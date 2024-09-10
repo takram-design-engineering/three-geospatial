@@ -5,6 +5,15 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
+"3d-tiles-renderer@npm:^0.3.37":
+  version: 0.3.37
+  resolution: "3d-tiles-renderer@npm:0.3.37"
+  peerDependencies:
+    three: ">=0.123.0"
+  checksum: 10c0/648ddc8fba2356f240e740c9f972a95572b20142b6f53bafdf2529c2d8f32916aa77249173959f7049aa26e8dc39bf0add09e2938a9a56cbb653e3e586b0c54f
+  languageName: node
+  linkType: hard
+
 "@adobe/css-tools@npm:^4.0.1":
   version: 4.4.0
   resolution: "@adobe/css-tools@npm:4.4.0"
@@ -1927,6 +1936,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@geovanni/source@workspace:."
   dependencies:
+    3d-tiles-renderer: "npm:^0.3.37"
     "@emotion/react": "npm:11.11.1"
     "@emotion/server": "npm:11.11.0"
     "@emotion/styled": "npm:11.11.0"
@@ -1976,6 +1986,7 @@ __metadata:
     nx: "npm:19.7.0"
     postprocessing: "npm:^6.36.1"
     prettier: "npm:^2.6.2"
+    raw-loader: "npm:^4.0.2"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
     three: "npm:^0.168.0"
@@ -1983,6 +1994,7 @@ __metadata:
     ts-jest: "npm:^29.1.0"
     ts-node: "npm:10.9.1"
     tslib: "npm:^2.3.0"
+    type-fest: "npm:^4.26.1"
     typescript: "npm:~5.5.2"
     vite: "npm:^5.0.0"
     vite-plugin-dts: "npm:~3.8.1"
@@ -13712,6 +13724,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"raw-loader@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "raw-loader@npm:4.0.2"
+  dependencies:
+    loader-utils: "npm:^2.0.0"
+    schema-utils: "npm:^3.0.0"
+  peerDependencies:
+    webpack: ^4.0.0 || ^5.0.0
+  checksum: 10c0/981ebe65e1cee7230300d21ba6dcd8bd23ea81ef4ad2b167c0f62d93deba347f27921d330be848634baab3831cf9f38900af6082d6416c2e937fe612fa6a74ff
+  languageName: node
+  linkType: hard
+
 "react-composer@npm:^5.0.3":
   version: 5.0.3
   resolution: "react-composer@npm:5.0.3"
@@ -15702,6 +15726,13 @@ __metadata:
   version: 0.21.3
   resolution: "type-fest@npm:0.21.3"
   checksum: 10c0/902bd57bfa30d51d4779b641c2bc403cdf1371fb9c91d3c058b0133694fcfdb817aef07a47f40faf79039eecbaa39ee9d3c532deff244f3a19ce68cea71a61e8
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^4.26.1":
+  version: 4.26.1
+  resolution: "type-fest@npm:4.26.1"
+  checksum: 10c0/d2719ff8d380befe8a3c61068f37f28d6fa2849fd140c5d2f0f143099e371da6856aad7c97e56b83329d45bfe504afe9fd936a7cff600cc0d46aa9ffb008d6c6
   languageName: node
   linkType: hard
 

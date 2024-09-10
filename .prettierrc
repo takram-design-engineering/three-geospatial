@@ -13,11 +13,11 @@
   "importOrder": [
     "<THIRD_PARTY_MODULES>",
     "",
-    "^(@)(/.*)$",
+    "^@geovanni/.*$",
     "",
     "^(?!.*\\.css$)[./].*$",
     "",
-    "(\\.(css))$"
+    "\\.css$"
   ],
   "importOrderParserPlugins": [
     "typescript",

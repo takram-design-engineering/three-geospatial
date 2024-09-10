@@ -4,6 +4,8 @@ import { type AppProps } from 'next/app'
 import Head from 'next/head'
 import { type FC } from 'react'
 
+import './styles.css'
+
 const theme = createTheme()
 
 const App: FC<AppProps> = props => {

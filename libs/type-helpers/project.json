@@ -1,0 +1,19 @@
+{
+  "name": "type-helpers",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/type-helpers/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/type-helpers",
+        "main": "libs/type-helpers/src/index.ts",
+        "tsConfig": "libs/type-helpers/tsconfig.lib.json",
+        "assets": ["libs/type-helpers/*.md"]
+      }
+    }
+  }
+}
