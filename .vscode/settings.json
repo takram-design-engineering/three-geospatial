@@ -1,4 +1,6 @@
 {
   "typescript.preferences.importModuleSpecifier": "project-relative",
-  "cSpell.words": ["geovanni"]
+  "cSpell.words": ["geovanni"],
+  // WORKAROUND: https://github.com/nrwl/nx/issues/4508#issuecomment-2315629925
+  "typescript.tsdk": "./node_modules/typescript/lib"
 }
