@@ -1,0 +1,19 @@
+{
+  "name": "three",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/three/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/three",
+        "main": "libs/three/src/index.ts",
+        "tsConfig": "libs/three/tsconfig.lib.json",
+        "assets": ["libs/three/*.md"]
+      }
+    }
+  }
+}

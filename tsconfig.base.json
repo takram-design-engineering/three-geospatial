@@ -15,7 +15,9 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@geovanni/three": ["libs/three/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
