@@ -1989,7 +1989,7 @@ __metadata:
     raw-loader: "npm:^4.0.2"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
-    three: "npm:0.168.0"
+    three: "npm:0.165.0"
     three-stdlib: "npm:2.32.2"
     ts-jest: "npm:^29.1.0"
     ts-node: "npm:10.9.1"
@@ -15379,10 +15379,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"three@npm:0.168.0":
-  version: 0.168.0
-  resolution: "three@npm:0.168.0"
-  checksum: 10c0/04aa53e64a61f31edd9631e57fe697752c9d358bd96e1344206d05e981507a6dae5c9da4e3b8d9ec7c6c8fc49732fd3f23d3675d126fe9bc1936894bbee6cc98
+"three@npm:0.165.0":
+  version: 0.165.0
+  resolution: "three@npm:0.165.0"
+  checksum: 10c0/235e52d4634c4fc400de7850af466fdcfaf70c621463a8d886b332faccfbc1c4f697cd67bf848da21e1b6e2fb3e7a153aafc217238ee50923b1a5ce7d47d3973
   languageName: node
   linkType: hard
 

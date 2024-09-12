@@ -1,5 +1,6 @@
 import { Plane } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
+import { EffectComposer, N8AO } from '@react-three/postprocessing'
 import { type FC } from 'react'
 
 import { Camera } from './Camera'
@@ -21,6 +22,9 @@ export const Main: FC = () => {
       <ambientLight intensity={0.5} />
       <fogExp2 attach='fog' color='white' density={0.0002} />
       <Camera longitude={longitude} latitude={latitude} height={4000} />
+      <EffectComposer>
+        <N8AO />
+      </EffectComposer>
       <EastNorthUp longitude={longitude} latitude={latitude}>
         <SunLight />
         <Plane args={[1e5, 1e5]} position={[0, 0, geoidalHeight]} receiveShadow>
