@@ -1,10 +1,10 @@
 {
-  "name": "app",
+  "name": "playground",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/app",
+  "sourceRoot": "apps/playground",
   "projectType": "application",
   "tags": [],
-  "// targets": "to see all targets run: nx show project app --web",
+  "// targets": "to see all targets run: nx show project playground --web",
   "targets": {
     "dev": {
       "options": {

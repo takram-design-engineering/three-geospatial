@@ -46,7 +46,10 @@
         "@typescript-eslint/no-explicit-any": "off",
 
         // {} is semantically different from the "object" and "Record".
-        "@typescript-eslint/ban-types": "off"
+        "@typescript-eslint/ban-types": "off",
+
+        // I rarely need those names.
+        "react/display-name": "off"
       }
     },
     {

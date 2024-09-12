@@ -2,9 +2,9 @@ import { Ellipsoid } from '@math.gl/geospatial'
 import { createContext, useMemo, type FC, type ReactNode } from 'react'
 import { Matrix4, Quaternion } from 'three'
 
-export const EastNorthUpContext = createContext<Matrix4 | undefined>(undefined)
+export const ENUFrameContext = createContext<Matrix4 | undefined>(undefined)
 
-export const EastNorthUp: FC<{
+export const ENUFrame: FC<{
   longitude: number
   latitude: number
   children?: ReactNode
@@ -35,9 +35,9 @@ export const EastNorthUp: FC<{
       position={position as [number, number, number]}
       quaternion={quaternion}
     >
-      <EastNorthUpContext.Provider value={matrix}>
+      <ENUFrameContext.Provider value={matrix}>
         {children}
-      </EastNorthUpContext.Provider>
+      </ENUFrameContext.Provider>
     </group>
   )
 }
