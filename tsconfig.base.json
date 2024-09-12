@@ -16,8 +16,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@geovanni/three": ["libs/three/src/index.ts"],
-      "@geovanni/type-helpers": ["libs/type-helpers/src/index.ts"]
+      "@geovanni/core": ["libs/core/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

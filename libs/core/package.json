@@ -1,5 +1,5 @@
 {
-  "name": "@geovanni/type-helpers",
+  "name": "@geovanni/core",
   "version": "0.0.1",
   "dependencies": {},
   "main": "./index.js",

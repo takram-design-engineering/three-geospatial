@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type FC } from 'react'
 import { Mesh, MeshStandardMaterial, type Group } from 'three'
 import { GLTFLoader, type GLTFLoaderPlugin } from 'three-stdlib'
 
-import { assertType } from '@geovanni/type-helpers'
+import { assertType } from '@geovanni/core'
 
 const gltfLoader = new GLTFLoader()
 gltfLoader.register(() => new GLTFCesiumRTCExtension() as GLTFLoaderPlugin)
