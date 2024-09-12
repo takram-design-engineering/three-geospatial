@@ -1955,7 +1955,7 @@ __metadata:
     "@nx/workspace": "npm:19.7.0"
     "@react-three/drei": "npm:9.112.0"
     "@react-three/fiber": "npm:8.17.7"
-    "@react-three/postprocessing": "npm:2.16.2"
+    "@react-three/postprocessing": "npm:^2.16.2"
     "@swc-node/register": "npm:~1.9.1"
     "@swc/core": "npm:~1.5.7"
     "@swc/helpers": "npm:~0.5.11"
@@ -1989,7 +1989,9 @@ __metadata:
     raw-loader: "npm:^4.0.2"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
-    three: "npm:0.168.0"
+    realism-effects: "npm:^1.1.2"
+    screen-space-reflections: "npm:^2.5.0"
+    three: "npm:0.165.0"
     three-stdlib: "npm:2.32.2"
     ts-jest: "npm:^29.1.0"
     ts-node: "npm:10.9.1"
@@ -3622,7 +3624,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-three/postprocessing@npm:2.16.2":
+"@react-three/postprocessing@npm:^2.16.2":
   version: 2.16.2
   resolution: "@react-three/postprocessing@npm:2.16.2"
   dependencies:
@@ -13872,6 +13874,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"realism-effects@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "realism-effects@npm:1.1.2"
+  peerDependencies:
+    postprocessing: ">=6.30.1"
+    three: ">=0.148.0"
+  checksum: 10c0/d0d0bb28bea16519b4008daf140b4f6af511a942958a60ea9a6a60deb5e4e2c6e05ff9fad3a33bca7a8fa8ce01703788e01f9bee4a62c138006c4b40fbb18734
+  languageName: node
+  linkType: hard
+
 "reflect.getprototypeof@npm:^1.0.4":
   version: 1.0.6
   resolution: "reflect.getprototypeof@npm:1.0.6"
@@ -14383,6 +14395,16 @@ __metadata:
     ajv-formats: "npm:^2.1.1"
     ajv-keywords: "npm:^5.1.0"
   checksum: 10c0/8dab7e7800316387fd8569870b4b668cfcecf95ac551e369ea799bbcbfb63fb0365366d4b59f64822c9f7904d8c5afcfaf5a6124a4b08783e558cd25f299a6b4
+  languageName: node
+  linkType: hard
+
+"screen-space-reflections@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "screen-space-reflections@npm:2.5.0"
+  peerDependencies:
+    postprocessing: ">=6.28.0"
+    three: ">=0.141.0"
+  checksum: 10c0/145124bdbd89f97bde9f40fd3baa2f7e996c1a99c621d63cd2eb4a2583f20cd85a1caf0298b8beb2f1bc9cb70d41cfd80c27bf47b013154c86aadcb81947515e
   languageName: node
   linkType: hard
 
@@ -15379,10 +15401,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"three@npm:0.168.0":
-  version: 0.168.0
-  resolution: "three@npm:0.168.0"
-  checksum: 10c0/04aa53e64a61f31edd9631e57fe697752c9d358bd96e1344206d05e981507a6dae5c9da4e3b8d9ec7c6c8fc49732fd3f23d3675d126fe9bc1936894bbee6cc98
+"three@npm:0.165.0":
+  version: 0.165.0
+  resolution: "three@npm:0.165.0"
+  checksum: 10c0/235e52d4634c4fc400de7850af466fdcfaf70c621463a8d886b332faccfbc1c4f697cd67bf848da21e1b6e2fb3e7a153aafc217238ee50923b1a5ce7d47d3973
   languageName: node
   linkType: hard
 

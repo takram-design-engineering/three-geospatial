@@ -1,13 +1,18 @@
 import styled from '@emotion/styled'
 import { type NextPage } from 'next'
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
 
-const Root = styled.div`
-  width: 100%;
-  height: 100%;
-`
+const Main = dynamic(async () => (await import('../components/Main')).Main, {
+  ssr: false
+})
 
 const Index: NextPage = () => {
-  return <Root>Hello</Root>
+  return (
+    <Suspense>
+      <Main />
+    </Suspense>
+  )
 }
 
 export default Index
