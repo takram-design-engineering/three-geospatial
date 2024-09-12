@@ -1,0 +1,19 @@
+{
+  "name": "3d-tiles",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/3d-tiles/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/3d-tiles",
+        "main": "libs/3d-tiles/src/index.ts",
+        "tsConfig": "libs/3d-tiles/tsconfig.lib.json",
+        "assets": ["libs/3d-tiles/*.md"]
+      }
+    }
+  }
+}

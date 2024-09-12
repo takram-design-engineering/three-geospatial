@@ -16,6 +16,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@geovanni/3d-tiles": ["libs/3d-tiles/src/index.ts"],
       "@geovanni/core": ["libs/core/src/index.ts"]
     }
   },
