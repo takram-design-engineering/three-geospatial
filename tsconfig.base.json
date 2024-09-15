@@ -17,7 +17,8 @@
     "baseUrl": ".",
     "paths": {
       "@geovanni/3d-tiles": ["libs/3d-tiles/src/index.ts"],
-      "@geovanni/core": ["libs/core/src/index.ts"]
+      "@geovanni/core": ["libs/core/src/index.ts"],
+      "@geovanni/effects": ["libs/effects/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

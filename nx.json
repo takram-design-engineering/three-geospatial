@@ -54,6 +54,11 @@
         "style": "@emotion/styled",
         "linter": "eslint"
       }
+    },
+    "@nx/react": {
+      "library": {
+        "unitTestRunner": "jest"
+      }
     }
   },
   "targetDefaults": {

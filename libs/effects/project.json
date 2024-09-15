@@ -1,0 +1,9 @@
+{
+  "name": "effects",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/effects/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project effects --web",
+  "targets": {}
+}
