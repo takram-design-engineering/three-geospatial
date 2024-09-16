@@ -10,9 +10,15 @@ import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
-function createTiles(): TilesRenderer {
+function createTiles(apiKey?: string): TilesRenderer {
   const tiles = new GooglePhotorealisticTilesRenderer()
-  tiles.registerPlugin(new GoogleCloudAuthPlugin({ apiToken: '' }))
+  if (apiKey != null) {
+    tiles.registerPlugin(
+      new GoogleCloudAuthPlugin({
+        apiToken: apiKey
+      })
+    )
+  }
 
   const loader = new GLTFLoader(tiles.manager)
   loader.setDRACOLoader(dracoLoader)
@@ -21,16 +27,18 @@ function createTiles(): TilesRenderer {
   return tiles
 }
 
-export interface GooglePhotorealisticTilesProps {}
+export interface GooglePhotorealisticTilesProps {
+  apiKey?: string
+}
 
-export const GooglePhotorealisticTiles: FC<
-  GooglePhotorealisticTilesProps
-> = () => {
-  const [tiles, setTiles] = useState(() => createTiles())
+export const GooglePhotorealisticTiles: FC<GooglePhotorealisticTilesProps> = ({
+  apiKey
+}) => {
+  const [tiles, setTiles] = useState(() => createTiles(apiKey))
 
   useEffect(() => {
-    setTiles(createTiles())
-  }, [])
+    setTiles(createTiles(apiKey))
+  }, [apiKey])
 
   useEffect(() => {
     return () => {

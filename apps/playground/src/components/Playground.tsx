@@ -2,32 +2,24 @@
 
 import { Plane } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { Bloom, EffectComposer, N8AO } from '@react-three/postprocessing'
+import {
+  Bloom,
+  EffectComposer,
+  ToneMapping
+} from '@react-three/postprocessing'
 import {
   KernelSize,
-  ToneMappingEffect,
-  ToneMappingMode,
-  type Effect
+  ToneMappingMode
 } from 'postprocessing'
-import { forwardRef, useMemo, type FC } from 'react'
+import { type FC } from 'react'
+
+import { SSAO } from '@geovanni/effects'
 
 import { Camera } from './Camera'
 import { ENUFrame } from './ENUFrame'
 import { GooglePhotorealisticTiles } from './GooglePhotorealisticTiles'
 import { SunLight } from './SunLight'
 import { Tileset } from './Tileset'
-
-export const ToneMapping = forwardRef<Effect, {}>((props, ref) => {
-  const effect = useMemo(
-    () =>
-      new ToneMappingEffect({
-        mode: ToneMappingMode.ACES_FILMIC,
-        adaptive: true
-      }),
-    []
-  )
-  return <primitive ref={ref} object={effect} dispose={null} />
-})
 
 export const Playground: FC = () => {
   // Coordinates of Tokyo station.
@@ -45,9 +37,9 @@ export const Playground: FC = () => {
       <fogExp2 attach='fog' color='white' density={0.0002} />
       <Camera longitude={longitude} latitude={latitude} height={4000} />
       <EffectComposer>
-        <N8AO />
+        <SSAO />
         <Bloom kernelSize={KernelSize.HUGE} />
-        <ToneMapping />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} adaptive />
       </EffectComposer>
       <ENUFrame longitude={longitude} latitude={latitude}>
         <SunLight />
@@ -73,14 +65,16 @@ export const Playground: FC = () => {
 //       <fogExp2 attach='fog' color='white' density={0.00005} />
 //       <Camera longitude={longitude} latitude={latitude} height={4000} />
 //       <EffectComposer>
-//         <N8AO />
+//         <SSAO />
 //         <Bloom kernelSize={KernelSize.HUGE} />
 //         <ToneMapping />
 //       </EffectComposer>
 //       <ENUFrame longitude={longitude} latitude={latitude}>
 //         <SunLight />
 //       </ENUFrame>
-//       <GooglePhotorealisticTiles />
+//       <GooglePhotorealisticTiles
+//         apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY}
+//       />
 //     </Canvas>
 //   )
 // }

@@ -4,6 +4,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
+    "dev": "nx dev playground",
     "clean": "nx reset && rm -rf dist tmp"
   },
   "dependencies": {
