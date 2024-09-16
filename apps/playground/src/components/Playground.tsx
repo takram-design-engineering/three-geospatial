@@ -2,15 +2,8 @@
 
 import { Plane } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import {
-  Bloom,
-  EffectComposer,
-  ToneMapping
-} from '@react-three/postprocessing'
-import {
-  KernelSize,
-  ToneMappingMode
-} from 'postprocessing'
+import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing'
+import { KernelSize, ToneMappingMode } from 'postprocessing'
 import { type FC } from 'react'
 
 import { SSAO } from '@geovanni/effects'
