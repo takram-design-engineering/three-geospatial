@@ -7,6 +7,8 @@ import {
 import { useEffect, useState, type FC } from 'react'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
+import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
+
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
@@ -19,6 +21,8 @@ function createTiles(apiKey?: string): TilesRenderer {
       })
     )
   }
+  tiles.registerPlugin(new UpdateOnChangePlugin())
+  tiles.registerPlugin(new TileCompressionPlugin())
 
   const loader = new GLTFLoader(tiles.manager)
   loader.setDRACOLoader(dracoLoader)
