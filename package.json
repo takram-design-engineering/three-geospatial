@@ -73,7 +73,7 @@
     "jest-environment-node": "^29.7.0",
     "jsdom": "~22.1.0",
     "nx": "19.7.3",
-    "prettier": "^2.8.8",
+    "prettier": "^3.3.3",
     "raw-loader": "^4.0.2",
     "ts-jest": "^29.1.0",
     "ts-node": "10.9.1",
