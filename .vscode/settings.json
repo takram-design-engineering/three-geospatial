@@ -1,4 +1,7 @@
 {
   "typescript.preferences.importModuleSpecifier": "project-relative",
+  "[glsl]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "cSpell.words": ["geovanni"]
 }

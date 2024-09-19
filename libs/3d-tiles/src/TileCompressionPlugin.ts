@@ -144,7 +144,7 @@ export interface TileCompressionPluginOptions {
 }
 
 export class TileCompressionPlugin {
-  options: Required<TileCompressionPluginOptions>
+  readonly options: Readonly<Required<TileCompressionPluginOptions>>
 
   constructor(options?: TileCompressionPluginOptions) {
     this.options = {
@@ -232,8 +232,8 @@ export class TileCompressionPlugin {
             vertCount > 65535
               ? Uint32Array
               : vertCount > 255
-              ? Uint16Array
-              : Uint8Array
+                ? Uint16Array
+                : Uint8Array
           if (!(index.array instanceof type)) {
             // eslint-disable-next-line new-cap
             const array = new type(geometry.index.count)

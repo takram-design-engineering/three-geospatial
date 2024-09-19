@@ -89,7 +89,28 @@ export const SSAO = forwardRef<Effect, SSAOProps>(function SSAO(
       transparencyAware,
       accumulate
     })
-  }, [aoSamples, aoRadius, aoTones, denoiseSamples, denoiseRadius, distanceFalloff, intensity, denoiseIterations, renderMode, biasOffset, biasMultiplier, color, gammaCorrection, logarithmicDepthBuffer, screenSpaceRadius, halfRes, depthAwareUpsampling, colorMultiply, transparencyAware, accumulate])
+  }, [
+    aoSamples,
+    aoRadius,
+    aoTones,
+    denoiseSamples,
+    denoiseRadius,
+    distanceFalloff,
+    intensity,
+    denoiseIterations,
+    renderMode,
+    biasOffset,
+    biasMultiplier,
+    color,
+    gammaCorrection,
+    logarithmicDepthBuffer,
+    screenSpaceRadius,
+    halfRes,
+    depthAwareUpsampling,
+    colorMultiply,
+    transparencyAware,
+    accumulate
+  ])
 
   return <primitive ref={forwardedRef} object={effect} />
 })

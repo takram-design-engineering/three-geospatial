@@ -10,7 +10,7 @@
   "tabWidth": 2,
   "trailingComma": "none",
   "useTabs": false,
-  "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+  "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-glsl"],
   "importOrder": [
     "<THIRD_PARTY_MODULES>",
     "",
@@ -26,5 +26,11 @@
     "classProperties",
     "decorators-legacy"
   ],
-  "importOrderTypeScriptVersion": "5.0.0"
+  "importOrderTypeScriptVersion": "5.0.0",
+  "overrides": [
+    {
+      "files": ["*.glsl"],
+      "options": { "parser": "glsl-parser" }
+    }
+  ]
 }
