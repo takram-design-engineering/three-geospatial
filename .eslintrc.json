@@ -42,9 +42,6 @@
         // Too many false negatives.
         "@typescript-eslint/no-unsafe-argument": "off",
 
-        // Just annoying. It's a warning anyway.
-        "@typescript-eslint/no-explicit-any": "off",
-
         // {} is semantically different from the "object" and "Record".
         "@typescript-eslint/ban-types": "off",
 
