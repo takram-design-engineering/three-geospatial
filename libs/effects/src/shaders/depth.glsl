@@ -1,7 +1,11 @@
 // TODO: Test logarithmic depth
 float linearizeDepth(const float depth) {
-  float near = cameraNear;
-  float far = cameraFar;
+  // Intentionally not using frustum length.
+  // TODO: Make these uniforms.
+  // float near = cameraNear;
+  // float far = cameraFar;
+  float near = 1.0;
+  float far = 5000.0;
   return 2.0 * near / (far + near - depth * (far - near));
 }
 
