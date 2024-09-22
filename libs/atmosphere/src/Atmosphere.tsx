@@ -50,15 +50,6 @@ export const Atmosphere: FC<AtmosphereProps> = ({
   })
 
   const uniforms = useConstant(() => ({
-    projection_matrix_inverse: {
-      value: new Matrix4()
-    },
-    view_matrix_inverse: {
-      value: new Matrix4()
-    },
-    camera: {
-      value: new Vector3()
-    },
     transmittance_texture: {
       value: transmittanceTexture
     },
@@ -71,16 +62,22 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     irradiance_texture: {
       value: irradianceTexture
     },
+    projectionMatrixInverse: {
+      value: new Matrix4()
+    },
+    viewMatrixInverse: {
+      value: new Matrix4()
+    },
+    cameraPosition: {
+      value: new Vector3()
+    },
     exposure: {
       value: 0
     },
-    earth_center: {
+    sunDirection: {
       value: new Vector3()
     },
-    sun_direction: {
-      value: new Vector3()
-    },
-    sun_size: {
+    sunSize: {
       value: new Vector2()
     }
   }))
@@ -98,18 +95,18 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     const state = stateRef.current
     state.viewZenithAngleRadians = 0.47
     state.viewAzimuthAngleRadians = -1.1
-    state.sunZenithAngleRadians = 1.6
+    state.sunZenithAngleRadians = 1.7
     state.sunAzimuthAngleRadians = 0.9
 
     uniforms.exposure.value = state.exposure
-    uniforms.sun_direction.value.set(
+    uniforms.sunDirection.value.set(
       Math.cos(state.sunAzimuthAngleRadians) *
         Math.sin(state.sunZenithAngleRadians),
       Math.sin(state.sunAzimuthAngleRadians) *
         Math.sin(state.sunZenithAngleRadians),
       Math.cos(state.sunZenithAngleRadians)
     )
-    uniforms.sun_size.value.set(
+    uniforms.sunSize.value.set(
       Math.tan(SUN_ANGULAR_RADIUS),
       Math.cos(SUN_ANGULAR_RADIUS)
     )
@@ -130,14 +127,16 @@ export const Atmosphere: FC<AtmosphereProps> = ({
         ]}
         onBeforeRender={(renderer, scene, camera) => {
           const scale = 1 / LENGTH_UNIT_IN_METERS
-          uniforms.view_matrix_inverse.value.copy(camera.matrixWorld)
-          uniforms.view_matrix_inverse.value.elements[12] *= scale
-          uniforms.view_matrix_inverse.value.elements[13] *= scale
-          uniforms.view_matrix_inverse.value.elements[14] *= scale
-          uniforms.projection_matrix_inverse.value.copy(
+          uniforms.viewMatrixInverse.value.copy(camera.matrixWorld)
+          uniforms.viewMatrixInverse.value.elements[12] *= scale
+          uniforms.viewMatrixInverse.value.elements[13] *= scale
+          uniforms.viewMatrixInverse.value.elements[14] *= scale
+          uniforms.projectionMatrixInverse.value.copy(
             camera.projectionMatrixInverse
           )
-          uniforms.camera.value.copy(camera.position).multiplyScalar(scale)
+          uniforms.cameraPosition.value
+            .copy(camera.position)
+            .multiplyScalar(scale)
         }}
       />
     </ScreenQuad>

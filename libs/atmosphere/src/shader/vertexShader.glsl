@@ -1,12 +1,11 @@
-uniform mat4 projection_matrix_inverse;
-uniform mat4 view_matrix_inverse;
+uniform mat4 projectionMatrixInverse;
+uniform mat4 viewMatrixInverse;
 
 layout(location = 0) in vec4 position;
-out vec3 view_ray;
+out vec4 worldDirection;
 
 void main() {
   gl_Position = position;
-  vec4 view_position = projection_matrix_inverse * gl_Position;
-  vec4 world_direction = view_matrix_inverse * vec4(view_position.xyz, 0.0);
-  view_ray = world_direction.xyz;
+  vec4 viewPosition = projectionMatrixInverse * gl_Position;
+  worldDirection = viewMatrixInverse * vec4(viewPosition.xyz, 0.0);
 }
