@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { Ellipsoid } from '@math.gl/geospatial'
 import {
   GizmoHelper,
   GizmoViewport,
@@ -98,13 +99,16 @@ const Scene: FC = () => {
         side={DoubleSide}
         rotation={[Math.PI / 2, 0, 0]}
       />
+      <Sphere args={[Ellipsoid.WGS84.minimumRadius, 360, 360]} renderOrder={-1}>
+        <meshBasicMaterial color='black' />
+      </Sphere>
     </>
   )
 }
 
 export const Container: FC = () => {
   return (
-    <Canvas id='canvas'>
+    <Canvas id='canvas' gl={{ logarithmicDepthBuffer: true }}>
       <Scene />
     </Canvas>
   )
