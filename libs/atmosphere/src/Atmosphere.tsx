@@ -2,7 +2,7 @@
 
 import { ScreenQuad } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useRef, type FC } from 'react'
+import { type FC } from 'react'
 import { Matrix4, Vector2, Vector3 } from 'three'
 
 import { useConstant } from '@geovanni/core'
@@ -10,11 +10,10 @@ import { useConstant } from '@geovanni/core'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
-  LENGTH_UNIT_IN_METERS,
+  METER_TO_LENGTH_UNIT,
   SCATTERING_TEXTURE_DEPTH,
   SCATTERING_TEXTURE_HEIGHT,
   SCATTERING_TEXTURE_WIDTH,
-  SUN_ANGULAR_RADIUS,
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
@@ -25,15 +24,15 @@ import fragmentShader from './shader/fragmentShader.glsl'
 import vertexShader from './shader/vertexShader.glsl'
 
 export interface AtmosphereProps {
-  exposure?: number
   sunDirection?: Vector3
-  sunSize?: Vector2
+  sunAngularRadius?: number
+  exposure?: number
 }
 
 export const Atmosphere: FC<AtmosphereProps> = ({
-  exposure,
   sunDirection,
-  sunSize
+  sunAngularRadius = 0.00465, // 16 minutes of arc
+  exposure = 10
 }: AtmosphereProps) => {
   const irradianceTexture = usePrecomputedData('/irradiance.bin', {
     width: IRRADIANCE_TEXTURE_WIDTH,
@@ -71,45 +70,26 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     cameraPosition: {
       value: new Vector3()
     },
-    exposure: {
-      value: 0
-    },
     sunDirection: {
-      value: new Vector3()
+      value: sunDirection?.clone() ?? new Vector3()
     },
     sunSize: {
-      value: new Vector2()
+      value: new Vector2(Math.tan(sunAngularRadius), Math.cos(sunAngularRadius))
+    },
+    exposure: {
+      value: exposure
     }
   }))
 
-  const stateRef = useRef({
-    viewDistanceMeters: 9000,
-    viewZenithAngleRadians: 1.47,
-    viewAzimuthAngleRadians: -0.1,
-    sunZenithAngleRadians: 1.3,
-    sunAzimuthAngleRadians: 2.9,
-    exposure: 10
-  })
-
   useFrame(() => {
-    const state = stateRef.current
-    state.viewZenithAngleRadians = 0.47
-    state.viewAzimuthAngleRadians = -1.1
-    state.sunZenithAngleRadians = 1.7
-    state.sunAzimuthAngleRadians = 0.9
-
-    uniforms.exposure.value = state.exposure
-    uniforms.sunDirection.value.set(
-      Math.cos(state.sunAzimuthAngleRadians) *
-        Math.sin(state.sunZenithAngleRadians),
-      Math.sin(state.sunAzimuthAngleRadians) *
-        Math.sin(state.sunZenithAngleRadians),
-      Math.cos(state.sunZenithAngleRadians)
-    )
+    if (sunDirection != null) {
+      uniforms.sunDirection.value.copy(sunDirection)
+    }
     uniforms.sunSize.value.set(
-      Math.tan(SUN_ANGULAR_RADIUS),
-      Math.cos(SUN_ANGULAR_RADIUS)
+      Math.tan(sunAngularRadius),
+      Math.cos(sunAngularRadius)
     )
+    uniforms.exposure.value = exposure
   })
 
   return (
@@ -126,17 +106,16 @@ export const Atmosphere: FC<AtmosphereProps> = ({
           }
         ]}
         onBeforeRender={(renderer, scene, camera) => {
-          const scale = 1 / LENGTH_UNIT_IN_METERS
           uniforms.viewMatrixInverse.value.copy(camera.matrixWorld)
-          uniforms.viewMatrixInverse.value.elements[12] *= scale
-          uniforms.viewMatrixInverse.value.elements[13] *= scale
-          uniforms.viewMatrixInverse.value.elements[14] *= scale
+          uniforms.viewMatrixInverse.value.elements[12] *= METER_TO_LENGTH_UNIT
+          uniforms.viewMatrixInverse.value.elements[13] *= METER_TO_LENGTH_UNIT
+          uniforms.viewMatrixInverse.value.elements[14] *= METER_TO_LENGTH_UNIT
           uniforms.projectionMatrixInverse.value.copy(
             camera.projectionMatrixInverse
           )
           uniforms.cameraPosition.value
             .copy(camera.position)
-            .multiplyScalar(scale)
+            .multiplyScalar(METER_TO_LENGTH_UNIT)
         }}
       />
     </ScreenQuad>

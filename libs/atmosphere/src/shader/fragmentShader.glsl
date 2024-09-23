@@ -1,7 +1,7 @@
 uniform vec3 cameraPosition;
-uniform float exposure;
 uniform vec3 sunDirection;
 uniform vec2 sunSize;
+uniform float exposure;
 
 in vec4 worldDirection;
 layout(location = 0) out vec4 color;
