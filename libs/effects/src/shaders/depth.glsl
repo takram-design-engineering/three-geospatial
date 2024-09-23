@@ -1,11 +1,19 @@
-// TODO: Test logarithmic depth
+uniform float near;
+uniform float far;
+
+float readMaybeLogDepth(const vec2 uv) {
+  float depth = readDepth(uv);
+  #ifdef LOG_DEPTH
+  float d = pow(2.0, depth * log2(cameraFar + 1.0)) - 1.0;
+  float a = cameraFar / (cameraFar - cameraNear);
+  float b = cameraFar * cameraNear / (cameraNear - cameraFar);
+  depth = a + b / d;
+  #endif
+  return depth;
+}
+
 float linearizeDepth(const float depth) {
   // Intentionally not using frustum length.
-  // TODO: Make these uniforms.
-  // float near = cameraNear;
-  // float far = cameraFar;
-  float near = 1.0;
-  float far = 5000.0;
   return 2.0 * near / (far + near - depth * (far - near));
 }
 
@@ -20,7 +28,7 @@ vec3 turbo(const float x) {
 }
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
-  float depth = linearizeDepth(readDepth(uv));
+  float depth = linearizeDepth(readMaybeLogDepth(uv));
   #ifdef USE_TURBO
   vec3 color = turbo(1.0 - depth);
   #else

@@ -1,5 +1,6 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
+import { applyProps } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { BlendFunction, Effect } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
@@ -10,43 +11,43 @@ import fragmentShader from './shaders/normal.glsl'
 
 export interface NormalEffectOptions {
   blendFunction?: BlendFunction
-  map?: Texture | null
+  normalBuffer?: Texture | null
 }
 
 export class NormalEffect extends Effect {
   constructor({
     blendFunction = BlendFunction.SRC,
-    map = null
+    normalBuffer = null
   }: NormalEffectOptions = {}) {
     super('NormalEffect', fragmentShader, {
       blendFunction,
-      uniforms: new Map([['map', new Uniform(map)]])
+      uniforms: new Map([['normalBuffer', new Uniform(normalBuffer)]])
     })
   }
 
-  get map(): Texture | null {
-    const uniform = this.uniforms.get('map')
+  get normalBuffer(): Texture | null {
+    const uniform = this.uniforms.get('normalBuffer')
     invariant(uniform != null)
     return uniform.value
   }
 
-  set map(value: Texture | null) {
-    const uniform = this.uniforms.get('map')
+  set normalBuffer(value: Texture | null) {
+    const uniform = this.uniforms.get('normalBuffer')
     invariant(uniform != null)
     uniform.value = value
   }
 }
 
-export interface NormalProps {
-  blendFunction?: BlendFunction
-}
-
-export const Normal = forwardRef<Effect, NormalProps>((props, ref) => {
+export const Normal = forwardRef<
+  Effect,
+  Omit<NormalEffectOptions, 'normalBuffer'>
+>((props, ref) => {
   const effect = useMemo(() => new NormalEffect(), [])
+  applyProps(effect, props)
 
   const { normalPass } = useContext(EffectComposerContext)
   useEffect(() => {
-    effect.map = normalPass?.texture ?? null
+    effect.normalBuffer = normalPass?.texture ?? null
   }, [effect, normalPass])
 
   return <primitive ref={ref} object={effect} />
