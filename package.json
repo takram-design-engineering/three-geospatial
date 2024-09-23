@@ -20,6 +20,8 @@
     "@react-three/fiber": "8.17.7",
     "@react-three/postprocessing": "2.16.2",
     "astronomy-engine": "^2.1.19",
+    "date-fns": "^4.1.0",
+    "leva": "^0.9.35",
     "lodash": "^4.17.21",
     "n8ao": "^1.9.1",
     "next": "14.2.3",

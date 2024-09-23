@@ -9,7 +9,7 @@ float linearizeDepth(const float depth) {
   return 2.0 * near / (far + near - depth * (far - near));
 }
 
-// A fifth-order polynomial approximation.
+// A fifth-order polynomial approximation of Turbo colormap.
 // See: https://observablehq.com/@mbostock/turbo
 // prettier-ignore
 vec3 turbo(const float x) {
