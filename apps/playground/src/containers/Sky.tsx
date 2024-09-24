@@ -1,13 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { Ellipsoid } from '@math.gl/geospatial'
-import {
-  GizmoHelper,
-  GizmoViewport,
-  Grid,
-  Plane,
-  Sphere
-} from '@react-three/drei'
+import { GizmoHelper, GizmoViewport, Grid, Plane, Sphere } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import {
@@ -66,13 +58,13 @@ const Scene: FC = () => {
 
   return (
     <>
-      <Camera longitude={longitude} latitude={latitude} height={4000} />
+      <Camera longitude={longitude} latitude={latitude} height={50} />
       <Suspense>
         <Atmosphere sunDirection={sunDirection} />
       </Suspense>
       <ENUFrame longitude={longitude} latitude={latitude}>
         <SunLight />
-        <Sphere args={[100]}>
+        <Sphere args={[10]} position={[0, 0, 10]}>
           <meshStandardMaterial color='white' />
         </Sphere>
         <Plane args={[1e5, 1e5]} position={[0, 0, 0]} receiveShadow>
@@ -80,9 +72,13 @@ const Scene: FC = () => {
         </Plane>
       </ENUFrame>
       <EffectComposer enableNormalPass>
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
         <>{normal && <Normal />}</>
         <>{depth && <Depth useTurbo />}</>
+        <>
+          {!normal && !depth && (
+            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          )}
+        </>
       </EffectComposer>
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
@@ -108,7 +104,16 @@ const Scene: FC = () => {
 
 export const Container: FC = () => {
   return (
-    <Canvas id='canvas' gl={{ logarithmicDepthBuffer: true }}>
+    <Canvas
+      id='canvas'
+      gl={{
+        powerPreference: 'high-performance',
+        antialias: false,
+        stencil: false,
+        depth: false,
+        logarithmicDepthBuffer: true
+      }}
+    >
       <Scene />
     </Canvas>
   )
