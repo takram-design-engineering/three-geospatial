@@ -113,13 +113,16 @@ const int IRRADIANCE_TEXTURE_HEIGHT = 16;
 #define ScatteringDensityTexture sampler3D
 #define IrradianceTexture sampler2D
 
+#ifndef PI
+#define PI (3.14159265358979323846)
+#endif
+
 const Length m = 1.0;
 const Wavelength nm = 1.0;
 const Angle rad = 1.0;
 const SolidAngle sr = 1.0;
 const Power watt = 1.0;
 const LuminousPower lm = 1.0;
-const float PI = 3.14159265358979323846;
 const Length km = 1000.0 * m;
 const Area m2 = m * m;
 const Volume m3 = m * m * m;
@@ -169,8 +172,8 @@ struct AtmosphereParameters {
 const AtmosphereParameters ATMOSPHERE = AtmosphereParameters(
   vec3(1.474, 1.8504, 1.91198),
   0.004675,
-  6360.0,
-  6420.0,
+  6356.752314,
+  6416.752314,
   DensityProfile(
     DensityProfileLayer[2](
       DensityProfileLayer(0.0, 0.0, 0.0, 0.0, 0.0),
