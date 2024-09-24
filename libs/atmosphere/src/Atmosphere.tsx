@@ -19,9 +19,9 @@ import {
 } from './constants'
 import { usePrecomputedData } from './usePrecomputedData'
 
-import atmosphereShader from './shader/atmosphereShader.glsl'
-import fragmentShader from './shader/fragmentShader.glsl'
-import vertexShader from './shader/vertexShader.glsl'
+import atmosphereShader from './shaders/atmosphereShader.glsl'
+import fragmentShader from './shaders/fragmentShader.glsl'
+import vertexShader from './shaders/vertexShader.glsl'
 
 export interface AtmosphereProps {
   sunDirection?: Vector3
