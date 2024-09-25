@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "nx dev playground",
+    "storybook": "nx storybook storybook --port=4400 --no-open",
     "clean": "nx reset && rm -rf dist tmp"
   },
   "dependencies": {
