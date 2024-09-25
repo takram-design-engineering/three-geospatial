@@ -35,10 +35,11 @@ export interface TerrainTileProps extends MeshProps {
   x: number
   y: number
   z: number
+  heightScale?: number
 }
 
 export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
-  ({ terrain, x, y, z, ...props }, forwardedRef) => {
+  ({ terrain, x, y, z, heightScale = 1, ...props }, forwardedRef) => {
     // TODO: Replace with a more advanced cache.
     const data = suspend(
       async () => await terrain.fetchTile({ x, y, z }),
@@ -53,7 +54,13 @@ export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
     return (
       <mesh ref={forwardedRef} {...props}>
         <terrainGeometry ref={geometryRef} />
-        <terrainMaterial />
+        <terrainMaterial
+          centerX={data.header.centerX}
+          centerY={data.header.centerY}
+          centerZ={data.header.centerZ}
+          minHeight={data.header.minHeight * heightScale}
+          maxHeight={data.header.maxHeight * heightScale}
+        />
       </mesh>
     )
   }

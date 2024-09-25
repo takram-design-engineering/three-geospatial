@@ -27,7 +27,8 @@ export const Basic: StoryFn = () => {
         y={0}
         z={0}
         position={[-size * 0.5, -size * 0.5, 0]}
-        scale={[size, size, size * 0.5]}
+        scale={[size, size, 1]}
+        heightScale={1 / 500}
       />
     </Canvas>
   )
@@ -60,7 +61,8 @@ export const Many: StoryFn = () => {
                   -size * 0.5 * yCount + size * y,
                   0
                 ]}
-                scale={[size, size, size * 0.5]}
+                scale={[size, size, 1]}
+                heightScale={1 / 500}
               />
             )
           })
