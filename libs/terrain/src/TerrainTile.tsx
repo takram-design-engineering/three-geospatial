@@ -42,7 +42,7 @@ export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
     // TODO: Replace with a more advanced cache.
     const data = suspend(
       async () => await terrain.fetchTile({ x, y, z }),
-      [TerrainTile, terrain.assetId, x, y, z]
+      [terrain, terrain.assetId, x, y, z]
     )
 
     const geometryRef = useRef<TerrainGeometry>(null)

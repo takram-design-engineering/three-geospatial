@@ -37,7 +37,13 @@ export class IonTerrain extends IonAsset {
     return decode(
       await this.fetch<ArrayBuffer>(
         stringTemplate(template, { ...params, version: layer.version }),
-        { responseType: 'arraybuffer' }
+        {
+          responseType: 'arraybuffer',
+          headers: {
+            Accept:
+              'application/vnd.quantized-mesh;extensions=octvertexnormals-watermask-metadata'
+          }
+        }
       )
     )
   }
