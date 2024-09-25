@@ -8,7 +8,7 @@
     "types": ["vite/client"]
   },
   "files": [],
-  "include": [],
+  "include": ["../../libs/**/src/**/*.stories.ts", "*.ts"],
   "references": [
     {
       "path": "./tsconfig.lib.json"
