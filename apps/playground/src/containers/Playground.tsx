@@ -6,10 +6,10 @@ import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { KernelSize, ToneMappingMode } from 'postprocessing'
 import { type FC } from 'react'
 
+import { ENUFrame } from '@geovanni/core'
 import { SSAO } from '@geovanni/effects'
 
 import { Camera } from '../components/Camera'
-import { ENUFrame } from '../components/ENUFrame'
 import { GooglePhotorealisticTiles } from '../components/GooglePhotorealisticTiles'
 import { SunLight } from '../components/SunLight'
 import { Tileset } from '../components/Tileset'
