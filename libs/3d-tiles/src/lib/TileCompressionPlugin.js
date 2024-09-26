@@ -1,27 +1,9 @@
-// See: https://github.com/NASA-AMMOS/3DTilesRendererJS/tree/master/example/src/plugins
+import { BufferAttribute, MathUtils, Vector3 } from 'three'
 
-import {
-  BufferAttribute,
-  MathUtils,
-  Mesh,
-  Vector3,
-  type BufferGeometry,
-  type InterleavedBufferAttribute,
-  type Material,
-  type Scene
-} from 'three'
-
-import { type TypedArrayConstructor } from '@geovanni/core'
-
-const vectorScratch = new Vector3()
-
-function compressAttribute(
-  attribute: BufferAttribute | InterleavedBufferAttribute,
-  arrayType: TypedArrayConstructor
-): BufferAttribute | InterleavedBufferAttribute {
+const _vec = new Vector3()
+function compressAttribute(attribute, arrayType) {
   if (
-    ('isInterleavedBufferAttribute' in attribute &&
-      attribute.isInterleavedBufferAttribute) ||
+    attribute.isInterleavedBufferAttribute ||
     attribute.array instanceof arrayType
   ) {
     return attribute
@@ -33,13 +15,12 @@ function compressAttribute(
     arrayType === Int32Array
   const minValue = signed ? -1 : 0
 
-  // eslint-disable-next-line new-cap
   const array = new arrayType(attribute.count * attribute.itemSize)
   const newAttribute = new BufferAttribute(array, attribute.itemSize, true)
   const itemSize = attribute.itemSize
   const count = attribute.count
-  for (let i = 0; i < count; ++i) {
-    for (let j = 0; j < itemSize; ++j) {
+  for (let i = 0; i < count; i++) {
+    for (let j = 0; j < itemSize; j++) {
       const v = MathUtils.clamp(attribute.getComponent(i, j), minValue, 1)
       newAttribute.setComponent(i, j, v)
     }
@@ -48,25 +29,20 @@ function compressAttribute(
   return newAttribute
 }
 
-function compressPositionAttribute(
-  mesh: Mesh,
-  arrayType: TypedArrayConstructor = Int16Array
-): void {
+function compressPositionAttribute(mesh, arrayType = Int16Array) {
   const geometry = mesh.geometry
   const attributes = geometry.attributes
   const attribute = attributes.position
 
   // skip if it's already compressed to the provided level
   if (
-    ('isInterleavedBufferAttribute' in attribute &&
-      attribute.isInterleavedBufferAttribute) ||
+    attribute.isInterleavedBufferAttribute ||
     attribute.array instanceof arrayType
   ) {
-    return
+    return attribute
   }
 
   // new attribute data
-  // eslint-disable-next-line new-cap
   const array = new arrayType(attribute.count * attribute.itemSize)
   const newAttribute = new BufferAttribute(array, attribute.itemSize, false)
   const itemSize = attribute.itemSize
@@ -78,18 +54,14 @@ function compressPositionAttribute(
   geometry.computeBoundingBox()
 
   const boundingBox = geometry.boundingBox
-  if (boundingBox == null) {
-    return
-  }
-
   const { min, max } = boundingBox
 
   // array range
   const maxValue = 2 ** (8 * arrayType.BYTES_PER_ELEMENT - 1) - 1
   const minValue = -maxValue
 
-  for (let i = 0; i < count; ++i) {
-    for (let j = 0; j < itemSize; ++j) {
+  for (let i = 0; i < count; i++) {
+    for (let j = 0; j < itemSize; j++) {
       const key = j === 0 ? 'x' : j === 1 ? 'y' : 'z'
       const bbMinValue = min[key]
       const bbMaxValue = max[key]
@@ -108,8 +80,8 @@ function compressPositionAttribute(
   }
 
   // shift the mesh to the center of the bounds
-  boundingBox.getCenter(vectorScratch)
-  mesh.position.add(vectorScratch)
+  boundingBox.getCenter(_vec)
+  mesh.position.add(_vec)
 
   // adjust the scale to accommodate the new geometry data range
   mesh.scale.x *= (0.5 * (max.x - min.x)) / maxValue
@@ -123,109 +95,83 @@ function compressPositionAttribute(
   mesh.updateMatrixWorld()
 }
 
-export interface TileCompressionPluginOptions {
-  // Whether to generate normals if they don't already exist.
-  generateNormals?: boolean
-
-  // Whether to disable use of mipmaps since they are typically not necessary
-  // with something like 3d tiles.
-  disableMipmaps?: boolean
-
-  // Whether to compress certain attributes.
-  compressIndex?: boolean
-  compressNormals?: boolean
-  compressUvs?: boolean
-  compressPosition?: boolean
-
-  // The TypedArray type to use when compressing the attributes.
-  uvType?: TypedArrayConstructor
-  normalType?: TypedArrayConstructor
-  positionType?: TypedArrayConstructor
-}
-
 export class TileCompressionPlugin {
-  readonly options: Readonly<Required<TileCompressionPluginOptions>>
-
-  constructor(options?: TileCompressionPluginOptions) {
-    this.options = {
+  constructor(options) {
+    this._options = {
+      // whether to generate normals if they don't already exist.
       generateNormals: false,
+
+      // whether to disable use of mipmaps since they are typically not necessary
+      // with something like 3d tiles.
       disableMipmaps: true,
+
+      // whether to compress certain attributes
       compressIndex: true,
       compressNormals: true,
       compressUvs: true,
       compressPosition: false,
+
+      // the TypedArray type to use when compressing the attributes
       uvType: Int8Array,
       normalType: Int8Array,
       positionType: Int16Array,
+
       ...options
     }
   }
 
-  processTileModel(scene: Scene): void {
+  processTileModel(scene, tile) {
     const {
       generateNormals,
+
       disableMipmaps,
       compressIndex,
       compressUvs,
       compressNormals,
       compressPosition,
+
       uvType,
       normalType,
       positionType
-    } = this.options
+    } = this._options
 
-    scene.traverse(object => {
-      if (!(object instanceof Mesh)) {
-        return
-      }
-
-      // Handle materials
-      if (object.material != null && disableMipmaps) {
-        const material: Material = object.material
+    scene.traverse(c => {
+      // handle materials
+      if (c.material && disableMipmaps) {
+        const material = c.material
         for (const key in material) {
-          const value = material[key as keyof Material] as Material & {
-            isTexture?: boolean
-            generateMipmaps?: boolean
-          }
-          if (value?.isTexture === true) {
+          const value = material[key]
+          if (value && value.isTexture) {
             value.generateMipmaps = false
           }
         }
       }
 
-      // Handle geometry attribute compression
-      if (object.geometry != null) {
-        const geometry: BufferGeometry = object.geometry
+      // handle geometry attribute compression
+      if (c.geometry) {
+        const geometry = c.geometry
         const attributes = geometry.attributes
         if (compressUvs) {
           const { uv, uv1, uv2, uv3 } = attributes
-          if (uv != null) {
-            attributes.uv = compressAttribute(uv, uvType)
-          }
-          if (uv1 != null) {
-            attributes.uv1 = compressAttribute(uv1, uvType)
-          }
-          if (uv2 != null) {
-            attributes.uv2 = compressAttribute(uv2, uvType)
-          }
-          if (uv3 != null) {
-            attributes.uv3 = compressAttribute(uv3, uvType)
-          }
+          if (uv) attributes.uv = compressAttribute(uv, uvType)
+          if (uv1) attributes.uv1 = compressAttribute(uv1, uvType)
+          if (uv2) attributes.uv2 = compressAttribute(uv2, uvType)
+          if (uv3) attributes.uv3 = compressAttribute(uv3, uvType)
         }
 
-        if (generateNormals && attributes.normals == null) {
+        if (generateNormals && !attributes.normals) {
           geometry.computeVertexNormals()
         }
 
-        if (compressNormals && attributes.normals != null) {
+        if (compressNormals && attributes.normals) {
           attributes.normals = compressAttribute(attributes.normals, normalType)
         }
 
         if (compressPosition) {
-          compressPositionAttribute(object, positionType)
+          compressPositionAttribute(c, positionType)
         }
 
-        if (compressIndex && geometry.index != null) {
+        if (compressIndex && geometry.index) {
           const vertCount = attributes.position.count
           const index = geometry.index
           const type =
@@ -235,7 +181,6 @@ export class TileCompressionPlugin {
                 ? Uint16Array
                 : Uint8Array
           if (!(index.array instanceof type)) {
-            // eslint-disable-next-line new-cap
             const array = new type(geometry.index.count)
             array.set(index.array)
 
