@@ -20,7 +20,7 @@ import { ToneMappingMode } from 'postprocessing'
 import { DoubleSide, Vector3 } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
-import { ENUFrame, isNotFalse } from '@geovanni/core'
+import { isNotFalse, LocalFrame } from '@geovanni/core'
 import { Depth, Normal } from '@geovanni/effects'
 
 import { Atmosphere } from './Atmosphere'
@@ -87,11 +87,11 @@ export const Basic: StoryFn = () => {
         <ambientLight intensity={0.1} />
         <directionalLight position={sunDirection} intensity={0.9} />
         <OrbitControls target={position} minDistance={100} />
-        <ENUFrame longitude={longitude} latitude={latitude}>
+        <LocalFrame longitude={longitude} latitude={latitude}>
           <Sphere args={[10, 64, 32]} position={[0, 0, 10]}>
             <meshStandardMaterial color='white' />
           </Sphere>
-        </ENUFrame>
+        </LocalFrame>
         <Sphere
           args={[Ellipsoid.WGS84.minimumRadius, 360, 180]}
           renderOrder={-2}

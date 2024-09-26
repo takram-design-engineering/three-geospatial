@@ -4,9 +4,9 @@ import { Matrix4, Quaternion } from 'three'
 
 import { type Tuple3 } from './types'
 
-export const ENUFrameContext = createContext<Matrix4 | undefined>(undefined)
+export const LocalFrameContext = createContext<Matrix4 | undefined>(undefined)
 
-export const ENUFrame: FC<{
+export const LocalFrame: FC<{
   longitude: number
   latitude: number
   children?: ReactNode
@@ -39,9 +39,9 @@ export const ENUFrame: FC<{
 
   return (
     <group position={position} quaternion={quaternion}>
-      <ENUFrameContext.Provider value={matrix}>
+      <LocalFrameContext.Provider value={matrix}>
         {children}
-      </ENUFrameContext.Provider>
+      </LocalFrameContext.Provider>
     </group>
   )
 }

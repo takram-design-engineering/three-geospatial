@@ -1,3 +1,3 @@
-export * from './ENUFrame'
+export * from './LocalFrame'
 export * from './types'
 export * from './useConstant'

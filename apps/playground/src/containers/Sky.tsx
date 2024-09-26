@@ -21,7 +21,7 @@ import { DoubleSide } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
 import { Atmosphere } from '@geovanni/atmosphere'
-import { ENUFrame } from '@geovanni/core'
+import { LocalFrame } from '@geovanni/core'
 import { Depth, Normal } from '@geovanni/effects'
 
 import { Camera } from '../components/Camera'
@@ -68,7 +68,7 @@ const Scene: FC = () => {
       <Suspense>
         <Atmosphere sunDirection={sunDirection} />
       </Suspense>
-      <ENUFrame longitude={longitude} latitude={latitude}>
+      <LocalFrame longitude={longitude} latitude={latitude}>
         <SunLight />
         <Sphere args={[10]} position={[0, 0, 10]}>
           <meshStandardMaterial color='white' />
@@ -76,7 +76,7 @@ const Scene: FC = () => {
         <Plane args={[1e5, 1e5]} position={[0, 0, 0]} receiveShadow>
           <meshStandardMaterial color='white' transparent opacity={0} />
         </Plane>
-      </ENUFrame>
+      </LocalFrame>
       <EffectComposer enableNormalPass>
         <>{normal && <Normal />}</>
         <>{depth && <Depth useTurbo />}</>

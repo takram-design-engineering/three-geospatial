@@ -6,7 +6,7 @@ import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { KernelSize, ToneMappingMode } from 'postprocessing'
 import { type FC } from 'react'
 
-import { ENUFrame } from '@geovanni/core'
+import { LocalFrame } from '@geovanni/core'
 import { SSAO } from '@geovanni/effects'
 
 import { Camera } from '../components/Camera'
@@ -34,12 +34,12 @@ export const Container: FC = () => {
         <Bloom kernelSize={KernelSize.HUGE} />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
-      <ENUFrame longitude={longitude} latitude={latitude}>
+      <LocalFrame longitude={longitude} latitude={latitude}>
         <SunLight />
         <Plane args={[1e5, 1e5]} position={[0, 0, geoidalHeight]} receiveShadow>
           <meshStandardMaterial color='white' />
         </Plane>
-      </ENUFrame>
+      </LocalFrame>
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13101_chiyoda-ku_2020_bldg_notexture/tileset.json' />
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13102_chuo-ku_2020_bldg_notexture/tileset.json' />
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13103_minato-ku_2020_bldg_notexture/tileset.json' />
@@ -65,9 +65,9 @@ export const Container: FC = () => {
 //         <Bloom kernelSize={KernelSize.HUGE} />
 //         <ToneMapping />
 //       </EffectComposer>
-//       <ENUFrame longitude={longitude} latitude={latitude}>
+//       <LocalFrame longitude={longitude} latitude={latitude}>
 //         <SunLight />
-//       </ENUFrame>
+//       </LocalFrame>
 //       <GooglePhotorealisticTiles
 //         apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY}
 //       />
