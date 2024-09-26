@@ -2,7 +2,7 @@ import { Ellipsoid } from '@math.gl/geospatial'
 import { createContext, useMemo, type FC, type ReactNode } from 'react'
 import { Matrix4, Quaternion } from 'three'
 
-type Position = [number, number, number]
+import { type Tuple3 } from './types'
 
 export const ENUFrameContext = createContext<Matrix4 | undefined>(undefined)
 
@@ -17,7 +17,7 @@ export const ENUFrame: FC<{
         longitude,
         latitude,
         0
-      ]) as Position,
+      ]) as Tuple3,
     [longitude, latitude]
   )
 
