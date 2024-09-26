@@ -4,7 +4,11 @@ import React from 'react'
 import './style.css'
 
 const preview: Preview = {
-  parameters: {},
+  parameters: {
+    options: {
+      showPanel: false
+    }
+  },
   decorators: (Story, { parameters }) => <Story />
 }
 
