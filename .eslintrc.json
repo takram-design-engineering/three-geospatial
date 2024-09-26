@@ -51,9 +51,6 @@
     },
     {
       "files": ["*.js", "*.jsx"],
-      "parserOptions": {
-        "project": ["./tsconfig.*?.json"]
-      },
       "extends": ["plugin:@nx/javascript", "prettier"],
       "rules": {}
     },
