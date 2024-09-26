@@ -6,15 +6,15 @@ import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { KernelSize, ToneMappingMode } from 'postprocessing'
 import { type FC } from 'react'
 
+import { ENUFrame } from '@geovanni/core'
 import { SSAO } from '@geovanni/effects'
 
-import { Camera } from './Camera'
-import { ENUFrame } from './ENUFrame'
-import { GooglePhotorealisticTiles } from './GooglePhotorealisticTiles'
-import { SunLight } from './SunLight'
-import { Tileset } from './Tileset'
+import { Camera } from '../components/Camera'
+import { GooglePhotorealisticTiles } from '../components/GooglePhotorealisticTiles'
+import { SunLight } from '../components/SunLight'
+import { Tileset } from '../components/Tileset'
 
-export const Playground: FC = () => {
+export const Container: FC = () => {
   // Coordinates of Tokyo station.
   const longitude = 139.7671
   const latitude = 35.6812
@@ -24,7 +24,7 @@ export const Playground: FC = () => {
   const geoidalHeight = 36.6624
 
   return (
-    <Canvas shadows gl={{ antialias: false }}>
+    <Canvas shadows>
       <color attach='background' args={['#ffffff']} />
       <ambientLight intensity={0.5} />
       <fogExp2 attach='fog' color='white' density={0.0002} />
@@ -32,7 +32,7 @@ export const Playground: FC = () => {
       <EffectComposer>
         <SSAO />
         <Bloom kernelSize={KernelSize.HUGE} />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} adaptive />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
       <ENUFrame longitude={longitude} latitude={latitude}>
         <SunLight />
@@ -42,11 +42,14 @@ export const Playground: FC = () => {
       </ENUFrame>
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13101_chiyoda-ku_2020_bldg_notexture/tileset.json' />
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13102_chuo-ku_2020_bldg_notexture/tileset.json' />
+      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13103_minato-ku_2020_bldg_notexture/tileset.json' />
+      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13104_shinjuku-ku_2020_bldg_notexture/tileset.json' />
+      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13113_shibuya-ku_2020_bldg_notexture/tileset.json' />
     </Canvas>
   )
 }
 
-// export const Playground: FC = () => {
+// export const Container: FC = () => {
 //   // Coordinates of Tokyo station.
 //   const longitude = 139.7671
 //   const latitude = 35.6812

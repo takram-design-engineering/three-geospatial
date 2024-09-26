@@ -17,6 +17,8 @@
     "baseUrl": ".",
     "paths": {
       "@geovanni/3d-tiles": ["libs/3d-tiles/src/index.ts"],
+      "@geovanni/astronomy": ["libs/astronomy/src/index.ts"],
+      "@geovanni/atmosphere": ["libs/atmosphere/src/index.ts"],
       "@geovanni/core": ["libs/core/src/index.ts"],
       "@geovanni/effects": ["libs/effects/src/index.ts"],
       "@geovanni/storybook": ["libs/storybook/src/index.ts"],

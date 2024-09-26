@@ -1,9 +1,12 @@
 {
   "name": "@geovanni/core",
   "version": "0.0.1",
-  "dependencies": {},
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    }
+  },
   "main": "./index.js",
-  "module": "./index.mjs",
-  "typings": "./index.d.ts",
-  "private": true
+  "types": "./index.d.ts"
 }

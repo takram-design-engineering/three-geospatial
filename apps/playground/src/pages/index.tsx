@@ -3,11 +3,11 @@ import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 
 const Playground = dynamic(
-  async () => (await import('../components/Playground')).Playground,
+  async () => (await import('../containers/Playground')).Container,
   { ssr: false }
 )
 
-const Index: NextPage = () => {
+const Page: NextPage = () => {
   return (
     <Suspense>
       <Playground />
@@ -15,4 +15,4 @@ const Index: NextPage = () => {
   )
 }
 
-export default Index
+export default Page

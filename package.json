@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "nx dev playground",
+    "storybook": "nx storybook storybook --port=4400 --no-open",
     "clean": "nx reset && rm -rf dist tmp"
   },
   "dependencies": {
@@ -20,13 +21,17 @@
     "@react-three/drei": "9.112.0",
     "@react-three/fiber": "8.17.7",
     "@react-three/postprocessing": "2.16.2",
+    "astronomy-engine": "^2.1.19",
     "axios": "^1.7.7",
+    "date-fns": "^4.1.0",
+    "leva": "^0.9.35",
     "lodash": "^4.17.21",
     "n8ao": "^1.9.1",
     "next": "14.2.3",
     "postprocessing": "6.36.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "react-merge-refs": "^2.1.1",
     "react-use": "^17.5.1",
     "string-template": "^1.0.0",
     "suspend-react": "^0.1.3",
