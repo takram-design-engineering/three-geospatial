@@ -1,7 +1,7 @@
 {
   "name": "@geovanni/source",
   "version": "0.0.0",
-  "license": "MIT",
+  "license": "UNLICENSED (for now)",
   "private": true,
   "scripts": {
     "dev": "nx dev playground",
