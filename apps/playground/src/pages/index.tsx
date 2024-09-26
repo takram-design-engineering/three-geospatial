@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 
 const Playground = dynamic(
-  async () => (await import('../containers/Playground')).Container,
+  async () => (await import('../Playground')).Container,
   { ssr: false }
 )
 

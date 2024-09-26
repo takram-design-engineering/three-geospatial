@@ -9,10 +9,10 @@ import { type FC } from 'react'
 import { LocalFrame } from '@geovanni/core'
 import { SSAO } from '@geovanni/effects'
 
-import { Camera } from '../components/Camera'
-import { GooglePhotorealisticTiles } from '../components/GooglePhotorealisticTiles'
-import { SunLight } from '../components/SunLight'
-import { Tileset } from '../components/Tileset'
+import { Camera } from './components/Camera'
+import { GooglePhotorealisticTiles } from './components/GooglePhotorealisticTiles'
+import { SunLight } from './components/SunLight'
+import { Tileset } from './components/Tileset'
 
 export const Container: FC = () => {
   // Coordinates of Tokyo station.

@@ -37,6 +37,8 @@ export default {
   }
 } satisfies Meta<StoryProps>
 
+const MILLISECONDS_PER_DAY = 3600000
+
 const longitude = 139.7671
 const latitude = 35.6812
 const position = new Vector3().fromArray(
@@ -60,21 +62,21 @@ export const Basic: StoryFn = () => {
       step: 1
     },
     timeOfDay: {
-      value: (Date.now() - +startOfDay(Date.now())) / 3600000,
+      value: (Date.now() - +startOfDay(Date.now())) / MILLISECONDS_PER_DAY,
       min: 0,
       max: 24
     },
     now: button(() => {
       setClock({
         dayOfYear: getDayOfYear(new Date()),
-        timeOfDay: (Date.now() - +startOfDay(Date.now())) / 3600000
+        timeOfDay: (Date.now() - +startOfDay(Date.now())) / MILLISECONDS_PER_DAY
       })
     })
   }))
 
   const date = addMilliseconds(
     startOfDay(setDayOfYear(new Date(), dayOfYear)),
-    timeOfDay * 3600000
+    timeOfDay * MILLISECONDS_PER_DAY
   )
   const sunDirection = getSunDirectionECEF(date)
 
