@@ -1,39 +1,30 @@
-import { Ellipsoid } from '@math.gl/geospatial'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { useMemo, type FC } from 'react'
-import { Vector3 } from 'three'
+
+import { Cartographic, Ellipsoid } from '@geovanni/core'
 
 export const Camera: FC<{
-  longitude: number
-  latitude: number
-  height: number
-}> = ({ longitude, latitude, height }) => {
-  const position = useMemo(
-    () =>
-      Ellipsoid.WGS84.cartographicToCartesian([longitude, latitude, height]),
-    [longitude, latitude, height]
-  )
-
+  location: Cartographic
+}> = ({ location }) => {
+  const position = useMemo(() => location.toVector(), [location])
   const target = useMemo(
-    () => Ellipsoid.WGS84.cartographicToCartesian([longitude, latitude, 0]),
-    [longitude, latitude]
+    () => new Cartographic().copy(location).setHeight(0).toVector(),
+    [location]
   )
-
   const normal = useMemo(
-    () => new Vector3(...Ellipsoid.WGS84.geodeticSurfaceNormal(target)),
+    () => Ellipsoid.WGS84.geodeticSurfaceNormal(target),
     [target]
   )
-
   return (
     <>
       <PerspectiveCamera
         makeDefault
         near={1}
-        far={1e5}
-        position={position as [number, number, number]}
+        far={1e8}
+        position={position}
         up={normal}
       />
-      <OrbitControls target={target as [number, number, number]} />
+      <OrbitControls target={target} />
     </>
   )
 }

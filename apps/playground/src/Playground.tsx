@@ -24,14 +24,6 @@ const location = new Cartographic(
 )
 
 export const Container: FC = () => {
-  // Coordinates of Tokyo station.
-  const longitude = 139.7671
-  const latitude = 35.6812
-
-  // Derive geoidal height of the above here:
-  // https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh/calc_f.html
-  const geoidalHeight = 36.6624
-
   return (
     <Canvas shadows>
       <color attach='background' args={['#ffffff']} />
@@ -63,22 +55,18 @@ export const Container: FC = () => {
 }
 
 // export const Container: FC = () => {
-//   // Coordinates of Tokyo station.
-//   const longitude = 139.7671
-//   const latitude = 35.6812
-
 //   return (
 //     <Canvas shadows>
 //       <color attach='background' args={['#ffffff']} />
 //       <ambientLight intensity={0.5} />
 //       <fogExp2 attach='fog' color='white' density={0.00005} />
-//       <Camera longitude={longitude} latitude={latitude} height={4000} />
+//       <Camera location={new Cartographic().copy(location).setHeight(4000)} />
 //       <EffectComposer>
 //         <SSAO />
 //         <Bloom kernelSize={KernelSize.HUGE} />
 //         <ToneMapping />
 //       </EffectComposer>
-//       <LocalFrame longitude={longitude} latitude={latitude}>
+//       <LocalFrame location={new Cartographic().copy(location).setHeight(0)}>
 //         <SunLight />
 //       </LocalFrame>
 //       <GooglePhotorealisticTiles
