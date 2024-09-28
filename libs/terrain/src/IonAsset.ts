@@ -1,4 +1,6 @@
-import axios, { isAxiosError, type AxiosRequestConfig } from 'axios'
+import { isAxiosError, type AxiosRequestConfig } from 'axios'
+
+import { axios } from '@geovanni/core'
 
 // https://cesium.com/learn/ion/rest-api/#operation/getAssetEndpoint
 interface AssetEndpoint {
