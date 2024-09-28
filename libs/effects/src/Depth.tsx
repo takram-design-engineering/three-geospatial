@@ -6,7 +6,7 @@ import { wrapEffect } from '@react-three/postprocessing'
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform, type WebGLRenderer } from 'three'
 
-import fragmentShader from './shaders/depth.glsl'
+import fragmentShader from './shaders/depth.frag'
 
 export interface DepthEffectOptions {
   blendFunction?: BlendFunction

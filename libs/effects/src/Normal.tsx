@@ -8,7 +8,7 @@ import { BlendFunction, Effect } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { Uniform, type Texture } from 'three'
 
-import fragmentShader from './shaders/normal.glsl'
+import fragmentShader from './shaders/normal.frag'
 
 export interface NormalEffectOptions {
   blendFunction?: BlendFunction
