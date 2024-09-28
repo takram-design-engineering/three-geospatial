@@ -1,6 +1,8 @@
 import decode, { type QuantizedMeshData } from '@here/quantized-mesh-decoder'
 import stringTemplate from 'string-template'
 
+import { TilingScheme } from '@geovanni/core'
+
 import { IonAsset } from './IonAsset'
 
 interface Range {
@@ -29,6 +31,9 @@ export interface TileParams {
 }
 
 export class IonTerrain extends IonAsset {
+  // TODO: Construct from layer.
+  readonly tilingScheme = new TilingScheme()
+
   private layerPromise?: Promise<Layer>
 
   async fetchTile(params: TileParams): Promise<QuantizedMeshData> {
@@ -39,6 +44,9 @@ export class IonTerrain extends IonAsset {
         stringTemplate(template, { ...params, version: layer.version }),
         {
           responseType: 'arraybuffer',
+          params: {
+            extensions: 'octvertexnormals-watermask-metadata'
+          },
           headers: {
             Accept:
               'application/vnd.quantized-mesh;extensions=octvertexnormals-watermask-metadata'

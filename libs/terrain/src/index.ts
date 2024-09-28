@@ -1,3 +1,5 @@
+export * from './FlatTerrainMaterial'
+export * from './FlatTerrainTile'
 export * from './IonAsset'
 export * from './IonTerrain'
 export * from './TerrainGeometry'

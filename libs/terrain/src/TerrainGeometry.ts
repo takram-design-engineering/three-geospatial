@@ -1,6 +1,5 @@
 import { type QuantizedMeshData } from '@here/quantized-mesh-decoder'
 import {
-  Box3,
   BufferAttribute,
   BufferGeometry,
   Sphere,
@@ -9,23 +8,65 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
+import { Cartographic, lerp, type Rectangle } from '@geovanni/core'
+
+const cartographicScratch = new Cartographic()
+const vectorScratch = new Vector3()
+
 function createPositionAttribute(vertexData: Uint16Array): BufferAttribute {
   invariant(vertexData.length % 3 === 0)
   const array = new Int16Array(vertexData.length)
   const vertexCount = vertexData.length / 3
-  const x = vertexData.subarray(0, vertexCount)
-  const y = vertexData.subarray(vertexCount, vertexCount * 2)
-  const z = vertexData.subarray(vertexCount * 2, vertexCount * 3)
+  const us = vertexData.subarray(0, vertexCount)
+  const vs = vertexData.subarray(vertexCount, vertexCount * 2)
+  const heights = vertexData.subarray(vertexCount * 2, vertexCount * 3)
+
   for (
     let index = 0, vertexIndex = 0;
     index < array.length;
     index += 3, ++vertexIndex
   ) {
-    array[index] = x[vertexIndex]
-    array[index + 1] = y[vertexIndex]
-    array[index + 2] = z[vertexIndex]
+    array[index] = us[vertexIndex]
+    array[index + 1] = vs[vertexIndex]
+    array[index + 2] = heights[vertexIndex]
   }
   return new BufferAttribute(array, 3, true)
+}
+
+function createProjectedPositionAttribute(
+  vertexData: Uint16Array,
+  params: {
+    rectangle: Rectangle
+    minHeight: number
+    maxHeight: number
+  }
+): BufferAttribute {
+  invariant(vertexData.length % 3 === 0)
+  const array = new Float32Array(vertexData.length)
+  const vertexCount = vertexData.length / 3
+  const us = vertexData.subarray(0, vertexCount)
+  const vs = vertexData.subarray(vertexCount, vertexCount * 2)
+  const heights = vertexData.subarray(vertexCount * 2, vertexCount * 3)
+
+  const { rectangle, minHeight, maxHeight } = params
+  const { west, south, east, north } = rectangle
+  for (
+    let index = 0, vertexIndex = 0;
+    index < array.length;
+    index += 3, ++vertexIndex
+  ) {
+    const u = us[vertexIndex]
+    const v = vs[vertexIndex]
+    const height = heights[vertexIndex]
+    cartographicScratch.longitude = lerp(west, east, u / 0x7fff)
+    cartographicScratch.latitude = lerp(south, north, v / 0x7fff)
+    cartographicScratch.height = lerp(minHeight, maxHeight, height / 0x7fff)
+    const position = cartographicScratch.toVector(vectorScratch)
+    array[index] = position.x
+    array[index + 1] = position.y
+    array[index + 2] = position.z
+  }
+  return new BufferAttribute(array, 3)
 }
 
 function createUvAttribute(positionArray: TypedArray): BufferAttribute {
@@ -42,7 +83,9 @@ function createUvAttribute(positionArray: TypedArray): BufferAttribute {
   return new BufferAttribute(array, 2, true)
 }
 
-function createNormalAttribute(vertexNormals: Uint8Array): BufferAttribute {
+function createPackedEncodedNormalAttribute(
+  vertexNormals: Uint8Array
+): BufferAttribute {
   const array = new Float32Array(vertexNormals.length / 2)
   for (
     let index = 0, normalIndex = 0;
@@ -56,41 +99,50 @@ function createNormalAttribute(vertexNormals: Uint8Array): BufferAttribute {
   return new BufferAttribute(array, 1)
 }
 
-export interface TerrainGeometryParameters {
-  data?: QuantizedMeshData
-}
-
 export class TerrainGeometry extends BufferGeometry {
-  constructor({ data }: TerrainGeometryParameters = {}) {
+  constructor(
+    data: QuantizedMeshData,
+    rectangle: Rectangle,
+    projectToEllipsoid = true
+  ) {
     super()
-    this.setData(data)
-  }
 
-  setData(data?: QuantizedMeshData): void {
-    const { vertexData, triangleIndices, extensions } = data ?? {}
-    if (
-      vertexData == null ||
-      triangleIndices == null ||
-      extensions?.vertexNormals == null
-    ) {
-      this.deleteAttribute('position')
-      this.deleteAttribute('uv')
-      this.deleteAttribute('encodedNormal')
-      return
+    const { header, vertexData, triangleIndices, extensions } = data
+    if (vertexData == null || triangleIndices == null) {
+      throw new Error()
     }
 
-    const position = createPositionAttribute(vertexData)
+    const index = new BufferAttribute(triangleIndices, 1)
+    this.setIndex(index)
+    const position = projectToEllipsoid
+      ? createProjectedPositionAttribute(vertexData, {
+          rectangle,
+          minHeight: data.header.minHeight,
+          maxHeight: data.header.maxHeight
+        })
+      : createPositionAttribute(vertexData)
     this.setAttribute('position', position)
     const uv = createUvAttribute(position.array)
     this.setAttribute('uv', uv)
-    const index = new BufferAttribute(triangleIndices, 1)
-    this.setIndex(index)
-    const normal = createNormalAttribute(extensions.vertexNormals)
-    this.setAttribute('encodedNormal', normal)
 
-    this.boundingBox = new Box3(new Vector3(0, 0, 0), new Vector3(1, 1, 1))
-    this.boundingSphere = this.boundingBox.getBoundingSphere(
-      this.boundingSphere ?? new Sphere()
-    )
+    if (extensions?.vertexNormals != null) {
+      const normal = createPackedEncodedNormalAttribute(
+        extensions.vertexNormals
+      )
+      this.setAttribute('packedOctNormal', normal)
+    }
+
+    if (projectToEllipsoid) {
+      this.boundingSphere = new Sphere(
+        new Vector3(
+          header.boundingSphereCenterX,
+          header.boundingSphereCenterY,
+          header.boundingSphereCenterZ
+        ),
+        header.boundingSphereRadius
+      )
+    } else {
+      this.boundingSphere = new Sphere(new Vector3(0.5, 0.5, 0.5), 0.5)
+    }
   }
 }

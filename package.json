@@ -23,6 +23,7 @@
     "@react-three/postprocessing": "2.16.2",
     "astronomy-engine": "^2.1.19",
     "axios": "^1.7.7",
+    "axios-rate-limit": "^1.4.0",
     "date-fns": "^4.1.0",
     "leva": "^0.9.35",
     "lodash": "^4.17.21",
