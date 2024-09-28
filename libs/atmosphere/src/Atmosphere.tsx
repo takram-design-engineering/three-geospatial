@@ -1,12 +1,9 @@
 import { ScreenQuad } from '@react-three/drei'
-import { extend, type MaterialNode, type MeshProps } from '@react-three/fiber'
-import { forwardRef } from 'react'
+import { type MeshProps } from '@react-three/fiber'
+import { forwardRef, useMemo } from 'react'
 import { type Mesh, type Vector3 } from 'three'
 
-import {
-  AtmosphereMaterial,
-  type AtmosphereMaterialParameters
-} from './AtmosphereMaterial'
+import { AtmosphereMaterial } from './AtmosphereMaterial'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
@@ -18,28 +15,13 @@ import {
 } from './constants'
 import { usePrecomputedData } from './usePrecomputedData'
 
-declare module '@react-three/fiber' {
-  export interface ThreeElements {
-    atmosphereMaterial: MaterialNode<
-      AtmosphereMaterial,
-      [AtmosphereMaterialParameters]
-    >
-  }
-}
-
-extend({ AtmosphereMaterial })
-
 export interface AtmosphereProps extends MeshProps {
   sunDirection?: Vector3
   sunAngularRadius?: number
-  exposure?: number
 }
 
 export const Atmosphere = forwardRef<Mesh, AtmosphereProps>(
-  (
-    { sunDirection, sunAngularRadius, exposure, ...props } = {},
-    forwardedRef
-  ) => {
+  ({ sunDirection, sunAngularRadius, ...props } = {}, forwardedRef) => {
     const irradianceTexture = usePrecomputedData('/irradiance.bin', {
       width: IRRADIANCE_TEXTURE_WIDTH,
       height: IRRADIANCE_TEXTURE_HEIGHT
@@ -54,15 +36,16 @@ export const Atmosphere = forwardRef<Mesh, AtmosphereProps>(
       height: TRANSMITTANCE_TEXTURE_HEIGHT
     })
 
+    const material = useMemo(() => new AtmosphereMaterial(), [])
     return (
       <ScreenQuad {...props} ref={forwardedRef}>
-        <atmosphereMaterial
+        <primitive
+          object={material}
           irradianceTexture={irradianceTexture}
           scatteringTexture={scatteringTexture}
           transmittanceTexture={transmittanceTexture}
           sunDirection={sunDirection}
           sunAngularRadius={sunAngularRadius}
-          exposure={exposure}
         />
       </ScreenQuad>
     )

@@ -28,6 +28,7 @@ import {
 } from '@geovanni/core'
 import { Depth, Normal } from '@geovanni/effects'
 
+import { AerialPerspective } from './AerialPerspective'
 import { Atmosphere } from './Atmosphere'
 
 interface StoryProps {
@@ -49,9 +50,10 @@ const position = location.toVector()
 const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
 
 export const Basic: StoryFn = () => {
-  const { normal, depth } = useControls('rendering', {
+  const { normal, depth, exposure } = useControls('rendering', {
     normal: false,
-    depth: false
+    depth: false,
+    exposure: { value: 10, min: 0, max: 50 }
   })
 
   const [{ dayOfYear, timeOfDay }, setClock] = useControls('clock', () => ({
@@ -83,33 +85,21 @@ export const Basic: StoryFn = () => {
   return (
     <>
       <Canvas
-        gl={{ logarithmicDepthBuffer: true }}
-        camera={{ near: 1, far: 1e8, position, up }}
+        gl={{
+          logarithmicDepthBuffer: true,
+          toneMappingExposure: exposure
+        }}
+        camera={{
+          near: 1,
+          far: 1e8,
+          position,
+          up
+        }}
       >
-        <ambientLight intensity={0.1} />
-        <directionalLight position={sunDirection} intensity={0.9} />
         <OrbitControls target={position} minDistance={100} />
-        <LocalFrame location={location}>
-          <Sphere args={[10, 64, 32]} position={[0, 0, 10]}>
-            <meshStandardMaterial color='white' />
-          </Sphere>
-        </LocalFrame>
-        <Sphere
-          args={[Ellipsoid.WGS84.minimumRadius, 360, 180]}
-          renderOrder={-2}
-        >
-          <meshBasicMaterial color='black' />
-        </Sphere>
-        <Atmosphere sunDirection={sunDirection} renderOrder={-1} />
-        <EffectComposer enableNormalPass>
-          {[
-            normal && <Normal key='normal' />,
-            depth && <Depth key='depth' useTurbo />,
-            !normal && !depth && (
-              <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-            )
-          ].filter(isNotFalse)}
-        </EffectComposer>
+        <GizmoHelper alignment='top-left' renderPriority={2}>
+          <GizmoViewport />
+        </GizmoHelper>
         <Grid
           infiniteGrid
           fadeDistance={1e8}
@@ -122,9 +112,33 @@ export const Basic: StoryFn = () => {
           side={DoubleSide}
           rotation={[Math.PI / 2, 0, 0]}
         />
-        <GizmoHelper alignment='top-left' renderPriority={2}>
-          <GizmoViewport />
-        </GizmoHelper>
+        <Atmosphere sunDirection={sunDirection} renderOrder={-1} />
+        <Sphere
+          args={[Ellipsoid.WGS84.minimumRadius, 360, 180]}
+          renderOrder={-2}
+        >
+          <meshBasicMaterial color='black' />
+        </Sphere>
+        <ambientLight intensity={0.02} />
+        <directionalLight position={sunDirection} intensity={0.4} />
+        <LocalFrame location={location}>
+          <Sphere args={[10, 64, 32]} position={[0, 0, 10]}>
+            <meshStandardMaterial color='white' />
+          </Sphere>
+        </LocalFrame>
+        <EffectComposer enableNormalPass>
+          {[
+            <AerialPerspective key='aerialPerspective' />,
+            normal && <Normal key='normal' />,
+            depth && <Depth key='depth' useTurbo />,
+            !normal && !depth && (
+              <ToneMapping
+                key='toneMapping'
+                mode={ToneMappingMode.ACES_FILMIC}
+              />
+            )
+          ].filter(isNotFalse)}
+        </EffectComposer>
       </Canvas>
       <Leva
         theme={{

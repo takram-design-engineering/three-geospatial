@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 /// <reference types="vite-plugin-glsl/ext" />
 
 import { applyProps } from '@react-three/fiber'
@@ -5,7 +7,6 @@ import { EffectComposerContext } from '@react-three/postprocessing'
 import { BlendFunction, Effect } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { Uniform, type Texture } from 'three'
-import invariant from 'tiny-invariant'
 
 import fragmentShader from './shaders/normal.glsl'
 
@@ -26,22 +27,18 @@ export class NormalEffect extends Effect {
   }
 
   get normalBuffer(): Texture | null {
-    const uniform = this.uniforms.get('normalBuffer')
-    invariant(uniform != null)
-    return uniform.value
+    return this.uniforms.get('normalBuffer')!.value
   }
 
   set normalBuffer(value: Texture | null) {
-    const uniform = this.uniforms.get('normalBuffer')
-    invariant(uniform != null)
-    uniform.value = value
+    this.uniforms.get('normalBuffer')!.value = value
   }
 }
 
 export const Normal = forwardRef<
   Effect,
   Omit<NormalEffectOptions, 'normalBuffer'>
->((props, ref) => {
+>((props, forwardedRef) => {
   const effect = useMemo(() => new NormalEffect(), [])
   applyProps(effect, props)
 
@@ -50,5 +47,5 @@ export const Normal = forwardRef<
     effect.normalBuffer = normalPass?.texture ?? null
   }, [effect, normalPass])
 
-  return <primitive ref={ref} object={effect} />
+  return <primitive ref={forwardedRef} object={effect} />
 })

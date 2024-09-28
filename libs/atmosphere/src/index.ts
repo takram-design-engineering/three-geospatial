@@ -1,3 +1,5 @@
+export * from './AerialPerspective'
+export * from './AerialPerspectiveEffect'
 export * from './Atmosphere'
 export * from './AtmosphereMaterial'
 export * from './usePrecomputedData'

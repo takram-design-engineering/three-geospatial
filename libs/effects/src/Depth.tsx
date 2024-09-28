@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 /// <reference types="vite-plugin-glsl/ext" />
 
 import { wrapEffect } from '@react-three/postprocessing'
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform, type WebGLRenderer } from 'three'
-import invariant from 'tiny-invariant'
 
 import fragmentShader from './shaders/depth.glsl'
 
@@ -61,27 +62,19 @@ export class DepthEffect extends Effect {
   }
 
   get near(): number {
-    const uniform = this.uniforms.get('near')
-    invariant(uniform != null)
-    return uniform.value
+    return this.uniforms.get('near')!.value
   }
 
   set near(value: number) {
-    const uniform = this.uniforms.get('near')
-    invariant(uniform != null)
-    uniform.value = value
+    this.uniforms.get('near')!.value = value
   }
 
   get far(): number {
-    const uniform = this.uniforms.get('far')
-    invariant(uniform != null)
-    return uniform.value
+    return this.uniforms.get('far')!.value
   }
 
   set far(value: number) {
-    const uniform = this.uniforms.get('far')
-    invariant(uniform != null)
-    uniform.value = value
+    this.uniforms.get('far')!.value = value
   }
 }
 
