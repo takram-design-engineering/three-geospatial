@@ -3,10 +3,23 @@ import { Vector3 } from 'three'
 import { Ellipsoid } from './Ellipsoid'
 import { projectToEllipsoid } from './projectToEllipsoid'
 
+export type CartographicTuple = [number, number, number]
+
+export interface CartographicLike {
+  readonly longitude: number
+  readonly latitude: number
+  readonly height: number
+}
+
 const vectorScratch1 = new Vector3()
 const vectorScratch2 = new Vector3()
 
 export class Cartographic {
+  static readonly MIN_LONGITUDE = -Math.PI
+  static readonly MAX_LONGITUDE = Math.PI
+  static readonly MIN_LATITUDE = -Math.PI / 2
+  static readonly MAX_LATITUDE = Math.PI / 2
+
   constructor(
     public longitude = 0,
     public latitude = 0,
@@ -24,14 +37,14 @@ export class Cartographic {
     return new Cartographic(this.longitude, this.latitude, this.height)
   }
 
-  copy(other: Cartographic): this {
+  copy(other: CartographicLike): this {
     this.longitude = other.longitude
     this.latitude = other.latitude
     this.height = other.height
     return this
   }
 
-  equals(other: Cartographic): boolean {
+  equals(other: CartographicLike): boolean {
     return (
       other.longitude === this.longitude &&
       other.latitude === this.latitude &&
@@ -54,11 +67,21 @@ export class Cartographic {
     return this
   }
 
+  normalize(): this {
+    if (this.longitude < Cartographic.MIN_LONGITUDE) {
+      this.longitude += Math.PI * 2
+    }
+    return this
+  }
+
   setFromVector(
     vector: Vector3,
-    ellipsoid = Ellipsoid.WGS84,
-    centerTolerance?: number
+    options: {
+      ellipsoid?: Ellipsoid
+      centerTolerance?: number
+    } = {}
   ): this {
+    const { ellipsoid = Ellipsoid.WGS84, centerTolerance } = options
     const oneOverRadiiSquared = ellipsoid.oneOverRadiiSquared(vectorScratch1)
     const projection = projectToEllipsoid(
       vector,
@@ -79,7 +102,13 @@ export class Cartographic {
     return this
   }
 
-  toVector(ellipsoid = Ellipsoid.WGS84, result = new Vector3()): Vector3 {
+  toVector(
+    result = new Vector3(),
+    options: {
+      ellipsoid?: Ellipsoid
+    } = {}
+  ): Vector3 {
+    const { ellipsoid = Ellipsoid.WGS84 } = options
     const radiiSquared = vectorScratch1.multiplyVectors(
       ellipsoid.radii,
       ellipsoid.radii

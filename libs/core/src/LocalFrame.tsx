@@ -2,29 +2,22 @@ import { Ellipsoid } from '@math.gl/geospatial'
 import { createContext, useMemo, type FC, type ReactNode } from 'react'
 import { Matrix4, Quaternion } from 'three'
 
-import { type Tuple3 } from './types'
+import { type Cartographic } from './Cartographic'
 
 export const LocalFrameContext = createContext<Matrix4 | undefined>(undefined)
 
 export const LocalFrame: FC<{
-  longitude: number
-  latitude: number
+  location: Cartographic
   children?: ReactNode
-}> = ({ longitude, latitude, children }) => {
-  const position = useMemo(
-    () =>
-      Ellipsoid.WGS84.cartographicToCartesian([
-        longitude,
-        latitude,
-        0
-      ]) as Tuple3,
-    [longitude, latitude]
-  )
+}> = ({ location, children }) => {
+  // TODO
+  const position = useMemo(() => location.toVector(), [location])
 
   const matrix = useMemo(
     () =>
       new Matrix4().fromArray(
-        Ellipsoid.WGS84.eastNorthUpToFixedFrame(position)
+        // TODO
+        Ellipsoid.WGS84.eastNorthUpToFixedFrame(position.toArray())
       ),
     [position]
   )

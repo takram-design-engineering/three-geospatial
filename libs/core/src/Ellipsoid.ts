@@ -3,7 +3,9 @@ import { Vector3 } from 'three'
 import { closeTo } from './math'
 
 export class Ellipsoid {
-  static WGS84 = new Ellipsoid(6378137, 6378137, 6356752.3142451793)
+  static WGS84 = Object.freeze(
+    new Ellipsoid(6378137, 6378137, 6356752.3142451793)
+  )
 
   readonly radii: Vector3
 

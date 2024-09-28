@@ -1,10 +1,42 @@
+import { Cartographic } from './Cartographic'
+
+export type RectangleTuple = [number, number, number, number]
+
+export interface RectangleLike {
+  readonly west: number
+  readonly south: number
+  readonly east: number
+  readonly north: number
+}
+
 export class Rectangle {
+  static readonly MAX: Readonly<Rectangle> = Object.freeze(
+    new Rectangle(
+      Cartographic.MIN_LONGITUDE,
+      Cartographic.MIN_LATITUDE,
+      Cartographic.MAX_LONGITUDE,
+      Cartographic.MAX_LATITUDE
+    )
+  )
+
   constructor(
     public west = 0,
     public south = 0,
     public east = 0,
     public north = 0
   ) {}
+
+  get width(): number {
+    let east = this.east
+    if (east < this.west) {
+      east += Math.PI * 2
+    }
+    return east - this.west
+  }
+
+  get height(): number {
+    return this.north - this.south
+  }
 
   set(west: number, south: number, east: number, north: number): this {
     this.west = west
@@ -18,7 +50,7 @@ export class Rectangle {
     return new Rectangle(this.west, this.south, this.east, this.north)
   }
 
-  copy(other: Rectangle): this {
+  copy(other: RectangleLike): this {
     this.west = other.west
     this.south = other.south
     this.east = other.east
@@ -26,7 +58,7 @@ export class Rectangle {
     return this
   }
 
-  equals(other: Rectangle): boolean {
+  equals(other: RectangleLike): boolean {
     return (
       other.west === this.west &&
       other.south === this.south &&
