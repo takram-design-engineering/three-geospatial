@@ -6,9 +6,10 @@ export const SunLight: FC = () => {
   return (
     <>
       <object3D ref={setTarget} position={[0, 0, 0]} />
+      <ambientLight intensity={0.1} />
       <directionalLight
         position={[500, 1000, 1000]}
-        intensity={1}
+        intensity={0.9}
         castShadow
         shadow-mapSize={[8192, 8192]}
         target={target ?? undefined}

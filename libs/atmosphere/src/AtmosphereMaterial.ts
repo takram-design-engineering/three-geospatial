@@ -18,9 +18,9 @@ import {
 
 import { METER_TO_LENGTH_UNIT } from './constants'
 
-import atmosphereShader from './shaders/atmosphereShader.glsl'
-import fragmentShader from './shaders/fragmentShader.glsl'
-import vertexShader from './shaders/vertexShader.glsl'
+import fragmentShader from './shaders/atmosphere.frag'
+import vertexShader from './shaders/atmosphere.vert'
+import atmosphericScattering from './shaders/atmosphericScattering.glsl'
 
 export interface AtmosphereMaterialParameters
   extends Partial<ShaderMaterialParameters> {
@@ -29,11 +29,10 @@ export interface AtmosphereMaterialParameters
   transmittanceTexture?: Texture
   sunDirection?: Vector3
   sunAngularRadius?: number
-  exposure?: number
 }
 
 export class AtmosphereMaterial extends RawShaderMaterial {
-  #sunAngularRadius!: number
+  private _sunAngularRadius!: number
 
   constructor({
     irradianceTexture,
@@ -41,25 +40,23 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     transmittanceTexture,
     sunDirection,
     sunAngularRadius = 0.00465, // 16 minutes of arc
-    exposure = 10,
     ...params
   }: AtmosphereMaterialParameters = {}) {
     super({
       ...params,
       glslVersion: '300 es',
-      fragmentShader: `${atmosphereShader}${fragmentShader}`,
+      fragmentShader: `${atmosphericScattering}${fragmentShader}`,
       vertexShader,
       uniforms: {
         irradiance_texture: new Uniform(irradianceTexture),
         scattering_texture: new Uniform(scatteringTexture),
         single_mie_scattering_texture: new Uniform(scatteringTexture),
         transmittance_texture: new Uniform(transmittanceTexture),
-        projectionMatrixInverse: new Uniform(new Matrix4()),
-        viewMatrixInverse: new Uniform(new Matrix4()),
+        inverseProjectionMatrix: new Uniform(new Matrix4()),
+        inverseViewMatrix: new Uniform(new Matrix4()),
         cameraPosition: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
-        sunSize: new Uniform(new Vector2()),
-        exposure: new Uniform(exposure)
+        sunSize: new Uniform(new Vector2())
       },
       depthWrite: false,
       depthTest: false
@@ -69,7 +66,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     }
   }
 
-  onBeforeRender(
+  override onBeforeRender(
     renderer: WebGLRenderer,
     scene: Scene,
     camera: Camera,
@@ -78,11 +75,11 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     group: Group
   ): void {
     const uniforms = this.uniforms
-    uniforms.viewMatrixInverse.value.copy(camera.matrixWorld)
-    uniforms.viewMatrixInverse.value.elements[12] *= METER_TO_LENGTH_UNIT
-    uniforms.viewMatrixInverse.value.elements[13] *= METER_TO_LENGTH_UNIT
-    uniforms.viewMatrixInverse.value.elements[14] *= METER_TO_LENGTH_UNIT
-    uniforms.projectionMatrixInverse.value.copy(camera.projectionMatrixInverse)
+    uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
+    uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
+    uniforms.inverseViewMatrix.value.elements[12] *= METER_TO_LENGTH_UNIT
+    uniforms.inverseViewMatrix.value.elements[13] *= METER_TO_LENGTH_UNIT
+    uniforms.inverseViewMatrix.value.elements[14] *= METER_TO_LENGTH_UNIT
     uniforms.cameraPosition.value
       .copy(camera.position)
       .multiplyScalar(METER_TO_LENGTH_UNIT)
@@ -122,20 +119,11 @@ export class AtmosphereMaterial extends RawShaderMaterial {
   }
 
   get sunAngularRadius(): number {
-    return this.#sunAngularRadius
+    return this._sunAngularRadius
   }
 
   set sunAngularRadius(value: number) {
     this.uniforms.sunSize.value.set(Math.tan(value), Math.cos(value))
-    this.#sunAngularRadius = value
-  }
-
-  // TODO: Move to post-processing effect.
-  get exposure(): number {
-    return this.uniforms.exposure.value
-  }
-
-  set exposure(value: number) {
-    this.uniforms.exposure.value = value
+    this._sunAngularRadius = value
   }
 }

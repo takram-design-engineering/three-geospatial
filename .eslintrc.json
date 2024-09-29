@@ -43,10 +43,7 @@
         "@typescript-eslint/no-unsafe-argument": "off",
 
         // {} is semantically different from the "object" and "Record".
-        "@typescript-eslint/ban-types": "off",
-
-        // I rarely need those names.
-        "react/display-name": "off"
+        "@typescript-eslint/ban-types": "off"
       }
     },
     {

@@ -1,13 +1,16 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 /// <reference types="vite-plugin-glsl/ext" />
 
-import { applyProps } from '@react-three/fiber'
-import { EffectComposerContext } from '@react-three/postprocessing'
+import {
+  EffectComposerContext,
+  type EffectProps
+} from '@react-three/postprocessing'
 import { BlendFunction, Effect } from 'postprocessing'
-import { forwardRef, useContext, useEffect, useMemo } from 'react'
+import { forwardRef, useContext, useMemo } from 'react'
 import { Uniform, type Texture } from 'three'
-import invariant from 'tiny-invariant'
 
-import fragmentShader from './shaders/normal.glsl'
+import fragmentShader from './shaders/normal.frag'
 
 export interface NormalEffectOptions {
   blendFunction?: BlendFunction
@@ -16,7 +19,7 @@ export interface NormalEffectOptions {
 
 export class NormalEffect extends Effect {
   constructor({
-    blendFunction = BlendFunction.SRC,
+    blendFunction = BlendFunction.NORMAL,
     normalBuffer = null
   }: NormalEffectOptions = {}) {
     super('NormalEffect', fragmentShader, {
@@ -26,29 +29,31 @@ export class NormalEffect extends Effect {
   }
 
   get normalBuffer(): Texture | null {
-    const uniform = this.uniforms.get('normalBuffer')
-    invariant(uniform != null)
-    return uniform.value
+    return this.uniforms.get('normalBuffer')!.value
   }
 
   set normalBuffer(value: Texture | null) {
-    const uniform = this.uniforms.get('normalBuffer')
-    invariant(uniform != null)
-    uniform.value = value
+    this.uniforms.get('normalBuffer')!.value = value
   }
 }
 
-export const Normal = forwardRef<
-  Effect,
-  Omit<NormalEffectOptions, 'normalBuffer'>
->((props, ref) => {
-  const effect = useMemo(() => new NormalEffect(), [])
-  applyProps(effect, props)
+export interface NormalProps extends EffectProps<typeof NormalEffect> {}
 
+export const Normal = forwardRef<NormalEffect, NormalProps>(function Normal(
+  { blendFunction, ...props },
+  forwardedRef
+) {
+  const effect = useMemo(
+    () => new NormalEffect({ blendFunction }),
+    [blendFunction]
+  )
   const { normalPass } = useContext(EffectComposerContext)
-  useEffect(() => {
-    effect.normalBuffer = normalPass?.texture ?? null
-  }, [effect, normalPass])
-
-  return <primitive ref={ref} object={effect} />
+  return (
+    <primitive
+      ref={forwardedRef}
+      object={effect}
+      normalBuffer={normalPass?.texture ?? null}
+      {...props}
+    />
+  )
 })

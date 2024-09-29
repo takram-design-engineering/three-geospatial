@@ -17,7 +17,7 @@ export interface TerrainTileProps extends MeshProps {
 }
 
 export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
-  ({ terrain, x, y, z, ...props }, forwardedRef) => {
+  function TerrainTile({ terrain, x, y, z, ...props }, forwardedRef) {
     // TODO: Replace with a more advanced cache.
     const data = suspend(
       async () => await terrain.fetchTile({ x, y, z }),
@@ -40,7 +40,7 @@ export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
     return (
       <mesh ref={forwardedRef} {...props}>
         <primitive object={geometry} />
-        <primitive object={material} />
+        <primitive object={material} wireframe />
       </mesh>
     )
   }

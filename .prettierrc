@@ -16,9 +16,9 @@
     "",
     "^@geovanni/.*$",
     "",
-    "^(?!.*\\.(css|glsl)$)[./].*$",
+    "^(?!.*\\.(css|glsl|frag|vert)$)[./].*$",
     "",
-    "\\.glsl$",
+    "\\.(glsl|frag|vert)$",
     "",
     "\\.css$"
   ],
@@ -31,7 +31,7 @@
   "importOrderTypeScriptVersion": "5.0.0",
   "overrides": [
     {
-      "files": ["*.glsl"],
+      "files": ["*.glsl", "*.frag", "*.vert"],
       "options": { "parser": "glsl-parser" }
     }
   ]

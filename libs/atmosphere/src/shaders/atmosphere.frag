@@ -1,10 +1,9 @@
 uniform vec3 cameraPosition;
 uniform vec3 sunDirection;
 uniform vec2 sunSize;
-uniform float exposure;
 
 in vec4 worldDirection;
-layout(location = 0) out vec4 color;
+layout(location = 0) out vec4 outputColor;
 
 void main() {
   vec3 viewDirection = normalize(worldDirection.xyz);
@@ -19,6 +18,5 @@ void main() {
   if (dot(viewDirection, sunDirection) > sunSize.y) {
     radiance = radiance + transmittance * GetSolarRadiance();
   }
-  color.rgb = radiance * exposure;
-  color.a = 1.0;
+  outputColor = vec4(radiance, 1.0);
 }

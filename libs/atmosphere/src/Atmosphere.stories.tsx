@@ -1,139 +1,70 @@
-import {
-  GizmoHelper,
-  GizmoViewport,
-  Grid,
-  OrbitControls,
-  Sphere
-} from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
+import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type Meta, type StoryFn } from '@storybook/react'
-import {
-  addMilliseconds,
-  getDayOfYear,
-  setDayOfYear,
-  startOfDay
-} from 'date-fns'
-import { button, Leva, useControls } from 'leva'
+import { parseISO } from 'date-fns'
+import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
-import { DoubleSide } from 'three'
+import { useRef, type FC } from 'react'
+import { Vector3 } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
-import {
-  Cartographic,
-  Ellipsoid,
-  isNotFalse,
-  LocalFrame,
-  radians
-} from '@geovanni/core'
-import { Depth, Normal } from '@geovanni/effects'
+import { Cartographic, Ellipsoid, radians } from '@geovanni/core'
 
-import { Atmosphere } from './Atmosphere'
-
-interface StoryProps {
-  dayOfYear: number
-  timeOfDay: number
-}
+import { Atmosphere, type AtmosphereImpl } from './Atmosphere'
 
 export default {
   title: 'atmosphere/Atmosphere',
   parameters: {
     layout: 'fullscreen'
   }
-} satisfies Meta<StoryProps>
-
-const MILLISECONDS_PER_DAY = 3600000
+} satisfies Meta
 
 const location = new Cartographic(radians(139.7671), radians(35.6812))
 const position = location.toVector()
 const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
 
-export const Basic: StoryFn = () => {
-  const { normal, depth } = useControls('rendering', {
-    normal: false,
-    depth: false
+const Scene: FC = () => {
+  const dateRef = useRef(+parseISO('2000-07-01T05:00:00+09:00'))
+  const sunDirectionRef = useRef(new Vector3())
+  const atmosphereRef = useRef<AtmosphereImpl>(null)
+
+  useFrame(() => {
+    if (atmosphereRef.current == null) {
+      return
+    }
+    getSunDirectionECEF(new Date(dateRef.current), sunDirectionRef.current)
+    atmosphereRef.current.material.sunDirection = sunDirectionRef.current
+    dateRef.current += 100000
   })
-
-  const [{ dayOfYear, timeOfDay }, setClock] = useControls('clock', () => ({
-    dayOfYear: {
-      value: getDayOfYear(new Date()),
-      min: 1,
-      max: 365,
-      step: 1
-    },
-    timeOfDay: {
-      value: (Date.now() - +startOfDay(Date.now())) / MILLISECONDS_PER_DAY,
-      min: 0,
-      max: 24
-    },
-    now: button(() => {
-      setClock({
-        dayOfYear: getDayOfYear(new Date()),
-        timeOfDay: (Date.now() - +startOfDay(Date.now())) / MILLISECONDS_PER_DAY
-      })
-    })
-  }))
-
-  const date = addMilliseconds(
-    startOfDay(setDayOfYear(new Date(), dayOfYear)),
-    timeOfDay * MILLISECONDS_PER_DAY
-  )
-  const sunDirection = getSunDirectionECEF(date)
 
   return (
     <>
-      <Canvas
-        gl={{ logarithmicDepthBuffer: true }}
-        camera={{ near: 1, far: 1e8, position, up }}
-      >
-        <ambientLight intensity={0.1} />
-        <directionalLight position={sunDirection} intensity={0.9} />
-        <OrbitControls target={position} minDistance={100} />
-        <LocalFrame location={location}>
-          <Sphere args={[10, 64, 32]} position={[0, 0, 10]}>
-            <meshStandardMaterial color='white' />
-          </Sphere>
-        </LocalFrame>
-        <Sphere
-          args={[Ellipsoid.WGS84.minimumRadius, 360, 180]}
-          renderOrder={-2}
-        >
-          <meshBasicMaterial color='black' />
-        </Sphere>
-        <Atmosphere sunDirection={sunDirection} renderOrder={-1} />
-        <EffectComposer enableNormalPass>
-          {[
-            normal && <Normal key='normal' />,
-            depth && <Depth key='depth' useTurbo />,
-            !normal && !depth && (
-              <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-            )
-          ].filter(isNotFalse)}
-        </EffectComposer>
-        <Grid
-          infiniteGrid
-          fadeDistance={1e8}
-          cellSize={1e6}
-          cellColor='white'
-          cellThickness={1}
-          sectionThickness={0}
-          fadeStrength={10}
-          fadeFrom={0}
-          side={DoubleSide}
-          rotation={[Math.PI / 2, 0, 0]}
-        />
-        <GizmoHelper alignment='top-left' renderPriority={2}>
-          <GizmoViewport />
-        </GizmoHelper>
-      </Canvas>
-      <Leva
-        theme={{
-          sizes: {
-            rootWidth: '380px',
-            controlWidth: '260px'
-          }
-        }}
-      />
+      <OrbitControls target={position} minDistance={1000} />
+      <GizmoHelper alignment='top-left' renderPriority={2}>
+        <GizmoViewport />
+      </GizmoHelper>
+      <Atmosphere ref={atmosphereRef} renderOrder={-1} />
+      <EffectComposer multisampling={0}>
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      </EffectComposer>
     </>
+  )
+}
+
+export const Basic: StoryFn = () => {
+  const { exposure } = useControls('gl', {
+    exposure: { value: 10, min: 0, max: 100 }
+  })
+  return (
+    <Canvas
+      gl={{
+        logarithmicDepthBuffer: true,
+        toneMappingExposure: exposure
+      }}
+      camera={{ near: 1, far: 1e8, position, up }}
+    >
+      <Scene />
+    </Canvas>
   )
 }
