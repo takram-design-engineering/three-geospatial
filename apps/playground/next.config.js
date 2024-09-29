@@ -20,7 +20,7 @@ const nextConfig = {
 
   webpack: config => {
     config.module.rules.push({
-      test: /\.glsl$/,
+      test: /\.(glsl|frag|vert)$/,
       use: {
         loader: 'raw-loader'
       }
