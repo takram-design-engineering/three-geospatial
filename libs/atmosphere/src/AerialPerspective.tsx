@@ -22,7 +22,7 @@ export interface AerialPerspectiveProps
 export const AerialPerspective = forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
->((props, forwardedRef) => {
+>(function AerialPerspective(props, forwardedRef) {
   // Make textures shared.
   const irradianceTexture = usePrecomputedData('/irradiance.bin', {
     width: IRRADIANCE_TEXTURE_WIDTH,

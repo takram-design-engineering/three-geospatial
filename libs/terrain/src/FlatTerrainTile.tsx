@@ -18,7 +18,10 @@ export interface FlatTerrainTileProps extends MeshProps {
 }
 
 export const FlatTerrainTile = forwardRef<Mesh, FlatTerrainTileProps>(
-  ({ terrain, x, y, z, heightScale = 1, ...props }, forwardedRef) => {
+  function FlatTerrainTile(
+    { terrain, x, y, z, heightScale = 1, ...props },
+    forwardedRef
+  ) {
     // TODO: Replace with a more advanced cache.
     const data = suspend(
       async () => await terrain.fetchTile({ x, y, z }),

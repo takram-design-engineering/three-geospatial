@@ -40,7 +40,7 @@ export class NormalEffect extends Effect {
 export interface NormalProps extends EffectProps<typeof NormalEffect> {}
 
 export const Normal = forwardRef<NormalEffect, NormalProps>(
-  (props, forwardedRef) => {
+  function Normal(props, forwardedRef) {
     const effect = useMemo(() => new NormalEffect(), [])
     const { normalPass } = useContext(EffectComposerContext)
     return (

@@ -32,7 +32,10 @@ export interface AtmosphereProps extends MeshProps {
 }
 
 export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
-  ({ sunDirection, sunAngularRadius, ...props } = {}, forwardedRef) => {
+  function Atmosphere(
+    { sunDirection, sunAngularRadius, ...props } = {},
+    forwardedRef
+  ) {
     // Make textures shared.
     const irradianceTexture = usePrecomputedData('/irradiance.bin', {
       width: IRRADIANCE_TEXTURE_WIDTH,
