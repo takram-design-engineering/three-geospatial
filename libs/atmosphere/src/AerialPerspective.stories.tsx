@@ -8,7 +8,6 @@ import {
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type Meta, type StoryFn } from '@storybook/react'
-import { parseISO } from 'date-fns'
 import { useControls } from 'leva'
 import { BlendFunction, ToneMappingMode } from 'postprocessing'
 import { useRef, type FC } from 'react'
@@ -21,6 +20,7 @@ import { Depth, Normal } from '@geovanni/effects'
 import { AerialPerspective } from './AerialPerspective'
 import { type AerialPerspectiveEffect } from './AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from './Atmosphere'
+import { useMotionDate } from './storybook/useMotionDate'
 
 export default {
   title: 'atmosphere/AerialPerspective',
@@ -34,12 +34,12 @@ const position = location.toVector()
 const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
 
 const Scene: FC = () => {
-  const { normal, depth } = useControls('pass', {
+  const { normal, depth } = useControls('effect', {
     normal: false,
     depth: false
   })
 
-  const dateRef = useRef(+parseISO('2000-07-01T05:00:00+09:00'))
+  const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
@@ -48,10 +48,9 @@ const Scene: FC = () => {
     if (atmosphereRef.current == null || aerialPerspectiveRef.current == null) {
       return
     }
-    getSunDirectionECEF(new Date(dateRef.current), sunDirectionRef.current)
+    getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
     atmosphereRef.current.material.sunDirection = sunDirectionRef.current
     aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
-    dateRef.current += 100000
   })
 
   return (

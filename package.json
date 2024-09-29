@@ -25,6 +25,7 @@
     "axios": "^1.7.7",
     "axios-rate-limit": "^1.4.0",
     "date-fns": "^4.1.0",
+    "framer-motion": "^11.9.0",
     "leva": "^0.9.35",
     "lodash": "^4.17.21",
     "n8ao": "^1.9.1",

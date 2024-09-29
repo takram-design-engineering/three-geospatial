@@ -2,7 +2,6 @@ import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type Meta, type StoryFn } from '@storybook/react'
-import { parseISO } from 'date-fns'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useRef, type FC } from 'react'
@@ -12,6 +11,7 @@ import { getSunDirectionECEF } from '@geovanni/astronomy'
 import { Cartographic, Ellipsoid, radians } from '@geovanni/core'
 
 import { Atmosphere, type AtmosphereImpl } from './Atmosphere'
+import { useMotionDate } from './storybook/useMotionDate'
 
 export default {
   title: 'atmosphere/Atmosphere',
@@ -25,7 +25,7 @@ const position = location.toVector()
 const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
 
 const Scene: FC = () => {
-  const dateRef = useRef(+parseISO('2000-07-01T05:00:00+09:00'))
+  const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
 
@@ -33,9 +33,8 @@ const Scene: FC = () => {
     if (atmosphereRef.current == null) {
       return
     }
-    getSunDirectionECEF(new Date(dateRef.current), sunDirectionRef.current)
+    getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
     atmosphereRef.current.material.sunDirection = sunDirectionRef.current
-    dateRef.current += 100000
   })
 
   return (
