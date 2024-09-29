@@ -1539,6 +1539,59 @@ RadianceSpectrum GetSkyRadianceToPoint(
   scattering = scattering - shadow_transmittance * scattering_p;
   single_mie_scattering =
     single_mie_scattering - shadow_transmittance * single_mie_scattering_p;
+
+  // See https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32
+  if (!ray_r_mu_intersects_ground) {
+    const float EPS = 0.004;
+    float muHoriz = -sqrt(
+      1.0 - atmosphere.bottom_radius / r * (atmosphere.bottom_radius / r)
+    );
+    if (abs(mu - muHoriz) < EPS) {
+      float a = (mu - muHoriz + EPS) / (2.0 * EPS);
+      mu = muHoriz + EPS;
+      IrradianceSpectrum single_mie_scattering0;
+      IrradianceSpectrum single_mie_scattering1;
+      Length r0 = ClampRadius(
+        atmosphere,
+        sqrt(d * d + 2.0 * r * mu * d + r * r)
+      );
+      Number mu0 = clamp((r * mu + d) / r0, -1.0, 1.0);
+      Number mu_s_0 = clamp((r * mu_s + d * nu) / r0, -1.0, 1.0);
+      IrradianceSpectrum inScatter0 = GetCombinedScattering(
+        atmosphere,
+        scattering_texture,
+        single_mie_scattering_texture,
+        r,
+        mu,
+        mu_s,
+        nu,
+        ray_r_mu_intersects_ground,
+        single_mie_scattering0
+      );
+      IrradianceSpectrum inScatter1 = GetCombinedScattering(
+        atmosphere,
+        scattering_texture,
+        single_mie_scattering_texture,
+        r0,
+        mu0,
+        mu_s_0,
+        nu,
+        ray_r_mu_intersects_ground,
+        single_mie_scattering1
+      );
+      IrradianceSpectrum inScatter = max(
+        inScatter0 - shadow_transmittance * inScatter1,
+        0.0
+      );
+      IrradianceSpectrum mie_scattering = max(
+        single_mie_scattering0 - shadow_transmittance * single_mie_scattering1,
+        0.0
+      );
+      scattering = inScatter;
+      single_mie_scattering = mie_scattering;
+    }
+  }
+
   #ifdef COMBINED_SCATTERING_TEXTURES
   single_mie_scattering = GetExtrapolatedSingleMieScattering(
     atmosphere,
