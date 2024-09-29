@@ -2,10 +2,12 @@
 
 /// <reference types="vite-plugin-glsl/ext" />
 
-import { applyProps } from '@react-three/fiber'
-import { EffectComposerContext } from '@react-three/postprocessing'
+import {
+  EffectComposerContext,
+  type EffectProps
+} from '@react-three/postprocessing'
 import { BlendFunction, Effect } from 'postprocessing'
-import { forwardRef, useContext, useEffect, useMemo } from 'react'
+import { forwardRef, useContext, useMemo } from 'react'
 import { Uniform, type Texture } from 'three'
 
 import fragmentShader from './shaders/normal.frag'
@@ -35,17 +37,19 @@ export class NormalEffect extends Effect {
   }
 }
 
-export const Normal = forwardRef<
-  Effect,
-  Omit<NormalEffectOptions, 'normalBuffer'>
->((props, forwardedRef) => {
-  const effect = useMemo(() => new NormalEffect(), [])
-  applyProps(effect, props)
+export interface NormalProps extends EffectProps<typeof NormalEffect> {}
 
-  const { normalPass } = useContext(EffectComposerContext)
-  useEffect(() => {
-    effect.normalBuffer = normalPass?.texture ?? null
-  }, [effect, normalPass])
-
-  return <primitive ref={forwardedRef} object={effect} />
-})
+export const Normal = forwardRef<NormalEffect, NormalProps>(
+  (props, forwardedRef) => {
+    const effect = useMemo(() => new NormalEffect(), [])
+    const { normalPass } = useContext(EffectComposerContext)
+    return (
+      <primitive
+        ref={forwardedRef}
+        object={effect}
+        normalBuffer={normalPass?.texture ?? null}
+        {...props}
+      />
+    )
+  }
+)
