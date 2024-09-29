@@ -1,7 +1,12 @@
 import { ScreenQuad } from '@react-three/drei'
 import { type MeshProps } from '@react-three/fiber'
 import { forwardRef, useMemo } from 'react'
-import { type Mesh, type Vector3 } from 'three'
+import {
+  type BufferGeometry,
+  type Mesh,
+  type Object3DEventMap,
+  type Vector3
+} from 'three'
 
 import { AtmosphereMaterial } from './AtmosphereMaterial'
 import {
@@ -15,13 +20,20 @@ import {
 } from './constants'
 import { usePrecomputedData } from './usePrecomputedData'
 
+export type AtmosphereImpl = Mesh<
+  BufferGeometry,
+  AtmosphereMaterial,
+  Object3DEventMap
+>
+
 export interface AtmosphereProps extends MeshProps {
   sunDirection?: Vector3
   sunAngularRadius?: number
 }
 
-export const Atmosphere = forwardRef<Mesh, AtmosphereProps>(
+export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
   ({ sunDirection, sunAngularRadius, ...props } = {}, forwardedRef) => {
+    // Make textures shared.
     const irradianceTexture = usePrecomputedData('/irradiance.bin', {
       width: IRRADIANCE_TEXTURE_WIDTH,
       height: IRRADIANCE_TEXTURE_HEIGHT

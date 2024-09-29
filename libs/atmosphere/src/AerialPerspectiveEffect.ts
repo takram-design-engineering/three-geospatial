@@ -2,7 +2,7 @@
 
 /// <reference types="vite-plugin-glsl/ext" />
 
-import { Effect, EffectAttribute } from 'postprocessing'
+import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Matrix4,
   Uniform,
@@ -20,18 +20,24 @@ import vertexShader from './shaders/aerialPerspective.vert'
 import atmosphericScattering from './shaders/atmosphericScattering.glsl'
 
 export interface AerialPerspectiveEffectOptions {
+  camera?: Camera
+  blendFunction?: BlendFunction
   normalBuffer?: Texture | null
 }
 
 export class AerialPerspectiveEffect extends Effect {
-  constructor(
-    public camera: Camera,
-    { normalBuffer = null }: AerialPerspectiveEffectOptions = {}
-  ) {
+  camera?: Camera | null
+
+  constructor({
+    camera,
+    blendFunction = BlendFunction.SRC,
+    normalBuffer = null
+  }: AerialPerspectiveEffectOptions = {}) {
     super(
       'AerialPerspectiveEffect',
       `${atmosphericScattering}${fragmentShader}`,
       {
+        blendFunction,
         vertexShader,
         attributes: EffectAttribute.DEPTH,
         uniforms: new Map<string, Uniform>([
@@ -42,19 +48,29 @@ export class AerialPerspectiveEffect extends Effect {
           ['normalBuffer', new Uniform(normalBuffer)],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
+          ['cameraMatrixWorld', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(new Vector3())]
+        ]),
+        defines: new Map<string, string>([
+          ['METER_TO_LENGTH_UNIT', `${METER_TO_LENGTH_UNIT}`]
         ])
       }
     )
+    this.camera = camera
   }
 
-  get mainCamera(): Camera {
-    return this.camera
-  }
-
-  set mainCamera(value: Camera) {
-    this.camera = value
+  initialize(
+    renderer: WebGLRenderer,
+    alpha: boolean,
+    frameBufferType: number
+  ): void {
+    super.initialize(renderer, alpha, frameBufferType)
+    if (renderer.capabilities.logarithmicDepthBuffer) {
+      this.defines.set('LOG_DEPTH', '1')
+    } else {
+      this.defines.delete('LOG_DEPTH')
+    }
   }
 
   update(
@@ -62,16 +78,21 @@ export class AerialPerspectiveEffect extends Effect {
     inputBuffer: WebGLRenderTarget,
     deltaTime?: number
   ): void {
+    if (this.camera == null) {
+      return
+    }
     const uniforms = this.uniforms
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
+    const cameraMatrixWorld = uniforms.get('cameraMatrixWorld')!
     const cameraPosition = uniforms.get('cameraPosition')!
     const camera = this.camera
+    inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
     inverseViewMatrix.value.elements[12] *= METER_TO_LENGTH_UNIT
     inverseViewMatrix.value.elements[13] *= METER_TO_LENGTH_UNIT
     inverseViewMatrix.value.elements[14] *= METER_TO_LENGTH_UNIT
-    inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
+    cameraMatrixWorld.value.copy(camera.matrixWorld)
     cameraPosition.value
       .copy(camera.position)
       .multiplyScalar(METER_TO_LENGTH_UNIT)
