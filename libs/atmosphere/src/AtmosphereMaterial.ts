@@ -66,7 +66,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     }
   }
 
-  onBeforeRender(
+  override onBeforeRender(
     renderer: WebGLRenderer,
     scene: Scene,
     camera: Camera,

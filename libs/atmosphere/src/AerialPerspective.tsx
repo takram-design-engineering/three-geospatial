@@ -22,7 +22,7 @@ export interface AerialPerspectiveProps
 export const AerialPerspective = forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
->(function AerialPerspective(props, forwardedRef) {
+>(function AerialPerspective({ blendFunction, ...props }, forwardedRef) {
   // Make textures shared.
   const irradianceTexture = usePrecomputedData('/irradiance.bin', {
     width: IRRADIANCE_TEXTURE_WIDTH,
@@ -38,7 +38,10 @@ export const AerialPerspective = forwardRef<
     height: TRANSMITTANCE_TEXTURE_HEIGHT
   })
 
-  const effect = useMemo(() => new AerialPerspectiveEffect(), [])
+  const effect = useMemo(
+    () => new AerialPerspectiveEffect({ blendFunction }),
+    [blendFunction]
+  )
   const { camera, normalPass } = useContext(EffectComposerContext)
   return (
     <primitive

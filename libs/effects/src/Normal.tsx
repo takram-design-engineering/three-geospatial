@@ -19,7 +19,7 @@ export interface NormalEffectOptions {
 
 export class NormalEffect extends Effect {
   constructor({
-    blendFunction = BlendFunction.SRC,
+    blendFunction = BlendFunction.NORMAL,
     normalBuffer = null
   }: NormalEffectOptions = {}) {
     super('NormalEffect', fragmentShader, {
@@ -39,17 +39,21 @@ export class NormalEffect extends Effect {
 
 export interface NormalProps extends EffectProps<typeof NormalEffect> {}
 
-export const Normal = forwardRef<NormalEffect, NormalProps>(
-  function Normal(props, forwardedRef) {
-    const effect = useMemo(() => new NormalEffect(), [])
-    const { normalPass } = useContext(EffectComposerContext)
-    return (
-      <primitive
-        ref={forwardedRef}
-        object={effect}
-        normalBuffer={normalPass?.texture ?? null}
-        {...props}
-      />
-    )
-  }
-)
+export const Normal = forwardRef<NormalEffect, NormalProps>(function Normal(
+  { blendFunction, ...props },
+  forwardedRef
+) {
+  const effect = useMemo(
+    () => new NormalEffect({ blendFunction }),
+    [blendFunction]
+  )
+  const { normalPass } = useContext(EffectComposerContext)
+  return (
+    <primitive
+      ref={forwardedRef}
+      object={effect}
+      normalBuffer={normalPass?.texture ?? null}
+      {...props}
+    />
+  )
+})

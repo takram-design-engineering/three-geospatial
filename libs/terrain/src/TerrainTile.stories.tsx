@@ -1,6 +1,7 @@
 import { CameraControls, GizmoHelper, GizmoViewport } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { type Meta, type StoryObj } from '@storybook/react'
+import { Suspense } from 'react'
 import { suspend } from 'suspend-react'
 
 import { FlatTerrainTile } from './FlatTerrainTile'
@@ -16,8 +17,22 @@ const terrain = new IonTerrain({
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
 
-export const Flat: StoryObj = {
-  render: () => {
+export const Flat: StoryObj<{
+  x: number
+  y: number
+  z: number
+}> = {
+  args: {
+    x: 1,
+    y: 0,
+    z: 0
+  },
+  argTypes: {
+    x: { control: { type: 'number' } },
+    y: { control: { type: 'number' } },
+    z: { control: { type: 'number' } }
+  },
+  render: ({ x, y, z }) => {
     const size = 200
     return (
       <Canvas
@@ -29,15 +44,17 @@ export const Flat: StoryObj = {
         }}
       >
         <CameraControls dollySpeed={0.1} />
-        <FlatTerrainTile
-          terrain={terrain}
-          x={1}
-          y={0}
-          z={0}
-          position={[-size * 0.5, -size * 0.5, 0]}
-          scale={[size, size, 1]}
-          heightScale={(1 / size) * 0.5}
-        />
+        <Suspense>
+          <FlatTerrainTile
+            terrain={terrain}
+            x={x}
+            y={y}
+            z={z}
+            position={[-size * 0.5, -size * 0.5, 0]}
+            scale={[size, size, 1]}
+            heightScale={1 / size}
+          />
+        </Suspense>
       </Canvas>
     )
   }
@@ -75,13 +92,15 @@ export const Globe: StoryObj<{ z: number }> = {
             return Array.from({ length: yCount }).map((_, index) => {
               const y = range.startY + index
               return (
-                <TerrainTile
-                  key={`${x}:${y}:${z}`}
-                  terrain={terrain}
-                  x={x}
-                  y={y}
-                  z={z}
-                />
+                <Suspense>
+                  <TerrainTile
+                    key={`${x}:${y}:${z}`}
+                    terrain={terrain}
+                    x={x}
+                    y={y}
+                    z={z}
+                  />
+                </Suspense>
               )
             })
           })

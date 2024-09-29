@@ -30,7 +30,7 @@ export class AerialPerspectiveEffect extends Effect {
 
   constructor({
     camera,
-    blendFunction = BlendFunction.SRC,
+    blendFunction = BlendFunction.NORMAL,
     normalBuffer = null
   }: AerialPerspectiveEffectOptions = {}) {
     super(
@@ -60,12 +60,11 @@ export class AerialPerspectiveEffect extends Effect {
     this.camera = camera
   }
 
-  initialize(
+  override initialize(
     renderer: WebGLRenderer,
     alpha: boolean,
     frameBufferType: number
   ): void {
-    super.initialize(renderer, alpha, frameBufferType)
     if (renderer.capabilities.logarithmicDepthBuffer) {
       this.defines.set('LOG_DEPTH', '1')
     } else {
@@ -73,7 +72,7 @@ export class AerialPerspectiveEffect extends Effect {
     }
   }
 
-  update(
+  override update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
     deltaTime?: number

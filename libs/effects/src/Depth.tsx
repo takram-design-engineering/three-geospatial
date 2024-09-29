@@ -17,7 +17,7 @@ export interface DepthEffectOptions {
 
 export class DepthEffect extends Effect {
   constructor({
-    blendFunction = BlendFunction.SRC,
+    blendFunction = BlendFunction.NORMAL,
     useTurbo = false,
     near = 1,
     far = 1000
