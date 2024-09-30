@@ -16,7 +16,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { METER_TO_LENGTH_UNIT } from './constants'
+import { METER_TO_UNIT_LENGTH } from './constants'
 
 import fragmentShader from './shaders/atmosphere.frag'
 import vertexShader from './shaders/atmosphere.vert'
@@ -62,7 +62,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         sunSize: new Uniform(new Vector2())
       },
       defines: {
-        METER_TO_LENGTH_UNIT
+        METER_TO_UNIT_LENGTH
       },
       depthWrite: false,
       depthTest: false

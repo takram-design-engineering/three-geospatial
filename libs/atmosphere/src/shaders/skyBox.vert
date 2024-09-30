@@ -9,7 +9,7 @@ out vec3 vWorldPosition;
 
 void main() {
   vec4 worldPosition = modelMatrix * position;
-  vWorldPosition = cameraPosition * METER_TO_LENGTH_UNIT;
+  vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
   vWorldDirection = normalize(worldPosition.xyz - cameraPosition);
 
   gl_Position = projectionMatrix * modelViewMatrix * position;

@@ -8,6 +8,6 @@ varying vec3 vWorldDirection;
 void mainSupport() {
   vec4 viewPosition = inverseProjectionMatrix * vec4(position, 1.0);
   vec4 worldDirection = inverseViewMatrix * vec4(viewPosition.xyz, 0.0);
-  vWorldPosition = cameraPosition * METER_TO_LENGTH_UNIT;
+  vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
   vWorldDirection = worldDirection.xyz;
 }

@@ -13,7 +13,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { METER_TO_LENGTH_UNIT } from './constants'
+import { METER_TO_UNIT_LENGTH } from './constants'
 
 import fragmentShader from './shaders/aerialPerspective.frag'
 import vertexShader from './shaders/aerialPerspective.vert'
@@ -56,7 +56,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['sunDirection', new Uniform(new Vector3())]
         ]),
         defines: new Map<string, string>([
-          ['METER_TO_LENGTH_UNIT', `${METER_TO_LENGTH_UNIT}`],
+          ['METER_TO_UNIT_LENGTH', `${METER_TO_UNIT_LENGTH}`],
           ['SUN_IRRADIANCE', '1'],
           ['SKY_IRRADIANCE', '1'],
           ['TRANSMITTANCE', '1'],

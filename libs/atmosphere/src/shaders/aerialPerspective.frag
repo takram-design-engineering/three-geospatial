@@ -4,6 +4,7 @@ uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform mat4 cameraMatrixWorld;
 uniform vec3 sunDirection;
+uniform float inputIntensity;
 
 varying vec3 vWorldPosition;
 varying vec3 vWorldDirection; // Not used for now.
@@ -44,12 +45,11 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   // Reconstruct position and normal in world space.
   depth = normalizeDepth(depth);
   float viewZ = getViewZ(depth);
-  vec3 worldPosition = screenToWorld(uv, depth) * METER_TO_LENGTH_UNIT;
+  vec3 worldPosition = screenToWorld(uv, depth) * METER_TO_UNIT_LENGTH;
   vec3 viewNormal = readNormal(uv);
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
-  // Use the input color as albedo.
-  vec3 radiance = inputColor.rgb;
+  vec3 radiance = inputColor.rgb * inputIntensity;
 
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   vec3 skyIrradiance;
@@ -60,14 +60,12 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     skyIrradiance
   );
   #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
-  radiance = radiance * RECIPROCAL_PI * (sunIrradiance + skyIrradiance);
+  radiance = radiance * (sunIrradiance + skyIrradiance);
   #elif defined(SUN_IRRADIANCE)
-  radiance = radiance + radiance * RECIPROCAL_PI * sunIrradiance;
+  radiance = radiance + radiance * sunIrradiance;
   #elif defined(SKY_IRRADIANCE)
-  radiance = radiance + radiance * RECIPROCAL_PI * skyIrradiance;
+  radiance = radiance + radiance * skyIrradiance;
   #endif
-
-  radiance += RECIPROCAL_PI * skyIrradiance;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
