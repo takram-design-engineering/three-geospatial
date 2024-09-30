@@ -27,6 +27,7 @@ export interface AerialPerspectiveEffectOptions {
   skyIrradiance?: boolean
   transmittance?: boolean
   inscatter?: boolean
+  inputIntensity?: number
 }
 
 export class AerialPerspectiveEffect extends Effect {
@@ -35,7 +36,12 @@ export class AerialPerspectiveEffect extends Effect {
   constructor({
     camera,
     blendFunction = BlendFunction.NORMAL,
-    normalBuffer = null
+    normalBuffer = null,
+    sunIrradiance = true,
+    skyIrradiance = true,
+    transmittance = true,
+    inscatter = true,
+    inputIntensity = 1
   }: AerialPerspectiveEffectOptions = {}) {
     super(
       'AerialPerspectiveEffect',
@@ -53,7 +59,8 @@ export class AerialPerspectiveEffect extends Effect {
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
-          ['sunDirection', new Uniform(new Vector3())]
+          ['sunDirection', new Uniform(new Vector3())],
+          ['inputIntensity', new Uniform(inputIntensity)]
         ]),
         defines: new Map<string, string>([
           ['METER_TO_UNIT_LENGTH', `${METER_TO_UNIT_LENGTH}`],
@@ -65,6 +72,10 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
     this.camera = camera
+    this.sunIrradiance = sunIrradiance
+    this.skyIrradiance = skyIrradiance
+    this.transmittance = transmittance
+    this.inscatter = inscatter
   }
 
   override initialize(
@@ -136,6 +147,14 @@ export class AerialPerspectiveEffect extends Effect {
 
   set sunDirection(value: Vector3) {
     this.uniforms.get('sunDirection')!.value.copy(value)
+  }
+
+  get inputIntensity(): number {
+    return this.uniforms.get('inputIntensity')!.value
+  }
+
+  set inputIntensity(value: number) {
+    this.uniforms.get('inputIntensity')!.value = value
   }
 
   get sunIrradiance(): boolean {
