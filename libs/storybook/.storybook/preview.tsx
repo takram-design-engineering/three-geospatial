@@ -5,9 +5,6 @@ import './style.css'
 
 const preview: Preview = {
   parameters: {
-    options: {
-      showPanel: false
-    },
     controls: {
       disableSaveFromUI: true
     }
