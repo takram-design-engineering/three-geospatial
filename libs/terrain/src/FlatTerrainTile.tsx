@@ -1,5 +1,5 @@
 import { type MeshProps } from '@react-three/fiber'
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useEffect, useMemo } from 'react'
 import { suspend } from 'suspend-react'
 import { DoubleSide, type Mesh } from 'three'
 
@@ -41,6 +41,12 @@ export const FlatTerrainTile = forwardRef<Mesh, FlatTerrainTileProps>(
       return geometry
     }, [data, rectangle])
     const material = useMemo(() => new FlatTerrainMaterial(), [])
+
+    useEffect(() => {
+      return () => {
+        geometry.dispose()
+      }
+    }, [geometry])
 
     if (data == null) {
       return null

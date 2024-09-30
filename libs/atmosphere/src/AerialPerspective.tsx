@@ -2,7 +2,7 @@ import {
   EffectComposerContext,
   type EffectProps
 } from '@react-three/postprocessing'
-import { forwardRef, useContext, useMemo } from 'react'
+import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
 import { AerialPerspectiveEffect } from './AerialPerspectiveEffect'
 import {
@@ -42,6 +42,12 @@ export const AerialPerspective = forwardRef<
     () => new AerialPerspectiveEffect({ blendFunction }),
     [blendFunction]
   )
+  useEffect(() => {
+    return () => {
+      effect.dispose()
+    }
+  }, [effect])
+
   const { camera, normalPass } = useContext(EffectComposerContext)
   return (
     <primitive

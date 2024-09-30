@@ -59,6 +59,7 @@ export const SSAO = forwardRef<Effect, SSAOProps>(function SSAO(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
+
   const effectRef = useRef(effect)
   effectRef.current = effect
 

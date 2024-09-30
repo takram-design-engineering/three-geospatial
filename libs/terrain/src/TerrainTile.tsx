@@ -1,5 +1,5 @@
 import { type MeshProps } from '@react-three/fiber'
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useEffect, useMemo } from 'react'
 import { suspend } from 'suspend-react'
 import { type Mesh } from 'three'
 
@@ -36,6 +36,12 @@ export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
       [data, rectangle]
     )
     const material = useMemo(() => new TerrainMaterial(), [])
+
+    useEffect(() => {
+      return () => {
+        geometry.dispose()
+      }
+    }, [geometry])
 
     return (
       <mesh ref={forwardedRef} {...props}>

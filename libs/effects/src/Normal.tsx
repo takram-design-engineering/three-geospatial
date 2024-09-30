@@ -7,7 +7,7 @@ import {
   type EffectProps
 } from '@react-three/postprocessing'
 import { BlendFunction, Effect } from 'postprocessing'
-import { forwardRef, useContext, useMemo } from 'react'
+import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { Uniform, type Texture } from 'three'
 
 import fragmentShader from './shaders/normal.frag'
@@ -47,6 +47,12 @@ export const Normal = forwardRef<NormalEffect, NormalProps>(function Normal(
     () => new NormalEffect({ blendFunction }),
     [blendFunction]
   )
+  useEffect(() => {
+    return () => {
+      effect.dispose()
+    }
+  }, [effect])
+
   const { normalPass } = useContext(EffectComposerContext)
   return (
     <primitive
