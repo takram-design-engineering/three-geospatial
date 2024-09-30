@@ -51,6 +51,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   // Use the input color as albedo.
   vec3 radiance = inputColor.rgb;
 
+  #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(
     worldPosition,
@@ -58,8 +59,18 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     sunDirection,
     skyIrradiance
   );
+  #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
   radiance = radiance * RECIPROCAL_PI * (sunIrradiance + skyIrradiance);
+  #elif defined(SUN_IRRADIANCE)
+  radiance = radiance + radiance * RECIPROCAL_PI * sunIrradiance;
+  #elif defined(SKY_IRRADIANCE)
+  radiance = radiance + radiance * RECIPROCAL_PI * skyIrradiance;
+  #endif
 
+  radiance += RECIPROCAL_PI * skyIrradiance;
+  #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+
+  #if defined(TRANSMITTANCE) || defined(INSCATTER)
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
     vWorldPosition,
@@ -68,7 +79,14 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     sunDirection,
     transmittance
   );
+  #if defined(TRANSMITTANCE) && defined(INSCATTER)
   radiance = radiance * transmittance + inscatter;
+  #elif defined(TRANSMITTANCE)
+  radiance = radiance * transmittance;
+  #elif defined(INSCATTER)
+  radiance = radiance + inscatter;
+  #endif
+  #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);
 }

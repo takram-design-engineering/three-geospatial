@@ -23,6 +23,10 @@ export interface AerialPerspectiveEffectOptions {
   camera?: Camera
   blendFunction?: BlendFunction
   normalBuffer?: Texture | null
+  sunIrradiance?: boolean
+  skyIrradiance?: boolean
+  transmittance?: boolean
+  inscatter?: boolean
 }
 
 export class AerialPerspectiveEffect extends Effect {
@@ -52,7 +56,11 @@ export class AerialPerspectiveEffect extends Effect {
           ['sunDirection', new Uniform(new Vector3())]
         ]),
         defines: new Map<string, string>([
-          ['METER_TO_LENGTH_UNIT', `${METER_TO_LENGTH_UNIT}`]
+          ['METER_TO_LENGTH_UNIT', `${METER_TO_LENGTH_UNIT}`],
+          ['SUN_IRRADIANCE', '1'],
+          ['SKY_IRRADIANCE', '1'],
+          ['TRANSMITTANCE', '1'],
+          ['INSCATTER', '1']
         ])
       }
     )
@@ -128,5 +136,65 @@ export class AerialPerspectiveEffect extends Effect {
 
   set sunDirection(value: Vector3) {
     this.uniforms.get('sunDirection')!.value.copy(value)
+  }
+
+  get sunIrradiance(): boolean {
+    return this.defines.has('SUN_IRRADIANCE')
+  }
+
+  set sunIrradiance(value: boolean) {
+    if (value !== this.sunIrradiance) {
+      if (value) {
+        this.defines.set('SUN_IRRADIANCE', '1')
+      } else {
+        this.defines.delete('SUN_IRRADIANCE')
+      }
+      this.setChanged()
+    }
+  }
+
+  get skyIrradiance(): boolean {
+    return this.defines.has('SKY_IRRADIANCE')
+  }
+
+  set skyIrradiance(value: boolean) {
+    if (value !== this.skyIrradiance) {
+      if (value) {
+        this.defines.set('SKY_IRRADIANCE', '1')
+      } else {
+        this.defines.delete('SKY_IRRADIANCE')
+      }
+      this.setChanged()
+    }
+  }
+
+  get transmittance(): boolean {
+    return this.defines.has('TRANSMITTANCE')
+  }
+
+  set transmittance(value: boolean) {
+    if (value !== this.transmittance) {
+      if (value) {
+        this.defines.set('TRANSMITTANCE', '1')
+      } else {
+        this.defines.delete('TRANSMITTANCE')
+      }
+      this.setChanged()
+    }
+  }
+
+  get inscatter(): boolean {
+    return this.defines.has('INSCATTER')
+  }
+
+  set inscatter(value: boolean) {
+    if (value !== this.inscatter) {
+      if (value) {
+        this.defines.set('INSCATTER', '1')
+      } else {
+        this.defines.delete('INSCATTER')
+      }
+      this.setChanged()
+    }
   }
 }
