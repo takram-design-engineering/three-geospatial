@@ -10,7 +10,7 @@ import { useControls } from 'leva'
 
 const MILLISECONDS_PER_DAY = 3600000
 
-const referenceDate = setHours(new Date(), 10)
+const referenceDate = setHours(new Date(), 9)
 
 export function useMotionDate(): MotionValue<number> {
   const { dayOfYear, timeOfDay } = useControls('date', {

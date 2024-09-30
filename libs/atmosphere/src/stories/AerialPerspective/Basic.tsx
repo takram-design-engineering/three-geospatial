@@ -29,16 +29,7 @@ import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useMotionDate } from '../useMotionDate'
 
-const location = new Cartographic(
-  // // Tokyo
-  // radians(139.7671),
-  // radians(35.6812)
-
-  // Mountain
-  radians(138.7274),
-  radians(35.3606),
-  4500
-)
+const location = new Cartographic(radians(138.7274), radians(35.3606), 4500)
 const position = location.toVector()
 const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
 
