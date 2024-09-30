@@ -10,8 +10,8 @@ import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { BlendFunction, ToneMappingMode } from 'postprocessing'
-import { Suspense, useRef, type FC } from 'react'
-import { Vector3 } from 'three'
+import { Suspense, useMemo, useRef, type FC } from 'react'
+import { MeshStandardMaterial, Vector3 } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
 import {
@@ -29,8 +29,16 @@ import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useMotionDate } from '../useMotionDate'
 
-// const location = new Cartographic(radians(139.7671), radians(35.6812))
-const location = new Cartographic(radians(138.7274), radians(35.3606), 4500)
+const location = new Cartographic(
+  // // Tokyo
+  // radians(139.7671),
+  // radians(35.6812)
+
+  // Mountain
+  radians(138.7274),
+  radians(35.3606),
+  4500
+)
 const position = location.toVector()
 const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
 
@@ -54,6 +62,8 @@ const tiles = tile
   .flatMap(tile => tile.getChildren())
   .flatMap(tile => tile.getChildren())
 
+const terrainMaterial = new MeshStandardMaterial({ color: 'gray' })
+
 const Scene: FC = () => {
   const { normal, depth } = useControls('effect', {
     normal: false,
@@ -75,6 +85,29 @@ const Scene: FC = () => {
     }
   })
 
+  const effects = useMemo(
+    () => (
+      <>
+        <AerialPerspective ref={aerialPerspectiveRef} />
+        <Normal
+          blendFunction={normal ? BlendFunction.NORMAL : BlendFunction.SKIP}
+        />
+        <Depth
+          useTurbo
+          blendFunction={depth ? BlendFunction.NORMAL : BlendFunction.SKIP}
+        />
+        <ToneMapping
+          mode={ToneMappingMode.ACES_FILMIC}
+          blendFunction={
+            !normal && !depth ? BlendFunction.NORMAL : BlendFunction.SKIP
+          }
+        />
+        <SMAA />
+      </>
+    ),
+    [normal, depth]
+  )
+
   return (
     <>
       <OrbitControls target={position} minDistance={1000} />
@@ -93,27 +126,16 @@ const Scene: FC = () => {
       </LocalFrame>
       {tiles.map(tile => (
         <Suspense key={`${tile.x}:${tile.y}:${tile.z}`}>
-          <TerrainTile terrain={terrain} {...tile} computeVertexNormals>
-            <meshStandardMaterial color='gray' />
-          </TerrainTile>
+          <TerrainTile
+            terrain={terrain}
+            {...tile}
+            computeVertexNormals
+            material={terrainMaterial}
+          />
         </Suspense>
       ))}
       <EffectComposer normalPass multisampling={0}>
-        <AerialPerspective ref={aerialPerspectiveRef} />
-        <Normal
-          blendFunction={normal ? BlendFunction.NORMAL : BlendFunction.SKIP}
-        />
-        <Depth
-          useTurbo
-          blendFunction={depth ? BlendFunction.NORMAL : BlendFunction.SKIP}
-        />
-        <ToneMapping
-          mode={ToneMappingMode.ACES_FILMIC}
-          blendFunction={
-            !normal && !depth ? BlendFunction.NORMAL : BlendFunction.SKIP
-          }
-        />
-        <SMAA />
+        {effects}
       </EffectComposer>
     </>
   )

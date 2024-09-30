@@ -1,5 +1,5 @@
 import { type MeshProps } from '@react-three/fiber'
-import { forwardRef, useEffect, useMemo } from 'react'
+import { forwardRef, memo, useEffect, useMemo } from 'react'
 import { suspend } from 'suspend-react'
 import { type Mesh } from 'three'
 
@@ -16,8 +16,8 @@ export interface TerrainTileProps extends MeshProps {
   computeVertexNormals?: boolean
 }
 
-export const TerrainTile = forwardRef<Mesh<TerrainGeometry>, TerrainTileProps>(
-  function TerrainTile(
+export const TerrainTile = memo(
+  forwardRef<Mesh<TerrainGeometry>, TerrainTileProps>(function TerrainTile(
     { terrain, x, y, z, computeVertexNormals = false, children, ...props },
     forwardedRef
   ) {
@@ -54,5 +54,5 @@ export const TerrainTile = forwardRef<Mesh<TerrainGeometry>, TerrainTileProps>(
         {children}
       </mesh>
     )
-  }
+  })
 )
