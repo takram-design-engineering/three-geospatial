@@ -43,20 +43,26 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     ...params
   }: AtmosphereMaterialParameters = {}) {
     super({
+      vertexShader,
       ...params,
       glslVersion: '300 es',
       fragmentShader: `${atmosphericScattering}${fragmentShader}`,
-      vertexShader,
       uniforms: {
         irradiance_texture: new Uniform(irradianceTexture),
         scattering_texture: new Uniform(scatteringTexture),
         single_mie_scattering_texture: new Uniform(scatteringTexture),
         transmittance_texture: new Uniform(transmittanceTexture),
+        projectionMatrix: new Uniform(new Matrix4()),
+        modelViewMatrix: new Uniform(new Matrix4()),
+        modelMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
         inverseViewMatrix: new Uniform(new Matrix4()),
         cameraPosition: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         sunSize: new Uniform(new Vector2())
+      },
+      defines: {
+        METER_TO_LENGTH_UNIT
       },
       depthWrite: false,
       depthTest: false
@@ -75,14 +81,12 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     group: Group
   ): void {
     const uniforms = this.uniforms
+    uniforms.projectionMatrix.value.copy(camera.projectionMatrix)
+    uniforms.modelViewMatrix.value.copy(scene.modelViewMatrix)
+    uniforms.modelMatrix.value.copy(object.matrixWorld)
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
-    uniforms.inverseViewMatrix.value.elements[12] *= METER_TO_LENGTH_UNIT
-    uniforms.inverseViewMatrix.value.elements[13] *= METER_TO_LENGTH_UNIT
-    uniforms.inverseViewMatrix.value.elements[14] *= METER_TO_LENGTH_UNIT
-    uniforms.cameraPosition.value
-      .copy(camera.position)
-      .multiplyScalar(METER_TO_LENGTH_UNIT)
+    uniforms.cameraPosition.value.copy(camera.position)
   }
 
   get irradianceTexture(): Texture | null {

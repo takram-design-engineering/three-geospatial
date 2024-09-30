@@ -48,7 +48,6 @@ export class AerialPerspectiveEffect extends Effect {
           ['normalBuffer', new Uniform(normalBuffer)],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
-          ['cameraMatrixWorld', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(new Vector3())]
         ]),
@@ -83,18 +82,11 @@ export class AerialPerspectiveEffect extends Effect {
     const uniforms = this.uniforms
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
-    const cameraMatrixWorld = uniforms.get('cameraMatrixWorld')!
     const cameraPosition = uniforms.get('cameraPosition')!
     const camera = this.camera
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
-    inverseViewMatrix.value.elements[12] *= METER_TO_LENGTH_UNIT
-    inverseViewMatrix.value.elements[13] *= METER_TO_LENGTH_UNIT
-    inverseViewMatrix.value.elements[14] *= METER_TO_LENGTH_UNIT
-    cameraMatrixWorld.value.copy(camera.matrixWorld)
-    cameraPosition.value
-      .copy(camera.position)
-      .multiplyScalar(METER_TO_LENGTH_UNIT)
+    cameraPosition.value.copy(camera.position)
   }
 
   get normalBuffer(): Texture | null {

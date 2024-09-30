@@ -1,12 +1,7 @@
 import { ScreenQuad } from '@react-three/drei'
 import { type MeshProps } from '@react-three/fiber'
 import { forwardRef, useMemo } from 'react'
-import {
-  type BufferGeometry,
-  type Mesh,
-  type Object3DEventMap,
-  type Vector3
-} from 'three'
+import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
 import { AtmosphereMaterial } from './AtmosphereMaterial'
 import {
@@ -20,11 +15,7 @@ import {
 } from './constants'
 import { usePrecomputedData } from './usePrecomputedData'
 
-export type AtmosphereImpl = Mesh<
-  BufferGeometry,
-  AtmosphereMaterial,
-  Object3DEventMap
->
+export type AtmosphereImpl = Mesh<BufferGeometry, AtmosphereMaterial>
 
 export interface AtmosphereProps extends MeshProps {
   sunDirection?: Vector3

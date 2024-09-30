@@ -3,10 +3,10 @@ uniform sampler2D normalBuffer;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform mat4 cameraMatrixWorld;
-uniform vec3 cameraPosition;
 uniform vec3 sunDirection;
 
-varying vec4 worldDirection; // Not used for now.
+varying vec3 vWorldPosition;
+varying vec3 vWorldDirection; // Not used for now.
 
 #ifndef DEPTH_THRESHOLD
 #define DEPTH_THRESHOLD (1.0 - EPSILON)
@@ -26,7 +26,7 @@ float normalizeDepth(const float depth) {
 vec3 screenToWorld(const vec2 uv, const float depth) {
   vec4 ndc = vec4(vec3(uv.xy, depth) * 2.0 - 1.0, 1.0);
   vec4 clip = inverseProjectionMatrix * ndc;
-  vec4 view = cameraMatrixWorld * (clip / clip.w);
+  vec4 view = inverseViewMatrix * (clip / clip.w);
   return view.xyz;
 }
 
@@ -62,7 +62,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
-    cameraPosition,
+    vWorldPosition,
     worldPosition,
     0.0, // TODO: Shadow length
     sunDirection,

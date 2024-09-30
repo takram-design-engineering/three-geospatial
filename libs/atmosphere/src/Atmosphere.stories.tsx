@@ -8,3 +8,4 @@ export default {
 } satisfies Meta
 
 export { Basic } from './stories/Atmosphere/Basic'
+export { SkyBox } from './stories/Atmosphere/SkyBox'
