@@ -1,77 +1,98 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Plane } from '@react-three/drei'
+import { OrbitControls, Plane } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing'
-import { KernelSize, ToneMappingMode } from 'postprocessing'
-import { type FC } from 'react'
+import { ToneMapping } from '@react-three/postprocessing'
+import { parseISO } from 'date-fns'
+import { ToneMappingMode } from 'postprocessing'
+import { useMemo, type FC } from 'react'
+import { Vector3 } from 'three'
 
+import { getSunDirectionECEF } from '@geovanni/astronomy'
+import {
+  AerialPerspective,
+  Atmosphere,
+  ATMOSPHERE_BOTTOM_RADIUS
+} from '@geovanni/atmosphere'
 import { Cartographic, LocalFrame, radians } from '@geovanni/core'
-import { SSAO } from '@geovanni/effects'
+import { EffectComposer, SSAO } from '@geovanni/effects'
 
-import { Camera } from './components/Camera'
-import { GooglePhotorealisticTiles } from './components/GooglePhotorealisticTiles'
 import { SunLight } from './components/SunLight'
 import { Tileset } from './components/Tileset'
+
+// Derive geoidal height of the above here:
+// https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh/calc_f.html'
+const geoidalHeight = 36.6624
 
 const location = new Cartographic(
   // Coordinates of Tokyo station.
   radians(139.7671),
-  radians(35.6812),
-  // Derive geoidal height of the above here:
-  // https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh/calc_f.html'
-  36.6624
+  radians(35.6812)
 )
 
+const geodeticNormal = location.toVector()
+const geodeticRadius = geodeticNormal.length()
+geodeticNormal.normalize()
+const atmosphereOffset = new Vector3()
+  .copy(geodeticNormal)
+  .multiplyScalar(ATMOSPHERE_BOTTOM_RADIUS - geodeticRadius)
+const localLocation = new Cartographic().copy(location).setHeight(geoidalHeight)
+const cameraTarget = localLocation.toVector().add(atmosphereOffset)
+const cameraPosition = new Vector3()
+  .copy(cameraTarget)
+  .add(new Vector3().copy(geodeticNormal).multiplyScalar(1000))
+
+const sunDirection = getSunDirectionECEF(parseISO('2024-09-30T10:00:00+09:00'))
+
 export const Container: FC = () => {
+  const effects = useMemo(
+    () => (
+      <>
+        <SSAO intensity={3} aoRadius={10} />
+        <AerialPerspective sunDirection={sunDirection} sunIrradiance={false} />
+        <ToneMapping mode={ToneMappingMode.AGX} />
+      </>
+    ),
+    []
+  )
   return (
-    <Canvas shadows>
-      <color attach='background' args={['#ffffff']} />
-      <ambientLight intensity={0.5} />
-      <fogExp2 attach='fog' color='white' density={0.0002} />
-      <Camera location={new Cartographic().copy(location).setHeight(4000)} />
-      <EffectComposer>
-        <SSAO />
-        <Bloom kernelSize={KernelSize.HUGE} />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-      </EffectComposer>
-      <LocalFrame location={new Cartographic().copy(location).setHeight(0)}>
-        <SunLight />
-        <Plane
-          args={[1e5, 1e5]}
-          position={[0, 0, location.height]}
-          receiveShadow
-        >
-          <meshStandardMaterial color='white' />
-        </Plane>
-      </LocalFrame>
-      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13101_chiyoda-ku_2020_bldg_notexture/tileset.json' />
-      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13102_chuo-ku_2020_bldg_notexture/tileset.json' />
-      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13103_minato-ku_2020_bldg_notexture/tileset.json' />
-      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13104_shinjuku-ku_2020_bldg_notexture/tileset.json' />
-      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13113_shibuya-ku_2020_bldg_notexture/tileset.json' />
+    <Canvas
+      shadows
+      gl={{
+        antialias: false,
+        depth: false,
+        stencil: false,
+        logarithmicDepthBuffer: true,
+        toneMappingExposure: 10
+      }}
+      camera={{
+        near: 1,
+        far: 1e8,
+        position: cameraPosition,
+        up: geodeticNormal
+      }}
+    >
+      <OrbitControls target={cameraTarget} />
+      <ambientLight intensity={0.05} />
+      <Atmosphere sunDirection={sunDirection} renderOrder={-1} />
+      <EffectComposer normalPass>{effects}</EffectComposer>
+      <group position={atmosphereOffset}>
+        <LocalFrame location={localLocation}>
+          <SunLight />
+          <Plane
+            args={[1e5, 1e5]}
+            position={[0, 0, location.height]}
+            receiveShadow
+          >
+            <meshStandardMaterial color={[0.05, 0.05, 0.05]} />
+          </Plane>
+        </LocalFrame>
+        <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13101_chiyoda-ku_2020_bldg_notexture/tileset.json' />
+        <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13102_chuo-ku_2020_bldg_notexture/tileset.json' />
+        <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13103_minato-ku_2020_bldg_notexture/tileset.json' />
+      </group>
+      {/* <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13104_shinjuku-ku_2020_bldg_notexture/tileset.json' />
+      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13113_shibuya-ku_2020_bldg_notexture/tileset.json' /> */}
     </Canvas>
   )
 }
-
-// export const Container: FC = () => {
-//   return (
-//     <Canvas shadows>
-//       <color attach='background' args={['#ffffff']} />
-//       <ambientLight intensity={0.5} />
-//       <fogExp2 attach='fog' color='white' density={0.00005} />
-//       <Camera location={new Cartographic().copy(location).setHeight(4000)} />
-//       <EffectComposer>
-//         <SSAO />
-//         <Bloom kernelSize={KernelSize.HUGE} />
-//         <ToneMapping />
-//       </EffectComposer>
-//       <LocalFrame location={new Cartographic().copy(location).setHeight(0)}>
-//         <SunLight />
-//       </LocalFrame>
-//       <GooglePhotorealisticTiles
-//         apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY}
-//       />
-//     </Canvas>
-//   )
-// }
