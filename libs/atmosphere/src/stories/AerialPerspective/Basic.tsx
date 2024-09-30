@@ -139,6 +139,9 @@ export const Basic: StoryFn = () => {
   return (
     <Canvas
       gl={{
+        antialias: false,
+        depth: false,
+        stencil: false,
         logarithmicDepthBuffer: true,
         toneMappingExposure: exposure
       }}
