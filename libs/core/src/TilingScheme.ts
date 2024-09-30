@@ -44,11 +44,11 @@ export class TilingScheme {
     if (this.rectangle.east < this.rectangle.west) {
       longitude += Math.PI * 2
     }
-    let x = (longitude - this.rectangle.west) / width
+    let x = Math.floor((longitude - this.rectangle.west) / width)
     if (x >= size.x) {
       x = size.x - 1
     }
-    let y = (this.rectangle.north - cartographic.latitude) / height
+    let y = Math.floor((this.rectangle.north - cartographic.latitude) / height)
     if (y >= size.y) {
       y = size.y - 1
     }
