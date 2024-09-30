@@ -4,7 +4,8 @@ import {
   MeshNormalMaterial,
   ShaderChunk,
   ShaderLib,
-  type WebGLProgramParametersWithUniforms
+  type WebGLProgramParametersWithUniforms,
+  type WebGLRenderer
 } from 'three'
 
 import octNormal from './shaders/octNormal.glsl'
@@ -51,25 +52,35 @@ const vertexShader =
 export interface OctNormalMaterialParameters
   extends Partial<MeshNormalMaterial> {}
 
+// TODO: Changing flatShading doesn't update material. (onBeforeCompile is not
+// called)
 export class OctNormalMaterial extends MeshNormalMaterial {
-  private currentFlatShading = false
+  private _flatShading = false
 
-  onBeforeRender(): void {
-    // Disable built-in flat shading codes.
-    this.currentFlatShading = this.flatShading
-    this.flatShading = false
+  // @ts-expect-error Ignore
+  get flatShading(): boolean {
+    return false
   }
 
-  onBeforeCompile(parameters: WebGLProgramParametersWithUniforms): void {
+  set flatShading(value: boolean) {
+    if (value !== this._flatShading) {
+      this._flatShading = value
+      this.needsUpdate = true
+    }
+  }
+
+  onBeforeCompile(
+    parameters: WebGLProgramParametersWithUniforms,
+    renderer: WebGLRenderer
+  ): void {
     parameters.fragmentShader = fragmentShader
     parameters.vertexShader = vertexShader
     parameters.defines ??= {}
 
-    if (this.currentFlatShading) {
+    if (this._flatShading) {
       parameters.defines.OCT_NORMAL_FLAT_SHADED = 1
     } else {
       delete parameters.defines.OCT_NORMAL_FLAT_SHADED
     }
-    this.flatShading = this.currentFlatShading
   }
 }

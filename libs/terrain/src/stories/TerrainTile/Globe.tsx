@@ -1,26 +1,13 @@
 import { CameraControls, GizmoHelper, GizmoViewport } from '@react-three/drei'
-import { Canvas, extend, type MaterialNode } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { suspend } from 'suspend-react'
+import { MeshNormalMaterial } from 'three'
 
 import { IonTerrain } from '../../IonTerrain'
-import {
-  OctNormalMaterial,
-  type OctNormalMaterialParameters
-} from '../../OctNormalMaterial'
+import { OctNormalMaterial } from '../../OctNormalMaterial'
 import { TerrainTile } from '../../TerrainTile'
-
-declare module '@react-three/fiber' {
-  interface ThreeElements {
-    octNormalMaterial: MaterialNode<
-      OctNormalMaterial,
-      OctNormalMaterialParameters
-    >
-  }
-}
-
-extend({ OctNormalMaterial })
 
 const terrain = new IonTerrain({
   assetId: 1,
@@ -34,6 +21,21 @@ export const Globe: StoryFn<{
 }> = ({ z, useOctNormal, flatShading }) => {
   const layer = suspend(async () => await terrain.loadLayer(), [])
   const ranges = layer.available[z]
+
+  const [[octNormalMaterial, meshNormalMaterial], setMaterials] = useState(
+    () => [
+      new OctNormalMaterial({ flatShading }),
+      new MeshNormalMaterial({ flatShading })
+    ]
+  )
+
+  useEffect(() => {
+    setMaterials([
+      new OctNormalMaterial({ flatShading }),
+      new MeshNormalMaterial({ flatShading })
+    ])
+  }, [flatShading])
+
   return (
     <Canvas
       gl={{ logarithmicDepthBuffer: true }}
@@ -63,19 +65,10 @@ export const Globe: StoryFn<{
                   y={y}
                   z={z}
                   computeVertexNormals
-                >
-                  {useOctNormal ? (
-                    <octNormalMaterial
-                      key={`oct-${flatShading}`}
-                      flatShading={flatShading}
-                    />
-                  ) : (
-                    <meshNormalMaterial
-                      key={`mesh-${flatShading}`}
-                      flatShading={flatShading}
-                    />
-                  )}
-                </TerrainTile>
+                  material={
+                    useOctNormal ? octNormalMaterial : meshNormalMaterial
+                  }
+                />
               </Suspense>
             )
           })
@@ -87,7 +80,7 @@ export const Globe: StoryFn<{
 
 Globe.args = {
   z: 3,
-  useOctNormal: true,
+  useOctNormal: false,
   flatShading: true
 }
 
