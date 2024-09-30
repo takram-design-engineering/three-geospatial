@@ -22,7 +22,7 @@
       "@geovanni/core": ["libs/core/src/index.ts"],
       "@geovanni/effects": ["libs/effects/src/index.ts"],
       "@geovanni/storybook": ["libs/storybook/src/index.ts"],
-      "@geovanni/terrain": ["libs/core/src/index.ts"]
+      "@geovanni/terrain": ["libs/terrain/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
