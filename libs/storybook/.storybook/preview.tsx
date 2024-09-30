@@ -7,6 +7,9 @@ const preview: Preview = {
   parameters: {
     options: {
       showPanel: false
+    },
+    controls: {
+      disableSaveFromUI: true
     }
   },
   decorators: (Story, { parameters }) => <Story />
