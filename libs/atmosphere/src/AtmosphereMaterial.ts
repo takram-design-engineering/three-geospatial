@@ -27,6 +27,7 @@ export interface AtmosphereMaterialParameters
   irradianceTexture?: Texture
   scatteringTexture?: Texture
   transmittanceTexture?: Texture
+  sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
 }
@@ -38,6 +39,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     irradianceTexture,
     scatteringTexture,
     transmittanceTexture,
+    sun = true,
     sunDirection,
     sunAngularRadius = 0.00465, // 16 minutes of arc
     ...params
@@ -62,6 +64,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         sunSize: new Uniform(new Vector2())
       },
       defines: {
+        SUN: '1',
         METER_TO_UNIT_LENGTH
       },
       depthWrite: false,
@@ -86,7 +89,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     uniforms.modelMatrix.value.copy(object.matrixWorld)
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
-    uniforms.cameraPosition.value.copy(camera.position)
+    camera.getWorldPosition(uniforms.cameraPosition.value)
   }
 
   get irradianceTexture(): Texture | null {
@@ -112,6 +115,21 @@ export class AtmosphereMaterial extends RawShaderMaterial {
 
   set transmittanceTexture(value: Texture | null) {
     this.uniforms.transmittance_texture.value = value
+  }
+
+  get sun(): boolean {
+    return this.defines.SUN != null
+  }
+
+  set sun(value: boolean) {
+    if (value !== this.sun) {
+      if (value) {
+        this.defines.SUN = '1'
+      } else {
+        delete this.defines.SUN
+      }
+      this.needsUpdate = true
+    }
   }
 
   get sunDirection(): Vector3 {

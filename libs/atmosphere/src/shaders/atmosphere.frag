@@ -15,8 +15,10 @@ void main() {
     sunDirection,
     transmittance
   );
+  #ifdef SUN
   if (dot(viewDirection, sunDirection) > sunSize.y) {
     radiance = radiance + transmittance * GetSolarRadiance();
   }
+  #endif
   outputColor = vec4(radiance, 1.0);
 }

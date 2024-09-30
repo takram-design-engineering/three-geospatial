@@ -18,13 +18,14 @@ import { usePrecomputedData } from './usePrecomputedData'
 export type AtmosphereImpl = Mesh<BufferGeometry, AtmosphereMaterial>
 
 export interface AtmosphereProps extends MeshProps {
+  sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
 }
 
 export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
   function Atmosphere(
-    { sunDirection, sunAngularRadius, ...props } = {},
+    { sun, sunDirection, sunAngularRadius, ...props } = {},
     forwardedRef
   ) {
     // Make textures shared.
@@ -50,6 +51,7 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
           irradianceTexture={irradianceTexture}
           scatteringTexture={scatteringTexture}
           transmittanceTexture={transmittanceTexture}
+          sun={sun}
           sunDirection={sunDirection}
           sunAngularRadius={sunAngularRadius}
         />

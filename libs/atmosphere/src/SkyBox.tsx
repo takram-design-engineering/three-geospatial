@@ -17,12 +17,13 @@ import { usePrecomputedData } from './usePrecomputedData'
 export type SkyBoxImpl = Mesh<BoxGeometry, SkyBoxMaterial>
 
 export interface SkyBoxProps extends ComponentPropsWithRef<typeof Box> {
+  sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
 }
 
 export const SkyBox = forwardRef<SkyBoxImpl, SkyBoxProps>(function SkyBox(
-  { sunDirection, sunAngularRadius, ...props } = {},
+  { sun, sunDirection, sunAngularRadius, ...props } = {},
   forwardedRef
 ) {
   // Make textures shared.
@@ -48,6 +49,7 @@ export const SkyBox = forwardRef<SkyBoxImpl, SkyBoxProps>(function SkyBox(
         irradianceTexture={irradianceTexture}
         scatteringTexture={scatteringTexture}
         transmittanceTexture={transmittanceTexture}
+        sun={sun}
         sunDirection={sunDirection}
         sunAngularRadius={sunAngularRadius}
       />
