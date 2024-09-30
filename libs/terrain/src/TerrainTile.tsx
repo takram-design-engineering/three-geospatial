@@ -22,10 +22,13 @@ export const TerrainTile = memo(
     forwardedRef
   ) {
     // TODO: Replace with a more advanced cache.
-    const data = suspend(
-      async () => await terrain.fetchTile({ x, y, z }),
-      [IonTerrain, terrain.assetId, x, y, z]
-    )
+    const data = suspend(async () => {
+      try {
+        return await terrain.fetchTile({ x, y, z })
+      } catch (error) {
+        console.error(error)
+      }
+    }, [IonTerrain, terrain.assetId, x, y, z])
 
     const { tilingScheme } = terrain
     const rectangle = useMemo(() => {
@@ -35,6 +38,9 @@ export const TerrainTile = memo(
     }, [tilingScheme, x, y, z])
 
     const geometry = useMemo(() => {
+      if (data == null) {
+        return
+      }
       const geometry = new TerrainGeometry(data, rectangle)
       if (computeVertexNormals) {
         geometry.computeVertexNormals()
@@ -44,10 +50,13 @@ export const TerrainTile = memo(
 
     useEffect(() => {
       return () => {
-        geometry.dispose()
+        geometry?.dispose()
       }
     }, [geometry])
 
+    if (geometry == null) {
+      return null
+    }
     return (
       <mesh ref={forwardedRef} {...props}>
         <primitive object={geometry} />
