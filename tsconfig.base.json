@@ -10,7 +10,7 @@
     "importHelpers": true,
     "target": "es2017",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "lib": ["es2021", "dom"],
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
