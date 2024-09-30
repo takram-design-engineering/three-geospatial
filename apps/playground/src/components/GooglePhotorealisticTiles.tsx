@@ -4,7 +4,7 @@ import {
   GooglePhotorealisticTilesRenderer,
   type TilesRenderer
 } from '3d-tiles-renderer'
-import { useEffect, useState, type FC } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
@@ -35,9 +35,10 @@ export interface GooglePhotorealisticTilesProps {
   apiKey?: string
 }
 
-export const GooglePhotorealisticTiles: FC<GooglePhotorealisticTilesProps> = ({
-  apiKey
-}) => {
+export const GooglePhotorealisticTiles = forwardRef<
+  TilesRenderer,
+  GooglePhotorealisticTilesProps
+>(function GooglePhotorealisticTiles({ apiKey }, forwardedRef) {
   const [tiles, setTiles] = useState(() => createTiles(apiKey))
 
   useEffect(() => {
@@ -50,8 +51,7 @@ export const GooglePhotorealisticTiles: FC<GooglePhotorealisticTilesProps> = ({
     }
   }, [tiles])
 
-  const camera = useThree(({ camera }) => camera)
-  const gl = useThree(({ gl }) => gl)
+  const { gl, camera } = useThree()
 
   useEffect(() => {
     tiles.setCamera(camera)
@@ -65,5 +65,7 @@ export const GooglePhotorealisticTiles: FC<GooglePhotorealisticTilesProps> = ({
     tiles.update()
   })
 
+  useImperativeHandle(forwardedRef, () => tiles, [tiles])
+
   return <primitive object={tiles.group} />
-}
+})
