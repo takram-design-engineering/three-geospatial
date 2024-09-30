@@ -72,6 +72,7 @@ export const EffectComposer = memo(
       let normalPass = null
       if (enableNormalPass) {
         normalPass = new NormalPass(scene, camera, {
+          // TODO: Should we dispose target?
           renderTarget: new WebGLRenderTarget(1, 1, {
             type: frameBufferType // We need high-precision normal.
           })

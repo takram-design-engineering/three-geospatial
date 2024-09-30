@@ -58,7 +58,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     sunDirection,
     skyIrradiance
   );
-  radiance = radiance * RECIPROCAL_PI * (sunIrradiance + skyIrradiance * 2.0);
+  radiance = radiance * RECIPROCAL_PI * (sunIrradiance + skyIrradiance);
 
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(

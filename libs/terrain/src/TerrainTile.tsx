@@ -7,17 +7,20 @@ import { Rectangle } from '@geovanni/core'
 
 import { IonTerrain } from './IonTerrain'
 import { TerrainGeometry } from './TerrainGeometry'
-import { TerrainMaterial } from './TerrainMaterial'
 
 export interface TerrainTileProps extends MeshProps {
   terrain: IonTerrain
   x: number
   y: number
   z: number
+  computeVertexNormals?: boolean
 }
 
-export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
-  function TerrainTile({ terrain, x, y, z, ...props }, forwardedRef) {
+export const TerrainTile = forwardRef<Mesh<TerrainGeometry>, TerrainTileProps>(
+  function TerrainTile(
+    { terrain, x, y, z, computeVertexNormals = false, children, ...props },
+    forwardedRef
+  ) {
     // TODO: Replace with a more advanced cache.
     const data = suspend(
       async () => await terrain.fetchTile({ x, y, z }),
@@ -31,11 +34,13 @@ export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
       return new Rectangle(rect.west, rect.south, rect.east, rect.north)
     }, [tilingScheme, x, y, z])
 
-    const geometry = useMemo(
-      () => new TerrainGeometry(data, rectangle),
-      [data, rectangle]
-    )
-    const material = useMemo(() => new TerrainMaterial(), [])
+    const geometry = useMemo(() => {
+      const geometry = new TerrainGeometry(data, rectangle)
+      if (computeVertexNormals) {
+        geometry.computeVertexNormals()
+      }
+      return geometry
+    }, [data, rectangle, computeVertexNormals])
 
     useEffect(() => {
       return () => {
@@ -46,7 +51,7 @@ export const TerrainTile = forwardRef<Mesh, TerrainTileProps>(
     return (
       <mesh ref={forwardedRef} {...props}>
         <primitive object={geometry} />
-        <primitive object={material} wireframe />
+        {children}
       </mesh>
     )
   }
