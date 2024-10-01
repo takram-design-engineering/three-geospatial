@@ -172,8 +172,8 @@ struct AtmosphereParameters {
 const AtmosphereParameters ATMOSPHERE = AtmosphereParameters(
   vec3(1.474, 1.8504, 1.91198),
   0.004675,
-  6356.752314,
-  6416.752314,
+  6360.0,
+  6420.0,
   DensityProfile(
     DensityProfileLayer[2](
       DensityProfileLayer(0.0, 0.0, 0.0, 0.0, 0.0),

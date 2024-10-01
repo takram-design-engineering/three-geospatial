@@ -8,3 +8,4 @@ export default {
 } satisfies Meta
 
 export { Basic } from './stories/AerialPerspective/Basic'
+export { PhotorealisticTiles } from './stories/AerialPerspective/PhotorealisticTiles'
