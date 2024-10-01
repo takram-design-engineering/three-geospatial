@@ -14,6 +14,8 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
+import { type EffectProps } from './types'
+
 import fragmentShader from './shaders/normal.frag'
 
 export interface NormalEffectOptions {
@@ -109,27 +111,30 @@ export class NormalEffect extends Effect {
   }
 }
 
-export const Normal = forwardRef<NormalEffect, NormalEffectOptions>(
-  function Normal({ blendFunction, ...props }, forwardedRef) {
-    const { camera, normalPass } = useContext(EffectComposerContext)
-    const effect = useMemo(
-      () => new NormalEffect(camera, { blendFunction }),
-      [camera, blendFunction]
-    )
-    useEffect(() => {
-      return () => {
-        effect.dispose()
-      }
-    }, [effect])
+export interface NormalProps extends EffectProps<typeof NormalEffect> {}
 
-    return (
-      <primitive
-        ref={forwardedRef}
-        object={effect}
-        mainCamera={camera}
-        normalBuffer={normalPass?.texture ?? null}
-        {...props}
-      />
-    )
-  }
-)
+export const Normal = forwardRef<NormalEffect, NormalProps>(function Normal(
+  { blendFunction, ...props },
+  forwardedRef
+) {
+  const { camera, normalPass } = useContext(EffectComposerContext)
+  const effect = useMemo(
+    () => new NormalEffect(camera, { blendFunction }),
+    [camera, blendFunction]
+  )
+  useEffect(() => {
+    return () => {
+      effect.dispose()
+    }
+  }, [effect])
+
+  return (
+    <primitive
+      ref={forwardedRef}
+      object={effect}
+      mainCamera={camera}
+      normalBuffer={normalPass?.texture ?? null}
+      {...props}
+    />
+  )
+})
