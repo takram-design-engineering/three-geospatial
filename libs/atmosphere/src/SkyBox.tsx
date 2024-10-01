@@ -19,11 +19,12 @@ export type SkyBoxImpl = Mesh<BoxGeometry, SkyBoxMaterial>
 export interface SkyBoxProps extends ComponentPropsWithRef<typeof Box> {
   sun?: boolean
   sunDirection?: Vector3
-  sunAngularRadius?: number
+  sunRadius?: number
+  sunIntensity?: number
 }
 
 export const SkyBox = forwardRef<SkyBoxImpl, SkyBoxProps>(function SkyBox(
-  { sun, sunDirection, sunAngularRadius, ...props } = {},
+  { sun, sunDirection, sunRadius, sunIntensity, ...props } = {},
   forwardedRef
 ) {
   // Make textures shared.
@@ -51,7 +52,8 @@ export const SkyBox = forwardRef<SkyBoxImpl, SkyBoxProps>(function SkyBox(
         transmittanceTexture={transmittanceTexture}
         sun={sun}
         sunDirection={sunDirection}
-        sunAngularRadius={sunAngularRadius}
+        sunRadius={sunRadius}
+        sunIntensity={sunIntensity}
       />
     </Box>
   )

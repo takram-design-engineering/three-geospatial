@@ -4,7 +4,6 @@ import {
   Matrix4,
   RawShaderMaterial,
   Uniform,
-  Vector2,
   Vector3,
   type BufferGeometry,
   type Camera,
@@ -29,19 +28,19 @@ export interface AtmosphereMaterialParameters
   transmittanceTexture?: Texture
   sun?: boolean
   sunDirection?: Vector3
-  sunAngularRadius?: number
+  sunRadius?: number
+  sunIntensity?: number
 }
 
 export class AtmosphereMaterial extends RawShaderMaterial {
-  private _sunAngularRadius!: number
-
   constructor({
     irradianceTexture,
     scatteringTexture,
     transmittanceTexture,
     sun = true,
     sunDirection,
-    sunAngularRadius = 0.00465, // 16 minutes of arc
+    sunRadius = 0.00465, // 16 minutes of arc
+    sunIntensity = 1,
     ...params
   }: AtmosphereMaterialParameters = {}) {
     super({
@@ -61,7 +60,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         inverseViewMatrix: new Uniform(new Matrix4()),
         cameraPosition: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
-        sunSize: new Uniform(new Vector2())
+        sunParams: new Uniform(new Vector3())
       },
       defines: {
         SUN: '1',
@@ -70,9 +69,8 @@ export class AtmosphereMaterial extends RawShaderMaterial {
       depthWrite: false,
       depthTest: false
     })
-    if (sunAngularRadius != null) {
-      this.sunAngularRadius = sunAngularRadius
-    }
+    this.sunRadius = sunRadius
+    this.sunIntensity = sunIntensity
   }
 
   override onBeforeRender(
@@ -140,12 +138,20 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     this.uniforms.sunDirection.value.copy(value)
   }
 
-  get sunAngularRadius(): number {
-    return this._sunAngularRadius
+  get sunRadius(): number {
+    return this.uniforms.sunParams.value.x
   }
 
-  set sunAngularRadius(value: number) {
-    this.uniforms.sunSize.value.set(Math.tan(value), Math.cos(value))
-    this._sunAngularRadius = value
+  set sunRadius(value: number) {
+    this.uniforms.sunParams.value.x = value
+    this.uniforms.sunParams.value.y = Math.cos(value)
+  }
+
+  get sunIntensity(): number {
+    return this.uniforms.sunParams.value.z
+  }
+
+  set sunIntensity(value: number) {
+    this.uniforms.sunParams.value.z = value
   }
 }

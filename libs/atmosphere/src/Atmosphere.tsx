@@ -20,12 +20,13 @@ export type AtmosphereImpl = Mesh<BufferGeometry, AtmosphereMaterial>
 export interface AtmosphereProps extends MeshProps {
   sun?: boolean
   sunDirection?: Vector3
-  sunAngularRadius?: number
+  sunRadius?: number
+  sunIntensity?: number
 }
 
 export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
   function Atmosphere(
-    { sun, sunDirection, sunAngularRadius, ...props } = {},
+    { sun, sunDirection, sunRadius, sunIntensity, ...props } = {},
     forwardedRef
   ) {
     // Make textures shared.
@@ -53,7 +54,8 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
           transmittanceTexture={transmittanceTexture}
           sun={sun}
           sunDirection={sunDirection}
-          sunAngularRadius={sunAngularRadius}
+          sunRadius={sunRadius}
+          sunIntensity={sunIntensity}
         />
       </ScreenQuad>
     )

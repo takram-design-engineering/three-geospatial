@@ -56,7 +56,12 @@ const Scene: FC = () => {
             clearcoat={1}
           >
             <RenderCubeTexture attach='envMap' position={position}>
-              <SkyBoxCube ref={atmosphere2Ref} position={position} />
+              <SkyBoxCube
+                ref={atmosphere2Ref}
+                position={position}
+                sunRadius={0.1}
+                sunIntensity={0.0008}
+              />
             </RenderCubeTexture>
           </meshPhysicalMaterial>
         </TorusKnot>
