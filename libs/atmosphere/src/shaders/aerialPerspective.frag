@@ -73,9 +73,9 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
   radiance = radiance * (sunIrradiance + skyIrradiance);
   #elif defined(SUN_IRRADIANCE)
-  radiance = radiance + radiance * sunIrradiance;
+  radiance = radiance * sunIrradiance;
   #elif defined(SKY_IRRADIANCE)
-  radiance = radiance + radiance * skyIrradiance;
+  radiance = radiance * skyIrradiance + radiance;
   #endif
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 

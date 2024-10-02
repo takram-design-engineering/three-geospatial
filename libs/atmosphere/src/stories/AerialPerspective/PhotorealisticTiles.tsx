@@ -128,6 +128,7 @@ const Scene: FC = () => {
         <AerialPerspective
           ref={aerialPerspectiveRef}
           reconstructNormal
+          skyIrradiance={false}
           inputIntensity={0.08}
           blendFunction={
             !normal && !depth && !depthNormal
