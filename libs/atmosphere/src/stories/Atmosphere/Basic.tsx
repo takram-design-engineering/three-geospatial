@@ -13,7 +13,7 @@ import { Cartographic, Ellipsoid, radians } from '@geovanni/core'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useMotionDate } from '../useMotionDate'
 
-const location = new Cartographic(radians(139.7671), radians(35.6812))
+const location = new Cartographic(radians(139.7671), radians(35.6812), 2000)
 const position = location.toVector()
 const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
 

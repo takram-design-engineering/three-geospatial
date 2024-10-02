@@ -20,7 +20,7 @@ import { Atmosphere } from '../../Atmosphere'
 import { SkyBox as SkyBoxCube, type SkyBoxImpl } from '../../SkyBox'
 import { useMotionDate } from '../useMotionDate'
 
-const location = new Cartographic(radians(139.7671), radians(35.6812))
+const location = new Cartographic(radians(139.7671), radians(35.6812), 2000)
 const position = location.toVector()
 const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
 

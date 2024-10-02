@@ -18,5 +18,6 @@ void main() {
   vHeightAdjustment =
     getHeightAdjustment(cameraHeight, ellipsoidRadii, ellipsoidSurface) *
     METER_TO_UNIT_LENGTH;
+
   gl_Position = vec4(position, 1.0);
 }
