@@ -28,7 +28,7 @@
       },
       "extends": ["plugin:@nx/typescript", "love", "prettier"],
       "rules": {
-        // It's not harmful.
+        // It's not harmful. Empty interfaces have purposes.
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/no-empty-function": "off",
 
@@ -43,7 +43,10 @@
         "@typescript-eslint/no-unsafe-argument": "off",
 
         // {} is semantically different from the "object" and "Record".
-        "@typescript-eslint/ban-types": "off"
+        "@typescript-eslint/ban-types": "off",
+
+        // For consistency with next/core-web-vitals.
+        "react/display-name": "error"
       }
     },
     {
