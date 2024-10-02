@@ -1,10 +1,12 @@
-import {
-  EffectComposerContext,
-  type EffectProps
-} from '@react-three/postprocessing'
+import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
-import { AerialPerspectiveEffect } from './AerialPerspectiveEffect'
+import { type EffectProps } from '@geovanni/effects'
+
+import {
+  AerialPerspectiveEffect,
+  type AerialPerspectiveEffectOptions
+} from './AerialPerspectiveEffect'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
@@ -17,7 +19,10 @@ import {
 import { usePrecomputedData } from './usePrecomputedData'
 
 export interface AerialPerspectiveProps
-  extends EffectProps<typeof AerialPerspectiveEffect> {}
+  extends EffectProps<
+    typeof AerialPerspectiveEffect,
+    AerialPerspectiveEffectOptions
+  > {}
 
 export const AerialPerspective = forwardRef<
   AerialPerspectiveEffect,
@@ -38,9 +43,11 @@ export const AerialPerspective = forwardRef<
     height: TRANSMITTANCE_TEXTURE_HEIGHT
   })
 
+  const { camera, normalPass } = useContext(EffectComposerContext)
+
   const effect = useMemo(
-    () => new AerialPerspectiveEffect({ blendFunction }),
-    [blendFunction]
+    () => new AerialPerspectiveEffect(camera, { blendFunction }),
+    [camera, blendFunction]
   )
   useEffect(() => {
     return () => {
@@ -48,7 +55,6 @@ export const AerialPerspective = forwardRef<
     }
   }, [effect])
 
-  const { camera, normalPass } = useContext(EffectComposerContext)
   return (
     <primitive
       ref={forwardedRef}

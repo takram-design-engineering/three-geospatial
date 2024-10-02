@@ -1,5 +1,6 @@
 uniform sampler2D normalBuffer;
 
+uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform mat4 cameraMatrixWorld;
@@ -13,7 +14,7 @@ varying vec3 vWorldDirection; // Not used for now.
 #define DEPTH_THRESHOLD (1.0 - EPSILON)
 #endif
 
-float normalizeDepth(const float depth) {
+float reverseLogDepth(const float depth) {
   #ifdef LOG_DEPTH
   float d = pow(2.0, depth * log2(cameraFar + 1.0)) - 1.0;
   float a = cameraFar / (cameraFar - cameraNear);
@@ -24,11 +25,11 @@ float normalizeDepth(const float depth) {
   #endif
 }
 
-vec3 screenToWorld(const vec2 uv, const float depth) {
-  vec4 ndc = vec4(vec3(uv.xy, depth) * 2.0 - 1.0, 1.0);
-  vec4 clip = inverseProjectionMatrix * ndc;
-  vec4 view = inverseViewMatrix * (clip / clip.w);
-  return view.xyz;
+vec3 screenToView(const vec2 uv, const float depth, const float z) {
+  vec4 clip = vec4(vec3(uv, depth) * 2.0 - 1.0, 1.0);
+  float clipW = projectionMatrix[2][3] * z + projectionMatrix[3][3];
+  clip *= clipW;
+  return (inverseProjectionMatrix * clip).xyz;
 }
 
 vec3 readNormal(const vec2 uv) {
@@ -41,12 +42,21 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     outputColor = inputColor;
     return;
   }
+  depth = reverseLogDepth(depth);
 
   // Reconstruct position and normal in world space.
-  depth = normalizeDepth(depth);
-  float viewZ = getViewZ(depth);
-  vec3 worldPosition = screenToWorld(uv, depth) * METER_TO_UNIT_LENGTH;
+  vec3 viewPosition = screenToView(uv, depth, getViewZ(depth));
+  vec3 worldPosition =
+    (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
+
+  #ifdef RECONSTRUCT_NORMAL
+  vec3 dx = dFdx(viewPosition);
+  vec3 dy = dFdy(viewPosition);
+  vec3 viewNormal = normalize(cross(dx, dy));
+  #else
   vec3 viewNormal = readNormal(uv);
+  #endif // RECONSTRUCT_NORMAL
+
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
   vec3 radiance = inputColor.rgb * inputIntensity;

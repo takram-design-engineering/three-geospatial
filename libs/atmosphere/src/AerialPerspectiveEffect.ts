@@ -20,9 +20,9 @@ import vertexShader from './shaders/aerialPerspective.vert'
 import atmosphericScattering from './shaders/atmosphericScattering.glsl'
 
 export interface AerialPerspectiveEffectOptions {
-  camera?: Camera
   blendFunction?: BlendFunction
   normalBuffer?: Texture | null
+  reconstructNormal?: boolean
   sunIrradiance?: boolean
   skyIrradiance?: boolean
   transmittance?: boolean
@@ -31,18 +31,19 @@ export interface AerialPerspectiveEffectOptions {
 }
 
 export class AerialPerspectiveEffect extends Effect {
-  camera?: Camera | null
-
-  constructor({
-    camera,
-    blendFunction = BlendFunction.NORMAL,
-    normalBuffer = null,
-    sunIrradiance = true,
-    skyIrradiance = true,
-    transmittance = true,
-    inscatter = true,
-    inputIntensity = 1
-  }: AerialPerspectiveEffectOptions = {}) {
+  constructor(
+    private camera: Camera,
+    {
+      blendFunction = BlendFunction.NORMAL,
+      normalBuffer = null,
+      reconstructNormal = false,
+      sunIrradiance = true,
+      skyIrradiance = true,
+      transmittance = true,
+      inscatter = true,
+      inputIntensity = 1
+    }: AerialPerspectiveEffectOptions = {}
+  ) {
     super(
       'AerialPerspectiveEffect',
       `${atmosphericScattering}${fragmentShader}`,
@@ -56,6 +57,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['single_mie_scattering_texture', new Uniform(null)],
           ['transmittance_texture', new Uniform(null)],
           ['normalBuffer', new Uniform(normalBuffer)],
+          ['projectionMatrix', new Uniform(new Matrix4())],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
@@ -72,10 +74,19 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
     this.camera = camera
+    this.reconstructNormal = reconstructNormal
     this.sunIrradiance = sunIrradiance
     this.skyIrradiance = skyIrradiance
     this.transmittance = transmittance
     this.inscatter = inscatter
+  }
+
+  get mainCamera(): Camera {
+    return this.camera
+  }
+
+  override set mainCamera(value: Camera) {
+    this.camera = value
   }
 
   override initialize(
@@ -99,10 +110,12 @@ export class AerialPerspectiveEffect extends Effect {
       return
     }
     const uniforms = this.uniforms
+    const projectionMatrix = uniforms.get('projectionMatrix')!
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
     const cameraPosition = uniforms.get('cameraPosition')!
     const camera = this.camera
+    projectionMatrix.value.copy(camera.projectionMatrix)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
     cameraPosition.value.copy(camera.position)
@@ -114,6 +127,21 @@ export class AerialPerspectiveEffect extends Effect {
 
   set normalBuffer(value: Texture | null) {
     this.uniforms.get('normalBuffer')!.value = value
+  }
+
+  get reconstructNormal(): boolean {
+    return this.defines.has('RECONSTRUCT_NORMAL')
+  }
+
+  set reconstructNormal(value: boolean) {
+    if (value !== this.reconstructNormal) {
+      if (value) {
+        this.defines.set('RECONSTRUCT_NORMAL', '1')
+      } else {
+        this.defines.delete('RECONSTRUCT_NORMAL')
+      }
+      this.setChanged()
+    }
   }
 
   get irradianceTexture(): Texture | null {
