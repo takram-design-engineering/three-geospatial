@@ -1,9 +1,12 @@
 {
   "name": "@geovanni/3d-tiles",
   "version": "0.0.1",
-  "private": true,
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    }
+  },
   "main": "./index.js",
-  "module": "./index.mjs",
-  "typings": "./index.d.ts",
-  "dependencies": {}
+  "types": "./index.d.ts"
 }
