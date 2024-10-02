@@ -3,12 +3,11 @@ uniform sampler2D normalBuffer;
 uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
-uniform mat4 cameraMatrixWorld;
 uniform vec3 sunDirection;
 uniform float inputIntensity;
 
 varying vec3 vWorldPosition;
-varying vec3 vWorldDirection; // Not used for now.
+in float vHeightAdjustment;
 
 #ifndef DEPTH_THRESHOLD
 #define DEPTH_THRESHOLD (1.0 - EPSILON)
@@ -48,6 +47,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 viewPosition = screenToView(uv, depth, getViewZ(depth));
   vec3 worldPosition =
     (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
+  vec3 surfaceNormal = normalize(worldPosition);
+  worldPosition = worldPosition - surfaceNormal * vHeightAdjustment;
 
   #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);

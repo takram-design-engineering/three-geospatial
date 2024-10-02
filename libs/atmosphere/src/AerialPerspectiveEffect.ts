@@ -13,16 +13,25 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
+import { Cartographic, Ellipsoid } from '@geovanni/core'
+
 import { METER_TO_UNIT_LENGTH } from './constants'
 
 import fragmentShader from './shaders/aerialPerspective.frag'
 import vertexShader from './shaders/aerialPerspective.vert'
 import atmosphericScattering from './shaders/atmosphericScattering.glsl'
+import vertexCommon from './shaders/vertexCommon.glsl'
+
+const cartographicScratch = new Cartographic()
 
 export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction
   normalBuffer?: Texture | null
   reconstructNormal?: boolean
+  irradianceTexture?: Texture
+  scatteringTexture?: Texture
+  transmittanceTexture?: Texture
+  ellipsoid?: Ellipsoid
   sunIrradiance?: boolean
   skyIrradiance?: boolean
   transmittance?: boolean
@@ -37,6 +46,10 @@ export class AerialPerspectiveEffect extends Effect {
       blendFunction = BlendFunction.NORMAL,
       normalBuffer = null,
       reconstructNormal = false,
+      irradianceTexture,
+      scatteringTexture,
+      transmittanceTexture,
+      ellipsoid = Ellipsoid.WGS84,
       sunIrradiance = true,
       skyIrradiance = true,
       transmittance = true,
@@ -49,18 +62,20 @@ export class AerialPerspectiveEffect extends Effect {
       `${atmosphericScattering}${fragmentShader}`,
       {
         blendFunction,
-        vertexShader,
+        vertexShader: `${vertexCommon}${vertexShader}`,
         attributes: EffectAttribute.DEPTH,
         uniforms: new Map<string, Uniform>([
-          ['irradiance_texture', new Uniform(null)],
-          ['scattering_texture', new Uniform(null)],
-          ['single_mie_scattering_texture', new Uniform(null)],
-          ['transmittance_texture', new Uniform(null)],
+          ['irradiance_texture', new Uniform(irradianceTexture)],
+          ['scattering_texture', new Uniform(scatteringTexture)],
+          ['single_mie_scattering_texture', new Uniform(scatteringTexture)],
+          ['transmittance_texture', new Uniform(transmittanceTexture)],
           ['normalBuffer', new Uniform(normalBuffer)],
           ['projectionMatrix', new Uniform(new Matrix4())],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
+          ['cameraHeight', new Uniform(0)],
+          ['ellipsoidRadii', new Uniform(new Vector3().copy(ellipsoid.radii))],
           ['sunDirection', new Uniform(new Vector3())],
           ['inputIntensity', new Uniform(inputIntensity)]
         ]),
@@ -114,11 +129,13 @@ export class AerialPerspectiveEffect extends Effect {
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
     const cameraPosition = uniforms.get('cameraPosition')!
+    const cameraHeight = uniforms.get('cameraHeight')!
     const camera = this.camera
     projectionMatrix.value.copy(camera.projectionMatrix)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
-    cameraPosition.value.copy(camera.position)
+    const position = camera.getWorldPosition(cameraPosition.value)
+    cameraHeight.value = cartographicScratch.setFromVector(position).height
   }
 
   get normalBuffer(): Texture | null {

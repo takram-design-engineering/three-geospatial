@@ -15,17 +15,23 @@ import {
   type WebGLRenderer
 } from 'three'
 
+import { Cartographic, Ellipsoid } from '@geovanni/core'
+
 import { METER_TO_UNIT_LENGTH, SUN_ANGULAR_RADIUS } from './constants'
 
 import fragmentShader from './shaders/atmosphere.frag'
 import vertexShader from './shaders/atmosphere.vert'
 import atmosphericScattering from './shaders/atmosphericScattering.glsl'
+import vertexCommon from './shaders/vertexCommon.glsl'
+
+const cartographicScratch = new Cartographic()
 
 export interface AtmosphereMaterialParameters
   extends Partial<ShaderMaterialParameters> {
   irradianceTexture?: Texture
   scatteringTexture?: Texture
   transmittanceTexture?: Texture
+  ellipsoid?: Ellipsoid
   sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
@@ -36,13 +42,14 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     irradianceTexture,
     scatteringTexture,
     transmittanceTexture,
+    ellipsoid = Ellipsoid.WGS84,
     sun = true,
     sunDirection,
     sunAngularRadius = SUN_ANGULAR_RADIUS, // 16 minutes of arc
     ...params
   }: AtmosphereMaterialParameters = {}) {
     super({
-      vertexShader,
+      vertexShader: `${vertexCommon}${vertexShader}`,
       ...params,
       glslVersion: '300 es',
       fragmentShader: `${atmosphericScattering}${fragmentShader}`,
@@ -57,6 +64,8 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         inverseProjectionMatrix: new Uniform(new Matrix4()),
         inverseViewMatrix: new Uniform(new Matrix4()),
         cameraPosition: new Uniform(new Vector3()),
+        cameraHeight: new Uniform(0),
+        ellipsoidRadii: new Uniform(new Vector3().copy(ellipsoid.radii)),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         sunParams: new Uniform(new Vector3())
       },
@@ -84,7 +93,9 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     uniforms.modelMatrix.value.copy(object.matrixWorld)
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
-    camera.getWorldPosition(uniforms.cameraPosition.value)
+    const position = camera.getWorldPosition(uniforms.cameraPosition.value)
+    uniforms.cameraHeight.value =
+      cartographicScratch.setFromVector(position).height
   }
 
   get irradianceTexture(): Texture | null {

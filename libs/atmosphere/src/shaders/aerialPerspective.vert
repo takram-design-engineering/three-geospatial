@@ -1,13 +1,14 @@
 uniform mat4 inverseProjectionMatrix;
-uniform mat4 inverseViewMatrix;
 uniform vec3 cameraPosition;
+uniform float cameraHeight;
+uniform vec3 ellipsoidRadii;
 
 varying vec3 vWorldPosition;
-varying vec3 vWorldDirection;
+varying float vHeightAdjustment;
 
 void mainSupport() {
   vec4 viewPosition = inverseProjectionMatrix * vec4(position, 1.0);
-  vec4 worldDirection = inverseViewMatrix * vec4(viewPosition.xyz, 0.0);
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
-  vWorldDirection = worldDirection.xyz;
+  vHeightAdjustment =
+    getHeightAdjustment(cameraHeight, ellipsoidRadii) * METER_TO_UNIT_LENGTH;
 }
