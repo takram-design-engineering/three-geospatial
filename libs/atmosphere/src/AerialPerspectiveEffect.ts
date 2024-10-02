@@ -13,7 +13,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { Cartographic, Ellipsoid } from '@geovanni/core'
+import { Cartographic, Ellipsoid } from '@geovanni/math'
 
 import { ATMOSPHERE_BOTTOM_RADIUS, METER_TO_UNIT_LENGTH } from './constants'
 

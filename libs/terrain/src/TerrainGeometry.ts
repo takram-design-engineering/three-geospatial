@@ -8,7 +8,7 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { Cartographic, lerp, type Rectangle } from '@geovanni/core'
+import { Cartographic, lerp, type Rectangle } from '@geovanni/math'
 
 import { decodeOctNormal } from './decodeOctNormal'
 

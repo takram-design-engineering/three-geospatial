@@ -14,8 +14,8 @@ import {
   Atmosphere,
   ATMOSPHERE_BOTTOM_RADIUS
 } from '@geovanni/atmosphere'
-import { Cartographic, LocalFrame, radians } from '@geovanni/core'
 import { EffectComposer, SSAO } from '@geovanni/effects'
+import { Cartographic, LocalFrame, radians } from '@geovanni/math'
 
 import { SunLight } from './components/SunLight'
 import { Tileset } from './components/Tileset'

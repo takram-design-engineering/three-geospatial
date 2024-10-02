@@ -1,7 +1,7 @@
 import decode, { type QuantizedMeshData } from '@here/quantized-mesh-decoder'
 import stringTemplate from 'string-template'
 
-import { TilingScheme } from '@geovanni/core'
+import { TilingScheme } from '@geovanni/math'
 
 import { IonAsset } from './IonAsset'
 

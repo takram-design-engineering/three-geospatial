@@ -15,7 +15,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { Cartographic, Ellipsoid } from '@geovanni/core'
+import { Cartographic, Ellipsoid } from '@geovanni/math'
 
 import {
   ATMOSPHERE_BOTTOM_RADIUS,

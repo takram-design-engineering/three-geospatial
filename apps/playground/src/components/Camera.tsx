@@ -1,7 +1,7 @@
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { useMemo, type FC } from 'react'
 
-import { Cartographic, Ellipsoid } from '@geovanni/core'
+import { Cartographic, Ellipsoid } from '@geovanni/math'
 
 export const Camera: FC<{
   location: Cartographic

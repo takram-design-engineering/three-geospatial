@@ -14,7 +14,7 @@ import { useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
-import { Cartographic, Ellipsoid, LocalFrame, radians } from '@geovanni/core'
+import { Cartographic, Ellipsoid, LocalFrame, radians } from '@geovanni/math'
 
 import { Atmosphere } from '../../Atmosphere'
 import { SkyBox as SkyBoxCube, type SkyBoxImpl } from '../../SkyBox'

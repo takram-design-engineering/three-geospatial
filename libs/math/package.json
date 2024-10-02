@@ -1,0 +1,12 @@
+{
+  "name": "@geovanni/math",
+  "version": "0.0.1",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    }
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts"
+}

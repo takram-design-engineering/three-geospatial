@@ -3,7 +3,7 @@ import { forwardRef, memo, useEffect, useMemo } from 'react'
 import { suspend } from 'suspend-react'
 import { type Mesh } from 'three'
 
-import { Rectangle } from '@geovanni/core'
+import { Rectangle } from '@geovanni/math'
 
 import { IonTerrain } from './IonTerrain'
 import { TerrainGeometry } from './TerrainGeometry'

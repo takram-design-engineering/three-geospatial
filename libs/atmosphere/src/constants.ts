@@ -1,4 +1,4 @@
-import { radians } from '@geovanni/core'
+import { radians } from '@geovanni/math'
 
 export const IRRADIANCE_TEXTURE_WIDTH = 64
 export const IRRADIANCE_TEXTURE_HEIGHT = 16

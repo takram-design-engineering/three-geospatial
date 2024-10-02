@@ -14,14 +14,14 @@ import { Suspense, useMemo, useRef, type FC } from 'react'
 import { MeshStandardMaterial, Vector3 } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
+import { Depth, EffectComposer, Normal } from '@geovanni/effects'
 import {
   Cartographic,
   Ellipsoid,
   LocalFrame,
   radians,
   TilingScheme
-} from '@geovanni/core'
-import { Depth, EffectComposer, Normal } from '@geovanni/effects'
+} from '@geovanni/math'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
 import { AerialPerspective } from '../../AerialPerspective'

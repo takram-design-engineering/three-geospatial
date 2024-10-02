@@ -8,7 +8,7 @@ import { useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
-import { Cartographic, Ellipsoid, radians } from '@geovanni/core'
+import { Cartographic, Ellipsoid, radians } from '@geovanni/math'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useMotionDate } from '../useMotionDate'
