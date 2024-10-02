@@ -15,7 +15,7 @@ import { useMotionDate } from '../useMotionDate'
 
 const location = new Cartographic(radians(139.7671), radians(35.6812), 2000)
 const position = location.toVector()
-const up = Ellipsoid.WGS84.geodeticSurfaceNormal(position)
+const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const Scene: FC = () => {
   const motionDate = useMotionDate()

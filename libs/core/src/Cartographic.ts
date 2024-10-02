@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 
 import { Ellipsoid } from './Ellipsoid'
-import { projectToEllipsoid } from './projectToEllipsoid'
+import { projectToEllipsoidSurface } from './projectToEllipsoidSurface'
 
 export type CartographicTuple = [number, number, number]
 
@@ -84,7 +84,7 @@ export class Cartographic {
   ): this {
     const { ellipsoid = Ellipsoid.WGS84, centerTolerance } = options
     const oneOverRadiiSquared = ellipsoid.oneOverRadiiSquared(vectorScratch1)
-    const projection = projectToEllipsoid(
+    const projection = projectToEllipsoidSurface(
       vector,
       oneOverRadiiSquared,
       centerTolerance,

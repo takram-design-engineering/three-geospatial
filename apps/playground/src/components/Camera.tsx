@@ -12,7 +12,7 @@ export const Camera: FC<{
     [location]
   )
   const normal = useMemo(
-    () => Ellipsoid.WGS84.geodeticSurfaceNormal(target),
+    () => Ellipsoid.WGS84.getSurfaceNormal(target),
     [target]
   )
   return (

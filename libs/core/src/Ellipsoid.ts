@@ -45,7 +45,7 @@ export class Ellipsoid {
     )
   }
 
-  geodeticSurfaceNormal(
+  getSurfaceNormal(
     vector: Vector3,
     result = new Vector3()
   ): Vector3 | undefined {

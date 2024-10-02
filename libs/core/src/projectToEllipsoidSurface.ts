@@ -3,7 +3,7 @@ import { Vector3 } from 'three'
 const vectorScratch = new Vector3()
 
 // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/scaleToGeodeticSurface.js
-export function projectToEllipsoid(
+export function projectToEllipsoidSurface(
   vector: Vector3,
   oneOverRadiiSquared: Vector3,
   centerTolerance = 0.1,
