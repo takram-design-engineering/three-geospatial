@@ -15,7 +15,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { METER_TO_UNIT_LENGTH } from './constants'
+import { METER_TO_UNIT_LENGTH, SUN_ANGULAR_RADIUS } from './constants'
 
 import fragmentShader from './shaders/atmosphere.frag'
 import vertexShader from './shaders/atmosphere.vert'
@@ -28,8 +28,7 @@ export interface AtmosphereMaterialParameters
   transmittanceTexture?: Texture
   sun?: boolean
   sunDirection?: Vector3
-  sunRadius?: number
-  sunIntensity?: number
+  sunAngularRadius?: number
 }
 
 export class AtmosphereMaterial extends RawShaderMaterial {
@@ -39,8 +38,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     transmittanceTexture,
     sun = true,
     sunDirection,
-    sunRadius = 0.00465, // 16 minutes of arc
-    sunIntensity = 1,
+    sunAngularRadius = SUN_ANGULAR_RADIUS, // 16 minutes of arc
     ...params
   }: AtmosphereMaterialParameters = {}) {
     super({
@@ -69,8 +67,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
       depthWrite: false,
       depthTest: false
     })
-    this.sunRadius = sunRadius
-    this.sunIntensity = sunIntensity
+    this.sunAngularRadius = sunAngularRadius
   }
 
   override onBeforeRender(
@@ -138,20 +135,13 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     this.uniforms.sunDirection.value.copy(value)
   }
 
-  get sunRadius(): number {
+  get sunAngularRadius(): number {
     return this.uniforms.sunParams.value.x
   }
 
-  set sunRadius(value: number) {
+  set sunAngularRadius(value: number) {
     this.uniforms.sunParams.value.x = value
     this.uniforms.sunParams.value.y = Math.cos(value)
-  }
-
-  get sunIntensity(): number {
-    return this.uniforms.sunParams.value.z
-  }
-
-  set sunIntensity(value: number) {
-    this.uniforms.sunParams.value.z = value
+    this.uniforms.sunParams.value.z = SUN_ANGULAR_RADIUS ** 2 / value ** 2
   }
 }

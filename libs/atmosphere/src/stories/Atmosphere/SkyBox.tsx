@@ -59,8 +59,7 @@ const Scene: FC = () => {
               <SkyBoxCube
                 ref={atmosphere2Ref}
                 position={position}
-                sunRadius={0.1}
-                sunIntensity={0.005}
+                sunAngularRadius={0.1}
               />
             </RenderCubeTexture>
           </meshPhysicalMaterial>

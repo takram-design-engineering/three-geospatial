@@ -1,3 +1,5 @@
+import { radians } from '@geovanni/core'
+
 export const IRRADIANCE_TEXTURE_WIDTH = 64
 export const IRRADIANCE_TEXTURE_HEIGHT = 16
 export const SCATTERING_TEXTURE_WIDTH = 256
@@ -8,3 +10,4 @@ export const TRANSMITTANCE_TEXTURE_HEIGHT = 64
 export const METER_TO_UNIT_LENGTH = 1 / 1000
 export const ATMOSPHERE_BOTTOM_RADIUS = 6360000
 export const ATMOSPHERE_TOP_RADIUS = 6420000
+export const SUN_ANGULAR_RADIUS = radians(0.2678)
