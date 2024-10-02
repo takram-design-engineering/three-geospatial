@@ -29,9 +29,9 @@ vec3 readNormal(const vec2 uv) {
 vec3 reconstructNormal(const vec2 uv) {
   float depth = readDepth(uv);
   depth = reverseLogDepth(depth);
-  vec3 center = screenToView(uv, depth, getViewZ(depth));
-  vec3 dx = dFdx(center);
-  vec3 dy = dFdy(center);
+  vec3 position = screenToView(uv, depth, getViewZ(depth));
+  vec3 dx = dFdx(position);
+  vec3 dy = dFdy(position);
   return normalize(cross(dx, dy));
 }
 

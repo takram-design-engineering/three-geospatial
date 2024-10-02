@@ -1,3 +1,4 @@
+export * from './assertions'
 export * from './axios'
 export * from './Cartographic'
 export * from './Ellipsoid'
