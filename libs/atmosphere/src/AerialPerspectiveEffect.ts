@@ -15,7 +15,7 @@ import {
 
 import { Cartographic, Ellipsoid } from '@geovanni/core'
 
-import { METER_TO_UNIT_LENGTH } from './constants'
+import { ATMOSPHERE_BOTTOM_RADIUS, METER_TO_UNIT_LENGTH } from './constants'
 
 import fragmentShader from './shaders/aerialPerspective.frag'
 import vertexShader from './shaders/aerialPerspective.vert'
@@ -76,11 +76,13 @@ export class AerialPerspectiveEffect extends Effect {
           ['cameraPosition', new Uniform(new Vector3())],
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidRadii', new Uniform(new Vector3().copy(ellipsoid.radii))],
+          ['ellipsoidSurface', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(new Vector3())],
           ['inputIntensity', new Uniform(inputIntensity)]
         ]),
         defines: new Map<string, string>([
-          ['METER_TO_UNIT_LENGTH', `${METER_TO_UNIT_LENGTH}`],
+          ['METER_TO_UNIT_LENGTH', `float(${METER_TO_UNIT_LENGTH})`],
+          ['ATMOSPHERE_BOTTOM_RADIUS', `float(${ATMOSPHERE_BOTTOM_RADIUS})`],
           ['SUN_IRRADIANCE', '1'],
           ['SKY_IRRADIANCE', '1'],
           ['TRANSMITTANCE', '1'],
@@ -130,12 +132,15 @@ export class AerialPerspectiveEffect extends Effect {
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
     const cameraPosition = uniforms.get('cameraPosition')!
     const cameraHeight = uniforms.get('cameraHeight')!
+    const ellipsoidSurface = uniforms.get('ellipsoidSurface')!
     const camera = this.camera
     projectionMatrix.value.copy(camera.projectionMatrix)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
     const position = camera.getWorldPosition(cameraPosition.value)
-    cameraHeight.value = cartographicScratch.setFromVector(position).height
+    const cartographic = cartographicScratch.setFromVector(position)
+    cameraHeight.value = cartographic.height
+    cartographic.setHeight(0).toVector(ellipsoidSurface.value)
   }
 
   get normalBuffer(): Texture | null {

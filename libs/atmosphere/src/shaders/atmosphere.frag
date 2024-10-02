@@ -3,16 +3,14 @@ uniform vec3 sunParams;
 
 in vec3 vWorldPosition;
 in vec3 vWorldDirection;
-in float vHeightAdjustment;
+in vec3 vHeightAdjustment;
 layout(location = 0) out vec4 outputColor;
 
 void main() {
   vec3 viewDirection = normalize(vWorldDirection);
-  vec3 surfaceNormal = normalize(vWorldPosition);
-
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
-    vWorldPosition - surfaceNormal * vHeightAdjustment,
+    vWorldPosition - vHeightAdjustment,
     viewDirection,
     0.0, // shadow length
     sunDirection,

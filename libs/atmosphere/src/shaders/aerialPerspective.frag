@@ -7,7 +7,7 @@ uniform vec3 sunDirection;
 uniform float inputIntensity;
 
 varying vec3 vWorldPosition;
-in float vHeightAdjustment;
+varying vec3 vHeightAdjustment;
 
 #ifndef DEPTH_THRESHOLD
 #define DEPTH_THRESHOLD (1.0 - EPSILON)
@@ -47,8 +47,6 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 viewPosition = screenToView(uv, depth, getViewZ(depth));
   vec3 worldPosition =
     (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
-  vec3 surfaceNormal = normalize(worldPosition);
-  worldPosition = worldPosition - surfaceNormal * vHeightAdjustment;
 
   #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);
@@ -65,7 +63,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(
-    worldPosition,
+    worldPosition - vHeightAdjustment,
     worldNormal,
     sunDirection,
     skyIrradiance
@@ -82,8 +80,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
-    vWorldPosition,
-    worldPosition,
+    vWorldPosition - vHeightAdjustment,
+    worldPosition - vHeightAdjustment,
     0.0, // TODO: Shadow length
     sunDirection,
     transmittance
