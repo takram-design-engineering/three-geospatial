@@ -21,6 +21,7 @@ vec3 decodeOctNormalRange(const vec2 value, const float range) {
   return normalize(w);
 }
 
+// TODO: Normal seems flipped on southern hemisphere.
 vec3 decodeOctNormal(const float packed) {
   return decodeOctNormalRange(unpackOctNormal(packed), 255.0);
 }

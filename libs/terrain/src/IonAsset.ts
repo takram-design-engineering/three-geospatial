@@ -23,14 +23,14 @@ export class IonAsset {
   }
 
   async fetch<T>(url: string, options?: AxiosRequestConfig<T>): Promise<T> {
-    const asset = await (this.endpointPromise ?? this.loadEndpoint())
-    const href = new URL(url, asset.url).href
+    const endpoint = await this.loadEndpoint()
+    const href = new URL(url, endpoint.url).href
     try {
       const response = await axios<T>(href, {
         ...options,
         headers: {
           ...options?.headers,
-          Authorization: `Bearer ${asset.accessToken}`
+          Authorization: `Bearer ${endpoint.accessToken}`
         }
       })
       return response.data
@@ -43,7 +43,7 @@ export class IonAsset {
     }
   }
 
-  private async loadEndpoint(): Promise<AssetEndpoint> {
+  async loadEndpoint(): Promise<AssetEndpoint> {
     if (this.endpointPromise == null) {
       this.endpointPromise = (async () => {
         const response = await axios<AssetEndpoint>(

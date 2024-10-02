@@ -37,7 +37,7 @@ export class IonTerrain extends IonAsset {
   private layerPromise?: Promise<Layer>
 
   async fetchTile(params: TileParams): Promise<QuantizedMeshData> {
-    const layer = await (this.layerPromise ?? this.loadLayer())
+    const layer = await this.loadLayer()
     const [template] = layer.tiles
     return decode(
       await this.fetch<ArrayBuffer>(
