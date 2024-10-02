@@ -19,6 +19,7 @@ import { useEffect, useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
+import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
 import { getSunDirectionECEF } from '@geovanni/astronomy'
 import { Cartographic, radians } from '@geovanni/core'
 import { Depth, EffectComposer, Normal } from '@geovanni/effects'
@@ -75,6 +76,9 @@ const Scene: FC = () => {
         apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
       })
     )
+    tiles.registerPlugin(new UpdateOnChangePlugin())
+    tiles.registerPlugin(new TileCompressionPlugin())
+
     const loader = new GLTFLoader(tiles.manager)
     loader.setDRACOLoader(dracoLoader)
     tiles.manager.addHandler(/\.gltf$/, loader)
