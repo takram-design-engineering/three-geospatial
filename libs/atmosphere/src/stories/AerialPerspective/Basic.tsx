@@ -56,9 +56,10 @@ const tiles = tile
 const terrainMaterial = new MeshStandardMaterial({ color: 'gray' })
 
 const Scene: FC = () => {
-  const { normal, depth } = useControls('effect', {
+  const { normal, depth, depthNormal } = useControls('effect', {
+    depth: false,
     normal: false,
-    depth: false
+    depthNormal: false
   })
 
   const motionDate = useMotionDate()
@@ -76,32 +77,37 @@ const Scene: FC = () => {
     }
   })
 
-  const effects = useMemo(
+  const effectComposer = useMemo(
     () => (
-      <>
+      <EffectComposer key={Math.random()} normalPass multisampling={0}>
         <AerialPerspective ref={aerialPerspectiveRef} />
-        <Normal
-          blendFunction={normal ? BlendFunction.NORMAL : BlendFunction.SKIP}
-        />
         <Depth
           useTurbo
           blendFunction={depth ? BlendFunction.NORMAL : BlendFunction.SKIP}
         />
+        <Normal
+          reconstructFromDepth={depthNormal}
+          blendFunction={
+            normal || depthNormal ? BlendFunction.NORMAL : BlendFunction.SKIP
+          }
+        />
         <ToneMapping
           mode={ToneMappingMode.ACES_FILMIC}
           blendFunction={
-            !normal && !depth ? BlendFunction.NORMAL : BlendFunction.SKIP
+            !normal && !depth && !depthNormal
+              ? BlendFunction.NORMAL
+              : BlendFunction.SKIP
           }
         />
         <SMAA />
-      </>
+      </EffectComposer>
     ),
-    [normal, depth]
+    [normal, depth, depthNormal]
   )
 
   return (
     <>
-      <OrbitControls target={position} minDistance={1000} />
+      <OrbitControls target={position} minDistance={1e3} />
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
@@ -125,9 +131,7 @@ const Scene: FC = () => {
           />
         </Suspense>
       ))}
-      <EffectComposer normalPass multisampling={0}>
-        {effects}
-      </EffectComposer>
+      {effectComposer}
     </>
   )
 }
@@ -145,7 +149,7 @@ export const Basic: StoryFn = () => {
         logarithmicDepthBuffer: true,
         toneMappingExposure: exposure
       }}
-      camera={{ near: 1, far: 1e8, position, up }}
+      camera={{ near: 100, far: 1e6, position, up }}
     >
       <Scene />
     </Canvas>

@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ToneMapping } from '@react-three/postprocessing'
+import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import {
   GoogleCloudAuthPlugin,
@@ -8,14 +8,20 @@ import {
 import { GlobeControls } from '3d-tiles-renderer/src/three/controls/GlobeControls'
 import { parseISO } from 'date-fns'
 import { useControls } from 'leva'
-import { ToneMappingMode } from 'postprocessing'
+import {
+  BlendFunction,
+  EffectMaterial,
+  SMAAPreset,
+  ToneMappingMode,
+  type EffectComposer as EffectComposerImpl
+} from 'postprocessing'
 import { useEffect, useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
 import { Cartographic, radians } from '@geovanni/core'
-import { EffectComposer } from '@geovanni/effects'
+import { Depth, EffectComposer, Normal } from '@geovanni/effects'
 
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
@@ -28,13 +34,8 @@ const location = new Cartographic(
   radians(35.6812)
 )
 
-// Derive geoidal height of the above here:
-// https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh/calc_f.html'
-const geoidalHeight = 36.6624
-
 const surfaceNormal = location.toVector().normalize()
-const localLocation = new Cartographic().copy(location).setHeight(geoidalHeight)
-const cameraPosition = localLocation
+const cameraPosition = location
   .toVector()
   .add(new Vector3().copy(surfaceNormal).multiplyScalar(2000))
 
@@ -44,6 +45,12 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Scene: FC = () => {
+  const { normal, depth, depthNormal } = useControls('effect', {
+    depth: false,
+    normal: false,
+    depthNormal: false
+  })
+
   const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
@@ -94,25 +101,62 @@ const Scene: FC = () => {
     }
   }, [controls])
 
+  const composerRef = useRef<EffectComposerImpl>(null)
+
   useFrame(() => {
     tiles.update()
     controls.update()
+
+    const composer = composerRef.current
+    if (composer != null) {
+      composer.passes.forEach(pass => {
+        if (pass.fullscreenMaterial instanceof EffectMaterial) {
+          pass.fullscreenMaterial.adoptCameraSettings(camera)
+        }
+      })
+    }
   })
 
-  const effects = useMemo(
+  const effectComposer = useMemo(
     () => (
-      <>
+      <EffectComposer
+        key={Math.random()}
+        ref={composerRef}
+        normalPass
+        multisampling={0}
+      >
         <AerialPerspective
           ref={aerialPerspectiveRef}
-          sunDirection={sunDirection}
-          sunIrradiance={false}
-          skyIrradiance={false}
-          inputIntensity={0.1}
+          reconstructNormal
+          inputIntensity={0.08}
+          blendFunction={
+            !normal && !depth && !depthNormal
+              ? BlendFunction.NORMAL
+              : BlendFunction.SKIP
+          }
         />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-      </>
+        <Depth
+          useTurbo
+          blendFunction={depth ? BlendFunction.NORMAL : BlendFunction.SKIP}
+        />
+        <Normal
+          reconstructFromDepth={depthNormal}
+          blendFunction={
+            normal || depthNormal ? BlendFunction.NORMAL : BlendFunction.SKIP
+          }
+        />
+        <ToneMapping
+          mode={ToneMappingMode.AGX}
+          blendFunction={
+            !normal && !depth && !depthNormal
+              ? BlendFunction.NORMAL
+              : BlendFunction.SKIP
+          }
+        />
+        <SMAA preset={SMAAPreset.ULTRA} />
+      </EffectComposer>
     ),
-    []
+    [normal, depth, depthNormal]
   )
 
   return (
@@ -123,7 +167,7 @@ const Scene: FC = () => {
         renderOrder={-1}
       />
       <primitive object={tiles.group} />
-      <EffectComposer normalPass>{effects}</EffectComposer>
+      {effectComposer}
     </>
   )
 }
@@ -141,12 +185,7 @@ export const PhotorealisticTiles: StoryFn = () => {
         logarithmicDepthBuffer: true,
         toneMappingExposure: exposure
       }}
-      camera={{
-        near: 1,
-        far: 1e8,
-        position: cameraPosition,
-        up: surfaceNormal
-      }}
+      camera={{ position: cameraPosition, up: surfaceNormal }}
     >
       <Scene />
     </Canvas>

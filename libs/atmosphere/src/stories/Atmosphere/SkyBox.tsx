@@ -60,7 +60,7 @@ const Scene: FC = () => {
                 ref={atmosphere2Ref}
                 position={position}
                 sunRadius={0.1}
-                sunIntensity={0.0008}
+                sunIntensity={0.005}
               />
             </RenderCubeTexture>
           </meshPhysicalMaterial>
