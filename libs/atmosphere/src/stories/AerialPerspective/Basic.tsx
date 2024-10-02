@@ -113,8 +113,11 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} renderOrder={-1} />
       <ambientLight intensity={2} />
-      <Sphere args={[Ellipsoid.WGS84.minimumRadius, 360, 180]} receiveShadow>
-        <meshStandardMaterial color='black' />
+      <Sphere
+        args={[location.clone().setHeight(0).toVector().length(), 360, 180]}
+        receiveShadow
+      >
+        <meshStandardMaterial color='gray' />
       </Sphere>
       <LocalFrame location={location}>
         <TorusKnot args={[200, 60, 256, 64]} position={[0, 0, 20]}>
