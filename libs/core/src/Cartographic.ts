@@ -74,6 +74,7 @@ export class Cartographic {
     return this
   }
 
+  // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Cartographic.js#L119
   setFromVector(
     vector: Vector3,
     options: {
@@ -102,6 +103,7 @@ export class Cartographic {
     return this
   }
 
+  // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Cartesian3.js#L916
   toVector(
     result = new Vector3(),
     options: {

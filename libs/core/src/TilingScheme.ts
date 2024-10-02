@@ -32,6 +32,7 @@ export class TilingScheme {
     }
   }
 
+  // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/GeographicTilingScheme.js#L210
   cartographicToTile(
     cartographic: CartographicLike,
     z: number,
@@ -58,6 +59,7 @@ export class TilingScheme {
     return result
   }
 
+  // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/GeographicTilingScheme.js#L169
   tileToRectangle(
     tile: TileCoordinateLike,
     result = new Rectangle()
