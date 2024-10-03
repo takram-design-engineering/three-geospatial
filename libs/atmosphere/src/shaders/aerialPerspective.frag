@@ -24,9 +24,9 @@ float reverseLogDepth(const float depth) {
   #endif
 }
 
-vec3 screenToView(const vec2 uv, const float depth, const float z) {
+vec3 screenToView(const vec2 uv, const float depth, const float viewZ) {
   vec4 clip = vec4(vec3(uv, depth) * 2.0 - 1.0, 1.0);
-  float clipW = projectionMatrix[2][3] * z + projectionMatrix[3][3];
+  float clipW = projectionMatrix[2][3] * viewZ + projectionMatrix[3][3];
   clip *= clipW;
   return (inverseProjectionMatrix * clip).xyz;
 }
