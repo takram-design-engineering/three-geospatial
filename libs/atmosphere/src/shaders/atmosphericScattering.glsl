@@ -688,12 +688,12 @@ vec3 GetSkyRadianceToPoint(
   // See https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32
   if (!ray_r_mu_intersects_ground) {
     const float EPS = 0.004;
-    float muHoriz = -sqrt(
+    float mu_horiz = -sqrt(
       1.0 - atmosphere.bottom_radius / r * (atmosphere.bottom_radius / r)
     );
-    if (abs(mu - muHoriz) < EPS) {
-      float a = (mu - muHoriz + EPS) / (2.0 * EPS);
-      mu = muHoriz + EPS;
+    if (abs(mu - mu_horiz) < EPS) {
+      float a = (mu - mu_horiz + EPS) / (2.0 * EPS);
+      mu = mu_horiz + EPS;
       vec3 single_mie_scattering0;
       vec3 single_mie_scattering1;
       float r0 = ClampRadius(
@@ -702,7 +702,7 @@ vec3 GetSkyRadianceToPoint(
       );
       float mu0 = clamp((r * mu + d) / r0, -1.0, 1.0);
       float mu_s_0 = clamp((r * mu_s + d * nu) / r0, -1.0, 1.0);
-      vec3 inScatter0 = GetCombinedScattering(
+      vec3 in_scatter0 = GetCombinedScattering(
         atmosphere,
         scattering_texture,
         single_mie_scattering_texture,
@@ -713,7 +713,7 @@ vec3 GetSkyRadianceToPoint(
         ray_r_mu_intersects_ground,
         single_mie_scattering0
       );
-      vec3 inScatter1 = GetCombinedScattering(
+      vec3 in_scatter1 = GetCombinedScattering(
         atmosphere,
         scattering_texture,
         single_mie_scattering_texture,
@@ -724,12 +724,15 @@ vec3 GetSkyRadianceToPoint(
         ray_r_mu_intersects_ground,
         single_mie_scattering1
       );
-      vec3 inScatter = max(inScatter0 - shadow_transmittance * inScatter1, 0.0);
+      vec3 in_scatter = max(
+        in_scatter0 - shadow_transmittance * in_scatter1,
+        0.0
+      );
       vec3 mie_scattering = max(
         single_mie_scattering0 - shadow_transmittance * single_mie_scattering1,
         0.0
       );
-      scattering = inScatter;
+      scattering = in_scatter;
       single_mie_scattering = mie_scattering;
     }
   }
