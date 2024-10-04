@@ -1,3 +1,5 @@
+// cSpell:words minzoom maxzoom octvertexnormals watermask
+
 import decode, { type QuantizedMeshData } from '@here/quantized-mesh-decoder'
 import stringTemplate from 'string-template'
 
