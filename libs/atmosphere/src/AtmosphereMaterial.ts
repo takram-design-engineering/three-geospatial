@@ -36,6 +36,10 @@ export interface AtmosphereMaterialParameters
   sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
+  moon?: boolean
+  moonDirection?: Vector3
+  moonAngularRadius?: number
+  lunarRadianceScale?: number
 }
 
 export class AtmosphereMaterial extends RawShaderMaterial {
@@ -47,6 +51,10 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     sun = true,
     sunDirection,
     sunAngularRadius,
+    moon = true,
+    moonDirection,
+    moonAngularRadius = 0.0045, // ≈ 15.5 arcminutes
+    lunarRadianceScale = 1,
     ...params
   }: AtmosphereMaterialParameters = {}) {
     super({
@@ -90,10 +98,14 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         ellipsoidRadii: new Uniform(new Vector3().copy(ellipsoid.radii)),
         ellipsoidSurface: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
+        moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
+        moonAngularRadius: new Uniform(moonAngularRadius),
+        lunarRadianceScale: new Uniform(lunarRadianceScale)
       },
       defines: {
         METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`,
-        SUN: '1'
+        SUN: '1',
+        MOON: '1'
       },
       depthWrite: false,
       depthTest: false
@@ -174,5 +186,44 @@ export class AtmosphereMaterial extends RawShaderMaterial {
 
   set sunAngularRadius(value: number) {
     this.uniforms.u_sun_angular_radius.value = value
+  }
+
+  get moon(): boolean {
+    return this.defines.MOON != null
+  }
+
+  set moon(value: boolean) {
+    if (value !== this.moon) {
+      if (value) {
+        this.defines.MOON = '1'
+      } else {
+        delete this.defines.MOON
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get moonDirection(): Vector3 {
+    return this.uniforms.moonDirection.value
+  }
+
+  set moonDirection(value: Vector3) {
+    this.uniforms.moonDirection.value.copy(value)
+  }
+
+  get moonAngularRadius(): number {
+    return this.uniforms.moonAngularRadius.value
+  }
+
+  set moonAngularRadius(value: number) {
+    this.uniforms.moonAngularRadius.value = value
+  }
+
+  get lunarRadianceScale(): number {
+    return this.uniforms.lunarRadianceScale.value
+  }
+
+  set lunarRadianceScale(value: number) {
+    this.uniforms.lunarRadianceScale.value = value
   }
 }

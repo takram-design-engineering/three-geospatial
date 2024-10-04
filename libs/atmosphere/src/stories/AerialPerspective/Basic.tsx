@@ -13,7 +13,7 @@ import { BlendFunction, ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
 import { MeshStandardMaterial, Vector3 } from 'three'
 
-import { getSunDirectionECEF } from '@geovanni/astronomy'
+import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
 import { Depth, EffectComposer, Normal } from '@geovanni/effects'
 import {
   Cartographic,
@@ -64,13 +64,16 @@ const Scene: FC = () => {
 
   const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
+  const moonDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
 
   useFrame(() => {
     getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
+    getMoonDirectionECEF(new Date(motionDate.get()), moonDirectionRef.current)
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
+      atmosphereRef.current.material.moonDirection = moonDirectionRef.current
     }
     if (aerialPerspectiveRef.current != null) {
       aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
