@@ -3,7 +3,10 @@ import { type MeshProps } from '@react-three/fiber'
 import { forwardRef, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
-import { AtmosphereMaterial } from './AtmosphereMaterial'
+import {
+  AtmosphereMaterial,
+  atmosphereMaterialParametersDefaults
+} from './AtmosphereMaterial'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
@@ -28,8 +31,8 @@ export interface AtmosphereProps extends MeshProps {
 }
 
 export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
-  function Atmosphere(
-    {
+  function Atmosphere(props, forwardedRef) {
+    const {
       sun,
       sunDirection,
       sunAngularRadius,
@@ -37,10 +40,9 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
       moonDirection,
       moonAngularRadius,
       lunarRadianceScale,
-      ...props
-    } = {},
-    forwardedRef
-  ) {
+      ...others
+    } = { ...atmosphereMaterialParametersDefaults, ...props }
+
     // Make textures shared.
     const irradianceTexture = usePrecomputedData('/irradiance.bin', {
       width: IRRADIANCE_TEXTURE_WIDTH,
@@ -58,7 +60,7 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
 
     const material = useMemo(() => new AtmosphereMaterial(), [])
     return (
-      <ScreenQuad {...props} ref={forwardedRef}>
+      <ScreenQuad {...others} ref={forwardedRef}>
         <primitive
           object={material}
           irradianceTexture={irradianceTexture}

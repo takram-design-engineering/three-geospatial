@@ -1,5 +1,7 @@
 export * from './Depth'
+export * from './DepthEffect'
 export * from './EffectComposer'
 export * from './Normal'
+export * from './NormalEffect'
 export * from './SSAO'
 export * from './types'

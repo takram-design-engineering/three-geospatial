@@ -40,24 +40,37 @@ export interface AerialPerspectiveEffectOptions {
   inputIntensity?: number
 }
 
+export const aerialPerspectiveEffectOptionsDefaults = {
+  blendFunction: BlendFunction.NORMAL,
+  reconstructNormal: false,
+  ellipsoid: Ellipsoid.WGS84,
+  sunIrradiance: true,
+  skyIrradiance: true,
+  transmittance: true,
+  inscatter: true,
+  inputIntensity: 1
+} satisfies AerialPerspectiveEffectOptions
+
 export class AerialPerspectiveEffect extends Effect {
   constructor(
     private camera: Camera,
-    {
-      blendFunction = BlendFunction.NORMAL,
-      normalBuffer = null,
-      reconstructNormal = false,
+    options?: AerialPerspectiveEffectOptions
+  ) {
+    const {
+      blendFunction,
+      normalBuffer,
+      reconstructNormal,
       irradianceTexture,
       scatteringTexture,
       transmittanceTexture,
-      ellipsoid = Ellipsoid.WGS84,
-      sunIrradiance = true,
-      skyIrradiance = true,
-      transmittance = true,
-      inscatter = true,
-      inputIntensity = 1
-    }: AerialPerspectiveEffectOptions = {}
-  ) {
+      ellipsoid,
+      sunIrradiance,
+      skyIrradiance,
+      transmittance,
+      inscatter,
+      inputIntensity
+    } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
+
     super(
       'AerialPerspectiveEffect',
       `${parameters}${functions}${fragmentShader}`,

@@ -5,6 +5,7 @@ import { type EffectProps } from '@geovanni/effects'
 
 import {
   AerialPerspectiveEffect,
+  aerialPerspectiveEffectOptionsDefaults,
   type AerialPerspectiveEffectOptions
 } from './AerialPerspectiveEffect'
 import {
@@ -27,7 +28,12 @@ export interface AerialPerspectiveProps
 export const AerialPerspective = forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
->(function AerialPerspective({ blendFunction, ...props }, forwardedRef) {
+>(function AerialPerspective(props, forwardedRef) {
+  const { blendFunction, ...others } = {
+    ...aerialPerspectiveEffectOptionsDefaults,
+    ...props
+  }
+
   // Make textures shared.
   const irradianceTexture = usePrecomputedData('/irradiance.bin', {
     width: IRRADIANCE_TEXTURE_WIDTH,
@@ -64,7 +70,7 @@ export const AerialPerspective = forwardRef<
       irradianceTexture={irradianceTexture}
       scatteringTexture={scatteringTexture}
       transmittanceTexture={transmittanceTexture}
-      {...props}
+      {...others}
     />
   )
 })
