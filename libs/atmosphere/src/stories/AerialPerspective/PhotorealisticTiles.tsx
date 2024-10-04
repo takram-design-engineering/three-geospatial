@@ -15,7 +15,7 @@ import {
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
 import { useEffect, useMemo, useRef, type FC } from 'react'
-import { Vector3 } from 'three'
+import { Mesh, Vector3, type Group } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
@@ -41,6 +41,14 @@ const cameraPosition = location
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
+
+const onLoadModel = ((event: { type: 'load-model'; scene: Group }): void => {
+  event.scene.traverse(object => {
+    if (object instanceof Mesh) {
+      // TODO: Deal with vertex normal.
+    }
+  })
+}) as (event: Object) => void
 
 const Scene: FC = () => {
   const { normal, depth, depthNormal } = useControls('effect', {
@@ -82,8 +90,16 @@ const Scene: FC = () => {
     const loader = new GLTFLoader(tiles.manager)
     loader.setDRACOLoader(dracoLoader)
     tiles.manager.addHandler(/\.gltf$/, loader)
+
     return tiles
   }, [])
+
+  useEffect(() => {
+    tiles.addEventListener('load-model', onLoadModel)
+    return () => {
+      tiles.removeEventListener('load-model', onLoadModel)
+    }
+  }, [tiles])
 
   useEffect(() => {
     tiles.setCamera(camera)
