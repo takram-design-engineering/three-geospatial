@@ -2452,7 +2452,7 @@ __metadata:
     storybook: "npm:^8.3.5"
     string-template: "npm:^1.0.0"
     suspend-react: "npm:^0.1.3"
-    three: "npm:0.168.0"
+    three: "npm:0.169.0"
     three-stdlib: "npm:2.33.0"
     tiny-invariant: "npm:^1.3.3"
     ts-jest: "npm:^29.1.0"
@@ -21046,10 +21046,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"three@npm:0.168.0":
-  version: 0.168.0
-  resolution: "three@npm:0.168.0"
-  checksum: 10c0/04aa53e64a61f31edd9631e57fe697752c9d358bd96e1344206d05e981507a6dae5c9da4e3b8d9ec7c6c8fc49732fd3f23d3675d126fe9bc1936894bbee6cc98
+"three@npm:0.169.0":
+  version: 0.169.0
+  resolution: "three@npm:0.169.0"
+  checksum: 10c0/be2e20f45eaa50489cd22d366c41fa14528f00b873078f52fc6ef37140fa8e541e9805630bbe696ab9b027530c74e5cd341705266eb268b5219402fb9fa78ed4
   languageName: node
   linkType: hard
 
