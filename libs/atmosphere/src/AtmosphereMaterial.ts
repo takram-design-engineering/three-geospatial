@@ -17,11 +17,7 @@ import {
 
 import { Cartographic, Ellipsoid } from '@geovanni/math'
 
-import {
-  ATMOSPHERE_BOTTOM_RADIUS,
-  ATMOSPHERE_PARAMETERS,
-  METER_TO_UNIT_LENGTH,
-} from './constants'
+import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
 import fragmentShader from './shaders/atmosphere.frag'
 import vertexShader from './shaders/atmosphere.vert'
@@ -57,6 +53,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
       vertexShader: /* glsl */ `
         precision highp float;
         precision highp sampler3D;
+        ${parameters}
         ${vertexCommon}
         ${vertexShader}
       `,
@@ -96,7 +93,6 @@ export class AtmosphereMaterial extends RawShaderMaterial {
       },
       defines: {
         METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`,
-        ATMOSPHERE_BOTTOM_RADIUS: `float(${ATMOSPHERE_BOTTOM_RADIUS})`,
         SUN: '1'
       },
       depthWrite: false,

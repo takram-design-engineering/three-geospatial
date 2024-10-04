@@ -15,11 +15,7 @@ import {
 
 import { Cartographic, Ellipsoid } from '@geovanni/math'
 
-import {
-  ATMOSPHERE_BOTTOM_RADIUS,
-  ATMOSPHERE_PARAMETERS,
-  METER_TO_UNIT_LENGTH
-} from './constants'
+import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
 import fragmentShader from './shaders/aerialPerspective.frag'
 import vertexShader from './shaders/aerialPerspective.vert'
@@ -67,7 +63,7 @@ export class AerialPerspectiveEffect extends Effect {
       `${parameters}${functions}${fragmentShader}`,
       {
         blendFunction,
-        vertexShader: `${vertexCommon}${vertexShader}`,
+        vertexShader: `${parameters}${vertexCommon}${vertexShader}`,
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
         uniforms: new Map<string, Uniform>([
@@ -96,7 +92,6 @@ export class AerialPerspectiveEffect extends Effect {
         ]),
         defines: new Map<string, string>([
           ['METER_TO_UNIT_LENGTH', `float(${METER_TO_UNIT_LENGTH})`],
-          ['ATMOSPHERE_BOTTOM_RADIUS', `float(${ATMOSPHERE_BOTTOM_RADIUS})`],
           ['SUN_IRRADIANCE', '1'],
           ['SKY_IRRADIANCE', '1'],
           ['TRANSMITTANCE', '1'],

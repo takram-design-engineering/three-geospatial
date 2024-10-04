@@ -10,7 +10,9 @@ varying vec3 vHeightAdjustment;
 void mainSupport() {
   vec4 viewPosition = inverseProjectionMatrix * vec4(position, 1.0);
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
-  vHeightAdjustment =
-    getHeightAdjustment(cameraHeight, ellipsoidRadii, ellipsoidSurface) *
-    METER_TO_UNIT_LENGTH;
+  vHeightAdjustment = getHeightAdjustment(
+    cameraHeight,
+    ellipsoidRadii,
+    ellipsoidSurface
+  );
 }
