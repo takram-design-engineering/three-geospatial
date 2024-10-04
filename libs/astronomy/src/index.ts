@@ -22,14 +22,29 @@ function Rotation_Z(angle: number): RotationMatrix {
   ])
 }
 
-export function getSunDirectionECEF(
+export function getDirectionECEF(
+  body: Body,
   date: FlexibleDateTime,
   result = new Vector3()
 ): Vector3 {
-  const vector_EQJ = GeoVector(Body.Sun, date, true)
+  const vector_EQJ = GeoVector(body, date, true)
   const rotation_EQJ_EQD = Rotation_EQJ_EQD(date)
   const vector_EQD = RotateVector(rotation_EQJ_EQD, vector_EQJ)
   const rotation_EQD_ECEF = Rotation_Z(SiderealTime(date) * (Math.PI / 12))
   const vector_ECEF = RotateVector(rotation_EQD_ECEF, vector_EQD)
   return result.set(vector_ECEF.x, vector_ECEF.y, vector_ECEF.z).normalize()
+}
+
+export function getSunDirectionECEF(
+  date: FlexibleDateTime,
+  result = new Vector3()
+): Vector3 {
+  return getDirectionECEF(Body.Sun, date, result)
+}
+
+export function getMoonDirectionECEF(
+  date: FlexibleDateTime,
+  result = new Vector3()
+): Vector3 {
+  return getDirectionECEF(Body.Moon, date, result)
 }
