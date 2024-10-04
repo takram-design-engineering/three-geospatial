@@ -19,5 +19,7 @@ export const ATMOSPHERE_PARAMETERS = {
   rayleighScattering: new Vector3(0.005802, 0.013558, 0.0331),
   mieScattering: new Vector3(0.003996, 0.003996, 0.003996),
   miePhaseFunctionG: 0.8,
+  // Use 120 for float and 102 for half-float.
+  // TODO: Sync with precomputed data.
   muSMin: Math.cos(radians(102))
 }

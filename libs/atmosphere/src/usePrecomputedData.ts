@@ -107,26 +107,30 @@ class Data3DLoader extends DataLoader {
 
 export function usePrecomputedData(
   path: string,
-  imageSize: Omit<ImageSize, 'depth'>
+  imageSize: Omit<ImageSize, 'depth'>,
+  useHalfFloat?: boolean
 ): DataTexture
 
 export function usePrecomputedData(
   path: string,
-  imageSize: Required<ImageSize>
+  imageSize: Required<ImageSize>,
+  useHalfFloat?: boolean
 ): Data3DTexture
 
 export function usePrecomputedData(
   path: string,
-  imageSize: ImageSize
+  imageSize: ImageSize,
+  useHalfFloat?: boolean
 ): DataTexture | Data3DTexture
 
 export function usePrecomputedData(
   path: string,
-  imageSize: ImageSize
+  imageSize: ImageSize,
+  useHalfFloat = true
 ): DataTexture | Data3DTexture {
   return useLoader(
     imageSize.depth != null ? Data3DLoader : Data2DLoader,
-    path,
+    path.replace('.bin', useHalfFloat ? '_half_float.bin' : '_float.bin'),
     loader => {
       assertType<DataLoader>(loader)
       loader.imageSize = imageSize
