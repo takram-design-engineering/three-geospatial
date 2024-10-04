@@ -6,7 +6,6 @@ import {
   GooglePhotorealisticTilesRenderer
 } from '3d-tiles-renderer'
 import { GlobeControls } from '3d-tiles-renderer/src/three/controls/GlobeControls'
-import { parseISO } from 'date-fns'
 import { useControls } from 'leva'
 import {
   BlendFunction,
@@ -20,7 +19,7 @@ import { Vector3 } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
-import { getSunDirectionECEF } from '@geovanni/astronomy'
+import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
 import { Depth, EffectComposer, Normal } from '@geovanni/effects'
 import { Cartographic, radians } from '@geovanni/math'
 
@@ -40,8 +39,6 @@ const cameraPosition = location
   .toVector()
   .add(new Vector3().copy(surfaceNormal).multiplyScalar(2000))
 
-const sunDirection = getSunDirectionECEF(parseISO('2024-09-30T10:00:00+09:00'))
-
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
@@ -54,13 +51,16 @@ const Scene: FC = () => {
 
   const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
+  const moonDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
 
   useFrame(() => {
     getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
+    getMoonDirectionECEF(new Date(motionDate.get()), moonDirectionRef.current)
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
+      atmosphereRef.current.material.moonDirection = moonDirectionRef.current
     }
     if (aerialPerspectiveRef.current != null) {
       aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
@@ -166,11 +166,7 @@ const Scene: FC = () => {
 
   return (
     <>
-      <Atmosphere
-        ref={atmosphereRef}
-        sunDirection={sunDirection}
-        renderOrder={-1}
-      />
+      <Atmosphere ref={atmosphereRef} renderOrder={-1} />
       <primitive object={tiles.group} />
       {effectComposer}
     </>

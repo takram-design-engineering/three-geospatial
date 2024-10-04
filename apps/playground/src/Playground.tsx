@@ -9,11 +9,7 @@ import { useMemo, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
-import {
-  AerialPerspective,
-  Atmosphere,
-  ATMOSPHERE_BOTTOM_RADIUS
-} from '@geovanni/atmosphere'
+import { AerialPerspective, Atmosphere } from '@geovanni/atmosphere'
 import { EffectComposer, SSAO } from '@geovanni/effects'
 import { Cartographic, LocalFrame, radians } from '@geovanni/math'
 
@@ -31,13 +27,9 @@ const location = new Cartographic(
 )
 
 const geodeticNormal = location.toVector()
-const geodeticRadius = geodeticNormal.length()
 geodeticNormal.normalize()
-const atmosphereOffset = new Vector3()
-  .copy(geodeticNormal)
-  .multiplyScalar(ATMOSPHERE_BOTTOM_RADIUS - geodeticRadius)
 const localLocation = new Cartographic().copy(location).setHeight(geoidalHeight)
-const cameraTarget = localLocation.toVector().add(atmosphereOffset)
+const cameraTarget = localLocation.toVector()
 const cameraPosition = new Vector3()
   .copy(cameraTarget)
   .add(new Vector3().copy(geodeticNormal).multiplyScalar(1000))
@@ -76,21 +68,19 @@ export const Container: FC = () => {
       <ambientLight intensity={0.05} />
       <Atmosphere sunDirection={sunDirection} renderOrder={-1} />
       <EffectComposer normalPass>{effects}</EffectComposer>
-      <group position={atmosphereOffset}>
-        <LocalFrame location={localLocation}>
-          <SunLight />
-          <Plane
-            args={[1e5, 1e5]}
-            position={[0, 0, location.height]}
-            receiveShadow
-          >
-            <meshStandardMaterial color={[0.05, 0.05, 0.05]} />
-          </Plane>
-        </LocalFrame>
-        <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13101_chiyoda-ku_2020_bldg_notexture/tileset.json' />
-        <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13102_chuo-ku_2020_bldg_notexture/tileset.json' />
-        <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13103_minato-ku_2020_bldg_notexture/tileset.json' />
-      </group>
+      <LocalFrame location={localLocation}>
+        <SunLight />
+        <Plane
+          args={[1e5, 1e5]}
+          position={[0, 0, location.height]}
+          receiveShadow
+        >
+          <meshStandardMaterial color={[0.05, 0.05, 0.05]} />
+        </Plane>
+      </LocalFrame>
+      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13101_chiyoda-ku_2020_bldg_notexture/tileset.json' />
+      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13102_chuo-ku_2020_bldg_notexture/tileset.json' />
+      <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13103_minato-ku_2020_bldg_notexture/tileset.json' />
       {/* <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13104_shinjuku-ku_2020_bldg_notexture/tileset.json' />
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13113_shibuya-ku_2020_bldg_notexture/tileset.json' /> */}
     </Canvas>

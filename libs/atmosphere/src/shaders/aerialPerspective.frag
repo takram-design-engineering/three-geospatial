@@ -38,6 +38,7 @@ vec3 readNormal(const vec2 uv) {
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   if (depth > DEPTH_THRESHOLD) {
+    // TODO: Compute sky radiance here to reduce number of pixels to ray-march.
     outputColor = inputColor;
     return;
   }

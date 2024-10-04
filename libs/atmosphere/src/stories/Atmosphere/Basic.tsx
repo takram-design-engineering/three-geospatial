@@ -7,7 +7,7 @@ import { ToneMappingMode } from 'postprocessing'
 import { useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 
-import { getSunDirectionECEF } from '@geovanni/astronomy'
+import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
 import { Cartographic, Ellipsoid, radians } from '@geovanni/math'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
@@ -20,14 +20,18 @@ const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 const Scene: FC = () => {
   const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
+  const moonDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
 
   useFrame(() => {
     if (atmosphereRef.current == null) {
       return
     }
-    getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
+    const date = new Date(motionDate.get())
+    getSunDirectionECEF(date, sunDirectionRef.current)
+    getMoonDirectionECEF(date, moonDirectionRef.current)
     atmosphereRef.current.material.sunDirection = sunDirectionRef.current
+    atmosphereRef.current.material.moonDirection = moonDirectionRef.current
   })
 
   return (
@@ -49,7 +53,15 @@ export const Basic: StoryFn = () => {
     exposure: { value: 10, min: 0, max: 100 }
   })
   return (
-    <Canvas gl={{ toneMappingExposure: exposure }} camera={{ position, up }}>
+    <Canvas
+      gl={{
+        antialias: false,
+        depth: false,
+        stencil: false,
+        toneMappingExposure: exposure
+      }}
+      camera={{ position, up }}
+    >
       <Scene />
     </Canvas>
   )

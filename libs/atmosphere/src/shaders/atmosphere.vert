@@ -6,6 +6,7 @@ uniform vec3 ellipsoidRadii;
 uniform vec3 ellipsoidSurface;
 
 layout(location = 0) in vec3 position;
+
 out vec3 vWorldPosition;
 out vec3 vWorldDirection;
 out vec3 vHeightAdjustment;
@@ -15,9 +16,11 @@ void main() {
   vec4 worldDirection = inverseViewMatrix * vec4(viewPosition.xyz, 0.0);
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
   vWorldDirection = worldDirection.xyz;
-  vHeightAdjustment =
-    getHeightAdjustment(cameraHeight, ellipsoidRadii, ellipsoidSurface) *
-    METER_TO_UNIT_LENGTH;
+  vHeightAdjustment = getHeightAdjustment(
+    cameraHeight,
+    ellipsoidRadii,
+    ellipsoidSurface
+  );
 
   gl_Position = vec4(position, 1.0);
 }

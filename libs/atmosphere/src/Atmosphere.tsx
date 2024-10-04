@@ -21,11 +21,24 @@ export interface AtmosphereProps extends MeshProps {
   sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
+  moon?: boolean
+  moonDirection?: Vector3
+  moonAngularRadius?: number
+  lunarRadianceScale?: number
 }
 
 export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
   function Atmosphere(
-    { sun, sunDirection, sunAngularRadius, ...props } = {},
+    {
+      sun,
+      sunDirection,
+      sunAngularRadius,
+      moon,
+      moonDirection,
+      moonAngularRadius,
+      lunarRadianceScale,
+      ...props
+    } = {},
     forwardedRef
   ) {
     // Make textures shared.
@@ -54,6 +67,10 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
           sun={sun}
           sunDirection={sunDirection}
           sunAngularRadius={sunAngularRadius}
+          moon={moon}
+          moonDirection={moonDirection}
+          moonAngularRadius={moonAngularRadius}
+          lunarRadianceScale={lunarRadianceScale}
         />
       </ScreenQuad>
     )

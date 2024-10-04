@@ -15,11 +15,12 @@ import {
 
 import { Cartographic, Ellipsoid } from '@geovanni/math'
 
-import { ATMOSPHERE_BOTTOM_RADIUS, METER_TO_UNIT_LENGTH } from './constants'
+import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
 import fragmentShader from './shaders/aerialPerspective.frag'
 import vertexShader from './shaders/aerialPerspective.vert'
-import atmosphericScattering from './shaders/atmosphericScattering.glsl'
+import functions from './shaders/functions.glsl'
+import parameters from './shaders/parameters.glsl'
 import vertexCommon from './shaders/vertexCommon.glsl'
 
 const cartographicScratch = new Cartographic()
@@ -59,16 +60,25 @@ export class AerialPerspectiveEffect extends Effect {
   ) {
     super(
       'AerialPerspectiveEffect',
-      `${atmosphericScattering}${fragmentShader}`,
+      `${parameters}${functions}${fragmentShader}`,
       {
         blendFunction,
-        vertexShader: `${vertexCommon}${vertexShader}`,
+        vertexShader: `${parameters}${vertexCommon}${vertexShader}`,
         attributes: EffectAttribute.DEPTH,
+        // prettier-ignore
         uniforms: new Map<string, Uniform>([
-          ['irradiance_texture', new Uniform(irradianceTexture)],
-          ['scattering_texture', new Uniform(scatteringTexture)],
-          ['single_mie_scattering_texture', new Uniform(scatteringTexture)],
-          ['transmittance_texture', new Uniform(transmittanceTexture)],
+          ['u_solar_irradiance', new Uniform(ATMOSPHERE_PARAMETERS.solarIrradiance)],
+          ['u_sun_angular_radius', new Uniform(ATMOSPHERE_PARAMETERS.sunAngularRadius)],
+          ['u_bottom_radius', new Uniform(ATMOSPHERE_PARAMETERS.bottomRadius)],
+          ['u_top_radius', new Uniform(ATMOSPHERE_PARAMETERS.topRadius)],
+          ['u_rayleigh_scattering', new Uniform(ATMOSPHERE_PARAMETERS.rayleighScattering)],
+          ['u_mie_scattering', new Uniform(ATMOSPHERE_PARAMETERS.mieScattering)],
+          ['u_mie_phase_function_g', new Uniform(ATMOSPHERE_PARAMETERS.miePhaseFunctionG)],
+          ['u_mu_s_min', new Uniform(ATMOSPHERE_PARAMETERS.muSMin)],
+          ['u_irradiance_texture', new Uniform(irradianceTexture)],
+          ['u_scattering_texture', new Uniform(scatteringTexture)],
+          ['u_single_mie_scattering_texture', new Uniform(scatteringTexture)],
+          ['u_transmittance_texture', new Uniform(transmittanceTexture)],
           ['normalBuffer', new Uniform(normalBuffer)],
           ['projectionMatrix', new Uniform(new Matrix4())],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
@@ -82,7 +92,6 @@ export class AerialPerspectiveEffect extends Effect {
         ]),
         defines: new Map<string, string>([
           ['METER_TO_UNIT_LENGTH', `float(${METER_TO_UNIT_LENGTH})`],
-          ['ATMOSPHERE_BOTTOM_RADIUS', `float(${ATMOSPHERE_BOTTOM_RADIUS})`],
           ['SUN_IRRADIANCE', '1'],
           ['SKY_IRRADIANCE', '1'],
           ['TRANSMITTANCE', '1'],
@@ -167,28 +176,28 @@ export class AerialPerspectiveEffect extends Effect {
   }
 
   get irradianceTexture(): Texture | null {
-    return this.uniforms.get('irradiance_texture')!.value
+    return this.uniforms.get('u_irradiance_texture')!.value
   }
 
   set irradianceTexture(value: Texture | null) {
-    this.uniforms.get('irradiance_texture')!.value = value
+    this.uniforms.get('u_irradiance_texture')!.value = value
   }
 
   get scatteringTexture(): Texture | null {
-    return this.uniforms.get('scattering_texture')!.value
+    return this.uniforms.get('u_scattering_texture')!.value
   }
 
   set scatteringTexture(value: Texture | null) {
-    this.uniforms.get('scattering_texture')!.value = value
-    this.uniforms.get('single_mie_scattering_texture')!.value = value
+    this.uniforms.get('u_scattering_texture')!.value = value
+    this.uniforms.get('u_single_mie_scattering_texture')!.value = value
   }
 
   get transmittanceTexture(): Texture | null {
-    return this.uniforms.get('transmittance_texture')!.value
+    return this.uniforms.get('u_transmittance_texture')!.value
   }
 
   set transmittanceTexture(value: Texture | null) {
-    this.uniforms.get('transmittance_texture')!.value = value
+    this.uniforms.get('u_transmittance_texture')!.value = value
   }
 
   get sunDirection(): Vector3 {
