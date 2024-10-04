@@ -1,3 +1,5 @@
+import { Vector3 } from 'three'
+
 import { radians } from '@geovanni/math'
 
 export const IRRADIANCE_TEXTURE_WIDTH = 64
@@ -10,4 +12,14 @@ export const TRANSMITTANCE_TEXTURE_HEIGHT = 64
 export const METER_TO_UNIT_LENGTH = 1 / 1000
 export const ATMOSPHERE_BOTTOM_RADIUS = 6360000
 export const ATMOSPHERE_TOP_RADIUS = 6420000
-export const SUN_ANGULAR_RADIUS = radians(0.2678)
+
+export const ATMOSPHERE_PARAMETERS = {
+  solarIrradiance: new Vector3(1.474, 1.8504, 1.91198),
+  sunAngularRadius: 0.004675,
+  bottomRadius: ATMOSPHERE_BOTTOM_RADIUS * METER_TO_UNIT_LENGTH,
+  topRadius: ATMOSPHERE_TOP_RADIUS * METER_TO_UNIT_LENGTH,
+  rayleighScattering: new Vector3(0.005802, 0.013558, 0.0331),
+  mieScattering: new Vector3(0.003996, 0.003996, 0.003996),
+  miePhaseFunctionG: 0.8,
+  muSMin: Math.cos(radians(102))
+}

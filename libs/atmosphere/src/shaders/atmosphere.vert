@@ -6,6 +6,7 @@ uniform vec3 ellipsoidRadii;
 uniform vec3 ellipsoidSurface;
 
 layout(location = 0) in vec3 position;
+
 out vec3 vWorldPosition;
 out vec3 vWorldDirection;
 out vec3 vHeightAdjustment;

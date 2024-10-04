@@ -1,5 +1,4 @@
 uniform vec3 sunDirection;
-uniform vec3 sunParams;
 
 in vec3 vWorldPosition;
 in vec3 vWorldDirection;
@@ -16,8 +15,10 @@ void main() {
     sunDirection,
     transmittance
   );
-  if (dot(viewDirection, sunDirection) > sunParams.y) {
-    radiance = radiance + transmittance * GetSolarRadiance() * sunParams.z;
+
+  #ifdef SUN
+  if (dot(viewDirection, sunDirection) > cos(u_sun_angular_radius)) {
+    radiance = radiance + transmittance * GetSolarRadiance();
   }
   outputColor = vec4(radiance, 1.0);
 }
