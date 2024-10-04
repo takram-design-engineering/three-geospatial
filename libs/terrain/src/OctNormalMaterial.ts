@@ -17,12 +17,12 @@ const fragmentShader =
     ShaderChunk.normal_pars_fragment.replace(
       /* glsl */ `varying vec3 vNormal;`,
       /* glsl */ `
-      #ifdef OCT_NORMAL_FLAT_SHADED
-      flat in vec3 vNormal;
-      #else
-      in vec3 vNormal;
-      #endif
-    `
+        #ifdef OCT_NORMAL_FLAT_SHADED
+        flat in vec3 vNormal;
+        #else
+        in vec3 vNormal;
+        #endif
+      `
     )
   )
 
@@ -34,14 +34,14 @@ const vertexShader =
       ShaderChunk.normal_pars_vertex.replace(
         /* glsl */ `varying vec3 vNormal;`,
         /* glsl */ `
-        #ifdef OCT_NORMAL_FLAT_SHADED
-        flat out vec3 vNormal;
-        #else
-        out vec3 vNormal;
-        #endif
-        attribute float packedOctNormal;
-        ${octNormal}
-      `
+          #ifdef OCT_NORMAL_FLAT_SHADED
+          flat out vec3 vNormal;
+          #else
+          out vec3 vNormal;
+          #endif
+          attribute float packedOctNormal;
+          ${octNormal}
+        `
       )
     )
     .replace(
