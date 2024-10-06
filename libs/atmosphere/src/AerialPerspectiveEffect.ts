@@ -29,9 +29,9 @@ export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction
   normalBuffer?: Texture | null
   reconstructNormal?: boolean
-  irradianceTexture?: Texture
-  scatteringTexture?: Texture
-  transmittanceTexture?: Texture
+  irradianceTexture?: Texture | null
+  scatteringTexture?: Texture | null
+  transmittanceTexture?: Texture | null
   ellipsoid?: Ellipsoid
   sunIrradiance?: boolean
   skyIrradiance?: boolean

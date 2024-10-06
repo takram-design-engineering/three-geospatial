@@ -8,7 +8,6 @@ import {
 import { GlobeControls } from '3d-tiles-renderer/src/three/controls/GlobeControls'
 import { useControls } from 'leva'
 import {
-  BlendFunction,
   EffectMaterial,
   SMAAPreset,
   ToneMappingMode,
@@ -20,7 +19,8 @@ import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
 import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
-import { Depth, EffectComposer, Normal } from '@geovanni/effects'
+import { isNotFalse } from '@geovanni/core'
+import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
 import { Cartographic, radians } from '@geovanni/math'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -145,36 +145,26 @@ const Scene: FC = () => {
         normalPass
         multisampling={0}
       >
-        <AerialPerspective
-          ref={aerialPerspectiveRef}
-          reconstructNormal
-          skyIrradiance={false}
-          inputIntensity={0.08}
-          blendFunction={
-            !normal && !depth && !depthNormal
-              ? BlendFunction.NORMAL
-              : BlendFunction.SKIP
-          }
-        />
-        <Depth
-          useTurbo
-          blendFunction={depth ? BlendFunction.NORMAL : BlendFunction.SKIP}
-        />
-        <Normal
-          reconstructFromDepth={depthNormal}
-          blendFunction={
-            normal || depthNormal ? BlendFunction.NORMAL : BlendFunction.SKIP
-          }
-        />
-        <ToneMapping
-          mode={ToneMappingMode.AGX}
-          blendFunction={
-            !normal && !depth && !depthNormal
-              ? BlendFunction.NORMAL
-              : BlendFunction.SKIP
-          }
-        />
-        <SMAA preset={SMAAPreset.ULTRA} />
+        {[
+          normal && !depth && !depthNormal && (
+            <AerialPerspective
+              key='aerialPerspective'
+              ref={aerialPerspectiveRef}
+              reconstructNormal
+              skyIrradiance={false}
+              inputIntensity={0.08}
+            />
+          ),
+          <LensFlare key='lensFlare' />,
+          depth && <Depth key='Depth' useTurbo />,
+          (normal || depthNormal) && (
+            <Normal key='normal' reconstructFromDepth={depthNormal} />
+          ),
+          !normal && !depth && !depthNormal && (
+            <ToneMapping key='toneMapping' mode={ToneMappingMode.AGX} />
+          ),
+          <SMAA key='smaa' preset={SMAAPreset.ULTRA} />
+        ].filter(isNotFalse)}
       </EffectComposer>
     ),
     [normal, depth, depthNormal]

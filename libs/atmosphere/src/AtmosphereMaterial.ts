@@ -29,9 +29,9 @@ const cartographicScratch = new Cartographic()
 
 export interface AtmosphereMaterialParameters
   extends Partial<ShaderMaterialParameters> {
-  irradianceTexture?: Texture
-  scatteringTexture?: Texture
-  transmittanceTexture?: Texture
+  irradianceTexture?: Texture | null
+  scatteringTexture?: Texture | null
+  transmittanceTexture?: Texture | null
   ellipsoid?: Ellipsoid
   sun?: boolean
   sunDirection?: Vector3
