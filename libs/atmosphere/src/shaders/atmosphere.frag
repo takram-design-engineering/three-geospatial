@@ -43,9 +43,22 @@ void main() {
     transmittance
   );
 
+  #if defined(SUN) || defined(MOON)
+  vec3 ddx = dFdx(vWorldDirection);
+  vec3 ddy = dFdy(vWorldDirection);
+  float fragmentAngle = length(ddx + ddy) / length(vWorldDirection);
+  #endif
+
   #ifdef SUN
-  if (dot(viewDirection, sunDirection) > cos(u_sun_angular_radius)) {
-    radiance = transmittance * GetSolarRadiance() + radiance;
+  float viewDotSun = dot(viewDirection, sunDirection);
+  if (viewDotSun > cos(u_sun_angular_radius)) {
+    float angle = acos(clamp(viewDotSun, -1.0, 1.0));
+    float antialias = smoothstep(
+      u_sun_angular_radius,
+      u_sun_angular_radius - fragmentAngle,
+      angle
+    );
+    radiance += transmittance * GetSolarRadiance() * antialias;
   }
   #endif
 
@@ -58,7 +71,14 @@ void main() {
   if (intersection > 0.0) {
     vec3 normal = normalize(moonDirection - viewDirection * intersection);
     float diffuse = orenNayarDiffuse(-sunDirection, viewDirection, normal);
-    radiance = transmittance * getLunarRadiance() * diffuse + radiance;
+    float viewDotMoon = dot(viewDirection, moonDirection);
+    float angle = acos(clamp(viewDotMoon, -1.0, 1.0));
+    float antialias = smoothstep(
+      moonAngularRadius,
+      moonAngularRadius - fragmentAngle,
+      angle
+    );
+    radiance += transmittance * getLunarRadiance() * diffuse * antialias;
   }
   #endif
 
