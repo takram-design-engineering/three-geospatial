@@ -5,7 +5,7 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform, type WebGLRenderer } from 'three'
 
-import fragmentShader from './shaders/depth.frag'
+import fragmentShader from './shaders/depthEffect.frag'
 
 export interface DepthEffectOptions {
   blendFunction?: BlendFunction

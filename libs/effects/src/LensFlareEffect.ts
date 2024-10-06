@@ -23,7 +23,7 @@ import {
 import { DownsampleThresholdMaterial } from './DownsampleThresholdMaterial'
 import { LensFlareFeaturesMaterial } from './LensFlareFeaturesMaterial'
 
-import fragmentShader from './shaders/lensFlare.frag'
+import fragmentShader from './shaders/lensFlareEffect.frag'
 
 export interface LensFlareEffectOptions {
   blendFunction?: BlendFunction

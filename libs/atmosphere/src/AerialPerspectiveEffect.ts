@@ -17,8 +17,8 @@ import { Cartographic, Ellipsoid } from '@geovanni/math'
 
 import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
-import fragmentShader from './shaders/aerialPerspective.frag'
-import vertexShader from './shaders/aerialPerspective.vert'
+import fragmentShader from './shaders/aerialPerspectiveEffect.frag'
+import vertexShader from './shaders/aerialPerspectiveEffect.vert'
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 import vertexCommon from './shaders/vertexCommon.glsl'

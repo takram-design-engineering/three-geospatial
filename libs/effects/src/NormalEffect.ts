@@ -12,7 +12,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import fragmentShader from './shaders/normal.frag'
+import fragmentShader from './shaders/normalEffect.frag'
 
 export interface NormalEffectOptions {
   blendFunction?: BlendFunction
