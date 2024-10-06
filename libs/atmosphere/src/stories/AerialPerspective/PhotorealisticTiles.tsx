@@ -14,10 +14,14 @@ import {
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
 import { useEffect, useMemo, useRef, type FC } from 'react'
-import { Mesh, Vector3, type Group } from 'three'
+import { Mesh, Vector3, type BufferGeometry, type Group } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
-import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
+import {
+  TileCompressionPlugin,
+  TilesFadePlugin,
+  UpdateOnChangePlugin
+} from '@geovanni/3d-tiles'
 import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
 import { isNotFalse } from '@geovanni/core'
 import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
@@ -45,7 +49,8 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 const onLoadModel = ((event: { type: 'load-model'; scene: Group }): void => {
   event.scene.traverse(object => {
     if (object instanceof Mesh) {
-      // TODO: Deal with vertex normal.
+      const geometry: BufferGeometry = object.geometry
+      geometry.computeVertexNormals()
     }
   })
 }) as (event: Object) => void
@@ -86,6 +91,7 @@ const Scene: FC = () => {
     )
     tiles.registerPlugin(new UpdateOnChangePlugin())
     tiles.registerPlugin(new TileCompressionPlugin())
+    tiles.registerPlugin(new TilesFadePlugin())
 
     const loader = new GLTFLoader(tiles.manager)
     loader.setDRACOLoader(dracoLoader)
@@ -150,7 +156,6 @@ const Scene: FC = () => {
             <AerialPerspective
               key='aerialPerspective'
               ref={aerialPerspectiveRef}
-              reconstructNormal
               skyIrradiance={false}
               inputIntensity={0.08}
             />
