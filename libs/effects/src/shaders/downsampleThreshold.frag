@@ -24,6 +24,7 @@ float clampToBorder(const vec2 uv) {
   return float(uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0);
 }
 
+// Reference: https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
 void main() {
   vec3 color = 0.125 * texture2D(inputBuffer, vec2(vRowUv5)).rgb;
   vec4 weight =

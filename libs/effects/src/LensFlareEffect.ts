@@ -41,6 +41,7 @@ export const lensFlareEffectOptionsDefaults = {
   height: Resolution.AUTO_SIZE
 } satisfies LensFlareEffectOptions
 
+// Reference: https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/
 export class LensFlareEffect extends Effect {
   readonly resolution: Resolution
   readonly renderTarget1: WebGLRenderTarget
