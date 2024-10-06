@@ -146,7 +146,7 @@ const Scene: FC = () => {
         multisampling={0}
       >
         {[
-          normal && !depth && !depthNormal && (
+          !normal && !depth && !depthNormal && (
             <AerialPerspective
               key='aerialPerspective'
               ref={aerialPerspectiveRef}

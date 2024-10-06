@@ -41,7 +41,7 @@ float cubicRingMask(const float x, const float radius, const float thickness) {
   return 1.0 - v * v * (3.0 - 2.0 * v);
 }
 
-vec3 sampleHalo(const float radius, const float thickness) {
+vec3 sampleHalo(const float radius) {
   vec2 direction = normalize((vUv - 0.5) / vAspectRatio) * vAspectRatio;
   vec3 offset = vec3(texelSize.x * chromaticAberration) * vec3(-1.0, 0.0, 1.0);
   vec2 suv = fract(1.0 - vUv + direction * radius);
@@ -53,14 +53,14 @@ vec3 sampleHalo(const float radius, const float thickness) {
 
   // Falloff at the center and perimeter.
   vec2 wuv = (vUv - vec2(0.5, 0.0)) / vAspectRatio + vec2(0.5, 0.0);
-  float d = distance(wuv, vec2(0.5));
-  result *= cubicRingMask(d, radius, radius * thickness);
+  float d = clamp(distance(wuv, vec2(0.5)), 0.0, 1.0);
+  result *= cubicRingMask(d, 0.45, 0.25);
   return result;
 }
 
 vec4 sampleHalos(const float amount) {
   vec3 color = vec3(0.0);
-  color += sampleHalo(0.3, 0.2);
+  color += sampleHalo(0.3);
   return vec4(color, 1.0) * amount;
 }
 
