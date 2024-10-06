@@ -34,9 +34,12 @@ export interface EffectComposerProps
   normalPass?: boolean
 }
 
-const isConvolution = (effect: Effect): boolean =>
-  (effect.getAttributes() & EffectAttribute.CONVOLUTION) ===
-  EffectAttribute.CONVOLUTION
+function isConvolution(effect: Effect): boolean {
+  return (
+    (effect.getAttributes() & EffectAttribute.CONVOLUTION) ===
+    EffectAttribute.CONVOLUTION
+  )
+}
 
 export const EffectComposer = memo(
   forwardRef(function EffectComposer(

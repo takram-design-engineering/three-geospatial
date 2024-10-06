@@ -9,12 +9,13 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
-import { BlendFunction, ToneMappingMode } from 'postprocessing'
+import { SMAAPreset, ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
 import { MeshStandardMaterial, Vector3 } from 'three'
 
 import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
-import { Depth, EffectComposer, Normal } from '@geovanni/effects'
+import { isNotFalse } from '@geovanni/core'
+import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
 import {
   Cartographic,
   Ellipsoid,
@@ -34,7 +35,7 @@ const position = location.toVector()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const tilingScheme = new TilingScheme()
-const tile = tilingScheme.cartographicToTile(location, 12)
+const tile = tilingScheme.cartographicToTile(location, 7)
 tile.y = tilingScheme.getSize(tile.z).y - tile.y - 1
 const terrain = new IonTerrain({
   assetId: 1,
@@ -42,11 +43,6 @@ const terrain = new IonTerrain({
 })
 
 const tiles = tile
-  .getParent()
-  .getParent()
-  .getParent()
-  .getParent()
-  .getParent()
   .getChildren()
   .flatMap(tile => tile.getChildren())
   .flatMap(tile => tile.getChildren())
@@ -83,26 +79,23 @@ const Scene: FC = () => {
   const effectComposer = useMemo(
     () => (
       <EffectComposer key={Math.random()} normalPass multisampling={0}>
-        <AerialPerspective ref={aerialPerspectiveRef} />
-        <Depth
-          useTurbo
-          blendFunction={depth ? BlendFunction.NORMAL : BlendFunction.SKIP}
-        />
-        <Normal
-          reconstructFromDepth={depthNormal}
-          blendFunction={
-            normal || depthNormal ? BlendFunction.NORMAL : BlendFunction.SKIP
-          }
-        />
-        <ToneMapping
-          mode={ToneMappingMode.ACES_FILMIC}
-          blendFunction={
-            !normal && !depth && !depthNormal
-              ? BlendFunction.NORMAL
-              : BlendFunction.SKIP
-          }
-        />
-        <SMAA />
+        {[
+          !normal && !depth && !depthNormal && (
+            <AerialPerspective
+              key='aerialPerspective'
+              ref={aerialPerspectiveRef}
+            />
+          ),
+          <LensFlare key='lensFlare' />,
+          depth && <Depth key='Depth' useTurbo />,
+          (normal || depthNormal) && (
+            <Normal key='normal' reconstructFromDepth={depthNormal} />
+          ),
+          !normal && !depth && !depthNormal && (
+            <ToneMapping key='toneMapping' mode={ToneMappingMode.AGX} />
+          ),
+          <SMAA key='smaa' preset={SMAAPreset.ULTRA} />
+        ].filter(isNotFalse)}
       </EffectComposer>
     ),
     [normal, depth, depthNormal]

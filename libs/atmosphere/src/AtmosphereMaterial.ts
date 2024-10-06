@@ -29,9 +29,9 @@ const cartographicScratch = new Cartographic()
 
 export interface AtmosphereMaterialParameters
   extends Partial<ShaderMaterialParameters> {
-  irradianceTexture?: Texture
-  scatteringTexture?: Texture
-  transmittanceTexture?: Texture
+  irradianceTexture?: Texture | null
+  scatteringTexture?: Texture | null
+  transmittanceTexture?: Texture | null
   ellipsoid?: Ellipsoid
   sun?: boolean
   sunDirection?: Vector3
@@ -42,21 +42,31 @@ export interface AtmosphereMaterialParameters
   lunarRadianceScale?: number
 }
 
+export const atmosphereMaterialParametersDefaults = {
+  ellipsoid: Ellipsoid.WGS84,
+  sun: true,
+  moon: true,
+  moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
+  lunarRadianceScale: 1
+} satisfies AtmosphereMaterialParameters
+
 export class AtmosphereMaterial extends RawShaderMaterial {
-  constructor({
-    irradianceTexture,
-    scatteringTexture,
-    transmittanceTexture,
-    ellipsoid = Ellipsoid.WGS84,
-    sun = true,
-    sunDirection,
-    sunAngularRadius,
-    moon = true,
-    moonDirection,
-    moonAngularRadius = 0.0045, // ≈ 15.5 arcminutes
-    lunarRadianceScale = 1,
-    ...params
-  }: AtmosphereMaterialParameters = {}) {
+  constructor(params?: AtmosphereMaterialParameters) {
+    const {
+      irradianceTexture,
+      scatteringTexture,
+      transmittanceTexture,
+      ellipsoid,
+      sun,
+      sunDirection,
+      sunAngularRadius,
+      moon,
+      moonDirection,
+      moonAngularRadius,
+      lunarRadianceScale,
+      ...others
+    } = { ...atmosphereMaterialParametersDefaults, ...params }
+
     super({
       vertexShader: /* glsl */ `
         precision highp float;
@@ -65,7 +75,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         ${vertexCommon}
         ${vertexShader}
       `,
-      ...params,
+      ...others,
       glslVersion: '300 es',
       fragmentShader: /* glsl */ `
         precision highp float;
@@ -107,6 +117,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         SUN: '1',
         MOON: '1'
       },
+      toneMapped: false,
       depthWrite: false,
       depthTest: false
     })

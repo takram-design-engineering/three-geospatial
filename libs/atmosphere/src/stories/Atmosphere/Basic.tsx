@@ -4,10 +4,11 @@ import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
-import { useRef, type FC } from 'react'
+import { useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
+import { LensFlare } from '@geovanni/effects'
 import { Cartographic, Ellipsoid, radians } from '@geovanni/math'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
@@ -34,6 +35,16 @@ const Scene: FC = () => {
     atmosphereRef.current.material.moonDirection = moonDirectionRef.current
   })
 
+  const effectComposer = useMemo(
+    () => (
+      <EffectComposer key={Math.random()} multisampling={0}>
+        <LensFlare />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      </EffectComposer>
+    ),
+    []
+  )
+
   return (
     <>
       <OrbitControls target={position} minDistance={1000} />
@@ -41,9 +52,7 @@ const Scene: FC = () => {
         <GizmoViewport />
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} renderOrder={-1} />
-      <EffectComposer multisampling={0}>
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-      </EffectComposer>
+      {effectComposer}
     </>
   )
 }
