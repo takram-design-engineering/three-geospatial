@@ -2,8 +2,8 @@
 
 uniform sampler2D inputBuffer;
 
-uniform float level;
-uniform float range;
+uniform float thresholdLevel;
+uniform float thresholdRange;
 
 in vec2 vCenterUv1;
 in vec2 vCenterUv2;
@@ -66,6 +66,10 @@ void main() {
   color += weight.w * texture2D(inputBuffer, vec2(vCenterUv4)).rgb;
 
   float l = luminance(color);
-  float scale = clamp(smoothstep(level, level + range, l), 0.0, 1.0);
+  float scale = clamp(
+    smoothstep(thresholdLevel, thresholdLevel + thresholdRange, l),
+    0.0,
+    1.0
+  );
   gl_FragColor = vec4(log(color * scale + 1.0) / vLogBase, 1.0);
 }

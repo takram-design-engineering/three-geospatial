@@ -15,20 +15,26 @@ import vertexShader from './shaders/downsampleThreshold.vert'
 export interface DownsampleThresholdMaterialParameters
   extends ShaderMaterialParameters {
   inputBuffer?: Texture | null
-  level?: number
-  range?: number
-  base?: number
+  thresholdLevel?: number
+  thresholdRange?: number
+  logarithmBase?: number
 }
 
 export const downsampleThresholdMaterialParametersDefaults = {
-  level: 10,
-  range: 1,
-  base: 1.5
+  thresholdLevel: 10,
+  thresholdRange: 1,
+  logarithmBase: 1.5
 } satisfies DownsampleThresholdMaterialParameters
 
 export class DownsampleThresholdMaterial extends ShaderMaterial {
   constructor(params?: DownsampleThresholdMaterialParameters) {
-    const { inputBuffer, level, range, base, ...others } = {
+    const {
+      inputBuffer,
+      thresholdLevel,
+      thresholdRange,
+      logarithmBase,
+      ...others
+    } = {
       ...downsampleThresholdMaterialParametersDefaults,
       ...params
     }
@@ -39,9 +45,9 @@ export class DownsampleThresholdMaterial extends ShaderMaterial {
       uniforms: {
         inputBuffer: new Uniform(inputBuffer ?? null),
         texelSize: new Uniform(new Vector2()),
-        level: new Uniform(level),
-        range: new Uniform(range),
-        base: new Uniform(base)
+        thresholdLevel: new Uniform(thresholdLevel),
+        thresholdRange: new Uniform(thresholdRange),
+        logarithmBase: new Uniform(logarithmBase)
       },
       blending: NoBlending,
       toneMapped: false,
@@ -65,27 +71,27 @@ export class DownsampleThresholdMaterial extends ShaderMaterial {
     texelSize.y = 1 / height
   }
 
-  get level(): number {
-    return this.uniforms.level.value
+  get thresholdLevel(): number {
+    return this.uniforms.thresholdLevel.value
   }
 
-  set level(value: number) {
-    this.uniforms.level.value = value
+  set thresholdLevel(value: number) {
+    this.uniforms.thresholdLevel.value = value
   }
 
-  get range(): number {
-    return this.uniforms.range.value
+  get thresholdRange(): number {
+    return this.uniforms.thresholdRange.value
   }
 
-  set range(value: number) {
-    this.uniforms.range.value = value
+  set thresholdRange(value: number) {
+    this.uniforms.thresholdRange.value = value
   }
 
-  get base(): number {
-    return this.uniforms.base.value
+  get logarithmBase(): number {
+    return this.uniforms.logarithmBase.value
   }
 
-  set base(value: number) {
-    this.uniforms.base.value = value
+  set logarithmBase(value: number) {
+    this.uniforms.logarithmBase.value = value
   }
 }
