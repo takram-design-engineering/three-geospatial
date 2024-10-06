@@ -21,7 +21,7 @@ export interface DownsampleThresholdMaterialParameters
 }
 
 export const downsampleThresholdMaterialParametersDefaults = {
-  level: 20,
+  level: 1,
   range: 1,
   base: 1.5
 } satisfies DownsampleThresholdMaterialParameters
