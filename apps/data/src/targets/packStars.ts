@@ -5,8 +5,7 @@ import { parse } from 'csv-parse'
 import { transform } from 'stream-transform'
 import invariant from 'tiny-invariant'
 
-import { parseInt16Array } from '@geovanni/core'
-import { closeTo } from '@geovanni/math'
+import { closeTo, parseInt16Array } from '@geovanni/core'
 
 // See: https://paulbourke.net/miscellaneous/astronomy/
 interface Record {

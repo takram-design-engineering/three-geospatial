@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 
-import { closeTo } from './helpers'
+import { closeTo } from './math'
 
 export class Ellipsoid {
   static WGS84 = Object.freeze(

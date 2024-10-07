@@ -19,9 +19,8 @@ import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
 import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
-import { isNotFalse } from '@geovanni/core'
+import { Cartographic, isNotFalse, radians } from '@geovanni/core'
 import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
-import { Cartographic, radians } from '@geovanni/math'
 
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
