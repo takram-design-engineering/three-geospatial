@@ -61,6 +61,13 @@ export function parseInt16Array(
   return parseTypedArray(buffer, Int16Array, 'getInt16', littleEndian)
 }
 
+export function parseUint16Array(
+  buffer: ArrayBuffer,
+  littleEndian?: boolean
+): Uint16Array {
+  return parseTypedArray(buffer, Uint16Array, 'getUint16', littleEndian)
+}
+
 export function parseFloat32Array(
   buffer: ArrayBuffer,
   littleEndian?: boolean

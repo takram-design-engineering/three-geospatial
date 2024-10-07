@@ -4,15 +4,21 @@ import {
   DataTexture,
   FileLoader,
   FloatType,
+  HalfFloatType,
   LinearFilter,
   Loader,
   RGBAFormat,
+  type Texture,
   type TypedArray
 } from 'three'
 import invariant from 'tiny-invariant'
 import { type Constructor } from 'type-fest'
 
-import { parseFloat32Array } from './typedArray'
+import {
+  parseFloat32Array,
+  parseInt16Array,
+  parseUint16Array
+} from './typedArray'
 
 export interface ImageSize {
   width: number
@@ -20,12 +26,35 @@ export interface ImageSize {
   depth?: number
 }
 
+export type DataTextureParameters = Omit<
+  Partial<{
+    [K in keyof Texture as Texture[K] extends Function ? never : K]: Texture[K]
+  }>,
+  'image'
+>
+
+const defaultDataTextureParameter = {
+  format: RGBAFormat,
+  wrapS: ClampToEdgeWrapping,
+  wrapT: ClampToEdgeWrapping,
+  minFilter: LinearFilter,
+  magFilter: LinearFilter
+} satisfies DataTextureParameters
+
 export abstract class DataLoader<
   T extends DataTexture | Data3DTexture = DataTexture | Data3DTexture
 > extends Loader<T> {
   abstract readonly Texture: Constructor<T>
 
   imageSize?: ImageSize
+  parameters?: DataTextureParameters
+
+  constructor() {
+    super()
+    this.parameters = { ...defaultDataTextureParameter, ...this.parameters }
+  }
+
+  abstract parseTypedArray(buffer: ArrayBuffer): TypedArray
 
   load(
     url: string,
@@ -45,7 +74,7 @@ export abstract class DataLoader<
         invariant(buffer instanceof ArrayBuffer)
         let imageData: TypedArray | undefined
         try {
-          imageData = parseFloat32Array(buffer)
+          imageData = this.parseTypedArray(buffer)
         } catch (error) {
           if (onError != null) {
             onError(error)
@@ -64,12 +93,7 @@ export abstract class DataLoader<
             texture.image.depth = this.imageSize.depth
           }
         }
-        texture.format = RGBAFormat
-        texture.type = FloatType
-        texture.wrapS = ClampToEdgeWrapping
-        texture.wrapT = ClampToEdgeWrapping
-        texture.minFilter = LinearFilter
-        texture.magFilter = LinearFilter
+        Object.assign(texture, this.parameters)
         texture.needsUpdate = true
         onLoad?.(texture)
       },
@@ -81,10 +105,34 @@ export abstract class DataLoader<
   }
 }
 
-export class Data2DLoader extends DataLoader {
-  readonly Texture = DataTexture
+export class Int16Data2DLoader extends DataLoader {
+  Texture = DataTexture
+  parseTypedArray = parseInt16Array
+  parameters = {
+    type: HalfFloatType
+  }
 }
 
-export class Data3DLoader extends DataLoader {
-  readonly Texture = Data3DTexture
+export class Uint16Data2DLoader extends DataLoader {
+  Texture = DataTexture
+  parseTypedArray = parseUint16Array
+  parameters = {
+    type: HalfFloatType
+  }
+}
+
+export class Float32Data2DLoader extends DataLoader {
+  Texture = DataTexture
+  parseTypedArray = parseFloat32Array
+  parameters = {
+    type: FloatType
+  }
+}
+
+export class Float32Data3DLoader extends DataLoader {
+  Texture = Data3DTexture
+  parseTypedArray = parseFloat32Array
+  parameters = {
+    type: FloatType
+  }
 }

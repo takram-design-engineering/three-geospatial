@@ -3,8 +3,8 @@ import { type Data3DTexture, type DataTexture } from 'three'
 
 import {
   assertType,
-  Data2DLoader,
-  Data3DLoader,
+  Float32Data2DLoader,
+  Float32Data3DLoader,
   type DataLoader,
   type ImageSize
 } from '@geovanni/core'
@@ -33,7 +33,7 @@ export function usePrecomputedData(
   useHalfFloat = true
 ): DataTexture | Data3DTexture {
   return useLoader(
-    imageSize.depth != null ? Data3DLoader : Data2DLoader,
+    imageSize.depth != null ? Float32Data3DLoader : Float32Data2DLoader,
     path.replace('.bin', useHalfFloat ? '_half_float.bin' : '_float.bin'),
     loader => {
       assertType<DataLoader>(loader)
