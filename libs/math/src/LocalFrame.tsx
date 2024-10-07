@@ -1,3 +1,5 @@
+// TODO: Separate React code.
+
 import { Ellipsoid } from '@math.gl/geospatial'
 import { createContext, useMemo, type FC, type ReactNode } from 'react'
 import { Matrix4, Quaternion } from 'three'
