@@ -34,7 +34,7 @@ export function usePrecomputedData(
 ): DataTexture | Data3DTexture {
   return useLoader(
     imageSize.depth != null ? Float32Data3DLoader : Float32Data2DLoader,
-    path.replace('.bin', useHalfFloat ? '_half_float.bin' : '_float.bin'),
+    path.replace('.bin', useHalfFloat ? '.bin' : '_float.bin'),
     loader => {
       assertType<DataLoader>(loader)
       loader.imageSize = imageSize
