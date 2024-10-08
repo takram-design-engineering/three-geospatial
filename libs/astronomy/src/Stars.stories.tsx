@@ -2,13 +2,12 @@ import { OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type Meta, type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 import { Color, Vector2, Vector3 } from 'three'
 
 import { EffectComposer } from '@geovanni/effects'
-import { useRendererControl } from '@geovanni/react'
+import { useRendererControls } from '@geovanni/react'
 
 import {
   convertChromaticityToXYZ,
@@ -26,7 +25,7 @@ export default {
 } satisfies Meta
 
 const Scene: FC = () => {
-  useRendererControl()
+  useRendererControls({ exposure: 50 })
 
   const effectComposer = useMemo(
     () => (
@@ -47,16 +46,12 @@ const Scene: FC = () => {
 }
 
 export const Basic: StoryFn = () => {
-  const { exposure } = useControls('gl', {
-    exposure: { value: 50, min: 0, max: 100 }
-  })
   return (
     <Canvas
       gl={{
         antialias: false,
         depth: false,
-        stencil: false,
-        toneMappingExposure: exposure
+        stencil: false
       }}
     >
       <Scene />

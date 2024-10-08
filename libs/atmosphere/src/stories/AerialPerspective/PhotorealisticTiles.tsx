@@ -21,6 +21,7 @@ import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
 import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
 import { Cartographic, isNotFalse, radians } from '@geovanni/core'
 import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
+import { useRendererControls } from '@geovanni/react'
 
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
@@ -50,6 +51,8 @@ const onLoadModel = ((event: { type: 'load-model'; scene: Group }): void => {
 }) as (event: Object) => void
 
 const Scene: FC = () => {
+  useRendererControls({ exposure: 10 })
+
   const { normal, depth, depthNormal } = useControls('effect', {
     depth: false,
     normal: false,
@@ -179,17 +182,13 @@ const Scene: FC = () => {
 }
 
 export const PhotorealisticTiles: StoryFn = () => {
-  const { exposure } = useControls('gl', {
-    exposure: { value: 10, min: 0, max: 100 }
-  })
   return (
     <Canvas
       gl={{
         antialias: false,
         depth: false,
         stencil: false,
-        logarithmicDepthBuffer: true,
-        toneMappingExposure: exposure
+        logarithmicDepthBuffer: true
       }}
       camera={{ position: cameraPosition, up: surfaceNormal }}
     >

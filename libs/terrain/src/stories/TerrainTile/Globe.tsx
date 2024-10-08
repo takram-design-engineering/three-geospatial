@@ -19,7 +19,7 @@ export const Globe: StoryFn<{
   useOctNormal: boolean
   flatShading: boolean
 }> = ({ z, useOctNormal, flatShading }) => {
-  const layer = suspend(async () => await terrain.loadLayer(), [])
+  const layer = suspend(async () => await terrain.loadLayer(), [Globe])
   const ranges = layer.available[z]
 
   const [[octNormalMaterial, meshNormalMaterial], setMaterials] = useState(

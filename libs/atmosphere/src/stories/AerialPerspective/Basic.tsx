@@ -26,7 +26,7 @@ import {
   TilingScheme
 } from '@geovanni/core'
 import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
-import { LocalFrame } from '@geovanni/react'
+import { LocalFrame, useRendererControls } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -56,6 +56,8 @@ const tiles = tile
 const terrainMaterial = new MeshStandardMaterial({ color: 'gray' })
 
 const Scene: FC = () => {
+  useRendererControls({ exposure: 10 })
+
   const { normal, depth, depthNormal } = useControls('effect', {
     depth: false,
     normal: false,
@@ -141,17 +143,13 @@ const Scene: FC = () => {
 }
 
 export const Basic: StoryFn = () => {
-  const { exposure } = useControls('gl', {
-    exposure: { value: 10, min: 0, max: 100 }
-  })
   return (
     <Canvas
       gl={{
         antialias: false,
         depth: false,
         stencil: false,
-        logarithmicDepthBuffer: true,
-        toneMappingExposure: exposure
+        logarithmicDepthBuffer: true
       }}
       camera={{ near: 100, far: 1e6, position, up }}
     >

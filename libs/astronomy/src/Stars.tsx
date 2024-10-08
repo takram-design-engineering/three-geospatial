@@ -27,7 +27,7 @@ export const Stars = forwardRef<
       responseType: 'arraybuffer'
     })
     return response.data
-  }, [])
+  }, [Stars])
 
   const geometry = useMemo(() => new StarsGeometry(data), [data])
   useEffect(() => {

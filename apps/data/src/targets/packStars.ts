@@ -6,7 +6,7 @@ import { maxBy, meanBy, minBy } from 'lodash'
 import { Color } from 'three'
 import invariant from 'tiny-invariant'
 
-import { convertBVIndexLinearRGBChromaticity } from '@geovanni/astronomy'
+import { convertBVIndexToLinearSRGBChromaticity } from '@geovanni/astronomy'
 import { closeTo, inverseLerp, lerp, radians } from '@geovanni/core'
 
 function readRightAscension(input: string): number | undefined {
@@ -86,7 +86,7 @@ async function readRecords(path: string): Promise<Record[]> {
   )
   const color = new Color()
   return records.map(({ bvIndex = bvIndexFallback, ...others }) => {
-    const { r, g, b } = convertBVIndexLinearRGBChromaticity(bvIndex, color)
+    const { r, g, b } = convertBVIndexToLinearSRGBChromaticity(bvIndex, color)
     return { ...others, r, g, b }
   })
 }

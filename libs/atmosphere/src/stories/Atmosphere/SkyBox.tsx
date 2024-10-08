@@ -8,7 +8,6 @@ import {
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
@@ -16,7 +15,7 @@ import { Vector3 } from 'three'
 import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
 import { Cartographic, Ellipsoid, radians } from '@geovanni/core'
 import { LensFlare } from '@geovanni/effects'
-import { LocalFrame } from '@geovanni/react'
+import { LocalFrame, useRendererControls } from '@geovanni/react'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useMotionDate } from '../useMotionDate'
@@ -26,6 +25,8 @@ const position = location.toVector()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const Scene: FC = () => {
+  useRendererControls({ exposure: 10 })
+
   const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
@@ -86,16 +87,12 @@ const Scene: FC = () => {
 }
 
 export const SkyBox: StoryFn = () => {
-  const { exposure } = useControls('gl', {
-    exposure: { value: 10, min: 0, max: 100 }
-  })
   return (
     <Canvas
       gl={{
         antialias: false,
         depth: false,
-        stencil: false,
-        toneMappingExposure: exposure
+        stencil: false
       }}
       camera={{ position, up }}
     >

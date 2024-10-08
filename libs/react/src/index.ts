@@ -1,2 +1,2 @@
 export * from './LocalFrame'
-export * from './useRendererControl'
+export * from './useRendererControls'
