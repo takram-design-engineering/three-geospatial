@@ -1,7 +1,9 @@
 import {
   BufferGeometry,
   InterleavedBuffer,
-  InterleavedBufferAttribute
+  InterleavedBufferAttribute,
+  Sphere,
+  Vector3
 } from 'three'
 
 export class StarsGeometry extends BufferGeometry {
@@ -23,5 +25,6 @@ export class StarsGeometry extends BufferGeometry {
       'color',
       new InterleavedBufferAttribute(uint8Buffer, 3, 7, true)
     )
+    this.boundingSphere = new Sphere(new Vector3(), 1)
   }
 }
