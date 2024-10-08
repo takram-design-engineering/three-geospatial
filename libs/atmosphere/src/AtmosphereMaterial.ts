@@ -113,14 +113,14 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         lunarRadianceScale: new Uniform(lunarRadianceScale)
       },
       defines: {
-        METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`,
-        SUN: '1',
-        MOON: '1'
+        METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`
       },
       toneMapped: false,
       depthWrite: false,
       depthTest: false
     })
+    this.sun = sun
+    this.moon = moon
   }
 
   override onBeforeRender(
@@ -133,8 +133,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
   ): void {
     const uniforms = this.uniforms
     uniforms.projectionMatrix.value.copy(camera.projectionMatrix)
-    uniforms.modelViewMatrix.value.copy(scene.modelViewMatrix)
-    uniforms.modelMatrix.value.copy(object.matrixWorld)
+    uniforms.modelViewMatrix.value.copy(camera.modelViewMatrix)
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)

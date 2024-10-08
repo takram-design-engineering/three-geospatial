@@ -73,10 +73,18 @@ export class AerialPerspectiveEffect extends Effect {
 
     super(
       'AerialPerspectiveEffect',
-      `${parameters}${functions}${fragmentShader}`,
+      /* glsl */ `
+        ${parameters}
+        ${functions}
+        ${fragmentShader}
+      `,
       {
         blendFunction,
-        vertexShader: `${parameters}${vertexCommon}${vertexShader}`,
+        vertexShader: /* glsl */ `
+          ${parameters}
+          ${vertexCommon}
+          ${vertexShader}
+        `,
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
         uniforms: new Map<string, Uniform>([
