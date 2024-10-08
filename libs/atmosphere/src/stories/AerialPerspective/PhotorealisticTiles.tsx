@@ -171,7 +171,7 @@ const Scene: FC = () => {
 
   return (
     <>
-      <Atmosphere ref={atmosphereRef} renderOrder={-1} />
+      <Atmosphere ref={atmosphereRef} />
       <primitive object={tiles.group} />
       {effectComposer}
     </>

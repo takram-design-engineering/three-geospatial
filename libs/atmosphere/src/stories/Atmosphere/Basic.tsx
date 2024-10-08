@@ -51,7 +51,7 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} renderOrder={-1} />
+      <Atmosphere ref={atmosphereRef} />
       {effectComposer}
     </>
   )

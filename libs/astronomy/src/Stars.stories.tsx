@@ -40,7 +40,7 @@ const Scene: FC = () => {
     <>
       <color args={[0, 0, 0]} attach='background' />
       <OrbitControls />
-      <Stars scale={[2, 2, 2]} />
+      <Stars scale={[2, 2, 2]} radianceScale={5} disableTransform />
       {effectComposer}
     </>
   )

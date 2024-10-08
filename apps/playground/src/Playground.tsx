@@ -67,7 +67,7 @@ export const Container: FC = () => {
     >
       <OrbitControls target={cameraTarget} />
       <ambientLight intensity={0.05} />
-      <Atmosphere sunDirection={sunDirection} renderOrder={-1} />
+      <Atmosphere sunDirection={sunDirection} />
       <EffectComposer normalPass>{effects}</EffectComposer>
       <LocalFrame location={localLocation}>
         <SunLight />

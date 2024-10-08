@@ -9,11 +9,15 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
-import { SMAAPreset, ToneMappingMode } from 'postprocessing'
+import { BlendFunction, SMAAPreset, ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
 import { MeshStandardMaterial, Vector3 } from 'three'
 
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
+import {
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  Stars
+} from '@geovanni/astronomy'
 import {
   Cartographic,
   Ellipsoid,
@@ -107,7 +111,8 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} renderOrder={-1} />
+      <Atmosphere ref={atmosphereRef} />
+      <Stars />
       <ambientLight intensity={2} />
       <Sphere
         args={[location.clone().setHeight(0).toVector().length(), 360, 180]}

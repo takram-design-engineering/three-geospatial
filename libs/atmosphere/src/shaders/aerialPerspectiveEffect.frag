@@ -39,6 +39,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   if (depth > DEPTH_THRESHOLD) {
     // TODO: Compute sky radiance here to reduce number of pixels to ray-march.
+    // TODO: Apply transmittance to the stars.
     outputColor = inputColor;
     return;
   }
