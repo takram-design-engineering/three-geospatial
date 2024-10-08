@@ -13,6 +13,14 @@ export function lerp(a: number, b: number, t: number): number {
   return t * b + (1 - t) * a
 }
 
+export function inverseLerp(a: number, b: number, x: number): number {
+  return a !== b ? (x - a) / (b - a) : 0
+}
+
+export function clamp(v: number, min: number, max: number): number {
+  return Math.min(Math.max(v, min), max)
+}
+
 export function closeTo(
   a: number,
   b: number,

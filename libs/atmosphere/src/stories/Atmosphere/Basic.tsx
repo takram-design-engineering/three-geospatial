@@ -8,8 +8,8 @@ import { useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
+import { Cartographic, Ellipsoid, radians } from '@geovanni/core'
 import { LensFlare } from '@geovanni/effects'
-import { Cartographic, Ellipsoid, radians } from '@geovanni/math'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useMotionDate } from '../useMotionDate'
@@ -51,7 +51,7 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} renderOrder={-1} />
+      <Atmosphere ref={atmosphereRef} />
       {effectComposer}
     </>
   )

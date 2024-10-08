@@ -43,10 +43,7 @@
         "@typescript-eslint/no-unsafe-argument": "off",
 
         // {} is semantically different from the "object" and "Record".
-        "@typescript-eslint/ban-types": "off",
-
-        // For consistency with next/core-web-vitals.
-        "react/display-name": "error"
+        "@typescript-eslint/ban-types": "off"
       }
     },
     {

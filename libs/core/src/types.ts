@@ -1,27 +1,5 @@
 import { type ReadonlyTuple } from 'type-fest'
 
-export type TypedArray =
-  | Int8Array
-  | Uint8Array
-  | Uint8ClampedArray
-  | Int16Array
-  | Uint16Array
-  | Int32Array
-  | Uint32Array
-  | Float32Array
-  | Float64Array
-
-export type TypedArrayConstructor =
-  | Int8ArrayConstructor
-  | Uint8ArrayConstructor
-  | Uint8ClampedArrayConstructor
-  | Int16ArrayConstructor
-  | Uint16ArrayConstructor
-  | Int32ArrayConstructor
-  | Uint32ArrayConstructor
-  | Float32ArrayConstructor
-  | Float64ArrayConstructor
-
 export type ReadonlyTuple2<T = number> = ReadonlyTuple<T, 2>
 export type ReadonlyTuple3<T = number> = ReadonlyTuple<T, 3>
 export type ReadonlyTuple4<T = number> = ReadonlyTuple<T, 4>

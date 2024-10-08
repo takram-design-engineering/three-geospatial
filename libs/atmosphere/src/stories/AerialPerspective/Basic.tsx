@@ -13,16 +13,20 @@ import { SMAAPreset, ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
 import { MeshStandardMaterial, Vector3 } from 'three'
 
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
-import { isNotFalse } from '@geovanni/core'
-import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
+import {
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  Stars
+} from '@geovanni/astronomy'
 import {
   Cartographic,
   Ellipsoid,
-  LocalFrame,
+  isNotFalse,
   radians,
   TilingScheme
-} from '@geovanni/math'
+} from '@geovanni/core'
+import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
+import { LocalFrame } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -107,7 +111,8 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} renderOrder={-1} />
+      <Atmosphere ref={atmosphereRef} />
+      <Stars />
       <ambientLight intensity={2} />
       <Sphere
         args={[location.clone().setHeight(0).toVector().length(), 360, 180]}

@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 
-import { radians } from '@geovanni/math'
+import { radians } from '@geovanni/core'
 
 export const IRRADIANCE_TEXTURE_WIDTH = 64
 export const IRRADIANCE_TEXTURE_HEIGHT = 16

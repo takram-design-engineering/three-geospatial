@@ -1,9 +1,9 @@
 {
-  "name": "math",
+  "name": "react",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/math/src",
+  "sourceRoot": "libs/react/src",
   "projectType": "library",
   "tags": [],
-  "// targets": "to see all targets run: nx show project math --web",
+  "// targets": "to see all targets run: nx show project react --web",
   "targets": {}
 }

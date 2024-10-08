@@ -13,7 +13,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { Cartographic, Ellipsoid } from '@geovanni/math'
+import { Cartographic, Ellipsoid } from '@geovanni/core'
 
 import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
@@ -73,10 +73,18 @@ export class AerialPerspectiveEffect extends Effect {
 
     super(
       'AerialPerspectiveEffect',
-      `${parameters}${functions}${fragmentShader}`,
+      /* glsl */ `
+        ${parameters}
+        ${functions}
+        ${fragmentShader}
+      `,
       {
         blendFunction,
-        vertexShader: `${parameters}${vertexCommon}${vertexShader}`,
+        vertexShader: /* glsl */ `
+          ${parameters}
+          ${vertexCommon}
+          ${vertexShader}
+        `,
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
         uniforms: new Map<string, Uniform>([

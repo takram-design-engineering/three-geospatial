@@ -60,7 +60,7 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
 
     const material = useMemo(() => new AtmosphereMaterial(), [])
     return (
-      <ScreenQuad {...others} ref={forwardedRef}>
+      <ScreenQuad renderOrder={-1} {...others} ref={forwardedRef}>
         <primitive
           object={material}
           irradianceTexture={irradianceTexture}

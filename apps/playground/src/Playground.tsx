@@ -10,8 +10,9 @@ import { Vector3 } from 'three'
 
 import { getSunDirectionECEF } from '@geovanni/astronomy'
 import { AerialPerspective, Atmosphere } from '@geovanni/atmosphere'
+import { Cartographic, radians } from '@geovanni/core'
 import { EffectComposer, SSAO } from '@geovanni/effects'
-import { Cartographic, LocalFrame, radians } from '@geovanni/math'
+import { LocalFrame } from '@geovanni/react'
 
 import { SunLight } from './components/SunLight'
 import { Tileset } from './components/Tileset'
@@ -66,7 +67,7 @@ export const Container: FC = () => {
     >
       <OrbitControls target={cameraTarget} />
       <ambientLight intensity={0.05} />
-      <Atmosphere sunDirection={sunDirection} renderOrder={-1} />
+      <Atmosphere sunDirection={sunDirection} />
       <EffectComposer normalPass>{effects}</EffectComposer>
       <LocalFrame location={localLocation}>
         <SunLight />

@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-  displayName: 'math',
+  displayName: 'react',
   preset: '../../jest.preset.js',
   transform: {
     '^.+\\.[tj]sx?$': [
@@ -14,5 +14,5 @@ export default {
     ]
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/math'
+  coverageDirectory: '../../coverage/libs/react'
 }

@@ -8,7 +8,10 @@
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {
+        // For consistency with next/core-web-vitals.
+        "react/display-name": "error"
+      }
     },
     {
       "files": ["*.js", "*.jsx"],
