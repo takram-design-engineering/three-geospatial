@@ -49,11 +49,6 @@ export abstract class DataLoader<
   imageSize?: ImageSize
   parameters?: DataTextureParameters
 
-  constructor() {
-    super()
-    this.parameters = { ...defaultDataTextureParameter, ...this.parameters }
-  }
-
   abstract parseTypedArray(buffer: ArrayBuffer): TypedArray
 
   load(
@@ -109,6 +104,7 @@ export class Int16Data2DLoader extends DataLoader {
   Texture = DataTexture
   parseTypedArray = parseInt16Array
   parameters = {
+    ...defaultDataTextureParameter,
     type: HalfFloatType
   }
 }
@@ -117,6 +113,7 @@ export class Uint16Data2DLoader extends DataLoader {
   Texture = DataTexture
   parseTypedArray = parseUint16Array
   parameters = {
+    ...defaultDataTextureParameter,
     type: HalfFloatType
   }
 }
@@ -125,6 +122,7 @@ export class Float32Data2DLoader extends DataLoader {
   Texture = DataTexture
   parseTypedArray = parseFloat32Array
   parameters = {
+    ...defaultDataTextureParameter,
     type: FloatType
   }
 }
@@ -133,6 +131,7 @@ export class Float32Data3DLoader extends DataLoader {
   Texture = Data3DTexture
   parseTypedArray = parseFloat32Array
   parameters = {
+    ...defaultDataTextureParameter,
     type: FloatType
   }
 }
