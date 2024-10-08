@@ -10,9 +10,9 @@ in vec3 vHeightAdjustment;
 layout(location = 0) out vec4 outputColor;
 
 vec3 getLunarRadiance() {
-  // Not a physical number but the order of 10^-6 may fit.
+  // Not a physical number but the order of 10^-6 relative to the sun may fit.
   return u_solar_irradiance *
-  0.000001 *
+  0.000002 *
   lunarRadianceScale /
   (PI * moonAngularRadius * moonAngularRadius);
 }
