@@ -10,22 +10,6 @@ import {
 
 import octNormal from './shaders/octNormal.glsl'
 
-const fragmentShader =
-  /* glsl */ `` +
-  ShaderLib.normal.fragmentShader.replace(
-    /* glsl */ `#include <normal_pars_fragment>`,
-    ShaderChunk.normal_pars_fragment.replace(
-      /* glsl */ `varying vec3 vNormal;`,
-      /* glsl */ `
-        #ifdef OCT_NORMAL_FLAT_SHADED
-        flat in vec3 vNormal;
-        #else
-        in vec3 vNormal;
-        #endif
-      `
-    )
-  )
-
 const vertexShader =
   /* glsl */ `` +
   ShaderLib.normal.vertexShader
@@ -49,6 +33,22 @@ const vertexShader =
       /* glsl */ `vec3 objectNormal = decodeOctNormal(packedOctNormal);`
     )
 
+const fragmentShader =
+  /* glsl */ `` +
+  ShaderLib.normal.fragmentShader.replace(
+    /* glsl */ `#include <normal_pars_fragment>`,
+    ShaderChunk.normal_pars_fragment.replace(
+      /* glsl */ `varying vec3 vNormal;`,
+      /* glsl */ `
+        #ifdef OCT_NORMAL_FLAT_SHADED
+        flat in vec3 vNormal;
+        #else
+        in vec3 vNormal;
+        #endif
+      `
+    )
+  )
+
 export interface OctNormalMaterialParameters
   extends Partial<MeshNormalMaterial> {}
 
@@ -69,12 +69,12 @@ export class OctNormalMaterial extends MeshNormalMaterial {
     }
   }
 
-  onBeforeCompile(
+  override onBeforeCompile(
     parameters: WebGLProgramParametersWithUniforms,
     renderer: WebGLRenderer
   ): void {
-    parameters.fragmentShader = fragmentShader
     parameters.vertexShader = vertexShader
+    parameters.fragmentShader = fragmentShader
     parameters.defines ??= {}
 
     if (this._flatShading) {
