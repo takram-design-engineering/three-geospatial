@@ -32,6 +32,7 @@ export interface AtmosphereMaterialParameters
   irradianceTexture?: Texture | null
   scatteringTexture?: Texture | null
   transmittanceTexture?: Texture | null
+  useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   sun?: boolean
   sunDirection?: Vector3
@@ -56,6 +57,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
       irradianceTexture,
       scatteringTexture,
       transmittanceTexture,
+      useHalfFloat,
       ellipsoid,
       sun,
       sunDirection,
@@ -93,7 +95,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         u_rayleigh_scattering: new Uniform(ATMOSPHERE_PARAMETERS.rayleighScattering),
         u_mie_scattering: new Uniform(ATMOSPHERE_PARAMETERS.mieScattering),
         u_mie_phase_function_g: new Uniform(ATMOSPHERE_PARAMETERS.miePhaseFunctionG),
-        u_mu_s_min: new Uniform(ATMOSPHERE_PARAMETERS.muSMin),
+        u_mu_s_min: new Uniform(0),
         u_irradiance_texture: new Uniform(irradianceTexture),
         u_scattering_texture: new Uniform(scatteringTexture),
         u_single_mie_scattering_texture: new Uniform(scatteringTexture),
@@ -119,6 +121,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
       depthWrite: false,
       depthTest: false
     })
+    this.useHalfFloat = useHalfFloat === true
     this.sun = sun
     this.moon = moon
   }
@@ -165,6 +168,18 @@ export class AtmosphereMaterial extends RawShaderMaterial {
 
   set transmittanceTexture(value: Texture | null) {
     this.uniforms.u_transmittance_texture.value = value
+  }
+
+  get useHalfFloat(): boolean {
+    return (
+      this.uniforms.u_mu_s_min.value === ATMOSPHERE_PARAMETERS.muSMinHalfFloat
+    )
+  }
+
+  set useHalfFloat(value: boolean) {
+    this.uniforms.u_mu_s_min.value = value
+      ? ATMOSPHERE_PARAMETERS.muSMinHalfFloat
+      : ATMOSPHERE_PARAMETERS.muSMinFloat
   }
 
   get sun(): boolean {

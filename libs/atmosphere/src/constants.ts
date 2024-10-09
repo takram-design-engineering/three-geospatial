@@ -20,6 +20,6 @@ export const ATMOSPHERE_PARAMETERS = {
   mieScattering: new Vector3(0.003996, 0.003996, 0.003996),
   miePhaseFunctionG: 0.8,
   // Use 120 for float and 102 for half-float.
-  // TODO: Sync with precomputed data.
-  muSMin: Math.cos(radians(102))
+  muSMinFloat: Math.cos(radians(120)),
+  muSMinHalfFloat: Math.cos(radians(102))
 }

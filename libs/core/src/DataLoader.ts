@@ -4,7 +4,6 @@ import {
   DataTexture,
   FileLoader,
   FloatType,
-  HalfFloatType,
   LinearFilter,
   Loader,
   RGBAFormat,
@@ -46,7 +45,6 @@ export abstract class DataLoader<
 > extends Loader<T> {
   abstract readonly Texture: Constructor<T>
 
-  imageSize?: ImageSize
   parameters?: DataTextureParameters
 
   abstract parseTypedArray(buffer: ArrayBuffer): TypedArray
@@ -81,13 +79,6 @@ export abstract class DataLoader<
         if (imageData != null) {
           texture.image.data = imageData as typeof texture.image.data
         }
-        if (this.imageSize != null) {
-          texture.image.width = this.imageSize.width
-          texture.image.height = this.imageSize.height
-          if ('depth' in texture.image && this.imageSize.depth != null) {
-            texture.image.depth = this.imageSize.depth
-          }
-        }
         Object.assign(texture, this.parameters)
         texture.needsUpdate = true
         onLoad?.(texture)
@@ -105,8 +96,8 @@ export class Int16Data2DLoader extends DataLoader {
   parseTypedArray = parseInt16Array
   parameters = {
     ...defaultDataTextureParameter,
-    type: HalfFloatType
-  }
+    type: FloatType
+  } satisfies DataTextureParameters
 }
 
 export class Uint16Data2DLoader extends DataLoader {
@@ -114,8 +105,8 @@ export class Uint16Data2DLoader extends DataLoader {
   parseTypedArray = parseUint16Array
   parameters = {
     ...defaultDataTextureParameter,
-    type: HalfFloatType
-  }
+    type: FloatType
+  } satisfies DataTextureParameters
 }
 
 export class Float32Data2DLoader extends DataLoader {
@@ -124,7 +115,7 @@ export class Float32Data2DLoader extends DataLoader {
   parameters = {
     ...defaultDataTextureParameter,
     type: FloatType
-  }
+  } satisfies DataTextureParameters
 }
 
 export class Float32Data3DLoader extends DataLoader {
@@ -133,5 +124,5 @@ export class Float32Data3DLoader extends DataLoader {
   parameters = {
     ...defaultDataTextureParameter,
     type: FloatType
-  }
+  } satisfies DataTextureParameters
 }

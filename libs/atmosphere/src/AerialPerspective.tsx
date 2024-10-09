@@ -1,3 +1,4 @@
+import { useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
@@ -35,18 +36,24 @@ export const AerialPerspective = forwardRef<
   }
 
   // Make textures shared.
+  const useHalfFloat = useThree(
+    ({ gl }) => gl.getContext().getExtension('OES_texture_float_linear') == null
+  )
   const irradianceTexture = usePrecomputedData('/irradiance.bin', {
     width: IRRADIANCE_TEXTURE_WIDTH,
-    height: IRRADIANCE_TEXTURE_HEIGHT
+    height: IRRADIANCE_TEXTURE_HEIGHT,
+    useHalfFloat
   })
   const scatteringTexture = usePrecomputedData('/scattering.bin', {
     width: SCATTERING_TEXTURE_WIDTH,
     height: SCATTERING_TEXTURE_HEIGHT,
-    depth: SCATTERING_TEXTURE_DEPTH
+    depth: SCATTERING_TEXTURE_DEPTH,
+    useHalfFloat
   })
   const transmittanceTexture = usePrecomputedData('/transmittance.bin', {
     width: TRANSMITTANCE_TEXTURE_WIDTH,
-    height: TRANSMITTANCE_TEXTURE_HEIGHT
+    height: TRANSMITTANCE_TEXTURE_HEIGHT,
+    useHalfFloat
   })
 
   const { camera, normalPass } = useContext(EffectComposerContext)
@@ -70,6 +77,7 @@ export const AerialPerspective = forwardRef<
       irradianceTexture={irradianceTexture}
       scatteringTexture={scatteringTexture}
       transmittanceTexture={transmittanceTexture}
+      useHalfFloat={useHalfFloat}
       {...others}
     />
   )
