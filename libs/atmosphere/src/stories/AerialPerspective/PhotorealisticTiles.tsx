@@ -11,7 +11,7 @@ import {
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
 import { useEffect, useMemo, useRef, type FC } from 'react'
-import { Mesh, Vector3, type BufferGeometry, type Group } from 'three'
+import { Matrix4, Mesh, Vector3, type BufferGeometry, type Group } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import {
@@ -24,6 +24,7 @@ import {
 } from '@geovanni/3d-tiles'
 import {
   Cartographic,
+  getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF,
   isNotFalse,
@@ -83,6 +84,7 @@ const Scene: FC = () => {
   const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
+  const rotationMatrixRef = useRef(new Matrix4())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
   const starsRef = useRef<StarsImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
@@ -91,12 +93,14 @@ const Scene: FC = () => {
     const date = new Date(motionDate.get())
     getSunDirectionECEF(date, sunDirectionRef.current)
     getMoonDirectionECEF(date, moonDirectionRef.current)
+    getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
       atmosphereRef.current.material.moonDirection = moonDirectionRef.current
     }
     if (starsRef.current != null) {
       starsRef.current.material.sunDirection = sunDirectionRef.current
+      starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
     }
     if (aerialPerspectiveRef.current != null) {
       aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
