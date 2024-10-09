@@ -22,14 +22,20 @@ import {
   toCreasedNormalsAsync,
   UpdateOnChangePlugin
 } from '@geovanni/3d-tiles'
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
-import { Cartographic, isNotFalse, radians } from '@geovanni/core'
+import {
+  Cartographic,
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  isNotFalse,
+  radians
+} from '@geovanni/core'
 import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
 import { useRendererControls } from '@geovanni/react'
 
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
+import { Stars } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
 const location = new Cartographic(
@@ -190,6 +196,7 @@ const Scene: FC = () => {
   return (
     <>
       <Atmosphere ref={atmosphereRef} />
+      <Stars />
       <primitive object={tiles.group} />
       {effectComposer}
     </>

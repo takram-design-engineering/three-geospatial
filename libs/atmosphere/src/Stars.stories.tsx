@@ -6,19 +6,19 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 import { Color, Vector2, Vector3 } from 'three'
 
-import { EffectComposer } from '@geovanni/effects'
-import { useRendererControls } from '@geovanni/react'
-
 import {
   convertChromaticityToXYZ,
   convertLinearSRGBToSRGB,
   convertTemperatureToBlackBodyChromaticity,
   convertXYZToLinearSRGBChromaticity
-} from './colors'
+} from '@geovanni/core'
+import { EffectComposer } from '@geovanni/effects'
+import { useRendererControls } from '@geovanni/react'
+
 import { Stars } from './Stars'
 
 export default {
-  title: 'astronomy/Stars',
+  title: 'atmosphere/Stars',
   parameters: {
     layout: 'fullscreen'
   }

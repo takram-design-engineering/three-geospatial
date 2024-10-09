@@ -3,7 +3,7 @@ import axios from 'axios'
 import { forwardRef, useEffect, useMemo, useRef } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import { suspend } from 'suspend-react'
-import { AdditiveBlending, type Points } from 'three'
+import { type Points } from 'three'
 
 import { StarsGeometry } from './StarsGeometry'
 import { StarsMaterial } from './StarsMaterial'
@@ -48,11 +48,25 @@ export const Stars = forwardRef<
     if (points != null) {
       camera.getWorldPosition(points.position)
       points.scale.setScalar(camera.far)
+
+      // WORKAROUND: GlobeControls tests intersection with scene objects and
+      // adjust the camera position accordingly.
+      const { boundingSphere } = geometry
+      if (boundingSphere != null) {
+        boundingSphere.center.x = -points.position.x
+        boundingSphere.center.y = -points.position.y
+        boundingSphere.center.z = -points.position.z
+        boundingSphere.radius = 1 / camera.far
+      }
     }
   })
 
   return (
-    <points ref={mergeRefs([ref, forwardedRef])} {...props}>
+    <points
+      ref={mergeRefs([ref, forwardedRef])}
+      {...props}
+      frustumCulled={false}
+    >
       <primitive object={geometry} />
       <primitive
         object={material}
@@ -62,8 +76,6 @@ export const Stars = forwardRef<
         color={[radianceScale, radianceScale, radianceScale]}
         depthTest={false}
         depthWrite={false}
-        transparent
-        blending={AdditiveBlending}
       />
     </points>
   )

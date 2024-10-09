@@ -12,8 +12,13 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
-import { Cartographic, Ellipsoid, radians } from '@geovanni/core'
+import {
+  Cartographic,
+  Ellipsoid,
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  radians
+} from '@geovanni/core'
 import { LensFlare } from '@geovanni/effects'
 import { LocalFrame, useRendererControls } from '@geovanni/react'
 

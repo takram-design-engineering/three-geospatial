@@ -14,13 +14,10 @@ import { Suspense, useMemo, useRef, type FC } from 'react'
 import { MeshStandardMaterial, Vector3 } from 'three'
 
 import {
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  Stars
-} from '@geovanni/astronomy'
-import {
   Cartographic,
   Ellipsoid,
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
   isNotFalse,
   radians,
   TilingScheme
@@ -32,6 +29,7 @@ import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
+import { Stars } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
 const location = new Cartographic(radians(138.731), radians(35.363), 4500)
