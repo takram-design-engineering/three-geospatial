@@ -16,7 +16,7 @@ import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import {
   GooglePhotorealisticTilesRenderer,
-  TILE_PREPROCESS_PROMISE,
+  TILE_ASYNC_STATE,
   TileCompressionPlugin,
   TilesFadePlugin,
   toCreasedNormalsAsync,
@@ -54,11 +54,13 @@ const onLoadModel = ((event: {
   event.scene.traverse(object => {
     if (object instanceof Mesh) {
       const geometry: BufferGeometry = object.geometry
-      event.tile[TILE_PREPROCESS_PROMISE] = (async () => {
-        object.geometry = await toCreasedNormalsAsync(geometry, radians(30))
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete event.tile[TILE_PREPROCESS_PROMISE]
-      })()
+      event.tile[TILE_ASYNC_STATE] = {
+        promise: toCreasedNormalsAsync(geometry, radians(30)).then(result => {
+          object.geometry = result
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+          delete event.tile[TILE_ASYNC_STATE]
+        })
+      }
     }
   })
 }) as (event: Object) => void

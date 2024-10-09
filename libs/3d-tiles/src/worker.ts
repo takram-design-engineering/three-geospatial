@@ -7,11 +7,12 @@ import type Transfer from 'workerpool/types/transfer'
 
 import { isNotNullish } from '@geovanni/core'
 
-export type BufferGeometryInput = Pick<BufferGeometry, 'attributes' | 'index'>
+export type CreasedNormalsInput = Pick<BufferGeometry, 'attributes' | 'index'>
+export type CreasedNormalsResult = Pick<BufferGeometry, 'attributes' | 'index'>
 
 workerpool.worker({
   toCreasedNormals: (
-    input: BufferGeometryInput,
+    input: CreasedNormalsInput,
     creaseAngle?: number
   ): Transfer => {
     const geometry = new BufferGeometry()
