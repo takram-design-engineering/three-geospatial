@@ -1,82 +1,87 @@
-import { useFrame, useThree, type PointsProps } from '@react-three/fiber'
+import { type PointsProps } from '@react-three/fiber'
 import axios from 'axios'
-import { forwardRef, useEffect, useMemo, useRef } from 'react'
-import { mergeRefs } from 'react-merge-refs'
+import { forwardRef, useEffect, useMemo } from 'react'
 import { suspend } from 'suspend-react'
-import { type Points } from 'three'
+import { type Points, type Vector3 } from 'three'
 
+import { type Ellipsoid } from '@geovanni/core'
+
+import {
+  IRRADIANCE_TEXTURE_HEIGHT,
+  IRRADIANCE_TEXTURE_WIDTH,
+  SCATTERING_TEXTURE_DEPTH,
+  SCATTERING_TEXTURE_HEIGHT,
+  SCATTERING_TEXTURE_WIDTH,
+  TRANSMITTANCE_TEXTURE_HEIGHT,
+  TRANSMITTANCE_TEXTURE_WIDTH
+} from './constants'
 import { StarsGeometry } from './StarsGeometry'
-import { StarsMaterial } from './StarsMaterial'
+import { StarsMaterial, starsMaterialParametersDefaults } from './StarsMaterial'
+import { usePrecomputedData } from './usePrecomputedData'
+
+export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
 export interface StarsProps extends PointsProps {
+  ellipsoid?: Ellipsoid
+  sunDirection?: Vector3
   pointSize?: number
   radianceScale?: number
-  disableTransform?: boolean
+  background?: boolean
 }
 
-export const Stars = forwardRef<
-  Points<StarsGeometry, StarsMaterial>,
-  StarsProps
->(function Stars(
-  { pointSize = 1, radianceScale = 1, disableTransform = false, ...props },
-  forwardedRef
-) {
-  // TODO: Replace with a more advanced cache.
-  const data = suspend(async () => {
-    const response = await axios<ArrayBuffer>('/stars.bin', {
-      responseType: 'arraybuffer'
+export const Stars = forwardRef<StarsImpl, StarsProps>(
+  function Stars(props, forwardedRef) {
+    const { ellipsoid, pointSize, radianceScale, background, ...others } = {
+      ...starsMaterialParametersDefaults,
+      ...props
+    }
+
+    // Make textures shared.
+    const irradianceTexture = usePrecomputedData('/irradiance.bin', {
+      width: IRRADIANCE_TEXTURE_WIDTH,
+      height: IRRADIANCE_TEXTURE_HEIGHT
     })
-    return response.data
-  }, [Stars])
+    const scatteringTexture = usePrecomputedData('/scattering.bin', {
+      width: SCATTERING_TEXTURE_WIDTH,
+      height: SCATTERING_TEXTURE_HEIGHT,
+      depth: SCATTERING_TEXTURE_DEPTH
+    })
+    const transmittanceTexture = usePrecomputedData('/transmittance.bin', {
+      width: TRANSMITTANCE_TEXTURE_WIDTH,
+      height: TRANSMITTANCE_TEXTURE_HEIGHT
+    })
 
-  const geometry = useMemo(() => new StarsGeometry(data), [data])
-  useEffect(() => {
-    return () => {
-      geometry.dispose()
-    }
-  }, [geometry])
+    // TODO: Replace with a more advanced cache.
+    const data = suspend(async () => {
+      const response = await axios<ArrayBuffer>('/stars.bin', {
+        responseType: 'arraybuffer'
+      })
+      return response.data
+    }, [Stars])
 
-  const material = useMemo(() => new StarsMaterial(), [])
-
-  const { camera } = useThree()
-  const ref = useRef<Points>(null)
-  useFrame(() => {
-    if (disableTransform) {
-      return
-    }
-    const points = ref.current
-    if (points != null) {
-      camera.getWorldPosition(points.position)
-      points.scale.setScalar(camera.far)
-
-      // WORKAROUND: GlobeControls tests intersection with scene objects and
-      // adjust the camera position accordingly.
-      const { boundingSphere } = geometry
-      if (boundingSphere != null) {
-        boundingSphere.center.x = -points.position.x
-        boundingSphere.center.y = -points.position.y
-        boundingSphere.center.z = -points.position.z
-        boundingSphere.radius = 1 / camera.far
+    const geometry = useMemo(() => new StarsGeometry(data), [data])
+    useEffect(() => {
+      return () => {
+        geometry.dispose()
       }
-    }
-  })
+    }, [geometry])
 
-  return (
-    <points
-      ref={mergeRefs([ref, forwardedRef])}
-      {...props}
-      frustumCulled={false}
-    >
-      <primitive object={geometry} />
-      <primitive
-        object={material}
-        vertexColors
-        size={pointSize}
-        sizeAttenuation={false}
-        color={[radianceScale, radianceScale, radianceScale]}
-        depthTest={false}
-        depthWrite={false}
-      />
-    </points>
-  )
-})
+    const material = useMemo(() => new StarsMaterial(), [])
+    return (
+      <points ref={forwardedRef} {...others} frustumCulled={false}>
+        <primitive object={geometry} />
+        <primitive
+          object={material}
+          irradianceTexture={irradianceTexture}
+          scatteringTexture={scatteringTexture}
+          transmittanceTexture={transmittanceTexture}
+          pointSize={pointSize}
+          radianceScale={radianceScale}
+          background={background}
+          depthTest={true}
+          depthWrite={false}
+        />
+      </points>
+    )
+  }
+)

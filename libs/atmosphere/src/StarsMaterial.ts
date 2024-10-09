@@ -1,40 +1,171 @@
 import {
-  PointsMaterial,
-  ShaderLib,
+  Matrix4,
+  RawShaderMaterial,
   Uniform,
   Vector2,
-  type WebGLProgramParametersWithUniforms,
+  Vector3,
+  type BufferGeometry,
+  type Camera,
+  type Group,
+  type Object3D,
+  type PerspectiveCamera,
+  type Scene,
+  type ShaderMaterialParameters,
+  type Texture,
   type WebGLRenderer
 } from 'three'
 
-const vertexShader =
-  /* glsl */ `
-    attribute float magnitude;
-    uniform vec2 magnitudeRange;
-  ` +
-  ShaderLib.points.vertexShader.replace(
-    /* glsl */ `#include <color_vertex>`,
-    /* glsl */ `
-      #include <color_vertex>
-      {
-        // Magnitude is stored between 0 to 1 within the given range.
-        float m = mix(magnitudeRange.x, magnitudeRange.y, magnitude);
-        vec3 v = pow(vec3(10.0), -vec3(magnitudeRange, m) / 2.5);
-        vColor *= clamp((v.z - v.y) / (v.x - v.y), 0.0, 1.0);
-      }
-    `
-  )
+import { Cartographic, Ellipsoid } from '@geovanni/core'
 
-const fragmentShader = ShaderLib.points.fragmentShader
+import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
-export class StarsMaterial extends PointsMaterial {
-  uniforms: Record<string, Uniform>
+import functions from './shaders/functions.glsl'
+import parameters from './shaders/parameters.glsl'
+import fragmentShader from './shaders/stars.frag'
+import vertexShader from './shaders/stars.vert'
+import vertexCommon from './shaders/vertexCommon.glsl'
 
-  constructor() {
-    super()
-    this.uniforms = {
-      magnitudeRange: new Uniform(new Vector2(-2, 8))
-    }
+const cartographicScratch = new Cartographic()
+
+export interface StarsMaterialParameters
+  extends Partial<ShaderMaterialParameters> {
+  irradianceTexture?: Texture | null
+  scatteringTexture?: Texture | null
+  transmittanceTexture?: Texture | null
+  ellipsoid?: Ellipsoid
+  sunDirection?: Vector3
+  pointSize?: number
+  radianceScale?: number
+  background?: boolean
+}
+
+export const starsMaterialParametersDefaults = {
+  ellipsoid: Ellipsoid.WGS84,
+  pointSize: 1,
+  radianceScale: 1,
+  background: true
+} satisfies StarsMaterialParameters
+
+export class StarsMaterial extends RawShaderMaterial {
+  pointSize: number
+
+  constructor(params?: StarsMaterialParameters) {
+    const {
+      irradianceTexture,
+      scatteringTexture,
+      transmittanceTexture,
+      ellipsoid,
+      sunDirection,
+      pointSize,
+      radianceScale,
+      background,
+      ...others
+    } = { ...starsMaterialParametersDefaults, ...params }
+
+    super({
+      vertexShader: /* glsl */ `
+        precision highp float;
+        precision highp sampler3D;
+        ${parameters}
+        ${vertexCommon}
+        ${vertexShader}
+      `,
+      ...others,
+      glslVersion: '300 es',
+      fragmentShader: /* glsl */ `
+        precision highp float;
+        precision highp sampler3D;
+        ${parameters}
+        ${functions}
+        ${fragmentShader}
+      `,
+      // prettier-ignore
+      uniforms: {
+        u_solar_irradiance: new Uniform(ATMOSPHERE_PARAMETERS.solarIrradiance),
+        u_sun_angular_radius: new Uniform(ATMOSPHERE_PARAMETERS.sunAngularRadius),
+        u_bottom_radius: new Uniform(ATMOSPHERE_PARAMETERS.bottomRadius),
+        u_top_radius: new Uniform(ATMOSPHERE_PARAMETERS.topRadius),
+        u_rayleigh_scattering: new Uniform(ATMOSPHERE_PARAMETERS.rayleighScattering),
+        u_mie_scattering: new Uniform(ATMOSPHERE_PARAMETERS.mieScattering),
+        u_mie_phase_function_g: new Uniform(ATMOSPHERE_PARAMETERS.miePhaseFunctionG),
+        u_mu_s_min: new Uniform(ATMOSPHERE_PARAMETERS.muSMin),
+        u_irradiance_texture: new Uniform(irradianceTexture),
+        u_scattering_texture: new Uniform(scatteringTexture),
+        u_single_mie_scattering_texture: new Uniform(scatteringTexture),
+        u_transmittance_texture: new Uniform(transmittanceTexture),
+        projectionMatrix: new Uniform(new Matrix4()),
+        modelViewMatrix: new Uniform(new Matrix4()),
+        cameraPosition: new Uniform(new Vector3()),
+        cameraHeight: new Uniform(0),
+        cameraFar: new Uniform(0),
+        ellipsoidRadii: new Uniform(new Vector3().copy(ellipsoid.radii)),
+        ellipsoidSurface: new Uniform(new Vector3()),
+        sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
+        pointSize: new Uniform(0),
+        magnitudeRange: new Uniform(new Vector2(-2, 8)),
+        radianceScale: new Uniform(radianceScale),
+      },
+      defines: {
+        METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`
+      },
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false
+    })
+    this.pointSize = pointSize
+    this.background = background
+  }
+
+  override onBeforeRender(
+    renderer: WebGLRenderer,
+    scene: Scene,
+    camera: Camera,
+    geometry: BufferGeometry,
+    object: Object3D,
+    group: Group
+  ): void {
+    const uniforms = this.uniforms
+    uniforms.projectionMatrix.value.copy(camera.projectionMatrix)
+    uniforms.modelViewMatrix.value.copy(camera.modelViewMatrix)
+    const position = camera.getWorldPosition(uniforms.cameraPosition.value)
+    const cartographic = cartographicScratch.setFromVector(position)
+    uniforms.cameraHeight.value = cartographic.height
+    uniforms.cameraFar.value = (camera as PerspectiveCamera).far
+    cartographic.setHeight(0).toVector(uniforms.ellipsoidSurface.value)
+    uniforms.pointSize.value = this.pointSize * renderer.getPixelRatio()
+  }
+
+  get irradianceTexture(): Texture | null {
+    return this.uniforms.u_irradiance_texture.value
+  }
+
+  set irradianceTexture(value: Texture | null) {
+    this.uniforms.u_irradiance_texture.value = value
+  }
+
+  get scatteringTexture(): Texture | null {
+    return this.uniforms.u_scattering_texture.value
+  }
+
+  set scatteringTexture(value: Texture | null) {
+    this.uniforms.u_scattering_texture.value = value
+    this.uniforms.u_single_mie_scattering_texture.value = value
+  }
+
+  get transmittanceTexture(): Texture | null {
+    return this.uniforms.u_transmittance_texture.value
+  }
+
+  set transmittanceTexture(value: Texture | null) {
+    this.uniforms.u_transmittance_texture.value = value
+  }
+
+  get sunDirection(): Vector3 {
+    return this.uniforms.sunDirection.value
+  }
+
+  set sunDirection(value: Vector3) {
+    this.uniforms.sunDirection.value.copy(value)
   }
 
   get magnitudeRange(): Vector2 {
@@ -45,12 +176,26 @@ export class StarsMaterial extends PointsMaterial {
     this.uniforms.magnitudeScale.value.set(value)
   }
 
-  override onBeforeCompile(
-    parameters: WebGLProgramParametersWithUniforms,
-    renderer: WebGLRenderer
-  ): void {
-    parameters.vertexShader = vertexShader
-    parameters.fragmentShader = fragmentShader
-    Object.assign(parameters.uniforms, this.uniforms)
+  get radianceScale(): number {
+    return this.uniforms.radianceScale.value
+  }
+
+  set radianceScale(value: number) {
+    this.uniforms.radianceScale.value = value
+  }
+
+  get background(): boolean {
+    return this.defines.BACKGROUND != null
+  }
+
+  set background(value: boolean) {
+    if (value !== this.background) {
+      if (value) {
+        this.defines.BACKGROUND = '1'
+      } else {
+        delete this.defines.BACKGROUND
+      }
+      this.needsUpdate = true
+    }
   }
 }

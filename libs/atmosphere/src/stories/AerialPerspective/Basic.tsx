@@ -29,7 +29,7 @@ import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
-import { Stars } from '../../Stars'
+import { Stars, type StarsImpl } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
 const location = new Cartographic(radians(138.731), radians(35.363), 4500)
@@ -67,6 +67,7 @@ const Scene: FC = () => {
   const moonDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
+  const starsRef = useRef<StarsImpl>(null)
 
   useFrame(() => {
     getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
@@ -74,6 +75,9 @@ const Scene: FC = () => {
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
       atmosphereRef.current.material.moonDirection = moonDirectionRef.current
+    }
+    if (starsRef.current != null) {
+      starsRef.current.material.sunDirection = sunDirectionRef.current
     }
     if (aerialPerspectiveRef.current != null) {
       aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
@@ -112,7 +116,7 @@ const Scene: FC = () => {
         <GizmoViewport />
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} />
-      <Stars />
+      <Stars ref={starsRef} />
       <ambientLight intensity={2} />
       <Sphere
         args={[location.clone().setHeight(0).toVector().length(), 360, 180]}

@@ -35,7 +35,7 @@ import { useRendererControls } from '@geovanni/react'
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
-import { Stars } from '../../Stars'
+import { Stars, type StarsImpl } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
 const location = new Cartographic(
@@ -84,6 +84,7 @@ const Scene: FC = () => {
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
+  const starsRef = useRef<StarsImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
 
   useFrame(() => {
@@ -92,6 +93,9 @@ const Scene: FC = () => {
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
       atmosphereRef.current.material.moonDirection = moonDirectionRef.current
+    }
+    if (starsRef.current != null) {
+      starsRef.current.material.sunDirection = sunDirectionRef.current
     }
     if (aerialPerspectiveRef.current != null) {
       aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
@@ -196,7 +200,7 @@ const Scene: FC = () => {
   return (
     <>
       <Atmosphere ref={atmosphereRef} />
-      <Stars />
+      <Stars ref={starsRef} />
       <primitive object={tiles.group} />
       {effectComposer}
     </>
