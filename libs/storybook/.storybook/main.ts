@@ -15,7 +15,10 @@ const config: StorybookConfig = {
 
   viteFinal: async config =>
     mergeConfig(config, {
-      plugins: [react(), nxViteTsPaths(), glsl()]
+      plugins: [react(), nxViteTsPaths(), glsl()],
+      worker: {
+        plugins: () => [nxViteTsPaths()]
+      }
     })
 }
 

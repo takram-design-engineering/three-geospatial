@@ -2630,6 +2630,7 @@ __metadata:
     vite-plugin-dts: "npm:~3.8.1"
     vite-plugin-glsl: "npm:^1.3.0"
     vitest: "npm:^1.3.1"
+    workerpool: "npm:^9.1.3"
   languageName: unknown
   linkType: soft
 
@@ -22926,6 +22927,13 @@ __metadata:
   version: 1.0.0
   resolution: "wordwrap@npm:1.0.0"
   checksum: 10c0/7ed2e44f3c33c5c3e3771134d2b0aee4314c9e49c749e37f464bf69f2bcdf0cbf9419ca638098e2717cff4875c47f56a007532f6111c3319f557a2ca91278e92
+  languageName: node
+  linkType: hard
+
+"workerpool@npm:^9.1.3":
+  version: 9.1.3
+  resolution: "workerpool@npm:9.1.3"
+  checksum: 10c0/32c8fd577f2752fde8ec6340e52b3de31eb36a8be29dcdffb4a11e933c9bf01aac18d092ec2a2a2f7e35f377b9cd8a84aec4436bc28f4fd6d4ceb82c4c2c3e58
   languageName: node
   linkType: hard
 

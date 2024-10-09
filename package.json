@@ -40,7 +40,8 @@
     "three-stdlib": "2.33.0",
     "tiny-invariant": "^1.3.3",
     "tslib": "^2.3.0",
-    "type-fest": "^4.26.1"
+    "type-fest": "^4.26.1",
+    "workerpool": "^9.1.3"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
