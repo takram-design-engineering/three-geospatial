@@ -97,6 +97,8 @@ export class StarsMaterial extends RawShaderMaterial {
         u_transmittance_texture: new Uniform(transmittanceTexture),
         projectionMatrix: new Uniform(new Matrix4()),
         modelViewMatrix: new Uniform(new Matrix4()),
+        viewMatrix: new Uniform(new Matrix4()),
+        matrixWorld: new Uniform(new Matrix4()),
         cameraPosition: new Uniform(new Vector3()),
         cameraHeight: new Uniform(0),
         cameraFar: new Uniform(0),
@@ -130,6 +132,8 @@ export class StarsMaterial extends RawShaderMaterial {
     const uniforms = this.uniforms
     uniforms.projectionMatrix.value.copy(camera.projectionMatrix)
     uniforms.modelViewMatrix.value.copy(camera.modelViewMatrix)
+    uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
+    uniforms.matrixWorld.value.copy(object.matrixWorld)
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
     const cartographic = cartographicScratch.setFromVector(position)
     uniforms.cameraHeight.value = cartographic.height

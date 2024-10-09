@@ -1,5 +1,7 @@
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 matrixWorld;
 uniform vec3 cameraPosition;
 uniform float cameraHeight;
 uniform float cameraFar;
@@ -25,9 +27,8 @@ void main() {
   vColor = vec3(radianceScale * color);
   vColor *= clamp((v.z - v.y) / (v.x - v.y), 0.0, 1.0);
 
-  vec3 transformed;
   #ifdef BACKGROUND
-  vec3 worldDirection = normalize(position);
+  vec3 worldDirection = normalize(matrixWorld * vec4(position, 1.0)).xyz;
   vWorldDirection = worldDirection;
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
   vHeightAdjustment = getHeightAdjustment(
@@ -35,11 +36,13 @@ void main() {
     ellipsoidRadii,
     ellipsoidSurface
   );
-  transformed = cameraPosition + worldDirection * cameraFar;
+  gl_Position =
+    projectionMatrix *
+    viewMatrix *
+    vec4(cameraPosition + worldDirection * cameraFar, 1.0);
   #else
-  transformed = position;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   #endif // BACKGROUND
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
   gl_PointSize = pointSize;
 }

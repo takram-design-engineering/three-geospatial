@@ -88,8 +88,9 @@ const Scene: FC = () => {
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
 
   useFrame(() => {
-    getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
-    getMoonDirectionECEF(new Date(motionDate.get()), moonDirectionRef.current)
+    const date = new Date(motionDate.get())
+    getSunDirectionECEF(date, sunDirectionRef.current)
+    getMoonDirectionECEF(date, moonDirectionRef.current)
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
       atmosphereRef.current.material.moonDirection = moonDirectionRef.current

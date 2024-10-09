@@ -1,21 +1,23 @@
 import { OrbitControls } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type Meta, type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { useMemo, type FC } from 'react'
-import { Color, Vector2, Vector3 } from 'three'
+import { useMemo, useRef, type FC } from 'react'
+import { Color, Matrix4, Vector2, Vector3 } from 'three'
 
 import {
   convertChromaticityToXYZ,
   convertLinearSRGBToSRGB,
   convertTemperatureToBlackBodyChromaticity,
-  convertXYZToLinearSRGBChromaticity
+  convertXYZToLinearSRGBChromaticity,
+  getECIToECEFRotationMatrix
 } from '@geovanni/core'
 import { EffectComposer } from '@geovanni/effects'
 import { useRendererControls } from '@geovanni/react'
 
-import { Stars } from './Stars'
+import { Stars, type StarsImpl } from './Stars'
+import { useMotionDate } from './stories/useMotionDate'
 
 export default {
   title: 'atmosphere/Stars',
@@ -26,6 +28,18 @@ export default {
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 50 })
+
+  const motionDate = useMotionDate()
+  const rotationMatrixRef = useRef(new Matrix4())
+  const starsRef = useRef<StarsImpl>(null)
+
+  useFrame(() => {
+    const date = new Date(motionDate.get())
+    getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
+    if (starsRef.current != null) {
+      starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
+    }
+  })
 
   const effectComposer = useMemo(
     () => (
@@ -39,7 +53,12 @@ const Scene: FC = () => {
     <>
       <color args={[0, 0, 0]} attach='background' />
       <OrbitControls />
-      <Stars scale={[2, 2, 2]} radianceScale={5} background={false} />
+      <Stars
+        ref={starsRef}
+        scale={[2, 2, 2]}
+        radianceScale={5}
+        background={false}
+      />
       {effectComposer}
     </>
   )
