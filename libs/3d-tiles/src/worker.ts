@@ -33,13 +33,14 @@ workerpool.worker({
         input.index.normalized
       )
     }
+    const result = toCreasedNormals(geometry, creaseAngle)
     return new workerpool.Transfer(
-      toCreasedNormals(geometry, creaseAngle),
+      result,
       [
-        ...Object.values(geometry.attributes).map(
+        ...Object.values(result.attributes).map(
           attribute => attribute.array.buffer
         ),
-        geometry.index?.array.buffer
+        result.index?.array.buffer
       ].filter(isNotNullish)
     )
   }

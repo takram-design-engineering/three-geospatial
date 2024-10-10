@@ -1,7 +1,10 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { GoogleCloudAuthPlugin, type Tile } from '3d-tiles-renderer'
+import {
+  GoogleCloudAuthPlugin,
+  GooglePhotorealisticTilesRenderer
+} from '3d-tiles-renderer'
 import { GlobeControls } from '3d-tiles-renderer/src/three/controls/GlobeControls'
 import { useControls } from 'leva'
 import {
@@ -11,15 +14,13 @@ import {
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
 import { useEffect, useMemo, useRef, type FC } from 'react'
-import { Matrix4, Mesh, Vector3, type BufferGeometry, type Group } from 'three'
+import { Matrix4, Vector3 } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import {
-  GooglePhotorealisticTilesRenderer,
-  TILE_ASYNC_STATE,
   TileCompressionPlugin,
+  TileCreaseNormalsPlugin,
   TilesFadePlugin,
-  toCreasedNormalsAsync,
   UpdateOnChangePlugin
 } from '@geovanni/3d-tiles'
 import {
@@ -52,25 +53,6 @@ const cameraPosition = location
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
-
-const onLoadModel = ((event: {
-  type: 'load-model'
-  scene: Group
-  tile: Tile
-}): void => {
-  event.scene.traverse(object => {
-    if (object instanceof Mesh) {
-      const geometry: BufferGeometry = object.geometry
-      event.tile[TILE_ASYNC_STATE] = {
-        promise: toCreasedNormalsAsync(geometry, radians(30)).then(result => {
-          object.geometry = result
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete event.tile[TILE_ASYNC_STATE]
-        })
-      }
-    }
-  })
-}) as (event: Object) => void
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
@@ -118,6 +100,11 @@ const Scene: FC = () => {
     )
     tiles.registerPlugin(new UpdateOnChangePlugin())
     tiles.registerPlugin(new TileCompressionPlugin())
+    tiles.registerPlugin(
+      new TileCreaseNormalsPlugin({
+        creaseAngle: radians(30)
+      })
+    )
     tiles.registerPlugin(new TilesFadePlugin())
 
     const loader = new GLTFLoader(tiles.manager)
@@ -126,13 +113,6 @@ const Scene: FC = () => {
 
     return tiles
   }, [])
-
-  useEffect(() => {
-    tiles.addEventListener('load-model', onLoadModel)
-    return () => {
-      tiles.removeEventListener('load-model', onLoadModel)
-    }
-  }, [tiles])
 
   useEffect(() => {
     tiles.setCamera(camera)
