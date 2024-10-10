@@ -35,7 +35,7 @@ export const AerialPerspective = forwardRef<
     ...props
   }
 
-  // Make textures shared.
+  // TODO: Make textures shared.
   const useHalfFloat = useThree(
     ({ gl }) => gl.getContext().getExtension('OES_texture_float_linear') == null
   )
