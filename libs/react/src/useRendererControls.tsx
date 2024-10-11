@@ -10,7 +10,7 @@ export function useRendererControls({
 }: {
   exposure?: number
 } = {}): void {
-  const [{ exposure }, set] = useControls('gl', () => ({
+  const [{ exposure }, set] = useControls('renderer', () => ({
     exposure: {
       value: initialExposure,
       min: 0,
