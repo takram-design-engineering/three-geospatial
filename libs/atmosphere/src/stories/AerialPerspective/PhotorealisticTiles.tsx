@@ -13,7 +13,7 @@ import {
   ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { useEffect, useMemo, useRef, type FC } from 'react'
+import { Fragment, useEffect, useMemo, useRef, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
@@ -31,7 +31,13 @@ import {
   isNotFalse,
   radians
 } from '@geovanni/core'
-import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
+import {
+  Depth,
+  EffectComposer,
+  LensFlare,
+  Normal,
+  useColorGradingControls
+} from '@geovanni/effects'
 import { useRendererControls } from '@geovanni/react'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -56,6 +62,7 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
+  const lut = useColorGradingControls()
 
   const { normal, depth, depthNormal } = useControls('effect', {
     depth: false,
@@ -175,11 +182,12 @@ const Scene: FC = () => {
           !normal && !depth && !depthNormal && (
             <ToneMapping key='toneMapping' mode={ToneMappingMode.AGX} />
           ),
+          lut != null && <Fragment key='lut'>{lut}</Fragment>,
           <SMAA key='smaa' preset={SMAAPreset.ULTRA} />
         ].filter(isNotFalse)}
       </EffectComposer>
     ),
-    [normal, depth, depthNormal]
+    [normal, depth, depthNormal, lut]
   )
 
   return (

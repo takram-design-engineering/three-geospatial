@@ -10,7 +10,7 @@ import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { SMAAPreset, ToneMappingMode } from 'postprocessing'
-import { Suspense, useMemo, useRef, type FC } from 'react'
+import { Fragment, Suspense, useMemo, useRef, type FC } from 'react'
 import { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
 
 import {
@@ -23,7 +23,13 @@ import {
   radians,
   TilingScheme
 } from '@geovanni/core'
-import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
+import {
+  Depth,
+  EffectComposer,
+  LensFlare,
+  Normal,
+  useColorGradingControls
+} from '@geovanni/effects'
 import { LocalFrame, useRendererControls } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
@@ -56,6 +62,7 @@ const terrainMaterial = new MeshStandardMaterial({ color: 'gray' })
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
+  const lut = useColorGradingControls()
 
   const { normal, depth, depthNormal } = useControls('effect', {
     depth: false,
@@ -107,11 +114,12 @@ const Scene: FC = () => {
           !normal && !depth && !depthNormal && (
             <ToneMapping key='toneMapping' mode={ToneMappingMode.AGX} />
           ),
+          lut != null && <Fragment key='lut'>{lut}</Fragment>,
           <SMAA key='smaa' preset={SMAAPreset.ULTRA} />
         ].filter(isNotFalse)}
       </EffectComposer>
     ),
-    [normal, depth, depthNormal]
+    [normal, depth, depthNormal, lut]
   )
 
   return (
