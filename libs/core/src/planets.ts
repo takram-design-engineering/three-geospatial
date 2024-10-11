@@ -3,6 +3,7 @@
 
 import {
   Body,
+  CombineRotation,
   GeoVector,
   RotateVector,
   Rotation_EQJ_EQD,
@@ -10,7 +11,7 @@ import {
   SiderealTime,
   type FlexibleDateTime
 } from 'astronomy-engine'
-import { Vector3 } from 'three'
+import { Matrix4, Vector3 } from 'three'
 
 function Rotation_Z(angle: number): RotationMatrix {
   const cos = Math.cos(angle)
@@ -47,4 +48,20 @@ export function getMoonDirectionECEF(
   result = new Vector3()
 ): Vector3 {
   return getDirectionECEF(Body.Moon, date, result)
+}
+
+export function getECIToECEFRotationMatrix(
+  date: FlexibleDateTime,
+  result = new Matrix4()
+): Matrix4 {
+  const rotation_EQJ_EQD = Rotation_EQJ_EQD(date)
+  const rotation_EQD_ECEF = Rotation_Z(SiderealTime(date) * (Math.PI / 12))
+  const { rot } = CombineRotation(rotation_EQJ_EQD, rotation_EQD_ECEF)
+  // prettier-ignore
+  return result.set(
+    rot[0][0], rot[0][1], rot[0][2], 0,
+    rot[1][0], rot[1][1], rot[1][2], 0,
+    rot[2][0], rot[2][1], rot[2][2], 0,
+    0, 0, 0, 1
+  ).invert()
 }

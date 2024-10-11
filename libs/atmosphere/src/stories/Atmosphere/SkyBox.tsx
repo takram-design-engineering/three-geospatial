@@ -12,8 +12,13 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
-import { Cartographic, Ellipsoid, radians } from '@geovanni/core'
+import {
+  Cartographic,
+  Ellipsoid,
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  radians
+} from '@geovanni/core'
 import { LensFlare } from '@geovanni/effects'
 import { LocalFrame, useRendererControls } from '@geovanni/react'
 
@@ -34,8 +39,9 @@ const Scene: FC = () => {
   const atmosphere2Ref = useRef<AtmosphereImpl>(null)
 
   useFrame(() => {
-    getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
-    getMoonDirectionECEF(new Date(motionDate.get()), moonDirectionRef.current)
+    const date = new Date(motionDate.get())
+    getSunDirectionECEF(date, sunDirectionRef.current)
+    getMoonDirectionECEF(date, moonDirectionRef.current)
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
       atmosphereRef.current.material.moonDirection = moonDirectionRef.current

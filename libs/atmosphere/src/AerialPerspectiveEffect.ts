@@ -32,6 +32,7 @@ export interface AerialPerspectiveEffectOptions {
   irradianceTexture?: Texture | null
   scatteringTexture?: Texture | null
   transmittanceTexture?: Texture | null
+  useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   sunIrradiance?: boolean
   skyIrradiance?: boolean
@@ -63,6 +64,7 @@ export class AerialPerspectiveEffect extends Effect {
       irradianceTexture,
       scatteringTexture,
       transmittanceTexture,
+      useHalfFloat,
       ellipsoid,
       sunIrradiance,
       skyIrradiance,
@@ -95,7 +97,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['u_rayleigh_scattering', new Uniform(ATMOSPHERE_PARAMETERS.rayleighScattering)],
           ['u_mie_scattering', new Uniform(ATMOSPHERE_PARAMETERS.mieScattering)],
           ['u_mie_phase_function_g', new Uniform(ATMOSPHERE_PARAMETERS.miePhaseFunctionG)],
-          ['u_mu_s_min', new Uniform(ATMOSPHERE_PARAMETERS.muSMin)],
+          ['u_mu_s_min', new Uniform(0)],
           ['u_irradiance_texture', new Uniform(irradianceTexture)],
           ['u_scattering_texture', new Uniform(scatteringTexture)],
           ['u_single_mie_scattering_texture', new Uniform(scatteringTexture)],
@@ -122,6 +124,7 @@ export class AerialPerspectiveEffect extends Effect {
     )
     this.camera = camera
     this.reconstructNormal = reconstructNormal
+    this.useHalfFloat = useHalfFloat === true
     this.sunIrradiance = sunIrradiance
     this.skyIrradiance = skyIrradiance
     this.transmittance = transmittance
@@ -219,6 +222,19 @@ export class AerialPerspectiveEffect extends Effect {
 
   set transmittanceTexture(value: Texture | null) {
     this.uniforms.get('u_transmittance_texture')!.value = value
+  }
+
+  get useHalfFloat(): boolean {
+    return (
+      this.uniforms.get('u_mu_s_min')!.value ===
+      ATMOSPHERE_PARAMETERS.muSMinHalfFloat
+    )
+  }
+
+  set useHalfFloat(value: boolean) {
+    this.uniforms.get('u_mu_s_min')!.value = value
+      ? ATMOSPHERE_PARAMETERS.muSMinHalfFloat
+      : ATMOSPHERE_PARAMETERS.muSMinFloat
   }
 
   get sunDirection(): Vector3 {

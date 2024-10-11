@@ -2,7 +2,6 @@
 
 import {
   Matrix4,
-  RawShaderMaterial,
   Uniform,
   Vector3,
   type BufferGeometry,
@@ -10,14 +9,14 @@ import {
   type Group,
   type Object3D,
   type Scene,
-  type ShaderMaterialParameters,
-  type Texture,
   type WebGLRenderer
 } from 'three'
 
-import { Cartographic, Ellipsoid } from '@geovanni/core'
-
-import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
+import {
+  AtmosphereMaterialBase,
+  atmosphereMaterialParametersBaseDefaults,
+  type AtmosphereMaterialBaseParameters
+} from './AtmosphereMaterialBase'
 
 import fragmentShader from './shaders/atmosphere.frag'
 import vertexShader from './shaders/atmosphere.vert'
@@ -25,17 +24,9 @@ import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 import vertexCommon from './shaders/vertexCommon.glsl'
 
-const cartographicScratch = new Cartographic()
-
 export interface AtmosphereMaterialParameters
-  extends Partial<ShaderMaterialParameters> {
-  irradianceTexture?: Texture | null
-  scatteringTexture?: Texture | null
-  transmittanceTexture?: Texture | null
-  ellipsoid?: Ellipsoid
+  extends AtmosphereMaterialBaseParameters {
   sun?: boolean
-  sunDirection?: Vector3
-  sunAngularRadius?: number
   moon?: boolean
   moonDirection?: Vector3
   moonAngularRadius?: number
@@ -43,23 +34,17 @@ export interface AtmosphereMaterialParameters
 }
 
 export const atmosphereMaterialParametersDefaults = {
-  ellipsoid: Ellipsoid.WGS84,
+  ...atmosphereMaterialParametersBaseDefaults,
   sun: true,
   moon: true,
   moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
   lunarRadianceScale: 1
 } satisfies AtmosphereMaterialParameters
 
-export class AtmosphereMaterial extends RawShaderMaterial {
+export class AtmosphereMaterial extends AtmosphereMaterialBase {
   constructor(params?: AtmosphereMaterialParameters) {
     const {
-      irradianceTexture,
-      scatteringTexture,
-      transmittanceTexture,
-      ellipsoid,
       sun,
-      sunDirection,
-      sunAngularRadius,
       moon,
       moonDirection,
       moonAngularRadius,
@@ -68,6 +53,7 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     } = { ...atmosphereMaterialParametersDefaults, ...params }
 
     super({
+      glslVersion: '300 es',
       vertexShader: /* glsl */ `
         precision highp float;
         precision highp sampler3D;
@@ -75,8 +61,6 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         ${vertexCommon}
         ${vertexShader}
       `,
-      ...others,
-      glslVersion: '300 es',
       fragmentShader: /* glsl */ `
         precision highp float;
         precision highp sampler3D;
@@ -84,40 +68,15 @@ export class AtmosphereMaterial extends RawShaderMaterial {
         ${functions}
         ${fragmentShader}
       `,
-      // prettier-ignore
+      ...others,
       uniforms: {
-        u_solar_irradiance: new Uniform(ATMOSPHERE_PARAMETERS.solarIrradiance),
-        u_sun_angular_radius: new Uniform(sunAngularRadius ?? ATMOSPHERE_PARAMETERS.sunAngularRadius),
-        u_bottom_radius: new Uniform(ATMOSPHERE_PARAMETERS.bottomRadius),
-        u_top_radius: new Uniform(ATMOSPHERE_PARAMETERS.topRadius),
-        u_rayleigh_scattering: new Uniform(ATMOSPHERE_PARAMETERS.rayleighScattering),
-        u_mie_scattering: new Uniform(ATMOSPHERE_PARAMETERS.mieScattering),
-        u_mie_phase_function_g: new Uniform(ATMOSPHERE_PARAMETERS.miePhaseFunctionG),
-        u_mu_s_min: new Uniform(ATMOSPHERE_PARAMETERS.muSMin),
-        u_irradiance_texture: new Uniform(irradianceTexture),
-        u_scattering_texture: new Uniform(scatteringTexture),
-        u_single_mie_scattering_texture: new Uniform(scatteringTexture),
-        u_transmittance_texture: new Uniform(transmittanceTexture),
-        projectionMatrix: new Uniform(new Matrix4()),
-        modelViewMatrix: new Uniform(new Matrix4()),
-        modelMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
         inverseViewMatrix: new Uniform(new Matrix4()),
-        cameraPosition: new Uniform(new Vector3()),
-        cameraHeight: new Uniform(0),
-        ellipsoidRadii: new Uniform(new Vector3().copy(ellipsoid.radii)),
-        ellipsoidSurface: new Uniform(new Vector3()),
-        sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
         moonAngularRadius: new Uniform(moonAngularRadius),
-        lunarRadianceScale: new Uniform(lunarRadianceScale)
-      },
-      defines: {
-        METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`
-      },
-      toneMapped: false,
-      depthWrite: false,
-      depthTest: false
+        lunarRadianceScale: new Uniform(lunarRadianceScale),
+        ...others.uniforms
+      }
     })
     this.sun = sun
     this.moon = moon
@@ -131,40 +90,10 @@ export class AtmosphereMaterial extends RawShaderMaterial {
     object: Object3D,
     group: Group
   ): void {
+    super.onBeforeRender(renderer, scene, camera, geometry, object, group)
     const uniforms = this.uniforms
-    uniforms.projectionMatrix.value.copy(camera.projectionMatrix)
-    uniforms.modelViewMatrix.value.copy(camera.modelViewMatrix)
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
-    const position = camera.getWorldPosition(uniforms.cameraPosition.value)
-    const cartographic = cartographicScratch.setFromVector(position)
-    uniforms.cameraHeight.value = cartographic.height
-    cartographic.setHeight(0).toVector(uniforms.ellipsoidSurface.value)
-  }
-
-  get irradianceTexture(): Texture | null {
-    return this.uniforms.u_irradiance_texture.value
-  }
-
-  set irradianceTexture(value: Texture | null) {
-    this.uniforms.u_irradiance_texture.value = value
-  }
-
-  get scatteringTexture(): Texture | null {
-    return this.uniforms.u_scattering_texture.value
-  }
-
-  set scatteringTexture(value: Texture | null) {
-    this.uniforms.u_scattering_texture.value = value
-    this.uniforms.u_single_mie_scattering_texture.value = value
-  }
-
-  get transmittanceTexture(): Texture | null {
-    return this.uniforms.u_transmittance_texture.value
-  }
-
-  set transmittanceTexture(value: Texture | null) {
-    this.uniforms.u_transmittance_texture.value = value
   }
 
   get sun(): boolean {
@@ -180,22 +109,6 @@ export class AtmosphereMaterial extends RawShaderMaterial {
       }
       this.needsUpdate = true
     }
-  }
-
-  get sunDirection(): Vector3 {
-    return this.uniforms.sunDirection.value
-  }
-
-  set sunDirection(value: Vector3) {
-    this.uniforms.sunDirection.value.copy(value)
-  }
-
-  get sunAngularRadius(): number {
-    return this.uniforms.u_sun_angular_radius.value
-  }
-
-  set sunAngularRadius(value: number) {
-    this.uniforms.u_sun_angular_radius.value = value
   }
 
   get moon(): boolean {

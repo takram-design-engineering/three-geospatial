@@ -14,18 +14,30 @@ import {
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
 import { useEffect, useMemo, useRef, type FC } from 'react'
-import { Mesh, Vector3, type Group } from 'three'
+import { Matrix4, Vector3 } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
-import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/astronomy'
-import { Cartographic, isNotFalse, radians } from '@geovanni/core'
+import {
+  TileCompressionPlugin,
+  TileCreaseNormalsPlugin,
+  TilesFadePlugin,
+  UpdateOnChangePlugin
+} from '@geovanni/3d-tiles'
+import {
+  Cartographic,
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  isNotFalse,
+  radians
+} from '@geovanni/core'
 import { Depth, EffectComposer, LensFlare, Normal } from '@geovanni/effects'
 import { useRendererControls } from '@geovanni/react'
 
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
+import { Stars, type StarsImpl } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
 const location = new Cartographic(
@@ -42,14 +54,6 @@ const cameraPosition = location
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
-const onLoadModel = ((event: { type: 'load-model'; scene: Group }): void => {
-  event.scene.traverse(object => {
-    if (object instanceof Mesh) {
-      // TODO: Deal with vertex normal.
-    }
-  })
-}) as (event: Object) => void
-
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
 
@@ -62,15 +66,23 @@ const Scene: FC = () => {
   const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
+  const rotationMatrixRef = useRef(new Matrix4())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
+  const starsRef = useRef<StarsImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
 
   useFrame(() => {
-    getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
-    getMoonDirectionECEF(new Date(motionDate.get()), moonDirectionRef.current)
+    const date = new Date(motionDate.get())
+    getSunDirectionECEF(date, sunDirectionRef.current)
+    getMoonDirectionECEF(date, moonDirectionRef.current)
+    getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
       atmosphereRef.current.material.moonDirection = moonDirectionRef.current
+    }
+    if (starsRef.current != null) {
+      starsRef.current.material.sunDirection = sunDirectionRef.current
+      starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
     }
     if (aerialPerspectiveRef.current != null) {
       aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
@@ -88,6 +100,12 @@ const Scene: FC = () => {
     )
     tiles.registerPlugin(new UpdateOnChangePlugin())
     tiles.registerPlugin(new TileCompressionPlugin())
+    tiles.registerPlugin(
+      new TileCreaseNormalsPlugin({
+        creaseAngle: radians(30)
+      })
+    )
+    tiles.registerPlugin(new TilesFadePlugin())
 
     const loader = new GLTFLoader(tiles.manager)
     loader.setDRACOLoader(dracoLoader)
@@ -95,13 +113,6 @@ const Scene: FC = () => {
 
     return tiles
   }, [])
-
-  useEffect(() => {
-    tiles.addEventListener('load-model', onLoadModel)
-    return () => {
-      tiles.removeEventListener('load-model', onLoadModel)
-    }
-  }, [tiles])
 
   useEffect(() => {
     tiles.setCamera(camera)
@@ -152,7 +163,6 @@ const Scene: FC = () => {
             <AerialPerspective
               key='aerialPerspective'
               ref={aerialPerspectiveRef}
-              reconstructNormal
               skyIrradiance={false}
               inputIntensity={0.08}
             />
@@ -175,6 +185,7 @@ const Scene: FC = () => {
   return (
     <>
       <Atmosphere ref={atmosphereRef} />
+      <Stars ref={starsRef} />
       <primitive object={tiles.group} />
       {effectComposer}
     </>

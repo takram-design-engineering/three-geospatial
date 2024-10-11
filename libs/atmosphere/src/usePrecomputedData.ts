@@ -1,43 +1,47 @@
 import { useLoader } from '@react-three/fiber'
 import { type Data3DTexture, type DataTexture } from 'three'
+import { type SetRequired } from 'type-fest'
 
 import {
-  assertType,
   Float32Data2DLoader,
   Float32Data3DLoader,
-  type DataLoader,
   type ImageSize
 } from '@geovanni/core'
 
+interface PrecomputedDataParams extends ImageSize {
+  useHalfFloat?: boolean
+}
+
 export function usePrecomputedData(
   path: string,
-  imageSize: Omit<ImageSize, 'depth'>,
-  useHalfFloat?: boolean
+  params: Omit<PrecomputedDataParams, 'depth'>
 ): DataTexture
 
 export function usePrecomputedData(
   path: string,
-  imageSize: Required<ImageSize>,
-  useHalfFloat?: boolean
+  params: SetRequired<PrecomputedDataParams, 'depth'>
 ): Data3DTexture
 
 export function usePrecomputedData(
   path: string,
-  imageSize: ImageSize,
-  useHalfFloat?: boolean
+  params: PrecomputedDataParams
 ): DataTexture | Data3DTexture
 
 export function usePrecomputedData(
   path: string,
-  imageSize: ImageSize,
-  useHalfFloat = true
+  { width, height, depth, useHalfFloat = false }: PrecomputedDataParams
 ): DataTexture | Data3DTexture {
-  return useLoader(
-    imageSize.depth != null ? Float32Data3DLoader : Float32Data2DLoader,
-    path.replace('.bin', useHalfFloat ? '.bin' : '_float.bin'),
-    loader => {
-      assertType<DataLoader>(loader)
-      loader.imageSize = imageSize
-    }
+  const texture = useLoader(
+    depth != null ? Float32Data3DLoader : Float32Data2DLoader,
+    path.replace('.bin', useHalfFloat ? '.bin' : '_float.bin')
   )
+  texture.image.width = width
+  texture.image.height = height
+  if ('depth' in texture.image && depth != null) {
+    texture.image.depth = depth
+  }
+  if (useHalfFloat) {
+    texture.internalFormat = 'RGBA16F'
+  }
+  return texture
 }

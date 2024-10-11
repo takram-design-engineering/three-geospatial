@@ -11,16 +11,14 @@ import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { SMAAPreset, ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
-import { MeshStandardMaterial, Vector3 } from 'three'
+import { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
 
-import {
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  Stars
-} from '@geovanni/astronomy'
 import {
   Cartographic,
   Ellipsoid,
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
   isNotFalse,
   radians,
   TilingScheme
@@ -32,6 +30,7 @@ import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
+import { Stars, type StarsImpl } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
 const location = new Cartographic(radians(138.731), radians(35.363), 4500)
@@ -67,15 +66,23 @@ const Scene: FC = () => {
   const motionDate = useMotionDate()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
+  const rotationMatrixRef = useRef(new Matrix4())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
+  const starsRef = useRef<StarsImpl>(null)
 
   useFrame(() => {
-    getSunDirectionECEF(new Date(motionDate.get()), sunDirectionRef.current)
-    getMoonDirectionECEF(new Date(motionDate.get()), moonDirectionRef.current)
+    const date = new Date(motionDate.get())
+    getSunDirectionECEF(date, sunDirectionRef.current)
+    getMoonDirectionECEF(date, moonDirectionRef.current)
+    getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
     if (atmosphereRef.current != null) {
       atmosphereRef.current.material.sunDirection = sunDirectionRef.current
       atmosphereRef.current.material.moonDirection = moonDirectionRef.current
+    }
+    if (starsRef.current != null) {
+      starsRef.current.material.sunDirection = sunDirectionRef.current
+      starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
     }
     if (aerialPerspectiveRef.current != null) {
       aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
@@ -114,7 +121,7 @@ const Scene: FC = () => {
         <GizmoViewport />
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} />
-      <Stars />
+      <Stars ref={starsRef} />
       <ambientLight intensity={2} />
       <Sphere
         args={[location.clone().setHeight(0).toVector().length(), 360, 180]}

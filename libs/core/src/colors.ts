@@ -1,6 +1,6 @@
 import { Color, Matrix3, Vector2, Vector3 } from 'three'
 
-import { clamp } from '@geovanni/core'
+import { clamp } from './math'
 
 const vector2Scratch = new Vector2()
 const vector3Scratch = new Vector3()

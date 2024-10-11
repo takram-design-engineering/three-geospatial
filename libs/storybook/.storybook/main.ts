@@ -11,15 +11,14 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {}
   },
-  staticDirs: [
-    '../../astronomy/assets',
-    '../../atmosphere/assets',
-    '../../effects/assets'
-  ],
+  staticDirs: ['../../atmosphere/assets'],
 
   viteFinal: async config =>
     mergeConfig(config, {
-      plugins: [react(), nxViteTsPaths(), glsl()]
+      plugins: [react(), nxViteTsPaths(), glsl()],
+      worker: {
+        plugins: () => [nxViteTsPaths()]
+      }
     })
 }
 
