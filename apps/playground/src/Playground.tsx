@@ -9,7 +9,7 @@ import { useMemo, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import { AerialPerspective, Atmosphere } from '@geovanni/atmosphere'
-import { Cartographic, getSunDirectionECEF, radians } from '@geovanni/core'
+import { Geodetic, getSunDirectionECEF, radians } from '@geovanni/core'
 import { EffectComposer, SSAO } from '@geovanni/effects'
 import { LocalFrame } from '@geovanni/react'
 
@@ -20,7 +20,7 @@ import { Tileset } from './components/Tileset'
 // https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh/calc_f.html'
 const geoidalHeight = 36.6624
 
-const location = new Cartographic(
+const location = new Geodetic(
   // Coordinates of Tokyo station.
   radians(139.7671),
   radians(35.6812)
@@ -28,7 +28,7 @@ const location = new Cartographic(
 
 const geodeticNormal = location.toVector()
 geodeticNormal.normalize()
-const localLocation = new Cartographic().copy(location).setHeight(geoidalHeight)
+const localLocation = new Geodetic().copy(location).setHeight(geoidalHeight)
 const cameraTarget = localLocation.toVector()
 const cameraPosition = new Vector3()
   .copy(cameraTarget)

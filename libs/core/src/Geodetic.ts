@@ -1,11 +1,11 @@
 import { Vector3 } from 'three'
 
 import { Ellipsoid } from './Ellipsoid'
-import { projectToEllipsoidSurface } from './projectToEllipsoidSurface'
+import { projectToGeodeticSurface } from './projectToGeodeticSurface'
 
-export type CartographicTuple = [number, number, number]
+export type GeodeticTuple = [number, number, number]
 
-export interface CartographicLike {
+export interface GeodeticLike {
   readonly longitude: number
   readonly latitude: number
   readonly height: number
@@ -14,7 +14,7 @@ export interface CartographicLike {
 const vectorScratch1 = new Vector3()
 const vectorScratch2 = new Vector3()
 
-export class Cartographic {
+export class Geodetic {
   static readonly MIN_LONGITUDE = -Math.PI
   static readonly MAX_LONGITUDE = Math.PI
   static readonly MIN_LATITUDE = -Math.PI / 2
@@ -33,18 +33,18 @@ export class Cartographic {
     return this
   }
 
-  clone(): Cartographic {
-    return new Cartographic(this.longitude, this.latitude, this.height)
+  clone(): Geodetic {
+    return new Geodetic(this.longitude, this.latitude, this.height)
   }
 
-  copy(other: CartographicLike): this {
+  copy(other: GeodeticLike): this {
     this.longitude = other.longitude
     this.latitude = other.latitude
     this.height = other.height
     return this
   }
 
-  equals(other: CartographicLike): boolean {
+  equals(other: GeodeticLike): boolean {
     return (
       other.longitude === this.longitude &&
       other.latitude === this.latitude &&
@@ -68,13 +68,14 @@ export class Cartographic {
   }
 
   normalize(): this {
-    if (this.longitude < Cartographic.MIN_LONGITUDE) {
+    if (this.longitude < Geodetic.MIN_LONGITUDE) {
       this.longitude += Math.PI * 2
     }
     return this
   }
 
-  // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Cartographic.js#L119
+  // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Geodetic.js#L119
+  // See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion
   setFromVector(
     vector: Vector3,
     options: {
@@ -84,7 +85,7 @@ export class Cartographic {
   ): this {
     const { ellipsoid = Ellipsoid.WGS84, centerTolerance } = options
     const oneOverRadiiSquared = ellipsoid.oneOverRadiiSquared(vectorScratch1)
-    const projection = projectToEllipsoidSurface(
+    const projection = projectToGeodeticSurface(
       vector,
       oneOverRadiiSquared,
       centerTolerance,
@@ -104,6 +105,7 @@ export class Cartographic {
   }
 
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Cartesian3.js#L916
+  // See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion
   toVector(
     result = new Vector3(),
     options: {

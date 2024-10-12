@@ -24,7 +24,7 @@ import {
   UpdateOnChangePlugin
 } from '@geovanni/3d-tiles'
 import {
-  Cartographic,
+  Geodetic,
   getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF,
@@ -46,7 +46,7 @@ import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
-const location = new Cartographic(
+const location = new Geodetic(
   // Coordinates of Tokyo station.
   radians(139.7671),
   radians(35.6812)

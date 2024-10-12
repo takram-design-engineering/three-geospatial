@@ -2,7 +2,7 @@ uniform mat4 inverseProjectionMatrix;
 uniform vec3 cameraPosition;
 uniform float cameraHeight;
 uniform vec3 ellipsoidRadii;
-uniform vec3 ellipsoidSurface;
+uniform vec3 geodeticSurface;
 
 varying vec3 vWorldPosition;
 varying vec3 vHeightAdjustment;
@@ -13,6 +13,6 @@ void mainSupport() {
   vHeightAdjustment = getHeightAdjustment(
     cameraHeight,
     ellipsoidRadii,
-    ellipsoidSurface
+    geodeticSurface
   );
 }

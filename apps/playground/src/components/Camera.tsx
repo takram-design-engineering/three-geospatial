@@ -1,14 +1,14 @@
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { useMemo, type FC } from 'react'
 
-import { Cartographic, Ellipsoid } from '@geovanni/core'
+import { Ellipsoid, Geodetic } from '@geovanni/core'
 
 export const Camera: FC<{
-  location: Cartographic
+  location: Geodetic
 }> = ({ location }) => {
   const position = useMemo(() => location.toVector(), [location])
   const target = useMemo(
-    () => new Cartographic().copy(location).setHeight(0).toVector(),
+    () => new Geodetic().copy(location).setHeight(0).toVector(),
     [location]
   )
   const normal = useMemo(

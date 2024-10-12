@@ -1,6 +1,6 @@
 export * from './assertions'
 export * from './axios'
-export * from './Cartographic'
+export * from './Geodetic'
 export * from './colors'
 export * from './DataLoader'
 export * from './Ellipsoid'

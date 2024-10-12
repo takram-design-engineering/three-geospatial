@@ -12,11 +12,11 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { Cartographic, Ellipsoid } from '@geovanni/core'
+import { Ellipsoid, Geodetic } from '@geovanni/core'
 
 import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
-const cartographicScratch = new Cartographic()
+const geodeticScratch = new Geodetic()
 
 export interface AtmosphereMaterialBaseParameters
   extends Partial<ShaderMaterialParameters> {
@@ -69,7 +69,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         cameraPosition: new Uniform(new Vector3()),
         cameraHeight: new Uniform(0),
         ellipsoidRadii: new Uniform(new Vector3().copy(ellipsoid.radii)),
-        ellipsoidSurface: new Uniform(new Vector3()),
+        geodeticSurface: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
       },
@@ -91,9 +91,9 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   ): void {
     const uniforms = this.uniforms
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
-    const cartographic = cartographicScratch.setFromVector(position)
-    uniforms.cameraHeight.value = cartographic.height
-    cartographic.setHeight(0).toVector(uniforms.ellipsoidSurface.value)
+    const geodetic = geodeticScratch.setFromVector(position)
+    uniforms.cameraHeight.value = geodetic.height
+    geodetic.setHeight(0).toVector(uniforms.geodeticSurface.value)
   }
 
   get irradianceTexture(): Texture | null {

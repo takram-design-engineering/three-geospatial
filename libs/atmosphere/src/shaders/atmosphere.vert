@@ -3,7 +3,7 @@ uniform mat4 inverseViewMatrix;
 uniform vec3 cameraPosition;
 uniform float cameraHeight;
 uniform vec3 ellipsoidRadii;
-uniform vec3 ellipsoidSurface;
+uniform vec3 geodeticSurface;
 
 layout(location = 0) in vec3 position;
 
@@ -19,7 +19,7 @@ void main() {
   vHeightAdjustment = getHeightAdjustment(
     cameraHeight,
     ellipsoidRadii,
-    ellipsoidSurface
+    geodeticSurface
   );
 
   gl_Position = vec4(position, 1.0);

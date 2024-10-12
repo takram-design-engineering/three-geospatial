@@ -14,8 +14,8 @@ import { Fragment, Suspense, useMemo, useRef, type FC } from 'react'
 import { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
 
 import {
-  Cartographic,
   Ellipsoid,
+  Geodetic,
   getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF,
@@ -39,12 +39,12 @@ import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
-const location = new Cartographic(radians(138.731), radians(35.363), 4500)
+const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toVector()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const tilingScheme = new TilingScheme()
-const tile = tilingScheme.cartographicToTile(location, 7)
+const tile = tilingScheme.geodeticToTile(location, 7)
 tile.y = tilingScheme.getSize(tile.z).y - tile.y - 1
 const terrain = new IonTerrain({
   assetId: 1,

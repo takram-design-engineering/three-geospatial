@@ -2,9 +2,9 @@
 vec3 getHeightAdjustment(
   float height,
   vec3 ellipsoidRadii,
-  vec3 ellipsoidSurface
+  vec3 geodeticSurface
 ) {
-  float surfaceRadius = length(ellipsoidSurface) * METER_TO_UNIT_LENGTH;
+  float surfaceRadius = length(geodeticSurface) * METER_TO_UNIT_LENGTH;
   float offset = surfaceRadius - u_bottom_radius;
-  return normalize(ellipsoidSurface) * offset;
+  return normalize(geodeticSurface) * offset;
 }

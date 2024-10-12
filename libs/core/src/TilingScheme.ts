@@ -1,6 +1,6 @@
 import { type Vector2Like } from 'three'
 
-import { type CartographicLike } from './Cartographic'
+import { type GeodeticLike } from './Geodetic'
 import { Rectangle } from './Rectangle'
 import { TileCoordinate, type TileCoordinateLike } from './TileCoordinate'
 
@@ -33,15 +33,15 @@ export class TilingScheme {
   }
 
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/GeographicTilingScheme.js#L210
-  cartographicToTile(
-    cartographic: CartographicLike,
+  geodeticToTile(
+    geodetic: GeodeticLike,
     z: number,
     result = new TileCoordinate()
   ): TileCoordinate {
     const size = this.getSize(z)
     const width = this.rectangle.width / size.x
     const height = this.rectangle.height / size.y
-    let longitude = cartographic.longitude
+    let longitude = geodetic.longitude
     if (this.rectangle.east < this.rectangle.west) {
       longitude += Math.PI * 2
     }
@@ -49,7 +49,7 @@ export class TilingScheme {
     if (x >= size.x) {
       x = size.x - 1
     }
-    let y = Math.floor((this.rectangle.north - cartographic.latitude) / height)
+    let y = Math.floor((this.rectangle.north - geodetic.latitude) / height)
     if (y >= size.y) {
       y = size.y - 1
     }

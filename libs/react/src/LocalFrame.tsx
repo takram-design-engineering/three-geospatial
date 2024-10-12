@@ -2,12 +2,12 @@ import { Ellipsoid } from '@math.gl/geospatial'
 import { createContext, useMemo, type FC, type ReactNode } from 'react'
 import { Matrix4, Quaternion } from 'three'
 
-import { type Cartographic } from '@geovanni/core'
+import { type Geodetic } from '@geovanni/core'
 
 export const LocalFrameContext = createContext<Matrix4 | undefined>(undefined)
 
 export const LocalFrame: FC<{
-  location: Cartographic
+  location: Geodetic
   children?: ReactNode
 }> = ({ location, children }) => {
   // TODO

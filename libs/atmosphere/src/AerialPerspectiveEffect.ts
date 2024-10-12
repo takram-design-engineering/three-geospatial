@@ -13,7 +13,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { Cartographic, Ellipsoid } from '@geovanni/core'
+import { Ellipsoid, Geodetic } from '@geovanni/core'
 
 import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
@@ -23,7 +23,7 @@ import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 import vertexCommon from './shaders/vertexCommon.glsl'
 
-const cartographicScratch = new Cartographic()
+const geodeticScratch = new Geodetic()
 
 export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction
@@ -109,7 +109,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['cameraPosition', new Uniform(new Vector3())],
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidRadii', new Uniform(new Vector3().copy(ellipsoid.radii))],
-          ['ellipsoidSurface', new Uniform(new Vector3())],
+          ['geodeticSurface', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(new Vector3())],
           ['inputIntensity', new Uniform(inputIntensity)]
         ]),
@@ -165,15 +165,15 @@ export class AerialPerspectiveEffect extends Effect {
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
     const cameraPosition = uniforms.get('cameraPosition')!
     const cameraHeight = uniforms.get('cameraHeight')!
-    const ellipsoidSurface = uniforms.get('ellipsoidSurface')!
+    const geodeticSurface = uniforms.get('geodeticSurface')!
     const camera = this.camera
     projectionMatrix.value.copy(camera.projectionMatrix)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
     const position = camera.getWorldPosition(cameraPosition.value)
-    const cartographic = cartographicScratch.setFromVector(position)
-    cameraHeight.value = cartographic.height
-    cartographic.setHeight(0).toVector(ellipsoidSurface.value)
+    const geodetic = geodeticScratch.setFromVector(position)
+    cameraHeight.value = geodetic.height
+    geodetic.setHeight(0).toVector(geodeticSurface.value)
   }
 
   get normalBuffer(): Texture | null {

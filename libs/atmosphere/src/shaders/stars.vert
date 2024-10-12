@@ -6,7 +6,7 @@ uniform vec3 cameraPosition;
 uniform float cameraHeight;
 uniform float cameraFar;
 uniform vec3 ellipsoidRadii;
-uniform vec3 ellipsoidSurface;
+uniform vec3 geodeticSurface;
 uniform float pointSize;
 uniform vec2 magnitudeRange;
 uniform float radianceScale;
@@ -34,7 +34,7 @@ void main() {
   vHeightAdjustment = getHeightAdjustment(
     cameraHeight,
     ellipsoidRadii,
-    ellipsoidSurface
+    geodeticSurface
   );
   gl_Position =
     projectionMatrix *

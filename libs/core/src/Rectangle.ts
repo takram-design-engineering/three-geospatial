@@ -1,4 +1,4 @@
-import { Cartographic } from './Cartographic'
+import { Geodetic } from './Geodetic'
 
 export type RectangleTuple = [number, number, number, number]
 
@@ -12,10 +12,10 @@ export interface RectangleLike {
 export class Rectangle {
   static readonly MAX: Readonly<Rectangle> = Object.freeze(
     new Rectangle(
-      Cartographic.MIN_LONGITUDE,
-      Cartographic.MIN_LATITUDE,
-      Cartographic.MAX_LONGITUDE,
-      Cartographic.MAX_LATITUDE
+      Geodetic.MIN_LONGITUDE,
+      Geodetic.MIN_LATITUDE,
+      Geodetic.MAX_LONGITUDE,
+      Geodetic.MAX_LATITUDE
     )
   )
 

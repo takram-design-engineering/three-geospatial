@@ -7,8 +7,8 @@ import { useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import {
-  Cartographic,
   Ellipsoid,
+  Geodetic,
   getMoonDirectionECEF,
   getSunDirectionECEF,
   radians
@@ -19,7 +19,7 @@ import { useRendererControls } from '@geovanni/react'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useMotionDate } from '../useMotionDate'
 
-const location = new Cartographic(radians(139.7671), radians(35.6812), 2000)
+const location = new Geodetic(radians(139.7671), radians(35.6812), 2000)
 const position = location.toVector()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 

@@ -8,11 +8,11 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { Cartographic, lerp, type Rectangle } from '@geovanni/core'
+import { Geodetic, lerp, type Rectangle } from '@geovanni/core'
 
 import { decodeOctNormal } from './decodeOctNormal'
 
-const cartographicScratch = new Cartographic()
+const geodeticScratch = new Geodetic()
 const vectorScratch = new Vector3()
 
 export class TerrainGeometry extends BufferGeometry {
@@ -107,10 +107,10 @@ export class TerrainGeometry extends BufferGeometry {
       const u = us[vertexIndex]
       const v = vs[vertexIndex]
       const height = heights[vertexIndex]
-      cartographicScratch.longitude = lerp(west, east, u / 0x7fff)
-      cartographicScratch.latitude = lerp(south, north, v / 0x7fff)
-      cartographicScratch.height = lerp(minHeight, maxHeight, height / 0x7fff)
-      const position = cartographicScratch.toVector(vectorScratch)
+      geodeticScratch.longitude = lerp(west, east, u / 0x7fff)
+      geodeticScratch.latitude = lerp(south, north, v / 0x7fff)
+      geodeticScratch.height = lerp(minHeight, maxHeight, height / 0x7fff)
+      const position = geodeticScratch.toVector(vectorScratch)
       array[index] = position.x
       array[index + 1] = position.y
       array[index + 2] = position.z
