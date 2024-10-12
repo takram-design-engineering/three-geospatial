@@ -76,7 +76,7 @@ export class Geodetic {
 
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Geodetic.js#L119
   // See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion
-  setFromVector(
+  setFromECEF(
     vector: Vector3,
     options: {
       ellipsoid?: Ellipsoid
@@ -106,7 +106,7 @@ export class Geodetic {
 
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Cartesian3.js#L916
   // See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion
-  toVector(
+  toECEF(
     result = new Vector3(),
     options: {
       ellipsoid?: Ellipsoid

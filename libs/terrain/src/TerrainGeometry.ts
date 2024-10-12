@@ -110,7 +110,7 @@ export class TerrainGeometry extends BufferGeometry {
       geodeticScratch.longitude = lerp(west, east, u / 0x7fff)
       geodeticScratch.latitude = lerp(south, north, v / 0x7fff)
       geodeticScratch.height = lerp(minHeight, maxHeight, height / 0x7fff)
-      const position = geodeticScratch.toVector(vectorScratch)
+      const position = geodeticScratch.toECEF(vectorScratch)
       array[index] = position.x
       array[index + 1] = position.y
       array[index + 2] = position.z

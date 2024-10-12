@@ -91,9 +91,9 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   ): void {
     const uniforms = this.uniforms
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
-    const geodetic = geodeticScratch.setFromVector(position)
+    const geodetic = geodeticScratch.setFromECEF(position)
     uniforms.cameraHeight.value = geodetic.height
-    geodetic.setHeight(0).toVector(uniforms.geodeticSurface.value)
+    geodetic.setHeight(0).toECEF(uniforms.geodeticSurface.value)
   }
 
   get irradianceTexture(): Texture | null {

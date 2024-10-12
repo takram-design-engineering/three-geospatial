@@ -52,9 +52,9 @@ const location = new Geodetic(
   radians(35.6812)
 )
 
-const surfaceNormal = location.toVector().normalize()
+const surfaceNormal = location.toECEF().normalize()
 const cameraPosition = location
-  .toVector()
+  .toECEF()
   .add(new Vector3().copy(surfaceNormal).multiplyScalar(2000))
 
 const dracoLoader = new DRACOLoader()

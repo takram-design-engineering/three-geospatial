@@ -26,10 +26,10 @@ const location = new Geodetic(
   radians(35.6812)
 )
 
-const geodeticNormal = location.toVector()
+const geodeticNormal = location.toECEF()
 geodeticNormal.normalize()
 const localLocation = new Geodetic().copy(location).setHeight(geoidalHeight)
-const cameraTarget = localLocation.toVector()
+const cameraTarget = localLocation.toECEF()
 const cameraPosition = new Vector3()
   .copy(cameraTarget)
   .add(new Vector3().copy(geodeticNormal).multiplyScalar(1000))

@@ -6,9 +6,9 @@ import { Ellipsoid, Geodetic } from '@geovanni/core'
 export const Camera: FC<{
   location: Geodetic
 }> = ({ location }) => {
-  const position = useMemo(() => location.toVector(), [location])
+  const position = useMemo(() => location.toECEF(), [location])
   const target = useMemo(
-    () => new Geodetic().copy(location).setHeight(0).toVector(),
+    () => new Geodetic().copy(location).setHeight(0).toECEF(),
     [location]
   )
   const normal = useMemo(

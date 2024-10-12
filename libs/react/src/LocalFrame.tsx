@@ -11,7 +11,7 @@ export const LocalFrame: FC<{
   children?: ReactNode
 }> = ({ location, children }) => {
   // TODO
-  const position = useMemo(() => location.toVector(), [location])
+  const position = useMemo(() => location.toECEF(), [location])
 
   const matrix = useMemo(
     () =>

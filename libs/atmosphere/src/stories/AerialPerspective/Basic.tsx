@@ -40,7 +40,7 @@ import { Stars, type StarsImpl } from '../../Stars'
 import { useMotionDate } from '../useMotionDate'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
-const position = location.toVector()
+const position = location.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const tilingScheme = new TilingScheme()
@@ -132,7 +132,7 @@ const Scene: FC = () => {
       <Stars ref={starsRef} />
       <ambientLight intensity={2} />
       <Sphere
-        args={[location.clone().setHeight(0).toVector().length(), 360, 180]}
+        args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         receiveShadow
       >
         <meshStandardMaterial color='gray' />

@@ -171,9 +171,9 @@ export class AerialPerspectiveEffect extends Effect {
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
     const position = camera.getWorldPosition(cameraPosition.value)
-    const geodetic = geodeticScratch.setFromVector(position)
+    const geodetic = geodeticScratch.setFromECEF(position)
     cameraHeight.value = geodetic.height
-    geodetic.setHeight(0).toVector(geodeticSurface.value)
+    geodetic.setHeight(0).toECEF(geodeticSurface.value)
   }
 
   get normalBuffer(): Texture | null {
