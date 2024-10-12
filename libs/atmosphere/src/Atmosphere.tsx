@@ -44,9 +44,10 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
     } = { ...atmosphereMaterialParametersDefaults, ...props }
 
     // TODO: Make textures shared.
-    const useHalfFloat = useThree(
-      ({ gl }) =>
-        gl.getContext().getExtension('OES_texture_float_linear') == null
+    const gl = useThree(({ gl }) => gl)
+    const useHalfFloat = useMemo(
+      () => gl.getContext().getExtension('OES_texture_float_linear') == null,
+      [gl]
     )
     const irradianceTexture = usePrecomputedData('/irradiance.bin', {
       width: IRRADIANCE_TEXTURE_WIDTH,
