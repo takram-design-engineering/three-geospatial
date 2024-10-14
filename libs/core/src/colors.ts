@@ -2,8 +2,8 @@ import { Color, Matrix3, Vector2, Vector3 } from 'three'
 
 import { clamp } from './math'
 
-const vector2Scratch = new Vector2()
-const vector3Scratch = new Vector3()
+const vector2Scratch = /*#__PURE__*/ new Vector2()
+const vector3Scratch = /*#__PURE__*/ new Vector3()
 
 // See: https://en.wikipedia.org/wiki/Color_index
 export function convertBVIndexToTemperature(bvIndex: number): number {
@@ -41,7 +41,7 @@ export function convertChromaticityToXYZ(
 }
 
 // prettier-ignore
-const XYZToLinearRGB = new Matrix3(
+const XYZToLinearRGB = /*#__PURE__*/ new Matrix3(
   3.2404542, -1.5371385, -0.4985314,
   -0.9692660, 1.8760108, 0.0415560,
   0.0556434, -0.2040259, 1.0572252

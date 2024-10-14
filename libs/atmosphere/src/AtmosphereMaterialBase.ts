@@ -16,7 +16,7 @@ import { Ellipsoid, Geodetic } from '@geovanni/core'
 
 import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
 
-const geodeticScratch = new Geodetic()
+const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface AtmosphereMaterialBaseParameters
   extends Partial<ShaderMaterialParameters> {
