@@ -1,2 +1,2 @@
-export * from './LocalFrame'
+export * from './LocalTangentFrame'
 export * from './useRendererControls'

@@ -19,7 +19,8 @@ import {
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
-  useRef
+  useRef,
+  type ReactNode
 } from 'react'
 import { HalfFloatType, NoToneMapping, WebGLRenderTarget } from 'three'
 import { isWebGL2Available } from 'three-stdlib'
@@ -29,8 +30,9 @@ import { isWebGL2Available } from 'three-stdlib'
 export interface EffectComposerProps
   extends Omit<
     BaseEffectComposerProps,
-    'enableNormalPass' | 'resolutionScale'
+    'children' | 'enableNormalPass' | 'resolutionScale'
   > {
+  children?: ReactNode
   normalPass?: boolean
 }
 
