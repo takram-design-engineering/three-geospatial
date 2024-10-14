@@ -4,9 +4,9 @@ import { Matrix4, Quaternion } from 'three'
 
 import { type Geodetic } from '@geovanni/core'
 
-export const LocalFrameContext = createContext<Matrix4 | undefined>(undefined)
+export const LocalTangentFrameContext = createContext<Matrix4 | null>(null)
 
-export const LocalFrame: FC<{
+export const LocalTangentFrame: FC<{
   location: Geodetic
   children?: ReactNode
 }> = ({ location, children }) => {
@@ -32,9 +32,9 @@ export const LocalFrame: FC<{
 
   return (
     <group position={position} quaternion={quaternion}>
-      <LocalFrameContext.Provider value={matrix}>
+      <LocalTangentFrameContext.Provider value={matrix}>
         {children}
-      </LocalFrameContext.Provider>
+      </LocalTangentFrameContext.Provider>
     </group>
   )
 }
