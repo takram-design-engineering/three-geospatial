@@ -1,4 +1,6 @@
 /* eslint-disable */
+import { type Config } from 'jest'
+
 export default {
   displayName: 'react',
   preset: '../../jest.preset.js',
@@ -15,4 +17,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/react'
-}
+} satisfies Config

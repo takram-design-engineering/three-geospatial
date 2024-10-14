@@ -1,4 +1,6 @@
 /* eslint-disable */
+import { type Config } from 'jest'
+
 export default {
   displayName: 'csm',
   preset: '../../jest.preset.js',
@@ -11,8 +13,9 @@ export default {
           transform: { react: { runtime: 'automatic' } }
         }
       }
-    ]
+    ],
+    '.+\\.(glsl|frag|vert)$': '@glen/jest-raw-loader'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/csm'
-}
+} satisfies Config
