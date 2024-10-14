@@ -23,7 +23,7 @@ import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 import vertexCommon from './shaders/vertexCommon.glsl'
 
-const geodeticScratch = new Geodetic()
+const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction

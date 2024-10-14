@@ -11,8 +11,8 @@ export interface GeodeticLike {
   readonly height: number
 }
 
-const vectorScratch1 = new Vector3()
-const vectorScratch2 = new Vector3()
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
 
 export class Geodetic {
   static readonly MIN_LONGITUDE = -Math.PI

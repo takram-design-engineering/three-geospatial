@@ -43,7 +43,21 @@
         "@typescript-eslint/no-unsafe-argument": "off",
 
         // {} is semantically different from the "object" and "Record".
-        "@typescript-eslint/ban-types": "off"
+        "@typescript-eslint/ban-types": "off",
+
+        // Exclude /*#__PURE__*/ annotation.
+        "spaced-comment": [
+          "error",
+          "always",
+          {
+            "line": {
+              "markers": ["/"]
+            },
+            "block": {
+              "exceptions": ["#__PURE__"]
+            }
+          }
+        ]
       }
     },
     {

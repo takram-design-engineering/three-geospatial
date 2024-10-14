@@ -12,8 +12,8 @@ import { Geodetic, lerp, type Rectangle } from '@geovanni/core'
 
 import { decodeOctNormal } from './decodeOctNormal'
 
-const geodeticScratch = new Geodetic()
-const vectorScratch = new Vector3()
+const geodeticScratch = /*#__PURE__*/ new Geodetic()
+const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export class TerrainGeometry extends BufferGeometry {
   constructor(
