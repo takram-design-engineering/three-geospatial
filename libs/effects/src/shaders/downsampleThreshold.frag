@@ -67,10 +67,8 @@ void main() {
   color += weight.w * texture2D(inputBuffer, vec2(vCenterUv4)).rgb;
 
   float l = luminance(color);
-  float scale = clamp(
-    smoothstep(thresholdLevel, thresholdLevel + thresholdRange, l),
-    0.0,
-    1.0
+  float scale = saturate(
+    smoothstep(thresholdLevel, thresholdLevel + thresholdRange, l)
   );
   gl_FragColor = vec4(log(color * scale + 1.0) / vLogBase, 1.0);
 }

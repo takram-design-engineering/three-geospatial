@@ -1,3 +1,5 @@
+#include <common>
+
 #define SQRT_2 (0.7071067811865476)
 
 uniform sampler2D inputBuffer;
@@ -53,7 +55,7 @@ vec3 sampleHalo(const float radius) {
 
   // Falloff at the center and perimeter.
   vec2 wuv = (vUv - vec2(0.5, 0.0)) / vAspectRatio + vec2(0.5, 0.0);
-  float d = clamp(distance(wuv, vec2(0.5)), 0.0, 1.0);
+  float d = saturate(distance(wuv, vec2(0.5)));
   result *= cubicRingMask(d, 0.45, 0.25);
   return result;
 }

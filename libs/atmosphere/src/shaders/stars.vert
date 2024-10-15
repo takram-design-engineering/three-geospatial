@@ -1,3 +1,5 @@
+#define saturate(x) clamp(x, 0.0, 1.0)
+
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
 uniform mat4 viewMatrix;
@@ -25,7 +27,7 @@ void main() {
   float m = mix(magnitudeRange.x, magnitudeRange.y, magnitude);
   vec3 v = pow(vec3(10.0), -vec3(magnitudeRange, m) / 2.5);
   vColor = vec3(radianceScale * color);
-  vColor *= clamp((v.z - v.y) / (v.x - v.y), 0.0, 1.0);
+  vColor *= saturate((v.z - v.y) / (v.x - v.y));
 
   #ifdef BACKGROUND
   vec3 worldDirection = normalize(matrixWorld * vec4(position, 1.0)).xyz;
