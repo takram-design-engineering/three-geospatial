@@ -1,7 +1,7 @@
 import { applyProps, useThree } from '@react-three/fiber'
 import { N8AOPostPass } from 'n8ao'
 import { type Effect } from 'postprocessing'
-import { forwardRef, useLayoutEffect, useMemo, useRef } from 'react'
+import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Color } from 'three'
 
 export interface SSAOProps {
@@ -112,6 +112,12 @@ export const SSAO = forwardRef<Effect, SSAOProps>(function SSAO(
     transparencyAware,
     accumulate
   ])
+
+  useEffect(() => {
+    return () => {
+      effect.dispose()
+    }
+  }, [effect])
 
   return <primitive ref={forwardedRef} object={effect} />
 })

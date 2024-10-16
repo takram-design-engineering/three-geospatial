@@ -1,6 +1,6 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useThree, type MeshProps } from '@react-three/fiber'
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useEffect, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
 import {
@@ -67,6 +67,12 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
     })
 
     const material = useMemo(() => new AtmosphereMaterial(), [])
+    useEffect(() => {
+      return () => {
+        material.dispose()
+      }
+    }, [material])
+
     return (
       <ScreenQuad renderOrder={-1} {...others} ref={forwardedRef}>
         <primitive
