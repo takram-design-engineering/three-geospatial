@@ -26,34 +26,28 @@ const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 const frustumScratch = /*#__PURE__*/ new FrustumCorners()
 const boxScratch = /*#__PURE__*/ new Box3()
 
-export interface CascadedShadowMapsParams {
+export interface CascadedShadowMapsOptions {
   cascadeCount?: number
   maxCascadeCount?: number
+  mapSize?: number
   far?: number
   mode?: FrustumSplitMode
   lambda?: number
   margin?: number
   fade?: boolean
   disableLastCascadeCutoff?: boolean
-  intensity?: number
-  mapSize?: number
-  bias?: number
-  normalBias?: number
 }
 
-export const cascadedShadowMapParamsDefaults = {
+export const cascadedShadowMapsOptionsDefaults = {
   cascadeCount: 4,
-  far: 100000,
+  mapSize: 2048,
+  far: 5000,
   mode: 'practical',
   lambda: 0.5,
   margin: 200,
   fade: true,
-  disableLastCascadeCutoff: false,
-  intensity: 1,
-  mapSize: 2048,
-  bias: 0,
-  normalBias: 0
-} satisfies Partial<CascadedShadowMapsParams>
+  disableLastCascadeCutoff: false
+} satisfies Partial<CascadedShadowMapsOptions>
 
 export class CascadedShadowMaps {
   maxCascadeCount: number
@@ -63,9 +57,6 @@ export class CascadedShadowMaps {
   margin: number
   fade: boolean
   disableLastCascadeCutoff: boolean
-  bias: number
-  normalBias: number
-  needsUpdateFrusta = true
 
   readonly directionalLight = new CascadedDirectionalLight()
   readonly materialStates = new MaterialStates()
@@ -73,37 +64,46 @@ export class CascadedShadowMaps {
   readonly cascadedFrusta: FrustumCorners[] = []
   readonly splits: number[] = []
   readonly cascades: Vector2[] = []
+  needsUpdateFrusta = true
 
   constructor(
     readonly mainCamera: PerspectiveCamera | OrthographicCamera,
-    params: CascadedShadowMapsParams
+    params?: CascadedShadowMapsOptions
   ) {
     const {
       cascadeCount,
       maxCascadeCount = cascadeCount,
+      mapSize,
       far,
       mode,
       lambda,
       margin,
       fade,
-      disableLastCascadeCutoff,
-      intensity,
-      mapSize,
-      bias,
-      normalBias
-    } = { ...cascadedShadowMapParamsDefaults, ...params }
+      disableLastCascadeCutoff
+    } = { ...cascadedShadowMapsOptionsDefaults, ...params }
     this.cascadeCount = cascadeCount
     this.maxCascadeCount = maxCascadeCount
+    this.mapSize = mapSize
     this.far = far
     this.mode = mode
     this.lambda = lambda
     this.margin = margin
     this.fade = fade
     this.disableLastCascadeCutoff = disableLastCascadeCutoff
-    this.bias = bias
-    this.normalBias = normalBias
-    this.intensity = intensity
-    this.mapSize = mapSize
+  }
+
+  dispose(): void {
+    this.materialStates.dispose()
+    console.log(this.directionalLight)
+    this.directionalLight.dispose()
+  }
+
+  setupMaterial<T extends Material>(material: T): T {
+    return this.materialStates.setup(material, this)
+  }
+
+  rollbackMaterial<T extends Material>(material: T): T {
+    return this.materialStates.rollback(material)
   }
 
   private updateCascades(): void {
@@ -174,7 +174,7 @@ export class CascadedShadowMaps {
     }
   }
 
-  private updateFrusta(): void {
+  updateFrusta(): void {
     this.updateCascades()
     this.updateShadowBounds()
     this.materialStates.update(this)
@@ -182,8 +182,8 @@ export class CascadedShadowMaps {
 
   update(): void {
     if (this.needsUpdateFrusta) {
-      this.updateFrusta()
       this.needsUpdateFrusta = false
+      this.updateFrusta()
     }
 
     const directionalLight = this.directionalLight
@@ -242,19 +242,6 @@ export class CascadedShadowMaps {
     }
   }
 
-  get intensity(): number {
-    return this.directionalLight.mainLight.shadow.intensity
-  }
-
-  set intensity(value: number) {
-    if (value !== this.intensity) {
-      const lights = this.directionalLight.cascadedLights
-      for (let i = 0; i < lights.length; ++i) {
-        lights[i].shadow.intensity = value
-      }
-    }
-  }
-
   get mapSize(): number {
     return this.directionalLight.mainLight.shadow.mapSize.width
   }
@@ -274,16 +261,70 @@ export class CascadedShadowMaps {
     }
   }
 
-  setupMaterial<T extends Material>(material: T): T {
-    return this.materialStates.setup(material, this)
+  // Proxy properties for cascaded lights:
+
+  get intensity(): number {
+    return this.directionalLight.mainLight.shadow.intensity
   }
 
-  rollbackMaterial<T extends Material>(material: T): T {
-    return this.materialStates.rollback(material)
+  set intensity(value: number) {
+    if (value !== this.intensity) {
+      const lights = this.directionalLight.cascadedLights
+      for (let i = 0; i < lights.length; ++i) {
+        lights[i].shadow.intensity = value
+      }
+    }
   }
 
-  dispose(): void {
-    this.materialStates.dispose()
-    this.directionalLight.dispose()
+  get bias(): number {
+    return this.directionalLight.mainLight.shadow.bias
+  }
+
+  set bias(value: number) {
+    if (value !== this.bias) {
+      const lights = this.directionalLight.cascadedLights
+      for (let i = 0; i < lights.length; ++i) {
+        lights[i].shadow.bias = value
+      }
+    }
+  }
+
+  get normalBias(): number {
+    return this.directionalLight.mainLight.shadow.normalBias
+  }
+
+  set normalBias(value: number) {
+    if (value !== this.normalBias) {
+      const lights = this.directionalLight.cascadedLights
+      for (let i = 0; i < lights.length; ++i) {
+        lights[i].shadow.normalBias = value
+      }
+    }
+  }
+
+  get radius(): number {
+    return this.directionalLight.mainLight.shadow.radius
+  }
+
+  set radius(value: number) {
+    if (value !== this.radius) {
+      const lights = this.directionalLight.cascadedLights
+      for (let i = 0; i < lights.length; ++i) {
+        lights[i].shadow.radius = value
+      }
+    }
+  }
+
+  get blurSamples(): number {
+    return this.directionalLight.mainLight.shadow.blurSamples
+  }
+
+  set blurSamples(value: number) {
+    if (value !== this.blurSamples) {
+      const lights = this.directionalLight.cascadedLights
+      for (let i = 0; i < lights.length; ++i) {
+        lights[i].shadow.blurSamples = value
+      }
+    }
   }
 }
