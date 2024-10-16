@@ -9,8 +9,8 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
-import { SMAAPreset, ToneMappingMode } from 'postprocessing'
-import { Fragment, Suspense, useMemo, useRef, type FC } from 'react'
+import { ToneMappingMode } from 'postprocessing'
+import { Suspense, useMemo, useRef, type FC } from 'react'
 import { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
 
 import {
@@ -19,7 +19,6 @@ import {
   getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF,
-  isNotFalse,
   radians,
   TilingScheme
 } from '@geovanni/core'
@@ -30,7 +29,7 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects'
-import { LocalFrame, useRendererControls } from '@geovanni/react'
+import { LocalTangentFrame, useRendererControls } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -64,10 +63,10 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { normal, depth, depthNormal } = useControls('effect', {
+  const { atmosphere, normal, depth } = useControls('effect', {
+    atmosphere: true,
     depth: false,
-    normal: false,
-    depthNormal: false
+    normal: false
   })
 
   const motionDate = useMotionDate()
@@ -98,28 +97,25 @@ const Scene: FC = () => {
 
   const effectComposer = useMemo(
     () => (
-      <EffectComposer key={Math.random()} normalPass multisampling={0}>
-        {[
-          !normal && !depth && !depthNormal && (
-            <AerialPerspective
-              key='aerialPerspective'
-              ref={aerialPerspectiveRef}
-            />
-          ),
-          <LensFlare key='lensFlare' />,
-          depth && <Depth key='Depth' useTurbo />,
-          (normal || depthNormal) && (
-            <Normal key='normal' reconstructFromDepth={depthNormal} />
-          ),
-          !normal && !depth && !depthNormal && (
-            <ToneMapping key='toneMapping' mode={ToneMappingMode.AGX} />
-          ),
-          lut != null && <Fragment key='lut'>{lut}</Fragment>,
-          <SMAA key='smaa' preset={SMAAPreset.ULTRA} />
-        ].filter(isNotFalse)}
+      <EffectComposer normalPass multisampling={0}>
+        {atmosphere && !normal && !depth && (
+          <>
+            <AerialPerspective ref={aerialPerspectiveRef} />
+            <LensFlare />
+          </>
+        )}
+        {depth && <Depth useTurbo />}
+        {normal && <Normal />}
+        {!normal && !depth && (
+          <>
+            <ToneMapping mode={ToneMappingMode.AGX} />
+            {lut != null && lut}
+            <SMAA />
+          </>
+        )}
       </EffectComposer>
     ),
-    [normal, depth, depthNormal, lut]
+    [atmosphere, normal, depth, lut]
   )
 
   return (
@@ -137,11 +133,11 @@ const Scene: FC = () => {
       >
         <meshStandardMaterial color='gray' />
       </Sphere>
-      <LocalFrame location={location}>
+      <LocalTangentFrame location={location}>
         <TorusKnot args={[200, 60, 256, 64]} position={[0, 0, 20]}>
           <meshStandardMaterial color='white' />
         </TorusKnot>
-      </LocalFrame>
+      </LocalTangentFrame>
       {tiles.map(tile => (
         <Suspense key={`${tile.x}:${tile.y}:${tile.z}`}>
           <TerrainTile

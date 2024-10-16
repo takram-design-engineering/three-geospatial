@@ -10,7 +10,7 @@ import { useRendererControls } from '@geovanni/react'
 import { LensFlare } from './LensFlare'
 
 export default {
-  title: 'atmosphere/LensFlare',
+  title: 'effects/LensFlare',
   parameters: {
     layout: 'fullscreen'
   }
