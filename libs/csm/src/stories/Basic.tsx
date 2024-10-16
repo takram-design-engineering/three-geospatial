@@ -1,9 +1,10 @@
 import { OrbitControls, Plane } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
+import { useSpring } from 'framer-motion'
 import { useControls } from 'leva'
 import { Fragment, useEffect, useMemo, useRef, type FC } from 'react'
-import { BoxGeometry, MeshStandardMaterial } from 'three'
+import { BoxGeometry, Material, MeshStandardMaterial } from 'three'
 import { ShadowMapViewer } from 'three-stdlib'
 
 import { radians } from '@geovanni/core'
@@ -22,18 +23,8 @@ const boxHeights = Array.from({ length: 40 }, () => [
 ])
 
 const Scene: FC = () => {
-  const { camera, viewport } = useThree()
-
-  const csm = useMemo(
-    () =>
-      new CascadedShadowMaps(camera, {
-        cascadeCount: 4,
-        far: 1000,
-        mode: 'practical',
-        fade: true
-      }),
-    [camera]
-  )
+  const camera = useThree(({ camera }) => camera)
+  const csm = useMemo(() => new CascadedShadowMaps(camera), [camera])
   useEffect(() => {
     return () => {
       csm.dispose()
@@ -48,6 +39,7 @@ const Scene: FC = () => {
     csm.setupMaterial(material2)
   }, [csm])
 
+  const viewport = useThree(({ viewport }) => viewport)
   useEffect(() => {
     csm.needsUpdateFrusta = true
   }, [viewport, csm])
@@ -61,8 +53,32 @@ const Scene: FC = () => {
     helper.update()
   })
 
+  const springConfig = { mass: 1, damping: 20 }
+  const motionAltitude = useSpring(-55, springConfig)
+  const motionAzimuth = useSpring(225, springConfig)
+  useFrame(() => {
+    csm.directionalLight.direction.setFromSphericalCoords(
+      1,
+      radians(motionAltitude.get()) + Math.PI,
+      radians(motionAzimuth.get())
+    )
+  })
+
+  const gl = useThree(({ gl }) => gl)
+  const scene = useThree(({ scene }) => scene)
+
   useControls('Controls', {
-    orthographic: false,
+    shadows: {
+      value: true,
+      onChange: value => {
+        gl.shadowMap.enabled = value
+        scene.traverse(child => {
+          if ('material' in child && child.material instanceof Material) {
+            child.material.needsUpdate = true
+          }
+        })
+      }
+    },
     fade: {
       value: true,
       onChange: value => {
@@ -86,19 +102,29 @@ const Scene: FC = () => {
         csm.needsUpdateFrusta = true
       }
     },
-    margin: { value: 100 },
-    direction: {
-      value: {
-        x: 125,
-        y: -135
-      },
-      joystick: false,
+    margin: {
+      value: 100,
+      min: 0,
+      max: 200,
       onChange: value => {
-        csm.directionalLight.direction.setFromSphericalCoords(
-          1,
-          radians(value.x),
-          radians(value.y)
-        )
+        csm.margin = value
+        csm.needsUpdateFrusta = true
+      }
+    },
+    altitude: {
+      value: motionAltitude.get(),
+      min: -90,
+      max: 90,
+      onChange: value => {
+        motionAltitude.set(value)
+      }
+    },
+    azimuth: {
+      value: motionAzimuth.get(),
+      min: 0,
+      max: 360,
+      onChange: value => {
+        motionAzimuth.set(value)
       }
     },
     cameraFar: {
