@@ -11,6 +11,16 @@ import { radians } from '@geovanni/core'
 import { CascadedShadowMaps } from '../CascadedShadowMaps'
 import { CSMHelper } from '../CSMHelper'
 
+const floorMaterial = new MeshStandardMaterial({ color: '#252a34' })
+const material1 = new MeshStandardMaterial({ color: '#08d9d6' })
+const material2 = new MeshStandardMaterial({ color: '#ff2e63' })
+
+const boxGeometry = new BoxGeometry(10, 10, 10)
+const boxHeights = Array.from({ length: 40 }, () => [
+  Math.random(),
+  Math.random()
+])
+
 const Scene: FC = () => {
   const { camera, viewport } = useThree()
 
@@ -24,8 +34,19 @@ const Scene: FC = () => {
       }),
     [camera]
   )
+  useEffect(() => {
+    return () => {
+      csm.dispose()
+    }
+  }, [csm])
 
-  const csmHelper = useMemo(() => new CSMHelper(csm), [csm])
+  const helper = useMemo(() => new CSMHelper(csm), [csm])
+
+  useEffect(() => {
+    csm.setupMaterial(floorMaterial)
+    csm.setupMaterial(material1)
+    csm.setupMaterial(material2)
+  }, [csm])
 
   useEffect(() => {
     csm.needsUpdateFrusta = true
@@ -34,53 +55,11 @@ const Scene: FC = () => {
   useFrame(() => {
     camera.updateMatrixWorld()
     csm.update()
-    csmHelper.displayPlanes = false
-    csmHelper.displayFrustum = false
-    csmHelper.updateVisibility()
-    csmHelper.update()
+    helper.displayPlanes = false
+    helper.displayFrustum = false
+    helper.updateVisibility()
+    helper.update()
   })
-
-  const floorMaterial = useMemo(() => {
-    const material = new MeshStandardMaterial({ color: '#808080' })
-    csm.setupMaterial(material)
-    return material
-  }, [csm])
-
-  const material1 = useMemo(() => {
-    const material = new MeshStandardMaterial({ color: '#08d9d6' })
-    csm.setupMaterial(material)
-    return material
-  }, [csm])
-
-  const material2 = useMemo(() => {
-    const material = new MeshStandardMaterial({ color: '#ff2e63' })
-    csm.setupMaterial(material)
-    return material
-  }, [csm])
-
-  const boxes = useMemo(() => {
-    const geometry = new BoxGeometry(10, 10, 10)
-    return [...Array(40)].map((_, index) => (
-      <Fragment key={index}>
-        <mesh
-          geometry={geometry}
-          material={index % 2 === 0 ? material1 : material2}
-          position={[-index * 25, 20, 30]}
-          scale={[1, Math.random() * 2 + 6, 1]}
-          receiveShadow
-          castShadow
-        />
-        <mesh
-          geometry={geometry}
-          material={index % 2 === 0 ? material2 : material1}
-          position={[-index * 25, 20, -30]}
-          scale={[1, Math.random() * 2 + 6, 1]}
-          receiveShadow
-          castShadow
-        />
-      </Fragment>
-    ))
-  }, [material1, material2])
 
   useControls('Controls', {
     orthographic: false,
@@ -113,7 +92,6 @@ const Scene: FC = () => {
         x: 125,
         y: -135
       },
-      step: 0.1,
       joystick: false,
       onChange: value => {
         csm.directionalLight.direction.setFromSphericalCoords(
@@ -134,7 +112,7 @@ const Scene: FC = () => {
     }
   })
 
-  useControls('Helper', {
+  const { visible } = useControls('Helper', {
     visible: false,
     frustum: true,
     planes: true,
@@ -166,23 +144,20 @@ const Scene: FC = () => {
       <color args={['#454e61']} attach='background' />
       <OrbitControls target={[-100, 10, 0]} maxPolarAngle={Math.PI / 2} />
       <ambientLight args={[0xffffff, 1.5]} />
-      <primitive
-        object={csm.directionalLight}
-        dispose={null}
-        mainLight-intensity={3}
-      />
-      {/* <directionalLight
+      <primitive object={csm.directionalLight} mainLight-intensity={3} />
+      <directionalLight
         args={[0xffffff, 1.5]}
-        position={new Vector3(1, 1, -1).normalize().multiplyScalar(200)}
+        position={[200, 200, -200]}
         castShadow
         shadow-mapSize={[2048, 2048]}
-      >
-        <orthographicCamera
-          attach='shadow-camera'
-          args={[-250, 250, 250, -250, 1, 500]}
-        />
-      </directionalLight> */}
-      <primitive object={csmHelper} />
+        shadow-camera-left={-250}
+        shadow-camera-right={250}
+        shadow-camera-top={250}
+        shadow-camera-bottom={-250}
+        shadow-camera-near={0}
+        shadow-camera-far={500}
+      />
+      {visible && <primitive object={helper} />}
       <Plane
         args={[10000, 10000]}
         rotation={[-Math.PI / 2, 0, 0]}
@@ -190,19 +165,36 @@ const Scene: FC = () => {
         castShadow
         material={floorMaterial}
       />
-      {boxes}
+      {boxHeights.map(([left, right], index) => (
+        <Fragment key={index}>
+          <mesh
+            geometry={boxGeometry}
+            material={index % 2 === 0 ? material1 : material2}
+            position={[-index * 25, 20, 30]}
+            scale={[1, left * 2 + 6, 1]}
+            receiveShadow
+            castShadow
+          />
+          <mesh
+            geometry={boxGeometry}
+            material={index % 2 === 0 ? material2 : material1}
+            position={[-index * 25, 20, -30]}
+            scale={[1, right * 2 + 6, 1]}
+            receiveShadow
+            castShadow
+          />
+        </Fragment>
+      ))}
     </>
   )
 }
 
-export const Basic: StoryFn = () => {
-  return (
-    <Canvas
-      shadows
-      gl={{ logarithmicDepthBuffer: true }}
-      camera={{ near: 0.1, far: 5000, position: [60, 60, 0] }}
-    >
-      <Scene />
-    </Canvas>
-  )
-}
+export const Basic: StoryFn = () => (
+  <Canvas
+    shadows
+    gl={{ logarithmicDepthBuffer: true }}
+    camera={{ near: 0.1, far: 5000, position: [60, 60, 0] }}
+  >
+    <Scene />
+  </Canvas>
+)
