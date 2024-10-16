@@ -10,7 +10,7 @@ const uniforms = /* glsl */ `
   #include <lights_pars_begin>
 
   #ifdef CSM
-    uniform vec2 csmCascades[CSM_MAX_CASCADE_COUNT];
+    uniform vec2 csmCascades[CSM_CASCADE_COUNT];
     uniform float csmNear;
     uniform float csmFar;
   #endif

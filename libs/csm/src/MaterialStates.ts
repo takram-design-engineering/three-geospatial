@@ -28,7 +28,6 @@ export class MaterialStates {
     material.defines ??= {}
     material.defines.CSM = 1
     material.defines.CSM_CASCADE_COUNT = csm.cascadeCount
-    material.defines.CSM_MAX_CASCADE_COUNT = csm.maxCascadeCount
     if (csm.fade) {
       material.defines.CSM_FADE = 1
     }
@@ -137,7 +136,6 @@ export class MaterialStates {
     }
     if (material.defines != null) {
       delete material.defines.CSM
-      delete material.defines.CSM_MAX_CASCADE_COUNT
       delete material.defines.CSM_CASCADE_COUNT
       delete material.defines.CSM_FADE
     }

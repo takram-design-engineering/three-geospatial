@@ -28,7 +28,6 @@ const boxScratch = /*#__PURE__*/ new Box3()
 
 export interface CascadedShadowMapsOptions {
   cascadeCount?: number
-  maxCascadeCount?: number
   mapSize?: number
   far?: number
   mode?: FrustumSplitMode
@@ -50,7 +49,6 @@ export const cascadedShadowMapsOptionsDefaults = {
 } satisfies Partial<CascadedShadowMapsOptions>
 
 export class CascadedShadowMaps {
-  maxCascadeCount: number
   far: number
   mode: FrustumSplitMode
   lambda: number
@@ -72,7 +70,6 @@ export class CascadedShadowMaps {
   ) {
     const {
       cascadeCount,
-      maxCascadeCount = cascadeCount,
       mapSize,
       far,
       mode,
@@ -82,7 +79,6 @@ export class CascadedShadowMaps {
       disableLastCascadeCutoff
     } = { ...cascadedShadowMapsOptionsDefaults, ...params }
     this.cascadeCount = cascadeCount
-    this.maxCascadeCount = maxCascadeCount
     this.mapSize = mapSize
     this.far = far
     this.mode = mode
@@ -94,7 +90,6 @@ export class CascadedShadowMaps {
 
   dispose(): void {
     this.materialStates.dispose()
-    console.log(this.directionalLight)
     this.directionalLight.dispose()
   }
 
@@ -107,10 +102,11 @@ export class CascadedShadowMaps {
   }
 
   private updateCascades(): void {
+    const cascadeCount = this.cascadeCount
     const splits = this.splits
     splitFrustum(
       this.mode,
-      this.cascadeCount,
+      cascadeCount,
       this.mainCamera.near,
       Math.min(this.mainCamera.far, this.far),
       this.lambda,
@@ -120,14 +116,14 @@ export class CascadedShadowMaps {
     this.mainFrustum.split(splits, this.cascadedFrusta)
 
     const cascades = this.cascades
-    for (let i = 0; i < this.maxCascadeCount; ++i) {
+    for (let i = 0; i < cascadeCount; ++i) {
       const vector = cascades[i] ?? (cascades[i] = new Vector2())
       vector.set(splits[i - 1] ?? 0, splits[i] ?? 0)
     }
     if (this.disableLastCascadeCutoff) {
-      cascades[this.maxCascadeCount - 1].y = Infinity
+      cascades[cascadeCount - 1].y = Infinity
     }
-    cascades.length = this.maxCascadeCount
+    cascades.length = cascadeCount
   }
 
   private getFrustumRadius(frustum: FrustumCorners): number {
@@ -136,7 +132,7 @@ export class CascadedShadowMaps {
     // across the whole frustum itself.
     const nearCorners = frustum.near
     const farCorners = frustum.far
-    let length = Math.max(
+    let diagonalLength = Math.max(
       farCorners[0].distanceTo(farCorners[2]),
       farCorners[0].distanceTo(nearCorners[2])
     )
@@ -147,9 +143,9 @@ export class CascadedShadowMaps {
       const near = camera.near
       const far = Math.min(camera.far, this.far)
       const distance = farCorners[0].z / (far - near)
-      length += 0.25 * distance ** 2 * (far - near)
+      diagonalLength += 0.25 * distance ** 2 * (far - near)
     }
-    return length * 0.5
+    return diagonalLength * 0.5
   }
 
   private updateShadowBounds(): void {
@@ -168,9 +164,6 @@ export class CascadedShadowMaps {
       camera.near = 0
       camera.far = radius * 2 + this.margin
       camera.updateProjectionMatrix()
-
-      // light.shadow.bias = this.bias * radius
-      // light.shadow.normalBias = this.normalBias * radius
     }
   }
 

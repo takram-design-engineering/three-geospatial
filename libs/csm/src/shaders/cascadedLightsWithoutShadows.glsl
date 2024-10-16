@@ -17,7 +17,7 @@ void cascadedLightsWithoutShadows() {
 
   // The rest of directional lights.
   #pragma unroll_loop_start
-  for (int i = CSM_MAX_CASCADE_COUNT; i < NUM_DIR_LIGHTS; i++) {
+  for (int i = CSM_CASCADE_COUNT; i < NUM_DIR_LIGHTS; i++) {
     directionalLight = directionalLights[i];
     getDirectionalLightInfo(directionalLight, directLight);
 

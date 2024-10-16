@@ -18,7 +18,7 @@ void cascadedFadedLights() {
   #pragma unroll_loop_start
   for (int i = 0; i < NUM_DIR_LIGHTS; i++) {
     #if UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS
-    #if UNROLLED_LOOP_INDEX < CSM_MAX_CASCADE_COUNT
+    #if UNROLLED_LOOP_INDEX < CSM_CASCADE_COUNT
 
     lastCascade = UNROLLED_LOOP_INDEX == CSM_CASCADE_COUNT - 1;
     cascade = csmCascades[i];
@@ -48,7 +48,7 @@ void cascadedFadedLights() {
         saturate(min(clipDepth - cascade.x, cascade.y - clipDepth) / margin)
       );
     }
-    #endif // UNROLLED_LOOP_INDEX < CSM_MAX_CASCADE_COUNT
+    #endif // UNROLLED_LOOP_INDEX < CSM_CASCADE_COUNT
     #endif // UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS
   }
   #pragma unroll_loop_end
@@ -69,7 +69,7 @@ void cascadedFadedLights() {
   #pragma unroll_loop_start
   for (int i = 0; i < NUM_DIR_LIGHTS; i++) {
     #if UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS
-    #if UNROLLED_LOOP_INDEX >= CSM_MAX_CASCADE_COUNT
+    #if UNROLLED_LOOP_INDEX >= CSM_CASCADE_COUNT
     directionalLight = directionalLights[i];
     getDirectionalLightInfo(directionalLight, directLight);
 
@@ -95,7 +95,7 @@ void cascadedFadedLights() {
       material,
       reflectedLight
     );
-    #endif // UNROLLED_LOOP_INDEX >= CSM_MAX_CASCADE_COUNT
+    #endif // UNROLLED_LOOP_INDEX >= CSM_CASCADE_COUNT
     #endif // UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS
   }
   #pragma unroll_loop_end
