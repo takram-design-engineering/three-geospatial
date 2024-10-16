@@ -1,8 +1,6 @@
 import { lerp } from '@geovanni/core'
 
-export type FrustumSplitMode = 'practical' | 'uniform' | 'logarithmic'
-
-type FrustumSplitFunction = (
+export type FrustumSplitFunction = (
   length: number,
   near: number,
   far: number,
@@ -10,10 +8,18 @@ type FrustumSplitFunction = (
   result?: number[]
 ) => number[]
 
+export interface FrustumSplitFunctions {
+  uniform: FrustumSplitFunction
+  logarithmic: FrustumSplitFunction
+  practical: FrustumSplitFunction
+}
+
+export type FrustumSplitMode = keyof FrustumSplitFunctions
+
 const arrayScratch: number[] = [] // TODO: Do we really have gain from this?
 
 // See: https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus
-const modes: Record<FrustumSplitMode, FrustumSplitFunction> = {
+const modes: FrustumSplitFunctions = {
   uniform: (count, near, far, _, result = []) => {
     for (let i = 0; i < count; ++i) {
       result[i] = (near + ((far - near) * (i + 1)) / count) / far
@@ -39,6 +45,8 @@ const modes: Record<FrustumSplitMode, FrustumSplitFunction> = {
     return result
   }
 }
+
+export const frustumSplitFunctions = modes
 
 export function splitFrustum(
   mode: FrustumSplitMode,
