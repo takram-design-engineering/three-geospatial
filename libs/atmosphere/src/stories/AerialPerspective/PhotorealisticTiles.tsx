@@ -9,11 +9,10 @@ import { GlobeControls } from '3d-tiles-renderer/src/three/controls/GlobeControl
 import { useControls } from 'leva'
 import {
   EffectMaterial,
-  SMAAPreset,
   ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { Fragment, useEffect, useMemo, useRef, type FC } from 'react'
+import { useEffect, useMemo, useRef, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
@@ -28,7 +27,6 @@ import {
   getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF,
-  isNotFalse,
   radians
 } from '@geovanni/core'
 import {
@@ -64,10 +62,9 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { normal, depth, depthNormal } = useControls('effect', {
+  const { normal, depth } = useControls('effect', {
     depth: false,
-    normal: false,
-    depthNormal: false
+    normal: false
   })
 
   const motionDate = useMotionDate()
@@ -165,29 +162,28 @@ const Scene: FC = () => {
         normalPass
         multisampling={0}
       >
-        {[
-          !normal && !depth && !depthNormal && (
+        {!normal && !depth && (
+          <>
             <AerialPerspective
-              key='aerialPerspective'
               ref={aerialPerspectiveRef}
               skyIrradiance={false}
               inputIntensity={0.08}
             />
-          ),
-          <LensFlare key='lensFlare' />,
-          depth && <Depth key='Depth' useTurbo />,
-          (normal || depthNormal) && (
-            <Normal key='normal' reconstructFromDepth={depthNormal} />
-          ),
-          !normal && !depth && !depthNormal && (
-            <ToneMapping key='toneMapping' mode={ToneMappingMode.AGX} />
-          ),
-          lut != null && <Fragment key='lut'>{lut}</Fragment>,
-          <SMAA key='smaa' preset={SMAAPreset.ULTRA} />
-        ].filter(isNotFalse)}
+            <LensFlare />
+          </>
+        )}
+        {depth && <Depth useTurbo />}
+        {normal && <Normal />}
+        {!normal && !depth && (
+          <>
+            <ToneMapping mode={ToneMappingMode.AGX} />
+            {lut != null && lut}
+            <SMAA />
+          </>
+        )}
       </EffectComposer>
     ),
-    [normal, depth, depthNormal, lut]
+    [normal, depth, lut]
   )
 
   return (
