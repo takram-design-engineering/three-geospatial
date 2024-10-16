@@ -1,7 +1,7 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'csm/CSM',
+  title: 'csm/CascadedShadowMaps',
   parameters: {
     layout: 'fullscreen'
   }

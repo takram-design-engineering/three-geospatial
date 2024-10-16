@@ -1,2 +1,2 @@
-export * from './lib/CSM'
-export * from './lib/CSMHelper'
+export * from './CascadedShadowMaps'
+export * from './CSMHelper'

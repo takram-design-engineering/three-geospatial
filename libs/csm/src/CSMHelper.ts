@@ -1,8 +1,13 @@
+// Based on the following work:
+// https://github.com/StrandedKitty/three-csm/tree/master/src
+// https://github.com/mrdoob/three.js/tree/r169/examples/jsm/csm
+
 import {
   Box3,
   Box3Helper,
   BufferAttribute,
   BufferGeometry,
+  Color,
   DoubleSide,
   Group,
   LineBasicMaterial,
@@ -12,13 +17,21 @@ import {
   PlaneGeometry
 } from 'three'
 
-class CSMHelper extends Group {
-  constructor(csm) {
+import { type CascadedShadowMaps } from './CascadedShadowMaps'
+
+export class CSMHelper extends Group {
+  private readonly csm: CascadedShadowMaps
+  public displayFrustum = true
+  public displayPlanes = true
+  public displayShadowBounds = true
+  private frustumLines: LineSegments<BufferGeometry, LineBasicMaterial>
+  private cascadeLines: Box3Helper[] = []
+  private cascadePlanes: Mesh[] = []
+  private shadowLines: Group[] = []
+
+  public constructor(csm: CascadedShadowMaps) {
     super()
     this.csm = csm
-    this.displayFrustum = true
-    this.displayPlanes = true
-    this.displayShadowBounds = true
 
     const indices = new Uint16Array([
       0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7
@@ -37,12 +50,9 @@ class CSMHelper extends Group {
     this.add(frustumLines)
 
     this.frustumLines = frustumLines
-    this.cascadeLines = []
-    this.cascadePlanes = []
-    this.shadowLines = []
   }
 
-  updateVisibility() {
+  public updateVisibility() {
     const displayFrustum = this.displayFrustum
     const displayPlanes = this.displayPlanes
     const displayShadowBounds = this.displayShadowBounds
@@ -64,13 +74,13 @@ class CSMHelper extends Group {
     frustumLines.visible = displayFrustum
   }
 
-  update() {
+  public update() {
     const csm = this.csm
-    const camera = csm.camera
-    const cascades = csm.cascades
+    const camera = csm.mainCamera
+    const cascadeCount = csm.cascadeCount
     const mainFrustum = csm.mainFrustum
-    const frustums = csm.frustums
-    const lights = csm.lights
+    const frusta = csm.cascadedFrusta
+    const lights = csm.directionalLight.cascadedLights
 
     const frustumLines = this.frustumLines
     const frustumLinePositions = frustumLines.geometry.getAttribute('position')
@@ -83,14 +93,14 @@ class CSMHelper extends Group {
     this.scale.copy(camera.scale)
     this.updateMatrixWorld(true)
 
-    while (cascadeLines.length > cascades) {
+    while (cascadeLines.length > cascadeCount) {
       this.remove(cascadeLines.pop())
       this.remove(cascadePlanes.pop())
       this.remove(shadowLines.pop())
     }
 
-    while (cascadeLines.length < cascades) {
-      const cascadeLine = new Box3Helper(new Box3(), 0xffffff)
+    while (cascadeLines.length < cascadeCount) {
+      const cascadeLine = new Box3Helper(new Box3(), new Color(0xffffff))
       const planeMat = new MeshBasicMaterial({
         transparent: true,
         opacity: 0.1,
@@ -99,7 +109,7 @@ class CSMHelper extends Group {
       })
       const cascadePlane = new Mesh(new PlaneGeometry(), planeMat)
       const shadowLineGroup = new Group()
-      const shadowLine = new Box3Helper(new Box3(), 0xffff00)
+      const shadowLine = new Box3Helper(new Box3(), new Color(0xffff00))
       shadowLineGroup.add(shadowLine)
 
       this.add(cascadeLine)
@@ -111,16 +121,16 @@ class CSMHelper extends Group {
       shadowLines.push(shadowLineGroup)
     }
 
-    for (let i = 0; i < cascades; i++) {
-      const frustum = frustums[i]
+    for (let i = 0; i < cascadeCount; i++) {
+      const frustum = frusta[i]
       const light = lights[i]
       const shadowCam = light.shadow.camera
-      const farVerts = frustum.vertices.far
+      const farVerts = frustum.far
 
       const cascadeLine = cascadeLines[i]
       const cascadePlane = cascadePlanes[i]
       const shadowLineGroup = shadowLines[i]
-      const shadowLine = shadowLineGroup.children[0]
+      const shadowLine = shadowLineGroup.children[0] as Box3Helper
 
       cascadeLine.box.min.copy(farVerts[2])
       cascadeLine.box.max.copy(farVerts[0])
@@ -142,8 +152,8 @@ class CSMHelper extends Group {
       shadowLine.box.max.set(shadowCam.top, shadowCam.right, -shadowCam.near)
     }
 
-    const nearVerts = mainFrustum.vertices.near
-    const farVerts = mainFrustum.vertices.far
+    const nearVerts = mainFrustum.near
+    const farVerts = mainFrustum.far
     frustumLinePositions.setXYZ(0, farVerts[0].x, farVerts[0].y, farVerts[0].z)
     frustumLinePositions.setXYZ(1, farVerts[3].x, farVerts[3].y, farVerts[3].z)
     frustumLinePositions.setXYZ(2, farVerts[2].x, farVerts[2].y, farVerts[2].z)
@@ -175,32 +185,4 @@ class CSMHelper extends Group {
     )
     frustumLinePositions.needsUpdate = true
   }
-
-  dispose() {
-    const frustumLines = this.frustumLines
-    const cascadeLines = this.cascadeLines
-    const cascadePlanes = this.cascadePlanes
-    const shadowLines = this.shadowLines
-
-    frustumLines.geometry.dispose()
-    frustumLines.material.dispose()
-
-    const cascades = this.csm.cascades
-
-    for (let i = 0; i < cascades; i++) {
-      const cascadeLine = cascadeLines[i]
-      const cascadePlane = cascadePlanes[i]
-      const shadowLineGroup = shadowLines[i]
-      const shadowLine = shadowLineGroup.children[0]
-
-      cascadeLine.dispose() // Box3Helper
-
-      cascadePlane.geometry.dispose()
-      cascadePlane.material.dispose()
-
-      shadowLine.dispose() // Box3Helper
-    }
-  }
 }
-
-export { CSMHelper }
