@@ -2,10 +2,10 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import {
+  GlobeControls,
   GoogleCloudAuthPlugin,
-  GooglePhotorealisticTilesRenderer
+  TilesRenderer
 } from '3d-tiles-renderer'
-import { GlobeControls } from '3d-tiles-renderer/src/three/controls/GlobeControls'
 import { useControls } from 'leva'
 import {
   EffectMaterial,
@@ -96,7 +96,8 @@ const Scene: FC = () => {
   const { gl, scene, camera } = useThree()
 
   const tiles = useMemo(() => {
-    const tiles = new GooglePhotorealisticTilesRenderer()
+    // @ts-expect-error Missing type
+    const tiles = new TilesRenderer()
     tiles.registerPlugin(
       new GoogleCloudAuthPlugin({
         apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY

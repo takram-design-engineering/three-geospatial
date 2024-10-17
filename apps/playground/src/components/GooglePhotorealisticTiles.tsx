@@ -1,9 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import {
-  GoogleCloudAuthPlugin,
-  GooglePhotorealisticTilesRenderer,
-  type TilesRenderer
-} from '3d-tiles-renderer'
+import { GoogleCloudAuthPlugin, TilesRenderer } from '3d-tiles-renderer'
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
@@ -12,8 +8,9 @@ import { TileCompressionPlugin, UpdateOnChangePlugin } from '@geovanni/3d-tiles'
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
-function createTiles(apiKey?: string): TilesRenderer {
-  const tiles = new GooglePhotorealisticTilesRenderer()
+function createTiles(apiKey: string): TilesRenderer {
+  // @ts-expect-error Missing type
+  const tiles = new TilesRenderer()
   if (apiKey != null) {
     tiles.registerPlugin(
       new GoogleCloudAuthPlugin({
@@ -32,7 +29,7 @@ function createTiles(apiKey?: string): TilesRenderer {
 }
 
 export interface GooglePhotorealisticTilesProps {
-  apiKey?: string
+  apiKey: string
 }
 
 export const GooglePhotorealisticTiles = forwardRef<
