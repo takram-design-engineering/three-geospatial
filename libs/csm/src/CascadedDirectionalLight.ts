@@ -25,12 +25,10 @@ export class CascadedDirectionalLight extends Object3D {
   }
 
   setCount(value: number): this {
+    value = Math.max(1, value)
     const count = this.cascadedLights.length
     if (value === count) {
       return this
-    }
-    if (value < 1) {
-      throw new Error(`"count" must be positive: ${value}`)
     }
     if (value > count) {
       const mainLight = this.mainLight
