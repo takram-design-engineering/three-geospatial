@@ -9,8 +9,8 @@ import { ShadowMapViewer } from 'three-stdlib'
 
 import { radians } from '@geovanni/core'
 
-import { CascadedShadowMaps } from '../CascadedShadowMaps'
-import { CSMHelper } from '../CSMHelper'
+import { CascadedShadowMaps } from '../../CascadedShadowMaps'
+import { CSMHelper } from '../../CSMHelper'
 
 const floorMaterial = new MeshStandardMaterial({ color: '#252a34' })
 const material1 = new MeshStandardMaterial({ color: '#08d9d6' })
@@ -37,6 +37,11 @@ const Scene: FC = () => {
     csm.setupMaterial(floorMaterial)
     csm.setupMaterial(material1)
     csm.setupMaterial(material2)
+    return () => {
+      csm.rollbackMaterial(floorMaterial)
+      csm.rollbackMaterial(material1)
+      csm.rollbackMaterial(material2)
+    }
   }, [csm])
 
   const viewport = useThree(({ viewport }) => viewport)
@@ -64,21 +69,7 @@ const Scene: FC = () => {
     )
   })
 
-  const gl = useThree(({ gl }) => gl)
-  const scene = useThree(({ scene }) => scene)
-
   useControls('Controls', {
-    shadows: {
-      value: true,
-      onChange: value => {
-        gl.shadowMap.enabled = value
-        scene.traverse(child => {
-          if ('material' in child && child.material instanceof Material) {
-            child.material.needsUpdate = true
-          }
-        })
-      }
-    },
     fade: {
       value: true,
       onChange: value => {
@@ -126,6 +117,23 @@ const Scene: FC = () => {
       onChange: value => {
         motionAzimuth.set(value)
       }
+    }
+  })
+
+  const gl = useThree(({ gl }) => gl)
+  const scene = useThree(({ scene }) => scene)
+
+  const { anotherLight } = useControls('Scene', {
+    shadows: {
+      value: true,
+      onChange: value => {
+        gl.shadowMap.enabled = value
+        scene.traverse(child => {
+          if ('material' in child && child.material instanceof Material) {
+            child.material.needsUpdate = true
+          }
+        })
+      }
     },
     cameraFar: {
       value: camera.far,
@@ -135,11 +143,12 @@ const Scene: FC = () => {
         camera.far = value
         camera.updateProjectionMatrix()
       }
-    }
+    },
+    anotherLight: true
   })
 
-  const { visible } = useControls('Helper', {
-    visible: false,
+  const { show: showHelper } = useControls('Helper', {
+    show: false,
     frustum: true,
     planes: true,
     shadowBounds: true,
@@ -171,19 +180,21 @@ const Scene: FC = () => {
       <OrbitControls target={[-100, 10, 0]} maxPolarAngle={Math.PI / 2} />
       <ambientLight args={[0xffffff, 1.5]} />
       <primitive object={csm.directionalLight} mainLight-intensity={3} />
-      <directionalLight
-        args={[0xffffff, 1.5]}
-        position={[200, 200, -200]}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-250}
-        shadow-camera-right={250}
-        shadow-camera-top={250}
-        shadow-camera-bottom={-250}
-        shadow-camera-near={0}
-        shadow-camera-far={500}
-      />
-      {visible && <primitive object={helper} />}
+      {anotherLight && (
+        <directionalLight
+          args={[0xffffff, 1.5]}
+          position={[200, 200, -200]}
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+          shadow-camera-left={-250}
+          shadow-camera-right={250}
+          shadow-camera-top={250}
+          shadow-camera-bottom={-250}
+          shadow-camera-near={0}
+          shadow-camera-far={500}
+        />
+      )}
+      {showHelper && <primitive object={helper} />}
       <Plane
         args={[10000, 10000]}
         rotation={[-Math.PI / 2, 0, 0]}

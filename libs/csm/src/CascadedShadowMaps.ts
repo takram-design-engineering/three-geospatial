@@ -101,6 +101,17 @@ export class CascadedShadowMaps {
     return this.materialStates.rollback(material)
   }
 
+  setupMaterials<T extends readonly Material[]>(materials: T): () => void {
+    for (let i = 0; i < materials.length; ++i) {
+      this.materialStates.setup(materials[i], this)
+    }
+    return () => {
+      for (let i = 0; i < materials.length; ++i) {
+        this.materialStates.rollback(materials[i])
+      }
+    }
+  }
+
   private updateCascades(): void {
     const cascadeCount = this.cascadeCount
     const splits = this.splits
