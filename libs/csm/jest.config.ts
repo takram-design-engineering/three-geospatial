@@ -2,7 +2,7 @@
 import { type Config } from 'jest'
 
 export default {
-  displayName: 'react',
+  displayName: 'csm',
   preset: '../../jest.preset.js',
   transform: {
     '^.+\\.[tj]sx?$': [
@@ -13,8 +13,9 @@ export default {
           transform: { react: { runtime: 'automatic' } }
         }
       }
-    ]
+    ],
+    '.+\\.(glsl|frag|vert)$': '@glen/jest-raw-loader'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/react'
+  coverageDirectory: '../../coverage/libs/csm'
 } satisfies Config

@@ -2575,6 +2575,7 @@ __metadata:
     "@emotion/react": "npm:11.11.1"
     "@emotion/server": "npm:11.11.0"
     "@emotion/styled": "npm:11.11.0"
+    "@glen/jest-raw-loader": "npm:^2.0.0"
     "@here/quantized-mesh-decoder": "npm:^1.2.8"
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.3.1"
     "@math.gl/core": "npm:^4.1.0"
@@ -2676,6 +2677,15 @@ __metadata:
     workerpool: "npm:^9.2.0"
   languageName: unknown
   linkType: soft
+
+"@glen/jest-raw-loader@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@glen/jest-raw-loader@npm:2.0.0"
+  peerDependencies:
+    jest: ">=28"
+  checksum: 10c0/1db455885f75f55de139281f1b906966ecc6073d83c6c689a0e5aa96992415505d86e8172c4b273205c248afc9179f62a41fb528c65a9db0532cba8662fa1cfa
+  languageName: node
+  linkType: hard
 
 "@hapi/hoek@npm:^9.0.0, @hapi/hoek@npm:^9.3.0":
   version: 9.3.0

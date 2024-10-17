@@ -1,4 +1,6 @@
 /* eslint-disable */
+import { type Config } from 'jest'
+
 export default {
   displayName: 'ssr',
   preset: '../../jest.preset.js',
@@ -8,4 +10,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/ssr'
-}
+} satisfies Config

@@ -17,7 +17,7 @@ import { EffectComposer } from '@geovanni/effects'
 import { useRendererControls } from '@geovanni/react'
 
 import { Stars, type StarsImpl } from './Stars'
-import { useMotionDate } from './stories/useMotionDate'
+import { useLocalDateControls } from './stories/useLocalDateControls'
 
 export default {
   title: 'atmosphere/Stars',
@@ -29,7 +29,7 @@ export default {
 const Scene: FC = () => {
   useRendererControls({ exposure: 50 })
 
-  const motionDate = useMotionDate()
+  const motionDate = useLocalDateControls()
   const rotationMatrixRef = useRef(new Matrix4())
   const starsRef = useRef<StarsImpl>(null)
 

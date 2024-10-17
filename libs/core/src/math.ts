@@ -17,8 +17,12 @@ export function inverseLerp(a: number, b: number, x: number): number {
   return a !== b ? (x - a) / (b - a) : 0
 }
 
-export function clamp(v: number, min: number, max: number): number {
-  return Math.min(Math.max(v, min), max)
+export function clamp(x: number, min: number, max: number): number {
+  return Math.min(Math.max(x, min), max)
+}
+
+export function saturate(x: number): number {
+  return Math.min(Math.max(x, 0), 1)
 }
 
 export function closeTo(

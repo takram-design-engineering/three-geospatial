@@ -1,4 +1,6 @@
 /* eslint-disable */
+import { type Config } from 'jest'
+
 export default {
   displayName: '3d-tiles',
   preset: '../../jest.preset.js',
@@ -15,4 +17,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/3d-tiles'
-}
+} satisfies Config

@@ -1,6 +1,6 @@
 import { Color, Matrix3, Vector2, Vector3 } from 'three'
 
-import { clamp } from './math'
+import { clamp, saturate } from './math'
 
 const vector2Scratch = /*#__PURE__*/ new Vector2()
 const vector3Scratch = /*#__PURE__*/ new Vector3()
@@ -53,9 +53,9 @@ export function convertXYZToLinearSRGBChromaticity(
 ): Color {
   const color = vector3Scratch.copy(xyz).applyMatrix3(XYZToLinearRGB)
   // XYZ directly converted from spectral locus doesn't fall inside RGB.
-  color.x = clamp(color.x, 0, 1)
-  color.y = clamp(color.y, 0, 1)
-  color.z = clamp(color.z, 0, 1)
+  color.x = saturate(color.x)
+  color.y = saturate(color.y)
+  color.z = saturate(color.z)
   return result.setFromVector3(color.normalize())
 }
 

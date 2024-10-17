@@ -36,7 +36,7 @@ import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
-import { useMotionDate } from '../useMotionDate'
+import { useLocalDateControls } from '../useLocalDateControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -63,13 +63,13 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { atmosphere, normal, depth } = useControls('effect', {
+  const { atmosphere, normal, depth } = useControls('effects', {
     atmosphere: true,
     depth: false,
     normal: false
   })
 
-  const motionDate = useMotionDate()
+  const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())
@@ -97,7 +97,7 @@ const Scene: FC = () => {
 
   const effectComposer = useMemo(
     () => (
-      <EffectComposer normalPass multisampling={0}>
+      <EffectComposer key={Math.random()} normalPass multisampling={0}>
         {atmosphere && !normal && !depth && (
           <>
             <AerialPerspective ref={aerialPerspectiveRef} />
