@@ -9,16 +9,7 @@ import {
   aerialPerspectiveEffectOptionsDefaults,
   type AerialPerspectiveEffectOptions
 } from './AerialPerspectiveEffect'
-import {
-  IRRADIANCE_TEXTURE_HEIGHT,
-  IRRADIANCE_TEXTURE_WIDTH,
-  SCATTERING_TEXTURE_DEPTH,
-  SCATTERING_TEXTURE_HEIGHT,
-  SCATTERING_TEXTURE_WIDTH,
-  TRANSMITTANCE_TEXTURE_HEIGHT,
-  TRANSMITTANCE_TEXTURE_WIDTH
-} from './constants'
-import { usePrecomputedData } from './usePrecomputedData'
+import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export interface AerialPerspectiveProps
   extends EffectProps<
@@ -35,31 +26,15 @@ export const AerialPerspective = forwardRef<
     ...props
   }
 
-  // TODO: Make textures shared.
+  // TODO: Make the path to the textures configurable.
   const gl = useThree(({ gl }) => gl)
   const useHalfFloat = useMemo(
     () => gl.getContext().getExtension('OES_texture_float_linear') == null,
     [gl]
   )
-  const irradianceTexture = usePrecomputedData('/irradiance.bin', {
-    width: IRRADIANCE_TEXTURE_WIDTH,
-    height: IRRADIANCE_TEXTURE_HEIGHT,
-    useHalfFloat
-  })
-  const scatteringTexture = usePrecomputedData('/scattering.bin', {
-    width: SCATTERING_TEXTURE_WIDTH,
-    height: SCATTERING_TEXTURE_HEIGHT,
-    depth: SCATTERING_TEXTURE_DEPTH,
-    useHalfFloat
-  })
-  const transmittanceTexture = usePrecomputedData('/transmittance.bin', {
-    width: TRANSMITTANCE_TEXTURE_WIDTH,
-    height: TRANSMITTANCE_TEXTURE_HEIGHT,
-    useHalfFloat
-  })
+  const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
 
   const { camera, normalPass } = useContext(EffectComposerContext)
-
   const effect = useMemo(
     () => new AerialPerspectiveEffect(camera, { blendFunction }),
     [camera, blendFunction]
@@ -76,9 +51,7 @@ export const AerialPerspective = forwardRef<
       object={effect}
       camera={camera}
       normalBuffer={normalPass?.texture ?? null}
-      irradianceTexture={irradianceTexture}
-      scatteringTexture={scatteringTexture}
-      transmittanceTexture={transmittanceTexture}
+      {...precomputedTextures}
       useHalfFloat={useHalfFloat}
       {...others}
     />

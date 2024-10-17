@@ -7,16 +7,7 @@ import {
   AtmosphereMaterial,
   atmosphereMaterialParametersDefaults
 } from './AtmosphereMaterial'
-import {
-  IRRADIANCE_TEXTURE_HEIGHT,
-  IRRADIANCE_TEXTURE_WIDTH,
-  SCATTERING_TEXTURE_DEPTH,
-  SCATTERING_TEXTURE_HEIGHT,
-  SCATTERING_TEXTURE_WIDTH,
-  TRANSMITTANCE_TEXTURE_HEIGHT,
-  TRANSMITTANCE_TEXTURE_WIDTH
-} from './constants'
-import { usePrecomputedData } from './usePrecomputedData'
+import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type AtmosphereImpl = Mesh<BufferGeometry, AtmosphereMaterial>
 
@@ -43,37 +34,20 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
       ...others
     } = { ...atmosphereMaterialParametersDefaults, ...props }
 
-    // TODO: Make textures shared.
+    // TODO: Make the path to the textures configurable.
     const gl = useThree(({ gl }) => gl)
     const useHalfFloat = useMemo(
       () => gl.getContext().getExtension('OES_texture_float_linear') == null,
       [gl]
     )
-    const irradianceTexture = usePrecomputedData('/irradiance.bin', {
-      width: IRRADIANCE_TEXTURE_WIDTH,
-      height: IRRADIANCE_TEXTURE_HEIGHT,
-      useHalfFloat
-    })
-    const scatteringTexture = usePrecomputedData('/scattering.bin', {
-      width: SCATTERING_TEXTURE_WIDTH,
-      height: SCATTERING_TEXTURE_HEIGHT,
-      depth: SCATTERING_TEXTURE_DEPTH,
-      useHalfFloat
-    })
-    const transmittanceTexture = usePrecomputedData('/transmittance.bin', {
-      width: TRANSMITTANCE_TEXTURE_WIDTH,
-      height: TRANSMITTANCE_TEXTURE_HEIGHT,
-      useHalfFloat
-    })
+    const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
 
     const material = useMemo(() => new AtmosphereMaterial(), [])
     return (
       <ScreenQuad renderOrder={-1} {...others} ref={forwardedRef}>
         <primitive
           object={material}
-          irradianceTexture={irradianceTexture}
-          scatteringTexture={scatteringTexture}
-          transmittanceTexture={transmittanceTexture}
+          {...precomputedTextures}
           useHalfFloat={useHalfFloat}
           sun={sun}
           sunDirection={sunDirection}

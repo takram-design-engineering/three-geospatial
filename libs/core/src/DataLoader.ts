@@ -41,7 +41,7 @@ const defaultDataTextureParameter = {
 } satisfies DataTextureParameters
 
 export abstract class DataLoader<
-  T extends DataTexture | Data3DTexture = DataTexture | Data3DTexture
+  T extends DataTexture | Data3DTexture
 > extends Loader<T> {
   abstract readonly Texture: Constructor<T>
 
@@ -91,7 +91,7 @@ export abstract class DataLoader<
   }
 }
 
-export class Int16Data2DLoader extends DataLoader {
+export class Int16Data2DLoader extends DataLoader<DataTexture> {
   Texture = DataTexture
   parseTypedArray = parseInt16Array
   parameters = {
@@ -100,7 +100,7 @@ export class Int16Data2DLoader extends DataLoader {
   } satisfies DataTextureParameters
 }
 
-export class Uint16Data2DLoader extends DataLoader {
+export class Uint16Data2DLoader extends DataLoader<DataTexture> {
   Texture = DataTexture
   parseTypedArray = parseUint16Array
   parameters = {
@@ -109,7 +109,7 @@ export class Uint16Data2DLoader extends DataLoader {
   } satisfies DataTextureParameters
 }
 
-export class Float32Data2DLoader extends DataLoader {
+export class Float32Data2DLoader extends DataLoader<DataTexture> {
   Texture = DataTexture
   parseTypedArray = parseFloat32Array
   parameters = {
@@ -118,7 +118,7 @@ export class Float32Data2DLoader extends DataLoader {
   } satisfies DataTextureParameters
 }
 
-export class Float32Data3DLoader extends DataLoader {
+export class Float32Data3DLoader extends DataLoader<Data3DTexture> {
   Texture = Data3DTexture
   parseTypedArray = parseFloat32Array
   parameters = {
