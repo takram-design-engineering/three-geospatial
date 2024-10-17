@@ -1,21 +1,25 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useSpring } from 'framer-motion'
 import { useControls } from 'leva'
 import { useEffect } from 'react'
+import { Material } from 'three'
 
 import { springOptions } from './springOptions'
 
 export function useRendererControls({
-  exposure: initialExposure = 10
+  exposure: initialExposure = 10,
+  shadow: initialShadow = false
 }: {
   exposure?: number
+  shadow?: boolean
 } = {}): void {
-  const [{ exposure }, set] = useControls('renderer', () => ({
+  const [{ exposure, shadow }, set] = useControls('renderer', () => ({
     exposure: {
       value: initialExposure,
       min: 0,
       max: 100
-    }
+    },
+    shadow: initialShadow
   }))
 
   const springExposure = useSpring(exposure, springOptions)
@@ -32,4 +36,14 @@ export function useRendererControls({
   useFrame(({ gl }) => {
     gl.toneMappingExposure = springExposure.get()
   })
+
+  const { gl, scene } = useThree()
+  useEffect(() => {
+    gl.shadowMap.enabled = shadow
+    scene.traverse(child => {
+      if ('material' in child && child.material instanceof Material) {
+        child.material.needsUpdate = true
+      }
+    })
+  }, [shadow, gl, scene])
 }
