@@ -9,3 +9,4 @@ export default {
 
 export { Basic } from './stories/AerialPerspective/Basic'
 export { PhotorealisticTiles } from './stories/AerialPerspective/PhotorealisticTiles'
+export { IrradianceMap } from './stories/AerialPerspective/IrradianceMap'

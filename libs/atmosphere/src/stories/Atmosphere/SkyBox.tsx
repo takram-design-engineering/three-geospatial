@@ -40,6 +40,8 @@ const Scene: FC = () => {
   const atmosphereRef = useRef<AtmosphereImpl>(null)
   const envMapRef = useRef<AtmosphereImpl>(null)
 
+  const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
+
   useFrame(() => {
     const date = new Date(motionDate.get())
     getSunDirectionECEF(date, sunDirectionRef.current)
@@ -63,8 +65,6 @@ const Scene: FC = () => {
     ),
     []
   )
-
-  const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
 
   return (
     <>
