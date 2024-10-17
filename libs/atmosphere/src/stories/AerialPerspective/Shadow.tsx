@@ -7,7 +7,7 @@ import {
   TorusKnot,
   type RenderCubeTextureApi
 } from '@react-three/drei'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
@@ -38,9 +38,12 @@ import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
+import { computeSkyTransmittance } from '../../computeSkyTransmittance'
+import { ATMOSPHERE_PARAMETERS } from '../../constants'
 import { Irradiance } from '../../Irradiance'
 import { Stars, type StarsImpl } from '../../Stars'
-import { useMotionDate } from '../useMotionDate'
+import { usePrecomputedTextures } from '../../usePrecomputedTextures'
+import { useLocalDateControls } from '../useLocalDateControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -72,7 +75,7 @@ const Scene: FC = () => {
     shadow: true
   })
 
-  const motionDate = useMotionDate()
+  const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())
@@ -157,6 +160,22 @@ const Scene: FC = () => {
     [atmosphere, normal, depth, lut]
   )
 
+  const textures = usePrecomputedTextures('/', true)
+  const camera = useThree(({ camera }) => camera)
+  const positionRef = useRef(new Vector3())
+  const resultRef = useRef(new Vector3())
+  useFrame(() => {
+    camera.getWorldPosition(positionRef.current)
+    computeSkyTransmittance(
+      textures.transmittanceTexture,
+      positionRef.current,
+      sunDirectionRef.current,
+      resultRef.current
+    )
+    resultRef.current.multiply(ATMOSPHERE_PARAMETERS.solarIrradiance)
+    csm.directionalLight.mainLight.color.setFromVector3(resultRef.current)
+  })
+
   return (
     <>
       <OrbitControls target={position} minDistance={1e3} />
@@ -165,7 +184,7 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} />
       <Stars ref={starsRef} />
-      <CSM.DirectionalLight intensity={0} />
+      <CSM.DirectionalLight intensity={1} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         material={terrainMaterial}
@@ -201,7 +220,7 @@ const Scene: FC = () => {
   )
 }
 
-export const IrradianceMap: StoryFn = () => {
+export const Shadow: StoryFn = () => {
   return (
     <Canvas
       gl={{
