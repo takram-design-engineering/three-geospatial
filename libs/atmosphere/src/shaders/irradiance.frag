@@ -6,40 +6,21 @@ in vec3 vHeightAdjustment;
 
 layout(location = 0) out vec4 outputColor;
 
-// TODO: Optimization
 void main() {
   vec3 worldPosition = vWorldPosition - vHeightAdjustment;
   vec3 viewDirection = normalize(vWorldDirection);
 
-  vec3 skyIrradiance;
-  GetSunAndSkyIrradiance(
+  vec3 skyIrradiance = GetSkyIrradiance(
     worldPosition,
     viewDirection,
-    sunDirection,
-    skyIrradiance
+    sunDirection
   );
-
-  vec3 skyTransmittance;
-  GetSkyRadiance(
-    worldPosition,
-    viewDirection,
-    0.0,
-    sunDirection,
-    skyTransmittance
-  );
-
-  vec3 sunTransmittance;
-  GetSkyRadiance(
-    worldPosition,
-    sunDirection,
-    0.0,
-    sunDirection,
-    sunTransmittance
-  );
+  vec3 skyTransmittance = GetSkyTransmittance(worldPosition, viewDirection);
 
   vec3 radiance = skyIrradiance * skyTransmittance;
   float viewDotSun = dot(viewDirection, sunDirection);
   if (viewDotSun > cos(u_sun_angular_radius)) {
+    vec3 sunTransmittance = GetSkyTransmittance(worldPosition, sunDirection);
     radiance += GetSolarRadiance() * sunTransmittance;
   }
 
