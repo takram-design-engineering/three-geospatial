@@ -63,7 +63,7 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { atmosphere, normal, depth } = useControls('effect', {
+  const { atmosphere, normal, depth } = useControls('effects', {
     atmosphere: true,
     depth: false,
     normal: false
@@ -97,7 +97,7 @@ const Scene: FC = () => {
 
   const effectComposer = useMemo(
     () => (
-      <EffectComposer normalPass multisampling={0}>
+      <EffectComposer key={Math.random()} normalPass multisampling={0}>
         {atmosphere && !normal && !depth && (
           <>
             <AerialPerspective ref={aerialPerspectiveRef} />
