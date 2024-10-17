@@ -31,8 +31,6 @@ const Scene: FC = () => {
     }
   }, [csm])
 
-  const helper = useMemo(() => new CSMHelper(csm), [csm])
-
   useEffect(() => {
     csm.setupMaterial(floorMaterial)
     csm.setupMaterial(material1)
@@ -52,10 +50,6 @@ const Scene: FC = () => {
   useFrame(() => {
     camera.updateMatrixWorld()
     csm.update()
-    helper.displayPlanes = false
-    helper.displayFrustum = false
-    helper.updateVisibility()
-    helper.update()
   })
 
   const springConfig = { mass: 1, damping: 20 }
@@ -147,12 +141,41 @@ const Scene: FC = () => {
     anotherLight: true
   })
 
-  const { show: showHelper } = useControls('Helper', {
-    show: false,
-    frustum: true,
-    planes: true,
-    shadowBounds: true,
-    autoUpdate: true
+  const helper = useMemo(() => new CSMHelper(csm), [csm])
+
+  const { show: showHelper, autoUpdate: autoUpdateHelper } = useControls(
+    'Helper',
+    {
+      show: false,
+      frustum: {
+        value: true,
+        onChange: value => {
+          helper.displayFrustum = value
+          helper.updateVisibility()
+        }
+      },
+      planes: {
+        value: true,
+        onChange: value => {
+          helper.displayPlanes = value
+          helper.updateVisibility()
+        }
+      },
+      shadowBounds: {
+        value: true,
+        onChange: value => {
+          helper.displayShadowBounds = value
+          helper.updateVisibility()
+        }
+      },
+      autoUpdate: true
+    }
+  )
+
+  useFrame(() => {
+    if (autoUpdateHelper) {
+      helper.update()
+    }
   })
 
   const viewersRef = useRef<ShadowMapViewer[]>([])

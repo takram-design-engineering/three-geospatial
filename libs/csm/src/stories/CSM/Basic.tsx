@@ -61,14 +61,6 @@ const Scene: FC = () => {
     anotherLight: true
   })
 
-  const { show: showHelper } = useControls('Helper', {
-    show: false,
-    frustum: true,
-    planes: true,
-    shadowBounds: true,
-    autoUpdate: true
-  })
-
   const viewersRef = useRef<ShadowMapViewer[]>([])
 
   useFrame(({ gl, scene, camera }) => {

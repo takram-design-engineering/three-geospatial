@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useSpring } from 'framer-motion'
 import { useControls } from 'leva'
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import { Material } from 'three'
 
 import { springOptions } from './springOptions'
@@ -38,7 +38,7 @@ export function useRendererControls({
   })
 
   const { gl, scene } = useThree()
-  useEffect(() => {
+  useLayoutEffect(() => {
     gl.shadowMap.enabled = shadow
     scene.traverse(child => {
       if ('material' in child && child.material instanceof Material) {

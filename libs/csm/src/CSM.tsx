@@ -101,7 +101,6 @@ export const CSM = Object.assign(
     })
 
     const context = useMemo(() => ({ csm }), [csm])
-
     return (
       <>
         <primitive ref={forwardedRef} object={csm} {...options} />
