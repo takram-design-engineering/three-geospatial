@@ -1,25 +1,16 @@
-const DEGREES_TO_RADIANS = (1 / 180) * Math.PI
-const RADIANS_TO_DEGREES = (1 / Math.PI) * 180
+import { MathUtils } from 'three'
 
-export function radians(degrees: number): number {
-  return degrees * DEGREES_TO_RADIANS
-}
-
-export function degrees(radians: number): number {
-  return radians * RADIANS_TO_DEGREES
-}
-
-export function lerp(a: number, b: number, t: number): number {
-  return t * b + (1 - t) * a
-}
-
-export function inverseLerp(a: number, b: number, x: number): number {
-  return a !== b ? (x - a) / (b - a) : 0
-}
-
-export function clamp(x: number, min: number, max: number): number {
-  return Math.min(Math.max(x, min), max)
-}
+export const clamp = MathUtils.clamp
+export const euclideanModulo = MathUtils.euclideanModulo
+export const inverseLerp = MathUtils.inverseLerp
+export const lerp = MathUtils.lerp
+export const smoothstep = MathUtils.smoothstep
+export const radians = MathUtils.degToRad
+export const degrees = MathUtils.radToDeg
+export const isPowerOfTwo = MathUtils.isPowerOfTwo
+export const ceilPowerOfTwo = MathUtils.ceilPowerOfTwo
+export const floorPowerOfTwo = MathUtils.floorPowerOfTwo
+export const normalize = MathUtils.normalize
 
 export function saturate(x: number): number {
   return Math.min(Math.max(x, 0), 1)
