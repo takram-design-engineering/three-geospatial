@@ -38,8 +38,7 @@ import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
-import { computeSkyTransmittance } from '../../computeSkyTransmittance'
-import { ATMOSPHERE_PARAMETERS } from '../../constants'
+import { computeSunLightColor } from '../../computeSunLightColor'
 import { Irradiance } from '../../Irradiance'
 import { Stars, type StarsImpl } from '../../Stars'
 import { usePrecomputedTextures } from '../../usePrecomputedTextures'
@@ -162,18 +161,13 @@ const Scene: FC = () => {
 
   const textures = usePrecomputedTextures('/', true)
   const camera = useThree(({ camera }) => camera)
-  const positionRef = useRef(new Vector3())
-  const resultRef = useRef(new Vector3())
   useFrame(() => {
-    camera.getWorldPosition(positionRef.current)
-    computeSkyTransmittance(
+    computeSunLightColor(
       textures.transmittanceTexture,
-      positionRef.current,
       sunDirectionRef.current,
-      resultRef.current
+      camera,
+      csm.directionalLight.mainLight.color
     )
-    resultRef.current.multiply(ATMOSPHERE_PARAMETERS.solarIrradiance)
-    csm.directionalLight.mainLight.color.setFromVector3(resultRef.current)
   })
 
   return (
@@ -184,7 +178,7 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} />
       <Stars ref={starsRef} />
-      <CSM.DirectionalLight intensity={1} />
+      <CSM.DirectionalLight />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         material={terrainMaterial}
