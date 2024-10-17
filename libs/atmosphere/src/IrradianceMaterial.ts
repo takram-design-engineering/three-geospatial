@@ -24,15 +24,21 @@ import parameters from './shaders/parameters.glsl'
 import vertexCommon from './shaders/vertexCommon.glsl'
 
 export interface IrradianceMaterialParameters
-  extends AtmosphereMaterialBaseParameters {}
+  extends AtmosphereMaterialBaseParameters {
+  sun?: boolean
+}
 
-export const radianceMaterialParametersDefaults = {
+export const irradianceMaterialParametersDefaults = {
+  sun: false,
   ...atmosphereMaterialParametersBaseDefaults
 } satisfies IrradianceMaterialParameters
 
 export class IrradianceMaterial extends AtmosphereMaterialBase {
   constructor(params?: IrradianceMaterialParameters) {
-    const { ...others } = { ...radianceMaterialParametersDefaults, ...params }
+    const { sun, ...others } = {
+      ...irradianceMaterialParametersDefaults,
+      ...params
+    }
 
     super({
       glslVersion: '300 es',
@@ -57,6 +63,7 @@ export class IrradianceMaterial extends AtmosphereMaterialBase {
         ...others.uniforms
       }
     })
+    this.sun = sun
   }
 
   override onBeforeRender(
@@ -71,5 +78,20 @@ export class IrradianceMaterial extends AtmosphereMaterialBase {
     const uniforms = this.uniforms
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
+  }
+
+  get sun(): boolean {
+    return this.defines.SUN != null
+  }
+
+  set sun(value: boolean) {
+    if (value !== this.sun) {
+      if (value) {
+        this.defines.SUN = '1'
+      } else {
+        delete this.defines.SUN
+      }
+      this.needsUpdate = true
+    }
   }
 }

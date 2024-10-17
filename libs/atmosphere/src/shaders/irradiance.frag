@@ -16,13 +16,15 @@ void main() {
     sunDirection
   );
   vec3 skyTransmittance = GetSkyTransmittance(worldPosition, viewDirection);
-
   vec3 radiance = skyIrradiance * skyTransmittance;
+
+  #ifdef SUN
   float viewDotSun = dot(viewDirection, sunDirection);
   if (viewDotSun > cos(u_sun_angular_radius)) {
     vec3 sunTransmittance = GetSkyTransmittance(worldPosition, sunDirection);
     radiance += GetSolarRadiance() * sunTransmittance;
   }
+  #endif
 
   outputColor = vec4(radiance, 1.0);
 }

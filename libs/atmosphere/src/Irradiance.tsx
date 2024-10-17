@@ -4,23 +4,23 @@ import { forwardRef, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
 import {
-  atmosphereMaterialParametersDefaults,
-  type AtmosphereMaterial
-} from './AtmosphereMaterial'
-import { IrradianceMaterial } from './IrradianceMaterial'
+  IrradianceMaterial,
+  irradianceMaterialParametersDefaults
+} from './IrradianceMaterial'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
-export type IrradianceImpl = Mesh<BufferGeometry, AtmosphereMaterial>
+export type IrradianceImpl = Mesh<BufferGeometry, IrradianceMaterial>
 
 export interface IrradianceProps extends MeshProps {
+  sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
 }
 
 export const Irradiance = forwardRef<IrradianceImpl, IrradianceProps>(
   function Irradiance(props, forwardedRef) {
-    const { sunDirection, sunAngularRadius, ...others } = {
-      ...atmosphereMaterialParametersDefaults,
+    const { sun, sunDirection, sunAngularRadius, ...others } = {
+      ...irradianceMaterialParametersDefaults,
       ...props
     }
 
@@ -39,6 +39,7 @@ export const Irradiance = forwardRef<IrradianceImpl, IrradianceProps>(
           object={material}
           {...precomputedTextures}
           useHalfFloat={useHalfFloat}
+          sun={sun}
           sunDirection={sunDirection}
           sunAngularRadius={sunAngularRadius}
         />
