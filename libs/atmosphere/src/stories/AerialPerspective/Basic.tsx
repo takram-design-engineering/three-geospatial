@@ -36,7 +36,7 @@ import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
-import { useMotionDate } from '../useMotionDate'
+import { useLocalDateControls } from '../useLocalDateControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -69,7 +69,7 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const motionDate = useMotionDate()
+  const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())

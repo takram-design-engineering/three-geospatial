@@ -12,8 +12,8 @@ const MILLISECONDS_PER_DAY = 3600000
 
 const referenceDate = setHours(new Date(), 9)
 
-export function useMotionDate(): MotionValue<number> {
-  const { dayOfYear, timeOfDay } = useControls('date', {
+export function useLocalDateControls(): MotionValue<number> {
+  const { dayOfYear, timeOfDay } = useControls('local date', {
     dayOfYear: {
       value: getDayOfYear(referenceDate),
       min: 1,

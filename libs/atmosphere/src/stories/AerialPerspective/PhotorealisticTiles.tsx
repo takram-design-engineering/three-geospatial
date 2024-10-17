@@ -42,7 +42,7 @@ import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
-import { useMotionDate } from '../useMotionDate'
+import { useLocalDateControls } from '../useLocalDateControls'
 
 const location = new Geodetic(
   // Coordinates of Tokyo station.
@@ -68,7 +68,7 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const motionDate = useMotionDate()
+  const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())

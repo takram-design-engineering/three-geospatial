@@ -17,7 +17,7 @@ import { LensFlare } from '@geovanni/effects'
 import { useRendererControls } from '@geovanni/react'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
-import { useMotionDate } from '../useMotionDate'
+import { useLocalDateControls } from '../useLocalDateControls'
 
 const location = new Geodetic(radians(139.7671), radians(35.6812), 2000)
 const position = location.toECEF()
@@ -26,7 +26,7 @@ const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
 
-  const motionDate = useMotionDate()
+  const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
