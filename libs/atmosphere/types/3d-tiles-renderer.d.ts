@@ -1,7 +1,6 @@
-declare module '3d-tiles-renderer/src/three/controls/GlobeControls' {
-  import { type TilesRenderer } from '3d-tiles-renderer'
-  import { type Scene, type Camera } from 'three'
+export {}
 
+declare module '3d-tiles-renderer' {
   export class GlobeControls {
     constructor(
       scene?: Scene | null,

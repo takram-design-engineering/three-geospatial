@@ -1,4 +1,4 @@
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useEffect, useMemo } from 'react'
 
 import {
   LensFlareEffect,
@@ -16,7 +16,14 @@ export const LensFlare = forwardRef<LensFlareEffect, LensFlareProps>(
       ...lensFlareEffectOptionsDefaults,
       ...props
     }
+
     const effect = useMemo(() => new LensFlareEffect(), [])
+    useEffect(() => {
+      return () => {
+        effect.dispose()
+      }
+    }, [effect])
+
     return <primitive ref={forwardedRef} object={effect} {...others} />
   }
 )
