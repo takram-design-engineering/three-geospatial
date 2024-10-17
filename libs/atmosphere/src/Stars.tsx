@@ -43,6 +43,12 @@ export const Stars = forwardRef<StarsImpl, StarsProps>(
     }, [geometry])
 
     const material = useMemo(() => new StarsMaterial(), [])
+    useEffect(() => {
+      return () => {
+        material.dispose()
+      }
+    }, [material])
+
     return (
       <points ref={forwardedRef} {...others} frustumCulled={false}>
         <primitive object={geometry} />
