@@ -2,7 +2,6 @@ import {
   ClampToEdgeWrapping,
   Data3DTexture,
   DataTexture,
-  FileLoader,
   FloatType,
   LinearFilter,
   Loader,
@@ -10,14 +9,14 @@ import {
   type Texture,
   type TypedArray
 } from 'three'
-import invariant from 'tiny-invariant'
-import { type Constructor } from 'type-fest'
+import { type Class } from 'type-fest'
 
 import {
-  parseFloat32Array,
-  parseInt16Array,
-  parseUint16Array
-} from './typedArray'
+  Float32ArrayLoader,
+  Int16ArrayLoader,
+  Uint16ArrayLoader,
+  type TypedArrayLoader
+} from './TypedArrayLoader'
 
 export interface ImageSize {
   width: number
@@ -41,87 +40,73 @@ const defaultDataTextureParameter = {
 } satisfies DataTextureParameters
 
 export abstract class DataLoader<
-  T extends DataTexture | Data3DTexture = DataTexture | Data3DTexture
+  T extends DataTexture | Data3DTexture,
+  U extends TypedArray
 > extends Loader<T> {
-  abstract readonly Texture: Constructor<T>
+  abstract readonly Texture: Class<T>
+  abstract readonly TypedArrayLoader: Class<TypedArrayLoader<U>>
 
-  parameters?: DataTextureParameters
+  readonly parameters?: DataTextureParameters
 
-  abstract parseTypedArray(buffer: ArrayBuffer): TypedArray
-
-  load(
+  override load(
     url: string,
     onLoad: (data: T) => void,
     onProgress?: (event: ProgressEvent) => void,
     onError?: (error: unknown) => void
-  ): T {
+  ): void {
     const texture = new this.Texture()
-    const loader = new FileLoader(this.manager)
-    loader.setResponseType('arraybuffer')
+    const loader = new this.TypedArrayLoader(this.manager)
     loader.setRequestHeader(this.requestHeader)
     loader.setPath(this.path)
     loader.setWithCredentials(this.withCredentials)
     loader.load(
       url,
-      buffer => {
-        invariant(buffer instanceof ArrayBuffer)
-        let imageData: TypedArray | undefined
-        try {
-          imageData = this.parseTypedArray(buffer)
-        } catch (error) {
-          if (onError != null) {
-            onError(error)
-          } else {
-            console.error(error)
-            return
-          }
-        }
-        if (imageData != null) {
-          texture.image.data = imageData as typeof texture.image.data
-        }
+      array => {
+        texture.image.data = array as typeof texture.image.data
         Object.assign(texture, this.parameters)
         texture.needsUpdate = true
-        onLoad?.(texture)
+        onLoad(texture)
       },
       onProgress,
       onError
     )
-
-    return texture
   }
 }
 
-export class Int16Data2DLoader extends DataLoader {
-  Texture = DataTexture
-  parseTypedArray = parseInt16Array
-  parameters = {
+export class Int16Data2DLoader extends DataLoader<DataTexture, Int16Array> {
+  readonly Texture = DataTexture
+  readonly TypedArrayLoader = Int16ArrayLoader
+  readonly parameters = {
     ...defaultDataTextureParameter,
     type: FloatType
   } satisfies DataTextureParameters
 }
 
-export class Uint16Data2DLoader extends DataLoader {
-  Texture = DataTexture
-  parseTypedArray = parseUint16Array
-  parameters = {
+export class Uint16Data2DLoader extends DataLoader<DataTexture, Uint16Array> {
+  readonly Texture = DataTexture
+  readonly TypedArrayLoader = Uint16ArrayLoader
+  readonly parameters = {
     ...defaultDataTextureParameter,
     type: FloatType
   } satisfies DataTextureParameters
 }
 
-export class Float32Data2DLoader extends DataLoader {
-  Texture = DataTexture
-  parseTypedArray = parseFloat32Array
-  parameters = {
+export class Float32Data2DLoader extends DataLoader<DataTexture, Float32Array> {
+  readonly Texture = DataTexture
+  readonly TypedArrayLoader = Float32ArrayLoader
+  readonly parameters = {
     ...defaultDataTextureParameter,
     type: FloatType
   } satisfies DataTextureParameters
 }
 
-export class Float32Data3DLoader extends DataLoader {
-  Texture = Data3DTexture
-  parseTypedArray = parseFloat32Array
-  parameters = {
+export class Float32Data3DLoader extends DataLoader<
+  Data3DTexture,
+  Float32Array
+> {
+  readonly Texture = Data3DTexture
+  readonly TypedArrayLoader = Float32ArrayLoader
+  readonly parameters = {
     ...defaultDataTextureParameter,
     type: FloatType
   } satisfies DataTextureParameters

@@ -656,3 +656,49 @@ vec3 GetSunAndSkyIrradiance(
     sky_irradiance
   );
 }
+
+// Additional decomposed functions
+
+vec3 GetSkyIrradiance(
+  const sampler2D u_irradiance_texture,
+  const vec3 point,
+  const vec3 normal,
+  const vec3 sun_direction
+) {
+  float r = length(point);
+  float mu_s = dot(point, sun_direction) / r;
+  return GetIrradiance(u_irradiance_texture, r, mu_s) *
+  (1.0 + dot(normal, point) / r) *
+  0.5;
+}
+
+vec3 GetSkyTransmittance(
+  const sampler2D u_transmittance_texture,
+  vec3 camera,
+  const vec3 view_ray
+) {
+  float r = length(camera);
+  float rmu = dot(camera, view_ray);
+  float distance_to_top_atmosphere_boundary =
+    -rmu - sqrt(rmu * rmu - r * r + u_top_radius * u_top_radius);
+  if (distance_to_top_atmosphere_boundary > 0.0) {
+    camera = camera + view_ray * distance_to_top_atmosphere_boundary;
+    r = u_top_radius;
+    rmu += distance_to_top_atmosphere_boundary;
+  } else if (r > u_top_radius) {
+    return vec3(1.0);
+  }
+  float mu = rmu / r;
+  bool ray_r_mu_intersects_ground = RayIntersectsGround(r, mu);
+  return ray_r_mu_intersects_ground
+    ? vec3(0.0)
+    : GetTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r, mu);
+}
+
+vec3 GetSkyIrradiance(vec3 p, vec3 normal, vec3 sun_direction) {
+  return GetSkyIrradiance(u_irradiance_texture, p, normal, sun_direction);
+}
+
+vec3 GetSkyTransmittance(vec3 camera, vec3 view_ray) {
+  return GetSkyTransmittance(u_transmittance_texture, camera, view_ray);
+}
