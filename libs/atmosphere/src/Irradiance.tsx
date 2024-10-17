@@ -24,7 +24,7 @@ export const Irradiance = forwardRef<IrradianceImpl, IrradianceProps>(
       ...props
     }
 
-    // TODO: Make the path to the textures configurable.
+    // TODO: Make the texture paths configurable.
     const gl = useThree(({ gl }) => gl)
     const useHalfFloat = useMemo(
       () => gl.getContext().getExtension('OES_texture_float_linear') == null,

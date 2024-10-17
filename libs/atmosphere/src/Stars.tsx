@@ -1,10 +1,8 @@
-import { useThree, type PointsProps } from '@react-three/fiber'
-import axios from 'axios'
+import { useLoader, useThree, type PointsProps } from '@react-three/fiber'
 import { forwardRef, useEffect, useMemo } from 'react'
-import { suspend } from 'suspend-react'
 import { type Points, type Vector3 } from 'three'
 
-import { type Ellipsoid } from '@geovanni/core'
+import { ArrayBufferLoader, type Ellipsoid } from '@geovanni/core'
 
 import { StarsGeometry } from './StarsGeometry'
 import { StarsMaterial, starsMaterialParametersDefaults } from './StarsMaterial'
@@ -27,7 +25,7 @@ export const Stars = forwardRef<StarsImpl, StarsProps>(
       ...props
     }
 
-    // TODO: Make the path to the textures configurable.
+    // TODO: Make the texture paths configurable.
     const gl = useThree(({ gl }) => gl)
     const useHalfFloat = useMemo(
       () => gl.getContext().getExtension('OES_texture_float_linear') == null,
@@ -35,14 +33,8 @@ export const Stars = forwardRef<StarsImpl, StarsProps>(
     )
     const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
 
-    // TODO: Replace with a more advanced cache.
-    const data = suspend(async () => {
-      const response = await axios<ArrayBuffer>('/stars.bin', {
-        responseType: 'arraybuffer'
-      })
-      return response.data
-    }, [Stars])
-
+    // TODO: Make the data path configurable.
+    const data = useLoader(ArrayBufferLoader, '/stars.bin')
     const geometry = useMemo(() => new StarsGeometry(data), [data])
     useEffect(() => {
       return () => {
