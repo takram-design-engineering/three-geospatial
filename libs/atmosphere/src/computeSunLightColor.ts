@@ -11,6 +11,7 @@ export function computeSunLightColor(
   camera: Camera,
   result = new Color()
 ): Color {
+  // TODO: Consider partial visibility when the sun is at the horizon.
   const worldPosition = camera.getWorldPosition(vectorScratch)
   const transmittance = computeSkyTransmittance(
     transmittanceTexture,

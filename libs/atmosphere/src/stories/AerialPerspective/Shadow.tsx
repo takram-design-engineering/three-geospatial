@@ -69,8 +69,7 @@ const Scene: FC = () => {
 
   const { normal, depth } = useControls('effect', {
     depth: false,
-    normal: false,
-    shadow: true
+    normal: false
   })
 
   const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
