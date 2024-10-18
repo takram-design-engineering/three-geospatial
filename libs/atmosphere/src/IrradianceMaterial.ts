@@ -29,8 +29,8 @@ export interface IrradianceMaterialParameters
 }
 
 export const irradianceMaterialParametersDefaults = {
-  sun: false,
-  ...atmosphereMaterialParametersBaseDefaults
+  ...atmosphereMaterialParametersBaseDefaults,
+  sun: false
 } satisfies IrradianceMaterialParameters
 
 export class IrradianceMaterial extends AtmosphereMaterialBase {

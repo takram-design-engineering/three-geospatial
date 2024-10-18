@@ -10,21 +10,19 @@ void main() {
   vec3 worldPosition = vWorldPosition - vHeightAdjustment;
   vec3 viewDirection = normalize(vWorldDirection);
 
-  vec3 skyIrradiance = GetSkyIrradiance(
+  vec3 irradiance = GetSkyIrradiance(
     worldPosition,
     viewDirection,
     sunDirection
   );
-  vec3 skyTransmittance = GetSkyTransmittance(worldPosition, viewDirection);
-  vec3 radiance = skyIrradiance * skyTransmittance;
 
-  #ifdef SUN
-  float viewDotSun = dot(viewDirection, sunDirection);
-  if (viewDotSun > cos(u_sun_angular_radius)) {
-    vec3 sunTransmittance = GetSkyTransmittance(worldPosition, sunDirection);
-    radiance += GetSolarRadiance() * sunTransmittance;
+  // This is a crude approximation, as sky irradiance is very smooth.
+  vec3 radiance = irradiance / PI;
+  float r = length(worldPosition);
+  float rmu = dot(worldPosition, viewDirection);
+  float mu = rmu / r;
+  if (RayIntersectsGround(r, mu)) {
+    radiance *= smoothstep(0.65, 0.0, -mu);
   }
-  #endif
-
   outputColor = vec4(radiance, 1.0);
 }
