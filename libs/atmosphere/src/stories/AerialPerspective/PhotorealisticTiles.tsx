@@ -62,11 +62,19 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { atmosphere, normal, depth } = useControls('effects', {
-    atmosphere: true,
+  const { normal, depth } = useControls('effects', {
     depth: false,
     normal: false
   })
+
+  const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
+    useControls('aerial perspective', {
+      enable: true,
+      sunIrradiance: true,
+      skyIrradiance: true,
+      transmittance: true,
+      inscatter: true
+    })
 
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
@@ -164,11 +172,14 @@ const Scene: FC = () => {
         normalPass
         multisampling={0}
       >
-        {atmosphere && !normal && !depth && (
+        {enable && !normal && !depth && (
           <>
             <AerialPerspective
               ref={aerialPerspectiveRef}
-              skyIrradiance={false}
+              sunIrradiance={sunIrradiance}
+              skyIrradiance={skyIrradiance}
+              transmittance={transmittance}
+              inscatter={inscatter}
               inputIntensity={0.08}
             />
             <LensFlare />
@@ -185,7 +196,16 @@ const Scene: FC = () => {
         )}
       </EffectComposer>
     ),
-    [atmosphere, normal, depth, lut]
+    [
+      enable,
+      sunIrradiance,
+      skyIrradiance,
+      transmittance,
+      inscatter,
+      normal,
+      depth,
+      lut
+    ]
   )
 
   return (

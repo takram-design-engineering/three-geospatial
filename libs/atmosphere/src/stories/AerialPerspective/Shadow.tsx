@@ -148,7 +148,7 @@ const Scene: FC = () => {
 
   const effectComposer = useMemo(
     () => (
-      <EffectComposer normalPass multisampling={0}>
+      <EffectComposer key={Math.random()} normalPass multisampling={0}>
         {enable && !normal && !depth && (
           <>
             <AerialPerspective
