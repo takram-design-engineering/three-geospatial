@@ -67,12 +67,20 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10, shadow: true })
   const lut = useColorGradingControls()
 
-  const { atmosphere, normal, depth } = useControls('effect', {
-    atmosphere: true,
+  const { normal, depth } = useControls('effect', {
     depth: false,
     normal: false,
     shadow: true
   })
+
+  const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
+    useControls('aerial perspective', {
+      enable: true,
+      sunIrradiance: true,
+      skyIrradiance: true,
+      transmittance: true,
+      inscatter: true
+    })
 
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
@@ -107,6 +115,12 @@ const Scene: FC = () => {
     terrainMaterial.envMap = envMap?.fbo.texture ?? null
   }, [material, terrainMaterial, envMap])
 
+  useEffect(() => {
+    const intensity = skyIrradiance ? 1 : 0
+    material.envMapIntensity = intensity
+    terrainMaterial.envMapIntensity = intensity
+  }, [material, terrainMaterial, skyIrradiance])
+
   useFrame(() => {
     const date = new Date(motionDate.get())
     getSunDirectionECEF(date, sunDirectionRef.current)
@@ -135,12 +149,14 @@ const Scene: FC = () => {
   const effectComposer = useMemo(
     () => (
       <EffectComposer normalPass multisampling={0}>
-        {atmosphere && !normal && !depth && (
+        {enable && !normal && !depth && (
           <>
             <AerialPerspective
               ref={aerialPerspectiveRef}
               skyIrradiance={false}
               sunIrradiance={false}
+              transmittance={transmittance}
+              inscatter={inscatter}
             />
             <LensFlare />
           </>
@@ -156,7 +172,7 @@ const Scene: FC = () => {
         )}
       </EffectComposer>
     ),
-    [atmosphere, normal, depth, lut]
+    [enable, transmittance, inscatter, normal, depth, lut]
   )
 
   const textures = usePrecomputedTextures('/', true)
@@ -178,7 +194,7 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} />
       <Stars ref={starsRef} />
-      <CSM.DirectionalLight />
+      <CSM.DirectionalLight intensity={sunIrradiance ? 1 : 0} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         material={terrainMaterial}
@@ -193,7 +209,7 @@ const Scene: FC = () => {
         />
         <primitive object={material}>
           <RenderCubeTexture ref={setEnvMap} position={position}>
-            <Irradiance ref={envMapRef} sunAngularRadius={0.1} />
+            <Irradiance ref={envMapRef} />
           </RenderCubeTexture>
         </primitive>
       </LocalTangentFrame>

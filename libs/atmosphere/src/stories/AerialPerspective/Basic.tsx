@@ -11,7 +11,7 @@ import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
-import { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
+import { Color, Matrix4, MeshBasicMaterial, Vector3 } from 'three'
 
 import {
   Ellipsoid,
@@ -57,17 +57,26 @@ const tiles = tile
   .flatMap(tile => tile.getChildren())
   .flatMap(tile => tile.getChildren())
 
-const terrainMaterial = new MeshStandardMaterial({ color: 'gray' })
+const material = new MeshBasicMaterial({ color: new Color(0.4, 0.4, 0.4) })
+const terrainMaterial = new MeshBasicMaterial({ color: new Color(0.1, 0.1, 0.1) })
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { atmosphere, normal, depth } = useControls('effects', {
-    atmosphere: true,
+  const { normal, depth } = useControls('effects', {
     depth: false,
     normal: false
   })
+
+  const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
+    useControls('aerial perspective', {
+      enable: true,
+      sunIrradiance: true,
+      skyIrradiance: true,
+      transmittance: true,
+      inscatter: true
+    })
 
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
@@ -98,9 +107,15 @@ const Scene: FC = () => {
   const effectComposer = useMemo(
     () => (
       <EffectComposer key={Math.random()} normalPass multisampling={0}>
-        {atmosphere && !normal && !depth && (
+        {enable && !normal && !depth && (
           <>
-            <AerialPerspective ref={aerialPerspectiveRef} />
+            <AerialPerspective
+              ref={aerialPerspectiveRef}
+              sunIrradiance={sunIrradiance}
+              skyIrradiance={skyIrradiance}
+              transmittance={transmittance}
+              inscatter={inscatter}
+            />
             <LensFlare />
           </>
         )}
@@ -115,7 +130,16 @@ const Scene: FC = () => {
         )}
       </EffectComposer>
     ),
-    [atmosphere, normal, depth, lut]
+    [
+      enable,
+      sunIrradiance,
+      skyIrradiance,
+      transmittance,
+      inscatter,
+      normal,
+      depth,
+      lut
+    ]
   )
 
   return (
@@ -126,17 +150,17 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} />
       <Stars ref={starsRef} />
-      <ambientLight intensity={2} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
+        material={terrainMaterial}
         receiveShadow
-      >
-        <meshStandardMaterial color='gray' />
-      </Sphere>
+      />
       <LocalTangentFrame location={location}>
-        <TorusKnot args={[200, 60, 256, 64]} position={[0, 0, 20]}>
-          <meshStandardMaterial color='white' />
-        </TorusKnot>
+        <TorusKnot
+          args={[200, 60, 256, 64]}
+          position={[0, 0, 20]}
+          material={material}
+        />
       </LocalTangentFrame>
       {tiles.map(tile => (
         <Suspense key={`${tile.x}:${tile.y}:${tile.z}`}>
