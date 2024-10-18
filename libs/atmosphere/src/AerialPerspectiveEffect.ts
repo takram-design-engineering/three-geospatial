@@ -52,7 +52,7 @@ export interface AerialPerspectiveEffectOptions {
   skyIrradiance?: boolean
   transmittance?: boolean
   inscatter?: boolean
-  inputIntensity?: number
+  albedoScale?: number
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -64,7 +64,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   skyIrradiance: true,
   transmittance: true,
   inscatter: true,
-  inputIntensity: 1
+  albedoScale: 1
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
@@ -86,7 +86,7 @@ export class AerialPerspectiveEffect extends Effect {
       skyIrradiance,
       transmittance,
       inscatter,
-      inputIntensity
+      albedoScale
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
     super(
@@ -127,7 +127,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['ellipsoidRadii', new Uniform(new Vector3().copy(ellipsoid.radii))],
           ['geodeticSurface', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(new Vector3())],
-          ['inputIntensity', new Uniform(inputIntensity)]
+          ['albedoScale', new Uniform(albedoScale)]
         ]),
         // prettier-ignore
         defines: new Map<string, string>([
@@ -269,12 +269,12 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('sunDirection')!.value.copy(value)
   }
 
-  get inputIntensity(): number {
-    return this.uniforms.get('inputIntensity')!.value
+  get albedoScale(): number {
+    return this.uniforms.get('albedoScale')!.value
   }
 
-  set inputIntensity(value: number) {
-    this.uniforms.get('inputIntensity')!.value = value
+  set albedoScale(value: number) {
+    this.uniforms.get('albedoScale')!.value = value
   }
 
   get photometric(): boolean {

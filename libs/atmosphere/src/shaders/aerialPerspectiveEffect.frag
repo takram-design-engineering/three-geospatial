@@ -4,7 +4,7 @@ uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform vec3 sunDirection;
-uniform float inputIntensity;
+uniform float albedoScale;
 
 varying vec3 vWorldPosition;
 varying vec3 vHeightAdjustment;
@@ -65,7 +65,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
   // defined, regard the inputColor as radiance at the texel.
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  vec3 albedo = inputColor.rgb * inputIntensity * RECIPROCAL_PI;
+  vec3 albedo = inputColor.rgb * albedoScale * RECIPROCAL_PI;
   vec3 skyIrrIllum;
   vec3 sunIrrIllum = GetSunAndSkyIrrIllum(
     worldPosition - vHeightAdjustment,
