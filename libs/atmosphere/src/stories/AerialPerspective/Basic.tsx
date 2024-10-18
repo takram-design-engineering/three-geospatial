@@ -11,7 +11,7 @@ import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
-import { Color, Matrix4, MeshBasicMaterial, Vector3 } from 'three'
+import { Matrix4, MeshBasicMaterial, Vector3 } from 'three'
 
 import {
   Ellipsoid,
@@ -57,8 +57,8 @@ const tiles = tile
   .flatMap(tile => tile.getChildren())
   .flatMap(tile => tile.getChildren())
 
-const material = new MeshBasicMaterial({ color: new Color(0.4, 0.4, 0.4) })
-const terrainMaterial = new MeshBasicMaterial({ color: new Color(0.1, 0.1, 0.1) })
+const material = new MeshBasicMaterial({ color: 'white' })
+const terrainMaterial = new MeshBasicMaterial({ color: 'gray' })
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })

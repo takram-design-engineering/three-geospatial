@@ -60,9 +60,12 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
-  vec3 radiance = inputColor.rgb * inputIntensity;
+  vec3 radiance = inputColor.rgb;
 
+  // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
+  // defined, regard the inputColor as radiance at the texel.
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+  vec3 albedo = inputColor.rgb * inputIntensity * RECIPROCAL_PI;
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(
     worldPosition - vHeightAdjustment,
@@ -71,11 +74,11 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     skyIrradiance
   );
   #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
-  radiance = radiance * (sunIrradiance + skyIrradiance);
+  radiance = albedo * (sunIrradiance + skyIrradiance);
   #elif defined(SUN_IRRADIANCE)
-  radiance = radiance * sunIrradiance;
+  radiance = albedo * sunIrradiance;
   #elif defined(SKY_IRRADIANCE)
-  radiance = radiance * skyIrradiance + radiance;
+  radiance = albedo * skyIrradiance;
   #endif
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
@@ -88,11 +91,10 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     sunDirection,
     transmittance
   );
-  #if defined(TRANSMITTANCE) && defined(INSCATTER)
-  radiance = radiance * transmittance + inscatter;
-  #elif defined(TRANSMITTANCE)
+  #if defined(TRANSMITTANCE)
   radiance = radiance * transmittance;
-  #elif defined(INSCATTER)
+  #endif
+  #if defined(INSCATTER)
   radiance = radiance + inscatter;
   #endif
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
