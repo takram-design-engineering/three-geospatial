@@ -32,13 +32,15 @@ export interface LensFlareEffectOptions {
   height?: number
   resolutionX?: number
   resolutionY?: number
+  intensity?: number
 }
 
 export const lensFlareEffectOptionsDefaults = {
   blendFunction: BlendFunction.NORMAL,
   resolutionScale: 0.5,
   width: Resolution.AUTO_SIZE,
-  height: Resolution.AUTO_SIZE
+  height: Resolution.AUTO_SIZE,
+  intensity: 0.005
 } satisfies LensFlareEffectOptions
 
 // Reference: https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/
@@ -61,16 +63,18 @@ export class LensFlareEffect extends Effect {
       width,
       height,
       resolutionX = width,
-      resolutionY = height
+      resolutionY = height,
+      intensity
     } = {
       ...lensFlareEffectOptionsDefaults,
       ...options
     }
     super('LensFlareEffect', fragmentShader, {
       blendFunction,
-      uniforms: new Map([
+      uniforms: new Map<string, Uniform>([
         ['bloomBuffer', new Uniform(null)],
-        ['featuresBuffer', new Uniform(null)]
+        ['featuresBuffer', new Uniform(null)],
+        ['intensity', new Uniform(1)]
       ])
     })
 
@@ -114,6 +118,8 @@ export class LensFlareEffect extends Effect {
       'change' as keyof Event,
       this.onResolutionChange
     )
+
+    this.intensity = intensity
   }
 
   private readonly onResolutionChange = (): void => {
@@ -151,5 +157,29 @@ export class LensFlareEffect extends Effect {
     this.blurPass.setSize(resolution.width, resolution.height)
     this.preBlurPass.setSize(resolution.width, resolution.height)
     this.featuresMaterial.setSize(resolution.width, resolution.height)
+  }
+
+  get intensity(): number {
+    return this.uniforms.get('intensity')!.value
+  }
+
+  set intensity(value: number) {
+    this.uniforms.get('intensity')!.value = value
+  }
+
+  get thresholdLevel(): number {
+    return this.thresholdMaterial.thresholdLevel
+  }
+
+  set thresholdLevel(value: number) {
+    this.thresholdMaterial.thresholdLevel = value
+  }
+
+  get thresholdRange(): number {
+    return this.thresholdMaterial.thresholdRange
+  }
+
+  set thresholdRange(value: number) {
+    this.thresholdMaterial.thresholdRange = value
   }
 }

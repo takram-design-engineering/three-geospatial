@@ -155,6 +155,7 @@ const Scene: FC = () => {
         <GizmoViewport />
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
+      <Stars ref={starsRef} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         material={terrainMaterial}

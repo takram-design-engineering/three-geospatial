@@ -18,7 +18,6 @@ in vec2 vRowUv6;
 in vec2 vRowUv7;
 in vec2 vRowUv8;
 in vec2 vRowUv9;
-in float vLogBase;
 
 float clampToBorder(const vec2 uv) {
   return float(uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0);
@@ -70,5 +69,5 @@ void main() {
   float scale = saturate(
     smoothstep(thresholdLevel, thresholdLevel + thresholdRange, l)
   );
-  gl_FragColor = vec4(log(color * scale + 1.0) / vLogBase, 1.0);
+  gl_FragColor = vec4(color * scale, 1.0);
 }

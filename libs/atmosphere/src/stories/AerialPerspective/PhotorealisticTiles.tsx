@@ -216,6 +216,7 @@ const Scene: FC = () => {
   return (
     <>
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
+      <Stars ref={starsRef} />
       <primitive object={tiles.group} />
       {effectComposer}
     </>
