@@ -65,7 +65,8 @@ const Scene: FC = () => {
   })
   const lut = useColorGradingControls()
 
-  const { normal, depth } = useControls('effects', {
+  const { lensFlare, normal, depth } = useControls('effects', {
+    lensFlare: true,
     depth: false,
     normal: false
   })
@@ -176,19 +177,17 @@ const Scene: FC = () => {
         multisampling={0}
       >
         {enable && !normal && !depth && (
-          <>
-            <AerialPerspective
-              ref={aerialPerspectiveRef}
-              photometric={photometric}
-              sunIrradiance={sunIrradiance}
-              skyIrradiance={skyIrradiance}
-              transmittance={transmittance}
-              inscatter={inscatter}
-              inputIntensity={0.08}
-            />
-            <LensFlare />
-          </>
+          <AerialPerspective
+            ref={aerialPerspectiveRef}
+            photometric={photometric}
+            sunIrradiance={sunIrradiance}
+            skyIrradiance={skyIrradiance}
+            transmittance={transmittance}
+            inscatter={inscatter}
+            inputIntensity={0.08}
+          />
         )}
+        {lensFlare && <LensFlare />}
         {depth && <Depth useTurbo />}
         {normal && <Normal />}
         {!normal && !depth && (
@@ -207,6 +206,7 @@ const Scene: FC = () => {
       skyIrradiance,
       transmittance,
       inscatter,
+      lensFlare,
       normal,
       depth,
       lut
@@ -216,7 +216,6 @@ const Scene: FC = () => {
   return (
     <>
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
-      <Stars ref={starsRef} />
       <primitive object={tiles.group} />
       {effectComposer}
     </>

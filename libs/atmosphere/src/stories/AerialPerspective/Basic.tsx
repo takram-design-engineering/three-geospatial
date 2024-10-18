@@ -68,7 +68,8 @@ const Scene: FC = () => {
   })
   const lut = useColorGradingControls()
 
-  const { normal, depth } = useControls('effects', {
+  const { lensFlare, normal, depth } = useControls('effects', {
+    lensFlare: true,
     depth: false,
     normal: false
   })
@@ -112,18 +113,16 @@ const Scene: FC = () => {
     () => (
       <EffectComposer key={Math.random()} normalPass multisampling={0}>
         {enable && !normal && !depth && (
-          <>
-            <AerialPerspective
-              ref={aerialPerspectiveRef}
-              photometric={photometric}
-              sunIrradiance={sunIrradiance}
-              skyIrradiance={skyIrradiance}
-              transmittance={transmittance}
-              inscatter={inscatter}
-            />
-            <LensFlare />
-          </>
+          <AerialPerspective
+            ref={aerialPerspectiveRef}
+            photometric={photometric}
+            sunIrradiance={sunIrradiance}
+            skyIrradiance={skyIrradiance}
+            transmittance={transmittance}
+            inscatter={inscatter}
+          />
         )}
+        {lensFlare && <LensFlare />}
         {depth && <Depth useTurbo />}
         {normal && <Normal />}
         {!normal && !depth && (
@@ -142,6 +141,7 @@ const Scene: FC = () => {
       skyIrradiance,
       transmittance,
       inscatter,
+      lensFlare,
       normal,
       depth,
       lut
@@ -155,7 +155,6 @@ const Scene: FC = () => {
         <GizmoViewport />
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
-      <Stars ref={starsRef} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         material={terrainMaterial}

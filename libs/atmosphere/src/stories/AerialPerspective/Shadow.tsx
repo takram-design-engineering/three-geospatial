@@ -72,19 +72,25 @@ const Scene: FC = () => {
   })
   const lut = useColorGradingControls()
 
-  const { normal, depth } = useControls('effect', {
+  const { lensFlare, normal, depth } = useControls('effects', {
+    lensFlare: true,
     depth: false,
     normal: false
   })
 
-  const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
-    useControls('aerial perspective', {
+  const { sun, sky } = useControls('lights', {
+    sun: true,
+    sky: true
+  })
+
+  const { enable, transmittance, inscatter } = useControls(
+    'aerial perspective',
+    {
       enable: true,
-      sunIrradiance: true,
-      skyIrradiance: true,
       transmittance: true,
       inscatter: true
-    })
+    }
+  )
 
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
@@ -120,10 +126,10 @@ const Scene: FC = () => {
   }, [material, terrainMaterial, envMap])
 
   useEffect(() => {
-    const intensity = skyIrradiance ? 1 : 0
+    const intensity = sky ? 1 : 0
     material.envMapIntensity = intensity
     terrainMaterial.envMapIntensity = intensity
-  }, [material, terrainMaterial, skyIrradiance])
+  }, [material, terrainMaterial, sky])
 
   useFrame(() => {
     const date = new Date(motionDate.get())
@@ -154,18 +160,16 @@ const Scene: FC = () => {
     () => (
       <EffectComposer key={Math.random()} normalPass multisampling={0}>
         {enable && !normal && !depth && (
-          <>
-            <AerialPerspective
-              ref={aerialPerspectiveRef}
-              photometric={photometric}
-              skyIrradiance={false}
-              sunIrradiance={false}
-              transmittance={transmittance}
-              inscatter={inscatter}
-            />
-            <LensFlare />
-          </>
+          <AerialPerspective
+            ref={aerialPerspectiveRef}
+            photometric={photometric}
+            skyIrradiance={false}
+            sunIrradiance={false}
+            transmittance={transmittance}
+            inscatter={inscatter}
+          />
         )}
+        {lensFlare && <LensFlare />}
         {depth && <Depth useTurbo />}
         {normal && <Normal />}
         {!normal && !depth && (
@@ -177,7 +181,16 @@ const Scene: FC = () => {
         )}
       </EffectComposer>
     ),
-    [photometric, enable, transmittance, inscatter, normal, depth, lut]
+    [
+      photometric,
+      enable,
+      transmittance,
+      inscatter,
+      lensFlare,
+      normal,
+      depth,
+      lut
+    ]
   )
 
   const textures = usePrecomputedTextures('/', true)
@@ -200,7 +213,7 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
-      <CSM.DirectionalLight intensity={sunIrradiance ? 1 : 0} />
+      <CSM.DirectionalLight intensity={sun ? 1 : 0} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         material={terrainMaterial}
