@@ -2,6 +2,7 @@ import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
+import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
@@ -24,8 +25,9 @@ const position = location.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const Scene: FC = () => {
-  const { photometric } = useRendererControls({
-    exposure: 10,
+  useRendererControls({ exposure: 10 })
+
+  const { photometric } = useControls('atmosphere', {
     photometric: false
   })
 

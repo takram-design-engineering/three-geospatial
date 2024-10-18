@@ -59,16 +59,17 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Scene: FC = () => {
-  const { photometric } = useRendererControls({
-    photometric: true,
-    exposure: 10
-  })
+  useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
   const { lensFlare, normal, depth } = useControls('effects', {
     lensFlare: true,
     depth: false,
     normal: false
+  })
+
+  const { photometric } = useControls('atmosphere', {
+    photometric: true
   })
 
   const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =

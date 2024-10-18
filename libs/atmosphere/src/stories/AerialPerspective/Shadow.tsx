@@ -65,17 +65,17 @@ const tiles = tile
   .flatMap(tile => tile.getChildren())
 
 const Scene: FC = () => {
-  const { photometric } = useRendererControls({
-    exposure: 10,
-    photometric: true,
-    shadow: true
-  })
+  useRendererControls({ exposure: 10, shadow: true })
   const lut = useColorGradingControls()
 
   const { lensFlare, normal, depth } = useControls('effects', {
     lensFlare: true,
     depth: false,
     normal: false
+  })
+
+  const { photometric } = useControls('atmosphere', {
+    photometric: true
   })
 
   const { sun, sky } = useControls('lights', {

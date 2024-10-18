@@ -62,16 +62,17 @@ const material = new MeshBasicMaterial({ color: 'white' })
 const terrainMaterial = new MeshBasicMaterial({ color: 'gray' })
 
 const Scene: FC = () => {
-  const { photometric } = useRendererControls({
-    photometric: true,
-    exposure: 10
-  })
+  useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
   const { lensFlare, normal, depth } = useControls('effects', {
     lensFlare: true,
     depth: false,
     normal: false
+  })
+
+  const { photometric } = useControls('atmosphere', {
+    photometric: true
   })
 
   const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
