@@ -27,6 +27,7 @@ import {
 import { CSM, useCSM } from '@geovanni/csm'
 import {
   Depth,
+  Dithering,
   EffectComposer,
   LensFlare,
   Normal,
@@ -177,6 +178,7 @@ const Scene: FC = () => {
             <ToneMapping mode={ToneMappingMode.AGX} />
             {lut != null && lut}
             <SMAA />
+            <Dithering />
           </>
         )}
       </EffectComposer>

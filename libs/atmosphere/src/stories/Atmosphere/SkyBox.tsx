@@ -21,7 +21,7 @@ import {
   getSunDirectionECEF,
   radians
 } from '@geovanni/core'
-import { LensFlare } from '@geovanni/effects'
+import { Dithering, LensFlare } from '@geovanni/effects'
 import { LocalTangentFrame } from '@geovanni/react'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
@@ -70,6 +70,7 @@ const Scene: FC = () => {
       <EffectComposer key={Math.random()} multisampling={0}>
         <LensFlare />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <Dithering />
       </EffectComposer>
     ),
     []

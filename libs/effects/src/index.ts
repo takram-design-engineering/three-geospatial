@@ -1,5 +1,7 @@
 export * from './Depth'
 export * from './DepthEffect'
+export * from './Dithering'
+export * from './DitheringEffect'
 export * from './EffectComposer'
 export * from './LensFlare'
 export * from './LensFlareEffect'
