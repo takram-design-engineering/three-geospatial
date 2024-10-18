@@ -2,8 +2,8 @@ import { useFrame } from '@react-three/fiber'
 import {
   addMilliseconds,
   getDayOfYear,
+  set,
   setDayOfYear,
-  setHours,
   startOfDay
 } from 'date-fns'
 import {
@@ -16,7 +16,12 @@ import { useControls } from 'leva'
 
 const MILLISECONDS_PER_DAY = 3600000
 
-const referenceDate = setHours(new Date(), 9)
+const referenceDate = set(new Date(), {
+  hours: 0,
+  minutes: 0,
+  seconds: 0,
+  milliseconds: 0
+})
 
 export function useAnimationDate(): MotionValue<number> {
   const { dayOfYear } = useControls('date', {
