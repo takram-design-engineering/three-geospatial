@@ -29,7 +29,7 @@ import {
   LensFlare,
   Normal,
   useColorGradingControls
-} from '@geovanni/effects'
+} from '@geovanni/effects/react'
 import { LocalTangentFrame } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 

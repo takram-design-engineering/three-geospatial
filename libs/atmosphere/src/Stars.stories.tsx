@@ -13,7 +13,7 @@ import {
   convertXYZToLinearSRGBChromaticity,
   getECIToECEFRotationMatrix
 } from '@geovanni/core'
-import { EffectComposer } from '@geovanni/effects'
+import { EffectComposer } from '@geovanni/effects/react'
 
 import { Stars, type StarsImpl } from './Stars'
 import { useLocalDateControls } from './stories/useLocalDateControls'

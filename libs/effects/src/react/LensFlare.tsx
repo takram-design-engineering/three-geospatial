@@ -4,7 +4,7 @@ import {
   LensFlareEffect,
   lensFlareEffectOptionsDefaults,
   type LensFlareEffectOptions
-} from './LensFlareEffect'
+} from '../LensFlareEffect'
 import { type EffectProps } from './types'
 
 export interface LensFlareProps

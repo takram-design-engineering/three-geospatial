@@ -10,7 +10,7 @@ import { Vector3 } from 'three'
 
 import { AerialPerspective, Atmosphere } from '@geovanni/atmosphere'
 import { Geodetic, getSunDirectionECEF, radians } from '@geovanni/core'
-import { EffectComposer, SSAO } from '@geovanni/effects'
+import { EffectComposer, SSAO } from '@geovanni/effects/react'
 import { LocalTangentFrame } from '@geovanni/react'
 
 import { SunLight } from './components/SunLight'

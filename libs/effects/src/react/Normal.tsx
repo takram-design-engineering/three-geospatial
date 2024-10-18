@@ -5,7 +5,7 @@ import {
   NormalEffect,
   normalEffectOptionsDefaults,
   type NormalEffectOptions
-} from './NormalEffect'
+} from '../NormalEffect'
 import { type EffectProps } from './types'
 
 export interface NormalProps

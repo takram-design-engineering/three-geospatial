@@ -36,7 +36,7 @@ import {
   LensFlare,
   Normal,
   useColorGradingControls
-} from '@geovanni/effects'
+} from '@geovanni/effects/react'
 
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
