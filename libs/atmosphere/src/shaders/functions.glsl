@@ -73,6 +73,17 @@ const int IRRADIANCE_TEXTURE_HEIGHT = 16;
 #define PI (3.14159265358979323846)
 #endif
 
+const vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE = vec3(
+  114974.916437,
+  71305.954816,
+  65310.548555
+);
+const vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE = vec3(
+  98242.786222,
+  69954.398112,
+  66475.012354
+);
+
 float ClampCosine(float mu) {
   return clamp(mu, float(-1.0), float(1.0));
 }
@@ -657,20 +668,71 @@ vec3 GetSunAndSkyIrradiance(
   );
 }
 
-// Additional decomposed functions
-
-vec3 GetSkyIrradiance(
-  const sampler2D u_irradiance_texture,
-  const vec3 point,
-  const vec3 normal,
-  const vec3 sun_direction
-) {
-  float r = length(point);
-  float mu_s = dot(point, sun_direction) / r;
-  return GetIrradiance(u_irradiance_texture, r, mu_s) *
-  (1.0 + dot(normal, point) / r) *
-  0.5;
+vec3 GetSolarLuminance() {
+  return u_solar_irradiance /
+  (PI * u_sun_angular_radius * u_sun_angular_radius) *
+  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
 }
+
+vec3 GetSkyLuminance(
+  vec3 camera,
+  vec3 view_ray,
+  float shadow_length,
+  vec3 sun_direction,
+  out vec3 transmittance
+) {
+  return GetSkyRadiance(
+    u_transmittance_texture,
+    u_scattering_texture,
+    u_single_mie_scattering_texture,
+    camera,
+    view_ray,
+    shadow_length,
+    sun_direction,
+    transmittance
+  ) *
+  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+}
+
+vec3 GetSkyLuminanceToPoint(
+  vec3 camera,
+  vec3 point,
+  float shadow_length,
+  vec3 sun_direction,
+  out vec3 transmittance
+) {
+  return GetSkyRadianceToPoint(
+    u_transmittance_texture,
+    u_scattering_texture,
+    u_single_mie_scattering_texture,
+    camera,
+    point,
+    shadow_length,
+    sun_direction,
+    transmittance
+  ) *
+  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+}
+
+vec3 GetSunAndSkyIlluminance(
+  vec3 p,
+  vec3 normal,
+  vec3 sun_direction,
+  out vec3 sky_irradiance
+) {
+  vec3 sun_irradiance = GetSunAndSkyIrradiance(
+    u_transmittance_texture,
+    u_irradiance_texture,
+    p,
+    normal,
+    sun_direction,
+    sky_irradiance
+  );
+  sky_irradiance *= SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+  return sun_irradiance * SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+}
+
+// Additional decomposed functions
 
 vec3 GetSkyTransmittance(
   const sampler2D u_transmittance_texture,
@@ -695,10 +757,28 @@ vec3 GetSkyTransmittance(
     : GetTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r, mu);
 }
 
-vec3 GetSkyIrradiance(vec3 p, vec3 normal, vec3 sun_direction) {
-  return GetSkyIrradiance(u_irradiance_texture, p, normal, sun_direction);
+vec3 GetSkyIrradiance(
+  const sampler2D u_irradiance_texture,
+  const vec3 point,
+  const vec3 normal,
+  const vec3 sun_direction
+) {
+  float r = length(point);
+  float mu_s = dot(point, sun_direction) / r;
+  return GetIrradiance(u_irradiance_texture, r, mu_s) *
+  (1.0 + dot(normal, point) / r) *
+  0.5;
 }
 
 vec3 GetSkyTransmittance(vec3 camera, vec3 view_ray) {
   return GetSkyTransmittance(u_transmittance_texture, camera, view_ray);
+}
+
+vec3 GetSkyIrradiance(vec3 p, vec3 normal, vec3 sun_direction) {
+  return GetSkyIrradiance(u_irradiance_texture, p, normal, sun_direction);
+}
+
+vec3 GetSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction) {
+  return GetSkyIrradiance(u_irradiance_texture, p, normal, sun_direction) *
+  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 }
