@@ -47,6 +47,7 @@ export interface AerialPerspectiveEffectOptions {
   transmittanceTexture?: Texture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
+  photometric?: boolean
   sunIrradiance?: boolean
   skyIrradiance?: boolean
   transmittance?: boolean
@@ -58,6 +59,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   blendFunction: BlendFunction.NORMAL,
   reconstructNormal: false,
   ellipsoid: Ellipsoid.WGS84,
+  photometric: false,
   sunIrradiance: true,
   skyIrradiance: true,
   transmittance: true,
@@ -79,6 +81,7 @@ export class AerialPerspectiveEffect extends Effect {
       transmittanceTexture,
       useHalfFloat,
       ellipsoid,
+      photometric,
       sunIrradiance,
       skyIrradiance,
       transmittance,
@@ -145,6 +148,7 @@ export class AerialPerspectiveEffect extends Effect {
     this.camera = camera
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
+    this.photometric = photometric
     this.sunIrradiance = sunIrradiance
     this.skyIrradiance = skyIrradiance
     this.transmittance = transmittance
@@ -271,6 +275,21 @@ export class AerialPerspectiveEffect extends Effect {
 
   set inputIntensity(value: number) {
     this.uniforms.get('inputIntensity')!.value = value
+  }
+
+  get photometric(): boolean {
+    return this.defines.has('PHOTOMETRIC')
+  }
+
+  set photometric(value: boolean) {
+    if (value !== this.photometric) {
+      if (value) {
+        this.defines.set('PHOTOMETRIC', '1')
+      } else {
+        this.defines.delete('PHOTOMETRIC')
+      }
+      this.setChanged()
+    }
   }
 
   get sunIrradiance(): boolean {

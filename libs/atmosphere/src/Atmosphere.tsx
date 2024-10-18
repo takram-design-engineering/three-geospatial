@@ -3,6 +3,8 @@ import { useThree, type MeshProps } from '@react-three/fiber'
 import { forwardRef, useEffect, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
+import { type Ellipsoid } from '@geovanni/core'
+
 import {
   AtmosphereMaterial,
   atmosphereMaterialParametersDefaults
@@ -12,6 +14,8 @@ import { usePrecomputedTextures } from './usePrecomputedTextures'
 export type AtmosphereImpl = Mesh<BufferGeometry, AtmosphereMaterial>
 
 export interface AtmosphereProps extends MeshProps {
+  ellipsoid?: Ellipsoid
+  photometric?: boolean
   sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
@@ -24,6 +28,8 @@ export interface AtmosphereProps extends MeshProps {
 export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
   function Atmosphere(props, forwardedRef) {
     const {
+      ellipsoid,
+      photometric,
       sun,
       sunDirection,
       sunAngularRadius,
@@ -55,6 +61,8 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
           object={material}
           {...precomputedTextures}
           useHalfFloat={useHalfFloat}
+          ellipsoid={ellipsoid}
+          photometric={photometric}
           sun={sun}
           sunDirection={sunDirection}
           sunAngularRadius={sunAngularRadius}

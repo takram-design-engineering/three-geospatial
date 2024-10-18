@@ -3,6 +3,8 @@ import { useThree, type MeshProps } from '@react-three/fiber'
 import { forwardRef, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
+import { type Ellipsoid } from '@geovanni/core'
+
 import {
   IrradianceMaterial,
   irradianceMaterialParametersDefaults
@@ -12,6 +14,8 @@ import { usePrecomputedTextures } from './usePrecomputedTextures'
 export type IrradianceImpl = Mesh<BufferGeometry, IrradianceMaterial>
 
 export interface IrradianceProps extends MeshProps {
+  ellipsoid?: Ellipsoid
+  photometric?: boolean
   sun?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
@@ -19,7 +23,14 @@ export interface IrradianceProps extends MeshProps {
 
 export const Irradiance = forwardRef<IrradianceImpl, IrradianceProps>(
   function Irradiance(props, forwardedRef) {
-    const { sun, sunDirection, sunAngularRadius, ...others } = {
+    const {
+      ellipsoid,
+      photometric,
+      sun,
+      sunDirection,
+      sunAngularRadius,
+      ...others
+    } = {
       ...irradianceMaterialParametersDefaults,
       ...props
     }
@@ -39,6 +50,8 @@ export const Irradiance = forwardRef<IrradianceImpl, IrradianceProps>(
           object={material}
           {...precomputedTextures}
           useHalfFloat={useHalfFloat}
+          ellipsoid={ellipsoid}
+          photometric={photometric}
           sun={sun}
           sunDirection={sunDirection}
           sunAngularRadius={sunAngularRadius}
