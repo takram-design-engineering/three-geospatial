@@ -184,7 +184,7 @@ const Scene: FC = () => {
             skyIrradiance={skyIrradiance}
             transmittance={transmittance}
             inscatter={inscatter}
-            inputIntensity={0.08}
+            inputIntensity={0.25}
           />
         )}
         {lensFlare && <LensFlare />}
