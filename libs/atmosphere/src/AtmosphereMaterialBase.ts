@@ -38,13 +38,15 @@ export interface AtmosphereMaterialBaseParameters
   transmittanceTexture?: Texture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
+  photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
 }
 
 export const atmosphereMaterialParametersBaseDefaults = {
   useHalfFloat: false,
-  ellipsoid: Ellipsoid.WGS84
+  ellipsoid: Ellipsoid.WGS84,
+  photometric: false
 } satisfies AtmosphereMaterialBaseParameters
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
@@ -55,6 +57,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       transmittanceTexture,
       useHalfFloat,
       ellipsoid,
+      photometric,
       sunDirection,
       sunAngularRadius,
       ...others
@@ -104,6 +107,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       }
     })
     this.useHalfFloat = useHalfFloat
+    this.photometric = photometric
   }
 
   override onBeforeRender(
@@ -156,6 +160,21 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.uniforms.u_mu_s_min.value = value
       ? ATMOSPHERE_PARAMETERS.muSMinHalfFloat
       : ATMOSPHERE_PARAMETERS.muSMinFloat
+  }
+
+  get photometric(): boolean {
+    return this.defines.PHOTOMETRIC != null
+  }
+
+  set photometric(value: boolean) {
+    if (value !== this.photometric) {
+      if (value) {
+        this.defines.PHOTOMETRIC = '1'
+      } else {
+        delete this.defines.PHOTOMETRIC
+      }
+      this.needsUpdate = true
+    }
   }
 
   get sunDirection(): Vector3 {

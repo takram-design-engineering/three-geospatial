@@ -32,7 +32,7 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects'
-import { LocalTangentFrame, useRendererControls } from '@geovanni/react'
+import { LocalTangentFrame } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -43,6 +43,7 @@ import { Irradiance } from '../../Irradiance'
 import { Stars, type StarsImpl } from '../../Stars'
 import { usePrecomputedTextures } from '../../usePrecomputedTextures'
 import { useLocalDateControls } from '../useLocalDateControls'
+import { useRendererControls } from '../useRendererControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -67,19 +68,29 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10, shadow: true })
   const lut = useColorGradingControls()
 
-  const { normal, depth } = useControls('effect', {
+  const { lensFlare, normal, depth } = useControls('effects', {
+    lensFlare: true,
     depth: false,
     normal: false
   })
 
-  const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
-    useControls('aerial perspective', {
+  const { photometric } = useControls('atmosphere', {
+    photometric: true
+  })
+
+  const { sun, sky } = useControls('lights', {
+    sun: true,
+    sky: true
+  })
+
+  const { enable, transmittance, inscatter } = useControls(
+    'aerial perspective',
+    {
       enable: true,
-      sunIrradiance: true,
-      skyIrradiance: true,
       transmittance: true,
       inscatter: true
-    })
+    }
+  )
 
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
@@ -115,10 +126,10 @@ const Scene: FC = () => {
   }, [material, terrainMaterial, envMap])
 
   useEffect(() => {
-    const intensity = skyIrradiance ? 1 : 0
+    const intensity = sky ? 1 : 0
     material.envMapIntensity = intensity
     terrainMaterial.envMapIntensity = intensity
-  }, [material, terrainMaterial, skyIrradiance])
+  }, [material, terrainMaterial, sky])
 
   useFrame(() => {
     const date = new Date(motionDate.get())
@@ -149,17 +160,16 @@ const Scene: FC = () => {
     () => (
       <EffectComposer key={Math.random()} normalPass multisampling={0}>
         {enable && !normal && !depth && (
-          <>
-            <AerialPerspective
-              ref={aerialPerspectiveRef}
-              skyIrradiance={false}
-              sunIrradiance={false}
-              transmittance={transmittance}
-              inscatter={inscatter}
-            />
-            <LensFlare />
-          </>
+          <AerialPerspective
+            ref={aerialPerspectiveRef}
+            photometric={photometric}
+            skyIrradiance={false}
+            sunIrradiance={false}
+            transmittance={transmittance}
+            inscatter={inscatter}
+          />
         )}
+        {lensFlare && <LensFlare />}
         {depth && <Depth useTurbo />}
         {normal && <Normal />}
         {!normal && !depth && (
@@ -171,7 +181,16 @@ const Scene: FC = () => {
         )}
       </EffectComposer>
     ),
-    [enable, transmittance, inscatter, normal, depth, lut]
+    [
+      photometric,
+      enable,
+      transmittance,
+      inscatter,
+      lensFlare,
+      normal,
+      depth,
+      lut
+    ]
   )
 
   const textures = usePrecomputedTextures('/', true)
@@ -181,6 +200,7 @@ const Scene: FC = () => {
       textures.transmittanceTexture,
       sunDirectionRef.current,
       camera,
+      photometric,
       csm.directionalLight.mainLight.color
     )
   })
@@ -191,9 +211,9 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} />
+      <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
-      <CSM.DirectionalLight intensity={sunIrradiance ? 1 : 0} />
+      <CSM.DirectionalLight intensity={sun ? 1 : 0} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         material={terrainMaterial}
@@ -208,7 +228,7 @@ const Scene: FC = () => {
         />
         <primitive object={material}>
           <RenderCubeTexture ref={setEnvMap} position={position}>
-            <Irradiance ref={envMapRef} />
+            <Irradiance ref={envMapRef} photometric={photometric} />
           </RenderCubeTexture>
         </primitive>
       </LocalTangentFrame>

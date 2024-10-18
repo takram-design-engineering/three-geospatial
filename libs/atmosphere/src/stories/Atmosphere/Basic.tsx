@@ -2,6 +2,7 @@ import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
+import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, useRef, type FC } from 'react'
 import { Vector3 } from 'three'
@@ -14,10 +15,10 @@ import {
   radians
 } from '@geovanni/core'
 import { LensFlare } from '@geovanni/effects'
-import { useRendererControls } from '@geovanni/react'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useLocalDateControls } from '../useLocalDateControls'
+import { useRendererControls } from '../useRendererControls'
 
 const location = new Geodetic(radians(139.7671), radians(35.6812), 2000)
 const position = location.toECEF()
@@ -25,6 +26,10 @@ const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
+
+  const { photometric } = useControls('atmosphere', {
+    photometric: false
+  })
 
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
@@ -58,7 +63,7 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} />
+      <Atmosphere ref={atmosphereRef} photometric={photometric} />
       {effectComposer}
     </>
   )

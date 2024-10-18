@@ -14,10 +14,10 @@ import {
   getECIToECEFRotationMatrix
 } from '@geovanni/core'
 import { EffectComposer } from '@geovanni/effects'
-import { useRendererControls } from '@geovanni/react'
 
 import { Stars, type StarsImpl } from './Stars'
 import { useLocalDateControls } from './stories/useLocalDateControls'
+import { useRendererControls } from './stories/useRendererControls'
 
 export default {
   title: 'atmosphere/Stars',

@@ -29,7 +29,7 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects'
-import { LocalTangentFrame, useRendererControls } from '@geovanni/react'
+import { LocalTangentFrame } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -37,6 +37,7 @@ import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
 import { useLocalDateControls } from '../useLocalDateControls'
+import { useRendererControls } from '../useRendererControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -64,9 +65,14 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { normal, depth } = useControls('effects', {
+  const { lensFlare, normal, depth } = useControls('effects', {
+    lensFlare: true,
     depth: false,
     normal: false
+  })
+
+  const { photometric } = useControls('atmosphere', {
+    photometric: true
   })
 
   const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
@@ -108,17 +114,16 @@ const Scene: FC = () => {
     () => (
       <EffectComposer key={Math.random()} normalPass multisampling={0}>
         {enable && !normal && !depth && (
-          <>
-            <AerialPerspective
-              ref={aerialPerspectiveRef}
-              sunIrradiance={sunIrradiance}
-              skyIrradiance={skyIrradiance}
-              transmittance={transmittance}
-              inscatter={inscatter}
-            />
-            <LensFlare />
-          </>
+          <AerialPerspective
+            ref={aerialPerspectiveRef}
+            photometric={photometric}
+            sunIrradiance={sunIrradiance}
+            skyIrradiance={skyIrradiance}
+            transmittance={transmittance}
+            inscatter={inscatter}
+          />
         )}
+        {lensFlare && <LensFlare />}
         {depth && <Depth useTurbo />}
         {normal && <Normal />}
         {!normal && !depth && (
@@ -131,11 +136,13 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
+      photometric,
       enable,
       sunIrradiance,
       skyIrradiance,
       transmittance,
       inscatter,
+      lensFlare,
       normal,
       depth,
       lut
@@ -148,7 +155,7 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} />
+      <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}

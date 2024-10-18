@@ -17,24 +17,16 @@ export interface DownsampleThresholdMaterialParameters
   inputBuffer?: Texture | null
   thresholdLevel?: number
   thresholdRange?: number
-  logarithmBase?: number
 }
 
 export const downsampleThresholdMaterialParametersDefaults = {
   thresholdLevel: 10,
-  thresholdRange: 1,
-  logarithmBase: 1.5
+  thresholdRange: 1
 } satisfies DownsampleThresholdMaterialParameters
 
 export class DownsampleThresholdMaterial extends ShaderMaterial {
   constructor(params?: DownsampleThresholdMaterialParameters) {
-    const {
-      inputBuffer,
-      thresholdLevel,
-      thresholdRange,
-      logarithmBase,
-      ...others
-    } = {
+    const { inputBuffer, thresholdLevel, thresholdRange, ...others } = {
       ...downsampleThresholdMaterialParametersDefaults,
       ...params
     }
@@ -46,8 +38,7 @@ export class DownsampleThresholdMaterial extends ShaderMaterial {
         inputBuffer: new Uniform(inputBuffer ?? null),
         texelSize: new Uniform(new Vector2()),
         thresholdLevel: new Uniform(thresholdLevel),
-        thresholdRange: new Uniform(thresholdRange),
-        logarithmBase: new Uniform(logarithmBase)
+        thresholdRange: new Uniform(thresholdRange)
       },
       blending: NoBlending,
       toneMapped: false,
@@ -85,13 +76,5 @@ export class DownsampleThresholdMaterial extends ShaderMaterial {
 
   set thresholdRange(value: number) {
     this.uniforms.thresholdRange.value = value
-  }
-
-  get logarithmBase(): number {
-    return this.uniforms.logarithmBase.value
-  }
-
-  set logarithmBase(value: number) {
-    this.uniforms.logarithmBase.value = value
   }
 }

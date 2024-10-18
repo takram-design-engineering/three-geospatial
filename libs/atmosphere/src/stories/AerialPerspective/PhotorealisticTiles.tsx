@@ -36,13 +36,13 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects'
-import { useRendererControls } from '@geovanni/react'
 
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
 import { useLocalDateControls } from '../useLocalDateControls'
+import { useRendererControls } from '../useRendererControls'
 
 const location = new Geodetic(
   // Coordinates of Tokyo station.
@@ -62,9 +62,14 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { normal, depth } = useControls('effects', {
+  const { lensFlare, normal, depth } = useControls('effects', {
+    lensFlare: true,
     depth: false,
     normal: false
+  })
+
+  const { photometric } = useControls('atmosphere', {
+    photometric: true
   })
 
   const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
@@ -173,18 +178,17 @@ const Scene: FC = () => {
         multisampling={0}
       >
         {enable && !normal && !depth && (
-          <>
-            <AerialPerspective
-              ref={aerialPerspectiveRef}
-              sunIrradiance={sunIrradiance}
-              skyIrradiance={skyIrradiance}
-              transmittance={transmittance}
-              inscatter={inscatter}
-              inputIntensity={0.08}
-            />
-            <LensFlare />
-          </>
+          <AerialPerspective
+            ref={aerialPerspectiveRef}
+            photometric={photometric}
+            sunIrradiance={sunIrradiance}
+            skyIrradiance={skyIrradiance}
+            transmittance={transmittance}
+            inscatter={inscatter}
+            inputIntensity={0.25}
+          />
         )}
+        {lensFlare && <LensFlare />}
         {depth && <Depth useTurbo />}
         {normal && <Normal />}
         {!normal && !depth && (
@@ -197,11 +201,13 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
+      photometric,
       enable,
       sunIrradiance,
       skyIrradiance,
       transmittance,
       inscatter,
+      lensFlare,
       normal,
       depth,
       lut
@@ -210,7 +216,7 @@ const Scene: FC = () => {
 
   return (
     <>
-      <Atmosphere ref={atmosphereRef} />
+      <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
       <primitive object={tiles.group} />
       {effectComposer}

@@ -1,12 +1,12 @@
 import { Environment, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
+import { ToneMapping } from '@react-three/postprocessing'
 import { type Meta, type StoryFn } from '@storybook/react'
+import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 
-import { useRendererControls } from '@geovanni/react'
-
+import { EffectComposer } from './EffectComposer'
 import { LensFlare } from './LensFlare'
 
 export default {
@@ -17,19 +17,24 @@ export default {
 } satisfies Meta
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 1 })
+  const { enabled } = useControls({
+    enabled: true
+  })
 
   const effectComposer = useMemo(
     () => (
       <EffectComposer key={Math.random()}>
-        <LensFlare
-          featuresMaterial-ghostAmount={0.1}
-          featuresMaterial-haloAmount={0.1}
-        />
+        {enabled && (
+          <LensFlare
+            intensity={0.1}
+            featuresMaterial-ghostAmount={0.1}
+            featuresMaterial-haloAmount={0.1}
+          />
+        )}
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
     ),
-    []
+    [enabled]
   )
   return (
     <>

@@ -6,14 +6,16 @@ import { Material } from 'three'
 
 import { springOptions } from './springOptions'
 
+export interface RendererControlValues {
+  exposure: number
+  shadow: boolean
+}
+
 export function useRendererControls({
-  exposure: initialExposure = 10,
+  exposure: initialExposure = 1,
   shadow: initialShadow = false
-}: {
-  exposure?: number
-  shadow?: boolean
-} = {}): void {
-  const [{ exposure, shadow }, set] = useControls('renderer', () => ({
+}: Partial<RendererControlValues>): RendererControlValues {
+  const [values, set] = useControls('renderer', () => ({
     exposure: {
       value: initialExposure,
       min: 0,
@@ -21,6 +23,8 @@ export function useRendererControls({
     },
     shadow: initialShadow
   }))
+
+  const { exposure, shadow } = values
 
   const springExposure = useSpring(exposure, springOptions)
 
@@ -46,4 +50,6 @@ export function useRendererControls({
       }
     })
   }, [shadow, gl, scene])
+
+  return values
 }
