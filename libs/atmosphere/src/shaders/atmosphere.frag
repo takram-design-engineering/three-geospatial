@@ -9,12 +9,24 @@ in vec3 vHeightAdjustment;
 
 layout(location = 0) out vec4 outputColor;
 
-vec3 getLunarRadiance() {
+vec3 GetLunarRadiance() {
   // Not a physical number but the order of 10^-6 relative to the sun may fit.
   return u_solar_irradiance *
   0.000002 *
   lunarRadianceScale /
   (PI * moonAngularRadius * moonAngularRadius);
+}
+
+vec3 GetLunarLuminance() {
+  return GetLunarRadiance() * SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+}
+
+vec3 GetLunarRadLum() {
+  #ifdef PHOTOMETRIC
+  return GetLunarLuminance();
+  #else
+  return GetLunarRadiance();
+  #endif
 }
 
 float intersectSphere(vec3 ray, vec3 point, float radius) {
@@ -35,7 +47,7 @@ float orenNayarDiffuse(const vec3 L, const vec3 V, const vec3 N) {
 void main() {
   vec3 viewDirection = normalize(vWorldDirection);
   vec3 transmittance;
-  vec3 radiance = GetSkyRadiance(
+  vec3 radLum = GetSkyRadLum(
     vWorldPosition - vHeightAdjustment,
     viewDirection,
     0.0, // TODO: Shadow length
@@ -58,7 +70,7 @@ void main() {
       u_sun_angular_radius - fragmentAngle,
       angle
     );
-    radiance += transmittance * GetSolarRadiance() * antialias;
+    radLum += transmittance * GetSolarRadLum() * antialias;
   }
   #endif
 
@@ -78,9 +90,9 @@ void main() {
       moonAngularRadius - fragmentAngle,
       angle
     );
-    radiance += transmittance * getLunarRadiance() * diffuse * antialias;
+    radLum += transmittance * GetLunarRadLum() * diffuse * antialias;
   }
   #endif
 
-  outputColor = vec4(radiance, 1.0);
+  outputColor = vec4(radLum, 1.0);
 }

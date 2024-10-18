@@ -32,7 +32,7 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects'
-import { LocalTangentFrame, useRendererControls } from '@geovanni/react'
+import { LocalTangentFrame } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -43,6 +43,7 @@ import { Irradiance } from '../../Irradiance'
 import { Stars, type StarsImpl } from '../../Stars'
 import { usePrecomputedTextures } from '../../usePrecomputedTextures'
 import { useLocalDateControls } from '../useLocalDateControls'
+import { useRendererControls } from '../useRendererControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -64,7 +65,11 @@ const tiles = tile
   .flatMap(tile => tile.getChildren())
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 10, shadow: true })
+  const { photometric } = useRendererControls({
+    exposure: 10,
+    photometric: true,
+    shadow: true
+  })
   const lut = useColorGradingControls()
 
   const { normal, depth } = useControls('effect', {
@@ -152,6 +157,7 @@ const Scene: FC = () => {
           <>
             <AerialPerspective
               ref={aerialPerspectiveRef}
+              photometric={photometric}
               skyIrradiance={false}
               sunIrradiance={false}
               transmittance={transmittance}
@@ -171,7 +177,7 @@ const Scene: FC = () => {
         )}
       </EffectComposer>
     ),
-    [enable, transmittance, inscatter, normal, depth, lut]
+    [photometric, enable, transmittance, inscatter, normal, depth, lut]
   )
 
   const textures = usePrecomputedTextures('/', true)
@@ -181,6 +187,7 @@ const Scene: FC = () => {
       textures.transmittanceTexture,
       sunDirectionRef.current,
       camera,
+      photometric,
       csm.directionalLight.mainLight.color
     )
   })
@@ -191,7 +198,7 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} />
+      <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
       <CSM.DirectionalLight intensity={sunIrradiance ? 1 : 0} />
       <Sphere
@@ -208,7 +215,7 @@ const Scene: FC = () => {
         />
         <primitive object={material}>
           <RenderCubeTexture ref={setEnvMap} position={position}>
-            <Irradiance ref={envMapRef} />
+            <Irradiance ref={envMapRef} photometric={photometric} />
           </RenderCubeTexture>
         </primitive>
       </LocalTangentFrame>

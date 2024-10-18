@@ -1,7 +1,10 @@
 import { Color, Vector3, type Camera, type DataTexture } from 'three'
 
 import { computeSkyTransmittance } from './computeSkyTransmittance'
-import { ATMOSPHERE_PARAMETERS } from './constants'
+import {
+  ATMOSPHERE_PARAMETERS,
+  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE
+} from './constants'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
@@ -9,6 +12,7 @@ export function computeSunLightColor(
   transmittanceTexture: DataTexture,
   sunDirection: Vector3,
   camera: Camera,
+  photometric: boolean,
   result = new Color()
 ): Color {
   // TODO: Consider partial visibility when the sun is at the horizon.
@@ -19,7 +23,11 @@ export function computeSunLightColor(
     sunDirection,
     vectorScratch
   )
-  return result.setFromVector3(
-    transmittance.multiply(ATMOSPHERE_PARAMETERS.solarIrradiance)
+  const solarRadLum = transmittance.multiply(
+    ATMOSPHERE_PARAMETERS.solarIrradiance
   )
+  if (photometric) {
+    solarRadLum.multiply(SUN_SPECTRAL_RADIANCE_TO_LUMINANCE)
+  }
+  return result.setFromVector3(solarRadLum)
 }

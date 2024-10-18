@@ -2,25 +2,36 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useSpring } from 'framer-motion'
 import { useControls } from 'leva'
 import { useEffect, useLayoutEffect } from 'react'
-import { Material } from 'three'
+import { Material, Vector3 } from 'three'
 
+import { SUN_SPECTRAL_RADIANCE_TO_LUMINANCE } from '../constants'
 import { springOptions } from './springOptions'
+
+const luminanceScale = new Vector3(0.2126, 0.7152, 0.0722).dot(
+  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE
+)
+
+export interface RendererControlValues {
+  exposure: number
+  photometric: boolean
+  shadow: boolean
+}
 
 export function useRendererControls({
   exposure: initialExposure = 10,
+  photometric: initialPhotometric = true,
   shadow: initialShadow = false
-}: {
-  exposure?: number
-  shadow?: boolean
-} = {}): void {
-  const [{ exposure, shadow }, set] = useControls('renderer', () => ({
+}: Partial<RendererControlValues>): RendererControlValues {
+  const [values, set] = useControls('renderer', () => ({
     exposure: {
       value: initialExposure,
       min: 0,
       max: 100
     },
+    photometric: initialPhotometric,
     shadow: initialShadow
   }))
+  const { exposure, photometric, shadow } = values
 
   const springExposure = useSpring(exposure, springOptions)
 
@@ -34,7 +45,8 @@ export function useRendererControls({
   }, [exposure, set, springExposure])
 
   useFrame(({ gl }) => {
-    gl.toneMappingExposure = springExposure.get()
+    gl.toneMappingExposure =
+      springExposure.get() / (photometric ? luminanceScale : 1)
   })
 
   const { gl, scene } = useThree()
@@ -46,4 +58,6 @@ export function useRendererControls({
       }
     })
   }, [shadow, gl, scene])
+
+  return values
 }

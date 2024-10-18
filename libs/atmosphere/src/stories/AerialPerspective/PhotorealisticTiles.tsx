@@ -36,13 +36,13 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects'
-import { useRendererControls } from '@geovanni/react'
 
 import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
 import { useLocalDateControls } from '../useLocalDateControls'
+import { useRendererControls } from '../useRendererControls'
 
 const location = new Geodetic(
   // Coordinates of Tokyo station.
@@ -59,7 +59,10 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 10 })
+  const { photometric } = useRendererControls({
+    photometric: true,
+    exposure: 10
+  })
   const lut = useColorGradingControls()
 
   const { normal, depth } = useControls('effects', {
@@ -176,6 +179,7 @@ const Scene: FC = () => {
           <>
             <AerialPerspective
               ref={aerialPerspectiveRef}
+              photometric={photometric}
               sunIrradiance={sunIrradiance}
               skyIrradiance={skyIrradiance}
               transmittance={transmittance}
@@ -197,6 +201,7 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
+      photometric,
       enable,
       sunIrradiance,
       skyIrradiance,
@@ -210,7 +215,7 @@ const Scene: FC = () => {
 
   return (
     <>
-      <Atmosphere ref={atmosphereRef} />
+      <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
       <primitive object={tiles.group} />
       {effectComposer}

@@ -5,8 +5,6 @@ import { type Meta, type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 
-import { useRendererControls } from '@geovanni/react'
-
 import { LensFlare } from './LensFlare'
 
 export default {
@@ -17,8 +15,6 @@ export default {
 } satisfies Meta
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 1 })
-
   const effectComposer = useMemo(
     () => (
       <EffectComposer key={Math.random()}>

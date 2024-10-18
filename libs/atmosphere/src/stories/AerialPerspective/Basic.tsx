@@ -29,7 +29,7 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects'
-import { LocalTangentFrame, useRendererControls } from '@geovanni/react'
+import { LocalTangentFrame } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
 import { AerialPerspective } from '../../AerialPerspective'
@@ -37,6 +37,7 @@ import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
 import { useLocalDateControls } from '../useLocalDateControls'
+import { useRendererControls } from '../useRendererControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -61,7 +62,10 @@ const material = new MeshBasicMaterial({ color: 'white' })
 const terrainMaterial = new MeshBasicMaterial({ color: 'gray' })
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 10 })
+  const { photometric } = useRendererControls({
+    photometric: true,
+    exposure: 10
+  })
   const lut = useColorGradingControls()
 
   const { normal, depth } = useControls('effects', {
@@ -111,6 +115,7 @@ const Scene: FC = () => {
           <>
             <AerialPerspective
               ref={aerialPerspectiveRef}
+              photometric={photometric}
               sunIrradiance={sunIrradiance}
               skyIrradiance={skyIrradiance}
               transmittance={transmittance}
@@ -131,6 +136,7 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
+      photometric,
       enable,
       sunIrradiance,
       skyIrradiance,
@@ -148,7 +154,7 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} />
+      <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}

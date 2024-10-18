@@ -708,7 +708,7 @@ vec3 GetSunAndSkyIlluminance(
   return sun_irradiance * SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
 }
 
-// Additional decomposed functions
+// Additional decomposed functions.
 
 vec3 GetSkyTransmittance(
   const sampler2D u_transmittance_texture,
@@ -757,4 +757,90 @@ vec3 GetSkyIrradiance(vec3 p, vec3 normal, vec3 sun_direction) {
 vec3 GetSkyIlluminance(vec3 p, vec3 normal, vec3 sun_direction) {
   return GetSkyIrradiance(u_irradiance_texture, p, normal, sun_direction) *
   SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+}
+
+// Switch between radiometric and photometric.
+// I don't know the correct terms that imply both luminance/radiance or
+// illuminance/irradiance respectively. RadLum and IrrIllum are used here, but
+// maybe it's hard to read.
+
+vec3 GetSolarRadLum() {
+  #ifdef PHOTOMETRIC
+  return GetSolarLuminance();
+  #else
+  return GetSolarRadiance();
+  #endif
+}
+
+vec3 GetSkyRadLum(
+  vec3 camera,
+  vec3 view_ray,
+  float shadow_length,
+  vec3 sun_direction,
+  out vec3 transmittance
+) {
+  #ifdef PHOTOMETRIC
+  return GetSkyLuminance(
+    camera,
+    view_ray,
+    shadow_length,
+    sun_direction,
+    transmittance
+  );
+  #else
+  return GetSkyRadiance(
+    camera,
+    view_ray,
+    shadow_length,
+    sun_direction,
+    transmittance
+  );
+  #endif
+}
+
+vec3 GetSkyRadLumToPoint(
+  vec3 camera,
+  vec3 point,
+  float shadow_length,
+  vec3 sun_direction,
+  out vec3 transmittance
+) {
+  #ifdef PHOTOMETRIC
+  return GetSkyLuminanceToPoint(
+    camera,
+    point,
+    shadow_length,
+    sun_direction,
+    transmittance
+  );
+  #else
+  return GetSkyRadianceToPoint(
+    camera,
+    point,
+    shadow_length,
+    sun_direction,
+    transmittance
+  );
+  #endif
+}
+
+vec3 GetSunAndSkyIrrIllum(
+  vec3 p,
+  vec3 normal,
+  vec3 sun_direction,
+  out vec3 sky_irradiance
+) {
+  #ifdef PHOTOMETRIC
+  return GetSunAndSkyIlluminance(p, normal, sun_direction, sky_irradiance);
+  #else
+  return GetSunAndSkyIrradiance(p, normal, sun_direction, sky_irradiance);
+  #endif
+}
+
+vec3 GetSkyIrrIllum(vec3 p, vec3 normal, vec3 sun_direction) {
+  #ifdef PHOTOMETRIC
+  return GetSkyIlluminance(p, normal, sun_direction);
+  #else
+  return GetSkyIrradiance(p, normal, sun_direction);
+  #endif
 }

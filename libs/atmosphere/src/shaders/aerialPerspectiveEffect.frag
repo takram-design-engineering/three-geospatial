@@ -60,31 +60,31 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
-  vec3 radiance = inputColor.rgb;
+  vec3 radLum = inputColor.rgb;
 
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
   // defined, regard the inputColor as radiance at the texel.
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   vec3 albedo = inputColor.rgb * inputIntensity * RECIPROCAL_PI;
-  vec3 skyIrradiance;
-  vec3 sunIrradiance = GetSunAndSkyIrradiance(
+  vec3 skyIrrIllum;
+  vec3 sunIrrIllum = GetSunAndSkyIrrIllum(
     worldPosition - vHeightAdjustment,
     worldNormal,
     sunDirection,
-    skyIrradiance
+    skyIrrIllum
   );
   #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
-  radiance = albedo * (sunIrradiance + skyIrradiance);
+  radLum = albedo * (sunIrrIllum + skyIrrIllum);
   #elif defined(SUN_IRRADIANCE)
-  radiance = albedo * sunIrradiance;
+  radLum = albedo * sunIrrIllum;
   #elif defined(SKY_IRRADIANCE)
-  radiance = albedo * skyIrradiance;
+  radLum = albedo * skyIrrIllum;
   #endif
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
   vec3 transmittance;
-  vec3 inscatter = GetSkyRadianceToPoint(
+  vec3 inscatter = GetSkyRadLumToPoint(
     vWorldPosition - vHeightAdjustment,
     worldPosition - vHeightAdjustment,
     0.0, // TODO: Shadow length
@@ -92,12 +92,12 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     transmittance
   );
   #if defined(TRANSMITTANCE)
-  radiance = radiance * transmittance;
+  radLum = radLum * transmittance;
   #endif
   #if defined(INSCATTER)
-  radiance = radiance + inscatter;
+  radLum = radLum + inscatter;
   #endif
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
-  outputColor = vec4(radiance, inputColor.a);
+  outputColor = vec4(radLum, inputColor.a);
 }
