@@ -39,7 +39,7 @@ import { AerialPerspective } from '../../AerialPerspective'
 import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { computeSunLightColor } from '../../computeSunLightColor'
-import { Irradiance } from '../../Irradiance'
+import { SkyRadiance } from '../../SkyRadiance'
 import { Stars, type StarsImpl } from '../../Stars'
 import { usePrecomputedTextures } from '../../usePrecomputedTextures'
 import { useLocalDateControls } from '../useLocalDateControls'
@@ -228,7 +228,7 @@ const Scene: FC = () => {
         />
         <primitive object={material}>
           <RenderCubeTexture ref={setEnvMap} position={position}>
-            <Irradiance ref={envMapRef} photometric={photometric} />
+            <SkyRadiance ref={envMapRef} photometric={photometric} />
           </RenderCubeTexture>
         </primitive>
       </LocalTangentFrame>

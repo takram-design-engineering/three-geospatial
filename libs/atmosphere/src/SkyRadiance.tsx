@@ -6,14 +6,14 @@ import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 import { type Ellipsoid } from '@geovanni/core'
 
 import {
-  IrradianceMaterial,
-  irradianceMaterialParametersDefaults
-} from './IrradianceMaterial'
+  SkyRadianceMaterial,
+  skyRadianceMaterialParametersDefaults
+} from './SkyRadianceMaterial'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
-export type IrradianceImpl = Mesh<BufferGeometry, IrradianceMaterial>
+export type SkyRadianceImpl = Mesh<BufferGeometry, SkyRadianceMaterial>
 
-export interface IrradianceProps extends MeshProps {
+export interface SkyRadianceProps extends MeshProps {
   ellipsoid?: Ellipsoid
   photometric?: boolean
   sun?: boolean
@@ -21,8 +21,8 @@ export interface IrradianceProps extends MeshProps {
   sunAngularRadius?: number
 }
 
-export const Irradiance = forwardRef<IrradianceImpl, IrradianceProps>(
-  function Irradiance(props, forwardedRef) {
+export const SkyRadiance = forwardRef<SkyRadianceImpl, SkyRadianceProps>(
+  function SkyRadiance(props, forwardedRef) {
     const {
       ellipsoid,
       photometric,
@@ -31,7 +31,7 @@ export const Irradiance = forwardRef<IrradianceImpl, IrradianceProps>(
       sunAngularRadius,
       ...others
     } = {
-      ...irradianceMaterialParametersDefaults,
+      ...skyRadianceMaterialParametersDefaults,
       ...props
     }
 
@@ -43,7 +43,7 @@ export const Irradiance = forwardRef<IrradianceImpl, IrradianceProps>(
     )
     const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
 
-    const material = useMemo(() => new IrradianceMaterial(), [])
+    const material = useMemo(() => new SkyRadianceMaterial(), [])
     return (
       <ScreenQuad renderOrder={-1} {...others} ref={forwardedRef}>
         <primitive

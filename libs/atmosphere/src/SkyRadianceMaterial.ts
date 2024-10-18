@@ -18,25 +18,22 @@ import {
 } from './AtmosphereMaterialBase'
 
 import functions from './shaders/functions.glsl'
-import fragmentShader from './shaders/irradiance.frag'
-import vertexShader from './shaders/irradiance.vert'
 import parameters from './shaders/parameters.glsl'
+import fragmentShader from './shaders/skyRadiance.frag'
+import vertexShader from './shaders/skyRadiance.vert'
 import vertexCommon from './shaders/vertexCommon.glsl'
 
-export interface IrradianceMaterialParameters
-  extends AtmosphereMaterialBaseParameters {
-  sun?: boolean
-}
+export interface SkyRadianceMaterialParameters
+  extends AtmosphereMaterialBaseParameters {}
 
-export const irradianceMaterialParametersDefaults = {
-  ...atmosphereMaterialParametersBaseDefaults,
-  sun: false
-} satisfies IrradianceMaterialParameters
+export const skyRadianceMaterialParametersDefaults = {
+  ...atmosphereMaterialParametersBaseDefaults
+} satisfies SkyRadianceMaterialParameters
 
-export class IrradianceMaterial extends AtmosphereMaterialBase {
-  constructor(params?: IrradianceMaterialParameters) {
-    const { sun, ...others } = {
-      ...irradianceMaterialParametersDefaults,
+export class SkyRadianceMaterial extends AtmosphereMaterialBase {
+  constructor(params?: SkyRadianceMaterialParameters) {
+    const { ...others } = {
+      ...skyRadianceMaterialParametersDefaults,
       ...params
     }
 
@@ -63,7 +60,6 @@ export class IrradianceMaterial extends AtmosphereMaterialBase {
         ...others.uniforms
       }
     })
-    this.sun = sun
   }
 
   override onBeforeRender(
@@ -78,20 +74,5 @@ export class IrradianceMaterial extends AtmosphereMaterialBase {
     const uniforms = this.uniforms
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
-  }
-
-  get sun(): boolean {
-    return this.defines.SUN != null
-  }
-
-  set sun(value: boolean) {
-    if (value !== this.sun) {
-      if (value) {
-        this.defines.SUN = '1'
-      } else {
-        delete this.defines.SUN
-      }
-      this.needsUpdate = true
-    }
   }
 }
