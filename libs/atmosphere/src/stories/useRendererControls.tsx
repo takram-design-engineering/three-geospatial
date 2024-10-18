@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useSpring } from 'framer-motion'
 import { useControls } from 'leva'
-import { useEffect, useLayoutEffect } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Material, Vector3 } from 'three'
 
 import { SUN_SPECTRAL_RADIANCE_TO_LUMINANCE } from '../constants'
@@ -31,6 +31,19 @@ export function useRendererControls({
     photometric: initialPhotometric,
     shadow: initialShadow
   }))
+
+  // These are story-dependent; don't keep the values between stories.
+  const initialValuesRef = useRef({
+    photometric: initialPhotometric,
+    shadow: initialShadow
+  })
+  useEffect(() => {
+    set({
+      photometric: initialValuesRef.current.photometric,
+      shadow: initialValuesRef.current.shadow
+    })
+  }, [set])
+
   const { exposure, photometric, shadow } = values
 
   const springExposure = useSpring(exposure, springOptions)
