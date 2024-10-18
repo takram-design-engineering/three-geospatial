@@ -14,7 +14,20 @@ import {
 
 import { Ellipsoid, Geodetic } from '@geovanni/core'
 
-import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
+import {
+  ATMOSPHERE_PARAMETERS,
+  IRRADIANCE_TEXTURE_HEIGHT,
+  IRRADIANCE_TEXTURE_WIDTH,
+  METER_TO_UNIT_LENGTH,
+  SCATTERING_TEXTURE_MU_S_SIZE,
+  SCATTERING_TEXTURE_MU_SIZE,
+  SCATTERING_TEXTURE_NU_SIZE,
+  SCATTERING_TEXTURE_R_SIZE,
+  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE,
+  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE,
+  TRANSMITTANCE_TEXTURE_HEIGHT,
+  TRANSMITTANCE_TEXTURE_WIDTH
+} from './constants'
 
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
@@ -73,8 +86,20 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
       },
+      // prettier-ignore
       defines: {
+        PI: `${Math.PI}`,
+        TRANSMITTANCE_TEXTURE_WIDTH: `${TRANSMITTANCE_TEXTURE_WIDTH}`,
+        TRANSMITTANCE_TEXTURE_HEIGHT: `${TRANSMITTANCE_TEXTURE_HEIGHT}`,
+        SCATTERING_TEXTURE_R_SIZE: `${SCATTERING_TEXTURE_R_SIZE}`,
+        SCATTERING_TEXTURE_MU_SIZE: `${SCATTERING_TEXTURE_MU_SIZE}`,
+        SCATTERING_TEXTURE_MU_S_SIZE: `${SCATTERING_TEXTURE_MU_S_SIZE}`,
+        SCATTERING_TEXTURE_NU_SIZE: `${SCATTERING_TEXTURE_NU_SIZE}`,
+        IRRADIANCE_TEXTURE_WIDTH: `${IRRADIANCE_TEXTURE_WIDTH}`,
+        IRRADIANCE_TEXTURE_HEIGHT: `${IRRADIANCE_TEXTURE_HEIGHT}`,
         METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`,
+        SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${SKY_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`,
+        SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${SUN_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`,
         ...others.defines
       }
     })

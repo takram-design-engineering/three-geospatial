@@ -15,7 +15,20 @@ import {
 
 import { Ellipsoid, Geodetic } from '@geovanni/core'
 
-import { ATMOSPHERE_PARAMETERS, METER_TO_UNIT_LENGTH } from './constants'
+import {
+  ATMOSPHERE_PARAMETERS,
+  IRRADIANCE_TEXTURE_HEIGHT,
+  IRRADIANCE_TEXTURE_WIDTH,
+  METER_TO_UNIT_LENGTH,
+  SCATTERING_TEXTURE_MU_S_SIZE,
+  SCATTERING_TEXTURE_MU_SIZE,
+  SCATTERING_TEXTURE_NU_SIZE,
+  SCATTERING_TEXTURE_R_SIZE,
+  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE,
+  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE,
+  TRANSMITTANCE_TEXTURE_HEIGHT,
+  TRANSMITTANCE_TEXTURE_WIDTH
+} from './constants'
 
 import fragmentShader from './shaders/aerialPerspectiveEffect.frag'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert'
@@ -113,12 +126,19 @@ export class AerialPerspectiveEffect extends Effect {
           ['sunDirection', new Uniform(new Vector3())],
           ['inputIntensity', new Uniform(inputIntensity)]
         ]),
+        // prettier-ignore
         defines: new Map<string, string>([
+          ['TRANSMITTANCE_TEXTURE_WIDTH', `${TRANSMITTANCE_TEXTURE_WIDTH}`],
+          ['TRANSMITTANCE_TEXTURE_HEIGHT', `${TRANSMITTANCE_TEXTURE_HEIGHT}`],
+          ['SCATTERING_TEXTURE_R_SIZE', `${SCATTERING_TEXTURE_R_SIZE}`],
+          ['SCATTERING_TEXTURE_MU_SIZE', `${SCATTERING_TEXTURE_MU_SIZE}`],
+          ['SCATTERING_TEXTURE_MU_S_SIZE', `${SCATTERING_TEXTURE_MU_S_SIZE}`],
+          ['SCATTERING_TEXTURE_NU_SIZE', `${SCATTERING_TEXTURE_NU_SIZE}`],
+          ['IRRADIANCE_TEXTURE_WIDTH', `${IRRADIANCE_TEXTURE_WIDTH}`],
+          ['IRRADIANCE_TEXTURE_HEIGHT', `${IRRADIANCE_TEXTURE_HEIGHT}`],
           ['METER_TO_UNIT_LENGTH', `float(${METER_TO_UNIT_LENGTH})`],
-          ['SUN_IRRADIANCE', '1'],
-          ['SKY_IRRADIANCE', '1'],
-          ['TRANSMITTANCE', '1'],
-          ['INSCATTER', '1']
+          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${SKY_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`],
+          ['SUN_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${SUN_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`]
         ])
       }
     )
