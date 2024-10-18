@@ -27,6 +27,16 @@ export const SUN_SPECTRAL_RADIANCE_TO_LUMINANCE = new Vector3(
   66475.012354
 )
 
+// We could store luminance (cd/m^2) in render buffers, but the illuminance
+// values easily saturate, and switching between radiometric and photometric
+// affects other parameters. Instead, we store the luminance values relative to
+// the luminance of the sun.
+const efficiency = new Vector3(0.2126, 0.7152, 0.0722)
+const luminance = efficiency.dot(SUN_SPECTRAL_RADIANCE_TO_LUMINANCE)
+export const LUMINANCE_SCALE = 1 / luminance
+SKY_SPECTRAL_RADIANCE_TO_LUMINANCE.multiplyScalar(LUMINANCE_SCALE)
+SUN_SPECTRAL_RADIANCE_TO_LUMINANCE.multiplyScalar(LUMINANCE_SCALE)
+
 export const ATMOSPHERE_PARAMETERS = {
   solarIrradiance: new Vector3(1.474, 1.8504, 1.91198),
   sunAngularRadius: 0.004675,
