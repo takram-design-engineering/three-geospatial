@@ -12,7 +12,7 @@ import {
   SCATTERING_TEXTURE_WIDTH,
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
-} from './constants'
+} from '../constants'
 
 export interface PrecomputedTexturesParams {
   useHalfFloat?: boolean

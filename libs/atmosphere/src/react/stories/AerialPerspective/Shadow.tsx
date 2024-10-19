@@ -36,10 +36,10 @@ import {
 import { LocalTangentFrame } from '@geovanni/react'
 import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
+import { type AerialPerspectiveEffect } from '../../../AerialPerspectiveEffect'
+import { computeSunLightColor } from '../../../computeSunLightColor'
 import { AerialPerspective } from '../../AerialPerspective'
-import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
-import { computeSunLightColor } from '../../computeSunLightColor'
 import { SkyRadiance } from '../../SkyRadiance'
 import { Stars, type StarsImpl } from '../../Stars'
 import { usePrecomputedTextures } from '../../usePrecomputedTextures'

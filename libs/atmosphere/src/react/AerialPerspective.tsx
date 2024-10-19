@@ -8,7 +8,7 @@ import {
   AerialPerspectiveEffect,
   aerialPerspectiveEffectOptionsDefaults,
   type AerialPerspectiveEffectOptions
-} from './AerialPerspectiveEffect'
+} from '../AerialPerspectiveEffect'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export interface AerialPerspectiveProps

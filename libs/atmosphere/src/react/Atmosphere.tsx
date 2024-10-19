@@ -8,7 +8,7 @@ import { type Ellipsoid } from '@geovanni/core'
 import {
   AtmosphereMaterial,
   atmosphereMaterialParametersDefaults
-} from './AtmosphereMaterial'
+} from '../AtmosphereMaterial'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type AtmosphereImpl = Mesh<BufferGeometry, AtmosphereMaterial>

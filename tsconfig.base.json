@@ -18,6 +18,7 @@
     "paths": {
       "@geovanni/3d-tiles": ["libs/3d-tiles/src/index.ts"],
       "@geovanni/atmosphere": ["libs/atmosphere/src/index.ts"],
+      "@geovanni/atmosphere/react": ["libs/atmosphere/src/react/index.ts"],
       "@geovanni/core": ["libs/core/src/index.ts"],
       "@geovanni/csm": ["libs/csm/src/index.ts"],
       "@geovanni/csm/react": ["libs/csm/src/react/index.ts"],

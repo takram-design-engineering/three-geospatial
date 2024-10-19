@@ -8,7 +8,7 @@ import { type Ellipsoid } from '@geovanni/core'
 import {
   SkyRadianceMaterial,
   skyRadianceMaterialParametersDefaults
-} from './SkyRadianceMaterial'
+} from '../SkyRadianceMaterial'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type SkyRadianceImpl = Mesh<BufferGeometry, SkyRadianceMaterial>

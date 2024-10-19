@@ -1,33 +1,26 @@
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import {
+  GizmoHelper,
+  GizmoViewport,
+  OrbitControls,
+  Sphere,
+  TorusKnot
+} from '@react-three/drei'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import {
-  GlobeControls,
-  GoogleCloudAuthPlugin,
-  TilesRenderer
-} from '3d-tiles-renderer'
 import { useControls } from 'leva'
-import {
-  EffectMaterial,
-  ToneMappingMode,
-  type EffectComposer as EffectComposerImpl
-} from 'postprocessing'
-import { useEffect, useMemo, useRef, type FC } from 'react'
-import { Matrix4, Vector3 } from 'three'
-import { DRACOLoader, GLTFLoader } from 'three-stdlib'
+import { ToneMappingMode } from 'postprocessing'
+import { Suspense, useMemo, useRef, type FC } from 'react'
+import { Matrix4, MeshBasicMaterial, Vector3 } from 'three'
 
 import {
-  TileCompressionPlugin,
-  TileCreaseNormalsPlugin,
-  TilesFadePlugin,
-  UpdateOnChangePlugin
-} from '@geovanni/3d-tiles'
-import {
+  Ellipsoid,
   Geodetic,
   getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF,
-  radians
+  radians,
+  TilingScheme
 } from '@geovanni/core'
 import {
   Depth,
@@ -37,27 +30,37 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects/react'
+import { LocalTangentFrame } from '@geovanni/react'
+import { IonTerrain, TerrainTile } from '@geovanni/terrain'
 
+import { type AerialPerspectiveEffect } from '../../../AerialPerspectiveEffect'
 import { AerialPerspective } from '../../AerialPerspective'
-import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { Stars, type StarsImpl } from '../../Stars'
 import { useLocalDateControls } from '../useLocalDateControls'
 import { useRendererControls } from '../useRendererControls'
 
-const location = new Geodetic(
-  // Coordinates of Tokyo station.
-  radians(139.7671),
-  radians(35.6812)
-)
+const location = new Geodetic(radians(138.731), radians(35.363), 4500)
+const position = location.toECEF()
+const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
-const surfaceNormal = location.toECEF().normalize()
-const cameraPosition = location
-  .toECEF()
-  .add(new Vector3().copy(surfaceNormal).multiplyScalar(2000))
+const tilingScheme = new TilingScheme()
+const tile = tilingScheme.geodeticToTile(location, 7)
+tile.y = tilingScheme.getSize(tile.z).y - tile.y - 1
+const terrain = new IonTerrain({
+  assetId: 1,
+  apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
+})
 
-const dracoLoader = new DRACOLoader()
-dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
+const tiles = tile
+  .getChildren()
+  .flatMap(tile => tile.getChildren())
+  .flatMap(tile => tile.getChildren())
+  .flatMap(tile => tile.getChildren())
+  .flatMap(tile => tile.getChildren())
+
+const material = new MeshBasicMaterial({ color: 'white' })
+const terrainMaterial = new MeshBasicMaterial({ color: 'gray' })
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
@@ -87,8 +90,8 @@ const Scene: FC = () => {
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())
   const atmosphereRef = useRef<AtmosphereImpl>(null)
-  const starsRef = useRef<StarsImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
+  const starsRef = useRef<StarsImpl>(null)
 
   useFrame(() => {
     const date = new Date(motionDate.get())
@@ -108,76 +111,9 @@ const Scene: FC = () => {
     }
   })
 
-  const { gl, scene, camera } = useThree()
-
-  const tiles = useMemo(() => {
-    // @ts-expect-error Missing type
-    const tiles = new TilesRenderer()
-    tiles.registerPlugin(
-      new GoogleCloudAuthPlugin({
-        apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
-      })
-    )
-    tiles.registerPlugin(new UpdateOnChangePlugin())
-    tiles.registerPlugin(new TileCompressionPlugin())
-    tiles.registerPlugin(
-      new TileCreaseNormalsPlugin({
-        creaseAngle: radians(30)
-      })
-    )
-    tiles.registerPlugin(new TilesFadePlugin())
-
-    const loader = new GLTFLoader(tiles.manager)
-    loader.setDRACOLoader(dracoLoader)
-    tiles.manager.addHandler(/\.gltf$/, loader)
-
-    return tiles
-  }, [])
-
-  useEffect(() => {
-    tiles.setCamera(camera)
-  }, [tiles, camera])
-
-  useEffect(() => {
-    tiles.setResolutionFromRenderer(camera, gl)
-  }, [tiles, camera, gl])
-
-  const controls = useMemo(() => {
-    const controls = new GlobeControls(scene, camera, gl.domElement, tiles)
-    controls.enableDamping = true
-    return controls
-  }, [scene, camera, gl, tiles])
-
-  useEffect(() => {
-    return () => {
-      controls.dispose()
-    }
-  }, [controls])
-
-  const composerRef = useRef<EffectComposerImpl>(null)
-
-  useFrame(() => {
-    tiles.update()
-    controls.update()
-
-    const composer = composerRef.current
-    if (composer != null) {
-      composer.passes.forEach(pass => {
-        if (pass.fullscreenMaterial instanceof EffectMaterial) {
-          pass.fullscreenMaterial.adoptCameraSettings(camera)
-        }
-      })
-    }
-  })
-
   const effectComposer = useMemo(
     () => (
-      <EffectComposer
-        key={Math.random()}
-        ref={composerRef}
-        normalPass
-        multisampling={0}
-      >
+      <EffectComposer key={Math.random()} normalPass multisampling={0}>
         {enable && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
@@ -186,7 +122,6 @@ const Scene: FC = () => {
             skyIrradiance={skyIrradiance}
             transmittance={transmittance}
             inscatter={inscatter}
-            albedoScale={0.2}
           />
         )}
         {lensFlare && <LensFlare />}
@@ -218,15 +153,40 @@ const Scene: FC = () => {
 
   return (
     <>
+      <OrbitControls target={position} minDistance={1e3} />
+      <GizmoHelper alignment='top-left' renderPriority={2}>
+        <GizmoViewport />
+      </GizmoHelper>
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
-      <primitive object={tiles.group} />
+      <Sphere
+        args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
+        material={terrainMaterial}
+        receiveShadow
+      />
+      <LocalTangentFrame location={location}>
+        <TorusKnot
+          args={[200, 60, 256, 64]}
+          position={[0, 0, 20]}
+          material={material}
+        />
+      </LocalTangentFrame>
+      {tiles.map(tile => (
+        <Suspense key={`${tile.x}:${tile.y}:${tile.z}`}>
+          <TerrainTile
+            terrain={terrain}
+            {...tile}
+            computeVertexNormals
+            material={terrainMaterial}
+          />
+        </Suspense>
+      ))}
       {effectComposer}
     </>
   )
 }
 
-export const PhotorealisticTiles: StoryFn = () => {
+export const Basic: StoryFn = () => {
   return (
     <Canvas
       gl={{
@@ -235,7 +195,7 @@ export const PhotorealisticTiles: StoryFn = () => {
         stencil: false,
         logarithmicDepthBuffer: true
       }}
-      camera={{ position: cameraPosition, up: surfaceNormal }}
+      camera={{ near: 100, far: 1e6, position, up }}
     >
       <Scene />
     </Canvas>

@@ -4,8 +4,11 @@ import { type Points, type Vector3 } from 'three'
 
 import { ArrayBufferLoader, type Ellipsoid } from '@geovanni/core'
 
-import { StarsGeometry } from './StarsGeometry'
-import { StarsMaterial, starsMaterialParametersDefaults } from './StarsMaterial'
+import { StarsGeometry } from '../StarsGeometry'
+import {
+  StarsMaterial,
+  starsMaterialParametersDefaults
+} from '../StarsMaterial'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>

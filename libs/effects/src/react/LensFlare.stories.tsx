@@ -6,8 +6,8 @@ import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 
-import { EffectComposer } from './react/EffectComposer'
-import { LensFlare } from './react/LensFlare'
+import { EffectComposer } from './EffectComposer'
+import { LensFlare } from './LensFlare'
 
 export default {
   title: 'effects/LensFlare',
