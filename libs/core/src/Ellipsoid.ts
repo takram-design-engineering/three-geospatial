@@ -1,7 +1,11 @@
 import { Vector3 } from 'three'
 
 import { closeTo } from './math'
+import { projectToGeodeticSurface } from './projectToGeodeticSurface'
 
+const vectorScratch = /*#__PURE__*/ new Vector3()
+
+// TODO: Rename to spheroid perhaps?
 export class Ellipsoid {
   static WGS84 = new Ellipsoid(6378137, 6378137, 6356752.3142451793)
 
@@ -48,5 +52,34 @@ export class Ellipsoid {
     }
     const reciprocalRadiiSquared = this.reciprocalRadiiSquared(result)
     return result.multiplyVectors(direction, reciprocalRadiiSquared).normalize()
+  }
+
+  getOsculatingSphereCenter(
+    surfacePosition: Vector3,
+    radius: number,
+    result = new Vector3()
+  ): Vector3 {
+    const xySquared = this.radii.x ** 2
+    const normal = vectorScratch
+      .set(
+        surfacePosition.x / xySquared,
+        surfacePosition.y / xySquared,
+        surfacePosition.z / this.radii.z ** 2
+      )
+      .normalize()
+    return result.copy(normal.multiplyScalar(-radius).add(surfacePosition))
+  }
+
+  projectToSurface(
+    position: Vector3,
+    centerTolerance?: number,
+    result = new Vector3()
+  ): Vector3 | undefined {
+    return projectToGeodeticSurface(
+      position,
+      this.reciprocalRadiiSquared(),
+      centerTolerance,
+      result
+    )
   }
 }

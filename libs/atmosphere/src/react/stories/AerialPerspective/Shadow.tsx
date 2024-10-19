@@ -203,6 +203,7 @@ const Scene: FC = () => {
       position,
       sunDirectionRef.current,
       photometric,
+      undefined,
       csm.directionalLight.mainLight.color
     )
   })
@@ -217,7 +218,8 @@ const Scene: FC = () => {
       <Stars ref={starsRef} />
       <CascadedDirectionalLight intensity={sun ? 1 : 0} />
       <Sphere
-        args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
+        args={[Ellipsoid.WGS84.maximumRadius, 360, 180]}
+        scale-z={Ellipsoid.WGS84.maximumRadius / Ellipsoid.WGS84.minimumRadius}
         material={terrainMaterial}
       />
       <LocalTangentFrame location={location}>

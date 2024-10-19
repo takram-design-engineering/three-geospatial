@@ -5,7 +5,7 @@ uniform float lunarRadianceScale;
 
 in vec3 vWorldPosition;
 in vec3 vWorldDirection;
-in vec3 vHeightAdjustment;
+in vec3 vEarthCenter;
 
 layout(location = 0) out vec4 outputColor;
 
@@ -48,7 +48,7 @@ void main() {
   vec3 viewDirection = normalize(vWorldDirection);
   vec3 transmittance;
   vec3 radLum = GetSkyRadLum(
-    vWorldPosition - vHeightAdjustment,
+    vWorldPosition - vEarthCenter,
     viewDirection,
     0.0, // TODO: Shadow length
     sunDirection,

@@ -7,7 +7,7 @@ uniform vec3 sunDirection;
 uniform float albedoScale;
 
 varying vec3 vWorldPosition;
-varying vec3 vHeightAdjustment;
+varying vec3 vEarthCenter;
 
 #ifndef DEPTH_THRESHOLD
 #define DEPTH_THRESHOLD (1.0 - EPSILON)
@@ -68,7 +68,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 albedo = inputColor.rgb * albedoScale * RECIPROCAL_PI;
   vec3 skyIrrIllum;
   vec3 sunIrrIllum = GetSunAndSkyIrrIllum(
-    worldPosition - vHeightAdjustment,
+    worldPosition - vEarthCenter,
     worldNormal,
     sunDirection,
     skyIrrIllum
@@ -85,8 +85,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
   vec3 transmittance;
   vec3 inscatter = GetSkyRadLumToPoint(
-    vWorldPosition - vHeightAdjustment,
-    worldPosition - vHeightAdjustment,
+    vWorldPosition - vEarthCenter,
+    worldPosition - vEarthCenter,
     0.0, // TODO: Shadow length
     sunDirection,
     transmittance

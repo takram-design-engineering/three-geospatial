@@ -1,7 +1,7 @@
 import { Vector2, Vector3, type DataTexture } from 'three'
 import invariant from 'tiny-invariant'
 
-import { Ellipsoid, Geodetic, smoothstep } from '@geovanni/core'
+import { Ellipsoid, smoothstep } from '@geovanni/core'
 
 import {
   ATMOSPHERE_PARAMETERS,
@@ -10,7 +10,8 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 
-const { topRadius, bottomRadius } = ATMOSPHERE_PARAMETERS
+const topRadius = ATMOSPHERE_PARAMETERS.topRadius * METER_TO_UNIT_LENGTH
+const bottomRadius = ATMOSPHERE_PARAMETERS.bottomRadius * METER_TO_UNIT_LENGTH
 
 function rayIntersectsGround(r: number, mu: number): boolean {
   return mu < 0 && r * r * (mu * mu - 1) + bottomRadius * bottomRadius >= 0
@@ -103,42 +104,36 @@ function getTransmittanceToTopAtmosphereBoundary(
   return sampleTexture(transmittanceTexture, uv, result)
 }
 
-// See: shaders/vertexCommon.glsl
-function getHeightAdjustment(
-  height: number,
-  ellipsoidRadii: Vector3,
-  geodeticSurface: Vector3,
-  result: Vector3
-): Vector3 {
-  const surfaceRadius = geodeticSurface.length() * METER_TO_UNIT_LENGTH
-  const offset = surfaceRadius - bottomRadius
-  return result.copy(geodeticSurface).normalize().multiplyScalar(offset)
-}
-
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
-const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export function computeSkyTransmittance(
   transmittanceTexture: DataTexture,
   worldPosition: Vector3,
   worldDirection: Vector3,
+  ellipsoid = Ellipsoid.WGS84,
   result = new Vector3()
 ): Vector3 {
   const camera = vectorScratch1
     .copy(worldPosition)
     .multiplyScalar(METER_TO_UNIT_LENGTH)
 
-  const geodetic = geodeticScratch.setFromECEF(worldPosition)
-  const cameraHeight = geodetic.height
-  const geodeticSurface = geodetic.setHeight(0).toECEF(vectorScratch2)
-  const heightAdjustment = getHeightAdjustment(
-    cameraHeight,
-    Ellipsoid.WGS84.radii,
-    geodeticSurface,
+  const earthCenter = vectorScratch2
+  const surfacePosition = ellipsoid.projectToSurface(
+    worldPosition,
+    undefined,
     vectorScratch2
   )
-  camera.sub(heightAdjustment)
+  if (surfacePosition != null) {
+    ellipsoid
+      .getOsculatingSphereCenter(
+        surfacePosition,
+        ATMOSPHERE_PARAMETERS.bottomRadius,
+        earthCenter
+      )
+      .multiplyScalar(METER_TO_UNIT_LENGTH)
+  }
+  camera.sub(earthCenter)
 
   let r = camera.length()
   let rmu = camera.dot(worldDirection)

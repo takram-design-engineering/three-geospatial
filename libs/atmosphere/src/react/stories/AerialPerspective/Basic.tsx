@@ -161,7 +161,8 @@ const Scene: FC = () => {
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
       <Sphere
-        args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
+        args={[Ellipsoid.WGS84.maximumRadius, 360, 180]}
+        scale-z={Ellipsoid.WGS84.maximumRadius / Ellipsoid.WGS84.minimumRadius}
         material={terrainMaterial}
         receiveShadow
       />

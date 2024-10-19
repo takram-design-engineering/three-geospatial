@@ -12,7 +12,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { Ellipsoid, Geodetic } from '@geovanni/core'
+import { Ellipsoid } from '@geovanni/core'
 
 import {
   ATMOSPHERE_PARAMETERS,
@@ -29,7 +29,7 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 
-const geodeticScratch = /*#__PURE__*/ new Geodetic()
+const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface AtmosphereMaterialBaseParameters
   extends Partial<ShaderMaterialParameters> {
@@ -50,6 +50,8 @@ export const atmosphereMaterialParametersBaseDefaults = {
 } satisfies AtmosphereMaterialBaseParameters
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
+  ellipsoid: Ellipsoid
+
   constructor(params?: AtmosphereMaterialBaseParameters) {
     const {
       irradianceTexture,
@@ -72,8 +74,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       uniforms: {
         u_solar_irradiance: new Uniform(ATMOSPHERE_PARAMETERS.solarIrradiance),
         u_sun_angular_radius: new Uniform(sunAngularRadius ?? ATMOSPHERE_PARAMETERS.sunAngularRadius),
-        u_bottom_radius: new Uniform(ATMOSPHERE_PARAMETERS.bottomRadius),
-        u_top_radius: new Uniform(ATMOSPHERE_PARAMETERS.topRadius),
+        u_bottom_radius: new Uniform(ATMOSPHERE_PARAMETERS.bottomRadius * METER_TO_UNIT_LENGTH),
+        u_top_radius: new Uniform(ATMOSPHERE_PARAMETERS.topRadius * METER_TO_UNIT_LENGTH),
         u_rayleigh_scattering: new Uniform(ATMOSPHERE_PARAMETERS.rayleighScattering),
         u_mie_scattering: new Uniform(ATMOSPHERE_PARAMETERS.mieScattering),
         u_mie_phase_function_g: new Uniform(ATMOSPHERE_PARAMETERS.miePhaseFunctionG),
@@ -83,9 +85,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_single_mie_scattering_texture: new Uniform(scatteringTexture),
         u_transmittance_texture: new Uniform(transmittanceTexture),
         cameraPosition: new Uniform(new Vector3()),
-        cameraHeight: new Uniform(0),
-        ellipsoidRadii: new Uniform(new Vector3().copy(ellipsoid.radii)),
-        geodeticSurface: new Uniform(new Vector3()),
+        earthCenter: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
       },
@@ -106,6 +106,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         ...others.defines
       }
     })
+    this.ellipsoid = ellipsoid
     this.useHalfFloat = useHalfFloat
     this.photometric = photometric
   }
@@ -120,9 +121,19 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   ): void {
     const uniforms = this.uniforms
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
-    const geodetic = geodeticScratch.setFromECEF(position)
-    uniforms.cameraHeight.value = geodetic.height
-    geodetic.setHeight(0).toECEF(uniforms.geodeticSurface.value)
+
+    const surfacePosition = this.ellipsoid.projectToSurface(
+      position,
+      undefined,
+      vectorScratch
+    )
+    if (surfacePosition != null) {
+      this.ellipsoid.getOsculatingSphereCenter(
+        surfacePosition,
+        ATMOSPHERE_PARAMETERS.bottomRadius,
+        uniforms.earthCenter.value
+      )
+    }
   }
 
   get irradianceTexture(): Texture | null {

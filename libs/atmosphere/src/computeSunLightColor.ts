@@ -1,5 +1,7 @@
 import { Color, Vector3, type DataTexture } from 'three'
 
+import { Ellipsoid } from '@geovanni/core'
+
 import { computeSkyTransmittance } from './computeSkyTransmittance'
 import {
   ATMOSPHERE_PARAMETERS,
@@ -13,6 +15,7 @@ export function computeSunLightColor(
   worldPosition: Vector3,
   sunDirection: Vector3,
   photometric: boolean,
+  ellipsoid = Ellipsoid.WGS84,
   result = new Color()
 ): Color {
   // TODO: Consider partial visibility when the sun is at the horizon.
@@ -20,6 +23,7 @@ export function computeSunLightColor(
     transmittanceTexture,
     worldPosition,
     sunDirection,
+    ellipsoid,
     vectorScratch
   )
   const solarRadLum = transmittance.multiply(

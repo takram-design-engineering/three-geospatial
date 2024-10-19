@@ -21,7 +21,6 @@ import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 import fragmentShader from './shaders/stars.frag'
 import vertexShader from './shaders/stars.vert'
-import vertexCommon from './shaders/vertexCommon.glsl'
 
 export interface StarsMaterialParameters
   extends AtmosphereMaterialBaseParameters {
@@ -52,7 +51,6 @@ export class StarsMaterial extends AtmosphereMaterialBase {
         precision highp float;
         precision highp sampler3D;
         ${parameters}
-        ${vertexCommon}
         ${vertexShader}
       `,
       fragmentShader: /* glsl */ `

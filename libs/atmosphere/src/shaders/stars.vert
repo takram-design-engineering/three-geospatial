@@ -5,10 +5,8 @@ uniform mat4 modelViewMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 matrixWorld;
 uniform vec3 cameraPosition;
-uniform float cameraHeight;
 uniform float cameraFar;
-uniform vec3 ellipsoidRadii;
-uniform vec3 geodeticSurface;
+uniform vec3 earthCenter;
 uniform float pointSize;
 uniform vec2 magnitudeRange;
 uniform float radianceScale;
@@ -19,7 +17,7 @@ layout(location = 2) in vec3 color;
 
 out vec3 vWorldPosition;
 out vec3 vWorldDirection;
-out vec3 vHeightAdjustment;
+out vec3 vEarthCenter;
 out vec3 vColor;
 
 void main() {
@@ -33,11 +31,7 @@ void main() {
   vec3 worldDirection = normalize(matrixWorld * vec4(position, 1.0)).xyz;
   vWorldDirection = worldDirection;
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
-  vHeightAdjustment = getHeightAdjustment(
-    cameraHeight,
-    ellipsoidRadii,
-    geodeticSurface
-  );
+  vEarthCenter = earthCenter * METER_TO_UNIT_LENGTH;
   gl_Position =
     projectionMatrix *
     viewMatrix *

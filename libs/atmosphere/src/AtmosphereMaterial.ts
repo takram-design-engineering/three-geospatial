@@ -22,7 +22,6 @@ import fragmentShader from './shaders/atmosphere.frag'
 import vertexShader from './shaders/atmosphere.vert'
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
-import vertexCommon from './shaders/vertexCommon.glsl'
 
 export interface AtmosphereMaterialParameters
   extends AtmosphereMaterialBaseParameters {
@@ -58,7 +57,6 @@ export class AtmosphereMaterial extends AtmosphereMaterialBase {
         precision highp float;
         precision highp sampler3D;
         ${parameters}
-        ${vertexCommon}
         ${vertexShader}
       `,
       fragmentShader: /* glsl */ `

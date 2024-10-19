@@ -13,7 +13,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { Ellipsoid, Geodetic } from '@geovanni/core'
+import { Ellipsoid } from '@geovanni/core'
 
 import {
   ATMOSPHERE_PARAMETERS,
@@ -34,9 +34,8 @@ import fragmentShader from './shaders/aerialPerspectiveEffect.frag'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert'
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
-import vertexCommon from './shaders/vertexCommon.glsl'
 
-const geodeticScratch = /*#__PURE__*/ new Geodetic()
+const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction
@@ -68,6 +67,8 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
+  ellipsoid: Ellipsoid
+
   constructor(
     private camera: Camera,
     options?: AerialPerspectiveEffectOptions
@@ -100,7 +101,6 @@ export class AerialPerspectiveEffect extends Effect {
         blendFunction,
         vertexShader: /* glsl */ `
           ${parameters}
-          ${vertexCommon}
           ${vertexShader}
         `,
         attributes: EffectAttribute.DEPTH,
@@ -108,8 +108,8 @@ export class AerialPerspectiveEffect extends Effect {
         uniforms: new Map<string, Uniform>([
           ['u_solar_irradiance', new Uniform(ATMOSPHERE_PARAMETERS.solarIrradiance)],
           ['u_sun_angular_radius', new Uniform(ATMOSPHERE_PARAMETERS.sunAngularRadius)],
-          ['u_bottom_radius', new Uniform(ATMOSPHERE_PARAMETERS.bottomRadius)],
-          ['u_top_radius', new Uniform(ATMOSPHERE_PARAMETERS.topRadius)],
+          ['u_bottom_radius', new Uniform(ATMOSPHERE_PARAMETERS.bottomRadius * METER_TO_UNIT_LENGTH)],
+          ['u_top_radius', new Uniform(ATMOSPHERE_PARAMETERS.topRadius * METER_TO_UNIT_LENGTH)],
           ['u_rayleigh_scattering', new Uniform(ATMOSPHERE_PARAMETERS.rayleighScattering)],
           ['u_mie_scattering', new Uniform(ATMOSPHERE_PARAMETERS.mieScattering)],
           ['u_mie_phase_function_g', new Uniform(ATMOSPHERE_PARAMETERS.miePhaseFunctionG)],
@@ -123,9 +123,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
-          ['cameraHeight', new Uniform(0)],
-          ['ellipsoidRadii', new Uniform(new Vector3().copy(ellipsoid.radii))],
-          ['geodeticSurface', new Uniform(new Vector3())],
+          ['earthCenter', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(new Vector3())],
           ['albedoScale', new Uniform(albedoScale)]
         ]),
@@ -146,6 +144,7 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
     this.camera = camera
+    this.ellipsoid = ellipsoid
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
     this.photometric = photometric
@@ -188,16 +187,25 @@ export class AerialPerspectiveEffect extends Effect {
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
     const cameraPosition = uniforms.get('cameraPosition')!
-    const cameraHeight = uniforms.get('cameraHeight')!
-    const geodeticSurface = uniforms.get('geodeticSurface')!
+    const earthCenter = uniforms.get('earthCenter')!
     const camera = this.camera
     projectionMatrix.value.copy(camera.projectionMatrix)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
     const position = camera.getWorldPosition(cameraPosition.value)
-    const geodetic = geodeticScratch.setFromECEF(position)
-    cameraHeight.value = geodetic.height
-    geodetic.setHeight(0).toECEF(geodeticSurface.value)
+
+    const surfacePosition = this.ellipsoid.projectToSurface(
+      position,
+      undefined,
+      vectorScratch
+    )
+    if (surfacePosition != null) {
+      this.ellipsoid.getOsculatingSphereCenter(
+        surfacePosition,
+        ATMOSPHERE_PARAMETERS.bottomRadius,
+        earthCenter.value
+      )
+    }
   }
 
   get normalBuffer(): Texture | null {

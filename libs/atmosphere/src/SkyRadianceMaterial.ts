@@ -21,7 +21,6 @@ import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 import fragmentShader from './shaders/skyRadiance.frag'
 import vertexShader from './shaders/skyRadiance.vert'
-import vertexCommon from './shaders/vertexCommon.glsl'
 
 export interface SkyRadianceMaterialParameters
   extends AtmosphereMaterialBaseParameters {}
@@ -43,7 +42,6 @@ export class SkyRadianceMaterial extends AtmosphereMaterialBase {
         precision highp float;
         precision highp sampler3D;
         ${parameters}
-        ${vertexCommon}
         ${vertexShader}
       `,
       fragmentShader: /* glsl */ `

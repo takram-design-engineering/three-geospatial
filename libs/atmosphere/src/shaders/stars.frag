@@ -2,7 +2,7 @@ uniform vec3 sunDirection;
 
 in vec3 vWorldPosition;
 in vec3 vWorldDirection;
-in vec3 vHeightAdjustment;
+in vec3 vEarthCenter;
 
 layout(location = 0) out vec4 outputColor;
 
@@ -13,7 +13,7 @@ void main() {
   vec3 viewDirection = normalize(vWorldDirection);
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
-    vWorldPosition - vHeightAdjustment,
+    vWorldPosition - vEarthCenter,
     viewDirection,
     0.0,
     sunDirection,

@@ -40,8 +40,8 @@ SUN_SPECTRAL_RADIANCE_TO_LUMINANCE.multiplyScalar(LUMINANCE_SCALE)
 export const ATMOSPHERE_PARAMETERS = {
   solarIrradiance: new Vector3(1.474, 1.8504, 1.91198),
   sunAngularRadius: 0.004675,
-  bottomRadius: 6360000 * METER_TO_UNIT_LENGTH,
-  topRadius: 6420000 * METER_TO_UNIT_LENGTH,
+  bottomRadius: 6360000,
+  topRadius: 6420000,
   rayleighScattering: new Vector3(0.005802, 0.013558, 0.0331),
   mieScattering: new Vector3(0.003996, 0.003996, 0.003996),
   miePhaseFunctionG: 0.8,
