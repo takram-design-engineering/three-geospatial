@@ -7,7 +7,7 @@ import {
   type RenderCubeTextureApi
 } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
+import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
@@ -70,6 +70,7 @@ const Scene: FC = () => {
       <EffectComposer key={Math.random()} multisampling={0}>
         <LensFlare />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <SMAA />
         <Dithering />
       </EffectComposer>
     ),
@@ -92,13 +93,17 @@ const Scene: FC = () => {
           <meshPhysicalMaterial
             color={[0.4, 0.4, 0.4]}
             metalness={0}
-            roughness={0}
-            clearcoat={1}
+            roughness={1}
+            clearcoat={0.5}
             envMap={envMap?.fbo.texture}
           />
         </TorusKnot>
         <material>
-          <RenderCubeTexture ref={setEnvMap} position={position}>
+          <RenderCubeTexture
+            ref={setEnvMap}
+            resolution={64}
+            position={position}
+          >
             <Atmosphere
               ref={envMapRef}
               photometric={photometric}

@@ -229,7 +229,11 @@ const Scene: FC = () => {
           castShadow
         />
         <primitive object={material}>
-          <RenderCubeTexture ref={setEnvMap} position={position}>
+          <RenderCubeTexture
+            ref={setEnvMap}
+            resolution={64}
+            position={position}
+          >
             <SkyRadiance ref={envMapRef} photometric={photometric} />
           </RenderCubeTexture>
         </primitive>

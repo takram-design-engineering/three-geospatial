@@ -1,6 +1,6 @@
 import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
+import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
@@ -52,6 +52,7 @@ const Scene: FC = () => {
       <EffectComposer key={Math.random()} multisampling={0}>
         <LensFlare />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <SMAA />
         <Dithering />
       </EffectComposer>
     ),
