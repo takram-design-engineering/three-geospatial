@@ -25,7 +25,7 @@ import {
   TilingScheme
 } from '@geovanni/core'
 import { LocalTangentFrame } from '@geovanni/core/react'
-import { CSM, useCSM } from '@geovanni/csm/react'
+import { CascadedDirectionalLight, CSM, useCSM } from '@geovanni/csm/react'
 import {
   Depth,
   Dithering,
@@ -215,7 +215,7 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
-      <CSM.DirectionalLight intensity={sun ? 1 : 0} />
+      <CascadedDirectionalLight intensity={sun ? 1 : 0} />
       <Sphere
         args={[location.clone().setHeight(0).toECEF().length(), 360, 180]}
         material={terrainMaterial}

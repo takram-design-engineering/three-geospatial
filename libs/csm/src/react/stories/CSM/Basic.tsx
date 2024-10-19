@@ -8,6 +8,7 @@ import { ShadowMapViewer } from 'three-stdlib'
 
 import { CSM } from '../../../react/CSM'
 import { useCSM } from '../../../react/useCSM'
+import { CascadedDirectionalLight } from '../../CascadedDirectionalLight'
 
 const floorMaterial = new MeshStandardMaterial({ color: '#252a34' })
 const material1 = new MeshStandardMaterial({ color: '#08d9d6' })
@@ -85,7 +86,7 @@ const Scene: FC = () => {
       <color args={['#454e61']} attach='background' />
       <OrbitControls target={[-100, 10, 0]} maxPolarAngle={Math.PI / 2} />
       <ambientLight args={[0xffffff, 1.5]} />
-      <CSM.DirectionalLight
+      <CascadedDirectionalLight
         intensity={3}
         direction={[directionX, directionY, directionZ]}
       />
