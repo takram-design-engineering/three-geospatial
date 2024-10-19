@@ -1,3 +1,4 @@
+import { GizmoHelper, GizmoViewport } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
@@ -23,12 +24,14 @@ import {
   UpdateOnChangePlugin
 } from '@geovanni/3d-tiles'
 import {
+  Ellipsoid,
   Geodetic,
   getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF,
   radians
 } from '@geovanni/core'
+import { Ellipsoid as EllipsoidMesh } from '@geovanni/core/react'
 import {
   Depth,
   Dithering,
@@ -69,7 +72,8 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { photometric } = useControls('atmosphere', {
+  const { adjustHeight, photometric } = useControls('atmosphere', {
+    adjustHeight: true,
     photometric: true
   })
 
@@ -181,6 +185,7 @@ const Scene: FC = () => {
         {enable && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
+            adjustHeight={adjustHeight}
             photometric={photometric}
             sunIrradiance={sunIrradiance}
             skyIrradiance={skyIrradiance}
@@ -203,6 +208,7 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
+      adjustHeight,
       photometric,
       enable,
       sunIrradiance,
@@ -218,10 +224,18 @@ const Scene: FC = () => {
 
   return (
     <>
-      <Atmosphere ref={atmosphereRef} photometric={photometric} />
-      <Stars ref={starsRef} />
+      <GizmoHelper alignment='top-left' renderPriority={2}>
+        <GizmoViewport />
+      </GizmoHelper>
+      <Atmosphere
+        ref={atmosphereRef}
+        adjustHeight={adjustHeight}
+        photometric={photometric}
+      />
+      <Stars ref={starsRef} adjustHeight={adjustHeight} />
       <primitive object={tiles.group} />
       {effectComposer}
+      <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} />
     </>
   )
 }

@@ -15,6 +15,7 @@ export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
 export interface StarsProps extends PointsProps {
   ellipsoid?: Ellipsoid
+  adjustHeight?: boolean
   sunDirection?: Vector3
   pointSize?: number
   radianceScale?: number
@@ -23,7 +24,15 @@ export interface StarsProps extends PointsProps {
 
 export const Stars = forwardRef<StarsImpl, StarsProps>(
   function Stars(props, forwardedRef) {
-    const { ellipsoid, pointSize, radianceScale, background, ...others } = {
+    const {
+      ellipsoid,
+      adjustHeight,
+      sunDirection,
+      pointSize,
+      radianceScale,
+      background,
+      ...others
+    } = {
       ...starsMaterialParametersDefaults,
       ...props
     }
@@ -59,6 +68,9 @@ export const Stars = forwardRef<StarsImpl, StarsProps>(
           object={material}
           {...precomputedTextures}
           useHalfFloat={useHalfFloat}
+          ellipsoid={ellipsoid}
+          adjustHeight={adjustHeight}
+          sunDirection={sunDirection}
           pointSize={pointSize}
           radianceScale={radianceScale}
           background={background}

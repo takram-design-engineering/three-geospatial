@@ -46,6 +46,7 @@ export interface AerialPerspectiveEffectOptions {
   transmittanceTexture?: Texture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
+  adjustHeight?: boolean
   photometric?: boolean
   sunIrradiance?: boolean
   skyIrradiance?: boolean
@@ -58,6 +59,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   blendFunction: BlendFunction.NORMAL,
   reconstructNormal: false,
   ellipsoid: Ellipsoid.WGS84,
+  adjustHeight: true,
   photometric: false,
   sunIrradiance: true,
   skyIrradiance: true,
@@ -68,6 +70,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 
 export class AerialPerspectiveEffect extends Effect {
   ellipsoid: Ellipsoid
+  adjustHeight: boolean
 
   constructor(
     private camera: Camera,
@@ -82,6 +85,7 @@ export class AerialPerspectiveEffect extends Effect {
       transmittanceTexture,
       useHalfFloat,
       ellipsoid,
+      adjustHeight,
       photometric,
       sunIrradiance,
       skyIrradiance,
@@ -145,6 +149,7 @@ export class AerialPerspectiveEffect extends Effect {
     )
     this.camera = camera
     this.ellipsoid = ellipsoid
+    this.adjustHeight = adjustHeight
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
     this.photometric = photometric
@@ -194,17 +199,21 @@ export class AerialPerspectiveEffect extends Effect {
     inverseViewMatrix.value.copy(camera.matrixWorld)
     const position = camera.getWorldPosition(cameraPosition.value)
 
-    const surfacePosition = this.ellipsoid.projectToSurface(
-      position,
-      undefined,
-      vectorScratch
-    )
-    if (surfacePosition != null) {
-      this.ellipsoid.getOsculatingSphereCenter(
-        surfacePosition,
-        ATMOSPHERE_PARAMETERS.bottomRadius,
-        earthCenter.value
+    if (this.adjustHeight) {
+      const surfacePosition = this.ellipsoid.projectToSurface(
+        position,
+        undefined,
+        vectorScratch
       )
+      if (surfacePosition != null) {
+        this.ellipsoid.getOsculatingSphereCenter(
+          surfacePosition,
+          ATMOSPHERE_PARAMETERS.bottomRadius,
+          earthCenter.value
+        )
+      }
+    } else {
+      earthCenter.value.set(0, 0, 0)
     }
   }
 

@@ -78,7 +78,8 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { photometric } = useControls('atmosphere', {
+  const { adjustHeight, photometric } = useControls('atmosphere', {
+    adjustHeight: true,
     photometric: true
   })
 
@@ -166,6 +167,7 @@ const Scene: FC = () => {
         {enable && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
+            adjustHeight={adjustHeight}
             photometric={photometric}
             skyIrradiance={false}
             sunIrradiance={false}
@@ -187,6 +189,7 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
+      adjustHeight,
       photometric,
       enable,
       transmittance,
@@ -216,8 +219,12 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} photometric={photometric} />
-      <Stars ref={starsRef} />
+      <Atmosphere
+        ref={atmosphereRef}
+        adjustHeight={adjustHeight}
+        photometric={photometric}
+      />
+      <Stars ref={starsRef} adjustHeight={adjustHeight} />
       <CascadedDirectionalLight intensity={sun ? 1 : 0} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
@@ -238,7 +245,11 @@ const Scene: FC = () => {
             resolution={64}
             position={position}
           >
-            <SkyRadiance ref={envMapRef} photometric={photometric} />
+            <SkyRadiance
+              ref={envMapRef}
+              adjustHeight={adjustHeight}
+              photometric={photometric}
+            />
           </RenderCubeTexture>
         </primitive>
       </LocalTangentFrame>

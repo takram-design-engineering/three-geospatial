@@ -38,6 +38,7 @@ export interface AtmosphereMaterialBaseParameters
   transmittanceTexture?: Texture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
+  adjustHeight?: boolean
   photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
@@ -46,11 +47,13 @@ export interface AtmosphereMaterialBaseParameters
 export const atmosphereMaterialParametersBaseDefaults = {
   useHalfFloat: false,
   ellipsoid: Ellipsoid.WGS84,
+  adjustHeight: true,
   photometric: false
 } satisfies AtmosphereMaterialBaseParameters
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   ellipsoid: Ellipsoid
+  adjustHeight: boolean
 
   constructor(params?: AtmosphereMaterialBaseParameters) {
     const {
@@ -59,6 +62,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       transmittanceTexture,
       useHalfFloat,
       ellipsoid,
+      adjustHeight,
       photometric,
       sunDirection,
       sunAngularRadius,
@@ -107,6 +111,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       }
     })
     this.ellipsoid = ellipsoid
+    this.adjustHeight = adjustHeight
     this.useHalfFloat = useHalfFloat
     this.photometric = photometric
   }
@@ -122,17 +127,21 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     const uniforms = this.uniforms
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
 
-    const surfacePosition = this.ellipsoid.projectToSurface(
-      position,
-      undefined,
-      vectorScratch
-    )
-    if (surfacePosition != null) {
-      this.ellipsoid.getOsculatingSphereCenter(
-        surfacePosition,
-        ATMOSPHERE_PARAMETERS.bottomRadius,
-        uniforms.earthCenter.value
+    if (this.adjustHeight) {
+      const surfacePosition = this.ellipsoid.projectToSurface(
+        position,
+        undefined,
+        vectorScratch
       )
+      if (surfacePosition != null) {
+        this.ellipsoid.getOsculatingSphereCenter(
+          surfacePosition,
+          ATMOSPHERE_PARAMETERS.bottomRadius,
+          uniforms.earthCenter.value
+        )
+      }
+    } else {
+      uniforms.earthCenter.value.set(0, 0, 0)
     }
   }
 

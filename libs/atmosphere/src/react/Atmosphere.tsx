@@ -15,6 +15,7 @@ export type AtmosphereImpl = Mesh<BufferGeometry, AtmosphereMaterial>
 
 export interface AtmosphereProps extends MeshProps {
   ellipsoid?: Ellipsoid
+  adjustHeight?: boolean
   photometric?: boolean
   sun?: boolean
   sunDirection?: Vector3
@@ -29,6 +30,7 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
   function Atmosphere(props, forwardedRef) {
     const {
       ellipsoid,
+      adjustHeight,
       photometric,
       sun,
       sunDirection,
@@ -62,6 +64,7 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
           {...precomputedTextures}
           useHalfFloat={useHalfFloat}
           ellipsoid={ellipsoid}
+          adjustHeight={adjustHeight}
           photometric={photometric}
           sun={sun}
           sunDirection={sunDirection}

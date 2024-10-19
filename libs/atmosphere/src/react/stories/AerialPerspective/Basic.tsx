@@ -75,7 +75,8 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { photometric } = useControls('atmosphere', {
+  const { adjustHeight, photometric } = useControls('atmosphere', {
+    adjustHeight: true,
     photometric: true
   })
 
@@ -120,6 +121,7 @@ const Scene: FC = () => {
         {enable && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
+            adjustHeight={adjustHeight}
             photometric={photometric}
             sunIrradiance={sunIrradiance}
             skyIrradiance={skyIrradiance}
@@ -141,6 +143,7 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
+      adjustHeight,
       photometric,
       enable,
       sunIrradiance,
@@ -160,8 +163,12 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere ref={atmosphereRef} photometric={photometric} />
-      <Stars ref={starsRef} />
+      <Atmosphere
+        ref={atmosphereRef}
+        adjustHeight={adjustHeight}
+        photometric={photometric}
+      />
+      <Stars ref={starsRef} adjustHeight={adjustHeight} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}
