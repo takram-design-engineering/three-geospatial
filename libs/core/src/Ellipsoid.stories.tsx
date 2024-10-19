@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { OrbitControls, Sphere } from '@react-three/drei'
+import {
+  GizmoHelper,
+  GizmoViewport,
+  OrbitControls,
+  Sphere
+} from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
 import { type Meta, type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
@@ -10,6 +15,7 @@ import { Raycaster, Vector2, Vector3, type ArrowHelper, type Mesh } from 'three'
 
 import { Ellipsoid } from './Ellipsoid'
 import { projectToGeodeticSurface } from './projectToGeodeticSurface'
+import { Ellipsoid as EllipsoidMesh } from './react/Ellipsoid'
 
 export default {
   title: 'core/Ellipsoid',
@@ -82,19 +88,13 @@ const Scene: FC = () => {
 
   return (
     <>
+      <GizmoHelper alignment='top-left'>
+        <GizmoViewport />
+      </GizmoHelper>
       <OrbitControls />
-      <Sphere
-        ref={ellipsoidMeshRef}
-        args={[ellipsoid.minimumRadius, 90, 45]}
-        scale={[
-          ellipsoid.radii.x / ellipsoid.minimumRadius,
-          ellipsoid.radii.z / ellipsoid.minimumRadius,
-          ellipsoid.radii.y / ellipsoid.minimumRadius
-        ]}
-        rotation-x={Math.PI / 2}
-      >
+      <EllipsoidMesh ref={ellipsoidMeshRef} args={[ellipsoid.radii, 90, 45]}>
         <meshBasicMaterial color='yellow' wireframe={wireframe} />
-      </Sphere>
+      </EllipsoidMesh>
       <Sphere ref={sphereMeshRef} args={[1, 90, 45]} rotation-x={Math.PI / 2}>
         <meshBasicMaterial color='cyan' wireframe={wireframe} />
       </Sphere>

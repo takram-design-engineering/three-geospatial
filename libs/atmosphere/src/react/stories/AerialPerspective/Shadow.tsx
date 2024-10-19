@@ -3,7 +3,6 @@ import {
   GizmoViewport,
   OrbitControls,
   RenderCubeTexture,
-  Sphere,
   TorusKnot,
   type RenderCubeTextureApi
 } from '@react-three/drei'
@@ -24,7 +23,10 @@ import {
   radians,
   TilingScheme
 } from '@geovanni/core'
-import { LocalTangentFrame } from '@geovanni/core/react'
+import {
+  Ellipsoid as EllipsoidMesh,
+  LocalTangentFrame
+} from '@geovanni/core/react'
 import { CascadedDirectionalLight, CSM, useCSM } from '@geovanni/csm/react'
 import {
   Depth,
@@ -217,10 +219,10 @@ const Scene: FC = () => {
       <Atmosphere ref={atmosphereRef} photometric={photometric} />
       <Stars ref={starsRef} />
       <CascadedDirectionalLight intensity={sun ? 1 : 0} />
-      <Sphere
-        args={[Ellipsoid.WGS84.maximumRadius, 360, 180]}
-        scale-z={Ellipsoid.WGS84.maximumRadius / Ellipsoid.WGS84.minimumRadius}
+      <EllipsoidMesh
+        args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}
+        receiveShadow
       />
       <LocalTangentFrame location={location}>
         <TorusKnot
