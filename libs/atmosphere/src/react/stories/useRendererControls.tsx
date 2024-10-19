@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useSpring } from 'framer-motion'
-import { useControls } from 'leva'
-import { useEffect, useLayoutEffect } from 'react'
+import { useControls, useStoreContext } from 'leva'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Material } from 'three'
 
 import { springOptions } from './springOptions'
@@ -15,14 +15,24 @@ export function useRendererControls({
   exposure: initialExposure = 1,
   shadow: initialShadow = false
 }: Partial<RendererControlValues>): RendererControlValues {
-  const [values, set] = useControls('renderer', () => ({
-    exposure: {
-      value: initialExposure,
-      min: 0,
-      max: 100
-    },
-    shadow: initialShadow
-  }))
+  const store = useStoreContext()
+  const [values, set] = useControls(
+    'renderer',
+    () => ({
+      exposure: {
+        value: initialExposure,
+        min: 0,
+        max: 100
+      },
+      shadow: initialShadow
+    }),
+    { store }
+  )
+
+  const initialValuesRef = useRef({ shadow: initialShadow })
+  useEffect(() => {
+    set(initialValuesRef.current)
+  }, [set])
 
   const { exposure, shadow } = values
 
