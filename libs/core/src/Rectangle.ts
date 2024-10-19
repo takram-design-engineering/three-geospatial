@@ -10,13 +10,11 @@ export interface RectangleLike {
 }
 
 export class Rectangle {
-  static readonly MAX: Readonly<Rectangle> = Object.freeze(
-    new Rectangle(
-      Geodetic.MIN_LONGITUDE,
-      Geodetic.MIN_LATITUDE,
-      Geodetic.MAX_LONGITUDE,
-      Geodetic.MAX_LATITUDE
-    )
+  static readonly MAX: Readonly<Rectangle> = new Rectangle(
+    Geodetic.MIN_LONGITUDE,
+    Geodetic.MIN_LATITUDE,
+    Geodetic.MAX_LONGITUDE,
+    Geodetic.MAX_LATITUDE
   )
 
   constructor(

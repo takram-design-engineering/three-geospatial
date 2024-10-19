@@ -77,17 +77,18 @@ export class Geodetic {
   // See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Geodetic.js#L119
   setFromECEF(
-    vector: Vector3,
+    position: Vector3,
     options: {
       ellipsoid?: Ellipsoid
       centerTolerance?: number
     } = {}
   ): this {
     const { ellipsoid = Ellipsoid.WGS84, centerTolerance } = options
-    const oneOverRadiiSquared = ellipsoid.oneOverRadiiSquared(vectorScratch1)
+    const reciprocalRadiiSquared =
+      ellipsoid.reciprocalRadiiSquared(vectorScratch1)
     const projection = projectToGeodeticSurface(
-      vector,
-      oneOverRadiiSquared,
+      position,
+      reciprocalRadiiSquared,
       centerTolerance,
       vectorScratch2
     )
@@ -95,12 +96,12 @@ export class Geodetic {
       throw new Error()
     }
     const normal = vectorScratch1
-      .multiplyVectors(projection, oneOverRadiiSquared)
+      .multiplyVectors(projection, reciprocalRadiiSquared)
       .normalize()
     this.longitude = Math.atan2(normal.y, normal.x)
     this.latitude = Math.asin(normal.z)
-    const height = vectorScratch1.subVectors(vector, projection)
-    this.height = Math.sign(height.dot(vector)) * height.length()
+    const height = vectorScratch1.subVectors(position, projection)
+    this.height = Math.sign(height.dot(position)) * height.length()
     return this
   }
 

@@ -6,14 +6,14 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/scaleToGeodeticSurface.js
 export function projectToGeodeticSurface(
   vector: Vector3,
-  oneOverRadiiSquared: Vector3,
+  reciprocalRadiiSquared: Vector3,
   centerTolerance = 0.1,
   result = new Vector3()
 ): Vector3 | undefined {
   const { x, y, z } = vector
-  const rx = oneOverRadiiSquared.x
-  const ry = oneOverRadiiSquared.y
-  const rz = oneOverRadiiSquared.z
+  const rx = reciprocalRadiiSquared.x
+  const ry = reciprocalRadiiSquared.y
+  const rz = reciprocalRadiiSquared.z
   const x2 = x * x * rx
   const y2 = y * y * ry
   const z2 = z * z * rz
@@ -37,7 +37,7 @@ export function projectToGeodeticSurface(
   // Use the gradient at the intersection point in place of the true unit
   // normal. The difference in magnitude will be absorbed in the multiplier.
   const gradient = vectorScratch
-    .multiplyVectors(result, oneOverRadiiSquared)
+    .multiplyVectors(result, reciprocalRadiiSquared)
     .multiplyScalar(2)
 
   // Compute the initial guess at the normal vector multiplier.

@@ -3,9 +3,7 @@ import { Vector3 } from 'three'
 import { closeTo } from './math'
 
 export class Ellipsoid {
-  static WGS84 = Object.freeze(
-    new Ellipsoid(6378137, 6378137, 6356752.3142451793)
-  )
+  static WGS84 = new Ellipsoid(6378137, 6378137, 6356752.3142451793)
 
   readonly radii: Vector3
 
@@ -21,15 +19,7 @@ export class Ellipsoid {
     return Math.max(this.radii.x, this.radii.y, this.radii.z)
   }
 
-  radiiSquared(result = new Vector3()): Vector3 {
-    return result.set(
-      this.radii.x * this.radii.x,
-      this.radii.y * this.radii.y,
-      this.radii.z * this.radii.z
-    )
-  }
-
-  oneOverRadii(result = new Vector3()): Vector3 {
+  reciprocalRadii(result = new Vector3()): Vector3 {
     return result.set(
       this.radii.x === 0 ? 0 : 1 / this.radii.x,
       this.radii.y === 0 ? 0 : 1 / this.radii.y,
@@ -37,7 +27,7 @@ export class Ellipsoid {
     )
   }
 
-  oneOverRadiiSquared(result = new Vector3()): Vector3 {
+  reciprocalRadiiSquared(result = new Vector3()): Vector3 {
     return result.set(
       this.radii.x === 0 ? 0 : 1 / (this.radii.x * this.radii.x),
       this.radii.y === 0 ? 0 : 1 / (this.radii.y * this.radii.y),
@@ -46,17 +36,17 @@ export class Ellipsoid {
   }
 
   getSurfaceNormal(
-    vector: Vector3,
+    direction: Vector3,
     result = new Vector3()
   ): Vector3 | undefined {
     if (
-      closeTo(vector.x, 0, 1e-14) &&
-      closeTo(vector.y, 0, 1e-14) &&
-      closeTo(vector.z, 0, 1e-14)
+      closeTo(direction.x, 0, 1e-14) &&
+      closeTo(direction.y, 0, 1e-14) &&
+      closeTo(direction.z, 0, 1e-14)
     ) {
       return undefined
     }
-    const oneOverRadiiSquared = this.oneOverRadiiSquared(result)
-    return result.multiplyVectors(vector, oneOverRadiiSquared).normalize()
+    const reciprocalRadiiSquared = this.reciprocalRadiiSquared(result)
+    return result.multiplyVectors(direction, reciprocalRadiiSquared).normalize()
   }
 }
