@@ -1,3 +1,2 @@
-import '@react-three/fiber'
-
 export * from './LocalTangentFrame'
+export * from './Ellipsoid'
