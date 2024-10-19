@@ -39,7 +39,7 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls />
-      <Environment preset='warehouse' background />
+      <Environment files='/hdri/wooden_lounge_4k.hdr' background />
       {effectComposer}
     </>
   )
