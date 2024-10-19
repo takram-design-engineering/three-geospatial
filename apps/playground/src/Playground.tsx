@@ -8,10 +8,10 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 import { Vector3 } from 'three'
 
-import { AerialPerspective, Atmosphere } from '@geovanni/atmosphere'
+import { AerialPerspective, Atmosphere } from '@geovanni/atmosphere/react'
 import { Geodetic, getSunDirectionECEF, radians } from '@geovanni/core'
+import { LocalTangentFrame } from '@geovanni/core/react'
 import { EffectComposer, SSAO } from '@geovanni/effects/react'
-import { LocalTangentFrame } from '@geovanni/react'
 
 import { SunLight } from './components/SunLight'
 import { Tileset } from './components/Tileset'

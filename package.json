@@ -4,7 +4,7 @@
   "private": true,
   "license": "UNLICENSED (for now)",
   "scripts": {
-    "clean": "nx reset && rm -r dist tmp libs/*/vite.config.ts.timestamp-*",
+    "clean": "nx reset && rm -r dist tmp; rm libs/*/vite.config.ts.timestamp-*",
     "dev": "nx dev playground",
     "storybook": "nx storybook storybook --port=4400 --no-open"
   },
