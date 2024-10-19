@@ -7,7 +7,7 @@ import {
   TorusKnot,
   type RenderCubeTextureApi
 } from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
@@ -197,12 +197,11 @@ const Scene: FC = () => {
   )
 
   const textures = usePrecomputedTextures('/', true)
-  const camera = useThree(({ camera }) => camera)
   useFrame(() => {
     computeSunLightColor(
       textures.transmittanceTexture,
+      position,
       sunDirectionRef.current,
-      camera,
       photometric,
       csm.directionalLight.mainLight.color
     )
