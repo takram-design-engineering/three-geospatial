@@ -14,7 +14,7 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { CascadedDirectionalLight } from './CascadedDirectionalLight'
+import { CascadedDirectionalLights } from './CascadedDirectionalLights'
 import { FrustumCorners } from './FrustumCorners'
 import { MaterialStates } from './MaterialStates'
 import { splitFrustum, type FrustumSplitMode } from './splitFrustum'
@@ -56,7 +56,7 @@ export class CascadedShadowMaps {
   fade: boolean
   disableLastCascadeCutoff: boolean
 
-  readonly directionalLight = new CascadedDirectionalLight()
+  readonly directionalLights = new CascadedDirectionalLights()
   readonly materialStates = new MaterialStates()
   readonly mainFrustum = new FrustumCorners()
   readonly cascadedFrusta: FrustumCorners[] = []
@@ -90,7 +90,7 @@ export class CascadedShadowMaps {
 
   dispose(): void {
     this.materialStates.dispose()
-    this.directionalLight.dispose()
+    this.directionalLights.dispose()
   }
 
   setupMaterial<T extends Material>(material: T): T {
@@ -161,7 +161,7 @@ export class CascadedShadowMaps {
 
   private updateShadowBounds(): void {
     const frusta = this.cascadedFrusta
-    const lights = this.directionalLight.cascadedLights
+    const lights = this.directionalLights.cascadedLights
     invariant(frusta.length === lights.length)
 
     for (let i = 0; i < frusta.length; ++i) {
@@ -190,7 +190,7 @@ export class CascadedShadowMaps {
       this.updateFrusta()
     }
 
-    const directionalLight = this.directionalLight
+    const directionalLight = this.directionalLights
     const lightDirection = vectorScratch1
       .copy(directionalLight.direction)
       .normalize()
@@ -236,23 +236,23 @@ export class CascadedShadowMaps {
   }
 
   get cascadeCount(): number {
-    return this.directionalLight.cascadedLights.length
+    return this.directionalLights.cascadedLights.length
   }
 
   set cascadeCount(value: number) {
     if (value !== this.cascadeCount) {
-      this.directionalLight.setCount(value)
+      this.directionalLights.setCount(value)
       this.needsUpdateFrusta = true
     }
   }
 
   get mapSize(): number {
-    return this.directionalLight.mainLight.shadow.mapSize.width
+    return this.directionalLights.mainLight.shadow.mapSize.width
   }
 
   set mapSize(value: number) {
     if (value !== this.mapSize) {
-      const lights = this.directionalLight.cascadedLights
+      const lights = this.directionalLights.cascadedLights
       for (let i = 0; i < lights.length; ++i) {
         const shadow = lights[i].shadow
         shadow.mapSize.width = value
@@ -268,12 +268,12 @@ export class CascadedShadowMaps {
   // Proxy properties for cascaded lights:
 
   get intensity(): number {
-    return this.directionalLight.mainLight.shadow.intensity
+    return this.directionalLights.mainLight.shadow.intensity
   }
 
   set intensity(value: number) {
     if (value !== this.intensity) {
-      const lights = this.directionalLight.cascadedLights
+      const lights = this.directionalLights.cascadedLights
       for (let i = 0; i < lights.length; ++i) {
         lights[i].shadow.intensity = value
       }
@@ -281,12 +281,12 @@ export class CascadedShadowMaps {
   }
 
   get bias(): number {
-    return this.directionalLight.mainLight.shadow.bias
+    return this.directionalLights.mainLight.shadow.bias
   }
 
   set bias(value: number) {
     if (value !== this.bias) {
-      const lights = this.directionalLight.cascadedLights
+      const lights = this.directionalLights.cascadedLights
       for (let i = 0; i < lights.length; ++i) {
         lights[i].shadow.bias = value
       }
@@ -294,12 +294,12 @@ export class CascadedShadowMaps {
   }
 
   get normalBias(): number {
-    return this.directionalLight.mainLight.shadow.normalBias
+    return this.directionalLights.mainLight.shadow.normalBias
   }
 
   set normalBias(value: number) {
     if (value !== this.normalBias) {
-      const lights = this.directionalLight.cascadedLights
+      const lights = this.directionalLights.cascadedLights
       for (let i = 0; i < lights.length; ++i) {
         lights[i].shadow.normalBias = value
       }
@@ -307,12 +307,12 @@ export class CascadedShadowMaps {
   }
 
   get radius(): number {
-    return this.directionalLight.mainLight.shadow.radius
+    return this.directionalLights.mainLight.shadow.radius
   }
 
   set radius(value: number) {
     if (value !== this.radius) {
-      const lights = this.directionalLight.cascadedLights
+      const lights = this.directionalLights.cascadedLights
       for (let i = 0; i < lights.length; ++i) {
         lights[i].shadow.radius = value
       }
@@ -320,12 +320,12 @@ export class CascadedShadowMaps {
   }
 
   get blurSamples(): number {
-    return this.directionalLight.mainLight.shadow.blurSamples
+    return this.directionalLights.mainLight.shadow.blurSamples
   }
 
   set blurSamples(value: number) {
     if (value !== this.blurSamples) {
-      const lights = this.directionalLight.cascadedLights
+      const lights = this.directionalLights.cascadedLights
       for (let i = 0; i < lights.length; ++i) {
         lights[i].shadow.blurSamples = value
       }

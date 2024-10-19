@@ -61,7 +61,7 @@ export const CSM = forwardRef<CascadedShadowMaps, CSMProps>(function CSM(
   return (
     <>
       <primitive ref={forwardedRef} object={csm} {...options} />
-      <primitive object={csm.directionalLight} />
+      <primitive object={csm.directionalLights} />
       <CSMContext.Provider value={context}>{children}</CSMContext.Provider>
     </>
   )

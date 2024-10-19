@@ -5,7 +5,7 @@ import {
   type ColorRepresentation
 } from 'three'
 
-export class CascadedDirectionalLight extends Object3D {
+export class CascadedDirectionalLights extends Object3D {
   readonly mainLight: DirectionalLight
   readonly cascadedLights: DirectionalLight[]
 

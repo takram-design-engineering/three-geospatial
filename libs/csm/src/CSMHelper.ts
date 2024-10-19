@@ -80,7 +80,7 @@ export class CSMHelper extends Group {
     const cascadeCount = csm.cascadeCount
     const mainFrustum = csm.mainFrustum
     const frusta = csm.cascadedFrusta
-    const lights = csm.directionalLight.cascadedLights
+    const lights = csm.directionalLights.cascadedLights
 
     const frustumLines = this.frustumLines
     const frustumLinePositions = frustumLines.geometry.getAttribute('position')

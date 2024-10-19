@@ -6,7 +6,7 @@ import { Fragment, useEffect, useRef, type FC } from 'react'
 import { BoxGeometry, Material, MeshStandardMaterial } from 'three'
 import { ShadowMapViewer } from 'three-stdlib'
 
-import { CascadedDirectionalLight } from '../../react/CascadedDirectionalLight'
+import { CascadedDirectionalLights } from '../../react/CascadedDirectionalLights'
 import { CSM } from '../../react/CSM'
 import { useCSM } from '../../react/useCSM'
 
@@ -65,7 +65,7 @@ const Scene: FC = () => {
   const viewersRef = useRef<ShadowMapViewer[]>([])
 
   useFrame(({ gl, scene, camera }) => {
-    const lights = csm.directionalLight.cascadedLights
+    const lights = csm.directionalLights.cascadedLights
     for (let i = 0; i < lights.length; ++i) {
       const light = lights[i]
       if (viewersRef.current[i] == null && light.shadow.map?.texture != null) {
@@ -86,7 +86,7 @@ const Scene: FC = () => {
       <color args={['#454e61']} attach='background' />
       <OrbitControls target={[-100, 10, 0]} maxPolarAngle={Math.PI / 2} />
       <ambientLight args={[0xffffff, 1.5]} />
-      <CascadedDirectionalLight
+      <CascadedDirectionalLights
         intensity={3}
         direction={[directionX, directionY, directionZ]}
       />

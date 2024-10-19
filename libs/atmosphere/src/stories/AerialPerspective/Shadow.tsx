@@ -27,7 +27,7 @@ import {
   Ellipsoid as EllipsoidMesh,
   LocalTangentFrame
 } from '@geovanni/core/react'
-import { CascadedDirectionalLight, CSM, useCSM } from '@geovanni/csm/react'
+import { CascadedDirectionalLights, CSM, useCSM } from '@geovanni/csm/react'
 import {
   Depth,
   Dithering,
@@ -156,7 +156,7 @@ const Scene: FC = () => {
     if (aerialPerspectiveRef.current != null) {
       aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
     }
-    csm.directionalLight.direction
+    csm.directionalLights.direction
       .copy(sunDirectionRef.current)
       .multiplyScalar(-1)
   })
@@ -209,7 +209,7 @@ const Scene: FC = () => {
       sunDirectionRef.current,
       photometric,
       undefined,
-      csm.directionalLight.mainLight.color
+      csm.directionalLights.mainLight.color
     )
   })
 
@@ -225,7 +225,7 @@ const Scene: FC = () => {
         photometric={photometric}
       />
       <Stars ref={starsRef} adjustHeight={adjustHeight} />
-      <CascadedDirectionalLight intensity={sun ? 1 : 0} />
+      <CascadedDirectionalLights intensity={sun ? 1 : 0} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}

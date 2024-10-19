@@ -56,7 +56,7 @@ const Scene: FC = () => {
   const motionAltitude = useSpring(-55, springConfig)
   const motionAzimuth = useSpring(225, springConfig)
   useFrame(() => {
-    csm.directionalLight.direction.setFromSphericalCoords(
+    csm.directionalLights.direction.setFromSphericalCoords(
       1,
       radians(motionAltitude.get()) + Math.PI,
       radians(motionAzimuth.get())
@@ -181,7 +181,7 @@ const Scene: FC = () => {
   const viewersRef = useRef<ShadowMapViewer[]>([])
 
   useFrame(({ gl, scene, camera }) => {
-    const lights = csm.directionalLight.cascadedLights
+    const lights = csm.directionalLights.cascadedLights
     for (let i = 0; i < lights.length; ++i) {
       const light = lights[i]
       if (viewersRef.current[i] == null && light.shadow.map?.texture != null) {
@@ -202,7 +202,7 @@ const Scene: FC = () => {
       <color args={['#454e61']} attach='background' />
       <OrbitControls target={[-100, 10, 0]} maxPolarAngle={Math.PI / 2} />
       <ambientLight args={[0xffffff, 1.5]} />
-      <primitive object={csm.directionalLight} mainLight-intensity={3} />
+      <primitive object={csm.directionalLights} mainLight-intensity={3} />
       {anotherLight && (
         <directionalLight
           args={[0xffffff, 1.5]}
