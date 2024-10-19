@@ -2,8 +2,8 @@ import { BufferAttribute, BufferGeometry, Vector3 } from 'three'
 
 export interface EllipsoidGeometryParameters {
   radii: Vector3
-  widthSegments?: number
-  heightSegments?: number
+  longitudeSegments?: number
+  latitudeSegments?: number
 }
 
 export class EllipsoidGeometry extends BufferGeometry {
@@ -12,20 +12,20 @@ export class EllipsoidGeometry extends BufferGeometry {
 
   constructor(
     radii = new Vector3(1, 1, 1),
-    widthSegments = 32,
-    heightSegments = 16
+    longitudeSegments = 32,
+    latitudeSegments = 16
   ) {
     super()
     this.parameters = {
       radii,
-      widthSegments,
-      heightSegments
+      longitudeSegments,
+      latitudeSegments
     }
 
-    widthSegments = Math.max(3, Math.floor(widthSegments))
-    heightSegments = Math.max(2, Math.floor(heightSegments))
+    longitudeSegments = Math.max(3, Math.floor(longitudeSegments))
+    latitudeSegments = Math.max(2, Math.floor(latitudeSegments))
 
-    const elementCount = (widthSegments + 1) * (heightSegments + 1)
+    const elementCount = (longitudeSegments + 1) * (latitudeSegments + 1)
     const vertex = new Vector3()
     const normal = new Vector3()
     const vertices = new Float32Array(elementCount * 3)
@@ -37,27 +37,27 @@ export class EllipsoidGeometry extends BufferGeometry {
     // Vertices, normals and UVs
     for (
       let y = 0, vertexIndex = 0, uvIndex = 0, rowIndex = 0;
-      y <= heightSegments;
+      y <= latitudeSegments;
       ++y
     ) {
       const rowIndices = []
-      const v = y / heightSegments
+      const v = y / latitudeSegments
       const phi = v * Math.PI
 
       // Special case for the poles
       let uOffset = 0
       if (y === 0) {
-        uOffset = 0.5 / widthSegments
-      } else if (y === heightSegments) {
-        uOffset = -0.5 / widthSegments
+        uOffset = 0.5 / longitudeSegments
+      } else if (y === latitudeSegments) {
+        uOffset = -0.5 / longitudeSegments
       }
 
       for (
         let x = 0;
-        x <= widthSegments;
+        x <= longitudeSegments;
         ++x, vertexIndex += 3, uvIndex += 2, ++rowIndex
       ) {
-        const u = x / widthSegments
+        const u = x / longitudeSegments
         const theta = u * Math.PI * 2
         vertex.x = radii.x * Math.cos(theta) * Math.sin(phi)
         vertex.y = radii.y * Math.sin(theta) * Math.sin(phi)
@@ -77,8 +77,8 @@ export class EllipsoidGeometry extends BufferGeometry {
     }
 
     // Indices
-    for (let y = 0; y < heightSegments; ++y) {
-      for (let x = 0; x < widthSegments; ++x) {
+    for (let y = 0; y < latitudeSegments; ++y) {
+      for (let x = 0; x < longitudeSegments; ++x) {
         const a = grid[y][x + 1]
         const b = grid[y][x]
         const c = grid[y + 1][x]
@@ -86,7 +86,7 @@ export class EllipsoidGeometry extends BufferGeometry {
         if (y !== 0) {
           indices.push(a, b, d)
         }
-        if (y !== heightSegments - 1) {
+        if (y !== latitudeSegments - 1) {
           indices.push(b, c, d)
         }
       }
@@ -107,8 +107,8 @@ export class EllipsoidGeometry extends BufferGeometry {
   static fromJSON(data: EllipsoidGeometryParameters): EllipsoidGeometry {
     return new EllipsoidGeometry(
       data.radii,
-      data.widthSegments,
-      data.heightSegments
+      data.longitudeSegments,
+      data.latitudeSegments
     )
   }
 }
