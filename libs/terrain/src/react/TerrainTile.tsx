@@ -5,8 +5,8 @@ import { type Mesh } from 'three'
 
 import { Rectangle } from '@geovanni/core'
 
-import { IonTerrain } from './IonTerrain'
-import { TerrainGeometry } from './TerrainGeometry'
+import { IonTerrain } from '../IonTerrain'
+import { TerrainGeometry } from '../TerrainGeometry'
 
 export interface TerrainTileProps extends MeshProps {
   terrain: IonTerrain

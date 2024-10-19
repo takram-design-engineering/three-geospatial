@@ -34,7 +34,8 @@ import {
   useColorGradingControls
 } from '@geovanni/effects/react'
 import { LocalTangentFrame } from '@geovanni/react'
-import { IonTerrain, TerrainTile } from '@geovanni/terrain'
+import { IonTerrain } from '@geovanni/terrain'
+import { TerrainTile } from '@geovanni/terrain/react'
 
 import { type AerialPerspectiveEffect } from '../../../AerialPerspectiveEffect'
 import { computeSunLightColor } from '../../../computeSunLightColor'

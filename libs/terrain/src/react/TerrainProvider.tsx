@@ -1,6 +1,6 @@
 import { createContext, useMemo, type FC, type ReactNode } from 'react'
 
-import { IonAsset, type IonAssetParams } from './IonAsset'
+import { IonAsset, type IonAssetParams } from '../IonAsset'
 
 export interface TerrainContextValue {
   asset: IonAsset
