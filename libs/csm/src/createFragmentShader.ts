@@ -1,3 +1,5 @@
+/// <reference types="vite-plugin-glsl/ext" />
+
 import { ShaderChunk } from 'three'
 
 import cascadedFadedLights from './shaders/cascadedFadedLights.glsl'

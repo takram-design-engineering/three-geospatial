@@ -16,12 +16,12 @@ import {
 } from 'react'
 import { type Vector3Like, type Vector3Tuple } from 'three'
 
-import { type CascadedDirectionalLight } from './CascadedDirectionalLight'
+import { type CascadedDirectionalLight } from '../CascadedDirectionalLight'
 import {
   CascadedShadowMaps,
   cascadedShadowMapsOptionsDefaults,
   type CascadedShadowMapsOptions
-} from './CascadedShadowMaps'
+} from '../CascadedShadowMaps'
 import { useCSM } from './useCSM'
 
 export interface CSMContextValue {

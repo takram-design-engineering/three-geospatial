@@ -7,4 +7,4 @@ export default {
   }
 } satisfies Meta
 
-export { Basic } from './stories/CSM/Basic'
+export { Basic } from '../stories/CSM/Basic'

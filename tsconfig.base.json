@@ -20,6 +20,7 @@
       "@geovanni/atmosphere": ["libs/atmosphere/src/index.ts"],
       "@geovanni/core": ["libs/core/src/index.ts"],
       "@geovanni/csm": ["libs/csm/src/index.ts"],
+      "@geovanni/csm/react": ["libs/csm/src/react/index.ts"],
       "@geovanni/effects": ["libs/effects/src/index.ts"],
       "@geovanni/effects/react": ["libs/effects/src/react/index.ts"],
       "@geovanni/react": ["libs/react/src/index.ts"],

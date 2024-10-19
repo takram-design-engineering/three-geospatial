@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 
-import { type CascadedShadowMaps } from './CascadedShadowMaps'
+import { type CascadedShadowMaps } from '../CascadedShadowMaps'
 import { CSMContext } from './CSM'
 
 export function useCSM(): CascadedShadowMaps {

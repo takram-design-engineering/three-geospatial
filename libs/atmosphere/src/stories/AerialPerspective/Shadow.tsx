@@ -24,7 +24,7 @@ import {
   radians,
   TilingScheme
 } from '@geovanni/core'
-import { CSM, useCSM } from '@geovanni/csm'
+import { CSM, useCSM } from '@geovanni/csm/react'
 import {
   Depth,
   Dithering,

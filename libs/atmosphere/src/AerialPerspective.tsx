@@ -2,7 +2,7 @@ import { useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
-import { type EffectProps } from '@geovanni/effects'
+import { type EffectProps } from '@geovanni/effects/react'
 
 import {
   AerialPerspectiveEffect,
