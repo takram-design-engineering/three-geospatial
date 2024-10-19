@@ -5,9 +5,9 @@ import { Suspense, useEffect, useState } from 'react'
 import { suspend } from 'suspend-react'
 import { MeshNormalMaterial } from 'three'
 
-import { IonTerrain } from '../../../IonTerrain'
-import { OctNormalMaterial } from '../../../OctNormalMaterial'
-import { TerrainTile } from '../../TerrainTile'
+import { IonTerrain } from '../../IonTerrain'
+import { OctNormalMaterial } from '../../OctNormalMaterial'
+import { TerrainTile } from '../../react/TerrainTile'
 
 const terrain = new IonTerrain({
   assetId: 1,

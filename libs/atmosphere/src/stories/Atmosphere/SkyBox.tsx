@@ -24,7 +24,7 @@ import {
 import { LocalTangentFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
-import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
+import { Atmosphere, type AtmosphereImpl } from '../../react/Atmosphere'
 import { useLocalDateControls } from '../useLocalDateControls'
 import { useRendererControls } from '../useRendererControls'
 

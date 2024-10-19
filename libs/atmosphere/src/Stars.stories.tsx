@@ -15,7 +15,7 @@ import {
 } from '@geovanni/core'
 import { EffectComposer } from '@geovanni/effects/react'
 
-import { Stars, type StarsImpl } from './Stars'
+import { Stars, type StarsImpl } from './react/Stars'
 import { useLocalDateControls } from './stories/useLocalDateControls'
 import { useRendererControls } from './stories/useRendererControls'
 
