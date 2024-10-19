@@ -1,5 +1,5 @@
 import { OrbitControls, Plane } from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree, type Viewport } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
 import { useSpring } from 'framer-motion'
 import { useControls } from 'leva'
@@ -42,12 +42,12 @@ const Scene: FC = () => {
     }
   }, [csm])
 
-  const viewport = useThree(({ viewport }) => viewport)
-  useEffect(() => {
-    csm.needsUpdateFrusta = true
-  }, [viewport, csm])
-
-  useFrame(() => {
+  const viewportRef = useRef<Viewport>()
+  useFrame(({ viewport }) => {
+    if (viewportRef.current !== viewport) {
+      viewportRef.current = viewport
+      csm.needsUpdateFrusta = true
+    }
     camera.updateMatrixWorld()
     csm.update()
   })

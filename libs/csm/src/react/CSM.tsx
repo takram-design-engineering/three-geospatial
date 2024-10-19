@@ -1,9 +1,13 @@
-import { applyProps, useFrame, useThree } from '@react-three/fiber'
+import {
+  applyProps,
+  useFrame,
+  useThree,
+  type Viewport
+} from '@react-three/fiber'
 import {
   createContext,
   forwardRef,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   type ReactNode
@@ -48,12 +52,12 @@ export const CSM = forwardRef<CascadedShadowMaps, CSMProps>(function CSM(
 
   applyProps(csm, props)
 
-  const viewport = useThree(({ viewport }) => viewport)
-  useLayoutEffect(() => {
-    csm.needsUpdateFrusta = true
-  }, [viewport, csm])
-
-  useFrame(() => {
+  const viewportRef = useRef<Viewport>()
+  useFrame(({ viewport }) => {
+    if (viewportRef.current !== viewport) {
+      viewportRef.current = viewport
+      csm.needsUpdateFrusta = true
+    }
     camera.updateMatrixWorld()
     csm.update()
   })
