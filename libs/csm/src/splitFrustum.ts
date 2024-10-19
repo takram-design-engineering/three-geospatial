@@ -16,8 +16,6 @@ export interface FrustumSplitFunctions {
 
 export type FrustumSplitMode = keyof FrustumSplitFunctions
 
-const arrayScratch: number[] = [] // TODO: Do we really have gain from this?
-
 // See: https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus
 const modes: FrustumSplitFunctions = {
   uniform: (count, near, far, _, result = []) => {
@@ -37,11 +35,12 @@ const modes: FrustumSplitFunctions = {
   },
 
   practical: (count, near, far, lambda = 0.5, result = []) => {
-    const uniform = modes.uniform(count, near, far, undefined, arrayScratch)
-    const logarithmic = modes.logarithmic(count, near, far, undefined, result)
     for (let i = 0; i < count; ++i) {
-      result[i] = lerp(uniform[i], logarithmic[i], lambda)
+      const uniform = (near + ((far - near) * (i + 1)) / count) / far
+      const logarithmic = (near * (far / near) ** ((i + 1) / count)) / far
+      result[i] = lerp(uniform, logarithmic, lambda)
     }
+    result.length = count
     return result
   }
 }

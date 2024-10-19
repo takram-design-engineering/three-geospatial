@@ -1,8 +1,9 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { applyProps, useFrame, useThree } from '@react-three/fiber'
 import {
   createContext,
   forwardRef,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   type ReactNode
@@ -45,10 +46,10 @@ export const CSM = forwardRef<CascadedShadowMaps, CSMProps>(function CSM(
     }
   }, [csm])
 
-  // TODO: Apply options
+  applyProps(csm, props)
 
   const viewport = useThree(({ viewport }) => viewport)
-  useEffect(() => {
+  useLayoutEffect(() => {
     csm.needsUpdateFrusta = true
   }, [viewport, csm])
 

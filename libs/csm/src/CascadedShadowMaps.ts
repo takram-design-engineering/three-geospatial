@@ -49,12 +49,7 @@ export const cascadedShadowMapsOptionsDefaults = {
 } satisfies Partial<CascadedShadowMapsOptions>
 
 export class CascadedShadowMaps {
-  far: number
-  mode: FrustumSplitMode
-  lambda: number
-  margin: number
-  fade: boolean
-  disableLastCascadeCutoff: boolean
+  needsUpdateFrusta = true
 
   readonly directionalLights = new CascadedDirectionalLights()
   readonly materialStates = new MaterialStates()
@@ -62,7 +57,13 @@ export class CascadedShadowMaps {
   readonly cascadedFrusta: FrustumCorners[] = []
   readonly splits: number[] = []
   readonly cascades: Vector2[] = []
-  needsUpdateFrusta = true
+
+  private _far: number
+  private _mode: FrustumSplitMode
+  private _lambda: number
+  private _margin: number
+  private _fade: boolean
+  private _disableLastCascadeCutoff: boolean
 
   constructor(
     readonly mainCamera: PerspectiveCamera | OrthographicCamera,
@@ -78,14 +79,14 @@ export class CascadedShadowMaps {
       fade,
       disableLastCascadeCutoff
     } = { ...cascadedShadowMapsOptionsDefaults, ...params }
+    this._far = far
+    this._mode = mode
+    this._lambda = lambda
+    this._margin = margin
+    this._fade = fade
+    this._disableLastCascadeCutoff = disableLastCascadeCutoff
     this.cascadeCount = cascadeCount
     this.mapSize = mapSize
-    this.far = far
-    this.mode = mode
-    this.lambda = lambda
-    this.margin = margin
-    this.fade = fade
-    this.disableLastCascadeCutoff = disableLastCascadeCutoff
   }
 
   dispose(): void {
@@ -262,6 +263,72 @@ export class CascadedShadowMaps {
           shadow.map = null
         }
       }
+    }
+  }
+
+  get far(): number {
+    return this._far
+  }
+
+  set far(value: number) {
+    if (value !== this._far) {
+      this._far = value
+      this.needsUpdateFrusta = true
+    }
+  }
+
+  get mode(): FrustumSplitMode {
+    return this._mode
+  }
+
+  set mode(value: FrustumSplitMode) {
+    if (value !== this._mode) {
+      this._mode = value
+      this.needsUpdateFrusta = true
+    }
+  }
+
+  get lambda(): number {
+    return this._lambda
+  }
+
+  set lambda(value: number) {
+    if (value !== this._lambda) {
+      this._lambda = value
+      this.needsUpdateFrusta = true
+    }
+  }
+
+  get margin(): number {
+    return this._margin
+  }
+
+  set margin(value: number) {
+    if (value !== this._margin) {
+      this._margin = value
+      this.needsUpdateFrusta = true
+    }
+  }
+
+  get fade(): boolean {
+    return this._fade
+  }
+
+  set fade(value: boolean) {
+    if (value !== this._fade) {
+      this._fade = value
+      this.needsUpdateFrusta = true
+    }
+  }
+
+  get disableLastCascadeCutoff(): boolean {
+    return this._disableLastCascadeCutoff
+  }
+
+  set disableLastCascadeCutoff(value: boolean) {
+    if (value !== this._disableLastCascadeCutoff) {
+      this._disableLastCascadeCutoff = value
+      this.needsUpdateFrusta = true
     }
   }
 
