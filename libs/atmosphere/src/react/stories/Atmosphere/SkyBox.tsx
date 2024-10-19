@@ -21,8 +21,8 @@ import {
   getSunDirectionECEF,
   radians
 } from '@geovanni/core'
+import { LocalTangentFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
-import { LocalTangentFrame } from '@geovanni/react'
 
 import { Atmosphere, type AtmosphereImpl } from '../../Atmosphere'
 import { useLocalDateControls } from '../useLocalDateControls'

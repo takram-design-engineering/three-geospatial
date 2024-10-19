@@ -5,6 +5,10 @@
     ".": {
       "import": "./index.mjs",
       "require": "./index.js"
+    },
+    "./react": {
+      "import": "./react/index.mjs",
+      "require": "./react/index.js"
     }
   },
   "main": "./index.js",

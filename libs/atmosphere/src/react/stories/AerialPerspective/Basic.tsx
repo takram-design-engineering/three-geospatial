@@ -22,6 +22,7 @@ import {
   radians,
   TilingScheme
 } from '@geovanni/core'
+import { LocalTangentFrame } from '@geovanni/core/react'
 import {
   Depth,
   Dithering,
@@ -30,7 +31,6 @@ import {
   Normal,
   useColorGradingControls
 } from '@geovanni/effects/react'
-import { LocalTangentFrame } from '@geovanni/react'
 import { IonTerrain } from '@geovanni/terrain'
 import { TerrainTile } from '@geovanni/terrain/react'
 
