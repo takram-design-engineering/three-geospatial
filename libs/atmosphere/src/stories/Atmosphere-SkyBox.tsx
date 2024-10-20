@@ -24,9 +24,9 @@ import {
 import { LocalTangentFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
-import { Atmosphere, type AtmosphereImpl } from '../../react/Atmosphere'
-import { useLocalDateControls } from '../useLocalDateControls'
-import { useRendererControls } from '../useRendererControls'
+import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
+import { useLocalDateControls } from './useLocalDateControls'
+import { useRendererControls } from './useRendererControls'
 
 const location = new Geodetic(radians(139.7671), radians(35.6812), 2000)
 const position = location.toECEF()
