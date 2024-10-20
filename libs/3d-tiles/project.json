@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/3d-tiles/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:lib"],
   "// targets": "to see all targets run: nx show project 3d-tiles --web",
   "targets": {}
 }

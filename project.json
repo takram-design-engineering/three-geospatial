@@ -17,7 +17,19 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --target=build --configuration=production"
+        "command": "nx run-many --target=build --parallel=8  --exclude=@geovanni/source --configuration=production"
+      }
+    },
+    "build-app": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run-many --target=build --parallel=8 --projects=tag:type:app --configuration=production"
+      }
+    },
+    "build-lib": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run-many --target=build --parallel=8 --projects=tag:type:lib --configuration=production"
       }
     }
   }
