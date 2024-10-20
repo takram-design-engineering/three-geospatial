@@ -7,5 +7,5 @@ export default {
   }
 } satisfies Meta
 
-export { Basic } from './stories/Atmosphere/Basic'
-export { SkyBox } from './stories/Atmosphere/SkyBox'
+export { Basic } from './Atmosphere-Basic'
+export { SkyBox } from './Atmosphere-SkyBox'

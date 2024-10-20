@@ -39,15 +39,15 @@ import {
 import { IonTerrain } from '@geovanni/terrain'
 import { TerrainTile } from '@geovanni/terrain/react'
 
-import { type AerialPerspectiveEffect } from '../../AerialPerspectiveEffect'
-import { computeSunLightColor } from '../../computeSunLightColor'
-import { AerialPerspective } from '../../react/AerialPerspective'
-import { Atmosphere, type AtmosphereImpl } from '../../react/Atmosphere'
-import { SkyRadiance } from '../../react/SkyRadiance'
-import { Stars, type StarsImpl } from '../../react/Stars'
-import { usePrecomputedTextures } from '../../react/usePrecomputedTextures'
-import { useLocalDateControls } from '../useLocalDateControls'
-import { useRendererControls } from '../useRendererControls'
+import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
+import { computeSunLightColor } from '../computeSunLightColor'
+import { AerialPerspective } from '../react/AerialPerspective'
+import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
+import { SkyRadiance } from '../react/SkyRadiance'
+import { Stars, type StarsImpl } from '../react/Stars'
+import { usePrecomputedTextures } from '../react/usePrecomputedTextures'
+import { useLocalDateControls } from './useLocalDateControls'
+import { useRendererControls } from './useRendererControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()

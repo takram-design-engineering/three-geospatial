@@ -4,4 +4,4 @@ export default {
   title: 'terrain/TerrainTile'
 } satisfies Meta
 
-export { Globe } from './stories/TerrainTile/Globe'
+export { Globe } from './TerrainTile-Globe'

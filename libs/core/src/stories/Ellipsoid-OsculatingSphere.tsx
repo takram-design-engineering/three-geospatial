@@ -7,22 +7,15 @@ import {
   Sphere
 } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
-import { type Meta, type StoryFn } from '@storybook/react'
+import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { useEffect, useRef, type FC } from 'react'
 import { useEvent } from 'react-use'
 import { Raycaster, Vector2, Vector3, type ArrowHelper, type Mesh } from 'three'
 
-import { Ellipsoid } from './Ellipsoid'
-import { projectToGeodeticSurface } from './projectToGeodeticSurface'
-import { Ellipsoid as EllipsoidMesh } from './react/Ellipsoid'
-
-export default {
-  title: 'core/Ellipsoid',
-  parameters: {
-    layout: 'fullscreen'
-  }
-} satisfies Meta
+import { Ellipsoid } from '../Ellipsoid'
+import { projectToGeodeticSurface } from '../projectToGeodeticSurface'
+import { Ellipsoid as EllipsoidMesh } from '../react/Ellipsoid'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getHeightAdjustment(

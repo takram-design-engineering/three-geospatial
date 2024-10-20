@@ -1,20 +1,13 @@
 import { Environment, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
-import { type Meta, type StoryFn } from '@storybook/react'
+import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 
-import { EffectComposer } from './react/EffectComposer'
-import { LensFlare } from './react/LensFlare'
-
-export default {
-  title: 'effects/LensFlare',
-  parameters: {
-    layout: 'fullscreen'
-  }
-} satisfies Meta
+import { EffectComposer } from '../react/EffectComposer'
+import { LensFlare } from '../react/LensFlare'
 
 const Scene: FC = () => {
   const { enabled } = useControls({
