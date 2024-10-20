@@ -4,7 +4,7 @@
 
 Run `nx dev playground` to serve the playground in development mode.
 
-Run `nx dev storybook` to serve stories.
+Run `nx storybook` to serve stories.
 
 ### Environment Variables
 

@@ -39,10 +39,10 @@
         // Triple slash reference has a different purpose.
         "@typescript-eslint/triple-slash-reference": "off",
 
-        // Too many false negatives.
+        // Too many false positives.
         "@typescript-eslint/no-unsafe-argument": "off",
 
-        // {} is semantically different from the "object" and "Record".
+        // {} is semantically different from `object` and `Record`.
         "@typescript-eslint/ban-types": "off",
 
         // Exclude /*#__PURE__*/ annotation.
