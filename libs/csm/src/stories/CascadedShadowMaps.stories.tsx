@@ -7,4 +7,4 @@ export default {
   }
 } satisfies Meta
 
-export { Basic } from './stories/CascadedShadowMaps/Basic'
+export { Basic } from './CascadedShadowMaps-Basic'

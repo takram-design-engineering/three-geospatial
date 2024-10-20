@@ -9,8 +9,8 @@ import { ShadowMapViewer } from 'three-stdlib'
 
 import { radians } from '@geovanni/core'
 
-import { CascadedShadowMaps } from '../../CascadedShadowMaps'
-import { CSMHelper } from '../../CSMHelper'
+import { CascadedShadowMaps } from '../CascadedShadowMaps'
+import { CSMHelper } from '../CSMHelper'
 
 const floorMaterial = new MeshStandardMaterial({ color: '#252a34' })
 const material1 = new MeshStandardMaterial({ color: '#08d9d6' })

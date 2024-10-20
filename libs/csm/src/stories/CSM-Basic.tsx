@@ -6,9 +6,9 @@ import { Fragment, useEffect, useRef, type FC } from 'react'
 import { BoxGeometry, Material, MeshStandardMaterial } from 'three'
 import { ShadowMapViewer } from 'three-stdlib'
 
-import { CascadedDirectionalLights } from '../../react/CascadedDirectionalLights'
-import { CSM } from '../../react/CSM'
-import { useCSM } from '../../react/useCSM'
+import { CascadedDirectionalLights } from '../react/CascadedDirectionalLights'
+import { CSM } from '../react/CSM'
+import { useCSM } from '../react/useCSM'
 
 const floorMaterial = new MeshStandardMaterial({ color: '#252a34' })
 const material1 = new MeshStandardMaterial({ color: '#08d9d6' })
