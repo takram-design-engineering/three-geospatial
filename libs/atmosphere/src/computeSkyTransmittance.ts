@@ -109,7 +109,7 @@ const vectorScratch2 = /*#__PURE__*/ new Vector3()
 
 export interface SkyTransmittanceOptions {
   ellipsoid?: Ellipsoid
-  adjustHeight?: boolean
+  osculateEllipsoid?: boolean
 }
 
 export function computeSkyTransmittance(
@@ -118,7 +118,7 @@ export function computeSkyTransmittance(
   worldDirection: Vector3,
   {
     ellipsoid = Ellipsoid.WGS84,
-    adjustHeight = true
+    osculateEllipsoid = true
   }: SkyTransmittanceOptions = {},
   result = new Vector3()
 ): Vector3 {
@@ -126,7 +126,7 @@ export function computeSkyTransmittance(
     .copy(worldPosition)
     .multiplyScalar(METER_TO_UNIT_LENGTH)
 
-  if (adjustHeight) {
+  if (osculateEllipsoid) {
     const earthCenter = vectorScratch2
     const surfacePosition = ellipsoid.projectToSurface(
       worldPosition,

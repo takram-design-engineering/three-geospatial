@@ -35,8 +35,8 @@ const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
 
-  const { adjustHeight, photometric } = useControls('atmosphere', {
-    adjustHeight: true,
+  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
+    osculateEllipsoid: true,
     photometric: false
   })
 
@@ -87,7 +87,7 @@ const Scene: FC = () => {
       <Atmosphere
         ref={atmosphereRef}
         position={position}
-        adjustHeight={adjustHeight}
+        osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />
       <LocalTangentFrame location={location}>
@@ -108,7 +108,7 @@ const Scene: FC = () => {
           >
             <Atmosphere
               ref={envMapRef}
-              adjustHeight={adjustHeight}
+              osculateEllipsoid={osculateEllipsoid}
               photometric={photometric}
               sunAngularRadius={0.1}
             />

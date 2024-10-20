@@ -15,7 +15,7 @@ export type SkyRadianceImpl = Mesh<BufferGeometry, SkyRadianceMaterial>
 
 export interface SkyRadianceProps extends MeshProps {
   ellipsoid?: Ellipsoid
-  adjustHeight?: boolean
+  osculateEllipsoid?: boolean
   photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
@@ -25,7 +25,7 @@ export const SkyRadiance = forwardRef<SkyRadianceImpl, SkyRadianceProps>(
   function SkyRadiance(props, forwardedRef) {
     const {
       ellipsoid,
-      adjustHeight,
+      osculateEllipsoid,
       photometric,
       sunDirection,
       sunAngularRadius,
@@ -51,7 +51,7 @@ export const SkyRadiance = forwardRef<SkyRadianceImpl, SkyRadianceProps>(
           {...precomputedTextures}
           useHalfFloat={useHalfFloat}
           ellipsoid={ellipsoid}
-          adjustHeight={adjustHeight}
+          osculateEllipsoid={osculateEllipsoid}
           photometric={photometric}
           sunDirection={sunDirection}
           sunAngularRadius={sunAngularRadius}

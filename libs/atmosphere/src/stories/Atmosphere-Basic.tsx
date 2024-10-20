@@ -27,8 +27,8 @@ const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
 
-  const { adjustHeight, photometric } = useControls('atmosphere', {
-    adjustHeight: true,
+  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
+    osculateEllipsoid: true,
     photometric: false
   })
 
@@ -68,7 +68,7 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere
         ref={atmosphereRef}
-        adjustHeight={adjustHeight}
+        osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />
       {effectComposer}

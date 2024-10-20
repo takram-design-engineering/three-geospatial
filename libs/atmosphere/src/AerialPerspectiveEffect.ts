@@ -46,7 +46,7 @@ export interface AerialPerspectiveEffectOptions {
   transmittanceTexture?: Texture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
-  adjustHeight?: boolean
+  osculateEllipsoid?: boolean
   photometric?: boolean
   sunIrradiance?: boolean
   skyIrradiance?: boolean
@@ -59,7 +59,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   blendFunction: BlendFunction.NORMAL,
   reconstructNormal: false,
   ellipsoid: Ellipsoid.WGS84,
-  adjustHeight: true,
+  osculateEllipsoid: true,
   photometric: false,
   sunIrradiance: true,
   skyIrradiance: true,
@@ -70,7 +70,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 
 export class AerialPerspectiveEffect extends Effect {
   ellipsoid: Ellipsoid
-  adjustHeight: boolean
+  osculateEllipsoid: boolean
 
   constructor(
     private camera: Camera,
@@ -85,7 +85,7 @@ export class AerialPerspectiveEffect extends Effect {
       transmittanceTexture,
       useHalfFloat,
       ellipsoid,
-      adjustHeight,
+      osculateEllipsoid,
       photometric,
       sunIrradiance,
       skyIrradiance,
@@ -149,7 +149,7 @@ export class AerialPerspectiveEffect extends Effect {
     )
     this.camera = camera
     this.ellipsoid = ellipsoid
-    this.adjustHeight = adjustHeight
+    this.osculateEllipsoid = osculateEllipsoid
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
     this.photometric = photometric
@@ -199,7 +199,7 @@ export class AerialPerspectiveEffect extends Effect {
     inverseViewMatrix.value.copy(camera.matrixWorld)
     const position = camera.getWorldPosition(cameraPosition.value)
 
-    if (this.adjustHeight) {
+    if (this.osculateEllipsoid) {
       const surfacePosition = this.ellipsoid.projectToSurface(
         position,
         undefined,

@@ -75,8 +75,8 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { adjustHeight, photometric } = useControls('atmosphere', {
-    adjustHeight: true,
+  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
+    osculateEllipsoid: true,
     photometric: true
   })
 
@@ -123,7 +123,7 @@ const Scene: FC = () => {
         {enabled && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
-            adjustHeight={adjustHeight}
+            osculateEllipsoid={osculateEllipsoid}
             photometric={photometric}
             sunIrradiance={sun}
             skyIrradiance={sky}
@@ -145,7 +145,7 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
-      adjustHeight,
+      osculateEllipsoid,
       photometric,
       enabled,
       sun,
@@ -167,10 +167,10 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere
         ref={atmosphereRef}
-        adjustHeight={adjustHeight}
+        osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />
-      <Stars ref={starsRef} adjustHeight={adjustHeight} />
+      <Stars ref={starsRef} osculateEllipsoid={osculateEllipsoid} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}

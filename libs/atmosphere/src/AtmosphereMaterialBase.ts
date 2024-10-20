@@ -38,7 +38,7 @@ export interface AtmosphereMaterialBaseParameters
   transmittanceTexture?: Texture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
-  adjustHeight?: boolean
+  osculateEllipsoid?: boolean
   photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
@@ -47,13 +47,13 @@ export interface AtmosphereMaterialBaseParameters
 export const atmosphereMaterialParametersBaseDefaults = {
   useHalfFloat: false,
   ellipsoid: Ellipsoid.WGS84,
-  adjustHeight: true,
+  osculateEllipsoid: true,
   photometric: false
 } satisfies AtmosphereMaterialBaseParameters
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   ellipsoid: Ellipsoid
-  adjustHeight: boolean
+  osculateEllipsoid: boolean
 
   constructor(params?: AtmosphereMaterialBaseParameters) {
     const {
@@ -62,7 +62,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       transmittanceTexture,
       useHalfFloat,
       ellipsoid,
-      adjustHeight,
+      osculateEllipsoid,
       photometric,
       sunDirection,
       sunAngularRadius,
@@ -111,7 +111,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       }
     })
     this.ellipsoid = ellipsoid
-    this.adjustHeight = adjustHeight
+    this.osculateEllipsoid = osculateEllipsoid
     this.useHalfFloat = useHalfFloat
     this.photometric = photometric
   }
@@ -127,7 +127,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     const uniforms = this.uniforms
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
 
-    if (this.adjustHeight) {
+    if (this.osculateEllipsoid) {
       const surfacePosition = this.ellipsoid.projectToSurface(
         position,
         undefined,

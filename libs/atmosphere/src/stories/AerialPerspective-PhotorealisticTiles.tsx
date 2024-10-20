@@ -72,19 +72,21 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { adjustHeight, photometric } = useControls('atmosphere', {
-    adjustHeight: true,
+  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
+    osculateEllipsoid: true,
     photometric: true
   })
 
-  const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
-    useControls('aerial perspective', {
+  const { enable, sun, sky, transmittance, inscatter } = useControls(
+    'aerial perspective',
+    {
       enable: true,
-      sunIrradiance: true,
-      skyIrradiance: true,
+      sun: true,
+      sky: true,
       transmittance: true,
       inscatter: true
-    })
+    }
+  )
 
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
@@ -185,10 +187,10 @@ const Scene: FC = () => {
         {enable && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
-            adjustHeight={adjustHeight}
+            osculateEllipsoid={osculateEllipsoid}
             photometric={photometric}
-            sunIrradiance={sunIrradiance}
-            skyIrradiance={skyIrradiance}
+            sunIrradiance={sun}
+            skyIrradiance={sky}
             transmittance={transmittance}
             inscatter={inscatter}
             albedoScale={0.2}
@@ -208,11 +210,11 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
-      adjustHeight,
+      osculateEllipsoid,
       photometric,
       enable,
-      sunIrradiance,
-      skyIrradiance,
+      sun,
+      sky,
       transmittance,
       inscatter,
       lensFlare,
@@ -229,10 +231,10 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere
         ref={atmosphereRef}
-        adjustHeight={adjustHeight}
+        osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />
-      <Stars ref={starsRef} adjustHeight={adjustHeight} />
+      <Stars ref={starsRef} osculateEllipsoid={osculateEllipsoid} />
       <primitive object={tiles.group} />
       {effectComposer}
       <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} />

@@ -17,17 +17,6 @@ import { Ellipsoid } from '../Ellipsoid'
 import { projectToGeodeticSurface } from '../projectToGeodeticSurface'
 import { Ellipsoid as EllipsoidMesh } from '../react/Ellipsoid'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getHeightAdjustment(
-  radius: number,
-  geodeticSurface: Vector3,
-  result = new Vector3()
-): Vector3 {
-  const surfaceRadius = geodeticSurface.length()
-  const offset = surfaceRadius - radius
-  return result.copy(geodeticSurface).normalize().multiplyScalar(offset)
-}
-
 const ellipsoid = new Ellipsoid(10, 10, 9)
 const raycaster = new Raycaster()
 const pointer = new Vector2()
@@ -73,8 +62,6 @@ const Scene: FC = () => {
     normalArrow.setDirection(ellipsoid.getSurfaceNormal(position)!)
 
     const radius = (ellipsoid.minimumRadius + ellipsoid.maximumRadius) / 2
-    // sphereMesh.scale.set(radius, radius, radius)
-    // getHeightAdjustment(radius, position, sphereMesh.position)
     ellipsoid.getOsculatingSphereCenter(position, radius, sphereMesh.position)
     sphereMesh.scale.set(radius, radius, radius)
   })

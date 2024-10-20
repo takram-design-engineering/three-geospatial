@@ -95,8 +95,8 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { adjustHeight, photometric } = useControls('atmosphere', {
-    adjustHeight: true,
+  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
+    osculateEllipsoid: true,
     photometric: true
   })
 
@@ -194,7 +194,7 @@ const Scene: FC = () => {
         {enabled && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
-            adjustHeight={adjustHeight}
+            osculateEllipsoid={osculateEllipsoid}
             photometric={photometric}
             sunIrradiance={mode === 'deferred' && sun}
             skyIrradiance={mode === 'deferred' && sky}
@@ -216,7 +216,7 @@ const Scene: FC = () => {
       </EffectComposer>
     ),
     [
-      adjustHeight,
+      osculateEllipsoid,
       photometric,
       mode,
       sun,
@@ -237,7 +237,7 @@ const Scene: FC = () => {
       textures.transmittanceTexture,
       position,
       sunDirectionRef.current,
-      { adjustHeight, photometric },
+      { osculateEllipsoid, photometric },
       csm.directionalLights.mainLight.color
     )
   })
@@ -255,10 +255,10 @@ const Scene: FC = () => {
       </GizmoHelper>
       <Atmosphere
         ref={atmosphereRef}
-        adjustHeight={adjustHeight}
+        osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />
-      <Stars ref={starsRef} adjustHeight={adjustHeight} />
+      <Stars ref={starsRef} osculateEllipsoid={osculateEllipsoid} />
       <CascadedDirectionalLights
         intensity={mode === 'forward' && sun ? 1 : 0}
       />
@@ -283,7 +283,7 @@ const Scene: FC = () => {
           >
             <SkyRadiance
               ref={envMapRef}
-              adjustHeight={adjustHeight}
+              osculateEllipsoid={osculateEllipsoid}
               photometric={photometric}
             />
           </RenderCubeTexture>
