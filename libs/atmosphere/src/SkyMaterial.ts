@@ -18,12 +18,12 @@ import {
   type AtmosphereMaterialBaseParameters
 } from './AtmosphereMaterialBase'
 
-import fragmentShader from './shaders/atmosphere.frag'
-import vertexShader from './shaders/atmosphere.vert'
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
+import fragmentShader from './shaders/sky.frag'
+import vertexShader from './shaders/sky.vert'
 
-export interface AtmosphereMaterialParameters
+export interface SkyMaterialParameters
   extends AtmosphereMaterialBaseParameters {
   sun?: boolean
   moon?: boolean
@@ -32,16 +32,16 @@ export interface AtmosphereMaterialParameters
   lunarRadianceScale?: number
 }
 
-export const atmosphereMaterialParametersDefaults = {
+export const skyMaterialParametersDefaults = {
   ...atmosphereMaterialParametersBaseDefaults,
   sun: true,
   moon: true,
   moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
   lunarRadianceScale: 1
-} satisfies AtmosphereMaterialParameters
+} satisfies SkyMaterialParameters
 
-export class AtmosphereMaterial extends AtmosphereMaterialBase {
-  constructor(params?: AtmosphereMaterialParameters) {
+export class SkyMaterial extends AtmosphereMaterialBase {
+  constructor(params?: SkyMaterialParameters) {
     const {
       sun,
       moon,
@@ -49,7 +49,7 @@ export class AtmosphereMaterial extends AtmosphereMaterialBase {
       moonAngularRadius,
       lunarRadianceScale,
       ...others
-    } = { ...atmosphereMaterialParametersDefaults, ...params }
+    } = { ...skyMaterialParametersDefaults, ...params }
 
     super({
       glslVersion: '300 es',

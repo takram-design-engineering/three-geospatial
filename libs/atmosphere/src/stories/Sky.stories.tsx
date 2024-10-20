@@ -1,11 +1,11 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'atmosphere/Atmosphere',
+  title: 'atmosphere/Sky',
   parameters: {
     layout: 'fullscreen'
   }
 } satisfies Meta
 
-export { Basic } from './Atmosphere-Basic'
-export { SkyBox } from './Atmosphere-SkyBox'
+export { Basic } from './Sky-Basic'
+export { EnvMap } from './Sky-EnvMap'

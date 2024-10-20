@@ -16,7 +16,7 @@ import {
 } from '@geovanni/core'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
-import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
+import { Sky, type SkyImpl } from '../react/Sky'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'
 
@@ -35,17 +35,17 @@ const Scene: FC = () => {
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
-  const atmosphereRef = useRef<AtmosphereImpl>(null)
+  const skyRef = useRef<SkyImpl>(null)
 
   useFrame(() => {
-    if (atmosphereRef.current == null) {
+    if (skyRef.current == null) {
       return
     }
     const date = new Date(motionDate.get())
     getSunDirectionECEF(date, sunDirectionRef.current)
     getMoonDirectionECEF(date, moonDirectionRef.current)
-    atmosphereRef.current.material.sunDirection = sunDirectionRef.current
-    atmosphereRef.current.material.moonDirection = moonDirectionRef.current
+    skyRef.current.material.sunDirection = sunDirectionRef.current
+    skyRef.current.material.moonDirection = moonDirectionRef.current
   })
 
   const effectComposer = useMemo(
@@ -66,8 +66,8 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere
-        ref={atmosphereRef}
+      <Sky
+        ref={skyRef}
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />

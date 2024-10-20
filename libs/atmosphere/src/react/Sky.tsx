@@ -5,15 +5,12 @@ import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
 import { type Ellipsoid } from '@geovanni/core'
 
-import {
-  AtmosphereMaterial,
-  atmosphereMaterialParametersDefaults
-} from '../AtmosphereMaterial'
+import { SkyMaterial, skyMaterialParametersDefaults } from '../SkyMaterial'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
-export type AtmosphereImpl = Mesh<BufferGeometry, AtmosphereMaterial>
+export type SkyImpl = Mesh<BufferGeometry, SkyMaterial>
 
-export interface AtmosphereProps extends MeshProps {
+export interface SkyProps extends MeshProps {
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
   photometric?: boolean
@@ -26,8 +23,8 @@ export interface AtmosphereProps extends MeshProps {
   lunarRadianceScale?: number
 }
 
-export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
-  function Atmosphere(props, forwardedRef) {
+export const Sky = forwardRef<SkyImpl, SkyProps>(
+  function Sky(props, forwardedRef) {
     const {
       ellipsoid,
       osculateEllipsoid,
@@ -40,7 +37,7 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
       moonAngularRadius,
       lunarRadianceScale,
       ...others
-    } = { ...atmosphereMaterialParametersDefaults, ...props }
+    } = { ...skyMaterialParametersDefaults, ...props }
 
     // TODO: Make the texture paths configurable.
     const gl = useThree(({ gl }) => gl)
@@ -50,7 +47,7 @@ export const Atmosphere = forwardRef<AtmosphereImpl, AtmosphereProps>(
     )
     const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
 
-    const material = useMemo(() => new AtmosphereMaterial(), [])
+    const material = useMemo(() => new SkyMaterial(), [])
     useEffect(() => {
       return () => {
         material.dispose()

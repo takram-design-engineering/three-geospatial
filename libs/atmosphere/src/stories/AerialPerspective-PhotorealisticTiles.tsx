@@ -43,7 +43,7 @@ import {
 
 import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
 import { AerialPerspective } from '../react/AerialPerspective'
-import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
+import { Sky, type SkyImpl } from '../react/Sky'
 import { Stars, type StarsImpl } from '../react/Stars'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'
@@ -92,7 +92,7 @@ const Scene: FC = () => {
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())
-  const atmosphereRef = useRef<AtmosphereImpl>(null)
+  const skyRef = useRef<SkyImpl>(null)
   const starsRef = useRef<StarsImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
 
@@ -101,9 +101,9 @@ const Scene: FC = () => {
     getSunDirectionECEF(date, sunDirectionRef.current)
     getMoonDirectionECEF(date, moonDirectionRef.current)
     getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
-    if (atmosphereRef.current != null) {
-      atmosphereRef.current.material.sunDirection = sunDirectionRef.current
-      atmosphereRef.current.material.moonDirection = moonDirectionRef.current
+    if (skyRef.current != null) {
+      skyRef.current.material.sunDirection = sunDirectionRef.current
+      skyRef.current.material.moonDirection = moonDirectionRef.current
     }
     if (starsRef.current != null) {
       starsRef.current.material.sunDirection = sunDirectionRef.current
@@ -229,8 +229,8 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere
-        ref={atmosphereRef}
+      <Sky
+        ref={skyRef}
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />

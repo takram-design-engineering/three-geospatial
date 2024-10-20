@@ -56,7 +56,7 @@ import { TerrainTile } from '@geovanni/terrain/react'
 import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
 import { computeSunLightColor } from '../computeSunLightColor'
 import { AerialPerspective } from '../react/AerialPerspective'
-import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
+import { Sky, type SkyImpl } from '../react/Sky'
 import { SkyRadiance } from '../react/SkyRadiance'
 import { Stars, type StarsImpl } from '../react/Stars'
 import { usePrecomputedTextures } from '../react/usePrecomputedTextures'
@@ -132,9 +132,9 @@ const Scene: FC = () => {
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())
-  const atmosphereRef = useRef<AtmosphereImpl>(null)
+  const skyRef = useRef<SkyImpl>(null)
   const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
-  const envMapRef = useRef<AtmosphereImpl>(null)
+  const envMapRef = useRef<SkyImpl>(null)
   const starsRef = useRef<StarsImpl>(null)
 
   const csm = useCSM()
@@ -168,9 +168,9 @@ const Scene: FC = () => {
     getSunDirectionECEF(date, sunDirectionRef.current)
     getMoonDirectionECEF(date, moonDirectionRef.current)
     getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
-    if (atmosphereRef.current != null) {
-      atmosphereRef.current.material.sunDirection = sunDirectionRef.current
-      atmosphereRef.current.material.moonDirection = moonDirectionRef.current
+    if (skyRef.current != null) {
+      skyRef.current.material.sunDirection = sunDirectionRef.current
+      skyRef.current.material.moonDirection = moonDirectionRef.current
     }
     if (envMapRef.current != null) {
       envMapRef.current.material.sunDirection = sunDirectionRef.current
@@ -253,8 +253,8 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere
-        ref={atmosphereRef}
+      <Sky
+        ref={skyRef}
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />

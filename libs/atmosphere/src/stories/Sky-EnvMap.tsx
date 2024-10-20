@@ -24,7 +24,7 @@ import {
 import { LocalTangentFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
-import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
+import { Sky, type SkyImpl } from '../react/Sky'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'
 
@@ -43,8 +43,8 @@ const Scene: FC = () => {
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
-  const atmosphereRef = useRef<AtmosphereImpl>(null)
-  const envMapRef = useRef<AtmosphereImpl>(null)
+  const skyRef = useRef<SkyImpl>(null)
+  const envMapRef = useRef<SkyImpl>(null)
 
   const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
   const scene = useThree(({ scene }) => scene)
@@ -56,9 +56,9 @@ const Scene: FC = () => {
     const date = new Date(motionDate.get())
     getSunDirectionECEF(date, sunDirectionRef.current)
     getMoonDirectionECEF(date, moonDirectionRef.current)
-    if (atmosphereRef.current != null) {
-      atmosphereRef.current.material.sunDirection = sunDirectionRef.current
-      atmosphereRef.current.material.moonDirection = moonDirectionRef.current
+    if (skyRef.current != null) {
+      skyRef.current.material.sunDirection = sunDirectionRef.current
+      skyRef.current.material.moonDirection = moonDirectionRef.current
     }
     if (envMapRef.current != null) {
       envMapRef.current.material.sunDirection = sunDirectionRef.current
@@ -84,8 +84,8 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <Atmosphere
-        ref={atmosphereRef}
+      <Sky
+        ref={skyRef}
         position={position}
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
@@ -106,7 +106,7 @@ const Scene: FC = () => {
             resolution={64}
             position={position}
           >
-            <Atmosphere
+            <Sky
               ref={envMapRef}
               osculateEllipsoid={osculateEllipsoid}
               photometric={photometric}
@@ -120,7 +120,7 @@ const Scene: FC = () => {
   )
 }
 
-export const SkyBox: StoryFn = () => {
+export const EnvMap: StoryFn = () => {
   return (
     <Canvas
       gl={{
