@@ -40,8 +40,8 @@ import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
 import { AerialPerspective } from '../react/AerialPerspective'
 import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
 import { Stars, type StarsImpl } from '../react/Stars'
-import { useLocalDateControls } from './useLocalDateControls'
-import { useRendererControls } from './useRendererControls'
+import { useLocalDateControls } from './helpers/useLocalDateControls'
+import { useRendererControls } from './helpers/useRendererControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -80,14 +80,16 @@ const Scene: FC = () => {
     photometric: true
   })
 
-  const { enable, sunIrradiance, skyIrradiance, transmittance, inscatter } =
-    useControls('aerial perspective', {
-      enable: true,
-      sunIrradiance: true,
-      skyIrradiance: true,
+  const { enabled, sun, sky, transmittance, inscatter } = useControls(
+    'aerial perspective',
+    {
+      enabled: true,
+      sun: true,
+      sky: true,
       transmittance: true,
       inscatter: true
-    })
+    }
+  )
 
   const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
@@ -118,13 +120,13 @@ const Scene: FC = () => {
   const effectComposer = useMemo(
     () => (
       <EffectComposer key={Math.random()} normalPass multisampling={0}>
-        {enable && !normal && !depth && (
+        {enabled && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
             adjustHeight={adjustHeight}
             photometric={photometric}
-            sunIrradiance={sunIrradiance}
-            skyIrradiance={skyIrradiance}
+            sunIrradiance={sun}
+            skyIrradiance={sky}
             transmittance={transmittance}
             inscatter={inscatter}
           />
@@ -145,9 +147,9 @@ const Scene: FC = () => {
     [
       adjustHeight,
       photometric,
-      enable,
-      sunIrradiance,
-      skyIrradiance,
+      enabled,
+      sun,
+      sky,
       transmittance,
       inscatter,
       lensFlare,

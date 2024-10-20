@@ -25,8 +25,8 @@ import { LocalTangentFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
 import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
-import { useLocalDateControls } from './useLocalDateControls'
-import { useRendererControls } from './useRendererControls'
+import { useLocalDateControls } from './helpers/useLocalDateControls'
+import { useRendererControls } from './helpers/useRendererControls'
 
 const location = new Geodetic(radians(139.7671), radians(35.6812), 2000)
 const position = location.toECEF()
@@ -35,7 +35,8 @@ const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
 
-  const { photometric } = useControls('atmosphere', {
+  const { adjustHeight, photometric } = useControls('atmosphere', {
+    adjustHeight: true,
     photometric: false
   })
 
@@ -86,6 +87,7 @@ const Scene: FC = () => {
       <Atmosphere
         ref={atmosphereRef}
         position={position}
+        adjustHeight={adjustHeight}
         photometric={photometric}
       />
       <LocalTangentFrame location={location}>
@@ -106,6 +108,7 @@ const Scene: FC = () => {
           >
             <Atmosphere
               ref={envMapRef}
+              adjustHeight={adjustHeight}
               photometric={photometric}
               sunAngularRadius={0.1}
             />

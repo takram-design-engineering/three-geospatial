@@ -8,5 +8,5 @@ export default {
 } satisfies Meta
 
 export { Basic } from './AerialPerspective-Basic'
-export { Shadow } from './AerialPerspective-Shadow'
+export { ForwardLighting } from './AerialPerspective-ForwardLighting'
 export { PhotorealisticTiles } from './AerialPerspective-PhotorealisticTiles'

@@ -6,13 +6,27 @@ import {
   TorusKnot,
   type RenderCubeTextureApi
 } from '@react-three/drei'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
-import { Suspense, useEffect, useMemo, useRef, useState, type FC } from 'react'
-import { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
+import {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FC
+} from 'react'
+import {
+  Material,
+  Matrix4,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Vector3
+} from 'three'
 
 import {
   Ellipsoid,
@@ -46,8 +60,8 @@ import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
 import { SkyRadiance } from '../react/SkyRadiance'
 import { Stars, type StarsImpl } from '../react/Stars'
 import { usePrecomputedTextures } from '../react/usePrecomputedTextures'
-import { useLocalDateControls } from './useLocalDateControls'
-import { useRendererControls } from './useRendererControls'
+import { useLocalDateControls } from './helpers/useLocalDateControls'
+import { useRendererControls } from './helpers/useRendererControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -68,8 +82,11 @@ const tiles = tile
   .flatMap(tile => tile.getChildren())
   .flatMap(tile => tile.getChildren())
 
+const basicMaterial = new MeshBasicMaterial({ color: 'white' })
+const terrainBasicMaterial = new MeshBasicMaterial({ color: 'gray' })
+
 const Scene: FC = () => {
-  useRendererControls({ exposure: 10, shadow: true })
+  useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
   const { lensFlare, normal, depth } = useControls('effects', {
@@ -83,15 +100,29 @@ const Scene: FC = () => {
     photometric: true
   })
 
-  const { sun, sky } = useControls('lights', {
+  const { mode, shadow, sun, sky } = useControls('lighting', {
+    mode: {
+      options: ['forward', 'deferred'] as const
+    },
+    shadow: true,
     sun: true,
     sky: true
   })
 
-  const { enable, transmittance, inscatter } = useControls(
+  const { gl, scene } = useThree()
+  useLayoutEffect(() => {
+    gl.shadowMap.enabled = shadow
+    scene.traverse(child => {
+      if ('material' in child && child.material instanceof Material) {
+        child.material.needsUpdate = true
+      }
+    })
+  }, [shadow, gl, scene])
+
+  const { enabled, transmittance, inscatter } = useControls(
     'aerial perspective',
     {
-      enable: true,
+      enabled: true,
       transmittance: true,
       inscatter: true
     }
@@ -107,34 +138,30 @@ const Scene: FC = () => {
   const starsRef = useRef<StarsImpl>(null)
 
   const csm = useCSM()
-
-  const material = useMemo(() => {
-    const material = new MeshStandardMaterial({
-      color: 'white'
-    })
-    csm.setupMaterial(material)
-    return material
-  }, [csm])
-
-  const terrainMaterial = useMemo(() => {
-    const material = new MeshStandardMaterial({
-      color: 'gray'
-    })
-    csm.setupMaterial(material)
-    return material
-  }, [csm])
+  const standardMaterial = useMemo(
+    () =>
+      csm.setupMaterial(
+        new MeshStandardMaterial({
+          color: 'white'
+        })
+      ),
+    [csm]
+  )
+  const terrainStandardMaterial = useMemo(
+    () =>
+      csm.setupMaterial(
+        new MeshStandardMaterial({
+          color: 'gray'
+        })
+      ),
+    [csm]
+  )
 
   const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
   useEffect(() => {
-    material.envMap = envMap?.fbo.texture ?? null
-    terrainMaterial.envMap = envMap?.fbo.texture ?? null
-  }, [material, terrainMaterial, envMap])
-
-  useEffect(() => {
-    const intensity = sky ? 1 : 0
-    material.envMapIntensity = intensity
-    terrainMaterial.envMapIntensity = intensity
-  }, [material, terrainMaterial, sky])
+    scene.environment = envMap?.fbo.texture ?? null
+    scene.environmentIntensity = mode === 'forward' && sky ? 1 : 0
+  }, [envMap, scene, mode, sky])
 
   useFrame(() => {
     const date = new Date(motionDate.get())
@@ -164,13 +191,13 @@ const Scene: FC = () => {
   const effectComposer = useMemo(
     () => (
       <EffectComposer key={Math.random()} normalPass multisampling={0}>
-        {enable && !normal && !depth && (
+        {enabled && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
             adjustHeight={adjustHeight}
             photometric={photometric}
-            skyIrradiance={false}
-            sunIrradiance={false}
+            sunIrradiance={mode === 'deferred' && sun}
+            skyIrradiance={mode === 'deferred' && sky}
             transmittance={transmittance}
             inscatter={inscatter}
           />
@@ -191,7 +218,10 @@ const Scene: FC = () => {
     [
       adjustHeight,
       photometric,
-      enable,
+      mode,
+      sun,
+      sky,
+      enabled,
       transmittance,
       inscatter,
       lensFlare,
@@ -207,11 +237,15 @@ const Scene: FC = () => {
       textures.transmittanceTexture,
       position,
       sunDirectionRef.current,
-      photometric,
-      undefined,
+      { adjustHeight, photometric },
       csm.directionalLights.mainLight.color
     )
   })
+
+  const [material, terrainMaterial] = {
+    forward: [standardMaterial, terrainStandardMaterial],
+    deferred: [basicMaterial, terrainBasicMaterial]
+  }[mode]
 
   return (
     <>
@@ -225,7 +259,9 @@ const Scene: FC = () => {
         photometric={photometric}
       />
       <Stars ref={starsRef} adjustHeight={adjustHeight} />
-      <CascadedDirectionalLights intensity={sun ? 1 : 0} />
+      <CascadedDirectionalLights
+        intensity={mode === 'forward' && sun ? 1 : 0}
+      />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}
@@ -239,7 +275,7 @@ const Scene: FC = () => {
           receiveShadow
           castShadow
         />
-        <primitive object={material}>
+        <material>
           <RenderCubeTexture
             ref={setEnvMap}
             resolution={64}
@@ -251,7 +287,7 @@ const Scene: FC = () => {
               photometric={photometric}
             />
           </RenderCubeTexture>
-        </primitive>
+        </material>
       </LocalTangentFrame>
       {tiles.map(tile => (
         <Suspense key={`${tile.x}:${tile.y}:${tile.z}`}>
@@ -270,7 +306,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Shadow: StoryFn = () => {
+export const ForwardLighting: StoryFn = () => {
   return (
     <Canvas
       gl={{

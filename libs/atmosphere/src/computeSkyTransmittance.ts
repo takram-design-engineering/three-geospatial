@@ -107,33 +107,43 @@ function getTransmittanceToTopAtmosphereBoundary(
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 
+export interface SkyTransmittanceOptions {
+  ellipsoid?: Ellipsoid
+  adjustHeight?: boolean
+}
+
 export function computeSkyTransmittance(
   transmittanceTexture: DataTexture,
   worldPosition: Vector3,
   worldDirection: Vector3,
-  ellipsoid = Ellipsoid.WGS84,
+  {
+    ellipsoid = Ellipsoid.WGS84,
+    adjustHeight = true
+  }: SkyTransmittanceOptions = {},
   result = new Vector3()
 ): Vector3 {
   const camera = vectorScratch1
     .copy(worldPosition)
     .multiplyScalar(METER_TO_UNIT_LENGTH)
 
-  const earthCenter = vectorScratch2
-  const surfacePosition = ellipsoid.projectToSurface(
-    worldPosition,
-    undefined,
-    vectorScratch2
-  )
-  if (surfacePosition != null) {
-    ellipsoid
-      .getOsculatingSphereCenter(
-        surfacePosition,
-        ATMOSPHERE_PARAMETERS.bottomRadius,
-        earthCenter
-      )
-      .multiplyScalar(METER_TO_UNIT_LENGTH)
+  if (adjustHeight) {
+    const earthCenter = vectorScratch2
+    const surfacePosition = ellipsoid.projectToSurface(
+      worldPosition,
+      undefined,
+      vectorScratch2
+    )
+    if (surfacePosition != null) {
+      ellipsoid
+        .getOsculatingSphereCenter(
+          surfacePosition,
+          ATMOSPHERE_PARAMETERS.bottomRadius,
+          earthCenter
+        )
+        .multiplyScalar(METER_TO_UNIT_LENGTH)
+    }
+    camera.sub(earthCenter)
   }
-  camera.sub(earthCenter)
 
   let r = camera.length()
   let rmu = camera.dot(worldDirection)

@@ -45,8 +45,8 @@ import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
 import { AerialPerspective } from '../react/AerialPerspective'
 import { Atmosphere, type AtmosphereImpl } from '../react/Atmosphere'
 import { Stars, type StarsImpl } from '../react/Stars'
-import { useLocalDateControls } from './useLocalDateControls'
-import { useRendererControls } from './useRendererControls'
+import { useLocalDateControls } from './helpers/useLocalDateControls'
+import { useRendererControls } from './helpers/useRendererControls'
 
 const location = new Geodetic(
   // Coordinates of Tokyo station.
