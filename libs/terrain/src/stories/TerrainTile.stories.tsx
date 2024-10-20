@@ -5,3 +5,4 @@ export default {
 } satisfies Meta
 
 export { Globe } from './TerrainTile-Globe'
+export { Multiple } from './TerrainTile-Multiple'
