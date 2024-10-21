@@ -4,11 +4,16 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 
 // See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion
 // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/scaleToGeodeticSurface.js
+
+export interface ProjectOnEllipsoidSurfaceOptions {
+  centerTolerance?: number
+}
+
 export function projectOnEllipsoidSurface(
   position: Vector3,
   reciprocalRadiiSquared: Vector3,
-  centerTolerance = 0.1,
-  result = new Vector3()
+  result = new Vector3(),
+  options?: ProjectOnEllipsoidSurfaceOptions
 ): Vector3 | undefined {
   const { x, y, z } = position
   const rx = reciprocalRadiiSquared.x
@@ -30,7 +35,7 @@ export function projectOnEllipsoidSurface(
   // As an initial approximation, assume that the radial intersection is the
   // projection point.
   const intersection = vectorScratch.copy(position).multiplyScalar(ratio)
-  if (normSquared < centerTolerance) {
+  if (normSquared < (options?.centerTolerance ?? 0.1)) {
     return result.copy(intersection)
   }
 

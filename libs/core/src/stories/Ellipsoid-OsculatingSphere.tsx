@@ -50,7 +50,7 @@ const Scene: FC = () => {
     if (intersection == null) {
       return
     }
-    ellipsoid.projectOnSurface(intersection.point, undefined, position)
+    ellipsoid.projectOnSurface(intersection.point, position)
     pointMesh.position.copy(position)
     normalArrow.position.copy(position)
     normalArrow.setDirection(ellipsoid.getSurfaceNormal(position))

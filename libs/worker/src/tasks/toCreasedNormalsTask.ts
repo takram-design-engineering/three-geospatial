@@ -1,17 +1,22 @@
+/* eslint-env worker */
+
 import { BufferAttribute, BufferGeometry } from 'three'
 import { toCreasedNormals } from 'three-stdlib'
-import workerpool from 'workerpool'
-import type Transfer from 'workerpool/types/transfer'
 
 import { isNotNullish } from '@geovanni/core'
 
-export type CreasedNormalsInput = Pick<BufferGeometry, 'attributes' | 'index'>
-export type CreasedNormalsResult = Pick<BufferGeometry, 'attributes' | 'index'>
+import { Transfer, type TransferResult } from '../transfer'
 
-export function toCreasedNormalsWorker(
-  input: CreasedNormalsInput,
+export type ToCreasedNormalsInput = Pick<BufferGeometry, 'attributes' | 'index'>
+export type ToCreasedNormalsResult = Pick<
+  BufferGeometry,
+  'attributes' | 'index'
+>
+
+export function toCreasedNormalsTask(
+  input: ToCreasedNormalsInput,
   creaseAngle?: number
-): Transfer {
+): TransferResult<ToCreasedNormalsResult> {
   const geometry = new BufferGeometry()
   for (const [name, attribute] of Object.entries(input.attributes)) {
     geometry.setAttribute(
@@ -31,7 +36,7 @@ export function toCreasedNormalsWorker(
     )
   }
   const result = toCreasedNormals(geometry, creaseAngle)
-  return new workerpool.Transfer(
+  return Transfer(
     result,
     [
       ...Object.values(result.attributes).map(

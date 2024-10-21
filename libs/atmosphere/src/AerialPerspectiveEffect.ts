@@ -202,7 +202,6 @@ export class AerialPerspectiveEffect extends Effect {
     if (this.osculateEllipsoid) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
         position,
-        undefined,
         vectorScratch
       )
       if (surfacePosition != null) {

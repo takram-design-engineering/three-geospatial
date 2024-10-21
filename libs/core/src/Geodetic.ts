@@ -1,7 +1,10 @@
 import { Vector3 } from 'three'
 
 import { Ellipsoid } from './Ellipsoid'
-import { projectOnEllipsoidSurface } from './projectOnEllipsoidSurface'
+import {
+  projectOnEllipsoidSurface,
+  type ProjectOnEllipsoidSurfaceOptions
+} from './projectOnEllipsoidSurface'
 
 export type GeodeticTuple = [number, number, number]
 
@@ -78,19 +81,18 @@ export class Geodetic {
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Geodetic.js#L119
   setFromECEF(
     position: Vector3,
-    options: {
+    options?: ProjectOnEllipsoidSurfaceOptions & {
       ellipsoid?: Ellipsoid
-      centerTolerance?: number
-    } = {}
+    }
   ): this {
-    const { ellipsoid = Ellipsoid.WGS84, centerTolerance } = options
+    const ellipsoid = options?.ellipsoid ?? Ellipsoid.WGS84
     const reciprocalRadiiSquared =
       ellipsoid.reciprocalRadiiSquared(vectorScratch1)
     const projection = projectOnEllipsoidSurface(
       position,
       reciprocalRadiiSquared,
-      centerTolerance,
-      vectorScratch2
+      vectorScratch2,
+      options
     )
     if (projection == null) {
       throw new Error()
@@ -109,11 +111,11 @@ export class Geodetic {
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Cartesian3.js#L916
   toECEF(
     result = new Vector3(),
-    options: {
+    options?: {
       ellipsoid?: Ellipsoid
-    } = {}
+    }
   ): Vector3 {
-    const { ellipsoid = Ellipsoid.WGS84 } = options
+    const ellipsoid = options?.ellipsoid ?? Ellipsoid.WGS84
     const radiiSquared = vectorScratch1.multiplyVectors(
       ellipsoid.radii,
       ellipsoid.radii

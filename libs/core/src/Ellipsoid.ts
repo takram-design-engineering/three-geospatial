@@ -1,6 +1,9 @@
 import { Matrix4, Vector3 } from 'three'
 
-import { projectOnEllipsoidSurface } from './projectOnEllipsoidSurface'
+import {
+  projectOnEllipsoidSurface,
+  type ProjectOnEllipsoidSurfaceOptions
+} from './projectOnEllipsoidSurface'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
@@ -25,31 +28,25 @@ export class Ellipsoid {
   }
 
   reciprocalRadii(result = new Vector3()): Vector3 {
-    return result.set(
-      this.radii.x === 0 ? 0 : 1 / this.radii.x,
-      this.radii.y === 0 ? 0 : 1 / this.radii.y,
-      this.radii.z === 0 ? 0 : 1 / this.radii.z
-    )
+    const { x, y, z } = this.radii
+    return result.set(1 / x, 1 / y, 1 / z)
   }
 
   reciprocalRadiiSquared(result = new Vector3()): Vector3 {
-    return result.set(
-      this.radii.x === 0 ? 0 : 1 / (this.radii.x * this.radii.x),
-      this.radii.y === 0 ? 0 : 1 / (this.radii.y * this.radii.y),
-      this.radii.z === 0 ? 0 : 1 / (this.radii.z * this.radii.z)
-    )
+    const { x, y, z } = this.radii
+    return result.set(1 / x ** 2, 1 / y ** 2, 1 / z ** 2)
   }
 
   projectOnSurface(
     position: Vector3,
-    centerTolerance?: number,
-    result = new Vector3()
+    result = new Vector3(),
+    options?: ProjectOnEllipsoidSurfaceOptions
   ): Vector3 | undefined {
     return projectOnEllipsoidSurface(
       position,
       this.reciprocalRadiiSquared(),
-      centerTolerance,
-      result
+      result,
+      options
     )
   }
 
@@ -59,13 +56,22 @@ export class Ellipsoid {
       .normalize()
   }
 
+  getEastNorthUpVectors(
+    position: Vector3,
+    east = new Vector3(),
+    north = new Vector3(),
+    up = new Vector3()
+  ): void {
+    this.getSurfaceNormal(position, up)
+    east.set(-position.y, position.x, 0).normalize()
+    north.crossVectors(up, east).normalize()
+  }
+
   getEastNorthUpFrame(position: Vector3, result = new Matrix4()): Matrix4 {
     const east = vectorScratch1
     const north = vectorScratch2
     const up = vectorScratch3
-    this.getSurfaceNormal(position, up)
-    east.set(-position.y, position.x, 0).normalize()
-    north.crossVectors(up, east).normalize()
+    this.getEastNorthUpVectors(position, east, north, up)
     return result.makeBasis(east, north, up).setPosition(position)
   }
 
