@@ -21,12 +21,7 @@ const terrain = new IonTerrain({
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
 
-const tiles = tile
-  .getChildren()
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
+const tiles = Array.from(tile.traverseChildren(5))
 
 const terrainMaterial = new MeshNormalMaterial()
 

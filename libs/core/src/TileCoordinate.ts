@@ -6,6 +6,40 @@ export interface TileCoordinateLike {
   readonly z: number
 }
 
+function* traverseChildren(
+  x: number,
+  y: number,
+  z: number,
+  maxZ: number,
+  result?: TileCoordinate
+): Generator<TileCoordinate> {
+  if (z >= maxZ) {
+    return
+  }
+  const divisor = 2 ** z
+  const nextZ = z + 1
+  const scale = 2 ** nextZ
+  const nextX = Math.floor((x / divisor) * scale)
+  const nextY = Math.floor((y / divisor) * scale)
+  const children = [
+    [nextX, nextY, nextZ],
+    [nextX + 1, nextY, nextZ],
+    [nextX, nextY + 1, nextZ],
+    [nextX + 1, nextY + 1, nextZ]
+  ] as const
+  if (nextZ < maxZ) {
+    for (const child of children) {
+      for (const coord of traverseChildren(...child, maxZ, result)) {
+        yield coord
+      }
+    }
+  } else {
+    for (const child of children) {
+      yield (result ?? new TileCoordinate()).set(...child)
+    }
+  }
+}
+
 export class TileCoordinate {
   constructor(
     public x = 0,
@@ -59,33 +93,14 @@ export class TileCoordinate {
     return result.set(Math.floor(x * scale), Math.floor(y * scale), z)
   }
 
-  getChildren(
-    result = [
-      new TileCoordinate(),
-      new TileCoordinate(),
-      new TileCoordinate(),
-      new TileCoordinate()
-    ]
-  ): TileCoordinate[] {
-    const divisor = 2 ** this.z
-    const z = this.z + 1
-    const scale = 2 ** z
-    const x = Math.floor((this.x / divisor) * scale)
-    const y = Math.floor((this.y / divisor) * scale)
-    result[0]?.set(x, y, z)
-    result[1]?.set(x + 1, y, z)
-    result[2]?.set(x, y + 1, z)
-    result[3]?.set(x + 1, y + 1, z)
-    return result
-  }
-
-  getChildrenAtDepth(depth: number): TileCoordinate[] {
-    // TODO: Too much wasted heap.
-    let tiles = [this.clone()]
-    for (let i = 0; i < depth; ++i) {
-      tiles = tiles.flatMap(tile => tile.getChildren())
+  *traverseChildren(
+    depth: number,
+    result?: TileCoordinate
+  ): Generator<TileCoordinate> {
+    const { x, y, z } = this
+    for (const coord of traverseChildren(x, y, z, z + depth, result)) {
+      yield coord
     }
-    return tiles
   }
 
   fromArray(array: readonly number[], offset = 0): this {

@@ -32,24 +32,25 @@ export const BatchedTerrainTile = memo(
     },
     forwardedRef
   ) {
-    const geometries = suspend(
-      async () =>
-        (
-          await Promise.all(
-            new TileCoordinate(x, y, z)
-              .getChildrenAtDepth(depth)
-              .map(async tile => {
-                try {
-                  return await terrain.createGeometry(
-                    tile,
-                    computeVertexNormals
-                  )
-                } catch (error) {}
-              })
-          )
-        ).filter(isNotNullish),
-      [terrain, x, y, z, depth]
-    )
+    const geometries = suspend(async () => {
+      const promises = []
+      const tile = new TileCoordinate(x, y, z)
+      for (const child of tile.traverseChildren(depth, tile)) {
+        promises.push(
+          (async () => {
+            try {
+              return await terrain.createGeometry(
+                { ...child },
+                computeVertexNormals
+              )
+              // TODO: This is intended to ignore 404. We can look up the layer
+              // definition in advance.
+            } catch (error) {}
+          })()
+        )
+      }
+      return (await Promise.all(promises)).filter(isNotNullish)
+    }, [terrain, x, y, z, depth])
 
     useEffect(() => {
       return () => {
