@@ -131,7 +131,6 @@ export function computeSkyTransmittance(
     const earthCenter = vectorScratch2
     const surfacePosition = ellipsoid.projectOnSurface(
       worldPosition,
-      undefined,
       vectorScratch2
     )
     if (surfacePosition != null) {

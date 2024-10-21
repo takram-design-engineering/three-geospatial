@@ -36,14 +36,14 @@ export class Ellipsoid {
 
   projectOnSurface(
     position: Vector3,
-    centerTolerance?: number,
-    result = new Vector3()
+    result = new Vector3(),
+    options?: { centerTolerance?: number }
   ): Vector3 | undefined {
     return projectOnEllipsoidSurface(
       position,
       this.reciprocalRadiiSquared(),
-      centerTolerance,
-      result
+      result,
+      options
     )
   }
 

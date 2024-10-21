@@ -7,8 +7,8 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 export function projectOnEllipsoidSurface(
   position: Vector3,
   reciprocalRadiiSquared: Vector3,
-  centerTolerance = 0.1,
-  result = new Vector3()
+  result = new Vector3(),
+  options?: { centerTolerance?: number }
 ): Vector3 | undefined {
   const { x, y, z } = position
   const rx = reciprocalRadiiSquared.x
@@ -30,7 +30,7 @@ export function projectOnEllipsoidSurface(
   // As an initial approximation, assume that the radial intersection is the
   // projection point.
   const intersection = vectorScratch.copy(position).multiplyScalar(ratio)
-  if (normSquared < centerTolerance) {
+  if (normSquared < (options?.centerTolerance ?? 0.1)) {
     return result.copy(intersection)
   }
 
