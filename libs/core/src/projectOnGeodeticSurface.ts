@@ -29,15 +29,15 @@ export function projectOnGeodeticSurface(
 
   // As an initial approximation, assume that the radial intersection is the
   // projection point.
-  result.copy(position).multiplyScalar(ratio)
+  const intersection = vectorScratch.copy(position).multiplyScalar(ratio)
   if (normSquared < centerTolerance) {
-    return result
+    return result.copy(intersection)
   }
 
   // Use the gradient at the intersection point in place of the true unit
   // normal. The difference in magnitude will be absorbed in the multiplier.
-  const gradient = vectorScratch
-    .multiplyVectors(result, reciprocalRadiiSquared)
+  const gradient = intersection
+    .multiply(reciprocalRadiiSquared)
     .multiplyScalar(2)
 
   // Compute the initial guess at the normal vector multiplier.
