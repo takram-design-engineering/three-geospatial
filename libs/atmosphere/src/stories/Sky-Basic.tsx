@@ -56,7 +56,6 @@ const Scene: FC = () => {
 
   const motionDate = useLocalDateControls({
     longitude,
-    timeOfDay: 9,
     dayOfYear: 0
   })
   const sunDirectionRef = useRef(new Vector3())

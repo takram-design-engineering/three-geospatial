@@ -14,7 +14,7 @@ export interface LocalDateControlsParams {
 export function useLocalDateControls({
   longitude,
   dayOfYear: initialDayOfYear = getDayOfYear(new Date()),
-  timeOfDay: initialTimeOfDay = 0
+  timeOfDay: initialTimeOfDay = 9
 }: LocalDateControlsParams = {}): MotionValue<number> {
   const { dayOfYear, timeOfDay } = useControls('local date', {
     dayOfYear: {
