@@ -1,5 +1,6 @@
 export * from './AerialPerspectiveEffect'
 export * from './AtmosphereMaterialBase'
+export * from './bvIndex'
 export * from './computeSkyTransmittance'
 export * from './computeSunLightColor'
 export * from './constants'

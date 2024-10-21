@@ -6,13 +6,8 @@ import { maxBy, meanBy, minBy } from 'lodash'
 import { Color } from 'three'
 import invariant from 'tiny-invariant'
 
-import {
-  closeTo,
-  convertBVIndexToLinearSRGBChromaticity,
-  inverseLerp,
-  lerp,
-  radians
-} from '@geovanni/core'
+import { convertBVIndexToLinearSRGBChromaticity } from '@geovanni/atmosphere'
+import { closeTo, inverseLerp, lerp, radians } from '@geovanni/core'
 
 function readRightAscension(input: string): number | undefined {
   const hours = parseInt(input.slice(75, 77))
