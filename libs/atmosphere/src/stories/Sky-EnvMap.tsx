@@ -1,7 +1,7 @@
 import {
-  CameraControls,
   GizmoHelper,
   GizmoViewport,
+  OrbitControls,
   RenderCubeTexture,
   TorusKnot,
   type RenderCubeTextureApi
@@ -19,7 +19,7 @@ import {
   type ComponentRef,
   type FC
 } from 'react'
-import { Vector3, type Group } from 'three'
+import { Quaternion, Vector3, type Group } from 'three'
 
 import {
   Ellipsoid,
@@ -38,6 +38,8 @@ import { useRendererControls } from './helpers/useRendererControls'
 const location = new Geodetic()
 const position = new Vector3()
 const up = new Vector3()
+const offset = new Vector3()
+const rotation = new Quaternion()
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
@@ -49,19 +51,22 @@ const Scene: FC = () => {
   })
 
   const camera = useThree(({ camera }) => camera)
-  const controlsRef = useRef<ComponentRef<typeof CameraControls>>(null)
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
   useEffect(() => {
-    location.set(radians(longitude), radians(latitude), height)
-    location.toECEF(position)
-    Ellipsoid.WGS84.getSurfaceNormal(position, up)
-    camera.up.copy(up)
-
     const controls = controlsRef.current
     if (controls == null) {
       return
     }
-    controls.updateCameraUp()
-    void controls.moveTo(position.x, position.y, position.z)
+    location.set(radians(longitude), radians(latitude), height)
+    location.toECEF(position)
+    Ellipsoid.WGS84.getSurfaceNormal(position, up)
+
+    rotation.setFromUnitVectors(camera.up, up)
+    offset.copy(camera.position).sub(controls.target)
+    offset.applyQuaternion(rotation)
+    camera.up.copy(up)
+    camera.position.copy(position).add(offset)
+    controls.target.copy(position)
   }, [longitude, latitude, height, camera])
 
   const { osculateEllipsoid, photometric } = useControls('atmosphere', {
@@ -115,7 +120,7 @@ const Scene: FC = () => {
 
   return (
     <>
-      <CameraControls ref={controlsRef} minDistance={5} dollySpeed={0.05} />
+      <OrbitControls ref={controlsRef} minDistance={5} />
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
