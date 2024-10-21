@@ -1,9 +1,16 @@
 // cSpell:words minzoom maxzoom octvertexnormals watermask
 
-import decode, { type QuantizedMeshData } from '@here/quantized-mesh-decoder'
 import stringTemplate from 'string-template'
+import { type BufferGeometry } from 'three'
 
-import { TilingScheme } from '@geovanni/core'
+import {
+  fromBufferGeometryLike,
+  TilingScheme,
+  type TileCoordinateLike
+} from '@geovanni/core'
+// TODO
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { queueTask } from '@geovanni/worker'
 
 import { IonAsset } from './IonAsset'
 
@@ -26,36 +33,41 @@ interface Layer {
   version: string
 }
 
-export interface TileParams {
-  x: number
-  y: number
-  z: number
-}
-
 export class IonTerrain extends IonAsset {
   // TODO: Construct from layer.
   readonly tilingScheme = new TilingScheme()
 
   private layerPromise?: Promise<Layer>
 
-  async fetchTile(params: TileParams): Promise<QuantizedMeshData> {
+  async fetchTile(coordinate: TileCoordinateLike): Promise<ArrayBuffer> {
     const layer = await this.loadLayer()
     const [template] = layer.tiles
-    return decode(
-      await this.fetch<ArrayBuffer>(
-        stringTemplate(template, { ...params, version: layer.version }),
-        {
-          responseType: 'arraybuffer',
-          params: {
-            extensions: 'octvertexnormals-watermask-metadata'
-          },
-          headers: {
-            Accept:
-              'application/vnd.quantized-mesh;extensions=octvertexnormals-watermask-metadata'
-          }
+    return await this.fetch<ArrayBuffer>(
+      stringTemplate(template, { ...coordinate, version: layer.version }),
+      {
+        responseType: 'arraybuffer',
+        params: {
+          extensions: 'octvertexnormals-watermask-metadata'
+        },
+        headers: {
+          Accept:
+            'application/vnd.quantized-mesh;extensions=octvertexnormals-watermask-metadata'
         }
-      )
+      }
     )
+  }
+
+  async createGeometry(
+    coordinate: TileCoordinateLike,
+    computeVertexNormals?: boolean
+  ): Promise<BufferGeometry> {
+    const result = await queueTask('createTerrainGeometry', [
+      await this.fetchTile(coordinate),
+      this.tilingScheme,
+      coordinate,
+      computeVertexNormals
+    ])
+    return fromBufferGeometryLike(result)
   }
 
   async loadLayer(): Promise<Layer> {
