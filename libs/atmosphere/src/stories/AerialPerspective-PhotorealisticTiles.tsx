@@ -23,8 +23,7 @@ import {
   TilesFadePlugin,
   UpdateOnChangePlugin
 } from '@geovanni/3d-tiles'
-import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
-import { EllipsoidMesh } from '@geovanni/core/react'
+import { Geodetic, radians } from '@geovanni/core'
 import {
   Depth,
   Dithering,
@@ -235,7 +234,6 @@ const Scene: FC = () => {
       <Stars ref={starsRef} osculateEllipsoid={osculateEllipsoid} />
       <primitive object={tiles.group} />
       {effectComposer}
-      <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} />
     </>
   )
 }

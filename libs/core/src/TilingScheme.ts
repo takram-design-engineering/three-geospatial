@@ -15,11 +15,7 @@ export class TilingScheme {
     public width = 2,
     public height = 1,
     public rectangle = Rectangle.MAX
-  ) {
-    this.width = width
-    this.height = height
-    this.rectangle = rectangle
-  }
+  ) {}
 
   clone(): TilingScheme {
     return new TilingScheme(this.width, this.height, this.rectangle.clone())

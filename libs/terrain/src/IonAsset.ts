@@ -16,10 +16,28 @@ export interface IonAssetParams {
 
 export class IonAsset {
   readonly assetId: number
+
   private endpointPromise?: Promise<AssetEndpoint>
 
   constructor(private readonly params: Readonly<IonAssetParams>) {
     this.assetId = params.assetId
+  }
+
+  async loadEndpoint(): Promise<AssetEndpoint> {
+    if (this.endpointPromise == null) {
+      this.endpointPromise = (async () => {
+        const response = await axios<AssetEndpoint>(
+          `https://api.cesium.com/v1/assets/${this.params.assetId}/endpoint`,
+          {
+            params: {
+              access_token: this.params.apiToken
+            }
+          }
+        )
+        return response.data
+      })()
+    }
+    return await this.endpointPromise
   }
 
   async fetch<T>(url: string, options?: AxiosRequestConfig<T>): Promise<T> {
@@ -41,22 +59,5 @@ export class IonAsset {
       }
       throw error
     }
-  }
-
-  async loadEndpoint(): Promise<AssetEndpoint> {
-    if (this.endpointPromise == null) {
-      this.endpointPromise = (async () => {
-        const response = await axios<AssetEndpoint>(
-          `https://api.cesium.com/v1/assets/${this.params.assetId}/endpoint`,
-          {
-            params: {
-              access_token: this.params.apiToken
-            }
-          }
-        )
-        return response.data
-      })()
-    }
-    return await this.endpointPromise
   }
 }

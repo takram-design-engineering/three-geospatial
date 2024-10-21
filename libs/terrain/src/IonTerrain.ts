@@ -39,6 +39,13 @@ export class IonTerrain extends IonAsset {
 
   private layerPromise?: Promise<Layer>
 
+  async loadLayer(): Promise<Layer> {
+    if (this.layerPromise == null) {
+      this.layerPromise = (async () => await this.fetch<Layer>('layer.json'))()
+    }
+    return await this.layerPromise
+  }
+
   async fetchTile(coordinate: TileCoordinateLike): Promise<ArrayBuffer> {
     const layer = await this.loadLayer()
     const [template] = layer.tiles
@@ -68,12 +75,5 @@ export class IonTerrain extends IonAsset {
       computeVertexNormals
     ])
     return fromBufferGeometryLike(result)
-  }
-
-  async loadLayer(): Promise<Layer> {
-    if (this.layerPromise == null) {
-      this.layerPromise = (async () => await this.fetch<Layer>('layer.json'))()
-    }
-    return await this.layerPromise
   }
 }

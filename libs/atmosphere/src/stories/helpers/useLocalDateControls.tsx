@@ -3,7 +3,7 @@ import { useMotionValue, useSpring, type MotionValue } from 'framer-motion'
 import { useControls } from 'leva'
 import { useEffect, useMemo } from 'react'
 
-const year = new Date().getFullYear()
+const year = /*#__PURE__*/ new Date().getFullYear()
 
 export interface LocalDateControlsParams {
   longitude?: number // In degrees

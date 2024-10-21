@@ -1,6 +1,6 @@
 import { BufferAttribute, MathUtils, Vector3 } from 'three'
 
-const _vec = new Vector3()
+const _vec = /*#__PURE__*/ new Vector3()
 function compressAttribute(attribute, arrayType) {
   if (
     attribute.isInterleavedBufferAttribute ||

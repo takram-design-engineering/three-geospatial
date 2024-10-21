@@ -1,6 +1,7 @@
 import { Matrix4 } from 'three'
 
-const _matrix = new Matrix4()
+const _matrix = /*#__PURE__*/ new Matrix4()
+
 export class UpdateOnChangePlugin {
   constructor() {
     this.tiles = null
