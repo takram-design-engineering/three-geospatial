@@ -25,7 +25,6 @@
       "@geovanni/csm/react": ["libs/csm/src/react/index.ts"],
       "@geovanni/effects": ["libs/effects/src/index.ts"],
       "@geovanni/effects/react": ["libs/effects/src/react/index.ts"],
-      "@geovanni/storybook": ["libs/storybook/src/index.ts"],
       "@geovanni/terrain": ["libs/terrain/src/index.ts"],
       "@geovanni/terrain/react": ["libs/terrain/src/react/index.ts"]
     }

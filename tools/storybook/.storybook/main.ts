@@ -5,13 +5,16 @@ import { mergeConfig } from 'vite'
 import glsl from 'vite-plugin-glsl'
 
 const config: StorybookConfig = {
-  stories: ['../../*/**/src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  stories: ['../../../libs/*/**/src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
     options: {}
   },
-  staticDirs: ['../../atmosphere/assets', '../../effects/assets'],
+  staticDirs: [
+    '../../../libs/atmosphere/assets',
+    '../../../libs/effects/assets'
+  ],
 
   viteFinal: async config =>
     mergeConfig(config, {
