@@ -1,7 +1,7 @@
 import {
+  CameraControls,
   GizmoHelper,
   GizmoViewport,
-  OrbitControls,
   RenderCubeTexture,
   TorusKnot,
   type RenderCubeTextureApi
@@ -11,8 +11,15 @@ import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useMemo, useRef, useState, type FC } from 'react'
-import { Vector3 } from 'three'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+  type FC
+} from 'react'
+import { Vector3, type Group } from 'three'
 
 import {
   Ellipsoid,
@@ -28,23 +35,50 @@ import { Sky, type SkyImpl } from '../react/Sky'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'
 
-const location = new Geodetic(radians(139.7671), radians(35.6812), 2000)
-const position = location.toECEF()
-const up = Ellipsoid.WGS84.getSurfaceNormal(position)
+const location = new Geodetic()
+const position = new Vector3()
+const up = new Vector3()
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
+
+  const { longitude, latitude, height } = useControls('location', {
+    longitude: { value: 0, min: -180, max: 180 },
+    latitude: { value: 35, min: -90, max: 90 },
+    height: { value: 2000, min: 0, max: 30000 }
+  })
+
+  const camera = useThree(({ camera }) => camera)
+  const controlsRef = useRef<ComponentRef<typeof CameraControls>>(null)
+  useEffect(() => {
+    location.set(radians(longitude), radians(latitude), height)
+    location.toECEF(position)
+    Ellipsoid.WGS84.getSurfaceNormal(position, up)
+    camera.up.copy(up)
+
+    const controls = controlsRef.current
+    if (controls == null) {
+      return
+    }
+    controls.updateCameraUp()
+    void controls.moveTo(position.x, position.y, position.z)
+  }, [longitude, latitude, height, camera])
 
   const { osculateEllipsoid, photometric } = useControls('atmosphere', {
     osculateEllipsoid: true,
     photometric: false
   })
 
-  const motionDate = useLocalDateControls()
+  const motionDate = useLocalDateControls({
+    longitude,
+    timeOfDay: 9,
+    dayOfYear: 0
+  })
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const skyRef = useRef<SkyImpl>(null)
   const envMapRef = useRef<SkyImpl>(null)
+  const envMapParentRef = useRef<Group>(null)
 
   const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
   const scene = useThree(({ scene }) => scene)
@@ -57,13 +91,14 @@ const Scene: FC = () => {
     getSunDirectionECEF(date, sunDirectionRef.current)
     getMoonDirectionECEF(date, moonDirectionRef.current)
     if (skyRef.current != null) {
-      skyRef.current.material.sunDirection = sunDirectionRef.current
-      skyRef.current.material.moonDirection = moonDirectionRef.current
+      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
+      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
     }
     if (envMapRef.current != null) {
-      envMapRef.current.material.sunDirection = sunDirectionRef.current
-      envMapRef.current.material.moonDirection = moonDirectionRef.current
+      envMapRef.current.material.sunDirection.copy(sunDirectionRef.current)
+      envMapRef.current.material.moonDirection.copy(moonDirectionRef.current)
     }
+    envMapParentRef.current?.position.copy(position)
   })
 
   const effectComposer = useMemo(
@@ -80,7 +115,7 @@ const Scene: FC = () => {
 
   return (
     <>
-      <OrbitControls target={position} minDistance={5} />
+      <CameraControls ref={controlsRef} minDistance={5} dollySpeed={0.05} />
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
@@ -90,8 +125,12 @@ const Scene: FC = () => {
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />
-      <EastNorthUpFrame {...location}>
-        <TorusKnot args={[1, 0.3, 256, 64]} position={[0, 0, 0]}>
+      <EastNorthUpFrame
+        longitude={radians(longitude)}
+        latitude={radians(latitude)}
+        height={height}
+      >
+        <TorusKnot args={[1, 0.3, 256, 64]}>
           <meshPhysicalMaterial
             color={[0.4, 0.4, 0.4]}
             metalness={0}
@@ -100,21 +139,17 @@ const Scene: FC = () => {
             envMap={envMap?.fbo.texture}
           />
         </TorusKnot>
-        <material>
-          <RenderCubeTexture
-            ref={setEnvMap}
-            resolution={64}
-            position={position}
-          >
-            <Sky
-              ref={envMapRef}
-              osculateEllipsoid={osculateEllipsoid}
-              photometric={photometric}
-              sunAngularRadius={0.1}
-            />
-          </RenderCubeTexture>
-        </material>
       </EastNorthUpFrame>
+      <group ref={envMapParentRef}>
+        <RenderCubeTexture ref={setEnvMap} resolution={64}>
+          <Sky
+            ref={envMapRef}
+            osculateEllipsoid={osculateEllipsoid}
+            photometric={photometric}
+            sunAngularRadius={0.1}
+          />
+        </RenderCubeTexture>
+      </group>
       {effectComposer}
     </>
   )
@@ -128,7 +163,6 @@ export const EnvMap: StoryFn = () => {
         depth: false,
         stencil: false
       }}
-      camera={{ position, up }}
     >
       <Scene />
     </Canvas>
