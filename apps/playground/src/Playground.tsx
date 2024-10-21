@@ -8,9 +8,9 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 import { Vector3 } from 'three'
 
-import { AerialPerspective, Atmosphere } from '@geovanni/atmosphere/react'
+import { AerialPerspective, Sky } from '@geovanni/atmosphere/react'
 import { Geodetic, getSunDirectionECEF, radians } from '@geovanni/core'
-import { LocalTangentFrame } from '@geovanni/core/react'
+import { EastNorthUpFrame } from '@geovanni/core/react'
 import { EffectComposer, SSAO } from '@geovanni/effects/react'
 
 import { SunLight } from './components/SunLight'
@@ -66,9 +66,9 @@ export const Container: FC = () => {
     >
       <OrbitControls target={cameraTarget} />
       <ambientLight intensity={0.05} />
-      <Atmosphere sunDirection={sunDirection} />
+      <Sky sunDirection={sunDirection} />
       <EffectComposer normalPass>{effects}</EffectComposer>
-      <LocalTangentFrame location={localLocation}>
+      <EastNorthUpFrame {...localLocation}>
         <SunLight />
         <Plane
           args={[1e5, 1e5]}
@@ -77,7 +77,7 @@ export const Container: FC = () => {
         >
           <meshStandardMaterial color={[0.05, 0.05, 0.05]} />
         </Plane>
-      </LocalTangentFrame>
+      </EastNorthUpFrame>
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13101_chiyoda-ku_2020_bldg_notexture/tileset.json' />
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13102_chuo-ku_2020_bldg_notexture/tileset.json' />
       <Tileset url='https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13103_minato-ku_2020_bldg_notexture/tileset.json' />

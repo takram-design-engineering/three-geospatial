@@ -21,10 +21,7 @@ import {
   radians,
   TilingScheme
 } from '@geovanni/core'
-import {
-  Ellipsoid as EllipsoidMesh,
-  LocalTangentFrame
-} from '@geovanni/core/react'
+import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/react'
 import {
   Depth,
   Dithering,
@@ -168,13 +165,13 @@ const Scene: FC = () => {
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}
       />
-      <LocalTangentFrame location={location}>
+      <EastNorthUpFrame {...location}>
         <TorusKnot
           args={[200, 60, 256, 64]}
           position={[0, 0, 20]}
           material={material}
         />
-      </LocalTangentFrame>
+      </EastNorthUpFrame>
       <Suspense>
         <BatchedTerrainTile
           terrain={terrain}

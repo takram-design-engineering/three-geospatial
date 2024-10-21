@@ -21,7 +21,7 @@ import {
   getSunDirectionECEF,
   radians
 } from '@geovanni/core'
-import { LocalTangentFrame } from '@geovanni/core/react'
+import { EastNorthUpFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
 import { Sky, type SkyImpl } from '../react/Sky'
@@ -90,7 +90,7 @@ const Scene: FC = () => {
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       />
-      <LocalTangentFrame location={location}>
+      <EastNorthUpFrame {...location}>
         <TorusKnot args={[1, 0.3, 256, 64]} position={[0, 0, 0]}>
           <meshPhysicalMaterial
             color={[0.4, 0.4, 0.4]}
@@ -114,7 +114,7 @@ const Scene: FC = () => {
             />
           </RenderCubeTexture>
         </material>
-      </LocalTangentFrame>
+      </EastNorthUpFrame>
       {effectComposer}
     </>
   )

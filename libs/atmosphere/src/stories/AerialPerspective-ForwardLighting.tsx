@@ -37,10 +37,7 @@ import {
   radians,
   TilingScheme
 } from '@geovanni/core'
-import {
-  Ellipsoid as EllipsoidMesh,
-  LocalTangentFrame
-} from '@geovanni/core/react'
+import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/react'
 import { CascadedDirectionalLights, CSM, useCSM } from '@geovanni/csm/react'
 import {
   Depth,
@@ -260,7 +257,7 @@ const Scene: FC = () => {
         material={terrainMaterial}
         receiveShadow
       />
-      <LocalTangentFrame location={location}>
+      <EastNorthUpFrame {...location}>
         <TorusKnot
           args={[200, 60, 256, 64]}
           position={[0, 0, 20]}
@@ -281,7 +278,7 @@ const Scene: FC = () => {
             />
           </RenderCubeTexture>
         </material>
-      </LocalTangentFrame>
+      </EastNorthUpFrame>
       <Suspense>
         <BatchedTerrainTile
           terrain={terrain}

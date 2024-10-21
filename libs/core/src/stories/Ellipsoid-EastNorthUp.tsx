@@ -8,10 +8,16 @@ import {
 } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { useEffect, useRef, type FC } from 'react'
 import { useEvent } from 'react-use'
-import { Raycaster, Vector2, Vector3, type ArrowHelper, type Mesh } from 'three'
+import {
+  Matrix4,
+  Raycaster,
+  Vector2,
+  Vector3,
+  type ArrowHelper,
+  type Mesh
+} from 'three'
 
 import { Ellipsoid } from '../Ellipsoid'
 import { EllipsoidMesh } from '../react/EllipsoidMesh'
@@ -19,28 +25,36 @@ import { EllipsoidMesh } from '../react/EllipsoidMesh'
 const ellipsoid = new Ellipsoid(10, 10, 9)
 const raycaster = new Raycaster()
 const pointer = new Vector2()
-const position = new Vector3()
+const matrix = new Matrix4()
+const east = new Vector3()
+const north = new Vector3()
+const up = new Vector3()
 
 const Scene: FC = () => {
-  const { wireframe } = useControls({ wireframe: true })
-
   const { camera } = useThree()
   const ellipsoidMeshRef = useRef<Mesh>(null)
-  const sphereMeshRef = useRef<Mesh>(null)
   const pointMeshRef = useRef<Mesh>(null)
-  const normalArrowRef = useRef<ArrowHelper>(null)
+  const eastArrowRef = useRef<ArrowHelper>(null)
+  const northArrowRef = useRef<ArrowHelper>(null)
+  const upArrowRef = useRef<ArrowHelper>(null)
 
   useEffect(() => {
-    const normalArrow = normalArrowRef.current!
-    normalArrow.setColor('red')
-    normalArrow.setLength(1, 0.2, 0.2)
+    ;[
+      eastArrowRef.current!,
+      northArrowRef.current!,
+      upArrowRef.current!
+    ].forEach((arrow, index) => {
+      arrow.setColor(['red', 'green', 'blue'][index])
+      arrow.setLength(1, 0.2, 0.2)
+    })
   }, [])
 
   useEvent('mousemove', (event: MouseEvent) => {
     const ellipsoidMesh = ellipsoidMeshRef.current!
-    const sphereMesh = sphereMeshRef.current!
     const pointMesh = pointMeshRef.current!
-    const normalArrow = normalArrowRef.current!
+    const eastArrow = eastArrowRef.current!
+    const northArrow = northArrowRef.current!
+    const upArrow = upArrowRef.current!
 
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1
     pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
@@ -50,14 +64,16 @@ const Scene: FC = () => {
     if (intersection == null) {
       return
     }
-    ellipsoid.projectOnSurface(intersection.point, undefined, position)
+    const position = intersection.point
+    ellipsoid.getEastNorthUpFrame(position, matrix)
     pointMesh.position.copy(position)
-    normalArrow.position.copy(position)
-    normalArrow.setDirection(ellipsoid.getSurfaceNormal(position))
-
-    const radius = (ellipsoid.minimumRadius + ellipsoid.maximumRadius) / 2
-    ellipsoid.getOsculatingSphereCenter(position, radius, sphereMesh.position)
-    sphereMesh.scale.set(radius, radius, radius)
+    eastArrow.position.copy(position)
+    northArrow.position.copy(position)
+    upArrow.position.copy(position)
+    matrix.extractBasis(east, north, up)
+    eastArrow.setDirection(east)
+    northArrow.setDirection(north)
+    upArrow.setDirection(up)
   })
 
   return (
@@ -66,21 +82,22 @@ const Scene: FC = () => {
         <GizmoViewport />
       </GizmoHelper>
       <OrbitControls />
+      <ambientLight />
+      <directionalLight />
       <EllipsoidMesh ref={ellipsoidMeshRef} args={[ellipsoid.radii, 90, 45]}>
-        <meshBasicMaterial color='yellow' wireframe={wireframe} />
+        <meshBasicMaterial color='yellow' wireframe />
       </EllipsoidMesh>
-      <Sphere ref={sphereMeshRef} args={[1, 90, 45]} rotation-x={Math.PI / 2}>
-        <meshBasicMaterial color='cyan' wireframe={wireframe} />
-      </Sphere>
       <Sphere ref={pointMeshRef} args={[0.1]}>
         <meshBasicMaterial color='red' />
       </Sphere>
-      <arrowHelper ref={normalArrowRef} />
+      <arrowHelper ref={eastArrowRef} />
+      <arrowHelper ref={northArrowRef} />
+      <arrowHelper ref={upArrowRef} />
     </>
   )
 }
 
-export const OsculatingSphere: StoryFn = () => {
+export const EastNorthUp: StoryFn = () => {
   return (
     <Canvas camera={{ fov: 30, position: [50, 0, 0], up: [0, 0, 1] }}>
       <Scene />

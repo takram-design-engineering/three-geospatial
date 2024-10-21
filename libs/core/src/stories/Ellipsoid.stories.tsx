@@ -7,4 +7,5 @@ export default {
   }
 } satisfies Meta
 
+export { EastNorthUp } from './Ellipsoid-EastNorthUp'
 export { OsculatingSphere } from './Ellipsoid-OsculatingSphere'

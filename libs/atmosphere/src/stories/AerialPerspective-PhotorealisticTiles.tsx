@@ -31,7 +31,7 @@ import {
   getSunDirectionECEF,
   radians
 } from '@geovanni/core'
-import { Ellipsoid as EllipsoidMesh } from '@geovanni/core/react'
+import { EllipsoidMesh } from '@geovanni/core/react'
 import {
   Depth,
   Dithering,
