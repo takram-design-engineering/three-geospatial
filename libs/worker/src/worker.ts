@@ -2,10 +2,12 @@
 
 import workerpool from 'workerpool'
 
-import { toCreasedNormalsTask } from './tasks/toCreasedNormalsTask'
+import { createTerrainGeometry } from './tasks/createTerrainGeometry'
+import { toCreasedNormals } from './tasks/toCreasedNormals'
 
 export const methods = {
-  toCreasedNormals: toCreasedNormalsTask
+  toCreasedNormals,
+  createTerrainGeometry
 }
 
 workerpool.worker(methods)

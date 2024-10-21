@@ -104,12 +104,4 @@ export class EllipsoidGeometry extends BufferGeometry {
     this.parameters = { ...source.parameters }
     return this
   }
-
-  static fromJSON(data: EllipsoidGeometryParameters): EllipsoidGeometry {
-    return new EllipsoidGeometry(
-      data.radii,
-      data.longitudeSegments,
-      data.latitudeSegments
-    )
-  }
 }

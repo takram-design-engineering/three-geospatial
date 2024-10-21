@@ -1,18 +1,15 @@
 import { type MeshProps } from '@react-three/fiber'
-import { forwardRef, memo, useEffect, useMemo } from 'react'
-import { suspend } from 'suspend-react'
-import { type Mesh } from 'three'
+import { forwardRef, memo, useEffect, useRef } from 'react'
+import { mergeRefs } from 'react-merge-refs'
+import { type BufferGeometry, type Mesh } from 'three'
 
-import { Rectangle } from '@geovanni/core'
+import { type TileCoordinateLike } from '@geovanni/core'
 
-import { IonTerrain } from '../IonTerrain'
-import { TerrainGeometry } from '../TerrainGeometry'
+import { type IonTerrain } from '../IonTerrain'
+import { type TerrainGeometry } from '../TerrainGeometry'
 
-export interface TerrainTileProps extends MeshProps {
+export interface TerrainTileProps extends TileCoordinateLike, MeshProps {
   terrain: IonTerrain
-  x: number
-  y: number
-  z: number
   computeVertexNormals?: boolean
 }
 
@@ -21,45 +18,30 @@ export const TerrainTile = memo(
     { terrain, x, y, z, computeVertexNormals = false, children, ...props },
     forwardedRef
   ) {
-    // TODO: Replace with a more advanced cache.
-    const data = suspend(async () => {
-      try {
-        return await terrain.fetchTile({ x, y, z })
-      } catch (error) {
-        console.error(error)
-      }
-    }, [IonTerrain, terrain.assetId, x, y, z])
-
-    const { tilingScheme } = terrain
-    const rectangle = useMemo(() => {
-      const size = tilingScheme.getSize(z)
-      const rect = tilingScheme.tileToRectangle({ x, y: size.y - y - 1, z })
-      return new Rectangle(rect.west, rect.south, rect.east, rect.north)
-    }, [tilingScheme, x, y, z])
-
-    const geometry = useMemo(() => {
-      if (data == null) {
-        return
-      }
-      const geometry = new TerrainGeometry(data, rectangle)
-      if (computeVertexNormals) {
-        geometry.computeVertexNormals()
-      }
-      return geometry
-    }, [data, rectangle, computeVertexNormals])
+    const ref = useRef<Mesh>(null)
 
     useEffect(() => {
+      const mesh = ref.current
+      if (mesh == null) {
+        return
+      }
+      let geometry: BufferGeometry | undefined
+      ;(async () => {
+        geometry = await terrain.createGeometry(
+          { x, y, z },
+          computeVertexNormals
+        )
+        mesh.geometry = geometry
+      })().catch(error => {
+        console.error(error)
+      })
       return () => {
         geometry?.dispose()
       }
-    }, [geometry])
+    }, [terrain, x, y, z, computeVertexNormals])
 
-    if (geometry == null) {
-      return null
-    }
     return (
-      <mesh ref={forwardedRef} {...props}>
-        <primitive object={geometry} />
+      <mesh ref={mergeRefs([ref, forwardedRef])} {...props}>
         {children}
       </mesh>
     )

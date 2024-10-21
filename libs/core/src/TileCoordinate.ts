@@ -65,19 +65,27 @@ export class TileCoordinate {
       new TileCoordinate(),
       new TileCoordinate(),
       new TileCoordinate()
-    ],
-    offset = 0
+    ]
   ): TileCoordinate[] {
     const divisor = 2 ** this.z
     const z = this.z + 1
     const scale = 2 ** z
     const x = Math.floor((this.x / divisor) * scale)
     const y = Math.floor((this.y / divisor) * scale)
-    result[offset]?.set(x, y, z)
-    result[offset + 1]?.set(x + 1, y, z)
-    result[offset + 2]?.set(x, y + 1, z)
-    result[offset + 3]?.set(x + 1, y + 1, z)
+    result[0]?.set(x, y, z)
+    result[1]?.set(x + 1, y, z)
+    result[2]?.set(x, y + 1, z)
+    result[3]?.set(x + 1, y + 1, z)
     return result
+  }
+
+  getChildrenAtDepth(depth: number): TileCoordinate[] {
+    // TODO: Too much wasted heap.
+    let tiles = [this.clone()]
+    for (let i = 0; i < depth; ++i) {
+      tiles = tiles.flatMap(tile => tile.getChildren())
+    }
+    return tiles
   }
 
   fromArray(array: readonly number[], offset = 0): this {

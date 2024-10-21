@@ -1,28 +1,35 @@
 import { type Vector2Like } from 'three'
 
 import { type GeodeticLike } from './Geodetic'
-import { Rectangle } from './Rectangle'
+import { Rectangle, type RectangleLike } from './Rectangle'
 import { TileCoordinate, type TileCoordinateLike } from './TileCoordinate'
 
-export interface TilingSchemeParams {
-  width?: number
-  height?: number
-  rectangle?: Rectangle
+export interface TilingSchemeLike {
+  readonly width: number
+  readonly height: number
+  readonly rectangle: RectangleLike
 }
 
 export class TilingScheme {
-  readonly width: number
-  readonly height: number
-  readonly rectangle: Rectangle
-
-  constructor({
-    width = 2,
-    height = 1,
-    rectangle = Rectangle.MAX
-  }: TilingSchemeParams = {}) {
+  constructor(
+    public width = 2,
+    public height = 1,
+    public rectangle = Rectangle.MAX
+  ) {
     this.width = width
     this.height = height
     this.rectangle = rectangle
+  }
+
+  clone(): TilingScheme {
+    return new TilingScheme(this.width, this.height, this.rectangle.clone())
+  }
+
+  copy(other: TilingSchemeLike): this {
+    this.width = other.width
+    this.height = other.height
+    this.rectangle.copy(other.rectangle)
+    return this
   }
 
   getSize(z: number): Vector2Like {
