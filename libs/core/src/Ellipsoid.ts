@@ -1,6 +1,6 @@
 import { Matrix4, Vector3 } from 'three'
 
-import { projectOnGeodeticSurface } from './projectOnGeodeticSurface'
+import { projectOnEllipsoidSurface } from './projectOnEllipsoidSurface'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
@@ -45,7 +45,7 @@ export class Ellipsoid {
     centerTolerance?: number,
     result = new Vector3()
   ): Vector3 | undefined {
-    return projectOnGeodeticSurface(
+    return projectOnEllipsoidSurface(
       position,
       this.reciprocalRadiiSquared(),
       centerTolerance,
