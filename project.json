@@ -20,13 +20,13 @@
         "command": "nx run-many --target=build --parallel=8  --exclude=@geovanni/source --configuration=production"
       }
     },
-    "build-app": {
+    "build-apps": {
       "executor": "nx:run-commands",
       "options": {
         "command": "nx run-many --target=build --parallel=8 --projects=tag:type:app --configuration=production"
       }
     },
-    "build-lib": {
+    "build-libs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "nx run-many --target=build --parallel=8 --projects=tag:type:lib --configuration=production"

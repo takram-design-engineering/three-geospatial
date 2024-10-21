@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/storybook/src",
   "projectType": "library",
-  "tags": ["type:lib"],
+  "tags": ["type:tool"],
   "// targets": "to see all targets run: nx show project storybook --web",
   "targets": {}
 }

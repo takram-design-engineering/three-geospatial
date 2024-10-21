@@ -1,23 +1,14 @@
 import { pick } from 'lodash'
 import { BufferAttribute, type BufferGeometry } from 'three'
-import workerpool from 'workerpool'
 
 import { isNotNullish } from '@geovanni/core'
-
-import { type ToCreasedNormalsResult } from './toCreasedNormalsWorker'
-import worker from './worker?url'
-
-const pool = workerpool.pool(worker, {
-  workerOpts: {
-    type: 'module'
-  }
-})
+import { queueTask } from '@geovanni/worker'
 
 export async function toCreasedNormalsAsync(
   geometry: BufferGeometry,
   creaseAngle?: number
 ): Promise<BufferGeometry> {
-  const result: ToCreasedNormalsResult = await pool.exec(
+  const result = await queueTask(
     'toCreasedNormals',
     [pick(geometry, ['attributes', 'index']), creaseAngle],
     {

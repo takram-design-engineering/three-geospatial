@@ -8,7 +8,7 @@ import dts from 'vite-plugin-dts'
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/libs/3d-tiles',
+  cacheDir: '../../node_modules/.vite/libs/worker',
   plugins: [
     react(),
     nxViteTsPaths(),
@@ -20,14 +20,14 @@ export default defineConfig({
   ],
 
   // Uncomment this if you are using workers.
-  // worker: {
-  //   plugins: () => [nxViteTsPaths()]
-  // },
+  worker: {
+    plugins: () => [nxViteTsPaths()]
+  },
 
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
-    outDir: '../../dist/libs/3d-tiles',
+    outDir: '../../dist/libs/worker',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -36,7 +36,7 @@ export default defineConfig({
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
-      name: '3d-tiles',
+      name: 'worker',
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.

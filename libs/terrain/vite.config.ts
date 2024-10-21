@@ -10,7 +10,6 @@ import glsl from 'vite-plugin-glsl'
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/terrain',
-
   plugins: [
     react(),
     nxViteTsPaths(),
