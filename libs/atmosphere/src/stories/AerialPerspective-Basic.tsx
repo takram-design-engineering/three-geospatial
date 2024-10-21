@@ -12,19 +12,8 @@ import { ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
 import { Matrix4, MeshBasicMaterial, Vector3 } from 'three'
 
-import {
-  Ellipsoid,
-  Geodetic,
-  getECIToECEFRotationMatrix,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  radians,
-  TilingScheme
-} from '@geovanni/core'
-import {
-  Ellipsoid as EllipsoidMesh,
-  LocalTangentFrame
-} from '@geovanni/core/react'
+import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
+import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/react'
 import {
   Depth,
   Dithering,
@@ -34,9 +23,14 @@ import {
   useColorGradingControls
 } from '@geovanni/effects/react'
 import { IonTerrain } from '@geovanni/terrain'
-import { TerrainTile } from '@geovanni/terrain/react'
+import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
 import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
+import {
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECEF,
+  getSunDirectionECEF
+} from '../planets'
 import { AerialPerspective } from '../react/AerialPerspective'
 import { Sky, type SkyImpl } from '../react/Sky'
 import { Stars, type StarsImpl } from '../react/Stars'
@@ -54,13 +48,6 @@ const terrain = new IonTerrain({
   assetId: 1,
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
-
-const tiles = tile
-  .getChildren()
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
 
 const material = new MeshBasicMaterial({ color: 'white' })
 const terrainMaterial = new MeshBasicMaterial({ color: 'gray' })
@@ -175,23 +162,22 @@ const Scene: FC = () => {
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}
       />
-      <LocalTangentFrame location={location}>
+      <EastNorthUpFrame {...location}>
         <TorusKnot
           args={[200, 60, 256, 64]}
           position={[0, 0, 20]}
           material={material}
         />
-      </LocalTangentFrame>
-      {tiles.map(tile => (
-        <Suspense key={`${tile.x}:${tile.y}:${tile.z}`}>
-          <TerrainTile
-            terrain={terrain}
-            {...tile}
-            computeVertexNormals
-            material={terrainMaterial}
-          />
-        </Suspense>
-      ))}
+      </EastNorthUpFrame>
+      <Suspense>
+        <BatchedTerrainTile
+          terrain={terrain}
+          {...tile}
+          depth={5}
+          computeVertexNormals
+          material={terrainMaterial}
+        />
+      </Suspense>
       {effectComposer}
     </>
   )

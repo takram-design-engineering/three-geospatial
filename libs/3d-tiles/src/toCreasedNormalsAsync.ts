@@ -4,7 +4,7 @@ import workerpool from 'workerpool'
 
 import { isNotNullish } from '@geovanni/core'
 
-import { type CreasedNormalsResult } from './worker'
+import { type CreasedNormalsResult } from './toCreasedNormalsWorker'
 import worker from './worker?url'
 
 const pool = workerpool.pool(worker, {

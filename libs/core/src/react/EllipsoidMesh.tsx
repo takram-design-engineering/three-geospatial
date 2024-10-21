@@ -18,20 +18,19 @@ declare module '@react-three/fiber' {
   }
 }
 
-export interface EllipsoidProps extends Omit<MeshProps, 'args'> {
+export interface EllipsoidMeshProps extends Omit<MeshProps, 'args'> {
   args?: ConstructorParameters<typeof EllipsoidGeometry>
 }
 
-export const Ellipsoid = forwardRef<Mesh, EllipsoidProps>(function Ellipsoid(
-  { args, children, ...props },
-  forwardedRef
-) {
-  const ref = useRef<Mesh | null>(null)
-  extend({ EllipsoidGeometry })
-  return (
-    <mesh ref={mergeRefs([ref, forwardedRef])} {...props}>
-      <ellipsoidGeometry args={args} />
-      {children}
-    </mesh>
-  )
-})
+export const EllipsoidMesh = forwardRef<Mesh, EllipsoidMeshProps>(
+  function Ellipsoid({ args, children, ...props }, forwardedRef) {
+    const ref = useRef<Mesh | null>(null)
+    extend({ EllipsoidGeometry })
+    return (
+      <mesh ref={mergeRefs([ref, forwardedRef])} {...props}>
+        <ellipsoidGeometry args={args} />
+        {children}
+      </mesh>
+    )
+  }
+)

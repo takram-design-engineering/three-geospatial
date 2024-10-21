@@ -28,19 +28,8 @@ import {
   Vector3
 } from 'three'
 
-import {
-  Ellipsoid,
-  Geodetic,
-  getECIToECEFRotationMatrix,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  radians,
-  TilingScheme
-} from '@geovanni/core'
-import {
-  Ellipsoid as EllipsoidMesh,
-  LocalTangentFrame
-} from '@geovanni/core/react'
+import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
+import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/react'
 import { CascadedDirectionalLights, CSM, useCSM } from '@geovanni/csm/react'
 import {
   Depth,
@@ -51,10 +40,15 @@ import {
   useColorGradingControls
 } from '@geovanni/effects/react'
 import { IonTerrain } from '@geovanni/terrain'
-import { TerrainTile } from '@geovanni/terrain/react'
+import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
 import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
 import { computeSunLightColor } from '../computeSunLightColor'
+import {
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECEF,
+  getSunDirectionECEF
+} from '../planets'
 import { AerialPerspective } from '../react/AerialPerspective'
 import { Sky, type SkyImpl } from '../react/Sky'
 import { SkyRadiance } from '../react/SkyRadiance'
@@ -74,13 +68,6 @@ const terrain = new IonTerrain({
   assetId: 1,
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
-
-const tiles = tile
-  .getChildren()
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
 
 const basicMaterial = new MeshBasicMaterial({ color: 'white' })
 const terrainBasicMaterial = new MeshBasicMaterial({ color: 'gray' })
@@ -267,7 +254,7 @@ const Scene: FC = () => {
         material={terrainMaterial}
         receiveShadow
       />
-      <LocalTangentFrame location={location}>
+      <EastNorthUpFrame {...location}>
         <TorusKnot
           args={[200, 60, 256, 64]}
           position={[0, 0, 20]}
@@ -288,19 +275,18 @@ const Scene: FC = () => {
             />
           </RenderCubeTexture>
         </material>
-      </LocalTangentFrame>
-      {tiles.map(tile => (
-        <Suspense key={`${tile.x}:${tile.y}:${tile.z}`}>
-          <TerrainTile
-            terrain={terrain}
-            {...tile}
-            computeVertexNormals
-            material={terrainMaterial}
-            receiveShadow
-            castShadow
-          />
-        </Suspense>
-      ))}
+      </EastNorthUpFrame>
+      <Suspense>
+        <BatchedTerrainTile
+          terrain={terrain}
+          {...tile}
+          depth={5}
+          computeVertexNormals
+          material={terrainMaterial}
+          receiveShadow
+          castShadow
+        />
+      </Suspense>
       {effectComposer}
     </>
   )

@@ -1,9 +1,10 @@
-import { Vector3 } from 'three'
+import { Matrix4, Vector3 } from 'three'
 
-import { closeTo } from './math'
-import { projectToGeodeticSurface } from './projectToGeodeticSurface'
+import { projectOnEllipsoidSurface } from './projectOnEllipsoidSurface'
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
+const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
 // TODO: Rename to spheroid perhaps?
 export class Ellipsoid {
@@ -39,19 +40,33 @@ export class Ellipsoid {
     )
   }
 
-  getSurfaceNormal(
-    direction: Vector3,
+  projectOnSurface(
+    position: Vector3,
+    centerTolerance?: number,
     result = new Vector3()
   ): Vector3 | undefined {
-    if (
-      closeTo(direction.x, 0, 1e-14) &&
-      closeTo(direction.y, 0, 1e-14) &&
-      closeTo(direction.z, 0, 1e-14)
-    ) {
-      return undefined
-    }
-    const reciprocalRadiiSquared = this.reciprocalRadiiSquared(result)
-    return result.multiplyVectors(direction, reciprocalRadiiSquared).normalize()
+    return projectOnEllipsoidSurface(
+      position,
+      this.reciprocalRadiiSquared(),
+      centerTolerance,
+      result
+    )
+  }
+
+  getSurfaceNormal(position: Vector3, result = new Vector3()): Vector3 {
+    return result
+      .multiplyVectors(this.reciprocalRadiiSquared(vectorScratch1), position)
+      .normalize()
+  }
+
+  getEastNorthUpFrame(position: Vector3, result = new Matrix4()): Matrix4 {
+    const east = vectorScratch1
+    const north = vectorScratch2
+    const up = vectorScratch3
+    this.getSurfaceNormal(position, up)
+    east.set(-position.y, position.x, 0).normalize()
+    north.crossVectors(up, east).normalize()
+    return result.makeBasis(east, north, up).setPosition(position)
   }
 
   getOsculatingSphereCenter(
@@ -60,7 +75,7 @@ export class Ellipsoid {
     result = new Vector3()
   ): Vector3 {
     const xySquared = this.radii.x ** 2
-    const normal = vectorScratch
+    const normal = vectorScratch1
       .set(
         surfacePosition.x / xySquared,
         surfacePosition.y / xySquared,
@@ -68,18 +83,5 @@ export class Ellipsoid {
       )
       .normalize()
     return result.copy(normal.multiplyScalar(-radius).add(surfacePosition))
-  }
-
-  projectToSurface(
-    position: Vector3,
-    centerTolerance?: number,
-    result = new Vector3()
-  ): Vector3 | undefined {
-    return projectToGeodeticSurface(
-      position,
-      this.reciprocalRadiiSquared(),
-      centerTolerance,
-      result
-    )
   }
 }

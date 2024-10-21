@@ -7,7 +7,8 @@ export interface EllipsoidGeometryParameters {
 }
 
 export class EllipsoidGeometry extends BufferGeometry {
-  readonly type = 'SphereGeometry'
+  readonly type = 'EllipsoidGeometry'
+
   parameters: EllipsoidGeometryParameters
 
   constructor(

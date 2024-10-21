@@ -17,6 +17,7 @@ import {
   Uint16ArrayLoader,
   type TypedArrayLoader
 } from './TypedArrayLoader'
+import { type Callable } from './types'
 
 export interface ImageSize {
   width: number
@@ -26,7 +27,7 @@ export interface ImageSize {
 
 export type DataTextureParameters = Omit<
   Partial<{
-    [K in keyof Texture as Texture[K] extends Function ? never : K]: Texture[K]
+    [K in keyof Texture as Texture[K] extends Callable ? never : K]: Texture[K]
   }>,
   'image'
 >

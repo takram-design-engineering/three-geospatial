@@ -7,7 +7,7 @@ import {
   convertLinearSRGBToSRGB,
   convertTemperatureToBlackBodyChromaticity,
   convertXYZToLinearSRGBChromaticity
-} from '@geovanni/core'
+} from '../bvIndex'
 
 export const BlackBodyChromaticity: StoryFn = () => {
   const minTemperature = 1400

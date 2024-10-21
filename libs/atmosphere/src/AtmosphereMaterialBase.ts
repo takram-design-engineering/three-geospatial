@@ -128,7 +128,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
 
     if (this.osculateEllipsoid) {
-      const surfacePosition = this.ellipsoid.projectToSurface(
+      const surfacePosition = this.ellipsoid.projectOnSurface(
         position,
         undefined,
         vectorScratch

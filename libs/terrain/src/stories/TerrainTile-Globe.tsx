@@ -1,4 +1,4 @@
-import { CameraControls, GizmoHelper, GizmoViewport } from '@react-three/drei'
+import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
 import { Suspense, useEffect, useState } from 'react'
@@ -46,7 +46,7 @@ export const Globe: StoryFn<{
         up: [0, 0, 1]
       }}
     >
-      <CameraControls dollySpeed={0.1} />
+      <OrbitControls />
       <GizmoHelper alignment='top-left'>
         <GizmoViewport />
       </GizmoHelper>

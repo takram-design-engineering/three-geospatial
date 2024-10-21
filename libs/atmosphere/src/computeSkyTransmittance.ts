@@ -54,6 +54,7 @@ function getTransmittanceTextureUvFromRMu(
 
 const sampleScratch1 = /*#__PURE__*/ new Vector3()
 const sampleScratch2 = /*#__PURE__*/ new Vector3()
+const sampleScratch3 = /*#__PURE__*/ new Vector3()
 
 function samplePixel(
   data: Float32Array,
@@ -83,13 +84,13 @@ function sampleTexture(
   const rx1 = (rx0 + 1) % width
   const ry0 = yi % height
   const ry1 = (ry0 + 1) % height
-  const v00 = samplePixel(data, ry0 * width + rx0, result)
-  const v10 = samplePixel(data, ry0 * width + rx1, sampleScratch1)
+  const v00 = samplePixel(data, ry0 * width + rx0, sampleScratch1)
+  const v10 = samplePixel(data, ry0 * width + rx1, sampleScratch2)
   const nx0 = v00.lerp(v10, sx)
-  const v01 = samplePixel(data, ry1 * width + rx0, sampleScratch1)
-  const v11 = samplePixel(data, ry1 * width + rx1, sampleScratch2)
+  const v01 = samplePixel(data, ry1 * width + rx0, sampleScratch2)
+  const v11 = samplePixel(data, ry1 * width + rx1, sampleScratch3)
   const nx1 = v01.lerp(v11, sx)
-  return nx0.lerp(nx1, sy)
+  return result.copy(nx0.lerp(nx1, sy))
 }
 
 const uvScratch = /*#__PURE__*/ new Vector2()
@@ -128,7 +129,7 @@ export function computeSkyTransmittance(
 
   if (osculateEllipsoid) {
     const earthCenter = vectorScratch2
-    const surfacePosition = ellipsoid.projectToSurface(
+    const surfacePosition = ellipsoid.projectOnSurface(
       worldPosition,
       undefined,
       vectorScratch2

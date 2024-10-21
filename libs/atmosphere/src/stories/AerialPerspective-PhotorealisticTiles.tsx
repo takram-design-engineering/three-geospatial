@@ -23,15 +23,8 @@ import {
   TilesFadePlugin,
   UpdateOnChangePlugin
 } from '@geovanni/3d-tiles'
-import {
-  Ellipsoid,
-  Geodetic,
-  getECIToECEFRotationMatrix,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  radians
-} from '@geovanni/core'
-import { Ellipsoid as EllipsoidMesh } from '@geovanni/core/react'
+import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
+import { EllipsoidMesh } from '@geovanni/core/react'
 import {
   Depth,
   Dithering,
@@ -42,6 +35,11 @@ import {
 } from '@geovanni/effects/react'
 
 import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
+import {
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECEF,
+  getSunDirectionECEF
+} from '../planets'
 import { AerialPerspective } from '../react/AerialPerspective'
 import { Sky, type SkyImpl } from '../react/Sky'
 import { Stars, type StarsImpl } from '../react/Stars'

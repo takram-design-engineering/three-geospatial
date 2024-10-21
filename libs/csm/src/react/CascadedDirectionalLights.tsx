@@ -5,6 +5,8 @@ import {
 import { forwardRef, memo, useImperativeHandle } from 'react'
 import { type Vector3Like, type Vector3Tuple } from 'three'
 
+import { type Callable } from '@geovanni/core'
+
 import { type CascadedDirectionalLights as CascadedDirectionalLightsImpl } from '../CascadedDirectionalLights'
 import { useCSM } from './useCSM'
 
@@ -13,7 +15,7 @@ export interface CascadedDirectionalLightsProps
     [K in keyof DirectionalLightImplProps as Exclude<
       DirectionalLightImplProps[K],
       null | undefined
-    > extends Function
+    > extends Callable
       ? never
       : K]: DirectionalLightImplProps[K]
   }> {

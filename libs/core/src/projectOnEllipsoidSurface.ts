@@ -4,7 +4,7 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 
 // See: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion
 // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/scaleToGeodeticSurface.js
-export function projectToGeodeticSurface(
+export function projectOnEllipsoidSurface(
   position: Vector3,
   reciprocalRadiiSquared: Vector3,
   centerTolerance = 0.1,
@@ -29,15 +29,15 @@ export function projectToGeodeticSurface(
 
   // As an initial approximation, assume that the radial intersection is the
   // projection point.
-  result.copy(position).multiplyScalar(ratio)
+  const intersection = vectorScratch.copy(position).multiplyScalar(ratio)
   if (normSquared < centerTolerance) {
-    return result
+    return result.copy(intersection)
   }
 
   // Use the gradient at the intersection point in place of the true unit
   // normal. The difference in magnitude will be absorbed in the multiplier.
-  const gradient = vectorScratch
-    .multiplyVectors(result, reciprocalRadiiSquared)
+  const gradient = intersection
+    .multiply(reciprocalRadiiSquared)
     .multiplyScalar(2)
 
   // Compute the initial guess at the normal vector multiplier.

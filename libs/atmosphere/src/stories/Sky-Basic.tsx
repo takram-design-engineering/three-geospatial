@@ -1,51 +1,76 @@
 import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
-import { useMemo, useRef, type FC } from 'react'
-import { Vector3 } from 'three'
+import { useEffect, useMemo, useRef, type ComponentRef, type FC } from 'react'
+import { Quaternion, Vector3 } from 'three'
 
-import {
-  Ellipsoid,
-  Geodetic,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  radians
-} from '@geovanni/core'
+import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
+import { getMoonDirectionECEF, getSunDirectionECEF } from '../planets'
 import { Sky, type SkyImpl } from '../react/Sky'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'
 
-const location = new Geodetic(radians(139.7671), radians(35.6812), 2000)
-const position = location.toECEF()
-const up = Ellipsoid.WGS84.getSurfaceNormal(position)
+const location = new Geodetic()
+const position = new Vector3()
+const up = new Vector3()
+const offset = new Vector3()
+const rotation = new Quaternion()
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
+
+  const { longitude, latitude, height } = useControls('location', {
+    longitude: { value: 0, min: -180, max: 180 },
+    latitude: { value: 35, min: -90, max: 90 },
+    height: { value: 2000, min: 0, max: 30000 }
+  })
+
+  const camera = useThree(({ camera }) => camera)
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
+  useEffect(() => {
+    const controls = controlsRef.current
+    if (controls == null) {
+      return
+    }
+    location.set(radians(longitude), radians(latitude), height)
+    location.toECEF(position)
+    Ellipsoid.WGS84.getSurfaceNormal(position, up)
+
+    rotation.setFromUnitVectors(camera.up, up)
+    offset.copy(camera.position).sub(controls.target)
+    offset.applyQuaternion(rotation)
+    camera.up.copy(up)
+    camera.position.copy(position).add(offset)
+    controls.target.copy(position)
+  }, [longitude, latitude, height, camera])
 
   const { osculateEllipsoid, photometric } = useControls('atmosphere', {
     osculateEllipsoid: true,
     photometric: false
   })
 
-  const motionDate = useLocalDateControls()
+  const motionDate = useLocalDateControls({
+    longitude,
+    timeOfDay: 9,
+    dayOfYear: 0
+  })
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const skyRef = useRef<SkyImpl>(null)
 
   useFrame(() => {
-    if (skyRef.current == null) {
-      return
-    }
     const date = new Date(motionDate.get())
     getSunDirectionECEF(date, sunDirectionRef.current)
     getMoonDirectionECEF(date, moonDirectionRef.current)
-    skyRef.current.material.sunDirection = sunDirectionRef.current
-    skyRef.current.material.moonDirection = moonDirectionRef.current
+    if (skyRef.current != null) {
+      skyRef.current.material.sunDirection = sunDirectionRef.current
+      skyRef.current.material.moonDirection = moonDirectionRef.current
+    }
   })
 
   const effectComposer = useMemo(
@@ -62,7 +87,7 @@ const Scene: FC = () => {
 
   return (
     <>
-      <OrbitControls target={position} minDistance={1000} />
+      <OrbitControls ref={controlsRef} minDistance={5} />
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
@@ -84,7 +109,6 @@ export const Basic: StoryFn = () => {
         depth: false,
         stencil: false
       }}
-      camera={{ position, up }}
     >
       <Scene />
     </Canvas>
