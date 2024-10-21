@@ -7,15 +7,10 @@ import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useMemo, useRef, type ComponentRef, type FC } from 'react'
 import { Quaternion, Vector3 } from 'three'
 
-import {
-  Ellipsoid,
-  Geodetic,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  radians
-} from '@geovanni/core'
+import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
+import { getMoonDirectionECEF, getSunDirectionECEF } from '../planets'
 import { Sky, type SkyImpl } from '../react/Sky'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'

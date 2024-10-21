@@ -8,8 +8,9 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 import { Vector3 } from 'three'
 
+import { getSunDirectionECEF } from '@geovanni/atmosphere'
 import { AerialPerspective, Sky } from '@geovanni/atmosphere/react'
-import { Geodetic, getSunDirectionECEF, radians } from '@geovanni/core'
+import { Geodetic, radians } from '@geovanni/core'
 import { EastNorthUpFrame } from '@geovanni/core/react'
 import { EffectComposer, SSAO } from '@geovanni/effects/react'
 

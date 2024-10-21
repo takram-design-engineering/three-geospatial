@@ -6,9 +6,9 @@ import { ToneMappingMode } from 'postprocessing'
 import { useMemo, useRef, type FC } from 'react'
 import { Matrix4 } from 'three'
 
-import { getECIToECEFRotationMatrix } from '@geovanni/core'
 import { EffectComposer } from '@geovanni/effects/react'
 
+import { getECIToECEFRotationMatrix } from '../planets'
 import { Stars, type StarsImpl } from '../react/Stars'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'

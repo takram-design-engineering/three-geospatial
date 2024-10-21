@@ -21,16 +21,11 @@ import {
 } from 'react'
 import { Quaternion, Vector3, type Group } from 'three'
 
-import {
-  Ellipsoid,
-  Geodetic,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  radians
-} from '@geovanni/core'
+import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import { EastNorthUpFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
+import { getMoonDirectionECEF, getSunDirectionECEF } from '../planets'
 import { Sky, type SkyImpl } from '../react/Sky'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'

@@ -12,15 +12,7 @@ import { ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
 import { Matrix4, MeshBasicMaterial, Vector3 } from 'three'
 
-import {
-  Ellipsoid,
-  Geodetic,
-  getECIToECEFRotationMatrix,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  radians,
-  TilingScheme
-} from '@geovanni/core'
+import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
 import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/react'
 import {
   Depth,
@@ -34,6 +26,11 @@ import { IonTerrain } from '@geovanni/terrain'
 import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
 import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
+import {
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECEF,
+  getSunDirectionECEF
+} from '../planets'
 import { AerialPerspective } from '../react/AerialPerspective'
 import { Sky, type SkyImpl } from '../react/Sky'
 import { Stars, type StarsImpl } from '../react/Stars'
