@@ -6,17 +6,12 @@ import { toCreasedNormals } from 'three-stdlib'
 import { isNotNullish } from '@geovanni/core'
 
 import { Transfer, type TransferResult } from '../transfer'
-
-export type ToCreasedNormalsInput = Pick<BufferGeometry, 'attributes' | 'index'>
-export type ToCreasedNormalsResult = Pick<
-  BufferGeometry,
-  'attributes' | 'index'
->
+import { type BufferGeometryAttributes } from '../types'
 
 export function toCreasedNormalsTask(
-  input: ToCreasedNormalsInput,
+  input: BufferGeometryAttributes,
   creaseAngle?: number
-): TransferResult<ToCreasedNormalsResult> {
+): TransferResult<BufferGeometryAttributes> {
   const geometry = new BufferGeometry()
   for (const [name, attribute] of Object.entries(input.attributes)) {
     geometry.setAttribute(
