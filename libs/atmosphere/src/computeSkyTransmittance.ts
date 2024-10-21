@@ -128,7 +128,7 @@ export function computeSkyTransmittance(
 
   if (osculateEllipsoid) {
     const earthCenter = vectorScratch2
-    const surfacePosition = ellipsoid.projectToSurface(
+    const surfacePosition = ellipsoid.projectOnSurface(
       worldPosition,
       undefined,
       vectorScratch2

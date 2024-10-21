@@ -14,7 +14,6 @@ import { useEvent } from 'react-use'
 import { Raycaster, Vector2, Vector3, type ArrowHelper, type Mesh } from 'three'
 
 import { Ellipsoid } from '../Ellipsoid'
-import { projectToGeodeticSurface } from '../projectToGeodeticSurface'
 import { Ellipsoid as EllipsoidMesh } from '../react/Ellipsoid'
 
 const ellipsoid = new Ellipsoid(10, 10, 9)
@@ -51,12 +50,7 @@ const Scene: FC = () => {
     if (intersection == null) {
       return
     }
-    projectToGeodeticSurface(
-      intersection.point,
-      ellipsoid.reciprocalRadiiSquared(),
-      undefined,
-      position
-    )
+    ellipsoid.projectOnSurface(intersection.point, undefined, position)
     pointMesh.position.copy(position)
     normalArrow.position.copy(position)
     normalArrow.setDirection(ellipsoid.getSurfaceNormal(position)!)

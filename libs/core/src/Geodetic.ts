@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 
 import { Ellipsoid } from './Ellipsoid'
-import { projectToGeodeticSurface } from './projectToGeodeticSurface'
+import { projectOnGeodeticSurface } from './projectOnGeodeticSurface'
 
 export type GeodeticTuple = [number, number, number]
 
@@ -86,7 +86,7 @@ export class Geodetic {
     const { ellipsoid = Ellipsoid.WGS84, centerTolerance } = options
     const reciprocalRadiiSquared =
       ellipsoid.reciprocalRadiiSquared(vectorScratch1)
-    const projection = projectToGeodeticSurface(
+    const projection = projectOnGeodeticSurface(
       position,
       reciprocalRadiiSquared,
       centerTolerance,

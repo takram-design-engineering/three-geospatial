@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 
 import { closeTo } from './math'
-import { projectToGeodeticSurface } from './projectToGeodeticSurface'
+import { projectOnGeodeticSurface } from './projectOnGeodeticSurface'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
@@ -39,6 +39,19 @@ export class Ellipsoid {
     )
   }
 
+  projectOnSurface(
+    position: Vector3,
+    centerTolerance?: number,
+    result = new Vector3()
+  ): Vector3 | undefined {
+    return projectOnGeodeticSurface(
+      position,
+      this.reciprocalRadiiSquared(),
+      centerTolerance,
+      result
+    )
+  }
+
   getSurfaceNormal(
     direction: Vector3,
     result = new Vector3()
@@ -68,18 +81,5 @@ export class Ellipsoid {
       )
       .normalize()
     return result.copy(normal.multiplyScalar(-radius).add(surfacePosition))
-  }
-
-  projectToSurface(
-    position: Vector3,
-    centerTolerance?: number,
-    result = new Vector3()
-  ): Vector3 | undefined {
-    return projectToGeodeticSurface(
-      position,
-      this.reciprocalRadiiSquared(),
-      centerTolerance,
-      result
-    )
   }
 }
