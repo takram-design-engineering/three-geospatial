@@ -1,7 +1,10 @@
 import { Vector3 } from 'three'
 
 import { Ellipsoid } from './Ellipsoid'
-import { projectOnEllipsoidSurface } from './projectOnEllipsoidSurface'
+import {
+  projectOnEllipsoidSurface,
+  type ProjectOnEllipsoidSurfaceOptions
+} from './projectOnEllipsoidSurface'
 
 export type GeodeticTuple = [number, number, number]
 
@@ -78,9 +81,8 @@ export class Geodetic {
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/Geodetic.js#L119
   setFromECEF(
     position: Vector3,
-    options?: {
+    options?: ProjectOnEllipsoidSurfaceOptions & {
       ellipsoid?: Ellipsoid
-      centerTolerance?: number
     }
   ): this {
     const ellipsoid = options?.ellipsoid ?? Ellipsoid.WGS84

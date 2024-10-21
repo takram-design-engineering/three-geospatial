@@ -1,6 +1,9 @@
 import { Matrix4, Vector3 } from 'three'
 
-import { projectOnEllipsoidSurface } from './projectOnEllipsoidSurface'
+import {
+  projectOnEllipsoidSurface,
+  type ProjectOnEllipsoidSurfaceOptions
+} from './projectOnEllipsoidSurface'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
@@ -37,7 +40,7 @@ export class Ellipsoid {
   projectOnSurface(
     position: Vector3,
     result = new Vector3(),
-    options?: { centerTolerance?: number }
+    options?: ProjectOnEllipsoidSurfaceOptions
   ): Vector3 | undefined {
     return projectOnEllipsoidSurface(
       position,

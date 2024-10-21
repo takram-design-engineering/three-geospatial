@@ -4,7 +4,7 @@ import workerpool from 'workerpool'
 
 import { isNotNullish } from '@geovanni/core'
 
-import { type CreasedNormalsResult } from './toCreasedNormalsWorker'
+import { type ToCreasedNormalsResult } from './toCreasedNormalsWorker'
 import worker from './worker?url'
 
 const pool = workerpool.pool(worker, {
@@ -17,7 +17,7 @@ export async function toCreasedNormalsAsync(
   geometry: BufferGeometry,
   creaseAngle?: number
 ): Promise<BufferGeometry> {
-  const result: CreasedNormalsResult = await pool.exec(
+  const result: ToCreasedNormalsResult = await pool.exec(
     'toCreasedNormals',
     [pick(geometry, ['attributes', 'index']), creaseAngle],
     {

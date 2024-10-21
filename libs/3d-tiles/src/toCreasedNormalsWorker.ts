@@ -5,11 +5,14 @@ import type Transfer from 'workerpool/types/transfer'
 
 import { isNotNullish } from '@geovanni/core'
 
-export type CreasedNormalsInput = Pick<BufferGeometry, 'attributes' | 'index'>
-export type CreasedNormalsResult = Pick<BufferGeometry, 'attributes' | 'index'>
+export type ToCreasedNormalsInput = Pick<BufferGeometry, 'attributes' | 'index'>
+export type ToCreasedNormalsResult = Pick<
+  BufferGeometry,
+  'attributes' | 'index'
+>
 
 export function toCreasedNormalsWorker(
-  input: CreasedNormalsInput,
+  input: ToCreasedNormalsInput,
   creaseAngle?: number
 ): Transfer {
   const geometry = new BufferGeometry()
