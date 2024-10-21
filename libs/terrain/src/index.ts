@@ -1,3 +1,4 @@
+export * from './BatchedTerrainMesh'
 export * from './IonAsset'
 export * from './IonTerrain'
 export * from './OctNormalMaterial'

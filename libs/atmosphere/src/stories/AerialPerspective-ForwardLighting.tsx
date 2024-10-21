@@ -51,7 +51,7 @@ import {
   useColorGradingControls
 } from '@geovanni/effects/react'
 import { IonTerrain } from '@geovanni/terrain'
-import { TerrainTile } from '@geovanni/terrain/react'
+import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
 import { type AerialPerspectiveEffect } from '../AerialPerspectiveEffect'
 import { computeSunLightColor } from '../computeSunLightColor'
@@ -74,13 +74,6 @@ const terrain = new IonTerrain({
   assetId: 1,
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
-
-const tiles = tile
-  .getChildren()
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
-  .flatMap(tile => tile.getChildren())
 
 const basicMaterial = new MeshBasicMaterial({ color: 'white' })
 const terrainBasicMaterial = new MeshBasicMaterial({ color: 'gray' })
@@ -289,18 +282,17 @@ const Scene: FC = () => {
           </RenderCubeTexture>
         </material>
       </LocalTangentFrame>
-      {tiles.map(tile => (
-        <Suspense key={`${tile.x}:${tile.y}:${tile.z}`}>
-          <TerrainTile
-            terrain={terrain}
-            {...tile}
-            computeVertexNormals
-            material={terrainMaterial}
-            receiveShadow
-            castShadow
-          />
-        </Suspense>
-      ))}
+      <Suspense>
+        <BatchedTerrainTile
+          terrain={terrain}
+          {...tile}
+          depth={5}
+          computeVertexNormals
+          material={terrainMaterial}
+          receiveShadow
+          castShadow
+        />
+      </Suspense>
       {effectComposer}
     </>
   )

@@ -6,3 +6,4 @@ export default {
 
 export { Globe } from './TerrainTile-Globe'
 export { Multiple } from './TerrainTile-Multiple'
+export { Batched } from './TerrainTile-Batched'
