@@ -144,6 +144,17 @@ const Scene: FC = () => {
     [csm]
   )
 
+  useEffect(() => {
+    return () => {
+      standardMaterial.dispose()
+    }
+  }, [standardMaterial])
+  useEffect(() => {
+    return () => {
+      terrainStandardMaterial.dispose()
+    }
+  }, [terrainStandardMaterial])
+
   const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
   useEffect(() => {
     scene.environment = envMap?.fbo.texture ?? null

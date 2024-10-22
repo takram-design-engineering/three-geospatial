@@ -23,7 +23,7 @@ import {
   TilesFadePlugin,
   UpdateOnChangePlugin
 } from '@geovanni/3d-tiles'
-import { Geodetic, radians } from '@geovanni/core'
+import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import {
   Depth,
   Dithering,
@@ -45,16 +45,10 @@ import { Stars, type StarsImpl } from '../react/Stars'
 import { useLocalDateControls } from './helpers/useLocalDateControls'
 import { useRendererControls } from './helpers/useRendererControls'
 
-const location = new Geodetic(
-  // Coordinates of Tokyo station.
-  radians(139.7671),
-  radians(35.6812)
-)
-
-const surfaceNormal = location.toECEF().normalize()
-const cameraPosition = location
-  .toECEF()
-  .add(new Vector3().copy(surfaceNormal).multiplyScalar(2000))
+// Coordinates of Tokyo station.
+const location = new Geodetic(radians(139.7671), radians(35.6812))
+const position = location.toECEF().multiplyScalar(2000)
+const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -69,12 +63,14 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { osculateEllipsoid, interpolateToSphere, photometric } =
-    useControls('atmosphere', {
+  const { osculateEllipsoid, interpolateToSphere, photometric } = useControls(
+    'atmosphere',
+    {
       osculateEllipsoid: true,
       interpolateToSphere: true,
       photometric: true
-    })
+    }
+  )
 
   const { enable, sun, sky, transmittance, inscatter } = useControls(
     'aerial perspective',
@@ -138,6 +134,12 @@ const Scene: FC = () => {
 
     return tiles
   }, [])
+
+  useEffect(() => {
+    return () => {
+      tiles.dispose()
+    }
+  }, [tiles])
 
   useEffect(() => {
     tiles.setCamera(camera)
@@ -251,7 +253,7 @@ export const PhotorealisticTiles: StoryFn = () => {
         stencil: false,
         logarithmicDepthBuffer: true
       }}
-      camera={{ position: cameraPosition, up: surfaceNormal }}
+      camera={{ position, up }}
     >
       <Scene />
     </Canvas>
