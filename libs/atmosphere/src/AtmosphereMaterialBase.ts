@@ -89,7 +89,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_single_mie_scattering_texture: new Uniform(scatteringTexture),
         u_transmittance_texture: new Uniform(transmittanceTexture),
         cameraPosition: new Uniform(new Vector3()),
-        earthCenter: new Uniform(new Vector3()),
+        ellipsoidCenter: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
       },
@@ -136,11 +136,11 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         this.ellipsoid.getOsculatingSphereCenter(
           surfacePosition,
           ATMOSPHERE_PARAMETERS.bottomRadius,
-          uniforms.earthCenter.value
+          uniforms.ellipsoidCenter.value
         )
       }
     } else {
-      uniforms.earthCenter.value.set(0, 0, 0)
+      uniforms.ellipsoidCenter.value.set(0, 0, 0)
     }
   }
 
@@ -201,7 +201,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   }
 
   set sunDirection(value: Vector3) {
-    this.uniforms.sunDirection.value.copy(value)
+    this.uniforms.sunDirection.value = value
   }
 
   get sunAngularRadius(): number {

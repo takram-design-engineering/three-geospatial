@@ -67,8 +67,8 @@ const Scene: FC = () => {
     getSunDirectionECEF(date, sunDirectionRef.current)
     getMoonDirectionECEF(date, moonDirectionRef.current)
     if (skyRef.current != null) {
-      skyRef.current.material.sunDirection = sunDirectionRef.current
-      skyRef.current.material.moonDirection = moonDirectionRef.current
+      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
+      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
     }
   })
 

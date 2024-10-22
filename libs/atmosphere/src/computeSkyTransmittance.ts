@@ -128,7 +128,7 @@ export function computeSkyTransmittance(
     .multiplyScalar(METER_TO_UNIT_LENGTH)
 
   if (osculateEllipsoid) {
-    const earthCenter = vectorScratch2
+    const ellipsoidCenter = vectorScratch2
     const surfacePosition = ellipsoid.projectOnSurface(
       worldPosition,
       vectorScratch2
@@ -138,11 +138,11 @@ export function computeSkyTransmittance(
         .getOsculatingSphereCenter(
           surfacePosition,
           ATMOSPHERE_PARAMETERS.bottomRadius,
-          earthCenter
+          ellipsoidCenter
         )
         .multiplyScalar(METER_TO_UNIT_LENGTH)
     }
-    camera.sub(earthCenter)
+    camera.sub(ellipsoidCenter)
   }
 
   let r = camera.length()

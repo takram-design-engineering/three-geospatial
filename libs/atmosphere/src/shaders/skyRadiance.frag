@@ -2,12 +2,12 @@ uniform vec3 sunDirection;
 
 in vec3 vWorldPosition;
 in vec3 vWorldDirection;
-in vec3 vEarthCenter;
+in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
 
 void main() {
-  vec3 worldPosition = vWorldPosition - vEarthCenter;
+  vec3 worldPosition = vWorldPosition - vEllipsoidCenter;
   vec3 viewDirection = normalize(vWorldDirection);
 
   vec3 irrIllum = GetSkyIrrIllum(worldPosition, viewDirection, sunDirection);

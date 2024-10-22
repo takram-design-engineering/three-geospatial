@@ -69,10 +69,12 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
-    osculateEllipsoid: true,
-    photometric: true
-  })
+  const { osculateEllipsoid, interpolateToEllipsoid, photometric } =
+    useControls('atmosphere', {
+      osculateEllipsoid: true,
+      interpolateToEllipsoid: true,
+      photometric: true
+    })
 
   const { enable, sun, sky, transmittance, inscatter } = useControls(
     'aerial perspective',
@@ -99,15 +101,15 @@ const Scene: FC = () => {
     getMoonDirectionECEF(date, moonDirectionRef.current)
     getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
     if (skyRef.current != null) {
-      skyRef.current.material.sunDirection = sunDirectionRef.current
-      skyRef.current.material.moonDirection = moonDirectionRef.current
+      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
+      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
     }
     if (starsRef.current != null) {
-      starsRef.current.material.sunDirection = sunDirectionRef.current
+      starsRef.current.material.sunDirection.copy(sunDirectionRef.current)
       starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
     }
     if (aerialPerspectiveRef.current != null) {
-      aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
+      aerialPerspectiveRef.current.sunDirection.copy(sunDirectionRef.current)
     }
   })
 
@@ -185,6 +187,7 @@ const Scene: FC = () => {
           <AerialPerspective
             ref={aerialPerspectiveRef}
             osculateEllipsoid={osculateEllipsoid}
+            interpolateToEllipsoid={interpolateToEllipsoid}
             photometric={photometric}
             sunIrradiance={sun}
             skyIrradiance={sky}
@@ -208,6 +211,7 @@ const Scene: FC = () => {
     ),
     [
       osculateEllipsoid,
+      interpolateToEllipsoid,
       photometric,
       enable,
       sun,

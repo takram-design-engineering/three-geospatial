@@ -6,6 +6,7 @@ import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Matrix4,
   Uniform,
+  Vector2,
   Vector3,
   type Camera,
   type Texture,
@@ -13,7 +14,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { Ellipsoid } from '@geovanni/core'
+import { Ellipsoid, Geodetic } from '@geovanni/core'
 
 import {
   ATMOSPHERE_PARAMETERS,
@@ -36,6 +37,7 @@ import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
+const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction
@@ -47,6 +49,7 @@ export interface AerialPerspectiveEffectOptions {
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
+  interpolateToEllipsoid?: boolean
   photometric?: boolean
   sunIrradiance?: boolean
   skyIrradiance?: boolean
@@ -60,6 +63,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   reconstructNormal: false,
   ellipsoid: Ellipsoid.WGS84,
   osculateEllipsoid: true,
+  interpolateToEllipsoid: true,
   photometric: false,
   sunIrradiance: true,
   skyIrradiance: true,
@@ -69,7 +73,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
-  ellipsoid: Ellipsoid
+  private _ellipsoid!: Ellipsoid
   osculateEllipsoid: boolean
 
   constructor(
@@ -86,6 +90,7 @@ export class AerialPerspectiveEffect extends Effect {
       useHalfFloat,
       ellipsoid,
       osculateEllipsoid,
+      interpolateToEllipsoid,
       photometric,
       sunIrradiance,
       skyIrradiance,
@@ -127,7 +132,10 @@ export class AerialPerspectiveEffect extends Effect {
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
-          ['earthCenter', new Uniform(new Vector3())],
+          ['cameraHeight', new Uniform(0)],
+          ['ellipsoidCenter', new Uniform(new Vector3())],
+          ['ellipsoidRadii', new Uniform(new Vector3())],
+          ['ellipsoidInterpolationRange', new Uniform(new Vector2(2e5, 5e5))],
           ['sunDirection', new Uniform(new Vector3())],
           ['albedoScale', new Uniform(albedoScale)]
         ]),
@@ -148,10 +156,11 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
     this.camera = camera
-    this.ellipsoid = ellipsoid
     this.osculateEllipsoid = osculateEllipsoid
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
+    this.ellipsoid = ellipsoid
+    this.interpolateToEllipsoid = interpolateToEllipsoid
     this.photometric = photometric
     this.sunIrradiance = sunIrradiance
     this.skyIrradiance = skyIrradiance
@@ -191,14 +200,17 @@ export class AerialPerspectiveEffect extends Effect {
     const projectionMatrix = uniforms.get('projectionMatrix')!
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
-    const cameraPosition = uniforms.get('cameraPosition')!
-    const earthCenter = uniforms.get('earthCenter')!
     const camera = this.camera
     projectionMatrix.value.copy(camera.projectionMatrix)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
-    const position = camera.getWorldPosition(cameraPosition.value)
 
+    const cameraPosition = uniforms.get('cameraPosition')!
+    const cameraHeight = uniforms.get('cameraHeight')!
+    const position = camera.getWorldPosition(cameraPosition.value)
+    cameraHeight.value = geodeticScratch.setFromECEF(position).height
+
+    const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
     if (this.osculateEllipsoid) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
         position,
@@ -208,11 +220,11 @@ export class AerialPerspectiveEffect extends Effect {
         this.ellipsoid.getOsculatingSphereCenter(
           surfacePosition,
           ATMOSPHERE_PARAMETERS.bottomRadius,
-          earthCenter.value
+          ellipsoidCenter.value
         )
       }
     } else {
-      earthCenter.value.set(0, 0, 0)
+      ellipsoidCenter.value.set(0, 0, 0)
     }
   }
 
@@ -277,20 +289,36 @@ export class AerialPerspectiveEffect extends Effect {
       : ATMOSPHERE_PARAMETERS.muSMinFloat
   }
 
-  get sunDirection(): Vector3 {
-    return this.uniforms.get('sunDirection')!.value
+  get ellipsoid(): Ellipsoid {
+    return this._ellipsoid
   }
 
-  set sunDirection(value: Vector3) {
-    this.uniforms.get('sunDirection')!.value.copy(value)
+  set ellipsoid(value: Ellipsoid) {
+    this._ellipsoid = value
+    this.uniforms.get('ellipsoidRadii')!.value = value.radii
   }
 
-  get albedoScale(): number {
-    return this.uniforms.get('albedoScale')!.value
+  get interpolateToEllipsoid(): boolean {
+    return this.defines.has('INTERPOLATE_TO_ELLIPSOID')
   }
 
-  set albedoScale(value: number) {
-    this.uniforms.get('albedoScale')!.value = value
+  set interpolateToEllipsoid(value: boolean) {
+    if (value !== this.transmittance) {
+      if (value) {
+        this.defines.set('INTERPOLATE_TO_ELLIPSOID', '1')
+      } else {
+        this.defines.delete('INTERPOLATE_TO_ELLIPSOID')
+      }
+      this.setChanged()
+    }
+  }
+
+  get ellipsoidInterpolationRange(): [number, number] {
+    return this.uniforms.get('ellipsoidInterpolationRange')!.value.toArray()
+  }
+
+  set ellipsoidInterpolationRange(value: [number, number]) {
+    this.uniforms.get('ellipsoidInterpolationRange')!.value.set(...value)
   }
 
   get photometric(): boolean {
@@ -306,6 +334,14 @@ export class AerialPerspectiveEffect extends Effect {
       }
       this.setChanged()
     }
+  }
+
+  get sunDirection(): Vector3 {
+    return this.uniforms.get('sunDirection')!.value
+  }
+
+  set sunDirection(value: Vector3) {
+    this.uniforms.get('sunDirection')!.value = value
   }
 
   get sunIrradiance(): boolean {
@@ -366,5 +402,13 @@ export class AerialPerspectiveEffect extends Effect {
       }
       this.setChanged()
     }
+  }
+
+  get albedoScale(): number {
+    return this.uniforms.get('albedoScale')!.value
+  }
+
+  set albedoScale(value: number) {
+    this.uniforms.get('albedoScale')!.value = value
   }
 }

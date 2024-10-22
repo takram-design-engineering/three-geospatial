@@ -3,11 +3,14 @@ uniform sampler2D normalBuffer;
 uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
+uniform float cameraHeight;
+uniform vec2 ellipsoidInterpolationRange;
 uniform vec3 sunDirection;
 uniform float albedoScale;
 
 varying vec3 vWorldPosition;
-varying vec3 vEarthCenter;
+varying vec3 vEllipsoidCenter;
+varying vec3 vEllipsoidRadiiSquared;
 
 #ifndef DEPTH_THRESHOLD
 #define DEPTH_THRESHOLD (1.0 - EPSILON)
@@ -35,6 +38,68 @@ vec3 readNormal(const vec2 uv) {
   return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
 }
 
+void interpolateToEllipsoid(
+  float minHeight,
+  float maxHeight,
+  inout vec3 worldPosition,
+  inout vec3 worldNormal
+) {
+  vec3 normal = normalize(1.0 / vEllipsoidRadiiSquared * worldPosition);
+  vec3 k = vEllipsoidRadiiSquared * normal;
+  float gamma = sqrt(dot(normal, k));
+  vec3 position = k / gamma;
+
+  float t = smoothstep(minHeight, maxHeight, cameraHeight);
+  worldPosition = mix(worldPosition, position, t);
+  // Correct way is slerp, but this will be small-angle interpolation anyways.
+  worldNormal = mix(worldNormal, normal, t);
+}
+
+vec3 sunSkyIrradiance(
+  const vec3 worldPosition,
+  const vec3 worldNormal,
+  const vec3 inputColor
+) {
+  // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
+  // defined, regard the inputColor as radiance at the texel.
+  vec3 albedo = inputColor * albedoScale * RECIPROCAL_PI;
+  vec3 skyIrrIllum;
+  vec3 sunIrrIllum = GetSunAndSkyIrrIllum(
+    worldPosition - vEllipsoidCenter,
+    worldNormal,
+    sunDirection,
+    skyIrrIllum
+  );
+  #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
+  return albedo * (sunIrrIllum + skyIrrIllum);
+  #elif defined(SUN_IRRADIANCE)
+  return albedo * sunIrrIllum;
+  #elif defined(SKY_IRRADIANCE)
+  return albedo * skyIrrIllum;
+  #endif
+}
+
+void transmittanceInscatter(
+  const vec3 worldPosition,
+  const vec3 worldNormal,
+  inout vec3 radLum
+) {
+  vec3 transmittance;
+  vec3 inscatter = GetSkyRadLumToPoint(
+    vWorldPosition - vEllipsoidCenter,
+    worldPosition - vEllipsoidCenter,
+    0.0, // TODO: Shadow length
+    sunDirection,
+    transmittance
+  );
+  #if defined(TRANSMITTANCE)
+  radLum = radLum * transmittance;
+  #endif
+  #if defined(INSCATTER)
+  radLum = radLum + inscatter;
+  #endif
+}
+
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   if (depth > DEPTH_THRESHOLD) {
@@ -47,56 +112,37 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   // Reconstruct position and normal in world space.
   vec3 viewPosition = screenToView(uv, depth, getViewZ(depth));
-  vec3 worldPosition =
-    (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
-
+  vec3 viewNormal;
   #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);
   vec3 dy = dFdy(viewPosition);
-  vec3 viewNormal = normalize(cross(dx, dy));
+  viewNormal = normalize(cross(dx, dy));
   #else
-  vec3 viewNormal = readNormal(uv);
+  viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
+  vec3 worldPosition =
+    (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
-  vec3 radLum = inputColor.rgb;
-
-  // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
-  // defined, regard the inputColor as radiance at the texel.
-  #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  vec3 albedo = inputColor.rgb * albedoScale * RECIPROCAL_PI;
-  vec3 skyIrrIllum;
-  vec3 sunIrrIllum = GetSunAndSkyIrrIllum(
-    worldPosition - vEarthCenter,
-    worldNormal,
-    sunDirection,
-    skyIrrIllum
+  #ifdef INTERPOLATE_TO_ELLIPSOID
+  interpolateToEllipsoid(
+    ellipsoidInterpolationRange.x,
+    ellipsoidInterpolationRange.y,
+    worldPosition,
+    worldNormal
   );
-  #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
-  radLum = albedo * (sunIrrIllum + skyIrrIllum);
-  #elif defined(SUN_IRRADIANCE)
-  radLum = albedo * sunIrrIllum;
-  #elif defined(SKY_IRRADIANCE)
-  radLum = albedo * skyIrrIllum;
-  #endif
+  #endif // INTERPOLATE_TO_ELLIPSOID
+
+  vec3 radLum;
+  #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+  radLum = sunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb);
+  #else
+  radLum = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  vec3 transmittance;
-  vec3 inscatter = GetSkyRadLumToPoint(
-    vWorldPosition - vEarthCenter,
-    worldPosition - vEarthCenter,
-    0.0, // TODO: Shadow length
-    sunDirection,
-    transmittance
-  );
-  #if defined(TRANSMITTANCE)
-  radLum = radLum * transmittance;
-  #endif
-  #if defined(INSCATTER)
-  radLum = radLum + inscatter;
-  #endif
+  transmittanceInscatter(worldPosition, worldNormal, radLum);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radLum, inputColor.a);

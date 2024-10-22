@@ -156,19 +156,19 @@ const Scene: FC = () => {
     getMoonDirectionECEF(date, moonDirectionRef.current)
     getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
     if (skyRef.current != null) {
-      skyRef.current.material.sunDirection = sunDirectionRef.current
-      skyRef.current.material.moonDirection = moonDirectionRef.current
+      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
+      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
     }
     if (envMapRef.current != null) {
-      envMapRef.current.material.sunDirection = sunDirectionRef.current
-      envMapRef.current.material.moonDirection = moonDirectionRef.current
+      envMapRef.current.material.sunDirection.copy(sunDirectionRef.current)
+      envMapRef.current.material.moonDirection.copy(moonDirectionRef.current)
     }
     if (starsRef.current != null) {
-      starsRef.current.material.sunDirection = sunDirectionRef.current
+      starsRef.current.material.sunDirection.copy(sunDirectionRef.current)
       starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
     }
     if (aerialPerspectiveRef.current != null) {
-      aerialPerspectiveRef.current.sunDirection = sunDirectionRef.current
+      aerialPerspectiveRef.current.sunDirection.copy(sunDirectionRef.current)
     }
     csm.directionalLights.direction
       .copy(sunDirectionRef.current)
