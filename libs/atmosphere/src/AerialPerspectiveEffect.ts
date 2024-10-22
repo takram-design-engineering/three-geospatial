@@ -313,12 +313,12 @@ export class AerialPerspectiveEffect extends Effect {
     }
   }
 
-  get ellipsoidInterpolationRange(): [number, number] {
-    return this.uniforms.get('ellipsoidInterpolationRange')!.value.toArray()
+  get ellipsoidInterpolationRange(): Vector2 {
+    return this.uniforms.get('ellipsoidInterpolationRange')!.value
   }
 
-  set ellipsoidInterpolationRange(value: [number, number]) {
-    this.uniforms.get('ellipsoidInterpolationRange')!.value.set(...value)
+  set ellipsoidInterpolationRange(value: Vector2) {
+    this.uniforms.get('ellipsoidInterpolationRange')!.value = value
   }
 
   get photometric(): boolean {
