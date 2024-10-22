@@ -19,16 +19,16 @@ export function computeSunLightColor(
   transmittanceTexture: DataTexture,
   worldPosition: Vector3,
   sunDirection: Vector3,
-  { photometric = true, ...options }: SunLightColorOptions = {},
-  result = new Color()
+  result = new Color(),
+  { photometric = true, ...options }: SunLightColorOptions = {}
 ): Color {
   // TODO: Consider partial visibility when the sun is at the horizon.
   const transmittance = computeSkyTransmittance(
     transmittanceTexture,
     worldPosition,
     sunDirection,
-    options,
-    vectorScratch
+    vectorScratch,
+    options
   )
   const solarRadLum = transmittance.multiply(
     ATMOSPHERE_PARAMETERS.solarIrradiance

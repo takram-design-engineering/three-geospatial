@@ -223,8 +223,11 @@ const Scene: FC = () => {
       textures.transmittanceTexture,
       position,
       sunDirectionRef.current,
-      { osculateEllipsoid, photometric },
-      csm.directionalLights.mainLight.color
+      csm.directionalLights.mainLight.color,
+      {
+        osculateEllipsoid,
+        photometric
+      }
     )
   })
 

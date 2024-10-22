@@ -117,11 +117,11 @@ export function computeSkyTransmittance(
   transmittanceTexture: DataTexture,
   worldPosition: Vector3,
   worldDirection: Vector3,
+  result = new Vector3(),
   {
     ellipsoid = Ellipsoid.WGS84,
     osculateEllipsoid = true
-  }: SkyTransmittanceOptions = {},
-  result = new Vector3()
+  }: SkyTransmittanceOptions = {}
 ): Vector3 {
   const camera = vectorScratch1
     .copy(worldPosition)
