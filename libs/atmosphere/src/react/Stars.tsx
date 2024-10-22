@@ -1,22 +1,21 @@
 import { useLoader, useThree, type PointsProps } from '@react-three/fiber'
 import { forwardRef, useEffect, useMemo } from 'react'
-import { type Points, type Vector3 } from 'three'
+import { type Points } from 'three'
 
-import { ArrayBufferLoader, type Ellipsoid } from '@geovanni/core'
+import { ArrayBufferLoader } from '@geovanni/core'
 
+import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 import { StarsGeometry } from '../StarsGeometry'
 import {
   StarsMaterial,
   starsMaterialParametersDefaults
 } from '../StarsMaterial'
+import { separateProps } from './separateProps'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
-export interface StarsProps extends PointsProps {
-  ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
-  sunDirection?: Vector3
+export interface StarsProps extends PointsProps, AtmosphereMaterialProps {
   pointSize?: number
   radianceScale?: number
   background?: boolean
@@ -24,18 +23,13 @@ export interface StarsProps extends PointsProps {
 
 export const Stars = forwardRef<StarsImpl, StarsProps>(
   function Stars(props, forwardedRef) {
-    const {
-      ellipsoid,
-      osculateEllipsoid,
-      sunDirection,
-      pointSize,
-      radianceScale,
-      background,
-      ...others
-    } = {
+    const [
+      atmosphereParameters,
+      { pointSize, radianceScale, background, ...others }
+    ] = separateProps({
       ...starsMaterialParametersDefaults,
       ...props
-    }
+    })
 
     // TODO: Make the texture paths configurable.
     const gl = useThree(({ gl }) => gl)
@@ -67,10 +61,8 @@ export const Stars = forwardRef<StarsImpl, StarsProps>(
         <primitive
           object={material}
           {...precomputedTextures}
+          {...atmosphereParameters}
           useHalfFloat={useHalfFloat}
-          ellipsoid={ellipsoid}
-          osculateEllipsoid={osculateEllipsoid}
-          sunDirection={sunDirection}
           pointSize={pointSize}
           radianceScale={radianceScale}
           background={background}

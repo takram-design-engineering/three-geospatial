@@ -9,6 +9,8 @@ import {
   Vector2,
   Vector3,
   type Camera,
+  type Data3DTexture,
+  type DataTexture,
   type Texture,
   type WebGLRenderer,
   type WebGLRenderTarget
@@ -43,9 +45,9 @@ export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction
   normalBuffer?: Texture | null
   reconstructNormal?: boolean
-  irradianceTexture?: Texture | null
-  scatteringTexture?: Texture | null
-  transmittanceTexture?: Texture | null
+  irradianceTexture?: DataTexture | null
+  scatteringTexture?: Data3DTexture | null
+  transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
@@ -251,28 +253,28 @@ export class AerialPerspectiveEffect extends Effect {
     }
   }
 
-  get irradianceTexture(): Texture | null {
+  get irradianceTexture(): DataTexture | null {
     return this.uniforms.get('u_irradiance_texture')!.value
   }
 
-  set irradianceTexture(value: Texture | null) {
+  set irradianceTexture(value: DataTexture | null) {
     this.uniforms.get('u_irradiance_texture')!.value = value
   }
 
-  get scatteringTexture(): Texture | null {
+  get scatteringTexture(): Data3DTexture | null {
     return this.uniforms.get('u_scattering_texture')!.value
   }
 
-  set scatteringTexture(value: Texture | null) {
+  set scatteringTexture(value: Data3DTexture | null) {
     this.uniforms.get('u_scattering_texture')!.value = value
     this.uniforms.get('u_single_mie_scattering_texture')!.value = value
   }
 
-  get transmittanceTexture(): Texture | null {
+  get transmittanceTexture(): DataTexture | null {
     return this.uniforms.get('u_transmittance_texture')!.value
   }
 
-  set transmittanceTexture(value: Texture | null) {
+  set transmittanceTexture(value: DataTexture | null) {
     this.uniforms.get('u_transmittance_texture')!.value = value
   }
 

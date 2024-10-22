@@ -3,20 +3,15 @@ import { useThree, type MeshProps } from '@react-three/fiber'
 import { forwardRef, useEffect, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
-import { type Ellipsoid } from '@geovanni/core'
-
+import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 import { SkyMaterial, skyMaterialParametersDefaults } from '../SkyMaterial'
+import { separateProps } from './separateProps'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type SkyImpl = Mesh<BufferGeometry, SkyMaterial>
 
-export interface SkyProps extends MeshProps {
-  ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
-  photometric?: boolean
+export interface SkyProps extends MeshProps, AtmosphereMaterialProps {
   sun?: boolean
-  sunDirection?: Vector3
-  sunAngularRadius?: number
   moon?: boolean
   moonDirection?: Vector3
   moonAngularRadius?: number
@@ -25,19 +20,20 @@ export interface SkyProps extends MeshProps {
 
 export const Sky = forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {
-    const {
-      ellipsoid,
-      osculateEllipsoid,
-      photometric,
-      sun,
-      sunDirection,
-      sunAngularRadius,
-      moon,
-      moonDirection,
-      moonAngularRadius,
-      lunarRadianceScale,
-      ...others
-    } = { ...skyMaterialParametersDefaults, ...props }
+    const [
+      atmosphereParameters,
+      {
+        sun,
+        moon,
+        moonDirection,
+        moonAngularRadius,
+        lunarRadianceScale,
+        ...others
+      }
+    ] = separateProps({
+      ...skyMaterialParametersDefaults,
+      ...props
+    })
 
     // TODO: Make the texture paths configurable.
     const gl = useThree(({ gl }) => gl)
@@ -59,13 +55,9 @@ export const Sky = forwardRef<SkyImpl, SkyProps>(
         <primitive
           object={material}
           {...precomputedTextures}
+          {...atmosphereParameters}
           useHalfFloat={useHalfFloat}
-          ellipsoid={ellipsoid}
-          osculateEllipsoid={osculateEllipsoid}
-          photometric={photometric}
           sun={sun}
-          sunDirection={sunDirection}
-          sunAngularRadius={sunAngularRadius}
           moon={moon}
           moonDirection={moonDirection}
           moonAngularRadius={moonAngularRadius}

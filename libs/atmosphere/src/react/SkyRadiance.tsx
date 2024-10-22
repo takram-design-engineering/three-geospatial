@@ -1,39 +1,26 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useThree, type MeshProps } from '@react-three/fiber'
 import { forwardRef, useMemo } from 'react'
-import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
+import { type BufferGeometry, type Mesh } from 'three'
 
-import { type Ellipsoid } from '@geovanni/core'
-
+import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 import {
   SkyRadianceMaterial,
   skyRadianceMaterialParametersDefaults
 } from '../SkyRadianceMaterial'
+import { separateProps } from './separateProps'
 import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type SkyRadianceImpl = Mesh<BufferGeometry, SkyRadianceMaterial>
 
-export interface SkyRadianceProps extends MeshProps {
-  ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
-  photometric?: boolean
-  sunDirection?: Vector3
-  sunAngularRadius?: number
-}
+export interface SkyRadianceProps extends MeshProps, AtmosphereMaterialProps {}
 
 export const SkyRadiance = forwardRef<SkyRadianceImpl, SkyRadianceProps>(
   function SkyRadiance(props, forwardedRef) {
-    const {
-      ellipsoid,
-      osculateEllipsoid,
-      photometric,
-      sunDirection,
-      sunAngularRadius,
-      ...others
-    } = {
+    const [atmosphereParameters, others] = separateProps({
       ...skyRadianceMaterialParametersDefaults,
       ...props
-    }
+    })
 
     // TODO: Make the texture paths configurable.
     const gl = useThree(({ gl }) => gl)
@@ -49,12 +36,8 @@ export const SkyRadiance = forwardRef<SkyRadianceImpl, SkyRadianceProps>(
         <primitive
           object={material}
           {...precomputedTextures}
+          {...atmosphereParameters}
           useHalfFloat={useHalfFloat}
-          ellipsoid={ellipsoid}
-          osculateEllipsoid={osculateEllipsoid}
-          photometric={photometric}
-          sunDirection={sunDirection}
-          sunAngularRadius={sunAngularRadius}
         />
       </ScreenQuad>
     )
