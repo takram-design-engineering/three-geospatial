@@ -64,7 +64,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   osculateEllipsoid: true,
   interpolateToSphere: true,
-  photometric: false,
+  photometric: true,
   sunIrradiance: true,
   skyIrradiance: true,
   transmittance: true,

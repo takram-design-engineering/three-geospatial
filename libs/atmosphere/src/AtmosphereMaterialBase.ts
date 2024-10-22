@@ -48,7 +48,7 @@ export const atmosphereMaterialParametersBaseDefaults = {
   useHalfFloat: false,
   ellipsoid: Ellipsoid.WGS84,
   osculateEllipsoid: true,
-  photometric: false
+  photometric: true
 } satisfies AtmosphereMaterialBaseParameters
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
