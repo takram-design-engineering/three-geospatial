@@ -52,6 +52,7 @@ void interpolateToSphere(
   worldNormal = mix(worldNormal, normal, t);
 }
 
+#if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 vec3 sunSkyIrradiance(
   const vec3 worldPosition,
   const vec3 worldNormal,
@@ -75,7 +76,9 @@ vec3 sunSkyIrradiance(
   return albedo * skyIrrIllum;
   #endif
 }
+#endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
+#if defined(TRANSMITTANCE) || defined(INSCATTER)
 void transmittanceInscatter(
   const vec3 worldPosition,
   const vec3 worldNormal,
@@ -96,6 +99,7 @@ void transmittanceInscatter(
   radLum = radLum + inscatter;
   #endif
 }
+#endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);

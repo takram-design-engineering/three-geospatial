@@ -161,7 +161,6 @@ const Scene: FC = () => {
     }
     if (envMapRef.current != null) {
       envMapRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      envMapRef.current.material.moonDirection.copy(moonDirectionRef.current)
     }
     if (starsRef.current != null) {
       starsRef.current.material.sunDirection.copy(sunDirectionRef.current)
