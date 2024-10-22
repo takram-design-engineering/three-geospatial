@@ -49,7 +49,7 @@ export interface AerialPerspectiveEffectOptions {
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
-  interpolateToEllipsoid?: boolean
+  interpolateToSphere?: boolean
   photometric?: boolean
   sunIrradiance?: boolean
   skyIrradiance?: boolean
@@ -63,7 +63,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   reconstructNormal: false,
   ellipsoid: Ellipsoid.WGS84,
   osculateEllipsoid: true,
-  interpolateToEllipsoid: true,
+  interpolateToSphere: true,
   photometric: false,
   sunIrradiance: true,
   skyIrradiance: true,
@@ -90,7 +90,7 @@ export class AerialPerspectiveEffect extends Effect {
       useHalfFloat,
       ellipsoid,
       osculateEllipsoid,
-      interpolateToEllipsoid,
+      interpolateToSphere,
       photometric,
       sunIrradiance,
       skyIrradiance,
@@ -135,7 +135,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
-          ['ellipsoidInterpolationRange', new Uniform(new Vector2(2e5, 5e5))],
+          ['ellipsoidInterpolationRange', new Uniform(new Vector2(2e5, 6e5))],
           ['sunDirection', new Uniform(new Vector3())],
           ['albedoScale', new Uniform(albedoScale)]
         ]),
@@ -156,11 +156,11 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
     this.camera = camera
-    this.osculateEllipsoid = osculateEllipsoid
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
     this.ellipsoid = ellipsoid
-    this.interpolateToEllipsoid = interpolateToEllipsoid
+    this.osculateEllipsoid = osculateEllipsoid
+    this.interpolateToSphere = interpolateToSphere
     this.photometric = photometric
     this.sunIrradiance = sunIrradiance
     this.skyIrradiance = skyIrradiance
@@ -295,19 +295,19 @@ export class AerialPerspectiveEffect extends Effect {
 
   set ellipsoid(value: Ellipsoid) {
     this._ellipsoid = value
-    this.uniforms.get('ellipsoidRadii')!.value = value.radii
+    this.uniforms.get('ellipsoidRadii')!.value.copy(value.radii)
   }
 
-  get interpolateToEllipsoid(): boolean {
-    return this.defines.has('INTERPOLATE_TO_ELLIPSOID')
+  get interpolateToSphere(): boolean {
+    return this.defines.has('INTERPOLATE_TO_SPHERE')
   }
 
-  set interpolateToEllipsoid(value: boolean) {
-    if (value !== this.transmittance) {
+  set interpolateToSphere(value: boolean) {
+    if (value !== this.interpolateToSphere) {
       if (value) {
-        this.defines.set('INTERPOLATE_TO_ELLIPSOID', '1')
+        this.defines.set('INTERPOLATE_TO_SPHERE', '1')
       } else {
-        this.defines.delete('INTERPOLATE_TO_ELLIPSOID')
+        this.defines.delete('INTERPOLATE_TO_SPHERE')
       }
       this.setChanged()
     }

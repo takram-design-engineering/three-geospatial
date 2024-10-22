@@ -38,17 +38,14 @@ vec3 readNormal(const vec2 uv) {
   return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
 }
 
-void interpolateToEllipsoid(
+void interpolateToSphere(
   float minHeight,
   float maxHeight,
   inout vec3 worldPosition,
   inout vec3 worldNormal
 ) {
   vec3 normal = normalize(1.0 / vEllipsoidRadiiSquared * worldPosition);
-  vec3 k = vEllipsoidRadiiSquared * normal;
-  float gamma = sqrt(dot(normal, k));
-  vec3 position = k / gamma;
-
+  vec3 position = u_bottom_radius * normal;
   float t = smoothstep(minHeight, maxHeight, cameraHeight);
   worldPosition = mix(worldPosition, position, t);
   // Correct way is slerp, but this will be small-angle interpolation anyways.
@@ -125,14 +122,14 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
-  #ifdef INTERPOLATE_TO_ELLIPSOID
-  interpolateToEllipsoid(
+  #ifdef INTERPOLATE_TO_SPHERE
+  interpolateToSphere(
     ellipsoidInterpolationRange.x,
     ellipsoidInterpolationRange.y,
     worldPosition,
     worldNormal
   );
-  #endif // INTERPOLATE_TO_ELLIPSOID
+  #endif // INTERPOLATE_TO_SPHERE
 
   vec3 radLum;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)

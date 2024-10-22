@@ -1,7 +1,9 @@
 uniform mat4 inverseProjectionMatrix;
 uniform vec3 cameraPosition;
-uniform vec3 ellipsoidRadii;
+uniform float cameraHeight;
 uniform vec3 ellipsoidCenter;
+uniform vec3 ellipsoidRadii;
+uniform vec2 ellipsoidInterpolationRange;
 
 varying vec3 vWorldPosition;
 varying vec3 vEllipsoidCenter;
@@ -10,7 +12,18 @@ varying vec3 vEllipsoidRadiiSquared;
 void mainSupport() {
   vec4 viewPosition = inverseProjectionMatrix * vec4(position, 1.0);
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
+
+  #ifdef INTERPOLATE_TO_SPHERE
+  float t = smoothstep(
+    ellipsoidInterpolationRange.x,
+    ellipsoidInterpolationRange.y,
+    cameraHeight
+  );
+  vEllipsoidCenter = mix(ellipsoidCenter, vec3(0.0), t) * METER_TO_UNIT_LENGTH;
+  #else
   vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
+  #endif // INTERPOLATE_TO_SPHERE
+
   vec3 radii = ellipsoidRadii * METER_TO_UNIT_LENGTH;
   vEllipsoidRadiiSquared = radii * radii;
 }

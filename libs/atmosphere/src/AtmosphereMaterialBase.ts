@@ -110,9 +110,9 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         ...others.defines
       }
     })
+    this.useHalfFloat = useHalfFloat
     this.ellipsoid = ellipsoid
     this.osculateEllipsoid = osculateEllipsoid
-    this.useHalfFloat = useHalfFloat
     this.photometric = photometric
   }
 
