@@ -63,11 +63,11 @@ const Scene: FC = () => {
     normal: false
   })
 
-  const { osculateEllipsoid, interpolateToSphere, photometric } = useControls(
+  const { osculateEllipsoid, morphToSphere, photometric } = useControls(
     'atmosphere',
     {
       osculateEllipsoid: true,
-      interpolateToSphere: true,
+      morphToSphere: true,
       photometric: true
     }
   )
@@ -189,7 +189,7 @@ const Scene: FC = () => {
           <AerialPerspective
             ref={aerialPerspectiveRef}
             osculateEllipsoid={osculateEllipsoid}
-            interpolateToSphere={interpolateToSphere}
+            morphToSphere={morphToSphere}
             photometric={photometric}
             sunIrradiance={sun}
             skyIrradiance={sky}
@@ -213,7 +213,7 @@ const Scene: FC = () => {
     ),
     [
       osculateEllipsoid,
-      interpolateToSphere,
+      morphToSphere,
       photometric,
       enable,
       sun,

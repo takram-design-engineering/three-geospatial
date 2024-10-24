@@ -51,7 +51,7 @@ export interface AerialPerspectiveEffectOptions {
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
-  interpolateToSphere?: boolean
+  morphToSphere?: boolean
   photometric?: boolean
   sunIrradiance?: boolean
   skyIrradiance?: boolean
@@ -65,7 +65,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   reconstructNormal: false,
   ellipsoid: Ellipsoid.WGS84,
   osculateEllipsoid: true,
-  interpolateToSphere: true,
+  morphToSphere: true,
   photometric: true,
   sunIrradiance: true,
   skyIrradiance: true,
@@ -92,7 +92,7 @@ export class AerialPerspectiveEffect extends Effect {
       useHalfFloat,
       ellipsoid,
       osculateEllipsoid,
-      interpolateToSphere,
+      morphToSphere,
       photometric,
       sunIrradiance,
       skyIrradiance,
@@ -162,7 +162,7 @@ export class AerialPerspectiveEffect extends Effect {
     this.useHalfFloat = useHalfFloat === true
     this.ellipsoid = ellipsoid
     this.osculateEllipsoid = osculateEllipsoid
-    this.interpolateToSphere = interpolateToSphere
+    this.morphToSphere = morphToSphere
     this.photometric = photometric
     this.sunIrradiance = sunIrradiance
     this.skyIrradiance = skyIrradiance
@@ -300,16 +300,16 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('ellipsoidRadii')!.value.copy(value.radii)
   }
 
-  get interpolateToSphere(): boolean {
-    return this.defines.has('INTERPOLATE_TO_SPHERE')
+  get morphToSphere(): boolean {
+    return this.defines.has('MORPH_TO_SPHERE')
   }
 
-  set interpolateToSphere(value: boolean) {
-    if (value !== this.interpolateToSphere) {
+  set morphToSphere(value: boolean) {
+    if (value !== this.morphToSphere) {
       if (value) {
-        this.defines.set('INTERPOLATE_TO_SPHERE', '1')
+        this.defines.set('MORPH_TO_SPHERE', '1')
       } else {
-        this.defines.delete('INTERPOLATE_TO_SPHERE')
+        this.defines.delete('MORPH_TO_SPHERE')
       }
       this.setChanged()
     }

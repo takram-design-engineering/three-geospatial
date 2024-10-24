@@ -186,10 +186,10 @@ ellipsoid = Ellipsoid.WGS84 : Ellipsoid
 osculateEllipsoid = true : boolean
 ```
 
-#### .interpolateToSphere
+#### .morphToSphere
 
 ```ts
-interpolateToSphere = true : boolean
+morphToSphere = true : boolean
 ```
 
 #### .ellipsoidInterpolationRange

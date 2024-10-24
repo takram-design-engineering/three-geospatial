@@ -38,7 +38,7 @@ vec3 readNormal(const vec2 uv) {
   return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
 }
 
-void interpolateToSphere(
+void morphToSphere(
   float minHeight,
   float maxHeight,
   inout vec3 worldPosition,
@@ -126,14 +126,14 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
-  #ifdef INTERPOLATE_TO_SPHERE
-  interpolateToSphere(
+  #ifdef MORPH_TO_SPHERE
+  morphToSphere(
     ellipsoidInterpolationRange.x,
     ellipsoidInterpolationRange.y,
     worldPosition,
     worldNormal
   );
-  #endif // INTERPOLATE_TO_SPHERE
+  #endif // MORPH_TO_SPHERE
 
   vec3 radLum;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
