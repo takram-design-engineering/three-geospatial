@@ -1,6 +1,7 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
 import {
+  GLSL3,
   Matrix4,
   Uniform,
   type BufferGeometry,
@@ -37,7 +38,7 @@ export class SkyRadianceMaterial extends AtmosphereMaterialBase {
     }
 
     super({
-      glslVersion: '300 es',
+      glslVersion: GLSL3,
       vertexShader: /* glsl */ `
         precision highp float;
         precision highp sampler3D;

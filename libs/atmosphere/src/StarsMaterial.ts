@@ -1,4 +1,5 @@
 import {
+  GLSL3,
   Matrix4,
   Uniform,
   Vector2,
@@ -46,7 +47,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     }
 
     super({
-      glslVersion: '300 es',
+      glslVersion: GLSL3,
       vertexShader: /* glsl */ `
         precision highp float;
         precision highp sampler3D;

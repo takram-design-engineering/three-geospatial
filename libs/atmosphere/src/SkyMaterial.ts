@@ -1,6 +1,7 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
 import {
+  GLSL3,
   Matrix4,
   Uniform,
   Vector3,
@@ -52,7 +53,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     } = { ...skyMaterialParametersDefaults, ...params }
 
     super({
-      glslVersion: '300 es',
+      glslVersion: GLSL3,
       vertexShader: /* glsl */ `
         precision highp float;
         precision highp sampler3D;
