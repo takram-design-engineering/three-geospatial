@@ -2,7 +2,6 @@ uniform highp sampler2D normalBuffer;
 
 uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
-uniform mat4 inverseViewMatrix;
 
 float reverseLogDepth(const float depth) {
   #ifdef LOG_DEPTH

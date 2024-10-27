@@ -40,8 +40,7 @@ export class NormalEffect extends Effect {
       uniforms: new Map<string, Uniform>([
         ['normalBuffer', new Uniform(normalBuffer)],
         ['projectionMatrix', new Uniform(new Matrix4())],
-        ['inverseProjectionMatrix', new Uniform(new Matrix4())],
-        ['inverseViewMatrix', new Uniform(new Matrix4())]
+        ['inverseProjectionMatrix', new Uniform(new Matrix4())]
       ])
     })
     if (camera != null) {
@@ -79,12 +78,10 @@ export class NormalEffect extends Effect {
     const uniforms = this.uniforms
     const projectionMatrix = uniforms.get('projectionMatrix')!
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
-    const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
     const camera = this.camera
     if (camera != null) {
       projectionMatrix.value.copy(camera.projectionMatrix)
       inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
-      inverseViewMatrix.value.copy(camera.matrixWorld)
     }
   }
 
