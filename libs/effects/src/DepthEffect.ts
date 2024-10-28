@@ -15,7 +15,7 @@ export interface DepthEffectOptions {
 }
 
 export const depthEffectOptionsDefaults = {
-  blendFunction: BlendFunction.NORMAL,
+  blendFunction: BlendFunction.SRC,
   useTurbo: false,
   near: 1,
   far: 1000

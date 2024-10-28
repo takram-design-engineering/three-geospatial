@@ -21,7 +21,7 @@ export interface NormalEffectOptions {
 }
 
 export const normalEffectOptionsDefaults = {
-  blendFunction: BlendFunction.NORMAL,
+  blendFunction: BlendFunction.SRC,
   reconstructFromDepth: false
 } satisfies NormalEffectOptions
 
