@@ -5,6 +5,7 @@ in vec3 vWorldDirection;
 in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
+layout(location = 1) out vec4 outputNormalPBR;
 
 in vec3 vColor;
 
@@ -24,4 +25,5 @@ void main() {
   #else
   outputColor = vec4(vColor, 1.0);
   #endif // BACKGROUND
+  outputNormalPBR = vec4(0.0);
 }

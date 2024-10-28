@@ -6,6 +6,7 @@ import {
   normalEffectOptionsDefaults,
   type NormalEffectOptions
 } from '../NormalEffect'
+import { type EffectComposerContextValue } from './EffectComposer'
 import { type EffectProps } from './types'
 
 export interface NormalProps
@@ -18,7 +19,10 @@ export const Normal = forwardRef<NormalEffect, NormalProps>(
       ...props
     }
 
-    const { camera, normalPass } = useContext(EffectComposerContext)
+    const { geometryPass, normalPass, camera } = useContext(
+      EffectComposerContext
+    ) as EffectComposerContextValue
+
     const effect = useMemo(
       () => new NormalEffect(camera, { blendFunction }),
       [camera, blendFunction]
@@ -34,7 +38,9 @@ export const Normal = forwardRef<NormalEffect, NormalProps>(
         ref={forwardedRef}
         object={effect}
         mainCamera={camera}
-        normalBuffer={normalPass?.texture ?? null}
+        normalBuffer={
+          geometryPass?.normalPBRTexture ?? normalPass?.texture ?? null
+        }
         {...others}
       />
     )
