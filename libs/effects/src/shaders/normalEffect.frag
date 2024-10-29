@@ -22,10 +22,6 @@ vec3 screenToView(const vec2 uv, const float depth, const float viewZ) {
   return (inverseProjectionMatrix * clip).xyz;
 }
 
-vec3 readNormal(const vec2 uv) {
-  return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
-}
-
 vec3 reconstructNormal(const vec2 uv) {
   float depth = readDepth(uv);
   depth = reverseLogDepth(depth);
@@ -33,6 +29,14 @@ vec3 reconstructNormal(const vec2 uv) {
   vec3 dx = dFdx(position);
   vec3 dy = dFdy(position);
   return normalize(cross(dx, dy));
+}
+
+vec3 readNormal(const vec2 uv) {
+  #ifdef OCT_ENCODED
+  return unpackVec2ToNormal(texture2D(normalBuffer, uv).xy);
+  #else
+  return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
+  #endif
 }
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
