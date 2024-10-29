@@ -9,7 +9,7 @@ const matrixScratch = /*#__PURE__*/ new Matrix4()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
-class EastNorthUpFrameImpl extends Group {
+class EastNorthUpFrameGroup extends Group {
   set(
     longitude: number,
     latitude: number,
@@ -32,13 +32,13 @@ export interface EastNorthUpFrameProps
 }
 
 export const EastNorthUpFrame = forwardRef<
-  EastNorthUpFrameImpl,
+  EastNorthUpFrameGroup,
   EastNorthUpFrameProps
 >(function EastNorthUpFrame(
   { longitude, latitude, height = 0, ellipsoid = Ellipsoid.WGS84, children },
   forwardedRef
 ) {
-  const group = useMemo(() => new EastNorthUpFrameImpl(), [])
+  const group = useMemo(() => new EastNorthUpFrameGroup(), [])
 
   useEffect(() => {
     group.set(longitude, latitude, height, ellipsoid)
