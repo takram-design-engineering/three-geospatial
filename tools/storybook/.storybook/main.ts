@@ -21,6 +21,9 @@ const config: StorybookConfig = {
       plugins: [react(), nxViteTsPaths(), glsl()],
       worker: {
         plugins: () => [nxViteTsPaths()]
+      },
+      optimizeDeps: {
+        exclude: ['node_modules/.cache/sb-vite']
       }
     })
 }
