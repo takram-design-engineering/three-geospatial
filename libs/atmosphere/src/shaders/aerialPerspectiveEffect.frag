@@ -35,7 +35,11 @@ vec3 screenToView(const vec2 uv, const float depth, const float viewZ) {
 }
 
 vec3 readNormal(const vec2 uv) {
+  #ifdef OCT_ENCODED_NORMAL
+  return unpackVec2ToNormal(texture2D(normalBuffer, uv).xy);
+  #else
   return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
+  #endif
 }
 
 void morphToSphere(

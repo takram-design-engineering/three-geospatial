@@ -17,6 +17,7 @@ import {
 } from 'three'
 
 import { Ellipsoid, Geodetic } from '@geovanni/core'
+import { shaders } from '@geovanni/effects'
 
 import {
   ATMOSPHERE_PARAMETERS,
@@ -44,6 +45,7 @@ const geodeticScratch = /*#__PURE__*/ new Geodetic()
 export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction
   normalBuffer?: Texture | null
+  octEncodedNormal?: boolean
   reconstructNormal?: boolean
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
@@ -62,6 +64,7 @@ export interface AerialPerspectiveEffectOptions {
 
 export const aerialPerspectiveEffectOptionsDefaults = {
   blendFunction: BlendFunction.NORMAL,
+  octEncodedNormal: false,
   reconstructNormal: false,
   ellipsoid: Ellipsoid.WGS84,
   osculateEllipsoid: true,
@@ -85,6 +88,7 @@ export class AerialPerspectiveEffect extends Effect {
     const {
       blendFunction,
       normalBuffer,
+      octEncodedNormal,
       reconstructNormal,
       irradianceTexture,
       scatteringTexture,
@@ -106,6 +110,7 @@ export class AerialPerspectiveEffect extends Effect {
       /* glsl */ `
         ${parameters}
         ${functions}
+        ${shaders.packing}
         ${fragmentShader}
       `,
       {
@@ -158,6 +163,7 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
     this.camera = camera
+    this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
     this.ellipsoid = ellipsoid
@@ -236,6 +242,21 @@ export class AerialPerspectiveEffect extends Effect {
 
   set normalBuffer(value: Texture | null) {
     this.uniforms.get('normalBuffer')!.value = value
+  }
+
+  get octEncodedNormal(): boolean {
+    return this.defines.has('OCT_ENCODED_NORMAL')
+  }
+
+  set octEncodedNormal(value: boolean) {
+    if (value !== this.octEncodedNormal) {
+      if (value) {
+        this.defines.set('OCT_ENCODED_NORMAL', '1')
+      } else {
+        this.defines.delete('OCT_ENCODED_NORMAL')
+      }
+      this.setChanged()
+    }
   }
 
   get reconstructNormal(): boolean {

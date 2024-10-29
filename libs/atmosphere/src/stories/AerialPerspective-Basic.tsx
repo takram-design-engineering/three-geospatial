@@ -120,7 +120,7 @@ const Scene: FC = () => {
         )}
         {lensFlare && <LensFlare />}
         {depth && <Depth useTurbo />}
-        {normal && <Normal />}
+        {normal && <Normal octEncoded />}
         {!normal && !depth && (
           <>
             <ToneMapping mode={ToneMappingMode.AGX} />
