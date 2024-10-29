@@ -5,6 +5,7 @@ in vec3 vWorldDirection;
 in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
+layout(location = 1) out vec4 outputNormalPBR;
 
 void main() {
   vec3 worldPosition = vWorldPosition - vEllipsoidCenter;
@@ -21,4 +22,5 @@ void main() {
     radLum *= smoothstep(0.65, 0.0, -mu);
   }
   outputColor = vec4(radLum, 1.0);
+  outputNormalPBR = vec4(0.0);
 }

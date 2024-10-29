@@ -2,7 +2,10 @@ import { useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
-import { type EffectProps } from '@geovanni/effects/react'
+import {
+  type EffectComposerContextValue,
+  type EffectProps
+} from '@geovanni/effects/react'
 
 import {
   AerialPerspectiveEffect,
@@ -34,7 +37,10 @@ export const AerialPerspective = forwardRef<
   )
   const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
 
-  const { camera, normalPass } = useContext(EffectComposerContext)
+  const { geometryPass, normalPass, camera } = useContext(
+    EffectComposerContext
+  ) as EffectComposerContextValue
+
   const effect = useMemo(
     () => new AerialPerspectiveEffect(camera, { blendFunction }),
     [camera, blendFunction]
@@ -50,10 +56,13 @@ export const AerialPerspective = forwardRef<
       ref={forwardedRef}
       object={effect}
       camera={camera}
-      normalBuffer={normalPass?.texture ?? null}
+      normalBuffer={
+        geometryPass?.normalPBRTexture ?? normalPass?.texture ?? null
+      }
       {...precomputedTextures}
       useHalfFloat={useHalfFloat}
       {...others}
+      octEncodedNormal={geometryPass?.normalPBRTexture != null}
     />
   )
 })

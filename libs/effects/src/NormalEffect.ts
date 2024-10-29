@@ -13,15 +13,18 @@ import {
 } from 'three'
 
 import fragmentShader from './shaders/normalEffect.frag'
+import packing from './shaders/packing.glsl'
 
 export interface NormalEffectOptions {
   blendFunction?: BlendFunction
   normalBuffer?: Texture | null
+  octEncoded?: boolean
   reconstructFromDepth?: boolean
 }
 
 export const normalEffectOptionsDefaults = {
-  blendFunction: BlendFunction.NORMAL,
+  blendFunction: BlendFunction.SRC,
+  octEncoded: false,
   reconstructFromDepth: false
 } satisfies NormalEffectOptions
 
@@ -30,22 +33,30 @@ export class NormalEffect extends Effect {
     private camera: Camera,
     options?: NormalEffectOptions
   ) {
-    const { blendFunction, normalBuffer, reconstructFromDepth } = {
+    const { blendFunction, normalBuffer, octEncoded, reconstructFromDepth } = {
       ...normalEffectOptionsDefaults,
       ...options
     }
-    super('NormalEffect', fragmentShader, {
-      blendFunction,
-      attributes: EffectAttribute.DEPTH,
-      uniforms: new Map<string, Uniform>([
-        ['normalBuffer', new Uniform(normalBuffer)],
-        ['projectionMatrix', new Uniform(new Matrix4())],
-        ['inverseProjectionMatrix', new Uniform(new Matrix4())]
-      ])
-    })
+    super(
+      'NormalEffect',
+      /* glsl */ `
+        ${packing}
+        ${fragmentShader}
+      `,
+      {
+        blendFunction,
+        attributes: EffectAttribute.DEPTH,
+        uniforms: new Map<string, Uniform>([
+          ['normalBuffer', new Uniform(normalBuffer)],
+          ['projectionMatrix', new Uniform(new Matrix4())],
+          ['inverseProjectionMatrix', new Uniform(new Matrix4())]
+        ])
+      }
+    )
     if (camera != null) {
       this.mainCamera = camera
     }
+    this.octEncoded = octEncoded
     this.reconstructFromDepth = reconstructFromDepth
   }
 
@@ -91,6 +102,21 @@ export class NormalEffect extends Effect {
 
   set normalBuffer(value: Texture | null) {
     this.uniforms.get('normalBuffer')!.value = value
+  }
+
+  get octEncoded(): boolean {
+    return this.defines.has('OCT_ENCODED')
+  }
+
+  set octEncoded(value: boolean) {
+    if (value !== this.octEncoded) {
+      if (value) {
+        this.defines.set('OCT_ENCODED', '1')
+      } else {
+        this.defines.delete('OCT_ENCODED')
+      }
+      this.setChanged()
+    }
   }
 
   get reconstructFromDepth(): boolean {

@@ -106,7 +106,7 @@ const Scene: FC = () => {
 
   const effectComposer = useMemo(
     () => (
-      <EffectComposer key={Math.random()} normalPass multisampling={0}>
+      <EffectComposer key={Math.random()} multisampling={0}>
         {enabled && !normal && !depth && (
           <AerialPerspective
             ref={aerialPerspectiveRef}
@@ -120,7 +120,7 @@ const Scene: FC = () => {
         )}
         {lensFlare && <LensFlare />}
         {depth && <Depth useTurbo />}
-        {normal && <Normal />}
+        {normal && <Normal octEncoded />}
         {!normal && !depth && (
           <>
             <ToneMapping mode={ToneMappingMode.AGX} />

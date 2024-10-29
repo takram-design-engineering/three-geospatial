@@ -2,30 +2,30 @@ import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
 import {
-  NormalEffect,
-  normalEffectOptionsDefaults,
-  type NormalEffectOptions
-} from '../NormalEffect'
+  GeometryEffect,
+  geometryEffectOptionsDefaults,
+  type GeometryEffectOptions
+} from '../GeometryEffect'
 import { type EffectComposerContextValue } from './EffectComposer'
 import { type EffectProps } from './types'
 
-export interface NormalProps
-  extends EffectProps<typeof NormalEffect, NormalEffectOptions> {}
+export interface GeometryProps
+  extends EffectProps<typeof GeometryEffect, GeometryEffectOptions> {}
 
-export const Normal = forwardRef<NormalEffect, NormalProps>(
-  function Normal(props, forwardedRef) {
+export const Geometry = forwardRef<GeometryEffect, GeometryProps>(
+  function Geometry(props, forwardedRef) {
     const { blendFunction, ...others } = {
-      ...normalEffectOptionsDefaults,
+      ...geometryEffectOptionsDefaults,
       ...props
     }
 
-    const { geometryPass, normalPass, camera } = useContext(
+    const { geometryPass } = useContext(
       EffectComposerContext
     ) as EffectComposerContextValue
 
     const effect = useMemo(
-      () => new NormalEffect(camera, { blendFunction }),
-      [camera, blendFunction]
+      () => new GeometryEffect({ blendFunction }),
+      [blendFunction]
     )
     useEffect(() => {
       return () => {
@@ -37,10 +37,7 @@ export const Normal = forwardRef<NormalEffect, NormalProps>(
       <primitive
         ref={forwardedRef}
         object={effect}
-        mainCamera={camera}
-        normalBuffer={
-          geometryPass?.normalPBRTexture ?? normalPass?.texture ?? null
-        }
+        geometryBuffer={geometryPass?.normalPBRTexture}
         {...others}
       />
     )

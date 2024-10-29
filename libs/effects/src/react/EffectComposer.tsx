@@ -1,16 +1,11 @@
 import { useFrame, useInstanceHandle, useThree } from '@react-three/fiber'
-import {
-  EffectComposerContext,
-  type EffectComposerProps as BaseEffectComposerProps
-} from '@react-three/postprocessing'
+import { EffectComposerContext } from '@react-three/postprocessing'
 import {
   Effect,
   EffectAttribute,
   EffectComposer as EffectComposerImpl,
   EffectPass,
-  NormalPass,
-  Pass,
-  RenderPass
+  Pass
 } from 'postprocessing'
 import {
   forwardRef,
@@ -20,20 +15,38 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  type Context,
   type ReactNode
 } from 'react'
-import { HalfFloatType, NoToneMapping, WebGLRenderTarget } from 'three'
-import { isWebGL2Available } from 'three-stdlib'
+import {
+  HalfFloatType,
+  NoToneMapping,
+  type Camera,
+  type Scene,
+  type TextureDataType
+} from 'three'
 
-// Provided for high-precision normal pass.
+import { GeometryPass } from '../GeometryPass'
 
-export interface EffectComposerProps
-  extends Omit<
-    BaseEffectComposerProps,
-    'children' | 'enableNormalPass' | 'resolutionScale'
-  > {
+type InferContextValue<T> = T extends Context<infer U> ? U : never
+
+export interface EffectComposerContextValue
+  extends InferContextValue<typeof EffectComposerContext> {
+  geometryPass?: GeometryPass
+}
+
+export interface EffectComposerProps {
+  enabled?: boolean
+  depthBuffer?: boolean
+  stencilBuffer?: boolean
+  autoClear?: boolean
+  resolutionScale?: number
+  multisampling?: number
+  frameBufferType?: TextureDataType
+  renderPriority?: number
+  camera?: Camera
+  scene?: Scene
   children?: ReactNode
-  normalPass?: boolean
 }
 
 function isConvolution(effect: Effect): boolean {
@@ -44,7 +57,7 @@ function isConvolution(effect: Effect): boolean {
 }
 
 export const EffectComposer = memo(
-  forwardRef(function EffectComposer(
+  forwardRef<EffectComposerImpl, EffectComposerProps>(function EffectComposer(
     {
       children,
       camera: cameraProp,
@@ -52,52 +65,41 @@ export const EffectComposer = memo(
       enabled = true,
       renderPriority = 1,
       autoClear = true,
+      resolutionScale,
       depthBuffer,
-      normalPass: enableNormalPass = false,
       stencilBuffer = false,
       multisampling = 8,
       frameBufferType = HalfFloatType
-    }: EffectComposerProps,
+    },
     forwardedRef
   ) {
-    const { gl, scene: defaultScene, camera: defaultCamera, size } = useThree()
+    const gl = useThree(({ gl }) => gl)
+    const defaultScene = useThree(({ scene }) => scene)
+    const defaultCamera = useThree(({ camera }) => camera)
     const scene = sceneProp ?? defaultScene
     const camera = cameraProp ?? defaultCamera
 
-    const [composer, normalPass] = useMemo(() => {
-      const webGL2Available = isWebGL2Available()
-      const effectComposer = new EffectComposerImpl(gl, {
+    const [composer, geometryPass] = useMemo(() => {
+      const composer = new EffectComposerImpl(gl, {
         depthBuffer,
         stencilBuffer,
-        multisampling: multisampling > 0 && webGL2Available ? multisampling : 0,
+        multisampling,
         frameBufferType
       })
-      effectComposer.addPass(new RenderPass(scene, camera))
-
-      let normalPass = null
-      if (enableNormalPass) {
-        normalPass = new NormalPass(scene, camera, {
-          // TODO: Should we dispose target?
-          renderTarget: new WebGLRenderTarget(1, 1, {
-            type: frameBufferType // We need high-precision normal.
-          })
-        })
-        normalPass.enabled = false
-        effectComposer.addPass(normalPass)
-      }
-
-      return [effectComposer, normalPass]
+      const geometryPass = new GeometryPass(composer.inputBuffer, scene, camera)
+      composer.addPass(geometryPass)
+      return [composer, geometryPass]
     }, [
-      camera,
       gl,
+      scene,
+      camera,
       depthBuffer,
       stencilBuffer,
       multisampling,
-      frameBufferType,
-      scene,
-      enableNormalPass
+      frameBufferType
     ])
 
+    const size = useThree(({ size }) => size)
     useEffect(() => {
       composer?.setSize(size.width, size.height)
     }, [composer, size])
@@ -107,7 +109,9 @@ export const EffectComposer = memo(
         if (enabled) {
           const currentAutoClear = gl.autoClear
           gl.autoClear = autoClear
-          if (stencilBuffer && !autoClear) gl.clearStencil()
+          if (stencilBuffer && !autoClear) {
+            gl.clearStencil()
+          }
           composer.render(delta)
           gl.autoClear = currentAutoClear
         }
@@ -148,20 +152,14 @@ export const EffectComposer = memo(
         for (const pass of passes) {
           composer?.addPass(pass)
         }
-        if (normalPass != null) {
-          normalPass.enabled = true
-        }
       }
 
       return () => {
         for (const pass of passes) {
           composer?.removePass(pass)
         }
-        if (normalPass != null) {
-          normalPass.enabled = false
-        }
       }
-    }, [composer, children, camera, normalPass, instance])
+    }, [composer, children, camera, instance])
 
     useEffect(() => {
       const currentToneMapping = gl.toneMapping
@@ -171,21 +169,23 @@ export const EffectComposer = memo(
       }
     }, [gl])
 
-    const state = useMemo(
-      () => ({
+    const context = useMemo(
+      (): EffectComposerContextValue => ({
         composer,
-        normalPass,
-        downSamplingPass: null,
         camera,
-        scene
+        scene,
+        geometryPass,
+        normalPass: null,
+        downSamplingPass: null,
+        resolutionScale
       }),
-      [composer, normalPass, camera, scene]
+      [composer, camera, scene, geometryPass, resolutionScale]
     )
 
     useImperativeHandle(forwardedRef, () => composer, [composer])
 
     return (
-      <EffectComposerContext.Provider value={state}>
+      <EffectComposerContext.Provider value={context}>
         <group ref={group}>{children}</group>
       </EffectComposerContext.Provider>
     )
