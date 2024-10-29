@@ -37,7 +37,7 @@ export const Geometry = forwardRef<GeometryEffect, GeometryProps>(
       <primitive
         ref={forwardedRef}
         object={effect}
-        geometryBuffer={geometryPass?.normalPBRTexture}
+        geometryBuffer={geometryPass?.geometryTexture}
         {...others}
       />
     )

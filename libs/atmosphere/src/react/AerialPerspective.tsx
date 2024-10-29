@@ -57,12 +57,12 @@ export const AerialPerspective = forwardRef<
       object={effect}
       camera={camera}
       normalBuffer={
-        geometryPass?.normalPBRTexture ?? normalPass?.texture ?? null
+        geometryPass?.geometryTexture ?? normalPass?.texture ?? null
       }
       {...precomputedTextures}
       useHalfFloat={useHalfFloat}
       {...others}
-      octEncodedNormal={geometryPass?.normalPBRTexture != null}
+      octEncodedNormal={geometryPass?.geometryTexture != null}
     />
   )
 })

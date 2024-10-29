@@ -39,9 +39,10 @@ export const Normal = forwardRef<NormalEffect, NormalProps>(
         object={effect}
         mainCamera={camera}
         normalBuffer={
-          geometryPass?.normalPBRTexture ?? normalPass?.texture ?? null
+          geometryPass?.geometryTexture ?? normalPass?.texture ?? null
         }
         {...others}
+        octEncoded={geometryPass?.geometryTexture != null}
       />
     )
   }
