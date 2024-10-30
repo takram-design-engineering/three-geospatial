@@ -2,14 +2,14 @@ uniform float near;
 uniform float far;
 
 float reverseLogDepth(const float depth) {
-  #ifdef LOG_DEPTH
+  #ifdef USE_LOGDEPTHBUF
   float d = pow(2.0, depth * log2(cameraFar + 1.0)) - 1.0;
   float a = cameraFar / (cameraFar - cameraNear);
   float b = cameraFar * cameraNear / (cameraNear - cameraFar);
   return a + b / d;
   #else
   return depth;
-  #endif
+  #endif // USE_LOGDEPTHBUF
 }
 
 float linearizeDepth(const float depth) {
@@ -31,10 +31,12 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   depth = reverseLogDepth(depth);
   depth = linearizeDepth(depth);
+
   #ifdef USE_TURBO
   vec3 color = turbo(1.0 - depth);
   #else
   vec3 color = vec3(depth);
-  #endif
+  #endif // USE_TURBO
+
   outputColor = vec4(color, inputColor.a);
 }

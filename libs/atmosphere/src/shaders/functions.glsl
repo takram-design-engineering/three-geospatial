@@ -769,7 +769,7 @@ vec3 GetSolarRadLum() {
   return GetSolarLuminance();
   #else
   return GetSolarRadiance();
-  #endif
+  #endif // PHOTOMETRIC
 }
 
 vec3 GetSkyRadLum(
@@ -795,7 +795,7 @@ vec3 GetSkyRadLum(
     sun_direction,
     transmittance
   );
-  #endif
+  #endif // PHOTOMETRIC
 }
 
 vec3 GetSkyRadLumToPoint(
@@ -821,7 +821,7 @@ vec3 GetSkyRadLumToPoint(
     sun_direction,
     transmittance
   );
-  #endif
+  #endif // PHOTOMETRIC
 }
 
 vec3 GetSunAndSkyIrrIllum(
@@ -834,7 +834,7 @@ vec3 GetSunAndSkyIrrIllum(
   return GetSunAndSkyIlluminance(p, normal, sun_direction, sky_irradiance);
   #else
   return GetSunAndSkyIrradiance(p, normal, sun_direction, sky_irradiance);
-  #endif
+  #endif // PHOTOMETRIC
 }
 
 vec3 GetSkyIrrIllum(vec3 p, vec3 normal, vec3 sun_direction) {
@@ -842,5 +842,5 @@ vec3 GetSkyIrrIllum(vec3 p, vec3 normal, vec3 sun_direction) {
   return GetSkyIlluminance(p, normal, sun_direction);
   #else
   return GetSkyIrradiance(p, normal, sun_direction);
-  #endif
+  #endif // PHOTOMETRIC
 }

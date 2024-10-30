@@ -22,7 +22,8 @@ const vertexShader =
           flat out vec3 vNormal;
           #else
           out vec3 vNormal;
-          #endif
+          #endif // OCT_NORMAL_FLAT_SHADED
+
           attribute float packedOctNormal;
           ${octNormal}
         `
@@ -44,7 +45,7 @@ const fragmentShader =
         flat in vec3 vNormal;
         #else
         in vec3 vNormal;
-        #endif
+        #endif // OCT_NORMAL_FLAT_SHADED
       `
     )
   )

@@ -68,19 +68,6 @@ export class NormalEffect extends Effect {
     this.camera = value
   }
 
-  initialize(
-    renderer: WebGLRenderer,
-    alpha: boolean,
-    frameBufferType: number
-  ): void {
-    super.initialize(renderer, alpha, frameBufferType)
-    if (renderer.capabilities.logarithmicDepthBuffer) {
-      this.defines.set('LOG_DEPTH', '1')
-    } else {
-      this.defines.delete('LOG_DEPTH')
-    }
-  }
-
   update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,

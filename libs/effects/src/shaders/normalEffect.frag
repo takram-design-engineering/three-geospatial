@@ -4,14 +4,14 @@ uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 
 float reverseLogDepth(const float depth) {
-  #ifdef LOG_DEPTH
+  #ifdef USE_LOGDEPTHBUF
   float d = pow(2.0, depth * log2(cameraFar + 1.0)) - 1.0;
   float a = cameraFar / (cameraFar - cameraNear);
   float b = cameraFar * cameraNear / (cameraNear - cameraFar);
   return a + b / d;
   #else
   return depth;
-  #endif
+  #endif // USE_LOGDEPTHBUF
 }
 
 vec3 screenToView(const vec2 uv, const float depth, const float viewZ) {
@@ -35,7 +35,7 @@ vec3 readNormal(const vec2 uv) {
   return unpackVec2ToNormal(texture2D(normalBuffer, uv).xy);
   #else
   return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
-  #endif
+  #endif // OCT_ENCODED
 }
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
@@ -43,6 +43,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 normal = reconstructNormal(uv);
   #else
   vec3 normal = readNormal(uv);
-  #endif
+  #endif // RECONSTRUCT_FROM_DEPTH
+
   outputColor = vec4(normal * 0.5 + 0.5, inputColor.a);
 }

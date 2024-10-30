@@ -3,7 +3,7 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
-import { Uniform, type WebGLRenderer } from 'three'
+import { Uniform } from 'three'
 
 import fragmentShader from './shaders/depthEffect.frag'
 
@@ -37,19 +37,6 @@ export class DepthEffect extends Effect {
       ])
     })
     this.useTurbo = useTurbo
-  }
-
-  initialize(
-    renderer: WebGLRenderer,
-    alpha: boolean,
-    frameBufferType: number
-  ): void {
-    super.initialize(renderer, alpha, frameBufferType)
-    if (renderer.capabilities.logarithmicDepthBuffer) {
-      this.defines.set('LOG_DEPTH', '1')
-    } else {
-      this.defines.delete('LOG_DEPTH')
-    }
   }
 
   get useTurbo(): boolean {

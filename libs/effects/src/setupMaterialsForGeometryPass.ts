@@ -86,7 +86,7 @@ function injectGBuffer(
   if (type === 'basic') {
     injectNormal(shader)
   }
-  const outputNormalPBR =
+  const outputBuffer1 =
     type === 'physical'
       ? /* glsl */ `
           vec4(
@@ -103,7 +103,7 @@ function injectGBuffer(
           );
         `
   shader.fragmentShader = /* glsl */ `
-    layout(location = 1) out vec4 outputNormalPBR;
+    layout(location = 1) out vec4 outputBuffer1;
 
     #ifndef USE_ENVMAP
       uniform float reflectivity;
@@ -113,7 +113,7 @@ function injectGBuffer(
     ${shader.fragmentShader.replace(
       /}\s*$/m, // Assume the last curly brace is of main()
       /* glsl */ `
-          outputNormalPBR = ${outputNormalPBR};
+          outputBuffer1 = ${outputBuffer1};
         }
       `
     )}
