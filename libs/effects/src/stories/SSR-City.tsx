@@ -193,6 +193,8 @@ const Scene: FC = () => {
           depth={5}
           computeVertexNormals
           material={terrainMaterial}
+          castShadow
+          receiveShadow
         />
       </Suspense>
       {effectComposer}
