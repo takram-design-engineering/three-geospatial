@@ -2,7 +2,7 @@ import { type MeshProps } from '@react-three/fiber'
 import { sumBy } from 'lodash'
 import { forwardRef, memo, useEffect, useMemo } from 'react'
 import { clear, suspend } from 'suspend-react'
-import { BatchedMesh } from 'three'
+import { BatchedMesh, Matrix4, Vector3 } from 'three'
 
 import {
   isNotNullish,
@@ -11,6 +11,9 @@ import {
 } from '@geovanni/core'
 
 import { type IonTerrain } from '../IonTerrain'
+
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
 
 export interface BatchedTerrainTileProps extends TileCoordinateLike, MeshProps {
   terrain: IonTerrain
@@ -32,7 +35,7 @@ export const BatchedTerrainTile = memo(
     },
     forwardedRef
   ) {
-    const geometries = suspend(async () => {
+    const results = suspend(async () => {
       const promises = []
       const tile = new TileCoordinate(x, y, z)
       for (const child of tile.traverseChildren(depth, tile)) {
@@ -54,11 +57,11 @@ export const BatchedTerrainTile = memo(
 
     useEffect(() => {
       return () => {
-        geometries.forEach(geometry => {
+        results.forEach(({ geometry }) => {
           geometry.dispose()
         })
       }
-    }, [geometries])
+    }, [results])
 
     useEffect(() => {
       return () => {
@@ -68,15 +71,15 @@ export const BatchedTerrainTile = memo(
 
     const mesh = useMemo(() => {
       const vertexCount = sumBy(
-        geometries,
-        geometry => geometry.getAttribute('position').count
+        results,
+        ({ geometry }) => geometry.getAttribute('position').count
       )
       const indexCount = sumBy(
-        geometries,
-        geometry => geometry.index?.count ?? 0
+        results,
+        ({ geometry }) => geometry.index?.count ?? 0
       )
-      return new BatchedMesh(geometries.length, vertexCount, indexCount)
-    }, [geometries])
+      return new BatchedMesh(results.length, vertexCount, indexCount)
+    }, [results])
 
     useEffect(() => {
       return () => {
@@ -85,12 +88,25 @@ export const BatchedTerrainTile = memo(
     }, [mesh])
 
     useEffect(() => {
-      // TODO: Perhaps geometries no longer needed after adding them to mesh.
-      for (const geometry of geometries) {
+      // TODO: Perhaps geometries no longer needed (free to dispose) after
+      // adding them to mesh.
+
+      const meshPosition = results
+        .reduce((sum, { position }) => sum.add(position), vectorScratch1)
+        .divideScalar(results.length)
+
+      for (const { geometry, position } of results) {
         const geometryId = mesh.addGeometry(geometry)
         mesh.addInstance(geometryId)
+        mesh.setMatrixAt(
+          geometryId,
+          new Matrix4().makeTranslation(
+            vectorScratch2.copy(position).sub(meshPosition)
+          )
+        )
       }
-    }, [mesh, geometries])
+      mesh.position.copy(meshPosition)
+    }, [mesh, results])
 
     return (
       <primitive object={mesh} ref={forwardedRef} {...props}>

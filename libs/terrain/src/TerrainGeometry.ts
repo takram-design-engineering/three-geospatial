@@ -16,16 +16,24 @@ const geodeticScratch = /*#__PURE__*/ new Geodetic()
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export class TerrainGeometry extends BufferGeometry {
+  position: Vector3
+
   constructor(
     readonly data: QuantizedMeshData,
     rectangle: Rectangle
   ) {
     super()
 
-    const { vertexData, triangleIndices, extensions } = data
+    const { header, vertexData, triangleIndices, extensions } = data
     if (vertexData == null || triangleIndices == null) {
       throw new Error()
     }
+
+    this.position = new Vector3(
+      header.boundingSphereCenterX,
+      header.boundingSphereCenterY,
+      header.boundingSphereCenterZ
+    )
 
     const index = new BufferAttribute(triangleIndices, 1)
     this.setIndex(index)
@@ -48,14 +56,7 @@ export class TerrainGeometry extends BufferGeometry {
 
   override computeBoundingSphere(): void {
     const { header } = this.data
-    this.boundingSphere = new Sphere(
-      new Vector3(
-        header.boundingSphereCenterX,
-        header.boundingSphereCenterY,
-        header.boundingSphereCenterZ
-      ),
-      header.boundingSphereRadius
-    )
+    this.boundingSphere = new Sphere(new Vector3(), header.boundingSphereRadius)
   }
 
   override computeVertexNormals(): void {
@@ -110,7 +111,7 @@ export class TerrainGeometry extends BufferGeometry {
       geodeticScratch.longitude = lerp(west, east, u / 0x7fff)
       geodeticScratch.latitude = lerp(south, north, v / 0x7fff)
       geodeticScratch.height = lerp(minHeight, maxHeight, height / 0x7fff)
-      const position = geodeticScratch.toECEF(vectorScratch)
+      const position = geodeticScratch.toECEF(vectorScratch).sub(this.position)
       array[index] = position.x
       array[index + 1] = position.y
       array[index + 2] = position.z

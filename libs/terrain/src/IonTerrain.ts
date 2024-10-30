@@ -1,7 +1,7 @@
 // cSpell:words minzoom maxzoom octvertexnormals watermask
 
 import stringTemplate from 'string-template'
-import { type BufferGeometry } from 'three'
+import { Vector3, type BufferGeometry } from 'three'
 
 import {
   fromBufferGeometryLike,
@@ -67,13 +67,19 @@ export class IonTerrain extends IonAsset {
   async createGeometry(
     coordinate: TileCoordinateLike,
     computeVertexNormals?: boolean
-  ): Promise<BufferGeometry> {
+  ): Promise<{
+    geometry: BufferGeometry
+    position: Vector3
+  }> {
     const result = await queueTask('createTerrainGeometry', [
       await this.fetchTile(coordinate),
       this.tilingScheme,
       coordinate,
       computeVertexNormals
     ])
-    return fromBufferGeometryLike(result)
+    return {
+      geometry: fromBufferGeometryLike(result.geometry),
+      position: new Vector3().copy(result.position)
+    }
   }
 }
