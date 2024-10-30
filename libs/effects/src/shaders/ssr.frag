@@ -1,3 +1,4 @@
+#include <common>
 #include <packing>
 
 uniform highp sampler2D inputBuffer;
@@ -24,7 +25,18 @@ float readDepth(const vec2 uv) {
   return unpackRGBAToDepth(texture2D(depthBuffer, uv));
   #else
   return texture2D(depthBuffer, uv).r;
-  #endif
+  #endif // DEPTH_PACKING == 3201
+}
+
+float reverseLogDepth(const float depth) {
+  #ifdef USE_LOGDEPTHBUF
+  float d = pow(2.0, depth * log2(cameraFar + 1.0)) - 1.0;
+  float a = cameraFar / (cameraFar - cameraNear);
+  float b = cameraFar * cameraNear / (cameraNear - cameraFar);
+  return a + b / d;
+  #else
+  return depth;
+  #endif // USE_LOGDEPTHBUF
 }
 
 float getViewZ(const float depth) {
@@ -32,7 +44,7 @@ float getViewZ(const float depth) {
   return perspectiveDepthToViewZ(depth, cameraNear, cameraFar);
   #else
   return orthographicDepthToViewZ(depth, cameraNear, cameraFar);
-  #endif
+  #endif // PERSPECTIVE_CAMERA
 }
 
 vec3 getViewPosition(const vec2 uv, const float depth, const float clipW) {
@@ -59,21 +71,51 @@ float pointPlaneDistance(vec3 point, vec3 P, vec3 N) {
   return (dot(N, point) - dot(N, P)) / sqrt(dot(N, N));
 }
 
+// TODO: Use blue noise.
+vec2 whiteNoise(vec3 v) {
+  v = fract(v * vec3(443.897, 441.423, 0.0973));
+  v += dot(v, v.yzx + 19.19);
+  return fract((v.xx + v.yz) * v.zy);
+}
+
+// Source: https://github.com/tuxalin/vulkanri/blob/master/examples/pbr_ibl/shaders/importanceSampleGGX.glsl
+vec3 sampleGGX(const vec3 n, const vec2 u, float roughness) {
+  float alpha = roughness * roughness;
+  float alpha2 = alpha * alpha;
+
+  float phi = 2.0 * PI * u.x;
+  float cosTheta = sqrt((1.0 - u.y) / (1.0 + (alpha2 - 1.0) * u.y));
+  float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+
+  vec3 H;
+  H.x = cos(phi) * sinTheta;
+  H.y = sin(phi) * sinTheta;
+  H.z = cosTheta;
+
+  vec3 up = abs(n.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+  vec3 tangent = normalize(cross(up, n));
+  vec3 bitangent = cross(n, tangent);
+
+  vec3 sampleVec = tangent * H.x + bitangent * H.y + n * H.z;
+  return normalize(sampleVec);
+}
+
 void main() {
   vec4 geometry = texture2D(geometryBuffer, vUv);
   float metalness = geometry.z;
+  float roughness = geometry.w;
   if (metalness < 0.01) {
     return;
   }
 
   float depth = readDepth(vUv);
-  float viewZ = getViewZ(depth);
-  if (-viewZ >= cameraFar) {
+  if (depth > 0.9999) {
     return;
   }
+  depth = reverseLogDepth(depth);
 
+  float viewZ = getViewZ(depth);
   vec3 viewPosition = screenToView(vUv, depth, viewZ);
-
   vec3 viewNormal = unpackVec2ToNormal(geometry.xy);
 
   #ifdef PERSPECTIVE_CAMERA
@@ -82,7 +124,13 @@ void main() {
   #else
   vec3 viewIncidentDir = vec3(0.0, 0.0, -1.0);
   vec3 viewReflectDir = reflect(viewIncidentDir, viewNormal);
-  #endif
+  #endif // PERSPECTIVE_CAMERA
+
+  viewReflectDir = sampleGGX(
+    viewReflectDir,
+    whiteNoise(vec3(vUv, 0.0)),
+    roughness
+  );
 
   float maxReflectRayLen = maxDistance / dot(-viewIncidentDir, viewNormal);
   // dot(a,b)==length(a)*length(b)*cos(theta) // https://www.mathsisfun.com/algebra/vectors-dot-product.html
@@ -98,7 +146,7 @@ void main() {
     float t = (-cameraNear - viewPosition.z) / viewReflectDir.z;
     d1viewPosition = viewPosition + viewReflectDir * t;
   }
-  #endif
+  #endif // PERSPECTIVE_CAMERA
 
   vec2 d0 = gl_FragCoord.xy;
   vec2 d1 = viewPositionToXY(d1viewPosition);
@@ -125,11 +173,11 @@ void main() {
     float s = length(xy - d0) / totalLen;
     vec2 uv = xy / resolution;
 
-    float d = readDepth(uv);
-    float vZ = getViewZ(d);
-    if (-vZ >= cameraFar) {
+    float d = reverseLogDepth(readDepth(uv));
+    if (d > 0.9999) {
       continue;
     }
+    float vZ = getViewZ(d);
     float cW = projectionMatrix[2][3] * vZ + projectionMatrix[3][3];
     vec3 vP = getViewPosition(uv, d, cW);
 

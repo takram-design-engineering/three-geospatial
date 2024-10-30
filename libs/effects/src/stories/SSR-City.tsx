@@ -155,10 +155,10 @@ const Scene: FC = () => {
     const material = new MeshPhysicalMaterial({
       color: 'gray',
       metalness: 0.2,
-      normalMap
+      roughness: 0.1
     })
     return material
-  }, [normalMap])
+  }, [])
 
   const [target, setTarget] = useState<Object3D | null>(null)
   return (
@@ -210,7 +210,7 @@ export const City: StoryFn = () => {
         antialias: false,
         depth: false,
         stencil: false,
-        logarithmicDepthBuffer: false,
+        logarithmicDepthBuffer: true,
         toneMappingExposure: 10
       }}
       camera={{
