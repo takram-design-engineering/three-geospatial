@@ -10,6 +10,7 @@ import {
   ShaderPass
 } from 'postprocessing'
 import {
+  HalfFloatType,
   Uniform,
   WebGLRenderTarget,
   type Camera,
@@ -20,13 +21,17 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { SSRMaterial } from './SSRMaterial'
+import {
+  SSRMaterial,
+  ssrMaterialParametersDefaults,
+  type SSRMaterialParameters
+} from './SSRMaterial'
 
 import fragmentShader from './shaders/ssrEffect.frag'
 
-export interface SSREffectOptions {
+export interface SSREffectOptions
+  extends Omit<SSRMaterialParameters, 'inputBuffer' | 'depthBuffer'> {
   blendFunction?: BlendFunction
-  geometryBuffer?: Texture | null
   resolutionScale?: number
   width?: number
   height?: number
@@ -55,8 +60,10 @@ export class SSREffect extends Effect {
       width,
       height,
       resolutionX = width,
-      resolutionY = height
+      resolutionY = height,
+      ...others
     } = {
+      ...ssrMaterialParametersDefaults,
       ...ssrEffectOptionsDefaults,
       ...options
     }
@@ -68,11 +75,12 @@ export class SSREffect extends Effect {
 
     this.renderTarget = new WebGLRenderTarget(1, 1, {
       depthBuffer: false,
-      stencilBuffer: false
+      stencilBuffer: false,
+      type: HalfFloatType
     })
     this.renderTarget.texture.name = 'SSR.Reflection'
 
-    this.ssrMaterial = new SSRMaterial()
+    this.ssrMaterial = new SSRMaterial(others)
     this.ssrPass = new ShaderPass(this.ssrMaterial)
     this.ssrMaterial.geometryBuffer = geometryBuffer ?? null
 
@@ -147,27 +155,91 @@ export class SSREffect extends Effect {
     this.ssrMaterial.geometryBuffer = value
   }
 
-  get maxSteps(): number {
-    return this.ssrMaterial.maxSteps
+  get iterations(): number {
+    return this.ssrMaterial.uniforms.iterations.value
   }
 
-  set maxSteps(value: number) {
-    this.ssrMaterial.maxSteps = value
+  set iterations(value: number) {
+    this.ssrMaterial.uniforms.iterations.value = value
   }
 
-  get maxDistance(): number {
-    return this.ssrMaterial.maxDistance
+  get binarySearchIterations(): number {
+    return this.ssrMaterial.uniforms.binarySearchIterations.value
   }
 
-  set maxDistance(value: number) {
-    this.ssrMaterial.maxDistance = value
+  set binarySearchIterations(value: number) {
+    this.ssrMaterial.uniforms.binarySearchIterations.value = value
   }
 
-  get thickness(): number {
-    return this.ssrMaterial.thickness
+  get pixelZSize(): number {
+    return this.ssrMaterial.uniforms.pixelZSize.value
   }
 
-  set thickness(value: number) {
-    this.ssrMaterial.thickness = value
+  set pixelZSize(value: number) {
+    this.ssrMaterial.uniforms.pixelZSize.value = value
+  }
+
+  get pixelStride(): number {
+    return this.ssrMaterial.uniforms.pixelStride.value
+  }
+
+  set pixelStride(value: number) {
+    this.ssrMaterial.uniforms.pixelStride.value = value
+  }
+
+  get pixelStrideZCutoff(): number {
+    return this.ssrMaterial.uniforms.pixelStrideZCutoff.value
+  }
+
+  set pixelStrideZCutoff(value: number) {
+    this.ssrMaterial.uniforms.pixelStrideZCutoff.value = value
+  }
+
+  get maxRayDistance(): number {
+    return this.ssrMaterial.uniforms.maxRayDistance.value
+  }
+
+  set maxRayDistance(value: number) {
+    this.ssrMaterial.uniforms.maxRayDistance.value = value
+  }
+
+  get screenEdgeFadeStart(): number {
+    return this.ssrMaterial.uniforms.screenEdgeFadeStart.value
+  }
+
+  set screenEdgeFadeStart(value: number) {
+    this.ssrMaterial.uniforms.screenEdgeFadeStart.value = value
+  }
+
+  get eyeFadeStart(): number {
+    return this.ssrMaterial.uniforms.eyeFadeStart.value
+  }
+
+  set eyeFadeStart(value: number) {
+    this.ssrMaterial.uniforms.eyeFadeStart.value = value
+  }
+
+  get eyeFadeEnd(): number {
+    return this.ssrMaterial.uniforms.eyeFadeEnd.value
+  }
+
+  set eyeFadeEnd(value: number) {
+    this.ssrMaterial.uniforms.eyeFadeEnd.value = value
+  }
+
+  get jitter(): number {
+    return this.ssrMaterial.uniforms.jitter.value
+  }
+
+  set jitter(value: number) {
+    this.ssrMaterial.uniforms.jitter.value = value
+  }
+
+  get roughness(): number {
+    return this.ssrMaterial.uniforms.roughness.value
+  }
+
+  set roughness(value: number) {
+    this.ssrMaterial.uniforms.roughness.value = value
   }
 }

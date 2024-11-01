@@ -23,15 +23,42 @@ export interface SSRMaterialParameters extends ShaderMaterialParameters {
   inputBuffer?: Texture | null
   geometryBuffer?: Texture | null
   depthBuffer?: Texture | null
-  maxSteps?: number
-  maxDistance?: number
-  thickness?: number
+
+  // Maximum ray iterations
+  iterations?: number
+  // Maximum binary search refinement iterations
+  binarySearchIterations?: number
+  // Z size in camera space of a pixel in the depth buffer = Thickness
+  pixelZSize?: number
+  // Number of pixels per ray step close to camera
+  pixelStride?: number
+  // Ray origin Z at this distance will have a pixel stride of 1
+  pixelStrideZCutoff?: number
+  // Maximum distance of a ray
+  maxRayDistance?: number
+  // Distance to screen edge that ray hits will start to fade
+  screenEdgeFadeStart?: number
+  // Ray direction's Z that ray hits will start to fade
+  eyeFadeStart?: number
+  // Ray direction's Z that ray hits will be cut
+  eyeFadeEnd?: number
+
+  jitter?: number
+  roughness?: number
 }
 
 export const ssrMaterialParametersDefaults = {
-  maxSteps: 500,
-  maxDistance: 100,
-  thickness: 0.01
+  iterations: 200,
+  binarySearchIterations: 4,
+  pixelZSize: 0.02,
+  pixelStride: 1,
+  pixelStrideZCutoff: 100,
+  maxRayDistance: 10,
+  screenEdgeFadeStart: 0.75,
+  eyeFadeStart: 0,
+  eyeFadeEnd: 1,
+  jitter: 0,
+  roughness: 0
 } satisfies SSRMaterialParameters
 
 export class SSRMaterial extends ShaderMaterial {
@@ -40,9 +67,17 @@ export class SSRMaterial extends ShaderMaterial {
       inputBuffer,
       geometryBuffer,
       depthBuffer,
-      maxSteps,
-      maxDistance,
-      thickness,
+      iterations,
+      binarySearchIterations,
+      pixelZSize,
+      pixelStride,
+      pixelStrideZCutoff,
+      maxRayDistance,
+      screenEdgeFadeStart,
+      eyeFadeStart,
+      eyeFadeEnd,
+      jitter,
+      roughness,
       ...others
     } = {
       ...ssrMaterialParametersDefaults,
@@ -61,15 +96,26 @@ export class SSRMaterial extends ShaderMaterial {
         depthBuffer: new Uniform(depthBuffer ?? null),
         projectionMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
+        resolution: new Uniform(new Vector2()),
+        texelSize: new Uniform(new Vector2()),
         cameraNear: new Uniform(0),
         cameraFar: new Uniform(1),
-        resolution: new Uniform(new Vector2()),
-        maxDistance: new Uniform(maxDistance),
-        thickness: new Uniform(thickness)
+        iterations: new Uniform(iterations),
+        binarySearchIterations: new Uniform(binarySearchIterations),
+        pixelZSize: new Uniform(pixelZSize),
+        pixelStride: new Uniform(pixelStride),
+        pixelStrideZCutoff: new Uniform(pixelStrideZCutoff),
+        maxRayDistance: new Uniform(maxRayDistance),
+        screenEdgeFadeStart: new Uniform(screenEdgeFadeStart),
+        eyeFadeStart: new Uniform(eyeFadeStart),
+        eyeFadeEnd: new Uniform(eyeFadeEnd),
+        jitter: new Uniform(jitter),
+        roughness: new Uniform(roughness)
       },
       defines: {
         DEPTH_PACKING: '0',
-        MAX_STEPS: `${maxSteps}`
+        MAX_ITERATIONS: '1000',
+        MAX_BINARY_SEARCH_ITERATIONS: '64'
       },
       blending: NoBlending,
       toneMapped: false,
@@ -81,6 +127,7 @@ export class SSRMaterial extends ShaderMaterial {
 
   setSize(width: number, height: number): void {
     this.uniforms.resolution.value.set(width, height)
+    this.uniforms.texelSize.value.set(1 / width, 1 / height)
   }
 
   copyCameraSettings(camera?: Camera | null): void {
@@ -95,11 +142,16 @@ export class SSRMaterial extends ShaderMaterial {
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
 
     if (camera instanceof PerspectiveCamera) {
-      this.defines.PERSPECTIVE_CAMERA = '1'
+      if (this.defines.PERSPECTIVE_CAMERA !== '1') {
+        this.defines.PERSPECTIVE_CAMERA = '1'
+        this.needsUpdate = true
+      }
     } else {
-      delete this.defines.PERSPECTIVE_CAMERA
+      if (this.defines.PERSPECTIVE_CAMERA != null) {
+        delete this.defines.PERSPECTIVE_CAMERA
+        this.needsUpdate = true
+      }
     }
-    this.needsUpdate = true
   }
 
   get inputBuffer(): Texture | null {
@@ -135,32 +187,5 @@ export class SSRMaterial extends ShaderMaterial {
       this.defines.DEPTH_PACKING = `${value}`
       this.needsUpdate = true
     }
-  }
-
-  get maxSteps(): number {
-    return +this.defines.MAX_STEPS
-  }
-
-  set maxSteps(value: number) {
-    if (value !== this.maxSteps) {
-      this.defines.MAX_STEPS = `${value}`
-      this.needsUpdate = true
-    }
-  }
-
-  get maxDistance(): number {
-    return this.uniforms.maxDistance.value
-  }
-
-  set maxDistance(value: number) {
-    this.uniforms.maxDistance.value = value
-  }
-
-  get thickness(): number {
-    return this.uniforms.thickness.value
-  }
-
-  set thickness(value: number) {
-    this.uniforms.thickness.value = value
   }
 }
