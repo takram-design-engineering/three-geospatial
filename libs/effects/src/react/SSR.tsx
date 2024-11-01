@@ -2,30 +2,30 @@ import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
 import {
-  GeometryEffect,
-  geometryEffectOptionsDefaults,
-  type GeometryEffectOptions
-} from '../GeometryEffect'
+  SSREffect,
+  ssrEffectOptionsDefaults,
+  type SSREffectOptions
+} from '../SSREffect'
 import { type EffectComposerContextValue } from './EffectComposer'
 import { type EffectProps } from './types'
 
-export interface GeometryProps
-  extends EffectProps<typeof GeometryEffect, GeometryEffectOptions> {}
+export interface SSRProps
+  extends EffectProps<typeof SSREffect, SSREffectOptions> {}
 
-export const Geometry = forwardRef<GeometryEffect, GeometryProps>(
-  function Geometry(props, forwardedRef) {
+export const SSR = forwardRef<SSREffect, SSRProps>(
+  function SSR(props, forwardedRef) {
     const { blendFunction, ...others } = {
-      ...geometryEffectOptionsDefaults,
+      ...ssrEffectOptionsDefaults,
       ...props
     }
 
-    const { geometryPass } = useContext(
+    const { geometryPass, camera } = useContext(
       EffectComposerContext
     ) as EffectComposerContextValue
 
     const effect = useMemo(
-      () => new GeometryEffect({ blendFunction }),
-      [blendFunction]
+      () => new SSREffect(camera, { blendFunction }),
+      [camera, blendFunction]
     )
     useEffect(() => {
       return () => {
@@ -37,6 +37,7 @@ export const Geometry = forwardRef<GeometryEffect, GeometryProps>(
       <primitive
         ref={forwardedRef}
         object={effect}
+        mainCamera={camera}
         geometryBuffer={geometryPass?.geometryTexture}
         {...others}
       />

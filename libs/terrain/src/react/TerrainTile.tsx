@@ -27,11 +27,13 @@ export const TerrainTile = memo(
       }
       let geometry: BufferGeometry | undefined
       ;(async () => {
-        geometry = await terrain.createGeometry(
+        const result = await terrain.createGeometry(
           { x, y, z },
           computeVertexNormals
         )
-        mesh.geometry = geometry
+        mesh.geometry = result.geometry
+        mesh.position.copy(result.position)
+        geometry = result.geometry
       })().catch(error => {
         console.error(error)
       })

@@ -15,7 +15,7 @@ const uniforms = /* glsl */ `
     uniform vec2 csmCascades[CSM_CASCADE_COUNT];
     uniform float csmNear;
     uniform float csmFar;
-  #endif
+  #endif // CSM
 `
 
 function body(shader: string): string {
@@ -35,18 +35,18 @@ const directionalLights = /* glsl */ `
           ${body(cascadedFadedLights)}
         #else
           ${body(cascadedLights)}
-        #endif
+        #endif // CSM_FADE
       #elif NUM_DIR_LIGHT_SHADOWS > 0
         ${body(cascadedLightsWithoutShadows)}
-      #endif
+      #endif // USE_SHADOWMAP
 
       #if NUM_DIR_LIGHTS > NUM_DIR_LIGHT_SHADOWS
         ${body(nonShadowCastingLights)}
       #endif
     #else
       ${body(defaultLights)}
-    #endif
-  #endif
+    #endif // CSM
+  #endif // NUM_DIR_LIGHTS > 0 && defined(RE_Direct)
 `
 
 interface ReplaceRangeParams {

@@ -8,5 +8,6 @@ export * from './GeometryPass'
 export * from './LensFlareEffect'
 export * from './NormalEffect'
 export * from './setupMaterialsForGeometryPass'
+export * from './SSREffect'
 
 export const shaders = { packing }

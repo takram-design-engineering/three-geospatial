@@ -1,6 +1,7 @@
 /* eslint-env worker */
 
 import decode from '@here/quantized-mesh-decoder'
+import { type Vector3Like } from 'three'
 
 import {
   Rectangle,
@@ -20,7 +21,10 @@ export function createTerrainGeometry(
   tilingSchemeLike: TilingSchemeLike,
   { x, y, z }: TileCoordinateLike,
   computeVertexNormals = true
-): TransferResult<TerrainGeometry> {
+): TransferResult<{
+  geometry: TerrainGeometry
+  position: Vector3Like
+}> {
   const decoded = decode(data)
 
   // TODO: Make tms coordinate conversion generic.
@@ -35,5 +39,11 @@ export function createTerrainGeometry(
     geometry.computeVertexNormals()
   }
   const [geometryLike, transfer] = toBufferGeometryLike(geometry)
-  return Transfer(geometryLike, transfer)
+  return Transfer(
+    {
+      geometry: geometryLike,
+      position: geometry.position
+    },
+    transfer
+  )
 }

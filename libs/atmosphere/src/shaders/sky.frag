@@ -8,7 +8,7 @@ in vec3 vWorldDirection;
 in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
-layout(location = 1) out vec4 outputNormalPBR;
+layout(location = 1) out vec4 outputBuffer1; // TODO
 
 vec3 GetLunarRadiance() {
   // Not a physical number but the order of 10^-6 relative to the sun may fit.
@@ -27,7 +27,7 @@ vec3 GetLunarRadLum() {
   return GetLunarLuminance();
   #else
   return GetLunarRadiance();
-  #endif
+  #endif // PHOTOMETRIC
 }
 
 float intersectSphere(vec3 ray, vec3 point, float radius) {
@@ -73,7 +73,7 @@ void main() {
     );
     radLum += transmittance * GetSolarRadLum() * antialias;
   }
-  #endif
+  #endif // SUN
 
   #ifdef MOON
   float intersection = intersectSphere(
@@ -93,8 +93,8 @@ void main() {
     );
     radLum += transmittance * GetLunarRadLum() * diffuse * antialias;
   }
-  #endif
+  #endif // MOON
 
   outputColor = vec4(radLum, 1.0);
-  outputNormalPBR = vec4(0.0);
+  outputBuffer1 = vec4(0.0);
 }

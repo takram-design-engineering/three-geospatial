@@ -12,19 +12,15 @@ varying vec3 vWorldPosition;
 varying vec3 vEllipsoidCenter;
 varying vec3 vEllipsoidRadiiSquared;
 
-#ifndef DEPTH_THRESHOLD
-#define DEPTH_THRESHOLD (1.0 - EPSILON)
-#endif
-
 float reverseLogDepth(const float depth) {
-  #ifdef LOG_DEPTH
+  #ifdef USE_LOGDEPTHBUF
   float d = pow(2.0, depth * log2(cameraFar + 1.0)) - 1.0;
   float a = cameraFar / (cameraFar - cameraNear);
   float b = cameraFar * cameraNear / (cameraNear - cameraFar);
   return a + b / d;
   #else
   return depth;
-  #endif
+  #endif // USE_LOGDEPTHBUF
 }
 
 vec3 screenToView(const vec2 uv, const float depth, const float viewZ) {
@@ -39,7 +35,7 @@ vec3 readNormal(const vec2 uv) {
   return unpackVec2ToNormal(texture2D(normalBuffer, uv).xy);
   #else
   return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
-  #endif
+  #endif // OCT_ENCODED_NORMAL
 }
 
 void morphToSphere(
@@ -107,7 +103,7 @@ void transmittanceInscatter(
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
-  if (depth > DEPTH_THRESHOLD) {
+  if (depth > 0.9999) {
     // TODO: Compute sky radiance here to reduce the total number of texels to
     // ray-march.
     outputColor = inputColor;

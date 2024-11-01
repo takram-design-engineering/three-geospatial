@@ -49,8 +49,7 @@ export class NormalEffect extends Effect {
         uniforms: new Map<string, Uniform>([
           ['normalBuffer', new Uniform(normalBuffer)],
           ['projectionMatrix', new Uniform(new Matrix4())],
-          ['inverseProjectionMatrix', new Uniform(new Matrix4())],
-          ['inverseViewMatrix', new Uniform(new Matrix4())]
+          ['inverseProjectionMatrix', new Uniform(new Matrix4())]
         ])
       }
     )
@@ -69,19 +68,6 @@ export class NormalEffect extends Effect {
     this.camera = value
   }
 
-  initialize(
-    renderer: WebGLRenderer,
-    alpha: boolean,
-    frameBufferType: number
-  ): void {
-    super.initialize(renderer, alpha, frameBufferType)
-    if (renderer.capabilities.logarithmicDepthBuffer) {
-      this.defines.set('LOG_DEPTH', '1')
-    } else {
-      this.defines.delete('LOG_DEPTH')
-    }
-  }
-
   update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
@@ -90,12 +76,10 @@ export class NormalEffect extends Effect {
     const uniforms = this.uniforms
     const projectionMatrix = uniforms.get('projectionMatrix')!
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
-    const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
     const camera = this.camera
     if (camera != null) {
       projectionMatrix.value.copy(camera.projectionMatrix)
       inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
-      inverseViewMatrix.value.copy(camera.matrixWorld)
     }
   }
 

@@ -12,7 +12,7 @@ import {
 import { setupMaterialsForGeometryPass } from './setupMaterialsForGeometryPass'
 
 export class GeometryPass extends RenderPass {
-  readonly normalPBRTexture: Texture
+  readonly geometryTexture: Texture
 
   constructor(
     inputBuffer: WebGLRenderTarget,
@@ -21,11 +21,11 @@ export class GeometryPass extends RenderPass {
     overrideMaterial?: Material
   ) {
     super(scene, camera, overrideMaterial)
-    this.normalPBRTexture = inputBuffer.texture.clone()
-    this.normalPBRTexture.isRenderTargetTexture = true
+    this.geometryTexture = inputBuffer.texture.clone()
+    this.geometryTexture.isRenderTargetTexture = true
     // We could use UnsignedByteType but it causes banding in aerial
     // perspective's lighting.
-    this.normalPBRTexture.type = HalfFloatType
+    this.geometryTexture.type = HalfFloatType
 
     setupMaterialsForGeometryPass()
   }
@@ -38,7 +38,7 @@ export class GeometryPass extends RenderPass {
     stencilTest?: boolean
   ): void {
     if (inputBuffer != null) {
-      inputBuffer.textures[1] = this.normalPBRTexture
+      inputBuffer.textures[1] = this.geometryTexture
     }
     super.render(renderer, inputBuffer, null)
     if (inputBuffer != null) {
@@ -47,7 +47,7 @@ export class GeometryPass extends RenderPass {
   }
 
   setSize(width: number, height: number): void {
-    this.normalPBRTexture.image.width = width
-    this.normalPBRTexture.image.height = height
+    this.geometryTexture.image.width = width
+    this.geometryTexture.image.height = height
   }
 }

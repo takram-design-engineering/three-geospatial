@@ -2,7 +2,6 @@ import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
 import { Suspense, type FC } from 'react'
-import { MeshNormalMaterial } from 'three'
 
 import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
 
@@ -21,8 +20,6 @@ const terrain = new IonTerrain({
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
 
-const terrainMaterial = new MeshNormalMaterial()
-
 const Scene: FC = () => {
   return (
     <>
@@ -36,7 +33,6 @@ const Scene: FC = () => {
           {...tile}
           depth={5}
           computeVertexNormals
-          material={terrainMaterial}
         >
           <meshNormalMaterial />
         </BatchedTerrainTile>
