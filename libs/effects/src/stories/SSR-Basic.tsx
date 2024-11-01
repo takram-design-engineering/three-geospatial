@@ -1,4 +1,12 @@
-import { Box, Cone, Icosahedron, OrbitControls, Plane } from '@react-three/drei'
+import { ClassNames } from '@emotion/react'
+import {
+  Box,
+  Cone,
+  Icosahedron,
+  OrbitControls,
+  Plane,
+  StatsGl
+} from '@react-three/drei'
 import { applyProps, Canvas, useLoader } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
@@ -23,33 +31,28 @@ const Scene: FC = () => {
     bunnyGeometry.computeVertexNormals()
   }, [bunnyGeometry])
 
-  const { enabled, maxSteps, maxDistance, thickness } = useControls({
+  const { enabled, ...ssrParams } = useControls('ssr', {
     enabled: true,
-    maxSteps: {
-      value: 500,
-      min: 0,
-      max: 1000
-    },
-    maxDistance: {
-      value: 100,
-      min: 0,
-      max: 1000
-    },
-    thickness: {
-      value: 0.01,
-      min: 0,
-      max: 1
-    }
+    iterations: { value: 200, min: 0, max: 1000 },
+    binarySearchIterations: { value: 4, min: 0, max: 64 },
+    pixelZSize: { value: 0.02, min: 0, max: 10, step: 0.01 },
+    pixelStride: { value: 1, min: 0, max: 64 },
+    pixelStrideZCutoff: { value: 100, min: 0, max: 1000 },
+    maxRayDistance: { value: 10, min: 0, max: 1000 },
+    screenEdgeFadeStart: { value: 0.75, min: 0, max: 1 },
+    eyeFadeStart: { value: 0, min: 0, max: 1 },
+    eyeFadeEnd: { value: 1, min: 0, max: 1 },
+    jitter: { value: 0, min: 0, max: 1 }
   })
 
   const ssrRef = useRef<SSREffect | null>(null)
   if (ssrRef.current != null) {
-    applyProps(ssrRef.current, { maxSteps, maxDistance, thickness })
+    applyProps(ssrRef.current, ssrParams)
   }
 
   const effectComposer = useMemo(
     () => (
-      <EffectComposer key={Math.random()}>
+      <EffectComposer key={Math.random()} multisampling={0}>
         {enabled && <SSR ref={ssrRef} />}
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
@@ -60,7 +63,7 @@ const Scene: FC = () => {
   return (
     <>
       <color attach='background' args={[0x443333]} />
-      <OrbitControls target={[0, 0.0635, 0]} />
+      <OrbitControls target={[-0.02, 0.02, 0]} />
       <hemisphereLight args={[0x8d7c7c, 0x494966, 3]} />
       <spotLight
         intensity={8}
@@ -89,6 +92,7 @@ const Scene: FC = () => {
 }
 
 export const Basic: StoryFn = () => {
+  const { show } = useControls('stats', { show: false })
   return (
     <Canvas
       gl={{
@@ -98,9 +102,27 @@ export const Basic: StoryFn = () => {
       }}
       camera={{
         fov: 35,
-        position: [0.13271600513224902, 0.3489546826045913, 0.43921296427927076]
+        position: [-0.2, 0.3, 0.5]
       }}
     >
+      {show && (
+        <ClassNames>
+          {(
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            { css }
+          ) => (
+            <StatsGl
+              className={css({
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                display: 'flex',
+                flexDirection: 'row'
+              })}
+            />
+          )}
+        </ClassNames>
+      )}
       <Scene />
     </Canvas>
   )

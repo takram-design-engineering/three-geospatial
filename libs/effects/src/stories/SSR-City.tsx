@@ -1,29 +1,49 @@
-import { OrbitControls, useTexture } from '@react-three/drei'
-import { applyProps, Canvas, useFrame, useThree } from '@react-three/fiber'
+import { ClassNames } from '@emotion/react'
+import {
+  Circle,
+  OrbitControls,
+  RenderCubeTexture,
+  StatsGl,
+  type RenderCubeTextureApi
+} from '@react-three/drei'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { GLTFCesiumRTCExtension, TilesRenderer } from '3d-tiles-renderer'
+import { parseISO } from 'date-fns'
 import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
-import { Suspense, useEffect, useMemo, useRef, useState, type FC } from 'react'
+import { useEffect, useMemo, useRef, useState, type FC } from 'react'
 import {
-  LinearSRGBColorSpace,
   Mesh,
   MeshPhysicalMaterial,
-  RepeatWrapping,
+  Vector3,
+  type DirectionalLight,
+  type Group,
   type Object3D
 } from 'three'
 import { GLTFLoader, type GLTFLoaderPlugin } from 'three-stdlib'
 
-import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import {
+  computeSunLightColor,
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  type AerialPerspectiveEffect
+} from '@geovanni/atmosphere'
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import {
+  AerialPerspective,
+  Sky,
+  usePrecomputedTextures,
+  type SkyImpl
+} from '@geovanni/atmosphere/react'
+import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import { EastNorthUpFrame } from '@geovanni/core/react'
-import { IonTerrain } from '@geovanni/terrain'
-import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
-import { Dithering, LensFlare } from '../react'
+import { Dithering, LensFlare, SSAO } from '../react'
 import { EffectComposer } from '../react/EffectComposer'
 import { SSR } from '../react/SSR'
-import { type SSREffect } from '../SSREffect'
 
 const gltfLoader = new GLTFLoader()
 gltfLoader.register(() => new GLTFCesiumRTCExtension() as GLTFLoaderPlugin)
@@ -38,14 +58,6 @@ const location = new Geodetic(radians(139.7671), radians(35.6812), 36.6624)
 const position = location.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 const cameraPosition = position.clone().add(up.clone().multiplyScalar(2000))
-
-const tilingScheme = new TilingScheme()
-const tile = tilingScheme.geodeticToTile(location, 8)
-tile.y = tilingScheme.getSize(tile.z).y - tile.y - 1
-const terrain = new IonTerrain({
-  assetId: 1,
-  apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
-})
 
 function onLoadModel(event: { scene: Object3D }): void {
   event.scene.traverse(object => {
@@ -108,101 +120,159 @@ const Scene: FC = () => {
     })
   })
 
-  const { enabled, maxSteps, maxDistance, thickness } = useControls({
+  const {
+    enabled,
+    iterations,
+    binarySearchIterations,
+    pixelZSize,
+    pixelStride,
+    pixelStrideZCutoff,
+    maxRayDistance,
+    screenEdgeFadeStart,
+    eyeFadeStart,
+    eyeFadeEnd,
+    jitter
+  } = useControls('ssr', {
     enabled: true,
-    maxSteps: {
-      value: 500,
-      min: 0,
-      max: 1000
-    },
-    maxDistance: {
-      value: 100,
-      min: 0,
-      max: 1000
-    },
-    thickness: {
-      value: 0.01,
-      min: 0,
-      max: 1
-    }
+    iterations: { value: 200, min: 0, max: 1000 },
+    binarySearchIterations: { value: 4, min: 0, max: 64 },
+    pixelZSize: { value: 100, min: 1, max: 100 },
+    pixelStride: { value: 5, min: 0, max: 64 },
+    pixelStrideZCutoff: { value: 100, min: 0, max: 1000 },
+    maxRayDistance: { value: 5000, min: 0, max: 5000 },
+    screenEdgeFadeStart: { value: 0.75, min: 0, max: 1 },
+    eyeFadeStart: { value: 0, min: 0, max: 1 },
+    eyeFadeEnd: { value: 1, min: 0, max: 1 },
+    jitter: { value: 1, min: 0, max: 1 }
   })
 
-  const ssrRef = useRef<SSREffect | null>(null)
-  if (ssrRef.current != null) {
-    applyProps(ssrRef.current, { maxSteps, maxDistance, thickness })
-  }
+  const sunDirectionRef = useRef(new Vector3())
+  const moonDirectionRef = useRef(new Vector3())
+  const lightRef = useRef<DirectionalLight>(null)
+  const skyRef = useRef<SkyImpl>(null)
+  const envMapRef = useRef<SkyImpl>(null)
+  const envMapParentRef = useRef<Group>(null)
+  const [aerialPerspective, setAerialPerspective] =
+    useState<AerialPerspectiveEffect | null>(null)
+
+  const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
+  const scene = useThree(({ scene }) => scene)
+  useEffect(() => {
+    scene.environment = envMap?.fbo.texture ?? null
+  }, [envMap, scene])
+
+  const { transmittanceTexture } = usePrecomputedTextures('/', true)
+
+  useEffect(() => {
+    const date = parseISO('2024-10-31T13:00+09:00')
+    getSunDirectionECEF(date, sunDirectionRef.current)
+    getMoonDirectionECEF(date, moonDirectionRef.current)
+    if (lightRef.current != null) {
+      lightRef.current.position.copy(sunDirectionRef.current)
+      computeSunLightColor(
+        transmittanceTexture,
+        position,
+        sunDirectionRef.current,
+        lightRef.current.color
+      )
+    }
+    if (skyRef.current != null) {
+      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
+      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
+    }
+    if (envMapRef.current != null) {
+      envMapRef.current.material.sunDirection.copy(sunDirectionRef.current)
+    }
+    if (aerialPerspective != null) {
+      aerialPerspective.sunDirection.copy(sunDirectionRef.current)
+    }
+    envMapParentRef.current?.position.copy(position)
+  }, [aerialPerspective, transmittanceTexture])
 
   const effectComposer = useMemo(
     () => (
       <EffectComposer key={Math.random()} multisampling={0}>
-        {enabled && <SSR ref={ssrRef} />}
+        <AerialPerspective
+          ref={setAerialPerspective}
+          sunIrradiance={false}
+          skyIrradiance={false}
+        />
+        {enabled && (
+          <SSR
+            iterations={iterations}
+            binarySearchIterations={binarySearchIterations}
+            pixelZSize={pixelZSize}
+            pixelStride={pixelStride}
+            pixelStrideZCutoff={pixelStrideZCutoff}
+            maxRayDistance={maxRayDistance}
+            screenEdgeFadeStart={screenEdgeFadeStart}
+            eyeFadeStart={eyeFadeStart}
+            eyeFadeEnd={eyeFadeEnd}
+            jitter={jitter}
+          />
+        )}
+        <SSAO intensity={3} aoRadius={20} />
         <LensFlare />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
         <SMAA />
         <Dithering />
       </EffectComposer>
     ),
-    [enabled]
+    [
+      enabled,
+      iterations,
+      binarySearchIterations,
+      pixelZSize,
+      pixelStride,
+      pixelStrideZCutoff,
+      maxRayDistance,
+      screenEdgeFadeStart,
+      eyeFadeStart,
+      eyeFadeEnd,
+      jitter
+    ]
   )
-
-  const normalMap = useTexture('/normal_noise.png')
-  normalMap.colorSpace = LinearSRGBColorSpace
-  normalMap.repeat.set(500, 500)
-  normalMap.wrapS = RepeatWrapping
-  normalMap.wrapT = RepeatWrapping
-
-  const terrainMaterial = useMemo(() => {
-    const material = new MeshPhysicalMaterial({
-      color: 'gray',
-      metalness: 0.2,
-      roughness: 0.1
-    })
-    return material
-  }, [])
 
   const [target, setTarget] = useState<Object3D | null>(null)
   return (
     <>
-      <color attach='background' args={[50, 50, 50]} />
-      <fogExp2 attach='fog' color='white' density={0.00005} />
+      <Sky ref={skyRef} />
       <OrbitControls target={position} />
-      <ambientLight intensity={0.02} />
-      <EastNorthUpFrame {...location}>
+      <group position={position}>
         <object3D ref={setTarget} />
         <directionalLight
-          position={[500, 1000, 1000]}
+          ref={lightRef}
           intensity={0.4}
           target={target ?? undefined}
           castShadow
           shadow-mapSize={[4096, 4096]}
-          shadow-intensity={0.5}
         >
           <orthographicCamera
             attach='shadow-camera'
             args={[-2500, 2500, 2500, -2500, 1, 5000]}
           />
         </directionalLight>
+      </group>
+      <EastNorthUpFrame {...location}>
+        <Circle args={[1e5]} receiveShadow>
+          <meshPhysicalMaterial color={[0.75, 0.75, 0.75]} metalness={0.2} />
+        </Circle>
       </EastNorthUpFrame>
       {renderers.map((renderer, index) => (
         <primitive key={index} object={renderer.group} />
       ))}
-      <Suspense>
-        <BatchedTerrainTile
-          terrain={terrain}
-          {...tile}
-          depth={5}
-          computeVertexNormals
-          material={terrainMaterial}
-          castShadow
-          receiveShadow
-        />
-      </Suspense>
+      <group ref={envMapParentRef}>
+        <RenderCubeTexture ref={setEnvMap} resolution={64}>
+          <Sky ref={envMapRef} sun={false} />
+        </RenderCubeTexture>
+      </group>
       {effectComposer}
     </>
   )
 }
 
 export const City: StoryFn = () => {
+  const { show } = useControls('stats', { show: false })
   return (
     <Canvas
       shadows
@@ -215,11 +285,29 @@ export const City: StoryFn = () => {
       }}
       camera={{
         near: 1,
-        far: 1e8,
+        far: 1e7,
         position: cameraPosition,
         up
       }}
     >
+      {show && (
+        <ClassNames>
+          {(
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            { css }
+          ) => (
+            <StatsGl
+              className={css({
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                display: 'flex',
+                flexDirection: 'row'
+              })}
+            />
+          )}
+        </ClassNames>
+      )}
       <Scene />
     </Canvas>
   )
