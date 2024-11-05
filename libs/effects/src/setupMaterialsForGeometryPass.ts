@@ -4,7 +4,7 @@
 
 import { ShaderLib, type ShaderLibShader } from 'three'
 
-import packing from './shaders/packing.glsl'
+import { shaders } from '@geovanni/core'
 
 const SETUP = Symbol('SETUP')
 
@@ -109,7 +109,7 @@ function injectGBuffer(
       uniform float reflectivity;
     #endif
 
-    ${packing}
+    ${shaders.packing}
     ${shader.fragmentShader.replace(
       /}\s*$/m, // Assume the last curly brace is of main()
       /* glsl */ `

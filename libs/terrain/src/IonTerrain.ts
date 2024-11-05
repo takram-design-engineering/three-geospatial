@@ -8,8 +8,6 @@ import {
   TilingScheme,
   type TileCoordinateLike
 } from '@geovanni/core'
-// TODO
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import { queueTask } from '@geovanni/worker'
 
 import { IonAsset } from './IonAsset'

@@ -16,8 +16,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { Ellipsoid, Geodetic } from '@geovanni/core'
-import { shaders } from '@geovanni/effects'
+import { Ellipsoid, Geodetic, shaders } from '@geovanni/core'
 
 import {
   ATMOSPHERE_PARAMETERS,

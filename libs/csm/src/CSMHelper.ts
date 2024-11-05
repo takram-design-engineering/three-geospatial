@@ -1,3 +1,6 @@
+/* eslint-disable */
+// TODO
+
 // Based on the following work:
 // https://github.com/StrandedKitty/three-csm/tree/master/src
 // https://github.com/mrdoob/three.js/tree/r169/examples/jsm/csm

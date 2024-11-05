@@ -18,12 +18,7 @@
     "**/*.test.js",
     "**/*.spec.jsx",
     "**/*.test.jsx",
-    "jest.config.ts",
-    "**/*.stories.ts",
-    "**/*.stories.js",
-    "**/*.stories.jsx",
-    "**/*.stories.tsx",
-    "**/stories"
+    "jest.config.ts"
   ],
   "include": [
     "src/**/*.js",

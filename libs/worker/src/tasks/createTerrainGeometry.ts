@@ -10,8 +10,6 @@ import {
   type TileCoordinateLike,
   type TilingSchemeLike
 } from '@geovanni/core'
-// TODO
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import { TerrainGeometry } from '@geovanni/terrain'
 
 import { Transfer, type TransferResult } from '../transfer'

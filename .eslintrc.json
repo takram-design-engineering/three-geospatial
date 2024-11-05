@@ -22,6 +22,12 @@
       }
     },
     {
+      "files": ["*.stories.ts", "*.stories.tsx", "**/stories/*.ts", "**/stories/*.tsx"],
+      "rules": {
+        "@nx/enforce-module-boundaries": "off"
+      }
+    },
+    {
       "files": ["*.ts", "*.tsx"],
       "parserOptions": {
         "project": ["./tsconfig.*?.json"]
