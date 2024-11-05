@@ -22,7 +22,7 @@ function body(shader: string): string {
   return shader.replace(/^\s*void\s+\w+\s*\(\s*\)\s*/m, '')
 }
 
-const directionalLights = /* glsl */ `
+const directionalLights = /*#__PURE__*/ (() => /* glsl */ `
   #if NUM_DIR_LIGHTS > 0 && defined(RE_Direct)
     DirectionalLight directionalLight;
     #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0
@@ -47,7 +47,7 @@ const directionalLights = /* glsl */ `
       ${body(defaultLights)}
     #endif // CSM
   #endif // NUM_DIR_LIGHTS > 0 && defined(RE_Direct)
-`
+`)()
 
 interface ReplaceRangeParams {
   source: string

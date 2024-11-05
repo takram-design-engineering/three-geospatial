@@ -10,7 +10,7 @@ import {
   type TileCoordinateLike,
   type TilingSchemeLike
 } from '@geovanni/core'
-import { TerrainGeometry } from '@geovanni/terrain'
+import { TerrainGeometry } from '@geovanni/terrain-core'
 
 import { Transfer, type TransferResult } from '../transfer'
 

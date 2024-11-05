@@ -11,7 +11,11 @@ const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
 // TODO: Rename to spheroid perhaps?
 export class Ellipsoid {
-  static WGS84 = new Ellipsoid(6378137, 6378137, 6356752.3142451793)
+  static WGS84 = /*#__PURE__*/ new Ellipsoid(
+    6378137,
+    6378137,
+    6356752.3142451793
+  )
 
   readonly radii: Vector3
 

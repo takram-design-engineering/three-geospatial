@@ -16,12 +16,12 @@ export const TRANSMITTANCE_TEXTURE_WIDTH = 256
 export const TRANSMITTANCE_TEXTURE_HEIGHT = 64
 export const METER_TO_UNIT_LENGTH = 1 / 1000
 
-export const SKY_SPECTRAL_RADIANCE_TO_LUMINANCE = new Vector3(
+export const SKY_SPECTRAL_RADIANCE_TO_LUMINANCE = /*#__PURE__*/ new Vector3(
   114974.916437,
   71305.954816,
   65310.548555
 )
-export const SUN_SPECTRAL_RADIANCE_TO_LUMINANCE = new Vector3(
+export const SUN_SPECTRAL_RADIANCE_TO_LUMINANCE = /*#__PURE__*/ new Vector3(
   98242.786222,
   69954.398112,
   66475.012354
@@ -31,13 +31,14 @@ export const SUN_SPECTRAL_RADIANCE_TO_LUMINANCE = new Vector3(
 // values easily saturate, and switching between radiometric and photometric
 // affects other parameters. Instead, we store the luminance values relative to
 // the luminance of the sun.
-const efficiency = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
-const luminance = efficiency.dot(SUN_SPECTRAL_RADIANCE_TO_LUMINANCE)
+// TODO: Code splitting
+const luminousEfficiency = new Vector3(0.2126, 0.7152, 0.0722)
+const luminance = luminousEfficiency.dot(SUN_SPECTRAL_RADIANCE_TO_LUMINANCE)
 export const LUMINANCE_SCALE = 1 / luminance
 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE.multiplyScalar(LUMINANCE_SCALE)
 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE.multiplyScalar(LUMINANCE_SCALE)
 
-export const ATMOSPHERE_PARAMETERS = {
+export const ATMOSPHERE_PARAMETERS = /*#__PURE__*/ (() => ({
   solarIrradiance: new Vector3(1.474, 1.8504, 1.91198),
   sunAngularRadius: 0.004675,
   bottomRadius: 6360000,
@@ -48,4 +49,4 @@ export const ATMOSPHERE_PARAMETERS = {
   // Use 120 for float and 102 for half-float.
   muSMinFloat: Math.cos(radians(120)),
   muSMinHalfFloat: Math.cos(radians(102))
-}
+}))()

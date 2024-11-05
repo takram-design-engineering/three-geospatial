@@ -110,8 +110,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         IRRADIANCE_TEXTURE_WIDTH: `${IRRADIANCE_TEXTURE_WIDTH}`,
         IRRADIANCE_TEXTURE_HEIGHT: `${IRRADIANCE_TEXTURE_HEIGHT}`,
         METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`,
-        SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${SKY_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`,
         SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${SUN_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`,
+        SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${SKY_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`,
         ...others.defines
       }
     })

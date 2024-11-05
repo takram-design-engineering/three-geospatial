@@ -9,7 +9,7 @@ import glsl from 'vite-plugin-glsl'
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/libs/csm',
+  cacheDir: '../../node_modules/.vite/libs/terrain-core',
   plugins: [
     react(),
     nxViteTsPaths(),
@@ -29,7 +29,7 @@ export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
-    outDir: '../../dist/libs/csm',
+    outDir: '../../dist/libs/terrain-core',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -38,10 +38,9 @@ export default defineConfig({
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: {
-        index: 'src/index.ts',
-        'react/index': 'src/react/index.ts'
+        index: 'src/index.ts'
       },
-      name: 'csm',
+      name: 'terrain-core',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
       formats: ['es', 'cjs']

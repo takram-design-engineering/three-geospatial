@@ -1,6 +1,7 @@
 {
   "name": "@geovanni/3d-tiles",
   "version": "0.0.1",
+  "type": "module",
   "exports": {
     ".": {
       "import": "./index.mjs",

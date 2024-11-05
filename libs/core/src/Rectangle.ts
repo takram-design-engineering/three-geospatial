@@ -10,7 +10,7 @@ export interface RectangleLike {
 }
 
 export class Rectangle {
-  static readonly MAX = new Rectangle(
+  static readonly MAX = /*#__PURE__*/ new Rectangle(
     Geodetic.MIN_LONGITUDE,
     Geodetic.MIN_LATITUDE,
     Geodetic.MAX_LONGITUDE,

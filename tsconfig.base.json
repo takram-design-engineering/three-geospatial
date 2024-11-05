@@ -27,6 +27,7 @@
       "@geovanni/effects/react": ["libs/effects/src/react/index.ts"],
       "@geovanni/terrain": ["libs/terrain/src/index.ts"],
       "@geovanni/terrain/react": ["libs/terrain/src/react/index.ts"],
+      "@geovanni/terrain-core": ["libs/terrain-core/src/index.ts"],
       "@geovanni/worker": ["libs/worker/src/index.ts"]
     }
   },
