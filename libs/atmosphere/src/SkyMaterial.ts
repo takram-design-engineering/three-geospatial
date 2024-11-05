@@ -129,10 +129,6 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     return this.uniforms.moonDirection.value
   }
 
-  set moonDirection(value: Vector3) {
-    this.uniforms.moonDirection.value = value
-  }
-
   get moonAngularRadius(): number {
     return this.uniforms.moonAngularRadius.value
   }

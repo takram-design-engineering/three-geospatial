@@ -48,18 +48,16 @@ export class DownsampleThresholdMaterial extends ShaderMaterial {
     })
   }
 
+  setSize(width: number, height: number): void {
+    this.uniforms.texelSize.value.set(1 / width, 1 / height)
+  }
+
   get inputBuffer(): Texture | null {
     return this.uniforms.inputBuffer.value
   }
 
   set inputBuffer(value: Texture | null) {
     this.uniforms.inputBuffer.value = value
-  }
-
-  setSize(width: number, height: number): void {
-    const texelSize = this.uniforms.texelSize.value
-    texelSize.x = 1 / width
-    texelSize.y = 1 / height
   }
 
   get thresholdLevel(): number {

@@ -205,10 +205,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     return this.uniforms.sunDirection.value
   }
 
-  set sunDirection(value: Vector3) {
-    this.uniforms.sunDirection.value = value
-  }
-
   get sunAngularRadius(): number {
     return this.uniforms.u_sun_angular_radius.value
   }

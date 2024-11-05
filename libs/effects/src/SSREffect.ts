@@ -147,6 +147,14 @@ export class SSREffect extends Effect {
     this.ssrMaterial.depthPacking = depthPacking ?? 0
   }
 
+  get resolutionScale(): number {
+    return this.resolution.scale
+  }
+
+  set resolutionScale(value: number) {
+    this.resolution.scale = value
+  }
+
   get geometryBuffer(): Texture | null {
     return this.ssrMaterial.geometryBuffer
   }

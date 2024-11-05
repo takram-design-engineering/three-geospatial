@@ -347,10 +347,6 @@ export class AerialPerspectiveEffect extends Effect {
     return this.uniforms.get('ellipsoidInterpolationRange')!.value
   }
 
-  set ellipsoidInterpolationRange(value: Vector2) {
-    this.uniforms.get('ellipsoidInterpolationRange')!.value = value
-  }
-
   get photometric(): boolean {
     return this.defines.has('PHOTOMETRIC')
   }
@@ -368,10 +364,6 @@ export class AerialPerspectiveEffect extends Effect {
 
   get sunDirection(): Vector3 {
     return this.uniforms.get('sunDirection')!.value
-  }
-
-  set sunDirection(value: Vector3) {
-    this.uniforms.get('sunDirection')!.value = value
   }
 
   get sunIrradiance(): boolean {

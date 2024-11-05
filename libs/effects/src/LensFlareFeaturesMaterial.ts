@@ -51,18 +51,18 @@ export class LensFlareFeaturesMaterial extends ShaderMaterial {
     })
   }
 
+  setSize(width: number, height: number): void {
+    const texelSize = this.uniforms.texelSize
+    texelSize.value.x = 1 / width
+    texelSize.value.y = 1 / height
+  }
+
   get inputBuffer(): Texture | null {
     return this.uniforms.inputBuffer.value
   }
 
   set inputBuffer(value: Texture | null) {
     this.uniforms.inputBuffer.value = value
-  }
-
-  setSize(width: number, height: number): void {
-    const texelSize = this.uniforms.texelSize
-    texelSize.value.x = 1 / width
-    texelSize.value.y = 1 / height
   }
 
   get ghostAmount(): number {

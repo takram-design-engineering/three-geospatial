@@ -100,10 +100,6 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     return this.uniforms.magnitudeScale.value
   }
 
-  set magnitudeRange(value: Vector2) {
-    this.uniforms.magnitudeScale.value.set(value)
-  }
-
   get radianceScale(): number {
     return this.uniforms.radianceScale.value
   }
