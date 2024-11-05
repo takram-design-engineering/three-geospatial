@@ -5,7 +5,7 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform, type Texture } from 'three'
 
-import { shaders } from '@geovanni/core'
+import { packingShader } from '@geovanni/core'
 
 import fragmentShader from './shaders/geometryEffect.frag'
 
@@ -31,7 +31,7 @@ export class GeometryEffect extends Effect {
     super(
       'GeometryEffect',
       /* glsl */ `
-        ${shaders.packing}
+        ${packingShader}
         ${fragmentShader}
       `,
       {
