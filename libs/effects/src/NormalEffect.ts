@@ -12,7 +12,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { packingShader } from '@geovanni/core'
+import { depthShader, packingShader, transformShader } from '@geovanni/core'
 
 import fragmentShader from './shaders/normalEffect.frag'
 
@@ -41,7 +41,9 @@ export class NormalEffect extends Effect {
     super(
       'NormalEffect',
       /* glsl */ `
+        ${depthShader}
         ${packingShader}
+        ${transformShader}
         ${fragmentShader}
       `,
       {

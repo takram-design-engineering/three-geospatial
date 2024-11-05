@@ -5,6 +5,8 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform } from 'three'
 
+import { depthShader } from '@geovanni/core'
+
 import fragmentShader from './shaders/depthEffect.frag'
 
 export interface DepthEffectOptions {
@@ -28,14 +30,21 @@ export class DepthEffect extends Effect {
       ...options
     }
 
-    super('DepthEffect', fragmentShader, {
-      blendFunction,
-      attributes: EffectAttribute.DEPTH,
-      uniforms: new Map([
-        ['near', new Uniform(near)],
-        ['far', new Uniform(far)]
-      ])
-    })
+    super(
+      'DepthEffect',
+      /* glsl */ `
+        ${depthShader}
+        ${fragmentShader}
+      `,
+      {
+        blendFunction,
+        attributes: EffectAttribute.DEPTH,
+        uniforms: new Map([
+          ['near', new Uniform(near)],
+          ['far', new Uniform(far)]
+        ])
+      }
+    )
     this.useTurbo = useTurbo
   }
 

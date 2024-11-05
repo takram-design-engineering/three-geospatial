@@ -60,17 +60,6 @@ float readDepth(const vec2 uv) {
   #endif // DEPTH_PACKING == 3201
 }
 
-float reverseLogDepth(const float depth) {
-  #ifdef USE_LOGDEPTHBUF
-  float d = pow(2.0, depth * log2(cameraFar + 1.0)) - 1.0;
-  float a = cameraFar / (cameraFar - cameraNear);
-  float b = cameraFar * cameraNear / (cameraNear - cameraFar);
-  return a + b / d;
-  #else
-  return depth;
-  #endif // USE_LOGDEPTHBUF
-}
-
 float getLinearDepth(vec2 screenPosition) {
   float fragCoordZ = texture2D(depthBuffer, screenPosition).x;
   float nz = cameraNear * fragCoordZ;
@@ -83,13 +72,6 @@ float getViewZ(const float depth) {
   #else
   return orthographicDepthToViewZ(depth, cameraNear, cameraFar);
   #endif
-}
-
-vec3 screenToView(const vec2 uv, const float depth, const float viewZ) {
-  vec4 clip = vec4(vec3(uv, depth) * 2.0 - 1.0, 1.0);
-  float clipW = projectionMatrix[2][3] * viewZ + projectionMatrix[3][3];
-  clip *= clipW;
-  return (inverseProjectionMatrix * clip).xyz;
 }
 
 vec3 readNormal(const vec2 uv) {
@@ -110,7 +92,9 @@ float distanceSquared(vec2 a, vec2 b) {
 }
 
 bool rayIntersectsDepth(float zA, float zB, vec2 uv) {
-  float sceneZMax = getViewZ(reverseLogDepth(readDepth(uv)));
+  float sceneZMax = getViewZ(
+    reverseLogDepth(readDepth(uv), cameraNear, cameraFar)
+  );
   float sceneZMin = sceneZMax - pixelZSize;
   return zB >= sceneZMin && zA <= sceneZMax;
 }
@@ -342,10 +326,16 @@ void main() {
   if (depth > 0.9999) {
     return;
   }
-  depth = reverseLogDepth(depth);
+  depth = reverseLogDepth(depth, cameraNear, cameraFar);
   float viewZ = getViewZ(depth);
 
-  vec3 viewPosition = screenToView(vUv, depth, viewZ);
+  vec3 viewPosition = screenToView(
+    vUv,
+    depth,
+    viewZ,
+    projectionMatrix,
+    inverseProjectionMatrix
+  );
   vec3 viewNormal = readNormal(vUv);
 
   vec3 rayOrigin = viewPosition;

@@ -16,7 +16,13 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { Ellipsoid, Geodetic, shaders } from '@geovanni/core'
+import {
+  depthShader,
+  Ellipsoid,
+  Geodetic,
+  packingShader,
+  transformShader
+} from '@geovanni/core'
 
 import {
   ATMOSPHERE_PARAMETERS,
@@ -109,7 +115,9 @@ export class AerialPerspectiveEffect extends Effect {
       /* glsl */ `
         ${parameters}
         ${functions}
-        ${shaders.packing}
+        ${depthShader}
+        ${packingShader}
+        ${transformShader}
         ${fragmentShader}
       `,
       {

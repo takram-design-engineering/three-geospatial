@@ -12,24 +12,6 @@ varying vec3 vWorldPosition;
 varying vec3 vEllipsoidCenter;
 varying vec3 vEllipsoidRadiiSquared;
 
-float reverseLogDepth(const float depth) {
-  #ifdef USE_LOGDEPTHBUF
-  float d = pow(2.0, depth * log2(cameraFar + 1.0)) - 1.0;
-  float a = cameraFar / (cameraFar - cameraNear);
-  float b = cameraFar * cameraNear / (cameraNear - cameraFar);
-  return a + b / d;
-  #else
-  return depth;
-  #endif // USE_LOGDEPTHBUF
-}
-
-vec3 screenToView(const vec2 uv, const float depth, const float viewZ) {
-  vec4 clip = vec4(vec3(uv, depth) * 2.0 - 1.0, 1.0);
-  float clipW = projectionMatrix[2][3] * viewZ + projectionMatrix[3][3];
-  clip *= clipW;
-  return (inverseProjectionMatrix * clip).xyz;
-}
-
 vec3 readNormal(const vec2 uv) {
   #ifdef OCT_ENCODED_NORMAL
   return unpackVec2ToNormal(texture2D(normalBuffer, uv).xy);
@@ -109,10 +91,16 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     outputColor = inputColor;
     return;
   }
-  depth = reverseLogDepth(depth);
+  depth = reverseLogDepth(depth, cameraNear, cameraFar);
 
   // Reconstruct position and normal in world space.
-  vec3 viewPosition = screenToView(uv, depth, getViewZ(depth));
+  vec3 viewPosition = screenToView(
+    uv,
+    depth,
+    getViewZ(depth),
+    projectionMatrix,
+    inverseProjectionMatrix
+  );
   vec3 viewNormal;
   #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);

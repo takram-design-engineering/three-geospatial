@@ -13,7 +13,12 @@ import {
   type Texture
 } from 'three'
 
-import { assertType, shaders } from '@geovanni/core'
+import {
+  assertType,
+  depthShader,
+  packingShader,
+  transformShader
+} from '@geovanni/core'
 
 import fragmentShader from './shaders/ssr.frag'
 import vertexShader from './shaders/ssr.vert'
@@ -85,7 +90,9 @@ export class SSRMaterial extends ShaderMaterial {
     super({
       name: 'SSRMaterial',
       fragmentShader: /* glsl */ `
-        ${shaders.packing}
+        ${depthShader}
+        ${packingShader}
+        ${transformShader}
         ${fragmentShader}
       `,
       vertexShader,

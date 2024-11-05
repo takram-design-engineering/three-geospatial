@@ -16,4 +16,6 @@ export * from './TypedArrayLoader'
 export * from './types'
 export * from './utils'
 
+export { default as depthShader } from './shaders/depth.glsl'
 export { default as packingShader } from './shaders/packing.glsl'
+export { default as transformShader } from './shaders/transform.glsl'
