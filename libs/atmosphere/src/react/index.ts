@@ -1,5 +1,4 @@
 export * from './AerialPerspective'
 export * from './Sky'
-export * from './SkyRadiance'
 export * from './Stars'
 export * from './usePrecomputedTextures'
