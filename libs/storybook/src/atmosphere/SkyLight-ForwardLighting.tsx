@@ -2,11 +2,9 @@ import {
   GizmoHelper,
   GizmoViewport,
   OrbitControls,
-  RenderCubeTexture,
-  TorusKnot,
-  type RenderCubeTextureApi
+  TorusKnot
 } from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useControls } from 'leva'
@@ -17,14 +15,13 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
   type FC
 } from 'react'
 import {
   Material,
   Matrix4,
   MeshBasicMaterial,
-  MeshStandardMaterial,
+  MeshLambertMaterial,
   Vector3
 } from 'three'
 
@@ -33,14 +30,15 @@ import {
   getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF,
+  PrecomputedTexturesLoader,
+  SkyLight,
   type AerialPerspectiveEffect
 } from '@geovanni/atmosphere'
 import {
   AerialPerspective,
+  Atmosphere,
   Sky,
-  SkyRadiance,
   Stars,
-  usePrecomputedTextures,
   type SkyImpl,
   type StarsImpl
 } from '@geovanni/atmosphere/react'
@@ -58,6 +56,7 @@ import {
 import { IonTerrain } from '@geovanni/terrain'
 import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
+import { Stats } from '../helpers/Stats'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
@@ -132,7 +131,7 @@ const Scene: FC = () => {
   const standardMaterial = useMemo(
     () =>
       csm.setupMaterial(
-        new MeshStandardMaterial({
+        new MeshLambertMaterial({
           color: 'white'
         })
       ),
@@ -141,7 +140,7 @@ const Scene: FC = () => {
   const terrainStandardMaterial = useMemo(
     () =>
       csm.setupMaterial(
-        new MeshStandardMaterial({
+        new MeshLambertMaterial({
           color: 'gray'
         })
       ),
@@ -158,12 +157,6 @@ const Scene: FC = () => {
       terrainStandardMaterial.dispose()
     }
   }, [terrainStandardMaterial])
-
-  const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
-  useEffect(() => {
-    scene.environment = envMap?.fbo.texture ?? null
-    scene.environmentIntensity = mode === 'forward' && sky ? 1 : 0
-  }, [envMap, scene, mode, sky])
 
   useFrame(() => {
     const date = new Date(motionDate.get())
@@ -232,7 +225,7 @@ const Scene: FC = () => {
     ]
   )
 
-  const textures = usePrecomputedTextures('/', true)
+  const textures = useLoader(PrecomputedTexturesLoader, '/')
   useFrame(() => {
     computeSunLightColor(
       textures.transmittanceTexture,
@@ -251,8 +244,17 @@ const Scene: FC = () => {
     deferred: [basicMaterial, terrainBasicMaterial]
   }[mode]
 
+  const skyLight = useMemo(() => new SkyLight(), [])
+  skyLight.irradianceTexture = textures.irradianceTexture
+  useFrame(() => {
+    skyLight.position.copy(position)
+    skyLight.sunDirection.copy(sunDirectionRef.current)
+    skyLight.update(gl)
+  })
+
   return (
-    <>
+    <Atmosphere>
+      {sky && <primitive object={skyLight} />}
       <OrbitControls target={position} minDistance={1e3} />
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
@@ -279,19 +281,6 @@ const Scene: FC = () => {
           receiveShadow
           castShadow
         />
-        <material>
-          <RenderCubeTexture
-            ref={setEnvMap}
-            resolution={64}
-            position={position}
-          >
-            <SkyRadiance
-              ref={envMapRef}
-              osculateEllipsoid={osculateEllipsoid}
-              photometric={photometric}
-            />
-          </RenderCubeTexture>
-        </material>
       </EastNorthUpFrame>
       <Suspense>
         <BatchedTerrainTile
@@ -305,24 +294,23 @@ const Scene: FC = () => {
         />
       </Suspense>
       {effectComposer}
-    </>
+    </Atmosphere>
   )
 }
 
-export const ForwardLighting: StoryFn = () => {
-  return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false,
-        logarithmicDepthBuffer: true
-      }}
-      camera={{ near: 100, far: 1e6, position, up }}
-    >
-      <CSM far={1e5} margin={7000} mapSize={4096}>
-        <Scene />
-      </CSM>
-    </Canvas>
-  )
-}
+export const ForwardLighting: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false,
+      logarithmicDepthBuffer: true
+    }}
+    camera={{ near: 100, far: 1e6, position, up }}
+  >
+    <Stats />
+    <CSM far={1e5} margin={7000} mapSize={4096}>
+      <Scene />
+    </CSM>
+  </Canvas>
+)

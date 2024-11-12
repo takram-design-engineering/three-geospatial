@@ -8,7 +8,9 @@ export const Stats: FC = () => {
 
   const gl = useThree(({ gl }) => gl)
   const stats = useMemo(() => {
-    const stats = new StatsImpl()
+    const stats = new StatsImpl({
+      trackGPU: true
+    })
     void stats.init(gl)
     return stats
   }, [gl])

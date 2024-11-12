@@ -58,16 +58,14 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
-  return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false
-      }}
-    >
-      <Scene />
-    </Canvas>
-  )
-}
+export const Basic: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false
+    }}
+  >
+    <Scene />
+  </Canvas>
+)

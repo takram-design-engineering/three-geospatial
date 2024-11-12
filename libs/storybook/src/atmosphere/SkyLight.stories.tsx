@@ -1,10 +1,10 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'atmosphere/SkyRadiance',
+  title: 'atmosphere/SkyLight',
   parameters: {
     layout: 'fullscreen'
   }
 } satisfies Meta
 
-export { ForwardLighting } from './SkyRadiance-ForwardLighting'
+export { ForwardLighting } from './SkyLight-ForwardLighting'
