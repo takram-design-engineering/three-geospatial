@@ -1,12 +1,12 @@
 import {
+  AstroTime,
   Body,
   CombineRotation,
   GeoVector,
   RotateVector,
   Rotation_EQJ_EQD,
   RotationMatrix,
-  SiderealTime,
-  type FlexibleDateTime
+  SiderealTime
 } from 'astronomy-engine'
 import { Matrix4, Vector3 } from 'three'
 
@@ -20,39 +20,48 @@ function RotationZ(angle: number): RotationMatrix {
   ])
 }
 
+// Prefer number to be JS timestamp; skips leap seconds.
+function makeTime(value: number | Date | AstroTime): AstroTime {
+  return value instanceof AstroTime
+    ? value
+    : new AstroTime(value instanceof Date ? value : new Date(value))
+}
+
 export function getDirectionECEF(
   body: Body,
-  date: FlexibleDateTime,
+  date: number | Date | AstroTime,
   result = new Vector3()
 ): Vector3 {
-  const vectorEQJ = GeoVector(body, date, true)
-  const rotationEQJtoEQD = Rotation_EQJ_EQD(date)
+  const time = makeTime(date)
+  const vectorEQJ = GeoVector(body, time, true)
+  const rotationEQJtoEQD = Rotation_EQJ_EQD(time)
   const vectorEQD = RotateVector(rotationEQJtoEQD, vectorEQJ)
-  const rotationEQDtoECEF = RotationZ(SiderealTime(date) * (Math.PI / 12))
+  const rotationEQDtoECEF = RotationZ(SiderealTime(time) * (Math.PI / 12))
   const vectorECEF = RotateVector(rotationEQDtoECEF, vectorEQD)
   return result.set(vectorECEF.x, vectorECEF.y, vectorECEF.z).normalize()
 }
 
 export function getSunDirectionECEF(
-  date: FlexibleDateTime,
+  date: number | Date | AstroTime,
   result = new Vector3()
 ): Vector3 {
   return getDirectionECEF(Body.Sun, date, result)
 }
 
 export function getMoonDirectionECEF(
-  date: FlexibleDateTime,
+  date: number | Date | AstroTime,
   result = new Vector3()
 ): Vector3 {
   return getDirectionECEF(Body.Moon, date, result)
 }
 
 export function getECIToECEFRotationMatrix(
-  date: FlexibleDateTime,
+  date: number | Date | AstroTime,
   result = new Matrix4()
 ): Matrix4 {
-  const rotationEQJtoEQD = Rotation_EQJ_EQD(date)
-  const rotationEQDtoECEF = RotationZ(SiderealTime(date) * (Math.PI / 12))
+  const time = makeTime(date)
+  const rotationEQJtoEQD = Rotation_EQJ_EQD(time)
+  const rotationEQDtoECEF = RotationZ(SiderealTime(time) * (Math.PI / 12))
   const { rot } = CombineRotation(rotationEQJtoEQD, rotationEQDtoECEF)
   // prettier-ignore
   return result.set(

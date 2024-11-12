@@ -32,7 +32,7 @@ export interface AtmosphereProps {
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
   photometric?: boolean
-  date?: Date | MotionValue<Date>
+  date?: number | Date | MotionValue<number> | MotionValue<Date>
   children?: ReactNode
 }
 
@@ -56,7 +56,7 @@ export const Atmosphere: FC<AtmosphereProps> = ({
         ? dateProp instanceof MotionValue
           ? dateProp.get()
           : dateProp
-        : new Date()
+        : Date.now()
     const { sunDirection, moonDirection, rotationMatrix } = stateRef.current
     getSunDirectionECEF(date, sunDirection)
     getMoonDirectionECEF(date, moonDirection)
