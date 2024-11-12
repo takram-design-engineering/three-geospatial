@@ -1,17 +1,18 @@
 import { useLoader, useThree, type PointsProps } from '@react-three/fiber'
-import { forwardRef, useEffect, useMemo } from 'react'
+import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { type Points } from 'three'
 
 import { ArrayBufferLoader } from '@geovanni/core'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
+import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import { StarsGeometry } from '../StarsGeometry'
 import {
   StarsMaterial,
   starsMaterialParametersDefaults
 } from '../StarsMaterial'
+import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
-import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
@@ -23,11 +24,14 @@ export interface StarsProps extends PointsProps, AtmosphereMaterialProps {
 
 export const Stars = forwardRef<StarsImpl, StarsProps>(
   function Stars(props, forwardedRef) {
+    const context = useContext(AtmosphereContext)
+
     const [
       atmosphereParameters,
       { pointSize, radianceScale, background, ...others }
     ] = separateProps({
       ...starsMaterialParametersDefaults,
+      ...context,
       ...props
     })
 
@@ -37,7 +41,13 @@ export const Stars = forwardRef<StarsImpl, StarsProps>(
       () => gl.getContext().getExtension('OES_texture_float_linear') == null,
       [gl]
     )
-    const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
+    const precomputedTextures = useLoader(
+      PrecomputedTexturesLoader,
+      '/',
+      loader => {
+        loader.useHalfFloat = useHalfFloat
+      }
+    )
 
     // TODO: Make the data path configurable.
     const data = useLoader(ArrayBufferLoader, '/stars.bin')

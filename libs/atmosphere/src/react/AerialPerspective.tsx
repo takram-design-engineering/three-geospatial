@@ -1,4 +1,4 @@
-import { useThree } from '@react-three/fiber'
+import { useLoader, useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
@@ -12,7 +12,8 @@ import {
   aerialPerspectiveEffectOptionsDefaults,
   type AerialPerspectiveEffectOptions
 } from '../AerialPerspectiveEffect'
-import { usePrecomputedTextures } from './usePrecomputedTextures'
+import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
+import { AtmosphereContext } from './Atmosphere'
 
 export interface AerialPerspectiveProps
   extends EffectProps<
@@ -24,8 +25,11 @@ export const AerialPerspective = forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
 >(function AerialPerspective(props, forwardedRef) {
+  const context = useContext(AtmosphereContext)
+
   const { blendFunction, ...others } = {
     ...aerialPerspectiveEffectOptionsDefaults,
+    ...context,
     ...props
   }
 
@@ -35,7 +39,7 @@ export const AerialPerspective = forwardRef<
     () => gl.getContext().getExtension('OES_texture_float_linear') == null,
     [gl]
   )
-  const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
+  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/')
 
   const { geometryPass, normalPass, camera } = useContext(
     EffectComposerContext

@@ -1,12 +1,13 @@
 import { ScreenQuad } from '@react-three/drei'
-import { useThree, type MeshProps } from '@react-three/fiber'
-import { forwardRef, useEffect, useMemo } from 'react'
+import { useLoader, useThree, type MeshProps } from '@react-three/fiber'
+import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
+import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import { SkyMaterial, skyMaterialParametersDefaults } from '../SkyMaterial'
+import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
-import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type SkyImpl = Mesh<BufferGeometry, SkyMaterial>
 
@@ -20,6 +21,8 @@ export interface SkyProps extends MeshProps, AtmosphereMaterialProps {
 
 export const Sky = forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {
+    const context = useContext(AtmosphereContext)
+
     const [
       atmosphereParameters,
       {
@@ -32,6 +35,7 @@ export const Sky = forwardRef<SkyImpl, SkyProps>(
       }
     ] = separateProps({
       ...skyMaterialParametersDefaults,
+      ...context,
       ...props
     })
 
@@ -41,7 +45,13 @@ export const Sky = forwardRef<SkyImpl, SkyProps>(
       () => gl.getContext().getExtension('OES_texture_float_linear') == null,
       [gl]
     )
-    const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
+    const precomputedTextures = useLoader(
+      PrecomputedTexturesLoader,
+      '/',
+      loader => {
+        loader.useHalfFloat = useHalfFloat
+      }
+    )
 
     const material = useMemo(() => new SkyMaterial(), [])
     useEffect(() => {
