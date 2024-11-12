@@ -12,6 +12,7 @@ import { Sky, type SkyImpl } from '@geovanni/atmosphere/react'
 import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
+import { Stats } from '../helpers/Stats'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
@@ -100,16 +101,15 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
-  return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false
-      }}
-    >
-      <Scene />
-    </Canvas>
-  )
-}
+export const Basic: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false
+    }}
+  >
+    <Stats />
+    <Scene />
+  </Canvas>
+)

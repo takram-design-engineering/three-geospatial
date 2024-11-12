@@ -27,6 +27,7 @@ import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import { EastNorthUpFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
+import { Stats } from '../helpers/Stats'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
@@ -153,16 +154,15 @@ const Scene: FC = () => {
   )
 }
 
-export const EnvMap: StoryFn = () => {
-  return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false
-      }}
-    >
-      <Scene />
-    </Canvas>
-  )
-}
+export const EnvMap: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false
+    }}
+  >
+    <Stats />
+    <Scene />
+  </Canvas>
+)

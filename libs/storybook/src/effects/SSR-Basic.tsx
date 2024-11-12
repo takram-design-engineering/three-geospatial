@@ -18,6 +18,8 @@ import { DRACOLoader } from 'three-stdlib'
 import { type SSREffect } from '@geovanni/effects'
 import { EffectComposer, SSR } from '@geovanni/effects/react'
 
+import { Stats } from '../helpers/Stats'
+
 const Scene: FC = () => {
   const bunnyGeometry = useLoader(
     DRACOLoader,
@@ -90,39 +92,19 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
-  const { show } = useControls('stats', { show: false })
-  return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false
-      }}
-      camera={{
-        fov: 35,
-        position: [-0.2, 0.3, 0.5]
-      }}
-    >
-      {show && (
-        <ClassNames>
-          {(
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            { css }
-          ) => (
-            <StatsGl
-              className={css({
-                position: 'absolute',
-                top: '0',
-                left: '0',
-                display: 'flex',
-                flexDirection: 'row'
-              })}
-            />
-          )}
-        </ClassNames>
-      )}
-      <Scene />
-    </Canvas>
-  )
-}
+export const Basic: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false
+    }}
+    camera={{
+      fov: 35,
+      position: [-0.2, 0.3, 0.5]
+    }}
+  >
+    <Stats />
+    <Scene />
+  </Canvas>
+)

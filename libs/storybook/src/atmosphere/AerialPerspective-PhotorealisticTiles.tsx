@@ -46,6 +46,7 @@ import {
   useColorGradingControls
 } from '@geovanni/effects/react'
 
+import { Stats } from '../helpers/Stats'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
@@ -243,18 +244,17 @@ const Scene: FC = () => {
   )
 }
 
-export const PhotorealisticTiles: StoryFn = () => {
-  return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false,
-        logarithmicDepthBuffer: true
-      }}
-      camera={{ position, up }}
-    >
-      <Scene />
-    </Canvas>
-  )
-}
+export const PhotorealisticTiles: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false,
+      logarithmicDepthBuffer: true
+    }}
+    camera={{ position, up }}
+  >
+    <Stats />
+    <Scene />
+  </Canvas>
+)

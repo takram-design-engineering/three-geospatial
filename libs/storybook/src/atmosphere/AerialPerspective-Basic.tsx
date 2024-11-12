@@ -38,6 +38,7 @@ import {
 import { IonTerrain } from '@geovanni/terrain'
 import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
+import { Stats } from '../helpers/Stats'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
@@ -187,18 +188,17 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
-  return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false,
-        logarithmicDepthBuffer: true
-      }}
-      camera={{ near: 100, far: 1e6, position, up }}
-    >
-      <Scene />
-    </Canvas>
-  )
-}
+export const Basic: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false,
+      logarithmicDepthBuffer: true
+    }}
+    camera={{ near: 100, far: 1e6, position, up }}
+  >
+    <Stats />
+    <Scene />
+  </Canvas>
+)
