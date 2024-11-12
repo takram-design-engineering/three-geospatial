@@ -81,6 +81,9 @@ class SkyLightMaterial extends AtmosphereMaterialBase {
 
 export interface SkyLightParameters {
   size?: number
+  angularThreshold?: number
+
+  // Derived from atmosphere material
   irradianceTexture?: DataTexture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
@@ -90,6 +93,7 @@ export interface SkyLightParameters {
 }
 
 export class SkyLight extends LightProbe {
+  angularThreshold: number
   sunDirection: Vector3
 
   private readonly renderTarget: WebGLCubeRenderTarget
@@ -102,6 +106,7 @@ export class SkyLight extends LightProbe {
 
   constructor({
     size = 16,
+    angularThreshold = Math.PI / 100,
     sunDirection = new Vector3()
   }: SkyLightParameters = {}) {
     super()
@@ -117,6 +122,7 @@ export class SkyLight extends LightProbe {
     this.scene.add(new Mesh(this.geometry, this.material))
     this.camera = new CubeCamera(0.1, 1000, this.renderTarget)
 
+    this.angularThreshold = angularThreshold
     this.sunDirection = sunDirection
   }
 
@@ -129,12 +135,9 @@ export class SkyLight extends LightProbe {
   update(renderer: WebGLRenderer): void {
     if (
       !this.needsUpdate &&
-      this.material.sunDirection.equals(this.sunDirection) &&
-      this.camera.position.equals(this.position) &&
-      this.camera.rotation.equals(this.rotation) &&
-      this.camera.scale.equals(this.scale) &&
-      this.camera.quaternion.equals(this.quaternion) &&
-      this.camera.matrix.equals(this.matrix)
+      Math.acos(this.material.sunDirection.dot(this.sunDirection)) <
+        this.angularThreshold &&
+      this.camera.position.equals(this.position)
     ) {
       return
     }
@@ -142,10 +145,6 @@ export class SkyLight extends LightProbe {
 
     this.material.sunDirection.copy(this.sunDirection)
     this.camera.position.copy(this.position)
-    this.camera.rotation.copy(this.rotation)
-    this.camera.scale.copy(this.scale)
-    this.camera.quaternion.copy(this.quaternion)
-    this.camera.matrix.copy(this.matrix)
     this.camera.update(renderer, this.scene)
 
     if (this.updatePromise == null) {
