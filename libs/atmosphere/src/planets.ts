@@ -1,6 +1,3 @@
-// Exception for this file only.
-/* eslint-disable @typescript-eslint/naming-convention */
-
 import {
   Body,
   CombineRotation,
@@ -13,7 +10,7 @@ import {
 } from 'astronomy-engine'
 import { Matrix4, Vector3 } from 'three'
 
-function Rotation_Z(angle: number): RotationMatrix {
+function RotationZ(angle: number): RotationMatrix {
   const cos = Math.cos(angle)
   const sin = Math.sin(angle)
   return new RotationMatrix([
@@ -28,12 +25,12 @@ export function getDirectionECEF(
   date: FlexibleDateTime,
   result = new Vector3()
 ): Vector3 {
-  const vector_EQJ = GeoVector(body, date, true)
-  const rotation_EQJ_EQD = Rotation_EQJ_EQD(date)
-  const vector_EQD = RotateVector(rotation_EQJ_EQD, vector_EQJ)
-  const rotation_EQD_ECEF = Rotation_Z(SiderealTime(date) * (Math.PI / 12))
-  const vector_ECEF = RotateVector(rotation_EQD_ECEF, vector_EQD)
-  return result.set(vector_ECEF.x, vector_ECEF.y, vector_ECEF.z).normalize()
+  const vectorEQJ = GeoVector(body, date, true)
+  const rotationEQJtoEQD = Rotation_EQJ_EQD(date)
+  const vectorEQD = RotateVector(rotationEQJtoEQD, vectorEQJ)
+  const rotationEQDtoECEF = RotationZ(SiderealTime(date) * (Math.PI / 12))
+  const vectorECEF = RotateVector(rotationEQDtoECEF, vectorEQD)
+  return result.set(vectorECEF.x, vectorECEF.y, vectorECEF.z).normalize()
 }
 
 export function getSunDirectionECEF(
@@ -54,9 +51,9 @@ export function getECIToECEFRotationMatrix(
   date: FlexibleDateTime,
   result = new Matrix4()
 ): Matrix4 {
-  const rotation_EQJ_EQD = Rotation_EQJ_EQD(date)
-  const rotation_EQD_ECEF = Rotation_Z(SiderealTime(date) * (Math.PI / 12))
-  const { rot } = CombineRotation(rotation_EQJ_EQD, rotation_EQD_ECEF)
+  const rotationEQJtoEQD = Rotation_EQJ_EQD(date)
+  const rotationEQDtoECEF = RotationZ(SiderealTime(date) * (Math.PI / 12))
+  const { rot } = CombineRotation(rotationEQJtoEQD, rotationEQDtoECEF)
   // prettier-ignore
   return result.set(
     rot[0][0], rot[0][1], rot[0][2], 0,
