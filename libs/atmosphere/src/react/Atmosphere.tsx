@@ -9,7 +9,7 @@ import {
   getECIToECEFRotationMatrix,
   getMoonDirectionECEF,
   getSunDirectionECEF
-} from '../planets'
+} from '../celestialDirections'
 
 export interface AtmosphereContextValue {
   sunDirection: Vector3
