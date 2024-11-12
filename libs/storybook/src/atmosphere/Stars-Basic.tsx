@@ -1,7 +1,7 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
-import { type Meta, type StoryFn } from '@storybook/react'
+import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, useRef, type FC } from 'react'
 import { Matrix4 } from 'three'
@@ -12,13 +12,6 @@ import { EffectComposer } from '@geovanni/effects/react'
 
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
-
-export default {
-  title: 'atmosphere/Stars',
-  parameters: {
-    layout: 'fullscreen'
-  }
-} satisfies Meta
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 50 })
@@ -58,7 +51,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     gl={{
       antialias: false,
@@ -69,3 +62,5 @@ export const Basic: StoryFn = () => (
     <Scene />
   </Canvas>
 )
+
+export default Story

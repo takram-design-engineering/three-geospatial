@@ -1,10 +1,12 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'atmosphere/SkyLight',
+  title: 'atmosphere/Sky Light',
   parameters: {
     layout: 'fullscreen'
   }
 } satisfies Meta
 
-export { ForwardLighting } from './SkyLight-ForwardLighting'
+export const ForwardLighting = await import('./SkyLight-ForwardLighting').then(
+  module => module.default
+)

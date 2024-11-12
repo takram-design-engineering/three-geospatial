@@ -7,5 +7,9 @@ export default {
   }
 } satisfies Meta
 
-export { EastNorthUp } from './Ellipsoid-EastNorthUp'
-export { OsculatingSphere } from './Ellipsoid-OsculatingSphere'
+export const EastNorthUp = await import('./Ellipsoid-EastNorthUp').then(
+  module => module.default
+)
+export const OsculatingSphere = await import(
+  './Ellipsoid-OsculatingSphere'
+).then(module => module.default)

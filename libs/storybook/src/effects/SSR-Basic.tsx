@@ -1,12 +1,4 @@
-import { ClassNames } from '@emotion/react'
-import {
-  Box,
-  Cone,
-  Icosahedron,
-  OrbitControls,
-  Plane,
-  StatsGl
-} from '@react-three/drei'
+import { Box, Cone, Icosahedron, OrbitControls, Plane } from '@react-three/drei'
 import { applyProps, Canvas, useLoader } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
@@ -92,7 +84,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     gl={{
       antialias: false,
@@ -108,3 +100,5 @@ export const Basic: StoryFn = () => (
     <Scene />
   </Canvas>
 )
+
+export default Story

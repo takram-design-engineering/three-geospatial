@@ -266,7 +266,7 @@ const Scene: FC = () => {
   )
 }
 
-export const City: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     shadows
     gl={{
@@ -287,3 +287,5 @@ export const City: StoryFn = () => (
     <Scene />
   </Canvas>
 )
+
+export default Story

@@ -19,7 +19,7 @@ export function convertLinearSRGBToSRGB(
   )
 }
 
-export const BlackBodyChromaticity: StoryFn = () => {
+const Story: StoryFn = () => {
   const minTemperature = 1400
   const maxTemperature = 16000
 
@@ -37,3 +37,5 @@ export const BlackBodyChromaticity: StoryFn = () => {
 
   return <div style={{ height: '100%', background: gradient }} />
 }
+
+export default Story

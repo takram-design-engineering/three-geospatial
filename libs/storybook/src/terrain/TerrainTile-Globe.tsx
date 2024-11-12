@@ -13,12 +13,12 @@ const terrain = new IonTerrain({
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
 
-export const Globe: StoryFn<{
+const Story: StoryFn<{
   z: number
   useOctNormal: boolean
   flatShading: boolean
 }> = ({ z, useOctNormal, flatShading }) => {
-  const layer = suspend(async () => await terrain.loadLayer(), [Globe])
+  const layer = suspend(async () => await terrain.loadLayer(), [Story])
   const ranges = layer.available[z]
 
   const [[octNormalMaterial, meshNormalMaterial], setMaterials] = useState(
@@ -77,14 +77,16 @@ export const Globe: StoryFn<{
   )
 }
 
-Globe.args = {
+Story.args = {
   z: 3,
   useOctNormal: false,
   flatShading: true
 }
 
-Globe.argTypes = {
+Story.argTypes = {
   z: { control: { type: 'number' } },
   useOctNormal: { control: { type: 'boolean' } },
   flatShading: { control: { type: 'boolean' } }
 }
+
+export default Story

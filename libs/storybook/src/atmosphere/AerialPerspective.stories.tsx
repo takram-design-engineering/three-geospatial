@@ -1,11 +1,15 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'atmosphere/AerialPerspective',
+  title: 'atmosphere/Aerial Perspective',
   parameters: {
     layout: 'fullscreen'
   }
 } satisfies Meta
 
-export { Basic } from './AerialPerspective-Basic'
-export { PhotorealisticTiles } from './AerialPerspective-PhotorealisticTiles'
+export const Basic = await import('./AerialPerspective-Basic').then(
+  module => module.default
+)
+export const PhotorealisticTiles = await import(
+  './AerialPerspective-PhotorealisticTiles'
+).then(module => module.default)

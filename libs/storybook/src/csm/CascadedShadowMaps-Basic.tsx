@@ -247,7 +247,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     shadows
     gl={{ logarithmicDepthBuffer: true }}
@@ -256,3 +256,5 @@ export const Basic: StoryFn = () => (
     <Scene />
   </Canvas>
 )
+
+export default Story

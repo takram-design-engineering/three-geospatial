@@ -80,10 +80,12 @@ const Scene: FC = () => {
   )
 }
 
-export const OsculatingSphere: StoryFn = () => {
+const Story: StoryFn = () => {
   return (
     <Canvas camera={{ fov: 30, position: [50, 0, 0], up: [0, 0, 1] }}>
       <Scene />
     </Canvas>
   )
 }
+
+export default Story

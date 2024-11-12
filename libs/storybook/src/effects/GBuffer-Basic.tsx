@@ -74,7 +74,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
+const Story: StoryFn = () => {
   return (
     <Canvas
       gl={{
@@ -87,3 +87,5 @@ export const Basic: StoryFn = () => {
     </Canvas>
   )
 }
+
+export default Story

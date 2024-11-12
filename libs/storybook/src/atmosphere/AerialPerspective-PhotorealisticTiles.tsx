@@ -244,7 +244,7 @@ const Scene: FC = () => {
   )
 }
 
-export const PhotorealisticTiles: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     gl={{
       antialias: false,
@@ -258,3 +258,5 @@ export const PhotorealisticTiles: StoryFn = () => (
     <Scene />
   </Canvas>
 )
+
+export default Story

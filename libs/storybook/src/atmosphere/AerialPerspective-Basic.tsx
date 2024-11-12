@@ -188,7 +188,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     gl={{
       antialias: false,
@@ -202,3 +202,5 @@ export const Basic: StoryFn = () => (
     <Scene />
   </Canvas>
 )
+
+export default Story

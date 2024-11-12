@@ -7,5 +7,5 @@ export default {
   }
 } satisfies Meta
 
-export { Basic } from './SSR-Basic'
-export { City } from './SSR-City'
+export const Basic = await import('./SSR-Basic').then(module => module.default)
+export const City = await import('./SSR-City').then(module => module.default)

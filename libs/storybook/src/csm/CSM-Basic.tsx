@@ -133,7 +133,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
+const Story: StoryFn = () => {
   const { fade, far, mode, margin } = useControls('Controls', {
     fade: true,
     far: { value: 1000, min: 1, max: 5000 },
@@ -153,3 +153,5 @@ export const Basic: StoryFn = () => {
     </Canvas>
   )
 }
+
+export default Story

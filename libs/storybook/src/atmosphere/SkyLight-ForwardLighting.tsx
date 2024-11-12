@@ -298,7 +298,7 @@ const Scene: FC = () => {
   )
 }
 
-export const ForwardLighting: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     gl={{
       antialias: false,
@@ -314,3 +314,5 @@ export const ForwardLighting: StoryFn = () => (
     </CSM>
   </Canvas>
 )
+
+export default Story

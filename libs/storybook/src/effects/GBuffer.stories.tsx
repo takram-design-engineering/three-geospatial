@@ -7,4 +7,6 @@ export default {
   }
 } satisfies Meta
 
-export { Basic } from './GBuffer-Basic'
+export const Basic = await import('./GBuffer-Basic').then(
+  module => module.default
+)

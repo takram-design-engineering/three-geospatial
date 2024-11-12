@@ -154,7 +154,7 @@ const Scene: FC = () => {
   )
 }
 
-export const EnvMap: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     gl={{
       antialias: false,
@@ -166,3 +166,5 @@ export const EnvMap: StoryFn = () => (
     <Scene />
   </Canvas>
 )
+
+export default Story
