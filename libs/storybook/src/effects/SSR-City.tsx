@@ -1,12 +1,5 @@
-import { ClassNames } from '@emotion/react'
-import {
-  Circle,
-  OrbitControls,
-  RenderCubeTexture,
-  StatsGl,
-  type RenderCubeTextureApi
-} from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Circle, OrbitControls } from '@react-three/drei'
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { GLTFCesiumRTCExtension, TilesRenderer } from '3d-tiles-renderer'
@@ -28,12 +21,13 @@ import {
   computeSunLightColor,
   getMoonDirectionECEF,
   getSunDirectionECEF,
+  PrecomputedTexturesLoader,
+  SkyLight,
   type AerialPerspectiveEffect
 } from '@geovanni/atmosphere'
 import {
   AerialPerspective,
   Sky,
-  usePrecomputedTextures,
   type SkyImpl
 } from '@geovanni/atmosphere/react'
 import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
@@ -45,6 +39,8 @@ import {
   SSAO,
   SSR
 } from '@geovanni/effects/react'
+
+import { Stats } from '../helpers/Stats'
 
 const gltfLoader = new GLTFLoader()
 gltfLoader.register(() => new GLTFCesiumRTCExtension() as GLTFLoaderPlugin)
@@ -156,13 +152,7 @@ const Scene: FC = () => {
   const [aerialPerspective, setAerialPerspective] =
     useState<AerialPerspectiveEffect | null>(null)
 
-  const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
-  const scene = useThree(({ scene }) => scene)
-  useEffect(() => {
-    scene.environment = envMap?.fbo.texture ?? null
-  }, [envMap, scene])
-
-  const { transmittanceTexture } = usePrecomputedTextures('/', true)
+  const textures = useLoader(PrecomputedTexturesLoader, '/')
 
   useEffect(() => {
     const date = parseISO('2024-10-31T13:00+09:00')
@@ -171,7 +161,7 @@ const Scene: FC = () => {
     if (lightRef.current != null) {
       lightRef.current.position.copy(sunDirectionRef.current)
       computeSunLightColor(
-        transmittanceTexture,
+        textures.transmittanceTexture,
         position,
         sunDirectionRef.current,
         lightRef.current.color
@@ -188,7 +178,7 @@ const Scene: FC = () => {
       aerialPerspective.sunDirection.copy(sunDirectionRef.current)
     }
     envMapParentRef.current?.position.copy(position)
-  }, [aerialPerspective, transmittanceTexture])
+  }, [aerialPerspective, textures.transmittanceTexture])
 
   const effectComposer = useMemo(
     () => (
@@ -234,9 +224,18 @@ const Scene: FC = () => {
     ]
   )
 
+  const skyLight = useMemo(() => new SkyLight(), [])
+  skyLight.irradianceTexture = textures.irradianceTexture
+  useFrame(() => {
+    skyLight.position.copy(position)
+    skyLight.sunDirection.copy(sunDirectionRef.current)
+    skyLight.update(gl)
+  })
+
   const [target, setTarget] = useState<Object3D | null>(null)
   return (
     <>
+      <primitive object={skyLight} />
       <Sky ref={skyRef} />
       <OrbitControls target={position} />
       <group position={position}>
@@ -262,54 +261,29 @@ const Scene: FC = () => {
       {renderers.map((renderer, index) => (
         <primitive key={index} object={renderer.group} />
       ))}
-      <group ref={envMapParentRef}>
-        <RenderCubeTexture ref={setEnvMap} resolution={64}>
-          <Sky ref={envMapRef} sun={false} />
-        </RenderCubeTexture>
-      </group>
       {effectComposer}
     </>
   )
 }
 
-export const City: StoryFn = () => {
-  const { show } = useControls('stats', { show: false })
-  return (
-    <Canvas
-      shadows
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false,
-        logarithmicDepthBuffer: true,
-        toneMappingExposure: 10
-      }}
-      camera={{
-        near: 1,
-        far: 1e7,
-        position: cameraPosition,
-        up
-      }}
-    >
-      {show && (
-        <ClassNames>
-          {(
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            { css }
-          ) => (
-            <StatsGl
-              className={css({
-                position: 'absolute',
-                top: '0',
-                left: '0',
-                display: 'flex',
-                flexDirection: 'row'
-              })}
-            />
-          )}
-        </ClassNames>
-      )}
-      <Scene />
-    </Canvas>
-  )
-}
+export const City: StoryFn = () => (
+  <Canvas
+    shadows
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false,
+      logarithmicDepthBuffer: true,
+      toneMappingExposure: 10
+    }}
+    camera={{
+      near: 1,
+      far: 1e7,
+      position: cameraPosition,
+      up
+    }}
+  >
+    <Stats />
+    <Scene />
+  </Canvas>
+)
