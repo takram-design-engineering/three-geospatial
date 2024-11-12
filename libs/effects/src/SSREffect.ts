@@ -56,7 +56,7 @@ export class SSREffect extends Effect {
     const {
       blendFunction,
       geometryBuffer,
-      resolutionScale = 0.5,
+      resolutionScale = 1,
       width,
       height,
       resolutionX = width,
