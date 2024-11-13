@@ -7,14 +7,18 @@ import { useControls } from '../helpers/useControls'
 export const Stats: FC = () => {
   const { show } = useControls('stats', { show: false }, { collapsed: true })
 
+  const stats = useMemo(
+    () =>
+      new StatsImpl({
+        trackGPU: true
+      }),
+    []
+  )
+
   const gl = useThree(({ gl }) => gl)
-  const stats = useMemo(() => {
-    const stats = new StatsImpl({
-      trackGPU: true
-    })
+  useEffect(() => {
     void stats.init(gl)
-    return stats
-  }, [gl])
+  }, [stats, gl])
 
   useEffect(() => {
     if (show) {

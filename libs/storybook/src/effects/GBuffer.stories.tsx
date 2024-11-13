@@ -1,7 +1,7 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'effects/GBuffer',
+  title: 'effects/G-Buffer',
   parameters: {
     layout: 'fullscreen'
   }
