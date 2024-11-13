@@ -1,12 +1,13 @@
 import { OrbitControls, Plane } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { Fragment, useEffect, useRef, type FC } from 'react'
 import { BoxGeometry, Material, MeshStandardMaterial } from 'three'
 import { ShadowMapViewer } from 'three-stdlib'
 
 import { CascadedDirectionalLights, CSM, useCSM } from '@geovanni/csm/react'
+
+import { useControls } from '../helpers/useControls'
 
 const floorMaterial = new MeshStandardMaterial({ color: '#252a34' })
 const material1 = new MeshStandardMaterial({ color: '#08d9d6' })

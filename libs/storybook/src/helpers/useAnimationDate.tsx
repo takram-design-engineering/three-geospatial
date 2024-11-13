@@ -12,7 +12,8 @@ import {
   useTransform,
   type MotionValue
 } from 'framer-motion'
-import { useControls } from 'leva'
+
+import { useControls } from './useControls'
 
 const MILLISECONDS_PER_DAY = 3600000
 

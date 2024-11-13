@@ -9,7 +9,6 @@ import {
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import {
   useEffect,
@@ -28,7 +27,9 @@ import { EastNorthUpFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
 import { Stats } from '../helpers/Stats'
+import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
+import { useLocationControls } from '../helpers/useLocationControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
 const location = new Geodetic()
@@ -39,11 +40,14 @@ const rotation = new Quaternion()
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
-
-  const { longitude, latitude, height } = useControls('location', {
-    longitude: { value: 0, min: -180, max: 180 },
-    latitude: { value: 35, min: -90, max: 90 },
-    height: { value: 2000, min: 0, max: 30000 }
+  const { longitude, latitude, height } = useLocationControls()
+  const motionDate = useLocalDateControls({
+    longitude,
+    dayOfYear: 0
+  })
+  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
+    osculateEllipsoid: true,
+    photometric: false
   })
 
   const camera = useThree(({ camera }) => camera)
@@ -65,15 +69,6 @@ const Scene: FC = () => {
     controls.target.copy(position)
   }, [longitude, latitude, height, camera])
 
-  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
-    osculateEllipsoid: true,
-    photometric: false
-  })
-
-  const motionDate = useLocalDateControls({
-    longitude,
-    dayOfYear: 0
-  })
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const skyRef = useRef<SkyImpl>(null)

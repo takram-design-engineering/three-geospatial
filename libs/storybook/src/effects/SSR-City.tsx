@@ -4,7 +4,6 @@ import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { GLTFCesiumRTCExtension, TilesRenderer } from '3d-tiles-renderer'
 import { parseISO } from 'date-fns'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useMemo, useRef, useState, type FC } from 'react'
 import {
@@ -41,6 +40,7 @@ import {
 } from '@geovanni/effects/react'
 
 import { Stats } from '../helpers/Stats'
+import { useControls } from '../helpers/useControls'
 
 const gltfLoader = new GLTFLoader()
 gltfLoader.register(() => new GLTFCesiumRTCExtension() as GLTFLoaderPlugin)

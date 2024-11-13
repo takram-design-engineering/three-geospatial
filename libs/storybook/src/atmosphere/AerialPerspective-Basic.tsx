@@ -1,13 +1,7 @@
-import {
-  GizmoHelper,
-  GizmoViewport,
-  OrbitControls,
-  TorusKnot
-} from '@react-three/drei'
+import { OrbitControls, TorusKnot } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { Suspense, useMemo, useRef, type FC } from 'react'
 import { Matrix4, MeshBasicMaterial, Vector3 } from 'three'
@@ -32,13 +26,14 @@ import {
   Dithering,
   EffectComposer,
   LensFlare,
-  Normal,
-  useColorGradingControls
+  Normal
 } from '@geovanni/effects/react'
 import { IonTerrain } from '@geovanni/terrain'
 import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
 import { Stats } from '../helpers/Stats'
+import { useColorGradingControls } from '../helpers/useColorGradingControls'
+import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
@@ -61,11 +56,17 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { lensFlare, normal, depth } = useControls('effects', {
-    lensFlare: true,
-    depth: false,
-    normal: false
-  })
+  const { lensFlare, normal, depth } = useControls(
+    'effects',
+    {
+      lensFlare: true,
+      depth: false,
+      normal: false
+    },
+    { collapsed: true }
+  )
+
+  const motionDate = useLocalDateControls()
 
   const { osculateEllipsoid, photometric } = useControls('atmosphere', {
     osculateEllipsoid: true,
@@ -83,7 +84,6 @@ const Scene: FC = () => {
     }
   )
 
-  const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())
@@ -154,9 +154,6 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls target={position} minDistance={1e3} />
-      <GizmoHelper alignment='top-left' renderPriority={2}>
-        <GizmoViewport />
-      </GizmoHelper>
       <Sky
         ref={skyRef}
         osculateEllipsoid={osculateEllipsoid}
@@ -167,13 +164,6 @@ const Scene: FC = () => {
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}
       />
-      <EastNorthUpFrame {...location}>
-        <TorusKnot
-          args={[200, 60, 256, 64]}
-          position={[0, 0, 20]}
-          material={material}
-        />
-      </EastNorthUpFrame>
       <Suspense>
         <BatchedTerrainTile
           terrain={terrain}
@@ -183,6 +173,13 @@ const Scene: FC = () => {
           material={terrainMaterial}
         />
       </Suspense>
+      <EastNorthUpFrame {...location}>
+        <TorusKnot
+          args={[200, 60, 256, 64]}
+          position={[0, 0, 20]}
+          material={material}
+        />
+      </EastNorthUpFrame>
       {effectComposer}
     </>
   )

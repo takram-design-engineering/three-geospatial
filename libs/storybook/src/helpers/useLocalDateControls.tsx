@@ -1,7 +1,9 @@
 import { getDayOfYear } from 'date-fns'
 import { useMotionValue, useSpring, type MotionValue } from 'framer-motion'
-import { useControls } from 'leva'
 import { useEffect, useMemo } from 'react'
+
+import { springOptions } from './springOptions'
+import { useControls } from './useControls'
 
 const year = /*#__PURE__*/ new Date().getFullYear()
 
@@ -30,9 +32,8 @@ export function useLocalDateControls({
     }
   })
 
-  const springConfig = { mass: 1, damping: 20 }
-  const springDayOfYear = useSpring(dayOfYear, springConfig)
-  const springTimeOfDay = useSpring(timeOfDay, springConfig)
+  const springDayOfYear = useSpring(dayOfYear, springOptions)
+  const springTimeOfDay = useSpring(timeOfDay, springOptions)
   springDayOfYear.set(dayOfYear)
   springTimeOfDay.set(timeOfDay)
 
@@ -48,7 +49,6 @@ export function useLocalDateControls({
   const date = useMotionValue(0)
   useEffect(() => {
     date.set(getDate(springDayOfYear.get(), springTimeOfDay.get()))
-
     const offs = [
       springDayOfYear.on('change', value => {
         date.set(getDate(value, springTimeOfDay.get()))

@@ -15,11 +15,10 @@ import { useRendererControls } from '../helpers/useRendererControls'
 
 const Scene: FC = () => {
   useRendererControls({ exposure: 50 })
-
   const motionDate = useLocalDateControls()
+
   const rotationMatrixRef = useRef(new Matrix4())
   const starsRef = useRef<StarsImpl>(null)
-
   useFrame(() => {
     const date = new Date(motionDate.get())
     getECIToECEFRotationMatrix(date, rotationMatrixRef.current)

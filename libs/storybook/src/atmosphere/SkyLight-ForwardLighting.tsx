@@ -7,7 +7,6 @@ import {
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import {
   Suspense,
@@ -50,13 +49,14 @@ import {
   Dithering,
   EffectComposer,
   LensFlare,
-  Normal,
-  useColorGradingControls
+  Normal
 } from '@geovanni/effects/react'
 import { IonTerrain } from '@geovanni/terrain'
 import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
 import { Stats } from '../helpers/Stats'
+import { useColorGradingControls } from '../helpers/useColorGradingControls'
+import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 

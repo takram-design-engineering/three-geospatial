@@ -1,10 +1,11 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useControls } from 'leva'
 import { useEffect, useMemo, type FC } from 'react'
 import StatsImpl from 'stats-gl'
 
+import { useControls } from '../helpers/useControls'
+
 export const Stats: FC = () => {
-  const { show } = useControls('stats', { show: false })
+  const { show } = useControls('stats', { show: false }, { collapsed: true })
 
   const gl = useThree(({ gl }) => gl)
   const stats = useMemo(() => {

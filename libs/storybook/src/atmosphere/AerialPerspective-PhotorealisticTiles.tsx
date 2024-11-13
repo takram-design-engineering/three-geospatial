@@ -1,4 +1,3 @@
-import { GizmoHelper, GizmoViewport } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
@@ -7,7 +6,6 @@ import {
   GoogleCloudAuthPlugin,
   TilesRenderer
 } from '3d-tiles-renderer'
-import { useControls } from 'leva'
 import {
   EffectMaterial,
   ToneMappingMode,
@@ -42,11 +40,12 @@ import {
   Dithering,
   EffectComposer,
   LensFlare,
-  Normal,
-  useColorGradingControls
+  Normal
 } from '@geovanni/effects/react'
 
 import { Stats } from '../helpers/Stats'
+import { useColorGradingControls } from '../helpers/useColorGradingControls'
+import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
@@ -62,11 +61,17 @@ const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
 
-  const { lensFlare, normal, depth } = useControls('effects', {
-    lensFlare: true,
-    depth: false,
-    normal: false
-  })
+  const { lensFlare, normal, depth } = useControls(
+    'effects',
+    {
+      lensFlare: true,
+      depth: false,
+      normal: false
+    },
+    { collapsed: true }
+  )
+
+  const motionDate = useLocalDateControls()
 
   const { osculateEllipsoid, morphToSphere, photometric } = useControls(
     'atmosphere',
@@ -88,7 +93,6 @@ const Scene: FC = () => {
     }
   )
 
-  const motionDate = useLocalDateControls()
   const sunDirectionRef = useRef(new Vector3())
   const moonDirectionRef = useRef(new Vector3())
   const rotationMatrixRef = useRef(new Matrix4())
@@ -229,9 +233,6 @@ const Scene: FC = () => {
 
   return (
     <>
-      <GizmoHelper alignment='top-left' renderPriority={2}>
-        <GizmoViewport />
-      </GizmoHelper>
       <Sky
         ref={skyRef}
         osculateEllipsoid={osculateEllipsoid}

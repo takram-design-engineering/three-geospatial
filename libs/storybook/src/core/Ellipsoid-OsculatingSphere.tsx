@@ -8,13 +8,14 @@ import {
 } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { useEffect, useRef, type FC } from 'react'
 import { useEvent } from 'react-use'
 import { Raycaster, Vector2, Vector3, type ArrowHelper, type Mesh } from 'three'
 
 import { Ellipsoid } from '@geovanni/core'
 import { EllipsoidMesh } from '@geovanni/core/react'
+
+import { useControls } from '../helpers/useControls'
 
 const ellipsoid = new Ellipsoid(10, 10, 9)
 const raycaster = new Raycaster()

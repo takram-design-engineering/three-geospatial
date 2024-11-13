@@ -2,7 +2,6 @@ import { Box, Cone, Icosahedron, OrbitControls, Plane } from '@react-three/drei'
 import { applyProps, Canvas, useLoader } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useMemo, useRef, type FC } from 'react'
 import { DRACOLoader } from 'three-stdlib'
@@ -11,6 +10,7 @@ import { type SSREffect } from '@geovanni/effects'
 import { EffectComposer, SSR } from '@geovanni/effects/react'
 
 import { Stats } from '../helpers/Stats'
+import { useControls } from '../helpers/useControls'
 
 const Scene: FC = () => {
   const bunnyGeometry = useLoader(
