@@ -106,7 +106,7 @@ export class SkyLight extends LightProbe {
 
   constructor({
     size = 16,
-    angularThreshold = Math.PI / 100,
+    angularThreshold = (Math.PI / 10800) * 5, // 5 arcminutes
     sunDirection = new Vector3()
   }: SkyLightParameters = {}) {
     super()
