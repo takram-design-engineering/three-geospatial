@@ -46,9 +46,6 @@ export default defineConfig({
       formats: ['es', 'cjs']
     },
     rollupOptions: {
-      output: {
-        chunkFileNames: 'chunk-[hash].js'
-      },
       // External packages that should not be bundled into your library.
       external: [
         /^@geovanni\/*/,
