@@ -101,11 +101,12 @@ async function writeRecords(
 }> {
   const minMagnitude = Math.floor(minBy(records, 'magnitude')?.magnitude ?? 0)
   const maxMagnitude = Math.ceil(maxBy(records, 'magnitude')?.magnitude ?? 0)
-  const data = Buffer.alloc(records.length * 14)
+  const bytesPerRecord = 10
+  const data = Buffer.alloc(records.length * bytesPerRecord)
   for (
     let recordIndex = 0, byteOffset = 0;
     recordIndex < records.length;
-    ++recordIndex, byteOffset += 10
+    ++recordIndex, byteOffset += bytesPerRecord
   ) {
     const record = records[recordIndex]
     data.writeInt16LE(Math.round(record.x * 0x7fff), byteOffset)
