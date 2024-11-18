@@ -1,4 +1,4 @@
-import { useLoader, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
@@ -12,8 +12,8 @@ import {
   aerialPerspectiveEffectOptionsDefaults,
   type AerialPerspectiveEffectOptions
 } from '../AerialPerspectiveEffect'
-import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import { AtmosphereContext } from './Atmosphere'
+import { separateProps } from './separateProps'
 
 export interface AerialPerspectiveProps
   extends EffectProps<
@@ -25,21 +25,15 @@ export const AerialPerspective = forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
 >(function AerialPerspective(props, forwardedRef) {
-  const context = useContext(AtmosphereContext)
+  const { textures, transientProps, ...contextProps } =
+    useContext(AtmosphereContext)
 
-  const { blendFunction, ...others } = {
+  const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
     ...aerialPerspectiveEffectOptionsDefaults,
-    ...context,
+    ...contextProps,
+    ...textures,
     ...props
-  }
-
-  // TODO: Make the texture paths configurable.
-  const gl = useThree(({ gl }) => gl)
-  const useHalfFloat = useMemo(
-    () => gl.getContext().getExtension('OES_texture_float_linear') == null,
-    [gl]
-  )
-  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/')
+  })
 
   const { geometryPass, normalPass, camera } = useContext(
     EffectComposerContext
@@ -55,6 +49,12 @@ export const AerialPerspective = forwardRef<
     }
   }, [effect])
 
+  useFrame(() => {
+    if (transientProps != null) {
+      effect.sunDirection.copy(transientProps.sunDirection)
+    }
+  })
+
   return (
     <primitive
       ref={forwardedRef}
@@ -63,8 +63,7 @@ export const AerialPerspective = forwardRef<
       normalBuffer={
         geometryPass?.geometryTexture ?? normalPass?.texture ?? null
       }
-      {...precomputedTextures}
-      useHalfFloat={useHalfFloat}
+      {...atmosphereParameters}
       {...others}
       octEncodedNormal={geometryPass?.geometryTexture != null}
     />

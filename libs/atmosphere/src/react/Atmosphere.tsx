@@ -1,6 +1,13 @@
-import { useFrame } from '@react-three/fiber'
-import { MotionValue } from 'framer-motion'
-import { createContext, useMemo, useRef, type FC, type ReactNode } from 'react'
+import {
+  createContext,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode
+} from 'react'
 import { Matrix4, Vector3 } from 'three'
 
 import { Ellipsoid } from '@geovanni/core'
@@ -10,73 +17,109 @@ import {
   getMoonDirectionECEF,
   getSunDirectionECEF
 } from '../celestialDirections'
+import {
+  PrecomputedTexturesLoader,
+  type PrecomputedTextures
+} from '../PrecomputedTexturesLoader'
 
-export interface AtmosphereContextValue {
+export interface AtmosphereTransientProps {
   sunDirection: Vector3
   moonDirection: Vector3
   rotationMatrix: Matrix4
-  useHalfFloat?: boolean
-  ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
-  photometric?: boolean
 }
 
-export const AtmosphereContext = createContext<AtmosphereContextValue>({
-  sunDirection: new Vector3(),
-  moonDirection: new Vector3(),
-  rotationMatrix: new Matrix4()
-})
-
-export interface AtmosphereProps {
+export interface AtmosphereContextValue {
+  textures?: PrecomputedTextures | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
   photometric?: boolean
-  date?: number | Date | MotionValue<number> | MotionValue<Date>
+  transientProps?: AtmosphereTransientProps
+}
+
+export const AtmosphereContext = createContext<AtmosphereContextValue>({})
+
+export interface AtmosphereProps {
+  textures?: PrecomputedTextures | null
+  url?: string
+  useHalfFloat?: boolean
+  ellipsoid?: Ellipsoid
+  osculateEllipsoid?: boolean
+  photometric?: boolean
   children?: ReactNode
 }
 
-export const Atmosphere: FC<AtmosphereProps> = ({
-  date: dateProp,
-  useHalfFloat = false,
-  ellipsoid = Ellipsoid.WGS84,
-  osculateEllipsoid = true,
-  photometric = true,
-  children
-}) => {
-  const stateRef = useRef<AtmosphereContextValue>({
-    sunDirection: new Vector3(),
-    moonDirection: new Vector3(),
-    rotationMatrix: new Matrix4()
-  })
-
-  useFrame(() => {
-    const date =
-      dateProp != null
-        ? dateProp instanceof MotionValue
-          ? dateProp.get()
-          : dateProp
-        : Date.now()
-    const { sunDirection, moonDirection, rotationMatrix } = stateRef.current
-    getSunDirectionECEF(date, sunDirection)
-    getMoonDirectionECEF(date, moonDirection)
-    getECIToECEFRotationMatrix(date, rotationMatrix)
-  })
-
-  const context = useMemo(
-    () => ({
-      useHalfFloat,
-      ellipsoid,
-      osculateEllipsoid,
-      photometric,
-      ...stateRef.current
-    }),
-    [useHalfFloat, ellipsoid, osculateEllipsoid, photometric]
-  )
-
-  return (
-    <AtmosphereContext.Provider value={context}>
-      {children}
-    </AtmosphereContext.Provider>
-  )
+export interface AtmosphereApi extends AtmosphereTransientProps {
+  update: (date: number | Date) => void
 }
+
+export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
+  function Atmosphere(
+    {
+      textures: texturesProp,
+      url,
+      useHalfFloat = false,
+      ellipsoid = Ellipsoid.WGS84,
+      osculateEllipsoid = true,
+      photometric = true,
+      children
+    },
+    forwardedRef
+  ) {
+    const transientPropsRef = useRef({
+      sunDirection: new Vector3(),
+      moonDirection: new Vector3(),
+      rotationMatrix: new Matrix4()
+    })
+
+    const [textures, setTextures] = useState(texturesProp)
+    useEffect(() => {
+      if (texturesProp != null) {
+        setTextures(texturesProp)
+      } else if (url != null) {
+        const loader = new PrecomputedTexturesLoader()
+        loader.useHalfFloat = useHalfFloat
+        ;(async () => {
+          setTextures(await loader.loadAsync(url))
+        })().catch(error => {
+          console.error(error)
+        })
+      } else {
+        setTextures(undefined)
+      }
+    }, [texturesProp, url, useHalfFloat])
+
+    const context = useMemo(
+      () => ({
+        textures,
+        useHalfFloat,
+        ellipsoid,
+        osculateEllipsoid,
+        photometric,
+        transientProps: transientPropsRef.current
+      }),
+      [textures, useHalfFloat, ellipsoid, osculateEllipsoid, photometric]
+    )
+
+    const update: AtmosphereApi['update'] = useMemo(() => {
+      const { sunDirection, moonDirection, rotationMatrix } =
+        transientPropsRef.current
+      return date => {
+        getSunDirectionECEF(date, sunDirection)
+        getMoonDirectionECEF(date, moonDirection)
+        getECIToECEFRotationMatrix(date, rotationMatrix)
+      }
+    }, [])
+
+    useImperativeHandle(forwardedRef, () => ({
+      ...transientPropsRef.current,
+      update
+    }))
+
+    return (
+      <AtmosphereContext.Provider value={context}>
+        {children}
+      </AtmosphereContext.Provider>
+    )
+  }
+)

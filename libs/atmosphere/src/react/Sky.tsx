@@ -1,10 +1,9 @@
 import { ScreenQuad } from '@react-three/drei'
-import { useLoader, useThree, type MeshProps } from '@react-three/fiber'
+import { useFrame, type MeshProps } from '@react-three/fiber'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
-import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import { SkyMaterial, skyMaterialParametersDefaults } from '../SkyMaterial'
 import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
@@ -21,7 +20,8 @@ export interface SkyProps extends MeshProps, AtmosphereMaterialProps {
 
 export const Sky = forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {
-    const context = useContext(AtmosphereContext)
+    const { textures, transientProps, ...contextProps } =
+      useContext(AtmosphereContext)
 
     const [
       atmosphereParameters,
@@ -35,23 +35,10 @@ export const Sky = forwardRef<SkyImpl, SkyProps>(
       }
     ] = separateProps({
       ...skyMaterialParametersDefaults,
-      ...context,
+      ...contextProps,
+      ...textures,
       ...props
     })
-
-    // TODO: Make the texture paths configurable.
-    const gl = useThree(({ gl }) => gl)
-    const useHalfFloat = useMemo(
-      () => gl.getContext().getExtension('OES_texture_float_linear') == null,
-      [gl]
-    )
-    const precomputedTextures = useLoader(
-      PrecomputedTexturesLoader,
-      '/',
-      loader => {
-        loader.useHalfFloat = useHalfFloat
-      }
-    )
 
     const material = useMemo(() => new SkyMaterial(), [])
     useEffect(() => {
@@ -60,13 +47,18 @@ export const Sky = forwardRef<SkyImpl, SkyProps>(
       }
     }, [material])
 
+    useFrame(() => {
+      if (transientProps != null) {
+        material.sunDirection.copy(transientProps.sunDirection)
+        material.moonDirection.copy(transientProps.moonDirection)
+      }
+    })
+
     return (
       <ScreenQuad renderOrder={-1} {...others} ref={forwardedRef}>
         <primitive
           object={material}
-          {...precomputedTextures}
           {...atmosphereParameters}
-          useHalfFloat={useHalfFloat}
           sun={sun}
           moon={moon}
           moonDirection={moonDirection}
