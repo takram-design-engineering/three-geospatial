@@ -1,3 +1,4 @@
+import { useThree } from '@react-three/fiber'
 import {
   createContext,
   forwardRef,
@@ -50,6 +51,7 @@ export interface AtmosphereProps {
 }
 
 export interface AtmosphereApi extends AtmosphereTransientProps {
+  textures?: PrecomputedTextures | null
   update: (date: number | Date) => void
 }
 
@@ -58,7 +60,7 @@ export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
     {
       textures: texturesProp,
       texturesUrl,
-      useHalfFloat = false,
+      useHalfFloat,
       ellipsoid = Ellipsoid.WGS84,
       osculateEllipsoid = true,
       photometric = true,
@@ -71,6 +73,12 @@ export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
       moonDirection: new Vector3(),
       rotationMatrix: new Matrix4()
     })
+
+    const gl = useThree(({ gl }) => gl)
+    if (useHalfFloat == null) {
+      useHalfFloat =
+        gl.getContext().getExtension('OES_texture_float_linear') == null
+    }
 
     const [textures, setTextures] = useState(texturesProp)
     useEffect(() => {
@@ -111,10 +119,15 @@ export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
       }
     }, [])
 
-    useImperativeHandle(forwardedRef, () => ({
-      ...transientPropsRef.current,
-      update
-    }))
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        ...transientPropsRef.current,
+        textures,
+        update
+      }),
+      [textures, update]
+    )
 
     return (
       <AtmosphereContext.Provider value={context}>
