@@ -35,7 +35,7 @@ void morphToSphere(
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-vec3 sunSkyIrradiance(
+vec3 getSunSkyIrradiance(
   const vec3 worldPosition,
   const vec3 worldNormal,
   const vec3 inputColor
@@ -61,7 +61,7 @@ vec3 sunSkyIrradiance(
 #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
 #if defined(TRANSMITTANCE) || defined(INSCATTER)
-void transmittanceInscatter(
+void getTransmittanceInscatter(
   const vec3 worldPosition,
   const vec3 worldNormal,
   inout vec3 radLum
@@ -125,13 +125,13 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 radLum;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  radLum = sunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb);
+  radLum = getSunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb);
   #else
   radLum = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  transmittanceInscatter(worldPosition, worldNormal, radLum);
+  getTransmittanceInscatter(worldPosition, worldNormal, radLum);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radLum, inputColor.a);

@@ -33,6 +33,9 @@ import {
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface AtmosphereMaterialProps {
+  irradianceTexture?: DataTexture | null
+  scatteringTexture?: Data3DTexture | null
+  transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
@@ -43,11 +46,7 @@ export interface AtmosphereMaterialProps {
 
 export interface AtmosphereMaterialBaseParameters
   extends Partial<ShaderMaterialParameters>,
-    AtmosphereMaterialProps {
-  irradianceTexture?: DataTexture | null
-  scatteringTexture?: Data3DTexture | null
-  transmittanceTexture?: DataTexture | null
-}
+    AtmosphereMaterialProps {}
 
 export const atmosphereMaterialParametersBaseDefaults = {
   useHalfFloat: false,

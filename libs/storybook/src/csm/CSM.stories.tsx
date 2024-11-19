@@ -7,4 +7,4 @@ export default {
   }
 } satisfies Meta
 
-export { Basic } from './CSM-Basic'
+export const Basic = await import('./CSM-Basic').then(module => module.default)

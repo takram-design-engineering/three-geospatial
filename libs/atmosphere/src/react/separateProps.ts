@@ -3,6 +3,9 @@ import { omit, pick } from 'lodash'
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 
 const propKeys = [
+  'irradianceTexture',
+  'scatteringTexture',
+  'transmittanceTexture',
   'useHalfFloat',
   'ellipsoid',
   'osculateEllipsoid',

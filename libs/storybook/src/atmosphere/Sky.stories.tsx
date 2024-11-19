@@ -7,5 +7,7 @@ export default {
   }
 } satisfies Meta
 
-export { Basic } from './Sky-Basic'
-export { EnvMap } from './Sky-EnvMap'
+export const Basic = await import('./Sky-Basic').then(module => module.default)
+export const EnvironmentMap = await import('./Sky-EnvironmentMap').then(
+  module => module.default
+)

@@ -1,5 +1,13 @@
-import { useLoader, useThree, type PointsProps } from '@react-three/fiber'
-import { forwardRef, useEffect, useMemo } from 'react'
+import { useFrame, type PointsProps } from '@react-three/fiber'
+import {
+  forwardRef,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
+import { mergeRefs } from 'react-merge-refs'
 import { type Points } from 'three'
 
 import { ArrayBufferLoader } from '@geovanni/core'
@@ -10,66 +18,93 @@ import {
   StarsMaterial,
   starsMaterialParametersDefaults
 } from '../StarsMaterial'
+import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
-import { usePrecomputedTextures } from './usePrecomputedTextures'
 
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
 export interface StarsProps extends PointsProps, AtmosphereMaterialProps {
+  data?: ArrayBuffer
+  dataUrl?: string
   pointSize?: number
   radianceScale?: number
   background?: boolean
 }
 
-export const Stars = forwardRef<StarsImpl, StarsProps>(
-  function Stars(props, forwardedRef) {
-    const [
-      atmosphereParameters,
-      { pointSize, radianceScale, background, ...others }
-    ] = separateProps({
-      ...starsMaterialParametersDefaults,
-      ...props
-    })
+export const Stars = forwardRef<StarsImpl, StarsProps>(function Stars(
+  { data: dataProp, dataUrl, ...props },
+  forwardedRef
+) {
+  const { textures, transientProps, ...contextProps } =
+    useContext(AtmosphereContext)
 
-    // TODO: Make the texture paths configurable.
-    const gl = useThree(({ gl }) => gl)
-    const useHalfFloat = useMemo(
-      () => gl.getContext().getExtension('OES_texture_float_linear') == null,
-      [gl]
-    )
-    const precomputedTextures = usePrecomputedTextures('/', useHalfFloat)
+  const [
+    atmosphereParameters,
+    { pointSize, radianceScale, background, ...others }
+  ] = separateProps({
+    ...starsMaterialParametersDefaults,
+    ...contextProps,
+    ...textures,
+    ...props
+  })
 
-    // TODO: Make the data path configurable.
-    const data = useLoader(ArrayBufferLoader, '/stars.bin')
-    const geometry = useMemo(() => new StarsGeometry(data), [data])
-    useEffect(() => {
-      return () => {
-        geometry.dispose()
-      }
-    }, [geometry])
+  const [data, setData] = useState(dataProp)
+  useEffect(() => {
+    if (dataProp != null) {
+      setData(dataProp)
+    } else if (dataUrl != null) {
+      const loader = new ArrayBufferLoader()
+      ;(async () => {
+        setData(await loader.loadAsync(dataUrl))
+      })().catch(error => {
+        console.error(error)
+      })
+    } else {
+      setData(undefined)
+    }
+  }, [dataProp, dataUrl])
 
-    const material = useMemo(() => new StarsMaterial(), [])
-    useEffect(() => {
-      return () => {
-        material.dispose()
-      }
-    }, [material])
+  const geometry = useMemo(
+    () => (data != null ? new StarsGeometry(data) : undefined),
+    [data]
+  )
+  useEffect(() => {
+    return () => {
+      geometry?.dispose()
+    }
+  }, [geometry])
 
-    return (
-      <points ref={forwardedRef} {...others} frustumCulled={false}>
-        <primitive object={geometry} />
-        <primitive
-          object={material}
-          {...precomputedTextures}
-          {...atmosphereParameters}
-          useHalfFloat={useHalfFloat}
-          pointSize={pointSize}
-          radianceScale={radianceScale}
-          background={background}
-          depthTest={true}
-          depthWrite={false}
-        />
-      </points>
-    )
-  }
-)
+  const material = useMemo(() => new StarsMaterial(), [])
+  useEffect(() => {
+    return () => {
+      material.dispose()
+    }
+  }, [material])
+
+  const ref = useRef<Points>(null)
+  useFrame(() => {
+    if (transientProps != null) {
+      material.sunDirection.copy(transientProps.sunDirection)
+      ref.current?.setRotationFromMatrix(transientProps.rotationMatrix)
+    }
+  })
+
+  return (
+    <points
+      ref={mergeRefs([ref, forwardedRef])}
+      {...others}
+      frustumCulled={false}
+    >
+      {geometry != null && <primitive object={geometry} />}
+      <primitive
+        object={material}
+        {...atmosphereParameters}
+        pointSize={pointSize}
+        radianceScale={radianceScale}
+        background={background}
+        depthTest={true}
+        depthWrite={false}
+      />
+    </points>
+  )
+})

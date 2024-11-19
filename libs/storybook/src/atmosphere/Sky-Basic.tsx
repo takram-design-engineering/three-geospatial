@@ -1,18 +1,20 @@
-import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
+import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useMemo, useRef, type ComponentRef, type FC } from 'react'
-import { Quaternion, Vector3 } from 'three'
+import { useEffect, useRef, type FC } from 'react'
+import { Quaternion, Vector3, type Camera } from 'three'
+import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/atmosphere'
-import { Sky, type SkyImpl } from '@geovanni/atmosphere/react'
-import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
+import { Atmosphere, Sky, type AtmosphereApi } from '@geovanni/atmosphere/react'
+import { Ellipsoid, Geodetic, radians, type GeodeticLike } from '@geovanni/core'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
+import { Stats } from '../helpers/Stats'
+import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
+import { useLocationControls } from '../helpers/useLocationControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
 const location = new Geodetic()
@@ -21,95 +23,84 @@ const up = new Vector3()
 const offset = new Vector3()
 const rotation = new Quaternion()
 
+function applyLocation(
+  camera: Camera,
+  controls: OrbitControlsImpl,
+  { longitude, latitude, height }: GeodeticLike
+): void {
+  location.set(radians(longitude), radians(latitude), height)
+  location.toECEF(position)
+  Ellipsoid.WGS84.getSurfaceNormal(position, up)
+
+  rotation.setFromUnitVectors(camera.up, up)
+  offset.copy(camera.position).sub(controls.target)
+  offset.applyQuaternion(rotation)
+  camera.up.copy(up)
+  camera.position.copy(position).add(offset)
+  controls.target.copy(position)
+}
+
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
-
-  const { longitude, latitude, height } = useControls('location', {
-    longitude: { value: 0, min: -180, max: 180 },
-    latitude: { value: 35, min: -90, max: 90 },
-    height: { value: 2000, min: 0, max: 30000 }
+  const { longitude, latitude, height } = useLocationControls()
+  const motionDate = useLocalDateControls({
+    longitude,
+    dayOfYear: 0
   })
-
-  const camera = useThree(({ camera }) => camera)
-  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
-  useEffect(() => {
-    const controls = controlsRef.current
-    if (controls == null) {
-      return
-    }
-    location.set(radians(longitude), radians(latitude), height)
-    location.toECEF(position)
-    Ellipsoid.WGS84.getSurfaceNormal(position, up)
-
-    rotation.setFromUnitVectors(camera.up, up)
-    offset.copy(camera.position).sub(controls.target)
-    offset.applyQuaternion(rotation)
-    camera.up.copy(up)
-    camera.position.copy(position).add(offset)
-    controls.target.copy(position)
-  }, [longitude, latitude, height, camera])
-
   const { osculateEllipsoid, photometric } = useControls('atmosphere', {
     osculateEllipsoid: true,
     photometric: false
   })
 
-  const motionDate = useLocalDateControls({
-    longitude,
-    dayOfYear: 0
-  })
-  const sunDirectionRef = useRef(new Vector3())
-  const moonDirectionRef = useRef(new Vector3())
-  const skyRef = useRef<SkyImpl>(null)
-
-  useFrame(() => {
-    const date = new Date(motionDate.get())
-    getSunDirectionECEF(date, sunDirectionRef.current)
-    getMoonDirectionECEF(date, moonDirectionRef.current)
-    if (skyRef.current != null) {
-      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
+  const camera = useThree(({ camera }) => camera)
+  const controlsRef = useRef<OrbitControlsImpl>(null)
+  useEffect(() => {
+    const controls = controlsRef.current
+    if (controls != null) {
+      applyLocation(camera, controls, {
+        longitude,
+        latitude,
+        height
+      })
     }
-  })
+  }, [longitude, latitude, height, camera])
 
-  const effectComposer = useMemo(
-    () => (
-      <EffectComposer key={Math.random()} multisampling={0}>
-        <LensFlare />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        <SMAA />
-        <Dithering />
-      </EffectComposer>
-    ),
-    []
-  )
+  const atmosphereRef = useRef<AtmosphereApi>(null)
+  useFrame(() => {
+    atmosphereRef.current?.update(new Date(motionDate.get()))
+  })
 
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={5} />
-      <GizmoHelper alignment='top-left' renderPriority={2}>
-        <GizmoViewport />
-      </GizmoHelper>
-      <Sky
-        ref={skyRef}
+      <Atmosphere
+        ref={atmosphereRef}
+        texturesUrl='/'
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
-      />
-      {effectComposer}
+      >
+        <Sky />
+      </Atmosphere>
+      <EffectComposer multisampling={0}>
+        <LensFlare />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <Dithering />
+      </EffectComposer>
     </>
   )
 }
 
-export const Basic: StoryFn = () => {
-  return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false
-      }}
-    >
-      <Scene />
-    </Canvas>
-  )
-}
+const Story: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false
+    }}
+  >
+    <Stats />
+    <Scene />
+  </Canvas>
+)
+
+export default Story

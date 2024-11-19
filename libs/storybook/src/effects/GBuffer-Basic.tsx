@@ -2,10 +2,11 @@ import { OrbitControls, Sphere } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { useMemo, type FC } from 'react'
 
 import { Depth, EffectComposer, Geometry } from '@geovanni/effects/react'
+
+import { useControls } from '../helpers/useControls'
 
 const Scene: FC = () => {
   const { output, material, depth } = useControls({
@@ -74,7 +75,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
+const Story: StoryFn = () => {
   return (
     <Canvas
       gl={{
@@ -87,3 +88,5 @@ export const Basic: StoryFn = () => {
     </Canvas>
   )
 }
+
+export default Story

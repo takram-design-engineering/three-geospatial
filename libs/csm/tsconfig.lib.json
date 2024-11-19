@@ -25,7 +25,6 @@
     "src/**/*.jsx",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "types/**/*.ts",
-    "index.d.ts"
+    "types/**/*.ts"
   ]
 }

@@ -2,11 +2,12 @@ import { Environment, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 
 import { LensFlare } from '@geovanni/effects/react'
+
+import { useControls } from '../helpers/useControls'
 
 const Scene: FC = () => {
   const { enabled } = useControls({
@@ -39,7 +40,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
+const Story: StoryFn = () => {
   return (
     <Canvas
       gl={{
@@ -52,3 +53,5 @@ export const Basic: StoryFn = () => {
     </Canvas>
   )
 }
+
+export default Story

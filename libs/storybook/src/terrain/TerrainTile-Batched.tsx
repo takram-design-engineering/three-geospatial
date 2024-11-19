@@ -40,7 +40,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Batched: StoryFn = () => {
+const Story: StoryFn = () => {
   return (
     <Canvas
       gl={{ logarithmicDepthBuffer: true }}
@@ -50,3 +50,5 @@ export const Batched: StoryFn = () => {
     </Canvas>
   )
 }
+
+export default Story

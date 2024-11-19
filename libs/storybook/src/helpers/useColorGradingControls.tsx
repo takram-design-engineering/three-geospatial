@@ -1,12 +1,12 @@
 import { LUT, type LUTProps } from '@react-three/postprocessing'
-import { useControls } from 'leva'
 import { type LUT3DEffect } from 'postprocessing'
 import { forwardRef, useMemo, type ReactElement } from 'react'
 import { suspend } from 'suspend-react'
 
 import { axios } from '@geovanni/core'
+import { useHaldLookupTexture } from '@geovanni/effects/react'
 
-import { useHaldLookupTexture } from './useHaldLookupTexture'
+import { useControls } from './useControls'
 
 interface Entry {
   category: string
@@ -48,19 +48,20 @@ export function useColorGradingControls(): ReactElement | null {
     [data]
   )
 
-  const { film, enabled } = useControls(
+  const { enabled, film } = useControls(
     'color grading',
     {
+      enabled: false,
       film: {
         options: films
-      },
-      enabled: false
+      }
     },
+    { collapsed: true },
     [films]
   )
 
   return useMemo(
     () => (enabled ? <HaldLUT path={film} /> : null),
-    [film, enabled]
+    [enabled, film]
   )
 }

@@ -2,13 +2,14 @@ import { OrbitControls, Plane } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type Viewport } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
 import { useSpring } from 'framer-motion'
-import { useControls } from 'leva'
 import { Fragment, useEffect, useMemo, useRef, type FC } from 'react'
 import { BoxGeometry, Material, MeshStandardMaterial } from 'three'
 import { ShadowMapViewer } from 'three-stdlib'
 
 import { radians } from '@geovanni/core'
 import { CascadedShadowMaps, CSMHelper } from '@geovanni/csm'
+
+import { useControls } from '../helpers/useControls'
 
 const floorMaterial = new MeshStandardMaterial({ color: '#252a34' })
 const material1 = new MeshStandardMaterial({ color: '#08d9d6' })
@@ -247,7 +248,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => (
+const Story: StoryFn = () => (
   <Canvas
     shadows
     gl={{ logarithmicDepthBuffer: true }}
@@ -256,3 +257,5 @@ export const Basic: StoryFn = () => (
     <Scene />
   </Canvas>
 )
+
+export default Story

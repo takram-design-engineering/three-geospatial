@@ -4,14 +4,14 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./index.mjs",
-      "require": "./index.js"
+      "import": "./index.js",
+      "require": "./index.cjs"
     },
     "./react": {
-      "import": "./react/index.mjs",
-      "require": "./react/index.js"
+      "import": "./react/index.js",
+      "require": "./react/index.cjs"
     }
   },
-  "main": "./index.js",
+  "main": "./index.cjs",
   "types": "./index.d.ts"
 }

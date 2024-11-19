@@ -1,12 +1,13 @@
 import { OrbitControls, Plane } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
-import { useControls } from 'leva'
 import { Fragment, useEffect, useRef, type FC } from 'react'
 import { BoxGeometry, Material, MeshStandardMaterial } from 'three'
 import { ShadowMapViewer } from 'three-stdlib'
 
 import { CascadedDirectionalLights, CSM, useCSM } from '@geovanni/csm/react'
+
+import { useControls } from '../helpers/useControls'
 
 const floorMaterial = new MeshStandardMaterial({ color: '#252a34' })
 const material1 = new MeshStandardMaterial({ color: '#08d9d6' })
@@ -133,7 +134,7 @@ const Scene: FC = () => {
   )
 }
 
-export const Basic: StoryFn = () => {
+const Story: StoryFn = () => {
   const { fade, far, mode, margin } = useControls('Controls', {
     fade: true,
     far: { value: 1000, min: 1, max: 5000 },
@@ -153,3 +154,5 @@ export const Basic: StoryFn = () => {
     </Canvas>
   )
 }
+
+export default Story

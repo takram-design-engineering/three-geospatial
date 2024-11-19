@@ -1,10 +1,12 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'csm/CascadedShadowMaps',
+  title: 'csm/Cascaded Shadow Maps',
   parameters: {
     layout: 'fullscreen'
   }
 } satisfies Meta
 
-export { Basic } from './CascadedShadowMaps-Basic'
+export const Basic = await import('./CascadedShadowMaps-Basic').then(
+  module => module.default
+)

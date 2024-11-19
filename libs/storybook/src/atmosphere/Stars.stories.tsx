@@ -7,5 +7,9 @@ export default {
   }
 } satisfies Meta
 
-export { Basic } from './Stars-Basic'
-export { BlackBodyChromaticity } from './Stars-BlackBodyChromaticity'
+export const Basic = await import('./Stars-Basic').then(
+  module => module.default
+)
+export const BlackBodyChromaticity = await import(
+  './Stars-BlackBodyChromaticity'
+).then(module => module.default)
