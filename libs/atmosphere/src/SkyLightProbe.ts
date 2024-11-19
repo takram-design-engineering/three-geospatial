@@ -108,8 +108,10 @@ export class SkyLightProbe extends LightProbe {
   private readonly geometry: BufferGeometry
   private readonly material: SkyLightMaterial
   private readonly camera: CubeCamera
+
   private needsUpdate = true
-  private updatePromise?: Promise<void>
+  private needsUpdateRenderTarget = false
+  private updatingRenderTarget = false
 
   constructor(params?: SkyLightProbeParameters) {
     super()
@@ -142,38 +144,48 @@ export class SkyLightProbe extends LightProbe {
   }
 
   update(renderer: WebGLRenderer): void {
-    const angleChange = Math.acos(
-      this.material.sunDirection.dot(this.sunDirection)
-    )
     const worldPosition = this.getWorldPosition(vectorScratch)
     if (
       !this.needsUpdate &&
-      angleChange < this.angularThreshold &&
+      Math.acos(this.material.sunDirection.dot(this.sunDirection)) <
+        this.angularThreshold &&
       this.camera.position.equals(worldPosition)
     ) {
+      // Because this function is supposed to be called regular interval, it's
+      // sufficient to queue updating render target via a flag and execute it in
+      // a following update.
+      if (this.needsUpdateRenderTarget && !this.updatingRenderTarget) {
+        this.needsUpdateRenderTarget = false
+        this.updateRenderTarget(renderer)
+      }
       return
     }
-    this.needsUpdate = false
 
+    this.needsUpdate = false
     this.material.sunDirection.copy(this.sunDirection)
     this.camera.position.copy(worldPosition)
     this.camera.update(renderer, this.scene)
 
-    if (this.updatePromise == null) {
-      this.updatePromise = this.updateRenderTarget(renderer)
+    this.needsUpdateRenderTarget = false
+    if (this.updatingRenderTarget) {
+      this.needsUpdateRenderTarget = true
     } else {
-      this.updatePromise = this.updatePromise.then(async () => {
-        await this.updateRenderTarget(renderer)
-      })
+      this.updateRenderTarget(renderer)
     }
   }
 
-  private async updateRenderTarget(renderer: WebGLRenderer): Promise<void> {
-    const other = await LightProbeGenerator.fromCubeRenderTarget(
-      renderer,
-      this.renderTarget
-    )
-    this.sh.copy(other.sh)
+  private updateRenderTarget(renderer: WebGLRenderer): void {
+    this.updatingRenderTarget = true
+    LightProbeGenerator.fromCubeRenderTarget(renderer, this.renderTarget)
+      .then(probe => {
+        this.sh.copy(probe.sh)
+      })
+      .catch(error => {
+        console.error(error)
+      })
+      .finally(() => {
+        this.updatingRenderTarget = false
+      })
   }
 
   get irradianceTexture(): DataTexture | null {
