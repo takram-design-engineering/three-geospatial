@@ -11,8 +11,7 @@ import {
   ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { useEffect, useMemo, useRef, type FC } from 'react'
-import { Matrix4, Vector3 } from 'three'
+import { Fragment, useEffect, useMemo, useRef, type FC } from 'react'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import {
@@ -22,17 +21,11 @@ import {
   UpdateOnChangePlugin
 } from '@geovanni/3d-tiles'
 import {
-  getECIToECEFRotationMatrix,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  type AerialPerspectiveEffect
-} from '@geovanni/atmosphere'
-import {
   AerialPerspective,
+  Atmosphere,
   Sky,
   Stars,
-  type SkyImpl,
-  type StarsImpl
+  type AtmosphereApi
 } from '@geovanni/atmosphere/react'
 import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import {
@@ -49,77 +42,14 @@ import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
 
-// Coordinates of Tokyo station.
-const location = new Geodetic(radians(139.7671), radians(35.6812))
-const position = location.toECEF().multiplyScalar(2000)
+const location = new Geodetic(radians(139.7671), radians(35.6812), 4500)
+const position = location.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
-const Scene: FC = () => {
-  useRendererControls({ exposure: 10 })
-  const lut = useColorGradingControls()
-
-  const { lensFlare, normal, depth } = useControls(
-    'effects',
-    {
-      lensFlare: true,
-      depth: false,
-      normal: false
-    },
-    { collapsed: true }
-  )
-
-  const motionDate = useLocalDateControls()
-
-  const { osculateEllipsoid, morphToSphere, photometric } = useControls(
-    'atmosphere',
-    {
-      osculateEllipsoid: true,
-      morphToSphere: true,
-      photometric: true
-    }
-  )
-
-  const { enable, sun, sky, transmittance, inscatter } = useControls(
-    'aerial perspective',
-    {
-      enable: true,
-      sun: true,
-      sky: true,
-      transmittance: true,
-      inscatter: true
-    }
-  )
-
-  const sunDirectionRef = useRef(new Vector3())
-  const moonDirectionRef = useRef(new Vector3())
-  const rotationMatrixRef = useRef(new Matrix4())
-  const skyRef = useRef<SkyImpl>(null)
-  const starsRef = useRef<StarsImpl>(null)
-  const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
-
-  useFrame(() => {
-    const date = new Date(motionDate.get())
-    getSunDirectionECEF(date, sunDirectionRef.current)
-    getMoonDirectionECEF(date, moonDirectionRef.current)
-    getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
-    if (skyRef.current != null) {
-      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
-    }
-    if (starsRef.current != null) {
-      starsRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
-    }
-    if (aerialPerspectiveRef.current != null) {
-      aerialPerspectiveRef.current.sunDirection.copy(sunDirectionRef.current)
-    }
-  })
-
-  const { gl, scene, camera } = useThree()
-
+const Globe: FC = () => {
   const tiles = useMemo(() => {
     // @ts-expect-error Missing type
     const tiles = new TilesRenderer()
@@ -150,14 +80,17 @@ const Scene: FC = () => {
     }
   }, [tiles])
 
+  const camera = useThree(({ camera }) => camera)
   useEffect(() => {
     tiles.setCamera(camera)
   }, [tiles, camera])
 
+  const gl = useThree(({ gl }) => gl)
   useEffect(() => {
     tiles.setResolutionFromRenderer(camera, gl)
   }, [tiles, camera, gl])
 
+  const scene = useThree(({ scene }) => scene)
   const controls = useMemo(() => {
     const controls = new GlobeControls(scene, camera, gl.domElement, tiles)
     controls.enableDamping = true
@@ -170,12 +103,53 @@ const Scene: FC = () => {
     }
   }, [controls])
 
-  const composerRef = useRef<EffectComposerImpl>(null)
-
   useFrame(() => {
     tiles.update()
     controls.update()
+  })
 
+  return <primitive object={tiles.group} />
+}
+
+const Scene: FC = () => {
+  useRendererControls({ exposure: 10 })
+  const lut = useColorGradingControls()
+  const { lensFlare, normal, depth } = useControls(
+    'effects',
+    {
+      lensFlare: true,
+      depth: false,
+      normal: false
+    },
+    { collapsed: true }
+  )
+  const motionDate = useLocalDateControls()
+  const { osculateEllipsoid, morphToSphere, photometric } = useControls(
+    'atmosphere',
+    {
+      osculateEllipsoid: true,
+      morphToSphere: true,
+      photometric: true
+    }
+  )
+  const {
+    enable: enabled,
+    sun,
+    sky,
+    transmittance,
+    inscatter
+  } = useControls('aerial perspective', {
+    enable: true,
+    sun: true,
+    sky: true,
+    transmittance: true,
+    inscatter: true
+  })
+
+  // Effects must know the camera near/far changed by GlobeControls.
+  const camera = useThree(({ camera }) => camera)
+  const composerRef = useRef<EffectComposerImpl>(null)
+  useFrame(() => {
     const composer = composerRef.current
     if (composer != null) {
       composer.passes.forEach(pass => {
@@ -186,62 +160,61 @@ const Scene: FC = () => {
     }
   })
 
-  const effectComposer = useMemo(
-    () => (
-      <EffectComposer key={Math.random()} ref={composerRef} multisampling={0}>
-        {enable && !normal && !depth && (
-          <AerialPerspective
-            ref={aerialPerspectiveRef}
-            osculateEllipsoid={osculateEllipsoid}
-            morphToSphere={morphToSphere}
-            photometric={photometric}
-            sunIrradiance={sun}
-            skyIrradiance={sky}
-            transmittance={transmittance}
-            inscatter={inscatter}
-            albedoScale={0.2}
-          />
-        )}
-        {lensFlare && <LensFlare />}
-        {depth && <Depth useTurbo />}
-        {normal && <Normal octEncoded />}
-        {!normal && !depth && (
-          <>
-            <ToneMapping mode={ToneMappingMode.AGX} />
-            {lut != null && lut}
-            <SMAA />
-            <Dithering />
-          </>
-        )}
-      </EffectComposer>
-    ),
-    [
-      osculateEllipsoid,
-      morphToSphere,
-      photometric,
-      enable,
-      sun,
-      sky,
-      transmittance,
-      inscatter,
-      lensFlare,
-      normal,
-      depth,
-      lut
-    ]
-  )
+  const atmosphereRef = useRef<AtmosphereApi>(null)
+  useFrame(() => {
+    atmosphereRef.current?.update(new Date(motionDate.get()))
+  })
 
   return (
-    <>
-      <Sky
-        ref={skyRef}
-        osculateEllipsoid={osculateEllipsoid}
-        photometric={photometric}
-      />
-      <Stars ref={starsRef} osculateEllipsoid={osculateEllipsoid} />
-      <primitive object={tiles.group} />
-      {effectComposer}
-    </>
+    <Atmosphere
+      ref={atmosphereRef}
+      texturesUrl='/'
+      osculateEllipsoid={osculateEllipsoid}
+      photometric={photometric}
+    >
+      <Sky />
+      <Stars dataUrl='/stars.bin' />
+      <Globe />
+      <EffectComposer ref={composerRef} multisampling={0}>
+        <Fragment
+          // Effects are order-dependant; we need to reconstruct the nodes.
+          key={JSON.stringify({
+            enabled,
+            sun,
+            sky,
+            transmittance,
+            inscatter,
+            morphToSphere,
+            lensFlare,
+            normal,
+            depth,
+            lut
+          })}
+        >
+          {enabled && !normal && !depth && (
+            <AerialPerspective
+              sunIrradiance={sun}
+              skyIrradiance={sky}
+              transmittance={transmittance}
+              inscatter={inscatter}
+              morphToSphere={morphToSphere}
+              albedoScale={0.2}
+            />
+          )}
+          {lensFlare && <LensFlare />}
+          {depth && <Depth useTurbo />}
+          {normal && <Normal octEncoded />}
+          {!normal && !depth && (
+            <>
+              <ToneMapping mode={ToneMappingMode.AGX} />
+              {lut != null && lut}
+              <SMAA />
+              <Dithering />
+            </>
+          )}
+        </Fragment>
+      </EffectComposer>
+    </Atmosphere>
   )
 }
 

@@ -3,21 +3,15 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { Suspense, useMemo, useRef, type FC } from 'react'
-import { Matrix4, MeshBasicMaterial, Vector3 } from 'three'
+import { Fragment, Suspense, useRef, type FC } from 'react'
+import { MeshBasicMaterial } from 'three'
 
 import {
-  getECIToECEFRotationMatrix,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  type AerialPerspectiveEffect
-} from '@geovanni/atmosphere'
-import {
   AerialPerspective,
+  Atmosphere,
   Sky,
   Stars,
-  type SkyImpl,
-  type StarsImpl
+  type AtmosphereApi
 } from '@geovanni/atmosphere/react'
 import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
 import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/react'
@@ -55,7 +49,6 @@ const terrainMaterial = new MeshBasicMaterial({ color: 'gray' })
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const lut = useColorGradingControls()
-
   const { lensFlare, normal, depth } = useControls(
     'effects',
     {
@@ -65,14 +58,11 @@ const Scene: FC = () => {
     },
     { collapsed: true }
   )
-
   const motionDate = useLocalDateControls()
-
   const { osculateEllipsoid, photometric } = useControls('atmosphere', {
     osculateEllipsoid: true,
     photometric: true
   })
-
   const { enabled, sun, sky, transmittance, inscatter } = useControls(
     'aerial perspective',
     {
@@ -84,82 +74,21 @@ const Scene: FC = () => {
     }
   )
 
-  const sunDirectionRef = useRef(new Vector3())
-  const moonDirectionRef = useRef(new Vector3())
-  const rotationMatrixRef = useRef(new Matrix4())
-  const skyRef = useRef<SkyImpl>(null)
-  const aerialPerspectiveRef = useRef<AerialPerspectiveEffect>(null)
-  const starsRef = useRef<StarsImpl>(null)
-
+  const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
-    const date = new Date(motionDate.get())
-    getSunDirectionECEF(date, sunDirectionRef.current)
-    getMoonDirectionECEF(date, moonDirectionRef.current)
-    getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
-    if (skyRef.current != null) {
-      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
-    }
-    if (starsRef.current != null) {
-      starsRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
-    }
-    if (aerialPerspectiveRef.current != null) {
-      aerialPerspectiveRef.current.sunDirection.copy(sunDirectionRef.current)
-    }
+    atmosphereRef.current?.update(new Date(motionDate.get()))
   })
 
-  const effectComposer = useMemo(
-    () => (
-      <EffectComposer key={Math.random()} multisampling={0}>
-        {enabled && !normal && !depth && (
-          <AerialPerspective
-            ref={aerialPerspectiveRef}
-            osculateEllipsoid={osculateEllipsoid}
-            photometric={photometric}
-            sunIrradiance={sun}
-            skyIrradiance={sky}
-            transmittance={transmittance}
-            inscatter={inscatter}
-          />
-        )}
-        {lensFlare && <LensFlare />}
-        {depth && <Depth useTurbo />}
-        {normal && <Normal octEncoded />}
-        {!normal && !depth && (
-          <>
-            <ToneMapping mode={ToneMappingMode.AGX} />
-            {lut != null && lut}
-            <SMAA />
-            <Dithering />
-          </>
-        )}
-      </EffectComposer>
-    ),
-    [
-      osculateEllipsoid,
-      photometric,
-      enabled,
-      sun,
-      sky,
-      transmittance,
-      inscatter,
-      lensFlare,
-      normal,
-      depth,
-      lut
-    ]
-  )
-
   return (
-    <>
+    <Atmosphere
+      ref={atmosphereRef}
+      texturesUrl='/'
+      osculateEllipsoid={osculateEllipsoid}
+      photometric={photometric}
+    >
       <OrbitControls target={position} minDistance={1e3} />
-      <Sky
-        ref={skyRef}
-        osculateEllipsoid={osculateEllipsoid}
-        photometric={photometric}
-      />
-      <Stars ref={starsRef} osculateEllipsoid={osculateEllipsoid} />
+      <Sky />
+      <Stars dataUrl='/stars.bin' />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}
@@ -180,8 +109,43 @@ const Scene: FC = () => {
           material={material}
         />
       </EastNorthUpFrame>
-      {effectComposer}
-    </>
+      <EffectComposer multisampling={0}>
+        <Fragment
+          // Effects are order-dependant; we need to reconstruct the nodes.
+          key={JSON.stringify({
+            enabled,
+            sun,
+            sky,
+            transmittance,
+            inscatter,
+            lensFlare,
+            normal,
+            depth,
+            lut
+          })}
+        >
+          {enabled && !normal && !depth && (
+            <AerialPerspective
+              sunIrradiance={sun}
+              skyIrradiance={sky}
+              transmittance={transmittance}
+              inscatter={inscatter}
+            />
+          )}
+          {lensFlare && <LensFlare />}
+          {depth && <Depth useTurbo />}
+          {normal && <Normal octEncoded />}
+          {!normal && !depth && (
+            <>
+              <ToneMapping mode={ToneMappingMode.AGX} />
+              {lut != null && lut}
+              <SMAA />
+              <Dithering />
+            </>
+          )}
+        </Fragment>
+      </EffectComposer>
+    </Atmosphere>
   )
 }
 
