@@ -28,8 +28,8 @@ import { AtmosphereMaterialBase } from './AtmosphereMaterialBase'
 
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
-import fragmentShader from './shaders/skyLight.frag'
-import vertexShader from './shaders/skyLight.vert'
+import fragmentShader from './shaders/skyRadiance.frag'
+import vertexShader from './shaders/skyRadiance.vert'
 
 function createScreenQuadGeometry(): BufferGeometry {
   const geometry = new BufferGeometry()
@@ -80,7 +80,7 @@ class SkyLightMaterial extends AtmosphereMaterialBase {
 }
 
 export interface SkyLightProbeParameters {
-  size?: number
+  frameBufferSize?: number
   angularThreshold?: number
 
   // Derived from atmosphere material
@@ -93,7 +93,7 @@ export interface SkyLightProbeParameters {
 }
 
 export const skyLightProbeParametersDefaults = {
-  size: 16,
+  frameBufferSize: 16,
   angularThreshold: (Math.PI / 10800) * 5 // 5 arcminutes
 } satisfies SkyLightProbeParameters
 
@@ -114,12 +114,12 @@ export class SkyLightProbe extends LightProbe {
   constructor(params?: SkyLightProbeParameters) {
     super()
 
-    const { size, angularThreshold, sunDirection } = {
+    const { frameBufferSize, angularThreshold, sunDirection } = {
       ...skyLightProbeParametersDefaults,
       ...params
     }
 
-    this.renderTarget = new WebGLCubeRenderTarget(size, {
+    this.renderTarget = new WebGLCubeRenderTarget(frameBufferSize, {
       depthBuffer: false,
       stencilBuffer: false,
       generateMipmaps: false,
