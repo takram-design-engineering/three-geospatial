@@ -1,33 +1,26 @@
 import { Circle, OrbitControls } from '@react-three/drei'
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { GLTFCesiumRTCExtension, TilesRenderer } from '3d-tiles-renderer'
 import { parseISO } from 'date-fns'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useMemo, useRef, useState, type FC } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState, type FC } from 'react'
 import {
   Mesh,
   MeshPhysicalMaterial,
-  Vector3,
   type DirectionalLight,
-  type Group,
   type Object3D
 } from 'three'
 import { GLTFLoader, type GLTFLoaderPlugin } from 'three-stdlib'
 
-import {
-  computeSunLightColor,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
-  PrecomputedTexturesLoader,
-  SkyLight,
-  type AerialPerspectiveEffect
-} from '@geovanni/atmosphere'
+import { computeSunLightColor } from '@geovanni/atmosphere'
 import {
   AerialPerspective,
+  Atmosphere,
   Sky,
-  type SkyImpl
+  SkyLight,
+  type AtmosphereApi
 } from '@geovanni/atmosphere/react'
 import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import { EastNorthUpFrame } from '@geovanni/core/react'
@@ -50,7 +43,6 @@ const buildingMaterial = new MeshPhysicalMaterial({
   roughness: 1
 })
 
-// Coordinates of Tokyo station.
 const location = new Geodetic(radians(139.7671), radians(35.6812), 36.6624)
 const position = location.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
@@ -73,7 +65,7 @@ function createRenderer(url: string): TilesRenderer {
   return tiles
 }
 
-const Scene: FC = () => {
+const Buildings: FC = () => {
   const renderers = useMemo(() => {
     const renderers = [
       'https://plateau.takram.com/data/plateau/13100_tokyo23ku_2020_3Dtiles_etc_1_op/01_building/13101_chiyoda-ku_2020_bldg_notexture/tileset.json',
@@ -117,6 +109,12 @@ const Scene: FC = () => {
     })
   })
 
+  return renderers.map((renderer, index) => (
+    <primitive key={index} object={renderer.group} />
+  ))
+}
+
+const Scene: FC = () => {
   const {
     enabled,
     iterations,
@@ -143,102 +141,35 @@ const Scene: FC = () => {
     jitter: { value: 1, min: 0, max: 1 }
   })
 
-  const sunDirectionRef = useRef(new Vector3())
-  const moonDirectionRef = useRef(new Vector3())
+  const [atmosphere, setAtmosphere] = useState<AtmosphereApi | null>(null)
   const lightRef = useRef<DirectionalLight>(null)
-  const skyRef = useRef<SkyImpl>(null)
-  const envMapRef = useRef<SkyImpl>(null)
-  const envMapParentRef = useRef<Group>(null)
-  const [aerialPerspective, setAerialPerspective] =
-    useState<AerialPerspectiveEffect | null>(null)
-
-  const textures = useLoader(PrecomputedTexturesLoader, '/')
 
   useEffect(() => {
+    if (atmosphere == null) {
+      return
+    }
     const date = parseISO('2024-10-31T13:00+09:00')
-    getSunDirectionECEF(date, sunDirectionRef.current)
-    getMoonDirectionECEF(date, moonDirectionRef.current)
-    if (lightRef.current != null) {
-      lightRef.current.position.copy(sunDirectionRef.current)
+    atmosphere.update(date)
+
+    const light = lightRef.current
+    if (atmosphere.textures != null && light != null) {
+      light.position.copy(atmosphere.sunDirection)
       computeSunLightColor(
-        textures.transmittanceTexture,
+        atmosphere.textures.transmittanceTexture,
         position,
-        sunDirectionRef.current,
-        lightRef.current.color
+        atmosphere.sunDirection,
+        light.color
       )
     }
-    if (skyRef.current != null) {
-      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
-    }
-    if (envMapRef.current != null) {
-      envMapRef.current.material.sunDirection.copy(sunDirectionRef.current)
-    }
-    if (aerialPerspective != null) {
-      aerialPerspective.sunDirection.copy(sunDirectionRef.current)
-    }
-    envMapParentRef.current?.position.copy(position)
-  }, [aerialPerspective, textures.transmittanceTexture])
-
-  const effectComposer = useMemo(
-    () => (
-      <EffectComposer key={Math.random()} multisampling={0}>
-        <AerialPerspective
-          ref={setAerialPerspective}
-          sunIrradiance={false}
-          skyIrradiance={false}
-        />
-        {enabled && (
-          <SSR
-            iterations={iterations}
-            binarySearchIterations={binarySearchIterations}
-            pixelZSize={pixelZSize}
-            pixelStride={pixelStride}
-            pixelStrideZCutoff={pixelStrideZCutoff}
-            maxRayDistance={maxRayDistance}
-            screenEdgeFadeStart={screenEdgeFadeStart}
-            eyeFadeStart={eyeFadeStart}
-            eyeFadeEnd={eyeFadeEnd}
-            jitter={jitter}
-          />
-        )}
-        <SSAO intensity={3} aoRadius={20} />
-        <LensFlare />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        <SMAA />
-        <Dithering />
-      </EffectComposer>
-    ),
-    [
-      enabled,
-      iterations,
-      binarySearchIterations,
-      pixelZSize,
-      pixelStride,
-      pixelStrideZCutoff,
-      maxRayDistance,
-      screenEdgeFadeStart,
-      eyeFadeStart,
-      eyeFadeEnd,
-      jitter
-    ]
-  )
-
-  const skyLight = useMemo(() => new SkyLight(), [])
-  skyLight.irradianceTexture = textures.irradianceTexture
-  useFrame(() => {
-    skyLight.position.copy(position)
-    skyLight.sunDirection.copy(sunDirectionRef.current)
-    skyLight.update(gl)
-  })
+  }, [atmosphere])
 
   const [target, setTarget] = useState<Object3D | null>(null)
   return (
-    <>
-      <primitive object={skyLight} />
-      <Sky ref={skyRef} />
+    <Atmosphere ref={setAtmosphere} texturesUrl='/'>
       <OrbitControls target={position} />
+      <Sky />
       <group position={position}>
+        <SkyLight />
         <object3D ref={setTarget} />
         <directionalLight
           ref={lightRef}
@@ -258,11 +189,47 @@ const Scene: FC = () => {
           <meshPhysicalMaterial color={[0.75, 0.75, 0.75]} metalness={0.2} />
         </Circle>
       </EastNorthUpFrame>
-      {renderers.map((renderer, index) => (
-        <primitive key={index} object={renderer.group} />
-      ))}
-      {effectComposer}
-    </>
+      <Buildings />
+      <EffectComposer multisampling={0}>
+        <Fragment
+          // Effects are order-dependant; we need to reconstruct the nodes.
+          key={JSON.stringify({
+            enabled,
+            iterations,
+            binarySearchIterations,
+            pixelZSize,
+            pixelStride,
+            pixelStrideZCutoff,
+            maxRayDistance,
+            screenEdgeFadeStart,
+            eyeFadeStart,
+            eyeFadeEnd,
+            jitter
+          })}
+        >
+          <AerialPerspective sunIrradiance={false} skyIrradiance={false} />
+          {enabled && (
+            <SSR
+              iterations={iterations}
+              binarySearchIterations={binarySearchIterations}
+              pixelZSize={pixelZSize}
+              pixelStride={pixelStride}
+              pixelStrideZCutoff={pixelStrideZCutoff}
+              maxRayDistance={maxRayDistance}
+              screenEdgeFadeStart={screenEdgeFadeStart}
+              eyeFadeStart={eyeFadeStart}
+              eyeFadeEnd={eyeFadeEnd}
+              jitter={jitter}
+            />
+          )}
+          <SSAO intensity={3} aoRadius={20} />
+          <LensFlare />
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          <SMAA />
+          <Dithering />
+        </Fragment>
+      </EffectComposer>
+    </Atmosphere>
   )
 }
 
