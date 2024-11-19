@@ -1,6 +1,4 @@
 import {
-  GizmoHelper,
-  GizmoViewport,
   OrbitControls,
   RenderCubeTexture,
   TorusKnot,
@@ -10,19 +8,12 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentRef,
-  type FC
-} from 'react'
-import { Quaternion, Vector3, type Group } from 'three'
+import { useEffect, useMemo, useRef, useState, type FC } from 'react'
+import { Quaternion, Vector3, type Camera, type Group } from 'three'
+import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/atmosphere'
-import { Sky, type SkyImpl } from '@geovanni/atmosphere/react'
-import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
+import { Atmosphere, Sky, type AtmosphereApi } from '@geovanni/atmosphere/react'
+import { Ellipsoid, Geodetic, radians, type GeodeticLike } from '@geovanni/core'
 import { EastNorthUpFrame } from '@geovanni/core/react'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
@@ -38,6 +29,23 @@ const up = new Vector3()
 const offset = new Vector3()
 const rotation = new Quaternion()
 
+function applyLocation(
+  camera: Camera,
+  controls: OrbitControlsImpl,
+  { longitude, latitude, height }: GeodeticLike
+): void {
+  location.set(radians(longitude), radians(latitude), height)
+  location.toECEF(position)
+  Ellipsoid.WGS84.getSurfaceNormal(position, up)
+
+  rotation.setFromUnitVectors(camera.up, up)
+  offset.copy(camera.position).sub(controls.target)
+  offset.applyQuaternion(rotation)
+  camera.up.copy(up)
+  camera.position.copy(position).add(offset)
+  controls.target.copy(position)
+}
+
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls()
@@ -50,49 +58,30 @@ const Scene: FC = () => {
     photometric: false
   })
 
-  const camera = useThree(({ camera }) => camera)
-  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
-  useEffect(() => {
-    const controls = controlsRef.current
-    if (controls == null) {
-      return
-    }
-    location.set(radians(longitude), radians(latitude), height)
-    location.toECEF(position)
-    Ellipsoid.WGS84.getSurfaceNormal(position, up)
-
-    rotation.setFromUnitVectors(camera.up, up)
-    offset.copy(camera.position).sub(controls.target)
-    offset.applyQuaternion(rotation)
-    camera.up.copy(up)
-    camera.position.copy(position).add(offset)
-    controls.target.copy(position)
-  }, [longitude, latitude, height, camera])
-
-  const sunDirectionRef = useRef(new Vector3())
-  const moonDirectionRef = useRef(new Vector3())
-  const skyRef = useRef<SkyImpl>(null)
-  const envMapRef = useRef<SkyImpl>(null)
-  const envMapParentRef = useRef<Group>(null)
-
-  const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
   const scene = useThree(({ scene }) => scene)
+  const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
   useEffect(() => {
     scene.environment = envMap?.fbo.texture ?? null
-  }, [envMap, scene])
+  }, [scene, envMap])
 
+  const camera = useThree(({ camera }) => camera)
+  const controlsRef = useRef<OrbitControlsImpl>(null)
+  const envMapParentRef = useRef<Group>(null)
+  useEffect(() => {
+    const controls = controlsRef.current
+    if (controls != null) {
+      applyLocation(camera, controls, {
+        longitude,
+        latitude,
+        height
+      })
+      envMapParentRef.current?.position.copy(position)
+    }
+  }, [longitude, latitude, height, camera])
+
+  const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
-    const date = new Date(motionDate.get())
-    getSunDirectionECEF(date, sunDirectionRef.current)
-    getMoonDirectionECEF(date, moonDirectionRef.current)
-    if (skyRef.current != null) {
-      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
-    }
-    if (envMapRef.current != null) {
-      envMapRef.current.material.sunDirection.copy(sunDirectionRef.current)
-    }
-    envMapParentRef.current?.position.copy(position)
+    atmosphereRef.current?.update(new Date(motionDate.get()))
   })
 
   const effectComposer = useMemo(
@@ -110,15 +99,22 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={5} />
-      <GizmoHelper alignment='top-left' renderPriority={2}>
-        <GizmoViewport />
-      </GizmoHelper>
-      <Sky
-        ref={skyRef}
-        position={position}
+      <Atmosphere
+        ref={atmosphereRef}
+        texturesUrl='/'
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
-      />
+      >
+        <Sky />
+        <group ref={envMapParentRef} position={position}>
+          <RenderCubeTexture ref={setEnvMap} resolution={64}>
+            <Sky
+              // Increase this to avoid flickers. Total radiance doesn't change.
+              sunAngularRadius={0.1}
+            />
+          </RenderCubeTexture>
+        </group>
+      </Atmosphere>
       <EastNorthUpFrame
         longitude={radians(longitude)}
         latitude={radians(latitude)}
@@ -134,16 +130,6 @@ const Scene: FC = () => {
           />
         </TorusKnot>
       </EastNorthUpFrame>
-      <group ref={envMapParentRef}>
-        <RenderCubeTexture ref={setEnvMap} resolution={64}>
-          <Sky
-            ref={envMapRef}
-            osculateEllipsoid={osculateEllipsoid}
-            photometric={photometric}
-            sunAngularRadius={0.1}
-          />
-        </RenderCubeTexture>
-      </group>
       {effectComposer}
     </>
   )

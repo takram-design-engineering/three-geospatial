@@ -1,14 +1,14 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
+import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useMemo, useRef, type ComponentRef, type FC } from 'react'
-import { Quaternion, Vector3 } from 'three'
+import { useEffect, useMemo, useRef, type FC } from 'react'
+import { Quaternion, Vector3, type Camera } from 'three'
+import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
-import { getMoonDirectionECEF, getSunDirectionECEF } from '@geovanni/atmosphere'
-import { Sky, type SkyImpl } from '@geovanni/atmosphere/react'
-import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
+import { Atmosphere, Sky, type AtmosphereApi } from '@geovanni/atmosphere/react'
+import { Ellipsoid, Geodetic, radians, type GeodeticLike } from '@geovanni/core'
 import { Dithering, LensFlare } from '@geovanni/effects/react'
 
 import { Stats } from '../helpers/Stats'
@@ -23,6 +23,23 @@ const up = new Vector3()
 const offset = new Vector3()
 const rotation = new Quaternion()
 
+function applyLocation(
+  camera: Camera,
+  controls: OrbitControlsImpl,
+  { longitude, latitude, height }: GeodeticLike
+): void {
+  location.set(radians(longitude), radians(latitude), height)
+  location.toECEF(position)
+  Ellipsoid.WGS84.getSurfaceNormal(position, up)
+
+  rotation.setFromUnitVectors(camera.up, up)
+  offset.copy(camera.position).sub(controls.target)
+  offset.applyQuaternion(rotation)
+  camera.up.copy(up)
+  camera.position.copy(position).add(offset)
+  controls.target.copy(position)
+}
+
 const Scene: FC = () => {
   useRendererControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls()
@@ -36,36 +53,21 @@ const Scene: FC = () => {
   })
 
   const camera = useThree(({ camera }) => camera)
-  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
+  const controlsRef = useRef<OrbitControlsImpl>(null)
   useEffect(() => {
     const controls = controlsRef.current
-    if (controls == null) {
-      return
+    if (controls != null) {
+      applyLocation(camera, controls, {
+        longitude,
+        latitude,
+        height
+      })
     }
-    location.set(radians(longitude), radians(latitude), height)
-    location.toECEF(position)
-    Ellipsoid.WGS84.getSurfaceNormal(position, up)
-
-    rotation.setFromUnitVectors(camera.up, up)
-    offset.copy(camera.position).sub(controls.target)
-    offset.applyQuaternion(rotation)
-    camera.up.copy(up)
-    camera.position.copy(position).add(offset)
-    controls.target.copy(position)
   }, [longitude, latitude, height, camera])
 
-  const sunDirectionRef = useRef(new Vector3())
-  const moonDirectionRef = useRef(new Vector3())
-  const skyRef = useRef<SkyImpl>(null)
-
+  const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
-    const date = new Date(motionDate.get())
-    getSunDirectionECEF(date, sunDirectionRef.current)
-    getMoonDirectionECEF(date, moonDirectionRef.current)
-    if (skyRef.current != null) {
-      skyRef.current.material.sunDirection.copy(sunDirectionRef.current)
-      skyRef.current.material.moonDirection.copy(moonDirectionRef.current)
-    }
+    atmosphereRef.current?.update(new Date(motionDate.get()))
   })
 
   const effectComposer = useMemo(
@@ -73,7 +75,6 @@ const Scene: FC = () => {
       <EffectComposer key={Math.random()} multisampling={0}>
         <LensFlare />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        <SMAA />
         <Dithering />
       </EffectComposer>
     ),
@@ -83,11 +84,14 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={5} />
-      <Sky
-        ref={skyRef}
+      <Atmosphere
+        ref={atmosphereRef}
+        texturesUrl='/'
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
-      />
+      >
+        <Sky />
+      </Atmosphere>
       {effectComposer}
     </>
   )

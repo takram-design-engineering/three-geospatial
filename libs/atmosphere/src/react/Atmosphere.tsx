@@ -41,7 +41,7 @@ export const AtmosphereContext = createContext<AtmosphereContextValue>({})
 
 export interface AtmosphereProps {
   textures?: PrecomputedTextures | null
-  url?: string
+  texturesUrl?: string
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
@@ -57,7 +57,7 @@ export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
   function Atmosphere(
     {
       textures: texturesProp,
-      url,
+      texturesUrl,
       useHalfFloat = false,
       ellipsoid = Ellipsoid.WGS84,
       osculateEllipsoid = true,
@@ -76,18 +76,18 @@ export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
     useEffect(() => {
       if (texturesProp != null) {
         setTextures(texturesProp)
-      } else if (url != null) {
+      } else if (texturesUrl != null) {
         const loader = new PrecomputedTexturesLoader()
         loader.useHalfFloat = useHalfFloat
         ;(async () => {
-          setTextures(await loader.loadAsync(url))
+          setTextures(await loader.loadAsync(texturesUrl))
         })().catch(error => {
           console.error(error)
         })
       } else {
         setTextures(undefined)
       }
-    }, [texturesProp, url, useHalfFloat])
+    }, [texturesProp, texturesUrl, useHalfFloat])
 
     const context = useMemo(
       () => ({
