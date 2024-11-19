@@ -1,5 +1,6 @@
 export * from './AerialPerspective'
 export * from './Atmosphere'
 export * from './Sky'
+export * from './SkyLight'
 export * from './Stars'
 export * from './useAtmosphereTextureProps'

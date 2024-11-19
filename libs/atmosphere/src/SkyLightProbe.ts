@@ -79,7 +79,7 @@ class SkyLightMaterial extends AtmosphereMaterialBase {
   }
 }
 
-export interface SkyLightParameters {
+export interface SkyLightProbeParameters {
   size?: number
   angularThreshold?: number
 
@@ -92,7 +92,14 @@ export interface SkyLightParameters {
   sunDirection?: Vector3
 }
 
-export class SkyLight extends LightProbe {
+export const skyLightProbeParametersDefaults = {
+  size: 16,
+  angularThreshold: (Math.PI / 10800) * 5 // 5 arcminutes
+} satisfies SkyLightProbeParameters
+
+const vectorScratch = /*#__PURE__*/ new Vector3()
+
+export class SkyLightProbe extends LightProbe {
   angularThreshold: number
   sunDirection: Vector3
 
@@ -104,12 +111,14 @@ export class SkyLight extends LightProbe {
   private needsUpdate = true
   private updatePromise?: Promise<void>
 
-  constructor({
-    size = 16,
-    angularThreshold = (Math.PI / 10800) * 5, // 5 arcminutes
-    sunDirection = new Vector3()
-  }: SkyLightParameters = {}) {
+  constructor(params?: SkyLightProbeParameters) {
     super()
+
+    const { size, angularThreshold, sunDirection } = {
+      ...skyLightProbeParametersDefaults,
+      ...params
+    }
+
     this.renderTarget = new WebGLCubeRenderTarget(size, {
       depthBuffer: false,
       stencilBuffer: false,
@@ -123,7 +132,7 @@ export class SkyLight extends LightProbe {
     this.camera = new CubeCamera(0.1, 1000, this.renderTarget)
 
     this.angularThreshold = angularThreshold
-    this.sunDirection = sunDirection
+    this.sunDirection = sunDirection?.clone() ?? new Vector3()
   }
 
   dispose(): void {
@@ -133,18 +142,21 @@ export class SkyLight extends LightProbe {
   }
 
   update(renderer: WebGLRenderer): void {
+    const angleChange = Math.acos(
+      this.material.sunDirection.dot(this.sunDirection)
+    )
+    const worldPosition = this.getWorldPosition(vectorScratch)
     if (
       !this.needsUpdate &&
-      Math.acos(this.material.sunDirection.dot(this.sunDirection)) <
-        this.angularThreshold &&
-      this.camera.position.equals(this.position)
+      angleChange < this.angularThreshold &&
+      this.camera.position.equals(worldPosition)
     ) {
       return
     }
     this.needsUpdate = false
 
     this.material.sunDirection.copy(this.sunDirection)
-    this.camera.position.copy(this.position)
+    this.camera.position.copy(worldPosition)
     this.camera.update(renderer, this.scene)
 
     if (this.updatePromise == null) {
@@ -161,8 +173,7 @@ export class SkyLight extends LightProbe {
       renderer,
       this.renderTarget
     )
-    // @ts-expect-error Incorrect type definition of copy()
-    this.copy(other)
+    this.sh.copy(other.sh)
   }
 
   get irradianceTexture(): DataTexture | null {
