@@ -3,7 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { useMemo, useRef, type FC } from 'react'
+import { useRef, type FC } from 'react'
 import { Matrix4 } from 'three'
 
 import { getECIToECEFRotationMatrix } from '@geovanni/atmosphere'
@@ -27,25 +27,20 @@ const Scene: FC = () => {
     }
   })
 
-  const effectComposer = useMemo(
-    () => (
-      <EffectComposer key={Math.random()}>
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-      </EffectComposer>
-    ),
-    []
-  )
   return (
     <>
       <color args={[0, 0, 0]} attach='background' />
       <OrbitControls />
       <Stars
         ref={starsRef}
+        dataUrl='/stars.bin'
         scale={[2, 2, 2]}
         radianceScale={5}
         background={false}
       />
-      {effectComposer}
+      <EffectComposer>
+        <ToneMapping mode={ToneMappingMode.AGX} />
+      </EffectComposer>
     </>
   )
 }

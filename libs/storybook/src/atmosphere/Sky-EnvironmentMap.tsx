@@ -8,7 +8,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useMemo, useRef, useState, type FC } from 'react'
+import { useEffect, useRef, useState, type FC } from 'react'
 import { Quaternion, Vector3, type Camera, type Group } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
@@ -84,18 +84,6 @@ const Scene: FC = () => {
     atmosphereRef.current?.update(new Date(motionDate.get()))
   })
 
-  const effectComposer = useMemo(
-    () => (
-      <EffectComposer key={Math.random()} multisampling={0}>
-        <LensFlare />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        <SMAA />
-        <Dithering />
-      </EffectComposer>
-    ),
-    []
-  )
-
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={5} />
@@ -130,7 +118,12 @@ const Scene: FC = () => {
           />
         </TorusKnot>
       </EastNorthUpFrame>
-      {effectComposer}
+      <EffectComposer multisampling={0}>
+        <LensFlare />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <SMAA />
+        <Dithering />
+      </EffectComposer>
     </>
   )
 }
