@@ -1,11 +1,8 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import {
-  GlobeControls,
-  GoogleCloudAuthPlugin,
-  TilesRenderer
-} from '3d-tiles-renderer'
+import { GlobeControls, TilesRenderer } from '3d-tiles-renderer'
+import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/plugins'
 import {
   EffectMaterial,
   ToneMappingMode,
@@ -51,7 +48,6 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Globe: FC = () => {
   const tiles = useMemo(() => {
-    // @ts-expect-error Missing type
     const tiles = new TilesRenderer()
     tiles.registerPlugin(
       new GoogleCloudAuthPlugin({
