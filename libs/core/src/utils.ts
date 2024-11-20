@@ -1,5 +1,5 @@
 import { pick } from 'lodash'
-import { BufferAttribute, BufferGeometry } from 'three'
+import { Box3, BufferAttribute, BufferGeometry, Sphere, Vector3 } from 'three'
 
 import { isNotNullish } from './assertions'
 
@@ -44,7 +44,19 @@ export function fromBufferGeometryLike(
           input.index.normalized
         )
       : null
-  result.boundingBox = input.boundingBox
-  result.boundingSphere = input.boundingSphere
+  if (input.boundingBox != null) {
+    const { min, max } = input.boundingBox
+    result.boundingBox = new Box3(
+      new Vector3(min.x, min.y, min.z),
+      new Vector3(max.x, max.y, max.z)
+    )
+  }
+  if (input.boundingSphere != null) {
+    const { center, radius } = input.boundingSphere
+    result.boundingSphere = new Sphere(
+      new Vector3(center.x, center.y, center.z),
+      radius
+    )
+  }
   return result
 }
