@@ -15,7 +15,7 @@ const tilingScheme = new TilingScheme()
 const tile = tilingScheme.geodeticToTile(location, 7)
 tile.y = tilingScheme.getSize(tile.z).y - tile.y - 1
 const terrain = new IonTerrain({
-  assetId: 1,
+  assetId: 2767062, // Japan Regional Terrain
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
 
