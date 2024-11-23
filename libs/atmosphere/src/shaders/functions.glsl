@@ -332,8 +332,6 @@ vec3 GetScattering(
   }
 }
 
-vec3 GetIrradiance(const sampler2D u_irradiance_texture, float r, float mu_s);
-
 vec2 GetIrradianceTextureUvFromRMuS(float r, float mu_s) {
   float x_r = (r - u_bottom_radius) / (u_top_radius - u_bottom_radius);
   float x_mu_s = mu_s * 0.5 + 0.5;
