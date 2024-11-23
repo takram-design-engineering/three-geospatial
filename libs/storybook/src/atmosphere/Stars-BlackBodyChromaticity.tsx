@@ -4,21 +4,6 @@ import { Color } from 'three'
 
 import { convertTemperatureToLinearSRGBChromaticity } from '@geovanni/atmosphere'
 
-function applyCompanding(x: number): number {
-  return x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055
-}
-
-export function convertLinearSRGBToSRGB(
-  { r, g, b }: Color,
-  result = new Color()
-): Color {
-  return result.setRGB(
-    applyCompanding(r),
-    applyCompanding(g),
-    applyCompanding(b)
-  )
-}
-
 const Story: StoryFn = () => {
   const minTemperature = 1400
   const maxTemperature = 16000
@@ -28,7 +13,7 @@ const Story: StoryFn = () => {
     const colors: string[] = []
     for (let T = minTemperature; T <= maxTemperature; T += 10) {
       convertTemperatureToLinearSRGBChromaticity(T, color)
-      const { r, g, b } = convertLinearSRGBToSRGB(color, color)
+      const { r, g, b } = color.convertLinearToSRGB()
       colors.push(`rgb(${Math.round(r * 0xff)}, ${g * 0xff}, ${b * 0xff})`)
     }
     const scale = 100 / (colors.length - 1)
