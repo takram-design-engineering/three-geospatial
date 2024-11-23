@@ -25,6 +25,7 @@ import {
 import { IonTerrain } from '@geovanni/terrain'
 import { BatchedTerrainTile } from '@geovanni/terrain/react'
 
+import { HaldLUT } from '../helpers/HaldLUT'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
@@ -138,7 +139,7 @@ const Scene: FC = () => {
           {!normal && !depth && (
             <>
               <ToneMapping mode={ToneMappingMode.AGX} />
-              {lut != null && lut}
+              {lut != null && <HaldLUT path={lut} />}
               <SMAA />
               <Dithering />
             </>

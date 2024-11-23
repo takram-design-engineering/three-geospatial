@@ -34,7 +34,12 @@ export class NormalEffect extends Effect {
     private camera: Camera,
     options?: NormalEffectOptions
   ) {
-    const { blendFunction, normalBuffer, octEncoded, reconstructFromDepth } = {
+    const {
+      blendFunction,
+      normalBuffer = null,
+      octEncoded,
+      reconstructFromDepth
+    } = {
       ...normalEffectOptionsDefaults,
       ...options
     }

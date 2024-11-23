@@ -9,7 +9,8 @@ export default {
           parser: { syntax: 'typescript' }
         }
       }
-    ]
+    ],
+    '.+\\.(glsl|frag|vert)$': '@glen/jest-raw-loader'
   },
   moduleFileExtensions: ['ts', 'js'],
   coverageDirectory: '../../coverage/libs/worker'

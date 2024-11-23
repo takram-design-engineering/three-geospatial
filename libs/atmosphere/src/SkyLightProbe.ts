@@ -1,91 +1,42 @@
-/// <reference types="vite-plugin-glsl/ext" />
+import { LightProbe, Vector2, Vector3, type DataTexture } from 'three'
 
+import { Ellipsoid } from '@geovanni/core'
+
+import { AtmosphereParameters } from './AtmosphereParameters'
 import {
-  BufferAttribute,
-  BufferGeometry,
-  CubeCamera,
-  GLSL3,
-  HalfFloatType,
-  LightProbe,
-  Matrix4,
-  Mesh,
-  Scene,
-  Sphere,
-  Uniform,
-  Vector3,
-  WebGLCubeRenderTarget,
-  type Camera,
-  type DataTexture,
-  type Group,
-  type Object3D,
-  type WebGLRenderer
-} from 'three'
-import { LightProbeGenerator } from 'three/examples/jsm/lights/LightProbeGenerator'
+  IRRADIANCE_TEXTURE_HEIGHT,
+  IRRADIANCE_TEXTURE_WIDTH,
+  METER_TO_UNIT_LENGTH
+} from './constants'
+import { getTextureCoordFromUnitRange } from './helpers/functions'
+import { sampleTexture } from './helpers/sampleTexture'
 
-import { type Ellipsoid } from '@geovanni/core'
-
-import { AtmosphereMaterialBase } from './AtmosphereMaterialBase'
-
-import functions from './shaders/functions.glsl'
-import parameters from './shaders/parameters.glsl'
-import fragmentShader from './shaders/skyRadiance.frag'
-import vertexShader from './shaders/skyRadiance.vert'
-
-function createScreenQuadGeometry(): BufferGeometry {
-  const geometry = new BufferGeometry()
-  const vertices = new Float32Array([-1, -1, 3, -1, -1, 3])
-  geometry.boundingSphere = new Sphere()
-  geometry.boundingSphere.set(new Vector3(), Infinity)
-  geometry.setAttribute('position', new BufferAttribute(vertices, 2))
-  return geometry
+function getUvFromRMuS(
+  atmosphere: AtmosphereParameters,
+  r: number,
+  muS: number,
+  result: Vector2
+): Vector2 {
+  const topRadius = atmosphere.topRadius * METER_TO_UNIT_LENGTH
+  const bottomRadius = atmosphere.bottomRadius * METER_TO_UNIT_LENGTH
+  const xR = (r - bottomRadius) / (topRadius - bottomRadius)
+  const xMuS = muS * 0.5 + 0.5
+  return result.set(
+    getTextureCoordFromUnitRange(xMuS, IRRADIANCE_TEXTURE_WIDTH),
+    getTextureCoordFromUnitRange(xR, IRRADIANCE_TEXTURE_HEIGHT)
+  )
 }
 
-class SkyLightMaterial extends AtmosphereMaterialBase {
-  constructor() {
-    super({
-      glslVersion: GLSL3,
-      vertexShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${vertexShader}
-      `,
-      fragmentShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${functions}
-        ${fragmentShader}
-      `,
-      uniforms: {
-        inverseProjectionMatrix: new Uniform(new Matrix4()),
-        inverseViewMatrix: new Uniform(new Matrix4())
-      }
-    })
-  }
+// TODO: Add note on the derivation of coefficients.
+const L0_COEFF = Math.sqrt(Math.PI) / 3
+const L1_COEFF = 0.5 * Math.sqrt(Math.PI / 3)
 
-  override onBeforeRender(
-    renderer: WebGLRenderer,
-    scene: Scene,
-    camera: Camera,
-    geometry: BufferGeometry,
-    object: Object3D,
-    group: Group
-  ): void {
-    super.onBeforeRender(renderer, scene, camera, geometry, object, group)
-    const uniforms = this.uniforms
-    uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
-    uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
-  }
-}
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
+const uvScratch = /*#__PURE__*/ new Vector2()
 
 export interface SkyLightProbeParameters {
-  frameBufferSize?: number
-  angularThreshold?: number
-
-  // Derived from atmosphere material
   irradianceTexture?: DataTexture | null
-  useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
   photometric?: boolean
@@ -93,153 +44,76 @@ export interface SkyLightProbeParameters {
 }
 
 export const skyLightProbeParametersDefaults = {
-  frameBufferSize: 16,
-  angularThreshold: (Math.PI / 10800) * 5 // 5 arcminutes
+  ellipsoid: Ellipsoid.WGS84,
+  osculateEllipsoid: true,
+  photometric: true
 } satisfies SkyLightProbeParameters
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
-
 export class SkyLightProbe extends LightProbe {
-  angularThreshold: number
-  sunDirection: Vector3
+  atmosphere: AtmosphereParameters
+  irradianceTexture: DataTexture | null
+  ellipsoid: Ellipsoid
+  osculateEllipsoid: boolean
+  photometric: boolean
+  readonly sunDirection: Vector3
 
-  private readonly renderTarget: WebGLCubeRenderTarget
-  private readonly scene: Scene
-  private readonly geometry: BufferGeometry
-  private readonly material: SkyLightMaterial
-  private readonly camera: CubeCamera
-
-  private needsUpdate = true
-  private needsUpdateRenderTarget = false
-  private updatingRenderTarget = false
-
-  constructor(params?: SkyLightProbeParameters) {
+  constructor(
+    params?: SkyLightProbeParameters,
+    atmosphere = AtmosphereParameters.DEFAULT
+  ) {
     super()
+    const {
+      irradianceTexture = null,
+      ellipsoid,
+      osculateEllipsoid,
+      photometric,
+      sunDirection
+    } = { ...skyLightProbeParametersDefaults, ...params }
 
-    const { frameBufferSize, angularThreshold, sunDirection } = {
-      ...skyLightProbeParametersDefaults,
-      ...params
-    }
-
-    this.renderTarget = new WebGLCubeRenderTarget(frameBufferSize, {
-      depthBuffer: false,
-      stencilBuffer: false,
-      generateMipmaps: false,
-      type: HalfFloatType
-    })
-    this.scene = new Scene()
-    this.geometry = createScreenQuadGeometry()
-    this.material = new SkyLightMaterial()
-    this.scene.add(new Mesh(this.geometry, this.material))
-    this.camera = new CubeCamera(0.1, 1000, this.renderTarget)
-
-    this.angularThreshold = angularThreshold
+    this.atmosphere = atmosphere
+    this.irradianceTexture = irradianceTexture
+    this.ellipsoid = ellipsoid
+    this.osculateEllipsoid = osculateEllipsoid
+    this.photometric = photometric
     this.sunDirection = sunDirection?.clone() ?? new Vector3()
   }
 
-  dispose(): void {
-    this.material.dispose()
-    this.geometry.dispose()
-    this.renderTarget.dispose()
-  }
-
-  update(renderer: WebGLRenderer): void {
-    const worldPosition = this.getWorldPosition(vectorScratch)
-    if (
-      !this.needsUpdate &&
-      Math.acos(this.material.sunDirection.dot(this.sunDirection)) <
-        this.angularThreshold &&
-      this.camera.position.equals(worldPosition)
-    ) {
-      // Because this function is supposed to be called regular interval, it's
-      // sufficient to queue updating render target via a flag and execute it in
-      // a following update.
-      if (this.needsUpdateRenderTarget && !this.updatingRenderTarget) {
-        this.needsUpdateRenderTarget = false
-        this.updateRenderTarget(renderer)
-      }
+  update(): void {
+    if (this.irradianceTexture == null) {
       return
     }
 
-    this.needsUpdate = false
-    this.material.sunDirection.copy(this.sunDirection)
-    this.camera.position.copy(worldPosition)
-    this.camera.update(renderer, this.scene)
-
-    this.needsUpdateRenderTarget = false
-    if (this.updatingRenderTarget) {
-      this.needsUpdateRenderTarget = true
-    } else {
-      this.updateRenderTarget(renderer)
+    const position = this.getWorldPosition(vectorScratch1)
+    if (this.osculateEllipsoid) {
+      const surfacePosition = this.ellipsoid.projectOnSurface(
+        position,
+        vectorScratch2
+      )
+      if (surfacePosition != null) {
+        position.sub(
+          this.ellipsoid.getOsculatingSphereCenter(
+            surfacePosition,
+            this.atmosphere.bottomRadius,
+            vectorScratch2
+          )
+        )
+      }
     }
-  }
+    position.multiplyScalar(METER_TO_UNIT_LENGTH)
 
-  private updateRenderTarget(renderer: WebGLRenderer): void {
-    this.updatingRenderTarget = true
-    LightProbeGenerator.fromCubeRenderTarget(renderer, this.renderTarget)
-      .then(probe => {
-        this.sh.copy(probe.sh)
-      })
-      .catch(error => {
-        console.error(error)
-      })
-      .finally(() => {
-        this.updatingRenderTarget = false
-      })
-  }
-
-  get irradianceTexture(): DataTexture | null {
-    return this.material.irradianceTexture
-  }
-
-  set irradianceTexture(value: DataTexture | null) {
-    if (value !== this.irradianceTexture) {
-      this.material.irradianceTexture = value
-      this.needsUpdate = true
+    const r = position.length()
+    const muS = position.dot(this.sunDirection.normalize()) / r
+    const uv = getUvFromRMuS(this.atmosphere, r, muS, uvScratch)
+    const irradiance = sampleTexture(this.irradianceTexture, uv, vectorScratch2)
+    if (this.photometric) {
+      irradiance.multiply(this.atmosphere.skyRadianceToRelativeLuminance)
     }
-  }
 
-  get useHalfFloat(): boolean {
-    return this.material.useHalfFloat
-  }
-
-  set useHalfFloat(value: boolean) {
-    if (value !== this.useHalfFloat) {
-      this.material.useHalfFloat = value
-      this.needsUpdate = true
-    }
-  }
-
-  get ellipsoid(): Ellipsoid {
-    return this.material.ellipsoid
-  }
-
-  set ellipsoid(value: Ellipsoid) {
-    if (value !== this.ellipsoid) {
-      this.material.ellipsoid = value
-      this.needsUpdate = true
-    }
-  }
-
-  get osculateEllipsoid(): boolean {
-    return this.material.osculateEllipsoid
-  }
-
-  set osculateEllipsoid(value: boolean) {
-    if (value !== this.osculateEllipsoid) {
-      this.material.osculateEllipsoid = value
-      this.needsUpdate = true
-    }
-  }
-
-  get photometric(): boolean {
-    return this.material.photometric
-  }
-
-  set photometric(value: boolean) {
-    if (value !== this.photometric) {
-      this.material.photometric = value
-      this.needsUpdate = true
-    }
+    const normal = this.ellipsoid.getSurfaceNormal(position)
+    const coefficients = this.sh.coefficients
+    coefficients[0].copy(irradiance).multiplyScalar(L0_COEFF)
+    coefficients[1].copy(irradiance).multiplyScalar(L1_COEFF * normal.y)
+    coefficients[2].copy(irradiance).multiplyScalar(L1_COEFF * normal.z)
+    coefficients[3].copy(irradiance).multiplyScalar(L1_COEFF * normal.x)
   }
 }

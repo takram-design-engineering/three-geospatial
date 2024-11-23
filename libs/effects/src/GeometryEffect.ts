@@ -24,7 +24,11 @@ export const geometryEffectOptionsDefaults = {
 
 export class GeometryEffect extends Effect {
   constructor(options?: GeometryEffectOptions) {
-    const { blendFunction, geometryBuffer, output } = {
+    const {
+      blendFunction,
+      geometryBuffer = null,
+      output
+    } = {
       ...geometryEffectOptionsDefaults,
       ...options
     }

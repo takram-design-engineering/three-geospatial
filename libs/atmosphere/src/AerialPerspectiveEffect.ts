@@ -24,8 +24,8 @@ import {
   transformShader
 } from '@geovanni/core'
 
+import { AtmosphereParameters } from './AtmosphereParameters'
 import {
-  ATMOSPHERE_PARAMETERS,
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
   METER_TO_UNIT_LENGTH,
@@ -33,8 +33,6 @@ import {
   SCATTERING_TEXTURE_MU_SIZE,
   SCATTERING_TEXTURE_NU_SIZE,
   SCATTERING_TEXTURE_R_SIZE,
-  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE,
-  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE,
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
@@ -60,6 +58,7 @@ export interface AerialPerspectiveEffectOptions {
   osculateEllipsoid?: boolean
   morphToSphere?: boolean
   photometric?: boolean
+  sunDirection?: Vector3
   sunIrradiance?: boolean
   skyIrradiance?: boolean
   transmittance?: boolean
@@ -83,26 +82,29 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
+  atmosphere: AtmosphereParameters
   private _ellipsoid!: Ellipsoid
   osculateEllipsoid: boolean
 
   constructor(
     private camera: Camera,
-    options?: AerialPerspectiveEffectOptions
+    options?: AerialPerspectiveEffectOptions,
+    atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       blendFunction,
-      normalBuffer,
+      normalBuffer = null,
       octEncodedNormal,
       reconstructNormal,
-      irradianceTexture,
-      scatteringTexture,
-      transmittanceTexture,
+      irradianceTexture = null,
+      scatteringTexture = null,
+      transmittanceTexture = null,
       useHalfFloat,
       ellipsoid,
       osculateEllipsoid,
       morphToSphere,
       photometric,
+      sunDirection,
       sunIrradiance,
       skyIrradiance,
       transmittance,
@@ -129,13 +131,13 @@ export class AerialPerspectiveEffect extends Effect {
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
         uniforms: new Map<string, Uniform>([
-          ['u_solar_irradiance', new Uniform(ATMOSPHERE_PARAMETERS.solarIrradiance)],
-          ['u_sun_angular_radius', new Uniform(ATMOSPHERE_PARAMETERS.sunAngularRadius)],
-          ['u_bottom_radius', new Uniform(ATMOSPHERE_PARAMETERS.bottomRadius * METER_TO_UNIT_LENGTH)],
-          ['u_top_radius', new Uniform(ATMOSPHERE_PARAMETERS.topRadius * METER_TO_UNIT_LENGTH)],
-          ['u_rayleigh_scattering', new Uniform(ATMOSPHERE_PARAMETERS.rayleighScattering)],
-          ['u_mie_scattering', new Uniform(ATMOSPHERE_PARAMETERS.mieScattering)],
-          ['u_mie_phase_function_g', new Uniform(ATMOSPHERE_PARAMETERS.miePhaseFunctionG)],
+          ['u_solar_irradiance', new Uniform(atmosphere.solarIrradiance)],
+          ['u_sun_angular_radius', new Uniform(atmosphere.sunAngularRadius)],
+          ['u_bottom_radius', new Uniform(atmosphere.bottomRadius * METER_TO_UNIT_LENGTH)],
+          ['u_top_radius', new Uniform(atmosphere.topRadius * METER_TO_UNIT_LENGTH)],
+          ['u_rayleigh_scattering', new Uniform(atmosphere.rayleighScattering)],
+          ['u_mie_scattering', new Uniform(atmosphere.mieScattering)],
+          ['u_mie_phase_function_g', new Uniform(atmosphere.miePhaseFunctionG)],
           ['u_mu_s_min', new Uniform(0)],
           ['u_irradiance_texture', new Uniform(irradianceTexture)],
           ['u_scattering_texture', new Uniform(scatteringTexture)],
@@ -150,7 +152,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['ellipsoidInterpolationRange', new Uniform(new Vector2(2e5, 6e5))],
-          ['sunDirection', new Uniform(new Vector3())],
+          ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['albedoScale', new Uniform(albedoScale)]
         ]),
         // prettier-ignore
@@ -164,12 +166,14 @@ export class AerialPerspectiveEffect extends Effect {
           ['IRRADIANCE_TEXTURE_WIDTH', `${IRRADIANCE_TEXTURE_WIDTH}`],
           ['IRRADIANCE_TEXTURE_HEIGHT', `${IRRADIANCE_TEXTURE_HEIGHT}`],
           ['METER_TO_UNIT_LENGTH', `float(${METER_TO_UNIT_LENGTH})`],
-          ['SUN_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${SUN_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`],
-          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${SKY_SPECTRAL_RADIANCE_TO_LUMINANCE.toArray().join(',')})`],
+          ['SUN_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().join(',')})`],
+          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().join(',')})`],
         ])
       }
     )
+
     this.camera = camera
+    this.atmosphere = atmosphere
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
@@ -234,7 +238,7 @@ export class AerialPerspectiveEffect extends Effect {
       if (surfacePosition != null) {
         this.ellipsoid.getOsculatingSphereCenter(
           surfacePosition,
-          ATMOSPHERE_PARAMETERS.bottomRadius,
+          this.atmosphere.bottomRadius,
           ellipsoidCenter.value
         )
       }
@@ -308,15 +312,14 @@ export class AerialPerspectiveEffect extends Effect {
 
   get useHalfFloat(): boolean {
     return (
-      this.uniforms.get('u_mu_s_min')!.value ===
-      ATMOSPHERE_PARAMETERS.muSMinHalfFloat
+      this.uniforms.get('u_mu_s_min')!.value === this.atmosphere.muSMinHalfFloat
     )
   }
 
   set useHalfFloat(value: boolean) {
     this.uniforms.get('u_mu_s_min')!.value = value
-      ? ATMOSPHERE_PARAMETERS.muSMinHalfFloat
-      : ATMOSPHERE_PARAMETERS.muSMinFloat
+      ? this.atmosphere.muSMinHalfFloat
+      : this.atmosphere.muSMinFloat
   }
 
   get ellipsoid(): Ellipsoid {
