@@ -43,19 +43,19 @@ vec3 getSunSkyIrradiance(
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
   // defined, regard the inputColor as radiance at the texel.
   vec3 albedo = inputColor * albedoScale * RECIPROCAL_PI;
-  vec3 skyIrrIllum;
-  vec3 sunIrrIllum = GetSunAndSkyIrrIllum(
+  vec3 skyIrradiance;
+  vec3 sunIrradiance = GetSunAndSkyIrradiance(
     worldPosition - vEllipsoidCenter,
     worldNormal,
     sunDirection,
-    skyIrrIllum
+    skyIrradiance
   );
   #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
-  return albedo * (sunIrrIllum + skyIrrIllum);
+  return albedo * (sunIrradiance + skyIrradiance);
   #elif defined(SUN_IRRADIANCE)
-  return albedo * sunIrrIllum;
+  return albedo * sunIrradiance;
   #elif defined(SKY_IRRADIANCE)
-  return albedo * skyIrrIllum;
+  return albedo * skyIrradiance;
   #endif
 }
 #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
@@ -64,10 +64,10 @@ vec3 getSunSkyIrradiance(
 void getTransmittanceInscatter(
   const vec3 worldPosition,
   const vec3 worldNormal,
-  inout vec3 radLum
+  inout vec3 radiance
 ) {
   vec3 transmittance;
-  vec3 inscatter = GetSkyRadLumToPoint(
+  vec3 inscatter = GetSkyRadianceToPoint(
     vWorldPosition - vEllipsoidCenter,
     worldPosition - vEllipsoidCenter,
     0.0, // TODO: Shadow length
@@ -75,10 +75,10 @@ void getTransmittanceInscatter(
     transmittance
   );
   #if defined(TRANSMITTANCE)
-  radLum = radLum * transmittance;
+  radiance = radiance * transmittance;
   #endif
   #if defined(INSCATTER)
-  radLum = radLum + inscatter;
+  radiance = radiance + inscatter;
   #endif
 }
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
@@ -123,16 +123,16 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   );
   #endif // MORPH_TO_SPHERE
 
-  vec3 radLum;
+  vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  radLum = getSunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb);
+  radiance = getSunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb);
   #else
-  radLum = inputColor.rgb;
+  radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  getTransmittanceInscatter(worldPosition, worldNormal, radLum);
+  getTransmittanceInscatter(worldPosition, worldNormal, radiance);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
-  outputColor = vec4(radLum, inputColor.a);
+  outputColor = vec4(radiance, inputColor.a);
 }
