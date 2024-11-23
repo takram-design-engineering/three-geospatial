@@ -55,7 +55,7 @@ export class SSREffect extends Effect {
   ) {
     const {
       blendFunction,
-      geometryBuffer,
+      geometryBuffer = null,
       resolutionScale = 0.5,
       width,
       height,
@@ -82,7 +82,7 @@ export class SSREffect extends Effect {
 
     this.ssrMaterial = new SSRMaterial(others)
     this.ssrPass = new ShaderPass(this.ssrMaterial)
-    this.ssrMaterial.geometryBuffer = geometryBuffer ?? null
+    this.ssrMaterial.geometryBuffer = geometryBuffer
 
     this.uniforms.get('ssrBuffer')!.value = this.renderTarget.texture
 

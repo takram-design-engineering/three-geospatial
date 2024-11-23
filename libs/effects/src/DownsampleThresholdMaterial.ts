@@ -26,7 +26,12 @@ export const downsampleThresholdMaterialParametersDefaults = {
 
 export class DownsampleThresholdMaterial extends ShaderMaterial {
   constructor(params?: DownsampleThresholdMaterialParameters) {
-    const { inputBuffer, thresholdLevel, thresholdRange, ...others } = {
+    const {
+      inputBuffer = null,
+      thresholdLevel,
+      thresholdRange,
+      ...others
+    } = {
       ...downsampleThresholdMaterialParametersDefaults,
       ...params
     }
@@ -35,7 +40,7 @@ export class DownsampleThresholdMaterial extends ShaderMaterial {
       fragmentShader,
       vertexShader,
       uniforms: {
-        inputBuffer: new Uniform(inputBuffer ?? null),
+        inputBuffer: new Uniform(inputBuffer),
         texelSize: new Uniform(new Vector2()),
         thresholdLevel: new Uniform(thresholdLevel),
         thresholdRange: new Uniform(thresholdRange)

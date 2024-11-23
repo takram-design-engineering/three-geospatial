@@ -60,6 +60,7 @@ export interface AerialPerspectiveEffectOptions {
   osculateEllipsoid?: boolean
   morphToSphere?: boolean
   photometric?: boolean
+  sunDirection?: Vector3
   sunIrradiance?: boolean
   skyIrradiance?: boolean
   transmittance?: boolean
@@ -92,17 +93,18 @@ export class AerialPerspectiveEffect extends Effect {
   ) {
     const {
       blendFunction,
-      normalBuffer,
+      normalBuffer = null,
       octEncodedNormal,
       reconstructNormal,
-      irradianceTexture,
-      scatteringTexture,
-      transmittanceTexture,
+      irradianceTexture = null,
+      scatteringTexture = null,
+      transmittanceTexture = null,
       useHalfFloat,
       ellipsoid,
       osculateEllipsoid,
       morphToSphere,
       photometric,
+      sunDirection,
       sunIrradiance,
       skyIrradiance,
       transmittance,
@@ -150,7 +152,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['ellipsoidInterpolationRange', new Uniform(new Vector2(2e5, 6e5))],
-          ['sunDirection', new Uniform(new Vector3())],
+          ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['albedoScale', new Uniform(albedoScale)]
         ]),
         // prettier-ignore

@@ -68,9 +68,9 @@ export const ssrMaterialParametersDefaults = {
 export class SSRMaterial extends ShaderMaterial {
   constructor(params?: SSRMaterialParameters) {
     const {
-      inputBuffer,
-      geometryBuffer,
-      depthBuffer,
+      inputBuffer = null,
+      geometryBuffer = null,
+      depthBuffer = null,
       iterations,
       binarySearchIterations,
       pixelZSize,
@@ -97,9 +97,9 @@ export class SSRMaterial extends ShaderMaterial {
       `,
       vertexShader,
       uniforms: {
-        inputBuffer: new Uniform(inputBuffer ?? null),
-        geometryBuffer: new Uniform(geometryBuffer ?? null),
-        depthBuffer: new Uniform(depthBuffer ?? null),
+        inputBuffer: new Uniform(inputBuffer),
+        geometryBuffer: new Uniform(geometryBuffer),
+        depthBuffer: new Uniform(depthBuffer),
         projectionMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
         resolution: new Uniform(new Vector2()),

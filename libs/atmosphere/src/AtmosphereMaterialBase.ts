@@ -61,9 +61,9 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   constructor(params?: AtmosphereMaterialBaseParameters) {
     const {
-      irradianceTexture,
-      scatteringTexture,
-      transmittanceTexture,
+      irradianceTexture = null,
+      scatteringTexture = null,
+      transmittanceTexture = null,
       useHalfFloat,
       ellipsoid,
       osculateEllipsoid,

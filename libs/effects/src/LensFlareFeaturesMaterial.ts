@@ -29,7 +29,12 @@ export const lensFlareFeaturesMaterialParametersDefaults = {
 
 export class LensFlareFeaturesMaterial extends ShaderMaterial {
   constructor(params?: LensFlareFeaturesMaterialParameters) {
-    const { inputBuffer, ghostAmount, haloAmount, chromaticAberration } = {
+    const {
+      inputBuffer = null,
+      ghostAmount,
+      haloAmount,
+      chromaticAberration
+    } = {
       ...lensFlareFeaturesMaterialParametersDefaults,
       ...params
     }
@@ -38,7 +43,7 @@ export class LensFlareFeaturesMaterial extends ShaderMaterial {
       fragmentShader,
       vertexShader,
       uniforms: {
-        inputBuffer: new Uniform(inputBuffer ?? null),
+        inputBuffer: new Uniform(inputBuffer),
         texelSize: new Uniform(new Vector2()),
         ghostAmount: new Uniform(ghostAmount),
         haloAmount: new Uniform(haloAmount),
