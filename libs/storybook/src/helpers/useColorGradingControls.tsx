@@ -1,10 +1,7 @@
-import { LUT, type LUTProps } from '@react-three/postprocessing'
-import { type LUT3DEffect } from 'postprocessing'
-import { forwardRef, useMemo, type ReactElement } from 'react'
+import { useMemo } from 'react'
 import { suspend } from 'suspend-react'
 
 import { axios } from '@geovanni/core'
-import { useHaldLookupTexture } from '@geovanni/effects/react'
 
 import { useControls } from './useControls'
 
@@ -14,17 +11,7 @@ interface Entry {
   file: string
 }
 
-const HaldLUT = forwardRef<
-  LUT3DEffect,
-  Omit<LUTProps, 'lut'> & {
-    path: string
-  }
->(function HaldLUT({ path, ...props }, forwardedRef) {
-  const texture = useHaldLookupTexture(path)
-  return <LUT ref={forwardedRef} lut={texture} {...props} />
-})
-
-export function useColorGradingControls(): ReactElement | null {
+export function useColorGradingControls(): string | null {
   const data = suspend(
     async () => (await axios<Entry[]>('/clut/index.json')).data,
     [useColorGradingControls]
@@ -60,8 +47,5 @@ export function useColorGradingControls(): ReactElement | null {
     [films]
   )
 
-  return useMemo(
-    () => (enabled ? <HaldLUT path={film} /> : null),
-    [enabled, film]
-  )
+  return enabled ? film : null
 }
