@@ -1,9 +1,4 @@
-import {
-  extend,
-  useFrame,
-  useThree,
-  type Object3DNode
-} from '@react-three/fiber'
+import { extend, useFrame, type Object3DNode } from '@react-three/fiber'
 import {
   forwardRef,
   useContext,
@@ -28,7 +23,6 @@ export const SkyLight = forwardRef<SkyLightProbe, SkyLightProps>(
     const { textures, transientProps, ...contextProps } =
       useContext(AtmosphereContext)
 
-    const gl = useThree(({ gl }) => gl)
     const ref = useRef<SkyLightProbe>(null)
     useFrame(() => {
       const probe = ref.current
@@ -37,7 +31,7 @@ export const SkyLight = forwardRef<SkyLightProbe, SkyLightProps>(
       }
       if (transientProps != null) {
         probe.sunDirection.copy(transientProps.sunDirection)
-        probe.update(gl)
+        probe.update()
       }
     })
 
