@@ -13,7 +13,8 @@ export default {
           transform: { react: { runtime: 'automatic' } }
         }
       }
-    ]
+    ],
+    '.+\\.(glsl|frag|vert)$': '@glen/jest-raw-loader'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/core'
