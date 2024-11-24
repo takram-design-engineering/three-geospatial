@@ -195,18 +195,6 @@ export class AerialPerspectiveEffect extends Effect {
     this.camera = value
   }
 
-  override initialize(
-    renderer: WebGLRenderer,
-    alpha: boolean,
-    frameBufferType: number
-  ): void {
-    if (renderer.capabilities.logarithmicDepthBuffer) {
-      this.defines.set('LOG_DEPTH', '1')
-    } else {
-      this.defines.delete('LOG_DEPTH')
-    }
-  }
-
   override update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,

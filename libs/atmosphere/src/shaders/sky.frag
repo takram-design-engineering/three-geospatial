@@ -44,7 +44,7 @@ void main() {
   vec3 radiance = GetSkyRadiance(
     vWorldPosition - vEllipsoidCenter,
     viewDirection,
-    0.0, // TODO: Shadow length
+    0.0, // Shadow length
     sunDirection,
     transmittance
   );

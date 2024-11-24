@@ -9,7 +9,6 @@ const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
-// TODO: Rename to spheroid perhaps?
 export class Ellipsoid {
   static WGS84 = /*#__PURE__*/ new Ellipsoid(
     6378137,
