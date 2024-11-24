@@ -82,7 +82,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
-  atmosphere: AtmosphereParameters
+  private readonly atmosphere: AtmosphereParameters
   private _ellipsoid!: Ellipsoid
   osculateEllipsoid: boolean
 

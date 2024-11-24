@@ -50,7 +50,7 @@ export const skyLightProbeParametersDefaults = {
 } satisfies SkyLightProbeParameters
 
 export class SkyLightProbe extends LightProbe {
-  atmosphere: AtmosphereParameters
+  private readonly atmosphere: AtmosphereParameters
   irradianceTexture: DataTexture | null
   ellipsoid: Ellipsoid
   osculateEllipsoid: boolean
