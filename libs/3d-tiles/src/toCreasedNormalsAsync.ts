@@ -1,7 +1,10 @@
 import { type BufferGeometry } from 'three'
 
-import { fromBufferGeometryLike, toBufferGeometryLike } from '@geovanni/core'
-import { queueTask } from '@geovanni/worker'
+import {
+  fromBufferGeometryLike,
+  toBufferGeometryLike
+} from '@takram/three-geospatial'
+import { queueTask } from '@takram/three-worker'
 
 export async function toCreasedNormalsAsync(
   geometry: BufferGeometry,

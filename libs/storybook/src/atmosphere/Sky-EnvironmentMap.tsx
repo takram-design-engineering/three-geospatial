@@ -12,10 +12,19 @@ import { useEffect, useRef, useState, type FC } from 'react'
 import { Quaternion, Vector3, type Camera, type Group } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
-import { Atmosphere, Sky, type AtmosphereApi } from '@geovanni/atmosphere/r3f'
-import { Ellipsoid, Geodetic, radians, type GeodeticLike } from '@geovanni/core'
-import { EastNorthUpFrame } from '@geovanni/core/r3f'
-import { Dithering, LensFlare } from '@geovanni/effects/r3f'
+import {
+  Atmosphere,
+  Sky,
+  type AtmosphereApi
+} from '@takram/three-atmosphere/r3f'
+import { Dithering, LensFlare } from '@takram/three-effects/r3f'
+import {
+  Ellipsoid,
+  Geodetic,
+  radians,
+  type GeodeticLike
+} from '@takram/three-geospatial'
+import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'

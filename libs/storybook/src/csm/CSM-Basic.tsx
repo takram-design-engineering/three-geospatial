@@ -5,7 +5,7 @@ import { Fragment, useEffect, useRef, type FC } from 'react'
 import { BoxGeometry, Material, MeshStandardMaterial } from 'three'
 import { ShadowMapViewer } from 'three-stdlib'
 
-import { CascadedDirectionalLights, CSM, useCSM } from '@geovanni/csm/r3f'
+import { CascadedDirectionalLights, CSM, useCSM } from '@takram/three-csm/r3f'
 
 import { useControls } from '../helpers/useControls'
 

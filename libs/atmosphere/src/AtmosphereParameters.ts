@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 
-import { assertType, radians } from '@geovanni/core'
+import { assertType, radians } from '@takram/three-geospatial'
 
 const paramKeys = [
   'solarIrradiance',

@@ -2,7 +2,7 @@ import { type StoryFn } from '@storybook/react'
 import { useMemo } from 'react'
 import { Color } from 'three'
 
-import { convertTemperatureToLinearSRGBChromaticity } from '@geovanni/atmosphere'
+import { convertTemperatureToLinearSRGBChromaticity } from '@takram/three-atmosphere'
 
 const Story: StoryFn = () => {
   const minTemperature = 1400

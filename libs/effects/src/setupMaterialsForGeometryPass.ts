@@ -4,7 +4,7 @@
 
 import { ShaderLib, type ShaderLibShader } from 'three'
 
-import { packingShader } from '@geovanni/core'
+import { packingShader } from '@takram/three-geospatial'
 
 const SETUP = Symbol('SETUP')
 

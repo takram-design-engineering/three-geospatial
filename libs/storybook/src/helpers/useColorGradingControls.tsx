@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { suspend } from 'suspend-react'
 
-import { axios } from '@geovanni/core'
+import { axios } from '@takram/three-geospatial'
 
 import { useControls } from './useControls'
 

@@ -7,8 +7,8 @@ import {
   fromBufferGeometryLike,
   TilingScheme,
   type TileCoordinateLike
-} from '@geovanni/core'
-import { queueTask } from '@geovanni/worker'
+} from '@takram/three-geospatial'
+import { queueTask } from '@takram/three-worker'
 
 import { IonAsset } from './IonAsset'
 

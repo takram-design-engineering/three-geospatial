@@ -5,7 +5,7 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform, type Texture } from 'three'
 
-import { packingShader } from '@geovanni/core'
+import { packingShader } from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/geometryEffect.frag'
 

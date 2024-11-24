@@ -6,9 +6,9 @@ import { ToneMappingMode } from 'postprocessing'
 import { useRef, type FC } from 'react'
 import { Matrix4 } from 'three'
 
-import { getECIToECEFRotationMatrix } from '@geovanni/atmosphere'
-import { Stars, type StarsImpl } from '@geovanni/atmosphere/r3f'
-import { EffectComposer } from '@geovanni/effects/r3f'
+import { getECIToECEFRotationMatrix } from '@takram/three-atmosphere'
+import { Stars, type StarsImpl } from '@takram/three-atmosphere/r3f'
+import { EffectComposer } from '@takram/three-effects/r3f'
 
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'

@@ -6,8 +6,8 @@ import { Fragment, useEffect, useMemo, useRef, type FC } from 'react'
 import { BoxGeometry, Material, MeshStandardMaterial } from 'three'
 import { ShadowMapViewer } from 'three-stdlib'
 
-import { radians } from '@geovanni/core'
-import { CascadedShadowMaps, CSMHelper } from '@geovanni/csm'
+import { CascadedShadowMaps, CSMHelper } from '@takram/three-csm'
+import { radians } from '@takram/three-geospatial'
 
 import { useControls } from '../helpers/useControls'
 

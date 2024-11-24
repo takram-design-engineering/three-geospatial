@@ -5,7 +5,7 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform } from 'three'
 
-import { depthShader } from '@geovanni/core'
+import { depthShader } from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/depthEffect.frag'
 

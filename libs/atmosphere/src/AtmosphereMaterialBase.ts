@@ -13,7 +13,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { Ellipsoid } from '@geovanni/core'
+import { Ellipsoid } from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {

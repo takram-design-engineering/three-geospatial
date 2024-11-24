@@ -1,11 +1,11 @@
 {
-  "name": "@geovanni/source",
+  "name": "@three-geospatial/source",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --target=lint --parallel=8 --exclude=@geovanni/source"
+        "command": "nx run-many --target=lint --parallel=8 --exclude=@three-geospatial/source"
       }
     },
     "format": {
@@ -17,7 +17,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --target=build --parallel=8  --exclude=@geovanni/source --configuration=production"
+        "command": "nx run-many --target=build --parallel=8  --exclude=@three-geospatial/source --configuration=production"
       }
     },
     "build-apps": {

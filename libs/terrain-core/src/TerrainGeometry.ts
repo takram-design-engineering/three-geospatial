@@ -8,7 +8,7 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { Geodetic, lerp, type Rectangle } from '@geovanni/core'
+import { Geodetic, lerp, type Rectangle } from '@takram/three-geospatial'
 
 import { decodeOctNormal } from './decodeOctNormal'
 

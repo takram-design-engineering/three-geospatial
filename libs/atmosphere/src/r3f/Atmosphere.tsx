@@ -11,7 +11,7 @@ import {
 } from 'react'
 import { Matrix4, Vector3 } from 'three'
 
-import { Ellipsoid } from '@geovanni/core'
+import { Ellipsoid } from '@takram/three-geospatial'
 
 import {
   getECIToECEFRotationMatrix,

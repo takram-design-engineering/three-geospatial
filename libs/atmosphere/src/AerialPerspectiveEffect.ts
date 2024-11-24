@@ -22,7 +22,7 @@ import {
   Geodetic,
   packingShader,
   transformShader
-} from '@geovanni/core'
+} from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {

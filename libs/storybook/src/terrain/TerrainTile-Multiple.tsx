@@ -4,9 +4,14 @@ import { type StoryFn } from '@storybook/react'
 import { Suspense, type FC } from 'react'
 import { MeshNormalMaterial } from 'three'
 
-import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
-import { IonTerrain } from '@geovanni/terrain'
-import { TerrainTile } from '@geovanni/terrain/r3f'
+import {
+  Ellipsoid,
+  Geodetic,
+  radians,
+  TilingScheme
+} from '@takram/three-geospatial'
+import { IonTerrain } from '@takram/three-terrain'
+import { TerrainTile } from '@takram/three-terrain/r3f'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 2000)
 const position = location.toECEF()

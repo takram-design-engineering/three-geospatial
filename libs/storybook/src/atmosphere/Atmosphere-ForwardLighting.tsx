@@ -13,18 +13,23 @@ import {
   Stars,
   SunLight,
   type AtmosphereApi
-} from '@geovanni/atmosphere/r3f'
-import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
-import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/r3f'
+} from '@takram/three-atmosphere/r3f'
 import {
   Depth,
   Dithering,
   EffectComposer,
   LensFlare,
   Normal
-} from '@geovanni/effects/r3f'
-import { IonTerrain } from '@geovanni/terrain'
-import { BatchedTerrainTile } from '@geovanni/terrain/r3f'
+} from '@takram/three-effects/r3f'
+import {
+  Ellipsoid,
+  Geodetic,
+  radians,
+  TilingScheme
+} from '@takram/three-geospatial'
+import { EastNorthUpFrame, EllipsoidMesh } from '@takram/three-geospatial/r3f'
+import { IonTerrain } from '@takram/three-terrain'
+import { BatchedTerrainTile } from '@takram/three-terrain/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'

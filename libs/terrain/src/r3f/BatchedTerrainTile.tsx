@@ -8,7 +8,7 @@ import {
   isNotNullish,
   TileCoordinate,
   type TileCoordinateLike
-} from '@geovanni/core'
+} from '@takram/three-geospatial'
 
 import { type IonTerrain } from '../IonTerrain'
 

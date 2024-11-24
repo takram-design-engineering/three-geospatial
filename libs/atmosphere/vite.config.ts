@@ -49,7 +49,7 @@ export default defineConfig({
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: [
-        /^@geovanni\/*/,
+        /^@takram\/*/,
         'react',
         'react-dom',
         'react/jsx-runtime',

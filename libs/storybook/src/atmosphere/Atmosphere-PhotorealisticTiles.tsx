@@ -16,22 +16,22 @@ import {
   TileCreaseNormalsPlugin,
   TilesFadePlugin,
   UpdateOnChangePlugin
-} from '@geovanni/3d-tiles'
+} from '@takram/three-3d-tiles'
 import {
   AerialPerspective,
   Atmosphere,
   Sky,
   Stars,
   type AtmosphereApi
-} from '@geovanni/atmosphere/r3f'
-import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
+} from '@takram/three-atmosphere/r3f'
 import {
   Depth,
   Dithering,
   EffectComposer,
   LensFlare,
   Normal
-} from '@geovanni/effects/r3f'
+} from '@takram/three-effects/r3f'
+import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
 import { HaldLUT } from '../helpers/HaldLUT'
 import { Stats } from '../helpers/Stats'

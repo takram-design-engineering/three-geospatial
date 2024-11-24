@@ -6,7 +6,7 @@ import {
   fromBufferGeometryLike,
   toBufferGeometryLike,
   type BufferGeometryLike
-} from '@geovanni/core'
+} from '@takram/three-geospatial'
 
 import { Transfer, type TransferResult } from '../transfer'
 

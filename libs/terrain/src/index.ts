@@ -1,4 +1,4 @@
-export * from '@geovanni/terrain-core'
+export * from '@takram/three-terrain-core'
 
 export * from './BatchedTerrainMesh'
 export * from './IonAsset'

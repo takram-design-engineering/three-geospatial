@@ -1,6 +1,6 @@
 import { isAxiosError, type AxiosRequestConfig } from 'axios'
 
-import { axios } from '@geovanni/core'
+import { axios } from '@takram/three-geospatial'
 
 // https://cesium.com/learn/ion/rest-api/#operation/getAssetEndpoint
 interface AssetEndpoint {

@@ -10,7 +10,7 @@ import {
 import { mergeRefs } from 'react-merge-refs'
 import { type Points } from 'three'
 
-import { ArrayBufferLoader } from '@geovanni/core'
+import { ArrayBufferLoader } from '@takram/three-geospatial'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 import { StarsGeometry } from '../StarsGeometry'
