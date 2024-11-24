@@ -3,7 +3,7 @@ import { forwardRef, memo, useEffect, useRef } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import { type BufferGeometry, type Mesh } from 'three'
 
-import { type TileCoordinateLike } from '@geovanni/core'
+import { type TileCoordinateLike } from '@takram/three-geospatial'
 
 import { type IonTerrain } from '../IonTerrain'
 import { type TerrainGeometry } from '../TerrainGeometry'

@@ -19,8 +19,8 @@ import {
   type Mesh
 } from 'three'
 
-import { Ellipsoid } from '@geovanni/core'
-import { EllipsoidMesh } from '@geovanni/core/r3f'
+import { Ellipsoid } from '@takram/three-geospatial'
+import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
 
 const ellipsoid = new Ellipsoid(10, 10, 9)
 const raycaster = new Raycaster()

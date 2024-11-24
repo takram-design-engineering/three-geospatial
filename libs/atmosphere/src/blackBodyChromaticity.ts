@@ -1,6 +1,6 @@
 import { Color, Matrix3, Vector3 } from 'three'
 
-import { clamp, saturate } from '@geovanni/core'
+import { clamp, saturate } from '@takram/three-geospatial'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 

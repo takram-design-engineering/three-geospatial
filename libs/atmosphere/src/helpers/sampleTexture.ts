@@ -1,7 +1,7 @@
 import { Vector3, type DataTexture, type Vector2 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { clamp } from '@geovanni/core'
+import { clamp } from '@takram/three-geospatial'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()

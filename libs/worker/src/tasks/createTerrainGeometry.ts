@@ -9,8 +9,8 @@ import {
   toBufferGeometryLike,
   type TileCoordinateLike,
   type TilingSchemeLike
-} from '@geovanni/core'
-import { TerrainGeometry } from '@geovanni/terrain-core'
+} from '@takram/three-geospatial'
+import { TerrainGeometry } from '@takram/three-terrain-core'
 
 import { Transfer, type TransferResult } from '../transfer'
 

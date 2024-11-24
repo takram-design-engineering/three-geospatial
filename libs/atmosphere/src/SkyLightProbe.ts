@@ -1,6 +1,6 @@
 import { LightProbe, Vector2, Vector3, type DataTexture } from 'three'
 
-import { Ellipsoid } from '@geovanni/core'
+import { Ellipsoid } from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {

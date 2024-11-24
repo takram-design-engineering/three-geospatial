@@ -14,7 +14,7 @@
   "importOrder": [
     "<THIRD_PARTY_MODULES>",
     "",
-    "^@geovanni/.*$",
+    "^@takram/.*$",
     "",
     "^(?!.*\\.(css|glsl|frag|vert)$)[./].*$",
     "",

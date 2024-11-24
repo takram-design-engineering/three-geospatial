@@ -1,5 +1,5 @@
 {
-  "name": "@geovanni/terrain-core",
+  "name": "@takram/three-terrain-core",
   "version": "0.0.1",
   "type": "module",
   "exports": {

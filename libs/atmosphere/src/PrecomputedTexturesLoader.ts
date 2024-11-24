@@ -1,7 +1,10 @@
 import { Data3DTexture, Loader, type DataTexture } from 'three'
 import join from 'url-join'
 
-import { Float32Data2DLoader, Float32Data3DLoader } from '@geovanni/core'
+import {
+  Float32Data2DLoader,
+  Float32Data3DLoader
+} from '@takram/three-geospatial'
 
 import {
   IRRADIANCE_TEXTURE_HEIGHT,

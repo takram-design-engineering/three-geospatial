@@ -5,7 +5,7 @@ import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import {
   type EffectComposerContextValue,
   type EffectProps
-} from '@geovanni/effects/r3f'
+} from '@takram/three-effects/r3f'
 
 import {
   AerialPerspectiveEffect,

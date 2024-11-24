@@ -18,7 +18,7 @@ import {
   depthShader,
   packingShader,
   transformShader
-} from '@geovanni/core'
+} from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/ssr.frag'
 import vertexShader from './shaders/ssr.vert'

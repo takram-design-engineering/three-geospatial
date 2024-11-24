@@ -12,7 +12,11 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { depthShader, packingShader, transformShader } from '@geovanni/core'
+import {
+  depthShader,
+  packingShader,
+  transformShader
+} from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/normalEffect.frag'
 

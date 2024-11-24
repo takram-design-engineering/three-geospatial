@@ -1,6 +1,6 @@
 import { BatchedMesh } from 'three'
 
-import { type TerrainGeometry } from '@geovanni/terrain-core'
+import { type TerrainGeometry } from '@takram/three-terrain-core'
 
 export class BatchedTerrainMesh extends BatchedMesh {
   constructor(readonly geometries: readonly TerrainGeometry[]) {

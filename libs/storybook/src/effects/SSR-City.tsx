@@ -15,23 +15,23 @@ import {
 } from 'three'
 import { GLTFLoader, type GLTFLoaderPlugin } from 'three-stdlib'
 
-import { computeSunLightColor } from '@geovanni/atmosphere'
+import { computeSunLightColor } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
   Sky,
   SkyLight,
   type AtmosphereApi
-} from '@geovanni/atmosphere/r3f'
-import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
-import { EastNorthUpFrame } from '@geovanni/core/r3f'
+} from '@takram/three-atmosphere/r3f'
 import {
   Dithering,
   EffectComposer,
   LensFlare,
   SSAO,
   SSR
-} from '@geovanni/effects/r3f'
+} from '@takram/three-effects/r3f'
+import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'

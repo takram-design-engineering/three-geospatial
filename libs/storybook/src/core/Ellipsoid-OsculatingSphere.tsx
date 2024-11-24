@@ -12,8 +12,8 @@ import { useEffect, useRef, type FC } from 'react'
 import { useEvent } from 'react-use'
 import { Raycaster, Vector2, Vector3, type ArrowHelper, type Mesh } from 'three'
 
-import { Ellipsoid } from '@geovanni/core'
-import { EllipsoidMesh } from '@geovanni/core/r3f'
+import { Ellipsoid } from '@takram/three-geospatial'
+import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
 
 import { useControls } from '../helpers/useControls'
 
