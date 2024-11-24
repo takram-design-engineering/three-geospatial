@@ -41,7 +41,7 @@ export interface AtmosphereContextValue {
 export const AtmosphereContext = createContext<AtmosphereContextValue>({})
 
 export interface AtmosphereProps {
-  textures?: PrecomputedTextures | null
+  textures?: PrecomputedTextures
   texturesUrl?: string
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
@@ -51,7 +51,7 @@ export interface AtmosphereProps {
 }
 
 export interface AtmosphereApi extends AtmosphereTransientProps {
-  textures?: PrecomputedTextures | null
+  textures?: PrecomputedTextures
   updateByDate: (date: number | Date) => void
 }
 
