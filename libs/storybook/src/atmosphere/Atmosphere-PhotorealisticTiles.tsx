@@ -23,7 +23,7 @@ import {
   Sky,
   Stars,
   type AtmosphereApi
-} from '@geovanni/atmosphere/react'
+} from '@geovanni/atmosphere/r3f'
 import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
 import {
   Depth,
@@ -31,7 +31,7 @@ import {
   EffectComposer,
   LensFlare,
   Normal
-} from '@geovanni/effects/react'
+} from '@geovanni/effects/r3f'
 
 import { HaldLUT } from '../helpers/HaldLUT'
 import { Stats } from '../helpers/Stats'

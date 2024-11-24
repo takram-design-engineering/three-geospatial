@@ -7,8 +7,8 @@ import { useRef, type FC } from 'react'
 import { Matrix4 } from 'three'
 
 import { getECIToECEFRotationMatrix } from '@geovanni/atmosphere'
-import { Stars, type StarsImpl } from '@geovanni/atmosphere/react'
-import { EffectComposer } from '@geovanni/effects/react'
+import { Stars, type StarsImpl } from '@geovanni/atmosphere/r3f'
+import { EffectComposer } from '@geovanni/effects/r3f'
 
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'

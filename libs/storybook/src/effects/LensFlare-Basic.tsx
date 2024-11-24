@@ -5,7 +5,7 @@ import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 
-import { LensFlare } from '@geovanni/effects/react'
+import { LensFlare } from '@geovanni/effects/r3f'
 
 import { useControls } from '../helpers/useControls'
 

@@ -22,16 +22,16 @@ import {
   Sky,
   SkyLight,
   type AtmosphereApi
-} from '@geovanni/atmosphere/react'
+} from '@geovanni/atmosphere/r3f'
 import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
-import { EastNorthUpFrame } from '@geovanni/core/react'
+import { EastNorthUpFrame } from '@geovanni/core/r3f'
 import {
   Dithering,
   EffectComposer,
   LensFlare,
   SSAO,
   SSR
-} from '@geovanni/effects/react'
+} from '@geovanni/effects/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'

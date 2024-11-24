@@ -6,7 +6,7 @@ import { suspend } from 'suspend-react'
 import { MeshNormalMaterial } from 'three'
 
 import { IonTerrain, OctNormalMaterial } from '@geovanni/terrain'
-import { TerrainTile } from '@geovanni/terrain/react'
+import { TerrainTile } from '@geovanni/terrain/r3f'
 
 const terrain = new IonTerrain({
   assetId: 1,

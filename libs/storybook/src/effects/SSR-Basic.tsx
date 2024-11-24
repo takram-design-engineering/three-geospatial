@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, type FC } from 'react'
 import { DRACOLoader } from 'three-stdlib'
 
 import { type SSREffect } from '@geovanni/effects'
-import { EffectComposer, SSR } from '@geovanni/effects/react'
+import { EffectComposer, SSR } from '@geovanni/effects/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'

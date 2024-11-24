@@ -2,7 +2,7 @@ import { LUT, type LUTProps } from '@react-three/postprocessing'
 import { type LUT3DEffect } from 'postprocessing'
 import { forwardRef } from 'react'
 
-import { useHaldLookupTexture } from '@geovanni/effects/react'
+import { useHaldLookupTexture } from '@geovanni/effects/r3f'
 
 export const HaldLUT = forwardRef<
   LUT3DEffect,

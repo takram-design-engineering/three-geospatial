@@ -5,7 +5,7 @@ import { Suspense, type FC } from 'react'
 
 import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
 import { IonTerrain } from '@geovanni/terrain'
-import { BatchedTerrainTile } from '@geovanni/terrain/react'
+import { BatchedTerrainTile } from '@geovanni/terrain/r3f'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 2000)
 const position = location.toECEF()

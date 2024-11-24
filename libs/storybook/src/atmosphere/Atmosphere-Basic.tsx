@@ -12,18 +12,18 @@ import {
   Sky,
   Stars,
   type AtmosphereApi
-} from '@geovanni/atmosphere/react'
+} from '@geovanni/atmosphere/r3f'
 import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
-import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/react'
+import { EastNorthUpFrame, EllipsoidMesh } from '@geovanni/core/r3f'
 import {
   Depth,
   Dithering,
   EffectComposer,
   LensFlare,
   Normal
-} from '@geovanni/effects/react'
+} from '@geovanni/effects/r3f'
 import { IonTerrain } from '@geovanni/terrain'
-import { BatchedTerrainTile } from '@geovanni/terrain/react'
+import { BatchedTerrainTile } from '@geovanni/terrain/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'

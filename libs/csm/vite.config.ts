@@ -39,7 +39,7 @@ export default defineConfig({
       // Could also be a dictionary or array of multiple entry points.
       entry: {
         index: 'src/index.ts',
-        'react/index': 'src/react/index.ts'
+        'r3f/index': 'src/r3f/index.ts'
       },
       name: 'csm',
       // Change this to the formats you want to support.
