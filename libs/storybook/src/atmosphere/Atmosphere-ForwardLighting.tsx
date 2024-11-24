@@ -96,7 +96,7 @@ const Scene: FC = () => {
     if (atmosphere == null) {
       return
     }
-    atmosphere.update(new Date(motionDate.get()))
+    atmosphere.updateByDate(new Date(motionDate.get()))
   })
 
   return (

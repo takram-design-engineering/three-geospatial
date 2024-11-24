@@ -81,7 +81,7 @@ const Scene: FC = () => {
 
   const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
-    atmosphereRef.current?.update(new Date(motionDate.get()))
+    atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
   return (

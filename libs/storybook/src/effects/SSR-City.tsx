@@ -150,7 +150,7 @@ const Scene: FC = () => {
       return
     }
     const date = parseISO('2024-10-31T13:00+09:00')
-    atmosphere.update(date)
+    atmosphere.updateByDate(date)
 
     const light = lightRef.current
     if (atmosphere.textures != null && light != null) {
