@@ -54,7 +54,7 @@ export const atmosphereMaterialParametersBaseDefaults = {
 } satisfies AtmosphereMaterialBaseParameters
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
-  atmosphere: AtmosphereParameters
+  private readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
   osculateEllipsoid: boolean
 

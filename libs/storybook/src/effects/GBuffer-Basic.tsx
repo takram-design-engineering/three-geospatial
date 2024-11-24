@@ -4,7 +4,7 @@ import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useMemo, type FC } from 'react'
 
-import { Depth, EffectComposer, Geometry } from '@geovanni/effects/react'
+import { Depth, EffectComposer, Geometry } from '@geovanni/effects/r3f'
 
 import { useControls } from '../helpers/useControls'
 

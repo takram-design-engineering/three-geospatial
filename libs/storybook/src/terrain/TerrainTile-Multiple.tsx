@@ -6,7 +6,7 @@ import { MeshNormalMaterial } from 'three'
 
 import { Ellipsoid, Geodetic, radians, TilingScheme } from '@geovanni/core'
 import { IonTerrain } from '@geovanni/terrain'
-import { TerrainTile } from '@geovanni/terrain/react'
+import { TerrainTile } from '@geovanni/terrain/r3f'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 2000)
 const position = location.toECEF()

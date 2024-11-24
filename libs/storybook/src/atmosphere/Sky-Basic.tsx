@@ -7,9 +7,9 @@ import { useEffect, useRef, type FC } from 'react'
 import { Quaternion, Vector3, type Camera } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
-import { Atmosphere, Sky, type AtmosphereApi } from '@geovanni/atmosphere/react'
+import { Atmosphere, Sky, type AtmosphereApi } from '@geovanni/atmosphere/r3f'
 import { Ellipsoid, Geodetic, radians, type GeodeticLike } from '@geovanni/core'
-import { Dithering, LensFlare } from '@geovanni/effects/react'
+import { Dithering, LensFlare } from '@geovanni/effects/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
@@ -67,7 +67,7 @@ const Scene: FC = () => {
 
   const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
-    atmosphereRef.current?.update(new Date(motionDate.get()))
+    atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
   return (

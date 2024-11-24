@@ -20,7 +20,7 @@ import {
 } from 'three'
 
 import { Ellipsoid } from '@geovanni/core'
-import { EllipsoidMesh } from '@geovanni/core/react'
+import { EllipsoidMesh } from '@geovanni/core/r3f'
 
 const ellipsoid = new Ellipsoid(10, 10, 9)
 const raycaster = new Raycaster()

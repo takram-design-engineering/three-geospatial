@@ -50,7 +50,7 @@ export const skyLightProbeParametersDefaults = {
 } satisfies SkyLightProbeParameters
 
 export class SkyLightProbe extends LightProbe {
-  atmosphere: AtmosphereParameters
+  private readonly atmosphere: AtmosphereParameters
   irradianceTexture: DataTexture | null
   ellipsoid: Ellipsoid
   osculateEllipsoid: boolean
@@ -102,7 +102,7 @@ export class SkyLightProbe extends LightProbe {
     position.multiplyScalar(METER_TO_UNIT_LENGTH)
 
     const r = position.length()
-    const muS = position.dot(this.sunDirection.normalize()) / r
+    const muS = position.dot(this.sunDirection) / r
     const uv = getUvFromRMuS(this.atmosphere, r, muS, uvScratch)
     const irradiance = sampleTexture(this.irradianceTexture, uv, vectorScratch2)
     if (this.photometric) {

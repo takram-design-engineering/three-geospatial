@@ -22,16 +22,16 @@ import {
   Sky,
   SkyLight,
   type AtmosphereApi
-} from '@geovanni/atmosphere/react'
+} from '@geovanni/atmosphere/r3f'
 import { Ellipsoid, Geodetic, radians } from '@geovanni/core'
-import { EastNorthUpFrame } from '@geovanni/core/react'
+import { EastNorthUpFrame } from '@geovanni/core/r3f'
 import {
   Dithering,
   EffectComposer,
   LensFlare,
   SSAO,
   SSR
-} from '@geovanni/effects/react'
+} from '@geovanni/effects/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
@@ -150,7 +150,7 @@ const Scene: FC = () => {
       return
     }
     const date = parseISO('2024-10-31T13:00+09:00')
-    atmosphere.update(date)
+    atmosphere.updateByDate(date)
 
     const light = lightRef.current
     if (atmosphere.textures != null && light != null) {

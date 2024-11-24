@@ -8,8 +8,8 @@
       "require": "./index.cjs"
     },
     "./react": {
-      "import": "./react/index.js",
-      "require": "./react/index.cjs"
+      "import": "./r3f/index.js",
+      "require": "./r3f/index.cjs"
     }
   },
   "main": "./index.cjs",

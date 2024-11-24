@@ -41,7 +41,7 @@ export interface AtmosphereContextValue {
 export const AtmosphereContext = createContext<AtmosphereContextValue>({})
 
 export interface AtmosphereProps {
-  textures?: PrecomputedTextures | null
+  textures?: PrecomputedTextures
   texturesUrl?: string
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
@@ -51,8 +51,8 @@ export interface AtmosphereProps {
 }
 
 export interface AtmosphereApi extends AtmosphereTransientProps {
-  textures?: PrecomputedTextures | null
-  update: (date: number | Date) => void
+  textures?: PrecomputedTextures
+  updateByDate: (date: number | Date) => void
 }
 
 export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
@@ -109,7 +109,7 @@ export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
       [textures, useHalfFloat, ellipsoid, osculateEllipsoid, photometric]
     )
 
-    const update: AtmosphereApi['update'] = useMemo(() => {
+    const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {
       const { sunDirection, moonDirection, rotationMatrix } =
         transientPropsRef.current
       return date => {
@@ -124,9 +124,9 @@ export const Atmosphere = forwardRef<AtmosphereApi, AtmosphereProps>(
       () => ({
         ...transientPropsRef.current,
         textures,
-        update
+        updateByDate
       }),
-      [textures, update]
+      [textures, updateByDate]
     )
 
     return (

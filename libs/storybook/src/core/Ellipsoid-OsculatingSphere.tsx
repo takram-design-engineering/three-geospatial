@@ -13,7 +13,7 @@ import { useEvent } from 'react-use'
 import { Raycaster, Vector2, Vector3, type ArrowHelper, type Mesh } from 'three'
 
 import { Ellipsoid } from '@geovanni/core'
-import { EllipsoidMesh } from '@geovanni/core/react'
+import { EllipsoidMesh } from '@geovanni/core/r3f'
 
 import { useControls } from '../helpers/useControls'
 

@@ -18,15 +18,15 @@
     "paths": {
       "@geovanni/3d-tiles": ["libs/3d-tiles/src/index.ts"],
       "@geovanni/atmosphere": ["libs/atmosphere/src/index.ts"],
-      "@geovanni/atmosphere/react": ["libs/atmosphere/src/react/index.ts"],
+      "@geovanni/atmosphere/r3f": ["libs/atmosphere/src/r3f/index.ts"],
       "@geovanni/core": ["libs/core/src/index.ts"],
-      "@geovanni/core/react": ["libs/core/src/react/index.ts"],
+      "@geovanni/core/r3f": ["libs/core/src/r3f/index.ts"],
       "@geovanni/csm": ["libs/csm/src/index.ts"],
-      "@geovanni/csm/react": ["libs/csm/src/react/index.ts"],
+      "@geovanni/csm/r3f": ["libs/csm/src/r3f/index.ts"],
       "@geovanni/effects": ["libs/effects/src/index.ts"],
-      "@geovanni/effects/react": ["libs/effects/src/react/index.ts"],
+      "@geovanni/effects/r3f": ["libs/effects/src/r3f/index.ts"],
       "@geovanni/terrain": ["libs/terrain/src/index.ts"],
-      "@geovanni/terrain/react": ["libs/terrain/src/react/index.ts"],
+      "@geovanni/terrain/r3f": ["libs/terrain/src/r3f/index.ts"],
       "@geovanni/terrain-core": ["libs/terrain-core/src/index.ts"],
       "@geovanni/worker": ["libs/worker/src/index.ts"]
     }
