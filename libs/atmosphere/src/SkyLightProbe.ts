@@ -27,9 +27,12 @@ function getUvFromRMuS(
   )
 }
 
-// TODO: Add note on the derivation of coefficients.
-const L0_COEFF = Math.sqrt(Math.PI) / 3
-const L1_COEFF = 0.5 * Math.sqrt(Math.PI / 3)
+// Our target is: (1 + dot(n, p)) * 0.5
+// Constant term: L0 * sqrt(π)/2 == 0.5
+// Linear term: L1 * π/3 * sqrt(3)/sqrt(π) == n/2
+// See: https://github.com/mrdoob/three.js/blob/r170/src/math/SphericalHarmonics3.js#L85
+const L0_COEFF = 1 / Math.sqrt(Math.PI)
+const L1_COEFF = Math.sqrt(3) / (2 * Math.sqrt(Math.PI))
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
