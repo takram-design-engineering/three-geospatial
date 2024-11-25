@@ -7,7 +7,7 @@ import { computeSunLightColor } from './computeSunLightColor'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
-export interface DirectionalSunLightParameters {
+export interface SunDirectionalLightParameters {
   transmittanceTexture?: DataTexture | null
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
@@ -16,13 +16,13 @@ export interface DirectionalSunLightParameters {
   direction?: Vector3
 }
 
-export const directionalSunLightParametersDefaults = {
+export const sunDirectionalLightParametersDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   osculateEllipsoid: true,
   photometric: true
-} satisfies DirectionalSunLightParameters
+} satisfies SunDirectionalLightParameters
 
-export class DirectionalSunLight extends DirectionalLight {
+export class SunDirectionalLight extends DirectionalLight {
   private readonly atmosphere: AtmosphereParameters
   transmittanceTexture: DataTexture | null
   ellipsoid: Ellipsoid
@@ -31,7 +31,7 @@ export class DirectionalSunLight extends DirectionalLight {
   readonly direction: Vector3
 
   constructor(
-    params?: DirectionalSunLightParameters,
+    params?: SunDirectionalLightParameters,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super()
@@ -41,7 +41,7 @@ export class DirectionalSunLight extends DirectionalLight {
       osculateEllipsoid,
       photometric,
       direction
-    } = { ...directionalSunLightParametersDefaults, ...params }
+    } = { ...sunDirectionalLightParametersDefaults, ...params }
 
     this.atmosphere = atmosphere
     this.transmittanceTexture = irradianceTexture

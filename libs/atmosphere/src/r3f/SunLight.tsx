@@ -9,27 +9,27 @@ import {
 import { mergeRefs } from 'react-merge-refs'
 import { Object3D } from 'three'
 
-import { DirectionalSunLight } from '../DirectionalSunLight'
+import { SunDirectionalLight } from '../SunDirectionalLight'
 import { AtmosphereContext } from './Atmosphere'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
-    directionalSunLight: Object3DNode<
-      DirectionalSunLight,
-      typeof DirectionalSunLight
+    sunDirectionalLight: Object3DNode<
+      SunDirectionalLight,
+      typeof SunDirectionalLight
     >
   }
 }
 
 export interface SunLightProps
-  extends Omit<ComponentPropsWithRef<'directionalSunLight'>, 'target'> {}
+  extends Omit<ComponentPropsWithRef<'sunDirectionalLight'>, 'target'> {}
 
-export const SunLight = forwardRef<DirectionalSunLight, SunLightProps>(
+export const SunLight = forwardRef<SunDirectionalLight, SunLightProps>(
   function SunLight({ position, ...props }, forwardedRef) {
     const { textures, transientProps, ...contextProps } =
       useContext(AtmosphereContext)
 
-    const ref = useRef<DirectionalSunLight>(null)
+    const ref = useRef<SunDirectionalLight>(null)
     useFrame(() => {
       const light = ref.current
       if (light == null) {
@@ -42,10 +42,10 @@ export const SunLight = forwardRef<DirectionalSunLight, SunLightProps>(
     })
 
     const target = useMemo(() => new Object3D(), [])
-    extend({ DirectionalSunLight })
+    extend({ SunDirectionalLight })
     return (
       <>
-        <directionalSunLight
+        <sunDirectionalLight
           ref={mergeRefs([ref, forwardedRef])}
           {...contextProps}
           {...textures}
