@@ -18,7 +18,7 @@ export interface SkyProps extends MeshProps, AtmosphereMaterialProps {
   lunarRadianceScale?: number
 }
 
-export const Sky = forwardRef<SkyImpl, SkyProps>(
+export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {
     const { textures, transientProps, ...contextProps } =
       useContext(AtmosphereContext)

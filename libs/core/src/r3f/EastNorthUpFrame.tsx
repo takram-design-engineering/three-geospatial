@@ -31,7 +31,7 @@ export interface EastNorthUpFrameProps
   children?: ReactNode
 }
 
-export const EastNorthUpFrame = forwardRef<
+export const EastNorthUpFrame = /*#__PURE__*/ forwardRef<
   EastNorthUpFrameGroup,
   EastNorthUpFrameProps
 >(function EastNorthUpFrame(

@@ -18,7 +18,7 @@ declare module '@react-three/fiber' {
 
 export interface SkyLightProps extends ComponentPropsWithRef<'skyLightProbe'> {}
 
-export const SkyLight = forwardRef<SkyLightProbe, SkyLightProps>(
+export const SkyLight = /*#__PURE__*/ forwardRef<SkyLightProbe, SkyLightProps>(
   function SkyLight(props, forwardedRef) {
     const { textures, transientProps, ...contextProps } =
       useContext(AtmosphereContext)

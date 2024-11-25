@@ -12,7 +12,7 @@ import { type EffectProps } from './types'
 export interface GeometryProps
   extends EffectProps<typeof GeometryEffect, GeometryEffectOptions> {}
 
-export const Geometry = forwardRef<GeometryEffect, GeometryProps>(
+export const Geometry = /*#__PURE__*/ forwardRef<GeometryEffect, GeometryProps>(
   function Geometry(props, forwardedRef) {
     const { blendFunction, ...others } = {
       ...geometryEffectOptionsDefaults,

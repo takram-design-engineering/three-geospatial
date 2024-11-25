@@ -21,7 +21,7 @@ export interface AerialPerspectiveProps
     AerialPerspectiveEffectOptions
   > {}
 
-export const AerialPerspective = forwardRef<
+export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
 >(function AerialPerspective(props, forwardedRef) {

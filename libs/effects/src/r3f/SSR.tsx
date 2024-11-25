@@ -12,7 +12,7 @@ import { type EffectProps } from './types'
 export interface SSRProps
   extends EffectProps<typeof SSREffect, SSREffectOptions> {}
 
-export const SSR = forwardRef<SSREffect, SSRProps>(
+export const SSR = /*#__PURE__*/ forwardRef<SSREffect, SSRProps>(
   function SSR(props, forwardedRef) {
     const { blendFunction, ...others } = {
       ...ssrEffectOptionsDefaults,

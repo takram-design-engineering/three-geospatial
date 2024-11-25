@@ -27,7 +27,7 @@ export interface SSAOProps {
   accumulate?: boolean
 }
 
-export const SSAO = forwardRef<Effect, SSAOProps>(function SSAO(
+export const SSAO = /*#__PURE__*/ forwardRef<Effect, SSAOProps>(function SSAO(
   {
     aoSamples = 16,
     aoRadius = 5,

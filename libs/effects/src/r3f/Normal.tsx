@@ -12,7 +12,7 @@ import { type EffectProps } from './types'
 export interface NormalProps
   extends EffectProps<typeof NormalEffect, NormalEffectOptions> {}
 
-export const Normal = forwardRef<NormalEffect, NormalProps>(
+export const Normal = /*#__PURE__*/ forwardRef<NormalEffect, NormalProps>(
   function Normal(props, forwardedRef) {
     const { blendFunction, ...others } = {
       ...normalEffectOptionsDefaults,

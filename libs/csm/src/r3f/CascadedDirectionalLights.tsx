@@ -22,22 +22,23 @@ export interface CascadedDirectionalLightsProps
   direction?: Vector3Like | Vector3Tuple
 }
 
-export const CascadedDirectionalLights = memo(
-  forwardRef<CascadedDirectionalLightsImpl, CascadedDirectionalLightsProps>(
-    function CascadedDirectionalLights({ direction, ...props }, forwardedRef) {
-      const { directionalLights } = useCSM()
-      if (direction != null) {
-        directionalLights.direction.set(
-          ...(Array.isArray(direction)
-            ? direction
-            : ([direction.x, direction.y, direction.z] as const))
-        )
-      }
-      applyProps(directionalLights.mainLight, props)
-      useImperativeHandle(forwardedRef, () => directionalLights, [
-        directionalLights
-      ])
-      return null
+export const CascadedDirectionalLights = /*#__PURE__*/ memo(
+  /*#__PURE__*/ forwardRef<
+    CascadedDirectionalLightsImpl,
+    CascadedDirectionalLightsProps
+  >(function CascadedDirectionalLights({ direction, ...props }, forwardedRef) {
+    const { directionalLights } = useCSM()
+    if (direction != null) {
+      directionalLights.direction.set(
+        ...(Array.isArray(direction)
+          ? direction
+          : ([direction.x, direction.y, direction.z] as const))
+      )
     }
-  )
+    applyProps(directionalLights.mainLight, props)
+    useImperativeHandle(forwardedRef, () => directionalLights, [
+      directionalLights
+    ])
+    return null
+  })
 )

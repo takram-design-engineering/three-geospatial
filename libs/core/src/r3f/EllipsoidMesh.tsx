@@ -22,7 +22,7 @@ export interface EllipsoidMeshProps extends Omit<MeshProps, 'args'> {
   args?: ConstructorParameters<typeof EllipsoidGeometry>
 }
 
-export const EllipsoidMesh = forwardRef<Mesh, EllipsoidMeshProps>(
+export const EllipsoidMesh = /*#__PURE__*/ forwardRef<Mesh, EllipsoidMeshProps>(
   function Ellipsoid({ args, children, ...props }, forwardedRef) {
     const ref = useRef<Mesh | null>(null)
     extend({ EllipsoidGeometry })
