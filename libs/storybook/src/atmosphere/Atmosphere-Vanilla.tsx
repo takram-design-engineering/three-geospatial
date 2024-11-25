@@ -76,6 +76,7 @@ function init(): void {
   // space.
   skyMaterial = new SkyMaterial()
   const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
+  sky.frustumCulled = false
   sky.position.copy(position)
   scene.add(sky)
 
