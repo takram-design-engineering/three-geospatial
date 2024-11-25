@@ -184,7 +184,7 @@ function onWindowResize(): void {
 }
 
 function render(): void {
-  const date = +referenceDate + clock.getElapsedTime() * 5e6
+  const date = +referenceDate + ((clock.getElapsedTime() * 5e6) % 864e5)
   const sunDirection = getSunDirectionECEF(date)
   const moonDirection = getMoonDirectionECEF(date)
 
