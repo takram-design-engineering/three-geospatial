@@ -29,6 +29,9 @@ const Scene = () => {
 }
 ```
 
+![deferred-1](https://github.com/user-attachments/assets/76fb8715-02ff-4833-b2af-ad5526a0ff0c)
+![deferred-2](https://github.com/user-attachments/assets/6605f432-933b-43fb-9c55-2c8aba5ddef6)
+
 ### Forward lighting
 
 Compatible with built-in Three.js materials and shadows, but both direct and indirect irradiance are approximated only for small-scale scenes.
@@ -50,6 +53,8 @@ const Scene = () => {
   )
 }
 ```
+
+![forward-1](https://github.com/user-attachments/assets/10b3befe-8a1f-47f3-8ac9-caaa19debbfb)
 
 ### Non-suspending texture loading
 
