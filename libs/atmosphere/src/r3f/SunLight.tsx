@@ -38,7 +38,7 @@ export const SunLight = /*#__PURE__*/ forwardRef<
       return
     }
     if (transientProps != null) {
-      light.direction.copy(transientProps.sunDirection)
+      light.sunDirection.copy(transientProps.sunDirection)
       light.update()
     }
   })

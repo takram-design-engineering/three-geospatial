@@ -196,7 +196,7 @@ function render(): void {
 
   skyMaterial.sunDirection.copy(sunDirection)
   skyMaterial.moonDirection.copy(moonDirection)
-  sunLight.direction.copy(sunDirection)
+  sunLight.sunDirection.copy(sunDirection)
   skyLight.sunDirection.copy(sunDirection)
   aerialPerspective.sunDirection.copy(sunDirection)
 

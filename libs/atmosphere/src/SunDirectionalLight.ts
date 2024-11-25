@@ -13,7 +13,7 @@ export interface SunDirectionalLightParameters {
   osculateEllipsoid?: boolean
   photometric?: boolean
   worldPosition?: Vector3
-  direction?: Vector3
+  sunDirection?: Vector3
   distance?: number
 }
 
@@ -30,7 +30,7 @@ export class SunDirectionalLight extends DirectionalLight {
   ellipsoid: Ellipsoid
   osculateEllipsoid: boolean
   photometric: boolean
-  readonly direction: Vector3
+  readonly sunDirection: Vector3
   distance: number
 
   constructor(
@@ -43,7 +43,7 @@ export class SunDirectionalLight extends DirectionalLight {
       ellipsoid,
       osculateEllipsoid,
       photometric,
-      direction,
+      sunDirection,
       distance
     } = { ...sunDirectionalLightParametersDefaults, ...params }
 
@@ -52,13 +52,13 @@ export class SunDirectionalLight extends DirectionalLight {
     this.ellipsoid = ellipsoid
     this.osculateEllipsoid = osculateEllipsoid
     this.photometric = photometric
-    this.direction = direction?.clone() ?? new Vector3()
+    this.sunDirection = sunDirection?.clone() ?? new Vector3()
     this.distance = distance
   }
 
   update(): void {
     this.position
-      .copy(this.direction)
+      .copy(this.sunDirection)
       .normalize()
       .multiplyScalar(this.distance)
       .add(this.target.position)
@@ -69,7 +69,7 @@ export class SunDirectionalLight extends DirectionalLight {
     computeSunLightColor(
       this.transmittanceTexture,
       this.target.getWorldPosition(vectorScratch),
-      this.direction,
+      this.sunDirection,
       this.color,
       {
         ellipsoid: this.ellipsoid,
