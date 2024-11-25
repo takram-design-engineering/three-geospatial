@@ -195,7 +195,7 @@ const Scene: FC = () => {
               transmittance={transmittance}
               inscatter={inscatter}
               morphToSphere={morphToSphere}
-              albedoScale={0.2}
+              albedoScale={2 / Math.PI}
             />
           )}
           {lensFlare && <LensFlare />}
