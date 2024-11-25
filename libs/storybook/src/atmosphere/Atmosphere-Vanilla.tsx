@@ -111,7 +111,13 @@ function init(): void {
 
   const torusKnot = new Mesh(
     new TorusKnotGeometry(200, 60, 256, 64),
-    new MeshPhysicalMaterial({ color: 'white' })
+    new MeshPhysicalMaterial({
+      color: 'white',
+      roughness: 0.5,
+      ior: 1.45,
+      clearcoat: 1,
+      clearcoatRoughness: 0.1
+    })
   )
   torusKnot.castShadow = true
   torusKnot.receiveShadow = true
