@@ -14,12 +14,14 @@ export interface SunDirectionalLightParameters {
   photometric?: boolean
   worldPosition?: Vector3
   direction?: Vector3
+  distance?: number
 }
 
 export const sunDirectionalLightParametersDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   osculateEllipsoid: true,
-  photometric: true
+  photometric: true,
+  distance: 1
 } satisfies SunDirectionalLightParameters
 
 export class SunDirectionalLight extends DirectionalLight {
@@ -29,6 +31,7 @@ export class SunDirectionalLight extends DirectionalLight {
   osculateEllipsoid: boolean
   photometric: boolean
   readonly direction: Vector3
+  distance: number
 
   constructor(
     params?: SunDirectionalLightParameters,
@@ -40,7 +43,8 @@ export class SunDirectionalLight extends DirectionalLight {
       ellipsoid,
       osculateEllipsoid,
       photometric,
-      direction
+      direction,
+      distance
     } = { ...sunDirectionalLightParametersDefaults, ...params }
 
     this.atmosphere = atmosphere
@@ -49,10 +53,15 @@ export class SunDirectionalLight extends DirectionalLight {
     this.osculateEllipsoid = osculateEllipsoid
     this.photometric = photometric
     this.direction = direction?.clone() ?? new Vector3()
+    this.distance = distance
   }
 
   update(): void {
-    this.position.copy(this.direction).normalize().add(this.target.position)
+    this.position
+      .copy(this.direction)
+      .normalize()
+      .multiplyScalar(this.distance)
+      .add(this.target.position)
 
     if (this.transmittanceTexture == null) {
       return

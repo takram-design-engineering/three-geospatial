@@ -16,3 +16,7 @@ export const ForwardLighting = await import(
 export const PhotorealisticTiles = await import(
   './Atmosphere-PhotorealisticTiles'
 ).then(module => module.default)
+
+export const Vanilla = await import('./Atmosphere-Vanilla').then(
+  module => module.default
+)

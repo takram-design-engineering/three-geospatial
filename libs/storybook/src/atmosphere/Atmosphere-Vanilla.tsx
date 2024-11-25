@@ -1,0 +1,209 @@
+import { type StoryFn } from '@storybook/react'
+import {
+  EffectComposer,
+  EffectPass,
+  RenderPass,
+  ToneMappingEffect,
+  ToneMappingMode
+} from 'postprocessing'
+import { useLayoutEffect } from 'react'
+import {
+  Clock,
+  Group,
+  HalfFloatType,
+  Mesh,
+  MeshPhysicalMaterial,
+  NoToneMapping,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  PlaneGeometry,
+  Scene,
+  TorusKnotGeometry,
+  WebGLRenderer
+} from 'three'
+import { OrbitControls } from 'three-stdlib'
+import invariant from 'tiny-invariant'
+
+import {
+  AerialPerspectiveEffect,
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  PrecomputedTexturesLoader,
+  SkyLightProbe,
+  SkyMaterial,
+  SunDirectionalLight,
+  type PrecomputedTextures
+} from '@takram/three-atmosphere'
+import { DitheringEffect, LensFlareEffect } from '@takram/three-effects'
+import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+
+let renderer: WebGLRenderer
+let camera: PerspectiveCamera
+let controls: OrbitControls
+let clock: Clock
+let scene: Scene
+let skyMaterial: SkyMaterial
+let skyLight: SkyLightProbe
+let sunLight: SunDirectionalLight
+let aerialPerspective: AerialPerspectiveEffect
+let composer: EffectComposer
+let texturesLoader: PrecomputedTexturesLoader
+
+// A midnight sun in summer.
+const referenceDate = new Date('2000-06-01T10:00:00Z')
+const location = new Geodetic(0, radians(67), 1000)
+const position = location.toECEF()
+const up = Ellipsoid.WGS84.getSurfaceNormal(position)
+
+function init(): void {
+  const container = document.getElementById('container')
+  invariant(container != null)
+
+  const aspect = window.innerWidth / window.innerHeight
+  camera = new PerspectiveCamera(75, aspect, 10, 1e6)
+  camera.position.copy(position)
+  camera.up.copy(up)
+
+  controls = new OrbitControls(camera, container)
+  controls.enableDamping = true
+  controls.minDistance = 1e3
+  controls.target.copy(position)
+
+  clock = new Clock()
+  scene = new Scene()
+
+  // SkyMaterial disables projection; just provide a plane that covers clip
+  // space.
+  skyMaterial = new SkyMaterial()
+  const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
+  sky.position.copy(position)
+  scene.add(sky)
+
+  // SkyLightProbe computes sky irradiance of its position.
+  skyLight = new SkyLightProbe()
+  skyLight.position.copy(position)
+  scene.add(skyLight)
+
+  // SunDirectionalLight computes sun light transmittance to its target
+  // position.
+  sunLight = new SunDirectionalLight({ distance: 300 })
+  sunLight.target.position.copy(position)
+  sunLight.castShadow = true
+  sunLight.shadow.camera.top = 300
+  sunLight.shadow.camera.bottom = -300
+  sunLight.shadow.camera.left = -300
+  sunLight.shadow.camera.right = 300
+  sunLight.shadow.camera.near = 0
+  sunLight.shadow.camera.far = 600
+  sunLight.shadow.mapSize.width = 2048
+  sunLight.shadow.mapSize.height = 2048
+  sunLight.shadow.normalBias = 1
+  scene.add(sunLight)
+
+  const group = new Group()
+  Ellipsoid.WGS84.getEastNorthUpFrame(position).decompose(
+    group.position,
+    group.quaternion,
+    group.scale
+  )
+  scene.add(group)
+
+  const torusKnot = new Mesh(
+    new TorusKnotGeometry(200, 60, 256, 64),
+    new MeshPhysicalMaterial({ color: 'white' })
+  )
+  torusKnot.castShadow = true
+  torusKnot.receiveShadow = true
+  group.add(torusKnot)
+
+  // Demonstrates forward lighting here. For deferred lighting, set
+  // sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
+  // SunDirectionalLight, and provide a normal buffer to
+  // AerialPerspectiveEffect.
+  aerialPerspective = new AerialPerspectiveEffect(camera, {
+    sunIrradiance: false,
+    skyIrradiance: false
+  })
+
+  renderer = new WebGLRenderer({
+    antialias: false,
+    stencil: false,
+    depth: false,
+    logarithmicDepthBuffer: true
+  })
+  renderer.setPixelRatio(window.devicePixelRatio)
+  renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.toneMapping = NoToneMapping
+  renderer.toneMappingExposure = 10
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = PCFSoftShadowMap
+
+  // Use floating-point render buffer, as irradiance/illuminance is stored here.
+  composer = new EffectComposer(renderer, {
+    frameBufferType: HalfFloatType,
+    multisampling: 8
+  })
+  composer.addPass(new RenderPass(scene, camera))
+  composer.addPass(
+    new EffectPass(
+      camera,
+      aerialPerspective,
+      new LensFlareEffect(),
+      new ToneMappingEffect({ mode: ToneMappingMode.AGX }),
+      new DitheringEffect()
+    )
+  )
+
+  // PrecomputedTexturesLoader defaults to loading single-precision float
+  // textures. Check for OES_texture_float_linear and load the appropriate one.
+  texturesLoader = new PrecomputedTexturesLoader()
+  texturesLoader.useHalfFloat =
+    renderer.getContext().getExtension('OES_texture_float_linear') == null
+  texturesLoader.load('/', onPrecomputedTexturesLoad)
+
+  container.appendChild(renderer.domElement)
+  window.addEventListener('resize', onWindowResize)
+}
+
+function onPrecomputedTexturesLoad(textures: PrecomputedTextures): void {
+  Object.assign(skyMaterial, textures)
+  skyMaterial.useHalfFloat = texturesLoader.useHalfFloat
+  sunLight.transmittanceTexture = textures.transmittanceTexture
+  skyLight.irradianceTexture = textures.irradianceTexture
+  Object.assign(aerialPerspective, textures)
+  aerialPerspective.useHalfFloat = texturesLoader.useHalfFloat
+
+  renderer.setAnimationLoop(render)
+}
+
+function onWindowResize(): void {
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(window.innerWidth, window.innerHeight)
+}
+
+function render(): void {
+  const date = +referenceDate + clock.getElapsedTime() * 5e6
+  const sunDirection = getSunDirectionECEF(date)
+  const moonDirection = getMoonDirectionECEF(date)
+
+  skyMaterial.sunDirection.copy(sunDirection)
+  skyMaterial.moonDirection.copy(moonDirection)
+  sunLight.direction.copy(sunDirection)
+  skyLight.sunDirection.copy(sunDirection)
+  aerialPerspective.sunDirection.copy(sunDirection)
+
+  sunLight.update()
+  skyLight.update()
+  controls.update()
+  composer.render()
+}
+
+const Story: StoryFn = () => {
+  useLayoutEffect(() => {
+    init()
+  }, [])
+  return <div id='container' />
+}
+
+export default Story
