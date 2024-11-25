@@ -1,5 +1,4 @@
 import { type AtmosphereParameters } from '../AtmosphereParameters'
-import { METER_TO_UNIT_LENGTH } from '../constants'
 
 export function safeSqrt(a: number): number {
   return Math.sqrt(Math.max(a, 0))
@@ -14,7 +13,7 @@ export function rayIntersectsGround(
   r: number,
   mu: number
 ): boolean {
-  const bottomRadius = atmosphere.bottomRadius * METER_TO_UNIT_LENGTH
+  const { bottomRadius } = atmosphere
   return mu < 0 && r * r * (mu * mu - 1) + bottomRadius * bottomRadius >= 0
 }
 
@@ -23,7 +22,7 @@ export function distanceToTopAtmosphereBoundary(
   r: number,
   mu: number
 ): number {
-  const topRadius = atmosphere.topRadius * METER_TO_UNIT_LENGTH
+  const { topRadius } = atmosphere
   const discriminant = r * r * (mu * mu - 1) + topRadius * topRadius
   return clampDistance(-r * mu + safeSqrt(discriminant))
 }

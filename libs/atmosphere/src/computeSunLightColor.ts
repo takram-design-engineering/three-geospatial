@@ -4,7 +4,6 @@ import { Ellipsoid } from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {
-  METER_TO_UNIT_LENGTH,
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
@@ -22,8 +21,7 @@ function getUvFromRMu(
   mu: number,
   result: Vector2
 ): Vector2 {
-  const topRadius = atmosphere.topRadius * METER_TO_UNIT_LENGTH
-  const bottomRadius = atmosphere.bottomRadius * METER_TO_UNIT_LENGTH
+  const { topRadius, bottomRadius } = atmosphere
   const H = Math.sqrt(topRadius * topRadius - bottomRadius * bottomRadius)
   const rho = safeSqrt(r * r - bottomRadius * bottomRadius)
   const d = distanceToTopAtmosphereBoundary(atmosphere, r, mu)
@@ -76,12 +74,11 @@ export function computeSunLightColor(
       )
     }
   }
-  camera.multiplyScalar(METER_TO_UNIT_LENGTH)
 
   const transmittance = vectorScratch2
   let r = camera.length()
   let rmu = camera.dot(sunDirection)
-  const topRadius = atmosphere.topRadius * METER_TO_UNIT_LENGTH
+  const { topRadius } = atmosphere
   const distanceToTopAtmosphereBoundary =
     -rmu - Math.sqrt(rmu * rmu - r * r + topRadius * topRadius)
   if (distanceToTopAtmosphereBoundary > 0) {

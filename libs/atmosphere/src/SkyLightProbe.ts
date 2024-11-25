@@ -5,20 +5,17 @@ import { Ellipsoid } from '@takram/three-geospatial'
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
-  IRRADIANCE_TEXTURE_WIDTH,
-  METER_TO_UNIT_LENGTH
+  IRRADIANCE_TEXTURE_WIDTH
 } from './constants'
 import { getTextureCoordFromUnitRange } from './helpers/functions'
 import { sampleTexture } from './helpers/sampleTexture'
 
 function getUvFromRMuS(
-  atmosphere: AtmosphereParameters,
+  { topRadius, bottomRadius }: AtmosphereParameters,
   r: number,
   muS: number,
   result: Vector2
 ): Vector2 {
-  const topRadius = atmosphere.topRadius * METER_TO_UNIT_LENGTH
-  const bottomRadius = atmosphere.bottomRadius * METER_TO_UNIT_LENGTH
   const xR = (r - bottomRadius) / (topRadius - bottomRadius)
   const xMuS = muS * 0.5 + 0.5
   return result.set(
@@ -102,7 +99,6 @@ export class SkyLightProbe extends LightProbe {
         )
       }
     }
-    position.multiplyScalar(METER_TO_UNIT_LENGTH)
 
     const r = position.length()
     const muS = position.dot(this.sunDirection) / r
