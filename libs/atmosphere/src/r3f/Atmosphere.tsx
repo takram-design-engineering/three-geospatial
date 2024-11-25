@@ -41,8 +41,7 @@ export interface AtmosphereContextValue {
 export const AtmosphereContext = createContext<AtmosphereContextValue>({})
 
 export interface AtmosphereProps {
-  textures?: PrecomputedTextures
-  texturesUrl?: string
+  textures?: PrecomputedTextures | string
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   osculateEllipsoid?: boolean
@@ -61,7 +60,6 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
 >(function Atmosphere(
   {
     textures: texturesProp,
-    texturesUrl,
     useHalfFloat,
     ellipsoid = Ellipsoid.WGS84,
     osculateEllipsoid = true,
@@ -82,22 +80,24 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       gl.getContext().getExtension('OES_texture_float_linear') == null
   }
 
-  const [textures, setTextures] = useState(texturesProp)
+  const [textures, setTextures] = useState(
+    typeof texturesProp !== 'string' ? texturesProp : undefined
+  )
   useEffect(() => {
-    if (texturesProp != null) {
-      setTextures(texturesProp)
-    } else if (texturesUrl != null) {
+    if (typeof texturesProp === 'string') {
       const loader = new PrecomputedTexturesLoader()
       loader.useHalfFloat = useHalfFloat
       ;(async () => {
-        setTextures(await loader.loadAsync(texturesUrl))
+        setTextures(await loader.loadAsync(texturesProp))
       })().catch(error => {
         console.error(error)
       })
+    } else if (texturesProp != null) {
+      setTextures(texturesProp)
     } else {
       setTextures(undefined)
     }
-  }, [texturesProp, texturesUrl, useHalfFloat])
+  }, [texturesProp, useHalfFloat])
 
   const context = useMemo(
     () => ({

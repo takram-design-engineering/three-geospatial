@@ -85,13 +85,13 @@ const Scene: FC = () => {
   return (
     <Atmosphere
       ref={atmosphereRef}
-      texturesUrl='/'
+      textures='/'
       osculateEllipsoid={osculateEllipsoid}
       photometric={photometric}
     >
       <OrbitControls target={position} minDistance={1e3} />
       <Sky />
-      <Stars dataUrl='/stars.bin' />
+      <Stars data='/stars.bin' />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}

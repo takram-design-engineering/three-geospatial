@@ -165,12 +165,12 @@ const Scene: FC = () => {
   return (
     <Atmosphere
       ref={atmosphereRef}
-      texturesUrl='/'
+      textures='/'
       osculateEllipsoid={osculateEllipsoid}
       photometric={photometric}
     >
       <Sky />
-      <Stars dataUrl='/stars.bin' />
+      <Stars data='/stars.bin' />
       <Globe />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment

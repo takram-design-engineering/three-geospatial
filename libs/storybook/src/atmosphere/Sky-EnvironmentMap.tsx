@@ -98,7 +98,7 @@ const Scene: FC = () => {
       <OrbitControls ref={controlsRef} minDistance={5} />
       <Atmosphere
         ref={atmosphereRef}
-        texturesUrl='/'
+        textures='/'
         osculateEllipsoid={osculateEllipsoid}
         photometric={photometric}
       >

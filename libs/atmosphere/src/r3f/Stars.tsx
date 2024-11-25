@@ -24,15 +24,14 @@ import { separateProps } from './separateProps'
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
 export interface StarsProps extends PointsProps, AtmosphereMaterialProps {
-  data?: ArrayBuffer
-  dataUrl?: string
+  data?: ArrayBuffer | string
   pointSize?: number
   radianceScale?: number
   background?: boolean
 }
 
 export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
-  function Stars({ data: dataProp, dataUrl, ...props }, forwardedRef) {
+  function Stars({ data: dataProp, ...props }, forwardedRef) {
     const { textures, transientProps, ...contextProps } =
       useContext(AtmosphereContext)
 
@@ -46,21 +45,23 @@ export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
       ...props
     })
 
-    const [data, setData] = useState(dataProp)
+    const [data, setData] = useState(
+      typeof dataProp !== 'string' ? dataProp : undefined
+    )
     useEffect(() => {
-      if (dataProp != null) {
-        setData(dataProp)
-      } else if (dataUrl != null) {
+      if (typeof dataProp === 'string') {
         const loader = new ArrayBufferLoader()
         ;(async () => {
-          setData(await loader.loadAsync(dataUrl))
+          setData(await loader.loadAsync(dataProp))
         })().catch(error => {
           console.error(error)
         })
+      } else if (dataProp != null) {
+        setData(dataProp)
       } else {
         setData(undefined)
       }
-    }, [dataProp, dataUrl])
+    }, [dataProp])
 
     const geometry = useMemo(
       () => (data != null ? new StarsGeometry(data) : undefined),

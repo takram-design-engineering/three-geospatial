@@ -166,7 +166,7 @@ const Scene: FC = () => {
 
   const [target, setTarget] = useState<Object3D | null>(null)
   return (
-    <Atmosphere ref={setAtmosphere} texturesUrl='/'>
+    <Atmosphere ref={setAtmosphere} textures='/'>
       <OrbitControls target={position} />
       <Sky />
       <group position={position}>
