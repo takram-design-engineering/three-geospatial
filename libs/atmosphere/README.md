@@ -22,7 +22,7 @@ const Scene = () => {
     <Atmosphere textures={precomputedTextures}>
       <Sky />
       <EffectComposer enableNormalPass>
-        <AerialPerspective />
+        <AerialPerspective skyIrradiance sunIrradiance />
       </EffectComposer>
     </Atmosphere>
   )
@@ -47,7 +47,7 @@ const Scene = () => {
         <SunLight />
       </group>
       <EffectComposer>
-        <AerialPerspective skyIrradiance={false} sunIrradiance={false} />
+        <AerialPerspective />
       </EffectComposer>
     </Atmosphere>
   )
@@ -114,10 +114,7 @@ scene.add(sunLight)
 // Demonstrates forward lighting here. For deferred lighting, set sunIrradiance
 // and skyIrradiance to true, remove SkyLightProbe and SunDirectionalLight, and
 // provide a normal buffer to AerialPerspectiveEffect.
-const aerialPerspective = new AerialPerspectiveEffect(camera, {
-  sunIrradiance: false,
-  skyIrradiance: false
-})
+const aerialPerspective = new AerialPerspectiveEffect(camera)
 
 // Use floating-point render buffer, as irradiance/illuminance is stored here.
 const composer = new EffectComposer(renderer, {
@@ -153,7 +150,7 @@ function render(): void {
 
   skyMaterial.sunDirection.copy(sunDirection)
   skyMaterial.moonDirection.copy(moonDirection)
-  sunLight.direction.copy(sunDirection)
+  sunLight.sunDirection.copy(sunDirection)
   skyLight.sunDirection.copy(sunDirection)
   aerialPerspective.sunDirection.copy(sunDirection)
 
@@ -606,13 +603,13 @@ sunDirection = new Vector3() : Vector3
 #### .sunIrradiance
 
 ```ts
-sunIrradiance = true : boolean
+sunIrradiance = false : boolean
 ```
 
 #### .skyIrradiance
 
 ```ts
-skyIrradiance = true : boolean
+skyIrradiance = false : boolean
 ```
 
 #### .transmittance

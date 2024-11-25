@@ -127,10 +127,7 @@ function init(): void {
   // sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
   // SunDirectionalLight, and provide a normal buffer to
   // AerialPerspectiveEffect.
-  aerialPerspective = new AerialPerspectiveEffect(camera, {
-    sunIrradiance: false,
-    skyIrradiance: false
-  })
+  aerialPerspective = new AerialPerspectiveEffect(camera)
 
   renderer = new WebGLRenderer({
     antialias: false,

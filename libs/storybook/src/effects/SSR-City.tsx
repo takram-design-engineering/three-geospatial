@@ -208,7 +208,7 @@ const Scene: FC = () => {
             jitter
           })}
         >
-          <AerialPerspective sunIrradiance={false} skyIrradiance={false} />
+          <AerialPerspective />
           {enabled && (
             <SSR
               iterations={iterations}

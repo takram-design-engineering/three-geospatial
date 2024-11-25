@@ -74,8 +74,8 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   osculateEllipsoid: true,
   morphToSphere: true,
   photometric: true,
-  sunIrradiance: true,
-  skyIrradiance: true,
+  sunIrradiance: false,
+  skyIrradiance: false,
   transmittance: true,
   inscatter: true,
   albedoScale: 1
