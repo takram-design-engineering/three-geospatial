@@ -33,7 +33,7 @@ export function getDirectionECEF(
   result = new Vector3()
 ): Vector3 {
   const time = makeTime(date)
-  const vectorEQJ = GeoVector(body, time, true)
+  const vectorEQJ = GeoVector(body, time, false)
   const rotationEQJtoEQD = Rotation_EQJ_EQD(time)
   const vectorEQD = RotateVector(rotationEQJtoEQD, vectorEQJ)
   const rotationEQDtoECEF = RotationZ(SiderealTime(time) * (Math.PI / 12))
