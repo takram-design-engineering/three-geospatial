@@ -2,7 +2,7 @@ import { createReadStream } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { dirname } from 'path'
 import { createInterface } from 'readline'
-import { maxBy, meanBy, minBy } from 'lodash-es'
+import { maxBy, meanBy, minBy } from 'lodash'
 import { Color } from 'three'
 import invariant from 'tiny-invariant'
 
