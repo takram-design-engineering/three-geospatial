@@ -1,6 +1,10 @@
-import { isAxiosError, type AxiosRequestConfig } from 'axios'
+import defaultAxios, { isAxiosError, type AxiosRequestConfig } from 'axios'
+import rateLimit from 'axios-rate-limit'
 
-import { axios } from '@takram/three-geospatial'
+// TODO: Remove axios.
+const axios = rateLimit(defaultAxios.create(), {
+  maxRequests: 100
+})
 
 // https://cesium.com/learn/ion/rest-api/#operation/getAssetEndpoint
 interface AssetEndpoint {

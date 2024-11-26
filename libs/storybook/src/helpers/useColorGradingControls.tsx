@@ -1,7 +1,6 @@
+import { useLoader } from '@react-three/fiber'
 import { useMemo } from 'react'
-import { suspend } from 'suspend-react'
-
-import { axios } from '@takram/three-geospatial'
+import { FileLoader } from 'three'
 
 import { useControls } from './useControls'
 
@@ -12,10 +11,9 @@ interface Entry {
 }
 
 export function useColorGradingControls(): string | null {
-  const data = suspend(
-    async () => (await axios<Entry[]>('/clut/index.json')).data,
-    [useColorGradingControls]
-  )
+  const data = useLoader(FileLoader, '/clut/index.json', loader => {
+    loader.setResponseType('json')
+  }) as Entry[]
 
   const films = useMemo(
     () =>

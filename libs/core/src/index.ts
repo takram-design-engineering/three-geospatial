@@ -2,7 +2,6 @@
 
 export * from './ArrayBufferLoader'
 export * from './assertions'
-export * from './axios'
 export * from './DataLoader'
 export * from './Ellipsoid'
 export * from './EllipsoidGeometry'
