@@ -4,7 +4,7 @@ import { Ellipsoid } from './Ellipsoid'
 import {
   projectOnEllipsoidSurface,
   type ProjectOnEllipsoidSurfaceOptions
-} from './projectOnEllipsoidSurface'
+} from './helpers/projectOnEllipsoidSurface'
 
 export type GeodeticTuple = [number, number, number]
 
@@ -29,10 +29,12 @@ export class Geodetic {
     public height = 0
   ) {}
 
-  set(longitude: number, latitude: number, height: number): this {
+  set(longitude: number, latitude: number, height?: number): this {
     this.longitude = longitude
     this.latitude = latitude
-    this.height = height
+    if (height != null) {
+      this.height = height
+    }
     return this
   }
 
@@ -95,7 +97,9 @@ export class Geodetic {
       options
     )
     if (projection == null) {
-      throw new Error()
+      throw new Error(
+        `Could not project position to ellipsoid surface: ${position.toArray()}`
+      )
     }
     const normal = vectorScratch1
       .multiplyVectors(projection, reciprocalRadiiSquared)

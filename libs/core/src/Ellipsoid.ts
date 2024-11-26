@@ -1,9 +1,9 @@
-import { Matrix4, Vector3 } from 'three'
+import { Matrix4, Vector3, type Ray } from 'three'
 
 import {
   projectOnEllipsoidSurface,
   type ProjectOnEllipsoidSurfaceOptions
-} from './projectOnEllipsoidSurface'
+} from './helpers/projectOnEllipsoidSurface'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
@@ -76,6 +76,38 @@ export class Ellipsoid {
     const up = vectorScratch3
     this.getEastNorthUpVectors(position, east, north, up)
     return result.makeBasis(east, north, up).setPosition(position)
+  }
+
+  getIntersection(ray: Ray, result = new Vector3()): Vector3 | undefined {
+    const reciprocalRadii = this.reciprocalRadii(vectorScratch1)
+    const p = vectorScratch2.copy(reciprocalRadii).multiply(ray.origin)
+    const d = vectorScratch3.copy(reciprocalRadii).multiply(ray.direction)
+    const p2 = p.lengthSq()
+    const d2 = d.lengthSq()
+    const pd = p.dot(d)
+    const discriminant = pd ** 2 - d2 * (p2 - 1)
+    if (p2 === 1) {
+      return result.copy(ray.origin)
+    }
+    if (p2 > 1) {
+      if (pd >= 0 || discriminant < 0) {
+        return // No intersection
+      }
+      const Q = Math.sqrt(discriminant)
+      const t1 = (-pd - Q) / d2
+      const t2 = (-pd + Q) / d2
+      return ray.at(Math.min(t1, t2), result)
+    }
+    if (p2 < 1) {
+      const discriminant = pd ** 2 - d2 * (p2 - 1)
+      const Q = Math.sqrt(discriminant)
+      const t = (-pd + Q) / d2
+      return ray.at(t, result) // Backface of the ellipsoid
+    }
+    if (pd < 0) {
+      return ray.at(-pd / d2, result) // Backface of the ellipsoid
+    }
+    // No intersection
   }
 
   getOsculatingSphereCenter(

@@ -47,10 +47,12 @@ export class TileCoordinate {
     public z = 0
   ) {}
 
-  set(x: number, y: number, z: number): this {
+  set(x: number, y: number, z?: number): this {
     this.x = x
     this.y = y
-    this.z = z
+    if (z != null) {
+      this.z = z
+    }
     return this
   }
 
