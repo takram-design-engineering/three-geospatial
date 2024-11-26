@@ -8,7 +8,14 @@ import {
   ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { Fragment, useEffect, useMemo, useRef, type FC } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type FC
+} from 'react'
 import { DRACOLoader, GLTFLoader } from 'three-stdlib'
 
 import {
@@ -31,7 +38,7 @@ import {
   LensFlare,
   Normal
 } from '@takram/three-effects/r3f'
-import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 
 import { HaldLUT } from '../helpers/HaldLUT'
 import { Stats } from '../helpers/Stats'
@@ -39,10 +46,6 @@ import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useRendererControls } from '../helpers/useRendererControls'
-
-const location = new Geodetic(radians(139.7671), radians(35.6812), 4500)
-const position = location.toECEF()
-const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -143,8 +146,17 @@ const Scene: FC = () => {
     inscatter: true
   })
 
-  // Effects must know the camera near/far changed by GlobeControls.
   const camera = useThree(({ camera }) => camera)
+  useLayoutEffect(() => {
+    new PointOfView(
+      new Geodetic(radians(139.7671), radians(35.6812)).toECEF(),
+      radians(180),
+      radians(-30),
+      4500
+    ).decompose(camera.position, camera.quaternion)
+  }, [camera])
+
+  // Effects must know the camera near/far changed by GlobeControls.
   const composerRef = useRef<EffectComposerImpl>(null)
   useFrame(() => {
     const composer = composerRef.current
@@ -223,7 +235,6 @@ const Story: StoryFn = () => (
       stencil: false,
       logarithmicDepthBuffer: true
     }}
-    camera={{ position, up }}
   >
     <Stats />
     <Scene />

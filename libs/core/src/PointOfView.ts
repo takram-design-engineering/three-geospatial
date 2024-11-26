@@ -1,10 +1,4 @@
-import {
-  Matrix4,
-  Ray,
-  Vector3,
-  type PerspectiveCamera,
-  type Quaternion
-} from 'three'
+import { Matrix4, Ray, Vector3, type Camera, type Quaternion } from 'three'
 
 import { Ellipsoid } from './Ellipsoid'
 import { clamp } from './math'
@@ -54,6 +48,14 @@ export class PointOfView {
 
   set distance(value: number) {
     this._distance = Math.max(value, EPSILON)
+  }
+
+  set(target: Vector3, heading: number, pitch: number, distance: number): this {
+    this.target.copy(target)
+    this.heading = heading
+    this.pitch = pitch
+    this.distance = distance
+    return this
   }
 
   clone(): PointOfView {
@@ -106,10 +108,7 @@ export class PointOfView {
     )
   }
 
-  setFromCamera(
-    camera: PerspectiveCamera,
-    ellipsoid = Ellipsoid.WGS84
-  ): this | undefined {
+  setFromCamera(camera: Camera, ellipsoid = Ellipsoid.WGS84): this | undefined {
     const position = vectorScratch1.setFromMatrixPosition(camera.matrixWorld)
     const direction = vectorScratch2
       .set(0, 0, 0.5)
