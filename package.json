@@ -4,7 +4,7 @@
   "private": true,
   "license": "UNLICENSED (for now)",
   "scripts": {
-    "clean": "nx reset && rimraf --glob dist tmp \"libs/*/vite.config.ts.timestamp-*\"",
+    "clean": "nx reset && rimraf --glob dist tmp \"packages/*/vite.config.ts.timestamp-*\"",
     "dev": "nx dev playground",
     "storybook": "nx storybook storybook --port=4400 --no-open"
   },
@@ -62,6 +62,7 @@
     "@storybook/addon-interactions": "^8.4.5",
     "@storybook/core-server": "^8.4.5",
     "@storybook/jest": "^0.2.3",
+    "@storybook/manager-api": "^8.4.5",
     "@storybook/react": "^8.4.5",
     "@storybook/react-vite": "^8.4.5",
     "@storybook/test-runner": "^0.19.1",
