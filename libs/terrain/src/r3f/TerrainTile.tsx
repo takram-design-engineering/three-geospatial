@@ -13,7 +13,7 @@ export interface TerrainTileProps extends TileCoordinateLike, MeshProps {
   computeVertexNormals?: boolean
 }
 
-export const TerrainTile = memo(
+export const TerrainTile = /*#__PURE__*/ memo(
   /*#__PURE__*/ forwardRef<Mesh<TerrainGeometry>, TerrainTileProps>(
     function TerrainTile(
       { terrain, x, y, z, computeVertexNormals = false, children, ...props },
