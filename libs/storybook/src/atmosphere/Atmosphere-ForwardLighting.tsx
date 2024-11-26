@@ -34,7 +34,7 @@ import { BatchedTerrainTile } from '@takram/three-terrain/r3f'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
-import { useRendererControls } from '../helpers/useRendererControls'
+import { useExposureControls } from '../helpers/useExposureControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -49,7 +49,7 @@ const terrain = new IonTerrain({
 })
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 10 })
+  useExposureControls({ exposure: 10 })
   const { lensFlare, normal, depth } = useControls(
     'effects',
     {

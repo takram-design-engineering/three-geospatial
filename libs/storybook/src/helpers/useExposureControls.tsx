@@ -5,15 +5,15 @@ import { useEffect } from 'react'
 import { springOptions } from './springOptions'
 import { useControls } from './useControls'
 
-export interface RendererControlValues {
+export interface useExposureControlValues {
   exposure: number
 }
 
-export function useRendererControls({
+export function useExposureControls({
   exposure: initialExposure = 1
-}: Partial<RendererControlValues>): RendererControlValues {
+}: Partial<useExposureControlValues>): useExposureControlValues {
   const [values, set] = useControls(
-    'renderer',
+    'exposure',
     () => ({
       exposure: {
         value: initialExposure,

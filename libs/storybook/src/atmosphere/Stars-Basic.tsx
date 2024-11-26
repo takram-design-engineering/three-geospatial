@@ -11,10 +11,10 @@ import { Stars, type StarsImpl } from '@takram/three-atmosphere/r3f'
 import { EffectComposer } from '@takram/three-effects/r3f'
 
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
-import { useRendererControls } from '../helpers/useRendererControls'
+import { useExposureControls } from '../helpers/useExposureControls'
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 50 })
+  useExposureControls({ exposure: 50 })
   const motionDate = useLocalDateControls()
 
   const rotationMatrixRef = useRef(new Matrix4())

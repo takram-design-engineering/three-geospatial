@@ -45,7 +45,7 @@ import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
-import { useRendererControls } from '../helpers/useRendererControls'
+import { useExposureControls } from '../helpers/useExposureControls'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -112,7 +112,7 @@ const Globe: FC = () => {
 }
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 10 })
+  useExposureControls({ exposure: 10 })
   const lut = useColorGradingControls()
   const { lensFlare, normal, depth } = useControls(
     'effects',

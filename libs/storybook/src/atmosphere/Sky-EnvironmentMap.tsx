@@ -30,7 +30,7 @@ import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
-import { useRendererControls } from '../helpers/useRendererControls'
+import { useExposureControls } from '../helpers/useExposureControls'
 
 const location = new Geodetic()
 const position = new Vector3()
@@ -56,7 +56,7 @@ function applyLocation(
 }
 
 const Scene: FC = () => {
-  useRendererControls({ exposure: 10 })
+  useExposureControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls()
   const motionDate = useLocalDateControls({
     longitude,
