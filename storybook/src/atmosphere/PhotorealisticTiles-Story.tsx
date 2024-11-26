@@ -44,8 +44,11 @@ import { HaldLUT } from '../helpers/HaldLUT'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
-import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useExposureControls } from '../helpers/useExposureControls'
+import {
+  useLocalDateControls,
+  type LocalDateControlsParams
+} from '../helpers/useLocalDateControls'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -111,8 +114,25 @@ const Globe: FC = () => {
   return <primitive object={tiles.group} />
 }
 
-const Scene: FC = () => {
-  useExposureControls({ exposure: 10 })
+interface SceneProps extends LocalDateControlsParams {
+  exposure?: number
+  longitude?: number
+  latitude?: number
+  heading?: number
+  pitch?: number
+  distance?: number
+}
+
+const Scene: FC<SceneProps> = ({
+  exposure = 10,
+  longitude = 139.7671,
+  latitude = 35.6812,
+  heading = 180,
+  pitch = -30,
+  distance = 4500,
+  ...localDate
+}) => {
+  useExposureControls({ exposure })
   const lut = useColorGradingControls()
   const { lensFlare, normal, depth } = useControls(
     'effects',
@@ -123,7 +143,7 @@ const Scene: FC = () => {
     },
     { collapsed: true }
   )
-  const motionDate = useLocalDateControls()
+  const motionDate = useLocalDateControls({ longitude, ...localDate })
   const { osculateEllipsoid, morphToSphere, photometric } = useControls(
     'atmosphere',
     {
@@ -149,12 +169,12 @@ const Scene: FC = () => {
   const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
     new PointOfView(
-      new Geodetic(radians(139.7671), radians(35.6812)).toECEF(),
-      radians(180),
-      radians(-30),
-      4500
+      new Geodetic(radians(longitude), radians(latitude)).toECEF(),
+      radians(heading),
+      radians(pitch),
+      distance
     ).decompose(camera.position, camera.quaternion)
-  }, [camera])
+  }, [longitude, latitude, heading, pitch, distance, camera])
 
   // Effects must know the camera near/far changed by GlobeControls.
   const composerRef = useRef<EffectComposerImpl>(null)
@@ -227,7 +247,7 @@ const Scene: FC = () => {
   )
 }
 
-const Story: StoryFn = () => (
+export const Story: StoryFn<SceneProps> = props => (
   <Canvas
     gl={{
       antialias: false,
@@ -237,8 +257,6 @@ const Story: StoryFn = () => (
     }}
   >
     <Stats />
-    <Scene />
+    <Scene {...props} />
   </Canvas>
 )
-
-export default Story
