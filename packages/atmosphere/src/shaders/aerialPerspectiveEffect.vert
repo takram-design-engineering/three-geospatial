@@ -3,7 +3,7 @@ uniform vec3 cameraPosition;
 uniform float cameraHeight;
 uniform vec3 ellipsoidCenter;
 uniform vec3 ellipsoidRadii;
-uniform vec2 ellipsoidInterpolationRange;
+uniform vec2 morphToSphereRange;
 
 varying vec3 vWorldPosition;
 varying vec3 vEllipsoidCenter;
@@ -15,8 +15,8 @@ void mainSupport() {
 
   #ifdef MORPH_TO_SPHERE
   float t = smoothstep(
-    ellipsoidInterpolationRange.x,
-    ellipsoidInterpolationRange.y,
+    morphToSphereRange.x,
+    morphToSphereRange.y,
     cameraHeight
   );
   vEllipsoidCenter = mix(ellipsoidCenter, vec3(0.0), t) * METER_TO_UNIT_LENGTH;

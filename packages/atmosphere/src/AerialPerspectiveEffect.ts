@@ -151,7 +151,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
-          ['ellipsoidInterpolationRange', new Uniform(new Vector2(2e5, 6e5))],
+          ['morphToSphereRange', new Uniform(new Vector2(2e5, 6e5))],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['albedoScale', new Uniform(albedoScale)]
         ]),
@@ -334,8 +334,8 @@ export class AerialPerspectiveEffect extends Effect {
     }
   }
 
-  get ellipsoidInterpolationRange(): Vector2 {
-    return this.uniforms.get('ellipsoidInterpolationRange')!.value
+  get morphToSphereRange(): Vector2 {
+    return this.uniforms.get('morphToSphereRange')!.value
   }
 
   get photometric(): boolean {

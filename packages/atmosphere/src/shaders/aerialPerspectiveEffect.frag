@@ -4,7 +4,7 @@ uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform float cameraHeight;
-uniform vec2 ellipsoidInterpolationRange;
+uniform vec2 morphToSphereRange;
 uniform vec3 sunDirection;
 uniform float albedoScale;
 
@@ -116,8 +116,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   #ifdef MORPH_TO_SPHERE
   morphToSphere(
-    ellipsoidInterpolationRange.x,
-    ellipsoidInterpolationRange.y,
+    morphToSphereRange.x,
+    morphToSphereRange.y,
     worldPosition,
     worldNormal
   );
