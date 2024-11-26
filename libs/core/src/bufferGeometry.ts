@@ -1,4 +1,4 @@
-import { pick } from 'lodash'
+import { pick } from 'lodash-es'
 import { Box3, BufferAttribute, BufferGeometry, Sphere, Vector3 } from 'three'
 
 import { isNotNullish } from './assertions'

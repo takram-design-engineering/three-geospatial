@@ -1,5 +1,5 @@
 import { type MeshProps } from '@react-three/fiber'
-import { sumBy } from 'lodash'
+import { sumBy } from 'lodash-es'
 import { forwardRef, memo, useEffect, useMemo } from 'react'
 import { clear, suspend } from 'suspend-react'
 import { BatchedMesh, Matrix4, Vector3 } from 'three'

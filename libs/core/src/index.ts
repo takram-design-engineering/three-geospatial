@@ -2,6 +2,7 @@
 
 export * from './ArrayBufferLoader'
 export * from './assertions'
+export * from './bufferGeometry'
 export * from './DataLoader'
 export * from './Ellipsoid'
 export * from './EllipsoidGeometry'
@@ -14,7 +15,6 @@ export * from './TilingScheme'
 export * from './typedArray'
 export * from './TypedArrayLoader'
 export * from './types'
-export * from './utils'
 
 export { default as depthShader } from './shaders/depth.glsl'
 export { default as packingShader } from './shaders/packing.glsl'

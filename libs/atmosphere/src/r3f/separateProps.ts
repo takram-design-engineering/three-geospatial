@@ -1,4 +1,4 @@
-import { omit, pick } from 'lodash'
+import { omit, pick } from 'lodash-es'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 
