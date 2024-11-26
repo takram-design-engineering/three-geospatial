@@ -94,7 +94,7 @@ See the [story](/storybook/src/atmosphere/Atmosphere-Vanilla.tsx) for complete e
 ```ts
 const position = new Vector3(/* ECEF coordinate in meters */)
 
-// SkyMaterial disables projection; just provide a plane that covers clip space.
+// SkyMaterial disables projection. Provide a plane that covers clip space.
 const skyMaterial = new SkyMaterial()
 const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
 sky.frustumCulled = false
@@ -106,7 +106,7 @@ const skyLight = new SkyLightProbe()
 skyLight.position.copy(position)
 scene.add(skyLight)
 
-// SunDirectionalLight computes sun light transmittance to its target position.
+// SunDirectionalLight computes sunlight transmittance to its target position.
 const sunLight = new SunDirectionalLight()
 sunLight.target.position.copy(position)
 scene.add(sunLight)
@@ -239,13 +239,47 @@ const Scene = () => {
 }
 ```
 
-| Prop              | Type                            | Description                                                                 | Default value     |
-| ----------------- | ------------------------------- | --------------------------------------------------------------------------- | ----------------- |
-| textures          | `PrecomputedTextures \| string` | The precomputed textures, or a URL to the directory containing them.        | `undefined`       |
-| useHalfFloat      | `boolean`                       | Whether the internal format of the textures is half-float.                  | `false`           |
-| ellipsoid         | `Ellipsoid`                     | The ellipsoid model representing Earth.                                     | `Ellipsoid.WGS84` |
-| osculateEllipsoid | `boolean`                       | Whether to adjust the atmosphere’s bottom sphere to osculate the ellipsoid. | `true`            |
-| photometric       | `boolean`                       | Whether to store illuminance instead of irradiance in render buffers.       | `true`            |
+### Props
+
+#### textures
+
+```ts
+textures: PrecomputedTextures | string = undefined
+```
+
+The precomputed textures, or a URL to the directory containing them.
+
+#### useHalfFloat
+
+```ts
+useHalfFloat: boolean = false
+```
+
+Whether the internal format of the textures is half-float.
+
+#### ellipsoid
+
+```ts
+ellipsoid: Ellipsoid = Ellipsoid.WGS84
+```
+
+The ellipsoid model representing Earth.
+
+#### osculateEllipsoid
+
+```ts
+osculateEllipsoid: boolean = true
+```
+
+Whether to adjust the atmosphere’s bottom sphere to osculate the ellipsoid.
+
+#### photometric
+
+```ts
+photometric: boolean = true
+```
+
+Whether to store illuminance instead of irradiance in render buffers.
 
 ## Sky
 
@@ -277,13 +311,9 @@ const Scene = () => {
 }
 ```
 
-| Prop               | Type      | Description                                               | Default value  |
-| ------------------ | --------- | --------------------------------------------------------- | -------------- |
-| sun                | `boolean` | Whether to display the sun.                               | `true`         |
-| moon               | `boolean` | Whether to display the moon.                              | `true`         |
-| moonDirection      | `Vector3` | The normalized direction to the moon in ECEF coordinates. | `new Vector()` |
-| moonAngularRadius  | `number`  | The angular radius of the moon, in radians.               | `0.0045`       |
-| lunarRadianceScale | `number`  | A scaling factor to adjust the brightness of the moon.    | `1`            |
+### Props
+
+The parameters of [`SkyMaterial`](#skymaterial) are exposed as props.
 
 ## Stars
 
@@ -316,12 +346,17 @@ const Scene = () => {
 }
 ```
 
-| Prop          | Type                    | Description                                                                                    | Default value |
-| ------------- | ----------------------- | ---------------------------------------------------------------------------------------------- | ------------- |
-| data          | `ArrayBuffer \| string` | The data containing the position and magnitude of the stars, or a URL to it.                   | `undefined`   |
-| pointSize     | `number`                | The size of each star, in points.                                                              | `1`           |
-| radianceScale | `number`                | A scaling factor to adjust the brightness of the stars.                                        | `1`           |
-| background    | `boolean`               | Whether to display the stars at an infinite distance, otherwise, they appear on a unit sphere. | `true`        |
+### Props
+
+The parameters of [`AtmosphereMaterialBase`](#atmospherematerialbase) and [`StarsMaterial`](#starsmaterial) are also exposed as props.
+
+#### data
+
+```ts
+data: ArrayBuffer | string = undefined
+```
+
+The data containing the position and magnitude of the stars, or a URL to it.
 
 ## SkyLight
 
@@ -354,6 +389,10 @@ const Scene = () => {
 }
 ```
 
+### Props
+
+The parameters of [`SkyLightProbe`](#skylightprobe) are exposed as props.
+
 ## SunLight
 
 A directional light representing the sun.
@@ -385,9 +424,13 @@ const Scene = () => {
 }
 ```
 
+### Props
+
+The parameters of [`SunDirectionalLight`](#directionalsunlight) are exposed as props.
+
 ## AerialPerspective
 
-A post-processing effect that displays aerial perspective. It can optionally render sun and sky irradiance as deferred lighting.
+A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as deferred lighting.
 
 This is for use with the [postprocessing](https://github.com/pmndrs/postprocessing)’s EffectComposer and is not compatible with the one in Three.js examples.
 
@@ -416,275 +459,291 @@ const Scene = () => {
 }
 ```
 
+### Props
+
+The parameters of [`AerialPerspectiveEffect`](#aerialperspectiveeffect) are exposed as props.
+
 ## AtmosphereMaterialBase
 
-Base class of [`SkyMaterial`](#skymaterial), [`SkyRadianceMaterial`](#skyradiancematerial) and [`StarsMaterial`](#starsmaterial).
+The base class of [`SkyMaterial`](#skymaterial) and [`StarsMaterial`](#starsmaterial).
 
-#### .irradianceTexture, .scatteringTexture, .transmittanceTexture
+Extends [`RawShaderMaterial`](https://threejs.org/docs/?q=shader#api/en/materials/RawShaderMaterial).
+
+### Parameters
+
+#### irradianceTexture, scatteringTexture, transmittanceTexture
 
 ```ts
-irradianceTexture = null : Texture | null
-scatteringTexture = null : Texture | null
-transmittanceTexture = null : Texture | null
+irradianceTexture: DataTexture | null = null
+scatteringTexture: Data3DTexture | null = null
+transmittanceTexture: DataTexture | null = null
 ```
 
-#### .useHalfFloat
+#### useHalfFloat
 
 ```ts
-useHalfFloat = false : boolean
+useHalfFloat: boolean = false
 ```
 
-#### .ellipsoid
+#### ellipsoid
 
 ```ts
-ellipsoid = Ellipsoid.WGS84 : Ellipsoid
+ellipsoid: Ellipsoid = Ellipsoid.WGS84
 ```
 
-#### .osculateEllipsoid
+#### osculateEllipsoid
 
 ```ts
-osculateEllipsoid = true : boolean
+osculateEllipsoid: boolean = true
 ```
 
-#### .photometric
+#### photometric
 
 ```ts
-photometric = true : boolean
+photometric: boolean = true
 ```
 
-#### .sunDirection
+#### sunDirection
 
 ```ts
-sunDirection = new Vector() : Vector3
+sunDirection: Vector3 = new Vector3()
 ```
 
-#### .sunAngularRadius
+#### sunAngularRadius
 
 ```ts
-sunAngularRadius = 0.004675 : number
+sunAngularRadius: number = 0.004675
 ```
 
 ## SkyMaterial
 
 Extends [`AtmosphereMaterialBase`](#atmospherematerialbase).
 
-#### .sun
-
 ```ts
-sun = true : boolean
+new SkyMaterial(params?: SkyMaterialParameters)
 ```
 
-#### .moon
+### Parameters
+
+#### sun, moon
 
 ```ts
-moon = true : boolean
+sun: boolean = true
+moon: boolean = true
 ```
 
-#### .moonDirection
+Whether to display the sun and moon.
+
+#### moonDirection
 
 ```ts
-moonDirection = new Vector3() : Vector3
+moonDirection: Vector3 = new Vector()
 ```
 
-#### .moonAngularRadius
+The normalized direction to the moon in ECEF coordinates.
+
+#### moonAngularRadius
 
 ```ts
-moonAngularRadius = 0.0045 : number
+moonAngularRadius: number = 0.0045
 ```
 
-#### .lunarRadianceScale
+The angular radius of the moon, in radians.
+
+#### lunarRadianceScale
 
 ```ts
-lunarRadianceScale = 1 : number
+lunarRadianceScale: number = 1
 ```
 
-## SkyRadianceMaterial
+A scaling factor to adjust the brightness of the moon.
 
-Extends [`AtmosphereMaterialBase`](#atmospherematerialbase).
+## SkyLightProbe
+
+Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/LightProbe)
+
+## SunDirectionalLight
+
+Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en/lights/DirectionalLight)
 
 ## StarsGeometry
 
-Extends `BufferGeometry`.
+Extends [`BufferGeometry`](https://threejs.org/docs/?q=BufferGeometry#api/en/core/BufferGeometry).
+
+```ts
+new StarsGeometry(data: ArrayBuffer)
+```
+
+### Parameters
+
+#### data
+
+```ts
+data: ArrayBuffer
+```
+
+The data containing the position and magnitude of the stars
 
 ## StarsMaterial
 
 Extends [`AtmosphereMaterialBase`](#atmospherematerialbase).
 
-#### .pointSize
-
 ```ts
-pointSize = 1 : number
+new StarsMaterial(params?: StarsMaterialParameters)
 ```
 
-#### .magnitudeRange
+### Parameters
+
+#### pointSize
 
 ```ts
-magnitudeRange new Vector2(-2, 8) : Vector2
+pointSize: number = 1
 ```
 
-#### .radianceScale
+The size of each star, in points.
+
+#### radianceScale
 
 ```ts
-radianceScale = 1 : number
+radianceScale: number = 1
 ```
 
-#### .background
+A scaling factor to adjust the brightness of the stars.
+
+#### background
 
 ```ts
-background = true : boolean
+background: boolean = true
 ```
+
+Whether to display the stars at an infinite distance, otherwise, they appear on a unit sphere.
 
 ## AerialPerspectiveEffect
 
-Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `Effect`.
+### Parameters
 
-#### .normalBuffer
+Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s [`Effect`](https://pmndrs.github.io/postprocessing/public/docs/class/src/effects/Effect.js~Effect.html).
+
+#### normalBuffer
 
 ```ts
-normalBuffer = null : Texture | null
+normalBuffer: Texture \| null = null
 ```
 
-#### .reconstructNormal
+#### octEncodedNormal
 
 ```ts
-reconstructNormal = false : boolean
+octEncodedNormal: boolean = false
 ```
 
-#### .irradianceTexture, .scatteringTexture, .transmittanceTexture
+#### reconstructNormal
 
 ```ts
-irradianceTexture = null : Texture | null
-scatteringTexture = null : Texture | null
-transmittanceTexture = null : Texture | null
+reconstructNormal: boolean = false
 ```
 
-#### .useHalfFloat
+#### irradianceTexture, scatteringTexture, transmittanceTexture
 
 ```ts
-useHalfFloat = false : boolean
+irradianceTexture: DataTexture | null = null
+scatteringTexture: Data3DTexture | null = null
+transmittanceTexture: DataTexture | null = null
 ```
 
-#### .ellipsoid
+#### useHalfFloat
 
 ```ts
-ellipsoid = Ellipsoid.WGS84 : Ellipsoid
+useHalfFloat: boolean = false
 ```
 
-#### .osculateEllipsoid
+#### ellipsoid
 
 ```ts
-osculateEllipsoid = true : boolean
+ellipsoid: Ellipsoid = Ellipsoid.WGS84
 ```
 
-#### .morphToSphere
+#### morphToSphere
 
 ```ts
-morphToSphere = true : boolean
+morphToSphere: boolean = true
 ```
 
-#### .ellipsoidInterpolationRange
+#### morphToSphereRange
 
 ```ts
-ellipsoidInterpolationRange = new Vector2(2e5, 6e5) : Vector2
+morphToSphereRange: Vector2 = new Vector2(2e5, 6e5)
 ```
 
-#### .photometric
+#### photometric
 
 ```ts
-photometric = true : boolean
+photometric: boolean = true
 ```
 
-#### .sunDirection
+#### sunDirection
 
 ```ts
-sunDirection = new Vector3() : Vector3
+sunDirection: Vector3 = new Vector3()
 ```
 
-#### .sunIrradiance
+#### sunIrradiance, skyIrradiance
 
 ```ts
-sunIrradiance = false : boolean
+sunIrradiance: boolean = false
+skyIrradiance: boolean = false
 ```
 
-#### .skyIrradiance
+#### transmittance, inscatter
 
 ```ts
-skyIrradiance = false : boolean
+transmittance: boolean = true
+inscatter: boolean = true
 ```
 
-#### .transmittance
+#### albedoScale
 
 ```ts
-transmittance = true : boolean
+albedoScale: number = 1
 ```
 
-#### .inscatter
+## Functions
+
+### getSunDirectionECEF
 
 ```ts
-inscatter = true : boolean
+function getSunDirectionECEF(date: number | Date, result?: Vector3): Vector3
 ```
 
-#### .albedoScale
+### getMoonDirectionECEF
 
 ```ts
-albedoScale = 1 : number
+function getMoonDirectionECEF(date: number | Date, result?: Vector3): Vector3
 ```
 
-## getSunDirectionECEF
+### getECIToECEFRotationMatrix
 
 ```ts
-function getSunDirectionECEF(
-  date: Date | number,
-  result = new Vector3()
-): Vector3
+function getECIToECEFRotationMatrix(
+  date: number | Date,
+  result?: Matrix4
+): Matrix4
 ```
 
-## getMoonDirectionECEF
+### computeSunLightColor
 
 ```ts
-getMoonDirectionECEF(
-  date: Date | number,
-  result = new Vector3()
-) => Vector3
-```
+interface SunLightColorOptions {
+  ellipsoid?: Ellipsoid
+  osculateEllipsoid?: boolean
+  photometric?: boolean
+}
 
-## getECIToECEFRotationMatrix
-
-```ts
-getECIToECEFRotationMatrix(
-  date: Date | number,
-  result = new Matrix4()
-) => Matrix4
-```
-
-## computeSkyTransmittance
-
-```ts
-computeSkyTransmittance(
-  transmittanceTexture: DataTexture,
-  worldPosition: Vector3,
-  worldDirection: Vector3,
-  result = new Vector3() : Vector3,
-  options = {
-    ellipsoid = Ellipsoid.WGS84 : Ellipsoid,
-    osculateEllipsoid = true : boolean
-  }
-) => Vector3
-```
-
-## computeSunLightColor
-
-```ts
-computeSunLightColor(
+function computeSunLightColor(
   transmittanceTexture: DataTexture,
   worldPosition: Vector3,
   sunDirection: Vector3,
-  result = new Color() : Color,
-  options = {
-    ellipsoid = Ellipsoid.WGS84 : Ellipsoid,
-    osculateEllipsoid = true : boolean,
-    photometric = true : boolean,
-  }
+  result?: Color,
+  options?: SunLightColorOptions
 ): Color
 ```
 
