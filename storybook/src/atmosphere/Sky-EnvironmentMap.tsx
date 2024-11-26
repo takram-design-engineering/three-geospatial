@@ -5,7 +5,7 @@ import {
   type RenderCubeTextureApi
 } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
+import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useRef, useState, type FC } from 'react'
@@ -127,10 +127,9 @@ const Scene: FC = () => {
           />
         </TorusKnot>
       </EastNorthUpFrame>
-      <EffectComposer multisampling={0}>
+      <EffectComposer multisampling={8}>
         <LensFlare />
         <ToneMapping mode={ToneMappingMode.AGX} />
-        <SMAA />
         <Dithering />
       </EffectComposer>
     </>

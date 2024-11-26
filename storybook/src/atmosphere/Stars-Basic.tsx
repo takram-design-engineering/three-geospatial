@@ -10,8 +10,8 @@ import { getECIToECEFRotationMatrix } from '@takram/three-atmosphere'
 import { Stars, type StarsImpl } from '@takram/three-atmosphere/r3f'
 import { EffectComposer } from '@takram/three-effects/r3f'
 
-import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useExposureControls } from '../helpers/useExposureControls'
+import { useLocalDateControls } from '../helpers/useLocalDateControls'
 
 const Scene: FC = () => {
   useExposureControls({ exposure: 50 })
@@ -38,7 +38,7 @@ const Scene: FC = () => {
         radianceScale={5}
         background={false}
       />
-      <EffectComposer>
+      <EffectComposer multisampling={0}>
         <ToneMapping mode={ToneMappingMode.AGX} />
       </EffectComposer>
     </>
