@@ -28,9 +28,9 @@ import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
+import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
-import { useExposureControls } from '../helpers/useExposureControls'
 
 const location = new Geodetic()
 const position = new Vector3()
@@ -129,7 +129,7 @@ const Scene: FC = () => {
       </EastNorthUpFrame>
       <EffectComposer multisampling={0}>
         <LensFlare />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <ToneMapping mode={ToneMappingMode.AGX} />
         <SMAA />
         <Dithering />
       </EffectComposer>

@@ -92,7 +92,7 @@ const Scene: FC = () => {
       </Atmosphere>
       <EffectComposer multisampling={0}>
         <LensFlare />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <ToneMapping mode={ToneMappingMode.AGX} />
         <Dithering />
       </EffectComposer>
     </>
