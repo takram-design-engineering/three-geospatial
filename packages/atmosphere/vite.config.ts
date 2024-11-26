@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react-swc'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 import glsl from 'vite-plugin-glsl'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
   root: __dirname,
@@ -18,6 +19,14 @@ export default defineConfig({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
       pathsToAliases: false
+    }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: path.join(__dirname, 'assets/[!.]*'),
+          dest: 'assets'
+        }
+      ]
     }),
     glsl()
   ],
