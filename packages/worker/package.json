@@ -1,5 +1,5 @@
 {
-  "name": "@takram/three-worker",
+  "name": "@takram/three-geospatial-worker",
   "version": "0.0.1",
   "type": "module",
   "exports": {

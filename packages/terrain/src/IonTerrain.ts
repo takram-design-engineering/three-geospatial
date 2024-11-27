@@ -8,7 +8,7 @@ import {
   TilingScheme,
   type TileCoordinateLike
 } from '@takram/three-geospatial'
-import { queueTask } from '@takram/three-worker'
+import { queueTask } from '@takram/three-geospatial-worker'
 
 import { IonAsset } from './IonAsset'
 
