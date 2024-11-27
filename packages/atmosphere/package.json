@@ -17,6 +17,8 @@
   "module": "./index.js",
   "types": "./index.d.ts",
   "dependencies": {
+    "@takram/three-effects": "0.0.1",
+    "@takram/three-geospatial": "0.0.1",
     "astronomy-engine": "^2.1.19",
     "lodash-es": "^4.17.21",
     "react-merge-refs": "^2.1.1",
@@ -27,8 +29,6 @@
     "@react-three/drei": ">=9.117.3",
     "@react-three/fiber": ">=8.17.10",
     "@react-three/postprocessing": ">=2.16.3",
-    "@takram/three-effects": "0.0.1",
-    "@takram/three-geospatial": "0.0.1",
     "postprocessing": ">=6.36.4",
     "react": ">=18.0",
     "three": ">=0.170.0"
