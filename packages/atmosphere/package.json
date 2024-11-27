@@ -8,7 +8,7 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
-    "./react": {
+    "./r3f": {
       "import": "./r3f/index.js",
       "require": "./r3f/index.cjs"
     }
