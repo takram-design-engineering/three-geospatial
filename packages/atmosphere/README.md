@@ -30,8 +30,8 @@ const Scene = () => {
 }
 ```
 
-![deferred-1](https://github.com/user-attachments/assets/76fb8715-02ff-4833-b2af-ad5526a0ff0c)
-![deferred-2](https://github.com/user-attachments/assets/6605f432-933b-43fb-9c55-2c8aba5ddef6)
+![manhattan](docs/manhattan.jpg)
+![fuji](docs/fuji.jpg)
 
 ### Forward lighting
 
@@ -55,7 +55,7 @@ const Scene = () => {
 }
 ```
 
-![forward-1](https://github.com/user-attachments/assets/10b3befe-8a1f-47f3-8ac9-caaa19debbfb)
+![forward](docs/forward.jpg)
 
 ### Non-suspending texture loading
 
@@ -197,10 +197,10 @@ function render(): void {
 
 **Functions**
 
-- [`getSunDirectionECEF`](#getsundirectionecef)
-- [`getMoonDirectionECEF`](#getmoondirectionecef)
+- [`getSunDirectionECEF`](#getsundirectionecef-getmoondirectionecef)
+- [`getMoonDirectionECEF`](#getsundirectionecef-getmoondirectionecef)
 - [`getECIToECEFRotationMatrix`](#getecitoecefrotationmatrix)
-- [`computeSunLightColor`](#computesunlightcolor)
+- [`getSunLightColor`](#getsunlightcolor)
 
 ## Common Parameters
 
@@ -318,7 +318,7 @@ The parameters of [`AtmosphereMaterialBase`](#atmospherematerialbase) and [`SkyM
 
 ## Stars
 
-Represents the stars as points at an infinite distance.
+Represents the brightest stars as points at an infinite distance.
 
 See [`StarsMaterial`](#starsmaterial) for further details.
 
@@ -580,7 +580,7 @@ A scaling factor to adjust the brightness of the moon.
 
 A light probe for indirect sky irradiance.
 
-It computes spherical harmonics of sky irradiance at its position by sampling the precomputed irradiance texture on the CPU.
+It calculates spherical harmonics of sky irradiance at its position by sampling the precomputed irradiance texture on the CPU.
 
 ```ts
 const skyLight = new SkyLightProbe({ irradianceTexture })
@@ -599,7 +599,7 @@ Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/Ligh
 
 A directional light representing the sun.
 
-It computes the sun’s radiance by sampling the precomputed transmittance texture on the CPU.
+It calculates the sun’s radiance by sampling the precomputed transmittance texture on the CPU.
 
 ```ts
 const sunLight = new SunDirectionalLight({ transmittanceTexture })
@@ -625,7 +625,9 @@ The distance from the target. Adjust this value if shadows are enabled for the l
 
 ## StarsMaterial
 
-The provided data contains the position and magnitude of the the 9,096 stars listed in [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html).
+Represents the brightest stars as points at an infinite distance.
+
+The provided data ([stars.bin](/packages/atmosphere/assets/stars.bin)) contains the J2000 ECI directions, magnitudes and black body chromaticities of the 9,096 stars listed in [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html).
 
 ```ts
 const data: ArrayBuffer = /* Load stars.bin */
@@ -818,17 +820,14 @@ Deferred lighting treats the color buffer as albedo, but textures like those in 
 
 ## Functions
 
-### getSunDirectionECEF
+### getSunDirectionECEF, getMoonDirectionECEF
 
 ```ts
 function getSunDirectionECEF(date: number | Date, result?: Vector3): Vector3
-```
-
-### getMoonDirectionECEF
-
-```ts
 function getMoonDirectionECEF(date: number | Date, result?: Vector3): Vector3
 ```
+
+Obtains the direction to the sun and moon in ECEF coordinates for the specified UTC time. This internally uses [astronomy-engine](https://github.com/cosinekitty/astronomy) and it approximates UTC as being equivalent to UT1.
 
 ### getECIToECEFRotationMatrix
 
@@ -839,7 +838,9 @@ function getECIToECEFRotationMatrix(
 ): Matrix4
 ```
 
-### computeSunLightColor
+Obtains the rotation matrix to convert coordinates from J2000 ECI to ECEF. This internally uses [astronomy-engine](https://github.com/cosinekitty/astronomy) and it approximates UTC as being equivalent to UT1.
+
+### getSunLightColor
 
 ```ts
 interface SunLightColorOptions {
@@ -848,7 +849,7 @@ interface SunLightColorOptions {
   photometric?: boolean
 }
 
-function computeSunLightColor(
+function getSunLightColor(
   transmittanceTexture: DataTexture,
   worldPosition: Vector3,
   sunDirection: Vector3,
@@ -857,8 +858,4 @@ function computeSunLightColor(
 ): Color
 ```
 
-# References
-
-- [Precomputed Atmospheric Scattering](https://inria.hal.science/inria-00288758/en) ([Github](https://github.com/ebruneton/precomputed_atmospheric_scattering)) by Eric Bruneton and Fabrice Neyret
-- [The Bright Star Catalogue, 5th Revised Ed.](http://tdc-www.harvard.edu/catalogs/bsc5.html) by Hoffleit D. and Warren Jr W.H.
-- [Physically Based Rendering in Filament](https://google.github.io/filament/Filament.html) by Google
+Calculates the radiance of sunlight observed from a given position by sampling the precomputed transmittance texture on the CPU.
