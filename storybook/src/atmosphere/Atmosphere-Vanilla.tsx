@@ -19,6 +19,7 @@ import {
   PlaneGeometry,
   Scene,
   TorusKnotGeometry,
+  Vector3,
   WebGLRenderer
 } from 'three'
 import { OrbitControls } from 'three-stdlib'
@@ -48,6 +49,9 @@ let sunLight: SunDirectionalLight
 let aerialPerspective: AerialPerspectiveEffect
 let composer: EffectComposer
 let texturesLoader: PrecomputedTexturesLoader
+
+const sunDirection = new Vector3()
+const moonDirection = new Vector3()
 
 // A midnight sun in summer.
 const referenceDate = new Date('2000-06-01T10:00:00Z')
@@ -188,8 +192,8 @@ function onWindowResize(): void {
 
 function render(): void {
   const date = +referenceDate + ((clock.getElapsedTime() * 5e6) % 864e5)
-  const sunDirection = getSunDirectionECEF(date)
-  const moonDirection = getMoonDirectionECEF(date)
+  getSunDirectionECEF(date, sunDirection)
+  getMoonDirectionECEF(date, moonDirection)
 
   skyMaterial.sunDirection.copy(sunDirection)
   skyMaterial.moonDirection.copy(moonDirection)

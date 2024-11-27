@@ -145,10 +145,13 @@ texturesLoader.load('/assets', textures => {
   aerialPerspective.useHalfFloat = texturesLoader.useHalfFloat
 })
 
+const sunDirection = new Vector3()
+const moonDirection = new Vector3()
+
 function render(): void {
   // Suppose `date` is updated elsewhere.
-  const sunDirection = getSunDirectionECEF(date)
-  const moonDirection = getMoonDirectionECEF(date)
+  getSunDirectionECEF(date, sunDirection)
+  getMoonDirectionECEF(date, moonDirection)
 
   skyMaterial.sunDirection.copy(sunDirection)
   skyMaterial.moonDirection.copy(moonDirection)
@@ -297,8 +300,8 @@ import { Vector3 } from 'three'
 import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import { Sky } from '@takram/three-atmosphere/r3f'
 
-const sunDirection = new Vector3(1, 1, 1).normalize()
-const moonDirection = new Vector3(1, 1, 1).normalize()
+const sunDirection = getSunDirectionECEF(/* date */)
+const moonDirection = getMoonDirectionECEF(/* date */)
 
 const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
@@ -330,8 +333,8 @@ import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import { Stars } from '@takram/three-atmosphere/r3f'
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
-const sunDirection = new Vector3(1, 1, 1).normalize()
-const rotationMatrix = new Matrix4().makeRotationFromEuler(new Euler(1, 1, 1))
+const sunDirection = getSunDirectionECEF(/* date */)
+const rotationMatrix = getECIToECEFRotationMatrix(/* date */)
 
 const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
@@ -370,10 +373,10 @@ import { useLoader } from '@react-three/fiber'
 import { Vector3 } from 'three'
 
 import { SkyLight } from '@takram/three-atmosphere/r3f'
-import { Float32Data2DLoader, Geodetic } from '@takram/three-geospatial'
+import { Float32Data2DLoader } from '@takram/three-geospatial'
 
-const position = new Geodetic().toECEF()
-const sunDirection = new Vector3(1, 1, 1).normalize()
+const position = new Vector3(/* ECEF coordinate in meters */)
+const sunDirection = getSunDirectionECEF(/* date */)
 
 const Scene = () => {
   const irradianceTexture = useLoader(
@@ -407,8 +410,8 @@ import { Vector3 } from 'three'
 import { SunLight } from '@takram/three-atmosphere/r3f'
 import { Float32Data2DLoader, Geodetic } from '@takram/three-geospatial'
 
-const position = new Geodetic().toECEF()
-const sunDirection = new Vector3(1, 1, 1).normalize()
+const position = new Vector3(/* ECEF coordinate in meters */)
+const sunDirection = getSunDirectionECEF(/* date */)
 
 const Scene = () => {
   const transmittanceTexture = useLoader(
@@ -443,7 +446,7 @@ import { Vector3 } from 'three'
 import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import { AerialPerspective } from '@takram/three-atmosphere/r3f'
 
-const sunDirection = new Vector3(1, 1, 1).normalize()
+const sunDirection = getSunDirectionECEF(/* date */)
 
 const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
@@ -513,7 +516,7 @@ See [photometric](#photometric).
 sunDirection: Vector3 = new Vector3()
 ```
 
-See [sunDirection](#sundirection).
+The normalized direction to the sun in ECEF coordinates.
 
 #### sunAngularRadius
 
@@ -533,7 +536,7 @@ Despite its name, this component renders the atmosphere itself, along with the s
 
 ```ts
 const material = new SkyMaterial()
-material.sunDirection.copy(getSunDirectionECEF(/* date */))
+getSunDirectionECEF(/* date */, material.sunDirection)
 const sky = new Mesh(new PlaneGeometry(2, 2), material)
 sky.frustumCulled = false
 scene.add(sky)
@@ -585,7 +588,7 @@ It calculates spherical harmonics of sky irradiance at its position by sampling 
 ```ts
 const skyLight = new SkyLightProbe({ irradianceTexture })
 skyLight.position.set(/* ECEF coordinate in meters */)
-skyLight.sunDirection.copy(getSunDirectionECEF(/* date */))
+getSunDirectionECEF(/* date */, skyLight.sunDirection)
 scene.add(skyLight)
 
 skyLight.update()
@@ -604,7 +607,7 @@ It calculates the sun’s radiance by sampling the precomputed transmittance tex
 ```ts
 const sunLight = new SunDirectionalLight({ transmittanceTexture })
 sunLight.target.position.set(/* ECEF coordinate in meters */)
-sunLight.sunDirection.copy(getSunDirectionECEF(/* date */))
+getSunDirectionECEF(/* date */, sunLight.sunDirection)
 scene.add(sunLight)
 scene.add(sunLight.target)
 
@@ -636,7 +639,7 @@ const material = new StarsMaterial({
   scatteringTexture,
   transmittanceTexture
 })
-material.sunDirection.copy(getSunDirectionECEF(/* date */))
+getSunDirectionECEF(/* date */, material.sunDirection)
 const stars = new Points(new StarsGeometry(data), material)
 stars.setRotationFromMatrix(getECIToECEFRotationMatrix(/* date */))
 scene.add(stars)
@@ -682,7 +685,7 @@ const aerialPerspective = new AerialPerspectiveEffect(camera, {
   scatteringTexture,
   transmittanceTexture
 })
-aerialPerspective.sunDirection.copy(getSunDirectionECEF(/* date */))
+getSunDirectionECEF(/* date */, aerialPerspective.sunDirection)
 
 const composer = new EffectComposer(renderer, {
   frameBufferType: HalfFloatType
