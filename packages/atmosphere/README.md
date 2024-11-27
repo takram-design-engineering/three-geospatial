@@ -17,8 +17,17 @@ yarn add @takram/three-atmosphere
 Suitable for large-scale scenes, but supports only Lambertian BRDF.
 
 ```tsx
+import { useLoader } from '@react-three/fiber'
+import { EffectComposer } from '@react-three/postprocessing'
+import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
+import {
+  AerialPerspective,
+  Atmosphere,
+  Sky
+} from '@takram/three-atmosphere/r3f'
+
 const Scene = () => {
-  const textures = useLoader(PrecomputedTexturesLoader, '/assets')
+  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
   return (
     <Atmosphere textures={precomputedTextures}>
       <Sky />
@@ -38,12 +47,23 @@ const Scene = () => {
 Compatible with built-in Three.js materials and shadows, but both direct and indirect irradiance are approximated only for small-scale scenes.
 
 ```tsx
+import { useLoader } from '@react-three/fiber'
+import { EffectComposer } from '@react-three/postprocessing'
+import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
+import {
+  AerialPerspective,
+  Atmosphere,
+  Sky,
+  SkyLight,
+  SunLight
+} from '@takram/three-atmosphere/r3f'
+
 const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
   return (
     <Atmosphere textures={precomputedTextures}>
       <Sky />
-      <group position={position}>
+      <group position={/* ECEF coordinate in meters */}>
         <SkyLight />
         <SunLight />
       </group>
@@ -57,23 +77,17 @@ const Scene = () => {
 
 ![forward](docs/forward.jpg)
 
-### Non-suspending texture loading
-
-```tsx
-const Scene = () => (
-  // Provide a url instead of textures to load them asynchronously.
-  <Atmosphere textures='/assets'>
-    <Sky />
-    <EffectComposer>
-      <AerialPerspective />
-    </EffectComposer>
-  </Atmosphere>
-)
-```
-
 ### Transient update by date
 
 ```tsx
+import { useFrame } from '@react-three/fiber'
+import {
+  Atmosphere,
+  Sky,
+  type AtmosphereApi
+} from '@takram/three-atmosphere/r3f'
+import { useRef } from 'react'
+
 const Scene = () => {
   const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
@@ -86,6 +100,20 @@ const Scene = () => {
     </Atmosphere>
   )
 }
+```
+
+### Non-suspending texture loading
+
+```tsx
+const Scene = () => (
+  // Provide a url instead of textures to load them asynchronously.
+  <Atmosphere textures='/assets'>
+    <Sky />
+    <EffectComposer>
+      <AerialPerspective />
+    </EffectComposer>
+  </Atmosphere>
+)
 ```
 
 ### Vanilla Three.js
@@ -175,7 +203,7 @@ function render(): void {
 
 - Although you can generate custom precomputed textures, the implementation is effectively limited to Earth’s atmosphere. For rendering atmospheres of other planets, consider implementing Sébastien Hillaire’s [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf).
 
-- Since this project is developed in TypeScript, the Node-based TSL cannot be used yet, as it lacks type definitions as of this writing.
+- Since this project is developed in TypeScript, the node-based TSL cannot be used yet, as it lacks type definitions as of this writing.
 
 # API
 
@@ -210,13 +238,14 @@ function render(): void {
 Provides and synchronizes props of atmosphere components. It’s the recommended way to configure components unless you need finer control over properties of individual components.
 
 ```tsx
+import { useFrame } from '@react-three/fiber'
 import {
   Atmosphere,
   Sky,
-  ...,
   useAtmosphereTextureProps,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
+import { useRef } from 'react'
 
 const Scene = () => {
   const atmosphereRef = useRef<AtmosphereApi>(null)
@@ -293,9 +322,11 @@ See [`SkyMaterial`](#skymaterial) for further details.
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
-import { Vector3 } from 'three'
-
-import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
+import {
+  getMoonDirectionECEF,
+  getSunDirectionECEF,
+  PrecomputedTexturesLoader
+} from '@takram/three-atmosphere'
 import { Sky } from '@takram/three-atmosphere/r3f'
 
 const sunDirection = getSunDirectionECEF(/* date */)
@@ -325,9 +356,11 @@ See [`StarsMaterial`](#starsmaterial) for further details.
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
-import { Euler, Matrix4, Vector3 } from 'three'
-
-import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
+import {
+  getECIToECEFRotationMatrix,
+  getSunDirectionECEF,
+  PrecomputedTexturesLoader
+} from '@takram/three-atmosphere'
 import { Stars } from '@takram/three-atmosphere/r3f'
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
@@ -368,10 +401,10 @@ See [`SkyLightProbe`](#skylightprobe) for further details.
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
-import { Vector3 } from 'three'
-
+import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import { SkyLight } from '@takram/three-atmosphere/r3f'
 import { Float32Data2DLoader } from '@takram/three-geospatial'
+import { Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
 const sunDirection = getSunDirectionECEF(/* date */)
@@ -403,10 +436,10 @@ See [`SunDirectionalLight`](#directionalsunlight) for further details.
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
-import { Vector3 } from 'three'
-
+import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import { SunLight } from '@takram/three-atmosphere/r3f'
-import { Float32Data2DLoader, Geodetic } from '@takram/three-geospatial'
+import { Float32Data2DLoader } from '@takram/three-geospatial'
+import { Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
 const sunDirection = getSunDirectionECEF(/* date */)
@@ -420,7 +453,7 @@ const Scene = () => {
     <SunLight
       transmittanceTexture={transmittanceTexture}
       position={position}
-      direction={sunDirection}
+      sunDirection={sunDirection}
     />
   )
 }
@@ -439,10 +472,12 @@ See [`AerialPerspectiveEffect`](#aerialperspectiveeffect) for further details.
 ```tsx
 import { useLoader } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
-import { Vector3 } from 'three'
-
-import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
+import {
+  getSunDirectionECEF,
+  PrecomputedTexturesLoader
+} from '@takram/three-atmosphere'
 import { AerialPerspective } from '@takram/three-atmosphere/r3f'
+import { Vector3 } from 'three'
 
 const sunDirection = getSunDirectionECEF(/* date */)
 

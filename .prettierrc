@@ -32,7 +32,23 @@
   "overrides": [
     {
       "files": ["*.glsl", "*.frag", "*.vert"],
-      "options": { "parser": "glsl-parser" }
+      "options": {
+        "parser": "glsl-parser"
+      }
+    },
+    {
+      "files": ["*.md"],
+      "options": {
+        "importOrder": [
+          "<THIRD_PARTY_MODULES>",
+          "",
+          "^(?!.*\\.(css|glsl|frag|vert)$)[./].*$",
+          "",
+          "\\.(glsl|frag|vert)$",
+          "",
+          "\\.css$"
+        ]
+      }
     }
   ]
 }
