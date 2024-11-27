@@ -16,19 +16,19 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@takram/three-3d-tiles": ["libs/3d-tiles/src/index.ts"],
-      "@takram/three-atmosphere": ["libs/atmosphere/src/index.ts"],
-      "@takram/three-atmosphere/r3f": ["libs/atmosphere/src/r3f/index.ts"],
-      "@takram/three-csm": ["libs/csm/src/index.ts"],
-      "@takram/three-csm/r3f": ["libs/csm/src/r3f/index.ts"],
-      "@takram/three-effects": ["libs/effects/src/index.ts"],
-      "@takram/three-effects/r3f": ["libs/effects/src/r3f/index.ts"],
-      "@takram/three-geospatial": ["libs/core/src/index.ts"],
-      "@takram/three-geospatial/r3f": ["libs/core/src/r3f/index.ts"],
-      "@takram/three-terrain": ["libs/terrain/src/index.ts"],
-      "@takram/three-terrain-core": ["libs/terrain-core/src/index.ts"],
-      "@takram/three-terrain/r3f": ["libs/terrain/src/r3f/index.ts"],
-      "@takram/three-worker": ["libs/worker/src/index.ts"]
+      "@takram/three-3d-tiles": ["packages/3d-tiles/src/index.ts"],
+      "@takram/three-atmosphere": ["packages/atmosphere/src/index.ts"],
+      "@takram/three-atmosphere/r3f": ["packages/atmosphere/src/r3f/index.ts"],
+      "@takram/three-csm": ["packages/csm/src/index.ts"],
+      "@takram/three-csm/r3f": ["packages/csm/src/r3f/index.ts"],
+      "@takram/three-effects": ["packages/effects/src/index.ts"],
+      "@takram/three-effects/r3f": ["packages/effects/src/r3f/index.ts"],
+      "@takram/three-geospatial": ["packages/core/src/index.ts"],
+      "@takram/three-geospatial/r3f": ["packages/core/src/r3f/index.ts"],
+      "@takram/three-terrain": ["packages/terrain/src/index.ts"],
+      "@takram/three-terrain-core": ["packages/terrain-core/src/index.ts"],
+      "@takram/three-terrain/r3f": ["packages/terrain/src/r3f/index.ts"],
+      "@takram/three-worker": ["packages/worker/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

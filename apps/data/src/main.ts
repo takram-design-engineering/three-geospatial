@@ -21,7 +21,7 @@ async function main(): Promise<void> {
   }
 
   const importPath = path.join(targetDir, argv.target)
-  invariant(importPath.startsWith(targetDir) === true)
+  invariant(importPath.startsWith(targetDir))
   let target
   try {
     target = await import(`${importPath}.js`)
