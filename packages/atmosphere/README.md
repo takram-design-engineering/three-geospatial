@@ -266,10 +266,10 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 The ellipsoid model representing Earth.
 
-#### osculateEllipsoid
+#### correctAltitude
 
 ```ts
-osculateEllipsoid: boolean = true
+correctAltitude: boolean = true
 ```
 
 Whether to adjust the atmosphere’s inner sphere to osculate (touch and share a tangent with) the ellipsoid.
@@ -491,13 +491,13 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 See [ellipsoid](#ellipsoid).
 
-#### osculateEllipsoid
+#### correctAltitude
 
 ```ts
-osculateEllipsoid: boolean = true
+correctAltitude: boolean = true
 ```
 
-See [osculateEllipsoid](#osculateellipsoid).
+See [correctAltitude](#correctaltitude).
 
 #### photometric
 
@@ -751,22 +751,22 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 See [ellipsoid](#ellipsoid).
 
-#### osculateEllipsoid
+#### correctAltitude
 
 ```ts
-osculateEllipsoid: boolean = true
+correctAltitude: boolean = true
 ```
 
-See [osculateEllipsoid](#osculateellipsoid)
+See [correctAltitude](#correctaltitude)
 
-#### morphToSphere, morphToSphereRange
+#### correctGeometricError, geometricErrorAltitudeRange
 
 ```ts
-morphToSphere: boolean = true
-morphToSphereRange: Vector2 = new Vector2(2e5, 6e5)
+correctGeometricError: boolean = true
+geometricErrorAltitudeRange: Vector2 = new Vector2(2e5, 6e5)
 ```
 
-These options corrects artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere within the altitude range specified by `morphToSphereRange`, in meters.
+These options corrects artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere within the altitude range specified by `geometricErrorAltitudeRange`, in meters.
 
 Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
 
@@ -806,10 +806,10 @@ inscatter: boolean = true
 
 Whether to account for the atmospheric transmittance and inscattered light.
 
-#### albedoScale
+#### irradianceScale
 
 ```ts
-albedoScale: number = 1
+irradianceScale: number = 1
 ```
 
 This value adjusts the color buffer to reduce contrast.
@@ -844,7 +844,7 @@ function getECIToECEFRotationMatrix(
 ```ts
 interface SunLightColorOptions {
   ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
+  correctAltitude?: boolean
   photometric?: boolean
 }
 

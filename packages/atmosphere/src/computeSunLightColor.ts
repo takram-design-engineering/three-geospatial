@@ -41,7 +41,7 @@ const uvScratch = /*#__PURE__*/ new Vector2()
 
 export interface SunLightColorOptions {
   ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
+  correctAltitude?: boolean
   photometric?: boolean
 }
 
@@ -53,13 +53,13 @@ export function computeSunLightColor(
   result = new Color(),
   {
     ellipsoid = Ellipsoid.WGS84,
-    osculateEllipsoid = true,
+    correctAltitude = true,
     photometric = true
   }: SunLightColorOptions = {},
   atmosphere = AtmosphereParameters.DEFAULT
 ): Color {
   const camera = vectorScratch1.copy(worldPosition)
-  if (osculateEllipsoid) {
+  if (correctAltitude) {
     const surfacePosition = ellipsoid.projectOnSurface(
       worldPosition,
       vectorScratch2

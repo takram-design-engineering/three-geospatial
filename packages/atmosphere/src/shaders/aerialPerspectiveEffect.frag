@@ -4,9 +4,9 @@ uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform float cameraHeight;
-uniform vec2 morphToSphereRange;
+uniform vec2 geometricErrorAltitudeRange;
 uniform vec3 sunDirection;
-uniform float albedoScale;
+uniform float irradianceScale;
 
 varying vec3 vWorldPosition;
 varying vec3 vEllipsoidCenter;
@@ -20,7 +20,7 @@ vec3 readNormal(const vec2 uv) {
   #endif // OCT_ENCODED_NORMAL
 }
 
-void morphToSphere(
+void correctGeometricError(
   float minHeight,
   float maxHeight,
   inout vec3 worldPosition,
@@ -42,7 +42,7 @@ vec3 getSunSkyIrradiance(
 ) {
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
   // defined, regard the inputColor as radiance at the texel.
-  vec3 albedo = inputColor * albedoScale * RECIPROCAL_PI;
+  vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(
     worldPosition - vEllipsoidCenter,
@@ -114,14 +114,14 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
-  #ifdef MORPH_TO_SPHERE
-  morphToSphere(
-    morphToSphereRange.x,
-    morphToSphereRange.y,
+  #ifdef CORRECT_GEOMETRIC_ERROR
+  correctGeometricError(
+    geometricErrorAltitudeRange.x,
+    geometricErrorAltitudeRange.y,
     worldPosition,
     worldNormal
   );
-  #endif // MORPH_TO_SPHERE
+  #endif // CORRECT_GEOMETRIC_ERROR
 
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)

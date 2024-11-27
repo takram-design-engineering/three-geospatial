@@ -33,7 +33,7 @@ export interface AtmosphereContextValue {
   textures?: PrecomputedTextures | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
+  correctAltitude?: boolean
   photometric?: boolean
   transientProps?: AtmosphereTransientProps
 }
@@ -44,7 +44,7 @@ export interface AtmosphereProps {
   textures?: PrecomputedTextures | string
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
+  correctAltitude?: boolean
   photometric?: boolean
   children?: ReactNode
 }
@@ -62,7 +62,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     textures: texturesProp,
     useHalfFloat,
     ellipsoid = Ellipsoid.WGS84,
-    osculateEllipsoid = true,
+    correctAltitude = true,
     photometric = true,
     children
   },
@@ -104,11 +104,11 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       textures,
       useHalfFloat,
       ellipsoid,
-      osculateEllipsoid,
+      correctAltitude,
       photometric,
       transientProps: transientPropsRef.current
     }),
-    [textures, useHalfFloat, ellipsoid, osculateEllipsoid, photometric]
+    [textures, useHalfFloat, ellipsoid, correctAltitude, photometric]
   )
 
   const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {

@@ -62,8 +62,8 @@ const Scene: FC = () => {
     longitude,
     dayOfYear: 0
   })
-  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
-    osculateEllipsoid: true,
+  const { correctAltitude, photometric } = useControls('atmosphere', {
+    correctAltitude: true,
     photometric: false
   })
 
@@ -99,7 +99,7 @@ const Scene: FC = () => {
       <Atmosphere
         ref={atmosphereRef}
         textures='/'
-        osculateEllipsoid={osculateEllipsoid}
+        correctAltitude={correctAltitude}
         photometric={photometric}
       >
         <Sky />

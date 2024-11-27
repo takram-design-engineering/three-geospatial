@@ -55,15 +55,15 @@ export interface AerialPerspectiveEffectOptions {
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
-  morphToSphere?: boolean
+  correctAltitude?: boolean
+  correctGeometricError?: boolean
   photometric?: boolean
   sunDirection?: Vector3
   sunIrradiance?: boolean
   skyIrradiance?: boolean
   transmittance?: boolean
   inscatter?: boolean
-  albedoScale?: number
+  irradianceScale?: number
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -71,20 +71,20 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   octEncodedNormal: false,
   reconstructNormal: false,
   ellipsoid: Ellipsoid.WGS84,
-  osculateEllipsoid: true,
-  morphToSphere: true,
+  correctAltitude: true,
+  correctGeometricError: true,
   photometric: true,
   sunIrradiance: false,
   skyIrradiance: false,
   transmittance: true,
   inscatter: true,
-  albedoScale: 1
+  irradianceScale: 1
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
   private readonly atmosphere: AtmosphereParameters
   private _ellipsoid!: Ellipsoid
-  osculateEllipsoid: boolean
+  correctAltitude: boolean
 
   constructor(
     private camera: Camera,
@@ -101,15 +101,15 @@ export class AerialPerspectiveEffect extends Effect {
       transmittanceTexture = null,
       useHalfFloat,
       ellipsoid,
-      osculateEllipsoid,
-      morphToSphere,
+      correctAltitude,
+      correctGeometricError,
       photometric,
       sunDirection,
       sunIrradiance,
       skyIrradiance,
       transmittance,
       inscatter,
-      albedoScale
+      irradianceScale
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
     super(
@@ -151,9 +151,9 @@ export class AerialPerspectiveEffect extends Effect {
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
-          ['morphToSphereRange', new Uniform(new Vector2(2e5, 6e5))],
+          ['geometricErrorAltitudeRange', new Uniform(new Vector2(2e5, 6e5))],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
-          ['albedoScale', new Uniform(albedoScale)]
+          ['irradianceScale', new Uniform(irradianceScale)]
         ]),
         // prettier-ignore
         defines: new Map<string, string>([
@@ -178,8 +178,8 @@ export class AerialPerspectiveEffect extends Effect {
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
     this.ellipsoid = ellipsoid
-    this.osculateEllipsoid = osculateEllipsoid
-    this.morphToSphere = morphToSphere
+    this.correctAltitude = correctAltitude
+    this.correctGeometricError = correctGeometricError
     this.photometric = photometric
     this.sunIrradiance = sunIrradiance
     this.skyIrradiance = skyIrradiance
@@ -218,7 +218,7 @@ export class AerialPerspectiveEffect extends Effect {
     cameraHeight.value = geodeticScratch.setFromECEF(position).height
 
     const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
-    if (this.osculateEllipsoid) {
+    if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
         position,
         vectorScratch
@@ -319,23 +319,23 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('ellipsoidRadii')!.value.copy(value.radii)
   }
 
-  get morphToSphere(): boolean {
-    return this.defines.has('MORPH_TO_SPHERE')
+  get correctGeometricError(): boolean {
+    return this.defines.has('CORRECT_GEOMETRIC_ERROR')
   }
 
-  set morphToSphere(value: boolean) {
-    if (value !== this.morphToSphere) {
+  set correctGeometricError(value: boolean) {
+    if (value !== this.correctGeometricError) {
       if (value) {
-        this.defines.set('MORPH_TO_SPHERE', '1')
+        this.defines.set('CORRECT_GEOMETRIC_ERROR', '1')
       } else {
-        this.defines.delete('MORPH_TO_SPHERE')
+        this.defines.delete('CORRECT_GEOMETRIC_ERROR')
       }
       this.setChanged()
     }
   }
 
-  get morphToSphereRange(): Vector2 {
-    return this.uniforms.get('morphToSphereRange')!.value
+  get geometricErrorAltitudeRange(): Vector2 {
+    return this.uniforms.get('geometricErrorAltitudeRange')!.value
   }
 
   get photometric(): boolean {
@@ -417,11 +417,11 @@ export class AerialPerspectiveEffect extends Effect {
     }
   }
 
-  get albedoScale(): number {
-    return this.uniforms.get('albedoScale')!.value
+  get irradianceScale(): number {
+    return this.uniforms.get('irradianceScale')!.value
   }
 
-  set albedoScale(value: number) {
-    this.uniforms.get('albedoScale')!.value = value
+  set irradianceScale(value: number) {
+    this.uniforms.get('irradianceScale')!.value = value
   }
 }

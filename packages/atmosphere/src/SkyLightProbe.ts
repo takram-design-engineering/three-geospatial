@@ -38,14 +38,14 @@ const uvScratch = /*#__PURE__*/ new Vector2()
 export interface SkyLightProbeParameters {
   irradianceTexture?: DataTexture | null
   ellipsoid?: Ellipsoid
-  osculateEllipsoid?: boolean
+  correctAltitude?: boolean
   photometric?: boolean
   sunDirection?: Vector3
 }
 
 export const skyLightProbeParametersDefaults = {
   ellipsoid: Ellipsoid.WGS84,
-  osculateEllipsoid: true,
+  correctAltitude: true,
   photometric: true
 } satisfies SkyLightProbeParameters
 
@@ -53,7 +53,7 @@ export class SkyLightProbe extends LightProbe {
   private readonly atmosphere: AtmosphereParameters
   irradianceTexture: DataTexture | null
   ellipsoid: Ellipsoid
-  osculateEllipsoid: boolean
+  correctAltitude: boolean
   photometric: boolean
   readonly sunDirection: Vector3
 
@@ -65,7 +65,7 @@ export class SkyLightProbe extends LightProbe {
     const {
       irradianceTexture = null,
       ellipsoid,
-      osculateEllipsoid,
+      correctAltitude,
       photometric,
       sunDirection
     } = { ...skyLightProbeParametersDefaults, ...params }
@@ -73,7 +73,7 @@ export class SkyLightProbe extends LightProbe {
     this.atmosphere = atmosphere
     this.irradianceTexture = irradianceTexture
     this.ellipsoid = ellipsoid
-    this.osculateEllipsoid = osculateEllipsoid
+    this.correctAltitude = correctAltitude
     this.photometric = photometric
     this.sunDirection = sunDirection?.clone() ?? new Vector3()
   }
@@ -84,7 +84,7 @@ export class SkyLightProbe extends LightProbe {
     }
 
     const position = this.getWorldPosition(vectorScratch1)
-    if (this.osculateEllipsoid) {
+    if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
         position,
         vectorScratch2

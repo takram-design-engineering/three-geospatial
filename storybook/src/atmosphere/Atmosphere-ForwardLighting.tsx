@@ -33,8 +33,8 @@ import { BatchedTerrainTile } from '@takram/three-terrain/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
-import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useExposureControls } from '../helpers/useExposureControls'
+import { useLocalDateControls } from '../helpers/useLocalDateControls'
 
 const location = new Geodetic(radians(138.731), radians(35.363), 4500)
 const position = location.toECEF()
@@ -60,10 +60,10 @@ const Scene: FC = () => {
     { collapsed: true }
   )
   const motionDate = useLocalDateControls()
-  const { osculateEllipsoid, photometric } = useControls(
+  const { correctAltitude, photometric } = useControls(
     'atmosphere',
     {
-      osculateEllipsoid: true,
+      correctAltitude: true,
       photometric: true
     },
     { collapsed: true }
@@ -108,7 +108,7 @@ const Scene: FC = () => {
     <Atmosphere
       ref={atmosphereRef}
       textures='/'
-      osculateEllipsoid={osculateEllipsoid}
+      correctAltitude={correctAltitude}
       photometric={photometric}
     >
       <OrbitControls target={position} minDistance={1e3} />

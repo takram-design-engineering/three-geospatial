@@ -22,9 +22,9 @@ import {
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
+import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
-import { useExposureControls } from '../helpers/useExposureControls'
 
 const location = new Geodetic()
 const position = new Vector3()
@@ -56,8 +56,8 @@ const Scene: FC = () => {
     longitude,
     dayOfYear: 0
   })
-  const { osculateEllipsoid, photometric } = useControls('atmosphere', {
-    osculateEllipsoid: true,
+  const { correctAltitude, photometric } = useControls('atmosphere', {
+    correctAltitude: true,
     photometric: false
   })
 
@@ -85,7 +85,7 @@ const Scene: FC = () => {
       <Atmosphere
         ref={atmosphereRef}
         textures='/'
-        osculateEllipsoid={osculateEllipsoid}
+        correctAltitude={correctAltitude}
         photometric={photometric}
       >
         <Sky />

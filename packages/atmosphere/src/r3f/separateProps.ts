@@ -8,7 +8,7 @@ const propKeys = [
   'transmittanceTexture',
   'useHalfFloat',
   'ellipsoid',
-  'osculateEllipsoid',
+  'correctAltitude',
   'photometric',
   'sunDirection',
   'sunAngularRadius'

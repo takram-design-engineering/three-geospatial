@@ -144,11 +144,11 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
   const motionDate = useLocalDateControls({ longitude, ...localDate })
-  const { osculateEllipsoid, morphToSphere, photometric } = useControls(
+  const { correctAltitude, correctGeometricError, photometric } = useControls(
     'atmosphere',
     {
-      osculateEllipsoid: true,
-      morphToSphere: true,
+      correctAltitude: true,
+      correctGeometricError: true,
       photometric: true
     }
   )
@@ -198,7 +198,7 @@ const Scene: FC<SceneProps> = ({
     <Atmosphere
       ref={atmosphereRef}
       textures='/'
-      osculateEllipsoid={osculateEllipsoid}
+      correctAltitude={correctAltitude}
       photometric={photometric}
     >
       <Sky />
@@ -213,7 +213,7 @@ const Scene: FC<SceneProps> = ({
             sky,
             transmittance,
             inscatter,
-            morphToSphere,
+            correctGeometricError,
             lensFlare,
             normal,
             depth,
@@ -226,8 +226,8 @@ const Scene: FC<SceneProps> = ({
               skyIrradiance={sky}
               transmittance={transmittance}
               inscatter={inscatter}
-              morphToSphere={morphToSphere}
-              albedoScale={2 / Math.PI}
+              correctGeometricError={correctGeometricError}
+              irradianceScale={2 / Math.PI}
             />
           )}
           {lensFlare && <LensFlare />}
