@@ -8,7 +8,8 @@ in vec3 vWorldDirection;
 in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
-layout(location = 1) out vec4 outputBuffer1; // TODO
+
+#include <mrt_layout>
 
 vec3 GetLunarRadiance() {
   // Not a physical number but the order of 10^-6 relative to the sun may fit.
@@ -89,5 +90,6 @@ void main() {
   #endif // MOON
 
   outputColor = vec4(radiance, 1.0);
-  outputBuffer1 = vec4(0.0);
+
+  #include <mrt_output>
 }

@@ -112,14 +112,14 @@ const Scene: FC = () => {
       photometric={photometric}
     >
       <OrbitControls target={position} minDistance={1e3} />
-      <Sky />
+      <Sky renderTargetCount={2} />
       {mode === 'forward' && (
         <group position={position}>
           {sun && <SunLight />}
           {sky && <SkyLight />}
         </group>
       )}
-      <Stars data='/stars.bin' />
+      <Stars data='/stars.bin' renderTargetCount={2} />
       <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} receiveShadow>
         {mode === 'forward' ? (
           <meshLambertMaterial color='gray' />

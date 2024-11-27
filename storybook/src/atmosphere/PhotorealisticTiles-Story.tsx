@@ -201,8 +201,8 @@ const Scene: FC<SceneProps> = ({
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
-      <Sky />
-      <Stars data='/stars.bin' />
+      <Sky renderTargetCount={2} />
+      <Stars data='/stars.bin' renderTargetCount={2} />
       <Globe />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment

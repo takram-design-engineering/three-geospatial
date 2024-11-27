@@ -1,6 +1,6 @@
 // Based on the following work and adapted to Three.js.
 // This file includes runtime functions only. Please refer to Bruneton's source
-// code for the whole picture. It has detailed comments!
+// code for the whole picture. It has detailed comments.
 // https://github.com/ebruneton/precomputed_atmospheric_scattering/blob/master/atmosphere/functions.glsl
 
 /**

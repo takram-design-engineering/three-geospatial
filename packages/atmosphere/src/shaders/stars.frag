@@ -5,7 +5,8 @@ in vec3 vWorldDirection;
 in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
-layout(location = 1) out vec4 outputBuffer1; // TODO
+
+#include <mrt_layout>
 
 in vec3 vColor;
 
@@ -26,5 +27,5 @@ void main() {
   outputColor = vec4(vColor, 1.0);
   #endif // BACKGROUND
 
-  outputBuffer1 = vec4(0.0);
+  #include <mrt_output>
 }

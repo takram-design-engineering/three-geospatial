@@ -168,7 +168,7 @@ const Scene: FC = () => {
   return (
     <Atmosphere ref={setAtmosphere} textures='/'>
       <OrbitControls target={position} />
-      <Sky />
+      <Sky renderTargetCount={2} />
       <group position={position}>
         <SkyLight />
         <object3D ref={setTarget} />

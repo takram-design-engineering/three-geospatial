@@ -10,6 +10,7 @@ import {
   type Object3D,
   type Scene,
   type ShaderMaterialParameters,
+  type WebGLProgramParametersWithUniforms,
   type WebGLRenderer
 } from 'three'
 
@@ -30,6 +31,18 @@ import {
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
+function includeRenderTargets(fragmentShader: string, count: number): string {
+  let layout = ''
+  let output = ''
+  for (let index = 1; index < count; ++index) {
+    layout += `layout(location = ${index}) out float renderTarget${index};\n`
+    output += `renderTarget${index} = 0.0;\n`
+  }
+  return fragmentShader
+    .replace('#include <mrt_layout>', layout)
+    .replace('#include <mrt_output>', output)
+}
+
 export interface AtmosphereMaterialProps {
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
@@ -40,6 +53,7 @@ export interface AtmosphereMaterialProps {
   photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
+  renderTargetCount?: number
 }
 
 export interface AtmosphereMaterialBaseParameters
@@ -50,13 +64,15 @@ export const atmosphereMaterialParametersBaseDefaults = {
   useHalfFloat: false,
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
-  photometric: true
+  photometric: true,
+  renderTargetCount: 1
 } satisfies AtmosphereMaterialBaseParameters
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   private readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
   correctAltitude: boolean
+  private _renderTargetCount!: number
 
   constructor(
     params?: AtmosphereMaterialBaseParameters,
@@ -72,6 +88,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       photometric,
       sunDirection,
       sunAngularRadius,
+      renderTargetCount,
       ...others
     } = { ...atmosphereMaterialParametersBaseDefaults, ...params }
 
@@ -122,6 +139,17 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.photometric = photometric
+    this.renderTargetCount = renderTargetCount
+  }
+
+  override onBeforeCompile(
+    parameters: WebGLProgramParametersWithUniforms,
+    renderer: WebGLRenderer
+  ): void {
+    parameters.fragmentShader = includeRenderTargets(
+      parameters.fragmentShader,
+      this.renderTargetCount
+    )
   }
 
   override onBeforeRender(
@@ -212,5 +240,16 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   set sunAngularRadius(value: number) {
     this.uniforms.u_sun_angular_radius.value = value
+  }
+
+  get renderTargetCount(): number {
+    return this._renderTargetCount
+  }
+
+  set renderTargetCount(value: number) {
+    if (value !== this.renderTargetCount) {
+      this._renderTargetCount = value
+      this.needsUpdate = true
+    }
   }
 }

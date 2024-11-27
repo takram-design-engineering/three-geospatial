@@ -90,8 +90,8 @@ const Scene: FC = () => {
       photometric={photometric}
     >
       <OrbitControls target={position} minDistance={1e3} />
-      <Sky />
-      <Stars data='/stars.bin' />
+      <Sky renderTargetCount={2} />
+      <Stars data='/stars.bin' renderTargetCount={2} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={terrainMaterial}

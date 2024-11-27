@@ -11,7 +11,8 @@ const propKeys = [
   'correctAltitude',
   'photometric',
   'sunDirection',
-  'sunAngularRadius'
+  'sunAngularRadius',
+  'renderTargetCount'
 ] as const satisfies ReadonlyArray<keyof AtmosphereMaterialProps>
 
 export function separateProps<T extends AtmosphereMaterialProps>(

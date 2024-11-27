@@ -20,7 +20,7 @@ function RotationZ(angle: number): RotationMatrix {
   ])
 }
 
-// Prefer number to be JS timestamp; skips leap seconds.
+// Prefer number to be JS timestamp.
 function makeTime(value: number | Date | AstroTime): AstroTime {
   return value instanceof AstroTime
     ? value
