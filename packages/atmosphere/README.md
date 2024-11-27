@@ -249,7 +249,7 @@ const Scene = () => {
 textures: PrecomputedTextures | string = undefined
 ```
 
-The precomputed textures, or a URL to the directory containing them.
+The [precomputed textures](assets), or a URL to the directory containing them.
 
 #### useHalfFloat
 
@@ -474,7 +474,7 @@ scatteringTexture: Data3DTexture | null = null
 transmittanceTexture: DataTexture | null = null
 ```
 
-The precomputed textures.
+The [precomputed textures](assets).
 
 #### useHalfFloat
 
@@ -736,7 +736,7 @@ scatteringTexture: Data3DTexture | null = null
 transmittanceTexture: DataTexture | null = null
 ```
 
-The precomputed textures.
+The [precomputed textures](assets).
 
 #### useHalfFloat
 
