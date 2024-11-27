@@ -712,7 +712,7 @@ Whether to display the stars at an infinite distance, otherwise, they appear on 
 
 A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as deferred lighting.
 
-This is for use with the [postprocessing](https://github.com/pmndrs/postprocessing)’s EffectComposer and is not compatible with the one in Three.js examples.
+This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
 
 ```ts
 const aerialPerspective = new AerialPerspectiveEffect(camera, {

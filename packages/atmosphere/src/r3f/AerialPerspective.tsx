@@ -1,11 +1,8 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, type Node } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
+import { RenderPass, type BlendFunction } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
-
-import {
-  type EffectComposerContextValue,
-  type EffectProps
-} from '@takram/three-effects/r3f'
+import { Texture } from 'three'
 
 import {
   AerialPerspectiveEffect,
@@ -15,11 +12,14 @@ import {
 import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
 
-export interface AerialPerspectiveProps
-  extends EffectProps<
-    typeof AerialPerspectiveEffect,
-    AerialPerspectiveEffectOptions
-  > {}
+export type AerialPerspectiveProps = Node<
+  InstanceType<typeof AerialPerspectiveEffect>,
+  AerialPerspectiveEffect
+> &
+  AerialPerspectiveEffectOptions & {
+    blendFunction?: BlendFunction
+    opacity?: number
+  }
 
 export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
@@ -35,9 +35,15 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     ...props
   })
 
-  const { geometryPass, normalPass, camera } = useContext(
-    EffectComposerContext
-  ) as EffectComposerContextValue
+  const context = useContext(EffectComposerContext)
+  const { normalPass, camera } = context
+  const geometryTexture =
+    'geometryPass' in context &&
+    context.geometryPass instanceof RenderPass &&
+    'geometryTexture' in context.geometryPass &&
+    context.geometryPass.geometryTexture instanceof Texture
+      ? context.geometryPass.geometryTexture
+      : undefined
 
   const effect = useMemo(
     () => new AerialPerspectiveEffect(camera, { blendFunction }),
@@ -60,12 +66,10 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       ref={forwardedRef}
       object={effect}
       camera={camera}
-      normalBuffer={
-        geometryPass?.geometryTexture ?? normalPass?.texture ?? null
-      }
+      normalBuffer={geometryTexture ?? normalPass?.texture ?? null}
       {...atmosphereParameters}
       {...others}
-      octEncodedNormal={geometryPass?.geometryTexture != null}
+      octEncodedNormal={geometryTexture != null}
     />
   )
 })

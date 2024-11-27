@@ -17,7 +17,6 @@
   "module": "./index.js",
   "types": "./index.d.ts",
   "dependencies": {
-    "@takram/three-effects": "0.0.1",
     "@takram/three-geospatial": "0.0.1",
     "astronomy-engine": "^2.1.19",
     "lodash-es": "^4.17.21",
