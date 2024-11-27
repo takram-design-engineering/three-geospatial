@@ -31,7 +31,7 @@ export const Manhattan: StoryFn = () => (
     heading={-155}
     pitch={-35}
     distance={3000}
-    exposure={100}
+    exposure={60}
     dayOfYear={1}
     timeOfDay={7.6}
   />
