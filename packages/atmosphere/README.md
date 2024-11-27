@@ -169,7 +169,7 @@ function render(): void {
 
 - The reference frame is fixed to ECEF and cannot be configured.
 
-- The aerial perspective (specifically the in-scatter term) includes a [workaround for the horizon artifact](https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32#issuecomment-480523982), but due to finite floating-point precision, this artifact cannot be removed completely.
+- The aerial perspective (specifically the inscatter term) includes a [workaround for the horizon artifact](https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32#issuecomment-480523982), but due to finite floating-point precision, this artifact cannot be removed completely.
 
 - Volumetric light shaft is not implemented as they requires ray tracing. You may notice scattered light is not occluded by scene objects.
 
@@ -205,8 +205,6 @@ function render(): void {
 - [`getECIToECEFRotationMatrix`](#getecitoecefrotationmatrix)
 - [`getSunLightColor`](#getsunlightcolor)
 
-## Common Parameters
-
 ## Atmosphere
 
 Provides and synchronizes props of atmosphere components. It’s the recommended way to configure components unless you need finer control over properties of individual components.
@@ -233,9 +231,9 @@ const Scene = () => {
   // float or half-float textures are supported. Some devices don't support
   // single-precision textures, so this hook fallbacks to half-float textures
   // when necessary.
-  const atmosphereProps = useAtmosphereTextureProps('/assets')
+  const textureProps = useAtmosphereTextureProps('/assets')
   return (
-    <Atmosphere ref={atmosphereRef} {...atmosphereProps}>
+    <Atmosphere ref={atmosphereRef} {...textureProps}>
       <Sky />
       ...
     </Atmosphere>

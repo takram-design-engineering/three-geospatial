@@ -1,6 +1,7 @@
 {
   "name": "@takram/three-atmosphere",
   "version": "0.0.1",
+  "license": "MIT",
   "type": "module",
   "exports": {
     ".": {
@@ -14,5 +15,22 @@
   },
   "main": "./index.cjs",
   "module": "./index.js",
-  "types": "./index.d.ts"
+  "types": "./index.d.ts",
+  "dependencies": {
+    "astronomy-engine": "^2.1.19",
+    "lodash-es": "^4.17.21",
+    "react-merge-refs": "^2.1.1",
+    "tiny-invariant": "^1.3.3",
+    "url-join": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@react-three/drei": ">=9.117.3",
+    "@react-three/fiber": ">=8.17.10",
+    "@react-three/postprocessing": ">=2.16.3",
+    "@takram/three-effects": "0.0.1",
+    "@takram/three-geospatial": "0.0.1",
+    "postprocessing": ">=6.36.4",
+    "react": ">=18.0",
+    "three": ">=0.170.0"
+  }
 }
