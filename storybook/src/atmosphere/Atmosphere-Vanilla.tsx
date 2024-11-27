@@ -77,7 +77,6 @@ function init(): void {
   skyMaterial = new SkyMaterial()
   const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
   sky.frustumCulled = false
-  sky.position.copy(position)
   scene.add(sky)
 
   // SkyLightProbe computes sky irradiance of its position.
@@ -100,6 +99,7 @@ function init(): void {
   sunLight.shadow.mapSize.height = 2048
   sunLight.shadow.normalBias = 1
   scene.add(sunLight)
+  scene.add(sunLight.target)
 
   const group = new Group()
   Ellipsoid.WGS84.getEastNorthUpFrame(position).decompose(

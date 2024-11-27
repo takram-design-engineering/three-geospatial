@@ -6,6 +6,7 @@ A Three.js and R3F (React Three Fiber) implementation of Eric Bruneton’s [Prec
 
 ```sh
 npm install @takram/three-atmosphere
+pnpm add @takram/three-atmosphere
 yarn add @takram/three-atmosphere
 ```
 
@@ -110,6 +111,7 @@ scene.add(skyLight)
 const sunLight = new SunDirectionalLight()
 sunLight.target.position.copy(position)
 scene.add(sunLight)
+scene.add(sunLight.target)
 
 // Demonstrates forward lighting here. For deferred lighting, set sunIrradiance
 // and skyIrradiance to true, remove SkyLightProbe and SunDirectionalLight, and
@@ -166,8 +168,6 @@ function render(): void {
 
 - The aerial perspective (specifically the in-scatter term) includes a [workaround for the horizon artifact](https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32#issuecomment-480523982), but due to finite floating-point precision, this artifact cannot be removed completely.
 
-- EffectComposer’s default normal buffer lacks sufficient precision during the lighting stage, causing banding in shaded areas when deferred lighting is used (i.e. AerialPerspective's skyIrradiance and sunIrradiance are enabled). Using a floating-point normal buffer resolves this issue.
-
 - Volumetric light shaft is not implemented as they requires ray tracing. You may notice scattered light is not occluded by scene objects.
 
 - Although you can generate custom precomputed textures, the implementation is effectively limited to Earth’s atmosphere. For rendering atmospheres of other planets, consider implementing Sébastien Hillaire’s [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf).
@@ -192,7 +192,6 @@ function render(): void {
 - [`SkyMaterial`](#skymaterial)
 - [`SkyLightProbe`](#skylightprobe)
 - [`SunDirectionalLight`](#directionalsunlight)
-- [`StarsGeometry`](#starsgeometry)
 - [`StarsMaterial`](#starsmaterial)
 - [`AerialPerspectiveEffect`](#aerialperspectiveeffect)
 
@@ -202,6 +201,8 @@ function render(): void {
 - [`getMoonDirectionECEF`](#getmoondirectionecef)
 - [`getECIToECEFRotationMatrix`](#getecitoecefrotationmatrix)
 - [`computeSunLightColor`](#computesunlightcolor)
+
+## Common Parameters
 
 ## Atmosphere
 
@@ -271,7 +272,9 @@ The ellipsoid model representing Earth.
 osculateEllipsoid: boolean = true
 ```
 
-Whether to adjust the atmosphere’s bottom sphere to osculate the ellipsoid.
+Whether to adjust the atmosphere’s inner sphere to osculate (touch and share a tangent with) the ellipsoid.
+
+The atmosphere is approximated as a sphere, with a radius between the ellipsoid’s major and minor axes. The difference can exceed 10,000 meters in worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
 
 #### photometric
 
@@ -284,8 +287,6 @@ Whether to store illuminance instead of irradiance in render buffers.
 ## Sky
 
 Displays the sky in a screen quad.
-
-Despite its name, this component renders the atmosphere itself, along with the sun and moon. When viewed from within the atmosphere, it appears as the sky. From space, it represents Earth’s atmosphere with a flat ground, creating the appearance of an ”empty Earth”.
 
 See [`SkyMaterial`](#skymaterial) for further details.
 
@@ -313,11 +314,11 @@ const Scene = () => {
 
 ### Props
 
-The parameters of [`SkyMaterial`](#skymaterial) are exposed as props.
+The parameters of [`AtmosphereMaterialBase`](#atmospherematerialbase) and [`SkyMaterial`](#skymaterial) are exposed as props.
 
 ## Stars
 
-Represents the stars in as points at an infinite distance. The provided data contains the 9,096 stars listed in [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html).
+Represents the stars as points at an infinite distance.
 
 See [`StarsMaterial`](#starsmaterial) for further details.
 
@@ -430,9 +431,7 @@ The parameters of [`SunDirectionalLight`](#directionalsunlight) are exposed as p
 
 ## AerialPerspective
 
-A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as deferred lighting.
-
-This is for use with the [postprocessing](https://github.com/pmndrs/postprocessing)’s EffectComposer and is not compatible with the one in Three.js examples.
+A post-processing effect that renders atmospheric transparency and inscattered light.
 
 See [`AerialPerspectiveEffect`](#aerialperspectiveeffect) for further details.
 
@@ -450,10 +449,7 @@ const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
   return (
     <EffectComposer>
-      <AerialPerspectiveEffect
-        {...precomputedTextures}
-        sunDirection={sunDirection}
-      />
+      <AerialPerspective {...precomputedTextures} sunDirection={sunDirection} />
     </EffectComposer>
   )
 }
@@ -467,8 +463,6 @@ The parameters of [`AerialPerspectiveEffect`](#aerialperspectiveeffect) are expo
 
 The base class of [`SkyMaterial`](#skymaterial) and [`StarsMaterial`](#starsmaterial).
 
-Extends [`RawShaderMaterial`](https://threejs.org/docs/?q=shader#api/en/materials/RawShaderMaterial).
-
 ### Parameters
 
 #### irradianceTexture, scatteringTexture, transmittanceTexture
@@ -479,11 +473,15 @@ scatteringTexture: Data3DTexture | null = null
 transmittanceTexture: DataTexture | null = null
 ```
 
+The precomputed textures.
+
 #### useHalfFloat
 
 ```ts
 useHalfFloat: boolean = false
 ```
+
+See [useHalfFloat](#usehalffloat).
 
 #### ellipsoid
 
@@ -491,11 +489,15 @@ useHalfFloat: boolean = false
 ellipsoid: Ellipsoid = Ellipsoid.WGS84
 ```
 
+See [ellipsoid](#ellipsoid).
+
 #### osculateEllipsoid
 
 ```ts
 osculateEllipsoid: boolean = true
 ```
+
+See [osculateEllipsoid](#osculateellipsoid).
 
 #### photometric
 
@@ -503,11 +505,15 @@ osculateEllipsoid: boolean = true
 photometric: boolean = true
 ```
 
+See [photometric](#photometric).
+
 #### sunDirection
 
 ```ts
 sunDirection: Vector3 = new Vector3()
 ```
+
+See [sunDirection](#sundirection).
 
 #### sunAngularRadius
 
@@ -515,15 +521,27 @@ sunDirection: Vector3 = new Vector3()
 sunAngularRadius: number = 0.004675
 ```
 
+The angular radius of the sun, in radians.
+
+Increase this value if the sun flickers in a low-resolution environment map. Modifying this value does not affect the sky’s total radiance unless the sun is partially visible.
+
 ## SkyMaterial
 
-Extends [`AtmosphereMaterialBase`](#atmospherematerialbase).
+A material for displaying the sky. Apply this to a screen quad.
+
+Despite its name, this component renders the atmosphere itself, along with the sun and moon. When viewed from within the atmosphere, it appears as the sky. From space, it represents Earth’s atmosphere with a flat ground.
 
 ```ts
-new SkyMaterial(params?: SkyMaterialParameters)
+const material = new SkyMaterial()
+material.sunDirection.copy(getSunDirectionECEF(/* date */))
+const sky = new Mesh(new PlaneGeometry(2, 2), material)
+sky.frustumCulled = false
+scene.add(sky)
 ```
 
 ### Parameters
+
+Extends [`AtmosphereMaterialBase`](#atmospherematerialbase).
 
 #### sun, moon
 
@@ -560,39 +578,71 @@ A scaling factor to adjust the brightness of the moon.
 
 ## SkyLightProbe
 
+A light probe for indirect sky irradiance.
+
+It computes spherical harmonics of sky irradiance at its position by sampling the precomputed irradiance texture on the CPU.
+
+```ts
+const skyLight = new SkyLightProbe({ irradianceTexture })
+skyLight.position.set(/* ECEF coordinate in meters */)
+skyLight.sunDirection.copy(getSunDirectionECEF(/* date */))
+scene.add(skyLight)
+
+skyLight.update()
+```
+
+### Parameters
+
 Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/LightProbe)
 
 ## SunDirectionalLight
 
-Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en/lights/DirectionalLight)
+A directional light representing the sun.
 
-## StarsGeometry
-
-Extends [`BufferGeometry`](https://threejs.org/docs/?q=BufferGeometry#api/en/core/BufferGeometry).
+It computes the sun’s radiance by sampling the precomputed transmittance texture on the CPU.
 
 ```ts
-new StarsGeometry(data: ArrayBuffer)
+const sunLight = new SunDirectionalLight({ transmittanceTexture })
+sunLight.target.position.set(/* ECEF coordinate in meters */)
+sunLight.sunDirection.copy(getSunDirectionECEF(/* date */))
+scene.add(sunLight)
+scene.add(sunLight.target)
+
+sunLight.update()
 ```
 
 ### Parameters
 
-#### data
+Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en/lights/DirectionalLight)
+
+#### distance
 
 ```ts
-data: ArrayBuffer
+distance: number = 1
 ```
 
-The data containing the position and magnitude of the stars
+The distance from the target. Adjust this value if shadows are enabled for the light, as it may need to cover the entire scene.
 
 ## StarsMaterial
 
-Extends [`AtmosphereMaterialBase`](#atmospherematerialbase).
+The provided data contains the position and magnitude of the the 9,096 stars listed in [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html).
 
 ```ts
-new StarsMaterial(params?: StarsMaterialParameters)
+const data: ArrayBuffer = /* Load stars.bin */
+const material = new StarsMaterial({
+  irradianceTexture,
+  scatteringTexture,
+  transmittanceTexture
+})
+material.sunDirection.copy(getSunDirectionECEF(/* date */))
+const stars = new Points(new StarsGeometry(data), material)
+stars.setRotationFromMatrix(getECIToECEFRotationMatrix(/* date */))
+scene.add(stars)
 ```
 
 ### Parameters
+
+Extends [`AtmosphereMaterialBase`](#atmospherematerialbase).
 
 #### pointSize
 
@@ -620,6 +670,31 @@ Whether to display the stars at an infinite distance, otherwise, they appear on 
 
 ## AerialPerspectiveEffect
 
+A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as deferred lighting.
+
+This is for use with the [postprocessing](https://github.com/pmndrs/postprocessing)’s EffectComposer and is not compatible with the one in Three.js examples.
+
+```ts
+const aerialPerspective = new AerialPerspectiveEffect(camera, {
+  irradianceTexture,
+  scatteringTexture,
+  transmittanceTexture
+})
+aerialPerspective.sunDirection.copy(getSunDirectionECEF(/* date */))
+
+const composer = new EffectComposer(renderer, {
+  frameBufferType: HalfFloatType
+})
+composer.addPass(new RenderPass(scene, camera))
+composer.addPass(
+  new EffectPass(
+    camera,
+    aerialPerspective,
+    new ToneMappingEffect({ mode: ToneMappingMode.AGX })
+  )
+)
+```
+
 ### Parameters
 
 Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s [`Effect`](https://pmndrs.github.io/postprocessing/public/docs/class/src/effects/Effect.js~Effect.html).
@@ -627,8 +702,12 @@ Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s [`Effec
 #### normalBuffer
 
 ```ts
-normalBuffer: Texture \| null = null
+normalBuffer: Texture | null = null
 ```
+
+The normal buffer used for deferred lighting. It is not required if both `sunIrradiance` and `skyIrradiance` are disabled.
+
+`EffectComposer`’s default normal buffer lacks sufficient precision, causing banding in shaded areas. Using a floating-point normal buffer resolves this issue.
 
 #### octEncodedNormal
 
@@ -636,11 +715,15 @@ normalBuffer: Texture \| null = null
 octEncodedNormal: boolean = false
 ```
 
+Indicates that the normal is oct-encoded and stored in the first two elements of the normal buffer texels.
+
 #### reconstructNormal
 
 ```ts
 reconstructNormal: boolean = false
 ```
+
+Whether to reconstruct normals from depth buffer.
 
 #### irradianceTexture, scatteringTexture, transmittanceTexture
 
@@ -650,11 +733,15 @@ scatteringTexture: Data3DTexture | null = null
 transmittanceTexture: DataTexture | null = null
 ```
 
+The precomputed textures.
+
 #### useHalfFloat
 
 ```ts
 useHalfFloat: boolean = false
 ```
+
+See [useHalfFloat](#usehalffloat).
 
 #### ellipsoid
 
@@ -662,17 +749,26 @@ useHalfFloat: boolean = false
 ellipsoid: Ellipsoid = Ellipsoid.WGS84
 ```
 
-#### morphToSphere
+See [ellipsoid](#ellipsoid).
+
+#### osculateEllipsoid
+
+```ts
+osculateEllipsoid: boolean = true
+```
+
+See [osculateEllipsoid](#osculateellipsoid)
+
+#### morphToSphere, morphToSphereRange
 
 ```ts
 morphToSphere: boolean = true
-```
-
-#### morphToSphereRange
-
-```ts
 morphToSphereRange: Vector2 = new Vector2(2e5, 6e5)
 ```
+
+These options corrects artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere within the altitude range specified by `morphToSphereRange`, in meters.
+
+Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
 
 #### photometric
 
@@ -680,11 +776,15 @@ morphToSphereRange: Vector2 = new Vector2(2e5, 6e5)
 photometric: boolean = true
 ```
 
+See [photometric](#photometric).
+
 #### sunDirection
 
 ```ts
 sunDirection: Vector3 = new Vector3()
 ```
+
+See [sunDirection](#sundirection).
 
 #### sunIrradiance, skyIrradiance
 
@@ -693,6 +793,10 @@ sunIrradiance: boolean = false
 skyIrradiance: boolean = false
 ```
 
+Whether to apply sun and sky irradiance as deferred lighting.
+
+Enabling one without the other is physically incorrect and should only be done for demonstration purposes.
+
 #### transmittance, inscatter
 
 ```ts
@@ -700,11 +804,17 @@ transmittance: boolean = true
 inscatter: boolean = true
 ```
 
+Whether to account for the atmospheric transmittance and inscattered light.
+
 #### albedoScale
 
 ```ts
 albedoScale: number = 1
 ```
+
+This value adjusts the color buffer to reduce contrast.
+
+Deferred lighting treats the color buffer as albedo, but textures like those in Google Photorealistic 3D Tiles have baked lighting and shadows, resulting in higher contrast. Adjusting this value helps make it less noticeable.
 
 ## Functions
 
