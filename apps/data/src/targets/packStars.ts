@@ -67,11 +67,12 @@ async function readRecords(path: string): Promise<Record[]> {
       if (rightAscension == null || declination == null || magnitude == null) {
         return
       }
-      const theta = radians(rightAscension)
-      const phi = radians(90 - declination)
-      const x = Math.sin(theta) * Math.sin(phi)
-      const y = Math.cos(phi)
-      const z = Math.cos(theta) * Math.sin(phi)
+      // Convert to ECI direction, epoch J2000.
+      const alpha = radians(rightAscension)
+      const delta = radians(declination)
+      const x = Math.cos(delta) * Math.cos(alpha)
+      const y = Math.cos(delta) * Math.sin(alpha)
+      const z = Math.sin(delta)
       records.push({ x, y, z, magnitude, bvIndex })
     })
     readline.on('error', reject)
