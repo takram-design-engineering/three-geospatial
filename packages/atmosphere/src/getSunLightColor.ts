@@ -46,7 +46,7 @@ export interface SunLightColorOptions {
 }
 
 // TODO: Consider partial visibility when the sun is at the horizon.
-export function computeSunLightColor(
+export function getSunLightColor(
   transmittanceTexture: DataTexture,
   worldPosition: Vector3,
   sunDirection: Vector3,

@@ -3,7 +3,7 @@ import { DirectionalLight, Vector3, type DataTexture } from 'three'
 import { Ellipsoid } from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
-import { computeSunLightColor } from './computeSunLightColor'
+import { getSunLightColor } from './getSunLightColor'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
@@ -66,7 +66,7 @@ export class SunDirectionalLight extends DirectionalLight {
     if (this.transmittanceTexture == null) {
       return
     }
-    computeSunLightColor(
+    getSunLightColor(
       this.transmittanceTexture,
       this.target.getWorldPosition(vectorScratch),
       this.sunDirection,

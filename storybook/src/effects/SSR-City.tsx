@@ -15,7 +15,7 @@ import {
 } from 'three'
 import { GLTFLoader, type GLTFLoaderPlugin } from 'three-stdlib'
 
-import { computeSunLightColor } from '@takram/three-atmosphere'
+import { getSunLightColor } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
@@ -155,7 +155,7 @@ const Scene: FC = () => {
     const light = lightRef.current
     if (atmosphere.textures != null && light != null) {
       light.position.copy(atmosphere.sunDirection)
-      computeSunLightColor(
+      getSunLightColor(
         atmosphere.textures.transmittanceTexture,
         position,
         atmosphere.sunDirection,
