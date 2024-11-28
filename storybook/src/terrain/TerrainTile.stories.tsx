@@ -1,7 +1,10 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'terrain/Terrain Tile'
+  title: 'terrain/Terrain Tile',
+  parameters: {
+    layout: 'fullscreen'
+  }
 } satisfies Meta
 
 export const Globe = await import('./TerrainTile-Globe').then(
