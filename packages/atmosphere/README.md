@@ -41,8 +41,8 @@ const Scene = () => {
 }
 ```
 
-![manhattan](docs/manhattan.jpg)
-![fuji](docs/fuji.jpg)
+![Example of deferred lighting](docs/manhattan.jpg)
+![Example of deferred lighting](docs/fuji.jpg)
 
 ### Forward lighting
 
@@ -77,7 +77,7 @@ const Scene = () => {
 }
 ```
 
-![forward](docs/forward.jpg)
+![Example of forward lighting](docs/forward.jpg)
 
 ### Transient update by date
 
@@ -205,7 +205,7 @@ function render(): void {
 
 - Although you can generate custom precomputed textures, the implementation is effectively limited to Earth’s atmosphere. For rendering atmospheres of other planets, consider implementing Sébastien Hillaire’s [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf).
 
-- Since this project is developed in TypeScript, the node-based TSL cannot be used yet, as it lacks type definitions as of this writing.
+- Currently developed using GLSL. The node-based TSL is not implemented yet but is planned.
 
 # API
 
