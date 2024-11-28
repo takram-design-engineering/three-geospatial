@@ -1,8 +1,9 @@
+import { useTexture } from '@react-three/drei'
 import { LUT, type LUTProps } from '@react-three/postprocessing'
 import { type LUT3DEffect } from 'postprocessing'
-import { forwardRef } from 'react'
+import { forwardRef, useMemo } from 'react'
 
-import { useHaldLookupTexture } from '@takram/three-geospatial-effects/r3f'
+import { createHaldLookupTexture } from '@takram/three-geospatial-effects'
 
 export const HaldLUT = /*#__PURE__*/ forwardRef<
   LUT3DEffect,
@@ -10,6 +11,7 @@ export const HaldLUT = /*#__PURE__*/ forwardRef<
     path: string
   }
 >(function HaldLUT({ path, ...props }, forwardedRef) {
-  const texture = useHaldLookupTexture(path)
-  return <LUT ref={forwardedRef} lut={texture} {...props} />
+  const texture = useTexture(path)
+  const lut = useMemo(() => createHaldLookupTexture(texture), [texture])
+  return <LUT ref={forwardedRef} lut={lut} {...props} />
 })
