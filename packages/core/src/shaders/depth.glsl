@@ -8,3 +8,8 @@ float reverseLogDepth(const float depth, const float near, const float far) {
   return depth;
   #endif // USE_LOGDEPTHBUF
 }
+
+float linearizeDepth(const float depth, const float near, const float far) {
+  float ndc = depth * 2.0 - 1.0;
+  return 2.0 * near * far / (far + near - ndc * (far - near));
+}

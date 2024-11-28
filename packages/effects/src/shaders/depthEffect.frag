@@ -1,11 +1,6 @@
 uniform float near;
 uniform float far;
 
-float linearizeDepth(const float depth) {
-  // Intentionally not using frustum length.
-  return 2.0 * near / (far + near - depth * (far - near));
-}
-
 // A fifth-order polynomial approximation of Turbo colormap.
 // See: https://observablehq.com/@mbostock/turbo
 // prettier-ignore
@@ -19,7 +14,7 @@ vec3 turbo(const float x) {
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
-  depth = linearizeDepth(depth);
+  depth = linearizeDepth(depth, near, far) / far;
 
   #ifdef USE_TURBO
   vec3 color = turbo(1.0 - depth);
