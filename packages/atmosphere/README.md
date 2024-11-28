@@ -642,6 +642,7 @@ It calculates the sun’s radiance by sampling the precomputed transmittance tex
 ```ts
 const sunLight = new SunDirectionalLight({ transmittanceTexture })
 sunLight.target.position.set(/* ECEF coordinate in meters */)
+// Note it's the direction to the sun, not that of light.
 getSunDirectionECEF(/* date */, sunLight.sunDirection)
 scene.add(sunLight)
 scene.add(sunLight.target)

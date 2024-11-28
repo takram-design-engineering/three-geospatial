@@ -31,5 +31,19 @@
     "postprocessing": ">=6.36.4",
     "react": ">=18.0",
     "three": ">=0.170.0"
+  },
+  "peerDependenciesMeta": {
+    "@react-three/drei": {
+      "optional": true
+    },
+    "@react-three/fiber": {
+      "optional": true
+    },
+    "@react-three/postprocessing": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   }
 }
