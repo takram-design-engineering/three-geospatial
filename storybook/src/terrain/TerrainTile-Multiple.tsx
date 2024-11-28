@@ -1,21 +1,26 @@
 import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
-import { Suspense, type FC } from 'react'
+import {
+  Suspense,
+  useEffect,
+  useState,
+  type ComponentRef,
+  type FC
+} from 'react'
 import { MeshNormalMaterial } from 'three'
 
 import {
-  Ellipsoid,
   Geodetic,
+  PointOfView,
   radians,
   TilingScheme
 } from '@takram/three-geospatial'
 import { IonTerrain } from '@takram/three-terrain'
 import { TerrainTile } from '@takram/three-terrain/r3f'
 
-const location = new Geodetic(radians(138.731), radians(35.363), 2000)
+const location = new Geodetic(radians(138.731), radians(35.363))
 const position = location.toECEF()
-const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const tilingScheme = new TilingScheme()
 const tile = tilingScheme.geodeticToTile(location, 7)
@@ -30,9 +35,23 @@ const tiles = Array.from(tile.traverseChildren(5))
 const terrainMaterial = new MeshNormalMaterial()
 
 const Scene: FC = () => {
+  const { camera } = useThree()
+  const [controls, setControls] = useState<ComponentRef<
+    typeof OrbitControls
+  > | null>(null)
+
+  useEffect(() => {
+    const pov = new PointOfView(position, radians(110), radians(-50), 20000)
+    pov.decompose(camera.position, camera.quaternion, camera.up)
+    if (controls != null) {
+      controls.target.copy(pov.target)
+      controls.update()
+    }
+  }, [camera, controls])
+
   return (
     <>
-      <OrbitControls target={position} minDistance={1e4} />
+      <OrbitControls ref={setControls} />
       <GizmoHelper alignment='top-left' renderPriority={1}>
         <GizmoViewport />
       </GizmoHelper>
@@ -54,7 +73,7 @@ const Story: StoryFn = () => {
   return (
     <Canvas
       gl={{ logarithmicDepthBuffer: true }}
-      camera={{ near: 100, far: 1e6, position, up }}
+      camera={{ near: 100, far: 1e6 }}
     >
       <Scene />
     </Canvas>
