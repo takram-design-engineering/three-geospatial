@@ -6,8 +6,8 @@ import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useMemo, useRef, type FC } from 'react'
 import { DRACOLoader } from 'three-stdlib'
 
-import { type SSREffect } from '@takram/three-effects'
-import { EffectComposer, SSR } from '@takram/three-effects/r3f'
+import { type SSREffect } from '@takram/three-geospatial-effects'
+import { EffectComposer, SSR } from '@takram/three-geospatial-effects/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'

@@ -14,18 +14,18 @@ import {
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
-  Depth,
-  Dithering,
-  EffectComposer,
-  LensFlare,
-  Normal
-} from '@takram/three-effects/r3f'
-import {
   Ellipsoid,
   Geodetic,
   radians,
   TilingScheme
 } from '@takram/three-geospatial'
+import {
+  Depth,
+  Dithering,
+  EffectComposer,
+  LensFlare,
+  Normal
+} from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame, EllipsoidMesh } from '@takram/three-geospatial/r3f'
 import { IonTerrain } from '@takram/three-terrain'
 import { BatchedTerrainTile } from '@takram/three-terrain/r3f'

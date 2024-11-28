@@ -23,14 +23,14 @@ import {
   SkyLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
+import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
   Dithering,
   EffectComposer,
   LensFlare,
   SSAO,
   SSR
-} from '@takram/three-effects/r3f'
-import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+} from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
 import { Stats } from '../helpers/Stats'

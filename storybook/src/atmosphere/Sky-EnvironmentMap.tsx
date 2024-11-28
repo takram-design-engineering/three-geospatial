@@ -17,13 +17,13 @@ import {
   Sky,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { Dithering, LensFlare } from '@takram/three-effects/r3f'
 import {
   Ellipsoid,
   Geodetic,
   radians,
   type GeodeticLike
 } from '@takram/three-geospatial'
+import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
 import { Stats } from '../helpers/Stats'

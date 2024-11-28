@@ -35,8 +35,11 @@ import {
   SunDirectionalLight,
   type PrecomputedTextures
 } from '@takram/three-atmosphere'
-import { DitheringEffect, LensFlareEffect } from '@takram/three-effects'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import {
+  DitheringEffect,
+  LensFlareEffect
+} from '@takram/three-geospatial-effects'
 
 let renderer: WebGLRenderer
 let camera: PerspectiveCamera

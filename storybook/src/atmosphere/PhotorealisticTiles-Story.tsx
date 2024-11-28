@@ -23,7 +23,7 @@ import {
   TileCreaseNormalsPlugin,
   TilesFadePlugin,
   UpdateOnChangePlugin
-} from '@takram/three-3d-tiles'
+} from '@takram/three-3d-tiles-support'
 import {
   AerialPerspective,
   Atmosphere,
@@ -31,14 +31,14 @@ import {
   Stars,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
+import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
   Depth,
   Dithering,
   EffectComposer,
   LensFlare,
   Normal
-} from '@takram/three-effects/r3f'
-import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
+} from '@takram/three-geospatial-effects/r3f'
 
 import { HaldLUT } from '../helpers/HaldLUT'
 import { Stats } from '../helpers/Stats'

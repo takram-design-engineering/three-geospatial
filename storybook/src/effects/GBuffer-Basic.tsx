@@ -4,7 +4,11 @@ import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useMemo, type FC } from 'react'
 
-import { Depth, EffectComposer, Geometry } from '@takram/three-effects/r3f'
+import {
+  Depth,
+  EffectComposer,
+  Geometry
+} from '@takram/three-geospatial-effects/r3f'
 
 import { useControls } from '../helpers/useControls'
 

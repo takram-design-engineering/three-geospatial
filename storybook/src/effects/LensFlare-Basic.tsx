@@ -5,7 +5,7 @@ import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 
-import { LensFlare } from '@takram/three-effects/r3f'
+import { LensFlare } from '@takram/three-geospatial-effects/r3f'
 
 import { useControls } from '../helpers/useControls'
 
