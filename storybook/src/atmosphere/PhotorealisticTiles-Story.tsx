@@ -1,6 +1,6 @@
+import { css } from '@emotion/react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react'
 import { GlobeControls, TilesRenderer } from '3d-tiles-renderer'
 import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/plugins'
 import {
@@ -53,12 +53,12 @@ import {
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
-const Globe: FC = () => {
+const Globe: FC<{ apiKey: string }> = ({ apiKey }) => {
   const tiles = useMemo(() => {
     const tiles = new TilesRenderer()
     tiles.registerPlugin(
       new GoogleCloudAuthPlugin({
-        apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
+        apiToken: apiKey
       })
     )
     tiles.registerPlugin(new UpdateOnChangePlugin())
@@ -75,7 +75,7 @@ const Globe: FC = () => {
     tiles.manager.addHandler(/\.gltf$/, loader)
 
     return tiles
-  }, [])
+  }, [apiKey])
 
   useEffect(() => {
     return () => {
@@ -123,7 +123,8 @@ interface SceneProps extends LocalDateControlsParams {
   distance?: number
 }
 
-const Scene: FC<SceneProps> = ({
+const Scene: FC<SceneProps & { apiKey: string }> = ({
+  apiKey,
   exposure = 10,
   longitude = 139.7671,
   latitude = 35.6812,
@@ -203,7 +204,7 @@ const Scene: FC<SceneProps> = ({
     >
       <Sky renderTargetCount={2} />
       <Stars data='/stars.bin' renderTargetCount={2} />
-      <Globe />
+      <Globe apiKey={apiKey} />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
@@ -247,16 +248,40 @@ const Scene: FC<SceneProps> = ({
   )
 }
 
-export const Story: StoryFn<SceneProps> = props => (
-  <Canvas
-    gl={{
-      antialias: false,
-      depth: false,
-      stencil: false,
-      logarithmicDepthBuffer: true
-    }}
-  >
-    <Stats />
-    <Scene {...props} />
-  </Canvas>
-)
+export const Story: FC<SceneProps> = props => {
+  const { apiKey } = useControls('google maps', {
+    apiKey: {
+      value: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
+    }
+  })
+  return (
+    <>
+      <Canvas
+        gl={{
+          antialias: false,
+          depth: false,
+          stencil: false,
+          logarithmicDepthBuffer: true
+        }}
+      >
+        <Stats />
+        <Scene {...props} apiKey={apiKey} />
+      </Canvas>
+      {apiKey === '' && (
+        <div
+          css={css`
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            color: white;
+            transform: translate(-50%, -50%);
+          `}
+        >
+          Enter Google Maps API key at the top right of this screen.
+        </div>
+      )}
+    </>
+  )
+}
+
+export default Story

@@ -22,7 +22,21 @@ const config: StorybookConfig = {
       optimizeDeps: {
         exclude: ['node_modules/.cache/sb-vite']
       }
-    })
+    }),
+
+  previewHead: head => `
+    ${head}
+    <link rel='preconnect' href='https://fonts.googleapis.com' />
+    <link
+      rel='preconnect'
+      href='https://fonts.gstatic.com'
+      crossOrigin='anonymous'
+    />
+    <link
+      href='https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap'
+      rel='stylesheet'
+    />
+  `
 }
 
 export default config
