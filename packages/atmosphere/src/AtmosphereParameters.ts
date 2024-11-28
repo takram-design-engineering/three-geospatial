@@ -74,14 +74,12 @@ export class AtmosphereParameters {
 
     // We could store luminance (cd/m^2) in render buffers, but the illuminance
     // values easily saturate.
-    const luminousEfficiency = new Vector3(0.2126, 0.7152, 0.0722)
-    const luminance = luminousEfficiency.dot(this.skyRadianceToLuminance)
-    const luminanceScale = 1 / luminance
+    const luminance = this.luminousEfficiency.dot(this.skyRadianceToLuminance)
     this.skyRadianceToRelativeLuminance
       .copy(this.skyRadianceToLuminance)
-      .multiplyScalar(luminanceScale)
+      .divideScalar(luminance)
     this.sunRadianceToRelativeLuminance
       .copy(this.sunRadianceToLuminance)
-      .multiplyScalar(luminanceScale)
+      .divideScalar(luminance)
   }
 }
