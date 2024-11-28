@@ -20,7 +20,7 @@ Run `nx dev playground` to serve the playground in development mode.
 
 Run `nx storybook` to serve stories.
 
-### Environment Variables
+### Environment variables
 
 Create `.env` at the root directory.
 
@@ -29,3 +29,17 @@ Create `.env` at the root directory.
 | -- | -- |
 | `(NEXT_PUBLIC\|STORYBOOK)_GOOGLE_MAP_API_KEY` | [Google Map Tiles API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
 | `(NEXT_PUBLIC\|STORYBOOK)_ION_API_TOKEN` | [Cesium Ion API access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/) |
+
+### Generating package
+
+For React library:
+
+```sh
+nx generate @nx/react:library --name={name} --bundler=vite --directory=packages/{name} --compiler=swc --importPath={package_name} --style=none --unitTestRunner=jest --no-interactive
+```
+
+Add storybook configuration:
+
+```sh
+nx generate @nx/storybook:configuration --project={name} --uiFramework=@storybook/react-vite --no-interactive
+```
