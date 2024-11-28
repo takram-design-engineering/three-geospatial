@@ -11,10 +11,7 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {}
   },
-  staticDirs: [
-    '../../packages/atmosphere/assets',
-    '../../packages/effects/assets'
-  ],
+  staticDirs: ['../assets', '../../packages/atmosphere/assets'],
 
   viteFinal: async config =>
     mergeConfig(config, {
