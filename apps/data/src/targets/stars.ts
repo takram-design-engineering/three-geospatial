@@ -86,10 +86,12 @@ async function readRecords(path: string): Promise<Record[]> {
     'bvIndex'
   )
   const color = new Color()
-  return records.map(({ bvIndex = bvIndexFallback, ...others }) => {
-    const { r, g, b } = convertBVIndexToLinearSRGBChromaticity(bvIndex, color)
-    return { ...others, r, g, b }
-  })
+  return records
+    .map(({ bvIndex = bvIndexFallback, ...others }) => {
+      const { r, g, b } = convertBVIndexToLinearSRGBChromaticity(bvIndex, color)
+      return { ...others, r, g, b }
+    })
+    .sort((a, b) => a.magnitude - b.magnitude)
 }
 
 async function writeRecords(
