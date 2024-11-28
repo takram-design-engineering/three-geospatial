@@ -25,8 +25,8 @@ const Scene: FC = () => {
   > | null>(null)
 
   const { longitude, latitude, heading, pitch, distance } = useControls({
-    longitude: { value: 0, min: -180, max: 180 },
-    latitude: { value: 0, min: -90, max: 90 },
+    longitude: { value: 90, min: -180, max: 180 },
+    latitude: { value: 40, min: -90, max: 90 },
     heading: { value: -90, min: -180, max: 180 },
     pitch: { value: -45, min: -90, max: 90 },
     distance: { value: 1000, min: 0, max: 1000 }
@@ -40,7 +40,7 @@ const Scene: FC = () => {
     pov.heading = radians(heading)
     pov.pitch = radians(pitch)
     pov.distance = distance * 1e3
-    pov.decompose(camera.position, camera.quaternion)
+    pov.decompose(camera.position, camera.quaternion, camera.up)
 
     if (controls != null) {
       controls.target.copy(pov.target)
@@ -72,10 +72,7 @@ const Story: StoryFn = () => {
   return (
     <Canvas
       gl={{ logarithmicDepthBuffer: true }}
-      camera={{
-        near: 1,
-        far: 1e8
-      }}
+      camera={{ near: 1, far: 1e8 }}
     >
       <Scene />
     </Canvas>

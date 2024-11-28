@@ -174,7 +174,7 @@ const Scene: FC<SceneProps & { apiKey: string }> = ({
       radians(heading),
       radians(pitch),
       distance
-    ).decompose(camera.position, camera.quaternion)
+    ).decompose(camera.position, camera.quaternion, camera.up)
   }, [longitude, latitude, heading, pitch, distance, camera])
 
   // Effects must know the camera near/far changed by GlobeControls.

@@ -5,16 +5,16 @@ import { clamp } from './math'
 
 const EPSILON = 0.000001
 
-const east = /*#__PURE__*/ new Vector3()
-const north = /*#__PURE__*/ new Vector3()
-const up = /*#__PURE__*/ new Vector3()
+const eastScratch = /*#__PURE__*/ new Vector3()
+const northScratch = /*#__PURE__*/ new Vector3()
+const upScratch = /*#__PURE__*/ new Vector3()
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const matrixScratch = /*#__PURE__*/ new Matrix4()
 const rayScratch = /*#__PURE__*/ new Ray()
 
 export class PointOfView {
-  target: Vector3
+  target = new Vector3()
 
   // Radians from the local east direction relative from true north, measured
   // clockwise (90 degrees is true north, and -90 is true south).
@@ -27,8 +27,10 @@ export class PointOfView {
   // Distance from the target.
   private _distance!: number
 
-  constructor(target = new Vector3(), heading = 0, pitch = 0, distance = 0) {
-    this.target = target
+  constructor(target?: Vector3, heading = 0, pitch = 0, distance = 0) {
+    if (target != null) {
+      this.target.copy(target)
+    }
     this.heading = heading
     this.pitch = pitch
     this.distance = distance
@@ -87,16 +89,19 @@ export class PointOfView {
   decompose(
     position: Vector3,
     quaternion: Quaternion,
+    up: Vector3,
     ellipsoid = Ellipsoid.WGS84
   ): void {
-    ellipsoid.getEastNorthUpVectors(this.target, east, north, up)
+    ellipsoid.getEastNorthUpVectors(this.target, eastScratch, northScratch, up)
 
     // h = east * cos(heading) + north * sin(heading)
     // v = h * cos(pitch) + up * sin(pitch)
     const offset = vectorScratch1
-      .copy(east)
+      .copy(eastScratch)
       .multiplyScalar(Math.cos(this.heading))
-      .add(vectorScratch2.copy(north).multiplyScalar(Math.sin(this.heading)))
+      .add(
+        vectorScratch2.copy(northScratch).multiplyScalar(Math.sin(this.heading))
+      )
       .multiplyScalar(Math.cos(this.pitch))
       .add(vectorScratch2.copy(up).multiplyScalar(Math.sin(this.pitch)))
       .normalize()
@@ -124,9 +129,17 @@ export class PointOfView {
 
     this.target.copy(intersection)
     this.distance = position.distanceTo(intersection)
-    ellipsoid.getEastNorthUpVectors(intersection, east, north, up)
-    this.heading = Math.atan2(north.dot(direction), east.dot(direction))
-    this.pitch = Math.asin(up.dot(direction))
+    ellipsoid.getEastNorthUpVectors(
+      intersection,
+      eastScratch,
+      northScratch,
+      upScratch
+    )
+    this.heading = Math.atan2(
+      northScratch.dot(direction),
+      eastScratch.dot(direction)
+    )
+    this.pitch = Math.asin(upScratch.dot(direction))
 
     return this
   }
