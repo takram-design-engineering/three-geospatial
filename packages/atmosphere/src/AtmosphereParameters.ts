@@ -49,7 +49,7 @@ function applyOptions(
 }
 
 export class AtmosphereParameters {
-  static DEFAULT = /*#__PURE__*/ new AtmosphereParameters()
+  static readonly DEFAULT = /*#__PURE__*/ new AtmosphereParameters()
 
   solarIrradiance = new Vector3(1.474, 1.8504, 1.91198)
   sunAngularRadius = 0.004675

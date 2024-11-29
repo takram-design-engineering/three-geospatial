@@ -10,7 +10,7 @@ const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
 export class Ellipsoid {
-  static WGS84 = /*#__PURE__*/ new Ellipsoid(
+  static readonly WGS84 = /*#__PURE__*/ new Ellipsoid(
     6378137,
     6378137,
     6356752.3142451793
