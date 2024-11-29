@@ -31,6 +31,14 @@
       "options": {
         "command": "nx run-many --target=build --parallel=8 --projects=tag:type:lib --configuration=production"
       }
+    },
+    "local-registry": {
+      "executor": "@nx/js:verdaccio",
+      "options": {
+        "port": 4873,
+        "config": ".verdaccio/config.yml",
+        "storage": "tmp/local-registry/storage"
+      }
     }
   }
 }
