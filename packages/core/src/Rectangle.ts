@@ -65,6 +65,13 @@ export class Rectangle {
     )
   }
 
+  at(x: number, y: number, result = new Geodetic()): Geodetic {
+    return result.set(
+      this.west + (this.east - this.west) * x,
+      this.north + (this.south - this.north) * y
+    )
+  }
+
   fromArray(array: readonly number[], offset = 0): this {
     this.west = array[offset]
     this.south = array[offset + 1]

@@ -23,8 +23,7 @@ const location = new Geodetic(radians(138.731), radians(35.363))
 const position = location.toECEF()
 
 const tilingScheme = new TilingScheme()
-const tile = tilingScheme.geodeticToTile(location, 7)
-tile.y = tilingScheme.getSize(tile.z).y - tile.y - 1
+const tile = tilingScheme.getTile(location, 7)
 const terrain = new IonTerrain({
   assetId: 2767062, // Japan Regional Terrain
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN

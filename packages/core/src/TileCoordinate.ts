@@ -71,21 +71,6 @@ export class TileCoordinate {
     return other.x === this.x && other.y === this.y && other.z === this.z
   }
 
-  setX(value: number): this {
-    this.x = value
-    return this
-  }
-
-  setY(value: number): this {
-    this.y = value
-    return this
-  }
-
-  setZ(value: number): this {
-    this.z = value
-    return this
-  }
-
   getParent(result = new TileCoordinate()): TileCoordinate {
     const divisor = 2 ** this.z
     const x = this.x / divisor

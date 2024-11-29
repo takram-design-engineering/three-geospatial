@@ -1,0 +1,38 @@
+import { TileCoordinate } from './TileCoordinate'
+
+describe('TileCoordinate', () => {
+  test('getParent', () => {
+    const tile = new TileCoordinate()
+    tile.set(0, 0, 1)
+    expect(tile.getParent()).toMatchObject({ x: 0, y: 0, z: 0 })
+    tile.set(1, 0, 1)
+    expect(tile.getParent()).toMatchObject({ x: 0, y: 0, z: 0 })
+    tile.set(0, 1, 1)
+    expect(tile.getParent()).toMatchObject({ x: 0, y: 0, z: 0 })
+    tile.set(1, 1, 1)
+    expect(tile.getParent()).toMatchObject({ x: 0, y: 0, z: 0 })
+    tile.set(2, 0, 1)
+    expect(tile.getParent()).toMatchObject({ x: 1, y: 0, z: 0 })
+    tile.set(3, 0, 1)
+    expect(tile.getParent()).toMatchObject({ x: 1, y: 0, z: 0 })
+    tile.set(2, 1, 1)
+    expect(tile.getParent()).toMatchObject({ x: 1, y: 0, z: 0 })
+    tile.set(3, 1, 1)
+    expect(tile.getParent()).toMatchObject({ x: 1, y: 0, z: 0 })
+  })
+
+  test('traverseChildren', () => {
+    const tile = new TileCoordinate()
+    const child = new TileCoordinate()
+    const iterator = tile.traverseChildren(1, child)
+    expect(iterator.next().done).toBe(false)
+    expect(child).toMatchObject({ x: 0, y: 0, z: 1 })
+    expect(iterator.next().done).toBe(false)
+    expect(child).toMatchObject({ x: 1, y: 0, z: 1 })
+    expect(iterator.next().done).toBe(false)
+    expect(child).toMatchObject({ x: 0, y: 1, z: 1 })
+    expect(iterator.next().done).toBe(false)
+    expect(child).toMatchObject({ x: 1, y: 1, z: 1 })
+    expect(iterator.next().done).toBe(true)
+  })
+})

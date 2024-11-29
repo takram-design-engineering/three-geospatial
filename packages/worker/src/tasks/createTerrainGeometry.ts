@@ -4,7 +4,6 @@ import decode from '@here/quantized-mesh-decoder'
 import { type Vector3Like } from 'three'
 
 import {
-  Rectangle,
   TilingScheme,
   toBufferGeometryLike,
   type TileCoordinateLike,
@@ -25,11 +24,8 @@ export function createTerrainGeometry(
 }> {
   const decoded = decode(data)
 
-  // TODO: Make tms coordinate conversion generic.
   const tilingScheme = new TilingScheme().copy(tilingSchemeLike)
-  const size = tilingScheme.getSize(z)
-  const rect = tilingScheme.tileToRectangle({ x, y: size.y - y - 1, z })
-  const rectangle = new Rectangle(rect.west, rect.south, rect.east, rect.north)
+  const rectangle = tilingScheme.getRectangle({ x, y, z })
 
   const geometry = new TerrainGeometry(decoded, rectangle)
   geometry.computeBoundingSphere() // Much cheaper to compute this here.

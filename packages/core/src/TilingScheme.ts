@@ -1,8 +1,10 @@
-import { type Vector2Like } from 'three'
+import { Vector2 } from 'three'
 
 import { type GeodeticLike } from './Geodetic'
 import { Rectangle, type RectangleLike } from './Rectangle'
 import { TileCoordinate, type TileCoordinateLike } from './TileCoordinate'
+
+const vectorScratch = /*#__PURE__*/ new Vector2()
 
 export interface TilingSchemeLike {
   readonly width: number
@@ -10,6 +12,7 @@ export interface TilingSchemeLike {
   readonly rectangle: RectangleLike
 }
 
+// TODO: Support slippyMap and EPSG:3857
 export class TilingScheme {
   constructor(
     public width = 2,
@@ -28,20 +31,17 @@ export class TilingScheme {
     return this
   }
 
-  getSize(z: number): Vector2Like {
-    return {
-      x: this.width << z,
-      y: this.height << z
-    }
+  getSize(z: number, result = new Vector2()): Vector2 {
+    return result.set(this.width << z, this.height << z)
   }
 
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/GeographicTilingScheme.js#L210
-  geodeticToTile(
+  getTile(
     geodetic: GeodeticLike,
     z: number,
     result = new TileCoordinate()
   ): TileCoordinate {
-    const size = this.getSize(z)
+    const size = this.getSize(z, vectorScratch)
     const width = this.rectangle.width / size.x
     const height = this.rectangle.height / size.y
     let longitude = geodetic.longitude
@@ -52,7 +52,7 @@ export class TilingScheme {
     if (x >= size.x) {
       x = size.x - 1
     }
-    let y = Math.floor((this.rectangle.north - geodetic.latitude) / height)
+    let y = Math.floor((geodetic.latitude - this.rectangle.south) / height)
     if (y >= size.y) {
       y = size.y - 1
     }
@@ -63,17 +63,14 @@ export class TilingScheme {
   }
 
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/GeographicTilingScheme.js#L169
-  tileToRectangle(
-    tile: TileCoordinateLike,
-    result = new Rectangle()
-  ): Rectangle {
-    const size = this.getSize(tile.z)
+  getRectangle(tile: TileCoordinateLike, result = new Rectangle()): Rectangle {
+    const size = this.getSize(tile.z, vectorScratch)
     const width = this.rectangle.width / size.x
     const height = this.rectangle.height / size.y
     result.west = tile.x * width + this.rectangle.west
     result.east = (tile.x + 1) * width + this.rectangle.west
-    result.north = this.rectangle.north - tile.y * height
-    result.south = this.rectangle.north - (tile.y + 1) * height
+    result.north = this.rectangle.north - (size.y - tile.y - 1) * height
+    result.south = this.rectangle.north - (size.y - tile.y) * height
     return result
   }
 }

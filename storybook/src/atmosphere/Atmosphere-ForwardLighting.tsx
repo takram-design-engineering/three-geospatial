@@ -41,8 +41,7 @@ const position = location.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 const tilingScheme = new TilingScheme()
-const tile = tilingScheme.geodeticToTile(location, 7)
-tile.y = tilingScheme.getSize(tile.z).y - tile.y - 1
+const tile = tilingScheme.getTile(location, 7)
 const terrain = new IonTerrain({
   assetId: 2767062, // Japan Regional Terrain
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
