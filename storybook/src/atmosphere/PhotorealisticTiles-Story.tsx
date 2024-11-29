@@ -169,12 +169,12 @@ const Scene: FC<SceneProps & { apiKey: string }> = ({
 
   const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
-    new PointOfView(
+    new PointOfView(distance, radians(heading), radians(pitch)).decompose(
       new Geodetic(radians(longitude), radians(latitude)).toECEF(),
-      radians(heading),
-      radians(pitch),
-      distance
-    ).decompose(camera.position, camera.quaternion, camera.up)
+      camera.position,
+      camera.quaternion,
+      camera.up
+    )
   }, [longitude, latitude, heading, pitch, distance, camera])
 
   // Effects must know the camera near/far changed by GlobeControls.

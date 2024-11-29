@@ -38,10 +38,10 @@ const Scene: FC = () => {
   > | null>(null)
 
   useEffect(() => {
-    const pov = new PointOfView(position, radians(110), radians(-50), 20000)
-    pov.decompose(camera.position, camera.quaternion, camera.up)
+    const pov = new PointOfView(20000, radians(110), radians(-50))
+    pov.decompose(position, camera.position, camera.quaternion, camera.up)
     if (controls != null) {
-      controls.target.copy(pov.target)
+      controls.target.copy(position)
       controls.update()
     }
   }, [camera, controls])
