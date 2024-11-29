@@ -2,7 +2,7 @@
   "name": "storybook",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "storybook/src",
-  "projectType": "library",
+  "projectType": "application",
   "tags": ["type:tool"],
   "// targets": "to see all targets run: nx show project storybook --web",
   "targets": {}

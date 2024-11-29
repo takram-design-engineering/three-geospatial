@@ -1,14 +1,15 @@
 {
   "name": "@takram/three-terrain-core",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": "./build/index.js",
+      "require": "./build/index.cjs",
+      "types": "./types/index.d.ts"
     }
   },
-  "main": "./index.cjs",
-  "module": "./index.js",
-  "types": "./index.d.ts"
+  "main": "./build/index.cjs",
+  "module": "./build/index.js",
+  "types": "./types/index.d.ts"
 }

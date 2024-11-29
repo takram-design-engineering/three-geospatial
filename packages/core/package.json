@@ -5,17 +5,26 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": "./build/index.js",
+      "require": "./build/index.cjs",
+      "types": "./types/index.d.ts"
     },
     "./r3f": {
-      "import": "./r3f/index.js",
-      "require": "./r3f/index.cjs"
+      "import": "./build/r3f.js",
+      "require": "./build/r3f.cjs",
+      "types": "./types/r3f/index.d.ts"
     }
   },
-  "main": "./index.cjs",
-  "module": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./build/index.cjs",
+  "module": "./build/index.js",
+  "types": "./types/index.d.ts",
+  "files": [
+    "build",
+    "src",
+    "types",
+    "package.json",
+    "README.md"
+  ],
   "dependencies": {
     "lodash-es": "^4.17.21",
     "react-merge-refs": "^2.1.1",

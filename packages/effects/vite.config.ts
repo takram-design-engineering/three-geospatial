@@ -1,4 +1,5 @@
 /// <reference types='vitest' />
+
 import * as path from 'path'
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
@@ -13,11 +14,17 @@ export default defineConfig({
   plugins: [
     react(),
     nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    nxCopyAssetsPlugin(['src/**/*', '*.md']),
     dts({
+      outDir: '../../dist/packages/effects/types',
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
-      pathsToAliases: false
+      pathsToAliases: false,
+      afterDiagnostic: diagnostics => {
+        diagnostics.forEach(diagnostic => {
+          console.warn(diagnostic)
+        })
+      }
     }),
     glsl()
   ],
@@ -39,8 +46,8 @@ export default defineConfig({
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: {
-        index: 'src/index.ts',
-        'r3f/index': 'src/r3f/index.ts'
+        'build/index': 'src/index.ts',
+        'build/r3f': 'src/r3f/index.ts'
       },
       name: 'effects',
       // Change this to the formats you want to support.
@@ -48,9 +55,19 @@ export default defineConfig({
       formats: ['es', 'cjs']
     },
     rollupOptions: {
+      output: [
+        {
+          format: 'es',
+          chunkFileNames: 'build/shared.js'
+        },
+        {
+          format: 'cjs',
+          chunkFileNames: 'build/shared.cjs'
+        }
+      ],
       // External packages that should not be bundled into your library.
       external: [
-        /^@takram\/*/,
+        /^@takram/,
         'react',
         'react-dom',
         'react/jsx-runtime',
