@@ -1,6 +1,10 @@
+// Copy-pasted from:
+// https://github.com/NASA-AMMOS/3DTilesRendererJS/blob/v0.3.41/example/src/plugins/fade/FadeManager.js
+
 import { MathUtils } from 'three'
 
 const { clamp } = MathUtils
+
 export class FadeManager {
   constructor() {
     this.duration = 250
@@ -36,7 +40,7 @@ export class FadeManager {
       const material = child.material
       if (material) {
         fadeParams.delete(material)
-        material.onBeforeCompile = null
+        material.onBeforeCompile = () => {}
         material.needsUpdate = true
       }
     })

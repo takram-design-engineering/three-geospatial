@@ -1,6 +1,10 @@
-import { BufferAttribute, MathUtils, Vector3 } from 'three'
+// Copy-pasted from:
+// https://github.com/NASA-AMMOS/3DTilesRendererJS/blob/v0.3.41/example/src/plugins/TileCompressionPlugin.js
+
+import { BufferAttribute, LinearFilter, MathUtils, Vector3 } from 'three'
 
 const _vec = /*#__PURE__*/ new Vector3()
+
 function compressAttribute(attribute, arrayType) {
   if (
     attribute.isInterleavedBufferAttribute ||
@@ -141,8 +145,9 @@ export class TileCompressionPlugin {
         const material = c.material
         for (const key in material) {
           const value = material[key]
-          if (value && value.isTexture) {
+          if (value && value.isTexture && value.generateMipmaps) {
             value.generateMipmaps = false
+            value.minFilter = LinearFilter
           }
         }
       }

@@ -1,9 +1,13 @@
+// Copy-pasted from:
+// https://github.com/NASA-AMMOS/3DTilesRendererJS/blob/v0.3.41/example/src/plugins/UpdateOnChangePlugin.js
+
 import { Matrix4 } from 'three'
 
 const _matrix = /*#__PURE__*/ new Matrix4()
 
 export class UpdateOnChangePlugin {
   constructor() {
+    this.name = 'UPDATE_ON_CHANGE_PLUGIN'
     this.tiles = null
     this.needsUpdate = false
     this.cameraMatrices = new Map()
@@ -25,9 +29,6 @@ export class UpdateOnChangePlugin {
       this.cameraMatrices.delete(camera)
     }
 
-    // dispose tile is included here because the LRUCache can evict tiles that are actively used if they're
-    // above the byte cap causing tile gaps
-    tiles.addEventListener('dispose-model', this._needsUpdateCallback)
     tiles.addEventListener(
       'camera-resolution-change',
       this._needsUpdateCallback
@@ -35,6 +36,11 @@ export class UpdateOnChangePlugin {
     tiles.addEventListener('load-content', this._needsUpdateCallback)
     tiles.addEventListener('add-camera', this._onCameraAdd)
     tiles.addEventListener('delete-camera', this._onCameraDelete)
+
+    // register any already-present cameras
+    tiles.cameras.forEach(camera => {
+      this._onCameraAdd({ camera })
+    })
   }
 
   doTilesNeedUpdate() {
@@ -60,7 +66,6 @@ export class UpdateOnChangePlugin {
 
   dispose() {
     const tiles = this.tiles
-    tiles.removeEventListener('dispose-model', this._needsUpdateCallback)
     tiles.removeEventListener(
       'camera-resolution-change',
       this._needsUpdateCallback

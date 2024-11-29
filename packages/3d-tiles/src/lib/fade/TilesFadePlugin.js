@@ -1,3 +1,6 @@
+// Copy-pasted from:
+// https://github.com/NASA-AMMOS/3DTilesRendererJS/blob/v0.3.41/example/src/plugins/fade/TilesFadePlugin.js
+
 import { Group, Matrix4, Quaternion, Vector3 } from 'three'
 
 import { FadeManager } from './FadeManager.js'
@@ -40,6 +43,7 @@ function onLoadModel(scene, tile) {
 
 function onDisposeModel(scene) {
   this._fadeManager.deleteObject(scene)
+  this._tileMap.delete(scene)
 }
 
 function onFadeComplete(object) {
@@ -197,6 +201,10 @@ export class TilesFadePlugin {
       this._prevCameraTransforms.set(camera, new Matrix4())
     })
 
+    tiles.forEachLoadedModel((scene, tile) => {
+      onLoadModel.call(this, scene, tile)
+    })
+
     this._onLoadModel = e => onLoadModel.call(this, e.scene, e.tile)
     this._onDisposeModel = e => onDisposeModel.call(this, e.scene)
     this._onTileVisibilityChange = e =>
@@ -230,5 +238,12 @@ export class TilesFadePlugin {
     tiles.removeEventListener('delete-camera', this._onDeleteCamera)
     tiles.removeEventListener('update-before', this._onUpdateBefore)
     tiles.removeEventListener('update-after', this._onUpdateAfter)
+    tiles.forEachLoadedModel(scene => {
+      this._fadeManager.deleteObject(scene)
+      this._tileMap.delete(scene)
+      scene.visible = true
+    })
+
+    this._fadeGroup.removeFromParent()
   }
 }
