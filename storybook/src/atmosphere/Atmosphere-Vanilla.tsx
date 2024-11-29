@@ -58,8 +58,8 @@ const moonDirection = new Vector3()
 
 // A midnight sun in summer.
 const referenceDate = new Date('2000-06-01T10:00:00Z')
-const location = new Geodetic(0, radians(67), 1000)
-const position = location.toECEF()
+const geodetic = new Geodetic(0, radians(67), 1000)
+const position = geodetic.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
 function init(): void {

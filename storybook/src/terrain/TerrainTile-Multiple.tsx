@@ -19,16 +19,14 @@ import {
 import { IonTerrain } from '@takram/three-terrain'
 import { TerrainTile } from '@takram/three-terrain/r3f'
 
-const location = new Geodetic(radians(138.731), radians(35.363))
-const position = location.toECEF()
+const geodetic = new Geodetic(radians(138.731), radians(35.363))
+const position = geodetic.toECEF()
 
-const tilingScheme = new TilingScheme()
-const tile = tilingScheme.getTile(location, 7)
 const terrain = new IonTerrain({
   assetId: 2767062, // Japan Regional Terrain
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
-
+const tile = new TilingScheme().getTile(geodetic, 7)
 const tiles = Array.from(tile.traverseChildren(5))
 
 const terrainMaterial = new MeshNormalMaterial()

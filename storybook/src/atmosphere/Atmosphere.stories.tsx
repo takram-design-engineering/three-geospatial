@@ -10,9 +10,6 @@ export default {
 export const Basic = await import('./Atmosphere-Basic').then(
   module => module.default
 )
-export const ForwardLighting = await import(
-  './Atmosphere-ForwardLighting'
-).then(module => module.default)
 export const Vanilla = await import('./Atmosphere-Vanilla').then(
   module => module.default
 )

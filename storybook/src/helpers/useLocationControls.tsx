@@ -1,3 +1,5 @@
+import { type GeodeticLike } from '@takram/three-geospatial'
+
 import { useControls } from './useControls'
 
 export interface LocationControlValues {
@@ -6,10 +8,11 @@ export interface LocationControlValues {
   height: number
 }
 
-export function useLocationControls(): LocationControlValues {
-  return useControls('location', {
+export function useLocationControls(): GeodeticLike {
+  const { longitude, latitude, altitude } = useControls('location', {
     longitude: { value: 0, min: -180, max: 180 },
     latitude: { value: 35, min: -90, max: 90 },
-    height: { value: 2000, min: 0, max: 30000 }
+    altitude: { value: 2000, min: 0, max: 30000 }
   })
+  return { longitude, latitude, height: altitude }
 }

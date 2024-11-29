@@ -26,7 +26,7 @@ import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 
-const location = new Geodetic()
+const geodetic = new Geodetic()
 const position = new Vector3()
 const up = new Vector3()
 const offset = new Vector3()
@@ -37,8 +37,8 @@ function applyLocation(
   controls: OrbitControlsImpl,
   { longitude, latitude, height }: GeodeticLike
 ): void {
-  location.set(radians(longitude), radians(latitude), height)
-  location.toECEF(position)
+  geodetic.set(radians(longitude), radians(latitude), height)
+  geodetic.toECEF(position)
   Ellipsoid.WGS84.getSurfaceNormal(position, up)
 
   rotation.setFromUnitVectors(camera.up, up)

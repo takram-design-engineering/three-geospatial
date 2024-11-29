@@ -1,21 +1,31 @@
 import { OrbitControls, TorusKnot } from '@react-three/drei'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { Fragment, Suspense, useRef, type FC } from 'react'
-import { MeshBasicMaterial } from 'three'
+import {
+  Fragment,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentRef,
+  type FC
+} from 'react'
 
 import {
   AerialPerspective,
   Atmosphere,
   Sky,
+  SkyLight,
   Stars,
+  SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
   Ellipsoid,
   Geodetic,
+  PointOfView,
   radians,
   TilingScheme
 } from '@takram/three-geospatial'
@@ -35,19 +45,14 @@ import { useControls } from '../helpers/useControls'
 import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 
-const location = new Geodetic(radians(138.731), radians(35.363), 4500)
-const position = location.toECEF()
-const up = Ellipsoid.WGS84.getSurfaceNormal(position)
+const geodetic = new Geodetic(radians(138.5), radians(36.2), 5000)
+const position = geodetic.toECEF()
 
-const tilingScheme = new TilingScheme()
-const tile = tilingScheme.getTile(location, 7)
 const terrain = new IonTerrain({
   assetId: 2767062, // Japan Regional Terrain
   apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
 })
-
-const material = new MeshBasicMaterial({ color: 'white' })
-const terrainMaterial = new MeshBasicMaterial({ color: 'gray' })
+const tile = new TilingScheme().getTile(geodetic, 7)
 
 const Scene: FC = () => {
   useExposureControls({ exposure: 10 })
@@ -61,24 +66,51 @@ const Scene: FC = () => {
     { collapsed: true }
   )
   const motionDate = useLocalDateControls()
-  const { correctAltitude, photometric } = useControls('atmosphere', {
-    correctAltitude: true,
-    photometric: true
-  })
-  const { enabled, sun, sky, transmittance, inscatter } = useControls(
+  const { correctAltitude, photometric } = useControls(
+    'atmosphere',
+    {
+      correctAltitude: true,
+      photometric: true
+    },
+    { collapsed: true }
+  )
+  const { enabled, transmittance, inscatter } = useControls(
     'aerial perspective',
     {
       enabled: true,
-      sun: true,
-      sky: true,
       transmittance: true,
       inscatter: true
     }
   )
+  const { mode, sun, sky } = useControls('lighting', {
+    mode: {
+      options: ['deferred', 'forward'] as const
+    },
+    sun: true,
+    sky: true
+  })
+
+  const { camera } = useThree()
+  const [controls, setControls] = useState<ComponentRef<
+    typeof OrbitControls
+  > | null>(null)
+
+  useEffect(() => {
+    const pov = new PointOfView(position, radians(-90), radians(-20), 2000)
+    pov.decompose(camera.position, camera.quaternion, camera.up)
+    if (controls != null) {
+      controls.target.copy(pov.target)
+      controls.update()
+    }
+  }, [camera, controls])
 
   const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
-    atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
+    const atmosphere = atmosphereRef.current
+    if (atmosphere == null) {
+      return
+    }
+    atmosphere.updateByDate(new Date(motionDate.get()))
   })
 
   return (
@@ -88,34 +120,58 @@ const Scene: FC = () => {
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
-      <OrbitControls target={position} minDistance={1e3} />
+      <OrbitControls ref={setControls} />
       <Sky renderTargetCount={2} />
+      {mode === 'forward' && (
+        <group position={position}>
+          {sun && <SunLight />}
+          {sky && <SkyLight />}
+        </group>
+      )}
       <Stars data='/stars.bin' renderTargetCount={2} />
-      <EllipsoidMesh
-        args={[Ellipsoid.WGS84.radii, 360, 180]}
-        material={terrainMaterial}
-      />
+      <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} receiveShadow>
+        {mode === 'forward' ? (
+          <meshLambertMaterial color='gray' />
+        ) : (
+          <meshBasicMaterial color='gray' />
+        )}
+      </EllipsoidMesh>
       <Suspense>
         <BatchedTerrainTile
           terrain={terrain}
           {...tile}
           depth={5}
           computeVertexNormals
-          material={terrainMaterial}
-        />
+          receiveShadow
+          castShadow
+        >
+          {mode === 'forward' ? (
+            <meshLambertMaterial color='gray' />
+          ) : (
+            <meshBasicMaterial color='gray' />
+          )}
+        </BatchedTerrainTile>
       </Suspense>
-      <EastNorthUpFrame {...location}>
+      <EastNorthUpFrame {...geodetic}>
         <TorusKnot
           args={[200, 60, 256, 64]}
           position={[0, 0, 20]}
-          material={material}
-        />
+          receiveShadow
+          castShadow
+        >
+          {mode === 'forward' ? (
+            <meshLambertMaterial color='white' />
+          ) : (
+            <meshBasicMaterial color='white' />
+          )}
+        </TorusKnot>
       </EastNorthUpFrame>
       <EffectComposer multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
           key={JSON.stringify({
             enabled,
+            mode,
             sun,
             sky,
             transmittance,
@@ -127,8 +183,8 @@ const Scene: FC = () => {
         >
           {enabled && !normal && !depth && (
             <AerialPerspective
-              sunIrradiance={sun}
-              skyIrradiance={sky}
+              sunIrradiance={mode === 'deferred' && sun}
+              skyIrradiance={mode === 'deferred' && sky}
               transmittance={transmittance}
               inscatter={inscatter}
             />
@@ -157,7 +213,7 @@ const Story: StoryFn = () => (
       stencil: false,
       logarithmicDepthBuffer: true
     }}
-    camera={{ near: 100, far: 1e6, position, up }}
+    camera={{ near: 100, far: 1e6 }}
   >
     <Stats />
     <Scene />
