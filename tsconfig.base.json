@@ -19,8 +19,6 @@
       "@takram/three-3d-tiles-support": ["packages/3d-tiles/src/index.ts"],
       "@takram/three-atmosphere": ["packages/atmosphere/src/index.ts"],
       "@takram/three-atmosphere/r3f": ["packages/atmosphere/src/r3f/index.ts"],
-      "@takram/three-csm": ["packages/csm/src/index.ts"],
-      "@takram/three-csm/r3f": ["packages/csm/src/r3f/index.ts"],
       "@takram/three-geospatial": ["packages/core/src/index.ts"],
       "@takram/three-geospatial-effects": ["packages/effects/src/index.ts"],
       "@takram/three-geospatial-effects/r3f": [
