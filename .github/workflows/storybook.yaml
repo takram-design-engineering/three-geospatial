@@ -10,9 +10,12 @@ permissions:
 
 jobs:
   deploy:
+    environment: github-pages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - uses: pnpm/action-setup@v4
         with:
@@ -29,3 +32,5 @@ jobs:
           build_command: npx nx build-storybook
           path: storybook/storybook-static
           checkout: false
+        env:
+          STORYBOOK_ION_API_TOKEN: ${{secrets.STORYBOOK_ION_API_TOKEN}}

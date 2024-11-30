@@ -251,7 +251,7 @@ const Scene: FC<SceneProps & { apiKey: string }> = ({
 export const Story: FC<SceneProps> = props => {
   const { apiKey } = useControls('google maps', {
     apiKey: {
-      value: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
+      value: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY ?? ''
     }
   })
   return (
