@@ -42,7 +42,10 @@ const Scene = () => {
 ```
 
 ![Example of deferred lighting](docs/manhattan.jpg)
+[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
+
 ![Example of deferred lighting](docs/fuji.jpg)
+[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
 
 ### Forward lighting
 
@@ -78,6 +81,7 @@ const Scene = () => {
 ```
 
 ![Example of forward lighting](docs/forward.jpg)
+[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
 
 ### Transient update by date
 
