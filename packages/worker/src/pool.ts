@@ -3,7 +3,7 @@ import { type ExecOptions } from 'workerpool/types/types'
 
 import { type TransferResult } from './transfer'
 import { type methods } from './worker'
-import worker from './worker?url'
+import worker from './worker?worker&url'
 
 let pool: Pool | undefined
 
