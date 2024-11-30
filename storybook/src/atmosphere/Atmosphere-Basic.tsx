@@ -116,7 +116,7 @@ const Scene: FC = () => {
   return (
     <Atmosphere
       ref={atmosphereRef}
-      textures='/'
+      textures='atmosphere'
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
@@ -128,7 +128,7 @@ const Scene: FC = () => {
           {sky && <SkyLight />}
         </group>
       )}
-      <Stars data='/stars.bin' renderTargetCount={2} />
+      <Stars data='atmosphere/stars.bin' renderTargetCount={2} />
       <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} receiveShadow>
         {mode === 'forward' ? (
           <meshLambertMaterial color='gray' />

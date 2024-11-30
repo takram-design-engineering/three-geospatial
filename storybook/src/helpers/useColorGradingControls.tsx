@@ -11,7 +11,7 @@ interface Entry {
 }
 
 export function useColorGradingControls(): string | null {
-  const data = useLoader(FileLoader, '/clut/index.json', loader => {
+  const data = useLoader(FileLoader, 'public/clut/index.json', loader => {
     loader.setResponseType('json')
   }) as Entry[]
 
@@ -20,7 +20,7 @@ export function useColorGradingControls(): string | null {
       data
         .map(({ category, manufacturer, file }) => [
           file.slice(0, -4),
-          `/clut/${category}/${manufacturer}/${file}`
+          `public/clut/${category}/${manufacturer}/${file}`
         ])
         .sort(([a], [b]) => a.localeCompare(b))
         .reduce<Record<string, string>>(

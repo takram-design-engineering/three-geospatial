@@ -34,7 +34,7 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls />
-      <Environment files='/hdri/wooden_lounge_4k.hdr' background />
+      <Environment files='public/hdri/wooden_lounge_4k.hdr' background />
       {effectComposer}
     </>
   )

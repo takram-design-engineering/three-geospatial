@@ -98,7 +98,7 @@ const Scene: FC = () => {
       <OrbitControls ref={controlsRef} minDistance={5} />
       <Atmosphere
         ref={atmosphereRef}
-        textures='/'
+        textures='atmosphere'
         correctAltitude={correctAltitude}
         photometric={photometric}
       >

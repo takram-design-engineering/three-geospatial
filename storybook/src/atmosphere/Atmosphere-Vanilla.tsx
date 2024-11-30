@@ -170,7 +170,7 @@ function init(): void {
   texturesLoader = new PrecomputedTexturesLoader()
   texturesLoader.useHalfFloat =
     renderer.getContext().getExtension('OES_texture_float_linear') == null
-  texturesLoader.load('/', onPrecomputedTexturesLoad)
+  texturesLoader.load('atmosphere', onPrecomputedTexturesLoad)
 
   container.appendChild(renderer.domElement)
   window.addEventListener('resize', onWindowResize)

@@ -32,7 +32,7 @@ const Scene: FC = () => {
       <OrbitControls />
       <Stars
         ref={starsRef}
-        data='/stars.bin'
+        data='atmosphere/stars.bin'
         scale={[2, 2, 2]}
         radianceScale={5}
         background={false}

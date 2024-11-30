@@ -198,12 +198,12 @@ const Scene: FC<SceneProps & { apiKey: string }> = ({
   return (
     <Atmosphere
       ref={atmosphereRef}
-      textures='/'
+      textures='atmosphere'
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
       <Sky renderTargetCount={2} />
-      <Stars data='/stars.bin' renderTargetCount={2} />
+      <Stars data='atmosphere/stars.bin' renderTargetCount={2} />
       <Globe apiKey={apiKey} />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
