@@ -89,5 +89,8 @@
         "packageRoot": "dist/packages/{projectName}"
       }
     }
+  },
+  "release": {
+    "projectsRelationship": "independent"
   }
 }
