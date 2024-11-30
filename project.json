@@ -32,6 +32,12 @@
         "command": "nx run-many --target=build --parallel=8 --projects=tag:type:lib --configuration=production"
       }
     },
+    "build-storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx build-storybook storybook --configuration=production"
+      }
+    },
     "local-registry": {
       "executor": "@nx/js:verdaccio",
       "options": {

@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - 'main'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'pnpm'
+
+      - uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
+        with:
+          install_command: pnpm install
+          build_command: npx nx build-storybook
+          path: storybook/storybook-static
+          checkout: false
