@@ -1,7 +1,7 @@
 {
   "name": "@takram/three-atmosphere",
   "version": "0.0.1",
-  "description": "A Three.js and R3F (React Three Fiber) implementation of Eric Bruneton’s Precomputed Atmospheric Scattering.",
+  "description": "A Three.js and R3F implementation of Precomputed Atmospheric Scattering",
   "keywords": [
     "three",
     "three.js",

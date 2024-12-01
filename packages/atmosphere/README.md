@@ -43,10 +43,10 @@ const Scene = () => {
 }
 ```
 
-![Example of deferred lighting](docs/manhattan.jpg)
+![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
 [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
 
-![Example of deferred lighting](docs/fuji.jpg)
+![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
 [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
 
 ### Forward lighting
@@ -82,7 +82,7 @@ const Scene = () => {
 }
 ```
 
-![Example of forward lighting](docs/forward.jpg)
+![Example of forward lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
 [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
 
 ### Transient update by date
@@ -586,7 +586,7 @@ Increase this value if the sun flickers in a low-resolution environment map. Mod
 
 A material for displaying the sky. Apply this to a screen quad.
 
-Despite its name, this component renders the atmosphere itself, along with the sun and moon. When viewed from within the atmosphere, it appears as the sky. From space, it represents Earth’s atmosphere with a flat ground.
+Despite its name, this material renders the atmosphere itself, along with the sun and moon. When viewed from within the atmosphere, it appears as the sky. From space, it represents Earth’s atmosphere with a flat ground.
 
 [Source](/packages/atmosphere/src/SkyMaterial.ts)
 
