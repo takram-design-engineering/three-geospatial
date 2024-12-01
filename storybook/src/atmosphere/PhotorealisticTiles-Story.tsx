@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { GlobeControls, TilesRenderer } from '3d-tiles-renderer'
 import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/plugins'
+import { useControls as useSharedControls } from 'leva'
 import {
   EffectMaterial,
   ToneMappingMode,
@@ -249,7 +250,7 @@ const Scene: FC<SceneProps & { apiKey: string }> = ({
 }
 
 export const Story: FC<SceneProps> = props => {
-  const { apiKey } = useControls('google maps', {
+  const { apiKey } = useSharedControls('google maps', {
     apiKey: {
       value: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY ?? ''
     }
