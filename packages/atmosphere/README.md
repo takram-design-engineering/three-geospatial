@@ -228,9 +228,9 @@ function render(): void {
 
 - [`AtmosphereMaterialBase`](#atmospherematerialbase)
 - [`SkyMaterial`](#skymaterial)
+- [`StarsMaterial`](#starsmaterial)
 - [`SkyLightProbe`](#skylightprobe)
 - [`SunDirectionalLight`](#sundirectionallight)
-- [`StarsMaterial`](#starsmaterial)
 - [`AerialPerspectiveEffect`](#aerialperspectiveeffect)
 
 **Functions**
@@ -635,58 +635,6 @@ lunarRadianceScale: number = 1
 
 A scaling factor to adjust the brightness of the moon.
 
-## SkyLightProbe
-
-A light probe for indirect sky irradiance.
-
-It calculates spherical harmonics of sky irradiance at its position by sampling the precomputed irradiance texture on the CPU.
-
-[Source](/packages/atmosphere/src/SkyLightProbe.ts)
-
-```ts
-const skyLight = new SkyLightProbe({ irradianceTexture })
-skyLight.position.set(/* ECEF coordinate in meters */)
-getSunDirectionECEF(/* date */, skyLight.sunDirection)
-scene.add(skyLight)
-
-skyLight.update()
-```
-
-### Parameters
-
-Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/LightProbe)
-
-## SunDirectionalLight
-
-A directional light representing the sun.
-
-It calculates the sun’s radiance by sampling the precomputed transmittance texture on the CPU.
-
-[Source](/packages/atmosphere/src/SunDirectionalLight.ts)
-
-```ts
-const sunLight = new SunDirectionalLight({ transmittanceTexture })
-sunLight.target.position.set(/* ECEF coordinate in meters */)
-// Note it's the direction to the sun, not that of light.
-getSunDirectionECEF(/* date */, sunLight.sunDirection)
-scene.add(sunLight)
-scene.add(sunLight.target)
-
-sunLight.update()
-```
-
-### Parameters
-
-Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en/lights/DirectionalLight)
-
-#### distance
-
-```ts
-distance: number = 1
-```
-
-The distance from the target. Adjust this value if shadows are enabled for the light, as it may need to cover the entire scene.
-
 ## StarsMaterial
 
 Represents the brightest stars as points at an infinite distance.
@@ -735,6 +683,139 @@ background: boolean = true
 ```
 
 Whether to display the stars at an infinite distance, otherwise, they appear on a unit sphere.
+
+## SkyLightProbe
+
+A light probe for indirect sky irradiance.
+
+It calculates spherical harmonics of sky irradiance at its position by sampling the precomputed irradiance texture on the CPU.
+
+[Source](/packages/atmosphere/src/SkyLightProbe.ts)
+
+```ts
+const skyLight = new SkyLightProbe({ irradianceTexture })
+skyLight.position.set(/* ECEF coordinate in meters */)
+getSunDirectionECEF(/* date */, skyLight.sunDirection)
+scene.add(skyLight)
+
+skyLight.update()
+```
+
+### Parameters
+
+Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/LightProbe)
+
+#### irradianceTexture
+
+```ts
+irradianceTexture: DataTexture | null = null
+```
+
+The [precomputed irradiance texture](assets).
+
+#### ellipsoid
+
+```ts
+ellipsoid: Ellipsoid = Ellipsoid.WGS84
+```
+
+See [ellipsoid](#ellipsoid).
+
+#### correctAltitude
+
+```ts
+correctAltitude: boolean = true
+```
+
+See [correctAltitude](#correctaltitude)
+
+#### photometric
+
+```ts
+photometric: boolean = true
+```
+
+See [photometric](#photometric).
+
+#### sunDirection
+
+```ts
+sunDirection: Vector3 = new Vector3()
+```
+
+See [sunDirection](#sundirection).
+
+## SunDirectionalLight
+
+A directional light representing the sun.
+
+It calculates the sun’s radiance by sampling the precomputed transmittance texture on the CPU.
+
+[Source](/packages/atmosphere/src/SunDirectionalLight.ts)
+
+```ts
+const sunLight = new SunDirectionalLight({ transmittanceTexture })
+sunLight.target.position.set(/* ECEF coordinate in meters */)
+getSunDirectionECEF(/* date */, sunLight.sunDirection)
+scene.add(sunLight)
+scene.add(sunLight.target)
+
+sunLight.update()
+```
+
+### Parameters
+
+Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en/lights/DirectionalLight)
+
+#### transmittanceTexture
+
+```ts
+transmittanceTexture: DataTexture | null = null
+```
+
+The [precomputed transmittance texture](assets).
+
+#### ellipsoid
+
+```ts
+ellipsoid: Ellipsoid = Ellipsoid.WGS84
+```
+
+See [ellipsoid](#ellipsoid).
+
+#### correctAltitude
+
+```ts
+correctAltitude: boolean = true
+```
+
+See [correctAltitude](#correctaltitude)
+
+#### photometric
+
+```ts
+photometric: boolean = true
+```
+
+See [photometric](#photometric).
+
+#### sunDirection
+
+```ts
+sunDirection: Vector3 = new Vector3()
+```
+
+See [sunDirection](#sundirection).
+
+Note it's the direction to the sun, not that of light.
+
+#### distance
+
+```ts
+distance: number = 1
+```
+
+The distance from the target. Adjust this value if shadows are enabled for the light, as it may need to cover the entire scene.
 
 ## AerialPerspectiveEffect
 
