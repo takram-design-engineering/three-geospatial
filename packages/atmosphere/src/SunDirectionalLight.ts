@@ -12,7 +12,6 @@ export interface SunDirectionalLightParameters {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
-  worldPosition?: Vector3
   sunDirection?: Vector3
   distance?: number
 }
