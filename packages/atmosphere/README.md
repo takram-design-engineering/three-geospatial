@@ -229,7 +229,7 @@ function render(): void {
 - [`AtmosphereMaterialBase`](#atmospherematerialbase)
 - [`SkyMaterial`](#skymaterial)
 - [`SkyLightProbe`](#skylightprobe)
-- [`SunDirectionalLight`](#directionalsunlight)
+- [`SunDirectionalLight`](#sundirectionallight)
 - [`StarsMaterial`](#starsmaterial)
 - [`AerialPerspectiveEffect`](#aerialperspectiveeffect)
 
