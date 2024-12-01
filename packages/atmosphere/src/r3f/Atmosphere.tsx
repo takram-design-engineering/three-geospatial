@@ -15,8 +15,8 @@ import { Ellipsoid } from '@takram/three-geospatial'
 
 import {
   getECIToECEFRotationMatrix,
-  getMoonDirectionECEF,
-  getSunDirectionECEF
+  getMoonDirectionECI,
+  getSunDirectionECI
 } from '../celestialDirections'
 import {
   PrecomputedTexturesLoader,
@@ -115,9 +115,9 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     const { sunDirection, moonDirection, rotationMatrix } =
       transientPropsRef.current
     return date => {
-      getSunDirectionECEF(date, sunDirection)
-      getMoonDirectionECEF(date, moonDirection)
       getECIToECEFRotationMatrix(date, rotationMatrix)
+      getSunDirectionECI(date, sunDirection).applyMatrix4(rotationMatrix)
+      getMoonDirectionECI(date, moonDirection).applyMatrix4(rotationMatrix)
     }
   }, [])
 
