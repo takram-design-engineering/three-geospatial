@@ -46,3 +46,7 @@ To add a Storybook configuration:
 ```sh
 nx generate @nx/storybook:configuration --project={name} --uiFramework=@storybook/react-vite --no-interactive
 ```
+
+## License
+
+[MIT](LICENSE)

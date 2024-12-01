@@ -1,7 +1,24 @@
 {
   "name": "@takram/three-atmosphere",
   "version": "0.0.1",
+  "description": "A Three.js and R3F (React Three Fiber) implementation of Eric Bruneton’s Precomputed Atmospheric Scattering.",
+  "keywords": [
+    "three",
+    "three.js",
+    "atmosphere",
+    "sun",
+    "sky"
+  ],
+  "homepage": "https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere",
+  "bugs": {
+    "url": "https://github.com/takram-design-engineering/three-geospatial/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/takram-design-engineering/three-geospatial.git"
+  },
   "license": "MIT",
+  "author": "Shota Matsuda <shota@takram.com>",
   "type": "module",
   "exports": {
     ".": {

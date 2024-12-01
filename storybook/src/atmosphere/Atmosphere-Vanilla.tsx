@@ -79,8 +79,7 @@ function init(): void {
   clock = new Clock()
   scene = new Scene()
 
-  // SkyMaterial disables projection; just provide a plane that covers clip
-  // space.
+  // SkyMaterial disables projection. Provide a plane that covers clip space.
   skyMaterial = new SkyMaterial()
   const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
   sky.frustumCulled = false
@@ -91,8 +90,7 @@ function init(): void {
   skyLight.position.copy(position)
   scene.add(skyLight)
 
-  // SunDirectionalLight computes sun light transmittance to its target
-  // position.
+  // SunDirectionalLight computes sunlight transmittance to its target position.
   sunLight = new SunDirectionalLight({ distance: 300 })
   sunLight.target.position.copy(position)
   sunLight.castShadow = true
@@ -149,7 +147,7 @@ function init(): void {
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = PCFSoftShadowMap
 
-  // Use floating-point render buffer, as irradiance/illuminance is stored here.
+  // Use floating-point render buffer, as radiance/luminance is stored here.
   composer = new EffectComposer(renderer, {
     frameBufferType: HalfFloatType,
     multisampling: 8

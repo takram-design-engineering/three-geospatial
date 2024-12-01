@@ -2,7 +2,7 @@
   "name": "@three-geospatial/source",
   "version": "0.0.0",
   "private": true,
-  "license": "UNLICENSED (for now)",
+  "license": "MIT",
   "scripts": {
     "clean": "nx reset && rimraf --glob dist tmp \"packages/*/vite.config.ts.timestamp-*\"",
     "dev": "nx dev playground",
