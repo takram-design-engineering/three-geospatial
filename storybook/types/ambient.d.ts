@@ -9,7 +9,7 @@ declare module '3d-tiles-renderer/r3f' {
 
   export function TilesRenderer<T extends new (...args: any[]) => any>(
     props: {
-      url?: String,
+      url?: String
     } & Partial<ConstructorParameters<T>[0]>
   ): JSX.Element
 
