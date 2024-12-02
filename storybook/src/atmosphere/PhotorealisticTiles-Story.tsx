@@ -1,30 +1,28 @@
 import { css } from '@emotion/react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { GlobeControls, TilesRenderer } from '3d-tiles-renderer'
-import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/plugins'
+import {
+  GLTFExtensionsPlugin,
+  GoogleCloudAuthPlugin,
+  TileCompressionPlugin,
+  TilesFadePlugin,
+  UpdateOnChangePlugin
+} from '3d-tiles-renderer/plugins'
+import {
+  GlobeControls,
+  TilesPlugin,
+  TilesRenderer
+} from '3d-tiles-renderer/r3f'
 import { useControls as useSharedControls } from 'leva'
 import {
   EffectMaterial,
   ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import {
-  Fragment,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  type FC
-} from 'react'
-import { DRACOLoader, GLTFLoader } from 'three-stdlib'
+import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
+import { DRACOLoader } from 'three-stdlib'
 
-import {
-  TileCompressionPlugin,
-  TileCreaseNormalsPlugin,
-  TilesFadePlugin,
-  UpdateOnChangePlugin
-} from '@takram/three-3d-tiles-support'
+import { TileCreaseNormalsPlugin } from '@takram/three-3d-tiles-support'
 import {
   AerialPerspective,
   Atmosphere,
@@ -55,64 +53,21 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Globe: FC<{ apiKey: string }> = ({ apiKey }) => {
-  const tiles = useMemo(() => {
-    const tiles = new TilesRenderer()
-    tiles.registerPlugin(
-      new GoogleCloudAuthPlugin({
-        apiToken: apiKey
-      })
-    )
-    tiles.registerPlugin(new UpdateOnChangePlugin())
-    tiles.registerPlugin(new TileCompressionPlugin())
-    tiles.registerPlugin(
-      new TileCreaseNormalsPlugin({
-        creaseAngle: radians(30)
-      })
-    )
-    tiles.registerPlugin(new TilesFadePlugin())
-
-    const loader = new GLTFLoader(tiles.manager)
-    loader.setDRACOLoader(dracoLoader)
-    tiles.manager.addHandler(/\.gltf$/, loader)
-
-    return tiles
-  }, [apiKey])
-
-  useEffect(() => {
-    return () => {
-      tiles.dispose()
-    }
-  }, [tiles])
-
-  const camera = useThree(({ camera }) => camera)
-  useEffect(() => {
-    tiles.setCamera(camera)
-  }, [tiles, camera])
-
-  const gl = useThree(({ gl }) => gl)
-  useEffect(() => {
-    tiles.setResolutionFromRenderer(camera, gl)
-  }, [tiles, camera, gl])
-
-  const scene = useThree(({ scene }) => scene)
-  const controls = useMemo(() => {
-    const controls = new GlobeControls(scene, camera, gl.domElement, tiles)
-    controls.enableDamping = true
-    return controls
-  }, [scene, camera, gl, tiles])
-
-  useEffect(() => {
-    return () => {
-      controls.dispose()
-    }
-  }, [controls])
-
-  useFrame(() => {
-    tiles.update()
-    controls.update()
-  })
-
-  return <primitive object={tiles.group} />
+  return (
+    <TilesRenderer key={apiKey}>
+      <TilesPlugin plugin={GoogleCloudAuthPlugin} args={{ apiToken: apiKey }} />
+      <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
+      <TilesPlugin plugin={TileCompressionPlugin} />
+      <TilesPlugin plugin={UpdateOnChangePlugin} />
+      <TilesPlugin plugin={TilesFadePlugin} />
+      <TilesPlugin
+        plugin={TileCreaseNormalsPlugin}
+        args={{ creaseAngle: radians(30) }}
+      />
+      {/* Controls */}
+      <GlobeControls enableDamping={true} />
+    </TilesRenderer>
+  )
 }
 
 interface SceneProps extends LocalDateControlsParams {
