@@ -11,13 +11,11 @@ import {
 } from 'postprocessing'
 import {
   Fragment,
-  useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   type FC
 } from 'react'
-import { DRACOLoader, GLTFLoader } from 'three-stdlib'
+import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreaseNormalsPlugin } from '@takram/three-3d-tiles-support'
 import {
