@@ -1,14 +1,13 @@
 import { type Tile } from '3d-tiles-renderer'
 import { BufferGeometry, Mesh, type Object3D } from 'three'
 
-import { type Plugin } from './lib'
 import { toCreasedNormalsAsync } from './toCreasedNormalsAsync'
 
 export interface TileCreaseNormalsPluginOptions {
   creaseAngle?: number
 }
 
-export class TileCreaseNormalsPlugin implements Plugin {
+export class TileCreaseNormalsPlugin {
   readonly options: TileCreaseNormalsPluginOptions
 
   constructor(options?: TileCreaseNormalsPluginOptions) {
