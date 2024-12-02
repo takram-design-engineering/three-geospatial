@@ -1,20 +1,25 @@
 import { css } from '@emotion/react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { GlobeControls, TilesRenderer, TilesPlugin } from '3d-tiles-renderer/r3f'
-import { GoogleCloudAuthPlugin, TileCompressionPlugin, TilesFadePlugin, UpdateOnChangePlugin, GLTFExtensionsPlugin } from '3d-tiles-renderer/plugins'
+import {
+  GLTFExtensionsPlugin,
+  GoogleCloudAuthPlugin,
+  TileCompressionPlugin,
+  TilesFadePlugin,
+  UpdateOnChangePlugin
+} from '3d-tiles-renderer/plugins'
+import {
+  GlobeControls,
+  TilesPlugin,
+  TilesRenderer
+} from '3d-tiles-renderer/r3f'
 import { useControls as useSharedControls } from 'leva'
 import {
   EffectMaterial,
   ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import {
-  Fragment,
-  useLayoutEffect,
-  useRef,
-  type FC
-} from 'react'
+import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
 import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreaseNormalsPlugin } from '@takram/three-3d-tiles-support'
@@ -48,23 +53,21 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Globe: FC<{ apiKey: string }> = ({ apiKey }) => {
-
   return (
-    <TilesRenderer key={ apiKey }>
-      <TilesPlugin plugin={ GoogleCloudAuthPlugin } args={ { apiToken: apiKey } } />
-      <TilesPlugin plugin={ GLTFExtensionsPlugin } dracoLoader={ dracoLoader } />
-      <TilesPlugin plugin={ TileCompressionPlugin } />
-      <TilesPlugin plugin={ UpdateOnChangePlugin } />
-      <TilesPlugin plugin={ TilesFadePlugin } />
-      <TilesPlugin plugin={ TileCreaseNormalsPlugin } args={ { creaseAngle: radians( 30 ) } } />
-
+    <TilesRenderer key={apiKey}>
+      <TilesPlugin plugin={GoogleCloudAuthPlugin} args={{ apiToken: apiKey }} />
+      <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
+      <TilesPlugin plugin={TileCompressionPlugin} />
+      <TilesPlugin plugin={UpdateOnChangePlugin} />
+      <TilesPlugin plugin={TilesFadePlugin} />
+      <TilesPlugin
+        plugin={TileCreaseNormalsPlugin}
+        args={{ creaseAngle: radians(30) }}
+      />
       {/* Controls */}
-      <GlobeControls enableDamping={ true } />
-
+      <GlobeControls enableDamping={true} />
     </TilesRenderer>
-
-  );
-
+  )
 }
 
 interface SceneProps extends LocalDateControlsParams {
