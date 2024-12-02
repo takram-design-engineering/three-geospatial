@@ -52,23 +52,21 @@ import {
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
-const Globe: FC<{ apiKey: string }> = ({ apiKey }) => {
-  return (
-    <TilesRenderer key={apiKey}>
-      <TilesPlugin plugin={GoogleCloudAuthPlugin} args={{ apiToken: apiKey }} />
-      <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
-      <TilesPlugin plugin={TileCompressionPlugin} />
-      <TilesPlugin plugin={UpdateOnChangePlugin} />
-      <TilesPlugin plugin={TilesFadePlugin} />
-      <TilesPlugin
-        plugin={TileCreaseNormalsPlugin}
-        args={{ creaseAngle: radians(30) }}
-      />
-      {/* Controls */}
-      <GlobeControls enableDamping={true} />
-    </TilesRenderer>
-  )
-}
+const Globe: FC<{ apiKey: string }> = ({ apiKey }) => (
+  <TilesRenderer>
+    <TilesPlugin plugin={GoogleCloudAuthPlugin} args={{ apiToken: apiKey }} />
+    <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
+    <TilesPlugin plugin={TileCompressionPlugin} />
+    <TilesPlugin plugin={UpdateOnChangePlugin} />
+    <TilesPlugin plugin={TilesFadePlugin} />
+    <TilesPlugin
+      plugin={TileCreaseNormalsPlugin}
+      args={{ creaseAngle: radians(30) }}
+    />
+    {/* Controls */}
+    <GlobeControls enableDamping={true} />
+  </TilesRenderer>
+)
 
 interface SceneProps extends LocalDateControlsParams {
   exposure?: number
