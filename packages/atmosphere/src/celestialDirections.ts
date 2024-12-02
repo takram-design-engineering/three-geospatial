@@ -34,7 +34,7 @@ export function getECIToECEFRotationMatrix(
 ): Matrix4 {
   const time = makeTime(date)
   const rotationEQJtoEQD = Rotation_EQJ_EQD(time)
-  const rotationEQDtoECEF = RotationZ(SiderealTime(time) * (Math.PI / 12))
+  const rotationEQDtoECEF = RotationZ(SiderealTime(time) * (-Math.PI / 12))
   const { rot } = CombineRotation(rotationEQJtoEQD, rotationEQDtoECEF)
   // prettier-ignore
   return result.set(
@@ -42,7 +42,7 @@ export function getECIToECEFRotationMatrix(
     rot[1][0], rot[1][1], rot[1][2], 0,
     rot[2][0], rot[2][1], rot[2][2], 0,
     0, 0, 0, 1
-  ).invert()
+  )
 }
 
 function getDirectionECI(
