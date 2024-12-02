@@ -34,11 +34,11 @@ import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
   Depth,
   Dithering,
-  EffectComposer,
   LensFlare,
   Normal
 } from '@takram/three-geospatial-effects/r3f'
 
+import { EffectComposer } from '../helpers/EffectComposer'
 import { HaldLUT } from '../helpers/HaldLUT'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
@@ -158,8 +158,8 @@ const Scene: FC<SceneProps & { apiKey: string }> = ({
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
-      <Sky renderTargetCount={2} />
-      <Stars data='atmosphere/stars.bin' renderTargetCount={2} />
+      <Sky />
+      <Stars data='atmosphere/stars.bin' />
       <Globe apiKey={apiKey} />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment

@@ -32,7 +32,6 @@ import {
 import {
   Depth,
   Dithering,
-  EffectComposer,
   LensFlare,
   Normal
 } from '@takram/three-geospatial-effects/r3f'
@@ -40,6 +39,7 @@ import { EastNorthUpFrame, EllipsoidMesh } from '@takram/three-geospatial/r3f'
 import { IonTerrain } from '@takram/three-terrain'
 import { BatchedTerrainTile } from '@takram/three-terrain/r3f'
 
+import { EffectComposer } from '../helpers/EffectComposer'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useExposureControls } from '../helpers/useExposureControls'
@@ -121,14 +121,14 @@ const Scene: FC = () => {
       photometric={photometric}
     >
       <OrbitControls ref={setControls} />
-      <Sky renderTargetCount={2} />
+      <Sky />
       {mode === 'forward' && (
         <group position={position}>
           {sun && <SunLight />}
           {sky && <SkyLight />}
         </group>
       )}
-      <Stars data='atmosphere/stars.bin' renderTargetCount={2} />
+      <Stars data='atmosphere/stars.bin' />
       <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} receiveShadow>
         {mode === 'forward' ? (
           <meshLambertMaterial color='gray' />
