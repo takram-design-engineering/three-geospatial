@@ -4,9 +4,14 @@ import * as path from 'path'
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import react from '@vitejs/plugin-react-swc'
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 import glsl from 'vite-plugin-glsl'
+
+type RollupOutputOptions = Extract<
+  NonNullable<NonNullable<UserConfig['build']>['rollupOptions']>['output'],
+  unknown[]
+>[number]
 
 export default defineConfig({
   root: __dirname,
@@ -49,22 +54,32 @@ export default defineConfig({
         'build/index': 'src/index.ts',
         'build/r3f': 'src/r3f/index.ts'
       },
-      name: 'atmosphere',
-      // Change this to the formats you want to support.
-      // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs']
+      name: 'atmosphere'
     },
+    sourcemap: true,
     rollupOptions: {
       output: [
         {
-          format: 'es',
+          format: 'es' as const,
           chunkFileNames: 'build/shared.js'
         },
         {
-          format: 'cjs',
+          format: 'cjs' as const,
           chunkFileNames: 'build/shared.cjs'
         }
-      ],
+      ].map(
+        (config): RollupOutputOptions => ({
+          ...config,
+          sourcemapExcludeSources: true,
+          // Note this just append files in ignore list.
+          sourcemapIgnoreList: relativeSourcePath =>
+            relativeSourcePath.includes('node_modules'),
+          sourcemapPathTransform: relativeSourcePath =>
+            relativeSourcePath
+              .replace('../../../../node_modules', '../node_modules')
+              .replace('../../../../packages/atmosphere/src', '../src')
+        })
+      ),
       // External packages that should not be bundled into your library.
       external: [
         /^@takram/,
