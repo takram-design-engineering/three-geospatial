@@ -85,9 +85,9 @@ void getTransmittanceInscatter(
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
-  if (depth > 0.9999) {
-    // TODO: Compute sky radiance here to reduce the total number of texels to
-    // ray-march.
+  if (depth >= 1.0 - 1e-7) {
+    // TODO: Add option to write sky radiance here to reduce the total fragments
+    // to process, at the cost of losing transparency.
     outputColor = inputColor;
     return;
   }
