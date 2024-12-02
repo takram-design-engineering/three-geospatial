@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       3d-tiles-renderer:
-        specifier: ^0.3.41
-        version: 0.3.41(three@0.170.0)
+        specifier: ^0.3.42
+        version: 0.3.42(three@0.170.0)
       '@emotion/react':
         specifier: 11.11.4
         version: 11.11.4(@types/react@18.3.1)(react@18.3.1)
@@ -345,8 +345,8 @@ importers:
 
 packages:
 
-  3d-tiles-renderer@0.3.41:
-    resolution: {integrity: sha512-aGn2v1MuxmN+O7VCTF8B8G+3g1BIB8guUcfLHQkVCxrsnmMEVUI4H7qy5+Sb3bki0hROHhwlUoNh2QAnVxDtNg==}
+  3d-tiles-renderer@0.3.42:
+    resolution: {integrity: sha512-GurjZ5U73clp5RDcBnBggTa1YWLE6uhniXs2fPEaUmYuuye/Dinj0q90hwnF551nmE1ZnnEmVwYw6RuJOCBdLA==}
     peerDependencies:
       three: '>=0.123.0'
 
@@ -9793,7 +9793,7 @@ packages:
 
 snapshots:
 
-  3d-tiles-renderer@0.3.41(three@0.170.0):
+  3d-tiles-renderer@0.3.42(three@0.170.0):
     dependencies:
       three: 0.170.0
     optionalDependencies:
