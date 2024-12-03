@@ -44,7 +44,7 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
       name: string,
       { Loader, width, height, depth, suffix = '' }: LoadTextureOptions
     ): void => {
-      const loader = new Loader()
+      const loader = new Loader(this.manager)
       loader.setRequestHeader(this.requestHeader)
       loader.setPath(this.path)
       loader.setWithCredentials(this.withCredentials)
