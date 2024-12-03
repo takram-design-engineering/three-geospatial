@@ -13,7 +13,7 @@ import {
   TilesPlugin,
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
-import { useControls as useSharedControls } from 'leva'
+import { useAtom, useAtomValue } from 'jotai'
 import {
   EffectMaterial,
   ToneMappingMode,
@@ -40,6 +40,7 @@ import {
 
 import { EffectComposer } from '../helpers/EffectComposer'
 import { HaldLUT } from '../helpers/HaldLUT'
+import { googleMapsApiAtom } from '../helpers/states'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
@@ -52,21 +53,26 @@ import {
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
-const Globe: FC<{ apiKey: string }> = ({ apiKey }) => (
-  <TilesRenderer>
-    <TilesPlugin plugin={GoogleCloudAuthPlugin} args={{ apiToken: apiKey }} />
-    <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
-    <TilesPlugin plugin={TileCompressionPlugin} />
-    <TilesPlugin plugin={UpdateOnChangePlugin} />
-    <TilesPlugin plugin={TilesFadePlugin} />
-    <TilesPlugin
-      plugin={TileCreaseNormalsPlugin}
-      args={{ creaseAngle: radians(30) }}
-    />
-    {/* Controls */}
-    <GlobeControls enableDamping={true} />
-  </TilesRenderer>
-)
+const Globe: FC = () => {
+  const apiKey = useAtomValue(googleMapsApiAtom)
+  return (
+    <TilesRenderer
+      key={apiKey} // Reconstruct tiles when API key changes.
+    >
+      <TilesPlugin plugin={GoogleCloudAuthPlugin} args={{ apiToken: apiKey }} />
+      <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
+      <TilesPlugin plugin={TileCompressionPlugin} />
+      <TilesPlugin plugin={UpdateOnChangePlugin} />
+      <TilesPlugin plugin={TilesFadePlugin} />
+      <TilesPlugin
+        plugin={TileCreaseNormalsPlugin}
+        args={{ creaseAngle: radians(30) }}
+      />
+      {/* Controls */}
+      <GlobeControls enableDamping={true} />
+    </TilesRenderer>
+  )
+}
 
 interface SceneProps extends LocalDateControlsParams {
   exposure?: number
@@ -77,8 +83,7 @@ interface SceneProps extends LocalDateControlsParams {
   distance?: number
 }
 
-const Scene: FC<SceneProps & { apiKey: string }> = ({
-  apiKey,
+const Scene: FC<SceneProps> = ({
   exposure = 10,
   longitude = 139.7671,
   latitude = 35.6812,
@@ -158,7 +163,7 @@ const Scene: FC<SceneProps & { apiKey: string }> = ({
     >
       <Sky />
       <Stars data='atmosphere/stars.bin' />
-      <Globe apiKey={apiKey} />
+      <Globe />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
@@ -203,9 +208,13 @@ const Scene: FC<SceneProps & { apiKey: string }> = ({
 }
 
 export const Story: FC<SceneProps> = props => {
-  const { apiKey } = useSharedControls('google maps', {
+  const [apiKey, setApiKey] = useAtom(googleMapsApiAtom)
+  useControls('google maps', {
     apiKey: {
-      value: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY ?? ''
+      value: apiKey,
+      onChange: value => {
+        setApiKey(value)
+      }
     }
   })
   return (
@@ -219,7 +228,7 @@ export const Story: FC<SceneProps> = props => {
         }}
       >
         <Stats />
-        <Scene {...props} apiKey={apiKey} />
+        <Scene {...props} />
       </Canvas>
       {apiKey === '' && (
         <div

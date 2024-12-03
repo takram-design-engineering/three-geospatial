@@ -9,6 +9,7 @@
     "storybook": "nx storybook storybook --port=4400 --no-open"
   },
   "dependencies": {
+    "3d-tiles-renderer": "^0.3.42",
     "@emotion/react": "11.11.4",
     "@emotion/server": "11.11.0",
     "@emotion/styled": "11.11.0",
@@ -18,7 +19,6 @@
     "@react-three/drei": "9.117.3",
     "@react-three/fiber": "8.17.10",
     "@react-three/postprocessing": "2.16.3",
-    "3d-tiles-renderer": "^0.3.42",
     "astronomy-engine": "^2.1.19",
     "axios": "^1.7.7",
     "axios-rate-limit": "^1.4.0",
@@ -104,6 +104,7 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "jest-environment-node": "^29.7.0",
+    "jotai": "^2.10.3",
     "jsdom": "~22.1.0",
     "leva": "^0.9.35",
     "lodash": "^4.17.21",
