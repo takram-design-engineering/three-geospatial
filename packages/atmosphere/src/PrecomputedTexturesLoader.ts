@@ -16,31 +16,12 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 
-const defs: Record<
-  string,
-  {
-    Loader: typeof Float32Data2DLoader | typeof Float32Data3DLoader
-    width: number
-    height: number
-    depth?: number
-  }
-> = {
-  irradiance: {
-    Loader: Float32Data2DLoader,
-    width: IRRADIANCE_TEXTURE_WIDTH,
-    height: IRRADIANCE_TEXTURE_HEIGHT
-  },
-  scattering: {
-    Loader: Float32Data3DLoader,
-    width: SCATTERING_TEXTURE_WIDTH,
-    height: SCATTERING_TEXTURE_HEIGHT,
-    depth: SCATTERING_TEXTURE_DEPTH
-  },
-  transmittance: {
-    Loader: Float32Data2DLoader,
-    width: TRANSMITTANCE_TEXTURE_WIDTH,
-    height: TRANSMITTANCE_TEXTURE_HEIGHT
-  }
+interface LoadTextureOptions {
+  Loader: typeof Float32Data2DLoader | typeof Float32Data3DLoader
+  width: number
+  height: number
+  depth?: number
+  suffix?: string
 }
 
 export interface PrecomputedTextures {
@@ -59,14 +40,16 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
     onError?: (error: unknown) => void
   ): void {
     const result: Record<string, DataTexture | Data3DTexture> = {}
-
-    Object.entries(defs).forEach(([name, { Loader, width, height, depth }]) => {
-      const loader = new Loader()
+    const loadTexture = (
+      name: string,
+      { Loader, width, height, depth, suffix = '' }: LoadTextureOptions
+    ): void => {
+      const loader = new Loader(this.manager)
       loader.setRequestHeader(this.requestHeader)
       loader.setPath(this.path)
       loader.setWithCredentials(this.withCredentials)
       loader.load(
-        join(url, `${name}${this.useHalfFloat ? '.bin' : '_float.bin'}`),
+        join(url, `${name}${suffix}.bin`),
         texture => {
           texture.image.width = width
           texture.image.height = height
@@ -88,6 +71,24 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
         onProgress,
         onError
       )
+    }
+
+    loadTexture('irradiance', {
+      Loader: Float32Data2DLoader,
+      width: IRRADIANCE_TEXTURE_WIDTH,
+      height: IRRADIANCE_TEXTURE_HEIGHT
+    })
+    loadTexture('scattering', {
+      Loader: Float32Data3DLoader,
+      width: SCATTERING_TEXTURE_WIDTH,
+      height: SCATTERING_TEXTURE_HEIGHT,
+      depth: SCATTERING_TEXTURE_DEPTH,
+      suffix: this.useHalfFloat ? '' : '_float'
+    })
+    loadTexture('transmittance', {
+      Loader: Float32Data2DLoader,
+      width: TRANSMITTANCE_TEXTURE_WIDTH,
+      height: TRANSMITTANCE_TEXTURE_HEIGHT
     })
   }
 }
