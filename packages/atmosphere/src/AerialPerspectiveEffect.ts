@@ -225,7 +225,11 @@ export class AerialPerspectiveEffect extends Effect {
       )
       if (surfacePosition != null) {
         this.ellipsoid.getOsculatingSphereCenter(
-          surfacePosition,
+          // Move the center of the atmosphere's inner sphere down to intersect
+          // the viewpoint when it's located underground.
+          surfacePosition.lengthSq() < position.lengthSq()
+            ? surfacePosition
+            : position,
           this.atmosphere.bottomRadius,
           ellipsoidCenter.value
         )
