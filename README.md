@@ -26,7 +26,6 @@ The `storybook` directory contains [Storybook](https://storybook.js.org) stories
 The `apps` directory contains standalone applications.
 
 - `data`: A command-line app for generating data.
-- `playground`: A playground app for integration (not in use for now).
 
 ### Installing
 
