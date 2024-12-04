@@ -2,11 +2,13 @@
 
 import depth from './shaders/depth.glsl'
 import generators from './shaders/generators.glsl'
+import math from './shaders/math.glsl'
 import packing from './shaders/packing.glsl'
 import transform from './shaders/transform.glsl'
 
 export const depthShader: string = depth
 export const generatorsShader: string = generators
+export const mathShader: string = math
 export const packingShader: string = packing
 export const transformShader: string = transform
 
