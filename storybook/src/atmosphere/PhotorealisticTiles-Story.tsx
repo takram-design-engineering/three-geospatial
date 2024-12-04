@@ -40,7 +40,7 @@ import {
 
 import { EffectComposer } from '../helpers/EffectComposer'
 import { HaldLUT } from '../helpers/HaldLUT'
-import { googleMapsApiAtom } from '../helpers/states'
+import { googleMapsApiKeyAtom } from '../helpers/states'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
@@ -54,7 +54,7 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Globe: FC = () => {
-  const apiKey = useAtomValue(googleMapsApiAtom)
+  const apiKey = useAtomValue(googleMapsApiKeyAtom)
   return (
     <TilesRenderer
       key={apiKey} // Reconstruct tiles when API key changes.
@@ -208,7 +208,7 @@ const Scene: FC<SceneProps> = ({
 }
 
 export const Story: FC<SceneProps> = props => {
-  const [apiKey, setApiKey] = useAtom(googleMapsApiAtom)
+  const [apiKey, setApiKey] = useAtom(googleMapsApiKeyAtom)
   useControls('google maps', {
     apiKey: {
       value: apiKey,
@@ -223,8 +223,7 @@ export const Story: FC<SceneProps> = props => {
         gl={{
           antialias: false,
           depth: false,
-          stencil: false,
-          logarithmicDepthBuffer: true
+          stencil: false
         }}
       >
         <Stats />
