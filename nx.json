@@ -19,15 +19,6 @@
   },
   "plugins": [
     {
-      "plugin": "@nx/next/plugin",
-      "options": {
-        "startTargetName": "start",
-        "buildTargetName": "build",
-        "devTargetName": "dev",
-        "serveStaticTargetName": "serve-static"
-      }
-    },
-    {
       "plugin": "@nx/jest/plugin",
       "options": {
         "targetName": "test"
@@ -61,12 +52,6 @@
     }
   ],
   "generators": {
-    "@nx/next": {
-      "application": {
-        "style": "@emotion/styled",
-        "linter": "eslint"
-      }
-    },
     "@nx/react": {
       "library": {
         "unitTestRunner": "jest"
