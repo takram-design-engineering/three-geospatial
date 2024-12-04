@@ -53,8 +53,8 @@ Create a `.env` file in the root directory with the following variables:
 <!-- prettier-ignore -->
 | Name | Description |
 | -- | -- |
-| `(NEXT_PUBLIC\|STORYBOOK)_GOOGLE_MAP_API_KEY` | [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
-| `(NEXT_PUBLIC\|STORYBOOK)_ION_API_TOKEN` | [Cesium Ion API access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/) |
+| `STORYBOOK_GOOGLE_MAP_API_KEY` | [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
+| `STORYBOOK_ION_API_TOKEN` | [Cesium Ion API access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/) |
 
 ### Generating a library
 
