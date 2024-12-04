@@ -223,8 +223,7 @@ export const Story: FC<SceneProps> = props => {
         gl={{
           antialias: false,
           depth: false,
-          stencil: false,
-          logarithmicDepthBuffer: true
+          stencil: false
         }}
       >
         <Stats />
