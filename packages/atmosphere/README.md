@@ -44,10 +44,10 @@ const Scene = () => {
 ```
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
-[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
+[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan) (Requires [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) to display the scene.)
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
-[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
+[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji) (Requires [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) to display the scene.)
 
 ### Forward lighting
 
