@@ -33,7 +33,10 @@ import {
 const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
   return (
-    <Atmosphere textures={precomputedTextures}>
+    <Atmosphere
+      textures={precomputedTextures}
+      date={/* Date object or timestamp */}
+    >
       <Sky />
       <EffectComposer enableNormalPass>
         <AerialPerspective skyIrradiance sunIrradiance />
@@ -68,7 +71,10 @@ import {
 const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
   return (
-    <Atmosphere textures={precomputedTextures}>
+    <Atmosphere
+      textures={precomputedTextures}
+      date={/* Date object or timestamp */}
+    >
       <Sky />
       <group position={/* ECEF coordinate in meters */}>
         <SkyLight />
@@ -326,6 +332,28 @@ photometric: boolean = true
 ```
 
 Whether to store luminance instead of radiance in render buffers.
+
+#### date
+
+```ts
+date: number | Date = undefined
+```
+
+Specifies the date used to obtain the directions of the sun, moon, and ECI to ECEF rotation matrix.
+
+The behavior when used together with the `updateByDate` function is not defined.
+
+### Ref
+
+#### updateByDate
+
+```ts
+function updateByDate(date: number | Date): void
+```
+
+Updates the directions of the sun, moon, and the ECI to ECEF rotation matrix for the specified date. Use this function via the `ref` instead of the `date` prop if you want to update it smoothly.
+
+The behavior when used together with the `date` prop is not defined.
 
 ## Sky
 
