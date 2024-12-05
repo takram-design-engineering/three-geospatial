@@ -1,2 +1,2 @@
-export * from './TileCreaseNormalsPlugin'
+export * from './TileCreasedNormalsPlugin'
 export * from './toCreasedNormalsAsync'
