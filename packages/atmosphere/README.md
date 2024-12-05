@@ -209,7 +209,7 @@ function render(): void {
 
 ## Limitations
 
-- The reference frame is fixed to ECEF and cannot be configured.
+- The reference frame is fixed to ECEF and cannot be configured, [#11](https://github.com/takram-design-engineering/three-geospatial/issues/11).
 
 - Orthographic cameras are not supported yet, [#4](https://github.com/takram-design-engineering/three-geospatial/issues/4).
 
