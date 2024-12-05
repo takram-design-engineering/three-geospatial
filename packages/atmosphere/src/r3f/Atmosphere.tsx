@@ -46,6 +46,7 @@ export interface AtmosphereProps {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
+  date?: number | Date
   children?: ReactNode
 }
 
@@ -64,6 +65,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     ellipsoid = Ellipsoid.WGS84,
     correctAltitude = true,
     photometric = true,
+    date,
     children
   },
   forwardedRef
@@ -120,6 +122,13 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       getMoonDirectionECI(date, moonDirection).applyMatrix4(rotationMatrix)
     }
   }, [])
+
+  const timestamp = date != null && !isNaN(+date) ? +date : undefined
+  useEffect(() => {
+    if (timestamp != null) {
+      updateByDate(timestamp)
+    }
+  }, [timestamp, updateByDate])
 
   useImperativeHandle(
     forwardedRef,
