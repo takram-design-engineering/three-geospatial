@@ -53,6 +53,10 @@
         // Too many false positives.
         "@typescript-eslint/no-unsafe-argument": "off",
 
+        // Too many false positives. `T extends any` is totally type-safe when
+        // used in type constraints.
+        "@typescript-eslint/no-explicit-any": "off",
+
         // {} is semantically different from `object` and `Record`.
         "@typescript-eslint/ban-types": "off",
 

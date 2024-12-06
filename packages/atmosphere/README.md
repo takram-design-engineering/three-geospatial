@@ -33,7 +33,10 @@ import {
 const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
   return (
-    <Atmosphere textures={precomputedTextures}>
+    <Atmosphere
+      textures={precomputedTextures}
+      date={/* Date object or timestamp */}
+    >
       <Sky />
       <EffectComposer enableNormalPass>
         <AerialPerspective skyIrradiance sunIrradiance />
@@ -44,10 +47,10 @@ const Scene = () => {
 ```
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
-[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
+[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan) (Requires [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) to display the scene.)
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
-[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
+[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji) (Requires [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) to display the scene.)
 
 ### Forward lighting
 
@@ -68,7 +71,10 @@ import {
 const Scene = () => {
   const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
   return (
-    <Atmosphere textures={precomputedTextures}>
+    <Atmosphere
+      textures={precomputedTextures}
+      date={/* Date object or timestamp */}
+    >
       <Sky />
       <group position={/* ECEF coordinate in meters */}>
         <SkyLight />
@@ -203,7 +209,7 @@ function render(): void {
 
 ## Limitations
 
-- The reference frame is fixed to ECEF and cannot be configured.
+- The reference frame is fixed to ECEF and cannot be configured, [#11](https://github.com/takram-design-engineering/three-geospatial/issues/11).
 
 - Orthographic cameras are not supported yet, [#4](https://github.com/takram-design-engineering/three-geospatial/issues/4).
 
@@ -326,6 +332,28 @@ photometric: boolean = true
 ```
 
 Whether to store luminance instead of radiance in render buffers.
+
+#### date
+
+```ts
+date: number | Date = undefined
+```
+
+Specifies the date used to obtain the directions of the sun, moon, and ECI to ECEF rotation matrix.
+
+The behavior when used together with the `updateByDate` function is not defined.
+
+### Ref
+
+#### updateByDate
+
+```ts
+function updateByDate(date: number | Date): void
+```
+
+Updates the directions of the sun, moon, and the ECI to ECEF rotation matrix for the specified date. Use this function via the `ref` instead of the `date` prop if you want to update it smoothly.
+
+The behavior when used together with the `date` prop is not defined.
 
 ## Sky
 

@@ -21,7 +21,6 @@
     {
       "files": ["*.ts", "*.tsx"],
       "rules": {
-        // For consistency with next/core-web-vitals.
         "react/display-name": "error"
       }
     },

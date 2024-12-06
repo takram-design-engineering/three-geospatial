@@ -22,7 +22,7 @@ import {
 import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
 import { DRACOLoader } from 'three-stdlib'
 
-import { TileCreaseNormalsPlugin } from '@takram/three-3d-tiles-support'
+import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
 import {
   AerialPerspective,
   Atmosphere,
@@ -65,7 +65,7 @@ const Globe: FC = () => {
       <TilesPlugin plugin={UpdateOnChangePlugin} />
       <TilesPlugin plugin={TilesFadePlugin} />
       <TilesPlugin
-        plugin={TileCreaseNormalsPlugin}
+        plugin={TileCreasedNormalsPlugin}
         args={{ creaseAngle: radians(30) }}
       />
       {/* Controls */}

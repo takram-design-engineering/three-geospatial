@@ -65,6 +65,13 @@ void main() {
   color += weight.z * texture2D(inputBuffer, vec2(vCenterUv3)).rgb;
   color += weight.w * texture2D(inputBuffer, vec2(vCenterUv4)).rgb;
 
+  // WORKAROUND: Avoid screen flashes if the input buffer contains NaN texels.
+  // See: https://github.com/takram-design-engineering/three-geospatial/issues/7
+  if (any(isnan(color))) {
+    gl_FragColor = vec4(vec3(0.0), 1.0);
+    return;
+  }
+
   float l = luminance(color);
   float scale = saturate(
     smoothstep(thresholdLevel, thresholdLevel + thresholdRange, l)

@@ -61,7 +61,7 @@ export class AtmosphereParameters {
   muSMinFloat = Math.cos(radians(120))
   muSMinHalfFloat = Math.cos(radians(102))
 
-  // Illuminance conversion
+  // Radiance to luminance conversion
   // prettier-ignore
   skyRadianceToLuminance = new Vector3(114974.916437, 71305.954816, 65310.548555)
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)

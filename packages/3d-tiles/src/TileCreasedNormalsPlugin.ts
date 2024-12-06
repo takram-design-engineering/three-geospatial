@@ -3,14 +3,14 @@ import { BufferGeometry, Mesh, type Object3D } from 'three'
 
 import { toCreasedNormalsAsync } from './toCreasedNormalsAsync'
 
-export interface TileCreaseNormalsPluginOptions {
+export interface TileCreasedNormalsPluginOptions {
   creaseAngle?: number
 }
 
-export class TileCreaseNormalsPlugin {
-  readonly options: TileCreaseNormalsPluginOptions
+export class TileCreasedNormalsPlugin {
+  readonly options: TileCreasedNormalsPluginOptions
 
-  constructor(options?: TileCreaseNormalsPluginOptions) {
+  constructor(options?: TileCreasedNormalsPluginOptions) {
     this.options = { ...options }
   }
 
@@ -31,3 +31,6 @@ export class TileCreaseNormalsPlugin {
     )
   }
 }
+
+/** @deprecated Use TileCreasedNormalsPlugin instead. */
+export const TileCreaseNormalsPlugin = TileCreasedNormalsPlugin

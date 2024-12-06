@@ -1,11 +1,24 @@
 # Changelog
 
+## [0.1.0] - 2024-12-06
+
+### Changed
+
+- Added date prop, [#10](https://github.com/takram-design-engineering/three-geospatial/issues/10).
+- Added workaround for the viewpoint located underground, [#5](https://github.com/takram-design-engineering/three-geospatial/issues/5).
+
+### Fixed
+
+- Removed unused dependency.
+
 ## [0.0.2] - 2024-12-03
+
+*Note this version should have been 0.1.0.*
 
 ### Changed
 
 - Added sourcemaps, [#6](https://github.com/takram-design-engineering/three-geospatial/issues/6).
-- Remove redundant precomputed textures, [#9](https://github.com/takram-design-engineering/three-geospatial/issues/9).
+- Removed redundant precomputed textures, [#9](https://github.com/takram-design-engineering/three-geospatial/issues/9).
 - Reduced bundle size.
 
 ### Fixed

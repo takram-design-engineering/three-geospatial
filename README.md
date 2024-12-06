@@ -26,7 +26,6 @@ The `storybook` directory contains [Storybook](https://storybook.js.org) stories
 The `apps` directory contains standalone applications.
 
 - `data`: A command-line app for generating data.
-- `playground`: A playground app for integration (not in use for now).
 
 ### Installing
 
@@ -54,8 +53,8 @@ Create a `.env` file in the root directory with the following variables:
 <!-- prettier-ignore -->
 | Name | Description |
 | -- | -- |
-| `(NEXT_PUBLIC\|STORYBOOK)_GOOGLE_MAP_API_KEY` | [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
-| `(NEXT_PUBLIC\|STORYBOOK)_ION_API_TOKEN` | [Cesium Ion API access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/) |
+| `STORYBOOK_GOOGLE_MAP_API_KEY` | [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
+| `STORYBOOK_ION_API_TOKEN` | [Cesium Ion API access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/) |
 
 ### Generating a library
 
