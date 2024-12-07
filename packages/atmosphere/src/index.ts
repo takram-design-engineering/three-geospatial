@@ -7,6 +7,7 @@ export const functionsShader: string = functions
 export const parametersShader: string = parameters
 
 export * from './AerialPerspectiveEffect'
+export * from './AtmosphereEffectBase'
 export * from './AtmosphereMaterialBase'
 export * from './AtmosphereParameters'
 export * from './blackBodyChromaticity'
