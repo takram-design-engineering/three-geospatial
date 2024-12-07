@@ -9,7 +9,7 @@
     "storybook": "nx storybook storybook --port=4400 --no-open"
   },
   "dependencies": {
-    "3d-tiles-renderer": "^0.3.42",
+    "3d-tiles-renderer": "^0.3.44",
     "@here/quantized-mesh-decoder": "^1.2.8",
     "@react-three/drei": "9.117.3",
     "@react-three/fiber": "8.17.10",
