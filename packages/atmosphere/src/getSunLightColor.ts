@@ -22,8 +22,8 @@ function getUvFromRMu(
   result: Vector2
 ): Vector2 {
   const { topRadius, bottomRadius } = atmosphere
-  const H = Math.sqrt(topRadius * topRadius - bottomRadius * bottomRadius)
-  const rho = safeSqrt(r * r - bottomRadius * bottomRadius)
+  const H = Math.sqrt(topRadius ** 2 - bottomRadius ** 2)
+  const rho = safeSqrt(r ** 2 - bottomRadius ** 2)
   const d = distanceToTopAtmosphereBoundary(atmosphere, r, mu)
   const dMin = topRadius - r
   const dMax = rho + H
@@ -80,7 +80,7 @@ export function getSunLightColor(
   let rmu = camera.dot(sunDirection)
   const { topRadius } = atmosphere
   const distanceToTopAtmosphereBoundary =
-    -rmu - Math.sqrt(rmu * rmu - r * r + topRadius * topRadius)
+    -rmu - Math.sqrt(rmu ** 2 - r ** 2 + topRadius ** 2)
   if (distanceToTopAtmosphereBoundary > 0) {
     r = topRadius
     rmu += distanceToTopAtmosphereBoundary
