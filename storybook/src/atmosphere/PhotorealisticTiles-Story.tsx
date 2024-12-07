@@ -225,7 +225,7 @@ export const Story: FC<SceneProps> = props => {
           depth: false,
           stencil: false
         }}
-        frameloop="demand"
+        frameloop='demand'
       >
         <Stats />
         <Scene {...props} />
