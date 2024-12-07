@@ -70,6 +70,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   blendFunction: BlendFunction.NORMAL,
   octEncodedNormal: false,
   reconstructNormal: false,
+  useHalfFloat: true,
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
   correctGeometricError: true,
@@ -176,7 +177,7 @@ export class AerialPerspectiveEffect extends Effect {
     this.atmosphere = atmosphere
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
-    this.useHalfFloat = useHalfFloat === true
+    this.useHalfFloat = useHalfFloat
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.correctGeometricError = correctGeometricError
