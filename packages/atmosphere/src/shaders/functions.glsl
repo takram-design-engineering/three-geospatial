@@ -492,6 +492,20 @@ vec3 GetSunAndSkyIrradiance(
   const sampler2D u_transmittance_texture,
   const sampler2D u_irradiance_texture,
   const vec3 point,
+  const vec3 sun_direction,
+  out vec3 sky_irradiance
+) {
+  float r = length(point);
+  float mu_s = dot(point, sun_direction) / r;
+  sky_irradiance = GetIrradiance(u_irradiance_texture, r, mu_s);
+  return u_solar_irradiance *
+  GetTransmittanceToSun(u_transmittance_texture, r, mu_s);
+}
+
+vec3 GetSunAndSkyIrradiance(
+  const sampler2D u_transmittance_texture,
+  const sampler2D u_irradiance_texture,
+  const vec3 point,
   const vec3 normal,
   const vec3 sun_direction,
   out vec3 sky_irradiance
@@ -563,7 +577,26 @@ vec3 GetSkyRadianceToPoint(
 }
 
 vec3 GetSunAndSkyIrradiance(
-  vec3 p,
+  vec3 point,
+  vec3 sun_direction,
+  out vec3 sky_irradiance
+) {
+  vec3 sun_irradiance = GetSunAndSkyIrradiance(
+    u_transmittance_texture,
+    u_irradiance_texture,
+    point,
+    sun_direction,
+    sky_irradiance
+  );
+  #ifdef PHOTOMETRIC
+  sun_irradiance *= SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+  sky_irradiance *= SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+  #endif // PHOTOMETRIC
+  return sun_irradiance;
+}
+
+vec3 GetSunAndSkyIrradiance(
+  vec3 point,
   vec3 normal,
   vec3 sun_direction,
   out vec3 sky_irradiance
@@ -571,7 +604,7 @@ vec3 GetSunAndSkyIrradiance(
   vec3 sun_irradiance = GetSunAndSkyIrradiance(
     u_transmittance_texture,
     u_irradiance_texture,
-    p,
+    point,
     normal,
     sun_direction,
     sky_irradiance
