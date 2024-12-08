@@ -30,7 +30,6 @@ import {
 } from './constants'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
-const position = /*#__PURE__*/ new Vector3()
 
 function includeRenderTargets(fragmentShader: string, count: number): string {
   let layout = ''
@@ -112,6 +111,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_scattering_texture: new Uniform(scatteringTexture),
         u_single_mie_scattering_texture: new Uniform(scatteringTexture),
         u_transmittance_texture: new Uniform(transmittanceTexture),
+        cameraPosition: new Uniform(new Vector3()),
         ellipsoidCenter: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
@@ -161,7 +161,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     group: Group
   ): void {
     const uniforms = this.uniforms
-    camera.getWorldPosition(position)
+    const position = camera.getWorldPosition(uniforms.cameraPosition.value)
 
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(

@@ -7,6 +7,7 @@ uniform mat4 modelViewMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 matrixWorld;
 uniform float cameraFar;
+uniform vec3 cameraPosition;
 uniform vec3 ellipsoidCenter;
 uniform float pointSize;
 uniform vec2 magnitudeRange;
@@ -29,18 +30,9 @@ void main() {
   vColor *= saturate((v.z - v.y) / (v.x - v.y));
 
   #ifdef BACKGROUND
-
-  // calculate world camera ray based on camera matrices
-  vec4 nearPlanePoint = inverseProjectionMatrix * vec4(position.xy, - 1.0, 1.0);
-  nearPlanePoint /= nearPlanePoint.w;
-
-  vec4 offsetPoint = inverseProjectionMatrix * vec4(position.xy, - 0.9, 1.0);
-  offsetPoint /= offsetPoint.w;
-
-  vec4 worldDirection = inverseViewMatrix * vec4( offsetPoint.xyz - nearPlanePoint.xyz, 0.0 );
-  vec4 worldOrigin = inverseViewMatrix * nearPlanePoint;
-  vWorldPosition = worldOrigin.xyz * METER_TO_UNIT_LENGTH;
-  vWorldDirection = worldDirection.xyz;
+  vec3 worldDirection = normalize(matrixWorld * vec4(position, 1.0)).xyz;
+  vWorldDirection = worldDirection;
+  vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
   vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
 
   gl_Position =
