@@ -1,13 +1,11 @@
 #define saturate(x) clamp(x, 0.0, 1.0)
 
-uniform mat4 inverseViewMatrix;
-uniform mat4 inverseProjectionMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 matrixWorld;
-uniform float cameraFar;
 uniform vec3 cameraPosition;
+uniform float cameraFar;
 uniform vec3 ellipsoidCenter;
 uniform float pointSize;
 uniform vec2 magnitudeRange;
@@ -34,11 +32,10 @@ void main() {
   vWorldDirection = worldDirection;
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
   vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
-
   gl_Position =
     projectionMatrix *
     viewMatrix *
-    vec4(vWorldPosition + vWorldDirection * cameraFar, 1.0);
+    vec4(cameraPosition + worldDirection * cameraFar, 1.0);
   #else
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   #endif // BACKGROUND

@@ -146,15 +146,14 @@ export class AerialPerspectiveEffect extends Effect {
           ['normalBuffer', new Uniform(normalBuffer)],
           ['projectionMatrix', new Uniform(new Matrix4())],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
+          ['cameraPosition', new Uniform(new Vector3())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['geometricErrorAltitudeRange', new Uniform(new Vector2(2e5, 6e5))],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
-          ['irradianceScale', new Uniform(irradianceScale)],
-          ['cameraPosition', new Uniform(new Vector3())],
-
+          ['irradianceScale', new Uniform(irradianceScale)]
         ]),
         // prettier-ignore
         defines: new Map<string, string>([
@@ -216,7 +215,6 @@ export class AerialPerspectiveEffect extends Effect {
     const cameraPosition = uniforms.get('cameraPosition')!
     const cameraHeight = uniforms.get('cameraHeight')!
     const position = camera.getWorldPosition(cameraPosition.value)
-    // camera.getWorldPosition(position)
     cameraHeight.value = geodeticScratch.setFromECEF(position).height
 
     const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
