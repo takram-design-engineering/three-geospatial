@@ -1,3 +1,4 @@
+uniform mat4 inverseViewMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform vec3 cameraPosition;
 uniform float cameraHeight;
@@ -10,8 +11,10 @@ varying vec3 vEllipsoidCenter;
 varying vec3 vEllipsoidRadiiSquared;
 
 void mainSupport() {
-  vec4 viewPosition = inverseProjectionMatrix * vec4(position, 1.0);
-  vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
+  vec4 nearPlane = inverseViewMatrix * inverseProjectionMatrix * vec4(position.xy, - 1.0, 1.0);
+  nearPlane /= nearPlane.w;
+
+  vWorldPosition = nearPlane.xyz * METER_TO_UNIT_LENGTH;
 
   #ifdef CORRECT_GEOMETRIC_ERROR
   float t = smoothstep(
