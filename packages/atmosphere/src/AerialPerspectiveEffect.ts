@@ -44,6 +44,7 @@ import parameters from './shaders/parameters.glsl'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
+const position = /*#__PURE__*/ new Vector3()
 
 export interface AerialPerspectiveEffectOptions {
   blendFunction?: BlendFunction
@@ -147,7 +148,6 @@ export class AerialPerspectiveEffect extends Effect {
           ['projectionMatrix', new Uniform(new Matrix4())],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
-          ['cameraPosition', new Uniform(new Vector3())],
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
@@ -212,9 +212,8 @@ export class AerialPerspectiveEffect extends Effect {
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
 
-    const cameraPosition = uniforms.get('cameraPosition')!
     const cameraHeight = uniforms.get('cameraHeight')!
-    const position = camera.getWorldPosition(cameraPosition.value)
+    camera.getWorldPosition(position)
     cameraHeight.value = geodeticScratch.setFromECEF(position).height
 
     const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
