@@ -265,11 +265,6 @@ vec2 GetIrradianceTextureUvFromRMuS(float r, float mu_s) {
   );
 }
 
-const vec2 IRRADIANCE_TEXTURE_SIZE = vec2(
-  IRRADIANCE_TEXTURE_WIDTH,
-  IRRADIANCE_TEXTURE_HEIGHT
-);
-
 vec3 GetIrradiance(const sampler2D u_irradiance_texture, float r, float mu_s) {
   vec2 uv = GetIrradianceTextureUvFromRMuS(r, mu_s);
   return vec3(texture(u_irradiance_texture, uv));
