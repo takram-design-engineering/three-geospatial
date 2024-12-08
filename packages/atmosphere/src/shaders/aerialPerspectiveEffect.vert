@@ -11,9 +11,11 @@ varying vec3 vEllipsoidRadiiSquared;
 
 void mainSupport() {
   // calculate world camera ray origin based on camera matrices
-  vec4 nearPlane = inverseViewMatrix * inverseProjectionMatrix * vec4(position.xy, - 1.0, 1.0);
-  nearPlane /= nearPlane.w;
-  vWorldPosition = nearPlane.xyz * METER_TO_UNIT_LENGTH;
+  vec4 nearPlanePoint = inverseProjectionMatrix * vec4(position.xy, - 1.0, 1.0);
+  nearPlanePoint /= nearPlanePoint.w;
+
+  vec4 worldOrigin = inverseViewMatrix * nearPlanePoint;
+  vWorldPosition = worldOrigin.xyz * METER_TO_UNIT_LENGTH;
 
   #ifdef CORRECT_GEOMETRIC_ERROR
   float t = smoothstep(
