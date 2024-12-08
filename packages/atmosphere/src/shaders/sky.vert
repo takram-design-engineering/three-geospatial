@@ -10,10 +10,14 @@ out vec3 vWorldDirection;
 out vec3 vEllipsoidCenter;
 
 void main() {
-  vec4 viewPosition = inverseProjectionMatrix * vec4(position, 1.0);
-  vec4 worldDirection = inverseViewMatrix * vec4(viewPosition.xyz, 0.0);
-  vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
-  vWorldDirection = worldDirection.xyz;
+  vec4 nearPlane = inverseViewMatrix * inverseProjectionMatrix * vec4(position.xy, - 1.0, 1.0);
+  nearPlane /= nearPlane.w;
+
+  vec4 farPlane = inverseViewMatrix * inverseProjectionMatrix * vec4(position.xy, 1.0, 1.0);
+  farPlane /= farPlane.w;
+
+  vWorldPosition = nearPlane.xyz * METER_TO_UNIT_LENGTH;
+  vWorldDirection = farPlane.xyz - nearPlane.xyz;
   vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
 
   gl_Position = vec4(position, 1.0);
