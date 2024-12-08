@@ -88,23 +88,27 @@ export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
       }
     })
 
-    return (
-      <points
-        ref={mergeRefs([ref, forwardedRef])}
-        {...others}
-        frustumCulled={false}
-      >
-        {geometry != null && <primitive object={geometry} />}
-        <primitive
-          object={material}
-          {...atmosphereParameters}
-          pointSize={pointSize}
-          radianceScale={radianceScale}
-          background={background}
-          depthTest={true}
-          depthWrite={false}
-        />
-      </points>
-    )
+    if (geometry == null) {
+      return null;
+    } else {
+      return (
+        <points
+          ref={mergeRefs([ref, forwardedRef])}
+          {...others}
+          frustumCulled={false}
+        >
+          <primitive object={geometry} />
+          <primitive
+            object={material}
+            {...atmosphereParameters}
+            pointSize={pointSize}
+            radianceScale={radianceScale}
+            background={background}
+            depthTest={true}
+            depthWrite={false}
+          />
+        </points>
+      )
+    }
   }
 )
