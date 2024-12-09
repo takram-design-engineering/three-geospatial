@@ -1,3 +1,4 @@
+import { useThree } from '@react-three/fiber'
 import { getDayOfYear } from 'date-fns'
 import { useMotionValue, useSpring, type MotionValue } from 'framer-motion'
 import { useEffect, useMemo } from 'react'
@@ -63,6 +64,23 @@ export function useLocalDateControls({
       })
     }
   }, [date, springDayOfYear, springTimeOfDay, getDate])
+
+  const { invalidate } = useThree()
+  useEffect(() => {
+    const offs = [
+      springDayOfYear.on('change', () => {
+        invalidate()
+      }),
+      springTimeOfDay.on('change', () => {
+        invalidate()
+      })
+    ]
+    return () => {
+      offs.forEach(off => {
+        off()
+      })
+    }
+  }, [springDayOfYear, springTimeOfDay, invalidate])
 
   return date
 }
