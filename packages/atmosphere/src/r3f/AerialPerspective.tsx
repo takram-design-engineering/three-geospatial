@@ -46,9 +46,16 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       : undefined
 
   const effect = useMemo(
-    () => new AerialPerspectiveEffect(camera, { blendFunction }),
-    [camera, blendFunction]
+    () => new AerialPerspectiveEffect(null, { blendFunction }),
+    [blendFunction]
   )
+
+  // assign the camera after-the-fact to avoid EffectComposer effect out-of-order problem when
+  // recreating effect passes
+  useEffect(() => {
+    effect.mainCamera = camera;
+  }, [camera, effect]);
+
   useEffect(() => {
     return () => {
       effect.dispose()

@@ -87,7 +87,7 @@ export class AerialPerspectiveEffect extends Effect {
   correctAltitude: boolean
 
   constructor(
-    private camera: Camera,
+    private camera: Camera | null,
     options?: AerialPerspectiveEffectOptions,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
