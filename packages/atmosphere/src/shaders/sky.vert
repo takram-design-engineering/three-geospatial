@@ -20,13 +20,14 @@ void getCameraRay(out vec3 origin, out vec3 direction) {
     direction = worldDirection.xyz;
   } else {
     // unprojected points to calculate direction
-    vec4 nearPoint = inverseProjectionMatrix * vec4(position.xy, - 1.0, 1.0);
-    vec4 farPoint = inverseProjectionMatrix * vec4(position.xy, - 0.9, 1.0);
+    vec4 nearPoint = inverseProjectionMatrix * vec4(position.xy, -1.0, 1.0);
+    vec4 farPoint = inverseProjectionMatrix * vec4(position.xy, -0.9, 1.0);
     nearPoint /= nearPoint.w;
     farPoint /= farPoint.w;
 
     // calculate world values
-    vec4 worldDirection = inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0 );
+    vec4 worldDirection =
+      inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
     vec4 worldOrigin = inverseViewMatrix * nearPoint;
 
     // outputs
