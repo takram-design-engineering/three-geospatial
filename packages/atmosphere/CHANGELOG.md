@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0] - 2024-12-10
+
+### Changed
+
+- Made `AerialPerspectiveEffect`’s camera parameter optional, [#18](https://github.com/takram-design-engineering/three-geospatial/pull/18).
+- Changed `Stars` so it doesn’t render until the data is loaded, [#16](https://github.com/takram-design-engineering/three-geospatial/pull/16).
+
 ## [0.1.0] - 2024-12-06
 
 ### Changed
