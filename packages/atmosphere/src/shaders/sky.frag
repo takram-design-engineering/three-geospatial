@@ -51,9 +51,9 @@ void main() {
   );
 
   #if defined(SUN) || defined(MOON)
-  vec3 ddx = dFdx(vWorldDirection);
-  vec3 ddy = dFdy(vWorldDirection);
-  float fragmentAngle = length(ddx + ddy) / length(vWorldDirection);
+  vec3 ddx = dFdx(viewDirection);
+  vec3 ddy = dFdy(viewDirection);
+  float fragmentAngle = length(ddx + ddy) / length(viewDirection);
   #endif
 
   #ifdef SUN
