@@ -7,4 +7,6 @@ export default {
   }
 } satisfies Meta
 
-export const Volume = await import('./Clouds-Volume').then(module => module.default)
+export const VolumetricNoise = await import('./Clouds-VolumetricNoise').then(
+  module => module.default
+)

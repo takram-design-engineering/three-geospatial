@@ -69,7 +69,7 @@ export class VolumetricNoise {
       worleyFrequency: 8,
       worleyAmplitude: 0.5,
       worleyLacunarity: 2,
-      worleyGain: 6,
+      worleyGain: 0.6,
       worleyOctaves: 4,
       invertWorley: true,
       perlinFrequency: 8,

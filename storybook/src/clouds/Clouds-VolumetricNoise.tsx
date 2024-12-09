@@ -1,7 +1,7 @@
 import { OrbitControls } from '@react-three/drei'
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
-import { type FC } from 'react'
+import { useEffect, type FC } from 'react'
 import {
   BoxGeometry,
   Color,
@@ -11,9 +11,117 @@ import {
   Vector3
 } from 'three'
 
-import { Texture3DLoader } from '@takram/three-geospatial'
+import { VolumetricNoise } from '@takram/three-global-clouds'
 
 import { useControls } from '../helpers/useControls'
+
+const volumetricNoise = new VolumetricNoise()
+
+const Scene: FC = () => {
+  const geometry = new BoxGeometry(1, 1, 1)
+  const material = new ShaderMaterial({
+    glslVersion: GLSL3,
+    vertexShader,
+    fragmentShader,
+    uniforms: {
+      cameraPosition: new Uniform(new Vector3()),
+      map: new Uniform(volumetricNoise.texture),
+      base: new Uniform(new Color(0x808080)),
+      threshold: new Uniform(0),
+      opacity: new Uniform(0),
+      range: new Uniform(0),
+      steps: new Uniform(0),
+      frame: new Uniform(0),
+      scale: new Uniform(0)
+    }
+  })
+
+  const params = useControls('viewer', {
+    threshold: { value: 0.5, min: 0, max: 1, step: 0.01 },
+    opacity: { value: 0.25, min: 0, max: 1, step: 0.01 },
+    range: { value: 0.25, min: 0, max: 1, step: 0.01 },
+    steps: { value: 100, min: 0, max: 200, step: 1 },
+    scale: { value: 1, min: 0.1, max: 5 }
+  })
+
+  const { camera } = useThree()
+  useFrame(() => {
+    const uniforms = material.uniforms
+    uniforms.cameraPosition.value.copy(camera.position)
+    uniforms.threshold.value = params.threshold
+    uniforms.opacity.value = params.opacity
+    uniforms.range.value = params.range
+    uniforms.steps.value = params.steps
+    uniforms.scale.value = params.scale
+    ++uniforms.frame.value
+  })
+
+  const {
+    frequency: worleyFrequency,
+    amplitude,
+    lacunarity,
+    gain,
+    octaves: worleyOctaves,
+    invert
+  } = useControls('worley', {
+    frequency: { value: 8, min: 1, max: 16, step: 1 },
+    amplitude: { value: 0.5, min: 0, max: 1, step: 0.01 },
+    lacunarity: { value: 2, min: 0, max: 5, step: 0.1 },
+    gain: { value: 0.6, min: 0, max: 1, step: 0.01 },
+    octaves: { value: 4, min: 1, max: 16, step: 1 },
+    invert: true
+  })
+
+  const {
+    modulate,
+    frequency: perlinFrequency,
+    octaves: perlinOctaves
+  } = useControls('perlin', {
+    modulate: { value: true },
+    frequency: { value: 8, min: 1, max: 16, step: 1 },
+    octaves: { value: 6, min: 1, max: 16, step: 1 }
+  })
+
+  const { gl } = useThree()
+  useEffect(() => {
+    volumetricNoise.worleyFrequency = worleyFrequency
+    volumetricNoise.worleyAmplitude = amplitude
+    volumetricNoise.worleyLacunarity = lacunarity
+    volumetricNoise.worleyGain = gain
+    volumetricNoise.worleyOctaves = worleyOctaves
+    volumetricNoise.invertWorley = invert
+    volumetricNoise.modulatePerlin = modulate
+    volumetricNoise.perlinFrequency = perlinFrequency
+    volumetricNoise.perlinOctaves = perlinOctaves
+    volumetricNoise.update(gl)
+  }, [
+    worleyFrequency,
+    amplitude,
+    lacunarity,
+    gain,
+    worleyOctaves,
+    invert,
+    modulate,
+    perlinFrequency,
+    perlinOctaves,
+    gl
+  ])
+
+  return (
+    <>
+      <OrbitControls />
+      <mesh geometry={geometry} material={material} />
+    </>
+  )
+}
+
+const Story: StoryFn = () => (
+  <Canvas camera={{ position: [-1, 1, -1] }}>
+    <Scene />
+  </Canvas>
+)
+
+export default Story
 
 // Modified version of https://threejs.org/examples/?q=cloud#webgl_volume_cloud
 
@@ -125,59 +233,3 @@ const fragmentShader = /* glsl */ `
     outputColor = linearToOutputTexel(color);
   }
 `
-
-const Scene: FC = () => {
-  const texture = useLoader(Texture3DLoader, '/clouds/cloud_shape.png')
-
-  const geometry = new BoxGeometry(1, 1, 1)
-  const material = new ShaderMaterial({
-    glslVersion: GLSL3,
-    vertexShader,
-    fragmentShader,
-    uniforms: {
-      cameraPosition: new Uniform(new Vector3()),
-      map: new Uniform(texture),
-      base: new Uniform(new Color(0x808080)),
-      threshold: new Uniform(0),
-      opacity: new Uniform(0),
-      range: new Uniform(0),
-      steps: new Uniform(0),
-      frame: new Uniform(0),
-      scale: new Uniform(0)
-    }
-  })
-
-  const parameters = useControls({
-    threshold: { value: 0.5, min: 0, max: 1, step: 0.01 },
-    opacity: { value: 0.25, min: 0, max: 1, step: 0.01 },
-    range: { value: 0.25, min: 0, max: 1, step: 0.01 },
-    steps: { value: 100, min: 0, max: 200, step: 1 },
-    scale: { value: 1, min: 0.1, max: 5 }
-  })
-
-  const { camera } = useThree()
-  useFrame(() => {
-    material.uniforms.cameraPosition.value.copy(camera.position)
-    material.uniforms.threshold.value = parameters.threshold
-    material.uniforms.opacity.value = parameters.opacity
-    material.uniforms.range.value = parameters.range
-    material.uniforms.steps.value = parameters.steps
-    material.uniforms.scale.value = parameters.scale
-    ++material.uniforms.frame.value
-  })
-
-  return (
-    <>
-      <OrbitControls />
-      <mesh geometry={geometry} material={material} />
-    </>
-  )
-}
-
-const Story: StoryFn = () => (
-  <Canvas camera={{ position: [-1, 1, -1] }}>
-    <Scene />
-  </Canvas>
-)
-
-export default Story
