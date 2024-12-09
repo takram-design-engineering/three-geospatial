@@ -50,12 +50,6 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     [blendFunction]
   )
 
-  // assign the camera after-the-fact to avoid EffectComposer effect out-of-order problem when
-  // recreating effect passes
-  useEffect(() => {
-    effect.mainCamera = camera;
-  }, [camera, effect]);
-
   useEffect(() => {
     return () => {
       effect.dispose()
@@ -72,7 +66,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     <primitive
       ref={forwardedRef}
       object={effect}
-      camera={camera}
+      mainCamera={camera}
       normalBuffer={geometryTexture ?? normalPass?.texture ?? null}
       {...atmosphereParameters}
       {...others}
