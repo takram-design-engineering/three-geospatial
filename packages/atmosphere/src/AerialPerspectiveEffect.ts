@@ -4,11 +4,11 @@
 
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
+  Camera,
   Matrix4,
   Uniform,
   Vector2,
   Vector3,
-  type Camera,
   type Data3DTexture,
   type DataTexture,
   type Texture,
@@ -87,7 +87,7 @@ export class AerialPerspectiveEffect extends Effect {
   correctAltitude: boolean
 
   constructor(
-    private camera: Camera | null,
+    private camera = new Camera(),
     options?: AerialPerspectiveEffectOptions,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
@@ -200,9 +200,6 @@ export class AerialPerspectiveEffect extends Effect {
     inputBuffer: WebGLRenderTarget,
     deltaTime?: number
   ): void {
-    if (this.camera == null) {
-      return
-    }
     const uniforms = this.uniforms
     const projectionMatrix = uniforms.get('projectionMatrix')!
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!

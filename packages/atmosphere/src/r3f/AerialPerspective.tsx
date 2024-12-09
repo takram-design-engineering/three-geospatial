@@ -46,7 +46,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       : undefined
 
   const effect = useMemo(
-    () => new AerialPerspectiveEffect(null, { blendFunction }),
+    () => new AerialPerspectiveEffect(undefined, { blendFunction }),
     [blendFunction]
   )
 
