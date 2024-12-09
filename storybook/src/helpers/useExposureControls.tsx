@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useSpring } from 'framer-motion'
 import { useEffect } from 'react'
 
@@ -33,6 +33,13 @@ export function useExposureControls({
   useFrame(({ gl }) => {
     gl.toneMappingExposure = springExposure.get()
   })
+
+  const { invalidate } = useThree()
+  useEffect(() => {
+    return springExposure.on('change', () => {
+      invalidate()
+    })
+  }, [springExposure, invalidate])
 
   return values
 }

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       3d-tiles-renderer:
-        specifier: ^0.3.42
-        version: 0.3.42(three@0.170.0)
+        specifier: ^0.3.44
+        version: 0.3.44(three@0.170.0)
       '@here/quantized-mesh-decoder':
         specifier: ^1.2.8
         version: 1.2.8
@@ -336,8 +336,8 @@ importers:
 
 packages:
 
-  3d-tiles-renderer@0.3.42:
-    resolution: {integrity: sha512-GurjZ5U73clp5RDcBnBggTa1YWLE6uhniXs2fPEaUmYuuye/Dinj0q90hwnF551nmE1ZnnEmVwYw6RuJOCBdLA==}
+  3d-tiles-renderer@0.3.44:
+    resolution: {integrity: sha512-C87IqOXkE9WR5VSp0QnerPKqFDfkmAQx74FjxxL74bYBX4S5kgVuFRSEijvc+m78L7fLeSK6VpxXSUYnPfEv8A==}
     peerDependencies:
       three: '>=0.123.0'
 
@@ -8682,7 +8682,7 @@ packages:
 
 snapshots:
 
-  3d-tiles-renderer@0.3.42(three@0.170.0):
+  3d-tiles-renderer@0.3.44(three@0.170.0):
     dependencies:
       three: 0.170.0
     optionalDependencies:

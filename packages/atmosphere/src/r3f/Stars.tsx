@@ -88,13 +88,16 @@ export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
       }
     })
 
+    if (geometry == null) {
+      return null
+    }
     return (
       <points
         ref={mergeRefs([ref, forwardedRef])}
         {...others}
         frustumCulled={false}
       >
-        {geometry != null && <primitive object={geometry} />}
+        <primitive object={geometry} />
         <primitive
           object={material}
           {...atmosphereParameters}

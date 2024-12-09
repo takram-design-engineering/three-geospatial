@@ -7,10 +7,10 @@ import {
   type WebGLExtension
 } from 'postprocessing'
 import {
+  Camera,
   Matrix4,
   Uniform,
   Vector3,
-  type Camera,
   type Data3DTexture,
   type DataTexture,
   type WebGLRenderer,
@@ -71,7 +71,7 @@ export abstract class AtmosphereEffectBase extends Effect {
   constructor(
     name: string,
     fragmentShader: string,
-    protected camera: Camera,
+    protected camera = new Camera(),
     options?: AtmosphereEffectBaseOptions,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
@@ -151,9 +151,6 @@ export abstract class AtmosphereEffectBase extends Effect {
     inputBuffer: WebGLRenderTarget,
     deltaTime?: number
   ): void {
-    if (this.camera == null) {
-      return
-    }
     const uniforms = this.uniforms
     const projectionMatrix = uniforms.get('projectionMatrix')!
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!

@@ -46,9 +46,10 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       : undefined
 
   const effect = useMemo(
-    () => new AerialPerspectiveEffect(camera, { blendFunction }),
-    [camera, blendFunction]
+    () => new AerialPerspectiveEffect(undefined, { blendFunction }),
+    [blendFunction]
   )
+
   useEffect(() => {
     return () => {
       effect.dispose()
@@ -65,7 +66,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     <primitive
       ref={forwardedRef}
       object={effect}
-      camera={camera}
+      mainCamera={camera}
       normalBuffer={geometryTexture ?? normalPass?.texture ?? null}
       {...atmosphereParameters}
       {...others}

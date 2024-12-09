@@ -50,7 +50,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 
 export class AerialPerspectiveEffect extends AtmosphereEffectBase {
   constructor(
-    camera: Camera,
+    camera?: Camera,
     options?: AerialPerspectiveEffectOptions,
     atmosphere?: AtmosphereParameters
   ) {
