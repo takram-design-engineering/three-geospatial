@@ -45,7 +45,7 @@ export class VolumetricNoise {
       ${fragmentShader}
     `,
     uniforms: {
-      slice: new Uniform(0),
+      layer: new Uniform(0),
       worleyFrequency: new Uniform(0),
       worleyAmplitude: new Uniform(0),
       worleyLacunarity: new Uniform(0),
@@ -100,9 +100,11 @@ export class VolumetricNoise {
 
   update(renderer: WebGLRenderer): void {
     const prevRenderTarget = renderer.getRenderTarget()
-    for (let face = 0; face < this.size; ++face) {
-      this.material.uniforms.slice.value = face / this.size
-      renderer.setRenderTarget(this.renderTarget, face)
+    // Unfortunately, rendering into 3D target requires as many draw calls as
+    // the value of "size".
+    for (let layer = 0; layer < this.size; ++layer) {
+      this.material.uniforms.layer.value = layer / this.size
+      renderer.setRenderTarget(this.renderTarget, layer)
       renderer.render(this.mesh, this.camera)
     }
     renderer.setRenderTarget(prevRenderTarget)

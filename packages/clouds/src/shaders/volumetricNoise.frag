@@ -1,6 +1,6 @@
 // Based on: https://github.com/sebh/TileableVolumeNoise
 
-uniform float slice;
+uniform float layer;
 uniform float worleyFrequency;
 uniform float worleyAmplitude;
 uniform float worleyLacunarity;
@@ -103,7 +103,7 @@ float perlinNoise(const vec3 pIn, float frequency, int octaveCount) {
 }
 
 void main() {
-  vec3 point = vec3(vUv.x, vUv.y, slice);
+  vec3 point = vec3(vUv.x, vUv.y, layer);
 
   float noise = worleyFbm(
     point,
