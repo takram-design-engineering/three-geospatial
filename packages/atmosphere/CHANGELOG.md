@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0] - 2024-12-11
+
+### Added
+
+- Added support for orthographic camera, [#15](https://github.com/takram-design-engineering/three-geospatial/pull/15).
+
 ## [0.2.0] - 2024-12-10
 
 ### Changed
@@ -20,7 +26,7 @@
 
 ## [0.0.2] - 2024-12-03
 
-*Note this version should have been 0.1.0.*
+_Note this version should have been 0.1.0._
 
 ### Changed
 
