@@ -1,3 +1,3 @@
 # @takram/three-global-clouds
 
-https://github.com/Calinou/free-blue-noise-textures
+This library is under active development and is in pre-release status.
