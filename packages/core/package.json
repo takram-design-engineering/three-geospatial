@@ -13,6 +13,11 @@
       "import": "./build/r3f.js",
       "require": "./build/r3f.cjs",
       "types": "./types/r3f/index.d.ts"
+    },
+    "./shaders": {
+      "import": "./build/shaders.js",
+      "require": "./build/shaders.cjs",
+      "types": "./types/shaders/index.d.ts"
     }
   },
   "main": "./build/index.cjs",

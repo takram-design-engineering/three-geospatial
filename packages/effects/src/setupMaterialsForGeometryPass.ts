@@ -4,7 +4,7 @@
 
 import { ShaderLib, type ShaderLibShader } from 'three'
 
-import { packingShader } from '@takram/three-geospatial'
+import { packing } from '@takram/three-geospatial/shaders'
 
 const SETUP = Symbol('SETUP')
 
@@ -109,7 +109,7 @@ function injectGBuffer(
       uniform float reflectivity;
     #endif
 
-    ${packingShader}
+    ${packing}
     ${shader.fragmentShader.replace(
       /}\s*$/m, // Assume the last curly brace is of main()
       /* glsl */ `

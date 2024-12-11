@@ -9,10 +9,9 @@ import {
   AtmosphereEffectBase,
   atmosphereEffectBaseOptionsDefaults,
   AtmosphereParameters,
-  functionsShader,
-  parametersShader,
   type AtmosphereEffectBaseOptions
 } from '@takram/three-atmosphere'
+import { functions, parameters } from '@takram/three-atmosphere/shaders'
 
 import fragmentShader from './shaders/cloudsEffect.frag'
 import vertexShader from './shaders/cloudsEffect.vert'
@@ -32,15 +31,15 @@ export class CloudsEffect extends AtmosphereEffectBase {
     super(
       'CloudsEffect',
       /* glsl */ `
-        ${parametersShader}
-        ${functionsShader}
+        ${parameters}
+        ${functions}
         ${fragmentShader}
       `,
       camera,
       {
         ...options,
         vertexShader: /* glsl */ `
-          ${parametersShader}
+          ${parameters}
           ${vertexShader}
         `,
         attributes: EffectAttribute.DEPTH,

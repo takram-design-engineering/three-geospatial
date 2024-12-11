@@ -5,7 +5,7 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform, type Texture } from 'three'
 
-import { packingShader } from '@takram/three-geospatial'
+import { packing } from '@takram/three-geospatial/shaders'
 
 import fragmentShader from './shaders/geometryEffect.frag'
 
@@ -35,7 +35,7 @@ export class GeometryEffect extends Effect {
     super(
       'GeometryEffect',
       /* glsl */ `
-        ${packingShader}
+        ${packing}
         ${fragmentShader}
       `,
       {

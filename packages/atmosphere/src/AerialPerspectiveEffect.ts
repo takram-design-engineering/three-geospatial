@@ -5,11 +5,7 @@
 import { EffectAttribute } from 'postprocessing'
 import { Uniform, Vector2, type Camera, type Texture } from 'three'
 
-import {
-  depthShader,
-  packingShader,
-  transformShader
-} from '@takram/three-geospatial'
+import { depth, packing, transform } from '@takram/three-geospatial/shaders'
 
 import {
   AtmosphereEffectBase,
@@ -72,9 +68,9 @@ export class AerialPerspectiveEffect extends AtmosphereEffectBase {
       /* glsl */ `
         ${parameters}
         ${functions}
-        ${depthShader}
-        ${packingShader}
-        ${transformShader}
+        ${depth}
+        ${packing}
+        ${transform}
         ${fragmentShader}
       `,
       camera,

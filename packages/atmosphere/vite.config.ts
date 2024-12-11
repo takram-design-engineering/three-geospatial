@@ -47,7 +47,8 @@ export default defineConfig({
       // Could also be a dictionary or array of multiple entry points.
       entry: {
         'build/index': 'src/index.ts',
-        'build/r3f': 'src/r3f/index.ts'
+        'build/r3f': 'src/r3f/index.ts',
+        'build/shaders': 'src/shaders/index.ts'
       },
       name: 'atmosphere'
     },
