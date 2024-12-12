@@ -2,8 +2,8 @@ import {
   Camera,
   GLSL3,
   LinearFilter,
-  LinearSRGBColorSpace,
   Mesh,
+  NoColorSpace,
   PlaneGeometry,
   RawShaderMaterial,
   RedFormat,
@@ -56,7 +56,7 @@ export class VolumetricNoiseBase {
     texture.wrapR = RepeatWrapping
     texture.wrapS = RepeatWrapping
     texture.wrapT = RepeatWrapping
-    texture.colorSpace = LinearSRGBColorSpace
+    texture.colorSpace = NoColorSpace
   }
 
   update(renderer: WebGLRenderer): void {
