@@ -15,22 +15,27 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    // prettier-ignore
     "paths": {
       "@takram/three-3d-tiles-support": ["packages/3d-tiles/src/index.ts"],
       "@takram/three-atmosphere": ["packages/atmosphere/src/index.ts"],
       "@takram/three-atmosphere/r3f": ["packages/atmosphere/src/r3f/index.ts"],
-      "@takram/three-atmosphere/shaders": ["packages/atmosphere/src/shaders/index.ts"],
-      "@takram/three-geospatial-effects": ["packages/effects/src/index.ts"],
-      "@takram/three-geospatial-effects/r3f": ["packages/effects/src/r3f/index.ts"],
-      "@takram/three-geospatial-worker": ["packages/worker/src/index.ts"],
+      "@takram/three-atmosphere/shaders": [
+        "packages/atmosphere/src/shaders/index.ts"
+      ],
       "@takram/three-geospatial": ["packages/core/src/index.ts"],
+      "@takram/three-geospatial-effects": ["packages/effects/src/index.ts"],
+      "@takram/three-geospatial-effects/r3f": [
+        "packages/effects/src/r3f/index.ts"
+      ],
+      "@takram/three-geospatial-worker": ["packages/worker/src/index.ts"],
       "@takram/three-geospatial/r3f": ["packages/core/src/r3f/index.ts"],
-      "@takram/three-geospatial/shaders": ["packages/core/src/shaders/index.ts"],
+      "@takram/three-geospatial/shaders": [
+        "packages/core/src/shaders/index.ts"
+      ],
       "@takram/three-global-clouds": ["packages/clouds/src/index.ts"],
       "@takram/three-global-clouds/r3f": ["packages/clouds/src/r3f/index.ts"],
-      "@takram/three-terrain-core": ["packages/terrain-core/src/index.ts"],
       "@takram/three-terrain": ["packages/terrain/src/index.ts"],
+      "@takram/three-terrain-core": ["packages/terrain-core/src/index.ts"],
       "@takram/three-terrain/r3f": ["packages/terrain/src/r3f/index.ts"]
     }
   },

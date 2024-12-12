@@ -14,7 +14,7 @@ const config: StorybookConfig = {
   staticDirs: [
     { from: '../assets', to: '/public' },
     { from: '../../packages/atmosphere/assets', to: '/atmosphere' },
-    { from: '../../packages/clouds/assets', to: '/clouds' },
+    { from: '../../packages/clouds/assets', to: '/clouds' }
   ],
 
   viteFinal: async config =>

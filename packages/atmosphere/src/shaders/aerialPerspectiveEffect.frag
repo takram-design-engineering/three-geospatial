@@ -35,11 +35,7 @@ void correctGeometricError(
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-vec3 getSunSkyIrradiance(
-  const vec3 worldPosition,
-  const vec3 worldNormal,
-  const vec3 inputColor
-) {
+vec3 getSunSkyIrradiance(const vec3 worldPosition, const vec3 worldNormal, const vec3 inputColor) {
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
   // defined, regard the inputColor as radiance at the texel.
   vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
@@ -110,8 +106,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
-  vec3 worldPosition =
-    (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
+  vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
   #ifdef CORRECT_GEOMETRIC_ERROR

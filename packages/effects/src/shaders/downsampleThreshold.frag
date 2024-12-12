@@ -73,8 +73,6 @@ void main() {
   }
 
   float l = luminance(color);
-  float scale = saturate(
-    smoothstep(thresholdLevel, thresholdLevel + thresholdRange, l)
-  );
+  float scale = saturate(smoothstep(thresholdLevel, thresholdLevel + thresholdRange, l));
   gl_FragColor = vec4(color * scale, 1.0);
 }

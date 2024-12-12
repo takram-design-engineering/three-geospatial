@@ -33,9 +33,7 @@ void main() {
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
   vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
   gl_Position =
-    projectionMatrix *
-    viewMatrix *
-    vec4(cameraPosition + worldDirection * cameraFar, 1.0);
+    projectionMatrix * viewMatrix * vec4(cameraPosition + worldDirection * cameraFar, 1.0);
   #else
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   #endif // BACKGROUND

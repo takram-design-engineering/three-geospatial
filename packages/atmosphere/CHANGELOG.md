@@ -20,7 +20,7 @@
 
 ## [0.0.2] - 2024-12-03
 
-*Note this version should have been 0.1.0.*
+_Note this version should have been 0.1.0._
 
 ### Changed
 

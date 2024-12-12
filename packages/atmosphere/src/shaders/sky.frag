@@ -60,31 +60,19 @@ void main() {
   float viewDotSun = dot(viewDirection, sunDirection);
   if (viewDotSun > cos(u_sun_angular_radius)) {
     float angle = acos(clamp(viewDotSun, -1.0, 1.0));
-    float antialias = smoothstep(
-      u_sun_angular_radius,
-      u_sun_angular_radius - fragmentAngle,
-      angle
-    );
+    float antialias = smoothstep(u_sun_angular_radius, u_sun_angular_radius - fragmentAngle, angle);
     radiance += transmittance * GetSolarRadiance() * antialias;
   }
   #endif // SUN
 
   #ifdef MOON
-  float intersection = intersectSphere(
-    viewDirection,
-    moonDirection,
-    moonAngularRadius
-  );
+  float intersection = intersectSphere(viewDirection, moonDirection, moonAngularRadius);
   if (intersection > 0.0) {
     vec3 normal = normalize(moonDirection - viewDirection * intersection);
     float diffuse = orenNayarDiffuse(-sunDirection, viewDirection, normal);
     float viewDotMoon = dot(viewDirection, moonDirection);
     float angle = acos(clamp(viewDotMoon, -1.0, 1.0));
-    float antialias = smoothstep(
-      moonAngularRadius,
-      moonAngularRadius - fragmentAngle,
-      angle
-    );
+    float antialias = smoothstep(moonAngularRadius, moonAngularRadius - fragmentAngle, angle);
     radiance += transmittance * GetLunarRadiance() * diffuse * antialias;
   }
   #endif // MOON

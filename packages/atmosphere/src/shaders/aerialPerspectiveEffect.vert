@@ -14,11 +14,7 @@ void mainSupport() {
   vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
 
   #ifdef CORRECT_GEOMETRIC_ERROR
-  float t = smoothstep(
-    geometricErrorAltitudeRange.x,
-    geometricErrorAltitudeRange.y,
-    cameraHeight
-  );
+  float t = smoothstep(geometricErrorAltitudeRange.x, geometricErrorAltitudeRange.y, cameraHeight);
   vEllipsoidCenter = mix(ellipsoidCenter, vec3(0.0), t) * METER_TO_UNIT_LENGTH;
   #else
   vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;

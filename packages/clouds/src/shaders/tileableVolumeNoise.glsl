@@ -11,11 +11,7 @@ float noise(const vec3 x) {
   f = f * f * (3.0 - 2.0 * f);
   float n = p.x + p.y * 57.0 + 113.0 * p.z;
   return mix(
-    mix(
-      mix(hash(n + 0.0), hash(n + 1.0), f.x),
-      mix(hash(n + 57.0), hash(n + 58.0), f.x),
-      f.y
-    ),
+    mix(mix(hash(n + 0.0), hash(n + 1.0), f.x), mix(hash(n + 57.0), hash(n + 58.0), f.x), f.y),
     mix(
       mix(hash(n + 113.0), hash(n + 114.0), f.x),
       mix(hash(n + 170.0), hash(n + 171.0), f.x),
@@ -40,11 +36,7 @@ float createWorleyNoise(const vec3 p, const float cellCount) {
   return clamp(d, 0.0, 1.0);
 }
 
-float createPerlinNoise(
-  const vec3 point,
-  const float frequency,
-  const int octaveCount
-) {
+float createPerlinNoise(const vec3 point, const float frequency, const int octaveCount) {
   // Noise frequency factor between octave, forced to 2.
   const float octaveFrequencyFactor = 2.0;
 
