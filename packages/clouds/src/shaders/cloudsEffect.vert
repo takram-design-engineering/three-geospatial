@@ -12,9 +12,7 @@ void mainSupport() {
   vec4 viewPosition = inverseProjectionMatrix * vec4(position, 1.0);
   vec4 rayDirection = inverseViewMatrix * vec4(viewPosition.xyz, 0.0);
   vViewPosition = cameraPosition;
-  vViewDirection = normalize(
-    (inverseViewMatrix * vec4(0.0, 0.0, -1.0, 0.0)).xyz
-  );
+  vViewDirection = normalize((inverseViewMatrix * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
   vRayDirection = rayDirection.xyz;
   vEllipsoidCenter = ellipsoidCenter;
 }
