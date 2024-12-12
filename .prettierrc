@@ -33,7 +33,8 @@
     {
       "files": ["*.glsl", "*.frag", "*.vert"],
       "options": {
-        "parser": "glsl-parser"
+        "parser": "glsl-parser",
+        "printWidth": 100
       }
     },
     {
