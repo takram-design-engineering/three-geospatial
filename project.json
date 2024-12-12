@@ -8,7 +8,7 @@
         "command": "nx run-many --target=lint --parallel=8 --exclude=@three-geospatial/source"
       }
     },
-    "format": {
+    "format-all": {
       "executor": "nx:run-commands",
       "options": {
         "command": "nx format:write --all"
