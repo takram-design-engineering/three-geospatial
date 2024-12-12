@@ -11,7 +11,8 @@ import {
 import {
   GlobeControls,
   TilesPlugin,
-  TilesRenderer
+  TilesRenderer,
+  CameraTransition,
 } from '3d-tiles-renderer/r3f'
 import { useAtom, useAtomValue } from 'jotai'
 import {
@@ -90,6 +91,7 @@ const Scene: FC<SceneProps> = ({
   heading = 180,
   pitch = -30,
   distance = 4500,
+  perspective,
   ...localDate
 }) => {
   useExposureControls({ exposure })
@@ -209,7 +211,10 @@ const Scene: FC<SceneProps> = ({
 
 export const Story: FC<SceneProps> = props => {
   const [apiKey, setApiKey] = useAtom(googleMapsApiKeyAtom)
-  useControls('google maps', {
+  const { orthographic } = useControls('google maps', {
+    orthographic: {
+      value: false,
+    },
     apiKey: {
       value: apiKey,
       onChange: value => {
@@ -229,6 +234,7 @@ export const Story: FC<SceneProps> = props => {
       >
         <Stats />
         <Scene {...props} />
+        <CameraTransition mode={ orthographic ? 'orthographic' : 'perspective' } />
       </Canvas>
       {apiKey === '' && (
         <div

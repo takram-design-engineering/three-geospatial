@@ -21,4 +21,9 @@ declare module '3d-tiles-renderer/r3f' {
     props: {} & Partial<ConstructorParameters<T>[0]> &
       RefAttributes<GlobeControls>
   ): JSX.Element
+
+  export function CameraTransition<T extends new (...args: any[]) => any>(
+    props: {} & Partial<ConstructorParameters<T>[0]> &
+      RefAttributes<GlobeControls>
+  ): JSX.Element
 }
