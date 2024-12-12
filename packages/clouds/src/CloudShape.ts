@@ -2,22 +2,22 @@
 
 import { math } from '@takram/three-geospatial/shaders'
 
-import { VolumetricNoiseBase } from './VolumetricNoiseBase'
+import { Render3DTexture } from './Render3DTexture'
 
-import fragmentShader from './shaders/detailNoise.frag'
+import fragmentShader from './shaders/cloudShape.frag'
 import perlin from './shaders/perlin.glsl'
-import tileableVolumeNoise from './shaders/tileableVolumeNoise.glsl'
+import tileableNoise from './shaders/tileableNoise.glsl'
 
-export class DetailNoise extends VolumetricNoiseBase {
+export class CloudShape extends Render3DTexture {
   constructor() {
     super({
-      size: 32,
+      size: 128,
       fragmentShader: /* glsl */ `
         precision highp float;
         precision highp int;
         ${math}
         ${perlin}
-        ${tileableVolumeNoise}
+        ${tileableNoise}
         ${fragmentShader}
       `
     })

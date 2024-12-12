@@ -14,19 +14,19 @@ import {
   type WebGLRenderer
 } from 'three'
 
-export interface VolumetricNoiseBaseParameters {
+export interface Render3DTextureParameters {
   size: number
   fragmentShader: string
 }
 
-export class VolumetricNoiseBase {
+export class Render3DTexture {
   readonly size: number
   protected readonly material: RawShaderMaterial
   protected readonly mesh: Mesh
   protected readonly renderTarget: WebGL3DRenderTarget
   protected readonly camera = new Camera()
 
-  constructor({ size, fragmentShader }: VolumetricNoiseBaseParameters) {
+  constructor({ size, fragmentShader }: Render3DTextureParameters) {
     this.size = size
     this.material = new RawShaderMaterial({
       glslVersion: GLSL3,
@@ -35,7 +35,7 @@ export class VolumetricNoiseBase {
         out vec2 vUv;
         void main() {
           vUv = uv;
-          gl_Position = vec4((uv - 0.5) * 2.0, 0.0, 1.0);
+          gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
         }
       `,
       fragmentShader,
@@ -53,9 +53,9 @@ export class VolumetricNoiseBase {
     const texture = this.renderTarget.texture
     texture.minFilter = LinearFilter
     texture.magFilter = LinearFilter
-    texture.wrapR = RepeatWrapping
     texture.wrapS = RepeatWrapping
     texture.wrapT = RepeatWrapping
+    texture.wrapR = RepeatWrapping
     texture.colorSpace = NoColorSpace
   }
 

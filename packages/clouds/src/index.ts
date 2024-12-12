@@ -1,3 +1,3 @@
 export * from './CloudsEffect'
-export * from './ShapeNoise'
-export * from './DetailNoise'
+export * from './CloudShape'
+export * from './CloudShapeDetail'

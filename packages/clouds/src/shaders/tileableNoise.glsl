@@ -21,7 +21,7 @@ float noise(const vec3 x) {
   );
 }
 
-float createWorleyNoise(const vec3 p, const float cellCount) {
+float getWorleyNoise(const vec3 p, const float cellCount) {
   vec3 cell = p * cellCount;
   float d = 1.0e10;
   for (int x = -1; x <= 1; ++x) {
@@ -36,7 +36,7 @@ float createWorleyNoise(const vec3 p, const float cellCount) {
   return clamp(d, 0.0, 1.0);
 }
 
-float createPerlinNoise(const vec3 point, const float frequency, const int octaveCount) {
+float getPerlinNoise(const vec3 point, const float frequency, const int octaveCount) {
   // Noise frequency factor between octave, forced to 2.
   const float octaveFrequencyFactor = 2.0;
 
