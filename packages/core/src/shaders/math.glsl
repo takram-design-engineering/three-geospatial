@@ -1,31 +1,55 @@
-float inverseLerp(float x, float y, float a) {
+float inverseLerp(const float x, const float y, const float a) {
   return (a - x) / (y - x);
 }
 
-vec2 inverseLerp(vec2 x, vec2 y, vec2 a) {
+vec2 inverseLerp(const vec2 x, const vec2 y, const vec2 a) {
   return (a - x) / (y - x);
 }
 
-vec3 inverseLerp(vec3 x, vec3 y, vec3 a) {
+vec3 inverseLerp(const vec3 x, const vec3 y, const vec3 a) {
   return (a - x) / (y - x);
 }
 
-vec4 inverseLerp(vec4 x, vec4 y, vec4 a) {
+vec4 inverseLerp(const vec4 x, const vec4 y, const vec4 a) {
   return (a - x) / (y - x);
 }
 
-float remap(float value, float min1, float max1, float min2, float max2) {
+float remap(
+  const float value,
+  const float min1,
+  const float max1,
+  const float min2,
+  const float max2
+) {
   return min2 + (value - min1) / (max1 - min1) * (max2 - min2);
 }
 
-vec2 remap(vec2 value, vec2 min1, vec2 max1, vec2 min2, vec2 max2) {
+vec2 remap(
+  const vec2 value,
+  const vec2 min1,
+  const vec2 max1,
+  const vec2 min2,
+  const vec2 max2
+) {
   return min2 + (value - min1) / (max1 - min1) * (max2 - min2);
 }
 
-vec3 remap(vec3 value, vec3 min1, vec3 max1, vec3 min2, vec3 max2) {
+vec3 remap(
+  const vec3 value,
+  const vec3 min1,
+  const vec3 max1,
+  const vec3 min2,
+  const vec3 max2
+) {
   return min2 + (value - min1) / (max1 - min1) * (max2 - min2);
 }
 
-vec4 remap(vec4 value, vec4 min1, vec4 max1, vec4 min2, vec4 max2) {
+vec4 remap(
+  const vec4 value,
+  const vec4 min1,
+  const vec4 max1,
+  const vec4 min2,
+  const vec4 max2
+) {
   return min2 + (value - min1) / (max1 - min1) * (max2 - min2);
 }

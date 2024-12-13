@@ -1,6 +1,6 @@
 // Based on: https://github.com/sebh/TileableVolumeNoise
 
-float hash(float n) {
+float hash(const float n) {
   return fract(sin(n + 1.951) * 43758.5453);
 }
 
@@ -25,10 +25,6 @@ float noise(const vec3 x) {
   );
 }
 
-float remap(float value, float min1, float max1, float min2, float max2) {
-  return min2 + (value - min1) / (max1 - min1) * (max2 - min2);
-}
-
 float createWorleyNoise(const vec3 p, const float cellCount) {
   vec3 cell = p * cellCount;
   float d = 1.0e10;
@@ -44,7 +40,11 @@ float createWorleyNoise(const vec3 p, const float cellCount) {
   return clamp(d, 0.0, 1.0);
 }
 
-float createPerlinNoise(const vec3 point, float frequency, int octaveCount) {
+float createPerlinNoise(
+  const vec3 point,
+  const float frequency,
+  const int octaveCount
+) {
   // Noise frequency factor between octave, forced to 2.
   const float octaveFrequencyFactor = 2.0;
 
@@ -53,13 +53,14 @@ float createPerlinNoise(const vec3 point, float frequency, int octaveCount) {
   float roughness = 0.5;
   float weightSum = 0.0;
   float weight = 1.0;
+  float nextFrequency = frequency;
   for (int i = 0; i < octaveCount; ++i) {
-    vec4 p = vec4(point.x, point.y, point.z, 0.0) * vec4(frequency);
-    float value = perlin(p, vec4(frequency));
+    vec4 p = vec4(point.x, point.y, point.z, 0.0) * vec4(nextFrequency);
+    float value = perlin(p, vec4(nextFrequency));
     sum += value * weight;
     weightSum += weight;
     weight *= roughness;
-    frequency *= octaveFrequencyFactor;
+    nextFrequency *= octaveFrequencyFactor;
   }
 
   float noise = sum / weightSum;

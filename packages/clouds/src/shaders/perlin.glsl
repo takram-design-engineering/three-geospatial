@@ -8,7 +8,7 @@ vec4 permute(const vec4 v) {
   return mod289((v * 34.0 + 1.0) * v);
 }
 
-vec4 taylorInvSqrt(vec4 r) {
+vec4 taylorInvSqrt(const vec4 r) {
   return 1.79284291400159 - 0.85373472095314 * r;
 }
 

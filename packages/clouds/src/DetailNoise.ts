@@ -1,10 +1,12 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
+import { mathShader } from '@takram/three-geospatial'
+
 import { VolumetricNoiseBase } from './VolumetricNoiseBase'
 
 import fragmentShader from './shaders/detailNoise.frag'
 import perlin from './shaders/perlin.glsl'
-import stackableNoise from './shaders/stackableNoise.glsl'
+import tileableVolumeNoise from './shaders/tileableVolumeNoise.glsl'
 
 export class DetailNoise extends VolumetricNoiseBase {
   constructor() {
@@ -13,8 +15,9 @@ export class DetailNoise extends VolumetricNoiseBase {
       fragmentShader: /* glsl */ `
         precision highp float;
         precision highp int;
+        ${mathShader}
         ${perlin}
-        ${stackableNoise}
+        ${tileableVolumeNoise}
         ${fragmentShader}
       `
     })
