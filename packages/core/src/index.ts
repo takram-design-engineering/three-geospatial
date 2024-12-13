@@ -9,7 +9,6 @@ export const packingShader: string = packing
 export const transformShader: string = transform
 
 export * from './ArrayBufferLoader'
-export * from './assertions'
 export * from './bufferGeometry'
 export * from './DataLoader'
 export * from './Ellipsoid'
