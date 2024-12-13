@@ -130,6 +130,11 @@ const Scene: FC<SceneProps> = ({
 
   const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
+    // Check the camera position to see if we've already moved it to globe surface
+    if (camera.position.length() > 10) {
+      return
+    }
+
     new PointOfView(distance, radians(heading), radians(pitch)).decompose(
       new Geodetic(radians(longitude), radians(latitude)).toECEF(),
       camera.position,
