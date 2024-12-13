@@ -53,6 +53,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     } = { ...skyMaterialParametersDefaults, ...params }
 
     super({
+      name: 'SkyMaterial',
       glslVersion: GLSL3,
       vertexShader: /* glsl */ `
         precision highp float;

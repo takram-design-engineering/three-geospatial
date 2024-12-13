@@ -47,6 +47,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     }
 
     super({
+      name: 'StarsMaterial',
       glslVersion: GLSL3,
       vertexShader: /* glsl */ `
         precision highp float;
