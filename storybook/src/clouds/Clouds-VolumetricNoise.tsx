@@ -11,11 +11,12 @@ import {
   Vector3
 } from 'three'
 
-import { VolumetricNoise } from '@takram/three-global-clouds'
+import { CloudShape, CloudShapeDetail } from '@takram/three-global-clouds'
 
 import { useControls } from '../helpers/useControls'
 
-const volumetricNoise = new VolumetricNoise()
+const shapeNoise = new CloudShape()
+const detailNoise = new CloudShapeDetail()
 
 const Scene: FC = () => {
   const geometry = new BoxGeometry(1, 1, 1)
@@ -25,7 +26,8 @@ const Scene: FC = () => {
     fragmentShader,
     uniforms: {
       cameraPosition: new Uniform(new Vector3()),
-      map: new Uniform(volumetricNoise.texture),
+      shape: new Uniform(shapeNoise.texture),
+      detail: new Uniform(detailNoise.texture),
       base: new Uniform(new Color(0x808080)),
       threshold: new Uniform(0),
       opacity: new Uniform(0),
@@ -56,56 +58,11 @@ const Scene: FC = () => {
     ++uniforms.frame.value
   })
 
-  const {
-    frequency: worleyFrequency,
-    amplitude,
-    lacunarity,
-    gain,
-    octaves: worleyOctaves,
-    invert
-  } = useControls('worley', {
-    frequency: { value: 8, min: 1, max: 16, step: 1 },
-    amplitude: { value: 0.5, min: 0, max: 1, step: 0.01 },
-    lacunarity: { value: 2, min: 0, max: 5, step: 0.1 },
-    gain: { value: 0.6, min: 0, max: 1, step: 0.01 },
-    octaves: { value: 4, min: 1, max: 16, step: 1 },
-    invert: true
-  })
-
-  const {
-    modulate,
-    frequency: perlinFrequency,
-    octaves: perlinOctaves
-  } = useControls('perlin', {
-    modulate: { value: true },
-    frequency: { value: 8, min: 1, max: 16, step: 1 },
-    octaves: { value: 6, min: 1, max: 16, step: 1 }
-  })
-
   const { gl } = useThree()
   useEffect(() => {
-    volumetricNoise.worleyFrequency = worleyFrequency
-    volumetricNoise.worleyAmplitude = amplitude
-    volumetricNoise.worleyLacunarity = lacunarity
-    volumetricNoise.worleyGain = gain
-    volumetricNoise.worleyOctaves = worleyOctaves
-    volumetricNoise.invertWorley = invert
-    volumetricNoise.modulatePerlin = modulate
-    volumetricNoise.perlinFrequency = perlinFrequency
-    volumetricNoise.perlinOctaves = perlinOctaves
-    volumetricNoise.update(gl)
-  }, [
-    worleyFrequency,
-    amplitude,
-    lacunarity,
-    gain,
-    worleyOctaves,
-    invert,
-    modulate,
-    perlinFrequency,
-    perlinOctaves,
-    gl
-  ])
+    shapeNoise.update(gl)
+    detailNoise.update(gl)
+  }, [gl])
 
   return (
     <>
@@ -149,7 +106,9 @@ const fragmentShader = /* glsl */ `
 
   out vec4 outputColor;
 
-  uniform sampler3D map;
+  uniform sampler3D shape;
+  uniform sampler3D detail;
+
   uniform vec3 base;
   uniform float threshold;
   uniform float range;
@@ -157,6 +116,10 @@ const fragmentShader = /* glsl */ `
   uniform float steps;
   uniform float frame;
   uniform float scale;
+
+  float remap(float value, float min1, float max1, float min2, float max2) {
+    return min2 + (value - min1) / (max1 - min1) * (max2 - min2);
+  }
 
   uint hash(uint seed) {
     seed = seed ^ 61u ^ (seed >> 16u);
@@ -184,7 +147,7 @@ const fragmentShader = /* glsl */ `
   }
 
   float sampleTexture(vec3 uvw) {
-    return texture(map, uvw * scale).r;
+    return texture(shape, uvw * scale).r;
   }
 
   float shading(vec3 coord) {
@@ -212,7 +175,7 @@ const fragmentShader = /* glsl */ `
       uint(gl_FragCoord.x) * uint(1973) +
       uint(gl_FragCoord.y) * uint(9277) +
       uint(frame) * uint(26699);
-    vec3 size = vec3(textureSize(map, 0));
+    vec3 size = vec3(textureSize(shape, 0));
     float rand = random(seed) * 2.0 - 1.0;
     point += rayDirection * rand * (1.0 / size);
 
