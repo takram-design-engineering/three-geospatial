@@ -91,7 +91,6 @@ const Scene: FC<SceneProps> = ({
   heading = 180,
   pitch = -30,
   distance = 4500,
-  perspective,
   ...localDate
 }) => {
   useExposureControls({ exposure })
