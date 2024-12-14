@@ -94,6 +94,11 @@ const Scene: FC<SceneProps> = ({
   ...localDate
 }) => {
   useExposureControls({ exposure })
+  const { orthographic } = useControls(
+    'camera',
+    { orthographic: false },
+    { collapsed: true }
+  )
   const lut = useColorGradingControls()
   const { lensFlare, normal, depth } = useControls(
     'effects',
@@ -209,14 +214,14 @@ const Scene: FC<SceneProps> = ({
           )}
         </Fragment>
       </EffectComposer>
+      <CameraTransition mode={orthographic ? 'orthographic' : 'perspective'} />
     </Atmosphere>
   )
 }
 
 export const Story: FC<SceneProps> = props => {
   const [apiKey, setApiKey] = useAtom(googleMapsApiKeyAtom)
-  const { orthographic } = useControls('google maps', {
-    orthographic: false,
+  useControls('google maps', {
     apiKey: {
       value: apiKey,
       onChange: value => {
@@ -236,11 +241,6 @@ export const Story: FC<SceneProps> = props => {
       >
         <Stats />
         <Scene {...props} />
-        <CameraTransition
-          // TODO: ESLint claims false positive error, perhaps due to mismatch
-          // in TS version.
-          mode={orthographic ? 'orthographic' : 'perspective'}
-        />
       </Canvas>
       {apiKey === '' && (
         <div
