@@ -20,9 +20,9 @@ vec3 reconstructNormal(const vec2 uv) {
 
 vec3 readNormal(const vec2 uv) {
   #ifdef OCT_ENCODED
-  return unpackVec2ToNormal(texture2D(normalBuffer, uv).xy);
+  return unpackVec2ToNormal(texture(normalBuffer, uv).xy);
   #else
-  return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
+  return 2.0 * texture(normalBuffer, uv).xyz - 1.0;
   #endif // OCT_ENCODED
 }
 

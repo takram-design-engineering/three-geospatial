@@ -1,10 +1,10 @@
 uniform sampler2D geometryBuffer;
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
-  vec4 normalMetalnessRoughness = texture2D(geometryBuffer, uv);
+  vec4 normalMetalnessRoughness = texture(geometryBuffer, uv);
 
   #ifdef OUTPUT_NORMAL
-  vec3 normal = unpackVec2ToNormal(texture2D(geometryBuffer, uv).xy);
+  vec3 normal = unpackVec2ToNormal(texture(geometryBuffer, uv).xy);
   outputColor = vec4(normal * 0.5 + 0.5, inputColor.a);
   #endif // OUTPUT_NORMAL
 
