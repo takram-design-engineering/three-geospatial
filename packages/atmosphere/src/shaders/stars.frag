@@ -12,7 +12,7 @@ in vec3 vColor;
 
 void main() {
   #ifndef PERSPECTIVE_CAMERA
-  discard; // Rendering stars without perspective doesn't make sense.
+  discard; // Rendering celestial objects without perspective doesn't make sense.
   #endif
 
   #ifdef BACKGROUND

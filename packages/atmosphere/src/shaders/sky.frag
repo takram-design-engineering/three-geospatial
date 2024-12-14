@@ -50,11 +50,14 @@ void main() {
     transmittance
   );
 
+  // Rendering celestial objects without perspective doesn't make sense.
+  #ifdef PERSPECTIVE_CAMERA
+
   #if defined(SUN) || defined(MOON)
   vec3 ddx = dFdx(viewDirection);
   vec3 ddy = dFdy(viewDirection);
   float fragmentAngle = length(ddx + ddy) / length(viewDirection);
-  #endif
+  #endif // defined(SUN) || defined(MOON)
 
   #ifdef SUN
   float viewDotSun = dot(viewDirection, sunDirection);
@@ -88,6 +91,8 @@ void main() {
     radiance += transmittance * GetLunarRadiance() * diffuse * antialias;
   }
   #endif // MOON
+
+  #endif // PERSPECTIVE_CAMERA
 
   outputColor = vec4(radiance, 1.0);
 
