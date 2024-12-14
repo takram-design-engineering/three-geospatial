@@ -167,24 +167,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.renderTargetCount = renderTargetCount
   }
 
-  override onBeforeCompile(
-    parameters: WebGLProgramParametersWithUniforms,
-    renderer: WebGLRenderer
-  ): void {
-    parameters.fragmentShader = includeRenderTargets(
-      parameters.fragmentShader,
-      this.renderTargetCount
-    )
-  }
-
-  override onBeforeRender(
-    renderer: WebGLRenderer,
-    scene: Scene,
-    camera: Camera,
-    geometry: BufferGeometry,
-    object: Object3D,
-    group: Group
-  ): void {
+  copyCameraSettings(camera: Camera): void {
     const uniforms = this.uniforms
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
 
@@ -207,6 +190,27 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     } else {
       uniforms.ellipsoidCenter.value.set(0, 0, 0)
     }
+  }
+
+  override onBeforeCompile(
+    parameters: WebGLProgramParametersWithUniforms,
+    renderer: WebGLRenderer
+  ): void {
+    parameters.fragmentShader = includeRenderTargets(
+      parameters.fragmentShader,
+      this.renderTargetCount
+    )
+  }
+
+  override onBeforeRender(
+    renderer: WebGLRenderer,
+    scene: Scene,
+    camera: Camera,
+    geometry: BufferGeometry,
+    object: Object3D,
+    group: Group
+  ): void {
+    this.copyCameraSettings(camera)
   }
 
   get irradianceTexture(): DataTexture | null {
