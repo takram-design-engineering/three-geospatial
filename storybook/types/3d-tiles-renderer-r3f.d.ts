@@ -27,7 +27,7 @@ declare module '3d-tiles-renderer/r3f' {
       RefAttributes<GlobeControls>
   ): JSX.Element
 
-  const CameraTransition: FC<{
+  export const CameraTransition: FC<{
     mode: 'perspective' | 'orthographic'
   }>
 }
