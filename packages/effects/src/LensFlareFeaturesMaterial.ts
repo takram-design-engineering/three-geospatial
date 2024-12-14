@@ -33,7 +33,8 @@ export class LensFlareFeaturesMaterial extends ShaderMaterial {
       inputBuffer = null,
       ghostAmount,
       haloAmount,
-      chromaticAberration
+      chromaticAberration,
+      ...others
     } = {
       ...lensFlareFeaturesMaterialParametersDefaults,
       ...params
@@ -42,17 +43,18 @@ export class LensFlareFeaturesMaterial extends ShaderMaterial {
       name: 'LensFlareFeaturesMaterial',
       fragmentShader,
       vertexShader,
+      blending: NoBlending,
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false,
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         texelSize: new Uniform(new Vector2()),
         ghostAmount: new Uniform(ghostAmount),
         haloAmount: new Uniform(haloAmount),
-        chromaticAberration: new Uniform(chromaticAberration)
-      },
-      blending: NoBlending,
-      toneMapped: false,
-      depthWrite: false,
-      depthTest: false
+        chromaticAberration: new Uniform(chromaticAberration),
+        ...others.uniforms
+      }
     })
   }
 

@@ -39,17 +39,18 @@ export class DownsampleThresholdMaterial extends ShaderMaterial {
       name: 'DownsampleThresholdMaterial',
       fragmentShader,
       vertexShader,
-      uniforms: {
-        inputBuffer: new Uniform(inputBuffer),
-        texelSize: new Uniform(new Vector2()),
-        thresholdLevel: new Uniform(thresholdLevel),
-        thresholdRange: new Uniform(thresholdRange)
-      },
       blending: NoBlending,
       toneMapped: false,
       depthWrite: false,
       depthTest: false,
-      ...others
+      ...others,
+      uniforms: {
+        inputBuffer: new Uniform(inputBuffer),
+        texelSize: new Uniform(new Vector2()),
+        thresholdLevel: new Uniform(thresholdLevel),
+        thresholdRange: new Uniform(thresholdRange),
+        ...others.uniforms
+      }
     })
   }
 
