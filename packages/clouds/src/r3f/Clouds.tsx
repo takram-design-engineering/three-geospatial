@@ -36,8 +36,8 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
     const { camera } = context
 
     const effect = useMemo(
-      () => new CloudsEffect(camera, { blendFunction }),
-      [camera, blendFunction]
+      () => new CloudsEffect(undefined, { blendFunction }),
+      [blendFunction]
     )
     useEffect(() => {
       return () => {
@@ -45,7 +45,8 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     }, [effect])
 
-    useFrame(() => {
+    useFrame(({ camera }) => {
+      effect.mainCamera = camera
       if (transientProps != null) {
         effect.sunDirection.copy(transientProps.sunDirection)
       }
@@ -55,7 +56,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       <primitive
         ref={forwardedRef}
         object={effect}
-        camera={camera}
+        mainCamera={camera}
         {...atmosphereParameters}
         {...others}
       />

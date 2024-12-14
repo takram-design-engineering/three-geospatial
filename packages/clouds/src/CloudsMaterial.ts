@@ -75,6 +75,7 @@ interface CloudsMaterialUniforms {
   shapeDetailTexture: Uniform<Texture | null>
   coverageTexture: Uniform<Texture | null>
   coverageDetailTexture: Uniform<Texture | null>
+  coverage: Uniform<number>
 }
 
 export interface CloudsMaterial {
@@ -133,7 +134,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           shapeTexture: new Uniform(shape.texture),
           shapeDetailTexture: new Uniform(shapeDetail.texture),
           coverageTexture: new Uniform(null),
-          coverageDetailTexture: new Uniform(null)
+          coverageDetailTexture: new Uniform(null),
+          coverage: new Uniform(0.3)
         } satisfies CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
