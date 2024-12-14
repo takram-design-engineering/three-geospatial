@@ -31,7 +31,9 @@ void correctGeometricError(inout vec3 worldPosition, inout vec3 worldNormal) {
 
   // Correct way is slerp, but this will be small-angle interpolation anyways.
   vec3 normal = normalize(1.0 / vEllipsoidRadiiSquared * worldPosition);
+  vec3 position = u_bottom_radius * normal;
   worldNormal = mix(worldNormal, normal, t);
+  worldPosition = mix(worldPosition, position, t);
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
