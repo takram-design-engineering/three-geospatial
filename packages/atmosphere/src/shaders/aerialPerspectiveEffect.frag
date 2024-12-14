@@ -4,7 +4,6 @@ uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform float cameraHeight;
-uniform vec2 geometricErrorAltitudeRange;
 uniform vec3 sunDirection;
 uniform float irradianceScale;
 uniform vec3 ellipsoidRadii;
@@ -21,22 +20,18 @@ vec3 readNormal(const vec2 uv) {
   #endif // OCT_ENCODED_NORMAL
 }
 
-void correctGeometricError(
-  float minHeight,
-  float maxHeight,
-  inout vec3 worldPosition,
-  inout vec3 worldNormal
-) {
+void correctGeometricError(inout vec3 worldPosition, inout vec3 worldNormal) {
   // calculate the projected scale of the globe in clip space
   float maxRadius = max(ellipsoidRadii.x, max(ellipsoidRadii.y, ellipsoidRadii.z));
   vec4 projectedPoint = projectionMatrix * vec4(0, maxRadius, - cameraHeight, 1);
   projectedPoint /= projectedPoint.w;
 
   // transition between the zoomed out and zoomed in normals based on projected size
-  float t = smoothstep( 41.5, 13.8, projectedPoint.y );
+  float t = smoothstep(41.5, 13.8, projectedPoint.y);
 
   // Correct way is slerp, but this will be small-angle interpolation anyways.
-  worldNormal = mix(worldNormal, normal, a);
+  vec3 normal = normalize(1.0 / vEllipsoidRadiiSquared * worldPosition);
+  worldNormal = mix(worldNormal, normal, t);
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
@@ -120,12 +115,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
   #ifdef CORRECT_GEOMETRIC_ERROR
-  correctGeometricError(
-    geometricErrorAltitudeRange.x,
-    geometricErrorAltitudeRange.y,
-    worldPosition,
-    worldNormal
-  );
+  correctGeometricError(worldPosition, worldNormal);
   #endif // CORRECT_GEOMETRIC_ERROR
 
   vec3 radiance;
