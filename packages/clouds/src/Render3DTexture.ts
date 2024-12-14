@@ -21,10 +21,12 @@ export interface Render3DTextureParameters {
 
 export class Render3DTexture {
   readonly size: number
-  protected readonly material: RawShaderMaterial
-  protected readonly mesh: Mesh
-  protected readonly renderTarget: WebGL3DRenderTarget
-  protected readonly camera = new Camera()
+  needsUpdate = true
+
+  private readonly material: RawShaderMaterial
+  private readonly mesh: Mesh
+  private readonly renderTarget: WebGL3DRenderTarget
+  private readonly camera = new Camera()
 
   constructor({ size, fragmentShader }: Render3DTextureParameters) {
     this.size = size
@@ -59,8 +61,17 @@ export class Render3DTexture {
     texture.colorSpace = NoColorSpace
   }
 
+  dispose(): void {
+    this.renderTarget.dispose()
+    this.material.dispose()
+  }
+
   update(renderer: WebGLRenderer): void {
-    const prevRenderTarget = renderer.getRenderTarget()
+    if (!this.needsUpdate) {
+      return
+    }
+    this.needsUpdate = false
+
     // Unfortunately, rendering into 3D target requires as many draw calls as
     // the value of "size".
     for (let layer = 0; layer < this.size; ++layer) {
@@ -68,7 +79,6 @@ export class Render3DTexture {
       renderer.setRenderTarget(this.renderTarget, layer)
       renderer.render(this.mesh, this.camera)
     }
-    renderer.setRenderTarget(prevRenderTarget)
   }
 
   get texture(): Data3DTexture {
