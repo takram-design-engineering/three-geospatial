@@ -2,13 +2,12 @@
 
 import {
   NoBlending,
+  ShaderMaterial,
   Uniform,
   Vector2,
   type ShaderMaterialParameters,
   type Texture
 } from 'three'
-
-import { TypedShaderMaterial } from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/downsampleThreshold.frag'
 import vertexShader from './shaders/downsampleThreshold.vert'
@@ -25,12 +24,7 @@ export const downsampleThresholdMaterialParametersDefaults = {
   thresholdRange: 1
 } satisfies DownsampleThresholdMaterialParameters
 
-export class DownsampleThresholdMaterial extends TypedShaderMaterial<{
-  inputBuffer: Uniform<Texture | null>
-  texelSize: Uniform<Vector2>
-  thresholdLevel: Uniform<number>
-  thresholdRange: Uniform<number>
-}> {
+export class DownsampleThresholdMaterial extends ShaderMaterial {
   constructor(params?: DownsampleThresholdMaterialParameters) {
     const {
       inputBuffer = null,
@@ -45,18 +39,17 @@ export class DownsampleThresholdMaterial extends TypedShaderMaterial<{
       name: 'DownsampleThresholdMaterial',
       fragmentShader,
       vertexShader,
-      blending: NoBlending,
-      toneMapped: false,
-      depthWrite: false,
-      depthTest: false,
-      ...others,
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         texelSize: new Uniform(new Vector2()),
         thresholdLevel: new Uniform(thresholdLevel),
-        thresholdRange: new Uniform(thresholdRange),
-        ...others.uniforms
-      }
+        thresholdRange: new Uniform(thresholdRange)
+      },
+      blending: NoBlending,
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false,
+      ...others
     })
   }
 

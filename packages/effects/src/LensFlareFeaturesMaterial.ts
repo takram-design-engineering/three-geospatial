@@ -2,13 +2,12 @@
 
 import {
   NoBlending,
+  ShaderMaterial,
   Uniform,
   Vector2,
   type ShaderMaterialParameters,
   type Texture
 } from 'three'
-
-import { TypedShaderMaterial } from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/lensFlareFeatures.frag'
 import vertexShader from './shaders/lensFlareFeatures.vert'
@@ -28,20 +27,13 @@ export const lensFlareFeaturesMaterialParametersDefaults = {
   chromaticAberration: 10
 } satisfies LensFlareFeaturesMaterialParameters
 
-export class LensFlareFeaturesMaterial extends TypedShaderMaterial<{
-  inputBuffer: Uniform<Texture | null>
-  texelSize: Uniform<Vector2>
-  ghostAmount: Uniform<number>
-  haloAmount: Uniform<number>
-  chromaticAberration: Uniform<number>
-}> {
+export class LensFlareFeaturesMaterial extends ShaderMaterial {
   constructor(params?: LensFlareFeaturesMaterialParameters) {
     const {
       inputBuffer = null,
       ghostAmount,
       haloAmount,
-      chromaticAberration,
-      ...others
+      chromaticAberration
     } = {
       ...lensFlareFeaturesMaterialParametersDefaults,
       ...params
@@ -50,19 +42,17 @@ export class LensFlareFeaturesMaterial extends TypedShaderMaterial<{
       name: 'LensFlareFeaturesMaterial',
       fragmentShader,
       vertexShader,
-      blending: NoBlending,
-      toneMapped: false,
-      depthWrite: false,
-      depthTest: false,
-      ...others,
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         texelSize: new Uniform(new Vector2()),
         ghostAmount: new Uniform(ghostAmount),
         haloAmount: new Uniform(haloAmount),
-        chromaticAberration: new Uniform(chromaticAberration),
-        ...others.uniforms
-      }
+        chromaticAberration: new Uniform(chromaticAberration)
+      },
+      blending: NoBlending,
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false
     })
   }
 
