@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
+
 import {
   RawShaderMaterial,
   Uniform,
@@ -68,6 +70,29 @@ export const atmosphereMaterialParametersBaseDefaults = {
   renderTargetCount: 1
 } satisfies AtmosphereMaterialBaseParameters
 
+export interface AtmosphereMaterialBaseUniforms {
+  [key: string]: Uniform
+  u_solar_irradiance: Uniform<Vector3>
+  u_sun_angular_radius: Uniform<number>
+  u_bottom_radius: Uniform<number>
+  u_top_radius: Uniform<number>
+  u_rayleigh_scattering: Uniform<Vector3>
+  u_mie_scattering: Uniform<Vector3>
+  u_mie_phase_function_g: Uniform<number>
+  u_mu_s_min: Uniform<number>
+  u_irradiance_texture: Uniform<DataTexture | null>
+  u_scattering_texture: Uniform<Data3DTexture | null>
+  u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
+  u_transmittance_texture: Uniform<DataTexture | null>
+  cameraPosition: Uniform<Vector3>
+  ellipsoidCenter: Uniform<Vector3>
+  sunDirection: Uniform<Vector3>
+}
+
+export interface AtmosphereMaterialBase {
+  uniforms: AtmosphereMaterialBaseUniforms
+}
+
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   private readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
@@ -115,7 +140,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         ellipsoidCenter: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
-      },
+      } satisfies AtmosphereMaterialBaseUniforms,
       // prettier-ignore
       defines: {
         PI: `${Math.PI}`,

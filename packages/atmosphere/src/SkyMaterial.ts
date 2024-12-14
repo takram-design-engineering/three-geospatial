@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
+
 /// <reference types="vite-plugin-glsl/ext" />
 
 import {
@@ -16,7 +18,8 @@ import {
 import {
   AtmosphereMaterialBase,
   atmosphereMaterialParametersBaseDefaults,
-  type AtmosphereMaterialBaseParameters
+  type AtmosphereMaterialBaseParameters,
+  type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
 
 import functions from './shaders/functions.glsl'
@@ -40,6 +43,19 @@ export const skyMaterialParametersDefaults = {
   moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
   lunarRadianceScale: 1
 } satisfies SkyMaterialParameters
+
+export interface SkyMaterialUniforms {
+  [key: string]: Uniform
+  inverseProjectionMatrix: Uniform<Matrix4>
+  inverseViewMatrix: Uniform<Matrix4>
+  moonDirection: Uniform<Vector3>
+  moonAngularRadius: Uniform<number>
+  lunarRadianceScale: Uniform<number>
+}
+
+export interface SkyMaterial {
+  uniforms: SkyMaterialUniforms & AtmosphereMaterialBaseUniforms
+}
 
 export class SkyMaterial extends AtmosphereMaterialBase {
   constructor(params?: SkyMaterialParameters) {
@@ -76,7 +92,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         moonAngularRadius: new Uniform(moonAngularRadius),
         lunarRadianceScale: new Uniform(lunarRadianceScale),
         ...others.uniforms
-      }
+      } satisfies SkyMaterialUniforms
     })
     this.sun = sun
     this.moon = moon

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
+
 import {
   GLSL3,
   Matrix4,
@@ -15,7 +17,8 @@ import {
 import {
   AtmosphereMaterialBase,
   atmosphereMaterialParametersBaseDefaults,
-  type AtmosphereMaterialBaseParameters
+  type AtmosphereMaterialBaseParameters,
+  type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
 
 import functions from './shaders/functions.glsl'
@@ -36,6 +39,22 @@ export const starsMaterialParametersDefaults = {
   radianceScale: 1,
   background: true
 } satisfies StarsMaterialParameters
+
+export interface StarsMaterialUniforms {
+  [key: string]: Uniform
+  projectionMatrix: Uniform<Matrix4>
+  modelViewMatrix: Uniform<Matrix4>
+  viewMatrix: Uniform<Matrix4>
+  matrixWorld: Uniform<Matrix4>
+  cameraFar: Uniform<number>
+  pointSize: Uniform<number>
+  magnitudeRange: Uniform<Vector2>
+  radianceScale: Uniform<number>
+}
+
+export interface StarsMaterial {
+  uniforms: StarsMaterialUniforms & AtmosphereMaterialBaseUniforms
+}
 
 export class StarsMaterial extends AtmosphereMaterialBase {
   pointSize: number
@@ -73,7 +92,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
         magnitudeRange: new Uniform(new Vector2(-2, 8)),
         radianceScale: new Uniform(radianceScale),
         ...others.uniforms
-      }
+      } satisfies StarsMaterialUniforms
     })
     this.pointSize = pointSize
     this.background = background
