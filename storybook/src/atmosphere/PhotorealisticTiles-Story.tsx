@@ -9,10 +9,10 @@ import {
   UpdateOnChangePlugin
 } from '3d-tiles-renderer/plugins'
 import {
+  CameraTransition,
   GlobeControls,
   TilesPlugin,
-  TilesRenderer,
-  CameraTransition,
+  TilesRenderer
 } from '3d-tiles-renderer/r3f'
 import { useAtom, useAtomValue } from 'jotai'
 import {
@@ -216,9 +216,7 @@ const Scene: FC<SceneProps> = ({
 export const Story: FC<SceneProps> = props => {
   const [apiKey, setApiKey] = useAtom(googleMapsApiKeyAtom)
   const { orthographic } = useControls('google maps', {
-    orthographic: {
-      value: false,
-    },
+    orthographic: false,
     apiKey: {
       value: apiKey,
       onChange: value => {
@@ -238,7 +236,11 @@ export const Story: FC<SceneProps> = props => {
       >
         <Stats />
         <Scene {...props} />
-        <CameraTransition mode={ orthographic ? 'orthographic' : 'perspective' } />
+        <CameraTransition
+          // TODO: ESLint claims false positive error, perhaps due to mismatch
+          // in TS version.
+          mode={orthographic ? 'orthographic' : 'perspective'}
+        />
       </Canvas>
       {apiKey === '' && (
         <div
