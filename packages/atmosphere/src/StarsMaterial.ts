@@ -23,6 +23,12 @@ import parameters from './shaders/parameters.glsl'
 import fragmentShader from './shaders/stars.frag'
 import vertexShader from './shaders/stars.vert'
 
+declare module 'three' {
+  interface Camera {
+    isPerspectiveCamera?: boolean
+  }
+}
+
 export interface StarsMaterialParameters
   extends AtmosphereMaterialBaseParameters {
   pointSize?: number
@@ -72,6 +78,9 @@ export class StarsMaterial extends AtmosphereMaterialBase {
         magnitudeRange: new Uniform(new Vector2(-2, 8)),
         radianceScale: new Uniform(radianceScale),
         ...others.uniforms
+      },
+      defines: {
+        PERSPECTIVE_CAMERA: '1'
       }
     })
     this.pointSize = pointSize
@@ -94,6 +103,16 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     uniforms.matrixWorld.value.copy(object.matrixWorld)
     uniforms.cameraFar.value = (camera as PerspectiveCamera).far
     uniforms.pointSize.value = this.pointSize * renderer.getPixelRatio()
+
+    const isPerspectiveCamera = camera.isPerspectiveCamera === true
+    if ((this.defines.PERSPECTIVE_CAMERA != null) !== isPerspectiveCamera) {
+      if (isPerspectiveCamera) {
+        this.defines.PERSPECTIVE_CAMERA = '1'
+      } else {
+        delete this.defines.PERSPECTIVE_CAMERA
+      }
+      this.needsUpdate = true
+    }
   }
 
   get magnitudeRange(): Vector2 {

@@ -11,6 +11,10 @@ layout(location = 0) out vec4 outputColor;
 in vec3 vColor;
 
 void main() {
+  #ifndef PERSPECTIVE_CAMERA
+  discard; // Rendering stars without perspective doesn't make sense.
+  #endif
+
   #ifdef BACKGROUND
   vec3 viewDirection = normalize(vWorldDirection);
   vec3 transmittance;
