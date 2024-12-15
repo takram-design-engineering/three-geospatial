@@ -226,6 +226,7 @@ export class AerialPerspectiveEffect extends Effect {
     // calculate interpolation alpha
     // interpolation values are picked to match previous rough globe scales to
     // match the previous "camera height" approach for interpolation
+    // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
     let a = MathUtils.mapLinear(vectorScratch.y, 41.5, 13.8, 0, 1)
     a = MathUtils.clamp(a, 0, 1)
     idealSphereAlphaUniform.value = a
