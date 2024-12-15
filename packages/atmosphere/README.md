@@ -940,14 +940,13 @@ correctAltitude: boolean = true
 
 See [correctAltitude](#correctaltitude)
 
-#### correctGeometricError, geometricErrorAltitudeRange
+#### correctGeometricError
 
 ```ts
 correctGeometricError: boolean = true
-geometricErrorAltitudeRange: Vector2 = new Vector2(2e5, 6e5)
 ```
 
-These options corrects artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere within the altitude range specified by `geometricErrorAltitudeRange`, in meters.
+These options corrects lighting artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere.
 
 Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
 
