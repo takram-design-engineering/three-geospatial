@@ -12,7 +12,7 @@ in vec3 vColor;
 
 void main() {
   #ifndef PERSPECTIVE_CAMERA
-  outputColor = vec4(0,0,0,0);
+  outputColor = vec4(0.0);
   discard; // Rendering celestial objects without perspective doesn't make sense.
   #endif
 

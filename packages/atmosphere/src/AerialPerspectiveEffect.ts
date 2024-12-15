@@ -8,7 +8,6 @@ import {
   MathUtils,
   Matrix4,
   Uniform,
-  Vector2,
   Vector3,
   type Data3DTexture,
   type DataTexture,
@@ -153,7 +152,6 @@ export class AerialPerspectiveEffect extends Effect {
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
-          ['geometricErrorAltitudeRange', new Uniform(new Vector2(2e5, 6e5))],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['irradianceScale', new Uniform(irradianceScale)]
         ]),
@@ -216,19 +214,21 @@ export class AerialPerspectiveEffect extends Effect {
     const position = camera.getWorldPosition(cameraPosition.value)
     cameraHeight.value = geodeticScratch.setFromECEF(position).height
 
-    // calculate the projected scale of the globe in clip space used to interpolate between the globe
-    // true normals and idealized normals to avoid lighting artifacts
-    const idealSphereAlphaUniform = uniforms.get('idealSphereAlpha')!;
-    const maxRadius = Math.max(...this.ellipsoid.radii);
-    const distanceToSurface = geodeticScratch.setFromECEF(position).height;
-    vectorScratch.set(0, maxRadius, -distanceToSurface).applyMatrix4(camera.projectionMatrix);
+    // calculate the projected scale of the globe in clip space used to
+    // interpolate between the globe true normals and idealized normals to avoid
+    // lighting artifacts
+    const idealSphereAlphaUniform = uniforms.get('idealSphereAlpha')!
+    const distanceToSurface = geodeticScratch.setFromECEF(position).height
+    vectorScratch
+      .set(0, this.ellipsoid.maximumRadius, -distanceToSurface)
+      .applyMatrix4(camera.projectionMatrix)
 
     // calculate interpolation alpha
-    // interpolation values are picked to match previous rough globe scales to match the previous
-    // "camera height" approach for interpolation
-    let a = MathUtils.mapLinear(vectorScratch.y, 41.5, 13.8, 0, 1);
-    a = MathUtils.clamp(a, 0, 1);
-    idealSphereAlphaUniform.value = a;
+    // interpolation values are picked to match previous rough globe scales to
+    // match the previous "camera height" approach for interpolation
+    let a = MathUtils.mapLinear(vectorScratch.y, 41.5, 13.8, 0, 1)
+    a = MathUtils.clamp(a, 0, 1)
+    idealSphereAlphaUniform.value = a
 
     const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
     if (this.correctAltitude) {
@@ -349,10 +349,6 @@ export class AerialPerspectiveEffect extends Effect {
       }
       this.setChanged()
     }
-  }
-
-  get geometricErrorAltitudeRange(): Vector2 {
-    return this.uniforms.get('geometricErrorAltitudeRange')!.value
   }
 
   get photometric(): boolean {
