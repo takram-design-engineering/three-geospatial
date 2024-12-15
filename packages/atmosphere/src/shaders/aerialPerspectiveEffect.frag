@@ -7,6 +7,7 @@ uniform float cameraHeight;
 uniform vec3 sunDirection;
 uniform float irradianceScale;
 uniform vec3 ellipsoidRadii;
+uniform float idealSphereAlpha;
 
 varying vec3 vWorldPosition;
 varying vec3 vEllipsoidCenter;
@@ -21,19 +22,11 @@ vec3 readNormal(const vec2 uv) {
 }
 
 void correctGeometricError(inout vec3 worldPosition, inout vec3 worldNormal) {
-  // calculate the projected scale of the globe in clip space
-  float maxRadius = max(ellipsoidRadii.x, max(ellipsoidRadii.y, ellipsoidRadii.z));
-  vec4 projectedPoint = projectionMatrix * vec4(0, maxRadius, - cameraHeight, 1);
-  projectedPoint /= projectedPoint.w;
-
-  // transition between the zoomed out and zoomed in normals based on projected size
-  float t = smoothstep(41.5, 13.8, projectedPoint.y);
-
   // Correct way is slerp, but this will be small-angle interpolation anyways.
   vec3 normal = normalize(1.0 / vEllipsoidRadiiSquared * worldPosition);
   vec3 position = u_bottom_radius * normal;
-  worldNormal = mix(worldNormal, normal, t);
-  worldPosition = mix(worldPosition, position, t);
+  worldNormal = mix(worldNormal, normal, idealSphereAlpha);
+  worldPosition = mix(worldPosition, position, idealSphereAlpha);
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
