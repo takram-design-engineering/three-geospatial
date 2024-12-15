@@ -323,6 +323,12 @@ Whether to adjust the atmosphere’s inner sphere to osculate (touch and share a
 
 The atmosphere is approximated as a sphere, with a radius between the ellipsoid’s major and minor axes. The difference can exceed 10,000 meters in worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
 
+An example at an altitude of 2,000 meters and a latitude of 35°:
+
+|        `correctAltitude = false`        |        `correctAltitude = true`        |
+| :-------------------------------------: | :------------------------------------: |
+| ![](docs/altitude-correction-false.jpg) | ![](docs/altitude-correction-true.jpg) |
+
 #### photometric
 
 ```ts
@@ -330,6 +336,10 @@ photometric: boolean = true
 ```
 
 Whether to store luminance instead of radiance in render buffers.
+
+|      `photometric = false`      |      `photometric = true`      |
+| :-----------------------------: | :----------------------------: |
+| ![](docs/photometric-false.jpg) | ![](docs/photometric-true.jpg) |
 
 #### date
 
@@ -612,6 +622,10 @@ The angular radius of the sun, in radians.
 
 Increase this value if the sun flickers in a low-resolution environment map. Modifying this value does not affect the sky’s total radiance unless the sun is partially visible.
 
+|      `sunAngularRadius = 0.004675`       |      `sunAngularRadius = 0.1`       |
+| :--------------------------------------: | :---------------------------------: |
+| ![](docs/sun-angular-radius-default.jpg) | ![](docs/sun-angular-radius-01.jpg) |
+
 ## SkyMaterial
 
 A material for displaying the sky. Apply this to a screen quad.
@@ -664,6 +678,10 @@ lunarRadianceScale: number = 1
 ```
 
 A scaling factor to adjust the brightness of the moon.
+
+|       `lunarRadianceScale = 1`       |       `lunarRadianceScale = 5`       |
+| :----------------------------------: | :----------------------------------: |
+| ![](docs/lunar-radiance-scale-1.jpg) | ![](docs/lunar-radiance-scale-5.jpg) |
 
 ## StarsMaterial
 
@@ -949,6 +967,12 @@ correctGeometricError: boolean = true
 These options corrects lighting artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere.
 
 Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
+
+A scaling factor to adjust the brightness of the moon.
+
+|       `correctGeometricError = false`       |       `correctGeometricError = true`       |
+| :-----------------------------------------: | :----------------------------------------: |
+| ![](docs/correct-geometric-error-false.jpg) | ![](docs/correct-geometric-error-true.jpg) |
 
 #### photometric
 
