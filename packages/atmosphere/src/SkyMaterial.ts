@@ -24,6 +24,12 @@ import parameters from './shaders/parameters.glsl'
 import fragmentShader from './shaders/sky.frag'
 import vertexShader from './shaders/sky.vert'
 
+declare module 'three' {
+  interface Camera {
+    isPerspectiveCamera?: boolean
+  }
+}
+
 export interface SkyMaterialParameters
   extends AtmosphereMaterialBaseParameters {
   sun?: boolean
@@ -75,6 +81,9 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         moonAngularRadius: new Uniform(moonAngularRadius),
         lunarRadianceScale: new Uniform(lunarRadianceScale),
         ...others.uniforms
+      },
+      defines: {
+        PERSPECTIVE_CAMERA: '1'
       }
     })
     this.sun = sun
@@ -93,6 +102,16 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     const uniforms = this.uniforms
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
+
+    const isPerspectiveCamera = camera.isPerspectiveCamera === true
+    if ((this.defines.PERSPECTIVE_CAMERA != null) !== isPerspectiveCamera) {
+      if (isPerspectiveCamera) {
+        this.defines.PERSPECTIVE_CAMERA = '1'
+      } else {
+        delete this.defines.PERSPECTIVE_CAMERA
+      }
+      this.needsUpdate = true
+    }
   }
 
   get sun(): boolean {
