@@ -325,9 +325,10 @@ The atmosphere is approximated as a sphere, with a radius between the ellipsoid�
 
 An example at an altitude of 2,000 meters and a latitude of 35°:
 
-|        `correctAltitude = false`        |        `correctAltitude = true`        |
-| :-------------------------------------: | :------------------------------------: |
-| ![](docs/altitude-correction-false.jpg) | ![](docs/altitude-correction-true.jpg) |
+<!-- prettier-ignore -->
+| `correctAltitude = false` | `correctAltitude = true` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/altitude-correction-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/altitude-correction-true.jpg) |
 
 #### photometric
 
@@ -337,9 +338,10 @@ photometric: boolean = true
 
 Whether to store luminance instead of radiance in render buffers.
 
-|      `photometric = false`      |      `photometric = true`      |
-| :-----------------------------: | :----------------------------: |
-| ![](docs/photometric-false.jpg) | ![](docs/photometric-true.jpg) |
+<!-- prettier-ignore -->
+| `photometric = false` | `photometric = true` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/photometric-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/photometric-true.jpg) |
 
 #### date
 
@@ -622,9 +624,10 @@ The angular radius of the sun, in radians.
 
 Increase this value if the sun flickers in a low-resolution environment map. Modifying this value does not affect the sky’s total radiance unless the sun is partially visible.
 
-|      `sunAngularRadius = 0.004675`       |      `sunAngularRadius = 0.1`       |
-| :--------------------------------------: | :---------------------------------: |
-| ![](docs/sun-angular-radius-default.jpg) | ![](docs/sun-angular-radius-01.jpg) |
+<!-- prettier-ignore -->
+| `sunAngularRadius = 0.004675` | `sunAngularRadius = 0.1` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/sun-angular-radius-default.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/sun-angular-radius-01.jpg) |
 
 ## SkyMaterial
 
@@ -679,9 +682,10 @@ lunarRadianceScale: number = 1
 
 A scaling factor to adjust the brightness of the moon.
 
-|       `lunarRadianceScale = 1`       |       `lunarRadianceScale = 5`       |
-| :----------------------------------: | :----------------------------------: |
-| ![](docs/lunar-radiance-scale-1.jpg) | ![](docs/lunar-radiance-scale-5.jpg) |
+<!-- prettier-ignore -->
+| `lunarRadianceScale = 1` | `lunarRadianceScale = 5` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/lunar-radiance-scale-1.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/lunar-radiance-scale-5.jpg) |
 
 ## StarsMaterial
 
@@ -968,9 +972,10 @@ These options corrects lighting artifacts caused by geometric errors in surface 
 
 Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
 
-|       `correctGeometricError = false`       |       `correctGeometricError = true`       |
-| :-----------------------------------------: | :----------------------------------------: |
-| ![](docs/correct-geometric-error-false.jpg) | ![](docs/correct-geometric-error-true.jpg) |
+<!-- prettier-ignore -->
+| `correctGeometricError = false` | `correctGeometricError = true` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/correct-geometric-error-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/correct-geometric-error-true.jpg) |
 
 #### photometric
 
