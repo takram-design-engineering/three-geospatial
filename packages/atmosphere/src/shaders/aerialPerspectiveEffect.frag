@@ -6,7 +6,6 @@ uniform mat4 inverseViewMatrix;
 uniform float cameraHeight;
 uniform vec3 sunDirection;
 uniform float irradianceScale;
-uniform vec3 ellipsoidRadii;
 uniform float idealSphereAlpha;
 
 varying vec3 vWorldPosition;

@@ -4,7 +4,6 @@ uniform vec3 cameraPosition;
 uniform float cameraHeight;
 uniform vec3 ellipsoidCenter;
 uniform vec3 ellipsoidRadii;
-uniform vec2 geometricErrorAltitudeRange;
 uniform float idealSphereAlpha;
 
 varying vec3 vWorldPosition;
