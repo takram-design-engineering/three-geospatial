@@ -968,8 +968,6 @@ These options corrects lighting artifacts caused by geometric errors in surface 
 
 Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
 
-A scaling factor to adjust the brightness of the moon.
-
 |       `correctGeometricError = false`       |       `correctGeometricError = true`       |
 | :-----------------------------------------: | :----------------------------------------: |
 | ![](docs/correct-geometric-error-false.jpg) | ![](docs/correct-geometric-error-true.jpg) |
