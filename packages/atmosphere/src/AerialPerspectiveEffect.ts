@@ -218,9 +218,8 @@ export class AerialPerspectiveEffect extends Effect {
     // interpolate between the globe true normals and idealized normals to avoid
     // lighting artifacts
     const idealSphereAlphaUniform = uniforms.get('idealSphereAlpha')!
-    const distanceToSurface = geodeticScratch.setFromECEF(position).height
     vectorScratch
-      .set(0, this.ellipsoid.maximumRadius, -distanceToSurface)
+      .set(0, this.ellipsoid.maximumRadius, -cameraHeight.value)
       .applyMatrix4(camera.projectionMatrix)
 
     // calculate interpolation alpha
