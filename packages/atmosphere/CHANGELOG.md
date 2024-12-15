@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0] - 2024-12-15
+
+### Changed
+
+- `AerialPerspectiveEffect`: Refined the geometric error correction to support different FoVs and orthographic camera, [#21](https://github.com/takram-design-engineering/three-geospatial/pull/21).
+- `AerialPerspectiveEffect`: Removed `geometricErrorAltitudeRange` parameter, [#21](https://github.com/takram-design-engineering/three-geospatial/pull/21).
+- `SkyMaterial`: Disabled sun and moon fragment output when using orthographic camera.
+- `Stars`, `StarsMaterial`: Disabled when using orthographic camera.
+
+### Fixed
+
+- `AerialPerspectiveEffect`: Fixed the shading was not visible due to the geometric error correction, [#21](https://github.com/takram-design-engineering/three-geospatial/pull/21).
+
 ## [0.3.0] - 2024-12-11
 
 ### Added
