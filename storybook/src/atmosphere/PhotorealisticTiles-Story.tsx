@@ -9,6 +9,7 @@ import {
   UpdateOnChangePlugin
 } from '3d-tiles-renderer/plugins'
 import {
+  CameraTransition,
   GlobeControls,
   TilesPlugin,
   TilesRenderer
@@ -93,6 +94,11 @@ const Scene: FC<SceneProps> = ({
   ...localDate
 }) => {
   useExposureControls({ exposure })
+  const { orthographic } = useControls(
+    'camera',
+    { orthographic: false },
+    { collapsed: true }
+  )
   const lut = useColorGradingControls()
   const { lensFlare, normal, depth } = useControls(
     'effects',
@@ -128,6 +134,11 @@ const Scene: FC<SceneProps> = ({
 
   const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
+    // Check the camera position to see if we've already moved it to globe surface
+    if (camera.position.length() > 10) {
+      return
+    }
+
     new PointOfView(distance, radians(heading), radians(pitch)).decompose(
       new Geodetic(radians(longitude), radians(latitude)).toECEF(),
       camera.position,
@@ -203,6 +214,7 @@ const Scene: FC<SceneProps> = ({
           )}
         </Fragment>
       </EffectComposer>
+      <CameraTransition mode={orthographic ? 'orthographic' : 'perspective'} />
     </Atmosphere>
   )
 }

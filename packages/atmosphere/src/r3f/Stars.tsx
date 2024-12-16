@@ -1,4 +1,4 @@
-import { useFrame, type PointsProps } from '@react-three/fiber'
+import { useFrame, useThree, type PointsProps } from '@react-three/fiber'
 import {
   forwardRef,
   useContext,
@@ -20,6 +20,12 @@ import {
 } from '../StarsMaterial'
 import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
+
+declare module 'three' {
+  interface Camera {
+    isPerspectiveCamera?: boolean
+  }
+}
 
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
@@ -81,14 +87,15 @@ export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
     }, [material])
 
     const ref = useRef<Points>(null)
-    useFrame(() => {
-      if (transientProps != null) {
+    useFrame(({ camera }) => {
+      if (transientProps != null && camera.isPerspectiveCamera === true) {
         material.sunDirection.copy(transientProps.sunDirection)
         ref.current?.setRotationFromMatrix(transientProps.rotationMatrix)
       }
     })
 
-    if (geometry == null) {
+    const camera = useThree(({ camera }) => camera)
+    if (geometry == null || camera.isPerspectiveCamera !== true) {
       return null
     }
     return (

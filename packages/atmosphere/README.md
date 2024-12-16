@@ -323,6 +323,13 @@ Whether to adjust the atmosphere’s inner sphere to osculate (touch and share a
 
 The atmosphere is approximated as a sphere, with a radius between the ellipsoid’s major and minor axes. The difference can exceed 10,000 meters in worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
 
+An example at an altitude of 2,000 meters and a latitude of 35°:
+
+<!-- prettier-ignore -->
+| `correctAltitude = false` | `correctAltitude = true` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/altitude-correction-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/altitude-correction-true.jpg) |
+
 #### photometric
 
 ```ts
@@ -330,6 +337,11 @@ photometric: boolean = true
 ```
 
 Whether to store luminance instead of radiance in render buffers.
+
+<!-- prettier-ignore -->
+| `photometric = false` | `photometric = true` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/photometric-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/photometric-true.jpg) |
 
 #### date
 
@@ -612,6 +624,11 @@ The angular radius of the sun, in radians.
 
 Increase this value if the sun flickers in a low-resolution environment map. Modifying this value does not affect the sky’s total radiance unless the sun is partially visible.
 
+<!-- prettier-ignore -->
+| `sunAngularRadius = 0.004675` | `sunAngularRadius = 0.1` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/sun-angular-radius-default.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/sun-angular-radius-01.jpg) |
+
 ## SkyMaterial
 
 A material for displaying the sky. Apply this to a screen quad.
@@ -664,6 +681,11 @@ lunarRadianceScale: number = 1
 ```
 
 A scaling factor to adjust the brightness of the moon.
+
+<!-- prettier-ignore -->
+| `lunarRadianceScale = 1` | `lunarRadianceScale = 5` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/lunar-radiance-scale-1.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/lunar-radiance-scale-5.jpg) |
 
 ## StarsMaterial
 
@@ -940,16 +962,20 @@ correctAltitude: boolean = true
 
 See [correctAltitude](#correctaltitude)
 
-#### correctGeometricError, geometricErrorAltitudeRange
+#### correctGeometricError
 
 ```ts
 correctGeometricError: boolean = true
-geometricErrorAltitudeRange: Vector2 = new Vector2(2e5, 6e5)
 ```
 
-These options corrects artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere within the altitude range specified by `geometricErrorAltitudeRange`, in meters.
+These options corrects lighting artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere.
 
 Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
+
+<!-- prettier-ignore -->
+| `correctGeometricError = false` | `correctGeometricError = true` |
+| :-: | :-: |
+| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/correct-geometric-error-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/correct-geometric-error-true.jpg) |
 
 #### photometric
 

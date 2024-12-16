@@ -3,7 +3,15 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
 import { EffectAttribute } from 'postprocessing'
-import { Uniform, Vector2, type Camera, type Texture } from 'three'
+import {
+  MathUtils,
+  Uniform,
+  Vector3,
+  type Camera,
+  type Texture,
+  type WebGLRenderer,
+  type WebGLRenderTarget
+} from 'three'
 
 import { depth, packing, transform } from '@takram/three-geospatial/shaders'
 
@@ -18,6 +26,8 @@ import fragmentShader from './shaders/aerialPerspectiveEffect.frag'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert'
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
+
+const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface AerialPerspectiveEffectOptions
   extends AtmosphereEffectBaseOptions {
@@ -84,7 +94,7 @@ export class AerialPerspectiveEffect extends AtmosphereEffectBase {
         // prettier-ignore
         uniforms: new Map<string, Uniform>([
           ['normalBuffer', new Uniform(normalBuffer)],
-          ['geometricErrorAltitudeRange', new Uniform(new Vector2(2e5, 6e5))],
+          ['idealSphereAlpha', new Uniform(0)],
           ['irradianceScale', new Uniform(irradianceScale)]
         ])
       },
@@ -98,6 +108,32 @@ export class AerialPerspectiveEffect extends AtmosphereEffectBase {
     this.skyIrradiance = skyIrradiance
     this.transmittance = transmittance
     this.inscatter = inscatter
+  }
+
+  override update(
+    renderer: WebGLRenderer,
+    inputBuffer: WebGLRenderTarget,
+    deltaTime?: number
+  ): void {
+    super.update(renderer, inputBuffer, deltaTime)
+    const uniforms = this.uniforms
+
+    // calculate the projected scale of the globe in clip space used to
+    // interpolate between the globe true normals and idealized normals to avoid
+    // lighting artifacts
+    const cameraHeight = uniforms.get('cameraHeight')!
+    const idealSphereAlphaUniform = uniforms.get('idealSphereAlpha')!
+    vectorScratch
+      .set(0, this.ellipsoid.maximumRadius, -cameraHeight.value)
+      .applyMatrix4(this.camera.projectionMatrix)
+
+    // calculate interpolation alpha
+    // interpolation values are picked to match previous rough globe scales to
+    // match the previous "camera height" approach for interpolation
+    // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
+    let a = MathUtils.mapLinear(vectorScratch.y, 41.5, 13.8, 0, 1)
+    a = MathUtils.clamp(a, 0, 1)
+    idealSphereAlphaUniform.value = a
   }
 
   get normalBuffer(): Texture | null {
@@ -151,10 +187,6 @@ export class AerialPerspectiveEffect extends AtmosphereEffectBase {
       }
       this.setChanged()
     }
-  }
-
-  get geometricErrorAltitudeRange(): Vector2 {
-    return this.uniforms.get('geometricErrorAltitudeRange')!.value
   }
 
   get sunIrradiance(): boolean {

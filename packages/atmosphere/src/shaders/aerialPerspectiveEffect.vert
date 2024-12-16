@@ -4,7 +4,7 @@ uniform vec3 cameraPosition;
 uniform float cameraHeight;
 uniform vec3 ellipsoidCenter;
 uniform vec3 ellipsoidRadii;
-uniform vec2 geometricErrorAltitudeRange;
+uniform float idealSphereAlpha;
 
 varying vec3 vWorldPosition;
 varying vec3 vEllipsoidCenter;
@@ -27,8 +27,7 @@ void getCameraRay(out vec3 origin, out vec3 direction) {
     farPoint /= farPoint.w;
 
     // calculate world values
-    vec4 worldDirection =
-      inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
+    vec4 worldDirection = inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
     vec4 worldOrigin = inverseViewMatrix * nearPoint;
 
     // outputs
@@ -43,8 +42,7 @@ void mainSupport() {
   vWorldPosition = origin * METER_TO_UNIT_LENGTH;
 
   #ifdef CORRECT_GEOMETRIC_ERROR
-  float t = smoothstep(geometricErrorAltitudeRange.x, geometricErrorAltitudeRange.y, cameraHeight);
-  vEllipsoidCenter = mix(ellipsoidCenter, vec3(0.0), t) * METER_TO_UNIT_LENGTH;
+  vEllipsoidCenter = mix(ellipsoidCenter, vec3(0.0), idealSphereAlpha) * METER_TO_UNIT_LENGTH;
   #else
   vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
   #endif // CORRECT_GEOMETRIC_ERROR

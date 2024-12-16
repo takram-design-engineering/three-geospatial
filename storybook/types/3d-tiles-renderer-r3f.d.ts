@@ -1,6 +1,6 @@
 declare module '3d-tiles-renderer/r3f' {
   import { type GlobeControls, type TilesRenderer } from '3d-tiles-renderer'
-  import { type RefAttributes } from 'react'
+  import { type FC, type RefAttributes } from 'react'
 
   export function TilesPlugin<
     T extends new (...args: any[]) => any,
@@ -33,4 +33,8 @@ declare module '3d-tiles-renderer/r3f' {
       ? ConstructorParameters<T>[0]
       : {}
   >(props: {} & Partial<Params> & RefAttributes<GlobeControls>): JSX.Element
+
+  export const CameraTransition: FC<{
+    mode: 'perspective' | 'orthographic'
+  }>
 }

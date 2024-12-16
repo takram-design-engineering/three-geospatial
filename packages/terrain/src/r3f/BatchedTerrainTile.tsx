@@ -5,7 +5,6 @@ import { clear, suspend } from 'suspend-react'
 import { BatchedMesh, Matrix4, Vector3 } from 'three'
 
 import {
-  isNotNullish,
   TileCoordinate,
   type TileCoordinateLike
 } from '@takram/three-geospatial'
@@ -53,7 +52,7 @@ export const BatchedTerrainTile = /*#__PURE__*/ memo(
             })()
           )
         }
-        return (await Promise.all(promises)).filter(isNotNullish)
+        return (await Promise.all(promises)).filter(promise => promise != null)
       }, [terrain, x, y, z, depth])
 
       useEffect(() => {

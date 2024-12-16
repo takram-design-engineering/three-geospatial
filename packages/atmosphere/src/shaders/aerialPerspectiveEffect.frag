@@ -4,9 +4,9 @@ uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform float cameraHeight;
-uniform vec2 geometricErrorAltitudeRange;
 uniform vec3 sunDirection;
 uniform float irradianceScale;
+uniform float idealSphereAlpha;
 
 varying vec3 vWorldPosition;
 varying vec3 vEllipsoidCenter;
@@ -20,18 +20,12 @@ vec3 readNormal(const vec2 uv) {
   #endif // OCT_ENCODED_NORMAL
 }
 
-void correctGeometricError(
-  float minHeight,
-  float maxHeight,
-  inout vec3 worldPosition,
-  inout vec3 worldNormal
-) {
+void correctGeometricError(inout vec3 worldPosition, inout vec3 worldNormal) {
+  // Correct way is slerp, but this will be small-angle interpolation anyways.
   vec3 normal = normalize(1.0 / vEllipsoidRadiiSquared * worldPosition);
   vec3 position = u_bottom_radius * normal;
-  float t = smoothstep(minHeight, maxHeight, cameraHeight);
-  worldPosition = mix(worldPosition, position, t);
-  // Correct way is slerp, but this will be small-angle interpolation anyways.
-  worldNormal = mix(worldNormal, normal, t);
+  worldNormal = mix(worldNormal, normal, idealSphereAlpha);
+  worldPosition = mix(worldPosition, position, idealSphereAlpha);
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
@@ -110,12 +104,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
   #ifdef CORRECT_GEOMETRIC_ERROR
-  correctGeometricError(
-    geometricErrorAltitudeRange.x,
-    geometricErrorAltitudeRange.y,
-    worldPosition,
-    worldNormal
-  );
+  correctGeometricError(worldPosition, worldNormal);
   #endif // CORRECT_GEOMETRIC_ERROR
 
   vec3 radiance;

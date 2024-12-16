@@ -1,8 +1,6 @@
 import { pick } from 'lodash-es'
 import { Box3, BufferAttribute, BufferGeometry, Sphere, Vector3 } from 'three'
 
-import { isNotNullish } from './assertions'
-
 export type BufferGeometryLike = Pick<
   BufferGeometry,
   'attributes' | 'index' | 'boundingBox' | 'boundingSphere'
@@ -18,7 +16,7 @@ export function toBufferGeometryLike(
         attribute => attribute.array.buffer
       ),
       geometry.index?.array.buffer
-    ].filter(isNotNullish)
+    ].filter(buffer => buffer != null)
   ]
 }
 
