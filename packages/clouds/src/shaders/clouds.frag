@@ -220,15 +220,12 @@ vec3 multipleScattering(
   float coeff = 1.0;
   const float attenuation = 0.5;
   vec3 radiance = vec3(0.0);
-  float beerLambert;
-  #pragma unroll_loop_start
-  for (int i = 0; i < MULTI_SCATTERING_OCTAVES; i++) {
-    beerLambert = exp(-opticalDepth * coeff);
+  for (int octave = 0; octave < MULTI_SCATTERING_OCTAVES; ++octave) {
+    float beerLambert = exp(-opticalDepth * coeff);
     // TODO: We may not afford calculating the phase function at every step.
     radiance += coeff * incidentLight * beerLambert * phaseFunction(cosTheta * coeff, coeff);
     coeff *= attenuation;
   }
-  #pragma unroll_loop_end
   return radiance;
 }
 
