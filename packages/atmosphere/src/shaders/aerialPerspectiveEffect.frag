@@ -85,8 +85,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
     #ifdef SKY
-    vec3 rayDirection = normalize(vWorldDirection);
     vec3 viewPosition = vWorldPosition - vEllipsoidCenter;
+    vec3 rayDirection = normalize(vWorldDirection);
     outputColor.rgb = getSkyRadiance(
       viewPosition,
       rayDirection,

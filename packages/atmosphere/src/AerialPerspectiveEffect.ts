@@ -64,13 +64,13 @@ export interface AerialPerspectiveEffectOptions {
   skyIrradiance?: boolean
   transmittance?: boolean
   inscatter?: boolean
+  irradianceScale?: number
   sky?: boolean
   sun?: boolean
   moon?: boolean
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
-  irradianceScale?: number
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -85,12 +85,12 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   skyIrradiance: false,
   transmittance: true,
   inscatter: true,
+  irradianceScale: 1,
   sky: true,
   sun: true,
   moon: true,
   moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
-  lunarRadianceScale: 1,
-  irradianceScale: 1
+  lunarRadianceScale: 1
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
@@ -121,13 +121,13 @@ export class AerialPerspectiveEffect extends Effect {
       skyIrradiance,
       transmittance,
       inscatter,
+      irradianceScale,
       sky,
       sun,
       moon,
       moonDirection,
       moonAngularRadius,
-      lunarRadianceScale,
-      irradianceScale
+      lunarRadianceScale
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
     super(
@@ -172,10 +172,10 @@ export class AerialPerspectiveEffect extends Effect {
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
+          ['irradianceScale', new Uniform(irradianceScale)],
           ['moonDirection', new Uniform(moonDirection?.clone() ?? new Vector3())],
           ['moonAngularRadius', new Uniform(moonAngularRadius)],
-          ['lunarRadianceScale', new Uniform(lunarRadianceScale)],
-          ['irradianceScale', new Uniform(irradianceScale)]
+          ['lunarRadianceScale', new Uniform(lunarRadianceScale)]
         ]),
         // prettier-ignore
         defines: new Map<string, string>([
@@ -455,6 +455,14 @@ export class AerialPerspectiveEffect extends Effect {
     }
   }
 
+  get irradianceScale(): number {
+    return this.uniforms.get('irradianceScale')!.value
+  }
+
+  set irradianceScale(value: number) {
+    this.uniforms.get('irradianceScale')!.value = value
+  }
+
   get sky(): boolean {
     return this.defines.has('SKY')
   }
@@ -518,13 +526,5 @@ export class AerialPerspectiveEffect extends Effect {
 
   set lunarRadianceScale(value: number) {
     this.uniforms.get('lunarRadianceScale')!.value = value
-  }
-
-  get irradianceScale(): number {
-    return this.uniforms.get('irradianceScale')!.value
-  }
-
-  set irradianceScale(value: number) {
-    this.uniforms.get('irradianceScale')!.value = value
   }
 }

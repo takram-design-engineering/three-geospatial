@@ -12,8 +12,8 @@ layout(location = 0) out vec4 outputColor;
 #include <mrt_layout>
 
 void main() {
-  vec3 rayDirection = normalize(vWorldDirection);
   vec3 viewPosition = vWorldPosition - vEllipsoidCenter;
+  vec3 rayDirection = normalize(vWorldDirection);
 
   outputColor.rgb = getSkyRadiance(
     viewPosition,

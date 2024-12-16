@@ -74,20 +74,23 @@ const Scene: FC = () => {
     },
     { collapsed: true }
   )
-  const { enabled, transmittance, inscatter } = useControls(
-    'aerial perspective',
-    {
-      enabled: true,
-      transmittance: true,
-      inscatter: true
-    }
-  )
-  const { mode, sun, sky } = useControls('lighting', {
+  const {
+    enabled,
+    transmittance,
+    inscatter,
+    sky: postprocessSky
+  } = useControls('aerial perspective', {
+    enabled: true,
+    transmittance: true,
+    inscatter: true,
+    sky: false
+  })
+  const { mode, sunLight, skyLight } = useControls('lighting', {
     mode: {
       options: ['deferred', 'forward'] as const
     },
-    sun: true,
-    sky: true
+    sunLight: true,
+    skyLight: true
   })
 
   const { camera } = useThree()
@@ -121,11 +124,11 @@ const Scene: FC = () => {
       photometric={photometric}
     >
       <OrbitControls ref={setControls} />
-      <Sky />
+      {!postprocessSky && <Sky />}
       {mode === 'forward' && (
         <group position={position}>
-          {sun && <SunLight />}
-          {sky && <SkyLight />}
+          {sunLight && <SunLight />}
+          {skyLight && <SkyLight />}
         </group>
       )}
       <Stars data='atmosphere/stars.bin' />
@@ -172,8 +175,8 @@ const Scene: FC = () => {
           key={JSON.stringify({
             enabled,
             mode,
-            sun,
-            sky,
+            sunLight,
+            skyLight,
             transmittance,
             inscatter,
             lensFlare,
@@ -183,10 +186,11 @@ const Scene: FC = () => {
         >
           {enabled && !normal && !depth && (
             <AerialPerspective
-              sunIrradiance={mode === 'deferred' && sun}
-              skyIrradiance={mode === 'deferred' && sky}
+              sunIrradiance={mode === 'deferred' && sunLight}
+              skyIrradiance={mode === 'deferred' && skyLight}
               transmittance={transmittance}
               inscatter={inscatter}
+              sky={postprocessSky}
             />
           )}
           {lensFlare && <LensFlare />}
