@@ -55,7 +55,7 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
     })
 
     return (
-      <ScreenQuad renderOrder={-1} {...others} ref={forwardedRef}>
+      <ScreenQuad renderOrder={1e2} {...others} ref={forwardedRef}>
         <primitive
           object={material}
           {...atmosphereParameters}

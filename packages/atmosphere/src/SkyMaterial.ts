@@ -88,6 +88,8 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     })
     this.sun = sun
     this.moon = moon
+
+    this.depthTest = true;
   }
 
   override onBeforeRender(
