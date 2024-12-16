@@ -3,6 +3,8 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
 import {
+  Clock,
+  Color,
   GLSL3,
   Matrix4,
   Uniform,
@@ -40,7 +42,6 @@ import phaseFunction from './shaders/phaseFunction.glsl'
 declare module 'three' {
   interface Camera {
     isPerspectiveCamera?: boolean
-    isOrthographicCamera?: boolean
   }
 }
 
@@ -59,7 +60,6 @@ export const cloudsMaterialParametersDefaults = {
 
 interface CloudsMaterialUniforms {
   [key: string]: Uniform
-  projectionMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>
   inverseViewMatrix: Uniform<Matrix4>
   resolution: Uniform<Vector2>
@@ -73,7 +73,6 @@ interface CloudsMaterialUniforms {
   depthBuffer: Uniform<Texture | null>
   shapeTexture: Uniform<Texture | null>
   shapeDetailTexture: Uniform<Texture | null>
-  coverageTexture: Uniform<Texture | null>
   coverageDetailTexture: Uniform<Texture | null>
   coverage: Uniform<number>
 }
@@ -119,27 +118,42 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ${fragmentShader}
         `,
         uniforms: {
-          projectionMatrix: new Uniform(new Matrix4()),
+          depthBuffer: new Uniform(depthBuffer),
           inverseProjectionMatrix: new Uniform(new Matrix4()),
           inverseViewMatrix: new Uniform(new Matrix4()),
           resolution: new Uniform(new Vector2()),
           cameraPosition: new Uniform(new Vector3()),
+          cameraHeight: new Uniform(0),
           cameraNear: new Uniform(0),
           cameraFar: new Uniform(0),
-          cameraHeight: new Uniform(0),
           ellipsoidRadii: new Uniform(new Vector3()),
+          bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
+          blueNoiseTexture: new Uniform(null),
+          time: new Uniform(0),
 
           // Cloud parameters
-          depthBuffer: new Uniform(depthBuffer),
           shapeTexture: new Uniform(shape.texture),
           shapeDetailTexture: new Uniform(shapeDetail.texture),
-          coverageTexture: new Uniform(null),
           coverageDetailTexture: new Uniform(null),
-          coverage: new Uniform(0.3)
+          coverage: new Uniform(0.3),
+          albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
+          useDetail: new Uniform(true),
+          coverageDetailFrequency: new Uniform(new Vector2(300, 150)),
+          shapeFrequency: new Uniform(0.0003),
+          shapeDetailFrequency: new Uniform(0.007),
+
+          // Raymarch to clouds
+          maxIterations: new Uniform(1000),
+          initialStepSize: new Uniform(100),
+          maxStepSize: new Uniform(500),
+          maxRayDistance: new Uniform(2e5),
+          minDensity: new Uniform(1e-5),
+          minTransmittance: new Uniform(1e-2)
         } satisfies CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
-          PHASE_FUNCTION: '1'
+          PHASE_FUNCTION: '2',
+          MULTI_SCATTERING_OCTAVES: '8'
         }
       },
       atmosphere
@@ -148,6 +162,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.shape = shape
     this.shapeDetail = shapeDetail
   }
+
+  clock = new Clock()
 
   onBeforeRender(
     renderer: WebGLRenderer,
@@ -159,6 +175,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   ): void {
     this.shape.update(renderer)
     this.shapeDetail.update(renderer)
+    this.uniforms.time.value = this.clock.getElapsedTime()
   }
 
   copyCameraSettings(camera?: Camera | null): void {
@@ -178,10 +195,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
 
     const uniforms = this.uniforms
-    const projectionMatrix = uniforms.projectionMatrix
     const inverseProjectionMatrix = uniforms.inverseProjectionMatrix
     const inverseViewMatrix = uniforms.inverseViewMatrix
-    projectionMatrix.value.copy(camera.projectionMatrix)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
 
@@ -243,19 +258,19 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get coverageTexture(): Texture | null {
-    return this.uniforms.coverageTexture.value
-  }
-
-  set coverageTexture(value: Texture | null) {
-    this.uniforms.coverageTexture.value = value
-  }
-
   get coverageDetailTexture(): Texture | null {
     return this.uniforms.coverageDetailTexture.value
   }
 
   set coverageDetailTexture(value: Texture | null) {
     this.uniforms.coverageDetailTexture.value = value
+  }
+
+  get blueNoiseTexture(): Texture | null {
+    return this.uniforms.blueNoiseTexture.value
+  }
+
+  set blueNoiseTexture(value: Texture | null) {
+    this.uniforms.blueNoiseTexture.value = value
   }
 }
