@@ -29,12 +29,13 @@ import {
   AtmosphereParameters,
   type AtmosphereEffectBaseOptions
 } from '@takram/three-atmosphere'
+import { type Ellipsoid } from '@takram/three-geospatial'
 
 import { CloudsMaterial } from './CloudsMaterial'
 
 import fragmentShader from './shaders/cloudsEffect.frag'
 
-const phaseFunctionTypes = ['hillaire', 'watoo', 'analytic', 'draine']
+const phaseFunctionTypes = ['2robes', '3robes', 'draine']
 export type PhaseFunctionType = (typeof phaseFunctionTypes)[number]
 
 export interface CloudsEffectOptions extends AtmosphereEffectBaseOptions {
@@ -50,16 +51,16 @@ export interface CloudsEffectOptions extends AtmosphereEffectBaseOptions {
 export const cloudsEffectOptionsDefaults = {
   ...atmosphereEffectBaseOptionsDefaults,
   blendFunction: BlendFunction.NORMAL,
-  resolutionScale: 0.5,
+  resolutionScale: 1,
   width: Resolution.AUTO_SIZE,
   height: Resolution.AUTO_SIZE
 } satisfies CloudsEffectOptions
 
 export class CloudsEffect extends Effect {
   readonly resolution: Resolution
-  private readonly renderTarget: WebGLRenderTarget
-  private readonly cloudsMaterial: CloudsMaterial
-  private readonly cloudsPass: ShaderPass
+  readonly renderTarget: WebGLRenderTarget
+  readonly cloudsMaterial: CloudsMaterial
+  readonly cloudsPass: ShaderPass
 
   constructor(
     private camera: Camera = new Camera(),
@@ -157,20 +158,20 @@ export class CloudsEffect extends Effect {
     this.cloudsMaterial.depthPacking = depthPacking ?? 0
   }
 
-  get coverageTexture(): Texture | null {
-    return this.cloudsMaterial.coverageTexture
-  }
-
-  set coverageTexture(value: Texture | null) {
-    this.cloudsMaterial.coverageTexture = value
-  }
-
   get coverageDetailTexture(): Texture | null {
     return this.cloudsMaterial.coverageDetailTexture
   }
 
   set coverageDetailTexture(value: Texture | null) {
     this.cloudsMaterial.coverageDetailTexture = value
+  }
+
+  get blueNoiseTexture(): Texture | null {
+    return this.cloudsMaterial.blueNoiseTexture
+  }
+
+  set blueNoiseTexture(value: Texture | null) {
+    this.cloudsMaterial.blueNoiseTexture = value
   }
 
   get coverage(): number {
@@ -187,6 +188,7 @@ export class CloudsEffect extends Effect {
 
   set phaseFunction(value: PhaseFunctionType) {
     this.cloudsMaterial.defines.PHASE_FUNCTION = `${phaseFunctionTypes.indexOf(value)}`
+    this.cloudsMaterial.needsUpdate = true
   }
 
   // Redundant pass-though accessors.
@@ -221,6 +223,22 @@ export class CloudsEffect extends Effect {
 
   set useHalfFloat(value: boolean) {
     this.cloudsMaterial.useHalfFloat = value
+  }
+
+  get ellipsoid(): Ellipsoid {
+    return this.cloudsMaterial.ellipsoid
+  }
+
+  set ellipsoid(value: Ellipsoid) {
+    this.cloudsMaterial.ellipsoid = value
+  }
+
+  get correctAltitude(): boolean {
+    return this.cloudsMaterial.correctAltitude
+  }
+
+  set correctAltitude(value: boolean) {
+    this.cloudsMaterial.correctAltitude = value
   }
 
   get photometric(): boolean {
