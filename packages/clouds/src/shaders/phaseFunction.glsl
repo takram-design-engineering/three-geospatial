@@ -1,13 +1,13 @@
-const float RECIPROCAL_FOUR_PI = 0.07957747154594767;
+const float RECIPROCAL_PI4 = 0.07957747154594767;
 
 float henyeyGreenstein(const float g, const float cosTheta) {
   float g2 = g * g;
-  return RECIPROCAL_FOUR_PI * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5));
+  return RECIPROCAL_PI4 * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5));
 }
 
 vec3 henyeyGreenstein(const vec3 g, const float cosTheta) {
   vec3 g2 = g * g;
-  return RECIPROCAL_FOUR_PI * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, vec3(1.5)));
+  return RECIPROCAL_PI4 * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, vec3(1.5)));
 }
 
 float draine(float u, float g, float a) {

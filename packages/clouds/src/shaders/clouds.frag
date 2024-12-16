@@ -65,7 +65,12 @@ float getViewZ(const float depth) {
   #endif
 }
 
-float raySphereFirstIntersection(vec3 origin, vec3 direction, vec3 center, float radius) {
+float raySphereFirstIntersection(
+  const vec3 origin,
+  const vec3 direction,
+  const vec3 center,
+  const float radius
+) {
   vec3 a = origin - center;
   float b = 2.0 * dot(direction, a);
   float c = dot(a, a) - radius * radius;
@@ -75,7 +80,12 @@ float raySphereFirstIntersection(vec3 origin, vec3 direction, vec3 center, float
     : (-b - sqrt(discriminant)) * 0.5;
 }
 
-float raySphereSecondIntersection(vec3 origin, vec3 direction, vec3 center, float radius) {
+float raySphereSecondIntersection(
+  const vec3 origin,
+  const vec3 direction,
+  const vec3 center,
+  const float radius
+) {
   vec3 a = origin - center;
   float b = 2.0 * dot(direction, a);
   float c = dot(a, a) - radius * radius;
@@ -86,10 +96,10 @@ float raySphereSecondIntersection(vec3 origin, vec3 direction, vec3 center, floa
 }
 
 void raySphereIntersections(
-  vec3 origin,
-  vec3 direction,
-  vec3 center,
-  float radius,
+  const vec3 origin,
+  const vec3 direction,
+  const vec3 center,
+  const float radius,
   out float intersection1,
   out float intersection2
 ) {
@@ -112,9 +122,8 @@ float random(const vec2 uv) {
   return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-const float goldenRatio = 1.61803398875;
-
 float blueNoise(const vec2 uv) {
+  const float goldenRatio = 1.61803398875;
   return fract(texture(blueNoiseTexture, uv * resolution / 256.0).r * time * goldenRatio);
 }
 
@@ -125,7 +134,7 @@ vec2 getGlobeUv(const vec3 position) {
   return vec2(phi * RECIPROCAL_PI2 + 0.5, theta * RECIPROCAL_PI + 0.5);
 }
 
-float getMipLevel(vec2 uv) {
+float getMipLevel(const vec2 uv) {
   vec2 coord = uv * resolution;
   vec2 ddx = dFdx(coord);
   vec2 ddy = dFdy(coord);
@@ -138,17 +147,18 @@ struct CoverageSample {
   vec4 heightScale;
 };
 
-vec4 shapeAlteringFunction(vec4 heightFraction, float bias) {
+vec4 shapeAlteringFunction(const vec4 heightFraction, const float bias) {
   // Apply a semi-circle transform round the clouds towards the top.
   vec4 biased = pow(heightFraction, vec4(bias));
   vec4 x = clamp(biased * 2.0 - 1.0, -1.0, 1.0);
   return vec4(1.0) - x * x;
 }
 
-CoverageSample sampleCoverage(vec2 uv, float height, float mipLevel) {
+CoverageSample sampleCoverage(const vec2 uv, const float height, const float mipLevel) {
   CoverageSample cs;
   cs.coverageDetail = pow(
-    textureLod(coverageDetailTexture, uv.xy * coverageDetailFrequency, mipLevel),
+    textureLod(coverageDetailTexture, uv * coverageDetailFrequency, mipLevel),
+    // TODO: Parameterize exponents.
     vec4(1.0, 3.0, 2.0, 1.0)
   );
   cs.heightFraction = saturate(
@@ -159,6 +169,7 @@ CoverageSample sampleCoverage(vec2 uv, float height, float mipLevel) {
 }
 
 vec4 sampleDensity(CoverageSample cs) {
+  // TODO: Nicely decrease density at the bottom.
   vec4 inverseCoverage = 1.0 - coverage * cs.heightScale;
   return saturate(
     remap(
@@ -171,17 +182,17 @@ vec4 sampleDensity(CoverageSample cs) {
   );
 }
 
-float sampleDensityDetail(CoverageSample cs, vec3 pos, float mipLevel) {
+float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mipLevel) {
   vec4 density = sampleDensity(cs);
   float intensity = mipLevel * 0.3;
   if (intensity < 1.0) {
-    float shape = textureLod(shapeTexture, pos * shapeFrequency, 0.0).r;
+    float shape = textureLod(shapeTexture, position * shapeFrequency, 0.0).r;
     // shape = pow(shape, 6.0) * 0.4; // Modulation for whippier shape
     shape = 1.0 - shape; // Or invert for fluffy shape
     density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), densityDetailAmounts);
 
     if (useDetail) {
-      float detail = textureLod(shapeDetailTexture, pos * shapeDetailFrequency, 0.0).r;
+      float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
       // Fluffy at the top and whippy at the bottom.
       vec4 modifier = mix(
         vec4(pow(detail, 5.0)),
@@ -292,7 +303,7 @@ vec4 marchToCloud(
     vec3 position = rayDirection * rayDistance + rayOrigin;
 
     // Sample a rough density.
-    float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance / 120000.0));
+    float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance / 1e5));
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
     CoverageSample cs = sampleCoverage(uv, height, mipLevel);
@@ -432,6 +443,7 @@ void main() {
   }
 
   // Apply a jitter to remove banding in raymarch.
+  // TODO: Implement structured sampling: https://github.com/huwb/volsample
   float stepSize = initialStepSize;
   rayNear += stepSize * random(uv);
 
