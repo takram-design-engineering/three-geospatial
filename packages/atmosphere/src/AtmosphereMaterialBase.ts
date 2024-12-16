@@ -1,4 +1,5 @@
 import {
+  Matrix4,
   RawShaderMaterial,
   Uniform,
   Vector3,
@@ -49,6 +50,7 @@ export interface AtmosphereMaterialProps {
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
+  ellipsoidMatrix?: Matrix4
   correctAltitude?: boolean
   photometric?: boolean
   sunDirection?: Vector3
@@ -84,6 +86,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       transmittanceTexture = null,
       useHalfFloat,
       ellipsoid,
+      ellipsoidMatrix,
       correctAltitude,
       photometric,
       sunDirection,
@@ -113,6 +116,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_transmittance_texture: new Uniform(transmittanceTexture),
         cameraPosition: new Uniform(new Vector3()),
         ellipsoidCenter: new Uniform(new Vector3()),
+        ellipsoidMatrix: new Uniform(ellipsoidMatrix?.clone() ?? new Matrix4()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
       },
@@ -217,6 +221,10 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.uniforms.u_mu_s_min.value = value
       ? this.atmosphere.muSMinHalfFloat
       : this.atmosphere.muSMinFloat
+  }
+
+  get ellipsoidMatrix(): Matrix4 {
+    return this.uniforms.ellipsoidMatrix.value
   }
 
   get photometric(): boolean {

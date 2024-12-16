@@ -55,6 +55,7 @@ export interface AerialPerspectiveEffectOptions {
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
+  ellipsoidMatrix?: Matrix4
   correctAltitude?: boolean
   correctGeometricError?: boolean
   photometric?: boolean
@@ -101,6 +102,7 @@ export class AerialPerspectiveEffect extends Effect {
       transmittanceTexture = null,
       useHalfFloat,
       ellipsoid,
+      ellipsoidMatrix,
       correctAltitude,
       correctGeometricError,
       photometric,
@@ -151,6 +153,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['cameraPosition', new Uniform(new Vector3())],
           ['cameraHeight', new Uniform(0)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
+          ['ellipsoidMatrix', new Uniform(ellipsoidMatrix?.clone() ?? new Matrix4())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['irradianceScale', new Uniform(irradianceScale)]
@@ -334,6 +337,10 @@ export class AerialPerspectiveEffect extends Effect {
   set ellipsoid(value: Ellipsoid) {
     this._ellipsoid = value
     this.uniforms.get('ellipsoidRadii')!.value.copy(value.radii)
+  }
+
+  get ellipsoidMatrix(): Matrix4 {
+    return this.uniforms.get('ellipsoidMatrix')!.value
   }
 
   get correctGeometricError(): boolean {
