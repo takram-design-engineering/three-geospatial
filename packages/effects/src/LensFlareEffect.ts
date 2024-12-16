@@ -5,6 +5,7 @@
 import {
   BlendFunction,
   Effect,
+  EffectAttribute,
   KawaseBlurPass,
   KernelSize,
   MipmapBlurPass,
@@ -71,6 +72,7 @@ export class LensFlareEffect extends Effect {
     }
     super('LensFlareEffect', fragmentShader, {
       blendFunction,
+      attributes: EffectAttribute.CONVOLUTION,
       uniforms: new Map<string, Uniform>([
         ['bloomBuffer', new Uniform(null)],
         ['featuresBuffer', new Uniform(null)],
