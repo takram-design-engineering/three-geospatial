@@ -41,6 +41,7 @@ import fragmentShader from './shaders/aerialPerspectiveEffect.frag'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert'
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
+import skyShader from './shaders/sky.glsl'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
@@ -64,6 +65,12 @@ export interface AerialPerspectiveEffectOptions {
   transmittance?: boolean
   inscatter?: boolean
   irradianceScale?: number
+  sky?: boolean
+  sun?: boolean
+  moon?: boolean
+  moonDirection?: Vector3
+  moonAngularRadius?: number
+  lunarRadianceScale?: number
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -78,7 +85,12 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   skyIrradiance: false,
   transmittance: true,
   inscatter: true,
-  irradianceScale: 1
+  irradianceScale: 1,
+  sky: false,
+  sun: true,
+  moon: true,
+  moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
+  lunarRadianceScale: 1
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
@@ -109,7 +121,13 @@ export class AerialPerspectiveEffect extends Effect {
       skyIrradiance,
       transmittance,
       inscatter,
-      irradianceScale
+      irradianceScale,
+      sky,
+      sun,
+      moon,
+      moonDirection,
+      moonAngularRadius,
+      lunarRadianceScale
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
     super(
@@ -120,6 +138,7 @@ export class AerialPerspectiveEffect extends Effect {
         ${depthShader}
         ${packingShader}
         ${transformShader}
+        ${skyShader}
         ${fragmentShader}
       `,
       {
@@ -143,7 +162,6 @@ export class AerialPerspectiveEffect extends Effect {
           ['u_scattering_texture', new Uniform(scatteringTexture)],
           ['u_single_mie_scattering_texture', new Uniform(scatteringTexture)],
           ['u_transmittance_texture', new Uniform(transmittanceTexture)],
-          ['idealSphereAlpha', new Uniform(0)],
           ['normalBuffer', new Uniform(normalBuffer)],
           ['projectionMatrix', new Uniform(new Matrix4())],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
@@ -153,7 +171,11 @@ export class AerialPerspectiveEffect extends Effect {
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
-          ['irradianceScale', new Uniform(irradianceScale)]
+          ['irradianceScale', new Uniform(irradianceScale)],
+          ['idealSphereAlpha', new Uniform(0)],
+          ['moonDirection', new Uniform(moonDirection?.clone() ?? new Vector3())],
+          ['moonAngularRadius', new Uniform(moonAngularRadius)],
+          ['lunarRadianceScale', new Uniform(lunarRadianceScale)]
         ]),
         // prettier-ignore
         defines: new Map<string, string>([
@@ -185,6 +207,9 @@ export class AerialPerspectiveEffect extends Effect {
     this.skyIrradiance = skyIrradiance
     this.transmittance = transmittance
     this.inscatter = inscatter
+    this.sky = sky
+    this.sun = sun
+    this.moon = moon
   }
 
   get mainCamera(): Camera {
@@ -436,5 +461,70 @@ export class AerialPerspectiveEffect extends Effect {
 
   set irradianceScale(value: number) {
     this.uniforms.get('irradianceScale')!.value = value
+  }
+
+  get sky(): boolean {
+    return this.defines.has('SKY')
+  }
+
+  set sky(value: boolean) {
+    if (value !== this.sky) {
+      if (value) {
+        this.defines.set('SKY', '1')
+      } else {
+        this.defines.delete('SKY')
+      }
+      this.setChanged()
+    }
+  }
+
+  get sun(): boolean {
+    return this.defines.has('SUN')
+  }
+
+  set sun(value: boolean) {
+    if (value !== this.sun) {
+      if (value) {
+        this.defines.set('SUN', '1')
+      } else {
+        this.defines.delete('SUN')
+      }
+      this.setChanged()
+    }
+  }
+
+  get moon(): boolean {
+    return this.defines.has('MOON')
+  }
+
+  set moon(value: boolean) {
+    if (value !== this.moon) {
+      if (value) {
+        this.defines.set('MOON', '1')
+      } else {
+        this.defines.delete('MOON')
+      }
+      this.setChanged()
+    }
+  }
+
+  get moonDirection(): Vector3 {
+    return this.uniforms.get('moonDirection')!.value
+  }
+
+  get moonAngularRadius(): number {
+    return this.uniforms.get('moonAngularRadius')!.value
+  }
+
+  set moonAngularRadius(value: number) {
+    this.uniforms.get('moonAngularRadius')!.value = value
+  }
+
+  get lunarRadianceScale(): number {
+    return this.uniforms.get('lunarRadianceScale')!.value
+  }
+
+  set lunarRadianceScale(value: number) {
+    this.uniforms.get('lunarRadianceScale')!.value = value
   }
 }

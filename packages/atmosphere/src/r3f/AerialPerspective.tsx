@@ -59,6 +59,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
   useFrame(() => {
     if (transientProps != null) {
       effect.sunDirection.copy(transientProps.sunDirection)
+      effect.moonDirection.copy(transientProps.moonDirection)
     }
   })
 

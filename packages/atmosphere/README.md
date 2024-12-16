@@ -1023,6 +1023,49 @@ This value adjusts the color buffer to reduce contrast.
 
 Deferred lighting treats the color buffer as albedo, but textures like those in Google Photorealistic 3D Tiles have baked lighting and shadows, resulting in higher contrast. Adjusting this value helps make it less noticeable.
 
+#### sky
+
+```ts
+sky: boolean = false
+```
+
+Whether to render the sky as a post-processing effect. Enabling this may reduce the total number of fragments needed to compute the sky radiance.
+
+In this case, the `Sky` component is redundant and should be omitted.
+
+#### sun, moon
+
+```ts
+sun: boolean = true
+moon: boolean = true
+```
+
+See [sun, moon](#sun-moon).
+
+#### moonDirection
+
+```ts
+moonDirection: Vector3 = new Vector()
+```
+
+See [moonDirection](#moondirection).
+
+#### moonAngularRadius
+
+```ts
+moonAngularRadius: number = 0.0045
+```
+
+See [moonAngularRadius](#moonangularradius).
+
+#### lunarRadianceScale
+
+```ts
+lunarRadianceScale: number = 1
+```
+
+See [lunarRadianceScale](#lunarradiancescale).
+
 ## Functions
 
 ### getSunDirectionECEF, getMoonDirectionECEF
