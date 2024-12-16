@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      3d-tiles-renderer:
-        specifier: ^0.3.45
-        version: 0.3.45(three@0.170.0)
       '@here/quantized-mesh-decoder':
         specifier: ^1.2.8
         version: 1.2.8
@@ -32,9 +29,6 @@ importers:
       axios-rate-limit:
         specifier: ^1.4.0
         version: 1.4.0(axios@1.7.9)
-      framer-motion:
-        specifier: ^11.13.3
-        version: 11.13.3(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -53,9 +47,6 @@ importers:
       react-merge-refs:
         specifier: ^2.1.1
         version: 2.1.1
-      react-use:
-        specifier: ^17.5.1
-        version: 17.5.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       string-template:
         specifier: ^1.0.0
         version: 1.0.0
@@ -84,6 +75,9 @@ importers:
         specifier: ^9.2.0
         version: 9.2.0
     devDependencies:
+      3d-tiles-renderer:
+        specifier: ^0.3.45
+        version: 0.3.45(three@0.170.0)
       '@emotion/react':
         specifier: 11.11.4
         version: 11.11.4(@types/react@18.3.1)(react@18.3.1)
@@ -264,6 +258,9 @@ importers:
       eslint-plugin-react-hooks:
         specifier: 5.0.0
         version: 5.0.0(eslint@8.57.1)
+      framer-motion:
+        specifier: ^11.13.3
+        version: 11.13.3(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@18.16.9)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.29(@swc/helpers@0.5.15))(@types/node@18.16.9)(typescript@5.6.3))
@@ -300,6 +297,9 @@ importers:
       raw-loader:
         specifier: ^4.0.2
         version: 4.0.2(webpack@5.88.0(@swc/core@1.5.29(@swc/helpers@0.5.15))(esbuild@0.19.12))
+      react-use:
+        specifier: ^17.5.1
+        version: 17.5.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
