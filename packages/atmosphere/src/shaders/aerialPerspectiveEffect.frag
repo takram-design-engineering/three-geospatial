@@ -14,6 +14,7 @@ uniform float idealSphereAlpha;
 varying vec3 vWorldPosition;
 varying vec3 vWorldDirection;
 varying vec3 vEllipsoidCenter;
+varying vec3 vSkyEllipsoidCenter;
 varying vec3 vEllipsoidRadiiSquared;
 
 vec3 readNormal(const vec2 uv) {
@@ -85,7 +86,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
     #ifdef SKY
-    vec3 viewPosition = vWorldPosition - vEllipsoidCenter;
+    vec3 viewPosition = vWorldPosition - vSkyEllipsoidCenter;
     vec3 rayDirection = normalize(vWorldDirection);
     outputColor.rgb = getSkyRadiance(
       viewPosition,
