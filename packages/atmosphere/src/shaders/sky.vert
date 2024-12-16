@@ -44,5 +44,5 @@ void main() {
   vWorldDirection = direction.xyz;
   vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
 
-  gl_Position = vec4(position, 1.0);
+  gl_Position = vec4(position.xy, 1.0, 1.0);
 }

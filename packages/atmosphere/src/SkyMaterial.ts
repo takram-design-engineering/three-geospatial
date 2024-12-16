@@ -84,7 +84,8 @@ export class SkyMaterial extends AtmosphereMaterialBase {
       },
       defines: {
         PERSPECTIVE_CAMERA: '1'
-      }
+      },
+      depthTest: true
     })
     this.sun = sun
     this.moon = moon
