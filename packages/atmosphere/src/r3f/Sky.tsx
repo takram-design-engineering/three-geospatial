@@ -4,6 +4,7 @@ import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
+import { SKY_RENDER_ORDER } from '../constants'
 import { SkyMaterial, skyMaterialParametersDefaults } from '../SkyMaterial'
 import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
@@ -55,7 +56,7 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
     })
 
     return (
-      <ScreenQuad renderOrder={1e2} {...others} ref={forwardedRef}>
+      <ScreenQuad renderOrder={SKY_RENDER_ORDER} {...others} ref={forwardedRef}>
         <primitive
           object={material}
           {...atmosphereParameters}
