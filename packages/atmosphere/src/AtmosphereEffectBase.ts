@@ -163,7 +163,11 @@ export abstract class AtmosphereEffectBase extends Effect {
     const cameraPosition = uniforms.get('cameraPosition')!
     const cameraHeight = uniforms.get('cameraHeight')!
     const position = camera.getWorldPosition(cameraPosition.value)
-    cameraHeight.value = geodeticScratch.setFromECEF(position).height
+    try {
+      cameraHeight.value = geodeticScratch.setFromECEF(position).height
+    } catch (error) {
+      return // Abort when the position is zero.
+    }
 
     const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
     if (this.correctAltitude) {
@@ -175,6 +179,7 @@ export abstract class AtmosphereEffectBase extends Effect {
         this.ellipsoid.getOsculatingSphereCenter(
           // Move the center of the atmosphere's inner sphere down to intersect
           // the viewpoint when it's located underground.
+          // TODO: Too many duplicated codes.
           surfacePosition.lengthSq() < position.lengthSq()
             ? surfacePosition
             : position,

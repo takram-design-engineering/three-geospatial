@@ -180,6 +180,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         this.ellipsoid.getOsculatingSphereCenter(
           // Move the center of the atmosphere's inner sphere down to intersect
           // the viewpoint when it's located underground.
+          // TODO: Too many duplicated codes.
           surfacePosition.lengthSq() < position.lengthSq()
             ? surfacePosition
             : position,
