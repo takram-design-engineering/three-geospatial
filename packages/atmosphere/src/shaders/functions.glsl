@@ -339,7 +339,7 @@ vec3 GetSkyRadiance(
   float r = length(camera);
   float rmu = dot(camera, view_ray);
   float distance_to_top_atmosphere_boundary =
-    -rmu - sqrt(rmu * rmu - r * r + u_top_radius * u_top_radius);
+    -rmu - SafeSqrt(rmu * rmu - r * r + u_top_radius * u_top_radius);
   if (distance_to_top_atmosphere_boundary > 0.0) {
     camera = camera + view_ray * distance_to_top_atmosphere_boundary;
     r = u_top_radius;
