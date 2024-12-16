@@ -1,4 +1,4 @@
-vec3 GetLunarRadiance(const float moonAngularRadius) {
+vec3 getLunarRadiance(const float moonAngularRadius) {
   // Not a physical number but the order of 10^-6 relative to the sun may fit.
   vec3 radiance =
     u_solar_irradiance *
@@ -82,7 +82,7 @@ vec3 getSkyRadiance(
     );
     radiance +=
       transmittance *
-      GetLunarRadiance(moonAngularRadius) *
+      getLunarRadiance(moonAngularRadius) *
       lunarRadianceScale *
       diffuse *
       antialias;

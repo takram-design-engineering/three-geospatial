@@ -86,7 +86,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   transmittance: true,
   inscatter: true,
   irradianceScale: 1,
-  sky: true,
+  sky: false,
   sun: true,
   moon: true,
   moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
@@ -162,7 +162,6 @@ export class AerialPerspectiveEffect extends Effect {
           ['u_scattering_texture', new Uniform(scatteringTexture)],
           ['u_single_mie_scattering_texture', new Uniform(scatteringTexture)],
           ['u_transmittance_texture', new Uniform(transmittanceTexture)],
-          ['idealSphereAlpha', new Uniform(0)],
           ['normalBuffer', new Uniform(normalBuffer)],
           ['projectionMatrix', new Uniform(new Matrix4())],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
@@ -173,6 +172,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['irradianceScale', new Uniform(irradianceScale)],
+          ['idealSphereAlpha', new Uniform(0)],
           ['moonDirection', new Uniform(moonDirection?.clone() ?? new Vector3())],
           ['moonAngularRadius', new Uniform(moonAngularRadius)],
           ['lunarRadianceScale', new Uniform(lunarRadianceScale)]
