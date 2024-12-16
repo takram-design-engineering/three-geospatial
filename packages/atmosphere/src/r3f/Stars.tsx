@@ -102,9 +102,9 @@ export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
     return (
       <points
         ref={mergeRefs([ref, forwardedRef])}
-        {...others}
         frustumCulled={false}
         renderOrder={SKY_RENDER_ORDER + 1}
+        {...others}
       >
         <primitive object={geometry} />
         <primitive
