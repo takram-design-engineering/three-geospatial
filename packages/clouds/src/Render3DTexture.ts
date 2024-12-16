@@ -74,11 +74,13 @@ export class Render3DTexture {
 
     // Unfortunately, rendering into 3D target requires as many draw calls as
     // the value of "size".
+    const renderTarget = renderer.getRenderTarget()
     for (let layer = 0; layer < this.size; ++layer) {
       this.material.uniforms.layer.value = layer / this.size
       renderer.setRenderTarget(this.renderTarget, layer)
       renderer.render(this.mesh, this.camera)
     }
+    renderer.setRenderTarget(renderTarget)
   }
 
   get texture(): Data3DTexture {
