@@ -41,6 +41,7 @@ import fragmentShader from './shaders/aerialPerspectiveEffect.frag'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert'
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
+import skyShader from './shaders/sky.glsl'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
@@ -63,6 +64,7 @@ export interface AerialPerspectiveEffectOptions {
   skyIrradiance?: boolean
   transmittance?: boolean
   inscatter?: boolean
+  sky?: boolean
   irradianceScale?: number
 }
 
@@ -78,6 +80,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   skyIrradiance: false,
   transmittance: true,
   inscatter: true,
+  sky: true,
   irradianceScale: 1
 } satisfies AerialPerspectiveEffectOptions
 
@@ -109,6 +112,7 @@ export class AerialPerspectiveEffect extends Effect {
       skyIrradiance,
       transmittance,
       inscatter,
+      sky,
       irradianceScale
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
@@ -120,6 +124,7 @@ export class AerialPerspectiveEffect extends Effect {
         ${depthShader}
         ${packingShader}
         ${transformShader}
+        ${skyShader}
         ${fragmentShader}
       `,
       {
@@ -185,6 +190,7 @@ export class AerialPerspectiveEffect extends Effect {
     this.skyIrradiance = skyIrradiance
     this.transmittance = transmittance
     this.inscatter = inscatter
+    this.sky = sky
   }
 
   get mainCamera(): Camera {
@@ -425,6 +431,21 @@ export class AerialPerspectiveEffect extends Effect {
         this.defines.set('INSCATTER', '1')
       } else {
         this.defines.delete('INSCATTER')
+      }
+      this.setChanged()
+    }
+  }
+
+  get sky(): boolean {
+    return this.defines.has('SKY')
+  }
+
+  set sky(value: boolean) {
+    if (value !== this.sky) {
+      if (value) {
+        this.defines.set('SKY', '1')
+      } else {
+        this.defines.delete('SKY')
       }
       this.setChanged()
     }
