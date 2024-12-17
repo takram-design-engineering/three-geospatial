@@ -7,7 +7,9 @@ uniform vec3 ellipsoidRadii;
 uniform float idealSphereAlpha;
 
 varying vec3 vWorldPosition;
+varying vec3 vWorldDirection;
 varying vec3 vEllipsoidCenter;
+varying vec3 vSkyEllipsoidCenter;
 varying vec3 vEllipsoidRadiiSquared;
 
 void getCameraRay(out vec3 origin, out vec3 direction) {
@@ -40,11 +42,17 @@ void mainSupport() {
   vec3 direction, origin;
   getCameraRay(origin, direction);
   vWorldPosition = origin * METER_TO_UNIT_LENGTH;
+  vWorldDirection = direction;
 
+  vSkyEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
   #ifdef CORRECT_GEOMETRIC_ERROR
-  vEllipsoidCenter = mix(ellipsoidCenter, vec3(0.0), idealSphereAlpha) * METER_TO_UNIT_LENGTH;
+  // Gradually turn off altitude correction for aerial perspective as geometric
+  // error correction takes effect.
+  // See: https://github.com/takram-design-engineering/three-geospatial/pull/23#issuecomment-2542914656
+  vEllipsoidCenter =
+    mix(ellipsoidCenter, vec3(0.0), idealSphereAlpha) * METER_TO_UNIT_LENGTH;
   #else
-  vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
+  vEllipsoidCenter = vSkyEllipsoidCenter;
   #endif // CORRECT_GEOMETRIC_ERROR
 
   vec3 radii = ellipsoidRadii * METER_TO_UNIT_LENGTH;

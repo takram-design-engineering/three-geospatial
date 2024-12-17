@@ -5,11 +5,16 @@ uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform float cameraHeight;
 uniform vec3 sunDirection;
+uniform vec3 moonDirection;
+uniform float moonAngularRadius;
+uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
 varying vec3 vWorldPosition;
+varying vec3 vWorldDirection;
 varying vec3 vEllipsoidCenter;
+varying vec3 vSkyEllipsoidCenter;
 varying vec3 vEllipsoidRadiiSquared;
 
 vec3 readNormal(const vec2 uv) {
@@ -76,9 +81,21 @@ void getTransmittanceInscatter(
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
-    // TODO: Add option to write sky radiance here to reduce the total fragments
-    // to process, at the cost of losing transparency.
+    #ifdef SKY
+    vec3 viewPosition = vWorldPosition - vSkyEllipsoidCenter;
+    vec3 rayDirection = normalize(vWorldDirection);
+    outputColor.rgb = getSkyRadiance(
+      viewPosition,
+      rayDirection,
+      sunDirection,
+      moonDirection,
+      moonAngularRadius,
+      lunarRadianceScale
+    );
+    outputColor.a = 1.0;
+    #else
     outputColor = inputColor;
+    #endif // SKY
     return;
   }
   depth = reverseLogDepth(depth, cameraNear, cameraFar);

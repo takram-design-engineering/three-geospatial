@@ -25,6 +25,7 @@ import {
 import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 import fragmentShader from './shaders/sky.frag'
+import sky from './shaders/sky.glsl'
 import vertexShader from './shaders/sky.vert'
 
 declare module 'three' {
@@ -88,6 +89,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         precision highp sampler3D;
         ${parameters}
         ${functions}
+        ${sky}
         ${fragmentShader}
       `,
       ...others,
@@ -101,7 +103,8 @@ export class SkyMaterial extends AtmosphereMaterialBase {
       } satisfies SkyMaterialUniforms,
       defines: {
         PERSPECTIVE_CAMERA: '1'
-      }
+      },
+      depthTest: true
     })
     this.sun = sun
     this.moon = moon
