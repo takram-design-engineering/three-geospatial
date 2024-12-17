@@ -27,6 +27,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: npx nx run-many --target=build --projects=tag:type:lib --configuration=production
+      - run: npx nx run-many --target=build --parallel=1 --projects=tag:type:lib --configuration=production
 
       - run: npx nx build-storybook storybook --configuration=production
