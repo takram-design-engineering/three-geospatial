@@ -1,0 +1,32 @@
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - release/**
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['20.x', '22.x']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: npx nx run-many --target=build --projects=tag:type:lib --configuration=production
+
+      - run: npx nx build-storybook storybook --configuration=production
