@@ -26,8 +26,7 @@ void getCameraRay(out vec3 origin, out vec3 direction) {
     farPoint /= farPoint.w;
 
     // calculate world values
-    vec4 worldDirection =
-      inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
+    vec4 worldDirection = inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
     vec4 worldOrigin = inverseViewMatrix * nearPoint;
 
     // outputs

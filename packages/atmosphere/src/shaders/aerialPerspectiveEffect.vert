@@ -49,8 +49,7 @@ void mainSupport() {
   // Gradually turn off altitude correction for aerial perspective as geometric
   // error correction takes effect.
   // See: https://github.com/takram-design-engineering/three-geospatial/pull/23#issuecomment-2542914656
-  vEllipsoidCenter =
-    mix(ellipsoidCenter, vec3(0.0), idealSphereAlpha) * METER_TO_UNIT_LENGTH;
+  vEllipsoidCenter = mix(ellipsoidCenter, vec3(0.0), idealSphereAlpha) * METER_TO_UNIT_LENGTH;
   #else
   vEllipsoidCenter = vSkyEllipsoidCenter;
   #endif // CORRECT_GEOMETRIC_ERROR
