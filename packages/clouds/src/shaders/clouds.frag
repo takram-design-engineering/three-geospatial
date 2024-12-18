@@ -6,7 +6,6 @@ uniform float cameraFar;
 uniform vec3 sunDirection;
 uniform float bottomRadius; // TODO:
 uniform sampler2D blueNoiseTexture;
-uniform float time;
 
 // Cloud parameters
 uniform sampler3D shapeTexture;

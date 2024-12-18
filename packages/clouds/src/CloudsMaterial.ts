@@ -3,7 +3,6 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
 import {
-  Clock,
   Color,
   GLSL3,
   Matrix4,
@@ -68,7 +67,6 @@ interface CloudsMaterialUniforms {
   cameraNear: Uniform<number>
   cameraFar: Uniform<number>
   cameraHeight: Uniform<number>
-  ellipsoidRadii: Uniform<Vector3>
 
   // Cloud parameters
   depthBuffer: Uniform<Texture | null>
@@ -132,10 +130,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraHeight: new Uniform(0),
           cameraNear: new Uniform(0),
           cameraFar: new Uniform(0),
-          ellipsoidRadii: new Uniform(new Vector3()),
           bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
           blueNoiseTexture: new Uniform(null),
-          time: new Uniform(0),
 
           // Cloud parameters
           shapeTexture: new Uniform(shape.texture),
@@ -169,8 +165,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.shapeDetail = shapeDetail
   }
 
-  clock = new Clock()
-
   onBeforeRender(
     renderer: WebGLRenderer,
     scene: Scene,
@@ -181,7 +175,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   ): void {
     this.shape.update(renderer)
     this.shapeDetail.update(renderer)
-    this.uniforms.time.value = this.clock.getElapsedTime()
   }
 
   copyCameraSettings(camera?: Camera | null): void {
