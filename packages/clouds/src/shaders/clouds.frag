@@ -1,6 +1,3 @@
-#include <common>
-#include <packing>
-
 uniform sampler2D depthBuffer;
 uniform vec2 resolution;
 uniform float cameraHeight;
@@ -24,8 +21,8 @@ uniform float shapeDetailFrequency;
 
 // Raymarch to clouds
 uniform int maxIterations;
-uniform float initialStepSize;
-uniform float maxStepSize;
+uniform float initialStepSize; // TODO:
+uniform float maxStepSize; // TODO:
 uniform float maxRayDistance;
 uniform float minDensity;
 uniform float minTransmittance;
@@ -41,7 +38,7 @@ layout(location = 0) out vec4 outputColor;
 // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
 const vec4 minLayerHeights = vec4(600.0, 4100.0, 6700.0, 0.0);
 const vec4 maxLayerHeights = vec4(1200.0, 5000.0, 7000.0, 0.0);
-const vec4 densityScales = vec4(0.05, 0.02, 0.0002, 0.0);
+const vec4 densityScales = vec4(0.03, 0.02, 0.0002, 0.0);
 const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
 const vec4 coverageModulations = vec4(0.6, 0.4, 0.7, 0.0);
 
@@ -122,9 +119,22 @@ float random(const vec2 uv) {
   return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-float blueNoise(const vec2 uv) {
-  const float goldenRatio = 1.61803398875;
-  return fract(texture(blueNoiseTexture, uv * resolution / 256.0).r * time * goldenRatio);
+vec3 blueNoise(const vec2 uv) {
+  return fract(texture(blueNoiseTexture, uv * resolution / 256.0)).xyz;
+}
+
+const mat4 bayerMatrix =
+  mat4(
+     0.0,  8.0,  2.0, 10.0,
+    12.0,  4.0, 14.0,  6.0,
+     3.0, 11.0,  1.0,  9.0,
+    15.0,  7.0, 13.0,  5.0
+  ) /
+  16.0;
+
+float bayer(const vec2 uv) {
+  ivec2 xy = ivec2(uv * resolution) % 4;
+  return bayerMatrix[xy.y][xy.x];
 }
 
 vec2 getGlobeUv(const vec3 position) {
@@ -282,25 +292,33 @@ vec3 marchToLight(
 }
 
 vec4 marchToCloud(
+  const vec3 viewPosition,
   const vec3 rayOrigin,
   const vec3 rayDirection,
-  float stepSize,
+  const float jitter,
   const float maxRayDistance,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
   const vec3 sunIrradiance,
   const vec3 skyIrradiance,
-  out float meanDistance
+  out float weightedMeanDepth
 ) {
+  // Setup structured volume sampling.
+  vec3 normal = getStructureNormal(rayDirection, jitter);
+  float stepOffset;
+  float stepSize;
+  intersectStructuredPlanes(normal, rayOrigin, rayDirection, initialStepSize, stepOffset, stepSize);
+  float rayDistance = stepOffset - stepSize * jitter;
+
+  // Initial values.
   vec3 radianceIntegral = vec3(0.0);
   float transmittanceIntegral = 1.0;
-  float rayDistance = 0.0;
   float weightedDistanceSum = 0.0;
   float transmittanceSum = 0.0;
 
   float cosTheta = dot(sunDirection, rayDirection);
   for (int i = 0; i < maxIterations; ++i) {
-    vec3 position = rayDirection * rayDistance + rayOrigin;
+    vec3 position = rayOrigin + rayDirection * rayDistance;
 
     // Sample a rough density.
     float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance / 1e5));
@@ -337,13 +355,16 @@ vec4 marchToCloud(
         transmittanceSum += transmittanceIntegral;
       }
 
+      // TODO:
       // Take a shorter step because we've already hit the clouds.
-      stepSize *= 1.005;
+      // stepSize *= 1.005;
       rayDistance += stepSize;
+
     } else {
+      rayDistance += stepSize;
+      // TODO:
       // Otherwise step longer in empty space.
-      rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
-      // rayDistance += stepSize;
+      // rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
     }
 
     if (transmittanceIntegral <= minTransmittance) {
@@ -354,7 +375,7 @@ vec4 marchToCloud(
     }
   }
   // The final product of 5.9.1 and we'll evaluate this in aerial perspective.
-  meanDistance = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : 0.0;
+  weightedMeanDepth = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : 0.0;
   return vec4(
     radianceIntegral,
     saturate(remap(transmittanceIntegral, minTransmittance, 1.0, 1.0, 0.0))
@@ -362,8 +383,13 @@ vec4 marchToCloud(
 }
 
 void main() {
-  vec2 uv = vUv;
   vec3 rayDirection = normalize(vRayDirection);
+  vec3 jitter = blueNoise(vUv);
+
+  // Uncomment to check blended dodecahedral normals.
+  // vec3 normal = getStructureNormal(rayDirection, jitter.x);
+  // outputColor = vec4(normal * 0.5 + 0.5, 1.0);
+  // return;
 
   float r = length(vViewPosition - vEllipsoidCenter) * METER_TO_UNIT_LENGTH;
   float mu = dot(vViewPosition * METER_TO_UNIT_LENGTH, rayDirection) / r;
@@ -434,18 +460,13 @@ void main() {
   }
 
   // Clamp the ray at the scene objects.
-  float depth = readDepth(uv);
+  float depth = readDepth(vUv);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     float viewZ = getViewZ(depth);
     float rayDistance = -viewZ / dot(rayDirection, vViewDirection);
     rayFar = min(rayFar, rayDistance);
   }
-
-  // Apply a jitter to remove banding in raymarch.
-  // TODO: Implement structured sampling: https://github.com/huwb/volsample
-  float stepSize = initialStepSize;
-  rayNear += stepSize * random(uv);
 
   vec3 camera = vViewPosition - vEllipsoidCenter;
   vec3 rayOrigin = camera + rayNear * rayDirection;
@@ -463,9 +484,10 @@ void main() {
 
   float weightedMeanDepth;
   vec4 color = marchToCloud(
+    camera,
     rayOrigin,
     rayDirection,
-    stepSize,
+    jitter.x,
     rayFar - rayNear,
     pow(2.0, mipLevel),
     sunDirection,

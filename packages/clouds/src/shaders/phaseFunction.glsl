@@ -43,6 +43,6 @@ float phaseFunction(const float cosTheta, const float attenuation) {
   const float alpha = 27.113693722212247;
   const float weight = 0.4981594843291369;
   return (1.0 - weight) * henyeyGreenstein(gHG * attenuation, cosTheta) +
-  weight * draine(cosTheta, gD, alpha);
+  weight * draine(cosTheta, gD * attenuation, alpha);
 }
 #endif

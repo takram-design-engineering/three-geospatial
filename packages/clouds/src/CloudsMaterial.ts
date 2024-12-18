@@ -38,6 +38,7 @@ import { CloudShapeDetail } from './CloudShapeDetail'
 import fragmentShader from './shaders/clouds.frag'
 import vertexShader from './shaders/clouds.vert'
 import phaseFunction from './shaders/phaseFunction.glsl'
+import structuredSampling from './shaders/structuredSampling.glsl'
 
 declare module 'three' {
   interface Camera {
@@ -110,11 +111,16 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         fragmentShader: /* glsl */ `
           precision highp float;
           precision highp sampler3D;
+
+          #include <common>
+          #include <packing>
+
           ${parameters}
           ${functions}
           ${depth}
           ${math}
           ${phaseFunction}
+          ${structuredSampling}
           ${fragmentShader}
         `,
         uniforms: {
