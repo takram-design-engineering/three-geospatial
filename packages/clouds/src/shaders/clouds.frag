@@ -264,7 +264,7 @@ const vec3 SCATTER_OFFSETS[6] = vec3[6](
 const float SCATTER_DISTANCES[6] = float[6](1.0, 2.0, 4.0, 8.0, 16.0, 32.0);
 const float SCATTER_STEP_SIZES[6] = float[6](1.0, 1.0, 2.0, 4.0, 8.0, 16.0);
 
-// Raymarch to light for near clouds, and implement BSM for far clouds.
+// TODO: Raymarch to light for near clouds, and implement BSM for far clouds.
 vec3 marchToLight(
   const vec3 rayOrigin,
   const vec3 sunDirection,
@@ -472,6 +472,8 @@ void main() {
   vec3 camera = vViewPosition - vEllipsoidCenter;
   vec3 rayOrigin = camera + rayNear * rayDirection;
 
+  // TODO: Take 2 samples for the cloud layer's bottom and top, then
+  // interpolate it for more accurate irradiance.
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(
     rayOrigin * METER_TO_UNIT_LENGTH,
