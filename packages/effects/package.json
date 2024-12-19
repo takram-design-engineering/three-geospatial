@@ -1,6 +1,6 @@
 {
   "name": "@takram/three-geospatial-effects",
-  "version": "0.0.1-alpha.3",
+  "version": "0.0.1-alpha.4",
   "type": "module",
   "exports": {
     ".": {
@@ -25,7 +25,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@takram/three-geospatial": "0.0.1-alpha.3",
+    "@takram/three-geospatial": "0.0.1-alpha.4",
     "n8ao": "^1.9.3"
   },
   "peerDependencies": {
