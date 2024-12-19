@@ -102,8 +102,9 @@ const Scene: FC = () => {
   blueNoiseTexture.wrapT = RepeatWrapping
   blueNoiseTexture.colorSpace = NoColorSpace
 
-  const { useDetail } = useControls('clouds', {
-    useDetail: true
+  const { useDetail, structuredSampling } = useControls('clouds', {
+    useDetail: true,
+    structuredSampling: false
   })
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
@@ -112,7 +113,8 @@ const Scene: FC = () => {
       return
     }
     clouds.cloudsMaterial.uniforms.useDetail.value = useDetail
-  }, [clouds, useDetail])
+    clouds.cloudsMaterial.structuredSampling = structuredSampling
+  }, [clouds, useDetail, structuredSampling])
 
   return (
     <>
