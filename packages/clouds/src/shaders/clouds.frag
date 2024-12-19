@@ -305,6 +305,7 @@ vec4 marchToCloud(
   const vec3 skyIrradiance,
   out float weightedMeanDepth
 ) {
+  #ifdef STRUCTURED_SAMPLING
   // Setup structured volume sampling.
   vec3 normal = getStructureNormal(rayDirection, jitter);
   float stepOffset;
@@ -312,6 +313,10 @@ vec4 marchToCloud(
   intersectStructuredPlanes(normal, rayOrigin, rayDirection, samplePeriod, stepOffset, stepSize);
   float rayDistance = stepOffset - stepSize * jitter;
   float stepScale = 1.0;
+  #else
+  float stepSize = samplePeriod;
+  float rayDistance = -stepSize * jitter;
+  #endif // STRUCTURED_SAMPLING
 
   // Initial values.
   vec3 radianceIntegral = vec3(0.0);
@@ -359,12 +364,21 @@ vec4 marchToCloud(
       }
 
       // Take a shorter step because we've already hit the clouds.
+      #ifdef STRUCTURED_SAMPLING
       stepScale *= 1.005;
       rayDistance += stepSize * round(stepScale);
+      #else
+      stepSize *= 1.005;
+      rayDistance += stepSize;
+      #endif // STRUCTURED_SAMPLING
     } else {
       // Otherwise step longer in empty space.
+      #ifdef STRUCTURED_SAMPLING
       float stepScale = mix(1.0, maxStepScale, min(1.0, mipLevel));
       rayDistance += stepSize * round(stepScale);
+      #else
+      rayDistance += mix(stepSize, stepSize * maxStepScale, min(1.0, mipLevel));
+      #endif // STRUCTURED_SAMPLING
     }
 
     if (transmittanceIntegral <= minTransmittance) {

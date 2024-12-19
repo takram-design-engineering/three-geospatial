@@ -272,4 +272,19 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   set blueNoiseTexture(value: Texture | null) {
     this.uniforms.blueNoiseTexture.value = value
   }
+
+  get structuredSampling(): boolean {
+    return this.defines.STRUCTURED_SAMPLING != null
+  }
+
+  set structuredSampling(value: boolean) {
+    if (value !== this.structuredSampling) {
+      if (value) {
+        this.defines.STRUCTURED_SAMPLING = '1'
+      } else {
+        delete this.defines.STRUCTURED_SAMPLING
+      }
+      this.needsUpdate = true
+    }
+  }
 }
