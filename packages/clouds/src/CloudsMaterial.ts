@@ -146,8 +146,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Raymarch to clouds
           maxIterations: new Uniform(1000),
-          initialStepSize: new Uniform(100),
-          maxStepSize: new Uniform(500),
+          samplePeriod: new Uniform(100),
+          maxStepScale: new Uniform(5),
           maxRayDistance: new Uniform(2e5),
           minDensity: new Uniform(1e-5),
           minTransmittance: new Uniform(1e-2)

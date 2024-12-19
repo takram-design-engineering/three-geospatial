@@ -20,8 +20,8 @@ uniform float shapeDetailFrequency;
 
 // Raymarch to clouds
 uniform int maxIterations;
-uniform float initialStepSize; // TODO:
-uniform float maxStepSize; // TODO:
+uniform float samplePeriod;
+uniform float maxStepScale;
 uniform float maxRayDistance;
 uniform float minDensity;
 uniform float minTransmittance;
@@ -250,7 +250,9 @@ vec3 multipleScattering(
 }
 
 // Random offsets for sampling scattered lights for less bias.
-// Reference: https://github.com/fede-vaccaro/TerrainEngine-OpenGL
+// Used in several places without an explicit reference:
+// https://github.com/fede-vaccaro/TerrainEngine-OpenGL
+// https://github.com/fede-vaccaro/TerrainEngine-OpenGL
 const vec3 SCATTER_OFFSETS[6] = vec3[6](
   vec3(0.114153915, 0.277360347, -0.006334035),
   vec3(-0.151877397, -0.010772376, -0.258490254),
@@ -307,8 +309,9 @@ vec4 marchToCloud(
   vec3 normal = getStructureNormal(rayDirection, jitter);
   float stepOffset;
   float stepSize;
-  intersectStructuredPlanes(normal, rayOrigin, rayDirection, initialStepSize, stepOffset, stepSize);
+  intersectStructuredPlanes(normal, rayOrigin, rayDirection, samplePeriod, stepOffset, stepSize);
   float rayDistance = stepOffset - stepSize * jitter;
+  float stepScale = 1.0;
 
   // Initial values.
   vec3 radianceIntegral = vec3(0.0);
@@ -355,16 +358,13 @@ vec4 marchToCloud(
         transmittanceSum += transmittanceIntegral;
       }
 
-      // TODO:
       // Take a shorter step because we've already hit the clouds.
-      // stepSize *= 1.005;
-      rayDistance += stepSize;
-
+      stepScale *= 1.005;
+      rayDistance += stepSize * round(stepScale);
     } else {
-      rayDistance += stepSize;
-      // TODO:
       // Otherwise step longer in empty space.
-      // rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
+      float stepScale = mix(1.0, maxStepScale, min(1.0, mipLevel));
+      rayDistance += stepSize * round(stepScale);
     }
 
     if (transmittanceIntegral <= minTransmittance) {
