@@ -155,8 +155,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         defines: {
           DEPTH_PACKING: '0',
           PHASE_FUNCTION: '2',
-          MULTI_SCATTERING_OCTAVES: '8',
-          STRUCTURED_SAMPLING: '1'
+          MULTI_SCATTERING_OCTAVES: '8'
         }
       },
       atmosphere

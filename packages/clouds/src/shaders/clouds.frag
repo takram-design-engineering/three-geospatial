@@ -204,9 +204,9 @@ float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mi
       float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
       // Fluffy at the top and whippy at the bottom.
       vec4 modifier = mix(
-        vec4(pow(detail, 5.0)),
+        vec4(pow(detail, 6.0)),
         vec4(1.0 - detail),
-        saturate(remap(cs.heightFraction, 0.2, 0.4, 0.0, 1.0))
+        saturate(remap(cs.heightFraction, 0.4, 0.6, 0.0, 1.0))
       );
       modifier = mix(vec4(0.0), modifier, densityDetailAmounts);
       density = saturate(
@@ -250,8 +250,7 @@ vec3 multipleScattering(
 }
 
 // Random offsets for sampling scattered lights for less bias.
-// Used in several places without an explicit reference:
-// https://github.com/fede-vaccaro/TerrainEngine-OpenGL
+// Used in several places without an explicit citation:
 // https://github.com/fede-vaccaro/TerrainEngine-OpenGL
 const vec3 SCATTER_OFFSETS[6] = vec3[6](
   vec3(0.114153915, 0.277360347, -0.006334035),
@@ -398,7 +397,7 @@ vec4 marchToCloud(
 
 void main() {
   vec3 rayDirection = normalize(vRayDirection);
-  vec3 jitter = blueNoise(vUv);
+  vec3 jitter = vec3(bayer(vUv));
 
   // Uncomment to check blended dodecahedral normals.
   // vec3 normal = getStructureNormal(rayDirection, jitter.x);
