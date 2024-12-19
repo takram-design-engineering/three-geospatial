@@ -312,17 +312,18 @@ vec4 marchToCloud(
   float stepSize;
   intersectStructuredPlanes(normal, rayOrigin, rayDirection, samplePeriod, stepOffset, stepSize);
   float rayDistance = stepOffset - stepSize * jitter;
-  float stepScale = 1.0;
   #else
   float stepSize = samplePeriod;
   float rayDistance = -stepSize * jitter;
   #endif // STRUCTURED_SAMPLING
 
-  // Initial values.
   vec3 radianceIntegral = vec3(0.0);
   float transmittanceIntegral = 1.0;
   float weightedDistanceSum = 0.0;
   float transmittanceSum = 0.0;
+
+  float stepScale = 1.0;
+  float largeStepScale = 1.0;
 
   float cosTheta = dot(sunDirection, rayDirection);
   for (int i = 0; i < maxIterations; ++i) {
@@ -364,24 +365,22 @@ vec4 marchToCloud(
       }
 
       // Take a shorter step because we've already hit the clouds.
-      #ifdef STRUCTURED_SAMPLING
       stepScale *= 1.005;
+      #ifdef STRUCTURED_SAMPLING
       rayDistance += stepSize * round(stepScale);
       #else
-      stepSize *= 1.005;
-      rayDistance += stepSize;
+      rayDistance += stepSize * stepScale;
       #endif // STRUCTURED_SAMPLING
     } else {
       // Otherwise step longer in empty space.
       // TODO: Apply more jitter when we entered empty space.
+      largeStepScale = mix(1.0, maxStepScale, min(1.0, mipLevel));
       #ifdef STRUCTURED_SAMPLING
-      float stepScale = mix(1.0, maxStepScale, min(1.0, mipLevel));
-      rayDistance += stepSize * round(stepScale);
+      rayDistance += stepSize * round(largeStepScale);
       #else
-      rayDistance += mix(stepSize, stepSize * maxStepScale, min(1.0, mipLevel));
+      rayDistance += stepSize * largeStepScale;
       #endif // STRUCTURED_SAMPLING
     }
-
     if (transmittanceIntegral <= minTransmittance) {
       break; // Early termination
     }
