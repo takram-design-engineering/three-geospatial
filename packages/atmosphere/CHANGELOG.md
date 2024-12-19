@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.5.0] - 2024-12-19
+
+### Added
+
+- `AerialPerspectiveEffect`: Added `sky` option to render the sky in post-processing.
+
+### Changed
+
+- `Sky`, `Stars`: Render after scene objects to take advantage of early Z rejection, [#27](https://github.com/takram-design-engineering/three-geospatial/pull/27).
+- Updated dependencies.
+
+### Fixed
+
+- Fixed handling of negative square root calculations, [#26](https://github.com/takram-design-engineering/three-geospatial/pull/26).
+
 ## [0.4.0] - 2024-12-15
 
 ### Changed
