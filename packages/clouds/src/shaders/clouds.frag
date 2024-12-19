@@ -37,9 +37,9 @@ layout(location = 0) out vec4 outputColor;
 // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
 const vec4 minLayerHeights = vec4(600.0, 4100.0, 6700.0, 0.0);
 const vec4 maxLayerHeights = vec4(1200.0, 5000.0, 7000.0, 0.0);
-const vec4 densityScales = vec4(0.03, 0.02, 0.0002, 0.0);
-const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
-const vec4 coverageModulations = vec4(0.6, 0.4, 0.7, 0.0);
+const vec4 densityScales = vec4(0.03, 0.02, 0.001, 0.0);
+const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.0, 0.0);
+const vec4 coverageModulations = vec4(0.6, 0.3, 0.6, 0.0);
 
 // TODO: Derive from minLayerHeights and maxLayerHeights
 const float minHeight = 600.0;
@@ -168,7 +168,7 @@ CoverageSample sampleCoverage(const vec2 uv, const float height, const float mip
   cs.coverageDetail = pow(
     textureLod(coverageDetailTexture, uv * coverageDetailFrequency, mipLevel),
     // TODO: Parameterize exponents.
-    vec4(1.0, 3.0, 2.0, 1.0)
+    vec4(1.0, 1.0, 2.0, 1.0)
   );
   cs.heightFraction = saturate(
     remap(vec4(height), minLayerHeights, maxLayerHeights, vec4(0.0), vec4(1.0))
@@ -373,6 +373,7 @@ vec4 marchToCloud(
       #endif // STRUCTURED_SAMPLING
     } else {
       // Otherwise step longer in empty space.
+      // TODO: Apply more jitter when we entered empty space.
       #ifdef STRUCTURED_SAMPLING
       float stepScale = mix(1.0, maxStepScale, min(1.0, mipLevel));
       rayDistance += stepSize * round(stepScale);
