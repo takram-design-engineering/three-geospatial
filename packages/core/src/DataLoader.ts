@@ -77,28 +77,28 @@ export abstract class DataLoader<
 export class Int16Data2DLoader extends DataLoader<DataTexture, Int16Array> {
   readonly Texture = DataTexture
   readonly TypedArrayLoader = Int16ArrayLoader
-  readonly parameters = {
+  readonly parameters: DataTextureParameters = {
     ...defaultDataTextureParameter,
     type: FloatType
-  } satisfies DataTextureParameters
+  }
 }
 
 export class Uint16Data2DLoader extends DataLoader<DataTexture, Uint16Array> {
   readonly Texture = DataTexture
   readonly TypedArrayLoader = Uint16ArrayLoader
-  readonly parameters = {
+  readonly parameters: DataTextureParameters = {
     ...defaultDataTextureParameter,
     type: FloatType
-  } satisfies DataTextureParameters
+  }
 }
 
 export class Float32Data2DLoader extends DataLoader<DataTexture, Float32Array> {
   readonly Texture = DataTexture
   readonly TypedArrayLoader = Float32ArrayLoader
-  readonly parameters = {
+  readonly parameters: DataTextureParameters = {
     ...defaultDataTextureParameter,
     type: FloatType
-  } satisfies DataTextureParameters
+  }
 }
 
 export class Float32Data3DLoader extends DataLoader<
@@ -107,8 +107,8 @@ export class Float32Data3DLoader extends DataLoader<
 > {
   readonly Texture = Data3DTexture
   readonly TypedArrayLoader = Float32ArrayLoader
-  readonly parameters = {
+  readonly parameters: DataTextureParameters = {
     ...defaultDataTextureParameter,
     type: FloatType
-  } satisfies DataTextureParameters
+  }
 }
