@@ -38,7 +38,6 @@ import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
 import fragmentShader from './shaders/clouds.frag'
 import vertexShader from './shaders/clouds.vert'
 import phaseFunction from './shaders/phaseFunction.glsl'
-import structuredSampling from './shaders/structuredSampling.glsl'
 
 declare module 'three' {
   interface Camera {
@@ -119,7 +118,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ${depth}
           ${math}
           ${phaseFunction}
-          ${structuredSampling}
           ${fragmentShader}
         `,
         uniforms: {
@@ -149,9 +147,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Raymarch to clouds
           maxIterations: new Uniform(1000),
-          samplePeriod: new Uniform(100),
-          maxStepScale: new Uniform(5),
-          maxRayDistance: new Uniform(2e5),
+          initialStepSize: new Uniform(100),
+          maxStepSize: new Uniform(1000),
+          maxRayDistance: new Uniform(1e5),
           minDensity: new Uniform(1e-5),
           minTransmittance: new Uniform(1e-2)
         } satisfies CloudsMaterialUniforms,

@@ -23,8 +23,8 @@ uniform float shapeDetailFrequency;
 
 // Raymarch to clouds
 uniform int maxIterations;
-uniform float samplePeriod;
-uniform float maxStepScale;
+uniform float initialStepSize;
+uniform float maxStepSize;
 uniform float maxRayDistance;
 uniform float minDensity;
 uniform float minTransmittance;
@@ -318,27 +318,15 @@ vec4 marchToCloud(
   const vec3 skyIrradiance,
   out float weightedMeanDepth
 ) {
-  #ifdef STRUCTURED_SAMPLING
-  // Setup structured volume sampling.
-  vec3 normal = getStructureNormal(rayDirection, jitter);
-  float stepOffset;
-  float stepSize;
-  intersectStructuredPlanes(normal, rayOrigin, rayDirection, samplePeriod, stepOffset, stepSize);
-  float rayDistance = stepOffset - stepSize * jitter;
-  #else
-  float stepSize = samplePeriod;
-  float rayDistance = -stepSize * jitter;
-  #endif // STRUCTURED_SAMPLING
-
   vec3 radianceIntegral = vec3(0.0);
   float transmittanceIntegral = 1.0;
   float weightedDistanceSum = 0.0;
   float transmittanceSum = 0.0;
 
-  float stepScale = 1.0;
-  float largeStepScale = 1.0;
-
+  float stepSize = initialStepSize;
+  float rayDistance = stepSize * jitter;
   float cosTheta = dot(sunDirection, rayDirection);
+
   for (int i = 0; i < maxIterations; ++i) {
     vec3 position = rayOrigin + rayDirection * rayDistance;
 
@@ -378,21 +366,12 @@ vec4 marchToCloud(
       }
 
       // Take a shorter step because we've already hit the clouds.
-      stepScale *= 1.005;
-      #ifdef STRUCTURED_SAMPLING
-      rayDistance += stepSize * round(stepScale);
-      #else
-      rayDistance += stepSize * stepScale;
-      #endif // STRUCTURED_SAMPLING
+      stepSize *= 1.005;
+      rayDistance += stepSize;
     } else {
       // Otherwise step longer in empty space.
       // TODO: Apply more jitter when we entered empty space.
-      largeStepScale = mix(1.0, maxStepScale, min(1.0, mipLevel));
-      #ifdef STRUCTURED_SAMPLING
-      rayDistance += stepSize * round(largeStepScale);
-      #else
-      rayDistance += stepSize * largeStepScale;
-      #endif // STRUCTURED_SAMPLING
+      rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
     }
     if (transmittanceIntegral <= minTransmittance) {
       break; // Early termination
@@ -412,11 +391,6 @@ vec4 marchToCloud(
 void main() {
   vec3 rayDirection = normalize(vRayDirection);
   float jitter = blueNoise(vUv);
-
-  // Uncomment to check blended dodecahedral normals.
-  // vec3 normal = getStructureNormal(rayDirection, jitter);
-  // outputColor = vec4(normal * 0.5 + 0.5, 1.0);
-  // return;
 
   float r = length(vViewPosition - vEllipsoidCenter) * METER_TO_UNIT_LENGTH;
   float mu = dot(vViewPosition * METER_TO_UNIT_LENGTH, rayDirection) / r;
