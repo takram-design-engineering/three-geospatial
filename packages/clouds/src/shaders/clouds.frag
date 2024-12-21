@@ -41,7 +41,7 @@ layout(location = 0) out vec4 outputColor;
 const vec4 minLayerHeights = vec4(600.0, 4500.0, 6700.0, 0.0);
 const vec4 maxLayerHeights = vec4(1000.0, 5000.0, 8000.0, 0.0);
 const vec4 densityScales = vec4(0.03, 0.02, 0.001, 0.0);
-const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.0, 0.0);
+const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
 const vec4 coverageModulations = vec4(0.6, 0.3, 0.5, 0.0);
 
 // TODO: Derive from minLayerHeights and maxLayerHeights
@@ -212,14 +212,13 @@ vec4 sampleDensity(CoverageSample cs) {
 
 float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mipLevel) {
   vec4 density = sampleDensity(cs);
-  float intensity = mipLevel * 0.3;
-  if (intensity < 1.0) {
+  if (mipLevel < 2.0) {
     float shape = textureLod(shapeTexture, position * shapeFrequency, 0.0).r;
     // shape = pow(shape, 6.0) * 0.4; // Modulation for whippier shape
     shape = 1.0 - shape; // Or invert for fluffy shape
     density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), densityDetailAmounts);
 
-    if (useDetail) {
+    if (useDetail && mipLevel < 1.0) {
       float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
       // Fluffy at the top and whippy at the bottom.
       vec4 modifier = mix(
