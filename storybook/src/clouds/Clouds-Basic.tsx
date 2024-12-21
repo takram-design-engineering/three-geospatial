@@ -1,12 +1,13 @@
 import { OrbitControls, useTexture } from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useRef, useState, type FC } from 'react'
 import {
-  NoColorSpace,
+  NearestFilter,
   Quaternion,
+  RedFormat,
   RepeatWrapping,
   Vector3,
   type Camera
@@ -22,10 +23,15 @@ import {
   Ellipsoid,
   Geodetic,
   radians,
+  Uint8Data3DLoader,
   type GeodeticLike
 } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
-import { type CloudsEffect } from '@takram/three-global-clouds'
+import {
+  STBN_TEXTURE_DEPTH,
+  STBN_TEXTURE_SIZE,
+  type CloudsEffect
+} from '@takram/three-global-clouds'
 import { Clouds } from '@takram/three-global-clouds/r3f'
 
 import { Stats } from '../helpers/Stats'
@@ -97,10 +103,33 @@ const Scene: FC = () => {
   const coverageDetailTexture = useTexture('/clouds/coverage_detail.png')
   coverageDetailTexture.wrapS = RepeatWrapping
   coverageDetailTexture.wrapT = RepeatWrapping
-  const blueNoiseTexture = useTexture('/clouds/blue_noise.png')
-  blueNoiseTexture.wrapS = RepeatWrapping
-  blueNoiseTexture.wrapT = RepeatWrapping
-  blueNoiseTexture.colorSpace = NoColorSpace
+
+  const stbnScalarTexture = useLoader(
+    Uint8Data3DLoader,
+    '/clouds/stbn_scalar.bin'
+  )
+  stbnScalarTexture.format = RedFormat
+  stbnScalarTexture.image.width = STBN_TEXTURE_SIZE
+  stbnScalarTexture.image.height = STBN_TEXTURE_SIZE
+  stbnScalarTexture.image.depth = STBN_TEXTURE_DEPTH
+  stbnScalarTexture.minFilter = NearestFilter
+  stbnScalarTexture.magFilter = NearestFilter
+  stbnScalarTexture.wrapS = RepeatWrapping
+  stbnScalarTexture.wrapT = RepeatWrapping
+  stbnScalarTexture.wrapR = RepeatWrapping
+
+  const stbnVectorTexture = useLoader(
+    Uint8Data3DLoader,
+    '/clouds/stbn_unit_vector.bin'
+  )
+  stbnVectorTexture.image.width = STBN_TEXTURE_SIZE
+  stbnVectorTexture.image.height = STBN_TEXTURE_SIZE
+  stbnVectorTexture.image.depth = STBN_TEXTURE_DEPTH
+  stbnVectorTexture.minFilter = NearestFilter
+  stbnVectorTexture.magFilter = NearestFilter
+  stbnVectorTexture.wrapS = RepeatWrapping
+  stbnVectorTexture.wrapT = RepeatWrapping
+  stbnVectorTexture.wrapR = RepeatWrapping
 
   const { useDetail, structuredSampling } = useControls('clouds', {
     useDetail: true,
@@ -133,7 +162,8 @@ const Scene: FC = () => {
           <Clouds
             ref={setClouds}
             coverageDetailTexture={coverageDetailTexture}
-            blueNoiseTexture={blueNoiseTexture}
+            stbnScalarTexture={stbnScalarTexture}
+            stbnVectorTexture={stbnVectorTexture}
             coverage={coverage}
             phaseFunction={phaseFunction}
           />

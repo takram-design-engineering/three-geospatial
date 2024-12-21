@@ -33,6 +33,7 @@ import { depth, math } from '@takram/three-geospatial/shaders'
 
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
+import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
 
 import fragmentShader from './shaders/clouds.frag'
 import vertexShader from './shaders/clouds.vert'
@@ -131,7 +132,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraNear: new Uniform(0),
           cameraFar: new Uniform(0),
           bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
-          blueNoiseTexture: new Uniform(null),
+          stbnScalarTexture: new Uniform(null),
+          stbnVectorTexture: new Uniform(null),
+          frame: new Uniform(0),
 
           // Cloud parameters
           shapeTexture: new Uniform(shape.texture),
@@ -153,6 +156,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           minTransmittance: new Uniform(1e-2)
         } satisfies CloudsMaterialUniforms,
         defines: {
+          STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
+          STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
           DEPTH_PACKING: '0',
           PHASE_FUNCTION: '2',
           MULTI_SCATTERING_OCTAVES: '8'
@@ -175,6 +180,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   ): void {
     this.shape.update(renderer)
     this.shapeDetail.update(renderer)
+    ++this.uniforms.frame.value
   }
 
   copyCameraSettings(camera?: Camera | null): void {
@@ -265,12 +271,20 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.uniforms.coverageDetailTexture.value = value
   }
 
-  get blueNoiseTexture(): Texture | null {
-    return this.uniforms.blueNoiseTexture.value
+  get stbnScalarTexture(): Texture | null {
+    return this.uniforms.stbnScalarTexture.value
   }
 
-  set blueNoiseTexture(value: Texture | null) {
-    this.uniforms.blueNoiseTexture.value = value
+  set stbnScalarTexture(value: Texture | null) {
+    this.uniforms.stbnScalarTexture.value = value
+  }
+
+  get stbnVectorTexture(): Texture | null {
+    return this.uniforms.stbnVectorTexture.value
+  }
+
+  set stbnVectorTexture(value: Texture | null) {
+    this.uniforms.stbnVectorTexture.value = value
   }
 
   get structuredSampling(): boolean {

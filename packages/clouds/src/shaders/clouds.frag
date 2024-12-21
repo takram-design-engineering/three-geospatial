@@ -6,6 +6,9 @@ uniform float cameraFar;
 uniform vec3 sunDirection;
 uniform float bottomRadius; // TODO:
 uniform sampler2D blueNoiseTexture;
+uniform sampler3D stbnScalarTexture;
+uniform sampler3D stbnVectorTexture;
+uniform int frame;
 
 // Cloud parameters
 uniform sampler3D shapeTexture;
@@ -118,8 +121,24 @@ float random(const vec2 uv) {
   return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-vec3 blueNoise(const vec2 uv) {
-  return fract(texture(blueNoiseTexture, uv * resolution / 256.0)).xyz;
+float blueNoise(const vec2 uv) {
+  return texture(
+    stbnScalarTexture,
+    vec3(
+      uv * resolution / float(STBN_TEXTURE_SIZE),
+      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
+    )
+  ).x;
+}
+
+vec3 blueNoiseVector(const vec2 uv) {
+  return texture(
+    stbnVectorTexture,
+    vec3(
+      uv * resolution / float(STBN_TEXTURE_SIZE),
+      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
+    )
+  ).xyz;
 }
 
 const mat4 bayerMatrix =
@@ -229,12 +248,7 @@ void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 colo
   color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
 }
 
-vec3 multipleScattering(
-  const vec3 incidentLight,
-  const float opticalDepth,
-  const float cosTheta,
-  const float density
-) {
+vec3 multipleScattering(const float opticalDepth, const float cosTheta, const float density) {
   // Attenuation, contribution and phase attenuation are all the same
   // as described in: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
   vec3 coeff = vec3(1.0);
@@ -398,10 +412,10 @@ vec4 marchToCloud(
 
 void main() {
   vec3 rayDirection = normalize(vRayDirection);
-  vec3 jitter = vec3(bayer(vUv));
+  float jitter = blueNoise(vUv);
 
   // Uncomment to check blended dodecahedral normals.
-  // vec3 normal = getStructureNormal(rayDirection, jitter.x);
+  // vec3 normal = getStructureNormal(rayDirection, jitter);
   // outputColor = vec4(normal * 0.5 + 0.5, 1.0);
   // return;
 
@@ -503,7 +517,7 @@ void main() {
     camera,
     rayOrigin,
     rayDirection,
-    jitter.x,
+    jitter,
     rayFar - rayNear,
     pow(2.0, mipLevel),
     sunDirection,
