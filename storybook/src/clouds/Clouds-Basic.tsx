@@ -74,12 +74,8 @@ const Scene: FC = () => {
     correctAltitude: true,
     photometric: true
   })
-  const { coverage, phaseFunction } = useControls('clouds', {
-    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
-    phaseFunction: {
-      value: 'draine',
-      options: ['2robes', '3robes', 'draine']
-    }
+  const { coverage } = useControls('clouds', {
+    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 }
   })
 
   const camera = useThree(({ camera }) => camera)
@@ -131,14 +127,25 @@ const Scene: FC = () => {
   stbnVectorTexture.wrapT = RepeatWrapping
   stbnVectorTexture.wrapR = RepeatWrapping
 
-  const { maxIterations, stepSize, maxStepSize, useDetail, usePowder } =
-    useControls('clouds', {
-      maxIterations: { value: 1000, min: 100, max: 2000 },
-      stepSize: { value: 100, min: 10, max: 200 },
-      maxStepSize: { value: 1000, min: 200, max: 2000 },
-      useDetail: true,
-      usePowder: false
-    })
+  const {
+    maxIterations,
+    stepSize,
+    maxStepSize,
+    scatterAnisotropy,
+    scatterSecondaryAnisotropy,
+    scatterAnisotropyMix,
+    useDetail,
+    usePowder
+  } = useControls('clouds', {
+    maxIterations: { value: 1000, min: 100, max: 2000 },
+    stepSize: { value: 100, min: 10, max: 200 },
+    maxStepSize: { value: 1000, min: 200, max: 2000 },
+    scatterAnisotropy: { value: 0.7, min: -1, max: 1 },
+    scatterSecondaryAnisotropy: { value: -0.3, min: -1, max: 1 },
+    scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
+    useDetail: true,
+    usePowder: false
+  })
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
 
@@ -149,6 +156,11 @@ const Scene: FC = () => {
     clouds.cloudsMaterial.uniforms.maxIterations.value = maxIterations
     clouds.cloudsMaterial.uniforms.initialStepSize.value = stepSize
     clouds.cloudsMaterial.uniforms.maxStepSize.value = maxStepSize
+    clouds.cloudsMaterial.uniforms.scatterAnisotropy.value = scatterAnisotropy
+    clouds.cloudsMaterial.uniforms.scatterSecondaryAnisotropy.value =
+      scatterSecondaryAnisotropy
+    clouds.cloudsMaterial.uniforms.scatterAnisotropyMix.value =
+      scatterAnisotropyMix
   })
 
   useEffect(() => {
@@ -179,7 +191,6 @@ const Scene: FC = () => {
             stbnScalarTexture={stbnScalarTexture}
             stbnVectorTexture={stbnVectorTexture}
             coverage={coverage}
-            phaseFunction={phaseFunction}
           />
           <LensFlare />
           <ToneMapping mode={ToneMappingMode.AGX} />

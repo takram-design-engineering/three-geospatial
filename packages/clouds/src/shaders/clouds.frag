@@ -1,3 +1,5 @@
+#define RECIPROCAL_PI4 (0.07957747154594767)
+
 uniform sampler2D depthBuffer;
 uniform vec2 resolution;
 uniform float cameraHeight;
@@ -19,6 +21,9 @@ uniform vec3 albedo;
 uniform vec2 coverageDetailFrequency;
 uniform float shapeFrequency;
 uniform float shapeDetailFrequency;
+uniform float scatterAnisotropy;
+uniform float scatterSecondaryAnisotropy;
+uniform float scatterAnisotropyMix;
 uniform float powderScale;
 uniform float powderExponent;
 
@@ -248,6 +253,17 @@ void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 colo
     transmittance
   );
   color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
+}
+
+vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
+  vec2 g2 = g * g;
+  return RECIPROCAL_PI4 * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
+}
+
+float phaseFunction(const float cosTheta, const float attenuation) {
+  vec2 g = vec2(scatterAnisotropy, scatterSecondaryAnisotropy);
+  vec2 weights = vec2(1.0 - scatterAnisotropyMix, scatterAnisotropyMix);
+  return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
 
 float multipleScattering(const float opticalDepth, const float cosTheta, const float density) {

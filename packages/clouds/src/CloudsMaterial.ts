@@ -37,7 +37,6 @@ import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
 
 import fragmentShader from './shaders/clouds.frag'
 import vertexShader from './shaders/clouds.vert'
-import phaseFunction from './shaders/phaseFunction.glsl'
 
 declare module 'three' {
   interface Camera {
@@ -117,7 +116,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ${functions}
           ${depth}
           ${math}
-          ${phaseFunction}
           ${fragmentShader}
         `,
         uniforms: {
@@ -145,6 +143,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           shapeDetailFrequency: new Uniform(0.007),
           powderScale: new Uniform(300),
           powderExponent: new Uniform(0.5),
+          scatterAnisotropy: new Uniform(0.7),
+          scatterSecondaryAnisotropy: new Uniform(-0.3),
+          scatterAnisotropyMix: new Uniform(0.5),
 
           // Raymarch to clouds
           maxIterations: new Uniform(500),
@@ -158,7 +159,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
           STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
           DEPTH_PACKING: '0',
-          PHASE_FUNCTION: '2',
           MULTI_SCATTERING_OCTAVES: '8',
           USE_DETAIL: '1',
           ACCURATE_ATMOSPHERIC_IRRADIANCE: '1'

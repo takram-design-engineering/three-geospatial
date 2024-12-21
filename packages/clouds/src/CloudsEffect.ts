@@ -35,9 +35,6 @@ import { CloudsMaterial } from './CloudsMaterial'
 
 import fragmentShader from './shaders/cloudsEffect.frag'
 
-const phaseFunctionTypes = ['2robes', '3robes', 'draine']
-export type PhaseFunctionType = (typeof phaseFunctionTypes)[number]
-
 export interface CloudsEffectOptions extends AtmosphereEffectBaseOptions {
   blendFunction?: BlendFunction
   resolutionScale?: number
@@ -188,15 +185,6 @@ export class CloudsEffect extends Effect {
 
   set coverage(value: number) {
     this.cloudsMaterial.uniforms.coverage.value = value
-  }
-
-  get phaseFunction(): PhaseFunctionType {
-    return phaseFunctionTypes[+this.cloudsMaterial.defines.PHASE_FUNCTION]
-  }
-
-  set phaseFunction(value: PhaseFunctionType) {
-    this.cloudsMaterial.defines.PHASE_FUNCTION = `${phaseFunctionTypes.indexOf(value)}`
-    this.cloudsMaterial.needsUpdate = true
   }
 
   // Redundant pass-though accessors.
