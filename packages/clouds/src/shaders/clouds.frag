@@ -237,16 +237,17 @@ vec3 multipleScattering(
 ) {
   // Attenuation, contribution and phase attenuation are all the same
   // as described in: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
-  float coeff = 1.0;
-  const float attenuation = 0.5;
-  vec3 radiance = vec3(0.0);
+  vec3 coeff = vec3(1.0);
+  const vec3 attenuation = vec3(0.5, 0.5, 0.5);
+  vec3 scattering = vec3(0.0);
   for (int octave = 0; octave < MULTI_SCATTERING_OCTAVES; ++octave) {
-    float beerLambert = exp(-opticalDepth * coeff);
-    // TODO: We may not afford calculating the phase function at every step.
-    radiance += coeff * incidentLight * beerLambert * phaseFunction(cosTheta * coeff, coeff);
+    float beerLambert = exp(-opticalDepth * coeff.y);
+    // A similar approximation is described in the Frostbite's paper, where
+    // phase angle is attenuated.
+    scattering += coeff.x * beerLambert * phaseFunction(cosTheta * coeff.z, coeff.z);
     coeff *= attenuation;
   }
-  return radiance;
+  return scattering;
 }
 
 // Random offsets for sampling scattered lights for less bias.
@@ -287,8 +288,8 @@ vec3 marchToLight(
     opticalDepth += density * stepSize;
   }
 
-  vec3 irradiance = albedo * (sunIrradiance + skyIrradiance);
-  vec3 radiance = multipleScattering(irradiance, opticalDepth, cosTheta, density);
+  vec3 irradiance = sunIrradiance + skyIrradiance;
+  vec3 radiance = irradiance * multipleScattering(opticalDepth, cosTheta, density);
   return radiance * density;
 }
 
