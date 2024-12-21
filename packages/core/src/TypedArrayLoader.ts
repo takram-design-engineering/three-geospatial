@@ -4,7 +4,8 @@ import { ArrayBufferLoader } from './ArrayBufferLoader'
 import {
   parseFloat32Array,
   parseInt16Array,
-  parseUint16Array
+  parseUint16Array,
+  parseUnt8Array
 } from './typedArray'
 
 export abstract class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
@@ -38,6 +39,10 @@ export abstract class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
       onError
     )
   }
+}
+
+export class Uint8ArrayLoader extends TypedArrayLoader<Uint8Array> {
+  readonly parseTypedArray = parseUnt8Array
 }
 
 export class Int16ArrayLoader extends TypedArrayLoader<Int16Array> {

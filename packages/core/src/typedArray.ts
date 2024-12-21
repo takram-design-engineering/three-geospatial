@@ -54,6 +54,10 @@ export function parseTypedArray<K extends GetValue>(
   return array
 }
 
+export function parseUnt8Array(buffer: ArrayBuffer): Uint8Array {
+  return parseTypedArray(buffer, Uint8Array, 'getUint8')
+}
+
 export function parseInt16Array(
   buffer: ArrayBuffer,
   littleEndian?: boolean

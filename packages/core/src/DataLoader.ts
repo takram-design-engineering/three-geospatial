@@ -6,6 +6,7 @@ import {
   LinearFilter,
   Loader,
   RGBAFormat,
+  UnsignedByteType,
   type Texture,
   type TypedArray
 } from 'three'
@@ -14,6 +15,7 @@ import { type Class } from 'type-fest'
 import {
   Float32ArrayLoader,
   Int16ArrayLoader,
+  Uint8ArrayLoader,
   Uint16ArrayLoader,
   type TypedArrayLoader
 } from './TypedArrayLoader'
@@ -71,6 +73,15 @@ export abstract class DataLoader<
       onProgress,
       onError
     )
+  }
+}
+
+export class Uint8Data3DLoader extends DataLoader<Data3DTexture, Uint8Array> {
+  readonly Texture = Data3DTexture
+  readonly TypedArrayLoader = Uint8ArrayLoader
+  readonly parameters: DataTextureParameters = {
+    ...defaultDataTextureParameter,
+    type: UnsignedByteType
   }
 }
 
