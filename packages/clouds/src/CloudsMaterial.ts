@@ -140,16 +140,17 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           coverageDetailTexture: new Uniform(null),
           coverage: new Uniform(0.3),
           albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
-          useDetail: new Uniform(true),
           coverageDetailFrequency: new Uniform(new Vector2(300, 150)),
           shapeFrequency: new Uniform(0.0003),
           shapeDetailFrequency: new Uniform(0.007),
+          powderScale: new Uniform(300),
+          powderExponent: new Uniform(0.5),
 
           // Raymarch to clouds
-          maxIterations: new Uniform(1000),
+          maxIterations: new Uniform(500),
           initialStepSize: new Uniform(100),
           maxStepSize: new Uniform(1000),
-          maxRayDistance: new Uniform(1e5),
+          maxRayDistance: new Uniform(1.5e5),
           minDensity: new Uniform(1e-5),
           minTransmittance: new Uniform(1e-2)
         } satisfies CloudsMaterialUniforms,
@@ -158,7 +159,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
           DEPTH_PACKING: '0',
           PHASE_FUNCTION: '2',
-          MULTI_SCATTERING_OCTAVES: '8'
+          MULTI_SCATTERING_OCTAVES: '8',
+          USE_DETAIL: '1',
+          ACCURATE_ATMOSPHERIC_IRRADIANCE: '1'
         }
       },
       atmosphere
@@ -285,16 +288,31 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.uniforms.stbnVectorTexture.value = value
   }
 
-  get structuredSampling(): boolean {
-    return this.defines.STRUCTURED_SAMPLING != null
+  get useDetail(): boolean {
+    return this.defines.USE_DETAIL != null
   }
 
-  set structuredSampling(value: boolean) {
-    if (value !== this.structuredSampling) {
+  set useDetail(value: boolean) {
+    if (value !== this.useDetail) {
       if (value) {
-        this.defines.STRUCTURED_SAMPLING = '1'
+        this.defines.USE_DETAIL = '1'
       } else {
-        delete this.defines.STRUCTURED_SAMPLING
+        delete this.defines.USE_DETAIL
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get usePowder(): boolean {
+    return this.defines.USE_POWDER != null
+  }
+
+  set usePowder(value: boolean) {
+    if (value !== this.usePowder) {
+      if (value) {
+        this.defines.USE_POWDER = '1'
+      } else {
+        delete this.defines.USE_POWDER
       }
       this.needsUpdate = true
     }

@@ -16,10 +16,11 @@ uniform sampler3D shapeDetailTexture;
 uniform sampler2D coverageDetailTexture;
 uniform float coverage;
 uniform vec3 albedo;
-uniform bool useDetail;
 uniform vec2 coverageDetailFrequency;
 uniform float shapeFrequency;
 uniform float shapeDetailFrequency;
+uniform float powderScale;
+uniform float powderExponent;
 
 // Raymarch to clouds
 uniform int maxIterations;
@@ -40,7 +41,7 @@ layout(location = 0) out vec4 outputColor;
 // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
 const vec4 minLayerHeights = vec4(600.0, 4500.0, 6700.0, 0.0);
 const vec4 maxLayerHeights = vec4(1000.0, 5000.0, 8000.0, 0.0);
-const vec4 densityScales = vec4(0.03, 0.02, 0.001, 0.0);
+const vec4 densityScales = vec4(0.05, 0.02, 0.001, 0.0);
 const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
 const vec4 coverageModulations = vec4(0.6, 0.3, 0.5, 0.0);
 
@@ -218,7 +219,8 @@ float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mi
     shape = 1.0 - shape; // Or invert for fluffy shape
     density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), densityDetailAmounts);
 
-    if (useDetail && mipLevel < 1.0) {
+    #ifdef USE_DETAIL
+    if (mipLevel < 1.0) {
       float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
       // Fluffy at the top and whippy at the bottom.
       vec4 modifier = mix(
@@ -231,6 +233,7 @@ float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mi
         remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0), vec4(0.0), vec4(1.0))
       );
     }
+    #endif
   }
   return saturate(dot(density, densityScales * cs.heightFraction) * 5.0);
 }
@@ -247,12 +250,13 @@ void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 colo
   color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
 }
 
-vec3 multipleScattering(const float opticalDepth, const float cosTheta, const float density) {
+float multipleScattering(const float opticalDepth, const float cosTheta, const float density) {
   // Attenuation, contribution and phase attenuation are all the same
   // as described in: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
   vec3 coeff = vec3(1.0);
-  const vec3 attenuation = vec3(0.5, 0.5, 0.5);
-  vec3 scattering = vec3(0.0);
+  // a, b, c, and should satisfy a <= b.
+  const vec3 attenuation = vec3(0.5, 0.5, 0.8);
+  float scattering = 0.0;
   for (int octave = 0; octave < MULTI_SCATTERING_OCTAVES; ++octave) {
     float beerLambert = exp(-opticalDepth * coeff.y);
     // A similar approximation is described in the Frostbite's paper, where
@@ -302,8 +306,8 @@ vec3 marchToLight(
   }
 
   vec3 irradiance = sunIrradiance + skyIrradiance;
-  vec3 radiance = irradiance * multipleScattering(opticalDepth, cosTheta, density);
-  return radiance * density;
+  float scattering = multipleScattering(opticalDepth, cosTheta, density);
+  return irradiance * scattering * density;
 }
 
 vec4 marchToCloud(
@@ -314,8 +318,8 @@ vec4 marchToCloud(
   const float maxRayDistance,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
-  const vec3 sunIrradiance,
-  const vec3 skyIrradiance,
+  vec3 sunIrradiance,
+  vec3 skyIrradiance,
   out float weightedMeanDepth
 ) {
   vec3 radianceIntegral = vec3(0.0);
@@ -328,6 +332,10 @@ vec4 marchToCloud(
   float cosTheta = dot(sunDirection, rayDirection);
 
   for (int i = 0; i < maxIterations; ++i) {
+    if (rayDistance > maxRayDistance) {
+      break; // Termination
+    }
+
     vec3 position = rayOrigin + rayDirection * rayDistance;
 
     // Sample a rough density.
@@ -341,6 +349,14 @@ vec4 marchToCloud(
       // Sample a detailed density.
       float density = sampleDensityDetail(cs, position, mipLevel);
       if (density > minDensity) {
+        #ifdef ACCURATE_ATMOSPHERIC_IRRADIANCE
+        sunIrradiance = GetSunAndSkyIrradiance(
+          position * METER_TO_UNIT_LENGTH,
+          sunDirection,
+          skyIrradiance
+        );
+        #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
+
         vec3 radiance = marchToLight(
           position,
           sunDirection,
@@ -350,6 +366,10 @@ vec4 marchToCloud(
           density,
           mipLevel
         );
+        #ifdef USE_POWDER
+        // radiance *= 1.0 - powderScale * exp(-density * powderExponent);
+        radiance *= min(1.0, pow(density * powderScale, powderExponent));
+        #endif // USE_POWDER
 
         // Energy-conserving analytical integration of scattered light
         // See 5.6.3 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
@@ -375,9 +395,6 @@ vec4 marchToCloud(
     }
     if (transmittanceIntegral <= minTransmittance) {
       break; // Early termination
-    }
-    if (rayDistance > maxRayDistance) {
-      break; // Termination
     }
   }
   // The final product of 5.9.1 and we'll evaluate this in aerial perspective.
@@ -472,18 +489,20 @@ void main() {
   vec3 camera = vViewPosition - vEllipsoidCenter;
   vec3 rayOrigin = camera + rayNear * rayDirection;
 
-  // TODO: Take 2 samples for the cloud layer's bottom and top, then
-  // interpolate it for more accurate irradiance.
+  vec2 globeUv = getGlobeUv(rayOrigin);
+  float mipLevel = getMipLevel(globeUv * coverageDetailFrequency);
+  mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
+
   vec3 skyIrradiance;
-  vec3 sunIrradiance = GetSunAndSkyIrradiance(
+  vec3 sunIrradiance;
+  #ifndef ACCURATE_ATMOSPHERIC_IRRADIANCE
+  // Sample the irradiance at the near point for a rough estimate.
+  sunIrradiance = GetSunAndSkyIrradiance(
     rayOrigin * METER_TO_UNIT_LENGTH,
     sunDirection,
     skyIrradiance
   );
-
-  vec2 globeUv = getGlobeUv(rayOrigin);
-  float mipLevel = getMipLevel(globeUv * coverageDetailFrequency);
-  mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
+  #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
   float weightedMeanDepth;
   vec4 color = marchToCloud(

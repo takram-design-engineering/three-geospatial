@@ -131,19 +131,33 @@ const Scene: FC = () => {
   stbnVectorTexture.wrapT = RepeatWrapping
   stbnVectorTexture.wrapR = RepeatWrapping
 
-  const { useDetail, structuredSampling } = useControls('clouds', {
-    useDetail: true,
-    structuredSampling: false
-  })
+  const { maxIterations, stepSize, maxStepSize, useDetail, usePowder } =
+    useControls('clouds', {
+      maxIterations: { value: 1000, min: 100, max: 2000 },
+      stepSize: { value: 100, min: 10, max: 200 },
+      maxStepSize: { value: 1000, min: 200, max: 2000 },
+      useDetail: true,
+      usePowder: false
+    })
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
+
+  useFrame(() => {
+    if (clouds == null) {
+      return
+    }
+    clouds.cloudsMaterial.uniforms.maxIterations.value = maxIterations
+    clouds.cloudsMaterial.uniforms.initialStepSize.value = stepSize
+    clouds.cloudsMaterial.uniforms.maxStepSize.value = maxStepSize
+  })
+
   useEffect(() => {
     if (clouds == null) {
       return
     }
-    clouds.cloudsMaterial.uniforms.useDetail.value = useDetail
-    clouds.cloudsMaterial.structuredSampling = structuredSampling
-  }, [clouds, useDetail, structuredSampling])
+    clouds.cloudsMaterial.useDetail = useDetail
+    clouds.cloudsMaterial.usePowder = usePowder
+  }, [clouds, useDetail, usePowder])
 
   return (
     <>
