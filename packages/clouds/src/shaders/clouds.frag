@@ -46,7 +46,7 @@ layout(location = 0) out vec4 outputColor;
 // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
 const vec4 minLayerHeights = vec4(600.0, 4500.0, 6700.0, 0.0);
 const vec4 maxLayerHeights = vec4(1000.0, 5000.0, 8000.0, 0.0);
-const vec4 densityScales = vec4(0.05, 0.02, 0.001, 0.0);
+const vec4 densityScales = vec4(0.06, 0.02, 0.001, 0.0);
 const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
 const vec4 coverageModulations = vec4(0.6, 0.3, 0.5, 0.0);
 
