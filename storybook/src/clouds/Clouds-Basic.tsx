@@ -142,7 +142,7 @@ const Scene: FC = () => {
     maxStepSize: { value: 1000, min: 200, max: 2000 },
     scatterAnisotropy: { value: 0.7, min: -1, max: 1 },
     scatterSecondaryAnisotropy: { value: -0.3, min: -1, max: 1 },
-    scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
+    scatterAnisotropyMix: { value: 0.4, min: 0, max: 1 },
     useDetail: true,
     usePowder: false
   })
