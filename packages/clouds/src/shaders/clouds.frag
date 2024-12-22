@@ -46,7 +46,7 @@ layout(location = 0) out vec4 outputColor;
 // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
 const vec4 minLayerHeights = vec4(600.0, 4500.0, 6700.0, 0.0);
 const vec4 maxLayerHeights = vec4(1000.0, 5000.0, 8000.0, 0.0);
-const vec4 densityScales = vec4(0.06, 0.02, 0.001, 0.0);
+const vec4 densityScales = vec4(0.3, 0.1, 0.005, 0.0);
 const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
 const vec4 coverageModulations = vec4(0.6, 0.3, 0.5, 0.0);
 
@@ -198,12 +198,11 @@ CoverageSample sampleCoverage(const vec2 uv, const float height, const float mip
   cs.heightFraction = saturate(
     remap(vec4(height), minLayerHeights, maxLayerHeights, vec4(0.0), vec4(1.0))
   );
-  cs.heightScale = shapeAlteringFunction(cs.heightFraction, 0.3);
+  cs.heightScale = shapeAlteringFunction(cs.heightFraction, 0.4);
   return cs;
 }
 
 vec4 sampleDensity(CoverageSample cs) {
-  // TODO: Nicely decrease density at the bottom.
   vec4 inverseCoverage = 1.0 - coverage * cs.heightScale;
   return saturate(
     remap(
@@ -231,7 +230,7 @@ float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mi
       vec4 modifier = mix(
         vec4(pow(detail, 6.0)),
         vec4(1.0 - detail),
-        saturate(remap(cs.heightFraction, 0.4, 0.6, 0.0, 1.0))
+        saturate(remap(cs.heightFraction, 0.2, 0.4, 0.0, 1.0))
       );
       modifier = mix(vec4(0.0), modifier, densityDetailAmounts);
       density = saturate(
@@ -240,7 +239,8 @@ float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mi
     }
     #endif
   }
-  return saturate(dot(density, densityScales * cs.heightFraction) * 5.0);
+  // Nicely decrease density at the bottom.
+  return saturate(dot(density, densityScales * cs.heightFraction));
 }
 
 void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 color) {
