@@ -1,4 +1,5 @@
 export * from './CloudsEffect'
-export * from './CloudShape'
-export * from './CloudShapeDetail'
+export * from './VolumetricDensity'
+export * from './VolumetricDensityDetail'
 export * from './constants'
+export * from './LocalCoverage'

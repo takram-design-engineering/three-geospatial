@@ -15,12 +15,12 @@ uniform int frame;
 uniform float time;
 
 // Cloud parameters
-uniform sampler3D shapeTexture;
-uniform sampler3D shapeDetailTexture;
-uniform sampler2D coverageDetailTexture;
+uniform sampler3D densityTexture;
+uniform sampler3D densityDetailTexture;
+uniform sampler2D localCoverageTexture;
 uniform float coverage;
 uniform vec3 albedo;
-uniform vec2 coverageDetailFrequency;
+uniform vec2 localCoverageFrequency;
 uniform float shapeFrequency;
 uniform float shapeDetailFrequency;
 uniform float scatterAnisotropy;
@@ -193,7 +193,7 @@ vec4 shapeAlteringFunction(const vec4 heightFraction, const float bias) {
 CoverageSample sampleCoverage(const vec2 uv, const float height, const float mipLevel) {
   CoverageSample cs;
   cs.coverageDetail = pow(
-    textureLod(coverageDetailTexture, uv * coverageDetailFrequency, mipLevel),
+    textureLod(localCoverageTexture, uv * localCoverageFrequency, mipLevel),
     // TODO: Parameterize exponents.
     vec4(1.0, 1.0, 2.0, 1.0)
   );
@@ -220,14 +220,14 @@ vec4 sampleDensity(CoverageSample cs) {
 float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mipLevel) {
   vec4 density = sampleDensity(cs);
   if (mipLevel < 2.0) {
-    float shape = textureLod(shapeTexture, position * shapeFrequency, 0.0).r;
+    float shape = textureLod(densityTexture, position * shapeFrequency, 0.0).r;
     // shape = pow(shape, 6.0) * 0.4; // Modulation for whippier shape
     shape = 1.0 - shape; // Or invert for fluffy shape
     density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), densityDetailAmounts);
 
     #ifdef USE_DETAIL
     if (mipLevel < 1.0) {
-      float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
+      float detail = textureLod(densityDetailTexture, position * shapeDetailFrequency, 0.0).r;
       // Fluffy at the top and whippy at the bottom.
       vec4 modifier = mix(
         vec4(pow(detail, 6.0)),
@@ -487,7 +487,7 @@ void main() {
   vec3 rayOrigin = camera + rayNear * rayDirection;
 
   vec2 globeUv = getGlobeUv(rayOrigin);
-  float mipLevel = getMipLevel(globeUv * coverageDetailFrequency);
+  float mipLevel = getMipLevel(globeUv * localCoverageFrequency);
   mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
 
   vec3 skyIrradiance;

@@ -11,12 +11,15 @@ import {
   Vector3
 } from 'three'
 
-import { CloudShape, CloudShapeDetail } from '@takram/three-global-clouds'
+import {
+  VolumetricDensity,
+  VolumetricDensityDetail
+} from '@takram/three-global-clouds'
 
 import { useControls } from '../helpers/useControls'
 
-const shapeNoise = new CloudShape()
-const detailNoise = new CloudShapeDetail()
+const density = new VolumetricDensity()
+const densityDetail = new VolumetricDensityDetail()
 
 const Scene: FC = () => {
   const geometry = new BoxGeometry(1, 1, 1)
@@ -26,8 +29,8 @@ const Scene: FC = () => {
     fragmentShader,
     uniforms: {
       cameraPosition: new Uniform(new Vector3()),
-      shape: new Uniform(shapeNoise.texture),
-      detail: new Uniform(detailNoise.texture),
+      shape: new Uniform(density.texture),
+      detail: new Uniform(densityDetail.texture),
       base: new Uniform(new Color(0x808080)),
       threshold: new Uniform(0),
       opacity: new Uniform(0),
@@ -60,8 +63,8 @@ const Scene: FC = () => {
 
   const { gl } = useThree()
   useEffect(() => {
-    shapeNoise.update(gl)
-    detailNoise.update(gl)
+    density.update(gl)
+    densityDetail.update(gl)
   }, [gl])
 
   return (

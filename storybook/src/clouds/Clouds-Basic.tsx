@@ -96,9 +96,9 @@ const Scene: FC = () => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const coverageDetailTexture = useTexture('/clouds/coverage_detail.png')
-  coverageDetailTexture.wrapS = RepeatWrapping
-  coverageDetailTexture.wrapT = RepeatWrapping
+  const localCoverageTexture = useTexture('/clouds/local_coverage.png')
+  localCoverageTexture.wrapS = RepeatWrapping
+  localCoverageTexture.wrapT = RepeatWrapping
 
   const stbnScalarTexture = useLoader(
     Uint8Data3DLoader,
@@ -187,7 +187,7 @@ const Scene: FC = () => {
         >
           <Clouds
             ref={setClouds}
-            coverageDetailTexture={coverageDetailTexture}
+            localCoverageTexture={localCoverageTexture}
             stbnScalarTexture={stbnScalarTexture}
             stbnVectorTexture={stbnVectorTexture}
             coverage={coverage}

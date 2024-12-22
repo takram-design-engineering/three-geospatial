@@ -2,16 +2,16 @@
 
 import { math } from '@takram/three-geospatial/shaders'
 
-import { Render3DTexture } from './Render3DTexture'
+import { RenderTexture } from './RenderTexture'
 
-import fragmentShader from './shaders/cloudShapeDetail.frag'
+import fragmentShader from './shaders/localCoverage.frag'
 import perlin from './shaders/perlin.glsl'
 import tileableNoise from './shaders/tileableNoise.glsl'
 
-export class CloudShapeDetail extends Render3DTexture {
+export class LocalCoverage extends RenderTexture {
   constructor() {
     super({
-      size: 32,
+      size: 512,
       fragmentShader: /* glsl */ `
         precision highp float;
         precision highp int;

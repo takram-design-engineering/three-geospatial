@@ -32,9 +32,9 @@ import { functions, parameters } from '@takram/three-atmosphere/shaders'
 import { assertType, Geodetic } from '@takram/three-geospatial'
 import { depth, math } from '@takram/three-geospatial/shaders'
 
-import { CloudShape } from './CloudShape'
-import { CloudShapeDetail } from './CloudShapeDetail'
 import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
+import { VolumetricDensity } from './VolumetricDensity'
+import { VolumetricDensityDetail } from './VolumetricDensityDetail'
 
 import fragmentShader from './shaders/clouds.frag'
 import vertexShader from './shaders/clouds.vert'
@@ -70,9 +70,9 @@ interface CloudsMaterialUniforms {
 
   // Cloud parameters
   depthBuffer: Uniform<Texture | null>
-  shapeTexture: Uniform<Texture | null>
-  shapeDetailTexture: Uniform<Texture | null>
-  coverageDetailTexture: Uniform<Texture | null>
+  densityTexture: Uniform<Texture | null>
+  densityDetailTexture: Uniform<Texture | null>
+  localCoverageTexture: Uniform<Texture | null>
   coverage: Uniform<number>
 }
 
@@ -81,8 +81,9 @@ export interface CloudsMaterial {
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
-  shape: CloudShape
-  shapeDetail: CloudShapeDetail
+  density: VolumetricDensity
+  densityDetail: VolumetricDensityDetail
+
   private readonly clock = new Clock()
 
   constructor(
@@ -94,8 +95,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       ...params
     }
 
-    const shape = new CloudShape()
-    const shapeDetail = new CloudShapeDetail()
+    const density = new VolumetricDensity()
+    const densityDetail = new VolumetricDensityDetail()
 
     super(
       {
@@ -136,12 +137,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           time: new Uniform(0),
 
           // Cloud parameters
-          shapeTexture: new Uniform(shape.texture),
-          shapeDetailTexture: new Uniform(shapeDetail.texture),
-          coverageDetailTexture: new Uniform(null),
+          densityTexture: new Uniform(density.texture),
+          densityDetailTexture: new Uniform(densityDetail.texture),
+          localCoverageTexture: new Uniform(null),
           coverage: new Uniform(0.3),
           albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
-          coverageDetailFrequency: new Uniform(new Vector2(300, 150)),
+          localCoverageFrequency: new Uniform(new Vector2(300, 150)),
           shapeFrequency: new Uniform(0.0003),
           shapeDetailFrequency: new Uniform(0.007),
           powderScale: new Uniform(200),
@@ -171,8 +172,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       atmosphere
     )
 
-    this.shape = shape
-    this.shapeDetail = shapeDetail
+    this.density = density
+    this.densityDetail = densityDetail
   }
 
   onBeforeRender(
@@ -183,8 +184,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     object: Object3D,
     group: Group
   ): void {
-    this.shape.update(renderer)
-    this.shapeDetail.update(renderer)
+    this.density.update(renderer)
+    this.densityDetail.update(renderer)
     ++this.uniforms.frame.value
     this.uniforms.time.value = this.clock.getElapsedTime()
   }
@@ -269,12 +270,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get coverageDetailTexture(): Texture | null {
-    return this.uniforms.coverageDetailTexture.value
+  get localCoverageTexture(): Texture | null {
+    return this.uniforms.localCoverageTexture.value
   }
 
-  set coverageDetailTexture(value: Texture | null) {
-    this.uniforms.coverageDetailTexture.value = value
+  set localCoverageTexture(value: Texture | null) {
+    this.uniforms.localCoverageTexture.value = value
   }
 
   get stbnScalarTexture(): Texture | null {
