@@ -6,6 +6,7 @@ uniform float cameraHeight;
 uniform float cameraNear;
 uniform float cameraFar;
 uniform vec3 sunDirection;
+uniform float skyIrradianceScale;
 uniform float bottomRadius; // TODO:
 uniform sampler2D blueNoiseTexture;
 uniform sampler3D stbnScalarTexture;
@@ -356,7 +357,7 @@ vec4 marchToCloud(
         #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
         float scattering = marchToLight(position, sunDirection, cosTheta, mipLevel);
-        vec3 radiance = (sunIrradiance + skyIrradiance) * scattering * density;
+        vec3 radiance = (sunIrradiance * scattering + skyIrradiance * skyIrradianceScale) * density;
 
         #ifdef USE_POWDER
         // radiance *= 1.0 - powderScale * exp(-density * powderExponent);
