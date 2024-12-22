@@ -141,9 +141,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           coverageDetailFrequency: new Uniform(new Vector2(300, 150)),
           shapeFrequency: new Uniform(0.0003),
           shapeDetailFrequency: new Uniform(0.007),
-          powderScale: new Uniform(300),
-          powderExponent: new Uniform(0.5),
-          scatterAnisotropy: new Uniform(0.7),
+          powderScale: new Uniform(200),
+          powderExponent: new Uniform(1),
+          scatterAnisotropy: new Uniform(0.35),
           scatterSecondaryAnisotropy: new Uniform(-0.3),
           scatterAnisotropyMix: new Uniform(0.4),
 
