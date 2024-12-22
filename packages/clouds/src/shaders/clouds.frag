@@ -294,7 +294,7 @@ float marchToLight(
   float opticalDepth = 0.0;
   float stepScale = 1.0;
   float prevStepScale = 0.0;
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 6; ++i) {
     vec3 position = rayOrigin + sunDirection * stepScale * stepSize;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
@@ -302,7 +302,9 @@ float marchToLight(
     float density = sampleDensityDetail(cs, position, mipLevel);
     opticalDepth += density * (stepScale - prevStepScale) * stepSize;
     prevStepScale = stepScale;
-    stepScale *= 2.82842712474619; // pow(64, 1/4) to match n = 6 and s = 2
+    stepScale *= 2.0;
+    // For n = 4:
+    // stepScale *= 2.82842712474619; // pow(64, 1/4) to match n = 6 and s = 2
   }
   return multipleScattering(opticalDepth, cosTheta);
 }
