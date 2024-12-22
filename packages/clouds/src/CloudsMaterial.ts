@@ -3,6 +3,7 @@
 /// <reference types="vite-plugin-glsl/ext" />
 
 import {
+  Clock,
   Color,
   GLSL3,
   Matrix4,
@@ -82,6 +83,7 @@ export interface CloudsMaterial {
 export class CloudsMaterial extends AtmosphereMaterialBase {
   shape: CloudShape
   shapeDetail: CloudShapeDetail
+  private readonly clock = new Clock()
 
   constructor(
     params?: CloudsMaterialParameters,
@@ -131,6 +133,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           stbnScalarTexture: new Uniform(null),
           stbnVectorTexture: new Uniform(null),
           frame: new Uniform(0),
+          time: new Uniform(0),
 
           // Cloud parameters
           shapeTexture: new Uniform(shape.texture),
@@ -183,6 +186,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.shape.update(renderer)
     this.shapeDetail.update(renderer)
     ++this.uniforms.frame.value
+    this.uniforms.time.value = this.clock.getElapsedTime()
   }
 
   copyCameraSettings(camera?: Camera | null): void {

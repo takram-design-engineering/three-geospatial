@@ -12,6 +12,7 @@ uniform sampler2D blueNoiseTexture;
 uniform sampler3D stbnScalarTexture;
 uniform sampler3D stbnVectorTexture;
 uniform int frame;
+uniform float time;
 
 // Cloud parameters
 uniform sampler3D shapeTexture;
