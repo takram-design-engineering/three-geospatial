@@ -266,59 +266,45 @@ float phaseFunction(const float cosTheta, const float attenuation) {
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
 
-float multipleScattering(const float opticalDepth, const float cosTheta, const float density) {
-  // Attenuation, contribution and phase attenuation are all the same
-  // as described in: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
-  vec3 coeff = vec3(1.0);
-  // a, b, c, and should satisfy a <= b.
-  const vec3 attenuation = vec3(0.5, 0.5, 0.8);
+float multipleScattering(const float opticalDepth, const float cosTheta) {
+  // Multiple scattering approximation
+  // See: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
+  // Attenuation (a), contribution (b) and phase attenuation (c).
+  vec3 abc = vec3(1.0);
+  const vec3 attenuation = vec3(0.5, 0.5, 0.8); // Should satisfy a <= b
   float scattering = 0.0;
   for (int octave = 0; octave < MULTI_SCATTERING_OCTAVES; ++octave) {
-    float beerLambert = exp(-opticalDepth * coeff.y);
+    float beerLambert = exp(-opticalDepth * abc.y);
     // A similar approximation is described in the Frostbite's paper, where
     // phase angle is attenuated.
-    scattering += coeff.x * beerLambert * phaseFunction(cosTheta * coeff.z, coeff.z);
-    coeff *= attenuation;
+    scattering += abc.x * beerLambert * phaseFunction(cosTheta * abc.z, abc.z);
+    abc *= attenuation;
   }
   return scattering;
 }
-
-// Random offsets for sampling scattered lights for less bias.
-// Used in several places without an explicit citation:
-// https://github.com/fede-vaccaro/TerrainEngine-OpenGL
-const vec3 SCATTER_OFFSETS[6] = vec3[6](
-  vec3(0.114153915, 0.277360347, -0.006334035),
-  vec3(-0.151877397, -0.010772376, -0.258490254),
-  vec3(-0.097527654, -0.283672317, 0.004286379),
-  vec3(0.027078714, -0.082129635, 0.287265495),
-  vec3(0.084385794, 0.127330917, -0.258197355),
-  vec3(-0.050557209, 0.044246091, 0.292380318)
-);
-
-const float SCATTER_DISTANCES[6] = float[6](1.0, 2.0, 4.0, 8.0, 16.0, 32.0);
-const float SCATTER_STEP_SIZES[6] = float[6](1.0, 1.0, 2.0, 4.0, 8.0, 16.0);
 
 // TODO: Raymarch to light for near clouds, and implement BSM for far clouds.
 float marchToLight(
   const vec3 rayOrigin,
   const vec3 sunDirection,
   const float cosTheta,
-  const float density,
   const float mipLevel
 ) {
-  const float stepLength = 10.0;
+  const float stepSize = 10.0;
   float opticalDepth = 0.0;
-  for (int i = 0; i < 6; ++i) {
-    vec3 randomOffset = (sunDirection + SCATTER_OFFSETS[i] * 0.3) * SCATTER_DISTANCES[i];
-    vec3 position = rayOrigin + randomOffset * stepLength;
+  float stepScale = 1.0;
+  float prevStepScale = 0.0;
+  for (int i = 0; i < 4; ++i) {
+    vec3 position = rayOrigin + sunDirection * stepScale * stepSize;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     CoverageSample cs = sampleCoverage(uv, height, mipLevel);
     float density = sampleDensityDetail(cs, position, mipLevel);
-    float stepSize = SCATTER_STEP_SIZES[i] * stepLength;
-    opticalDepth += density * stepSize;
+    opticalDepth += density * (stepScale - prevStepScale) * stepSize;
+    prevStepScale = stepScale;
+    stepScale *= 2.82842712474619; // pow(64, 1/4) to match n = 6 and s = 2
   }
-  return multipleScattering(opticalDepth, cosTheta, density) * density;
+  return multipleScattering(opticalDepth, cosTheta);
 }
 
 vec4 marchToCloud(
@@ -368,8 +354,8 @@ vec4 marchToCloud(
         );
         #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
-        float scattering = marchToLight(position, sunDirection, cosTheta, density, mipLevel);
-        vec3 radiance = (sunIrradiance + skyIrradiance) * scattering;
+        float scattering = marchToLight(position, sunDirection, cosTheta, mipLevel);
+        vec3 radiance = (sunIrradiance + skyIrradiance) * scattering * density;
 
         #ifdef USE_POWDER
         // radiance *= 1.0 - powderScale * exp(-density * powderExponent);
