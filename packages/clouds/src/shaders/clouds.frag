@@ -45,7 +45,7 @@ layout(location = 0) out vec4 outputColor;
 
 // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
 const vec4 minLayerHeights = vec4(600.0, 4500.0, 6700.0, 0.0);
-const vec4 maxLayerHeights = vec4(1200.0, 5000.0, 8000.0, 0.0);
+const vec4 maxLayerHeights = vec4(1000.0, 5000.0, 8000.0, 0.0);
 const vec4 densityScales = vec4(0.06, 0.02, 0.001, 0.0);
 const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
 const vec4 coverageModulations = vec4(0.6, 0.3, 0.5, 0.0);
@@ -332,7 +332,6 @@ vec4 marchToCloud(
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
-
     vec3 position = rayOrigin + rayDirection * rayDistance;
 
     // Sample a rough density.
@@ -384,12 +383,15 @@ vec4 marchToCloud(
       // TODO: Apply more jitter when we entered empty space.
       rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
     }
+
     if (transmittanceIntegral <= minTransmittance) {
       break; // Early termination
     }
   }
+
   // The final product of 5.9.1 and we'll evaluate this in aerial perspective.
   weightedMeanDepth = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : 0.0;
+
   return vec4(
     radianceIntegral,
     saturate(remap(transmittanceIntegral, minTransmittance, 1.0, 1.0, 0.0))
