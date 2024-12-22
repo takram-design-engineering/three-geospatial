@@ -299,11 +299,9 @@ const float SCATTER_DISTANCES[6] = float[6](1.0, 2.0, 4.0, 8.0, 16.0, 32.0);
 const float SCATTER_STEP_SIZES[6] = float[6](1.0, 1.0, 2.0, 4.0, 8.0, 16.0);
 
 // TODO: Raymarch to light for near clouds, and implement BSM for far clouds.
-vec3 marchToLight(
+float marchToLight(
   const vec3 rayOrigin,
   const vec3 sunDirection,
-  const vec3 sunIrradiance,
-  const vec3 skyIrradiance,
   const float cosTheta,
   const float density,
   const float mipLevel
@@ -320,10 +318,7 @@ vec3 marchToLight(
     float stepSize = SCATTER_STEP_SIZES[i] * stepLength;
     opticalDepth += density * stepSize;
   }
-
-  vec3 irradiance = sunIrradiance + skyIrradiance;
-  float scattering = multipleScattering(opticalDepth, cosTheta, density);
-  return irradiance * scattering * density;
+  return multipleScattering(opticalDepth, cosTheta, density) * density;
 }
 
 vec4 marchToCloud(
@@ -373,15 +368,9 @@ vec4 marchToCloud(
         );
         #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
-        vec3 radiance = marchToLight(
-          position,
-          sunDirection,
-          sunIrradiance,
-          skyIrradiance,
-          cosTheta,
-          density,
-          mipLevel
-        );
+        float scattering = marchToLight(position, sunDirection, cosTheta, density, mipLevel);
+        vec3 radiance = (sunIrradiance + skyIrradiance) * scattering;
+
         #ifdef USE_POWDER
         // radiance *= 1.0 - powderScale * exp(-density * powderExponent);
         radiance *= min(1.0, pow(density * powderScale, powderExponent));
