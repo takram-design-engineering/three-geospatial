@@ -109,6 +109,7 @@
     "raw-loader": "^4.0.2",
     "react-use": "^17.5.1",
     "rimraf": "^6.0.1",
+    "sharp": "^0.33.5",
     "stats-gl": "^3.6.0",
     "storybook": "^8.4.7",
     "ts-jest": "^29.1.0",

@@ -137,8 +137,8 @@ async function writeRecords(
   }
 }
 
-export async function main(): Promise<void> {
-  const records = await readRecords('apps/data/assets/bsc5/bsc5.dat')
+export default async function (): Promise<void> {
+  const records = await readRecords('apps/data/data/ybsc5')
   const { data, minMagnitude, maxMagnitude } = await writeRecords(
     'packages/atmosphere/assets/stars.bin',
     records
@@ -172,5 +172,6 @@ export async function main(): Promise<void> {
     invariant(closeTo(record.g, g, 0.01))
     invariant(closeTo(record.b, b, 0.01))
   }
-  console.log(`Done`)
+
+  console.log('Done')
 }

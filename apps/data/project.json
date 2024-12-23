@@ -13,7 +13,7 @@
         "platform": "node",
         "outputPath": "dist/apps/data",
         "format": ["cjs"],
-        "bundle": false,
+        "bundle": true,
         "main": "apps/data/src/main.ts",
         "tsConfig": "apps/data/tsconfig.app.json",
         "assets": ["apps/data/src/assets"],
@@ -22,6 +22,11 @@
           "sourcemap": true,
           "outExtension": {
             ".js": ".js"
+          },
+          "loader": {
+            ".frag": "empty",
+            ".vert": "empty",
+            ".glsl": "empty"
           }
         }
       },
@@ -32,6 +37,11 @@
             "sourcemap": false,
             "outExtension": {
               ".js": ".js"
+            },
+            "loader": {
+              ".frag": "empty",
+              ".vert": "empty",
+              ".glsl": "empty"
             }
           }
         }
