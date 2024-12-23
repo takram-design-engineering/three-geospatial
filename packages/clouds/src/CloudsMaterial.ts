@@ -50,7 +50,6 @@ const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface CloudsMaterialParameters
   extends AtmosphereMaterialBaseParameters {
-  inputBuffer?: Texture | null
   depthBuffer?: Texture | null
 }
 
@@ -131,8 +130,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraNear: new Uniform(0),
           cameraFar: new Uniform(0),
           bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
-          stbnScalarTexture: new Uniform(null),
-          stbnVectorTexture: new Uniform(null),
+          spatiotemporalBlueNoiseTexture: new Uniform(null),
           frame: new Uniform(0),
           time: new Uniform(0),
 
@@ -278,20 +276,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.uniforms.localCoverageTexture.value = value
   }
 
-  get stbnScalarTexture(): Texture | null {
-    return this.uniforms.stbnScalarTexture.value
+  get spatiotemporalBlueNoiseTexture(): Texture | null {
+    return this.uniforms.spatiotemporalBlueNoiseTexture.value
   }
 
-  set stbnScalarTexture(value: Texture | null) {
-    this.uniforms.stbnScalarTexture.value = value
-  }
-
-  get stbnVectorTexture(): Texture | null {
-    return this.uniforms.stbnVectorTexture.value
-  }
-
-  set stbnVectorTexture(value: Texture | null) {
-    this.uniforms.stbnVectorTexture.value = value
+  set spatiotemporalBlueNoiseTexture(value: Texture | null) {
+    this.uniforms.spatiotemporalBlueNoiseTexture.value = value
   }
 
   get useDetail(): boolean {

@@ -100,32 +100,19 @@ const Scene: FC = () => {
   localCoverageTexture.wrapS = RepeatWrapping
   localCoverageTexture.wrapT = RepeatWrapping
 
-  const stbnScalarTexture = useLoader(
+  const spatiotemporalBlueNoiseTexture = useLoader(
     Uint8Data3DLoader,
     '/clouds/stbn_scalar.bin'
   )
-  stbnScalarTexture.format = RedFormat
-  stbnScalarTexture.image.width = STBN_TEXTURE_SIZE
-  stbnScalarTexture.image.height = STBN_TEXTURE_SIZE
-  stbnScalarTexture.image.depth = STBN_TEXTURE_DEPTH
-  stbnScalarTexture.minFilter = NearestFilter
-  stbnScalarTexture.magFilter = NearestFilter
-  stbnScalarTexture.wrapS = RepeatWrapping
-  stbnScalarTexture.wrapT = RepeatWrapping
-  stbnScalarTexture.wrapR = RepeatWrapping
-
-  const stbnVectorTexture = useLoader(
-    Uint8Data3DLoader,
-    '/clouds/stbn_unit_vector.bin'
-  )
-  stbnVectorTexture.image.width = STBN_TEXTURE_SIZE
-  stbnVectorTexture.image.height = STBN_TEXTURE_SIZE
-  stbnVectorTexture.image.depth = STBN_TEXTURE_DEPTH
-  stbnVectorTexture.minFilter = NearestFilter
-  stbnVectorTexture.magFilter = NearestFilter
-  stbnVectorTexture.wrapS = RepeatWrapping
-  stbnVectorTexture.wrapT = RepeatWrapping
-  stbnVectorTexture.wrapR = RepeatWrapping
+  spatiotemporalBlueNoiseTexture.format = RedFormat
+  spatiotemporalBlueNoiseTexture.image.width = STBN_TEXTURE_SIZE
+  spatiotemporalBlueNoiseTexture.image.height = STBN_TEXTURE_SIZE
+  spatiotemporalBlueNoiseTexture.image.depth = STBN_TEXTURE_DEPTH
+  spatiotemporalBlueNoiseTexture.minFilter = NearestFilter
+  spatiotemporalBlueNoiseTexture.magFilter = NearestFilter
+  spatiotemporalBlueNoiseTexture.wrapS = RepeatWrapping
+  spatiotemporalBlueNoiseTexture.wrapT = RepeatWrapping
+  spatiotemporalBlueNoiseTexture.wrapR = RepeatWrapping
 
   const {
     maxIterations,
@@ -188,8 +175,7 @@ const Scene: FC = () => {
           <Clouds
             ref={setClouds}
             localCoverageTexture={localCoverageTexture}
-            stbnScalarTexture={stbnScalarTexture}
-            stbnVectorTexture={stbnVectorTexture}
+            spatiotemporalBlueNoiseTexture={spatiotemporalBlueNoiseTexture}
             coverage={coverage}
           />
           <LensFlare />

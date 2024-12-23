@@ -163,20 +163,12 @@ export class CloudsEffect extends Effect {
     this.cloudsMaterial.localCoverageTexture = value
   }
 
-  get stbnScalarTexture(): Texture | null {
-    return this.cloudsMaterial.stbnScalarTexture
+  get spatiotemporalBlueNoiseTexture(): Texture | null {
+    return this.cloudsMaterial.spatiotemporalBlueNoiseTexture
   }
 
-  set stbnScalarTexture(value: Texture | null) {
-    this.cloudsMaterial.stbnScalarTexture = value
-  }
-
-  get stbnVectorTexture(): Texture | null {
-    return this.cloudsMaterial.stbnVectorTexture
-  }
-
-  set stbnVectorTexture(value: Texture | null) {
-    this.cloudsMaterial.stbnVectorTexture = value
+  set spatiotemporalBlueNoiseTexture(value: Texture | null) {
+    this.cloudsMaterial.spatiotemporalBlueNoiseTexture = value
   }
 
   get coverage(): number {
