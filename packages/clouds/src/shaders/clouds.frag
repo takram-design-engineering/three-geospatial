@@ -361,8 +361,7 @@ vec4 marchToCloud(
         vec3 radiance = (sunIrradiance * scattering + skyIrradiance * skyIrradianceScale) * density;
 
         #ifdef USE_POWDER
-        // radiance *= 1.0 - powderScale * exp(-density * powderExponent);
-        radiance *= min(1.0, pow(density * powderScale, powderExponent));
+        radiance *= 1.0 - powderScale * exp(-density * powderExponent);
         #endif // USE_POWDER
 
         // Energy-conserving analytical integration of scattered light
