@@ -1,7 +1,8 @@
-import { useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { getDayOfYear } from 'date-fns'
 import { useMotionValue, useSpring, type MotionValue } from 'framer-motion'
-import { useEffect, useMemo } from 'react'
+import { button } from 'leva'
+import { useEffect, useMemo, useState } from 'react'
 
 import { springOptions } from './springOptions'
 import { useControls } from './useControls'
@@ -19,19 +20,44 @@ export function useLocalDateControls({
   dayOfYear: initialDayOfYear = getDayOfYear(new Date()),
   timeOfDay: initialTimeOfDay = 9
 }: LocalDateControlsParams = {}): MotionValue<number> {
-  const { dayOfYear, timeOfDay } = useControls('local date', {
-    dayOfYear: {
-      value: initialDayOfYear,
-      min: 1,
-      max: 365, // Ignore leap year
-      step: 1
-    },
-    timeOfDay: {
-      value: initialTimeOfDay,
-      min: 0,
-      max: 24
-    }
-  })
+  const [animated, setAnimated] = useState(false)
+  const [{ dayOfYear, timeOfDay, speed }, set] = useControls(
+    'local date',
+    () => ({
+      dayOfYear: {
+        value: initialDayOfYear,
+        min: 1,
+        max: 365, // Ignore leap year
+        step: 1
+      },
+      timeOfDay: {
+        value: initialTimeOfDay,
+        min: 0,
+        max: 24,
+        step: 0.1
+      },
+      speed: {
+        value: 0.05,
+        min: -1,
+        max: 1
+      },
+      ...(animated
+        ? {
+            stop: button(() => {
+              setAnimated(false)
+              set({
+                timeOfDay: springTimeOfDay.get()
+              })
+            })
+          }
+        : {
+            animate: button(() => {
+              setAnimated(true)
+            })
+          })
+    }),
+    [animated]
+  )
 
   const springDayOfYear = useSpring(dayOfYear, springOptions)
   const springTimeOfDay = useSpring(timeOfDay, springOptions)
@@ -81,6 +107,12 @@ export function useLocalDateControls({
       })
     }
   }, [springDayOfYear, springTimeOfDay, invalidate])
+
+  useFrame(() => {
+    if (animated) {
+      springTimeOfDay.set((springTimeOfDay.get() + speed) % 24)
+    }
+  })
 
   return date
 }
