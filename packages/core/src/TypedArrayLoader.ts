@@ -1,11 +1,13 @@
 import { Loader, type TypedArray } from 'three'
+import { type Class } from 'type-fest'
 
 import { ArrayBufferLoader } from './ArrayBufferLoader'
 import {
   parseFloat32Array,
   parseInt16Array,
-  parseUint16Array
-} from './typedArray'
+  parseUint16Array,
+  type TypedArrayParser
+} from './typedArrayParsers'
 
 export abstract class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
   abstract parseTypedArray(buffer: ArrayBuffer): T
@@ -40,14 +42,28 @@ export abstract class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
   }
 }
 
-export class Int16ArrayLoader extends TypedArrayLoader<Int16Array> {
-  readonly parseTypedArray = parseInt16Array
+export function createTypedArrayLoaderClass<T extends TypedArray>(
+  parser: TypedArrayParser<T>
+): Class<TypedArrayLoader<T>> {
+  return class extends TypedArrayLoader<T> {
+    readonly parseTypedArray = parser
+  }
 }
 
-export class Uint16ArrayLoader extends TypedArrayLoader<Uint16Array> {
-  readonly parseTypedArray = parseUint16Array
+export function createTypedArrayLoader<T extends TypedArray>(
+  parser: TypedArrayParser<T>
+): TypedArrayLoader<T> {
+  return new (createTypedArrayLoaderClass(parser))()
 }
 
-export class Float32ArrayLoader extends TypedArrayLoader<Float32Array> {
-  readonly parseTypedArray = parseFloat32Array
-}
+/** @deprecated Use createTypedArrayLoaderClass instead. */
+export const Int16ArrayLoader =
+  /*#__PURE__*/ createTypedArrayLoaderClass(parseInt16Array)
+
+/** @deprecated Use createTypedArrayLoaderClass instead. */
+export const Uint16ArrayLoader =
+  /*#__PURE__*/ createTypedArrayLoaderClass(parseUint16Array)
+
+/** @deprecated Use createTypedArrayLoaderClass instead. */
+export const Float32ArrayLoader =
+  /*#__PURE__*/ createTypedArrayLoaderClass(parseFloat32Array)
