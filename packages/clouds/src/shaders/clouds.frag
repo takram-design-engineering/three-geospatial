@@ -235,18 +235,6 @@ float sampleDensityDetail(WeatherSample weather, const vec3 position, const floa
   return saturate(dot(density, densityScales * weather.heightFraction));
 }
 
-void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 color) {
-  vec3 transmittance;
-  vec3 inscatter = GetSkyRadianceToPoint(
-    camera * METER_TO_UNIT_LENGTH,
-    point * METER_TO_UNIT_LENGTH,
-    0.0, // Shadow length
-    sunDirection,
-    transmittance
-  );
-  color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
-}
-
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   vec2 g2 = g * g;
   return RECIPROCAL_PI4 * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
@@ -256,6 +244,27 @@ float phaseFunction(const float cosTheta, const float attenuation) {
   vec2 g = vec2(scatterAnisotropy1, scatterAnisotropy2);
   vec2 weights = vec2(1.0 - scatterAnisotropyMix, scatterAnisotropyMix);
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
+}
+
+// TODO: Raymarch to light for near clouds, and implement BSM for far clouds.
+float marchToLight(const vec3 rayOrigin, const vec3 sunDirection, const float mipLevel) {
+  const float stepSize = 10.0;
+  float opticalDepth = 0.0;
+  float stepScale = 1.0;
+  float prevStepScale = 0.0;
+  for (int i = 0; i < 6; ++i) {
+    vec3 position = rayOrigin + sunDirection * stepScale * stepSize;
+    vec2 uv = getGlobeUv(position);
+    float height = length(position) - bottomRadius;
+    WeatherSample weather = sampleWeather(uv, height, mipLevel);
+    float density = sampleDensityDetail(weather, position, mipLevel);
+    opticalDepth += density * (stepScale - prevStepScale) * stepSize;
+    prevStepScale = stepScale;
+    stepScale *= 2.0;
+    // For n = 4:
+    // stepScale *= 2.82842712474619; // pow(64, 1/4) to match n = 6 and s = 2
+  }
+  return opticalDepth;
 }
 
 float multipleScattering(const float opticalDepth, const float cosTheta) {
@@ -273,32 +282,6 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
     abc *= attenuation;
   }
   return scattering;
-}
-
-// TODO: Raymarch to light for near clouds, and implement BSM for far clouds.
-float marchToLight(
-  const vec3 rayOrigin,
-  const vec3 sunDirection,
-  const float cosTheta,
-  const float mipLevel
-) {
-  const float stepSize = 10.0;
-  float opticalDepth = 0.0;
-  float stepScale = 1.0;
-  float prevStepScale = 0.0;
-  for (int i = 0; i < 6; ++i) {
-    vec3 position = rayOrigin + sunDirection * stepScale * stepSize;
-    vec2 uv = getGlobeUv(position);
-    float height = length(position) - bottomRadius;
-    WeatherSample weather = sampleWeather(uv, height, mipLevel);
-    float density = sampleDensityDetail(weather, position, mipLevel);
-    opticalDepth += density * (stepScale - prevStepScale) * stepSize;
-    prevStepScale = stepScale;
-    stepScale *= 2.0;
-    // For n = 4:
-    // stepScale *= 2.82842712474619; // pow(64, 1/4) to match n = 6 and s = 2
-  }
-  return multipleScattering(opticalDepth, cosTheta);
 }
 
 vec4 marchToCloud(
@@ -346,7 +329,8 @@ vec4 marchToCloud(
         );
         #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
-        float scattering = marchToLight(position, sunDirection, cosTheta, mipLevel);
+        float opticalDepth = marchToLight(position, sunDirection, mipLevel);
+        float scattering = multipleScattering(opticalDepth, cosTheta);
         vec3 radiance = (sunIrradiance * scattering + skyIrradiance * skyIrradianceScale) * density;
 
         #ifdef USE_POWDER
@@ -388,6 +372,18 @@ vec4 marchToCloud(
     radianceIntegral,
     saturate(remap(transmittanceIntegral, minTransmittance, 1.0, 1.0, 0.0))
   );
+}
+
+void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 color) {
+  vec3 transmittance;
+  vec3 inscatter = GetSkyRadianceToPoint(
+    camera * METER_TO_UNIT_LENGTH,
+    point * METER_TO_UNIT_LENGTH,
+    0.0, // Shadow length
+    sunDirection,
+    transmittance
+  );
+  color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
 }
 
 void main() {
