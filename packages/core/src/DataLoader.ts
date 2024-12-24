@@ -1,4 +1,5 @@
 import {
+  ByteType,
   ClampToEdgeWrapping,
   Data3DTexture,
   DataTexture,
@@ -12,27 +13,29 @@ import {
 } from 'three'
 import { type Class } from 'type-fest'
 
+import { getTypedArrayElementType } from './typedArray'
 import {
-  Float32ArrayLoader,
-  Int16ArrayLoader,
-  Uint8ArrayLoader,
-  Uint16ArrayLoader,
+  createTypedArrayLoaderClass,
   type TypedArrayLoader
 } from './TypedArrayLoader'
+import {
+  parseFloat32Array,
+  parseInt16Array,
+  parseUint16Array,
+  type TypedArrayParser
+} from './typedArrayParsers'
 import { type Callable } from './types'
-
-export interface ImageSize {
-  width: number
-  height: number
-  depth?: number
-}
 
 export type DataTextureParameters = Omit<
   Partial<{
     [K in keyof Texture as Texture[K] extends Callable ? never : K]: Texture[K]
   }>,
   'image'
->
+> & {
+  width?: number
+  height?: number
+  depth?: number
+}
 
 const defaultDataTextureParameter = {
   format: RGBAFormat,
@@ -43,13 +46,13 @@ const defaultDataTextureParameter = {
 } satisfies DataTextureParameters
 
 export abstract class DataLoader<
-  T extends DataTexture | Data3DTexture,
-  U extends TypedArray
+  T extends DataTexture | Data3DTexture = DataTexture | Data3DTexture,
+  U extends TypedArray = TypedArray
 > extends Loader<T> {
   abstract readonly Texture: Class<T>
   abstract readonly TypedArrayLoader: Class<TypedArrayLoader<U>>
 
-  readonly parameters?: DataTextureParameters
+  readonly parameters: DataTextureParameters = {}
 
   override load(
     url: string,
@@ -66,7 +69,27 @@ export abstract class DataLoader<
       url,
       array => {
         texture.image.data = array as typeof texture.image.data
-        Object.assign(texture, this.parameters)
+        const { width, height, depth, ...params } = this.parameters
+        if (width != null) {
+          texture.image.width = width
+        }
+        if (height != null) {
+          texture.image.height = height
+        }
+        if ('depth' in texture.image && depth != null) {
+          texture.image.depth = depth
+        }
+
+        // Populate the default texture type for the array type.
+        const type = getTypedArrayElementType(array)
+        texture.type =
+          type === 'uint8'
+            ? UnsignedByteType
+            : type === 'int8'
+              ? ByteType
+              : FloatType
+
+        Object.assign(texture, params)
         texture.needsUpdate = true
         onLoad(texture)
       },
@@ -76,50 +99,64 @@ export abstract class DataLoader<
   }
 }
 
-export class Uint8Data3DLoader extends DataLoader<Data3DTexture, Uint8Array> {
-  readonly Texture = Data3DTexture
-  readonly TypedArrayLoader = Uint8ArrayLoader
-  readonly parameters: DataTextureParameters = {
-    ...defaultDataTextureParameter,
-    type: UnsignedByteType
+function createDataLoaderClass<
+  T extends DataTexture | Data3DTexture,
+  U extends TypedArray
+>(
+  Texture: Class<T>,
+  parser: TypedArrayParser<U>,
+  parameters?: DataTextureParameters
+): Class<DataLoader<T, U>> {
+  return class extends DataLoader<T, U> {
+    readonly Texture = Texture
+    readonly TypedArrayLoader = createTypedArrayLoaderClass(parser)
+    readonly parameters = {
+      ...defaultDataTextureParameter,
+      ...parameters
+    }
   }
 }
 
-export class Int16Data2DLoader extends DataLoader<DataTexture, Int16Array> {
-  readonly Texture = DataTexture
-  readonly TypedArrayLoader = Int16ArrayLoader
-  readonly parameters: DataTextureParameters = {
-    ...defaultDataTextureParameter,
-    type: FloatType
-  }
+export function createData3DTextureLoaderClass<T extends TypedArray>(
+  parser: TypedArrayParser<T>,
+  parameters?: DataTextureParameters
+): Class<DataLoader<Data3DTexture, T>> {
+  return createDataLoaderClass(Data3DTexture, parser, parameters)
 }
 
-export class Uint16Data2DLoader extends DataLoader<DataTexture, Uint16Array> {
-  readonly Texture = DataTexture
-  readonly TypedArrayLoader = Uint16ArrayLoader
-  readonly parameters: DataTextureParameters = {
-    ...defaultDataTextureParameter,
-    type: FloatType
-  }
+export function createDataTextureLoaderClass<T extends TypedArray>(
+  parser: TypedArrayParser<T>,
+  parameters?: DataTextureParameters
+): Class<DataLoader<DataTexture, T>> {
+  return createDataLoaderClass(DataTexture, parser, parameters)
 }
 
-export class Float32Data2DLoader extends DataLoader<DataTexture, Float32Array> {
-  readonly Texture = DataTexture
-  readonly TypedArrayLoader = Float32ArrayLoader
-  readonly parameters: DataTextureParameters = {
-    ...defaultDataTextureParameter,
-    type: FloatType
-  }
+export function createData3DTextureLoader<T extends TypedArray>(
+  parser: TypedArrayParser<T>,
+  parameters?: DataTextureParameters
+): DataLoader<Data3DTexture, T> {
+  return new (createData3DTextureLoaderClass(parser, parameters))()
 }
 
-export class Float32Data3DLoader extends DataLoader<
-  Data3DTexture,
-  Float32Array
-> {
-  readonly Texture = Data3DTexture
-  readonly TypedArrayLoader = Float32ArrayLoader
-  readonly parameters: DataTextureParameters = {
-    ...defaultDataTextureParameter,
-    type: FloatType
-  }
+export function createDataTextureLoader<T extends TypedArray>(
+  parser: TypedArrayParser<T>,
+  parameters?: DataTextureParameters
+): DataLoader<DataTexture, T> {
+  return new (createDataTextureLoaderClass(parser, parameters))()
 }
+
+/** @deprecated Use createDataTextureLoaderClass instead. */
+export const Int16Data2DLoader =
+  /*#__PURE__*/ createDataTextureLoaderClass(parseInt16Array)
+
+/** @deprecated Use createDataTextureLoaderClass instead. */
+export const Uint16Data2DLoader =
+  /*#__PURE__*/ createDataTextureLoaderClass(parseUint16Array)
+
+/** @deprecated Use createDataTextureLoaderClass instead. */
+export const Float32Data2DLoader =
+  /*#__PURE__*/ createDataTextureLoaderClass(parseFloat32Array)
+
+/** @deprecated Use createData3DTextureLoaderClass instead. */
+export const Float32Data3DLoader =
+  /*#__PURE__*/ createData3DTextureLoaderClass(parseFloat32Array)

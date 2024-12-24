@@ -458,9 +458,16 @@ See [`SkyLightProbe`](#skylightprobe) for further details.
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
-import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  getSunDirectionECEF,
+  IRRADIANCE_TEXTURE_HEIGHT,
+  IRRADIANCE_TEXTURE_WIDTH
+} from '@takram/three-atmosphere'
 import { SkyLight } from '@takram/three-atmosphere/r3f'
-import { Float32Data2DLoader } from '@takram/three-geospatial'
+import {
+  createDataTextureLoaderClass,
+  parseFloat32Array
+} from '@takram/three-geospatial'
 import { Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
@@ -468,7 +475,10 @@ const sunDirection = getSunDirectionECEF(/* date */)
 
 const Scene = () => {
   const irradianceTexture = useLoader(
-    Float32Data2DLoader,
+    createDataTextureLoaderClass(parseFloat32Array, {
+      width: IRRADIANCE_TEXTURE_WIDTH,
+      height: IRRADIANCE_TEXTURE_HEIGHT
+    }),
     '/assets/irradiance.bin'
   )
   return (
@@ -495,9 +505,16 @@ See [`SunDirectionalLight`](#directionalsunlight) for further details.
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
-import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  getSunDirectionECEF,
+  TRANSMITTANCE_TEXTURE_HEIGHT,
+  TRANSMITTANCE_TEXTURE_WIDTH
+} from '@takram/three-atmosphere'
 import { SunLight } from '@takram/three-atmosphere/r3f'
-import { Float32Data2DLoader } from '@takram/three-geospatial'
+import {
+  createDataTextureLoaderClass,
+  parseFloat32Array
+} from '@takram/three-geospatial'
 import { Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
@@ -505,7 +522,10 @@ const sunDirection = getSunDirectionECEF(/* date */)
 
 const Scene = () => {
   const transmittanceTexture = useLoader(
-    Float32Data2DLoader,
+    createDataTextureLoaderClass(parseFloat32Array, {
+      width: TRANSMITTANCE_TEXTURE_WIDTH,
+      height: TRANSMITTANCE_TEXTURE_HEIGHT
+    }),
     '/assets/transmittance.bin'
   )
   return (
