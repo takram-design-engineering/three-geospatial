@@ -20,10 +20,11 @@ import {
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
+  createData3DTextureLoaderClass,
   Ellipsoid,
   Geodetic,
+  parseUint8Array,
   radians,
-  Uint8Data3DLoader,
   type GeodeticLike
 } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
@@ -101,18 +102,19 @@ const Scene: FC = () => {
   localCoverageTexture.wrapT = RepeatWrapping
 
   const spatiotemporalBlueNoiseTexture = useLoader(
-    Uint8Data3DLoader,
+    createData3DTextureLoaderClass(parseUint8Array, {
+      format: RedFormat,
+      minFilter: NearestFilter,
+      magFilter: NearestFilter,
+      wrapS: RepeatWrapping,
+      wrapT: RepeatWrapping,
+      wrapR: RepeatWrapping,
+      width: STBN_TEXTURE_SIZE,
+      height: STBN_TEXTURE_SIZE,
+      depth: STBN_TEXTURE_DEPTH
+    }),
     '/clouds/stbn_scalar.bin'
   )
-  spatiotemporalBlueNoiseTexture.format = RedFormat
-  spatiotemporalBlueNoiseTexture.image.width = STBN_TEXTURE_SIZE
-  spatiotemporalBlueNoiseTexture.image.height = STBN_TEXTURE_SIZE
-  spatiotemporalBlueNoiseTexture.image.depth = STBN_TEXTURE_DEPTH
-  spatiotemporalBlueNoiseTexture.minFilter = NearestFilter
-  spatiotemporalBlueNoiseTexture.magFilter = NearestFilter
-  spatiotemporalBlueNoiseTexture.wrapS = RepeatWrapping
-  spatiotemporalBlueNoiseTexture.wrapT = RepeatWrapping
-  spatiotemporalBlueNoiseTexture.wrapR = RepeatWrapping
 
   const {
     maxIterations,
