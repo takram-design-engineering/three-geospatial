@@ -8,10 +8,9 @@ import {
   Loader,
   RGBAFormat,
   UnsignedByteType,
-  type Texture,
   type TypedArray
 } from 'three'
-import { type Class } from 'type-fest'
+import { type Class, type WritableKeysOf } from 'type-fest'
 
 import { getTypedArrayElementType } from './typedArray'
 import {
@@ -26,10 +25,20 @@ import {
 } from './typedArrayParsers'
 import { type Callable } from './types'
 
+type ParameterProperties<T> = {
+  [K in WritableKeysOf<T> as T[K] extends Callable ? never : K]: T[K]
+}
+
 export type DataTextureParameters = Omit<
-  Partial<{
-    [K in keyof Texture as Texture[K] extends Callable ? never : K]: Texture[K]
-  }>,
+  Partial<ParameterProperties<DataTexture>>,
+  'image'
+> & {
+  width?: number
+  height?: number
+}
+
+export type Data3DTextureParameters = Omit<
+  Partial<ParameterProperties<Data3DTexture>>,
   'image'
 > & {
   width?: number
@@ -43,7 +52,7 @@ const defaultDataTextureParameter = {
   wrapT: ClampToEdgeWrapping,
   minFilter: LinearFilter,
   magFilter: LinearFilter
-} satisfies DataTextureParameters
+} satisfies DataTextureParameters & Data3DTextureParameters
 
 export abstract class DataLoader<
   T extends DataTexture | Data3DTexture = DataTexture | Data3DTexture,
@@ -52,7 +61,7 @@ export abstract class DataLoader<
   abstract readonly Texture: Class<T>
   abstract readonly TypedArrayLoader: Class<TypedArrayLoader<U>>
 
-  readonly parameters: DataTextureParameters = {}
+  readonly parameters: DataTextureParameters & Data3DTextureParameters = {}
 
   override load(
     url: string,
@@ -119,7 +128,7 @@ function createDataLoaderClass<
 
 export function createData3DTextureLoaderClass<T extends TypedArray>(
   parser: TypedArrayParser<T>,
-  parameters?: DataTextureParameters
+  parameters?: Data3DTextureParameters
 ): Class<DataLoader<Data3DTexture, T>> {
   return createDataLoaderClass(Data3DTexture, parser, parameters)
 }
@@ -133,7 +142,7 @@ export function createDataTextureLoaderClass<T extends TypedArray>(
 
 export function createData3DTextureLoader<T extends TypedArray>(
   parser: TypedArrayParser<T>,
-  parameters?: DataTextureParameters
+  parameters?: Data3DTextureParameters
 ): DataLoader<Data3DTexture, T> {
   return new (createData3DTextureLoaderClass(parser, parameters))()
 }
