@@ -155,12 +155,12 @@ export class CloudsEffect extends Effect {
     this.cloudsMaterial.depthPacking = depthPacking ?? 0
   }
 
-  get localCoverageTexture(): Texture | null {
-    return this.cloudsMaterial.localCoverageTexture
+  get localWeatherTexture(): Texture | null {
+    return this.cloudsMaterial.localWeatherTexture
   }
 
-  set localCoverageTexture(value: Texture | null) {
-    this.cloudsMaterial.localCoverageTexture = value
+  set localWeatherTexture(value: Texture | null) {
+    this.cloudsMaterial.localWeatherTexture = value
   }
 
   get spatiotemporalBlueNoiseTexture(): Texture | null {

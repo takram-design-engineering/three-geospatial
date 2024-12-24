@@ -97,9 +97,9 @@ const Scene: FC = () => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const localCoverageTexture = useTexture('/clouds/local_coverage.png')
-  localCoverageTexture.wrapS = RepeatWrapping
-  localCoverageTexture.wrapT = RepeatWrapping
+  const localWeatherTexture = useTexture('/clouds/local_weather.png')
+  localWeatherTexture.wrapS = RepeatWrapping
+  localWeatherTexture.wrapT = RepeatWrapping
 
   const spatiotemporalBlueNoiseTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
@@ -176,7 +176,7 @@ const Scene: FC = () => {
         >
           <Clouds
             ref={setClouds}
-            localCoverageTexture={localCoverageTexture}
+            localWeatherTexture={localWeatherTexture}
             spatiotemporalBlueNoiseTexture={spatiotemporalBlueNoiseTexture}
             coverage={coverage}
           />

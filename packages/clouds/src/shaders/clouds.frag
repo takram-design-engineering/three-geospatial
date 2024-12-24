@@ -16,10 +16,10 @@ uniform float time;
 // Cloud parameters
 uniform sampler3D densityTexture;
 uniform sampler3D densityDetailTexture;
-uniform sampler2D localCoverageTexture;
+uniform sampler2D localWeatherTexture;
 uniform float coverage;
 uniform vec3 albedo;
-uniform vec2 localCoverageFrequency;
+uniform vec2 localWeatherFrequency;
 uniform float shapeFrequency;
 uniform float shapeDetailFrequency;
 uniform float scatterAnisotropy;
@@ -46,10 +46,11 @@ layout(location = 0) out vec4 outputColor;
 
 // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
 const vec4 minLayerHeights = vec4(600.0, 4500.0, 6700.0, 0.0);
-const vec4 maxLayerHeights = vec4(1000.0, 5000.0, 8000.0, 0.0);
+const vec4 maxLayerHeights = vec4(1100.0, 5000.0, 8000.0, 0.0);
 const vec4 densityScales = vec4(0.3, 0.1, 0.005, 0.0);
 const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
-const vec4 coverageModulations = vec4(0.6, 0.3, 0.5, 0.0);
+const vec4 localWeatherExponents = vec4(1.0, 1.0, 2.0, 1.0);
+const vec4 coverageFilterWidths = vec4(0.6, 0.3, 0.5, 0.0);
 
 // TODO: Derive from minLayerHeights and maxLayerHeights
 const float minHeight = 600.0;
@@ -166,48 +167,48 @@ float getMipLevel(const vec2 uv) {
   return max(0.0, 0.5 * log2(max(dot(ddx, ddx), dot(ddy, ddy))));
 }
 
-struct CoverageSample {
-  vec4 coverageDetail;
-  vec4 heightFraction;
-  vec4 heightScale;
+struct WeatherSample {
+  vec4 heightFraction; // Normalized height of each layer
+  vec4 density;
 };
 
 vec4 shapeAlteringFunction(const vec4 heightFraction, const float bias) {
-  // Apply a semi-circle transform round the clouds towards the top.
+  // Apply a semi-circle transform to round the clouds towards the top.
   vec4 biased = pow(heightFraction, vec4(bias));
   vec4 x = clamp(biased * 2.0 - 1.0, -1.0, 1.0);
-  return vec4(1.0) - x * x;
+  return 1.0 - x * x;
 }
 
-CoverageSample sampleCoverage(const vec2 uv, const float height, const float mipLevel) {
-  CoverageSample cs;
-  cs.coverageDetail = pow(
-    textureLod(localCoverageTexture, uv * localCoverageFrequency, mipLevel),
-    // TODO: Parameterize exponents.
-    vec4(1.0, 1.0, 2.0, 1.0)
-  );
-  cs.heightFraction = saturate(
+WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLevel) {
+  WeatherSample weather;
+  weather.heightFraction = saturate(
     remap(vec4(height), minLayerHeights, maxLayerHeights, vec4(0.0), vec4(1.0))
   );
-  cs.heightScale = shapeAlteringFunction(cs.heightFraction, 0.4);
-  return cs;
-}
 
-vec4 sampleDensity(CoverageSample cs) {
-  vec4 inverseCoverage = 1.0 - coverage * cs.heightScale;
-  return saturate(
+  vec4 weatherMap = pow(
+    textureLod(localWeatherTexture, uv * localWeatherFrequency, mipLevel),
+    localWeatherExponents
+  );
+  vec4 heightScale = shapeAlteringFunction(weather.heightFraction, 0.4);
+
+  // Modulation to control weather by coverage parameter.
+  // Reference: https://github.com/Prograda/Skybolt/blob/master/Assets/Core/Shaders/Clouds.h#L63
+  vec4 factor = 1.0 - coverage * heightScale;
+  weather.density = saturate(
     remap(
-      cs.coverageDetail * (1.0 - coverageModulations) + coverageModulations,
-      inverseCoverage,
-      inverseCoverage + coverageModulations,
+      mix(weatherMap, vec4(1.0), coverageFilterWidths),
+      factor,
+      factor + coverageFilterWidths,
       vec4(0.0),
       vec4(1.0)
     )
   );
+
+  return weather;
 }
 
-float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mipLevel) {
-  vec4 density = sampleDensity(cs);
+float sampleDensityDetail(WeatherSample weather, const vec3 position, const float mipLevel) {
+  vec4 density = weather.density;
   if (mipLevel < 2.0) {
     float shape = textureLod(densityTexture, position * shapeFrequency, 0.0).r;
     // shape = pow(shape, 6.0) * 0.4; // Modulation for whippier shape
@@ -221,7 +222,7 @@ float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mi
       vec4 modifier = mix(
         vec4(pow(detail, 6.0)),
         vec4(1.0 - detail),
-        saturate(remap(cs.heightFraction, 0.2, 0.4, 0.0, 1.0))
+        saturate(remap(weather.heightFraction, 0.2, 0.4, 0.0, 1.0))
       );
       modifier = mix(vec4(0.0), modifier, densityDetailAmounts);
       density = saturate(
@@ -231,7 +232,7 @@ float sampleDensityDetail(CoverageSample cs, const vec3 position, const float mi
     #endif
   }
   // Nicely decrease density at the bottom.
-  return saturate(dot(density, densityScales * cs.heightFraction));
+  return saturate(dot(density, densityScales * weather.heightFraction));
 }
 
 void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 color) {
@@ -289,8 +290,8 @@ float marchToLight(
     vec3 position = rayOrigin + sunDirection * stepScale * stepSize;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
-    CoverageSample cs = sampleCoverage(uv, height, mipLevel);
-    float density = sampleDensityDetail(cs, position, mipLevel);
+    WeatherSample weather = sampleWeather(uv, height, mipLevel);
+    float density = sampleDensityDetail(weather, position, mipLevel);
     opticalDepth += density * (stepScale - prevStepScale) * stepSize;
     prevStepScale = stepScale;
     stepScale *= 2.0;
@@ -331,12 +332,11 @@ vec4 marchToCloud(
     float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance / 1e5));
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
-    CoverageSample cs = sampleCoverage(uv, height, mipLevel);
-    vec4 density = sampleDensity(cs);
+    WeatherSample weather = sampleWeather(uv, height, mipLevel);
 
-    if (any(greaterThan(density, vec4(minDensity)))) {
+    if (any(greaterThan(weather.density, vec4(minDensity)))) {
       // Sample a detailed density.
-      float density = sampleDensityDetail(cs, position, mipLevel);
+      float density = sampleDensityDetail(weather, position, mipLevel);
       if (density > minDensity) {
         #ifdef ACCURATE_ATMOSPHERIC_IRRADIANCE
         sunIrradiance = GetSunAndSkyIrradiance(
@@ -475,7 +475,7 @@ void main() {
   vec3 rayOrigin = camera + rayNear * rayDirection;
 
   vec2 globeUv = getGlobeUv(rayOrigin);
-  float mipLevel = getMipLevel(globeUv * localCoverageFrequency);
+  float mipLevel = getMipLevel(globeUv * localWeatherFrequency);
   mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
 
   vec3 skyIrradiance;

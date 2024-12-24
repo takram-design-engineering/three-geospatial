@@ -173,9 +173,10 @@ const Scene: FC<SceneProps> = ({
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const localCoverageTexture = useTexture('/clouds/local_coverage.png')
-  localCoverageTexture.wrapS = RepeatWrapping
-  localCoverageTexture.wrapT = RepeatWrapping
+  const localWeatherTexture = useTexture('/clouds/local_weather.png')
+  localWeatherTexture.wrapS = RepeatWrapping
+  localWeatherTexture.wrapT = RepeatWrapping
+
   const spatiotemporalBlueNoiseTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
       format: RedFormat,
@@ -238,7 +239,7 @@ const Scene: FC<SceneProps> = ({
           )}
           <Clouds
             ref={cloudsRef}
-            localCoverageTexture={localCoverageTexture}
+            localWeatherTexture={localWeatherTexture}
             spatiotemporalBlueNoiseTexture={spatiotemporalBlueNoiseTexture}
             coverage={coverage}
           />

@@ -4,11 +4,11 @@ import { math } from '@takram/three-geospatial/shaders'
 
 import { RenderTexture } from './RenderTexture'
 
-import fragmentShader from './shaders/localCoverage.frag'
+import fragmentShader from './shaders/localWeather.frag'
 import perlin from './shaders/perlin.glsl'
 import tileableNoise from './shaders/tileableNoise.glsl'
 
-export class LocalCoverage extends RenderTexture {
+export class LocalWeather extends RenderTexture {
   constructor() {
     super({
       size: 512,

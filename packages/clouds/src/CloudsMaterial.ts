@@ -71,7 +71,7 @@ interface CloudsMaterialUniforms {
   depthBuffer: Uniform<Texture | null>
   densityTexture: Uniform<Texture | null>
   densityDetailTexture: Uniform<Texture | null>
-  localCoverageTexture: Uniform<Texture | null>
+  localWeatherTexture: Uniform<Texture | null>
   coverage: Uniform<number>
 }
 
@@ -137,10 +137,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Cloud parameters
           densityTexture: new Uniform(density.texture),
           densityDetailTexture: new Uniform(densityDetail.texture),
-          localCoverageTexture: new Uniform(null),
+          localWeatherTexture: new Uniform(null),
           coverage: new Uniform(0.3),
           albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
-          localCoverageFrequency: new Uniform(new Vector2(300, 150)),
+          localWeatherFrequency: new Uniform(new Vector2(300, 150)),
           shapeFrequency: new Uniform(0.0003),
           shapeDetailFrequency: new Uniform(0.007),
           powderScale: new Uniform(1),
@@ -268,12 +268,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get localCoverageTexture(): Texture | null {
-    return this.uniforms.localCoverageTexture.value
+  get localWeatherTexture(): Texture | null {
+    return this.uniforms.localWeatherTexture.value
   }
 
-  set localCoverageTexture(value: Texture | null) {
-    this.uniforms.localCoverageTexture.value = value
+  set localWeatherTexture(value: Texture | null) {
+    this.uniforms.localWeatherTexture.value = value
   }
 
   get spatiotemporalBlueNoiseTexture(): Texture | null {
