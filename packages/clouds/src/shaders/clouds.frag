@@ -9,8 +9,7 @@ uniform vec3 sunDirection;
 uniform float skyIrradianceScale;
 uniform float bottomRadius; // TODO:
 uniform sampler2D blueNoiseTexture;
-uniform sampler3D stbnScalarTexture;
-uniform sampler3D stbnVectorTexture;
+uniform sampler3D spatiotemporalBlueNoiseTexture;
 uniform int frame;
 uniform float time;
 
@@ -131,22 +130,12 @@ float random(const vec2 uv) {
 
 float blueNoise(const vec2 uv) {
   return texture(
-    stbnScalarTexture,
+    spatiotemporalBlueNoiseTexture,
     vec3(
       uv * resolution / float(STBN_TEXTURE_SIZE),
       float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
     )
   ).x;
-}
-
-vec3 blueNoiseVector(const vec2 uv) {
-  return texture(
-    stbnVectorTexture,
-    vec3(
-      uv * resolution / float(STBN_TEXTURE_SIZE),
-      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
-    )
-  ).xyz;
 }
 
 const mat4 bayerMatrix =
