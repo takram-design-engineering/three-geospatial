@@ -6,17 +6,14 @@ type GetValue = keyof {
     : never]: DataView[K]
 }
 
-export function parseTypedArray<
-  T extends TypedArrayConstructor,
-  K extends GetValue
->(
+function parseTypedArray<T extends TypedArrayConstructor, K extends GetValue>(
   buffer: ArrayBuffer,
   TypedArray: T,
   getValue: K,
   littleEndian?: boolean
 ): InstanceType<T>
 
-export function parseTypedArray<K extends GetValue>(
+function parseTypedArray<K extends GetValue>(
   buffer: ArrayBuffer,
   TypedArray: TypedArrayConstructor,
   getValue: K,
