@@ -22,8 +22,8 @@ uniform vec3 albedo;
 uniform vec2 localWeatherFrequency;
 uniform float shapeFrequency;
 uniform float shapeDetailFrequency;
-uniform float scatterAnisotropy;
-uniform float scatterSecondaryAnisotropy;
+uniform float scatterAnisotropy1;
+uniform float scatterAnisotropy2;
 uniform float scatterAnisotropyMix;
 uniform float powderScale;
 uniform float powderExponent;
@@ -253,7 +253,7 @@ vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
 }
 
 float phaseFunction(const float cosTheta, const float attenuation) {
-  vec2 g = vec2(scatterAnisotropy, scatterSecondaryAnisotropy);
+  vec2 g = vec2(scatterAnisotropy1, scatterAnisotropy2);
   vec2 weights = vec2(1.0 - scatterAnisotropyMix, scatterAnisotropyMix);
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
@@ -372,7 +372,7 @@ vec4 marchToCloud(
       rayDistance += stepSize;
     } else {
       // Otherwise step longer in empty space.
-      // TODO: Apply more jitter when we entered empty space.
+      // TODO: This produces some banding artifacts.
       rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
     }
 
