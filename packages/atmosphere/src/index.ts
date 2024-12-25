@@ -1,5 +1,4 @@
 export * from './AerialPerspectiveEffect'
-export * from './AtmosphereEffectBase'
 export * from './AtmosphereMaterialBase'
 export * from './AtmosphereParameters'
 export * from './blackBodyChromaticity'

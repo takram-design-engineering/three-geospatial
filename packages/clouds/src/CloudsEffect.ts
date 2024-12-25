@@ -24,18 +24,14 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import {
-  atmosphereEffectBaseOptionsDefaults,
-  AtmosphereParameters,
-  type AtmosphereEffectBaseOptions
-} from '@takram/three-atmosphere'
+import { AtmosphereParameters } from '@takram/three-atmosphere'
 import { type Ellipsoid } from '@takram/three-geospatial'
 
 import { CloudsMaterial } from './CloudsMaterial'
 
 import fragmentShader from './shaders/cloudsEffect.frag'
 
-export interface CloudsEffectOptions extends AtmosphereEffectBaseOptions {
+export interface CloudsEffectOptions {
   blendFunction?: BlendFunction
   resolutionScale?: number
   width?: number
@@ -46,7 +42,6 @@ export interface CloudsEffectOptions extends AtmosphereEffectBaseOptions {
 }
 
 export const cloudsEffectOptionsDefaults = {
-  ...atmosphereEffectBaseOptionsDefaults,
   blendFunction: BlendFunction.NORMAL,
   resolutionScale: 1,
   width: Resolution.AUTO_SIZE,
