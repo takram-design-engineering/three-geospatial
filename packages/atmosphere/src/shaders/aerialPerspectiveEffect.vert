@@ -1,7 +1,6 @@
 uniform mat4 inverseViewMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform vec3 cameraPosition;
-uniform float cameraHeight;
 uniform vec3 ellipsoidCenter;
 uniform vec3 ellipsoidRadii;
 uniform float idealSphereAlpha;
