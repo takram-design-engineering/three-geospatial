@@ -5,7 +5,6 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Camera,
-  MathUtils,
   Matrix4,
   Uniform,
   Vector3,
@@ -21,6 +20,8 @@ import {
   Ellipsoid,
   Geodetic,
   packingShader,
+  remap,
+  saturate,
   transformShader
 } from '@takram/three-geospatial'
 
@@ -167,7 +168,6 @@ export class AerialPerspectiveEffect extends Effect {
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
-          ['cameraHeight', new Uniform(0)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
@@ -235,25 +235,22 @@ export class AerialPerspectiveEffect extends Effect {
     inverseViewMatrix.value.copy(camera.matrixWorld)
 
     const cameraPosition = uniforms.get('cameraPosition')!
-    const cameraHeight = uniforms.get('cameraHeight')!
     const position = camera.getWorldPosition(cameraPosition.value)
-    cameraHeight.value = geodeticScratch.setFromECEF(position).height
+    const cameraHeight = geodeticScratch.setFromECEF(position).height
 
-    // calculate the projected scale of the globe in clip space used to
+    // Calculate the projected scale of the globe in clip space used to
     // interpolate between the globe true normals and idealized normals to avoid
-    // lighting artifacts
-    const idealSphereAlphaUniform = uniforms.get('idealSphereAlpha')!
+    // lighting artifacts.
+    const idealSphereAlpha = uniforms.get('idealSphereAlpha')!
     vectorScratch
-      .set(0, this.ellipsoid.maximumRadius, -cameraHeight.value)
+      .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
       .applyMatrix4(camera.projectionMatrix)
 
-    // calculate interpolation alpha
-    // interpolation values are picked to match previous rough globe scales to
-    // match the previous "camera height" approach for interpolation
+    // Calculate interpolation alpha
+    // Interpolation values are picked to match previous rough globe scales to
+    // match the previous "camera height" approach for interpolation.
     // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
-    let a = MathUtils.mapLinear(vectorScratch.y, 41.5, 13.8, 0, 1)
-    a = MathUtils.clamp(a, 0, 1)
-    idealSphereAlphaUniform.value = a
+    idealSphereAlpha.value = saturate(remap(vectorScratch.y, 41.5, 13.8, 0, 1))
 
     const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
     if (this.correctAltitude) {
