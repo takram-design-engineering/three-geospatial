@@ -19,8 +19,11 @@ import {
 import { Ellipsoid, resolveIncludes } from '@takram/three-geospatial'
 import { depth, math } from '@takram/three-geospatial/shaders'
 
-import { type CloudLayerUniforms } from './cloudLayers'
 import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
+import {
+  type CloudLayerUniforms,
+  type CloudParameterUniforms
+} from './uniforms'
 
 import clouds from './shaders/clouds.glsl?raw'
 import fragmentShader from './shaders/cloudsShadow.frag?raw'
@@ -46,7 +49,9 @@ export const cloudsShadowMaterialParametersDefaults = {
   correctAltitude: true
 } satisfies CloudsShadowMaterialParameters
 
-interface CloudsShadowMaterialUniforms extends CloudLayerUniforms {
+interface CloudsShadowMaterialUniforms
+  extends CloudLayerUniforms,
+    CloudParameterUniforms {
   [key: string]: Uniform
   depthBuffer: Uniform<Texture | null>
   inverseProjectionMatrix: Uniform<Matrix4>
@@ -60,15 +65,6 @@ interface CloudsShadowMaterialUniforms extends CloudLayerUniforms {
   bottomRadius: Uniform<number> // TODO
   ellipsoidCenter: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
-
-  // Cloud parameters
-  shapeTexture: Uniform<Texture | null>
-  shapeFrequency: Uniform<number>
-  shapeDetailTexture: Uniform<Texture | null>
-  shapeDetailFrequency: Uniform<number>
-  localWeatherTexture: Uniform<Texture | null>
-  localWeatherFrequency: Uniform<Vector2>
-  coverage: Uniform<number>
 }
 
 export interface CloudsShadowMaterial {
@@ -134,6 +130,8 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         detailAmounts: new Uniform(new Vector4()),
         weatherExponents: new Uniform(new Vector4()),
         coverageFilterWidths: new Uniform(new Vector4()),
+        minHeight: new Uniform(0),
+        maxHeight: new Uniform(0),
 
         // Raymarch to clouds
         maxIterations: new Uniform(500),

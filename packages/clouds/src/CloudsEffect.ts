@@ -34,6 +34,7 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsShadowMaterial } from './CloudsShadowMaterial'
+import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
 
@@ -62,6 +63,42 @@ export const cloudsEffectOptionsDefaults = {
 export class CloudsEffect extends Effect {
   readonly cloudShape: CloudShape
   readonly cloudShapeDetail: CloudShapeDetail
+
+  // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
+  readonly cloudLayers: CloudLayers = [
+    {
+      minHeight: 600,
+      maxHeight: 1600,
+      extinctionCoeff: 0.3,
+      detailAmount: 1,
+      weatherExponent: 1,
+      coverageFilterWidth: 0.6
+    },
+    {
+      minHeight: 4500,
+      maxHeight: 5000,
+      extinctionCoeff: 0.1,
+      detailAmount: 0.8,
+      weatherExponent: 1,
+      coverageFilterWidth: 0.3
+    },
+    {
+      minHeight: 6700,
+      maxHeight: 8000,
+      extinctionCoeff: 0.005,
+      detailAmount: 0.3,
+      weatherExponent: 2,
+      coverageFilterWidth: 0.5
+    },
+    {
+      minHeight: 0,
+      maxHeight: 0,
+      extinctionCoeff: 0,
+      detailAmount: 0,
+      weatherExponent: 1,
+      coverageFilterWidth: 0.0
+    }
+  ]
 
   readonly resolution: Resolution
   readonly cloudsRenderTarget: WebGLRenderTarget
@@ -238,6 +275,8 @@ export class CloudsEffect extends Effect {
     const time = this.clock.getElapsedTime()
     const cloudsUniforms = this.cloudsMaterial.uniforms
     const shadowUniforms = this.shadowMaterial.uniforms
+    updateCloudLayerUniforms(cloudsUniforms, this.cloudLayers)
+    updateCloudLayerUniforms(shadowUniforms, this.cloudLayers)
     cloudsUniforms.frame.value = this.frame
     shadowUniforms.frame.value = this.frame
     cloudsUniforms.time.value = time
