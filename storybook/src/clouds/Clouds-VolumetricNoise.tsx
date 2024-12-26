@@ -12,14 +12,14 @@ import {
 } from 'three'
 
 import {
-  VolumetricDensity,
-  VolumetricDensityDetail
+  CloudShape,
+  CloudShapeDetail
 } from '@takram/three-global-clouds'
 
 import { useControls } from '../helpers/useControls'
 
-const density = new VolumetricDensity()
-const densityDetail = new VolumetricDensityDetail()
+const density = new CloudShape()
+const densityDetail = new CloudShapeDetail()
 
 const Scene: FC = () => {
   const geometry = new BoxGeometry(1, 1, 1)

@@ -101,7 +101,7 @@ const Scene: FC = () => {
   localWeatherTexture.wrapS = RepeatWrapping
   localWeatherTexture.wrapT = RepeatWrapping
 
-  const spatiotemporalBlueNoiseTexture = useLoader(
+  const blueNoiseTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
       format: RedFormat,
       minFilter: NearestFilter,
@@ -161,7 +161,7 @@ const Scene: FC = () => {
           <Clouds
             ref={setClouds}
             localWeatherTexture={localWeatherTexture}
-            spatiotemporalBlueNoiseTexture={spatiotemporalBlueNoiseTexture}
+            blueNoiseTexture={blueNoiseTexture}
             coverage={coverage}
           />
           <LensFlare />

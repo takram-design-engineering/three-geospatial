@@ -3,11 +3,11 @@ import { math } from '@takram/three-geospatial/shaders'
 
 import { Render3DTexture } from './Render3DTexture'
 
+import fragmentShader from './shaders/cloudShapeDetail.frag?raw'
 import perlin from './shaders/perlin.glsl?raw'
 import tileableNoise from './shaders/tileableNoise.glsl?raw'
-import fragmentShader from './shaders/volumetricDensityDetail.frag?raw'
 
-export class VolumetricDensityDetail extends Render3DTexture {
+export class CloudShapeDetail extends Render3DTexture {
   constructor() {
     super({
       size: 32,
