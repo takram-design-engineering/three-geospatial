@@ -32,7 +32,7 @@ export class DepthEffect extends Effect {
     super(
       'DepthEffect',
       resolveIncludes(fragmentShader, {
-        depth
+        core: { depth }
       }),
       {
         blendFunction,

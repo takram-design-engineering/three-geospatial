@@ -45,9 +45,11 @@ export class NormalEffect extends Effect {
     super(
       'NormalEffect',
       resolveIncludes(fragmentShader, {
-        depth,
-        packing,
-        transform
+        core: {
+          depth,
+          packing,
+          transform
+        }
       }),
       {
         blendFunction,

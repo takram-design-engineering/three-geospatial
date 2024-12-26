@@ -1,4 +1,4 @@
-#include "depth"
+#include "core/depth"
 
 uniform float near;
 uniform float far;

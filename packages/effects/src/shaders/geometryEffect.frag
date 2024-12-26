@@ -1,4 +1,4 @@
-#include "packing"
+#include "core/packing"
 
 uniform sampler2D geometryBuffer;
 

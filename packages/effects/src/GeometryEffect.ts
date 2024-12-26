@@ -34,7 +34,7 @@ export class GeometryEffect extends Effect {
     super(
       'GeometryEffect',
       resolveIncludes(fragmentShader, {
-        packing
+        core: { packing }
       }),
       {
         blendFunction,

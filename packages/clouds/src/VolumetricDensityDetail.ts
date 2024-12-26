@@ -12,7 +12,7 @@ export class VolumetricDensityDetail extends Render3DTexture {
     super({
       size: 32,
       fragmentShader: resolveIncludes(fragmentShader, {
-        math,
+        core: { math },
         perlin,
         tileableNoise
       })

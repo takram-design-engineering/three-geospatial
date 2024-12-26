@@ -131,11 +131,13 @@ export class AerialPerspectiveEffect extends Effect {
     super(
       'AerialPerspectiveEffect',
       resolveIncludes(fragmentShader, {
+        core: {
+          depth,
+          packing,
+          transform
+        },
         parameters,
         functions,
-        depth,
-        packing,
-        transform,
         sky: skyShader
       }),
       {

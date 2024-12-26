@@ -1,6 +1,6 @@
-#include "depth"
-#include "packing"
-#include "transform"
+#include "core/depth"
+#include "core/packing"
+#include "core/transform"
 
 uniform highp sampler2D normalBuffer;
 
