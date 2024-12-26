@@ -1,12 +1,10 @@
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { math } from '@takram/three-geospatial/shaders'
 
 import { RenderTexture } from './RenderTexture'
 
-import fragmentShader from './shaders/localWeather.frag'
-import perlin from './shaders/perlin.glsl'
-import tileableNoise from './shaders/tileableNoise.glsl'
+import fragmentShader from './shaders/localWeather.frag?raw'
+import perlin from './shaders/perlin.glsl?raw'
+import tileableNoise from './shaders/tileableNoise.glsl?raw'
 
 export class LocalWeather extends RenderTexture {
   constructor() {

@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Matrix4,
@@ -14,7 +12,7 @@ import {
 
 import { depth, packing, transform } from '@takram/three-geospatial/shaders'
 
-import fragmentShader from './shaders/normalEffect.frag'
+import fragmentShader from './shaders/normalEffect.frag?raw'
 
 export interface NormalEffectOptions {
   blendFunction?: BlendFunction

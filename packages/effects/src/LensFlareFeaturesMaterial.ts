@@ -1,5 +1,3 @@
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
   NoBlending,
   ShaderMaterial,
@@ -9,8 +7,8 @@ import {
   type Texture
 } from 'three'
 
-import fragmentShader from './shaders/lensFlareFeatures.frag'
-import vertexShader from './shaders/lensFlareFeatures.vert'
+import fragmentShader from './shaders/lensFlareFeatures.frag?raw'
+import vertexShader from './shaders/lensFlareFeatures.vert?raw'
 
 export interface LensFlareFeaturesMaterialParameters
   extends ShaderMaterialParameters {

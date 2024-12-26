@@ -21,10 +21,10 @@ import {
   type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
 
-import functions from './shaders/functions.glsl'
-import parameters from './shaders/parameters.glsl'
-import fragmentShader from './shaders/stars.frag'
-import vertexShader from './shaders/stars.vert'
+import functions from './shaders/functions.glsl?raw'
+import parameters from './shaders/parameters.glsl?raw'
+import fragmentShader from './shaders/stars.frag?raw'
+import vertexShader from './shaders/stars.vert?raw'
 
 declare module 'three' {
   interface Camera {

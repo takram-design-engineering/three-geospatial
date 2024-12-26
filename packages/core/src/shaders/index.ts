@@ -1,10 +1,8 @@
-/// <reference types="vite-plugin-glsl/ext" />
-
-import _depth from './depth.glsl'
-import _generators from './generators.glsl'
-import _math from './math.glsl'
-import _packing from './packing.glsl'
-import _transform from './transform.glsl'
+import _depth from './depth.glsl?raw'
+import _generators from './generators.glsl?raw'
+import _math from './math.glsl?raw'
+import _packing from './packing.glsl?raw'
+import _transform from './transform.glsl?raw'
 
 export const depth: string = _depth
 export const generators: string = _generators

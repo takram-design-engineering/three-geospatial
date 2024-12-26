@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
   GLSL3,
   Matrix4,
@@ -22,11 +20,11 @@ import {
   type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
 
-import functions from './shaders/functions.glsl'
-import parameters from './shaders/parameters.glsl'
-import fragmentShader from './shaders/sky.frag'
-import sky from './shaders/sky.glsl'
-import vertexShader from './shaders/sky.vert'
+import functions from './shaders/functions.glsl?raw'
+import parameters from './shaders/parameters.glsl?raw'
+import fragmentShader from './shaders/sky.frag?raw'
+import sky from './shaders/sky.glsl?raw'
+import vertexShader from './shaders/sky.vert?raw'
 
 declare module 'three' {
   interface Camera {

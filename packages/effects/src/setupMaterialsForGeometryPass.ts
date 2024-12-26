@@ -1,7 +1,5 @@
 // cSpell:words defaultnormal specularmap envmap
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { ShaderLib, type ShaderLibShader } from 'three'
 
 import { packing } from '@takram/three-geospatial/shaders'

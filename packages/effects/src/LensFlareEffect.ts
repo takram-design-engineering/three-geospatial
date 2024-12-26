@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
   BlendFunction,
   Effect,
@@ -24,7 +22,7 @@ import {
 import { DownsampleThresholdMaterial } from './DownsampleThresholdMaterial'
 import { LensFlareFeaturesMaterial } from './LensFlareFeaturesMaterial'
 
-import fragmentShader from './shaders/lensFlareEffect.frag'
+import fragmentShader from './shaders/lensFlareEffect.frag?raw'
 
 export interface LensFlareEffectOptions {
   blendFunction?: BlendFunction

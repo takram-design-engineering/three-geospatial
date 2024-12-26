@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform } from 'three'
 
 import { depth } from '@takram/three-geospatial/shaders'
 
-import fragmentShader from './shaders/depthEffect.frag'
+import fragmentShader from './shaders/depthEffect.frag?raw'
 
 export interface DepthEffectOptions {
   blendFunction?: BlendFunction

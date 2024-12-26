@@ -1,5 +1,3 @@
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
   MeshNormalMaterial,
   ShaderChunk,
@@ -8,7 +6,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import octNormal from './shaders/octNormal.glsl'
+import octNormal from './shaders/octNormal.glsl?raw'
 
 const vertexShader =
   /* glsl */ `` +

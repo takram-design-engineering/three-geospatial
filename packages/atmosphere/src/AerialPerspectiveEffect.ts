@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Camera,
@@ -31,11 +29,11 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 
-import fragmentShader from './shaders/aerialPerspectiveEffect.frag'
-import vertexShader from './shaders/aerialPerspectiveEffect.vert'
-import functions from './shaders/functions.glsl'
-import parameters from './shaders/parameters.glsl'
-import skyShader from './shaders/sky.glsl'
+import fragmentShader from './shaders/aerialPerspectiveEffect.frag?raw'
+import vertexShader from './shaders/aerialPerspectiveEffect.vert?raw'
+import functions from './shaders/functions.glsl?raw'
+import parameters from './shaders/parameters.glsl?raw'
+import skyShader from './shaders/sky.glsl?raw'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()

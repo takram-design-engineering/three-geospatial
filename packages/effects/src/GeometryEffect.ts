@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform, type Texture } from 'three'
 
 import { packing } from '@takram/three-geospatial/shaders'
 
-import fragmentShader from './shaders/geometryEffect.frag'
+import fragmentShader from './shaders/geometryEffect.frag?raw'
 
 export type GeometryEffectOutput = 'normal' | 'pbr'
 
