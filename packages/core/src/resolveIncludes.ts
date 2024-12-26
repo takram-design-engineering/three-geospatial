@@ -1,14 +1,22 @@
 const includePattern = /^[ \t]*#include +"([\w\d./]+)"/gm
 
-export function resolveIncludes(
-  source: string,
-  libraries: Record<string, string>
-): string {
-  return source.replace(includePattern, (match, path) => {
-    const library = libraries[path]
-    if (library == null) {
-      throw new Error(`Could not find library for ${path}.`)
+interface Includes {
+  [key: string]: string | Includes
+}
+
+export function resolveIncludes(source: string, includes: Includes): string {
+  return source.replace(includePattern, (match, path: string) => {
+    const components = path.split('/')
+    const include = components.reduce<string | Includes | undefined>(
+      (parent, component) =>
+        typeof parent !== 'string' && parent != null
+          ? parent[component]
+          : undefined,
+      includes
+    )
+    if (typeof include !== 'string') {
+      throw new Error(`Could not find include for ${path}.`)
     }
-    return resolveIncludes(library, libraries)
+    return resolveIncludes(include, includes)
   })
 }
