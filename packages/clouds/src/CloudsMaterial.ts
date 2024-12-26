@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
-  Clock,
   Color,
   GLSL3,
   Matrix4,
   Uniform,
   Vector2,
-  Vector3,
+  Vector4,
   type BufferGeometry,
   type Camera,
   type Group,
@@ -28,16 +25,20 @@ import {
   type AtmosphereMaterialBaseParameters,
   type AtmosphereMaterialBaseUniforms
 } from '@takram/three-atmosphere'
-import { functions, parameters } from '@takram/three-atmosphere/shaders'
-import { assertType, Geodetic } from '@takram/three-geospatial'
+import {
+  parameters as atmosphereParameters,
+  functions
+} from '@takram/three-atmosphere/shaders'
+import { assertType, Geodetic, resolveIncludes } from '@takram/three-geospatial'
 import { depth, math } from '@takram/three-geospatial/shaders'
 
+import { type CloudLayerUniforms } from './cloudLayers'
 import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
-import { VolumetricDensity } from './VolumetricDensity'
-import { VolumetricDensityDetail } from './VolumetricDensityDetail'
 
-import fragmentShader from './shaders/clouds.frag'
-import vertexShader from './shaders/clouds.vert'
+import fragmentShader from './shaders/clouds.frag?raw'
+import clouds from './shaders/clouds.glsl?raw'
+import vertexShader from './shaders/clouds.vert?raw'
+import parameters from './shaders/parameters.glsl?raw'
 
 declare module 'three' {
   interface Camera {
@@ -45,7 +46,6 @@ declare module 'three' {
   }
 }
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface CloudsMaterialParameters
@@ -57,22 +57,51 @@ export const cloudsMaterialParametersDefaults = {
   ...atmosphereMaterialParametersBaseDefaults
 } satisfies CloudsMaterialParameters
 
-interface CloudsMaterialUniforms {
+interface CloudsMaterialUniforms extends CloudLayerUniforms {
   [key: string]: Uniform
+  depthBuffer: Uniform<Texture | null>
   inverseProjectionMatrix: Uniform<Matrix4>
   inverseViewMatrix: Uniform<Matrix4>
   resolution: Uniform<Vector2>
-  cameraPosition: Uniform<Vector3>
   cameraNear: Uniform<number>
   cameraFar: Uniform<number>
   cameraHeight: Uniform<number>
+  frame: Uniform<number>
+  time: Uniform<number>
+  blueNoiseTexture: Uniform<Texture | null>
+
+  // Atmospheric parameters
+  bottomRadius: Uniform<number> // TODO
 
   // Cloud parameters
-  depthBuffer: Uniform<Texture | null>
-  densityTexture: Uniform<Texture | null>
-  densityDetailTexture: Uniform<Texture | null>
+  shapeTexture: Uniform<Texture | null>
+  shapeFrequency: Uniform<number>
+  shapeDetailTexture: Uniform<Texture | null>
+  shapeDetailFrequency: Uniform<number>
   localWeatherTexture: Uniform<Texture | null>
+  localWeatherFrequency: Uniform<Vector2>
   coverage: Uniform<number>
+
+  // Scattering parameters
+  albedo: Uniform<Color>
+  powderScale: Uniform<number>
+  powderExponent: Uniform<number>
+  scatterAnisotropy1: Uniform<number>
+  scatterAnisotropy2: Uniform<number>
+  scatterAnisotropyMix: Uniform<number>
+  skyIrradianceScale: Uniform<number>
+
+  // Raymarch to clouds
+  maxIterations: Uniform<number>
+  initialStepSize: Uniform<number>
+  maxStepSize: Uniform<number>
+  maxRayDistance: Uniform<number>
+  minDensity: Uniform<number>
+  minTransmittance: Uniform<number>
+
+  // Beer shadow map
+  shadowBuffer: Uniform<Texture | null>
+  shadowMatrix: Uniform<Matrix4>
 }
 
 export interface CloudsMaterial {
@@ -80,11 +109,6 @@ export interface CloudsMaterial {
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
-  density: VolumetricDensity
-  densityDetail: VolumetricDensityDetail
-
-  private readonly clock = new Clock()
-
   constructor(
     params?: CloudsMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
@@ -93,56 +117,49 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       ...cloudsMaterialParametersDefaults,
       ...params
     }
-
-    const density = new VolumetricDensity()
-    const densityDetail = new VolumetricDensityDetail()
-
     super(
       {
         name: 'CloudsMaterial',
         glslVersion: GLSL3,
-        vertexShader: /* glsl */ `
-          precision highp float;
-          precision highp sampler3D;
-          ${parameters}
-          ${vertexShader}
-        `,
-        fragmentShader: /* glsl */ `
-          precision highp float;
-          precision highp sampler3D;
-
-          #include <common>
-          #include <packing>
-
-          ${parameters}
-          ${functions}
-          ${depth}
-          ${math}
-          ${fragmentShader}
-        `,
+        vertexShader,
+        fragmentShader: resolveIncludes(fragmentShader, {
+          core: {
+            depth,
+            math
+          },
+          atmosphere: {
+            parameters: atmosphereParameters,
+            functions
+          },
+          parameters,
+          clouds
+        }),
         uniforms: {
           depthBuffer: new Uniform(depthBuffer),
           inverseProjectionMatrix: new Uniform(new Matrix4()),
           inverseViewMatrix: new Uniform(new Matrix4()),
           resolution: new Uniform(new Vector2()),
-          cameraPosition: new Uniform(new Vector3()),
-          cameraHeight: new Uniform(0),
           cameraNear: new Uniform(0),
           cameraFar: new Uniform(0),
-          bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
-          spatiotemporalBlueNoiseTexture: new Uniform(null),
+          cameraHeight: new Uniform(0),
           frame: new Uniform(0),
           time: new Uniform(0),
+          blueNoiseTexture: new Uniform(null),
+
+          // Atmospheric parameters
+          bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
 
           // Cloud parameters
-          densityTexture: new Uniform(density.texture),
-          densityDetailTexture: new Uniform(densityDetail.texture),
-          localWeatherTexture: new Uniform(null),
-          coverage: new Uniform(0.3),
-          albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
-          localWeatherFrequency: new Uniform(new Vector2(300, 150)),
+          shapeTexture: new Uniform(null),
           shapeFrequency: new Uniform(0.0003),
+          shapeDetailTexture: new Uniform(null),
           shapeDetailFrequency: new Uniform(0.007),
+          localWeatherTexture: new Uniform(null),
+          localWeatherFrequency: new Uniform(new Vector2(300, 150)),
+          coverage: new Uniform(0.3),
+
+          // Scattering parameters
+          albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
           powderScale: new Uniform(1),
           powderExponent: new Uniform(200),
           scatterAnisotropy1: new Uniform(0.35),
@@ -150,31 +167,40 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(0.1),
 
+          // Cloud layer parameters
+          minLayerHeights: new Uniform(new Vector4()),
+          maxLayerHeights: new Uniform(new Vector4()),
+          extinctionCoeffs: new Uniform(new Vector4()),
+          detailAmounts: new Uniform(new Vector4()),
+          weatherExponents: new Uniform(new Vector4()),
+          coverageFilterWidths: new Uniform(new Vector4()),
+
           // Raymarch to clouds
           maxIterations: new Uniform(500),
           initialStepSize: new Uniform(100),
           maxStepSize: new Uniform(1000),
           maxRayDistance: new Uniform(1.5e5),
           minDensity: new Uniform(1e-5),
-          minTransmittance: new Uniform(1e-2)
+          minTransmittance: new Uniform(1e-2),
+
+          // Beer shadow map
+          shadowBuffer: new Uniform(null),
+          shadowMatrix: new Uniform(new Matrix4())
         } satisfies CloudsMaterialUniforms,
         defines: {
           STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
           STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
           DEPTH_PACKING: '0',
-          MULTI_SCATTERING_OCTAVES: '8',
           USE_DETAIL: '1',
-          ACCURATE_ATMOSPHERIC_IRRADIANCE: '1'
+          MULTI_SCATTERING_OCTAVES: '8',
+          ACCURATE_ATMOSPHERIC_IRRADIANCE: '1' // TODO
         }
       },
       atmosphere
     )
-
-    this.density = density
-    this.densityDetail = densityDetail
   }
 
-  onBeforeRender(
+  override onBeforeRender(
     renderer: WebGLRenderer,
     scene: Scene,
     camera: Camera,
@@ -182,16 +208,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     object: Object3D,
     group: Group
   ): void {
-    this.density.update(renderer)
-    this.densityDetail.update(renderer)
-    ++this.uniforms.frame.value
-    this.uniforms.time.value = this.clock.getElapsedTime()
+    // Disable onBeforeRender in AtmosphereMaterialBase because we're rendering
+    // into fullscreen quad with another camera for the scene projection.
   }
 
-  copyCameraSettings(camera?: Camera | null): void {
-    if (camera == null) {
-      return
-    }
+  override copyCameraSettings(camera: Camera): void {
+    super.copyCameraSettings(camera)
+
     if (camera.isPerspectiveCamera === true) {
       if (this.defines.PERSPECTIVE_CAMERA !== '1') {
         this.defines.PERSPECTIVE_CAMERA = '1'
@@ -214,34 +237,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     uniforms.cameraNear.value = camera.near
     uniforms.cameraFar.value = camera.far
 
-    const cameraPosition = uniforms.cameraPosition
     const cameraHeight = uniforms.cameraHeight
-    const position = camera.getWorldPosition(cameraPosition.value)
+    const position = uniforms.cameraPosition.value
     try {
       cameraHeight.value = geodeticScratch.setFromECEF(position).height
     } catch (error) {
-      return // Abort when the position is zero.
-    }
-
-    if (this.correctAltitude) {
-      const surfacePosition = this.ellipsoid.projectOnSurface(
-        position,
-        vectorScratch
-      )
-      if (surfacePosition != null) {
-        this.ellipsoid.getOsculatingSphereCenter(
-          // Move the center of the atmosphere's inner sphere down to intersect
-          // the viewpoint when it's located underground.
-          // TODO: Too many duplicated codes.
-          surfacePosition.lengthSq() < position.lengthSq()
-            ? surfacePosition
-            : position,
-          this.atmosphere.bottomRadius,
-          uniforms.ellipsoidCenter.value
-        )
-      }
-    } else {
-      uniforms.ellipsoidCenter.value.set(0, 0, 0)
+      // Abort when the position is zero.
     }
   }
 
@@ -268,22 +269,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get localWeatherTexture(): Texture | null {
-    return this.uniforms.localWeatherTexture.value
-  }
-
-  set localWeatherTexture(value: Texture | null) {
-    this.uniforms.localWeatherTexture.value = value
-  }
-
-  get spatiotemporalBlueNoiseTexture(): Texture | null {
-    return this.uniforms.spatiotemporalBlueNoiseTexture.value
-  }
-
-  set spatiotemporalBlueNoiseTexture(value: Texture | null) {
-    this.uniforms.spatiotemporalBlueNoiseTexture.value = value
-  }
-
   get useDetail(): boolean {
     return this.defines.USE_DETAIL != null
   }
@@ -295,6 +280,17 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       } else {
         delete this.defines.USE_DETAIL
       }
+      this.needsUpdate = true
+    }
+  }
+
+  get multiScatteringOctaves(): number {
+    return +this.defines.MULTI_SCATTERING_OCTAVES
+  }
+
+  set multiScatteringOctaves(value: number) {
+    if (value !== this.multiScatteringOctaves) {
+      this.defines.MULTI_SCATTERING_OCTAVES = `${value}`
       this.needsUpdate = true
     }
   }
