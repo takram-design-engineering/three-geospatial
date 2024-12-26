@@ -1,5 +1,12 @@
 // Based on: https://github.com/sebh/TileableVolumeNoise
 
+precision highp float;
+precision highp int;
+
+#include "math"
+#include "perlin"
+#include "tileableNoise"
+
 uniform float layer;
 
 in vec2 vUv;

@@ -1,3 +1,4 @@
+import { resolveIncludes } from '@takram/three-geospatial'
 import { math } from '@takram/three-geospatial/shaders'
 
 import { Render3DTexture } from './Render3DTexture'
@@ -10,14 +11,11 @@ export class VolumetricDensity extends Render3DTexture {
   constructor() {
     super({
       size: 128,
-      fragmentShader: /* glsl */ `
-        precision highp float;
-        precision highp int;
-        ${math}
-        ${perlin}
-        ${tileableNoise}
-        ${fragmentShader}
-      `
+      fragmentShader: resolveIncludes(fragmentShader, {
+        math,
+        perlin,
+        tileableNoise
+      })
     })
   }
 }
