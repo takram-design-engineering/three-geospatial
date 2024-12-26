@@ -12,6 +12,7 @@ Our contribution to the project is scheduled to conclude by March 2025.
 | Name | Description | Status | NPM |
 | -- | -- | -- | -- |
 | [atmosphere](packages/atmosphere) | An implementation of Precomputed Atmospheric Scattering | Beta | [@takram/three-atmosphere](https://www.npmjs.com/package/@takram/three-atmosphere) |
+| [clouds]([packages/clouds](https://github.com/takram-design-engineering/three-geospatial/tree/dev/clouds/packages/clouds)) | (Hopefully) global volumetric clouds and weather | WIP | @takram/three-global-clouds |
 | [core](packages/core) | Provides fundamental functions for rendering GIS data | Alpha | [@takram/three-geospatial](https://www.npmjs.com/package/@takram/three-geospatial) |
 | [effects](packages/effects) | A collection of post-processing effects | Alpha | [@takram/three-geospatial-effects](https://www.npmjs.com/package/@takram/three-geospatial-effects) |
 
@@ -55,6 +56,25 @@ Create a `.env` file in the root directory with the following variables:
 | -- | -- |
 | `STORYBOOK_GOOGLE_MAP_API_KEY` | [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
 | `STORYBOOK_ION_API_TOKEN` | [Cesium Ion API access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/) |
+
+### Running Storybook
+
+All examples are created as [Storybook](https://storybook.js.org) stories, hosted at: https://takram-design-engineering.github.io/three-geospatial/.
+
+The command below runs Storybook locally on port 4400 by default. You can override the port by adding the `--port` option:
+
+```sh
+nx storybook
+nx storybook --port 8080
+```
+
+Some stories use Cesium Ion assets. To display them correctly, search for the following assets in the [Asset Depot](https://ion.cesium.com/assetdepot/) and add them to your [My Assets](https://ion.cesium.com/assets/):
+
+<!-- prettier-ignore -->
+| Name | Asset ID |
+| -- | -- |
+| Cesium World Terrain | `1` (likely exists by default) |
+| Japan Regional Terrain | `2767062` |
 
 ### Generating a library
 
