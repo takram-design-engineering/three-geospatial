@@ -7,6 +7,7 @@ import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH
 } from './constants'
+import { correctAtmosphereAltitude } from './correctAtmosphereAltitude'
 import { getTextureCoordFromUnitRange } from './helpers/functions'
 import { sampleTexture } from './helpers/sampleTexture'
 
@@ -84,21 +85,7 @@ export class SkyLightProbe extends LightProbe {
     }
 
     const position = this.getWorldPosition(vectorScratch1)
-    if (this.correctAltitude) {
-      const surfacePosition = this.ellipsoid.projectOnSurface(
-        position,
-        vectorScratch2
-      )
-      if (surfacePosition != null) {
-        position.sub(
-          this.ellipsoid.getOsculatingSphereCenter(
-            surfacePosition,
-            this.atmosphere.bottomRadius,
-            vectorScratch2
-          )
-        )
-      }
-    }
+    correctAtmosphereAltitude(this, position, this.atmosphere, vectorScratch2)
 
     const r = position.length()
     const muS = position.dot(this.sunDirection) / r

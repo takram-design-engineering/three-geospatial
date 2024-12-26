@@ -34,6 +34,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
+import { correctAtmosphereAltitude } from './correctAtmosphereAltitude'
 
 import fragmentShader from './shaders/aerialPerspectiveEffect.frag?raw'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert?raw'
@@ -262,26 +263,12 @@ export class AerialPerspectiveEffect extends Effect {
     idealSphereAlpha.value = saturate(remap(vectorScratch.y, 41.5, 13.8, 0, 1))
 
     const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
-    if (this.correctAltitude) {
-      const surfacePosition = this.ellipsoid.projectOnSurface(
-        position,
-        vectorScratch
-      )
-      if (surfacePosition != null) {
-        this.ellipsoid.getOsculatingSphereCenter(
-          // Move the center of the atmosphere's inner sphere down to intersect
-          // the viewpoint when it's located underground.
-          // TODO: Too many duplicated codes.
-          surfacePosition.lengthSq() < position.lengthSq()
-            ? surfacePosition
-            : position,
-          this.atmosphere.bottomRadius,
-          ellipsoidCenter.value
-        )
-      }
-    } else {
-      ellipsoidCenter.value.set(0, 0, 0)
-    }
+    correctAtmosphereAltitude(
+      this,
+      position,
+      this.atmosphere,
+      ellipsoidCenter.value
+    )
   }
 
   get normalBuffer(): Texture | null {

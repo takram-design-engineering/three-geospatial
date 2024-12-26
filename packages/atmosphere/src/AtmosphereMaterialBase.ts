@@ -30,8 +30,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
-
-const vectorScratch = /*#__PURE__*/ new Vector3()
+import { correctAtmosphereAltitude } from './correctAtmosphereAltitude'
 
 function includeRenderTargets(fragmentShader: string, count: number): string {
   let layout = ''
@@ -170,27 +169,12 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   copyCameraSettings(camera: Camera): void {
     const uniforms = this.uniforms
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
-
-    if (this.correctAltitude) {
-      const surfacePosition = this.ellipsoid.projectOnSurface(
-        position,
-        vectorScratch
-      )
-      if (surfacePosition != null) {
-        this.ellipsoid.getOsculatingSphereCenter(
-          // Move the center of the atmosphere's inner sphere down to intersect
-          // the viewpoint when it's located underground.
-          // TODO: Too many duplicated codes.
-          surfacePosition.lengthSq() < position.lengthSq()
-            ? surfacePosition
-            : position,
-          this.atmosphere.bottomRadius,
-          uniforms.ellipsoidCenter.value
-        )
-      }
-    } else {
-      uniforms.ellipsoidCenter.value.set(0, 0, 0)
-    }
+    correctAtmosphereAltitude(
+      this,
+      position,
+      this.atmosphere,
+      uniforms.ellipsoidCenter.value
+    )
   }
 
   override onBeforeCompile(
