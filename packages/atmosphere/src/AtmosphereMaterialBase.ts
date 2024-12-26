@@ -172,7 +172,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     correctAtmosphereAltitude(
       this,
       position,
-      this.atmosphere,
+      this.atmosphere.bottomRadius,
       uniforms.ellipsoidCenter.value
     )
   }

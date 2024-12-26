@@ -266,7 +266,7 @@ export class AerialPerspectiveEffect extends Effect {
     correctAtmosphereAltitude(
       this,
       position,
-      this.atmosphere,
+      this.atmosphere.bottomRadius,
       ellipsoidCenter.value
     )
   }

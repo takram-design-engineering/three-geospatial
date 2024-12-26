@@ -85,7 +85,12 @@ export class SkyLightProbe extends LightProbe {
     }
 
     const position = this.getWorldPosition(vectorScratch1)
-    correctAtmosphereAltitude(this, position, this.atmosphere, vectorScratch2)
+    correctAtmosphereAltitude(
+      this,
+      position,
+      this.atmosphere.bottomRadius,
+      vectorScratch2
+    )
 
     const r = position.length()
     const muS = position.dot(this.sunDirection) / r

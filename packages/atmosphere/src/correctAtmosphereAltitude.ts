@@ -2,8 +2,6 @@ import { Vector3 } from 'three'
 
 import { type Ellipsoid } from '@takram/three-geospatial'
 
-import { type AtmosphereParameters } from './AtmosphereParameters'
-
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export function correctAtmosphereAltitude(
@@ -12,7 +10,7 @@ export function correctAtmosphereAltitude(
     correctAltitude: boolean
   },
   cameraPosition: Vector3,
-  atmosphere: AtmosphereParameters,
+  atmosphereBottomRadius: number,
   ellipsoidCenter: Vector3
 ): void {
   if (target.correctAltitude) {
@@ -27,7 +25,7 @@ export function correctAtmosphereAltitude(
         surfacePosition.lengthSq() < cameraPosition.lengthSq()
           ? surfacePosition
           : cameraPosition,
-        atmosphere.bottomRadius,
+        atmosphereBottomRadius,
         ellipsoidCenter
       )
     }
