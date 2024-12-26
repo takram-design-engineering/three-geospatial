@@ -13,6 +13,8 @@ import {
   type WebGLRenderer
 } from 'three'
 
+import { resolveIncludes } from '@takram/three-geospatial'
+
 import {
   AtmosphereMaterialBase,
   atmosphereMaterialParametersBaseDefaults,
@@ -76,20 +78,14 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     super({
       name: 'SkyMaterial',
       glslVersion: GLSL3,
-      vertexShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${vertexShader}
-      `,
-      fragmentShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${functions}
-        ${sky}
-        ${fragmentShader}
-      `,
+      vertexShader: resolveIncludes(vertexShader, {
+        parameters
+      }),
+      fragmentShader: resolveIncludes(fragmentShader, {
+        parameters,
+        functions,
+        sky
+      }),
       ...others,
       uniforms: {
         inverseProjectionMatrix: new Uniform(new Matrix4()),

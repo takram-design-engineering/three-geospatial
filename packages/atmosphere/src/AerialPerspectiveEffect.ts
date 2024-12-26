@@ -13,7 +13,13 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { Ellipsoid, Geodetic, remap, saturate } from '@takram/three-geospatial'
+import {
+  Ellipsoid,
+  Geodetic,
+  remap,
+  resolveIncludes,
+  saturate
+} from '@takram/three-geospatial'
 import { depth, packing, transform } from '@takram/three-geospatial/shaders'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
@@ -124,21 +130,19 @@ export class AerialPerspectiveEffect extends Effect {
 
     super(
       'AerialPerspectiveEffect',
-      /* glsl */ `
-        ${parameters}
-        ${functions}
-        ${depth}
-        ${packing}
-        ${transform}
-        ${skyShader}
-        ${fragmentShader}
-      `,
+      resolveIncludes(fragmentShader, {
+        parameters,
+        functions,
+        depth,
+        packing,
+        transform,
+        sky: skyShader
+      }),
       {
         blendFunction,
-        vertexShader: /* glsl */ `
-          ${parameters}
-          ${vertexShader}
-        `,
+        vertexShader: resolveIncludes(vertexShader, {
+          parameters
+        }),
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
         uniforms: new Map<string, Uniform>([

@@ -1,3 +1,8 @@
+precision highp float;
+precision highp sampler3D;
+
+#include "parameters"
+
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform vec3 cameraPosition;

@@ -1,3 +1,5 @@
+#include "depth"
+
 uniform float near;
 uniform float far;
 

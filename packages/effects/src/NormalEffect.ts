@@ -10,6 +10,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
+import { resolveIncludes } from '@takram/three-geospatial'
 import { depth, packing, transform } from '@takram/three-geospatial/shaders'
 
 import fragmentShader from './shaders/normalEffect.frag?raw'
@@ -43,12 +44,11 @@ export class NormalEffect extends Effect {
     }
     super(
       'NormalEffect',
-      /* glsl */ `
-        ${depth}
-        ${packing}
-        ${transform}
-        ${fragmentShader}
-      `,
+      resolveIncludes(fragmentShader, {
+        depth,
+        packing,
+        transform
+      }),
       {
         blendFunction,
         attributes: EffectAttribute.DEPTH,

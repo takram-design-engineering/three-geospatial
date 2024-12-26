@@ -1,3 +1,9 @@
+#include "parameters"
+#include "functions"
+#include "depth"
+#include "packing"
+#include "transform"
+
 uniform sampler2D normalBuffer;
 
 uniform mat4 projectionMatrix;

@@ -1,3 +1,9 @@
+precision highp float;
+precision highp sampler3D;
+
+#include "parameters"
+#include "functions"
+
 uniform vec3 sunDirection;
 
 in vec3 vWorldPosition;

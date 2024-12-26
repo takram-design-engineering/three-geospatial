@@ -1,3 +1,5 @@
+#include "packing"
+
 uniform sampler2D geometryBuffer;
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {

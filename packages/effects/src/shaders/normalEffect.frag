@@ -1,3 +1,7 @@
+#include "depth"
+#include "packing"
+#include "transform"
+
 uniform highp sampler2D normalBuffer;
 
 uniform mat4 projectionMatrix;

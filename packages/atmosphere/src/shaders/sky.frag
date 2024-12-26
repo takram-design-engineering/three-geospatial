@@ -1,3 +1,10 @@
+precision highp float;
+precision highp sampler3D;
+
+#include "parameters"
+#include "functions"
+#include "sky"
+
 uniform vec3 sunDirection;
 uniform vec3 moonDirection;
 uniform float moonAngularRadius;

@@ -14,6 +14,8 @@ import {
   type WebGLRenderer
 } from 'three'
 
+import { resolveIncludes } from '@takram/three-geospatial'
+
 import {
   AtmosphereMaterialBase,
   atmosphereMaterialParametersBaseDefaults,
@@ -74,19 +76,13 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     super({
       name: 'StarsMaterial',
       glslVersion: GLSL3,
-      vertexShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${vertexShader}
-      `,
-      fragmentShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${functions}
-        ${fragmentShader}
-      `,
+      vertexShader: resolveIncludes(vertexShader, {
+        parameters
+      }),
+      fragmentShader: resolveIncludes(fragmentShader, {
+        parameters,
+        functions
+      }),
       ...others,
       uniforms: {
         projectionMatrix: new Uniform(new Matrix4()),
