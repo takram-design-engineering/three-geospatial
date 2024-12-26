@@ -1,30 +1,29 @@
-#define RECIPROCAL_PI4 (0.07957747154594767)
+precision highp float;
+precision highp sampler3D;
+
+#include <common>
+#include <packing>
+
+#include "core/depth"
+#include "core/math"
+#include "atmosphere/parameters"
+#include "atmosphere/functions"
+#include "parameters"
+#include "clouds"
 
 uniform sampler2D depthBuffer;
-uniform vec2 resolution;
-uniform float cameraHeight;
+uniform vec3 cameraPosition;
 uniform float cameraNear;
 uniform float cameraFar;
-uniform vec3 sunDirection;
-uniform float skyIrradianceScale;
-uniform float bottomRadius; // TODO:
-uniform sampler2D blueNoiseTexture;
-uniform sampler3D spatiotemporalBlueNoiseTexture;
-uniform int frame;
-uniform float time;
+uniform float cameraHeight;
+uniform sampler3D blueNoiseTexture;
 
-// Cloud parameters
-uniform sampler3D densityTexture;
-uniform sampler3D densityDetailTexture;
-uniform sampler2D localWeatherTexture;
-uniform float coverage;
+// Scattering parameters
 uniform vec3 albedo;
-uniform vec2 localWeatherFrequency;
-uniform float shapeFrequency;
-uniform float shapeDetailFrequency;
 uniform float scatterAnisotropy1;
 uniform float scatterAnisotropy2;
 uniform float scatterAnisotropyMix;
+uniform float skyIrradianceScale;
 uniform float powderScale;
 uniform float powderExponent;
 
@@ -36,25 +35,25 @@ uniform float maxRayDistance;
 uniform float minDensity;
 uniform float minTransmittance;
 
+// Beer shadow map
+uniform sampler2D shadowBuffer;
+uniform mat4 shadowMatrix;
+
 in vec2 vUv;
-in vec3 vViewPosition;
 in vec3 vViewDirection; // Direction to the center of screen
-in vec3 vRayDirection; // Direction to the texels
-in vec3 vEllipsoidCenter;
+in vec3 vRayDirection; // Direction to the texel
 
 layout(location = 0) out vec4 outputColor;
 
-// TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
-const vec4 minLayerHeights = vec4(600.0, 4500.0, 6700.0, 0.0);
-const vec4 maxLayerHeights = vec4(1100.0, 5000.0, 8000.0, 0.0);
-const vec4 densityScales = vec4(0.3, 0.1, 0.005, 0.0);
-const vec4 densityDetailAmounts = vec4(1.0, 0.8, 0.3, 0.0);
-const vec4 localWeatherExponents = vec4(1.0, 1.0, 2.0, 1.0);
-const vec4 coverageFilterWidths = vec4(0.6, 0.3, 0.5, 0.0);
-
-// TODO: Derive from minLayerHeights and maxLayerHeights
-const float minHeight = 600.0;
-const float maxHeight = 7000.0;
+float blueNoise(const vec2 uv) {
+  return texture(
+    blueNoiseTexture,
+    vec3(
+      uv * resolution / float(STBN_TEXTURE_SIZE),
+      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
+    )
+  ).x;
+}
 
 float readDepth(const vec2 uv) {
   #if DEPTH_PACKING == 3201
@@ -72,172 +71,21 @@ float getViewZ(const float depth) {
   #endif
 }
 
-float raySphereFirstIntersection(
-  const vec3 origin,
-  const vec3 direction,
-  const vec3 center,
-  const float radius
-) {
-  vec3 a = origin - center;
-  float b = 2.0 * dot(direction, a);
-  float c = dot(a, a) - radius * radius;
-  float discriminant = b * b - 4.0 * c;
-  return discriminant < 0.0
-    ? -1.0
-    : (-b - sqrt(discriminant)) * 0.5;
-}
-
-float raySphereSecondIntersection(
-  const vec3 origin,
-  const vec3 direction,
-  const vec3 center,
-  const float radius
-) {
-  vec3 a = origin - center;
-  float b = 2.0 * dot(direction, a);
-  float c = dot(a, a) - radius * radius;
-  float discriminant = b * b - 4.0 * c;
-  return discriminant < 0.0
-    ? -1.0
-    : (-b + sqrt(discriminant)) * 0.5;
-}
-
-void raySphereIntersections(
-  const vec3 origin,
-  const vec3 direction,
-  const vec3 center,
-  const float radius,
-  out float intersection1,
-  out float intersection2
-) {
-  vec3 a = origin - center;
-  float b = 2.0 * dot(direction, a);
-  float c = dot(a, a) - radius * radius;
-  float discriminant = b * b - 4.0 * c;
-  if (discriminant < 0.0) {
-    intersection1 = -1.0;
-    intersection2 = -1.0;
-    return;
-  } else {
-    float Q = sqrt(discriminant);
-    intersection1 = (-b - Q) * 0.5;
-    intersection2 = (-b + Q) * 0.5;
+vec3 getShadow(vec3 position) {
+  vec4 point = shadowMatrix * vec4(position + ellipsoidCenter, 1.0);
+  point /= point.w;
+  vec2 uv = point.xy * 0.5 + 0.5;
+  if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+    // x: frontDepth, y: meanExtinction, z: maxOpticalDepth
+    return texture(shadowBuffer, uv).xyz;
   }
-}
-
-float random(const vec2 uv) {
-  return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
-float blueNoise(const vec2 uv) {
-  return texture(
-    spatiotemporalBlueNoiseTexture,
-    vec3(
-      uv * resolution / float(STBN_TEXTURE_SIZE),
-      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
-    )
-  ).x;
-}
-
-const mat4 bayerMatrix =
-  mat4(
-     0.0,  8.0,  2.0, 10.0,
-    12.0,  4.0, 14.0,  6.0,
-     3.0, 11.0,  1.0,  9.0,
-    15.0,  7.0, 13.0,  5.0
-  ) /
-  16.0;
-
-float bayer(const vec2 uv) {
-  ivec2 xy = ivec2(uv * resolution) % 4;
-  return bayerMatrix[xy.y][xy.x];
-}
-
-vec2 getGlobeUv(const vec3 position) {
-  vec2 st = normalize(position.yx);
-  float phi = atan(st.x, st.y);
-  float theta = asin(normalize(position).z);
-  return vec2(phi * RECIPROCAL_PI2 + 0.5, theta * RECIPROCAL_PI + 0.5);
-}
-
-float getMipLevel(const vec2 uv) {
-  vec2 coord = uv * resolution;
-  vec2 ddx = dFdx(coord);
-  vec2 ddy = dFdy(coord);
-  return max(0.0, 0.5 * log2(max(dot(ddx, ddx), dot(ddy, ddy))));
-}
-
-struct WeatherSample {
-  vec4 heightFraction; // Normalized height of each layer
-  vec4 density;
-};
-
-vec4 shapeAlteringFunction(const vec4 heightFraction, const float bias) {
-  // Apply a semi-circle transform to round the clouds towards the top.
-  vec4 biased = pow(heightFraction, vec4(bias));
-  vec4 x = clamp(biased * 2.0 - 1.0, -1.0, 1.0);
-  return 1.0 - x * x;
-}
-
-WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLevel) {
-  WeatherSample weather;
-  weather.heightFraction = saturate(
-    remap(vec4(height), minLayerHeights, maxLayerHeights, vec4(0.0), vec4(1.0))
-  );
-
-  vec4 weatherMap = pow(
-    textureLod(localWeatherTexture, uv * localWeatherFrequency, mipLevel),
-    localWeatherExponents
-  );
-  vec4 heightScale = shapeAlteringFunction(weather.heightFraction, 0.4);
-
-  // Modulation to control weather by coverage parameter.
-  // Reference: https://github.com/Prograda/Skybolt/blob/master/Assets/Core/Shaders/Clouds.h#L63
-  vec4 factor = 1.0 - coverage * heightScale;
-  weather.density = saturate(
-    remap(
-      mix(weatherMap, vec4(1.0), coverageFilterWidths),
-      factor,
-      factor + coverageFilterWidths,
-      vec4(0.0),
-      vec4(1.0)
-    )
-  );
-
-  return weather;
-}
-
-float sampleDensityDetail(WeatherSample weather, const vec3 position, const float mipLevel) {
-  vec4 density = weather.density;
-  if (mipLevel < 2.0) {
-    float shape = textureLod(densityTexture, position * shapeFrequency, 0.0).r;
-    // shape = pow(shape, 6.0) * 0.4; // Modulation for whippier shape
-    shape = 1.0 - shape; // Or invert for fluffy shape
-    density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), densityDetailAmounts);
-
-    #ifdef USE_DETAIL
-    if (mipLevel < 1.0) {
-      float detail = textureLod(densityDetailTexture, position * shapeDetailFrequency, 0.0).r;
-      // Fluffy at the top and whippy at the bottom.
-      vec4 modifier = mix(
-        vec4(pow(detail, 6.0)),
-        vec4(1.0 - detail),
-        saturate(remap(weather.heightFraction, 0.2, 0.4, 0.0, 1.0))
-      );
-      modifier = mix(vec4(0.0), modifier, densityDetailAmounts);
-      density = saturate(
-        remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0), vec4(0.0), vec4(1.0))
-      );
-    }
-    #endif
-  }
-  // Nicely decrease density at the bottom.
-  return saturate(dot(density, densityScales * weather.heightFraction));
+  return vec3(0.0);
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   vec2 g2 = g * g;
-  return RECIPROCAL_PI4 * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
+  const float reciprocalPi4 = 0.07957747154594767;
+  return reciprocalPi4 * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
 }
 
 float phaseFunction(const float cosTheta, const float attenuation) {
@@ -246,14 +94,13 @@ float phaseFunction(const float cosTheta, const float attenuation) {
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
 
-// TODO: Raymarch to light for near clouds, and implement BSM for far clouds.
-float marchToLight(const vec3 rayOrigin, const vec3 sunDirection, const float mipLevel) {
+float sampleOpticalDepth(const vec3 rayOrigin, const vec3 rayDirection, const float mipLevel) {
   const float stepSize = 10.0;
   float opticalDepth = 0.0;
   float stepScale = 1.0;
   float prevStepScale = 0.0;
-  for (int i = 0; i < 6; ++i) {
-    vec3 position = rayOrigin + sunDirection * stepScale * stepSize;
+  for (int i = 0; i < MAX_SECONDARY_ITERATIONS; ++i) {
+    vec3 position = rayOrigin + rayDirection * stepScale * stepSize;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
@@ -261,8 +108,6 @@ float marchToLight(const vec3 rayOrigin, const vec3 sunDirection, const float mi
     opticalDepth += density * (stepScale - prevStepScale) * stepSize;
     prevStepScale = stepScale;
     stepScale *= 2.0;
-    // For n = 4:
-    // stepScale *= 2.82842712474619; // pow(64, 1/4) to match n = 6 and s = 2
   }
   return opticalDepth;
 }
@@ -278,14 +123,13 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
     float beerLambert = exp(-opticalDepth * abc.y);
     // A similar approximation is described in the Frostbite's paper, where
     // phase angle is attenuated.
-    scattering += abc.x * beerLambert * phaseFunction(cosTheta * abc.z, abc.z);
+    scattering += abc.x * beerLambert * phaseFunction(cosTheta, abc.z);
     abc *= attenuation;
   }
   return scattering;
 }
 
-vec4 marchToCloud(
-  const vec3 viewPosition,
+vec4 marchToClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
   const float jitter,
@@ -321,6 +165,7 @@ vec4 marchToCloud(
       // Sample a detailed density.
       float density = sampleDensityDetail(weather, position, mipLevel);
       if (density > minDensity) {
+        // density *= 0.1;
         #ifdef ACCURATE_ATMOSPHERIC_IRRADIANCE
         sunIrradiance = GetSunAndSkyIrradiance(
           position * METER_TO_UNIT_LENGTH,
@@ -329,9 +174,33 @@ vec4 marchToCloud(
         );
         #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
-        float opticalDepth = marchToLight(position, sunDirection, mipLevel);
+        // Distance to the top of the bottom layer along the sun direction.
+        // This matches the ray origin of BSM.
+        float distanceToTop = raySphereSecondIntersection(
+          position + ellipsoidCenter,
+          sunDirection,
+          ellipsoidCenter,
+          bottomRadius + maxLayerHeights.x
+        );
+
+        // Obtain the optical depth at the position from BSM.
+        vec3 shadow = getShadow(position);
+        float frontDepth = shadow.x;
+        float meanExtinction = shadow.y;
+        float maxOpticalDepth = shadow.z;
+        float shadowOpticalDepth = min(
+          maxOpticalDepth,
+          meanExtinction * max(0.0, distanceToTop - frontDepth)
+        );
+
+        float sunOpticalDepth = sampleOpticalDepth(position, sunDirection, mipLevel);
+        float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
         float scattering = multipleScattering(opticalDepth, cosTheta);
         vec3 radiance = (sunIrradiance * scattering + skyIrradiance * skyIrradianceScale) * density;
+
+        // Fudge factor for the irradiance from ground.
+        float groundOpticalDepth = sampleOpticalDepth(position, -normalize(position), mipLevel);
+        radiance += radiance * exp(-groundOpticalDepth - (height - minHeight) * 0.01);
 
         #ifdef USE_POWDER
         radiance *= 1.0 - powderScale * exp(-density * powderExponent);
@@ -386,31 +255,25 @@ void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 colo
   color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
 }
 
-void main() {
-  vec3 rayDirection = normalize(vRayDirection);
-  float jitter = blueNoise(vUv);
+void getRayNearFar(const vec3 rayDirection, out float rayNear, out float rayFar) {
+  bool intersectsGround =
+    raySphereFirstIntersection(cameraPosition, rayDirection, ellipsoidCenter, bottomRadius) >= 0.0;
 
-  float r = length(vViewPosition - vEllipsoidCenter) * METER_TO_UNIT_LENGTH;
-  float mu = dot(vViewPosition * METER_TO_UNIT_LENGTH, rayDirection) / r;
-  bool intersectsGround = RayIntersectsGround(r, mu);
-
-  // TODO: Calculate by r and mu parametrization.
-  float rayNear;
-  float rayFar;
   if (cameraHeight < minHeight) {
     if (intersectsGround) {
-      discard;
+      rayNear = -1.0;
+      return;
     }
     rayNear = raySphereSecondIntersection(
-      vViewPosition,
+      cameraPosition,
       rayDirection,
-      vEllipsoidCenter,
+      ellipsoidCenter,
       bottomRadius + minHeight
     );
     rayFar = raySphereSecondIntersection(
-      vViewPosition,
+      cameraPosition,
       rayDirection,
-      vEllipsoidCenter,
+      ellipsoidCenter,
       bottomRadius + maxHeight
     );
     rayFar = min(rayFar, maxRayDistance);
@@ -418,16 +281,16 @@ void main() {
     rayNear = 0.0;
     if (intersectsGround) {
       rayFar = raySphereFirstIntersection(
-        vViewPosition,
+        cameraPosition,
         rayDirection,
-        vEllipsoidCenter,
+        ellipsoidCenter,
         bottomRadius + minHeight
       );
     } else {
       rayFar = raySphereSecondIntersection(
-        vViewPosition,
+        cameraPosition,
         rayDirection,
-        vEllipsoidCenter,
+        ellipsoidCenter,
         bottomRadius + maxHeight
       );
     }
@@ -435,9 +298,9 @@ void main() {
     float intersection1;
     float intersection2;
     raySphereIntersections(
-      vViewPosition,
+      cameraPosition,
       rayDirection,
-      vEllipsoidCenter,
+      ellipsoidCenter,
       bottomRadius + maxHeight,
       intersection1,
       intersection2
@@ -445,15 +308,22 @@ void main() {
     rayNear = intersection1;
     if (intersectsGround) {
       rayFar = raySphereFirstIntersection(
-        vViewPosition,
+        cameraPosition,
         rayDirection,
-        vEllipsoidCenter,
+        ellipsoidCenter,
         bottomRadius + minHeight
       );
     } else {
       rayFar = intersection2;
     }
   }
+}
+
+void main() {
+  vec3 rayDirection = normalize(vRayDirection);
+  float rayNear;
+  float rayFar;
+  getRayNearFar(rayDirection, rayNear, rayFar);
   if (rayNear < 0.0) {
     discard;
   }
@@ -467,8 +337,8 @@ void main() {
     rayFar = min(rayFar, rayDistance);
   }
 
-  vec3 camera = vViewPosition - vEllipsoidCenter;
-  vec3 rayOrigin = camera + rayNear * rayDirection;
+  vec3 viewPosition = cameraPosition - ellipsoidCenter;
+  vec3 rayOrigin = viewPosition + rayNear * rayDirection;
 
   vec2 globeUv = getGlobeUv(rayOrigin);
   float mipLevel = getMipLevel(globeUv * localWeatherFrequency);
@@ -485,9 +355,9 @@ void main() {
   );
   #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
+  float jitter = blueNoise(vUv);
   float weightedMeanDepth;
-  vec4 color = marchToCloud(
-    camera,
+  vec4 color = marchToClouds(
     rayOrigin,
     rayDirection,
     jitter,
@@ -501,8 +371,8 @@ void main() {
 
   if (weightedMeanDepth > 0.0) {
     weightedMeanDepth += rayNear;
-    vec3 point = camera + weightedMeanDepth * rayDirection;
-    applyAerialPerspective(camera, point, color);
+    vec3 frontPosition = viewPosition + weightedMeanDepth * rayDirection;
+    applyAerialPerspective(viewPosition, frontPosition, color);
   }
 
   outputColor = color;

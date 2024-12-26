@@ -33,7 +33,7 @@ float blueNoise(const vec2 uv) {
   ).x;
 }
 
-vec3 marchToCloud(
+vec3 marchToClouds(
   const vec3 viewPosition,
   const vec3 rayOrigin,
   const vec3 rayDirection,
@@ -140,5 +140,5 @@ void main() {
   vec3 camera = vViewPosition - ellipsoidCenter;
   vec3 rayOrigin = camera + rayNear * rayDirection;
   // float jitter = blueNoise(vUv);
-  outputColor = marchToCloud(camera, rayOrigin, rayDirection, 0.0, rayFar - rayNear);
+  outputColor = marchToClouds(camera, rayOrigin, rayDirection, 0.0, rayFar - rayNear);
 }
