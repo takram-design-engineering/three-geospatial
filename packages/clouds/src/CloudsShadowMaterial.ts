@@ -7,7 +7,6 @@ import {
   Uniform,
   Vector2,
   Vector3,
-  Vector4,
   type Camera,
   type Texture
 } from 'three'
@@ -21,6 +20,8 @@ import { depth, math } from '@takram/three-geospatial/shaders'
 
 import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
 import {
+  createCloudLayerUniforms,
+  createCloudParameterUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
@@ -109,29 +110,13 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         time: new Uniform(0),
         blueNoiseTexture: new Uniform(null),
 
+        ...createCloudParameterUniforms(),
+        ...createCloudLayerUniforms(),
+
         // Atmospheric parameters
         bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
         ellipsoidCenter: new Uniform(new Vector3()),
         sunDirection: new Uniform(new Vector3()),
-
-        // Cloud parameters
-        shapeTexture: new Uniform(null),
-        shapeFrequency: new Uniform(0.0003),
-        shapeDetailTexture: new Uniform(null),
-        shapeDetailFrequency: new Uniform(0.007),
-        localWeatherTexture: new Uniform(null),
-        localWeatherFrequency: new Uniform(new Vector2(300, 150)),
-        coverage: new Uniform(0.3),
-
-        // Cloud layer parameters
-        minLayerHeights: new Uniform(new Vector4()),
-        maxLayerHeights: new Uniform(new Vector4()),
-        extinctionCoeffs: new Uniform(new Vector4()),
-        detailAmounts: new Uniform(new Vector4()),
-        weatherExponents: new Uniform(new Vector4()),
-        coverageFilterWidths: new Uniform(new Vector4()),
-        minHeight: new Uniform(0),
-        maxHeight: new Uniform(0),
 
         // Raymarch to clouds
         maxIterations: new Uniform(500),

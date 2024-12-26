@@ -1,4 +1,27 @@
-import { type Texture, type Uniform, type Vector2, type Vector4 } from 'three'
+import { Uniform, Vector2, Vector4, type Texture } from 'three'
+
+export interface CloudParameterUniforms {
+  // Shape and weather
+  shapeTexture: Uniform<Texture | null>
+  shapeFrequency: Uniform<number>
+  shapeDetailTexture: Uniform<Texture | null>
+  shapeDetailFrequency: Uniform<number>
+  localWeatherTexture: Uniform<Texture | null>
+  localWeatherFrequency: Uniform<Vector2>
+  coverage: Uniform<number>
+}
+
+export function createCloudParameterUniforms(): CloudParameterUniforms {
+  return {
+    shapeTexture: new Uniform(null),
+    shapeFrequency: new Uniform(0.0003),
+    shapeDetailTexture: new Uniform(null),
+    shapeDetailFrequency: new Uniform(0.007),
+    localWeatherTexture: new Uniform(null),
+    localWeatherFrequency: new Uniform(new Vector2(300, 150)),
+    coverage: new Uniform(0.3)
+  }
+}
 
 export interface CloudLayerUniforms {
   minLayerHeights: Uniform<Vector4>
@@ -11,15 +34,17 @@ export interface CloudLayerUniforms {
   maxHeight: Uniform<number>
 }
 
-export interface CloudParameterUniforms {
-  // Shape and weather
-  shapeTexture: Uniform<Texture | null>
-  shapeFrequency: Uniform<number>
-  shapeDetailTexture: Uniform<Texture | null>
-  shapeDetailFrequency: Uniform<number>
-  localWeatherTexture: Uniform<Texture | null>
-  localWeatherFrequency: Uniform<Vector2>
-  coverage: Uniform<number>
+export function createCloudLayerUniforms(): CloudLayerUniforms {
+  return {
+    minLayerHeights: new Uniform(new Vector4()),
+    maxLayerHeights: new Uniform(new Vector4()),
+    extinctionCoeffs: new Uniform(new Vector4()),
+    detailAmounts: new Uniform(new Vector4()),
+    weatherExponents: new Uniform(new Vector4()),
+    coverageFilterWidths: new Uniform(new Vector4()),
+    minHeight: new Uniform(0),
+    maxHeight: new Uniform(0)
+  }
 }
 
 export interface CloudLayer {
