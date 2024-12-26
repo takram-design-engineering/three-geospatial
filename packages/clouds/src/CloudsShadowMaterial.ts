@@ -119,10 +119,9 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         sunDirection: new Uniform(new Vector3()),
 
         // Raymarch to clouds
-        maxIterations: new Uniform(500),
-        initialStepSize: new Uniform(500),
-        maxStepSize: new Uniform(5000),
-        maxRayDistance: new Uniform(4000),
+        maxIterations: new Uniform(100),
+        initialStepSize: new Uniform(200),
+        maxStepSize: new Uniform(1000),
         minDensity: new Uniform(1e-5),
         minTransmittance: new Uniform(1e-2)
       } satisfies CloudsShadowMaterialUniforms,

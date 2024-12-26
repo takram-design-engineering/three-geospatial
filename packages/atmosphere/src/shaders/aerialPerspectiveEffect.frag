@@ -97,11 +97,11 @@ void getTransmittanceInscatter(
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
 float getShadow(vec3 worldPosition) {
-  vec4 pos = shadowMatrix * vec4(worldPosition, 1.0);
-  pos /= pos.w;
-  vec2 uv = pos.xy * 0.5 + 0.5;
+  vec4 point = shadowMatrix * vec4(worldPosition, 1.0);
+  point /= point.w;
+  vec2 uv = point.xy * 0.5 + 0.5;
   if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-    // x: frontDepth, y: meanExtinction, z: opticalDepth
+    // x: frontDepth, y: meanExtinction, z: maxOpticalDepth
     return texture(shadowBuffer, uv).z;
   }
   return 0.0;

@@ -1,25 +1,25 @@
 import { Uniform, Vector2, Vector4, type Texture } from 'three'
 
 export interface CloudParameterUniforms {
-  // Shape and weather
+  // Weather and shape
+  localWeatherTexture: Uniform<Texture | null>
+  localWeatherFrequency: Uniform<Vector2>
+  coverage: Uniform<number>
   shapeTexture: Uniform<Texture | null>
   shapeFrequency: Uniform<number>
   shapeDetailTexture: Uniform<Texture | null>
   shapeDetailFrequency: Uniform<number>
-  localWeatherTexture: Uniform<Texture | null>
-  localWeatherFrequency: Uniform<Vector2>
-  coverage: Uniform<number>
 }
 
 export function createCloudParameterUniforms(): CloudParameterUniforms {
   return {
+    localWeatherTexture: new Uniform(null),
+    localWeatherFrequency: new Uniform(new Vector2(300, 150)),
+    coverage: new Uniform(0.3),
     shapeTexture: new Uniform(null),
     shapeFrequency: new Uniform(0.0003),
     shapeDetailTexture: new Uniform(null),
-    shapeDetailFrequency: new Uniform(0.007),
-    localWeatherTexture: new Uniform(null),
-    localWeatherFrequency: new Uniform(new Vector2(300, 150)),
-    coverage: new Uniform(0.3)
+    shapeDetailFrequency: new Uniform(0.007)
   }
 }
 
