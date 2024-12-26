@@ -69,6 +69,8 @@ export interface AerialPerspectiveEffectOptions {
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
+  shadowBuffer?: Texture | null
+  shadowMatrix?: Matrix4
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -125,7 +127,9 @@ export class AerialPerspectiveEffect extends Effect {
       moon,
       moonDirection,
       moonAngularRadius,
-      lunarRadianceScale
+      lunarRadianceScale,
+      shadowBuffer = null,
+      shadowMatrix
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
     super(
@@ -172,7 +176,9 @@ export class AerialPerspectiveEffect extends Effect {
           ['idealSphereAlpha', new Uniform(0)],
           ['moonDirection', new Uniform(moonDirection?.clone() ?? new Vector3())],
           ['moonAngularRadius', new Uniform(moonAngularRadius)],
-          ['lunarRadianceScale', new Uniform(lunarRadianceScale)]
+          ['lunarRadianceScale', new Uniform(lunarRadianceScale)],
+          ['shadowBuffer', new Uniform(shadowBuffer)],
+          ['shadowMatrix', new Uniform(shadowMatrix?.clone() ?? new Matrix4())]
         ]),
         // prettier-ignore
         defines: new Map<string, string>([
@@ -527,5 +533,26 @@ export class AerialPerspectiveEffect extends Effect {
 
   set lunarRadianceScale(value: number) {
     this.uniforms.get('lunarRadianceScale')!.value = value
+  }
+
+  get shadowBuffer(): Texture | null {
+    return this.uniforms.get('shadowBuffer')!.value
+  }
+
+  set shadowBuffer(value: Texture | null) {
+    this.uniforms.get('shadowBuffer')!.value = value
+    const hasShadow = value != null
+    if (hasShadow !== this.defines.has('HAS_SHADOW')) {
+      if (hasShadow) {
+        this.defines.set('HAS_SHADOW', '1')
+      } else {
+        this.defines.delete('HAS_SHADOW')
+      }
+      this.setChanged()
+    }
+  }
+
+  get shadowMatrix(): Matrix4 {
+    return this.uniforms.get('shadowMatrix')!.value
   }
 }

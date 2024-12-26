@@ -16,6 +16,9 @@ uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
+uniform sampler2D shadowBuffer;
+uniform mat4 shadowMatrix;
+
 varying vec3 vWorldPosition;
 varying vec3 vWorldDirection;
 varying vec3 vEllipsoidCenter;
@@ -39,7 +42,12 @@ void correctGeometricError(inout vec3 worldPosition, inout vec3 worldNormal) {
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-vec3 getSunSkyIrradiance(const vec3 worldPosition, const vec3 worldNormal, const vec3 inputColor) {
+vec3 getSunSkyIrradiance(
+  const vec3 worldPosition,
+  const vec3 worldNormal,
+  const vec3 inputColor,
+  const float shadowTransmittance
+) {
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
   // defined, regard the inputColor as radiance at the texel.
   vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
@@ -50,6 +58,11 @@ vec3 getSunSkyIrradiance(const vec3 worldPosition, const vec3 worldNormal, const
     sunDirection,
     skyIrradiance
   );
+
+  #ifdef HAS_SHADOW
+  sunIrradiance *= shadowTransmittance;
+  #endif // HAS_SHADOW
+
   #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
   return albedo * (sunIrradiance + skyIrradiance);
   #elif defined(SUN_IRRADIANCE)
@@ -82,6 +95,17 @@ void getTransmittanceInscatter(
   #endif
 }
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
+
+float getShadow(vec3 worldPosition) {
+  vec4 pos = shadowMatrix * vec4(worldPosition, 1.0);
+  pos /= pos.w;
+  vec2 uv = pos.xy * 0.5 + 0.5;
+  if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+    // x: frontDepth, y: meanExtinction, z: opticalDepth
+    return texture(shadowBuffer, uv).z;
+  }
+  return 0.0;
+}
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
@@ -122,16 +146,24 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
-  vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
+  vec3 worldPositionMeters = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
+  vec3 worldPosition = worldPositionMeters * METER_TO_UNIT_LENGTH;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
   #ifdef CORRECT_GEOMETRIC_ERROR
   correctGeometricError(worldPosition, worldNormal);
   #endif // CORRECT_GEOMETRIC_ERROR
 
+  #ifdef HAS_SHADOW
+  float opticalDepth = getShadow(worldPositionMeters);
+  float shadowTransmittance = exp(-opticalDepth);
+  #else
+  float shadowTransmittance = 1.0;
+  #endif // HAS_SHADOW
+
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  radiance = getSunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb);
+  radiance = getSunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb, shadowTransmittance);
   #else
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)

@@ -25,7 +25,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
 >(function AerialPerspective(props, forwardedRef) {
-  const { textures, transientProps, ...contextProps } =
+  const { textures, transientProps, shadowBuffer, ...contextProps } =
     useContext(AtmosphereContext)
 
   const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
@@ -60,6 +60,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     if (transientProps != null) {
       effect.sunDirection.copy(transientProps.sunDirection)
       effect.moonDirection.copy(transientProps.moonDirection)
+      effect.shadowMatrix.copy(transientProps.shadowMatrix)
     }
   })
 
@@ -69,6 +70,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       object={effect}
       mainCamera={camera}
       normalBuffer={geometryTexture ?? normalPass?.texture ?? null}
+      shadowBuffer={shadowBuffer}
       {...atmosphereParameters}
       {...others}
       octEncodedNormal={geometryTexture != null}

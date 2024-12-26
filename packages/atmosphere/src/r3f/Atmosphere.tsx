@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode
 } from 'react'
-import { Matrix4, Vector3 } from 'three'
+import { Matrix4, Vector3, type Texture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -27,6 +27,7 @@ export interface AtmosphereTransientProps {
   sunDirection: Vector3
   moonDirection: Vector3
   rotationMatrix: Matrix4
+  shadowMatrix: Matrix4
 }
 
 export interface AtmosphereContextValue {
@@ -36,6 +37,8 @@ export interface AtmosphereContextValue {
   correctAltitude?: boolean
   photometric?: boolean
   transientProps?: AtmosphereTransientProps
+  shadowBuffer?: Texture | null
+  setShadowBuffer?: (value: Texture | null) => void
 }
 
 export const AtmosphereContext = createContext<AtmosphereContextValue>({})
@@ -73,7 +76,8 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
   const transientPropsRef = useRef({
     sunDirection: new Vector3(),
     moonDirection: new Vector3(),
-    rotationMatrix: new Matrix4()
+    rotationMatrix: new Matrix4(),
+    shadowMatrix: new Matrix4()
   })
 
   const gl = useThree(({ gl }) => gl)
@@ -101,6 +105,8 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     }
   }, [texturesProp, useHalfFloat])
 
+  const [shadowBuffer, setShadowBuffer] = useState<Texture | null>(null)
+
   const context = useMemo(
     () => ({
       textures,
@@ -108,9 +114,19 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       ellipsoid,
       correctAltitude,
       photometric,
-      transientProps: transientPropsRef.current
+      transientProps: transientPropsRef.current,
+      shadowBuffer,
+      setShadowBuffer
     }),
-    [textures, useHalfFloat, ellipsoid, correctAltitude, photometric]
+    [
+      textures,
+      useHalfFloat,
+      ellipsoid,
+      correctAltitude,
+      photometric,
+      shadowBuffer,
+      setShadowBuffer
+    ]
   )
 
   const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {
