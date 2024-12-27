@@ -16,7 +16,11 @@ import {
   correctAtmosphereAltitude
 } from '@takram/three-atmosphere'
 import { Ellipsoid, resolveIncludes } from '@takram/three-geospatial'
-import { depth, math } from '@takram/three-geospatial/shaders'
+import {
+  depth,
+  math,
+  raySphereIntersection
+} from '@takram/three-geospatial/shaders'
 
 import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
 import {
@@ -98,7 +102,8 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
       fragmentShader: resolveIncludes(fragmentShader, {
         core: {
           depth,
-          math
+          math,
+          raySphereIntersection
         },
         parameters,
         clouds

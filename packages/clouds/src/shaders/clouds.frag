@@ -6,6 +6,7 @@ precision highp sampler3D;
 
 #include "core/depth"
 #include "core/math"
+#include "core/raySphereIntersection"
 #include "atmosphere/parameters"
 #include "atmosphere/functions"
 #include "parameters"

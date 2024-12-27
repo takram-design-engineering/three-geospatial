@@ -30,7 +30,11 @@ import {
   functions
 } from '@takram/three-atmosphere/shaders'
 import { assertType, Geodetic, resolveIncludes } from '@takram/three-geospatial'
-import { depth, math } from '@takram/three-geospatial/shaders'
+import {
+  depth,
+  math,
+  raySphereIntersection
+} from '@takram/three-geospatial/shaders'
 
 import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
 import {
@@ -124,7 +128,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         fragmentShader: resolveIncludes(fragmentShader, {
           core: {
             depth,
-            math
+            math,
+            raySphereIntersection
           },
           atmosphere: {
             parameters: atmosphereParameters,
