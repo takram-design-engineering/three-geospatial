@@ -124,21 +124,9 @@ const Scene: FC<SceneProps> = ({
       correctAltitude: true,
       correctGeometricError: true,
       photometric: true
-    }
+    },
+    { collapsed: true }
   )
-  const {
-    enable: enabled,
-    sun,
-    sky,
-    transmittance,
-    inscatter
-  } = useControls('aerial perspective', {
-    enable: true,
-    sun: true,
-    sky: true,
-    transmittance: true,
-    inscatter: true
-  })
 
   const { coverage, useDetail } = useControls('clouds', {
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
@@ -215,11 +203,6 @@ const Scene: FC<SceneProps> = ({
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
           key={JSON.stringify({
-            enabled,
-            sun,
-            sky,
-            transmittance,
-            inscatter,
             correctGeometricError,
             lensFlare,
             normal,
@@ -227,22 +210,22 @@ const Scene: FC<SceneProps> = ({
             lut
           })}
         >
-          {enabled && !normal && !depth && (
-            <AerialPerspective
-              sunIrradiance={sun}
-              skyIrradiance={sky}
-              transmittance={transmittance}
-              inscatter={inscatter}
-              correctGeometricError={correctGeometricError}
-              irradianceScale={2 / Math.PI}
-            />
+          {!normal && !depth && (
+            <>
+              <AerialPerspective
+                sunIrradiance
+                skyIrradiance
+                correctGeometricError={correctGeometricError}
+                irradianceScale={2 / Math.PI}
+              />
+              <Clouds
+                ref={cloudsRef}
+                localWeatherTexture={localWeatherTexture}
+                blueNoiseTexture={blueNoiseTexture}
+                coverage={coverage}
+              />
+            </>
           )}
-          <Clouds
-            ref={cloudsRef}
-            localWeatherTexture={localWeatherTexture}
-            blueNoiseTexture={blueNoiseTexture}
-            coverage={coverage}
-          />
           {lensFlare && <LensFlare />}
           {depth && <Depth useTurbo />}
           {normal && <Normal />}

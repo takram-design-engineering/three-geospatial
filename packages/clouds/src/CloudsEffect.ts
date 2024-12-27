@@ -14,7 +14,6 @@ import {
   Clock,
   HalfFloatType,
   Matrix4,
-  RGBFormat,
   Uniform,
   Vector3,
   WebGLRenderTarget,
