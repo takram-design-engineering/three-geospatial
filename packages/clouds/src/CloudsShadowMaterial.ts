@@ -43,6 +43,7 @@ export interface CloudsShadowMaterialParameters {
   depthBuffer?: Texture | null
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
+  sunDirectionRef?: Vector3
 }
 
 export const cloudsShadowMaterialParametersDefaults = {
@@ -84,7 +85,8 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
     const {
       depthBuffer = null,
       ellipsoid,
-      correctAltitude
+      correctAltitude,
+      sunDirectionRef
     } = {
       ...cloudsShadowMaterialParametersDefaults,
       ...params
@@ -116,7 +118,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         // Atmospheric parameters
         bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
         ellipsoidCenter: new Uniform(new Vector3()),
-        sunDirection: new Uniform(new Vector3()),
+        sunDirection: new Uniform(sunDirectionRef ?? new Vector3()),
 
         // Raymarch to clouds
         maxIterations: new Uniform(100),

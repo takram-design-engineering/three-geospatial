@@ -60,9 +60,6 @@ export const cloudsEffectOptionsDefaults = {
 } satisfies CloudsEffectOptions
 
 export class CloudsEffect extends Effect {
-  readonly cloudShape: CloudShape
-  readonly cloudShapeDetail: CloudShapeDetail
-
   // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
   readonly cloudLayers: CloudLayers = [
     {
@@ -99,7 +96,11 @@ export class CloudsEffect extends Effect {
     }
   ]
 
-  readonly resolution: Resolution
+  readonly sunDirection: Vector3
+  readonly shadowMatrix = new Matrix4()
+
+  readonly cloudShape: CloudShape
+  readonly cloudShapeDetail: CloudShapeDetail
   readonly cloudsRenderTarget: WebGLRenderTarget
   readonly cloudsMaterial: CloudsMaterial
   readonly cloudsPass: ShaderPass
@@ -107,8 +108,7 @@ export class CloudsEffect extends Effect {
   readonly shadowMaterial: CloudsShadowMaterial
   readonly shadowPass: ShaderPass
   readonly blurPass: KawaseBlurPass
-
-  readonly shadowMatrix = new Matrix4()
+  readonly resolution: Resolution
 
   private frame = 0
   private readonly clock = new Clock()
@@ -153,25 +153,32 @@ export class CloudsEffect extends Effect {
     )
     shadowRenderTarget.texture.name = 'Clouds.Shadow'
 
-    const cloudsMaterial = new CloudsMaterial({}, atmosphere)
-    const cloudsPass = new ShaderPass(cloudsMaterial)
+    // This instance is shared between clouds and shadow materials.
+    const sunDirection = new Vector3()
 
-    const shadowMaterial = new CloudsShadowMaterial({}, atmosphere)
-    shadowMaterial.setSize(shadowMapSize, shadowMapSize)
-    const shadowPass = new ShaderPass(shadowMaterial)
-
-    const blurPass = new KawaseBlurPass({
-      kernelSize: KernelSize.SMALL
-    })
-
+    const cloudsMaterial = new CloudsMaterial(
+      { sunDirectionRef: sunDirection },
+      atmosphere
+    )
     const cloudsUniforms = cloudsMaterial.uniforms
     cloudsUniforms.shapeTexture.value = cloudShape.texture
     cloudsUniforms.shapeDetailTexture.value = cloudShapeDetail.texture
     cloudsUniforms.shadowBuffer.value = shadowRenderTarget.texture
 
+    const shadowMaterial = new CloudsShadowMaterial(
+      { sunDirectionRef: sunDirection },
+      atmosphere
+    )
+    shadowMaterial.setSize(shadowMapSize, shadowMapSize)
     const shadowUniforms = shadowMaterial.uniforms
     shadowUniforms.shapeTexture.value = cloudShape.texture
     shadowUniforms.shapeDetailTexture.value = cloudShapeDetail.texture
+
+    const cloudsPass = new ShaderPass(cloudsMaterial)
+    const shadowPass = new ShaderPass(shadowMaterial)
+    const blurPass = new KawaseBlurPass({
+      kernelSize: KernelSize.SMALL
+    })
 
     super('CloudsEffect', fragmentShader, {
       blendFunction,
@@ -181,6 +188,7 @@ export class CloudsEffect extends Effect {
       ])
     })
 
+    this.sunDirection = sunDirection
     this.cloudShape = cloudShape
     this.cloudShapeDetail = cloudShapeDetail
     this.cloudsRenderTarget = cloudsRenderTarget
@@ -399,10 +407,6 @@ export class CloudsEffect extends Effect {
 
   set photometric(value: boolean) {
     this.cloudsMaterial.photometric = value
-  }
-
-  get sunDirection(): Vector3 {
-    return this.cloudsMaterial.sunDirection // TODO
   }
 
   get sunAngularRadius(): number {

@@ -6,6 +6,7 @@ import {
   Matrix4,
   Uniform,
   Vector2,
+  Vector3,
   type BufferGeometry,
   type Camera,
   type Group,
@@ -55,6 +56,7 @@ const geodeticScratch = /*#__PURE__*/ new Geodetic()
 export interface CloudsMaterialParameters
   extends AtmosphereMaterialBaseParameters {
   depthBuffer?: Texture | null
+  sunDirectionRef?: Vector3
 }
 
 export const cloudsMaterialParametersDefaults = {
@@ -110,7 +112,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     params?: CloudsMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
-    const { depthBuffer = null } = {
+    const { depthBuffer = null, sunDirectionRef } = {
       ...cloudsMaterialParametersDefaults,
       ...params
     }
@@ -148,6 +150,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Atmospheric parameters
           bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
+          sunDirection: new Uniform(sunDirectionRef ?? new Vector3()), // Overridden
 
           // Scattering parameters
           albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
