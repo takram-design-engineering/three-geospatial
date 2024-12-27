@@ -28,7 +28,7 @@ float blueNoise(const vec2 uv) {
     blueNoiseTexture,
     vec3(
       uv * resolution / float(STBN_TEXTURE_SIZE),
-      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
+      0.0 //float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
     )
   ).x;
 }
@@ -94,7 +94,10 @@ vec3 marchToClouds(
   // TODO: Setting 0 when no sample produces soft dark edges, maxRayDistance
   // instead produces too sharp shadow edges. Maybe do the latter and dilate it
   // before blurring.
-  float frontDepth = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : 0.0;
+  float frontDepth =
+    transmittanceSum > 0.0
+      ? weightedDistanceSum / transmittanceSum
+      : maxRayDistance;
   float meanExtinction = sampleCount > 0 ? extinctionSum / float(sampleCount) : 0.0;
   return vec3(frontDepth, meanExtinction, maxOpticalDepth);
 }
@@ -134,11 +137,10 @@ void main() {
   // TODO: Clamp the ray at the scene objects.
   // This can't afford another depth render pass, so that take projection
   // transform of the main camera and measure the position from it. It will
-  // result in incorrect shadow outside of the main view, but it's not the end
-  // of the world.
+  // result in incorrect shadow outside of the main view.
 
   vec3 camera = vViewPosition - ellipsoidCenter;
   vec3 rayOrigin = camera + rayNear * rayDirection;
-  // float jitter = blueNoise(vUv);
-  outputColor = marchToClouds(camera, rayOrigin, rayDirection, 0.0, rayFar - rayNear);
+  float jitter = blueNoise(vUv);
+  outputColor = marchToClouds(camera, rayOrigin, rayDirection, jitter, rayFar - rayNear);
 }

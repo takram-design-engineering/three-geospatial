@@ -95,7 +95,7 @@ float phaseFunction(const float cosTheta, const float attenuation) {
 }
 
 float sampleOpticalDepth(const vec3 rayOrigin, const vec3 rayDirection, const float mipLevel) {
-  const float stepSize = 10.0;
+  const float stepSize = 20.0;
   float opticalDepth = 0.0;
   float stepScale = 1.0;
   float prevStepScale = 0.0;
@@ -193,14 +193,19 @@ vec4 marchToClouds(
           meanExtinction * max(0.0, distanceToTop - frontDepth)
         );
 
-        float sunOpticalDepth = sampleOpticalDepth(position, sunDirection, mipLevel);
+        float sunOpticalDepth = 0.0;
+        if (mipLevel < 0.5) {
+          sunOpticalDepth = sampleOpticalDepth(position, sunDirection, mipLevel);
+        }
         float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
         float scattering = multipleScattering(opticalDepth, cosTheta);
         vec3 radiance = (sunIrradiance * scattering + skyIrradiance * skyIrradianceScale) * density;
 
         // Fudge factor for the irradiance from ground.
-        float groundOpticalDepth = sampleOpticalDepth(position, -normalize(position), mipLevel);
-        radiance += radiance * exp(-groundOpticalDepth - (height - minHeight) * 0.01);
+        if (mipLevel < 0.5) {
+          float groundOpticalDepth = sampleOpticalDepth(position, -normalize(position), mipLevel);
+          radiance += radiance * exp(-groundOpticalDepth - (height - minHeight) * 0.01);
+        }
 
         #ifdef USE_POWDER
         radiance *= 1.0 - powderScale * exp(-density * powderExponent);

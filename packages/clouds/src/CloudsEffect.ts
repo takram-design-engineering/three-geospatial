@@ -149,9 +149,7 @@ export class CloudsEffect extends Effect {
       {
         depthBuffer: false,
         stencilBuffer: false,
-        type: HalfFloatType,
-        format: RGBFormat,
-        internalFormat: 'R11F_G11F_B10F'
+        type: HalfFloatType
       }
     )
     shadowRenderTarget.texture.name = 'Clouds.Shadow'
