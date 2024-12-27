@@ -22,8 +22,13 @@ export type CloudsProps = Node<
 
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
   function Clouds(props, forwardedRef) {
-    const { textures, transientProps, ...contextProps } =
-      useContext(AtmosphereContext)
+    const {
+      textures,
+      transientProps,
+      shadowBuffer,
+      setShadowBuffer,
+      ...contextProps
+    } = useContext(AtmosphereContext)
 
     const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
       ...cloudsEffectOptionsDefaults,
@@ -49,6 +54,22 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       effect.mainCamera = camera
       if (transientProps != null) {
         effect.sunDirection.copy(transientProps.sunDirection)
+      }
+    })
+
+    // TODO: Separate component for shadow pass and put it before aerial
+    // perspective in order to sync shadow buffer.
+
+    useEffect(() => {
+      setShadowBuffer?.(effect.shadowRenderTarget.texture)
+      return () => {
+        setShadowBuffer?.(null)
+      }
+    }, [setShadowBuffer, effect])
+
+    useFrame(() => {
+      if (transientProps != null) {
+        transientProps.shadowMatrix.copy(effect.shadowMatrix)
       }
     })
 
