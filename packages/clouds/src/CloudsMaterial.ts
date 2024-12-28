@@ -72,6 +72,7 @@ interface CloudsMaterialUniforms
     CloudParameterUniforms {
   [key: string]: Uniform<unknown>
   depthBuffer: Uniform<Texture | null>
+  viewMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>
   inverseViewMatrix: Uniform<Matrix4>
   resolution: Uniform<Vector2>
@@ -104,7 +105,9 @@ interface CloudsMaterialUniforms
 
   // Beer shadow map
   shadowBuffer: Uniform<Texture | null>
-  shadowMatrix: Uniform<Matrix4>
+  shadowMatrices: Uniform<Matrix4[]>
+  shadowCascades: Uniform<Vector2[]>
+  shadowFar: Uniform<number>
 }
 
 export interface CloudsMaterial {
@@ -140,6 +143,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         }),
         uniforms: {
           depthBuffer: new Uniform(depthBuffer),
+          viewMatrix: new Uniform(new Matrix4()),
           inverseProjectionMatrix: new Uniform(new Matrix4()),
           inverseViewMatrix: new Uniform(new Matrix4()),
           resolution: new Uniform(new Vector2()),
@@ -159,12 +163,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Scattering parameters
           albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
-          powderScale: new Uniform(1),
+          powderScale: new Uniform(0.5),
           powderExponent: new Uniform(200),
           scatterAnisotropy1: new Uniform(0.35),
           scatterAnisotropy2: new Uniform(-0.3),
           scatterAnisotropyMix: new Uniform(0.5),
-          skyIrradianceScale: new Uniform(0.15),
+          skyIrradianceScale: new Uniform(0.1),
 
           // Raymarch to clouds
           maxIterations: new Uniform(500),
@@ -176,7 +180,19 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Beer shadow map
           shadowBuffer: new Uniform(null),
-          shadowMatrix: new Uniform(new Matrix4())
+          shadowMatrices: new Uniform([
+            new Matrix4(),
+            new Matrix4(),
+            new Matrix4(),
+            new Matrix4()
+          ]),
+          shadowCascades: new Uniform([
+            new Vector2(),
+            new Vector2(),
+            new Vector2(),
+            new Vector2()
+          ]),
+          shadowFar: new Uniform(0)
         } satisfies CloudsMaterialUniforms,
         defines: {
           STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
@@ -220,8 +236,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
 
     const uniforms = this.uniforms
+    const viewMatrix = uniforms.viewMatrix
     const inverseProjectionMatrix = uniforms.inverseProjectionMatrix
     const inverseViewMatrix = uniforms.inverseViewMatrix
+    viewMatrix.value.copy(camera.matrixWorldInverse)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
 

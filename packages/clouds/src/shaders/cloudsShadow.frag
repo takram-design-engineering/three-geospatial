@@ -13,6 +13,7 @@ precision highp sampler3D;
 uniform sampler2D depthBuffer;
 uniform mat4 viewMatrix; // The main camera
 uniform mat4 inverseProjectionMatrix; // The main camera
+uniform mat4 inverseShadowMatrices[4]; // Inverse view projection of the sun
 uniform float cameraNear;
 uniform float cameraFar;
 uniform sampler3D blueNoiseTexture;
@@ -25,7 +26,6 @@ uniform float minDensity;
 uniform float minTransmittance;
 
 in vec2 vUv;
-in vec3 vSunWorldPosition;
 in mat4 vViewProjectionMatrix; // The main camera
 
 layout(location = 0) out vec4 outputColor;
@@ -180,16 +180,38 @@ void getRayNearFar(
   );
 }
 
-void main() {
+vec4 cascade(const vec2 uv, const mat4 inverseShadowMatrix) {
+  vec2 clip = uv * 2.0 - 1.0;
+  vec4 point = inverseShadowMatrix * vec4(clip.xy, -1.0, 1.0);
+  point /= point.w;
+  vec3 sunWorldPosition = point.xyz;
+
   vec3 rayDirection = normalize(-sunDirection);
   float rayNear;
   float rayFar;
-  getRayNearFar(vSunWorldPosition, rayDirection, rayNear, rayFar);
+  getRayNearFar(sunWorldPosition, rayDirection, rayNear, rayFar);
   if (rayNear < 0.0) {
     discard;
   }
 
-  vec3 rayOrigin = vSunWorldPosition + rayNear * rayDirection - ellipsoidCenter;
+  vec3 rayOrigin = sunWorldPosition - ellipsoidCenter + rayNear * rayDirection;
   float jitter = blueNoise(vUv);
-  outputColor = marchToClouds(rayOrigin, rayDirection, jitter, rayFar - rayNear);
+  return marchToClouds(rayOrigin, rayDirection, jitter, rayFar - rayNear);
+}
+
+void main() {
+  vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
+  if (vUv.x < 0.5) {
+    if (vUv.y < 0.5) {
+      outputColor = cascade(coord.xy, inverseShadowMatrices[0]);
+    } else {
+      outputColor = cascade(coord.xw, inverseShadowMatrices[1]);
+    }
+  } else {
+    if (vUv.y < 0.5) {
+      outputColor = cascade(coord.zy, inverseShadowMatrices[2]);
+    } else {
+      outputColor = cascade(coord.zw, inverseShadowMatrices[3]);
+    }
+  }
 }

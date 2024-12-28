@@ -176,10 +176,10 @@ export class CascadedShadows {
     }
   }
 
-  update(camera: PerspectiveCamera, lightDirection: Vector3): void {
+  update(camera: PerspectiveCamera, sunDirection: Vector3): void {
     const lightOrientationMatrix = matrixScratch1.lookAt(
       vectorScratch1.set(0, 0, 0),
-      lightDirection,
+      vectorScratch2.copy(sunDirection).multiplyScalar(-1),
       Object3D.DEFAULT_UP
     )
     const cameraToLightMatrix = matrixScratch2.multiplyMatrices(
@@ -218,8 +218,8 @@ export class CascadedShadows {
 
       center.applyMatrix4(lightOrientationMatrix)
       const position = vectorScratch2
-        .copy(lightDirection)
-        .multiplyScalar(-500000)
+        .copy(sunDirection)
+        .multiplyScalar(500000)
         .add(center)
       light.inverseViewMatrix
         .lookAt(center, position, Object3D.DEFAULT_UP)

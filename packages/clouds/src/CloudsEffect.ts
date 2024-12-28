@@ -21,14 +21,16 @@ import {
   type DataTexture,
   type DepthPackingStrategies,
   type Event,
+  type PerspectiveCamera,
   type Texture,
   type TextureDataType,
   type WebGLRenderer
 } from 'three'
 
 import { AtmosphereParameters } from '@takram/three-atmosphere'
-import { type Ellipsoid } from '@takram/three-geospatial'
+import { assertType, type Ellipsoid } from '@takram/three-geospatial'
 
+import { CascadedShadows } from './CascadedShadows'
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
@@ -37,8 +39,6 @@ import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
 
-const vectorScratch1 = /*#__PURE__*/ new Vector3()
-const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const matrixScratch1 = /*#__PURE__*/ new Matrix4()
 const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 
@@ -64,7 +64,7 @@ export class CloudsEffect extends Effect {
   readonly cloudLayers: CloudLayers = [
     {
       minHeight: 600,
-      maxHeight: 1600,
+      maxHeight: 1200,
       extinctionCoeff: 0.3,
       detailAmount: 1,
       weatherExponent: 1,
@@ -83,7 +83,7 @@ export class CloudsEffect extends Effect {
       maxHeight: 8000,
       extinctionCoeff: 0.005,
       detailAmount: 0.3,
-      weatherExponent: 2,
+      weatherExponent: 3,
       coverageFilterWidth: 0.5
     },
     {
@@ -97,8 +97,21 @@ export class CloudsEffect extends Effect {
   ]
 
   readonly sunDirection: Vector3
-  readonly shadowMatrix = new Matrix4()
-  readonly inverseShadowMatrix = new Matrix4()
+  readonly cascadedShadows: CascadedShadows
+
+  readonly shadowMatrices = [
+    new Matrix4(),
+    new Matrix4(),
+    new Matrix4(),
+    new Matrix4()
+  ]
+
+  readonly inverseShadowMatrices = [
+    new Matrix4(),
+    new Matrix4(),
+    new Matrix4(),
+    new Matrix4()
+  ]
 
   readonly cloudShape: CloudShape
   readonly cloudShapeDetail: CloudShapeDetail
@@ -141,8 +154,7 @@ export class CloudsEffect extends Effect {
     })
     cloudsRenderTarget.texture.name = 'Clouds.Target'
 
-    // TODO: Implement cascaded shadow map.
-    const shadowMapSize = 2048
+    const shadowMapSize = 4096 // TODO: Parametrize
     const shadowRenderTarget = new WebGLRenderTarget(
       shadowMapSize,
       shadowMapSize,
@@ -156,6 +168,10 @@ export class CloudsEffect extends Effect {
 
     // This instance is shared between clouds and shadow materials.
     const sunDirection = new Vector3()
+    const cascadedShadows = new CascadedShadows({
+      mapSize: shadowMapSize,
+      far: 1e5 // TODO: Parametrize
+    })
 
     const cloudsMaterial = new CloudsMaterial(
       { sunDirectionRef: sunDirection },
@@ -190,6 +206,7 @@ export class CloudsEffect extends Effect {
     })
 
     this.sunDirection = sunDirection
+    this.cascadedShadows = cascadedShadows
     this.cloudShape = cloudShape
     this.cloudShapeDetail = cloudShapeDetail
     this.cloudsRenderTarget = cloudsRenderTarget
@@ -239,36 +256,27 @@ export class CloudsEffect extends Effect {
   }
 
   updateShadowMatrix(): void {
-    // TODO: Implement cascaded shadow map.
-    const range = 10000
-    const projectionMatrix = matrixScratch1.makeOrthographic(
-      -range,
-      range,
-      -range,
-      range,
-      // Clip depth doesn't matter.
-      0,
-      1
-    )
-
-    const cameraPosition = this.camera.getWorldPosition(vectorScratch1)
-    const sunPosition = vectorScratch2
-      .copy(this.sunDirection)
-      .multiplyScalar(50000)
-      .add(cameraPosition)
-    const inverseViewMatrix = matrixScratch2
-      .lookAt(sunPosition, cameraPosition, Camera.DEFAULT_UP)
-      .setPosition(sunPosition)
-
-    this.shadowMatrix.copy(projectionMatrix)
-    this.inverseShadowMatrix.copy(inverseViewMatrix)
-    this.shadowMatrix.multiply(inverseViewMatrix.invert())
-    this.inverseShadowMatrix.multiply(projectionMatrix.invert())
+    assertType<PerspectiveCamera>(this.mainCamera)
+    const shadows = this.cascadedShadows
+    shadows.update(this.mainCamera, this.sunDirection)
 
     const shadowUniforms = this.shadowMaterial.uniforms
-    shadowUniforms.inverseShadowMatrix.value.copy(this.inverseShadowMatrix)
     const cloudsUniforms = this.cloudsMaterial.uniforms
-    cloudsUniforms.shadowMatrix.value.copy(this.shadowMatrix)
+    for (let i = 0; i < 4; ++i) {
+      const light = shadows.lights[i]
+      const projectionMatrix = matrixScratch1.copy(light.projectionMatrix)
+      const inverseViewMatrix = matrixScratch2.copy(light.inverseViewMatrix)
+      const shadowMatrix = this.shadowMatrices[i]
+      const inverseShadowMatrix = this.inverseShadowMatrices[i]
+      shadowMatrix.copy(projectionMatrix)
+      inverseShadowMatrix.copy(inverseViewMatrix)
+      shadowMatrix.multiply(inverseViewMatrix.invert())
+      inverseShadowMatrix.multiply(projectionMatrix.invert())
+      cloudsUniforms.shadowMatrices.value[i].copy(shadowMatrix)
+      shadowUniforms.inverseShadowMatrices.value[i].copy(inverseShadowMatrix)
+      cloudsUniforms.shadowCascades.value[i].copy(shadows.cascades[i])
+    }
+    cloudsUniforms.shadowFar.value = this.cascadedShadows.far
   }
 
   override update(

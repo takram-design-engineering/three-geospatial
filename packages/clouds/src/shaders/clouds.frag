@@ -13,6 +13,7 @@ precision highp sampler3D;
 #include "clouds"
 
 uniform sampler2D depthBuffer;
+uniform mat4 viewMatrix;
 uniform vec3 cameraPosition;
 uniform float cameraNear;
 uniform float cameraFar;
@@ -38,7 +39,9 @@ uniform float minTransmittance;
 
 // Beer shadow map
 uniform sampler2D shadowBuffer;
-uniform mat4 shadowMatrix;
+uniform mat4 shadowMatrices[4];
+uniform vec2 shadowCascades[4];
+uniform float shadowFar;
 
 in vec2 vUv;
 in vec3 vViewDirection; // Direction to the center of screen
@@ -72,12 +75,36 @@ float getViewZ(const float depth) {
   #endif
 }
 
-vec3 getShadow(vec3 position) {
-  vec4 point = shadowMatrix * vec4(position + ellipsoidCenter, 1.0);
+int getCascadeIndex(vec3 position) {
+  vec4 viewPosition = viewMatrix * vec4(position, 1.0);
+  float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
+  for (int i = 0; i < 4; ++i) {
+    vec2 cascade = shadowCascades[i];
+    if (depth >= cascade.x && depth < cascade.y) {
+      return i;
+    }
+  }
+  return 3;
+}
+
+vec3 getShadow(vec3 rayPosition) {
+  vec3 position = rayPosition + ellipsoidCenter;
+  int index = getCascadeIndex(position);
+  vec4 point = shadowMatrices[index] * vec4(position, 1.0);
   point /= point.w;
   vec2 uv = point.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(0.0);
+  }
+  vec4 coord = vec4(uv, uv + 1.0) * 0.5;
+  if (index == 0) {
+    uv = coord.xy;
+  } else if (index == 1) {
+    uv = coord.xw;
+  } else if (index == 2) {
+    uv = coord.zy;
+  } else {
+    uv = coord.zw;
   }
   // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
   return texture(shadowBuffer, uv).xyz;

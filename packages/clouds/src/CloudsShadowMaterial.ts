@@ -69,7 +69,7 @@ interface CloudsShadowMaterialUniforms
   projectionMatrix: Uniform<Matrix4> // The main camera
   viewMatrix: Uniform<Matrix4> // The main camera
   inverseProjectionMatrix: Uniform<Matrix4> // The main camera
-  inverseShadowMatrix: Uniform<Matrix4> // Inverse view projection of the sun
+  inverseShadowMatrices: Uniform<Matrix4[]> // Inverse view projection of the sun
   resolution: Uniform<Vector2>
   frame: Uniform<number>
   time: Uniform<number>
@@ -121,7 +121,12 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         projectionMatrix: new Uniform(new Matrix4()),
         viewMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
-        inverseShadowMatrix: new Uniform(new Matrix4()),
+        inverseShadowMatrices: new Uniform([
+          new Matrix4(),
+          new Matrix4(),
+          new Matrix4(),
+          new Matrix4()
+        ]),
         resolution: new Uniform(new Vector2()),
         cameraNear: new Uniform(0),
         cameraFar: new Uniform(0),
