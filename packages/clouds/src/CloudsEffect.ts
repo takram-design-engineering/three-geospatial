@@ -34,6 +34,8 @@ import { CascadedShadows } from './CascadedShadows'
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { CloudsShadowBlurMaterial } from './CloudsShadowBlurMaterial'
 import { CloudsShadowMaterial } from './CloudsShadowMaterial'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 
@@ -196,6 +198,7 @@ export class CloudsEffect extends Effect {
     const blurPass = new KawaseBlurPass({
       kernelSize: KernelSize.SMALL
     })
+    // blurPass.blurMaterial = new CloudsShadowBlurMaterial()
 
     super('CloudsEffect', fragmentShader, {
       blendFunction,
