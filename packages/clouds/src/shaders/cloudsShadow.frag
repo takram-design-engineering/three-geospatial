@@ -10,6 +10,11 @@ precision highp sampler3D;
 #include "parameters"
 #include "clouds"
 
+uniform sampler2D depthBuffer;
+uniform mat4 viewMatrix; // The main camera
+uniform mat4 inverseProjectionMatrix; // The main camera
+uniform float cameraNear;
+uniform float cameraFar;
 uniform sampler3D blueNoiseTexture;
 
 // Raymarch to clouds
@@ -21,6 +26,7 @@ uniform float minTransmittance;
 
 in vec2 vUv;
 in vec3 vSunWorldPosition;
+in mat4 vViewProjectionMatrix; // The main camera
 
 layout(location = 0) out vec4 outputColor;
 
@@ -34,9 +40,48 @@ float blueNoise(const vec2 uv) {
   ).x;
 }
 
+float readDepth(const vec2 uv) {
+  #if DEPTH_PACKING == 3201
+  return unpackRGBAToDepth(texture(depthBuffer, uv));
+  #else
+  return texture(depthBuffer, uv).r;
+  #endif // DEPTH_PACKING == 3201
+}
+
+float getViewZ(const float depth) {
+  #ifdef PERSPECTIVE_CAMERA
+  return perspectiveDepthToViewZ(depth, cameraNear, cameraFar);
+  #else
+  return orthographicDepthToViewZ(depth, cameraNear, cameraFar);
+  #endif
+}
+
+bool intersectsSceneObjects(vec3 rayPosition) {
+  // Ray position is relative to the ellipsoid center.
+  vec3 position = rayPosition + ellipsoidCenter;
+
+  vec4 clip = vViewProjectionMatrix * vec4(position, 1.0);
+  clip /= clip.w;
+  if (clip.x < -1.0 || clip.x > 1.0 || clip.y < -1.0 || clip.y > 1.0) {
+    return false; // Ignore points of the main camera's clip space.
+  }
+  vec2 uv = clip.xy * 0.5 + 0.5;
+  float depth = readDepth(uv);
+  if (depth >= 1.0 - 1e-7) {
+    return false; // Ignore depth at an infinite distance.
+  }
+  // Finally derive the view coordinate.
+  vec4 ndc = vec4(clip.xy, depth * 2.0 - 1.0, 1.0);
+  vec4 sceneView = inverseProjectionMatrix * ndc;
+  sceneView /= sceneView.w;
+
+  // The ray is behind the scene objects when rayView.z < sceneView.z.
+  vec4 rayView = viewMatrix * vec4(position, 1.0);
+  return rayView.z < sceneView.z;
+}
+
 vec4 marchToClouds(
-  const vec3 viewPosition,
-  const vec3 rayOrigin,
+  const vec3 rayOrigin, // Relative to the ellipsoid center
   const vec3 rayDirection,
   const float jitter,
   const float maxRayDistance
@@ -56,6 +101,11 @@ vec4 marchToClouds(
       break; // Termination
     }
     vec3 position = rayOrigin + rayDirection * rayDistance;
+
+    // Terminate the ray at the scene objects.
+    if (intersectsSceneObjects(position)) {
+      break;
+    }
 
     // Sample a rough density.
     float mipLevel = 0.0; // TODO
@@ -139,13 +189,7 @@ void main() {
     discard;
   }
 
-  // TODO: Clamp the ray at the scene objects.
-  // This can't afford another depth render pass, so that take projection
-  // transform of the main camera and measure the position from it. It will
-  // result in incorrect shadow outside of the main view.
-
-  vec3 sunPosition = vSunWorldPosition - ellipsoidCenter;
-  vec3 rayOrigin = sunPosition + rayNear * rayDirection;
+  vec3 rayOrigin = vSunWorldPosition + rayNear * rayDirection - ellipsoidCenter;
   float jitter = blueNoise(vUv);
-  outputColor = marchToClouds(sunPosition, rayOrigin, rayDirection, jitter, rayFar - rayNear);
+  outputColor = marchToClouds(rayOrigin, rayDirection, jitter, rayFar - rayNear);
 }

@@ -8,6 +8,8 @@ import {
   Vector2,
   Vector3,
   type Camera,
+  type OrthographicCamera,
+  type PerspectiveCamera,
   type Texture
 } from 'three'
 
@@ -15,7 +17,11 @@ import {
   AtmosphereParameters,
   correctAtmosphereAltitude
 } from '@takram/three-atmosphere'
-import { Ellipsoid, resolveIncludes } from '@takram/three-geospatial'
+import {
+  assertType,
+  Ellipsoid,
+  resolveIncludes
+} from '@takram/three-geospatial'
 import {
   depth,
   math,
@@ -60,8 +66,10 @@ interface CloudsShadowMaterialUniforms
     CloudParameterUniforms {
   [key: string]: Uniform
   depthBuffer: Uniform<Texture | null>
-  sunInverseProjectionMatrix: Uniform<Matrix4>
-  sunInverseViewMatrix: Uniform<Matrix4>
+  projectionMatrix: Uniform<Matrix4> // The main camera
+  viewMatrix: Uniform<Matrix4> // The main camera
+  inverseProjectionMatrix: Uniform<Matrix4> // The main camera
+  inverseShadowMatrix: Uniform<Matrix4> // Inverse view projection of the sun
   resolution: Uniform<Vector2>
   frame: Uniform<number>
   time: Uniform<number>
@@ -110,9 +118,13 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
       }),
       uniforms: {
         depthBuffer: new Uniform(depthBuffer),
-        sunInverseProjectionMatrix: new Uniform(new Matrix4()),
-        sunInverseViewMatrix: new Uniform(new Matrix4()),
+        projectionMatrix: new Uniform(new Matrix4()),
+        viewMatrix: new Uniform(new Matrix4()),
+        inverseProjectionMatrix: new Uniform(new Matrix4()),
+        inverseShadowMatrix: new Uniform(new Matrix4()),
         resolution: new Uniform(new Vector2()),
+        cameraNear: new Uniform(0),
+        cameraFar: new Uniform(0),
         frame: new Uniform(0),
         time: new Uniform(0),
         blueNoiseTexture: new Uniform(null),
@@ -147,6 +159,29 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
 
   copyCameraSettings(camera: Camera): void {
     const uniforms = this.uniforms
+    if (camera.isPerspectiveCamera === true) {
+      if (this.defines.PERSPECTIVE_CAMERA !== '1') {
+        this.defines.PERSPECTIVE_CAMERA = '1'
+        this.needsUpdate = true
+      }
+    } else {
+      if (this.defines.PERSPECTIVE_CAMERA != null) {
+        delete this.defines.PERSPECTIVE_CAMERA
+        this.needsUpdate = true
+      }
+    }
+
+    const projectionMatrix = uniforms.projectionMatrix
+    const viewMatrix = uniforms.viewMatrix
+    const inverseProjectionMatrix = uniforms.inverseProjectionMatrix
+    projectionMatrix.value.copy(camera.projectionMatrix)
+    viewMatrix.value.copy(camera.matrixWorldInverse)
+    inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
+
+    assertType<PerspectiveCamera | OrthographicCamera>(camera)
+    uniforms.cameraNear.value = camera.near
+    uniforms.cameraFar.value = camera.far
+
     const position = camera.getWorldPosition(vectorScratch)
     correctAtmosphereAltitude(
       this,

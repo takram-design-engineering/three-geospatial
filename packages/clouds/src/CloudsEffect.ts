@@ -98,6 +98,7 @@ export class CloudsEffect extends Effect {
 
   readonly sunDirection: Vector3
   readonly shadowMatrix = new Matrix4()
+  readonly inverseShadowMatrix = new Matrix4()
 
   readonly cloudShape: CloudShape
   readonly cloudShapeDetail: CloudShapeDetail
@@ -259,17 +260,14 @@ export class CloudsEffect extends Effect {
       .lookAt(sunPosition, cameraPosition, Camera.DEFAULT_UP)
       .setPosition(sunPosition)
 
-    const shadowUniforms = this.shadowMaterial.uniforms
-    shadowUniforms.sunInverseProjectionMatrix.value
-      .copy(projectionMatrix)
-      .invert()
-    shadowUniforms.sunInverseViewMatrix.value.copy(inverseViewMatrix)
+    this.shadowMatrix.copy(projectionMatrix)
+    this.inverseShadowMatrix.copy(inverseViewMatrix)
+    this.shadowMatrix.multiply(inverseViewMatrix.invert())
+    this.inverseShadowMatrix.multiply(projectionMatrix.invert())
 
+    const shadowUniforms = this.shadowMaterial.uniforms
+    shadowUniforms.inverseShadowMatrix.value.copy(this.inverseShadowMatrix)
     const cloudsUniforms = this.cloudsMaterial.uniforms
-    this.shadowMatrix.multiplyMatrices(
-      projectionMatrix,
-      inverseViewMatrix.invert()
-    )
     cloudsUniforms.shadowMatrix.value.copy(this.shadowMatrix)
   }
 
