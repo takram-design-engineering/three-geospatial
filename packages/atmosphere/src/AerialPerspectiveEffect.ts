@@ -20,7 +20,12 @@ import {
   resolveIncludes,
   saturate
 } from '@takram/three-geospatial'
-import { depth, packing, transform } from '@takram/three-geospatial/shaders'
+import {
+  depth,
+  packing,
+  raySphereIntersection,
+  transform
+} from '@takram/three-geospatial/shaders'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {
@@ -139,7 +144,8 @@ export class AerialPerspectiveEffect extends Effect {
         core: {
           depth,
           packing,
-          transform
+          transform,
+          raySphereIntersection
         },
         parameters,
         functions,

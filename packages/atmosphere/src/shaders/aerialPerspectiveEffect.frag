@@ -1,6 +1,7 @@
 #include "core/depth"
 #include "core/packing"
 #include "core/transform"
+#include "core/raySphereIntersection"
 #include "parameters"
 #include "functions"
 
@@ -9,6 +10,7 @@ uniform sampler2D normalBuffer;
 uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
+uniform vec3 ellipsoidCenter;
 uniform vec3 sunDirection;
 uniform vec3 moonDirection;
 uniform float moonAngularRadius;
@@ -96,15 +98,15 @@ void getTransmittanceInscatter(
 }
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
-float getShadow(vec3 worldPosition) {
+vec4 getShadow(vec3 worldPosition) {
   vec4 point = shadowMatrix * vec4(worldPosition, 1.0);
   point /= point.w;
   vec2 uv = point.xy * 0.5 + 0.5;
-  if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-    // x: frontDepth, y: meanExtinction, z: maxOpticalDepth
-    return texture(shadowBuffer, uv).z;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    return vec4(0.0);
   }
-  return 0.0;
+  // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
+  return texture(shadowBuffer, uv);
 }
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
@@ -155,7 +157,18 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // CORRECT_GEOMETRIC_ERROR
 
   #ifdef HAS_SHADOW
-  float opticalDepth = getShadow(worldPositionMeters);
+  vec4 shadow = getShadow(worldPositionMeters);
+  float opticalDepth = shadow.z;
+  float distanceToCloud = shadow.w;
+  float distanceToGround = raySphereFirstIntersection(
+    worldPositionMeters,
+    -sunDirection,
+    ellipsoidCenter,
+    u_bottom_radius / METER_TO_UNIT_LENGTH
+  );
+  if (distanceToCloud < distanceToGround) {
+    opticalDepth = 0.0;
+  }
   float shadowTransmittance = exp(-opticalDepth);
   #else
   float shadowTransmittance = 1.0;
