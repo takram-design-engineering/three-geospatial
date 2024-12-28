@@ -56,21 +56,21 @@ float getViewZ(const float depth) {
   #endif
 }
 
-bool intersectsSceneObjects(vec3 rayPosition) {
+bool intersectsSceneObjects(const vec3 rayPosition) {
   // Ray position is relative to the ellipsoid center.
   vec3 position = rayPosition + ellipsoidCenter;
 
   vec4 clip = vViewProjectionMatrix * vec4(position, 1.0);
   clip /= clip.w;
   if (clip.x < -1.0 || clip.x > 1.0 || clip.y < -1.0 || clip.y > 1.0) {
-    return false; // Ignore points of the main camera's clip space.
+    return false; // Ignore outside of the main camera's clip space.
   }
   vec2 uv = clip.xy * 0.5 + 0.5;
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
     return false; // Ignore depth at an infinite distance.
   }
-  // Finally derive the view coordinate.
+  // Derive the view coordinate at the depth.
   vec4 ndc = vec4(clip.xy, depth * 2.0 - 1.0, 1.0);
   vec4 sceneView = inverseProjectionMatrix * ndc;
   sceneView /= sceneView.w;
