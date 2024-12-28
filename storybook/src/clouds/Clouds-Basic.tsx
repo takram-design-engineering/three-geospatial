@@ -1,4 +1,4 @@
-import { OrbitControls, useTexture } from '@react-three/drei'
+import { Box, OrbitControls, useTexture } from '@react-three/drei'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
@@ -15,6 +15,7 @@ import {
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import {
+  AerialPerspective,
   Atmosphere,
   Sky,
   type AtmosphereApi
@@ -28,6 +29,7 @@ import {
   type GeodeticLike
 } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
+import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 import {
   STBN_TEXTURE_DEPTH,
   STBN_TEXTURE_SIZE,
@@ -116,14 +118,21 @@ const Scene: FC = () => {
     '/clouds/stbn_scalar.bin'
   )
 
-  const { maxIterations, stepSize, maxStepSize, useDetail, usePowder } =
-    useControls('clouds', {
-      maxIterations: { value: 1000, min: 100, max: 2000 },
-      stepSize: { value: 100, min: 10, max: 200 },
-      maxStepSize: { value: 1000, min: 200, max: 2000 },
-      useDetail: true,
-      usePowder: false
-    })
+  const {
+    maxIterations,
+    stepSize,
+    maxStepSize,
+    useDetail,
+    usePowder,
+    showBox
+  } = useControls('clouds', {
+    maxIterations: { value: 1000, min: 100, max: 2000 },
+    stepSize: { value: 100, min: 10, max: 200 },
+    maxStepSize: { value: 1000, min: 200, max: 2000 },
+    useDetail: true,
+    usePowder: false,
+    showBox: false
+  })
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
 
@@ -147,6 +156,20 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={1000} />
+      {showBox && (
+        <EastNorthUpFrame
+          longitude={radians(longitude)}
+          latitude={radians(latitude)}
+        >
+          <Box
+            args={[2e3, 2e3, 2e3]}
+            position={[1e3, -2e3, 1e3]}
+            rotation={[Math.PI / 4, Math.PI / 4, 0]}
+          >
+            <meshBasicMaterial color='white' />
+          </Box>
+        </EastNorthUpFrame>
+      )}
       <Atmosphere
         ref={atmosphereRef}
         textures='atmosphere'
@@ -157,7 +180,9 @@ const Scene: FC = () => {
         <EffectComposer
           multisampling={0}
           key={clouds?.cloudsMaterial.fragmentShader}
+          enableNormalPass
         >
+          <AerialPerspective sunIrradiance skyIrradiance />
           <Clouds
             ref={setClouds}
             localWeatherTexture={localWeatherTexture}
@@ -180,6 +205,7 @@ const Story: StoryFn = () => (
       depth: false,
       stencil: false
     }}
+    camera={{ near: 10, far: 1e5 }}
   >
     <Stats />
     <Scene />
