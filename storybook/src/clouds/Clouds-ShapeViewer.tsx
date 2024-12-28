@@ -1,7 +1,7 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
-import { useEffect, type FC } from 'react'
+import { useEffect, useMemo, type FC } from 'react'
 import {
   BoxGeometry,
   Color,
@@ -11,35 +11,36 @@ import {
   Vector3
 } from 'three'
 
-import {
-  CloudShape,
-  CloudShapeDetail
-} from '@takram/three-global-clouds'
+import { CloudShape, CloudShapeDetail } from '@takram/three-global-clouds'
 
 import { useControls } from '../helpers/useControls'
 
-const density = new CloudShape()
-const densityDetail = new CloudShapeDetail()
+const shape = new CloudShape()
+const shapeDetail = new CloudShapeDetail()
+const geometry = new BoxGeometry(1, 1, 1)
 
 const Scene: FC = () => {
-  const geometry = new BoxGeometry(1, 1, 1)
-  const material = new ShaderMaterial({
-    glslVersion: GLSL3,
-    vertexShader,
-    fragmentShader,
-    uniforms: {
-      cameraPosition: new Uniform(new Vector3()),
-      shape: new Uniform(density.texture),
-      detail: new Uniform(densityDetail.texture),
-      base: new Uniform(new Color(0x808080)),
-      threshold: new Uniform(0),
-      opacity: new Uniform(0),
-      range: new Uniform(0),
-      steps: new Uniform(0),
-      frame: new Uniform(0),
-      scale: new Uniform(0)
-    }
-  })
+  const material = useMemo(
+    () =>
+      new ShaderMaterial({
+        glslVersion: GLSL3,
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          cameraPosition: new Uniform(new Vector3()),
+          shape: new Uniform(shape.texture),
+          detail: new Uniform(shapeDetail.texture),
+          base: new Uniform(new Color(0x808080)),
+          threshold: new Uniform(0),
+          opacity: new Uniform(0),
+          range: new Uniform(0),
+          steps: new Uniform(0),
+          frame: new Uniform(0),
+          scale: new Uniform(0)
+        }
+      }),
+    []
+  )
 
   const params = useControls('viewer', {
     threshold: { value: 0.5, min: 0, max: 1, step: 0.01 },
@@ -63,9 +64,19 @@ const Scene: FC = () => {
 
   const { gl } = useThree()
   useEffect(() => {
-    density.update(gl)
-    densityDetail.update(gl)
+    shape.update(gl)
+    shapeDetail.update(gl)
   }, [gl])
+
+  const { target } = useControls('target', {
+    target: {
+      options: ['shape', 'shapeDetail'] as const
+    }
+  })
+
+  useEffect(() => {
+    material.uniforms.shape.value = { shape, shapeDetail }[target].texture
+  }, [material, target])
 
   return (
     <>

@@ -10,6 +10,6 @@ export default {
 export const Basic = await import('./Clouds-Basic').then(
   module => module.default
 )
-export const VolumetricNoise = await import('./Clouds-VolumetricNoise').then(
+export const ShapeViewer = await import('./Clouds-ShapeViewer').then(
   module => module.default
 )
