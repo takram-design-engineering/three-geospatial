@@ -255,16 +255,21 @@ export class CloudsEffect extends Effect {
       .copy(this.sunDirection)
       .multiplyScalar(50000)
       .add(cameraPosition)
-    const viewMatrix = matrixScratch2
+    const inverseViewMatrix = matrixScratch2
       .lookAt(sunPosition, cameraPosition, Camera.DEFAULT_UP)
       .setPosition(sunPosition)
 
     const shadowUniforms = this.shadowMaterial.uniforms
-    shadowUniforms.inverseProjectionMatrix.value.copy(projectionMatrix).invert()
-    shadowUniforms.viewMatrix.value.copy(viewMatrix)
+    shadowUniforms.sunInverseProjectionMatrix.value
+      .copy(projectionMatrix)
+      .invert()
+    shadowUniforms.sunInverseViewMatrix.value.copy(inverseViewMatrix)
 
     const cloudsUniforms = this.cloudsMaterial.uniforms
-    this.shadowMatrix.multiplyMatrices(projectionMatrix, viewMatrix.invert())
+    this.shadowMatrix.multiplyMatrices(
+      projectionMatrix,
+      inverseViewMatrix.invert()
+    )
     cloudsUniforms.shadowMatrix.value.copy(this.shadowMatrix)
   }
 

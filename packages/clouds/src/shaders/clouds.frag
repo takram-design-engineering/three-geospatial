@@ -76,11 +76,11 @@ vec3 getShadow(vec3 position) {
   vec4 point = shadowMatrix * vec4(position + ellipsoidCenter, 1.0);
   point /= point.w;
   vec2 uv = point.xy * 0.5 + 0.5;
-  if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-    // x: frontDepth, y: meanExtinction, z: maxOpticalDepth
-    return texture(shadowBuffer, uv).xyz;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    return vec3(0.0);
   }
-  return vec3(0.0);
+  // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
+  return texture(shadowBuffer, uv).xyz;
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {

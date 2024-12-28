@@ -60,8 +60,8 @@ interface CloudsShadowMaterialUniforms
     CloudParameterUniforms {
   [key: string]: Uniform
   depthBuffer: Uniform<Texture | null>
-  inverseProjectionMatrix: Uniform<Matrix4>
-  viewMatrix: Uniform<Matrix4>
+  sunInverseProjectionMatrix: Uniform<Matrix4>
+  sunInverseViewMatrix: Uniform<Matrix4>
   resolution: Uniform<Vector2>
   frame: Uniform<number>
   time: Uniform<number>
@@ -110,8 +110,8 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
       }),
       uniforms: {
         depthBuffer: new Uniform(depthBuffer),
-        inverseProjectionMatrix: new Uniform(new Matrix4()),
-        viewMatrix: new Uniform(new Matrix4()),
+        sunInverseProjectionMatrix: new Uniform(new Matrix4()),
+        sunInverseViewMatrix: new Uniform(new Matrix4()),
         resolution: new Uniform(new Vector2()),
         frame: new Uniform(0),
         time: new Uniform(0),

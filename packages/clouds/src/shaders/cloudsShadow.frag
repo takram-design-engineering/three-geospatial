@@ -20,9 +20,9 @@ uniform float minDensity;
 uniform float minTransmittance;
 
 in vec2 vUv;
-in vec3 vViewPosition;
+in vec3 vSunWorldPosition;
 
-layout(location = 0) out vec3 outputColor;
+layout(location = 0) out vec4 outputColor;
 
 float blueNoise(const vec2 uv) {
   return texture(
@@ -34,7 +34,7 @@ float blueNoise(const vec2 uv) {
   ).x;
 }
 
-vec3 marchToClouds(
+vec4 marchToClouds(
   const vec3 viewPosition,
   const vec3 rayOrigin,
   const vec3 rayDirection,
@@ -92,15 +92,19 @@ vec3 marchToClouds(
     }
   }
 
-  // TODO: Setting 0 when no sample produces soft dark edges, maxRayDistance
-  // instead produces too sharp shadow edges. Maybe do the latter and dilate it
-  // before blurring.
-  float frontDepth =
-    transmittanceSum > 0.0
-      ? weightedDistanceSum / transmittanceSum
-      : maxRayDistance;
+  float frontDepth = maxRayDistance;
+  float distanceToEllipsoid = 0.0;
+  if (transmittanceSum > 0.0) {
+    frontDepth = weightedDistanceSum / transmittanceSum;
+    distanceToEllipsoid = raySphereFirstIntersection(
+      rayOrigin + rayDirection * frontDepth,
+      rayDirection,
+      vec3(0.0),
+      bottomRadius
+    );
+  }
   float meanExtinction = sampleCount > 0 ? extinctionSum / float(sampleCount) : 0.0;
-  return vec3(frontDepth, meanExtinction, maxOpticalDepth);
+  return vec4(frontDepth, meanExtinction, maxOpticalDepth, distanceToEllipsoid);
 }
 
 void getRayNearFar(
@@ -130,7 +134,7 @@ void main() {
   vec3 rayDirection = normalize(-sunDirection);
   float rayNear;
   float rayFar;
-  getRayNearFar(vViewPosition, rayDirection, rayNear, rayFar);
+  getRayNearFar(vSunWorldPosition, rayDirection, rayNear, rayFar);
   if (rayNear < 0.0) {
     discard;
   }
@@ -140,8 +144,8 @@ void main() {
   // transform of the main camera and measure the position from it. It will
   // result in incorrect shadow outside of the main view.
 
-  vec3 camera = vViewPosition - ellipsoidCenter;
-  vec3 rayOrigin = camera + rayNear * rayDirection;
+  vec3 sunPosition = vSunWorldPosition - ellipsoidCenter;
+  vec3 rayOrigin = sunPosition + rayNear * rayDirection;
   float jitter = blueNoise(vUv);
-  outputColor = marchToClouds(camera, rayOrigin, rayDirection, jitter, rayFar - rayNear);
+  outputColor = marchToClouds(sunPosition, rayOrigin, rayDirection, jitter, rayFar - rayNear);
 }
