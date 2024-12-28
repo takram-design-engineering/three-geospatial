@@ -52,7 +52,7 @@ export const skyMaterialParametersDefaults = {
 } satisfies SkyMaterialParameters
 
 export interface SkyMaterialUniforms {
-  [key: string]: Uniform
+  [key: string]: Uniform<unknown>
   inverseProjectionMatrix: Uniform<Matrix4>
   inverseViewMatrix: Uniform<Matrix4>
   moonDirection: Uniform<Vector3>

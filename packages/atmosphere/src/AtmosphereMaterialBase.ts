@@ -70,7 +70,7 @@ export const atmosphereMaterialParametersBaseDefaults = {
 } satisfies AtmosphereMaterialBaseParameters
 
 export interface AtmosphereMaterialBaseUniforms {
-  [key: string]: Uniform
+  [key: string]: Uniform<unknown>
   u_solar_irradiance: Uniform<Vector3>
   u_sun_angular_radius: Uniform<number>
   u_bottom_radius: Uniform<number>

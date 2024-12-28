@@ -70,7 +70,7 @@ export const cloudsMaterialParametersDefaults = {
 interface CloudsMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
-  [key: string]: Uniform
+  [key: string]: Uniform<unknown>
   depthBuffer: Uniform<Texture | null>
   inverseProjectionMatrix: Uniform<Matrix4>
   inverseViewMatrix: Uniform<Matrix4>

@@ -49,7 +49,7 @@ export const starsMaterialParametersDefaults = {
 } satisfies StarsMaterialParameters
 
 export interface StarsMaterialUniforms {
-  [key: string]: Uniform
+  [key: string]: Uniform<unknown>
   projectionMatrix: Uniform<Matrix4>
   modelViewMatrix: Uniform<Matrix4>
   viewMatrix: Uniform<Matrix4>
@@ -132,7 +132,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
   }
 
   get magnitudeRange(): Vector2 {
-    return this.uniforms.magnitudeScale.value
+    return this.uniforms.magnitudeRange.value
   }
 
   get radianceScale(): number {

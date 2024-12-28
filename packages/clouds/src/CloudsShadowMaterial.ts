@@ -64,7 +64,7 @@ export const cloudsShadowMaterialParametersDefaults = {
 interface CloudsShadowMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
-  [key: string]: Uniform
+  [key: string]: Uniform<unknown>
   depthBuffer: Uniform<Texture | null>
   projectionMatrix: Uniform<Matrix4> // The main camera
   viewMatrix: Uniform<Matrix4> // The main camera
