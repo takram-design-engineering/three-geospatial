@@ -128,9 +128,10 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
 
-  const { coverage, useDetail } = useControls('clouds', {
+  const { coverage, useDetail, usePowder } = useControls('clouds', {
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
-    useDetail: true
+    useDetail: true,
+    usePowder: false
   })
 
   const camera = useThree(({ camera }) => camera)
@@ -187,7 +188,8 @@ const Scene: FC<SceneProps> = ({
       return
     }
     clouds.cloudsMaterial.useDetail = useDetail
-  }, [useDetail])
+    clouds.cloudsMaterial.usePowder = usePowder
+  }, [useDetail, usePowder])
 
   return (
     <Atmosphere

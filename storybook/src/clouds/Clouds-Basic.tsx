@@ -205,7 +205,7 @@ const Story: StoryFn = () => (
       depth: false,
       stencil: false
     }}
-    camera={{ near: 10, far: 1e5 }}
+    camera={{ near: 1, far: 4e5 }}
   >
     <Stats />
     <Scene />
