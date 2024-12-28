@@ -8,6 +8,7 @@ import {
   Vector2,
   Vector3,
   type Camera,
+  type Data3DTexture,
   type OrthographicCamera,
   type PerspectiveCamera,
   type Texture
@@ -73,7 +74,8 @@ interface CloudsShadowMaterialUniforms
   resolution: Uniform<Vector2>
   frame: Uniform<number>
   time: Uniform<number>
-  blueNoiseTexture: Uniform<Texture | null>
+  blueNoiseTexture: Uniform<Data3DTexture | null>
+  blueNoiseVectorTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
   bottomRadius: Uniform<number> // TODO
@@ -133,6 +135,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         frame: new Uniform(0),
         time: new Uniform(0),
         blueNoiseTexture: new Uniform(null),
+        blueNoiseVectorTexture: new Uniform(null),
 
         ...createCloudParameterUniforms(),
         ...createCloudLayerUniforms(),

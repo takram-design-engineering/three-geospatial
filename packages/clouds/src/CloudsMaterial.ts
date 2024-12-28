@@ -9,6 +9,7 @@ import {
   Vector3,
   type BufferGeometry,
   type Camera,
+  type Data3DTexture,
   type Group,
   type Object3D,
   type OrthographicCamera,
@@ -81,7 +82,8 @@ interface CloudsMaterialUniforms
   cameraHeight: Uniform<number>
   frame: Uniform<number>
   time: Uniform<number>
-  blueNoiseTexture: Uniform<Texture | null>
+  blueNoiseTexture: Uniform<Data3DTexture | null>
+  blueNoiseVectorTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
   bottomRadius: Uniform<number> // TODO
@@ -153,6 +155,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           frame: new Uniform(0),
           time: new Uniform(0),
           blueNoiseTexture: new Uniform(null),
+          blueNoiseVectorTexture: new Uniform(null),
 
           ...createCloudParameterUniforms(),
           ...createCloudLayerUniforms(),

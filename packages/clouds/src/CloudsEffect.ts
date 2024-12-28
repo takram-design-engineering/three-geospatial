@@ -345,13 +345,22 @@ export class CloudsEffect extends Effect {
     this.shadowMaterial.uniforms.localWeatherTexture.value = value
   }
 
-  get blueNoiseTexture(): Texture | null {
+  get blueNoiseTexture(): Data3DTexture | null {
     return this.cloudsMaterial.uniforms.blueNoiseTexture.value
   }
 
-  set blueNoiseTexture(value: Texture | null) {
+  set blueNoiseTexture(value: Data3DTexture | null) {
     this.cloudsMaterial.uniforms.blueNoiseTexture.value = value
     this.shadowMaterial.uniforms.blueNoiseTexture.value = value
+  }
+
+  get blueNoiseVectorTexture(): Data3DTexture | null {
+    return this.cloudsMaterial.uniforms.blueNoiseVectorTexture.value
+  }
+
+  set blueNoiseVectorTexture(value: Data3DTexture | null) {
+    this.cloudsMaterial.uniforms.blueNoiseVectorTexture.value = value
+    this.shadowMaterial.uniforms.blueNoiseVectorTexture.value = value
   }
 
   get coverage(): number {
