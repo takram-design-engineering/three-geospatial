@@ -8,6 +8,7 @@
 uniform sampler2D normalBuffer;
 
 uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform vec3 ellipsoidCenter;
@@ -19,7 +20,9 @@ uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
 uniform sampler2D shadowBuffer;
-uniform mat4 shadowMatrix;
+uniform mat4 shadowMatrices[4];
+uniform vec2 shadowCascades[4];
+uniform float shadowFar;
 
 varying vec3 vWorldPosition;
 varying vec3 vWorldDirection;
@@ -98,12 +101,35 @@ void getTransmittanceInscatter(
 }
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
+int getCascadeIndex(vec3 position) {
+  vec4 viewPosition = viewMatrix * vec4(position, 1.0);
+  float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
+  for (int i = 0; i < 4; ++i) {
+    vec2 cascade = shadowCascades[i];
+    if (depth >= cascade.x && depth < cascade.y) {
+      return i;
+    }
+  }
+  return 3;
+}
+
 vec4 getShadow(vec3 worldPosition) {
-  vec4 point = shadowMatrix * vec4(worldPosition, 1.0);
+  int index = getCascadeIndex(worldPosition);
+  vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
   point /= point.w;
   vec2 uv = point.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec4(0.0);
+  }
+  vec4 coord = vec4(uv, uv + 1.0) * 0.5;
+  if (index == 0) {
+    uv = coord.xy;
+  } else if (index == 1) {
+    uv = coord.xw;
+  } else if (index == 2) {
+    uv = coord.zy;
+  } else {
+    uv = coord.zw;
   }
   // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
   return texture(shadowBuffer, uv);

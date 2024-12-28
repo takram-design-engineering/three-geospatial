@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode
 } from 'react'
-import { Matrix4, Vector3, type Texture } from 'three'
+import { Matrix4, Vector2, Vector3, type Texture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -27,7 +27,9 @@ export interface AtmosphereTransientProps {
   sunDirection: Vector3
   moonDirection: Vector3
   rotationMatrix: Matrix4
-  shadowMatrix: Matrix4
+  shadowMatrices: Matrix4[]
+  shadowCascades: Vector2[]
+  shadowFar: number
 }
 
 export interface AtmosphereContextValue {
@@ -77,7 +79,19 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     sunDirection: new Vector3(),
     moonDirection: new Vector3(),
     rotationMatrix: new Matrix4(),
-    shadowMatrix: new Matrix4()
+    shadowMatrices: [
+      new Matrix4(),
+      new Matrix4(),
+      new Matrix4(),
+      new Matrix4()
+    ],
+    shadowCascades: [
+      new Vector2(),
+      new Vector2(),
+      new Vector2(),
+      new Vector2()
+    ],
+    shadowFar: 0
   })
 
   const gl = useThree(({ gl }) => gl)

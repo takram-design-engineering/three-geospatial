@@ -69,7 +69,13 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
 
     useFrame(() => {
       if (transientProps != null) {
-        transientProps.shadowMatrix.copy(effect.shadowMatrix)
+        for (let i = 0; i < 4; ++i) {
+          transientProps.shadowMatrices[i].copy(effect.shadowMatrices[i])
+          transientProps.shadowCascades[i].copy(
+            effect.cascadedShadows.cascades[i]
+          )
+        }
+        transientProps.shadowFar = effect.cascadedShadows.far
       }
     })
 

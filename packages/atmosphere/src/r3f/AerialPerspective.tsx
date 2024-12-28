@@ -60,7 +60,12 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     if (transientProps != null) {
       effect.sunDirection.copy(transientProps.sunDirection)
       effect.moonDirection.copy(transientProps.moonDirection)
-      effect.shadowMatrix.copy(transientProps.shadowMatrix)
+
+      for (let i = 0; i < 4; ++i) {
+        effect.shadowMatrices[i].copy(transientProps.shadowMatrices[i])
+        effect.shadowCascades[i].copy(transientProps.shadowCascades[i])
+      }
+      effect.shadowFar = transientProps.shadowFar
     }
   })
 

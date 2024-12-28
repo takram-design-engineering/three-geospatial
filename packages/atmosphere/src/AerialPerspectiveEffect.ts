@@ -5,6 +5,7 @@ import {
   Camera,
   Matrix4,
   Uniform,
+  Vector2,
   Vector3,
   type Data3DTexture,
   type DataTexture,
@@ -76,7 +77,8 @@ export interface AerialPerspectiveEffectOptions {
   moonAngularRadius?: number
   lunarRadianceScale?: number
   shadowBuffer?: Texture | null
-  shadowMatrix?: Matrix4
+  shadowMatrices?: Matrix4[]
+  shadowCascades?: Vector2[]
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -134,8 +136,7 @@ export class AerialPerspectiveEffect extends Effect {
       moonDirection,
       moonAngularRadius,
       lunarRadianceScale,
-      shadowBuffer = null,
-      shadowMatrix
+      shadowBuffer = null
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
     super(
@@ -173,6 +174,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['u_transmittance_texture', new Uniform(transmittanceTexture)],
           ['normalBuffer', new Uniform(normalBuffer)],
           ['projectionMatrix', new Uniform(new Matrix4())],
+          ['viewMatrix', new Uniform(new Matrix4())],
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
@@ -185,7 +187,9 @@ export class AerialPerspectiveEffect extends Effect {
           ['moonAngularRadius', new Uniform(moonAngularRadius)],
           ['lunarRadianceScale', new Uniform(lunarRadianceScale)],
           ['shadowBuffer', new Uniform(shadowBuffer)],
-          ['shadowMatrix', new Uniform(shadowMatrix?.clone() ?? new Matrix4())]
+          ['shadowMatrices', new Uniform([new Matrix4(), new Matrix4(), new Matrix4(), new Matrix4()])],
+          ['shadowCascades', new Uniform([new Vector2(), new Vector2(), new Vector2(), new Vector2()])],
+          ['shadowFar', new Uniform(0)]
         ]),
         // prettier-ignore
         defines: new Map<string, string>([
@@ -237,10 +241,12 @@ export class AerialPerspectiveEffect extends Effect {
   ): void {
     const uniforms = this.uniforms
     const projectionMatrix = uniforms.get('projectionMatrix')!
+    const viewMatrix = uniforms.get('viewMatrix')!
     const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
     const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
     const camera = this.camera
     projectionMatrix.value.copy(camera.projectionMatrix)
+    viewMatrix.value.copy(camera.matrixWorldInverse)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
 
@@ -545,7 +551,19 @@ export class AerialPerspectiveEffect extends Effect {
     }
   }
 
-  get shadowMatrix(): Matrix4 {
-    return this.uniforms.get('shadowMatrix')!.value
+  get shadowMatrices(): Matrix4[] {
+    return this.uniforms.get('shadowMatrices')!.value
+  }
+
+  get shadowCascades(): Vector2[] {
+    return this.uniforms.get('shadowCascades')!.value
+  }
+
+  get shadowFar(): number {
+    return this.uniforms.get('shadowFar')!.value
+  }
+
+  set shadowFar(value: number) {
+    this.uniforms.get('shadowFar')!.value = value
   }
 }
