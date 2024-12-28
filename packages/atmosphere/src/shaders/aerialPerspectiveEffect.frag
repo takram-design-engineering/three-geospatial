@@ -166,9 +166,12 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     ellipsoidCenter,
     u_bottom_radius / METER_TO_UNIT_LENGTH
   );
-  if (distanceToCloud < distanceToGround) {
-    opticalDepth = 0.0;
-  }
+  // TODO: This is basically no longer needed because clouds are clamped in the
+  // shadow pass, but shadows of clouds outside the main camera are still
+  // visible on certain occasions.
+  // if (distanceToCloud < distanceToGround) {
+  //   opticalDepth = 0.0;
+  // }
   float shadowTransmittance = exp(-opticalDepth);
   #else
   float shadowTransmittance = 1.0;
