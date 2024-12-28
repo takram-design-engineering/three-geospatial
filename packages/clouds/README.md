@@ -1,5 +1,7 @@
 # @takram/three-global-clouds
 
+This library is under active development and is in pre-release status.
+
 ## References
 
 - [Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite](https://www.ea.com/frostbite/news/physically-based-sky-atmosphere-and-cloud-rendering)
