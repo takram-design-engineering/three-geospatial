@@ -5,11 +5,11 @@ import {
   Camera,
   Matrix4,
   Uniform,
-  Vector2,
   Vector3,
   type Data3DTexture,
   type DataTexture,
   type Texture,
+  type Vector2,
   type WebGLRenderer,
   type WebGLRenderTarget
 } from 'three'
@@ -41,6 +41,7 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 import { correctAtmosphereAltitude } from './correctAtmosphereAltitude'
+import { type AtmosphereComposite } from './types'
 
 import fragmentShader from './shaders/aerialPerspectiveEffect.frag?raw'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert?raw'
@@ -56,15 +57,21 @@ export interface AerialPerspectiveEffectOptions {
   normalBuffer?: Texture | null
   octEncodedNormal?: boolean
   reconstructNormal?: boolean
+
+  // Precomputed textures
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
+
+  // Atmosphere controls
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   correctGeometricError?: boolean
   photometric?: boolean
   sunDirection?: Vector3
+
+  // Rendering options
   sunIrradiance?: boolean
   skyIrradiance?: boolean
   transmittance?: boolean
@@ -72,10 +79,14 @@ export interface AerialPerspectiveEffectOptions {
   irradianceScale?: number
   sky?: boolean
   sun?: boolean
+
+  // Moon
   moon?: boolean
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
+
+  // Composite
   shadowBuffer?: Texture | null
   shadowMatrices?: Matrix4[]
   shadowCascades?: Vector2[]
@@ -105,6 +116,7 @@ export class AerialPerspectiveEffect extends Effect {
   private readonly atmosphere: AtmosphereParameters
   private _ellipsoid!: Ellipsoid
   correctAltitude: boolean
+  private composite: AtmosphereComposite | null = null
 
   constructor(
     private camera = new Camera(),
@@ -135,8 +147,7 @@ export class AerialPerspectiveEffect extends Effect {
       moon,
       moonDirection,
       moonAngularRadius,
-      lunarRadianceScale,
-      shadowBuffer = null
+      lunarRadianceScale
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
     super(
@@ -186,9 +197,10 @@ export class AerialPerspectiveEffect extends Effect {
           ['moonDirection', new Uniform(moonDirection?.clone() ?? new Vector3())],
           ['moonAngularRadius', new Uniform(moonAngularRadius)],
           ['lunarRadianceScale', new Uniform(lunarRadianceScale)],
-          ['shadowBuffer', new Uniform(shadowBuffer)],
-          ['shadowMatrices', new Uniform([new Matrix4(), new Matrix4(), new Matrix4(), new Matrix4()])],
-          ['shadowCascades', new Uniform([new Vector2(), new Vector2(), new Vector2(), new Vector2()])],
+          ['compositeBuffer', new Uniform(null)],
+          ['shadowBuffer', new Uniform(null)],
+          ['shadowMatrices', new Uniform([])],
+          ['shadowCascades', new Uniform([])],
           ['shadowFar', new Uniform(0)]
         ]),
         // prettier-ignore
@@ -203,7 +215,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['IRRADIANCE_TEXTURE_HEIGHT', `${IRRADIANCE_TEXTURE_HEIGHT}`],
           ['METER_TO_UNIT_LENGTH', `float(${METER_TO_UNIT_LENGTH})`],
           ['SUN_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().join(',')})`],
-          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().join(',')})`],
+          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().join(',')})`]
         ])
       }
     )
@@ -534,36 +546,32 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('lunarRadianceScale')!.value = value
   }
 
-  get shadowBuffer(): Texture | null {
-    return this.uniforms.get('shadowBuffer')!.value
-  }
-
-  set shadowBuffer(value: Texture | null) {
-    this.uniforms.get('shadowBuffer')!.value = value
-    const hasShadow = value != null
-    if (hasShadow !== this.defines.has('HAS_SHADOW')) {
-      if (hasShadow) {
-        this.defines.set('HAS_SHADOW', '1')
-      } else {
-        this.defines.delete('HAS_SHADOW')
+  setComposite(value?: AtmosphereComposite | null): void {
+    if (value != null) {
+      if (value.texture != null) {
+        this.defines.set('HAS_COMPOSITE', '1')
+        this.uniforms.get('compositeBuffer')!.value = value.texture
       }
-      this.setChanged()
+      if (value.shadow != null) {
+        this.defines.set('HAS_SHADOW', '1')
+        this.defines.set('SHADOW_CASCADES', `${value.shadow.cascades.length}`)
+        this.uniforms.get('shadowBuffer')!.value = value.shadow.texture
+        this.uniforms.get('shadowMatrices')!.value = value.shadow.matrices
+        this.uniforms.get('shadowCascades')!.value = value.shadow.cascades
+        this.uniforms.get('shadowFar')!.value = value.shadow.far
+      }
+      console.log(this)
+    } else {
+      this.defines.delete('HAS_COMPOSITE')
+      this.defines.delete('HAS_SHADOW')
+      this.defines.delete('SHADOW_CASCADES')
+      this.uniforms.get('compositeBuffer')!.value = null
+      this.uniforms.get('shadowBuffer')!.value = null
+      this.uniforms.get('shadowMatrices')!.value = []
+      this.uniforms.get('shadowCascades')!.value = []
+      this.uniforms.get('shadowFar')!.value = 0
     }
-  }
-
-  get shadowMatrices(): Matrix4[] {
-    return this.uniforms.get('shadowMatrices')!.value
-  }
-
-  get shadowCascades(): Vector2[] {
-    return this.uniforms.get('shadowCascades')!.value
-  }
-
-  get shadowFar(): number {
-    return this.uniforms.get('shadowFar')!.value
-  }
-
-  set shadowFar(value: number) {
-    this.uniforms.get('shadowFar')!.value = value
+    this.composite = value ?? null
+    this.setChanged()
   }
 }

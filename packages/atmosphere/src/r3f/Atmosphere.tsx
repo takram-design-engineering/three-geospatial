@@ -1,4 +1,5 @@
 import { useThree } from '@react-three/fiber'
+import { atom, WritableAtom, type Atom } from 'jotai'
 import {
   createContext,
   forwardRef,
@@ -9,7 +10,7 @@ import {
   useState,
   type ReactNode
 } from 'react'
-import { Matrix4, Vector2, Vector3, type Texture } from 'three'
+import { Matrix4, Vector3 } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -22,14 +23,12 @@ import {
   PrecomputedTexturesLoader,
   type PrecomputedTextures
 } from '../PrecomputedTexturesLoader'
+import { type AtmosphereComposite } from '../types'
 
 export interface AtmosphereTransientProps {
   sunDirection: Vector3
   moonDirection: Vector3
   rotationMatrix: Matrix4
-  shadowMatrices: Matrix4[]
-  shadowCascades: Vector2[]
-  shadowFar: number
 }
 
 export interface AtmosphereContextValue {
@@ -39,11 +38,16 @@ export interface AtmosphereContextValue {
   correctAltitude?: boolean
   photometric?: boolean
   transientProps?: AtmosphereTransientProps
-  shadowBuffer?: Texture | null
-  setShadowBuffer?: (value: Texture | null) => void
+  compositeAtom: WritableAtom<
+    AtmosphereComposite | null,
+    [AtmosphereComposite | null],
+    void
+  >
 }
 
-export const AtmosphereContext = createContext<AtmosphereContextValue>({})
+export const AtmosphereContext = createContext<AtmosphereContextValue>({
+  compositeAtom: atom<AtmosphereComposite | null>(null)
+})
 
 export interface AtmosphereProps {
   textures?: PrecomputedTextures | string
@@ -78,20 +82,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
   const transientPropsRef = useRef({
     sunDirection: new Vector3(),
     moonDirection: new Vector3(),
-    rotationMatrix: new Matrix4(),
-    shadowMatrices: [
-      new Matrix4(),
-      new Matrix4(),
-      new Matrix4(),
-      new Matrix4()
-    ],
-    shadowCascades: [
-      new Vector2(),
-      new Vector2(),
-      new Vector2(),
-      new Vector2()
-    ],
-    shadowFar: 0
+    rotationMatrix: new Matrix4()
   })
 
   const gl = useThree(({ gl }) => gl)
@@ -119,7 +110,10 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     }
   }, [texturesProp, useHalfFloat])
 
-  const [shadowBuffer, setShadowBuffer] = useState<Texture | null>(null)
+  const compositeAtom = useMemo(
+    () => atom<AtmosphereComposite | null>(null),
+    []
+  )
 
   const context = useMemo(
     () => ({
@@ -129,8 +123,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       correctAltitude,
       photometric,
       transientProps: transientPropsRef.current,
-      shadowBuffer,
-      setShadowBuffer
+      compositeAtom
     }),
     [
       textures,
@@ -138,8 +131,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       ellipsoid,
       correctAltitude,
       photometric,
-      shadowBuffer,
-      setShadowBuffer
+      compositeAtom
     ]
   )
 

@@ -1,5 +1,6 @@
 import { useFrame, type Node } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
+import { useAtomValue } from 'jotai'
 import { RenderPass, type BlendFunction } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { Texture } from 'three'
@@ -25,7 +26,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
 >(function AerialPerspective(props, forwardedRef) {
-  const { textures, transientProps, shadowBuffer, ...contextProps } =
+  const { textures, transientProps, compositeAtom, ...contextProps } =
     useContext(AtmosphereContext)
 
   const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
@@ -56,16 +57,15 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     }
   }, [effect])
 
+  const composite = useAtomValue(compositeAtom)
+  useEffect(() => {
+    effect.setComposite(composite)
+  }, [effect, composite])
+
   useFrame(() => {
     if (transientProps != null) {
       effect.sunDirection.copy(transientProps.sunDirection)
       effect.moonDirection.copy(transientProps.moonDirection)
-
-      for (let i = 0; i < 4; ++i) {
-        effect.shadowMatrices[i].copy(transientProps.shadowMatrices[i])
-        effect.shadowCascades[i].copy(transientProps.shadowCascades[i])
-      }
-      effect.shadowFar = transientProps.shadowFar
     }
   })
 
@@ -75,7 +75,6 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       object={effect}
       mainCamera={camera}
       normalBuffer={geometryTexture ?? normalPass?.texture ?? null}
-      shadowBuffer={shadowBuffer}
       {...atmosphereParameters}
       {...others}
       octEncodedNormal={geometryTexture != null}

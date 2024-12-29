@@ -19,10 +19,16 @@ uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
+#ifdef HAS_COMPOSITE
+uniform sampler2D compositeBuffer;
+#endif // HAS_COMPOSITE
+
+#ifdef HAS_SHADOW
 uniform sampler2D shadowBuffer;
-uniform mat4 shadowMatrices[4];
-uniform vec2 shadowCascades[4];
+uniform mat4 shadowMatrices[SHADOW_CASCADES];
+uniform vec2 shadowCascades[SHADOW_CASCADES];
 uniform float shadowFar;
+#endif // HAS_SHADOW
 
 varying vec3 vWorldPosition;
 varying vec3 vWorldDirection;
@@ -101,6 +107,8 @@ void getTransmittanceInscatter(
 }
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
+#ifdef HAS_SHADOW
+
 int getCascadeIndex(vec3 position) {
   vec4 viewPosition = viewMatrix * vec4(position, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
@@ -135,7 +143,14 @@ vec4 getShadow(vec3 worldPosition) {
   return texture(shadowBuffer, uv);
 }
 
+#endif // HAS_SHADOW
+
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
+  vec4 composite = vec4(0.0);
+  #ifdef HAS_COMPOSITE
+  composite = texture(compositeBuffer, uv);
+  #endif // HAS_COMPOSITE
+
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
     #ifdef SKY
@@ -153,6 +168,10 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     #else
     outputColor = inputColor;
     #endif // SKY
+
+    #ifdef HAS_COMPOSITE
+    outputColor.rgb = composite.rgb + outputColor.rgb * (1.0 - composite.a);
+    #endif // HAS_COMPOSITE
     return;
   }
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
@@ -215,4 +234,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);
+
+  #ifdef HAS_COMPOSITE
+  outputColor.rgb = composite.rgb + outputColor.rgb * (1.0 - composite.a);
+  #endif // HAS_COMPOSITE
 }
