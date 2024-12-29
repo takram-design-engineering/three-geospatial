@@ -153,6 +153,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         minIterations: new Uniform(50),
         maxIterations: new Uniform(100),
         minStepSize: new Uniform(50),
+        maxStepSize: new Uniform(1000),
         minDensity: new Uniform(1e-5),
         minTransmittance: new Uniform(1e-2)
       } satisfies CloudsShadowMaterialUniforms,

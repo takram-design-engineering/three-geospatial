@@ -24,6 +24,7 @@ uniform sampler3D blueNoiseTexture;
 uniform int minIterations;
 uniform int maxIterations;
 uniform float minStepSize;
+uniform float maxStepSize;
 uniform float minDensity;
 uniform float minTransmittance;
 
@@ -97,7 +98,7 @@ vec4 marchToClouds(
     normal,
     rayOrigin,
     rayDirection,
-    max(minStepSize, maxRayDistance / float(maxIterations) * (frustumRadius * 1e-4)),
+    clamp(maxRayDistance / float(maxIterations) * (frustumRadius * 1e-4), minStepSize, maxStepSize),
     rayDistance,
     stepSize
   );
