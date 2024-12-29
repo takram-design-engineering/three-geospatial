@@ -49,12 +49,23 @@ in vec3 vRayDirection; // Direction to the texel
 
 layout(location = 0) out vec4 outputColor;
 
+const vec3 blueNoiseScale = vec3(
+  vec2(1.0 / float(STBN_TEXTURE_SIZE)),
+  1.0 / float(STBN_TEXTURE_DEPTH)
+);
+
 float blueNoise(const vec2 uv) {
-  const vec3 scale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
   return texture(
     blueNoiseTexture,
-    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * scale
+    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * blueNoiseScale
   ).x;
+}
+
+vec3 blueNoiseVector(const vec2 uv) {
+  return texture(
+    blueNoiseTexture,
+    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * blueNoiseScale
+  ).xyz;
 }
 
 float readDepth(const vec2 uv) {
@@ -163,8 +174,9 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
 vec4 marchToClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
-  const float jitter,
   const float maxRayDistance,
+  const float jitter,
+  const vec3 jitterVector,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
   vec3 sunIrradiance,
@@ -398,12 +410,14 @@ void main() {
   #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
   float jitter = blueNoise(vUv);
+  vec3 jitterVector = blueNoiseVector(vUv);
   float weightedMeanDepth;
   vec4 color = marchToClouds(
     rayOrigin,
     rayDirection,
-    jitter,
     rayFar - rayNear,
+    jitter,
+    jitterVector,
     pow(2.0, mipLevel),
     sunDirection,
     sunIrradiance,
