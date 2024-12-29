@@ -41,6 +41,7 @@ import clouds from './shaders/clouds.glsl?raw'
 import fragmentShader from './shaders/cloudsShadow.frag?raw'
 import vertexShader from './shaders/cloudsShadow.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
+import structuredSampling from './shaders/structuredSampling.glsl?raw'
 
 declare module 'three' {
   interface Camera {
@@ -116,6 +117,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
           raySphereIntersection
         },
         parameters,
+        structuredSampling,
         clouds
       }),
       uniforms: {

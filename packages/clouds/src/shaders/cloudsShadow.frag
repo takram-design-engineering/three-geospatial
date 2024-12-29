@@ -8,6 +8,7 @@ precision highp sampler3D;
 #include "core/math"
 #include "core/raySphereIntersection"
 #include "parameters"
+#include "structuredSampling"
 #include "clouds"
 
 uniform sampler2D depthBuffer;
@@ -86,14 +87,24 @@ vec4 marchToClouds(
   const float jitter,
   const float maxRayDistance
 ) {
+  // Setup structured volume sampling.
+  vec3 normal = getStructureNormal(rayDirection, jitter);
+  float rayDistance;
+  float stepSize;
+  intersectStructuredPlanes(
+    normal,
+    rayOrigin,
+    rayDirection,
+    initialStepSize,
+    rayDistance,
+    stepSize
+  );
+
   float extinctionSum = 0.0;
   float maxOpticalDepth = 0.0;
   float transmittanceIntegral = 1.0;
   float weightedDistanceSum = 0.0;
   float transmittanceSum = 0.0;
-
-  float stepSize = initialStepSize;
-  float rayDistance = stepSize * jitter;
 
   int sampleCount = 0;
   for (int i = 0; i < maxIterations; ++i) {

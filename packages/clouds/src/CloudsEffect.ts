@@ -172,6 +172,7 @@ export class CloudsEffect extends Effect {
     const sunDirection = new Vector3()
     const cascadedShadows = new CascadedShadows({
       mapSize: shadowMapSize,
+      lambda: 0.8,
       far: 1e5 // TODO: Parametrize
     })
 
@@ -196,7 +197,7 @@ export class CloudsEffect extends Effect {
     const cloudsPass = new ShaderPass(cloudsMaterial)
     const shadowPass = new ShaderPass(shadowMaterial)
     const blurPass = new KawaseBlurPass({
-      kernelSize: KernelSize.SMALL
+      kernelSize: KernelSize.VERY_SMALL
     })
     // blurPass.blurMaterial = new CloudsShadowBlurMaterial()
 
