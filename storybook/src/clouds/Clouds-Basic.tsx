@@ -146,7 +146,7 @@ const Scene: FC = () => {
     stepSize: { value: 100, min: 10, max: 200 },
     maxStepSize: { value: 1000, min: 200, max: 2000 },
     useDetail: true,
-    usePowder: false,
+    usePowder: true,
     showBox: false
   })
 

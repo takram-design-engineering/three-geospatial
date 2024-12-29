@@ -122,12 +122,17 @@ float phaseFunction(const float cosTheta, const float attenuation) {
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
 
-float sampleOpticalDepth(const vec3 rayOrigin, const vec3 rayDirection, const float mipLevel) {
-  const float stepSize = 20.0;
+float sampleOpticalDepth(
+  const vec3 rayOrigin,
+  const vec3 rayDirection,
+  const int iterations,
+  const float mipLevel
+) {
+  float stepSize = 40.0 / float(iterations);
   float opticalDepth = 0.0;
   float stepScale = 1.0;
   float prevStepScale = 0.0;
-  for (int i = 0; i < MAX_SECONDARY_ITERATIONS; ++i) {
+  for (int i = 0; i < iterations; ++i) {
     vec3 position = rayOrigin + rayDirection * stepScale * stepSize;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
@@ -223,7 +228,9 @@ vec4 marchToClouds(
 
         float sunOpticalDepth = 0.0;
         if (mipLevel < 0.5) {
-          sunOpticalDepth = sampleOpticalDepth(position, sunDirection, mipLevel);
+          sunOpticalDepth = sampleOpticalDepth(position, sunDirection, 2, mipLevel);
+        } else {
+          sunOpticalDepth = sampleOpticalDepth(position, sunDirection, 1, mipLevel);
         }
         float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
         float scattering = multipleScattering(opticalDepth, cosTheta);
@@ -231,7 +238,12 @@ vec4 marchToClouds(
 
         // Fudge factor for the irradiance from ground.
         if (mipLevel < 0.5) {
-          float groundOpticalDepth = sampleOpticalDepth(position, -normalize(position), mipLevel);
+          float groundOpticalDepth = sampleOpticalDepth(
+            position,
+            -normalize(position),
+            2,
+            mipLevel
+          );
           radiance += radiance * exp(-groundOpticalDepth - (height - minHeight) * 0.01);
         }
 

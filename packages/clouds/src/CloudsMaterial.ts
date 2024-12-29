@@ -166,9 +166,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Scattering parameters
           albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
-          powderScale: new Uniform(0.5),
+          powderScale: new Uniform(0.8),
           powderExponent: new Uniform(200),
-          scatterAnisotropy1: new Uniform(0.35),
+          scatterAnisotropy1: new Uniform(0.7),
           scatterAnisotropy2: new Uniform(-0.3),
           scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(0.1),
@@ -202,8 +202,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
           DEPTH_PACKING: '0',
           USE_DETAIL: '1',
-          MAX_SECONDARY_ITERATIONS: '2',
           MULTI_SCATTERING_OCTAVES: '8',
+          USE_POWDER: '1',
           ACCURATE_ATMOSPHERIC_IRRADIANCE: '1' // TODO
         }
       },
@@ -293,17 +293,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       } else {
         delete this.defines.USE_DETAIL
       }
-      this.needsUpdate = true
-    }
-  }
-
-  get maxSecondaryIterations(): number {
-    return +this.defines.MAX_SECONDARY_ITERATIONS
-  }
-
-  set maxSecondaryIterations(value: number) {
-    if (value !== this.multiScatteringOctaves) {
-      this.defines.MAX_SECONDARY_ITERATIONS = `${value}`
       this.needsUpdate = true
     }
   }
