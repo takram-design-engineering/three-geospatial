@@ -374,6 +374,11 @@ void getRayNearFar(const vec3 rayDirection, out float rayNear, out float rayFar)
 }
 
 void main() {
+  #ifdef DEBUG_SHOW_SHADOW_MAP
+  outputColor = vec4(texture(shadowBuffer, vUv).rgb * vec3(1e-5, 10.0, 0.1), 1.0);
+  return;
+  #endif // DEBUG_SHOW_SHADOW_MAP
+
   vec3 rayDirection = normalize(vRayDirection);
   float rayNear;
   float rayFar;

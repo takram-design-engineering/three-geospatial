@@ -3,7 +3,7 @@ import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useRef, useState, type FC } from 'react'
+import { Fragment, useEffect, useRef, useState, type FC } from 'react'
 import {
   NearestFilter,
   Quaternion,
@@ -150,6 +150,10 @@ const Scene: FC = () => {
     showBox: false
   })
 
+  const { showShadowMap } = useControls('debug', {
+    showShadowMap: false
+  })
+
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
 
   useFrame(() => {
@@ -167,7 +171,13 @@ const Scene: FC = () => {
     }
     clouds.cloudsMaterial.useDetail = useDetail
     clouds.cloudsMaterial.usePowder = usePowder
-  }, [clouds, useDetail, usePowder])
+    if (showShadowMap) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+    }
+    clouds.cloudsMaterial.needsUpdate = true
+  }, [clouds, useDetail, usePowder, showShadowMap])
 
   return (
     <>
@@ -193,22 +203,24 @@ const Scene: FC = () => {
         photometric={photometric}
       >
         <Sky />
-        <EffectComposer
-          multisampling={0}
-          key={clouds?.cloudsMaterial.fragmentShader}
-          enableNormalPass
-        >
-          <Clouds
-            ref={setClouds}
-            localWeatherTexture={localWeatherTexture}
-            blueNoiseTexture={blueNoiseTexture}
-            blueNoiseVectorTexture={blueNoiseVectorTexture}
-            coverage={coverage}
-          />
-          <AerialPerspective sunIrradiance skyIrradiance />
-          <LensFlare />
-          <ToneMapping mode={ToneMappingMode.AGX} />
-          <Dithering />
+        <EffectComposer multisampling={0} enableNormalPass>
+          <Fragment key={JSON.stringify({ showShadowMap })}>
+            <Clouds
+              ref={setClouds}
+              localWeatherTexture={localWeatherTexture}
+              blueNoiseTexture={blueNoiseTexture}
+              blueNoiseVectorTexture={blueNoiseVectorTexture}
+              coverage={coverage}
+            />
+            <AerialPerspective sunIrradiance skyIrradiance />
+            {!showShadowMap && (
+              <>
+                <LensFlare />
+                <ToneMapping mode={ToneMappingMode.AGX} />
+                <Dithering />
+              </>
+            )}
+          </Fragment>
         </EffectComposer>
       </Atmosphere>
     </>
