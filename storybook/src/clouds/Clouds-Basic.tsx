@@ -69,7 +69,10 @@ function applyLocation(
 
 const Scene: FC = () => {
   useExposureControls({ exposure: 10 })
-  const { longitude, latitude, height } = useLocationControls({ height: 300 })
+  const { longitude, latitude, height } = useLocationControls({
+    longitude: 30,
+    height: 300
+  })
   const motionDate = useLocalDateControls({
     longitude,
     dayOfYear: 0
@@ -134,24 +137,23 @@ const Scene: FC = () => {
     '/clouds/stbn_unit_vector.bin'
   )
 
-  const {
-    maxIterations,
-    stepSize,
-    maxStepSize,
-    useDetail,
-    usePowder,
-    showBox
-  } = useControls('clouds', {
-    maxIterations: { value: 1000, min: 100, max: 2000 },
-    stepSize: { value: 100, min: 10, max: 200 },
-    maxStepSize: { value: 1000, min: 200, max: 2000 },
-    useDetail: true,
-    usePowder: true,
-    showBox: false
-  })
+  const { maxIterations, stepSize, maxStepSize, useDetail, usePowder } =
+    useControls('clouds', {
+      maxIterations: { value: 1000, min: 100, max: 2000 },
+      stepSize: { value: 100, min: 10, max: 200 },
+      maxStepSize: { value: 1000, min: 200, max: 2000 },
+      useDetail: true,
+      usePowder: true
+    })
 
-  const { showShadowMap } = useControls('debug', {
-    showShadowMap: false
+  const {
+    showBox: debugShowBox,
+    showShadowMap: debugShowShadowMap,
+    showUv: debugShowUv
+  } = useControls('debug', {
+    showBox: false,
+    showShadowMap: false,
+    showUv: false
   })
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
@@ -171,18 +173,29 @@ const Scene: FC = () => {
     }
     clouds.cloudsMaterial.useDetail = useDetail
     clouds.cloudsMaterial.usePowder = usePowder
-    if (showShadowMap) {
+  }, [clouds, useDetail, usePowder])
+
+  useEffect(() => {
+    if (clouds == null) {
+      return
+    }
+    if (debugShowUv) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_UV = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_UV
+    }
+    if (debugShowShadowMap) {
       clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
     } else {
       delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
     }
     clouds.cloudsMaterial.needsUpdate = true
-  }, [clouds, useDetail, usePowder, showShadowMap])
+  }, [clouds, debugShowShadowMap, debugShowUv])
 
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={1000} />
-      {showBox && (
+      {debugShowBox && (
         <EastNorthUpFrame
           longitude={radians(longitude)}
           latitude={radians(latitude)}
@@ -204,7 +217,7 @@ const Scene: FC = () => {
       >
         <Sky />
         <EffectComposer multisampling={0} enableNormalPass>
-          <Fragment key={JSON.stringify({ showShadowMap })}>
+          <Fragment key={JSON.stringify({ debugShowUv, debugShowShadowMap })}>
             <Clouds
               ref={setClouds}
               localWeatherTexture={localWeatherTexture}
@@ -213,7 +226,7 @@ const Scene: FC = () => {
               coverage={coverage}
             />
             <AerialPerspective sunIrradiance skyIrradiance />
-            {!showShadowMap && (
+            {!debugShowUv && !debugShowShadowMap && (
               <>
                 <LensFlare />
                 <ToneMapping mode={ToneMappingMode.AGX} />

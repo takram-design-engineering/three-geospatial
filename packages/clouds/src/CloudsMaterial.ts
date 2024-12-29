@@ -33,6 +33,7 @@ import {
 import { assertType, Geodetic, resolveIncludes } from '@takram/three-geospatial'
 import {
   depth,
+  generators,
   math,
   raySphereIntersection
 } from '@takram/three-geospatial/shaders'
@@ -134,6 +135,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           core: {
             depth,
             math,
+            generators,
             raySphereIntersection
           },
           atmosphere: {

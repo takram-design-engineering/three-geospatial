@@ -6,6 +6,7 @@ precision highp sampler3D;
 
 #include "core/depth"
 #include "core/math"
+#include "core/generators"
 #include "core/raySphereIntersection"
 #include "atmosphere/parameters"
 #include "atmosphere/functions"
@@ -402,6 +403,11 @@ void main() {
   vec2 globeUv = getGlobeUv(rayOrigin);
   float mipLevel = getMipLevel(globeUv * localWeatherFrequency);
   mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
+
+  #ifdef DEBUG_SHOW_UV
+  outputColor = vec4(vec3(checker(globeUv, localWeatherFrequency)), 1.0);
+  return;
+  #endif // DEBUG_SHOW_UV
 
   vec3 skyIrradiance;
   vec3 sunIrradiance;

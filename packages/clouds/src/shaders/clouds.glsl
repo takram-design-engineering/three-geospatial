@@ -1,8 +1,37 @@
+// Straightforward spherical mapping
+// vec2 getGlobeUv(const vec3 position) {
+//   vec2 st = normalize(position.yx);
+//   float phi = atan(st.x, st.y);
+//   float theta = asin(normalize(position).z);
+//   return vec2(phi * RECIPROCAL_PI2 + 0.5, theta * RECIPROCAL_PI + 0.5);
+// }
+
 vec2 getGlobeUv(const vec3 position) {
-  vec2 st = normalize(position.yx);
-  float phi = atan(st.x, st.y);
-  float theta = asin(normalize(position).z);
-  return vec2(phi * RECIPROCAL_PI2 + 0.5, theta * RECIPROCAL_PI + 0.5);
+  // Cube-sphere relaxation by: http://mathproofs.blogspot.com/2005/07/mapping-cube-to-sphere.html
+  // TODO: Tile and fix seams.
+  // Possible improvements:
+  // https://gamedev.stackexchange.com/questions/184388/fragment-shader-map-dot-texture-repeatedly-over-the-sphere
+  // https://github.com/mmikk/hextile-demo
+
+  vec3 n = normalize(position);
+  vec3 f = abs(n);
+  vec3 c = n / max(f.x, max(f.y, f.z));
+  vec2 m;
+  if (all(greaterThan(f.yy, f.xz))) {
+    m = c.y > 0.0 ? vec2(-n.x, n.z) : n.xz;
+  } else if (all(greaterThan(f.xx, f.yz))) {
+    m = c.x > 0.0 ? n.yz : vec2(-n.y, n.z);
+  } else {
+    m = c.z > 0.0 ? n.xy : vec2(n.x, -n.y);
+  }
+
+  vec2 m2 = m * m;
+  float q = dot(m2.xy, vec2(-2.0, 2.0)) - 3.0;
+  float q2 = q * q;
+  vec2 uv;
+  uv.x = sqrt(1.5 + m2.x - m2.y - 0.5 * sqrt(-24.0 * m2.x + q2)) * (m.x > 0.0 ? 1.0 : -1.0);
+  uv.y = sqrt(6.0 / (3.0 - uv.x * uv.x)) * m.y;
+  return uv * 0.5 + 0.5;
 }
 
 float getMipLevel(const vec2 uv) {
