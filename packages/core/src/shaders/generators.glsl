@@ -1,6 +1,11 @@
 float checker(const vec2 uv, const float repeats) {
-  float cx = floor(repeats * uv.x);
-  float cy = floor(repeats * uv.y);
-  float result = mod(cx + cy, 2.0);
+  vec2 c = floor(repeats * uv);
+  float result = mod(c.x + c.y, 2.0);
+  return sign(result);
+}
+
+float checker(const vec2 uv, const vec2 repeats) {
+  vec2 c = floor(repeats * uv);
+  float result = mod(c.x + c.y, 2.0);
   return sign(result);
 }
