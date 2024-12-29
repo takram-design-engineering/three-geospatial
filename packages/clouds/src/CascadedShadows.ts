@@ -117,15 +117,9 @@ export class CascadedShadows {
   private updateCascades(camera: PerspectiveCamera): void {
     const cascadeCount = this.cascadeCount
     const splits = this.splits
-    splitFrustum(
-      this.mode,
-      cascadeCount,
-      camera.near,
-      this.far,
-      this.lambda,
-      splits
-    )
-    frustumScratch.setFromCamera(camera, this.far)
+    const far = Math.min(this.far, camera.far)
+    splitFrustum(this.mode, cascadeCount, camera.near, far, this.lambda, splits)
+    frustumScratch.setFromCamera(camera, far)
     frustumScratch.split(splits, this.cascadedFrusta)
 
     const cascades = this.cascades
@@ -153,7 +147,7 @@ export class CascadedShadows {
     // Expand the shadow bounds by the fade width.
     if (this.fade) {
       const near = camera.near
-      const far = this.far
+      const far = Math.min(this.far, camera.far)
       const distance = farCorners[0].z / (far - near)
       diagonalLength += 0.25 * distance ** 2 * (far - near)
     }
