@@ -9,7 +9,7 @@ const mat4 bayerMatrix =
   ) /
   16.0;
 
-float bayer(const vec2 uv) {
+float bayer(const vec2 uv, const vec2 resolution) {
   ivec2 xy = ivec2(uv * resolution) % 4;
   return bayerMatrix[xy.y][xy.x];
 }
