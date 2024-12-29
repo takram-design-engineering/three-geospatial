@@ -1,8 +1,8 @@
 import { KawaseBlurMaterial } from 'postprocessing'
 
 export class CloudsShadowBlurMaterial extends KawaseBlurMaterial {
-  constructor() {
-    super()
+  constructor(...args: ConstructorParameters<typeof KawaseBlurMaterial>) {
+    super(...args)
 
     this.vertexShader = /* glsl */ `
       uniform vec4 texelSize; // XY = texel size, ZW = half texel size

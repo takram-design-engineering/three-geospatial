@@ -72,6 +72,7 @@ interface CloudsShadowMaterialUniforms
   viewMatrix: Uniform<Matrix4> // The main camera
   inverseProjectionMatrix: Uniform<Matrix4> // The main camera
   inverseShadowMatrices: Uniform<Matrix4[]> // Inverse view projection of the sun
+  shadowFrustumRadii: Uniform<number[]>
   resolution: Uniform<Vector2>
   frame: Uniform<number>
   time: Uniform<number>
@@ -131,6 +132,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
           new Matrix4(),
           new Matrix4()
         ]),
+        shadowFrustumRadii: new Uniform([0, 0, 0, 0]),
         resolution: new Uniform(new Vector2()),
         cameraNear: new Uniform(0),
         cameraFar: new Uniform(0),
@@ -148,9 +150,9 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         sunDirection: new Uniform(sunDirectionRef ?? new Vector3()),
 
         // Raymarch to clouds
+        minIterations: new Uniform(50),
         maxIterations: new Uniform(100),
-        initialStepSize: new Uniform(200),
-        maxStepSize: new Uniform(1000),
+        minStepSize: new Uniform(50),
         minDensity: new Uniform(1e-5),
         minTransmittance: new Uniform(1e-2)
       } satisfies CloudsShadowMaterialUniforms,

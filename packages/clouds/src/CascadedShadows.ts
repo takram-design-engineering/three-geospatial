@@ -65,6 +65,7 @@ export const cascadedShadowsOptionsDefaults = {
 interface Light {
   readonly projectionMatrix: Matrix4
   readonly inverseViewMatrix: Matrix4
+  frustumRadius: number
 }
 
 export class CascadedShadows {
@@ -105,7 +106,8 @@ export class CascadedShadows {
       for (let i = 0; i < value; ++i) {
         this.lights[i] = {
           projectionMatrix: new Matrix4(),
-          inverseViewMatrix: new Matrix4()
+          inverseViewMatrix: new Matrix4(),
+          frustumRadius: 0
         }
       }
       this.lights.length = value
@@ -173,6 +175,7 @@ export class CascadedShadows {
         -this.margin, // near
         radius * 2 + this.margin // far
       )
+      lights[i].frustumRadius = radius
     }
   }
 
@@ -219,7 +222,8 @@ export class CascadedShadows {
       center.applyMatrix4(lightOrientationMatrix)
       const position = vectorScratch2
         .copy(sunDirection)
-        .multiplyScalar(500000)
+        // TODO: Adjust this depending on the zenith angle.
+        .multiplyScalar(1e5)
         .add(center)
       light.inverseViewMatrix
         .lookAt(center, position, Object3D.DEFAULT_UP)

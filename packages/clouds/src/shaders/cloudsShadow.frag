@@ -15,14 +15,15 @@ uniform sampler2D depthBuffer;
 uniform mat4 viewMatrix; // The main camera
 uniform mat4 inverseProjectionMatrix; // The main camera
 uniform mat4 inverseShadowMatrices[4]; // Inverse view projection of the sun
+uniform float shadowFrustumRadii[4];
 uniform float cameraNear;
 uniform float cameraFar;
 uniform sampler3D blueNoiseTexture;
 
 // Raymarch to clouds
+uniform int minIterations;
 uniform int maxIterations;
-uniform float initialStepSize;
-uniform float maxStepSize;
+uniform float minStepSize;
 uniform float minDensity;
 uniform float minTransmittance;
 
@@ -84,8 +85,9 @@ bool intersectsSceneObjects(const vec3 rayPosition) {
 vec4 marchToClouds(
   const vec3 rayOrigin, // Relative to the ellipsoid center
   const vec3 rayDirection,
-  const float jitter,
-  const float maxRayDistance
+  const float frustumRadius,
+  const float maxRayDistance,
+  const float jitter
 ) {
   // Setup structured volume sampling.
   vec3 normal = getStructureNormal(rayDirection, jitter);
@@ -95,7 +97,7 @@ vec4 marchToClouds(
     normal,
     rayOrigin,
     rayDirection,
-    initialStepSize,
+    max(minStepSize, maxRayDistance / float(maxIterations) * (frustumRadius * 1e-4)),
     rayDistance,
     stepSize
   );
@@ -191,7 +193,8 @@ void getRayNearFar(
   );
 }
 
-vec4 cascade(const vec2 uv, const mat4 inverseShadowMatrix) {
+vec4 cascade(const vec2 uv, const int index) {
+  mat4 inverseShadowMatrix = inverseShadowMatrices[index];
   vec2 clip = uv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrix * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
@@ -207,22 +210,23 @@ vec4 cascade(const vec2 uv, const mat4 inverseShadowMatrix) {
 
   vec3 rayOrigin = sunWorldPosition - ellipsoidCenter + rayNear * rayDirection;
   float jitter = blueNoise(vUv);
-  return marchToClouds(rayOrigin, rayDirection, jitter, rayFar - rayNear);
+  float frustumRadius = shadowFrustumRadii[index];
+  return marchToClouds(rayOrigin, rayDirection, frustumRadius, rayFar - rayNear, jitter);
 }
 
 void main() {
   vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
   if (vUv.x < 0.5) {
     if (vUv.y < 0.5) {
-      outputColor = cascade(coord.xy, inverseShadowMatrices[0]);
+      outputColor = cascade(coord.xy, 0);
     } else {
-      outputColor = cascade(coord.xw, inverseShadowMatrices[1]);
+      outputColor = cascade(coord.xw, 1);
     }
   } else {
     if (vUv.y < 0.5) {
-      outputColor = cascade(coord.zy, inverseShadowMatrices[2]);
+      outputColor = cascade(coord.zy, 2);
     } else {
-      outputColor = cascade(coord.zw, inverseShadowMatrices[3]);
+      outputColor = cascade(coord.zw, 3);
     }
   }
 }

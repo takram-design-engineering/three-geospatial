@@ -196,10 +196,9 @@ export class CloudsEffect extends Effect {
 
     const cloudsPass = new ShaderPass(cloudsMaterial)
     const shadowPass = new ShaderPass(shadowMaterial)
-    const blurPass = new KawaseBlurPass({
-      kernelSize: KernelSize.VERY_SMALL
-    })
+    const blurPass = new KawaseBlurPass()
     // blurPass.blurMaterial = new CloudsShadowBlurMaterial()
+    blurPass.kernelSize = KernelSize.VERY_SMALL
 
     super('CloudsEffect', fragmentShader, {
       blendFunction,
@@ -279,6 +278,7 @@ export class CloudsEffect extends Effect {
       cloudsUniforms.shadowMatrices.value[i].copy(shadowMatrix)
       shadowUniforms.inverseShadowMatrices.value[i].copy(inverseShadowMatrix)
       cloudsUniforms.shadowCascades.value[i].copy(shadows.cascades[i])
+      shadowUniforms.shadowFrustumRadii.value[i] = light.frustumRadius
     }
     cloudsUniforms.shadowFar.value = this.cascadedShadows.far
   }

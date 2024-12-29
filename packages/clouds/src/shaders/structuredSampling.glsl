@@ -48,7 +48,7 @@ vec3 getPentagonalWeights(const vec3 direction, const vec3 v1, const vec3 v2, co
   float d1 = dot(v1, direction);
   float d2 = dot(v2, direction);
   float d3 = dot(v3, direction);
-  vec3 w = exp(vec3(d1, d2, d3) * 20.0);
+  vec3 w = exp(vec3(d1, d2, d3) * 40.0);
   return w / (w.x + w.y + w.z);
 }
 
