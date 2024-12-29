@@ -128,7 +128,8 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
 
-  const { coverage, useDetail, usePowder } = useControls('clouds', {
+  const { enabled, coverage, useDetail, usePowder } = useControls('clouds', {
+    enabled: true,
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
     useDetail: true,
     usePowder: true
@@ -224,18 +225,21 @@ const Scene: FC<SceneProps> = ({
             lensFlare,
             normal,
             depth,
-            lut
+            lut,
+            enabled
           })}
         >
           {!normal && !depth && (
             <>
-              <Clouds
-                ref={cloudsRef}
-                localWeatherTexture={localWeatherTexture}
-                blueNoiseTexture={blueNoiseTexture}
-                blueNoiseVectorTexture={blueNoiseVectorTexture}
-                coverage={coverage}
-              />
+              {enabled && (
+                <Clouds
+                  ref={cloudsRef}
+                  localWeatherTexture={localWeatherTexture}
+                  blueNoiseTexture={blueNoiseTexture}
+                  blueNoiseVectorTexture={blueNoiseVectorTexture}
+                  coverage={coverage}
+                />
+              )}
               <AerialPerspective
                 sunIrradiance
                 skyIrradiance
