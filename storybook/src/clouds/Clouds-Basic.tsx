@@ -198,7 +198,6 @@ const Scene: FC = () => {
           key={clouds?.cloudsMaterial.fragmentShader}
           enableNormalPass
         >
-          <AerialPerspective sunIrradiance skyIrradiance />
           <Clouds
             ref={setClouds}
             localWeatherTexture={localWeatherTexture}
@@ -206,6 +205,7 @@ const Scene: FC = () => {
             blueNoiseVectorTexture={blueNoiseVectorTexture}
             coverage={coverage}
           />
+          <AerialPerspective sunIrradiance skyIrradiance />
           <LensFlare />
           <ToneMapping mode={ToneMappingMode.AGX} />
           <Dithering />

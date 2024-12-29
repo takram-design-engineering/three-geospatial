@@ -560,7 +560,6 @@ export class AerialPerspectiveEffect extends Effect {
         this.uniforms.get('shadowCascades')!.value = value.shadow.cascades
         this.uniforms.get('shadowFar')!.value = value.shadow.far
       }
-      console.log(this)
     } else {
       this.defines.delete('HAS_COMPOSITE')
       this.defines.delete('HAS_SHADOW')

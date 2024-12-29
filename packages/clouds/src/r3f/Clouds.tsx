@@ -1,5 +1,6 @@
 import { useFrame, type Node } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
+import { useSetAtom } from 'jotai'
 import { type BlendFunction } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
@@ -22,13 +23,8 @@ export type CloudsProps = Node<
 
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
   function Clouds(props, forwardedRef) {
-    const {
-      textures,
-      transientProps,
-      shadowBuffer,
-      setShadowBuffer,
-      ...contextProps
-    } = useContext(AtmosphereContext)
+    const { textures, transientProps, compositeAtom, ...contextProps } =
+      useContext(AtmosphereContext)
 
     const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
       ...cloudsEffectOptionsDefaults,
@@ -57,27 +53,21 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     })
 
-    // TODO: Separate component for shadow pass and put it before aerial
-    // perspective in order to sync shadow buffer.
-
+    const setComposite = useSetAtom(compositeAtom)
     useEffect(() => {
-      setShadowBuffer?.(effect.shadowRenderTarget.texture)
-      return () => {
-        setShadowBuffer?.(null)
-      }
-    }, [setShadowBuffer, effect])
-
-    useFrame(() => {
-      if (transientProps != null) {
-        for (let i = 0; i < 4; ++i) {
-          transientProps.shadowMatrices[i].copy(effect.shadowMatrices[i])
-          transientProps.shadowCascades[i].copy(
-            effect.cascadedShadows.cascades[i]
-          )
+      setComposite({
+        texture: effect.cloudsRenderTarget.texture,
+        shadow: {
+          texture: effect.shadowRenderTarget.texture,
+          matrices: effect.shadowMatrices,
+          cascades: effect.cascadedShadows.cascades,
+          far: effect.cascadedShadows.far
         }
-        transientProps.shadowFar = effect.cascadedShadows.far
+      })
+      return () => {
+        setComposite(null)
       }
-    })
+    }, [setComposite, effect])
 
     return (
       <primitive

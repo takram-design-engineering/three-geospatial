@@ -229,18 +229,18 @@ const Scene: FC<SceneProps> = ({
         >
           {!normal && !depth && (
             <>
-              <AerialPerspective
-                sunIrradiance
-                skyIrradiance
-                correctGeometricError={correctGeometricError}
-                irradianceScale={2 / Math.PI}
-              />
               <Clouds
                 ref={cloudsRef}
                 localWeatherTexture={localWeatherTexture}
                 blueNoiseTexture={blueNoiseTexture}
                 blueNoiseVectorTexture={blueNoiseVectorTexture}
                 coverage={coverage}
+              />
+              <AerialPerspective
+                sunIrradiance
+                skyIrradiance
+                correctGeometricError={correctGeometricError}
+                irradianceScale={2 / Math.PI}
               />
             </>
           )}
