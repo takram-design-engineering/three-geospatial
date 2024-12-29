@@ -156,7 +156,7 @@ export class CloudsEffect extends Effect {
     })
     cloudsRenderTarget.texture.name = 'Clouds.Target'
 
-    const shadowMapSize = 4096 // TODO: Parametrize
+    const shadowMapSize = 2048 // TODO: Parametrize
     const shadowRenderTarget = new WebGLRenderTarget(
       shadowMapSize,
       shadowMapSize,
