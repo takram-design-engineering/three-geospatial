@@ -50,12 +50,10 @@ in vec3 vRayDirection; // Direction to the texel
 layout(location = 0) out vec4 outputColor;
 
 float blueNoise(const vec2 uv) {
+  const vec3 scale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
   return texture(
     blueNoiseTexture,
-    vec3(
-      uv * resolution / float(STBN_TEXTURE_SIZE),
-      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
-    )
+    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * scale
   ).x;
 }
 
@@ -189,7 +187,7 @@ vec4 marchToClouds(
     vec3 position = rayOrigin + rayDirection * rayDistance;
 
     // Sample a rough density.
-    float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance / 1e5));
+    float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance * 1e-5));
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
@@ -198,7 +196,6 @@ vec4 marchToClouds(
       // Sample a detailed density.
       float density = sampleDensityDetail(weather, position, mipLevel);
       if (density > minDensity) {
-        // density *= 0.1;
         #ifdef ACCURATE_ATMOSPHERIC_IRRADIANCE
         sunIrradiance = GetSunAndSkyIrradiance(
           position * METER_TO_UNIT_LENGTH,
