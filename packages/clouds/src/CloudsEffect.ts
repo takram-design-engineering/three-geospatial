@@ -197,7 +197,7 @@ export class CloudsEffect extends Effect {
     const cloudsPass = new ShaderPass(cloudsMaterial)
     const shadowPass = new ShaderPass(shadowMaterial)
     const blurPass = new KawaseBlurPass()
-    // blurPass.blurMaterial = new CloudsShadowBlurMaterial()
+    blurPass.blurMaterial = new CloudsShadowBlurMaterial()
     blurPass.kernelSize = KernelSize.VERY_SMALL
 
     super('CloudsEffect', fragmentShader, {

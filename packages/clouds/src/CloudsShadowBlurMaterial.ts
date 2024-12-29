@@ -1,5 +1,6 @@
 import { KawaseBlurMaterial } from 'postprocessing'
 
+// Provides for excluding R from being blurred.
 export class CloudsShadowBlurMaterial extends KawaseBlurMaterial {
   constructor(...args: ConstructorParameters<typeof KawaseBlurMaterial>) {
     super(...args)
