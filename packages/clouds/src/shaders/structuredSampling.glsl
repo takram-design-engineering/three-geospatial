@@ -1,5 +1,7 @@
 // Implements Structured Volume Sampling in fragment shader:
 // https://github.com/huwb/volsample
+// Implementation reference:
+// https://www.shadertoy.com/view/ttVfDc
 
 void getIcosahedralVertices(const vec3 direction, out vec3 v1, out vec3 v2, out vec3 v3) {
   // Normalization scalers to fit dodecahedron to unit sphere.
