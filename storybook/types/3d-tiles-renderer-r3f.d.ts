@@ -1,24 +1,19 @@
 declare module '3d-tiles-renderer/r3f' {
-  import {
-    type GlobeControls as GlobeControlsImpl,
-    type TilesRenderer as TilesRendererImpl,
-    type EnvironmentControls as EnvironmentControlsImpl,
-    type CameraTransitionManager,
-    type CameraTransitionMode
+  import type {
+    GlobeControls as GlobeControlsImpl,
+    TilesRenderer as TilesRendererImpl,
+    EnvironmentControls as EnvironmentControlsImpl,
+    CameraTransitionManager,
+    CameraTransitionMode
   } from '3d-tiles-renderer'
-  import { type GroupProps } from '@react-three/fiber'
-  import {
-    type OrthographicCamera,
-    type PerspectiveCamera,
-    type Camera,
-    type Object3D
+  import type { GroupProps } from '@react-three/fiber'
+  import type {
+    OrthographicCamera,
+    PerspectiveCamera,
+    Camera,
+    Object3D
   } from 'three'
-  import {
-    type ReactNode,
-    type Context,
-    type FC,
-    type RefAttributes
-  } from 'react'
+  import type { ReactNode, Context, FC, RefAttributes } from 'react'
 
   export const TilesRendererContext: Context<TilesRendererImpl | null>
 

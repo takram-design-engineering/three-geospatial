@@ -1,15 +1,11 @@
-import {
-  type Ellipsoid,
-  type TilesGroup,
-  type TilesRenderer
-} from '3d-tiles-renderer'
-import {
+import type { Ellipsoid, TilesGroup, TilesRenderer } from '3d-tiles-renderer'
+import type {
+  Camera,
   EventDispatcher,
-  type Camera,
-  type Object3D,
-  type OrthographicCamera,
-  type PerspectiveCamera,
-  type Vector3
+  Object3D,
+  OrthographicCamera,
+  PerspectiveCamera,
+  Vector3
 } from 'three'
 
 export {}
