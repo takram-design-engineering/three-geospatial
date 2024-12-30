@@ -82,8 +82,11 @@ const Globe: FC = () => {
         plugin={TileCreasedNormalsPlugin}
         args={{ creaseAngle: radians(30) }}
       />
-      {/* Controls */}
-      <GlobeControls enableDamping={true} />
+      <GlobeControls
+        enableDamping={true}
+        // TODO: Re-enable adjustHeight after initial load completes.
+        adjustHeight={false}
+      />
     </TilesRenderer>
   )
 }
