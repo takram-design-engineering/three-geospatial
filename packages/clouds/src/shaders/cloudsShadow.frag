@@ -98,7 +98,7 @@ vec4 marchToClouds(
     normal,
     rayOrigin,
     rayDirection,
-    clamp(maxRayDistance / float(maxIterations) * (frustumRadius * 1e-4), minStepSize, maxStepSize),
+    clamp(maxRayDistance / float(maxIterations), minStepSize, maxStepSize),
     rayDistance,
     stepSize
   );
@@ -156,18 +156,18 @@ vec4 marchToClouds(
     }
   }
 
-  float frontDepth = maxRayDistance;
-  float distanceToEllipsoid = 0.0;
-  if (transmittanceSum > 0.0) {
-    frontDepth = weightedDistanceSum / transmittanceSum;
-    distanceToEllipsoid = raySphereFirstIntersection(
-      rayOrigin + rayDirection * frontDepth,
-      rayDirection,
-      vec3(0.0),
-      bottomRadius
-    );
+  if (sampleCount == 0) {
+    return vec4(maxRayDistance, 0.5, 0.5, 0.0);
   }
-  float meanExtinction = sampleCount > 0 ? extinctionSum / float(sampleCount) : 0.0;
+
+  float frontDepth = weightedDistanceSum / transmittanceSum;
+  float distanceToEllipsoid = raySphereFirstIntersection(
+    rayOrigin + rayDirection * frontDepth,
+    rayDirection,
+    vec3(0.0),
+    bottomRadius
+  );
+  float meanExtinction = extinctionSum / float(sampleCount);
   return vec4(frontDepth, meanExtinction, maxOpticalDepth, distanceToEllipsoid);
 }
 
@@ -206,7 +206,7 @@ vec4 cascade(const vec2 uv, const int index) {
   float rayFar;
   getRayNearFar(sunWorldPosition, rayDirection, rayNear, rayFar);
   if (rayNear < 0.0) {
-    discard;
+    return vec4(1e5, 0.5, 0.5, 0.0);
   }
 
   vec3 rayOrigin = sunWorldPosition - ellipsoidCenter + rayNear * rayDirection;
