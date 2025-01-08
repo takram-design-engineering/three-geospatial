@@ -21,10 +21,7 @@ uniform float cameraFar;
 uniform sampler3D blueNoiseTexture;
 
 // Raymarch to clouds
-uniform int minIterations;
 uniform int maxIterations;
-uniform float minStepSize;
-uniform float maxStepSize;
 uniform float minDensity;
 uniform float minTransmittance;
 
@@ -98,7 +95,7 @@ vec4 marchToClouds(
     normal,
     rayOrigin,
     rayDirection,
-    clamp(maxRayDistance / float(maxIterations), minStepSize, maxStepSize),
+    maxRayDistance / float(maxIterations),
     rayDistance,
     stepSize
   );
@@ -142,18 +139,12 @@ vec4 marchToClouds(
         weightedDistanceSum += rayDistance * transmittanceIntegral;
         transmittanceSum += transmittanceIntegral;
       }
-
-      // Take a shorter step because we've already hit the clouds.
-      rayDistance += stepSize;
-    } else {
-      // Otherwise step longer in empty space.
-      // TODO
-      rayDistance += stepSize;
     }
 
     if (transmittanceIntegral <= minTransmittance) {
       break; // Early termination
     }
+    rayDistance += stepSize;
   }
 
   if (sampleCount == 0) {
