@@ -36,6 +36,8 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
+import { Ellipsoid, lerp } from '@takram/three-geospatial'
+
 import { FrustumCorners } from './helpers/FrustumCorners'
 import { splitFrustum, type FrustumSplitMode } from './helpers/splitFrustum'
 
@@ -46,29 +48,8 @@ const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 const frustumScratch = /*#__PURE__*/ new FrustumCorners()
 const boxScratch = /*#__PURE__*/ new Box3()
 
-function extractOrthographicTuple(
-  matrix: Matrix4
-): [left: number, right: number, top: number, bottom: number] {
-  const elements = matrix.elements
-  const m00 = elements[0] // 2 / (right - left)
-  const m03 = elements[12] // -(right + left) / (right - left)
-  const m11 = elements[5] // 2 / (top - bottom)
-  const m13 = elements[13] // -(top + bottom) / (top - bottom)
-  const RmL = 2 / m00 // (right - left)
-  const RpL = RmL * -m03 // (right + left)
-  const TmB = 2 / m11 // (top - bottom)
-  const TpB = TmB * -m13 // (t + bottom)
-  return [
-    (RpL - RmL) / 2, // left
-    (RmL + RpL) / 2, // right
-    (TmB + TpB) / 2, // top
-    (TpB - TmB) / 2 // bottom
-  ]
-}
-
 export interface CascadedShadowsOptions {
   cascadeCount?: number
-  mapSize?: number
   far?: number
   mode?: FrustumSplitMode
   lambda?: number
@@ -78,7 +59,6 @@ export interface CascadedShadowsOptions {
 
 export const cascadedShadowsOptionsDefaults = {
   cascadeCount: 4,
-  mapSize: 2048,
   far: 1e4,
   mode: 'practical',
   lambda: 0.5,
@@ -89,14 +69,12 @@ export const cascadedShadowsOptionsDefaults = {
 interface Light {
   readonly projectionMatrix: Matrix4
   readonly inverseViewMatrix: Matrix4
-  frustumRadius: number
 }
 
 export class CascadedShadows {
   readonly lights: Light[] = []
   readonly cascadeMatrix = new Matrix4()
 
-  mapSize: number
   far: number
   mode: FrustumSplitMode
   lambda: number
@@ -108,12 +86,11 @@ export class CascadedShadows {
   readonly cascades: Vector2[] = []
 
   constructor(options?: CascadedShadowsOptions) {
-    const { cascadeCount, mapSize, far, mode, lambda, margin, fade } = {
+    const { cascadeCount, far, mode, lambda, margin, fade } = {
       ...cascadedShadowsOptionsDefaults,
       ...options
     }
     this.cascadeCount = cascadeCount
-    this.mapSize = mapSize
     this.far = far
     this.mode = mode
     this.lambda = lambda
@@ -130,8 +107,7 @@ export class CascadedShadows {
       for (let i = 0; i < value; ++i) {
         this.lights[i] = {
           projectionMatrix: new Matrix4(),
-          inverseViewMatrix: new Matrix4(),
-          frustumRadius: 0
+          inverseViewMatrix: new Matrix4()
         }
       }
       this.lights.length = value
@@ -154,6 +130,7 @@ export class CascadedShadows {
     cascades.length = cascadeCount
   }
 
+  // TODO: BSM doesn't need rotational invariance. Frusta can be tighter.
   private getFrustumRadius(
     camera: PerspectiveCamera,
     frustum: FrustumCorners
@@ -178,26 +155,13 @@ export class CascadedShadows {
     return diagonalLength * 0.5
   }
 
-  private updateShadowBounds(camera: PerspectiveCamera): void {
-    const frusta = this.cascadedFrusta
-    const lights = this.lights
-    invariant(frusta.length === lights.length)
+  update(
+    camera: PerspectiveCamera,
+    sunDirection: Vector3,
+    ellipsoid = Ellipsoid.WGS84
+  ): void {
+    this.updateCascades(camera)
 
-    for (let i = 0; i < frusta.length; ++i) {
-      const radius = this.getFrustumRadius(camera, this.cascadedFrusta[i])
-      lights[i].projectionMatrix.makeOrthographic(
-        -radius, // left
-        radius, // right
-        radius, // top
-        -radius, // bottom
-        -this.margin, // near
-        radius * 2 + this.margin // far
-      )
-      lights[i].frustumRadius = radius
-    }
-  }
-
-  update(camera: PerspectiveCamera, sunDirection: Vector3): void {
     const lightOrientationMatrix = matrixScratch1.lookAt(
       vectorScratch1.set(0, 0, 0),
       vectorScratch2.copy(sunDirection).multiplyScalar(-1),
@@ -208,16 +172,23 @@ export class CascadedShadows {
       camera.matrixWorld
     )
 
-    this.updateCascades(camera)
-    this.updateShadowBounds(camera)
+    // Increase light's distance to the target when the sun is at the horizon.
+    const cameraPosition = camera.getWorldPosition(vectorScratch1)
+    const up = ellipsoid.getSurfaceNormal(cameraPosition, vectorScratch2)
+    const zenithAngle = sunDirection.dot(up)
+    const distance = lerp(1e6, 1e3, zenithAngle)
 
     const margin = this.margin
-    const mapSize = this.mapSize
     const frusta = this.cascadedFrusta
     const lights = this.lights
+    invariant(frusta.length === lights.length)
+
     for (let i = 0; i < frusta.length; ++i) {
+      const frustum = frusta[i]
+      const light = lights[i]
+
       const { near, far } = frustumScratch
-        .copy(frusta[i])
+        .copy(frustum)
         .applyMatrix4(cameraToLightMatrix)
       const bbox = boxScratch.makeEmpty()
       for (let j = 0; j < 4; j++) {
@@ -226,22 +197,21 @@ export class CascadedShadows {
       }
       const center = bbox.getCenter(vectorScratch1)
       center.z = bbox.max.z + margin
-
-      // Round light-space translation to even texel increments.
-      const light = lights[i]
-      const [left, right, top, bottom] = extractOrthographicTuple(
-        light.projectionMatrix
-      )
-      const texelWidth = (right - left) / mapSize
-      const texelHeight = (top - bottom) / mapSize
-      center.x = Math.round(center.x / texelWidth) * texelWidth
-      center.y = Math.round(center.y / texelHeight) * texelHeight
-
       center.applyMatrix4(lightOrientationMatrix)
+
+      const radius = this.getFrustumRadius(camera, frustum)
+      light.projectionMatrix.makeOrthographic(
+        -radius, // left
+        radius, // right
+        radius, // top
+        -radius, // bottom
+        -this.margin, // near
+        radius * 2 + this.margin // far
+      )
+
       const position = vectorScratch2
         .copy(sunDirection)
-        // TODO: Adjust this depending on the zenith angle.
-        .multiplyScalar(1e5)
+        .multiplyScalar(distance)
         .add(center)
       light.inverseViewMatrix
         .lookAt(center, position, Object3D.DEFAULT_UP)

@@ -177,7 +177,6 @@ export class CloudsEffect extends Effect {
     // This instance is shared between clouds and shadow materials.
     const sunDirection = new Vector3()
     const cascadedShadows = new CascadedShadows({
-      mapSize: shadowMapSize,
       lambda: 0.8,
       far: 1e5 // TODO: Parametrize
     })
@@ -267,7 +266,7 @@ export class CloudsEffect extends Effect {
   updateShadowMatrix(): void {
     assertType<PerspectiveCamera>(this.mainCamera)
     const shadows = this.cascadedShadows
-    shadows.update(this.mainCamera, this.sunDirection)
+    shadows.update(this.mainCamera, this.sunDirection, this.ellipsoid)
 
     const shadowUniforms = this.shadowMaterial.uniforms
     const cloudsUniforms = this.cloudsMaterial.uniforms
@@ -284,7 +283,6 @@ export class CloudsEffect extends Effect {
       cloudsUniforms.shadowMatrices.value[i].copy(shadowMatrix)
       shadowUniforms.inverseShadowMatrices.value[i].copy(inverseShadowMatrix)
       cloudsUniforms.shadowCascades.value[i].copy(shadows.cascades[i])
-      shadowUniforms.shadowFrustumRadii.value[i] = light.frustumRadius
     }
     cloudsUniforms.shadowFar.value = this.cascadedShadows.far
   }

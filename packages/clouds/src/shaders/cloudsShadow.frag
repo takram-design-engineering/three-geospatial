@@ -15,13 +15,13 @@ uniform sampler2D depthBuffer;
 uniform mat4 viewMatrix; // The main camera
 uniform mat4 inverseProjectionMatrix; // The main camera
 uniform mat4 inverseShadowMatrices[4]; // Inverse view projection of the sun
-uniform float shadowFrustumRadii[4];
 uniform float cameraNear;
 uniform float cameraFar;
 uniform sampler3D blueNoiseTexture;
 
 // Raymarch to clouds
 uniform int maxIterations;
+uniform float minStepSize;
 uniform float minDensity;
 uniform float minTransmittance;
 
@@ -83,7 +83,6 @@ bool intersectsSceneObjects(const vec3 rayPosition) {
 vec4 marchToClouds(
   const vec3 rayOrigin, // Relative to the ellipsoid center
   const vec3 rayDirection,
-  const float frustumRadius,
   const float maxRayDistance,
   const float jitter
 ) {
@@ -95,7 +94,7 @@ vec4 marchToClouds(
     normal,
     rayOrigin,
     rayDirection,
-    maxRayDistance / float(maxIterations),
+    max(maxRayDistance / float(maxIterations), minStepSize),
     rayDistance,
     stepSize
   );
@@ -202,8 +201,7 @@ vec4 cascade(const vec2 uv, const int index) {
 
   vec3 rayOrigin = sunWorldPosition - ellipsoidCenter + rayNear * rayDirection;
   float jitter = blueNoise(vUv);
-  float frustumRadius = shadowFrustumRadii[index];
-  return marchToClouds(rayOrigin, rayDirection, frustumRadius, rayFar - rayNear, jitter);
+  return marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter);
 }
 
 void main() {
