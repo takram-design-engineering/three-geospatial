@@ -4,8 +4,7 @@ import {
   BlendFunction,
   Effect,
   EffectAttribute,
-  KawaseBlurPass,
-  KernelSize,
+  GaussianBlurPass,
   Resolution,
   ShaderPass
 } from 'postprocessing'
@@ -34,8 +33,6 @@ import { CascadedShadows } from './CascadedShadows'
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { CloudsShadowBlurMaterial } from './CloudsShadowBlurMaterial'
 import { CloudsShadowMaterial } from './CloudsShadowMaterial'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 
@@ -66,7 +63,7 @@ export class CloudsEffect extends Effect {
   readonly cloudLayers: CloudLayers = [
     {
       minHeight: 600,
-      maxHeight: 1200,
+      maxHeight: 1400,
       extinctionCoeff: 0.3,
       detailAmount: 1,
       weatherExponent: 1,
@@ -129,9 +126,10 @@ export class CloudsEffect extends Effect {
   readonly shadowRenderTarget: WebGLRenderTarget
   readonly shadowMaterial: CloudsShadowMaterial
   readonly shadowPass: ShaderPass
-  readonly blurPass: KawaseBlurPass
+  readonly blurPass: GaussianBlurPass
   readonly resolution: Resolution
 
+  useBlur = false
   private frame = 0
   private readonly clock = new Clock()
 
@@ -176,8 +174,9 @@ export class CloudsEffect extends Effect {
 
     // This instance is shared between clouds and shadow materials.
     const sunDirection = new Vector3()
+
     const cascadedShadows = new CascadedShadows({
-      lambda: 0.8,
+      lambda: 0.6,
       far: 1e5 // TODO: Parametrize
     })
 
@@ -189,6 +188,7 @@ export class CloudsEffect extends Effect {
     cloudsUniforms.shapeTexture.value = cloudShape.texture
     cloudsUniforms.shapeDetailTexture.value = cloudShapeDetail.texture
     cloudsUniforms.shadowBuffer.value = shadowRenderTarget.texture
+    cloudsUniforms.shadowTexelSize.value.set(1, 1).divideScalar(shadowMapSize)
 
     const shadowMaterial = new CloudsShadowMaterial(
       { sunDirectionRef: sunDirection },
@@ -201,9 +201,9 @@ export class CloudsEffect extends Effect {
 
     const cloudsPass = new ShaderPass(cloudsMaterial)
     const shadowPass = new ShaderPass(shadowMaterial)
-    const blurPass = new KawaseBlurPass()
-    blurPass.blurMaterial = new CloudsShadowBlurMaterial()
-    blurPass.kernelSize = KernelSize.VERY_SMALL
+    const blurPass = new GaussianBlurPass({
+      kernelSize: 12
+    })
 
     super('CloudsEffect', fragmentShader, {
       blendFunction,
@@ -311,11 +311,13 @@ export class CloudsEffect extends Effect {
     this.updateShadowMatrix()
 
     this.shadowPass.render(renderer, null, this.shadowRenderTarget)
-    this.blurPass.render(
-      renderer,
-      this.shadowRenderTarget,
-      this.shadowRenderTarget
-    )
+    if (this.useBlur) {
+      this.blurPass.render(
+        renderer,
+        this.shadowRenderTarget,
+        this.shadowRenderTarget
+      )
+    }
     this.cloudsPass.render(renderer, null, this.cloudsRenderTarget)
   }
 

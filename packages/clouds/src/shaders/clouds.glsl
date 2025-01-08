@@ -90,7 +90,7 @@ float sampleDensityDetail(WeatherSample weather, const vec3 position, const floa
     density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), detailAmounts);
 
     #ifdef USE_DETAIL
-    if (mipLevel < 1.0) {
+    if (mipLevel < 0.5) {
       float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
       // Fluffy at the top and whippy at the bottom.
       vec4 modifier = mix(

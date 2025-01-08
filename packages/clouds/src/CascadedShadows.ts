@@ -62,7 +62,7 @@ export const cascadedShadowsOptionsDefaults = {
   far: 1e4,
   mode: 'practical',
   lambda: 0.5,
-  margin: 200,
+  margin: 0,
   fade: true
 } satisfies Partial<CascadedShadowsOptions>
 

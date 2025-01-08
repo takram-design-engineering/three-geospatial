@@ -35,7 +35,7 @@ float blueNoise(const vec2 uv) {
     blueNoiseTexture,
     vec3(
       uv * resolution / float(STBN_TEXTURE_SIZE),
-      0.0 //float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
+      0.0 // float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
     )
   ).x;
 }
@@ -84,7 +84,8 @@ vec4 marchToClouds(
   const vec3 rayOrigin, // Relative to the ellipsoid center
   const vec3 rayDirection,
   const float maxRayDistance,
-  const float jitter
+  const float jitter,
+  const float mipLevel
 ) {
   // Setup structured volume sampling.
   vec3 normal = getStructureNormal(rayDirection, jitter);
@@ -99,11 +100,12 @@ vec4 marchToClouds(
     stepSize
   );
 
+  rayDistance -= stepSize * jitter; // May increase aliasing noise.
+
   float extinctionSum = 0.0;
   float maxOpticalDepth = 0.0;
   float transmittanceIntegral = 1.0;
-  float weightedDistanceSum = 0.0;
-  float transmittanceSum = 0.0;
+  float frontDepth = 0.0;
 
   int sampleCount = 0;
   for (int i = 0; i < maxIterations; ++i) {
@@ -118,7 +120,6 @@ vec4 marchToClouds(
     }
 
     // Sample a rough density.
-    float mipLevel = 0.0; // TODO
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
@@ -127,16 +128,11 @@ vec4 marchToClouds(
       // Sample a detailed density.
       float density = sampleDensityDetail(weather, position, mipLevel);
       if (density > minDensity) {
+        frontDepth = max(frontDepth, rayDistance);
         extinctionSum += density;
         maxOpticalDepth += density * stepSize;
+        transmittanceIntegral *= exp(-density * stepSize);
         ++sampleCount;
-
-        float transmittance = exp(-density * stepSize);
-        transmittanceIntegral *= transmittance;
-
-        // Use the method of the Frostbite's 5.9.1 to obtain smooth front depth.
-        weightedDistanceSum += rayDistance * transmittanceIntegral;
-        transmittanceSum += transmittanceIntegral;
       }
     }
 
@@ -147,10 +143,9 @@ vec4 marchToClouds(
   }
 
   if (sampleCount == 0) {
-    return vec4(maxRayDistance, 0.5, 0.5, 0.0);
+    return vec4(maxRayDistance, 0.0, 0.0, 0.0);
   }
 
-  float frontDepth = weightedDistanceSum / transmittanceSum;
   float distanceToEllipsoid = raySphereFirstIntersection(
     rayOrigin + rayDirection * frontDepth,
     rayDirection,
@@ -184,7 +179,7 @@ void getRayNearFar(
   );
 }
 
-vec4 cascade(const vec2 uv, const int index) {
+vec4 cascade(const vec2 uv, const int index, const float mipLevel) {
   mat4 inverseShadowMatrix = inverseShadowMatrices[index];
   vec2 clip = uv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrix * vec4(clip.xy, -1.0, 1.0);
@@ -195,28 +190,29 @@ vec4 cascade(const vec2 uv, const int index) {
   float rayNear;
   float rayFar;
   getRayNearFar(sunWorldPosition, rayDirection, rayNear, rayFar);
-  if (rayNear < 0.0) {
-    return vec4(1e5, 0.5, 0.5, 0.0);
+  if (rayNear < 0.0 || rayFar < 0.0) {
+    return vec4(1e7, 0.0, 0.0, 0.0);
   }
 
   vec3 rayOrigin = sunWorldPosition - ellipsoidCenter + rayNear * rayDirection;
   float jitter = blueNoise(vUv);
-  return marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter);
+  return marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter, mipLevel);
 }
 
 void main() {
+  // TODO: Calculate mip level
   vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
   if (vUv.x < 0.5) {
     if (vUv.y < 0.5) {
-      outputColor = cascade(coord.xy, 0);
+      outputColor = cascade(coord.xy, 0, 0.0);
     } else {
-      outputColor = cascade(coord.xw, 1);
+      outputColor = cascade(coord.xw, 1, 0.5);
     }
   } else {
     if (vUv.y < 0.5) {
-      outputColor = cascade(coord.zy, 2);
+      outputColor = cascade(coord.zy, 2, 1.0);
     } else {
-      outputColor = cascade(coord.zw, 3);
+      outputColor = cascade(coord.zw, 3, 2.0);
     }
   }
 }

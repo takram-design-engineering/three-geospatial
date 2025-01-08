@@ -147,12 +147,14 @@ const Scene: FC = () => {
     })
 
   const {
-    showBox: debugShowBox,
     showShadowMap: debugShowShadowMap,
+    showCascades: debugShowCascades,
+    showBox: debugShowBox,
     showUv: debugShowUv
   } = useControls('debug', {
-    showBox: false,
     showShadowMap: false,
+    showCascades: false,
+    showBox: false,
     showUv: false
   })
 
@@ -179,18 +181,23 @@ const Scene: FC = () => {
     if (clouds == null) {
       return
     }
-    if (debugShowUv) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_UV = '1'
-    } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_UV
-    }
     if (debugShowShadowMap) {
       clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
     } else {
       delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
     }
+    if (debugShowCascades) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
+    }
+    if (debugShowUv) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_UV = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_UV
+    }
     clouds.cloudsMaterial.needsUpdate = true
-  }, [clouds, debugShowShadowMap, debugShowUv])
+  }, [clouds, debugShowShadowMap, debugShowCascades, debugShowUv])
 
   return (
     <>

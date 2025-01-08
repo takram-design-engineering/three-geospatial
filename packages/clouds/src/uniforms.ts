@@ -14,12 +14,12 @@ export interface CloudParameterUniforms {
 export function createCloudParameterUniforms(): CloudParameterUniforms {
   return {
     localWeatherTexture: new Uniform(null),
-    localWeatherFrequency: new Uniform(new Vector2(75, 75)),
+    localWeatherFrequency: new Uniform(new Vector2(70, 70)),
     coverage: new Uniform(0.3),
     shapeTexture: new Uniform(null),
     shapeFrequency: new Uniform(0.0003),
     shapeDetailTexture: new Uniform(null),
-    shapeDetailFrequency: new Uniform(0.007)
+    shapeDetailFrequency: new Uniform(0.006)
   }
 }
 

@@ -108,6 +108,7 @@ interface CloudsMaterialUniforms
 
   // Beer shadow map
   shadowBuffer: Uniform<Texture | null>
+  shadowTexelSize: Uniform<Vector2>
   shadowMatrices: Uniform<Matrix4[]>
   shadowCascades: Uniform<Vector2[]>
   shadowFar: Uniform<number>
@@ -185,6 +186,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Beer shadow map
           shadowBuffer: new Uniform(null),
+          shadowTexelSize: new Uniform(new Vector2()),
           shadowMatrices: new Uniform([
             new Matrix4(),
             new Matrix4(),

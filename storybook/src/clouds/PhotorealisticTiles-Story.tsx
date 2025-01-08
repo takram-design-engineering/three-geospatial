@@ -133,7 +133,7 @@ const Scene: FC<SceneProps> = ({
 
   const { enabled, coverage, useDetail, usePowder } = useControls('clouds', {
     enabled: true,
-    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
+    coverage: { value: 0.2, min: 0, max: 1, step: 0.01 },
     useDetail: true,
     usePowder: true
   })
@@ -208,6 +208,8 @@ const Scene: FC<SceneProps> = ({
     }
     clouds.cloudsMaterial.useDetail = useDetail
     clouds.cloudsMaterial.usePowder = usePowder
+    clouds.cloudLayers[0].minHeight = 750
+    clouds.cloudLayers[0].maxHeight = 1200
   }, [useDetail, usePowder])
 
   return (
@@ -241,6 +243,7 @@ const Scene: FC<SceneProps> = ({
                   blueNoiseTexture={blueNoiseTexture}
                   blueNoiseVectorTexture={blueNoiseVectorTexture}
                   coverage={coverage}
+                  resolution-scale={0.5}
                 />
               )}
               <AerialPerspective

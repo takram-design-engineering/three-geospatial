@@ -40,6 +40,7 @@ uniform float minTransmittance;
 
 // Beer shadow map
 uniform sampler2D shadowBuffer;
+uniform vec2 shadowTexelSize;
 uniform mat4 shadowMatrices[4];
 uniform vec2 shadowCascades[4];
 uniform float shadowFar;
@@ -97,12 +98,33 @@ int getCascadeIndex(vec3 position) {
   return 3;
 }
 
-vec3 getShadow(vec3 rayPosition) {
+vec3 getCascadeColor(vec3 rayPosition, vec2 uvOffset) {
   vec3 position = rayPosition + ellipsoidCenter;
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
   point /= point.w;
-  vec2 uv = point.xy * 0.5 + 0.5;
+  vec2 uv = point.xy * 0.5 + 0.5 + uvOffset;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    return vec3(0.0);
+  }
+  vec4 coord = vec4(uv, uv + 1.0) * 0.5;
+  if (index == 0) {
+    return vec3(1.0, 0.0, 0.0);
+  } else if (index == 1) {
+    return vec3(0.0, 1.0, 0.0);
+  } else if (index == 2) {
+    return vec3(0.0, 0.0, 1.0);
+  } else {
+    return vec3(1.0, 1.0, 0.0);
+  }
+}
+
+vec3 sampleShadow(vec3 rayPosition, vec2 uvOffset) {
+  vec3 position = rayPosition + ellipsoidCenter;
+  int index = getCascadeIndex(position);
+  vec4 point = shadowMatrices[index] * vec4(position, 1.0);
+  point /= point.w;
+  vec2 uv = point.xy * 0.5 + 0.5 + uvOffset;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(0.0);
   }
@@ -116,8 +138,31 @@ vec3 getShadow(vec3 rayPosition) {
   } else {
     uv = coord.zw;
   }
-  // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
+  // x: frontDepth, y: meanExtinction, z: maxOpticalDepth
   return texture(shadowBuffer, uv).xyz;
+}
+
+float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop, vec2 uvOffset) {
+  vec3 shadow = sampleShadow(rayPosition, uvOffset);
+  float frontDepth = shadow.x;
+  float meanExtinction = shadow.y;
+  float maxOpticalDepth = shadow.z;
+  return min(maxOpticalDepth, meanExtinction * max(0.0, distanceToTop - frontDepth));
+}
+
+// TODO: Optimization
+float sampleFilteredShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
+  vec2 size = shadowTexelSize * 2.0;
+  return 0.11111111 *
+  (sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(0.0)) +
+    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(size.x, 0.0)) +
+    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(0.0, size.y)) +
+    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(-size.x, 0.0)) +
+    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(0.0, -size.y)) +
+    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(size.x, size.y)) +
+    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(-size.x, -size.y)) +
+    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(size.x, -size.y)) +
+    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(-size.x, size.y)));
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
@@ -138,7 +183,7 @@ float sampleOpticalDepth(
   const int iterations,
   const float mipLevel
 ) {
-  float stepSize = 40.0 / float(iterations);
+  float stepSize = 60.0 / float(iterations);
   float opticalDepth = 0.0;
   float stepScale = 1.0;
   float prevStepScale = 0.0;
@@ -173,7 +218,7 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
 }
 
 vec4 marchToClouds(
-  const vec3 rayOrigin,
+  vec3 rayOrigin,
   const vec3 rayDirection,
   const float maxRayDistance,
   const float jitter,
@@ -227,20 +272,12 @@ vec4 marchToClouds(
         );
 
         // Obtain the optical depth at the position from BSM.
-        vec3 shadow = getShadow(position);
-        float frontDepth = shadow.x;
-        float meanExtinction = shadow.y;
-        float maxOpticalDepth = shadow.z;
-        float shadowOpticalDepth = min(
-          maxOpticalDepth,
-          meanExtinction * max(0.0, distanceToTop - frontDepth)
-        );
+        // float shadowOpticalDepth = sampleShadowOpticalDepth(position, distanceToTop, vec2(0.0));
+        float shadowOpticalDepth = sampleFilteredShadowOpticalDepth(position, distanceToTop);
 
         float sunOpticalDepth = 0.0;
         if (mipLevel < 0.5) {
-          sunOpticalDepth = sampleOpticalDepth(position, sunDirection, 2, mipLevel);
-        } else {
-          sunOpticalDepth = sampleOpticalDepth(position, sunDirection, 1, mipLevel);
+          sunOpticalDepth = sampleOpticalDepth(position, sunDirection, 3, mipLevel);
         }
         float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
         float scattering = multipleScattering(opticalDepth, cosTheta);
@@ -260,6 +297,10 @@ vec4 marchToClouds(
         #ifdef USE_POWDER
         radiance *= 1.0 - powderScale * exp(-density * powderExponent);
         #endif // USE_POWDER
+
+        #ifdef DEBUG_SHOW_CASCADES
+        radiance = 0.001 * getCascadeColor(position, vec2(0.0));
+        #endif // DEBUG_SHOW_CASCADES
 
         // Energy-conserving analytical integration of scattered light
         // See 5.6.3 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
@@ -376,7 +417,19 @@ void getRayNearFar(const vec3 rayDirection, out float rayNear, out float rayFar)
 
 void main() {
   #ifdef DEBUG_SHOW_SHADOW_MAP
-  outputColor = vec4(texture(shadowBuffer, vUv).rgb * vec3(1e-5, 10.0, 0.1), 1.0);
+  #ifndef DEBUG_SHOW_SHADOW_MAP_TYPE
+  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
+  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
+
+  #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
+  outputColor = vec4(vec3(texture(shadowBuffer, vUv).r * 1e-4), 1.0);
+  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
+  outputColor = vec4(vec3(texture(shadowBuffer, vUv).g * 10.0), 1.0);
+  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
+  outputColor = vec4(vec3(texture(shadowBuffer, vUv).b * 0.1), 1.0);
+  #else
+  outputColor = vec4(texture(shadowBuffer, vUv).rgb * vec3(1e-4, 10.0, 0.1), 1.0);
+  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 
@@ -384,7 +437,7 @@ void main() {
   float rayNear;
   float rayFar;
   getRayNearFar(rayDirection, rayNear, rayFar);
-  if (rayNear < 0.0) {
+  if (rayNear < 0.0 || rayFar < 0.0) {
     discard;
   }
 
