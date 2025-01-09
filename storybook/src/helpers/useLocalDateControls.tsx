@@ -1,6 +1,7 @@
 import { useThree } from '@react-three/fiber'
 import { getDayOfYear } from 'date-fns'
 import { useMotionValue, useSpring, type MotionValue } from 'framer-motion'
+import { type FolderSettings } from 'leva/dist/declarations/src/types'
 import { useEffect, useMemo } from 'react'
 
 import { springOptions } from './springOptions'
@@ -14,24 +15,31 @@ export interface LocalDateControlsParams {
   timeOfDay?: number
 }
 
-export function useLocalDateControls({
-  longitude,
-  dayOfYear: initialDayOfYear = getDayOfYear(new Date()),
-  timeOfDay: initialTimeOfDay = 9
-}: LocalDateControlsParams = {}): MotionValue<number> {
-  const { dayOfYear, timeOfDay } = useControls('local date', {
-    dayOfYear: {
-      value: initialDayOfYear,
-      min: 1,
-      max: 365, // Ignore leap year
-      step: 1
+export function useLocalDateControls(
+  {
+    longitude,
+    dayOfYear: initialDayOfYear = getDayOfYear(new Date()),
+    timeOfDay: initialTimeOfDay = 9
+  }: LocalDateControlsParams = {},
+  folderSettings?: FolderSettings
+): MotionValue<number> {
+  const { dayOfYear, timeOfDay } = useControls(
+    'local date',
+    {
+      dayOfYear: {
+        value: initialDayOfYear,
+        min: 1,
+        max: 365, // Ignore leap year
+        step: 1
+      },
+      timeOfDay: {
+        value: initialTimeOfDay,
+        min: 0,
+        max: 24
+      }
     },
-    timeOfDay: {
-      value: initialTimeOfDay,
-      min: 0,
-      max: 24
-    }
-  })
+    folderSettings
+  )
 
   const springDayOfYear = useSpring(dayOfYear, springOptions)
   const springTimeOfDay = useSpring(timeOfDay, springOptions)

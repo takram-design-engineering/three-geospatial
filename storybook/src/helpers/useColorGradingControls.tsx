@@ -1,4 +1,5 @@
 import { useLoader } from '@react-three/fiber'
+import { type FolderSettings } from 'leva/dist/declarations/src/types'
 import { useMemo } from 'react'
 import { FileLoader } from 'three'
 
@@ -10,7 +11,9 @@ interface Entry {
   file: string
 }
 
-export function useColorGradingControls(): string | null {
+export function useColorGradingControls(
+  folderSettings?: FolderSettings
+): string | null {
   const data = useLoader(FileLoader, 'public/clut/index.json', loader => {
     loader.setResponseType('json')
   }) as Entry[]
@@ -41,7 +44,7 @@ export function useColorGradingControls(): string | null {
         options: films
       }
     },
-    { collapsed: true },
+    { collapsed: true, ...folderSettings },
     [films]
   )
 
