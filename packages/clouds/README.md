@@ -2,6 +2,16 @@
 
 This library is under active development and is in pre-release status.
 
+### TODO
+
+- [ ] Temporal upsampling in the main render buffer
+- [ ] Crepuscular rays
+- [ ] Cloud layer parametrization refinements
+- [ ] TRAA on BSM
+- [ ] Shadow filtering on aerial perspective
+- [ ] Fix shadow occlusion
+- [ ] Finalize API
+
 ## References
 
 In alphabetical order
