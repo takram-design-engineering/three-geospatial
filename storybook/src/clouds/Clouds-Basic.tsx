@@ -142,14 +142,14 @@ const Scene: FC = () => {
     halfResolution,
     animate,
     skyIrradianceScale,
-    useDetail,
+    useShapeDetail,
     usePowder
   } = useControls('clouds', {
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
     halfResolution: true,
     animate: false,
     skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
-    useDetail: true,
+    useShapeDetail: true,
     usePowder: true
   })
 
@@ -190,9 +190,9 @@ const Scene: FC = () => {
     if (clouds == null) {
       return
     }
-    clouds.cloudsMaterial.useDetail = useDetail
+    clouds.cloudsMaterial.useShapeDetail = useShapeDetail
     clouds.cloudsMaterial.usePowder = usePowder
-  }, [clouds, useDetail, usePowder])
+  }, [clouds, useShapeDetail, usePowder])
 
   useEffect(() => {
     if (clouds == null) {

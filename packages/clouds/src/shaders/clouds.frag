@@ -299,7 +299,7 @@ vec4 marchToClouds(
         #endif // USE_POWDER
 
         #ifdef DEBUG_SHOW_CASCADES
-        radiance = 0.001 * getCascadeColor(position, vec2(0.0));
+        radiance = 1e-3 * getCascadeColor(position, vec2(0.0));
         #endif // DEBUG_SHOW_CASCADES
 
         // Energy-conserving analytical integration of scattered light

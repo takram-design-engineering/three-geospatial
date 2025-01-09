@@ -130,10 +130,10 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
 
-  const { enabled, coverage, useDetail, usePowder } = useControls('clouds', {
+  const { enabled, coverage, useShapeDetail, usePowder } = useControls('clouds', {
     enabled: true,
     coverage: { value: 0.25, min: 0, max: 1, step: 0.01 },
-    useDetail: true,
+    useShapeDetail: true,
     usePowder: true
   })
 
@@ -201,11 +201,11 @@ const Scene: FC<SceneProps> = ({
     if (clouds == null) {
       return
     }
-    clouds.cloudsMaterial.useDetail = useDetail
+    clouds.cloudsMaterial.useShapeDetail = useShapeDetail
     clouds.cloudsMaterial.usePowder = usePowder
     clouds.cloudLayers[0].minHeight = 750
     clouds.cloudLayers[0].maxHeight = 1200
-  }, [useDetail, usePowder])
+  }, [useShapeDetail, usePowder])
 
   return (
     <Atmosphere

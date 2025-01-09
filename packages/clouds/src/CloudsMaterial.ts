@@ -203,7 +203,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
           STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
           DEPTH_PACKING: '0',
-          USE_DETAIL: '1',
+          USE_SHAPE_DETAIL: '1',
           MULTI_SCATTERING_OCTAVES: '8',
           USE_POWDER: '1',
           ACCURATE_ATMOSPHERIC_IRRADIANCE: '1' // TODO
@@ -284,16 +284,16 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get useDetail(): boolean {
-    return this.defines.USE_DETAIL != null
+  get useShapeDetail(): boolean {
+    return this.defines.USE_SHAPE_DETAIL != null
   }
 
-  set useDetail(value: boolean) {
-    if (value !== this.useDetail) {
+  set useShapeDetail(value: boolean) {
+    if (value !== this.useShapeDetail) {
       if (value) {
-        this.defines.USE_DETAIL = '1'
+        this.defines.USE_SHAPE_DETAIL = '1'
       } else {
-        delete this.defines.USE_DETAIL
+        delete this.defines.USE_SHAPE_DETAIL
       }
       this.needsUpdate = true
     }

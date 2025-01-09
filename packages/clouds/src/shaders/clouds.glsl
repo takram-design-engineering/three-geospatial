@@ -94,7 +94,7 @@ float sampleDensityDetail(WeatherSample weather, const vec3 position, const floa
   shape = 1.0 - shape; // Modulation for fluffy shape
   density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), detailAmounts);
 
-  #ifdef USE_DETAIL
+  #ifdef USE_SHAPE_DETAIL
   if (mipLevel < 0.5) {
     float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
     // Fluffy at the top and whippy at the bottom.

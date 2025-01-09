@@ -163,7 +163,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
         STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
         DEPTH_PACKING: '0',
-        USE_DETAIL: '1'
+        USE_SHAPE_DETAIL: '1'
       }
     })
 
@@ -229,16 +229,16 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
     }
   }
 
-  get useDetail(): boolean {
-    return this.defines.USE_DETAIL != null
+  get useShapeDetail(): boolean {
+    return this.defines.USE_SHAPE_DETAIL != null
   }
 
-  set useDetail(value: boolean) {
-    if (value !== this.useDetail) {
+  set useShapeDetail(value: boolean) {
+    if (value !== this.useShapeDetail) {
       if (value) {
-        this.defines.USE_DETAIL = '1'
+        this.defines.USE_SHAPE_DETAIL = '1'
       } else {
-        delete this.defines.USE_DETAIL
+        delete this.defines.USE_SHAPE_DETAIL
       }
       this.needsUpdate = true
     }
