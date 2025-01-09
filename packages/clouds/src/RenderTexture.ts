@@ -2,6 +2,7 @@ import {
   Camera,
   GLSL3,
   LinearFilter,
+  LinearMipMapLinearFilter,
   Mesh,
   NoColorSpace,
   PlaneGeometry,
@@ -53,7 +54,8 @@ export class RenderTexture {
       format: RGBAFormat
     })
     const texture = this.renderTarget.texture
-    texture.minFilter = LinearFilter
+    texture.generateMipmaps = true
+    texture.minFilter = LinearMipMapLinearFilter
     texture.magFilter = LinearFilter
     texture.wrapS = RepeatWrapping
     texture.wrapT = RepeatWrapping

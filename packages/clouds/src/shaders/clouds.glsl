@@ -41,10 +41,12 @@ vec2 getGlobeUv(const vec3 position) {
 }
 
 float getMipLevel(const vec2 uv) {
+  const float mipLevelScale = 0.1;
   vec2 coord = uv * resolution;
   vec2 ddx = dFdx(coord);
   vec2 ddy = dFdy(coord);
-  return max(0.0, 0.5 * log2(max(dot(ddx, ddx), dot(ddy, ddy))));
+  float deltaMaxSqr = max(dot(ddx, ddx), dot(ddy, ddy)) * mipLevelScale;
+  return max(0.0, 0.5 * log2(max(1.0, deltaMaxSqr)));
 }
 
 struct WeatherSample {
@@ -87,7 +89,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
   return weather;
 }
 
-float sampleDensityDetail(WeatherSample weather, const vec3 position, const float mipLevel) {
+float sampleShape(WeatherSample weather, const vec3 position, const float mipLevel) {
   vec4 density = weather.density;
 
   float shape = textureLod(shapeTexture, position * shapeFrequency, 0.0).r;

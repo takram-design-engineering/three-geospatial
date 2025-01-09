@@ -127,7 +127,7 @@ vec4 marchToClouds(
 
     if (any(greaterThan(weather.density, vec4(minDensity)))) {
       // Sample a detailed density.
-      float density = sampleDensityDetail(weather, position, mipLevel);
+      float density = sampleShape(weather, position, mipLevel);
       if (density > minDensity) {
         frontDepth = max(frontDepth, rayDistance);
         extinctionSum += density;

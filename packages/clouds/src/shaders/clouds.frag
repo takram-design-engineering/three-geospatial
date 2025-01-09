@@ -192,7 +192,7 @@ float marchOpticalDepth(
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
-    float density = sampleDensityDetail(weather, position, mipLevel);
+    float density = sampleShape(weather, position, mipLevel);
     opticalDepth += density * (stepScale - prevStepScale) * stepSize;
     prevStepScale = stepScale;
     stepScale *= 2.0;
@@ -252,7 +252,7 @@ vec4 marchToClouds(
 
     if (any(greaterThan(weather.density, vec4(minDensity)))) {
       // Sample a detailed density.
-      float density = sampleDensityDetail(weather, position, mipLevel);
+      float density = sampleShape(weather, position, mipLevel);
       if (density > minDensity) {
         #ifdef ACCURATE_ATMOSPHERIC_IRRADIANCE
         sunIrradiance = GetSunAndSkyIrradiance(
@@ -322,7 +322,8 @@ vec4 marchToClouds(
       rayDistance += stepSize;
     } else {
       // Otherwise step longer in empty space.
-      // TODO: This produces some banding artifacts.
+      // TODO: This produces banding artifacts.
+      // Possible improvement: Binary search refinement
       rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
     }
 
