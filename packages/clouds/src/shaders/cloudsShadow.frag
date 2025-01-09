@@ -202,17 +202,17 @@ vec4 cascade(const vec2 uv, const int index, const float mipLevel) {
 void main() {
   // TODO: Calculate mip level
   vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
-  if (vUv.x < 0.5) {
-    if (vUv.y < 0.5) {
-      outputColor = cascade(coord.xy, 0, 0.0);
+  if (vUv.y > 0.5) {
+    if (vUv.x < 0.5) {
+      outputColor = cascade(coord.xw, 0, 0.0);
     } else {
-      outputColor = cascade(coord.xw, 1, 0.5);
+      outputColor = cascade(coord.zw, 1, 0.5);
     }
   } else {
-    if (vUv.y < 0.5) {
-      outputColor = cascade(coord.zy, 2, 1.0);
+    if (vUv.x < 0.5) {
+      outputColor = cascade(coord.xy, 2, 1.0);
     } else {
-      outputColor = cascade(coord.zw, 3, 2.0);
+      outputColor = cascade(coord.zy, 3, 2.0);
     }
   }
 }

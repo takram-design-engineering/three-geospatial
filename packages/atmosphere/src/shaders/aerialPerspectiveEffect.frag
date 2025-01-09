@@ -131,13 +131,13 @@ vec4 getShadow(vec3 worldPosition) {
   }
   vec4 coord = vec4(uv, uv + 1.0) * 0.5;
   if (index == 0) {
-    uv = coord.xy;
-  } else if (index == 1) {
     uv = coord.xw;
-  } else if (index == 2) {
-    uv = coord.zy;
-  } else {
+  } else if (index == 1) {
     uv = coord.zw;
+  } else if (index == 2) {
+    uv = coord.xy;
+  } else {
+    uv = coord.zy;
   }
   // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
   return texture(shadowBuffer, uv);

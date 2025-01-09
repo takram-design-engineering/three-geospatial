@@ -130,13 +130,13 @@ vec3 sampleShadow(vec3 rayPosition, vec2 uvOffset) {
   }
   vec4 coord = vec4(uv, uv + 1.0) * 0.5;
   if (index == 0) {
-    uv = coord.xy;
-  } else if (index == 1) {
     uv = coord.xw;
-  } else if (index == 2) {
-    uv = coord.zy;
-  } else {
+  } else if (index == 1) {
     uv = coord.zw;
+  } else if (index == 2) {
+    uv = coord.xy;
+  } else {
+    uv = coord.zy;
   }
   // x: frontDepth, y: meanExtinction, z: maxOpticalDepth
   return texture(shadowBuffer, uv).xyz;
