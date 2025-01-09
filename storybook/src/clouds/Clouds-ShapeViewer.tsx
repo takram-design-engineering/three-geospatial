@@ -15,11 +15,12 @@ import { CloudShape, CloudShapeDetail } from '@takram/three-global-clouds'
 
 import { useControls } from '../helpers/useControls'
 
-const shape = new CloudShape()
-const shapeDetail = new CloudShapeDetail()
 const geometry = new BoxGeometry(1, 1, 1)
 
 const Scene: FC = () => {
+  const shape = useMemo(() => new CloudShape(), [])
+  const shapeDetail = useMemo(() => new CloudShapeDetail(), [])
+
   const material = useMemo(
     () =>
       new ShaderMaterial({
@@ -39,7 +40,7 @@ const Scene: FC = () => {
           scale: new Uniform(0)
         }
       }),
-    []
+    [shape, shapeDetail]
   )
 
   const params = useControls('viewer', {
@@ -66,7 +67,7 @@ const Scene: FC = () => {
   useEffect(() => {
     shape.update(gl)
     shapeDetail.update(gl)
-  }, [gl])
+  }, [shape, shapeDetail, gl])
 
   const { target } = useControls('target', {
     target: {
@@ -76,7 +77,7 @@ const Scene: FC = () => {
 
   useEffect(() => {
     material.uniforms.shape.value = { shape, shapeDetail }[target].texture
-  }, [material, target])
+  }, [shape, shapeDetail, material, target])
 
   return (
     <>
