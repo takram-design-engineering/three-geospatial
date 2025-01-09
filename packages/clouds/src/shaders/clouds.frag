@@ -177,7 +177,7 @@ float phaseFunction(const float cosTheta, const float attenuation) {
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
 
-float sampleOpticalDepth(
+float marchOpticalDepth(
   const vec3 rayOrigin,
   const vec3 rayDirection,
   const int iterations,
@@ -277,22 +277,23 @@ vec4 marchToClouds(
 
         float sunOpticalDepth = 0.0;
         if (mipLevel < 0.5) {
-          sunOpticalDepth = sampleOpticalDepth(position, sunDirection, 3, mipLevel);
+          sunOpticalDepth = marchOpticalDepth(position, sunDirection, 3, mipLevel);
         }
         float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
         float scattering = multipleScattering(opticalDepth, cosTheta);
-        vec3 radiance = (sunIrradiance * scattering + skyIrradiance * skyIrradianceScale) * density;
+        vec3 scatteredIrradiance = (sunIrradiance + skyIrradiance) * scattering;
+        vec3 radiance = (scatteredIrradiance + skyIrradiance * skyIrradianceScale) * density;
 
+        #ifdef USE_GROUND_IRRADIANCE
         // Fudge factor for the irradiance from ground.
         if (mipLevel < 0.5) {
-          float groundOpticalDepth = sampleOpticalDepth(
-            position,
-            -normalize(position),
-            2,
-            mipLevel
-          );
-          radiance += radiance * exp(-groundOpticalDepth - (height - minHeight) * 0.01);
+          float groundOpticalDepth = marchOpticalDepth(position, -normalize(position), 2, mipLevel);
+          vec3 groundIrradiance = radiance * exp(-groundOpticalDepth - (height - minHeight) * 1e-3);
+          // Ground irradiance decreases as coverage increases.
+          groundIrradiance *= 1.0 - coverage;
+          radiance += groundIrradiance;
         }
+        #endif // USE_GROUND_IRRADIANCE
 
         #ifdef USE_POWDER
         radiance *= 1.0 - powderScale * exp(-density * powderExponent);

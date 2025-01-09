@@ -205,6 +205,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           DEPTH_PACKING: '0',
           USE_SHAPE_DETAIL: '1',
           MULTI_SCATTERING_OCTAVES: '8',
+          USE_GROUND_IRRADIANCE: '1',
           USE_POWDER: '1',
           ACCURATE_ATMOSPHERIC_IRRADIANCE: '1' // TODO
         }
