@@ -204,16 +204,16 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #ifdef HAS_SHADOW
   vec4 shadow = getShadow(worldPositionMeters);
   float opticalDepth = shadow.z;
-  float distanceToCloud = shadow.w;
-  float distanceToGround = raySphereFirstIntersection(
-    worldPositionMeters,
-    -sunDirection,
-    ellipsoidCenter,
-    u_bottom_radius / METER_TO_UNIT_LENGTH
-  );
   // TODO: This is basically no longer needed because clouds are clamped in the
   // shadow pass, but shadows of clouds outside the main camera are still
   // visible on certain occasions.
+  // float distanceToCloud = shadow.w;
+  // float distanceToGround = raySphereFirstIntersection(
+  //   worldPositionMeters,
+  //   -sunDirection,
+  //   ellipsoidCenter,
+  //   u_bottom_radius / METER_TO_UNIT_LENGTH
+  // );
   // if (distanceToCloud < distanceToGround) {
   //   opticalDepth = 0.0;
   // }

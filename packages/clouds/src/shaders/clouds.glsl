@@ -89,27 +89,25 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
 
 float sampleDensityDetail(WeatherSample weather, const vec3 position, const float mipLevel) {
   vec4 density = weather.density;
-  if (mipLevel < 2.0) {
-    float shape = textureLod(shapeTexture, position * shapeFrequency, 0.0).r;
-    shape = 1.0 - shape; // Modulation for fluffy shape
-    density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), detailAmounts);
 
-    #ifdef USE_DETAIL
-    if (mipLevel < 0.5) {
-      float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
-      // Fluffy at the top and whippy at the bottom.
-      vec4 modifier = mix(
-        vec4(pow(detail, 6.0)),
-        vec4(1.0 - detail),
-        saturate(remap(weather.heightFraction, 0.2, 0.4, 0.0, 1.0))
-      );
-      modifier = mix(vec4(0.0), modifier, detailAmounts);
-      density = saturate(
-        remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0), vec4(0.0), vec4(1.0))
-      );
-    }
-    #endif
+  float shape = textureLod(shapeTexture, position * shapeFrequency, 0.0).r;
+  shape = 1.0 - shape; // Modulation for fluffy shape
+  density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), detailAmounts);
+
+  #ifdef USE_DETAIL
+  if (mipLevel < 0.5) {
+    float detail = textureLod(shapeDetailTexture, position * shapeDetailFrequency, 0.0).r;
+    // Fluffy at the top and whippy at the bottom.
+    vec4 modifier = mix(
+      vec4(pow(detail, 6.0)),
+      vec4(1.0 - detail),
+      saturate(remap(weather.heightFraction, 0.2, 0.4, 0.0, 1.0))
+    );
+    modifier = mix(vec4(0.0), modifier, detailAmounts);
+    density = saturate(remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0), vec4(0.0), vec4(1.0)));
   }
+  #endif
+
   // Nicely decrease density at the bottom.
   return saturate(dot(density, extinctionCoeffs * weather.heightFraction));
 }
