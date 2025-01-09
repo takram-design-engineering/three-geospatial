@@ -1,6 +1,5 @@
 uniform vec2 resolution;
 uniform int frame;
-uniform float time;
 
 // Atmospheric parameters
 uniform float bottomRadius; // TODO
@@ -10,6 +9,7 @@ uniform vec3 ellipsoidCenter;
 // Shape and weather
 uniform sampler2D localWeatherTexture;
 uniform vec2 localWeatherFrequency;
+uniform vec2 localWeatherOffset;
 uniform float coverage;
 uniform sampler3D shapeTexture;
 uniform float shapeFrequency;

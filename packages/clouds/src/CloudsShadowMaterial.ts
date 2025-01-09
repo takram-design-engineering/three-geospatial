@@ -73,8 +73,9 @@ interface CloudsShadowMaterialUniforms
   inverseProjectionMatrix: Uniform<Matrix4> // The main camera
   inverseShadowMatrices: Uniform<Matrix4[]> // Inverse view projection of the sun
   resolution: Uniform<Vector2>
+  cameraNear: Uniform<number>
+  cameraFar: Uniform<number>
   frame: Uniform<number>
-  time: Uniform<number>
   blueNoiseTexture: Uniform<Data3DTexture | null>
   blueNoiseVectorTexture: Uniform<Data3DTexture | null>
 
@@ -82,6 +83,12 @@ interface CloudsShadowMaterialUniforms
   bottomRadius: Uniform<number> // TODO
   ellipsoidCenter: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
+
+  // Raymarch to clouds
+  maxIterations: Uniform<number>
+  minStepSize: Uniform<number>
+  minDensity: Uniform<number>
+  minTransmittance: Uniform<number>
 }
 
 export interface CloudsShadowMaterial {
@@ -135,7 +142,6 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         cameraNear: new Uniform(0),
         cameraFar: new Uniform(0),
         frame: new Uniform(0),
-        time: new Uniform(0),
         blueNoiseTexture: new Uniform(null),
         blueNoiseVectorTexture: new Uniform(null),
 

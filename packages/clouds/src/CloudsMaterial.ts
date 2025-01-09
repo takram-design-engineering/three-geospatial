@@ -82,7 +82,6 @@ interface CloudsMaterialUniforms
   cameraFar: Uniform<number>
   cameraHeight: Uniform<number>
   frame: Uniform<number>
-  time: Uniform<number>
   blueNoiseTexture: Uniform<Data3DTexture | null>
   blueNoiseVectorTexture: Uniform<Data3DTexture | null>
 
@@ -156,7 +155,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraFar: new Uniform(0),
           cameraHeight: new Uniform(0),
           frame: new Uniform(0),
-          time: new Uniform(0),
           blueNoiseTexture: new Uniform(null),
           blueNoiseVectorTexture: new Uniform(null),
 

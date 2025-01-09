@@ -10,10 +10,10 @@ import {
 } from 'postprocessing'
 import {
   Camera,
-  Clock,
   HalfFloatType,
   Matrix4,
   Uniform,
+  Vector2,
   Vector3,
   WebGLRenderTarget,
   type Data3DTexture,
@@ -41,6 +41,7 @@ import fragmentShader from './shaders/cloudsEffect.frag?raw'
 
 const matrixScratch1 = /*#__PURE__*/ new Matrix4()
 const matrixScratch2 = /*#__PURE__*/ new Matrix4()
+const uvScratch = /*#__PURE__*/ new Vector2()
 
 export interface CloudsEffectOptions {
   blendFunction?: BlendFunction
@@ -103,6 +104,7 @@ export class CloudsEffect extends Effect {
   ]
 
   readonly sunDirection: Vector3
+  readonly localWeatherVelocity = new Vector2()
   readonly cascadedShadows: CascadedShadows
 
   readonly shadowMatrices = [
@@ -133,7 +135,6 @@ export class CloudsEffect extends Effect {
 
   useBlur = false
   private frame = 0
-  private readonly clock = new Clock()
 
   constructor(
     private camera: Camera = new Camera(),
@@ -296,22 +297,25 @@ export class CloudsEffect extends Effect {
   override update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
-    deltaTime?: number
+    deltaTime = 0
   ): void {
     this.localWeather.update(renderer)
     this.cloudShape.update(renderer)
     this.cloudShapeDetail.update(renderer)
 
     ++this.frame
-    const time = this.clock.getElapsedTime()
     const cloudsUniforms = this.cloudsMaterial.uniforms
     const shadowUniforms = this.shadowMaterial.uniforms
     updateCloudLayerUniforms(cloudsUniforms, this.cloudLayers)
     updateCloudLayerUniforms(shadowUniforms, this.cloudLayers)
     cloudsUniforms.frame.value = this.frame
     shadowUniforms.frame.value = this.frame
-    cloudsUniforms.time.value = time
-    shadowUniforms.time.value = time
+
+    const offset = uvScratch
+      .copy(this.localWeatherVelocity)
+      .multiplyScalar(deltaTime)
+    cloudsUniforms.localWeatherOffset.value.add(offset)
+    shadowUniforms.localWeatherOffset.value.add(offset)
 
     this.cloudsMaterial.copyCameraSettings(this.camera)
     this.shadowMaterial.copyCameraSettings(this.camera)

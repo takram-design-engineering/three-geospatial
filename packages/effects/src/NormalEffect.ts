@@ -76,7 +76,7 @@ export class NormalEffect extends Effect {
     this.camera = value
   }
 
-  update(
+  override update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
     deltaTime?: number

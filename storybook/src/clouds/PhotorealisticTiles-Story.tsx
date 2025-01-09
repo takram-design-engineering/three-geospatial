@@ -238,6 +238,7 @@ const Scene: FC<SceneProps> = ({
                   blueNoiseVectorTexture={blueNoiseVectorTexture}
                   coverage={coverage}
                   resolution-scale={0.5}
+                  localWeatherVelocity-x={0.00001}
                 />
               )}
               <AerialPerspective
