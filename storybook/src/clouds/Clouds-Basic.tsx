@@ -69,21 +69,25 @@ function applyLocation(
 
 const Scene: FC = () => {
   useExposureControls({ exposure: 10 })
-  const { longitude, latitude, height } = useLocationControls({
-    longitude: 30,
-    height: 300
-  })
+  const { longitude, latitude, height } = useLocationControls(
+    {
+      longitude: 30,
+      height: 300
+    },
+    { collapsed: true }
+  )
   const motionDate = useLocalDateControls({
     longitude,
     dayOfYear: 0
   })
-  const { correctAltitude, photometric } = useControls('atmosphere', {
-    correctAltitude: true,
-    photometric: true
-  })
-  const { coverage } = useControls('clouds', {
-    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 }
-  })
+  const { correctAltitude, photometric } = useControls(
+    'atmosphere',
+    {
+      correctAltitude: true,
+      photometric: true
+    },
+    { collapsed: true }
+  )
 
   const camera = useThree(({ camera }) => camera)
   const controlsRef = useRef<OrbitControlsImpl>(null)
@@ -133,13 +137,28 @@ const Scene: FC = () => {
     '/clouds/stbn_unit_vector.bin'
   )
 
-  const { maxIterations, stepSize, maxStepSize, useDetail, usePowder } =
-    useControls('clouds', {
-      maxIterations: { value: 1000, min: 100, max: 2000 },
-      stepSize: { value: 100, min: 10, max: 200 },
+  const {
+    coverage,
+    halfResolution,
+    animate,
+    skyIrradianceScale,
+    useDetail,
+    usePowder
+  } = useControls('clouds', {
+    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
+    halfResolution: true,
+    animate: false,
+    skyIrradianceScale: { value: 0.25, min: 0, max: 0.5 },
+    useDetail: true,
+    usePowder: true
+  })
+
+  const { maxIterations, initialStepSize, maxStepSize, maxRayDistance } =
+    useControls('primary raymarch', {
+      maxIterations: { value: 500, min: 100, max: 1000 },
+      initialStepSize: { value: 50, min: 50, max: 200 },
       maxStepSize: { value: 1000, min: 200, max: 2000 },
-      useDetail: true,
-      usePowder: true
+      maxRayDistance: { value: 1.5e5, min: 1e4, max: 2e5 }
     })
 
   const {
@@ -160,9 +179,11 @@ const Scene: FC = () => {
     if (clouds == null) {
       return
     }
+    clouds.cloudsMaterial.uniforms.skyIrradianceScale.value = skyIrradianceScale
     clouds.cloudsMaterial.uniforms.maxIterations.value = maxIterations
-    clouds.cloudsMaterial.uniforms.initialStepSize.value = stepSize
+    clouds.cloudsMaterial.uniforms.initialStepSize.value = initialStepSize
     clouds.cloudsMaterial.uniforms.maxStepSize.value = maxStepSize
+    clouds.cloudsMaterial.uniforms.maxRayDistance.value = maxRayDistance
   })
 
   useEffect(() => {
@@ -226,6 +247,8 @@ const Scene: FC = () => {
               blueNoiseTexture={blueNoiseTexture}
               blueNoiseVectorTexture={blueNoiseVectorTexture}
               coverage={coverage}
+              resolution-scale={halfResolution ? 0.5 : 1}
+              localWeatherVelocity-x={animate ? 0.00005 : 0}
             />
             <AerialPerspective sunIrradiance skyIrradiance />
             {!debugShowUv && !debugShowShadowMap && (
