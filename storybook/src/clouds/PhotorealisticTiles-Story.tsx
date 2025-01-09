@@ -132,7 +132,7 @@ const Scene: FC<SceneProps> = ({
 
   const { enabled, coverage, useDetail, usePowder } = useControls('clouds', {
     enabled: true,
-    coverage: { value: 0.2, min: 0, max: 1, step: 0.01 },
+    coverage: { value: 0.25, min: 0, max: 1, step: 0.01 },
     useDetail: true,
     usePowder: true
   })

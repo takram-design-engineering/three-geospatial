@@ -12,10 +12,10 @@ export default {
 export const Tokyo: StoryFn = () => (
   <Story
     exposure={10}
-    longitude={139.8196}
-    latitude={35.7545}
+    longitude={139.8146}
+    latitude={35.7455}
     heading={-130}
     pitch={-9}
-    distance={1300}
+    distance={1000}
   />
 )
