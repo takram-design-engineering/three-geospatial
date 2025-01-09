@@ -172,7 +172,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           scatterAnisotropy1: new Uniform(0.8),
           scatterAnisotropy2: new Uniform(-0.3),
           scatterAnisotropyMix: new Uniform(0.5),
-          skyIrradianceScale: new Uniform(0.25),
+          skyIrradianceScale: new Uniform(0.3),
 
           // Raymarch to clouds
           maxIterations: new Uniform(500),

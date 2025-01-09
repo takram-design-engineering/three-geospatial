@@ -148,7 +148,7 @@ const Scene: FC = () => {
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
     halfResolution: true,
     animate: false,
-    skyIrradianceScale: { value: 0.25, min: 0, max: 0.5 },
+    skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
     useDetail: true,
     usePowder: true
   })

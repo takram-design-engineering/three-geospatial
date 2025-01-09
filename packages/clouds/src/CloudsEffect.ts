@@ -65,7 +65,7 @@ export class CloudsEffect extends Effect {
   readonly cloudLayers: CloudLayers = [
     {
       minHeight: 600,
-      maxHeight: 1400,
+      maxHeight: 1600,
       extinctionCoeff: 0.3,
       detailAmount: 1,
       weatherExponent: 1,
