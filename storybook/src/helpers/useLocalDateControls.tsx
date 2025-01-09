@@ -2,6 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { getDayOfYear } from 'date-fns'
 import { useMotionValue, useSpring, type MotionValue } from 'framer-motion'
 import { button } from 'leva'
+import { type FolderSettings } from 'leva/dist/declarations/src/types'
 import { useEffect, useMemo, useState } from 'react'
 
 import { springOptions } from './springOptions'
@@ -15,11 +16,14 @@ export interface LocalDateControlsParams {
   timeOfDay?: number
 }
 
-export function useLocalDateControls({
-  longitude,
-  dayOfYear: initialDayOfYear = getDayOfYear(new Date()),
-  timeOfDay: initialTimeOfDay = 9
-}: LocalDateControlsParams = {}): MotionValue<number> {
+export function useLocalDateControls(
+  {
+    longitude,
+    dayOfYear: initialDayOfYear = getDayOfYear(new Date()),
+    timeOfDay: initialTimeOfDay = 9
+  }: LocalDateControlsParams = {},
+  folderSettings?: FolderSettings
+): MotionValue<number> {
   const [animated, setAnimated] = useState(false)
   const [{ dayOfYear, timeOfDay, speed }, set] = useControls(
     'local date',
@@ -56,6 +60,7 @@ export function useLocalDateControls({
             })
           })
     }),
+    folderSettings,
     [animated]
   )
 
