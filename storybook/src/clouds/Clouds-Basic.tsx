@@ -1,4 +1,4 @@
-import { Box, OrbitControls, useTexture } from '@react-three/drei'
+import { Box, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
@@ -102,10 +102,6 @@ const Scene: FC = () => {
   useFrame(() => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
-
-  const localWeatherTexture = useTexture('/clouds/local_weather.png')
-  localWeatherTexture.wrapS = RepeatWrapping
-  localWeatherTexture.wrapT = RepeatWrapping
 
   const blueNoiseTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
@@ -227,7 +223,6 @@ const Scene: FC = () => {
           <Fragment key={JSON.stringify({ debugShowUv, debugShowShadowMap })}>
             <Clouds
               ref={setClouds}
-              localWeatherTexture={localWeatherTexture}
               blueNoiseTexture={blueNoiseTexture}
               blueNoiseVectorTexture={blueNoiseVectorTexture}
               coverage={coverage}

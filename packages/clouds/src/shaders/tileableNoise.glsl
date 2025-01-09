@@ -61,7 +61,7 @@ float getWorleyNoise(const vec3 p, const float cellCount) {
   return clamp(d, 0.0, 1.0);
 }
 
-float getPerlinNoise(const vec3 point, const float frequency, const int octaveCount) {
+float getPerlinNoise(const vec3 point, const vec3 frequency, const int octaveCount) {
   // Noise frequency factor between octave, forced to 2.
   const float octaveFrequencyFactor = 2.0;
 
@@ -70,16 +70,19 @@ float getPerlinNoise(const vec3 point, const float frequency, const int octaveCo
   float roughness = 0.5;
   float weightSum = 0.0;
   float weight = 1.0;
-  float nextFrequency = frequency;
+  vec3 nextFrequency = frequency;
   for (int i = 0; i < octaveCount; ++i) {
-    vec4 p = vec4(point.x, point.y, point.z, 0.0) * vec4(nextFrequency);
-    float value = perlin(p, vec4(nextFrequency));
+    vec4 p = vec4(point.x, point.y, point.z, 0.0) * vec4(nextFrequency, 1.0);
+    float value = perlin(p, vec4(nextFrequency, 1.0));
     sum += value * weight;
     weightSum += weight;
     weight *= roughness;
     nextFrequency *= octaveFrequencyFactor;
   }
 
-  float noise = sum / weightSum;
-  return clamp(noise, 0.0, 1.0);
+  return sum / weightSum; // Intentionally skip clamping.
+}
+
+float getPerlinNoise(const vec3 point, const float frequency, const int octaveCount) {
+  return getPerlinNoise(point, vec3(frequency), octaveCount);
 }

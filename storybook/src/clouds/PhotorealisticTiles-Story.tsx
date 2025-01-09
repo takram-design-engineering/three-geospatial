@@ -1,5 +1,4 @@
 import { css } from '@emotion/react'
-import { useTexture } from '@react-three/drei'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import {
@@ -166,10 +165,6 @@ const Scene: FC<SceneProps> = ({
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const localWeatherTexture = useTexture('/clouds/local_weather.png')
-  localWeatherTexture.wrapS = RepeatWrapping
-  localWeatherTexture.wrapT = RepeatWrapping
-
   const blueNoiseTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
       format: RedFormat,
@@ -239,7 +234,6 @@ const Scene: FC<SceneProps> = ({
               {enabled && (
                 <Clouds
                   ref={cloudsRef}
-                  localWeatherTexture={localWeatherTexture}
                   blueNoiseTexture={blueNoiseTexture}
                   blueNoiseVectorTexture={blueNoiseVectorTexture}
                   coverage={coverage}

@@ -34,6 +34,7 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsShadowMaterial } from './CloudsShadowMaterial'
+import { LocalWeather } from './LocalWeather'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
@@ -118,6 +119,7 @@ export class CloudsEffect extends Effect {
     new Matrix4()
   ]
 
+  readonly localWeather: LocalWeather
   readonly cloudShape: CloudShape
   readonly cloudShapeDetail: CloudShapeDetail
   readonly cloudsRenderTarget: WebGLRenderTarget
@@ -150,6 +152,7 @@ export class CloudsEffect extends Effect {
       ...options
     }
 
+    const localWeather = new LocalWeather()
     const cloudShape = new CloudShape()
     const cloudShapeDetail = new CloudShapeDetail()
 
@@ -185,6 +188,7 @@ export class CloudsEffect extends Effect {
       atmosphere
     )
     const cloudsUniforms = cloudsMaterial.uniforms
+    cloudsUniforms.localWeatherTexture.value = localWeather.texture
     cloudsUniforms.shapeTexture.value = cloudShape.texture
     cloudsUniforms.shapeDetailTexture.value = cloudShapeDetail.texture
     cloudsUniforms.shadowBuffer.value = shadowRenderTarget.texture
@@ -196,6 +200,7 @@ export class CloudsEffect extends Effect {
     )
     shadowMaterial.setSize(shadowMapSize, shadowMapSize)
     const shadowUniforms = shadowMaterial.uniforms
+    shadowUniforms.localWeatherTexture.value = localWeather.texture
     shadowUniforms.shapeTexture.value = cloudShape.texture
     shadowUniforms.shapeDetailTexture.value = cloudShapeDetail.texture
 
@@ -215,6 +220,7 @@ export class CloudsEffect extends Effect {
 
     this.sunDirection = sunDirection
     this.cascadedShadows = cascadedShadows
+    this.localWeather = localWeather
     this.cloudShape = cloudShape
     this.cloudShapeDetail = cloudShapeDetail
     this.cloudsRenderTarget = cloudsRenderTarget
@@ -292,6 +298,7 @@ export class CloudsEffect extends Effect {
     inputBuffer: WebGLRenderTarget,
     deltaTime?: number
   ): void {
+    this.localWeather.update(renderer)
     this.cloudShape.update(renderer)
     this.cloudShapeDetail.update(renderer)
 
