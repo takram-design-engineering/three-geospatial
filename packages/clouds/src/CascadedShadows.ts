@@ -48,7 +48,28 @@ const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 const frustumScratch = /*#__PURE__*/ new FrustumCorners()
 const boxScratch = /*#__PURE__*/ new Box3()
 
+function extractOrthographicTuple(
+  matrix: Matrix4
+): [left: number, right: number, top: number, bottom: number] {
+  const elements = matrix.elements
+  const m00 = elements[0] // 2 / (right - left)
+  const m03 = elements[12] // -(right + left) / (right - left)
+  const m11 = elements[5] // 2 / (top - bottom)
+  const m13 = elements[13] // -(top + bottom) / (top - bottom)
+  const RmL = 2 / m00 // (right - left)
+  const RpL = RmL * -m03 // (right + left)
+  const TmB = 2 / m11 // (top - bottom)
+  const TpB = TmB * -m13 // (t + bottom)
+  return [
+    (RpL - RmL) / 2, // left
+    (RmL + RpL) / 2, // right
+    (TmB + TpB) / 2, // top
+    (TpB - TmB) / 2 // bottom
+  ]
+}
+
 export interface CascadedShadowsOptions {
+  cascadeSize: number
   cascadeCount?: number
   far?: number
   mode?: FrustumSplitMode
@@ -75,6 +96,7 @@ export class CascadedShadows {
   readonly lights: Light[] = []
   readonly cascadeMatrix = new Matrix4()
 
+  cascadeSize: number
   far: number
   mode: FrustumSplitMode
   lambda: number
@@ -85,12 +107,13 @@ export class CascadedShadows {
   private readonly splits: number[] = []
   readonly cascades: Vector2[] = []
 
-  constructor(options?: CascadedShadowsOptions) {
-    const { cascadeCount, far, mode, lambda, margin, fade } = {
+  constructor(options: CascadedShadowsOptions) {
+    const { cascadeCount, cascadeSize, far, mode, lambda, margin, fade } = {
       ...cascadedShadowsOptionsDefaults,
       ...options
     }
     this.cascadeCount = cascadeCount
+    this.cascadeSize = cascadeSize
     this.far = far
     this.mode = mode
     this.lambda = lambda
@@ -130,7 +153,6 @@ export class CascadedShadows {
     cascades.length = cascadeCount
   }
 
-  // TODO: BSM doesn't need rotational invariance. Frusta can be tighter.
   private getFrustumRadius(
     camera: PerspectiveCamera,
     frustum: FrustumCorners
@@ -155,13 +177,29 @@ export class CascadedShadows {
     return diagonalLength * 0.5
   }
 
-  update(
+  private updateProjectionMatrix(camera: PerspectiveCamera): void {
+    const frusta = this.cascadedFrusta
+    const lights = this.lights
+    invariant(frusta.length === lights.length)
+
+    for (let i = 0; i < frusta.length; ++i) {
+      const radius = this.getFrustumRadius(camera, frusta[i])
+      lights[i].projectionMatrix.makeOrthographic(
+        -radius, // left
+        radius, // right
+        radius, // top
+        -radius, // bottom
+        -this.margin, // near
+        radius * 2 + this.margin // far
+      )
+    }
+  }
+
+  private updateInverseViewMatrix(
     camera: PerspectiveCamera,
     sunDirection: Vector3,
     ellipsoid = Ellipsoid.WGS84
   ): void {
-    this.updateCascades(camera)
-
     const lightOrientationMatrix = matrixScratch1.lookAt(
       vectorScratch1.set(0, 0, 0),
       vectorScratch2.copy(sunDirection).multiplyScalar(-1),
@@ -178,10 +216,11 @@ export class CascadedShadows {
     const zenithAngle = sunDirection.dot(up)
     const distance = lerp(1e6, 1e3, zenithAngle)
 
-    const margin = this.margin
     const frusta = this.cascadedFrusta
     const lights = this.lights
     invariant(frusta.length === lights.length)
+    const margin = this.margin
+    const cascadeSize = this.cascadeSize
 
     for (let i = 0; i < frusta.length; ++i) {
       const frustum = frusta[i]
@@ -197,18 +236,17 @@ export class CascadedShadows {
       }
       const center = bbox.getCenter(vectorScratch1)
       center.z = bbox.max.z + margin
-      center.applyMatrix4(lightOrientationMatrix)
 
-      const radius = this.getFrustumRadius(camera, frustum)
-      light.projectionMatrix.makeOrthographic(
-        -radius, // left
-        radius, // right
-        radius, // top
-        -radius, // bottom
-        -this.margin, // near
-        radius * 2 + this.margin // far
+      // Round light-space translation to even texel increments.
+      const [left, right, top, bottom] = extractOrthographicTuple(
+        light.projectionMatrix
       )
+      const texelWidth = (right - left) / cascadeSize
+      const texelHeight = (top - bottom) / cascadeSize
+      center.x = Math.round(center.x / texelWidth) * texelWidth
+      center.y = Math.round(center.y / texelHeight) * texelHeight
 
+      center.applyMatrix4(lightOrientationMatrix)
       const position = vectorScratch2
         .copy(sunDirection)
         .multiplyScalar(distance)
@@ -217,5 +255,15 @@ export class CascadedShadows {
         .lookAt(center, position, Object3D.DEFAULT_UP)
         .setPosition(position)
     }
+  }
+
+  update(
+    camera: PerspectiveCamera,
+    sunDirection: Vector3,
+    ellipsoid?: Ellipsoid
+  ): void {
+    this.updateCascades(camera)
+    this.updateProjectionMatrix(camera)
+    this.updateInverseViewMatrix(camera, sunDirection, ellipsoid)
   }
 }

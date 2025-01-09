@@ -100,7 +100,8 @@ vec4 marchToClouds(
     stepSize
   );
 
-  rayDistance -= stepSize * jitter; // May increase aliasing noise.
+  // May increase aliasing noise on shadows.
+  // rayDistance -= stepSize * jitter;
 
   float extinctionSum = 0.0;
   float maxOpticalDepth = 0.0;

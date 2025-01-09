@@ -180,6 +180,7 @@ export class CloudsEffect extends Effect {
     const sunDirection = new Vector3()
 
     const cascadedShadows = new CascadedShadows({
+      cascadeSize: shadowMapSize / 2,
       lambda: 0.6,
       far: 1e5 // TODO: Parametrize
     })
