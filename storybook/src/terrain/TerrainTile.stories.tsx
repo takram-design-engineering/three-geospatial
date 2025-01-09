@@ -1,7 +1,7 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'terrain/Terrain Tile',
+  title: 'terrain (WIP)/Terrain Tile',
   parameters: {
     layout: 'fullscreen'
   }

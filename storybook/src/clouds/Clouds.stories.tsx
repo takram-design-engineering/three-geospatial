@@ -1,7 +1,7 @@
 import { type Meta } from '@storybook/react'
 
 export default {
-  title: 'clouds/Clouds',
+  title: 'clouds (WIP)/Clouds',
   parameters: {
     layout: 'fullscreen'
   }
@@ -13,6 +13,6 @@ export const Basic = await import('./Clouds-Basic').then(
 export const LocalWeather = await import('./Clouds-LocalWeather').then(
   module => module.default
 )
-export const ShapeViewer = await import('./Clouds-ShapeViewer').then(
+export const Shape = await import('./Clouds-Shape').then(
   module => module.default
 )

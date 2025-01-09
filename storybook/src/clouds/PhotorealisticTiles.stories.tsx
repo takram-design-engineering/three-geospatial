@@ -3,7 +3,7 @@ import { type Meta, type StoryFn } from '@storybook/react'
 import { Story } from './PhotorealisticTiles-Story'
 
 export default {
-  title: 'clouds/Photorealistic Tiles',
+  title: 'clouds (WIP)/Photorealistic Tiles',
   parameters: {
     layout: 'fullscreen'
   }
