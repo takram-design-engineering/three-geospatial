@@ -150,19 +150,29 @@ float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop, vec2 uvOff
   return min(maxOpticalDepth, meanExtinction * max(0.0, distanceToTop - frontDepth));
 }
 
-// TODO: Optimization
 float sampleFilteredShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
-  vec2 size = shadowTexelSize * 2.0;
-  return 0.11111111 *
-  (sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(0.0)) +
-    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(size.x, 0.0)) +
-    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(0.0, size.y)) +
-    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(-size.x, 0.0)) +
-    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(0.0, -size.y)) +
-    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(size.x, size.y)) +
-    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(-size.x, -size.y)) +
-    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(size.x, -size.y)) +
-    sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(-size.x, size.y)));
+  // Reference: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
+  const vec2 offsets[4] = vec2[4](
+    vec2(-1.5, 0.5),
+    vec2(0.5, 0.5),
+    vec2(-1.5, -1.5),
+    vec2(0.5, -1.5)
+  );
+  vec2 offset = step(0.5, fract(vUv * resolution * 0.5));
+  if (offset.y > 1.1) {
+    offset.y = 0.0;
+  }
+  float sum = 0.0;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; i++) {
+    sum += sampleShadowOpticalDepth(
+      rayPosition,
+      distanceToTop,
+      shadowTexelSize * (offset + offsets[i])
+    );
+  }
+  #pragma unroll_loop_end
+  return 0.25 * sum;
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
