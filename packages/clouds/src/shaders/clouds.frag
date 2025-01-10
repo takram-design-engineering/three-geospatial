@@ -228,14 +228,14 @@ vec4 marchToClouds(
   const vec3 jitterVector,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
-  vec3 sunIrradiance,
-  vec3 skyIrradiance,
   out float weightedMeanDepth
 ) {
   vec3 radianceIntegral = vec3(0.0);
   float transmittanceIntegral = 1.0;
   float weightedDistanceSum = 0.0;
   float transmittanceSum = 0.0;
+  vec3 sunIrradiance;
+  vec3 skyIrradiance;
 
   float stepSize = initialStepSize;
   float rayDistance = stepSize * jitter;
@@ -257,13 +257,11 @@ vec4 marchToClouds(
       // Sample a detailed density.
       float density = sampleShape(weather, position, mipLevel);
       if (density > minDensity) {
-        #ifdef ACCURATE_ATMOSPHERIC_IRRADIANCE
         sunIrradiance = GetSunAndSkyIrradiance(
           position * METER_TO_UNIT_LENGTH,
           sunDirection,
           skyIrradiance
         );
-        #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
 
         // Distance to the top of the bottom layer along the sun direction.
         // This matches the ray origin of BSM.
@@ -486,17 +484,6 @@ void main() {
   return;
   #endif // DEBUG_SHOW_UV
 
-  vec3 skyIrradiance;
-  vec3 sunIrradiance;
-  #ifndef ACCURATE_ATMOSPHERIC_IRRADIANCE
-  // Sample the irradiance at the near point for a rough estimate.
-  sunIrradiance = GetSunAndSkyIrradiance(
-    rayOrigin * METER_TO_UNIT_LENGTH,
-    sunDirection,
-    skyIrradiance
-  );
-  #endif // ACCURATE_ATMOSPHERIC_IRRADIANCE
-
   float jitter = blueNoise(vUv);
   vec3 jitterVector = blueNoiseVector(vUv);
   float weightedMeanDepth;
@@ -508,8 +495,6 @@ void main() {
     jitterVector,
     pow(2.0, mipLevel),
     sunDirection,
-    sunIrradiance,
-    skyIrradiance,
     weightedMeanDepth
   );
 
