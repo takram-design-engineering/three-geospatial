@@ -31,7 +31,12 @@ import {
   parameters as atmosphereParameters,
   functions
 } from '@takram/three-atmosphere/shaders'
-import { assertType, Geodetic, resolveIncludes } from '@takram/three-geospatial'
+import {
+  assertType,
+  Geodetic,
+  resolveIncludes,
+  unrollLoops
+} from '@takram/three-geospatial'
 import {
   depth,
   generators,
@@ -64,10 +69,12 @@ export interface CloudsMaterialParameters
   extends AtmosphereMaterialBaseParameters {
   depthBuffer?: Texture | null
   sunDirectionRef?: Vector3
+  shadowCascadeCount?: number
 }
 
 export const cloudsMaterialParametersDefaults = {
-  ...atmosphereMaterialParametersBaseDefaults
+  ...atmosphereMaterialParametersBaseDefaults,
+  shadowCascadeCount: 4
 } satisfies CloudsMaterialParameters
 
 interface CloudsMaterialUniforms
@@ -123,7 +130,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     params?: CloudsMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
-    const { depthBuffer = null, sunDirectionRef } = {
+    const {
+      depthBuffer = null,
+      sunDirectionRef,
+      shadowCascadeCount
+    } = {
       ...cloudsMaterialParametersDefaults,
       ...params
     }
@@ -132,7 +143,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         name: 'CloudsMaterial',
         glslVersion: GLSL3,
         vertexShader,
-        fragmentShader: resolveIncludes(fragmentShader, {
+        fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
           core: {
             depth,
             math,
@@ -186,32 +197,24 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Beer shadow map
           shadowBuffer: new Uniform(null),
           shadowTexelSize: new Uniform(new Vector2()),
-          shadowMatrices: new Uniform([
-            new Matrix4(),
-            new Matrix4(),
-            new Matrix4(),
-            new Matrix4()
-          ]),
-          shadowCascades: new Uniform([
-            new Vector2(),
-            new Vector2(),
-            new Vector2(),
-            new Vector2()
-          ]),
+          shadowMatrices: new Uniform([]),
+          shadowCascades: new Uniform([]),
           shadowFar: new Uniform(0)
         } satisfies CloudsMaterialUniforms,
         defines: {
-          STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
-          STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
           DEPTH_PACKING: '0',
           USE_SHAPE_DETAIL: '1',
           MULTI_SCATTERING_OCTAVES: '8',
           USE_POWDER: '1',
-          USE_GROUND_IRRADIANCE: '1'
+          USE_GROUND_IRRADIANCE: '1',
+          STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
+          STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`
         }
       },
       atmosphere
     )
+
+    this.shadowCascadeCount = shadowCascadeCount
   }
 
   override onBeforeRender(
@@ -338,6 +341,26 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         delete this.defines.USE_GROUND_IRRADIANCE
       }
       this.needsUpdate = true
+    }
+  }
+
+  get shadowCascadeCount(): number {
+    return +this.defines.SHADOW_CASCADE_COUNT
+  }
+
+  set shadowCascadeCount(value: number) {
+    if (value !== this.shadowCascadeCount) {
+      this.defines.SHADOW_CASCADE_COUNT = `${value}`
+      this.needsUpdate = true
+
+      const shadowMatrices = this.uniforms.shadowMatrices.value
+      const shadowCascades = this.uniforms.shadowCascades.value
+      for (let i = 0; i < value; ++i) {
+        shadowMatrices[i] ??= new Matrix4()
+        shadowCascades[i] ??= new Vector2()
+      }
+      shadowMatrices.length = value
+      shadowCascades.length = value
     }
   }
 }

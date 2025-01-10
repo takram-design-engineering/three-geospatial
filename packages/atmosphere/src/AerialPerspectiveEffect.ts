@@ -555,7 +555,10 @@ export class AerialPerspectiveEffect extends Effect {
       }
       if (value.shadow != null) {
         this.defines.set('HAS_SHADOW', '1')
-        this.defines.set('SHADOW_CASCADES', `${value.shadow.cascades.length}`)
+        this.defines.set(
+          'SHADOW_CASCADE_COUNT',
+          `${value.shadow.cascades.length}`
+        )
         this.uniforms.get('shadowBuffer')!.value = value.shadow.texture
         this.uniforms.get('shadowMatrices')!.value = value.shadow.matrices
         this.uniforms.get('shadowCascades')!.value = value.shadow.cascades
@@ -564,7 +567,7 @@ export class AerialPerspectiveEffect extends Effect {
     } else {
       this.defines.delete('HAS_COMPOSITE')
       this.defines.delete('HAS_SHADOW')
-      this.defines.delete('SHADOW_CASCADES')
+      this.defines.delete('SHADOW_CASCADE_COUNT')
       this.uniforms.get('compositeBuffer')!.value = null
       this.uniforms.get('shadowBuffer')!.value = null
       this.uniforms.get('shadowMatrices')!.value = []

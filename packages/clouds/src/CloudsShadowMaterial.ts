@@ -220,9 +220,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
 
       const inverseShadowMatrices = this.uniforms.inverseShadowMatrices.value
       for (let i = 0; i < value; ++i) {
-        if (inverseShadowMatrices[i] == null) {
-          inverseShadowMatrices[i] = new Matrix4()
-        }
+        inverseShadowMatrices[i] ??= new Matrix4()
       }
       inverseShadowMatrices.length = value
     }

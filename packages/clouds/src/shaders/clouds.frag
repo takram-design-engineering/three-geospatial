@@ -42,8 +42,8 @@ uniform float minTransmittance;
 // Beer shadow map
 uniform sampler2DArray shadowBuffer;
 uniform vec2 shadowTexelSize;
-uniform mat4 shadowMatrices[4];
-uniform vec2 shadowCascades[4];
+uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
+uniform vec2 shadowCascades[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 
 in vec2 vUv;
@@ -90,35 +90,26 @@ float getViewZ(const float depth) {
 int getCascadeIndex(vec3 position) {
   vec4 viewPosition = viewMatrix * vec4(position, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < SHADOW_CASCADE_COUNT; ++i) {
     vec2 cascade = shadowCascades[i];
     if (depth >= cascade.x && depth < cascade.y) {
       return i;
     }
   }
-  return 3;
+  return SHADOW_CASCADE_COUNT - 1;
 }
 
 #ifdef DEBUG_SHOW_CASCADES
 vec3 getCascadeColor(vec3 rayPosition, vec2 uvOffset) {
+  const vec3 colors[4] = vec3[4](
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(1.0, 1.0, 0.0)
+  );
   vec3 position = rayPosition + ellipsoidCenter;
   int index = getCascadeIndex(position);
-  vec4 point = shadowMatrices[index] * vec4(position, 1.0);
-  point /= point.w;
-  vec2 uv = point.xy * 0.5 + 0.5 + uvOffset;
-  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-    return vec3(0.0);
-  }
-  vec4 coord = vec4(uv, uv + 1.0) * 0.5;
-  if (index == 0) {
-    return vec3(1.0, 0.0, 0.0);
-  } else if (index == 1) {
-    return vec3(0.0, 1.0, 0.0);
-  } else if (index == 2) {
-    return vec3(0.0, 0.0, 1.0);
-  } else {
-    return vec3(1.0, 1.0, 0.0);
-  }
+  return colors[index];
 }
 #endif // DEBUG_SHOW_CASCADES
 
@@ -157,7 +148,7 @@ float sampleFilteredShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
   }
   float sum = 0.0;
   #pragma unroll_loop_start
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; ++i) {
     sum += sampleShadowOpticalDepth(
       rayPosition,
       distanceToTop,
@@ -421,37 +412,48 @@ void getRayNearFar(const vec3 rayDirection, out float rayNear, out float rayFar)
 #ifdef DEBUG_SHOW_SHADOW_MAP
 vec4 getCascadedShadowMap(vec2 uv) {
   vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
+  vec4 shadow = vec4(0.0);
   if (uv.y > 0.5) {
     if (uv.x < 0.5) {
-      return texture(shadowBuffer, vec3(coord.xw, 0.0));
+      shadow = texture(shadowBuffer, vec3(coord.xw, 0.0));
     } else {
-      return texture(shadowBuffer, vec3(coord.zw, 1.0));
+      #if SHADOW_CASCADE_COUNT > 1
+      shadow = texture(shadowBuffer, vec3(coord.zw, 1.0));
+      #endif // SHADOW_CASCADE_COUNT > 1
     }
   } else {
     if (uv.x < 0.5) {
-      return texture(shadowBuffer, vec3(coord.xy, 2.0));
+      #if SHADOW_CASCADE_COUNT > 2
+      shadow = texture(shadowBuffer, vec3(coord.xy, 2.0));
+      #endif // SHADOW_CASCADE_COUNT > 2
     } else {
-      return texture(shadowBuffer, vec3(coord.zy, 3.0));
+      #if SHADOW_CASCADE_COUNT > 3
+      shadow = texture(shadowBuffer, vec3(coord.zy, 3.0));
+      #endif // SHADOW_CASCADE_COUNT > 3
     }
   }
+
+  #ifndef DEBUG_SHOW_SHADOW_MAP_TYPE
+  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
+  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
+
+  vec3 color;
+  #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
+  color = vec3(shadow.r * 1e-4);
+  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
+  color = vec3(shadow.g * 10.0);
+  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
+  color = vec3(shadow.b * 0.1);
+  #else
+  color = shadow.rgb * vec3(1e-4, 10.0, 0.1);
+  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
+  return vec4(color, 1.0);
 }
 #endif // DEBUG_SHOW_SHADOW_MAP
 
 void main() {
   #ifdef DEBUG_SHOW_SHADOW_MAP
-  #ifndef DEBUG_SHOW_SHADOW_MAP_TYPE
-  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
-  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
-
-  #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
-  outputColor = vec4(vec3(getCascadedShadowMap(vUv).r * 1e-4), 1.0);
-  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
-  outputColor = vec4(vec3(getCascadedShadowMap(vUv).g * 10.0), 1.0);
-  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
-  outputColor = vec4(vec3(getCascadedShadowMap(vUv).b * 0.1), 1.0);
-  #else
-  outputColor = vec4(getCascadedShadowMap(vUv).rgb * vec3(1e-4, 10.0, 0.1), 1.0);
-  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
+  outputColor = getCascadedShadowMap(vUv);
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 

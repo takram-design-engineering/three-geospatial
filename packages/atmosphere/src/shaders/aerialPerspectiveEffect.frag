@@ -27,8 +27,8 @@ uniform sampler2D compositeBuffer;
 
 #ifdef HAS_SHADOW
 uniform sampler2DArray shadowBuffer;
-uniform mat4 shadowMatrices[SHADOW_CASCADES];
-uniform vec2 shadowCascades[SHADOW_CASCADES];
+uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
+uniform vec2 shadowCascades[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 #endif // HAS_SHADOW
 
@@ -114,13 +114,13 @@ void getTransmittanceInscatter(
 int getCascadeIndex(vec3 position) {
   vec4 viewPosition = viewMatrix * vec4(position, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < SHADOW_CASCADE_COUNT; ++i) {
     vec2 cascade = shadowCascades[i];
     if (depth >= cascade.x && depth < cascade.y) {
       return i;
     }
   }
-  return 3;
+  return SHADOW_CASCADE_COUNT - 1;
 }
 
 vec4 getShadow(vec3 worldPosition) {
