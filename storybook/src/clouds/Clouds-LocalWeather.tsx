@@ -6,6 +6,8 @@ import { GLSL3, ShaderMaterial, Uniform, Vector2 } from 'three'
 
 import { LocalWeather } from '@takram/three-global-clouds'
 
+import { useControls } from '../helpers/useControls'
+
 const Scene: FC = () => {
   const localWeather = useMemo(() => new LocalWeather(), [])
 
@@ -18,7 +20,8 @@ const Scene: FC = () => {
         uniforms: {
           resolution: new Uniform(new Vector2()),
           size: new Uniform(new Vector2().setScalar(localWeather.size * 2)),
-          localWeather: new Uniform(localWeather.texture)
+          localWeather: new Uniform(localWeather.texture),
+          gammaCorrect: new Uniform(false)
         }
       }),
     [localWeather]
@@ -29,8 +32,13 @@ const Scene: FC = () => {
     localWeather.update(gl)
   }, [localWeather, gl])
 
+  const { gammaCorrect } = useControls({
+    gammaCorrect: true
+  })
+
   useFrame(({ size }) => {
     material.uniforms.resolution.value.set(size.width, size.height)
+    material.uniforms.gammaCorrect.value = gammaCorrect
   })
 
   return (
@@ -68,6 +76,7 @@ const fragmentShader = /* glsl */ `
   uniform vec2 resolution;
   uniform vec2 size;
   uniform sampler2D localWeather;
+  uniform bool gammaCorrect;
 
   void main() {
     vec2 scale = resolution / size;
@@ -91,6 +100,6 @@ const fragmentShader = /* glsl */ `
         color = vec4(vec3(texture(localWeather, coord.zy).a), 1.0);
       }
     }
-    outputColor = linearToOutputTexel(color);
+    outputColor = gammaCorrect ? linearToOutputTexel(color) : color;
   }
 `

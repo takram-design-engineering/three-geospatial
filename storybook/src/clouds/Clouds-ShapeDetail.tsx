@@ -6,6 +6,8 @@ import { GLSL3, ShaderMaterial, Uniform, Vector2 } from 'three'
 
 import { CloudShapeDetail } from '@takram/three-global-clouds'
 
+import { useControls } from '../helpers/useControls'
+
 const Scene: FC = () => {
   const shapeDetail = useMemo(() => new CloudShapeDetail(), [])
 
@@ -19,7 +21,8 @@ const Scene: FC = () => {
           resolution: new Uniform(new Vector2()),
           size: new Uniform(shapeDetail.size),
           columns: new Uniform(0),
-          shapeDetail: new Uniform(shapeDetail.texture)
+          shapeDetail: new Uniform(shapeDetail.texture),
+          gammaCorrect: new Uniform(false)
         }
       }),
     [shapeDetail]
@@ -30,9 +33,14 @@ const Scene: FC = () => {
     shapeDetail.update(gl)
   }, [shapeDetail, gl])
 
+  const { gammaCorrect } = useControls({
+    gammaCorrect: false
+  })
+
   useFrame(({ size }) => {
     material.uniforms.resolution.value.set(size.width, size.height)
     material.uniforms.columns.value = Math.floor(size.width / shapeDetail.size)
+    material.uniforms.gammaCorrect.value = gammaCorrect
   })
 
   return (
@@ -72,6 +80,7 @@ const fragmentShader = /* glsl */ `
   uniform float size;
   uniform int columns;
   uniform sampler3D shapeDetail;
+  uniform bool gammaCorrect;
 
   void main() {
     vec2 uv = vec2(vUv.x, 1.0 - vUv.y) * resolution / size;
@@ -85,6 +94,6 @@ const fragmentShader = /* glsl */ `
     }
     vec3 uvw = vec3(uv, (float(index)) / size);
     vec4 color = vec4(vec3(texture(shapeDetail, uvw).r), 1.0);
-    outputColor = linearToOutputTexel(color);
+    outputColor = gammaCorrect ? linearToOutputTexel(color) : color;
   }
 `
