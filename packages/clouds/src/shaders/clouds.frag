@@ -353,44 +353,44 @@ void applyAerialPerspective(const vec3 camera, const vec3 point, inout vec4 colo
   color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
 }
 
+bool rayIntersectsGround(float r, float mu) {
+  // Assets r >= bottomRadius
+  return mu < 0.0 && r * r * (mu * mu - 1.0) + bottomRadius * bottomRadius >= 0.0;
+}
+
+float distanceToTopBoundary(float r, float mu, float radius) {
+  // Assets r <= radius
+  float discriminant = r * r * (mu * mu - 1.0) + radius * radius;
+  return ClampDistance(-r * mu + SafeSqrt(discriminant));
+}
+
+float distanceToBottomBoundary(float r, float mu, float radius) {
+  // Assets r >= radius
+  float discriminant = r * r * (mu * mu - 1.0) + radius * radius;
+  return ClampDistance(-r * mu - SafeSqrt(discriminant));
+}
+
 void getRayNearFar(const vec3 rayDirection, out float rayNear, out float rayFar) {
-  bool intersectsGround =
-    raySphereFirstIntersection(cameraPosition, rayDirection, ellipsoidCenter, bottomRadius) >= 0.0;
+  vec3 rayPosition = cameraPosition - ellipsoidCenter;
+  float r = length(rayPosition);
+  float mu = dot(rayPosition, rayDirection) / r;
+
+  bool intersectsGround = rayIntersectsGround(r, mu);
 
   if (cameraHeight < minHeight) {
     if (intersectsGround) {
       rayNear = -1.0;
       return;
     }
-    rayNear = raySphereSecondIntersection(
-      cameraPosition,
-      rayDirection,
-      ellipsoidCenter,
-      bottomRadius + minHeight
-    );
-    rayFar = raySphereSecondIntersection(
-      cameraPosition,
-      rayDirection,
-      ellipsoidCenter,
-      bottomRadius + maxHeight
-    );
+    rayNear = distanceToTopBoundary(r, mu, bottomRadius + minHeight);
+    rayFar = distanceToTopBoundary(r, mu, bottomRadius + maxHeight);
     rayFar = min(rayFar, maxRayDistance);
   } else if (cameraHeight < maxHeight) {
     rayNear = 0.0;
     if (intersectsGround) {
-      rayFar = raySphereFirstIntersection(
-        cameraPosition,
-        rayDirection,
-        ellipsoidCenter,
-        bottomRadius + minHeight
-      );
+      rayFar = distanceToBottomBoundary(r, mu, bottomRadius + minHeight);
     } else {
-      rayFar = raySphereSecondIntersection(
-        cameraPosition,
-        rayDirection,
-        ellipsoidCenter,
-        bottomRadius + maxHeight
-      );
+      rayFar = distanceToTopBoundary(r, mu, bottomRadius + maxHeight);
     }
   } else {
     float intersection1;
