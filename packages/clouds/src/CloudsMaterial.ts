@@ -206,8 +206,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           DEPTH_PACKING: '0',
           USE_SHAPE_DETAIL: '1',
           MULTI_SCATTERING_OCTAVES: '8',
-          USE_GROUND_IRRADIANCE: '1',
-          USE_POWDER: '1'
+          USE_POWDER: '1',
+          USE_GROUND_IRRADIANCE: '1'
         }
       },
       atmosphere
@@ -321,6 +321,21 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         this.defines.USE_POWDER = '1'
       } else {
         delete this.defines.USE_POWDER
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get useGroundIrradiance(): boolean {
+    return this.defines.USE_GROUND_IRRADIANCE != null
+  }
+
+  set useGroundIrradiance(value: boolean) {
+    if (value !== this.useGroundIrradiance) {
+      if (value) {
+        this.defines.USE_GROUND_IRRADIANCE = '1'
+      } else {
+        delete this.defines.USE_GROUND_IRRADIANCE
       }
       this.needsUpdate = true
     }
