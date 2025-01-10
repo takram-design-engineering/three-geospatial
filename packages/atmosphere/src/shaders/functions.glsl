@@ -81,21 +81,12 @@ float DistanceToTopAtmosphereBoundary(float r, float mu) {
   return ClampDistance(-r * mu + SafeSqrt(discriminant));
 }
 
-float DistanceToBottomAtmosphereBoundary(float r, float mu) {
-  float discriminant = r * r * (mu * mu - 1.0) + u_bottom_radius * u_bottom_radius;
-  return ClampDistance(-r * mu - SafeSqrt(discriminant));
-}
-
 bool RayIntersectsGround(float r, float mu) {
   return mu < 0.0 && r * r * (mu * mu - 1.0) + u_bottom_radius * u_bottom_radius >= 0.0;
 }
 
 float GetTextureCoordFromUnitRange(float x, int texture_size) {
   return 0.5 / float(texture_size) + x * (1.0 - 1.0 / float(texture_size));
-}
-
-float GetUnitRangeFromTextureCoord(float u, int texture_size) {
-  return (u - 0.5 / float(texture_size)) / (1.0 - 1.0 / float(texture_size));
 }
 
 vec2 GetTransmittanceTextureUvFromRMu(float r, float mu) {
@@ -154,14 +145,6 @@ vec3 GetTransmittanceToSun(const sampler2D u_transmittance_texture, float r, flo
     sin_theta_h * u_sun_angular_radius,
     mu_s - cos_theta_h
   );
-}
-
-float DistanceToNearestAtmosphereBoundary(float r, float mu, bool ray_r_mu_intersects_ground) {
-  if (ray_r_mu_intersects_ground) {
-    return DistanceToBottomAtmosphereBoundary(r, mu);
-  } else {
-    return DistanceToTopAtmosphereBoundary(r, mu);
-  }
 }
 
 float RayleighPhaseFunction(float nu) {
