@@ -52,6 +52,7 @@ declare module 'three' {
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface CloudsShadowMaterialParameters {
+  cascadeCount?: number
   depthBuffer?: Texture | null
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
@@ -59,6 +60,7 @@ export interface CloudsShadowMaterialParameters {
 }
 
 export const cloudsShadowMaterialParametersDefaults = {
+  cascadeCount: 4,
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true
 } satisfies CloudsShadowMaterialParameters
@@ -105,6 +107,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
+      cascadeCount,
       depthBuffer = null,
       ellipsoid,
       correctAltitude,
@@ -132,12 +135,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         projectionMatrix: new Uniform(new Matrix4()),
         viewMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
-        inverseShadowMatrices: new Uniform([
-          new Matrix4(),
-          new Matrix4(),
-          new Matrix4(),
-          new Matrix4()
-        ]),
+        inverseShadowMatrices: new Uniform([]),
         resolution: new Uniform(new Vector2()),
         cameraNear: new Uniform(0),
         cameraFar: new Uniform(0),
@@ -160,13 +158,14 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         minTransmittance: new Uniform(1e-2)
       } satisfies CloudsShadowMaterialUniforms,
       defines: {
-        STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
-        STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`,
         DEPTH_PACKING: '0',
-        USE_SHAPE_DETAIL: '1'
+        USE_SHAPE_DETAIL: '1',
+        STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
+        STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`
       }
     })
 
+    this.cascadeCount = cascadeCount
     this.atmosphere = atmosphere
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
@@ -208,6 +207,25 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
 
   setSize(width: number, height: number): void {
     this.uniforms.resolution.value.set(width, height)
+  }
+
+  get cascadeCount(): number {
+    return +this.defines.CASCADE_COUNT
+  }
+
+  set cascadeCount(value: number) {
+    if (value !== this.cascadeCount) {
+      this.defines.CASCADE_COUNT = `${value}`
+      this.needsUpdate = true
+
+      const inverseShadowMatrices = this.uniforms.inverseShadowMatrices.value
+      for (let i = 0; i < value; ++i) {
+        if (inverseShadowMatrices[i] == null) {
+          inverseShadowMatrices[i] = new Matrix4()
+        }
+      }
+      inverseShadowMatrices.length = value
+    }
   }
 
   get depthBuffer(): Texture | null {

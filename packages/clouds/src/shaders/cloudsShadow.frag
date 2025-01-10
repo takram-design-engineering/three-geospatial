@@ -29,9 +29,15 @@ in vec2 vUv;
 in mat4 vViewProjectionMatrix; // The main camera
 
 layout(location = 0) out vec4 outputColor0;
+#if CASCADE_COUNT > 1
 layout(location = 1) out vec4 outputColor1;
+#endif // CASCADE_COUNT > 1
+#if CASCADE_COUNT > 2
 layout(location = 2) out vec4 outputColor2;
+#endif // CASCADE_COUNT > 2
+#if CASCADE_COUNT > 3
 layout(location = 3) out vec4 outputColor3;
+#endif // CASCADE_COUNT > 3
 
 float blueNoise(const vec2 uv) {
   return texture(
@@ -206,7 +212,13 @@ vec4 cascade(const vec2 uv, const int index, const float mipLevel) {
 void main() {
   // TODO: Calculate mip level
   outputColor0 = cascade(vUv, 0, 0.0);
+  #if CASCADE_COUNT > 1
   outputColor1 = cascade(vUv, 1, 0.5);
+  #endif // CASCADE_COUNT > 1
+  #if CASCADE_COUNT > 2
   outputColor2 = cascade(vUv, 2, 1.0);
+  #endif // CASCADE_COUNT > 2
+  #if CASCADE_COUNT > 3
   outputColor3 = cascade(vUv, 3, 2.0);
+  #endif // CASCADE_COUNT > 3
 }
