@@ -42,8 +42,8 @@ export function useLocalDateControls(
       },
       speed: {
         value: 0.05,
-        min: -1,
-        max: 1
+        min: -0.5,
+        max: 0.5
       },
       ...(animated
         ? {
@@ -60,7 +60,7 @@ export function useLocalDateControls(
             })
           })
     }),
-    folderSettings,
+    folderSettings ?? {},
     [animated]
   )
 

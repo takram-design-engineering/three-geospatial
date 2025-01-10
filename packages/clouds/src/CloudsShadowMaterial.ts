@@ -89,6 +89,7 @@ interface CloudsShadowMaterialUniforms
   // Raymarch to clouds
   maxIterations: Uniform<number>
   minStepSize: Uniform<number>
+  maxStepSize: Uniform<number>
   minDensity: Uniform<number>
   minTransmittance: Uniform<number>
 }
@@ -154,6 +155,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         // Raymarch to clouds
         maxIterations: new Uniform(100),
         minStepSize: new Uniform(50),
+        maxStepSize: new Uniform(1000),
         minDensity: new Uniform(1e-5),
         minTransmittance: new Uniform(1e-2)
       } satisfies CloudsShadowMaterialUniforms,

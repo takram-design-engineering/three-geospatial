@@ -264,7 +264,6 @@ vec4 marchToClouds(
         );
 
         // Obtain the optical depth at the position from BSM.
-        // float shadowOpticalDepth = sampleShadowOpticalDepth(position, distanceToTop, vec2(0.0));
         float shadowOpticalDepth = sampleFilteredShadowOpticalDepth(position, distanceToTop);
 
         float sunOpticalDepth = 0.0;

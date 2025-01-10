@@ -22,6 +22,7 @@ uniform sampler3D blueNoiseTexture;
 // Raymarch to clouds
 uniform int maxIterations;
 uniform float minStepSize;
+uniform float maxStepSize;
 uniform float minDensity;
 uniform float minTransmittance;
 
@@ -104,7 +105,7 @@ vec4 marchToClouds(
     normal,
     rayOrigin,
     rayDirection,
-    max(maxRayDistance / float(maxIterations), minStepSize),
+    clamp(maxRayDistance / float(maxIterations), minStepSize, maxStepSize),
     rayDistance,
     stepSize
   );
@@ -172,21 +173,24 @@ void getRayNearFar(
   out float rayNear,
   out float rayFar
 ) {
-  rayNear = raySphereFirstIntersection(
-    viewPosition,
-    rayDirection,
-    ellipsoidCenter,
-    bottomRadius + maxLayerHeights.x
+  rayNear = max(
+    0.0,
+    raySphereFirstIntersection(
+      viewPosition,
+      rayDirection,
+      ellipsoidCenter,
+      bottomRadius + maxLayerHeights.x
+    )
   );
-  if (rayNear < 0.0) {
-    return;
-  }
   rayFar = raySphereFirstIntersection(
     viewPosition,
     rayDirection,
     ellipsoidCenter,
     bottomRadius + minLayerHeights.x
   );
+  if (rayFar < 0.0) {
+    rayFar = 1e6;
+  }
 }
 
 vec4 cascade(const vec2 uv, const int index, const float mipLevel) {
@@ -200,9 +204,6 @@ vec4 cascade(const vec2 uv, const int index, const float mipLevel) {
   float rayNear;
   float rayFar;
   getRayNearFar(sunWorldPosition, rayDirection, rayNear, rayFar);
-  if (rayNear < 0.0 || rayFar < 0.0) {
-    return vec4(1e7, 0.0, 0.0, 0.0);
-  }
 
   vec3 rayOrigin = sunWorldPosition - ellipsoidCenter + rayNear * rayDirection;
   float jitter = blueNoise(vUv);
