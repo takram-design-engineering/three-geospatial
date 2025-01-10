@@ -13,8 +13,10 @@ uniform vec2 localWeatherOffset;
 uniform float coverage;
 uniform sampler3D shapeTexture;
 uniform float shapeFrequency;
+uniform vec3 shapeOffset;
 uniform sampler3D shapeDetailTexture;
 uniform float shapeDetailFrequency;
+uniform vec3 shapeDetailOffset;
 
 // Cloud layers
 uniform vec4 minLayerHeights;

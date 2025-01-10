@@ -1,4 +1,4 @@
-import { Uniform, Vector2, Vector4, type Texture } from 'three'
+import { Uniform, Vector2, Vector3, Vector4, type Texture } from 'three'
 
 export interface CloudParameterUniforms {
   // Weather and shape
@@ -8,8 +8,10 @@ export interface CloudParameterUniforms {
   coverage: Uniform<number>
   shapeTexture: Uniform<Texture | null>
   shapeFrequency: Uniform<number>
+  shapeOffset: Uniform<Vector3>
   shapeDetailTexture: Uniform<Texture | null>
   shapeDetailFrequency: Uniform<number>
+  shapeDetailOffset: Uniform<Vector3>
 }
 
 export function createCloudParameterUniforms(): CloudParameterUniforms {
@@ -20,8 +22,10 @@ export function createCloudParameterUniforms(): CloudParameterUniforms {
     coverage: new Uniform(0.3),
     shapeTexture: new Uniform(null),
     shapeFrequency: new Uniform(0.0003),
+    shapeOffset: new Uniform(new Vector3()),
     shapeDetailTexture: new Uniform(null),
-    shapeDetailFrequency: new Uniform(0.006)
+    shapeDetailFrequency: new Uniform(0.006),
+    shapeDetailOffset: new Uniform(new Vector3())
   }
 }
 
