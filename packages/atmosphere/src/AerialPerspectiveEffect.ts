@@ -89,8 +89,8 @@ export interface AerialPerspectiveEffectOptions {
 
   // Composite
   shadowBuffer?: DataArrayTexture | null
+  shadowIntervals?: Vector2[]
   shadowMatrices?: Matrix4[]
-  shadowCascades?: Vector2[]
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -200,8 +200,8 @@ export class AerialPerspectiveEffect extends Effect {
           ['lunarRadianceScale', new Uniform(lunarRadianceScale)],
           ['compositeBuffer', new Uniform(null)],
           ['shadowBuffer', new Uniform(null)],
+          ['shadowIntervals', new Uniform([])],
           ['shadowMatrices', new Uniform([])],
-          ['shadowCascades', new Uniform([])],
           ['shadowFar', new Uniform(0)]
         ]),
         // prettier-ignore
@@ -557,11 +557,11 @@ export class AerialPerspectiveEffect extends Effect {
         this.defines.set('HAS_SHADOW', '1')
         this.defines.set(
           'SHADOW_CASCADE_COUNT',
-          `${value.shadow.cascades.length}`
+          `${value.shadow.intervals.length}`
         )
         this.uniforms.get('shadowBuffer')!.value = value.shadow.texture
+        this.uniforms.get('shadowIntervals')!.value = value.shadow.intervals
         this.uniforms.get('shadowMatrices')!.value = value.shadow.matrices
-        this.uniforms.get('shadowCascades')!.value = value.shadow.cascades
         this.uniforms.get('shadowFar')!.value = value.shadow.far
       }
     } else {
@@ -570,8 +570,8 @@ export class AerialPerspectiveEffect extends Effect {
       this.defines.delete('SHADOW_CASCADE_COUNT')
       this.uniforms.get('compositeBuffer')!.value = null
       this.uniforms.get('shadowBuffer')!.value = null
+      this.uniforms.get('shadowIntervals')!.value = []
       this.uniforms.get('shadowMatrices')!.value = []
-      this.uniforms.get('shadowCascades')!.value = []
       this.uniforms.get('shadowFar')!.value = 0
     }
     this.composite = value ?? null

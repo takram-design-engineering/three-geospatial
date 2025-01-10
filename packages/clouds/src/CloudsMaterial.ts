@@ -116,8 +116,8 @@ interface CloudsMaterialUniforms
   // Beer shadow map
   shadowBuffer: Uniform<DataArrayTexture | null>
   shadowTexelSize: Uniform<Vector2>
+  shadowIntervals: Uniform<Vector2[]>
   shadowMatrices: Uniform<Matrix4[]>
-  shadowCascades: Uniform<Vector2[]>
   shadowFar: Uniform<number>
 }
 
@@ -197,8 +197,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Beer shadow map
           shadowBuffer: new Uniform(null),
           shadowTexelSize: new Uniform(new Vector2()),
+          shadowIntervals: new Uniform([]),
           shadowMatrices: new Uniform([]),
-          shadowCascades: new Uniform([]),
           shadowFar: new Uniform(0)
         } satisfies CloudsMaterialUniforms,
         defines: {
@@ -353,14 +353,14 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       this.defines.SHADOW_CASCADE_COUNT = `${value}`
       this.needsUpdate = true
 
+      const shadowIntervals = this.uniforms.shadowIntervals.value
       const shadowMatrices = this.uniforms.shadowMatrices.value
-      const shadowCascades = this.uniforms.shadowCascades.value
       for (let i = 0; i < value; ++i) {
+        shadowIntervals[i] ??= new Vector2()
         shadowMatrices[i] ??= new Matrix4()
-        shadowCascades[i] ??= new Vector2()
       }
+      shadowIntervals.length = value
       shadowMatrices.length = value
-      shadowCascades.length = value
     }
   }
 }

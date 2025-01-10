@@ -56,12 +56,12 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
     const setComposite = useSetAtom(compositeAtom)
     useEffect(() => {
       setComposite({
-        texture: effect.cloudsRenderTarget.texture,
+        texture: effect.cloudsBuffer,
         shadow: {
-          texture: effect.shadowRenderTarget.texture,
+          texture: effect.shadowBuffer,
+          intervals: effect.shadowIntervals,
           matrices: effect.shadowMatrices,
-          cascades: effect.cascadedShadows.cascades,
-          far: effect.cascadedShadows.far
+          far: effect.shadowFar
         }
       })
       return () => {

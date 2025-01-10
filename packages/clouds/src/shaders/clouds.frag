@@ -42,8 +42,8 @@ uniform float minTransmittance;
 // Beer shadow map
 uniform sampler2DArray shadowBuffer;
 uniform vec2 shadowTexelSize;
+uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
-uniform vec2 shadowCascades[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 
 in vec2 vUv;
@@ -91,8 +91,8 @@ int getCascadeIndex(vec3 position) {
   vec4 viewPosition = viewMatrix * vec4(position, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
   for (int i = 0; i < SHADOW_CASCADE_COUNT; ++i) {
-    vec2 cascade = shadowCascades[i];
-    if (depth >= cascade.x && depth < cascade.y) {
+    vec2 interval = shadowIntervals[i];
+    if (depth >= interval.x && depth < interval.y) {
       return i;
     }
   }

@@ -7,8 +7,8 @@ import {
 
 export interface AtmosphereCompositeShadow {
   texture: DataArrayTexture | null
+  intervals: Vector2[]
   matrices: Matrix4[]
-  cascades: Vector2[]
   far: number
 }
 

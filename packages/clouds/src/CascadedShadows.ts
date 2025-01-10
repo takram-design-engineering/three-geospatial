@@ -69,8 +69,8 @@ function extractOrthographicTuple(
 }
 
 export interface CascadedShadowsOptions {
+  cascadeCount: number
   cascadeSize: number
-  cascadeCount?: number
   far?: number
   mode?: FrustumSplitMode
   lambda?: number
@@ -79,7 +79,6 @@ export interface CascadedShadowsOptions {
 }
 
 export const cascadedShadowsOptionsDefaults = {
-  cascadeCount: 4,
   far: 1e4,
   mode: 'practical',
   lambda: 0.5,
@@ -87,14 +86,18 @@ export const cascadedShadowsOptionsDefaults = {
   fade: true
 } satisfies Partial<CascadedShadowsOptions>
 
-interface Light {
+export interface Cascade {
+  readonly interval: Vector2
+  readonly matrix: Matrix4
+  readonly inverseMatrix: Matrix4
   readonly projectionMatrix: Matrix4
+  readonly inverseProjectionMatrix: Matrix4
+  readonly viewMatrix: Matrix4
   readonly inverseViewMatrix: Matrix4
 }
 
 export class CascadedShadows {
-  readonly lights: Light[] = []
-  readonly cascadeMatrix = new Matrix4()
+  readonly cascades: Cascade[] = []
 
   cascadeSize: number
   far: number
@@ -103,9 +106,8 @@ export class CascadedShadows {
   margin: number
   fade: boolean
 
-  private readonly cascadedFrusta: FrustumCorners[] = []
+  private readonly frusta: FrustumCorners[] = []
   private readonly splits: number[] = []
-  readonly cascades: Vector2[] = []
 
   constructor(options: CascadedShadowsOptions) {
     const { cascadeCount, cascadeSize, far, mode, lambda, margin, fade } = {
@@ -122,35 +124,38 @@ export class CascadedShadows {
   }
 
   get cascadeCount(): number {
-    return this.lights.length
+    return this.cascades.length
   }
 
   set cascadeCount(value: number) {
     if (value !== this.cascadeCount) {
       for (let i = 0; i < value; ++i) {
-        this.lights[i] = {
+        this.cascades[i] ??= {
+          interval: new Vector2(),
+          matrix: new Matrix4(),
+          inverseMatrix: new Matrix4(),
           projectionMatrix: new Matrix4(),
+          inverseProjectionMatrix: new Matrix4(),
+          viewMatrix: new Matrix4(),
           inverseViewMatrix: new Matrix4()
         }
       }
-      this.lights.length = value
+      this.cascades.length = value
     }
   }
 
-  private updateCascades(camera: PerspectiveCamera): void {
+  private updateIntervals(camera: PerspectiveCamera): void {
     const cascadeCount = this.cascadeCount
     const splits = this.splits
     const far = Math.min(this.far, camera.far)
     splitFrustum(this.mode, cascadeCount, camera.near, far, this.lambda, splits)
     frustumScratch.setFromCamera(camera, far)
-    frustumScratch.split(splits, this.cascadedFrusta)
+    frustumScratch.split(splits, this.frusta)
 
     const cascades = this.cascades
     for (let i = 0; i < cascadeCount; ++i) {
-      const vector = cascades[i] ?? (cascades[i] = new Vector2())
-      vector.set(splits[i - 1] ?? 0, splits[i] ?? 0)
+      cascades[i].interval.set(splits[i - 1] ?? 0, splits[i] ?? 0)
     }
-    cascades.length = cascadeCount
   }
 
   private getFrustumRadius(
@@ -178,13 +183,13 @@ export class CascadedShadows {
   }
 
   private updateProjectionMatrix(camera: PerspectiveCamera): void {
-    const frusta = this.cascadedFrusta
-    const lights = this.lights
-    invariant(frusta.length === lights.length)
+    const frusta = this.frusta
+    const shadows = this.cascades
+    invariant(frusta.length === shadows.length)
 
     for (let i = 0; i < frusta.length; ++i) {
       const radius = this.getFrustumRadius(camera, frusta[i])
-      lights[i].projectionMatrix.makeOrthographic(
+      shadows[i].projectionMatrix.makeOrthographic(
         -radius, // left
         radius, // right
         radius, // top
@@ -216,15 +221,15 @@ export class CascadedShadows {
     const zenithAngle = sunDirection.dot(up)
     const distance = lerp(1e6, 1e3, zenithAngle)
 
-    const frusta = this.cascadedFrusta
-    const lights = this.lights
-    invariant(frusta.length === lights.length)
+    const frusta = this.frusta
+    const cascades = this.cascades
+    invariant(frusta.length === cascades.length)
     const margin = this.margin
     const cascadeSize = this.cascadeSize
 
     for (let i = 0; i < frusta.length; ++i) {
       const frustum = frusta[i]
-      const light = lights[i]
+      const cascade = cascades[i]
 
       const { near, far } = frustumScratch
         .copy(frustum)
@@ -239,7 +244,7 @@ export class CascadedShadows {
 
       // Round light-space translation to even texel increments.
       const [left, right, top, bottom] = extractOrthographicTuple(
-        light.projectionMatrix
+        cascade.projectionMatrix
       )
       const texelWidth = (right - left) / cascadeSize
       const texelHeight = (top - bottom) / cascadeSize
@@ -251,7 +256,7 @@ export class CascadedShadows {
         .copy(sunDirection)
         .multiplyScalar(distance)
         .add(center)
-      light.inverseViewMatrix
+      cascade.inverseViewMatrix
         .lookAt(center, position, Object3D.DEFAULT_UP)
         .setPosition(position)
     }
@@ -262,8 +267,24 @@ export class CascadedShadows {
     sunDirection: Vector3,
     ellipsoid?: Ellipsoid
   ): void {
-    this.updateCascades(camera)
+    this.updateIntervals(camera)
     this.updateProjectionMatrix(camera)
     this.updateInverseViewMatrix(camera, sunDirection, ellipsoid)
+
+    const cascades = this.cascades
+    for (let i = 0; i < this.cascadeCount; ++i) {
+      const {
+        matrix,
+        inverseMatrix,
+        projectionMatrix,
+        inverseProjectionMatrix,
+        viewMatrix,
+        inverseViewMatrix
+      } = cascades[i]
+      inverseProjectionMatrix.copy(projectionMatrix).invert()
+      viewMatrix.copy(inverseViewMatrix).invert()
+      matrix.copy(projectionMatrix).multiply(viewMatrix)
+      inverseMatrix.copy(inverseViewMatrix).multiply(inverseProjectionMatrix)
+    }
   }
 }
