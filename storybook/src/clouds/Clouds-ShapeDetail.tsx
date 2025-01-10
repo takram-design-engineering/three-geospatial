@@ -4,10 +4,10 @@ import { type StoryFn } from '@storybook/react'
 import { useEffect, useMemo, type FC } from 'react'
 import { GLSL3, ShaderMaterial, Uniform, Vector2 } from 'three'
 
-import { LocalWeather } from '@takram/three-global-clouds'
+import { CloudShapeDetail } from '@takram/three-global-clouds'
 
 const Scene: FC = () => {
-  const localWeather = useMemo(() => new LocalWeather(), [])
+  const shapeDetail = useMemo(() => new CloudShapeDetail(), [])
 
   const material = useMemo(
     () =>
@@ -17,20 +17,22 @@ const Scene: FC = () => {
         fragmentShader,
         uniforms: {
           resolution: new Uniform(new Vector2()),
-          size: new Uniform(new Vector2().setScalar(localWeather.size * 2)),
-          localWeather: new Uniform(localWeather.texture)
+          size: new Uniform(shapeDetail.size),
+          columns: new Uniform(0),
+          shapeDetail: new Uniform(shapeDetail.texture)
         }
       }),
-    [localWeather]
+    [shapeDetail]
   )
 
   const { gl } = useThree()
   useEffect(() => {
-    localWeather.update(gl)
-  }, [localWeather, gl])
+    shapeDetail.update(gl)
+  }, [shapeDetail, gl])
 
   useFrame(({ size }) => {
     material.uniforms.resolution.value.set(size.width, size.height)
+    material.uniforms.columns.value = Math.floor(size.width / shapeDetail.size)
   })
 
   return (
@@ -60,37 +62,29 @@ const vertexShader = /* glsl */ `
 
 const fragmentShader = /* glsl */ `
   precision highp float;
+  precision highp sampler3D;
 
   in vec2 vUv;
 
   out vec4 outputColor;
 
   uniform vec2 resolution;
-  uniform vec2 size;
-  uniform sampler2D localWeather;
+  uniform float size;
+  uniform int columns;
+  uniform sampler3D shapeDetail;
 
   void main() {
-    vec2 scale = resolution / size;
-    vec2 uv = vUv * scale + (1.0 - scale) * 0.5;
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    vec2 uv = vec2(vUv.x, 1.0 - vUv.y) * resolution / size;
+    ivec2 xy = ivec2(uv);
+    if (xy.x >= columns) {
       discard;
     }
-
-    vec4 coord = vec4(uv, uv - 0.5) * 2.0;
-    vec4 color;
-    if (uv.y > 0.5) {
-      if (uv.x < 0.5) {
-        color = vec4(vec3(texture(localWeather, coord.xw).r), 1.0);
-      } else {
-        color = vec4(vec3(texture(localWeather, coord.zw).g), 1.0);
-      }
-    } else {
-      if (uv.x < 0.5) {
-        color = vec4(vec3(texture(localWeather, coord.xy).b), 1.0);
-      } else {
-        color = vec4(vec3(texture(localWeather, coord.zy).a), 1.0);
-      }
+    int index = xy.y * columns + xy.x % columns;
+    if (index >= int(size)) {
+      discard;
     }
+    vec3 uvw = vec3(uv, (float(index)) / size);
+    vec4 color = vec4(vec3(texture(shapeDetail, uvw).r), 1.0);
     outputColor = linearToOutputTexel(color);
   }
 `

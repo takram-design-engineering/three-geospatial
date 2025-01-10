@@ -42,6 +42,7 @@ float getPerlinWorley(const vec3 point) {
   int octaveCount = 3;
   float frequency = 8.0;
   float perlin = getPerlinNoise(point, frequency, octaveCount);
+  perlin = clamp(perlin, 0.0, 1.0);
 
   float cellCount = 4.0;
   vec3 noise = vec3(

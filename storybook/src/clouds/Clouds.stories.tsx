@@ -16,3 +16,9 @@ export const LocalWeather = await import('./Clouds-LocalWeather').then(
 export const Shape = await import('./Clouds-Shape').then(
   module => module.default
 )
+export const ShapeDetail = await import('./Clouds-ShapeDetail').then(
+  module => module.default
+)
+export const VolumetricShape = await import('./Clouds-VolumetricShape').then(
+  module => module.default
+)
