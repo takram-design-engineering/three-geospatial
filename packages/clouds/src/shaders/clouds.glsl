@@ -93,8 +93,7 @@ float sampleShape(WeatherSample weather, const vec3 position, const float mipLev
   vec4 density = weather.density;
 
   float shape = textureLod(shapeTexture, position * shapeFrequency, 0.0).r;
-  shape = 1.0 - shape; // Modulation for fluffy shape
-  density = mix(density, saturate(remap(density, shape, 1.0, 0.0, 1.0)), detailAmounts);
+  density = mix(density, saturate(remap(density, 1.0 - shape, 1.0, 0.0, 1.0)), detailAmounts);
 
   #ifdef USE_SHAPE_DETAIL
   if (mipLevel < 0.5) {

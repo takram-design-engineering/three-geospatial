@@ -37,7 +37,7 @@ import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsShadowMaterial } from './CloudsShadowMaterial'
 import { LocalWeather } from './LocalWeather'
-import { MRTArrayShaderPass } from './MRTArrayShaderPass'
+import { ShaderArrayPass } from './ShaderArrayPass'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
@@ -125,7 +125,7 @@ export class CloudsEffect extends Effect {
   readonly cloudsPass: ShaderPass
   readonly shadowRenderTarget: WebGLArrayRenderTarget
   readonly shadowMaterial: CloudsShadowMaterial
-  readonly shadowPass: MRTArrayShaderPass
+  readonly shadowPass: ShaderArrayPass
   readonly blurPass: GaussianBlurPass
   readonly resolution: Resolution
 
@@ -161,10 +161,11 @@ export class CloudsEffect extends Effect {
     cloudsRenderTarget.texture.name = 'Clouds.Target'
 
     const shadowMapSize = 1024 // TODO: Parametrize
+    const shadowCascadeCount = 4 // TODO: Parametrize
     const shadowRenderTarget = new WebGLArrayRenderTarget(
       shadowMapSize,
       shadowMapSize,
-      4, // TODO: Parametrize
+      shadowCascadeCount,
       {
         depthBuffer: false,
         stencilBuffer: false
@@ -181,6 +182,7 @@ export class CloudsEffect extends Effect {
 
     const cascadedShadows = new CascadedShadows({
       cascadeSize: shadowMapSize,
+      cascadeCount: shadowCascadeCount,
       lambda: 0.6,
       far: 1e5 // TODO: Parametrize
     })
@@ -207,7 +209,7 @@ export class CloudsEffect extends Effect {
     shadowUniforms.shapeDetailTexture.value = cloudShapeDetail.texture
 
     const cloudsPass = new ShaderPass(cloudsMaterial)
-    const shadowPass = new MRTArrayShaderPass(shadowMaterial)
+    const shadowPass = new ShaderArrayPass(shadowMaterial)
     const blurPass = new GaussianBlurPass({
       kernelSize: 12
     })
