@@ -7,6 +7,7 @@ import {
   Uniform,
   Vector3,
   type Data3DTexture,
+  type DataArrayTexture,
   type DataTexture,
   type Texture,
   type Vector2,
@@ -87,7 +88,7 @@ export interface AerialPerspectiveEffectOptions {
   lunarRadianceScale?: number
 
   // Composite
-  shadowBuffer?: Texture | null
+  shadowBuffer?: DataArrayTexture | null
   shadowMatrices?: Matrix4[]
   shadowCascades?: Vector2[]
 }

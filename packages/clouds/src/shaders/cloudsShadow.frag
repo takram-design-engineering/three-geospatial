@@ -28,7 +28,10 @@ uniform float minTransmittance;
 in vec2 vUv;
 in mat4 vViewProjectionMatrix; // The main camera
 
-layout(location = 0) out vec4 outputColor;
+layout(location = 0) out vec4 outputColor0;
+layout(location = 1) out vec4 outputColor1;
+layout(location = 2) out vec4 outputColor2;
+layout(location = 3) out vec4 outputColor3;
 
 float blueNoise(const vec2 uv) {
   return texture(
@@ -202,18 +205,8 @@ vec4 cascade(const vec2 uv, const int index, const float mipLevel) {
 
 void main() {
   // TODO: Calculate mip level
-  vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
-  if (vUv.y > 0.5) {
-    if (vUv.x < 0.5) {
-      outputColor = cascade(coord.xw, 0, 0.0);
-    } else {
-      outputColor = cascade(coord.zw, 1, 0.5);
-    }
-  } else {
-    if (vUv.x < 0.5) {
-      outputColor = cascade(coord.xy, 2, 1.0);
-    } else {
-      outputColor = cascade(coord.zy, 3, 2.0);
-    }
-  }
+  outputColor0 = cascade(vUv, 0, 0.0);
+  outputColor1 = cascade(vUv, 1, 0.5);
+  outputColor2 = cascade(vUv, 2, 1.0);
+  outputColor3 = cascade(vUv, 3, 2.0);
 }

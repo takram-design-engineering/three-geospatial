@@ -11,10 +11,12 @@ import {
 import {
   Camera,
   HalfFloatType,
+  LinearFilter,
   Matrix4,
   Uniform,
   Vector2,
   Vector3,
+  WebGLArrayRenderTarget,
   WebGLRenderTarget,
   type Data3DTexture,
   type DataTexture,
@@ -35,6 +37,7 @@ import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsShadowMaterial } from './CloudsShadowMaterial'
 import { LocalWeather } from './LocalWeather'
+import { MRTArrayShaderPass } from './MRTArrayShaderPass'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
@@ -61,7 +64,6 @@ export const cloudsEffectOptionsDefaults = {
 } satisfies CloudsEffectOptions
 
 export class CloudsEffect extends Effect {
-  // TODO: Cumulus, Altostratus, Cirrocumulus, Cirrus
   readonly cloudLayers: CloudLayers = [
     {
       minHeight: 600,
@@ -78,12 +80,6 @@ export class CloudsEffect extends Effect {
       detailAmount: 0,
       weatherExponent: 1,
       coverageFilterWidth: 0.0
-      // minHeight: 4500,
-      // maxHeight: 5000,
-      // extinctionCoeff: 0.1,
-      // detailAmount: 0.8,
-      // weatherExponent: 1,
-      // coverageFilterWidth: 0.3
     },
     {
       minHeight: 6700,
@@ -127,9 +123,9 @@ export class CloudsEffect extends Effect {
   readonly cloudsRenderTarget: WebGLRenderTarget
   readonly cloudsMaterial: CloudsMaterial
   readonly cloudsPass: ShaderPass
-  readonly shadowRenderTarget: WebGLRenderTarget
+  readonly shadowRenderTarget: WebGLArrayRenderTarget
   readonly shadowMaterial: CloudsShadowMaterial
-  readonly shadowPass: ShaderPass
+  readonly shadowPass: MRTArrayShaderPass
   readonly blurPass: GaussianBlurPass
   readonly resolution: Resolution
 
@@ -164,23 +160,27 @@ export class CloudsEffect extends Effect {
     })
     cloudsRenderTarget.texture.name = 'Clouds.Target'
 
-    const shadowMapSize = 2048 // TODO: Parametrize
-    const shadowRenderTarget = new WebGLRenderTarget(
+    const shadowMapSize = 1024 // TODO: Parametrize
+    const shadowRenderTarget = new WebGLArrayRenderTarget(
       shadowMapSize,
       shadowMapSize,
+      4, // TODO: Parametrize
       {
         depthBuffer: false,
-        stencilBuffer: false,
-        type: HalfFloatType
+        stencilBuffer: false
       }
     )
+    // Constructor option doesn't work
+    shadowRenderTarget.texture.type = HalfFloatType
+    shadowRenderTarget.texture.minFilter = LinearFilter
+    shadowRenderTarget.texture.magFilter = LinearFilter
     shadowRenderTarget.texture.name = 'Clouds.Shadow'
 
     // This instance is shared between clouds and shadow materials.
     const sunDirection = new Vector3()
 
     const cascadedShadows = new CascadedShadows({
-      cascadeSize: shadowMapSize / 2,
+      cascadeSize: shadowMapSize,
       lambda: 0.6,
       far: 1e5 // TODO: Parametrize
     })
@@ -207,7 +207,7 @@ export class CloudsEffect extends Effect {
     shadowUniforms.shapeDetailTexture.value = cloudShapeDetail.texture
 
     const cloudsPass = new ShaderPass(cloudsMaterial)
-    const shadowPass = new ShaderPass(shadowMaterial)
+    const shadowPass = new MRTArrayShaderPass(shadowMaterial)
     const blurPass = new GaussianBlurPass({
       kernelSize: 12
     })

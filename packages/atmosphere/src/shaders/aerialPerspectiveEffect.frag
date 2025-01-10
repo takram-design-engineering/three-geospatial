@@ -1,3 +1,5 @@
+precision highp sampler2DArray;
+
 #include "core/depth"
 #include "core/packing"
 #include "core/transform"
@@ -24,7 +26,7 @@ uniform sampler2D compositeBuffer;
 #endif // HAS_COMPOSITE
 
 #ifdef HAS_SHADOW
-uniform sampler2D shadowBuffer;
+uniform sampler2DArray shadowBuffer;
 uniform mat4 shadowMatrices[SHADOW_CASCADES];
 uniform vec2 shadowCascades[SHADOW_CASCADES];
 uniform float shadowFar;
@@ -129,18 +131,8 @@ vec4 getShadow(vec3 worldPosition) {
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec4(0.0);
   }
-  vec4 coord = vec4(uv, uv + 1.0) * 0.5;
-  if (index == 0) {
-    uv = coord.xw;
-  } else if (index == 1) {
-    uv = coord.zw;
-  } else if (index == 2) {
-    uv = coord.xy;
-  } else {
-    uv = coord.zy;
-  }
   // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
-  return texture(shadowBuffer, uv);
+  return texture(shadowBuffer, vec3(uv, float(index)));
 }
 
 #endif // HAS_SHADOW

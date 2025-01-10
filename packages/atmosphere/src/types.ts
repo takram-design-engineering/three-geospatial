@@ -1,7 +1,12 @@
-import { type Matrix4, type Texture, type Vector2 } from 'three'
+import {
+  type DataArrayTexture,
+  type Matrix4,
+  type Texture,
+  type Vector2
+} from 'three'
 
 export interface AtmosphereCompositeShadow {
-  texture: Texture | null
+  texture: DataArrayTexture | null
   matrices: Matrix4[]
   cascades: Vector2[]
   far: number

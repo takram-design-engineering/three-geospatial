@@ -10,6 +10,7 @@ import {
   type BufferGeometry,
   type Camera,
   type Data3DTexture,
+  type DataArrayTexture,
   type Group,
   type Object3D,
   type OrthographicCamera,
@@ -106,7 +107,7 @@ interface CloudsMaterialUniforms
   minTransmittance: Uniform<number>
 
   // Beer shadow map
-  shadowBuffer: Uniform<Texture | null>
+  shadowBuffer: Uniform<DataArrayTexture | null>
   shadowTexelSize: Uniform<Vector2>
   shadowMatrices: Uniform<Matrix4[]>
   shadowCascades: Uniform<Vector2[]>
