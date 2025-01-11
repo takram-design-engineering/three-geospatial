@@ -12,7 +12,6 @@ import {
   Camera,
   HalfFloatType,
   LinearFilter,
-  Uniform,
   Vector2,
   Vector3,
   WebGLArrayRenderTarget,
@@ -207,10 +206,7 @@ export class CloudsEffect extends Effect {
 
     super('CloudsEffect', fragmentShader, {
       blendFunction,
-      attributes: EffectAttribute.DEPTH,
-      uniforms: new Map<string, Uniform>([
-        ['cloudsBuffer', new Uniform(cloudsRenderTarget.texture)]
-      ])
+      attributes: EffectAttribute.DEPTH
     })
 
     this.sunDirection = sunDirection
