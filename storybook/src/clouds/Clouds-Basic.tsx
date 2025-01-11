@@ -153,10 +153,10 @@ const Scene: FC = () => {
     usePowder: true
   })
 
-  const { maxIterations, initialStepSize, maxStepSize, maxRayDistance } =
+  const { maxIterations, minStepSize, maxStepSize, maxRayDistance } =
     useControls('primary raymarch', {
       maxIterations: { value: 500, min: 100, max: 1000 },
-      initialStepSize: { value: 50, min: 50, max: 200 },
+      minStepSize: { value: 50, min: 50, max: 200 },
       maxStepSize: { value: 1000, min: 200, max: 2000 },
       maxRayDistance: { value: 1.5e5, min: 1e4, max: 2e5 }
     })
@@ -181,7 +181,7 @@ const Scene: FC = () => {
     }
     clouds.cloudsMaterial.uniforms.skyIrradianceScale.value = skyIrradianceScale
     clouds.cloudsMaterial.uniforms.maxIterations.value = maxIterations
-    clouds.cloudsMaterial.uniforms.initialStepSize.value = initialStepSize
+    clouds.cloudsMaterial.uniforms.minStepSize.value = minStepSize
     clouds.cloudsMaterial.uniforms.maxStepSize.value = maxStepSize
     clouds.cloudsMaterial.uniforms.maxRayDistance.value = maxRayDistance
   })

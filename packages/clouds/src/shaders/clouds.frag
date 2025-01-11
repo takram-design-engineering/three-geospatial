@@ -33,7 +33,7 @@ uniform float powderExponent;
 
 // Raymarch to clouds
 uniform int maxIterations;
-uniform float initialStepSize;
+uniform float minStepSize;
 uniform float maxStepSize;
 uniform float maxRayDistance;
 uniform float minDensity;
@@ -228,7 +228,7 @@ vec4 marchToClouds(
   vec3 sunIrradiance;
   vec3 skyIrradiance;
 
-  float stepSize = initialStepSize;
+  float stepSize = minStepSize;
   float rayDistance = stepSize * jitter;
   float cosTheta = dot(sunDirection, rayDirection);
 
