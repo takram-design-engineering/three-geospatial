@@ -87,6 +87,7 @@ bool intersectsSceneObjects(const vec3 rayPosition) {
 
   // The ray is behind the scene objects when rayView.z < sceneView.z.
   vec4 rayView = viewMatrix * vec4(position, 1.0);
+  rayView /= rayView.w;
   return rayView.z < sceneView.z;
 }
 
@@ -125,17 +126,16 @@ vec4 marchToClouds(
     }
     vec3 position = rayOrigin + rayDirection * rayDistance;
 
-    // Terminate the ray at the scene objects.
-    if (intersectsSceneObjects(position)) {
-      break;
-    }
-
     // Sample a rough density.
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
 
-    if (any(greaterThan(weather.density, vec4(minDensity)))) {
+    if (
+      any(greaterThan(weather.density, vec4(minDensity))) &&
+      // Skip the ray inside scene objects.
+      !intersectsSceneObjects(position)
+    ) {
       // Sample a detailed density.
       float density = sampleShape(weather, position, mipLevel);
       if (density > minDensity) {
