@@ -102,6 +102,12 @@ vec3 getCascadeColor(vec3 rayPosition, vec2 uvOffset) {
   );
   vec3 position = rayPosition + ellipsoidCenter;
   int index = getCascadeIndex(position);
+  vec4 point = shadowMatrices[index] * vec4(position, 1.0);
+  point /= point.w;
+  vec2 uv = point.xy * 0.5 + 0.5 + uvOffset;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    return vec3(1.0);
+  }
   return colors[index];
 }
 #endif // DEBUG_SHOW_CASCADES
