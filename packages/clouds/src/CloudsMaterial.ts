@@ -197,8 +197,14 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Beer shadow map
           shadowBuffer: new Uniform(null),
           shadowTexelSize: new Uniform(new Vector2()),
-          shadowIntervals: new Uniform([]),
-          shadowMatrices: new Uniform([]),
+          shadowIntervals: new Uniform(
+            // Populate the max number of elements.
+            Array.from({ length: 4 }, () => new Vector2())
+          ),
+          shadowMatrices: new Uniform(
+            // Populate the max number of elements.
+            Array.from({ length: 4 }, () => new Matrix4())
+          ),
           shadowFar: new Uniform(0)
         } satisfies CloudsMaterialUniforms,
         defines: {
@@ -352,15 +358,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     if (value !== this.shadowCascadeCount) {
       this.defines.SHADOW_CASCADE_COUNT = `${value}`
       this.needsUpdate = true
-
-      const shadowIntervals = this.uniforms.shadowIntervals.value
-      const shadowMatrices = this.uniforms.shadowMatrices.value
-      for (let i = 0; i < value; ++i) {
-        shadowIntervals[i] ??= new Vector2()
-        shadowMatrices[i] ??= new Matrix4()
-      }
-      shadowIntervals.length = value
-      shadowMatrices.length = value
     }
   }
 }

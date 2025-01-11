@@ -69,8 +69,8 @@ function extractOrthographicTuple(
 }
 
 export interface CascadedShadowsOptions {
-  cascadeCount: number
-  cascadeSize: number
+  cascadeCount?: number
+  cascadeSize?: number
   far?: number
   mode?: FrustumSplitMode
   lambda?: number
@@ -79,6 +79,8 @@ export interface CascadedShadowsOptions {
 }
 
 export const cascadedShadowsOptionsDefaults = {
+  cascadeCount: 4,
+  cascadeSize: 1024,
   far: 1e4,
   mode: 'practical',
   lambda: 0.5,

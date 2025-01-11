@@ -131,6 +131,8 @@ export class CloudsEffect extends Effect {
 
   useBlur = false
   private frame = 0
+  private _shadowMapSize = 0
+  private _shadowCascadeCount = 0
 
   constructor(
     private camera: Camera = new Camera(),
@@ -160,17 +162,10 @@ export class CloudsEffect extends Effect {
     })
     cloudsRenderTarget.texture.name = 'Clouds.Target'
 
-    const shadowMapSize = 1024 // TODO: Parametrize
-    const shadowCascadeCount = 3 // TODO: Parametrize
-    const shadowRenderTarget = new WebGLArrayRenderTarget(
-      shadowMapSize,
-      shadowMapSize,
-      shadowCascadeCount,
-      {
-        depthBuffer: false,
-        stencilBuffer: false
-      }
-    )
+    const shadowRenderTarget = new WebGLArrayRenderTarget(1, 1, 1, {
+      depthBuffer: false,
+      stencilBuffer: false
+    })
     // Constructor option doesn't work
     shadowRenderTarget.texture.type = HalfFloatType
     shadowRenderTarget.texture.minFilter = LinearFilter
@@ -181,8 +176,6 @@ export class CloudsEffect extends Effect {
     const sunDirection = new Vector3()
 
     const cascadedShadows = new CascadedShadows({
-      cascadeSize: shadowMapSize,
-      cascadeCount: shadowCascadeCount,
       lambda: 0.6,
       far: 1e5 // TODO: Parametrize
     })
@@ -196,13 +189,11 @@ export class CloudsEffect extends Effect {
     cloudsUniforms.shapeTexture.value = shape.texture
     cloudsUniforms.shapeDetailTexture.value = shapeDetail.texture
     cloudsUniforms.shadowBuffer.value = shadowRenderTarget.texture
-    cloudsUniforms.shadowTexelSize.value.set(1, 1).divideScalar(shadowMapSize)
 
     const shadowMaterial = new CloudsShadowMaterial(
       { sunDirectionRef: sunDirection },
       atmosphere
     )
-    shadowMaterial.setSize(shadowMapSize, shadowMapSize)
     const shadowUniforms = shadowMaterial.uniforms
     shadowUniforms.localWeatherTexture.value = localWeather.texture
     shadowUniforms.shapeTexture.value = shape.texture
@@ -235,7 +226,12 @@ export class CloudsEffect extends Effect {
     this.shadowPass = shadowPass
     this.blurPass = blurPass
 
-    this.mainCamera = camera // Need to assign after setting up the pass.
+    // Camera needs to be set after setting up the pass.
+    this.mainCamera = camera
+
+    // Initialize aggregated default values.
+    this.shadowMapSize = 1024
+    this.shadowCascadeCount = 3
 
     this.resolution = new Resolution(
       this,
@@ -366,6 +362,8 @@ export class CloudsEffect extends Effect {
     this.shadowMaterial.depthPacking = depthPacking ?? 0
   }
 
+  // Textures
+
   get localWeatherTexture(): Texture | null {
     return this.cloudsMaterial.uniforms.localWeatherTexture.value
   }
@@ -393,6 +391,8 @@ export class CloudsEffect extends Effect {
     this.shadowMaterial.uniforms.blueNoiseVectorTexture.value = value
   }
 
+  // Cloud parameters
+
   get coverage(): number {
     return this.cloudsMaterial.uniforms.coverage.value
   }
@@ -402,7 +402,45 @@ export class CloudsEffect extends Effect {
     this.shadowMaterial.uniforms.coverage.value = value
   }
 
-  // Aggregated accessors
+  // Shadow parameters
+
+  get shadowMapSize(): number {
+    return this._shadowMapSize
+  }
+
+  set shadowMapSize(value: number) {
+    if (value !== this.shadowMapSize) {
+      this._shadowMapSize = value
+      this.shadowRenderTarget.setSize(
+        value,
+        value,
+        this.shadowRenderTarget.depth
+      )
+      this.cascadedShadows.cascadeSize = value
+      this.cloudsMaterial.uniforms.shadowTexelSize.value.setScalar(1 / value)
+      this.shadowMaterial.setSize(value, value)
+    }
+  }
+
+  get shadowCascadeCount(): number {
+    return this._shadowCascadeCount
+  }
+
+  set shadowCascadeCount(value: number) {
+    if (value !== this.shadowCascadeCount) {
+      this._shadowCascadeCount = value
+      this.shadowRenderTarget.setSize(
+        this.shadowRenderTarget.width,
+        this.shadowRenderTarget.height,
+        value
+      )
+      this.cascadedShadows.cascadeCount = value
+      this.cloudsMaterial.shadowCascadeCount = value
+      this.shadowMaterial.cascadeCount = value
+    }
+  }
+
+  // Shadow composition accessors
 
   get cloudsBuffer(): Texture {
     return this.cloudsRenderTarget.texture
@@ -424,7 +462,7 @@ export class CloudsEffect extends Effect {
     return this.cascadedShadows.far
   }
 
-  // Redundant pass-though accessors
+  // Atmosphere parameters
 
   get irradianceTexture(): DataTexture | null {
     return this.cloudsMaterial.irradianceTexture

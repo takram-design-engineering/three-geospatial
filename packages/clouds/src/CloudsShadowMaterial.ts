@@ -136,7 +136,10 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         projectionMatrix: new Uniform(new Matrix4()),
         viewMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
-        inverseShadowMatrices: new Uniform([]),
+        inverseShadowMatrices: new Uniform(
+          // Populate the max number of elements.
+          Array.from({ length: 4 }, () => new Matrix4())
+        ),
         resolution: new Uniform(new Vector2()),
         cameraNear: new Uniform(0),
         cameraFar: new Uniform(0),
@@ -219,12 +222,6 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
     if (value !== this.cascadeCount) {
       this.defines.CASCADE_COUNT = `${value}`
       this.needsUpdate = true
-
-      const inverseShadowMatrices = this.uniforms.inverseShadowMatrices.value
-      for (let i = 0; i < value; ++i) {
-        inverseShadowMatrices[i] ??= new Matrix4()
-      }
-      inverseShadowMatrices.length = value
     }
   }
 
