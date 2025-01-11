@@ -19,7 +19,14 @@ import {
   ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { Fragment, useEffect, useLayoutEffect, useRef, type FC } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FC
+} from 'react'
 import { NearestFilter, RedFormat, RepeatWrapping, RGBAFormat } from 'three'
 import { DRACOLoader } from 'three-stdlib'
 
@@ -130,12 +137,21 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
 
-  const { enabled, coverage, useShapeDetail, usePowder } = useControls('clouds', {
-    enabled: true,
-    coverage: { value: 0.25, min: 0, max: 1, step: 0.01 },
-    useShapeDetail: true,
-    usePowder: true
-  })
+  const { enabled, coverage, useShapeDetail, usePowder } = useControls(
+    'clouds',
+    {
+      enabled: true,
+      coverage: { value: 0.25, min: 0, max: 1, step: 0.01 },
+      useShapeDetail: true,
+      usePowder: true
+    }
+  )
+
+  const { showShadowMap: debugShowShadowMap, showCascades: debugShowCascades } =
+    useControls('debug', {
+      showShadowMap: false,
+      showCascades: false
+    })
 
   const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
@@ -195,9 +211,9 @@ const Scene: FC<SceneProps> = ({
     '/clouds/stbn_unit_vector.bin'
   )
 
-  const cloudsRef = useRef<CloudsEffect>(null)
+  const [clouds, setClouds] = useState<CloudsEffect | null>(null)
+
   useEffect(() => {
-    const clouds = cloudsRef.current
     if (clouds == null) {
       return
     }
@@ -205,7 +221,24 @@ const Scene: FC<SceneProps> = ({
     clouds.cloudsMaterial.usePowder = usePowder
     clouds.cloudLayers[0].minHeight = 750
     clouds.cloudLayers[0].maxHeight = 1300
-  }, [useShapeDetail, usePowder])
+  }, [clouds, useShapeDetail, usePowder])
+
+  useEffect(() => {
+    if (clouds == null) {
+      return
+    }
+    if (debugShowShadowMap) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+    }
+    if (debugShowCascades) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
+    }
+    clouds.cloudsMaterial.needsUpdate = true
+  }, [clouds, debugShowShadowMap, debugShowCascades])
 
   return (
     <Atmosphere
@@ -233,7 +266,7 @@ const Scene: FC<SceneProps> = ({
             <>
               {enabled && (
                 <Clouds
-                  ref={cloudsRef}
+                  ref={setClouds}
                   blueNoiseTexture={blueNoiseTexture}
                   blueNoiseVectorTexture={blueNoiseVectorTexture}
                   coverage={coverage}
@@ -249,15 +282,19 @@ const Scene: FC<SceneProps> = ({
               />
             </>
           )}
-          {lensFlare && <LensFlare />}
-          {depth && <Depth useTurbo />}
-          {normal && <Normal />}
-          {!normal && !depth && (
+          {!debugShowShadowMap && (
             <>
-              <ToneMapping mode={ToneMappingMode.AGX} />
-              {lut != null && <HaldLUT path={lut} />}
-              <SMAA />
-              <Dithering />
+              {lensFlare && <LensFlare />}
+              {depth && <Depth useTurbo />}
+              {normal && <Normal />}
+              {!normal && !depth && (
+                <>
+                  <ToneMapping mode={ToneMappingMode.AGX} />
+                  {lut != null && <HaldLUT path={lut} />}
+                  <SMAA />
+                  <Dithering />
+                </>
+              )}
             </>
           )}
         </Fragment>
