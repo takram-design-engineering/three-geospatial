@@ -123,16 +123,16 @@ int getCascadeIndex(vec3 position) {
   return SHADOW_CASCADE_COUNT - 1;
 }
 
-vec4 getShadow(vec3 worldPosition) {
+float sampleOpticalDepth(vec3 worldPosition) {
   int index = getCascadeIndex(worldPosition);
   vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
   point /= point.w;
   vec2 uv = point.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-    return vec4(0.0);
+    return 0.0;
   }
   // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
-  return texture(shadowBuffer, vec3(uv, float(index)));
+  return texture(shadowBuffer, vec3(uv, float(index))).z;
 }
 
 #endif // HAS_SHADOW
@@ -194,8 +194,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // CORRECT_GEOMETRIC_ERROR
 
   #ifdef HAS_SHADOW
-  vec4 shadow = getShadow(worldPositionMeters);
-  float opticalDepth = shadow.z;
+  float opticalDepth = sampleOpticalDepth(worldPositionMeters);
   // TODO: This is basically no longer needed because clouds are clamped in the
   // shadow pass, but shadows of clouds outside the main camera are still
   // visible on certain occasions.
