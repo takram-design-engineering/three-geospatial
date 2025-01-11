@@ -244,83 +244,84 @@ vec4 marchToClouds(
     vec2 uv = getGlobeUv(position);
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
 
-    if (any(greaterThan(weather.density, vec4(minDensity)))) {
-      // Sample a detailed density.
-      float density = sampleShape(weather, position, mipLevel);
-      if (density > minDensity) {
-        sunIrradiance = GetSunAndSkyIrradiance(
-          position * METER_TO_UNIT_LENGTH,
-          sunDirection,
-          skyIrradiance
-        );
-
-        // Distance to the top of the bottom layer along the sun direction.
-        // This matches the ray origin of BSM.
-        float distanceToTop = raySphereSecondIntersection(
-          position + ellipsoidCenter,
-          sunDirection,
-          ellipsoidCenter,
-          bottomRadius + maxLayerHeights.x
-        );
-
-        // Obtain the optical depth at the position from BSM.
-        float shadowOpticalDepth = sampleFilteredShadowOpticalDepth(position, distanceToTop);
-
-        float sunOpticalDepth = 0.0;
-        if (mipLevel < 0.5) {
-          sunOpticalDepth = marchOpticalDepth(position, sunDirection, 3, mipLevel);
-        }
-        float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
-        float scattering = multipleScattering(opticalDepth, cosTheta);
-        vec3 scatteredIrradiance = (sunIrradiance + skyIrradiance) * scattering;
-        vec3 radiance = (scatteredIrradiance + skyIrradiance * skyIrradianceScale) * density;
-
-        #ifdef USE_GROUND_IRRADIANCE
-        // Fudge factor for the irradiance from ground.
-        if (mipLevel < 0.5) {
-          float groundOpticalDepth = marchOpticalDepth(position, -normalize(position), 2, mipLevel);
-          vec3 groundIrradiance = radiance * exp(-groundOpticalDepth - (height - minHeight) * 1e-3);
-          // Ground irradiance decreases as coverage increases.
-          groundIrradiance *= 1.0 - coverage;
-          radiance += groundIrradiance;
-        }
-        #endif // USE_GROUND_IRRADIANCE
-
-        #ifdef USE_POWDER
-        radiance *= 1.0 - powderScale * exp(-density * powderExponent);
-        #endif // USE_POWDER
-
-        #ifdef DEBUG_SHOW_CASCADES
-        radiance = 1e-3 * getCascadeColor(position, vec2(0.0));
-        #endif // DEBUG_SHOW_CASCADES
-
-        // Energy-conserving analytical integration of scattered light
-        // See 5.6.3 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
-        float transmittance = exp(-density * stepSize);
-        float clampedDensity = max(density, 1e-7);
-        vec3 scatteringIntegral = (radiance - radiance * transmittance) / clampedDensity;
-        radianceIntegral += transmittanceIntegral * scatteringIntegral;
-        transmittanceIntegral *= transmittance;
-
-        // Aerial perspective affecting clouds
-        // See 5.9.1 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
-        weightedDistanceSum += rayDistance * transmittanceIntegral;
-        transmittanceSum += transmittanceIntegral;
-      }
-
-      // Take a shorter step because we've already hit the clouds.
-      stepSize *= 1.005;
-      rayDistance += stepSize;
-    } else {
-      // Otherwise step longer in empty space.
+    if (!any(greaterThan(weather.density, vec4(minDensity)))) {
+      // Step longer in empty space.
       // TODO: This produces banding artifacts.
       // Possible improvement: Binary search refinement
       rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
+      continue;
+    }
+
+    // Sample a detailed density.
+    float density = sampleShape(weather, position, mipLevel);
+    if (density > minDensity) {
+      sunIrradiance = GetSunAndSkyIrradiance(
+        position * METER_TO_UNIT_LENGTH,
+        sunDirection,
+        skyIrradiance
+      );
+
+      // Distance to the top of the bottom layer along the sun direction.
+      // This matches the ray origin of BSM.
+      float distanceToTop = raySphereSecondIntersection(
+        position + ellipsoidCenter,
+        sunDirection,
+        ellipsoidCenter,
+        bottomRadius + maxLayerHeights.x
+      );
+
+      // Obtain the optical depth at the position from BSM.
+      float shadowOpticalDepth = sampleFilteredShadowOpticalDepth(position, distanceToTop);
+
+      float sunOpticalDepth = 0.0;
+      if (mipLevel < 0.5) {
+        sunOpticalDepth = marchOpticalDepth(position, sunDirection, 3, mipLevel);
+      }
+      float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
+      float scattering = multipleScattering(opticalDepth, cosTheta);
+      vec3 scatteredIrradiance = (sunIrradiance + skyIrradiance) * scattering;
+      vec3 radiance = (scatteredIrradiance + skyIrradiance * skyIrradianceScale) * density;
+
+      #ifdef USE_GROUND_IRRADIANCE
+      // Fudge factor for the irradiance from ground.
+      if (mipLevel < 0.5) {
+        float groundOpticalDepth = marchOpticalDepth(position, -normalize(position), 2, mipLevel);
+        vec3 groundIrradiance = radiance * exp(-groundOpticalDepth - (height - minHeight) * 1e-3);
+        // Ground irradiance decreases as coverage increases.
+        groundIrradiance *= 1.0 - coverage;
+        radiance += groundIrradiance;
+      }
+      #endif // USE_GROUND_IRRADIANCE
+
+      #ifdef USE_POWDER
+      radiance *= 1.0 - powderScale * exp(-density * powderExponent);
+      #endif // USE_POWDER
+
+      #ifdef DEBUG_SHOW_CASCADES
+      radiance = 1e-3 * getCascadeColor(position, vec2(0.0));
+      #endif // DEBUG_SHOW_CASCADES
+
+      // Energy-conserving analytical integration of scattered light
+      // See 5.6.3 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
+      float transmittance = exp(-density * stepSize);
+      float clampedDensity = max(density, 1e-7);
+      vec3 scatteringIntegral = (radiance - radiance * transmittance) / clampedDensity;
+      radianceIntegral += transmittanceIntegral * scatteringIntegral;
+      transmittanceIntegral *= transmittance;
+
+      // Aerial perspective affecting clouds
+      // See 5.9.1 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
+      weightedDistanceSum += rayDistance * transmittanceIntegral;
+      transmittanceSum += transmittanceIntegral;
     }
 
     if (transmittanceIntegral <= minTransmittance) {
       break; // Early termination
     }
+
+    // Take a shorter step because we've already hit the clouds.
+    stepSize *= 1.005;
+    rayDistance += stepSize;
   }
 
   // The final product of 5.9.1 and we'll evaluate this in aerial perspective.
