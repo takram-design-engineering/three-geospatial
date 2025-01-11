@@ -193,9 +193,9 @@ void getRayNearFar(
   }
 }
 
-vec4 cascade(const vec2 uv, const int index, const float mipLevel) {
+vec4 cascade(const int index, const float mipLevel) {
   mat4 inverseShadowMatrix = inverseShadowMatrices[index];
-  vec2 clip = uv * 2.0 - 1.0;
+  vec2 clip = vUv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrix * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
   vec3 sunWorldPosition = point.xyz;
@@ -212,14 +212,14 @@ vec4 cascade(const vec2 uv, const int index, const float mipLevel) {
 
 void main() {
   // TODO: Calculate mip level
-  outputColor0 = cascade(vUv, 0, 0.0);
+  outputColor0 = cascade(0, 0.0);
   #if CASCADE_COUNT > 1
-  outputColor1 = cascade(vUv, 1, 0.5);
+  outputColor1 = cascade(1, 0.5);
   #endif // CASCADE_COUNT > 1
   #if CASCADE_COUNT > 2
-  outputColor2 = cascade(vUv, 2, 1.0);
+  outputColor2 = cascade(2, 1.0);
   #endif // CASCADE_COUNT > 2
   #if CASCADE_COUNT > 3
-  outputColor3 = cascade(vUv, 3, 2.0);
+  outputColor3 = cascade(3, 2.0);
   #endif // CASCADE_COUNT > 3
 }

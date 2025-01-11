@@ -14,16 +14,24 @@ export interface CloudParameterUniforms {
   shapeDetailOffset: Uniform<Vector3>
 }
 
-export function createCloudParameterUniforms(): CloudParameterUniforms {
+export function createCloudParameterUniforms({
+  localWeatherTexture = null,
+  shapeTexture = null,
+  shapeDetailTexture = null
+}: {
+  localWeatherTexture?: Texture | null
+  shapeTexture?: Texture | null
+  shapeDetailTexture?: Texture | null
+} = {}): CloudParameterUniforms {
   return {
-    localWeatherTexture: new Uniform(null),
+    localWeatherTexture: new Uniform(localWeatherTexture),
     localWeatherFrequency: new Uniform(new Vector2(70, 70)),
     localWeatherOffset: new Uniform(new Vector2()),
     coverage: new Uniform(0.3),
-    shapeTexture: new Uniform(null),
+    shapeTexture: new Uniform(shapeTexture),
     shapeFrequency: new Uniform(0.0003),
     shapeOffset: new Uniform(new Vector3()),
-    shapeDetailTexture: new Uniform(null),
+    shapeDetailTexture: new Uniform(shapeDetailTexture),
     shapeDetailFrequency: new Uniform(0.006),
     shapeDetailOffset: new Uniform(new Vector3())
   }

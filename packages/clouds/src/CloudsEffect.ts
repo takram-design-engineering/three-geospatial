@@ -360,15 +360,6 @@ export class CloudsEffect extends Effect {
 
   // Textures
 
-  get localWeatherTexture(): Texture | null {
-    return this.cloudsMaterial.uniforms.localWeatherTexture.value
-  }
-
-  set localWeatherTexture(value: Texture | null) {
-    this.cloudsMaterial.uniforms.localWeatherTexture.value = value
-    this.shadowMaterial.uniforms.localWeatherTexture.value = value
-  }
-
   get blueNoiseTexture(): Data3DTexture | null {
     return this.cloudsMaterial.uniforms.blueNoiseTexture.value
   }

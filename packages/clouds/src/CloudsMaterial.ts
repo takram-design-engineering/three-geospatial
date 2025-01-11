@@ -22,9 +22,7 @@ import {
 
 import {
   AtmosphereMaterialBase,
-  atmosphereMaterialParametersBaseDefaults,
   AtmosphereParameters,
-  type AtmosphereMaterialBaseParameters,
   type AtmosphereMaterialBaseUniforms
 } from '@takram/three-atmosphere'
 import {
@@ -65,17 +63,13 @@ declare module 'three' {
 
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
-export interface CloudsMaterialParameters
-  extends AtmosphereMaterialBaseParameters {
-  depthBuffer?: Texture | null
+export interface CloudsMaterialParameters {
   sunDirectionRef?: Vector3
-  shadowCascadeCount?: number
+  localWeatherTexture?: Texture | null
+  shapeTexture?: Texture | null
+  shapeDetailTexture?: Texture | null
+  shadowBuffer?: DataArrayTexture | null
 }
-
-export const cloudsMaterialParametersDefaults = {
-  ...atmosphereMaterialParametersBaseDefaults,
-  shadowCascadeCount: 4
-} satisfies CloudsMaterialParameters
 
 interface CloudsMaterialUniforms
   extends CloudLayerUniforms,
@@ -126,17 +120,15 @@ export interface CloudsMaterial {
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
   constructor(
-    params?: CloudsMaterialParameters,
+    {
+      sunDirectionRef,
+      localWeatherTexture = null,
+      shapeTexture = null,
+      shapeDetailTexture = null,
+      shadowBuffer = null
+    }: CloudsMaterialParameters = {},
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
-    const {
-      depthBuffer = null,
-      sunDirectionRef,
-      shadowCascadeCount
-    } = {
-      ...cloudsMaterialParametersDefaults,
-      ...params
-    }
     super(
       {
         name: 'CloudsMaterial',
@@ -157,7 +149,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           clouds
         }),
         uniforms: {
-          depthBuffer: new Uniform(depthBuffer),
+          depthBuffer: new Uniform(null),
           viewMatrix: new Uniform(new Matrix4()),
           inverseProjectionMatrix: new Uniform(new Matrix4()),
           inverseViewMatrix: new Uniform(new Matrix4()),
@@ -168,7 +160,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           frame: new Uniform(0),
           blueNoiseTexture: new Uniform(null),
 
-          ...createCloudParameterUniforms(),
+          ...createCloudParameterUniforms({
+            localWeatherTexture,
+            shapeTexture,
+            shapeDetailTexture
+          }),
           ...createCloudLayerUniforms(),
 
           // Atmospheric parameters
@@ -193,15 +189,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           minTransmittance: new Uniform(1e-2),
 
           // Beer shadow map
-          shadowBuffer: new Uniform(null),
+          shadowBuffer: new Uniform(shadowBuffer),
           shadowTexelSize: new Uniform(new Vector2()),
           shadowIntervals: new Uniform(
-            // Populate the max number of elements.
-            Array.from({ length: 4 }, () => new Vector2())
+            Array.from({ length: 4 }, () => new Vector2()) // Populate the max number of elements
           ),
           shadowMatrices: new Uniform(
-            // Populate the max number of elements.
-            Array.from({ length: 4 }, () => new Matrix4())
+            Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
           ),
           shadowFar: new Uniform(0)
         } satisfies CloudsMaterialUniforms,
@@ -218,7 +212,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       atmosphere
     )
 
-    this.shadowCascadeCount = shadowCascadeCount
+    this.shadowCascadeCount = 4
   }
 
   override onBeforeRender(

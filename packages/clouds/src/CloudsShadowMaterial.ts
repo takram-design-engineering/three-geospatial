@@ -52,18 +52,11 @@ declare module 'three' {
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface CloudsShadowMaterialParameters {
-  cascadeCount?: number
-  depthBuffer?: Texture | null
-  ellipsoid?: Ellipsoid
-  correctAltitude?: boolean
   sunDirectionRef?: Vector3
+  localWeatherTexture?: Texture | null
+  shapeTexture?: Texture | null
+  shapeDetailTexture?: Texture | null
 }
-
-export const cloudsShadowMaterialParametersDefaults = {
-  cascadeCount: 4,
-  ellipsoid: Ellipsoid.WGS84,
-  correctAltitude: true
-} satisfies CloudsShadowMaterialParameters
 
 interface CloudsShadowMaterialUniforms
   extends CloudLayerUniforms,
@@ -103,19 +96,14 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
   correctAltitude: boolean
 
   constructor(
-    params?: CloudsShadowMaterialParameters,
+    {
+      sunDirectionRef,
+      localWeatherTexture = null,
+      shapeTexture = null,
+      shapeDetailTexture = null
+    }: CloudsShadowMaterialParameters = {},
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
-    const {
-      cascadeCount,
-      depthBuffer = null,
-      ellipsoid,
-      correctAltitude,
-      sunDirectionRef
-    } = {
-      ...cloudsShadowMaterialParametersDefaults,
-      ...params
-    }
     super({
       name: 'CloudsShadowMaterial',
       glslVersion: GLSL3,
@@ -131,13 +119,12 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         clouds
       }),
       uniforms: {
-        depthBuffer: new Uniform(depthBuffer),
+        depthBuffer: new Uniform(null),
         projectionMatrix: new Uniform(new Matrix4()),
         viewMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
         inverseShadowMatrices: new Uniform(
-          // Populate the max number of elements.
-          Array.from({ length: 4 }, () => new Matrix4())
+          Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
         ),
         resolution: new Uniform(new Vector2()),
         cameraNear: new Uniform(0),
@@ -145,7 +132,11 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         frame: new Uniform(0),
         blueNoiseTexture: new Uniform(null),
 
-        ...createCloudParameterUniforms(),
+        ...createCloudParameterUniforms({
+          localWeatherTexture,
+          shapeTexture,
+          shapeDetailTexture
+        }),
         ...createCloudLayerUniforms(),
 
         // Atmospheric parameters
@@ -168,10 +159,10 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
       }
     })
 
-    this.cascadeCount = cascadeCount
     this.atmosphere = atmosphere
-    this.ellipsoid = ellipsoid
-    this.correctAltitude = correctAltitude
+    this.ellipsoid = Ellipsoid.WGS84
+    this.correctAltitude = true
+    this.cascadeCount = 4
   }
 
   copyCameraSettings(camera: Camera): void {
@@ -212,17 +203,6 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
     this.uniforms.resolution.value.set(width, height)
   }
 
-  get cascadeCount(): number {
-    return +this.defines.CASCADE_COUNT
-  }
-
-  set cascadeCount(value: number) {
-    if (value !== this.cascadeCount) {
-      this.defines.CASCADE_COUNT = `${value}`
-      this.needsUpdate = true
-    }
-  }
-
   get depthBuffer(): Texture | null {
     return this.uniforms.depthBuffer.value
   }
@@ -238,6 +218,17 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
   set depthPacking(value: number) {
     if (value !== this.depthPacking) {
       this.defines.DEPTH_PACKING = `${value}`
+      this.needsUpdate = true
+    }
+  }
+
+  get cascadeCount(): number {
+    return +this.defines.CASCADE_COUNT
+  }
+
+  set cascadeCount(value: number) {
+    if (value !== this.cascadeCount) {
+      this.defines.CASCADE_COUNT = `${value}`
       this.needsUpdate = true
     }
   }
