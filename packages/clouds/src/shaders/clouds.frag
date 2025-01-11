@@ -64,13 +64,6 @@ float blueNoise(const vec2 uv) {
   ).x;
 }
 
-vec3 blueNoiseVector(const vec2 uv) {
-  return texture(
-    blueNoiseTexture,
-    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * blueNoiseScale
-  ).xyz;
-}
-
 float readDepth(const vec2 uv) {
   #if DEPTH_PACKING == 3201
   return unpackRGBAToDepth(texture(depthBuffer, uv));
@@ -134,8 +127,13 @@ float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop, vec2 uvOff
   return min(maxOpticalDepth, meanExtinction * max(0.0, distanceToTop - frontDepth));
 }
 
+float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
+  return sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(0.0));
+}
+
+// Use 4-taps filtering. We can't afford complex filters here.
+// Reference: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
 float sampleFilteredShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
-  // Reference: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
   const vec2 offsets[4] = vec2[4](
     vec2(-1.5, 0.5),
     vec2(0.5, 0.5),
@@ -216,7 +214,6 @@ vec4 marchToClouds(
   const vec3 rayDirection,
   const float maxRayDistance,
   const float jitter,
-  const vec3 jitterVector,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
   out float weightedMeanDepth
@@ -487,14 +484,12 @@ void main() {
   #endif // DEBUG_SHOW_UV
 
   float jitter = blueNoise(vUv);
-  vec3 jitterVector = blueNoiseVector(vUv);
   float weightedMeanDepth;
   vec4 color = marchToClouds(
     rayOrigin,
     rayDirection,
     rayFar - rayNear,
     jitter,
-    jitterVector,
     pow(2.0, mipLevel),
     sunDirection,
     weightedMeanDepth

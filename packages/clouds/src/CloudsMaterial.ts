@@ -91,7 +91,6 @@ interface CloudsMaterialUniforms
   cameraHeight: Uniform<number>
   frame: Uniform<number>
   blueNoiseTexture: Uniform<Data3DTexture | null>
-  blueNoiseVectorTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
   bottomRadius: Uniform<number> // TODO
@@ -168,7 +167,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraHeight: new Uniform(0),
           frame: new Uniform(0),
           blueNoiseTexture: new Uniform(null),
-          blueNoiseVectorTexture: new Uniform(null),
 
           ...createCloudParameterUniforms(),
           ...createCloudLayerUniforms(),

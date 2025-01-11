@@ -9,7 +9,6 @@ import {
   Quaternion,
   RedFormat,
   RepeatWrapping,
-  RGBAFormat,
   Vector3,
   type Camera
 } from 'three'
@@ -122,21 +121,6 @@ const Scene: FC = () => {
     '/clouds/stbn_scalar.bin'
   )
 
-  const blueNoiseVectorTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RGBAFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_SIZE,
-      height: STBN_TEXTURE_SIZE,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    '/clouds/stbn_unit_vector.bin'
-  )
-
   const {
     coverage,
     halfResolution,
@@ -245,7 +229,6 @@ const Scene: FC = () => {
             <Clouds
               ref={setClouds}
               blueNoiseTexture={blueNoiseTexture}
-              blueNoiseVectorTexture={blueNoiseVectorTexture}
               coverage={coverage}
               resolution-scale={halfResolution ? 0.5 : 1}
               localWeatherVelocity-x={animate ? 0.00005 : 0}

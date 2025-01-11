@@ -27,7 +27,7 @@ import {
   useState,
   type FC
 } from 'react'
-import { NearestFilter, RedFormat, RepeatWrapping, RGBAFormat } from 'three'
+import { NearestFilter, RedFormat, RepeatWrapping } from 'three'
 import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
@@ -196,21 +196,6 @@ const Scene: FC<SceneProps> = ({
     '/clouds/stbn_scalar.bin'
   )
 
-  const blueNoiseVectorTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RGBAFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_SIZE,
-      height: STBN_TEXTURE_SIZE,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    '/clouds/stbn_unit_vector.bin'
-  )
-
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
 
   useEffect(() => {
@@ -268,7 +253,6 @@ const Scene: FC<SceneProps> = ({
                 <Clouds
                   ref={setClouds}
                   blueNoiseTexture={blueNoiseTexture}
-                  blueNoiseVectorTexture={blueNoiseVectorTexture}
                   coverage={coverage}
                   resolution-scale={0.5}
                   localWeatherVelocity-x={0.00001}
