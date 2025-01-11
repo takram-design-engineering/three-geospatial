@@ -1,8 +1,6 @@
 import { CopyPass } from 'postprocessing'
 import { LinearFilter, WebGLArrayRenderTarget, type WebGLRenderer } from 'three'
 
-import { assertType } from '@takram/three-geospatial'
-
 import { CopyArrayMaterial } from './CopyArrayMaterial'
 import { setMRTArrayRenderTarget } from './helpers/setMRTArrayRenderTarget'
 
@@ -30,13 +28,8 @@ export class CopyArrayPass extends CopyPass {
     deltaTime?: number,
     stencilTest?: boolean
   ): void {
-    assertType<CopyArrayMaterial>(this.fullscreenMaterial)
-    this.fullscreenMaterial.inputBuffer = inputBuffer.texture
-    const layerCount = +this.fullscreenMaterial.defines.LAYER_COUNT
-    if (layerCount !== inputBuffer.depth) {
-      this.fullscreenMaterial.defines.LAYER_COUNT = `${inputBuffer.depth}`
-      this.fullscreenMaterial.needsUpdate = true
-    }
+    const material = this.fullscreenMaterial as CopyArrayMaterial
+    material.inputBuffer = inputBuffer.texture
     setMRTArrayRenderTarget(
       renderer,
       this.renderToScreen ? null : this.renderTarget
@@ -47,6 +40,19 @@ export class CopyArrayPass extends CopyPass {
   override setSize(width: number, height: number, depth?: number): void {
     if (this.autoResize) {
       this.renderTarget.setSize(width, height, depth ?? this.renderTarget.depth)
+    }
+  }
+
+  get layerCount(): number {
+    const material = this.fullscreenMaterial as CopyArrayMaterial
+    return +material.defines.LAYER_COUNT
+  }
+
+  set layerCount(value: number) {
+    if (value !== this.layerCount) {
+      const material = this.fullscreenMaterial as CopyArrayMaterial
+      material.defines.LAYER_COUNT = `${value}`
+      material.needsUpdate = true
     }
   }
 }

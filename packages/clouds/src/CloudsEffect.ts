@@ -437,6 +437,7 @@ export class CloudsEffect extends Effect {
       this.cascadedShadows.cascadeCount = value
       this.cloudsMaterial.shadowCascadeCount = value
       this.shadowMaterial.cascadeCount = value
+      this.shadowHistoryPass.layerCount = value
       this.shadowResolveMaterial.cascadeCount = value
     }
   }
