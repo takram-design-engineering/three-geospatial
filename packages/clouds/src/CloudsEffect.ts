@@ -98,7 +98,7 @@ export const cloudsEffectOptionsDefaults = {
 export class CloudsEffect extends Effect {
   readonly cloudLayers: CloudLayers = [
     {
-      minHeight: 600,
+      minHeight: 750,
       maxHeight: 1600,
       extinctionCoeff: 0.3,
       detailAmount: 1,

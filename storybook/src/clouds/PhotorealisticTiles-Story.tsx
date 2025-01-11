@@ -204,8 +204,6 @@ const Scene: FC<SceneProps> = ({
     }
     clouds.cloudsMaterial.useShapeDetail = useShapeDetail
     clouds.cloudsMaterial.usePowder = usePowder
-    clouds.cloudLayers[0].minHeight = 750
-    clouds.cloudLayers[0].maxHeight = 1300
   }, [clouds, useShapeDetail, usePowder])
 
   useEffect(() => {

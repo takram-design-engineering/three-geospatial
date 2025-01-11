@@ -25,7 +25,7 @@ export function createCloudParameterUniforms({
 } = {}): CloudParameterUniforms {
   return {
     localWeatherTexture: new Uniform(localWeatherTexture),
-    localWeatherFrequency: new Uniform(new Vector2(70, 70)),
+    localWeatherFrequency: new Uniform(new Vector2(100, 100)),
     localWeatherOffset: new Uniform(new Vector2()),
     coverage: new Uniform(0.3),
     shapeTexture: new Uniform(shapeTexture),
