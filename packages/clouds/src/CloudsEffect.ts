@@ -370,6 +370,7 @@ export class CloudsEffect extends Effect {
     this.cloudsMaterial.setSize(scaledWidth, scaledHeight)
     this.historyRenderTarget.setSize(scaledWidth, scaledHeight)
     this.resolveRenderTarget.setSize(scaledWidth, scaledHeight)
+    this.resolveMaterial.setSize(scaledWidth, scaledHeight)
 
     this.shadowMaterial.copyCameraSettings(this.camera)
     this.cloudsMaterial.copyCameraSettings(this.camera)

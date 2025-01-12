@@ -11,8 +11,7 @@ import {
   type Texture
 } from 'three'
 
-import { resolveIncludes } from '@takram/three-geospatial'
-import { turbo } from '@takram/three-geospatial/shaders'
+import { unrollLoops } from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/cloudsResolve.frag?raw'
 import vertexShader from './shaders/cloudsResolve.vert?raw'
@@ -33,6 +32,7 @@ interface CloudsResolveMaterialUniforms {
   reprojectionMatrix: Uniform<Matrix4>
   texelSize: Uniform<Vector2>
   cameraPosition: Uniform<Vector3>
+  temporalAlpha: Uniform<number>
 }
 
 export interface CloudsResolveMaterial {
@@ -49,11 +49,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
       name: 'CloudsResolveMaterial',
       glslVersion: GLSL3,
       vertexShader,
-      fragmentShader: resolveIncludes(fragmentShader, {
-        core: {
-          turbo
-        }
-      }),
+      fragmentShader: unrollLoops(fragmentShader),
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         depthVelocityBuffer: new Uniform(depthVelocityBuffer),
@@ -62,7 +58,8 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         inverseViewMatrix: new Uniform(new Matrix4()),
         reprojectionMatrix: new Uniform(new Matrix4()),
         texelSize: new Uniform(new Vector2()),
-        cameraPosition: new Uniform(new Vector3())
+        cameraPosition: new Uniform(new Vector3()),
+        temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
       defines: {}
     })
