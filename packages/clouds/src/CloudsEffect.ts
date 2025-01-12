@@ -278,7 +278,7 @@ export class CloudsEffect extends Effect {
     this.mainCamera = camera
 
     // Initialize aggregated default values.
-    this.shadowMapSize = 512
+    this.shadowMapSize = 1024
     this.shadowCascadeCount = 3
 
     this.resolution = new Resolution(
