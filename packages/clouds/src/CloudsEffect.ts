@@ -1,5 +1,6 @@
 import {
   BlendFunction,
+  CopyPass,
   Effect,
   EffectAttribute,
   Resolution,
@@ -9,6 +10,7 @@ import {
   Camera,
   HalfFloatType,
   LinearFilter,
+  NearestFilter,
   Vector2,
   Vector3,
   WebGLArrayRenderTarget,
@@ -32,9 +34,8 @@ import { CascadedShadows } from './CascadedShadows'
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
+import { CloudsResolveMaterial } from './CloudsResolveMaterial'
 import { CloudsShadowMaterial } from './CloudsShadowMaterial'
-import { CloudsShadowResolveMaterial } from './CloudsShadowResolveMaterial'
-import { CopyArrayPass } from './CopyArrayPass'
 import { LocalWeather } from './LocalWeather'
 import { ShaderArrayPass } from './ShaderArrayPass'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
@@ -140,17 +141,18 @@ export class CloudsEffect extends Effect {
   readonly shapeDetailVelocity = new Vector3()
 
   private readonly cascadedShadows: CascadedShadows
-  readonly cloudsRenderTarget: WebGLRenderTarget
-  readonly cloudsMaterial: CloudsMaterial
-  readonly cloudsPass: ShaderPass
   readonly shadowRenderTarget: WebGLArrayRenderTarget
   readonly shadowMaterial: CloudsShadowMaterial
   readonly shadowPass: ShaderArrayPass
-  readonly shadowHistoryRenderTarget: WebGLArrayRenderTarget
-  readonly shadowHistoryPass: CopyArrayPass
-  readonly shadowResolveRenderTarget: WebGLArrayRenderTarget
-  readonly shadowResolveMaterial: CloudsShadowResolveMaterial
-  readonly shadowResolvePass: ShaderArrayPass
+  readonly cloudsRenderTarget: WebGLRenderTarget
+  readonly cloudsMaterial: CloudsMaterial
+  readonly cloudsPass: ShaderPass
+  readonly historyRenderTarget: WebGLRenderTarget
+  readonly historyPass: CopyPass
+  readonly resolveRenderTarget: WebGLRenderTarget
+  readonly resolveMaterial: CloudsResolveMaterial
+  readonly resolvePass: ShaderPass
+
   readonly resolution: Resolution
 
   private frame = 0
@@ -160,7 +162,7 @@ export class CloudsEffect extends Effect {
   constructor(
     private camera: Camera = new Camera(),
     options?: CloudsEffectOptions,
-    atmosphere = AtmosphereParameters.DEFAULT
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       blendFunction,
@@ -178,10 +180,15 @@ export class CloudsEffect extends Effect {
     const shape = new CloudShape()
     const shapeDetail = new CloudShapeDetail()
 
-    const cloudsRenderTarget = createRenderTarget('Clouds')
-    const shadowRenderTarget = createArrayRenderTarget('Shadow')
-    const shadowHistoryRenderTarget = createArrayRenderTarget('ShadowHistory')
-    const shadowResolveRenderTarget = createArrayRenderTarget('ShadowResolve')
+    const shadowRenderTarget = createArrayRenderTarget('Clouds.Shadow')
+    const cloudsRenderTarget = createRenderTarget('Clouds.Current')
+    const depthVelocityBuffer = cloudsRenderTarget.texture.clone()
+    depthVelocityBuffer.isRenderTargetTexture = true
+    depthVelocityBuffer.minFilter = NearestFilter
+    depthVelocityBuffer.magFilter = NearestFilter
+    cloudsRenderTarget.textures.push(depthVelocityBuffer)
+    const historyRenderTarget = createRenderTarget('Clouds.History')
+    const resolveRenderTarget = createRenderTarget('Clouds.Resolve')
 
     // This instance is shared between clouds and shadow materials.
     const sunDirection = new Vector3()
@@ -190,17 +197,6 @@ export class CloudsEffect extends Effect {
       lambda: 0.6,
       far: 1e5 // TODO: Parametrize
     })
-
-    const cloudsMaterial = new CloudsMaterial(
-      {
-        sunDirectionRef: sunDirection,
-        localWeatherTexture: localWeather.texture,
-        shapeTexture: shape.texture,
-        shapeDetailTexture: shapeDetail.texture,
-        shadowBuffer: shadowResolveRenderTarget.texture
-      },
-      atmosphere
-    )
     const shadowMaterial = new CloudsShadowMaterial(
       {
         sunDirectionRef: sunDirection,
@@ -210,15 +206,26 @@ export class CloudsEffect extends Effect {
       },
       atmosphere
     )
-    const shadowResolveMaterial = new CloudsShadowResolveMaterial({
-      inputBuffer: shadowRenderTarget.texture,
-      historyBuffer: shadowHistoryRenderTarget.texture
+    const cloudsMaterial = new CloudsMaterial(
+      {
+        sunDirectionRef: sunDirection,
+        localWeatherTexture: localWeather.texture,
+        shapeTexture: shape.texture,
+        shapeDetailTexture: shapeDetail.texture,
+        shadowBuffer: shadowRenderTarget.texture
+      },
+      atmosphere
+    )
+    const resolveMaterial = new CloudsResolveMaterial({
+      inputBuffer: cloudsRenderTarget.texture,
+      depthVelocityBuffer,
+      historyBuffer: historyRenderTarget.texture
     })
 
-    const cloudsPass = new ShaderPass(cloudsMaterial)
     const shadowPass = new ShaderArrayPass(shadowMaterial)
-    const shadowHistoryPass = new CopyArrayPass(shadowHistoryRenderTarget)
-    const shadowResolvePass = new ShaderArrayPass(shadowResolveMaterial)
+    const cloudsPass = new ShaderPass(cloudsMaterial)
+    const historyPass = new CopyPass(historyRenderTarget)
+    const resolvePass = new ShaderPass(resolveMaterial)
 
     super('CloudsEffect', fragmentShader, {
       blendFunction,
@@ -230,17 +237,17 @@ export class CloudsEffect extends Effect {
     this.shape = shape
     this.shapeDetail = shapeDetail
     this.cascadedShadows = cascadedShadows
-    this.cloudsRenderTarget = cloudsRenderTarget
-    this.cloudsMaterial = cloudsMaterial
-    this.cloudsPass = cloudsPass
     this.shadowRenderTarget = shadowRenderTarget
     this.shadowMaterial = shadowMaterial
     this.shadowPass = shadowPass
-    this.shadowHistoryRenderTarget = shadowHistoryRenderTarget
-    this.shadowHistoryPass = shadowHistoryPass
-    this.shadowResolveRenderTarget = shadowResolveRenderTarget
-    this.shadowResolveMaterial = shadowResolveMaterial
-    this.shadowResolvePass = shadowResolvePass
+    this.cloudsRenderTarget = cloudsRenderTarget
+    this.cloudsMaterial = cloudsMaterial
+    this.cloudsPass = cloudsPass
+    this.historyRenderTarget = historyRenderTarget
+    this.historyPass = historyPass
+    this.resolveRenderTarget = resolveRenderTarget
+    this.resolveMaterial = resolveMaterial
+    this.resolvePass = resolvePass
 
     // Camera needs to be set after setting up the pass.
     this.mainCamera = camera
@@ -271,8 +278,9 @@ export class CloudsEffect extends Effect {
 
   override set mainCamera(value: Camera) {
     this.camera = value
-    this.cloudsMaterial.copyCameraSettings(value)
     this.shadowMaterial.copyCameraSettings(value)
+    this.cloudsMaterial.copyCameraSettings(value)
+    this.resolveMaterial.copyCameraSettings(value)
   }
 
   override initialize(
@@ -280,13 +288,13 @@ export class CloudsEffect extends Effect {
     alpha: boolean,
     frameBufferType: TextureDataType
   ): void {
-    this.cloudsPass.initialize(renderer, alpha, frameBufferType)
     this.shadowPass.initialize(renderer, alpha, frameBufferType)
-    this.shadowHistoryPass.initialize(renderer, alpha, frameBufferType)
-    this.shadowResolvePass.initialize(renderer, alpha, frameBufferType)
+    this.cloudsPass.initialize(renderer, alpha, frameBufferType)
+    this.historyPass.initialize(renderer, alpha, frameBufferType)
+    this.resolvePass.initialize(renderer, alpha, frameBufferType)
   }
 
-  updateShadowMatrix(): void {
+  updateShadowMatrices(): void {
     const camera = this.mainCamera
     assertType<PerspectiveCamera>(camera)
     const shadows = this.cascadedShadows
@@ -296,9 +304,9 @@ export class CloudsEffect extends Effect {
     const cloudsUniforms = this.cloudsMaterial.uniforms
     for (let i = 0; i < shadows.cascadeCount; ++i) {
       const cascade = shadows.cascades[i]
+      shadowUniforms.inverseShadowMatrices.value[i].copy(cascade.inverseMatrix)
       cloudsUniforms.shadowIntervals.value[i].copy(cascade.interval)
       cloudsUniforms.shadowMatrices.value[i].copy(cascade.matrix)
-      shadowUniforms.inverseShadowMatrices.value[i].copy(cascade.inverseMatrix)
     }
     cloudsUniforms.shadowFar.value = shadows.far
   }
@@ -313,71 +321,74 @@ export class CloudsEffect extends Effect {
     this.shapeDetail.update(renderer)
 
     ++this.frame
-    const cloudsUniforms = this.cloudsMaterial.uniforms
     const shadowUniforms = this.shadowMaterial.uniforms
-    updateCloudLayerUniforms(cloudsUniforms, this.cloudLayers)
+    const cloudsUniforms = this.cloudsMaterial.uniforms
     updateCloudLayerUniforms(shadowUniforms, this.cloudLayers)
-    cloudsUniforms.frame.value = this.frame
+    updateCloudLayerUniforms(cloudsUniforms, this.cloudLayers)
     shadowUniforms.frame.value = this.frame
+    cloudsUniforms.frame.value = this.frame
 
     applyVelocity(
       this.localWeatherVelocity,
       deltaTime,
-      cloudsUniforms.localWeatherOffset.value,
-      shadowUniforms.localWeatherOffset.value
+      shadowUniforms.localWeatherOffset.value,
+      cloudsUniforms.localWeatherOffset.value
     )
     applyVelocity(
       this.shapeVelocity,
       deltaTime,
-      cloudsUniforms.shapeOffset.value,
-      shadowUniforms.shapeOffset.value
+      shadowUniforms.shapeOffset.value,
+      cloudsUniforms.shapeOffset.value
     )
     applyVelocity(
       this.localWeatherVelocity,
       deltaTime,
-      cloudsUniforms.shapeDetailOffset.value,
-      shadowUniforms.shapeDetailOffset.value
+      shadowUniforms.shapeDetailOffset.value,
+      cloudsUniforms.shapeDetailOffset.value
     )
 
-    this.cloudsMaterial.copyCameraSettings(this.camera)
     this.shadowMaterial.copyCameraSettings(this.camera)
-    this.updateShadowMatrix()
+    this.cloudsMaterial.copyCameraSettings(this.camera)
+    this.resolveMaterial.copyCameraSettings(this.camera)
+    this.updateShadowMatrices()
 
     this.shadowPass.render(renderer, null, this.shadowRenderTarget)
-    this.shadowResolvePass.render(
-      renderer,
-      this.shadowRenderTarget,
-      this.shadowResolveRenderTarget
-    )
-    this.shadowHistoryPass.render(
-      renderer,
-      this.shadowResolveRenderTarget,
-      null
-    )
     this.cloudsPass.render(renderer, null, this.cloudsRenderTarget)
+    this.resolvePass.render(renderer, null, this.resolveRenderTarget)
+    this.historyPass.render(renderer, this.resolveRenderTarget, null)
+
+    this.cloudsMaterial.setReprojectionMatrix(this.camera)
+    this.resolveMaterial.setReprojectionMatrix(this.camera)
   }
 
   override setSize(width: number, height: number): void {
     const resolution = this.resolution
     resolution.setBaseSize(width, height)
 
-    const { width: scaleWidth, height: scaleHeight } = resolution
-    this.cloudsRenderTarget.setSize(scaleWidth, scaleHeight)
-    this.cloudsMaterial.setSize(scaleWidth, scaleHeight)
+    const { width: scaledWidth, height: scaledHeight } = resolution
+    this.cloudsRenderTarget.setSize(scaledWidth, scaledHeight)
+    this.cloudsMaterial.setSize(scaledWidth, scaledHeight)
+    this.historyRenderTarget.setSize(scaledWidth, scaledHeight)
+    this.resolveRenderTarget.setSize(scaledWidth, scaledHeight)
 
-    this.cloudsMaterial.copyCameraSettings(this.camera)
     this.shadowMaterial.copyCameraSettings(this.camera)
-    this.updateShadowMatrix()
+    this.cloudsMaterial.copyCameraSettings(this.camera)
+    this.resolveMaterial.copyCameraSettings(this.camera)
+    this.updateShadowMatrices()
+
+    // Reset reprojection matrices.
+    this.cloudsMaterial.setReprojectionMatrix(this.camera)
+    this.resolveMaterial.setReprojectionMatrix(this.camera)
   }
 
   override setDepthTexture(
     depthTexture: Texture,
     depthPacking?: DepthPackingStrategies
   ): void {
-    this.cloudsMaterial.depthBuffer = depthTexture
     this.shadowMaterial.depthBuffer = depthTexture
-    this.cloudsMaterial.depthPacking = depthPacking ?? 0
+    this.cloudsMaterial.depthBuffer = depthTexture
     this.shadowMaterial.depthPacking = depthPacking ?? 0
+    this.cloudsMaterial.depthPacking = depthPacking ?? 0
   }
 
   // Textures
@@ -387,8 +398,8 @@ export class CloudsEffect extends Effect {
   }
 
   set blueNoiseTexture(value: Data3DTexture | null) {
-    this.cloudsMaterial.uniforms.blueNoiseTexture.value = value
     this.shadowMaterial.uniforms.blueNoiseTexture.value = value
+    this.cloudsMaterial.uniforms.blueNoiseTexture.value = value
   }
 
   // Cloud parameters
@@ -398,8 +409,8 @@ export class CloudsEffect extends Effect {
   }
 
   set coverage(value: number) {
-    this.cloudsMaterial.uniforms.coverage.value = value
     this.shadowMaterial.uniforms.coverage.value = value
+    this.cloudsMaterial.uniforms.coverage.value = value
   }
 
   // Shadow parameters
@@ -414,8 +425,6 @@ export class CloudsEffect extends Effect {
 
       const { depth } = this.shadowRenderTarget
       this.shadowRenderTarget.setSize(value, value, depth)
-      this.shadowHistoryRenderTarget.setSize(value, value, depth)
-      this.shadowResolveRenderTarget.setSize(value, value, depth)
       this.cascadedShadows.cascadeSize = value
       this.cloudsMaterial.uniforms.shadowTexelSize.value.setScalar(1 / value)
       this.shadowMaterial.setSize(value, value)
@@ -432,24 +441,20 @@ export class CloudsEffect extends Effect {
 
       const { width, height } = this.shadowRenderTarget
       this.shadowRenderTarget.setSize(width, height, value)
-      this.shadowHistoryRenderTarget.setSize(width, height, value)
-      this.shadowResolveRenderTarget.setSize(width, height, value)
       this.cascadedShadows.cascadeCount = value
       this.cloudsMaterial.shadowCascadeCount = value
       this.shadowMaterial.cascadeCount = value
-      this.shadowHistoryPass.layerCount = value
-      this.shadowResolveMaterial.cascadeCount = value
     }
   }
 
   // Shadow composition accessors
 
   get cloudsBuffer(): Texture {
-    return this.cloudsRenderTarget.texture
+    return this.resolveRenderTarget.texture
   }
 
   get shadowBuffer(): DataArrayTexture {
-    return this.shadowResolveRenderTarget.texture
+    return this.shadowRenderTarget.texture
   }
 
   get shadowIntervals(): Vector2[] {
