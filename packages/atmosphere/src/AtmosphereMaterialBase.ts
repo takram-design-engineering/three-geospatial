@@ -93,14 +93,13 @@ export interface AtmosphereMaterialBase {
 }
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
-  protected readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
   correctAltitude: boolean
   private _renderTargetCount!: number
 
   constructor(
     params?: AtmosphereMaterialBaseParameters,
-    atmosphere = AtmosphereParameters.DEFAULT
+    protected readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       irradianceTexture = null,

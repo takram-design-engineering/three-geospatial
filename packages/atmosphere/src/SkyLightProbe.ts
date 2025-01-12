@@ -51,7 +51,6 @@ export const skyLightProbeParametersDefaults = {
 } satisfies SkyLightProbeParameters
 
 export class SkyLightProbe extends LightProbe {
-  private readonly atmosphere: AtmosphereParameters
   irradianceTexture: DataTexture | null
   ellipsoid: Ellipsoid
   correctAltitude: boolean
@@ -60,7 +59,7 @@ export class SkyLightProbe extends LightProbe {
 
   constructor(
     params?: SkyLightProbeParameters,
-    atmosphere = AtmosphereParameters.DEFAULT
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super()
     const {
@@ -71,7 +70,6 @@ export class SkyLightProbe extends LightProbe {
       sunDirection
     } = { ...skyLightProbeParametersDefaults, ...params }
 
-    this.atmosphere = atmosphere
     this.irradianceTexture = irradianceTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude

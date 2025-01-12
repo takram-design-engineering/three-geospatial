@@ -114,15 +114,13 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
-  private readonly atmosphere: AtmosphereParameters
   private _ellipsoid!: Ellipsoid
   correctAltitude: boolean
-  private composite: AtmosphereComposite | null = null
 
   constructor(
     private camera = new Camera(),
     options?: AerialPerspectiveEffectOptions,
-    atmosphere = AtmosphereParameters.DEFAULT
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       blendFunction,
@@ -221,8 +219,6 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
 
-    this.camera = camera
-    this.atmosphere = atmosphere
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
@@ -578,7 +574,6 @@ export class AerialPerspectiveEffect extends Effect {
       this.uniforms.get('shadowMatrices')!.value = []
       this.uniforms.get('shadowFar')!.value = 0
     }
-    this.composite = value ?? null
     this.setChanged()
   }
 }
