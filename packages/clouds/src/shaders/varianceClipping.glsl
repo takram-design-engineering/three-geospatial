@@ -1,17 +1,17 @@
 // Reference: https://github.com/playdeadgames/temporal
 // TODO: Can we adapt it to the optimized version?
 vec4 clipAABB(const vec4 current, const vec4 history, const vec4 minColor, const vec4 maxColor) {
-  vec4 r = history - current;
-  vec4 rMin = minColor - current;
-  vec4 rMax = maxColor - current;
+  vec3 r = (history - current).rgb;
+  vec3 rMin = (minColor - current).rgb;
+  vec3 rMax = (maxColor - current).rgb;
   const float epsilon = 1e-7;
-  if (r.x > rMax.x + epsilon) r *= rMax.x / r.x;
-  if (r.y > rMax.y + epsilon) r *= rMax.y / r.y;
-  if (r.z > rMax.z + epsilon) r *= rMax.z / r.z;
-  if (r.x < rMin.x - epsilon) r *= rMin.x / r.x;
-  if (r.y < rMin.y - epsilon) r *= rMin.y / r.y;
-  if (r.z < rMin.z - epsilon) r *= rMin.z / r.z;
-  return current + r;
+  if (r.r > rMax.r + epsilon) r *= rMax.r / r.r;
+  if (r.g > rMax.g + epsilon) r *= rMax.g / r.g;
+  if (r.b > rMax.b + epsilon) r *= rMax.b / r.b;
+  if (r.r < rMin.r - epsilon) r *= rMin.r / r.r;
+  if (r.g < rMin.g - epsilon) r *= rMin.g / r.g;
+  if (r.b < rMin.b - epsilon) r *= rMin.b / r.b;
+  return vec4(current.rgb + r, current.a);
 }
 
 #define VARIANCE_OFFSET_COUNT (4)
