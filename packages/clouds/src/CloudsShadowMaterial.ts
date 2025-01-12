@@ -16,7 +16,7 @@ import {
 
 import {
   AtmosphereParameters,
-  correctAtmosphereAltitude
+  getAltitudeCorrectionOffset
 } from '@takram/three-atmosphere'
 import {
   assertType,
@@ -91,7 +91,6 @@ export interface CloudsShadowMaterial {
 }
 
 export class CloudsShadowMaterial extends RawShaderMaterial {
-  protected readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
   correctAltitude: boolean
 
@@ -102,7 +101,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
       shapeTexture = null,
       shapeDetailTexture = null
     }: CloudsShadowMaterialParameters = {},
-    atmosphere = AtmosphereParameters.DEFAULT
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super({
       name: 'CloudsShadowMaterial',
@@ -159,14 +158,12 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
       }
     })
 
-    this.atmosphere = atmosphere
     this.ellipsoid = Ellipsoid.WGS84
     this.correctAltitude = true
     this.cascadeCount = 4
   }
 
   copyCameraSettings(camera: Camera): void {
-    const uniforms = this.uniforms
     if (camera.isPerspectiveCamera === true) {
       if (this.defines.PERSPECTIVE_CAMERA !== '1') {
         this.defines.PERSPECTIVE_CAMERA = '1'
@@ -179,24 +176,27 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
       }
     }
 
-    const projectionMatrix = uniforms.projectionMatrix
-    const viewMatrix = uniforms.viewMatrix
-    const inverseProjectionMatrix = uniforms.inverseProjectionMatrix
-    projectionMatrix.value.copy(camera.projectionMatrix)
-    viewMatrix.value.copy(camera.matrixWorldInverse)
-    inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
+    const uniforms = this.uniforms
+    uniforms.projectionMatrix.value.copy(camera.projectionMatrix)
+    uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
+    uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
 
     assertType<PerspectiveCamera | OrthographicCamera>(camera)
     uniforms.cameraNear.value = camera.near
     uniforms.cameraFar.value = camera.far
 
     const position = camera.getWorldPosition(vectorScratch)
-    correctAtmosphereAltitude(
-      this,
-      position,
-      this.atmosphere.bottomRadius,
-      uniforms.ellipsoidCenter.value
-    )
+    const ellipsoidCenter = uniforms.ellipsoidCenter.value
+    if (this.correctAltitude) {
+      getAltitudeCorrectionOffset(
+        position,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        ellipsoidCenter
+      )
+    } else {
+      ellipsoidCenter.setScalar(0)
+    }
   }
 
   setSize(width: number, height: number): void {
