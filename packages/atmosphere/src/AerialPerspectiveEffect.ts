@@ -41,7 +41,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
-import { correctAtmosphereAltitude } from './correctAtmosphereAltitude'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectedEllipsoidCenter'
 import { type AtmosphereComposite } from './types'
 
 import fragmentShader from './shaders/aerialPerspectiveEffect.frag?raw'
@@ -287,13 +287,17 @@ export class AerialPerspectiveEffect extends Effect {
     // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
     idealSphereAlpha.value = saturate(remap(vectorScratch.y, 41.5, 13.8, 0, 1))
 
-    const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
-    correctAtmosphereAltitude(
-      this,
-      position,
-      this.atmosphere.bottomRadius,
-      ellipsoidCenter.value
-    )
+    const ellipsoidCenter = uniforms.get('ellipsoidCenter')!.value
+    if (this.correctAltitude) {
+      getAltitudeCorrectionOffset(
+        position,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        ellipsoidCenter
+      )
+    } else {
+      ellipsoidCenter.setScalar(0)
+    }
   }
 
   get normalBuffer(): Texture | null {

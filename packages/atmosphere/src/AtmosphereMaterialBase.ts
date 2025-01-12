@@ -30,7 +30,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
-import { correctAtmosphereAltitude } from './correctAtmosphereAltitude'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectedEllipsoidCenter'
 
 function includeRenderTargets(fragmentShader: string, count: number): string {
   let layout = ''
@@ -169,12 +169,17 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   copyCameraSettings(camera: Camera): void {
     const uniforms = this.uniforms
     const position = camera.getWorldPosition(uniforms.cameraPosition.value)
-    correctAtmosphereAltitude(
-      this,
-      position,
-      this.atmosphere.bottomRadius,
-      uniforms.ellipsoidCenter.value
-    )
+    const ellipsoidCenter = uniforms.ellipsoidCenter.value
+    if (this.correctAltitude) {
+      getAltitudeCorrectionOffset(
+        position,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        ellipsoidCenter
+      )
+    } else {
+      ellipsoidCenter.setScalar(0)
+    }
   }
 
   override onBeforeCompile(
