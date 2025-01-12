@@ -7,7 +7,7 @@ import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH
 } from './constants'
-import { correctAtmosphereAltitude } from './correctAtmosphereAltitude'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectedEllipsoidCenter'
 import { getTextureCoordFromUnitRange } from './helpers/functions'
 import { sampleTexture } from './helpers/sampleTexture'
 
@@ -85,11 +85,13 @@ export class SkyLightProbe extends LightProbe {
     }
 
     const position = this.getWorldPosition(vectorScratch1)
-    correctAtmosphereAltitude(
-      this,
-      position,
-      this.atmosphere.bottomRadius,
-      vectorScratch2
+    position.sub(
+      getAltitudeCorrectionOffset(
+        position,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        vectorScratch2
+      )
     )
 
     const r = position.length()
