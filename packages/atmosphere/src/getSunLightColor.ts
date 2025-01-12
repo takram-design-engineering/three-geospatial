@@ -91,7 +91,7 @@ export function getSunLightColor(
     const mu = rmu / r
     const rayRMuIntersectsGround = rayIntersectsGround(atmosphere, r, mu)
     if (rayRMuIntersectsGround) {
-      transmittance.set(0, 0, 0)
+      transmittance.setScalar(0)
     } else {
       const uv = getUvFromRMu(atmosphere, r, mu, uvScratch)
       sampleTexture(transmittanceTexture, uv, transmittance)

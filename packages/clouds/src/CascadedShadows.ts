@@ -208,7 +208,7 @@ export class CascadedShadows {
     ellipsoid = Ellipsoid.WGS84
   ): void {
     const lightOrientationMatrix = matrixScratch1.lookAt(
-      vectorScratch1.set(0, 0, 0),
+      vectorScratch1.setScalar(0),
       vectorScratch2.copy(sunDirection).multiplyScalar(-1),
       Object3D.DEFAULT_UP
     )
