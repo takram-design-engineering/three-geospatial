@@ -10,11 +10,12 @@ out vec3 vViewDirection; // Direction to the center of screen
 out vec3 vRayDirection; // Direction to the texel
 
 void main() {
+  vUv = position.xy * 0.5 + 0.5;
+
   vec4 viewPosition = inverseProjectionMatrix * vec4(position, 1.0);
   vec4 rayDirection = inverseViewMatrix * vec4(viewPosition.xyz, 0.0);
   vViewDirection = normalize((inverseViewMatrix * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
   vRayDirection = rayDirection.xyz;
 
-  vUv = position.xy * 0.5 + 0.5;
   gl_Position = vec4(position.xy, 1.0, 1.0);
 }

@@ -79,6 +79,7 @@ interface CloudsMaterialUniforms
   viewMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>
   inverseViewMatrix: Uniform<Matrix4>
+  reprojectionMatrix: Uniform<Matrix4>
   resolution: Uniform<Vector2>
   cameraNear: Uniform<number>
   cameraFar: Uniform<number>
@@ -153,6 +154,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           viewMatrix: new Uniform(new Matrix4()),
           inverseProjectionMatrix: new Uniform(new Matrix4()),
           inverseViewMatrix: new Uniform(new Matrix4()),
+          reprojectionMatrix: new Uniform(new Matrix4()),
           resolution: new Uniform(new Vector2()),
           cameraNear: new Uniform(0),
           cameraFar: new Uniform(0),
@@ -243,12 +245,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
 
     const uniforms = this.uniforms
-    const viewMatrix = uniforms.viewMatrix
-    const inverseProjectionMatrix = uniforms.inverseProjectionMatrix
-    const inverseViewMatrix = uniforms.inverseViewMatrix
-    viewMatrix.value.copy(camera.matrixWorldInverse)
-    inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
-    inverseViewMatrix.value.copy(camera.matrixWorld)
+    uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
+    uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
+    uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
 
     assertType<PerspectiveCamera | OrthographicCamera>(camera)
     uniforms.cameraNear.value = camera.near
@@ -261,6 +260,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     } catch (error) {
       // Abort when the position is zero.
     }
+  }
+
+  setReprojectionMatrix(camera: Camera): void {
+    const uniforms = this.uniforms
+    uniforms.reprojectionMatrix.value
+      .copy(camera.projectionMatrix)
+      .multiply(camera.matrixWorldInverse)
   }
 
   setSize(width: number, height: number): void {

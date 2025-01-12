@@ -16,6 +16,7 @@ precision highp sampler2DArray;
 
 uniform sampler2D depthBuffer;
 uniform mat4 viewMatrix;
+uniform mat4 reprojectionMatrix;
 uniform vec3 cameraPosition;
 uniform float cameraNear;
 uniform float cameraFar;
@@ -51,6 +52,7 @@ in vec3 vViewDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
 
 layout(location = 0) out vec4 outputColor;
+layout(location = 1) out vec4 outputDepthVelocity;
 
 const vec3 blueNoiseScale = vec3(
   vec2(1.0 / float(STBN_TEXTURE_SIZE)),
@@ -100,6 +102,7 @@ vec3 getCascadeColor(vec3 rayPosition, vec2 uvOffset) {
     vec3(0.0, 0.0, 1.0),
     vec3(1.0, 1.0, 0.0)
   );
+  // Ray position is relative to the ellipsoid center.
   vec3 position = rayPosition + ellipsoidCenter;
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
@@ -113,6 +116,7 @@ vec3 getCascadeColor(vec3 rayPosition, vec2 uvOffset) {
 #endif // DEBUG_SHOW_CASCADES
 
 vec3 sampleShadow(vec3 rayPosition, vec2 uvOffset) {
+  // Ray position is relative to the ellipsoid center.
   vec3 position = rayPosition + ellipsoidCenter;
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
@@ -216,13 +220,13 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
 }
 
 vec4 marchToClouds(
-  vec3 rayOrigin,
+  const vec3 rayOrigin, // Relative to the ellipsoid center
   const vec3 rayDirection,
   const float maxRayDistance,
   const float jitter,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
-  out float weightedMeanDepth
+  out float frontDepth
 ) {
   vec3 radianceIntegral = vec3(0.0);
   float transmittanceIntegral = 1.0;
@@ -274,7 +278,7 @@ vec4 marchToClouds(
       );
 
       // Obtain the optical depth at the position from BSM.
-      float shadowOpticalDepth = sampleFilteredShadowOpticalDepth(position, distanceToTop);
+      float shadowOpticalDepth = sampleShadowOpticalDepth(position, distanceToTop);
 
       float sunOpticalDepth = 0.0;
       if (mipLevel < 0.5) {
@@ -328,7 +332,7 @@ vec4 marchToClouds(
   }
 
   // The final product of 5.9.1 and we'll evaluate this in aerial perspective.
-  weightedMeanDepth = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : 0.0;
+  frontDepth = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : 0.0;
 
   return vec4(
     radianceIntegral,
@@ -448,7 +452,7 @@ vec4 getCascadedShadowMap(vec2 uv) {
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
   color = vec3(shadow.b * 0.1);
   #else
-  color = shadow.rgb * vec3(1e-4, 10.0, 0.1);
+  color = shadow.rgb * vec3(1e-5, 10.0, 0.1);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return vec4(color, 1.0);
 }
@@ -457,6 +461,7 @@ vec4 getCascadedShadowMap(vec2 uv) {
 void main() {
   #ifdef DEBUG_SHOW_SHADOW_MAP
   outputColor = getCascadedShadowMap(vUv);
+  outputDepthVelocity = vec4(0.0);
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 
@@ -486,11 +491,12 @@ void main() {
 
   #ifdef DEBUG_SHOW_UV
   outputColor = vec4(vec3(checker(globeUv, localWeatherFrequency)), 1.0);
+  outputDepthVelocity = vec4(0.0);
   return;
   #endif // DEBUG_SHOW_UV
 
   float jitter = blueNoise(vUv);
-  float weightedMeanDepth;
+  float frontDepth;
   vec4 color = marchToClouds(
     rayOrigin,
     rayDirection,
@@ -498,14 +504,26 @@ void main() {
     jitter,
     pow(2.0, mipLevel),
     sunDirection,
-    weightedMeanDepth
+    frontDepth
   );
 
-  if (weightedMeanDepth > 0.0) {
-    weightedMeanDepth += rayNear;
-    vec3 frontPosition = viewPosition + weightedMeanDepth * rayDirection;
-    applyAerialPerspective(viewPosition, frontPosition, color);
+  if (frontDepth == 0.0) {
+    outputColor = vec4(0.0);
+    outputDepthVelocity = vec4(0.0);
+    return;
   }
+  frontDepth += rayNear;
+
+  // Apply aerial perspective.
+  vec3 frontPosition = viewPosition + frontDepth * rayDirection;
+  applyAerialPerspective(viewPosition, frontPosition, color);
+
+  // Velocity vector for temporal resolution.
+  vec4 prevClip = reprojectionMatrix * vec4(ellipsoidCenter + frontPosition, 1.0);
+  prevClip /= prevClip.w;
+  vec2 prevUv = prevClip.xy * 0.5 + 0.5;
+  vec2 uvVelocity = vUv - prevUv;
 
   outputColor = color;
+  outputDepthVelocity = vec4(frontDepth, uvVelocity, 1.0);
 }
