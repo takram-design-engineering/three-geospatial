@@ -45,7 +45,7 @@ float blueNoise(const vec2 uv) {
     blueNoiseTexture,
     vec3(
       uv * resolution / float(STBN_TEXTURE_SIZE),
-      0.0 // float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
+      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
     )
   ).x;
 }
@@ -111,8 +111,7 @@ vec4 marchToClouds(
     stepSize
   );
 
-  // May increase aliasing noise on shadows.
-  // rayDistance -= stepSize * jitter;
+  rayDistance -= stepSize * jitter;
 
   float extinctionSum = 0.0;
   float maxOpticalDepth = 0.0;
@@ -156,15 +155,8 @@ vec4 marchToClouds(
   if (sampleCount == 0) {
     return vec4(maxRayDistance, 0.0, 0.0, 0.0);
   }
-
-  float distanceToEllipsoid = raySphereFirstIntersection(
-    rayOrigin + rayDirection * frontDepth,
-    rayDirection,
-    vec3(0.0),
-    bottomRadius
-  );
   float meanExtinction = extinctionSum / float(sampleCount);
-  return vec4(frontDepth, meanExtinction, maxOpticalDepth, distanceToEllipsoid);
+  return vec4(frontDepth, meanExtinction, maxOpticalDepth, 1.0);
 }
 
 void getRayNearFar(
@@ -194,18 +186,17 @@ void getRayNearFar(
 }
 
 vec4 cascade(const int index, const float mipLevel) {
-  mat4 inverseShadowMatrix = inverseShadowMatrices[index];
   vec2 clip = vUv * 2.0 - 1.0;
-  vec4 point = inverseShadowMatrix * vec4(clip.xy, -1.0, 1.0);
+  vec4 point = inverseShadowMatrices[index] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
-  vec3 sunWorldPosition = point.xyz;
+  vec3 sunPosition = point.xyz;
 
   vec3 rayDirection = normalize(-sunDirection);
   float rayNear;
   float rayFar;
-  getRayNearFar(sunWorldPosition, rayDirection, rayNear, rayFar);
+  getRayNearFar(sunPosition, rayDirection, rayNear, rayFar);
 
-  vec3 rayOrigin = sunWorldPosition - ellipsoidCenter + rayNear * rayDirection;
+  vec3 rayOrigin = sunPosition - ellipsoidCenter + rayNear * rayDirection;
   float jitter = blueNoise(vUv);
   return marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter, mipLevel);
 }
