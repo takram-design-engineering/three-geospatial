@@ -30,6 +30,13 @@ export class CopyArrayPass extends CopyPass {
   ): void {
     const material = this.fullscreenMaterial as CopyArrayMaterial
     material.inputBuffer = inputBuffer.texture
+
+    const layerCount = +material.defines.LAYER_COUNT
+    if (layerCount !== this.renderTarget.depth) {
+      material.defines.LAYER_COUNT = `${this.renderTarget.depth}`
+      material.needsUpdate = true
+    }
+
     setMRTArrayRenderTarget(
       renderer,
       this.renderToScreen ? null : this.renderTarget
@@ -40,19 +47,6 @@ export class CopyArrayPass extends CopyPass {
   override setSize(width: number, height: number, depth?: number): void {
     if (this.autoResize) {
       this.renderTarget.setSize(width, height, depth ?? this.renderTarget.depth)
-    }
-  }
-
-  get layerCount(): number {
-    const material = this.fullscreenMaterial as CopyArrayMaterial
-    return +material.defines.LAYER_COUNT
-  }
-
-  set layerCount(value: number) {
-    if (value !== this.layerCount) {
-      const material = this.fullscreenMaterial as CopyArrayMaterial
-      material.defines.LAYER_COUNT = `${value}`
-      material.needsUpdate = true
     }
   }
 }
