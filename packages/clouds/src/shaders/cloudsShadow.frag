@@ -72,7 +72,14 @@ bool intersectsSceneObjects(const vec3 rayPosition) {
 
   vec4 clip = vViewProjectionMatrix * vec4(position, 1.0);
   clip /= clip.w;
-  if (clip.x < -1.0 || clip.x > 1.0 || clip.y < -1.0 || clip.y > 1.0) {
+  if (
+    clip.x < -1.0 ||
+    clip.x > 1.0 ||
+    clip.y < -1.0 ||
+    clip.y > 1.0 ||
+    clip.z < 0.0 ||
+    clip.z > 1.0
+  ) {
     return false; // Ignore outside of the main camera's clip space.
   }
   vec2 uv = clip.xy * 0.5 + 0.5;
