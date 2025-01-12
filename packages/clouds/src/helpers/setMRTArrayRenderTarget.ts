@@ -3,8 +3,7 @@ import invariant from 'tiny-invariant'
 
 export function setMRTArrayRenderTarget(
   renderer: WebGLRenderer,
-  outputBuffer: WebGLArrayRenderTarget | null,
-  layerCount?: number
+  outputBuffer: WebGLArrayRenderTarget | null
 ): void {
   renderer.setRenderTarget(outputBuffer)
   if (outputBuffer == null) {
@@ -18,7 +17,7 @@ export function setMRTArrayRenderTarget(
   }
   const glTexture = textureProperties.__webglTexture
   const drawBuffers: number[] = []
-  for (let layer = 0; layer < (layerCount ?? outputBuffer.depth); ++layer) {
+  for (let layer = 0; layer < outputBuffer.depth; ++layer) {
     gl.framebufferTextureLayer(
       gl.FRAMEBUFFER,
       gl.COLOR_ATTACHMENT0 + layer,

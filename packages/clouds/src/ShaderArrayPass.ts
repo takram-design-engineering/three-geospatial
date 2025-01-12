@@ -1,7 +1,6 @@
 import { ShaderPass } from 'postprocessing'
 import {
   type Material,
-  type ShaderMaterial,
   type Uniform,
   type WebGLArrayRenderTarget,
   type WebGLRenderer,
@@ -13,14 +12,6 @@ import { assertType } from '@takram/three-geospatial'
 import { setMRTArrayRenderTarget } from './helpers/setMRTArrayRenderTarget'
 
 export class ShaderArrayPass extends ShaderPass {
-  constructor(
-    material: ShaderMaterial,
-    public layerCount?: number,
-    input?: string
-  ) {
-    super(material, input)
-  }
-
   override render(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget | null,
@@ -39,7 +30,7 @@ export class ShaderArrayPass extends ShaderPass {
     if (inputBuffer !== null && uniforms?.[this.input] != null) {
       uniforms[this.input].value = inputBuffer.texture
     }
-    setMRTArrayRenderTarget(renderer, outputBuffer, this.layerCount)
+    setMRTArrayRenderTarget(renderer, outputBuffer)
     renderer.render(this.scene, this.camera)
   }
 }
