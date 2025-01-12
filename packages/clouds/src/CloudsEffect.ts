@@ -35,9 +35,11 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsResolveMaterial } from './CloudsResolveMaterial'
-import { CloudsShadowMaterial } from './CloudsShadowMaterial'
+import { CopyArrayPass } from './CopyArrayPass'
 import { LocalWeather } from './LocalWeather'
 import { ShaderArrayPass } from './ShaderArrayPass'
+import { ShadowMaterial } from './ShadowMaterial'
+import { ShadowResolveMaterial } from './ShadowResolveMaterial'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
@@ -141,9 +143,16 @@ export class CloudsEffect extends Effect {
   readonly shapeDetailVelocity = new Vector3()
 
   private readonly cascadedShadows: CascadedShadows
+
   readonly shadowRenderTarget: WebGLArrayRenderTarget
-  readonly shadowMaterial: CloudsShadowMaterial
+  readonly shadowMaterial: ShadowMaterial
   readonly shadowPass: ShaderArrayPass
+  readonly shadowHistoryRenderTarget: WebGLArrayRenderTarget
+  readonly shadowHistoryPass: CopyArrayPass
+  readonly shadowResolveRenderTarget: WebGLArrayRenderTarget
+  readonly shadowResolveMaterial: ShadowResolveMaterial
+  readonly shadowResolvePass: ShaderArrayPass
+
   readonly cloudsRenderTarget: WebGLRenderTarget
   readonly cloudsMaterial: CloudsMaterial
   readonly cloudsPass: ShaderPass
@@ -180,7 +189,10 @@ export class CloudsEffect extends Effect {
     const shape = new CloudShape()
     const shapeDetail = new CloudShapeDetail()
 
-    const shadowRenderTarget = createArrayRenderTarget('Clouds.Shadow')
+    const shadowRenderTarget = createArrayRenderTarget('Shadow.Current')
+    const shadowHistoryRenderTarget = createArrayRenderTarget('Shadow.History')
+    const shadowResolveRenderTarget = createArrayRenderTarget('Shadow.Resolve')
+
     const cloudsRenderTarget = createRenderTarget('Clouds.Current')
     const cloudsDepthVelocityBuffer = cloudsRenderTarget.texture.clone()
     cloudsDepthVelocityBuffer.isRenderTargetTexture = true
@@ -197,7 +209,7 @@ export class CloudsEffect extends Effect {
       lambda: 0.6,
       far: 1e5 // TODO: Parametrize
     })
-    const shadowMaterial = new CloudsShadowMaterial(
+    const shadowMaterial = new ShadowMaterial(
       {
         sunDirectionRef: sunDirection,
         localWeatherTexture: localWeather.texture,
@@ -206,13 +218,17 @@ export class CloudsEffect extends Effect {
       },
       atmosphere
     )
+    const shadowResolveMaterial = new ShadowResolveMaterial({
+      inputBuffer: shadowRenderTarget.texture,
+      historyBuffer: shadowHistoryRenderTarget.texture
+    })
     const cloudsMaterial = new CloudsMaterial(
       {
         sunDirectionRef: sunDirection,
         localWeatherTexture: localWeather.texture,
         shapeTexture: shape.texture,
         shapeDetailTexture: shapeDetail.texture,
-        shadowBuffer: shadowRenderTarget.texture
+        shadowBuffer: shadowResolveRenderTarget.texture
       },
       atmosphere
     )
@@ -223,6 +239,8 @@ export class CloudsEffect extends Effect {
     })
 
     const shadowPass = new ShaderArrayPass(shadowMaterial)
+    const shadowHistoryPass = new CopyArrayPass(shadowHistoryRenderTarget)
+    const shadowResolvePass = new ShaderArrayPass(shadowResolveMaterial)
     const cloudsPass = new ShaderPass(cloudsMaterial)
     const cloudsHistoryPass = new CopyPass(cloudsHistoryRenderTarget)
     const cloudsResolvePass = new ShaderPass(cloudsResolveMaterial)
@@ -237,9 +255,16 @@ export class CloudsEffect extends Effect {
     this.shape = shape
     this.shapeDetail = shapeDetail
     this.cascadedShadows = cascadedShadows
+
     this.shadowRenderTarget = shadowRenderTarget
     this.shadowMaterial = shadowMaterial
     this.shadowPass = shadowPass
+    this.shadowHistoryRenderTarget = shadowHistoryRenderTarget
+    this.shadowHistoryPass = shadowHistoryPass
+    this.shadowResolveRenderTarget = shadowResolveRenderTarget
+    this.shadowResolveMaterial = shadowResolveMaterial
+    this.shadowResolvePass = shadowResolvePass
+
     this.cloudsRenderTarget = cloudsRenderTarget
     this.cloudsMaterial = cloudsMaterial
     this.cloudsPass = cloudsPass
@@ -289,6 +314,8 @@ export class CloudsEffect extends Effect {
     frameBufferType: TextureDataType
   ): void {
     this.shadowPass.initialize(renderer, alpha, frameBufferType)
+    this.shadowHistoryPass.initialize(renderer, alpha, frameBufferType)
+    this.shadowResolvePass.initialize(renderer, alpha, frameBufferType)
     this.cloudsPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsHistoryPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsResolvePass.initialize(renderer, alpha, frameBufferType)
@@ -309,6 +336,20 @@ export class CloudsEffect extends Effect {
       cloudsUniforms.shadowMatrices.value[i].copy(cascade.matrix)
     }
     cloudsUniforms.shadowFar.value = shadows.far
+  }
+
+  setReprojectionMatrices(): void {
+    const shadows = this.cascadedShadows
+    const shadowUniforms = this.shadowMaterial.uniforms
+    const shadowResolveUniforms = this.shadowResolveMaterial.uniforms
+    for (let i = 0; i < shadows.cascadeCount; ++i) {
+      const cascade = shadows.cascades[i]
+      shadowUniforms.reprojectionMatrices.value[i].copy(cascade.matrix)
+      shadowResolveUniforms.reprojectionMatrices.value[i].copy(cascade.matrix)
+    }
+
+    this.cloudsMaterial.setReprojectionMatrix(this.camera)
+    this.cloudsResolveMaterial.setReprojectionMatrix(this.camera)
   }
 
   override update(
@@ -353,6 +394,16 @@ export class CloudsEffect extends Effect {
     this.updateShadowMatrices()
 
     this.shadowPass.render(renderer, null, this.shadowRenderTarget)
+    this.shadowResolvePass.render(
+      renderer,
+      null,
+      this.shadowResolveRenderTarget
+    )
+    this.shadowHistoryPass.render(
+      renderer,
+      this.shadowResolveRenderTarget,
+      null
+    )
     this.cloudsPass.render(renderer, null, this.cloudsRenderTarget)
     this.cloudsResolvePass.render(
       renderer,
@@ -365,8 +416,7 @@ export class CloudsEffect extends Effect {
       null
     )
 
-    this.cloudsMaterial.setReprojectionMatrix(this.camera)
-    this.cloudsResolveMaterial.setReprojectionMatrix(this.camera)
+    this.setReprojectionMatrices()
   }
 
   override setSize(width: number, height: number): void {
@@ -432,11 +482,15 @@ export class CloudsEffect extends Effect {
     if (value !== this.shadowMapSize) {
       this._shadowMapSize = value
 
-      const { depth } = this.shadowRenderTarget
-      this.shadowRenderTarget.setSize(value, value, depth)
       this.cascadedShadows.cascadeSize = value
-      this.cloudsMaterial.uniforms.shadowTexelSize.value.setScalar(1 / value)
       this.shadowMaterial.setSize(value, value)
+      this.shadowResolveMaterial.setSize(value, value)
+      this.cloudsMaterial.setShadowSize(value, value)
+
+      const depth = this.shadowCascadeCount
+      this.shadowRenderTarget.setSize(value, value, depth * 2) // For velocity
+      this.shadowHistoryRenderTarget.setSize(value, value, depth)
+      this.shadowResolveRenderTarget.setSize(value, value, depth)
     }
   }
 
@@ -448,11 +502,15 @@ export class CloudsEffect extends Effect {
     if (value !== this.shadowCascadeCount) {
       this._shadowCascadeCount = value
 
-      const { width, height } = this.shadowRenderTarget
-      this.shadowRenderTarget.setSize(width, height, value)
       this.cascadedShadows.cascadeCount = value
-      this.cloudsMaterial.shadowCascadeCount = value
       this.shadowMaterial.cascadeCount = value
+      this.shadowResolveMaterial.cascadeCount = value
+      this.cloudsMaterial.shadowCascadeCount = value
+
+      const size = this.shadowMapSize
+      this.shadowRenderTarget.setSize(size, size, value * 2) // For velocity
+      this.shadowHistoryRenderTarget.setSize(size, size, value)
+      this.shadowResolveRenderTarget.setSize(size, size, value)
     }
   }
 
@@ -463,7 +521,7 @@ export class CloudsEffect extends Effect {
   }
 
   get shadowBuffer(): DataArrayTexture {
-    return this.shadowRenderTarget.texture
+    return this.shadowResolveRenderTarget.texture
   }
 
   get shadowIntervals(): Vector2[] {

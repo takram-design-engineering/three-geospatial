@@ -1,5 +1,6 @@
 precision highp float;
 precision highp sampler3D;
+precision highp sampler2DArray;
 
 #include <common>
 #include <packing>
@@ -12,9 +13,11 @@ precision highp sampler3D;
 #include "clouds"
 
 uniform sampler2D depthBuffer;
+uniform sampler2DArray historyBuffer;
 uniform mat4 viewMatrix; // The main camera
 uniform mat4 inverseProjectionMatrix; // The main camera
-uniform mat4 inverseShadowMatrices[4]; // Inverse view projection of the sun
+uniform mat4 inverseShadowMatrices[CASCADE_COUNT]; // Inverse view projection of the sun
+uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 uniform float cameraNear;
 uniform float cameraFar;
 uniform sampler3D blueNoiseTexture;
@@ -29,16 +32,16 @@ uniform float minTransmittance;
 in vec2 vUv;
 in mat4 vViewProjectionMatrix; // The main camera
 
-layout(location = 0) out vec4 outputColor0;
-#if CASCADE_COUNT > 1
-layout(location = 1) out vec4 outputColor1;
-#endif // CASCADE_COUNT > 1
-#if CASCADE_COUNT > 2
-layout(location = 2) out vec4 outputColor2;
-#endif // CASCADE_COUNT > 2
-#if CASCADE_COUNT > 3
-layout(location = 3) out vec4 outputColor3;
-#endif // CASCADE_COUNT > 3
+layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
+#if CASCADE_COUNT == 1
+layout(location = 1) out vec4 outputVelocity[CASCADE_COUNT];
+#elif CASCADE_COUNT == 2
+layout(location = 2) out vec4 outputVelocity[CASCADE_COUNT];
+#elif CASCADE_COUNT == 3
+layout(location = 3) out vec4 outputVelocity[CASCADE_COUNT];
+#elif CASCADE_COUNT == 4
+layout(location = 4) out vec4 outputVelocity[CASCADE_COUNT];
+#endif // CASCADE_COUNT
 
 float blueNoise(const vec2 uv) {
   return texture(
@@ -192,7 +195,7 @@ void getRayNearFar(
   }
 }
 
-vec4 cascade(const int index, const float mipLevel) {
+void cascade(const int index, const float mipLevel, out vec4 outputColor, out vec4 outputVelocity) {
   vec2 clip = vUv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrices[index] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
@@ -205,19 +208,29 @@ vec4 cascade(const int index, const float mipLevel) {
 
   vec3 rayOrigin = sunPosition - ellipsoidCenter + rayNear * rayDirection;
   float jitter = blueNoise(vUv);
-  return marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter, mipLevel);
+  vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter, mipLevel);
+
+  // Velocity vector for temporal resolution.
+  vec3 frontPosition = rayOrigin + rayDirection * color.x;
+  vec4 prevClip = reprojectionMatrices[index] * vec4(ellipsoidCenter + frontPosition, 1.0);
+  prevClip /= prevClip.w;
+  vec2 prevUv = prevClip.xy * 0.5 + 0.5;
+  vec2 velocity = vUv - prevUv;
+
+  outputColor = color;
+  outputVelocity = vec4(velocity, 0.0, 0.0);
 }
 
 void main() {
   // TODO: Calculate mip level
-  outputColor0 = cascade(0, 0.0);
+  cascade(0, 0.0, outputColor[0], outputVelocity[0]);
   #if CASCADE_COUNT > 1
-  outputColor1 = cascade(1, 0.5);
+  cascade(1, 0.5, outputColor[1], outputVelocity[1]);
   #endif // CASCADE_COUNT > 1
   #if CASCADE_COUNT > 2
-  outputColor2 = cascade(2, 1.0);
+  cascade(2, 1.0, outputColor[2], outputVelocity[2]);
   #endif // CASCADE_COUNT > 2
   #if CASCADE_COUNT > 3
-  outputColor3 = cascade(3, 2.0);
+  cascade(3, 2.0, outputColor[3], outputVelocity[3]);
   #endif // CASCADE_COUNT > 3
 }

@@ -6,15 +6,15 @@ import {
   RawShaderMaterial,
   Uniform,
   Vector2,
-  Vector3,
   type Camera,
   type Texture
 } from 'three'
 
-import { unrollLoops } from '@takram/three-geospatial'
+import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/cloudsResolve.frag?raw'
 import vertexShader from './shaders/cloudsResolve.vert?raw'
+import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface CloudsResolveMaterialParameters {
   inputBuffer?: Texture | null
@@ -31,7 +31,6 @@ interface CloudsResolveMaterialUniforms {
   inverseViewMatrix: Uniform<Matrix4>
   reprojectionMatrix: Uniform<Matrix4>
   texelSize: Uniform<Vector2>
-  cameraPosition: Uniform<Vector3>
   temporalAlpha: Uniform<number>
 }
 
@@ -49,7 +48,9 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
       name: 'CloudsResolveMaterial',
       glslVersion: GLSL3,
       vertexShader,
-      fragmentShader: unrollLoops(fragmentShader),
+      fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
+        varianceClipping
+      }),
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         depthVelocityBuffer: new Uniform(depthVelocityBuffer),
@@ -58,7 +59,6 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         inverseViewMatrix: new Uniform(new Matrix4()),
         reprojectionMatrix: new Uniform(new Matrix4()),
         texelSize: new Uniform(new Vector2()),
-        cameraPosition: new Uniform(new Vector3()),
         temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
       defines: {}
@@ -69,7 +69,6 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
     const uniforms = this.uniforms
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
-    camera.getWorldPosition(uniforms.cameraPosition.value)
   }
 
   setReprojectionMatrix(camera: Camera): void {

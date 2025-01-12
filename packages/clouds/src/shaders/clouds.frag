@@ -143,6 +143,7 @@ float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
 
 // Use 4-taps filtering. We can't afford complex filters here.
 // Reference: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
+// TODO: Use temporal sampling pattern
 float sampleFilteredShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
   const vec2 offsets[4] = vec2[4](
     vec2(-1.5, 0.5),
@@ -278,7 +279,7 @@ vec4 marchToClouds(
       );
 
       // Obtain the optical depth at the position from BSM.
-      float shadowOpticalDepth = sampleShadowOpticalDepth(position, distanceToTop);
+      float shadowOpticalDepth = sampleFilteredShadowOpticalDepth(position, distanceToTop);
 
       float sunOpticalDepth = 0.0;
       if (mipLevel < 0.5) {
@@ -522,8 +523,8 @@ void main() {
   vec4 prevClip = reprojectionMatrix * vec4(ellipsoidCenter + frontPosition, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-  vec2 uvVelocity = vUv - prevUv;
+  vec2 velocity = vUv - prevUv;
 
   outputColor = color;
-  outputDepthVelocity = vec4(frontDepth, uvVelocity, 1.0);
+  outputDepthVelocity = vec4(frontDepth, velocity, 1.0);
 }

@@ -273,6 +273,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.uniforms.resolution.value.set(width, height)
   }
 
+  setShadowSize(width: number, height: number): void {
+    this.uniforms.shadowTexelSize.value.set(1 / width, 1 / height)
+  }
+
   get depthBuffer(): Texture | null {
     return this.uniforms.depthBuffer.value
   }

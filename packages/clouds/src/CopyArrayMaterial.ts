@@ -27,21 +27,21 @@ export class CopyArrayMaterial extends CopyMaterial {
       layout(location = 3) out vec4 outputColor3;
       #endif // LAYER_COUNT > 3
 
-      vec4 mainLayer(float layer) {
+      void mainLayer(const float layer, out vec4 outputColor) {
         vec4 texel = texture(inputBuffer, vec3(vUv, layer));
-        return opacity * texel;
+        outputColor = opacity * texel;
       }
 
       void main() {
-        outputColor0 = mainLayer(0.0);
+        mainLayer(0.0, outputColor0);
         #if LAYER_COUNT > 1
-        outputColor1 = mainLayer(1.0);
+        mainLayer(1.0, outputColor1);
         #endif // LAYER_COUNT > 1
         #if LAYER_COUNT > 2
-        outputColor2 = mainLayer(2.0);
+        mainLayer(2.0, outputColor2);
         #endif // LAYER_COUNT > 2
         #if LAYER_COUNT > 3
-        outputColor3 = mainLayer(3.0);
+        mainLayer(3.0, outputColor3);
         #endif // LAYER_COUNT > 3
       }
     `

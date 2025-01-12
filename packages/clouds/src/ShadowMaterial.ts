@@ -38,9 +38,9 @@ import {
 } from './uniforms'
 
 import clouds from './shaders/clouds.glsl?raw'
-import fragmentShader from './shaders/cloudsShadow.frag?raw'
-import vertexShader from './shaders/cloudsShadow.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
+import fragmentShader from './shaders/shadow.frag?raw'
+import vertexShader from './shaders/shadow.vert?raw'
 import structuredSampling from './shaders/structuredSampling.glsl?raw'
 
 declare module 'three' {
@@ -51,14 +51,14 @@ declare module 'three' {
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
-export interface CloudsShadowMaterialParameters {
+export interface ShadowMaterialParameters {
   sunDirectionRef?: Vector3
   localWeatherTexture?: Texture | null
   shapeTexture?: Texture | null
   shapeDetailTexture?: Texture | null
 }
 
-interface CloudsShadowMaterialUniforms
+interface ShadowMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
   [key: string]: Uniform<unknown>
@@ -67,6 +67,7 @@ interface CloudsShadowMaterialUniforms
   viewMatrix: Uniform<Matrix4> // The main camera
   inverseProjectionMatrix: Uniform<Matrix4> // The main camera
   inverseShadowMatrices: Uniform<Matrix4[]> // Inverse view projection of the sun
+  reprojectionMatrices: Uniform<Matrix4[]>
   resolution: Uniform<Vector2>
   cameraNear: Uniform<number>
   cameraFar: Uniform<number>
@@ -86,11 +87,11 @@ interface CloudsShadowMaterialUniforms
   minTransmittance: Uniform<number>
 }
 
-export interface CloudsShadowMaterial {
-  uniforms: CloudsShadowMaterialUniforms
+export interface ShadowMaterial {
+  uniforms: ShadowMaterialUniforms
 }
 
-export class CloudsShadowMaterial extends RawShaderMaterial {
+export class ShadowMaterial extends RawShaderMaterial {
   ellipsoid: Ellipsoid
   correctAltitude: boolean
 
@@ -100,11 +101,11 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
       localWeatherTexture = null,
       shapeTexture = null,
       shapeDetailTexture = null
-    }: CloudsShadowMaterialParameters = {},
+    }: ShadowMaterialParameters = {},
     private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super({
-      name: 'CloudsShadowMaterial',
+      name: 'ShadowMaterial',
       glslVersion: GLSL3,
       vertexShader,
       fragmentShader: resolveIncludes(fragmentShader, {
@@ -123,6 +124,9 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         viewMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
         inverseShadowMatrices: new Uniform(
+          Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
+        ),
+        reprojectionMatrices: new Uniform(
           Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
         ),
         resolution: new Uniform(new Vector2()),
@@ -149,7 +153,7 @@ export class CloudsShadowMaterial extends RawShaderMaterial {
         maxStepSize: new Uniform(1000),
         minDensity: new Uniform(1e-5),
         minTransmittance: new Uniform(1e-2)
-      } satisfies CloudsShadowMaterialUniforms,
+      } satisfies ShadowMaterialUniforms,
       defines: {
         DEPTH_PACKING: '0',
         USE_SHAPE_DETAIL: '1',
