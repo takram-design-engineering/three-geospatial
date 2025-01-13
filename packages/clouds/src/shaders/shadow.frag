@@ -219,7 +219,7 @@ void cascade(const int index, const float mipLevel, out vec4 outputColor, out ve
   vec2 velocity = vUv - prevUv;
 
   outputColor = color;
-  outputVelocity = vec4(velocity, 0.0, 0.0);
+  outputVelocity = vec4(velocity, 0.0, 1.0);
 }
 
 // TODO: Calculate from the main camera frustum perhaps?
