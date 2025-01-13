@@ -4,6 +4,12 @@ import { LinearFilter, WebGLArrayRenderTarget, type WebGLRenderer } from 'three'
 import { CopyArrayMaterial } from './CopyArrayMaterial'
 import { setArrayRenderTargetLayers } from './helpers/setArrayRenderTargetLayers'
 
+declare module 'postprocessing' {
+  interface CopyPass {
+    fullscreenMaterial: CopyMaterial
+  }
+}
+
 export class CopyArrayPass extends CopyPass {
   declare renderTarget: WebGLArrayRenderTarget
 
@@ -28,15 +34,8 @@ export class CopyArrayPass extends CopyPass {
     deltaTime?: number,
     stencilTest?: boolean
   ): void {
-    const material = this.fullscreenMaterial as CopyArrayMaterial
+    const material = this.fullscreenMaterial
     material.inputBuffer = inputBuffer.texture
-
-    const layerCount = +material.defines.LAYER_COUNT
-    if (layerCount !== this.renderTarget.depth) {
-      material.defines.LAYER_COUNT = `${this.renderTarget.depth}`
-      material.needsUpdate = true
-    }
-
     setArrayRenderTargetLayers(
       renderer,
       this.renderToScreen ? null : this.renderTarget
@@ -44,9 +43,19 @@ export class CopyArrayPass extends CopyPass {
     renderer.render(this.scene, this.camera)
   }
 
-  override setSize(width: number, height: number, depth?: number): void {
+  override setSize(
+    width: number,
+    height: number,
+    depth = this.renderTarget.depth
+  ): void {
     if (this.autoResize) {
-      this.renderTarget.setSize(width, height, depth ?? this.renderTarget.depth)
+      const prevDepth = this.renderTarget.depth
+      this.renderTarget.setSize(width, height, depth)
+
+      if (depth !== prevDepth) {
+        this.fullscreenMaterial.defines.LAYER_COUNT = `${depth}`
+        this.fullscreenMaterial.needsUpdate = true
+      }
     }
   }
 }

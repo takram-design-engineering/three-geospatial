@@ -5,6 +5,7 @@
 import { GaussianBlurPass } from 'postprocessing'
 import {
   GLSL3,
+  LinearFilter,
   WebGLArrayRenderTarget,
   type Texture,
   type Vector2,
@@ -45,8 +46,10 @@ export class ShadowFilterPass extends GaussianBlurPass {
       depthBuffer: false,
       stencilBuffer: false
     })
+    this.renderTargetA.texture.minFilter = LinearFilter
+    this.renderTargetA.texture.magFilter = LinearFilter
     this.renderTargetA.texture.name = 'Blur.Target.A'
-    this.renderTargetB = new WebGLArrayRenderTarget()
+    this.renderTargetB = this.renderTargetA.clone()
     this.renderTargetB.texture.name = 'Blur.Target.B'
     this.blurMaterial.glslVersion = GLSL3
     this.blurMaterial.fragmentShader = fragmentShader
