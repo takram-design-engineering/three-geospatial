@@ -137,11 +137,12 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
 
-  const { enabled, coverage, useShapeDetail, usePowder } = useControls(
+  const { enabled, coverage, animate, useShapeDetail, usePowder } = useControls(
     'clouds',
     {
       enabled: true,
       coverage: { value: 0.25, min: 0, max: 1, step: 0.01 },
+      animate: true,
       useShapeDetail: true,
       usePowder: true
     }
@@ -269,7 +270,7 @@ const Scene: FC<SceneProps> = ({
                   stbnVec2Texture={stbnVec2Texture}
                   coverage={coverage}
                   resolution-scale={0.5}
-                  localWeatherVelocity-x={0.00001}
+                  localWeatherVelocity-x={animate ? 0.00001 : 0}
                 />
               )}
               <AerialPerspective
