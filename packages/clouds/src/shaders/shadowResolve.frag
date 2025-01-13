@@ -35,14 +35,11 @@ void cascade(const int index, out vec4 outputColor) {
 }
 
 void main() {
-  cascade(0, outputColor[0]);
-  #if CASCADE_COUNT > 1
-  cascade(1, outputColor[1]);
-  #endif // CASCADE_COUNT > 1
-  #if CASCADE_COUNT > 2
-  cascade(2, outputColor[2]);
-  #endif // CASCADE_COUNT > 2
-  #if CASCADE_COUNT > 3
-  cascade(3, outputColor[3]);
-  #endif // CASCADE_COUNT > 3
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; ++i) {
+    #if UNROLLED_LOOP_INDEX < CASCADE_COUNT
+    cascade(UNROLLED_LOOP_INDEX, outputColor[i]);
+    #endif // UNROLLED_LOOP_INDEX < LAYER_COUNT
+  }
+  #pragma unroll_loop_end
 }

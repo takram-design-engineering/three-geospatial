@@ -29,12 +29,7 @@ import {
   parameters as atmosphereParameters,
   functions
 } from '@takram/three-atmosphere/shaders'
-import {
-  assertType,
-  Geodetic,
-  resolveIncludes,
-  unrollLoops
-} from '@takram/three-geospatial'
+import { assertType, Geodetic, resolveIncludes } from '@takram/three-geospatial'
 import {
   depth,
   generators,
@@ -137,7 +132,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         name: 'CloudsMaterial',
         glslVersion: GLSL3,
         vertexShader,
-        fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
+        fragmentShader: resolveIncludes(fragmentShader, {
           core: {
             depth,
             math,

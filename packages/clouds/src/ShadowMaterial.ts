@@ -21,7 +21,8 @@ import {
 import {
   assertType,
   Ellipsoid,
-  resolveIncludes
+  resolveIncludes,
+  unrollLoops
 } from '@takram/three-geospatial'
 import {
   depth,
@@ -108,7 +109,7 @@ export class ShadowMaterial extends RawShaderMaterial {
       name: 'ShadowMaterial',
       glslVersion: GLSL3,
       vertexShader,
-      fragmentShader: resolveIncludes(fragmentShader, {
+      fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
         core: {
           depth,
           math,

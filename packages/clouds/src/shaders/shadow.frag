@@ -33,6 +33,7 @@ in vec2 vUv;
 in mat4 vViewProjectionMatrix; // The main camera
 
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
+// Redundant notation for prettier.
 #if CASCADE_COUNT == 1
 layout(location = 1) out vec4 outputVelocity[CASCADE_COUNT];
 #elif CASCADE_COUNT == 2
@@ -221,16 +222,15 @@ void cascade(const int index, const float mipLevel, out vec4 outputColor, out ve
   outputVelocity = vec4(velocity, 0.0, 0.0);
 }
 
+// TODO: Calculate from the main camera frustum perhaps?
+const float mipLevels[4] = float[4](0.0, 0.5, 1.0, 2.0);
+
 void main() {
-  // TODO: Calculate mip level
-  cascade(0, 0.0, outputColor[0], outputVelocity[0]);
-  #if CASCADE_COUNT > 1
-  cascade(1, 0.5, outputColor[1], outputVelocity[1]);
-  #endif // CASCADE_COUNT > 1
-  #if CASCADE_COUNT > 2
-  cascade(2, 1.0, outputColor[2], outputVelocity[2]);
-  #endif // CASCADE_COUNT > 2
-  #if CASCADE_COUNT > 3
-  cascade(3, 2.0, outputColor[3], outputVelocity[3]);
-  #endif // CASCADE_COUNT > 3
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; ++i) {
+    #if UNROLLED_LOOP_INDEX < CASCADE_COUNT
+    cascade(UNROLLED_LOOP_INDEX, mipLevels[i], outputColor[i], outputVelocity[i]);
+    #endif // UNROLLED_LOOP_INDEX < LAYER_COUNT
+  }
+  #pragma unroll_loop_end
 }
