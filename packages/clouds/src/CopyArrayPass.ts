@@ -2,7 +2,7 @@ import { CopyPass } from 'postprocessing'
 import { LinearFilter, WebGLArrayRenderTarget, type WebGLRenderer } from 'three'
 
 import { CopyArrayMaterial } from './CopyArrayMaterial'
-import { setMRTArrayRenderTarget } from './helpers/setMRTArrayRenderTarget'
+import { setArrayRenderTargetLayers } from './helpers/setArrayRenderTargetLayers'
 
 export class CopyArrayPass extends CopyPass {
   declare renderTarget: WebGLArrayRenderTarget
@@ -37,7 +37,7 @@ export class CopyArrayPass extends CopyPass {
       material.needsUpdate = true
     }
 
-    setMRTArrayRenderTarget(
+    setArrayRenderTargetLayers(
       renderer,
       this.renderToScreen ? null : this.renderTarget
     )

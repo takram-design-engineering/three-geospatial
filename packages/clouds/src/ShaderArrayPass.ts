@@ -9,7 +9,7 @@ import {
 
 import { assertType } from '@takram/three-geospatial'
 
-import { setMRTArrayRenderTarget } from './helpers/setMRTArrayRenderTarget'
+import { setArrayRenderTargetLayers } from './helpers/setArrayRenderTargetLayers'
 
 export class ShaderArrayPass extends ShaderPass {
   override render(
@@ -30,7 +30,7 @@ export class ShaderArrayPass extends ShaderPass {
     if (inputBuffer !== null && uniforms?.[this.input] != null) {
       uniforms[this.input].value = inputBuffer.texture
     }
-    setMRTArrayRenderTarget(renderer, outputBuffer)
+    setArrayRenderTargetLayers(renderer, outputBuffer)
     renderer.render(this.scene, this.camera)
   }
 }

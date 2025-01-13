@@ -12,7 +12,7 @@ import {
 } from 'three'
 
 import { CopyArrayMaterial } from './CopyArrayMaterial'
-import { setMRTArrayRenderTarget } from './helpers/setMRTArrayRenderTarget'
+import { setArrayRenderTargetLayers } from './helpers/setArrayRenderTargetLayers'
 
 import fragmentShader from './shaders/shadowFilter.frag?raw'
 
@@ -76,13 +76,13 @@ export class ShadowFilterPass extends GaussianBlurPass {
       // Blur direction: Horizontal
       blurMaterial.direction.set(1.0, 0.0)
       blurMaterial.inputBuffer = previousBuffer.texture
-      setMRTArrayRenderTarget(renderer, renderTargetA)
+      setArrayRenderTargetLayers(renderer, renderTargetA)
       renderer.render(scene, camera)
 
       // Blur direction: Vertical
       blurMaterial.direction.set(0.0, 1.0)
       blurMaterial.inputBuffer = renderTargetA.texture
-      setMRTArrayRenderTarget(renderer, renderTargetB)
+      setArrayRenderTargetLayers(renderer, renderTargetB)
       renderer.render(scene, camera)
 
       if (i === 0 && l > 1) {
@@ -93,7 +93,7 @@ export class ShadowFilterPass extends GaussianBlurPass {
 
     // Copy the result to the output buffer.
     this.fullscreenMaterial = this.copyMaterial
-    setMRTArrayRenderTarget(renderer, outputBuffer)
+    setArrayRenderTargetLayers(renderer, outputBuffer)
     renderer.render(scene, camera)
   }
 

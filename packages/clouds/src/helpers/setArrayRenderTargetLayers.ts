@@ -1,7 +1,7 @@
 import { type WebGLArrayRenderTarget, type WebGLRenderer } from 'three'
 import invariant from 'tiny-invariant'
 
-export function setMRTArrayRenderTarget(
+export function setArrayRenderTargetLayers(
   renderer: WebGLRenderer,
   outputBuffer: WebGLArrayRenderTarget | null
 ): void {
