@@ -70,7 +70,7 @@ function extractOrthographicTuple(
 
 export interface CascadedShadowsOptions {
   cascadeCount?: number
-  cascadeSize?: number
+  mapSize?: Vector2
   far?: number
   mode?: FrustumSplitMode
   lambda?: number
@@ -80,7 +80,7 @@ export interface CascadedShadowsOptions {
 
 export const cascadedShadowsOptionsDefaults = {
   cascadeCount: 4,
-  cascadeSize: 1024,
+  mapSize: new Vector2(1024, 1024),
   far: 1e4,
   mode: 'practical',
   lambda: 0.5,
@@ -101,7 +101,7 @@ export interface Cascade {
 export class CascadedShadows {
   readonly cascades: Cascade[] = []
 
-  cascadeSize: number
+  mapSize: Vector2
   far: number
   mode: FrustumSplitMode
   lambda: number
@@ -112,12 +112,12 @@ export class CascadedShadows {
   private readonly splits: number[] = []
 
   constructor(options: CascadedShadowsOptions) {
-    const { cascadeCount, cascadeSize, far, mode, lambda, margin, fade } = {
+    const { cascadeCount, mapSize, far, mode, lambda, margin, fade } = {
       ...cascadedShadowsOptionsDefaults,
       ...options
     }
     this.cascadeCount = cascadeCount
-    this.cascadeSize = cascadeSize
+    this.mapSize = mapSize
     this.far = far
     this.mode = mode
     this.lambda = lambda
@@ -227,7 +227,7 @@ export class CascadedShadows {
     const cascades = this.cascades
     invariant(frusta.length === cascades.length)
     const margin = this.margin
-    const cascadeSize = this.cascadeSize
+    const mapSize = this.mapSize
 
     for (let i = 0; i < frusta.length; ++i) {
       const frustum = frusta[i]
@@ -248,8 +248,8 @@ export class CascadedShadows {
       const [left, right, top, bottom] = extractOrthographicTuple(
         cascade.projectionMatrix
       )
-      const texelWidth = (right - left) / cascadeSize
-      const texelHeight = (top - bottom) / cascadeSize
+      const texelWidth = (right - left) / mapSize.width
+      const texelHeight = (top - bottom) / mapSize.height
       center.x = Math.round(center.x / texelWidth) * texelWidth
       center.y = Math.round(center.y / texelHeight) * texelHeight
 

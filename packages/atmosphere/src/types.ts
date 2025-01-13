@@ -6,7 +6,8 @@ import {
 } from 'three'
 
 export interface AtmosphereCompositeShadow {
-  texture: DataArrayTexture | null
+  map: DataArrayTexture | null
+  mapSize: Vector2
   intervals: Vector2[]
   matrices: Matrix4[]
   far: number

@@ -131,8 +131,8 @@ float sampleOpticalDepth(vec3 worldPosition) {
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return 0.0;
   }
-  // x: frontDepth, y: meanExtinction, z: maxOpticalDepth, w: distanceToEllipsoid
-  return texture(shadowBuffer, vec3(uv, float(index))).z;
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  return texture(shadowBuffer, vec3(uv, float(index))).a;
 }
 
 #endif // HAS_SHADOW
@@ -195,6 +195,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   #ifdef HAS_SHADOW
   float opticalDepth = sampleOpticalDepth(worldPositionMeters);
+
   // TODO: This is basically no longer needed because clouds are clamped in the
   // shadow pass, but shadows of clouds outside the main camera are still
   // visible on certain occasions.

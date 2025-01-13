@@ -131,8 +131,8 @@ vec3 sampleShadow(vec3 rayPosition, vec2 uvOffset) {
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(0.0);
   }
-  // x: frontDepth, y: meanExtinction, z: maxOpticalDepth
-  return texture(shadowBuffer, vec3(uv, float(index))).xyz;
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  return texture(shadowBuffer, vec3(uv, float(index))).rgb;
 }
 
 float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop, vec2 uvOffset) {

@@ -5,12 +5,12 @@ import {
   Camera,
   Matrix4,
   Uniform,
+  Vector2,
   Vector3,
   type Data3DTexture,
   type DataArrayTexture,
   type DataTexture,
   type Texture,
-  type Vector2,
   type WebGLRenderer,
   type WebGLRenderTarget
 } from 'three'
@@ -198,6 +198,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['lunarRadianceScale', new Uniform(lunarRadianceScale)],
           ['compositeBuffer', new Uniform(null)],
           ['shadowBuffer', new Uniform(null)],
+          ['shadowMapSize', new Uniform(new Vector2())],
           ['shadowIntervals', new Uniform([])],
           ['shadowMatrices', new Uniform([])],
           ['shadowFar', new Uniform(0)]
@@ -559,7 +560,8 @@ export class AerialPerspectiveEffect extends Effect {
           'SHADOW_CASCADE_COUNT',
           `${value.shadow.intervals.length}`
         )
-        this.uniforms.get('shadowBuffer')!.value = value.shadow.texture
+        this.uniforms.get('shadowBuffer')!.value = value.shadow.map
+        this.uniforms.get('shadowMapSize')!.value.copy(value.shadow.mapSize)
         this.uniforms.get('shadowIntervals')!.value = value.shadow.intervals
         this.uniforms.get('shadowMatrices')!.value = value.shadow.matrices
         this.uniforms.get('shadowFar')!.value = value.shadow.far
@@ -570,6 +572,7 @@ export class AerialPerspectiveEffect extends Effect {
       this.defines.delete('SHADOW_CASCADE_COUNT')
       this.uniforms.get('compositeBuffer')!.value = null
       this.uniforms.get('shadowBuffer')!.value = null
+      this.uniforms.get('shadowMapSize')!.value.setScalar(0)
       this.uniforms.get('shadowIntervals')!.value = []
       this.uniforms.get('shadowMatrices')!.value = []
       this.uniforms.get('shadowFar')!.value = 0

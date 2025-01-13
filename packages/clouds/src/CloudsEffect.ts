@@ -38,6 +38,7 @@ import { CloudsResolveMaterial } from './CloudsResolveMaterial'
 import { CopyArrayPass } from './CopyArrayPass'
 import { LocalWeather } from './LocalWeather'
 import { ShaderArrayPass } from './ShaderArrayPass'
+import { ShadowFilterPass } from './ShadowFilterPass'
 import { ShadowMaterial } from './ShadowMaterial'
 import { ShadowResolveMaterial } from './ShadowResolveMaterial'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
@@ -152,6 +153,7 @@ export class CloudsEffect extends Effect {
   readonly shadowResolveRenderTarget: WebGLArrayRenderTarget
   readonly shadowResolveMaterial: ShadowResolveMaterial
   readonly shadowResolvePass: ShaderArrayPass
+  readonly shadowFilterPass: ShadowFilterPass
 
   readonly cloudsRenderTarget: WebGLRenderTarget
   readonly cloudsMaterial: CloudsMaterial
@@ -165,8 +167,8 @@ export class CloudsEffect extends Effect {
   readonly resolution: Resolution
 
   private frame = 0
-  private _shadowMapSize = 0
   private _shadowCascadeCount = 0
+  private _shadowMapSize = new Vector2()
 
   constructor(
     private camera: Camera = new Camera(),
@@ -241,6 +243,8 @@ export class CloudsEffect extends Effect {
     const shadowPass = new ShaderArrayPass(shadowMaterial)
     const shadowHistoryPass = new CopyArrayPass(shadowHistoryRenderTarget)
     const shadowResolvePass = new ShaderArrayPass(shadowResolveMaterial)
+    const shadowFilterPass = new ShadowFilterPass({ kernelSize: 16 })
+
     const cloudsPass = new ShaderPass(cloudsMaterial)
     const cloudsHistoryPass = new CopyPass(cloudsHistoryRenderTarget)
     const cloudsResolvePass = new ShaderPass(cloudsResolveMaterial)
@@ -264,6 +268,7 @@ export class CloudsEffect extends Effect {
     this.shadowResolveRenderTarget = shadowResolveRenderTarget
     this.shadowResolveMaterial = shadowResolveMaterial
     this.shadowResolvePass = shadowResolvePass
+    this.shadowFilterPass = shadowFilterPass
 
     this.cloudsRenderTarget = cloudsRenderTarget
     this.cloudsMaterial = cloudsMaterial
@@ -278,8 +283,8 @@ export class CloudsEffect extends Effect {
     this.mainCamera = camera
 
     // Initialize aggregated default values.
-    this.shadowMapSize = 1024
     this.shadowCascadeCount = 3
+    this.shadowMapSize = new Vector2(1024, 1024)
 
     this.resolution = new Resolution(
       this,
@@ -316,6 +321,7 @@ export class CloudsEffect extends Effect {
     this.shadowPass.initialize(renderer, alpha, frameBufferType)
     this.shadowHistoryPass.initialize(renderer, alpha, frameBufferType)
     this.shadowResolvePass.initialize(renderer, alpha, frameBufferType)
+    this.shadowFilterPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsHistoryPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsResolvePass.initialize(renderer, alpha, frameBufferType)
@@ -404,6 +410,12 @@ export class CloudsEffect extends Effect {
       this.shadowResolveRenderTarget,
       null
     )
+    this.shadowFilterPass.render(
+      renderer,
+      this.shadowResolveRenderTarget,
+      this.shadowResolveRenderTarget
+    )
+
     this.cloudsPass.render(renderer, null, this.cloudsRenderTarget)
     this.cloudsResolvePass.render(
       renderer,
@@ -482,26 +494,6 @@ export class CloudsEffect extends Effect {
 
   // Shadow parameters
 
-  get shadowMapSize(): number {
-    return this._shadowMapSize
-  }
-
-  set shadowMapSize(value: number) {
-    if (value !== this.shadowMapSize) {
-      this._shadowMapSize = value
-
-      this.cascadedShadows.cascadeSize = value
-      this.shadowMaterial.setSize(value, value)
-      this.shadowResolveMaterial.setSize(value, value)
-      this.cloudsMaterial.setShadowSize(value, value)
-
-      const depth = this.shadowCascadeCount
-      this.shadowRenderTarget.setSize(value, value, depth * 2) // For velocity
-      this.shadowHistoryRenderTarget.setSize(value, value, depth)
-      this.shadowResolveRenderTarget.setSize(value, value, depth)
-    }
-  }
-
   get shadowCascadeCount(): number {
     return this._shadowCascadeCount
   }
@@ -515,10 +507,33 @@ export class CloudsEffect extends Effect {
       this.shadowResolveMaterial.cascadeCount = value
       this.cloudsMaterial.shadowCascadeCount = value
 
-      const size = this.shadowMapSize
-      this.shadowRenderTarget.setSize(size, size, value * 2) // For velocity
-      this.shadowHistoryRenderTarget.setSize(size, size, value)
-      this.shadowResolveRenderTarget.setSize(size, size, value)
+      const { width, height } = this.shadowMapSize
+      this.shadowRenderTarget.setSize(width, height, value * 2) // For velocity
+      this.shadowHistoryRenderTarget.setSize(width, height, value)
+      this.shadowResolveRenderTarget.setSize(width, height, value)
+      this.shadowFilterPass.setSize(width, height, value)
+    }
+  }
+
+  get shadowMapSize(): Vector2 {
+    return this._shadowMapSize
+  }
+
+  set shadowMapSize(value: Vector2) {
+    if (!this.shadowMapSize.equals(value)) {
+      this._shadowMapSize = value
+
+      const { width, height } = value
+      this.cascadedShadows.mapSize.set(width, height)
+      this.shadowMaterial.setSize(width, height)
+      this.shadowResolveMaterial.setSize(width, height)
+      this.cloudsMaterial.setShadowSize(width, height)
+
+      const depth = this.shadowCascadeCount
+      this.shadowRenderTarget.setSize(width, height, depth * 2) // For velocity
+      this.shadowHistoryRenderTarget.setSize(width, height, depth)
+      this.shadowResolveRenderTarget.setSize(width, height, depth)
+      this.shadowFilterPass.setSize(width, height, depth)
     }
   }
 
