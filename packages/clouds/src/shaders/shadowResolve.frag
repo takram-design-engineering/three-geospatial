@@ -1,6 +1,7 @@
 precision highp float;
 precision highp sampler2DArray;
 
+#define VARIANCE_9_SAMPLES (1)
 #include "varianceClipping"
 
 uniform sampler2DArray inputBuffer;

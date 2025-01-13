@@ -1,3 +1,25 @@
+#ifdef VARIANCE_9_SAMPLES
+#define VARIANCE_OFFSET_COUNT (8)
+const vec2 varianceOffsets[8] = vec2[8](
+  vec2(-1.0, -1.0),
+  vec2(-1.0, 1.0),
+  vec2(1.0, -1.0),
+  vec2(1.0, 1.0),
+  vec2(1.0, 0.0),
+  vec2(0.0, -1.0),
+  vec2(0.0, 1.0),
+  vec2(-1.0, 0.0)
+);
+#else
+#define VARIANCE_OFFSET_COUNT (4)
+const vec2 varianceOffsets[4] = vec2[4](
+  vec2(1.0, 0.0),
+  vec2(0.0, -1.0),
+  vec2(0.0, 1.0),
+  vec2(-1.0, 0.0)
+);
+#endif // VARIANCE_9_SAMPLES
+
 // Reference: https://github.com/playdeadgames/temporal
 // TODO: Can we adapt it to the optimized version?
 vec4 clipAABB(const vec4 current, const vec4 history, const vec4 minColor, const vec4 maxColor) {
@@ -14,18 +36,8 @@ vec4 clipAABB(const vec4 current, const vec4 history, const vec4 minColor, const
   return vec4(current.rgb + r, current.a);
 }
 
-#define VARIANCE_OFFSET_COUNT (4)
-
-const vec2 varianceOffsets[4] = vec2[4](
-  vec2(1.0, 0.0),
-  vec2(0.0, -1.0),
-  vec2(0.0, 1.0),
-  vec2(-1.0, 0.0)
-);
-
 // Variance clipping
 // Reference: https://developer.download.nvidia.com/gameworks/events/GDC2016/msalvi_temporal_supersampling.pdf
-
 vec4 varianceClipping(
   const sampler2D inputBuffer,
   const vec2 uv,
