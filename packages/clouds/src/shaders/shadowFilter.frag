@@ -12,7 +12,8 @@ in vec2 vOffset;
 in vec2 vUv;
 
 void mainLayer(const float layer, out vec4 outputColor) {
-  vec4 result = texture(inputBuffer, vec3(vUv, layer)) * kernel[0].y;
+  vec4 color = texture(inputBuffer, vec3(vUv, layer));
+  vec4 result = color * kernel[0].y;
 
   for (int i = 1; i < STEPS; ++i) {
     vec2 offset = kernel[i].x * vOffset;
@@ -22,7 +23,7 @@ void mainLayer(const float layer, out vec4 outputColor) {
   }
 
   // Store the filtered max optical depth to alpha.
-  outputColor = vec4(result.rgb, result.b);
+  outputColor = vec4(color.rgb, result.b);
 }
 
 void main() {
