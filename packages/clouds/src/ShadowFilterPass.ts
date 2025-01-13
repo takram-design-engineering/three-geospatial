@@ -1,3 +1,7 @@
+// Obviously based on:
+// https://github.com/pmndrs/postprocessing/blob/main/src/passes/GaussianBlurPass.js
+// Provides for rendering array target layers as MRT.
+
 import { GaussianBlurPass } from 'postprocessing'
 import {
   GLSL3,
