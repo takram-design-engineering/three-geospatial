@@ -424,13 +424,13 @@ vec4 getCascadedShadowMap(vec2 uv) {
 
   vec3 color;
   #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
-  color = vec3(shadow.r * 1e-4);
+  color = vec3(shadow.r * 1e-5);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
   color = vec3(shadow.g * 10.0);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
-  color = vec3(shadow.b * 0.1);
+  color = vec3(shadow.b * 0.01);
   #else
-  color = shadow.rgb * vec3(1e-5, 10.0, 0.1);
+  color = shadow.rgb * vec3(1e-5, 10.0, 0.01);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return vec4(color, 1.0);
 }

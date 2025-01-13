@@ -52,7 +52,7 @@ export class ShadowResolveMaterial extends RawShaderMaterial {
           Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
         ),
         texelSize: new Uniform(new Vector2()),
-        temporalAlpha: new Uniform(0.1)
+        temporalAlpha: new Uniform(0.01)
       } satisfies ShadowResolveMaterialUniforms,
       defines: {}
     })
