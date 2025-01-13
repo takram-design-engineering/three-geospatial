@@ -21,12 +21,12 @@ export default async function (): Promise<void> {
   const unitVector = new Uint8Array(WIDTH * HEIGHT * DEPTH * 4)
   for (let depth = 0; depth < DEPTH; ++depth) {
     const image = sharp(
-      `apps/data/data/STBN/stbn_unitvec3_2Dx1D_128x128x64_${depth}.png`
+      `apps/data/data/STBN/stbn_vec2_2Dx1D_128x128x64_${depth}.png`
     )
     const slice = new Uint8Array(await image.raw({ depth: 'uchar' }).toBuffer())
     unitVector.set(slice, depth * WIDTH * HEIGHT * 4)
   }
-  await writeFile('packages/clouds/assets/stbn_unit_vector.bin', unitVector)
+  await writeFile('packages/clouds/assets/stbn_vec2.bin', unitVector)
 
   console.log('Done')
 }

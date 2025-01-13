@@ -21,7 +21,8 @@ uniform vec3 cameraPosition;
 uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
-uniform sampler3D blueNoiseTexture;
+uniform sampler3D stbnScalarTexture;
+uniform sampler3D stbnVec2Texture;
 
 // Scattering parameters
 uniform vec3 albedo;
@@ -46,6 +47,7 @@ uniform vec2 shadowTexelSize;
 uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
+uniform float shadowFilterRadius;
 
 in vec2 vUv;
 in vec3 vViewDirection; // Direction to the center of screen
@@ -54,16 +56,20 @@ in vec3 vRayDirection; // Direction to the texel
 layout(location = 0) out vec4 outputColor;
 layout(location = 1) out vec4 outputDepthVelocity;
 
-const vec3 blueNoiseScale = vec3(
-  vec2(1.0 / float(STBN_TEXTURE_SIZE)),
-  1.0 / float(STBN_TEXTURE_DEPTH)
-);
+const vec3 stbnScale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
 
-float blueNoise(const vec2 uv) {
+float stbnScalar(const vec2 uv) {
   return texture(
-    blueNoiseTexture,
-    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * blueNoiseScale
+    stbnScalarTexture,
+    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
   ).x;
+}
+
+vec2 stbnVec2(const vec2 uv) {
+  return texture(
+    stbnScalarTexture,
+    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
+  ).xy;
 }
 
 float readDepth(const vec2 uv) {
@@ -137,37 +143,6 @@ float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop, vec2 uvOff
   return min(maxOpticalDepth, meanExtinction * max(0.0, distanceToTop - frontDepth));
 }
 
-float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
-  return sampleShadowOpticalDepth(rayPosition, distanceToTop, vec2(0.0));
-}
-
-// Use 4-taps filtering. We can't afford complex filters here.
-// Reference: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
-// TODO: Use temporal sampling pattern
-float sampleFilteredShadowOpticalDepth(vec3 rayPosition, float distanceToTop) {
-  const vec2 offsets[4] = vec2[4](
-    vec2(-1.5, 0.5),
-    vec2(0.5, 0.5),
-    vec2(-1.5, -1.5),
-    vec2(0.5, -1.5)
-  );
-  vec2 offset = step(0.5, fract(vUv * resolution * 0.5));
-  if (offset.y > 1.1) {
-    offset.y = 0.0;
-  }
-  float sum = 0.0;
-  #pragma unroll_loop_start
-  for (int i = 0; i < 4; ++i) {
-    sum += sampleShadowOpticalDepth(
-      rayPosition,
-      distanceToTop,
-      shadowTexelSize * (offset + offsets[i])
-    );
-  }
-  #pragma unroll_loop_end
-  return 0.25 * sum;
-}
-
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   vec2 g2 = g * g;
   const float reciprocalPi4 = 0.07957747154594767;
@@ -191,7 +166,7 @@ float marchOpticalDepth(
   float stepScale = 1.0;
   float prevStepScale = 0.0;
   for (int i = 0; i < iterations; ++i) {
-    vec3 position = rayOrigin + rayDirection * stepScale * stepSize;
+    vec3 position = rayOrigin + stepSize * stepScale * rayDirection;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
@@ -225,6 +200,7 @@ vec4 marchToClouds(
   const vec3 rayDirection,
   const float maxRayDistance,
   const float jitter,
+  const vec2 jitterVec2,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
   out float frontDepth
@@ -239,12 +215,13 @@ vec4 marchToClouds(
   float stepSize = minStepSize;
   float rayDistance = stepSize * jitter;
   float cosTheta = dot(sunDirection, rayDirection);
+  vec2 jitterUv = shadowFilterRadius * shadowTexelSize * jitterVec2;
 
   for (int i = 0; i < maxIterations; ++i) {
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
-    vec3 position = rayOrigin + rayDirection * rayDistance;
+    vec3 position = rayOrigin + rayDistance * rayDirection;
 
     // Sample a rough density.
     float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance * 1e-5));
@@ -279,7 +256,7 @@ vec4 marchToClouds(
       );
 
       // Obtain the optical depth at the position from BSM.
-      float shadowOpticalDepth = sampleFilteredShadowOpticalDepth(position, distanceToTop);
+      float shadowOpticalDepth = sampleShadowOpticalDepth(position, distanceToTop, jitterUv);
 
       float sunOpticalDepth = 0.0;
       if (mipLevel < 0.5) {
@@ -496,13 +473,15 @@ void main() {
   return;
   #endif // DEBUG_SHOW_UV
 
-  float jitter = blueNoise(vUv);
+  float jitter = stbnScalar(vUv);
+  vec2 jitterVec2 = stbnVec2(vUv);
   float frontDepth;
   vec4 color = marchToClouds(
     rayOrigin,
     rayDirection,
     rayFar - rayNear,
     jitter,
+    jitterVec2,
     pow(2.0, mipLevel),
     sunDirection,
     frontDepth

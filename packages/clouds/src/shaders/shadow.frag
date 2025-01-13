@@ -20,7 +20,7 @@ uniform mat4 inverseShadowMatrices[CASCADE_COUNT]; // Inverse view projection of
 uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 uniform float cameraNear;
 uniform float cameraFar;
-uniform sampler3D blueNoiseTexture;
+uniform sampler3D stbnScalarTexture;
 
 // Raymarch to clouds
 uniform int maxIterations;
@@ -43,13 +43,12 @@ layout(location = 3) out vec4 outputVelocity[CASCADE_COUNT];
 layout(location = 4) out vec4 outputVelocity[CASCADE_COUNT];
 #endif // CASCADE_COUNT
 
-float blueNoise(const vec2 uv) {
+const vec3 stbnScale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
+
+float stbnScalar(const vec2 uv) {
   return texture(
-    blueNoiseTexture,
-    vec3(
-      uv * resolution / float(STBN_TEXTURE_SIZE),
-      float(frame % STBN_TEXTURE_DEPTH) / float(STBN_TEXTURE_DEPTH)
-    )
+    stbnScalarTexture,
+    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
   ).x;
 }
 
@@ -133,7 +132,7 @@ vec4 marchToClouds(
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
-    vec3 position = rayOrigin + rayDirection * rayDistance;
+    vec3 position = rayOrigin + rayDistance * rayDirection;
 
     // Sample a rough density.
     float height = length(position) - bottomRadius;
@@ -207,11 +206,11 @@ void cascade(const int index, const float mipLevel, out vec4 outputColor, out ve
   getRayNearFar(sunPosition, rayDirection, rayNear, rayFar);
 
   vec3 rayOrigin = sunPosition - ellipsoidCenter + rayNear * rayDirection;
-  float jitter = blueNoise(vUv);
+  float jitter = stbnScalar(vUv);
   vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter, mipLevel);
 
   // Velocity vector for temporal resolution.
-  vec3 frontPosition = rayOrigin + rayDirection * color.x;
+  vec3 frontPosition = rayOrigin + color.x * rayDirection;
   vec4 prevClip = reprojectionMatrices[index] * vec4(ellipsoidCenter + frontPosition, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;

@@ -72,7 +72,7 @@ interface ShadowMaterialUniforms
   cameraNear: Uniform<number>
   cameraFar: Uniform<number>
   frame: Uniform<number>
-  blueNoiseTexture: Uniform<Data3DTexture | null>
+  stbnScalarTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
   bottomRadius: Uniform<number> // TODO
@@ -133,7 +133,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         cameraNear: new Uniform(0),
         cameraFar: new Uniform(0),
         frame: new Uniform(0),
-        blueNoiseTexture: new Uniform(null),
+        stbnScalarTexture: new Uniform(null),
 
         ...createCloudParameterUniforms({
           localWeatherTexture,

@@ -85,7 +85,8 @@ interface CloudsMaterialUniforms
   cameraFar: Uniform<number>
   cameraHeight: Uniform<number>
   frame: Uniform<number>
-  blueNoiseTexture: Uniform<Data3DTexture | null>
+  stbnScalarTexture: Uniform<Data3DTexture | null>
+  stbnVec2Texture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
   bottomRadius: Uniform<number> // TODO
@@ -113,6 +114,7 @@ interface CloudsMaterialUniforms
   shadowIntervals: Uniform<Vector2[]>
   shadowMatrices: Uniform<Matrix4[]>
   shadowFar: Uniform<number>
+  shadowFilterRadius: Uniform<number>
 }
 
 export interface CloudsMaterial {
@@ -160,7 +162,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraFar: new Uniform(0),
           cameraHeight: new Uniform(0),
           frame: new Uniform(0),
-          blueNoiseTexture: new Uniform(null),
+          stbnScalarTexture: new Uniform(null),
+          stbnVec2Texture: new Uniform(null),
 
           ...createCloudParameterUniforms({
             localWeatherTexture,
@@ -199,7 +202,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           shadowMatrices: new Uniform(
             Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
           ),
-          shadowFar: new Uniform(0)
+          shadowFar: new Uniform(0),
+          shadowFilterRadius: new Uniform(5)
         } satisfies CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
