@@ -10,7 +10,7 @@ const ivec2 varianceOffsets[8] = ivec2[8](
   ivec2(0, 1),
   ivec2(-1, 0)
 );
-#else
+#else // VARIANCE_9_SAMPLES
 #define VARIANCE_OFFSET_COUNT (4)
 const ivec2 varianceOffsets[4] = ivec2[4](ivec2(1, 0), ivec2(0, -1), ivec2(0, 1), ivec2(-1, 0));
 #endif // VARIANCE_9_SAMPLES
@@ -30,13 +30,13 @@ vec4 clipAABB(const vec4 current, const vec4 history, const vec4 minColor, const
   return history;
 }
 
-#ifdef VARIANCE_USE_SAMPLER_ARRAY
+#ifdef VARIANCE_SAMPLER_ARRAY
 #define VARIANCE_SAMPLER sampler2DArray
 #define VARIANCE_SAMPLER_COORD ivec3
-#else // VARIANCE_USE_SAMPLER_ARRAY
+#else // VARIANCE_SAMPLER_ARRAY
 #define VARIANCE_SAMPLER sampler2D
 #define VARIANCE_SAMPLER_COORD ivec2
-#endif // VARIANCE_USE_SAMPLER_ARRAY
+#endif // VARIANCE_SAMPLER_ARRAY
 
 // Variance clipping
 // Reference: https://developer.download.nvidia.com/gameworks/events/GDC2016/msalvi_temporal_supersampling.pdf
@@ -54,11 +54,11 @@ vec4 varianceClipping(
   #pragma unroll_loop_start
   for (int i = 0; i < 8; ++i) {
     #if UNROLLED_LOOP_INDEX < VARIANCE_OFFSET_COUNT
-    #ifdef VARIANCE_USE_SAMPLER_ARRAY
+    #ifdef VARIANCE_SAMPLER_ARRAY
     neighborCoord = ivec3(coord.xy + varianceOffsets[i], coord.z);
-    #else // VARIANCE_USE_SAMPLER_ARRAY
+    #else // VARIANCE_SAMPLER_ARRAY
     neighborCoord = coord + varianceOffsets[i];
-    #endif // VARIANCE_USE_SAMPLER_ARRAY
+    #endif // VARIANCE_SAMPLER_ARRAY
     neighbor = texelFetch(inputBuffer, neighborCoord, 0);
     moment1 += neighbor;
     moment2 += neighbor * neighbor;

@@ -2,7 +2,7 @@ precision highp float;
 precision highp sampler2DArray;
 
 #define VARIANCE_9_SAMPLES (1)
-#define VARIANCE_USE_SAMPLER_ARRAY (1)
+#define VARIANCE_SAMPLER_ARRAY (1)
 
 #include "varianceClipping"
 
@@ -36,7 +36,7 @@ void main() {
   for (int i = 0; i < 4; ++i) {
     #if UNROLLED_LOOP_INDEX < CASCADE_COUNT
     cascade(UNROLLED_LOOP_INDEX, outputColor[i]);
-    #endif // UNROLLED_LOOP_INDEX < LAYER_COUNT
+    #endif // UNROLLED_LOOP_INDEX < CASCADE_COUNT
   }
   #pragma unroll_loop_end
 }

@@ -265,7 +265,7 @@ vec4 marchToClouds(
       vec3 scatteredIrradiance = (sunIrradiance + skyIrradiance) * scattering;
       vec3 radiance = (scatteredIrradiance + skyIrradiance * skyIrradianceScale) * density;
 
-      #ifdef USE_GROUND_IRRADIANCE
+      #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (mipLevel < 0.5) {
         float groundOpticalDepth = marchOpticalDepth(position, -normalize(position), 2, mipLevel);
@@ -274,11 +274,11 @@ vec4 marchToClouds(
         groundIrradiance *= 1.0 - coverage;
         radiance += groundIrradiance;
       }
-      #endif // USE_GROUND_IRRADIANCE
+      #endif // GROUND_IRRADIANCE
 
-      #ifdef USE_POWDER
+      #ifdef POWDER
       radiance *= 1.0 - powderScale * exp(-density * powderExponent);
-      #endif // USE_POWDER
+      #endif // POWDER
 
       #ifdef DEBUG_SHOW_CASCADES
       radiance = 1e-3 * getCascadeColor(position, vec2(0.0));

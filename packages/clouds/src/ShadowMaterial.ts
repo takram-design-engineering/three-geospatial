@@ -158,7 +158,7 @@ export class ShadowMaterial extends RawShaderMaterial {
       } satisfies ShadowMaterialUniforms,
       defines: {
         DEPTH_PACKING: '0',
-        USE_SHAPE_DETAIL: '1'
+        SHAPE_DETAIL: '1'
       }
     })
 
@@ -238,15 +238,15 @@ export class ShadowMaterial extends RawShaderMaterial {
   }
 
   get useShapeDetail(): boolean {
-    return this.defines.USE_SHAPE_DETAIL != null
+    return this.defines.SHAPE_DETAIL != null
   }
 
   set useShapeDetail(value: boolean) {
     if (value !== this.useShapeDetail) {
       if (value) {
-        this.defines.USE_SHAPE_DETAIL = '1'
+        this.defines.SHAPE_DETAIL = '1'
       } else {
-        delete this.defines.USE_SHAPE_DETAIL
+        delete this.defines.SHAPE_DETAIL
       }
       this.needsUpdate = true
     }

@@ -226,7 +226,7 @@ void main() {
   for (int i = 0; i < 4; ++i) {
     #if UNROLLED_LOOP_INDEX < CASCADE_COUNT
     cascade(UNROLLED_LOOP_INDEX, mipLevels[i], outputColor[i], outputVelocity[i]);
-    #endif // UNROLLED_LOOP_INDEX < LAYER_COUNT
+    #endif // UNROLLED_LOOP_INDEX < CASCADE_COUNT
   }
   #pragma unroll_loop_end
 }

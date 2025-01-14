@@ -54,15 +54,15 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
   }
 
   get temporalUpscaling(): boolean {
-    return this.defines.USE_TEMPORAL_UPSCALING != null
+    return this.defines.TEMPORAL_UPSCALING != null
   }
 
   set temporalUpscaling(value: boolean) {
     if (value !== this.temporalUpscaling) {
       if (value) {
-        this.defines.USE_TEMPORAL_UPSCALING = '1'
+        this.defines.TEMPORAL_UPSCALING = '1'
       } else {
-        delete this.defines.USE_TEMPORAL_UPSCALING
+        delete this.defines.TEMPORAL_UPSCALING
       }
       this.needsUpdate = true
     }

@@ -95,7 +95,7 @@ float sampleShape(WeatherSample weather, const vec3 position, const float mipLev
   float shape = textureLod(shapeTexture, position * shapeFrequency + shapeOffset, 0.0).r;
   density = mix(density, saturate(remap(density, 1.0 - shape, 1.0, 0.0, 1.0)), detailAmounts);
 
-  #ifdef USE_SHAPE_DETAIL
+  #ifdef SHAPE_DETAIL
   if (mipLevel < 0.5) {
     float detail = textureLod(
       shapeDetailTexture,

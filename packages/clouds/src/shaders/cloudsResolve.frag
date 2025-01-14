@@ -42,7 +42,7 @@ vec4 getClosestFragment(const ivec2 coord) {
   return result;
 }
 
-#ifdef USE_TEMPORAL_UPSCALING
+#ifdef TEMPORAL_UPSCALING
 
 const mat4 bayerIndices = mat4(
   vec4(0.0, 12.0, 3.0, 15.0),
@@ -77,7 +77,7 @@ void main() {
   outputColor = clippedHistory;
 }
 
-#else // USE_TEMPORAL_UPSCALING
+#else // TEMPORAL_UPSCALING
 
 void main() {
   ivec2 coord = ivec2(gl_FragCoord.xy);
@@ -96,4 +96,4 @@ void main() {
   outputColor = mix(clippedHistory, current, temporalAlpha);
 }
 
-#endif // USE_TEMPORAL_UPSCALING
+#endif // TEMPORAL_UPSCALING

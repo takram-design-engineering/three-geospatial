@@ -226,10 +226,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         } satisfies CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
-          USE_SHAPE_DETAIL: '1',
+          SHAPE_DETAIL: '1',
           MULTI_SCATTERING_OCTAVES: '8',
-          USE_POWDER: '1',
-          USE_GROUND_IRRADIANCE: '1'
+          POWDER: '1',
+          GROUND_IRRADIANCE: '1'
         }
       },
       atmosphere
@@ -353,15 +353,16 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   get useShapeDetail(): boolean {
-    return this.defines.USE_SHAPE_DETAIL != null
+    return this.defines.SHAPE_DETAIL != null
   }
 
+  // TODO: Remove this and make parametric uniform instead
   set useShapeDetail(value: boolean) {
     if (value !== this.useShapeDetail) {
       if (value) {
-        this.defines.USE_SHAPE_DETAIL = '1'
+        this.defines.SHAPE_DETAIL = '1'
       } else {
-        delete this.defines.USE_SHAPE_DETAIL
+        delete this.defines.SHAPE_DETAIL
       }
       this.needsUpdate = true
     }
@@ -379,30 +380,32 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   get usePowder(): boolean {
-    return this.defines.USE_POWDER != null
+    return this.defines.POWDER != null
   }
 
+  // TODO: Remove this and make parametric uniform instead
   set usePowder(value: boolean) {
     if (value !== this.usePowder) {
       if (value) {
-        this.defines.USE_POWDER = '1'
+        this.defines.POWDER = '1'
       } else {
-        delete this.defines.USE_POWDER
+        delete this.defines.POWDER
       }
       this.needsUpdate = true
     }
   }
 
   get useGroundIrradiance(): boolean {
-    return this.defines.USE_GROUND_IRRADIANCE != null
+    return this.defines.GROUND_IRRADIANCE != null
   }
 
+  // TODO: Remove this and make parametric uniform instead
   set useGroundIrradiance(value: boolean) {
     if (value !== this.useGroundIrradiance) {
       if (value) {
-        this.defines.USE_GROUND_IRRADIANCE = '1'
+        this.defines.GROUND_IRRADIANCE = '1'
       } else {
-        delete this.defines.USE_GROUND_IRRADIANCE
+        delete this.defines.GROUND_IRRADIANCE
       }
       this.needsUpdate = true
     }
