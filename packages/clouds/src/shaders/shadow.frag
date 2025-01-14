@@ -46,10 +46,10 @@ layout(location = 4) out vec4 outputVelocity[CASCADE_COUNT];
 
 const vec3 stbnScale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
 
-float stbnScalar(const vec2 uv) {
+float stbnScalar() {
   return texture(
     stbnScalarTexture,
-    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
+    vec3(gl_FragCoord.xy, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
   ).x;
 }
 
@@ -208,7 +208,7 @@ void cascade(const int index, const float mipLevel, out vec4 outputColor, out ve
   getRayNearFar(sunPosition, rayDirection, rayNear, rayFar);
 
   vec3 rayOrigin = sunPosition - ellipsoidCenter + rayNear * rayDirection;
-  float jitter = stbnScalar(vUv);
+  float jitter = stbnScalar();
   vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter, mipLevel);
 
   // Velocity for temporal resolution.

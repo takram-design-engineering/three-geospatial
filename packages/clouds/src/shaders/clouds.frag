@@ -58,17 +58,17 @@ layout(location = 1) out vec4 outputDepthVelocity;
 
 const vec3 stbnScale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
 
-float stbnScalar(const vec2 uv) {
+float stbnScalar() {
   return texture(
     stbnScalarTexture,
-    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
+    vec3(gl_FragCoord.xy, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
   ).x;
 }
 
-vec2 stbnVec2(const vec2 uv) {
+vec2 stbnVec2() {
   return texture(
     stbnScalarTexture,
-    vec3(uv * resolution, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
+    vec3(gl_FragCoord.xy, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
   ).xy;
 }
 
@@ -476,8 +476,8 @@ void main() {
   return;
   #endif // DEBUG_SHOW_UV
 
-  float jitter = stbnScalar(vUv);
-  vec2 jitterVec2 = stbnVec2(vUv);
+  float jitter = stbnScalar();
+  vec2 jitterVec2 = stbnVec2();
   float frontDepth;
   vec4 color = marchToClouds(
     rayOrigin,
