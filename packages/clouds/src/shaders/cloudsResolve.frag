@@ -8,8 +8,7 @@ uniform sampler2D inputBuffer;
 uniform sampler2D depthVelocityBuffer;
 uniform sampler2D historyBuffer;
 
-uniform mat4 reprojectionMatrix;
-uniform vec2 texelSize;
+uniform int frame;
 uniform float temporalAlpha;
 
 in vec2 vUv;
@@ -44,19 +43,57 @@ vec4 getClosestFragment(const ivec2 coord) {
   return result;
 }
 
+#ifdef USE_TEMPORAL_UPSCALING
+
+const mat4 bayerIndices = mat4(
+  vec4(0.0, 12.0, 3.0, 15.0),
+  vec4(8.0, 4.0, 11.0, 7.0),
+  vec4(2.0, 14.0, 1.0, 13.0),
+  vec4(10.0, 6.0, 9.0, 5.0)
+);
+
 void main() {
-  ivec2 coord = ivec2(gl_FragCoord.xy);
+  ivec2 coord = ivec2(gl_FragCoord.xy) / 4;
   vec4 current = texelFetch(inputBuffer, coord, 0);
 
-  vec4 closestFragment = getClosestFragment(coord);
-  vec2 velocity = closestFragment.gb;
+  int bayerValue = int(bayerIndices[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4]);
+  if (bayerValue == frame % 16) {
+    // Use the texel just rendered without any accumulation, for now.
+    outputColor = current;
+    return;
+  }
+
+  vec4 depthVelocity = getClosestFragment(coord);
+  vec2 velocity = depthVelocity.gb;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = current;
     return; // Rejection
   }
 
-  vec4 history = textureCatmullRom(historyBuffer, prevUv);
+  // TODO
+  vec4 history = texture(historyBuffer, prevUv);
+  vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history, 5.0);
+  outputColor = clippedHistory;
+}
+
+#else // USE_TEMPORAL_UPSCALING
+
+void main() {
+  ivec2 coord = ivec2(gl_FragCoord.xy);
+  vec4 current = texelFetch(inputBuffer, coord, 0);
+
+  vec4 depthVelocity = getClosestFragment(coord);
+  vec2 velocity = depthVelocity.gb;
+  vec2 prevUv = vUv - velocity;
+  if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
+    outputColor = current;
+    return; // Rejection
+  }
+
+  vec4 history = texture(historyBuffer, prevUv);
   vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history);
   outputColor = mix(clippedHistory, current, temporalAlpha);
 }
+
+#endif // USE_TEMPORAL_UPSCALING

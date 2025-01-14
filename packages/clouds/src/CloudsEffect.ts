@@ -166,7 +166,8 @@ export class CloudsEffect extends Effect {
 
   private frame = 0
   private _shadowCascadeCount = 0
-  private _shadowMapSize = new Vector2()
+  private readonly _shadowMapSize = new Vector2()
+  private _temporalUpscaling = false
 
   constructor(
     private camera: Camera = new Camera(),
@@ -273,13 +274,6 @@ export class CloudsEffect extends Effect {
     this.cloudsResolveMaterial = cloudsResolveMaterial
     this.cloudsResolvePass = cloudsResolvePass
 
-    // Camera needs to be set after setting up the pass.
-    this.mainCamera = camera
-
-    // Initialize aggregated default values.
-    this.shadowCascadeCount = 3
-    this.shadowMapSize = new Vector2(1024, 1024)
-
     this.resolution = new Resolution(
       this,
       resolutionX,
@@ -290,6 +284,11 @@ export class CloudsEffect extends Effect {
       'change' as keyof Event,
       this.onResolutionChange
     )
+
+    // Initialize aggregated properties.
+    this.shadowCascadeCount = 3
+    this.shadowMapSize = new Vector2(512, 512)
+    this.temporalUpscaling = true
   }
 
   private readonly onResolutionChange = (): void => {
@@ -337,14 +336,14 @@ export class CloudsEffect extends Effect {
     cloudsUniforms.shadowFar.value = shadows.far
   }
 
-  setReprojectionMatrices(): void {
+  copyReprojectionMatrices(): void {
     const shadows = this.cascadedShadows
     const shadowUniforms = this.shadowMaterial.uniforms
     for (let i = 0; i < shadows.cascadeCount; ++i) {
       const cascade = shadows.cascades[i]
       shadowUniforms.reprojectionMatrices.value[i].copy(cascade.matrix)
     }
-    this.cloudsMaterial.setReprojectionMatrix(this.camera)
+    this.cloudsMaterial.copyReprojectionMatrix(this.camera)
   }
 
   override update(
@@ -418,25 +417,23 @@ export class CloudsEffect extends Effect {
       null
     )
 
-    this.setReprojectionMatrices()
+    this.copyReprojectionMatrices()
   }
 
-  override setSize(width: number, height: number): void {
+  override setSize(baseWidth: number, baseHeight: number): void {
     const resolution = this.resolution
-    resolution.setBaseSize(width, height)
+    resolution.setBaseSize(baseWidth, baseHeight)
 
-    const { width: scaledWidth, height: scaledHeight } = resolution
-    this.cloudsRenderTarget.setSize(scaledWidth, scaledHeight)
-    this.cloudsMaterial.setSize(scaledWidth, scaledHeight)
-    this.cloudsResolveRenderTarget.setSize(scaledWidth, scaledHeight)
-    this.cloudsHistoryPass.setSize(scaledWidth, scaledHeight)
+    const { width, height } = resolution
+    const scale = this.temporalUpscaling ? 0.25 : 1
+    this.cloudsRenderTarget.setSize(width * scale, height * scale)
+    this.cloudsMaterial.setSize(width, height)
+    this.cloudsResolveRenderTarget.setSize(width, height)
+    this.cloudsHistoryPass.setSize(width, height)
 
     this.shadowMaterial.copyCameraSettings(this.camera)
     this.cloudsMaterial.copyCameraSettings(this.camera)
     this.updateShadowMatrices()
-
-    // Reset reprojection matrices.
-    this.cloudsMaterial.setReprojectionMatrix(this.camera)
   }
 
   override setDepthTexture(
@@ -447,6 +444,22 @@ export class CloudsEffect extends Effect {
     this.cloudsMaterial.depthBuffer = depthTexture
     this.shadowMaterial.depthPacking = depthPacking ?? 0
     this.cloudsMaterial.depthPacking = depthPacking ?? 0
+  }
+
+  get temporalUpscaling(): boolean {
+    return this._temporalUpscaling
+  }
+
+  set temporalUpscaling(value: boolean) {
+    if (value !== this.temporalUpscaling) {
+      this._temporalUpscaling = value
+
+      const { width, height } = this.resolution
+      const scale = this.temporalUpscaling ? 0.25 : 1
+      this.cloudsRenderTarget.setSize(width * scale, height * scale)
+      this.cloudsMaterial.temporalUpscaling = value
+      this.cloudsResolveMaterial.temporalUpscaling = value
+    }
   }
 
   // Textures
@@ -508,7 +521,7 @@ export class CloudsEffect extends Effect {
 
   set shadowMapSize(value: Vector2) {
     if (!this.shadowMapSize.equals(value)) {
-      this._shadowMapSize = value
+      this._shadowMapSize.copy(value)
 
       const { width, height } = value
       this.cascadedShadows.mapSize.set(width, height)

@@ -58,6 +58,21 @@ declare module 'three' {
 
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
+const bayerIndices = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+const bayerOffsets = /*#__PURE__*/ bayerIndices.reduce<Vector2[]>(
+  (result, _, index) => {
+    const offset = new Vector2()
+    for (let i = 0; i < 16; ++i) {
+      if (bayerIndices[i] === index) {
+        offset.set(((i % 4) + 0.5) / 4, (Math.floor(i / 4) + 0.5) / 4)
+        break
+      }
+    }
+    return [...result, offset]
+  },
+  []
+)
+
 export interface CloudsMaterialParameters {
   sunDirectionRef?: Vector3
   localWeatherTexture?: Texture | null
@@ -117,6 +132,11 @@ export interface CloudsMaterial {
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
+  temporalUpscaling = false
+
+  private previousProjectionMatrix?: Matrix4
+  private previousViewMatrix?: Matrix4
+
   constructor(
     {
       sunDirectionRef,
@@ -245,8 +265,37 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
     const uniforms = this.uniforms
     uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
-    uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
+
+    const previousProjectionMatrix =
+      this.previousProjectionMatrix ?? camera.projectionMatrix
+    const previousViewMatrix =
+      this.previousViewMatrix ?? camera.matrixWorldInverse
+
+    const inverseProjectionMatrix = uniforms.inverseProjectionMatrix.value
+    const reprojectionMatrix = uniforms.reprojectionMatrix.value
+    if (this.temporalUpscaling) {
+      const frame = uniforms.frame.value % 16
+      const resolution = uniforms.resolution.value
+      inverseProjectionMatrix.copy(camera.projectionMatrix)
+      const offset = bayerOffsets[frame]
+      const dx = ((offset.x - 0.5) / resolution.x) * 4 * 2
+      const dy = ((offset.y - 0.5) / resolution.y) * 4 * 2
+      inverseProjectionMatrix.elements[8] += dx
+      inverseProjectionMatrix.elements[9] += dy
+      inverseProjectionMatrix.invert()
+
+      // Jitter the previous projection matrix with the current jitter.
+      reprojectionMatrix.copy(previousProjectionMatrix)
+      reprojectionMatrix.elements[8] += dx
+      reprojectionMatrix.elements[9] += dy
+      reprojectionMatrix.multiply(previousViewMatrix)
+    } else {
+      inverseProjectionMatrix.copy(camera.projectionMatrixInverse)
+      reprojectionMatrix
+        .copy(previousProjectionMatrix)
+        .multiply(previousViewMatrix)
+    }
 
     assertType<PerspectiveCamera | OrthographicCamera>(camera)
     uniforms.cameraNear.value = camera.near
@@ -261,15 +310,21 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  setReprojectionMatrix(camera: Camera): void {
-    const uniforms = this.uniforms
-    uniforms.reprojectionMatrix.value
-      .copy(camera.projectionMatrix)
-      .multiply(camera.matrixWorldInverse)
+  // copyCameraSettings can be called multiple times within a frame. Only
+  // reliable way is to explicitly store the matrices.
+  copyReprojectionMatrix(camera: Camera): void {
+    this.previousProjectionMatrix ??= new Matrix4()
+    this.previousViewMatrix ??= new Matrix4()
+    this.previousProjectionMatrix.copy(camera.projectionMatrix)
+    this.previousViewMatrix.copy(camera.matrixWorldInverse)
   }
 
   setSize(width: number, height: number): void {
     this.uniforms.resolution.value.set(width, height)
+
+    // Invalidate reprojection.
+    this.previousProjectionMatrix = undefined
+    this.previousViewMatrix = undefined
   }
 
   setShadowSize(width: number, height: number): void {
