@@ -310,7 +310,7 @@ vec4 marchToClouds(
   }
 
   // The final product of 5.9.1 and we'll evaluate this in aerial perspective.
-  frontDepth = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : 0.0;
+  frontDepth = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : -1.0;
 
   return vec4(
     radianceIntegral,
@@ -490,15 +490,10 @@ void main() {
     frontDepth
   );
 
-  if (frontDepth == 0.0) {
-    outputColor = vec4(0.0);
-    outputDepthVelocity = vec4(0.0);
-    return;
-  }
-  frontDepth += rayNear;
+  frontDepth = frontDepth > 0.0 ? rayNear + frontDepth : rayFar;
+  vec3 frontPosition = viewPosition + frontDepth * rayDirection;
 
   // Apply aerial perspective.
-  vec3 frontPosition = viewPosition + frontDepth * rayDirection;
   applyAerialPerspective(viewPosition, frontPosition, color);
 
   // Velocity for temporal resolution.
