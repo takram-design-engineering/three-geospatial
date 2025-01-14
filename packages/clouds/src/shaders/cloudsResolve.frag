@@ -16,26 +16,27 @@ in vec2 vUv;
 
 layout(location = 0) out vec4 outputColor;
 
-const ivec2 neighborOffsets[8] = ivec2[8](
+const ivec2 neighborOffsets[9] = ivec2[9](
   ivec2(-1, -1),
   ivec2(-1, 0),
   ivec2(-1, 1),
   ivec2(0, -1),
+  ivec2(0, 0),
   ivec2(0, 1),
   ivec2(1, -1),
   ivec2(1, 0),
   ivec2(1, 1)
 );
 
-vec4 getClosestFragment(const ivec2 coord, const vec4 center) {
-  vec4 result = center;
+vec4 getClosestFragment(const ivec2 coord) {
+  vec4 result = vec4(1e7, 0.0, 0.0, 0.0);
   ivec2 neighborCoord;
   vec4 neighbor;
   #pragma unroll_loop_start
-  for (int i = 0; i < 8; ++i) {
+  for (int i = 0; i < 9; ++i) {
     neighborCoord = coord + neighborOffsets[i];
     neighbor = texelFetch(depthVelocityBuffer, neighborCoord, 0);
-    if (neighbor.r > 0.0 && neighbor.r < result.r) {
+    if (neighbor.r < result.r) {
       result = neighbor;
     }
   }
@@ -46,13 +47,9 @@ vec4 getClosestFragment(const ivec2 coord, const vec4 center) {
 void main() {
   ivec2 coord = ivec2(gl_FragCoord.xy);
   vec4 current = texelFetch(inputBuffer, coord, 0);
-  vec4 centerDepthVelocity = texelFetch(depthVelocityBuffer, coord, 0);
-  if (centerDepthVelocity.r == 0.0) {
-    outputColor = current;
-    return; // Rejection
-  }
 
-  vec2 velocity = getClosestFragment(coord, centerDepthVelocity).gb;
+  vec4 closestFragment = getClosestFragment(coord);
+  vec2 velocity = closestFragment.gb;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = current;
