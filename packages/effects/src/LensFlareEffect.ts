@@ -148,18 +148,17 @@ export class LensFlareEffect extends Effect {
     this.featuresPass.render(renderer, this.renderTarget2, this.renderTarget1)
   }
 
-  override setSize(width: number, height: number): void {
+  override setSize(baseWidth: number, baseHeight: number): void {
     const resolution = this.resolution
-    resolution.setBaseSize(width, height)
+    resolution.setBaseSize(baseWidth, baseHeight)
 
-    const scaleWidth = resolution.width
-    const scaleHeight = resolution.height
-    this.renderTarget1.setSize(scaleWidth, scaleHeight)
-    this.renderTarget2.setSize(scaleWidth, scaleHeight)
-    this.thresholdMaterial.setSize(scaleWidth, scaleHeight)
-    this.blurPass.setSize(scaleWidth, scaleHeight)
-    this.preBlurPass.setSize(scaleWidth, scaleHeight)
-    this.featuresMaterial.setSize(scaleWidth, scaleHeight)
+    const { width, height } = resolution
+    this.renderTarget1.setSize(width, height)
+    this.renderTarget2.setSize(width, height)
+    this.thresholdMaterial.setSize(width, height)
+    this.blurPass.setSize(width, height)
+    this.preBlurPass.setSize(width, height)
+    this.featuresMaterial.setSize(width, height)
   }
 
   get intensity(): number {

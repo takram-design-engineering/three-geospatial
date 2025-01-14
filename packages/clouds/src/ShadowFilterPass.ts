@@ -101,16 +101,18 @@ export class ShadowFilterPass extends GaussianBlurPass {
   }
 
   setSize(
-    width: number,
-    height: number,
+    baseWidth: number,
+    baseHeight: number,
     depth = this.renderTargetA.depth
   ): void {
     const resolution = this.resolution
-    resolution.setBaseSize(width, height)
+    resolution.setBaseSize(baseWidth, baseHeight)
+
+    const { width, height } = resolution
     const prevDepth = this.renderTargetA.depth
-    this.renderTargetA.setSize(resolution.width, resolution.height, depth)
-    this.renderTargetB.setSize(resolution.width, resolution.height, depth)
-    this.blurMaterial.setSize(width, height)
+    this.renderTargetA.setSize(width, height, depth)
+    this.renderTargetB.setSize(width, height, depth)
+    this.blurMaterial.setSize(baseWidth, baseHeight)
 
     if (depth !== prevDepth) {
       this.blurMaterial.defines.LAYER_COUNT = `${depth}`
