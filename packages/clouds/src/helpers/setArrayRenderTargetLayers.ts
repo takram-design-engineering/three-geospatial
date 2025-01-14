@@ -10,12 +10,16 @@ export function setArrayRenderTargetLayers(
     return
   }
 
+  const glTexture = (
+    renderer.properties.get(outputBuffer.texture) as {
+      __webglTexture?: WebGLTexture
+    }
+  ).__webglTexture
+  invariant(glTexture != null)
+
   const gl = renderer.getContext()
   invariant(gl instanceof WebGL2RenderingContext)
-  const textureProperties = renderer.properties.get(outputBuffer.texture) as {
-    __webglTexture: WebGLTexture
-  }
-  const glTexture = textureProperties.__webglTexture
+
   const drawBuffers: number[] = []
   for (let layer = 0; layer < outputBuffer.depth; ++layer) {
     gl.framebufferTextureLayer(

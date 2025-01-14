@@ -82,6 +82,19 @@ function applyVelocity(
   }
 }
 
+function tryClearRenderTarget(
+  renderer: WebGLRenderer,
+  renderTarget: WebGLRenderTarget
+): boolean {
+  const property = renderer.properties.get(renderTarget.texture) as any
+  if (property?.__webglTexture == null) {
+    return false
+  }
+  renderer.setRenderTarget(renderTarget)
+  renderer.clearColor()
+  return true
+}
+
 export interface CloudsEffectOptions {
   blendFunction?: BlendFunction
   resolutionScale?: number
@@ -164,6 +177,7 @@ export class CloudsEffect extends Effect {
   readonly resolution: Resolution
 
   private frame = 0
+  private clearedShadowHistory = false
   private _shadowCascadeCount = 0
   private readonly _shadowMapSize = new Vector2()
   private _temporalUpscaling = false
@@ -389,6 +403,15 @@ export class CloudsEffect extends Effect {
 
     const shadowResolveRenderTarget = this.shadowResolveRenderTarget
     this.shadowPass.render(renderer, null, this.shadowRenderTarget)
+    if (!this.clearedShadowHistory) {
+      // WORKAROUND: WebGLArrayRenderTarget is empty until we render into it.
+      // We must clear the history buffer before use, as it contains NaN values.
+      // This will be executed twice.
+      this.clearedShadowHistory = tryClearRenderTarget(
+        renderer,
+        this.shadowHistoryPass.renderTarget
+      )
+    }
     this.shadowResolvePass.render(renderer, null, shadowResolveRenderTarget)
     this.shadowHistoryPass.render(renderer, shadowResolveRenderTarget, null)
     this.shadowFilterPass.render(

@@ -27,10 +27,6 @@ void cascade(const int index, out vec4 outputColor) {
   }
 
   vec4 history = texture(historyBuffer, vec3(prevUv, float(index)));
-  if (any(isnan(history))) {
-    outputColor = current;
-    return; // Rejection
-  }
   vec4 clippedHistory = varianceClipping(inputBuffer, ivec3(coord, index), current, history);
   outputColor = mix(clippedHistory, current, temporalAlpha);
 }
