@@ -27,8 +27,6 @@ interface CloudsResolveMaterialUniforms {
   inputBuffer: Uniform<Texture | null>
   depthVelocityBuffer: Uniform<Texture | null>
   historyBuffer: Uniform<Texture | null>
-  inverseProjectionMatrix: Uniform<Matrix4>
-  inverseViewMatrix: Uniform<Matrix4>
   reprojectionMatrix: Uniform<Matrix4>
   texelSize: Uniform<Vector2>
   temporalAlpha: Uniform<number>
@@ -55,20 +53,12 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         inputBuffer: new Uniform(inputBuffer),
         depthVelocityBuffer: new Uniform(depthVelocityBuffer),
         historyBuffer: new Uniform(historyBuffer),
-        inverseProjectionMatrix: new Uniform(new Matrix4()),
-        inverseViewMatrix: new Uniform(new Matrix4()),
         reprojectionMatrix: new Uniform(new Matrix4()),
         texelSize: new Uniform(new Vector2()),
         temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
       defines: {}
     })
-  }
-
-  copyCameraSettings(camera: Camera): void {
-    const uniforms = this.uniforms
-    uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
-    uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
   }
 
   setReprojectionMatrix(camera: Camera): void {

@@ -304,7 +304,6 @@ export class CloudsEffect extends Effect {
     this.camera = value
     this.shadowMaterial.copyCameraSettings(value)
     this.cloudsMaterial.copyCameraSettings(value)
-    this.cloudsResolveMaterial.copyCameraSettings(value)
   }
 
   override initialize(
@@ -390,7 +389,6 @@ export class CloudsEffect extends Effect {
 
     this.shadowMaterial.copyCameraSettings(this.camera)
     this.cloudsMaterial.copyCameraSettings(this.camera)
-    this.cloudsResolveMaterial.copyCameraSettings(this.camera)
     this.updateShadowMatrices()
 
     this.shadowPass.render(renderer, null, this.shadowRenderTarget)
@@ -438,7 +436,6 @@ export class CloudsEffect extends Effect {
 
     this.shadowMaterial.copyCameraSettings(this.camera)
     this.cloudsMaterial.copyCameraSettings(this.camera)
-    this.cloudsResolveMaterial.copyCameraSettings(this.camera)
     this.updateShadowMatrices()
 
     // Reset reprojection matrices.

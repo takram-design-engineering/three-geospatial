@@ -12,7 +12,6 @@ uniform vec2 texelSize;
 uniform float temporalAlpha;
 
 in vec2 vUv;
-in vec3 vRayDirection;
 
 layout(location = 0) out vec4 outputColor;
 
