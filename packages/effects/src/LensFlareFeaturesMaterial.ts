@@ -57,9 +57,7 @@ export class LensFlareFeaturesMaterial extends ShaderMaterial {
   }
 
   setSize(width: number, height: number): void {
-    const texelSize = this.uniforms.texelSize
-    texelSize.value.x = 1 / width
-    texelSize.value.y = 1 / height
+    this.uniforms.texelSize.value.set(1 / width, 1 / height)
   }
 
   get inputBuffer(): Texture | null {

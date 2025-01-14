@@ -42,7 +42,6 @@ import {
   raySphereIntersection
 } from '@takram/three-geospatial/shaders'
 
-import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
 import {
   createCloudLayerUniforms,
   createCloudParameterUniforms,
@@ -230,9 +229,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           USE_SHAPE_DETAIL: '1',
           MULTI_SCATTERING_OCTAVES: '8',
           USE_POWDER: '1',
-          USE_GROUND_IRRADIANCE: '1',
-          STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
-          STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`
+          USE_GROUND_IRRADIANCE: '1'
         }
       },
       atmosphere

@@ -44,14 +44,11 @@ layout(location = 3) out vec4 outputVelocity[CASCADE_COUNT];
 layout(location = 4) out vec4 outputVelocity[CASCADE_COUNT];
 #endif // CASCADE_COUNT
 
-const vec3 stbnScale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
-
 vec3 getSTBN() {
+  ivec3 size = textureSize(stbnTexture, 0);
+  vec3 scale = 1.0 / vec3(size);
   // x: scalar, yz: vec2
-  return texture(
-    stbnTexture,
-    vec3(gl_FragCoord.xy, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
-  ).xyz;
+  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).xyz;
 }
 
 float readDepth(const vec2 uv) {

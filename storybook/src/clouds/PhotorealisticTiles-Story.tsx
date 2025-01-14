@@ -51,7 +51,8 @@ import {
 } from '@takram/three-geospatial-effects/r3f'
 import {
   STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_SIZE,
+  STBN_TEXTURE_HEIGHT,
+  STBN_TEXTURE_WIDTH,
   type CloudsEffect
 } from '@takram/three-global-clouds'
 import { Clouds } from '@takram/three-global-clouds/r3f'
@@ -188,8 +189,8 @@ const Scene: FC<SceneProps> = ({
       wrapS: RepeatWrapping,
       wrapT: RepeatWrapping,
       wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_SIZE,
-      height: STBN_TEXTURE_SIZE,
+      width: STBN_TEXTURE_WIDTH,
+      height: STBN_TEXTURE_HEIGHT,
       depth: STBN_TEXTURE_DEPTH
     }),
     '/clouds/stbn.bin'

@@ -30,7 +30,6 @@ import {
   raySphereIntersection
 } from '@takram/three-geospatial/shaders'
 
-import { STBN_TEXTURE_DEPTH, STBN_TEXTURE_SIZE } from './constants'
 import {
   createCloudLayerUniforms,
   createCloudParameterUniforms,
@@ -159,9 +158,7 @@ export class ShadowMaterial extends RawShaderMaterial {
       } satisfies ShadowMaterialUniforms,
       defines: {
         DEPTH_PACKING: '0',
-        USE_SHAPE_DETAIL: '1',
-        STBN_TEXTURE_SIZE: `${STBN_TEXTURE_SIZE}`,
-        STBN_TEXTURE_DEPTH: `${STBN_TEXTURE_DEPTH}`
+        USE_SHAPE_DETAIL: '1'
       }
     })
 
