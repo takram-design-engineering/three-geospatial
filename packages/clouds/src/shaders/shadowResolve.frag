@@ -28,7 +28,7 @@ void cascade(const int index, out vec4 outputColor) {
     return; // Rejection
   }
 
-  vec4 history = textureCatmullRom(historyBuffer, vec3(prevUv, float(index)));
+  vec4 history = texture(historyBuffer, vec3(prevUv, float(index)));
   if (any(isnan(history))) {
     outputColor = current;
     return; // Rejection
