@@ -340,15 +340,11 @@ export class CloudsEffect extends Effect {
   setReprojectionMatrices(): void {
     const shadows = this.cascadedShadows
     const shadowUniforms = this.shadowMaterial.uniforms
-    const shadowResolveUniforms = this.shadowResolveMaterial.uniforms
     for (let i = 0; i < shadows.cascadeCount; ++i) {
       const cascade = shadows.cascades[i]
       shadowUniforms.reprojectionMatrices.value[i].copy(cascade.matrix)
-      shadowResolveUniforms.reprojectionMatrices.value[i].copy(cascade.matrix)
     }
-
     this.cloudsMaterial.setReprojectionMatrix(this.camera)
-    this.cloudsResolveMaterial.setReprojectionMatrix(this.camera)
   }
 
   override update(
@@ -363,10 +359,12 @@ export class CloudsEffect extends Effect {
     ++this.frame
     const shadowUniforms = this.shadowMaterial.uniforms
     const cloudsUniforms = this.cloudsMaterial.uniforms
+    const cloudsResolveUniforms = this.cloudsResolveMaterial.uniforms
     updateCloudLayerUniforms(shadowUniforms, this.cloudLayers)
     updateCloudLayerUniforms(cloudsUniforms, this.cloudLayers)
     shadowUniforms.frame.value = this.frame
     cloudsUniforms.frame.value = this.frame
+    cloudsResolveUniforms.frame.value = this.frame
 
     applyVelocity(
       this.localWeatherVelocity,
@@ -431,7 +429,6 @@ export class CloudsEffect extends Effect {
     this.cloudsRenderTarget.setSize(scaledWidth, scaledHeight)
     this.cloudsMaterial.setSize(scaledWidth, scaledHeight)
     this.cloudsResolveRenderTarget.setSize(scaledWidth, scaledHeight)
-    this.cloudsResolveMaterial.setSize(scaledWidth, scaledHeight)
     this.cloudsHistoryPass.setSize(scaledWidth, scaledHeight)
 
     this.shadowMaterial.copyCameraSettings(this.camera)
@@ -440,7 +437,6 @@ export class CloudsEffect extends Effect {
 
     // Reset reprojection matrices.
     this.cloudsMaterial.setReprojectionMatrix(this.camera)
-    this.cloudsResolveMaterial.setReprojectionMatrix(this.camera)
   }
 
   override setDepthTexture(
@@ -517,7 +513,6 @@ export class CloudsEffect extends Effect {
       const { width, height } = value
       this.cascadedShadows.mapSize.set(width, height)
       this.shadowMaterial.setSize(width, height)
-      this.shadowResolveMaterial.setSize(width, height)
       this.cloudsMaterial.setShadowSize(width, height)
 
       const depth = this.shadowCascadeCount
