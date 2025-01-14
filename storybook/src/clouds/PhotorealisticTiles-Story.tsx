@@ -27,7 +27,7 @@ import {
   useState,
   type FC
 } from 'react'
-import { NearestFilter, RedFormat, RepeatWrapping, RGBFormat } from 'three'
+import { NearestFilter, RedFormat, RepeatWrapping, RGBAFormat } from 'three'
 import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
@@ -199,7 +199,7 @@ const Scene: FC<SceneProps> = ({
 
   const stbnVec2Texture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
-      format: RGBFormat,
+      format: RGBAFormat,
       minFilter: NearestFilter,
       magFilter: NearestFilter,
       wrapS: RepeatWrapping,

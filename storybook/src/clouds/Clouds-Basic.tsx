@@ -9,6 +9,7 @@ import {
   Quaternion,
   RedFormat,
   RepeatWrapping,
+  RGBAFormat,
   RGBFormat,
   Vector3,
   type Camera
@@ -124,7 +125,7 @@ const Scene: FC = () => {
 
   const stbnVec2Texture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
-      format: RGBFormat,
+      format: RGBAFormat,
       minFilter: NearestFilter,
       magFilter: NearestFilter,
       wrapS: RepeatWrapping,

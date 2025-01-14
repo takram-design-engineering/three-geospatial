@@ -67,7 +67,7 @@ float stbnScalar() {
 
 vec2 stbnVec2() {
   return texture(
-    stbnScalarTexture,
+    stbnVec2Texture,
     vec3(gl_FragCoord.xy, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
   ).xy;
 }
@@ -218,6 +218,8 @@ vec4 marchToClouds(
   float stepSize = minStepSize;
   float rayDistance = stepSize * jitter;
   float cosTheta = dot(sunDirection, rayDirection);
+
+  // TODO: Use jitter only when the zenith angle is very large.
   vec2 jitterUv = shadowFilterRadius * shadowTexelSize * jitterVec2;
 
   for (int i = 0; i < maxIterations; ++i) {
@@ -455,6 +457,7 @@ void main() {
   }
 
   // Clamp the ray at the scene objects.
+  // TODO: Don't clamp at objects in low altitude and use depth test instead.
   float depth = readDepth(vUv);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);

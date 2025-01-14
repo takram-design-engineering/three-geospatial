@@ -218,7 +218,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
             Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
           ),
           shadowFar: new Uniform(0),
-          shadowFilterRadius: new Uniform(5)
+          shadowFilterRadius: new Uniform(3)
         } satisfies CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
