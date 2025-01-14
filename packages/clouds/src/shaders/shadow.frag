@@ -33,13 +33,13 @@ in mat4 vViewProjectionMatrix; // The main camera
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
 // Redundant notation for prettier.
 #if CASCADE_COUNT == 1
-layout(location = 1) out vec4 outputVelocity[CASCADE_COUNT];
+layout(location = 1) out vec2 outputVelocity[CASCADE_COUNT];
 #elif CASCADE_COUNT == 2
-layout(location = 2) out vec4 outputVelocity[CASCADE_COUNT];
+layout(location = 2) out vec2 outputVelocity[CASCADE_COUNT];
 #elif CASCADE_COUNT == 3
-layout(location = 3) out vec4 outputVelocity[CASCADE_COUNT];
+layout(location = 3) out vec2 outputVelocity[CASCADE_COUNT];
 #elif CASCADE_COUNT == 4
-layout(location = 4) out vec4 outputVelocity[CASCADE_COUNT];
+layout(location = 4) out vec2 outputVelocity[CASCADE_COUNT];
 #endif // CASCADE_COUNT
 
 vec3 getSTBN() {
@@ -192,7 +192,7 @@ void getRayNearFar(
   }
 }
 
-void cascade(const int index, const float mipLevel, out vec4 outputColor, out vec4 outputVelocity) {
+void cascade(const int index, const float mipLevel, out vec4 outputColor, out vec2 outputVelocity) {
   vec2 clip = vUv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrices[index] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
@@ -215,7 +215,7 @@ void cascade(const int index, const float mipLevel, out vec4 outputColor, out ve
   vec2 velocity = vUv - prevUv;
 
   outputColor = color;
-  outputVelocity = vec4(velocity, 0.0, 1.0);
+  outputVelocity = velocity;
 }
 
 // TODO: Calculate from the main camera frustum perhaps?

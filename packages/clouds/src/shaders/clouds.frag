@@ -53,7 +53,7 @@ in vec3 vViewDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
 
 layout(location = 0) out vec4 outputColor;
-layout(location = 1) out vec4 outputDepthVelocity;
+layout(location = 1) out vec3 outputDepthVelocity;
 
 vec3 getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
@@ -440,7 +440,7 @@ vec4 getCascadedShadowMap(vec2 uv) {
 void main() {
   #ifdef DEBUG_SHOW_SHADOW_MAP
   outputColor = getCascadedShadowMap(vUv);
-  outputDepthVelocity = vec4(0.0);
+  outputDepthVelocity = vec3(0.0);
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 
@@ -471,7 +471,7 @@ void main() {
 
   #ifdef DEBUG_SHOW_UV
   outputColor = vec4(vec3(checker(globeUv, localWeatherFrequency)), 1.0);
-  outputDepthVelocity = vec4(0.0);
+  outputDepthVelocity = vec3(0.0);
   return;
   #endif // DEBUG_SHOW_UV
 
@@ -501,5 +501,5 @@ void main() {
   vec2 velocity = vUv - prevUv;
 
   outputColor = color;
-  outputDepthVelocity = vec4(frontDepth, velocity, 1.0);
+  outputDepthVelocity = vec3(frontDepth, velocity);
 }
