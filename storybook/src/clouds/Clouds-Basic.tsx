@@ -138,17 +138,17 @@ const Scene: FC = () => {
 
   const {
     coverage,
-    halfResolution,
-    temporalUpscaling,
     animate,
+    temporalUpscaling,
+    halfResolution,
     skyIrradianceScale,
     useShapeDetail,
     usePowder
   } = useControls('clouds', {
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
-    halfResolution: false,
-    temporalUpscaling: true,
     animate: false,
+    temporalUpscaling: true,
+    halfResolution: false,
     skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
     useShapeDetail: true,
     usePowder: true
