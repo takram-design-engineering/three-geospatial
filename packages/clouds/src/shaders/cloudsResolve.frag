@@ -1,6 +1,7 @@
 precision highp float;
 precision highp sampler2DArray;
 
+#include "textureCatmullRom"
 #include "varianceClipping"
 
 uniform sampler2D inputBuffer;
@@ -58,7 +59,7 @@ void main() {
     return; // Rejection
   }
 
-  vec4 history = texture(historyBuffer, prevUv);
+  vec4 history = textureCatmullRom(historyBuffer, prevUv);
   vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history);
   outputColor = mix(clippedHistory, current, temporalAlpha);
 }

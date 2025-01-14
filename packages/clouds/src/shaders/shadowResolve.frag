@@ -3,6 +3,8 @@ precision highp sampler2DArray;
 
 #define VARIANCE_9_SAMPLES (1)
 #define VARIANCE_USE_SAMPLER_ARRAY (1)
+
+#include "textureCatmullRom"
 #include "varianceClipping"
 
 uniform sampler2DArray inputBuffer;
@@ -26,7 +28,7 @@ void cascade(const int index, out vec4 outputColor) {
     return; // Rejection
   }
 
-  vec4 history = texture(historyBuffer, vec3(prevUv, float(index)));
+  vec4 history = textureCatmullRom(historyBuffer, vec3(prevUv, float(index)));
   if (any(isnan(history))) {
     outputColor = current;
     return; // Rejection

@@ -13,6 +13,7 @@ import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/shadowResolve.frag?raw'
 import vertexShader from './shaders/shadowResolve.vert?raw'
+import textureCatmullRom from './shaders/textureCatmullRom.glsl?raw'
 import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface ShadowResolveMaterialParameters {
@@ -43,6 +44,7 @@ export class ShadowResolveMaterial extends RawShaderMaterial {
       glslVersion: GLSL3,
       vertexShader,
       fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
+        textureCatmullRom,
         varianceClipping
       }),
       uniforms: {
