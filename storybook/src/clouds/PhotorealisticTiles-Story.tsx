@@ -139,7 +139,7 @@ const Scene: FC<SceneProps> = ({
     'clouds',
     {
       enabled: true,
-      coverage: { value: 0.25, min: 0, max: 1, step: 0.01 },
+      coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
       animate: true,
       useShapeDetail: true,
       usePowder: true
