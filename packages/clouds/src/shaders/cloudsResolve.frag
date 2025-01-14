@@ -70,7 +70,8 @@ void main() {
     return; // Rejection
   }
 
-  // TODO
+  // Variance clipping with a large variance gamma seems to work fine for upsampling.
+  // This increases ghosting, of course, but it's hard to notice on clouds.
   vec4 history = texture(historyBuffer, prevUv);
   vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history, 5.0);
   outputColor = clippedHistory;
