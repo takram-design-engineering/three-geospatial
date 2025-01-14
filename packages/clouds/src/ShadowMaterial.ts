@@ -83,8 +83,6 @@ interface ShadowMaterialUniforms
   maxIterations: Uniform<number>
   minStepSize: Uniform<number>
   maxStepSize: Uniform<number>
-  minDensity: Uniform<number>
-  minTransmittance: Uniform<number>
 }
 
 export interface ShadowMaterial {
@@ -152,9 +150,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         // Raymarch to clouds
         maxIterations: new Uniform(50),
         minStepSize: new Uniform(100),
-        maxStepSize: new Uniform(1000),
-        minDensity: new Uniform(1e-5),
-        minTransmittance: new Uniform(1e-2)
+        maxStepSize: new Uniform(1000)
       } satisfies ShadowMaterialUniforms,
       defines: {
         DEPTH_PACKING: '0',
@@ -237,6 +233,7 @@ export class ShadowMaterial extends RawShaderMaterial {
     }
   }
 
+  // TODO: Remove this and make parametric uniform instead
   get useShapeDetail(): boolean {
     return this.defines.SHAPE_DETAIL != null
   }

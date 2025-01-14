@@ -118,8 +118,6 @@ interface CloudsMaterialUniforms
   minStepSize: Uniform<number>
   maxStepSize: Uniform<number>
   maxRayDistance: Uniform<number>
-  minDensity: Uniform<number>
-  minTransmittance: Uniform<number>
 
   // Beer shadow map
   shadowBuffer: Uniform<DataArrayTexture | null>
@@ -209,8 +207,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           minStepSize: new Uniform(50),
           maxStepSize: new Uniform(1000),
           maxRayDistance: new Uniform(1.5e5),
-          minDensity: new Uniform(1e-5),
-          minTransmittance: new Uniform(1e-2),
 
           // Beer shadow map
           shadowBuffer: new Uniform(shadowBuffer),
