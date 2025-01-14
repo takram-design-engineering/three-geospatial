@@ -16,21 +16,18 @@ const ivec2 varianceOffsets[4] = ivec2[4](ivec2(1, 0), ivec2(0, -1), ivec2(0, 1)
 #endif // VARIANCE_9_SAMPLES
 
 // Reference: https://github.com/playdeadgames/temporal
-// TODO: Can we adapt it to the optimized version?
 vec4 clipAABB(const vec4 current, const vec4 history, const vec4 minColor, const vec4 maxColor) {
-  vec4 r = history - current;
-  vec4 rMin = minColor - current;
-  vec4 rMax = maxColor - current;
   const float epsilon = 1e-7;
-  if (r.r > rMax.r + epsilon) r *= rMax.r / r.r;
-  if (r.g > rMax.g + epsilon) r *= rMax.g / r.g;
-  if (r.b > rMax.b + epsilon) r *= rMax.b / r.b;
-  if (r.a > rMax.a + epsilon) r *= rMax.a / r.a;
-  if (r.r < rMin.r - epsilon) r *= rMin.r / r.r;
-  if (r.g < rMin.g - epsilon) r *= rMin.g / r.g;
-  if (r.b < rMin.b - epsilon) r *= rMin.b / r.b;
-  if (r.a < rMin.a - epsilon) r *= rMin.a / r.a;
-  return current + r;
+  vec3 pClip = 0.5 * (maxColor.rgb + minColor.rgb);
+  vec3 eClip = 0.5 * (maxColor.rgb - minColor.rgb) + epsilon;
+  vec4 vClip = history - vec4(pClip, current.a);
+  vec3 vUnit = vClip.xyz / eClip;
+  vec3 aUnit = abs(vUnit);
+  float maUnit = max(aUnit.x, max(aUnit.y, aUnit.z));
+  if (maUnit > 1.0) {
+    return vec4(pClip, current.a) + vClip / maUnit;
+  }
+  return history;
 }
 
 #ifdef VARIANCE_USE_SAMPLER_ARRAY
