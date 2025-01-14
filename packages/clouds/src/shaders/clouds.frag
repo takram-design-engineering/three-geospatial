@@ -158,12 +158,13 @@ float phaseFunction(const float cosTheta, const float attenuation) {
 float marchOpticalDepth(
   const vec3 rayOrigin,
   const vec3 rayDirection,
-  const int iterations,
+  const int maxIterations,
   const float mipLevel
 ) {
-  if (mipLevel > 1.0) {
-    return 1.0;
+  if (mipLevel > 0.75) {
+    return 0.5; // Fudge factor to approximate the average optical depth.
   }
+  int iterations = int(remap(mipLevel, 0.0, 0.75, float(maxIterations), 1.0));
   float stepSize = 60.0 / float(iterations);
   float opticalDepth = 0.0;
   float stepScale = 1.0;
@@ -178,7 +179,7 @@ float marchOpticalDepth(
     prevStepScale = stepScale;
     stepScale *= 2.0;
   }
-  return mix(opticalDepth, 1.0, max(0.0, remap(mipLevel, 0.5, 1.0, 0.0, 1.0)));
+  return opticalDepth;
 }
 
 float multipleScattering(const float opticalDepth, const float cosTheta) {
