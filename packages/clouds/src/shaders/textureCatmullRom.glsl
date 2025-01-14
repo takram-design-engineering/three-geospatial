@@ -1,4 +1,7 @@
 // Taken from https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
+// TODO: Use 5-taps version: https://www.shadertoy.com/view/MtVGWz
+// Or even 4 taps (requires preprocessing in the input buffer):
+// https://www.shadertoy.com/view/4tyGDD
 
 /**
  * MIT License
