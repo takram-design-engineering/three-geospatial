@@ -4,7 +4,6 @@ This library is under active development and is in pre-release status.
 
 ### TODO
 
-- [ ] Temporal upsampling in the main render buffer
 - [ ] Crepuscular rays
 - [ ] Cloud layer parametrization refinements
 - [ ] Fix shadow occlusion
