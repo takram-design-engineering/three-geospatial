@@ -20,7 +20,7 @@ uniform mat4 inverseShadowMatrices[CASCADE_COUNT]; // Inverse view projection of
 uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 uniform float cameraNear;
 uniform float cameraFar;
-uniform sampler3D stbnScalarTexture;
+uniform sampler3D stbnTexture;
 
 // Raymarch to clouds
 uniform int maxIterations;
@@ -46,11 +46,12 @@ layout(location = 4) out vec4 outputVelocity[CASCADE_COUNT];
 
 const vec3 stbnScale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
 
-float stbnScalar() {
+vec3 getSTBN() {
+  // x: scalar, yz: vec2
   return texture(
-    stbnScalarTexture,
+    stbnTexture,
     vec3(gl_FragCoord.xy, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
-  ).x;
+  ).xyz;
 }
 
 float readDepth(const vec2 uv) {
@@ -208,8 +209,8 @@ void cascade(const int index, const float mipLevel, out vec4 outputColor, out ve
   getRayNearFar(sunPosition, rayDirection, rayNear, rayFar);
 
   vec3 rayOrigin = sunPosition - ellipsoidCenter + rayNear * rayDirection;
-  float jitter = stbnScalar();
-  vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter, mipLevel);
+  vec3 stbn = getSTBN();
+  vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.x, mipLevel);
 
   // Velocity for temporal resolution.
   vec3 frontPosition = rayOrigin + color.x * rayDirection;

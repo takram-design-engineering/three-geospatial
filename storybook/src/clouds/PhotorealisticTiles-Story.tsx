@@ -27,7 +27,7 @@ import {
   useState,
   type FC
 } from 'react'
-import { NearestFilter, RedFormat, RepeatWrapping, RGBAFormat } from 'three'
+import { NearestFilter, RepeatWrapping, RGBAFormat } from 'three'
 import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
@@ -180,22 +180,7 @@ const Scene: FC<SceneProps> = ({
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const stbnScalarTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RedFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_SIZE,
-      height: STBN_TEXTURE_SIZE,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    '/clouds/stbn_scalar.bin'
-  )
-
-  const stbnVec2Texture = useLoader(
+  const stbnTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
       format: RGBAFormat,
       minFilter: NearestFilter,
@@ -207,7 +192,7 @@ const Scene: FC<SceneProps> = ({
       height: STBN_TEXTURE_SIZE,
       depth: STBN_TEXTURE_DEPTH
     }),
-    '/clouds/stbn_vec2.bin'
+    '/clouds/stbn.bin'
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
@@ -262,8 +247,7 @@ const Scene: FC<SceneProps> = ({
               {enabled && (
                 <Clouds
                   ref={setClouds}
-                  stbnScalarTexture={stbnScalarTexture}
-                  stbnVec2Texture={stbnVec2Texture}
+                  stbnTexture={stbnTexture}
                   coverage={coverage}
                   localWeatherVelocity-x={animate ? 0.00001 : 0}
                 />

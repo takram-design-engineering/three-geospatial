@@ -21,8 +21,7 @@ uniform vec3 cameraPosition;
 uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
-uniform sampler3D stbnScalarTexture;
-uniform sampler3D stbnVec2Texture;
+uniform sampler3D stbnTexture;
 
 // Scattering parameters
 uniform vec3 albedo;
@@ -58,18 +57,12 @@ layout(location = 1) out vec4 outputDepthVelocity;
 
 const vec3 stbnScale = vec3(vec2(1.0 / float(STBN_TEXTURE_SIZE)), 1.0 / float(STBN_TEXTURE_DEPTH));
 
-float stbnScalar() {
+vec3 getSTBN() {
+  // x: scalar, yz: vec2
   return texture(
-    stbnScalarTexture,
+    stbnTexture,
     vec3(gl_FragCoord.xy, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
-  ).x;
-}
-
-vec2 stbnVec2() {
-  return texture(
-    stbnVec2Texture,
-    vec3(gl_FragCoord.xy, float(frame % STBN_TEXTURE_DEPTH)) * stbnScale
-  ).xy;
+  ).xyz;
 }
 
 float readDepth(const vec2 uv) {
@@ -485,15 +478,14 @@ void main() {
   return;
   #endif // DEBUG_SHOW_UV
 
-  float jitter = stbnScalar();
-  vec2 jitterVec2 = stbnVec2();
+  vec3 stbn = getSTBN();
   float frontDepth;
   vec4 color = marchToClouds(
     rayOrigin,
     rayDirection,
     rayFar - rayNear,
-    jitter,
-    jitterVec2,
+    stbn.x,
+    stbn.yz,
     pow(2.0, mipLevel),
     sunDirection,
     frontDepth

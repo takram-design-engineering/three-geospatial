@@ -1,34 +1,43 @@
 import { writeFile } from 'fs/promises'
 import sharp from 'sharp'
+import invariant from 'tiny-invariant'
 
 const WIDTH = 128
 const HEIGHT = 128
 const DEPTH = 64
 
 export default async function (): Promise<void> {
-  // TODO: Merge scalar and vec2 into one texture.
+  const bytesPerLayer = WIDTH * HEIGHT * 4
+  const result = new Uint8Array(bytesPerLayer * DEPTH)
 
-  const scalar = new Uint8Array(WIDTH * HEIGHT * DEPTH)
   for (let depth = 0; depth < DEPTH; ++depth) {
-    const image = sharp(
+    const scalarImage = sharp(
       `apps/data/data/STBN/stbn_scalar_2Dx1Dx1D_128x128x64x1_${depth}.png`
     )
-    const slice = new Uint8Array(
-      await image.extractChannel(0).raw({ depth: 'uchar' }).toBuffer()
-    )
-    scalar.set(slice, depth * WIDTH * HEIGHT)
-  }
-  await writeFile('packages/clouds/assets/stbn_scalar.bin', scalar)
-
-  const vec2 = new Uint8Array(WIDTH * HEIGHT * DEPTH * 4)
-  for (let depth = 0; depth < DEPTH; ++depth) {
-    const image = sharp(
+    const vec2Image = sharp(
       `apps/data/data/STBN/stbn_vec2_2Dx1D_128x128x64_${depth}.png`
     )
-    const slice = new Uint8Array(await image.raw({ depth: 'uchar' }).toBuffer())
-    vec2.set(slice, depth * WIDTH * HEIGHT * 4)
+    const [scalar, vec2x, vec2y] = await Promise.all([
+      scalarImage.extractChannel(0).raw({ depth: 'uchar' }).toBuffer(),
+      vec2Image.extractChannel(0).raw({ depth: 'uchar' }).toBuffer(),
+      vec2Image.extractChannel(1).raw({ depth: 'uchar' }).toBuffer()
+    ])
+    invariant(scalar.byteLength === vec2x.byteLength)
+    invariant(vec2x.byteLength === vec2y.byteLength)
+    invariant(scalar.byteLength * 4 === bytesPerLayer)
+
+    for (
+      let layerIndex = 0, resultIndex = bytesPerLayer * depth;
+      layerIndex < scalar.byteLength;
+      ++layerIndex, resultIndex += 4
+    ) {
+      result[resultIndex + 0] = scalar[layerIndex]
+      result[resultIndex + 1] = vec2x[layerIndex]
+      result[resultIndex + 2] = vec2y[layerIndex]
+      result[resultIndex + 3] = 255
+    }
   }
-  await writeFile('packages/clouds/assets/stbn_vec2.bin', vec2)
+  await writeFile('packages/clouds/assets/stbn.bin', result)
 
   console.log('Done')
 }

@@ -7,7 +7,6 @@ import { Fragment, useEffect, useRef, useState, type FC } from 'react'
 import {
   NearestFilter,
   Quaternion,
-  RedFormat,
   RepeatWrapping,
   RGBAFormat,
   Vector3,
@@ -106,22 +105,7 @@ const Scene: FC = () => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const stbnScalarTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RedFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_SIZE,
-      height: STBN_TEXTURE_SIZE,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    '/clouds/stbn_scalar.bin'
-  )
-
-  const stbnVec2Texture = useLoader(
+  const stbnTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
       format: RGBAFormat,
       minFilter: NearestFilter,
@@ -133,7 +117,7 @@ const Scene: FC = () => {
       height: STBN_TEXTURE_SIZE,
       depth: STBN_TEXTURE_DEPTH
     }),
-    '/clouds/stbn_vec2.bin'
+    '/clouds/stbn.bin'
   )
 
   const {
@@ -244,8 +228,7 @@ const Scene: FC = () => {
           <Fragment key={JSON.stringify({ debugShowUv, debugShowShadowMap })}>
             <Clouds
               ref={setClouds}
-              stbnScalarTexture={stbnScalarTexture}
-              stbnVec2Texture={stbnVec2Texture}
+              stbnTexture={stbnTexture}
               coverage={coverage}
               temporalUpscaling={temporalUpscaling}
               resolution-scale={halfResolution ? 0.5 : 1}

@@ -472,21 +472,13 @@ export class CloudsEffect extends Effect {
 
   // Textures
 
-  get stbnScalarTexture(): Data3DTexture | null {
-    return this.cloudsMaterial.uniforms.stbnScalarTexture.value
+  get stbnTexture(): Data3DTexture | null {
+    return this.cloudsMaterial.uniforms.stbnTexture.value
   }
 
-  set stbnScalarTexture(value: Data3DTexture | null) {
-    this.shadowMaterial.uniforms.stbnScalarTexture.value = value
-    this.cloudsMaterial.uniforms.stbnScalarTexture.value = value
-  }
-
-  get stbnVec2Texture(): Data3DTexture | null {
-    return this.cloudsMaterial.uniforms.stbnVec2Texture.value
-  }
-
-  set stbnVec2Texture(value: Data3DTexture | null) {
-    this.cloudsMaterial.uniforms.stbnVec2Texture.value = value
+  set stbnTexture(value: Data3DTexture | null) {
+    this.shadowMaterial.uniforms.stbnTexture.value = value
+    this.cloudsMaterial.uniforms.stbnTexture.value = value
   }
 
   // Cloud parameters

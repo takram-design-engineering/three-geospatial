@@ -100,8 +100,7 @@ interface CloudsMaterialUniforms
   cameraFar: Uniform<number>
   cameraHeight: Uniform<number>
   frame: Uniform<number>
-  stbnScalarTexture: Uniform<Data3DTexture | null>
-  stbnVec2Texture: Uniform<Data3DTexture | null>
+  stbnTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
   bottomRadius: Uniform<number> // TODO
@@ -184,8 +183,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraFar: new Uniform(0),
           cameraHeight: new Uniform(0),
           frame: new Uniform(0),
-          stbnScalarTexture: new Uniform(null),
-          stbnVec2Texture: new Uniform(null),
+          stbnTexture: new Uniform(null),
 
           ...createCloudParameterUniforms({
             localWeatherTexture,
