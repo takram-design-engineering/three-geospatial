@@ -10,7 +10,6 @@ import {
   RedFormat,
   RepeatWrapping,
   RGBAFormat,
-  RGBFormat,
   Vector3,
   type Camera
 } from 'three'
@@ -19,7 +18,6 @@ import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import {
   AerialPerspective,
   Atmosphere,
-  Sky,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
@@ -242,7 +240,6 @@ const Scene: FC = () => {
         correctAltitude={correctAltitude}
         photometric={photometric}
       >
-        <Sky />
         <EffectComposer multisampling={0} enableNormalPass>
           <Fragment key={JSON.stringify({ debugShowUv, debugShowShadowMap })}>
             <Clouds
@@ -254,7 +251,7 @@ const Scene: FC = () => {
               resolution-scale={halfResolution ? 0.5 : 1}
               localWeatherVelocity-x={animate ? 0.00005 : 0}
             />
-            <AerialPerspective sunIrradiance skyIrradiance />
+            <AerialPerspective sky sunIrradiance skyIrradiance />
             {!debugShowUv && !debugShowShadowMap && (
               <>
                 <LensFlare />

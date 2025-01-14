@@ -6,6 +6,7 @@ precision highp sampler2DArray;
 #include "core/raySphereIntersection"
 #include "parameters"
 #include "functions"
+#include "sky"
 
 uniform sampler2D normalBuffer;
 
@@ -141,6 +142,10 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec4 composite = vec4(0.0);
   #ifdef HAS_COMPOSITE
   composite = texture(compositeBuffer, uv);
+  if (composite.a == 1.0) {
+    outputColor = composite;
+    return;
+  }
   #endif // HAS_COMPOSITE
 
   float depth = readDepth(uv);

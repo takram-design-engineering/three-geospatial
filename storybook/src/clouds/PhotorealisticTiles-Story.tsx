@@ -34,8 +34,6 @@ import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
 import {
   AerialPerspective,
   Atmosphere,
-  Sky,
-  Stars,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
@@ -246,8 +244,6 @@ const Scene: FC<SceneProps> = ({
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
-      <Sky />
-      <Stars data='atmosphere/stars.bin' />
       <Globe />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
@@ -273,6 +269,7 @@ const Scene: FC<SceneProps> = ({
                 />
               )}
               <AerialPerspective
+                sky
                 sunIrradiance
                 skyIrradiance
                 correctGeometricError={correctGeometricError}
