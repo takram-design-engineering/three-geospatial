@@ -269,7 +269,6 @@ const Scene: FC<SceneProps> = ({
                   stbnScalarTexture={stbnScalarTexture}
                   stbnVec2Texture={stbnVec2Texture}
                   coverage={coverage}
-                  resolution-scale={0.5}
                   localWeatherVelocity-x={animate ? 0.00001 : 0}
                 />
               )}

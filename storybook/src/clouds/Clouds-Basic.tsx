@@ -140,13 +140,15 @@ const Scene: FC = () => {
   const {
     coverage,
     halfResolution,
+    temporalUpscaling,
     animate,
     skyIrradianceScale,
     useShapeDetail,
     usePowder
   } = useControls('clouds', {
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
-    halfResolution: true,
+    halfResolution: false,
+    temporalUpscaling: true,
     animate: false,
     skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
     useShapeDetail: true,
@@ -247,6 +249,7 @@ const Scene: FC = () => {
               stbnScalarTexture={stbnScalarTexture}
               stbnVec2Texture={stbnVec2Texture}
               coverage={coverage}
+              temporalUpscaling={temporalUpscaling}
               resolution-scale={halfResolution ? 0.5 : 1}
               localWeatherVelocity-x={animate ? 0.00005 : 0}
             />
