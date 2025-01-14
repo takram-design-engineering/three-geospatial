@@ -172,7 +172,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           sunDirection: new Uniform(sunDirectionRef ?? new Vector3()), // Overridden
 
           // Scattering parameters
-          albedo: new Uniform(new Color(0.98, 0.98, 0.98)),
+          albedo: new Uniform(new Color().setScalar(0.98)),
           powderScale: new Uniform(0.8),
           powderExponent: new Uniform(200),
           scatterAnisotropy1: new Uniform(0.8),

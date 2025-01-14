@@ -36,44 +36,36 @@ vec4 clipAABB(const vec4 current, const vec4 history, const vec4 minColor, const
   return vec4(current.rgb + r, current.a);
 }
 
+#ifdef VARIANCE_USE_SAMPLER_ARRAY
+#define VARIANCE_SAMPLER sampler2DArray
+#define VARIANCE_SAMPLER_COORD vec3
+#else
+#define VARIANCE_SAMPLER sampler2D
+#define VARIANCE_SAMPLER_COORD vec2
+#endif // VARIANCE_USE_SAMPLER_ARRAY
+
 // Variance clipping
 // Reference: https://developer.download.nvidia.com/gameworks/events/GDC2016/msalvi_temporal_supersampling.pdf
 vec4 varianceClipping(
-  const sampler2D inputBuffer,
-  const vec2 uv,
+  const VARIANCE_SAMPLER inputBuffer,
+  const VARIANCE_SAMPLER_COORD uv,
   const vec2 texelSize,
   const vec4 current,
   const vec4 history
 ) {
   vec4 m1 = current;
   vec4 m2 = current * current;
+  VARIANCE_SAMPLER_COORD neighborUv;
+  vec4 neighbor;
   for (int i = 0; i < VARIANCE_OFFSET_COUNT; ++i) {
-    vec4 texel = texture(inputBuffer, uv + varianceOffsets[i] * texelSize);
-    m1 += texel;
-    m2 += texel * texel;
-  }
-  const float N = float(VARIANCE_OFFSET_COUNT + 1);
-  const float gamma = 1.0;
-  vec4 mean = m1 / N;
-  vec4 sigma = sqrt(m2 / N - mean * mean);
-  vec4 minColor = mean - sigma * gamma;
-  vec4 maxColor = mean + sigma * gamma;
-  return clipAABB(clamp(mean, minColor, maxColor), history, minColor, maxColor);
-}
-
-vec4 varianceClipping(
-  const sampler2DArray inputBuffer,
-  const vec3 uvw,
-  const vec2 texelSize,
-  const vec4 current,
-  const vec4 history
-) {
-  vec4 m1 = current;
-  vec4 m2 = current * current;
-  for (int i = 0; i < VARIANCE_OFFSET_COUNT; ++i) {
-    vec4 texel = texture(inputBuffer, vec3(uvw.xy + varianceOffsets[i] * texelSize, uvw.z));
-    m1 += texel;
-    m2 += texel * texel;
+    #ifdef VARIANCE_USE_SAMPLER_ARRAY
+    neighborUv = vec3(uv.xy + varianceOffsets[i] * texelSize, uv.z);
+    #else
+    neighborUv = uv + varianceOffsets[i] * texelSize;
+    #endif // VARIANCE_USE_SAMPLER_ARRAY
+    neighbor = texture(inputBuffer, neighborUv);
+    m1 += neighbor;
+    m2 += neighbor * neighbor;
   }
   const float N = float(VARIANCE_OFFSET_COUNT + 1);
   const float gamma = 1.0;
