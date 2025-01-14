@@ -157,20 +157,22 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         name: 'CloudsMaterial',
         glslVersion: GLSL3,
         vertexShader,
-        fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
-          core: {
-            depth,
-            math,
-            generators,
-            raySphereIntersection
-          },
-          atmosphere: {
-            parameters: atmosphereParameters,
-            functions
-          },
-          parameters,
-          clouds
-        }),
+        fragmentShader: unrollLoops(
+          resolveIncludes(fragmentShader, {
+            core: {
+              depth,
+              math,
+              generators,
+              raySphereIntersection
+            },
+            atmosphere: {
+              parameters: atmosphereParameters,
+              functions
+            },
+            parameters,
+            clouds
+          })
+        ),
         uniforms: {
           depthBuffer: new Uniform(null),
           viewMatrix: new Uniform(new Matrix4()),

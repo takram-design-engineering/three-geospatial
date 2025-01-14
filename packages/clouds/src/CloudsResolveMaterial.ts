@@ -37,9 +37,11 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
       name: 'CloudsResolveMaterial',
       glslVersion: GLSL3,
       vertexShader,
-      fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
-        varianceClipping
-      }),
+      fragmentShader: unrollLoops(
+        resolveIncludes(fragmentShader, {
+          varianceClipping
+        })
+      ),
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         depthVelocityBuffer: new Uniform(depthVelocityBuffer),

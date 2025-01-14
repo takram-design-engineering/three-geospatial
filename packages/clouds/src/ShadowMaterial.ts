@@ -109,16 +109,18 @@ export class ShadowMaterial extends RawShaderMaterial {
       name: 'ShadowMaterial',
       glslVersion: GLSL3,
       vertexShader,
-      fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
-        core: {
-          depth,
-          math,
-          raySphereIntersection
-        },
-        parameters,
-        structuredSampling,
-        clouds
-      }),
+      fragmentShader: unrollLoops(
+        resolveIncludes(fragmentShader, {
+          core: {
+            depth,
+            math,
+            raySphereIntersection
+          },
+          parameters,
+          structuredSampling,
+          clouds
+        })
+      ),
       uniforms: {
         depthBuffer: new Uniform(null),
         projectionMatrix: new Uniform(new Matrix4()),
