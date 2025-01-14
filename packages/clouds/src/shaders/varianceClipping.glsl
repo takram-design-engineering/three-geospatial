@@ -1,23 +1,18 @@
 #ifdef VARIANCE_9_SAMPLES
 #define VARIANCE_OFFSET_COUNT (8)
-const vec2 varianceOffsets[8] = vec2[8](
-  vec2(-1.0, -1.0),
-  vec2(-1.0, 1.0),
-  vec2(1.0, -1.0),
-  vec2(1.0, 1.0),
-  vec2(1.0, 0.0),
-  vec2(0.0, -1.0),
-  vec2(0.0, 1.0),
-  vec2(-1.0, 0.0)
+const ivec2 varianceOffsets[8] = ivec2[8](
+  ivec2(-1, -1),
+  ivec2(-1, 1),
+  ivec2(1, -1),
+  ivec2(1, 1),
+  ivec2(1, 0),
+  ivec2(0, -1),
+  ivec2(0, 1),
+  ivec2(-1, 0)
 );
 #else
 #define VARIANCE_OFFSET_COUNT (4)
-const vec2 varianceOffsets[4] = vec2[4](
-  vec2(1.0, 0.0),
-  vec2(0.0, -1.0),
-  vec2(0.0, 1.0),
-  vec2(-1.0, 0.0)
-);
+const ivec2 varianceOffsets[4] = ivec2[4](ivec2(1, 0), ivec2(0, -1), ivec2(0, 1), ivec2(-1, 0));
 #endif // VARIANCE_9_SAMPLES
 
 // Reference: https://github.com/playdeadgames/temporal
@@ -38,32 +33,31 @@ vec4 clipAABB(const vec4 current, const vec4 history, const vec4 minColor, const
 
 #ifdef VARIANCE_USE_SAMPLER_ARRAY
 #define VARIANCE_SAMPLER sampler2DArray
-#define VARIANCE_SAMPLER_COORD vec3
+#define VARIANCE_SAMPLER_COORD ivec3
 #else
 #define VARIANCE_SAMPLER sampler2D
-#define VARIANCE_SAMPLER_COORD vec2
+#define VARIANCE_SAMPLER_COORD ivec2
 #endif // VARIANCE_USE_SAMPLER_ARRAY
 
 // Variance clipping
 // Reference: https://developer.download.nvidia.com/gameworks/events/GDC2016/msalvi_temporal_supersampling.pdf
 vec4 varianceClipping(
   const VARIANCE_SAMPLER inputBuffer,
-  const VARIANCE_SAMPLER_COORD uv,
-  const vec2 texelSize,
+  const VARIANCE_SAMPLER_COORD coord,
   const vec4 current,
   const vec4 history
 ) {
   vec4 m1 = current;
   vec4 m2 = current * current;
-  VARIANCE_SAMPLER_COORD neighborUv;
+  VARIANCE_SAMPLER_COORD neighborCoord;
   vec4 neighbor;
   for (int i = 0; i < VARIANCE_OFFSET_COUNT; ++i) {
     #ifdef VARIANCE_USE_SAMPLER_ARRAY
-    neighborUv = vec3(uv.xy + varianceOffsets[i] * texelSize, uv.z);
+    neighborCoord = ivec3(coord.xy + varianceOffsets[i], coord.z);
     #else
-    neighborUv = uv + varianceOffsets[i] * texelSize;
+    neighborCoord = coord + varianceOffsets[i];
     #endif // VARIANCE_USE_SAMPLER_ARRAY
-    neighbor = texture(inputBuffer, neighborUv);
+    neighbor = texelFetch(inputBuffer, neighborCoord, 0);
     m1 += neighbor;
     m2 += neighbor * neighbor;
   }
