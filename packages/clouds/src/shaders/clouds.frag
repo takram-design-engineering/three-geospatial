@@ -161,6 +161,9 @@ float marchOpticalDepth(
   const int iterations,
   const float mipLevel
 ) {
+  if (mipLevel > 1.0) {
+    return 1.0;
+  }
   float stepSize = 60.0 / float(iterations);
   float opticalDepth = 0.0;
   float stepScale = 1.0;
@@ -175,7 +178,7 @@ float marchOpticalDepth(
     prevStepScale = stepScale;
     stepScale *= 2.0;
   }
-  return opticalDepth;
+  return mix(opticalDepth, 1.0, max(0.0, remap(mipLevel, 0.5, 1.0, 0.0, 1.0)));
 }
 
 float multipleScattering(const float opticalDepth, const float cosTheta) {
@@ -258,10 +261,7 @@ vec4 marchToClouds(
       // Obtain the optical depth at the position from BSM.
       float shadowOpticalDepth = sampleShadowOpticalDepth(position, distanceToTop, jitterUv);
 
-      float sunOpticalDepth = 0.0;
-      if (mipLevel < 0.5) {
-        sunOpticalDepth = marchOpticalDepth(position, sunDirection, 3, mipLevel);
-      }
+      float sunOpticalDepth = marchOpticalDepth(position, sunDirection, 3, mipLevel);
       float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
       float scattering = multipleScattering(opticalDepth, cosTheta);
       vec3 scatteredIrradiance = (sunIrradiance + skyIrradiance) * scattering;
