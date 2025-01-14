@@ -211,7 +211,7 @@ void cascade(const int index, const float mipLevel, out vec4 outputColor, out ve
   float jitter = stbnScalar(vUv);
   vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, jitter, mipLevel);
 
-  // Velocity vector for temporal resolution.
+  // Velocity for temporal resolution.
   vec3 frontPosition = rayOrigin + color.x * rayDirection;
   vec4 prevClip = reprojectionMatrices[index] * vec4(ellipsoidCenter + frontPosition, 1.0);
   prevClip /= prevClip.w;

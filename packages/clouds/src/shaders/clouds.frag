@@ -422,15 +422,18 @@ vec4 getCascadedShadowMap(vec2 uv) {
   #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
 
+  const float frontDepthScale = 1e-5;
+  const float meanExtinctionScale = 10.0;
+  const float maxOpticalDepthScale = 0.01;
   vec3 color;
   #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
-  color = vec3(shadow.r * 1e-5);
+  color = vec3(shadow.r * frontDepthScale);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
-  color = vec3(shadow.g * 10.0);
+  color = vec3(shadow.g * meanExtinctionScale);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
-  color = vec3(shadow.b * 0.01);
+  color = vec3(shadow.b * maxOpticalDepthScale);
   #else
-  color = shadow.rgb * vec3(1e-5, 10.0, 0.01);
+  color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return vec4(color, 1.0);
 }
@@ -498,7 +501,7 @@ void main() {
   vec3 frontPosition = viewPosition + frontDepth * rayDirection;
   applyAerialPerspective(viewPosition, frontPosition, color);
 
-  // Velocity vector for temporal resolution.
+  // Velocity for temporal resolution.
   vec4 prevClip = reprojectionMatrix * vec4(ellipsoidCenter + frontPosition, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
