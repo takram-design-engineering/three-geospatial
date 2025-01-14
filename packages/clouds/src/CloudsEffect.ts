@@ -10,7 +10,6 @@ import {
   Camera,
   HalfFloatType,
   LinearFilter,
-  NearestFilter,
   Vector2,
   Vector3,
   WebGLArrayRenderTarget,
@@ -196,8 +195,6 @@ export class CloudsEffect extends Effect {
     const cloudsRenderTarget = createRenderTarget('Clouds.Current')
     const cloudsDepthVelocityBuffer = cloudsRenderTarget.texture.clone()
     cloudsDepthVelocityBuffer.isRenderTargetTexture = true
-    cloudsDepthVelocityBuffer.minFilter = NearestFilter
-    cloudsDepthVelocityBuffer.magFilter = NearestFilter
     cloudsRenderTarget.textures.push(cloudsDepthVelocityBuffer)
     const cloudsResolveRenderTarget = createRenderTarget('Clouds.Resolve')
 
@@ -241,7 +238,9 @@ export class CloudsEffect extends Effect {
 
     const shadowPass = new ShaderArrayPass(shadowMaterial)
     const shadowResolvePass = new ShaderArrayPass(shadowResolveMaterial)
-    const shadowFilterPass = new ShadowFilterPass({ kernelSize: 16 })
+    const shadowFilterPass = new ShadowFilterPass({
+      kernelSize: 16 // TODO: Parametrize
+    })
 
     const cloudsPass = new ShaderPass(cloudsMaterial)
     const cloudsResolvePass = new ShaderPass(cloudsResolveMaterial)
@@ -388,34 +387,20 @@ export class CloudsEffect extends Effect {
     this.cloudsMaterial.copyCameraSettings(this.camera)
     this.updateShadowMatrices()
 
+    const shadowResolveRenderTarget = this.shadowResolveRenderTarget
     this.shadowPass.render(renderer, null, this.shadowRenderTarget)
-    this.shadowResolvePass.render(
-      renderer,
-      null,
-      this.shadowResolveRenderTarget
-    )
-    this.shadowHistoryPass.render(
-      renderer,
-      this.shadowResolveRenderTarget,
-      null
-    )
+    this.shadowResolvePass.render(renderer, null, shadowResolveRenderTarget)
+    this.shadowHistoryPass.render(renderer, shadowResolveRenderTarget, null)
     this.shadowFilterPass.render(
       renderer,
-      this.shadowResolveRenderTarget,
-      this.shadowResolveRenderTarget
+      shadowResolveRenderTarget,
+      shadowResolveRenderTarget
     )
 
+    const cloudsResolveRenderTarget = this.cloudsResolveRenderTarget
     this.cloudsPass.render(renderer, null, this.cloudsRenderTarget)
-    this.cloudsResolvePass.render(
-      renderer,
-      null,
-      this.cloudsResolveRenderTarget
-    )
-    this.cloudsHistoryPass.render(
-      renderer,
-      this.cloudsResolveRenderTarget,
-      null
-    )
+    this.cloudsResolvePass.render(renderer, null, cloudsResolveRenderTarget)
+    this.cloudsHistoryPass.render(renderer, cloudsResolveRenderTarget, null)
 
     this.copyReprojectionMatrices()
   }

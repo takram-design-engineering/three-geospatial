@@ -48,26 +48,6 @@ const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 const frustumScratch = /*#__PURE__*/ new FrustumCorners()
 const boxScratch = /*#__PURE__*/ new Box3()
 
-function extractOrthographicTuple(
-  matrix: Matrix4
-): [left: number, right: number, top: number, bottom: number] {
-  const elements = matrix.elements
-  const m00 = elements[0] // 2 / (right - left)
-  const m03 = elements[12] // -(right + left) / (right - left)
-  const m11 = elements[5] // 2 / (top - bottom)
-  const m13 = elements[13] // -(top + bottom) / (top - bottom)
-  const RmL = 2 / m00 // (right - left)
-  const RpL = RmL * -m03 // (right + left)
-  const TmB = 2 / m11 // (top - bottom)
-  const TpB = TmB * -m13 // (t + bottom)
-  return [
-    (RpL - RmL) / 2, // left
-    (RmL + RpL) / 2, // right
-    (TmB + TpB) / 2, // top
-    (TpB - TmB) / 2 // bottom
-  ]
-}
-
 export interface CascadedShadowsOptions {
   cascadeCount?: number
   mapSize?: Vector2
@@ -184,25 +164,7 @@ export class CascadedShadows {
     return diagonalLength * 0.5
   }
 
-  private updateProjectionMatrix(camera: PerspectiveCamera): void {
-    const frusta = this.frusta
-    const shadows = this.cascades
-    invariant(frusta.length === shadows.length)
-
-    for (let i = 0; i < frusta.length; ++i) {
-      const radius = this.getFrustumRadius(camera, frusta[i])
-      shadows[i].projectionMatrix.makeOrthographic(
-        -radius, // left
-        radius, // right
-        radius, // top
-        -radius, // bottom
-        -this.margin, // near
-        radius * 2 + this.margin // far
-      )
-    }
-  }
-
-  private updateInverseViewMatrix(
+  private updateMatrices(
     camera: PerspectiveCamera,
     sunDirection: Vector3,
     ellipsoid = Ellipsoid.WGS84
@@ -233,6 +195,21 @@ export class CascadedShadows {
       const frustum = frusta[i]
       const cascade = cascades[i]
 
+      // Update projection matrix.
+      const radius = this.getFrustumRadius(camera, frusta[i])
+      const left = -radius
+      const right = radius
+      const top = radius
+      const bottom = -radius
+      cascade.projectionMatrix.makeOrthographic(
+        left,
+        right,
+        top,
+        bottom,
+        -this.margin, // near
+        radius * 2 + this.margin // far
+      )
+
       const { near, far } = frustumScratch
         .copy(frustum)
         .applyMatrix4(cameraToLightMatrix)
@@ -245,14 +222,12 @@ export class CascadedShadows {
       center.z = bbox.max.z + margin
 
       // Round light-space translation to even texel increments.
-      const [left, right, top, bottom] = extractOrthographicTuple(
-        cascade.projectionMatrix
-      )
       const texelWidth = (right - left) / mapSize.width
       const texelHeight = (top - bottom) / mapSize.height
       center.x = Math.round(center.x / texelWidth) * texelWidth
       center.y = Math.round(center.y / texelHeight) * texelHeight
 
+      // Update inverse view matrix.
       center.applyMatrix4(lightOrientationMatrix)
       const position = vectorScratch2
         .copy(sunDirection)
@@ -270,8 +245,7 @@ export class CascadedShadows {
     ellipsoid?: Ellipsoid
   ): void {
     this.updateIntervals(camera)
-    this.updateProjectionMatrix(camera)
-    this.updateInverseViewMatrix(camera, sunDirection, ellipsoid)
+    this.updateMatrices(camera, sunDirection, ellipsoid)
 
     const cascades = this.cascades
     for (let i = 0; i < this.cascadeCount; ++i) {

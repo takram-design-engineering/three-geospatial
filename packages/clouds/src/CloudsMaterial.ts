@@ -277,10 +277,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     if (this.temporalUpscaling) {
       const frame = uniforms.frame.value % 16
       const resolution = uniforms.resolution.value
-      inverseProjectionMatrix.copy(camera.projectionMatrix)
       const offset = bayerOffsets[frame]
       const dx = ((offset.x - 0.5) / resolution.x) * 4 * 2
       const dy = ((offset.y - 0.5) / resolution.y) * 4 * 2
+      inverseProjectionMatrix.copy(camera.projectionMatrix)
       inverseProjectionMatrix.elements[8] += dx
       inverseProjectionMatrix.elements[9] += dy
       inverseProjectionMatrix.invert()
