@@ -6,7 +6,6 @@ import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 
 import fragmentShader from './shaders/cloudsResolve.frag?raw'
 import vertexShader from './shaders/cloudsResolve.vert?raw'
-import textureCatmullRom from './shaders/textureCatmullRom.glsl?raw'
 import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface CloudsResolveMaterialParameters {
@@ -39,7 +38,6 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
       glslVersion: GLSL3,
       vertexShader,
       fragmentShader: resolveIncludes(unrollLoops(fragmentShader), {
-        textureCatmullRom,
         varianceClipping
       }),
       uniforms: {

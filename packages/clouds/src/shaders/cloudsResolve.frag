@@ -1,7 +1,6 @@
 precision highp float;
 precision highp sampler2DArray;
 
-#include "textureCatmullRom"
 #include "varianceClipping"
 
 uniform sampler2D inputBuffer;
