@@ -39,7 +39,7 @@ export class ShadowResolveMaterial extends RawShaderMaterial {
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         historyBuffer: new Uniform(historyBuffer),
-        temporalAlpha: new Uniform(0.05)
+        temporalAlpha: new Uniform(0.1)
       } satisfies ShadowResolveMaterialUniforms,
       defines: {}
     })
