@@ -189,13 +189,18 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
   vec3 abc = vec3(1.0);
   const vec3 attenuation = vec3(0.5, 0.5, 0.8); // Should satisfy a <= b
   float scattering = 0.0;
-  for (int octave = 0; octave < MULTI_SCATTERING_OCTAVES; ++octave) {
-    float beerLambert = exp(-opticalDepth * abc.y);
+  float beerLambert;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 12; ++i) {
+    #if UNROLLED_LOOP_INDEX < MULTI_SCATTERING_OCTAVES
+    beerLambert = exp(-opticalDepth * abc.y);
     // A similar approximation is described in the Frostbite's paper, where
     // phase angle is attenuated.
     scattering += abc.x * beerLambert * phaseFunction(cosTheta, abc.z);
     abc *= attenuation;
+    #endif
   }
+  #pragma unroll_loop_end
   return scattering;
 }
 
