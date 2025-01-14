@@ -1,6 +1,5 @@
 precision highp float;
 precision highp sampler3D;
-precision highp sampler2DArray;
 
 #include <common>
 #include <packing>
@@ -13,7 +12,6 @@ precision highp sampler2DArray;
 #include "clouds"
 
 uniform sampler2D depthBuffer;
-uniform sampler2DArray historyBuffer;
 uniform mat4 viewMatrix; // The main camera
 uniform mat4 inverseProjectionMatrix; // The main camera
 uniform mat4 inverseShadowMatrices[CASCADE_COUNT]; // Inverse view projection of the sun
