@@ -47,8 +47,8 @@ vec4 varianceClipping(
   const vec4 current,
   const vec4 history
 ) {
-  vec4 m1 = current;
-  vec4 m2 = current * current;
+  vec4 moment1 = current;
+  vec4 moment2 = current * current;
   VARIANCE_SAMPLER_COORD neighborCoord;
   vec4 neighbor;
   for (int i = 0; i < VARIANCE_OFFSET_COUNT; ++i) {
@@ -58,14 +58,14 @@ vec4 varianceClipping(
     neighborCoord = coord + varianceOffsets[i];
     #endif // VARIANCE_USE_SAMPLER_ARRAY
     neighbor = texelFetch(inputBuffer, neighborCoord, 0);
-    m1 += neighbor;
-    m2 += neighbor * neighbor;
+    moment1 += neighbor;
+    moment2 += neighbor * neighbor;
   }
   const float N = float(VARIANCE_OFFSET_COUNT + 1);
   const float gamma = 1.0;
-  vec4 mean = m1 / N;
-  vec4 sigma = sqrt(m2 / N - mean * mean);
-  vec4 minColor = mean - sigma * gamma;
-  vec4 maxColor = mean + sigma * gamma;
+  vec4 mean = moment1 / N;
+  vec4 variance = sqrt(moment2 / N - mean * mean);
+  vec4 minColor = mean - variance * gamma;
+  vec4 maxColor = mean + variance * gamma;
   return clipAABB(clamp(mean, minColor, maxColor), history, minColor, maxColor);
 }
