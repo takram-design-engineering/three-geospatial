@@ -127,6 +127,7 @@ const Scene: FC = () => {
     temporalUpscaling,
     halfResolution,
     skyIrradianceScale,
+    shadowMapSize,
     useShapeDetail,
     usePowder
   } = useControls('clouds', {
@@ -134,6 +135,7 @@ const Scene: FC = () => {
     animate: false,
     temporalUpscaling: true,
     halfResolution: false,
+    shadowMapSize: { value: 512, options: [256, 512, 1024] },
     skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
     useShapeDetail: true,
     usePowder: true
@@ -233,7 +235,8 @@ const Scene: FC = () => {
               coverage={coverage}
               temporalUpscaling={temporalUpscaling}
               resolution-scale={halfResolution ? 0.5 : 1}
-              localWeatherVelocity-x={animate ? 0.00005 : 0}
+              localWeatherVelocity={animate ? [0.00005, 0] : [0, 0]}
+              shadow-mapSize={[shadowMapSize, shadowMapSize]}
             />
             <AerialPerspective sky sunIrradiance skyIrradiance />
             {!debugShowUv && !debugShowShadowMap && (

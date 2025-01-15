@@ -48,7 +48,7 @@ const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 const frustumScratch = /*#__PURE__*/ new FrustumCorners()
 const boxScratch = /*#__PURE__*/ new Box3()
 
-export interface CascadedShadowsOptions {
+export interface CascadedShadowMapOptions {
   cascadeCount?: number
   mapSize?: Vector2
   far?: number
@@ -58,7 +58,7 @@ export interface CascadedShadowsOptions {
   fade?: boolean
 }
 
-export const cascadedShadowsOptionsDefaults = {
+export const cascadedShadowMapDefaults = {
   cascadeCount: 4,
   mapSize: new Vector2(1024, 1024),
   far: 1e4,
@@ -66,7 +66,7 @@ export const cascadedShadowsOptionsDefaults = {
   lambda: 0.5,
   margin: 0,
   fade: true
-} satisfies Partial<CascadedShadowsOptions>
+} satisfies Partial<CascadedShadowMapOptions>
 
 export interface Cascade {
   readonly interval: Vector2
@@ -78,7 +78,7 @@ export interface Cascade {
   readonly inverseViewMatrix: Matrix4
 }
 
-export class CascadedShadows {
+export class CascadedShadowMap {
   readonly cascades: Cascade[] = []
 
   mapSize: Vector2
@@ -91,9 +91,9 @@ export class CascadedShadows {
   private readonly frusta: FrustumCorners[] = []
   private readonly splits: number[] = []
 
-  constructor(options: CascadedShadowsOptions) {
+  constructor(options: CascadedShadowMapOptions) {
     const { cascadeCount, mapSize, far, mode, lambda, margin, fade } = {
-      ...cascadedShadowsOptionsDefaults,
+      ...cascadedShadowMapDefaults,
       ...options
     }
     this.cascadeCount = cascadeCount
@@ -127,15 +127,15 @@ export class CascadedShadows {
   }
 
   private updateIntervals(camera: PerspectiveCamera): void {
-    const cascadeCount = this.cascadeCount
+    const count = this.cascadeCount
     const splits = this.splits
     const far = Math.min(this.far, camera.far)
-    splitFrustum(this.mode, cascadeCount, camera.near, far, this.lambda, splits)
+    splitFrustum(this.mode, count, camera.near, far, this.lambda, splits)
     frustumScratch.setFromCamera(camera, far)
     frustumScratch.split(splits, this.frusta)
 
     const cascades = this.cascades
-    for (let i = 0; i < cascadeCount; ++i) {
+    for (let i = 0; i < count; ++i) {
       cascades[i].interval.set(splits[i - 1] ?? 0, splits[i] ?? 0)
     }
   }
