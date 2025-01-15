@@ -1,15 +1,21 @@
 import { ShaderPass } from 'postprocessing'
 import {
-  type Material,
   type Uniform,
   type WebGLArrayRenderTarget,
   type WebGLRenderer,
   type WebGLRenderTarget
 } from 'three'
 
-import { assertType } from '@takram/three-geospatial'
-
 import { setArrayRenderTargetLayers } from './helpers/setArrayRenderTargetLayers'
+
+declare module 'postprocessing' {
+  interface ShaderPass {
+    input: string
+    fullscreenMaterial: CopyMaterial & {
+      uniforms?: Record<string, Uniform>
+    }
+  }
+}
 
 export class ShaderArrayPass extends ShaderPass {
   override render(
@@ -19,13 +25,6 @@ export class ShaderArrayPass extends ShaderPass {
     deltaTime?: number,
     stencilTest?: boolean
   ): void {
-    assertType<{
-      fullscreenMaterial: Material & {
-        uniforms?: Record<string, Uniform>
-      }
-      input: string
-    }>(this)
-
     const uniforms = this.fullscreenMaterial.uniforms
     if (inputBuffer !== null && uniforms?.[this.input] != null) {
       uniforms[this.input].value = inputBuffer.texture
