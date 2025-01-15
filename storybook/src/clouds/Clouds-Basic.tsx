@@ -121,59 +121,72 @@ const Scene: FC = () => {
     '/clouds/stbn.bin'
   )
 
-  const {
-    coverage,
-    animate,
-    temporalUpscaling,
-    halfResolution,
-    shadowMapSize,
-    useShapeDetail,
-    usePowder
-  } = useControls('clouds', {
+  const { coverage, animate, useShapeDetail } = useControls('clouds', {
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
     animate: false,
-    temporalUpscaling: true,
-    halfResolution: false,
-    shadowMapSize: { value: 512, options: [256, 512, 1024] },
-    useShapeDetail: true,
-    usePowder: true
+    useShapeDetail: true
   })
 
-  const scatteringParams = useControls('scattering', {
-    albedo: { value: 0.98, min: 0, max: 1 },
-    powderScale: { value: 0.8, min: 0.5, max: 1 },
-    powderExponent: { value: 200, min: 1, max: 1000 },
-    scatterAnisotropy1: { value: 0.8, min: 0, max: 1 },
-    scatterAnisotropy2: { value: -0.3, min: -1, max: 0 },
-    scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
-    skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
-    groundIrradianceScale: { value: 0.7, min: 0, max: 1 }
-  })
+  const { temporalUpscaling, halfResolution, shadowMapSize } = useControls(
+    'rendering',
+    {
+      temporalUpscaling: true,
+      halfResolution: false,
+      shadowMapSize: { value: 512, options: [256, 512, 1024] }
+    }
+  )
 
-  const cloudsRaymarchParams = useControls('clouds raymarch', {
-    maxIterations: { value: 500, min: 100, max: 1000 },
-    minStepSize: { value: 50, min: 50, max: 200 },
-    maxStepSize: { value: 1000, min: 200, max: 2000 },
-    maxRayDistance: { value: 1.5e5, min: 1e4, max: 2e5 }
-  })
+  const scatteringParams = useControls(
+    'scattering',
+    {
+      albedo: { value: 0.98, min: 0, max: 1 },
+      powderScale: { value: 0.8, min: 0.5, max: 1 },
+      powderExponent: { value: 200, min: 1, max: 1000 },
+      scatterAnisotropy1: { value: 0.8, min: 0, max: 1 },
+      scatterAnisotropy2: { value: -0.3, min: -1, max: 0 },
+      scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
+      skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
+      groundIrradianceScale: { value: 0.7, min: 0, max: 1 }
+    },
+    { collapsed: true }
+  )
 
-  const shadowRaymarchParams = useControls('shadow raymarch', {
-    maxIterations: { value: 50, min: 10, max: 100 },
-    minStepSize: { value: 100, min: 50, max: 200 },
-    maxStepSize: { value: 1000, min: 200, max: 2000 }
-  })
+  const cloudsRaymarchParams = useControls(
+    'clouds raymarch',
+    {
+      maxIterations: { value: 500, min: 100, max: 1000 },
+      minStepSize: { value: 50, min: 50, max: 200 },
+      maxStepSize: { value: 1000, min: 200, max: 2000 },
+      maxRayDistance: { value: 1.5e5, min: 1e4, max: 2e5 }
+    },
+    { collapsed: true }
+  )
+
+  const shadowRaymarchParams = useControls(
+    'shadow raymarch',
+    {
+      maxIterations: { value: 50, min: 10, max: 100 },
+      minStepSize: { value: 100, min: 50, max: 200 },
+      maxStepSize: { value: 1000, min: 200, max: 2000 }
+    },
+    { collapsed: true }
+  )
 
   const {
     showShadowMap: debugShowShadowMap,
     showCascades: debugShowCascades,
     showBox: debugShowBox,
     showUv: debugShowUv
-  } = useControls('debug', {
-    showShadowMap: false,
-    showCascades: false,
-    showBox: false,
-    showUv: false
-  })
+  } = useControls(
+    'debug',
+    {
+      showShadowMap: false,
+      showCascades: false,
+      showBox: false,
+      showUv: false
+    },
+    { collapsed: true }
+  )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
 
@@ -202,8 +215,7 @@ const Scene: FC = () => {
       return
     }
     clouds.cloudsMaterial.useShapeDetail = useShapeDetail
-    clouds.cloudsMaterial.usePowder = usePowder
-  }, [clouds, useShapeDetail, usePowder])
+  }, [clouds, useShapeDetail])
 
   useEffect(() => {
     if (clouds == null) {

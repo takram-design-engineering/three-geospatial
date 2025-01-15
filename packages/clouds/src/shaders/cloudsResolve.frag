@@ -52,17 +52,18 @@ const mat4 bayerIndices = mat4(
 );
 
 void main() {
-  ivec2 coord = ivec2(gl_FragCoord.xy) / 4;
-  vec4 current = texelFetch(inputBuffer, coord, 0);
+  ivec2 coord = ivec2(gl_FragCoord.xy);
+  ivec2 subCoord = coord / 4;
+  vec4 current = texelFetch(inputBuffer, subCoord, 0);
 
-  int bayerValue = int(bayerIndices[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4]);
+  int bayerValue = int(bayerIndices[coord.x % 4][coord.y % 4]);
   if (bayerValue == frame % 16) {
     // Use the texel just rendered without any accumulation, for now.
     outputColor = current;
     return;
   }
 
-  vec4 depthVelocity = getClosestFragment(coord);
+  vec4 depthVelocity = getClosestFragment(subCoord);
   vec2 velocity = depthVelocity.gb;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
@@ -73,7 +74,7 @@ void main() {
   // Variance clipping with a large variance gamma seems to work fine for upsampling.
   // This increases ghosting, of course, but it's hard to notice on clouds.
   vec4 history = texture(historyBuffer, prevUv);
-  vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history, 5.0);
+  vec4 clippedHistory = varianceClipping(inputBuffer, subCoord, current, history, 5.0);
   outputColor = clippedHistory;
 }
 
