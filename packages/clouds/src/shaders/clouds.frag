@@ -29,6 +29,7 @@ uniform float scatterAnisotropy1;
 uniform float scatterAnisotropy2;
 uniform float scatterAnisotropyMix;
 uniform float skyIrradianceScale;
+uniform float groundIrradianceScale;
 uniform float powderScale;
 uniform float powderExponent;
 
@@ -172,13 +173,13 @@ float marchOpticalDepth(
   return opticalDepth;
 }
 
-float multipleScattering(const float opticalDepth, const float cosTheta) {
+vec3 multipleScattering(const float opticalDepth, const float cosTheta) {
   // Multiple scattering approximation
   // See: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
   // Attenuation (a), contribution (b) and phase attenuation (c).
-  vec3 abc = vec3(1.0);
+  vec3 abc = vec3(albedo);
   const vec3 attenuation = vec3(0.5, 0.5, 0.8); // Should satisfy a <= b
-  float scattering = 0.0;
+  vec3 scattering = vec3(0.0);
   float beerLambert;
   #pragma unroll_loop_start
   for (int i = 0; i < 12; ++i) {
@@ -261,20 +262,23 @@ vec4 marchToClouds(
 
       float sunOpticalDepth = marchOpticalDepth(position, sunDirection, 3, mipLevel);
       float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
-      float scattering = multipleScattering(opticalDepth, cosTheta);
+      vec3 scattering = multipleScattering(opticalDepth, cosTheta);
       vec3 scatteredIrradiance = (sunIrradiance + skyIrradiance) * scattering;
-      vec3 radiance = (scatteredIrradiance + skyIrradiance * skyIrradianceScale) * density;
+      vec3 radiance = scatteredIrradiance + albedo * skyIrradiance * skyIrradianceScale;
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (mipLevel < 0.5) {
         float groundOpticalDepth = marchOpticalDepth(position, -normalize(position), 2, mipLevel);
-        vec3 groundIrradiance = radiance * exp(-groundOpticalDepth - (height - minHeight) * 1e-3);
+        float heightScale = max(0.0, 1.0 - weather.heightFraction.x * 2.0);
+        vec3 groundIrradiance = radiance * exp(-groundOpticalDepth) * heightScale;
         // Ground irradiance decreases as coverage increases.
         groundIrradiance *= 1.0 - coverage;
-        radiance += groundIrradiance;
+        radiance += albedo * groundIrradiance * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
+
+      radiance *= density;
 
       #ifdef POWDER
       radiance *= 1.0 - powderScale * exp(-density * powderExponent);
