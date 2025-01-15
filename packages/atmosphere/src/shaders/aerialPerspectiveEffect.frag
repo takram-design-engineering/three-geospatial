@@ -133,7 +133,7 @@ float sampleOpticalDepth(vec3 worldPosition) {
     return 0.0;
   }
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
-  return texture(shadowBuffer, vec3(uv, float(index))).a;
+  return texture(shadowBuffer, vec3(uv, float(index))).b;
 }
 
 #endif // HAS_SHADOW
