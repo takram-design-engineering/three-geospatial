@@ -52,7 +52,8 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
           mapSize: effect.shadow.mapSize,
           intervals: effect.shadowIntervals,
           matrices: effect.shadowMatrices,
-          far: effect.shadow.far
+          far: effect.shadow.far,
+          topHeight: effect.shadowTopHeight
         }
       })
       return () => {

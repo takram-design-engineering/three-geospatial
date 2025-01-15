@@ -170,18 +170,6 @@ export class AerialPerspectiveEffect extends Effect {
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
         uniforms: new Map<string, Uniform>([
-          ['u_solar_irradiance', new Uniform(atmosphere.solarIrradiance)],
-          ['u_sun_angular_radius', new Uniform(atmosphere.sunAngularRadius)],
-          ['u_bottom_radius', new Uniform(atmosphere.bottomRadius * METER_TO_UNIT_LENGTH)],
-          ['u_top_radius', new Uniform(atmosphere.topRadius * METER_TO_UNIT_LENGTH)],
-          ['u_rayleigh_scattering', new Uniform(atmosphere.rayleighScattering)],
-          ['u_mie_scattering', new Uniform(atmosphere.mieScattering)],
-          ['u_mie_phase_function_g', new Uniform(atmosphere.miePhaseFunctionG)],
-          ['u_mu_s_min', new Uniform(0)],
-          ['u_irradiance_texture', new Uniform(irradianceTexture)],
-          ['u_scattering_texture', new Uniform(scatteringTexture)],
-          ['u_single_mie_scattering_texture', new Uniform(scatteringTexture)],
-          ['u_transmittance_texture', new Uniform(transmittanceTexture)],
           ['normalBuffer', new Uniform(normalBuffer)],
           ['projectionMatrix', new Uniform(new Matrix4())],
           ['viewMatrix', new Uniform(new Matrix4())],
@@ -196,12 +184,29 @@ export class AerialPerspectiveEffect extends Effect {
           ['moonDirection', new Uniform(moonDirection?.clone() ?? new Vector3())],
           ['moonAngularRadius', new Uniform(moonAngularRadius)],
           ['lunarRadianceScale', new Uniform(lunarRadianceScale)],
+
+          // Composition and shadow
           ['compositeBuffer', new Uniform(null)],
           ['shadowBuffer', new Uniform(null)],
           ['shadowMapSize', new Uniform(new Vector2())],
           ['shadowIntervals', new Uniform([])],
           ['shadowMatrices', new Uniform([])],
-          ['shadowFar', new Uniform(0)]
+          ['shadowFar', new Uniform(0)],
+          ['shadowTopHeight', new Uniform(0)],
+
+          // Uniforms for atmosphere functions
+          ['u_solar_irradiance', new Uniform(atmosphere.solarIrradiance)],
+          ['u_sun_angular_radius', new Uniform(atmosphere.sunAngularRadius)],
+          ['u_bottom_radius', new Uniform(atmosphere.bottomRadius * METER_TO_UNIT_LENGTH)],
+          ['u_top_radius', new Uniform(atmosphere.topRadius * METER_TO_UNIT_LENGTH)],
+          ['u_rayleigh_scattering', new Uniform(atmosphere.rayleighScattering)],
+          ['u_mie_scattering', new Uniform(atmosphere.mieScattering)],
+          ['u_mie_phase_function_g', new Uniform(atmosphere.miePhaseFunctionG)],
+          ['u_mu_s_min', new Uniform(0)],
+          ['u_irradiance_texture', new Uniform(irradianceTexture)],
+          ['u_scattering_texture', new Uniform(scatteringTexture)],
+          ['u_single_mie_scattering_texture', new Uniform(scatteringTexture)],
+          ['u_transmittance_texture', new Uniform(transmittanceTexture)],
         ]),
         // prettier-ignore
         defines: new Map<string, string>([
@@ -565,6 +570,7 @@ export class AerialPerspectiveEffect extends Effect {
         this.uniforms.get('shadowIntervals')!.value = value.shadow.intervals
         this.uniforms.get('shadowMatrices')!.value = value.shadow.matrices
         this.uniforms.get('shadowFar')!.value = value.shadow.far
+        this.uniforms.get('shadowTopHeight')!.value = value.shadow.topHeight
       }
     } else {
       this.defines.delete('HAS_COMPOSITE')
@@ -576,6 +582,7 @@ export class AerialPerspectiveEffect extends Effect {
       this.uniforms.get('shadowIntervals')!.value = []
       this.uniforms.get('shadowMatrices')!.value = []
       this.uniforms.get('shadowFar')!.value = 0
+      this.uniforms.get('shadowTopHeight')!.value = 0
     }
     this.setChanged()
   }

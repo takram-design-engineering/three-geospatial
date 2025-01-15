@@ -11,6 +11,7 @@ export interface AtmosphereCompositeShadow {
   intervals: Vector2[]
   matrices: Matrix4[]
   far: number
+  topHeight: number
 }
 
 export interface AtmosphereComposite {
