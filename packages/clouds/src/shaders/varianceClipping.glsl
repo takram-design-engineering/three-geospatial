@@ -49,17 +49,11 @@ vec4 varianceClipping(
 ) {
   vec4 moment1 = current;
   vec4 moment2 = current * current;
-  VARIANCE_SAMPLER_COORD neighborCoord;
   vec4 neighbor;
   #pragma unroll_loop_start
   for (int i = 0; i < 8; ++i) {
     #if UNROLLED_LOOP_INDEX < VARIANCE_OFFSET_COUNT
-    #ifdef VARIANCE_SAMPLER_ARRAY
-    neighborCoord = ivec3(coord.xy + varianceOffsets[i], coord.z);
-    #else // VARIANCE_SAMPLER_ARRAY
-    neighborCoord = coord + varianceOffsets[i];
-    #endif // VARIANCE_SAMPLER_ARRAY
-    neighbor = texelFetch(inputBuffer, neighborCoord, 0);
+    neighbor = texelFetchOffset(inputBuffer, coord, 0, varianceOffsets[i]);
     moment1 += neighbor;
     moment2 += neighbor * neighbor;
     #endif // UNROLLED_LOOP_INDEX < VARIANCE_OFFSET_COUNT

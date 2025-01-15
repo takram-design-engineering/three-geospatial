@@ -28,12 +28,10 @@ const ivec2 neighborOffsets[9] = ivec2[9](
 
 vec4 getClosestFragment(const ivec2 coord) {
   vec4 result = vec4(1e7, 0.0, 0.0, 0.0);
-  ivec2 neighborCoord;
   vec4 neighbor;
   #pragma unroll_loop_start
   for (int i = 0; i < 9; ++i) {
-    neighborCoord = coord + neighborOffsets[i];
-    neighbor = texelFetch(depthVelocityBuffer, neighborCoord, 0);
+    neighbor = texelFetchOffset(depthVelocityBuffer, coord, 0, neighborOffsets[i]);
     if (neighbor.r < result.r) {
       result = neighbor;
     }
