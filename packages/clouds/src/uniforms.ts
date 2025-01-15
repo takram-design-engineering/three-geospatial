@@ -7,10 +7,10 @@ export interface CloudParameterUniforms {
   localWeatherOffset: Uniform<Vector2>
   coverage: Uniform<number>
   shapeTexture: Uniform<Texture | null>
-  shapeFrequency: Uniform<number>
+  shapeFrequency: Uniform<Vector3>
   shapeOffset: Uniform<Vector3>
   shapeDetailTexture: Uniform<Texture | null>
-  shapeDetailFrequency: Uniform<number>
+  shapeDetailFrequency: Uniform<Vector3>
   shapeDetailOffset: Uniform<Vector3>
 
   // Primary raymarch
@@ -33,10 +33,10 @@ export function createCloudParameterUniforms({
     localWeatherOffset: new Uniform(new Vector2()),
     coverage: new Uniform(0.3),
     shapeTexture: new Uniform(shapeTexture),
-    shapeFrequency: new Uniform(0.0003),
+    shapeFrequency: new Uniform(new Vector3().setScalar(0.0003)),
     shapeOffset: new Uniform(new Vector3()),
     shapeDetailTexture: new Uniform(shapeDetailTexture),
-    shapeDetailFrequency: new Uniform(0.006),
+    shapeDetailFrequency: new Uniform(new Vector3().setScalar(0.006)),
     shapeDetailOffset: new Uniform(new Vector3()),
     minDensity: new Uniform(1e-5),
     minTransmittance: new Uniform(1e-2)
