@@ -6,7 +6,6 @@ This library is under active development and is in pre-release status.
 
 - [ ] Crepuscular rays
 - [ ] Cloud layer parametrization refinements
-- [ ] Fix shadow occlusion
 - [ ] Finalize API
 
 ## References
