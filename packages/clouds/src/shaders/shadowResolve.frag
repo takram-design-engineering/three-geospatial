@@ -16,10 +16,10 @@ in vec2 vUv;
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
 
 void cascade(const int index, out vec4 outputColor) {
-  ivec2 coord = ivec2(gl_FragCoord.xy);
-  vec4 current = texelFetch(inputBuffer, ivec3(coord, index), 0);
-  vec4 depthVelocity = texelFetch(inputBuffer, ivec3(coord, index + CASCADE_COUNT), 0);
-  vec2 velocity = depthVelocity.rg;
+  ivec3 coord = ivec3(gl_FragCoord.xy, index);
+  vec4 current = texelFetch(inputBuffer, coord, 0);
+  vec4 depthVelocity = texelFetch(inputBuffer, ivec3(coord.xy, index + CASCADE_COUNT), 0);
+  vec2 velocity = depthVelocity.gb;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = current;
@@ -27,7 +27,7 @@ void cascade(const int index, out vec4 outputColor) {
   }
 
   vec4 history = texture(historyBuffer, vec3(prevUv, float(index)));
-  vec4 clippedHistory = varianceClipping(inputBuffer, ivec3(coord, index), current, history);
+  vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history);
   outputColor = mix(clippedHistory, current, temporalAlpha);
 }
 

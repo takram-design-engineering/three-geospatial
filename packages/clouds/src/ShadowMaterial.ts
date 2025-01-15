@@ -49,7 +49,7 @@ interface ShadowMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
   [key: string]: Uniform<unknown>
-  inverseShadowMatrices: Uniform<Matrix4[]> // Inverse view projection of the sun
+  inverseShadowMatrices: Uniform<Matrix4[]>
   reprojectionMatrices: Uniform<Matrix4[]>
   resolution: Uniform<Vector2>
   frame: Uniform<number>

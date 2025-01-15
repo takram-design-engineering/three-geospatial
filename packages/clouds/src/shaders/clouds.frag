@@ -422,7 +422,7 @@ vec4 getCascadedShadowMap(vec2 uv) {
   }
 
   #ifndef DEBUG_SHOW_SHADOW_MAP_TYPE
-  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
+  #define DEBUG_SHOW_SHADOW_MAP_TYPE (2)
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
 
   const float frontDepthScale = 1e-5;

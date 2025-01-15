@@ -9,7 +9,7 @@ precision highp sampler3D;
 #include "structuredSampling"
 #include "clouds"
 
-uniform mat4 inverseShadowMatrices[CASCADE_COUNT]; // Inverse view projection of the sun
+uniform mat4 inverseShadowMatrices[CASCADE_COUNT];
 uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 uniform sampler3D stbnTexture;
 
@@ -25,13 +25,13 @@ in vec2 vUv;
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
 // Redundant notation for prettier.
 #if CASCADE_COUNT == 1
-layout(location = 1) out vec2 outputVelocity[CASCADE_COUNT];
+layout(location = 1) out vec3 outputDepthVelocity[CASCADE_COUNT];
 #elif CASCADE_COUNT == 2
-layout(location = 2) out vec2 outputVelocity[CASCADE_COUNT];
+layout(location = 2) out vec3 outputDepthVelocity[CASCADE_COUNT];
 #elif CASCADE_COUNT == 3
-layout(location = 3) out vec2 outputVelocity[CASCADE_COUNT];
+layout(location = 3) out vec3 outputDepthVelocity[CASCADE_COUNT];
 #elif CASCADE_COUNT == 4
-layout(location = 4) out vec2 outputVelocity[CASCADE_COUNT];
+layout(location = 4) out vec3 outputDepthVelocity[CASCADE_COUNT];
 #endif // CASCADE_COUNT
 
 vec3 getSTBN() {
@@ -48,7 +48,10 @@ vec4 marchToClouds(
   const float jitter,
   const float mipLevel
 ) {
-  // Setup structured volume sampling.
+  // Setup structured volume sampling (SVS).
+  // While SVS introduces spatial aliasing, it is indeed temporally stable,
+  // which is important for lower-resolution shadow maps where a flickering
+  // single pixel can be highly noticeable.
   vec3 normal = getStructureNormal(rayDirection, jitter);
   float rayDistance;
   float stepSize;
@@ -132,7 +135,12 @@ void getRayNearFar(
   }
 }
 
-void cascade(const int index, const float mipLevel, out vec4 outputColor, out vec2 outputVelocity) {
+void cascade(
+  const int index,
+  const float mipLevel,
+  out vec4 outputColor,
+  out vec3 outputDepthVelocity
+) {
   vec2 clip = vUv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrices[index] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
@@ -155,7 +163,7 @@ void cascade(const int index, const float mipLevel, out vec4 outputColor, out ve
   vec2 velocity = vUv - prevUv;
 
   outputColor = color;
-  outputVelocity = velocity;
+  outputDepthVelocity = vec3(color.x, velocity);
 }
 
 // TODO: Calculate from the main camera frustum perhaps?
@@ -165,7 +173,7 @@ void main() {
   #pragma unroll_loop_start
   for (int i = 0; i < 4; ++i) {
     #if UNROLLED_LOOP_INDEX < CASCADE_COUNT
-    cascade(UNROLLED_LOOP_INDEX, mipLevels[i], outputColor[i], outputVelocity[i]);
+    cascade(UNROLLED_LOOP_INDEX, mipLevels[i], outputColor[i], outputDepthVelocity[i]);
     #endif // UNROLLED_LOOP_INDEX < CASCADE_COUNT
   }
   #pragma unroll_loop_end
