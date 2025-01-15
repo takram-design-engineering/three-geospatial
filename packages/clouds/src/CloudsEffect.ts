@@ -398,8 +398,8 @@ export class CloudsEffect extends Effect {
     this.shadowPass.render(renderer, null, this.shadowRenderTarget)
     if (!this.clearedShadowHistory) {
       // WORKAROUND: WebGLArrayRenderTarget is empty until we render into it.
-      // We must clear the history buffer before use, as it contains NaN values.
-      // This will be executed twice.
+      // WebGLRenderer.initRenderTarget() before clearing or using it did't work
+      // either.
       this.clearedShadowHistory = tryClearRenderTarget(
         renderer,
         this.shadowHistoryFilterRenderTarget
@@ -416,6 +416,8 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.render(renderer, null, this.cloudsRenderTarget)
     this.cloudsResolvePass.render(renderer, null, cloudsResolveRenderTarget)
     this.cloudsHistoryPass.render(renderer, cloudsResolveRenderTarget, null)
+    // TODO: There were attempts to use WebGLRenderer.copyTextureToTexture()
+    // instead of using CopyPass, but no success yet.
 
     this.copyReprojectionMatrices()
   }
