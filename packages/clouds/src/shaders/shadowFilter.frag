@@ -4,7 +4,8 @@ uniform mediump sampler2DArray inputBuffer;
 uniform lowp sampler2DArray inputBuffer;
 #endif
 
-uniform vec2 kernel[STEPS];
+uniform vec2 kernel[1];
+uniform int inputChannel;
 
 layout(location = 0) out vec4 outputColor[LAYER_COUNT];
 
@@ -15,15 +16,13 @@ void mainLayer(const float layer, out vec4 outputColor) {
   vec4 color = texture(inputBuffer, vec3(vUv, layer));
   vec4 result = color * kernel[0].y;
 
-  for (int i = 1; i < STEPS; ++i) {
-    vec2 offset = kernel[i].x * vOffset;
-    vec4 c0 = texture(inputBuffer, vec3(vUv + offset, layer));
-    vec4 c1 = texture(inputBuffer, vec3(vUv - offset, layer));
-    result += (c0 + c1) * kernel[i].y;
-  }
+  vec2 offset = kernel[0].x * vOffset;
+  vec4 c0 = texture(inputBuffer, vec3(vUv + offset, layer));
+  vec4 c1 = texture(inputBuffer, vec3(vUv - offset, layer));
+  result += (c0 + c1) * kernel[0].y;
 
-  // Store the filtered max optical depth to alpha.
-  outputColor = vec4(color.rgb, result.b);
+  // Store the filtered input channel to alpha.
+  outputColor = vec4(color.rgb, result[inputChannel]);
 }
 
 void main() {

@@ -35,7 +35,7 @@ import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsResolveMaterial } from './CloudsResolveMaterial'
 import { LocalWeather } from './LocalWeather'
 import { ShaderArrayPass } from './ShaderArrayPass'
-import { ShadowFilterPass } from './ShadowFilterPass'
+import { ShadowHistoryFilterPass } from './ShadowHistoryFilterPass'
 import { ShadowMaterial } from './ShadowMaterial'
 import { ShadowResolveMaterial } from './ShadowResolveMaterial'
 import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
@@ -78,19 +78,6 @@ function applyVelocity(
   for (let i = 0; i < results.length; ++i) {
     results[i].add(delta)
   }
-}
-
-function tryClearRenderTarget(
-  renderer: WebGLRenderer,
-  renderTarget: WebGLRenderTarget
-): boolean {
-  const property = renderer.properties.get(renderTarget.texture) as any
-  if (property?.__webglTexture == null) {
-    return false
-  }
-  renderer.setRenderTarget(renderTarget)
-  renderer.clearColor()
-  return true
 }
 
 export interface CloudsEffectOptions {
@@ -159,8 +146,8 @@ export class CloudsEffect extends Effect {
   readonly shadowResolveRenderTarget: WebGLArrayRenderTarget
   readonly shadowResolveMaterial: ShadowResolveMaterial
   readonly shadowResolvePass: ShaderArrayPass
-  readonly shadowHistoryFilterRenderTarget: WebGLArrayRenderTarget
-  readonly shadowHistoryFilterPass: ShadowFilterPass
+  readonly shadowHistoryRenderTarget: WebGLArrayRenderTarget
+  readonly shadowHistoryFilterPass: ShadowHistoryFilterPass
 
   readonly cloudsRenderTarget: WebGLRenderTarget
   readonly cloudsMaterial: CloudsMaterial
@@ -173,7 +160,6 @@ export class CloudsEffect extends Effect {
   readonly resolution: Resolution
 
   private frame = 0
-  private clearedShadowHistory = false
   private _shadowCascadeCount = 0
   private readonly _shadowMapSize = new Vector2()
   private _temporalUpscaling = false
@@ -208,13 +194,14 @@ export class CloudsEffect extends Effect {
     cloudsRenderTarget.textures.push(cloudsDepthVelocityBuffer)
     const cloudsResolveRenderTarget = createRenderTarget('Clouds.Resolve')
 
-    // This instance is shared between clouds and shadow materials.
+    // This instance is shared by both cloud and shadow materials.
     const sunDirection = new Vector3()
 
     const cascadedShadows = new CascadedShadows({
       lambda: 0.6,
       far: 1e5 // TODO: Parametrize
     })
+
     const shadowMaterial = new ShadowMaterial(
       {
         sunDirectionRef: sunDirection,
@@ -224,10 +211,17 @@ export class CloudsEffect extends Effect {
       },
       atmosphere
     )
+    const shadowPass = new ShaderArrayPass(shadowMaterial)
     const shadowResolveMaterial = new ShadowResolveMaterial({
       inputBuffer: shadowRenderTarget.texture,
       historyBuffer: shadowHistoryRenderTarget.texture
     })
+    const shadowResolvePass = new ShaderArrayPass(shadowResolveMaterial)
+    const shadowHistoryFilterPass = new ShadowHistoryFilterPass({
+      kernelSize: 16, // TODO: Parametrize
+      historyRenderTarget: shadowHistoryRenderTarget
+    })
+
     const cloudsMaterial = new CloudsMaterial(
       {
         sunDirectionRef: sunDirection,
@@ -238,20 +232,13 @@ export class CloudsEffect extends Effect {
       },
       atmosphere
     )
+    const cloudsPass = new ShaderPass(cloudsMaterial)
     const cloudsHistoryPass = new CopyPass()
     const cloudsResolveMaterial = new CloudsResolveMaterial({
       inputBuffer: cloudsRenderTarget.texture,
       depthVelocityBuffer: cloudsDepthVelocityBuffer,
       historyBuffer: cloudsHistoryPass.texture
     })
-
-    const shadowPass = new ShaderArrayPass(shadowMaterial)
-    const shadowResolvePass = new ShaderArrayPass(shadowResolveMaterial)
-    const shadowHistoryFilterPass = new ShadowFilterPass({
-      kernelSize: 16 // TODO: Parametrize
-    })
-
-    const cloudsPass = new ShaderPass(cloudsMaterial)
     const cloudsResolvePass = new ShaderPass(cloudsResolveMaterial)
 
     super('CloudsEffect', fragmentShader, {
@@ -270,7 +257,7 @@ export class CloudsEffect extends Effect {
     this.shadowResolveRenderTarget = shadowResolveRenderTarget
     this.shadowResolveMaterial = shadowResolveMaterial
     this.shadowResolvePass = shadowResolvePass
-    this.shadowHistoryFilterRenderTarget = shadowHistoryRenderTarget
+    this.shadowHistoryRenderTarget = shadowHistoryRenderTarget
     this.shadowHistoryFilterPass = shadowHistoryFilterPass
 
     this.cloudsRenderTarget = cloudsRenderTarget
@@ -319,7 +306,6 @@ export class CloudsEffect extends Effect {
   ): void {
     this.shadowPass.initialize(renderer, alpha, frameBufferType)
     this.shadowResolvePass.initialize(renderer, alpha, frameBufferType)
-    this.shadowHistoryFilterPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsResolvePass.initialize(renderer, alpha, frameBufferType)
     this.cloudsHistoryPass.initialize(renderer, alpha, frameBufferType)
@@ -396,28 +382,19 @@ export class CloudsEffect extends Effect {
 
     const shadowResolveRenderTarget = this.shadowResolveRenderTarget
     this.shadowPass.render(renderer, null, this.shadowRenderTarget)
-    if (!this.clearedShadowHistory) {
-      // WORKAROUND: WebGLArrayRenderTarget is empty until we render into it.
-      // WebGLRenderer.initRenderTarget() before clearing or using it did't work
-      // either.
-      this.clearedShadowHistory = tryClearRenderTarget(
-        renderer,
-        this.shadowHistoryFilterRenderTarget
-      )
-    }
     this.shadowResolvePass.render(renderer, null, shadowResolveRenderTarget)
     this.shadowHistoryFilterPass.render(
       renderer,
       shadowResolveRenderTarget,
-      this.shadowHistoryFilterRenderTarget
+      shadowResolveRenderTarget
     )
 
     const cloudsResolveRenderTarget = this.cloudsResolveRenderTarget
     this.cloudsPass.render(renderer, null, this.cloudsRenderTarget)
     this.cloudsResolvePass.render(renderer, null, cloudsResolveRenderTarget)
     this.cloudsHistoryPass.render(renderer, cloudsResolveRenderTarget, null)
-    // TODO: There were attempts to use WebGLRenderer.copyTextureToTexture()
-    // instead of using CopyPass, but no success yet.
+    // TODO: Attempts have been made to use WebGLRenderer.copyTextureToTexture()
+    // instead of CopyPass, but none have been successful so far.
 
     this.copyReprojectionMatrices()
   }
@@ -504,8 +481,7 @@ export class CloudsEffect extends Effect {
       const { width, height } = this.shadowMapSize
       this.shadowRenderTarget.setSize(width, height, value * 2) // For velocity
       this.shadowResolveRenderTarget.setSize(width, height, value)
-      this.shadowHistoryFilterRenderTarget.setSize(width, height, value)
-      this.shadowHistoryFilterPass.setSize(width, height, value)
+      this.shadowHistoryRenderTarget.setSize(width, height, value)
     }
   }
 
@@ -525,8 +501,7 @@ export class CloudsEffect extends Effect {
       const depth = this.shadowCascadeCount
       this.shadowRenderTarget.setSize(width, height, depth * 2) // For velocity
       this.shadowResolveRenderTarget.setSize(width, height, depth)
-      this.shadowHistoryFilterRenderTarget.setSize(width, height, depth)
-      this.shadowHistoryFilterPass.setSize(width, height, depth)
+      this.shadowHistoryRenderTarget.setSize(width, height, depth)
     }
   }
 
@@ -537,7 +512,7 @@ export class CloudsEffect extends Effect {
   }
 
   get shadowBuffer(): DataArrayTexture {
-    return this.shadowHistoryFilterRenderTarget.texture
+    return this.shadowResolveRenderTarget.texture
   }
 
   get shadowIntervals(): Vector2[] {

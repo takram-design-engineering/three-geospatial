@@ -30,16 +30,13 @@ export class CopyArrayPass extends CopyPass {
   override render(
     renderer: WebGLRenderer,
     inputBuffer: WebGLArrayRenderTarget,
-    outputBuffer: WebGLArrayRenderTarget | null,
+    outputBuffer: null,
     deltaTime?: number,
     stencilTest?: boolean
   ): void {
     const material = this.fullscreenMaterial
     material.inputBuffer = inputBuffer.texture
-    setArrayRenderTargetLayers(
-      renderer,
-      this.renderToScreen ? null : this.renderTarget
-    )
+    setArrayRenderTargetLayers(renderer, this.renderTarget)
     renderer.render(this.scene, this.camera)
   }
 

@@ -3,33 +3,30 @@ import invariant from 'tiny-invariant'
 
 export function setArrayRenderTargetLayers(
   renderer: WebGLRenderer,
-  outputBuffer: WebGLArrayRenderTarget | null
+  outputBuffer: WebGLArrayRenderTarget
 ): void {
-  renderer.setRenderTarget(outputBuffer)
-  if (outputBuffer == null) {
-    return
-  }
-
   const glTexture = (
     renderer.properties.get(outputBuffer.texture) as {
       __webglTexture?: WebGLTexture
     }
   ).__webglTexture
-  invariant(glTexture != null)
 
   const gl = renderer.getContext()
   invariant(gl instanceof WebGL2RenderingContext)
 
+  renderer.setRenderTarget(outputBuffer)
   const drawBuffers: number[] = []
-  for (let layer = 0; layer < outputBuffer.depth; ++layer) {
-    gl.framebufferTextureLayer(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0 + layer,
-      glTexture,
-      0,
-      layer
-    )
-    drawBuffers.push(gl.COLOR_ATTACHMENT0 + layer)
+  if (glTexture != null) {
+    for (let layer = 0; layer < outputBuffer.depth; ++layer) {
+      gl.framebufferTextureLayer(
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0 + layer,
+        glTexture,
+        0,
+        layer
+      )
+      drawBuffers.push(gl.COLOR_ATTACHMENT0 + layer)
+    }
   }
   gl.drawBuffers(drawBuffers)
 }
