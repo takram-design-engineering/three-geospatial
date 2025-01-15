@@ -201,7 +201,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           scatterAnisotropy2: new Uniform(-0.3),
           scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(0.3),
-          groundIrradianceScale: new Uniform(1),
+          groundIrradianceScale: new Uniform(0.7),
 
           // Raymarch to clouds
           maxIterations: new Uniform(500),
@@ -226,13 +226,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           SHAPE_DETAIL: '1',
           MULTI_SCATTERING_OCTAVES: '8',
           POWDER: '1',
-          GROUND_IRRADIANCE: '1'
+          GROUND_IRRADIANCE: '1',
+          SHADOW_CASCADE_COUNT: '1'
         }
       },
       atmosphere
     )
-
-    this.shadowCascadeCount = 4
   }
 
   override onBeforeRender(

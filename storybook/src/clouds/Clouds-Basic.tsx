@@ -126,7 +126,6 @@ const Scene: FC = () => {
     animate,
     temporalUpscaling,
     halfResolution,
-    skyIrradianceScale,
     shadowMapSize,
     useShapeDetail,
     usePowder
@@ -136,18 +135,33 @@ const Scene: FC = () => {
     temporalUpscaling: true,
     halfResolution: false,
     shadowMapSize: { value: 512, options: [256, 512, 1024] },
-    skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
     useShapeDetail: true,
     usePowder: true
   })
 
-  const { maxIterations, minStepSize, maxStepSize, maxRayDistance } =
-    useControls('primary raymarch', {
-      maxIterations: { value: 500, min: 100, max: 1000 },
-      minStepSize: { value: 50, min: 50, max: 200 },
-      maxStepSize: { value: 1000, min: 200, max: 2000 },
-      maxRayDistance: { value: 1.5e5, min: 1e4, max: 2e5 }
-    })
+  const scatteringParams = useControls('scattering', {
+    albedo: { value: 0.98, min: 0, max: 1 },
+    powderScale: { value: 0.8, min: 0.5, max: 1 },
+    powderExponent: { value: 200, min: 1, max: 1000 },
+    scatterAnisotropy1: { value: 0.8, min: 0, max: 1 },
+    scatterAnisotropy2: { value: -0.3, min: -1, max: 0 },
+    scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
+    skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
+    groundIrradianceScale: { value: 0.7, min: 0, max: 1 }
+  })
+
+  const cloudsRaymarchParams = useControls('clouds raymarch', {
+    maxIterations: { value: 500, min: 100, max: 1000 },
+    minStepSize: { value: 50, min: 50, max: 200 },
+    maxStepSize: { value: 1000, min: 200, max: 2000 },
+    maxRayDistance: { value: 1.5e5, min: 1e4, max: 2e5 }
+  })
+
+  const shadowRaymarchParams = useControls('shadow raymarch', {
+    maxIterations: { value: 50, min: 10, max: 100 },
+    minStepSize: { value: 100, min: 50, max: 200 },
+    maxStepSize: { value: 1000, min: 200, max: 2000 }
+  })
 
   const {
     showShadowMap: debugShowShadowMap,
@@ -167,11 +181,20 @@ const Scene: FC = () => {
     if (clouds == null) {
       return
     }
-    clouds.cloudsMaterial.uniforms.skyIrradianceScale.value = skyIrradianceScale
-    clouds.cloudsMaterial.uniforms.maxIterations.value = maxIterations
-    clouds.cloudsMaterial.uniforms.minStepSize.value = minStepSize
-    clouds.cloudsMaterial.uniforms.maxStepSize.value = maxStepSize
-    clouds.cloudsMaterial.uniforms.maxRayDistance.value = maxRayDistance
+    const { albedo, ...scalarScatteringParams } = scatteringParams
+    clouds.cloudsMaterial.uniforms.albedo.value.setScalar(albedo)
+    for (const key in scalarScatteringParams) {
+      clouds.cloudsMaterial.uniforms[key].value =
+        scalarScatteringParams[key as keyof typeof scalarScatteringParams]
+    }
+    for (const key in cloudsRaymarchParams) {
+      clouds.cloudsMaterial.uniforms[key].value =
+        cloudsRaymarchParams[key as keyof typeof cloudsRaymarchParams]
+    }
+    for (const key in shadowRaymarchParams) {
+      clouds.shadowMaterial.uniforms[key].value =
+        shadowRaymarchParams[key as keyof typeof shadowRaymarchParams]
+    }
   })
 
   useEffect(() => {

@@ -177,7 +177,7 @@ vec3 multipleScattering(const float opticalDepth, const float cosTheta) {
   // Multiple scattering approximation
   // See: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
   // Attenuation (a), contribution (b) and phase attenuation (c).
-  vec3 abc = vec3(albedo);
+  vec3 abc = vec3(1.0);
   const vec3 attenuation = vec3(0.5, 0.5, 0.8); // Should satisfy a <= b
   vec3 scattering = vec3(0.0);
   float beerLambert;
@@ -187,7 +187,7 @@ vec3 multipleScattering(const float opticalDepth, const float cosTheta) {
     beerLambert = exp(-opticalDepth * abc.y);
     // A similar approximation is described in the Frostbite's paper, where
     // phase angle is attenuated.
-    scattering += abc.x * beerLambert * phaseFunction(cosTheta, abc.z);
+    scattering += albedo * abc.x * beerLambert * phaseFunction(cosTheta, abc.z);
     abc *= attenuation;
     #endif
   }
@@ -262,8 +262,8 @@ vec4 marchToClouds(
 
       float sunOpticalDepth = marchOpticalDepth(position, sunDirection, 3, mipLevel);
       float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
-      vec3 scattering = multipleScattering(opticalDepth, cosTheta);
-      vec3 scatteredIrradiance = (sunIrradiance + skyIrradiance) * scattering;
+      vec3 albedoScattering = multipleScattering(opticalDepth, cosTheta);
+      vec3 scatteredIrradiance = albedoScattering * (sunIrradiance + skyIrradiance);
       vec3 radiance = scatteredIrradiance + albedo * skyIrradiance * skyIrradianceScale;
 
       #ifdef GROUND_IRRADIANCE
