@@ -11,7 +11,7 @@ import {
   Vector3
 } from 'three'
 
-import { CloudShape, CloudShapeDetail } from '@takram/three-global-clouds'
+import { CloudShape, CloudShapeDetail } from '@takram/three-clouds'
 
 import { useControls } from '../helpers/useControls'
 

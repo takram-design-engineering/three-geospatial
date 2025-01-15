@@ -37,6 +37,13 @@ import {
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
+  STBN_TEXTURE_DEPTH,
+  STBN_TEXTURE_HEIGHT,
+  STBN_TEXTURE_WIDTH,
+  type CloudsEffect
+} from '@takram/three-clouds'
+import { Clouds } from '@takram/three-clouds/r3f'
+import {
   createData3DTextureLoaderClass,
   Geodetic,
   parseUint8Array,
@@ -49,13 +56,6 @@ import {
   LensFlare,
   Normal
 } from '@takram/three-geospatial-effects/r3f'
-import {
-  STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH,
-  type CloudsEffect
-} from '@takram/three-global-clouds'
-import { Clouds } from '@takram/three-global-clouds/r3f'
 
 import { EffectComposer } from '../helpers/EffectComposer'
 import { HaldLUT } from '../helpers/HaldLUT'

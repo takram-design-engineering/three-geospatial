@@ -4,7 +4,7 @@ import { type StoryFn } from '@storybook/react'
 import { useEffect, useMemo, type FC } from 'react'
 import { GLSL3, ShaderMaterial, Uniform, Vector2 } from 'three'
 
-import { CloudShape } from '@takram/three-global-clouds'
+import { CloudShape } from '@takram/three-clouds'
 
 import { useControls } from '../helpers/useControls'
 
