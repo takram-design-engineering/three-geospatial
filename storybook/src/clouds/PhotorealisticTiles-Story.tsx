@@ -212,8 +212,10 @@ const Scene: FC<SceneProps> = ({
     }
     if (debugShowShadowMap) {
       clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+      clouds.temporalUpscaling = false
     } else {
       delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+      clouds.temporalUpscaling = true
     }
     if (debugShowCascades) {
       clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'

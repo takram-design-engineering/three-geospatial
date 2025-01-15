@@ -247,7 +247,7 @@ export class CloudsEffect extends Effect {
     // Beer shadow map
     this.shadow = new CascadedShadowMap({
       cascadeCount: 3,
-      mapSize: new Vector2(512, 512),
+      mapSize: new Vector2().setScalar(512),
       lambda: 0.6,
       far: 1e5
     })
@@ -504,6 +504,10 @@ export class CloudsEffect extends Effect {
 
   get shadowMatrices(): Matrix4[] {
     return this.cloudsMaterial.uniforms.shadowMatrices.value
+  }
+
+  get shadowTopHeight(): number {
+    return this.cloudLayers[0].maxHeight
   }
 
   // Atmosphere parameters

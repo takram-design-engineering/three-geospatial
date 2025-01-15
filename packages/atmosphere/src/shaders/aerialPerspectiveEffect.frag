@@ -14,6 +14,7 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
+uniform float bottomRadius;
 uniform vec3 ellipsoidCenter;
 uniform vec3 sunDirection;
 uniform vec3 moonDirection;
@@ -31,6 +32,8 @@ uniform sampler2DArray shadowBuffer;
 uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
+uniform float shadowTopHeight;
+uniform float shadowRadius;
 #endif // HAS_SHADOW
 
 varying vec3 vWorldPosition;
@@ -112,7 +115,7 @@ void getTransmittanceInscatter(
 
 #ifdef HAS_SHADOW
 
-int getCascadeIndex(vec3 position) {
+int getCascadeIndex(const vec3 position) {
   vec4 viewPosition = viewMatrix * vec4(position, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
   for (int i = 0; i < SHADOW_CASCADE_COUNT; ++i) {
@@ -124,7 +127,13 @@ int getCascadeIndex(vec3 position) {
   return SHADOW_CASCADE_COUNT - 1;
 }
 
-float sampleOpticalDepth(vec3 worldPosition) {
+float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const int index) {
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  vec4 shadow = texture(shadowBuffer, vec3(uv, float(index)));
+  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
+}
+
+float sampleShadowOpticalDepthPCF(const vec3 worldPosition) {
   int index = getCascadeIndex(worldPosition);
   vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
   point /= point.w;
@@ -132,8 +141,37 @@ float sampleOpticalDepth(vec3 worldPosition) {
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return 0.0;
   }
-  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
-  return texture(shadowBuffer, vec3(uv, float(index))).b;
+
+  float distanceToTop = raySphereSecondIntersection(
+    worldPosition,
+    sunDirection,
+    ellipsoidCenter,
+    bottomRadius + shadowTopHeight
+  );
+
+  vec2 texelSize = vec2(1.0) / vec2(textureSize(shadowBuffer, 0).xy);
+  vec4 d1 = vec4(-texelSize.xy, texelSize.xy) * shadowRadius;
+  vec4 d2 = d1 * 0.5;
+  // prettier-ignore
+  return (1.0 / 17.0) * (
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.xy, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, d1.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.xy, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, d2.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, d2.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.zw, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, d1.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.zw, index)
+  );
 }
 
 #endif // HAS_SHADOW
@@ -189,30 +227,16 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
-  vec3 worldPositionMeters = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
-  vec3 worldPosition = worldPositionMeters * METER_TO_UNIT_LENGTH;
+  vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
+  vec3 worldPositionUnit = worldPosition * METER_TO_UNIT_LENGTH;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
 
   #ifdef CORRECT_GEOMETRIC_ERROR
-  correctGeometricError(worldPosition, worldNormal);
+  correctGeometricError(worldPositionUnit, worldNormal);
   #endif // CORRECT_GEOMETRIC_ERROR
 
   #ifdef HAS_SHADOW
-  float opticalDepth = sampleOpticalDepth(worldPositionMeters);
-
-  // TODO: This is basically no longer needed because clouds are clamped in the
-  // shadow pass, but shadows of clouds outside the main camera are still
-  // visible on certain occasions.
-  // float distanceToCloud = shadow.w;
-  // float distanceToGround = raySphereFirstIntersection(
-  //   worldPositionMeters,
-  //   -sunDirection,
-  //   ellipsoidCenter,
-  //   u_bottom_radius / METER_TO_UNIT_LENGTH
-  // );
-  // if (distanceToCloud < distanceToGround) {
-  //   opticalDepth = 0.0;
-  // }
+  float opticalDepth = sampleShadowOpticalDepthPCF(worldPosition);
   float shadowTransmittance = exp(-opticalDepth);
   #else
   float shadowTransmittance = 1.0;
@@ -220,13 +244,18 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  radiance = getSunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb, shadowTransmittance);
+  radiance = getSunSkyIrradiance(
+    worldPositionUnit,
+    worldNormal,
+    inputColor.rgb,
+    shadowTransmittance
+  );
   #else
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  getTransmittanceInscatter(worldPosition, worldNormal, radiance);
+  getTransmittanceInscatter(worldPositionUnit, worldNormal, radiance);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);

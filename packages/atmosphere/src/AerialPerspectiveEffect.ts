@@ -8,7 +8,6 @@ import {
   Vector2,
   Vector3,
   type Data3DTexture,
-  type DataArrayTexture,
   type DataTexture,
   type Texture,
   type WebGLRenderer,
@@ -86,11 +85,6 @@ export interface AerialPerspectiveEffectOptions {
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
-
-  // Composite
-  shadowBuffer?: DataArrayTexture | null
-  shadowIntervals?: Vector2[]
-  shadowMatrices?: Matrix4[]
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -176,6 +170,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
+          ['bottomRadius', new Uniform(atmosphere.bottomRadius)],
           ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
@@ -193,6 +188,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['shadowMatrices', new Uniform([])],
           ['shadowFar', new Uniform(0)],
           ['shadowTopHeight', new Uniform(0)],
+          ['shadowRadius', new Uniform(1)],
 
           // Uniforms for atmosphere functions
           ['u_solar_irradiance', new Uniform(atmosphere.solarIrradiance)],
@@ -551,6 +547,14 @@ export class AerialPerspectiveEffect extends Effect {
 
   set lunarRadianceScale(value: number) {
     this.uniforms.get('lunarRadianceScale')!.value = value
+  }
+
+  get shadowRadius(): number {
+    return this.uniforms.get('shadowRadius')!.value
+  }
+
+  set shadowRadius(value: number) {
+    this.uniforms.get('shadowRadius')!.value = value
   }
 
   setComposite(value?: AtmosphereComposite | null): void {

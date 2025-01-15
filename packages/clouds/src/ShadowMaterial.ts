@@ -36,12 +36,6 @@ import fragmentShader from './shaders/shadow.frag?raw'
 import vertexShader from './shaders/shadow.vert?raw'
 import structuredSampling from './shaders/structuredSampling.glsl?raw'
 
-declare module 'three' {
-  interface Camera {
-    isPerspectiveCamera?: boolean
-  }
-}
-
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface ShadowMaterialParameters {
@@ -62,7 +56,7 @@ interface ShadowMaterialUniforms
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
-  bottomRadius: Uniform<number> // TODO
+  bottomRadius: Uniform<number>
   ellipsoidCenter: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
 
@@ -123,7 +117,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         ...createCloudLayerUniforms(),
 
         // Atmospheric parameters
-        bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
+        bottomRadius: new Uniform(atmosphere.bottomRadius),
         ellipsoidCenter: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirectionRef ?? new Vector3()),
 
@@ -139,7 +133,7 @@ export class ShadowMaterial extends RawShaderMaterial {
 
     this.ellipsoid = Ellipsoid.WGS84
     this.correctAltitude = true
-    this.cascadeCount = 4
+    this.cascadeCount = 1
   }
 
   copyCameraSettings(camera: Camera): void {

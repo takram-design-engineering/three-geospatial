@@ -102,7 +102,7 @@ interface CloudsMaterialUniforms
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
-  bottomRadius: Uniform<number> // TODO
+  bottomRadius: Uniform<number>
 
   // Scattering parameters
   albedo: Uniform<Color>
@@ -190,7 +190,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ...createCloudLayerUniforms(),
 
           // Atmospheric parameters
-          bottomRadius: new Uniform(atmosphere.bottomRadius), // TODO
+          bottomRadius: new Uniform(atmosphere.bottomRadius),
           sunDirection: new Uniform(sunDirectionRef ?? new Vector3()), // Overridden
 
           // Scattering parameters

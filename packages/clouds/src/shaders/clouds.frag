@@ -79,7 +79,7 @@ float getViewZ(const float depth) {
   #endif
 }
 
-int getCascadeIndex(vec3 position) {
+int getCascadeIndex(const vec3 position) {
   vec4 viewPosition = viewMatrix * vec4(position, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
   for (int i = 0; i < SHADOW_CASCADE_COUNT; ++i) {
@@ -92,7 +92,7 @@ int getCascadeIndex(vec3 position) {
 }
 
 #ifdef DEBUG_SHOW_CASCADES
-vec3 getCascadeColor(vec3 rayPosition, vec2 uvOffset) {
+vec3 getCascadeColor(const vec3 rayPosition) {
   const vec3 colors[4] = vec3[4](
     vec3(1.0, 0.0, 0.0),
     vec3(0.0, 1.0, 0.0),
@@ -104,7 +104,7 @@ vec3 getCascadeColor(vec3 rayPosition, vec2 uvOffset) {
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
   point /= point.w;
-  vec2 uv = point.xy * 0.5 + 0.5 + uvOffset;
+  vec2 uv = point.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(1.0);
   }
@@ -112,26 +112,27 @@ vec3 getCascadeColor(vec3 rayPosition, vec2 uvOffset) {
 }
 #endif // DEBUG_SHOW_CASCADES
 
-vec3 sampleShadow(vec3 rayPosition, vec2 uvOffset) {
+vec3 sampleShadow(const vec3 rayPosition, vec2 offset) {
   // Ray position is relative to the ellipsoid center.
   vec3 position = rayPosition + ellipsoidCenter;
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
   point /= point.w;
-  vec2 uv = point.xy * 0.5 + 0.5 + uvOffset;
+  vec2 uv = point.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(0.0);
   }
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
-  return texture(shadowBuffer, vec3(uv, float(index))).rgb;
+  return texture(shadowBuffer, vec3(uv + offset, float(index))).rgb;
 }
 
-float sampleShadowOpticalDepth(vec3 rayPosition, float distanceToTop, vec2 uvOffset) {
-  vec3 shadow = sampleShadow(rayPosition, uvOffset);
-  float frontDepth = shadow.x;
-  float meanExtinction = shadow.y;
-  float maxOpticalDepth = shadow.z;
-  return min(maxOpticalDepth, meanExtinction * max(0.0, distanceToTop - frontDepth));
+float sampleShadowOpticalDepth(
+  const vec3 rayPosition,
+  const float distanceToTop,
+  const vec2 offset
+) {
+  vec3 shadow = sampleShadow(rayPosition, offset);
+  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
@@ -285,7 +286,7 @@ vec4 marchToClouds(
       #endif // POWDER
 
       #ifdef DEBUG_SHOW_CASCADES
-      radiance = 1e-3 * getCascadeColor(position, vec2(0.0));
+      radiance = 1e-3 * getCascadeColor(position);
       #endif // DEBUG_SHOW_CASCADES
 
       // Energy-conserving analytical integration of scattered light
@@ -435,7 +436,7 @@ vec4 getCascadedShadowMap(vec2 uv) {
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
   color = vec3(shadow.b * maxOpticalDepthScale);
   #else
-  color = vec3(exp(-shadow.a));
+  color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return vec4(color, 1.0);
 }
