@@ -2,22 +2,15 @@ precision highp float;
 precision highp sampler3D;
 
 #include <common>
-#include <packing>
 
-#include "core/depth"
 #include "core/math"
 #include "core/raySphereIntersection"
 #include "parameters"
 #include "structuredSampling"
 #include "clouds"
 
-uniform sampler2D depthBuffer;
-uniform mat4 viewMatrix; // The main camera
-uniform mat4 inverseProjectionMatrix; // The main camera
 uniform mat4 inverseShadowMatrices[CASCADE_COUNT]; // Inverse view projection of the sun
 uniform mat4 reprojectionMatrices[CASCADE_COUNT];
-uniform float cameraNear;
-uniform float cameraFar;
 uniform sampler3D stbnTexture;
 
 // Raymarch to clouds
@@ -28,7 +21,6 @@ uniform float minDensity;
 uniform float minTransmittance;
 
 in vec2 vUv;
-in mat4 vViewProjectionMatrix; // The main camera
 
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
 // Redundant notation for prettier.
@@ -47,54 +39,6 @@ vec3 getSTBN() {
   vec3 scale = 1.0 / vec3(size);
   // x: scalar, yz: vec2
   return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).xyz;
-}
-
-float readDepth(const vec2 uv) {
-  #if DEPTH_PACKING == 3201
-  return unpackRGBAToDepth(texture(depthBuffer, uv));
-  #else
-  return texture(depthBuffer, uv).r;
-  #endif // DEPTH_PACKING == 3201
-}
-
-float getViewZ(const float depth) {
-  #ifdef PERSPECTIVE_CAMERA
-  return perspectiveDepthToViewZ(depth, cameraNear, cameraFar);
-  #else
-  return orthographicDepthToViewZ(depth, cameraNear, cameraFar);
-  #endif
-}
-
-bool intersectsSceneObjects(const vec3 rayPosition) {
-  // Ray position is relative to the ellipsoid center.
-  vec3 position = rayPosition + ellipsoidCenter;
-
-  vec4 clip = vViewProjectionMatrix * vec4(position, 1.0);
-  clip /= clip.w;
-  if (
-    clip.x < -1.0 ||
-    clip.x > 1.0 ||
-    clip.y < -1.0 ||
-    clip.y > 1.0 ||
-    clip.z < 0.0 ||
-    clip.z > 1.0
-  ) {
-    return false; // Ignore outside of the main camera's clip space.
-  }
-  vec2 uv = clip.xy * 0.5 + 0.5;
-  float depth = readDepth(uv);
-  if (depth >= 1.0 - 1e-7) {
-    return false; // Ignore depth at an infinite distance.
-  }
-  // Derive the view coordinate at the depth.
-  vec4 ndc = vec4(clip.xy, depth * 2.0 - 1.0, 1.0);
-  vec4 sceneView = inverseProjectionMatrix * ndc;
-  sceneView /= sceneView.w;
-
-  // The ray is behind the scene objects when rayView.z < sceneView.z.
-  vec4 rayView = viewMatrix * vec4(position, 1.0);
-  rayView /= rayView.w;
-  return rayView.z < sceneView.z;
 }
 
 vec4 marchToClouds(
@@ -136,11 +80,7 @@ vec4 marchToClouds(
     vec2 uv = getGlobeUv(position);
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
 
-    if (
-      any(greaterThan(weather.density, vec4(minDensity))) &&
-      // Skip the ray inside scene objects.
-      !intersectsSceneObjects(position)
-    ) {
+    if (any(greaterThan(weather.density, vec4(minDensity)))) {
       // Sample a detailed density.
       float density = sampleShape(weather, position, mipLevel);
       if (density > minDensity) {

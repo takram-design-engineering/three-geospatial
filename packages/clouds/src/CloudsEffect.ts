@@ -446,9 +446,7 @@ export class CloudsEffect extends Effect {
     depthTexture: Texture,
     depthPacking?: DepthPackingStrategies
   ): void {
-    this.shadowMaterial.depthBuffer = depthTexture
     this.cloudsMaterial.depthBuffer = depthTexture
-    this.shadowMaterial.depthPacking = depthPacking ?? 0
     this.cloudsMaterial.depthPacking = depthPacking ?? 0
   }
 
