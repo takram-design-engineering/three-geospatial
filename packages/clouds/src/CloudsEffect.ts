@@ -1,5 +1,4 @@
 import {
-  BlendFunction,
   CopyPass,
   Effect,
   EffectAttribute,
@@ -96,7 +95,6 @@ function tryClearRenderTarget(
 }
 
 export interface CloudsEffectOptions {
-  blendFunction?: BlendFunction
   resolutionScale?: number
   width?: number
   height?: number
@@ -105,7 +103,6 @@ export interface CloudsEffectOptions {
 }
 
 export const cloudsEffectOptionsDefaults = {
-  blendFunction: BlendFunction.NORMAL,
   resolutionScale: 1,
   width: Resolution.AUTO_SIZE,
   height: Resolution.AUTO_SIZE
@@ -188,7 +185,6 @@ export class CloudsEffect extends Effect {
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
-      blendFunction,
       resolutionScale,
       width,
       height,
@@ -260,7 +256,6 @@ export class CloudsEffect extends Effect {
     const cloudsResolvePass = new ShaderPass(cloudsResolveMaterial)
 
     super('CloudsEffect', fragmentShader, {
-      blendFunction,
       attributes: EffectAttribute.DEPTH
     })
 
@@ -463,7 +458,7 @@ export class CloudsEffect extends Effect {
       this._temporalUpscaling = value
 
       const { width, height } = this.resolution
-      const scale = this.temporalUpscaling ? 0.25 : 1
+      const scale = value ? 0.25 : 1
       this.cloudsRenderTarget.setSize(width * scale, height * scale)
       this.cloudsMaterial.temporalUpscaling = value
       this.cloudsResolveMaterial.temporalUpscaling = value

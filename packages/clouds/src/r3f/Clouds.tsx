@@ -1,7 +1,6 @@
 import { useFrame, type Node } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { useSetAtom } from 'jotai'
-import { type BlendFunction } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
@@ -17,7 +16,6 @@ export type CloudsProps = Node<
   CloudsEffect
 > &
   CloudsEffectOptions & {
-    blendFunction?: BlendFunction
     opacity?: number
   }
 
@@ -26,7 +24,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
     const { textures, transientProps, compositeAtom, ...contextProps } =
       useContext(AtmosphereContext)
 
-    const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
+    const [atmosphereParameters, others] = separateProps({
       ...cloudsEffectOptionsDefaults,
       ...contextProps,
       ...textures,
@@ -36,10 +34,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
     const context = useContext(EffectComposerContext)
     const { camera } = context
 
-    const effect = useMemo(
-      () => new CloudsEffect(undefined, { blendFunction }),
-      [blendFunction]
-    )
+    const effect = useMemo(() => new CloudsEffect(), [])
     useEffect(() => {
       return () => {
         effect.dispose()
