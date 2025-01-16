@@ -326,6 +326,7 @@ export class CloudsEffect extends Effect {
 
       this.shadowMapSize.set(width, height)
       this.shadowMaterial.setSize(width, height)
+      this.shadowResolveMaterial.setSize(width, height)
       this.cloudsMaterial.setShadowSize(width, height)
 
       this.shadowRenderTarget.setSize(width, height, depth * 2) // For velocity

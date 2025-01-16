@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 
-import { GLSL3, RawShaderMaterial, Uniform, type Texture } from 'three'
+import { GLSL3, RawShaderMaterial, Uniform, Vector2, type Texture } from 'three'
 
 import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 
@@ -17,6 +17,8 @@ interface ShadowResolveMaterialUniforms {
   [key: string]: Uniform<unknown>
   inputBuffer: Uniform<Texture | null>
   historyBuffer: Uniform<Texture | null>
+  texelSize: Uniform<Vector2>
+  varianceGamma: Uniform<number>
   temporalAlpha: Uniform<number>
 }
 
@@ -41,10 +43,16 @@ export class ShadowResolveMaterial extends RawShaderMaterial {
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         historyBuffer: new Uniform(historyBuffer),
+        texelSize: new Uniform(new Vector2()),
+        varianceGamma: new Uniform(1),
         temporalAlpha: new Uniform(0.01)
       } satisfies ShadowResolveMaterialUniforms,
       defines: {}
     })
+  }
+
+  setSize(width: number, height: number): void {
+    this.uniforms.texelSize.value.set(1 / width, 1 / height)
   }
 
   get cascadeCount(): number {
