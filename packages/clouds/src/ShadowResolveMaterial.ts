@@ -45,6 +45,10 @@ export class ShadowResolveMaterial extends RawShaderMaterial {
         historyBuffer: new Uniform(historyBuffer),
         texelSize: new Uniform(new Vector2()),
         varianceGamma: new Uniform(1),
+        // Use a very slow alpha because a single flickering pixel can be highly
+        // noticeable in shadow maps. This value can be increased if temporal
+        // jitter is turned off in the shadows rendering, but it will suffer
+        // from spatial aliasing.
         temporalAlpha: new Uniform(0.01)
       } satisfies ShadowResolveMaterialUniforms,
       defines: {}
