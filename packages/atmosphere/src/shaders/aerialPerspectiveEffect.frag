@@ -156,19 +156,19 @@ float sampleShadowOpticalDepthPCF(const vec3 worldPosition) {
   return (1.0 / 17.0) * (
     sampleShadowOpticalDepth(distanceToTop, uv + d1.xy, index) +
     sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.y), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, d1.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.zy, index) +
     sampleShadowOpticalDepth(distanceToTop, uv + d2.xy, index) +
     sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.y), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, d2.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.zy, index) +
     sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, 0.0), index) +
     sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, 0.0), index) +
     sampleShadowOpticalDepth(distanceToTop, uv, index) +
     sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, 0.0), index) +
     sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, d2.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.xw, index) +
     sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.w), index) +
     sampleShadowOpticalDepth(distanceToTop, uv + d2.zw, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, d1.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.xw, index) +
     sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.w), index) +
     sampleShadowOpticalDepth(distanceToTop, uv + d1.zw, index)
   );
@@ -204,7 +204,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     #endif // SKY
 
     #ifdef HAS_COMPOSITE
-    outputColor.rgb = composite.rgb + outputColor.rgb * (1.0 - composite.a);
+    outputColor.rgb = outputColor.rgb * (1.0 - composite.a) + composite.rgb;
     #endif // HAS_COMPOSITE
     return;
   }
@@ -261,6 +261,6 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   outputColor = vec4(radiance, inputColor.a);
 
   #ifdef HAS_COMPOSITE
-  outputColor.rgb = composite.rgb + outputColor.rgb * (1.0 - composite.a);
+  outputColor.rgb = outputColor.rgb * (1.0 - composite.a) + composite.rgb;
   #endif // HAS_COMPOSITE
 }
