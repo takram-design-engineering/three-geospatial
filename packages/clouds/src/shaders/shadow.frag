@@ -87,7 +87,6 @@ vec4 marchToClouds(
       // Sample a detailed density.
       float density = sampleShape(weather, position, mipLevel);
       if (density > minDensity) {
-        density *= 2.0; // TODO: Parametrize
         frontDepth = max(frontDepth, rayDistance);
         extinctionSum += density;
         maxOpticalDepth += density * stepSize;

@@ -133,7 +133,13 @@ float sampleShadowOpticalDepth(
   const vec2 offset
 ) {
   vec3 shadow = sampleShadow(rayPosition, offset);
-  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
+  // In Hillaire's presentation, optical depth is clamped to the max optical
+  // depth. While it is understandable, it lacks resolution in shadows
+  // compared to marched results with a very high number of iterations. I chose
+  // not to clamp it and let it increase towards infinity.
+  // https://blog.selfshadow.com/publications/s2020-shading-course/hillaire/s2020_pbs_hillaire_slides.pdf
+  // return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
+  return shadow.g * max(0.0, distanceToTop - shadow.r);
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
