@@ -67,7 +67,7 @@ vec3 getSTBN() {
 float readDepth(const vec2 uv) {
   #if DEPTH_PACKING == 3201
   return unpackRGBAToDepth(texture(depthBuffer, uv));
-  #else
+  #else // DEPTH_PACKING == 3201
   return texture(depthBuffer, uv).r;
   #endif // DEPTH_PACKING == 3201
 }
@@ -75,9 +75,9 @@ float readDepth(const vec2 uv) {
 float getViewZ(const float depth) {
   #ifdef PERSPECTIVE_CAMERA
   return perspectiveDepthToViewZ(depth, cameraNear, cameraFar);
-  #else
+  #else // PERSPECTIVE_CAMERA
   return orthographicDepthToViewZ(depth, cameraNear, cameraFar);
-  #endif
+  #endif // PERSPECTIVE_CAMERA
 }
 
 int getCascadeIndex(const vec3 position) {
@@ -178,20 +178,20 @@ float marchOpticalDepth(
 vec3 multipleScattering(const float opticalDepth, const float cosTheta) {
   // Multiple scattering approximation
   // See: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
-  // Attenuation (a), contribution (b) and phase attenuation (c).
-  vec3 abc = vec3(1.0);
+  // x: attenuation, y: contribution, z: phase attenuation
+  vec3 coeffs = vec3(1.0);
   const vec3 attenuation = vec3(0.5, 0.5, 0.8); // Should satisfy a <= b
   vec3 scattering = vec3(0.0);
   float beerLambert;
   #pragma unroll_loop_start
   for (int i = 0; i < 12; ++i) {
     #if UNROLLED_LOOP_INDEX < MULTI_SCATTERING_OCTAVES
-    beerLambert = exp(-opticalDepth * abc.y);
+    beerLambert = exp(-opticalDepth * coeffs.y);
     // A similar approximation is described in the Frostbite's paper, where
     // phase angle is attenuated.
-    scattering += albedo * abc.x * beerLambert * phaseFunction(cosTheta, abc.z);
-    abc *= attenuation;
-    #endif
+    scattering += albedo * coeffs.x * beerLambert * phaseFunction(cosTheta, coeffs.z);
+    coeffs *= attenuation;
+    #endif // UNROLLED_LOOP_INDEX < MULTI_SCATTERING_OCTAVES
   }
   #pragma unroll_loop_end
   return scattering;
@@ -436,7 +436,7 @@ vec4 getCascadedShadowMap(vec2 uv) {
   color = vec3(shadow.g * meanExtinctionScale);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
   color = vec3(shadow.b * maxOpticalDepthScale);
-  #else
+  #else // DEBUG_SHOW_SHADOW_MAP_TYPE
   color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return vec4(color, 1.0);

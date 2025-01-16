@@ -111,7 +111,7 @@ float sampleShape(WeatherSample weather, const vec3 position, const float mipLev
     modifier = mix(vec4(0.0), modifier, detailAmounts);
     density = saturate(remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0), vec4(0.0), vec4(1.0)));
   }
-  #endif
+  #endif // SHAPE_DETAIL
 
   // Nicely decrease density at the bottom.
   return saturate(dot(density, extinctionCoeffs * weather.heightFraction));

@@ -10,7 +10,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   #ifdef USE_TURBO
   vec3 color = turbo(1.0 - depth);
-  #else
+  #else // USE_TURBO
   vec3 color = vec3(depth);
   #endif // USE_TURBO
 

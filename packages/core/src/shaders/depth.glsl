@@ -6,7 +6,7 @@ float reverseLogDepth(const float depth, const float near, const float far) {
   float a = far / (far - near);
   float b = far * near / (near - far);
   return a + b / d;
-  #else
+  #else // USE_LOGDEPTHBUF
   return depth;
   #endif // USE_LOGDEPTHBUF
 }

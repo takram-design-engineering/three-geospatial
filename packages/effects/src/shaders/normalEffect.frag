@@ -25,7 +25,7 @@ vec3 reconstructNormal(const vec2 uv) {
 vec3 readNormal(const vec2 uv) {
   #ifdef OCT_ENCODED
   return unpackVec2ToNormal(texture(normalBuffer, uv).xy);
-  #else
+  #else // OCT_ENCODED
   return 2.0 * texture(normalBuffer, uv).xyz - 1.0;
   #endif // OCT_ENCODED
 }
@@ -33,7 +33,7 @@ vec3 readNormal(const vec2 uv) {
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #ifdef RECONSTRUCT_FROM_DEPTH
   vec3 normal = reconstructNormal(uv);
-  #else
+  #else // RECONSTRUCT_FROM_DEPTH
   vec3 normal = readNormal(uv);
   #endif // RECONSTRUCT_FROM_DEPTH
 

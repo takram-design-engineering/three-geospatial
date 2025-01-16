@@ -49,7 +49,7 @@ void mainSupport() {
   // error correction takes effect.
   // See: https://github.com/takram-design-engineering/three-geospatial/pull/23#issuecomment-2542914656
   vEllipsoidCenter = mix(ellipsoidCenter, vec3(0.0), idealSphereAlpha) * METER_TO_UNIT_LENGTH;
-  #else
+  #else // CORRECT_GEOMETRIC_ERROR
   vEllipsoidCenter = vSkyEllipsoidCenter;
   #endif // CORRECT_GEOMETRIC_ERROR
 

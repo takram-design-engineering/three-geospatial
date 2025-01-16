@@ -45,7 +45,7 @@ varying vec3 vEllipsoidRadiiSquared;
 vec3 readNormal(const vec2 uv) {
   #ifdef OCT_ENCODED_NORMAL
   return unpackVec2ToNormal(texture(normalBuffer, uv).xy);
-  #else
+  #else // OCT_ENCODED_NORMAL
   return 2.0 * texture(normalBuffer, uv).xyz - 1.0;
   #endif // OCT_ENCODED_NORMAL
 }
@@ -86,7 +86,7 @@ vec3 getSunSkyIrradiance(
   return albedo * sunIrradiance;
   #elif defined(SKY_IRRADIANCE)
   return albedo * skyIrradiance;
-  #endif
+  #endif // defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
 }
 #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
@@ -104,12 +104,12 @@ void getTransmittanceInscatter(
     sunDirection,
     transmittance
   );
-  #if defined(TRANSMITTANCE)
+  #ifdef TRANSMITTANCE
   radiance = radiance * transmittance;
-  #endif
-  #if defined(INSCATTER)
+  #endif // TRANSMITTANCE
+  #ifdef INSCATTER
   radiance = radiance + inscatter;
-  #endif
+  #endif // INSCATTER
 }
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
@@ -199,7 +199,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
       lunarRadianceScale
     );
     outputColor.a = 1.0;
-    #else
+    #else // SKY
     outputColor = inputColor;
     #endif // SKY
 
@@ -223,7 +223,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 dx = dFdx(viewPosition);
   vec3 dy = dFdy(viewPosition);
   viewNormal = normalize(cross(dx, dy));
-  #else
+  #else // RECONSTRUCT_NORMAL
   viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
@@ -238,7 +238,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #ifdef HAS_SHADOW
   float opticalDepth = sampleShadowOpticalDepthPCF(worldPosition);
   float shadowTransmittance = exp(-opticalDepth);
-  #else
+  #else // HAS_SHADOW
   float shadowTransmittance = 1.0;
   #endif // HAS_SHADOW
 
@@ -250,7 +250,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     inputColor.rgb,
     shadowTransmittance
   );
-  #else
+  #else // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 

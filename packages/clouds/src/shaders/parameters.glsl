@@ -2,7 +2,7 @@ uniform vec2 resolution;
 uniform int frame;
 
 // Atmospheric parameters
-uniform float bottomRadius; // TODO
+uniform float bottomRadius;
 uniform vec3 sunDirection;
 uniform vec3 ellipsoidCenter;
 

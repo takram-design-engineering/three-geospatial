@@ -2,9 +2,9 @@
 
 #ifdef FRAMEBUFFER_PRECISION_HIGH
 uniform mediump sampler2DArray inputBuffer;
-#else
+#else // FRAMEBUFFER_PRECISION_HIGH
 uniform lowp sampler2DArray inputBuffer;
-#endif
+#endif // FRAMEBUFFER_PRECISION_HIGH
 
 uniform float opacity;
 

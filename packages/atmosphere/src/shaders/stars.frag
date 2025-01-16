@@ -20,7 +20,7 @@ void main() {
   #ifndef PERSPECTIVE_CAMERA
   outputColor = vec4(0.0);
   discard; // Rendering celestial objects without perspective doesn't make sense.
-  #endif
+  #endif // PERSPECTIVE_CAMERA
 
   #ifdef BACKGROUND
   vec3 viewDirection = normalize(vWorldDirection);
@@ -34,7 +34,7 @@ void main() {
   );
   radiance += transmittance * vColor;
   outputColor = vec4(radiance, 1.0);
-  #else
+  #else // BACKGROUND
   outputColor = vec4(vColor, 1.0);
   #endif // BACKGROUND
 

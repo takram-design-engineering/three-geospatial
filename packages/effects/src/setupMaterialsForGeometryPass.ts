@@ -105,7 +105,7 @@ function injectGBuffer(
 
     #ifndef USE_ENVMAP
       uniform float reflectivity;
-    #endif
+    #endif // USE_ENVMAP
 
     ${packing}
     ${shader.fragmentShader.replace(
