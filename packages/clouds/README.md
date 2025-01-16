@@ -6,6 +6,7 @@ This library is under active development and is in pre-release status.
 
 - [ ] Crepuscular rays
 - [ ] Cloud layer parametrization refinements
+- [ ] UV velocity suffers from projection errors due to large coordinates (or am I missing something?)
 - [ ] Finalize API
 
 ## References
