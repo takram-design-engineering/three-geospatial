@@ -1,4 +1,4 @@
-// A fifth-order polynomial approximation of Turbo colormap.
+// A fifth-order polynomial approximation of Turbo color map.
 // See: https://observablehq.com/@mbostock/turbo
 // prettier-ignore
 vec3 turbo(const float x) {

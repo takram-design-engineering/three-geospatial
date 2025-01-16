@@ -31,7 +31,6 @@
     "README.md"
   ],
   "dependencies": {
-    "lodash-es": "^4.17.21",
     "react-merge-refs": "^2.1.1",
     "tiny-invariant": "^1.3.3",
     "type-fest": "^4.28.0"
