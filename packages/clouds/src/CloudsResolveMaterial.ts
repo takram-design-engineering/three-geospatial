@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 
-import { GLSL3, RawShaderMaterial, Uniform, type Texture } from 'three'
+import { GLSL3, RawShaderMaterial, Uniform, Vector2, type Texture } from 'three'
 
 import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 
@@ -19,6 +19,7 @@ interface CloudsResolveMaterialUniforms {
   inputBuffer: Uniform<Texture | null>
   depthVelocityBuffer: Uniform<Texture | null>
   historyBuffer: Uniform<Texture | null>
+  texelSize: Uniform<Vector2>
   frame: Uniform<number>
   varianceGamma: Uniform<number>
   temporalAlpha: Uniform<number>
@@ -47,12 +48,17 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         inputBuffer: new Uniform(inputBuffer),
         depthVelocityBuffer: new Uniform(depthVelocityBuffer),
         historyBuffer: new Uniform(historyBuffer),
+        texelSize: new Uniform(new Vector2()),
         frame: new Uniform(0),
         varianceGamma: new Uniform(2),
         temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
       defines: {}
     })
+  }
+
+  setSize(width: number, height: number): void {
+    this.uniforms.texelSize.value.set(1 / width, 1 / height)
   }
 
   get temporalUpscaling(): boolean {

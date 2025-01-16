@@ -7,6 +7,7 @@ uniform sampler2D inputBuffer;
 uniform sampler2D depthVelocityBuffer;
 uniform sampler2D historyBuffer;
 
+uniform vec2 texelSize;
 uniform int frame;
 uniform float varianceGamma;
 uniform float temporalAlpha;
@@ -63,7 +64,7 @@ void main() {
   }
 
   vec4 depthVelocity = getClosestFragment(subCoord);
-  vec2 velocity = depthVelocity.gb;
+  vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = current;

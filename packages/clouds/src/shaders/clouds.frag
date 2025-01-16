@@ -503,7 +503,7 @@ void main() {
   vec4 prevClip = reprojectionMatrix * vec4(ellipsoidCenter + frontPosition, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-  vec2 velocity = vUv - prevUv;
+  vec2 velocity = (vUv - prevUv) * resolution;
 
   outputColor = color;
   outputDepthVelocity = vec3(frontDepth, velocity);
