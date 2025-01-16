@@ -136,16 +136,21 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
 
-  const { enabled, coverage, animate, useShapeDetail, usePowder } = useControls(
-    'clouds',
-    {
-      enabled: true,
-      coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
-      animate: true,
-      useShapeDetail: true,
-      usePowder: true
-    }
-  )
+  const {
+    enabled,
+    coverage,
+    animate,
+    shadowMapSize,
+    useShapeDetail,
+    usePowder
+  } = useControls('clouds', {
+    enabled: true,
+    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
+    animate: true,
+    shadowMapSize: { value: 512, options: [256, 512, 1024] },
+    useShapeDetail: true,
+    usePowder: true
+  })
 
   const { showShadowMap: debugShowShadowMap, showCascades: debugShowCascades } =
     useControls('debug', {
@@ -253,6 +258,7 @@ const Scene: FC<SceneProps> = ({
                   stbnTexture={stbnTexture}
                   coverage={coverage}
                   localWeatherVelocity-x={animate ? 0.00001 : 0}
+                  shadow-mapSize={shadowMapSize}
                 />
               )}
               <AerialPerspective
