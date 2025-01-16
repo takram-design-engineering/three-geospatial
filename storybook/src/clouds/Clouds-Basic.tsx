@@ -121,7 +121,8 @@ const Scene: FC = () => {
     '/clouds/stbn.bin'
   )
 
-  const { coverage, animate, useShapeDetail } = useControls('clouds', {
+  const { enabled, coverage, animate, useShapeDetail } = useControls('clouds', {
+    enabled: true,
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
     animate: false,
     useShapeDetail: true
@@ -263,16 +264,24 @@ const Scene: FC = () => {
         photometric={photometric}
       >
         <EffectComposer multisampling={0} enableNormalPass>
-          <Fragment key={JSON.stringify({ debugShowUv, debugShowShadowMap })}>
-            <Clouds
-              ref={setClouds}
-              stbnTexture={stbnTexture}
-              coverage={coverage}
-              temporalUpscaling={temporalUpscaling}
-              resolution-scale={halfResolution ? 0.5 : 1}
-              localWeatherVelocity={animate ? [0.00005, 0] : [0, 0]}
-              shadow-mapSize={[shadowMapSize, shadowMapSize]}
-            />
+          <Fragment
+            key={JSON.stringify({
+              enabled,
+              debugShowUv,
+              debugShowShadowMap
+            })}
+          >
+            {enabled && (
+              <Clouds
+                ref={setClouds}
+                stbnTexture={stbnTexture}
+                coverage={coverage}
+                temporalUpscaling={temporalUpscaling}
+                resolution-scale={halfResolution ? 0.5 : 1}
+                localWeatherVelocity={animate ? [0.00005, 0] : [0, 0]}
+                shadow-mapSize={[shadowMapSize, shadowMapSize]}
+              />
+            )}
             <AerialPerspective sky sunIrradiance skyIrradiance />
             {!debugShowUv && !debugShowShadowMap && (
               <>
