@@ -8,6 +8,7 @@ uniform sampler2D depthVelocityBuffer;
 uniform sampler2D historyBuffer;
 
 uniform int frame;
+uniform float varianceGamma;
 uniform float temporalAlpha;
 
 in vec2 vUv;
@@ -72,7 +73,7 @@ void main() {
   // Variance clipping with a large variance gamma seems to work fine for upsampling.
   // This increases ghosting, of course, but it's hard to notice on clouds.
   vec4 history = texture(historyBuffer, prevUv);
-  vec4 clippedHistory = varianceClipping(inputBuffer, subCoord, current, history, 5.0);
+  vec4 clippedHistory = varianceClipping(inputBuffer, subCoord, current, history, varianceGamma);
   outputColor = clippedHistory;
 }
 

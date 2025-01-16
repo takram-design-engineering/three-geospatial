@@ -20,6 +20,7 @@ interface CloudsResolveMaterialUniforms {
   depthVelocityBuffer: Uniform<Texture | null>
   historyBuffer: Uniform<Texture | null>
   frame: Uniform<number>
+  varianceGamma: Uniform<number>
   temporalAlpha: Uniform<number>
 }
 
@@ -47,6 +48,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         depthVelocityBuffer: new Uniform(depthVelocityBuffer),
         historyBuffer: new Uniform(historyBuffer),
         frame: new Uniform(0),
+        varianceGamma: new Uniform(2),
         temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
       defines: {}
