@@ -139,7 +139,8 @@ float sampleShadowOpticalDepth(
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   vec2 g2 = g * g;
   const float reciprocalPi4 = 0.07957747154594767;
-  return reciprocalPi4 * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
+  vec2 denom = max(vec2(1e-7), pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
+  return reciprocalPi4 * ((1.0 - g2) / denom);
 }
 
 float phaseFunction(const float cosTheta, const float attenuation) {
