@@ -99,6 +99,7 @@ interface CloudsMaterialUniforms
   cameraFar: Uniform<number>
   cameraHeight: Uniform<number>
   frame: Uniform<number>
+  temporalJitter: Uniform<Vector2>
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
@@ -180,6 +181,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraFar: new Uniform(0),
           cameraHeight: new Uniform(0),
           frame: new Uniform(0),
+          temporalJitter: new Uniform(new Vector2()),
           stbnTexture: new Uniform(null),
 
           ...createCloudParameterUniforms({
@@ -276,19 +278,21 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       const frame = uniforms.frame.value % 16
       const resolution = uniforms.resolution.value
       const offset = bayerOffsets[frame]
-      const dx = ((offset.x - 0.5) / resolution.x) * 4 * 2
-      const dy = ((offset.y - 0.5) / resolution.y) * 4 * 2
+      const dx = ((offset.x - 0.5) / resolution.x) * 4
+      const dy = ((offset.y - 0.5) / resolution.y) * 4
+      uniforms.temporalJitter.value.set(dx, dy)
       inverseProjectionMatrix.copy(camera.projectionMatrix)
-      inverseProjectionMatrix.elements[8] += dx
-      inverseProjectionMatrix.elements[9] += dy
+      inverseProjectionMatrix.elements[8] += dx * 2
+      inverseProjectionMatrix.elements[9] += dy * 2
       inverseProjectionMatrix.invert()
 
       // Jitter the previous projection matrix with the current jitter.
       reprojectionMatrix.copy(previousProjectionMatrix)
-      reprojectionMatrix.elements[8] += dx
-      reprojectionMatrix.elements[9] += dy
+      reprojectionMatrix.elements[8] += dx * 2
+      reprojectionMatrix.elements[9] += dy * 2
       reprojectionMatrix.multiply(previousViewMatrix)
     } else {
+      uniforms.temporalJitter.value.setScalar(0)
       inverseProjectionMatrix.copy(camera.projectionMatrixInverse)
       reprojectionMatrix
         .copy(previousProjectionMatrix)

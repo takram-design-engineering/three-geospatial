@@ -21,6 +21,7 @@ uniform vec3 cameraPosition;
 uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
+uniform vec2 temporalJitter;
 uniform sampler3D stbnTexture;
 
 // Scattering parameters
@@ -459,7 +460,7 @@ void main() {
 
   // Clamp the ray at the scene objects.
   // TODO: Don't clamp at objects in low altitude and use depth test instead.
-  float depth = readDepth(vUv);
+  float depth = readDepth(vUv + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     float viewZ = getViewZ(depth);
