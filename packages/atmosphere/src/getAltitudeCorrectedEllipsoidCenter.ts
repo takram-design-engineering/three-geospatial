@@ -8,7 +8,8 @@ export function getAltitudeCorrectionOffset(
   cameraPosition: Vector3,
   bottomRadius: number,
   ellipsoid: Ellipsoid,
-  result: Vector3
+  result: Vector3,
+  clipToSurface = true
 ): Vector3 {
   const surfacePosition = ellipsoid.projectOnSurface(
     cameraPosition,
@@ -18,7 +19,7 @@ export function getAltitudeCorrectionOffset(
     ? ellipsoid.getOsculatingSphereCenter(
         // Move the center of the atmosphere's inner sphere down to intersect
         // the viewpoint when it's located underground.
-        surfacePosition.lengthSq() < cameraPosition.lengthSq()
+        !clipToSurface || surfacePosition.lengthSq() < cameraPosition.lengthSq()
           ? surfacePosition
           : cameraPosition,
         bottomRadius,

@@ -145,7 +145,8 @@ export class ShadowMaterial extends RawShaderMaterial {
         position,
         this.atmosphere.bottomRadius,
         this.ellipsoid,
-        ellipsoidCenter
+        ellipsoidCenter,
+        false
       )
     } else {
       ellipsoidCenter.setScalar(0)

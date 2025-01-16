@@ -23,6 +23,7 @@ import {
 import {
   AtmosphereMaterialBase,
   AtmosphereParameters,
+  getAltitudeCorrectionOffset,
   type AtmosphereMaterialBaseUniforms
 } from '@takram/three-atmosphere'
 import {
@@ -249,8 +250,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   override copyCameraSettings(camera: Camera): void {
-    super.copyCameraSettings(camera)
-
     if (camera.isPerspectiveCamera === true) {
       if (this.defines.PERSPECTIVE_CAMERA !== '1') {
         this.defines.PERSPECTIVE_CAMERA = '1'
@@ -304,11 +303,24 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     uniforms.cameraFar.value = camera.far
 
     const cameraHeight = uniforms.cameraHeight
-    const position = uniforms.cameraPosition.value
+    const position = camera.getWorldPosition(uniforms.cameraPosition.value)
     try {
       cameraHeight.value = geodeticScratch.setFromECEF(position).height
     } catch (error) {
       // Abort when the position is zero.
+    }
+
+    const ellipsoidCenter = uniforms.ellipsoidCenter.value
+    if (this.correctAltitude) {
+      getAltitudeCorrectionOffset(
+        position,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        ellipsoidCenter,
+        false
+      )
+    } else {
+      ellipsoidCenter.setScalar(0)
     }
   }
 
