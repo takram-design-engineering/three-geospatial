@@ -176,6 +176,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       .applyMatrix4(inverseEllipsoidMatrix)
       .sub(uniforms.ellipsoidCenter.value)
 
+    const altitudeCorrection = uniforms.altitudeCorrection
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
         cameraPositionRelEllipsoid,
@@ -189,11 +190,11 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
             ? surfacePosition
             : cameraPositionRelEllipsoid,
           this.atmosphere.bottomRadius,
-          uniforms.altitudeCorrection.value
+          altitudeCorrection.value
         )
       }
     } else {
-      uniforms.altitudeCorrection.value.set(0, 0, 0)
+      altitudeCorrection.value.set(0, 0, 0)
     }
   }
 

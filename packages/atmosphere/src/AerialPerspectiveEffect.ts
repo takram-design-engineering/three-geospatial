@@ -44,7 +44,8 @@ import functions from './shaders/functions.glsl'
 import parameters from './shaders/parameters.glsl'
 import skyShader from './shaders/sky.glsl'
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface AerialPerspectiveEffectOptions {
@@ -57,7 +58,6 @@ export interface AerialPerspectiveEffectOptions {
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
-  ellipsoidMatrix?: Matrix4
   correctAltitude?: boolean
   correctGeometricError?: boolean
   photometric?: boolean
@@ -98,6 +98,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 export class AerialPerspectiveEffect extends Effect {
   private readonly atmosphere: AtmosphereParameters
   private _ellipsoid!: Ellipsoid
+  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
 
   constructor(
@@ -115,7 +116,6 @@ export class AerialPerspectiveEffect extends Effect {
       transmittanceTexture = null,
       useHalfFloat,
       ellipsoid,
-      ellipsoidMatrix,
       correctAltitude,
       correctGeometricError,
       photometric,
@@ -170,9 +170,10 @@ export class AerialPerspectiveEffect extends Effect {
           ['inverseProjectionMatrix', new Uniform(new Matrix4())],
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
-          ['ellipsoidCenter', new Uniform(new Vector3())],
-          ['ellipsoidMatrix', new Uniform(ellipsoidMatrix?.clone() ?? new Matrix4())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
+          ['ellipsoidCenter', new Uniform(new Vector3())],
+          ['inverseEllipsoidMatrix', new Uniform(new Matrix4())],
+          ['altitudeCorrection', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['irradianceScale', new Uniform(irradianceScale)],
           ['idealSphereAlpha', new Uniform(0)],
@@ -237,15 +238,26 @@ export class AerialPerspectiveEffect extends Effect {
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
 
-    const cameraPosition = uniforms.get('cameraPosition')!
-    const position = camera.getWorldPosition(cameraPosition.value)
-    const cameraHeight = geodeticScratch.setFromECEF(position).height
+    const cameraPosition = camera.getWorldPosition(
+      uniforms.get('cameraPosition')!.value
+    )
+    const inverseEllipsoidMatrix = uniforms
+      .get('inverseEllipsoidMatrix')!
+      .value.copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionRelEllipsoid = vectorScratch1
+      .copy(cameraPosition)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(uniforms.get('ellipsoidCenter')!.value)
 
     // Calculate the projected scale of the globe in clip space used to
     // interpolate between the globe true normals and idealized normals to avoid
     // lighting artifacts.
     const idealSphereAlpha = uniforms.get('idealSphereAlpha')!
-    vectorScratch
+    const cameraHeight = geodeticScratch.setFromECEF(
+      cameraPositionRelEllipsoid
+    ).height
+    vectorScratch2
       .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
       .applyMatrix4(camera.projectionMatrix)
 
@@ -253,27 +265,27 @@ export class AerialPerspectiveEffect extends Effect {
     // Interpolation values are picked to match previous rough globe scales to
     // match the previous "camera height" approach for interpolation.
     // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
-    idealSphereAlpha.value = saturate(remap(vectorScratch.y, 41.5, 13.8, 0, 1))
+    idealSphereAlpha.value = saturate(remap(vectorScratch2.y, 41.5, 13.8, 0, 1))
 
-    const ellipsoidCenter = uniforms.get('ellipsoidCenter')!
+    const altitudeCorrection = uniforms.get('altitudeCorrection')!
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
-        position,
-        vectorScratch
+        cameraPositionRelEllipsoid,
+        vectorScratch2
       )
       if (surfacePosition != null) {
         this.ellipsoid.getOsculatingSphereCenter(
           // Move the center of the atmosphere's inner sphere down to intersect
           // the viewpoint when it's located underground.
-          surfacePosition.lengthSq() < position.lengthSq()
+          surfacePosition.lengthSq() < cameraPositionRelEllipsoid.lengthSq()
             ? surfacePosition
-            : position,
+            : cameraPositionRelEllipsoid,
           this.atmosphere.bottomRadius,
-          ellipsoidCenter.value
+          altitudeCorrection.value
         )
       }
     } else {
-      ellipsoidCenter.value.set(0, 0, 0)
+      altitudeCorrection.value.set(0, 0, 0)
     }
   }
 
@@ -361,8 +373,8 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('ellipsoidRadii')!.value.copy(value.radii)
   }
 
-  get ellipsoidMatrix(): Matrix4 {
-    return this.uniforms.get('ellipsoidMatrix')!.value
+  get ellipsoidCenter(): Vector3 {
+    return this.uniforms.get('ellipsoidCenter')!.value
   }
 
   get correctGeometricError(): boolean {

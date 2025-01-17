@@ -3,6 +3,7 @@ uniform sampler2D normalBuffer;
 uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
+uniform mat4 inverseEllipsoidMatrix;
 uniform vec3 sunDirection;
 uniform vec3 moonDirection;
 uniform float moonAngularRadius;
@@ -10,10 +11,10 @@ uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
-varying vec3 vWorldPosition;
-varying vec3 vWorldDirection;
+varying vec3 vCameraPosition;
+varying vec3 vRayDirection;
 varying vec3 vEllipsoidCenter;
-varying vec3 vSkyEllipsoidCenter;
+varying vec3 vGeometryEllipsoidCenter;
 varying vec3 vEllipsoidRadiiSquared;
 
 vec3 readNormal(const vec2 uv) {
@@ -34,8 +35,8 @@ void correctGeometricError(inout vec3 worldPosition, inout vec3 worldNormal) {
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 vec3 getSunSkyIrradiance(
-  const vec3 worldPosition,
-  const vec3 worldNormal,
+  const vec3 position,
+  const vec3 normal,
   const vec3 inputColor
 ) {
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
@@ -43,8 +44,8 @@ vec3 getSunSkyIrradiance(
   vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(
-    worldPosition - vEllipsoidCenter,
-    worldNormal,
+    position - vGeometryEllipsoidCenter,
+    normal,
     sunDirection,
     skyIrradiance
   );
@@ -59,15 +60,11 @@ vec3 getSunSkyIrradiance(
 #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
 #if defined(TRANSMITTANCE) || defined(INSCATTER)
-void getTransmittanceInscatter(
-  const vec3 worldPosition,
-  const vec3 worldNormal,
-  inout vec3 radiance
-) {
+void getTransmittanceInscatter(const vec3 position, inout vec3 radiance) {
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
-    vWorldPosition - vEllipsoidCenter,
-    worldPosition - vEllipsoidCenter,
+    vCameraPosition - vGeometryEllipsoidCenter,
+    position - vGeometryEllipsoidCenter,
     0.0, // Shadow length
     sunDirection,
     transmittance
@@ -85,10 +82,9 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
     #ifdef SKY
-    vec3 viewPosition = vWorldPosition - vSkyEllipsoidCenter;
-    vec3 rayDirection = normalize(vWorldDirection);
+    vec3 rayDirection = normalize(vRayDirection);
     outputColor.rgb = getSkyRadiance(
-      viewPosition,
+      vCameraPosition - vEllipsoidCenter,
       rayDirection,
       sunDirection,
       moonDirection,
@@ -123,20 +119,27 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 worldPosition =
     (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
+  mat3 rotation = mat3(inverseEllipsoidMatrix);
+  vec3 rotatedPosition = rotation * worldPosition;
+  vec3 rotatedNormal = rotation * worldNormal;
 
-  #ifdef CORRECT_GEOMETRIC_ERROR
-  correctGeometricError(worldPosition, worldNormal);
-  #endif // CORRECT_GEOMETRIC_ERROR
+  // #ifdef CORRECT_GEOMETRIC_ERROR
+  // correctGeometricError(worldPosition, worldNormal);
+  // #endif // CORRECT_GEOMETRIC_ERROR
 
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  radiance = getSunSkyIrradiance(worldPosition, worldNormal, inputColor.rgb);
+  radiance = getSunSkyIrradiance(
+    rotatedPosition,
+    rotatedNormal,
+    inputColor.rgb
+  );
   #else
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  getTransmittanceInscatter(worldPosition, worldNormal, radiance);
+  getTransmittanceInscatter(rotatedPosition, radiance);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);
