@@ -50,7 +50,6 @@ export interface AtmosphereMaterialProps {
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
-  ellipsoidMatrix?: Matrix4
   correctAltitude?: boolean
   photometric?: boolean
   sunDirection?: Vector3
@@ -73,6 +72,7 @@ export const atmosphereMaterialParametersBaseDefaults = {
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   private readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
+  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
   private _renderTargetCount!: number
 
@@ -86,7 +86,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       transmittanceTexture = null,
       useHalfFloat,
       ellipsoid,
-      ellipsoidMatrix,
       correctAltitude,
       photometric,
       sunDirection,
@@ -116,7 +115,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_transmittance_texture: new Uniform(transmittanceTexture),
         cameraPosition: new Uniform(new Vector3()),
         ellipsoidCenter: new Uniform(new Vector3()),
-        ellipsoidMatrix: new Uniform(ellipsoidMatrix?.clone() ?? new Matrix4()),
+        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+        altitudeCorrection: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
       },
@@ -165,7 +165,11 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     group: Group
   ): void {
     const uniforms = this.uniforms
-    const position = camera.getWorldPosition(uniforms.cameraPosition.value)
+    uniforms.inverseEllipsoidMatrix.value.copy(this.ellipsoidMatrix).invert()
+
+    const position = vectorScratch
+      .copy(camera.getWorldPosition(uniforms.cameraPosition.value))
+      .sub(uniforms.ellipsoidCenter.value)
 
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
@@ -180,11 +184,11 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
             ? surfacePosition
             : position,
           this.atmosphere.bottomRadius,
-          uniforms.ellipsoidCenter.value
+          uniforms.altitudeCorrection.value
         )
       }
     } else {
-      uniforms.ellipsoidCenter.value.set(0, 0, 0)
+      uniforms.altitudeCorrection.value.set(0, 0, 0)
     }
   }
 
@@ -223,8 +227,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       : this.atmosphere.muSMinFloat
   }
 
-  get ellipsoidMatrix(): Matrix4 {
-    return this.uniforms.ellipsoidMatrix.value
+  get ellipsoidCenter(): Vector3 {
+    return this.uniforms.ellipsoidCenter.value
   }
 
   get photometric(): boolean {
