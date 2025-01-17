@@ -30,7 +30,8 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
 
 function includeRenderTargets(fragmentShader: string, count: number): string {
   let layout = ''
@@ -171,7 +172,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
       .copy(this.ellipsoidMatrix)
       .invert()
-    const cameraPositionRelEllipsoid = vectorScratch
+    const cameraPositionRelEllipsoid = vectorScratch1
       .copy(cameraPosition)
       .applyMatrix4(inverseEllipsoidMatrix)
       .sub(uniforms.ellipsoidCenter.value)
@@ -180,7 +181,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
         cameraPositionRelEllipsoid,
-        vectorScratch
+        vectorScratch2
       )
       if (surfacePosition != null) {
         this.ellipsoid.getOsculatingSphereCenter(
