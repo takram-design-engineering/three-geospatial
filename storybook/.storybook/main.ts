@@ -17,7 +17,7 @@ const config: StorybookConfig = {
   viteFinal: async config =>
     mergeConfig(config, {
       optimizeDeps: {
-        force: true
+        exclude: ['../node_modules/.cache/storybook']
       }
     }),
 
