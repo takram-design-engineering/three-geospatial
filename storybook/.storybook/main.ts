@@ -16,8 +16,17 @@ const config: StorybookConfig = {
 
   viteFinal: async config =>
     mergeConfig(config, {
+      // TODO: I don't understand at all how to tell the optimizer exclude
+      // storybook's cache. Put everything that I can think of here.
       optimizeDeps: {
-        exclude: ['../node_modules/.cache/storybook']
+        exclude: [
+          'node_modules/.cache/storybook',
+          'storybook/node_modules/.cache/storybook',
+          '../node_modules/.cache/storybook',
+          '../storybook/node_modules/.cache/storybook',
+          '../../storybook/node_modules/.cache/storybook'
+        ],
+        force: true
       }
     }),
 
