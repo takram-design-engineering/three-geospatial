@@ -1,8 +1,5 @@
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import type { StorybookConfig } from '@storybook/react-vite'
-import react from '@vitejs/plugin-react'
 import { mergeConfig } from 'vite'
-import glsl from 'vite-plugin-glsl'
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
@@ -18,10 +15,6 @@ const config: StorybookConfig = {
 
   viteFinal: async config =>
     mergeConfig(config, {
-      plugins: [react(), nxViteTsPaths(), glsl()],
-      worker: {
-        plugins: () => [nxViteTsPaths()]
-      },
       optimizeDeps: {
         exclude: ['node_modules/.cache/sb-vite']
       }

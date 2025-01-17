@@ -1,3 +1,5 @@
+import invariant from 'tiny-invariant'
+
 export type TypedArray =
   | Int8Array
   | Uint8Array
@@ -20,57 +22,32 @@ export type TypedArrayConstructor =
   | Float32ArrayConstructor
   | Float64ArrayConstructor
 
-type GetValue = keyof {
-  [K in keyof DataView as DataView[K] extends (byteOffset: number) => number
-    ? K
-    : never]: DataView[K]
-}
+export type TypedArrayElementType =
+  | 'int8'
+  | 'uint8'
+  | 'int16'
+  | 'uint16'
+  | 'int32'
+  | 'uint32'
+  | 'float32'
+  | 'float64'
 
-export function parseTypedArray<
-  T extends TypedArrayConstructor,
-  K extends GetValue
->(
-  buffer: ArrayBuffer,
-  TypedArray: T,
-  getValue: K,
-  littleEndian?: boolean
-): InstanceType<T>
-
-export function parseTypedArray<K extends GetValue>(
-  buffer: ArrayBuffer,
-  TypedArray: TypedArrayConstructor,
-  getValue: K,
-  littleEndian = true
-): TypedArray {
-  const data = new DataView(buffer)
-  const array = new TypedArray(data.byteLength / TypedArray.BYTES_PER_ELEMENT)
-  for (
-    let index = 0, byteIndex = 0;
-    index < array.length;
-    ++index, byteIndex += TypedArray.BYTES_PER_ELEMENT
-  ) {
-    array[index] = data[getValue](byteIndex, littleEndian)
-  }
-  return array
-}
-
-export function parseInt16Array(
-  buffer: ArrayBuffer,
-  littleEndian?: boolean
-): Int16Array {
-  return parseTypedArray(buffer, Int16Array, 'getInt16', littleEndian)
-}
-
-export function parseUint16Array(
-  buffer: ArrayBuffer,
-  littleEndian?: boolean
-): Uint16Array {
-  return parseTypedArray(buffer, Uint16Array, 'getUint16', littleEndian)
-}
-
-export function parseFloat32Array(
-  buffer: ArrayBuffer,
-  littleEndian?: boolean
-): Float32Array {
-  return parseTypedArray(buffer, Float32Array, 'getFloat32', littleEndian)
+export function getTypedArrayElementType(
+  array: TypedArray
+): TypedArrayElementType {
+  // prettier-ignore
+  const type = (
+    array instanceof Int8Array ? 'int8' :
+    array instanceof Uint8Array ? 'uint8' :
+    array instanceof Uint8ClampedArray ? 'uint8' :
+    array instanceof Int16Array ? 'int16' :
+    array instanceof Uint16Array ? 'uint16' :
+    array instanceof Int32Array ? 'int32' :
+    array instanceof Uint32Array ? 'uint32' :
+    array instanceof Float32Array ? 'float32' :
+    array instanceof Float64Array ? 'float64' :
+    null
+  )
+  invariant(type != null)
+  return type
 }

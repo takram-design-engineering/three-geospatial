@@ -10,6 +10,7 @@ export const isPowerOfTwo = MathUtils.isPowerOfTwo
 export const ceilPowerOfTwo = MathUtils.ceilPowerOfTwo
 export const floorPowerOfTwo = MathUtils.floorPowerOfTwo
 export const normalize = MathUtils.normalize
+export const remap = MathUtils.mapLinear
 
 // Prefer glsl's argument order which differs from that of MathUtils.
 export function smoothstep(min: number, max: number, x: number): number {

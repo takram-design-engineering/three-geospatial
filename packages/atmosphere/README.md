@@ -458,9 +458,16 @@ See [`SkyLightProbe`](#skylightprobe) for further details.
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
-import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  getSunDirectionECEF,
+  IRRADIANCE_TEXTURE_HEIGHT,
+  IRRADIANCE_TEXTURE_WIDTH
+} from '@takram/three-atmosphere'
 import { SkyLight } from '@takram/three-atmosphere/r3f'
-import { Float32Data2DLoader } from '@takram/three-geospatial'
+import {
+  createDataTextureLoaderClass,
+  parseFloat32Array
+} from '@takram/three-geospatial'
 import { Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
@@ -468,7 +475,10 @@ const sunDirection = getSunDirectionECEF(/* date */)
 
 const Scene = () => {
   const irradianceTexture = useLoader(
-    Float32Data2DLoader,
+    createDataTextureLoaderClass(parseFloat32Array, {
+      width: IRRADIANCE_TEXTURE_WIDTH,
+      height: IRRADIANCE_TEXTURE_HEIGHT
+    }),
     '/assets/irradiance.bin'
   )
   return (
@@ -495,9 +505,16 @@ See [`SunDirectionalLight`](#directionalsunlight) for further details.
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
-import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  getSunDirectionECEF,
+  TRANSMITTANCE_TEXTURE_HEIGHT,
+  TRANSMITTANCE_TEXTURE_WIDTH
+} from '@takram/three-atmosphere'
 import { SunLight } from '@takram/three-atmosphere/r3f'
-import { Float32Data2DLoader } from '@takram/three-geospatial'
+import {
+  createDataTextureLoaderClass,
+  parseFloat32Array
+} from '@takram/three-geospatial'
 import { Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
@@ -505,7 +522,10 @@ const sunDirection = getSunDirectionECEF(/* date */)
 
 const Scene = () => {
   const transmittanceTexture = useLoader(
-    Float32Data2DLoader,
+    createDataTextureLoaderClass(parseFloat32Array, {
+      width: TRANSMITTANCE_TEXTURE_WIDTH,
+      height: TRANSMITTANCE_TEXTURE_HEIGHT
+    }),
     '/assets/transmittance.bin'
   )
   return (
@@ -1022,6 +1042,49 @@ irradianceScale: number = 1
 This value adjusts the color buffer to reduce contrast.
 
 Deferred lighting treats the color buffer as albedo, but textures like those in Google Photorealistic 3D Tiles have baked lighting and shadows, resulting in higher contrast. Adjusting this value helps make it less noticeable.
+
+#### sky
+
+```ts
+sky: boolean = false
+```
+
+Whether to render the sky as a post-processing effect. Enabling this may reduce the total number of fragments needed to compute the sky radiance.
+
+In this case, the `Sky` component is redundant and should be omitted.
+
+#### sun, moon
+
+```ts
+sun: boolean = true
+moon: boolean = true
+```
+
+See [sun, moon](#sun-moon).
+
+#### moonDirection
+
+```ts
+moonDirection: Vector3 = new Vector()
+```
+
+See [moonDirection](#moondirection).
+
+#### moonAngularRadius
+
+```ts
+moonAngularRadius: number = 0.0045
+```
+
+See [moonAngularRadius](#moonangularradius).
+
+#### lunarRadianceScale
+
+```ts
+lunarRadianceScale: number = 1
+```
+
+See [lunarRadianceScale](#lunarradiancescale).
 
 ## Functions
 
