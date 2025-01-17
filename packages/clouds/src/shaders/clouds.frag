@@ -152,6 +152,8 @@ vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
 float phaseFunction(const float cosTheta, const float attenuation) {
   vec2 g = vec2(scatterAnisotropy1, scatterAnisotropy2);
   vec2 weights = vec2(1.0 - scatterAnisotropyMix, scatterAnisotropyMix);
+  // A similar approximation is described in the Frostbite's paper, where phase
+  // angle is attenuated instead of anisotropy.
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
 
@@ -194,8 +196,6 @@ vec3 multipleScattering(const float opticalDepth, const float cosTheta) {
   for (int i = 0; i < 12; ++i) {
     #if UNROLLED_LOOP_INDEX < MULTI_SCATTERING_OCTAVES
     beerLambert = exp(-opticalDepth * coeffs.y);
-    // A similar approximation is described in the Frostbite's paper, where
-    // phase angle is attenuated.
     scattering += albedo * coeffs.x * beerLambert * phaseFunction(cosTheta, coeffs.z);
     coeffs *= attenuation;
     #endif // UNROLLED_LOOP_INDEX < MULTI_SCATTERING_OCTAVES
