@@ -12,6 +12,6 @@ export default defineConfig({
     target: 'es2022' // Top-level await is supported.
   },
   optimizeDeps: {
-    force: true
+    exclude: ['node_modules/.cache/storybook']
   }
 })
