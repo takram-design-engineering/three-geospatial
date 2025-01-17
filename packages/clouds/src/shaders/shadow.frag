@@ -76,7 +76,7 @@ vec4 marchToClouds(
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
-    vec3 position = rayOrigin + rayDistance * rayDirection;
+    vec3 position = rayDistance * rayDirection + rayOrigin;
 
     // Sample a rough density.
     float height = length(position) - bottomRadius;
@@ -150,12 +150,12 @@ void cascade(
   float rayFar;
   getRayNearFar(sunPosition, rayDirection, rayNear, rayFar);
 
-  vec3 rayOrigin = sunPosition - ellipsoidCenter + rayNear * rayDirection;
+  vec3 rayOrigin = rayNear * rayDirection + sunPosition - ellipsoidCenter;
   vec3 stbn = getSTBN();
   vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.x, mipLevel);
 
   // Velocity for temporal resolution.
-  vec3 frontPosition = rayOrigin + color.x * rayDirection;
+  vec3 frontPosition = color.x * rayDirection + rayOrigin;
   vec4 prevClip = reprojectionMatrices[index] * vec4(ellipsoidCenter + frontPosition, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;

@@ -170,7 +170,7 @@ float marchOpticalDepth(
   float stepScale = 1.0;
   float prevStepScale = 0.0;
   for (int i = 0; i < iterations; ++i) {
-    vec3 position = rayOrigin + stepSize * stepScale * rayDirection;
+    vec3 position = stepSize * stepScale * rayDirection + rayOrigin;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
@@ -232,7 +232,7 @@ vec4 marchToClouds(
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
-    vec3 position = rayOrigin + rayDistance * rayDirection;
+    vec3 position = rayDistance * rayDirection + rayOrigin;
 
     // Sample a rough density.
     float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance * 1e-5));
@@ -476,7 +476,7 @@ void main() {
   }
 
   vec3 viewPosition = cameraPosition - ellipsoidCenter;
-  vec3 rayOrigin = viewPosition + rayNear * rayDirection;
+  vec3 rayOrigin = rayNear * rayDirection + viewPosition;
 
   vec2 globeUv = getGlobeUv(rayOrigin);
   float mipLevel = getMipLevel(globeUv * localWeatherFrequency);
