@@ -1,4 +1,4 @@
-import { DirectionalLight, Vector3, type DataTexture } from 'three'
+import { DirectionalLight, Matrix4, Vector3, type DataTexture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -6,6 +6,7 @@ import { AtmosphereParameters } from './AtmosphereParameters'
 import { getSunLightColor } from './getSunLightColor'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
+const matrixScratch = /*#__PURE__*/ new Matrix4()
 
 export interface SunDirectionalLightParameters {
   transmittanceTexture?: DataTexture | null
@@ -27,6 +28,8 @@ export class SunDirectionalLight extends DirectionalLight {
   private readonly atmosphere: AtmosphereParameters
   transmittanceTexture: DataTexture | null
   ellipsoid: Ellipsoid
+  readonly ellipsoidCenter = new Vector3()
+  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
   photometric: boolean
   readonly sunDirection: Vector3
@@ -58,6 +61,7 @@ export class SunDirectionalLight extends DirectionalLight {
   update(): void {
     this.position
       .copy(this.sunDirection)
+      .applyMatrix4(this.ellipsoidMatrix)
       .normalize()
       .multiplyScalar(this.distance)
       .add(this.target.position)
@@ -65,9 +69,18 @@ export class SunDirectionalLight extends DirectionalLight {
     if (this.transmittanceTexture == null) {
       return
     }
+
+    const inverseEllipsoidMatrix = matrixScratch
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const positionRelEllipsoid = this.target
+      .getWorldPosition(vectorScratch)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(this.ellipsoidCenter)
+
     getSunLightColor(
       this.transmittanceTexture,
-      this.target.getWorldPosition(vectorScratch),
+      positionRelEllipsoid,
       this.sunDirection,
       this.color,
       {
