@@ -148,12 +148,11 @@ export class ShadowMaterial extends RawShaderMaterial {
 
   copyCameraSettings(camera: Camera): void {
     const uniforms = this.uniforms
-    const cameraPosition = camera.getWorldPosition(vectorScratch)
     const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
       .copy(this.ellipsoidMatrix)
       .invert()
-    const cameraPositionECEF = vectorScratch
-      .copy(cameraPosition)
+    const cameraPositionECEF = camera
+      .getWorldPosition(vectorScratch)
       .applyMatrix4(inverseEllipsoidMatrix)
       .sub(uniforms.ellipsoidCenter.value)
 
