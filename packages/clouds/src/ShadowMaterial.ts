@@ -39,6 +39,8 @@ import structuredSampling from './shaders/structuredSampling.glsl?raw'
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface ShadowMaterialParameters {
+  ellipsoidCenterRef?: Vector3
+  ellipsoidMatrixRef?: Matrix4
   sunDirectionRef?: Vector3
   localWeatherTexture?: Texture | null
   shapeTexture?: Texture | null
@@ -58,6 +60,8 @@ interface ShadowMaterialUniforms
   // Atmospheric parameters
   bottomRadius: Uniform<number>
   ellipsoidCenter: Uniform<Vector3>
+  inverseEllipsoidMatrix: Uniform<Matrix4>
+  altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
 
   // Raymarch to clouds
@@ -72,10 +76,13 @@ export interface ShadowMaterial {
 
 export class ShadowMaterial extends RawShaderMaterial {
   ellipsoid: Ellipsoid
+  readonly ellipsoidMatrix: Matrix4
   correctAltitude: boolean
 
   constructor(
     {
+      ellipsoidCenterRef,
+      ellipsoidMatrixRef,
       sunDirectionRef,
       localWeatherTexture = null,
       shapeTexture = null,
@@ -118,7 +125,9 @@ export class ShadowMaterial extends RawShaderMaterial {
 
         // Atmospheric parameters
         bottomRadius: new Uniform(atmosphere.bottomRadius),
-        ellipsoidCenter: new Uniform(new Vector3()),
+        ellipsoidCenter: new Uniform(ellipsoidCenterRef ?? new Vector3()),
+        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+        altitudeCorrection: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirectionRef ?? new Vector3()),
 
         // Raymarch to clouds
@@ -132,24 +141,33 @@ export class ShadowMaterial extends RawShaderMaterial {
     })
 
     this.ellipsoid = Ellipsoid.WGS84
+    this.ellipsoidMatrix = ellipsoidMatrixRef ?? new Matrix4()
     this.correctAltitude = true
     this.cascadeCount = 1
   }
 
   copyCameraSettings(camera: Camera): void {
     const uniforms = this.uniforms
-    const position = camera.getWorldPosition(vectorScratch)
-    const ellipsoidCenter = uniforms.ellipsoidCenter.value
+    const cameraPosition = camera.getWorldPosition(vectorScratch)
+    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionECEF = vectorScratch
+      .copy(cameraPosition)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(uniforms.ellipsoidCenter.value)
+
+    const altitudeCorrection = uniforms.altitudeCorrection.value
     if (this.correctAltitude) {
       getAltitudeCorrectionOffset(
-        position,
+        cameraPositionECEF,
         this.atmosphere.bottomRadius,
         this.ellipsoid,
-        ellipsoidCenter,
+        altitudeCorrection,
         false
       )
     } else {
-      ellipsoidCenter.setScalar(0)
+      altitudeCorrection.setScalar(0)
     }
   }
 

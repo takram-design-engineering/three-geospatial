@@ -80,6 +80,8 @@ const bayerOffsets = /*#__PURE__*/ bayerIndices.reduce<Vector2[]>(
 )
 
 export interface CloudsMaterialParameters {
+  ellipsoidCenterRef?: Vector3
+  ellipsoidMatrixRef?: Matrix4
   sunDirectionRef?: Vector3
   localWeatherTexture?: Texture | null
   shapeTexture?: Texture | null
@@ -136,6 +138,7 @@ export interface CloudsMaterial {
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
+  readonly ellipsoidMatrix: Matrix4
   temporalUpscaling = false
 
   private previousProjectionMatrix?: Matrix4
@@ -143,6 +146,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   constructor(
     {
+      ellipsoidCenterRef,
+      ellipsoidMatrixRef,
       sunDirectionRef,
       localWeatherTexture = null,
       shapeTexture = null,
@@ -195,6 +200,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Atmospheric parameters
           bottomRadius: new Uniform(atmosphere.bottomRadius),
+          ellipsoidCenter: new Uniform(ellipsoidCenterRef ?? new Vector3()), // Overridden
           sunDirection: new Uniform(sunDirectionRef ?? new Vector3()), // Overridden
 
           // Scattering parameters
@@ -236,6 +242,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       },
       atmosphere
     )
+
+    this.ellipsoidMatrix = ellipsoidMatrixRef ?? new Matrix4()
   }
 
   override onBeforeRender(

@@ -9,6 +9,7 @@ import {
   Camera,
   HalfFloatType,
   LinearFilter,
+  Matrix4,
   Vector2,
   Vector3,
   WebGLArrayRenderTarget,
@@ -18,7 +19,6 @@ import {
   type DataTexture,
   type DepthPackingStrategies,
   type Event,
-  type Matrix4,
   type PerspectiveCamera,
   type Texture,
   type TextureDataType,
@@ -130,8 +130,12 @@ export class CloudsEffect extends Effect {
     }
   ]
 
-  // Atmosphere, weather and shape
+  // Shared references
+  readonly ellipsoidCenter: Vector3
+  readonly ellipsoidMatrix: Matrix4
   readonly sunDirection: Vector3
+
+  // Atmosphere, weather and shape
   readonly localWeather: LocalWeather
   readonly localWeatherVelocity = new Vector2()
   readonly shape: CloudShape
@@ -157,8 +161,6 @@ export class CloudsEffect extends Effect {
   readonly cloudsResolveMaterial: CloudsResolveMaterial
   readonly cloudsResolvePass: ShaderPass
   readonly cloudsHistoryPass: CopyPass
-
-  // Shadow parameters
 
   readonly resolution: Resolution
   private frame = 0
@@ -195,11 +197,15 @@ export class CloudsEffect extends Effect {
     cloudsRenderTarget.textures.push(cloudsDepthVelocityBuffer)
     const cloudsResolveRenderTarget = createRenderTarget('Clouds.Resolve')
 
-    // This instance is shared by both cloud and shadow materials.
+    // These instances are shared by both cloud and shadow materials.
+    const ellipsoidCenter = new Vector3()
+    const ellipsoidMatrix = new Matrix4()
     const sunDirection = new Vector3()
 
     const shadowMaterial = new ShadowMaterial(
       {
+        ellipsoidCenterRef: ellipsoidCenter,
+        ellipsoidMatrixRef: ellipsoidMatrix,
         sunDirectionRef: sunDirection,
         localWeatherTexture: localWeather.texture,
         shapeTexture: shape.texture,
@@ -217,6 +223,8 @@ export class CloudsEffect extends Effect {
 
     const cloudsMaterial = new CloudsMaterial(
       {
+        ellipsoidCenterRef: ellipsoidCenter,
+        ellipsoidMatrixRef: ellipsoidMatrix,
         sunDirectionRef: sunDirection,
         localWeatherTexture: localWeather.texture,
         shapeTexture: shape.texture,
@@ -238,8 +246,12 @@ export class CloudsEffect extends Effect {
       attributes: EffectAttribute.DEPTH
     })
 
-    // Atmosphere, weather and shape
+    // Shared references
+    this.ellipsoidCenter = ellipsoidCenter
+    this.ellipsoidMatrix = ellipsoidMatrix
     this.sunDirection = sunDirection
+
+    // Atmosphere, weather and shape
     this.localWeather = localWeather
     this.shape = shape
     this.shapeDetail = shapeDetail
@@ -553,14 +565,6 @@ export class CloudsEffect extends Effect {
   set ellipsoid(value: Ellipsoid) {
     this.cloudsMaterial.ellipsoid = value
     this.shadowMaterial.ellipsoid = value
-  }
-
-  get ellipsoidCenter(): Vector3 {
-    return this.cloudsMaterial.ellipsoidCenter
-  }
-
-  get ellipsoidMatrix(): Matrix4 {
-    return this.cloudsMaterial.ellipsoidMatrix
   }
 
   get correctAltitude(): boolean {
