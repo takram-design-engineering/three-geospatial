@@ -1,4 +1,4 @@
-import { LightProbe, Vector2, Vector3, type DataTexture } from 'three'
+import { LightProbe, Matrix4, Vector2, Vector3, type DataTexture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -34,6 +34,7 @@ const L1_COEFF = Math.sqrt(3) / (2 * Math.sqrt(Math.PI))
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const uvScratch = /*#__PURE__*/ new Vector2()
+const matrixScratch = /*#__PURE__*/ new Matrix4()
 
 export interface SkyLightProbeParameters {
   irradianceTexture?: DataTexture | null
@@ -53,6 +54,8 @@ export class SkyLightProbe extends LightProbe {
   private readonly atmosphere: AtmosphereParameters
   irradianceTexture: DataTexture | null
   ellipsoid: Ellipsoid
+  readonly ellipsoidCenter = new Vector3()
+  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
   photometric: boolean
   readonly sunDirection: Vector3
@@ -83,14 +86,21 @@ export class SkyLightProbe extends LightProbe {
       return
     }
 
-    const position = this.getWorldPosition(vectorScratch1)
+    const inverseEllipsoidMatrix = matrixScratch
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPosition = this.getWorldPosition(vectorScratch1)
+    const cameraPositionECEF = cameraPosition
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(this.ellipsoidCenter)
+
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
-        position,
+        cameraPositionECEF,
         vectorScratch2
       )
       if (surfacePosition != null) {
-        position.sub(
+        cameraPositionECEF.sub(
           this.ellipsoid.getOsculatingSphereCenter(
             surfacePosition,
             this.atmosphere.bottomRadius,
@@ -100,15 +110,17 @@ export class SkyLightProbe extends LightProbe {
       }
     }
 
-    const r = position.length()
-    const muS = position.dot(this.sunDirection) / r
+    const r = cameraPositionECEF.length()
+    const muS = cameraPositionECEF.dot(this.sunDirection) / r
     const uv = getUvFromRMuS(this.atmosphere, r, muS, uvScratch)
     const irradiance = sampleTexture(this.irradianceTexture, uv, vectorScratch2)
     if (this.photometric) {
       irradiance.multiply(this.atmosphere.skyRadianceToRelativeLuminance)
     }
 
-    const normal = this.ellipsoid.getSurfaceNormal(position)
+    const normal = this.ellipsoid
+      .getSurfaceNormal(cameraPositionECEF)
+      .applyMatrix4(this.ellipsoidMatrix)
     const coefficients = this.sh.coefficients
     coefficients[0].copy(irradiance).multiplyScalar(L0_COEFF)
     coefficients[1].copy(irradiance).multiplyScalar(L1_COEFF * normal.y)

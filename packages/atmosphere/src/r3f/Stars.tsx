@@ -92,6 +92,8 @@ export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
       if (transientProps != null && camera.isPerspectiveCamera === true) {
         material.sunDirection.copy(transientProps.sunDirection)
         ref.current?.setRotationFromMatrix(transientProps.rotationMatrix)
+        material.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
+        material.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
       }
     })
 

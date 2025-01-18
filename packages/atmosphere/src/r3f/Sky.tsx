@@ -52,6 +52,8 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
       if (transientProps != null) {
         material.sunDirection.copy(transientProps.sunDirection)
         material.moonDirection.copy(transientProps.moonDirection)
+        material.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
+        material.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
       }
     })
 

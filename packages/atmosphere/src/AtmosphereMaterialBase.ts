@@ -1,4 +1,5 @@
 import {
+  Matrix4,
   RawShaderMaterial,
   Uniform,
   Vector3,
@@ -29,7 +30,8 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
 
 function includeRenderTargets(fragmentShader: string, count: number): string {
   let layout = ''
@@ -71,6 +73,7 @@ export const atmosphereMaterialParametersBaseDefaults = {
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   private readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
+  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
   private _renderTargetCount!: number
 
@@ -113,6 +116,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_transmittance_texture: new Uniform(transmittanceTexture),
         cameraPosition: new Uniform(new Vector3()),
         ellipsoidCenter: new Uniform(new Vector3()),
+        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+        altitudeCorrection: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
       },
@@ -161,26 +166,36 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     group: Group
   ): void {
     const uniforms = this.uniforms
-    const position = camera.getWorldPosition(uniforms.cameraPosition.value)
+    const cameraPosition = camera.getWorldPosition(
+      uniforms.cameraPosition.value
+    )
+    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionECEF = vectorScratch1
+      .copy(cameraPosition)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(uniforms.ellipsoidCenter.value)
 
+    const altitudeCorrection = uniforms.altitudeCorrection
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
-        position,
-        vectorScratch
+        cameraPositionECEF,
+        vectorScratch2
       )
       if (surfacePosition != null) {
         this.ellipsoid.getOsculatingSphereCenter(
           // Move the center of the atmosphere's inner sphere down to intersect
           // the viewpoint when it's located underground.
-          surfacePosition.lengthSq() < position.lengthSq()
+          surfacePosition.lengthSq() < cameraPositionECEF.lengthSq()
             ? surfacePosition
-            : position,
+            : cameraPositionECEF,
           this.atmosphere.bottomRadius,
-          uniforms.ellipsoidCenter.value
+          altitudeCorrection.value
         )
       }
     } else {
-      uniforms.ellipsoidCenter.value.set(0, 0, 0)
+      altitudeCorrection.value.set(0, 0, 0)
     }
   }
 
@@ -217,6 +232,10 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.uniforms.u_mu_s_min.value = value
       ? this.atmosphere.muSMinHalfFloat
       : this.atmosphere.muSMinFloat
+  }
+
+  get ellipsoidCenter(): Vector3 {
+    return this.uniforms.ellipsoidCenter.value
   }
 
   get photometric(): boolean {

@@ -1,5 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useSpring } from 'framer-motion'
+import { type FolderSettings } from 'leva/dist/declarations/src/types'
 import { useEffect } from 'react'
 
 import { springOptions } from './springOptions'
@@ -9,9 +10,10 @@ export interface useExposureControlValues {
   exposure: number
 }
 
-export function useExposureControls({
-  exposure: initialExposure = 1
-}: Partial<useExposureControlValues>): useExposureControlValues {
+export function useExposureControls(
+  { exposure: initialExposure = 1 }: Partial<useExposureControlValues> = {},
+  folderSettings?: FolderSettings
+): useExposureControlValues {
   const [values, set] = useControls(
     'exposure',
     () => ({
@@ -21,7 +23,7 @@ export function useExposureControls({
         max: 100
       }
     }),
-    { collapsed: true }
+    { collapsed: true, ...folderSettings }
   )
 
   const { exposure } = values

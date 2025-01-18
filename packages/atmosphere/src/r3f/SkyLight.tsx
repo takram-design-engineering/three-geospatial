@@ -31,6 +31,8 @@ export const SkyLight = /*#__PURE__*/ forwardRef<SkyLightProbe, SkyLightProps>(
       }
       if (transientProps != null) {
         probe.sunDirection.copy(transientProps.sunDirection)
+        probe.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
+        probe.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
         probe.update()
       }
     })
