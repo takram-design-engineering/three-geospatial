@@ -60,6 +60,8 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     if (transientProps != null) {
       effect.sunDirection.copy(transientProps.sunDirection)
       effect.moonDirection.copy(transientProps.moonDirection)
+      effect.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
+      effect.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
     }
   })
 

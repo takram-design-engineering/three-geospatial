@@ -39,6 +39,8 @@ export const SunLight = /*#__PURE__*/ forwardRef<
     }
     if (transientProps != null) {
       light.sunDirection.copy(transientProps.sunDirection)
+      light.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
+      light.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
       light.update()
     }
   })

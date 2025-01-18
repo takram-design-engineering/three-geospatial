@@ -27,6 +27,8 @@ export interface AtmosphereTransientProps {
   sunDirection: Vector3
   moonDirection: Vector3
   rotationMatrix: Matrix4
+  ellipsoidCenter: Vector3
+  ellipsoidMatrix: Matrix4
 }
 
 export interface AtmosphereContextValue {
@@ -73,7 +75,9 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
   const transientPropsRef = useRef({
     sunDirection: new Vector3(),
     moonDirection: new Vector3(),
-    rotationMatrix: new Matrix4()
+    rotationMatrix: new Matrix4(),
+    ellipsoidCenter: new Vector3(),
+    ellipsoidMatrix: new Matrix4()
   })
 
   const gl = useThree(({ gl }) => gl)
