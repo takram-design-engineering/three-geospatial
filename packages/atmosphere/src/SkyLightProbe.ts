@@ -87,17 +87,17 @@ export class SkyLightProbe extends LightProbe {
     }
 
     const cameraPosition = this.getWorldPosition(vectorScratch1)
-    const cameraPositionRelEllipsoid = cameraPosition
+    const cameraPositionECEF = cameraPosition
       .applyMatrix4(this.ellipsoidMatrix)
       .sub(this.ellipsoidCenter)
 
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
-        cameraPositionRelEllipsoid,
+        cameraPositionECEF,
         vectorScratch2
       )
       if (surfacePosition != null) {
-        cameraPositionRelEllipsoid.sub(
+        cameraPositionECEF.sub(
           this.ellipsoid.getOsculatingSphereCenter(
             surfacePosition,
             this.atmosphere.bottomRadius,
@@ -107,8 +107,8 @@ export class SkyLightProbe extends LightProbe {
       }
     }
 
-    const r = cameraPositionRelEllipsoid.length()
-    const muS = cameraPositionRelEllipsoid.dot(this.sunDirection) / r
+    const r = cameraPositionECEF.length()
+    const muS = cameraPositionECEF.dot(this.sunDirection) / r
     const uv = getUvFromRMuS(this.atmosphere, r, muS, uvScratch)
     const irradiance = sampleTexture(this.irradianceTexture, uv, vectorScratch2)
     if (this.photometric) {
@@ -119,7 +119,7 @@ export class SkyLightProbe extends LightProbe {
       .copy(this.ellipsoidMatrix)
       .invert()
     const normal = this.ellipsoid
-      .getSurfaceNormal(cameraPositionRelEllipsoid)
+      .getSurfaceNormal(cameraPositionECEF)
       .applyMatrix4(inverseEllipsoidMatrix)
     const coefficients = this.sh.coefficients
     coefficients[0].copy(irradiance).multiplyScalar(L0_COEFF)

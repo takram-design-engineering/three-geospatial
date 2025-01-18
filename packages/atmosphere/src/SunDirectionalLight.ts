@@ -73,13 +73,13 @@ export class SunDirectionalLight extends DirectionalLight {
       return
     }
 
-    const positionRelEllipsoid = this.target
+    const cameraPositionECEF = this.target
       .getWorldPosition(vectorScratch)
       .applyMatrix4(this.ellipsoidMatrix)
       .sub(this.ellipsoidCenter)
     getSunLightColor(
       this.transmittanceTexture,
-      positionRelEllipsoid,
+      cameraPositionECEF,
       this.sunDirection,
       this.color,
       {

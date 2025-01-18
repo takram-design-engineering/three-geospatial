@@ -240,7 +240,7 @@ export class AerialPerspectiveEffect extends Effect {
     const cameraPosition = camera.getWorldPosition(
       uniforms.get('cameraPosition')!.value
     )
-    const cameraPositionRelEllipsoid = vectorScratch1
+    const cameraPositionECEF = vectorScratch1
       .copy(cameraPosition)
       .applyMatrix4(uniforms.get('ellipsoidMatrix')!.value)
       .sub(uniforms.get('ellipsoidCenter')!.value)
@@ -249,9 +249,7 @@ export class AerialPerspectiveEffect extends Effect {
     // interpolate between the globe true normals and idealized normals to avoid
     // lighting artifacts.
     const idealSphereAlpha = uniforms.get('idealSphereAlpha')!
-    const cameraHeight = geodeticScratch.setFromECEF(
-      cameraPositionRelEllipsoid
-    ).height
+    const cameraHeight = geodeticScratch.setFromECEF(cameraPositionECEF).height
     vectorScratch2
       .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
       .applyMatrix4(camera.projectionMatrix)
@@ -265,16 +263,16 @@ export class AerialPerspectiveEffect extends Effect {
     const altitudeCorrection = uniforms.get('altitudeCorrection')!
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
-        cameraPositionRelEllipsoid,
+        cameraPositionECEF,
         vectorScratch2
       )
       if (surfacePosition != null) {
         this.ellipsoid.getOsculatingSphereCenter(
           // Move the center of the atmosphere's inner sphere down to intersect
           // the viewpoint when it's located underground.
-          surfacePosition.lengthSq() < cameraPositionRelEllipsoid.lengthSq()
+          surfacePosition.lengthSq() < cameraPositionECEF.lengthSq()
             ? surfacePosition
-            : cameraPositionRelEllipsoid,
+            : cameraPositionECEF,
           this.atmosphere.bottomRadius,
           altitudeCorrection.value
         )

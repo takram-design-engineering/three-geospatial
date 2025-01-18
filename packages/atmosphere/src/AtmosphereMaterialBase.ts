@@ -168,7 +168,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     const cameraPosition = camera.getWorldPosition(
       uniforms.cameraPosition.value
     )
-    const cameraPositionRelEllipsoid = vectorScratch1
+    const cameraPositionECEF = vectorScratch1
       .copy(cameraPosition)
       .applyMatrix4(uniforms.ellipsoidMatrix.value)
       .sub(uniforms.ellipsoidCenter.value)
@@ -176,16 +176,16 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     const altitudeCorrection = uniforms.altitudeCorrection
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
-        cameraPositionRelEllipsoid,
+        cameraPositionECEF,
         vectorScratch2
       )
       if (surfacePosition != null) {
         this.ellipsoid.getOsculatingSphereCenter(
           // Move the center of the atmosphere's inner sphere down to intersect
           // the viewpoint when it's located underground.
-          surfacePosition.lengthSq() < cameraPositionRelEllipsoid.lengthSq()
+          surfacePosition.lengthSq() < cameraPositionECEF.lengthSq()
             ? surfacePosition
-            : cameraPositionRelEllipsoid,
+            : cameraPositionECEF,
           this.atmosphere.bottomRadius,
           altitudeCorrection.value
         )
