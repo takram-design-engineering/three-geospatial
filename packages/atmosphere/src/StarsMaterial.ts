@@ -4,9 +4,9 @@ import {
   Uniform,
   Vector2,
   type BufferGeometry,
-  type Camera,
   type Group,
   type Object3D,
+  type OrthographicCamera,
   type PerspectiveCamera,
   type Scene,
   type WebGLRenderer
@@ -90,7 +90,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
   override onBeforeRender(
     renderer: WebGLRenderer,
     scene: Scene,
-    camera: Camera,
+    camera: PerspectiveCamera | OrthographicCamera,
     geometry: BufferGeometry,
     object: Object3D,
     group: Group
@@ -101,7 +101,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     uniforms.modelViewMatrix.value.copy(camera.modelViewMatrix)
     uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
     uniforms.matrixWorld.value.copy(object.matrixWorld)
-    uniforms.cameraFar.value = (camera as PerspectiveCamera).far
+    uniforms.cameraFar.value = camera.far
     uniforms.pointSize.value = this.pointSize * renderer.getPixelRatio()
 
     const isPerspectiveCamera = camera.isPerspectiveCamera === true

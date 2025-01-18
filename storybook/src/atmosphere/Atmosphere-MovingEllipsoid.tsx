@@ -17,6 +17,7 @@ import {
   Atmosphere,
   Sky,
   SkyLight,
+  Stars,
   SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
@@ -94,6 +95,7 @@ const Scene: FC = () => {
         <Sky />
         <SkyLight />
         <SunLight />
+        <Stars data='atmosphere/stars.bin' />
         <EffectComposer>
           <AerialPerspective />
           <LensFlare />
