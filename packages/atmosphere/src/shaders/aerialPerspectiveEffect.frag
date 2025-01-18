@@ -130,7 +130,7 @@ float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const i
   return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
-float sampleShadowOpticalDepthPCF(const vec3 worldPosition) {
+float sampleShadowOpticalDepthPCF(const vec3 worldPosition, const vec3 positionECEF) {
   int index = getCascadeIndex(worldPosition);
   vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
   point /= point.w;
@@ -140,9 +140,9 @@ float sampleShadowOpticalDepthPCF(const vec3 worldPosition) {
   }
 
   float distanceToTop = raySphereSecondIntersection(
-    worldPosition,
+    positionECEF / METER_TO_UNIT_LENGTH, // TODO: Make units consistent
     sunDirection,
-    ellipsoidCenter,
+    vec3(0.0),
     bottomRadius + shadowTopHeight
   );
 
@@ -234,7 +234,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // CORRECT_GEOMETRIC_ERROR
 
   #ifdef HAS_SHADOW
-  float opticalDepth = sampleShadowOpticalDepthPCF(worldPosition);
+  float opticalDepth = sampleShadowOpticalDepthPCF(worldPosition, positionECEF);
   float shadowTransmittance = exp(-opticalDepth);
   #else // HAS_SHADOW
   float shadowTransmittance = 1.0;
