@@ -8,7 +8,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useState, type FC } from 'react'
+import { Fragment, useEffect, useState, type FC } from 'react'
 import { NearestFilter, RepeatWrapping, RGBAFormat, Vector3 } from 'three'
 
 import {
@@ -149,16 +149,26 @@ const Scene: FC = () => {
         correctAltitude={correctAltitude}
       >
         <EffectComposer multisampling={0} enableNormalPass>
-          <AerialPerspective sky skyIrradiance sunIrradiance />
-          <Clouds
-            ref={setClouds}
-            stbnTexture={stbnTexture}
-            coverage={coverage}
-            temporalUpscaling={false}
-          />
-          <LensFlare />
-          <ToneMapping mode={ToneMappingMode.AGX} />
-          <Dithering />
+          <Fragment
+            key={JSON.stringify({
+              debugShowUv,
+              debugShowShadowMap
+            })}
+          >
+            <Clouds
+              ref={setClouds}
+              stbnTexture={stbnTexture}
+              coverage={coverage}
+            />
+            <AerialPerspective sky skyIrradiance sunIrradiance />
+            {!debugShowUv && !debugShowShadowMap && (
+              <>
+                <LensFlare />
+                <ToneMapping mode={ToneMappingMode.AGX} />
+                <Dithering />
+              </>
+            )}
+          </Fragment>
         </EffectComposer>
       </Atmosphere>
     </>
