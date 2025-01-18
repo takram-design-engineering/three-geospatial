@@ -351,9 +351,65 @@ date: number | Date = undefined
 
 Specifies the date used to obtain the directions of the sun, moon, and ECI to ECEF rotation matrix.
 
-The behavior when used together with the `updateByDate` function is not defined.
+The behavior when used together with the [`updateByDate`](#updatebydate) function is not defined.
 
 ### Ref
+
+#### sunDirection, moonDirection
+
+```ts
+sunDirection: Vector3
+moonDirection: Vector3
+```
+
+The normalized direction to the sun and moon in ECEF coordinates. This value is shared with descendant components and is overwritten by the [`date`](#date) prop or the [`updateByDate`](#updatebydate) function.
+
+The default values are [0, 0, 0].
+
+#### rotationMatrix
+
+```ts
+rotationMatrix: Matrix4
+```
+
+The rotation matrix for converting ECI to ECEF coordinates. This value is shared with descendant components and is overwritten by the [`date`](#date) prop or the [`updateByDate`](#updatebydate) function.
+
+The default value is an identity matrix.
+
+#### ellipsoidCenter, ellipsoidMatrix
+
+```ts
+ellipsoidCenter: Vector3
+ellipsoidMatrix: Matrix4
+```
+
+The center coordinates and rotation matrix of the ellipsoid. Use these values to define a reference frame or, more commonly, to move the ellipsoid for working around the world space origin and adapting to Three.js’s Y-up coordinate system.
+
+The default value of `ellipsoidCenter` is [0, 0, 0], and `ellipsoidMatrix` is an identity matrix.
+
+```ts
+import { type AtmosphereApi } from '@takram/three-atmosphere/r3f'
+import { Ellipsoid } from '@takram/three-geospatial'
+import { Vector3 } from 'three'
+
+const position = new Vector3(/* ECEF coordinate in meters */)
+const east = new Vector3()
+const north = new Vector3()
+const up = new Vector3()
+
+declare const atmosphere: AtmosphereApi
+
+// Offset the ellipsoid so that the world space origin locates at the
+// position relative to the ellipsoid.
+atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
+
+// Rotate the ellipsoid around the world space origin so that the camera's
+// orientation aligns with X: east, Y: up, Z: north, for example.
+Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
+atmosphere.ellipsoidMatrix.makeBasis(east, up, north).invert()
+```
+
+See the [story](/storybook/src/atmosphere/Atmosphere-MovingEllipsoid.tsx) for complete example.
 
 #### updateByDate
 
@@ -610,6 +666,15 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 See [ellipsoid](#ellipsoid).
 
+#### ellipsoidCenter, ellipsoidMatrix
+
+```ts
+ellipsoidCenter: Vector3
+ellipsoidMatrix: Matrix4
+```
+
+See [ellipsoidCenter, ellipsoidMatrix](#ellipsoidcenter-ellipsoidmatrix).
+
 #### correctAltitude
 
 ```ts
@@ -793,6 +858,15 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 See [ellipsoid](#ellipsoid).
 
+#### ellipsoidCenter, ellipsoidMatrix
+
+```ts
+ellipsoidCenter: Vector3
+ellipsoidMatrix: Matrix4
+```
+
+See [ellipsoidCenter, ellipsoidMatrix](#ellipsoidcenter-ellipsoidmatrix).
+
 #### correctAltitude
 
 ```ts
@@ -854,6 +928,15 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 ```
 
 See [ellipsoid](#ellipsoid).
+
+#### ellipsoidCenter, ellipsoidMatrix
+
+```ts
+ellipsoidCenter: Vector3
+ellipsoidMatrix: Matrix4
+```
+
+See [ellipsoidCenter, ellipsoidMatrix](#ellipsoidcenter-ellipsoidmatrix).
 
 #### correctAltitude
 
@@ -973,6 +1056,15 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 ```
 
 See [ellipsoid](#ellipsoid).
+
+#### ellipsoidCenter, ellipsoidMatrix
+
+```ts
+ellipsoidCenter: Vector3
+ellipsoidMatrix: Matrix4
+```
+
+See [ellipsoidCenter, ellipsoidMatrix](#ellipsoidcenter-ellipsoidmatrix).
 
 #### correctAltitude
 
