@@ -314,13 +314,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     const cameraPosition = camera.getWorldPosition(
       uniforms.cameraPosition.value
     )
-    try {
-      uniforms.cameraHeight.value =
-        geodeticScratch.setFromECEF(cameraPosition).height
-    } catch (error) {
-      // Abort when unable to project position to the ellipsoid surface.
-    }
-
     const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
       .copy(this.ellipsoidMatrix)
       .invert()
@@ -328,6 +321,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       .copy(cameraPosition)
       .applyMatrix4(inverseEllipsoidMatrix)
       .sub(uniforms.ellipsoidCenter.value)
+
+    try {
+      uniforms.cameraHeight.value =
+        geodeticScratch.setFromECEF(cameraPositionECEF).height
+    } catch (error) {
+      // Abort when unable to project position to the ellipsoid surface.
+    }
 
     const altitudeCorrection = uniforms.altitudeCorrection.value
     if (this.correctAltitude) {
