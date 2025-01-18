@@ -26,8 +26,13 @@ vec3 readNormal(const vec2 uv) {
 }
 
 void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
+  // TODO: The error is pronounced at the edge of the ellipsoid due to the
+  // large difference between the sphere position and the unprojected position
+  // at the current fragment. Calculating the sphere position from the fragment
+  // UV may resolve this.
+
   // Correct way is slerp, but this will be small-angle interpolation anyways.
-  vec3 sphereNormal = normalize(1.0 / vEllipsoidRadiiSquared * positionECEF);
+  vec3 sphereNormal = normalize(positionECEF / vEllipsoidRadiiSquared);
   vec3 spherePosition = u_bottom_radius * sphereNormal;
   normalECEF = mix(normalECEF, sphereNormal, idealSphereAlpha);
   positionECEF = mix(positionECEF, spherePosition, idealSphereAlpha);
