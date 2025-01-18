@@ -20,8 +20,6 @@ uniform mat4 reprojectionMatrix;
 uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
-uniform mat4 ellipsoidMatrix;
-uniform mat4 inverseEllipsoidMatrix;
 uniform vec2 temporalJitter;
 uniform sampler3D stbnTexture;
 
@@ -104,7 +102,7 @@ vec3 getCascadeColor(const vec3 rayPosition) {
     vec3(1.0, 1.0, 0.0)
   );
   // Ray position is relative to the ellipsoid.
-  vec3 position = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
+  vec3 position = rayPosition + vEllipsoidCenter;
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
   point /= point.w;
@@ -118,7 +116,7 @@ vec3 getCascadeColor(const vec3 rayPosition) {
 
 vec3 sampleShadow(const vec3 rayPosition, vec2 offset) {
   // Ray position is relative to the ellipsoid.
-  vec3 position = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
+  vec3 position = rayPosition + vEllipsoidCenter;
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
   point /= point.w;
@@ -208,7 +206,7 @@ vec3 multipleScattering(const float opticalDepth, const float cosTheta) {
 }
 
 vec4 marchToClouds(
-  const vec3 rayOrigin, // Relative to the ellipsoid center
+  const vec3 rayOrigin,
   const vec3 rayDirection,
   const float maxRayDistance,
   const float jitter,
@@ -263,9 +261,9 @@ vec4 marchToClouds(
       // Distance to the top of the bottom layer along the sun direction.
       // This matches the ray origin of BSM.
       float distanceToTop = raySphereSecondIntersection(
-        position + vEllipsoidCenter,
+        position,
         sunDirection,
-        vEllipsoidCenter,
+        vec3(0.0),
         bottomRadius + maxLayerHeights.x
       );
 
@@ -391,9 +389,9 @@ void getRayNearFar(
     float intersection1;
     float intersection2;
     raySphereIntersections(
-      vCameraPosition,
+      cameraPosition,
       rayDirection,
-      vEllipsoidCenter,
+      vec3(0.0),
       bottomRadius + maxHeight,
       intersection1,
       intersection2
@@ -401,9 +399,9 @@ void getRayNearFar(
     rayNear = intersection1;
     if (intersectsGround) {
       rayFar = raySphereFirstIntersection(
-        vCameraPosition,
+        cameraPosition,
         rayDirection,
-        vEllipsoidCenter,
+        vec3(0.0),
         bottomRadius + minHeight
       );
     } else {
@@ -437,7 +435,7 @@ vec4 getCascadedShadowMap(vec2 uv) {
   }
 
   #ifndef DEBUG_SHOW_SHADOW_MAP_TYPE
-  #define DEBUG_SHOW_SHADOW_MAP_TYPE (2)
+  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
 
   const float frontDepthScale = 1e-5;

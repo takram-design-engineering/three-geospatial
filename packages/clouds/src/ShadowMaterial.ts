@@ -81,9 +81,9 @@ export class ShadowMaterial extends RawShaderMaterial {
 
   constructor(
     {
-      ellipsoidCenterRef,
-      ellipsoidMatrixRef,
-      sunDirectionRef,
+      ellipsoidCenterRef = new Vector3(),
+      ellipsoidMatrixRef = new Matrix4(),
+      sunDirectionRef = new Vector3(),
       localWeatherTexture = null,
       shapeTexture = null,
       shapeDetailTexture = null
@@ -125,10 +125,11 @@ export class ShadowMaterial extends RawShaderMaterial {
 
         // Atmospheric parameters
         bottomRadius: new Uniform(atmosphere.bottomRadius),
-        ellipsoidCenter: new Uniform(ellipsoidCenterRef ?? new Vector3()),
+        ellipsoidCenter: new Uniform(ellipsoidCenterRef),
+        ellipsoidMatrix: new Uniform(ellipsoidMatrixRef),
         inverseEllipsoidMatrix: new Uniform(new Matrix4()),
         altitudeCorrection: new Uniform(new Vector3()),
-        sunDirection: new Uniform(sunDirectionRef ?? new Vector3()),
+        sunDirection: new Uniform(sunDirectionRef),
 
         // Raymarch to clouds
         maxIterations: new Uniform(50),
@@ -141,7 +142,7 @@ export class ShadowMaterial extends RawShaderMaterial {
     })
 
     this.ellipsoid = Ellipsoid.WGS84
-    this.ellipsoidMatrix = ellipsoidMatrixRef ?? new Matrix4()
+    this.ellipsoidMatrix = ellipsoidMatrixRef
     this.correctAltitude = true
     this.cascadeCount = 1
   }

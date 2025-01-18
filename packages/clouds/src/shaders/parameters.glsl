@@ -3,8 +3,9 @@ uniform int frame;
 
 // Atmospheric parameters
 uniform float bottomRadius;
+uniform mat4 ellipsoidMatrix;
+uniform mat4 inverseEllipsoidMatrix;
 uniform vec3 sunDirection;
-uniform vec3 ellipsoidCenter;
 
 // Shape and weather
 uniform sampler2D localWeatherTexture;

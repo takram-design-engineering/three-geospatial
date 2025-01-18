@@ -21,6 +21,7 @@ uniform float minDensity;
 uniform float minTransmittance;
 
 in vec2 vUv;
+in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
 // Redundant notation for prettier.
@@ -42,7 +43,7 @@ vec3 getSTBN() {
 }
 
 vec4 marchToClouds(
-  const vec3 rayOrigin, // Relative to the ellipsoid center
+  const vec3 rayOrigin,
   const vec3 rayDirection,
   const float maxRayDistance,
   const float jitter,
@@ -109,7 +110,7 @@ vec4 marchToClouds(
 }
 
 void getRayNearFar(
-  const vec3 viewPosition,
+  const vec3 sunPosition,
   const vec3 rayDirection,
   out float rayNear,
   out float rayFar
@@ -117,16 +118,16 @@ void getRayNearFar(
   rayNear = max(
     0.0,
     raySphereFirstIntersection(
-      viewPosition,
+      sunPosition,
       rayDirection,
-      ellipsoidCenter,
+      vec3(0.0),
       bottomRadius + maxLayerHeights.x
     )
   );
   rayFar = raySphereFirstIntersection(
-    viewPosition,
+    sunPosition,
     rayDirection,
-    ellipsoidCenter,
+    vec3(0.0),
     bottomRadius + minLayerHeights.x
   );
   if (rayFar < 0.0) {
@@ -143,20 +144,20 @@ void cascade(
   vec2 clip = vUv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrices[index] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
-  vec3 sunPosition = point.xyz;
+  vec3 sunPosition = point.xyz - vEllipsoidCenter;
 
   vec3 rayDirection = normalize(-sunDirection);
   float rayNear;
   float rayFar;
   getRayNearFar(sunPosition, rayDirection, rayNear, rayFar);
 
-  vec3 rayOrigin = rayNear * rayDirection + sunPosition - ellipsoidCenter;
+  vec3 rayOrigin = rayNear * rayDirection + sunPosition;
   vec3 stbn = getSTBN();
   vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.x, mipLevel);
 
   // Velocity for temporal resolution.
   vec3 frontPosition = color.x * rayDirection + rayOrigin;
-  vec4 prevClip = reprojectionMatrices[index] * vec4(ellipsoidCenter + frontPosition, 1.0);
+  vec4 prevClip = reprojectionMatrices[index] * vec4(frontPosition + vEllipsoidCenter, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
   vec2 velocity = (vUv - prevUv) * resolution;
