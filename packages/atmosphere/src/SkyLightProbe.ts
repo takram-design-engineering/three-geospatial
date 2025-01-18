@@ -86,9 +86,12 @@ export class SkyLightProbe extends LightProbe {
       return
     }
 
+    const inverseEllipsoidMatrix = matrixScratch
+      .copy(this.ellipsoidMatrix)
+      .invert()
     const cameraPosition = this.getWorldPosition(vectorScratch1)
     const cameraPositionECEF = cameraPosition
-      .applyMatrix4(this.ellipsoidMatrix)
+      .applyMatrix4(inverseEllipsoidMatrix)
       .sub(this.ellipsoidCenter)
 
     if (this.correctAltitude) {
@@ -115,12 +118,9 @@ export class SkyLightProbe extends LightProbe {
       irradiance.multiply(this.atmosphere.skyRadianceToRelativeLuminance)
     }
 
-    const inverseEllipsoidMatrix = matrixScratch
-      .copy(this.ellipsoidMatrix)
-      .invert()
     const normal = this.ellipsoid
       .getSurfaceNormal(cameraPositionECEF)
-      .applyMatrix4(inverseEllipsoidMatrix)
+      .applyMatrix4(this.ellipsoidMatrix)
     const coefficients = this.sh.coefficients
     coefficients[0].copy(irradiance).multiplyScalar(L0_COEFF)
     coefficients[1].copy(irradiance).multiplyScalar(L1_COEFF * normal.y)

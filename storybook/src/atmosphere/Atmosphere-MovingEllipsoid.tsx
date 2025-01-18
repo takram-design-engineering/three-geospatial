@@ -64,9 +64,9 @@ const Scene: FC = () => {
     atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
 
     // Rotate the ellipsoid around the world space origin so that the camera's
-    // orientation aligns with X: east, Y: up, Z: north.
+    // orientation aligns with X: east, Y: up, Z: north, for example.
     Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-    atmosphere.ellipsoidMatrix.makeBasis(east, up, north)
+    atmosphere.ellipsoidMatrix.makeBasis(east, up, north).invert()
   })
 
   return (

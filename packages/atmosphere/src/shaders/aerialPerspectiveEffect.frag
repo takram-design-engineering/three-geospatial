@@ -3,7 +3,7 @@ uniform sampler2D normalBuffer;
 uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
-uniform mat4 ellipsoidMatrix;
+uniform mat4 inverseEllipsoidMatrix;
 uniform vec3 sunDirection;
 uniform vec3 moonDirection;
 uniform float moonAngularRadius;
@@ -118,9 +118,9 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
-  vec3 positionECEF =
-    mat3(ellipsoidMatrix) * worldPosition * METER_TO_UNIT_LENGTH;
-  vec3 normalECEF = mat3(ellipsoidMatrix) * worldNormal;
+  mat3 rotation = mat3(inverseEllipsoidMatrix);
+  vec3 positionECEF = rotation * worldPosition * METER_TO_UNIT_LENGTH;
+  vec3 normalECEF = rotation * worldNormal;
 
   // #ifdef CORRECT_GEOMETRIC_ERROR
   // correctGeometricError(worldPosition, worldNormal);

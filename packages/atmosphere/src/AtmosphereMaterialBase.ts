@@ -73,6 +73,7 @@ export const atmosphereMaterialParametersBaseDefaults = {
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   private readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
+  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
   private _renderTargetCount!: number
 
@@ -115,7 +116,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_transmittance_texture: new Uniform(transmittanceTexture),
         cameraPosition: new Uniform(new Vector3()),
         ellipsoidCenter: new Uniform(new Vector3()),
-        ellipsoidMatrix: new Uniform(new Matrix4()),
+        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
         altitudeCorrection: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
@@ -168,9 +169,12 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     const cameraPosition = camera.getWorldPosition(
       uniforms.cameraPosition.value
     )
+    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
+      .copy(this.ellipsoidMatrix)
+      .invert()
     const cameraPositionECEF = vectorScratch1
       .copy(cameraPosition)
-      .applyMatrix4(uniforms.ellipsoidMatrix.value)
+      .applyMatrix4(inverseEllipsoidMatrix)
       .sub(uniforms.ellipsoidCenter.value)
 
     const altitudeCorrection = uniforms.altitudeCorrection
@@ -232,10 +236,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   get ellipsoidCenter(): Vector3 {
     return this.uniforms.ellipsoidCenter.value
-  }
-
-  get ellipsoidMatrix(): Matrix4 {
-    return this.uniforms.ellipsoidMatrix.value
   }
 
   get photometric(): boolean {

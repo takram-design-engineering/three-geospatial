@@ -2,7 +2,7 @@ uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform vec3 cameraPosition;
 uniform vec3 ellipsoidCenter;
-uniform mat4 ellipsoidMatrix;
+uniform mat4 inverseEllipsoidMatrix;
 uniform vec3 altitudeCorrection;
 
 layout(location = 0) in vec3 position;
@@ -42,8 +42,9 @@ void main() {
   vec3 direction, origin;
   getCameraRay(origin, direction);
 
-  vCameraPosition = mat3(ellipsoidMatrix) * origin.xyz * METER_TO_UNIT_LENGTH;
-  vRayDirection = mat3(ellipsoidMatrix) * direction.xyz;
+  mat3 rotation = mat3(inverseEllipsoidMatrix);
+  vCameraPosition = rotation * origin.xyz * METER_TO_UNIT_LENGTH;
+  vRayDirection = rotation * direction.xyz;
   vEllipsoidCenter =
     (ellipsoidCenter + altitudeCorrection) * METER_TO_UNIT_LENGTH;
 

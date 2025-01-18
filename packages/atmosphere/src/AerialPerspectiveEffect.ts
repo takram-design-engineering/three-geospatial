@@ -98,6 +98,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 export class AerialPerspectiveEffect extends Effect {
   private readonly atmosphere: AtmosphereParameters
   private _ellipsoid!: Ellipsoid
+  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
 
   constructor(
@@ -171,7 +172,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['cameraPosition', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
           ['ellipsoidCenter', new Uniform(new Vector3())],
-          ['ellipsoidMatrix', new Uniform(new Matrix4())],
+          ['inverseEllipsoidMatrix', new Uniform(new Matrix4())],
           ['altitudeCorrection', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['irradianceScale', new Uniform(irradianceScale)],
@@ -240,9 +241,13 @@ export class AerialPerspectiveEffect extends Effect {
     const cameraPosition = camera.getWorldPosition(
       uniforms.get('cameraPosition')!.value
     )
+    const inverseEllipsoidMatrix = uniforms
+      .get('inverseEllipsoidMatrix')!
+      .value.copy(this.ellipsoidMatrix)
+      .invert()
     const cameraPositionECEF = vectorScratch1
       .copy(cameraPosition)
-      .applyMatrix4(uniforms.get('ellipsoidMatrix')!.value)
+      .applyMatrix4(inverseEllipsoidMatrix)
       .sub(uniforms.get('ellipsoidCenter')!.value)
 
     // Calculate the projected scale of the globe in clip space used to
@@ -368,10 +373,6 @@ export class AerialPerspectiveEffect extends Effect {
 
   get ellipsoidCenter(): Vector3 {
     return this.uniforms.get('ellipsoidCenter')!.value
-  }
-
-  get ellipsoidMatrix(): Matrix4 {
-    return this.uniforms.get('ellipsoidMatrix')!.value
   }
 
   get correctGeometricError(): boolean {

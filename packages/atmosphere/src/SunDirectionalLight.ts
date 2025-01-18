@@ -59,12 +59,9 @@ export class SunDirectionalLight extends DirectionalLight {
   }
 
   update(): void {
-    const inverseEllipsoidMatrix = matrixScratch
-      .copy(this.ellipsoidMatrix)
-      .invert()
     this.position
       .copy(this.sunDirection)
-      .applyMatrix4(inverseEllipsoidMatrix)
+      .applyMatrix4(this.ellipsoidMatrix)
       .normalize()
       .multiplyScalar(this.distance)
       .add(this.target.position)
@@ -73,9 +70,12 @@ export class SunDirectionalLight extends DirectionalLight {
       return
     }
 
+    const inverseEllipsoidMatrix = matrixScratch
+      .copy(this.ellipsoidMatrix)
+      .invert()
     const cameraPositionECEF = this.target
       .getWorldPosition(vectorScratch)
-      .applyMatrix4(this.ellipsoidMatrix)
+      .applyMatrix4(inverseEllipsoidMatrix)
       .sub(this.ellipsoidCenter)
     getSunLightColor(
       this.transmittanceTexture,
