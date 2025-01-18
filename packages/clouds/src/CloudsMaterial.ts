@@ -108,6 +108,7 @@ interface CloudsMaterialUniforms
 
   // Atmospheric parameters
   bottomRadius: Uniform<number>
+  ellipsoidMatrix: Uniform<Matrix4>
 
   // Scattering parameters
   albedo: Uniform<Color>
@@ -146,9 +147,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   constructor(
     {
-      ellipsoidCenterRef,
-      ellipsoidMatrixRef,
-      sunDirectionRef,
+      ellipsoidCenterRef = new Vector3(),
+      ellipsoidMatrixRef = new Matrix4(),
+      sunDirectionRef = new Vector3(),
       localWeatherTexture = null,
       shapeTexture = null,
       shapeDetailTexture = null,
@@ -200,8 +201,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Atmospheric parameters
           bottomRadius: new Uniform(atmosphere.bottomRadius),
-          ellipsoidCenter: new Uniform(ellipsoidCenterRef ?? new Vector3()), // Overridden
-          sunDirection: new Uniform(sunDirectionRef ?? new Vector3()), // Overridden
+          ellipsoidCenter: new Uniform(ellipsoidCenterRef), // Overridden
+          ellipsoidMatrix: new Uniform(ellipsoidMatrixRef),
+          sunDirection: new Uniform(sunDirectionRef), // Overridden
 
           // Scattering parameters
           albedo: new Uniform(new Color().setScalar(0.98)),
@@ -242,8 +244,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       },
       atmosphere
     )
-
-    this.ellipsoidMatrix = ellipsoidMatrixRef ?? new Matrix4()
+    this.ellipsoidMatrix = ellipsoidMatrixRef
   }
 
   override onBeforeRender(

@@ -17,10 +17,11 @@ precision highp sampler2DArray;
 uniform sampler2D depthBuffer;
 uniform mat4 viewMatrix;
 uniform mat4 reprojectionMatrix;
-uniform vec3 cameraPosition;
 uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
+uniform mat4 ellipsoidMatrix;
+uniform mat4 inverseEllipsoidMatrix;
 uniform vec2 temporalJitter;
 uniform sampler3D stbnTexture;
 
@@ -51,8 +52,10 @@ uniform float shadowFar;
 uniform float shadowFilterRadius;
 
 in vec2 vUv;
-in vec3 vViewDirection; // Direction to the center of screen
+in vec3 vCameraPosition;
+in vec3 vCameraDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
+in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 1) out vec3 outputDepthVelocity;
@@ -100,8 +103,8 @@ vec3 getCascadeColor(const vec3 rayPosition) {
     vec3(0.0, 0.0, 1.0),
     vec3(1.0, 1.0, 0.0)
   );
-  // Ray position is relative to the ellipsoid center.
-  vec3 position = rayPosition + ellipsoidCenter;
+  // Ray position is relative to the ellipsoid.
+  vec3 position = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
   point /= point.w;
@@ -114,8 +117,8 @@ vec3 getCascadeColor(const vec3 rayPosition) {
 #endif // DEBUG_SHOW_CASCADES
 
 vec3 sampleShadow(const vec3 rayPosition, vec2 offset) {
-  // Ray position is relative to the ellipsoid center.
-  vec3 position = rayPosition + ellipsoidCenter;
+  // Ray position is relative to the ellipsoid.
+  vec3 position = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
   int index = getCascadeIndex(position);
   vec4 point = shadowMatrices[index] * vec4(position, 1.0);
   point /= point.w;
@@ -260,9 +263,9 @@ vec4 marchToClouds(
       // Distance to the top of the bottom layer along the sun direction.
       // This matches the ray origin of BSM.
       float distanceToTop = raySphereSecondIntersection(
-        position + ellipsoidCenter,
+        position + vEllipsoidCenter,
         sunDirection,
-        ellipsoidCenter,
+        vEllipsoidCenter,
         bottomRadius + maxLayerHeights.x
       );
 
@@ -358,10 +361,14 @@ float distanceToBottomBoundary(float r, float mu, float radius) {
   return ClampDistance(-r * mu - SafeSqrt(discriminant));
 }
 
-void getRayNearFar(const vec3 rayDirection, out float rayNear, out float rayFar) {
-  vec3 rayPosition = cameraPosition - ellipsoidCenter;
-  float r = length(rayPosition);
-  float mu = dot(rayPosition, rayDirection) / r;
+void getRayNearFar(
+  const vec3 cameraPosition,
+  const vec3 rayDirection,
+  out float rayNear,
+  out float rayFar
+) {
+  float r = length(cameraPosition);
+  float mu = dot(cameraPosition, rayDirection) / r;
 
   bool intersectsGround = rayIntersectsGround(r, mu);
 
@@ -384,9 +391,9 @@ void getRayNearFar(const vec3 rayDirection, out float rayNear, out float rayFar)
     float intersection1;
     float intersection2;
     raySphereIntersections(
-      cameraPosition,
+      vCameraPosition,
       rayDirection,
-      ellipsoidCenter,
+      vEllipsoidCenter,
       bottomRadius + maxHeight,
       intersection1,
       intersection2
@@ -394,9 +401,9 @@ void getRayNearFar(const vec3 rayDirection, out float rayNear, out float rayFar)
     rayNear = intersection1;
     if (intersectsGround) {
       rayFar = raySphereFirstIntersection(
-        cameraPosition,
+        vCameraPosition,
         rayDirection,
-        ellipsoidCenter,
+        vEllipsoidCenter,
         bottomRadius + minHeight
       );
     } else {
@@ -457,26 +464,27 @@ void main() {
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 
+  vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
   vec3 rayDirection = normalize(vRayDirection);
   float rayNear;
   float rayFar;
-  getRayNearFar(rayDirection, rayNear, rayFar);
+  getRayNearFar(cameraPosition, rayDirection, rayNear, rayFar);
   if (rayNear < 0.0 || rayFar < 0.0) {
     discard;
   }
 
   // Clamp the ray at the scene objects.
-  // TODO: Don't clamp at objects in low altitude and use depth test instead.
+  // TODO: Don't clamp at objects below the minimum height and use depth test
+  // instead.
   float depth = readDepth(vUv + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     float viewZ = getViewZ(depth);
-    float rayDistance = -viewZ / dot(rayDirection, vViewDirection);
+    float rayDistance = -viewZ / dot(rayDirection, vCameraDirection);
     rayFar = min(rayFar, rayDistance);
   }
 
-  vec3 viewPosition = cameraPosition - ellipsoidCenter;
-  vec3 rayOrigin = rayNear * rayDirection + viewPosition;
+  vec3 rayOrigin = rayNear * rayDirection + cameraPosition;
 
   vec2 globeUv = getGlobeUv(rayOrigin);
   float mipLevel = getMipLevel(globeUv * localWeatherFrequency);
@@ -502,13 +510,13 @@ void main() {
   );
 
   frontDepth = frontDepth > 0.0 ? rayNear + frontDepth : rayFar;
-  vec3 frontPosition = viewPosition + frontDepth * rayDirection;
+  vec3 frontPosition = cameraPosition + frontDepth * rayDirection;
 
   // Apply aerial perspective.
-  applyAerialPerspective(viewPosition, frontPosition, color);
+  applyAerialPerspective(cameraPosition, frontPosition, color);
 
   // Velocity for temporal resolution.
-  vec4 prevClip = reprojectionMatrix * vec4(ellipsoidCenter + frontPosition, 1.0);
+  vec4 prevClip = reprojectionMatrix * vec4(frontPosition + vEllipsoidCenter, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
   vec2 velocity = (vUv - prevUv) * resolution;
