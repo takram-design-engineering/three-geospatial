@@ -42,9 +42,8 @@ void main() {
   vec3 direction, origin;
   getCameraRay(origin, direction);
 
-  mat3 rotation = mat3(ellipsoidMatrix);
-  vCameraPosition = rotation * origin.xyz * METER_TO_UNIT_LENGTH;
-  vRayDirection = rotation * direction.xyz;
+  vCameraPosition = mat3(ellipsoidMatrix) * origin.xyz * METER_TO_UNIT_LENGTH;
+  vRayDirection = mat3(ellipsoidMatrix) * direction.xyz;
   vEllipsoidCenter =
     (ellipsoidCenter + altitudeCorrection) * METER_TO_UNIT_LENGTH;
 

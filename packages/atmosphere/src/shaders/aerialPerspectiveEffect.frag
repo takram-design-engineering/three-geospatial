@@ -116,12 +116,11 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
-  vec3 worldPosition =
-    (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz * METER_TO_UNIT_LENGTH;
+  vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
-  mat3 rotation = mat3(ellipsoidMatrix);
-  vec3 rotatedPosition = rotation * worldPosition;
-  vec3 rotatedNormal = rotation * worldNormal;
+  vec3 positionECEF =
+    mat3(ellipsoidMatrix) * worldPosition * METER_TO_UNIT_LENGTH;
+  vec3 normalECEF = mat3(ellipsoidMatrix) * worldNormal;
 
   // #ifdef CORRECT_GEOMETRIC_ERROR
   // correctGeometricError(worldPosition, worldNormal);
@@ -129,17 +128,13 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  radiance = getSunSkyIrradiance(
-    rotatedPosition,
-    rotatedNormal,
-    inputColor.rgb
-  );
+  radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb);
   #else
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  getTransmittanceInscatter(rotatedPosition, radiance);
+  getTransmittanceInscatter(positionECEF, radiance);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);
