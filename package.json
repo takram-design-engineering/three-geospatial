@@ -40,7 +40,7 @@
     "@emotion/server": "11.11.0",
     "@emotion/styled": "11.11.0",
     "@glen/jest-raw-loader": "^2.0.0",
-    "@ianvs/prettier-plugin-sort-imports": "^4.4.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@nx/esbuild": "20.3.2",
     "@nx/eslint": "20.3.2",
     "@nx/eslint-plugin": "20.3.2",
