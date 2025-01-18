@@ -55,9 +55,15 @@ const Scene: FC = () => {
     if (atmosphere == null) {
       return
     }
+
+    // Offset the ellipsoid so that the world space origin locates at the
+    // position relative to the ellipsoid.
     geodetic.set(radians(longitude), radians(latitude), height)
     geodetic.toECEF(position)
     atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
+
+    // Rotate the ellipsoid around the world space origin so that the surface
+    // normal aligns with camera's up vector [0, 1, 0].
     Ellipsoid.WGS84.getSurfaceNormal(position, up)
     rotation.setFromUnitVectors(up, camera.up)
     atmosphere.ellipsoidMatrix.makeRotationFromQuaternion(rotation)
