@@ -8,7 +8,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { useState, type FC } from 'react'
+import { useEffect, useState, type FC } from 'react'
 import { NearestFilter, RepeatWrapping, RGBAFormat, Vector3 } from 'three'
 
 import {
@@ -19,7 +19,8 @@ import {
 import {
   STBN_TEXTURE_DEPTH,
   STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH
+  STBN_TEXTURE_WIDTH,
+  type CloudsEffect
 } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import {
@@ -47,7 +48,8 @@ const up = new Vector3()
 const Scene: FC = () => {
   useExposureControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls({
-    height: 500
+    longitude: 30,
+    height: 300
   })
   const motionDate = useLocalDateControls({
     longitude,
@@ -59,6 +61,20 @@ const Scene: FC = () => {
   const { coverage } = useControls('clouds', {
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 }
   })
+  const {
+    showShadowMap: debugShowShadowMap,
+    showCascades: debugShowCascades,
+    showUv: debugShowUv
+  } = useControls(
+    'debug',
+    {
+      showShadowMap: false,
+      showCascades: false,
+      showBox: false,
+      showUv: false
+    },
+    { collapsed: true }
+  )
 
   const [atmosphere, setAtmosphere] = useState<AtmosphereApi | null>(null)
   useFrame(() => {
@@ -76,7 +92,7 @@ const Scene: FC = () => {
     // Rotate the ellipsoid around the world space origin so that the camera's
     // orientation aligns with X: east, Y: up, Z: north, for example.
     Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-    atmosphere.ellipsoidMatrix.makeBasis(east, up, north).invert()
+    atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
   })
 
   const stbnTexture = useLoader(
@@ -94,6 +110,30 @@ const Scene: FC = () => {
     '/clouds/stbn.bin'
   )
 
+  const [clouds, setClouds] = useState<CloudsEffect | null>(null)
+
+  useEffect(() => {
+    if (clouds == null) {
+      return
+    }
+    if (debugShowShadowMap) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+    }
+    if (debugShowCascades) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
+    }
+    if (debugShowUv) {
+      clouds.cloudsMaterial.defines.DEBUG_SHOW_UV = '1'
+    } else {
+      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_UV
+    }
+    clouds.cloudsMaterial.needsUpdate = true
+  }, [clouds, debugShowShadowMap, debugShowCascades, debugShowUv])
+
   return (
     <>
       <GizmoHelper alignment='top-left' renderPriority={2}>
@@ -110,7 +150,12 @@ const Scene: FC = () => {
       >
         <EffectComposer multisampling={0} enableNormalPass>
           <AerialPerspective sky skyIrradiance sunIrradiance />
-          <Clouds stbnTexture={stbnTexture} coverage={coverage} />
+          <Clouds
+            ref={setClouds}
+            stbnTexture={stbnTexture}
+            coverage={coverage}
+            temporalUpscaling={false}
+          />
           <LensFlare />
           <ToneMapping mode={ToneMappingMode.AGX} />
           <Dithering />
@@ -127,7 +172,12 @@ const Story: StoryFn = () => (
       depth: false,
       stencil: false
     }}
-    camera={{ position: [2, 1, 2] }}
+    camera={{
+      position: [2, 1, 2],
+      // TODO:
+      near: 1,
+      far: 4e5
+    }}
   >
     <Stats />
     <Scene />
