@@ -10,6 +10,9 @@ export default {
 export const Basic = await import('./Clouds-Basic').then(
   module => module.default
 )
+export const MovingEllipsoid = await import('./Clouds-MovingEllipsoid').then(
+  module => module.default
+)
 export const LocalWeather = await import('./Clouds-LocalWeather').then(
   module => module.default
 )
