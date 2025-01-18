@@ -555,6 +555,14 @@ export class CloudsEffect extends Effect {
     this.shadowMaterial.ellipsoid = value
   }
 
+  get ellipsoidCenter(): Vector3 {
+    return this.cloudsMaterial.ellipsoidCenter
+  }
+
+  get ellipsoidMatrix(): Matrix4 {
+    return this.cloudsMaterial.ellipsoidMatrix
+  }
+
   get correctAltitude(): boolean {
     return this.cloudsMaterial.correctAltitude
   }

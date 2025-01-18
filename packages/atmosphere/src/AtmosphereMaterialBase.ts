@@ -48,15 +48,20 @@ function includeRenderTargets(fragmentShader: string, count: number): string {
 }
 
 export interface AtmosphereMaterialProps {
+  // Precomputed textures
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
+
+  // Atmosphere controls
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
+
+  // For internal use only
   renderTargetCount?: number
 }
 
@@ -74,7 +79,6 @@ export const atmosphereMaterialParametersBaseDefaults = {
 
 export interface AtmosphereMaterialBaseUniforms {
   [key: string]: Uniform<unknown>
-
   cameraPosition: Uniform<Vector3>
   ellipsoidCenter: Uniform<Vector3>
   inverseEllipsoidMatrix: Uniform<Matrix4>
@@ -131,6 +135,13 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       ...others,
       // prettier-ignore
       uniforms: {
+        cameraPosition: new Uniform(new Vector3()),
+        ellipsoidCenter: new Uniform(new Vector3()),
+        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+        altitudeCorrection: new Uniform(new Vector3()),
+        sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
+
+        // Uniforms for atmosphere functions
         u_solar_irradiance: new Uniform(atmosphere.solarIrradiance),
         u_sun_angular_radius: new Uniform(sunAngularRadius ?? atmosphere.sunAngularRadius),
         u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_UNIT_LENGTH),
@@ -143,11 +154,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_scattering_texture: new Uniform(scatteringTexture),
         u_single_mie_scattering_texture: new Uniform(scatteringTexture),
         u_transmittance_texture: new Uniform(transmittanceTexture),
-        cameraPosition: new Uniform(new Vector3()),
-        ellipsoidCenter: new Uniform(new Vector3()),
-        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
-        altitudeCorrection: new Uniform(new Vector3()),
-        sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
       } satisfies AtmosphereMaterialBaseUniforms,
       // prettier-ignore
@@ -189,16 +195,16 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       .applyMatrix4(inverseEllipsoidMatrix)
       .sub(uniforms.ellipsoidCenter.value)
 
-    const altitudeCorrection = uniforms.altitudeCorrection
+    const altitudeCorrection = uniforms.altitudeCorrection.value
     if (this.correctAltitude) {
       getAltitudeCorrectionOffset(
         cameraPositionECEF,
         this.atmosphere.bottomRadius,
         this.ellipsoid,
-        altitudeCorrection.value
+        altitudeCorrection
       )
     } else {
-      altitudeCorrection.value.set(0, 0, 0)
+      altitudeCorrection.setScalar(0)
     }
   }
 

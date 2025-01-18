@@ -61,6 +61,7 @@ declare module 'three' {
   }
 }
 
+const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 const bayerIndices = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
@@ -302,25 +303,35 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     uniforms.cameraNear.value = camera.near
     uniforms.cameraFar.value = camera.far
 
-    const cameraHeight = uniforms.cameraHeight
-    const position = camera.getWorldPosition(uniforms.cameraPosition.value)
+    const cameraPosition = camera.getWorldPosition(
+      uniforms.cameraPosition.value
+    )
     try {
-      cameraHeight.value = geodeticScratch.setFromECEF(position).height
+      uniforms.cameraHeight.value =
+        geodeticScratch.setFromECEF(cameraPosition).height
     } catch (error) {
-       // Abort when unable to project position to the ellipsoid surface.
+      // Abort when unable to project position to the ellipsoid surface.
     }
 
-    const ellipsoidCenter = uniforms.ellipsoidCenter.value
+    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionECEF = vectorScratch
+      .copy(cameraPosition)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(uniforms.ellipsoidCenter.value)
+
+    const altitudeCorrection = uniforms.altitudeCorrection.value
     if (this.correctAltitude) {
       getAltitudeCorrectionOffset(
-        position,
+        cameraPositionECEF,
         this.atmosphere.bottomRadius,
         this.ellipsoid,
-        ellipsoidCenter,
+        altitudeCorrection,
         false
       )
     } else {
-      ellipsoidCenter.setScalar(0)
+      altitudeCorrection.setScalar(0)
     }
   }
 

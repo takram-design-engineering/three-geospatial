@@ -307,7 +307,7 @@ export class AerialPerspectiveEffect extends Effect {
         altitudeCorrection.value
       )
     } else {
-      altitudeCorrection.value.set(0, 0, 0)
+      altitudeCorrection.value.setScalar(0)
     }
   }
 

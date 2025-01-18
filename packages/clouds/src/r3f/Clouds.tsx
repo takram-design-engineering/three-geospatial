@@ -40,6 +40,8 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       effect.mainCamera = camera
       if (transientProps != null) {
         effect.sunDirection.copy(transientProps.sunDirection)
+        effect.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
+        effect.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
       }
     })
 
