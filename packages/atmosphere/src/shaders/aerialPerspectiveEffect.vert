@@ -2,7 +2,7 @@ uniform mat4 inverseViewMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform vec3 cameraPosition;
 uniform vec3 ellipsoidCenter;
-uniform mat4 inverseEllipsoidMatrix;
+uniform mat4 ellipsoidMatrix;
 uniform vec3 altitudeCorrection;
 uniform vec3 ellipsoidRadii;
 uniform float idealSphereAlpha;
@@ -44,7 +44,7 @@ void mainSupport() {
   vec3 direction, origin;
   getCameraRay(origin, direction);
 
-  mat3 rotation = mat3(inverseEllipsoidMatrix);
+  mat3 rotation = mat3(ellipsoidMatrix);
   vCameraPosition = rotation * origin.xyz * METER_TO_UNIT_LENGTH;
   vRayDirection = rotation * direction.xyz;
 

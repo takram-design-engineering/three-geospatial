@@ -5,12 +5,12 @@ import {
   OrbitControls,
   Sphere
 } from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useState, type FC } from 'react'
-import { DoubleSide, Quaternion, Vector3 } from 'three'
+import { useState, type FC } from 'react'
+import { DoubleSide, Vector3 } from 'three'
 
 import {
   AerialPerspective,
@@ -32,8 +32,9 @@ import { useLocationControls } from '../helpers/useLocationControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
+const east = new Vector3()
+const north = new Vector3()
 const up = new Vector3()
-const rotation = new Quaternion()
 
 const Scene: FC = () => {
   useExposureControls({ exposure: 10 })
@@ -49,12 +50,11 @@ const Scene: FC = () => {
   })
 
   const [atmosphere, setAtmosphere] = useState<AtmosphereApi | null>(null)
-
-  const camera = useThree(({ camera }) => camera)
-  useEffect(() => {
+  useFrame(() => {
     if (atmosphere == null) {
       return
     }
+    atmosphere.updateByDate(new Date(motionDate.get()))
 
     // Offset the ellipsoid so that the world space origin locates at the
     // position relative to the ellipsoid.
@@ -62,15 +62,10 @@ const Scene: FC = () => {
     geodetic.toECEF(position)
     atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
 
-    // Rotate the ellipsoid around the world space origin so that the surface
-    // normal aligns with camera's up vector [0, 1, 0].
-    Ellipsoid.WGS84.getSurfaceNormal(position, up)
-    rotation.setFromUnitVectors(up, camera.up)
-    atmosphere.ellipsoidMatrix.makeRotationFromQuaternion(rotation)
-  }, [atmosphere, height, longitude, latitude, camera.up])
-
-  useFrame(() => {
-    atmosphere?.updateByDate(new Date(motionDate.get()))
+    // Rotate the ellipsoid around the world space origin so that the camera's
+    // orientation aligns with X: east, Y: up, Z: north.
+    Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
+    atmosphere.ellipsoidMatrix.makeBasis(east, up, north)
   })
 
   return (
