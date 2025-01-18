@@ -25,17 +25,17 @@ vec3 readNormal(const vec2 uv) {
   #endif // OCT_ENCODED_NORMAL
 }
 
-void correctGeometricError(inout vec3 worldPosition, inout vec3 worldNormal) {
+void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
   // Correct way is slerp, but this will be small-angle interpolation anyways.
-  vec3 normal = normalize(1.0 / vEllipsoidRadiiSquared * worldPosition);
-  vec3 position = u_bottom_radius * normal;
-  worldNormal = mix(worldNormal, normal, idealSphereAlpha);
-  worldPosition = mix(worldPosition, position, idealSphereAlpha);
+  vec3 sphereNormal = normalize(1.0 / vEllipsoidRadiiSquared * positionECEF);
+  vec3 spherePosition = u_bottom_radius * sphereNormal;
+  normalECEF = mix(normalECEF, sphereNormal, idealSphereAlpha);
+  positionECEF = mix(positionECEF, spherePosition, idealSphereAlpha);
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 vec3 getSunSkyIrradiance(
-  const vec3 position,
+  const vec3 positionECEF,
   const vec3 normal,
   const vec3 inputColor
 ) {
@@ -44,7 +44,7 @@ vec3 getSunSkyIrradiance(
   vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(
-    position - vGeometryEllipsoidCenter,
+    positionECEF,
     normal,
     sunDirection,
     skyIrradiance
@@ -60,11 +60,11 @@ vec3 getSunSkyIrradiance(
 #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
 #if defined(TRANSMITTANCE) || defined(INSCATTER)
-void getTransmittanceInscatter(const vec3 position, inout vec3 radiance) {
+void getTransmittanceInscatter(const vec3 positionECEF, inout vec3 radiance) {
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
     vCameraPosition - vGeometryEllipsoidCenter,
-    position - vGeometryEllipsoidCenter,
+    positionECEF,
     0.0, // Shadow length
     sunDirection,
     transmittance
@@ -119,12 +119,13 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
   mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vec3 positionECEF = rotation * worldPosition * METER_TO_UNIT_LENGTH;
+  vec3 positionECEF =
+    rotation * worldPosition * METER_TO_UNIT_LENGTH - vGeometryEllipsoidCenter;
   vec3 normalECEF = rotation * worldNormal;
 
-  // #ifdef CORRECT_GEOMETRIC_ERROR
-  // correctGeometricError(worldPosition, worldNormal);
-  // #endif // CORRECT_GEOMETRIC_ERROR
+  #ifdef CORRECT_GEOMETRIC_ERROR
+  correctGeometricError(positionECEF, normalECEF);
+  #endif // CORRECT_GEOMETRIC_ERROR
 
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)

@@ -253,9 +253,8 @@ export class AerialPerspectiveEffect extends Effect {
     // Calculate the projected scale of the globe in clip space used to
     // interpolate between the globe true normals and idealized normals to avoid
     // lighting artifacts.
-    const idealSphereAlpha = uniforms.get('idealSphereAlpha')!
     const cameraHeight = geodeticScratch.setFromECEF(cameraPositionECEF).height
-    vectorScratch2
+    const projectedScale = vectorScratch2
       .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
       .applyMatrix4(camera.projectionMatrix)
 
@@ -263,7 +262,9 @@ export class AerialPerspectiveEffect extends Effect {
     // Interpolation values are picked to match previous rough globe scales to
     // match the previous "camera height" approach for interpolation.
     // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
-    idealSphereAlpha.value = saturate(remap(vectorScratch2.y, 41.5, 13.8, 0, 1))
+    uniforms.get('idealSphereAlpha')!.value = saturate(
+      remap(projectedScale.y, 41.5, 13.8, 0, 1)
+    )
 
     const altitudeCorrection = uniforms.get('altitudeCorrection')!
     if (this.correctAltitude) {
