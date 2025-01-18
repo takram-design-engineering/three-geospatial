@@ -307,7 +307,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     try {
       cameraHeight.value = geodeticScratch.setFromECEF(position).height
     } catch (error) {
-      // Abort when the position is zero.
+       // Abort when unable to project position to the ellipsoid surface.
     }
 
     const ellipsoidCenter = uniforms.ellipsoidCenter.value

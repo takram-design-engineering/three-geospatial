@@ -49,7 +49,8 @@ import functions from './shaders/functions.glsl?raw'
 import parameters from './shaders/parameters.glsl?raw'
 import skyShader from './shaders/sky.glsl?raw'
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface AerialPerspectiveEffectOptions {
@@ -109,6 +110,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 
 export class AerialPerspectiveEffect extends Effect {
   private _ellipsoid!: Ellipsoid
+  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
 
   constructor(
@@ -171,8 +173,10 @@ export class AerialPerspectiveEffect extends Effect {
           ['inverseViewMatrix', new Uniform(new Matrix4())],
           ['cameraPosition', new Uniform(new Vector3())],
           ['bottomRadius', new Uniform(atmosphere.bottomRadius)],
-          ['ellipsoidCenter', new Uniform(new Vector3())],
           ['ellipsoidRadii', new Uniform(new Vector3())],
+          ['ellipsoidCenter', new Uniform(new Vector3())],
+          ['inverseEllipsoidMatrix', new Uniform(new Matrix4())],
+          ['altitudeCorrection', new Uniform(new Vector3())],
           ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
           ['irradianceScale', new Uniform(irradianceScale)],
           ['idealSphereAlpha', new Uniform(0)],
@@ -261,40 +265,49 @@ export class AerialPerspectiveEffect extends Effect {
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
 
-    const cameraPosition = uniforms.get('cameraPosition')!
-    const position = camera.getWorldPosition(cameraPosition.value)
+    const cameraPosition = camera.getWorldPosition(
+      uniforms.get('cameraPosition')!.value
+    )
+    const inverseEllipsoidMatrix = uniforms
+      .get('inverseEllipsoidMatrix')!
+      .value.copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionECEF = vectorScratch1
+      .copy(cameraPosition)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(uniforms.get('ellipsoidCenter')!.value)
 
     try {
-      geodeticScratch.setFromECEF(position)
+      // Calculate the projected scale of the globe in clip space used to
+      // interpolate between the globe true normals and idealized normals to avoid
+      // lighting artifacts.
+      const cameraHeight =
+        geodeticScratch.setFromECEF(cameraPositionECEF).height
+      const projectedScale = vectorScratch2
+        .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
+        .applyMatrix4(camera.projectionMatrix)
+
+      // Calculate interpolation alpha
+      // Interpolation values are picked to match previous rough globe scales to
+      // match the previous "camera height" approach for interpolation.
+      // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
+      uniforms.get('idealSphereAlpha')!.value = saturate(
+        remap(projectedScale.y, 41.5, 13.8, 0, 1)
+      )
     } catch (error) {
-      return // Abort when the position is zero.
+      return // Abort when unable to project position to the ellipsoid surface.
     }
-    const cameraHeight = geodeticScratch.height
 
-    // Calculate the projected scale of the globe in clip space used to
-    // interpolate between the globe true normals and idealized normals to avoid
-    // lighting artifacts.
-    const idealSphereAlpha = uniforms.get('idealSphereAlpha')!
-    vectorScratch
-      .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
-      .applyMatrix4(camera.projectionMatrix)
-
-    // Calculate interpolation alpha
-    // Interpolation values are picked to match previous rough globe scales to
-    // match the previous "camera height" approach for interpolation.
-    // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
-    idealSphereAlpha.value = saturate(remap(vectorScratch.y, 41.5, 13.8, 0, 1))
-
-    const ellipsoidCenter = uniforms.get('ellipsoidCenter')!.value
+    const altitudeCorrection = uniforms.get('altitudeCorrection')!
     if (this.correctAltitude) {
       getAltitudeCorrectionOffset(
-        position,
+        cameraPositionECEF,
         this.atmosphere.bottomRadius,
         this.ellipsoid,
-        ellipsoidCenter
+        altitudeCorrection.value
       )
     } else {
-      ellipsoidCenter.setScalar(0)
+      altitudeCorrection.value.set(0, 0, 0)
     }
   }
 
@@ -380,6 +393,10 @@ export class AerialPerspectiveEffect extends Effect {
   set ellipsoid(value: Ellipsoid) {
     this._ellipsoid = value
     this.uniforms.get('ellipsoidRadii')!.value.copy(value.radii)
+  }
+
+  get ellipsoidCenter(): Vector3 {
+    return this.uniforms.get('ellipsoidCenter')!.value
   }
 
   get correctGeometricError(): boolean {

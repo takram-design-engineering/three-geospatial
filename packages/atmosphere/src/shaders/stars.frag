@@ -6,8 +6,8 @@ precision highp sampler3D;
 
 uniform vec3 sunDirection;
 
-in vec3 vWorldPosition;
-in vec3 vWorldDirection;
+in vec3 vCameraPosition;
+in vec3 vRayDirection;
 in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
@@ -23,11 +23,10 @@ void main() {
   #endif // PERSPECTIVE_CAMERA
 
   #ifdef BACKGROUND
-  vec3 viewDirection = normalize(vWorldDirection);
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
-    vWorldPosition - vEllipsoidCenter,
-    viewDirection,
+    vCameraPosition - vEllipsoidCenter,
+    normalize(vRayDirection),
     0.0,
     sunDirection,
     transmittance

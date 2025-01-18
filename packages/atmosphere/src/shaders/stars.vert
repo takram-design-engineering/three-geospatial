@@ -12,6 +12,8 @@ uniform mat4 matrixWorld;
 uniform vec3 cameraPosition;
 uniform float cameraFar;
 uniform vec3 ellipsoidCenter;
+uniform mat4 inverseEllipsoidMatrix;
+uniform vec3 altitudeCorrection;
 uniform float pointSize;
 uniform vec2 magnitudeRange;
 uniform float radianceScale;
@@ -20,8 +22,8 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in float magnitude;
 layout(location = 2) in vec3 color;
 
-out vec3 vWorldPosition;
-out vec3 vWorldDirection;
+out vec3 vCameraPosition;
+out vec3 vRayDirection;
 out vec3 vEllipsoidCenter;
 out vec3 vColor;
 
@@ -34,9 +36,11 @@ void main() {
 
   #ifdef BACKGROUND
   vec3 worldDirection = normalize(matrixWorld * vec4(position, 1.0)).xyz;
-  vWorldDirection = worldDirection;
-  vWorldPosition = cameraPosition * METER_TO_UNIT_LENGTH;
-  vEllipsoidCenter = ellipsoidCenter * METER_TO_UNIT_LENGTH;
+  mat3 rotation = mat3(inverseEllipsoidMatrix);
+  vCameraPosition = rotation * cameraPosition * METER_TO_UNIT_LENGTH;
+  vRayDirection = rotation * worldDirection;
+  vEllipsoidCenter =
+    (ellipsoidCenter + altitudeCorrection) * METER_TO_UNIT_LENGTH;
   gl_Position =
     projectionMatrix * viewMatrix * vec4(cameraPosition + worldDirection * cameraFar, 1.0);
   #else // BACKGROUND
