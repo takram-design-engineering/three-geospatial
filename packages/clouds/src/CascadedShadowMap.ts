@@ -36,8 +36,6 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { Ellipsoid, lerp } from '@takram/three-geospatial'
-
 import { FrustumCorners } from './helpers/FrustumCorners'
 import { splitFrustum, type FrustumSplitMode } from './helpers/splitFrustum'
 
@@ -88,6 +86,7 @@ export class CascadedShadowMap {
   margin: number
   fade: boolean
 
+  private readonly cameraFrustum = new FrustumCorners()
   private readonly frusta: FrustumCorners[] = []
   private readonly splits: number[] = []
 
@@ -131,8 +130,8 @@ export class CascadedShadowMap {
     const splits = this.splits
     const far = Math.min(this.far, camera.far)
     splitFrustum(this.mode, count, camera.near, far, this.lambda, splits)
-    frustumScratch.setFromCamera(camera, far)
-    frustumScratch.split(splits, this.frusta)
+    this.cameraFrustum.setFromCamera(camera, far)
+    this.cameraFrustum.split(splits, this.frusta)
 
     const cascades = this.cascades
     for (let i = 0; i < count; ++i) {
@@ -167,7 +166,7 @@ export class CascadedShadowMap {
   private updateMatrices(
     camera: PerspectiveCamera,
     sunDirection: Vector3,
-    ellipsoid = Ellipsoid.WGS84
+    distance = 1
   ): void {
     const lightOrientationMatrix = matrixScratch1.lookAt(
       vectorScratch1.setScalar(0),
@@ -178,12 +177,6 @@ export class CascadedShadowMap {
       matrixScratch2.copy(lightOrientationMatrix).invert(),
       camera.matrixWorld
     )
-
-    // Increase light's distance to the target when the sun is at the horizon.
-    const cameraPosition = camera.getWorldPosition(vectorScratch1)
-    const up = ellipsoid.getSurfaceNormal(cameraPosition, vectorScratch2)
-    const zenithAngle = sunDirection.dot(up)
-    const distance = lerp(1e6, 1e3, zenithAngle)
 
     const frusta = this.frusta
     const cascades = this.cascades
@@ -242,10 +235,10 @@ export class CascadedShadowMap {
   update(
     camera: PerspectiveCamera,
     sunDirection: Vector3,
-    ellipsoid?: Ellipsoid
+    distance?: number
   ): void {
     this.updateIntervals(camera)
-    this.updateMatrices(camera, sunDirection, ellipsoid)
+    this.updateMatrices(camera, sunDirection, distance)
 
     const cascades = this.cascades
     for (let i = 0; i < this.cascadeCount; ++i) {

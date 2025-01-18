@@ -26,7 +26,7 @@ import {
 } from 'three'
 
 import { AtmosphereParameters } from '@takram/three-atmosphere'
-import { type Ellipsoid } from '@takram/three-geospatial'
+import { lerp, type Ellipsoid } from '@takram/three-geospatial'
 
 import { CascadedShadowMap } from './CascadedShadowMap'
 import { CloudShape } from './CloudShape'
@@ -43,6 +43,7 @@ import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
+const matrixScratch = /*#__PURE__*/ new Matrix4()
 
 function createRenderTarget(name: string): WebGLRenderTarget {
   const renderTarget = new WebGLRenderTarget(1, 1, {
@@ -346,10 +347,25 @@ export class CloudsEffect extends Effect {
       this.shadowHistoryPass.setSize(width, height, depth)
     }
 
+    // Increase light's distance to the target when the sun is at the horizon.
+    const inverseEllipsoidMatrix = matrixScratch
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionECEF = this.camera
+      .getWorldPosition(vectorScratch)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(this.ellipsoidCenter)
+    const surfaceNormal = this.ellipsoid.getSurfaceNormal(
+      cameraPositionECEF,
+      vectorScratch
+    )
+    const zenithAngle = this.sunDirection.dot(surfaceNormal)
+    const distance = lerp(1e6, 1e3, zenithAngle)
+
     this.shadow.update(
       this.camera as PerspectiveCamera,
       this.sunDirection,
-      this.ellipsoid
+      distance
     )
   }
 
