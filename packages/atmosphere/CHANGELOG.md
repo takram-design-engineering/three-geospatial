@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.0] - 2025-01-19
+
+### Added
+
+- Added function to move the ellipsoid via `ellipsoidCenter` and `ellipsoidMatrix`, [#11](https://github.com/takram-design-engineering/three-geospatial/issues/11).
+
+### Changed
+
+- Updated dependencies.
+
 ## [0.5.0] - 2024-12-19
 
 ### Added
