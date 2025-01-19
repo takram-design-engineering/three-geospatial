@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 
 import {
+  Color,
   GLSL3,
   Matrix4,
   Uniform,
@@ -14,6 +15,7 @@ import {
 } from 'three'
 
 import { resolveIncludes } from '@takram/three-geospatial'
+import { raySphereIntersection } from '@takram/three-geospatial/shaders'
 
 import {
   AtmosphereMaterialBase,
@@ -41,6 +43,7 @@ export interface SkyMaterialParameters
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
+  groundAlbedo?: Color
 }
 
 export const skyMaterialParametersDefaults = {
@@ -58,6 +61,7 @@ export interface SkyMaterialUniforms {
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
   lunarRadianceScale: Uniform<number>
+  groundAlbedo: Uniform<Color>
 }
 
 export interface SkyMaterial {
@@ -72,6 +76,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
       moonDirection,
       moonAngularRadius,
       lunarRadianceScale,
+      groundAlbedo,
       ...others
     } = { ...skyMaterialParametersDefaults, ...params }
 
@@ -82,6 +87,9 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         parameters
       }),
       fragmentShader: resolveIncludes(fragmentShader, {
+        core: {
+          raySphereIntersection
+        },
         parameters,
         functions,
         sky
@@ -93,6 +101,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
         moonAngularRadius: new Uniform(moonAngularRadius),
         lunarRadianceScale: new Uniform(lunarRadianceScale),
+        groundAlbedo: new Uniform(groundAlbedo?.clone() ?? new Color(0)),
         ...others.uniforms
       } satisfies SkyMaterialUniforms,
       defines: {
@@ -176,5 +185,9 @@ export class SkyMaterial extends AtmosphereMaterialBase {
 
   set lunarRadianceScale(value: number) {
     this.uniforms.lunarRadianceScale.value = value
+  }
+
+  get groundAlbedo(): Color {
+    return this.uniforms.groundAlbedo.value
   }
 }

@@ -1,7 +1,9 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useFrame, type MeshProps } from '@react-three/fiber'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
-import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
+import { type BufferGeometry, type Color, type Mesh, type Vector3 } from 'three'
+
+import { type ExtendedProps } from '@takram/three-geospatial/r3f'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 import { SKY_RENDER_ORDER } from '../constants'
@@ -11,13 +13,16 @@ import { separateProps } from './separateProps'
 
 export type SkyImpl = Mesh<BufferGeometry, SkyMaterial>
 
-export interface SkyProps extends MeshProps, AtmosphereMaterialProps {
-  sun?: boolean
-  moon?: boolean
-  moonDirection?: Vector3
-  moonAngularRadius?: number
-  lunarRadianceScale?: number
-}
+export type SkyProps = MeshProps &
+  AtmosphereMaterialProps &
+  ExtendedProps<{
+    sun?: boolean
+    moon?: boolean
+    moonDirection?: Vector3
+    moonAngularRadius?: number
+    lunarRadianceScale?: number
+    groundAlbedo?: Color
+  }>
 
 export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {
@@ -32,6 +37,7 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
         moonDirection,
         moonAngularRadius,
         lunarRadianceScale,
+        groundAlbedo,
         ...others
       }
     ] = separateProps({
@@ -67,6 +73,7 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
           moonDirection={moonDirection}
           moonAngularRadius={moonAngularRadius}
           lunarRadianceScale={lunarRadianceScale}
+          groundAlbedo={groundAlbedo}
         />
       </ScreenQuad>
     )

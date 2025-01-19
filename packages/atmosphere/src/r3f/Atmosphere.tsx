@@ -1,5 +1,5 @@
 import { useThree } from '@react-three/fiber'
-import { atom, WritableAtom, type Atom } from 'jotai'
+import { atom, type WritableAtom } from 'jotai'
 import {
   createContext,
   forwardRef,
