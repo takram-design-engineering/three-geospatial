@@ -1,6 +1,7 @@
 import {
   GizmoHelper,
   GizmoViewport,
+  Grid,
   OrbitControls,
   Sphere
 } from '@react-three/drei'
@@ -9,11 +10,21 @@ import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { Fragment, useEffect, useState, type FC } from 'react'
-import { NearestFilter, RepeatWrapping, RGBAFormat, Vector3 } from 'three'
+import {
+  DoubleSide,
+  NearestFilter,
+  RepeatWrapping,
+  RGBAFormat,
+  Vector3
+} from 'three'
 
 import {
   AerialPerspective,
   Atmosphere,
+  Sky,
+  SkyLight,
+  Stars,
+  SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
@@ -141,13 +152,26 @@ const Scene: FC = () => {
       </GizmoHelper>
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere args={[0.5, 128, 128]} position={[0, 0.5, 0]}>
-        <meshBasicMaterial color='white' />
+        <meshStandardMaterial color='white' />
       </Sphere>
+      <Grid
+        cellColor={0x333333}
+        sectionColor={0x333333}
+        fadeStrength={10}
+        fadeDistance={100}
+        followCamera
+        infiniteGrid
+        side={DoubleSide}
+      />
       <Atmosphere
         ref={setAtmosphere}
         textures='atmosphere'
         correctAltitude={correctAltitude}
       >
+        <Sky />
+        <SkyLight />
+        <SunLight />
+        <Stars data='atmosphere/stars.bin' />
         <EffectComposer multisampling={0} enableNormalPass>
           <Fragment
             key={JSON.stringify({
@@ -159,8 +183,10 @@ const Scene: FC = () => {
               ref={setClouds}
               stbnTexture={stbnTexture}
               coverage={coverage}
+              // TODO: Reprojection doesn't work with moving ellipsoid.
+              temporalUpscaling={false}
             />
-            <AerialPerspective sky skyIrradiance sunIrradiance />
+            <AerialPerspective sky />
             {!debugShowUv && !debugShowShadowMap && (
               <>
                 <LensFlare />
@@ -184,9 +210,8 @@ const Story: StoryFn = () => (
     }}
     camera={{
       position: [2, 1, 2],
-      // TODO:
-      near: 1,
-      far: 4e5
+      near: 0.1,
+      far: 1e5
     }}
   >
     <Stats />
