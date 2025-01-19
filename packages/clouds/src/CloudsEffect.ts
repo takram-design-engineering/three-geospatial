@@ -364,7 +364,10 @@ export class CloudsEffect extends Effect {
 
     this.shadow.update(
       this.camera as PerspectiveCamera,
-      this.sunDirection,
+      // The sun direction must be rotated with the ellipsoid to ensure the
+      // frusta are constructed correctly. Note this affects the transformation
+      // in the shadow shader.
+      vectorScratch.copy(this.sunDirection).applyMatrix4(this.ellipsoidMatrix),
       distance
     )
   }

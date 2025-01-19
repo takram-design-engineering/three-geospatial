@@ -102,9 +102,9 @@ vec3 getCascadeColor(const vec3 rayPosition) {
     vec3(1.0, 1.0, 0.0)
   );
   // Ray position is relative to the ellipsoid.
-  vec3 position = rayPosition + vEllipsoidCenter;
-  int index = getCascadeIndex(position);
-  vec4 point = shadowMatrices[index] * vec4(position, 1.0);
+  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
+  int index = getCascadeIndex(worldPosition);
+  vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
   point /= point.w;
   vec2 uv = point.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
@@ -116,9 +116,9 @@ vec3 getCascadeColor(const vec3 rayPosition) {
 
 vec3 sampleShadow(const vec3 rayPosition, vec2 offset) {
   // Ray position is relative to the ellipsoid.
-  vec3 position = rayPosition + vEllipsoidCenter;
-  int index = getCascadeIndex(position);
-  vec4 point = shadowMatrices[index] * vec4(position, 1.0);
+  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
+  int index = getCascadeIndex(worldPosition);
+  vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
   point /= point.w;
   vec2 uv = point.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {

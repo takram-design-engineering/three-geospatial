@@ -144,8 +144,11 @@ void cascade(
   vec2 clip = vUv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrices[index] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
-  vec3 sunPosition = point.xyz - vEllipsoidCenter;
+  vec3 sunPosition = mat3(inverseEllipsoidMatrix) * point.xyz - vEllipsoidCenter;
 
+  // The sun direction is in ECEF. Since the view matrix is constructed with the
+  // ellipsoid matrix already applied, there’s no need to apply the inverse
+  // matrix here.
   vec3 rayDirection = normalize(-sunDirection);
   float rayNear;
   float rayFar;
@@ -157,7 +160,8 @@ void cascade(
 
   // Velocity for temporal resolution.
   vec3 frontPosition = color.x * rayDirection + rayOrigin;
-  vec4 prevClip = reprojectionMatrices[index] * vec4(frontPosition + vEllipsoidCenter, 1.0);
+  vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
+  vec4 prevClip = reprojectionMatrices[index] * vec4(frontPositionWorld, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
   vec2 velocity = (vUv - prevUv) * resolution;
