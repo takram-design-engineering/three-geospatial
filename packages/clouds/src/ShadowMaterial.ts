@@ -201,4 +201,19 @@ export class ShadowMaterial extends RawShaderMaterial {
       this.needsUpdate = true
     }
   }
+
+  get temporalJitter(): boolean {
+    return this.defines.TEMPORAL_JITTER != null
+  }
+
+  set temporalJitter(value: boolean) {
+    if (value !== this.temporalJitter) {
+      if (value) {
+        this.defines.TEMPORAL_JITTER = '1'
+      } else {
+        delete this.defines.TEMPORAL_JITTER
+      }
+      this.needsUpdate = true
+    }
+  }
 }

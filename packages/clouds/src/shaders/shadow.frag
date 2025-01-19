@@ -65,7 +65,9 @@ vec4 marchClouds(
     stepSize
   );
 
+  #ifdef TEMPORAL_JITTER
   rayDistance -= stepSize * jitter;
+  #endif // TEMPORAL_JITTER
 
   float extinctionSum = 0.0;
   float maxOpticalDepth = 0.0;
