@@ -1,6 +1,7 @@
 import { css } from '@emotion/react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
+import { GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
@@ -73,6 +74,22 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Globe: FC = () => {
+  const controls = useThree(
+    ({ controls }) => controls as GlobeControlsImpl | null
+  )
+  useEffect(() => {
+    if (controls != null) {
+      const callback = (): void => {
+        controls.adjustHeight = true
+        controls.removeEventListener('start', callback)
+      }
+      controls.addEventListener('start', callback)
+      return () => {
+        controls.removeEventListener('start', callback)
+      }
+    }
+  }, [controls])
+
   const apiKey = useAtomValue(googleMapsApiKeyAtom)
   return (
     <TilesRenderer
@@ -89,7 +106,10 @@ const Globe: FC = () => {
       />
       <GlobeControls
         enableDamping={true}
-        // TODO: Re-enable adjustHeight after initial load completes.
+        // Globe controls adjust the camera height based on very low LoD tiles
+        // during the initial load, causing the camera to unexpectedly jump to
+        // the sky when set to a low altitude.
+        // Re-enable it when the user first drags.
         adjustHeight={false}
       />
     </TilesRenderer>

@@ -13,7 +13,15 @@ export {}
 declare module '3d-tiles-renderer' {
   export type CameraTransitionMode = 'perspective' | 'orthographic'
 
-  export class CameraTransitionManager extends EventDispatcher {
+  export class CameraTransitionManager extends EventDispatcher<{
+    'camera-change': {
+      camera: Camera
+      prevCamera: Camera
+    }
+    toggle: {}
+    change: {}
+    'transition-end': {}
+  }> {
     readonly animating: boolean
     readonly camera: PerspectiveCamera | OrthographicCamera
 
@@ -42,7 +50,11 @@ declare module '3d-tiles-renderer' {
     | typeof ZOOM
     | typeof WAITING
 
-  export class EnvironmentControls extends EventDispatcher {
+  export class EnvironmentControls extends EventDispatcher<{
+    change: {}
+    start: {}
+    end: {}
+  }> {
     enabled: boolean
 
     isEnvironmentControls?: boolean
