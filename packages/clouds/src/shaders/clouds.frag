@@ -69,7 +69,7 @@ layout(location = 2) out float outputShadowLength;
 vec3 getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
   vec3 scale = 1.0 / vec3(size);
-  // x: scalar, yz: vec2
+  // xy: vec2, z: scalar
   return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).xyz;
 }
 
@@ -527,8 +527,8 @@ void main() {
     rayOrigin,
     rayDirection,
     rayFar - rayNear,
-    stbn.x,
-    stbn.yz,
+    stbn.z,
+    stbn.xy,
     pow(2.0, mipLevel),
     sunDirection,
     frontDepth
