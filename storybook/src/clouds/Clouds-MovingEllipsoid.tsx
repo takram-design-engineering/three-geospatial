@@ -183,8 +183,6 @@ const Scene: FC = () => {
               ref={setClouds}
               stbnTexture={stbnTexture}
               coverage={coverage}
-              // TODO: Reprojection doesn't work with moving ellipsoid.
-              temporalUpscaling={false}
             />
             <AerialPerspective sky />
             {!debugShowUv && !debugShowShadowMap && (

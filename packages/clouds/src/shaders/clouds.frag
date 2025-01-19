@@ -514,7 +514,8 @@ void main() {
   applyAerialPerspective(cameraPosition, frontPosition, color);
 
   // Velocity for temporal resolution.
-  vec4 prevClip = reprojectionMatrix * vec4(frontPosition + vEllipsoidCenter, 1.0);
+  vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
+  vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
   vec2 velocity = (vUv - prevUv) * resolution;
