@@ -119,11 +119,15 @@ interface CloudsMaterialUniforms
   powderScale: Uniform<number>
   powderExponent: Uniform<number>
 
-  // Raymarch to clouds
+  // Primary raymarch
   maxIterations: Uniform<number>
   minStepSize: Uniform<number>
   maxStepSize: Uniform<number>
   maxRayDistance: Uniform<number>
+
+  // Secondary raymarch
+  maxSunIterations: Uniform<number>
+  maxGroundIterations: Uniform<number>
 
   // Beer shadow map
   shadowBuffer: Uniform<DataArrayTexture | null>
@@ -215,11 +219,15 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           skyIrradianceScale: new Uniform(0.3),
           groundIrradianceScale: new Uniform(0.7),
 
-          // Raymarch to clouds
+          // Primary raymarch
           maxIterations: new Uniform(500),
           minStepSize: new Uniform(50),
           maxStepSize: new Uniform(1000),
           maxRayDistance: new Uniform(1.5e5),
+
+          // Secondary raymarch
+          maxSunIterations: new Uniform(3),
+          maxGroundIterations: new Uniform(2),
 
           // Beer shadow map
           shadowBuffer: new Uniform(shadowBuffer),

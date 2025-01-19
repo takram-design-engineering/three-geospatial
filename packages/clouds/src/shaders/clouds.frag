@@ -33,13 +33,17 @@ uniform float groundIrradianceScale;
 uniform float powderScale;
 uniform float powderExponent;
 
-// Raymarch to clouds
+// Primary raymarch
 uniform int maxIterations;
 uniform float minStepSize;
 uniform float maxStepSize;
 uniform float maxRayDistance;
 uniform float minDensity;
 uniform float minTransmittance;
+
+// Secondary raymarch
+uniform int maxSunIterations;
+uniform int maxGroundIterations;
 
 // Beer shadow map
 uniform sampler2DArray shadowBuffer;
@@ -270,7 +274,7 @@ vec4 marchToClouds(
       // Obtain the optical depth at the position from BSM.
       float shadowOpticalDepth = sampleShadowOpticalDepth(position, distanceToTop, jitterUv);
 
-      float sunOpticalDepth = marchOpticalDepth(position, sunDirection, 3, mipLevel);
+      float sunOpticalDepth = marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel);
       float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
       vec3 albedoScattering = multipleScattering(opticalDepth, cosTheta);
       vec3 scatteredIrradiance = albedoScattering * (sunIrradiance + skyIrradiance);
@@ -279,7 +283,12 @@ vec4 marchToClouds(
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (mipLevel < 0.5) {
-        float groundOpticalDepth = marchOpticalDepth(position, -normalize(position), 2, mipLevel);
+        float groundOpticalDepth = marchOpticalDepth(
+          position,
+          -normalize(position),
+          maxGroundIterations,
+          mipLevel
+        );
         float heightScale = max(0.0, 1.0 - weather.heightFraction.x * 2.0);
         vec3 groundIrradiance = radiance * exp(-groundOpticalDepth) * heightScale;
         // Ground irradiance decreases as coverage increases.

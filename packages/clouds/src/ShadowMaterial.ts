@@ -64,7 +64,7 @@ interface ShadowMaterialUniforms
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
 
-  // Raymarch to clouds
+  // Primary raymarch
   maxIterations: Uniform<number>
   minStepSize: Uniform<number>
   maxStepSize: Uniform<number>
@@ -131,7 +131,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         altitudeCorrection: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirectionRef),
 
-        // Raymarch to clouds
+        // Primary raymarch
         maxIterations: new Uniform(50),
         minStepSize: new Uniform(100),
         maxStepSize: new Uniform(1000)

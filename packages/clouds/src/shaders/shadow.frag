@@ -13,7 +13,7 @@ uniform mat4 inverseShadowMatrices[CASCADE_COUNT];
 uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 uniform sampler3D stbnTexture;
 
-// Raymarch to clouds
+// Primary raymarch
 uniform int maxIterations;
 uniform float minStepSize;
 uniform float maxStepSize;
