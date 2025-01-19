@@ -10,6 +10,7 @@ import {
   HalfFloatType,
   LinearFilter,
   Matrix4,
+  RedFormat,
   Vector2,
   Vector3,
   WebGLArrayRenderTarget,
@@ -162,6 +163,7 @@ export class CloudsEffect extends Effect {
   readonly cloudsResolveMaterial: CloudsResolveMaterial
   readonly cloudsResolvePass: ShaderPass
   readonly cloudsHistoryPass: CopyPass
+  readonly shadowLengthBuffer: Texture
 
   readonly resolution: Resolution
   private frame = 0
@@ -196,6 +198,10 @@ export class CloudsEffect extends Effect {
     const cloudsDepthVelocityBuffer = cloudsRenderTarget.texture.clone()
     cloudsDepthVelocityBuffer.isRenderTargetTexture = true
     cloudsRenderTarget.textures.push(cloudsDepthVelocityBuffer)
+    const shadowLengthBuffer = cloudsRenderTarget.texture.clone()
+    shadowLengthBuffer.isRenderTargetTexture = true
+    shadowLengthBuffer.format = RedFormat
+    cloudsRenderTarget.textures.push(shadowLengthBuffer)
     const cloudsResolveRenderTarget = createRenderTarget('Clouds.Resolve')
 
     // These instances are shared by both cloud and shadow materials.
@@ -280,6 +286,7 @@ export class CloudsEffect extends Effect {
     this.cloudsResolveMaterial = cloudsResolveMaterial
     this.cloudsResolvePass = cloudsResolvePass
     this.cloudsHistoryPass = cloudsHistoryPass
+    this.shadowLengthBuffer = shadowLengthBuffer
 
     this.resolution = new Resolution(
       this,

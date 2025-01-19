@@ -37,6 +37,10 @@ uniform float shadowTopHeight;
 uniform float shadowRadius;
 #endif // HAS_SHADOW
 
+#ifdef HAS_SHADOW_LENGTH
+uniform sampler2D shadowLengthBuffer;
+#endif // HAS_SHADOW_LENGTH
+
 varying vec3 vCameraPosition;
 varying vec3 vRayDirection;
 varying vec3 vEllipsoidCenter;

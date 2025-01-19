@@ -64,6 +64,7 @@ in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 1) out vec3 outputDepthVelocity;
+layout(location = 2) out float outputShadowLength;
 
 vec3 getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
@@ -466,6 +467,8 @@ vec4 getCascadedShadowMap(vec2 uv) {
 #endif // DEBUG_SHOW_SHADOW_MAP
 
 void main() {
+  outputShadowLength = 0.0;
+
   #ifdef DEBUG_SHOW_SHADOW_MAP
   outputColor = getCascadedShadowMap(vUv);
   outputDepthVelocity = vec3(0.0);

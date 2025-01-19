@@ -56,7 +56,8 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
           matrices: effect.shadowMatrices,
           far: effect.shadow.far,
           topHeight: effect.shadowTopHeight
-        }
+        },
+        shadowLengthTexture: effect.shadowLengthBuffer
       })
       return () => {
         setComposite(null)
