@@ -128,6 +128,8 @@ interface CloudsMaterialUniforms
   // Secondary raymarch
   maxSunIterations: Uniform<number>
   maxGroundIterations: Uniform<number>
+  secondaryStepSize: Uniform<number>
+  secondaryStepScale: Uniform<number>
 
   // Beer shadow map
   shadowBuffer: Uniform<DataArrayTexture | null>
@@ -136,6 +138,7 @@ interface CloudsMaterialUniforms
   shadowMatrices: Uniform<Matrix4[]>
   shadowFar: Uniform<number>
   shadowFilterRadius: Uniform<number>
+  maxShadowOpticalDepthScale: Uniform<number>
 }
 
 export interface CloudsMaterial {
@@ -228,6 +231,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Secondary raymarch
           maxSunIterations: new Uniform(3),
           maxGroundIterations: new Uniform(2),
+          secondaryStepSize: new Uniform(80),
+          secondaryStepScale: new Uniform(2),
 
           // Beer shadow map
           shadowBuffer: new Uniform(shadowBuffer),
@@ -239,7 +244,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
             Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
           ),
           shadowFar: new Uniform(0),
-          shadowFilterRadius: new Uniform(0)
+          shadowFilterRadius: new Uniform(0),
+          maxShadowOpticalDepthScale: new Uniform(5)
         } satisfies CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',

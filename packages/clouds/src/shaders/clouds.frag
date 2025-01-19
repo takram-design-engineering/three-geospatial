@@ -44,6 +44,8 @@ uniform float minTransmittance;
 // Secondary raymarch
 uniform int maxSunIterations;
 uniform int maxGroundIterations;
+uniform float secondaryStepSize;
+uniform float secondaryStepScale;
 
 // Beer shadow map
 uniform sampler2DArray shadowBuffer;
@@ -52,6 +54,7 @@ uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 uniform float shadowFilterRadius;
+uniform float maxShadowOpticalDepthScale;
 
 in vec2 vUv;
 in vec3 vCameraPosition;
@@ -140,11 +143,9 @@ float sampleShadowOpticalDepth(
   vec3 shadow = sampleShadow(rayPosition, offset);
   // In Hillaire's presentation, optical depth is clamped to the max optical
   // depth. While it is understandable, it lacks resolution in shadows
-  // compared to marched results with a very high number of iterations. I chose
-  // not to clamp it and let it increase towards infinity.
+  // compared to marched results with a very high number of iterations.
   // https://blog.selfshadow.com/publications/s2020-shading-course/hillaire/s2020_pbs_hillaire_slides.pdf
-  // return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
-  return shadow.g * max(0.0, distanceToTop - shadow.r);
+  return min(shadow.b * maxShadowOpticalDepthScale, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
@@ -172,7 +173,7 @@ float marchOpticalDepth(
     return 0.5; // Fudge factor to approximate the average optical depth.
   }
   int iterations = int(remap(mipLevel, 0.0, 0.75, float(maxIterations), 1.0));
-  float stepSize = 60.0 / float(iterations);
+  float stepSize = secondaryStepSize / float(iterations);
   float opticalDepth = 0.0;
   float stepScale = 1.0;
   float prevStepScale = 0.0;
@@ -184,7 +185,7 @@ float marchOpticalDepth(
     float density = sampleShape(weather, position, mipLevel);
     opticalDepth += density * (stepScale - prevStepScale) * stepSize;
     prevStepScale = stepScale;
-    stepScale *= 2.0;
+    stepScale *= secondaryStepScale;
   }
   return opticalDepth;
 }

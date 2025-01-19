@@ -100,7 +100,7 @@ export class CloudsEffect extends Effect {
     {
       minHeight: 750,
       maxHeight: 1600,
-      extinctionCoeff: 0.3,
+      extinctionCoeff: 0.4,
       detailAmount: 1,
       weatherExponent: 1,
       coverageFilterWidth: 0.6
