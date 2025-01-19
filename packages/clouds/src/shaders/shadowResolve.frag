@@ -17,10 +17,44 @@ in vec2 vUv;
 
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
 
+const ivec2 neighborOffsets[9] = ivec2[9](
+  ivec2(-1, -1),
+  ivec2(-1, 0),
+  ivec2(-1, 1),
+  ivec2(0, -1),
+  ivec2(0, 0),
+  ivec2(0, 1),
+  ivec2(1, -1),
+  ivec2(1, 0),
+  ivec2(1, 1)
+);
+
+vec4 getClosestFragment(const ivec3 coord) {
+  vec4 result = vec4(1e7, 0.0, 0.0, 0.0);
+  vec4 neighbor;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 9; ++i) {
+    neighbor = texelFetchOffset(
+      inputBuffer,
+      coord + ivec3(0, 0, CASCADE_COUNT),
+      0,
+      neighborOffsets[i]
+    );
+    if (neighbor.r < result.r) {
+      result = neighbor;
+    }
+  }
+  #pragma unroll_loop_end
+  return result;
+}
+
 void cascade(const int index, out vec4 outputColor) {
   ivec3 coord = ivec3(gl_FragCoord.xy, index);
   vec4 current = texelFetch(inputBuffer, coord, 0);
-  vec4 depthVelocity = texelFetch(inputBuffer, ivec3(coord.xy, index + CASCADE_COUNT), 0);
+
+  // TODO: Neighbor lookup might be overkill for the outcome.
+  // vec4 depthVelocity = texelFetch(inputBuffer, ivec3(coord.xy, index + CASCADE_COUNT), 0);
+  vec4 depthVelocity = getClosestFragment(coord);
   vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
