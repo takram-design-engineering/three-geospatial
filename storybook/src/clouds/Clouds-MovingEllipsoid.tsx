@@ -10,13 +10,7 @@ import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { Fragment, useEffect, useState, type FC } from 'react'
-import {
-  DoubleSide,
-  NearestFilter,
-  RepeatWrapping,
-  RGBAFormat,
-  Vector3
-} from 'three'
+import { NearestFilter, RepeatWrapping, RGBAFormat, Vector3 } from 'three'
 
 import {
   AerialPerspective,
@@ -81,7 +75,6 @@ const Scene: FC = () => {
     {
       showShadowMap: false,
       showCascades: false,
-      showBox: false,
       showUv: false
     },
     { collapsed: true }
@@ -161,7 +154,6 @@ const Scene: FC = () => {
         fadeDistance={100}
         followCamera
         infiniteGrid
-        side={DoubleSide}
       />
       <Atmosphere
         ref={setAtmosphere}
