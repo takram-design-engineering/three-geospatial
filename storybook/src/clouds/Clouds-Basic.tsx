@@ -1,6 +1,6 @@
 import { Box, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
-import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
+import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { Fragment, useEffect, useRef, useState, type FC } from 'react'
@@ -287,6 +287,7 @@ const Scene: FC = () => {
               <>
                 <LensFlare />
                 <ToneMapping mode={ToneMappingMode.AGX} />
+                <SMAA />
                 <Dithering />
               </>
             )}

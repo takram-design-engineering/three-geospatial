@@ -6,7 +6,7 @@ import {
   Sphere
 } from '@react-three/drei'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
-import { ToneMapping } from '@react-three/postprocessing'
+import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { Fragment, useEffect, useState, type FC } from 'react'
@@ -172,7 +172,7 @@ const Scene: FC = () => {
         <SkyLight />
         <SunLight />
         <Stars data='atmosphere/stars.bin' />
-        <EffectComposer multisampling={0} enableNormalPass>
+        <EffectComposer multisampling={0}>
           <Fragment
             key={JSON.stringify({
               debugShowUv,
@@ -189,6 +189,7 @@ const Scene: FC = () => {
               <>
                 <LensFlare />
                 <ToneMapping mode={ToneMappingMode.AGX} />
+                <SMAA />
                 <Dithering />
               </>
             )}

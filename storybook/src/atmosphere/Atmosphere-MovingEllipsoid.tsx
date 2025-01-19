@@ -96,7 +96,7 @@ const Scene: FC = () => {
         <SkyLight />
         <SunLight />
         <Stars data='atmosphere/stars.bin' />
-        <EffectComposer>
+        <EffectComposer multisampling={0}>
           <AerialPerspective />
           <LensFlare />
           <ToneMapping mode={ToneMappingMode.AGX} />
