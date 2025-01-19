@@ -1,7 +1,7 @@
 import { css } from '@emotion/react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer'
+import { type GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
