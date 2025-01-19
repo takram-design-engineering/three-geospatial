@@ -472,14 +472,15 @@ void main() {
   }
 
   // Clamp the ray at the scene objects.
-  // TODO: Don't clamp at objects below the minimum height and use depth test
-  // instead.
   float depth = readDepth(vUv + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     float viewZ = getViewZ(depth);
     float rayDistance = -viewZ / dot(rayDirection, vCameraDirection);
     rayFar = min(rayFar, rayDistance);
+  }
+  if (rayFar < rayNear) {
+    discard; // Scene objects in front of the clouds layer boundary.
   }
 
   vec3 rayOrigin = rayNear * rayDirection + cameraPosition;

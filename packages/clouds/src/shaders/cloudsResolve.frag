@@ -85,7 +85,7 @@ void main() {
   vec4 current = texelFetch(inputBuffer, coord, 0);
 
   vec4 depthVelocity = getClosestFragment(coord);
-  vec2 velocity = depthVelocity.gb;
+  vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = current;
