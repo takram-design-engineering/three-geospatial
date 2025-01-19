@@ -42,7 +42,7 @@ vec3 getSTBN() {
   return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).xyz;
 }
 
-vec4 marchToClouds(
+vec4 marchClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
   const float maxRayDistance,
@@ -156,7 +156,7 @@ void cascade(
 
   vec3 rayOrigin = rayNear * rayDirection + sunPosition;
   vec3 stbn = getSTBN();
-  vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.x, mipLevel);
+  vec4 color = marchClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.x, mipLevel);
 
   // Velocity for temporal resolution.
   vec3 frontPosition = color.x * rayDirection + rayOrigin;

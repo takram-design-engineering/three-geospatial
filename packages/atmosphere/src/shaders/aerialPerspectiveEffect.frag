@@ -92,7 +92,7 @@ vec3 getSunSkyIrradiance(
 #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
 #if defined(TRANSMITTANCE) || defined(INSCATTER)
-void getTransmittanceInscatter(const vec3 positionECEF, inout vec3 radiance) {
+void applyTransmittanceInscatter(const vec3 positionECEF, inout vec3 radiance) {
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
     vCameraPosition - vGeometryEllipsoidCenter,
@@ -248,7 +248,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  getTransmittanceInscatter(positionECEF, radiance);
+  applyTransmittanceInscatter(positionECEF, radiance);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);

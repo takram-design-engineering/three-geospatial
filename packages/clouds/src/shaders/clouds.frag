@@ -210,7 +210,7 @@ vec3 multipleScattering(const float opticalDepth, const float cosTheta) {
   return scattering;
 }
 
-vec4 marchToClouds(
+vec4 marchClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
   const float maxRayDistance,
@@ -520,7 +520,7 @@ void main() {
 
   vec3 stbn = getSTBN();
   float frontDepth;
-  vec4 color = marchToClouds(
+  vec4 color = marchClouds(
     rayOrigin,
     rayDirection,
     rayFar - rayNear,
