@@ -480,6 +480,19 @@ void main() {
     rayFar = min(rayFar, rayDistance);
   }
   if (rayFar < rayNear) {
+    // TODO: We may calculate velocity here, which reduces occlusion errors at
+    // the edges, but suffers from floating-point precision errors on near
+    // objects.
+    // vec3 frontPosition = cameraPosition + rayFar * rayDirection;
+    // vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
+    // vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
+    // prevClip /= prevClip.w;
+    // vec2 prevUv = prevClip.xy * 0.5 + 0.5;
+    // vec2 velocity = (vUv - prevUv) * resolution;
+    // outputColor = vec4(0.0);
+    // outputDepthVelocity = vec3(rayFar, velocity);
+    // return;
+
     discard; // Scene objects in front of the clouds layer boundary.
   }
 
