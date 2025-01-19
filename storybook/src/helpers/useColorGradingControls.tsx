@@ -6,7 +6,6 @@ import { FileLoader } from 'three'
 import { useControls } from './useControls'
 
 interface Entry {
-  category: string
   manufacturer: string
   file: string
 }
@@ -21,9 +20,9 @@ export function useColorGradingControls(
   const films = useMemo(
     () =>
       data
-        .map(({ category, manufacturer, file }) => [
+        .map(({ manufacturer, file }) => [
           file.slice(0, -4),
-          `public/clut/${category}/${manufacturer}/${file}`
+          `public/clut/${manufacturer}/${file}`
         ])
         .sort(([a], [b]) => a.localeCompare(b))
         .reduce<Record<string, string>>(
