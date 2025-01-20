@@ -1,9 +1,9 @@
 import { CopyMaterial } from 'postprocessing'
 import { GLSL3 } from 'three'
 
-import fragmentShader from './shaders/copyArray.frag?raw'
+import fragmentShader from './shaders/arrayCopy.frag?raw'
 
-export class CopyArrayMaterial extends CopyMaterial {
+export class ArrayCopyMaterial extends CopyMaterial {
   constructor() {
     super()
     this.glslVersion = GLSL3

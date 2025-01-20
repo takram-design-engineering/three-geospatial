@@ -1,7 +1,7 @@
 import { CopyPass } from 'postprocessing'
 import { LinearFilter, WebGLArrayRenderTarget, type WebGLRenderer } from 'three'
 
-import { CopyArrayMaterial } from './CopyArrayMaterial'
+import { ArrayCopyMaterial } from './ArrayCopyMaterial'
 import { setArrayRenderTargetLayers } from './helpers/setArrayRenderTargetLayers'
 
 declare module 'postprocessing' {
@@ -10,7 +10,7 @@ declare module 'postprocessing' {
   }
 }
 
-export class CopyArrayPass extends CopyPass {
+export class ArrayCopyPass extends CopyPass {
   declare renderTarget: WebGLArrayRenderTarget
 
   constructor(renderTarget?: WebGLArrayRenderTarget, autoResize?: boolean) {
@@ -24,7 +24,7 @@ export class CopyArrayPass extends CopyPass {
       renderTarget.texture.name = 'CopyPass.Target'
     }
     super(renderTarget, autoResize)
-    this.fullscreenMaterial = new CopyArrayMaterial()
+    this.fullscreenMaterial = new ArrayCopyMaterial()
   }
 
   override render(

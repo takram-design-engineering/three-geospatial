@@ -29,12 +29,12 @@ import {
 import { AtmosphereParameters } from '@takram/three-atmosphere'
 import { lerp, type Ellipsoid } from '@takram/three-geospatial'
 
+import { ArrayCopyPass } from './ArrayCopyPass'
 import { CascadedShadowMap } from './CascadedShadowMap'
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsResolveMaterial } from './CloudsResolveMaterial'
-import { CopyArrayPass } from './CopyArrayPass'
 import { LocalWeather } from './LocalWeather'
 import { ShaderArrayPass } from './ShaderArrayPass'
 import { ShadowMaterial } from './ShadowMaterial'
@@ -153,7 +153,7 @@ export class CloudsEffect extends Effect {
   readonly shadowResolveRenderTarget: WebGLArrayRenderTarget
   readonly shadowResolveMaterial: ShadowResolveMaterial
   readonly shadowResolvePass: ShaderArrayPass
-  readonly shadowHistoryPass: CopyArrayPass
+  readonly shadowHistoryPass: ArrayCopyPass
 
   // Clouds
   readonly cloudsRenderTarget: WebGLRenderTarget
@@ -194,6 +194,8 @@ export class CloudsEffect extends Effect {
     const shadowResolveRenderTarget = createArrayRenderTarget('Shadow.Resolve')
 
     const cloudsRenderTarget = createRenderTarget('Clouds.Current')
+    const cloudsResolveRenderTarget = createRenderTarget('Clouds.Resolve')
+
     const cloudsDepthVelocityBuffer = cloudsRenderTarget.texture.clone()
     cloudsDepthVelocityBuffer.isRenderTargetTexture = true
     cloudsRenderTarget.textures.push(cloudsDepthVelocityBuffer)
@@ -201,7 +203,6 @@ export class CloudsEffect extends Effect {
     shadowLengthBuffer.isRenderTargetTexture = true
     shadowLengthBuffer.format = RedFormat
     cloudsRenderTarget.textures.push(shadowLengthBuffer)
-    const cloudsResolveRenderTarget = createRenderTarget('Clouds.Resolve')
 
     // These instances are shared by both cloud and shadow materials.
     const ellipsoidCenter = new Vector3()
@@ -220,7 +221,7 @@ export class CloudsEffect extends Effect {
       atmosphere
     )
     const shadowPass = new ShaderArrayPass(shadowMaterial)
-    const shadowHistoryPass = new CopyArrayPass()
+    const shadowHistoryPass = new ArrayCopyPass()
     const shadowResolveMaterial = new ShadowResolveMaterial({
       inputBuffer: shadowRenderTarget.texture,
       historyBuffer: shadowHistoryPass.texture
