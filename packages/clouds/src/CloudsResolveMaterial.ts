@@ -61,7 +61,9 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         varianceGamma: new Uniform(2),
         temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
-      defines: {}
+      defines: {
+        SHADOW_LENGTH: '1'
+      }
     })
   }
 
@@ -79,6 +81,21 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         this.defines.TEMPORAL_UPSCALING = '1'
       } else {
         delete this.defines.TEMPORAL_UPSCALING
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get shadowLength(): boolean {
+    return this.defines.SHADOW_LENGTH != null
+  }
+
+  set shadowLength(value: boolean) {
+    if (value !== this.shadowLength) {
+      if (value) {
+        this.defines.SHADOW_LENGTH = '1'
+      } else {
+        delete this.defines.SHADOW_LENGTH
       }
       this.needsUpdate = true
     }

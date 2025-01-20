@@ -473,4 +473,19 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       this.needsUpdate = true
     }
   }
+
+  get shadowLength(): boolean {
+    return this.defines.SHADOW_LENGTH != null
+  }
+
+  set shadowLength(value: boolean) {
+    if (value !== this.shadowLength) {
+      if (value) {
+        this.defines.SHADOW_LENGTH = '1'
+      } else {
+        delete this.defines.SHADOW_LENGTH
+      }
+      this.needsUpdate = true
+    }
+  }
 }

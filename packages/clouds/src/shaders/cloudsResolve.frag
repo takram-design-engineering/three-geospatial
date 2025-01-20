@@ -5,9 +5,12 @@ precision highp sampler2DArray;
 
 uniform sampler2D colorBuffer;
 uniform sampler2D depthVelocityBuffer;
-uniform sampler2D shadowLengthBuffer;
 uniform sampler2D colorHistoryBuffer;
+
+#ifdef SHADOW_LENGTH
+uniform sampler2D shadowLengthBuffer;
 uniform sampler2D shadowLengthHistoryBuffer;
+#endif // SHADOW_LENGTH
 
 uniform vec2 texelSize;
 uniform int frame;
@@ -17,7 +20,9 @@ uniform float temporalAlpha;
 in vec2 vUv;
 
 layout(location = 0) out vec4 outputColor;
+#ifdef SHADOW_LENGTH
 layout(location = 1) out float outputShadowLength;
+#endif // SHADOW_LENGTH
 
 const ivec2 neighborOffsets[9] = ivec2[9](
   ivec2(-1, -1),
@@ -58,13 +63,17 @@ void main() {
   ivec2 coord = ivec2(gl_FragCoord.xy);
   ivec2 subCoord = coord / 4;
   vec4 currentColor = texelFetch(colorBuffer, subCoord, 0);
+  #ifdef SHADOW_LENGTH
   vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, subCoord, 0).rgb, 1.0);
+  #endif // SHADOW_LENGTH
 
   int bayerValue = int(bayerIndices[coord.x % 4][coord.y % 4]);
   if (bayerValue == frame % 16) {
     // Use the texel just rendered without any accumulation, for now.
     outputColor = currentColor;
+    #ifdef SHADOW_LENGTH
     outputShadowLength = currentShadowLength.r;
+    #endif // SHADOW_LENGTH
     return;
   }
 
@@ -73,7 +82,9 @@ void main() {
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = currentColor;
+    #ifdef SHADOW_LENGTH
     outputShadowLength = currentShadowLength.r;
+    #endif // SHADOW_LENGTH
     return; // Rejection
   }
 
@@ -89,6 +100,7 @@ void main() {
   );
   outputColor = clippedColor;
 
+  #ifdef SHADOW_LENGTH
   // Sampling the shadow length history using scene depth doesn’t make much
   // sense, but deriving it properly is too hard. At least this approach
   // resolves the edges of scene objects.
@@ -101,6 +113,7 @@ void main() {
     varianceGamma
   );
   outputShadowLength = clippedShadowLength.r;
+  #endif // SHADOW_LENGTH
 }
 
 #else // TEMPORAL_UPSCALING
@@ -108,14 +121,18 @@ void main() {
 void main() {
   ivec2 coord = ivec2(gl_FragCoord.xy);
   vec4 currentColor = texelFetch(colorBuffer, coord, 0);
+  #ifdef SHADOW_LENGTH
   vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, coord, 0).rgb, 1.0);
+  #endif // SHADOW_LENGTH
 
   vec4 depthVelocity = getClosestFragment(coord);
   vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = currentColor;
+    #ifdef SHADOW_LENGTH
     outputShadowLength = currentShadowLength.r;
+    #endif // SHADOW_LENGTH
     return; // Rejection
   }
 
@@ -123,6 +140,7 @@ void main() {
   vec4 clippedColor = varianceClipping(colorBuffer, coord, currentColor, historyColor);
   outputColor = mix(clippedColor, currentColor, temporalAlpha);
 
+  #ifdef SHADOW_LENGTH
   vec4 historyShadowLength = vec4(texture(shadowLengthHistoryBuffer, prevUv).rgb, 1.0);
   vec4 clippedShadowLength = varianceClipping(
     shadowLengthBuffer,
@@ -131,6 +149,7 @@ void main() {
     historyShadowLength
   );
   outputShadowLength = mix(clippedShadowLength.r, currentShadowLength.r, temporalAlpha);
+  #endif // SHADOW_LENGTH
 }
 
 #endif // TEMPORAL_UPSCALING
