@@ -3,9 +3,11 @@ precision highp sampler2DArray;
 
 #include "varianceClipping"
 
-uniform sampler2D inputBuffer;
+uniform sampler2D colorBuffer;
 uniform sampler2D depthVelocityBuffer;
-uniform sampler2D historyBuffer;
+uniform sampler2D shadowLengthBuffer;
+uniform sampler2D colorHistoryBuffer;
+uniform sampler2D shadowLengthHistoryBuffer;
 
 uniform vec2 texelSize;
 uniform int frame;
@@ -15,6 +17,7 @@ uniform float temporalAlpha;
 in vec2 vUv;
 
 layout(location = 0) out vec4 outputColor;
+layout(location = 1) out float outputShadowLength;
 
 const ivec2 neighborOffsets[9] = ivec2[9](
   ivec2(-1, -1),
@@ -54,12 +57,14 @@ const mat4 bayerIndices = mat4(
 void main() {
   ivec2 coord = ivec2(gl_FragCoord.xy);
   ivec2 subCoord = coord / 4;
-  vec4 current = texelFetch(inputBuffer, subCoord, 0);
+  vec4 currentColor = texelFetch(colorBuffer, subCoord, 0);
+  vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, subCoord, 0).rgb, 1.0);
 
   int bayerValue = int(bayerIndices[coord.x % 4][coord.y % 4]);
   if (bayerValue == frame % 16) {
     // Use the texel just rendered without any accumulation, for now.
-    outputColor = current;
+    outputColor = currentColor;
+    outputShadowLength = currentShadowLength.r;
     return;
   }
 
@@ -67,22 +72,42 @@ void main() {
   vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
-    outputColor = current;
+    outputColor = currentColor;
+    outputShadowLength = currentShadowLength.r;
     return; // Rejection
   }
 
   // Variance clipping with a large variance gamma seems to work fine for upsampling.
   // This increases ghosting, of course, but it's hard to notice on clouds.
-  vec4 history = texture(historyBuffer, prevUv);
-  vec4 clippedHistory = varianceClipping(inputBuffer, subCoord, current, history, varianceGamma);
+  vec4 historyColor = texture(colorHistoryBuffer, prevUv);
+  vec4 clippedHistory = varianceClipping(
+    colorBuffer,
+    subCoord,
+    currentColor,
+    historyColor,
+    varianceGamma
+  );
   outputColor = clippedHistory;
+
+  // Sampling the shadow length history using scene depth doesn’t make much
+  // sense, but deriving it properly is too hard. At least this approach
+  // resolves the edges of scene objects.
+  vec4 historyShadowLength = vec4(texture(shadowLengthHistoryBuffer, prevUv).rgb, 1.0);
+  vec4 clippedShadowLength = varianceClipping(
+    shadowLengthBuffer,
+    subCoord,
+    currentShadowLength,
+    historyShadowLength,
+    varianceGamma
+  );
+  outputShadowLength = clippedShadowLength.r;
 }
 
 #else // TEMPORAL_UPSCALING
 
 void main() {
   ivec2 coord = ivec2(gl_FragCoord.xy);
-  vec4 current = texelFetch(inputBuffer, coord, 0);
+  vec4 current = texelFetch(colorBuffer, coord, 0);
 
   vec4 depthVelocity = getClosestFragment(coord);
   vec2 velocity = depthVelocity.gb * texelSize;
@@ -92,8 +117,8 @@ void main() {
     return; // Rejection
   }
 
-  vec4 history = texture(historyBuffer, prevUv);
-  vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history);
+  vec4 history = texture(colorHistoryBuffer, prevUv);
+  vec4 clippedHistory = varianceClipping(colorBuffer, coord, current, history);
   outputColor = mix(clippedHistory, current, temporalAlpha);
 }
 
