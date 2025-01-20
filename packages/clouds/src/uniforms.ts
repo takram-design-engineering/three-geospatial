@@ -52,6 +52,8 @@ export interface CloudLayerUniforms {
   coverageFilterWidths: Uniform<Vector4>
   minHeight: Uniform<number>
   maxHeight: Uniform<number>
+  shadowTopHeight: Uniform<number>
+  shadowBottomHeight: Uniform<number>
 }
 
 export function createCloudLayerUniforms(): CloudLayerUniforms {
@@ -63,7 +65,9 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
     weatherExponents: new Uniform(new Vector4()),
     coverageFilterWidths: new Uniform(new Vector4()),
     minHeight: new Uniform(0),
-    maxHeight: new Uniform(0)
+    maxHeight: new Uniform(0),
+    shadowTopHeight: new Uniform(0),
+    shadowBottomHeight: new Uniform(0)
   }
 }
 
@@ -121,4 +125,8 @@ export function updateCloudLayerUniforms(
       value => value > 0
     )
   )
+
+  // TODO: Parameterize
+  uniforms.shadowTopHeight.value = layers[0].maxHeight
+  uniforms.shadowBottomHeight.value = layers[0].minHeight
 }

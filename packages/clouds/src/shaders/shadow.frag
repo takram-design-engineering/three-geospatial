@@ -117,20 +117,18 @@ void getRayNearFar(
   out float rayNear,
   out float rayFar
 ) {
-  rayNear = max(
-    0.0,
-    raySphereFirstIntersection(
-      sunPosition,
-      rayDirection,
-      vec3(0.0),
-      bottomRadius + maxLayerHeights.x
-    )
+  rayNear = raySphereFirstIntersection(
+    sunPosition,
+    rayDirection,
+    vec3(0.0),
+    bottomRadius + shadowTopHeight
   );
+  rayNear = max(0.0, rayNear);
   rayFar = raySphereFirstIntersection(
     sunPosition,
     rayDirection,
     vec3(0.0),
-    bottomRadius + minLayerHeights.x
+    bottomRadius + shadowBottomHeight
   );
   if (rayFar < 0.0) {
     rayFar = 1e6;

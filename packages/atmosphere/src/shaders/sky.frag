@@ -21,14 +21,13 @@ layout(location = 0) out vec4 outputColor;
 
 #include <mrt_layout>
 
-// TODO: Separate to an include
 float distanceToBottomBoundary(float r, float mu, float radius) {
   if (r < radius || mu > 0.0) {
     return -1.0;
   }
   float discriminant = r * r * (mu * mu - 1.0) + radius * radius;
   return discriminant >= 0.0
-    ? max(-r * mu - sqrt(discriminant), 0.0)
+    ? max(0.0, -r * mu - sqrt(discriminant))
     : -1.0;
 }
 
