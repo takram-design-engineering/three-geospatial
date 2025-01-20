@@ -601,12 +601,25 @@ void main() {
       );
     }
     #endif // SHADOW_LENGTH
+
+    outputColor = vec4(0.0);
+    outputDepthVelocity = vec3(0.0);
     return; // Intersects with the ground, or no intersections.
   }
 
   clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowLengthRayNearFar);
   if (rayNearFar.y < rayNearFar.x) {
-    // TODO: We may calculate velocity here, which reduces occlusion errors at
+    #ifdef SHADOW_LENGTH
+    if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
+      outputShadowLength = marchShadowLength(
+        shadowLengthRayNearFar.x * rayDirection + cameraPosition,
+        rayDirection,
+        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
+      );
+    }
+    #endif // SHADOW_LENGTH
+
+    // TODO: We can calculate velocity here, which reduces occlusion errors at
     // the edges, but suffers from floating-point precision errors on near
     // objects.
     // vec3 frontPosition = cameraPosition + rayNearFar.y * rayDirection;
@@ -617,16 +630,8 @@ void main() {
     // vec2 velocity = (vUv - prevUv) * resolution;
     // outputColor = vec4(0.0);
     // outputDepthVelocity = vec3(rayNearFar.y, velocity);
-
-    #ifdef SHADOW_LENGTH
-    if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
-      outputShadowLength = marchShadowLength(
-        shadowLengthRayNearFar.x * rayDirection + cameraPosition,
-        rayDirection,
-        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
-      );
-    }
-    #endif // SHADOW_LENGTH
+    outputColor = vec4(0.0);
+    outputDepthVelocity = vec3(0.0);
     return; // Scene objects in front of the clouds layer boundary.
   }
 
