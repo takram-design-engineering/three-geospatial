@@ -249,7 +249,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Shadow length
           maxShadowLengthIterations: new Uniform(500),
-          shadowLengthStepSize: new Uniform(100),
+          minShadowLengthStepSize: new Uniform(50),
           maxShadowLengthRayDistance: new Uniform(5e5)
         } satisfies CloudsMaterialUniforms,
         defines: {

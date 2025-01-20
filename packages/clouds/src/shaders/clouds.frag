@@ -59,7 +59,7 @@ uniform float maxShadowOpticalDepthScale;
 // Shadow length
 #ifdef SHADOW_LENGTH
 uniform int maxShadowLengthIterations;
-uniform float shadowLengthStepSize;
+uniform float minShadowLengthStepSize;
 uniform float maxShadowLengthRayDistance;
 #endif // SHADOW_LENGTH
 
@@ -371,7 +371,7 @@ float marchShadowLength(
   const float jitter
 ) {
   float shadowLength = 0.0;
-  float stepSize = shadowLengthStepSize;
+  float stepSize = minShadowLengthStepSize;
   float rayDistance = 0.0;
 
   rayDistance -= stepSize * jitter;

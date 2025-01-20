@@ -36,7 +36,7 @@ vec3 getSkyRadiance(
   // used in Bruneton's demo.
   float r = length(cameraPosition);
   float mu = dot(cameraPosition, rayDirection) / r;
-  float shadowLengthFade = smoothstep(0.02, 0.04, abs(mu));
+  float shadowLengthFade = smoothstep(0.01, 0.035, abs(mu));
 
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
