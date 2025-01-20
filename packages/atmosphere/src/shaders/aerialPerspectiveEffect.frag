@@ -185,8 +185,6 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float shadowLength = 0.0;
   #ifdef HAS_SHADOW_LENGTH
   shadowLength = texture(shadowLengthBuffer, uv).r;
-  // outputColor = vec4(vec3(shadowLength * 0.005), 1.0);
-  // return;
   #endif // HAS_SHADOW_LENGTH
 
   #ifdef HAS_COMPOSITE
