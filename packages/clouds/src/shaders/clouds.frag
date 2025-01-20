@@ -384,7 +384,13 @@ float marchShadowLength(const vec3 rayOrigin, const vec3 rayDirection, const flo
       bottomRadius + shadowTopHeight
     );
     float opticalDepth = sampleShadowOpticalDepth(position, distanceToTop, vec2(0.0));
-    shadowLength += stepSize * (1.0 - exp(-opticalDepth));
+    // Hack to prevent over-integration of shadow length. The shadow should be
+    // attenuated by the inscatter as the ray travels further.
+    float attenuation = exp(-rayDistance * 1e-5);
+    shadowLength += stepSize * (1.0 - exp(-opticalDepth)) * attenuation;
+    if (attenuation < 1e-5) {
+      break;
+    }
 
     stepSize *= 1.005;
     rayDistance += stepSize;
@@ -613,11 +619,13 @@ void main() {
     // outputDepthVelocity = vec3(rayNearFar.y, velocity);
 
     #ifdef SHADOW_LENGTH
-    outputShadowLength = marchShadowLength(
-      shadowLengthRayNearFar.x * rayDirection + cameraPosition,
-      rayDirection,
-      shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
-    );
+    if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
+      outputShadowLength = marchShadowLength(
+        shadowLengthRayNearFar.x * rayDirection + cameraPosition,
+        rayDirection,
+        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
+      );
+    }
     #endif // SHADOW_LENGTH
     return; // Scene objects in front of the clouds layer boundary.
   }
@@ -657,11 +665,13 @@ void main() {
   }
 
   #ifdef SHADOW_LENGTH
-  outputShadowLength = marchShadowLength(
-    shadowLengthRayNearFar.x * rayDirection + cameraPosition,
-    rayDirection,
-    shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
-  );
+  if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
+    outputShadowLength = marchShadowLength(
+      shadowLengthRayNearFar.x * rayDirection + cameraPosition,
+      rayDirection,
+      shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
+    );
+  }
   #endif // SHADOW_LENGTH
 
   // Apply aerial perspective.

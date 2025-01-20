@@ -31,11 +31,18 @@ vec3 getSkyRadiance(
   const float moonAngularRadius,
   const float lunarRadianceScale
 ) {
+  // Hack to reduce shadow length near the horizon, as the sky with long shadow
+  // lengths should be occluded. A similar hack for the sun at the horizon is
+  // used in Bruneton's demo.
+  float r = length(cameraPosition);
+  float mu = dot(cameraPosition, rayDirection) / r;
+  float shadowLengthFade = smoothstep(0.02, 0.04, abs(mu));
+
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
     cameraPosition,
     rayDirection,
-    shadowLength,
+    shadowLength * shadowLengthFade,
     sunDirection,
     transmittance
   );

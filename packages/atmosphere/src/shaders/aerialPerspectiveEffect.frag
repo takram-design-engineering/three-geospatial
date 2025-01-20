@@ -204,7 +204,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     outputColor.rgb = getSkyRadiance(
       vCameraPosition - vEllipsoidCenter,
       rayDirection,
-      0.0, // shadowLength
+      shadowLength,
       sunDirection,
       moonDirection,
       moonAngularRadius,
