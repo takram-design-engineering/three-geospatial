@@ -362,23 +362,6 @@ vec4 marchClouds(
   );
 }
 
-void applyAerialPerspective(
-  const vec3 cameraPosition,
-  const vec3 frontPosition,
-  const float shadowLength,
-  inout vec4 color
-) {
-  vec3 transmittance;
-  vec3 inscatter = GetSkyRadianceToPoint(
-    cameraPosition * METER_TO_UNIT_LENGTH,
-    frontPosition * METER_TO_UNIT_LENGTH,
-    shadowLength,
-    sunDirection,
-    transmittance
-  );
-  color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
-}
-
 #ifdef SHADOW_LENGTH
 
 float marchShadowLength(const vec3 rayOrigin, const vec3 rayDirection, const float maxRayDistance) {
@@ -411,6 +394,23 @@ float marchShadowLength(const vec3 rayOrigin, const vec3 rayDirection, const flo
 }
 
 #endif // SHADOW_LENGTH
+
+void applyAerialPerspective(
+  const vec3 cameraPosition,
+  const vec3 frontPosition,
+  const float shadowLength,
+  inout vec4 color
+) {
+  vec3 transmittance;
+  vec3 inscatter = GetSkyRadianceToPoint(
+    cameraPosition * METER_TO_UNIT_LENGTH,
+    frontPosition * METER_TO_UNIT_LENGTH,
+    shadowLength,
+    sunDirection,
+    transmittance
+  );
+  color.rgb = mix(color.rgb, color.rgb * transmittance + inscatter, color.a);
+}
 
 bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
   float r = length(cameraPosition);
