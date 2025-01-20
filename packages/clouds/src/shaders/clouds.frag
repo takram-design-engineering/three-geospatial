@@ -364,10 +364,17 @@ vec4 marchClouds(
 
 #ifdef SHADOW_LENGTH
 
-float marchShadowLength(const vec3 rayOrigin, const vec3 rayDirection, const float maxRayDistance) {
+float marchShadowLength(
+  const vec3 rayOrigin,
+  const vec3 rayDirection,
+  const float maxRayDistance,
+  const float jitter
+) {
   float shadowLength = 0.0;
   float stepSize = shadowLengthStepSize;
   float rayDistance = 0.0;
+
+  rayDistance -= stepSize * jitter;
 
   for (int i = 0; i < maxShadowLengthIterations; ++i) {
     if (rayDistance > maxRayDistance) {
@@ -590,6 +597,10 @@ void main() {
   vec2 shadowLengthRayNearFar;
   getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowLengthRayNearFar);
 
+  #ifdef SHADOW_LENGTH
+  vec3 stbn = getSTBN();
+  #endif // SHADOW_LENGTH
+
   if (any(lessThan(rayNearFar, vec2(0.0)))) {
     #ifdef SHADOW_LENGTH
     clampRayAtSceneObjects(rayDirection, shadowLengthRayNearFar);
@@ -597,7 +608,8 @@ void main() {
       outputShadowLength = marchShadowLength(
         shadowLengthRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
-        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
+        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
+        stbn.z
       );
     }
     #endif // SHADOW_LENGTH
@@ -614,7 +626,8 @@ void main() {
       outputShadowLength = marchShadowLength(
         shadowLengthRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
-        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
+        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
+        stbn.z
       );
     }
     #endif // SHADOW_LENGTH
@@ -648,7 +661,10 @@ void main() {
   float mipLevel = getMipLevel(globeUv * localWeatherFrequency);
   mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
 
+  #ifndef SHADOW_LENGTH
   vec3 stbn = getSTBN();
+  #endif // !defined(SHADOW_LENGTH)
+
   float frontDepth;
   vec4 color = marchClouds(
     rayOrigin,
@@ -674,7 +690,8 @@ void main() {
     outputShadowLength = marchShadowLength(
       shadowLengthRayNearFar.x * rayDirection + cameraPosition,
       rayDirection,
-      shadowLengthRayNearFar.y - shadowLengthRayNearFar.x
+      shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
+      stbn.z
     );
   }
   #endif // SHADOW_LENGTH
