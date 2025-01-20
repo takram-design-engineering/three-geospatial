@@ -137,7 +137,8 @@ export class ShadowMaterial extends RawShaderMaterial {
         maxStepSize: new Uniform(1000)
       } satisfies ShadowMaterialUniforms,
       defines: {
-        SHAPE_DETAIL: '1'
+        SHAPE_DETAIL: '1',
+        TEMPORAL_JITTER: '1'
       }
     })
 
@@ -197,6 +198,21 @@ export class ShadowMaterial extends RawShaderMaterial {
         this.defines.SHAPE_DETAIL = '1'
       } else {
         delete this.defines.SHAPE_DETAIL
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get temporalJitter(): boolean {
+    return this.defines.TEMPORAL_JITTER != null
+  }
+
+  set temporalJitter(value: boolean) {
+    if (value !== this.temporalJitter) {
+      if (value) {
+        this.defines.TEMPORAL_JITTER = '1'
+      } else {
+        delete this.defines.TEMPORAL_JITTER
       }
       this.needsUpdate = true
     }

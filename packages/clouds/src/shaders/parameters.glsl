@@ -28,3 +28,5 @@ uniform vec4 weatherExponents;
 uniform vec4 coverageFilterWidths;
 uniform float minHeight;
 uniform float maxHeight;
+uniform float shadowTopHeight;
+uniform float shadowBottomHeight;

@@ -1,5 +1,3 @@
-#include <common>
-
 #ifdef FRAMEBUFFER_PRECISION_HIGH
 uniform mediump sampler2DArray inputBuffer;
 #else // FRAMEBUFFER_PRECISION_HIGH

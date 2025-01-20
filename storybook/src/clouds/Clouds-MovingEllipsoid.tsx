@@ -176,7 +176,7 @@ const Scene: FC = () => {
               stbnTexture={stbnTexture}
               coverage={coverage}
             />
-            <AerialPerspective sky />
+            <AerialPerspective />
             {!debugShowUv && !debugShowShadowMap && (
               <>
                 <LensFlare />

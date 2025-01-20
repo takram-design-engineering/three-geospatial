@@ -91,7 +91,7 @@ const Scene: FC = () => {
         textures='atmosphere'
         correctAltitude={correctAltitude}
       >
-        <Sky />
+        <Sky groundAlbedo={0xffffff} />
         <SkyLight />
         <SunLight />
         <Stars data='atmosphere/stars.bin' />

@@ -38,11 +38,11 @@ layout(location = 4) out vec3 outputDepthVelocity[CASCADE_COUNT];
 vec3 getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
   vec3 scale = 1.0 / vec3(size);
-  // x: scalar, yz: vec2
+  // xy: vec2, z: scalar
   return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).xyz;
 }
 
-vec4 marchToClouds(
+vec4 marchClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
   const float maxRayDistance,
@@ -65,7 +65,9 @@ vec4 marchToClouds(
     stepSize
   );
 
+  #ifdef TEMPORAL_JITTER
   rayDistance -= stepSize * jitter;
+  #endif // TEMPORAL_JITTER
 
   float extinctionSum = 0.0;
   float maxOpticalDepth = 0.0;
@@ -115,20 +117,18 @@ void getRayNearFar(
   out float rayNear,
   out float rayFar
 ) {
-  rayNear = max(
-    0.0,
-    raySphereFirstIntersection(
-      sunPosition,
-      rayDirection,
-      vec3(0.0),
-      bottomRadius + maxLayerHeights.x
-    )
+  rayNear = raySphereFirstIntersection(
+    sunPosition,
+    rayDirection,
+    vec3(0.0),
+    bottomRadius + shadowTopHeight
   );
+  rayNear = max(0.0, rayNear);
   rayFar = raySphereFirstIntersection(
     sunPosition,
     rayDirection,
     vec3(0.0),
-    bottomRadius + minLayerHeights.x
+    bottomRadius + shadowBottomHeight
   );
   if (rayFar < 0.0) {
     rayFar = 1e6;
@@ -156,7 +156,7 @@ void cascade(
 
   vec3 rayOrigin = rayNear * rayDirection + sunPosition;
   vec3 stbn = getSTBN();
-  vec4 color = marchToClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.x, mipLevel);
+  vec4 color = marchClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.z, mipLevel);
 
   // Velocity for temporal resolution.
   vec3 frontPosition = color.x * rayDirection + rayOrigin;

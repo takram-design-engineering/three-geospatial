@@ -157,8 +157,7 @@ const Scene: FC = () => {
     {
       maxIterations: { value: 500, min: 100, max: 1000 },
       minStepSize: { value: 50, min: 50, max: 200 },
-      maxStepSize: { value: 1000, min: 200, max: 2000 },
-      maxRayDistance: { value: 1.5e5, min: 1e4, max: 2e5 }
+      maxStepSize: { value: 1000, min: 200, max: 2000 }
     },
     { collapsed: true }
   )

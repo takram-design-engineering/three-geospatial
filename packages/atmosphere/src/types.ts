@@ -17,4 +17,5 @@ export interface AtmosphereCompositeShadow {
 export interface AtmosphereComposite {
   texture?: Texture | null
   shadow?: AtmosphereCompositeShadow
+  shadowLengthTexture?: Texture | null
 }

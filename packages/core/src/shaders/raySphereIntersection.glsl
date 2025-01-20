@@ -13,6 +13,10 @@ float raySphereFirstIntersection(
     : (-b - sqrt(discriminant)) * 0.5;
 }
 
+float raySphereFirstIntersection(const vec3 origin, const vec3 direction, const float radius) {
+  return raySphereFirstIntersection(origin, direction, vec3(0.0), radius);
+}
+
 float raySphereSecondIntersection(
   const vec3 origin,
   const vec3 direction,
@@ -26,6 +30,10 @@ float raySphereSecondIntersection(
   return discriminant < 0.0
     ? -1.0
     : (-b + sqrt(discriminant)) * 0.5;
+}
+
+float raySphereSecondIntersection(const vec3 origin, const vec3 direction, const float radius) {
+  return raySphereSecondIntersection(origin, direction, vec3(0.0), radius);
 }
 
 void raySphereIntersections(
@@ -49,4 +57,14 @@ void raySphereIntersections(
     intersection1 = (-b - Q) * 0.5;
     intersection2 = (-b + Q) * 0.5;
   }
+}
+
+void raySphereIntersections(
+  const vec3 origin,
+  const vec3 direction,
+  const float radius,
+  out float intersection1,
+  out float intersection2
+) {
+  raySphereIntersections(origin, direction, vec3(0.0), radius, intersection1, intersection2);
 }

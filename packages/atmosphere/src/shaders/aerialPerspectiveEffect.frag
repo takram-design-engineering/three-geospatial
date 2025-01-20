@@ -37,6 +37,10 @@ uniform float shadowTopHeight;
 uniform float shadowRadius;
 #endif // HAS_SHADOW
 
+#ifdef HAS_SHADOW_LENGTH
+uniform sampler2D shadowLengthBuffer;
+#endif // HAS_SHADOW_LENGTH
+
 varying vec3 vCameraPosition;
 varying vec3 vRayDirection;
 varying vec3 vEllipsoidCenter;
@@ -65,6 +69,7 @@ void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+
 vec3 getSunSkyIrradiance(
   const vec3 positionECEF,
   const vec3 normal,
@@ -89,15 +94,17 @@ vec3 getSunSkyIrradiance(
   return albedo * skyIrradiance;
   #endif // defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
 }
+
 #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
 #if defined(TRANSMITTANCE) || defined(INSCATTER)
-void getTransmittanceInscatter(const vec3 positionECEF, inout vec3 radiance) {
+
+void applyTransmittanceInscatter(const vec3 positionECEF, float shadowLength, inout vec3 radiance) {
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
     vCameraPosition - vGeometryEllipsoidCenter,
     positionECEF,
-    0.0, // Shadow length
+    shadowLength,
     sunDirection,
     transmittance
   );
@@ -108,6 +115,7 @@ void getTransmittanceInscatter(const vec3 positionECEF, inout vec3 radiance) {
   radiance = radiance + inscatter;
   #endif // INSCATTER
 }
+
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
 #ifdef HAS_SHADOW
@@ -174,6 +182,13 @@ float sampleShadowOpticalDepthPCF(const vec3 worldPosition, const vec3 positionE
 #endif // HAS_SHADOW
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
+  float shadowLength = 0.0;
+  #ifdef HAS_SHADOW_LENGTH
+  shadowLength = texture(shadowLengthBuffer, uv).r;
+  // outputColor = vec4(vec3(shadowLength * 0.005), 1.0);
+  // return;
+  #endif // HAS_SHADOW_LENGTH
+
   #ifdef HAS_COMPOSITE
   vec4 composite = texture(compositeBuffer, uv);
   if (composite.a == 1.0) {
@@ -189,6 +204,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     outputColor.rgb = getSkyRadiance(
       vCameraPosition - vEllipsoidCenter,
       rayDirection,
+      shadowLength,
       sunDirection,
       moonDirection,
       moonAngularRadius,
@@ -248,7 +264,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  getTransmittanceInscatter(positionECEF, radiance);
+  applyTransmittanceInscatter(positionECEF, shadowLength, radiance);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);

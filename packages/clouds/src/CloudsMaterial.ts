@@ -226,7 +226,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           maxIterations: new Uniform(500),
           minStepSize: new Uniform(50),
           maxStepSize: new Uniform(1000),
-          maxRayDistance: new Uniform(1.5e5),
+          maxRayDistance: new Uniform(5e5),
 
           // Secondary raymarch
           maxSunIterations: new Uniform(3),
@@ -245,7 +245,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ),
           shadowFar: new Uniform(0),
           shadowFilterRadius: new Uniform(0),
-          maxShadowOpticalDepthScale: new Uniform(5)
+          maxShadowOpticalDepthScale: new Uniform(5),
+
+          // Shadow length
+          maxShadowLengthIterations: new Uniform(500),
+          shadowLengthStepSize: new Uniform(100),
+          maxShadowLengthRayDistance: new Uniform(5e5)
         } satisfies CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
@@ -253,7 +258,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           MULTI_SCATTERING_OCTAVES: '8',
           POWDER: '1',
           GROUND_IRRADIANCE: '1',
-          SHADOW_CASCADE_COUNT: '1'
+          SHADOW_CASCADE_COUNT: '1',
+          SHADOW_LENGTH: '1'
         }
       },
       atmosphere

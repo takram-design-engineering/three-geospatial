@@ -9,16 +9,20 @@ import vertexShader from './shaders/cloudsResolve.vert?raw'
 import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface CloudsResolveMaterialParameters {
-  inputBuffer?: Texture | null
+  colorBuffer?: Texture | null
   depthVelocityBuffer?: Texture | null
-  historyBuffer?: Texture | null
+  shadowLengthBuffer?: Texture | null
+  colorHistoryBuffer?: Texture | null
+  shadowLengthHistoryBuffer?: Texture | null
 }
 
 interface CloudsResolveMaterialUniforms {
   [key: string]: Uniform<unknown>
-  inputBuffer: Uniform<Texture | null>
+  colorBuffer: Uniform<Texture | null>
   depthVelocityBuffer: Uniform<Texture | null>
-  historyBuffer: Uniform<Texture | null>
+  shadowLengthBuffer: Uniform<Texture | null>
+  colorHistoryBuffer: Uniform<Texture | null>
+  shadowLengthHistoryBuffer: Uniform<Texture | null>
   texelSize: Uniform<Vector2>
   frame: Uniform<number>
   varianceGamma: Uniform<number>
@@ -31,9 +35,11 @@ export interface CloudsResolveMaterial {
 
 export class CloudsResolveMaterial extends RawShaderMaterial {
   constructor({
-    inputBuffer = null,
+    colorBuffer = null,
     depthVelocityBuffer = null,
-    historyBuffer = null
+    shadowLengthBuffer = null,
+    colorHistoryBuffer = null,
+    shadowLengthHistoryBuffer = null
   }: CloudsResolveMaterialParameters = {}) {
     super({
       name: 'CloudsResolveMaterial',
@@ -45,9 +51,11 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         })
       ),
       uniforms: {
-        inputBuffer: new Uniform(inputBuffer),
+        colorBuffer: new Uniform(colorBuffer),
         depthVelocityBuffer: new Uniform(depthVelocityBuffer),
-        historyBuffer: new Uniform(historyBuffer),
+        shadowLengthBuffer: new Uniform(shadowLengthBuffer),
+        colorHistoryBuffer: new Uniform(colorHistoryBuffer),
+        shadowLengthHistoryBuffer: new Uniform(shadowLengthHistoryBuffer),
         texelSize: new Uniform(new Vector2()),
         frame: new Uniform(0),
         varianceGamma: new Uniform(2),

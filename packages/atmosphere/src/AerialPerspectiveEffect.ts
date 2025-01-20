@@ -193,6 +193,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['shadowFar', new Uniform(0)],
           ['shadowTopHeight', new Uniform(0)],
           ['shadowRadius', new Uniform(1)],
+          ['shadowLengthBuffer', new Uniform(null)],
 
           // Uniforms for atmosphere functions
           ['u_solar_irradiance', new Uniform(atmosphere.solarIrradiance)],
@@ -593,10 +594,16 @@ export class AerialPerspectiveEffect extends Effect {
         this.uniforms.get('shadowFar')!.value = value.shadow.far
         this.uniforms.get('shadowTopHeight')!.value = value.shadow.topHeight
       }
+      if (value.shadowLengthTexture != null) {
+        this.defines.set('HAS_SHADOW_LENGTH', '1')
+        this.uniforms.get('shadowLengthBuffer')!.value =
+          value.shadowLengthTexture
+      }
     } else {
       this.defines.delete('HAS_COMPOSITE')
       this.defines.delete('HAS_SHADOW')
       this.defines.delete('SHADOW_CASCADE_COUNT')
+      this.defines.delete('HAS_SHADOW_LENGTH')
       this.uniforms.get('compositeBuffer')!.value = null
       this.uniforms.get('shadowBuffer')!.value = null
       this.uniforms.get('shadowMapSize')!.value.setScalar(0)
