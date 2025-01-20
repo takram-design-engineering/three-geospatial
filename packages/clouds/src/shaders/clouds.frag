@@ -412,24 +412,10 @@ float marchShadowLength(const vec3 rayOrigin, const vec3 rayDirection, const flo
 
 #endif // SHADOW_LENGTH
 
-float distanceToTopBoundary(float r, float mu, float radius) {
-  if (r > radius) {
-    return -1.0;
-  }
-  float discriminant = r * r * (mu * mu - 1.0) + radius * radius;
-  return discriminant >= 0.0
-    ? max(0.0, -r * mu + sqrt(discriminant))
-    : -1.0;
-}
-
-float distanceToBottomBoundary(float r, float mu, float radius) {
-  if (r < radius || mu > 0.0) {
-    return -1.0;
-  }
-  float discriminant = r * r * (mu * mu - 1.0) + radius * radius;
-  return discriminant >= 0.0
-    ? max(0.0, -r * mu - sqrt(discriminant))
-    : -1.0;
+bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
+  float r = length(cameraPosition);
+  float mu = dot(cameraPosition, rayDirection) / r;
+  return mu < 0.0 && r * r * (mu * mu - 1.0) + bottomRadius * bottomRadius >= 0.0;
 }
 
 void getRayNearFar(
@@ -438,10 +424,7 @@ void getRayNearFar(
   out vec2 rayNearFar,
   out vec2 shadowLengthRayNearFar
 ) {
-  float r = length(cameraPosition);
-  float mu = dot(cameraPosition, rayDirection) / r;
-  float distanceToGround = distanceToBottomBoundary(r, mu, bottomRadius);
-  bool intersectsGround = distanceToGround >= 0.0;
+  bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
 
   if (cameraHeight < minHeight) {
     // View below the clouds
@@ -449,56 +432,71 @@ void getRayNearFar(
       rayNearFar = vec2(-1.0); // No clouds to the ground
     } else {
       rayNearFar = vec2(
-        distanceToTopBoundary(r, mu, bottomRadius + minHeight),
-        distanceToTopBoundary(r, mu, bottomRadius + maxHeight)
+        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + minHeight),
+        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + maxHeight)
       );
       rayNearFar.y = min(rayNearFar.y, maxRayDistance);
     }
   } else if (cameraHeight < maxHeight) {
     // View inside the total cloud layer
     if (intersectsGround) {
-      rayNearFar = vec2(cameraNear, distanceToBottomBoundary(r, mu, bottomRadius + minHeight));
+      rayNearFar = vec2(
+        cameraNear,
+        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + minHeight)
+      );
     } else {
-      rayNearFar = vec2(cameraNear, distanceToTopBoundary(r, mu, bottomRadius + maxHeight));
+      rayNearFar = vec2(
+        cameraNear,
+        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + maxHeight)
+      );
     }
   } else {
     // View above the clouds
     raySphereIntersections(
       cameraPosition,
       rayDirection,
-      vec3(0.0),
       bottomRadius + maxHeight,
       rayNearFar.x,
       rayNearFar.y
     );
     if (intersectsGround) {
       // Clamp the ray at the min height.
-      rayNearFar.y = distanceToBottomBoundary(r, mu, bottomRadius + minHeight);
+      rayNearFar.y = raySphereFirstIntersection(
+        cameraPosition,
+        rayDirection,
+        bottomRadius + minHeight
+      );
     }
   }
 
   #ifdef SHADOW_LENGTH
   if (cameraHeight < shadowTopHeight) {
     if (intersectsGround) {
-      shadowLengthRayNearFar = vec2(cameraNear, distanceToGround);
+      shadowLengthRayNearFar = vec2(
+        cameraNear,
+        raySphereFirstIntersection(cameraPosition, rayDirection, bottomRadius)
+      );
     } else {
       shadowLengthRayNearFar = vec2(
         cameraNear,
-        distanceToTopBoundary(r, mu, bottomRadius + shadowTopHeight)
+        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + shadowTopHeight)
       );
     }
   } else {
     raySphereIntersections(
       cameraPosition,
       rayDirection,
-      vec3(0.0),
       bottomRadius + shadowTopHeight,
       shadowLengthRayNearFar.x,
       shadowLengthRayNearFar.y
     );
     if (intersectsGround) {
       // Clamp the ray at the ground.
-      shadowLengthRayNearFar.y = distanceToGround;
+      shadowLengthRayNearFar.y = raySphereFirstIntersection(
+        cameraPosition,
+        rayDirection,
+        bottomRadius
+      );
     }
   }
   shadowLengthRayNearFar.y = min(shadowLengthRayNearFar.y, maxShadowLengthRayDistance);

@@ -15,6 +15,7 @@ import {
 } from 'three'
 
 import { resolveIncludes } from '@takram/three-geospatial'
+import { raySphereIntersection } from '@takram/three-geospatial/shaders'
 
 import {
   AtmosphereMaterialBase,
@@ -86,6 +87,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         parameters
       }),
       fragmentShader: resolveIncludes(fragmentShader, {
+        core: { raySphereIntersection },
         parameters,
         functions,
         sky

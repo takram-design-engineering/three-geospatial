@@ -3,6 +3,7 @@ precision highp sampler3D;
 
 #define RECIPROCAL_PI (0.3183098861837907)
 
+#include "core/raySphereIntersection"
 #include "parameters"
 #include "functions"
 #include "sky"
@@ -21,24 +22,23 @@ layout(location = 0) out vec4 outputColor;
 
 #include <mrt_layout>
 
-float distanceToBottomBoundary(float r, float mu, float radius) {
-  if (r < radius || mu > 0.0) {
-    return -1.0;
-  }
-  float discriminant = r * r * (mu * mu - 1.0) + radius * radius;
-  return discriminant >= 0.0
-    ? max(0.0, -r * mu - sqrt(discriminant))
-    : -1.0;
+bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
+  float r = length(cameraPosition);
+  float mu = dot(cameraPosition, rayDirection) / r;
+  return mu < 0.0 && r * r * (mu * mu - 1.0) + u_bottom_radius * u_bottom_radius >= 0.0;
 }
 
 void main() {
   vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
   vec3 rayDirection = normalize(vRayDirection);
-  float r = length(cameraPosition);
-  float mu = dot(cameraPosition, rayDirection) / r;
+  bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
 
-  float distanceToGround = distanceToBottomBoundary(r, mu, u_bottom_radius);
-  if (distanceToGround >= 0.0) {
+  if (intersectsGround) {
+    float distanceToGround = raySphereFirstIntersection(
+      cameraPosition,
+      rayDirection,
+      u_bottom_radius
+    );
     vec3 groundPosition = rayDirection * distanceToGround + cameraPosition;
     vec3 surfaceNormal = normalize(groundPosition);
     vec3 skyIrradiance;
