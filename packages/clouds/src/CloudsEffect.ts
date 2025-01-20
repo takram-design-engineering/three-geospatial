@@ -169,7 +169,6 @@ export class CloudsEffect extends Effect {
   private frame = 0
   private shadowCascadeCount = 0
   private readonly shadowMapSize = new Vector2()
-  private _temporalUpscaling = false
 
   constructor(
     private camera: Camera = new Camera(),
@@ -491,13 +490,11 @@ export class CloudsEffect extends Effect {
   }
 
   get temporalUpscaling(): boolean {
-    return this._temporalUpscaling
+    return this.cloudsMaterial.temporalUpscaling
   }
 
   set temporalUpscaling(value: boolean) {
     if (value !== this.temporalUpscaling) {
-      this._temporalUpscaling = value
-
       const { width, height } = this.resolution
       const scale = value ? 0.25 : 1
       this.cloudsRenderTarget.setSize(width * scale, height * scale)
