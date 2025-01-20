@@ -80,14 +80,14 @@ void main() {
   // Variance clipping with a large variance gamma seems to work fine for upsampling.
   // This increases ghosting, of course, but it's hard to notice on clouds.
   vec4 historyColor = texture(colorHistoryBuffer, prevUv);
-  vec4 clippedHistory = varianceClipping(
+  vec4 clippedColor = varianceClipping(
     colorBuffer,
     subCoord,
     currentColor,
     historyColor,
     varianceGamma
   );
-  outputColor = clippedHistory;
+  outputColor = clippedColor;
 
   // Sampling the shadow length history using scene depth doesn’t make much
   // sense, but deriving it properly is too hard. At least this approach
@@ -107,19 +107,30 @@ void main() {
 
 void main() {
   ivec2 coord = ivec2(gl_FragCoord.xy);
-  vec4 current = texelFetch(colorBuffer, coord, 0);
+  vec4 currentColor = texelFetch(colorBuffer, coord, 0);
+  vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, coord, 0).rgb, 1.0);
 
   vec4 depthVelocity = getClosestFragment(coord);
   vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
-    outputColor = current;
+    outputColor = currentColor;
+    outputShadowLength = currentShadowLength.r;
     return; // Rejection
   }
 
-  vec4 history = texture(colorHistoryBuffer, prevUv);
-  vec4 clippedHistory = varianceClipping(colorBuffer, coord, current, history);
-  outputColor = mix(clippedHistory, current, temporalAlpha);
+  vec4 historyColor = texture(colorHistoryBuffer, prevUv);
+  vec4 clippedColor = varianceClipping(colorBuffer, coord, currentColor, historyColor);
+  outputColor = mix(clippedColor, currentColor, temporalAlpha);
+
+  vec4 historyShadowLength = vec4(texture(shadowLengthHistoryBuffer, prevUv).rgb, 1.0);
+  vec4 clippedShadowLength = varianceClipping(
+    shadowLengthBuffer,
+    coord,
+    currentShadowLength,
+    historyShadowLength
+  );
+  outputShadowLength = mix(clippedShadowLength.r, currentShadowLength.r, temporalAlpha);
 }
 
 #endif // TEMPORAL_UPSCALING
