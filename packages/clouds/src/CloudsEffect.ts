@@ -489,7 +489,9 @@ export class CloudsEffect extends Effect {
 
     const { width, height } = resolution
     const scale = this.temporalUpscaling ? 0.25 : 1
-    this.cloudsRenderTarget.setSize(width * scale, height * scale)
+    const scaledWidth = Math.ceil(width * scale)
+    const scaledHeight = Math.ceil(height * scale)
+    this.cloudsRenderTarget.setSize(scaledWidth, scaledHeight)
     this.cloudsMaterial.setSize(width, height)
     this.cloudsResolveRenderTarget.setSize(width, height)
     this.cloudsResolveMaterial.setSize(width, height)
