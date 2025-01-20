@@ -34,7 +34,24 @@ export class CloudsHistoryMaterial extends RawShaderMaterial {
         colorBuffer: new Uniform(colorBuffer),
         shadowLengthBuffer: new Uniform(shadowLengthBuffer)
       } satisfies CloudsHistoryMaterialUniforms,
-      defines: {}
+      defines: {
+        SHADOW_LENGTH: '1'
+      }
     })
+  }
+
+  get shadowLength(): boolean {
+    return this.defines.SHADOW_LENGTH != null
+  }
+
+  set shadowLength(value: boolean) {
+    if (value !== this.shadowLength) {
+      if (value) {
+        this.defines.SHADOW_LENGTH = '1'
+      } else {
+        delete this.defines.SHADOW_LENGTH
+      }
+      this.needsUpdate = true
+    }
   }
 }
