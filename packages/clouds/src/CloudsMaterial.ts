@@ -245,7 +245,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ),
           shadowFar: new Uniform(0),
           shadowFilterRadius: new Uniform(0),
-          maxShadowOpticalDepthScale: new Uniform(5),
+          maxShadowOpticalDepthScale: new Uniform(3),
 
           // Shadow length
           maxShadowLengthIterations: new Uniform(500),
