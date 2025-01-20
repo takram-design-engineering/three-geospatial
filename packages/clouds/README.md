@@ -4,7 +4,6 @@ This library is under active development and is in pre-release status.
 
 ### TODO
 
-- [ ] Crepuscular rays
 - [ ] Cloud layer parametrization refinements
 - [ ] Finalize API
 
