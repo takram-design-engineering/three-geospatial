@@ -182,8 +182,11 @@ float sampleShadowOpticalDepthPCF(const vec3 worldPosition, const vec3 positionE
 #endif // HAS_SHADOW
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
+  float shadowLength = 0.0;
   #ifdef HAS_SHADOW_LENGTH
-  float shadowLength = texture(shadowLengthBuffer, uv).r;
+  shadowLength = texture(shadowLengthBuffer, uv).r;
+  // outputColor = vec4(vec3(shadowLength * 0.005), 1.0);
+  // return;
   #endif // HAS_SHADOW_LENGTH
 
   #ifdef HAS_COMPOSITE
@@ -261,11 +264,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  #ifdef HAS_SHADOW_LENGTH
   applyTransmittanceInscatter(positionECEF, shadowLength, radiance);
-  #else // HAS_SHADOW_LENGTH
-  applyTransmittanceInscatter(positionECEF, 0.0, radiance);
-  #endif // HAS_SHADOW_LENGTH
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);
