@@ -98,7 +98,7 @@ void main() {
     subCoord,
     currentShadowLength,
     historyShadowLength,
-    1.0
+    varianceGamma
   );
   outputShadowLength = clippedShadowLength.r;
 }
