@@ -137,7 +137,8 @@ export class ShadowMaterial extends RawShaderMaterial {
         maxStepSize: new Uniform(1000)
       } satisfies ShadowMaterialUniforms,
       defines: {
-        SHAPE_DETAIL: '1'
+        SHAPE_DETAIL: '1',
+        TEMPORAL_JITTER: '1'
       }
     })
 
