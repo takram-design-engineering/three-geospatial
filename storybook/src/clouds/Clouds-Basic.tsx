@@ -121,12 +121,16 @@ const Scene: FC = () => {
     '/clouds/stbn.bin'
   )
 
-  const { enabled, coverage, animate, useShapeDetail } = useControls('clouds', {
-    enabled: true,
-    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
-    animate: false,
-    useShapeDetail: true
-  })
+  const { enabled, coverage, animate, shapeDetail, shadowLength } = useControls(
+    'clouds',
+    {
+      enabled: true,
+      coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
+      animate: false,
+      shapeDetail: true,
+      shadowLength: true
+    }
+  )
 
   const { temporalUpscaling, halfResolution, shadowMapSize } = useControls(
     'rendering',
@@ -214,8 +218,8 @@ const Scene: FC = () => {
     if (clouds == null) {
       return
     }
-    clouds.cloudsMaterial.useShapeDetail = useShapeDetail
-  }, [clouds, useShapeDetail])
+    clouds.cloudsMaterial.useShapeDetail = shapeDetail
+  }, [clouds, shapeDetail])
 
   useEffect(() => {
     if (clouds == null) {
@@ -279,6 +283,7 @@ const Scene: FC = () => {
                 resolution-scale={halfResolution ? 0.5 : 1}
                 localWeatherVelocity={animate ? [0.00005, 0] : [0, 0]}
                 shadow-mapSize={[shadowMapSize, shadowMapSize]}
+                shadowLength={shadowLength}
               />
             )}
             <AerialPerspective sky sunIrradiance skyIrradiance />

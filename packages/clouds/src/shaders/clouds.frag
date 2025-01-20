@@ -71,7 +71,9 @@ in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 1) out vec3 outputDepthVelocity;
+#ifdef SHADOW_LENGTH
 layout(location = 2) out float outputShadowLength;
+#endif // SHADOW_LENGTH
 
 vec3 getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
@@ -583,7 +585,11 @@ void clampRaysAtSceneObjects(const vec3 rayDirection, inout vec2 nearFar1, inout
 }
 
 void main() {
+  #ifdef SHADOW_LENGTH
   outputShadowLength = 0.0;
+  #else // SHADOW_LENGTH
+  float outputShadowLength = 0.0;
+  #endif // SHADOW_LENGTH
 
   #ifdef DEBUG_SHOW_SHADOW_MAP
   outputColor = getCascadedShadowMap(vUv);

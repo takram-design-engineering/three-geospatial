@@ -61,9 +61,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         varianceGamma: new Uniform(2),
         temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
-      defines: {
-        SHADOW_LENGTH: '1'
-      }
+      defines: {}
     })
   }
 

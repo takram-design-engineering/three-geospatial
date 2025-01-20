@@ -62,7 +62,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       return () => {
         setComposite(null)
       }
-    }, [setComposite, effect])
+    }, [setComposite, effect, others.shadowLength])
 
     return (
       <primitive

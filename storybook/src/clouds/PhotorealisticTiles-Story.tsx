@@ -161,15 +161,17 @@ const Scene: FC<SceneProps> = ({
     coverage,
     animate,
     shadowMapSize,
-    useShapeDetail,
-    usePowder
+    shapeDetail,
+    powder,
+    shadowLength
   } = useControls('clouds', {
     enabled: true,
     coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
     animate: true,
     shadowMapSize: { value: 512, options: [256, 512, 1024] },
-    useShapeDetail: true,
-    usePowder: true
+    shapeDetail: true,
+    powder: true,
+    shadowLength: true
   })
 
   const { showShadowMap: debugShowShadowMap, showCascades: debugShowCascades } =
@@ -227,9 +229,9 @@ const Scene: FC<SceneProps> = ({
     if (clouds == null) {
       return
     }
-    clouds.cloudsMaterial.useShapeDetail = useShapeDetail
-    clouds.cloudsMaterial.usePowder = usePowder
-  }, [clouds, useShapeDetail, usePowder])
+    clouds.cloudsMaterial.useShapeDetail = shapeDetail
+    clouds.cloudsMaterial.usePowder = powder
+  }, [clouds, shapeDetail, powder])
 
   useEffect(() => {
     if (clouds == null) {
@@ -279,6 +281,7 @@ const Scene: FC<SceneProps> = ({
                   coverage={coverage}
                   localWeatherVelocity-x={animate ? 0.00001 : 0}
                   shadow-mapSize={shadowMapSize}
+                  shadowLength={shadowLength}
                 />
               )}
               <AerialPerspective

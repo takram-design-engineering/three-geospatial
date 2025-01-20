@@ -54,29 +54,50 @@ function createShadowRenderTarget(name: string): WebGLArrayRenderTarget {
   return renderTarget
 }
 
+type CloudsRenderTarget = WebGLRenderTarget & {
+  depthVelocity: Texture | null
+  shadowLength: Texture | null
+}
+
+interface CloudsRenderTargetOptions {
+  depthVelocity: boolean
+  shadowLength: boolean
+}
+
 function createCloudsRenderTarget(
   name: string,
-  depthVelocity = false
-): WebGLRenderTarget {
-  const renderTarget = new WebGLRenderTarget(1, 1, {
+  { depthVelocity, shadowLength }: CloudsRenderTargetOptions
+): CloudsRenderTarget {
+  const renderTarget: WebGLRenderTarget & {
+    depthVelocity?: Texture
+    shadowLength?: Texture
+  } = new WebGLRenderTarget(1, 1, {
     depthBuffer: false,
     stencilBuffer: false,
     type: HalfFloatType
   })
   renderTarget.texture.name = name
 
+  let depthVelocityBuffer
   if (depthVelocity) {
-    const depthVelocityBuffer = renderTarget.texture.clone()
+    depthVelocityBuffer = renderTarget.texture.clone()
     depthVelocityBuffer.isRenderTargetTexture = true
+    renderTarget.depthVelocity = depthVelocityBuffer
     renderTarget.textures.push(depthVelocityBuffer)
   }
+  let shadowLengthBuffer
+  if (shadowLength) {
+    shadowLengthBuffer = renderTarget.texture.clone()
+    shadowLengthBuffer.isRenderTargetTexture = true
+    shadowLengthBuffer.format = RedFormat
+    renderTarget.shadowLength = shadowLengthBuffer
+    renderTarget.textures.push(shadowLengthBuffer)
+  }
 
-  const shadowLengthBuffer = renderTarget.texture.clone()
-  shadowLengthBuffer.isRenderTargetTexture = true
-  shadowLengthBuffer.format = RedFormat
-  renderTarget.textures.push(shadowLengthBuffer)
-
-  return renderTarget
+  return Object.assign(renderTarget, {
+    depthVelocity: depthVelocityBuffer ?? null,
+    shadowLength: shadowLengthBuffer ?? null
+  })
 }
 
 function applyVelocity(
@@ -166,15 +187,15 @@ export class CloudsEffect extends Effect {
   readonly shadowHistoryPass: ArrayCopyPass
 
   // Clouds
-  readonly cloudsRenderTarget: WebGLRenderTarget
+  cloudsRenderTarget!: CloudsRenderTarget
   readonly cloudsMaterial: CloudsMaterial
   readonly cloudsPass: ShaderPass
-  readonly cloudsResolveRenderTarget: WebGLRenderTarget
+  cloudsResolveRenderTarget!: CloudsRenderTarget
   readonly cloudsResolveMaterial: CloudsResolveMaterial
   readonly cloudsResolvePass: ShaderPass
-  readonly cloudsHistoryRenderTarget: WebGLRenderTarget
+  cloudsHistoryRenderTarget!: CloudsRenderTarget
+  readonly cloudsHistoryMaterial: CloudsHistoryMaterial
   readonly cloudsHistoryPass: ShaderPass
-  readonly shadowLengthBuffer: Texture
 
   readonly resolution: Resolution
   private frame = 0
@@ -184,7 +205,7 @@ export class CloudsEffect extends Effect {
   constructor(
     private camera: Camera = new Camera(),
     options?: CloudsEffectOptions,
-    atmosphere = AtmosphereParameters.DEFAULT
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       resolutionScale,
@@ -203,10 +224,6 @@ export class CloudsEffect extends Effect {
 
     const shadowRenderTarget = createShadowRenderTarget('Shadow.Current')
     const shadowResolveRenderTarget = createShadowRenderTarget('Shadow.Resolve')
-
-    const cloudsRenderTarget = createCloudsRenderTarget('Clouds.Current', true)
-    const cloudsHistoryRenderTarget = createCloudsRenderTarget('Clouds.History')
-    const cloudsResolveRenderTarget = createCloudsRenderTarget('Clouds.Resolve')
 
     // These instances are shared by both cloud and shadow materials.
     const ellipsoidCenter = new Vector3()
@@ -244,20 +261,6 @@ export class CloudsEffect extends Effect {
       },
       atmosphere
     )
-    const cloudsHistoryMaterial = new CloudsHistoryMaterial({
-      colorBuffer: cloudsResolveRenderTarget.textures[0],
-      shadowLengthBuffer: cloudsResolveRenderTarget.textures[1]
-    })
-    const cloudsPass = new ShaderPass(cloudsMaterial)
-    const cloudsHistoryPass = new ShaderPass(cloudsHistoryMaterial)
-    const cloudsResolveMaterial = new CloudsResolveMaterial({
-      colorBuffer: cloudsRenderTarget.textures[0],
-      depthVelocityBuffer: cloudsRenderTarget.textures[1],
-      shadowLengthBuffer: cloudsRenderTarget.textures[2],
-      colorHistoryBuffer: cloudsHistoryRenderTarget.textures[0],
-      shadowLengthHistoryBuffer: cloudsHistoryRenderTarget.textures[1]
-    })
-    const cloudsResolvePass = new ShaderPass(cloudsResolveMaterial)
 
     super('CloudsEffect', fragmentShader, {
       attributes: EffectAttribute.DEPTH
@@ -289,15 +292,16 @@ export class CloudsEffect extends Effect {
     this.shadowHistoryPass = shadowHistoryPass
 
     // Clouds
-    this.cloudsRenderTarget = cloudsRenderTarget
     this.cloudsMaterial = cloudsMaterial
-    this.cloudsPass = cloudsPass
-    this.cloudsResolveRenderTarget = cloudsResolveRenderTarget
-    this.cloudsResolveMaterial = cloudsResolveMaterial
-    this.cloudsResolvePass = cloudsResolvePass
-    this.cloudsHistoryRenderTarget = cloudsHistoryRenderTarget
-    this.cloudsHistoryPass = cloudsHistoryPass
-    this.shadowLengthBuffer = cloudsResolveRenderTarget.textures[1]
+    this.cloudsPass = new ShaderPass(cloudsMaterial)
+    this.cloudsResolveMaterial = new CloudsResolveMaterial()
+    this.cloudsResolvePass = new ShaderPass(this.cloudsResolveMaterial)
+    this.cloudsHistoryMaterial = new CloudsHistoryMaterial()
+    this.cloudsHistoryPass = new ShaderPass(this.cloudsHistoryMaterial)
+    this.initCloudsRenderTargets({
+      depthVelocity: true,
+      shadowLength: false
+    })
 
     this.resolution = new Resolution(
       this,
@@ -312,6 +316,43 @@ export class CloudsEffect extends Effect {
 
     // Initialize aggregated properties.
     this.temporalUpscaling = true
+  }
+
+  private initCloudsRenderTargets({
+    depthVelocity,
+    shadowLength
+  }: CloudsRenderTargetOptions): void {
+    this.cloudsRenderTarget?.dispose()
+    this.cloudsResolveRenderTarget?.dispose()
+    this.cloudsHistoryRenderTarget?.dispose()
+
+    const current = createCloudsRenderTarget('Clouds.Current', {
+      depthVelocity,
+      shadowLength
+    })
+    const resolve = createCloudsRenderTarget('Clouds.Resolve', {
+      depthVelocity: false,
+      shadowLength
+    })
+    const history = createCloudsRenderTarget('Clouds.History', {
+      depthVelocity: false,
+      shadowLength
+    })
+
+    this.cloudsRenderTarget = current
+    this.cloudsResolveRenderTarget = resolve
+    this.cloudsHistoryRenderTarget = history
+
+    const resolveUniforms = this.cloudsResolveMaterial.uniforms
+    resolveUniforms.colorBuffer.value = current.texture
+    resolveUniforms.depthVelocityBuffer.value = current.depthVelocity
+    resolveUniforms.shadowLengthBuffer.value = current.shadowLength
+    resolveUniforms.colorHistoryBuffer.value = history.texture
+    resolveUniforms.shadowLengthHistoryBuffer.value = history.shadowLength
+
+    const historyUniforms = this.cloudsHistoryMaterial.uniforms
+    historyUniforms.colorBuffer.value = resolve.texture
+    historyUniforms.shadowLengthBuffer.value = resolve.shadowLength
   }
 
   private readonly onResolutionChange = (): void => {
@@ -524,6 +565,23 @@ export class CloudsEffect extends Effect {
     }
   }
 
+  get shadowLength(): boolean {
+    return this.cloudsMaterial.shadowLength
+  }
+
+  set shadowLength(value: boolean) {
+    if (value !== this.shadowLength) {
+      this.cloudsMaterial.shadowLength = value
+      this.cloudsResolveMaterial.shadowLength = value
+      this.cloudsHistoryMaterial.shadowLength = value
+      this.initCloudsRenderTargets({
+        depthVelocity: true,
+        shadowLength: value
+      })
+      this.setSize(this.resolution.baseWidth, this.resolution.baseHeight)
+    }
+  }
+
   // Textures
 
   get stbnTexture(): Data3DTexture | null {
@@ -566,6 +624,10 @@ export class CloudsEffect extends Effect {
 
   get shadowTopHeight(): number {
     return this.cloudLayers[0].maxHeight
+  }
+
+  get shadowLengthBuffer(): Texture | null {
+    return this.cloudsResolveRenderTarget.shadowLength
   }
 
   // Atmosphere parameters

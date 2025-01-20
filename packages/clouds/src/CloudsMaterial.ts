@@ -258,8 +258,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           MULTI_SCATTERING_OCTAVES: '8',
           POWDER: '1',
           GROUND_IRRADIANCE: '1',
-          SHADOW_CASCADE_COUNT: '1',
-          SHADOW_LENGTH: '1'
+          SHADOW_CASCADE_COUNT: '1'
         }
       },
       atmosphere
