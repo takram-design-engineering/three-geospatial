@@ -1,7 +1,6 @@
 import {
   GizmoHelper,
   GizmoViewport,
-  Grid,
   OrbitControls,
   Sphere
 } from '@react-three/drei'
@@ -15,10 +14,7 @@ import { NearestFilter, RepeatWrapping, RGBAFormat, Vector3 } from 'three'
 import {
   AerialPerspective,
   Atmosphere,
-  Sky,
-  SkyLight,
   Stars,
-  SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
@@ -145,24 +141,21 @@ const Scene: FC = () => {
       </GizmoHelper>
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere args={[0.5, 128, 128]} position={[0, 0.5, 0]}>
-        <meshStandardMaterial color='white' />
+        <meshBasicMaterial color='white' />
       </Sphere>
-      <Grid
+      {/* <Grid
         cellColor={0x333333}
         sectionColor={0x333333}
         fadeStrength={10}
         fadeDistance={100}
         followCamera
         infiniteGrid
-      />
+      /> */}
       <Atmosphere
         ref={setAtmosphere}
         textures='atmosphere'
         correctAltitude={correctAltitude}
       >
-        <Sky />
-        <SkyLight />
-        <SunLight />
         <Stars data='atmosphere/stars.bin' />
         <EffectComposer multisampling={0}>
           <Fragment
@@ -176,7 +169,7 @@ const Scene: FC = () => {
               stbnTexture={stbnTexture}
               coverage={coverage}
             />
-            <AerialPerspective />
+            <AerialPerspective sky skyIrradiance sunIrradiance />
             {!debugShowUv && !debugShowShadowMap && (
               <>
                 <LensFlare />
