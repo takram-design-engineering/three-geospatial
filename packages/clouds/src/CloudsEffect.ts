@@ -76,6 +76,8 @@ function createCloudsRenderTarget(
     stencilBuffer: false,
     type: HalfFloatType
   })
+  renderTarget.texture.minFilter = LinearFilter
+  renderTarget.texture.magFilter = LinearFilter
   renderTarget.texture.name = name
 
   let depthVelocityBuffer
@@ -532,7 +534,7 @@ export class CloudsEffect extends Effect {
       const w = Math.ceil(width / 4)
       const h = Math.ceil(height / 4)
       this.cloudsRenderTarget.setSize(w, h)
-      this.cloudsMaterial.setSize(w * 4, w * 4)
+      this.cloudsMaterial.setSize(w * 4, h * 4)
     } else {
       this.cloudsRenderTarget.setSize(width, height)
       this.cloudsMaterial.setSize(width, height)

@@ -52,8 +52,6 @@ void cascade(const int index, out vec4 outputColor) {
   ivec3 coord = ivec3(gl_FragCoord.xy, index);
   vec4 current = texelFetch(inputBuffer, coord, 0);
 
-  // TODO: Neighbor lookup might be overkill for the outcome.
-  // vec4 depthVelocity = texelFetch(inputBuffer, ivec3(coord.xy, index + CASCADE_COUNT), 0);
   vec4 depthVelocity = getClosestFragment(coord);
   vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;

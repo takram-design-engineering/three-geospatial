@@ -76,3 +76,40 @@ vec4 varianceClipping(
 ) {
   return varianceClipping(inputBuffer, coord, current, history, 1.0);
 }
+
+vec4 varianceClipping(
+  const sampler2D inputBuffer,
+  const vec2 coord,
+  const vec4 current,
+  const vec4 history,
+  const float gamma
+) {
+  vec4 moment1 = current;
+  vec4 moment2 = current * current;
+  vec4 neighbor;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 8; ++i) {
+    #if UNROLLED_LOOP_INDEX < VARIANCE_OFFSET_COUNT
+    neighbor = textureOffset(inputBuffer, coord, varianceOffsets[i]);
+    moment1 += neighbor;
+    moment2 += neighbor * neighbor;
+    #endif // UNROLLED_LOOP_INDEX < VARIANCE_OFFSET_COUNT
+  }
+  #pragma unroll_loop_end
+
+  const float N = float(VARIANCE_OFFSET_COUNT + 1);
+  vec4 mean = moment1 / N;
+  vec4 variance = sqrt(moment2 / N - mean * mean);
+  vec4 minColor = mean - variance * gamma;
+  vec4 maxColor = mean + variance * gamma;
+  return clipAABB(clamp(mean, minColor, maxColor), history, minColor, maxColor);
+}
+
+vec4 varianceClipping(
+  const sampler2D inputBuffer,
+  const vec2 coord,
+  const vec4 current,
+  const vec4 history
+) {
+  return varianceClipping(inputBuffer, coord, current, history, 1.0);
+}

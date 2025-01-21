@@ -1,9 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 
-import { GLSL3, RawShaderMaterial, Uniform, Vector2, type Texture } from 'three'
+import {
+  GLSL3,
+  RawShaderMaterial,
+  Uniform,
+  Vector2,
+  type BufferGeometry,
+  type Camera,
+  type Group,
+  type Object3D,
+  type Scene,
+  type Texture,
+  type WebGLRenderer
+} from 'three'
 
 import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 
+import { bayerOffsets } from './bayer'
+
+import catmullRomSampling from './shaders/catmullRomSampling.glsl?raw'
 import fragmentShader from './shaders/cloudsResolve.frag?raw'
 import vertexShader from './shaders/cloudsResolve.vert?raw'
 import varianceClipping from './shaders/varianceClipping.glsl?raw'
@@ -25,6 +40,7 @@ interface CloudsResolveMaterialUniforms {
   shadowLengthHistoryBuffer: Uniform<Texture | null>
   texelSize: Uniform<Vector2>
   frame: Uniform<number>
+  jitterOffset: Uniform<Vector2>
   varianceGamma: Uniform<number>
   temporalAlpha: Uniform<number>
 }
@@ -47,6 +63,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
       vertexShader,
       fragmentShader: unrollLoops(
         resolveIncludes(fragmentShader, {
+          catmullRomSampling,
           varianceClipping
         })
       ),
@@ -58,6 +75,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         shadowLengthHistoryBuffer: new Uniform(shadowLengthHistoryBuffer),
         texelSize: new Uniform(new Vector2()),
         frame: new Uniform(0),
+        jitterOffset: new Uniform(new Vector2()),
         varianceGamma: new Uniform(2),
         temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
@@ -67,6 +85,22 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
 
   setSize(width: number, height: number): void {
     this.uniforms.texelSize.value.set(1 / width, 1 / height)
+  }
+
+  onBeforeRender(
+    renderer: WebGLRenderer,
+    scene: Scene,
+    camera: Camera,
+    geometry: BufferGeometry,
+    object: Object3D,
+    group: Group
+  ): void {
+    const uniforms = this.uniforms
+    const frame = uniforms.frame.value % 16
+    const offset = bayerOffsets[frame]
+    const dx = (offset.x - 0.5) * 4
+    const dy = (offset.y - 0.5) * 4
+    this.uniforms.jitterOffset.value.set(dx, dy)
   }
 
   get temporalUpscaling(): boolean {
