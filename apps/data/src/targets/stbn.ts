@@ -17,7 +17,7 @@ export default async function (): Promise<void> {
     const scalarImage = sharp(
       `apps/data/data/STBN/stbn_scalar_2Dx1Dx1D_128x128x64x1_${depth}.png`
     )
-    const [scalar, vec2x, vec2y] = await Promise.all([
+    const [vec2x, vec2y, scalar] = await Promise.all([
       vec2Image.extractChannel(0).raw({ depth: 'uchar' }).toBuffer(),
       vec2Image.extractChannel(1).raw({ depth: 'uchar' }).toBuffer(),
       scalarImage.extractChannel(0).raw({ depth: 'uchar' }).toBuffer()
