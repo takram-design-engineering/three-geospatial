@@ -627,7 +627,7 @@ export class CloudsEffect extends Effect {
   }
 
   get shadowTopHeight(): number {
-    return this.cloudLayers[0].maxHeight
+    return this.cloudsMaterial.uniforms.shadowTopHeight.value
   }
 
   get shadowLengthBuffer(): Texture | null {
