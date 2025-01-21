@@ -14,6 +14,7 @@ export default defineConfig({
   // storybook's cache. Put everything that I can think of here.
   optimizeDeps: {
     exclude: [
+      '.vite',
       'node_modules/.cache/storybook',
       'storybook/node_modules/.cache/storybook',
       '../node_modules/.cache/storybook',
