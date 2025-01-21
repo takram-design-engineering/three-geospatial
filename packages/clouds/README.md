@@ -4,7 +4,9 @@ This library is under active development and is in pre-release status.
 
 ### TODO
 
-- [ ] Cloud layer parametrization refinements
+- [ ] Cloud layer parameterization refinements
+- [ ] Scale length unit in the shaders
+- [ ] Add depth output and compute shadow length of scene objects
 - [ ] Finalize API
 
 ## References
