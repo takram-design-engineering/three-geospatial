@@ -204,7 +204,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           albedo: new Uniform(new Color().setScalar(0.98)),
           powderScale: new Uniform(0.8),
           powderExponent: new Uniform(200),
-          scatterAnisotropy1: new Uniform(0.8),
+          scatterAnisotropy1: new Uniform(0.7),
           scatterAnisotropy2: new Uniform(-0.3),
           scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(0.3),
@@ -233,7 +233,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ),
           shadowFar: new Uniform(0),
           shadowFilterRadius: new Uniform(6),
-          maxShadowOpticalDepthScale: new Uniform(3),
+          maxShadowOpticalDepthScale: new Uniform(4),
 
           // Shadow length
           maxShadowLengthIterations: new Uniform(500),

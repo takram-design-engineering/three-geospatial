@@ -325,12 +325,15 @@ vec4 marchClouds(
       vec3 surfaceNormal = normalize(position);
 
       // Obtain the optical depth at the position from BSM.
-      float shadowOpticalDepth = sampleShadowOpticalDepth(
-        position,
-        maxShadowOpticalDepthScale,
-        // Apply PCF only when the sun is close to the horizon.
-        shadowFilterRadius * saturate(remap(dot(sunDirection, surfaceNormal), 0.0, 0.1, 1.0, 0.0))
-      );
+      float shadowOpticalDepth = 0.0;
+      if (height < maxLayerHeights.x) {
+        shadowOpticalDepth = sampleShadowOpticalDepth(
+          position,
+          maxShadowOpticalDepthScale,
+          // Apply PCF only when the sun is close to the horizon.
+          shadowFilterRadius * saturate(remap(dot(sunDirection, surfaceNormal), 0.0, 0.1, 1.0, 0.0))
+        );
+      }
 
       float opticalDepth = marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel);
       vec3 albedoScattering = multipleScattering(opticalDepth + shadowOpticalDepth, cosTheta);
@@ -339,7 +342,7 @@ vec4 marchClouds(
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
-      if (mipLevel < 0.5) {
+      if (height < maxLayerHeights.x && mipLevel < 0.5) {
         float groundOpticalDepth = marchOpticalDepth(
           position,
           -surfaceNormal,
