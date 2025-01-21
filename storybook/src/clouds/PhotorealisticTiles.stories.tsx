@@ -19,16 +19,3 @@ export const Tokyo: StoryFn = () => (
     distance={1000}
   />
 )
-
-export const Fuji: StoryFn = () => (
-  <Story
-    longitude={138.5973}
-    latitude={35.2138}
-    heading={71}
-    pitch={-31}
-    distance={7000}
-    exposure={10}
-    dayOfYear={260}
-    timeOfDay={16}
-  />
-)
