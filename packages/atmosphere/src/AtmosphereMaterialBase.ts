@@ -23,7 +23,7 @@ import { AtmosphereParameters } from './AtmosphereParameters'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
-  METER_TO_UNIT_LENGTH,
+  METER_TO_LENGTH_UNIT,
   SCATTERING_TEXTURE_MU_S_SIZE,
   SCATTERING_TEXTURE_MU_SIZE,
   SCATTERING_TEXTURE_NU_SIZE,
@@ -144,8 +144,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         // Uniforms for atmosphere functions
         u_solar_irradiance: new Uniform(atmosphere.solarIrradiance),
         u_sun_angular_radius: new Uniform(sunAngularRadius ?? atmosphere.sunAngularRadius),
-        u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_UNIT_LENGTH),
-        u_top_radius: new Uniform(atmosphere.topRadius * METER_TO_UNIT_LENGTH),
+        u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_LENGTH_UNIT),
+        u_top_radius: new Uniform(atmosphere.topRadius * METER_TO_LENGTH_UNIT),
         u_rayleigh_scattering: new Uniform(atmosphere.rayleighScattering),
         u_mie_scattering: new Uniform(atmosphere.mieScattering),
         u_mie_phase_function_g: new Uniform(atmosphere.miePhaseFunctionG),
@@ -167,7 +167,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         SCATTERING_TEXTURE_NU_SIZE: `${SCATTERING_TEXTURE_NU_SIZE}`,
         IRRADIANCE_TEXTURE_WIDTH: `${IRRADIANCE_TEXTURE_WIDTH}`,
         IRRADIANCE_TEXTURE_HEIGHT: `${IRRADIANCE_TEXTURE_HEIGHT}`,
-        METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`,
+        METER_TO_LENGTH_UNIT: `float(${METER_TO_LENGTH_UNIT})`,
         SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().join(',')})`,
         SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().join(',')})`,
         ...others.defines

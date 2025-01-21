@@ -148,7 +148,7 @@ float sampleShadowOpticalDepthPCF(const vec3 worldPosition, const vec3 positionE
   }
 
   float distanceToTop = raySphereSecondIntersection(
-    positionECEF / METER_TO_UNIT_LENGTH, // TODO: Make units consistent
+    positionECEF / METER_TO_LENGTH_UNIT, // TODO: Make units consistent
     sunDirection,
     vec3(0.0),
     bottomRadius + shadowTopHeight
@@ -240,7 +240,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
   mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vec3 positionECEF = rotation * worldPosition * METER_TO_UNIT_LENGTH - vGeometryEllipsoidCenter;
+  vec3 positionECEF = rotation * worldPosition * METER_TO_LENGTH_UNIT - vGeometryEllipsoidCenter;
   vec3 normalECEF = rotation * worldNormal;
 
   #ifdef CORRECT_GEOMETRIC_ERROR

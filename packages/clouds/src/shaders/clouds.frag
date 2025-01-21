@@ -277,7 +277,7 @@ vec4 marchClouds(
     float density = sampleShape(weather, position, mipLevel);
     if (density > minDensity) {
       sunIrradiance = GetSunAndSkyIrradiance(
-        position * METER_TO_UNIT_LENGTH,
+        position * METER_TO_LENGTH_UNIT,
         sunDirection,
         skyIrradiance
       );
@@ -408,7 +408,7 @@ float marchShadowLength(
     rayDistance += stepSize;
   }
   // Scale to the length unit because we only use this in atmosphere functions.
-  return shadowLength * METER_TO_UNIT_LENGTH;
+  return shadowLength * METER_TO_LENGTH_UNIT;
 }
 
 #endif // SHADOW_LENGTH
@@ -421,8 +421,8 @@ void applyAerialPerspective(
 ) {
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
-    cameraPosition * METER_TO_UNIT_LENGTH,
-    frontPosition * METER_TO_UNIT_LENGTH,
+    cameraPosition * METER_TO_LENGTH_UNIT,
+    frontPosition * METER_TO_LENGTH_UNIT,
     shadowLength,
     sunDirection,
     transmittance

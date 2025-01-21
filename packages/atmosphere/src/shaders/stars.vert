@@ -37,10 +37,10 @@ void main() {
   #ifdef BACKGROUND
   vec3 worldDirection = normalize(matrixWorld * vec4(position, 1.0)).xyz;
   mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vCameraPosition = rotation * cameraPosition * METER_TO_UNIT_LENGTH;
+  vCameraPosition = rotation * cameraPosition * METER_TO_LENGTH_UNIT;
   vRayDirection = rotation * worldDirection;
   vEllipsoidCenter =
-    (ellipsoidCenter + altitudeCorrection) * METER_TO_UNIT_LENGTH;
+    (ellipsoidCenter + altitudeCorrection) * METER_TO_LENGTH_UNIT;
   gl_Position =
     projectionMatrix * viewMatrix * vec4(cameraPosition + worldDirection * cameraFar, 1.0);
   #else // BACKGROUND
