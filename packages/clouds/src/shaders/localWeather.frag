@@ -29,6 +29,20 @@ float getWorleyFbm(
 void main() {
   vec3 point = vec3(vUv.x, vUv.y, 0.0);
 
+  // Mid clouds
+  {
+    float worley = getWorleyFbm(
+      point + vec3(0.5),
+      6.0, // frequency
+      0.4, // amplitude
+      2.0, // lacunarity
+      0.95, // gain
+      4 // octaveCount
+    );
+    worley = smoothstep(1.0, 1.4, worley);
+    outputColor.g = worley;
+  }
+
   // Low clouds
   {
     float worley = getWorleyFbm(
@@ -40,7 +54,7 @@ void main() {
       4 // octaveCount
     );
     worley = smoothstep(0.8, 1.4, worley);
-    outputColor.r = worley;
+    outputColor.r = saturate(worley - outputColor.g);
   }
 
   // High clouds

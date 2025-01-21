@@ -133,19 +133,19 @@ export class CloudsEffect extends Effect {
   readonly cloudLayers: CloudLayers = [
     {
       minHeight: 750,
-      maxHeight: 1600,
-      extinctionCoeff: 0.5,
+      maxHeight: 1400,
+      extinctionCoeff: 0.4,
       detailAmount: 1,
       weatherExponent: 1,
       coverageFilterWidth: 0.6
     },
     {
-      minHeight: 0,
-      maxHeight: 0,
-      extinctionCoeff: 0,
-      detailAmount: 0,
+      minHeight: 1000,
+      maxHeight: 2200,
+      extinctionCoeff: 0.5,
+      detailAmount: 1,
       weatherExponent: 1,
-      coverageFilterWidth: 0.0
+      coverageFilterWidth: 0.6
     },
     {
       minHeight: 7500,

@@ -127,6 +127,6 @@ export function updateCloudLayerUniforms(
   )
 
   // TODO: Parameterize
-  uniforms.shadowTopHeight.value = layers[0].maxHeight
+  uniforms.shadowTopHeight.value = layers[1].maxHeight
   uniforms.shadowBottomHeight.value = layers[0].minHeight
 }

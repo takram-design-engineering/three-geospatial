@@ -326,7 +326,7 @@ vec4 marchClouds(
 
       // Obtain the optical depth at the position from BSM.
       float shadowOpticalDepth = 0.0;
-      if (height < maxLayerHeights.x) {
+      if (height < shadowTopHeight) {
         shadowOpticalDepth = sampleShadowOpticalDepth(
           position,
           maxShadowOpticalDepthScale,
@@ -342,7 +342,7 @@ vec4 marchClouds(
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
-      if (height < maxLayerHeights.x && mipLevel < 0.5) {
+      if (height < shadowTopHeight && mipLevel < 0.5) {
         float groundOpticalDepth = marchOpticalDepth(
           position,
           -surfaceNormal,

@@ -1,3 +1,7 @@
+#ifndef saturate
+#define saturate(a) clamp(a, 0.0, 1.0)
+#endif // saturate
+
 float inverseLerp(const float x, const float y, const float a) {
   return (a - x) / (y - x);
 }

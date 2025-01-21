@@ -71,7 +71,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
     textureLod(localWeatherTexture, uv * localWeatherFrequency, mipLevel),
     weatherExponents
   );
-  vec4 heightScale = shapeAlteringFunction(weather.heightFraction, 0.4);
+  vec4 heightScale = shapeAlteringFunction(weather.heightFraction, 0.35);
 
   // Modulation to control weather by coverage parameter.
   // Reference: https://github.com/Prograda/Skybolt/blob/master/Assets/Core/Shaders/Clouds.h#L63
