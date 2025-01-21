@@ -529,11 +529,16 @@ export class CloudsEffect extends Effect {
     resolution.setBaseSize(baseWidth, baseHeight)
 
     const { width, height } = resolution
-    const scale = this.temporalUpscaling ? 0.25 : 1
-    const scaledWidth = Math.ceil(width * scale)
-    const scaledHeight = Math.ceil(height * scale)
-    this.cloudsRenderTarget.setSize(scaledWidth, scaledHeight)
-    this.cloudsMaterial.setSize(width, height)
+    if (this.temporalUpscaling) {
+      const w = Math.ceil(width / 4)
+      const h = Math.ceil(height / 4)
+      this.cloudsRenderTarget.setSize(w, h)
+      this.cloudsMaterial.setSize(w * 4, w * 4)
+    } else {
+      this.cloudsRenderTarget.setSize(width, height)
+      this.cloudsMaterial.setSize(width, height)
+    }
+
     this.cloudsResolveRenderTarget.setSize(width, height)
     this.cloudsResolveMaterial.setSize(width, height)
     this.cloudsHistoryRenderTarget.setSize(width, height)
@@ -557,11 +562,9 @@ export class CloudsEffect extends Effect {
 
   set temporalUpscaling(value: boolean) {
     if (value !== this.temporalUpscaling) {
-      const { width, height } = this.resolution
-      const scale = value ? 0.25 : 1
-      this.cloudsRenderTarget.setSize(width * scale, height * scale)
       this.cloudsMaterial.temporalUpscaling = value
       this.cloudsResolveMaterial.temporalUpscaling = value
+      this.setSize(this.resolution.baseWidth, this.resolution.baseHeight)
     }
   }
 
