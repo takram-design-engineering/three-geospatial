@@ -84,6 +84,7 @@ void temporalUpscaling(
   out vec4 outputColor,
   out float outputShadowLength
 ) {
+  #ifndef DEBUG_SHOW_VELOCITY
   if (currentFrame) {
     // Use the texel just rendered without any accumulation.
     outputColor = texelFetch(colorBuffer, lowResCoord, 0);
@@ -92,6 +93,7 @@ void temporalUpscaling(
     #endif // SHADOW_LENGTH
     return;
   }
+  #endif // !defined(DEBUG_SHOW_VELOCITY)
 
   vec2 unjitteredUv = getUnjitteredUv(coord);
   vec4 currentColor = texture(colorBuffer, unjitteredUv);
@@ -118,6 +120,10 @@ void temporalUpscaling(
   vec4 clippedColor = varianceClipping(colorBuffer, vUv, currentColor, historyColor, varianceGamma);
   outputColor = clippedColor;
 
+  #ifdef DEBUG_SHOW_VELOCITY
+  outputColor.rgb = outputColor.rgb + vec3(abs(velocity), 0.0);
+  #endif // DEBUG_SHOW_VELOCITY
+
   #ifdef SHADOW_LENGTH
   // Sampling the shadow length history using scene depth doesn’t make much
   // sense, but it's too hard to derive it properly. At least this approach
@@ -143,6 +149,7 @@ void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float out
 
   vec4 depthVelocity = getClosestFragment(coord);
   vec2 velocity = depthVelocity.gb * texelSize;
+
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = currentColor;
@@ -155,6 +162,10 @@ void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float out
   vec4 historyColor = texture(colorHistoryBuffer, prevUv);
   vec4 clippedColor = varianceClipping(colorBuffer, coord, currentColor, historyColor);
   outputColor = mix(clippedColor, currentColor, temporalAlpha);
+
+  #ifdef DEBUG_SHOW_VELOCITY
+  outputColor.rgb = outputColor.rgb + vec3(abs(velocity), 0.0);
+  #endif // DEBUG_SHOW_VELOCITY
 
   #ifdef SHADOW_LENGTH
   vec4 historyShadowLength = vec4(texture(shadowLengthHistoryBuffer, prevUv).rgb, 1.0);

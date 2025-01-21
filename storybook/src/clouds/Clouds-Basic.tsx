@@ -181,7 +181,8 @@ const Scene: FC = () => {
     showCascades: debugShowCascades,
     showBox: debugShowBox,
     showUv: debugShowUv,
-    showShadowLength: debugShowShadowLength
+    showShadowLength: debugShowShadowLength,
+    showVelocity: debugShowVelocity
   } = useControls(
     'debug',
     {
@@ -189,7 +190,8 @@ const Scene: FC = () => {
       showCascades: false,
       showBox: false,
       showUv: false,
-      showShadowLength: false
+      showShadowLength: false,
+      showVelocity: false
     },
     { collapsed: true }
   )
@@ -247,6 +249,11 @@ const Scene: FC = () => {
     } else {
       delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
     }
+    if (debugShowVelocity) {
+      clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
+    } else {
+      delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY
+    }
     clouds.cloudsMaterial.needsUpdate = true
     clouds.cloudsResolveMaterial.needsUpdate = true
   }, [
@@ -254,7 +261,8 @@ const Scene: FC = () => {
     debugShowShadowMap,
     debugShowCascades,
     debugShowUv,
-    debugShowShadowLength
+    debugShowShadowLength,
+    debugShowVelocity
   ])
 
   return (
@@ -302,7 +310,7 @@ const Scene: FC = () => {
               />
             )}
             <AerialPerspective sky sunIrradiance skyIrradiance />
-            {!debugShowUv && !debugShowShadowMap && (
+            {!debugShowUv && !debugShowShadowMap && !debugShowShadowLength && (
               <>
                 <LensFlare />
                 <ToneMapping mode={ToneMappingMode.AGX} />

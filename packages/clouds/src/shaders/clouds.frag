@@ -567,21 +567,21 @@ vec4 getCascadedShadowMaps(vec2 uv) {
   }
 
   #ifndef DEBUG_SHOW_SHADOW_MAP_TYPE
-  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
+  #define DEBUG_SHOW_SHADOW_MAP_TYPE (2)
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
 
   const float frontDepthScale = 1e-5;
   const float meanExtinctionScale = 10.0;
-  const float scale = 0.01;
+  const float maxOpticalDepthScale = 0.01;
   vec3 color;
   #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
   color = vec3(shadow.r * frontDepthScale);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
   color = vec3(shadow.g * meanExtinctionScale);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
-  color = vec3(shadow.b * scale);
+  color = vec3(shadow.b * maxOpticalDepthScale);
   #else // DEBUG_SHOW_SHADOW_MAP_TYPE
-  color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, scale);
+  color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return vec4(color, 1.0);
 }

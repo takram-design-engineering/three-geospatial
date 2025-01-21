@@ -179,11 +179,13 @@ const Scene: FC<SceneProps> = ({
   const {
     showShadowMap: debugShowShadowMap,
     showCascades: debugShowCascades,
-    showShadowLength: debugShowShadowLength
+    showShadowLength: debugShowShadowLength,
+    showVelocity: debugShowVelocity
   } = useControls('debug', {
     showShadowMap: false,
     showCascades: false,
-    showShadowLength: false
+    showShadowLength: false,
+    showVelocity: false
   })
 
   const camera = useThree(({ camera }) => camera)
@@ -260,9 +262,20 @@ const Scene: FC<SceneProps> = ({
     } else {
       delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
     }
+    if (debugShowVelocity) {
+      clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
+    } else {
+      delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY
+    }
     clouds.cloudsMaterial.needsUpdate = true
     clouds.cloudsResolveMaterial.needsUpdate = true
-  }, [clouds, debugShowShadowMap, debugShowCascades, debugShowShadowLength])
+  }, [
+    clouds,
+    debugShowShadowMap,
+    debugShowCascades,
+    debugShowShadowLength,
+    debugShowVelocity
+  ])
 
   return (
     <Atmosphere
@@ -281,7 +294,10 @@ const Scene: FC<SceneProps> = ({
             normal,
             depth,
             lut,
-            enabled
+            enabled,
+            debugShowShadowMap,
+            debugShowShadowLength,
+            debugShowVelocity
           })}
         >
           {!normal && !depth && (
@@ -306,21 +322,22 @@ const Scene: FC<SceneProps> = ({
               />
             </>
           )}
-          {!debugShowShadowMap && (
-            <>
-              {lensFlare && <LensFlare />}
-              {depth && <Depth useTurbo />}
-              {normal && <Normal />}
-              {!normal && !depth && (
-                <>
-                  <ToneMapping mode={ToneMappingMode.AGX} />
-                  {lut != null && <HaldLUT path={lut} />}
-                  <SMAA />
-                  <Dithering />
-                </>
-              )}
-            </>
-          )}
+          {!debugShowShadowMap &&
+            !debugShowShadowLength&& (
+              <>
+                {lensFlare && <LensFlare />}
+                {depth && <Depth useTurbo />}
+                {normal && <Normal />}
+                {!normal && !depth && (
+                  <>
+                    <ToneMapping mode={ToneMappingMode.AGX} />
+                    {lut != null && <HaldLUT path={lut} />}
+                    <SMAA />
+                    <Dithering />
+                  </>
+                )}
+              </>
+            )}
         </Fragment>
       </EffectComposer>
     </Atmosphere>
