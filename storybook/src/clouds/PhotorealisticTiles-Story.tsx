@@ -111,6 +111,8 @@ const Globe: FC = () => {
         // the sky when set to a low altitude.
         // Re-enable it when the user first drags.
         adjustHeight={false}
+        maxAltitude={Math.PI * 0.55} // Permit grazing angles
+        maxDistance={7500} // Below the bottom of the top cloud layer, for now
       />
     </TilesRenderer>
   )

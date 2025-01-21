@@ -14,7 +14,6 @@ import { NearestFilter, RepeatWrapping, RGBAFormat, Vector3 } from 'three'
 import {
   AerialPerspective,
   Atmosphere,
-  Stars,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
@@ -156,7 +155,7 @@ const Scene: FC = () => {
         textures='atmosphere'
         correctAltitude={correctAltitude}
       >
-        <Stars data='atmosphere/stars.bin' />
+        {/* <Stars data='atmosphere/stars.bin' /> */}
         <EffectComposer multisampling={0}>
           <Fragment
             key={JSON.stringify({
@@ -168,6 +167,8 @@ const Scene: FC = () => {
               ref={setClouds}
               stbnTexture={stbnTexture}
               coverage={coverage}
+              shadow-maxFar={1e5}
+              shadowLength
             />
             <AerialPerspective sky skyIrradiance sunIrradiance />
             {!debugShowUv && !debugShowShadowMap && (

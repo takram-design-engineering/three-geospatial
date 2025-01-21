@@ -14,7 +14,7 @@ export const Tokyo: StoryFn = () => (
     exposure={10}
     longitude={139.8146}
     latitude={35.7455}
-    heading={-130}
+    heading={-110}
     pitch={-9}
     distance={1000}
   />

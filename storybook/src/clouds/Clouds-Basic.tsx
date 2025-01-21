@@ -180,14 +180,16 @@ const Scene: FC = () => {
     showShadowMap: debugShowShadowMap,
     showCascades: debugShowCascades,
     showBox: debugShowBox,
-    showUv: debugShowUv
+    showUv: debugShowUv,
+    showShadowLength: debugShowShadowLength
   } = useControls(
     'debug',
     {
       showShadowMap: false,
       showCascades: false,
       showBox: false,
-      showUv: false
+      showUv: false,
+      showShadowLength: false
     },
     { collapsed: true }
   )
@@ -240,8 +242,20 @@ const Scene: FC = () => {
     } else {
       delete clouds.cloudsMaterial.defines.DEBUG_SHOW_UV
     }
+    if (debugShowShadowLength) {
+      clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
+    } else {
+      delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
+    }
     clouds.cloudsMaterial.needsUpdate = true
-  }, [clouds, debugShowShadowMap, debugShowCascades, debugShowUv])
+    clouds.cloudsResolveMaterial.needsUpdate = true
+  }, [
+    clouds,
+    debugShowShadowMap,
+    debugShowCascades,
+    debugShowUv,
+    debugShowShadowLength
+  ])
 
   return (
     <>
@@ -283,6 +297,7 @@ const Scene: FC = () => {
                 resolution-scale={halfResolution ? 0.5 : 1}
                 localWeatherVelocity={animate ? [0.00005, 0] : [0, 0]}
                 shadow-mapSize={[shadowMapSize, shadowMapSize]}
+                shadow-maxFar={1e5}
                 shadowLength={shadowLength}
               />
             )}
