@@ -90,6 +90,7 @@ interface CloudsMaterialUniforms
   cameraHeight: Uniform<number>
   frame: Uniform<number>
   temporalJitter: Uniform<Vector2>
+  mipLevelScale: Uniform<number>
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Atmospheric parameters
@@ -183,6 +184,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraHeight: new Uniform(0),
           frame: new Uniform(0),
           temporalJitter: new Uniform(new Vector2()),
+          mipLevelScale: new Uniform(1),
           stbnTexture: new Uniform(null),
 
           ...createCloudParameterUniforms({
@@ -230,7 +232,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
             Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
           ),
           shadowFar: new Uniform(0),
-          shadowFilterRadius: new Uniform(0),
+          shadowFilterRadius: new Uniform(6),
           maxShadowOpticalDepthScale: new Uniform(3),
 
           // Shadow length
@@ -295,6 +297,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       const dx = ((offset.x - 0.5) / resolution.x) * 4
       const dy = ((offset.y - 0.5) / resolution.y) * 4
       uniforms.temporalJitter.value.set(dx, dy)
+      uniforms.mipLevelScale.value = 0.25 // NOTE: Not exactly
       inverseProjectionMatrix.copy(camera.projectionMatrix)
       inverseProjectionMatrix.elements[8] += dx * 2
       inverseProjectionMatrix.elements[9] += dy * 2
@@ -307,6 +310,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       reprojectionMatrix.multiply(previousViewMatrix)
     } else {
       uniforms.temporalJitter.value.setScalar(0)
+      uniforms.mipLevelScale.value = 1
       inverseProjectionMatrix.copy(camera.projectionMatrixInverse)
       reprojectionMatrix
         .copy(previousProjectionMatrix)

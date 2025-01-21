@@ -147,6 +147,8 @@ float sampleShadowOpticalDepthPCF(const vec3 worldPosition, const vec3 positionE
     return 0.0;
   }
 
+  // Distance to the top of the shadows along the sun direction, which matches
+  // the ray origin of BSM.
   float distanceToTop = raySphereSecondIntersection(
     positionECEF / METER_TO_LENGTH_UNIT, // TODO: Make units consistent
     sunDirection,

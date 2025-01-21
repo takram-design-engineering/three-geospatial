@@ -21,6 +21,7 @@ uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
 uniform vec2 temporalJitter;
+uniform float mipLevelScale;
 uniform sampler3D stbnTexture;
 
 // Scattering parameters
@@ -146,25 +147,68 @@ vec3 sampleShadow(const vec3 rayPosition, vec2 offset) {
 }
 
 float sampleShadowOpticalDepth(
-  const vec3 rayPosition,
   const float distanceToTop,
-  const float maxOpticalDepthScale,
-  const vec2 offset
+  const float scale,
+  const vec2 uv,
+  const int index
 ) {
-  vec3 shadow = sampleShadow(rayPosition, offset);
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  vec4 shadow = texture(shadowBuffer, vec3(uv, float(index)));
+
   // In Hillaire's presentation, optical depth is clamped to the max optical
   // depth. While it is understandable, it lacks resolution in shadows
   // compared to marched results with a very high number of iterations.
   // https://blog.selfshadow.com/publications/s2020-shading-course/hillaire/s2020_pbs_hillaire_slides.pdf
-  return min(shadow.b * maxOpticalDepthScale, shadow.g * max(0.0, distanceToTop - shadow.r));
+  return min(shadow.b * scale, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
-float sampleShadowOpticalDepth(
-  const vec3 rayPosition,
-  const float distanceToTop,
-  const vec2 offset
-) {
-  return sampleShadowOpticalDepth(rayPosition, distanceToTop, 1.0, offset);
+float sampleShadowOpticalDepth(const vec3 rayPosition, const float scale, const float radius) {
+  // Ray position is relative to the ellipsoid.
+  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
+  int index = getCascadeIndex(worldPosition);
+  vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
+  point /= point.w;
+  vec2 uv = point.xy * 0.5 + 0.5;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    return 0.0;
+  }
+
+  // Distance to the top of the shadows along the sun direction, which matches
+  // the ray origin of BSM.
+  float distanceToTop = raySphereSecondIntersection(
+    rayPosition,
+    sunDirection,
+    vec3(0.0),
+    bottomRadius + shadowTopHeight
+  );
+  if (distanceToTop <= 0.0) {
+    return 0.0;
+  }
+  if (radius < 0.1) {
+    return sampleShadowOpticalDepth(distanceToTop, scale, uv, index);
+  }
+  vec4 d1 = vec4(-shadowTexelSize.xy, shadowTexelSize.xy) * radius;
+  vec4 d2 = d1 * 0.5;
+  // prettier-ignore
+  return (1.0 / 17.0) * (
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + d1.xy, index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(0.0, d1.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + d1.zy, index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + d2.xy, index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(0.0, d2.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + d2.zy, index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(d1.x, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(d2.x, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv, index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(d2.z, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(d1.z, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + d2.xw, index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(0.0, d2.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + d2.zw, index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + d1.xw, index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(0.0, d1.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, scale, uv + d1.zw, index)
+  );
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
@@ -250,9 +294,6 @@ vec4 marchClouds(
   float rayDistance = stepSize * jitter;
   float cosTheta = dot(sunDirection, rayDirection);
 
-  // TODO: Use jitter only when the zenith angle is very large.
-  vec2 jitterUv = shadowFilterRadius * shadowTexelSize * jitterVec2;
-
   for (int i = 0; i < maxIterations; ++i) {
     if (rayDistance > maxRayDistance) {
       break; // Termination
@@ -281,30 +322,18 @@ vec4 marchClouds(
         sunDirection,
         skyIrradiance
       );
-
-      // Distance to the top of the shadows along the sun direction.
-      // This matches the ray origin of BSM.
-      float distanceToTop = raySphereSecondIntersection(
-        position,
-        sunDirection,
-        vec3(0.0),
-        bottomRadius + shadowTopHeight
-      );
+      vec3 surfaceNormal = normalize(position);
 
       // Obtain the optical depth at the position from BSM.
-      float shadowOpticalDepth = 0.0;
-      if (distanceToTop > 0.0) {
-        shadowOpticalDepth = sampleShadowOpticalDepth(
-          position,
-          distanceToTop,
-          maxShadowOpticalDepthScale,
-          jitterUv
-        );
-      }
+      float shadowOpticalDepth = sampleShadowOpticalDepth(
+        position,
+        maxShadowOpticalDepthScale,
+        // Apply PCF only when the sun is close to the horizon.
+        shadowFilterRadius * saturate(remap(dot(sunDirection, surfaceNormal), 0.0, 0.1, 1.0, 0.0))
+      );
 
-      float sunOpticalDepth = marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel);
-      float opticalDepth = sunOpticalDepth + shadowOpticalDepth;
-      vec3 albedoScattering = multipleScattering(opticalDepth, cosTheta);
+      float opticalDepth = marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel);
+      vec3 albedoScattering = multipleScattering(opticalDepth + shadowOpticalDepth, cosTheta);
       vec3 scatteredIrradiance = albedoScattering * (sunIrradiance + skyIrradiance);
       vec3 radiance = scatteredIrradiance + albedo * skyIrradiance * skyIrradianceScale;
 
@@ -313,7 +342,7 @@ vec4 marchClouds(
       if (mipLevel < 0.5) {
         float groundOpticalDepth = marchOpticalDepth(
           position,
-          -normalize(position),
+          -surfaceNormal,
           maxGroundIterations,
           mipLevel
         );
@@ -387,15 +416,7 @@ float marchShadowLength(
     }
     vec3 position = rayDistance * rayDirection + rayOrigin;
 
-    // Distance to the top of the shadows along the sun direction.
-    // This matches the ray origin of BSM.
-    float distanceToTop = raySphereSecondIntersection(
-      position,
-      sunDirection,
-      vec3(0.0),
-      bottomRadius + shadowTopHeight
-    );
-    float opticalDepth = sampleShadowOpticalDepth(position, distanceToTop, vec2(0.0));
+    float opticalDepth = sampleShadowOpticalDepth(position, 1.0, 0.0);
     // Hack to prevent over-integration of shadow length. The shadow should be
     // attenuated by the inscatter as the ray travels further.
     float attenuation = exp(-rayDistance * 1e-5);
@@ -551,16 +572,16 @@ vec4 getCascadedShadowMaps(vec2 uv) {
 
   const float frontDepthScale = 1e-5;
   const float meanExtinctionScale = 10.0;
-  const float maxOpticalDepthScale = 0.01;
+  const float scale = 0.01;
   vec3 color;
   #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
   color = vec3(shadow.r * frontDepthScale);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
   color = vec3(shadow.g * meanExtinctionScale);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
-  color = vec3(shadow.b * maxOpticalDepthScale);
+  color = vec3(shadow.b * scale);
   #else // DEBUG_SHOW_SHADOW_MAP_TYPE
-  color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
+  color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, scale);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return vec4(color, 1.0);
 }
@@ -657,7 +678,7 @@ void main() {
   return;
   #endif // DEBUG_SHOW_UV
 
-  float mipLevel = getMipLevel(globeUv * localWeatherFrequency);
+  float mipLevel = getMipLevel(globeUv * localWeatherFrequency) * mipLevelScale;
   mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
 
   #ifndef SHADOW_LENGTH
