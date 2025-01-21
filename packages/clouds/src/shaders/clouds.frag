@@ -566,16 +566,6 @@ vec4 getCascadedShadowMaps(vec2 uv) {
 }
 #endif // DEBUG_SHOW_SHADOW_MAP
 
-void clampRayAtSceneObjects(const vec3 rayDirection, inout vec2 nearFar) {
-  float depth = readDepth(vUv + temporalJitter);
-  if (depth < 1.0 - 1e-7) {
-    depth = reverseLogDepth(depth, cameraNear, cameraFar);
-    float viewZ = getViewZ(depth);
-    float rayDistance = -viewZ / dot(rayDirection, vCameraDirection);
-    nearFar.y = min(nearFar.y, rayDistance);
-  }
-}
-
 void clampRaysAtSceneObjects(const vec3 rayDirection, inout vec2 nearFar1, inout vec2 nearFar2) {
   float depth = readDepth(vUv + temporalJitter);
   if (depth < 1.0 - 1e-7) {
@@ -612,7 +602,7 @@ void main() {
 
   if (any(lessThan(rayNearFar, vec2(0.0)))) {
     #ifdef SHADOW_LENGTH
-    clampRayAtSceneObjects(rayDirection, shadowLengthRayNearFar);
+    clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowLengthRayNearFar);
     if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
       outputShadowLength = marchShadowLength(
         shadowLengthRayNearFar.x * rayDirection + cameraPosition,

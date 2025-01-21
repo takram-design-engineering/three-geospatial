@@ -50,8 +50,6 @@ vec4 getClosestFragment(const ivec2 coord) {
   return result;
 }
 
-#ifdef TEMPORAL_UPSCALING
-
 const mat4 bayerIndices = mat4(
   vec4(0.0, 12.0, 3.0, 15.0),
   vec4(8.0, 4.0, 11.0, 7.0),
@@ -59,16 +57,19 @@ const mat4 bayerIndices = mat4(
   vec4(10.0, 6.0, 9.0, 5.0)
 );
 
-void main() {
-  ivec2 coord = ivec2(gl_FragCoord.xy);
-  ivec2 subCoord = coord / 4;
+void temporalUpscale(
+  const ivec2 coord,
+  const ivec2 subCoord,
+  const bool currentFrame,
+  out vec4 outputColor,
+  out float outputShadowLength
+) {
   vec4 currentColor = texelFetch(colorBuffer, subCoord, 0);
   #ifdef SHADOW_LENGTH
   vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, subCoord, 0).rgb, 1.0);
   #endif // SHADOW_LENGTH
 
-  int bayerValue = int(bayerIndices[coord.x % 4][coord.y % 4]);
-  if (bayerValue == frame % 16) {
+  if (currentFrame) {
     // Use the texel just rendered without any accumulation, for now.
     outputColor = currentColor;
     #ifdef SHADOW_LENGTH
@@ -116,10 +117,7 @@ void main() {
   #endif // SHADOW_LENGTH
 }
 
-#else // TEMPORAL_UPSCALING
-
-void main() {
-  ivec2 coord = ivec2(gl_FragCoord.xy);
+void temporalAntialias(const ivec2 coord, out vec4 outputColor, out float outputShadowLength) {
   vec4 currentColor = texelFetch(colorBuffer, coord, 0);
   #ifdef SHADOW_LENGTH
   vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, coord, 0).rgb, 1.0);
@@ -152,4 +150,22 @@ void main() {
   #endif // SHADOW_LENGTH
 }
 
-#endif // TEMPORAL_UPSCALING
+void main() {
+  ivec2 coord = ivec2(gl_FragCoord.xy);
+
+  #ifndef SHADOW_LENGTH
+  float outputShadowLength;
+  #endif // !defined(SHADOW_LENGTH)
+
+  #ifdef TEMPORAL_UPSCALING
+  ivec2 subCoord = coord / 4;
+  int bayerValue = int(bayerIndices[coord.x % 4][coord.y % 4]);
+  temporalUpscale(coord, subCoord, bayerValue == frame % 16, outputColor, outputShadowLength);
+  #else // TEMPORAL_UPSCALING
+  temporalAntialias(coord, outputColor, outputShadowLength);
+  #endif // TEMPORAL_UPSCALING
+
+  #if defined(SHADOW_LENGTH) && defined(DEBUG_SHOW_SHADOW_LENGTH)
+  outputColor = vec4(vec3(outputShadowLength * 0.05), 1.0);
+  #endif // defined(SHADOW_LENGTH) && defined(DEBUG_SHOW_SHADOW_LENGTH)
+}

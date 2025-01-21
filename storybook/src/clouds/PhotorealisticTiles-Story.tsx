@@ -174,11 +174,15 @@ const Scene: FC<SceneProps> = ({
     shadowLength: true
   })
 
-  const { showShadowMap: debugShowShadowMap, showCascades: debugShowCascades } =
-    useControls('debug', {
-      showShadowMap: false,
-      showCascades: false
-    })
+  const {
+    showShadowMap: debugShowShadowMap,
+    showCascades: debugShowCascades,
+    showShadowLength: debugShowShadowLength
+  } = useControls('debug', {
+    showShadowMap: false,
+    showCascades: false,
+    showShadowLength: false
+  })
 
   const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
@@ -249,8 +253,14 @@ const Scene: FC<SceneProps> = ({
     } else {
       delete clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
     }
+    if (debugShowShadowLength) {
+      clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
+    } else {
+      delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
+    }
     clouds.cloudsMaterial.needsUpdate = true
-  }, [clouds, debugShowShadowMap, debugShowCascades])
+    clouds.cloudsResolveMaterial.needsUpdate = true
+  }, [clouds, debugShowShadowMap, debugShowCascades, debugShowShadowLength])
 
   return (
     <Atmosphere
@@ -281,6 +291,7 @@ const Scene: FC<SceneProps> = ({
                   coverage={coverage}
                   localWeatherVelocity-x={animate ? 0.00001 : 0}
                   shadow-mapSize={shadowMapSize}
+                  shadow-farScale={0.25}
                   shadowLength={shadowLength}
                 />
               )}
