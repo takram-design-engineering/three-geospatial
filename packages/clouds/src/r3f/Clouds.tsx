@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { useSetAtom } from 'jotai'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
+import { Uniform } from 'three'
 
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
 import { type PassThoughInstanceProps } from '@takram/three-geospatial/r3f'
@@ -45,6 +46,13 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     })
 
+    const maxFarRef = useMemo(() => new Uniform(0), [])
+    const topHeightRef = useMemo(() => new Uniform(0), [])
+    useFrame(() => {
+      maxFarRef.value = effect.shadow.far
+      topHeightRef.value = effect.shadowTopHeight
+    })
+
     const setComposite = useSetAtom(compositeAtom)
     useEffect(() => {
       setComposite({
@@ -54,15 +62,15 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
           mapSize: effect.shadow.mapSize,
           intervals: effect.shadowIntervals,
           matrices: effect.shadowMatrices,
-          far: effect.shadow.far,
-          topHeight: effect.shadowTopHeight
+          far: maxFarRef,
+          topHeight: topHeightRef
         },
         shadowLengthTexture: effect.shadowLengthBuffer
       })
       return () => {
         setComposite(null)
       }
-    }, [setComposite, effect, others.shadowLength])
+    }, [others.shadowLength, effect, setComposite, maxFarRef, topHeightRef])
 
     return (
       <primitive

@@ -46,25 +46,27 @@ const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 const frustumScratch = /*#__PURE__*/ new FrustumCorners()
 const boxScratch = /*#__PURE__*/ new Box3()
 
-export interface CascadedShadowMapOptions {
+export interface CascadedShadowMapsOptions {
   cascadeCount?: number
   mapSize?: Vector2
-  far?: number
-  mode?: FrustumSplitMode
-  lambda?: number
+  maxFar?: number
+  farScale?: number
+  splitMode?: FrustumSplitMode
+  splitLambda?: number
   margin?: number
   fade?: boolean
 }
 
-export const cascadedShadowMapDefaults = {
+export const cascadedShadowMapsDefaults = {
   cascadeCount: 4,
   mapSize: new Vector2(1024, 1024),
-  far: 1e4,
-  mode: 'practical',
-  lambda: 0.5,
+  maxFar: -1,
+  farScale: 1,
+  splitMode: 'practical',
+  splitLambda: 0.5,
   margin: 0,
   fade: true
-} satisfies Partial<CascadedShadowMapOptions>
+} satisfies Partial<CascadedShadowMapsOptions>
 
 export interface Cascade {
   readonly interval: Vector2
@@ -76,30 +78,42 @@ export interface Cascade {
   readonly inverseViewMatrix: Matrix4
 }
 
-export class CascadedShadowMap {
+export class CascadedShadowMaps {
   readonly cascades: Cascade[] = []
 
   mapSize: Vector2
-  far: number
-  mode: FrustumSplitMode
-  lambda: number
+  maxFar: number
+  farScale: number
+  splitMode: FrustumSplitMode
+  splitLambda: number
   margin: number
   fade: boolean
 
   private readonly cameraFrustum = new FrustumCorners()
   private readonly frusta: FrustumCorners[] = []
   private readonly splits: number[] = []
+  private _far = 0
 
-  constructor(options: CascadedShadowMapOptions) {
-    const { cascadeCount, mapSize, far, mode, lambda, margin, fade } = {
-      ...cascadedShadowMapDefaults,
+  constructor(options: CascadedShadowMapsOptions) {
+    const {
+      cascadeCount,
+      mapSize,
+      maxFar,
+      farScale,
+      splitMode,
+      splitLambda,
+      margin,
+      fade
+    } = {
+      ...cascadedShadowMapsDefaults,
       ...options
     }
     this.cascadeCount = cascadeCount
     this.mapSize = mapSize
-    this.far = far
-    this.mode = mode
-    this.lambda = lambda
+    this.maxFar = maxFar
+    this.farScale = farScale
+    this.splitMode = splitMode
+    this.splitLambda = splitLambda
     this.margin = margin
     this.fade = fade
   }
@@ -125,16 +139,27 @@ export class CascadedShadowMap {
     }
   }
 
+  get far(): number {
+    return this._far
+  }
+
   private updateIntervals(camera: PerspectiveCamera): void {
-    const count = this.cascadeCount
+    const cascadeCount = this.cascadeCount
     const splits = this.splits
-    const far = Math.min(this.far, camera.far)
-    splitFrustum(this.mode, count, camera.near, far, this.lambda, splits)
+    const far = this.far
+    splitFrustum(
+      this.splitMode,
+      cascadeCount,
+      camera.near,
+      far,
+      this.splitLambda,
+      splits
+    )
     this.cameraFrustum.setFromCamera(camera, far)
     this.cameraFrustum.split(splits, this.frusta)
 
     const cascades = this.cascades
-    for (let i = 0; i < count; ++i) {
+    for (let i = 0; i < cascadeCount; ++i) {
       cascades[i].interval.set(splits[i - 1] ?? 0, splits[i] ?? 0)
     }
   }
@@ -156,7 +181,7 @@ export class CascadedShadowMap {
     // Expand the shadow bounds by the fade width.
     if (this.fade) {
       const near = camera.near
-      const far = Math.min(this.far, camera.far)
+      const far = this.far
       const distance = farCorners[0].z / (far - near)
       diagonalLength += 0.25 * distance ** 2 * (far - near)
     }
@@ -237,11 +262,17 @@ export class CascadedShadowMap {
     sunDirection: Vector3,
     distance?: number
   ): void {
+    this._far =
+      this.maxFar > 0
+        ? Math.min(this.maxFar, camera.far * this.farScale)
+        : camera.far * this.farScale
+
     this.updateIntervals(camera)
     this.updateMatrices(camera, sunDirection, distance)
 
     const cascades = this.cascades
-    for (let i = 0; i < this.cascadeCount; ++i) {
+    const cascadeCount = this.cascadeCount
+    for (let i = 0; i < cascadeCount; ++i) {
       const {
         matrix,
         inverseMatrix,

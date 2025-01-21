@@ -522,7 +522,7 @@ void getRayNearFar(
 }
 
 #ifdef DEBUG_SHOW_SHADOW_MAP
-vec4 getCascadedShadowMap(vec2 uv) {
+vec4 getCascadedShadowMaps(vec2 uv) {
   vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
   vec4 shadow = vec4(0.0);
   if (uv.y > 0.5) {
@@ -595,7 +595,7 @@ void main() {
   #endif // SHADOW_LENGTH
 
   #ifdef DEBUG_SHOW_SHADOW_MAP
-  outputColor = getCascadedShadowMap(vUv);
+  outputColor = getCascadedShadowMaps(vUv);
   outputDepthVelocity = vec3(0.0);
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP

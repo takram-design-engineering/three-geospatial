@@ -24,7 +24,7 @@ import { AtmosphereParameters } from '@takram/three-atmosphere'
 import { lerp, type Ellipsoid } from '@takram/three-geospatial'
 
 import { ArrayCopyPass } from './ArrayCopyPass'
-import { CascadedShadowMap } from './CascadedShadowMap'
+import { CascadedShadowMaps } from './CascadedShadowMaps'
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsHistoryMaterial } from './CloudsHistoryMaterial'
@@ -177,7 +177,7 @@ export class CloudsEffect extends Effect {
   readonly shapeDetailVelocity = new Vector3()
 
   // Beer shadow map
-  readonly shadow: CascadedShadowMap
+  readonly shadow: CascadedShadowMaps
   readonly shadowRenderTarget: WebGLArrayRenderTarget
   readonly shadowMaterial: ShadowMaterial
   readonly shadowPass: ShaderArrayPass
@@ -277,11 +277,10 @@ export class CloudsEffect extends Effect {
     this.shapeDetail = shapeDetail
 
     // Beer shadow map
-    this.shadow = new CascadedShadowMap({
+    this.shadow = new CascadedShadowMaps({
       cascadeCount: 3,
       mapSize: new Vector2().setScalar(512),
-      lambda: 0.6,
-      far: 1e5
+      splitLambda: 0.6
     })
     this.shadowRenderTarget = shadowRenderTarget
     this.shadowMaterial = shadowMaterial
