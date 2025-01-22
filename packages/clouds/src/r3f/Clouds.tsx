@@ -5,14 +5,17 @@ import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { Uniform } from 'three'
 
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
-import { type PassThoughInstanceProps } from '@takram/three-geospatial/r3f'
+import {
+  type ExpandNestedProps,
+  type PassThoughInstanceProps
+} from '@takram/three-geospatial/r3f'
 
 import { CloudsEffect, cloudsEffectOptionsDefaults } from '../CloudsEffect'
 
 export type CloudsProps = PassThoughInstanceProps<
   CloudsEffect,
   [],
-  Partial<CloudsEffect>
+  Partial<CloudsEffect> & ExpandNestedProps<CloudsEffect, 'shadow'>
 >
 
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
