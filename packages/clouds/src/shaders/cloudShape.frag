@@ -74,5 +74,5 @@ void main() {
   vec3 point = vec3(vUv.x, vUv.y, layer);
   float perlinWorley = getPerlinWorley(point);
   float worleyFbm = getWorleyFbm(point);
-  outputColor = remap(perlinWorley, worleyFbm - 1.0, 1.0, 0.0, 1.0);
+  outputColor = remap(perlinWorley, worleyFbm - 1.0, 1.0);
 }

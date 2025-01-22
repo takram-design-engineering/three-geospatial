@@ -63,9 +63,7 @@ vec4 shapeAlteringFunction(const vec4 heightFraction, const float bias) {
 
 WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLevel) {
   WeatherSample weather;
-  weather.heightFraction = saturate(
-    remap(vec4(height), minLayerHeights, maxLayerHeights, vec4(0.0), vec4(1.0))
-  );
+  weather.heightFraction = saturate(remap(vec4(height), minLayerHeights, maxLayerHeights));
 
   vec4 localWeather = pow(
     textureLod(localWeatherTexture, uv * localWeatherFrequency, mipLevel),
@@ -77,13 +75,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
   // Reference: https://github.com/Prograda/Skybolt/blob/master/Assets/Core/Shaders/Clouds.h#L63
   vec4 factor = 1.0 - coverage * heightScale;
   weather.density = saturate(
-    remap(
-      mix(localWeather, vec4(1.0), coverageFilterWidths),
-      factor,
-      factor + coverageFilterWidths,
-      vec4(0.0),
-      vec4(1.0)
-    )
+    remap(mix(localWeather, vec4(1.0), coverageFilterWidths), factor, factor + coverageFilterWidths)
   );
 
   return weather;
@@ -93,7 +85,7 @@ float sampleShape(WeatherSample weather, const vec3 position, const float mipLev
   vec4 density = weather.density;
 
   float shape = textureLod(shapeTexture, position * shapeFrequency + shapeOffset, 0.0).r;
-  density = mix(density, saturate(remap(density, 1.0 - shape, 1.0, 0.0, 1.0)), detailAmounts);
+  density = mix(density, saturate(remap(density, vec4(1.0 - shape), vec4(1.0))), detailAmounts);
 
   #ifdef SHAPE_DETAIL
   if (mipLevel < 0.5) {
@@ -106,10 +98,10 @@ float sampleShape(WeatherSample weather, const vec3 position, const float mipLev
     vec4 modifier = mix(
       vec4(pow(detail, 6.0)),
       vec4(1.0 - detail),
-      saturate(remap(weather.heightFraction, 0.2, 0.4, 0.0, 1.0))
+      saturate(remap(weather.heightFraction, vec4(0.2), vec4(0.4)))
     );
     modifier = mix(vec4(0.0), modifier, detailAmounts);
-    density = saturate(remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0), vec4(0.0), vec4(1.0)));
+    density = saturate(remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0)));
   }
   #endif // SHAPE_DETAIL
 

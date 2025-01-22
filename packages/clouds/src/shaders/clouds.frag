@@ -317,7 +317,7 @@ vec4 marchClouds(
         shadowOpticalDepth = sampleShadowOpticalDepth(
           position,
           // Apply PCF only when the sun is close to the horizon.
-          shadowFilterRadius * saturate(remap(dot(sunDirection, surfaceNormal), 0.0, 0.1, 1.0, 0.0))
+          shadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1))
         );
       }
 
@@ -382,7 +382,7 @@ vec4 marchClouds(
 
   return vec4(
     radianceIntegral,
-    saturate(remap(transmittanceIntegral, minTransmittance, 1.0, 1.0, 0.0))
+    saturate(1.0 - remap(transmittanceIntegral, minTransmittance, 1.0))
   );
 }
 
