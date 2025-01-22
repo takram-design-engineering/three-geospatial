@@ -30,6 +30,7 @@ export interface CloudsResolveMaterialParameters {
 }
 
 export interface CloudsResolveMaterialUniforms {
+  [key: string]: Uniform<unknown>
   colorBuffer: Uniform<Texture | null>
   depthVelocityBuffer: Uniform<Texture | null>
   shadowLengthBuffer: Uniform<Texture | null>
@@ -43,7 +44,6 @@ export interface CloudsResolveMaterialUniforms {
 }
 
 export class CloudsResolveMaterial extends RawShaderMaterial {
-  // @ts-expect-error Intentionally omit index signature
   declare uniforms: CloudsResolveMaterialUniforms
 
   constructor({

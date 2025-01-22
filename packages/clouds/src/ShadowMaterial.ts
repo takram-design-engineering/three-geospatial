@@ -48,6 +48,7 @@ export interface ShadowMaterialParameters {
 export interface ShadowMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
+  [key: string]: Uniform<unknown>
   inverseShadowMatrices: Uniform<Matrix4[]>
   reprojectionMatrices: Uniform<Matrix4[]>
   resolution: Uniform<Vector2>
@@ -72,7 +73,6 @@ export interface ShadowMaterialUniforms
 }
 
 export class ShadowMaterial extends RawShaderMaterial {
-  // @ts-expect-error Intentionally omit index signature
   declare uniforms: ShadowMaterialUniforms
 
   ellipsoid: Ellipsoid

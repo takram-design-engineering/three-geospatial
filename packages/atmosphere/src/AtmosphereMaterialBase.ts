@@ -76,6 +76,7 @@ export const atmosphereMaterialParametersBaseDefaults = {
 } satisfies AtmosphereMaterialBaseParameters
 
 export interface AtmosphereMaterialBaseUniforms {
+  [key: string]: Uniform<unknown>
   cameraPosition: Uniform<Vector3>
   ellipsoidCenter: Uniform<Vector3>
   inverseEllipsoidMatrix: Uniform<Matrix4>
@@ -98,7 +99,6 @@ export interface AtmosphereMaterialBaseUniforms {
 }
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
-  // @ts-expect-error Intentionally omit index signature
   declare uniforms: AtmosphereMaterialBaseUniforms
 
   ellipsoid: Ellipsoid

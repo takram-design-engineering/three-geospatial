@@ -12,6 +12,7 @@ export interface ShadowResolveMaterialParameters {
 }
 
 export interface ShadowResolveMaterialUniforms {
+  [key: string]: Uniform<unknown>
   inputBuffer: Uniform<Texture | null>
   historyBuffer: Uniform<Texture | null>
   texelSize: Uniform<Vector2>
@@ -20,7 +21,6 @@ export interface ShadowResolveMaterialUniforms {
 }
 
 export class ShadowResolveMaterial extends RawShaderMaterial {
-  // @ts-expect-error Intentionally omit index signature
   declare uniforms: ShadowResolveMaterialUniforms
 
   constructor({

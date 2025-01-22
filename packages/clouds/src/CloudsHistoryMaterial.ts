@@ -9,12 +9,12 @@ export interface CloudsHistoryMaterialParameters {
 }
 
 export interface CloudsHistoryMaterialUniforms {
+  [key: string]: Uniform<unknown>
   colorBuffer: Uniform<Texture | null>
   shadowLengthBuffer: Uniform<Texture | null>
 }
 
 export class CloudsHistoryMaterial extends RawShaderMaterial {
-  // @ts-expect-error Intentionally omit index signature
   declare uniforms: CloudsHistoryMaterialUniforms
 
   constructor({
