@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
-
 import {
   GLSL3,
   Matrix4,
@@ -50,7 +48,6 @@ export interface ShadowMaterialParameters {
 interface ShadowMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
-  [key: string]: Uniform<unknown>
   inverseShadowMatrices: Uniform<Matrix4[]>
   reprojectionMatrices: Uniform<Matrix4[]>
   resolution: Uniform<Vector2>
@@ -60,6 +57,7 @@ interface ShadowMaterialUniforms
   // Atmosphere
   bottomRadius: Uniform<number>
   ellipsoidCenter: Uniform<Vector3>
+  ellipsoidMatrix: Uniform<Matrix4>
   inverseEllipsoidMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
@@ -73,11 +71,10 @@ interface ShadowMaterialUniforms
   minTransmittance: Uniform<number>
 }
 
-export interface ShadowMaterial {
-  uniforms: ShadowMaterialUniforms
-}
-
 export class ShadowMaterial extends RawShaderMaterial {
+  // @ts-expect-error Intentionally omit index signature
+  declare uniforms: ShadowMaterialUniforms
+
   ellipsoid: Ellipsoid
   readonly ellipsoidMatrix: Matrix4
   correctAltitude: boolean

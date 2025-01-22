@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
-
 import { GLSL3, RawShaderMaterial, Uniform, Vector2, type Texture } from 'three'
 
 import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
@@ -14,7 +12,6 @@ export interface ShadowResolveMaterialParameters {
 }
 
 interface ShadowResolveMaterialUniforms {
-  [key: string]: Uniform<unknown>
   inputBuffer: Uniform<Texture | null>
   historyBuffer: Uniform<Texture | null>
   texelSize: Uniform<Vector2>
@@ -22,11 +19,10 @@ interface ShadowResolveMaterialUniforms {
   temporalAlpha: Uniform<number>
 }
 
-export interface ShadowResolveMaterial {
-  uniforms: ShadowResolveMaterialUniforms
-}
-
 export class ShadowResolveMaterial extends RawShaderMaterial {
+  // @ts-expect-error Intentionally omit index signature
+  declare uniforms: ShadowResolveMaterialUniforms
+
   constructor({
     inputBuffer = null,
     historyBuffer = null

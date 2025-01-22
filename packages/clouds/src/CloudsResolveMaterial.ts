@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
-
 import {
   GLSL3,
   RawShaderMaterial,
@@ -32,7 +30,6 @@ export interface CloudsResolveMaterialParameters {
 }
 
 interface CloudsResolveMaterialUniforms {
-  [key: string]: Uniform<unknown>
   colorBuffer: Uniform<Texture | null>
   depthVelocityBuffer: Uniform<Texture | null>
   shadowLengthBuffer: Uniform<Texture | null>
@@ -45,11 +42,10 @@ interface CloudsResolveMaterialUniforms {
   temporalAlpha: Uniform<number>
 }
 
-export interface CloudsResolveMaterial {
-  uniforms: CloudsResolveMaterialUniforms
-}
-
 export class CloudsResolveMaterial extends RawShaderMaterial {
+  // @ts-expect-error Intentionally omit index signature
+  declare uniforms: CloudsResolveMaterialUniforms
+
   constructor({
     colorBuffer = null,
     depthVelocityBuffer = null,

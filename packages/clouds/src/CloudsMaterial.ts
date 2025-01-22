@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
-
 import {
   Color,
   GLSL3,
@@ -78,7 +76,6 @@ export interface CloudsMaterialParameters {
 interface CloudsMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
-  [key: string]: Uniform<unknown>
   depthBuffer: Uniform<Texture | null>
   viewMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>
@@ -103,6 +100,7 @@ interface CloudsMaterialUniforms
   scatterAnisotropy2: Uniform<number>
   scatterAnisotropyMix: Uniform<number>
   skyIrradianceScale: Uniform<number>
+  groundIrradianceScale: Uniform<number>
   powderScale: Uniform<number>
   powderExponent: Uniform<number>
 
@@ -128,13 +126,16 @@ interface CloudsMaterialUniforms
   shadowMatrices: Uniform<Matrix4[]>
   shadowFar: Uniform<number>
   shadowFilterRadius: Uniform<number>
-}
 
-export interface CloudsMaterial {
-  uniforms: CloudsMaterialUniforms & AtmosphereMaterialBaseUniforms
+  // Shadow length
+  maxShadowLengthIterations: Uniform<number>
+  minShadowLengthStepSize: Uniform<number>
+  maxShadowLengthRayDistance: Uniform<number>
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
+  declare uniforms: AtmosphereMaterialBaseUniforms & CloudsMaterialUniforms
+
   readonly ellipsoidMatrix: Matrix4
   temporalUpscaling = false
 
@@ -204,19 +205,22 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Scattering
           albedo: new Uniform(new Color().setScalar(0.98)),
-          powderScale: new Uniform(0.8),
-          powderExponent: new Uniform(200),
           scatterAnisotropy1: new Uniform(0.7),
           scatterAnisotropy2: new Uniform(-0.2),
           scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(0.3),
           groundIrradianceScale: new Uniform(1),
+          powderScale: new Uniform(0.8),
+          powderExponent: new Uniform(200),
 
           // Primary raymarch
           maxIterations: new Uniform(500),
           minStepSize: new Uniform(50),
           maxStepSize: new Uniform(1000),
           maxRayDistance: new Uniform(5e5),
+          minDensity: new Uniform(1e-5),
+          minExtinction: new Uniform(1e-5),
+          minTransmittance: new Uniform(1e-2),
 
           // Secondary raymarch
           maxSunIterations: new Uniform(3),
@@ -239,11 +243,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Shadow length
           maxShadowLengthIterations: new Uniform(500),
           minShadowLengthStepSize: new Uniform(50),
-          maxShadowLengthRayDistance: new Uniform(5e5),
-          minDensity: new Uniform(1e-5),
-          minExtinction: new Uniform(1e-5),
-          minTransmittance: new Uniform(1e-2)
-        } satisfies CloudsMaterialUniforms,
+          maxShadowLengthRayDistance: new Uniform(5e5)
+        } satisfies Partial<AtmosphereMaterialBaseUniforms> &
+          CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
           SHAPE_DETAIL: '1',

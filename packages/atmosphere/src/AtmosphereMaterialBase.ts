@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
-
 import {
   Matrix4,
   RawShaderMaterial,
@@ -78,7 +76,6 @@ export const atmosphereMaterialParametersBaseDefaults = {
 } satisfies AtmosphereMaterialBaseParameters
 
 export interface AtmosphereMaterialBaseUniforms {
-  [key: string]: Uniform<unknown>
   cameraPosition: Uniform<Vector3>
   ellipsoidCenter: Uniform<Vector3>
   inverseEllipsoidMatrix: Uniform<Matrix4>
@@ -100,11 +97,10 @@ export interface AtmosphereMaterialBaseUniforms {
   u_transmittance_texture: Uniform<DataTexture | null>
 }
 
-export interface AtmosphereMaterialBase {
-  uniforms: AtmosphereMaterialBaseUniforms
-}
-
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
+  // @ts-expect-error Intentionally omit index signature
+  declare uniforms: AtmosphereMaterialBaseUniforms
+
   ellipsoid: Ellipsoid
   readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean

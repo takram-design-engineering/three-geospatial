@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
-
 import {
   Color,
   GLSL3,
@@ -64,11 +62,9 @@ export interface SkyMaterialUniforms {
   groundAlbedo: Uniform<Color>
 }
 
-export interface SkyMaterial {
-  uniforms: SkyMaterialUniforms & AtmosphereMaterialBaseUniforms
-}
-
 export class SkyMaterial extends AtmosphereMaterialBase {
+  declare uniforms: AtmosphereMaterialBaseUniforms & SkyMaterialUniforms
+
   constructor(params?: SkyMaterialParameters) {
     const {
       sun,

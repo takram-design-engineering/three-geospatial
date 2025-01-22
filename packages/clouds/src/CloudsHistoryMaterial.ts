@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
-
 import { GLSL3, RawShaderMaterial, Uniform, type Texture } from 'three'
 
 import fragmentShader from './shaders/cloudsHistory.frag?raw'
@@ -11,16 +9,14 @@ export interface CloudsHistoryMaterialParameters {
 }
 
 interface CloudsHistoryMaterialUniforms {
-  [key: string]: Uniform<unknown>
   colorBuffer: Uniform<Texture | null>
   shadowLengthBuffer: Uniform<Texture | null>
 }
 
-export interface CloudsHistoryMaterial {
-  uniforms: CloudsHistoryMaterialUniforms
-}
-
 export class CloudsHistoryMaterial extends RawShaderMaterial {
+  // @ts-expect-error Intentionally omit index signature
+  declare uniforms: CloudsHistoryMaterialUniforms
+
   constructor({
     colorBuffer = null,
     shadowLengthBuffer = null

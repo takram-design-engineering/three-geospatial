@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
-
 import {
   GLSL3,
   Matrix4,
@@ -60,11 +58,9 @@ export interface StarsMaterialUniforms {
   radianceScale: Uniform<number>
 }
 
-export interface StarsMaterial {
-  uniforms: StarsMaterialUniforms & AtmosphereMaterialBaseUniforms
-}
-
 export class StarsMaterial extends AtmosphereMaterialBase {
+  declare uniforms: AtmosphereMaterialBaseUniforms & StarsMaterialUniforms
+
   pointSize: number
 
   constructor(params?: StarsMaterialParameters) {
