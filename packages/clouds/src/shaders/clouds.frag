@@ -350,7 +350,9 @@ vec4 marchClouds(
       #endif // POWDER
 
       #ifdef DEBUG_SHOW_CASCADES
-      radiance = 1e-3 * getCascadeColor(position);
+      if (height < shadowTopHeight) {
+        radiance = 1e-3 * getCascadeColor(position);
+      }
       #endif // DEBUG_SHOW_CASCADES
 
       // Energy-conserving analytical integration of scattered light
