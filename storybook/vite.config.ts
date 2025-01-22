@@ -1,3 +1,4 @@
+import path from 'path'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -13,14 +14,7 @@ export default defineConfig({
   // TODO: I don't understand at all how to tell the optimizer exclude
   // storybook's cache. Put everything that I can think of here.
   optimizeDeps: {
-    exclude: [
-      '.vite',
-      'node_modules/.cache/storybook',
-      'storybook/node_modules/.cache/storybook',
-      '../node_modules/.cache/storybook',
-      '../storybook/node_modules/.cache/storybook',
-      '../../storybook/node_modules/.cache/storybook'
-    ],
+    exclude: [path.resolve(__dirname, 'node_modules/.cache/storybook')],
     force: true
   }
 })
