@@ -291,10 +291,12 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.uniforms.u_sun_angular_radius.value = value
   }
 
+  /** @package */
   get renderTargetCount(): number {
     return this._renderTargetCount
   }
 
+  /** @package */
   set renderTargetCount(value: number) {
     if (value !== this.renderTargetCount) {
       this._renderTargetCount = value
