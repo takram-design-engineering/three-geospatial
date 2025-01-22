@@ -29,7 +29,7 @@ export interface CloudsResolveMaterialParameters {
   shadowLengthHistoryBuffer?: Texture | null
 }
 
-interface CloudsResolveMaterialUniforms {
+export interface CloudsResolveMaterialUniforms {
   colorBuffer: Uniform<Texture | null>
   depthVelocityBuffer: Uniform<Texture | null>
   shadowLengthBuffer: Uniform<Texture | null>

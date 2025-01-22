@@ -11,7 +11,7 @@ export interface ShadowResolveMaterialParameters {
   historyBuffer?: Texture | null
 }
 
-interface ShadowResolveMaterialUniforms {
+export interface ShadowResolveMaterialUniforms {
   inputBuffer: Uniform<Texture | null>
   historyBuffer: Uniform<Texture | null>
   texelSize: Uniform<Vector2>

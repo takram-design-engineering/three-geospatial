@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import { BlendFunction, Effect } from 'postprocessing'
 
 import fragmentShader from './shaders/ditheringEffect.frag?raw'

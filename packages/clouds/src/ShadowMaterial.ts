@@ -45,7 +45,7 @@ export interface ShadowMaterialParameters {
   shapeDetailTexture?: Texture | null
 }
 
-interface ShadowMaterialUniforms
+export interface ShadowMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
   inverseShadowMatrices: Uniform<Matrix4[]>

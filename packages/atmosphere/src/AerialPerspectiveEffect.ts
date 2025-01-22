@@ -92,7 +92,7 @@ export interface AerialPerspectiveEffectOptions {
   lunarRadianceScale?: number
 }
 
-interface AerialPerspectiveEffectUniforms {
+export interface AerialPerspectiveEffectUniforms {
   normalBuffer: Uniform<Texture | null>
   projectionMatrix: Uniform<Matrix4>
   viewMatrix: Uniform<Matrix4>

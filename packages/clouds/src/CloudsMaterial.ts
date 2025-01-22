@@ -73,7 +73,7 @@ export interface CloudsMaterialParameters {
   shadowBuffer?: DataArrayTexture | null
 }
 
-interface CloudsMaterialUniforms
+export interface CloudsMaterialUniforms
   extends CloudLayerUniforms,
     CloudParameterUniforms {
   depthBuffer: Uniform<Texture | null>

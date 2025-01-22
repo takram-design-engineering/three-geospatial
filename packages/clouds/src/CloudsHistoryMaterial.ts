@@ -8,7 +8,7 @@ export interface CloudsHistoryMaterialParameters {
   shadowLengthBuffer?: Texture | null
 }
 
-interface CloudsHistoryMaterialUniforms {
+export interface CloudsHistoryMaterialUniforms {
   colorBuffer: Uniform<Texture | null>
   shadowLengthBuffer: Uniform<Texture | null>
 }

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Matrix4,
@@ -10,7 +8,7 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { resolveIncludes } from '@takram/three-geospatial'
+import { resolveIncludes, type UniformMap } from '@takram/three-geospatial'
 import { depth, packing, transform } from '@takram/three-geospatial/shaders'
 
 import fragmentShader from './shaders/normalEffect.frag?raw'
@@ -22,6 +20,12 @@ export interface NormalEffectOptions {
   reconstructFromDepth?: boolean
 }
 
+export interface NormalEffectUniforms {
+  normalBuffer: Uniform<Texture | null>
+  projectionMatrix: Uniform<Matrix4>
+  inverseProjectionMatrix: Uniform<Matrix4>
+}
+
 export const normalEffectOptionsDefaults = {
   blendFunction: BlendFunction.SRC,
   octEncoded: false,
@@ -29,6 +33,8 @@ export const normalEffectOptionsDefaults = {
 } satisfies NormalEffectOptions
 
 export class NormalEffect extends Effect {
+  declare uniforms: UniformMap<NormalEffectUniforms>
+
   constructor(
     private camera: Camera,
     options?: NormalEffectOptions
@@ -54,11 +60,13 @@ export class NormalEffect extends Effect {
       {
         blendFunction,
         attributes: EffectAttribute.DEPTH,
-        uniforms: new Map<string, Uniform>([
-          ['normalBuffer', new Uniform(normalBuffer)],
-          ['projectionMatrix', new Uniform(new Matrix4())],
-          ['inverseProjectionMatrix', new Uniform(new Matrix4())]
-        ])
+        uniforms: new Map<string, Uniform>(
+          Object.entries({
+            normalBuffer: new Uniform(normalBuffer),
+            projectionMatrix: new Uniform(new Matrix4()),
+            inverseProjectionMatrix: new Uniform(new Matrix4())
+          } satisfies NormalEffectUniforms)
+        )
       }
     )
     if (camera != null) {
@@ -82,8 +90,8 @@ export class NormalEffect extends Effect {
     deltaTime?: number
   ): void {
     const uniforms = this.uniforms
-    const projectionMatrix = uniforms.get('projectionMatrix')!
-    const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
+    const projectionMatrix = uniforms.get('projectionMatrix')
+    const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')
     const camera = this.camera
     if (camera != null) {
       projectionMatrix.value.copy(camera.projectionMatrix)
@@ -92,11 +100,11 @@ export class NormalEffect extends Effect {
   }
 
   get normalBuffer(): Texture | null {
-    return this.uniforms.get('normalBuffer')!.value
+    return this.uniforms.get('normalBuffer').value
   }
 
   set normalBuffer(value: Texture | null) {
-    this.uniforms.get('normalBuffer')!.value = value
+    this.uniforms.get('normalBuffer').value = value
   }
 
   get octEncoded(): boolean {

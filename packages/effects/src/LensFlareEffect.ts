@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import {
   BlendFunction,
   Effect,
@@ -15,9 +13,12 @@ import {
   Uniform,
   WebGLRenderTarget,
   type Event,
+  type Texture,
   type TextureDataType,
   type WebGLRenderer
 } from 'three'
+
+import { type UniformMap } from '@takram/three-geospatial'
 
 import { DownsampleThresholdMaterial } from './DownsampleThresholdMaterial'
 import { LensFlareFeaturesMaterial } from './LensFlareFeaturesMaterial'
@@ -34,6 +35,12 @@ export interface LensFlareEffectOptions {
   intensity?: number
 }
 
+export interface LensFlareEffectUniforms {
+  bloomBuffer: Uniform<Texture | null>
+  featuresBuffer: Uniform<Texture | null>
+  intensity: Uniform<number>
+}
+
 export const lensFlareEffectOptionsDefaults = {
   blendFunction: BlendFunction.NORMAL,
   resolutionScale: 0.5,
@@ -44,6 +51,8 @@ export const lensFlareEffectOptionsDefaults = {
 
 // Reference: https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/
 export class LensFlareEffect extends Effect {
+  declare uniforms: UniformMap<LensFlareEffectUniforms>
+
   readonly resolution: Resolution
   readonly renderTarget1: WebGLRenderTarget
   readonly renderTarget2: WebGLRenderTarget
@@ -71,11 +80,13 @@ export class LensFlareEffect extends Effect {
     super('LensFlareEffect', fragmentShader, {
       blendFunction,
       attributes: EffectAttribute.CONVOLUTION,
-      uniforms: new Map<string, Uniform>([
-        ['bloomBuffer', new Uniform(null)],
-        ['featuresBuffer', new Uniform(null)],
-        ['intensity', new Uniform(1)]
-      ])
+      uniforms: new Map<string, Uniform>(
+        Object.entries({
+          bloomBuffer: new Uniform(null),
+          featuresBuffer: new Uniform(null),
+          intensity: new Uniform(1)
+        } satisfies LensFlareEffectUniforms)
+      )
     })
 
     this.renderTarget1 = new WebGLRenderTarget(1, 1, {
@@ -105,8 +116,8 @@ export class LensFlareEffect extends Effect {
     this.featuresMaterial = new LensFlareFeaturesMaterial()
     this.featuresPass = new ShaderPass(this.featuresMaterial)
 
-    this.uniforms.get('bloomBuffer')!.value = this.blurPass.texture
-    this.uniforms.get('featuresBuffer')!.value = this.renderTarget1.texture
+    this.uniforms.get('bloomBuffer').value = this.blurPass.texture
+    this.uniforms.get('featuresBuffer').value = this.renderTarget1.texture
 
     this.resolution = new Resolution(
       this,
@@ -162,11 +173,11 @@ export class LensFlareEffect extends Effect {
   }
 
   get intensity(): number {
-    return this.uniforms.get('intensity')!.value
+    return this.uniforms.get('intensity').value
   }
 
   set intensity(value: number) {
-    this.uniforms.get('intensity')!.value = value
+    this.uniforms.get('intensity').value = value
   }
 
   get thresholdLevel(): number {

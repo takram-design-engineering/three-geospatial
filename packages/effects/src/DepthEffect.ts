@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform } from 'three'
 
-import { resolveIncludes } from '@takram/three-geospatial'
+import { resolveIncludes, type UniformMap } from '@takram/three-geospatial'
 import { depth, turbo } from '@takram/three-geospatial/shaders'
 
 import fragmentShader from './shaders/depthEffect.frag?raw'
@@ -15,6 +13,10 @@ export interface DepthEffectOptions {
   far?: number
 }
 
+export interface DepthEffectUniforms {
+  near: Uniform<number>
+  far: Uniform<number>
+}
 export const depthEffectOptionsDefaults = {
   blendFunction: BlendFunction.SRC,
   useTurbo: false,
@@ -23,6 +25,8 @@ export const depthEffectOptionsDefaults = {
 } satisfies DepthEffectOptions
 
 export class DepthEffect extends Effect {
+  declare uniforms: UniformMap<DepthEffectUniforms>
+
   constructor(options?: DepthEffectOptions) {
     const { blendFunction, useTurbo, near, far } = {
       ...depthEffectOptionsDefaults,
@@ -37,10 +41,12 @@ export class DepthEffect extends Effect {
       {
         blendFunction,
         attributes: EffectAttribute.DEPTH,
-        uniforms: new Map([
-          ['near', new Uniform(near)],
-          ['far', new Uniform(far)]
-        ])
+        uniforms: new Map(
+          Object.entries({
+            near: new Uniform(near),
+            far: new Uniform(far)
+          } satisfies DepthEffectUniforms)
+        )
       }
     )
     this.useTurbo = useTurbo
@@ -62,18 +68,18 @@ export class DepthEffect extends Effect {
   }
 
   get near(): number {
-    return this.uniforms.get('near')!.value
+    return this.uniforms.get('near').value
   }
 
   set near(value: number) {
-    this.uniforms.get('near')!.value = value
+    this.uniforms.get('near').value = value
   }
 
   get far(): number {
-    return this.uniforms.get('far')!.value
+    return this.uniforms.get('far').value
   }
 
   set far(value: number) {
-    this.uniforms.get('far')!.value = value
+    this.uniforms.get('far').value = value
   }
 }
