@@ -15,7 +15,11 @@ import { CloudsEffect, cloudsEffectOptionsDefaults } from '../CloudsEffect'
 export type CloudsProps = PassThoughInstanceProps<
   CloudsEffect,
   [],
-  Partial<CloudsEffect> & ExpandNestedProps<CloudsEffect, 'shadow'>
+  Partial<
+    CloudsEffect &
+      ExpandNestedProps<CloudsEffect, 'resolution'> &
+      ExpandNestedProps<CloudsEffect, 'shadow'>
+  >
 >
 
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
