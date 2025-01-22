@@ -18,6 +18,7 @@ import {
   remap,
   resolveIncludes,
   saturate,
+  unrollLoops,
   type UniformMap
 } from '@takram/three-geospatial'
 import {
@@ -193,17 +194,19 @@ export class AerialPerspectiveEffect extends Effect {
 
     super(
       'AerialPerspectiveEffect',
-      resolveIncludes(fragmentShader, {
-        core: {
-          depth,
-          packing,
-          transform,
-          raySphereIntersection
-        },
-        parameters,
-        functions,
-        sky: skyShader
-      }),
+      unrollLoops(
+        resolveIncludes(fragmentShader, {
+          core: {
+            depth,
+            packing,
+            transform,
+            raySphereIntersection
+          },
+          parameters,
+          functions,
+          sky: skyShader
+        })
+      ),
       {
         blendFunction,
         vertexShader: resolveIncludes(vertexShader, {

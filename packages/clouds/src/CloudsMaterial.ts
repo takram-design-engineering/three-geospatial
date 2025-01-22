@@ -93,11 +93,11 @@ interface CloudsMaterialUniforms
   mipLevelScale: Uniform<number>
   stbnTexture: Uniform<Data3DTexture | null>
 
-  // Atmospheric parameters
+  // Atmosphere
   bottomRadius: Uniform<number>
   ellipsoidMatrix: Uniform<Matrix4>
 
-  // Scattering parameters
+  // Scattering
   albedo: Uniform<Color>
   scatterAnisotropy1: Uniform<number>
   scatterAnisotropy2: Uniform<number>
@@ -196,13 +196,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           }),
           ...createCloudLayerUniforms(),
 
-          // Atmospheric parameters
+          // Atmosphere
           bottomRadius: new Uniform(atmosphere.bottomRadius),
           ellipsoidCenter: new Uniform(ellipsoidCenterRef), // Overridden
           ellipsoidMatrix: new Uniform(ellipsoidMatrixRef),
           sunDirection: new Uniform(sunDirectionRef), // Overridden
 
-          // Scattering parameters
+          // Scattering
           albedo: new Uniform(new Color().setScalar(0.98)),
           powderScale: new Uniform(0.8),
           powderExponent: new Uniform(200),

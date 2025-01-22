@@ -48,8 +48,8 @@ vec4 getClosestFragment(const ivec3 coord) {
   return result;
 }
 
-void cascade(const int index, out vec4 outputColor) {
-  ivec3 coord = ivec3(gl_FragCoord.xy, index);
+void cascade(const int cascadeIndex, out vec4 outputColor) {
+  ivec3 coord = ivec3(gl_FragCoord.xy, cascadeIndex);
   vec4 current = texelFetch(inputBuffer, coord, 0);
 
   vec4 depthVelocity = getClosestFragment(coord);
@@ -60,7 +60,7 @@ void cascade(const int index, out vec4 outputColor) {
     return; // Rejection
   }
 
-  vec4 history = texture(historyBuffer, vec3(prevUv, float(index)));
+  vec4 history = texture(historyBuffer, vec3(prevUv, float(cascadeIndex)));
   vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history, varianceGamma);
   outputColor = mix(clippedHistory, current, temporalAlpha);
 }

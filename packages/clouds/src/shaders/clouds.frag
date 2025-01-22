@@ -24,7 +24,7 @@ uniform vec2 temporalJitter;
 uniform float mipLevelScale;
 uniform sampler3D stbnTexture;
 
-// Scattering parameters
+// Scattering
 uniform vec3 albedo;
 uniform float scatterAnisotropy1;
 uniform float scatterAnisotropy2;
@@ -99,13 +99,27 @@ float getViewZ(const float depth) {
 int getCascadeIndex(const vec3 position) {
   vec4 viewPosition = viewMatrix * vec4(position, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
-  for (int i = 0; i < SHADOW_CASCADE_COUNT; ++i) {
-    vec2 interval = shadowIntervals[i];
+  vec2 interval;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; ++i) {
+    #if UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
+    interval = shadowIntervals[i];
     if (depth >= interval.x && depth < interval.y) {
-      return i;
+      return UNROLLED_LOOP_INDEX;
     }
+    #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
   }
+  #pragma unroll_loop_end
   return SHADOW_CASCADE_COUNT - 1;
+}
+
+vec2 getShadowUv(const vec3 rayPosition, out int cascadeIndex) {
+  // Ray position is relative to the ellipsoid.
+  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
+  cascadeIndex = getCascadeIndex(worldPosition);
+  vec4 point = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  point /= point.w;
+  return point.xy * 0.5 + 0.5;
 }
 
 #ifdef DEBUG_SHOW_CASCADES
@@ -116,46 +130,24 @@ vec3 getCascadeColor(const vec3 rayPosition) {
     vec3(0.0, 0.0, 1.0),
     vec3(1.0, 1.0, 0.0)
   );
-  // Ray position is relative to the ellipsoid.
-  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
-  int index = getCascadeIndex(worldPosition);
-  vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
-  point /= point.w;
-  vec2 uv = point.xy * 0.5 + 0.5;
+  int cascadeIndex;
+  vec2 uv = getShadowUv(rayPosition, cascadeIndex);
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(1.0);
   }
-  return colors[index];
+  return colors[cascadeIndex];
 }
 #endif // DEBUG_SHOW_CASCADES
 
-vec3 sampleShadow(const vec3 rayPosition, vec2 offset) {
-  // Ray position is relative to the ellipsoid.
-  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
-  int index = getCascadeIndex(worldPosition);
-  vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
-  point /= point.w;
-  vec2 uv = point.xy * 0.5 + 0.5;
-  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-    return vec3(0.0);
-  }
+float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const int cascadeIndex) {
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
-  return texture(shadowBuffer, vec3(uv + offset, float(index))).rgb;
-}
-
-float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const int index) {
-  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
-  vec4 shadow = texture(shadowBuffer, vec3(uv, float(index)));
+  vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
   return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
 float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
-  // Ray position is relative to the ellipsoid.
-  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
-  int index = getCascadeIndex(worldPosition);
-  vec4 point = shadowMatrices[index] * vec4(worldPosition, 1.0);
-  point /= point.w;
-  vec2 uv = point.xy * 0.5 + 0.5;
+  int cascadeIndex;
+  vec2 uv = getShadowUv(rayPosition, cascadeIndex);
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return 0.0;
   }
@@ -172,29 +164,29 @@ float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
     return 0.0;
   }
   if (radius < 0.1) {
-    return sampleShadowOpticalDepth(distanceToTop, uv, index);
+    return sampleShadowOpticalDepth(distanceToTop, uv, cascadeIndex);
   }
   vec4 d1 = vec4(-shadowTexelSize.xy, shadowTexelSize.xy) * radius;
   vec4 d2 = d1 * 0.5;
   // prettier-ignore
   return (1.0 / 17.0) * (
-    sampleShadowOpticalDepth(distanceToTop, uv + d1.xy, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.y), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d1.zy, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d2.xy, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.y), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d2.zy, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d2.xw, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.w), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d2.zw, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d1.xw, index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.w), index) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d1.zw, index)
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.xy, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.y), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.zy, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.xy, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.y), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.zy, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, 0.0), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, 0.0), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, 0.0), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, 0.0), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.xw, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.w), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.zw, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.xw, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.w), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.zw, cascadeIndex)
   );
 }
 

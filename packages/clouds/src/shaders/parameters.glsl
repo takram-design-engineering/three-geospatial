@@ -1,7 +1,7 @@
 uniform vec2 resolution;
 uniform int frame;
 
-// Atmospheric parameters
+// Atmosphere
 uniform float bottomRadius;
 uniform mat4 ellipsoidMatrix;
 uniform mat4 inverseEllipsoidMatrix;

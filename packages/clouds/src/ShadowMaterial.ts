@@ -57,7 +57,7 @@ interface ShadowMaterialUniforms
   frame: Uniform<number>
   stbnTexture: Uniform<Data3DTexture | null>
 
-  // Atmospheric parameters
+  // Atmosphere
   bottomRadius: Uniform<number>
   ellipsoidCenter: Uniform<Vector3>
   inverseEllipsoidMatrix: Uniform<Matrix4>
@@ -126,7 +126,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         }),
         ...createCloudLayerUniforms(),
 
-        // Atmospheric parameters
+        // Atmosphere
         bottomRadius: new Uniform(atmosphere.bottomRadius),
         ellipsoidCenter: new Uniform(ellipsoidCenterRef),
         ellipsoidMatrix: new Uniform(ellipsoidMatrixRef),

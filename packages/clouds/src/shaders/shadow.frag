@@ -135,13 +135,13 @@ void getRayNearFar(
 }
 
 void cascade(
-  const int index,
+  const int cascadeIndex,
   const float mipLevel,
   out vec4 outputColor,
   out vec3 outputDepthVelocity
 ) {
   vec2 clip = vUv * 2.0 - 1.0;
-  vec4 point = inverseShadowMatrices[index] * vec4(clip.xy, -1.0, 1.0);
+  vec4 point = inverseShadowMatrices[cascadeIndex] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
   vec3 sunPosition = mat3(inverseEllipsoidMatrix) * point.xyz - vEllipsoidCenter;
 
@@ -160,7 +160,7 @@ void cascade(
   // Velocity for temporal resolution.
   vec3 frontPosition = color.x * rayDirection + rayOrigin;
   vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
-  vec4 prevClip = reprojectionMatrices[index] * vec4(frontPositionWorld, 1.0);
+  vec4 prevClip = reprojectionMatrices[cascadeIndex] * vec4(frontPositionWorld, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
   vec2 velocity = (vUv - prevUv) * resolution;
