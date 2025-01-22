@@ -147,8 +147,8 @@ const Scene: FC = () => {
       albedo: { value: 0.98, min: 0, max: 1 },
       powderScale: { value: 0.8, min: 0.5, max: 1 },
       powderExponent: { value: 200, min: 1, max: 1000 },
-      scatterAnisotropy1: { value: 0.8, min: 0, max: 1 },
-      scatterAnisotropy2: { value: -0.3, min: -1, max: 0 },
+      scatterAnisotropy1: { value: 0.7, min: 0, max: 1 },
+      scatterAnisotropy2: { value: -0.2, min: -1, max: 0 },
       scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
       skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
       groundIrradianceScale: { value: 0.7, min: 0, max: 1 }
