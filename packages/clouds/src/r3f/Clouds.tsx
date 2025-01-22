@@ -17,7 +17,7 @@ export type CloudsProps = PassThoughInstanceProps<
 
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
   function Clouds(props, forwardedRef) {
-    const { textures, transientProps, compositeAtom, ...contextProps } =
+    const { textures, transientStates, atoms, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [atmosphereParameters, others] = separateProps({
@@ -39,38 +39,55 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
 
     useFrame(({ camera }) => {
       effect.mainCamera = camera
-      if (transientProps != null) {
-        effect.sunDirection.copy(transientProps.sunDirection)
-        effect.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
-        effect.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
+      if (transientStates != null) {
+        effect.sunDirection.copy(transientStates.sunDirection)
+        effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+        effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
       }
     })
 
-    const maxFarRef = useMemo(() => new Uniform(0), [])
-    const topHeightRef = useMemo(() => new Uniform(0), [])
-    useFrame(() => {
-      maxFarRef.value = effect.shadow.far
-      topHeightRef.value = effect.shadowTopHeight
-    })
-
-    const setComposite = useSetAtom(compositeAtom)
+    const setComposite = useSetAtom(atoms.compositeAtom)
     useEffect(() => {
       setComposite({
-        texture: effect.cloudsBuffer,
-        shadow: {
-          map: effect.shadowBuffer,
-          mapSize: effect.shadow.mapSize,
-          intervals: effect.shadowIntervals,
-          matrices: effect.shadowMatrices,
-          far: maxFarRef,
-          topHeight: topHeightRef
-        },
-        shadowLengthTexture: effect.shadowLengthBuffer
+        map: effect.cloudsBuffer
       })
       return () => {
         setComposite(null)
       }
-    }, [others.shadowLength, effect, setComposite, maxFarRef, topHeightRef])
+    }, [effect, setComposite])
+
+    const setShadow = useSetAtom(atoms.shadowAtom)
+    const shadowFarRef = useMemo(() => new Uniform(0), [])
+    const shadowTopHeightRef = useMemo(() => new Uniform(0), [])
+    useFrame(() => {
+      shadowFarRef.value = effect.shadow.far
+      shadowTopHeightRef.value = effect.shadowTopHeight
+    })
+    useEffect(() => {
+      setShadow({
+        map: effect.shadowBuffer,
+        mapSize: effect.shadow.mapSize,
+        intervals: effect.shadowIntervals,
+        matrices: effect.shadowMatrices,
+        far: shadowFarRef,
+        topHeight: shadowTopHeightRef
+      })
+      return () => {
+        setShadow(null)
+      }
+    }, [effect, setShadow, shadowFarRef, shadowTopHeightRef])
+
+    const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
+    useEffect(() => {
+      if (effect.shadowLengthBuffer != null) {
+        setShadowLength({
+          map: effect.shadowLengthBuffer
+        })
+        return () => {
+          setShadowLength(null)
+        }
+      }
+    }, [others.shadowLength, effect, setShadowLength])
 
     return (
       <primitive

@@ -41,7 +41,11 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 import { getAltitudeCorrectionOffset } from './getAltitudeCorrectedEllipsoidCenter'
-import { type AtmosphereComposite } from './types'
+import {
+  type AtmosphereComposite,
+  type AtmosphereShadow,
+  type AtmosphereShadowLength
+} from './types'
 
 import fragmentShader from './shaders/aerialPerspectiveEffect.frag?raw'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert?raw'
@@ -626,54 +630,60 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('shadowRadius').value = value
   }
 
-  setComposite(value?: AtmosphereComposite | null): void {
-    if (value?.texture != null) {
+  private setUniform<K extends keyof AerialPerspectiveEffectUniforms>(
+    name: K,
+    value:
+      | AerialPerspectiveEffectUniforms[K]
+      | (AerialPerspectiveEffectUniforms[K] extends Uniform<infer V>
+          ? V
+          : never)
+  ): void {
+    if (value instanceof Uniform) {
+      this.uniforms.set(name, value)
+    } else {
+      this.uniforms.get(name).value = value as any
+    }
+  }
+
+  // eslint-disable-next-line accessor-pairs
+  set composite(value: AtmosphereComposite | null) {
+    if (value != null) {
       this.defines.set('HAS_COMPOSITE', '1')
-      this.uniforms.get('compositeBuffer').value = value.texture
+      this.uniforms.get('compositeBuffer').value = value.map
     } else {
       this.defines.delete('HAS_COMPOSITE')
       this.uniforms.get('compositeBuffer').value = null
     }
+    this.setChanged()
+  }
 
-    if (value?.shadow != null) {
+  // eslint-disable-next-line accessor-pairs
+  set shadow(value: AtmosphereShadow | null) {
+    if (value != null) {
       this.defines.set('HAS_SHADOW', '1')
-      this.defines.set(
-        'SHADOW_CASCADE_COUNT',
-        `${value.shadow.intervals.length}`
-      )
-      this.uniforms.get('shadowBuffer').value = value.shadow.map
-      this.uniforms.get('shadowMapSize').value.copy(value.shadow.mapSize)
-      this.uniforms.get('shadowIntervals').value = value.shadow.intervals
-      this.uniforms.get('shadowMatrices').value = value.shadow.matrices
-      if (typeof value.shadow.far === 'number') {
-        this.uniforms.get('shadowFar').value = value.shadow.far
-      } else {
-        this.uniforms.set('shadowFar', value.shadow.far)
-      }
-      if (typeof value.shadow.topHeight === 'number') {
-        this.uniforms.get('shadowTopHeight').value = value.shadow.topHeight
-      } else {
-        this.uniforms.set('shadowTopHeight', value.shadow.topHeight)
-      }
+      this.defines.set('SHADOW_CASCADE_COUNT', `${value.intervals.length}`)
+      this.uniforms.get('shadowBuffer').value = value.map
+      this.uniforms.get('shadowMapSize').value.copy(value.mapSize)
+      this.uniforms.get('shadowIntervals').value = value.intervals
+      this.uniforms.get('shadowMatrices').value = value.matrices
+      this.setUniform('shadowFar', value.far)
+      this.setUniform('shadowTopHeight', value.topHeight)
     } else {
       this.defines.delete('HAS_SHADOW')
-      this.defines.delete('SHADOW_CASCADE_COUNT')
       this.uniforms.get('shadowBuffer').value = null
-      this.uniforms.get('shadowMapSize').value.setScalar(0)
-      this.uniforms.get('shadowIntervals').value = []
-      this.uniforms.get('shadowMatrices').value = []
-      this.uniforms.set('shadowFar', new Uniform(0))
-      this.uniforms.set('shadowTopHeight', new Uniform(0))
     }
+    this.setChanged()
+  }
 
-    if (value?.shadowLengthTexture != null) {
+  // eslint-disable-next-line accessor-pairs
+  set shadowLength(value: AtmosphereShadowLength | null) {
+    if (value != null) {
       this.defines.set('HAS_SHADOW_LENGTH', '1')
-      this.uniforms.get('shadowLengthBuffer').value = value.shadowLengthTexture
+      this.uniforms.get('shadowLengthBuffer').value = value.map
     } else {
       this.defines.delete('HAS_SHADOW_LENGTH')
       this.uniforms.get('shadowLengthBuffer').value = null
     }
-
     this.setChanged()
   }
 }

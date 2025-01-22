@@ -26,7 +26,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
 >(function AerialPerspective(props, forwardedRef) {
-  const { textures, transientProps, compositeAtom, ...contextProps } =
+  const { textures, transientStates, atoms, ...contextProps } =
     useContext(AtmosphereContext)
 
   const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
@@ -57,17 +57,27 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     }
   }, [effect])
 
-  const composite = useAtomValue(compositeAtom)
+  const composite = useAtomValue(atoms.compositeAtom)
   useEffect(() => {
-    effect.setComposite(composite)
+    effect.composite = composite
   }, [effect, composite])
 
+  const shadow = useAtomValue(atoms.shadowAtom)
+  useEffect(() => {
+    effect.shadow = shadow
+  }, [effect, shadow])
+
+  const shadowLength = useAtomValue(atoms.shadowLengthAtom)
+  useEffect(() => {
+    effect.shadowLength = shadowLength
+  }, [effect, shadowLength])
+
   useFrame(() => {
-    if (transientProps != null) {
-      effect.sunDirection.copy(transientProps.sunDirection)
-      effect.moonDirection.copy(transientProps.moonDirection)
-      effect.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
-      effect.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
+    if (transientStates != null) {
+      effect.sunDirection.copy(transientStates.sunDirection)
+      effect.moonDirection.copy(transientStates.moonDirection)
+      effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+      effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
     }
   })
 

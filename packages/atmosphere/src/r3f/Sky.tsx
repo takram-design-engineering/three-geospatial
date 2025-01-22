@@ -26,7 +26,7 @@ export type SkyProps = MeshProps &
 
 export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {
-    const { textures, transientProps, ...contextProps } =
+    const { textures, transientStates, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [
@@ -55,11 +55,11 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
     }, [material])
 
     useFrame(() => {
-      if (transientProps != null) {
-        material.sunDirection.copy(transientProps.sunDirection)
-        material.moonDirection.copy(transientProps.moonDirection)
-        material.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
-        material.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
+      if (transientStates != null) {
+        material.sunDirection.copy(transientStates.sunDirection)
+        material.moonDirection.copy(transientStates.moonDirection)
+        material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+        material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
       }
     })
 

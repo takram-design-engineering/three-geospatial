@@ -23,7 +23,11 @@ import {
   PrecomputedTexturesLoader,
   type PrecomputedTextures
 } from '../PrecomputedTexturesLoader'
-import { type AtmosphereComposite } from '../types'
+import {
+  type AtmosphereComposite,
+  type AtmosphereShadow,
+  type AtmosphereShadowLength
+} from '../types'
 
 export interface AtmosphereTransientProps {
   sunDirection: Vector3
@@ -33,22 +37,40 @@ export interface AtmosphereTransientProps {
   ellipsoidMatrix: Matrix4
 }
 
+export interface AtmosphereAtoms {
+  compositeAtom: WritableAtom<
+    AtmosphereComposite | null,
+    [AtmosphereComposite | null],
+    void
+  >
+  shadowAtom: WritableAtom<
+    AtmosphereShadow | null,
+    [AtmosphereShadow | null],
+    void
+  >
+  shadowLengthAtom: WritableAtom<
+    AtmosphereShadowLength | null,
+    [AtmosphereShadowLength | null],
+    void
+  >
+}
+
 export interface AtmosphereContextValue {
   textures?: PrecomputedTextures | null
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
-  transientProps?: AtmosphereTransientProps
-  compositeAtom: WritableAtom<
-    AtmosphereComposite | null,
-    [AtmosphereComposite | null],
-    void
-  >
+  transientStates?: AtmosphereTransientProps
+  atoms: AtmosphereAtoms
 }
 
 export const AtmosphereContext = createContext<AtmosphereContextValue>({
-  compositeAtom: atom<AtmosphereComposite | null>(null)
+  atoms: {
+    compositeAtom: atom<AtmosphereComposite | null>(null),
+    shadowAtom: atom<AtmosphereShadow | null>(null),
+    shadowLengthAtom: atom<AtmosphereShadowLength | null>(null)
+  }
 })
 
 export interface AtmosphereProps {
@@ -81,7 +103,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
   },
   forwardedRef
 ) {
-  const transientPropsRef = useRef({
+  const transientStatesRef = useRef({
     sunDirection: new Vector3(),
     moonDirection: new Vector3(),
     rotationMatrix: new Matrix4(),
@@ -114,8 +136,12 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     }
   }, [texturesProp, useHalfFloat])
 
-  const compositeAtom = useMemo(
-    () => atom<AtmosphereComposite | null>(null),
+  const atoms = useMemo(
+    () => ({
+      compositeAtom: atom<AtmosphereComposite | null>(null),
+      shadowAtom: atom<AtmosphereShadow | null>(null),
+      shadowLengthAtom: atom<AtmosphereShadowLength | null>(null)
+    }),
     []
   )
 
@@ -126,22 +152,15 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       ellipsoid,
       correctAltitude,
       photometric,
-      transientProps: transientPropsRef.current,
-      compositeAtom
+      transientStates: transientStatesRef.current,
+      atoms
     }),
-    [
-      textures,
-      useHalfFloat,
-      ellipsoid,
-      correctAltitude,
-      photometric,
-      compositeAtom
-    ]
+    [textures, useHalfFloat, ellipsoid, correctAltitude, photometric, atoms]
   )
 
   const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {
     const { sunDirection, moonDirection, rotationMatrix } =
-      transientPropsRef.current
+      transientStatesRef.current
     return date => {
       getECIToECEFRotationMatrix(date, rotationMatrix)
       getSunDirectionECI(date, sunDirection).applyMatrix4(rotationMatrix)
@@ -159,7 +178,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
   useImperativeHandle(
     forwardedRef,
     () => ({
-      ...transientPropsRef.current,
+      ...transientStatesRef.current,
       textures,
       updateByDate
     }),
