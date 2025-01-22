@@ -7,7 +7,7 @@ import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH
 } from './constants'
-import { getAltitudeCorrectionOffset } from './getAltitudeCorrectedEllipsoidCenter'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import { getTextureCoordFromUnitRange } from './helpers/functions'
 import { sampleTexture } from './helpers/sampleTexture'
 

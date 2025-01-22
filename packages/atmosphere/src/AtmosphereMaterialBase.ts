@@ -29,7 +29,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
-import { getAltitudeCorrectionOffset } from './getAltitudeCorrectedEllipsoidCenter'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 

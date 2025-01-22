@@ -40,7 +40,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
-import { getAltitudeCorrectionOffset } from './getAltitudeCorrectedEllipsoidCenter'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import {
   type AtmosphereComposite,
   type AtmosphereShadow,
