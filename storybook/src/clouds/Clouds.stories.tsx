@@ -13,15 +13,3 @@ export const Basic = await import('./Clouds-Basic').then(
 export const MovingEllipsoid = await import('./Clouds-MovingEllipsoid').then(
   module => module.default
 )
-export const LocalWeather = await import('./Clouds-LocalWeather').then(
-  module => module.default
-)
-export const Shape = await import('./Clouds-Shape').then(
-  module => module.default
-)
-export const ShapeDetail = await import('./Clouds-ShapeDetail').then(
-  module => module.default
-)
-export const VolumetricShape = await import('./Clouds-VolumetricShape').then(
-  module => module.default
-)

@@ -1,6 +1,7 @@
 import {
   GizmoHelper,
   GizmoViewport,
+  Grid,
   OrbitControls,
   Sphere
 } from '@react-three/drei'
@@ -142,14 +143,14 @@ const Scene: FC = () => {
       <Sphere args={[0.5, 128, 128]} position={[0, 0.5, 0]}>
         <meshBasicMaterial color='white' />
       </Sphere>
-      {/* <Grid
+      <Grid
         cellColor={0x333333}
         sectionColor={0x333333}
         fadeStrength={10}
         fadeDistance={100}
         followCamera
         infiniteGrid
-      /> */}
+      />
       <Atmosphere
         ref={setAtmosphere}
         textures='atmosphere'
