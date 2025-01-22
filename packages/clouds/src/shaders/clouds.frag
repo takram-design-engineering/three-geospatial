@@ -39,8 +39,6 @@ uniform int maxIterations;
 uniform float minStepSize;
 uniform float maxStepSize;
 uniform float maxRayDistance;
-uniform float minDensity;
-uniform float minTransmittance;
 
 // Secondary raymarch
 uniform int maxSunIterations;
@@ -245,8 +243,8 @@ float marchOpticalDepth(
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
-    float density = sampleShape(weather, position, mipLevel);
-    opticalDepth += density * (stepScale - prevStepScale) * stepSize;
+    float extinction = sampleShape(weather, position, mipLevel);
+    opticalDepth += extinction * (stepScale - prevStepScale) * stepSize;
     prevStepScale = stepScale;
     stepScale *= secondaryStepScale;
   }
@@ -314,9 +312,9 @@ vec4 marchClouds(
       continue;
     }
 
-    // Sample a detailed density.
-    float density = sampleShape(weather, position, mipLevel);
-    if (density > minDensity) {
+    // Sample a detailed extinction.
+    float extinction = sampleShape(weather, position, mipLevel);
+    if (extinction > minExtinction) {
       sunIrradiance = GetSunAndSkyIrradiance(
         position * METER_TO_LENGTH_UNIT,
         sunDirection,
@@ -357,10 +355,10 @@ vec4 marchClouds(
       }
       #endif // GROUND_IRRADIANCE
 
-      radiance *= density;
+      radiance *= extinction;
 
       #ifdef POWDER
-      radiance *= 1.0 - powderScale * exp(-density * powderExponent);
+      radiance *= 1.0 - powderScale * exp(-extinction * powderExponent);
       #endif // POWDER
 
       #ifdef DEBUG_SHOW_CASCADES
@@ -369,8 +367,8 @@ vec4 marchClouds(
 
       // Energy-conserving analytical integration of scattered light
       // See 5.6.3 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
-      float transmittance = exp(-density * stepSize);
-      float clampedDensity = max(density, 1e-7);
+      float transmittance = exp(-extinction * stepSize);
+      float clampedDensity = max(extinction, 1e-7);
       vec3 scatteringIntegral = (radiance - radiance * transmittance) / clampedDensity;
       radianceIntegral += transmittanceIntegral * scatteringIntegral;
       transmittanceIntegral *= transmittance;

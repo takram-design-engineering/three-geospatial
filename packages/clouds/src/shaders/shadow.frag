@@ -17,8 +17,6 @@ uniform sampler3D stbnTexture;
 uniform int maxIterations;
 uniform float minStepSize;
 uniform float maxStepSize;
-uniform float minDensity;
-uniform float minTransmittance;
 
 in vec2 vUv;
 in vec3 vEllipsoidCenter;
@@ -87,14 +85,14 @@ vec4 marchClouds(
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
 
     if (any(greaterThan(weather.density, vec4(minDensity)))) {
-      // Sample a detailed density.
+      // Sample a detailed extinction.
       // Note this assumes an homogeneous medium.
-      float density = sampleShape(weather, position, mipLevel);
-      if (density > minDensity) {
+      float extinction = sampleShape(weather, position, mipLevel);
+      if (extinction > minExtinction) {
         frontDepth = max(frontDepth, rayDistance);
-        extinctionSum += density;
-        maxOpticalDepth += density * stepSize;
-        transmittanceIntegral *= exp(-density * stepSize);
+        extinctionSum += extinction;
+        maxOpticalDepth += extinction * stepSize;
+        transmittanceIntegral *= exp(-extinction * stepSize);
         ++sampleCount;
       }
     }

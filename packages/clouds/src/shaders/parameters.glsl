@@ -18,6 +18,9 @@ uniform vec3 shapeOffset;
 uniform sampler3D shapeDetailTexture;
 uniform vec3 shapeDetailFrequency;
 uniform vec3 shapeDetailOffset;
+uniform float minDensity;
+uniform float minExtinction;
+uniform float minTransmittance;
 
 // Cloud layers
 uniform vec4 minLayerHeights;
