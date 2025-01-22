@@ -59,11 +59,6 @@ export type PassThoughInstanceProps<
   NodeProps<RefType, Args>
 >
 
-export type ExpandNestedProps<
-  T,
-  Prop extends keyof T & string
-> = ExtendedProps<{
-  [K in NonFunctionKeys<T[Prop]> as K extends string
-    ? `${Prop}-${K}`
-    : never]: T[Prop][K]
-}>
+export type ExpandNestedProps<T, Prop extends keyof T & string> = {
+  [K in keyof T[Prop] as K extends string ? `${Prop}-${K}` : never]: T[Prop][K]
+}
