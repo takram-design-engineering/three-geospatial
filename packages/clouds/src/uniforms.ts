@@ -72,16 +72,17 @@ export interface CloudLayer {
   detailAmount: number
   weatherExponent: number
   coverageFilterWidth: number
+  shadow?: boolean
 }
 
 export type CloudLayers = [CloudLayer, CloudLayer, CloudLayer, CloudLayer]
 
-function packVector<K extends keyof CloudLayer>(
-  layers: CloudLayers,
-  key: K,
-  result: Vector4
-): Vector4 {
-  return result.set(
+function packVector<
+  K extends keyof {
+    [P in keyof CloudLayer as CloudLayer[P] extends number ? P : never]: any
+  }
+>(layers: CloudLayers, key: K, uniform: Uniform<Vector4>): void {
+  uniform.value.set(
     layers[0][key],
     layers[1][key],
     layers[2][key],
@@ -93,38 +94,48 @@ export function updateCloudLayerUniforms(
   uniforms: CloudLayerUniforms,
   layers: CloudLayers
 ): void {
-  const minHeights = packVector(
-    layers,
-    'minHeight',
-    uniforms.minLayerHeights.value
-  )
-  const maxHeights = packVector(
-    layers,
-    'maxHeight',
-    uniforms.maxLayerHeights.value
-  )
-  packVector(
-    layers,
-    'extinctionCoefficient',
-    uniforms.extinctionCoefficients.value
-  )
-  packVector(layers, 'detailAmount', uniforms.detailAmounts.value)
-  packVector(layers, 'weatherExponent', uniforms.weatherExponents.value)
-  packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths.value)
+  packVector(layers, 'minHeight', uniforms.minLayerHeights)
+  packVector(layers, 'maxHeight', uniforms.maxLayerHeights)
+  packVector(layers, 'extinctionCoefficient', uniforms.extinctionCoefficients)
+  packVector(layers, 'detailAmount', uniforms.detailAmounts)
+  packVector(layers, 'weatherExponent', uniforms.weatherExponents)
+  packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths)
 
-  // Exclude zero heights that effectively disable the layer.
-  uniforms.minHeight.value = Math.min(
-    ...[minHeights.x, minHeights.y, minHeights.z, minHeights.w].filter(
-      value => value > 0
-    )
-  )
-  uniforms.maxHeight.value = Math.max(
-    ...[maxHeights.x, maxHeights.y, maxHeights.z, maxHeights.w].filter(
-      value => value > 0
-    )
-  )
-
-  // TODO: Parameterize
-  uniforms.shadowTopHeight.value = layers[1].maxHeight
-  uniforms.shadowBottomHeight.value = layers[0].minHeight
+  let minHeight = Infinity
+  let maxHeight = 0
+  let shadowBottomHeight = Infinity
+  let shadowTopHeight = 0
+  for (let i = 0; i < layers.length; ++i) {
+    const layer = layers[i]
+    if (layer.minHeight > 0) {
+      if (layer.minHeight < minHeight) {
+        minHeight = layer.minHeight
+      }
+      if (layer.shadow === true && layer.minHeight < shadowBottomHeight) {
+        shadowBottomHeight = layer.minHeight
+      }
+    }
+    if (layer.maxHeight > 0) {
+      if (layer.maxHeight > maxHeight) {
+        maxHeight = layer.maxHeight
+      }
+      if (layer.shadow === true && layer.maxHeight > shadowTopHeight) {
+        shadowTopHeight = layer.maxHeight
+      }
+    }
+  }
+  if (minHeight !== Infinity) {
+    uniforms.minHeight.value = minHeight
+    uniforms.maxHeight.value = maxHeight
+  } else {
+    uniforms.minHeight.value = 0
+    // TODO: Deal with empty cloud layers
+  }
+  if (shadowBottomHeight !== Infinity) {
+    uniforms.shadowBottomHeight.value = shadowBottomHeight
+    uniforms.shadowTopHeight.value = shadowTopHeight
+  } else {
+    uniforms.shadowBottomHeight.value = 0
+    // TODO: Deal with empty cloud layers
+  }
 }

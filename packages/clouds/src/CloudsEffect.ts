@@ -137,7 +137,8 @@ export class CloudsEffect extends Effect {
       extinctionCoefficient: 0.4,
       detailAmount: 1,
       weatherExponent: 1,
-      coverageFilterWidth: 0.6
+      coverageFilterWidth: 0.6,
+      shadow: true
     },
     {
       minHeight: 1000,
@@ -145,7 +146,8 @@ export class CloudsEffect extends Effect {
       extinctionCoefficient: 0.5,
       detailAmount: 1,
       weatherExponent: 1,
-      coverageFilterWidth: 0.6
+      coverageFilterWidth: 0.6,
+      shadow: true
     },
     {
       minHeight: 7500,
