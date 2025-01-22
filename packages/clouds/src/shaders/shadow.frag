@@ -88,6 +88,7 @@ vec4 marchClouds(
 
     if (any(greaterThan(weather.density, vec4(minDensity)))) {
       // Sample a detailed density.
+      // Note this assumes an homogeneous medium.
       float density = sampleShape(weather, position, mipLevel);
       if (density > minDensity) {
         frontDepth = max(frontDepth, rayDistance);

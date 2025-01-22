@@ -114,5 +114,5 @@ float sampleShape(WeatherSample weather, const vec3 position, const float mipLev
   #endif // SHAPE_DETAIL
 
   // Nicely decrease density at the bottom.
-  return saturate(dot(density, extinctionCoeffs * weather.heightFraction));
+  return dot(density, extinctionCoefficients * weather.heightFraction);
 }

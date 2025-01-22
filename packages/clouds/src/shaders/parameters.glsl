@@ -22,7 +22,7 @@ uniform vec3 shapeDetailOffset;
 // Cloud layers
 uniform vec4 minLayerHeights;
 uniform vec4 maxLayerHeights;
-uniform vec4 extinctionCoeffs;
+uniform vec4 extinctionCoefficients;
 uniform vec4 detailAmounts;
 uniform vec4 weatherExponents;
 uniform vec4 coverageFilterWidths;

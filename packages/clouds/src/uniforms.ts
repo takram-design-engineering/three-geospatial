@@ -46,7 +46,7 @@ export function createCloudParameterUniforms({
 export interface CloudLayerUniforms {
   minLayerHeights: Uniform<Vector4>
   maxLayerHeights: Uniform<Vector4>
-  extinctionCoeffs: Uniform<Vector4>
+  extinctionCoefficients: Uniform<Vector4>
   detailAmounts: Uniform<Vector4>
   weatherExponents: Uniform<Vector4>
   coverageFilterWidths: Uniform<Vector4>
@@ -60,7 +60,7 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
   return {
     minLayerHeights: new Uniform(new Vector4()),
     maxLayerHeights: new Uniform(new Vector4()),
-    extinctionCoeffs: new Uniform(new Vector4()),
+    extinctionCoefficients: new Uniform(new Vector4()),
     detailAmounts: new Uniform(new Vector4()),
     weatherExponents: new Uniform(new Vector4()),
     coverageFilterWidths: new Uniform(new Vector4()),
@@ -74,7 +74,7 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
 export interface CloudLayer {
   minHeight: number
   maxHeight: number
-  extinctionCoeff: number
+  extinctionCoefficient: number
   detailAmount: number
   weatherExponent: number
   coverageFilterWidth: number
@@ -109,7 +109,11 @@ export function updateCloudLayerUniforms(
     'maxHeight',
     uniforms.maxLayerHeights.value
   )
-  packVector(layers, 'extinctionCoeff', uniforms.extinctionCoeffs.value)
+  packVector(
+    layers,
+    'extinctionCoefficient',
+    uniforms.extinctionCoefficients.value
+  )
   packVector(layers, 'detailAmount', uniforms.detailAmounts.value)
   packVector(layers, 'weatherExponent', uniforms.weatherExponents.value)
   packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths.value)
