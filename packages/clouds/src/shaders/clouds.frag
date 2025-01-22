@@ -335,9 +335,8 @@ vec4 marchClouds(
           maxGroundIterations,
           mipLevel
         );
-        float heightScale = max(0.0, 1.0 - weather.heightFraction.x * 2.0);
-        vec3 groundIrradiance = radiance * exp(-groundOpticalDepth) * heightScale;
-        // Ground irradiance decreases as coverage increases.
+        vec3 groundIrradiance = radiance * exp(-groundOpticalDepth) * RECIPROCAL_PI;
+        // Higher ground irradiance for lower coverage.
         groundIrradiance *= 1.0 - coverage;
         radiance += albedo * groundIrradiance * groundIrradianceScale;
       }
