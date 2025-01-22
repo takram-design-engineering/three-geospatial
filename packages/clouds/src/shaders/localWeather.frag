@@ -33,7 +33,7 @@ void main() {
   {
     float worley = getWorleyFbm(
       point + vec3(0.5),
-      7.0, // frequency
+      8.0, // frequency
       0.4, // amplitude
       2.0, // lacunarity
       0.95, // gain
