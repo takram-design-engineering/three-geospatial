@@ -111,6 +111,9 @@ interface CloudsMaterialUniforms
   minStepSize: Uniform<number>
   maxStepSize: Uniform<number>
   maxRayDistance: Uniform<number>
+  minDensity: Uniform<number>
+  minExtinction: Uniform<number>
+  minTransmittance: Uniform<number>
 
   // Secondary raymarch
   maxSunIterations: Uniform<number>
@@ -125,7 +128,6 @@ interface CloudsMaterialUniforms
   shadowMatrices: Uniform<Matrix4[]>
   shadowFar: Uniform<number>
   shadowFilterRadius: Uniform<number>
-  maxShadowOpticalDepthScale: Uniform<number>
 }
 
 export interface CloudsMaterial {
@@ -233,12 +235,14 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ),
           shadowFar: new Uniform(0),
           shadowFilterRadius: new Uniform(6),
-          maxShadowOpticalDepthScale: new Uniform(1),
 
           // Shadow length
           maxShadowLengthIterations: new Uniform(500),
           minShadowLengthStepSize: new Uniform(50),
-          maxShadowLengthRayDistance: new Uniform(5e5)
+          maxShadowLengthRayDistance: new Uniform(5e5),
+          minDensity: new Uniform(1e-5),
+          minExtinction: new Uniform(1e-5),
+          minTransmittance: new Uniform(1e-2)
         } satisfies CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',

@@ -53,7 +53,6 @@ uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 uniform float shadowFilterRadius;
-uniform float maxShadowOpticalDepthScale;
 
 // Shadow length
 #ifdef SHADOW_LENGTH
@@ -144,23 +143,13 @@ vec3 sampleShadow(const vec3 rayPosition, vec2 offset) {
   return texture(shadowBuffer, vec3(uv + offset, float(index))).rgb;
 }
 
-float sampleShadowOpticalDepth(
-  const float distanceToTop,
-  const float scale,
-  const vec2 uv,
-  const int index
-) {
+float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const int index) {
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(index)));
-
-  // In Hillaire's presentation, optical depth is clamped to the max optical
-  // depth. While it is understandable, it lacks resolution in shadows
-  // compared to marched results with a very high number of iterations.
-  // https://blog.selfshadow.com/publications/s2020-shading-course/hillaire/s2020_pbs_hillaire_slides.pdf
-  return min(shadow.b * scale, shadow.g * max(0.0, distanceToTop - shadow.r));
+  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
-float sampleShadowOpticalDepth(const vec3 rayPosition, const float scale, const float radius) {
+float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
   // Ray position is relative to the ellipsoid.
   vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
   int index = getCascadeIndex(worldPosition);
@@ -183,29 +172,29 @@ float sampleShadowOpticalDepth(const vec3 rayPosition, const float scale, const 
     return 0.0;
   }
   if (radius < 0.1) {
-    return sampleShadowOpticalDepth(distanceToTop, scale, uv, index);
+    return sampleShadowOpticalDepth(distanceToTop, uv, index);
   }
   vec4 d1 = vec4(-shadowTexelSize.xy, shadowTexelSize.xy) * radius;
   vec4 d2 = d1 * 0.5;
   // prettier-ignore
   return (1.0 / 17.0) * (
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + d1.xy, index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(0.0, d1.y), index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + d1.zy, index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + d2.xy, index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(0.0, d2.y), index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + d2.zy, index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(d1.x, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(d2.x, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv, index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(d2.z, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(d1.z, 0.0), index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + d2.xw, index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(0.0, d2.w), index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + d2.zw, index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + d1.xw, index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + vec2(0.0, d1.w), index) +
-    sampleShadowOpticalDepth(distanceToTop, scale, uv + d1.zw, index)
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.xy, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.zy, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.xy, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.y), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.zy, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, 0.0), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.xw, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.zw, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.xw, index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.w), index) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.zw, index)
   );
 }
 
@@ -327,7 +316,6 @@ vec4 marchClouds(
       if (height < shadowTopHeight) {
         shadowOpticalDepth = sampleShadowOpticalDepth(
           position,
-          maxShadowOpticalDepthScale,
           // Apply PCF only when the sun is close to the horizon.
           shadowFilterRadius * saturate(remap(dot(sunDirection, surfaceNormal), 0.0, 0.1, 1.0, 0.0))
         );
@@ -417,7 +405,7 @@ float marchShadowLength(
     }
     vec3 position = rayDistance * rayDirection + rayOrigin;
 
-    float opticalDepth = sampleShadowOpticalDepth(position, 1.0, 0.0);
+    float opticalDepth = sampleShadowOpticalDepth(position, 0.0);
     // Hack to prevent over-integration of shadow length. The shadow should be
     // attenuated by the inscatter as the ray travels further.
     float attenuation = exp(-rayDistance * 1e-5);

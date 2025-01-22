@@ -68,6 +68,9 @@ interface ShadowMaterialUniforms
   maxIterations: Uniform<number>
   minStepSize: Uniform<number>
   maxStepSize: Uniform<number>
+  minDensity: Uniform<number>
+  minExtinction: Uniform<number>
+  minTransmittance: Uniform<number>
 }
 
 export interface ShadowMaterial {
@@ -134,7 +137,10 @@ export class ShadowMaterial extends RawShaderMaterial {
         // Primary raymarch
         maxIterations: new Uniform(50),
         minStepSize: new Uniform(100),
-        maxStepSize: new Uniform(1000)
+        maxStepSize: new Uniform(1000),
+        minDensity: new Uniform(1e-5),
+        minExtinction: new Uniform(1e-5),
+        minTransmittance: new Uniform(1e-4)
       } satisfies ShadowMaterialUniforms,
       defines: {
         SHAPE_DETAIL: '1',

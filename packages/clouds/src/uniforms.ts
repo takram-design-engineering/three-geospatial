@@ -12,11 +12,6 @@ export interface CloudParameterUniforms {
   shapeDetailTexture: Uniform<Texture | null>
   shapeDetailFrequency: Uniform<Vector3>
   shapeDetailOffset: Uniform<Vector3>
-
-  // Primary raymarch
-  minDensity: Uniform<number>
-  minExtinction: Uniform<number>
-  minTransmittance: Uniform<number>
 }
 
 export function createCloudParameterUniforms({
@@ -38,10 +33,7 @@ export function createCloudParameterUniforms({
     shapeOffset: new Uniform(new Vector3()),
     shapeDetailTexture: new Uniform(shapeDetailTexture),
     shapeDetailFrequency: new Uniform(new Vector3().setScalar(0.006)),
-    shapeDetailOffset: new Uniform(new Vector3()),
-    minDensity: new Uniform(1e-5),
-    minExtinction: new Uniform(1e-5),
-    minTransmittance: new Uniform(1e-2)
+    shapeDetailOffset: new Uniform(new Vector3())
   }
 }
 
