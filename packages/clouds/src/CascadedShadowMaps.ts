@@ -49,7 +49,7 @@ const boxScratch = /*#__PURE__*/ new Box3()
 export interface CascadedShadowMapsOptions {
   cascadeCount?: number
   mapSize?: Vector2
-  maxFar?: number
+  maxFar?: number | null
   farScale?: number
   splitMode?: FrustumSplitMode
   splitLambda?: number
@@ -60,7 +60,7 @@ export interface CascadedShadowMapsOptions {
 export const cascadedShadowMapsDefaults = {
   cascadeCount: 4,
   mapSize: new Vector2(1024, 1024),
-  maxFar: -1,
+  maxFar: null,
   farScale: 1,
   splitMode: 'practical',
   splitLambda: 0.5,
@@ -82,7 +82,7 @@ export class CascadedShadowMaps {
   readonly cascades: Cascade[] = []
 
   mapSize: Vector2
-  maxFar: number
+  maxFar: number | null
   farScale: number
   splitMode: FrustumSplitMode
   splitLambda: number
@@ -263,7 +263,7 @@ export class CascadedShadowMaps {
     distance?: number
   ): void {
     this._far =
-      this.maxFar > 0
+      this.maxFar != null
         ? Math.min(this.maxFar, camera.far * this.farScale)
         : camera.far * this.farScale
 
