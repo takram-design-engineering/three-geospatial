@@ -55,10 +55,11 @@ void cascade(const int cascadeIndex, out vec4 outputColor) {
   vec4 depthVelocity = getClosestFragment(coord);
   vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;
-  if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
-    outputColor = current;
-    return; // Rejection
-  }
+  // Consider it an useless branch
+  // if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
+  //   outputColor = current;
+  //   return; // Rejection
+  // }
 
   vec4 history = texture(historyBuffer, vec3(prevUv, float(cascadeIndex)));
   vec4 clippedHistory = varianceClipping(inputBuffer, coord, current, history, varianceGamma);
