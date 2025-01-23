@@ -171,17 +171,17 @@ export class CloudsEffect extends Effect {
     }
   ]
 
-  // Shared references
-  readonly ellipsoidCenter: Vector3
-  readonly ellipsoidMatrix: Matrix4
-  readonly sunDirection: Vector3
+  // These instances are shared by both cloud and shadow materials.
+  readonly ellipsoidCenter = new Vector3()
+  readonly ellipsoidMatrix = new Matrix4()
+  readonly sunDirection = new Vector3()
 
   // Atmosphere, weather and shape
-  readonly localWeather: LocalWeather
+  readonly localWeather = new LocalWeather()
   readonly localWeatherVelocity = new Vector2()
-  readonly shape: CloudShape
+  readonly shape = new CloudShape()
   readonly shapeVelocity = new Vector3()
-  readonly shapeDetail: CloudShapeDetail
+  readonly shapeDetail = new CloudShapeDetail()
   readonly shapeDetailVelocity = new Vector3()
 
   // Beer shadow map
@@ -224,51 +224,9 @@ export class CloudsEffect extends Effect {
       ...options
     }
 
-    const localWeather = new LocalWeather()
-    const shape = new CloudShape()
-    const shapeDetail = new CloudShapeDetail()
-
-    // These instances are shared by both cloud and shadow materials.
-    const ellipsoidCenter = new Vector3()
-    const ellipsoidMatrix = new Matrix4()
-    const sunDirection = new Vector3()
-
-    const shadowMaterial = new ShadowMaterial(
-      {
-        ellipsoidCenterRef: ellipsoidCenter,
-        ellipsoidMatrixRef: ellipsoidMatrix,
-        sunDirectionRef: sunDirection,
-        localWeatherTexture: localWeather.texture,
-        shapeTexture: shape.texture,
-        shapeDetailTexture: shapeDetail.texture
-      },
-      atmosphere
-    )
-    const cloudsMaterial = new CloudsMaterial(
-      {
-        ellipsoidCenterRef: ellipsoidCenter,
-        ellipsoidMatrixRef: ellipsoidMatrix,
-        sunDirectionRef: sunDirection,
-        localWeatherTexture: localWeather.texture,
-        shapeTexture: shape.texture,
-        shapeDetailTexture: shapeDetail.texture
-      },
-      atmosphere
-    )
-
     super('CloudsEffect', fragmentShader, {
       attributes: EffectAttribute.DEPTH
     })
-
-    // Shared references
-    this.ellipsoidCenter = ellipsoidCenter
-    this.ellipsoidMatrix = ellipsoidMatrix
-    this.sunDirection = sunDirection
-
-    // Atmosphere, weather and shape
-    this.localWeather = localWeather
-    this.shape = shape
-    this.shapeDetail = shapeDetail
 
     // Beer shadow map
     this.shadow = new CascadedShadowMaps({
@@ -276,15 +234,35 @@ export class CloudsEffect extends Effect {
       mapSize: new Vector2().setScalar(512),
       splitLambda: 0.6
     })
-    this.shadowMaterial = shadowMaterial
-    this.shadowPass = new ShaderArrayPass(shadowMaterial)
+    this.shadowMaterial = new ShadowMaterial(
+      {
+        ellipsoidCenterRef: this.ellipsoidCenter,
+        ellipsoidMatrixRef: this.ellipsoidMatrix,
+        sunDirectionRef: this.sunDirection,
+        localWeatherTexture: this.localWeather.texture,
+        shapeTexture: this.shape.texture,
+        shapeDetailTexture: this.shapeDetail.texture
+      },
+      atmosphere
+    )
+    this.shadowPass = new ShaderArrayPass(this.shadowMaterial)
     this.shadowResolveMaterial = new ShadowResolveMaterial()
     this.shadowResolvePass = new ShaderArrayPass(this.shadowResolveMaterial)
     this.initShadowRenderTargets()
 
     // Clouds
-    this.cloudsMaterial = cloudsMaterial
-    this.cloudsPass = new ShaderPass(cloudsMaterial)
+    this.cloudsMaterial = new CloudsMaterial(
+      {
+        ellipsoidCenterRef: this.ellipsoidCenter,
+        ellipsoidMatrixRef: this.ellipsoidMatrix,
+        sunDirectionRef: this.sunDirection,
+        localWeatherTexture: this.localWeather.texture,
+        shapeTexture: this.shape.texture,
+        shapeDetailTexture: this.shapeDetail.texture
+      },
+      atmosphere
+    )
+    this.cloudsPass = new ShaderPass(this.cloudsMaterial)
     this.cloudsResolveMaterial = new CloudsResolveMaterial()
     this.cloudsResolvePass = new ShaderPass(this.cloudsResolveMaterial)
     this.initCloudsRenderTargets({
@@ -545,7 +523,7 @@ export class CloudsEffect extends Effect {
     // Store the current view and projection matrices for the next reprojection.
     this.copyReprojectionParameters()
 
-    // Swap resolve and history render targets for the next frame.
+    // Swap resolve and history render targets for the next render.
     this.swapShadowBuffers()
     this.swapCloudsBuffers()
   }
