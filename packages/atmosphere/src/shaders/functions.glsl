@@ -285,6 +285,13 @@ vec3 GetSkyRadiance(
     : GetTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r, mu);
   vec3 single_mie_scattering;
   vec3 scattering;
+
+  // Hack to reduce shadow length near the horizon, as the sky with long shadow
+  // lengths should be occluded. A similar hack for the sun at the horizon is
+  // used in Bruneton's demo.
+  float shadow_length_fade = smoothstep(0.01, 0.035, abs(mu));
+  shadow_length *= shadow_length_fade;
+
   if (shadow_length == 0.0) {
     scattering = GetCombinedScattering(
       u_scattering_texture,
