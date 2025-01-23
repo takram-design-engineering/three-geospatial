@@ -27,7 +27,6 @@ import { ArrayCopyPass } from './ArrayCopyPass'
 import { CascadedShadowMaps } from './CascadedShadowMaps'
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
-import { CloudsHistoryMaterial } from './CloudsHistoryMaterial'
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsResolveMaterial } from './CloudsResolveMaterial'
 import { LocalWeather } from './LocalWeather'
@@ -197,15 +196,13 @@ export class CloudsEffect extends Effect {
   readonly shadowHistoryPass: ArrayCopyPass
 
   // Clouds
-  cloudsRenderTarget!: CloudsRenderTarget
+  private cloudsRenderTarget!: CloudsRenderTarget
   readonly cloudsMaterial: CloudsMaterial
   readonly cloudsPass: ShaderPass
-  cloudsResolveRenderTarget!: CloudsRenderTarget
+  private cloudsResolveRenderTarget!: CloudsRenderTarget
   readonly cloudsResolveMaterial: CloudsResolveMaterial
   readonly cloudsResolvePass: ShaderPass
-  cloudsHistoryRenderTarget!: CloudsRenderTarget
-  readonly cloudsHistoryMaterial: CloudsHistoryMaterial
-  readonly cloudsHistoryPass: ShaderPass
+  private cloudsHistoryRenderTarget!: CloudsRenderTarget
 
   readonly resolution: Resolution
   private frame = 0
@@ -305,8 +302,6 @@ export class CloudsEffect extends Effect {
     this.cloudsPass = new ShaderPass(cloudsMaterial)
     this.cloudsResolveMaterial = new CloudsResolveMaterial()
     this.cloudsResolvePass = new ShaderPass(this.cloudsResolveMaterial)
-    this.cloudsHistoryMaterial = new CloudsHistoryMaterial()
-    this.cloudsHistoryPass = new ShaderPass(this.cloudsHistoryMaterial)
     this.initCloudsRenderTargets({
       depthVelocity: true,
       shadowLength: false
@@ -335,15 +330,15 @@ export class CloudsEffect extends Effect {
     this.cloudsResolveRenderTarget?.dispose()
     this.cloudsHistoryRenderTarget?.dispose()
 
-    const current = createCloudsRenderTarget('Clouds.Current', {
+    const current = createCloudsRenderTarget('Clouds', {
       depthVelocity,
       shadowLength
     })
-    const resolve = createCloudsRenderTarget('Clouds.Resolve', {
+    const resolve = createCloudsRenderTarget('Clouds.A', {
       depthVelocity: false,
       shadowLength
     })
-    const history = createCloudsRenderTarget('Clouds.History', {
+    const history = createCloudsRenderTarget('Clouds.B', {
       depthVelocity: false,
       shadowLength
     })
@@ -358,10 +353,6 @@ export class CloudsEffect extends Effect {
     resolveUniforms.shadowLengthBuffer.value = current.shadowLength
     resolveUniforms.colorHistoryBuffer.value = history.texture
     resolveUniforms.shadowLengthHistoryBuffer.value = history.shadowLength
-
-    const historyUniforms = this.cloudsHistoryMaterial.uniforms
-    historyUniforms.colorBuffer.value = resolve.texture
-    historyUniforms.shadowLengthBuffer.value = resolve.shadowLength
   }
 
   private readonly onResolutionChange = (): void => {
@@ -388,7 +379,6 @@ export class CloudsEffect extends Effect {
     this.shadowHistoryPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsResolvePass.initialize(renderer, alpha, frameBufferType)
-    this.cloudsHistoryPass.initialize(renderer, alpha, frameBufferType)
   }
 
   private updateShadowMap(): void {
@@ -463,17 +453,7 @@ export class CloudsEffect extends Effect {
     this.cloudsMaterial.copyReprojectionMatrix(this.camera)
   }
 
-  override update(
-    renderer: WebGLRenderer,
-    inputBuffer: WebGLRenderTarget,
-    deltaTime = 0
-  ): void {
-    this.updateShadowMap()
-    this.localWeather.update(renderer)
-    this.shape.update(renderer)
-    this.shapeDetail.update(renderer)
-
-    // Update uniforms.
+  private updateParameters(deltaTime: number): void {
     ++this.frame
     const shadowUniforms = this.shadowMaterial.uniforms
     const cloudsUniforms = this.cloudsMaterial.uniforms
@@ -507,6 +487,30 @@ export class CloudsEffect extends Effect {
     this.shadowMaterial.copyCameraSettings(this.camera)
     this.cloudsMaterial.copyCameraSettings(this.camera)
     this.copyShadowParameters()
+  }
+
+  private swapBuffers(): void {
+    const nextResolve = this.cloudsHistoryRenderTarget
+    const nextHistory = this.cloudsResolveRenderTarget
+    this.cloudsResolveRenderTarget = nextResolve
+    this.cloudsHistoryRenderTarget = nextHistory
+
+    const resolveUniforms = this.cloudsResolveMaterial.uniforms
+    resolveUniforms.colorHistoryBuffer.value = nextHistory.texture
+    resolveUniforms.shadowLengthHistoryBuffer.value = nextHistory.shadowLength
+  }
+
+  override update(
+    renderer: WebGLRenderer,
+    inputBuffer: WebGLRenderTarget,
+    deltaTime = 0
+  ): void {
+    this.localWeather.update(renderer)
+    this.shape.update(renderer)
+    this.shapeDetail.update(renderer)
+
+    this.updateShadowMap()
+    this.updateParameters(deltaTime)
 
     // Render beer shadow map.
     const shadowResolveRenderTarget = this.shadowResolveRenderTarget
@@ -515,18 +519,12 @@ export class CloudsEffect extends Effect {
     this.shadowHistoryPass.render(renderer, shadowResolveRenderTarget, null)
 
     // Render clouds.
-    // TODO: Attempts have been made to use WebGLRenderer.copyTextureToTexture()
-    // instead of CopyPass, but none have been successful so far.
+    this.swapBuffers()
     this.cloudsPass.render(renderer, null, this.cloudsRenderTarget)
     this.cloudsResolvePass.render(
       renderer,
       null,
       this.cloudsResolveRenderTarget
-    )
-    this.cloudsHistoryPass.render(
-      renderer,
-      null,
-      this.cloudsHistoryRenderTarget
     )
 
     // Store the current view and projection matrices for the next reprojection.
@@ -585,7 +583,6 @@ export class CloudsEffect extends Effect {
     if (value !== this.shadowLength) {
       this.cloudsMaterial.shadowLength = value
       this.cloudsResolveMaterial.shadowLength = value
-      this.cloudsHistoryMaterial.shadowLength = value
       this.initCloudsRenderTargets({
         depthVelocity: true,
         shadowLength: value

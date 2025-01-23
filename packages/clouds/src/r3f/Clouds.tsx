@@ -53,23 +53,34 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     })
 
+    const cloudsBufferRef = useMemo(
+      () => new Uniform(effect.cloudsBuffer),
+      [] // eslint-disable-line react-hooks/exhaustive-deps
+    )
+    const shadowLengthBufferRef = useMemo(
+      () => new Uniform(effect.shadowLengthBuffer),
+      [] // eslint-disable-line react-hooks/exhaustive-deps
+    )
+    const shadowFarRef = useMemo(() => new Uniform(0), [])
+    const shadowTopHeightRef = useMemo(() => new Uniform(0), [])
+    useFrame(() => {
+      cloudsBufferRef.value = effect.cloudsBuffer
+      shadowLengthBufferRef.value = effect.shadowLengthBuffer
+      shadowFarRef.value = effect.shadow.far
+      shadowTopHeightRef.value = effect.shadowTopHeight
+    })
+
     const setComposite = useSetAtom(atoms.compositeAtom)
     useEffect(() => {
       setComposite({
-        map: effect.cloudsBuffer
+        map: cloudsBufferRef
       })
       return () => {
         setComposite(null)
       }
-    }, [others.shadowLength, effect, setComposite])
+    }, [effect, setComposite, cloudsBufferRef])
 
     const setShadow = useSetAtom(atoms.shadowAtom)
-    const shadowFarRef = useMemo(() => new Uniform(0), [])
-    const shadowTopHeightRef = useMemo(() => new Uniform(0), [])
-    useFrame(() => {
-      shadowFarRef.value = effect.shadow.far
-      shadowTopHeightRef.value = effect.shadowTopHeight
-    })
     useEffect(() => {
       setShadow({
         map: effect.shadowBuffer,
@@ -86,15 +97,16 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
 
     const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
     useEffect(() => {
-      if (effect.shadowLengthBuffer != null) {
+      if (effect.shadowLength) {
         setShadowLength({
-          map: effect.shadowLengthBuffer
+          // @ts-expect-error Ignore
+          map: shadowLengthBufferRef
         })
         return () => {
           setShadowLength(null)
         }
       }
-    }, [others.shadowLength, effect, setShadowLength])
+    }, [effect, effect.shadowLength, setShadowLength, shadowLengthBufferRef])
 
     return (
       <primitive
