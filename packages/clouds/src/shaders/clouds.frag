@@ -623,14 +623,12 @@ void main() {
   vec2 rayNearFar;
   vec2 shadowLengthRayNearFar;
   getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowLengthRayNearFar);
+  clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowLengthRayNearFar);
 
-  #ifdef SHADOW_LENGTH
   vec3 stbn = getSTBN();
-  #endif // SHADOW_LENGTH
 
   if (any(lessThan(rayNearFar, vec2(0.0)))) {
     #ifdef SHADOW_LENGTH
-    clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowLengthRayNearFar);
     if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
       outputShadowLength = marchShadowLength(
         shadowLengthRayNearFar.x * rayDirection + cameraPosition,
@@ -646,7 +644,6 @@ void main() {
     return; // Intersects with the ground, or no intersections.
   }
 
-  clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowLengthRayNearFar);
   if (rayNearFar.y < rayNearFar.x) {
     #ifdef SHADOW_LENGTH
     if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
@@ -688,10 +685,6 @@ void main() {
   float mipLevel = getMipLevel(globeUv * localWeatherFrequency) * mipLevelScale;
   mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
 
-  #ifndef SHADOW_LENGTH
-  vec3 stbn = getSTBN();
-  #endif // !defined(SHADOW_LENGTH)
-
   float frontDepth;
   vec4 color = marchClouds(
     rayOrigin,
@@ -704,13 +697,16 @@ void main() {
     frontDepth
   );
 
-  if (frontDepth > 0.0) {
-    frontDepth = rayNearFar.x + frontDepth;
-    // Clamp the shadow length ray at the clouds.
-    shadowLengthRayNearFar.y = min(frontDepth, shadowLengthRayNearFar.y);
-  } else {
-    frontDepth = rayNearFar.y;
-  }
+  // Front depth will be -1.0 when no samples are accumulated.
+  float frontDepthStep = step(0.0, frontDepth);
+  frontDepth = mix(rayNearFar.y, rayNearFar.x + frontDepth, frontDepthStep);
+
+  // Clamp the shadow length ray at the clouds.
+  shadowLengthRayNearFar.y = mix(
+    shadowLengthRayNearFar.y,
+    min(frontDepth, shadowLengthRayNearFar.y),
+    frontDepthStep
+  );
 
   #ifdef SHADOW_LENGTH
   if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
