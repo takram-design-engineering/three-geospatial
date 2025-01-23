@@ -61,7 +61,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       return () => {
         setComposite(null)
       }
-    }, [effect, setComposite])
+    }, [others.shadowLength, effect, setComposite])
 
     const setShadow = useSetAtom(atoms.shadowAtom)
     const shadowFarRef = useMemo(() => new Uniform(0), [])
