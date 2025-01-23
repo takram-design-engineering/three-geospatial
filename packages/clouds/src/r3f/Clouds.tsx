@@ -44,8 +44,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     }, [effect])
 
-    useFrame(({ camera }) => {
-      effect.mainCamera = camera // Copy camera settings
+    useFrame(() => {
       if (transientStates != null) {
         effect.sunDirection.copy(transientStates.sunDirection)
         effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
