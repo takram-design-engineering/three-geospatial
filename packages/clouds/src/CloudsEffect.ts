@@ -447,7 +447,7 @@ export class CloudsEffect extends Effect {
       cloudsUniforms.shapeOffset.value
     )
     applyVelocity(
-      this.localWeatherVelocity,
+      this.shapeDetailVelocity,
       deltaTime,
       shadowUniforms.shapeDetailOffset.value,
       cloudsUniforms.shapeDetailOffset.value

@@ -84,15 +84,14 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
 float sampleShape(WeatherSample weather, const vec3 position, const float mipLevel) {
   vec4 density = weather.density;
 
-  float shape = textureLod(shapeTexture, position * shapeFrequency + shapeOffset, 0.0).r;
+  float shape = texture(shapeTexture, position * shapeFrequency + shapeOffset).r;
   density = mix(density, saturate(remap(density, vec4(1.0 - shape), vec4(1.0))), detailAmounts);
 
   #ifdef SHAPE_DETAIL
   if (mipLevel < 0.5) {
-    float detail = textureLod(
+    float detail = texture(
       shapeDetailTexture,
-      position * shapeDetailFrequency + shapeDetailOffset,
-      0.0
+      position * shapeDetailFrequency + shapeDetailOffset
     ).r;
     // Fluffy at the top and whippy at the bottom.
     vec4 modifier = mix(
