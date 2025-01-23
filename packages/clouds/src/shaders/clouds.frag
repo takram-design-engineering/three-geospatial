@@ -197,6 +197,27 @@ vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   return reciprocalPi4 * ((1.0 - g2) / denom);
 }
 
+#ifdef ACCURATE_PHASE_FUNCTION
+
+float draine(float u, float g, float a) {
+  float g2 = g * g;
+  return (1.0 - g2) *
+  (1.0 + a * u * u) /
+  (4.0 * (1.0 + a * (1.0 + 2.0 * g2) / 3.0) * PI * pow(1.0 + g2 - 2.0 * g * u, 1.5));
+}
+
+// Reference: https://research.nvidia.com/labs/rtr/approximate-mie/
+float phaseFunction(const float cosTheta, const float attenuation) {
+  const vec2 gHG = vec2(0.18702876788543576);
+  const float gD = 0.5937905847209213;
+  const float alpha = 27.113693722212247;
+  const float weight = 0.4981594843291369;
+  return (1.0 - weight) * henyeyGreenstein(gHG * attenuation, cosTheta).x +
+  weight * draine(cosTheta, gD * attenuation, alpha);
+}
+
+#else // ACCURATE_PHASE_FUNCTION
+
 float phaseFunction(const float cosTheta, const float attenuation) {
   vec2 g = vec2(scatterAnisotropy1, scatterAnisotropy2);
   vec2 weights = vec2(1.0 - scatterAnisotropyMix, scatterAnisotropyMix);
@@ -204,6 +225,8 @@ float phaseFunction(const float cosTheta, const float attenuation) {
   // angle is attenuated instead of anisotropy.
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
+
+#endif // ACCURATE_PHASE_FUNCTION
 
 float marchOpticalDepth(
   const vec3 rayOrigin,
