@@ -706,7 +706,8 @@ void main() {
   shadowLengthRayNearFar.y = mix(
     shadowLengthRayNearFar.y,
     min(frontDepth, shadowLengthRayNearFar.y),
-    frontDepthStep
+    // Interpolate by the alpha for smoother edges.
+    frontDepthStep * color.a
   );
 
   #ifdef SHADOW_LENGTH
