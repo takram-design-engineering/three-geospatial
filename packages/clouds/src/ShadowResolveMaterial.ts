@@ -1,4 +1,10 @@
-import { GLSL3, RawShaderMaterial, Uniform, Vector2, type Texture } from 'three'
+import {
+  GLSL3,
+  RawShaderMaterial,
+  Uniform,
+  Vector2,
+  type DataArrayTexture
+} from 'three'
 
 import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 
@@ -7,14 +13,14 @@ import vertexShader from './shaders/shadowResolve.vert?raw'
 import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface ShadowResolveMaterialParameters {
-  inputBuffer?: Texture | null
-  historyBuffer?: Texture | null
+  inputBuffer?: DataArrayTexture | null
+  historyBuffer?: DataArrayTexture | null
 }
 
 export interface ShadowResolveMaterialUniforms {
   [key: string]: Uniform<unknown>
-  inputBuffer: Uniform<Texture | null>
-  historyBuffer: Uniform<Texture | null>
+  inputBuffer: Uniform<DataArrayTexture | null>
+  historyBuffer: Uniform<DataArrayTexture | null>
   texelSize: Uniform<Vector2>
   varianceGamma: Uniform<number>
   temporalAlpha: Uniform<number>

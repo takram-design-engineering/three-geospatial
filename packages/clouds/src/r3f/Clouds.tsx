@@ -57,17 +57,22 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       () => new Uniform(effect.cloudsBuffer),
       [] // eslint-disable-line react-hooks/exhaustive-deps
     )
-    const shadowLengthBufferRef = useMemo(
-      () => new Uniform(effect.shadowLengthBuffer),
+    const shadowBufferRef = useMemo(
+      () => new Uniform(effect.shadowBuffer),
       [] // eslint-disable-line react-hooks/exhaustive-deps
     )
     const shadowFarRef = useMemo(() => new Uniform(0), [])
     const shadowTopHeightRef = useMemo(() => new Uniform(0), [])
+    const shadowLengthBufferRef = useMemo(
+      () => new Uniform(effect.shadowLengthBuffer),
+      [] // eslint-disable-line react-hooks/exhaustive-deps
+    )
     useFrame(() => {
       cloudsBufferRef.value = effect.cloudsBuffer
-      shadowLengthBufferRef.value = effect.shadowLengthBuffer
+      shadowBufferRef.value = effect.shadowBuffer
       shadowFarRef.value = effect.shadow.far
       shadowTopHeightRef.value = effect.shadowTopHeight
+      shadowLengthBufferRef.value = effect.shadowLengthBuffer
     })
 
     const setComposite = useSetAtom(atoms.compositeAtom)
@@ -83,7 +88,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
     const setShadow = useSetAtom(atoms.shadowAtom)
     useEffect(() => {
       setShadow({
-        map: effect.shadowBuffer,
+        map: shadowBufferRef,
         mapSize: effect.shadow.mapSize,
         intervals: effect.shadowIntervals,
         matrices: effect.shadowMatrices,
@@ -93,7 +98,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       return () => {
         setShadow(null)
       }
-    }, [effect, setShadow, shadowFarRef, shadowTopHeightRef])
+    }, [effect, setShadow, shadowBufferRef, shadowFarRef, shadowTopHeightRef])
 
     const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
     useEffect(() => {
