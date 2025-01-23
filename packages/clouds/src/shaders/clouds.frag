@@ -72,11 +72,11 @@ layout(location = 1) out vec3 outputDepthVelocity;
 layout(location = 2) out float outputShadowLength;
 #endif // SHADOW_LENGTH
 
-vec3 getSTBN() {
+vec4 getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
   vec3 scale = 1.0 / vec3(size);
-  // xy: vec2, z: scalar
-  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).xyz;
+  // xy: vec2, z: vec1, w: scalar
+  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale);
 }
 
 float readDepth(const vec2 uv) {
@@ -635,7 +635,7 @@ void main() {
   getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowLengthRayNearFar);
   clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowLengthRayNearFar);
 
-  vec3 stbn = getSTBN();
+  vec4 stbn = getSTBN();
 
   if (any(lessThan(rayNearFar, vec2(0.0)))) {
     #ifdef SHADOW_LENGTH
@@ -644,7 +644,7 @@ void main() {
         shadowLengthRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
         shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
-        stbn.z
+        stbn.w
       );
     }
     #endif // SHADOW_LENGTH
@@ -661,7 +661,7 @@ void main() {
         shadowLengthRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
         shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
-        stbn.z
+        stbn.w
       );
     }
     #endif // SHADOW_LENGTH
@@ -700,8 +700,8 @@ void main() {
     rayOrigin,
     rayDirection,
     rayNearFar.y - rayNearFar.x,
-    stbn.z,
     stbn.xy,
+    stbn.w,
     pow(2.0, mipLevel),
     sunDirection,
     frontDepth
@@ -725,7 +725,7 @@ void main() {
       shadowLengthRayNearFar.x * rayDirection + cameraPosition,
       rayDirection,
       shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
-      stbn.z
+      stbn.w
     );
   }
   #endif // SHADOW_LENGTH

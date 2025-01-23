@@ -33,11 +33,11 @@ layout(location = 3) out vec3 outputDepthVelocity[CASCADE_COUNT];
 layout(location = 4) out vec3 outputDepthVelocity[CASCADE_COUNT];
 #endif // CASCADE_COUNT
 
-vec3 getSTBN() {
+vec4 getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
   vec3 scale = 1.0 / vec3(size);
-  // xy: vec2, z: scalar
-  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).xyz;
+  // xy: vec2, z: vec1, w: scalar
+  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale);
 }
 
 vec4 marchClouds(
@@ -154,8 +154,8 @@ void cascade(
   getRayNearFar(sunPosition, rayDirection, rayNear, rayFar);
 
   vec3 rayOrigin = rayNear * rayDirection + sunPosition;
-  vec3 stbn = getSTBN();
-  vec4 color = marchClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.z, mipLevel);
+  vec4 stbn = getSTBN();
+  vec4 color = marchClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.w, mipLevel);
 
   // Velocity for temporal resolution.
   vec3 frontPosition = color.x * rayDirection + rayOrigin;

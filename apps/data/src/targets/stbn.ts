@@ -14,27 +14,33 @@ export default async function (): Promise<void> {
     const vec2Image = sharp(
       `apps/data/data/STBN/stbn_vec2_2Dx1D_128x128x64_${depth}.png`
     )
+    const vec1Image = sharp(
+      `apps/data/data/STBN/stbn_vec1_2Dx1D_128x128x64_${depth}.png`
+    )
     const scalarImage = sharp(
       `apps/data/data/STBN/stbn_scalar_2Dx1Dx1D_128x128x64x1_${depth}.png`
     )
-    const [vec2x, vec2y, scalar] = await Promise.all([
+    const [vec2x, vec2y, vec1, scalar] = await Promise.all([
       vec2Image.extractChannel(0).raw({ depth: 'uchar' }).toBuffer(),
       vec2Image.extractChannel(1).raw({ depth: 'uchar' }).toBuffer(),
+      vec1Image.extractChannel(0).raw({ depth: 'uchar' }).toBuffer(),
       scalarImage.extractChannel(0).raw({ depth: 'uchar' }).toBuffer()
     ])
-    invariant(vec2x.byteLength === vec2y.byteLength)
-    invariant(vec2x.byteLength === scalar.byteLength)
-    invariant(vec2x.byteLength * 4 === bytesPerLayer)
+    const byteLength = scalar.byteLength
+    invariant(byteLength * 4 === bytesPerLayer)
+    invariant(vec2x.byteLength === byteLength)
+    invariant(vec2x.byteLength === byteLength)
+    invariant(vec1.byteLength === byteLength)
 
     for (
       let layerIndex = 0, resultIndex = bytesPerLayer * depth;
-      layerIndex < scalar.byteLength;
+      layerIndex < byteLength;
       ++layerIndex, resultIndex += 4
     ) {
       result[resultIndex + 0] = vec2x[layerIndex]
       result[resultIndex + 1] = vec2y[layerIndex]
-      result[resultIndex + 2] = scalar[layerIndex]
-      result[resultIndex + 3] = 255
+      result[resultIndex + 2] = vec1[layerIndex]
+      result[resultIndex + 3] = scalar[layerIndex]
     }
   }
   await writeFile('packages/clouds/assets/stbn.bin', result)
