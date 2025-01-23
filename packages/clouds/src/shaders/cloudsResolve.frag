@@ -104,14 +104,13 @@ void temporalUpscaling(
   vec4 depthVelocity = getClosestFragment(unjitteredUv);
   vec2 velocity = depthVelocity.gb * texelSize;
   vec2 prevUv = vUv - velocity;
-  // Consider it an useless branch
-  // if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
-  //   outputColor = currentColor;
-  //   #ifdef SHADOW_LENGTH
-  //   outputShadowLength = currentShadowLength.r;
-  //   #endif // SHADOW_LENGTH
-  //   return; // Rejection
-  // }
+  if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
+    outputColor = currentColor;
+    #ifdef SHADOW_LENGTH
+    outputShadowLength = currentShadowLength.r;
+    #endif // SHADOW_LENGTH
+    return; // Rejection
+  }
 
   // Variance clipping with a large variance gamma seems to work fine for
   // upsampling. This increases ghosting, of course, but it's hard to notice on
@@ -152,14 +151,13 @@ void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float out
   vec2 velocity = depthVelocity.gb * texelSize;
 
   vec2 prevUv = vUv - velocity;
-  // Consider it an useless branch
-  // if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
-  //   outputColor = currentColor;
-  //   #ifdef SHADOW_LENGTH
-  //   outputShadowLength = currentShadowLength.r;
-  //   #endif // SHADOW_LENGTH
-  //   return; // Rejection
-  // }
+  if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
+    outputColor = currentColor;
+    #ifdef SHADOW_LENGTH
+    outputShadowLength = currentShadowLength.r;
+    #endif // SHADOW_LENGTH
+    return; // Rejection
+  }
 
   vec4 historyColor = texture(colorHistoryBuffer, prevUv);
   vec4 clippedColor = varianceClipping(colorBuffer, coord, currentColor, historyColor);
