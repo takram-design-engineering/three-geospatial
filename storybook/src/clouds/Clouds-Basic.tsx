@@ -125,7 +125,7 @@ const Scene: FC = () => {
     'clouds',
     {
       enabled: true,
-      coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
+      coverage: { value: 0.35, min: 0, max: 1, step: 0.01 },
       animate: false,
       shapeDetail: true,
       shadowLength: true

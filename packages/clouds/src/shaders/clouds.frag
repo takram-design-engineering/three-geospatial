@@ -208,11 +208,11 @@ float draine(float u, float g, float a) {
 
 // Reference: https://research.nvidia.com/labs/rtr/approximate-mie/
 float phaseFunction(const float cosTheta, const float attenuation) {
-  const vec2 gHG = vec2(0.18702876788543576);
+  const float gHG = 0.18702876788543576;
   const float gD = 0.5937905847209213;
   const float alpha = 27.113693722212247;
   const float weight = 0.4981594843291369;
-  return (1.0 - weight) * henyeyGreenstein(gHG * attenuation, cosTheta).x +
+  return (1.0 - weight) * henyeyGreenstein(vec2(gHG) * attenuation, cosTheta).x +
   weight * draine(cosTheta, gD * attenuation, alpha);
 }
 
