@@ -249,6 +249,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         defines: {
           DEPTH_PACKING: '0',
           SHAPE_DETAIL: '1',
+          ACCURATE_PHASE_FUNCTION: '1',
           MULTI_SCATTERING_OCTAVES: '8',
           POWDER: '1',
           GROUND_IRRADIANCE: '1',
@@ -410,6 +411,21 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         this.defines.SHAPE_DETAIL = '1'
       } else {
         delete this.defines.SHAPE_DETAIL
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get accuratePhaseFunction(): boolean {
+    return this.defines.ACCURATE_PHASE_FUNCTION != null
+  }
+
+  set accuratePhaseFunction(value: boolean) {
+    if (value !== this.accuratePhaseFunction) {
+      if (value) {
+        this.defines.ACCURATE_PHASE_FUNCTION = '1'
+      } else {
+        delete this.defines.ACCURATE_PHASE_FUNCTION
       }
       this.needsUpdate = true
     }
