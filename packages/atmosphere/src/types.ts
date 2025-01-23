@@ -7,15 +7,15 @@ import {
 } from 'three'
 
 export interface AtmosphereComposite {
-  map: Texture
+  map: Texture | Uniform<Texture>
 }
 
 export interface AtmosphereShadowLength {
-  map: Texture
+  map: Texture | Uniform<Texture>
 }
 
 export interface AtmosphereShadow {
-  map: DataArrayTexture
+  map: DataArrayTexture | Uniform<DataArrayTexture>
   mapSize: Vector2
   intervals: Vector2[]
   matrices: Matrix4[]

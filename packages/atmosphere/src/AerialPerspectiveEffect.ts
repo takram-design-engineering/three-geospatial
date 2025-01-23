@@ -649,7 +649,7 @@ export class AerialPerspectiveEffect extends Effect {
   set composite(value: AtmosphereComposite | null) {
     if (value != null) {
       this.defines.set('HAS_COMPOSITE', '1')
-      this.uniforms.get('compositeBuffer').value = value.map
+      this.setUniform('compositeBuffer', value.map)
     } else {
       this.defines.delete('HAS_COMPOSITE')
       this.uniforms.get('compositeBuffer').value = null
@@ -662,7 +662,7 @@ export class AerialPerspectiveEffect extends Effect {
     if (value != null) {
       this.defines.set('HAS_SHADOW', '1')
       this.defines.set('SHADOW_CASCADE_COUNT', `${value.intervals.length}`)
-      this.uniforms.get('shadowBuffer').value = value.map
+      this.setUniform('shadowBuffer', value.map)
       this.uniforms.get('shadowMapSize').value.copy(value.mapSize)
       this.uniforms.get('shadowIntervals').value = value.intervals
       this.uniforms.get('shadowMatrices').value = value.matrices
@@ -679,7 +679,7 @@ export class AerialPerspectiveEffect extends Effect {
   set shadowLength(value: AtmosphereShadowLength | null) {
     if (value != null) {
       this.defines.set('HAS_SHADOW_LENGTH', '1')
-      this.uniforms.get('shadowLengthBuffer').value = value.map
+      this.setUniform('shadowLengthBuffer', value.map)
     } else {
       this.defines.delete('HAS_SHADOW_LENGTH')
       this.uniforms.get('shadowLengthBuffer').value = null
