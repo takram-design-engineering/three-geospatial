@@ -44,7 +44,6 @@ uniform float maxRayDistance;
 uniform int maxSunIterations;
 uniform int maxGroundIterations;
 uniform float secondaryStepSize;
-uniform float secondaryStepScale;
 
 // Beer shadow map
 uniform sampler2DArray shadowBuffer;
@@ -232,25 +231,28 @@ float marchOpticalDepth(
   const vec3 rayOrigin,
   const vec3 rayDirection,
   const int maxIterations,
-  const float mipLevel
+  const float mipLevel,
+  const float jitter
 ) {
   if (mipLevel > 0.75) {
     return 0.5; // Fudge factor to approximate the average optical depth.
   }
   int iterations = int(remap(mipLevel, 0.0, 0.75, float(maxIterations), 1.0));
   float stepSize = secondaryStepSize / float(iterations);
+  float rayDistance = stepSize * jitter;
   float opticalDepth = 0.0;
   float stepScale = 1.0;
   float prevStepScale = 0.0;
   for (int i = 0; i < iterations; ++i) {
-    vec3 position = stepSize * stepScale * rayDirection + rayOrigin;
+    vec3 position = rayDistance * rayDirection + rayOrigin;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
     float extinction = sampleShape(weather, position, mipLevel);
     opticalDepth += extinction * (stepScale - prevStepScale) * stepSize;
+    rayDistance += stepSize * stepScale;
     prevStepScale = stepScale;
-    stepScale *= secondaryStepScale;
+    stepScale *= 2.0;
   }
   return opticalDepth;
 }
@@ -336,7 +338,13 @@ vec4 marchClouds(
         );
       }
 
-      float opticalDepth = marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel);
+      float opticalDepth = marchOpticalDepth(
+        position,
+        sunDirection,
+        maxSunIterations,
+        mipLevel,
+        jitter
+      );
       vec3 albedoScattering = multipleScattering(opticalDepth + shadowOpticalDepth, cosTheta);
       vec3 scatteredIrradiance = albedoScattering * (sunIrradiance + skyIrradiance);
       vec3 radiance = scatteredIrradiance + albedo * skyIrradiance * skyIrradianceScale;
@@ -348,7 +356,8 @@ vec4 marchClouds(
           position,
           -surfaceNormal,
           maxGroundIterations,
-          mipLevel
+          mipLevel,
+          jitter
         );
         vec3 groundIrradiance = radiance * exp(-groundOpticalDepth) * RECIPROCAL_PI;
         // Higher ground irradiance for lower coverage.

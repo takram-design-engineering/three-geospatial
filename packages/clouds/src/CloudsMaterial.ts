@@ -117,7 +117,6 @@ export interface CloudsMaterialUniforms
   maxSunIterations: Uniform<number>
   maxGroundIterations: Uniform<number>
   secondaryStepSize: Uniform<number>
-  secondaryStepScale: Uniform<number>
 
   // Beer shadow map
   shadowBuffer: Uniform<DataArrayTexture | null>
@@ -225,8 +224,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Secondary raymarch
           maxSunIterations: new Uniform(3),
           maxGroundIterations: new Uniform(2),
-          secondaryStepSize: new Uniform(80),
-          secondaryStepScale: new Uniform(2),
+          secondaryStepSize: new Uniform(100),
 
           // Beer shadow map
           shadowBuffer: new Uniform(shadowBuffer),
