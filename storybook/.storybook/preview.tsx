@@ -9,6 +9,12 @@ const preview: Preview = {
   parameters: {
     controls: {
       disableSaveFromUI: true
+    },
+    options: {
+      storySort: {
+        method: 'alphabetical',
+        order: ['README', '*', ['README', '*']]
+      }
     }
   },
   decorators: [
