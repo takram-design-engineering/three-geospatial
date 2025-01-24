@@ -133,7 +133,7 @@ export class CloudsEffect extends Effect {
     {
       altitude: 750,
       height: 650,
-      extinctionCoefficient: 0.4,
+      extinctionCoefficient: 0.3,
       detailAmount: 1,
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
@@ -143,7 +143,7 @@ export class CloudsEffect extends Effect {
     {
       altitude: 1000,
       height: 1200,
-      extinctionCoefficient: 0.5,
+      extinctionCoefficient: 0.3,
       detailAmount: 1,
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
