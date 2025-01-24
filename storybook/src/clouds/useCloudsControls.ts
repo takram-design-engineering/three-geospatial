@@ -1,10 +1,20 @@
 import { useFrame } from '@react-three/fiber'
+import { folder } from 'leva'
 import { useEffect } from 'react'
 
-import { type CloudsEffect } from '@takram/three-clouds'
+import { type CloudLayer, type CloudsEffect } from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
 
 import { useControls } from '../helpers/useControls'
+
+type FlattenCloudLayer<Index extends number> = {
+  [K in keyof CloudLayer as `${K}${Index}`]: CloudLayer[K]
+}
+
+type FlatCloudLayers = FlattenCloudLayer<0> &
+  FlattenCloudLayer<1> &
+  FlattenCloudLayer<2> &
+  FlattenCloudLayer<3>
 
 export interface CloudsControlParams {
   enabled: boolean
@@ -14,7 +24,7 @@ export interface CloudsControlParams {
 }
 
 export function useCloudsControls(
-  clouds: CloudsEffect | null
+  effect: CloudsEffect | null
 ): [CloudsControlParams, Partial<CloudsProps>] {
   const { enabled, coverage, animate, shapeDetail, shadowLength } = useControls(
     'clouds',
@@ -33,7 +43,8 @@ export function useCloudsControls(
       temporalUpscaling: true,
       halfResolution: false,
       shadowMapSize: { value: 512, options: [256, 512, 1024] }
-    }
+    },
+    { collapsed: true }
   )
 
   const scatteringParams = useControls(
@@ -72,6 +83,54 @@ export function useCloudsControls(
     { collapsed: true }
   )
 
+  const cloudLayersParams = useControls(
+    'cloud layers',
+    effect?.cloudLayers.reduce(
+      (schema, layer, index) => ({
+        ...schema,
+        [`layer ${index}`]: folder(
+          {
+            [`altitude${index}`]: {
+              value: layer.altitude,
+              min: 0,
+              max: 10000
+            },
+            [`height${index}`]: {
+              value: layer.height,
+              min: 0,
+              max: 2000
+            },
+            [`extinctionCoefficient${index}`]: {
+              value: layer.extinctionCoefficient,
+              min: 0,
+              max: 1
+            },
+            [`detailAmount${index}`]: {
+              value: layer.detailAmount,
+              min: 0,
+              max: 1
+            },
+            [`weatherExponent${index}`]: {
+              value: layer.weatherExponent,
+              min: 0,
+              max: 3
+            },
+            [`coverageFilterWidth${index}`]: {
+              value: layer.coverageFilterWidth,
+              min: 0,
+              max: 1
+            },
+            [`shadow${index}`]: layer.shadow ?? false
+          },
+          { collapsed: index > 0 }
+        )
+      }),
+      {}
+    ) ?? {},
+    { collapsed: true },
+    [effect]
+  ) as FlatCloudLayers
+
   const {
     showShadowMap: debugShowShadowMap,
     showCascades: debugShowCascades,
@@ -83,7 +142,6 @@ export function useCloudsControls(
     {
       showShadowMap: false,
       showCascades: false,
-      showBox: false,
       showUv: false,
       showShadowLength: false,
       showVelocity: false
@@ -92,65 +150,71 @@ export function useCloudsControls(
   )
 
   useFrame(() => {
-    if (clouds == null) {
+    if (effect == null) {
       return
     }
     const { albedo, ...scalarScatteringParams } = scatteringParams
-    clouds.cloudsMaterial.uniforms.albedo.value.setScalar(albedo)
+    effect.cloudsMaterial.uniforms.albedo.value.setScalar(albedo)
     for (const key in scalarScatteringParams) {
-      clouds.cloudsMaterial.uniforms[key].value =
+      effect.cloudsMaterial.uniforms[key].value =
         scalarScatteringParams[key as keyof typeof scalarScatteringParams]
     }
     for (const key in cloudsRaymarchParams) {
-      clouds.cloudsMaterial.uniforms[key].value =
+      effect.cloudsMaterial.uniforms[key].value =
         cloudsRaymarchParams[key as keyof typeof cloudsRaymarchParams]
     }
     for (const key in shadowRaymarchParams) {
-      clouds.shadowMaterial.uniforms[key].value =
+      effect.shadowMaterial.uniforms[key].value =
         shadowRaymarchParams[key as keyof typeof shadowRaymarchParams]
+    }
+    for (const key in cloudLayersParams) {
+      const field = key.slice(0, -1)
+      const index = +key.slice(-1)
+      ;(effect.cloudLayers as any)[index][field] =
+        cloudLayersParams[key as keyof typeof cloudLayersParams]
     }
   })
 
   useEffect(() => {
-    if (clouds == null) {
+    if (effect == null) {
       return
     }
-    clouds.cloudsMaterial.useShapeDetail = shapeDetail
-  }, [clouds, shapeDetail])
+    effect.cloudsMaterial.useShapeDetail = shapeDetail
+  }, [effect, shapeDetail])
 
   useEffect(() => {
-    if (clouds == null) {
+    if (effect == null) {
       return
     }
     if (debugShowShadowMap) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+      effect.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
     } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+      delete effect.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
     }
     if (debugShowCascades) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'
+      effect.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'
     } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
+      delete effect.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
     }
     if (debugShowUv) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_UV = '1'
+      effect.cloudsMaterial.defines.DEBUG_SHOW_UV = '1'
     } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_UV
+      delete effect.cloudsMaterial.defines.DEBUG_SHOW_UV
     }
     if (debugShowShadowLength) {
-      clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
+      effect.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
     } else {
-      delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
+      delete effect.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
     }
     if (debugShowVelocity) {
-      clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
+      effect.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
     } else {
-      delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY
+      delete effect.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY
     }
-    clouds.cloudsMaterial.needsUpdate = true
-    clouds.cloudsResolveMaterial.needsUpdate = true
+    effect.cloudsMaterial.needsUpdate = true
+    effect.cloudsResolveMaterial.needsUpdate = true
   }, [
-    clouds,
+    effect,
     debugShowShadowMap,
     debugShowCascades,
     debugShowUv,

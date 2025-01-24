@@ -122,13 +122,17 @@ const Scene: FC = () => {
     '/clouds/stbn.bin'
   )
 
-  const { showBox: debugShowBox } = useControls('debug', { showBox: false })
-
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
   const [
     { enabled, debugShowUv, debugShowShadowMap, debugShowShadowLength },
     cloudsProps
   ] = useCloudsControls(clouds)
+
+  const { showBox: debugShowBox } = useControls(
+    'debug',
+    { showBox: false },
+    { collapsed: true }
+  )
 
   return (
     <>
