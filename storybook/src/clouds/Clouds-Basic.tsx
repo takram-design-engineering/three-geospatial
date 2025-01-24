@@ -153,7 +153,7 @@ const Scene: FC = () => {
       )}
       <Atmosphere
         ref={atmosphereRef}
-        textures='clouds'
+        textures='atmosphere'
         correctAltitude={correctAltitude}
         photometric={photometric}
       >
