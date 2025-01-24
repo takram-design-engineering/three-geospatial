@@ -349,7 +349,7 @@ vec4 marchClouds(
         jitter
       );
       float scattering = multipleScattering(opticalDepth + shadowOpticalDepth, cosTheta);
-      vec3 radiance = albedo * scattering * sunIrradiance;
+      vec3 radiance = albedo * scattering * (sunIrradiance + skyIrradiance);
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.

@@ -178,7 +178,7 @@ const Scene: FC<SceneProps> = ({
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
-          key={JSON.stringify({
+          key={JSON.stringify([
             enabled,
             sun,
             sky,
@@ -189,7 +189,7 @@ const Scene: FC<SceneProps> = ({
             normal,
             depth,
             lut
-          })}
+          ])}
         >
           {enabled && !normal && !depth && (
             <AerialPerspective

@@ -158,12 +158,7 @@ const Scene: FC = () => {
       >
         {/* <Stars data='atmosphere/stars.bin' /> */}
         <EffectComposer multisampling={0}>
-          <Fragment
-            key={JSON.stringify({
-              debugShowUv,
-              debugShowShadowMap
-            })}
-          >
+          <Fragment key={JSON.stringify([debugShowUv, debugShowShadowMap])}>
             <Clouds
               ref={setClouds}
               stbnTexture={stbnTexture}

@@ -69,6 +69,7 @@ import {
   useLocalDateControls,
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
+import { useCloudsControls } from './useCloudsControls'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -158,36 +159,6 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
 
-  const {
-    enabled,
-    coverage,
-    animate,
-    shadowMapSize,
-    shapeDetail,
-    powder,
-    shadowLength
-  } = useControls('clouds', {
-    enabled: true,
-    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 },
-    animate: true,
-    shadowMapSize: { value: 512, options: [256, 512, 1024] },
-    shapeDetail: true,
-    powder: true,
-    shadowLength: true
-  })
-
-  const {
-    showShadowMap: debugShowShadowMap,
-    showCascades: debugShowCascades,
-    showShadowLength: debugShowShadowLength,
-    showVelocity: debugShowVelocity
-  } = useControls('debug', {
-    showShadowMap: false,
-    showCascades: false,
-    showShadowLength: false,
-    showVelocity: false
-  })
-
   const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
     new PointOfView(distance, radians(heading), radians(pitch)).decompose(
@@ -232,50 +203,10 @@ const Scene: FC<SceneProps> = ({
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
-
-  useEffect(() => {
-    if (clouds == null) {
-      return
-    }
-    clouds.cloudsMaterial.useShapeDetail = shapeDetail
-    clouds.cloudsMaterial.usePowder = powder
-  }, [clouds, shapeDetail, powder])
-
-  useEffect(() => {
-    if (clouds == null) {
-      return
-    }
-    if (debugShowShadowMap) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
-      clouds.temporalUpscaling = false
-    } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
-      clouds.temporalUpscaling = true
-    }
-    if (debugShowCascades) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'
-    } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
-    }
-    if (debugShowShadowLength) {
-      clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
-    } else {
-      delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
-    }
-    if (debugShowVelocity) {
-      clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
-    } else {
-      delete clouds.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY
-    }
-    clouds.cloudsMaterial.needsUpdate = true
-    clouds.cloudsResolveMaterial.needsUpdate = true
-  }, [
-    clouds,
-    debugShowShadowMap,
-    debugShowCascades,
-    debugShowShadowLength,
-    debugShowVelocity
-  ])
+  const [
+    { enabled, debugShowUv, debugShowShadowMap, debugShowShadowLength },
+    cloudsProps
+  ] = useCloudsControls(clouds)
 
   return (
     <Atmosphere
@@ -288,17 +219,17 @@ const Scene: FC<SceneProps> = ({
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
-          key={JSON.stringify({
+          key={JSON.stringify([
             correctGeometricError,
             lensFlare,
             normal,
             depth,
             lut,
             enabled,
+            debugShowUv,
             debugShowShadowMap,
-            debugShowShadowLength,
-            debugShowVelocity
-          })}
+            debugShowShadowLength
+          ])}
         >
           {!normal && !depth && (
             <>
@@ -306,11 +237,8 @@ const Scene: FC<SceneProps> = ({
                 <Clouds
                   ref={setClouds}
                   stbnTexture={stbnTexture}
-                  coverage={coverage}
-                  localWeatherVelocity-x={animate ? 0.00001 : 0}
-                  shadow-mapSize={shadowMapSize}
                   shadow-farScale={0.25}
-                  shadowLength={shadowLength}
+                  {...cloudsProps}
                 />
               )}
               <AerialPerspective
@@ -322,22 +250,21 @@ const Scene: FC<SceneProps> = ({
               />
             </>
           )}
-          {!debugShowShadowMap &&
-            !debugShowShadowLength&& (
-              <>
-                {lensFlare && <LensFlare />}
-                {depth && <Depth useTurbo />}
-                {normal && <Normal />}
-                {!normal && !depth && (
-                  <>
-                    <ToneMapping mode={ToneMappingMode.AGX} />
-                    {lut != null && <HaldLUT path={lut} />}
-                    <SMAA />
-                    <Dithering />
-                  </>
-                )}
-              </>
-            )}
+          {!debugShowUv && !debugShowShadowMap && !debugShowShadowLength && (
+            <>
+              {lensFlare && <LensFlare />}
+              {depth && <Depth useTurbo />}
+              {normal && <Normal />}
+              {!normal && !depth && (
+                <>
+                  <ToneMapping mode={ToneMappingMode.AGX} />
+                  {lut != null && <HaldLUT path={lut} />}
+                  <SMAA />
+                  <Dithering />
+                </>
+              )}
+            </>
+          )}
         </Fragment>
       </EffectComposer>
     </Atmosphere>
