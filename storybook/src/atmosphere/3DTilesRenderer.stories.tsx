@@ -1,9 +1,9 @@
 import { type Meta, type StoryFn } from '@storybook/react'
 
-import { Story } from './PhotorealisticTiles-Story'
+import { Story } from './3DTilesRenderer-Story'
 
 export default {
-  title: 'atmosphere/Photorealistic Tiles',
+  title: 'atmosphere/3D Tiles Renderer',
   parameters: {
     layout: 'fullscreen'
   }
