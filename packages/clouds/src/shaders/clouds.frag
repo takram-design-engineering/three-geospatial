@@ -43,7 +43,7 @@ uniform float maxRayDistance;
 // Secondary raymarch
 uniform int maxSunIterations;
 uniform int maxGroundIterations;
-uniform float secondaryStepSize;
+uniform float minSecondaryStepSize;
 
 // Beer shadow map
 uniform sampler2DArray shadowBuffer;
@@ -241,7 +241,7 @@ float marchOpticalDepth(
     return 1.0;
   }
   int iterations = int(remap(mipLevel, 0.0, 0.75, float(maxIterations), 1.0));
-  float stepSize = secondaryStepSize / float(iterations);
+  float stepSize = minSecondaryStepSize / float(iterations);
   float rayDistance = stepSize * jitter;
   float opticalDepth = 0.0;
   float stepScale = 1.0;
