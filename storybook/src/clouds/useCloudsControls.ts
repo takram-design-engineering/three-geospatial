@@ -64,7 +64,7 @@ export function useCloudsControls(
       scatterAnisotropy2: { value: -0.2, min: -1, max: 0 },
       scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
       skyIrradianceScale: { value: 3, min: 0, max: 5 },
-      groundIrradianceScale: { value: 3, min: 0, max: 5 },
+      groundIrradianceScale: { value: 3, min: 0, max: 10 },
       powderScale: { value: 0.8, min: 0, max: 1 },
       powderExponent: { value: 150, min: 1, max: 1000 },
       shadowExtension: { value: 1.5, min: 1, max: 3 }
