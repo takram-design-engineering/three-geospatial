@@ -297,7 +297,7 @@ vec4 marchClouds(
   vec3 skyIrradiance;
 
   float stepSize = minStepSize;
-  float rayDistance = stepSize * jitter;
+  float rayDistance = stepSize * -jitter; // TODO: Clip in view space
   float cosTheta = dot(sunDirection, rayDirection);
 
   for (int i = 0; i < maxIterations; ++i) {
