@@ -168,17 +168,17 @@ export function useCloudsControls(
       return
     }
     const { albedo, ...scalarScatteringParams } = scatteringParams
-    effect.cloudsMaterial.uniforms.albedo.value.setScalar(albedo)
+    effect.cloudsPass.currentMaterial.uniforms.albedo.value.setScalar(albedo)
     for (const key in scalarScatteringParams) {
-      effect.cloudsMaterial.uniforms[key].value =
+      effect.cloudsPass.currentMaterial.uniforms[key].value =
         scalarScatteringParams[key as keyof typeof scalarScatteringParams]
     }
     for (const key in cloudsRaymarchParams) {
-      effect.cloudsMaterial.uniforms[key].value =
+      effect.cloudsPass.currentMaterial.uniforms[key].value =
         cloudsRaymarchParams[key as keyof typeof cloudsRaymarchParams]
     }
     for (const key in shadowRaymarchParams) {
-      effect.shadowMaterial.uniforms[key].value =
+      effect.shadowPass.currentMaterial.uniforms[key].value =
         shadowRaymarchParams[key as keyof typeof shadowRaymarchParams]
     }
     for (const key in cloudLayersParams) {
@@ -193,7 +193,7 @@ export function useCloudsControls(
     if (effect == null) {
       return
     }
-    effect.cloudsMaterial.useShapeDetail = shapeDetail
+    effect.cloudsPass.currentMaterial.useShapeDetail = shapeDetail
   }, [effect, shapeDetail])
 
   useEffect(() => {
@@ -201,32 +201,32 @@ export function useCloudsControls(
       return
     }
     if (debugShowShadowMap) {
-      effect.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
     } else {
-      delete effect.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP
     }
     if (debugShowCascades) {
-      effect.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES = '1'
     } else {
-      delete effect.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES
     }
     if (debugShowUv) {
-      effect.cloudsMaterial.defines.DEBUG_SHOW_UV = '1'
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV = '1'
     } else {
-      delete effect.cloudsMaterial.defines.DEBUG_SHOW_UV
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV
     }
     if (debugShowShadowLength) {
-      effect.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
+      effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
     } else {
-      delete effect.cloudsResolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
+      delete effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
     }
     if (debugShowVelocity) {
-      effect.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
+      effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
     } else {
-      delete effect.cloudsResolveMaterial.defines.DEBUG_SHOW_VELOCITY
+      delete effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY
     }
-    effect.cloudsMaterial.needsUpdate = true
-    effect.cloudsResolveMaterial.needsUpdate = true
+    effect.cloudsPass.currentMaterial.needsUpdate = true
+    effect.cloudsPass.resolveMaterial.needsUpdate = true
   }, [
     effect,
     debugShowShadowMap,

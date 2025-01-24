@@ -46,6 +46,16 @@ const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 const frustumScratch = /*#__PURE__*/ new FrustumCorners()
 const boxScratch = /*#__PURE__*/ new Box3()
 
+export interface Cascade {
+  readonly interval: Vector2
+  readonly matrix: Matrix4
+  readonly inverseMatrix: Matrix4
+  readonly projectionMatrix: Matrix4
+  readonly inverseProjectionMatrix: Matrix4
+  readonly viewMatrix: Matrix4
+  readonly inverseViewMatrix: Matrix4
+}
+
 export interface CascadedShadowMapsOptions {
   cascadeCount?: number
   mapSize?: Vector2
@@ -67,16 +77,6 @@ export const cascadedShadowMapsDefaults = {
   margin: 0,
   fade: true
 } satisfies Partial<CascadedShadowMapsOptions>
-
-export interface Cascade {
-  readonly interval: Vector2
-  readonly matrix: Matrix4
-  readonly inverseMatrix: Matrix4
-  readonly projectionMatrix: Matrix4
-  readonly inverseProjectionMatrix: Matrix4
-  readonly viewMatrix: Matrix4
-  readonly inverseViewMatrix: Matrix4
-}
 
 export class CascadedShadowMaps {
   readonly cascades: Cascade[] = []
