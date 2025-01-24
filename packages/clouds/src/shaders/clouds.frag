@@ -265,7 +265,7 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
   // See: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
   // a: attenuation, b: contribution, c: phase attenuation
   vec3 coeffs = vec3(1.0); // [a, b, c]
-  const vec3 attenuation = vec3(0.5, 0.5, 0.8); // Should satisfy a <= b
+  const vec3 attenuation = vec3(0.5, 0.5, 0.5); // Should satisfy a <= b
   float scattering = 0.0;
   float beerLambert;
   #pragma unroll_loop_start
