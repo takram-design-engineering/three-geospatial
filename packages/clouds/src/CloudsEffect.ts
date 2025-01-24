@@ -32,7 +32,8 @@ import { LocalWeather } from './LocalWeather'
 import { ShaderArrayPass } from './ShaderArrayPass'
 import { ShadowMaterial } from './ShadowMaterial'
 import { ShadowResolveMaterial } from './ShadowResolveMaterial'
-import { updateCloudLayerUniforms, type CloudLayers } from './uniforms'
+import { type CloudLayers } from './types'
+import { updateCloudLayerUniforms } from './uniforms'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
 
@@ -130,8 +131,8 @@ export const cloudsEffectOptionsDefaults = {
 export class CloudsEffect extends Effect {
   readonly cloudLayers: CloudLayers = [
     {
-      minHeight: 750,
-      maxHeight: 1400,
+      altitude: 750,
+      height: 650,
       extinctionCoefficient: 0.4,
       detailAmount: 1,
       weatherExponent: 1,
@@ -139,8 +140,8 @@ export class CloudsEffect extends Effect {
       shadow: true
     },
     {
-      minHeight: 1000,
-      maxHeight: 2400,
+      altitude: 1000,
+      height: 1400,
       extinctionCoefficient: 0.5,
       detailAmount: 1,
       weatherExponent: 1,
@@ -148,26 +149,20 @@ export class CloudsEffect extends Effect {
       shadow: true
     },
     {
-      minHeight: 0,
-      maxHeight: 0,
-      extinctionCoefficient: 0,
-      detailAmount: 0,
+      altitude: 7500,
+      height: 1500,
+      extinctionCoefficient: 0.002,
+      detailAmount: 0.8,
       weatherExponent: 1,
-      coverageFilterWidth: 0.0
-      // minHeight: 7500,
-      // maxHeight: 9000,
-      // extinctionCoefficient: 0.002,
-      // detailAmount: 0.8,
-      // weatherExponent: 1,
-      // coverageFilterWidth: 0.5
+      coverageFilterWidth: 0.5
     },
     {
-      minHeight: 0,
-      maxHeight: 0,
+      altitude: 0,
+      height: 0,
       extinctionCoefficient: 0,
       detailAmount: 0,
       weatherExponent: 1,
-      coverageFilterWidth: 0.0
+      coverageFilterWidth: 0
     }
   ]
 
