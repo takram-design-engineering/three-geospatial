@@ -280,7 +280,7 @@ const Scene: FC<SceneProps> = ({
   return (
     <Atmosphere
       ref={atmosphereRef}
-      textures='atmosphere'
+      textures='clouds'
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
