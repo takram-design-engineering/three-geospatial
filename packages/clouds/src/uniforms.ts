@@ -45,6 +45,7 @@ export interface CloudLayerUniforms {
   extinctionCoefficients: Uniform<Vector4>
   detailAmounts: Uniform<Vector4>
   weatherExponents: Uniform<Vector4>
+  shapeAlteringBiases: Uniform<Vector4>
   coverageFilterWidths: Uniform<Vector4>
   minHeight: Uniform<number>
   maxHeight: Uniform<number>
@@ -59,6 +60,7 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
     extinctionCoefficients: new Uniform(new Vector4()),
     detailAmounts: new Uniform(new Vector4()),
     weatherExponents: new Uniform(new Vector4()),
+    shapeAlteringBiases: new Uniform(new Vector4()),
     coverageFilterWidths: new Uniform(new Vector4()),
     minHeight: new Uniform(0),
     maxHeight: new Uniform(0),
@@ -94,6 +96,7 @@ export function updateCloudLayerUniforms(
   packVector(layers, 'extinctionCoefficient', uniforms.extinctionCoefficients)
   packVector(layers, 'detailAmount', uniforms.detailAmounts)
   packVector(layers, 'weatherExponent', uniforms.weatherExponents)
+  packVector(layers, 'shapeAlteringBias', uniforms.shapeAlteringBiases)
   packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths)
 
   let totalMinHeight = Infinity

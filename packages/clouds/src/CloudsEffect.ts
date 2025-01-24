@@ -136,15 +136,17 @@ export class CloudsEffect extends Effect {
       extinctionCoefficient: 0.4,
       detailAmount: 1,
       weatherExponent: 1,
+      shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.6,
       shadow: true
     },
     {
       altitude: 1000,
-      height: 1400,
+      height: 1200,
       extinctionCoefficient: 0.5,
       detailAmount: 1,
       weatherExponent: 1,
+      shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.6,
       shadow: true
     },
@@ -154,6 +156,7 @@ export class CloudsEffect extends Effect {
       extinctionCoefficient: 0.002,
       detailAmount: 0.8,
       weatherExponent: 1,
+      shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.5
     },
     {
@@ -162,6 +165,7 @@ export class CloudsEffect extends Effect {
       extinctionCoefficient: 0,
       detailAmount: 0,
       weatherExponent: 1,
+      shapeAlteringBias: 0.35,
       coverageFilterWidth: 0
     }
   ]

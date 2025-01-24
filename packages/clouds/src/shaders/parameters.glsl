@@ -28,6 +28,7 @@ uniform vec4 maxLayerHeights;
 uniform vec4 extinctionCoefficients;
 uniform vec4 detailAmounts;
 uniform vec4 weatherExponents;
+uniform vec4 shapeAlteringBiases;
 uniform vec4 coverageFilterWidths;
 uniform float minHeight;
 uniform float maxHeight;

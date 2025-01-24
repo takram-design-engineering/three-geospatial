@@ -54,9 +54,9 @@ struct WeatherSample {
   vec4 density;
 };
 
-vec4 shapeAlteringFunction(const vec4 heightFraction, const float bias) {
+vec4 shapeAlteringFunction(const vec4 heightFraction, const vec4 bias) {
   // Apply a semi-circle transform to round the clouds towards the top.
-  vec4 biased = pow(heightFraction, vec4(bias));
+  vec4 biased = pow(heightFraction, bias);
   vec4 x = clamp(biased * 2.0 - 1.0, -1.0, 1.0);
   return 1.0 - x * x;
 }
@@ -69,7 +69,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
     textureLod(localWeatherTexture, uv * localWeatherFrequency, mipLevel),
     weatherExponents
   );
-  vec4 heightScale = shapeAlteringFunction(weather.heightFraction, 0.35);
+  vec4 heightScale = shapeAlteringFunction(weather.heightFraction, shapeAlteringBiases);
 
   // Modulation to control weather by coverage parameter.
   // Reference: https://github.com/Prograda/Skybolt/blob/master/Assets/Core/Shaders/Clouds.h#L63

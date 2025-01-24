@@ -4,6 +4,7 @@ export interface CloudLayer {
   extinctionCoefficient: number
   detailAmount: number
   weatherExponent: number
+  shapeAlteringBias: number
   coverageFilterWidth: number
   shadow?: boolean
 }

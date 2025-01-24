@@ -115,6 +115,11 @@ export function useCloudsControls(
               min: 0,
               max: 3
             },
+            [`shapeAlteringBias${index}`]: {
+              value: layer.shapeAlteringBias,
+              min: 0,
+              max: 1
+            },
             [`coverageFilterWidth${index}`]: {
               value: layer.coverageFilterWidth,
               min: 0,
