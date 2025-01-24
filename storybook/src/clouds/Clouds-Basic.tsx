@@ -150,8 +150,9 @@ const Scene: FC = () => {
       scatterAnisotropy1: { value: 0.7, min: 0, max: 1 },
       scatterAnisotropy2: { value: -0.2, min: -1, max: 0 },
       scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
-      skyIrradianceScale: { value: 0.3, min: 0, max: 0.5 },
-      groundIrradianceScale: { value: 1, min: 0, max: 1 }
+      skyIrradianceScale: { value: 0.95, min: 0, max: 1 },
+      groundIrradianceScale: { value: 0.5, min: 0, max: 1 },
+      shadowExtension: { value: 3, min: 1, max: 10 },
     },
     { collapsed: true }
   )

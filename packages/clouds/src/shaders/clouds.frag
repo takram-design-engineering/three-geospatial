@@ -52,6 +52,7 @@ uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 uniform float shadowFilterRadius;
+uniform float shadowExtension;
 
 // Shadow length
 #ifdef SHADOW_LENGTH
@@ -141,7 +142,7 @@ vec3 getCascadeColor(const vec3 rayPosition) {
 float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const int cascadeIndex) {
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
-  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
+  return min(shadow.b * shadowExtension, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
 float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
@@ -235,7 +236,9 @@ float marchOpticalDepth(
   const float jitter
 ) {
   if (mipLevel > 0.75) {
-    return 0.5; // Fudge factor to approximate the average optical depth.
+    // Fudge factor to approximate the mean optical depth.
+    // TODO: Remove it.
+    return 1.0;
   }
   int iterations = int(remap(mipLevel, 0.0, 0.75, float(maxIterations), 1.0));
   float stepSize = secondaryStepSize / float(iterations);
@@ -257,19 +260,19 @@ float marchOpticalDepth(
   return opticalDepth;
 }
 
-vec3 multipleScattering(const float opticalDepth, const float cosTheta) {
+float multipleScattering(const float opticalDepth, const float cosTheta) {
   // Multiple scattering approximation
   // See: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
   // a: attenuation, b: contribution, c: phase attenuation
   vec3 coeffs = vec3(1.0); // [a, b, c]
   const vec3 attenuation = vec3(0.5, 0.5, 0.8); // Should satisfy a <= b
-  vec3 scattering = vec3(0.0);
+  float scattering = 0.0;
   float beerLambert;
   #pragma unroll_loop_start
   for (int i = 0; i < 12; ++i) {
     #if UNROLLED_LOOP_INDEX < MULTI_SCATTERING_OCTAVES
     beerLambert = exp(-opticalDepth * coeffs.y);
-    scattering += albedo * coeffs.x * beerLambert * phaseFunction(cosTheta, coeffs.z);
+    scattering += coeffs.x * beerLambert * phaseFunction(cosTheta, coeffs.z);
     coeffs *= attenuation;
     #endif // UNROLLED_LOOP_INDEX < MULTI_SCATTERING_OCTAVES
   }
@@ -282,7 +285,6 @@ vec4 marchClouds(
   const vec3 rayDirection,
   const float maxRayDistance,
   const float jitter,
-  const vec2 jitterVec2,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
   out float frontDepth
@@ -345,9 +347,8 @@ vec4 marchClouds(
         mipLevel,
         jitter
       );
-      vec3 albedoScattering = multipleScattering(opticalDepth + shadowOpticalDepth, cosTheta);
-      vec3 scatteredIrradiance = albedoScattering * (sunIrradiance + skyIrradiance);
-      vec3 radiance = scatteredIrradiance + albedo * skyIrradiance * skyIrradianceScale;
+      float scattering = multipleScattering(opticalDepth + shadowOpticalDepth, cosTheta);
+      vec3 radiance = albedo * scattering * sunIrradiance;
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
@@ -359,12 +360,17 @@ vec4 marchClouds(
           mipLevel,
           jitter
         );
-        vec3 groundIrradiance = radiance * exp(-groundOpticalDepth) * RECIPROCAL_PI;
+        // Note that this sky and sun irradiance is not for the ground.
+        vec3 bouncedLight = 0.1 * RECIPROCAL_PI * (skyIrradiance + sunIrradiance);
+        vec3 groundIrradiance = bouncedLight * exp(-groundOpticalDepth);
         // Higher ground irradiance for lower coverage.
         groundIrradiance *= 1.0 - coverage;
-        radiance += albedo * groundIrradiance * groundIrradianceScale;
+        radiance += albedo * RECIPROCAL_PI * groundIrradiance * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
+
+      // TODO: Take ambient occlusion into account.
+      radiance += albedo * RECIPROCAL_PI * skyIrradiance * skyIrradianceScale;
 
       radiance *= extinction;
 
@@ -420,11 +426,9 @@ float marchShadowLength(
 ) {
   float shadowLength = 0.0;
   float stepSize = minShadowLengthStepSize;
-  float rayDistance = 0.0;
+  float rayDistance = stepSize * jitter;
   const float attenuationFactor = 1.0 - 1e-3;
   float attenuation = 1.0;
-
-  rayDistance -= stepSize * jitter;
 
   for (int i = 0; i < maxShadowLengthIterations; ++i) {
     if (rayDistance > maxRayDistance) {
@@ -700,7 +704,6 @@ void main() {
     rayOrigin,
     rayDirection,
     rayNearFar.y - rayNearFar.x,
-    stbn.xy,
     stbn.w,
     pow(2.0, mipLevel),
     sunDirection,
