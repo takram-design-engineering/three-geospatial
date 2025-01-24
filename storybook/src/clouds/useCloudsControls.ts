@@ -24,14 +24,23 @@ export interface CloudsControlParams {
 }
 
 export function useCloudsControls(
-  effect: CloudsEffect | null
+  effect: CloudsEffect | null,
+  {
+    coverage: defaultCoverage,
+    animate: defaultAnimate,
+    localWeatherVelocity: defaultLocalWeatherVelocity
+  }: {
+    coverage?: number
+    animate?: boolean
+    localWeatherVelocity?: number
+  } = {}
 ): [CloudsControlParams, Partial<CloudsProps>] {
   const { enabled, coverage, animate, shapeDetail, shadowLength } = useControls(
     'clouds',
     {
       enabled: true,
-      coverage: { value: 0.35, min: 0, max: 1, step: 0.01 },
-      animate: false,
+      coverage: { value: defaultCoverage ?? 0.3, min: 0, max: 1, step: 0.01 },
+      animate: defaultAnimate ?? false,
       shapeDetail: true,
       shadowLength: true
     }
@@ -54,11 +63,11 @@ export function useCloudsControls(
       scatterAnisotropy1: { value: 0.7, min: 0, max: 1 },
       scatterAnisotropy2: { value: -0.2, min: -1, max: 0 },
       scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
-      skyIrradianceScale: { value: 0.95, min: 0, max: 1 },
-      groundIrradianceScale: { value: 0.5, min: 0, max: 1 },
-      powderScale: { value: 0.8, min: 0.5, max: 1 },
-      powderExponent: { value: 100, min: 1, max: 1000 },
-      shadowExtension: { value: 3, min: 1, max: 10 }
+      skyIrradianceScale: { value: 3, min: 0, max: 5 },
+      groundIrradianceScale: { value: 3, min: 0, max: 5 },
+      powderScale: { value: 0.8, min: 0, max: 1 },
+      powderExponent: { value: 150, min: 1, max: 1000 },
+      shadowExtension: { value: 1.5, min: 1, max: 3 }
     },
     { collapsed: true }
   )
@@ -238,7 +247,9 @@ export function useCloudsControls(
       coverage,
       temporalUpscaling,
       'resolution-scale': halfResolution ? 0.5 : 1,
-      localWeatherVelocity: animate ? [0.00005, 0] : [0, 0],
+      localWeatherVelocity: animate
+        ? [defaultLocalWeatherVelocity ?? 0.00005, 0]
+        : [0, 0],
       'shadow-mapSize': [shadowMapSize, shadowMapSize],
       shadowLength
     }

@@ -206,7 +206,11 @@ const Scene: FC<SceneProps> = ({
   const [
     { enabled, debugShowUv, debugShowShadowMap, debugShowShadowLength },
     cloudsProps
-  ] = useCloudsControls(clouds)
+  ] = useCloudsControls(clouds, {
+    coverage: 0.3,
+    animate: true,
+    localWeatherVelocity: 0.00001
+  })
 
   return (
     <Atmosphere

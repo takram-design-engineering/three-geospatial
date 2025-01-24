@@ -207,10 +207,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           scatterAnisotropy1: new Uniform(0.7),
           scatterAnisotropy2: new Uniform(-0.2),
           scatterAnisotropyMix: new Uniform(0.5),
-          skyIrradianceScale: new Uniform(0.95),
-          groundIrradianceScale: new Uniform(0.5),
+          skyIrradianceScale: new Uniform(3),
+          groundIrradianceScale: new Uniform(3),
+          scatteringScale: new Uniform(1.1),
           powderScale: new Uniform(0.8),
-          powderExponent: new Uniform(100),
+          powderExponent: new Uniform(150),
 
           // Primary raymarch
           maxIterations: new Uniform(500),
@@ -237,7 +238,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ),
           shadowFar: new Uniform(0),
           shadowFilterRadius: new Uniform(6),
-          shadowExtension: new Uniform(3),
+          shadowExtension: new Uniform(1.5),
 
           // Shadow length
           maxShadowLengthIterations: new Uniform(500),

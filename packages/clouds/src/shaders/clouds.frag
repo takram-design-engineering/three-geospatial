@@ -14,6 +14,10 @@ precision highp sampler2DArray;
 #include "parameters"
 #include "clouds"
 
+#ifndef RECIPROCAL_PI4
+#define RECIPROCAL_PI4 (0.07957747154594767)
+#endif // RECIPROCAL_PI4
+
 uniform sampler2D depthBuffer;
 uniform mat4 viewMatrix;
 uniform mat4 reprojectionMatrix;
@@ -31,6 +35,7 @@ uniform float scatterAnisotropy2;
 uniform float scatterAnisotropyMix;
 uniform float skyIrradianceScale;
 uniform float groundIrradianceScale;
+uniform float scatteringScale;
 uniform float powderScale;
 uniform float powderExponent;
 
@@ -192,9 +197,8 @@ float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   vec2 g2 = g * g;
-  const float reciprocalPi4 = 0.07957747154594767;
   vec2 denom = max(vec2(1e-7), pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
-  return reciprocalPi4 * ((1.0 - g2) / denom);
+  return RECIPROCAL_PI4 * ((1.0 - g2) / denom);
 }
 
 #ifdef ACCURATE_PHASE_FUNCTION
@@ -293,8 +297,6 @@ vec4 marchClouds(
   float transmittanceIntegral = 1.0;
   float weightedDistanceSum = 0.0;
   float transmittanceSum = 0.0;
-  vec3 sunIrradiance;
-  vec3 skyIrradiance;
 
   float stepSize = minStepSize;
   // I don't understand why spatial aliasing remains unless doubling the jitter.
@@ -324,7 +326,8 @@ vec4 marchClouds(
     // Sample a detailed extinction.
     float extinction = sampleShape(weather, position, mipLevel);
     if (extinction > minExtinction) {
-      sunIrradiance = GetSunAndSkyIrradiance(
+      vec3 skyIrradiance;
+      vec3 sunIrradiance = GetSunAndSkyIrradiance(
         position * METER_TO_LENGTH_UNIT,
         sunDirection,
         skyIrradiance
@@ -332,47 +335,52 @@ vec4 marchClouds(
       vec3 surfaceNormal = normalize(position);
 
       // Obtain the optical depth at the position from BSM.
-      float shadowOpticalDepth = 0.0;
+      float opticalDepth = 0.0;
       if (height < shadowTopHeight) {
-        shadowOpticalDepth = sampleShadowOpticalDepth(
+        opticalDepth += sampleShadowOpticalDepth(
           position,
           // Apply PCF only when the sun is close to the horizon.
           shadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1))
         );
       }
 
-      float opticalDepth = marchOpticalDepth(
-        position,
-        sunDirection,
-        maxSunIterations,
-        mipLevel,
-        jitter
-      );
-      float scattering = multipleScattering(opticalDepth + shadowOpticalDepth, cosTheta);
+      opticalDepth += marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel, jitter);
+      // scatteringScale compensates for the missing energy due to ignoring
+      // higher-order multiple scattering octaves.
+      float scattering = multipleScattering(opticalDepth, cosTheta) * scatteringScale;
+      // I’m not sure skyIrradiance should be included in the scattering term.
       vec3 radiance = albedo * scattering * (sunIrradiance + skyIrradiance);
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (height < shadowTopHeight && mipLevel < 0.5) {
-        float groundOpticalDepth = marchOpticalDepth(
+        float opticalDepthToGround = marchOpticalDepth(
           position,
           -surfaceNormal,
           maxGroundIterations,
           mipLevel,
           jitter
         );
-        // Note that this sky and sun irradiance is not for the ground.
-        vec3 bouncedLight = 0.1 * RECIPROCAL_PI * (skyIrradiance + sunIrradiance);
-        vec3 groundIrradiance = bouncedLight * exp(-groundOpticalDepth);
-        // Higher ground irradiance for lower coverage.
-        groundIrradiance *= 1.0 - coverage;
-        radiance += albedo * RECIPROCAL_PI * groundIrradiance * groundIrradianceScale;
+        vec3 skyIrradiance;
+        vec3 sunIrradiance = GetSunAndSkyIrradiance(
+          (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
+          sunDirection,
+          skyIrradiance
+        );
+        const float groundAlbedo = 0.3;
+        vec3 groundIrradiance = skyIrradiance + sunIrradiance * RECIPROCAL_PI4;
+        vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
+        vec3 bouncedIrradiance = (1.0 - coverage) * bouncedLight * exp(-opticalDepthToGround);
+        radiance += albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
 
-      // TODO: Take ambient occlusion into account.
-      radiance += albedo * RECIPROCAL_PI * skyIrradiance * skyIrradianceScale;
+      // Assumes isotropic scattering and ignores the light gradient between the
+      // ground and the zenith. This often results in a scene that is too dark,
+      // requiring skyIrradianceScale to be greater than 1.
+      radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale;
 
+      // Finally multiply by extinction (σT).
       radiance *= extinction;
 
       #ifdef POWDER
