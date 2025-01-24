@@ -11,6 +11,7 @@ export default {
 
 export const Tokyo: StoryFn = () => (
   <Story
+    timeOfDay={14}
     exposure={10}
     longitude={139.8146}
     latitude={35.7455}
