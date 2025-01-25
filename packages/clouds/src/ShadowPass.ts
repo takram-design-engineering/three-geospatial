@@ -238,7 +238,11 @@ export class ShadowPass extends CloudsPassBase {
   }
 
   get texture(): DataArrayTexture {
-    return this.resolveRenderTarget?.texture ?? this.currentRenderTarget.texture
+    if (this.temporalPass) {
+      invariant(this.resolveRenderTarget != null)
+      return this.resolveRenderTarget.texture
+    }
+    return this.currentRenderTarget.texture
   }
 
   get temporalPass(): boolean {
