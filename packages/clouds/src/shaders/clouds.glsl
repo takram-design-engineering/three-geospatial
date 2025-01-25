@@ -49,7 +49,7 @@ float getMipLevel(const vec2 uv) {
   return max(0.0, 0.5 * log2(max(1.0, deltaMaxSqr)));
 }
 
-struct WeatherSample {
+struct Weather {
   vec4 heightFraction; // Normalized height of each layer
   vec4 density;
 };
@@ -61,8 +61,8 @@ vec4 shapeAlteringFunction(const vec4 heightFraction, const vec4 bias) {
   return 1.0 - x * x;
 }
 
-WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLevel) {
-  WeatherSample weather;
+Weather sampleWeather(const vec2 uv, const float height, const float mipLevel) {
+  Weather weather;
   weather.heightFraction = saturate(remap(vec4(height), minLayerHeights, maxLayerHeights));
 
   vec4 localWeather = pow(
@@ -81,7 +81,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
   return weather;
 }
 
-float sampleShape(WeatherSample weather, const vec3 position, const float mipLevel) {
+float sampleExtinction(Weather weather, const vec3 position, const float mipLevel) {
   vec4 density = weather.density;
 
   float shape = texture(shapeTexture, position * shapeFrequency + shapeOffset).r;

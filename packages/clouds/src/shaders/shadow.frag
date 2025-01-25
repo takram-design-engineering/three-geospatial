@@ -83,12 +83,12 @@ vec4 marchClouds(
     // Sample a rough density.
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
-    WeatherSample weather = sampleWeather(uv, height, mipLevel);
+    Weather weather = sampleWeather(uv, height, mipLevel);
 
     if (any(greaterThan(weather.density, vec4(minDensity)))) {
       // Sample a detailed extinction.
       // Note this assumes an homogeneous medium.
-      float extinction = sampleShape(weather, position, mipLevel);
+      float extinction = sampleExtinction(weather, position, mipLevel);
       if (extinction > minExtinction) {
         frontDepth = max(frontDepth, rayDistance);
         extinctionSum += extinction;

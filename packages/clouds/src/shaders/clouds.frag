@@ -254,8 +254,8 @@ float marchOpticalDepth(
     vec3 position = rayDistance * rayDirection + rayOrigin;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
-    WeatherSample weather = sampleWeather(uv, height, mipLevel);
-    float extinction = sampleShape(weather, position, mipLevel);
+    Weather weather = sampleWeather(uv, height, mipLevel);
+    float extinction = sampleExtinction(weather, position, mipLevel);
     opticalDepth += extinction * (stepScale - prevStepScale) * stepSize;
     rayDistance += stepSize * stepScale;
     prevStepScale = stepScale;
@@ -313,7 +313,7 @@ vec4 marchClouds(
     float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance * 1e-5));
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
-    WeatherSample weather = sampleWeather(uv, height, mipLevel);
+    Weather weather = sampleWeather(uv, height, mipLevel);
 
     if (!any(greaterThan(weather.density, vec4(minDensity)))) {
       // Step longer in empty space.
@@ -324,7 +324,7 @@ vec4 marchClouds(
     }
 
     // Sample a detailed extinction.
-    float extinction = sampleShape(weather, position, mipLevel);
+    float extinction = sampleExtinction(weather, position, mipLevel);
     if (extinction > minExtinction) {
       vec3 skyIrradiance;
       vec3 sunIrradiance = GetSunAndSkyIrradiance(
