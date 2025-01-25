@@ -136,7 +136,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   declare uniforms: AtmosphereMaterialBaseUniforms & CloudsMaterialUniforms
 
   readonly ellipsoidMatrix: Matrix4
-  temporalUpscale = false
+  temporalUpscale = true
 
   private previousProjectionMatrix?: Matrix4
   private previousViewMatrix?: Matrix4

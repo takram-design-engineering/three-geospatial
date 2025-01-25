@@ -76,6 +76,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         temporalAlpha: new Uniform(0.1)
       } satisfies CloudsResolveMaterialUniforms,
       defines: {
+        TEMPORAL_UPSCALE: '1',
         SHADOW_LENGTH: '1'
       }
     })

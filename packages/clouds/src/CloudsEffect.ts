@@ -144,9 +144,6 @@ export class CloudsEffect extends Effect {
       'change' as keyof Event,
       this.onResolutionChange
     )
-
-    // Initialize aggregated properties.
-    this.temporalUpscale = true
   }
 
   private readonly onResolutionChange = (): void => {
