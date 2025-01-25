@@ -136,7 +136,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   declare uniforms: AtmosphereMaterialBaseUniforms & CloudsMaterialUniforms
 
   readonly ellipsoidMatrix: Matrix4
-  temporalUpscaling = false
+  temporalUpscale = false
 
   private previousProjectionMatrix?: Matrix4
   private previousViewMatrix?: Matrix4
@@ -296,7 +296,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
     const inverseProjectionMatrix = uniforms.inverseProjectionMatrix.value
     const reprojectionMatrix = uniforms.reprojectionMatrix.value
-    if (this.temporalUpscaling) {
+    if (this.temporalUpscale) {
       const frame = uniforms.frame.value % 16
       const resolution = uniforms.resolution.value
       const offset = bayerOffsets[frame]

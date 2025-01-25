@@ -146,7 +146,7 @@ export class CloudsEffect extends Effect {
     )
 
     // Initialize aggregated properties.
-    this.temporalUpscaling = true
+    this.temporalUpscale = true
   }
 
   private readonly onResolutionChange = (): void => {
@@ -217,12 +217,12 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.setDepthTexture(depthTexture, depthPacking)
   }
 
-  get temporalUpscaling(): boolean {
-    return this.cloudsPass.temporalUpscaling
+  get temporalUpscale(): boolean {
+    return this.cloudsPass.temporalUpscale
   }
 
-  set temporalUpscaling(value: boolean) {
-    this.cloudsPass.temporalUpscaling = value
+  set temporalUpscale(value: boolean) {
+    this.cloudsPass.temporalUpscale = value
   }
 
   get crepuscularRays(): boolean {

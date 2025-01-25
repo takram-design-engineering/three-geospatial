@@ -233,7 +233,7 @@ export class CloudsPass extends CloudsPassBase {
     this.width = width
     this.height = height
 
-    if (this.temporalUpscaling) {
+    if (this.temporalUpscale) {
       const lowResWidth = Math.ceil(width / 4)
       const lowResHeight = Math.ceil(height / 4)
       this.currentRenderTarget.setSize(lowResWidth, lowResHeight)
@@ -252,20 +252,16 @@ export class CloudsPass extends CloudsPassBase {
     this.currentMaterial.setShadowSize(width, height)
   }
 
-  get texture(): Texture {
-    return this.resolveRenderTarget.texture
-  }
-
-  get shadowLengthTexture(): Texture | null {
-    return this.resolveRenderTarget.shadowLength
-  }
-
   override setDepthTexture(
     depthTexture: Texture,
     depthPacking?: DepthPackingStrategies
   ): void {
     this.currentMaterial.depthBuffer = depthTexture
     this.currentMaterial.depthPacking = depthPacking ?? 0
+  }
+
+  get texture(): Texture {
+    return this.resolveRenderTarget.texture
   }
 
   get shadowTexture(): DataArrayTexture | null {
@@ -276,14 +272,18 @@ export class CloudsPass extends CloudsPassBase {
     this.currentMaterial.uniforms.shadowBuffer.value = value
   }
 
-  get temporalUpscaling(): boolean {
-    return this.currentMaterial.temporalUpscaling
+  get shadowLengthTexture(): Texture | null {
+    return this.resolveRenderTarget.shadowLength
   }
 
-  set temporalUpscaling(value: boolean) {
-    if (value !== this.temporalUpscaling) {
-      this.currentMaterial.temporalUpscaling = value
-      this.resolveMaterial.temporalUpscaling = value
+  get temporalUpscale(): boolean {
+    return this.currentMaterial.temporalUpscale
+  }
+
+  set temporalUpscale(value: boolean) {
+    if (value !== this.temporalUpscale) {
+      this.currentMaterial.temporalUpscale = value
+      this.resolveMaterial.temporalUpscale = value
       this.setSize(this.width, this.height)
     }
   }

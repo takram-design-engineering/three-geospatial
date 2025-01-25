@@ -77,7 +77,7 @@ vec4 getClosestFragment(const ivec2 coord) {
   return result;
 }
 
-void temporalUpscaling(
+void temporalUpscale(
   const ivec2 coord,
   const ivec2 lowResCoord,
   const bool currentFrame,
@@ -186,14 +186,14 @@ void main() {
   float outputShadowLength;
   #endif // !defined(SHADOW_LENGTH)
 
-  #ifdef TEMPORAL_UPSCALING
+  #ifdef TEMPORAL_UPSCALE
   ivec2 lowResCoord = coord / 4;
   int bayerValue = int(bayerIndices[coord.x % 4][coord.y % 4]);
   bool currentFrame = bayerValue == frame % 16;
-  temporalUpscaling(coord, lowResCoord, currentFrame, outputColor, outputShadowLength);
-  #else // TEMPORAL_UPSCALING
+  temporalUpscale(coord, lowResCoord, currentFrame, outputColor, outputShadowLength);
+  #else // TEMPORAL_UPSCALE
   temporalAntialiasing(coord, outputColor, outputShadowLength);
-  #endif // TEMPORAL_UPSCALING
+  #endif // TEMPORAL_UPSCALE
 
   #if defined(SHADOW_LENGTH) && defined(DEBUG_SHOW_SHADOW_LENGTH)
   outputColor = vec4(vec3(outputShadowLength * 0.05), 1.0);

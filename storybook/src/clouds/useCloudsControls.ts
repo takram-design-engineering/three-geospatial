@@ -44,10 +44,10 @@ export function useCloudsControls(
       crepuscularRays: true
     })
 
-  const { temporalUpscaling, halfResolution, shadowMapSize } = useControls(
+  const { temporalUpscale, halfResolution, shadowMapSize } = useControls(
     'rendering',
     {
-      temporalUpscaling: true,
+      temporalUpscale: true,
       halfResolution: false,
       shadowMapSize: { value: 512, options: [256, 512, 1024] }
     },
@@ -243,7 +243,7 @@ export function useCloudsControls(
     },
     {
       coverage,
-      temporalUpscaling,
+      temporalUpscale,
       'resolution-scale': halfResolution ? 0.5 : 1,
       localWeatherVelocity: animate
         ? [defaultLocalWeatherVelocity ?? 0.00005, 0]

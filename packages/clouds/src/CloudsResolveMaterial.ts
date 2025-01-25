@@ -99,16 +99,16 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
     this.uniforms.jitterOffset.value.set(dx, dy)
   }
 
-  get temporalUpscaling(): boolean {
-    return this.defines.TEMPORAL_UPSCALING != null
+  get temporalUpscale(): boolean {
+    return this.defines.TEMPORAL_UPSCALE != null
   }
 
-  set temporalUpscaling(value: boolean) {
-    if (value !== this.temporalUpscaling) {
+  set temporalUpscale(value: boolean) {
+    if (value !== this.temporalUpscale) {
       if (value) {
-        this.defines.TEMPORAL_UPSCALING = '1'
+        this.defines.TEMPORAL_UPSCALE = '1'
       } else {
-        delete this.defines.TEMPORAL_UPSCALING
+        delete this.defines.TEMPORAL_UPSCALE
       }
       this.needsUpdate = true
     }
