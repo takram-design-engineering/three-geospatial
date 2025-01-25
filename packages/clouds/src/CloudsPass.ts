@@ -260,19 +260,19 @@ export class CloudsPass extends CloudsPassBase {
     this.currentMaterial.depthPacking = depthPacking ?? 0
   }
 
-  get texture(): Texture {
+  get outputBuffer(): Texture {
     return this.resolveRenderTarget.texture
   }
 
-  get shadowTexture(): DataArrayTexture | null {
+  get shadowBuffer(): DataArrayTexture | null {
     return this.currentMaterial.uniforms.shadowBuffer.value
   }
 
-  set shadowTexture(value: DataArrayTexture | null) {
+  set shadowBuffer(value: DataArrayTexture | null) {
     this.currentMaterial.uniforms.shadowBuffer.value = value
   }
 
-  get shadowLengthTexture(): Texture | null {
+  get shadowLengthBuffer(): Texture | null {
     return this.resolveRenderTarget.shadowLength
   }
 

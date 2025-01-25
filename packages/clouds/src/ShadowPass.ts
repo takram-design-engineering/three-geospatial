@@ -237,7 +237,7 @@ export class ShadowPass extends CloudsPassBase {
     this.historyRenderTarget?.setSize(width, height, depth)
   }
 
-  get texture(): DataArrayTexture {
+  get outputBuffer(): DataArrayTexture {
     if (this.temporalPass) {
       invariant(this.resolveRenderTarget != null)
       return this.resolveRenderTarget.texture

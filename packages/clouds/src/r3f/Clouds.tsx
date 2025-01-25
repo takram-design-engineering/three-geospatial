@@ -52,65 +52,43 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     })
 
-    const cloudsBufferRef = useMemo(
-      () => new Uniform(effect.cloudsBuffer),
-      [] // eslint-disable-line react-hooks/exhaustive-deps
-    )
-    const shadowBufferRef = useMemo(
-      () => new Uniform(effect.shadowBuffer),
-      [] // eslint-disable-line react-hooks/exhaustive-deps
-    )
-    const shadowFarRef = useMemo(() => new Uniform(0), [])
-    const shadowTopHeightRef = useMemo(() => new Uniform(0), [])
-    const shadowLengthBufferRef = useMemo(
-      () => new Uniform(effect.shadowLengthBuffer),
-      [] // eslint-disable-line react-hooks/exhaustive-deps
-    )
-    useFrame(() => {
-      cloudsBufferRef.value = effect.cloudsBuffer
-      shadowBufferRef.value = effect.shadowBuffer
-      shadowFarRef.value = effect.shadow.far
-      shadowTopHeightRef.value = effect.shadowTopHeight
-      shadowLengthBufferRef.value = effect.shadowLengthBuffer
-    })
-
     const setComposite = useSetAtom(atoms.compositeAtom)
     useEffect(() => {
       setComposite({
-        map: cloudsBufferRef
+        map: effect.cloudsBufferRef
       })
       return () => {
         setComposite(null)
       }
-    }, [effect, setComposite, cloudsBufferRef])
+    }, [effect, setComposite])
 
     const setShadow = useSetAtom(atoms.shadowAtom)
     useEffect(() => {
       setShadow({
-        map: shadowBufferRef,
-        mapSize: effect.shadow.mapSize,
+        map: effect.shadowBufferRef,
+        mapSize: effect.shadowMapSize,
         intervals: effect.shadowIntervals,
         matrices: effect.shadowMatrices,
-        far: shadowFarRef,
-        topHeight: shadowTopHeightRef
+        far: effect.shadowFarRef,
+        topHeight: effect.shadowTopHeightRef
       })
       return () => {
         setShadow(null)
       }
-    }, [effect, setShadow, shadowBufferRef, shadowFarRef, shadowTopHeightRef])
+    }, [effect, setShadow])
 
     const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
     useEffect(() => {
       if (effect.crepuscularRays) {
         setShadowLength({
           // @ts-expect-error Ignore
-          map: shadowLengthBufferRef
+          map: effect.shadowLengthBufferRef
         })
         return () => {
           setShadowLength(null)
         }
       }
-    }, [effect, effect.crepuscularRays, setShadowLength, shadowLengthBufferRef])
+    }, [effect, effect.crepuscularRays, setShadowLength])
 
     return (
       <primitive

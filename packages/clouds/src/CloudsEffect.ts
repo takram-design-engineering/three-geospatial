@@ -2,6 +2,7 @@ import { Effect, EffectAttribute, Resolution } from 'postprocessing'
 import {
   Camera,
   Matrix4,
+  Uniform,
   Vector2,
   Vector3,
   type Data3DTexture,
@@ -101,9 +102,15 @@ export class CloudsEffect extends Effect {
   readonly shadowPass: ShadowPass
   readonly cloudsPass: CloudsPass
 
+  readonly cloudsBufferRef: Uniform<Texture>
+  readonly shadowBufferRef: Uniform<DataArrayTexture>
+  readonly shadowFarRef = new Uniform(0)
+  readonly shadowTopHeightRef = new Uniform(0)
+  readonly shadowLengthBufferRef: Uniform<Texture | null>
+
   readonly resolution: Resolution
+  readonly shadowMapSize = new Vector2()
   private frame = 0
-  private readonly shadowMapSize = new Vector2()
   private shadowCascadeCount = 0
 
   constructor(
@@ -133,6 +140,10 @@ export class CloudsEffect extends Effect {
     })
     this.shadowPass = new ShadowPass(this, atmosphere)
     this.cloudsPass = new CloudsPass(this, atmosphere)
+
+    this.cloudsBufferRef = new Uniform(this.cloudsPass.outputBuffer)
+    this.shadowBufferRef = new Uniform(this.shadowPass.outputBuffer)
+    this.shadowLengthBufferRef = new Uniform(this.cloudsPass.shadowLengthBuffer)
 
     this.resolution = new Resolution(
       this,
@@ -175,6 +186,8 @@ export class CloudsEffect extends Effect {
     deltaTime = 0
   ): void {
     const shadow = this.shadow
+    const shadowPass = this.shadowPass
+    const cloudsPass = this.cloudsPass
     if (
       shadow.cascadeCount !== this.shadowCascadeCount ||
       !shadow.mapSize.equals(this.shadowMapSize)
@@ -184,19 +197,25 @@ export class CloudsEffect extends Effect {
       this.shadowMapSize.set(width, height)
       this.shadowCascadeCount = depth
 
-      this.shadowPass.setSize(width, height, depth)
-      this.cloudsPass.setShadowSize(width, height, depth)
+      shadowPass.setSize(width, height, depth)
+      cloudsPass.setShadowSize(width, height, depth)
     }
 
     this.localWeather.update(renderer)
     this.shape.update(renderer)
     this.shapeDetail.update(renderer)
 
+    this.cloudsBufferRef.value = cloudsPass.outputBuffer
+    this.shadowBufferRef.value = shadowPass.outputBuffer
+    this.shadowFarRef.value = this.shadowFar
+    this.shadowTopHeightRef.value = this.shadowTopHeight
+    this.shadowLengthBufferRef.value = cloudsPass.shadowLengthBuffer
+
     ++this.frame
     const { cloudLayers, frame } = this
-    this.cloudsPass.shadowTexture = this.shadowPass.texture
-    this.shadowPass.update(renderer, cloudLayers, frame, deltaTime)
-    this.cloudsPass.update(renderer, cloudLayers, frame, deltaTime)
+    cloudsPass.shadowBuffer = shadowPass.outputBuffer
+    shadowPass.update(renderer, cloudLayers, frame, deltaTime)
+    cloudsPass.update(renderer, cloudLayers, frame, deltaTime)
   }
 
   override setSize(baseWidth: number, baseHeight: number): void {
@@ -255,11 +274,11 @@ export class CloudsEffect extends Effect {
   // Atmosphere composition accessors
 
   get cloudsBuffer(): Texture {
-    return this.cloudsPass.texture
+    return this.cloudsPass.outputBuffer
   }
 
   get shadowBuffer(): DataArrayTexture {
-    return this.shadowPass.texture
+    return this.shadowPass.outputBuffer
   }
 
   get shadowIntervals(): Vector2[] {
@@ -270,12 +289,16 @@ export class CloudsEffect extends Effect {
     return this.cloudsPass.currentMaterial.uniforms.shadowMatrices.value
   }
 
+  get shadowFar(): number {
+    return this.shadow.far
+  }
+
   get shadowTopHeight(): number {
     return this.cloudsPass.currentMaterial.uniforms.shadowTopHeight.value
   }
 
   get shadowLengthBuffer(): Texture | null {
-    return this.cloudsPass.shadowLengthTexture
+    return this.cloudsPass.shadowLengthBuffer
   }
 
   // Atmosphere parameters
