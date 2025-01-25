@@ -62,7 +62,7 @@ vec4 varianceClipping(
 
   const float N = float(VARIANCE_OFFSET_COUNT + 1);
   vec4 mean = moment1 / N;
-  vec4 variance = sqrt(moment2 / N - mean * mean);
+  vec4 variance = sqrt(max(moment2 / N - mean * mean, 0.0));
   vec4 minColor = mean - variance * gamma;
   vec4 maxColor = mean + variance * gamma;
   return clipAABB(clamp(mean, minColor, maxColor), history, minColor, maxColor);
@@ -99,7 +99,7 @@ vec4 varianceClipping(
 
   const float N = float(VARIANCE_OFFSET_COUNT + 1);
   vec4 mean = moment1 / N;
-  vec4 variance = sqrt(moment2 / N - mean * mean);
+  vec4 variance = sqrt(max(moment2 / N - mean * mean, 0.0));
   vec4 minColor = mean - variance * gamma;
   vec4 maxColor = mean + variance * gamma;
   return clipAABB(clamp(mean, minColor, maxColor), history, minColor, maxColor);
