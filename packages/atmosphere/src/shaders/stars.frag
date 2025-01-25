@@ -17,10 +17,10 @@ layout(location = 0) out vec4 outputColor;
 in vec3 vColor;
 
 void main() {
-  #ifndef PERSPECTIVE_CAMERA
+  #if !defined(PERSPECTIVE_CAMERA)
   outputColor = vec4(0.0);
   discard; // Rendering celestial objects without perspective doesn't make sense.
-  #endif // PERSPECTIVE_CAMERA
+  #endif // !defined(PERSPECTIVE_CAMERA)
 
   #ifdef BACKGROUND
   vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;

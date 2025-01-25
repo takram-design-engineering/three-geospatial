@@ -14,9 +14,9 @@ precision highp sampler2DArray;
 #include "parameters"
 #include "clouds"
 
-#ifndef RECIPROCAL_PI4
+#if !defined(RECIPROCAL_PI4)
 #define RECIPROCAL_PI4 (0.07957747154594767)
-#endif // RECIPROCAL_PI4
+#endif // !defined(RECIPROCAL_PI4)
 
 uniform sampler2D depthBuffer;
 uniform mat4 viewMatrix;
@@ -596,9 +596,9 @@ vec4 getCascadedShadowMaps(vec2 uv) {
     }
   }
 
-  #ifndef DEBUG_SHOW_SHADOW_MAP_TYPE
+  #if !defined(DEBUG_SHOW_SHADOW_MAP_TYPE)
   #define DEBUG_SHOW_SHADOW_MAP_TYPE (2)
-  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
+  #endif // !defined(DEBUG_SHOW_SHADOW_MAP_TYPE
 
   const float frontDepthScale = 1e-5;
   const float meanExtinctionScale = 10.0;

@@ -84,7 +84,7 @@ void temporalUpscale(
   out vec4 outputColor,
   out float outputShadowLength
 ) {
-  #ifndef DEBUG_SHOW_VELOCITY
+  #if !defined(DEBUG_SHOW_VELOCITY)
   if (currentFrame) {
     // Use the texel just rendered without any accumulation.
     outputColor = texelFetch(colorBuffer, lowResCoord, 0);
@@ -182,7 +182,7 @@ void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float out
 void main() {
   ivec2 coord = ivec2(gl_FragCoord.xy);
 
-  #ifndef SHADOW_LENGTH
+  #if !defined(SHADOW_LENGTH)
   float outputShadowLength;
   #endif // !defined(SHADOW_LENGTH)
 

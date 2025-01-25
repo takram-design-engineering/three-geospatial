@@ -103,9 +103,9 @@ function injectGBuffer(
   shader.fragmentShader = /* glsl */ `
     layout(location = 1) out vec4 outputBuffer1;
 
-    #ifndef USE_ENVMAP
+    #if !defined(USE_ENVMAP)
       uniform float reflectivity;
-    #endif // USE_ENVMAP
+    #endif // !defined(USE_ENVMAP)
 
     ${packing}
     ${shader.fragmentShader.replace(
