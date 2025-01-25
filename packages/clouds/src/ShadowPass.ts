@@ -10,6 +10,7 @@ import {
   type TextureDataType,
   type WebGLRenderer
 } from 'three'
+import invariant from 'tiny-invariant'
 
 import { type AtmosphereParameters } from '@takram/three-atmosphere'
 import { lerp } from '@takram/three-geospatial'
@@ -47,10 +48,13 @@ export class ShadowPass extends CloudsPassBase {
   private currentRenderTarget!: WebGLArrayRenderTarget
   readonly currentMaterial: ShadowMaterial
   readonly currentPass: ShaderArrayPass
-  private resolveRenderTarget!: WebGLArrayRenderTarget
+  private resolveRenderTarget!: WebGLArrayRenderTarget | null
   readonly resolveMaterial: ShadowResolveMaterial
   readonly resolvePass: ShaderArrayPass
-  private historyRenderTarget!: WebGLArrayRenderTarget
+  private historyRenderTarget!: WebGLArrayRenderTarget | null
+
+  private width = 0
+  private height = 0
 
   constructor(
     options: ShadowPassOptions,
@@ -94,15 +98,15 @@ export class ShadowPass extends CloudsPassBase {
     this.resolveRenderTarget?.dispose()
     this.historyRenderTarget?.dispose()
     const current = createRenderTarget('Shadow')
-    const resolve = createRenderTarget('Shadow.A')
-    const history = createRenderTarget('Shadow.B')
+    const resolve = this.temporalPass ? createRenderTarget('Shadow.A') : null
+    const history = this.temporalPass ? createRenderTarget('Shadow.B') : null
     this.currentRenderTarget = current
     this.resolveRenderTarget = resolve
     this.historyRenderTarget = history
 
     const resolveUniforms = this.resolveMaterial.uniforms
     resolveUniforms.inputBuffer.value = current.texture
-    resolveUniforms.historyBuffer.value = history.texture
+    resolveUniforms.historyBuffer.value = history?.texture ?? null
   }
 
   private updateShadow(): void {
@@ -175,6 +179,8 @@ export class ShadowPass extends CloudsPassBase {
   }
 
   private swapBuffers(): void {
+    invariant(this.historyRenderTarget != null)
+    invariant(this.resolveRenderTarget != null)
     const nextResolve = this.historyRenderTarget
     const nextHistory = this.resolveRenderTarget
     this.resolveRenderTarget = nextResolve
@@ -196,13 +202,17 @@ export class ShadowPass extends CloudsPassBase {
     this.updateParameters(cloudLayers, frame, deltaTime)
 
     this.currentPass.render(renderer, null, this.currentRenderTarget)
-    this.resolvePass.render(renderer, null, this.resolveRenderTarget)
 
-    // Store the current view and projection matrices for the next reprojection.
-    this.copyReprojection()
+    if (this.temporalPass) {
+      invariant(this.resolveRenderTarget != null)
+      this.resolvePass.render(renderer, null, this.resolveRenderTarget)
 
-    // Swap resolve and history render targets for the next render.
-    this.swapBuffers()
+      // Store the current view and projection matrices for the next reprojection.
+      this.copyReprojection()
+
+      // Swap resolve and history render targets for the next render.
+      this.swapBuffers()
+    }
   }
 
   setSize(
@@ -210,21 +220,36 @@ export class ShadowPass extends CloudsPassBase {
     height: number,
     depth = this.shadow.cascadeCount
   ): void {
-    const shadow = this.shadow
-    shadow.mapSize.set(width, height)
-    shadow.cascadeCount = depth
+    this.width = width
+    this.height = height
 
     this.currentMaterial.cascadeCount = depth
     this.resolveMaterial.cascadeCount = depth
     this.currentMaterial.setSize(width, height)
     this.resolveMaterial.setSize(width, height)
 
-    this.currentRenderTarget.setSize(width, height, depth * 2) // For velocity
-    this.resolveRenderTarget.setSize(width, height, depth)
-    this.historyRenderTarget.setSize(width, height, depth)
+    this.currentRenderTarget.setSize(
+      width,
+      height,
+      this.temporalPass ? depth * 2 : depth // For depth velocity
+    )
+    this.resolveRenderTarget?.setSize(width, height, depth)
+    this.historyRenderTarget?.setSize(width, height, depth)
   }
 
   get texture(): DataArrayTexture {
-    return this.resolveRenderTarget.texture
+    return this.resolveRenderTarget?.texture ?? this.currentRenderTarget.texture
+  }
+
+  get temporalPass(): boolean {
+    return this.currentMaterial.temporalPass
+  }
+
+  set temporalPass(value: boolean) {
+    if (value !== this.temporalPass) {
+      this.currentMaterial.temporalPass = value
+      this.initRenderTargets()
+      this.setSize(this.width, this.height)
+    }
   }
 }

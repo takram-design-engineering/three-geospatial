@@ -22,6 +22,7 @@ in vec2 vUv;
 in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
+
 // Redundant notation for prettier.
 #if CASCADE_COUNT == 1
 layout(location = 1) out vec3 outputDepthVelocity[CASCADE_COUNT];
@@ -156,17 +157,20 @@ void cascade(
   vec3 rayOrigin = rayNear * rayDirection + sunPosition;
   vec4 stbn = getSTBN();
   vec4 color = marchClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.w, mipLevel);
+  outputColor = color;
 
   // Velocity for temporal resolution.
+  #ifdef TEMPORAL_PASS
   vec3 frontPosition = color.x * rayDirection + rayOrigin;
   vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
   vec4 prevClip = reprojectionMatrices[cascadeIndex] * vec4(frontPositionWorld, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
   vec2 velocity = (vUv - prevUv) * resolution;
-
-  outputColor = color;
   outputDepthVelocity = vec3(color.x, velocity);
+  #else // TEMPORAL_PASS
+  outputDepthVelocity = vec3(0.0);
+  #endif // TEMPORAL_PASS
 }
 
 // TODO: Calculate from the main camera frustum perhaps?

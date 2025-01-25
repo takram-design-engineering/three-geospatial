@@ -140,8 +140,9 @@ export class ShadowMaterial extends RawShaderMaterial {
         minTransmittance: new Uniform(1e-4)
       } satisfies ShadowMaterialUniforms,
       defines: {
-        SHAPE_DETAIL: '1',
-        TEMPORAL_JITTER: '1'
+        TEMPORAL_PASS: '1',
+        TEMPORAL_JITTER: '1',
+        SHAPE_DETAIL: '1'
       }
     })
 
@@ -190,16 +191,16 @@ export class ShadowMaterial extends RawShaderMaterial {
     }
   }
 
-  get shapeDetail(): boolean {
-    return this.defines.SHAPE_DETAIL != null
+  get temporalPass(): boolean {
+    return this.defines.TEMPORAL_PASS != null
   }
 
-  set shapeDetail(value: boolean) {
-    if (value !== this.shapeDetail) {
+  set temporalPass(value: boolean) {
+    if (value !== this.temporalPass) {
       if (value) {
-        this.defines.SHAPE_DETAIL = '1'
+        this.defines.TEMPORAL_PASS = '1'
       } else {
-        delete this.defines.SHAPE_DETAIL
+        delete this.defines.TEMPORAL_PASS
       }
       this.needsUpdate = true
     }
@@ -215,6 +216,21 @@ export class ShadowMaterial extends RawShaderMaterial {
         this.defines.TEMPORAL_JITTER = '1'
       } else {
         delete this.defines.TEMPORAL_JITTER
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get shapeDetail(): boolean {
+    return this.defines.SHAPE_DETAIL != null
+  }
+
+  set shapeDetail(value: boolean) {
+    if (value !== this.shapeDetail) {
+      if (value) {
+        this.defines.SHAPE_DETAIL = '1'
+      } else {
+        delete this.defines.SHAPE_DETAIL
       }
       this.needsUpdate = true
     }
