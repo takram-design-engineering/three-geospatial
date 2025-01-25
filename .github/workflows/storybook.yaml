@@ -27,8 +27,8 @@ jobs:
           cache: 'pnpm'
 
       - run: |
-          'pnpm install --frozen-lockfile'
-          'npx nx build-storybook'
+          pnpm install --frozen-lockfile
+          npx nx build-storybook
 
       - uses: actions/upload-pages-artifact@v3
         with:
