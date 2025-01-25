@@ -44,15 +44,42 @@ export function useCloudsControls(
       crepuscularRays: true
     })
 
-  const { temporalUpscale, halfResolution, shadowMapSize } = useControls(
-    'rendering',
+  useEffect(() => {
+    if (effect == null) {
+      return
+    }
+    effect.cloudsPass.currentMaterial.shapeDetail = shapeDetail
+  }, [effect, shapeDetail])
+
+  const { temporalUpscale, resolutionScale } = useControls(
+    'clouds rendering',
     {
       temporalUpscale: true,
-      halfResolution: false,
-      shadowMapSize: { value: 512, options: [256, 512, 1024] }
+      resolutionScale: { value: 1, options: [0.25, 0.5, 0.75, 1] }
     },
     { collapsed: true }
   )
+
+  const {
+    mapSize: shadowMapSize,
+    temporalPass: shadowTemporalPass,
+    temporalJitter: shadowTemporalJitter
+  } = useControls(
+    'shadow rendering',
+    {
+      mapSize: { value: 512, options: [256, 512, 1024] },
+      temporalPass: true,
+      temporalJitter: true
+    },
+    { collapsed: true }
+  )
+
+  useEffect(() => {
+    if (effect != null) {
+      effect.shadowPass.temporalPass = shadowTemporalPass
+      effect.shadowPass.currentMaterial.temporalJitter = shadowTemporalJitter
+    }
+  }, [effect, shadowTemporalPass, shadowTemporalJitter])
 
   const scatteringParams = useControls(
     'scattering',
@@ -98,42 +125,42 @@ export function useCloudsControls(
         ...schema,
         [`layer ${index}`]: folder(
           {
-            [`altitude${index}`]: {
+            [`altitude ${index}`]: {
               value: layer.altitude,
               min: 0,
               max: 10000
             },
-            [`height${index}`]: {
+            [`height ${index}`]: {
               value: layer.height,
               min: 0,
               max: 2000
             },
-            [`densityScale${index}`]: {
+            [`densityScale ${index}`]: {
               value: layer.densityScale,
               min: 0,
               max: 1
             },
-            [`detailAmount${index}`]: {
+            [`detailAmount ${index}`]: {
               value: layer.detailAmount,
               min: 0,
               max: 1
             },
-            [`weatherExponent${index}`]: {
+            [`weatherExponent ${index}`]: {
               value: layer.weatherExponent,
               min: 0,
               max: 3
             },
-            [`shapeAlteringBias${index}`]: {
+            [`shapeAlteringBias ${index}`]: {
               value: layer.shapeAlteringBias,
               min: 0,
               max: 1
             },
-            [`coverageFilterWidth${index}`]: {
+            [`coverageFilterWidth ${index}`]: {
               value: layer.coverageFilterWidth,
               min: 0,
               max: 1
             },
-            [`shadow${index}`]: layer.shadow ?? false
+            [`shadow ${index}`]: layer.shadow ?? false
           },
           { collapsed: index > 0 }
         )
@@ -143,24 +170,6 @@ export function useCloudsControls(
     { collapsed: true },
     [effect]
   ) as FlatCloudLayers
-
-  const {
-    showShadowMap: debugShowShadowMap,
-    showCascades: debugShowCascades,
-    showUv: debugShowUv,
-    showShadowLength: debugShowShadowLength,
-    showVelocity: debugShowVelocity
-  } = useControls(
-    'debug',
-    {
-      showShadowMap: false,
-      showCascades: false,
-      showUv: false,
-      showShadowLength: false,
-      showVelocity: false
-    },
-    { collapsed: true }
-  )
 
   useFrame(() => {
     if (effect == null) {
@@ -179,19 +188,30 @@ export function useCloudsControls(
         shadowRaymarchParams[key as keyof typeof shadowRaymarchParams]
     }
     for (const key in cloudLayersParams) {
-      const field = key.slice(0, -1)
+      const field = key.slice(0, -2)
       const index = +key.slice(-1)
       ;(effect.cloudLayers as any)[index][field] =
         cloudLayersParams[key as keyof typeof cloudLayersParams]
     }
   })
 
-  useEffect(() => {
-    if (effect == null) {
-      return
-    }
-    effect.cloudsPass.currentMaterial.shapeDetail = shapeDetail
-  }, [effect, shapeDetail])
+  const {
+    showShadowMap: debugShowShadowMap,
+    showCascades: debugShowCascades,
+    showUv: debugShowUv,
+    showShadowLength: debugShowShadowLength,
+    showVelocity: debugShowVelocity
+  } = useControls(
+    'debug',
+    {
+      showShadowMap: false,
+      showCascades: false,
+      showUv: false,
+      showShadowLength: false,
+      showVelocity: false
+    },
+    { collapsed: true }
+  )
 
   useEffect(() => {
     if (effect == null) {
@@ -243,7 +263,7 @@ export function useCloudsControls(
     {
       coverage,
       temporalUpscale,
-      'resolution-scale': halfResolution ? 0.5 : 1,
+      'resolution-scale': resolutionScale,
       localWeatherVelocity: animate
         ? [defaultLocalWeatherVelocity ?? 0.00005, 0]
         : [0, 0],
