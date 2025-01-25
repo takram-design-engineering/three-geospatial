@@ -14,6 +14,11 @@ uniform float moonAngularRadius;
 uniform float lunarRadianceScale;
 uniform vec3 groundAlbedo;
 
+#ifdef HAS_SHADOW_LENGTH
+uniform sampler2D shadowLengthBuffer;
+#endif // HAS_SHADOW_LENGTH
+
+in vec2 vUv;
 in vec3 vCameraPosition;
 in vec3 vRayDirection;
 in vec3 vEllipsoidCenter;
@@ -29,6 +34,11 @@ bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
 }
 
 void main() {
+  float shadowLength = 0.0;
+  #ifdef HAS_SHADOW_LENGTH
+  shadowLength = texture(shadowLengthBuffer, vUv).r;
+  #endif // HAS_SHADOW_LENGTH
+
   vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
   vec3 rayDirection = normalize(vRayDirection);
 
@@ -54,7 +64,7 @@ void main() {
     vec3 inscatter = GetSkyRadianceToPoint(
       cameraPosition,
       u_bottom_radius * surfaceNormal,
-      0.0, // Shadow length
+      shadowLength,
       sunDirection,
       transmittance
     );
@@ -64,6 +74,7 @@ void main() {
     outputColor.rgb = getSkyRadiance(
       cameraPosition,
       rayDirection,
+      shadowLength,
       sunDirection,
       moonDirection,
       moonAngularRadius,
@@ -76,6 +87,7 @@ void main() {
   outputColor.rgb = getSkyRadiance(
     cameraPosition,
     rayDirection,
+    shadowLength,
     sunDirection,
     moonDirection,
     moonAngularRadius,

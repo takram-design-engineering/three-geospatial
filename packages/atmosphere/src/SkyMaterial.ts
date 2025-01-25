@@ -9,6 +9,7 @@ import {
   type Group,
   type Object3D,
   type Scene,
+  type Texture,
   type WebGLProgramParametersWithUniforms,
   type WebGLRenderer
 } from 'three'
@@ -22,6 +23,7 @@ import {
   type AtmosphereMaterialBaseParameters,
   type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
+import { type AtmosphereShadowLength } from './types'
 
 import functions from './shaders/functions.glsl?raw'
 import parameters from './shaders/parameters.glsl?raw'
@@ -61,6 +63,7 @@ export interface SkyMaterialUniforms {
   moonAngularRadius: Uniform<number>
   lunarRadianceScale: Uniform<number>
   groundAlbedo: Uniform<Color>
+  shadowLengthBuffer: Uniform<Texture | null>
 }
 
 export class SkyMaterial extends AtmosphereMaterialBase {
@@ -97,6 +100,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         moonAngularRadius: new Uniform(moonAngularRadius),
         lunarRadianceScale: new Uniform(lunarRadianceScale),
         groundAlbedo: new Uniform(groundAlbedo?.clone() ?? new Color(0)),
+        shadowLengthBuffer: new Uniform(null),
         ...others.uniforms
       } satisfies SkyMaterialUniforms,
       defines: {
@@ -201,5 +205,30 @@ export class SkyMaterial extends AtmosphereMaterialBase {
 
   get groundAlbedo(): Color {
     return this.uniforms.groundAlbedo.value
+  }
+
+  private setUniform<K extends keyof SkyMaterialUniforms>(
+    name: K,
+    value:
+      | SkyMaterialUniforms[K]
+      | (SkyMaterialUniforms[K] extends Uniform<infer V> ? V : never)
+  ): void {
+    if (value instanceof Uniform) {
+      this.uniforms[name] = value
+    } else {
+      this.uniforms[name].value = value as any
+    }
+  }
+
+  // eslint-disable-next-line accessor-pairs
+  set shadowLength(value: AtmosphereShadowLength | null) {
+    if (value != null) {
+      this.defines.HAS_SHADOW_LENGTH = '1'
+      this.setUniform('shadowLengthBuffer', value.map)
+    } else {
+      delete this.defines.HAS_SHADOW_LENGTH
+      this.uniforms.shadowLengthBuffer.value = null
+    }
+    this.needsUpdate = true
   }
 }

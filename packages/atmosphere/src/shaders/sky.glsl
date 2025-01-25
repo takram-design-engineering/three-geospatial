@@ -79,22 +79,3 @@ vec3 getSkyRadiance(
 
   return radiance;
 }
-
-vec3 getSkyRadiance(
-  const vec3 cameraPosition,
-  const vec3 rayDirection,
-  const vec3 sunDirection,
-  const vec3 moonDirection,
-  const float moonAngularRadius,
-  const float lunarRadianceScale
-) {
-  return getSkyRadiance(
-    cameraPosition,
-    rayDirection,
-    0.0,
-    sunDirection,
-    moonDirection,
-    moonAngularRadius,
-    lunarRadianceScale
-  );
-}

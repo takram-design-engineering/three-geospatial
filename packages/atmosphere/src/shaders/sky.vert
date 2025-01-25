@@ -12,6 +12,7 @@ uniform vec3 altitudeCorrection;
 
 layout(location = 0) in vec3 position;
 
+out vec2 vUv;
 out vec3 vCameraPosition;
 out vec3 vRayDirection;
 out vec3 vEllipsoidCenter;
@@ -43,6 +44,8 @@ void getCameraRay(out vec3 origin, out vec3 direction) {
 }
 
 void main() {
+  vUv = position.xy * 0.5 + 0.5;
+
   vec3 direction, origin;
   getCameraRay(origin, direction);
 
