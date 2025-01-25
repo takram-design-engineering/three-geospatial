@@ -399,13 +399,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get useShapeDetail(): boolean {
+  get shapeDetail(): boolean {
     return this.defines.SHAPE_DETAIL != null
   }
 
-  // TODO: Remove this and make parametric uniform instead
-  set useShapeDetail(value: boolean) {
-    if (value !== this.useShapeDetail) {
+  set shapeDetail(value: boolean) {
+    if (value !== this.shapeDetail) {
       if (value) {
         this.defines.SHAPE_DETAIL = '1'
       } else {
@@ -441,13 +440,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get usePowder(): boolean {
+  get powder(): boolean {
     return this.defines.POWDER != null
   }
 
-  // TODO: Remove this and make parametric uniform instead
-  set usePowder(value: boolean) {
-    if (value !== this.usePowder) {
+  set powder(value: boolean) {
+    if (value !== this.powder) {
       if (value) {
         this.defines.POWDER = '1'
       } else {
@@ -457,13 +455,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get useGroundIrradiance(): boolean {
+  get groundIrradiance(): boolean {
     return this.defines.GROUND_IRRADIANCE != null
   }
 
-  // TODO: Remove this and make parametric uniform instead
-  set useGroundIrradiance(value: boolean) {
-    if (value !== this.useGroundIrradiance) {
+  set groundIrradiance(value: boolean) {
+    if (value !== this.groundIrradiance) {
       if (value) {
         this.defines.GROUND_IRRADIANCE = '1'
       } else {

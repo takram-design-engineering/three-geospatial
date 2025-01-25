@@ -190,13 +190,12 @@ export class ShadowMaterial extends RawShaderMaterial {
     }
   }
 
-  // TODO: Remove this and make parametric uniform instead
-  get useShapeDetail(): boolean {
+  get shapeDetail(): boolean {
     return this.defines.SHAPE_DETAIL != null
   }
 
-  set useShapeDetail(value: boolean) {
-    if (value !== this.useShapeDetail) {
+  set shapeDetail(value: boolean) {
+    if (value !== this.shapeDetail) {
       if (value) {
         this.defines.SHAPE_DETAIL = '1'
       } else {

@@ -191,7 +191,7 @@ export function useCloudsControls(
     if (effect == null) {
       return
     }
-    effect.cloudsPass.currentMaterial.useShapeDetail = shapeDetail
+    effect.cloudsPass.currentMaterial.shapeDetail = shapeDetail
   }, [effect, shapeDetail])
 
   useEffect(() => {
