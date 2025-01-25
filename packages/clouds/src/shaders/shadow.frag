@@ -11,7 +11,6 @@ precision highp sampler3D;
 
 uniform mat4 inverseShadowMatrices[CASCADE_COUNT];
 uniform mat4 reprojectionMatrices[CASCADE_COUNT];
-uniform sampler3D stbnTexture;
 
 // Primary raymarch
 uniform int maxIterations;
@@ -33,13 +32,6 @@ layout(location = 3) out vec3 outputDepthVelocity[CASCADE_COUNT];
 #elif CASCADE_COUNT == 4
 layout(location = 4) out vec3 outputDepthVelocity[CASCADE_COUNT];
 #endif // CASCADE_COUNT
-
-vec4 getSTBN() {
-  ivec3 size = textureSize(stbnTexture, 0);
-  vec3 scale = 1.0 / vec3(size);
-  // xy: vec2, z: vec1, w: scalar
-  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale);
-}
 
 vec4 marchClouds(
   const vec3 rayOrigin,

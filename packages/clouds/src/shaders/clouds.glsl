@@ -1,3 +1,10 @@
+vec4 getSTBN() {
+  ivec3 size = textureSize(stbnTexture, 0);
+  vec3 scale = 1.0 / vec3(size);
+  // xy: vec2, z: vec1, w: scalar
+  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale);
+}
+
 // Straightforward spherical mapping
 vec2 getSphericalUv(const vec3 position) {
   vec2 st = normalize(position.yx);

@@ -1,5 +1,6 @@
 uniform vec2 resolution;
 uniform int frame;
+uniform sampler3D stbnTexture;
 
 // Atmosphere
 uniform float bottomRadius;

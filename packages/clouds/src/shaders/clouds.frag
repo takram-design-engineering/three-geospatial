@@ -26,7 +26,6 @@ uniform float cameraFar;
 uniform float cameraHeight;
 uniform vec2 temporalJitter;
 uniform float mipLevelScale;
-uniform sampler3D stbnTexture;
 
 // Scattering
 uniform vec3 albedo;
@@ -77,13 +76,6 @@ layout(location = 1) out vec3 outputDepthVelocity;
 #ifdef SHADOW_LENGTH
 layout(location = 2) out float outputShadowLength;
 #endif // SHADOW_LENGTH
-
-vec4 getSTBN() {
-  ivec3 size = textureSize(stbnTexture, 0);
-  vec3 scale = 1.0 / vec3(size);
-  // xy: vec2, z: vec1, w: scalar
-  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale);
-}
 
 float readDepth(const vec2 uv) {
   #if DEPTH_PACKING == 3201
