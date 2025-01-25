@@ -4,7 +4,7 @@ This library is under active development and is in pre-release status.
 
 ### TODO
 
-- [ ] Cloud layer parameterization refinements
+- [ ] Fade between shadow cascades
 - [ ] Scale length unit in the shaders
 - [ ] Add depth output and compute shadow length of scene objects
 - [ ] Finalize API
