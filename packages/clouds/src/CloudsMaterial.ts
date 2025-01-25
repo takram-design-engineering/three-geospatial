@@ -481,12 +481,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get crepuscularRays(): boolean {
+  get shadowLength(): boolean {
     return this.defines.SHADOW_LENGTH != null
   }
 
-  set crepuscularRays(value: boolean) {
-    if (value !== this.crepuscularRays) {
+  set shadowLength(value: boolean) {
+    if (value !== this.shadowLength) {
       if (value) {
         this.defines.SHADOW_LENGTH = '1'
       } else {
