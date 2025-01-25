@@ -28,7 +28,6 @@ uniform vec2 temporalJitter;
 uniform float mipLevelScale;
 
 // Scattering
-uniform vec3 albedo;
 uniform float scatterAnisotropy1;
 uniform float scatterAnisotropy2;
 uniform float scatterAnisotropyMix;
