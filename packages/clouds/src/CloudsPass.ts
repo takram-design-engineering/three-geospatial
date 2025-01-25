@@ -109,7 +109,7 @@ export class CloudsPass extends CloudsPassBase {
 
     this.initRenderTargets({
       depthVelocity: true,
-      shadowLength: false
+      shadowLength: true
     })
   }
 
