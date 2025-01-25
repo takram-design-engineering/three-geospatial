@@ -31,8 +31,10 @@ bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
 void main() {
   vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
   vec3 rayDirection = normalize(vRayDirection);
-  bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
 
+  #ifdef GROUND_ALBEDO
+
+  bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
   if (intersectsGround) {
     float distanceToGround = raySphereFirstIntersection(
       cameraPosition,
@@ -68,6 +70,20 @@ void main() {
       lunarRadianceScale
     );
   }
+
+  #else // GROUND_ALBEDO
+
+  outputColor.rgb = getSkyRadiance(
+    cameraPosition,
+    rayDirection,
+    sunDirection,
+    moonDirection,
+    moonAngularRadius,
+    lunarRadianceScale
+  );
+
+  #endif // GROUND_ALBEDO
+
   outputColor.a = 1.0;
 
   #include <mrt_output>

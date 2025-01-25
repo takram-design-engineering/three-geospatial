@@ -9,6 +9,7 @@ import {
   type Group,
   type Object3D,
   type Scene,
+  type WebGLProgramParametersWithUniforms,
   type WebGLRenderer
 } from 'three'
 
@@ -105,6 +106,23 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     })
     this.sun = sun
     this.moon = moon
+  }
+
+  override onBeforeCompile(
+    parameters: WebGLProgramParametersWithUniforms,
+    renderer: WebGLRenderer
+  ): void {
+    super.onBeforeCompile(parameters, renderer)
+    const color = this.groundAlbedo
+    const groundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
+    if ((this.defines.GROUND_ALBEDO != null) !== groundAlbedo) {
+      if (groundAlbedo) {
+        this.defines.GROUND_ALBEDO = '1'
+      } else {
+        delete this.defines.GROUND_ALBEDO
+      }
+      this.needsUpdate = true
+    }
   }
 
   override onBeforeRender(
