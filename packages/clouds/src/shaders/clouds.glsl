@@ -49,7 +49,7 @@ float getMipLevel(const vec2 uv) {
   return max(0.0, 0.5 * log2(max(1.0, deltaMaxSqr)));
 }
 
-struct Weather {
+struct WeatherSample {
   vec4 heightFraction; // Normalized height of each layer
   vec4 density;
 };
@@ -61,8 +61,8 @@ vec4 shapeAlteringFunction(const vec4 heightFraction, const vec4 bias) {
   return 1.0 - x * x;
 }
 
-Weather sampleWeather(const vec2 uv, const float height, const float mipLevel) {
-  Weather weather;
+WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLevel) {
+  WeatherSample weather;
   weather.heightFraction = saturate(remap(vec4(height), minLayerHeights, maxLayerHeights));
 
   vec4 localWeather = pow(
@@ -81,7 +81,12 @@ Weather sampleWeather(const vec2 uv, const float height, const float mipLevel) {
   return weather;
 }
 
-float sampleExtinction(Weather weather, const vec3 position, const float mipLevel) {
+struct MediaSample {
+  float scattering;
+  float extinction;
+};
+
+MediaSample sampleMedia(WeatherSample weather, const vec3 position, const float mipLevel) {
   vec4 density = weather.density;
 
   float shape = texture(shapeTexture, position * shapeFrequency + shapeOffset).r;
@@ -105,5 +110,11 @@ float sampleExtinction(Weather weather, const vec3 position, const float mipLeve
   #endif // SHAPE_DETAIL
 
   // Nicely decrease density at the bottom.
-  return dot(density * (weather.heightFraction * 0.75 + 0.25), extinctionCoefficients);
+  density = saturate(density * densityScales * (weather.heightFraction * 0.75 + 0.25));
+
+  MediaSample media;
+  float densitySum = density.x + density.y + density.z + density.w;
+  media.scattering = densitySum * scatteringCoefficient;
+  media.extinction = densitySum * absorptionCoefficient + media.scattering;
+  return media;
 }

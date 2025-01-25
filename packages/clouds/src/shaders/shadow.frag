@@ -80,20 +80,20 @@ vec4 marchClouds(
     }
     vec3 position = rayDistance * rayDirection + rayOrigin;
 
-    // Sample a rough density.
+    // Sample rough weather.
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
-    Weather weather = sampleWeather(uv, height, mipLevel);
+    WeatherSample weather = sampleWeather(uv, height, mipLevel);
 
     if (any(greaterThan(weather.density, vec4(minDensity)))) {
-      // Sample a detailed extinction.
+      // Sample detailed media.
       // Note this assumes an homogeneous medium.
-      float extinction = sampleExtinction(weather, position, mipLevel);
-      if (extinction > minExtinction) {
+      MediaSample media = sampleMedia(weather, position, mipLevel);
+      if (media.extinction > minExtinction) {
         frontDepth = max(frontDepth, rayDistance);
-        extinctionSum += extinction;
-        maxOpticalDepth += extinction * stepSize;
-        transmittanceIntegral *= exp(-extinction * stepSize);
+        extinctionSum += media.extinction;
+        maxOpticalDepth += media.extinction * stepSize;
+        transmittanceIntegral *= exp(-media.extinction * stepSize);
         ++sampleCount;
       }
     }

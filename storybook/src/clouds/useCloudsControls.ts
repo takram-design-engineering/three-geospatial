@@ -57,7 +57,8 @@ export function useCloudsControls(
   const scatteringParams = useControls(
     'scattering',
     {
-      albedo: { value: 0.98, min: 0, max: 1 },
+      scatteringCoefficient: { value: 1, min: 0, max: 5 },
+      absorptionCoefficient: { value: 0.02, min: 0, max: 5 },
       scatterAnisotropy1: { value: 0.7, min: 0, max: 1 },
       scatterAnisotropy2: { value: -0.2, min: -1, max: 0 },
       scatterAnisotropyMix: { value: 0.5, min: 0, max: 1 },
@@ -65,7 +66,7 @@ export function useCloudsControls(
       groundIrradianceScale: { value: 3, min: 0, max: 10 },
       powderScale: { value: 0.8, min: 0, max: 1 },
       powderExponent: { value: 150, min: 1, max: 1000 },
-      shadowExtension: { value: 1.5, min: 1, max: 3 }
+      shadowExtensionScale: { value: 2, min: 1, max: 5 }
     },
     { collapsed: true }
   )
@@ -107,8 +108,8 @@ export function useCloudsControls(
               min: 0,
               max: 2000
             },
-            [`extinctionCoefficient${index}`]: {
-              value: layer.extinctionCoefficient,
+            [`densityScale${index}`]: {
+              value: layer.densityScale,
               min: 0,
               max: 1
             },
@@ -165,11 +166,9 @@ export function useCloudsControls(
     if (effect == null) {
       return
     }
-    const { albedo, ...scalarScatteringParams } = scatteringParams
-    effect.cloudsPass.currentMaterial.uniforms.albedo.value.setScalar(albedo)
-    for (const key in scalarScatteringParams) {
+    for (const key in scatteringParams) {
       effect.cloudsPass.currentMaterial.uniforms[key].value =
-        scalarScatteringParams[key as keyof typeof scalarScatteringParams]
+        scatteringParams[key as keyof typeof scatteringParams]
     }
     for (const key in cloudsRaymarchParams) {
       effect.cloudsPass.currentMaterial.uniforms[key].value =

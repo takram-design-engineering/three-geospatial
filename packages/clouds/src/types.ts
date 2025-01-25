@@ -1,7 +1,7 @@
 export interface CloudLayer {
   altitude: number
   height: number
-  extinctionCoefficient: number
+  densityScale: number
   detailAmount: number
   weatherExponent: number
   shapeAlteringBias: number

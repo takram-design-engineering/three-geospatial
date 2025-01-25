@@ -1,5 +1,4 @@
 import {
-  Color,
   GLSL3,
   Matrix4,
   Uniform,
@@ -95,7 +94,6 @@ export interface CloudsMaterialUniforms
   ellipsoidMatrix: Uniform<Matrix4>
 
   // Scattering
-  albedo: Uniform<Color>
   scatterAnisotropy1: Uniform<number>
   scatterAnisotropy2: Uniform<number>
   scatterAnisotropyMix: Uniform<number>
@@ -203,7 +201,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           sunDirection: new Uniform(sunDirectionRef), // Overridden
 
           // Scattering
-          albedo: new Uniform(new Color().setScalar(0.98)),
           scatterAnisotropy1: new Uniform(0.7),
           scatterAnisotropy2: new Uniform(-0.2),
           scatterAnisotropyMix: new Uniform(0.5),
@@ -238,7 +235,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ),
           shadowFar: new Uniform(0),
           shadowFilterRadius: new Uniform(6),
-          shadowExtension: new Uniform(1.5),
+          shadowExtensionScale: new Uniform(2),
 
           // Shadow length
           maxShadowLengthIterations: new Uniform(500),

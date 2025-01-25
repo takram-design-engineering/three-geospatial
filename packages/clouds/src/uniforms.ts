@@ -3,6 +3,10 @@ import { Uniform, Vector2, Vector3, Vector4, type Texture } from 'three'
 import { type CloudLayer, type CloudLayers } from './types'
 
 export interface CloudParameterUniforms {
+  // Scattering
+  scatteringCoefficient: Uniform<number>
+  absorptionCoefficient: Uniform<number>
+
   // Weather and shape
   localWeatherTexture: Uniform<Texture | null>
   localWeatherFrequency: Uniform<Vector2>
@@ -26,6 +30,11 @@ export function createCloudParameterUniforms({
   shapeDetailTexture?: Texture | null
 } = {}): CloudParameterUniforms {
   return {
+    // Scattering
+    scatteringCoefficient: new Uniform(1.0),
+    absorptionCoefficient: new Uniform(0.02),
+
+    // Weather and shape
     localWeatherTexture: new Uniform(localWeatherTexture),
     localWeatherFrequency: new Uniform(new Vector2(100, 100)),
     localWeatherOffset: new Uniform(new Vector2()),
@@ -42,7 +51,7 @@ export function createCloudParameterUniforms({
 export interface CloudLayerUniforms {
   minLayerHeights: Uniform<Vector4>
   maxLayerHeights: Uniform<Vector4>
-  extinctionCoefficients: Uniform<Vector4>
+  densityScales: Uniform<Vector4>
   detailAmounts: Uniform<Vector4>
   weatherExponents: Uniform<Vector4>
   shapeAlteringBiases: Uniform<Vector4>
@@ -57,7 +66,7 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
   return {
     minLayerHeights: new Uniform(new Vector4()),
     maxLayerHeights: new Uniform(new Vector4()),
-    extinctionCoefficients: new Uniform(new Vector4()),
+    densityScales: new Uniform(new Vector4()),
     detailAmounts: new Uniform(new Vector4()),
     weatherExponents: new Uniform(new Vector4()),
     shapeAlteringBiases: new Uniform(new Vector4()),
@@ -93,7 +102,7 @@ export function updateCloudLayerUniforms(
     layers[2].altitude + layers[2].height,
     layers[3].altitude + layers[3].height
   )
-  packVector(layers, 'extinctionCoefficient', uniforms.extinctionCoefficients)
+  packVector(layers, 'densityScale', uniforms.densityScales)
   packVector(layers, 'detailAmount', uniforms.detailAmounts)
   packVector(layers, 'weatherExponent', uniforms.weatherExponents)
   packVector(layers, 'shapeAlteringBias', uniforms.shapeAlteringBiases)

@@ -57,7 +57,7 @@ uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 uniform float shadowFilterRadius;
-uniform float shadowExtension;
+uniform float shadowExtensionScale;
 
 // Shadow length
 #ifdef SHADOW_LENGTH
@@ -147,7 +147,7 @@ vec3 getCascadeColor(const vec3 rayPosition) {
 float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const int cascadeIndex) {
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
-  return min(shadow.b * shadowExtension, shadow.g * max(0.0, distanceToTop - shadow.r));
+  return min(shadow.b * shadowExtensionScale, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
 float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
@@ -254,9 +254,9 @@ float marchOpticalDepth(
     vec3 position = rayDistance * rayDirection + rayOrigin;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
-    Weather weather = sampleWeather(uv, height, mipLevel);
-    float extinction = sampleExtinction(weather, position, mipLevel);
-    opticalDepth += extinction * (stepScale - prevStepScale) * stepSize;
+    WeatherSample weather = sampleWeather(uv, height, mipLevel);
+    MediaSample media = sampleMedia(weather, position, mipLevel);
+    opticalDepth += media.extinction * (stepScale - prevStepScale) * stepSize;
     rayDistance += stepSize * stepScale;
     prevStepScale = stepScale;
     stepScale *= 2.0;
@@ -309,11 +309,11 @@ vec4 marchClouds(
     }
     vec3 position = rayDistance * rayDirection + rayOrigin;
 
-    // Sample a rough density.
+    // Sample rough weather.
     float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance * 1e-5));
     float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
-    Weather weather = sampleWeather(uv, height, mipLevel);
+    WeatherSample weather = sampleWeather(uv, height, mipLevel);
 
     if (!any(greaterThan(weather.density, vec4(minDensity)))) {
       // Step longer in empty space.
@@ -323,9 +323,9 @@ vec4 marchClouds(
       continue;
     }
 
-    // Sample a detailed extinction.
-    float extinction = sampleExtinction(weather, position, mipLevel);
-    if (extinction > minExtinction) {
+    // Sample detailed media.
+    MediaSample media = sampleMedia(weather, position, mipLevel);
+    if (media.extinction > minExtinction) {
       vec3 skyIrradiance;
       vec3 sunIrradiance = GetSunAndSkyIrradiance(
         position * METER_TO_LENGTH_UNIT,
@@ -344,8 +344,10 @@ vec4 marchClouds(
         );
       }
 
+      vec3 albedo = vec3(media.scattering / media.extinction);
+
       opticalDepth += marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel, jitter);
-      // scatteringScale compensates for the missing energy due to ignoring
+      // Scattering scale compensates for the missing energy due to ignoring
       // higher-order multiple scattering octaves.
       float scattering = multipleScattering(opticalDepth, cosTheta) * scatteringScale;
       // I’m not sure skyIrradiance should be included in the scattering term.
@@ -380,11 +382,11 @@ vec4 marchClouds(
       // requiring skyIrradianceScale to be greater than 1.
       radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale;
 
-      // Finally multiply by extinction (σT).
-      radiance *= extinction;
+      // Finally multiply by extinction.
+      radiance *= media.extinction;
 
       #ifdef POWDER
-      radiance *= 1.0 - powderScale * exp(-extinction * powderExponent);
+      radiance *= 1.0 - powderScale * exp(-media.extinction * powderExponent);
       #endif // POWDER
 
       #ifdef DEBUG_SHOW_CASCADES
@@ -395,8 +397,8 @@ vec4 marchClouds(
 
       // Energy-conserving analytical integration of scattered light
       // See 5.6.3 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
-      float transmittance = exp(-extinction * stepSize);
-      float clampedDensity = max(extinction, 1e-7);
+      float transmittance = exp(-media.extinction * stepSize);
+      float clampedDensity = max(media.extinction, 1e-7);
       vec3 scatteringIntegral = (radiance - radiance * transmittance) / clampedDensity;
       radianceIntegral += transmittanceIntegral * scatteringIntegral;
       transmittanceIntegral *= transmittance;
