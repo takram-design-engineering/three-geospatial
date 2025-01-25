@@ -225,12 +225,12 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.temporalUpscaling = value
   }
 
-  get shadowLength(): boolean {
-    return this.cloudsPass.shadowLength
+  get crepuscularRays(): boolean {
+    return this.cloudsPass.crepuscularRays
   }
 
-  set shadowLength(value: boolean) {
-    this.cloudsPass.shadowLength = value
+  set crepuscularRays(value: boolean) {
+    this.cloudsPass.crepuscularRays = value
   }
 
   // Textures

@@ -288,13 +288,13 @@ export class CloudsPass extends CloudsPassBase {
     }
   }
 
-  get shadowLength(): boolean {
-    return this.currentMaterial.shadowLength
+  get crepuscularRays(): boolean {
+    return this.currentMaterial.crepuscularRays
   }
 
-  set shadowLength(value: boolean) {
-    if (value !== this.shadowLength) {
-      this.currentMaterial.shadowLength = value
+  set crepuscularRays(value: boolean) {
+    if (value !== this.crepuscularRays) {
+      this.currentMaterial.crepuscularRays = value
       this.resolveMaterial.shadowLength = value
       this.initRenderTargets({
         depthVelocity: true,

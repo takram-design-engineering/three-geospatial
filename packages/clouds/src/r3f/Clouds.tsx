@@ -101,7 +101,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
 
     const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
     useEffect(() => {
-      if (effect.shadowLength) {
+      if (effect.crepuscularRays) {
         setShadowLength({
           // @ts-expect-error Ignore
           map: shadowLengthBufferRef
@@ -110,7 +110,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
           setShadowLength(null)
         }
       }
-    }, [effect, effect.shadowLength, setShadowLength, shadowLengthBufferRef])
+    }, [effect, effect.crepuscularRays, setShadowLength, shadowLengthBufferRef])
 
     return (
       <primitive

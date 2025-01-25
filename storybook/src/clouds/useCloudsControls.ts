@@ -35,16 +35,14 @@ export function useCloudsControls(
     localWeatherVelocity?: number
   } = {}
 ): [CloudsControlParams, Partial<CloudsProps>] {
-  const { enabled, coverage, animate, shapeDetail, shadowLength } = useControls(
-    'clouds',
-    {
+  const { enabled, coverage, animate, shapeDetail, crepuscularRays } =
+    useControls('clouds', {
       enabled: true,
       coverage: { value: defaultCoverage ?? 0.3, min: 0, max: 1, step: 0.01 },
       animate: defaultAnimate ?? false,
       shapeDetail: true,
-      shadowLength: true
-    }
-  )
+      crepuscularRays: true
+    })
 
   const { temporalUpscaling, halfResolution, shadowMapSize } = useControls(
     'rendering',
@@ -251,7 +249,7 @@ export function useCloudsControls(
         ? [defaultLocalWeatherVelocity ?? 0.00005, 0]
         : [0, 0],
       'shadow-mapSize': [shadowMapSize, shadowMapSize],
-      shadowLength
+      crepuscularRays
     }
   ]
 }
