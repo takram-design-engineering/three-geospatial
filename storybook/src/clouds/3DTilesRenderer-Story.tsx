@@ -69,6 +69,7 @@ import {
   useLocalDateControls,
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
+import { usePovControls } from '../helpers/usePovControls'
 import { useCloudsControls } from './useCloudsControls'
 
 const dracoLoader = new DRACOLoader()
@@ -137,6 +138,7 @@ const Scene: FC<SceneProps> = ({
   distance = 4500,
   ...localDate
 }) => {
+  const camera = useThree(({ camera }) => camera)
   useExposureControls({ exposure })
   const lut = useColorGradingControls()
   const { lensFlare, normal, depth } = useControls(
@@ -148,6 +150,7 @@ const Scene: FC<SceneProps> = ({
     },
     { collapsed: true }
   )
+  usePovControls(camera, { collapsed: true })
   const motionDate = useLocalDateControls({ longitude, ...localDate })
   const { correctAltitude, correctGeometricError, photometric } = useControls(
     'atmosphere',
@@ -159,7 +162,6 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
 
-  const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
     new PointOfView(distance, radians(heading), radians(pitch)).decompose(
       new Geodetic(radians(longitude), radians(latitude)).toECEF(),
