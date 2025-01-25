@@ -20,7 +20,7 @@ export interface SkyLightProps extends ComponentPropsWithRef<'skyLightProbe'> {}
 
 export const SkyLight = /*#__PURE__*/ forwardRef<SkyLightProbe, SkyLightProps>(
   function SkyLight(props, forwardedRef) {
-    const { textures, transientProps, ...contextProps } =
+    const { textures, transientStates, ...contextProps } =
       useContext(AtmosphereContext)
 
     const ref = useRef<SkyLightProbe>(null)
@@ -29,10 +29,10 @@ export const SkyLight = /*#__PURE__*/ forwardRef<SkyLightProbe, SkyLightProps>(
       if (probe == null) {
         return
       }
-      if (transientProps != null) {
-        probe.sunDirection.copy(transientProps.sunDirection)
-        probe.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
-        probe.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
+      if (transientStates != null) {
+        probe.sunDirection.copy(transientStates.sunDirection)
+        probe.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+        probe.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
         probe.update()
       }
     })

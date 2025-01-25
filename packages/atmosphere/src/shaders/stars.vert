@@ -1,3 +1,8 @@
+precision highp float;
+precision highp sampler3D;
+
+#include "parameters"
+
 #define saturate(x) clamp(x, 0.0, 1.0)
 
 uniform mat4 projectionMatrix;
@@ -32,15 +37,13 @@ void main() {
   #ifdef BACKGROUND
   vec3 worldDirection = normalize(matrixWorld * vec4(position, 1.0)).xyz;
   mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vCameraPosition = rotation * cameraPosition * METER_TO_UNIT_LENGTH;
+  vCameraPosition = rotation * cameraPosition * METER_TO_LENGTH_UNIT;
   vRayDirection = rotation * worldDirection;
   vEllipsoidCenter =
-    (ellipsoidCenter + altitudeCorrection) * METER_TO_UNIT_LENGTH;
+    (ellipsoidCenter + altitudeCorrection) * METER_TO_LENGTH_UNIT;
   gl_Position =
-    projectionMatrix *
-    viewMatrix *
-    vec4(cameraPosition + worldDirection * cameraFar, 1.0);
-  #else
+    projectionMatrix * viewMatrix * vec4(cameraPosition + worldDirection * cameraFar, 1.0);
+  #else // BACKGROUND
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   #endif // BACKGROUND
 

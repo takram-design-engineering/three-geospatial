@@ -7,6 +7,7 @@ import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH
 } from './constants'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import { getTextureCoordFromUnitRange } from './helpers/functions'
 import { sampleTexture } from './helpers/sampleTexture'
 
@@ -51,7 +52,6 @@ export const skyLightProbeParametersDefaults = {
 } satisfies SkyLightProbeParameters
 
 export class SkyLightProbe extends LightProbe {
-  private readonly atmosphere: AtmosphereParameters
   irradianceTexture: DataTexture | null
   ellipsoid: Ellipsoid
   readonly ellipsoidCenter = new Vector3()
@@ -62,7 +62,7 @@ export class SkyLightProbe extends LightProbe {
 
   constructor(
     params?: SkyLightProbeParameters,
-    atmosphere = AtmosphereParameters.DEFAULT
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super()
     const {
@@ -73,7 +73,6 @@ export class SkyLightProbe extends LightProbe {
       sunDirection
     } = { ...skyLightProbeParametersDefaults, ...params }
 
-    this.atmosphere = atmosphere
     this.irradianceTexture = irradianceTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
@@ -101,9 +100,10 @@ export class SkyLightProbe extends LightProbe {
       )
       if (surfacePosition != null) {
         cameraPositionECEF.sub(
-          this.ellipsoid.getOsculatingSphereCenter(
+          getAltitudeCorrectionOffset(
             surfacePosition,
             this.atmosphere.bottomRadius,
+            this.ellipsoid,
             vectorScratch2
           )
         )

@@ -1,6 +1,5 @@
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
+  Color,
   GLSL3,
   Matrix4,
   Uniform,
@@ -10,20 +9,27 @@ import {
   type Group,
   type Object3D,
   type Scene,
+  type Texture,
+  type WebGLProgramParametersWithUniforms,
   type WebGLRenderer
 } from 'three'
+
+import { resolveIncludes } from '@takram/three-geospatial'
+import { raySphereIntersection } from '@takram/three-geospatial/shaders'
 
 import {
   AtmosphereMaterialBase,
   atmosphereMaterialParametersBaseDefaults,
-  type AtmosphereMaterialBaseParameters
+  type AtmosphereMaterialBaseParameters,
+  type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
+import { type AtmosphereShadowLength } from './types'
 
-import functions from './shaders/functions.glsl'
-import parameters from './shaders/parameters.glsl'
-import fragmentShader from './shaders/sky.frag'
-import sky from './shaders/sky.glsl'
-import vertexShader from './shaders/sky.vert'
+import functions from './shaders/functions.glsl?raw'
+import parameters from './shaders/parameters.glsl?raw'
+import fragmentShader from './shaders/sky.frag?raw'
+import sky from './shaders/sky.glsl?raw'
+import vertexShader from './shaders/sky.vert?raw'
 
 declare module 'three' {
   interface Camera {
@@ -38,6 +44,7 @@ export interface SkyMaterialParameters
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
+  groundAlbedo?: Color
 }
 
 export const skyMaterialParametersDefaults = {
@@ -48,7 +55,20 @@ export const skyMaterialParametersDefaults = {
   lunarRadianceScale: 1
 } satisfies SkyMaterialParameters
 
+export interface SkyMaterialUniforms {
+  [key: string]: Uniform<unknown>
+  inverseProjectionMatrix: Uniform<Matrix4>
+  inverseViewMatrix: Uniform<Matrix4>
+  moonDirection: Uniform<Vector3>
+  moonAngularRadius: Uniform<number>
+  lunarRadianceScale: Uniform<number>
+  groundAlbedo: Uniform<Color>
+  shadowLengthBuffer: Uniform<Texture | null>
+}
+
 export class SkyMaterial extends AtmosphereMaterialBase {
+  declare uniforms: AtmosphereMaterialBaseUniforms & SkyMaterialUniforms
+
   constructor(params?: SkyMaterialParameters) {
     const {
       sun,
@@ -56,25 +76,22 @@ export class SkyMaterial extends AtmosphereMaterialBase {
       moonDirection,
       moonAngularRadius,
       lunarRadianceScale,
+      groundAlbedo,
       ...others
     } = { ...skyMaterialParametersDefaults, ...params }
 
     super({
+      name: 'SkyMaterial',
       glslVersion: GLSL3,
-      vertexShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${vertexShader}
-      `,
-      fragmentShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${functions}
-        ${sky}
-        ${fragmentShader}
-      `,
+      vertexShader: resolveIncludes(vertexShader, {
+        parameters
+      }),
+      fragmentShader: resolveIncludes(fragmentShader, {
+        core: { raySphereIntersection },
+        parameters,
+        functions,
+        sky
+      }),
       ...others,
       uniforms: {
         inverseProjectionMatrix: new Uniform(new Matrix4()),
@@ -82,8 +99,10 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
         moonAngularRadius: new Uniform(moonAngularRadius),
         lunarRadianceScale: new Uniform(lunarRadianceScale),
+        groundAlbedo: new Uniform(groundAlbedo?.clone() ?? new Color(0)),
+        shadowLengthBuffer: new Uniform(null),
         ...others.uniforms
-      },
+      } satisfies SkyMaterialUniforms,
       defines: {
         PERSPECTIVE_CAMERA: '1'
       },
@@ -91,6 +110,23 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     })
     this.sun = sun
     this.moon = moon
+  }
+
+  override onBeforeCompile(
+    parameters: WebGLProgramParametersWithUniforms,
+    renderer: WebGLRenderer
+  ): void {
+    super.onBeforeCompile(parameters, renderer)
+    const color = this.groundAlbedo
+    const groundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
+    if ((this.defines.GROUND_ALBEDO != null) !== groundAlbedo) {
+      if (groundAlbedo) {
+        this.defines.GROUND_ALBEDO = '1'
+      } else {
+        delete this.defines.GROUND_ALBEDO
+      }
+      this.needsUpdate = true
+    }
   }
 
   override onBeforeRender(
@@ -165,5 +201,34 @@ export class SkyMaterial extends AtmosphereMaterialBase {
 
   set lunarRadianceScale(value: number) {
     this.uniforms.lunarRadianceScale.value = value
+  }
+
+  get groundAlbedo(): Color {
+    return this.uniforms.groundAlbedo.value
+  }
+
+  private setUniform<K extends keyof SkyMaterialUniforms>(
+    name: K,
+    value:
+      | SkyMaterialUniforms[K]
+      | (SkyMaterialUniforms[K] extends Uniform<infer V> ? V : never)
+  ): void {
+    if (value instanceof Uniform) {
+      this.uniforms[name] = value
+    } else {
+      this.uniforms[name].value = value as any
+    }
+  }
+
+  // eslint-disable-next-line accessor-pairs
+  set shadowLength(value: AtmosphereShadowLength | null) {
+    if (value != null) {
+      this.defines.HAS_SHADOW_LENGTH = '1'
+      this.setUniform('shadowLengthBuffer', value.map)
+    } else {
+      delete this.defines.HAS_SHADOW_LENGTH
+      this.uniforms.shadowLengthBuffer.value = null
+    }
+    this.needsUpdate = true
   }
 }

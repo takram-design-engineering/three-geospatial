@@ -1,3 +1,9 @@
+precision highp float;
+precision highp sampler3D;
+
+#include "parameters"
+#include "functions"
+
 uniform vec3 sunDirection;
 
 in vec3 vCameraPosition;
@@ -11,12 +17,21 @@ layout(location = 0) out vec4 outputColor;
 in vec3 vColor;
 
 void main() {
-  #ifndef PERSPECTIVE_CAMERA
+  #if !defined(PERSPECTIVE_CAMERA)
   outputColor = vec4(0.0);
   discard; // Rendering celestial objects without perspective doesn't make sense.
-  #endif
+  #endif // !defined(PERSPECTIVE_CAMERA)
 
   #ifdef BACKGROUND
+  vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
+  vec3 rayDirection = normalize(vRayDirection);
+  float r = length(cameraPosition);
+  float mu = dot(cameraPosition, rayDirection) / r;
+
+  if (RayIntersectsGround(r, mu)) {
+    discard;
+  }
+
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
     vCameraPosition - vEllipsoidCenter,
@@ -27,7 +42,7 @@ void main() {
   );
   radiance += transmittance * vColor;
   outputColor = vec4(radiance, 1.0);
-  #else
+  #else // BACKGROUND
   outputColor = vec4(vColor, 1.0);
   #endif // BACKGROUND
 

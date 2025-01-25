@@ -25,7 +25,6 @@ export const sunDirectionalLightParametersDefaults = {
 } satisfies SunDirectionalLightParameters
 
 export class SunDirectionalLight extends DirectionalLight {
-  private readonly atmosphere: AtmosphereParameters
   transmittanceTexture: DataTexture | null
   ellipsoid: Ellipsoid
   readonly ellipsoidCenter = new Vector3()
@@ -37,7 +36,7 @@ export class SunDirectionalLight extends DirectionalLight {
 
   constructor(
     params?: SunDirectionalLightParameters,
-    atmosphere = AtmosphereParameters.DEFAULT
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super()
     const {
@@ -49,7 +48,6 @@ export class SunDirectionalLight extends DirectionalLight {
       distance
     } = { ...sunDirectionalLightParametersDefaults, ...params }
 
-    this.atmosphere = atmosphere
     this.transmittanceTexture = irradianceTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude

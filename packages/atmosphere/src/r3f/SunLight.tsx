@@ -28,7 +28,7 @@ export const SunLight = /*#__PURE__*/ forwardRef<
   SunDirectionalLight,
   SunLightProps
 >(function SunLight({ position, ...props }, forwardedRef) {
-  const { textures, transientProps, ...contextProps } =
+  const { textures, transientStates, ...contextProps } =
     useContext(AtmosphereContext)
 
   const ref = useRef<SunDirectionalLight>(null)
@@ -37,10 +37,10 @@ export const SunLight = /*#__PURE__*/ forwardRef<
     if (light == null) {
       return
     }
-    if (transientProps != null) {
-      light.sunDirection.copy(transientProps.sunDirection)
-      light.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
-      light.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
+    if (transientStates != null) {
+      light.sunDirection.copy(transientStates.sunDirection)
+      light.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+      light.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
       light.update()
     }
   })

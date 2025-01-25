@@ -6,7 +6,6 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
-import glsl from 'vite-plugin-glsl'
 
 export default defineConfig({
   root: __dirname,
@@ -25,8 +24,7 @@ export default defineConfig({
           console.warn(diagnostic)
         })
       }
-    }),
-    glsl()
+    })
   ],
 
   // Uncomment this if you are using workers.
@@ -47,7 +45,8 @@ export default defineConfig({
       // Could also be a dictionary or array of multiple entry points.
       entry: {
         'build/index': 'src/index.ts',
-        'build/r3f': 'src/r3f/index.ts'
+        'build/r3f': 'src/r3f/index.ts',
+        'build/shaders': 'src/shaders/index.ts'
       },
       name: 'core'
     },

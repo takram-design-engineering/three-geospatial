@@ -1,7 +1,10 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useFrame, type MeshProps } from '@react-three/fiber'
+import { useAtomValue } from 'jotai'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
-import { type BufferGeometry, type Mesh, type Vector3 } from 'three'
+import { type BufferGeometry, type Color, type Mesh, type Vector3 } from 'three'
+
+import { type ExtendedProps } from '@takram/three-geospatial/r3f'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 import { SKY_RENDER_ORDER } from '../constants'
@@ -11,17 +14,20 @@ import { separateProps } from './separateProps'
 
 export type SkyImpl = Mesh<BufferGeometry, SkyMaterial>
 
-export interface SkyProps extends MeshProps, AtmosphereMaterialProps {
-  sun?: boolean
-  moon?: boolean
-  moonDirection?: Vector3
-  moonAngularRadius?: number
-  lunarRadianceScale?: number
-}
+export type SkyProps = MeshProps &
+  AtmosphereMaterialProps &
+  ExtendedProps<{
+    sun?: boolean
+    moon?: boolean
+    moonDirection?: Vector3
+    moonAngularRadius?: number
+    lunarRadianceScale?: number
+    groundAlbedo?: Color
+  }>
 
 export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {
-    const { textures, transientProps, ...contextProps } =
+    const { textures, transientStates, atoms, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [
@@ -32,6 +38,7 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
         moonDirection,
         moonAngularRadius,
         lunarRadianceScale,
+        groundAlbedo,
         ...others
       }
     ] = separateProps({
@@ -48,12 +55,19 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
       }
     }, [material])
 
+    // TODO: Since cloud shadows are computed in post-processing, the shadow
+    // length texture is delayed by 1 frame.
+    const shadowLength = useAtomValue(atoms.shadowLengthAtom)
+    useEffect(() => {
+      material.shadowLength = shadowLength
+    }, [material, shadowLength])
+
     useFrame(() => {
-      if (transientProps != null) {
-        material.sunDirection.copy(transientProps.sunDirection)
-        material.moonDirection.copy(transientProps.moonDirection)
-        material.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
-        material.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
+      if (transientStates != null) {
+        material.sunDirection.copy(transientStates.sunDirection)
+        material.moonDirection.copy(transientStates.moonDirection)
+        material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+        material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
       }
     })
 
@@ -67,6 +81,7 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
           moonDirection={moonDirection}
           moonAngularRadius={moonAngularRadius}
           lunarRadianceScale={lunarRadianceScale}
+          groundAlbedo={groundAlbedo}
         />
       </ScreenQuad>
     )

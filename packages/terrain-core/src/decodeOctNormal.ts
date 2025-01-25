@@ -11,7 +11,7 @@ export function decodeOctNormal(
   range = 255
 ): Vector3 {
   if (octX === 0 && octY === 0) {
-    return result.set(0, 0, 0)
+    return result.setScalar(0)
   }
   let x = (octX / range) * 2 - 1
   let y = (octY / range) * 2 - 1

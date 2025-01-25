@@ -1,5 +1,3 @@
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
   NoBlending,
   ShaderMaterial,
@@ -9,8 +7,8 @@ import {
   type Texture
 } from 'three'
 
-import fragmentShader from './shaders/lensFlareFeatures.frag'
-import vertexShader from './shaders/lensFlareFeatures.vert'
+import fragmentShader from './shaders/lensFlareFeatures.frag?raw'
+import vertexShader from './shaders/lensFlareFeatures.vert?raw'
 
 export interface LensFlareFeaturesMaterialParameters
   extends ShaderMaterialParameters {
@@ -33,7 +31,8 @@ export class LensFlareFeaturesMaterial extends ShaderMaterial {
       inputBuffer = null,
       ghostAmount,
       haloAmount,
-      chromaticAberration
+      chromaticAberration,
+      ...others
     } = {
       ...lensFlareFeaturesMaterialParametersDefaults,
       ...params
@@ -42,24 +41,23 @@ export class LensFlareFeaturesMaterial extends ShaderMaterial {
       name: 'LensFlareFeaturesMaterial',
       fragmentShader,
       vertexShader,
+      blending: NoBlending,
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false,
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         texelSize: new Uniform(new Vector2()),
         ghostAmount: new Uniform(ghostAmount),
         haloAmount: new Uniform(haloAmount),
-        chromaticAberration: new Uniform(chromaticAberration)
-      },
-      blending: NoBlending,
-      toneMapped: false,
-      depthWrite: false,
-      depthTest: false
+        chromaticAberration: new Uniform(chromaticAberration),
+        ...others.uniforms
+      }
     })
   }
 
   setSize(width: number, height: number): void {
-    const texelSize = this.uniforms.texelSize
-    texelSize.value.x = 1 / width
-    texelSize.value.y = 1 / height
+    this.uniforms.texelSize.value.set(1 / width, 1 / height)
   }
 
   get inputBuffer(): Texture | null {

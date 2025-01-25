@@ -25,6 +25,7 @@ import {
 } from './typedArrayParsers'
 import { type Callable } from './types'
 
+// TODO: Move to types
 type ParameterProperties<T> = {
   [K in WritableKeysOf<T> as T[K] extends Callable ? never : K]: T[K]
 }

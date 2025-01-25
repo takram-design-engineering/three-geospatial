@@ -1,10 +1,6 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { BlendFunction, Effect } from 'postprocessing'
 
-import fragmentShader from './shaders/ditheringEffect.frag'
+import fragmentShader from './shaders/ditheringEffect.frag?raw'
 
 export interface DitheringEffectOptions {
   blendFunction?: BlendFunction

@@ -1,3 +1,8 @@
+precision highp float;
+precision highp sampler3D;
+
+#include "parameters"
+
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform vec3 cameraPosition;
@@ -7,6 +12,7 @@ uniform vec3 altitudeCorrection;
 
 layout(location = 0) in vec3 position;
 
+out vec2 vUv;
 out vec3 vCameraPosition;
 out vec3 vRayDirection;
 out vec3 vEllipsoidCenter;
@@ -27,9 +33,8 @@ void getCameraRay(out vec3 origin, out vec3 direction) {
     nearPoint /= nearPoint.w;
     farPoint /= farPoint.w;
 
-    // Calculate world values.
-    vec4 worldDirection =
-      inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
+    // Calculate world values
+    vec4 worldDirection = inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
     vec4 worldOrigin = inverseViewMatrix * nearPoint;
 
     // Outputs
@@ -39,14 +44,15 @@ void getCameraRay(out vec3 origin, out vec3 direction) {
 }
 
 void main() {
+  vUv = position.xy * 0.5 + 0.5;
+
   vec3 direction, origin;
   getCameraRay(origin, direction);
 
   mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vCameraPosition = rotation * origin.xyz * METER_TO_UNIT_LENGTH;
+  vCameraPosition = rotation * origin.xyz * METER_TO_LENGTH_UNIT;
   vRayDirection = rotation * direction.xyz;
-  vEllipsoidCenter =
-    (ellipsoidCenter + altitudeCorrection) * METER_TO_UNIT_LENGTH;
+  vEllipsoidCenter = (ellipsoidCenter + altitudeCorrection) * METER_TO_LENGTH_UNIT;
 
   gl_Position = vec4(position.xy, 1.0, 1.0);
 }

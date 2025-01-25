@@ -1,10 +1,8 @@
 // cSpell:words defaultnormal specularmap envmap
 
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { ShaderLib, type ShaderLibShader } from 'three'
 
-import { packingShader } from '@takram/three-geospatial'
+import { packing } from '@takram/three-geospatial/shaders'
 
 const SETUP = Symbol('SETUP')
 
@@ -105,11 +103,11 @@ function injectGBuffer(
   shader.fragmentShader = /* glsl */ `
     layout(location = 1) out vec4 outputBuffer1;
 
-    #ifndef USE_ENVMAP
+    #if !defined(USE_ENVMAP)
       uniform float reflectivity;
-    #endif
+    #endif // !defined(USE_ENVMAP)
 
-    ${packingShader}
+    ${packing}
     ${shader.fragmentShader.replace(
       /}\s*$/m, // Assume the last curly brace is of main()
       /* glsl */ `

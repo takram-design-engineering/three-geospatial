@@ -12,7 +12,7 @@ Our contribution to the project is scheduled to conclude by March 2025.
 | Name | Description | Status | NPM |
 | -- | -- | -- | -- |
 | [atmosphere](packages/atmosphere) | An implementation of Precomputed Atmospheric Scattering | Beta | [@takram/three-atmosphere](https://www.npmjs.com/package/@takram/three-atmosphere) |
-| [clouds](https://github.com/takram-design-engineering/three-geospatial/tree/dev/clouds/packages/clouds) | (Hopefully) global volumetric clouds and weather | WIP | @takram/three-global-clouds |
+| [clouds](https://github.com/takram-design-engineering/three-geospatial/tree/dev/clouds/packages/clouds) | (Hopefully) global volumetric clouds and weather | WIP | @takram/three-clouds |
 | [core](packages/core) | Provides fundamental functions for rendering GIS data | Alpha | [@takram/three-geospatial](https://www.npmjs.com/package/@takram/three-geospatial) |
 | [effects](packages/effects) | A collection of post-processing effects | Alpha | [@takram/three-geospatial-effects](https://www.npmjs.com/package/@takram/three-geospatial-effects) |
 
@@ -45,7 +45,7 @@ Project level commands are defined in [`project.json`](project.json). Although l
 - `nx build-libs`: Build all libraries.
 - `nx build {name}`: Build a specific library or app.
 - `nx lint`: Run linter.
-- `nx format`: Run prettier.
+- `nx format-all`: Run prettier.
 
 ### Environment variables
 

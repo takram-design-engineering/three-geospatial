@@ -1,8 +1,13 @@
+import { type ExtendedProps } from '@takram/three-geospatial/r3f'
+
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 
-export function separateProps<T extends AtmosphereMaterialProps>(
+export function separateProps<T extends ExtendedProps<AtmosphereMaterialProps>>(
   params: T
-): [AtmosphereMaterialProps, Omit<T, keyof AtmosphereMaterialProps>] {
+): [
+  ExtendedProps<AtmosphereMaterialProps>,
+  Omit<T, keyof AtmosphereMaterialProps>
+] {
   const {
     irradianceTexture,
     scatteringTexture,

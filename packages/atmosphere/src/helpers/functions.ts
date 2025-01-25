@@ -14,7 +14,7 @@ export function rayIntersectsGround(
   mu: number
 ): boolean {
   const { bottomRadius } = atmosphere
-  return mu < 0 && r * r * (mu * mu - 1) + bottomRadius * bottomRadius >= 0
+  return mu < 0 && r ** 2 * (mu ** 2 - 1) + bottomRadius ** 2 >= 0
 }
 
 export function distanceToTopAtmosphereBoundary(
@@ -23,7 +23,7 @@ export function distanceToTopAtmosphereBoundary(
   mu: number
 ): number {
   const { topRadius } = atmosphere
-  const discriminant = r * r * (mu * mu - 1) + topRadius * topRadius
+  const discriminant = r ** 2 * (mu ** 2 - 1) + topRadius ** 2
   return clampDistance(-r * mu + safeSqrt(discriminant))
 }
 

@@ -1,4 +1,3 @@
-import { pick } from 'lodash-es'
 import { Box3, BufferAttribute, BufferGeometry, Sphere, Vector3 } from 'three'
 
 export type BufferGeometryLike = Pick<
@@ -9,8 +8,9 @@ export type BufferGeometryLike = Pick<
 export function toBufferGeometryLike(
   geometry: BufferGeometry
 ): [BufferGeometryLike, ArrayBuffer[]] {
+  const { attributes, index, boundingBox, boundingSphere } = geometry
   return [
-    pick(geometry, ['attributes', 'index', 'boundingBox', 'boundingSphere']),
+    { attributes, index, boundingBox, boundingSphere },
     [
       ...Object.values(geometry.attributes).map(
         attribute => attribute.array.buffer

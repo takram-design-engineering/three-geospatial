@@ -1,13 +1,10 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform, type Texture } from 'three'
 
-import { packingShader } from '@takram/three-geospatial'
+import { resolveIncludes, type UniformMap } from '@takram/three-geospatial'
+import { packing } from '@takram/three-geospatial/shaders'
 
-import fragmentShader from './shaders/geometryEffect.frag'
+import fragmentShader from './shaders/geometryEffect.frag?raw'
 
 export type GeometryEffectOutput = 'normal' | 'pbr'
 
@@ -17,12 +14,18 @@ export interface GeometryEffectOptions {
   output?: GeometryEffectOutput
 }
 
+export interface GeometryEffectUniforms {
+  geometryBuffer: Uniform<Texture | null>
+}
+
 export const geometryEffectOptionsDefaults = {
   blendFunction: BlendFunction.SRC,
   output: 'normal'
 } satisfies GeometryEffectOptions
 
 export class GeometryEffect extends Effect {
+  declare uniforms: UniformMap<GeometryEffectUniforms>
+
   constructor(options?: GeometryEffectOptions) {
     const {
       blendFunction,
@@ -34,27 +37,28 @@ export class GeometryEffect extends Effect {
     }
     super(
       'GeometryEffect',
-      /* glsl */ `
-        ${packingShader}
-        ${fragmentShader}
-      `,
+      resolveIncludes(fragmentShader, {
+        core: { packing }
+      }),
       {
         blendFunction,
         attributes: EffectAttribute.DEPTH,
-        uniforms: new Map<string, Uniform>([
-          ['geometryBuffer', new Uniform(geometryBuffer)]
-        ])
+        uniforms: new Map<string, Uniform>(
+          Object.entries({
+            geometryBuffer: new Uniform(geometryBuffer)
+          } satisfies GeometryEffectUniforms)
+        )
       }
     )
     this.output = output
   }
 
   get geometryBuffer(): Texture | null {
-    return this.uniforms.get('geometryBuffer')!.value
+    return this.uniforms.get('geometryBuffer').value
   }
 
   set geometryBuffer(value: Texture | null) {
-    this.uniforms.get('geometryBuffer')!.value = value
+    this.uniforms.get('geometryBuffer').value = value
   }
 
   get output(): GeometryEffectOutput {

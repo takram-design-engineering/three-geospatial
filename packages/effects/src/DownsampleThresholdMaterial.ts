@@ -1,5 +1,3 @@
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
   NoBlending,
   ShaderMaterial,
@@ -9,8 +7,8 @@ import {
   type Texture
 } from 'three'
 
-import fragmentShader from './shaders/downsampleThreshold.frag'
-import vertexShader from './shaders/downsampleThreshold.vert'
+import fragmentShader from './shaders/downsampleThreshold.frag?raw'
+import vertexShader from './shaders/downsampleThreshold.vert?raw'
 
 export interface DownsampleThresholdMaterialParameters
   extends ShaderMaterialParameters {
@@ -39,17 +37,18 @@ export class DownsampleThresholdMaterial extends ShaderMaterial {
       name: 'DownsampleThresholdMaterial',
       fragmentShader,
       vertexShader,
-      uniforms: {
-        inputBuffer: new Uniform(inputBuffer),
-        texelSize: new Uniform(new Vector2()),
-        thresholdLevel: new Uniform(thresholdLevel),
-        thresholdRange: new Uniform(thresholdRange)
-      },
       blending: NoBlending,
       toneMapped: false,
       depthWrite: false,
       depthTest: false,
-      ...others
+      ...others,
+      uniforms: {
+        inputBuffer: new Uniform(inputBuffer),
+        texelSize: new Uniform(new Vector2()),
+        thresholdLevel: new Uniform(thresholdLevel),
+        thresholdRange: new Uniform(thresholdRange),
+        ...others.uniforms
+      }
     })
   }
 

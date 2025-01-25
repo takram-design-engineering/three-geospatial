@@ -1,3 +1,4 @@
+import path from 'path'
 import type { StorybookConfig } from '@storybook/react-vite'
 import { mergeConfig } from 'vite'
 
@@ -10,7 +11,8 @@ const config: StorybookConfig = {
   },
   staticDirs: [
     { from: '../assets', to: '/public' },
-    { from: '../../packages/atmosphere/assets', to: '/atmosphere' }
+    { from: '../../packages/atmosphere/assets', to: '/atmosphere' },
+    { from: '../../packages/clouds/assets', to: '/clouds' }
   ],
 
   viteFinal: async config =>
@@ -18,13 +20,7 @@ const config: StorybookConfig = {
       // TODO: I don't understand at all how to tell the optimizer exclude
       // storybook's cache. Put everything that I can think of here.
       optimizeDeps: {
-        exclude: [
-          'node_modules/.cache/storybook',
-          'storybook/node_modules/.cache/storybook',
-          '../node_modules/.cache/storybook',
-          '../storybook/node_modules/.cache/storybook',
-          '../../storybook/node_modules/.cache/storybook'
-        ],
+        exclude: [path.resolve(__dirname, '../node_modules/.cache/storybook')],
         force: true
       }
     }),

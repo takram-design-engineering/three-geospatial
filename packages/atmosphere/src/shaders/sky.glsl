@@ -1,9 +1,6 @@
 vec3 getLunarRadiance(const float moonAngularRadius) {
   // Not a physical number but the order of 10^-6 relative to the sun may fit.
-  vec3 radiance =
-    u_solar_irradiance *
-    0.000002 /
-    (PI * moonAngularRadius * moonAngularRadius);
+  vec3 radiance = u_solar_irradiance * 0.000002 / (PI * moonAngularRadius * moonAngularRadius);
   #ifdef PHOTOMETRIC
   radiance *= SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
   #endif // PHOTOMETRIC
@@ -26,8 +23,9 @@ float orenNayarDiffuse(const vec3 L, const vec3 V, const vec3 N) {
 }
 
 vec3 getSkyRadiance(
-  const vec3 viewPosition,
+  const vec3 cameraPosition,
   const vec3 rayDirection,
+  float shadowLength,
   const vec3 sunDirection,
   const vec3 moonDirection,
   const float moonAngularRadius,
@@ -35,9 +33,9 @@ vec3 getSkyRadiance(
 ) {
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
-    viewPosition,
+    cameraPosition,
     rayDirection,
-    0.0, // Shadow length
+    shadowLength,
     sunDirection,
     transmittance
   );
@@ -55,31 +53,19 @@ vec3 getSkyRadiance(
   float viewDotSun = dot(rayDirection, sunDirection);
   if (viewDotSun > cos(u_sun_angular_radius)) {
     float angle = acos(clamp(viewDotSun, -1.0, 1.0));
-    float antialias = smoothstep(
-      u_sun_angular_radius,
-      u_sun_angular_radius - fragmentAngle,
-      angle
-    );
+    float antialias = smoothstep(u_sun_angular_radius, u_sun_angular_radius - fragmentAngle, angle);
     radiance += transmittance * GetSolarRadiance() * antialias;
   }
   #endif // SUN
 
   #ifdef MOON
-  float intersection = intersectSphere(
-    rayDirection,
-    moonDirection,
-    moonAngularRadius
-  );
+  float intersection = intersectSphere(rayDirection, moonDirection, moonAngularRadius);
   if (intersection > 0.0) {
     vec3 normal = normalize(moonDirection - rayDirection * intersection);
     float diffuse = orenNayarDiffuse(-sunDirection, rayDirection, normal);
     float viewDotMoon = dot(rayDirection, moonDirection);
     float angle = acos(clamp(viewDotMoon, -1.0, 1.0));
-    float antialias = smoothstep(
-      moonAngularRadius,
-      moonAngularRadius - fragmentAngle,
-      angle
-    );
+    float antialias = smoothstep(moonAngularRadius, moonAngularRadius - fragmentAngle, angle);
     radiance +=
       transmittance *
       getLunarRadiance(moonAngularRadius) *

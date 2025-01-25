@@ -13,6 +13,11 @@
       "import": "./build/r3f.js",
       "require": "./build/r3f.cjs",
       "types": "./types/r3f/index.d.ts"
+    },
+    "./shaders": {
+      "import": "./build/shaders.js",
+      "require": "./build/shaders.cjs",
+      "types": "./types/shaders/index.d.ts"
     }
   },
   "main": "./build/index.cjs",
@@ -26,7 +31,6 @@
     "README.md"
   ],
   "dependencies": {
-    "lodash-es": "^4.17.21",
     "react-merge-refs": "^2.1.1",
     "tiny-invariant": "^1.3.3",
     "type-fest": "^4.32.0"

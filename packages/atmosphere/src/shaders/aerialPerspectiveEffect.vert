@@ -30,8 +30,7 @@ void getCameraRay(out vec3 origin, out vec3 direction) {
     farPoint /= farPoint.w;
 
     // Calculate world values.
-    vec4 worldDirection =
-      inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
+    vec4 worldDirection = inverseViewMatrix * vec4(farPoint.xyz - nearPoint.xyz, 0.0);
     vec4 worldOrigin = inverseViewMatrix * nearPoint;
 
     // Outputs
@@ -45,23 +44,20 @@ void mainSupport() {
   getCameraRay(origin, direction);
 
   mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vCameraPosition = rotation * origin.xyz * METER_TO_UNIT_LENGTH;
+  vCameraPosition = rotation * origin.xyz * METER_TO_LENGTH_UNIT;
   vRayDirection = rotation * direction.xyz;
 
-  vEllipsoidCenter =
-    (ellipsoidCenter + altitudeCorrection) * METER_TO_UNIT_LENGTH;
-
+  vEllipsoidCenter = (ellipsoidCenter + altitudeCorrection) * METER_TO_LENGTH_UNIT;
   #ifdef CORRECT_GEOMETRIC_ERROR
   // Gradually turn off altitude correction for aerial perspective as geometric
   // error correction takes effect.
   // See: https://github.com/takram-design-engineering/three-geospatial/pull/23#issuecomment-2542914656
   vGeometryEllipsoidCenter =
-    (ellipsoidCenter + mix(altitudeCorrection, vec3(0.0), idealSphereAlpha)) *
-    METER_TO_UNIT_LENGTH;
+    (ellipsoidCenter + mix(altitudeCorrection, vec3(0.0), idealSphereAlpha)) * METER_TO_LENGTH_UNIT;
   #else
   vGeometryEllipsoidCenter = vEllipsoidCenter;
   #endif // CORRECT_GEOMETRIC_ERROR
 
-  vec3 radii = ellipsoidRadii * METER_TO_UNIT_LENGTH;
+  vec3 radii = ellipsoidRadii * METER_TO_LENGTH_UNIT;
   vEllipsoidRadiiSquared = radii * radii;
 }

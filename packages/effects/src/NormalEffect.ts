@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Matrix4,
@@ -12,19 +8,22 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import {
-  depthShader,
-  packingShader,
-  transformShader
-} from '@takram/three-geospatial'
+import { resolveIncludes, type UniformMap } from '@takram/three-geospatial'
+import { depth, packing, transform } from '@takram/three-geospatial/shaders'
 
-import fragmentShader from './shaders/normalEffect.frag'
+import fragmentShader from './shaders/normalEffect.frag?raw'
 
 export interface NormalEffectOptions {
   blendFunction?: BlendFunction
   normalBuffer?: Texture | null
   octEncoded?: boolean
   reconstructFromDepth?: boolean
+}
+
+export interface NormalEffectUniforms {
+  normalBuffer: Uniform<Texture | null>
+  projectionMatrix: Uniform<Matrix4>
+  inverseProjectionMatrix: Uniform<Matrix4>
 }
 
 export const normalEffectOptionsDefaults = {
@@ -34,6 +33,8 @@ export const normalEffectOptionsDefaults = {
 } satisfies NormalEffectOptions
 
 export class NormalEffect extends Effect {
+  declare uniforms: UniformMap<NormalEffectUniforms>
+
   constructor(
     private camera: Camera,
     options?: NormalEffectOptions
@@ -49,20 +50,23 @@ export class NormalEffect extends Effect {
     }
     super(
       'NormalEffect',
-      /* glsl */ `
-        ${depthShader}
-        ${packingShader}
-        ${transformShader}
-        ${fragmentShader}
-      `,
+      resolveIncludes(fragmentShader, {
+        core: {
+          depth,
+          packing,
+          transform
+        }
+      }),
       {
         blendFunction,
         attributes: EffectAttribute.DEPTH,
-        uniforms: new Map<string, Uniform>([
-          ['normalBuffer', new Uniform(normalBuffer)],
-          ['projectionMatrix', new Uniform(new Matrix4())],
-          ['inverseProjectionMatrix', new Uniform(new Matrix4())]
-        ])
+        uniforms: new Map<string, Uniform>(
+          Object.entries({
+            normalBuffer: new Uniform(normalBuffer),
+            projectionMatrix: new Uniform(new Matrix4()),
+            inverseProjectionMatrix: new Uniform(new Matrix4())
+          } satisfies NormalEffectUniforms)
+        )
       }
     )
     if (camera != null) {
@@ -80,14 +84,14 @@ export class NormalEffect extends Effect {
     this.camera = value
   }
 
-  update(
+  override update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
     deltaTime?: number
   ): void {
     const uniforms = this.uniforms
-    const projectionMatrix = uniforms.get('projectionMatrix')!
-    const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
+    const projectionMatrix = uniforms.get('projectionMatrix')
+    const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')
     const camera = this.camera
     if (camera != null) {
       projectionMatrix.value.copy(camera.projectionMatrix)
@@ -96,11 +100,11 @@ export class NormalEffect extends Effect {
   }
 
   get normalBuffer(): Texture | null {
-    return this.uniforms.get('normalBuffer')!.value
+    return this.uniforms.get('normalBuffer').value
   }
 
   set normalBuffer(value: Texture | null) {
-    this.uniforms.get('normalBuffer')!.value = value
+    this.uniforms.get('normalBuffer').value = value
   }
 
   get octEncoded(): boolean {

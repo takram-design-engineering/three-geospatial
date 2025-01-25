@@ -12,16 +12,19 @@ import {
   type WebGLRenderer
 } from 'three'
 
+import { resolveIncludes } from '@takram/three-geospatial'
+
 import {
   AtmosphereMaterialBase,
   atmosphereMaterialParametersBaseDefaults,
-  type AtmosphereMaterialBaseParameters
+  type AtmosphereMaterialBaseParameters,
+  type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
 
-import functions from './shaders/functions.glsl'
-import parameters from './shaders/parameters.glsl'
-import fragmentShader from './shaders/stars.frag'
-import vertexShader from './shaders/stars.vert'
+import functions from './shaders/functions.glsl?raw'
+import parameters from './shaders/parameters.glsl?raw'
+import fragmentShader from './shaders/stars.frag?raw'
+import vertexShader from './shaders/stars.vert?raw'
 
 declare module 'three' {
   interface Camera {
@@ -43,7 +46,21 @@ export const starsMaterialParametersDefaults = {
   background: true
 } satisfies StarsMaterialParameters
 
+export interface StarsMaterialUniforms {
+  [key: string]: Uniform<unknown>
+  projectionMatrix: Uniform<Matrix4>
+  modelViewMatrix: Uniform<Matrix4>
+  viewMatrix: Uniform<Matrix4>
+  matrixWorld: Uniform<Matrix4>
+  cameraFar: Uniform<number>
+  pointSize: Uniform<number>
+  magnitudeRange: Uniform<Vector2>
+  radianceScale: Uniform<number>
+}
+
 export class StarsMaterial extends AtmosphereMaterialBase {
+  declare uniforms: AtmosphereMaterialBaseUniforms & StarsMaterialUniforms
+
   pointSize: number
 
   constructor(params?: StarsMaterialParameters) {
@@ -53,20 +70,15 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     }
 
     super({
+      name: 'StarsMaterial',
       glslVersion: GLSL3,
-      vertexShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${vertexShader}
-      `,
-      fragmentShader: /* glsl */ `
-        precision highp float;
-        precision highp sampler3D;
-        ${parameters}
-        ${functions}
-        ${fragmentShader}
-      `,
+      vertexShader: resolveIncludes(vertexShader, {
+        parameters
+      }),
+      fragmentShader: resolveIncludes(fragmentShader, {
+        parameters,
+        functions
+      }),
       ...others,
       uniforms: {
         projectionMatrix: new Uniform(new Matrix4()),
@@ -78,7 +90,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
         magnitudeRange: new Uniform(new Vector2(-2, 8)),
         radianceScale: new Uniform(radianceScale),
         ...others.uniforms
-      },
+      } satisfies StarsMaterialUniforms,
       defines: {
         PERSPECTIVE_CAMERA: '1'
       }
@@ -116,7 +128,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
   }
 
   get magnitudeRange(): Vector2 {
-    return this.uniforms.magnitudeScale.value
+    return this.uniforms.magnitudeRange.value
   }
 
   get radianceScale(): number {

@@ -1,0 +1,9 @@
+{
+  "name": "clouds",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/clouds/src",
+  "projectType": "library",
+  "tags": ["type:lib"],
+  "// targets": "to see all targets run: nx show project clouds --web",
+  "targets": {}
+}

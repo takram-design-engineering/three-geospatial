@@ -1,8 +1,21 @@
+precision highp sampler2DArray;
+
+#include "core/depth"
+#include "core/packing"
+#include "core/transform"
+#include "core/raySphereIntersection"
+#include "parameters"
+#include "functions"
+#include "sky"
+
 uniform sampler2D normalBuffer;
 
 uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
+uniform float bottomRadius;
+uniform vec3 ellipsoidCenter;
 uniform mat4 inverseEllipsoidMatrix;
 uniform vec3 sunDirection;
 uniform vec3 moonDirection;
@@ -10,6 +23,23 @@ uniform float moonAngularRadius;
 uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
+
+#ifdef HAS_COMPOSITE
+uniform sampler2D compositeBuffer;
+#endif // HAS_COMPOSITE
+
+#ifdef HAS_SHADOW
+uniform sampler2DArray shadowBuffer;
+uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
+uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
+uniform float shadowFar;
+uniform float shadowTopHeight;
+uniform float shadowRadius;
+#endif // HAS_SHADOW
+
+#ifdef HAS_SHADOW_LENGTH
+uniform sampler2D shadowLengthBuffer;
+#endif // HAS_SHADOW_LENGTH
 
 varying vec3 vCameraPosition;
 varying vec3 vRayDirection;
@@ -19,9 +49,9 @@ varying vec3 vEllipsoidRadiiSquared;
 
 vec3 readNormal(const vec2 uv) {
   #ifdef OCT_ENCODED_NORMAL
-  return unpackVec2ToNormal(texture2D(normalBuffer, uv).xy);
-  #else
-  return 2.0 * texture2D(normalBuffer, uv).xyz - 1.0;
+  return unpackVec2ToNormal(texture(normalBuffer, uv).xy);
+  #else // OCT_ENCODED_NORMAL
+  return 2.0 * texture(normalBuffer, uv).xyz - 1.0;
   #endif // OCT_ENCODED_NORMAL
 }
 
@@ -39,51 +69,139 @@ void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
 }
 
 #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+
 vec3 getSunSkyIrradiance(
   const vec3 positionECEF,
   const vec3 normal,
-  const vec3 inputColor
+  const vec3 inputColor,
+  const float shadowTransmittance
 ) {
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
   // defined, regard the inputColor as radiance at the texel.
   vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
-  vec3 sunIrradiance = GetSunAndSkyIrradiance(
-    positionECEF,
-    normal,
-    sunDirection,
-    skyIrradiance
-  );
+  vec3 sunIrradiance = GetSunAndSkyIrradiance(positionECEF, normal, sunDirection, skyIrradiance);
+
+  #ifdef HAS_SHADOW
+  sunIrradiance *= shadowTransmittance;
+  #endif // HAS_SHADOW
+
   #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
   return albedo * (sunIrradiance + skyIrradiance);
   #elif defined(SUN_IRRADIANCE)
   return albedo * sunIrradiance;
   #elif defined(SKY_IRRADIANCE)
   return albedo * skyIrradiance;
-  #endif
+  #endif // defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
 }
+
 #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
 #if defined(TRANSMITTANCE) || defined(INSCATTER)
-void getTransmittanceInscatter(const vec3 positionECEF, inout vec3 radiance) {
+
+void applyTransmittanceInscatter(const vec3 positionECEF, float shadowLength, inout vec3 radiance) {
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
     vCameraPosition - vGeometryEllipsoidCenter,
     positionECEF,
-    0.0, // Shadow length
+    shadowLength,
     sunDirection,
     transmittance
   );
-  #if defined(TRANSMITTANCE)
+  #ifdef TRANSMITTANCE
   radiance = radiance * transmittance;
-  #endif
-  #if defined(INSCATTER)
+  #endif // TRANSMITTANCE
+  #ifdef INSCATTER
   radiance = radiance + inscatter;
-  #endif
+  #endif // INSCATTER
 }
+
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
+#ifdef HAS_SHADOW
+
+int getCascadeIndex(const vec3 position) {
+  vec4 viewPosition = viewMatrix * vec4(position, 1.0);
+  float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
+  vec2 interval;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; ++i) {
+    #if UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
+    interval = shadowIntervals[i];
+    if (depth >= interval.x && depth < interval.y) {
+      return UNROLLED_LOOP_INDEX;
+    }
+    #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
+  }
+  #pragma unroll_loop_end
+  return SHADOW_CASCADE_COUNT - 1;
+}
+
+float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const int cascadeIndex) {
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
+  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
+}
+
+float sampleShadowOpticalDepthPCF(const vec3 worldPosition, const vec3 positionECEF) {
+  int cascadeIndex = getCascadeIndex(worldPosition);
+  vec4 point = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  point /= point.w;
+  vec2 uv = point.xy * 0.5 + 0.5;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    return 0.0;
+  }
+
+  // Distance to the top of the shadows along the sun direction, which matches
+  // the ray origin of BSM.
+  float distanceToTop = raySphereSecondIntersection(
+    positionECEF / METER_TO_LENGTH_UNIT, // TODO: Make units consistent
+    sunDirection,
+    vec3(0.0),
+    bottomRadius + shadowTopHeight
+  );
+
+  vec2 texelSize = vec2(1.0) / vec2(textureSize(shadowBuffer, 0).xy);
+  vec4 d1 = vec4(-texelSize.xy, texelSize.xy) * shadowRadius;
+  vec4 d2 = d1 * 0.5;
+  // prettier-ignore
+  return (1.0 / 17.0) * (
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.xy, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.y), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.zy, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.xy, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.y), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.zy, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, 0.0), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, 0.0), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, 0.0), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, 0.0), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.xw, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.w), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d2.zw, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.xw, cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.w), cascadeIndex) +
+    sampleShadowOpticalDepth(distanceToTop, uv + d1.zw, cascadeIndex)
+  );
+}
+
+#endif // HAS_SHADOW
+
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
+  float shadowLength = 0.0;
+  #ifdef HAS_SHADOW_LENGTH
+  shadowLength = texture(shadowLengthBuffer, uv).r;
+  #endif // HAS_SHADOW_LENGTH
+
+  #ifdef HAS_COMPOSITE
+  vec4 composite = texture(compositeBuffer, uv);
+  if (composite.a == 1.0) {
+    outputColor = composite;
+    return;
+  }
+  #endif // HAS_COMPOSITE
+
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
     #ifdef SKY
@@ -91,15 +209,20 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     outputColor.rgb = getSkyRadiance(
       vCameraPosition - vEllipsoidCenter,
       rayDirection,
+      shadowLength,
       sunDirection,
       moonDirection,
       moonAngularRadius,
       lunarRadianceScale
     );
     outputColor.a = 1.0;
-    #else
+    #else // SKY
     outputColor = inputColor;
     #endif // SKY
+
+    #ifdef HAS_COMPOSITE
+    outputColor.rgb = outputColor.rgb * (1.0 - composite.a) + composite.rgb;
+    #endif // HAS_COMPOSITE
     return;
   }
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
@@ -117,31 +240,41 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 dx = dFdx(viewPosition);
   vec3 dy = dFdy(viewPosition);
   viewNormal = normalize(cross(dx, dy));
-  #else
+  #else // RECONSTRUCT_NORMAL
   viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
   vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
   vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
   mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vec3 positionECEF =
-    rotation * worldPosition * METER_TO_UNIT_LENGTH - vGeometryEllipsoidCenter;
+  vec3 positionECEF = rotation * worldPosition * METER_TO_LENGTH_UNIT - vGeometryEllipsoidCenter;
   vec3 normalECEF = rotation * worldNormal;
 
   #ifdef CORRECT_GEOMETRIC_ERROR
   correctGeometricError(positionECEF, normalECEF);
   #endif // CORRECT_GEOMETRIC_ERROR
 
+  #ifdef HAS_SHADOW
+  float opticalDepth = sampleShadowOpticalDepthPCF(worldPosition, positionECEF);
+  float shadowTransmittance = exp(-opticalDepth);
+  #else // HAS_SHADOW
+  float shadowTransmittance = 1.0;
+  #endif // HAS_SHADOW
+
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb);
-  #else
+  radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, shadowTransmittance);
+  #else // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
-  getTransmittanceInscatter(positionECEF, radiance);
+  applyTransmittanceInscatter(positionECEF, shadowLength, radiance);
   #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
   outputColor = vec4(radiance, inputColor.a);
+
+  #ifdef HAS_COMPOSITE
+  outputColor.rgb = outputColor.rgb * (1.0 - composite.a) + composite.rgb;
+  #endif // HAS_COMPOSITE
 }

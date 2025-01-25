@@ -1,5 +1,3 @@
-/// <reference types="vite-plugin-glsl/ext" />
-
 import {
   MeshNormalMaterial,
   ShaderChunk,
@@ -8,7 +6,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import octNormal from './shaders/octNormal.glsl'
+import octNormal from './shaders/octNormal.glsl?raw'
 
 const vertexShader =
   /* glsl */ `` +
@@ -20,7 +18,7 @@ const vertexShader =
         /* glsl */ `
           #ifdef OCT_NORMAL_FLAT_SHADED
           flat out vec3 vNormal;
-          #else
+          #else // OCT_NORMAL_FLAT_SHADED
           out vec3 vNormal;
           #endif // OCT_NORMAL_FLAT_SHADED
 
@@ -43,7 +41,7 @@ const fragmentShader =
       /* glsl */ `
         #ifdef OCT_NORMAL_FLAT_SHADED
         flat in vec3 vNormal;
-        #else
+        #else // OCT_NORMAL_FLAT_SHADED
         in vec3 vNormal;
         #endif // OCT_NORMAL_FLAT_SHADED
       `

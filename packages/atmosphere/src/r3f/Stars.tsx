@@ -39,7 +39,7 @@ export interface StarsProps extends PointsProps, AtmosphereMaterialProps {
 
 export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
   function Stars({ data: dataProp, ...props }, forwardedRef) {
-    const { textures, transientProps, ...contextProps } =
+    const { textures, transientStates, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [
@@ -89,11 +89,11 @@ export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
 
     const ref = useRef<Points>(null)
     useFrame(({ camera }) => {
-      if (transientProps != null && camera.isPerspectiveCamera === true) {
-        material.sunDirection.copy(transientProps.sunDirection)
-        ref.current?.setRotationFromMatrix(transientProps.rotationMatrix)
-        material.ellipsoidCenter.copy(transientProps.ellipsoidCenter)
-        material.ellipsoidMatrix.copy(transientProps.ellipsoidMatrix)
+      if (transientStates != null && camera.isPerspectiveCamera === true) {
+        material.sunDirection.copy(transientStates.sunDirection)
+        ref.current?.setRotationFromMatrix(transientStates.rotationMatrix)
+        material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+        material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
       }
     })
 

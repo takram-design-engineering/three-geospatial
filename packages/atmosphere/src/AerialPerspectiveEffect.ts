@@ -1,12 +1,9 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
-/// <reference types="vite-plugin-glsl/ext" />
-
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Camera,
   Matrix4,
   Uniform,
+  Vector2,
   Vector3,
   type Data3DTexture,
   type DataTexture,
@@ -16,20 +13,26 @@ import {
 } from 'three'
 
 import {
-  depthShader,
   Ellipsoid,
   Geodetic,
-  packingShader,
   remap,
+  resolveIncludes,
   saturate,
-  transformShader
+  unrollLoops,
+  type UniformMap
 } from '@takram/three-geospatial'
+import {
+  depth,
+  packing,
+  raySphereIntersection,
+  transform
+} from '@takram/three-geospatial/shaders'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
-  METER_TO_UNIT_LENGTH,
+  METER_TO_LENGTH_UNIT,
   SCATTERING_TEXTURE_MU_S_SIZE,
   SCATTERING_TEXTURE_MU_SIZE,
   SCATTERING_TEXTURE_NU_SIZE,
@@ -37,12 +40,18 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
+import {
+  type AtmosphereComposite,
+  type AtmosphereShadow,
+  type AtmosphereShadowLength
+} from './types'
 
-import fragmentShader from './shaders/aerialPerspectiveEffect.frag'
-import vertexShader from './shaders/aerialPerspectiveEffect.vert'
-import functions from './shaders/functions.glsl'
-import parameters from './shaders/parameters.glsl'
-import skyShader from './shaders/sky.glsl'
+import fragmentShader from './shaders/aerialPerspectiveEffect.frag?raw'
+import vertexShader from './shaders/aerialPerspectiveEffect.vert?raw'
+import functions from './shaders/functions.glsl?raw'
+import parameters from './shaders/parameters.glsl?raw'
+import skyShader from './shaders/sky.glsl?raw'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
@@ -53,15 +62,21 @@ export interface AerialPerspectiveEffectOptions {
   normalBuffer?: Texture | null
   octEncodedNormal?: boolean
   reconstructNormal?: boolean
+
+  // Precomputed textures
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
+
+  // Atmosphere controls
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   correctGeometricError?: boolean
   photometric?: boolean
   sunDirection?: Vector3
+
+  // Rendering options
   sunIrradiance?: boolean
   skyIrradiance?: boolean
   transmittance?: boolean
@@ -69,10 +84,57 @@ export interface AerialPerspectiveEffectOptions {
   irradianceScale?: number
   sky?: boolean
   sun?: boolean
+
+  // Moon
   moon?: boolean
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
+}
+
+export interface AerialPerspectiveEffectUniforms {
+  normalBuffer: Uniform<Texture | null>
+  projectionMatrix: Uniform<Matrix4>
+  viewMatrix: Uniform<Matrix4>
+  inverseProjectionMatrix: Uniform<Matrix4>
+  inverseViewMatrix: Uniform<Matrix4>
+  cameraPosition: Uniform<Vector3>
+  bottomRadius: Uniform<number>
+  ellipsoidRadii: Uniform<Vector3>
+  ellipsoidCenter: Uniform<Vector3>
+  inverseEllipsoidMatrix: Uniform<Matrix4>
+  altitudeCorrection: Uniform<Vector3>
+  sunDirection: Uniform<Vector3>
+  irradianceScale: Uniform<number>
+  idealSphereAlpha: Uniform<number>
+  moonDirection: Uniform<Vector3>
+  moonAngularRadius: Uniform<number>
+  lunarRadianceScale: Uniform<number>
+
+  // Composition and shadow
+  compositeBuffer: Uniform<Texture | null>
+  shadowBuffer: Uniform<Texture | null>
+  shadowMapSize: Uniform<Vector2>
+  shadowIntervals: Uniform<Vector2[]>
+  shadowMatrices: Uniform<Matrix4[]>
+  shadowFar: Uniform<number>
+  shadowTopHeight: Uniform<number>
+  shadowRadius: Uniform<number>
+  shadowLengthBuffer: Uniform<Texture | null>
+
+  // Uniforms for atmosphere functions
+  u_solar_irradiance: Uniform<Vector3>
+  u_sun_angular_radius: Uniform<number>
+  u_bottom_radius: Uniform<number>
+  u_top_radius: Uniform<number>
+  u_rayleigh_scattering: Uniform<Vector3>
+  u_mie_scattering: Uniform<Vector3>
+  u_mie_phase_function_g: Uniform<number>
+  u_mu_s_min: Uniform<number>
+  u_irradiance_texture: Uniform<DataTexture | null>
+  u_scattering_texture: Uniform<Data3DTexture | null>
+  u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
+  u_transmittance_texture: Uniform<DataTexture | null>
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -96,7 +158,8 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
-  private readonly atmosphere: AtmosphereParameters
+  declare uniforms: UniformMap<AerialPerspectiveEffectUniforms>
+
   private _ellipsoid!: Ellipsoid
   readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
@@ -104,7 +167,7 @@ export class AerialPerspectiveEffect extends Effect {
   constructor(
     private camera = new Camera(),
     options?: AerialPerspectiveEffectOptions,
-    atmosphere = AtmosphereParameters.DEFAULT
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       blendFunction,
@@ -135,52 +198,72 @@ export class AerialPerspectiveEffect extends Effect {
 
     super(
       'AerialPerspectiveEffect',
-      /* glsl */ `
-        ${parameters}
-        ${functions}
-        ${depthShader}
-        ${packingShader}
-        ${transformShader}
-        ${skyShader}
-        ${fragmentShader}
-      `,
+      unrollLoops(
+        resolveIncludes(fragmentShader, {
+          core: {
+            depth,
+            packing,
+            transform,
+            raySphereIntersection
+          },
+          parameters,
+          functions,
+          sky: skyShader
+        })
+      ),
       {
         blendFunction,
-        vertexShader: /* glsl */ `
-          ${parameters}
-          ${vertexShader}
-        `,
+        vertexShader: resolveIncludes(vertexShader, {
+          parameters
+        }),
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
-        uniforms: new Map<string, Uniform>([
-          ['u_solar_irradiance', new Uniform(atmosphere.solarIrradiance)],
-          ['u_sun_angular_radius', new Uniform(atmosphere.sunAngularRadius)],
-          ['u_bottom_radius', new Uniform(atmosphere.bottomRadius * METER_TO_UNIT_LENGTH)],
-          ['u_top_radius', new Uniform(atmosphere.topRadius * METER_TO_UNIT_LENGTH)],
-          ['u_rayleigh_scattering', new Uniform(atmosphere.rayleighScattering)],
-          ['u_mie_scattering', new Uniform(atmosphere.mieScattering)],
-          ['u_mie_phase_function_g', new Uniform(atmosphere.miePhaseFunctionG)],
-          ['u_mu_s_min', new Uniform(0)],
-          ['u_irradiance_texture', new Uniform(irradianceTexture)],
-          ['u_scattering_texture', new Uniform(scatteringTexture)],
-          ['u_single_mie_scattering_texture', new Uniform(scatteringTexture)],
-          ['u_transmittance_texture', new Uniform(transmittanceTexture)],
-          ['normalBuffer', new Uniform(normalBuffer)],
-          ['projectionMatrix', new Uniform(new Matrix4())],
-          ['inverseProjectionMatrix', new Uniform(new Matrix4())],
-          ['inverseViewMatrix', new Uniform(new Matrix4())],
-          ['cameraPosition', new Uniform(new Vector3())],
-          ['ellipsoidRadii', new Uniform(new Vector3())],
-          ['ellipsoidCenter', new Uniform(new Vector3())],
-          ['inverseEllipsoidMatrix', new Uniform(new Matrix4())],
-          ['altitudeCorrection', new Uniform(new Vector3())],
-          ['sunDirection', new Uniform(sunDirection?.clone() ?? new Vector3())],
-          ['irradianceScale', new Uniform(irradianceScale)],
-          ['idealSphereAlpha', new Uniform(0)],
-          ['moonDirection', new Uniform(moonDirection?.clone() ?? new Vector3())],
-          ['moonAngularRadius', new Uniform(moonAngularRadius)],
-          ['lunarRadianceScale', new Uniform(lunarRadianceScale)]
-        ]),
+        uniforms: new Map<string, Uniform>(
+          Object.entries({
+            normalBuffer: new Uniform(normalBuffer),
+            projectionMatrix: new Uniform(new Matrix4()),
+            viewMatrix: new Uniform(new Matrix4()),
+            inverseProjectionMatrix: new Uniform(new Matrix4()),
+            inverseViewMatrix: new Uniform(new Matrix4()),
+            cameraPosition: new Uniform(new Vector3()),
+            bottomRadius: new Uniform(atmosphere.bottomRadius),
+            ellipsoidRadii: new Uniform(new Vector3()),
+            ellipsoidCenter: new Uniform(new Vector3()),
+            inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+            altitudeCorrection: new Uniform(new Vector3()),
+            sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
+            irradianceScale: new Uniform(irradianceScale),
+            idealSphereAlpha: new Uniform(0),
+            moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
+            moonAngularRadius: new Uniform(moonAngularRadius),
+            lunarRadianceScale: new Uniform(lunarRadianceScale),
+
+            // Composition and shadow
+            compositeBuffer: new Uniform(null),
+            shadowBuffer: new Uniform(null),
+            shadowMapSize: new Uniform(new Vector2()),
+            shadowIntervals: new Uniform([]),
+            shadowMatrices: new Uniform([]),
+            shadowFar: new Uniform(0),
+            shadowTopHeight: new Uniform(0),
+            shadowRadius: new Uniform(1),
+            shadowLengthBuffer: new Uniform(null),
+
+            // Uniforms for atmosphere functions
+            u_solar_irradiance: new Uniform(atmosphere.solarIrradiance),
+            u_sun_angular_radius: new Uniform(atmosphere.sunAngularRadius),
+            u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_LENGTH_UNIT),
+            u_top_radius: new Uniform(atmosphere.topRadius * METER_TO_LENGTH_UNIT),
+            u_rayleigh_scattering: new Uniform(atmosphere.rayleighScattering),
+            u_mie_scattering: new Uniform(atmosphere.mieScattering),
+            u_mie_phase_function_g: new Uniform(atmosphere.miePhaseFunctionG),
+            u_mu_s_min: new Uniform(0),
+            u_irradiance_texture: new Uniform(irradianceTexture),
+            u_scattering_texture: new Uniform(scatteringTexture),
+            u_single_mie_scattering_texture: new Uniform(scatteringTexture),
+            u_transmittance_texture: new Uniform(transmittanceTexture)
+          } satisfies AerialPerspectiveEffectUniforms)
+        ),
         // prettier-ignore
         defines: new Map<string, string>([
           ['TRANSMITTANCE_TEXTURE_WIDTH', `${TRANSMITTANCE_TEXTURE_WIDTH}`],
@@ -191,15 +274,13 @@ export class AerialPerspectiveEffect extends Effect {
           ['SCATTERING_TEXTURE_NU_SIZE', `${SCATTERING_TEXTURE_NU_SIZE}`],
           ['IRRADIANCE_TEXTURE_WIDTH', `${IRRADIANCE_TEXTURE_WIDTH}`],
           ['IRRADIANCE_TEXTURE_HEIGHT', `${IRRADIANCE_TEXTURE_HEIGHT}`],
-          ['METER_TO_UNIT_LENGTH', `float(${METER_TO_UNIT_LENGTH})`],
+          ['METER_TO_LENGTH_UNIT', `float(${METER_TO_LENGTH_UNIT})`],
           ['SUN_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().join(',')})`],
-          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().join(',')})`],
+          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().join(',')})`]
         ])
       }
     )
 
-    this.camera = camera
-    this.atmosphere = atmosphere
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
     this.useHalfFloat = useHalfFloat === true
@@ -230,70 +311,68 @@ export class AerialPerspectiveEffect extends Effect {
     deltaTime?: number
   ): void {
     const uniforms = this.uniforms
-    const projectionMatrix = uniforms.get('projectionMatrix')!
-    const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')!
-    const inverseViewMatrix = uniforms.get('inverseViewMatrix')!
+    const projectionMatrix = uniforms.get('projectionMatrix')
+    const viewMatrix = uniforms.get('viewMatrix')
+    const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')
+    const inverseViewMatrix = uniforms.get('inverseViewMatrix')
     const camera = this.camera
     projectionMatrix.value.copy(camera.projectionMatrix)
+    viewMatrix.value.copy(camera.matrixWorldInverse)
     inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     inverseViewMatrix.value.copy(camera.matrixWorld)
 
     const cameraPosition = camera.getWorldPosition(
-      uniforms.get('cameraPosition')!.value
+      uniforms.get('cameraPosition').value
     )
     const inverseEllipsoidMatrix = uniforms
-      .get('inverseEllipsoidMatrix')!
+      .get('inverseEllipsoidMatrix')
       .value.copy(this.ellipsoidMatrix)
       .invert()
     const cameraPositionECEF = vectorScratch1
       .copy(cameraPosition)
       .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(uniforms.get('ellipsoidCenter')!.value)
+      .sub(uniforms.get('ellipsoidCenter').value)
 
-    // Calculate the projected scale of the globe in clip space used to
-    // interpolate between the globe true normals and idealized normals to avoid
-    // lighting artifacts.
-    const cameraHeight = geodeticScratch.setFromECEF(cameraPositionECEF).height
-    const projectedScale = vectorScratch2
-      .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
-      .applyMatrix4(camera.projectionMatrix)
+    try {
+      // Calculate the projected scale of the globe in clip space used to
+      // interpolate between the globe true normals and idealized normals to avoid
+      // lighting artifacts.
+      const cameraHeight =
+        geodeticScratch.setFromECEF(cameraPositionECEF).height
+      const projectedScale = vectorScratch2
+        .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
+        .applyMatrix4(camera.projectionMatrix)
 
-    // Calculate interpolation alpha
-    // Interpolation values are picked to match previous rough globe scales to
-    // match the previous "camera height" approach for interpolation.
-    // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
-    uniforms.get('idealSphereAlpha')!.value = saturate(
-      remap(projectedScale.y, 41.5, 13.8, 0, 1)
-    )
-
-    const altitudeCorrection = uniforms.get('altitudeCorrection')!
-    if (this.correctAltitude) {
-      const surfacePosition = this.ellipsoid.projectOnSurface(
-        cameraPositionECEF,
-        vectorScratch2
+      // Calculate interpolation alpha
+      // Interpolation values are picked to match previous rough globe scales to
+      // match the previous "camera height" approach for interpolation.
+      // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
+      uniforms.get('idealSphereAlpha').value = saturate(
+        remap(projectedScale.y, 41.5, 13.8, 0, 1)
       )
-      if (surfacePosition != null) {
-        this.ellipsoid.getOsculatingSphereCenter(
-          // Move the center of the atmosphere's inner sphere down to intersect
-          // the viewpoint when it's located underground.
-          surfacePosition.lengthSq() < cameraPositionECEF.lengthSq()
-            ? surfacePosition
-            : cameraPositionECEF,
-          this.atmosphere.bottomRadius,
-          altitudeCorrection.value
-        )
-      }
+    } catch (error) {
+      return // Abort when unable to project position to the ellipsoid surface.
+    }
+
+    const altitudeCorrection = uniforms.get('altitudeCorrection')
+    if (this.correctAltitude) {
+      getAltitudeCorrectionOffset(
+        cameraPositionECEF,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        altitudeCorrection.value
+      )
     } else {
-      altitudeCorrection.value.set(0, 0, 0)
+      altitudeCorrection.value.setScalar(0)
     }
   }
 
   get normalBuffer(): Texture | null {
-    return this.uniforms.get('normalBuffer')!.value
+    return this.uniforms.get('normalBuffer').value
   }
 
   set normalBuffer(value: Texture | null) {
-    this.uniforms.get('normalBuffer')!.value = value
+    this.uniforms.get('normalBuffer').value = value
   }
 
   get octEncodedNormal(): boolean {
@@ -327,38 +406,38 @@ export class AerialPerspectiveEffect extends Effect {
   }
 
   get irradianceTexture(): DataTexture | null {
-    return this.uniforms.get('u_irradiance_texture')!.value
+    return this.uniforms.get('u_irradiance_texture').value
   }
 
   set irradianceTexture(value: DataTexture | null) {
-    this.uniforms.get('u_irradiance_texture')!.value = value
+    this.uniforms.get('u_irradiance_texture').value = value
   }
 
   get scatteringTexture(): Data3DTexture | null {
-    return this.uniforms.get('u_scattering_texture')!.value
+    return this.uniforms.get('u_scattering_texture').value
   }
 
   set scatteringTexture(value: Data3DTexture | null) {
-    this.uniforms.get('u_scattering_texture')!.value = value
-    this.uniforms.get('u_single_mie_scattering_texture')!.value = value
+    this.uniforms.get('u_scattering_texture').value = value
+    this.uniforms.get('u_single_mie_scattering_texture').value = value
   }
 
   get transmittanceTexture(): DataTexture | null {
-    return this.uniforms.get('u_transmittance_texture')!.value
+    return this.uniforms.get('u_transmittance_texture').value
   }
 
   set transmittanceTexture(value: DataTexture | null) {
-    this.uniforms.get('u_transmittance_texture')!.value = value
+    this.uniforms.get('u_transmittance_texture').value = value
   }
 
   get useHalfFloat(): boolean {
     return (
-      this.uniforms.get('u_mu_s_min')!.value === this.atmosphere.muSMinHalfFloat
+      this.uniforms.get('u_mu_s_min').value === this.atmosphere.muSMinHalfFloat
     )
   }
 
   set useHalfFloat(value: boolean) {
-    this.uniforms.get('u_mu_s_min')!.value = value
+    this.uniforms.get('u_mu_s_min').value = value
       ? this.atmosphere.muSMinHalfFloat
       : this.atmosphere.muSMinFloat
   }
@@ -369,11 +448,11 @@ export class AerialPerspectiveEffect extends Effect {
 
   set ellipsoid(value: Ellipsoid) {
     this._ellipsoid = value
-    this.uniforms.get('ellipsoidRadii')!.value.copy(value.radii)
+    this.uniforms.get('ellipsoidRadii').value.copy(value.radii)
   }
 
   get ellipsoidCenter(): Vector3 {
-    return this.uniforms.get('ellipsoidCenter')!.value
+    return this.uniforms.get('ellipsoidCenter').value
   }
 
   get correctGeometricError(): boolean {
@@ -407,7 +486,7 @@ export class AerialPerspectiveEffect extends Effect {
   }
 
   get sunDirection(): Vector3 {
-    return this.uniforms.get('sunDirection')!.value
+    return this.uniforms.get('sunDirection').value
   }
 
   get sunIrradiance(): boolean {
@@ -471,11 +550,11 @@ export class AerialPerspectiveEffect extends Effect {
   }
 
   get irradianceScale(): number {
-    return this.uniforms.get('irradianceScale')!.value
+    return this.uniforms.get('irradianceScale').value
   }
 
   set irradianceScale(value: number) {
-    this.uniforms.get('irradianceScale')!.value = value
+    this.uniforms.get('irradianceScale').value = value
   }
 
   get sky(): boolean {
@@ -524,22 +603,87 @@ export class AerialPerspectiveEffect extends Effect {
   }
 
   get moonDirection(): Vector3 {
-    return this.uniforms.get('moonDirection')!.value
+    return this.uniforms.get('moonDirection').value
   }
 
   get moonAngularRadius(): number {
-    return this.uniforms.get('moonAngularRadius')!.value
+    return this.uniforms.get('moonAngularRadius').value
   }
 
   set moonAngularRadius(value: number) {
-    this.uniforms.get('moonAngularRadius')!.value = value
+    this.uniforms.get('moonAngularRadius').value = value
   }
 
   get lunarRadianceScale(): number {
-    return this.uniforms.get('lunarRadianceScale')!.value
+    return this.uniforms.get('lunarRadianceScale').value
   }
 
   set lunarRadianceScale(value: number) {
-    this.uniforms.get('lunarRadianceScale')!.value = value
+    this.uniforms.get('lunarRadianceScale').value = value
+  }
+
+  get shadowRadius(): number {
+    return this.uniforms.get('shadowRadius').value
+  }
+
+  set shadowRadius(value: number) {
+    this.uniforms.get('shadowRadius').value = value
+  }
+
+  private setUniform<K extends keyof AerialPerspectiveEffectUniforms>(
+    name: K,
+    value:
+      | AerialPerspectiveEffectUniforms[K]
+      | (AerialPerspectiveEffectUniforms[K] extends Uniform<infer V>
+          ? V
+          : never)
+  ): void {
+    if (value instanceof Uniform) {
+      this.uniforms.set(name, value)
+    } else {
+      this.uniforms.get(name).value = value as any
+    }
+  }
+
+  // eslint-disable-next-line accessor-pairs
+  set composite(value: AtmosphereComposite | null) {
+    if (value != null) {
+      this.defines.set('HAS_COMPOSITE', '1')
+      this.setUniform('compositeBuffer', value.map)
+    } else {
+      this.defines.delete('HAS_COMPOSITE')
+      this.uniforms.get('compositeBuffer').value = null
+    }
+    this.setChanged()
+  }
+
+  // eslint-disable-next-line accessor-pairs
+  set shadow(value: AtmosphereShadow | null) {
+    if (value != null) {
+      this.defines.set('HAS_SHADOW', '1')
+      this.defines.set('SHADOW_CASCADE_COUNT', `${value.intervals.length}`)
+      this.setUniform('shadowBuffer', value.map)
+      this.uniforms.get('shadowMapSize').value.copy(value.mapSize)
+      this.uniforms.get('shadowIntervals').value = value.intervals
+      this.uniforms.get('shadowMatrices').value = value.matrices
+      this.setUniform('shadowFar', value.far)
+      this.setUniform('shadowTopHeight', value.topHeight)
+    } else {
+      this.defines.delete('HAS_SHADOW')
+      this.uniforms.get('shadowBuffer').value = null
+    }
+    this.setChanged()
+  }
+
+  // eslint-disable-next-line accessor-pairs
+  set shadowLength(value: AtmosphereShadowLength | null) {
+    if (value != null) {
+      this.defines.set('HAS_SHADOW_LENGTH', '1')
+      this.setUniform('shadowLengthBuffer', value.map)
+    } else {
+      this.defines.delete('HAS_SHADOW_LENGTH')
+      this.uniforms.get('shadowLengthBuffer').value = null
+    }
+    this.setChanged()
   }
 }

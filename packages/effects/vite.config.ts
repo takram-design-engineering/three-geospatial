@@ -6,7 +6,6 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
-import glsl from 'vite-plugin-glsl'
 
 export default defineConfig({
   root: __dirname,
@@ -25,8 +24,7 @@ export default defineConfig({
           console.warn(diagnostic)
         })
       }
-    }),
-    glsl()
+    })
   ],
 
   // Uncomment this if you are using workers.

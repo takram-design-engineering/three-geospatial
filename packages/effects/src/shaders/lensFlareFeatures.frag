@@ -14,7 +14,7 @@ in vec2 vAspectRatio;
 
 vec3 sampleGhost(const vec2 direction, const vec3 color, const float offset) {
   vec2 suv = clamp(1.0 - vUv + direction * offset, 0.0, 1.0);
-  vec3 result = texture2D(inputBuffer, suv).rgb * color;
+  vec3 result = texture(inputBuffer, suv).rgb * color;
 
   // Falloff at the perimeter.
   float d = clamp(length(0.5 - suv) / (0.5 * SQRT_2), 0.0, 1.0);
@@ -48,9 +48,9 @@ vec3 sampleHalo(const float radius) {
   vec3 offset = vec3(texelSize.x * chromaticAberration) * vec3(-1.0, 0.0, 1.0);
   vec2 suv = fract(1.0 - vUv + direction * radius);
   vec3 result = vec3(
-    texture2D(inputBuffer, suv + direction * offset.r).r,
-    texture2D(inputBuffer, suv + direction * offset.g).g,
-    texture2D(inputBuffer, suv + direction * offset.b).b
+    texture(inputBuffer, suv + direction * offset.r).r,
+    texture(inputBuffer, suv + direction * offset.g).g,
+    texture(inputBuffer, suv + direction * offset.b).b
   );
 
   // Falloff at the center and perimeter.

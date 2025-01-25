@@ -6,11 +6,11 @@ import {
   Sphere
 } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ToneMapping } from '@react-three/postprocessing'
+import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useState, type FC } from 'react'
-import { DoubleSide, Vector3 } from 'three'
+import { Vector3 } from 'three'
 
 import {
   AerialPerspective,
@@ -85,21 +85,21 @@ const Scene: FC = () => {
         fadeDistance={100}
         followCamera
         infiniteGrid
-        side={DoubleSide}
       />
       <Atmosphere
         ref={setAtmosphere}
         textures='atmosphere'
         correctAltitude={correctAltitude}
       >
-        <Sky />
+        <Sky groundAlbedo={0xffffff} />
         <SkyLight />
         <SunLight />
         <Stars data='atmosphere/stars.bin' />
-        <EffectComposer>
+        <EffectComposer multisampling={0}>
           <AerialPerspective />
           <LensFlare />
           <ToneMapping mode={ToneMappingMode.AGX} />
+          <SMAA />
           <Dithering />
         </EffectComposer>
       </Atmosphere>

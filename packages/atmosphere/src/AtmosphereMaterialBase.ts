@@ -21,7 +21,7 @@ import { AtmosphereParameters } from './AtmosphereParameters'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
-  METER_TO_UNIT_LENGTH,
+  METER_TO_LENGTH_UNIT,
   SCATTERING_TEXTURE_MU_S_SIZE,
   SCATTERING_TEXTURE_MU_SIZE,
   SCATTERING_TEXTURE_NU_SIZE,
@@ -29,9 +29,9 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
+import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 
-const vectorScratch1 = /*#__PURE__*/ new Vector3()
-const vectorScratch2 = /*#__PURE__*/ new Vector3()
+const vectorScratch = /*#__PURE__*/ new Vector3()
 
 function includeRenderTargets(fragmentShader: string, count: number): string {
   let layout = ''
@@ -46,15 +46,20 @@ function includeRenderTargets(fragmentShader: string, count: number): string {
 }
 
 export interface AtmosphereMaterialProps {
+  // Precomputed textures
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: DataTexture | null
   useHalfFloat?: boolean
+
+  // Atmosphere controls
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
+
+  // For internal use only
   renderTargetCount?: number
 }
 
@@ -70,8 +75,32 @@ export const atmosphereMaterialParametersBaseDefaults = {
   renderTargetCount: 1
 } satisfies AtmosphereMaterialBaseParameters
 
+export interface AtmosphereMaterialBaseUniforms {
+  [key: string]: Uniform<unknown>
+  cameraPosition: Uniform<Vector3>
+  ellipsoidCenter: Uniform<Vector3>
+  inverseEllipsoidMatrix: Uniform<Matrix4>
+  altitudeCorrection: Uniform<Vector3>
+  sunDirection: Uniform<Vector3>
+
+  // Uniforms for atmosphere functions
+  u_solar_irradiance: Uniform<Vector3>
+  u_sun_angular_radius: Uniform<number>
+  u_bottom_radius: Uniform<number>
+  u_top_radius: Uniform<number>
+  u_rayleigh_scattering: Uniform<Vector3>
+  u_mie_scattering: Uniform<Vector3>
+  u_mie_phase_function_g: Uniform<number>
+  u_mu_s_min: Uniform<number>
+  u_irradiance_texture: Uniform<DataTexture | null>
+  u_scattering_texture: Uniform<Data3DTexture | null>
+  u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
+  u_transmittance_texture: Uniform<DataTexture | null>
+}
+
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
-  private readonly atmosphere: AtmosphereParameters
+  declare uniforms: AtmosphereMaterialBaseUniforms
+
   ellipsoid: Ellipsoid
   readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
@@ -79,7 +108,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   constructor(
     params?: AtmosphereMaterialBaseParameters,
-    atmosphere = AtmosphereParameters.DEFAULT
+    protected readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       irradianceTexture = null,
@@ -102,10 +131,17 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       ...others,
       // prettier-ignore
       uniforms: {
+        cameraPosition: new Uniform(new Vector3()),
+        ellipsoidCenter: new Uniform(new Vector3()),
+        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+        altitudeCorrection: new Uniform(new Vector3()),
+        sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
+
+        // Uniforms for atmosphere functions
         u_solar_irradiance: new Uniform(atmosphere.solarIrradiance),
         u_sun_angular_radius: new Uniform(sunAngularRadius ?? atmosphere.sunAngularRadius),
-        u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_UNIT_LENGTH),
-        u_top_radius: new Uniform(atmosphere.topRadius * METER_TO_UNIT_LENGTH),
+        u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_LENGTH_UNIT),
+        u_top_radius: new Uniform(atmosphere.topRadius * METER_TO_LENGTH_UNIT),
         u_rayleigh_scattering: new Uniform(atmosphere.rayleighScattering),
         u_mie_scattering: new Uniform(atmosphere.mieScattering),
         u_mie_phase_function_g: new Uniform(atmosphere.miePhaseFunctionG),
@@ -114,13 +150,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_scattering_texture: new Uniform(scatteringTexture),
         u_single_mie_scattering_texture: new Uniform(scatteringTexture),
         u_transmittance_texture: new Uniform(transmittanceTexture),
-        cameraPosition: new Uniform(new Vector3()),
-        ellipsoidCenter: new Uniform(new Vector3()),
-        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
-        altitudeCorrection: new Uniform(new Vector3()),
-        sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
         ...others.uniforms,
-      },
+      } satisfies AtmosphereMaterialBaseUniforms,
       // prettier-ignore
       defines: {
         PI: `${Math.PI}`,
@@ -132,7 +163,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         SCATTERING_TEXTURE_NU_SIZE: `${SCATTERING_TEXTURE_NU_SIZE}`,
         IRRADIANCE_TEXTURE_WIDTH: `${IRRADIANCE_TEXTURE_WIDTH}`,
         IRRADIANCE_TEXTURE_HEIGHT: `${IRRADIANCE_TEXTURE_HEIGHT}`,
-        METER_TO_UNIT_LENGTH: `float(${METER_TO_UNIT_LENGTH})`,
+        METER_TO_LENGTH_UNIT: `float(${METER_TO_LENGTH_UNIT})`,
         SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().join(',')})`,
         SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().join(',')})`,
         ...others.defines
@@ -145,6 +176,32 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.correctAltitude = correctAltitude
     this.photometric = photometric
     this.renderTargetCount = renderTargetCount
+  }
+
+  copyCameraSettings(camera: Camera): void {
+    const uniforms = this.uniforms
+    const cameraPosition = camera.getWorldPosition(
+      uniforms.cameraPosition.value
+    )
+    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionECEF = vectorScratch
+      .copy(cameraPosition)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(uniforms.ellipsoidCenter.value)
+
+    const altitudeCorrection = uniforms.altitudeCorrection.value
+    if (this.correctAltitude) {
+      getAltitudeCorrectionOffset(
+        cameraPositionECEF,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        altitudeCorrection
+      )
+    } else {
+      altitudeCorrection.setScalar(0)
+    }
   }
 
   override onBeforeCompile(
@@ -165,38 +222,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     object: Object3D,
     group: Group
   ): void {
-    const uniforms = this.uniforms
-    const cameraPosition = camera.getWorldPosition(
-      uniforms.cameraPosition.value
-    )
-    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
-      .copy(this.ellipsoidMatrix)
-      .invert()
-    const cameraPositionECEF = vectorScratch1
-      .copy(cameraPosition)
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(uniforms.ellipsoidCenter.value)
-
-    const altitudeCorrection = uniforms.altitudeCorrection
-    if (this.correctAltitude) {
-      const surfacePosition = this.ellipsoid.projectOnSurface(
-        cameraPositionECEF,
-        vectorScratch2
-      )
-      if (surfacePosition != null) {
-        this.ellipsoid.getOsculatingSphereCenter(
-          // Move the center of the atmosphere's inner sphere down to intersect
-          // the viewpoint when it's located underground.
-          surfacePosition.lengthSq() < cameraPositionECEF.lengthSq()
-            ? surfacePosition
-            : cameraPositionECEF,
-          this.atmosphere.bottomRadius,
-          altitudeCorrection.value
-        )
-      }
-    } else {
-      altitudeCorrection.value.set(0, 0, 0)
-    }
+    this.copyCameraSettings(camera)
   }
 
   get irradianceTexture(): DataTexture | null {
@@ -265,10 +291,12 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.uniforms.u_sun_angular_radius.value = value
   }
 
+  /** @package */
   get renderTargetCount(): number {
     return this._renderTargetCount
   }
 
+  /** @package */
   set renderTargetCount(value: number) {
     if (value !== this.renderTargetCount) {
       this._renderTargetCount = value
