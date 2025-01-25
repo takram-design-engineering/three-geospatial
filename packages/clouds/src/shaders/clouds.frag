@@ -35,7 +35,6 @@ uniform float scatterAnisotropy2;
 uniform float scatterAnisotropyMix;
 uniform float skyIrradianceScale;
 uniform float groundIrradianceScale;
-uniform float scatteringScale;
 uniform float powderScale;
 uniform float powderExponent;
 
@@ -347,9 +346,7 @@ vec4 marchClouds(
       vec3 albedo = vec3(media.scattering / media.extinction);
 
       opticalDepth += marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel, jitter);
-      // Scattering scale compensates for the missing energy due to ignoring
-      // higher-order multiple scattering octaves.
-      float scattering = multipleScattering(opticalDepth, cosTheta) * scatteringScale;
+      float scattering = multipleScattering(opticalDepth, cosTheta);
       // I’m not sure skyIrradiance should be included in the scattering term.
       vec3 radiance = albedo * scattering * (sunIrradiance + skyIrradiance);
 

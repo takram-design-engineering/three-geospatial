@@ -206,7 +206,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(2.5),
           groundIrradianceScale: new Uniform(3),
-          scatteringScale: new Uniform(1.05),
           powderScale: new Uniform(0.8),
           powderExponent: new Uniform(150),
 
