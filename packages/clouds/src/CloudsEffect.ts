@@ -78,8 +78,8 @@ export class CloudsEffect extends Effect {
       height: 0,
       densityScale: 0,
       detailAmount: 0,
-      weatherExponent: 1,
-      shapeAlteringBias: 0.35,
+      weatherExponent: 0,
+      shapeAlteringBias: 0,
       coverageFilterWidth: 0
     }
   ]

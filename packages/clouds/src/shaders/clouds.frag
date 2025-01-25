@@ -411,7 +411,7 @@ vec4 marchClouds(
     }
 
     // Take a shorter step because we've already hit the clouds.
-    stepSize *= 1.005;
+    stepSize *= 1.01;
     rayDistance += stepSize;
   }
 
@@ -453,7 +453,7 @@ float marchShadowLength(
       break;
     }
 
-    stepSize *= 1.005;
+    stepSize *= 1.01;
     rayDistance += stepSize;
   }
   // Scale to the length unit because we only use this in atmosphere functions.
