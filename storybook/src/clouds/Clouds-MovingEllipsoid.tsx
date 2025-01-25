@@ -9,7 +9,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
-import { Fragment, useEffect, useState, type FC } from 'react'
+import { Fragment, useState, type FC } from 'react'
 import { NearestFilter, RepeatWrapping, RGBAFormat, Vector3 } from 'three'
 
 import {
@@ -39,6 +39,7 @@ import { useControls } from '../helpers/useControls'
 import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
+import { useCloudsControls } from './useCloudsControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -59,22 +60,6 @@ const Scene: FC = () => {
   const { correctAltitude } = useControls('atmosphere', {
     correctAltitude: true
   })
-  const { coverage } = useControls('clouds', {
-    coverage: { value: 0.3, min: 0, max: 1, step: 0.01 }
-  })
-  const {
-    showShadowMap: debugShowShadowMap,
-    showCascades: debugShowCascades,
-    showUv: debugShowUv
-  } = useControls(
-    'debug',
-    {
-      showShadowMap: false,
-      showCascades: false,
-      showUv: false
-    },
-    { collapsed: true }
-  )
 
   const [atmosphere, setAtmosphere] = useState<AtmosphereApi | null>(null)
   useFrame(() => {
@@ -111,28 +96,10 @@ const Scene: FC = () => {
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
-
-  useEffect(() => {
-    if (clouds == null) {
-      return
-    }
-    if (debugShowShadowMap) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
-    } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_SHADOW_MAP
-    }
-    if (debugShowCascades) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES = '1'
-    } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_CASCADES
-    }
-    if (debugShowUv) {
-      clouds.cloudsMaterial.defines.DEBUG_SHOW_UV = '1'
-    } else {
-      delete clouds.cloudsMaterial.defines.DEBUG_SHOW_UV
-    }
-    clouds.cloudsMaterial.needsUpdate = true
-  }, [clouds, debugShowShadowMap, debugShowCascades, debugShowUv])
+  const [
+    { enabled, debugShowUv, debugShowShadowMap, debugShowShadowLength },
+    cloudsProps
+  ] = useCloudsControls(clouds)
 
   return (
     <>
@@ -158,14 +125,22 @@ const Scene: FC = () => {
       >
         {/* <Stars data='atmosphere/stars.bin' /> */}
         <EffectComposer multisampling={0}>
-          <Fragment key={JSON.stringify([debugShowUv, debugShowShadowMap])}>
-            <Clouds
-              ref={setClouds}
-              stbnTexture={stbnTexture}
-              coverage={coverage}
-              shadow-maxFar={1e5}
-              shadowLength
-            />
+          <Fragment
+            key={JSON.stringify([
+              enabled,
+              debugShowUv,
+              debugShowShadowMap,
+              debugShowShadowLength
+            ])}
+          >
+            {enabled && (
+              <Clouds
+                ref={setClouds}
+                stbnTexture={stbnTexture}
+                shadow-maxFar={1e5}
+                {...cloudsProps}
+              />
+            )}
             <AerialPerspective sky skyIrradiance sunIrradiance />
             {!debugShowUv && !debugShowShadowMap && (
               <>
