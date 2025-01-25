@@ -201,7 +201,7 @@ const Scene: FC<SceneProps> = ({
       height: STBN_TEXTURE_HEIGHT,
       depth: STBN_TEXTURE_DEPTH
     }),
-    '/clouds/stbn.bin'
+    'clouds/stbn.bin'
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
