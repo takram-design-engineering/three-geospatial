@@ -43,6 +43,7 @@ uniform int maxIterations;
 uniform float minStepSize;
 uniform float maxStepSize;
 uniform float maxRayDistance;
+uniform float perspectiveStepScale;
 
 // Secondary raymarch
 uniform int maxSunIterations;
@@ -411,7 +412,7 @@ vec4 marchClouds(
     }
 
     // Take a shorter step because we've already hit the clouds.
-    stepSize *= 1.01;
+    stepSize *= perspectiveStepScale;
     rayDistance += stepSize;
   }
 
@@ -453,7 +454,7 @@ float marchShadowLength(
       break;
     }
 
-    stepSize *= 1.01;
+    stepSize *= perspectiveStepScale;
     rayDistance += stepSize;
   }
   // Scale to the length unit because we only use this in atmosphere functions.

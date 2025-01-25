@@ -214,6 +214,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           minStepSize: new Uniform(50),
           maxStepSize: new Uniform(1000),
           maxRayDistance: new Uniform(5e5),
+          perspectiveStepScale: new Uniform(1.01),
           minDensity: new Uniform(1e-5),
           minExtinction: new Uniform(1e-5),
           minTransmittance: new Uniform(1e-2),
