@@ -335,6 +335,7 @@ vec4 marchClouds(
         );
       }
 
+      // TODO: It's constant. Move to vertex shader or uniform.
       vec3 albedo = vec3(media.scattering / media.extinction);
 
       opticalDepth += marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel, jitter);
@@ -618,6 +619,9 @@ void clampRaysAtSceneObjects(const vec3 rayDirection, inout vec2 nearFar1, inout
     nearFar2.y = min(nearFar2.y, rayDistance);
   }
 }
+
+// TODO: Try separating the shadow length raymarch to another pass, as it
+// introduces many branches which may decrease coherency.
 
 void main() {
   #ifdef SHADOW_LENGTH

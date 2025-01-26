@@ -125,3 +125,36 @@ MediaSample sampleMedia(WeatherSample weather, const vec3 position, const float 
   media.extinction = densitySum * absorptionCoefficient + media.scattering;
   return media;
 }
+
+MediaSample sampleMedia(WeatherSample weather, const vec3 position, const float mipLevel) {
+  vec4 density = weather.density;
+
+  float shape = texture(shapeTexture, position * shapeFrequency + shapeOffset).r;
+  density = mix(density, saturate(remap(density, vec4(1.0 - shape), vec4(1.0))), detailAmounts);
+
+  #ifdef SHAPE_DETAIL
+  if (mipLevel < 0.5) {
+    float detail = texture(
+      shapeDetailTexture,
+      position * shapeDetailFrequency + shapeDetailOffset
+    ).r;
+    // Fluffy at the top and whippy at the bottom.
+    vec4 modifier = mix(
+      vec4(pow(detail, 6.0)),
+      vec4(1.0 - detail),
+      saturate(remap(weather.heightFraction, vec4(0.2), vec4(0.4)))
+    );
+    modifier = mix(vec4(0.0), modifier, detailAmounts);
+    density = saturate(remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0)));
+  }
+  #endif // SHAPE_DETAIL
+
+  // Nicely decrease density at the bottom.
+  density = saturate(density * densityScales * (weather.heightFraction * 0.75 + 0.25));
+
+  MediaSample media;
+  float densitySum = density.x + density.y + density.z + density.w;
+  media.scattering = densitySum * scatteringCoefficient;
+  media.extinction = densitySum * absorptionCoefficient + media.scattering;
+  return media;
+}
