@@ -207,8 +207,11 @@ float phaseFunction(const float cosTheta, const float attenuation) {
   const float gD = 0.5937905847209213;
   const float alpha = 27.113693722212247;
   const float weight = 0.4981594843291369;
-  return (1.0 - weight) * henyeyGreenstein(vec2(gHG) * attenuation, cosTheta).x +
-  weight * draine(cosTheta, gD * attenuation, alpha);
+  return mix(
+    henyeyGreenstein(vec2(gHG) * attenuation, cosTheta).x,
+    draine(cosTheta, gD * attenuation, alpha),
+    weight
+  );
 }
 
 #else // ACCURATE_PHASE_FUNCTION
@@ -335,12 +338,14 @@ vec4 marchClouds(
         );
       }
 
+      // March optical depth for finer details, which BSM lacks.
+      opticalDepth += marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel, jitter);
+
       // TODO: It's constant. Move to vertex shader or uniform.
       vec3 albedo = vec3(media.scattering / media.extinction);
 
-      opticalDepth += marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel, jitter);
+      // I'm not sure skyIrradiance should be included in the scattering term.
       float scattering = multipleScattering(opticalDepth, cosTheta);
-      // I’m not sure skyIrradiance should be included in the scattering term.
       vec3 radiance = albedo * scattering * (sunIrradiance + skyIrradiance);
 
       #ifdef GROUND_IRRADIANCE
@@ -367,12 +372,11 @@ vec4 marchClouds(
       }
       #endif // GROUND_IRRADIANCE
 
-      // Assumes isotropic scattering and ignores the light gradient between the
-      // ground and the zenith. This often results in a scene that is too dark,
-      // requiring skyIrradianceScale to be greater than 1.
+      // Assume isotropic scattering and ignore the light gradient between the
+      // ground and the zenith.
       radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale;
 
-      // Finally multiply by extinction.
+      // Finally multiply by extinction (redundant but kept for clarity).
       radiance *= media.extinction;
 
       #ifdef POWDER
@@ -388,8 +392,8 @@ vec4 marchClouds(
       // Energy-conserving analytical integration of scattered light
       // See 5.6.3 in https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
       float transmittance = exp(-media.extinction * stepSize);
-      float clampedDensity = max(media.extinction, 1e-7);
-      vec3 scatteringIntegral = (radiance - radiance * transmittance) / clampedDensity;
+      float clampedExtinction = max(media.extinction, 1e-7);
+      vec3 scatteringIntegral = (radiance - radiance * transmittance) / clampedExtinction;
       radianceIntegral += transmittanceIntegral * scatteringIntegral;
       transmittanceIntegral *= transmittance;
 
@@ -740,6 +744,7 @@ void main() {
   // Apply aerial perspective.
   vec3 frontPosition = cameraPosition + frontDepth * rayDirection;
   applyAerialPerspective(cameraPosition, frontPosition, outputShadowLength, color);
+  outputColor = color;
 
   // Velocity for temporal resolution.
   vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
@@ -747,7 +752,5 @@ void main() {
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
   vec2 velocity = (vUv - prevUv) * resolution;
-
-  outputColor = color;
   outputDepthVelocity = vec3(frontDepth, velocity);
 }

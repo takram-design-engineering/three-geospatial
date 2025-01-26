@@ -139,7 +139,7 @@ void cascade(
   vec3 sunPosition = mat3(inverseEllipsoidMatrix) * point.xyz - vEllipsoidCenter;
 
   // The sun direction is in ECEF. Since the view matrix is constructed with the
-  // ellipsoid matrix already applied, there’s no need to apply the inverse
+  // ellipsoid matrix already applied, there's no need to apply the inverse
   // matrix here.
   vec3 rayDirection = normalize(-sunDirection);
   float rayNear;

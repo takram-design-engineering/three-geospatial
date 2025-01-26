@@ -125,7 +125,7 @@ void temporalUpscale(
   #endif // DEBUG_SHOW_VELOCITY
 
   #ifdef SHADOW_LENGTH
-  // Sampling the shadow length history using scene depth doesn’t make much
+  // Sampling the shadow length history using scene depth doesn't make much
   // sense, but it's too hard to derive it properly. At least this approach
   // resolves the edges of scene objects.
   // vec4 historyShadowLength = vec4(textureCatmullRom(shadowLengthHistoryBuffer, prevUv).rgb, 1.0);
