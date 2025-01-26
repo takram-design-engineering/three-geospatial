@@ -309,7 +309,16 @@ export const Story: FC<SceneProps> = props => {
             transform: translate(-50%, -50%);
           `}
         >
-          Enter Google Maps API key at the top right of this screen.
+          Enter{' '}
+          <a
+            href='https://developers.google.com/maps/documentation/tile/get-api-key'
+            target='_blank'
+            rel='noreferrer'
+            style={{ color: 'inherit' }}
+          >
+            Google Maps API key
+          </a>{' '}
+          at the top right of this screen.
         </div>
       )}
     </>
