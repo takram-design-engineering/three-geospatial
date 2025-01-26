@@ -2,7 +2,6 @@ import { useFrame } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { useSetAtom } from 'jotai'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
-import { Uniform } from 'three'
 
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
 import {

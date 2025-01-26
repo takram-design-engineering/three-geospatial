@@ -1,26 +1,24 @@
-import { useFrame, type Node } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { useAtomValue } from 'jotai'
-import { RenderPass, type BlendFunction } from 'postprocessing'
+import { RenderPass } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { Texture } from 'three'
 
+import { type PassThoughInstanceProps } from '@takram/three-geospatial/r3f'
+
 import {
   AerialPerspectiveEffect,
-  aerialPerspectiveEffectOptionsDefaults,
-  type AerialPerspectiveEffectOptions
+  aerialPerspectiveEffectOptionsDefaults
 } from '../AerialPerspectiveEffect'
 import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
 
-export type AerialPerspectiveProps = Node<
-  InstanceType<typeof AerialPerspectiveEffect>,
-  AerialPerspectiveEffect
-> &
-  AerialPerspectiveEffectOptions & {
-    blendFunction?: BlendFunction
-    opacity?: number
-  }
+export type AerialPerspectiveProps = PassThoughInstanceProps<
+  AerialPerspectiveEffect,
+  [],
+  Partial<AerialPerspectiveEffect>
+>
 
 export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
