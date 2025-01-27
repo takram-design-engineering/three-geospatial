@@ -90,12 +90,17 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
 
 struct MediaSample {
   float density;
-  vec4 weights;
+  vec4 weight;
   float scattering;
   float extinction;
 };
 
-MediaSample sampleMedia(WeatherSample weather, const vec3 position, const float mipLevel) {
+MediaSample sampleMedia(
+  const WeatherSample weather,
+  vec3 position,
+  const vec2 uv,
+  const float mipLevel
+) {
   vec4 density = weather.density;
 
   float shape = texture(shapeTexture, position * shapeFrequency + shapeOffset).r;
@@ -123,7 +128,7 @@ MediaSample sampleMedia(WeatherSample weather, const vec3 position, const float 
 
   MediaSample media;
   float densitySum = density.x + density.y + density.z + density.w;
-  media.weights = density / densitySum;
+  media.weight = density / densitySum;
   media.scattering = densitySum * scatteringCoefficient;
   media.extinction = densitySum * absorptionCoefficient + media.scattering;
   return media;
