@@ -232,6 +232,13 @@ export function useCloudsControls(
     } else {
       delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV
     }
+    effect.cloudsPass.currentMaterial.needsUpdate = true
+  }, [effect, debugShowShadowMap, debugShowCascades, debugShowUv])
+
+  useEffect(() => {
+    if (effect == null) {
+      return
+    }
     if (debugShowShadowLength) {
       effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
     } else {
@@ -242,16 +249,8 @@ export function useCloudsControls(
     } else {
       delete effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY
     }
-    effect.cloudsPass.currentMaterial.needsUpdate = true
     effect.cloudsPass.resolveMaterial.needsUpdate = true
-  }, [
-    effect,
-    debugShowShadowMap,
-    debugShowCascades,
-    debugShowUv,
-    debugShowShadowLength,
-    debugShowVelocity
-  ])
+  }, [effect, debugShowShadowLength, debugShowVelocity])
 
   return [
     {
@@ -262,7 +261,7 @@ export function useCloudsControls(
     },
     {
       coverage,
-      temporalUpscale,
+      temporalUpscale: temporalUpscale && !debugShowShadowMap,
       'resolution-scale': resolutionScale,
       localWeatherVelocity: animate
         ? [defaultLocalWeatherVelocity ?? 0.00005, 0]
