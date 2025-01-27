@@ -52,7 +52,7 @@ export function createCloudParameterUniforms({
     shapeDetailOffset: new Uniform(new Vector3()),
     turbulenceTexture: new Uniform(turbulenceTexture),
     turbulenceFrequency: new Uniform(new Vector2().setScalar(20)),
-    turbulenceDisplacement: new Uniform(100)
+    turbulenceDisplacement: new Uniform(400)
   }
 }
 

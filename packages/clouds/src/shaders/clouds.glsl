@@ -103,15 +103,20 @@ MediaSample sampleMedia(
 ) {
   vec4 density = weather.density;
 
-  float shape = texture(shapeTexture, position * shapeFrequency + shapeOffset).r;
+  vec2 turbulenceUv = uv * localWeatherFrequency * turbulenceFrequency;
+  vec3 turbulence =
+    turbulenceDisplacement *
+    (texture(turbulenceTexture, turbulenceUv).rgb * 2.0 - 1.0) *
+    dot(density, saturate(1.0 - remap(weather.heightFraction, vec4(0.0), vec4(0.3))));
+
+  vec3 shapePosition = (position + turbulence) * shapeFrequency + shapeOffset;
+  float shape = texture(shapeTexture, shapePosition).r;
   density = mix(density, saturate(remap(density, vec4(1.0 - shape), vec4(1.0))), detailAmounts);
 
   #ifdef SHAPE_DETAIL
   if (mipLevel < 0.5) {
-    float detail = texture(
-      shapeDetailTexture,
-      position * shapeDetailFrequency + shapeDetailOffset
-    ).r;
+    vec3 detailPosition = (position + turbulence) * shapeDetailFrequency + shapeDetailOffset;
+    float detail = texture(shapeDetailTexture, detailPosition).r;
     // Fluffy at the top and whippy at the bottom.
     vec4 modifier = mix(
       vec4(pow(detail, 6.0)),
