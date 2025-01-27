@@ -15,15 +15,6 @@ const config: StorybookConfig = {
     { from: '../../packages/clouds/assets', to: '/clouds' }
   ],
 
-  viteFinal: async config =>
-    mergeConfig(config, {
-      // TODO: I don't understand at all how to tell the optimizer exclude
-      // storybook's cache. Put everything that I can think of here.
-      optimizeDeps: {
-        exclude: [path.resolve(__dirname, '../node_modules/.cache/storybook')]
-      }
-    }),
-
   previewHead: head => `
     ${head}
     <link rel='preconnect' href='https://fonts.googleapis.com' />

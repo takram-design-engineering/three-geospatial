@@ -76,6 +76,28 @@ Some stories use Cesium Ion assets. To display them correctly, search for the fo
 | Cesium World Terrain | `1` (likely exists by default) |
 | Japan Regional Terrain | `2767062` |
 
+### Note on Storybook errors
+
+You may occasionally encounter the following errors, especially when switching branches:
+
+```
+The file does not exist at "..." which is in the optimize deps directory.
+The dependency might be incompatible with the dep optimizer.
+Try adding it to `optimizeDeps.exclude`.
+```
+
+or even `R3F: Hooks can only be used within the Canvas component!` error in the browser.
+
+If the Storybook build succeeded on the commit you’re currently on in the Github Actions, the problem is likely not in the source or Storybook configuration. I haven’t found a reliable way to prevent this problem or recover from it reliably.
+
+In most cases, removing the Storybook cache, resetting NX, restarting Storybook, and opening the Storybook in a *new browser window* will recover from it:
+
+```sh
+rm -r storybook/node_modules
+nx reset
+nx storybook
+```
+
 ### Generating a library
 
 To generate a React library:
