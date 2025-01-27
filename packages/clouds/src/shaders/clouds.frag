@@ -339,7 +339,7 @@ vec4 marchClouds(
         );
       }
 
-      // March optical depth for finer details, which BSM lacks.
+      // March optical depth to the sun for finer details, which BSM lacks.
       opticalDepth += marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel, jitter);
 
       // TODO: It's constant. Move to vertex shader or uniform.

@@ -74,7 +74,7 @@ vec3 getSunSkyIrradiance(
   const vec3 positionECEF,
   const vec3 normal,
   const vec3 inputColor,
-  const float shadowTransmittance
+  const float sunTransmittance
 ) {
   // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
   // defined, regard the inputColor as radiance at the texel.
@@ -83,7 +83,7 @@ vec3 getSunSkyIrradiance(
   vec3 sunIrradiance = GetSunAndSkyIrradiance(positionECEF, normal, sunDirection, skyIrradiance);
 
   #ifdef HAS_SHADOW
-  sunIrradiance *= shadowTransmittance;
+  sunIrradiance *= sunTransmittance;
   #endif // HAS_SHADOW
 
   #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
@@ -256,14 +256,14 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   #ifdef HAS_SHADOW
   float opticalDepth = sampleShadowOpticalDepthPCF(worldPosition, positionECEF);
-  float shadowTransmittance = exp(-opticalDepth);
+  float sunTransmittance = exp(-opticalDepth);
   #else // HAS_SHADOW
-  float shadowTransmittance = 1.0;
+  float sunTransmittance = 1.0;
   #endif // HAS_SHADOW
 
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
-  radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, shadowTransmittance);
+  radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
   #else // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
