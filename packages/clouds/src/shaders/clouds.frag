@@ -372,9 +372,10 @@ vec4 marchClouds(
       }
       #endif // GROUND_IRRADIANCE
 
-      // Assume isotropic scattering and ignore the light gradient between the
-      // ground and the zenith.
-      radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale;
+      // Crude approximation of sky gradient. Better than none in the shadows.
+      float skyGradient = dot(0.5 + weather.heightFraction, media.weights);
+      // Assume isotropic scattering.
+      radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
 
       // Finally multiply by extinction (redundant but kept for clarity).
       radiance *= media.extinction;

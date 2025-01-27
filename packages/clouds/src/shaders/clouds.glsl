@@ -90,6 +90,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
 
 struct MediaSample {
   float density;
+  vec4 weights;
   float scattering;
   float extinction;
 };
@@ -121,8 +122,9 @@ MediaSample sampleMedia(WeatherSample weather, const vec3 position, const float 
   density = saturate(density * densityScales * (weather.heightFraction * 0.75 + 0.25));
 
   MediaSample media;
-  media.density = saturate(density.x + density.y + density.z + density.w);
-  media.scattering = media.density * scatteringCoefficient;
-  media.extinction = media.density * absorptionCoefficient + media.scattering;
+  float densitySum = density.x + density.y + density.z + density.w;
+  media.weights = density / densitySum;
+  media.scattering = densitySum * scatteringCoefficient;
+  media.extinction = densitySum * absorptionCoefficient + media.scattering;
   return media;
 }
