@@ -3,6 +3,7 @@ import { type Meta } from '@storybook/react'
 import _LocalWeather from './Clouds-LocalWeather'
 import _Shape from './Clouds-Shape'
 import _ShapeDetail from './Clouds-ShapeDetail'
+import _Turbulence from './Clouds-Turbulence'
 import _VolumetricShape from './Clouds-VolumetricShape'
 
 export default {
@@ -15,4 +16,5 @@ export default {
 export const LocalWeather = _LocalWeather
 export const Shape = _Shape
 export const ShapeDetail = _ShapeDetail
+export const Turbulence = _Turbulence
 export const VolumetricShape = _VolumetricShape

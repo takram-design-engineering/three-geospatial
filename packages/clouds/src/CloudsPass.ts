@@ -99,7 +99,8 @@ export class CloudsPass extends CloudsPassBase {
         sunDirectionRef: this.sunDirection,
         localWeatherTexture: this.localWeather.texture,
         shapeTexture: this.shape.texture,
-        shapeDetailTexture: this.shapeDetail.texture
+        shapeDetailTexture: this.shapeDetail.texture,
+        turbulenceTexture: this.turbulence.texture
       },
       atmosphere
     )

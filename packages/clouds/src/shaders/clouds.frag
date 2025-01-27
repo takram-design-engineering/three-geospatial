@@ -250,7 +250,7 @@ float marchOpticalDepth(
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
-    MediaSample media = sampleMedia(weather, position, mipLevel);
+    MediaSample media = sampleMedia(weather, position, uv, mipLevel);
     opticalDepth += media.extinction * (stepScale - prevStepScale) * stepSize;
     rayDistance += stepSize * stepScale;
     prevStepScale = stepScale;
@@ -318,8 +318,8 @@ vec4 marchClouds(
       continue;
     }
 
-    // Sample detailed media.
-    MediaSample media = sampleMedia(weather, position, mipLevel);
+    // Sample detailed participating media.
+    MediaSample media = sampleMedia(weather, position, uv, mipLevel);
     if (media.extinction > minExtinction) {
       vec3 skyIrradiance;
       vec3 sunIrradiance = GetSunAndSkyIrradiance(
@@ -374,7 +374,7 @@ vec4 marchClouds(
       #endif // GROUND_IRRADIANCE
 
       // Crude approximation of sky gradient. Better than none in the shadows.
-      float skyGradient = dot(0.5 + weather.heightFraction, media.weights);
+      float skyGradient = dot(0.5 + weather.heightFraction, media.weight);
       // Assume isotropic scattering.
       radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
 
