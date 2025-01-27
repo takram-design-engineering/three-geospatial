@@ -18,16 +18,21 @@ export interface CloudParameterUniforms {
   shapeDetailTexture: Uniform<Texture | null>
   shapeDetailFrequency: Uniform<Vector3>
   shapeDetailOffset: Uniform<Vector3>
+  turbulenceTexture: Uniform<Texture | null>
+  turbulenceFrequency: Uniform<Vector2>
+  turbulenceDisplacement: Uniform<number>
 }
 
 export function createCloudParameterUniforms({
   localWeatherTexture = null,
   shapeTexture = null,
-  shapeDetailTexture = null
+  shapeDetailTexture = null,
+  turbulenceTexture = null
 }: {
   localWeatherTexture?: Texture | null
   shapeTexture?: Texture | null
   shapeDetailTexture?: Texture | null
+  turbulenceTexture?: Texture | null
 } = {}): CloudParameterUniforms {
   return {
     // Scattering
@@ -36,7 +41,7 @@ export function createCloudParameterUniforms({
 
     // Weather and shape
     localWeatherTexture: new Uniform(localWeatherTexture),
-    localWeatherFrequency: new Uniform(new Vector2(100, 100)),
+    localWeatherFrequency: new Uniform(new Vector2().setScalar(100)),
     localWeatherOffset: new Uniform(new Vector2()),
     coverage: new Uniform(0.3),
     shapeTexture: new Uniform(shapeTexture),
@@ -44,7 +49,10 @@ export function createCloudParameterUniforms({
     shapeOffset: new Uniform(new Vector3()),
     shapeDetailTexture: new Uniform(shapeDetailTexture),
     shapeDetailFrequency: new Uniform(new Vector3().setScalar(0.006)),
-    shapeDetailOffset: new Uniform(new Vector3())
+    shapeDetailOffset: new Uniform(new Vector3()),
+    turbulenceTexture: new Uniform(turbulenceTexture),
+    turbulenceFrequency: new Uniform(new Vector2().setScalar(20)),
+    turbulenceDisplacement: new Uniform(100)
   }
 }
 

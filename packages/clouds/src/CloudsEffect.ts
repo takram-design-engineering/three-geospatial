@@ -24,6 +24,7 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsPass } from './CloudsPass'
 import { LocalWeather } from './LocalWeather'
+import { Turbulence } from './Turbulence'
 import { ShadowPass } from './ShadowPass'
 import { type CloudLayers } from './types'
 
@@ -97,6 +98,7 @@ export class CloudsEffect extends Effect {
   readonly shapeVelocity = new Vector3()
   readonly shapeDetail = new CloudShapeDetail()
   readonly shapeDetailVelocity = new Vector3()
+  readonly turbulence = new Turbulence()
 
   readonly shadow: CascadedShadowMaps
   readonly shadowPass: ShadowPass
@@ -204,6 +206,7 @@ export class CloudsEffect extends Effect {
     this.localWeather.update(renderer)
     this.shape.update(renderer)
     this.shapeDetail.update(renderer)
+    this.turbulence.update(renderer)
 
     this.cloudsBufferRef.value = cloudsPass.outputBuffer
     this.shadowBufferRef.value = shadowPass.outputBuffer

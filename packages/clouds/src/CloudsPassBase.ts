@@ -2,9 +2,8 @@ import { Pass } from 'postprocessing'
 import { Camera, Vector3, type Matrix4, type Vector2 } from 'three'
 
 import { type CascadedShadowMaps } from './CascadedShadowMaps'
-import { type CloudShape } from './CloudShape'
-import { type CloudShapeDetail } from './CloudShapeDetail'
-import { type LocalWeather } from './LocalWeather'
+import { type Render3DTexture } from './Render3DTexture'
+import { type RenderTexture } from './RenderTexture'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
@@ -25,12 +24,13 @@ export interface CloudsPassBaseOptions {
   ellipsoidCenter: Vector3
   ellipsoidMatrix: Matrix4
   sunDirection: Vector3
-  localWeather: LocalWeather
+  localWeather: RenderTexture
   localWeatherVelocity: Vector2
-  shape: CloudShape
+  shape: Render3DTexture
   shapeVelocity: Vector3
-  shapeDetail: CloudShapeDetail
+  shapeDetail: Render3DTexture
   shapeDetailVelocity: Vector3
+  turbulence: RenderTexture
   shadow: CascadedShadowMaps
 }
 
@@ -38,12 +38,13 @@ export abstract class CloudsPassBase extends Pass {
   readonly ellipsoidCenter!: Vector3
   readonly ellipsoidMatrix!: Matrix4
   readonly sunDirection!: Vector3
-  readonly localWeather!: LocalWeather
+  readonly localWeather!: RenderTexture
   readonly localWeatherVelocity!: Vector2
-  readonly shape!: CloudShape
+  readonly shape!: Render3DTexture
   readonly shapeVelocity!: Vector3
-  readonly shapeDetail!: CloudShapeDetail
+  readonly shapeDetail!: Render3DTexture
   readonly shapeDetailVelocity!: Vector3
+  readonly turbulence!: RenderTexture
   shadow: CascadedShadowMaps
 
   private _mainCamera = new Camera()
@@ -60,6 +61,7 @@ export abstract class CloudsPassBase extends Pass {
       shapeVelocity,
       shapeDetail,
       shapeDetailVelocity,
+      turbulence,
       shadow
     } = options
     this.ellipsoidCenter = ellipsoidCenter
@@ -71,6 +73,7 @@ export abstract class CloudsPassBase extends Pass {
     this.shapeVelocity = shapeVelocity
     this.shapeDetail = shapeDetail
     this.shapeDetailVelocity = shapeDetailVelocity
+    this.turbulence = turbulence
     this.shadow = shadow
   }
 

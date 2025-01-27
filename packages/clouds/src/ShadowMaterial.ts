@@ -43,6 +43,7 @@ export interface ShadowMaterialParameters {
   localWeatherTexture?: Texture | null
   shapeTexture?: Texture | null
   shapeDetailTexture?: Texture | null
+  turbulenceTexture?: Texture | null
 }
 
 export interface ShadowMaterialUniforms
@@ -86,7 +87,8 @@ export class ShadowMaterial extends RawShaderMaterial {
       sunDirectionRef = new Vector3(),
       localWeatherTexture = null,
       shapeTexture = null,
-      shapeDetailTexture = null
+      shapeDetailTexture = null,
+      turbulenceTexture = null
     }: ShadowMaterialParameters = {},
     private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
@@ -119,7 +121,8 @@ export class ShadowMaterial extends RawShaderMaterial {
         ...createCloudParameterUniforms({
           localWeatherTexture,
           shapeTexture,
-          shapeDetailTexture
+          shapeDetailTexture,
+          turbulenceTexture
         }),
         ...createCloudLayerUniforms(),
 

@@ -69,6 +69,7 @@ export interface CloudsMaterialParameters {
   localWeatherTexture?: Texture | null
   shapeTexture?: Texture | null
   shapeDetailTexture?: Texture | null
+  turbulenceTexture?: Texture | null
   shadowBuffer?: DataArrayTexture | null
 }
 
@@ -148,6 +149,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       localWeatherTexture = null,
       shapeTexture = null,
       shapeDetailTexture = null,
+      turbulenceTexture = null,
       shadowBuffer = null
     }: CloudsMaterialParameters = {},
     atmosphere = AtmosphereParameters.DEFAULT
@@ -192,7 +194,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ...createCloudParameterUniforms({
             localWeatherTexture,
             shapeTexture,
-            shapeDetailTexture
+            shapeDetailTexture,
+            turbulenceTexture
           }),
           ...createCloudLayerUniforms(),
 
