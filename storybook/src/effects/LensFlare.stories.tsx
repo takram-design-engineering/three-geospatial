@@ -1,5 +1,7 @@
 import { type Meta } from '@storybook/react'
 
+import _Basic from './LensFlare-Basic'
+
 export default {
   title: 'effects/Lens Flare',
   parameters: {
@@ -7,6 +9,4 @@ export default {
   }
 } satisfies Meta
 
-export const Basic = await import('./LensFlare-Basic').then(
-  module => module.default
-)
+export const Basic = _Basic

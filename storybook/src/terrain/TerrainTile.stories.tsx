@@ -1,5 +1,9 @@
 import { type Meta } from '@storybook/react'
 
+import _Batched from './TerrainTile-Batched'
+import _Globe from './TerrainTile-Globe'
+import _Multiple from './TerrainTile-Multiple'
+
 export default {
   title: 'terrain (WIP)/Terrain Tile',
   parameters: {
@@ -7,12 +11,6 @@ export default {
   }
 } satisfies Meta
 
-export const Globe = await import('./TerrainTile-Globe').then(
-  module => module.default
-)
-export const Multiple = await import('./TerrainTile-Multiple').then(
-  module => module.default
-)
-export const Batched = await import('./TerrainTile-Batched').then(
-  module => module.default
-)
+export const Globe = _Globe
+export const Multiple = _Multiple
+export const Batched = _Batched

@@ -1,5 +1,7 @@
 import { type Meta } from '@storybook/react'
 
+import _PointOfView from './Camera-PointOfView'
+
 export default {
   title: 'core/Camera',
   parameters: {
@@ -7,6 +9,4 @@ export default {
   }
 } satisfies Meta
 
-export const PointOfView = await import('./Camera-PointOfView').then(
-  module => module.default
-)
+export const PointOfView = _PointOfView

@@ -1,5 +1,7 @@
 import { type Meta } from '@storybook/react'
 
+import _Basic from './GBuffer-Basic'
+
 export default {
   title: 'effects/G-Buffer',
   parameters: {
@@ -7,6 +9,4 @@ export default {
   }
 } satisfies Meta
 
-export const Basic = await import('./GBuffer-Basic').then(
-  module => module.default
-)
+export const Basic = _Basic

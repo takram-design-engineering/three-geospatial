@@ -20,8 +20,7 @@ const config: StorybookConfig = {
       // TODO: I don't understand at all how to tell the optimizer exclude
       // storybook's cache. Put everything that I can think of here.
       optimizeDeps: {
-        exclude: [path.resolve(__dirname, '../node_modules/.cache/storybook')],
-        force: true
+        exclude: [path.resolve(__dirname, '../node_modules/.cache/storybook')]
       }
     }),
 

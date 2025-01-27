@@ -1,5 +1,8 @@
 import { type Meta } from '@storybook/react'
 
+import _EastNorthUp from './Ellipsoid-EastNorthUp'
+import _OsculatingSphere from './Ellipsoid-OsculatingSphere'
+
 export default {
   title: 'core/Ellipsoid',
   parameters: {
@@ -7,9 +10,5 @@ export default {
   }
 } satisfies Meta
 
-export const EastNorthUp = await import('./Ellipsoid-EastNorthUp').then(
-  module => module.default
-)
-export const OsculatingSphere = await import(
-  './Ellipsoid-OsculatingSphere'
-).then(module => module.default)
+export const EastNorthUp = _EastNorthUp
+export const OsculatingSphere = _OsculatingSphere

@@ -1,5 +1,8 @@
 import { type Meta } from '@storybook/react'
 
+import _Basic from './Sky-Basic'
+import _EnvironmentMap from './Sky-EnvironmentMap'
+
 export default {
   title: 'atmosphere/Sky',
   parameters: {
@@ -7,7 +10,5 @@ export default {
   }
 } satisfies Meta
 
-export const Basic = await import('./Sky-Basic').then(module => module.default)
-export const EnvironmentMap = await import('./Sky-EnvironmentMap').then(
-  module => module.default
-)
+export const Basic = _Basic
+export const EnvironmentMap = _EnvironmentMap

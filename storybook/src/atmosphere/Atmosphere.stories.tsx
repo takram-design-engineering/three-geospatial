@@ -1,5 +1,9 @@
 import { type Meta } from '@storybook/react'
 
+import _Basic from './Atmosphere-Basic'
+import _MovingEllipsoid from './Atmosphere-MovingEllipsoid'
+import _Vanilla from './Atmosphere-Vanilla'
+
 export default {
   title: 'atmosphere/Atmosphere',
   parameters: {
@@ -7,12 +11,6 @@ export default {
   }
 } satisfies Meta
 
-export const Basic = await import('./Atmosphere-Basic').then(
-  module => module.default
-)
-export const MovingEllipsoid = await import(
-  './Atmosphere-MovingEllipsoid'
-).then(module => module.default)
-export const Vanilla = await import('./Atmosphere-Vanilla').then(
-  module => module.default
-)
+export const Basic = _Basic
+export const MovingEllipsoid = _MovingEllipsoid
+export const Vanilla = _Vanilla

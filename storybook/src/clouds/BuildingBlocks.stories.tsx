@@ -1,5 +1,10 @@
 import { type Meta } from '@storybook/react'
 
+import _LocalWeather from './Clouds-LocalWeather'
+import _Shape from './Clouds-Shape'
+import _ShapeDetail from './Clouds-ShapeDetail'
+import _VolumetricShape from './Clouds-VolumetricShape'
+
 export default {
   title: 'clouds (WIP)/Building Blocks',
   parameters: {
@@ -7,15 +12,7 @@ export default {
   }
 } satisfies Meta
 
-export const LocalWeather = await import('./Clouds-LocalWeather').then(
-  module => module.default
-)
-export const Shape = await import('./Clouds-Shape').then(
-  module => module.default
-)
-export const ShapeDetail = await import('./Clouds-ShapeDetail').then(
-  module => module.default
-)
-export const VolumetricShape = await import('./Clouds-VolumetricShape').then(
-  module => module.default
-)
+export const LocalWeather = _LocalWeather
+export const Shape = _Shape
+export const ShapeDetail = _ShapeDetail
+export const VolumetricShape = _VolumetricShape
