@@ -237,7 +237,12 @@ export class CloudsPass extends CloudsPassBase {
       const lowResWidth = Math.ceil(width / 4)
       const lowResHeight = Math.ceil(height / 4)
       this.currentRenderTarget.setSize(lowResWidth, lowResHeight)
-      this.currentMaterial.setSize(lowResWidth * 4, lowResHeight * 4)
+      this.currentMaterial.setSize(
+        lowResWidth * 4,
+        lowResHeight * 4,
+        width,
+        height
+      )
     } else {
       this.currentRenderTarget.setSize(width, height)
       this.currentMaterial.setSize(width, height)

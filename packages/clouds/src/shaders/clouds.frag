@@ -25,6 +25,7 @@ uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
 uniform vec2 temporalJitter;
+uniform vec2 targetUvScale;
 uniform float mipLevelScale;
 
 // Scattering
@@ -615,7 +616,7 @@ vec4 getCascadedShadowMaps(vec2 uv) {
 #endif // DEBUG_SHOW_SHADOW_MAP
 
 void clampRaysAtSceneObjects(const vec3 rayDirection, inout vec2 nearFar1, inout vec2 nearFar2) {
-  float depth = readDepth(vUv + temporalJitter);
+  float depth = readDepth(vUv * targetUvScale + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     float viewZ = getViewZ(depth);

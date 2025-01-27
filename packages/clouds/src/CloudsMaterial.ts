@@ -86,6 +86,7 @@ export interface CloudsMaterialUniforms
   cameraHeight: Uniform<number>
   frame: Uniform<number>
   temporalJitter: Uniform<Vector2>
+  targetUvScale: Uniform<Vector2>
   mipLevelScale: Uniform<number>
   stbnTexture: Uniform<Data3DTexture | null>
 
@@ -184,6 +185,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           cameraHeight: new Uniform(0),
           frame: new Uniform(0),
           temporalJitter: new Uniform(new Vector2()),
+          targetUvScale: new Uniform(new Vector2()),
           mipLevelScale: new Uniform(1),
           stbnTexture: new Uniform(null),
 
@@ -366,8 +368,24 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.previousViewMatrix.copy(camera.matrixWorldInverse)
   }
 
-  setSize(width: number, height: number): void {
+  setSize(
+    width: number,
+    height: number,
+    targetWidth?: number,
+    targetHeight?: number
+  ): void {
     this.uniforms.resolution.value.set(width, height)
+    if (targetWidth != null && targetHeight != null) {
+      // The size of the high-resolution target buffer differs from the upscaled
+      // resolution, which is a multiple of 4. This must be corrected when
+      // reading from the depth buffer.
+      this.uniforms.targetUvScale.value.set(
+        width / targetWidth,
+        height / targetHeight
+      )
+    } else {
+      this.uniforms.targetUvScale.value.setScalar(1)
+    }
 
     // Invalidate reprojection.
     this.previousProjectionMatrix = undefined
