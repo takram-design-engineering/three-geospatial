@@ -65,6 +65,7 @@ import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
 import { useExposureControls } from '../helpers/useExposureControls'
+import { useKeyboardControl } from '../helpers/useKeyboardControl'
 import {
   useLocalDateControls,
   type LocalDateControlsParams
@@ -219,6 +220,8 @@ const Scene: FC<SceneProps> = ({
     animate: true,
     localWeatherVelocity: 0.00001
   })
+
+  useKeyboardControl()
 
   return (
     <Atmosphere
