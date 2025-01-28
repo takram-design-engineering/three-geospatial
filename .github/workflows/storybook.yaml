@@ -29,6 +29,8 @@ jobs:
       - run: |
           pnpm install --frozen-lockfile
           npx nx build-storybook
+        env:
+          STORYBOOK_ION_API_TOKEN: ${{secrets.STORYBOOK_ION_API_TOKEN}}
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -37,5 +39,3 @@ jobs:
       - uses: actions/deploy-pages@v4
         with:
           token: ${{ github.token }}
-        env:
-          STORYBOOK_ION_API_TOKEN: ${{secrets.STORYBOOK_ION_API_TOKEN}}
