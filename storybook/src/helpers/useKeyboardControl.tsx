@@ -31,7 +31,7 @@ export function useKeyboardControl({
   const [s] = useKeyPress('s')
   const [d] = useKeyPress('d')
   const [space] = useKeyPress(' ')
-  const [control] = useKeyPress('Control')
+  const [c] = useKeyPress('c')
 
   useEffect(() => {
     motionX.set(d ? speed : a ? -speed : 0)
@@ -48,11 +48,11 @@ export function useKeyboardControl({
   }, [motionY, s]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    motionZ.set(space ? speed : control ? -speed : 0)
+    motionZ.set(space ? speed : c ? -speed : 0)
   }, [motionZ, space]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    motionZ.set(control ? -speed : space ? speed : 0)
-  }, [motionZ, control]) // eslint-disable-line react-hooks/exhaustive-deps
+    motionZ.set(c ? -speed : space ? speed : 0)
+  }, [motionZ, c]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useFrame(({ camera, controls }) => {
     const x = motionX.get()
