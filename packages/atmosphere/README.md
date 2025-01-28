@@ -215,7 +215,7 @@ function render(): void {
 
 - The aerial perspective (specifically the inscatter term) includes a [workaround for the horizon artifact](https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32#issuecomment-480523982), but due to finite floating-point precision, this artifact cannot be removed completely.
 
-- Volumetric light shaft is not implemented as it requires ray tracing. You may notice scattered light is not occluded by scene objects.
+- Volumetric light shaft is not implemented as it requires ray tracing or an additional depth pass from the sun. You may notice scattered light is not occluded by scene objects.
 
 - Although you can generate custom precomputed textures, the implementation is effectively limited to Earth’s atmosphere. For rendering atmospheres of other planets, consider implementing Sébastien Hillaire’s [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf).
 
