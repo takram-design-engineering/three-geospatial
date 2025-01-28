@@ -264,7 +264,7 @@ export function useCloudsControls(
       temporalUpscale: temporalUpscale && !debugShowShadowMap,
       'resolution-scale': resolutionScale,
       localWeatherVelocity: animate
-        ? [defaultLocalWeatherVelocity ?? 0.00005, 0]
+        ? [defaultLocalWeatherVelocity ?? 0.00001, 0]
         : [0, 0],
       'shadow-mapSize': [shadowMapSize, shadowMapSize],
       crepuscularRays

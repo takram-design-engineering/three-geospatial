@@ -97,7 +97,7 @@ struct MediaSample {
 
 MediaSample sampleMedia(
   const WeatherSample weather,
-  vec3 position,
+  const vec3 position,
   const vec2 uv,
   const float mipLevel
 ) {
@@ -128,7 +128,7 @@ MediaSample sampleMedia(
   }
   #endif // SHAPE_DETAIL
 
-  // Nicely decrease density at the bottom.
+  // Nicely decrease the density at the bottom.
   density = saturate(density * densityScales * (weather.heightFraction * 0.75 + 0.25));
 
   MediaSample media;

@@ -217,8 +217,7 @@ const Scene: FC<SceneProps> = ({
     cloudsProps
   ] = useCloudsControls(clouds, {
     coverage: 0.3,
-    animate: true,
-    localWeatherVelocity: 0.00001
+    animate: true
   })
 
   useKeyboardControl()
