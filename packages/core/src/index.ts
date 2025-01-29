@@ -1,6 +1,7 @@
 export * from './ArrayBufferLoader'
 export * from './assertions'
 export * from './bufferGeometry'
+export * from './constants'
 export * from './DataLoader'
 export * from './Ellipsoid'
 export * from './EllipsoidGeometry'

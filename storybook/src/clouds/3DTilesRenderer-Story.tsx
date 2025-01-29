@@ -37,19 +37,17 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import {
-  STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH,
-  type CloudsEffect
-} from '@takram/three-clouds'
+import { type CloudsEffect } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import {
   createData3DTextureLoaderClass,
   Geodetic,
   parseUint8Array,
   PointOfView,
-  radians
+  radians,
+  STBN_TEXTURE_DEPTH,
+  STBN_TEXTURE_HEIGHT,
+  STBN_TEXTURE_WIDTH
 } from '@takram/three-geospatial'
 import {
   Depth,

@@ -20,19 +20,17 @@ import {
   SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import {
-  STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH,
-  type CloudsEffect
-} from '@takram/three-clouds'
+import { type CloudsEffect } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import {
   createData3DTextureLoaderClass,
   Ellipsoid,
   Geodetic,
   parseUint8Array,
-  radians
+  radians,
+  STBN_TEXTURE_DEPTH,
+  STBN_TEXTURE_HEIGHT,
+  STBN_TEXTURE_WIDTH
 } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 
