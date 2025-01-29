@@ -93,6 +93,10 @@ float getViewZ(const float depth) {
   #endif // PERSPECTIVE_CAMERA
 }
 
+vec3 ECEFToWorld(const vec3 positionECEF) {
+  return mat3(ellipsoidMatrix) * (positionECEF + vEllipsoidCenter);
+}
+
 int getCascadeIndex(const vec3 worldPosition) {
   vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
@@ -110,9 +114,7 @@ int getCascadeIndex(const vec3 worldPosition) {
   return SHADOW_CASCADE_COUNT - 1;
 }
 
-vec2 getShadowUv(const vec3 rayPosition, out int cascadeIndex) {
-  // Ray position is relative to the ellipsoid.
-  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
+vec2 getShadowUv(const vec3 worldPosition, out int cascadeIndex) {
   cascadeIndex = getCascadeIndex(worldPosition);
   vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
@@ -136,9 +138,7 @@ struct CascadeFade {
   float alpha;
 };
 
-CascadeFade getCascadeFade(const vec3 rayPosition) {
-  // Ray position is relative to the ellipsoid.
-  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
+CascadeFade getCascadeFade(const vec3 worldPosition) {
   vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
 
@@ -180,8 +180,9 @@ const vec3 cascadeColors[4] = vec3[4](
 );
 
 vec3 getCascadeColor(const vec3 rayPosition) {
+  vec3 worldPosition = ECEFToWorld(rayPosition);
   int cascadeIndex;
-  vec2 uv = getShadowUv(rayPosition, cascadeIndex);
+  vec2 uv = getShadowUv(worldPosition, cascadeIndex);
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(1.0);
   }
@@ -189,7 +190,8 @@ vec3 getCascadeColor(const vec3 rayPosition) {
 }
 
 vec3 getFadedCascadeColor(const vec3 rayPosition) {
-  CascadeFade fade = getCascadeFade(rayPosition);
+  vec3 worldPosition = ECEFToWorld(rayPosition);
+  CascadeFade fade = getCascadeFade(worldPosition);
   return mix(
     fade.prevIndex >= 0
       ? cascadeColors[fade.prevIndex]
@@ -246,13 +248,11 @@ float sampleShadowOpticalDepthByUv(
 }
 
 float sampleShadowOpticalDepthByPosition(
-  const vec3 rayPosition,
+  const vec3 worldPosition,
   const float distanceToTop,
   const float radius,
   const int cascadeIndex
 ) {
-  // Ray position is relative to the ellipsoid.
-  vec3 worldPosition = mat3(ellipsoidMatrix) * (rayPosition + vEllipsoidCenter);
   vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
   vec2 uv = clip.xy * 0.5 + 0.5;
@@ -263,8 +263,9 @@ float sampleShadowOpticalDepthByPosition(
 }
 
 float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
+  vec3 worldPosition = ECEFToWorld(rayPosition);
   int cascadeIndex;
-  vec2 uv = getShadowUv(rayPosition, cascadeIndex);
+  vec2 uv = getShadowUv(worldPosition, cascadeIndex);
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return 0.0;
   }
@@ -273,14 +274,15 @@ float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
 }
 
 float sampleFadedShadowOpticalDepth(const vec3 rayPosition, const float radius) {
+  vec3 worldPosition = ECEFToWorld(rayPosition);
   float distanceToTop = getDistanceToShadowTop(rayPosition);
-  CascadeFade fade = getCascadeFade(rayPosition);
+  CascadeFade fade = getCascadeFade(worldPosition);
   return mix(
     fade.prevIndex >= 0
-      ? sampleShadowOpticalDepthByPosition(rayPosition, distanceToTop, radius, fade.prevIndex)
+      ? sampleShadowOpticalDepthByPosition(worldPosition, distanceToTop, radius, fade.prevIndex)
       : 0.0,
     fade.nextIndex >= 0
-      ? sampleShadowOpticalDepthByPosition(rayPosition, distanceToTop, radius, fade.nextIndex)
+      ? sampleShadowOpticalDepthByPosition(worldPosition, distanceToTop, radius, fade.nextIndex)
       : 0.0,
     fade.alpha
   );
@@ -783,7 +785,7 @@ void main() {
     // the edges, but suffers from floating-point precision errors on near
     // objects.
     // vec3 frontPosition = cameraPosition + rayNearFar.y * rayDirection;
-    // vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
+    // vec3 frontPositionWorld = ECEFToWorld(frontPosition);
     // vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
     // prevClip /= prevClip.w;
     // vec2 prevUv = prevClip.xy * 0.5 + 0.5;
@@ -848,7 +850,7 @@ void main() {
   outputColor = color;
 
   // Velocity for temporal resolution.
-  vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
+  vec3 frontPositionWorld = ECEFToWorld(frontPosition);
   vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
