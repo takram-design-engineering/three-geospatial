@@ -120,6 +120,8 @@ export interface AerialPerspectiveEffectUniforms {
   shadowFar: Uniform<number>
   shadowTopHeight: Uniform<number>
   shadowRadius: Uniform<number>
+  stbnTexture: Uniform<Data3DTexture | null>
+  frame: Uniform<number>
   shadowLengthBuffer: Uniform<Texture | null>
 
   // Uniforms for atmosphere functions
@@ -247,6 +249,8 @@ export class AerialPerspectiveEffect extends Effect {
             shadowFar: new Uniform(0),
             shadowTopHeight: new Uniform(0),
             shadowRadius: new Uniform(1),
+            stbnTexture: new Uniform(null),
+            frame: new Uniform(0),
             shadowLengthBuffer: new Uniform(null),
 
             // Uniforms for atmosphere functions
@@ -365,6 +369,8 @@ export class AerialPerspectiveEffect extends Effect {
     } else {
       altitudeCorrection.value.setScalar(0)
     }
+
+    ++this.uniforms.get('frame').value
   }
 
   get normalBuffer(): Texture | null {
@@ -622,14 +628,6 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('lunarRadianceScale').value = value
   }
 
-  get shadowRadius(): number {
-    return this.uniforms.get('shadowRadius').value
-  }
-
-  set shadowRadius(value: number) {
-    this.uniforms.get('shadowRadius').value = value
-  }
-
   private setUniform<K extends keyof AerialPerspectiveEffectUniforms>(
     name: K,
     value:
@@ -657,6 +655,14 @@ export class AerialPerspectiveEffect extends Effect {
     this.setChanged()
   }
 
+  get stbnTexture(): Data3DTexture | null {
+    return this.uniforms.get('stbnTexture').value
+  }
+
+  set stbnTexture(value: Data3DTexture | null) {
+    this.uniforms.get('stbnTexture').value = value
+  }
+
   // eslint-disable-next-line accessor-pairs
   set shadow(value: AtmosphereShadow | null) {
     if (value != null) {
@@ -673,6 +679,14 @@ export class AerialPerspectiveEffect extends Effect {
       this.uniforms.get('shadowBuffer').value = null
     }
     this.setChanged()
+  }
+
+  get shadowRadius(): number {
+    return this.uniforms.get('shadowRadius').value
+  }
+
+  set shadowRadius(value: number) {
+    this.uniforms.get('shadowRadius').value = value
   }
 
   // eslint-disable-next-line accessor-pairs

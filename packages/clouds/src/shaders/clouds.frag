@@ -145,7 +145,7 @@ int getFadedCascadeIndex(const vec3 worldPosition, const float jitter) {
   }
   #pragma unroll_loop_end
 
-  return jitter < alpha
+  return jitter <= alpha
     ? nextIndex
     : prevIndex;
 }

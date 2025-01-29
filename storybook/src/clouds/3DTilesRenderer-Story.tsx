@@ -260,6 +260,7 @@ const Scene: FC<SceneProps> = ({
                 skyIrradiance
                 correctGeometricError={correctGeometricError}
                 irradianceScale={2 / Math.PI}
+                stbnTexture={stbnTexture}
               />
             </>
           )}

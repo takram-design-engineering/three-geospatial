@@ -174,7 +174,12 @@ const Scene: FC = () => {
                 {...cloudsProps}
               />
             )}
-            <AerialPerspective sky sunIrradiance skyIrradiance />
+            <AerialPerspective
+              sky
+              sunIrradiance
+              skyIrradiance
+              stbnTexture={stbnTexture}
+            />
             {!debugShowUv && !debugShowShadowMap && !debugShowShadowLength && (
               <>
                 <LensFlare />
