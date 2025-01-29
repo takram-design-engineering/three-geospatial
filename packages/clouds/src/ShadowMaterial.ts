@@ -145,7 +145,8 @@ export class ShadowMaterial extends RawShaderMaterial {
       defines: {
         TEMPORAL_PASS: '1',
         TEMPORAL_JITTER: '1',
-        SHAPE_DETAIL: '1'
+        SHAPE_DETAIL: '1',
+        TURBULENCE: '1'
       }
     })
 
@@ -234,6 +235,21 @@ export class ShadowMaterial extends RawShaderMaterial {
         this.defines.SHAPE_DETAIL = '1'
       } else {
         delete this.defines.SHAPE_DETAIL
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get turbulence(): boolean {
+    return this.defines.TURBULENCE != null
+  }
+
+  set turbulence(value: boolean) {
+    if (value !== this.turbulence) {
+      if (value) {
+        this.defines.TURBULENCE = '1'
+      } else {
+        delete this.defines.TURBULENCE
       }
       this.needsUpdate = true
     }

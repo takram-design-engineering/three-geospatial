@@ -103,11 +103,14 @@ MediaSample sampleMedia(
 ) {
   vec4 density = weather.density;
 
+  vec3 turbulence = vec3(0.0);
+  #ifdef TURBULENCE
   vec2 turbulenceUv = uv * localWeatherRepeat * turbulenceRepeat;
-  vec3 turbulence =
+  turbulence =
     turbulenceDisplacement *
     (texture(turbulenceTexture, turbulenceUv).rgb * 2.0 - 1.0) *
     dot(density, saturate(1.0 - remap(weather.heightFraction, vec4(0.0), vec4(0.3))));
+  #endif // TURBULENCE
 
   vec3 shapePosition = (position + turbulence) * shapeRepeat + shapeOffset;
   float shape = texture(shapeTexture, shapePosition).r;

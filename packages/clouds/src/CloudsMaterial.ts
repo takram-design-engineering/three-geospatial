@@ -251,6 +251,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         defines: {
           DEPTH_PACKING: '0',
           SHAPE_DETAIL: '1',
+          TURBULENCE: '1',
           MULTI_SCATTERING_OCTAVES: '8',
           POWDER: '1',
           GROUND_IRRADIANCE: '1',
@@ -428,6 +429,21 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         this.defines.SHAPE_DETAIL = '1'
       } else {
         delete this.defines.SHAPE_DETAIL
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get turbulence(): boolean {
+    return this.defines.TURBULENCE != null
+  }
+
+  set turbulence(value: boolean) {
+    if (value !== this.turbulence) {
+      if (value) {
+        this.defines.TURBULENCE = '1'
+      } else {
+        delete this.defines.TURBULENCE
       }
       this.needsUpdate = true
     }
