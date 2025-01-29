@@ -114,8 +114,43 @@ int getCascadeIndex(const vec3 worldPosition) {
   return SHADOW_CASCADE_COUNT - 1;
 }
 
-vec2 getShadowUv(const vec3 worldPosition, out int cascadeIndex) {
-  cascadeIndex = getCascadeIndex(worldPosition);
+// Reference: https://github.com/mrdoob/three.js/blob/r171/examples/jsm/csm/CSMShader.js
+int getFadedCascadeIndex(const vec3 worldPosition, const float jitter) {
+  vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
+  float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
+
+  vec2 interval;
+  float intervalCenter;
+  float closestEdge;
+  float margin;
+  int nextIndex = -1;
+  int prevIndex = -1;
+  float alpha;
+
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; ++i) {
+    #if UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
+    interval = shadowIntervals[i];
+    intervalCenter = (interval.x + interval.y) * 0.5;
+    closestEdge = depth < intervalCenter ? interval.x : interval.y;
+    margin = closestEdge * closestEdge * 0.5;
+    interval += margin * vec2(-0.5, 0.5);
+
+    if (depth >= interval.x && depth < interval.y) {
+      prevIndex = nextIndex;
+      nextIndex = UNROLLED_LOOP_INDEX;
+      alpha = saturate(min(depth - interval.x, interval.y - depth) / margin);
+    }
+    #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
+  }
+  #pragma unroll_loop_end
+
+  return jitter < alpha
+    ? nextIndex
+    : prevIndex;
+}
+
+vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
   vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
   return clip.xy * 0.5 + 0.5;
@@ -132,44 +167,6 @@ float getDistanceToShadowTop(const vec3 rayPosition) {
   );
 }
 
-struct CascadeFade {
-  int prevIndex;
-  int nextIndex;
-  float alpha;
-};
-
-CascadeFade getCascadeFade(const vec3 worldPosition) {
-  vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
-  float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
-
-  // Reference: https://github.com/mrdoob/three.js/blob/r171/examples/jsm/csm/CSMShader.js
-  vec2 interval;
-  float intervalCenter;
-  float closestEdge;
-  float margin;
-  CascadeFade fade = CascadeFade(-1, -1, 1.0);
-
-  #pragma unroll_loop_start
-  for (int i = 0; i < 4; ++i) {
-    #if UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
-    interval = shadowIntervals[i];
-    intervalCenter = (interval.x + interval.y) * 0.5;
-    closestEdge = depth < intervalCenter ? interval.x : interval.y;
-    margin = closestEdge * closestEdge * 0.5;
-    interval += margin * vec2(-0.5, 0.5);
-
-    if (depth >= interval.x && depth < interval.y) {
-      fade.prevIndex = fade.nextIndex;
-      fade.nextIndex = UNROLLED_LOOP_INDEX;
-      fade.alpha = saturate(min(depth - interval.x, interval.y - depth) / margin);
-    }
-    #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
-  }
-  #pragma unroll_loop_end
-
-  return fade;
-}
-
 #ifdef DEBUG_SHOW_CASCADES
 
 const vec3 cascadeColors[4] = vec3[4](
@@ -181,7 +178,7 @@ const vec3 cascadeColors[4] = vec3[4](
 
 vec3 getCascadeColor(const vec3 rayPosition) {
   vec3 worldPosition = ECEFToWorld(rayPosition);
-  int cascadeIndex;
+  int cascadeIndex = getCascadeIndex(worldPosition);
   vec2 uv = getShadowUv(worldPosition, cascadeIndex);
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(1.0);
@@ -189,18 +186,12 @@ vec3 getCascadeColor(const vec3 rayPosition) {
   return cascadeColors[cascadeIndex];
 }
 
-vec3 getFadedCascadeColor(const vec3 rayPosition) {
+vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
   vec3 worldPosition = ECEFToWorld(rayPosition);
-  CascadeFade fade = getCascadeFade(worldPosition);
-  return mix(
-    fade.prevIndex >= 0
-      ? cascadeColors[fade.prevIndex]
-      : vec3(1.0),
-    fade.nextIndex >= 0
-      ? cascadeColors[fade.nextIndex]
-      : vec3(1.0),
-    fade.alpha
-  );
+  int cascadeIndex = getFadedCascadeIndex(worldPosition, jitter);
+  return cascadeIndex >= 0
+    ? cascadeColors[cascadeIndex]
+    : vec3(1.0);
 }
 
 #endif // DEBUG_SHOW_CASCADES
@@ -211,13 +202,14 @@ float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int
   return min(shadow.b * shadowExtensionScale, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
-float sampleShadowOpticalDepthByUv(
-  const vec2 uv,
+float sampleShadowOpticalDepthPCF(
+  const vec3 worldPosition,
   const float distanceToTop,
   const float radius,
   const int cascadeIndex
 ) {
-  if (distanceToTop <= 0.0) {
+  vec2 uv = getShadowUv(worldPosition, cascadeIndex);
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return 0.0;
   }
   if (radius < 0.1) {
@@ -247,45 +239,16 @@ float sampleShadowOpticalDepthByUv(
   );
 }
 
-float sampleShadowOpticalDepthByPosition(
-  const vec3 worldPosition,
-  const float distanceToTop,
-  const float radius,
-  const int cascadeIndex
-) {
-  vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
-  clip /= clip.w;
-  vec2 uv = clip.xy * 0.5 + 0.5;
-  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius, const float jitter) {
+  float distanceToTop = getDistanceToShadowTop(rayPosition);
+  if (distanceToTop <= 0.0) {
     return 0.0;
   }
-  return sampleShadowOpticalDepthByUv(uv, distanceToTop, radius, cascadeIndex);
-}
-
-float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius) {
   vec3 worldPosition = ECEFToWorld(rayPosition);
-  int cascadeIndex;
-  vec2 uv = getShadowUv(worldPosition, cascadeIndex);
-  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-    return 0.0;
-  }
-  float distanceToTop = getDistanceToShadowTop(rayPosition);
-  return sampleShadowOpticalDepthByUv(uv, distanceToTop, radius, cascadeIndex);
-}
-
-float sampleFadedShadowOpticalDepth(const vec3 rayPosition, const float radius) {
-  vec3 worldPosition = ECEFToWorld(rayPosition);
-  float distanceToTop = getDistanceToShadowTop(rayPosition);
-  CascadeFade fade = getCascadeFade(worldPosition);
-  return mix(
-    fade.prevIndex >= 0
-      ? sampleShadowOpticalDepthByPosition(worldPosition, distanceToTop, radius, fade.prevIndex)
-      : 0.0,
-    fade.nextIndex >= 0
-      ? sampleShadowOpticalDepthByPosition(worldPosition, distanceToTop, radius, fade.nextIndex)
-      : 0.0,
-    fade.alpha
-  );
+  int cascadeIndex = getFadedCascadeIndex(worldPosition, jitter);
+  return cascadeIndex >= 0
+    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, radius, cascadeIndex)
+    : 0.0;
 }
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
@@ -433,10 +396,11 @@ vec4 marchClouds(
       // Obtain the optical depth at the position from BSM.
       float opticalDepth = 0.0;
       if (height < shadowTopHeight) {
-        opticalDepth += sampleFadedShadowOpticalDepth(
+        opticalDepth += sampleShadowOpticalDepth(
           position,
           // Apply PCF only when the sun is close to the horizon.
-          shadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1))
+          shadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1)),
+          jitter
         );
       }
 
@@ -488,7 +452,7 @@ vec4 marchClouds(
 
       #ifdef DEBUG_SHOW_CASCADES
       if (height < shadowTopHeight) {
-        radiance = 1e-3 * getFadedCascadeColor(position);
+        radiance = 1e-3 * getFadedCascadeColor(position, jitter);
       }
       #endif // DEBUG_SHOW_CASCADES
 
@@ -543,7 +507,7 @@ float marchShadowLength(
       break; // Termination
     }
     vec3 position = rayDistance * rayDirection + rayOrigin;
-    float opticalDepth = sampleFadedShadowOpticalDepth(position, 0.0);
+    float opticalDepth = sampleShadowOpticalDepth(position, 0.0, jitter);
     shadowLength += (1.0 - exp(-opticalDepth)) * stepSize * attenuation;
 
     // Hack to prevent over-integration of shadow length. The shadow should be
