@@ -126,6 +126,7 @@ interface SceneProps extends LocalDateControlsParams {
   heading?: number
   pitch?: number
   distance?: number
+  coverage?: number
 }
 
 const Scene: FC<SceneProps> = ({
@@ -135,6 +136,7 @@ const Scene: FC<SceneProps> = ({
   heading = 180,
   pitch = -30,
   distance = 4500,
+  coverage = 0.3,
   ...localDate
 }) => {
   const camera = useThree(({ camera }) => camera)
@@ -214,7 +216,7 @@ const Scene: FC<SceneProps> = ({
     { enabled, debugShowUv, debugShowShadowMap, debugShowShadowLength },
     cloudsProps
   ] = useCloudsControls(clouds, {
-    coverage: 0.3,
+    coverage,
     animate: true
   })
 
