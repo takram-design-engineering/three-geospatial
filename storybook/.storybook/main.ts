@@ -11,6 +11,7 @@ const config: StorybookConfig = {
   },
   staticDirs: [
     { from: '../assets', to: '/public' },
+    { from: '../../packages/core/assets', to: '/core' },
     { from: '../../packages/atmosphere/assets', to: '/atmosphere' },
     { from: '../../packages/clouds/assets', to: '/clouds' }
   ],

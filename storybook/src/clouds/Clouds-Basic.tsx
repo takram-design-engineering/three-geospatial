@@ -7,8 +7,8 @@ import { Fragment, useEffect, useRef, useState, type FC } from 'react'
 import {
   NearestFilter,
   Quaternion,
+  RedFormat,
   RepeatWrapping,
-  RGBAFormat,
   Vector3,
   type Camera
 } from 'three'
@@ -109,7 +109,7 @@ const Scene: FC = () => {
 
   const stbnTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
-      format: RGBAFormat,
+      format: RedFormat,
       minFilter: NearestFilter,
       magFilter: NearestFilter,
       wrapS: RepeatWrapping,
@@ -119,7 +119,7 @@ const Scene: FC = () => {
       height: STBN_TEXTURE_HEIGHT,
       depth: STBN_TEXTURE_DEPTH
     }),
-    'clouds/stbn.bin'
+    'core/stbn.bin'
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
@@ -174,7 +174,12 @@ const Scene: FC = () => {
                 {...cloudsProps}
               />
             )}
-            <AerialPerspective sky sunIrradiance skyIrradiance />
+            <AerialPerspective
+              sky
+              sunIrradiance
+              skyIrradiance
+              stbnTexture={stbnTexture}
+            />
             {!debugShowUv && !debugShowShadowMap && !debugShowShadowLength && (
               <>
                 <LensFlare />

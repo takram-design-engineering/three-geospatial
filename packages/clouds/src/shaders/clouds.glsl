@@ -1,8 +1,7 @@
-vec4 getSTBN() {
+float getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
   vec3 scale = 1.0 / vec3(size);
-  // xy: vec2, z: vec1, w: scalar
-  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale);
+  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).r;
 }
 
 // Straightforward spherical mapping
@@ -43,8 +42,7 @@ vec2 getCubeSphereUv(const vec3 position) {
 }
 
 vec2 getGlobeUv(const vec3 position) {
-  vec2 uv = getCubeSphereUv(position);
-  return uv + localWeatherOffset;
+  return getCubeSphereUv(position);
 }
 
 float getMipLevel(const vec2 uv) {
@@ -73,7 +71,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
   weather.heightFraction = saturate(remap(vec4(height), minLayerHeights, maxLayerHeights));
 
   vec4 localWeather = pow(
-    textureLod(localWeatherTexture, uv * localWeatherRepeat, mipLevel),
+    textureLod(localWeatherTexture, uv * localWeatherRepeat + localWeatherOffset, mipLevel),
     weatherExponents
   );
   vec4 heightScale = shapeAlteringFunction(weather.heightFraction, shapeAlteringBiases);
@@ -103,6 +101,11 @@ MediaSample sampleMedia(
 ) {
   vec4 density = weather.density;
 
+  // TODO: Define in physical length.
+  vec3 surfaceNormal = normalize(position);
+  float localWeatherSpeed = length(localWeatherOffset);
+  vec3 evolution = -surfaceNormal * localWeatherSpeed * 2e4;
+
   vec3 turbulence = vec3(0.0);
   #ifdef TURBULENCE
   vec2 turbulenceUv = uv * localWeatherRepeat * turbulenceRepeat;
@@ -112,7 +115,7 @@ MediaSample sampleMedia(
     dot(density, saturate(1.0 - remap(weather.heightFraction, vec4(0.0), vec4(0.3))));
   #endif // TURBULENCE
 
-  vec3 shapePosition = (position + turbulence) * shapeRepeat + shapeOffset;
+  vec3 shapePosition = (position + evolution + turbulence) * shapeRepeat + shapeOffset;
   float shape = texture(shapeTexture, shapePosition).r;
   density = saturate(remap(density, vec4(1.0 - shape) * shapeAmounts, vec4(1.0)));
 

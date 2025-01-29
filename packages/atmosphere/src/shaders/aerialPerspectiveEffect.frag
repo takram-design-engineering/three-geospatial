@@ -35,6 +35,8 @@ uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 uniform float shadowTopHeight;
 uniform float shadowRadius;
+uniform sampler3D stbnTexture;
+uniform int frame;
 #endif // HAS_SHADOW
 
 #ifdef HAS_SHADOW_LENGTH
@@ -120,8 +122,14 @@ void applyTransmittanceInscatter(const vec3 positionECEF, float shadowLength, in
 
 #ifdef HAS_SHADOW
 
-int getCascadeIndex(const vec3 position) {
-  vec4 viewPosition = viewMatrix * vec4(position, 1.0);
+float getSTBN() {
+  ivec3 size = textureSize(stbnTexture, 0);
+  vec3 scale = 1.0 / vec3(size);
+  return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).r;
+}
+
+int getCascadeIndex(const vec3 worldPosition) {
+  vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
   vec2 interval;
   #pragma unroll_loop_start
@@ -137,53 +145,112 @@ int getCascadeIndex(const vec3 position) {
   return SHADOW_CASCADE_COUNT - 1;
 }
 
-float sampleShadowOpticalDepth(const float distanceToTop, const vec2 uv, const int cascadeIndex) {
-  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
-  vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
-  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
+// Reference: https://github.com/mrdoob/three.js/blob/r171/examples/jsm/csm/CSMShader.js
+int getFadedCascadeIndex(const vec3 worldPosition, const float jitter) {
+  vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
+  float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
+
+  vec2 interval;
+  float intervalCenter;
+  float closestEdge;
+  float margin;
+  int nextIndex = -1;
+  int prevIndex = -1;
+  float alpha;
+
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; ++i) {
+    #if UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
+    interval = shadowIntervals[i];
+    intervalCenter = (interval.x + interval.y) * 0.5;
+    closestEdge = depth < intervalCenter ? interval.x : interval.y;
+    margin = closestEdge * closestEdge * 0.5;
+    interval += margin * vec2(-0.5, 0.5);
+
+    if (depth >= interval.x && depth < interval.y) {
+      prevIndex = nextIndex;
+      nextIndex = UNROLLED_LOOP_INDEX;
+      alpha = saturate(min(depth - interval.x, interval.y - depth) / margin);
+    }
+    #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
+  }
+  #pragma unroll_loop_end
+
+  return jitter <= alpha
+    ? nextIndex
+    : prevIndex;
 }
 
-float sampleShadowOpticalDepthPCF(const vec3 worldPosition, const vec3 positionECEF) {
-  int cascadeIndex = getCascadeIndex(worldPosition);
-  vec4 point = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
-  point /= point.w;
-  vec2 uv = point.xy * 0.5 + 0.5;
-  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-    return 0.0;
-  }
+vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
+  vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  clip /= clip.w;
+  return clip.xy * 0.5 + 0.5;
+}
 
+float getDistanceToShadowTop(const vec3 positionECEF) {
   // Distance to the top of the shadows along the sun direction, which matches
   // the ray origin of BSM.
-  float distanceToTop = raySphereSecondIntersection(
+  return raySphereSecondIntersection(
     positionECEF / METER_TO_LENGTH_UNIT, // TODO: Make units consistent
     sunDirection,
     vec3(0.0),
     bottomRadius + shadowTopHeight
   );
+}
 
+float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int cascadeIndex) {
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
+  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
+}
+
+float sampleShadowOpticalDepthPCF(
+  const vec3 worldPosition,
+  const float distanceToTop,
+  const int cascadeIndex
+) {
+  vec2 uv = getShadowUv(worldPosition, cascadeIndex);
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    return 0.0;
+  }
   vec2 texelSize = vec2(1.0) / vec2(textureSize(shadowBuffer, 0).xy);
   vec4 d1 = vec4(-texelSize.xy, texelSize.xy) * shadowRadius;
   vec4 d2 = d1 * 0.5;
   // prettier-ignore
   return (1.0 / 17.0) * (
-    sampleShadowOpticalDepth(distanceToTop, uv + d1.xy, cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.y), cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d1.zy, cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d2.xy, cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.y), cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d2.zy, cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.x, 0.0), cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.x, 0.0), cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv, cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d2.z, 0.0), cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(d1.z, 0.0), cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d2.xw, cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d2.w), cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d2.zw, cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d1.xw, cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + vec2(0.0, d1.w), cascadeIndex) +
-    sampleShadowOpticalDepth(distanceToTop, uv + d1.zw, cascadeIndex)
+    readShadowOpticalDepth(uv + d1.xy, distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(0.0, d1.y), distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + d1.zy, distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + d2.xy, distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(0.0, d2.y), distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + d2.zy, distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(d1.x, 0.0), distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(d2.x, 0.0), distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv, distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(d2.z, 0.0), distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(d1.z, 0.0), distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + d2.xw, distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(0.0, d2.w), distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + d2.zw, distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + d1.xw, distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(0.0, d1.w), distanceToTop, cascadeIndex) +
+    readShadowOpticalDepth(uv + d1.zw, distanceToTop, cascadeIndex)
   );
+}
+
+float sampleShadowOpticalDepth(
+  const vec3 worldPosition,
+  const vec3 positionECEF,
+  const float jitter
+) {
+  float distanceToTop = getDistanceToShadowTop(positionECEF);
+  if (distanceToTop <= 0.0) {
+    return 0.0;
+  }
+  int cascadeIndex = getFadedCascadeIndex(worldPosition, jitter);
+  return cascadeIndex >= 0
+    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, cascadeIndex)
+    : 0.0;
 }
 
 #endif // HAS_SHADOW
@@ -255,7 +322,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // CORRECT_GEOMETRIC_ERROR
 
   #ifdef HAS_SHADOW
-  float opticalDepth = sampleShadowOpticalDepthPCF(worldPosition, positionECEF);
+  float stbn = getSTBN();
+  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, stbn);
   float sunTransmittance = exp(-opticalDepth);
   #else // HAS_SHADOW
   float sunTransmittance = 1.0;
