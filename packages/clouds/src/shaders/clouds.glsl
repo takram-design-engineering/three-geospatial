@@ -73,7 +73,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
   weather.heightFraction = saturate(remap(vec4(height), minLayerHeights, maxLayerHeights));
 
   vec4 localWeather = pow(
-    textureLod(localWeatherTexture, uv * localWeatherFrequency, mipLevel),
+    textureLod(localWeatherTexture, uv * localWeatherRepeat, mipLevel),
     weatherExponents
   );
   vec4 heightScale = shapeAlteringFunction(weather.heightFraction, shapeAlteringBiases);
@@ -103,19 +103,19 @@ MediaSample sampleMedia(
 ) {
   vec4 density = weather.density;
 
-  vec2 turbulenceUv = uv * localWeatherFrequency * turbulenceFrequency;
+  vec2 turbulenceUv = uv * localWeatherRepeat * turbulenceRepeat;
   vec3 turbulence =
     turbulenceDisplacement *
     (texture(turbulenceTexture, turbulenceUv).rgb * 2.0 - 1.0) *
     dot(density, saturate(1.0 - remap(weather.heightFraction, vec4(0.0), vec4(0.3))));
 
-  vec3 shapePosition = (position + turbulence) * shapeFrequency + shapeOffset;
+  vec3 shapePosition = (position + turbulence) * shapeRepeat + shapeOffset;
   float shape = texture(shapeTexture, shapePosition).r;
   density = saturate(remap(density, vec4(1.0 - shape) * shapeAmounts, vec4(1.0)));
 
   #ifdef SHAPE_DETAIL
   if (mipLevel < 0.5) {
-    vec3 detailPosition = (position + turbulence) * shapeDetailFrequency + shapeDetailOffset;
+    vec3 detailPosition = (position + turbulence) * shapeDetailRepeat + shapeDetailOffset;
     float detail = texture(shapeDetailTexture, detailPosition).r;
     // Fluffy at the top and whippy at the bottom.
     vec4 modifier = mix(

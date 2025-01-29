@@ -9,17 +9,17 @@ export interface CloudParameterUniforms {
 
   // Weather and shape
   localWeatherTexture: Uniform<Texture | null>
-  localWeatherFrequency: Uniform<Vector2>
+  localWeatherRepeat: Uniform<Vector2>
   localWeatherOffset: Uniform<Vector2>
   coverage: Uniform<number>
   shapeTexture: Uniform<Texture | null>
-  shapeFrequency: Uniform<Vector3>
+  shapeRepeat: Uniform<Vector3>
   shapeOffset: Uniform<Vector3>
   shapeDetailTexture: Uniform<Texture | null>
-  shapeDetailFrequency: Uniform<Vector3>
+  shapeDetailRepeat: Uniform<Vector3>
   shapeDetailOffset: Uniform<Vector3>
   turbulenceTexture: Uniform<Texture | null>
-  turbulenceFrequency: Uniform<Vector2>
+  turbulenceRepeat: Uniform<Vector2>
   turbulenceDisplacement: Uniform<number>
 }
 
@@ -41,17 +41,17 @@ export function createCloudParameterUniforms({
 
     // Weather and shape
     localWeatherTexture: new Uniform(localWeatherTexture),
-    localWeatherFrequency: new Uniform(new Vector2().setScalar(100)),
+    localWeatherRepeat: new Uniform(new Vector2().setScalar(100)),
     localWeatherOffset: new Uniform(new Vector2()),
     coverage: new Uniform(0.3),
     shapeTexture: new Uniform(shapeTexture),
-    shapeFrequency: new Uniform(new Vector3().setScalar(0.0003)),
+    shapeRepeat: new Uniform(new Vector3().setScalar(0.0003)),
     shapeOffset: new Uniform(new Vector3()),
     shapeDetailTexture: new Uniform(shapeDetailTexture),
-    shapeDetailFrequency: new Uniform(new Vector3().setScalar(0.006)),
+    shapeDetailRepeat: new Uniform(new Vector3().setScalar(0.006)),
     shapeDetailOffset: new Uniform(new Vector3()),
     turbulenceTexture: new Uniform(turbulenceTexture),
-    turbulenceFrequency: new Uniform(new Vector2().setScalar(20)),
+    turbulenceRepeat: new Uniform(new Vector2().setScalar(20)),
     turbulenceDisplacement: new Uniform(400)
   }
 }

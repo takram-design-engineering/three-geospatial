@@ -700,13 +700,13 @@ void main() {
 
   vec2 globeUv = getGlobeUv(rayOrigin);
   #ifdef DEBUG_SHOW_UV
-  outputColor = vec4(vec3(checker(globeUv, localWeatherFrequency)), 1.0);
+  outputColor = vec4(vec3(checker(globeUv, localWeatherRepeat)), 1.0);
   outputDepthVelocity = vec3(0.0);
   outputShadowLength = 0.0;
   return;
   #endif // DEBUG_SHOW_UV
 
-  float mipLevel = getMipLevel(globeUv * localWeatherFrequency) * mipLevelScale;
+  float mipLevel = getMipLevel(globeUv * localWeatherRepeat) * mipLevelScale;
   mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
 
   float frontDepth;

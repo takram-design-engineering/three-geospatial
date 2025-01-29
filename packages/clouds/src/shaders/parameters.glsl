@@ -17,17 +17,17 @@ uniform float minTransmittance;
 
 // Shape and weather
 uniform sampler2D localWeatherTexture;
-uniform vec2 localWeatherFrequency;
+uniform vec2 localWeatherRepeat;
 uniform vec2 localWeatherOffset;
 uniform float coverage;
 uniform sampler3D shapeTexture;
-uniform vec3 shapeFrequency;
+uniform vec3 shapeRepeat;
 uniform vec3 shapeOffset;
 uniform sampler3D shapeDetailTexture;
-uniform vec3 shapeDetailFrequency;
+uniform vec3 shapeDetailRepeat;
 uniform vec3 shapeDetailOffset;
 uniform sampler2D turbulenceTexture;
-uniform vec2 turbulenceFrequency;
+uniform vec2 turbulenceRepeat;
 uniform float turbulenceDisplacement;
 
 // Cloud layers
