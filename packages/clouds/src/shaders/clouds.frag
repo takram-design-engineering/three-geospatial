@@ -467,9 +467,9 @@ vec4 marchClouds(
           skyIrradiance
         );
         const float groundAlbedo = 0.3;
-        vec3 groundIrradiance = skyIrradiance + sunIrradiance * RECIPROCAL_PI2;
+        vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
         vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
-        vec3 bouncedIrradiance = (1.0 - coverage) * bouncedLight * exp(-opticalDepthToGround);
+        vec3 bouncedIrradiance = bouncedLight * exp(-opticalDepthToGround);
         radiance += albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
