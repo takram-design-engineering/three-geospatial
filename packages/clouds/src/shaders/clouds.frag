@@ -714,7 +714,7 @@ void main() {
   getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowLengthRayNearFar);
   clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowLengthRayNearFar);
 
-  vec4 stbn = getSTBN();
+  float stbn = getSTBN();
 
   if (any(lessThan(rayNearFar, vec2(0.0)))) {
     #ifdef SHADOW_LENGTH
@@ -723,7 +723,7 @@ void main() {
         shadowLengthRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
         shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
-        stbn.w
+        stbn
       );
     }
     #endif // SHADOW_LENGTH
@@ -740,7 +740,7 @@ void main() {
         shadowLengthRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
         shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
-        stbn.w
+        stbn
       );
     }
     #endif // SHADOW_LENGTH
@@ -779,7 +779,7 @@ void main() {
     rayOrigin,
     rayDirection,
     rayNearFar.y - rayNearFar.x,
-    stbn.w,
+    stbn,
     pow(2.0, mipLevel),
     sunDirection,
     frontDepth
@@ -803,7 +803,7 @@ void main() {
       shadowLengthRayNearFar.x * rayDirection + cameraPosition,
       rayDirection,
       shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
-      stbn.w
+      stbn
     );
   }
   #endif // SHADOW_LENGTH

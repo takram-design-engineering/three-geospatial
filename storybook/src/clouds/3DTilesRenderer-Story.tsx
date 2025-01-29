@@ -28,7 +28,7 @@ import {
   useState,
   type FC
 } from 'react'
-import { NearestFilter, RepeatWrapping, RGBAFormat } from 'three'
+import { NearestFilter, RedFormat, RepeatWrapping } from 'three'
 import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
@@ -115,7 +115,6 @@ const Globe: FC = () => {
         // Re-enable it when the user first drags.
         adjustHeight={false}
         maxAltitude={Math.PI * 0.55} // Permit grazing angles
-        maxDistance={7500} // Below the bottom of the top cloud layer, for now
       />
     </TilesRenderer>
   )
@@ -198,7 +197,7 @@ const Scene: FC<SceneProps> = ({
 
   const stbnTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
-      format: RGBAFormat,
+      format: RedFormat,
       minFilter: NearestFilter,
       magFilter: NearestFilter,
       wrapS: RepeatWrapping,
@@ -208,7 +207,7 @@ const Scene: FC<SceneProps> = ({
       height: STBN_TEXTURE_HEIGHT,
       depth: STBN_TEXTURE_DEPTH
     }),
-    'clouds/stbn.bin'
+    'core/stbn.bin'
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)

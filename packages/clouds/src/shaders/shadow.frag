@@ -147,8 +147,8 @@ void cascade(
   getRayNearFar(sunPosition, rayDirection, rayNear, rayFar);
 
   vec3 rayOrigin = rayNear * rayDirection + sunPosition;
-  vec4 stbn = getSTBN();
-  vec4 color = marchClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn.w, mipLevel);
+  float stbn = getSTBN();
+  vec4 color = marchClouds(rayOrigin, rayDirection, rayFar - rayNear, stbn, mipLevel);
   outputColor = color;
 
   // Velocity for temporal resolution.

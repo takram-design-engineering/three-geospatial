@@ -9,7 +9,7 @@ import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { ToneMappingMode } from 'postprocessing'
 import { Fragment, useState, type FC } from 'react'
-import { NearestFilter, RepeatWrapping, RGBAFormat, Vector3 } from 'three'
+import { NearestFilter, RedFormat, RepeatWrapping, Vector3 } from 'three'
 
 import {
   AerialPerspective,
@@ -85,7 +85,7 @@ const Scene: FC = () => {
 
   const stbnTexture = useLoader(
     createData3DTextureLoaderClass(parseUint8Array, {
-      format: RGBAFormat,
+      format: RedFormat,
       minFilter: NearestFilter,
       magFilter: NearestFilter,
       wrapS: RepeatWrapping,
@@ -95,7 +95,7 @@ const Scene: FC = () => {
       height: STBN_TEXTURE_HEIGHT,
       depth: STBN_TEXTURE_DEPTH
     }),
-    'clouds/stbn.bin'
+    'core/stbn.bin'
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
