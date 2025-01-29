@@ -111,7 +111,7 @@ MediaSample sampleMedia(
 
   vec3 shapePosition = (position + turbulence) * shapeFrequency + shapeOffset;
   float shape = texture(shapeTexture, shapePosition).r;
-  density = mix(density, saturate(remap(density, vec4(1.0 - shape), vec4(1.0))), detailAmounts);
+  density = saturate(remap(density, vec4(1.0 - shape) * shapeAmounts, vec4(1.0)));
 
   #ifdef SHAPE_DETAIL
   if (mipLevel < 0.5) {

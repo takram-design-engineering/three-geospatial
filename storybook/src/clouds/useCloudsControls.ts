@@ -140,6 +140,11 @@ export function useCloudsControls(
               min: 0,
               max: 1
             },
+            [`shapeAmount ${index}`]: {
+              value: layer.shapeAmount,
+              min: 0,
+              max: 1
+            },
             [`detailAmount ${index}`]: {
               value: layer.detailAmount,
               min: 0,

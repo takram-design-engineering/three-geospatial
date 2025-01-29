@@ -34,6 +34,7 @@ uniform float turbulenceDisplacement;
 uniform vec4 minLayerHeights;
 uniform vec4 maxLayerHeights;
 uniform vec4 densityScales;
+uniform vec4 shapeAmounts;
 uniform vec4 detailAmounts;
 uniform vec4 weatherExponents;
 uniform vec4 shapeAlteringBiases;
