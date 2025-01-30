@@ -298,12 +298,12 @@ float marchOpticalDepth(
   const float mipLevel,
   const float jitter
 ) {
-  if (mipLevel > 0.75) {
+  int iterations = int(max(0.0, remap(mipLevel, 0.0, 1.0, float(maxIterations), 1.0) - jitter));
+  if (iterations == 0) {
     // Fudge factor to approximate the mean optical depth.
     // TODO: Remove it.
-    return 1.0;
+    return 0.5;
   }
-  int iterations = int(remap(mipLevel, 0.0, 0.75, float(maxIterations), 1.0));
   float stepSize = minSecondaryStepSize / float(iterations);
   float rayDistance = stepSize * jitter;
   float opticalDepth = 0.0;
