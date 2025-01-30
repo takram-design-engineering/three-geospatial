@@ -558,77 +558,52 @@ void getRayNearFar(
 ) {
   bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
 
+  vec4 firstIntersections;
+  vec4 secondIntersections;
+  raySphereIntersections(
+    cameraPosition,
+    rayDirection,
+    bottomRadius + vec4(0.0, minHeight, maxHeight, shadowTopHeight),
+    firstIntersections,
+    secondIntersections
+  );
+
   if (cameraHeight < minHeight) {
     // View below the clouds
     if (intersectsGround) {
       rayNearFar = vec2(-1.0); // No clouds to the ground
     } else {
-      rayNearFar = vec2(
-        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + minHeight),
-        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + maxHeight)
-      );
+      rayNearFar = vec2(secondIntersections.y, secondIntersections.z);
       rayNearFar.y = min(rayNearFar.y, maxRayDistance);
     }
   } else if (cameraHeight < maxHeight) {
     // View inside the total cloud layer
     if (intersectsGround) {
-      rayNearFar = vec2(
-        cameraNear,
-        raySphereFirstIntersection(cameraPosition, rayDirection, bottomRadius + minHeight)
-      );
+      rayNearFar = vec2(cameraNear, firstIntersections.y);
     } else {
-      rayNearFar = vec2(
-        cameraNear,
-        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + maxHeight)
-      );
+      rayNearFar = vec2(cameraNear, secondIntersections.z);
     }
   } else {
     // View above the clouds
-    raySphereIntersections(
-      cameraPosition,
-      rayDirection,
-      bottomRadius + maxHeight,
-      rayNearFar.x,
-      rayNearFar.y
-    );
+    rayNearFar = vec2(firstIntersections.z, secondIntersections.z);
     if (intersectsGround) {
       // Clamp the ray at the min height.
-      rayNearFar.y = raySphereFirstIntersection(
-        cameraPosition,
-        rayDirection,
-        bottomRadius + minHeight
-      );
+      rayNearFar.y = firstIntersections.y;
     }
   }
 
   #ifdef SHADOW_LENGTH
   if (cameraHeight < shadowTopHeight) {
     if (intersectsGround) {
-      shadowLengthRayNearFar = vec2(
-        cameraNear,
-        raySphereFirstIntersection(cameraPosition, rayDirection, bottomRadius)
-      );
+      shadowLengthRayNearFar = vec2(cameraNear, firstIntersections.x);
     } else {
-      shadowLengthRayNearFar = vec2(
-        cameraNear,
-        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + shadowTopHeight)
-      );
+      shadowLengthRayNearFar = vec2(cameraNear, secondIntersections.w);
     }
   } else {
-    raySphereIntersections(
-      cameraPosition,
-      rayDirection,
-      bottomRadius + shadowTopHeight,
-      shadowLengthRayNearFar.x,
-      shadowLengthRayNearFar.y
-    );
+    shadowLengthRayNearFar = vec2(firstIntersections.w, secondIntersections.w);
     if (intersectsGround) {
       // Clamp the ray at the ground.
-      shadowLengthRayNearFar.y = raySphereFirstIntersection(
-        cameraPosition,
-        rayDirection,
-        bottomRadius
-      );
+      shadowLengthRayNearFar.y = firstIntersections.x;
     }
   }
   shadowLengthRayNearFar.y = min(shadowLengthRayNearFar.y, maxShadowLengthRayDistance);
