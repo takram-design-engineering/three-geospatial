@@ -15,7 +15,8 @@ export const Stats: FC = () => {
       return
     }
     const stats = new StatsImpl({
-      trackGPU: true
+      trackGPU: true,
+      precision: 0
     })
     stats.init(gl).catch(error => {
       console.error(error)
