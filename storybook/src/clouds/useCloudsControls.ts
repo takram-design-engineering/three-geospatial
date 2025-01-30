@@ -18,9 +18,7 @@ type FlatCloudLayers = FlattenCloudLayer<0> &
 
 export interface CloudsControlParams {
   enabled: boolean
-  debugShowShadowMap: boolean
-  debugShowUv: boolean
-  debugShowShadowLength: boolean
+  toneMapping: boolean
 }
 
 export function useCloudsControls(
@@ -201,6 +199,7 @@ export function useCloudsControls(
   })
 
   const {
+    showSampleCount: debugShowSampleCount,
     showShadowMap: debugShowShadowMap,
     showCascades: debugShowCascades,
     showUv: debugShowUv,
@@ -209,6 +208,7 @@ export function useCloudsControls(
   } = useControls(
     'debug',
     {
+      showSampleCount: false,
       showShadowMap: false,
       showCascades: false,
       showUv: false,
@@ -221,6 +221,11 @@ export function useCloudsControls(
   useEffect(() => {
     if (effect == null) {
       return
+    }
+    if (debugShowSampleCount) {
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT = '1'
+    } else {
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT
     }
     if (debugShowShadowMap) {
       effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
@@ -238,7 +243,13 @@ export function useCloudsControls(
       delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV
     }
     effect.cloudsPass.currentMaterial.needsUpdate = true
-  }, [effect, debugShowShadowMap, debugShowCascades, debugShowUv])
+  }, [
+    effect,
+    debugShowSampleCount,
+    debugShowShadowMap,
+    debugShowCascades,
+    debugShowUv
+  ])
 
   useEffect(() => {
     if (effect == null) {
@@ -260,9 +271,11 @@ export function useCloudsControls(
   return [
     {
       enabled,
-      debugShowShadowMap,
-      debugShowUv,
-      debugShowShadowLength
+      toneMapping:
+        !debugShowSampleCount &&
+        !debugShowUv &&
+        !debugShowShadowMap &&
+        !debugShowShadowLength
     },
     {
       coverage,

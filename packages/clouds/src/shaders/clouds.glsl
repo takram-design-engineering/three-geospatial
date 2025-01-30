@@ -97,7 +97,8 @@ MediaSample sampleMedia(
   const WeatherSample weather,
   const vec3 position,
   const vec2 uv,
-  const float mipLevel
+  const float mipLevel,
+  out ivec3 sampleCount
 ) {
   vec4 density = weather.density;
 
@@ -119,6 +120,10 @@ MediaSample sampleMedia(
   float shape = texture(shapeTexture, shapePosition).r;
   density = saturate(remap(density, vec4(1.0 - shape) * shapeAmounts, vec4(1.0)));
 
+  #ifdef DEBUG_SHOW_SAMPLE_COUNT
+  ++sampleCount.y;
+  #endif // DEBUG_SHOW_SAMPLE_COUNT
+
   #ifdef SHAPE_DETAIL
   if (mipLevel < 0.5) {
     vec3 detailPosition = (position + turbulence) * shapeDetailRepeat + shapeDetailOffset;
@@ -131,6 +136,10 @@ MediaSample sampleMedia(
     );
     modifier = mix(vec4(0.0), modifier, detailAmounts);
     density = saturate(remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0)));
+
+    #ifdef DEBUG_SHOW_SAMPLE_COUNT
+    ++sampleCount.z;
+    #endif // DEBUG_SHOW_SAMPLE_COUNT
   }
   #endif // SHAPE_DETAIL
 
@@ -143,4 +152,14 @@ MediaSample sampleMedia(
   media.scattering = densitySum * scatteringCoefficient;
   media.extinction = densitySum * absorptionCoefficient + media.scattering;
   return media;
+}
+
+MediaSample sampleMedia(
+  const WeatherSample weather,
+  const vec3 position,
+  const vec2 uv,
+  const float mipLevel
+) {
+  ivec3 sampleCount;
+  return sampleMedia(weather, position, uv, mipLevel, sampleCount);
 }

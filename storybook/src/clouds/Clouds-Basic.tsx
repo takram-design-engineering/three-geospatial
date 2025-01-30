@@ -121,10 +121,7 @@ const Scene: FC = () => {
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
-  const [
-    { enabled, debugShowUv, debugShowShadowMap, debugShowShadowLength },
-    cloudsProps
-  ] = useCloudsControls(clouds)
+  const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)
 
   const { showBox: debugShowBox } = useControls(
     'debug',
@@ -156,14 +153,7 @@ const Scene: FC = () => {
         photometric={photometric}
       >
         <EffectComposer multisampling={0} enableNormalPass>
-          <Fragment
-            key={JSON.stringify([
-              enabled,
-              debugShowUv,
-              debugShowShadowMap,
-              debugShowShadowLength
-            ])}
-          >
+          <Fragment key={JSON.stringify([enabled, toneMapping])}>
             {enabled && (
               <Clouds
                 ref={setClouds}
@@ -178,7 +168,7 @@ const Scene: FC = () => {
               skyIrradiance
               stbnTexture={stbnTexture}
             />
-            {!debugShowUv && !debugShowShadowMap && !debugShowShadowLength && (
+            {toneMapping && (
               <>
                 <LensFlare />
                 <ToneMapping mode={ToneMappingMode.AGX} />

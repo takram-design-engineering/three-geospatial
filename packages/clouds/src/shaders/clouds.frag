@@ -350,7 +350,8 @@ vec4 marchClouds(
   const float jitter,
   const float rayStartTexelsPerPixel,
   const vec3 sunDirection,
-  out float frontDepth
+  out float frontDepth,
+  out ivec3 sampleCount
 ) {
   vec3 radianceIntegral = vec3(0.0);
   float transmittanceIntegral = 1.0;
@@ -374,16 +375,22 @@ vec4 marchClouds(
     vec2 uv = getGlobeUv(position);
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
 
+    #ifdef DEBUG_SHOW_SAMPLE_COUNT
+    ++sampleCount.x;
+    #endif // DEBUG_SHOW_SAMPLE_COUNT
+
     if (!any(greaterThan(weather.density, vec4(minDensity)))) {
       // Step longer in empty space.
       // TODO: This produces banding artifacts.
       // Possible improvement: Binary search refinement
+      stepSize *= perspectiveStepScale;
       rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
       continue;
     }
 
     // Sample detailed participating media.
-    MediaSample media = sampleMedia(weather, position, uv, mipLevel);
+    MediaSample media = sampleMedia(weather, position, uv, mipLevel, sampleCount);
+
     if (media.extinction > minExtinction) {
       vec3 skyIrradiance;
       vec3 sunIrradiance = GetSunAndSkyIrradiance(
@@ -750,6 +757,7 @@ void main() {
   mipLevel = mix(0.0, mipLevel, min(1.0, 0.2 * cameraHeight / maxHeight));
 
   float frontDepth;
+  ivec3 sampleCount = ivec3(0);
   vec4 color = marchClouds(
     rayOrigin,
     rayDirection,
@@ -757,8 +765,16 @@ void main() {
     stbn,
     pow(2.0, mipLevel),
     sunDirection,
-    frontDepth
+    frontDepth,
+    sampleCount
   );
+
+  #ifdef DEBUG_SHOW_SAMPLE_COUNT
+  outputColor = vec4(vec3(dot(vec3(sampleCount), 1.0 / vec3(100.0, 10.0, 10.0))), 1.0);
+  outputDepthVelocity = vec3(0.0);
+  outputShadowLength = 0.0;
+  return;
+  #endif // DEBUG_SHOW_SAMPLE_COUNT
 
   // Front depth will be -1.0 when no samples are accumulated.
   float frontDepthStep = step(0.0, frontDepth);

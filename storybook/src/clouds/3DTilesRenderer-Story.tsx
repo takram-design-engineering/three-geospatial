@@ -212,10 +212,7 @@ const Scene: FC<SceneProps> = ({
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
-  const [
-    { enabled, debugShowUv, debugShowShadowMap, debugShowShadowLength },
-    cloudsProps
-  ] = useCloudsControls(clouds, {
+  const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
     coverage,
     animate: true
   })
@@ -240,9 +237,7 @@ const Scene: FC<SceneProps> = ({
             depth,
             lut,
             enabled,
-            debugShowUv,
-            debugShowShadowMap,
-            debugShowShadowLength
+            toneMapping
           ])}
         >
           {!normal && !depth && (
@@ -265,7 +260,7 @@ const Scene: FC<SceneProps> = ({
               />
             </>
           )}
-          {!debugShowUv && !debugShowShadowMap && !debugShowShadowLength && (
+          {toneMapping && (
             <>
               {lensFlare && <LensFlare />}
               {depth && <Depth useTurbo />}
