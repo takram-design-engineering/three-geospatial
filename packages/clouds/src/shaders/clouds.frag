@@ -574,7 +574,7 @@ void getRayNearFar(
     if (intersectsGround) {
       rayNearFar = vec2(
         cameraNear,
-        raySphereSecondIntersection(cameraPosition, rayDirection, bottomRadius + minHeight)
+        raySphereFirstIntersection(cameraPosition, rayDirection, bottomRadius + minHeight)
       );
     } else {
       rayNearFar = vec2(
