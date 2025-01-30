@@ -780,6 +780,13 @@ void main() {
   float frontDepthStep = step(0.0, frontDepth);
   frontDepth = mix(rayNearFar.y, rayNearFar.x + frontDepth, frontDepthStep);
 
+  #ifdef DEBUG_SHOW_FRONT_DEPTH
+  outputColor = vec4(vec3(frontDepth / maxRayDistance), 1.0);
+  outputDepthVelocity = vec3(0.0);
+  outputShadowLength = 0.0;
+  return;
+  #endif // DEBUG_SHOW_FRONT_DEPTH
+
   // Clamp the shadow length ray at the clouds.
   shadowLengthRayNearFar.y = mix(
     shadowLengthRayNearFar.y,
