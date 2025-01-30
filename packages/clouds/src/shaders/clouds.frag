@@ -314,7 +314,7 @@ float marchOpticalDepth(
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
-    MediaSample media = sampleMedia(weather, position, uv, mipLevel);
+    MediaSample media = sampleMedia(weather, position, uv, mipLevel, jitter);
     opticalDepth += media.extinction * (stepScale - prevStepScale) * stepSize;
     rayDistance += stepSize * stepScale;
     prevStepScale = stepScale;
@@ -389,7 +389,7 @@ vec4 marchClouds(
     }
 
     // Sample detailed participating media.
-    MediaSample media = sampleMedia(weather, position, uv, mipLevel, sampleCount);
+    MediaSample media = sampleMedia(weather, position, uv, mipLevel, jitter, sampleCount);
 
     if (media.extinction > minExtinction) {
       vec3 skyIrradiance;

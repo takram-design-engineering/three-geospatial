@@ -80,7 +80,7 @@ vec4 marchClouds(
     if (any(greaterThan(weather.density, vec4(minDensity)))) {
       // Sample detailed participating media.
       // Note this assumes an homogeneous medium.
-      MediaSample media = sampleMedia(weather, position, uv, mipLevel);
+      MediaSample media = sampleMedia(weather, position, uv, mipLevel, jitter);
       if (media.extinction > minExtinction) {
         frontDepth = max(frontDepth, rayDistance);
         extinctionSum += media.extinction;

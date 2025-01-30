@@ -98,6 +98,7 @@ MediaSample sampleMedia(
   const vec3 position,
   const vec2 uv,
   const float mipLevel,
+  const float jitter,
   out ivec3 sampleCount
 ) {
   vec4 density = weather.density;
@@ -125,7 +126,7 @@ MediaSample sampleMedia(
   #endif // DEBUG_SHOW_SAMPLE_COUNT
 
   #ifdef SHAPE_DETAIL
-  if (mipLevel < 0.5) {
+  if (mipLevel * 0.5 + (jitter - 0.5) * 0.5 < 0.5) {
     vec3 detailPosition = (position + turbulence) * shapeDetailRepeat + shapeDetailOffset;
     float detail = texture(shapeDetailTexture, detailPosition).r;
     // Fluffy at the top and whippy at the bottom.
@@ -158,8 +159,9 @@ MediaSample sampleMedia(
   const WeatherSample weather,
   const vec3 position,
   const vec2 uv,
-  const float mipLevel
+  const float mipLevel,
+  const float jitter
 ) {
   ivec3 sampleCount;
-  return sampleMedia(weather, position, uv, mipLevel, sampleCount);
+  return sampleMedia(weather, position, uv, mipLevel, jitter, sampleCount);
 }
