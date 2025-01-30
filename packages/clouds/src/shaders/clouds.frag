@@ -642,7 +642,7 @@ vec4 getCascadedShadowMaps(vec2 uv) {
   }
 
   #if !defined(DEBUG_SHOW_SHADOW_MAP_TYPE)
-  #define DEBUG_SHOW_SHADOW_MAP_TYPE (2)
+  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
   #endif // !defined(DEBUG_SHOW_SHADOW_MAP_TYPE
 
   const float frontDepthScale = 1e-5;
@@ -770,7 +770,7 @@ void main() {
   );
 
   #ifdef DEBUG_SHOW_SAMPLE_COUNT
-  outputColor = vec4(vec3(dot(vec3(sampleCount), 1.0 / vec3(100.0, 10.0, 10.0))), 1.0);
+  outputColor = vec4(vec3(sampleCount) / vec3(500.0, 5.0, 5.0), 1.0);
   outputDepthVelocity = vec3(0.0);
   outputShadowLength = 0.0;
   return;
