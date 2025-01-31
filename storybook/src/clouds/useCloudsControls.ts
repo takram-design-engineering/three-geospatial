@@ -101,7 +101,10 @@ export function useCloudsControls(
     {
       maxIterations: { value: 500, min: 100, max: 1000 },
       minStepSize: { value: 50, min: 50, max: 200 },
-      maxStepSize: { value: 1000, min: 200, max: 2000 }
+      maxStepSize: { value: 1000, min: 200, max: 2000 },
+      maxRayDistance: { value: 5e5, min: 1e4, max: 1e6 },
+      maxSunIterations: { value: 3, min: 0, max: 10, step: 1 },
+      maxGroundIterations: { value: 2, min: 0, max: 10, step: 1 }
     },
     { collapsed: true }
   )

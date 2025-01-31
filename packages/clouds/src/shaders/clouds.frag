@@ -198,6 +198,7 @@ vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
 
 float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int cascadeIndex) {
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  // Also see the discussion here: https://x.com/shotamatsuda/status/1885322308908442106
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
   float distanceToFront = max(0.0, distanceToTop - shadow.r);
   return min(shadow.b * shadowExtensionScale, shadow.g * distanceToFront);
