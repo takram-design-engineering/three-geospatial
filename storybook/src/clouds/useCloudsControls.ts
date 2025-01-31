@@ -60,12 +60,14 @@ export function useCloudsControls(
 
   const {
     mapSize: shadowMapSize,
+    cascadeCount,
     temporalPass: shadowTemporalPass,
     temporalJitter: shadowTemporalJitter
   } = useControls(
     'shadow rendering',
     {
       mapSize: { value: 512, options: [256, 512, 1024] },
+      cascadeCount: { value: 3, options: [1, 2, 3, 4] },
       temporalPass: true,
       temporalJitter: true
     },
@@ -74,10 +76,11 @@ export function useCloudsControls(
 
   useEffect(() => {
     if (effect != null) {
+      effect.shadow.cascadeCount = cascadeCount
       effect.shadowPass.temporalPass = shadowTemporalPass
       effect.shadowPass.currentMaterial.temporalJitter = shadowTemporalJitter
     }
-  }, [effect, shadowTemporalPass, shadowTemporalJitter])
+  }, [effect, cascadeCount, shadowTemporalPass, shadowTemporalJitter])
 
   const scatteringParams = useControls(
     'scattering',
