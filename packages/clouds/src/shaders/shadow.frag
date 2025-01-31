@@ -101,7 +101,7 @@ vec4 marchClouds(
   if (sampleCount == 0) {
     return vec4(maxRayDistance, 0.0, 0.0, 0.0);
   }
-  float frontDepth = weightedDistanceSum / transmittanceSum;
+  float frontDepth = min(weightedDistanceSum / transmittanceSum, maxRayDistance);
   float meanExtinction = extinctionSum / float(sampleCount);
   return vec4(frontDepth, meanExtinction, maxOpticalDepth, 1.0);
 }
