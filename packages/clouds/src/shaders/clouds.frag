@@ -197,17 +197,23 @@ vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
 
 #endif // DEBUG_SHOW_CASCADES
 
-float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int cascadeIndex) {
+float readShadowOpticalDepth(
+  const vec2 uv,
+  const float distanceToTop,
+  const float distanceOffset,
+  const int cascadeIndex
+) {
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
   // Also see the discussion here: https://x.com/shotamatsuda/status/1885322308908442106
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
-  float distanceToFront = max(0.0, distanceToTop - shadow.r);
+  float distanceToFront = max(0.0, distanceToTop - distanceOffset - shadow.r);
   return min(shadow.b * shadowExtensionScale, shadow.g * distanceToFront);
 }
 
 float sampleShadowOpticalDepthPCF(
   const vec3 worldPosition,
   const float distanceToTop,
+  const float distanceOffset,
   const float radius,
   const int cascadeIndex
 ) {
@@ -216,35 +222,35 @@ float sampleShadowOpticalDepthPCF(
     return 0.0;
   }
   if (radius < 0.1) {
-    return readShadowOpticalDepth(uv, distanceToTop, cascadeIndex);
+    return readShadowOpticalDepth(uv, distanceToTop, distanceOffset, cascadeIndex);
   }
   vec4 d1 = vec4(-shadowTexelSize.xy, shadowTexelSize.xy) * radius;
   vec4 d2 = d1 * 0.5;
   // prettier-ignore
   return (1.0 / 17.0) * (
-    readShadowOpticalDepth(uv + d1.xy, distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(0.0, d1.y), distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + d1.zy, distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + d2.xy, distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(0.0, d2.y), distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + d2.zy, distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(d1.x, 0.0), distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(d2.x, 0.0), distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv, distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(d2.z, 0.0), distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(d1.z, 0.0), distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + d2.xw, distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(0.0, d2.w), distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + d2.zw, distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + d1.xw, distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(0.0, d1.w), distanceToTop, cascadeIndex) +
-    readShadowOpticalDepth(uv + d1.zw, distanceToTop, cascadeIndex)
+    readShadowOpticalDepth(uv + d1.xy, distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(0.0, d1.y), distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + d1.zy, distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + d2.xy, distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(0.0, d2.y), distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + d2.zy, distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(d1.x, 0.0), distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(d2.x, 0.0), distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv, distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(d2.z, 0.0), distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(d1.z, 0.0), distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + d2.xw, distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(0.0, d2.w), distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + d2.zw, distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + d1.xw, distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + vec2(0.0, d1.w), distanceToTop, distanceOffset, cascadeIndex) +
+    readShadowOpticalDepth(uv + d1.zw, distanceToTop, distanceOffset, cascadeIndex)
   );
 }
 
 float sampleShadowOpticalDepth(
   const vec3 rayPosition,
-  const float distanceBias,
+  const float distanceOffset,
   const float radius,
   const float jitter
 ) {
@@ -255,7 +261,13 @@ float sampleShadowOpticalDepth(
   vec3 worldPosition = ECEFToWorld(rayPosition);
   int cascadeIndex = getFadedCascadeIndex(worldPosition, jitter);
   return cascadeIndex >= 0
-    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop + distanceBias, radius, cascadeIndex)
+    ? sampleShadowOpticalDepthPCF(
+      worldPosition,
+      distanceToTop,
+      distanceOffset,
+      radius,
+      cascadeIndex
+    )
     : 0.0;
 }
 
@@ -434,7 +446,7 @@ vec4 marchClouds(
         opticalDepth += sampleShadowOpticalDepth(
           position,
           // Take account of only positions further than the marched ray distance.
-          -sunRayDistance,
+          sunRayDistance,
           // Apply PCF only when the sun is close to the horizon.
           shadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1)),
           jitter
