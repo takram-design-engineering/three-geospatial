@@ -137,11 +137,20 @@ int getFadedCascadeIndex(const vec3 worldPosition, const float jitter) {
     margin = closestEdge * closestEdge * 0.5;
     interval += margin * vec2(-0.5, 0.5);
 
+    #if UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT - 1
     if (depth >= interval.x && depth < interval.y) {
       prevIndex = nextIndex;
       nextIndex = UNROLLED_LOOP_INDEX;
       alpha = saturate(min(depth - interval.x, interval.y - depth) / margin);
     }
+    #else // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT - 1
+    // Don't fade out the last cascade.
+    if (depth >= interval.x) {
+      prevIndex = nextIndex;
+      nextIndex = UNROLLED_LOOP_INDEX;
+      alpha = saturate((depth - interval.x) / margin);
+    }
+    #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT - 1
     #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
   }
   #pragma unroll_loop_end
