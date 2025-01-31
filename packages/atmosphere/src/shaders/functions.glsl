@@ -291,7 +291,8 @@ vec3 GetSkyRadiance(
   // used in Bruneton's demo.
   const float min_mu = 0.01;
   const float max_mu = 0.05;
-  float shadow_length_fade = 1.0 - pow(saturate(1.0 - (abs(mu) - min_mu) / (max_mu - min_mu)), 4.0);
+  float shadow_length_fade =
+    1.0 - pow(min(max(1.0 - (abs(mu) - min_mu) / (max_mu - min_mu), 0.0), 1.0), 4.0);
   shadow_length *= shadow_length_fade;
 
   if (shadow_length == 0.0) {
