@@ -228,6 +228,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           maxSunIterations: new Uniform(3),
           maxGroundIterations: new Uniform(2),
           minSecondaryStepSize: new Uniform(100),
+          secondaryStepScale: new Uniform(2),
 
           // Beer shadow map
           shadowBuffer: new Uniform(shadowBuffer),

@@ -48,6 +48,7 @@ uniform float perspectiveStepScale;
 uniform int maxSunIterations;
 uniform int maxGroundIterations;
 uniform float minSecondaryStepSize;
+uniform float secondaryStepScale;
 
 // Beer shadow map
 uniform sampler2DArray shadowBuffer;
@@ -313,20 +314,18 @@ float marchOpticalDepth(
     return 0.5;
   }
   float stepSize = minSecondaryStepSize / float(iterations);
-  rayDistance = stepSize * jitter;
+  float nextDistance = stepSize * jitter;
   float opticalDepth = 0.0;
-  float stepScale = 1.0;
-  float prevStepScale = 0.0;
   for (int i = 0; i < iterations; ++i) {
+    rayDistance = nextDistance;
     vec3 position = rayDistance * rayDirection + rayOrigin;
     vec2 uv = getGlobeUv(position);
     float height = length(position) - bottomRadius;
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
     MediaSample media = sampleMedia(weather, position, uv, mipLevel, jitter);
-    opticalDepth += media.extinction * (stepScale - prevStepScale) * stepSize;
-    rayDistance += stepSize * stepScale;
-    prevStepScale = stepScale;
-    stepScale *= 2.0;
+    opticalDepth += media.extinction * stepSize;
+    nextDistance += stepSize;
+    stepSize *= secondaryStepScale;
   }
   return opticalDepth;
 }
