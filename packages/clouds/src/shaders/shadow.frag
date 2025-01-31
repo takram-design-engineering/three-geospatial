@@ -63,7 +63,8 @@ vec4 marchClouds(
   float extinctionSum = 0.0;
   float maxOpticalDepth = 0.0;
   float transmittanceIntegral = 1.0;
-  float frontDepth = 0.0;
+  float weightedDistanceSum = 0.0;
+  float transmittanceSum = 0.0;
 
   int sampleCount = 0;
   for (int i = 0; i < maxIterations; ++i) {
@@ -82,10 +83,11 @@ vec4 marchClouds(
       // Note this assumes an homogeneous medium.
       MediaSample media = sampleMedia(weather, position, uv, mipLevel, jitter);
       if (media.extinction > minExtinction) {
-        frontDepth = max(frontDepth, rayDistance);
         extinctionSum += media.extinction;
         maxOpticalDepth += media.extinction * stepSize;
         transmittanceIntegral *= exp(-media.extinction * stepSize);
+        weightedDistanceSum += rayDistance * transmittanceIntegral;
+        transmittanceSum += transmittanceIntegral;
         ++sampleCount;
       }
     }
@@ -99,6 +101,7 @@ vec4 marchClouds(
   if (sampleCount == 0) {
     return vec4(maxRayDistance, 0.0, 0.0, 0.0);
   }
+  float frontDepth = weightedDistanceSum / transmittanceSum;
   float meanExtinction = extinctionSum / float(sampleCount);
   return vec4(frontDepth, meanExtinction, maxOpticalDepth, 1.0);
 }
