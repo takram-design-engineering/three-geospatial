@@ -199,7 +199,8 @@ vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
 float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int cascadeIndex) {
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
-  return min(shadow.b * shadowExtensionScale, shadow.g * max(0.0, distanceToTop - shadow.r));
+  float distanceToFront = max(0.0, distanceToTop - shadow.r);
+  return min(shadow.b * shadowExtensionScale, shadow.g * distanceToFront);
 }
 
 float sampleShadowOpticalDepthPCF(
@@ -239,7 +240,12 @@ float sampleShadowOpticalDepthPCF(
   );
 }
 
-float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius, const float jitter) {
+float sampleShadowOpticalDepth(
+  const vec3 rayPosition,
+  const float distanceBias,
+  const float radius,
+  const float jitter
+) {
   float distanceToTop = getDistanceToShadowTop(rayPosition);
   if (distanceToTop <= 0.0) {
     return 0.0;
@@ -247,7 +253,7 @@ float sampleShadowOpticalDepth(const vec3 rayPosition, const float radius, const
   vec3 worldPosition = ECEFToWorld(rayPosition);
   int cascadeIndex = getFadedCascadeIndex(worldPosition, jitter);
   return cascadeIndex >= 0
-    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, radius, cascadeIndex)
+    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop + distanceBias, radius, cascadeIndex)
     : 0.0;
 }
 
@@ -296,7 +302,8 @@ float marchOpticalDepth(
   const vec3 rayDirection,
   const int maxIterations,
   const float mipLevel,
-  const float jitter
+  const float jitter,
+  out float rayDistance
 ) {
   int iterations = int(max(0.0, remap(mipLevel, 0.0, 1.0, float(maxIterations + 1), 1.0) - jitter));
   if (iterations == 0) {
@@ -305,7 +312,7 @@ float marchOpticalDepth(
     return 0.5;
   }
   float stepSize = minSecondaryStepSize / float(iterations);
-  float rayDistance = stepSize * jitter;
+  rayDistance = stepSize * jitter;
   float opticalDepth = 0.0;
   float stepScale = 1.0;
   float prevStepScale = 0.0;
@@ -321,6 +328,17 @@ float marchOpticalDepth(
     stepScale *= 2.0;
   }
   return opticalDepth;
+}
+
+float marchOpticalDepth(
+  const vec3 rayOrigin,
+  const vec3 rayDirection,
+  const int maxIterations,
+  const float mipLevel,
+  const float jitter
+) {
+  float rayDistance;
+  return marchOpticalDepth(rayOrigin, rayDirection, maxIterations, mipLevel, jitter, rayDistance);
 }
 
 float multipleScattering(const float opticalDepth, const float cosTheta) {
@@ -400,19 +418,28 @@ vec4 marchClouds(
       );
       vec3 surfaceNormal = normalize(position);
 
-      // Obtain the optical depth at the position from BSM.
-      float opticalDepth = 0.0;
+      // March optical depth to the sun for finer details, which BSM lacks.
+      float sunRayDistance = 0.0;
+      float opticalDepth = marchOpticalDepth(
+        position,
+        sunDirection,
+        maxSunIterations,
+        mipLevel,
+        jitter,
+        sunRayDistance
+      );
+
       if (height < shadowTopHeight) {
+        // Obtain the optical depth from BSM at the ray position.
         opticalDepth += sampleShadowOpticalDepth(
           position,
+          // Take account of only positions further than the marched ray distance.
+          -sunRayDistance,
           // Apply PCF only when the sun is close to the horizon.
           shadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1)),
           jitter
         );
       }
-
-      // March optical depth to the sun for finer details, which BSM lacks.
-      opticalDepth += marchOpticalDepth(position, sunDirection, maxSunIterations, mipLevel, jitter);
 
       // TODO: It's constant. Move to vertex shader or uniform.
       vec3 albedo = vec3(media.scattering / media.extinction);
@@ -506,7 +533,7 @@ float marchShadowLength(
   float shadowLength = 0.0;
   float stepSize = minShadowLengthStepSize;
   float rayDistance = stepSize * jitter;
-  const float attenuationFactor = 1.0 - 1e-3;
+  const float attenuationFactor = 1.0 - 5e-3;
   float attenuation = 1.0;
 
   for (int i = 0; i < maxShadowLengthIterations; ++i) {
@@ -514,7 +541,7 @@ float marchShadowLength(
       break; // Termination
     }
     vec3 position = rayDistance * rayDirection + rayOrigin;
-    float opticalDepth = sampleShadowOpticalDepth(position, 0.0, jitter);
+    float opticalDepth = sampleShadowOpticalDepth(position, 0.0, 0.0, jitter);
     shadowLength += (1.0 - exp(-opticalDepth)) * stepSize * attenuation;
 
     // Hack to prevent over-integration of shadow length. The shadow should be

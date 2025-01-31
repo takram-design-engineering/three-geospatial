@@ -289,7 +289,9 @@ vec3 GetSkyRadiance(
   // Hack to reduce shadow length near the horizon, as the sky with long shadow
   // lengths should be occluded. A similar hack for the sun at the horizon is
   // used in Bruneton's demo.
-  float shadow_length_fade = smoothstep(0.01, 0.035, abs(mu));
+  const float min_mu = 0.01;
+  const float max_mu = 0.05;
+  float shadow_length_fade = 1.0 - pow(saturate(1.0 - (abs(mu) - min_mu) / (max_mu - min_mu)), 4.0);
   shadow_length *= shadow_length_fade;
 
   if (shadow_length == 0.0) {
