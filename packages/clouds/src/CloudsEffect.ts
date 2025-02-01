@@ -24,8 +24,8 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsPass } from './CloudsPass'
 import { LocalWeather } from './LocalWeather'
-import { Turbulence } from './Turbulence'
 import { ShadowPass } from './ShadowPass'
+import { Turbulence } from './Turbulence'
 import { type CloudLayers } from './types'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
@@ -95,7 +95,7 @@ export class CloudsEffect extends Effect {
   readonly ellipsoidMatrix = new Matrix4()
   readonly sunDirection = new Vector3()
 
-  // Atmosphere, weather and shape
+  // Weather and shape
   readonly localWeather = new LocalWeather()
   readonly localWeatherVelocity = new Vector2()
   readonly shape = new CloudShape()
@@ -115,9 +115,9 @@ export class CloudsEffect extends Effect {
   readonly shadowLengthBufferRef: Uniform<Texture | null>
 
   readonly resolution: Resolution
-  readonly shadowMapSize = new Vector2()
   private frame = 0
   private shadowCascadeCount = 0
+  private readonly shadowMapSize = new Vector2()
 
   constructor(
     private camera: Camera = new Camera(),
@@ -207,10 +207,10 @@ export class CloudsEffect extends Effect {
       cloudsPass.setShadowSize(width, height, depth)
     }
 
-    this.localWeather.update(renderer)
-    this.shape.update(renderer)
-    this.shapeDetail.update(renderer)
-    this.turbulence.update(renderer)
+    this.localWeather.update(renderer, deltaTime)
+    this.shape.update(renderer, deltaTime)
+    this.shapeDetail.update(renderer, deltaTime)
+    this.turbulence.update(renderer, deltaTime)
 
     this.cloudsBufferRef.value = cloudsPass.outputBuffer
     this.shadowBufferRef.value = shadowPass.outputBuffer
