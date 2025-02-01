@@ -41,8 +41,8 @@ export interface ShadowMaterialParameters {
   ellipsoidMatrixRef?: Matrix4
   sunDirectionRef?: Vector3
   localWeatherTexture?: Texture | null
-  shapeTexture?: Texture | null
-  shapeDetailTexture?: Texture | null
+  shapeTexture?: Data3DTexture | null
+  shapeDetailTexture?: Data3DTexture | null
   turbulenceTexture?: Texture | null
 }
 

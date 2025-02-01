@@ -1,4 +1,11 @@
-import { Uniform, Vector2, Vector3, Vector4, type Texture } from 'three'
+import {
+  Uniform,
+  Vector2,
+  Vector3,
+  Vector4,
+  type Data3DTexture,
+  type Texture
+} from 'three'
 
 import { type CloudLayer, type CloudLayers } from './types'
 
@@ -12,10 +19,10 @@ export interface CloudParameterUniforms {
   localWeatherRepeat: Uniform<Vector2>
   localWeatherOffset: Uniform<Vector2>
   coverage: Uniform<number>
-  shapeTexture: Uniform<Texture | null>
+  shapeTexture: Uniform<Data3DTexture | null>
   shapeRepeat: Uniform<Vector3>
   shapeOffset: Uniform<Vector3>
-  shapeDetailTexture: Uniform<Texture | null>
+  shapeDetailTexture: Uniform<Data3DTexture | null>
   shapeDetailRepeat: Uniform<Vector3>
   shapeDetailOffset: Uniform<Vector3>
   turbulenceTexture: Uniform<Texture | null>
@@ -30,8 +37,8 @@ export function createCloudParameterUniforms({
   turbulenceTexture = null
 }: {
   localWeatherTexture?: Texture | null
-  shapeTexture?: Texture | null
-  shapeDetailTexture?: Texture | null
+  shapeTexture?: Data3DTexture | null
+  shapeDetailTexture?: Data3DTexture | null
   turbulenceTexture?: Texture | null
 } = {}): CloudParameterUniforms {
   return {
