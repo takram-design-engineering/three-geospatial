@@ -14,6 +14,12 @@
         "command": "nx format:write --all"
       }
     },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run-many --target=test --args=--passWithNoTests --parallel=8 --exclude=@three-geospatial/source"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {
