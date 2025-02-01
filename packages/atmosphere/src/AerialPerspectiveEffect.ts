@@ -24,6 +24,7 @@ import {
 import {
   depth,
   packing,
+  poissonDisk,
   raySphereIntersection,
   transform
 } from '@takram/three-geospatial/shaders'
@@ -206,7 +207,8 @@ export class AerialPerspectiveEffect extends Effect {
             depth,
             packing,
             transform,
-            raySphereIntersection
+            raySphereIntersection,
+            poissonDisk
           },
           parameters,
           functions,
@@ -248,7 +250,7 @@ export class AerialPerspectiveEffect extends Effect {
             shadowMatrices: new Uniform([]),
             shadowFar: new Uniform(0),
             shadowTopHeight: new Uniform(0),
-            shadowRadius: new Uniform(1),
+            shadowRadius: new Uniform(3),
             stbnTexture: new Uniform(null),
             frame: new Uniform(0),
             shadowLengthBuffer: new Uniform(null),

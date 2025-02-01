@@ -37,6 +37,7 @@ import {
   depth,
   generators,
   math,
+  poissonDisk,
   raySphereIntersection
 } from '@takram/three-geospatial/shaders'
 
@@ -165,7 +166,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
               depth,
               math,
               generators,
-              raySphereIntersection
+              raySphereIntersection,
+              poissonDisk
             },
             atmosphere: {
               parameters: atmosphereParameters,

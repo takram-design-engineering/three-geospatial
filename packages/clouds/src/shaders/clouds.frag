@@ -9,6 +9,7 @@ precision highp sampler2DArray;
 #include "core/math"
 #include "core/generators"
 #include "core/raySphereIntersection"
+#include "core/poissonDisk"
 #include "atmosphere/parameters"
 #include "atmosphere/functions"
 #include "parameters"
@@ -233,28 +234,19 @@ float sampleShadowOpticalDepthPCF(
   if (radius < 0.1) {
     return readShadowOpticalDepth(uv, distanceToTop, distanceOffset, cascadeIndex);
   }
-  vec4 d1 = vec4(-shadowTexelSize.xy, shadowTexelSize.xy) * radius;
-  vec4 d2 = d1 * 0.5;
-  // prettier-ignore
-  return (1.0 / 17.0) * (
-    readShadowOpticalDepth(uv + d1.xy, distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(0.0, d1.y), distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + d1.zy, distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + d2.xy, distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(0.0, d2.y), distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + d2.zy, distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(d1.x, 0.0), distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(d2.x, 0.0), distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv, distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(d2.z, 0.0), distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(d1.z, 0.0), distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + d2.xw, distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(0.0, d2.w), distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + d2.zw, distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + d1.xw, distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + vec2(0.0, d1.w), distanceToTop, distanceOffset, cascadeIndex) +
-    readShadowOpticalDepth(uv + d1.zw, distanceToTop, distanceOffset, cascadeIndex)
-  );
+  float sum = 0.0;
+  #pragma unroll_loop_start
+  for (int i = 0; i < POISSON_DISK_COUNT; ++i) {
+    vec2 offset = poissonDisk[i];
+    sum += readShadowOpticalDepth(
+      uv + offset * radius * shadowTexelSize,
+      distanceToTop,
+      distanceOffset,
+      cascadeIndex
+    );
+  }
+  #pragma unroll_loop_end
+  return sum / float(POISSON_DISK_COUNT);
 }
 
 float sampleShadowOpticalDepth(
