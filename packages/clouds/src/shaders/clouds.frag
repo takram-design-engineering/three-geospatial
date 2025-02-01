@@ -235,15 +235,18 @@ float sampleShadowOpticalDepthPCF(
     return readShadowOpticalDepth(uv, distanceToTop, distanceOffset, cascadeIndex);
   }
   float sum = 0.0;
+  vec2 offset;
   #pragma unroll_loop_start
-  for (int i = 0; i < POISSON_DISK_COUNT; ++i) {
-    vec2 offset = poissonDisk[i];
+  for (int i = 0; i < 32; ++i) {
+    #if UNROLLED_LOOP_INDEX < POISSON_DISK_COUNT
+    offset = poissonDisk[i];
     sum += readShadowOpticalDepth(
       uv + offset * radius * shadowTexelSize,
       distanceToTop,
       distanceOffset,
       cascadeIndex
     );
+    #endif // UNROLLED_LOOP_INDEX < POISSON_DISK_COUNT
   }
   #pragma unroll_loop_end
   return sum / float(POISSON_DISK_COUNT);
