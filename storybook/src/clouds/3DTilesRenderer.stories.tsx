@@ -3,7 +3,7 @@ import { type Meta, type StoryFn } from '@storybook/react'
 import { Story } from './3DTilesRenderer-Story'
 
 export default {
-  title: 'clouds (WIP)/3D Tiles Renderer',
+  title: 'clouds (WIP)/3D Tiles Renderer Integration',
   parameters: {
     layout: 'fullscreen'
   }
@@ -11,7 +11,8 @@ export default {
 
 export const Tokyo: StoryFn = () => (
   <Story
-    timeOfDay={14}
+    dayOfYear={170}
+    timeOfDay={7.5}
     exposure={10}
     longitude={139.8146}
     latitude={35.7455}

@@ -3,7 +3,7 @@ import { type Meta, type StoryFn } from '@storybook/react'
 import { Story } from './3DTilesRenderer-Story'
 
 export default {
-  title: 'atmosphere/3D Tiles Renderer',
+  title: 'atmosphere/3D Tiles Renderer Integration',
   parameters: {
     layout: 'fullscreen'
   }
