@@ -97,10 +97,7 @@ const Scene: FC = () => {
   )
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
-  const [
-    { enabled, debugShowUv, debugShowShadowMap, debugShowShadowLength },
-    cloudsProps
-  ] = useCloudsControls(clouds)
+  const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)
 
   return (
     <>
@@ -129,14 +126,7 @@ const Scene: FC = () => {
         <SunLight />
         <Stars data='atmosphere/stars.bin' />
         <EffectComposer multisampling={0}>
-          <Fragment
-            key={JSON.stringify([
-              enabled,
-              debugShowUv,
-              debugShowShadowMap,
-              debugShowShadowLength
-            ])}
-          >
+          <Fragment key={JSON.stringify([enabled, toneMapping])}>
             {enabled && (
               <Clouds
                 ref={setClouds}
@@ -146,7 +136,7 @@ const Scene: FC = () => {
               />
             )}
             <AerialPerspective />
-            {!debugShowUv && !debugShowShadowMap && (
+            {toneMapping && (
               <>
                 <LensFlare />
                 <ToneMapping mode={ToneMappingMode.AGX} />

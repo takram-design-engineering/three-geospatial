@@ -44,6 +44,7 @@ Project level commands are defined in [`project.json`](project.json). Although l
 - `nx build`: Build all libraries and apps.
 - `nx build-libs`: Build all libraries.
 - `nx build {name}`: Build a specific library or app.
+- `nx test`: Run unit tests.
 - `nx lint`: Run linter.
 - `nx format-all`: Run prettier.
 
