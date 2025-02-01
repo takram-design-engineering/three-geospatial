@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.7.0] - 2025-02-02
+
+### Added
+
+- `SkyMaterial`: Added support for custom ground albedo in sky rendering (undocumented for now).
+- `AerialPerspectiveEffect`: Refined R3F type definitions.
+- Added uniform type definitions.
+- Added undocumented functions for preparing cloud and light shafts compositing.
+
+### Fixed
+
+- `StarsMaterial`: Fixed incorrect proxy to `magnitudeRange` uniform.
+- `StarsMaterial`: Ensured stars are not rendered in front of the ground.
+
+### Changed
+
+- Switched to Vite’s native raw loading function for importing GLSL shaders.
+- Separated shader code exports in `@takram/three-atmosphere/shaders`.
+- Removed unused shader codes in atmosphere functions.
+- Updated dependencies.
+
 ## [0.6.0] - 2025-01-19
 
 ### Added
