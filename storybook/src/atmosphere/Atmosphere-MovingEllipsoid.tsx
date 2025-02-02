@@ -8,7 +8,6 @@ import {
 import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { ToneMappingMode } from 'postprocessing'
 import { useState, type FC } from 'react'
 import { Vector3 } from 'three'
 
@@ -27,9 +26,9 @@ import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 import { EffectComposer } from '../helpers/EffectComposer'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
-import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
+import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -38,7 +37,7 @@ const north = new Vector3()
 const up = new Vector3()
 
 const Scene: FC = () => {
-  useExposureControls({ exposure: 10 })
+  const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls({
     height: 500
   })
@@ -98,7 +97,7 @@ const Scene: FC = () => {
         <EffectComposer multisampling={0}>
           <AerialPerspective />
           <LensFlare />
-          <ToneMapping mode={ToneMappingMode.AGX} />
+          <ToneMapping mode={toneMappingMode} />
           <SMAA />
           <Dithering />
         </EffectComposer>

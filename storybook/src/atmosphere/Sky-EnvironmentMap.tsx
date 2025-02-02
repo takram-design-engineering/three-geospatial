@@ -7,7 +7,6 @@ import {
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useRef, useState, type FC } from 'react'
 import { Quaternion, Vector3, type Camera, type Group } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
@@ -28,9 +27,9 @@ import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
-import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
+import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -56,7 +55,7 @@ function applyLocation(
 }
 
 const Scene: FC = () => {
-  useExposureControls({ exposure: 10 })
+  const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls()
   const motionDate = useLocalDateControls({
     longitude,
@@ -129,7 +128,7 @@ const Scene: FC = () => {
       </EastNorthUpFrame>
       <EffectComposer multisampling={8}>
         <LensFlare />
-        <ToneMapping mode={ToneMappingMode.AGX} />
+        <ToneMapping mode={toneMappingMode} />
         <Dithering />
       </EffectComposer>
     </>

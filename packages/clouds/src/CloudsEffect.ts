@@ -212,9 +212,7 @@ export class CloudsEffect extends Effect {
     inputBuffer: WebGLRenderTarget,
     deltaTime = 0
   ): void {
-    const shadow = this.shadow
-    const shadowPass = this.shadowPass
-    const cloudsPass = this.cloudsPass
+    const { shadow, shadowPass, cloudsPass } = this
     if (
       shadow.cascadeCount !== this.shadowCascadeCount ||
       !shadow.mapSize.equals(this.shadowMapSize)
@@ -255,7 +253,7 @@ export class CloudsEffect extends Effect {
   }
 
   override setSize(baseWidth: number, baseHeight: number): void {
-    const resolution = this.resolution
+    const { resolution } = this
     resolution.setBaseSize(baseWidth, baseHeight)
     const { width, height } = resolution
     this.cloudsPass.setSize(width, height)
@@ -267,22 +265,6 @@ export class CloudsEffect extends Effect {
   ): void {
     this.shadowPass.setDepthTexture(depthTexture, depthPacking)
     this.cloudsPass.setDepthTexture(depthTexture, depthPacking)
-  }
-
-  get temporalUpscale(): boolean {
-    return this.cloudsPass.temporalUpscale
-  }
-
-  set temporalUpscale(value: boolean) {
-    this.cloudsPass.temporalUpscale = value
-  }
-
-  get lightShafts(): boolean {
-    return this.cloudsPass.lightShafts
-  }
-
-  set lightShafts(value: boolean) {
-    this.cloudsPass.lightShafts = value
   }
 
   // Textures
@@ -330,6 +312,24 @@ export class CloudsEffect extends Effect {
   set stbnTexture(value: Data3DTexture | null) {
     this.shadowPass.currentMaterial.uniforms.stbnTexture.value = value
     this.cloudsPass.currentMaterial.uniforms.stbnTexture.value = value
+  }
+
+  // Pass parameters
+
+  get temporalUpscale(): boolean {
+    return this.cloudsPass.temporalUpscale
+  }
+
+  set temporalUpscale(value: boolean) {
+    this.cloudsPass.temporalUpscale = value
+  }
+
+  get lightShafts(): boolean {
+    return this.cloudsPass.lightShafts
+  }
+
+  set lightShafts(value: boolean) {
+    this.cloudsPass.lightShafts = value
   }
 
   // Cloud parameters
