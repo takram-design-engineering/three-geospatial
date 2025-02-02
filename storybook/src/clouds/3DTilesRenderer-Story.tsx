@@ -259,7 +259,7 @@ const Scene: FC<SceneProps> = ({
               />
             </>
           )}
-          {toneMappingMode && (
+          {toneMapping && (
             <>
               {lensFlare && <LensFlare />}
               {depth && <Depth useTurbo />}
