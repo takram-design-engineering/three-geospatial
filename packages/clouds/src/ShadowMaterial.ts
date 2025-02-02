@@ -6,8 +6,7 @@ import {
   Vector2,
   Vector3,
   type Camera,
-  type Data3DTexture,
-  type Texture
+  type Data3DTexture
 } from 'three'
 
 import {
@@ -40,10 +39,6 @@ export interface ShadowMaterialParameters {
   ellipsoidCenterRef?: Vector3
   ellipsoidMatrixRef?: Matrix4
   sunDirectionRef?: Vector3
-  localWeatherTexture?: Texture | null
-  shapeTexture?: Data3DTexture | null
-  shapeDetailTexture?: Data3DTexture | null
-  turbulenceTexture?: Texture | null
 }
 
 export interface ShadowMaterialUniforms
@@ -84,11 +79,7 @@ export class ShadowMaterial extends RawShaderMaterial {
     {
       ellipsoidCenterRef = new Vector3(),
       ellipsoidMatrixRef = new Matrix4(),
-      sunDirectionRef = new Vector3(),
-      localWeatherTexture = null,
-      shapeTexture = null,
-      shapeDetailTexture = null,
-      turbulenceTexture = null
+      sunDirectionRef = new Vector3()
     }: ShadowMaterialParameters = {},
     private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
@@ -118,12 +109,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         frame: new Uniform(0),
         stbnTexture: new Uniform(null),
 
-        ...createCloudParameterUniforms({
-          localWeatherTexture,
-          shapeTexture,
-          shapeDetailTexture,
-          turbulenceTexture
-        }),
+        ...createCloudParameterUniforms(),
         ...createCloudLayerUniforms(),
 
         // Atmosphere

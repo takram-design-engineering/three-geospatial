@@ -30,34 +30,24 @@ export interface CloudParameterUniforms {
   turbulenceDisplacement: Uniform<number>
 }
 
-export function createCloudParameterUniforms({
-  localWeatherTexture = null,
-  shapeTexture = null,
-  shapeDetailTexture = null,
-  turbulenceTexture = null
-}: {
-  localWeatherTexture?: Texture | null
-  shapeTexture?: Data3DTexture | null
-  shapeDetailTexture?: Data3DTexture | null
-  turbulenceTexture?: Texture | null
-} = {}): CloudParameterUniforms {
+export function createCloudParameterUniforms(): CloudParameterUniforms {
   return {
     // Scattering
     scatteringCoefficient: new Uniform(1.0),
     absorptionCoefficient: new Uniform(0.02),
 
     // Weather and shape
-    localWeatherTexture: new Uniform(localWeatherTexture),
+    localWeatherTexture: new Uniform(null),
     localWeatherRepeat: new Uniform(new Vector2().setScalar(100)),
     localWeatherOffset: new Uniform(new Vector2()),
     coverage: new Uniform(0.3),
-    shapeTexture: new Uniform(shapeTexture),
+    shapeTexture: new Uniform(null),
     shapeRepeat: new Uniform(new Vector3().setScalar(0.0003)),
     shapeOffset: new Uniform(new Vector3()),
-    shapeDetailTexture: new Uniform(shapeDetailTexture),
+    shapeDetailTexture: new Uniform(null),
     shapeDetailRepeat: new Uniform(new Vector3().setScalar(0.006)),
     shapeDetailOffset: new Uniform(new Vector3()),
-    turbulenceTexture: new Uniform(turbulenceTexture),
+    turbulenceTexture: new Uniform(null),
     turbulenceRepeat: new Uniform(new Vector2().setScalar(20)),
     turbulenceDisplacement: new Uniform(350)
   }

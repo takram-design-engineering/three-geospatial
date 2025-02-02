@@ -66,11 +66,7 @@ export class ShadowPass extends CloudsPassBase {
       {
         ellipsoidCenterRef: this.ellipsoidCenter,
         ellipsoidMatrixRef: this.ellipsoidMatrix,
-        sunDirectionRef: this.sunDirection,
-        localWeatherTexture: this.localWeather.texture,
-        shapeTexture: this.shape.texture,
-        shapeDetailTexture: this.shapeDetail.texture,
-        turbulenceTexture: this.turbulence.texture
+        sunDirectionRef: this.sunDirection
       },
       atmosphere
     )

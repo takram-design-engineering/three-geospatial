@@ -1,16 +1,16 @@
 import { Effect, EffectAttribute, Resolution } from 'postprocessing'
 import {
   Camera,
+  Data3DTexture,
   Matrix4,
+  Texture,
   Uniform,
   Vector2,
   Vector3,
-  type Data3DTexture,
   type DataArrayTexture,
   type DataTexture,
   type DepthPackingStrategies,
   type Event,
-  type Texture,
   type TextureDataType,
   type WebGLRenderer,
   type WebGLRenderTarget
@@ -24,6 +24,8 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsPass } from './CloudsPass'
 import { LocalWeather } from './LocalWeather'
+import { Render3DTexture } from './Render3DTexture'
+import { RenderTexture } from './RenderTexture'
 import { ShadowPass } from './ShadowPass'
 import { Turbulence } from './Turbulence'
 import { type CloudLayers } from './types'
@@ -96,13 +98,13 @@ export class CloudsEffect extends Effect {
   readonly sunDirection = new Vector3()
 
   // Weather and shape
-  readonly localWeather = new LocalWeather()
+  localWeather: RenderTexture = new LocalWeather()
   readonly localWeatherVelocity = new Vector2()
-  readonly shape = new CloudShape()
+  shape: Render3DTexture = new CloudShape()
   readonly shapeVelocity = new Vector3()
-  readonly shapeDetail = new CloudShapeDetail()
+  shapeDetail: Render3DTexture = new CloudShapeDetail()
   readonly shapeDetailVelocity = new Vector3()
-  readonly turbulence = new Turbulence()
+  turbulence: RenderTexture = new Turbulence()
 
   readonly shadow: CascadedShadowMaps
   readonly shadowPass: ShadowPass
@@ -144,8 +146,27 @@ export class CloudsEffect extends Effect {
       mapSize: new Vector2().setScalar(512),
       splitLambda: 0.6
     })
-    this.shadowPass = new ShadowPass(this, atmosphere)
-    this.cloudsPass = new CloudsPass(this, atmosphere)
+
+    const passOptions = {
+      ellipsoidCenter: this.ellipsoidCenter,
+      ellipsoidMatrix: this.ellipsoidMatrix,
+      sunDirection: this.sunDirection,
+      localWeatherVelocity: this.localWeatherVelocity,
+      shapeVelocity: this.shapeVelocity,
+      shapeDetailVelocity: this.shapeDetailVelocity,
+      shadow: this.shadow
+    }
+    this.shadowPass = new ShadowPass(passOptions, atmosphere)
+    this.cloudsPass = new CloudsPass(passOptions, atmosphere)
+
+    const textures = {
+      localWeatherTexture: this.localWeather.texture,
+      shapeTexture: this.shape.texture,
+      shapeDetailTexture: this.shapeDetail.texture,
+      turbulenceTexture: this.turbulence.texture
+    }
+    Object.assign(this.shadowPass, textures)
+    Object.assign(this.cloudsPass, textures)
 
     this.cloudsBufferRef = new Uniform(this.cloudsPass.outputBuffer)
     this.shadowBufferRef = new Uniform(this.shadowPass.outputBuffer)
@@ -207,10 +228,18 @@ export class CloudsEffect extends Effect {
       cloudsPass.setShadowSize(width, height, depth)
     }
 
-    this.localWeather.update(renderer, deltaTime)
-    this.shape.update(renderer, deltaTime)
-    this.shapeDetail.update(renderer, deltaTime)
-    this.turbulence.update(renderer, deltaTime)
+    if ('update' in this.localWeather) {
+      this.localWeather.update(renderer, deltaTime)
+    }
+    if ('update' in this.shape) {
+      this.shape.update(renderer, deltaTime)
+    }
+    if ('update' in this.shapeDetail) {
+      this.shapeDetail.update(renderer, deltaTime)
+    }
+    if ('update' in this.turbulence) {
+      this.turbulence.update(renderer, deltaTime)
+    }
 
     this.cloudsBufferRef.value = cloudsPass.outputBuffer
     this.shadowBufferRef.value = shadowPass.outputBuffer
@@ -257,6 +286,42 @@ export class CloudsEffect extends Effect {
   }
 
   // Textures
+
+  get localWeatherTexture(): Texture | null {
+    return this.cloudsPass.localWeatherTexture
+  }
+
+  set localWeatherTexture(value: Texture | null) {
+    this.cloudsPass.localWeatherTexture = value
+    this.shadowPass.localWeatherTexture = value
+  }
+
+  get shapeTexture(): Data3DTexture | null {
+    return this.cloudsPass.shapeTexture
+  }
+
+  set shapeTexture(value: Data3DTexture | null) {
+    this.cloudsPass.shapeTexture = value
+    this.shadowPass.shapeTexture = value
+  }
+
+  get shapeDetailTexture(): Data3DTexture | null {
+    return this.cloudsPass.shapeDetailTexture
+  }
+
+  set shapeDetailTexture(value: Data3DTexture | null) {
+    this.cloudsPass.shapeDetailTexture = value
+    this.shadowPass.shapeDetailTexture = value
+  }
+
+  get turbulenceTexture(): Texture | null {
+    return this.cloudsPass.turbulenceTexture
+  }
+
+  set turbulenceTexture(value: Texture | null) {
+    this.cloudsPass.turbulenceTexture = value
+    this.shadowPass.turbulenceTexture = value
+  }
 
   get stbnTexture(): Data3DTexture | null {
     return this.cloudsPass.currentMaterial.uniforms.stbnTexture.value

@@ -1,9 +1,16 @@
 import { Pass } from 'postprocessing'
-import { Camera, Vector3, type Matrix4, type Vector2 } from 'three'
+import {
+  Camera,
+  Data3DTexture,
+  Material,
+  Texture,
+  Vector3,
+  type Matrix4,
+  type Vector2
+} from 'three'
 
 import { type CascadedShadowMaps } from './CascadedShadowMaps'
-import { type Render3DTexture } from './Render3DTexture'
-import { type RenderTexture } from './RenderTexture'
+import { CloudParameterUniforms } from './uniforms'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
@@ -24,28 +31,24 @@ export interface CloudsPassBaseOptions {
   ellipsoidCenter: Vector3
   ellipsoidMatrix: Matrix4
   sunDirection: Vector3
-  localWeather: RenderTexture
   localWeatherVelocity: Vector2
-  shape: Render3DTexture
   shapeVelocity: Vector3
-  shapeDetail: Render3DTexture
   shapeDetailVelocity: Vector3
-  turbulence: RenderTexture
   shadow: CascadedShadowMaps
 }
 
 export abstract class CloudsPassBase extends Pass {
-  readonly ellipsoidCenter!: Vector3
-  readonly ellipsoidMatrix!: Matrix4
-  readonly sunDirection!: Vector3
-  readonly localWeather!: RenderTexture
-  readonly localWeatherVelocity!: Vector2
-  readonly shape!: Render3DTexture
-  readonly shapeVelocity!: Vector3
-  readonly shapeDetail!: Render3DTexture
-  readonly shapeDetailVelocity!: Vector3
-  readonly turbulence!: RenderTexture
+  readonly ellipsoidCenter: Vector3
+  readonly ellipsoidMatrix: Matrix4
+  readonly sunDirection: Vector3
+  readonly localWeatherVelocity: Vector2
+  readonly shapeVelocity: Vector3
+  readonly shapeDetailVelocity: Vector3
   shadow: CascadedShadowMaps
+
+  abstract currentMaterial: Material & {
+    uniforms: CloudParameterUniforms
+  }
 
   private _mainCamera = new Camera()
 
@@ -55,25 +58,19 @@ export abstract class CloudsPassBase extends Pass {
       ellipsoidCenter,
       ellipsoidMatrix,
       sunDirection,
-      localWeather,
       localWeatherVelocity,
-      shape,
       shapeVelocity,
-      shapeDetail,
       shapeDetailVelocity,
-      turbulence,
       shadow
     } = options
+
+    // Vectors and matrices are intentionally not copied but referenced.
     this.ellipsoidCenter = ellipsoidCenter
     this.ellipsoidMatrix = ellipsoidMatrix
     this.sunDirection = sunDirection
-    this.localWeather = localWeather
     this.localWeatherVelocity = localWeatherVelocity
-    this.shape = shape
     this.shapeVelocity = shapeVelocity
-    this.shapeDetail = shapeDetail
     this.shapeDetailVelocity = shapeDetailVelocity
-    this.turbulence = turbulence
     this.shadow = shadow
   }
 
@@ -83,5 +80,37 @@ export abstract class CloudsPassBase extends Pass {
 
   set mainCamera(value: Camera) {
     this._mainCamera = value
+  }
+
+  get localWeatherTexture(): Texture | null {
+    return this.currentMaterial.uniforms.localWeatherTexture.value
+  }
+
+  get shapeTexture(): Data3DTexture | null {
+    return this.currentMaterial.uniforms.shapeTexture.value
+  }
+
+  get shapeDetailTexture(): Data3DTexture | null {
+    return this.currentMaterial.uniforms.shapeDetailTexture.value
+  }
+
+  get turbulenceTexture(): Texture | null {
+    return this.currentMaterial.uniforms.turbulenceTexture.value
+  }
+
+  set localWeatherTexture(value: Texture | null) {
+    this.currentMaterial.uniforms.localWeatherTexture.value = value
+  }
+
+  set shapeTexture(value: Data3DTexture | null) {
+    this.currentMaterial.uniforms.shapeTexture.value = value
+  }
+
+  set shapeDetailTexture(value: Data3DTexture | null) {
+    this.currentMaterial.uniforms.shapeDetailTexture.value = value
+  }
+
+  set turbulenceTexture(value: Texture | null) {
+    this.currentMaterial.uniforms.turbulenceTexture.value = value
   }
 }

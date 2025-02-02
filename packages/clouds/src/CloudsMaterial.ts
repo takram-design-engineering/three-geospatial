@@ -67,11 +67,6 @@ export interface CloudsMaterialParameters {
   ellipsoidCenterRef?: Vector3
   ellipsoidMatrixRef?: Matrix4
   sunDirectionRef?: Vector3
-  localWeatherTexture?: Texture | null
-  shapeTexture?: Data3DTexture | null
-  shapeDetailTexture?: Data3DTexture | null
-  turbulenceTexture?: Texture | null
-  shadowBuffer?: DataArrayTexture | null
 }
 
 export interface CloudsMaterialUniforms
@@ -146,12 +141,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     {
       ellipsoidCenterRef = new Vector3(),
       ellipsoidMatrixRef = new Matrix4(),
-      sunDirectionRef = new Vector3(),
-      localWeatherTexture = null,
-      shapeTexture = null,
-      shapeDetailTexture = null,
-      turbulenceTexture = null,
-      shadowBuffer = null
+      sunDirectionRef = new Vector3()
     }: CloudsMaterialParameters = {},
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
@@ -193,12 +183,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           mipLevelScale: new Uniform(1),
           stbnTexture: new Uniform(null),
 
-          ...createCloudParameterUniforms({
-            localWeatherTexture,
-            shapeTexture,
-            shapeDetailTexture,
-            turbulenceTexture
-          }),
+          ...createCloudParameterUniforms(),
           ...createCloudLayerUniforms(),
 
           // Atmosphere
@@ -233,7 +218,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           secondaryStepScale: new Uniform(2),
 
           // Beer shadow map
-          shadowBuffer: new Uniform(shadowBuffer),
+          shadowBuffer: new Uniform(null),
           shadowTexelSize: new Uniform(new Vector2()),
           shadowIntervals: new Uniform(
             Array.from({ length: 4 }, () => new Vector2()) // Populate the max number of elements
