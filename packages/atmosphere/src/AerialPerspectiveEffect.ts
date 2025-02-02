@@ -311,21 +311,16 @@ export class AerialPerspectiveEffect extends Effect {
     this.camera = value
   }
 
-  override update(
-    renderer: WebGLRenderer,
-    inputBuffer: WebGLRenderTarget,
-    deltaTime?: number
-  ): void {
+  private copyCameraSettings(camera: Camera): void {
     const uniforms = this.uniforms
-    const projectionMatrix = uniforms.get('projectionMatrix')
-    const viewMatrix = uniforms.get('viewMatrix')
-    const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')
-    const inverseViewMatrix = uniforms.get('inverseViewMatrix')
-    const camera = this.camera
-    projectionMatrix.value.copy(camera.projectionMatrix)
-    viewMatrix.value.copy(camera.matrixWorldInverse)
-    inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
-    inverseViewMatrix.value.copy(camera.matrixWorld)
+    const projectionMatrix = camera.projectionMatrix
+    const viewMatrix = camera.matrixWorldInverse
+    const inverseProjectionMatrix = camera.projectionMatrixInverse
+    const inverseViewMatrix = camera.matrixWorld
+    uniforms.get('projectionMatrix').value.copy(projectionMatrix)
+    uniforms.get('viewMatrix').value.copy(viewMatrix)
+    uniforms.get('inverseProjectionMatrix').value.copy(inverseProjectionMatrix)
+    uniforms.get('inverseViewMatrix').value.copy(inverseViewMatrix)
 
     const cameraPosition = camera.getWorldPosition(
       uniforms.get('cameraPosition').value
@@ -347,7 +342,7 @@ export class AerialPerspectiveEffect extends Effect {
         geodeticScratch.setFromECEF(cameraPositionECEF).height
       const projectedScale = vectorScratch2
         .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
-        .applyMatrix4(camera.projectionMatrix)
+        .applyMatrix4(projectionMatrix)
 
       // Calculate interpolation alpha
       // Interpolation values are picked to match previous rough globe scales to
@@ -371,7 +366,14 @@ export class AerialPerspectiveEffect extends Effect {
     } else {
       altitudeCorrection.value.setScalar(0)
     }
+  }
 
+  override update(
+    renderer: WebGLRenderer,
+    inputBuffer: WebGLRenderTarget,
+    deltaTime?: number
+  ): void {
+    this.copyCameraSettings(this.camera)
     ++this.uniforms.get('frame').value
   }
 
