@@ -34,6 +34,7 @@ import {
   unrollLoops
 } from '@takram/three-geospatial'
 import {
+  cascadedShadowMaps,
   depth,
   generators,
   math,
@@ -157,6 +158,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
               math,
               generators,
               raySphereIntersection,
+              cascadedShadowMaps,
               poissonDisk
             },
             atmosphere: {

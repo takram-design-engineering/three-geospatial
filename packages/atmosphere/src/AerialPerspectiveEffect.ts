@@ -22,6 +22,7 @@ import {
   type UniformMap
 } from '@takram/three-geospatial'
 import {
+  cascadedShadowMaps,
   depth,
   packing,
   poissonDisk,
@@ -208,6 +209,7 @@ export class AerialPerspectiveEffect extends Effect {
             packing,
             transform,
             raySphereIntersection,
+            cascadedShadowMaps,
             poissonDisk
           },
           parameters,
