@@ -263,7 +263,8 @@ export class CloudsPass extends CloudsPassBase {
   }
 
   get outputBuffer(): Texture {
-    return this.resolveRenderTarget.texture
+    // Resolve and history render targets are already swapped.
+    return this.historyRenderTarget.texture
   }
 
   get shadowBuffer(): DataArrayTexture | null {
@@ -275,7 +276,8 @@ export class CloudsPass extends CloudsPassBase {
   }
 
   get shadowLengthBuffer(): Texture | null {
-    return this.resolveRenderTarget.shadowLength
+    // Resolve and history render targets are already swapped.
+    return this.historyRenderTarget.shadowLength
   }
 
   get temporalUpscale(): boolean {

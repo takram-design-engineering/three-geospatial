@@ -236,8 +236,9 @@ export class ShadowPass extends CloudsPassBase {
 
   get outputBuffer(): DataArrayTexture {
     if (this.temporalPass) {
-      invariant(this.resolveRenderTarget != null)
-      return this.resolveRenderTarget.texture
+      // Resolve and history render targets are already swapped.
+      invariant(this.historyRenderTarget != null)
+      return this.historyRenderTarget.texture
     }
     return this.currentRenderTarget.texture
   }

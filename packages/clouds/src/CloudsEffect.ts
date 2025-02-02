@@ -323,13 +323,13 @@ export class CloudsEffect extends Effect<{ change: CloudsEffectChangeEvent }> {
       this.turbulence.update(renderer, deltaTime)
     }
 
-    this.updateAtmosphereComposition()
-
     ++this.frame
     const { cloudLayers, frame } = this
-    cloudsPass.shadowBuffer = shadowPass.outputBuffer
     shadowPass.update(renderer, cloudLayers, frame, deltaTime)
+    cloudsPass.shadowBuffer = shadowPass.outputBuffer
     cloudsPass.update(renderer, cloudLayers, frame, deltaTime)
+
+    this.updateAtmosphereComposition()
   }
 
   override setSize(baseWidth: number, baseHeight: number): void {
