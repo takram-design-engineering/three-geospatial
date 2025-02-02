@@ -1,16 +1,16 @@
 import { Pass } from 'postprocessing'
 import {
   Camera,
-  Data3DTexture,
-  Material,
-  Texture,
   Vector3,
+  type Data3DTexture,
+  type Material,
   type Matrix4,
+  type Texture,
   type Vector2
 } from 'three'
 
 import { type CascadedShadowMaps } from './CascadedShadowMaps'
-import { CloudParameterUniforms } from './uniforms'
+import { type CloudParameterUniforms } from './uniforms'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
@@ -86,28 +86,28 @@ export abstract class CloudsPassBase extends Pass {
     return this.currentMaterial.uniforms.localWeatherTexture.value
   }
 
-  get shapeTexture(): Data3DTexture | null {
-    return this.currentMaterial.uniforms.shapeTexture.value
-  }
-
-  get shapeDetailTexture(): Data3DTexture | null {
-    return this.currentMaterial.uniforms.shapeDetailTexture.value
-  }
-
-  get turbulenceTexture(): Texture | null {
-    return this.currentMaterial.uniforms.turbulenceTexture.value
-  }
-
   set localWeatherTexture(value: Texture | null) {
     this.currentMaterial.uniforms.localWeatherTexture.value = value
+  }
+
+  get shapeTexture(): Data3DTexture | null {
+    return this.currentMaterial.uniforms.shapeTexture.value
   }
 
   set shapeTexture(value: Data3DTexture | null) {
     this.currentMaterial.uniforms.shapeTexture.value = value
   }
 
+  get shapeDetailTexture(): Data3DTexture | null {
+    return this.currentMaterial.uniforms.shapeDetailTexture.value
+  }
+
   set shapeDetailTexture(value: Data3DTexture | null) {
     this.currentMaterial.uniforms.shapeDetailTexture.value = value
+  }
+
+  get turbulenceTexture(): Texture | null {
+    return this.currentMaterial.uniforms.turbulenceTexture.value
   }
 
   set turbulenceTexture(value: Texture | null) {

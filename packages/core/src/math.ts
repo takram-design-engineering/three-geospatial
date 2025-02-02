@@ -1,5 +1,4 @@
 import { MathUtils } from 'three'
-import invariant from 'tiny-invariant'
 
 export const clamp = MathUtils.clamp
 export const euclideanModulo = MathUtils.euclideanModulo

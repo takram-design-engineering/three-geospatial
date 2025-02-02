@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { useSetAtom } from 'jotai'
-import { forwardRef, useContext, useEffect, useMemo } from 'react'
+import { forwardRef, useCallback, useContext, useEffect, useMemo } from 'react'
 
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
 import {
@@ -9,7 +9,11 @@ import {
   type PassThoughInstanceProps
 } from '@takram/three-geospatial/r3f'
 
-import { CloudsEffect, cloudsEffectOptionsDefaults } from '../CloudsEffect'
+import {
+  CloudsEffect,
+  cloudsEffectOptionsDefaults,
+  type CloudsEffectChangeEvent
+} from '../CloudsEffect'
 
 export type CloudsProps = PassThoughInstanceProps<
   CloudsEffect,
@@ -51,43 +55,31 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     })
 
-    const setComposite = useSetAtom(atoms.compositeAtom)
-    useEffect(() => {
-      setComposite({
-        map: effect.cloudsBufferRef
-      })
-      return () => {
-        setComposite(null)
-      }
-    }, [effect, setComposite])
-
+    const setOverlay = useSetAtom(atoms.overlayAtom)
     const setShadow = useSetAtom(atoms.shadowAtom)
-    useEffect(() => {
-      setShadow({
-        map: effect.shadowBufferRef,
-        mapSize: effect.shadowMapSize,
-        intervals: effect.shadowIntervals,
-        matrices: effect.shadowMatrices,
-        far: effect.shadowFarRef,
-        topHeight: effect.shadowTopHeightRef
-      })
-      return () => {
-        setShadow(null)
-      }
-    }, [effect, setShadow])
-
     const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
-    useEffect(() => {
-      if (effect.lightShafts) {
-        setShadowLength({
-          // @ts-expect-error Ignore
-          map: effect.shadowLengthBufferRef
-        })
-        return () => {
-          setShadowLength(null)
+    const handleChange = useCallback(
+      (event: CloudsEffectChangeEvent) => {
+        switch (event.property) {
+          case 'atmosphereOverlay':
+            setOverlay(effect.atmosphereOverlay)
+            break
+          case 'atmosphereShadow':
+            setShadow(effect.atmosphereShadow)
+            break
+          case 'atmosphereShadowLength':
+            setShadowLength(effect.atmosphereShadowLength)
+            break
         }
+      },
+      [effect, setOverlay, setShadow, setShadowLength]
+    )
+    useEffect(() => {
+      effect.addEventListener('change', handleChange)
+      return () => {
+        effect.removeEventListener('change', handleChange)
       }
-    }, [effect, effect.lightShafts, setShadowLength])
+    }, [effect, handleChange])
 
     return (
       <primitive

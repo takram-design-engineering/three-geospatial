@@ -28,9 +28,9 @@ uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
-#ifdef HAS_COMPOSITE
-uniform sampler2D compositeBuffer;
-#endif // HAS_COMPOSITE
+#ifdef HAS_OVERLAY
+uniform sampler2D overlayBuffer;
+#endif // HAS_OVERLAY
 
 #ifdef HAS_SHADOW
 uniform sampler2DArray shadowBuffer;
@@ -213,13 +213,13 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   shadowLength = texture(shadowLengthBuffer, uv).r;
   #endif // HAS_SHADOW_LENGTH
 
-  #ifdef HAS_COMPOSITE
-  vec4 composite = texture(compositeBuffer, uv);
-  if (composite.a == 1.0) {
-    outputColor = composite;
+  #ifdef HAS_OVERLAY
+  vec4 overlay = texture(overlayBuffer, uv);
+  if (overlay.a == 1.0) {
+    outputColor = overlay;
     return;
   }
-  #endif // HAS_COMPOSITE
+  #endif // HAS_OVERLAY
 
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
@@ -239,9 +239,9 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     outputColor = inputColor;
     #endif // SKY
 
-    #ifdef HAS_COMPOSITE
-    outputColor.rgb = outputColor.rgb * (1.0 - composite.a) + composite.rgb;
-    #endif // HAS_COMPOSITE
+    #ifdef HAS_OVERLAY
+    outputColor.rgb = outputColor.rgb * (1.0 - overlay.a) + overlay.rgb;
+    #endif // HAS_OVERLAY
     return;
   }
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
@@ -294,7 +294,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   outputColor = vec4(radiance, inputColor.a);
 
-  #ifdef HAS_COMPOSITE
-  outputColor.rgb = outputColor.rgb * (1.0 - composite.a) + composite.rgb;
-  #endif // HAS_COMPOSITE
+  #ifdef HAS_OVERLAY
+  outputColor.rgb = outputColor.rgb * (1.0 - overlay.a) + overlay.rgb;
+  #endif // HAS_OVERLAY
 }

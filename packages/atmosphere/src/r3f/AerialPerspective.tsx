@@ -55,10 +55,10 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     }
   }, [effect])
 
-  const composite = useAtomValue(atoms.compositeAtom)
+  const overlay = useAtomValue(atoms.overlayAtom)
   useEffect(() => {
-    effect.composite = composite
-  }, [effect, composite])
+    effect.overlay = overlay
+  }, [effect, overlay])
 
   const shadow = useAtomValue(atoms.shadowAtom)
   useEffect(() => {

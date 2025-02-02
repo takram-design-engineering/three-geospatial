@@ -1,22 +1,27 @@
 import { Effect, EffectAttribute, Resolution } from 'postprocessing'
 import {
   Camera,
-  Data3DTexture,
   Matrix4,
-  Texture,
-  Uniform,
   Vector2,
   Vector3,
-  type DataArrayTexture,
+  type BaseEvent,
+  type Data3DTexture,
   type DataTexture,
   type DepthPackingStrategies,
   type Event,
+  type EventListener,
+  type Texture,
   type TextureDataType,
   type WebGLRenderer,
   type WebGLRenderTarget
 } from 'three'
 
-import { AtmosphereParameters } from '@takram/three-atmosphere'
+import {
+  AtmosphereParameters,
+  type AtmosphereOverlay,
+  type AtmosphereShadow,
+  type AtmosphereShadowLength
+} from '@takram/three-atmosphere'
 import { type Ellipsoid } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
@@ -24,13 +29,45 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsPass } from './CloudsPass'
 import { LocalWeather } from './LocalWeather'
-import { Render3DTexture } from './Render3DTexture'
-import { RenderTexture } from './RenderTexture'
+import { type Render3DTexture } from './Render3DTexture'
+import { type RenderTexture } from './RenderTexture'
 import { ShadowPass } from './ShadowPass'
 import { Turbulence } from './Turbulence'
 import { type CloudLayers } from './types'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
+
+declare module 'postprocessing' {
+  // The postprocessing Effect class incorrectly specifies the event map:
+  //   class Effect extends EventDispatcher<import("three").Event>
+  // This expects events of type "type" and "target," which conflicts with the
+  // EventDispatcher's type constraints and prevents dispatching events without
+  // type errors.
+  // @ts-expect-error Force overriding the event dispatcher function types.
+  interface Effect<EventMap extends {} = {}> {
+    addEventListener: <T extends Extract<keyof EventMap, string>>(
+      type: T,
+      listener: EventListener<EventMap[T], T, this>
+    ) => void
+    hasEventListener: <T extends Extract<keyof EventMap, string>>(
+      type: T,
+      listener: EventListener<EventMap[T], T, this>
+    ) => boolean
+    removeEventListener: <T extends Extract<keyof EventMap, string>>(
+      type: T,
+      listener: EventListener<EventMap[T], T, this>
+    ) => void
+    dispatchEvent: <T extends Extract<keyof EventMap, string>>(
+      event: BaseEvent<T> & EventMap[T]
+    ) => void
+  }
+}
+
+export interface CloudsEffectChangeEvent {
+  type: 'change'
+  target: CloudsEffect
+  property: 'atmosphereOverlay' | 'atmosphereShadow' | 'atmosphereShadowLength'
+}
 
 export interface CloudsEffectOptions {
   resolutionScale?: number
@@ -46,7 +83,7 @@ export const cloudsEffectOptionsDefaults = {
   height: Resolution.AUTO_SIZE
 } satisfies CloudsEffectOptions
 
-export class CloudsEffect extends Effect {
+export class CloudsEffect extends Effect<{ change: CloudsEffectChangeEvent }> {
   readonly cloudLayers: CloudLayers = [
     {
       altitude: 750,
@@ -110,11 +147,9 @@ export class CloudsEffect extends Effect {
   readonly shadowPass: ShadowPass
   readonly cloudsPass: CloudsPass
 
-  readonly cloudsBufferRef: Uniform<Texture>
-  readonly shadowBufferRef: Uniform<DataArrayTexture>
-  readonly shadowFarRef = new Uniform(0)
-  readonly shadowTopHeightRef = new Uniform(0)
-  readonly shadowLengthBufferRef: Uniform<Texture | null>
+  private _atmosphereOverlay: AtmosphereOverlay | null = null
+  private _atmosphereShadow: AtmosphereShadow | null = null
+  private _atmosphereShadowLength: AtmosphereShadowLength | null = null
 
   readonly resolution: Resolution
   private frame = 0
@@ -168,10 +203,6 @@ export class CloudsEffect extends Effect {
     Object.assign(this.shadowPass, textures)
     Object.assign(this.cloudsPass, textures)
 
-    this.cloudsBufferRef = new Uniform(this.cloudsPass.outputBuffer)
-    this.shadowBufferRef = new Uniform(this.shadowPass.outputBuffer)
-    this.shadowLengthBufferRef = new Uniform(this.cloudsPass.shadowLengthBuffer)
-
     this.resolution = new Resolution(
       this,
       resolutionX,
@@ -207,6 +238,59 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.initialize(renderer, alpha, frameBufferType)
   }
 
+  private updateAtmosphereComposition(): void {
+    const { shadow, shadowPass, cloudsPass } = this
+    const cloudsUniforms = cloudsPass.currentMaterial.uniforms
+
+    const prevOverlay = this._atmosphereOverlay
+    const nextOverlay = Object.assign(this._atmosphereOverlay ?? {}, {
+      map: cloudsPass.outputBuffer
+    })
+    if (prevOverlay !== nextOverlay) {
+      this._atmosphereOverlay = nextOverlay
+      this.dispatchEvent({
+        type: 'change',
+        target: this,
+        property: 'atmosphereOverlay'
+      })
+    }
+
+    const prevShadow = this._atmosphereShadow
+    const nextShadow = Object.assign(this._atmosphereShadow ?? {}, {
+      map: shadowPass.outputBuffer,
+      mapSize: shadow.mapSize,
+      cascadeCount: shadow.cascadeCount,
+      intervals: cloudsUniforms.shadowIntervals.value,
+      matrices: cloudsUniforms.shadowMatrices.value,
+      far: shadow.far,
+      topHeight: cloudsUniforms.shadowTopHeight.value
+    })
+    if (prevShadow !== nextShadow) {
+      this._atmosphereShadow = nextShadow
+      this.dispatchEvent({
+        type: 'change',
+        target: this,
+        property: 'atmosphereShadow'
+      })
+    }
+
+    const prevShadowLength = this._atmosphereShadowLength
+    const nextShadowLength =
+      cloudsPass.shadowLengthBuffer != null
+        ? Object.assign(this._atmosphereShadowLength ?? {}, {
+            map: cloudsPass.shadowLengthBuffer
+          })
+        : null
+    if (prevShadowLength !== nextShadowLength) {
+      this._atmosphereShadowLength = nextShadowLength
+      this.dispatchEvent({
+        type: 'change',
+        target: this,
+        property: 'atmosphereShadowLength'
+      })
+    }
+  }
+
   override update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
@@ -239,11 +323,7 @@ export class CloudsEffect extends Effect {
       this.turbulence.update(renderer, deltaTime)
     }
 
-    this.cloudsBufferRef.value = cloudsPass.outputBuffer
-    this.shadowBufferRef.value = shadowPass.outputBuffer
-    this.shadowFarRef.value = this.shadowFar
-    this.shadowTopHeightRef.value = this.shadowTopHeight
-    this.shadowLengthBufferRef.value = cloudsPass.shadowLengthBuffer
+    this.updateAtmosphereComposition()
 
     ++this.frame
     const { cloudLayers, frame } = this
@@ -343,34 +423,18 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.uniforms.coverage.value = value
   }
 
-  // Atmosphere composition accessors
+  // Atmosphere composition
 
-  get cloudsBuffer(): Texture {
-    return this.cloudsPass.outputBuffer
+  get atmosphereOverlay(): AtmosphereOverlay | null {
+    return this._atmosphereOverlay
   }
 
-  get shadowBuffer(): DataArrayTexture {
-    return this.shadowPass.outputBuffer
+  get atmosphereShadow(): AtmosphereShadow | null {
+    return this._atmosphereShadow
   }
 
-  get shadowIntervals(): Vector2[] {
-    return this.cloudsPass.currentMaterial.uniforms.shadowIntervals.value
-  }
-
-  get shadowMatrices(): Matrix4[] {
-    return this.cloudsPass.currentMaterial.uniforms.shadowMatrices.value
-  }
-
-  get shadowFar(): number {
-    return this.shadow.far
-  }
-
-  get shadowTopHeight(): number {
-    return this.cloudsPass.currentMaterial.uniforms.shadowTopHeight.value
-  }
-
-  get shadowLengthBuffer(): Texture | null {
-    return this.cloudsPass.shadowLengthBuffer
+  get atmosphereShadowLength(): AtmosphereShadowLength | null {
+    return this._atmosphereShadowLength
   }
 
   // Atmosphere parameters
