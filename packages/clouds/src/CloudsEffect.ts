@@ -4,12 +4,10 @@ import {
   Matrix4,
   Vector2,
   Vector3,
-  type BaseEvent,
   type Data3DTexture,
   type DataTexture,
   type DepthPackingStrategies,
   type Event,
-  type EventListener,
   type Texture,
   type TextureDataType,
   type WebGLRenderer,
@@ -37,32 +35,6 @@ import { type CloudLayers } from './types'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
 
-declare module 'postprocessing' {
-  // The postprocessing Effect class incorrectly specifies the event map:
-  //   class Effect extends EventDispatcher<import("three").Event>
-  // This expects events of type "type" and "target," which conflicts with the
-  // EventDispatcher's type constraints and prevents dispatching events without
-  // type errors.
-  // @ts-expect-error Force overriding the event dispatcher function types.
-  interface Effect<EventMap extends {} = {}> {
-    addEventListener: <T extends Extract<keyof EventMap, string>>(
-      type: T,
-      listener: EventListener<EventMap[T], T, this>
-    ) => void
-    hasEventListener: <T extends Extract<keyof EventMap, string>>(
-      type: T,
-      listener: EventListener<EventMap[T], T, this>
-    ) => boolean
-    removeEventListener: <T extends Extract<keyof EventMap, string>>(
-      type: T,
-      listener: EventListener<EventMap[T], T, this>
-    ) => void
-    dispatchEvent: <T extends Extract<keyof EventMap, string>>(
-      event: BaseEvent<T> & EventMap[T]
-    ) => void
-  }
-}
-
 export interface CloudsEffectChangeEvent {
   type: 'change'
   target: CloudsEffect
@@ -83,7 +55,7 @@ export const cloudsEffectOptionsDefaults = {
   height: Resolution.AUTO_SIZE
 } satisfies CloudsEffectOptions
 
-export class CloudsEffect extends Effect<{ change: CloudsEffectChangeEvent }> {
+export class CloudsEffect extends Effect {
   readonly cloudLayers: CloudLayers = [
     {
       altitude: 750,
@@ -242,13 +214,19 @@ export class CloudsEffect extends Effect<{ change: CloudsEffectChangeEvent }> {
     const { shadow, shadowPass, cloudsPass } = this
     const cloudsUniforms = cloudsPass.currentMaterial.uniforms
 
+    // The postprocessing Effect class incorrectly specifies the event map:
+    //   class Effect extends EventDispatcher<import("three").Event>
+    // This expects events of type "type" and "target," which conflicts with the
+    // EventDispatcher's type constraints and prevents dispatching events
+    // without type errors.
+
     const prevOverlay = this._atmosphereOverlay
     const nextOverlay = Object.assign(this._atmosphereOverlay ?? {}, {
       map: cloudsPass.outputBuffer
     })
     if (prevOverlay !== nextOverlay) {
       this._atmosphereOverlay = nextOverlay
-      this.dispatchEvent({
+      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
         type: 'change',
         target: this,
         property: 'atmosphereOverlay'
@@ -267,7 +245,7 @@ export class CloudsEffect extends Effect<{ change: CloudsEffectChangeEvent }> {
     })
     if (prevShadow !== nextShadow) {
       this._atmosphereShadow = nextShadow
-      this.dispatchEvent({
+      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
         type: 'change',
         target: this,
         property: 'atmosphereShadow'
@@ -283,7 +261,7 @@ export class CloudsEffect extends Effect<{ change: CloudsEffectChangeEvent }> {
         : null
     if (prevShadowLength !== nextShadowLength) {
       this._atmosphereShadowLength = nextShadowLength
-      this.dispatchEvent({
+      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
         type: 'change',
         target: this,
         property: 'atmosphereShadowLength'

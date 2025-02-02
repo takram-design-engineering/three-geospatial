@@ -1,4 +1,4 @@
-import { ShaderPass } from 'postprocessing'
+import { ShaderPass, type CopyMaterial } from 'postprocessing'
 import {
   type Uniform,
   type WebGLArrayRenderTarget,
@@ -8,16 +8,9 @@ import {
 
 import { setArrayRenderTargetLayers } from './helpers/setArrayRenderTargetLayers'
 
-declare module 'postprocessing' {
-  interface ShaderPass {
-    input: string
-    fullscreenMaterial: CopyMaterial & {
-      uniforms?: Record<string, Uniform>
-    }
-  }
-}
-
 export class ShaderArrayPass extends ShaderPass {
+  declare input: string
+
   override render(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget | null,
@@ -25,7 +18,11 @@ export class ShaderArrayPass extends ShaderPass {
     deltaTime?: number,
     stencilTest?: boolean
   ): void {
-    const uniforms = this.fullscreenMaterial.uniforms
+    const uniforms = (
+      this.fullscreenMaterial as CopyMaterial & {
+        uniforms?: Record<string, Uniform>
+      }
+    ).uniforms
     if (inputBuffer !== null && uniforms?.[this.input] != null) {
       uniforms[this.input].value = inputBuffer.texture
     }
