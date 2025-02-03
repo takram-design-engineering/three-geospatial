@@ -75,9 +75,9 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       [effect, setOverlay, setShadow, setShadowLength]
     )
     useEffect(() => {
-      effect.addEventListener('change', handleChange)
+      effect.events.addEventListener('change', handleChange)
       return () => {
-        effect.removeEventListener('change', handleChange)
+        effect.events.removeEventListener('change', handleChange)
       }
     }, [effect, handleChange])
 
