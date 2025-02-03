@@ -1,4 +1,11 @@
-import { Uniform, Vector2, Vector3, Vector4, type Texture } from 'three'
+import {
+  Uniform,
+  Vector2,
+  Vector3,
+  Vector4,
+  type Data3DTexture,
+  type Texture
+} from 'three'
 
 import { type CloudLayer, type CloudLayers } from './types'
 
@@ -12,10 +19,10 @@ export interface CloudParameterUniforms {
   localWeatherRepeat: Uniform<Vector2>
   localWeatherOffset: Uniform<Vector2>
   coverage: Uniform<number>
-  shapeTexture: Uniform<Texture | null>
+  shapeTexture: Uniform<Data3DTexture | null>
   shapeRepeat: Uniform<Vector3>
   shapeOffset: Uniform<Vector3>
-  shapeDetailTexture: Uniform<Texture | null>
+  shapeDetailTexture: Uniform<Data3DTexture | null>
   shapeDetailRepeat: Uniform<Vector3>
   shapeDetailOffset: Uniform<Vector3>
   turbulenceTexture: Uniform<Texture | null>
@@ -23,34 +30,24 @@ export interface CloudParameterUniforms {
   turbulenceDisplacement: Uniform<number>
 }
 
-export function createCloudParameterUniforms({
-  localWeatherTexture = null,
-  shapeTexture = null,
-  shapeDetailTexture = null,
-  turbulenceTexture = null
-}: {
-  localWeatherTexture?: Texture | null
-  shapeTexture?: Texture | null
-  shapeDetailTexture?: Texture | null
-  turbulenceTexture?: Texture | null
-} = {}): CloudParameterUniforms {
+export function createCloudParameterUniforms(): CloudParameterUniforms {
   return {
     // Scattering
     scatteringCoefficient: new Uniform(1.0),
     absorptionCoefficient: new Uniform(0.02),
 
     // Weather and shape
-    localWeatherTexture: new Uniform(localWeatherTexture),
+    localWeatherTexture: new Uniform(null),
     localWeatherRepeat: new Uniform(new Vector2().setScalar(100)),
     localWeatherOffset: new Uniform(new Vector2()),
     coverage: new Uniform(0.3),
-    shapeTexture: new Uniform(shapeTexture),
+    shapeTexture: new Uniform(null),
     shapeRepeat: new Uniform(new Vector3().setScalar(0.0003)),
     shapeOffset: new Uniform(new Vector3()),
-    shapeDetailTexture: new Uniform(shapeDetailTexture),
+    shapeDetailTexture: new Uniform(null),
     shapeDetailRepeat: new Uniform(new Vector3().setScalar(0.006)),
     shapeDetailOffset: new Uniform(new Vector3()),
-    turbulenceTexture: new Uniform(turbulenceTexture),
+    turbulenceTexture: new Uniform(null),
     turbulenceRepeat: new Uniform(new Vector2().setScalar(20)),
     turbulenceDisplacement: new Uniform(350)
   }

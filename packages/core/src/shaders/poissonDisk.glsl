@@ -1,3 +1,5 @@
+// TODO: Maybe switch to Vogel disk with IGN:
+// https://www.gamedev.net/tutorials/programming/graphics/contact-hardening-soft-shadows-made-fast-r4906/
 // Taken from: https://developer.download.nvidia.com/whitepapers/2008/PCSS_Integration.pdf
 const vec2 poissonDisk[16] = vec2[16](
   vec2(-0.94201624, -0.39906216),

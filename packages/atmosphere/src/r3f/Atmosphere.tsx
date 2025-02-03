@@ -24,7 +24,7 @@ import {
   type PrecomputedTextures
 } from '../PrecomputedTexturesLoader'
 import {
-  type AtmosphereComposite,
+  type AtmosphereOverlay,
   type AtmosphereShadow,
   type AtmosphereShadowLength
 } from '../types'
@@ -38,9 +38,9 @@ export interface AtmosphereTransientProps {
 }
 
 export interface AtmosphereAtoms {
-  compositeAtom: WritableAtom<
-    AtmosphereComposite | null,
-    [AtmosphereComposite | null],
+  overlayAtom: WritableAtom<
+    AtmosphereOverlay | null,
+    [AtmosphereOverlay | null],
     void
   >
   shadowAtom: WritableAtom<
@@ -67,7 +67,7 @@ export interface AtmosphereContextValue {
 
 export const AtmosphereContext = createContext<AtmosphereContextValue>({
   atoms: {
-    compositeAtom: atom<AtmosphereComposite | null>(null),
+    overlayAtom: atom<AtmosphereOverlay | null>(null),
     shadowAtom: atom<AtmosphereShadow | null>(null),
     shadowLengthAtom: atom<AtmosphereShadowLength | null>(null)
   }
@@ -138,7 +138,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
 
   const atoms = useMemo(
     () => ({
-      compositeAtom: atom<AtmosphereComposite | null>(null),
+      overlayAtom: atom<AtmosphereOverlay | null>(null),
       shadowAtom: atom<AtmosphereShadow | null>(null),
       shadowLengthAtom: atom<AtmosphereShadowLength | null>(null)
     }),

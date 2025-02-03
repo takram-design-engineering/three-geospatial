@@ -22,7 +22,9 @@ import {
   type UniformMap
 } from '@takram/three-geospatial'
 import {
+  cascadedShadowMaps,
   depth,
+  math,
   packing,
   poissonDisk,
   raySphereIntersection,
@@ -43,7 +45,7 @@ import {
 } from './constants'
 import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import {
-  type AtmosphereComposite,
+  type AtmosphereOverlay,
   type AtmosphereShadow,
   type AtmosphereShadowLength
 } from './types'
@@ -113,11 +115,12 @@ export interface AerialPerspectiveEffectUniforms {
   lunarRadianceScale: Uniform<number>
 
   // Composition and shadow
-  compositeBuffer: Uniform<Texture | null>
+  overlayBuffer: Uniform<Texture | null>
   shadowBuffer: Uniform<Texture | null>
   shadowMapSize: Uniform<Vector2>
   shadowIntervals: Uniform<Vector2[]>
   shadowMatrices: Uniform<Matrix4[]>
+  inverseShadowMatrices: Uniform<Matrix4[]>
   shadowFar: Uniform<number>
   shadowTopHeight: Uniform<number>
   shadowRadius: Uniform<number>
@@ -167,6 +170,10 @@ export class AerialPerspectiveEffect extends Effect {
   readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
 
+  overlay: AtmosphereOverlay | null = null
+  shadow: AtmosphereShadow | null = null
+  shadowLength: AtmosphereShadowLength | null = null
+
   constructor(
     private camera = new Camera(),
     options?: AerialPerspectiveEffectOptions,
@@ -206,8 +213,10 @@ export class AerialPerspectiveEffect extends Effect {
           core: {
             depth,
             packing,
+            math,
             transform,
             raySphereIntersection,
+            cascadedShadowMaps,
             poissonDisk
           },
           parameters,
@@ -243,11 +252,12 @@ export class AerialPerspectiveEffect extends Effect {
             lunarRadianceScale: new Uniform(lunarRadianceScale),
 
             // Composition and shadow
-            compositeBuffer: new Uniform(null),
+            overlayBuffer: new Uniform(null),
             shadowBuffer: new Uniform(null),
             shadowMapSize: new Uniform(new Vector2()),
             shadowIntervals: new Uniform([]),
             shadowMatrices: new Uniform([]),
+            inverseShadowMatrices: new Uniform([]),
             shadowFar: new Uniform(0),
             shadowTopHeight: new Uniform(0),
             shadowRadius: new Uniform(3),
@@ -311,21 +321,18 @@ export class AerialPerspectiveEffect extends Effect {
     this.camera = value
   }
 
-  override update(
-    renderer: WebGLRenderer,
-    inputBuffer: WebGLRenderTarget,
-    deltaTime?: number
-  ): void {
+  private copyCameraSettings(camera: Camera): void {
+    const {
+      projectionMatrix,
+      matrixWorldInverse,
+      projectionMatrixInverse,
+      matrixWorld
+    } = camera
     const uniforms = this.uniforms
-    const projectionMatrix = uniforms.get('projectionMatrix')
-    const viewMatrix = uniforms.get('viewMatrix')
-    const inverseProjectionMatrix = uniforms.get('inverseProjectionMatrix')
-    const inverseViewMatrix = uniforms.get('inverseViewMatrix')
-    const camera = this.camera
-    projectionMatrix.value.copy(camera.projectionMatrix)
-    viewMatrix.value.copy(camera.matrixWorldInverse)
-    inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
-    inverseViewMatrix.value.copy(camera.matrixWorld)
+    uniforms.get('projectionMatrix').value.copy(projectionMatrix)
+    uniforms.get('viewMatrix').value.copy(matrixWorldInverse)
+    uniforms.get('inverseProjectionMatrix').value.copy(projectionMatrixInverse)
+    uniforms.get('inverseViewMatrix').value.copy(matrixWorld)
 
     const cameraPosition = camera.getWorldPosition(
       uniforms.get('cameraPosition').value
@@ -347,7 +354,7 @@ export class AerialPerspectiveEffect extends Effect {
         geodeticScratch.setFromECEF(cameraPositionECEF).height
       const projectedScale = vectorScratch2
         .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
-        .applyMatrix4(camera.projectionMatrix)
+        .applyMatrix4(projectionMatrix)
 
       // Calculate interpolation alpha
       // Interpolation values are picked to match previous rough globe scales to
@@ -371,7 +378,76 @@ export class AerialPerspectiveEffect extends Effect {
     } else {
       altitudeCorrection.value.setScalar(0)
     }
+  }
 
+  private updateComposition(): void {
+    const { uniforms, defines, overlay, shadow, shadowLength } = this
+
+    const prevOverlay = defines.has('HAS_OVERLAY')
+    const nextOverlay = overlay != null
+    if (nextOverlay !== prevOverlay) {
+      if (nextOverlay) {
+        defines.set('HAS_OVERLAY', '1')
+      } else {
+        defines.delete('HAS_OVERLAY')
+        uniforms.get('overlayBuffer').value = null
+      }
+      this.setChanged()
+    }
+    if (nextOverlay) {
+      uniforms.get('overlayBuffer').value = overlay.map
+    }
+
+    const prevShadow = defines.has('HAS_SHADOW')
+    const nextShadow = shadow != null
+    if (nextShadow !== prevShadow) {
+      if (nextShadow) {
+        defines.set('HAS_SHADOW', '1')
+      } else {
+        defines.delete('HAS_SHADOW')
+        uniforms.get('shadowBuffer').value = null
+      }
+      this.setChanged()
+    }
+    if (nextShadow) {
+      const prevCascadeCount = defines.get('SHADOW_CASCADE_COUNT')
+      const nextCascadeCount = `${shadow.cascadeCount}`
+      if (prevCascadeCount !== nextCascadeCount) {
+        defines.set('SHADOW_CASCADE_COUNT', `${shadow.cascadeCount}`)
+        this.setChanged()
+      }
+      uniforms.get('shadowBuffer').value = shadow.map
+      uniforms.get('shadowMapSize').value = shadow.mapSize
+      uniforms.get('shadowIntervals').value = shadow.intervals
+      uniforms.get('shadowMatrices').value = shadow.matrices
+      uniforms.get('inverseShadowMatrices').value = shadow.inverseMatrices
+      uniforms.get('shadowFar').value = shadow.far
+      uniforms.get('shadowTopHeight').value = shadow.topHeight
+    }
+
+    const prevShadowLength = defines.has('HAS_SHADOW_LENGTH')
+    const nextShadowLength = shadowLength != null
+    if (nextShadowLength !== prevShadowLength) {
+      if (nextShadowLength) {
+        defines.set('HAS_SHADOW_LENGTH', '1')
+      } else {
+        defines.delete('HAS_SHADOW_LENGTH')
+        uniforms.get('shadowLengthBuffer').value = null
+      }
+      this.setChanged()
+    }
+    if (nextShadowLength) {
+      uniforms.get('shadowLengthBuffer').value = shadowLength.map
+    }
+  }
+
+  override update(
+    renderer: WebGLRenderer,
+    inputBuffer: WebGLRenderTarget,
+    deltaTime?: number
+  ): void {
+    this.copyCameraSettings(this.camera)
+    this.updateComposition()
     ++this.uniforms.get('frame').value
   }
 
@@ -630,33 +706,6 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('lunarRadianceScale').value = value
   }
 
-  private setUniform<K extends keyof AerialPerspectiveEffectUniforms>(
-    name: K,
-    value:
-      | AerialPerspectiveEffectUniforms[K]
-      | (AerialPerspectiveEffectUniforms[K] extends Uniform<infer V>
-          ? V
-          : never)
-  ): void {
-    if (value instanceof Uniform) {
-      this.uniforms.set(name, value)
-    } else {
-      this.uniforms.get(name).value = value as any
-    }
-  }
-
-  // eslint-disable-next-line accessor-pairs
-  set composite(value: AtmosphereComposite | null) {
-    if (value != null) {
-      this.defines.set('HAS_COMPOSITE', '1')
-      this.setUniform('compositeBuffer', value.map)
-    } else {
-      this.defines.delete('HAS_COMPOSITE')
-      this.uniforms.get('compositeBuffer').value = null
-    }
-    this.setChanged()
-  }
-
   get stbnTexture(): Data3DTexture | null {
     return this.uniforms.get('stbnTexture').value
   }
@@ -665,41 +714,11 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('stbnTexture').value = value
   }
 
-  // eslint-disable-next-line accessor-pairs
-  set shadow(value: AtmosphereShadow | null) {
-    if (value != null) {
-      this.defines.set('HAS_SHADOW', '1')
-      this.defines.set('SHADOW_CASCADE_COUNT', `${value.intervals.length}`)
-      this.setUniform('shadowBuffer', value.map)
-      this.uniforms.get('shadowMapSize').value.copy(value.mapSize)
-      this.uniforms.get('shadowIntervals').value = value.intervals
-      this.uniforms.get('shadowMatrices').value = value.matrices
-      this.setUniform('shadowFar', value.far)
-      this.setUniform('shadowTopHeight', value.topHeight)
-    } else {
-      this.defines.delete('HAS_SHADOW')
-      this.uniforms.get('shadowBuffer').value = null
-    }
-    this.setChanged()
-  }
-
   get shadowRadius(): number {
     return this.uniforms.get('shadowRadius').value
   }
 
   set shadowRadius(value: number) {
     this.uniforms.get('shadowRadius').value = value
-  }
-
-  // eslint-disable-next-line accessor-pairs
-  set shadowLength(value: AtmosphereShadowLength | null) {
-    if (value != null) {
-      this.defines.set('HAS_SHADOW_LENGTH', '1')
-      this.setUniform('shadowLengthBuffer', value.map)
-    } else {
-      this.defines.delete('HAS_SHADOW_LENGTH')
-      this.uniforms.get('shadowLengthBuffer').value = null
-    }
-    this.setChanged()
   }
 }

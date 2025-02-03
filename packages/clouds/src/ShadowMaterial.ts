@@ -6,8 +6,7 @@ import {
   Vector2,
   Vector3,
   type Camera,
-  type Data3DTexture,
-  type Texture
+  type Data3DTexture
 } from 'three'
 
 import {
@@ -40,10 +39,6 @@ export interface ShadowMaterialParameters {
   ellipsoidCenterRef?: Vector3
   ellipsoidMatrixRef?: Matrix4
   sunDirectionRef?: Vector3
-  localWeatherTexture?: Texture | null
-  shapeTexture?: Texture | null
-  shapeDetailTexture?: Texture | null
-  turbulenceTexture?: Texture | null
 }
 
 export interface ShadowMaterialUniforms
@@ -71,6 +66,7 @@ export interface ShadowMaterialUniforms
   minDensity: Uniform<number>
   minExtinction: Uniform<number>
   minTransmittance: Uniform<number>
+  opticalDepthTailScale: Uniform<number>
 }
 
 export class ShadowMaterial extends RawShaderMaterial {
@@ -84,11 +80,7 @@ export class ShadowMaterial extends RawShaderMaterial {
     {
       ellipsoidCenterRef = new Vector3(),
       ellipsoidMatrixRef = new Matrix4(),
-      sunDirectionRef = new Vector3(),
-      localWeatherTexture = null,
-      shapeTexture = null,
-      shapeDetailTexture = null,
-      turbulenceTexture = null
+      sunDirectionRef = new Vector3()
     }: ShadowMaterialParameters = {},
     private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
@@ -118,12 +110,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         frame: new Uniform(0),
         stbnTexture: new Uniform(null),
 
-        ...createCloudParameterUniforms({
-          localWeatherTexture,
-          shapeTexture,
-          shapeDetailTexture,
-          turbulenceTexture
-        }),
+        ...createCloudParameterUniforms(),
         ...createCloudLayerUniforms(),
 
         // Atmosphere
@@ -140,7 +127,8 @@ export class ShadowMaterial extends RawShaderMaterial {
         maxStepSize: new Uniform(1000),
         minDensity: new Uniform(1e-5),
         minExtinction: new Uniform(1e-5),
-        minTransmittance: new Uniform(1e-4)
+        minTransmittance: new Uniform(1e-4),
+        opticalDepthTailScale: new Uniform(2)
       } satisfies ShadowMaterialUniforms,
       defines: {
         TEMPORAL_PASS: '1',

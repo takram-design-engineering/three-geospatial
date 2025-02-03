@@ -17,7 +17,6 @@ import {
 import { useAtom, useAtomValue } from 'jotai'
 import {
   EffectMaterial,
-  ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
 import {
@@ -62,13 +61,13 @@ import { googleMapsApiKeyAtom } from '../helpers/states'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
-import { useExposureControls } from '../helpers/useExposureControls'
 import { useKeyboardControl } from '../helpers/useKeyboardControl'
 import {
   useLocalDateControls,
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
 import { usePovControls } from '../helpers/usePovControls'
+import { useToneMappingControls } from '../helpers/useToneMappingControls'
 import { useCloudsControls } from './useCloudsControls'
 
 const dracoLoader = new DRACOLoader()
@@ -140,7 +139,7 @@ const Scene: FC<SceneProps> = ({
   ...localDate
 }) => {
   const camera = useThree(({ camera }) => camera)
-  useExposureControls({ exposure })
+  const { toneMappingMode } = useToneMappingControls({ exposure })
   const lut = useColorGradingControls()
   const { lensFlare, normal, depth } = useControls(
     'effects',
@@ -237,7 +236,7 @@ const Scene: FC<SceneProps> = ({
             depth,
             lut,
             enabled,
-            toneMapping
+            toneMappingMode
           ])}
         >
           {!normal && !depth && (
@@ -267,7 +266,7 @@ const Scene: FC<SceneProps> = ({
               {normal && <Normal />}
               {!normal && !depth && (
                 <>
-                  <ToneMapping mode={ToneMappingMode.AGX} />
+                  <ToneMapping mode={toneMappingMode} />
                   {lut != null && <HaldLUT path={lut} />}
                   <SMAA />
                   <Dithering />

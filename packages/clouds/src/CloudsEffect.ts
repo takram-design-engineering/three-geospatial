@@ -2,11 +2,9 @@ import { Effect, EffectAttribute, Resolution } from 'postprocessing'
 import {
   Camera,
   Matrix4,
-  Uniform,
   Vector2,
   Vector3,
   type Data3DTexture,
-  type DataArrayTexture,
   type DataTexture,
   type DepthPackingStrategies,
   type Event,
@@ -16,7 +14,12 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { AtmosphereParameters } from '@takram/three-atmosphere'
+import {
+  AtmosphereParameters,
+  type AtmosphereOverlay,
+  type AtmosphereShadow,
+  type AtmosphereShadowLength
+} from '@takram/three-atmosphere'
 import { type Ellipsoid } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
@@ -24,11 +27,19 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsPass } from './CloudsPass'
 import { LocalWeather } from './LocalWeather'
-import { Turbulence } from './Turbulence'
+import { type Render3DTexture } from './Render3DTexture'
+import { type RenderTexture } from './RenderTexture'
 import { ShadowPass } from './ShadowPass'
+import { Turbulence } from './Turbulence'
 import { type CloudLayers } from './types'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
+
+export interface CloudsEffectChangeEvent {
+  type: 'change'
+  target: CloudsEffect
+  property: 'atmosphereOverlay' | 'atmosphereShadow' | 'atmosphereShadowLength'
+}
 
 export interface CloudsEffectOptions {
   resolutionScale?: number
@@ -95,29 +106,27 @@ export class CloudsEffect extends Effect {
   readonly ellipsoidMatrix = new Matrix4()
   readonly sunDirection = new Vector3()
 
-  // Atmosphere, weather and shape
-  readonly localWeather = new LocalWeather()
+  // Weather and shape
+  localWeather: RenderTexture = new LocalWeather()
   readonly localWeatherVelocity = new Vector2()
-  readonly shape = new CloudShape()
+  shape: Render3DTexture = new CloudShape()
   readonly shapeVelocity = new Vector3()
-  readonly shapeDetail = new CloudShapeDetail()
+  shapeDetail: Render3DTexture = new CloudShapeDetail()
   readonly shapeDetailVelocity = new Vector3()
-  readonly turbulence = new Turbulence()
+  turbulence: RenderTexture = new Turbulence()
 
   readonly shadow: CascadedShadowMaps
   readonly shadowPass: ShadowPass
   readonly cloudsPass: CloudsPass
 
-  readonly cloudsBufferRef: Uniform<Texture>
-  readonly shadowBufferRef: Uniform<DataArrayTexture>
-  readonly shadowFarRef = new Uniform(0)
-  readonly shadowTopHeightRef = new Uniform(0)
-  readonly shadowLengthBufferRef: Uniform<Texture | null>
+  private _atmosphereOverlay: AtmosphereOverlay | null = null
+  private _atmosphereShadow: AtmosphereShadow | null = null
+  private _atmosphereShadowLength: AtmosphereShadowLength | null = null
 
   readonly resolution: Resolution
-  readonly shadowMapSize = new Vector2()
   private frame = 0
   private shadowCascadeCount = 0
+  private readonly shadowMapSize = new Vector2()
 
   constructor(
     private camera: Camera = new Camera(),
@@ -144,12 +153,27 @@ export class CloudsEffect extends Effect {
       mapSize: new Vector2().setScalar(512),
       splitLambda: 0.6
     })
-    this.shadowPass = new ShadowPass(this, atmosphere)
-    this.cloudsPass = new CloudsPass(this, atmosphere)
 
-    this.cloudsBufferRef = new Uniform(this.cloudsPass.outputBuffer)
-    this.shadowBufferRef = new Uniform(this.shadowPass.outputBuffer)
-    this.shadowLengthBufferRef = new Uniform(this.cloudsPass.shadowLengthBuffer)
+    const passOptions = {
+      ellipsoidCenter: this.ellipsoidCenter,
+      ellipsoidMatrix: this.ellipsoidMatrix,
+      sunDirection: this.sunDirection,
+      localWeatherVelocity: this.localWeatherVelocity,
+      shapeVelocity: this.shapeVelocity,
+      shapeDetailVelocity: this.shapeDetailVelocity,
+      shadow: this.shadow
+    }
+    this.shadowPass = new ShadowPass(passOptions, atmosphere)
+    this.cloudsPass = new CloudsPass(passOptions, atmosphere)
+
+    const textures = {
+      localWeatherTexture: this.localWeather.texture,
+      shapeTexture: this.shape.texture,
+      shapeDetailTexture: this.shapeDetail.texture,
+      turbulenceTexture: this.turbulence.texture
+    }
+    Object.assign(this.shadowPass, textures)
+    Object.assign(this.cloudsPass, textures)
 
     this.resolution = new Resolution(
       this,
@@ -186,14 +210,73 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.initialize(renderer, alpha, frameBufferType)
   }
 
+  private updateAtmosphereComposition(): void {
+    const { shadow, shadowPass, cloudsPass } = this
+    const shadowUniforms = shadowPass.currentMaterial.uniforms
+    const cloudsUniforms = cloudsPass.currentMaterial.uniforms
+
+    // The postprocessing Effect class incorrectly specifies the event map:
+    //   class Effect extends EventDispatcher<import("three").Event>
+    // This expects events of type "type" and "target," which conflicts with the
+    // EventDispatcher's type constraints and prevents dispatching events
+    // without type errors.
+
+    const prevOverlay = this._atmosphereOverlay
+    const nextOverlay = Object.assign(this._atmosphereOverlay ?? {}, {
+      map: cloudsPass.outputBuffer
+    } satisfies AtmosphereOverlay)
+    if (prevOverlay !== nextOverlay) {
+      this._atmosphereOverlay = nextOverlay
+      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
+        type: 'change',
+        target: this,
+        property: 'atmosphereOverlay'
+      })
+    }
+
+    const prevShadow = this._atmosphereShadow
+    const nextShadow = Object.assign(this._atmosphereShadow ?? {}, {
+      map: shadowPass.outputBuffer,
+      mapSize: shadow.mapSize,
+      cascadeCount: shadow.cascadeCount,
+      intervals: cloudsUniforms.shadowIntervals.value,
+      matrices: cloudsUniforms.shadowMatrices.value,
+      inverseMatrices: shadowUniforms.inverseShadowMatrices.value,
+      far: shadow.far,
+      topHeight: cloudsUniforms.shadowTopHeight.value
+    } satisfies AtmosphereShadow)
+    if (prevShadow !== nextShadow) {
+      this._atmosphereShadow = nextShadow
+      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
+        type: 'change',
+        target: this,
+        property: 'atmosphereShadow'
+      })
+    }
+
+    const prevShadowLength = this._atmosphereShadowLength
+    const nextShadowLength =
+      cloudsPass.shadowLengthBuffer != null
+        ? Object.assign(this._atmosphereShadowLength ?? {}, {
+            map: cloudsPass.shadowLengthBuffer
+          } satisfies AtmosphereShadowLength)
+        : null
+    if (prevShadowLength !== nextShadowLength) {
+      this._atmosphereShadowLength = nextShadowLength
+      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
+        type: 'change',
+        target: this,
+        property: 'atmosphereShadowLength'
+      })
+    }
+  }
+
   override update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
     deltaTime = 0
   ): void {
-    const shadow = this.shadow
-    const shadowPass = this.shadowPass
-    const cloudsPass = this.cloudsPass
+    const { shadow, shadowPass, cloudsPass } = this
     if (
       shadow.cascadeCount !== this.shadowCascadeCount ||
       !shadow.mapSize.equals(this.shadowMapSize)
@@ -207,26 +290,30 @@ export class CloudsEffect extends Effect {
       cloudsPass.setShadowSize(width, height, depth)
     }
 
-    this.localWeather.update(renderer)
-    this.shape.update(renderer)
-    this.shapeDetail.update(renderer)
-    this.turbulence.update(renderer)
-
-    this.cloudsBufferRef.value = cloudsPass.outputBuffer
-    this.shadowBufferRef.value = shadowPass.outputBuffer
-    this.shadowFarRef.value = this.shadowFar
-    this.shadowTopHeightRef.value = this.shadowTopHeight
-    this.shadowLengthBufferRef.value = cloudsPass.shadowLengthBuffer
+    if ('update' in this.localWeather) {
+      this.localWeather.update(renderer, deltaTime)
+    }
+    if ('update' in this.shape) {
+      this.shape.update(renderer, deltaTime)
+    }
+    if ('update' in this.shapeDetail) {
+      this.shapeDetail.update(renderer, deltaTime)
+    }
+    if ('update' in this.turbulence) {
+      this.turbulence.update(renderer, deltaTime)
+    }
 
     ++this.frame
     const { cloudLayers, frame } = this
-    cloudsPass.shadowBuffer = shadowPass.outputBuffer
     shadowPass.update(renderer, cloudLayers, frame, deltaTime)
+    cloudsPass.shadowBuffer = shadowPass.outputBuffer
     cloudsPass.update(renderer, cloudLayers, frame, deltaTime)
+
+    this.updateAtmosphereComposition()
   }
 
   override setSize(baseWidth: number, baseHeight: number): void {
-    const resolution = this.resolution
+    const { resolution } = this
     resolution.setBaseSize(baseWidth, baseHeight)
     const { width, height } = resolution
     this.cloudsPass.setSize(width, height)
@@ -240,23 +327,43 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.setDepthTexture(depthTexture, depthPacking)
   }
 
-  get temporalUpscale(): boolean {
-    return this.cloudsPass.temporalUpscale
-  }
-
-  set temporalUpscale(value: boolean) {
-    this.cloudsPass.temporalUpscale = value
-  }
-
-  get crepuscularRays(): boolean {
-    return this.cloudsPass.crepuscularRays
-  }
-
-  set crepuscularRays(value: boolean) {
-    this.cloudsPass.crepuscularRays = value
-  }
-
   // Textures
+
+  get localWeatherTexture(): Texture | null {
+    return this.cloudsPass.localWeatherTexture
+  }
+
+  set localWeatherTexture(value: Texture | null) {
+    this.cloudsPass.localWeatherTexture = value
+    this.shadowPass.localWeatherTexture = value
+  }
+
+  get shapeTexture(): Data3DTexture | null {
+    return this.cloudsPass.shapeTexture
+  }
+
+  set shapeTexture(value: Data3DTexture | null) {
+    this.cloudsPass.shapeTexture = value
+    this.shadowPass.shapeTexture = value
+  }
+
+  get shapeDetailTexture(): Data3DTexture | null {
+    return this.cloudsPass.shapeDetailTexture
+  }
+
+  set shapeDetailTexture(value: Data3DTexture | null) {
+    this.cloudsPass.shapeDetailTexture = value
+    this.shadowPass.shapeDetailTexture = value
+  }
+
+  get turbulenceTexture(): Texture | null {
+    return this.cloudsPass.turbulenceTexture
+  }
+
+  set turbulenceTexture(value: Texture | null) {
+    this.cloudsPass.turbulenceTexture = value
+    this.shadowPass.turbulenceTexture = value
+  }
 
   get stbnTexture(): Data3DTexture | null {
     return this.cloudsPass.currentMaterial.uniforms.stbnTexture.value
@@ -265,6 +372,24 @@ export class CloudsEffect extends Effect {
   set stbnTexture(value: Data3DTexture | null) {
     this.shadowPass.currentMaterial.uniforms.stbnTexture.value = value
     this.cloudsPass.currentMaterial.uniforms.stbnTexture.value = value
+  }
+
+  // Pass parameters
+
+  get temporalUpscale(): boolean {
+    return this.cloudsPass.temporalUpscale
+  }
+
+  set temporalUpscale(value: boolean) {
+    this.cloudsPass.temporalUpscale = value
+  }
+
+  get lightShafts(): boolean {
+    return this.cloudsPass.lightShafts
+  }
+
+  set lightShafts(value: boolean) {
+    this.cloudsPass.lightShafts = value
   }
 
   // Cloud parameters
@@ -278,34 +403,18 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.uniforms.coverage.value = value
   }
 
-  // Atmosphere composition accessors
+  // Atmosphere composition
 
-  get cloudsBuffer(): Texture {
-    return this.cloudsPass.outputBuffer
+  get atmosphereOverlay(): AtmosphereOverlay | null {
+    return this._atmosphereOverlay
   }
 
-  get shadowBuffer(): DataArrayTexture {
-    return this.shadowPass.outputBuffer
+  get atmosphereShadow(): AtmosphereShadow | null {
+    return this._atmosphereShadow
   }
 
-  get shadowIntervals(): Vector2[] {
-    return this.cloudsPass.currentMaterial.uniforms.shadowIntervals.value
-  }
-
-  get shadowMatrices(): Matrix4[] {
-    return this.cloudsPass.currentMaterial.uniforms.shadowMatrices.value
-  }
-
-  get shadowFar(): number {
-    return this.shadow.far
-  }
-
-  get shadowTopHeight(): number {
-    return this.cloudsPass.currentMaterial.uniforms.shadowTopHeight.value
-  }
-
-  get shadowLengthBuffer(): Texture | null {
-    return this.cloudsPass.shadowLengthBuffer
+  get atmosphereShadowLength(): AtmosphereShadowLength | null {
+    return this._atmosphereShadowLength
   }
 
   // Atmosphere parameters

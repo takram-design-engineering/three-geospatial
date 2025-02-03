@@ -2,18 +2,17 @@ import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { ToneMappingMode } from 'postprocessing'
 import { useRef, type FC } from 'react'
 import { Matrix4 } from 'three'
 
 import { getECIToECEFRotationMatrix } from '@takram/three-atmosphere'
 import { Stars, type StarsImpl } from '@takram/three-atmosphere/r3f'
 
-import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
+import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 const Scene: FC = () => {
-  useExposureControls({ exposure: 50 })
+  const { toneMappingMode } = useToneMappingControls({ exposure: 50 })
   const motionDate = useLocalDateControls()
 
   const rotationMatrixRef = useRef(new Matrix4())
@@ -38,7 +37,7 @@ const Scene: FC = () => {
         background={false}
       />
       <EffectComposer multisampling={0}>
-        <ToneMapping mode={ToneMappingMode.AGX} />
+        <ToneMapping mode={toneMappingMode} />
       </EffectComposer>
     </>
   )

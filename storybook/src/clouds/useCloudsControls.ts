@@ -33,14 +33,16 @@ export function useCloudsControls(
     localWeatherVelocity?: number
   } = {}
 ): [CloudsControlParams, Partial<CloudsProps>] {
-  const { enabled, coverage, animate, shapeDetail, crepuscularRays } =
-    useControls('clouds', {
+  const { enabled, coverage, animate, shapeDetail, lightShafts } = useControls(
+    'clouds',
+    {
       enabled: true,
       coverage: { value: defaultCoverage ?? 0.3, min: 0, max: 1, step: 0.01 },
       animate: defaultAnimate ?? false,
       shapeDetail: true,
-      crepuscularRays: true
-    })
+      lightShafts: true
+    }
+  )
 
   useEffect(() => {
     if (effect == null) {
@@ -93,8 +95,7 @@ export function useCloudsControls(
       skyIrradianceScale: { value: 2.5, min: 0, max: 5 },
       groundIrradianceScale: { value: 3, min: 0, max: 10 },
       powderScale: { value: 0.8, min: 0, max: 1 },
-      powderExponent: { value: 150, min: 1, max: 1000 },
-      shadowExtensionScale: { value: 2, min: 1, max: 5 }
+      powderExponent: { value: 150, min: 1, max: 1000 }
     },
     { collapsed: true }
   )
@@ -117,7 +118,8 @@ export function useCloudsControls(
     {
       maxIterations: { value: 50, min: 10, max: 100 },
       minStepSize: { value: 100, min: 50, max: 200 },
-      maxStepSize: { value: 1000, min: 200, max: 2000 }
+      maxStepSize: { value: 1000, min: 200, max: 2000 },
+      opticalDepthTailScale: { value: 2, min: 0, max: 4 }
     },
     { collapsed: true }
   )
@@ -300,7 +302,7 @@ export function useCloudsControls(
         ? [defaultLocalWeatherVelocity ?? 0.001, 0]
         : [0, 0],
       'shadow-mapSize': [shadowMapSize, shadowMapSize],
-      crepuscularRays
+      lightShafts
     }
   ]
 }

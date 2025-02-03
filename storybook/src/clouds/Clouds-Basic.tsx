@@ -2,7 +2,6 @@ import { Box, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { ToneMappingMode } from 'postprocessing'
 import { Fragment, useEffect, useRef, useState, type FC } from 'react'
 import {
   NearestFilter,
@@ -37,9 +36,9 @@ import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
-import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
+import { useToneMappingControls } from '../helpers/useToneMappingControls'
 import { useCloudsControls } from './useCloudsControls'
 
 const geodetic = new Geodetic()
@@ -66,7 +65,7 @@ function applyLocation(
 }
 
 const Scene: FC = () => {
-  useExposureControls({ exposure: 10 })
+  const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls(
     {
       longitude: 30,
@@ -171,7 +170,7 @@ const Scene: FC = () => {
             {toneMapping && (
               <>
                 <LensFlare />
-                <ToneMapping mode={ToneMappingMode.AGX} />
+                <ToneMapping mode={toneMappingMode} />
                 <SMAA />
                 <Dithering />
               </>

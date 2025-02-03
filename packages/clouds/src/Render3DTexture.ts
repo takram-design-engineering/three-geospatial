@@ -66,7 +66,7 @@ export class Render3DTexture {
     this.material.dispose()
   }
 
-  update(renderer: WebGLRenderer): void {
+  update(renderer: WebGLRenderer, deltaTime?: number): void {
     if (!this.needsUpdate) {
       return
     }

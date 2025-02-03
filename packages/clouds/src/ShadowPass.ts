@@ -66,11 +66,7 @@ export class ShadowPass extends CloudsPassBase {
       {
         ellipsoidCenterRef: this.ellipsoidCenter,
         ellipsoidMatrixRef: this.ellipsoidMatrix,
-        sunDirectionRef: this.sunDirection,
-        localWeatherTexture: this.localWeather.texture,
-        shapeTexture: this.shape.texture,
-        shapeDetailTexture: this.shapeDetail.texture,
-        turbulenceTexture: this.turbulence.texture
+        sunDirectionRef: this.sunDirection
       },
       atmosphere
     )
@@ -240,8 +236,9 @@ export class ShadowPass extends CloudsPassBase {
 
   get outputBuffer(): DataArrayTexture {
     if (this.temporalPass) {
-      invariant(this.resolveRenderTarget != null)
-      return this.resolveRenderTarget.texture
+      // Resolve and history render targets are already swapped.
+      invariant(this.historyRenderTarget != null)
+      return this.historyRenderTarget.texture
     }
     return this.currentRenderTarget.texture
   }

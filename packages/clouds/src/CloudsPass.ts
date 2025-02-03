@@ -96,11 +96,7 @@ export class CloudsPass extends CloudsPassBase {
       {
         ellipsoidCenterRef: this.ellipsoidCenter,
         ellipsoidMatrixRef: this.ellipsoidMatrix,
-        sunDirectionRef: this.sunDirection,
-        localWeatherTexture: this.localWeather.texture,
-        shapeTexture: this.shape.texture,
-        shapeDetailTexture: this.shapeDetail.texture,
-        turbulenceTexture: this.turbulence.texture
+        sunDirectionRef: this.sunDirection
       },
       atmosphere
     )
@@ -267,7 +263,8 @@ export class CloudsPass extends CloudsPassBase {
   }
 
   get outputBuffer(): Texture {
-    return this.resolveRenderTarget.texture
+    // Resolve and history render targets are already swapped.
+    return this.historyRenderTarget.texture
   }
 
   get shadowBuffer(): DataArrayTexture | null {
@@ -279,7 +276,8 @@ export class CloudsPass extends CloudsPassBase {
   }
 
   get shadowLengthBuffer(): Texture | null {
-    return this.resolveRenderTarget.shadowLength
+    // Resolve and history render targets are already swapped.
+    return this.historyRenderTarget.shadowLength
   }
 
   get temporalUpscale(): boolean {
@@ -294,12 +292,12 @@ export class CloudsPass extends CloudsPassBase {
     }
   }
 
-  get crepuscularRays(): boolean {
+  get lightShafts(): boolean {
     return this.currentMaterial.shadowLength
   }
 
-  set crepuscularRays(value: boolean) {
-    if (value !== this.crepuscularRays) {
+  set lightShafts(value: boolean) {
+    if (value !== this.lightShafts) {
       this.currentMaterial.shadowLength = value
       this.resolveMaterial.shadowLength = value
       this.initRenderTargets({

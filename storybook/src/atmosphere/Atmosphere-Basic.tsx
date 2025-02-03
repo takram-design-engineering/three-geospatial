@@ -2,7 +2,6 @@ import { OrbitControls, TorusKnot } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { ToneMappingMode } from 'postprocessing'
 import {
   Fragment,
   Suspense,
@@ -42,8 +41,8 @@ import { BatchedTerrainTile } from '@takram/three-terrain/r3f'
 import { EffectComposer } from '../helpers/EffectComposer'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
-import { useExposureControls } from '../helpers/useExposureControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
+import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 const geodetic = new Geodetic(radians(138.5), radians(36.2), 5000)
 const position = geodetic.toECEF()
@@ -55,7 +54,7 @@ const terrain = new IonTerrain({
 const tile = new TilingScheme().getTile(geodetic, 7)
 
 const Scene: FC = () => {
-  useExposureControls({ exposure: 10 })
+  const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { lensFlare, normal, depth } = useControls(
     'effects',
     {
@@ -194,7 +193,7 @@ const Scene: FC = () => {
           {normal && <Normal />}
           {!normal && !depth && (
             <>
-              <ToneMapping mode={ToneMappingMode.AGX} />
+              <ToneMapping mode={toneMappingMode} />
               <SMAA />
               <Dithering />
             </>

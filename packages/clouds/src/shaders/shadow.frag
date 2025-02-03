@@ -16,6 +16,7 @@ uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 uniform int maxIterations;
 uniform float minStepSize;
 uniform float maxStepSize;
+uniform float opticalDepthTailScale;
 
 in vec2 vUv;
 in vec3 vEllipsoidCenter;
@@ -93,6 +94,12 @@ vec4 marchClouds(
     }
 
     if (transmittanceIntegral <= minTransmittance) {
+      // A large amount of optical depth accumulates in the tail, beyond the
+      // point of minimum transmittance. The expected optical depth seems to
+      // increase exponentially with the number of samples taken before reaching
+      // the minimum transmittance.
+      float tail = opticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
+      maxOpticalDepth += tail;
       break; // Early termination
     }
     rayDistance += stepSize;

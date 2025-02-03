@@ -17,7 +17,6 @@ import {
 import { useAtom, useAtomValue } from 'jotai'
 import {
   EffectMaterial,
-  ToneMappingMode,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
 import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
@@ -45,11 +44,11 @@ import { googleMapsApiKeyAtom } from '../helpers/states'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
-import { useExposureControls } from '../helpers/useExposureControls'
 import {
   useLocalDateControls,
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
+import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -93,7 +92,7 @@ const Scene: FC<SceneProps> = ({
   distance = 4500,
   ...localDate
 }) => {
-  useExposureControls({ exposure })
+  const { toneMappingMode } = useToneMappingControls({ exposure })
   const { orthographic } = useControls(
     'camera',
     { orthographic: false },
@@ -206,7 +205,7 @@ const Scene: FC<SceneProps> = ({
           {normal && <Normal />}
           {!normal && !depth && (
             <>
-              <ToneMapping mode={ToneMappingMode.AGX} />
+              <ToneMapping mode={toneMappingMode} />
               {lut != null && <HaldLUT path={lut} />}
               <SMAA />
               <Dithering />

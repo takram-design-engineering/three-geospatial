@@ -1,9 +1,13 @@
 precision highp sampler2DArray;
 
 #include "core/depth"
+#include "core/math"
 #include "core/packing"
 #include "core/transform"
 #include "core/raySphereIntersection"
+#ifdef HAS_SHADOW
+#include "core/cascadedShadowMaps"
+#endif // HAS_SHADOW
 #include "core/poissonDisk"
 #include "parameters"
 #include "functions"
@@ -25,14 +29,15 @@ uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
-#ifdef HAS_COMPOSITE
-uniform sampler2D compositeBuffer;
-#endif // HAS_COMPOSITE
+#ifdef HAS_OVERLAY
+uniform sampler2D overlayBuffer;
+#endif // HAS_OVERLAY
 
 #ifdef HAS_SHADOW
 uniform sampler2DArray shadowBuffer;
 uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
+uniform mat4 inverseShadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 uniform float shadowTopHeight;
 uniform float shadowRadius;
@@ -129,59 +134,6 @@ float getSTBN() {
   return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).r;
 }
 
-int getCascadeIndex(const vec3 worldPosition) {
-  vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
-  float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
-  vec2 interval;
-  #pragma unroll_loop_start
-  for (int i = 0; i < 4; ++i) {
-    #if UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
-    interval = shadowIntervals[i];
-    if (depth >= interval.x && depth < interval.y) {
-      return UNROLLED_LOOP_INDEX;
-    }
-    #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
-  }
-  #pragma unroll_loop_end
-  return SHADOW_CASCADE_COUNT - 1;
-}
-
-// Reference: https://github.com/mrdoob/three.js/blob/r171/examples/jsm/csm/CSMShader.js
-int getFadedCascadeIndex(const vec3 worldPosition, const float jitter) {
-  vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
-  float depth = viewZToOrthographicDepth(viewPosition.z, cameraNear, shadowFar);
-
-  vec2 interval;
-  float intervalCenter;
-  float closestEdge;
-  float margin;
-  int nextIndex = -1;
-  int prevIndex = -1;
-  float alpha;
-
-  #pragma unroll_loop_start
-  for (int i = 0; i < 4; ++i) {
-    #if UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
-    interval = shadowIntervals[i];
-    intervalCenter = (interval.x + interval.y) * 0.5;
-    closestEdge = depth < intervalCenter ? interval.x : interval.y;
-    margin = closestEdge * closestEdge * 0.5;
-    interval += margin * vec2(-0.5, 0.5);
-
-    if (depth >= interval.x && depth < interval.y) {
-      prevIndex = nextIndex;
-      nextIndex = UNROLLED_LOOP_INDEX;
-      alpha = saturate(min(depth - interval.x, interval.y - depth) / margin);
-    }
-    #endif // UNROLLED_LOOP_INDEX < SHADOW_CASCADE_COUNT
-  }
-  #pragma unroll_loop_end
-
-  return jitter <= alpha
-    ? nextIndex
-    : prevIndex;
-}
-
 vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
   vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
@@ -208,6 +160,7 @@ float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int
 float sampleShadowOpticalDepthPCF(
   const vec3 worldPosition,
   const float distanceToTop,
+  const float radius,
   const int cascadeIndex
 ) {
   vec2 uv = getShadowUv(worldPosition, cascadeIndex);
@@ -222,11 +175,7 @@ float sampleShadowOpticalDepthPCF(
   for (int i = 0; i < 32; ++i) {
     #if UNROLLED_LOOP_INDEX < POISSON_DISK_COUNT
     offset = poissonDisk[i];
-    sum += readShadowOpticalDepth(
-      uv + offset * shadowRadius * texelSize,
-      distanceToTop,
-      cascadeIndex
-    );
+    sum += readShadowOpticalDepth(uv + offset * radius * texelSize, distanceToTop, cascadeIndex);
     #endif // UNROLLED_LOOP_INDEX < POISSON_DISK_COUNT
   }
   #pragma unroll_loop_end
@@ -236,16 +185,56 @@ float sampleShadowOpticalDepthPCF(
 float sampleShadowOpticalDepth(
   const vec3 worldPosition,
   const vec3 positionECEF,
+  const float radius,
   const float jitter
 ) {
   float distanceToTop = getDistanceToShadowTop(positionECEF);
   if (distanceToTop <= 0.0) {
     return 0.0;
   }
-  int cascadeIndex = getFadedCascadeIndex(worldPosition, jitter);
+  int cascadeIndex = getFadedCascadeIndex(
+    viewMatrix,
+    worldPosition,
+    shadowIntervals,
+    cameraNear,
+    shadowFar,
+    jitter
+  );
   return cascadeIndex >= 0
-    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, cascadeIndex)
+    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, radius, cascadeIndex)
     : 0.0;
+}
+
+float getShadowRadius(const vec3 worldPosition) {
+  vec4 clip = shadowMatrices[0] * vec4(worldPosition, 1.0);
+  clip /= clip.w;
+
+  // Offset by 1px in each direction in shadow's clip coordinates.
+  vec2 shadowSize = vec2(textureSize(shadowBuffer, 0));
+  vec3 offset = vec3(2.0 / shadowSize, 0.0);
+  vec4 clipX = clip + offset.xzzz;
+  vec4 clipY = clip + offset.zyzz;
+
+  // Convert back to world space.
+  vec4 worldX = inverseShadowMatrices[0] * clipX;
+  vec4 worldY = inverseShadowMatrices[0] * clipY;
+
+  // Project into the main camera's clip space.
+  mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
+  vec4 projected = viewProjectionMatrix * vec4(worldPosition, 1.0);
+  vec4 projectedX = viewProjectionMatrix * worldX;
+  vec4 projectedY = viewProjectionMatrix * worldY;
+  projected /= projected.w;
+  projectedX /= projectedX.w;
+  projectedY /= projectedY.w;
+
+  // Take the mean of pixel sizes.
+  vec2 center = (projected.xy * 0.5 + 0.5) * resolution;
+  vec2 offsetX = (projectedX.xy * 0.5 + 0.5) * resolution;
+  vec2 offsetY = (projectedY.xy * 0.5 + 0.5) * resolution;
+  float size = (length(offsetX - center) + length(offsetY - center)) * 0.5;
+
+  return remapClamped(size, 10.0, 50.0, 0.0, shadowRadius);
 }
 
 #endif // HAS_SHADOW
@@ -256,13 +245,13 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   shadowLength = texture(shadowLengthBuffer, uv).r;
   #endif // HAS_SHADOW_LENGTH
 
-  #ifdef HAS_COMPOSITE
-  vec4 composite = texture(compositeBuffer, uv);
-  if (composite.a == 1.0) {
-    outputColor = composite;
+  #ifdef HAS_OVERLAY
+  vec4 overlay = texture(overlayBuffer, uv);
+  if (overlay.a == 1.0) {
+    outputColor = overlay;
     return;
   }
-  #endif // HAS_COMPOSITE
+  #endif // HAS_OVERLAY
 
   float depth = readDepth(uv);
   if (depth >= 1.0 - 1e-7) {
@@ -282,9 +271,9 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     outputColor = inputColor;
     #endif // SKY
 
-    #ifdef HAS_COMPOSITE
-    outputColor.rgb = outputColor.rgb * (1.0 - composite.a) + composite.rgb;
-    #endif // HAS_COMPOSITE
+    #ifdef HAS_OVERLAY
+    outputColor.rgb = outputColor.rgb * (1.0 - overlay.a) + overlay.rgb;
+    #endif // HAS_OVERLAY
     return;
   }
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
@@ -318,7 +307,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   #ifdef HAS_SHADOW
   float stbn = getSTBN();
-  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, stbn);
+  float radius = getShadowRadius(worldPosition);
+  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
   float sunTransmittance = exp(-opticalDepth);
   #else // HAS_SHADOW
   float sunTransmittance = 1.0;
@@ -337,7 +327,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   outputColor = vec4(radiance, inputColor.a);
 
-  #ifdef HAS_COMPOSITE
-  outputColor.rgb = outputColor.rgb * (1.0 - composite.a) + composite.rgb;
-  #endif // HAS_COMPOSITE
+  #ifdef HAS_OVERLAY
+  outputColor.rgb = outputColor.rgb * (1.0 - overlay.a) + overlay.rgb;
+  #endif // HAS_OVERLAY
 }

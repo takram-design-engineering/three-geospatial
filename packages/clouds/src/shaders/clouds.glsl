@@ -68,7 +68,7 @@ vec4 shapeAlteringFunction(const vec4 heightFraction, const vec4 bias) {
 
 WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLevel) {
   WeatherSample weather;
-  weather.heightFraction = saturate(remap(vec4(height), minLayerHeights, maxLayerHeights));
+  weather.heightFraction = remapClamped(vec4(height), minLayerHeights, maxLayerHeights);
 
   vec4 localWeather = pow(
     textureLod(localWeatherTexture, uv * localWeatherRepeat + localWeatherOffset, mipLevel),
@@ -79,8 +79,10 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
   // Modulation to control weather by coverage parameter.
   // Reference: https://github.com/Prograda/Skybolt/blob/master/Assets/Core/Shaders/Clouds.h#L63
   vec4 factor = 1.0 - coverage * heightScale;
-  weather.density = saturate(
-    remap(mix(localWeather, vec4(1.0), coverageFilterWidths), factor, factor + coverageFilterWidths)
+  weather.density = remapClamped(
+    mix(localWeather, vec4(1.0), coverageFilterWidths),
+    factor,
+    factor + coverageFilterWidths
   );
 
   return weather;
@@ -119,7 +121,7 @@ MediaSample sampleMedia(
 
   vec3 shapePosition = (position + evolution + turbulence) * shapeRepeat + shapeOffset;
   float shape = texture(shapeTexture, shapePosition).r;
-  density = saturate(remap(density, vec4(1.0 - shape) * shapeAmounts, vec4(1.0)));
+  density = remapClamped(density, vec4(1.0 - shape) * shapeAmounts, vec4(1.0));
 
   #ifdef DEBUG_SHOW_SAMPLE_COUNT
   ++sampleCount.y;
@@ -133,10 +135,10 @@ MediaSample sampleMedia(
     vec4 modifier = mix(
       vec4(pow(detail, 6.0)),
       vec4(1.0 - detail),
-      saturate(remap(weather.heightFraction, vec4(0.2), vec4(0.4)))
+      remapClamped(weather.heightFraction, vec4(0.2), vec4(0.4))
     );
     modifier = mix(vec4(0.0), modifier, detailAmounts);
-    density = saturate(remap(density * 2.0, vec4(modifier * 0.5), vec4(1.0)));
+    density = remapClamped(density * 2.0, vec4(modifier * 0.5), vec4(1.0));
 
     #ifdef DEBUG_SHOW_SAMPLE_COUNT
     ++sampleCount.z;
