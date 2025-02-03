@@ -1,6 +1,7 @@
 import { Effect, EffectAttribute, Resolution } from 'postprocessing'
 import {
   Camera,
+  EventDispatcher,
   Matrix4,
   Vector2,
   Vector3,
@@ -128,6 +129,16 @@ export class CloudsEffect extends Effect {
   private shadowCascadeCount = 0
   private readonly shadowMapSize = new Vector2()
 
+  // WORKAROUND: The postprocessing's Effect class incorrectly specifies the
+  // event map:
+  //   class Effect extends EventDispatcher<import("three").Event>
+  // This expects events of type "type" and "target," which conflicts with the
+  // EventDispatcher's type constraints and prevents dispatching events
+  // without type errors.
+  // NOTE: 'change' is used by Effect and treated as a shader change without
+  // additional checks on what actually changed.
+  readonly events = new EventDispatcher<{ change: CloudsEffectChangeEvent }>()
+
   constructor(
     private camera: Camera = new Camera(),
     options?: CloudsEffectOptions,
@@ -215,19 +226,13 @@ export class CloudsEffect extends Effect {
     const shadowUniforms = shadowPass.currentMaterial.uniforms
     const cloudsUniforms = cloudsPass.currentMaterial.uniforms
 
-    // The postprocessing Effect class incorrectly specifies the event map:
-    //   class Effect extends EventDispatcher<import("three").Event>
-    // This expects events of type "type" and "target," which conflicts with the
-    // EventDispatcher's type constraints and prevents dispatching events
-    // without type errors.
-
     const prevOverlay = this._atmosphereOverlay
     const nextOverlay = Object.assign(this._atmosphereOverlay ?? {}, {
       map: cloudsPass.outputBuffer
     } satisfies AtmosphereOverlay)
     if (prevOverlay !== nextOverlay) {
       this._atmosphereOverlay = nextOverlay
-      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
+      this.events.dispatchEvent({
         type: 'change',
         target: this,
         property: 'atmosphereOverlay'
@@ -247,7 +252,7 @@ export class CloudsEffect extends Effect {
     } satisfies AtmosphereShadow)
     if (prevShadow !== nextShadow) {
       this._atmosphereShadow = nextShadow
-      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
+      this.events.dispatchEvent({
         type: 'change',
         target: this,
         property: 'atmosphereShadow'
@@ -263,7 +268,7 @@ export class CloudsEffect extends Effect {
         : null
     if (prevShadowLength !== nextShadowLength) {
       this._atmosphereShadowLength = nextShadowLength
-      ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
+      this.events.dispatchEvent({
         type: 'change',
         target: this,
         property: 'atmosphereShadowLength'

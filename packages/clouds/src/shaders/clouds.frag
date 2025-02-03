@@ -426,7 +426,8 @@ vec4 marchClouds(
         // Obtain the optical depth from BSM at the ray position.
         opticalDepth += sampleShadowOpticalDepth(
           position,
-          // Take account of only positions further than the marched ray distance.
+          // Take account of only positions further than the marched ray
+          // distance.
           sunRayDistance,
           // Apply PCF only when the sun is close to the horizon.
           shadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1)),
