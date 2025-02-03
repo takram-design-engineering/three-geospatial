@@ -59,7 +59,6 @@ uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 uniform float shadowFilterRadius;
-uniform float shadowExtensionScale;
 
 // Shadow length
 #ifdef SHADOW_LENGTH
@@ -169,7 +168,7 @@ float readShadowOpticalDepth(
   // Also see the discussion here: https://x.com/shotamatsuda/status/1885322308908442106
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
   float distanceToFront = max(0.0, distanceToTop - distanceOffset - shadow.r);
-  return min(shadow.b * shadowExtensionScale, shadow.g * distanceToFront);
+  return min(shadow.b, shadow.g * distanceToFront);
 }
 
 float sampleShadowOpticalDepthPCF(

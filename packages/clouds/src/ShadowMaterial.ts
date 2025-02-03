@@ -66,6 +66,7 @@ export interface ShadowMaterialUniforms
   minDensity: Uniform<number>
   minExtinction: Uniform<number>
   minTransmittance: Uniform<number>
+  opticalDepthTailScale: Uniform<number>
 }
 
 export class ShadowMaterial extends RawShaderMaterial {
@@ -126,7 +127,8 @@ export class ShadowMaterial extends RawShaderMaterial {
         maxStepSize: new Uniform(1000),
         minDensity: new Uniform(1e-5),
         minExtinction: new Uniform(1e-5),
-        minTransmittance: new Uniform(1e-4)
+        minTransmittance: new Uniform(1e-4),
+        opticalDepthTailScale: new Uniform(2)
       } satisfies ShadowMaterialUniforms,
       defines: {
         TEMPORAL_PASS: '1',

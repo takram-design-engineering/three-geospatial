@@ -230,7 +230,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ),
           shadowFar: new Uniform(0),
           shadowFilterRadius: new Uniform(6),
-          shadowExtensionScale: new Uniform(2),
 
           // Shadow length
           maxShadowLengthIterations: new Uniform(500),
