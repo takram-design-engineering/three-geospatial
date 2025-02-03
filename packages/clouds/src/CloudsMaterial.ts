@@ -272,6 +272,28 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   ): void {
     // Disable onBeforeRender in AtmosphereMaterialBase because we're rendering
     // into fullscreen quad with another camera for the scene projection.
+
+    const prevPowder = this.defines.POWDER != null
+    const nextPowder = this.uniforms.powderScale.value > 0
+    if (nextPowder !== prevPowder) {
+      if (nextPowder) {
+        this.defines.POWDER = '1'
+      } else {
+        delete this.defines.POWDER
+      }
+      this.needsUpdate = true
+    }
+
+    const prevGroundIrradiance = this.defines.GROUND_IRRADIANCE != null
+    const nextGroundIrradiance = this.uniforms.groundIrradianceScale.value > 0
+    if (nextGroundIrradiance !== prevGroundIrradiance) {
+      if (nextPowder) {
+        this.defines.GROUND_IRRADIANCE = '1'
+      } else {
+        delete this.defines.GROUND_IRRADIANCE
+      }
+      this.needsUpdate = true
+    }
   }
 
   override copyCameraSettings(camera: Camera): void {
@@ -484,36 +506,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   set multiScatteringOctaves(value: number) {
     if (value !== this.multiScatteringOctaves) {
       this.defines.MULTI_SCATTERING_OCTAVES = `${value}`
-      this.needsUpdate = true
-    }
-  }
-
-  get powder(): boolean {
-    return this.defines.POWDER != null
-  }
-
-  set powder(value: boolean) {
-    if (value !== this.powder) {
-      if (value) {
-        this.defines.POWDER = '1'
-      } else {
-        delete this.defines.POWDER
-      }
-      this.needsUpdate = true
-    }
-  }
-
-  get groundIrradiance(): boolean {
-    return this.defines.GROUND_IRRADIANCE != null
-  }
-
-  set groundIrradiance(value: boolean) {
-    if (value !== this.groundIrradiance) {
-      if (value) {
-        this.defines.GROUND_IRRADIANCE = '1'
-      } else {
-        delete this.defines.GROUND_IRRADIANCE
-      }
       this.needsUpdate = true
     }
   }
