@@ -1,6 +1,6 @@
 struct SunSkyIrradiance {
-  vec3 lowSky;
-  vec3 lowSun;
-  vec3 highSky;
-  vec3 highSun;
+  vec3 minSky;
+  vec3 minSun;
+  vec3 maxSky;
+  vec3 maxSun;
 };

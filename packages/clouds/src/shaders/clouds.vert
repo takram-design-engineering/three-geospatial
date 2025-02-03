@@ -36,16 +36,17 @@ out SunSkyIrradiance vSunSkyIrradiance;
 SunSkyIrradiance sampleSunSkyIrradiance(const vec3 positionECEF) {
   vec3 surfaceNormal = normalize(positionECEF);
   vec2 radii = (bottomRadius + vec2(minHeight, maxHeight)) * METER_TO_LENGTH_UNIT;
-  vec3 lowPosition = surfaceNormal * radii.x;
-  vec3 highPosition = surfaceNormal * radii.y;
+  vec3 minPosition = surfaceNormal * radii.x;
+  vec3 maxPosition = surfaceNormal * radii.y;
   vec3 skyIrradiance;
-  vec3 sunIrradiance = GetSunAndSkyIrradiance(lowPosition, sunDirection, skyIrradiance);
+  vec3 sunIrradiance;
+  sunIrradiance = GetSunAndSkyIrradiance(minPosition, sunDirection, skyIrradiance);
   SunSkyIrradiance result;
-  result.lowSky = skyIrradiance;
-  result.lowSun = sunIrradiance;
-  sunIrradiance = GetSunAndSkyIrradiance(highPosition, sunDirection, skyIrradiance);
-  result.highSky = skyIrradiance;
-  result.highSun = sunIrradiance;
+  result.minSky = skyIrradiance;
+  result.minSun = sunIrradiance;
+  sunIrradiance = GetSunAndSkyIrradiance(maxPosition, sunDirection, skyIrradiance);
+  result.maxSky = skyIrradiance;
+  result.maxSun = sunIrradiance;
   return result;
 }
 #endif // ACCURATE_SUN_SKY_IRRADIANCE
