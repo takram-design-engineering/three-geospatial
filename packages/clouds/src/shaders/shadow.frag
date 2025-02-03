@@ -16,7 +16,7 @@ uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 uniform int maxIterations;
 uniform float minStepSize;
 uniform float maxStepSize;
-uniform float opticalDepthTailScale;
+uniform float maxOpticalDepthTailScale;
 
 in vec2 vUv;
 in vec3 vEllipsoidCenter;
@@ -100,7 +100,7 @@ vec4 marchClouds(
       // decrease exponentially with the number of samples taken before reaching
       // the minimum transmittance.
       // See the discussion here: https://x.com/shotamatsuda/status/1886259549931520437
-      maxOpticalDepthTail = opticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
+      maxOpticalDepthTail = maxOpticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
       break; // Early termination
     }
     rayDistance += stepSize;
