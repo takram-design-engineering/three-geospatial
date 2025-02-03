@@ -1,10 +1,10 @@
 import {
   Uniform,
-  Vector2,
-  Vector3,
   Vector4,
   type Data3DTexture,
-  type Texture
+  type Texture,
+  type Vector2,
+  type Vector3
 } from 'three'
 
 import { type CloudLayer, type CloudLayers } from './types'
@@ -30,7 +30,16 @@ export interface CloudParameterUniforms {
   turbulenceDisplacement: Uniform<number>
 }
 
-export function createCloudParameterUniforms(): CloudParameterUniforms {
+// prettier-ignore
+export type CloudParameterUniformInstances = {
+  [K in keyof CloudParameterUniforms as
+    CloudParameterUniforms[K]['value'] extends Vector2 | Vector3 ? K : never
+  ]: CloudParameterUniforms[K]['value']
+}
+
+export function createCloudParameterUniforms(
+  instances: CloudParameterUniformInstances
+): CloudParameterUniforms {
   return {
     // Scattering
     scatteringCoefficient: new Uniform(1.0),
@@ -38,17 +47,17 @@ export function createCloudParameterUniforms(): CloudParameterUniforms {
 
     // Weather and shape
     localWeatherTexture: new Uniform(null),
-    localWeatherRepeat: new Uniform(new Vector2().setScalar(100)),
-    localWeatherOffset: new Uniform(new Vector2()),
+    localWeatherRepeat: new Uniform(instances.localWeatherRepeat),
+    localWeatherOffset: new Uniform(instances.localWeatherOffset),
     coverage: new Uniform(0.3),
     shapeTexture: new Uniform(null),
-    shapeRepeat: new Uniform(new Vector3().setScalar(0.0003)),
-    shapeOffset: new Uniform(new Vector3()),
+    shapeRepeat: new Uniform(instances.shapeRepeat),
+    shapeOffset: new Uniform(instances.shapeOffset),
     shapeDetailTexture: new Uniform(null),
-    shapeDetailRepeat: new Uniform(new Vector3().setScalar(0.006)),
-    shapeDetailOffset: new Uniform(new Vector3()),
+    shapeDetailRepeat: new Uniform(instances.shapeDetailRepeat),
+    shapeDetailOffset: new Uniform(instances.shapeDetailOffset),
     turbulenceTexture: new Uniform(null),
-    turbulenceRepeat: new Uniform(new Vector2().setScalar(20)),
+    turbulenceRepeat: new Uniform(instances.turbulenceRepeat),
     turbulenceDisplacement: new Uniform(350)
   }
 }

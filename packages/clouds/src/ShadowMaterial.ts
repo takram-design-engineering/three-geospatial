@@ -21,8 +21,6 @@ import {
 import { math, raySphereIntersection } from '@takram/three-geospatial/shaders'
 
 import {
-  createCloudLayerUniforms,
-  createCloudParameterUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
@@ -36,6 +34,8 @@ import structuredSampling from './shaders/structuredSampling.glsl?raw'
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export interface ShadowMaterialParameters {
+  cloudParameterUniforms: CloudParameterUniforms
+  cloudLayerUniforms: CloudLayerUniforms
   ellipsoidCenterRef?: Vector3
   ellipsoidMatrixRef?: Matrix4
   sunDirectionRef?: Vector3
@@ -78,10 +78,12 @@ export class ShadowMaterial extends RawShaderMaterial {
 
   constructor(
     {
+      cloudParameterUniforms,
+      cloudLayerUniforms,
       ellipsoidCenterRef = new Vector3(),
       ellipsoidMatrixRef = new Matrix4(),
       sunDirectionRef = new Vector3()
-    }: ShadowMaterialParameters = {},
+    }: ShadowMaterialParameters,
     private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super({
@@ -110,8 +112,8 @@ export class ShadowMaterial extends RawShaderMaterial {
         frame: new Uniform(0),
         stbnTexture: new Uniform(null),
 
-        ...createCloudParameterUniforms(),
-        ...createCloudLayerUniforms(),
+        ...cloudParameterUniforms,
+        ...cloudLayerUniforms,
 
         // Atmosphere
         bottomRadius: new Uniform(atmosphere.bottomRadius),

@@ -33,8 +33,30 @@ import { type RenderTexture } from './RenderTexture'
 import { ShadowPass } from './ShadowPass'
 import { Turbulence } from './Turbulence'
 import { type CloudLayers } from './types'
+import {
+  createCloudLayerUniforms,
+  createCloudParameterUniforms,
+  updateCloudLayerUniforms,
+  type CloudLayerUniforms,
+  type CloudParameterUniforms
+} from './uniforms'
 
 import fragmentShader from './shaders/cloudsEffect.frag?raw'
+
+const vectorScratch = /*#__PURE__*/ new Vector3()
+
+export function applyVelocity(
+  velocity: Vector2 | Vector3,
+  deltaTime: number,
+  ...results: Array<Vector2 | Vector3>
+): void {
+  const delta = vectorScratch
+    .fromArray(velocity.toArray())
+    .multiplyScalar(deltaTime)
+  for (let i = 0; i < results.length; ++i) {
+    results[i].add(delta)
+  }
+}
 
 export interface CloudsEffectChangeEvent {
   type: 'change'
@@ -102,19 +124,33 @@ export class CloudsEffect extends Effect {
     }
   ]
 
-  // These instances are shared by both cloud and shadow materials.
+  // Instances shared by both cloud and shadow materials
   readonly ellipsoidCenter = new Vector3()
   readonly ellipsoidMatrix = new Matrix4()
   readonly sunDirection = new Vector3()
 
-  // Weather and shape
+  // Weather and shape textures
   localWeather: RenderTexture = new LocalWeather()
-  readonly localWeatherVelocity = new Vector2()
   shape: Render3DTexture = new CloudShape()
-  readonly shapeVelocity = new Vector3()
   shapeDetail: Render3DTexture = new CloudShapeDetail()
-  readonly shapeDetailVelocity = new Vector3()
   turbulence: RenderTexture = new Turbulence()
+
+  // Mutable instances of CloudParameterUniforms
+  readonly localWeatherRepeat = new Vector2().setScalar(100)
+  readonly localWeatherOffset = new Vector2()
+  readonly shapeRepeat = new Vector3().setScalar(0.0003)
+  readonly shapeOffset = new Vector3()
+  readonly shapeDetailRepeat = new Vector3().setScalar(0.006)
+  readonly shapeDetailOffset = new Vector3()
+  readonly turbulenceRepeat = new Vector2().setScalar(20)
+
+  // Uniforms shared by both cloud and shadow materials
+  private readonly cloudParameterUniforms: CloudParameterUniforms
+  private readonly cloudLayerUniforms: CloudLayerUniforms
+
+  readonly localWeatherVelocity = new Vector2()
+  readonly shapeVelocity = new Vector3()
+  readonly shapeDetailVelocity = new Vector3()
 
   readonly shadow: CascadedShadowMaps
   readonly shadowPass: ShadowPass
@@ -125,19 +161,10 @@ export class CloudsEffect extends Effect {
   private _atmosphereShadowLength: AtmosphereShadowLength | null = null
 
   readonly resolution: Resolution
+  readonly events = new EventDispatcher<{ change: CloudsEffectChangeEvent }>()
   private frame = 0
   private shadowCascadeCount = 0
   private readonly shadowMapSize = new Vector2()
-
-  // WORKAROUND: The postprocessing's Effect class incorrectly specifies the
-  // event map:
-  //   class Effect extends EventDispatcher<import("three").Event>
-  // This expects events of type "type" and "target," which conflicts with the
-  // EventDispatcher's type constraints and prevents dispatching events
-  // without type errors.
-  // NOTE: 'change' is used by Effect and treated as a shader change without
-  // additional checks on what actually changed.
-  readonly events = new EventDispatcher<{ change: CloudsEffectChangeEvent }>()
 
   constructor(
     private camera: Camera = new Camera(),
@@ -165,14 +192,15 @@ export class CloudsEffect extends Effect {
       splitLambda: 0.6
     })
 
+    this.cloudParameterUniforms = createCloudParameterUniforms(this)
+    this.cloudLayerUniforms = createCloudLayerUniforms()
     const passOptions = {
       ellipsoidCenter: this.ellipsoidCenter,
       ellipsoidMatrix: this.ellipsoidMatrix,
       sunDirection: this.sunDirection,
-      localWeatherVelocity: this.localWeatherVelocity,
-      shapeVelocity: this.shapeVelocity,
-      shapeDetailVelocity: this.shapeDetailVelocity,
-      shadow: this.shadow
+      shadow: this.shadow,
+      cloudParameterUniforms: this.cloudParameterUniforms,
+      cloudLayerUniforms: this.cloudLayerUniforms
     }
     this.shadowPass = new ShadowPass(passOptions, atmosphere)
     this.cloudsPass = new CloudsPass(passOptions, atmosphere)
@@ -219,6 +247,28 @@ export class CloudsEffect extends Effect {
   ): void {
     this.shadowPass.initialize(renderer, alpha, frameBufferType)
     this.cloudsPass.initialize(renderer, alpha, frameBufferType)
+  }
+
+  private updateSharedUniforms(deltaTime: number): void {
+    const { cloudParameterUniforms, cloudLayerUniforms } = this
+    updateCloudLayerUniforms(cloudLayerUniforms, this.cloudLayers)
+
+    // Apply velocity to offset uniforms.
+    applyVelocity(
+      this.localWeatherVelocity,
+      deltaTime,
+      cloudParameterUniforms.localWeatherOffset.value
+    )
+    applyVelocity(
+      this.shapeVelocity,
+      deltaTime,
+      cloudParameterUniforms.shapeOffset.value
+    )
+    applyVelocity(
+      this.shapeDetailVelocity,
+      deltaTime,
+      cloudParameterUniforms.shapeDetailOffset.value
+    )
   }
 
   private updateAtmosphereComposition(): void {
@@ -295,24 +345,17 @@ export class CloudsEffect extends Effect {
       cloudsPass.setShadowSize(width, height, depth)
     }
 
-    if ('update' in this.localWeather) {
-      this.localWeather.update(renderer, deltaTime)
-    }
-    if ('update' in this.shape) {
-      this.shape.update(renderer, deltaTime)
-    }
-    if ('update' in this.shapeDetail) {
-      this.shapeDetail.update(renderer, deltaTime)
-    }
-    if ('update' in this.turbulence) {
-      this.turbulence.update(renderer, deltaTime)
-    }
+    this.localWeather.update(renderer, deltaTime)
+    this.shape.update(renderer, deltaTime)
+    this.shapeDetail.update(renderer, deltaTime)
+    this.turbulence.update(renderer, deltaTime)
+
+    this.updateSharedUniforms(deltaTime)
 
     ++this.frame
-    const { cloudLayers, frame } = this
-    shadowPass.update(renderer, cloudLayers, frame, deltaTime)
+    shadowPass.update(renderer, this.frame, deltaTime)
     cloudsPass.shadowBuffer = shadowPass.outputBuffer
-    cloudsPass.update(renderer, cloudLayers, frame, deltaTime)
+    cloudsPass.update(renderer, this.frame, deltaTime)
 
     this.updateAtmosphereComposition()
   }
@@ -397,15 +440,38 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.lightShafts = value
   }
 
-  // Cloud parameters
+  // Cloud parameter primitives
+
+  get scatteringCoefficient(): number {
+    return this.cloudParameterUniforms.scatteringCoefficient.value
+  }
+
+  set scatteringCoefficient(value: number) {
+    this.cloudParameterUniforms.scatteringCoefficient.value = value
+  }
+
+  get absorptionCoefficient(): number {
+    return this.cloudParameterUniforms.absorptionCoefficient.value
+  }
+
+  set absorptionCoefficient(value: number) {
+    this.cloudParameterUniforms.absorptionCoefficient.value = value
+  }
 
   get coverage(): number {
-    return this.cloudsPass.currentMaterial.uniforms.coverage.value
+    return this.cloudParameterUniforms.coverage.value
   }
 
   set coverage(value: number) {
-    this.shadowPass.currentMaterial.uniforms.coverage.value = value
-    this.cloudsPass.currentMaterial.uniforms.coverage.value = value
+    this.cloudParameterUniforms.coverage.value = value
+  }
+
+  get turbulenceDisplacement(): number {
+    return this.cloudParameterUniforms.turbulenceDisplacement.value
+  }
+
+  set turbulenceDisplacement(value: number) {
+    this.cloudParameterUniforms.turbulenceDisplacement.value = value
   }
 
   // Atmosphere composition

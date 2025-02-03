@@ -44,8 +44,6 @@ import {
 
 import { bayerOffsets } from './bayer'
 import {
-  createCloudLayerUniforms,
-  createCloudParameterUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
@@ -66,6 +64,8 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface CloudsMaterialParameters {
+  cloudParameterUniforms: CloudParameterUniforms
+  cloudLayerUniforms: CloudLayerUniforms
   ellipsoidCenterRef?: Vector3
   ellipsoidMatrixRef?: Matrix4
   sunDirectionRef?: Vector3
@@ -141,10 +141,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   constructor(
     {
+      cloudParameterUniforms,
+      cloudLayerUniforms,
       ellipsoidCenterRef = new Vector3(),
       ellipsoidMatrixRef = new Matrix4(),
       sunDirectionRef = new Vector3()
-    }: CloudsMaterialParameters = {},
+    }: CloudsMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super(
@@ -193,8 +195,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           mipLevelScale: new Uniform(1),
           stbnTexture: new Uniform(null),
 
-          ...createCloudParameterUniforms(),
-          ...createCloudLayerUniforms(),
+          ...cloudParameterUniforms,
+          ...cloudLayerUniforms,
 
           // Atmosphere
           bottomRadius: new Uniform(atmosphere.bottomRadius),
