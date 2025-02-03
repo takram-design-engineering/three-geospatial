@@ -60,7 +60,7 @@ export class CloudsEffect extends Effect {
     {
       altitude: 750,
       height: 650,
-      densityScale: 0.3,
+      densityScale: 0.15,
       shapeAmount: 1,
       detailAmount: 1,
       weatherExponent: 1,
@@ -71,7 +71,7 @@ export class CloudsEffect extends Effect {
     {
       altitude: 1000,
       height: 1200,
-      densityScale: 0.3,
+      densityScale: 0.15,
       shapeAmount: 1,
       detailAmount: 1,
       weatherExponent: 1,
@@ -82,7 +82,7 @@ export class CloudsEffect extends Effect {
     {
       altitude: 7500,
       height: 500,
-      densityScale: 0.005,
+      densityScale: 0.003,
       shapeAmount: 0.4,
       detailAmount: 0,
       weatherExponent: 1,
