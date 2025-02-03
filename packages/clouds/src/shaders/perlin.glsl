@@ -1,14 +1,12 @@
 // Ported from GLM: https://github.com/g-truc/glm/blob/master/glm/gtc/noise.inl
 
 /**
- * ================================================================================
  * OpenGL Mathematics (GLM)
- * --------------------------------------------------------------------------------
+ *
  * GLM is licensed under The Happy Bunny License or MIT License
  *
- * ================================================================================
  * The Happy Bunny License (Modified MIT License)
- * --------------------------------------------------------------------------------
+ *
  * Copyright (c) 2005 - G-Truc Creation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,9 +31,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * ================================================================================
  * The MIT License
- * --------------------------------------------------------------------------------
+ *
  * Copyright (c) 2005 - G-Truc Creation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
