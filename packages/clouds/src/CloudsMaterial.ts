@@ -150,7 +150,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       {
         name: 'CloudsMaterial',
         glslVersion: GLSL3,
-        vertexShader,
+        vertexShader: resolveIncludes(vertexShader, {
+          atmosphere: {
+            parameters: atmosphereParameters,
+            functions
+          }
+        }),
         fragmentShader: unrollLoops(
           resolveIncludes(fragmentShader, {
             core: {
@@ -241,6 +246,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           DEPTH_PACKING: '0',
           SHAPE_DETAIL: '1',
           TURBULENCE: '1',
+          ACCURATE_SUN_SKY_IRRADIANCE: '1',
           MULTI_SCATTERING_OCTAVES: '8',
           POWDER: '1',
           GROUND_IRRADIANCE: '1',
@@ -433,6 +439,21 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         this.defines.TURBULENCE = '1'
       } else {
         delete this.defines.TURBULENCE
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get accurateSunSkyIrradiance(): boolean {
+    return this.defines.ACCURATE_SUN_SKY_IRRADIANCE != null
+  }
+
+  set accurateSunSkyIrradiance(value: boolean) {
+    if (value !== this.accurateSunSkyIrradiance) {
+      if (value) {
+        this.defines.ACCURATE_SUN_SKY_IRRADIANCE = '1'
+      } else {
+        delete this.defines.ACCURATE_SUN_SKY_IRRADIANCE
       }
       this.needsUpdate = true
     }
