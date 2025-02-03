@@ -42,18 +42,18 @@ export const Clouds = /*#__PURE__*/ forwardRef<
   const context = useContext(EffectComposerContext)
   const { camera } = context
 
-  const effect = useMemo(() => new CloudsCompositePass(), [])
+  const pass = useMemo(() => new CloudsCompositePass(), [])
   useEffect(() => {
     return () => {
-      effect.dispose()
+      pass.dispose()
     }
-  }, [effect])
+  }, [pass])
 
   useFrame(() => {
     if (transientStates != null) {
-      effect.sunDirection.copy(transientStates.sunDirection)
-      effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-      effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+      pass.sunDirection.copy(transientStates.sunDirection)
+      pass.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+      pass.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
     }
   })
 
@@ -64,29 +64,29 @@ export const Clouds = /*#__PURE__*/ forwardRef<
     (event: CloudsCompositePassChangeEvent) => {
       switch (event.property) {
         case 'atmosphereOverlay':
-          setOverlay(effect.atmosphereOverlay)
+          setOverlay(pass.atmosphereOverlay)
           break
         case 'atmosphereShadow':
-          setShadow(effect.atmosphereShadow)
+          setShadow(pass.atmosphereShadow)
           break
         case 'atmosphereShadowLength':
-          setShadowLength(effect.atmosphereShadowLength)
+          setShadowLength(pass.atmosphereShadowLength)
           break
       }
     },
-    [effect, setOverlay, setShadow, setShadowLength]
+    [pass, setOverlay, setShadow, setShadowLength]
   )
   useEffect(() => {
-    effect.events.addEventListener('change', handleChange)
+    pass.events.addEventListener('change', handleChange)
     return () => {
-      effect.events.removeEventListener('change', handleChange)
+      pass.events.removeEventListener('change', handleChange)
     }
-  }, [effect, handleChange])
+  }, [pass, handleChange])
 
   return (
     <primitive
       ref={forwardedRef}
-      object={effect}
+      object={pass}
       mainCamera={camera}
       {...atmosphereParameters}
       {...others}

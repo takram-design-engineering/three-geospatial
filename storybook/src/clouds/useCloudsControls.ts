@@ -22,7 +22,7 @@ export interface CloudsControlParams {
 }
 
 export function useCloudsControls(
-  effect: CloudsCompositePass | null,
+  pass: CloudsCompositePass | null,
   {
     coverage: defaultCoverage,
     animate: defaultAnimate,
@@ -45,11 +45,11 @@ export function useCloudsControls(
   )
 
   useEffect(() => {
-    if (effect == null) {
+    if (pass == null) {
       return
     }
-    effect.cloudsPass.currentMaterial.shapeDetail = shapeDetail
-  }, [effect, shapeDetail])
+    pass.cloudsPass.currentMaterial.shapeDetail = shapeDetail
+  }, [pass, shapeDetail])
 
   const { temporalUpscale, resolutionScale } = useControls(
     'clouds rendering',
@@ -77,12 +77,12 @@ export function useCloudsControls(
   )
 
   useEffect(() => {
-    if (effect != null) {
-      effect.shadow.cascadeCount = cascadeCount
-      effect.shadowPass.temporalPass = shadowTemporalPass
-      effect.shadowPass.currentMaterial.temporalJitter = shadowTemporalJitter
+    if (pass != null) {
+      pass.shadow.cascadeCount = cascadeCount
+      pass.shadowPass.temporalPass = shadowTemporalPass
+      pass.shadowPass.currentMaterial.temporalJitter = shadowTemporalJitter
     }
-  }, [effect, cascadeCount, shadowTemporalPass, shadowTemporalJitter])
+  }, [pass, cascadeCount, shadowTemporalPass, shadowTemporalJitter])
 
   const scatteringParams = useControls(
     'scattering',
@@ -126,7 +126,7 @@ export function useCloudsControls(
 
   const cloudLayersParams = useControls(
     'cloud layers',
-    effect?.cloudLayers.reduce(
+    pass?.cloudLayers.reduce(
       (schema, layer, index) => ({
         ...schema,
         [`layer ${index}`]: folder(
@@ -179,29 +179,29 @@ export function useCloudsControls(
       {}
     ) ?? {},
     { collapsed: true },
-    [effect]
+    [pass]
   ) as FlatCloudLayers
 
   useFrame(() => {
-    if (effect == null) {
+    if (pass == null) {
       return
     }
     for (const key in scatteringParams) {
-      effect.cloudsPass.currentMaterial.uniforms[key].value =
+      pass.cloudsPass.currentMaterial.uniforms[key].value =
         scatteringParams[key as keyof typeof scatteringParams]
     }
     for (const key in cloudsRaymarchParams) {
-      effect.cloudsPass.currentMaterial.uniforms[key].value =
+      pass.cloudsPass.currentMaterial.uniforms[key].value =
         cloudsRaymarchParams[key as keyof typeof cloudsRaymarchParams]
     }
     for (const key in shadowRaymarchParams) {
-      effect.shadowPass.currentMaterial.uniforms[key].value =
+      pass.shadowPass.currentMaterial.uniforms[key].value =
         shadowRaymarchParams[key as keyof typeof shadowRaymarchParams]
     }
     for (const key in cloudLayersParams) {
       const field = key.slice(0, -2)
       const index = +key.slice(-1)
-      ;(effect.cloudLayers as any)[index][field] =
+      ;(pass.cloudLayers as any)[index][field] =
         cloudLayersParams[key as keyof typeof cloudLayersParams]
     }
   })
@@ -229,37 +229,37 @@ export function useCloudsControls(
   )
 
   useEffect(() => {
-    if (effect == null) {
+    if (pass == null) {
       return
     }
     if (debugShowSampleCount) {
-      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT = '1'
+      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT = '1'
     } else {
-      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT
+      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT
     }
     if (debugShowFrontDepth) {
-      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH = '1'
+      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH = '1'
     } else {
-      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH
+      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH
     }
     if (debugShowShadowMap) {
-      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
     } else {
-      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP
     }
     if (debugShowCascades) {
-      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES = '1'
+      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES = '1'
     } else {
-      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES
+      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES
     }
     if (debugShowUv) {
-      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV = '1'
+      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV = '1'
     } else {
-      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV
+      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV
     }
-    effect.cloudsPass.currentMaterial.needsUpdate = true
+    pass.cloudsPass.currentMaterial.needsUpdate = true
   }, [
-    effect,
+    pass,
     debugShowSampleCount,
     debugShowFrontDepth,
     debugShowShadowMap,
@@ -268,21 +268,21 @@ export function useCloudsControls(
   ])
 
   useEffect(() => {
-    if (effect == null) {
+    if (pass == null) {
       return
     }
     if (debugShowShadowLength) {
-      effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
+      pass.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
     } else {
-      delete effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
+      delete pass.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
     }
     if (debugShowVelocity) {
-      effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
+      pass.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
     } else {
-      delete effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY
+      delete pass.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY
     }
-    effect.cloudsPass.resolveMaterial.needsUpdate = true
-  }, [effect, debugShowShadowLength, debugShowVelocity])
+    pass.cloudsPass.resolveMaterial.needsUpdate = true
+  }, [pass, debugShowShadowLength, debugShowVelocity])
 
   return [
     {
