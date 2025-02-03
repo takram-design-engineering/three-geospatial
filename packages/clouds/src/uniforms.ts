@@ -2,10 +2,14 @@ import {
   Uniform,
   Vector4,
   type Data3DTexture,
+  type Matrix4,
   type Texture,
   type Vector2,
   type Vector3
 } from 'three'
+import { type Primitive } from 'type-fest'
+
+import { type AtmosphereParameters } from '@takram/three-atmosphere'
 
 import { type CloudLayer, type CloudLayers } from './types'
 
@@ -33,7 +37,7 @@ export interface CloudParameterUniforms {
 // prettier-ignore
 export type CloudParameterUniformInstances = {
   [K in keyof CloudParameterUniforms as
-    CloudParameterUniforms[K]['value'] extends Vector2 | Vector3 ? K : never
+    CloudParameterUniforms[K]['value'] extends Primitive ? never : K
   ]: CloudParameterUniforms[K]['value']
 }
 
@@ -46,17 +50,17 @@ export function createCloudParameterUniforms(
     absorptionCoefficient: new Uniform(0.02),
 
     // Weather and shape
-    localWeatherTexture: new Uniform(null),
+    localWeatherTexture: new Uniform(instances.localWeatherTexture),
     localWeatherRepeat: new Uniform(instances.localWeatherRepeat),
     localWeatherOffset: new Uniform(instances.localWeatherOffset),
     coverage: new Uniform(0.3),
-    shapeTexture: new Uniform(null),
+    shapeTexture: new Uniform(instances.shapeTexture),
     shapeRepeat: new Uniform(instances.shapeRepeat),
     shapeOffset: new Uniform(instances.shapeOffset),
-    shapeDetailTexture: new Uniform(null),
+    shapeDetailTexture: new Uniform(instances.shapeDetailTexture),
     shapeDetailRepeat: new Uniform(instances.shapeDetailRepeat),
     shapeDetailOffset: new Uniform(instances.shapeDetailOffset),
-    turbulenceTexture: new Uniform(null),
+    turbulenceTexture: new Uniform(instances.turbulenceTexture),
     turbulenceRepeat: new Uniform(instances.turbulenceRepeat),
     turbulenceDisplacement: new Uniform(350)
   }
@@ -160,5 +164,37 @@ export function updateCloudLayerUniforms(
   } else {
     uniforms.shadowBottomHeight.value = 0
     // TODO: Deal with empty cloud layers
+  }
+}
+
+export interface AtmosphereUniforms {
+  bottomRadius: Uniform<number>
+  topRadius: Uniform<number>
+  ellipsoidCenter: Uniform<Vector3>
+  ellipsoidMatrix: Uniform<Matrix4>
+  inverseEllipsoidMatrix: Uniform<Matrix4>
+  altitudeCorrection: Uniform<Vector3>
+  sunDirection: Uniform<Vector3>
+}
+
+// prettier-ignore
+export type AtmosphereUniformInstances = {
+  [K in keyof AtmosphereUniforms as
+    AtmosphereUniforms[K]['value'] extends Primitive ? never : K
+  ]: AtmosphereUniforms[K]['value']
+}
+
+export function createAtmosphereUniforms(
+  atmosphere: AtmosphereParameters,
+  instances: AtmosphereUniformInstances
+): AtmosphereUniforms {
+  return {
+    bottomRadius: new Uniform(atmosphere.bottomRadius),
+    topRadius: new Uniform(atmosphere.topRadius),
+    ellipsoidCenter: new Uniform(instances.ellipsoidCenter),
+    ellipsoidMatrix: new Uniform(instances.ellipsoidMatrix),
+    inverseEllipsoidMatrix: new Uniform(instances.inverseEllipsoidMatrix),
+    altitudeCorrection: new Uniform(instances.altitudeCorrection),
+    sunDirection: new Uniform(instances.sunDirection)
   }
 }

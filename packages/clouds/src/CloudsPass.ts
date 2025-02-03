@@ -18,6 +18,7 @@ import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsPassBase, type CloudsPassBaseOptions } from './CloudsPassBase'
 import { CloudsResolveMaterial } from './CloudsResolveMaterial'
 import {
+  type AtmosphereUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
@@ -73,6 +74,7 @@ function createRenderTarget(
 export interface CloudsPassOptions extends CloudsPassBaseOptions {
   cloudParameterUniforms: CloudParameterUniforms
   cloudLayerUniforms: CloudLayerUniforms
+  atmosphereUniforms: AtmosphereUniforms
 }
 
 export class CloudsPass extends CloudsPassBase {
@@ -91,6 +93,7 @@ export class CloudsPass extends CloudsPassBase {
     {
       cloudParameterUniforms,
       cloudLayerUniforms,
+      atmosphereUniforms,
       ...options
     }: CloudsPassOptions,
     private readonly atmosphere: AtmosphereParameters
@@ -101,9 +104,7 @@ export class CloudsPass extends CloudsPassBase {
       {
         cloudParameterUniforms,
         cloudLayerUniforms,
-        ellipsoidCenterRef: this.ellipsoidCenter,
-        ellipsoidMatrixRef: this.ellipsoidMatrix,
-        sunDirectionRef: this.sunDirection
+        atmosphereUniforms
       },
       atmosphere
     )

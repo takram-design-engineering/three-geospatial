@@ -20,7 +20,6 @@ import {
 import {
   AtmosphereMaterialBase,
   AtmosphereParameters,
-  getAltitudeCorrectionOffset,
   type AtmosphereMaterialBaseUniforms
 } from '@takram/three-atmosphere'
 import {
@@ -44,6 +43,7 @@ import {
 
 import { bayerOffsets } from './bayer'
 import {
+  type AtmosphereUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
@@ -66,14 +66,13 @@ const geodeticScratch = /*#__PURE__*/ new Geodetic()
 export interface CloudsMaterialParameters {
   cloudParameterUniforms: CloudParameterUniforms
   cloudLayerUniforms: CloudLayerUniforms
-  ellipsoidCenterRef?: Vector3
-  ellipsoidMatrixRef?: Matrix4
-  sunDirectionRef?: Vector3
+  atmosphereUniforms: AtmosphereUniforms
 }
 
 export interface CloudsMaterialUniforms
-  extends CloudLayerUniforms,
-    CloudParameterUniforms {
+  extends CloudParameterUniforms,
+    CloudLayerUniforms,
+    AtmosphereUniforms {
   depthBuffer: Uniform<Texture | null>
   viewMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>
@@ -88,10 +87,6 @@ export interface CloudsMaterialUniforms
   targetUvScale: Uniform<Vector2>
   mipLevelScale: Uniform<number>
   stbnTexture: Uniform<Data3DTexture | null>
-
-  // Atmosphere
-  bottomRadius: Uniform<number>
-  ellipsoidMatrix: Uniform<Matrix4>
 
   // Scattering
   scatterAnisotropy1: Uniform<number>
@@ -133,7 +128,6 @@ export interface CloudsMaterialUniforms
 export class CloudsMaterial extends AtmosphereMaterialBase {
   declare uniforms: AtmosphereMaterialBaseUniforms & CloudsMaterialUniforms
 
-  readonly ellipsoidMatrix: Matrix4
   temporalUpscale = true
 
   private previousProjectionMatrix?: Matrix4
@@ -143,9 +137,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     {
       cloudParameterUniforms,
       cloudLayerUniforms,
-      ellipsoidCenterRef = new Vector3(),
-      ellipsoidMatrixRef = new Matrix4(),
-      sunDirectionRef = new Vector3()
+      atmosphereUniforms
     }: CloudsMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
@@ -180,6 +172,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           })
         ),
         uniforms: {
+          ...cloudParameterUniforms,
+          ...cloudLayerUniforms,
+          ...atmosphereUniforms,
+
           depthBuffer: new Uniform(null),
           viewMatrix: new Uniform(new Matrix4()),
           inverseProjectionMatrix: new Uniform(new Matrix4()),
@@ -194,15 +190,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           targetUvScale: new Uniform(new Vector2()),
           mipLevelScale: new Uniform(1),
           stbnTexture: new Uniform(null),
-
-          ...cloudParameterUniforms,
-          ...cloudLayerUniforms,
-
-          // Atmosphere
-          bottomRadius: new Uniform(atmosphere.bottomRadius),
-          ellipsoidCenter: new Uniform(ellipsoidCenterRef), // Overridden
-          ellipsoidMatrix: new Uniform(ellipsoidMatrixRef),
-          sunDirection: new Uniform(sunDirectionRef), // Overridden
 
           // Scattering
           scatterAnisotropy1: new Uniform(0.7),
@@ -261,7 +248,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       },
       atmosphere
     )
-    this.ellipsoidMatrix = ellipsoidMatrixRef
   }
 
   override onBeforeRender(
@@ -299,6 +285,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   override copyCameraSettings(camera: Camera): void {
+    // Intentionally omit the call of super.
+
     if (camera.isPerspectiveCamera === true) {
       if (this.defines.PERSPECTIVE_CAMERA !== '1') {
         this.defines.PERSPECTIVE_CAMERA = '1'
@@ -356,12 +344,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     const cameraPosition = camera.getWorldPosition(
       uniforms.cameraPosition.value
     )
-    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
-      .copy(this.ellipsoidMatrix)
-      .invert()
     const cameraPositionECEF = vectorScratch
       .copy(cameraPosition)
-      .applyMatrix4(inverseEllipsoidMatrix)
+      .applyMatrix4(uniforms.inverseEllipsoidMatrix.value)
       .sub(uniforms.ellipsoidCenter.value)
 
     try {
@@ -369,19 +354,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         geodeticScratch.setFromECEF(cameraPositionECEF).height
     } catch (error) {
       // Abort when unable to project position to the ellipsoid surface.
-    }
-
-    const altitudeCorrection = uniforms.altitudeCorrection.value
-    if (this.correctAltitude) {
-      getAltitudeCorrectionOffset(
-        cameraPositionECEF,
-        this.atmosphere.bottomRadius,
-        this.ellipsoid,
-        altitudeCorrection,
-        false
-      )
-    } else {
-      altitudeCorrection.setScalar(0)
     }
   }
 

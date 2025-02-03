@@ -9,6 +9,7 @@ import {
   type DataTexture,
   type DepthPackingStrategies,
   type Event,
+  type PerspectiveCamera,
   type Texture,
   type TextureDataType,
   type WebGLRenderer,
@@ -17,11 +18,12 @@ import {
 
 import {
   AtmosphereParameters,
+  getAltitudeCorrectionOffset,
   type AtmosphereOverlay,
   type AtmosphereShadow,
   type AtmosphereShadowLength
 } from '@takram/three-atmosphere'
-import { type Ellipsoid } from '@takram/three-geospatial'
+import { lerp, type Ellipsoid } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
 import { CloudShape } from './CloudShape'
@@ -34,9 +36,11 @@ import { ShadowPass } from './ShadowPass'
 import { Turbulence } from './Turbulence'
 import { type CloudLayers } from './types'
 import {
+  createAtmosphereUniforms,
   createCloudLayerUniforms,
   createCloudParameterUniforms,
   updateCloudLayerUniforms,
+  type AtmosphereUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
@@ -124,18 +128,15 @@ export class CloudsEffect extends Effect {
     }
   ]
 
-  // Instances shared by both cloud and shadow materials
-  readonly ellipsoidCenter = new Vector3()
-  readonly ellipsoidMatrix = new Matrix4()
-  readonly sunDirection = new Vector3()
-
-  // Weather and shape textures
+  // Weather and shape texture generators
   localWeather: RenderTexture = new LocalWeather()
   shape: Render3DTexture = new CloudShape()
   shapeDetail: Render3DTexture = new CloudShapeDetail()
   turbulence: RenderTexture = new Turbulence()
 
-  // Mutable instances of CloudParameterUniforms
+  correctAltitude = true
+
+  // Mutable instances of cloud parameter uniforms
   readonly localWeatherRepeat = new Vector2().setScalar(100)
   readonly localWeatherOffset = new Vector2()
   readonly shapeRepeat = new Vector3().setScalar(0.0003)
@@ -144,9 +145,17 @@ export class CloudsEffect extends Effect {
   readonly shapeDetailOffset = new Vector3()
   readonly turbulenceRepeat = new Vector2().setScalar(20)
 
+  // Mutable instances of atmosphere parameter uniforms
+  readonly ellipsoidCenter = new Vector3()
+  readonly ellipsoidMatrix = new Matrix4()
+  private readonly inverseEllipsoidMatrix = new Matrix4()
+  private readonly altitudeCorrection = new Vector3()
+  readonly sunDirection = new Vector3()
+
   // Uniforms shared by both cloud and shadow materials
   private readonly cloudParameterUniforms: CloudParameterUniforms
   private readonly cloudLayerUniforms: CloudLayerUniforms
+  private readonly atmosphereUniforms: AtmosphereUniforms
 
   readonly localWeatherVelocity = new Vector2()
   readonly shapeVelocity = new Vector3()
@@ -192,27 +201,38 @@ export class CloudsEffect extends Effect {
       splitLambda: 0.6
     })
 
-    this.cloudParameterUniforms = createCloudParameterUniforms(this)
+    this.cloudParameterUniforms = createCloudParameterUniforms({
+      localWeatherTexture: this.localWeather.texture,
+      localWeatherRepeat: this.localWeatherRepeat,
+      localWeatherOffset: this.localWeatherOffset,
+      shapeTexture: this.shape.texture,
+      shapeRepeat: this.shapeRepeat,
+      shapeOffset: this.shapeOffset,
+      shapeDetailTexture: this.shapeDetail.texture,
+      shapeDetailRepeat: this.shapeDetailRepeat,
+      shapeDetailOffset: this.shapeDetailOffset,
+      turbulenceTexture: this.turbulence.texture,
+      turbulenceRepeat: this.turbulenceRepeat
+    })
+
     this.cloudLayerUniforms = createCloudLayerUniforms()
-    const passOptions = {
+
+    this.atmosphereUniforms = createAtmosphereUniforms(atmosphere, {
       ellipsoidCenter: this.ellipsoidCenter,
       ellipsoidMatrix: this.ellipsoidMatrix,
-      sunDirection: this.sunDirection,
+      inverseEllipsoidMatrix: this.inverseEllipsoidMatrix,
+      altitudeCorrection: this.altitudeCorrection,
+      sunDirection: this.sunDirection
+    })
+
+    const passOptions = {
       shadow: this.shadow,
       cloudParameterUniforms: this.cloudParameterUniforms,
-      cloudLayerUniforms: this.cloudLayerUniforms
+      cloudLayerUniforms: this.cloudLayerUniforms,
+      atmosphereUniforms: this.atmosphereUniforms
     }
-    this.shadowPass = new ShadowPass(passOptions, atmosphere)
+    this.shadowPass = new ShadowPass(passOptions)
     this.cloudsPass = new CloudsPass(passOptions, atmosphere)
-
-    const textures = {
-      localWeatherTexture: this.localWeather.texture,
-      shapeTexture: this.shape.texture,
-      shapeDetailTexture: this.shapeDetail.texture,
-      turbulenceTexture: this.turbulence.texture
-    }
-    Object.assign(this.shadowPass, textures)
-    Object.assign(this.cloudsPass, textures)
 
     this.resolution = new Resolution(
       this,
@@ -250,10 +270,10 @@ export class CloudsEffect extends Effect {
   }
 
   private updateSharedUniforms(deltaTime: number): void {
-    const { cloudParameterUniforms, cloudLayerUniforms } = this
-    updateCloudLayerUniforms(cloudLayerUniforms, this.cloudLayers)
+    updateCloudLayerUniforms(this.cloudLayerUniforms, this.cloudLayers)
 
     // Apply velocity to offset uniforms.
+    const { cloudParameterUniforms } = this
     applyVelocity(
       this.localWeatherVelocity,
       deltaTime,
@@ -268,6 +288,46 @@ export class CloudsEffect extends Effect {
       this.shapeDetailVelocity,
       deltaTime,
       cloudParameterUniforms.shapeDetailOffset.value
+    )
+
+    // Update atmosphere uniforms.
+    const inverseEllipsoidMatrix = this.inverseEllipsoidMatrix
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionECEF = this.camera
+      .getWorldPosition(vectorScratch)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(this.ellipsoidCenter)
+
+    const altitudeCorrection = this.altitudeCorrection
+    if (this.correctAltitude) {
+      getAltitudeCorrectionOffset(
+        cameraPositionECEF,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        altitudeCorrection,
+        false
+      )
+    } else {
+      altitudeCorrection.setScalar(0)
+    }
+
+    // TODO: Position the sun on the top atmosphere sphere.
+    // Increase light's distance to the target when the sun is at the horizon.
+    const surfaceNormal = this.ellipsoid.getSurfaceNormal(
+      cameraPositionECEF,
+      vectorScratch
+    )
+    const zenithAngle = this.sunDirection.dot(surfaceNormal)
+    const distance = lerp(1e6, 1e3, zenithAngle)
+
+    this.shadow.update(
+      this.mainCamera as PerspectiveCamera,
+      // The sun direction must be rotated with the ellipsoid to ensure the
+      // frusta are constructed correctly. Note this affects the transformation
+      // in the shadow shader.
+      vectorScratch.copy(this.sunDirection).applyMatrix4(this.ellipsoidMatrix),
+      distance
     )
   }
 
@@ -350,9 +410,9 @@ export class CloudsEffect extends Effect {
     this.shapeDetail.update(renderer, deltaTime)
     this.turbulence.update(renderer, deltaTime)
 
+    ++this.frame
     this.updateSharedUniforms(deltaTime)
 
-    ++this.frame
     shadowPass.update(renderer, this.frame, deltaTime)
     cloudsPass.shadowBuffer = shadowPass.outputBuffer
     cloudsPass.update(renderer, this.frame, deltaTime)
@@ -378,39 +438,35 @@ export class CloudsEffect extends Effect {
   // Textures
 
   get localWeatherTexture(): Texture | null {
-    return this.cloudsPass.localWeatherTexture
+    return this.cloudParameterUniforms.localWeatherTexture.value
   }
 
   set localWeatherTexture(value: Texture | null) {
-    this.cloudsPass.localWeatherTexture = value
-    this.shadowPass.localWeatherTexture = value
+    this.cloudParameterUniforms.localWeatherTexture.value = value
   }
 
   get shapeTexture(): Data3DTexture | null {
-    return this.cloudsPass.shapeTexture
+    return this.cloudParameterUniforms.shapeTexture.value
   }
 
   set shapeTexture(value: Data3DTexture | null) {
-    this.cloudsPass.shapeTexture = value
-    this.shadowPass.shapeTexture = value
+    this.cloudParameterUniforms.shapeTexture.value = value
   }
 
   get shapeDetailTexture(): Data3DTexture | null {
-    return this.cloudsPass.shapeDetailTexture
+    return this.cloudParameterUniforms.shapeDetailTexture.value
   }
 
   set shapeDetailTexture(value: Data3DTexture | null) {
-    this.cloudsPass.shapeDetailTexture = value
-    this.shadowPass.shapeDetailTexture = value
+    this.cloudParameterUniforms.shapeDetailTexture.value = value
   }
 
   get turbulenceTexture(): Texture | null {
-    return this.cloudsPass.turbulenceTexture
+    return this.cloudParameterUniforms.turbulenceTexture.value
   }
 
   set turbulenceTexture(value: Texture | null) {
-    this.cloudsPass.turbulenceTexture = value
-    this.shadowPass.turbulenceTexture = value
+    this.cloudParameterUniforms.turbulenceTexture.value = value
   }
 
   get stbnTexture(): Data3DTexture | null {
@@ -418,8 +474,8 @@ export class CloudsEffect extends Effect {
   }
 
   set stbnTexture(value: Data3DTexture | null) {
-    this.shadowPass.currentMaterial.uniforms.stbnTexture.value = value
     this.cloudsPass.currentMaterial.uniforms.stbnTexture.value = value
+    this.shadowPass.currentMaterial.uniforms.stbnTexture.value = value
   }
 
   // Pass parameters
@@ -528,16 +584,6 @@ export class CloudsEffect extends Effect {
 
   set ellipsoid(value: Ellipsoid) {
     this.cloudsPass.currentMaterial.ellipsoid = value
-    this.shadowPass.currentMaterial.ellipsoid = value
-  }
-
-  get correctAltitude(): boolean {
-    return this.cloudsPass.currentMaterial.correctAltitude
-  }
-
-  set correctAltitude(value: boolean) {
-    this.cloudsPass.currentMaterial.correctAltitude = value
-    this.shadowPass.currentMaterial.correctAltitude = value
   }
 
   get photometric(): boolean {
