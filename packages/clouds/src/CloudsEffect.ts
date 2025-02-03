@@ -246,6 +246,14 @@ export class CloudsEffect extends Effect {
     )
   }
 
+  dispose(): void {
+    this.localWeather.dispose()
+    this.shape.dispose()
+    this.shapeDetail.dispose()
+    this.turbulence.dispose()
+    super.dispose()
+  }
+
   private readonly onResolutionChange = (): void => {
     this.setSize(this.resolution.baseWidth, this.resolution.baseHeight)
   }
