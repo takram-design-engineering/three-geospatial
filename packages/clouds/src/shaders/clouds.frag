@@ -13,6 +13,7 @@ precision highp sampler2DArray;
 #include "core/poissonDisk"
 #include "atmosphere/parameters"
 #include "atmosphere/functions"
+#include "types"
 #include "parameters"
 #include "clouds"
 
@@ -72,6 +73,10 @@ in vec3 vCameraPosition;
 in vec3 vCameraDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
 in vec3 vEllipsoidCenter;
+
+#if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
+in SunSkyIrradiance vSunSkyIrradiance;
+#endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 1) out vec3 outputDepthVelocity;
@@ -335,6 +340,14 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
   return scattering;
 }
 
+#if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
+vec3 getInterpolatedSunSkyIrradiance(const float height, out vec3 skyIrradiance) {
+  float hightFraction = remapClamped(height, minHeight, maxHeight);
+  skyIrradiance = mix(vSunSkyIrradiance.minSky, vSunSkyIrradiance.maxSky, hightFraction);
+  return mix(vSunSkyIrradiance.minSun, vSunSkyIrradiance.maxSun, hightFraction);
+}
+#endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
+
 vec4 marchClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
@@ -385,11 +398,17 @@ vec4 marchClouds(
 
     if (media.extinction > minExtinction) {
       vec3 skyIrradiance;
-      vec3 sunIrradiance = GetSunAndSkyIrradiance(
+      vec3 sunIrradiance;
+      #ifdef ACCURATE_SUN_SKY_IRRADIANCE
+      sunIrradiance = GetSunAndSkyIrradiance(
         position * METER_TO_LENGTH_UNIT,
         sunDirection,
         skyIrradiance
       );
+      #else // ACCURATE_SUN_SKY_IRRADIANCE
+      sunIrradiance = getInterpolatedSunSkyIrradiance(height, skyIrradiance);
+      #endif // ACCURATE_SUN_SKY_IRRADIANCE
+
       vec3 surfaceNormal = normalize(position);
 
       // March optical depth to the sun for finer details, which BSM lacks.
@@ -432,12 +451,16 @@ vec4 marchClouds(
           mipLevel,
           jitter
         );
+
+        #ifdef ACCURATE_SUN_SKY_IRRADIANCE
         vec3 skyIrradiance;
         vec3 sunIrradiance = GetSunAndSkyIrradiance(
           (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
           sunDirection,
           skyIrradiance
         );
+        #endif // ACCURATE_SUN_SKY_IRRADIANCE
+
         const float groundAlbedo = 0.3;
         vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
         vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
