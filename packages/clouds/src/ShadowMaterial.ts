@@ -4,25 +4,14 @@ import {
   RawShaderMaterial,
   Uniform,
   Vector2,
-  Vector3,
-  type Camera,
   type Data3DTexture
 } from 'three'
 
-import {
-  AtmosphereParameters,
-  getAltitudeCorrectionOffset
-} from '@takram/three-atmosphere'
-import {
-  Ellipsoid,
-  resolveIncludes,
-  unrollLoops
-} from '@takram/three-geospatial'
+import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 import { math, raySphereIntersection } from '@takram/three-geospatial/shaders'
 
 import {
-  createCloudLayerUniforms,
-  createCloudParameterUniforms,
+  type AtmosphereUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
@@ -33,31 +22,22 @@ import fragmentShader from './shaders/shadow.frag?raw'
 import vertexShader from './shaders/shadow.vert?raw'
 import structuredSampling from './shaders/structuredSampling.glsl?raw'
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
-
 export interface ShadowMaterialParameters {
-  ellipsoidCenterRef?: Vector3
-  ellipsoidMatrixRef?: Matrix4
-  sunDirectionRef?: Vector3
+  cloudParameterUniforms: CloudParameterUniforms
+  cloudLayerUniforms: CloudLayerUniforms
+  atmosphereUniforms: AtmosphereUniforms
 }
 
 export interface ShadowMaterialUniforms
-  extends CloudLayerUniforms,
-    CloudParameterUniforms {
+  extends CloudParameterUniforms,
+    CloudLayerUniforms,
+    AtmosphereUniforms {
   [key: string]: Uniform<unknown>
   inverseShadowMatrices: Uniform<Matrix4[]>
   reprojectionMatrices: Uniform<Matrix4[]>
   resolution: Uniform<Vector2>
   frame: Uniform<number>
   stbnTexture: Uniform<Data3DTexture | null>
-
-  // Atmosphere
-  bottomRadius: Uniform<number>
-  ellipsoidCenter: Uniform<Vector3>
-  ellipsoidMatrix: Uniform<Matrix4>
-  inverseEllipsoidMatrix: Uniform<Matrix4>
-  altitudeCorrection: Uniform<Vector3>
-  sunDirection: Uniform<Vector3>
 
   // Primary raymarch
   maxIterations: Uniform<number>
@@ -66,24 +46,17 @@ export interface ShadowMaterialUniforms
   minDensity: Uniform<number>
   minExtinction: Uniform<number>
   minTransmittance: Uniform<number>
-  opticalDepthTailScale: Uniform<number>
+  maxOpticalDepthTailScale: Uniform<number>
 }
 
 export class ShadowMaterial extends RawShaderMaterial {
   declare uniforms: ShadowMaterialUniforms
 
-  ellipsoid: Ellipsoid
-  readonly ellipsoidMatrix: Matrix4
-  correctAltitude: boolean
-
-  constructor(
-    {
-      ellipsoidCenterRef = new Vector3(),
-      ellipsoidMatrixRef = new Matrix4(),
-      sunDirectionRef = new Vector3()
-    }: ShadowMaterialParameters = {},
-    private readonly atmosphere = AtmosphereParameters.DEFAULT
-  ) {
+  constructor({
+    atmosphereUniforms,
+    cloudParameterUniforms,
+    cloudLayerUniforms
+  }: ShadowMaterialParameters) {
     super({
       name: 'ShadowMaterial',
       glslVersion: GLSL3,
@@ -100,6 +73,10 @@ export class ShadowMaterial extends RawShaderMaterial {
         })
       ),
       uniforms: {
+        ...cloudParameterUniforms,
+        ...cloudLayerUniforms,
+        ...atmosphereUniforms,
+
         inverseShadowMatrices: new Uniform(
           Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
         ),
@@ -110,17 +87,6 @@ export class ShadowMaterial extends RawShaderMaterial {
         frame: new Uniform(0),
         stbnTexture: new Uniform(null),
 
-        ...createCloudParameterUniforms(),
-        ...createCloudLayerUniforms(),
-
-        // Atmosphere
-        bottomRadius: new Uniform(atmosphere.bottomRadius),
-        ellipsoidCenter: new Uniform(ellipsoidCenterRef),
-        ellipsoidMatrix: new Uniform(ellipsoidMatrixRef),
-        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
-        altitudeCorrection: new Uniform(new Vector3()),
-        sunDirection: new Uniform(sunDirectionRef),
-
         // Primary raymarch
         maxIterations: new Uniform(50),
         minStepSize: new Uniform(100),
@@ -128,7 +94,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         minDensity: new Uniform(1e-5),
         minExtinction: new Uniform(1e-5),
         minTransmittance: new Uniform(1e-4),
-        opticalDepthTailScale: new Uniform(2)
+        maxOpticalDepthTailScale: new Uniform(2)
       } satisfies ShadowMaterialUniforms,
       defines: {
         TEMPORAL_PASS: '1',
@@ -138,34 +104,7 @@ export class ShadowMaterial extends RawShaderMaterial {
       }
     })
 
-    this.ellipsoid = Ellipsoid.WGS84
-    this.ellipsoidMatrix = ellipsoidMatrixRef
-    this.correctAltitude = true
     this.cascadeCount = 1
-  }
-
-  copyCameraSettings(camera: Camera): void {
-    const uniforms = this.uniforms
-    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
-      .copy(this.ellipsoidMatrix)
-      .invert()
-    const cameraPositionECEF = camera
-      .getWorldPosition(vectorScratch)
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(uniforms.ellipsoidCenter.value)
-
-    const altitudeCorrection = uniforms.altitudeCorrection.value
-    if (this.correctAltitude) {
-      getAltitudeCorrectionOffset(
-        cameraPositionECEF,
-        this.atmosphere.bottomRadius,
-        this.ellipsoid,
-        altitudeCorrection,
-        false
-      )
-    } else {
-      altitudeCorrection.setScalar(0)
-    }
   }
 
   setSize(width: number, height: number): void {

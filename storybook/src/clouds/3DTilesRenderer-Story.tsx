@@ -36,7 +36,7 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsEffect } from '@takram/three-clouds'
+import { type CloudsCompositePass } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import {
   createData3DTextureLoaderClass,
@@ -95,7 +95,13 @@ const Globe: FC = () => {
     <TilesRenderer
       key={apiKey} // Reconstruct tiles when API key changes.
     >
-      <TilesPlugin plugin={GoogleCloudAuthPlugin} args={{ apiToken: apiKey }} />
+      <TilesPlugin
+        plugin={GoogleCloudAuthPlugin}
+        args={{
+          apiToken: apiKey,
+          autoRefreshToken: true
+        }}
+      />
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
       <TilesPlugin plugin={UpdateOnChangePlugin} />
@@ -210,7 +216,7 @@ const Scene: FC<SceneProps> = ({
     'core/stbn.bin'
   )
 
-  const [clouds, setClouds] = useState<CloudsEffect | null>(null)
+  const [clouds, setClouds] = useState<CloudsCompositePass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
     coverage,
     animate: true

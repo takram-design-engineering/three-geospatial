@@ -169,11 +169,11 @@ float readShadowOpticalDepth(
   const float distanceOffset,
   const int cascadeIndex
 ) {
-  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth, a: maxOpticalDepthTail
   // Also see the discussion here: https://x.com/shotamatsuda/status/1885322308908442106
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
   float distanceToFront = max(0.0, distanceToTop - distanceOffset - shadow.r);
-  return min(shadow.b, shadow.g * distanceToFront);
+  return min(shadow.b + shadow.a, shadow.g * distanceToFront);
 }
 
 float sampleShadowOpticalDepthPCF(
@@ -342,9 +342,9 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
 
 #if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 vec3 getInterpolatedSunSkyIrradiance(const float height, out vec3 skyIrradiance) {
-  float hightFraction = remapClamped(height, minHeight, maxHeight);
-  skyIrradiance = mix(vSunSkyIrradiance.minSky, vSunSkyIrradiance.maxSky, hightFraction);
-  return mix(vSunSkyIrradiance.minSun, vSunSkyIrradiance.maxSun, hightFraction);
+  float heightFraction = remapClamped(height, minHeight, maxHeight);
+  skyIrradiance = mix(vSunSkyIrradiance.minSky, vSunSkyIrradiance.maxSky, heightFraction);
+  return mix(vSunSkyIrradiance.minSun, vSunSkyIrradiance.maxSun, heightFraction);
 }
 #endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
@@ -679,7 +679,7 @@ vec4 getCascadedShadowMaps(vec2 uv) {
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
   color = vec3(shadow.g * meanExtinctionScale);
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
-  color = vec3(shadow.b * maxOpticalDepthScale);
+  color = vec3((shadow.b + shadow.a) * maxOpticalDepthScale);
   #else // DEBUG_SHOW_SHADOW_MAP_TYPE
   color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE

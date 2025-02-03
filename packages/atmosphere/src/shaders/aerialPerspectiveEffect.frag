@@ -152,8 +152,10 @@ float getDistanceToShadowTop(const vec3 positionECEF) {
 }
 
 float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int cascadeIndex) {
-  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth, a: maxOpticalDepthTail
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
+  // Omit adding maxOpticalDepthTail to avoid pronounced aliasing. Ground
+  // shadow will be attenuated by inscatter anyways.
   return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
@@ -232,7 +234,7 @@ float getShadowRadius(const vec3 worldPosition) {
   vec2 center = (projected.xy * 0.5 + 0.5) * resolution;
   vec2 offsetX = (projectedX.xy * 0.5 + 0.5) * resolution;
   vec2 offsetY = (projectedY.xy * 0.5 + 0.5) * resolution;
-  float size = (length(offsetX - center) + length(offsetY - center)) * 0.5;
+  float size = max(length(offsetX - center), length(offsetY - center));
 
   return remapClamped(size, 10.0, 50.0, 0.0, shadowRadius);
 }

@@ -1,4 +1,4 @@
-export * from './CloudsEffect'
+export * from './CloudsCompositePass'
 export * from './CloudShape'
 export * from './CloudShapeDetail'
 export * from './LocalWeather'

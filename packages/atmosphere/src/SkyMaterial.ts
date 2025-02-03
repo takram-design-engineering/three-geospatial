@@ -10,7 +10,6 @@ import {
   type Object3D,
   type Scene,
   type Texture,
-  type WebGLProgramParametersWithUniforms,
   type WebGLRenderer
 } from 'three'
 
@@ -112,23 +111,6 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     this.moon = moon
   }
 
-  override onBeforeCompile(
-    parameters: WebGLProgramParametersWithUniforms,
-    renderer: WebGLRenderer
-  ): void {
-    super.onBeforeCompile(parameters, renderer)
-    const color = this.groundAlbedo
-    const groundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
-    if ((this.defines.GROUND_ALBEDO != null) !== groundAlbedo) {
-      if (groundAlbedo) {
-        this.defines.GROUND_ALBEDO = '1'
-      } else {
-        delete this.defines.GROUND_ALBEDO
-      }
-      this.needsUpdate = true
-    }
-  }
-
   override onBeforeRender(
     renderer: WebGLRenderer,
     scene: Scene,
@@ -142,12 +124,25 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
 
-    const isPerspectiveCamera = camera.isPerspectiveCamera === true
-    if ((this.defines.PERSPECTIVE_CAMERA != null) !== isPerspectiveCamera) {
-      if (isPerspectiveCamera) {
+    const prevPerspectiveCamera = this.defines.PERSPECTIVE_CAMERA != null
+    const nextPerspectiveCamera = camera.isPerspectiveCamera === true
+    if (nextPerspectiveCamera !== prevPerspectiveCamera) {
+      if (nextPerspectiveCamera) {
         this.defines.PERSPECTIVE_CAMERA = '1'
       } else {
         delete this.defines.PERSPECTIVE_CAMERA
+      }
+      this.needsUpdate = true
+    }
+
+    const color = this.groundAlbedo
+    const prevGroundAlbedo = this.defines.GROUND_ALBEDO != null
+    const nextGroundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
+    if (nextGroundAlbedo !== prevGroundAlbedo) {
+      if (nextGroundAlbedo) {
+        this.defines.GROUND_ALBEDO = '1'
+      } else {
+        delete this.defines.GROUND_ALBEDO
       }
       this.needsUpdate = true
     }

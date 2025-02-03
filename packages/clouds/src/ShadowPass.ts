@@ -1,33 +1,22 @@
 import {
   HalfFloatType,
   LinearFilter,
-  Matrix4,
-  Vector3,
   WebGLArrayRenderTarget,
-  type Camera,
   type DataArrayTexture,
-  type PerspectiveCamera,
   type TextureDataType,
   type WebGLRenderer
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { type AtmosphereParameters } from '@takram/three-atmosphere'
-import { lerp } from '@takram/three-geospatial'
-
-import {
-  applyVelocity,
-  CloudsPassBase,
-  type CloudsPassBaseOptions
-} from './CloudsPassBase'
+import { PassBase, type PassBaseOptions } from './PassBase'
 import { ShaderArrayPass } from './ShaderArrayPass'
 import { ShadowMaterial } from './ShadowMaterial'
 import { ShadowResolveMaterial } from './ShadowResolveMaterial'
-import { type CloudLayers } from './types'
-import { updateCloudLayerUniforms } from './uniforms'
-
-const vectorScratch = /*#__PURE__*/ new Vector3()
-const matrixScratch = /*#__PURE__*/ new Matrix4()
+import {
+  type AtmosphereUniforms,
+  type CloudLayerUniforms,
+  type CloudParameterUniforms
+} from './uniforms'
 
 function createRenderTarget(name: string): WebGLArrayRenderTarget {
   const renderTarget = new WebGLArrayRenderTarget(1, 1, 1, {
@@ -42,9 +31,13 @@ function createRenderTarget(name: string): WebGLArrayRenderTarget {
   return renderTarget
 }
 
-export interface ShadowPassOptions extends CloudsPassBaseOptions {}
+export interface ShadowPassOptions extends PassBaseOptions {
+  cloudParameterUniforms: CloudParameterUniforms
+  cloudLayerUniforms: CloudLayerUniforms
+  atmosphereUniforms: AtmosphereUniforms
+}
 
-export class ShadowPass extends CloudsPassBase {
+export class ShadowPass extends PassBase {
   private currentRenderTarget!: WebGLArrayRenderTarget
   readonly currentMaterial: ShadowMaterial
   readonly currentPass: ShaderArrayPass
@@ -56,29 +49,24 @@ export class ShadowPass extends CloudsPassBase {
   private width = 0
   private height = 0
 
-  constructor(
-    options: ShadowPassOptions,
-    private readonly atmosphere: AtmosphereParameters
-  ) {
+  constructor({
+    cloudParameterUniforms,
+    cloudLayerUniforms,
+    atmosphereUniforms,
+    ...options
+  }: ShadowPassOptions) {
     super('ShadowPass', options)
 
-    this.currentMaterial = new ShadowMaterial(
-      {
-        ellipsoidCenterRef: this.ellipsoidCenter,
-        ellipsoidMatrixRef: this.ellipsoidMatrix,
-        sunDirectionRef: this.sunDirection
-      },
-      atmosphere
-    )
+    this.currentMaterial = new ShadowMaterial({
+      cloudParameterUniforms,
+      cloudLayerUniforms,
+      atmosphereUniforms
+    })
     this.currentPass = new ShaderArrayPass(this.currentMaterial)
     this.resolveMaterial = new ShadowResolveMaterial()
     this.resolvePass = new ShaderArrayPass(this.resolveMaterial)
 
     this.initRenderTargets()
-  }
-
-  copyCameraSettings(camera: Camera): void {
-    this.currentMaterial.copyCameraSettings(camera)
   }
 
   override initialize(
@@ -106,64 +94,13 @@ export class ShadowPass extends CloudsPassBase {
     resolveUniforms.historyBuffer.value = history?.texture ?? null
   }
 
-  private updateShadow(): void {
-    // TODO: Position the sun on the top atmosphere sphere.
-    // Increase light's distance to the target when the sun is at the horizon.
-    const inverseEllipsoidMatrix = matrixScratch
-      .copy(this.ellipsoidMatrix)
-      .invert()
-    const cameraPositionECEF = this.mainCamera
-      .getWorldPosition(vectorScratch)
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(this.ellipsoidCenter)
-    const surfaceNormal = this.currentMaterial.ellipsoid.getSurfaceNormal(
-      cameraPositionECEF,
-      vectorScratch
-    )
-    const zenithAngle = this.sunDirection.dot(surfaceNormal)
-    const distance = lerp(1e6, 1e3, zenithAngle)
-
-    this.shadow.update(
-      this.mainCamera as PerspectiveCamera,
-      // The sun direction must be rotated with the ellipsoid to ensure the
-      // frusta are constructed correctly. Note this affects the transformation
-      // in the shadow shader.
-      vectorScratch.copy(this.sunDirection).applyMatrix4(this.ellipsoidMatrix),
-      distance
-    )
-  }
-
-  private updateParameters(
-    cloudLayers: CloudLayers,
-    frame: number,
-    deltaTime: number
-  ): void {
-    const currentUniforms = this.currentMaterial.uniforms
-    updateCloudLayerUniforms(currentUniforms, cloudLayers)
-
-    // Update shadow matrices.
+  private copyShadow(): void {
     const shadow = this.shadow
+    const currentUniforms = this.currentMaterial.uniforms
     for (let i = 0; i < shadow.cascadeCount; ++i) {
       const cascade = shadow.cascades[i]
       currentUniforms.inverseShadowMatrices.value[i].copy(cascade.inverseMatrix)
     }
-
-    // Apply velocity to offset uniforms.
-    applyVelocity(
-      this.localWeatherVelocity,
-      deltaTime,
-      currentUniforms.localWeatherOffset.value
-    )
-    applyVelocity(
-      this.shapeVelocity,
-      deltaTime,
-      currentUniforms.shapeOffset.value
-    )
-    applyVelocity(
-      this.shapeDetailVelocity,
-      deltaTime,
-      currentUniforms.shapeDetailOffset.value
-    )
   }
 
   private copyReprojection(): void {
@@ -185,18 +122,9 @@ export class ShadowPass extends CloudsPassBase {
     this.resolveMaterial.uniforms.historyBuffer.value = nextHistory.texture
   }
 
-  update(
-    renderer: WebGLRenderer,
-    cloudLayers: CloudLayers,
-    frame: number,
-    deltaTime: number
-  ): void {
-    // Update frame uniforms before copyCameraSettings.
+  update(renderer: WebGLRenderer, frame: number, deltaTime: number): void {
     this.currentMaterial.uniforms.frame.value = frame
-
-    this.copyCameraSettings(this.mainCamera)
-    this.updateShadow()
-    this.updateParameters(cloudLayers, frame, deltaTime)
+    this.copyShadow()
 
     this.currentPass.render(renderer, null, this.currentRenderTarget)
 

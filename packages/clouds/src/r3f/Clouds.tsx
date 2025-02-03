@@ -10,85 +10,86 @@ import {
 } from '@takram/three-geospatial/r3f'
 
 import {
-  CloudsEffect,
-  cloudsEffectOptionsDefaults,
-  type CloudsEffectChangeEvent
-} from '../CloudsEffect'
+  CloudsCompositePass,
+  cloudsCompositePassOptionsDefaults,
+  type CloudsCompositePassChangeEvent
+} from '../CloudsCompositePass'
 
 export type CloudsProps = PassThoughInstanceProps<
-  CloudsEffect,
+  CloudsCompositePass,
   [],
   Partial<
-    CloudsEffect &
-      ExpandNestedProps<CloudsEffect, 'resolution'> &
-      ExpandNestedProps<CloudsEffect, 'shadow'>
+    CloudsCompositePass &
+      ExpandNestedProps<CloudsCompositePass, 'resolution'> &
+      ExpandNestedProps<CloudsCompositePass, 'shadow'>
   >
 >
 
-export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
-  function Clouds(props, forwardedRef) {
-    const { textures, transientStates, atoms, ...contextProps } =
-      useContext(AtmosphereContext)
+export const Clouds = /*#__PURE__*/ forwardRef<
+  CloudsCompositePass,
+  CloudsProps
+>(function Clouds(props, forwardedRef) {
+  const { textures, transientStates, atoms, ...contextProps } =
+    useContext(AtmosphereContext)
 
-    const [atmosphereParameters, others] = separateProps({
-      ...cloudsEffectOptionsDefaults,
-      ...contextProps,
-      ...textures,
-      ...props
-    })
+  const [atmosphereParameters, others] = separateProps({
+    ...cloudsCompositePassOptionsDefaults,
+    ...contextProps,
+    ...textures,
+    ...props
+  })
 
-    const context = useContext(EffectComposerContext)
-    const { camera } = context
+  const context = useContext(EffectComposerContext)
+  const { camera } = context
 
-    const effect = useMemo(() => new CloudsEffect(), [])
-    useEffect(() => {
-      return () => {
-        effect.dispose()
+  const effect = useMemo(() => new CloudsCompositePass(), [])
+  useEffect(() => {
+    return () => {
+      effect.dispose()
+    }
+  }, [effect])
+
+  useFrame(() => {
+    if (transientStates != null) {
+      effect.sunDirection.copy(transientStates.sunDirection)
+      effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+      effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+    }
+  })
+
+  const setOverlay = useSetAtom(atoms.overlayAtom)
+  const setShadow = useSetAtom(atoms.shadowAtom)
+  const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
+  const handleChange = useCallback(
+    (event: CloudsCompositePassChangeEvent) => {
+      switch (event.property) {
+        case 'atmosphereOverlay':
+          setOverlay(effect.atmosphereOverlay)
+          break
+        case 'atmosphereShadow':
+          setShadow(effect.atmosphereShadow)
+          break
+        case 'atmosphereShadowLength':
+          setShadowLength(effect.atmosphereShadowLength)
+          break
       }
-    }, [effect])
+    },
+    [effect, setOverlay, setShadow, setShadowLength]
+  )
+  useEffect(() => {
+    effect.events.addEventListener('change', handleChange)
+    return () => {
+      effect.events.removeEventListener('change', handleChange)
+    }
+  }, [effect, handleChange])
 
-    useFrame(() => {
-      if (transientStates != null) {
-        effect.sunDirection.copy(transientStates.sunDirection)
-        effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-        effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
-      }
-    })
-
-    const setOverlay = useSetAtom(atoms.overlayAtom)
-    const setShadow = useSetAtom(atoms.shadowAtom)
-    const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
-    const handleChange = useCallback(
-      (event: CloudsEffectChangeEvent) => {
-        switch (event.property) {
-          case 'atmosphereOverlay':
-            setOverlay(effect.atmosphereOverlay)
-            break
-          case 'atmosphereShadow':
-            setShadow(effect.atmosphereShadow)
-            break
-          case 'atmosphereShadowLength':
-            setShadowLength(effect.atmosphereShadowLength)
-            break
-        }
-      },
-      [effect, setOverlay, setShadow, setShadowLength]
-    )
-    useEffect(() => {
-      effect.events.addEventListener('change', handleChange)
-      return () => {
-        effect.events.removeEventListener('change', handleChange)
-      }
-    }, [effect, handleChange])
-
-    return (
-      <primitive
-        ref={forwardedRef}
-        object={effect}
-        mainCamera={camera}
-        {...atmosphereParameters}
-        {...others}
-      />
-    )
-  }
-)
+  return (
+    <primitive
+      ref={forwardedRef}
+      object={effect}
+      mainCamera={camera}
+      {...atmosphereParameters}
+      {...others}
+    />
+  )
+})

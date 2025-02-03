@@ -20,7 +20,6 @@ import {
 import {
   AtmosphereMaterialBase,
   AtmosphereParameters,
-  getAltitudeCorrectionOffset,
   type AtmosphereMaterialBaseUniforms
 } from '@takram/three-atmosphere'
 import {
@@ -44,8 +43,7 @@ import {
 
 import { bayerOffsets } from './bayer'
 import {
-  createCloudLayerUniforms,
-  createCloudParameterUniforms,
+  type AtmosphereUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
@@ -66,14 +64,15 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface CloudsMaterialParameters {
-  ellipsoidCenterRef?: Vector3
-  ellipsoidMatrixRef?: Matrix4
-  sunDirectionRef?: Vector3
+  cloudParameterUniforms: CloudParameterUniforms
+  cloudLayerUniforms: CloudLayerUniforms
+  atmosphereUniforms: AtmosphereUniforms
 }
 
 export interface CloudsMaterialUniforms
-  extends CloudLayerUniforms,
-    CloudParameterUniforms {
+  extends CloudParameterUniforms,
+    CloudLayerUniforms,
+    AtmosphereUniforms {
   depthBuffer: Uniform<Texture | null>
   viewMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>
@@ -88,10 +87,6 @@ export interface CloudsMaterialUniforms
   targetUvScale: Uniform<Vector2>
   mipLevelScale: Uniform<number>
   stbnTexture: Uniform<Data3DTexture | null>
-
-  // Atmosphere
-  bottomRadius: Uniform<number>
-  ellipsoidMatrix: Uniform<Matrix4>
 
   // Scattering
   scatterAnisotropy1: Uniform<number>
@@ -133,7 +128,6 @@ export interface CloudsMaterialUniforms
 export class CloudsMaterial extends AtmosphereMaterialBase {
   declare uniforms: AtmosphereMaterialBaseUniforms & CloudsMaterialUniforms
 
-  readonly ellipsoidMatrix: Matrix4
   temporalUpscale = true
 
   private previousProjectionMatrix?: Matrix4
@@ -141,10 +135,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   constructor(
     {
-      ellipsoidCenterRef = new Vector3(),
-      ellipsoidMatrixRef = new Matrix4(),
-      sunDirectionRef = new Vector3()
-    }: CloudsMaterialParameters = {},
+      cloudParameterUniforms,
+      cloudLayerUniforms,
+      atmosphereUniforms
+    }: CloudsMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super(
@@ -178,6 +172,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           })
         ),
         uniforms: {
+          ...cloudParameterUniforms,
+          ...cloudLayerUniforms,
+          ...atmosphereUniforms,
+
           depthBuffer: new Uniform(null),
           viewMatrix: new Uniform(new Matrix4()),
           inverseProjectionMatrix: new Uniform(new Matrix4()),
@@ -192,15 +190,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           targetUvScale: new Uniform(new Vector2()),
           mipLevelScale: new Uniform(1),
           stbnTexture: new Uniform(null),
-
-          ...createCloudParameterUniforms(),
-          ...createCloudLayerUniforms(),
-
-          // Atmosphere
-          bottomRadius: new Uniform(atmosphere.bottomRadius),
-          ellipsoidCenter: new Uniform(ellipsoidCenterRef), // Overridden
-          ellipsoidMatrix: new Uniform(ellipsoidMatrixRef),
-          sunDirection: new Uniform(sunDirectionRef), // Overridden
 
           // Scattering
           scatterAnisotropy1: new Uniform(0.7),
@@ -259,7 +248,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       },
       atmosphere
     )
-    this.ellipsoidMatrix = ellipsoidMatrixRef
   }
 
   override onBeforeRender(
@@ -272,9 +260,33 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   ): void {
     // Disable onBeforeRender in AtmosphereMaterialBase because we're rendering
     // into fullscreen quad with another camera for the scene projection.
+
+    const prevPowder = this.defines.POWDER != null
+    const nextPowder = this.uniforms.powderScale.value > 0
+    if (nextPowder !== prevPowder) {
+      if (nextPowder) {
+        this.defines.POWDER = '1'
+      } else {
+        delete this.defines.POWDER
+      }
+      this.needsUpdate = true
+    }
+
+    const prevGroundIrradiance = this.defines.GROUND_IRRADIANCE != null
+    const nextGroundIrradiance = this.uniforms.groundIrradianceScale.value > 0
+    if (nextGroundIrradiance !== prevGroundIrradiance) {
+      if (nextPowder) {
+        this.defines.GROUND_IRRADIANCE = '1'
+      } else {
+        delete this.defines.GROUND_IRRADIANCE
+      }
+      this.needsUpdate = true
+    }
   }
 
   override copyCameraSettings(camera: Camera): void {
+    // Intentionally omit the call of super.
+
     if (camera.isPerspectiveCamera === true) {
       if (this.defines.PERSPECTIVE_CAMERA !== '1') {
         this.defines.PERSPECTIVE_CAMERA = '1'
@@ -332,12 +344,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     const cameraPosition = camera.getWorldPosition(
       uniforms.cameraPosition.value
     )
-    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
-      .copy(this.ellipsoidMatrix)
-      .invert()
     const cameraPositionECEF = vectorScratch
       .copy(cameraPosition)
-      .applyMatrix4(inverseEllipsoidMatrix)
+      .applyMatrix4(uniforms.inverseEllipsoidMatrix.value)
       .sub(uniforms.ellipsoidCenter.value)
 
     try {
@@ -345,19 +354,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         geodeticScratch.setFromECEF(cameraPositionECEF).height
     } catch (error) {
       // Abort when unable to project position to the ellipsoid surface.
-    }
-
-    const altitudeCorrection = uniforms.altitudeCorrection.value
-    if (this.correctAltitude) {
-      getAltitudeCorrectionOffset(
-        cameraPositionECEF,
-        this.atmosphere.bottomRadius,
-        this.ellipsoid,
-        altitudeCorrection,
-        false
-      )
-    } else {
-      altitudeCorrection.setScalar(0)
     }
   }
 
@@ -484,36 +480,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   set multiScatteringOctaves(value: number) {
     if (value !== this.multiScatteringOctaves) {
       this.defines.MULTI_SCATTERING_OCTAVES = `${value}`
-      this.needsUpdate = true
-    }
-  }
-
-  get powder(): boolean {
-    return this.defines.POWDER != null
-  }
-
-  set powder(value: boolean) {
-    if (value !== this.powder) {
-      if (value) {
-        this.defines.POWDER = '1'
-      } else {
-        delete this.defines.POWDER
-      }
-      this.needsUpdate = true
-    }
-  }
-
-  get groundIrradiance(): boolean {
-    return this.defines.GROUND_IRRADIANCE != null
-  }
-
-  set groundIrradiance(value: boolean) {
-    if (value !== this.groundIrradiance) {
-      if (value) {
-        this.defines.GROUND_IRRADIANCE = '1'
-      } else {
-        delete this.defines.GROUND_IRRADIANCE
-      }
       this.needsUpdate = true
     }
   }
