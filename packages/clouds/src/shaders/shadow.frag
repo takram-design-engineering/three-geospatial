@@ -98,6 +98,7 @@ vec4 marchClouds(
       // point of minimum transmittance. The expected optical depth seems to
       // decrease exponentially with the number of samples taken before reaching
       // the minimum transmittance.
+      // See the discussion here: https://x.com/shotamatsuda/status/1886259549931520437
       float tail = opticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
       maxOpticalDepth += tail;
       break; // Early termination
