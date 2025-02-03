@@ -342,9 +342,9 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
 
 #if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 vec3 getInterpolatedSunSkyIrradiance(const float height, out vec3 skyIrradiance) {
-  float hightFraction = remapClamped(height, minHeight, maxHeight);
-  skyIrradiance = mix(vSunSkyIrradiance.minSky, vSunSkyIrradiance.maxSky, hightFraction);
-  return mix(vSunSkyIrradiance.minSun, vSunSkyIrradiance.maxSun, hightFraction);
+  float heightFraction = remapClamped(height, minHeight, maxHeight);
+  skyIrradiance = mix(vSunSkyIrradiance.minSky, vSunSkyIrradiance.maxSky, heightFraction);
+  return mix(vSunSkyIrradiance.minSun, vSunSkyIrradiance.maxSun, heightFraction);
 }
 #endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 

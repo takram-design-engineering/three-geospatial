@@ -29,27 +29,19 @@ out vec3 vRayDirection; // Direction to the texel
 out vec3 vEllipsoidCenter;
 
 #if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
-out SunSkyIrradiance vSunSkyIrradiance;
-#endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
-#ifndef ACCURATE_SUN_SKY_IRRADIANCE
+out SunSkyIrradiance vSunSkyIrradiance;
+
 SunSkyIrradiance sampleSunSkyIrradiance(const vec3 positionECEF) {
   vec3 surfaceNormal = normalize(positionECEF);
   vec2 radii = (bottomRadius + vec2(minHeight, maxHeight)) * METER_TO_LENGTH_UNIT;
-  vec3 minPosition = surfaceNormal * radii.x;
-  vec3 maxPosition = surfaceNormal * radii.y;
-  vec3 skyIrradiance;
-  vec3 sunIrradiance;
-  sunIrradiance = GetSunAndSkyIrradiance(minPosition, sunDirection, skyIrradiance);
   SunSkyIrradiance result;
-  result.minSky = skyIrradiance;
-  result.minSun = sunIrradiance;
-  sunIrradiance = GetSunAndSkyIrradiance(maxPosition, sunDirection, skyIrradiance);
-  result.maxSky = skyIrradiance;
-  result.maxSun = sunIrradiance;
+  result.minSun = GetSunAndSkyIrradiance(surfaceNormal * radii.x, sunDirection, result.minSky);
+  result.maxSun = GetSunAndSkyIrradiance(surfaceNormal * radii.y, sunDirection, result.maxSky);
   return result;
 }
-#endif // ACCURATE_SUN_SKY_IRRADIANCE
+
+#endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
 void main() {
   vUv = position.xy * 0.5 + 0.5;
