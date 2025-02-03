@@ -54,6 +54,7 @@ import fragmentShader from './shaders/clouds.frag?raw'
 import clouds from './shaders/clouds.glsl?raw'
 import vertexShader from './shaders/clouds.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
+import types from './shaders/types.glsl?raw'
 
 declare module 'three' {
   interface Camera {
@@ -154,7 +155,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           atmosphere: {
             parameters: atmosphereParameters,
             functions
-          }
+          },
+          types
         }),
         fragmentShader: unrollLoops(
           resolveIncludes(fragmentShader, {
@@ -170,6 +172,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
               parameters: atmosphereParameters,
               functions
             },
+            types,
             parameters,
             clouds
           })

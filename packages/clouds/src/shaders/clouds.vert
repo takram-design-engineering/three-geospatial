@@ -3,6 +3,7 @@ precision highp sampler3D;
 
 #include "atmosphere/parameters"
 #include "atmosphere/functions"
+#include "types"
 
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
@@ -28,12 +29,6 @@ out vec3 vRayDirection; // Direction to the texel
 out vec3 vEllipsoidCenter;
 
 #if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
-struct SunSkyIrradiance {
-  vec3 lowSky;
-  vec3 lowSun;
-  vec3 highSky;
-  vec3 highSun;
-};
 out SunSkyIrradiance vSunSkyIrradiance;
 #endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 

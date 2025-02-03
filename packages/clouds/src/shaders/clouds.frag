@@ -13,6 +13,7 @@ precision highp sampler2DArray;
 #include "core/poissonDisk"
 #include "atmosphere/parameters"
 #include "atmosphere/functions"
+#include "types"
 #include "parameters"
 #include "clouds"
 
@@ -74,12 +75,6 @@ in vec3 vRayDirection; // Direction to the texel
 in vec3 vEllipsoidCenter;
 
 #if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
-struct SunSkyIrradiance {
-  vec3 lowSky;
-  vec3 lowSun;
-  vec3 highSky;
-  vec3 highSun;
-};
 in SunSkyIrradiance vSunSkyIrradiance;
 #endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
