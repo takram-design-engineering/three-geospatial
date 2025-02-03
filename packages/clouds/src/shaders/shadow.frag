@@ -63,6 +63,7 @@ vec4 marchClouds(
 
   float extinctionSum = 0.0;
   float maxOpticalDepth = 0.0;
+  float maxOpticalDepthTail = 0.0;
   float transmittanceIntegral = 1.0;
   float weightedDistanceSum = 0.0;
   float transmittanceSum = 0.0;
@@ -99,8 +100,7 @@ vec4 marchClouds(
       // decrease exponentially with the number of samples taken before reaching
       // the minimum transmittance.
       // See the discussion here: https://x.com/shotamatsuda/status/1886259549931520437
-      float tail = opticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
-      maxOpticalDepth += tail;
+      maxOpticalDepthTail = opticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
       break; // Early termination
     }
     rayDistance += stepSize;
@@ -111,7 +111,7 @@ vec4 marchClouds(
   }
   float frontDepth = min(weightedDistanceSum / transmittanceSum, maxRayDistance);
   float meanExtinction = extinctionSum / float(sampleCount);
-  return vec4(frontDepth, meanExtinction, maxOpticalDepth, 1.0);
+  return vec4(frontDepth, meanExtinction, maxOpticalDepth, maxOpticalDepthTail);
 }
 
 void getRayNearFar(
