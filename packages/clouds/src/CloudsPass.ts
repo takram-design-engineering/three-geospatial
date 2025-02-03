@@ -15,8 +15,8 @@ import {
 import { type AtmosphereParameters } from '@takram/three-atmosphere'
 
 import { CloudsMaterial } from './CloudsMaterial'
-import { CloudsPassBase, type CloudsPassBaseOptions } from './CloudsPassBase'
 import { CloudsResolveMaterial } from './CloudsResolveMaterial'
+import { PassBase, type PassBaseOptions } from './PassBase'
 import {
   type AtmosphereUniforms,
   type CloudLayerUniforms,
@@ -71,13 +71,13 @@ function createRenderTarget(
   })
 }
 
-export interface CloudsPassOptions extends CloudsPassBaseOptions {
+export interface CloudsPassOptions extends PassBaseOptions {
   cloudParameterUniforms: CloudParameterUniforms
   cloudLayerUniforms: CloudLayerUniforms
   atmosphereUniforms: AtmosphereUniforms
 }
 
-export class CloudsPass extends CloudsPassBase {
+export class CloudsPass extends PassBase {
   private currentRenderTarget!: RenderTarget
   readonly currentMaterial: CloudsMaterial
   readonly currentPass: ShaderPass

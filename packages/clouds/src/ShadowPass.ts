@@ -8,7 +8,7 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { CloudsPassBase, type CloudsPassBaseOptions } from './CloudsPassBase'
+import { PassBase, type PassBaseOptions } from './PassBase'
 import { ShaderArrayPass } from './ShaderArrayPass'
 import { ShadowMaterial } from './ShadowMaterial'
 import { ShadowResolveMaterial } from './ShadowResolveMaterial'
@@ -31,13 +31,13 @@ function createRenderTarget(name: string): WebGLArrayRenderTarget {
   return renderTarget
 }
 
-export interface ShadowPassOptions extends CloudsPassBaseOptions {
+export interface ShadowPassOptions extends PassBaseOptions {
   cloudParameterUniforms: CloudParameterUniforms
   cloudLayerUniforms: CloudLayerUniforms
   atmosphereUniforms: AtmosphereUniforms
 }
 
-export class ShadowPass extends CloudsPassBase {
+export class ShadowPass extends PassBase {
   private currentRenderTarget!: WebGLArrayRenderTarget
   readonly currentMaterial: ShadowMaterial
   readonly currentPass: ShaderArrayPass

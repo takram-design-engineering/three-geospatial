@@ -3,16 +3,16 @@ import { Camera } from 'three'
 
 import { type CascadedShadowMaps } from './CascadedShadowMaps'
 
-export interface CloudsPassBaseOptions {
+export interface PassBaseOptions {
   shadow: CascadedShadowMaps
 }
 
-export abstract class CloudsPassBase extends Pass {
+export abstract class PassBase extends Pass {
   shadow: CascadedShadowMaps
 
   private _mainCamera = new Camera()
 
-  constructor(name: string, options: CloudsPassBaseOptions) {
+  constructor(name: string, options: PassBaseOptions) {
     super(name)
     const { shadow } = options
     this.shadow = shadow
