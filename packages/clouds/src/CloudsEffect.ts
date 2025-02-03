@@ -212,6 +212,7 @@ export class CloudsEffect extends Effect {
 
   private updateAtmosphereComposition(): void {
     const { shadow, shadowPass, cloudsPass } = this
+    const shadowUniforms = shadowPass.currentMaterial.uniforms
     const cloudsUniforms = cloudsPass.currentMaterial.uniforms
 
     // The postprocessing Effect class incorrectly specifies the event map:
@@ -223,7 +224,7 @@ export class CloudsEffect extends Effect {
     const prevOverlay = this._atmosphereOverlay
     const nextOverlay = Object.assign(this._atmosphereOverlay ?? {}, {
       map: cloudsPass.outputBuffer
-    })
+    } satisfies AtmosphereOverlay)
     if (prevOverlay !== nextOverlay) {
       this._atmosphereOverlay = nextOverlay
       ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
@@ -240,9 +241,10 @@ export class CloudsEffect extends Effect {
       cascadeCount: shadow.cascadeCount,
       intervals: cloudsUniforms.shadowIntervals.value,
       matrices: cloudsUniforms.shadowMatrices.value,
+      inverseMatrices: shadowUniforms.inverseShadowMatrices.value,
       far: shadow.far,
       topHeight: cloudsUniforms.shadowTopHeight.value
-    })
+    } satisfies AtmosphereShadow)
     if (prevShadow !== nextShadow) {
       this._atmosphereShadow = nextShadow
       ;(this.dispatchEvent as (event: CloudsEffectChangeEvent) => void)({
@@ -257,7 +259,7 @@ export class CloudsEffect extends Effect {
       cloudsPass.shadowLengthBuffer != null
         ? Object.assign(this._atmosphereShadowLength ?? {}, {
             map: cloudsPass.shadowLengthBuffer
-          })
+          } satisfies AtmosphereShadowLength)
         : null
     if (prevShadowLength !== nextShadowLength) {
       this._atmosphereShadowLength = nextShadowLength

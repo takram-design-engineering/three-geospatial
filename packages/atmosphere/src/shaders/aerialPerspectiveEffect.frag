@@ -1,6 +1,7 @@
 precision highp sampler2DArray;
 
 #include "core/depth"
+#include "core/math"
 #include "core/packing"
 #include "core/transform"
 #include "core/raySphereIntersection"
@@ -36,6 +37,7 @@ uniform sampler2D overlayBuffer;
 uniform sampler2DArray shadowBuffer;
 uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
+uniform mat4 inverseShadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
 uniform float shadowTopHeight;
 uniform float shadowRadius;
@@ -158,6 +160,7 @@ float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int
 float sampleShadowOpticalDepthPCF(
   const vec3 worldPosition,
   const float distanceToTop,
+  const float radius,
   const int cascadeIndex
 ) {
   vec2 uv = getShadowUv(worldPosition, cascadeIndex);
@@ -172,11 +175,7 @@ float sampleShadowOpticalDepthPCF(
   for (int i = 0; i < 32; ++i) {
     #if UNROLLED_LOOP_INDEX < POISSON_DISK_COUNT
     offset = poissonDisk[i];
-    sum += readShadowOpticalDepth(
-      uv + offset * shadowRadius * texelSize,
-      distanceToTop,
-      cascadeIndex
-    );
+    sum += readShadowOpticalDepth(uv + offset * radius * texelSize, distanceToTop, cascadeIndex);
     #endif // UNROLLED_LOOP_INDEX < POISSON_DISK_COUNT
   }
   #pragma unroll_loop_end
@@ -186,6 +185,7 @@ float sampleShadowOpticalDepthPCF(
 float sampleShadowOpticalDepth(
   const vec3 worldPosition,
   const vec3 positionECEF,
+  const float radius,
   const float jitter
 ) {
   float distanceToTop = getDistanceToShadowTop(positionECEF);
@@ -201,8 +201,40 @@ float sampleShadowOpticalDepth(
     jitter
   );
   return cascadeIndex >= 0
-    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, cascadeIndex)
+    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, radius, cascadeIndex)
     : 0.0;
+}
+
+float getShadowRadius(const vec3 worldPosition) {
+  vec4 clip = shadowMatrices[0] * vec4(worldPosition, 1.0);
+  clip /= clip.w;
+
+  // Offset by 1px in each direction in shadow's clip coordinates.
+  vec2 shadowSize = vec2(textureSize(shadowBuffer, 0));
+  vec3 offset = vec3(2.0 / shadowSize, 0.0);
+  vec4 clipX = clip + offset.xzzz;
+  vec4 clipY = clip + offset.zyzz;
+
+  // Convert back to world space.
+  vec4 worldX = inverseShadowMatrices[0] * clipX;
+  vec4 worldY = inverseShadowMatrices[0] * clipY;
+
+  // Project into the main camera's clip space.
+  mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
+  vec4 projected = viewProjectionMatrix * vec4(worldPosition, 1.0);
+  vec4 projectedX = viewProjectionMatrix * worldX;
+  vec4 projectedY = viewProjectionMatrix * worldY;
+  projected /= projected.w;
+  projectedX /= projectedX.w;
+  projectedY /= projectedY.w;
+
+  // Take the mean of pixel sizes.
+  vec2 center = (projected.xy * 0.5 + 0.5) * resolution;
+  vec2 offsetX = (projectedX.xy * 0.5 + 0.5) * resolution;
+  vec2 offsetY = (projectedY.xy * 0.5 + 0.5) * resolution;
+  float size = (length(offsetX - center) + length(offsetY - center)) * 0.5;
+
+  return remapClamped(size, 10.0, 50.0, 0.0, shadowRadius);
 }
 
 #endif // HAS_SHADOW
@@ -275,7 +307,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   #ifdef HAS_SHADOW
   float stbn = getSTBN();
-  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, stbn);
+  float radius = getShadowRadius(worldPosition);
+  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
   float sunTransmittance = exp(-opticalDepth);
   #else // HAS_SHADOW
   float sunTransmittance = 1.0;

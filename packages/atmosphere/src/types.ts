@@ -19,6 +19,7 @@ export interface AtmosphereShadow {
   cascadeCount: number
   intervals: Vector2[]
   matrices: Matrix4[]
+  inverseMatrices: Matrix4[]
   far: number
   topHeight: number
 }

@@ -24,6 +24,7 @@ import {
 import {
   cascadedShadowMaps,
   depth,
+  math,
   packing,
   poissonDisk,
   raySphereIntersection,
@@ -119,6 +120,7 @@ export interface AerialPerspectiveEffectUniforms {
   shadowMapSize: Uniform<Vector2>
   shadowIntervals: Uniform<Vector2[]>
   shadowMatrices: Uniform<Matrix4[]>
+  inverseShadowMatrices: Uniform<Matrix4[]>
   shadowFar: Uniform<number>
   shadowTopHeight: Uniform<number>
   shadowRadius: Uniform<number>
@@ -211,6 +213,7 @@ export class AerialPerspectiveEffect extends Effect {
           core: {
             depth,
             packing,
+            math,
             transform,
             raySphereIntersection,
             cascadedShadowMaps,
@@ -254,6 +257,7 @@ export class AerialPerspectiveEffect extends Effect {
             shadowMapSize: new Uniform(new Vector2()),
             shadowIntervals: new Uniform([]),
             shadowMatrices: new Uniform([]),
+            inverseShadowMatrices: new Uniform([]),
             shadowFar: new Uniform(0),
             shadowTopHeight: new Uniform(0),
             shadowRadius: new Uniform(3),
@@ -416,6 +420,7 @@ export class AerialPerspectiveEffect extends Effect {
       uniforms.get('shadowMapSize').value = shadow.mapSize
       uniforms.get('shadowIntervals').value = shadow.intervals
       uniforms.get('shadowMatrices').value = shadow.matrices
+      uniforms.get('inverseShadowMatrices').value = shadow.inverseMatrices
       uniforms.get('shadowFar').value = shadow.far
       uniforms.get('shadowTopHeight').value = shadow.topHeight
     }
