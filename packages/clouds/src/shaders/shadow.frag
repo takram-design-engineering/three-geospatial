@@ -96,7 +96,7 @@ vec4 marchClouds(
     if (transmittanceIntegral <= minTransmittance) {
       // A large amount of optical depth accumulates in the tail, beyond the
       // point of minimum transmittance. The expected optical depth seems to
-      // increase exponentially with the number of samples taken before reaching
+      // decrease exponentially with the number of samples taken before reaching
       // the minimum transmittance.
       float tail = opticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
       maxOpticalDepth += tail;
