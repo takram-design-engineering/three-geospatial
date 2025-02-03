@@ -95,7 +95,13 @@ const Globe: FC = () => {
     <TilesRenderer
       key={apiKey} // Reconstruct tiles when API key changes.
     >
-      <TilesPlugin plugin={GoogleCloudAuthPlugin} args={{ apiToken: apiKey }} />
+      <TilesPlugin
+        plugin={GoogleCloudAuthPlugin}
+        args={{
+          apiToken: apiKey,
+          autoRefreshToken: true
+        }}
+      />
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
       <TilesPlugin plugin={UpdateOnChangePlugin} />
