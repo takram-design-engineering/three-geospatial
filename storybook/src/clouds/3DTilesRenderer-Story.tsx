@@ -36,7 +36,7 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsEffect } from '@takram/three-clouds'
+import { type CloudsCompositePass } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import {
   createData3DTextureLoaderClass,
@@ -216,7 +216,7 @@ const Scene: FC<SceneProps> = ({
     'core/stbn.bin'
   )
 
-  const [clouds, setClouds] = useState<CloudsEffect | null>(null)
+  const [clouds, setClouds] = useState<CloudsCompositePass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
     coverage,
     animate: true

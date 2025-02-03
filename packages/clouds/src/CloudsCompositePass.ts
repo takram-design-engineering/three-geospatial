@@ -1,4 +1,4 @@
-import { Effect, EffectAttribute, Resolution } from 'postprocessing'
+import { Pass, Resolution } from 'postprocessing'
 import {
   Camera,
   EventDispatcher,
@@ -45,8 +45,6 @@ import {
   type CloudParameterUniforms
 } from './uniforms'
 
-import fragmentShader from './shaders/cloudsEffect.frag?raw'
-
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export function applyVelocity(
@@ -62,13 +60,13 @@ export function applyVelocity(
   }
 }
 
-export interface CloudsEffectChangeEvent {
+export interface CloudsCompositePassChangeEvent {
   type: 'change'
-  target: CloudsEffect
+  target: CloudsCompositePass
   property: 'atmosphereOverlay' | 'atmosphereShadow' | 'atmosphereShadowLength'
 }
 
-export interface CloudsEffectOptions {
+export interface CloudsCompositePassOptions {
   resolutionScale?: number
   width?: number
   height?: number
@@ -76,13 +74,13 @@ export interface CloudsEffectOptions {
   resolutionY?: number
 }
 
-export const cloudsEffectOptionsDefaults = {
+export const cloudsCompositePassOptionsDefaults = {
   resolutionScale: 1,
   width: Resolution.AUTO_SIZE,
   height: Resolution.AUTO_SIZE
-} satisfies CloudsEffectOptions
+} satisfies CloudsCompositePassOptions
 
-export class CloudsEffect extends Effect {
+export class CloudsCompositePass extends Pass {
   readonly cloudLayers: CloudLayers = [
     {
       altitude: 750,
@@ -170,19 +168,23 @@ export class CloudsEffect extends Effect {
   private _atmosphereShadowLength: AtmosphereShadowLength | null = null
 
   readonly resolution: Resolution
-  readonly events = new EventDispatcher<{ change: CloudsEffectChangeEvent }>()
+  readonly events = new EventDispatcher<{
+    change: CloudsCompositePassChangeEvent
+  }>()
+
   private frame = 0
   private shadowCascadeCount = 0
   private readonly shadowMapSize = new Vector2()
 
   constructor(
-    private camera: Camera = new Camera(),
-    options?: CloudsEffectOptions,
+    private _mainCamera: Camera = new Camera(),
+    options?: CloudsCompositePassOptions,
     private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
-    super('CloudsEffect', fragmentShader, {
-      attributes: EffectAttribute.DEPTH
-    })
+    super('CloudsCompositePass')
+    this.renderToScreen = false
+    this.needsSwap = false
+    this.needsDepthTexture = true
 
     const {
       resolutionScale,
@@ -191,7 +193,7 @@ export class CloudsEffect extends Effect {
       resolutionX = width,
       resolutionY = height
     } = {
-      ...cloudsEffectOptionsDefaults,
+      ...cloudsCompositePassOptionsDefaults,
       ...options
     }
 
@@ -259,11 +261,11 @@ export class CloudsEffect extends Effect {
   }
 
   get mainCamera(): Camera {
-    return this.camera
+    return this._mainCamera
   }
 
   override set mainCamera(value: Camera) {
-    this.camera = value
+    this._mainCamera = value
     this.shadowPass.mainCamera = value
     this.cloudsPass.mainCamera = value
   }
@@ -302,7 +304,7 @@ export class CloudsEffect extends Effect {
     const inverseEllipsoidMatrix = this.inverseEllipsoidMatrix
       .copy(this.ellipsoidMatrix)
       .invert()
-    const cameraPositionECEF = this.camera
+    const cameraPositionECEF = this.mainCamera
       .getWorldPosition(vectorScratch)
       .applyMatrix4(inverseEllipsoidMatrix)
       .sub(this.ellipsoidCenter)
@@ -394,10 +396,12 @@ export class CloudsEffect extends Effect {
     }
   }
 
-  override update(
+  override render(
     renderer: WebGLRenderer,
-    inputBuffer: WebGLRenderTarget,
-    deltaTime = 0
+    inputBuffer: WebGLRenderTarget | null,
+    outputBuffer: WebGLRenderTarget | null,
+    deltaTime = 0,
+    stencilTest?: boolean
   ): void {
     const { shadow, shadowPass, cloudsPass } = this
     if (

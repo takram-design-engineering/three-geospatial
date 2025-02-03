@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { folder } from 'leva'
 import { useEffect } from 'react'
 
-import { type CloudLayer, type CloudsEffect } from '@takram/three-clouds'
+import { type CloudLayer, type CloudsCompositePass } from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
 
 import { useControls } from '../helpers/useControls'
@@ -22,7 +22,7 @@ export interface CloudsControlParams {
 }
 
 export function useCloudsControls(
-  effect: CloudsEffect | null,
+  effect: CloudsCompositePass | null,
   {
     coverage: defaultCoverage,
     animate: defaultAnimate,
