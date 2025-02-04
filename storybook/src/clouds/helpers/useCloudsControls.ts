@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { type CloudsPass } from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
 
-import { useControls } from '../helpers/useControls'
+import { useControls } from '../../helpers/useControls'
 
 export interface CloudsControlParams {
   enabled: boolean

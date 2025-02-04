@@ -58,7 +58,7 @@ import {
 } from '../helpers/useLocalDateControls'
 import { usePovControls } from '../helpers/usePovControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-import { useCloudsControls } from './useCloudsControls'
+import { useCloudsControls } from './helpers/useCloudsControls'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')

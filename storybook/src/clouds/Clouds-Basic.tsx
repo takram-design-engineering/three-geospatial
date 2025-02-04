@@ -27,7 +27,7 @@ import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-import { useCloudsControls } from './useCloudsControls'
+import { useCloudsControls } from './helpers/useCloudsControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
