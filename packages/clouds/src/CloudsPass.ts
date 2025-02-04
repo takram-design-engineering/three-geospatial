@@ -27,14 +27,10 @@ import { lerp, type Ellipsoid } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
 import { type CloudLayer } from './cloudLayer'
-import { CloudShape } from './CloudShape'
-import { CloudShapeDetail } from './CloudShapeDetail'
-import { LocalWeather } from './LocalWeather'
 import { type Procedural3DTexture } from './Procedural3DTexture'
 import { type ProceduralTexture } from './ProceduralTexture'
 import { RenderPass } from './RenderPass'
 import { ShadowPass } from './ShadowPass'
-import { Turbulence } from './Turbulence'
 import {
   createAtmosphereUniforms,
   createCloudLayerUniforms,
@@ -117,10 +113,10 @@ export class CloudsPass extends Pass {
   ]
 
   // Weather and shape texture generators
-  localWeather: ProceduralTexture = new LocalWeather()
-  shape: Procedural3DTexture = new CloudShape()
-  shapeDetail: Procedural3DTexture = new CloudShapeDetail()
-  turbulence: ProceduralTexture = new Turbulence()
+  localWeather: ProceduralTexture | null = null
+  shape: Procedural3DTexture | null = null
+  shapeDetail: Procedural3DTexture | null = null
+  turbulence: ProceduralTexture | null = null
 
   correctAltitude = true
 
@@ -194,16 +190,16 @@ export class CloudsPass extends Pass {
     })
 
     this.cloudParameterUniforms = createCloudParameterUniforms({
-      localWeatherTexture: this.localWeather.texture,
+      localWeatherTexture: this.localWeather?.texture ?? null,
       localWeatherRepeat: this.localWeatherRepeat,
       localWeatherOffset: this.localWeatherOffset,
-      shapeTexture: this.shape.texture,
+      shapeTexture: this.shape?.texture ?? null,
       shapeRepeat: this.shapeRepeat,
       shapeOffset: this.shapeOffset,
-      shapeDetailTexture: this.shapeDetail.texture,
+      shapeDetailTexture: this.shapeDetail?.texture ?? null,
       shapeDetailRepeat: this.shapeDetailRepeat,
       shapeDetailOffset: this.shapeDetailOffset,
-      turbulenceTexture: this.turbulence.texture,
+      turbulenceTexture: this.turbulence?.texture ?? null,
       turbulenceRepeat: this.turbulenceRepeat
     })
 
@@ -239,10 +235,10 @@ export class CloudsPass extends Pass {
   }
 
   dispose(): void {
-    this.localWeather.dispose()
-    this.shape.dispose()
-    this.shapeDetail.dispose()
-    this.turbulence.dispose()
+    this.localWeather?.dispose()
+    this.shape?.dispose()
+    this.shapeDetail?.dispose()
+    this.turbulence?.dispose()
     super.dispose()
   }
 
@@ -407,10 +403,10 @@ export class CloudsPass extends Pass {
       renderPass.setShadowSize(width, height, depth)
     }
 
-    this.localWeather.render(renderer, deltaTime)
-    this.shape.render(renderer, deltaTime)
-    this.shapeDetail.render(renderer, deltaTime)
-    this.turbulence.render(renderer, deltaTime)
+    this.localWeather?.render(renderer, deltaTime)
+    this.shape?.render(renderer, deltaTime)
+    this.shapeDetail?.render(renderer, deltaTime)
+    this.turbulence?.render(renderer, deltaTime)
 
     ++this.frame
     this.updateSharedUniforms(deltaTime)
@@ -444,7 +440,8 @@ export class CloudsPass extends Pass {
   }
 
   set localWeatherTexture(value: Texture | null) {
-    this.cloudParameterUniforms.localWeatherTexture.value = value
+    this.cloudParameterUniforms.localWeatherTexture.value =
+      value ?? this.localWeather?.texture ?? null
   }
 
   get shapeTexture(): Data3DTexture | null {
@@ -452,7 +449,8 @@ export class CloudsPass extends Pass {
   }
 
   set shapeTexture(value: Data3DTexture | null) {
-    this.cloudParameterUniforms.shapeTexture.value = value
+    this.cloudParameterUniforms.shapeTexture.value =
+      value ?? this.shape?.texture ?? null
   }
 
   get shapeDetailTexture(): Data3DTexture | null {
@@ -460,7 +458,8 @@ export class CloudsPass extends Pass {
   }
 
   set shapeDetailTexture(value: Data3DTexture | null) {
-    this.cloudParameterUniforms.shapeDetailTexture.value = value
+    this.cloudParameterUniforms.shapeDetailTexture.value =
+      value ?? this.shapeDetail?.texture ?? null
   }
 
   get turbulenceTexture(): Texture | null {
@@ -468,7 +467,8 @@ export class CloudsPass extends Pass {
   }
 
   set turbulenceTexture(value: Texture | null) {
-    this.cloudParameterUniforms.turbulenceTexture.value = value
+    this.cloudParameterUniforms.turbulenceTexture.value =
+      value ?? this.turbulence?.texture ?? null
   }
 
   get stbnTexture(): Data3DTexture | null {
