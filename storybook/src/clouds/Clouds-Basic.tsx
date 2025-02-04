@@ -3,14 +3,7 @@ import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { Fragment, useEffect, useRef, useState, type FC } from 'react'
-import {
-  NearestFilter,
-  Quaternion,
-  RedFormat,
-  RepeatWrapping,
-  Vector3,
-  type Camera
-} from 'three'
+import { Quaternion, Vector3, type Camera } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import {
@@ -21,14 +14,10 @@ import {
 import { type CloudsPass } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import {
-  createData3DTextureLoaderClass,
   Ellipsoid,
   Geodetic,
-  parseUint8Array,
   radians,
-  STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH,
+  STBNLoader,
   type GeodeticLike
 } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
@@ -104,20 +93,7 @@ const Scene: FC = () => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const stbnTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RedFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_WIDTH,
-      height: STBN_TEXTURE_HEIGHT,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    'core/stbn.bin'
-  )
+  const stbnTexture = useLoader(STBNLoader, 'core/stbn.bin')
 
   const [clouds, setClouds] = useState<CloudsPass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)

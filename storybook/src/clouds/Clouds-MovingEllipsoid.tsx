@@ -8,7 +8,7 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { Fragment, useState, type FC } from 'react'
-import { NearestFilter, RedFormat, RepeatWrapping, Vector3 } from 'three'
+import { Vector3 } from 'three'
 
 import {
   AerialPerspective,
@@ -22,14 +22,10 @@ import {
 import { type CloudsPass } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import {
-  createData3DTextureLoaderClass,
   Ellipsoid,
   Geodetic,
-  parseUint8Array,
   radians,
-  STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH
+  STBNLoader
 } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 
@@ -80,20 +76,7 @@ const Scene: FC = () => {
     atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
   })
 
-  const stbnTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RedFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_WIDTH,
-      height: STBN_TEXTURE_HEIGHT,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    'core/stbn.bin'
-  )
+  const stbnTexture = useLoader(STBNLoader, 'core/stbn.bin')
 
   const [clouds, setClouds] = useState<CloudsPass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)

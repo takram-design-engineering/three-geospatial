@@ -27,7 +27,6 @@ import {
   useState,
   type FC
 } from 'react'
-import { NearestFilter, RedFormat, RepeatWrapping } from 'three'
 import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
@@ -39,14 +38,10 @@ import {
 import { type CloudsPass } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import {
-  createData3DTextureLoaderClass,
   Geodetic,
-  parseUint8Array,
   PointOfView,
   radians,
-  STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH
+  STBNLoader
 } from '@takram/three-geospatial'
 import {
   Depth,
@@ -201,20 +196,7 @@ const Scene: FC<SceneProps> = ({
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const stbnTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RedFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_WIDTH,
-      height: STBN_TEXTURE_HEIGHT,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    'core/stbn.bin'
-  )
+  const stbnTexture = useLoader(STBNLoader, 'core/stbn.bin')
 
   const [clouds, setClouds] = useState<CloudsPass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
