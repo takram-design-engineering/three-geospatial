@@ -1,5 +1,5 @@
 import { Box, OrbitControls } from '@react-three/drei'
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { Fragment, useEffect, useRef, useState, type FC } from 'react'
@@ -17,7 +17,6 @@ import {
   Ellipsoid,
   Geodetic,
   radians,
-  STBNLoader,
   type GeodeticLike
 } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
@@ -93,8 +92,6 @@ const Scene: FC = () => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const stbnTexture = useLoader(STBNLoader, 'core/stbn.bin')
-
   const [clouds, setClouds] = useState<CloudsPass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)
 
@@ -126,23 +123,14 @@ const Scene: FC = () => {
         textures='atmosphere'
         correctAltitude={correctAltitude}
         photometric={photometric}
+        stbn='core/stbn.bin'
       >
         <EffectComposer multisampling={0} enableNormalPass>
           <Fragment key={JSON.stringify([enabled, toneMapping])}>
             {enabled && (
-              <Clouds
-                ref={setClouds}
-                stbnTexture={stbnTexture}
-                shadow-maxFar={1e5}
-                {...cloudsProps}
-              />
+              <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps} />
             )}
-            <AerialPerspective
-              sky
-              sunIrradiance
-              skyIrradiance
-              stbnTexture={stbnTexture}
-            />
+            <AerialPerspective sky sunIrradiance skyIrradiance />
             {toneMapping && (
               <>
                 <LensFlare />

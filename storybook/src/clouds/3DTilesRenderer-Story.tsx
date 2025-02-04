@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer'
 import {
@@ -37,12 +37,7 @@ import {
 } from '@takram/three-atmosphere/r3f'
 import { type CloudsPass } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
-import {
-  Geodetic,
-  PointOfView,
-  radians,
-  STBNLoader
-} from '@takram/three-geospatial'
+import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
   Depth,
   Dithering,
@@ -196,8 +191,6 @@ const Scene: FC<SceneProps> = ({
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const stbnTexture = useLoader(STBNLoader, 'core/stbn.bin')
-
   const [clouds, setClouds] = useState<CloudsPass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
     coverage,
@@ -212,6 +205,7 @@ const Scene: FC<SceneProps> = ({
       textures={atmosphereModel === 'default' ? 'atmosphere' : 'clouds'}
       correctAltitude={correctAltitude}
       photometric={photometric}
+      stbn='core/stbn.bin'
     >
       <Globe />
       <EffectComposer ref={composerRef} multisampling={0}>
@@ -232,7 +226,6 @@ const Scene: FC<SceneProps> = ({
               {enabled && (
                 <Clouds
                   ref={setClouds}
-                  stbnTexture={stbnTexture}
                   shadow-farScale={0.25}
                   {...cloudsProps}
                 />
@@ -243,7 +236,6 @@ const Scene: FC<SceneProps> = ({
                 skyIrradiance
                 correctGeometricError={correctGeometricError}
                 irradianceScale={2 / Math.PI}
-                stbnTexture={stbnTexture}
               />
             </>
           )}

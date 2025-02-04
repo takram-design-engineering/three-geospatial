@@ -33,7 +33,7 @@ export type CloudsProps = Omit<
 
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
   function Clouds({ children, ...props }, forwardedRef) {
-    const { textures, transientStates, atoms, ...contextProps } =
+    const { textures, stbn, transientStates, atoms, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [atmosphereParameters, others] = separateProps({
@@ -101,6 +101,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
           object={pass}
           mainCamera={camera}
           {...atmosphereParameters}
+          stbnTexture={stbn}
           {...others}
         />
         {children != null && <CloudLayers pass={pass}>{children}</CloudLayers>}
