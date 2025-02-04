@@ -26,6 +26,7 @@ import {
 import { lerp, type Ellipsoid } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
+import { type CloudLayer } from './cloudLayer'
 import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { LocalWeather } from './LocalWeather'
@@ -34,7 +35,6 @@ import { type ProceduralTexture } from './ProceduralTexture'
 import { RenderPass } from './RenderPass'
 import { ShadowPass } from './ShadowPass'
 import { Turbulence } from './Turbulence'
-import { type CloudLayers } from './types'
 import {
   createAtmosphereUniforms,
   createCloudLayerUniforms,
@@ -81,7 +81,7 @@ export const cloudsPassOptionsDefaults = {
 } satisfies CloudsPassOptions
 
 export class CloudsPass extends Pass {
-  readonly cloudLayers: CloudLayers = [
+  readonly cloudLayers: CloudLayer[] = [
     {
       altitude: 750,
       height: 650,
@@ -113,16 +113,6 @@ export class CloudsPass extends Pass {
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.5
-    },
-    {
-      altitude: 0,
-      height: 0,
-      densityScale: 0,
-      shapeAmount: 0,
-      detailAmount: 0,
-      weatherExponent: 0,
-      shapeAlteringBias: 0,
-      coverageFilterWidth: 0
     }
   ]
 

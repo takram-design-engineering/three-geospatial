@@ -11,7 +11,7 @@ import { type Primitive } from 'type-fest'
 
 import { type AtmosphereParameters } from '@takram/three-atmosphere'
 
-import { type CloudLayer, type CloudLayers } from './types'
+import { defaultCloudLayer, type CloudLayer } from './cloudLayer'
 
 export interface CloudParameterUniforms {
   // Scattering
@@ -98,11 +98,19 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
   }
 }
 
+function normalizeLayers(layers: readonly CloudLayer[]): CloudLayer[] {
+  const result: CloudLayer[] = []
+  for (let i = 0; i < 4; ++i) {
+    result[i] = Object.assign({}, defaultCloudLayer, layers[i])
+  }
+  return result
+}
+
 function packVector<
   K extends keyof {
     [P in keyof CloudLayer as CloudLayer[P] extends number ? P : never]: any
   }
->(layers: CloudLayers, key: K, uniform: Uniform<Vector4>): void {
+>(layers: readonly CloudLayer[], key: K, uniform: Uniform<Vector4>): void {
   uniform.value.set(
     layers[0][key],
     layers[1][key],
@@ -113,8 +121,10 @@ function packVector<
 
 export function updateCloudLayerUniforms(
   uniforms: CloudLayerUniforms,
-  layers: CloudLayers
+  layersInput: readonly CloudLayer[]
 ): void {
+  const layers = normalizeLayers(layersInput)
+
   packVector(layers, 'altitude', uniforms.minLayerHeights)
   uniforms.maxLayerHeights.value.set(
     layers[0].altitude + layers[0].height,

@@ -14,19 +14,25 @@ import {
   cloudsPassOptionsDefaults,
   type CloudsPassChangeEvent
 } from '../CloudsPass'
+import { CloudLayers, type CloudLayersChildren } from './CloudLayers'
 
-export type CloudsProps = PassThoughInstanceProps<
-  CloudsPass,
-  [],
-  Partial<
-    CloudsPass &
-      ExpandNestedProps<CloudsPass, 'resolution'> &
-      ExpandNestedProps<CloudsPass, 'shadow'>
-  >
->
+export type CloudsProps = Omit<
+  PassThoughInstanceProps<
+    CloudsPass,
+    [],
+    Partial<
+      CloudsPass &
+        ExpandNestedProps<CloudsPass, 'resolution'> &
+        ExpandNestedProps<CloudsPass, 'shadow'>
+    >
+  >,
+  'children'
+> & {
+  children?: CloudLayersChildren
+}
 
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
-  function Clouds(props, forwardedRef) {
+  function Clouds({ children, ...props }, forwardedRef) {
     const { textures, transientStates, atoms, ...contextProps } =
       useContext(AtmosphereContext)
 
@@ -89,13 +95,16 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
     }, [pass, handleChange])
 
     return (
-      <primitive
-        ref={forwardedRef}
-        object={pass}
-        mainCamera={camera}
-        {...atmosphereParameters}
-        {...others}
-      />
+      <>
+        <primitive
+          ref={forwardedRef}
+          object={pass}
+          mainCamera={camera}
+          {...atmosphereParameters}
+          {...others}
+        />
+        {children != null && <CloudLayers pass={pass}>{children}</CloudLayers>}
+      </>
     )
   }
 )

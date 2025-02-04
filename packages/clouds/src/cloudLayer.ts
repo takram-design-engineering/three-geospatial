@@ -10,4 +10,13 @@ export interface CloudLayer {
   shadow?: boolean
 }
 
-export type CloudLayers = [CloudLayer, CloudLayer, CloudLayer, CloudLayer]
+export const defaultCloudLayer: CloudLayer = {
+  altitude: 0,
+  height: 0,
+  densityScale: 0.15,
+  shapeAmount: 1,
+  detailAmount: 1,
+  weatherExponent: 1,
+  shapeAlteringBias: 0.35,
+  coverageFilterWidth: 0.6
+}
