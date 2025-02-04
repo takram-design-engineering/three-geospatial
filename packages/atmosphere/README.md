@@ -297,6 +297,8 @@ textures: PrecomputedTextures | string = undefined
 
 The [precomputed textures](assets), or a URL to the directory containing them.
 
+If left undefined, the textures will be loaded directly from GitHub.
+
 #### useHalfFloat
 
 ```ts
@@ -503,6 +505,8 @@ data: ArrayBuffer | string = undefined
 ```
 
 The data containing the position and magnitude of the stars, or a URL to it.
+
+If left undefined, the data will be loaded directly from GitHub.
 
 ## SkyLight
 
