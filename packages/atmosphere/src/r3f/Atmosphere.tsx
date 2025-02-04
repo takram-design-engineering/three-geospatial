@@ -93,7 +93,8 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
   AtmosphereProps
 >(function Atmosphere(
   {
-    textures: texturesProp,
+    textures:
+      texturesProp = 'https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/9627216cc50057994c98a2118f3c4a23765d43b9/packages/atmosphere/assets',
     useHalfFloat,
     ellipsoid = Ellipsoid.WGS84,
     correctAltitude = true,
@@ -129,10 +130,8 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       })().catch(error => {
         console.error(error)
       })
-    } else if (texturesProp != null) {
-      setTextures(texturesProp)
     } else {
-      setTextures(undefined)
+      setTextures(texturesProp)
     }
   }, [texturesProp, useHalfFloat])
 

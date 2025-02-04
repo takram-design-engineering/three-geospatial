@@ -38,7 +38,13 @@ export interface StarsProps extends PointsProps, AtmosphereMaterialProps {
 }
 
 export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
-  function Stars({ data: dataProp, ...props }, forwardedRef) {
+  function Stars(
+    {
+      data: dataProp = 'https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/9627216cc50057994c98a2118f3c4a23765d43b9/packages/atmosphere/assets/stars.bin',
+      ...props
+    },
+    forwardedRef
+  ) {
     const { textures, transientStates, ...contextProps } =
       useContext(AtmosphereContext)
 
@@ -63,10 +69,8 @@ export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
         })().catch(error => {
           console.error(error)
         })
-      } else if (dataProp != null) {
-        setData(dataProp)
       } else {
-        setData(undefined)
+        setData(dataProp)
       }
     }, [dataProp])
 
