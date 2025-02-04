@@ -23,13 +23,28 @@ import {
   type AtmosphereShadow,
   type AtmosphereShadowLength
 } from '@takram/three-atmosphere'
-import { lerp, type Ellipsoid } from '@takram/three-geospatial'
+import {
+  definePropertyShorthand,
+  defineUniformShorthand,
+  lerp,
+  type Ellipsoid,
+  type PropertyShorthand,
+  type UniformShorthand
+} from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
 import { type CloudLayer } from './cloudLayer'
 import { Procedural3DTexture } from './Procedural3DTexture'
 import { ProceduralTexture } from './ProceduralTexture'
+import {
+  type RenderMaterial,
+  type RenderMaterialUniforms
+} from './RenderMaterial'
 import { RenderPass } from './RenderPass'
+import {
+  type ShadowMaterial,
+  type ShadowMaterialUniforms
+} from './ShadowMaterial'
 import { ShadowPass } from './ShadowPass'
 import {
   createAtmosphereUniforms,
@@ -55,6 +70,54 @@ export function applyVelocity(
     results[i].add(delta)
   }
 }
+
+const renderPassParamKeys = [
+  'maxIterationCount',
+  'minStepSize',
+  'maxStepSize',
+  'maxRayDistance',
+  'perspectiveStepScale',
+  'minDensity',
+  'minExtinction',
+  'minTransmittance',
+  'maxIterationCountToSun',
+  'maxIterationCountToGround',
+  'minSecondaryStepSize',
+  'secondaryStepScale',
+  'maxShadowFilterRadius',
+  'maxShadowLengthIterationCount',
+  'minShadowLengthStepSize',
+  'maxShadowLengthRayDistance'
+] as const satisfies Array<keyof RenderMaterialUniforms>
+
+const shadowPassParamKeys = [
+  'maxIterationCount',
+  'minStepSize',
+  'maxStepSize',
+  'minDensity',
+  'minExtinction',
+  'minTransmittance',
+  'maxOpticalDepthTailScale'
+] as const satisfies Array<keyof ShadowMaterialUniforms>
+
+const shadowMapsParamKeys = [
+  'cascadeCount',
+  'mapSize',
+  'maxFar',
+  'farScale',
+  'splitMode',
+  'splitLambda'
+] as const satisfies Array<keyof CascadedShadowMaps>
+
+type CloudsShorthand = UniformShorthand<
+  RenderMaterial,
+  (typeof renderPassParamKeys)[number]
+>
+
+// prettier-ignore
+type ShadowShorthand =
+  & UniformShorthand<ShadowMaterial, (typeof shadowPassParamKeys)[number]>
+  & PropertyShorthand<CascadedShadowMaps, (typeof shadowMapsParamKeys)[number]>
 
 export interface CloudsPassChangeEvent {
   type: 'change'
@@ -145,9 +208,12 @@ export class CloudsPass extends Pass {
   private shapeDetail?: Procedural3DTexture
   private turbulence?: ProceduralTexture
 
-  readonly shadow: CascadedShadowMaps
+  readonly shadowMaps: CascadedShadowMaps
   readonly shadowPass: ShadowPass
   readonly renderPass: RenderPass
+
+  readonly clouds: CloudsShorthand
+  readonly shadow: ShadowShorthand
 
   private _atmosphereOverlay: AtmosphereOverlay | null = null
   private _atmosphereShadow: AtmosphereShadow | null = null
@@ -183,7 +249,7 @@ export class CloudsPass extends Pass {
       ...options
     }
 
-    this.shadow = new CascadedShadowMaps({
+    this.shadowMaps = new CascadedShadowMaps({
       cascadeCount: 3,
       mapSize: new Vector2().setScalar(512),
       splitLambda: 0.6
@@ -214,13 +280,28 @@ export class CloudsPass extends Pass {
     })
 
     const passOptions = {
-      shadow: this.shadow,
+      shadow: this.shadowMaps,
       parameterUniforms: this.parameterUniforms,
       layerUniforms: this.layerUniforms,
       atmosphereUniforms: this.atmosphereUniforms
     }
     this.shadowPass = new ShadowPass(passOptions)
     this.renderPass = new RenderPass(passOptions, atmosphere)
+
+    this.clouds = defineUniformShorthand(
+      {},
+      this.renderPass.currentMaterial,
+      renderPassParamKeys
+    )
+    this.shadow = definePropertyShorthand(
+      defineUniformShorthand(
+        {},
+        this.shadowPass.currentMaterial,
+        shadowPassParamKeys
+      ),
+      this.shadowMaps,
+      shadowMapsParamKeys
+    )
 
     this.resolution = new Resolution(
       this,
@@ -309,7 +390,7 @@ export class CloudsPass extends Pass {
     const zenithAngle = this.sunDirection.dot(surfaceNormal)
     const distance = lerp(1e6, 1e3, zenithAngle)
 
-    this.shadow.update(
+    this.shadowMaps.update(
       this.mainCamera as PerspectiveCamera,
       // The sun direction must be rotated with the ellipsoid to ensure the
       // frusta are constructed correctly. Note this affects the transformation
@@ -320,7 +401,7 @@ export class CloudsPass extends Pass {
   }
 
   private updateAtmosphereComposition(): void {
-    const { shadow, shadowPass, renderPass } = this
+    const { shadowMaps, shadowPass, renderPass } = this
     const shadowUniforms = shadowPass.currentMaterial.uniforms
     const renderUniforms = renderPass.currentMaterial.uniforms
 
@@ -340,12 +421,12 @@ export class CloudsPass extends Pass {
     const prevShadow = this._atmosphereShadow
     const nextShadow = Object.assign(this._atmosphereShadow ?? {}, {
       map: shadowPass.outputBuffer,
-      mapSize: shadow.mapSize,
-      cascadeCount: shadow.cascadeCount,
+      mapSize: shadowMaps.mapSize,
+      cascadeCount: shadowMaps.cascadeCount,
       intervals: renderUniforms.shadowIntervals.value,
       matrices: renderUniforms.shadowMatrices.value,
       inverseMatrices: shadowUniforms.inverseShadowMatrices.value,
-      far: shadow.far,
+      far: shadowMaps.far,
       topHeight: renderUniforms.shadowTopHeight.value
     } satisfies AtmosphereShadow)
     if (prevShadow !== nextShadow) {
@@ -381,13 +462,13 @@ export class CloudsPass extends Pass {
     deltaTime = 0,
     stencilTest?: boolean
   ): void {
-    const { shadow, shadowPass, renderPass } = this
+    const { shadowMaps, shadowPass, renderPass } = this
     if (
-      shadow.cascadeCount !== this.shadowCascadeCount ||
-      !shadow.mapSize.equals(this.shadowMapSize)
+      shadowMaps.cascadeCount !== this.shadowCascadeCount ||
+      !shadowMaps.mapSize.equals(this.shadowMapSize)
     ) {
-      const { width, height } = shadow.mapSize
-      const depth = shadow.cascadeCount
+      const { width, height } = shadowMaps.mapSize
+      const depth = shadowMaps.cascadeCount
       this.shadowMapSize.set(width, height)
       this.shadowCascadeCount = depth
 
@@ -493,6 +574,14 @@ export class CloudsPass extends Pass {
   }
 
   // Pass parameters
+
+  get resolutionScale(): number {
+    return this.resolution.scale
+  }
+
+  set resolutionScale(value: number) {
+    this.resolution.scale = value
+  }
 
   get temporalUpscale(): boolean {
     return this.renderPass.temporalUpscale

@@ -1,6 +1,5 @@
 import {
   type Color,
-  type ExtendedColors,
   type NodeProps,
   type Overwrite,
   type Vector2,
@@ -8,6 +7,7 @@ import {
   type Vector4
 } from '@react-three/fiber'
 import {
+  type Color as ColorImpl,
   type Vector2 as Vector2Impl,
   type Vector3 as Vector3Impl,
   type Vector4 as Vector4Impl
@@ -17,15 +17,14 @@ import { type WritableKeysOf } from 'type-fest'
 import { type Callable } from '../types'
 
 // prettier-ignore
-export type ExtendedVectors<T> = {
+export type ExtendedProps<T> = {
   [K in keyof T]:
     Vector2Impl extends T[K] ? Vector2 | T[K] :
     Vector3Impl extends T[K] ? Vector3 | T[K] :
     Vector4Impl extends T[K] ? Vector4 | T[K] :
+    ColorImpl extends T[K] ? Color :
     T[K]
 }
-
-export type ExtendedProps<T> = ExtendedColors<ExtendedVectors<T>>
 
 // @react-three/fiber's NonFunctionKeys cannot exclude partial functions.
 // This excludes callback properties, which may be undesirable behavior.
