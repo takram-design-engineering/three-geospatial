@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { folder } from 'leva'
 import { useEffect } from 'react'
 
-import { type CloudLayer, type CloudsCompositePass } from '@takram/three-clouds'
+import { type CloudLayer, type CloudsPass } from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
 
 import { useControls } from '../helpers/useControls'
@@ -22,7 +22,7 @@ export interface CloudsControlParams {
 }
 
 export function useCloudsControls(
-  pass: CloudsCompositePass | null,
+  pass: CloudsPass | null,
   {
     coverage: defaultCoverage,
     animate: defaultAnimate,
@@ -48,7 +48,7 @@ export function useCloudsControls(
     if (pass == null) {
       return
     }
-    pass.cloudsPass.currentMaterial.shapeDetail = shapeDetail
+    pass.renderPass.currentMaterial.shapeDetail = shapeDetail
   }, [pass, shapeDetail])
 
   const { temporalUpscale, resolutionScale } = useControls(
@@ -187,11 +187,11 @@ export function useCloudsControls(
       return
     }
     for (const key in scatteringParams) {
-      pass.cloudsPass.currentMaterial.uniforms[key].value =
+      pass.renderPass.currentMaterial.uniforms[key].value =
         scatteringParams[key as keyof typeof scatteringParams]
     }
     for (const key in cloudsRaymarchParams) {
-      pass.cloudsPass.currentMaterial.uniforms[key].value =
+      pass.renderPass.currentMaterial.uniforms[key].value =
         cloudsRaymarchParams[key as keyof typeof cloudsRaymarchParams]
     }
     for (const key in shadowRaymarchParams) {
@@ -233,31 +233,31 @@ export function useCloudsControls(
       return
     }
     if (debugShowSampleCount) {
-      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT = '1'
+      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT = '1'
     } else {
-      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT
+      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT
     }
     if (debugShowFrontDepth) {
-      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH = '1'
+      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH = '1'
     } else {
-      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH
+      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH
     }
     if (debugShowShadowMap) {
-      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
     } else {
-      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP
     }
     if (debugShowCascades) {
-      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES = '1'
+      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_CASCADES = '1'
     } else {
-      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES
+      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_CASCADES
     }
     if (debugShowUv) {
-      pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV = '1'
+      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_UV = '1'
     } else {
-      delete pass.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV
+      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_UV
     }
-    pass.cloudsPass.currentMaterial.needsUpdate = true
+    pass.renderPass.currentMaterial.needsUpdate = true
   }, [
     pass,
     debugShowSampleCount,
@@ -272,16 +272,16 @@ export function useCloudsControls(
       return
     }
     if (debugShowShadowLength) {
-      pass.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
+      pass.renderPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
     } else {
-      delete pass.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
+      delete pass.renderPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
     }
     if (debugShowVelocity) {
-      pass.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
+      pass.renderPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
     } else {
-      delete pass.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY
+      delete pass.renderPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY
     }
-    pass.cloudsPass.resolveMaterial.needsUpdate = true
+    pass.renderPass.resolveMaterial.needsUpdate = true
   }, [pass, debugShowShadowLength, debugShowVelocity])
 
   return [

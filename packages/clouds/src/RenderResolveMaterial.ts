@@ -21,7 +21,7 @@ import fragmentShader from './shaders/cloudsResolve.frag?raw'
 import vertexShader from './shaders/cloudsResolve.vert?raw'
 import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
-export interface CloudsResolveMaterialParameters {
+export interface RenderResolveMaterialParameters {
   colorBuffer?: Texture | null
   depthVelocityBuffer?: Texture | null
   shadowLengthBuffer?: Texture | null
@@ -29,7 +29,7 @@ export interface CloudsResolveMaterialParameters {
   shadowLengthHistoryBuffer?: Texture | null
 }
 
-export interface CloudsResolveMaterialUniforms {
+export interface RenderResolveMaterialUniforms {
   [key: string]: Uniform<unknown>
   colorBuffer: Uniform<Texture | null>
   depthVelocityBuffer: Uniform<Texture | null>
@@ -43,8 +43,8 @@ export interface CloudsResolveMaterialUniforms {
   temporalAlpha: Uniform<number>
 }
 
-export class CloudsResolveMaterial extends RawShaderMaterial {
-  declare uniforms: CloudsResolveMaterialUniforms
+export class RenderResolveMaterial extends RawShaderMaterial {
+  declare uniforms: RenderResolveMaterialUniforms
 
   constructor({
     colorBuffer = null,
@@ -52,9 +52,9 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
     shadowLengthBuffer = null,
     colorHistoryBuffer = null,
     shadowLengthHistoryBuffer = null
-  }: CloudsResolveMaterialParameters = {}) {
+  }: RenderResolveMaterialParameters = {}) {
     super({
-      name: 'CloudsResolveMaterial',
+      name: 'RenderResolveMaterial',
       glslVersion: GLSL3,
       vertexShader,
       fragmentShader: unrollLoops(
@@ -74,7 +74,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         jitterOffset: new Uniform(new Vector2()),
         varianceGamma: new Uniform(2),
         temporalAlpha: new Uniform(0.1)
-      } satisfies CloudsResolveMaterialUniforms,
+      } satisfies RenderResolveMaterialUniforms,
       defines: {
         TEMPORAL_UPSCALE: '1',
         SHADOW_LENGTH: '1'

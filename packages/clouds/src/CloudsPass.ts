@@ -1,125 +1,273 @@
-import { ShaderPass } from 'postprocessing'
+import { Pass, Resolution } from 'postprocessing'
 import {
-  HalfFloatType,
-  LinearFilter,
-  RedFormat,
-  WebGLRenderTarget,
-  type Camera,
-  type DataArrayTexture,
+  Camera,
+  EventDispatcher,
+  Matrix4,
+  Vector2,
+  Vector3,
+  type Data3DTexture,
+  type DataTexture,
   type DepthPackingStrategies,
+  type Event,
+  type PerspectiveCamera,
   type Texture,
   type TextureDataType,
-  type WebGLRenderer
+  type WebGLRenderer,
+  type WebGLRenderTarget
 } from 'three'
 
-import { type AtmosphereParameters } from '@takram/three-atmosphere'
-
-import { CloudsMaterial } from './CloudsMaterial'
-import { CloudsResolveMaterial } from './CloudsResolveMaterial'
-import { PassBase, type PassBaseOptions } from './PassBase'
 import {
+  AtmosphereParameters,
+  getAltitudeCorrectionOffset,
+  type AtmosphereOverlay,
+  type AtmosphereShadow,
+  type AtmosphereShadowLength
+} from '@takram/three-atmosphere'
+import { lerp, type Ellipsoid } from '@takram/three-geospatial'
+
+import { CascadedShadowMaps } from './CascadedShadowMaps'
+import { CloudShape } from './CloudShape'
+import { CloudShapeDetail } from './CloudShapeDetail'
+import { LocalWeather } from './LocalWeather'
+import { type Procedural3DTexture } from './Procedural3DTexture'
+import { type ProceduralTexture } from './ProceduralTexture'
+import { RenderPass } from './RenderPass'
+import { ShadowPass } from './ShadowPass'
+import { Turbulence } from './Turbulence'
+import { type CloudLayers } from './types'
+import {
+  createAtmosphereUniforms,
+  createCloudLayerUniforms,
+  createCloudParameterUniforms,
+  updateCloudLayerUniforms,
   type AtmosphereUniforms,
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
 
-type RenderTarget = WebGLRenderTarget & {
-  depthVelocity: Texture | null
-  shadowLength: Texture | null
-}
+const vectorScratch = /*#__PURE__*/ new Vector3()
 
-interface RenderTargetOptions {
-  depthVelocity: boolean
-  shadowLength: boolean
-}
-
-function createRenderTarget(
-  name: string,
-  { depthVelocity, shadowLength }: RenderTargetOptions
-): RenderTarget {
-  const renderTarget: WebGLRenderTarget & {
-    depthVelocity?: Texture
-    shadowLength?: Texture
-  } = new WebGLRenderTarget(1, 1, {
-    depthBuffer: false,
-    stencilBuffer: false,
-    type: HalfFloatType
-  })
-  renderTarget.texture.minFilter = LinearFilter
-  renderTarget.texture.magFilter = LinearFilter
-  renderTarget.texture.name = name
-
-  let depthVelocityBuffer
-  if (depthVelocity) {
-    depthVelocityBuffer = renderTarget.texture.clone()
-    depthVelocityBuffer.isRenderTargetTexture = true
-    renderTarget.depthVelocity = depthVelocityBuffer
-    renderTarget.textures.push(depthVelocityBuffer)
+export function applyVelocity(
+  velocity: Vector2 | Vector3,
+  deltaTime: number,
+  ...results: Array<Vector2 | Vector3>
+): void {
+  const delta = vectorScratch
+    .fromArray(velocity.toArray())
+    .multiplyScalar(deltaTime)
+  for (let i = 0; i < results.length; ++i) {
+    results[i].add(delta)
   }
-  let shadowLengthBuffer
-  if (shadowLength) {
-    shadowLengthBuffer = renderTarget.texture.clone()
-    shadowLengthBuffer.isRenderTargetTexture = true
-    shadowLengthBuffer.format = RedFormat
-    renderTarget.shadowLength = shadowLengthBuffer
-    renderTarget.textures.push(shadowLengthBuffer)
-  }
-
-  return Object.assign(renderTarget, {
-    depthVelocity: depthVelocityBuffer ?? null,
-    shadowLength: shadowLengthBuffer ?? null
-  })
 }
 
-export interface CloudsPassOptions extends PassBaseOptions {
-  cloudParameterUniforms: CloudParameterUniforms
-  cloudLayerUniforms: CloudLayerUniforms
-  atmosphereUniforms: AtmosphereUniforms
+export interface CloudsPassChangeEvent {
+  type: 'change'
+  target: CloudsPass
+  property: 'atmosphereOverlay' | 'atmosphereShadow' | 'atmosphereShadowLength'
 }
 
-export class CloudsPass extends PassBase {
-  private currentRenderTarget!: RenderTarget
-  readonly currentMaterial: CloudsMaterial
-  readonly currentPass: ShaderPass
-  private resolveRenderTarget!: RenderTarget
-  readonly resolveMaterial: CloudsResolveMaterial
-  readonly resolvePass: ShaderPass
-  private historyRenderTarget!: RenderTarget
+export interface CloudsPassOptions {
+  resolutionScale?: number
+  width?: number
+  height?: number
+  resolutionX?: number
+  resolutionY?: number
+}
 
-  private width = 0
-  private height = 0
+export const cloudsPassOptionsDefaults = {
+  resolutionScale: 1,
+  width: Resolution.AUTO_SIZE,
+  height: Resolution.AUTO_SIZE
+} satisfies CloudsPassOptions
+
+export class CloudsPass extends Pass {
+  readonly cloudLayers: CloudLayers = [
+    {
+      altitude: 750,
+      height: 650,
+      densityScale: 0.15,
+      shapeAmount: 1,
+      detailAmount: 1,
+      weatherExponent: 1,
+      shapeAlteringBias: 0.35,
+      coverageFilterWidth: 0.6,
+      shadow: true
+    },
+    {
+      altitude: 1000,
+      height: 1200,
+      densityScale: 0.15,
+      shapeAmount: 1,
+      detailAmount: 1,
+      weatherExponent: 1,
+      shapeAlteringBias: 0.35,
+      coverageFilterWidth: 0.6,
+      shadow: true
+    },
+    {
+      altitude: 7500,
+      height: 500,
+      densityScale: 0.003,
+      shapeAmount: 0.4,
+      detailAmount: 0,
+      weatherExponent: 1,
+      shapeAlteringBias: 0.35,
+      coverageFilterWidth: 0.5
+    },
+    {
+      altitude: 0,
+      height: 0,
+      densityScale: 0,
+      shapeAmount: 0,
+      detailAmount: 0,
+      weatherExponent: 0,
+      shapeAlteringBias: 0,
+      coverageFilterWidth: 0
+    }
+  ]
+
+  // Weather and shape texture generators
+  localWeather: ProceduralTexture = new LocalWeather()
+  shape: Procedural3DTexture = new CloudShape()
+  shapeDetail: Procedural3DTexture = new CloudShapeDetail()
+  turbulence: ProceduralTexture = new Turbulence()
+
+  correctAltitude = true
+
+  // Mutable instances of cloud parameter uniforms
+  readonly localWeatherRepeat = new Vector2().setScalar(100)
+  readonly localWeatherOffset = new Vector2()
+  readonly shapeRepeat = new Vector3().setScalar(0.0003)
+  readonly shapeOffset = new Vector3()
+  readonly shapeDetailRepeat = new Vector3().setScalar(0.006)
+  readonly shapeDetailOffset = new Vector3()
+  readonly turbulenceRepeat = new Vector2().setScalar(20)
+
+  // Mutable instances of atmosphere parameter uniforms
+  readonly ellipsoidCenter = new Vector3()
+  readonly ellipsoidMatrix = new Matrix4()
+  private readonly inverseEllipsoidMatrix = new Matrix4()
+  private readonly altitudeCorrection = new Vector3()
+  readonly sunDirection = new Vector3()
+
+  // Uniforms shared by both cloud and shadow materials
+  private readonly cloudParameterUniforms: CloudParameterUniforms
+  private readonly cloudLayerUniforms: CloudLayerUniforms
+  private readonly atmosphereUniforms: AtmosphereUniforms
+
+  readonly localWeatherVelocity = new Vector2()
+  readonly shapeVelocity = new Vector3()
+  readonly shapeDetailVelocity = new Vector3()
+
+  readonly shadow: CascadedShadowMaps
+  readonly shadowPass: ShadowPass
+  readonly renderPass: RenderPass
+
+  private _atmosphereOverlay: AtmosphereOverlay | null = null
+  private _atmosphereShadow: AtmosphereShadow | null = null
+  private _atmosphereShadowLength: AtmosphereShadowLength | null = null
+
+  readonly resolution: Resolution
+  readonly events = new EventDispatcher<{
+    change: CloudsPassChangeEvent
+  }>()
+
+  private frame = 0
+  private shadowCascadeCount = 0
+  private readonly shadowMapSize = new Vector2()
 
   constructor(
-    {
-      cloudParameterUniforms,
-      cloudLayerUniforms,
-      atmosphereUniforms,
-      ...options
-    }: CloudsPassOptions,
-    private readonly atmosphere: AtmosphereParameters
+    private _mainCamera: Camera = new Camera(),
+    options?: CloudsPassOptions,
+    private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
-    super('CloudsPass', options)
+    super('CloudsPass')
+    this.renderToScreen = false
+    this.needsSwap = false
+    this.needsDepthTexture = true
 
-    this.currentMaterial = new CloudsMaterial(
-      {
-        cloudParameterUniforms,
-        cloudLayerUniforms,
-        atmosphereUniforms
-      },
-      atmosphere
-    )
-    this.currentPass = new ShaderPass(this.currentMaterial)
-    this.resolveMaterial = new CloudsResolveMaterial()
-    this.resolvePass = new ShaderPass(this.resolveMaterial)
+    const {
+      resolutionScale,
+      width,
+      height,
+      resolutionX = width,
+      resolutionY = height
+    } = {
+      ...cloudsPassOptionsDefaults,
+      ...options
+    }
 
-    this.initRenderTargets({
-      depthVelocity: true,
-      shadowLength: true
+    this.shadow = new CascadedShadowMaps({
+      cascadeCount: 3,
+      mapSize: new Vector2().setScalar(512),
+      splitLambda: 0.6
     })
+
+    this.cloudParameterUniforms = createCloudParameterUniforms({
+      localWeatherTexture: this.localWeather.texture,
+      localWeatherRepeat: this.localWeatherRepeat,
+      localWeatherOffset: this.localWeatherOffset,
+      shapeTexture: this.shape.texture,
+      shapeRepeat: this.shapeRepeat,
+      shapeOffset: this.shapeOffset,
+      shapeDetailTexture: this.shapeDetail.texture,
+      shapeDetailRepeat: this.shapeDetailRepeat,
+      shapeDetailOffset: this.shapeDetailOffset,
+      turbulenceTexture: this.turbulence.texture,
+      turbulenceRepeat: this.turbulenceRepeat
+    })
+
+    this.cloudLayerUniforms = createCloudLayerUniforms()
+
+    this.atmosphereUniforms = createAtmosphereUniforms(atmosphere, {
+      ellipsoidCenter: this.ellipsoidCenter,
+      ellipsoidMatrix: this.ellipsoidMatrix,
+      inverseEllipsoidMatrix: this.inverseEllipsoidMatrix,
+      altitudeCorrection: this.altitudeCorrection,
+      sunDirection: this.sunDirection
+    })
+
+    const passOptions = {
+      shadow: this.shadow,
+      cloudParameterUniforms: this.cloudParameterUniforms,
+      cloudLayerUniforms: this.cloudLayerUniforms,
+      atmosphereUniforms: this.atmosphereUniforms
+    }
+    this.shadowPass = new ShadowPass(passOptions)
+    this.renderPass = new RenderPass(passOptions, atmosphere)
+
+    this.resolution = new Resolution(
+      this,
+      resolutionX,
+      resolutionY,
+      resolutionScale
+    )
+    this.resolution.addEventListener<keyof Event>(
+      'change' as keyof Event,
+      this.onResolutionChange
+    )
   }
 
-  copyCameraSettings(camera: Camera): void {
-    this.currentMaterial.copyCameraSettings(camera)
+  dispose(): void {
+    this.localWeather.dispose()
+    this.shape.dispose()
+    this.shapeDetail.dispose()
+    this.turbulence.dispose()
+    super.dispose()
+  }
+
+  private readonly onResolutionChange = (): void => {
+    this.setSize(this.resolution.baseWidth, this.resolution.baseHeight)
+  }
+
+  get mainCamera(): Camera {
+    return this._mainCamera
+  }
+
+  override set mainCamera(value: Camera) {
+    this._mainCamera = value
+    this.shadowPass.mainCamera = value
+    this.renderPass.mainCamera = value
   }
 
   override initialize(
@@ -127,158 +275,342 @@ export class CloudsPass extends PassBase {
     alpha: boolean,
     frameBufferType: TextureDataType
   ): void {
-    this.currentPass.initialize(renderer, alpha, frameBufferType)
-    this.resolvePass.initialize(renderer, alpha, frameBufferType)
+    this.shadowPass.initialize(renderer, alpha, frameBufferType)
+    this.renderPass.initialize(renderer, alpha, frameBufferType)
   }
 
-  private initRenderTargets(options: RenderTargetOptions): void {
-    this.currentRenderTarget?.dispose()
-    this.resolveRenderTarget?.dispose()
-    this.historyRenderTarget?.dispose()
-    const current = createRenderTarget('Clouds', options)
-    const resolve = createRenderTarget('Clouds.A', {
-      ...options,
-      depthVelocity: false
-    })
-    const history = createRenderTarget('Clouds.B', {
-      ...options,
-      depthVelocity: false
-    })
-    this.currentRenderTarget = current
-    this.resolveRenderTarget = resolve
-    this.historyRenderTarget = history
+  private updateSharedUniforms(deltaTime: number): void {
+    updateCloudLayerUniforms(this.cloudLayerUniforms, this.cloudLayers)
 
-    const resolveUniforms = this.resolveMaterial.uniforms
-    resolveUniforms.colorBuffer.value = current.texture
-    resolveUniforms.depthVelocityBuffer.value = current.depthVelocity
-    resolveUniforms.shadowLengthBuffer.value = current.shadowLength
-    resolveUniforms.colorHistoryBuffer.value = history.texture
-    resolveUniforms.shadowLengthHistoryBuffer.value = history.shadowLength
-  }
+    // Apply velocity to offset uniforms.
+    const { cloudParameterUniforms } = this
+    applyVelocity(
+      this.localWeatherVelocity,
+      deltaTime,
+      cloudParameterUniforms.localWeatherOffset.value
+    )
+    applyVelocity(
+      this.shapeVelocity,
+      deltaTime,
+      cloudParameterUniforms.shapeOffset.value
+    )
+    applyVelocity(
+      this.shapeDetailVelocity,
+      deltaTime,
+      cloudParameterUniforms.shapeDetailOffset.value
+    )
 
-  private copyShadow(): void {
-    const shadow = this.shadow
-    const currentUniforms = this.currentMaterial.uniforms
-    for (let i = 0; i < shadow.cascadeCount; ++i) {
-      const cascade = shadow.cascades[i]
-      currentUniforms.shadowIntervals.value[i].copy(cascade.interval)
-      currentUniforms.shadowMatrices.value[i].copy(cascade.matrix)
-    }
-    currentUniforms.shadowFar.value = shadow.far
-  }
+    // Update atmosphere uniforms.
+    const inverseEllipsoidMatrix = this.inverseEllipsoidMatrix
+      .copy(this.ellipsoidMatrix)
+      .invert()
+    const cameraPositionECEF = this.mainCamera
+      .getWorldPosition(vectorScratch)
+      .applyMatrix4(inverseEllipsoidMatrix)
+      .sub(this.ellipsoidCenter)
 
-  private copyReprojection(): void {
-    this.currentMaterial.copyReprojectionMatrix(this.mainCamera)
-  }
-
-  private swapBuffers(): void {
-    const nextResolve = this.historyRenderTarget
-    const nextHistory = this.resolveRenderTarget
-    this.resolveRenderTarget = nextResolve
-    this.historyRenderTarget = nextHistory
-
-    const resolveUniforms = this.resolveMaterial.uniforms
-    resolveUniforms.colorHistoryBuffer.value = nextHistory.texture
-    resolveUniforms.shadowLengthHistoryBuffer.value = nextHistory.shadowLength
-  }
-
-  update(renderer: WebGLRenderer, frame: number, deltaTime: number): void {
-    // Update frame uniforms before copyCameraSettings.
-    this.currentMaterial.uniforms.frame.value = frame
-    this.resolveMaterial.uniforms.frame.value = frame
-
-    this.copyCameraSettings(this.mainCamera)
-    this.copyShadow()
-
-    this.currentPass.render(renderer, null, this.currentRenderTarget)
-    this.resolvePass.render(renderer, null, this.resolveRenderTarget)
-
-    // Store the current view and projection matrices for the next reprojection.
-    this.copyReprojection()
-
-    // Swap resolve and history render targets for the next render.
-    this.swapBuffers()
-  }
-
-  override setSize(width: number, height: number): void {
-    this.width = width
-    this.height = height
-
-    if (this.temporalUpscale) {
-      const lowResWidth = Math.ceil(width / 4)
-      const lowResHeight = Math.ceil(height / 4)
-      this.currentRenderTarget.setSize(lowResWidth, lowResHeight)
-      this.currentMaterial.setSize(
-        lowResWidth * 4,
-        lowResHeight * 4,
-        width,
-        height
+    const altitudeCorrection = this.altitudeCorrection
+    if (this.correctAltitude) {
+      getAltitudeCorrectionOffset(
+        cameraPositionECEF,
+        this.atmosphere.bottomRadius,
+        this.ellipsoid,
+        altitudeCorrection,
+        false
       )
     } else {
-      this.currentRenderTarget.setSize(width, height)
-      this.currentMaterial.setSize(width, height)
+      altitudeCorrection.setScalar(0)
     }
-    this.resolveRenderTarget.setSize(width, height)
-    this.resolveMaterial.setSize(width, height)
-    this.historyRenderTarget.setSize(width, height)
+
+    // TODO: Position the sun on the top atmosphere sphere.
+    // Increase light's distance to the target when the sun is at the horizon.
+    const surfaceNormal = this.ellipsoid.getSurfaceNormal(
+      cameraPositionECEF,
+      vectorScratch
+    )
+    const zenithAngle = this.sunDirection.dot(surfaceNormal)
+    const distance = lerp(1e6, 1e3, zenithAngle)
+
+    this.shadow.update(
+      this.mainCamera as PerspectiveCamera,
+      // The sun direction must be rotated with the ellipsoid to ensure the
+      // frusta are constructed correctly. Note this affects the transformation
+      // in the shadow shader.
+      vectorScratch.copy(this.sunDirection).applyMatrix4(this.ellipsoidMatrix),
+      distance
+    )
   }
 
-  setShadowSize(width: number, height: number, depth: number): void {
-    this.currentMaterial.shadowCascadeCount = depth
-    this.currentMaterial.setShadowSize(width, height)
+  private updateAtmosphereComposition(): void {
+    const { shadow, shadowPass, renderPass } = this
+    const shadowUniforms = shadowPass.currentMaterial.uniforms
+    const renderUniforms = renderPass.currentMaterial.uniforms
+
+    const prevOverlay = this._atmosphereOverlay
+    const nextOverlay = Object.assign(this._atmosphereOverlay ?? {}, {
+      map: renderPass.outputBuffer
+    } satisfies AtmosphereOverlay)
+    if (prevOverlay !== nextOverlay) {
+      this._atmosphereOverlay = nextOverlay
+      this.events.dispatchEvent({
+        type: 'change',
+        target: this,
+        property: 'atmosphereOverlay'
+      })
+    }
+
+    const prevShadow = this._atmosphereShadow
+    const nextShadow = Object.assign(this._atmosphereShadow ?? {}, {
+      map: shadowPass.outputBuffer,
+      mapSize: shadow.mapSize,
+      cascadeCount: shadow.cascadeCount,
+      intervals: renderUniforms.shadowIntervals.value,
+      matrices: renderUniforms.shadowMatrices.value,
+      inverseMatrices: shadowUniforms.inverseShadowMatrices.value,
+      far: shadow.far,
+      topHeight: renderUniforms.shadowTopHeight.value
+    } satisfies AtmosphereShadow)
+    if (prevShadow !== nextShadow) {
+      this._atmosphereShadow = nextShadow
+      this.events.dispatchEvent({
+        type: 'change',
+        target: this,
+        property: 'atmosphereShadow'
+      })
+    }
+
+    const prevShadowLength = this._atmosphereShadowLength
+    const nextShadowLength =
+      renderPass.shadowLengthBuffer != null
+        ? Object.assign(this._atmosphereShadowLength ?? {}, {
+            map: renderPass.shadowLengthBuffer
+          } satisfies AtmosphereShadowLength)
+        : null
+    if (prevShadowLength !== nextShadowLength) {
+      this._atmosphereShadowLength = nextShadowLength
+      this.events.dispatchEvent({
+        type: 'change',
+        target: this,
+        property: 'atmosphereShadowLength'
+      })
+    }
+  }
+
+  override render(
+    renderer: WebGLRenderer,
+    inputBuffer: WebGLRenderTarget | null,
+    outputBuffer: WebGLRenderTarget | null,
+    deltaTime = 0,
+    stencilTest?: boolean
+  ): void {
+    const { shadow, shadowPass, renderPass } = this
+    if (
+      shadow.cascadeCount !== this.shadowCascadeCount ||
+      !shadow.mapSize.equals(this.shadowMapSize)
+    ) {
+      const { width, height } = shadow.mapSize
+      const depth = shadow.cascadeCount
+      this.shadowMapSize.set(width, height)
+      this.shadowCascadeCount = depth
+
+      shadowPass.setSize(width, height, depth)
+      renderPass.setShadowSize(width, height, depth)
+    }
+
+    this.localWeather.render(renderer, deltaTime)
+    this.shape.render(renderer, deltaTime)
+    this.shapeDetail.render(renderer, deltaTime)
+    this.turbulence.render(renderer, deltaTime)
+
+    ++this.frame
+    this.updateSharedUniforms(deltaTime)
+
+    shadowPass.update(renderer, this.frame, deltaTime)
+    renderPass.shadowBuffer = shadowPass.outputBuffer
+    renderPass.update(renderer, this.frame, deltaTime)
+
+    this.updateAtmosphereComposition()
+  }
+
+  override setSize(baseWidth: number, baseHeight: number): void {
+    const { resolution } = this
+    resolution.setBaseSize(baseWidth, baseHeight)
+    const { width, height } = resolution
+    this.renderPass.setSize(width, height)
   }
 
   override setDepthTexture(
     depthTexture: Texture,
     depthPacking?: DepthPackingStrategies
   ): void {
-    this.currentMaterial.depthBuffer = depthTexture
-    this.currentMaterial.depthPacking = depthPacking ?? 0
+    this.shadowPass.setDepthTexture(depthTexture, depthPacking)
+    this.renderPass.setDepthTexture(depthTexture, depthPacking)
   }
 
-  get outputBuffer(): Texture {
-    // Resolve and history render targets are already swapped.
-    return this.historyRenderTarget.texture
+  // Textures
+
+  get localWeatherTexture(): Texture | null {
+    return this.cloudParameterUniforms.localWeatherTexture.value
   }
 
-  get shadowBuffer(): DataArrayTexture | null {
-    return this.currentMaterial.uniforms.shadowBuffer.value
+  set localWeatherTexture(value: Texture | null) {
+    this.cloudParameterUniforms.localWeatherTexture.value = value
   }
 
-  set shadowBuffer(value: DataArrayTexture | null) {
-    this.currentMaterial.uniforms.shadowBuffer.value = value
+  get shapeTexture(): Data3DTexture | null {
+    return this.cloudParameterUniforms.shapeTexture.value
   }
 
-  get shadowLengthBuffer(): Texture | null {
-    // Resolve and history render targets are already swapped.
-    return this.historyRenderTarget.shadowLength
+  set shapeTexture(value: Data3DTexture | null) {
+    this.cloudParameterUniforms.shapeTexture.value = value
   }
+
+  get shapeDetailTexture(): Data3DTexture | null {
+    return this.cloudParameterUniforms.shapeDetailTexture.value
+  }
+
+  set shapeDetailTexture(value: Data3DTexture | null) {
+    this.cloudParameterUniforms.shapeDetailTexture.value = value
+  }
+
+  get turbulenceTexture(): Texture | null {
+    return this.cloudParameterUniforms.turbulenceTexture.value
+  }
+
+  set turbulenceTexture(value: Texture | null) {
+    this.cloudParameterUniforms.turbulenceTexture.value = value
+  }
+
+  get stbnTexture(): Data3DTexture | null {
+    return this.renderPass.currentMaterial.uniforms.stbnTexture.value
+  }
+
+  set stbnTexture(value: Data3DTexture | null) {
+    this.renderPass.currentMaterial.uniforms.stbnTexture.value = value
+    this.shadowPass.currentMaterial.uniforms.stbnTexture.value = value
+  }
+
+  // Pass parameters
 
   get temporalUpscale(): boolean {
-    return this.currentMaterial.temporalUpscale
+    return this.renderPass.temporalUpscale
   }
 
   set temporalUpscale(value: boolean) {
-    if (value !== this.temporalUpscale) {
-      this.currentMaterial.temporalUpscale = value
-      this.resolveMaterial.temporalUpscale = value
-      this.setSize(this.width, this.height)
-    }
+    this.renderPass.temporalUpscale = value
   }
 
   get lightShafts(): boolean {
-    return this.currentMaterial.shadowLength
+    return this.renderPass.lightShafts
   }
 
   set lightShafts(value: boolean) {
-    if (value !== this.lightShafts) {
-      this.currentMaterial.shadowLength = value
-      this.resolveMaterial.shadowLength = value
-      this.initRenderTargets({
-        depthVelocity: true,
-        shadowLength: value
-      })
-      this.setSize(this.width, this.height)
-    }
+    this.renderPass.lightShafts = value
+  }
+
+  // Cloud parameter primitives
+
+  get scatteringCoefficient(): number {
+    return this.cloudParameterUniforms.scatteringCoefficient.value
+  }
+
+  set scatteringCoefficient(value: number) {
+    this.cloudParameterUniforms.scatteringCoefficient.value = value
+  }
+
+  get absorptionCoefficient(): number {
+    return this.cloudParameterUniforms.absorptionCoefficient.value
+  }
+
+  set absorptionCoefficient(value: number) {
+    this.cloudParameterUniforms.absorptionCoefficient.value = value
+  }
+
+  get coverage(): number {
+    return this.cloudParameterUniforms.coverage.value
+  }
+
+  set coverage(value: number) {
+    this.cloudParameterUniforms.coverage.value = value
+  }
+
+  get turbulenceDisplacement(): number {
+    return this.cloudParameterUniforms.turbulenceDisplacement.value
+  }
+
+  set turbulenceDisplacement(value: number) {
+    this.cloudParameterUniforms.turbulenceDisplacement.value = value
+  }
+
+  // Atmosphere composition
+
+  get atmosphereOverlay(): AtmosphereOverlay | null {
+    return this._atmosphereOverlay
+  }
+
+  get atmosphereShadow(): AtmosphereShadow | null {
+    return this._atmosphereShadow
+  }
+
+  get atmosphereShadowLength(): AtmosphereShadowLength | null {
+    return this._atmosphereShadowLength
+  }
+
+  // Atmosphere parameters
+
+  get irradianceTexture(): DataTexture | null {
+    return this.renderPass.currentMaterial.irradianceTexture
+  }
+
+  set irradianceTexture(value: DataTexture | null) {
+    this.renderPass.currentMaterial.irradianceTexture = value
+  }
+
+  get scatteringTexture(): Data3DTexture | null {
+    return this.renderPass.currentMaterial.scatteringTexture
+  }
+
+  set scatteringTexture(value: Data3DTexture | null) {
+    this.renderPass.currentMaterial.scatteringTexture = value
+  }
+
+  get transmittanceTexture(): DataTexture | null {
+    return this.renderPass.currentMaterial.transmittanceTexture
+  }
+
+  set transmittanceTexture(value: DataTexture | null) {
+    this.renderPass.currentMaterial.transmittanceTexture = value
+  }
+
+  get useHalfFloat(): boolean {
+    return this.renderPass.currentMaterial.useHalfFloat
+  }
+
+  set useHalfFloat(value: boolean) {
+    this.renderPass.currentMaterial.useHalfFloat = value
+  }
+
+  get ellipsoid(): Ellipsoid {
+    return this.renderPass.currentMaterial.ellipsoid
+  }
+
+  set ellipsoid(value: Ellipsoid) {
+    this.renderPass.currentMaterial.ellipsoid = value
+  }
+
+  get photometric(): boolean {
+    return this.renderPass.currentMaterial.photometric
+  }
+
+  set photometric(value: boolean) {
+    this.renderPass.currentMaterial.photometric = value
+  }
+
+  get sunAngularRadius(): number {
+    return this.renderPass.currentMaterial.sunAngularRadius
+  }
+
+  set sunAngularRadius(value: number) {
+    this.renderPass.currentMaterial.sunAngularRadius = value
   }
 }
