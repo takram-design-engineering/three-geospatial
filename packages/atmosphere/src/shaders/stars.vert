@@ -39,8 +39,7 @@ void main() {
   mat3 rotation = mat3(inverseEllipsoidMatrix);
   vCameraPosition = rotation * cameraPosition * METER_TO_LENGTH_UNIT;
   vRayDirection = rotation * worldDirection;
-  vEllipsoidCenter =
-    (ellipsoidCenter + altitudeCorrection) * METER_TO_LENGTH_UNIT;
+  vEllipsoidCenter = (ellipsoidCenter + altitudeCorrection) * METER_TO_LENGTH_UNIT;
   gl_Position =
     projectionMatrix * viewMatrix * vec4(cameraPosition + worldDirection * cameraFar, 1.0);
   #else // BACKGROUND
