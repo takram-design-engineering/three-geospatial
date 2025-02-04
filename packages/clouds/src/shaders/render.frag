@@ -41,15 +41,15 @@ uniform float powderScale;
 uniform float powderExponent;
 
 // Primary raymarch
-uniform int maxIterations;
+uniform int maxIterationCount;
 uniform float minStepSize;
 uniform float maxStepSize;
 uniform float maxRayDistance;
 uniform float perspectiveStepScale;
 
 // Secondary raymarch
-uniform int maxSunIterations;
-uniform int maxGroundIterations;
+uniform int maxIterationCountToSun;
+uniform int maxIterationCountToGround;
 uniform float minSecondaryStepSize;
 uniform float secondaryStepScale;
 
@@ -59,11 +59,11 @@ uniform vec2 shadowTexelSize;
 uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
 uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
 uniform float shadowFar;
-uniform float shadowFilterRadius;
+uniform float maxShadowFilterRadius;
 
 // Shadow length
 #ifdef SHADOW_LENGTH
-uniform int maxShadowLengthIterations;
+uniform int maxShadowLengthIterationCount;
 uniform float minShadowLengthStepSize;
 uniform float maxShadowLengthRayDistance;
 #endif // SHADOW_LENGTH
@@ -281,21 +281,23 @@ float phaseFunction(const float cosTheta, const float attenuation) {
 float marchOpticalDepth(
   const vec3 rayOrigin,
   const vec3 rayDirection,
-  const int maxIterations,
+  const int maxIterationCount,
   const float mipLevel,
   const float jitter,
   out float rayDistance
 ) {
-  int iterations = int(max(0.0, remap(mipLevel, 0.0, 1.0, float(maxIterations + 1), 1.0) - jitter));
-  if (iterations == 0) {
+  int iterationCount = int(
+    max(0.0, remap(mipLevel, 0.0, 1.0, float(maxIterationCount + 1), 1.0) - jitter)
+  );
+  if (iterationCount == 0) {
     // Fudge factor to approximate the mean optical depth.
     // TODO: Remove it.
     return 0.5;
   }
-  float stepSize = minSecondaryStepSize / float(iterations);
+  float stepSize = minSecondaryStepSize / float(iterationCount);
   float nextDistance = stepSize * jitter;
   float opticalDepth = 0.0;
-  for (int i = 0; i < iterations; ++i) {
+  for (int i = 0; i < iterationCount; ++i) {
     rayDistance = nextDistance;
     vec3 position = rayDistance * rayDirection + rayOrigin;
     vec2 uv = getGlobeUv(position);
@@ -312,12 +314,19 @@ float marchOpticalDepth(
 float marchOpticalDepth(
   const vec3 rayOrigin,
   const vec3 rayDirection,
-  const int maxIterations,
+  const int maxIterationCount,
   const float mipLevel,
   const float jitter
 ) {
   float rayDistance;
-  return marchOpticalDepth(rayOrigin, rayDirection, maxIterations, mipLevel, jitter, rayDistance);
+  return marchOpticalDepth(
+    rayOrigin,
+    rayDirection,
+    maxIterationCount,
+    mipLevel,
+    jitter,
+    rayDistance
+  );
 }
 
 float multipleScattering(const float opticalDepth, const float cosTheta) {
@@ -368,7 +377,7 @@ vec4 marchClouds(
   float rayDistance = stepSize * jitter * 2.0;
   float cosTheta = dot(sunDirection, rayDirection);
 
-  for (int i = 0; i < maxIterations; ++i) {
+  for (int i = 0; i < maxIterationCount; ++i) {
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
@@ -416,7 +425,7 @@ vec4 marchClouds(
       float opticalDepth = marchOpticalDepth(
         position,
         sunDirection,
-        maxSunIterations,
+        maxIterationCountToSun,
         mipLevel,
         jitter,
         sunRayDistance
@@ -430,7 +439,7 @@ vec4 marchClouds(
           // distance.
           sunRayDistance,
           // Apply PCF only when the sun is close to the horizon.
-          shadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1)),
+          maxShadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1)),
           jitter
         );
       }
@@ -448,7 +457,7 @@ vec4 marchClouds(
         float opticalDepthToGround = marchOpticalDepth(
           position,
           -surfaceNormal,
-          maxGroundIterations,
+          maxIterationCountToGround,
           mipLevel,
           jitter
         );
@@ -534,7 +543,7 @@ float marchShadowLength(
   const float attenuationFactor = 1.0 - 5e-3;
   float attenuation = 1.0;
 
-  for (int i = 0; i < maxShadowLengthIterations; ++i) {
+  for (int i = 0; i < maxShadowLengthIterationCount; ++i) {
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }

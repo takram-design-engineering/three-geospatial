@@ -13,7 +13,7 @@ uniform mat4 inverseShadowMatrices[CASCADE_COUNT];
 uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 
 // Primary raymarch
-uniform int maxIterations;
+uniform int maxIterationCount;
 uniform float minStepSize;
 uniform float maxStepSize;
 uniform float maxOpticalDepthTailScale;
@@ -52,7 +52,7 @@ vec4 marchClouds(
     normal,
     rayOrigin,
     rayDirection,
-    clamp(maxRayDistance / float(maxIterations), minStepSize, maxStepSize),
+    clamp(maxRayDistance / float(maxIterationCount), minStepSize, maxStepSize),
     rayDistance,
     stepSize
   );
@@ -69,7 +69,7 @@ vec4 marchClouds(
   float transmittanceSum = 0.0;
 
   int sampleCount = 0;
-  for (int i = 0; i < maxIterations; ++i) {
+  for (int i = 0; i < maxIterationCount; ++i) {
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
