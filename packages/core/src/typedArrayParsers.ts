@@ -8,7 +8,8 @@ function isHostLittleEndian(): boolean {
   }
   const a = new Uint32Array([0x10000000])
   const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength)
-  return b[0] === 0
+  hostLittleEndian = b[0] === 0
+  return hostLittleEndian
 }
 
 type GetValue = keyof {
