@@ -1,20 +1,10 @@
 import { useFrame } from '@react-three/fiber'
-import { folder } from 'leva'
 import { useEffect } from 'react'
 
-import { type CloudLayer, type CloudsPass } from '@takram/three-clouds'
+import { type CloudsPass } from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
 
 import { useControls } from '../helpers/useControls'
-
-type FlattenCloudLayer<Index extends number> = {
-  [K in keyof CloudLayer as `${K}${Index}`]: CloudLayer[K]
-}
-
-type FlatCloudLayers = FlattenCloudLayer<0> &
-  FlattenCloudLayer<1> &
-  FlattenCloudLayer<2> &
-  FlattenCloudLayer<3>
 
 export interface CloudsControlParams {
   enabled: boolean
@@ -124,64 +114,6 @@ export function useCloudsControls(
     { collapsed: true }
   )
 
-  const cloudLayersParams = useControls(
-    'cloud layers',
-    pass?.cloudLayers.reduce(
-      (schema, layer, index) => ({
-        ...schema,
-        [`layer ${index}`]: folder(
-          {
-            [`altitude ${index}`]: {
-              value: layer.altitude,
-              min: 0,
-              max: 10000
-            },
-            [`height ${index}`]: {
-              value: layer.height,
-              min: 0,
-              max: 2000
-            },
-            [`densityScale ${index}`]: {
-              value: layer.densityScale,
-              min: 0,
-              max: 1
-            },
-            [`shapeAmount ${index}`]: {
-              value: layer.shapeAmount,
-              min: 0,
-              max: 1
-            },
-            [`detailAmount ${index}`]: {
-              value: layer.detailAmount,
-              min: 0,
-              max: 1
-            },
-            [`weatherExponent ${index}`]: {
-              value: layer.weatherExponent,
-              min: 0,
-              max: 3
-            },
-            [`shapeAlteringBias ${index}`]: {
-              value: layer.shapeAlteringBias,
-              min: 0,
-              max: 1
-            },
-            [`coverageFilterWidth ${index}`]: {
-              value: layer.coverageFilterWidth,
-              min: 0,
-              max: 1
-            },
-            [`shadow ${index}`]: layer.shadow ?? false
-          },
-          { collapsed: index > 0 }
-        )
-      }),
-      {}
-    ) ?? {},
-    { collapsed: true },
-    [pass]
-  ) as FlatCloudLayers
-
   useFrame(() => {
     if (pass == null) {
       return
@@ -197,12 +129,6 @@ export function useCloudsControls(
     for (const key in shadowRaymarchParams) {
       pass.shadowPass.currentMaterial.uniforms[key].value =
         shadowRaymarchParams[key as keyof typeof shadowRaymarchParams]
-    }
-    for (const key in cloudLayersParams) {
-      const field = key.slice(0, -2)
-      const index = +key.slice(-1)
-      ;(pass.cloudLayers as any)[index][field] =
-        cloudLayersParams[key as keyof typeof cloudLayersParams]
     }
   })
 
