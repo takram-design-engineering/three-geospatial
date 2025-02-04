@@ -14,15 +14,15 @@ import { type AtmosphereParameters } from '@takram/three-atmosphere'
 import { defaultCloudLayer, type CloudLayer } from './cloudLayer'
 
 export interface CloudParameterUniforms {
-  // Scattering
+  // Participating medium
   scatteringCoefficient: Uniform<number>
   absorptionCoefficient: Uniform<number>
 
   // Weather and shape
+  coverage: Uniform<number>
   localWeatherTexture: Uniform<Texture | null>
   localWeatherRepeat: Uniform<Vector2>
   localWeatherOffset: Uniform<Vector2>
-  coverage: Uniform<number>
   shapeTexture: Uniform<Data3DTexture | null>
   shapeRepeat: Uniform<Vector3>
   shapeOffset: Uniform<Vector3>
@@ -45,15 +45,15 @@ export function createCloudParameterUniforms(
   instances: CloudParameterUniformInstances
 ): CloudParameterUniforms {
   return {
-    // Scattering
+    // Participating medium
     scatteringCoefficient: new Uniform(1.0),
     absorptionCoefficient: new Uniform(0.02),
 
     // Weather and shape
+    coverage: new Uniform(0.3),
     localWeatherTexture: new Uniform(instances.localWeatherTexture),
     localWeatherRepeat: new Uniform(instances.localWeatherRepeat),
     localWeatherOffset: new Uniform(instances.localWeatherOffset),
-    coverage: new Uniform(0.3),
     shapeTexture: new Uniform(instances.shapeTexture),
     shapeRepeat: new Uniform(instances.shapeRepeat),
     shapeOffset: new Uniform(instances.shapeOffset),

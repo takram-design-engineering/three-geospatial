@@ -8,9 +8,11 @@ uniform mat4 ellipsoidMatrix;
 uniform mat4 inverseEllipsoidMatrix;
 uniform vec3 sunDirection;
 
-// Scattering
+// Participating medium
 uniform float scatteringCoefficient;
 uniform float absorptionCoefficient;
+
+// Primary raymarch
 uniform float minDensity;
 uniform float minExtinction;
 uniform float minTransmittance;

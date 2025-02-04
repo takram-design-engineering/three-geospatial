@@ -40,13 +40,13 @@ export interface ShadowMaterialUniforms
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Primary raymarch
-  maxIterations: Uniform<number>
+  maxIterationCount: Uniform<number>
   minStepSize: Uniform<number>
   maxStepSize: Uniform<number>
   minDensity: Uniform<number>
   minExtinction: Uniform<number>
   minTransmittance: Uniform<number>
-  maxOpticalDepthTailScale: Uniform<number>
+  opticalDepthTailScale: Uniform<number>
 }
 
 export class ShadowMaterial extends RawShaderMaterial {
@@ -88,13 +88,13 @@ export class ShadowMaterial extends RawShaderMaterial {
         stbnTexture: new Uniform(null),
 
         // Primary raymarch
-        maxIterations: new Uniform(50),
+        maxIterationCount: new Uniform(50),
         minStepSize: new Uniform(100),
         maxStepSize: new Uniform(1000),
         minDensity: new Uniform(1e-5),
         minExtinction: new Uniform(1e-5),
         minTransmittance: new Uniform(1e-4),
-        maxOpticalDepthTailScale: new Uniform(2)
+        opticalDepthTailScale: new Uniform(2)
       } satisfies ShadowMaterialUniforms,
       defines: {
         TEMPORAL_PASS: '1',

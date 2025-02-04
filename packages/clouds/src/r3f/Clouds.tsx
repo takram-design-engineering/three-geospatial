@@ -52,7 +52,7 @@ export type CloudsProps = Omit<
     [],
     Partial<
       CloudsPass &
-        ExpandNestedProps<CloudsPass, 'resolution'> &
+        ExpandNestedProps<CloudsPass, 'clouds'> &
         ExpandNestedProps<CloudsPass, 'shadow'>
     >
   >,
@@ -62,11 +62,11 @@ export type CloudsProps = Omit<
   | 'turbulenceTexture'
   | 'children'
 > & {
-  children?: CloudLayersChildren
   localWeatherTexture?: Texture | ProceduralTexture | string
   shapeTexture?: Data3DTexture | Procedural3DTexture | string
   shapeDetailTexture?: Data3DTexture | Procedural3DTexture | string
   turbulenceTexture?: Texture | ProceduralTexture | string
+  children?: CloudLayersChildren
 }
 
 function useTextureState(
@@ -87,7 +87,7 @@ function useTextureState(
         texture.needsUpdate = true
 
         // WORKAROUND: Unless the texture is initialized here, the color space
-        // resets to sRGB for an unknown reason.
+        // resets to sRGB for unknown reason.
         gl.initTexture(texture)
 
         setData(texture)

@@ -13,10 +13,10 @@ uniform mat4 inverseShadowMatrices[CASCADE_COUNT];
 uniform mat4 reprojectionMatrices[CASCADE_COUNT];
 
 // Primary raymarch
-uniform int maxIterations;
+uniform int maxIterationCount;
 uniform float minStepSize;
 uniform float maxStepSize;
-uniform float maxOpticalDepthTailScale;
+uniform float opticalDepthTailScale;
 
 in vec2 vUv;
 in vec3 vEllipsoidCenter;
@@ -52,7 +52,7 @@ vec4 marchClouds(
     normal,
     rayOrigin,
     rayDirection,
-    clamp(maxRayDistance / float(maxIterations), minStepSize, maxStepSize),
+    clamp(maxRayDistance / float(maxIterationCount), minStepSize, maxStepSize),
     rayDistance,
     stepSize
   );
@@ -69,7 +69,7 @@ vec4 marchClouds(
   float transmittanceSum = 0.0;
 
   int sampleCount = 0;
-  for (int i = 0; i < maxIterations; ++i) {
+  for (int i = 0; i < maxIterationCount; ++i) {
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
@@ -100,7 +100,7 @@ vec4 marchClouds(
       // decrease exponentially with the number of samples taken before reaching
       // the minimum transmittance.
       // See the discussion here: https://x.com/shotamatsuda/status/1886259549931520437
-      maxOpticalDepthTail = maxOpticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
+      maxOpticalDepthTail = opticalDepthTailScale * stepSize * exp(float(1 - sampleCount));
       break; // Early termination
     }
     rayDistance += stepSize;

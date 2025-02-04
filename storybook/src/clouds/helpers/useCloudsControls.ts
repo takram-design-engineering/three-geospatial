@@ -68,7 +68,7 @@ export function useCloudsControls(
 
   useEffect(() => {
     if (pass != null) {
-      pass.shadow.cascadeCount = cascadeCount
+      pass.shadowMaps.cascadeCount = cascadeCount
       pass.shadowPass.temporalPass = shadowTemporalPass
       pass.shadowPass.currentMaterial.temporalJitter = shadowTemporalJitter
     }
@@ -93,12 +93,12 @@ export function useCloudsControls(
   const cloudsRaymarchParams = useControls(
     'clouds raymarch',
     {
-      maxIterations: { value: 500, min: 100, max: 1000 },
+      maxIterationCount: { value: 500, min: 100, max: 1000 },
       minStepSize: { value: 50, min: 50, max: 200 },
       maxStepSize: { value: 1000, min: 200, max: 2000 },
       maxRayDistance: { value: 5e5, min: 1e4, max: 1e6 },
-      maxSunIterations: { value: 3, min: 0, max: 10, step: 1 },
-      maxGroundIterations: { value: 2, min: 0, max: 10, step: 1 }
+      maxIterationCountToSun: { value: 3, min: 0, max: 10, step: 1 },
+      maxIterationCountToGround: { value: 2, min: 0, max: 10, step: 1 }
     },
     { collapsed: true }
   )
@@ -106,10 +106,10 @@ export function useCloudsControls(
   const shadowRaymarchParams = useControls(
     'shadow raymarch',
     {
-      maxIterations: { value: 50, min: 10, max: 100 },
+      maxIterationCount: { value: 50, min: 10, max: 100 },
       minStepSize: { value: 100, min: 50, max: 200 },
       maxStepSize: { value: 1000, min: 200, max: 2000 },
-      maxOpticalDepthTailScale: { value: 2, min: 0, max: 4 }
+      opticalDepthTailScale: { value: 2, min: 0, max: 4 }
     },
     { collapsed: true }
   )
@@ -223,11 +223,11 @@ export function useCloudsControls(
     {
       coverage,
       temporalUpscale: temporalUpscale && !debugShowShadowMap,
-      'resolution-scale': resolutionScale,
+      resolutionScale,
       localWeatherVelocity: animate
         ? [defaultLocalWeatherVelocity ?? 0.001, 0]
         : [0, 0],
-      'shadow-mapSize': [shadowMapSize, shadowMapSize],
+      'shadowMaps-mapSize': [shadowMapSize, shadowMapSize],
       lightShafts
     }
   ]

@@ -98,18 +98,20 @@ export interface RenderMaterialUniforms
   powderExponent: Uniform<number>
 
   // Primary raymarch
-  maxIterations: Uniform<number>
+  maxIterationCount: Uniform<number>
   minStepSize: Uniform<number>
   maxStepSize: Uniform<number>
   maxRayDistance: Uniform<number>
+  perspectiveStepScale: Uniform<number>
   minDensity: Uniform<number>
   minExtinction: Uniform<number>
   minTransmittance: Uniform<number>
 
   // Secondary raymarch
-  maxSunIterations: Uniform<number>
-  maxGroundIterations: Uniform<number>
+  maxIterationCountToSun: Uniform<number>
+  maxIterationCountToGround: Uniform<number>
   minSecondaryStepSize: Uniform<number>
+  secondaryStepScale: Uniform<number>
 
   // Beer shadow map
   shadowBuffer: Uniform<DataArrayTexture | null>
@@ -117,10 +119,10 @@ export interface RenderMaterialUniforms
   shadowIntervals: Uniform<Vector2[]>
   shadowMatrices: Uniform<Matrix4[]>
   shadowFar: Uniform<number>
-  shadowFilterRadius: Uniform<number>
+  maxShadowFilterRadius: Uniform<number>
 
   // Shadow length
-  maxShadowLengthIterations: Uniform<number>
+  maxShadowLengthIterationCount: Uniform<number>
   minShadowLengthStepSize: Uniform<number>
   maxShadowLengthRayDistance: Uniform<number>
 }
@@ -201,7 +203,7 @@ export class RenderMaterial extends AtmosphereMaterialBase {
           powderExponent: new Uniform(150),
 
           // Primary raymarch
-          maxIterations: new Uniform(500),
+          maxIterationCount: new Uniform(500),
           minStepSize: new Uniform(50),
           maxStepSize: new Uniform(1000),
           maxRayDistance: new Uniform(5e5),
@@ -211,8 +213,8 @@ export class RenderMaterial extends AtmosphereMaterialBase {
           minTransmittance: new Uniform(1e-2),
 
           // Secondary raymarch
-          maxSunIterations: new Uniform(3),
-          maxGroundIterations: new Uniform(2),
+          maxIterationCountToSun: new Uniform(3),
+          maxIterationCountToGround: new Uniform(2),
           minSecondaryStepSize: new Uniform(100),
           secondaryStepScale: new Uniform(2),
 
@@ -226,10 +228,10 @@ export class RenderMaterial extends AtmosphereMaterialBase {
             Array.from({ length: 4 }, () => new Matrix4()) // Populate the max number of elements
           ),
           shadowFar: new Uniform(0),
-          shadowFilterRadius: new Uniform(6),
+          maxShadowFilterRadius: new Uniform(6),
 
           // Shadow length
-          maxShadowLengthIterations: new Uniform(500),
+          maxShadowLengthIterationCount: new Uniform(500),
           minShadowLengthStepSize: new Uniform(50),
           maxShadowLengthRayDistance: new Uniform(5e5)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
