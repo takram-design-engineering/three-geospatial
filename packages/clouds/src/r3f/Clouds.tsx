@@ -58,6 +58,13 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
     const setOverlay = useSetAtom(atoms.overlayAtom)
     const setShadow = useSetAtom(atoms.shadowAtom)
     const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
+
+    useEffect(() => {
+      setOverlay(pass.atmosphereOverlay)
+      setShadow(pass.atmosphereShadow)
+      setShadowLength(pass.atmosphereShadowLength)
+    }, [pass, setOverlay, setShadow, setShadowLength])
+
     const handleChange = useCallback(
       (event: CloudsPassChangeEvent) => {
         switch (event.property) {
