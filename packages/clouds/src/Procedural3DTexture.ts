@@ -33,11 +33,11 @@ export class Procedural3DTexture {
     this.material = new RawShaderMaterial({
       glslVersion: GLSL3,
       vertexShader: /* glsl */ `
-        in vec2 uv;
+        in vec3 position;
         out vec2 vUv;
         void main() {
-          vUv = uv;
-          gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+          vUv = position.xy * 0.5 + 0.5;
+          gl_Position = vec4(position.xy, 0.0, 1.0);
         }
       `,
       fragmentShader,

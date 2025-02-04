@@ -32,8 +32,8 @@ function createRenderTarget(name: string): WebGLArrayRenderTarget {
 }
 
 export interface ShadowPassOptions extends PassBaseOptions {
-  cloudParameterUniforms: CloudParameterUniforms
-  cloudLayerUniforms: CloudLayerUniforms
+  parameterUniforms: CloudParameterUniforms
+  layerUniforms: CloudLayerUniforms
   atmosphereUniforms: AtmosphereUniforms
 }
 
@@ -50,16 +50,16 @@ export class ShadowPass extends PassBase {
   private height = 0
 
   constructor({
-    cloudParameterUniforms,
-    cloudLayerUniforms,
+    parameterUniforms,
+    layerUniforms,
     atmosphereUniforms,
     ...options
   }: ShadowPassOptions) {
     super('ShadowPass', options)
 
     this.currentMaterial = new ShadowMaterial({
-      cloudParameterUniforms,
-      cloudLayerUniforms,
+      parameterUniforms,
+      layerUniforms,
       atmosphereUniforms
     })
     this.currentPass = new ShaderArrayPass(this.currentMaterial)

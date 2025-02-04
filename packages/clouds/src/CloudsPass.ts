@@ -27,8 +27,8 @@ import { lerp, type Ellipsoid } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
 import { type CloudLayer } from './cloudLayer'
-import { type Procedural3DTexture } from './Procedural3DTexture'
-import { type ProceduralTexture } from './ProceduralTexture'
+import { Procedural3DTexture } from './Procedural3DTexture'
+import { ProceduralTexture } from './ProceduralTexture'
 import { RenderPass } from './RenderPass'
 import { ShadowPass } from './ShadowPass'
 import {
@@ -112,12 +112,6 @@ export class CloudsPass extends Pass {
     }
   ]
 
-  // Weather and shape texture generators
-  localWeather: ProceduralTexture | null = null
-  shape: Procedural3DTexture | null = null
-  shapeDetail: Procedural3DTexture | null = null
-  turbulence: ProceduralTexture | null = null
-
   correctAltitude = true
 
   // Mutable instances of cloud parameter uniforms
@@ -137,13 +131,19 @@ export class CloudsPass extends Pass {
   readonly sunDirection = new Vector3()
 
   // Uniforms shared by both cloud and shadow materials
-  private readonly cloudParameterUniforms: CloudParameterUniforms
-  private readonly cloudLayerUniforms: CloudLayerUniforms
+  private readonly parameterUniforms: CloudParameterUniforms
+  private readonly layerUniforms: CloudLayerUniforms
   private readonly atmosphereUniforms: AtmosphereUniforms
 
   readonly localWeatherVelocity = new Vector2()
   readonly shapeVelocity = new Vector3()
   readonly shapeDetailVelocity = new Vector3()
+
+  // Weather and shape procedural textures
+  private localWeather?: ProceduralTexture
+  private shape?: Procedural3DTexture
+  private shapeDetail?: Procedural3DTexture
+  private turbulence?: ProceduralTexture
 
   readonly shadow: CascadedShadowMaps
   readonly shadowPass: ShadowPass
@@ -189,7 +189,7 @@ export class CloudsPass extends Pass {
       splitLambda: 0.6
     })
 
-    this.cloudParameterUniforms = createCloudParameterUniforms({
+    this.parameterUniforms = createCloudParameterUniforms({
       localWeatherTexture: this.localWeather?.texture ?? null,
       localWeatherRepeat: this.localWeatherRepeat,
       localWeatherOffset: this.localWeatherOffset,
@@ -203,7 +203,7 @@ export class CloudsPass extends Pass {
       turbulenceRepeat: this.turbulenceRepeat
     })
 
-    this.cloudLayerUniforms = createCloudLayerUniforms()
+    this.layerUniforms = createCloudLayerUniforms()
 
     this.atmosphereUniforms = createAtmosphereUniforms(atmosphere, {
       ellipsoidCenter: this.ellipsoidCenter,
@@ -215,8 +215,8 @@ export class CloudsPass extends Pass {
 
     const passOptions = {
       shadow: this.shadow,
-      cloudParameterUniforms: this.cloudParameterUniforms,
-      cloudLayerUniforms: this.cloudLayerUniforms,
+      parameterUniforms: this.parameterUniforms,
+      layerUniforms: this.layerUniforms,
       atmosphereUniforms: this.atmosphereUniforms
     }
     this.shadowPass = new ShadowPass(passOptions)
@@ -232,14 +232,6 @@ export class CloudsPass extends Pass {
       'change' as keyof Event,
       this.onResolutionChange
     )
-  }
-
-  dispose(): void {
-    this.localWeather?.dispose()
-    this.shape?.dispose()
-    this.shapeDetail?.dispose()
-    this.turbulence?.dispose()
-    super.dispose()
   }
 
   private readonly onResolutionChange = (): void => {
@@ -266,10 +258,10 @@ export class CloudsPass extends Pass {
   }
 
   private updateSharedUniforms(deltaTime: number): void {
-    updateCloudLayerUniforms(this.cloudLayerUniforms, this.cloudLayers)
+    updateCloudLayerUniforms(this.layerUniforms, this.cloudLayers)
 
     // Apply velocity to offset uniforms.
-    const { cloudParameterUniforms } = this
+    const { parameterUniforms: cloudParameterUniforms } = this
     applyVelocity(
       this.localWeatherVelocity,
       deltaTime,
@@ -435,40 +427,60 @@ export class CloudsPass extends Pass {
 
   // Textures
 
-  get localWeatherTexture(): Texture | null {
-    return this.cloudParameterUniforms.localWeatherTexture.value
+  get localWeatherTexture(): Texture | ProceduralTexture | null {
+    return this.localWeather ?? this.parameterUniforms.localWeatherTexture.value
   }
 
-  set localWeatherTexture(value: Texture | null) {
-    this.cloudParameterUniforms.localWeatherTexture.value =
-      value ?? this.localWeather?.texture ?? null
+  set localWeatherTexture(value: Texture | ProceduralTexture | null) {
+    if (value instanceof ProceduralTexture) {
+      this.localWeather = value
+      this.parameterUniforms.localWeatherTexture.value = value.texture
+    } else {
+      this.localWeather = undefined
+      this.parameterUniforms.localWeatherTexture.value = value
+    }
   }
 
-  get shapeTexture(): Data3DTexture | null {
-    return this.cloudParameterUniforms.shapeTexture.value
+  get shapeTexture(): Data3DTexture | Procedural3DTexture | null {
+    return this.shape ?? this.parameterUniforms.shapeTexture.value
   }
 
-  set shapeTexture(value: Data3DTexture | null) {
-    this.cloudParameterUniforms.shapeTexture.value =
-      value ?? this.shape?.texture ?? null
+  set shapeTexture(value: Data3DTexture | Procedural3DTexture | null) {
+    if (value instanceof Procedural3DTexture) {
+      this.shape = value
+      this.parameterUniforms.shapeTexture.value = value.texture
+    } else {
+      this.shape = undefined
+      this.parameterUniforms.shapeTexture.value = value
+    }
   }
 
-  get shapeDetailTexture(): Data3DTexture | null {
-    return this.cloudParameterUniforms.shapeDetailTexture.value
+  get shapeDetailTexture(): Data3DTexture | Procedural3DTexture | null {
+    return this.shapeDetail ?? this.parameterUniforms.shapeDetailTexture.value
   }
 
-  set shapeDetailTexture(value: Data3DTexture | null) {
-    this.cloudParameterUniforms.shapeDetailTexture.value =
-      value ?? this.shapeDetail?.texture ?? null
+  set shapeDetailTexture(value: Data3DTexture | Procedural3DTexture | null) {
+    if (value instanceof Procedural3DTexture) {
+      this.shapeDetail = value
+      this.parameterUniforms.shapeDetailTexture.value = value.texture
+    } else {
+      this.shapeDetail = undefined
+      this.parameterUniforms.shapeDetailTexture.value = value
+    }
   }
 
-  get turbulenceTexture(): Texture | null {
-    return this.cloudParameterUniforms.turbulenceTexture.value
+  get turbulenceTexture(): Texture | ProceduralTexture | null {
+    return this.turbulence ?? this.parameterUniforms.turbulenceTexture.value
   }
 
-  set turbulenceTexture(value: Texture | null) {
-    this.cloudParameterUniforms.turbulenceTexture.value =
-      value ?? this.turbulence?.texture ?? null
+  set turbulenceTexture(value: Texture | ProceduralTexture | null) {
+    if (value instanceof ProceduralTexture) {
+      this.turbulence = value
+      this.parameterUniforms.turbulenceTexture.value = value.texture
+    } else {
+      this.turbulence = undefined
+      this.parameterUniforms.turbulenceTexture.value = value
+    }
   }
 
   get stbnTexture(): Data3DTexture | null {
@@ -501,35 +513,35 @@ export class CloudsPass extends Pass {
   // Cloud parameter primitives
 
   get scatteringCoefficient(): number {
-    return this.cloudParameterUniforms.scatteringCoefficient.value
+    return this.parameterUniforms.scatteringCoefficient.value
   }
 
   set scatteringCoefficient(value: number) {
-    this.cloudParameterUniforms.scatteringCoefficient.value = value
+    this.parameterUniforms.scatteringCoefficient.value = value
   }
 
   get absorptionCoefficient(): number {
-    return this.cloudParameterUniforms.absorptionCoefficient.value
+    return this.parameterUniforms.absorptionCoefficient.value
   }
 
   set absorptionCoefficient(value: number) {
-    this.cloudParameterUniforms.absorptionCoefficient.value = value
+    this.parameterUniforms.absorptionCoefficient.value = value
   }
 
   get coverage(): number {
-    return this.cloudParameterUniforms.coverage.value
+    return this.parameterUniforms.coverage.value
   }
 
   set coverage(value: number) {
-    this.cloudParameterUniforms.coverage.value = value
+    this.parameterUniforms.coverage.value = value
   }
 
   get turbulenceDisplacement(): number {
-    return this.cloudParameterUniforms.turbulenceDisplacement.value
+    return this.parameterUniforms.turbulenceDisplacement.value
   }
 
   set turbulenceDisplacement(value: number) {
-    this.cloudParameterUniforms.turbulenceDisplacement.value = value
+    this.parameterUniforms.turbulenceDisplacement.value = value
   }
 
   // Atmosphere composition

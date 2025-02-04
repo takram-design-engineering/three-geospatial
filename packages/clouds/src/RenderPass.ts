@@ -72,8 +72,8 @@ function createRenderTarget(
 }
 
 export interface RenderPassOptions extends PassBaseOptions {
-  cloudParameterUniforms: CloudParameterUniforms
-  cloudLayerUniforms: CloudLayerUniforms
+  parameterUniforms: CloudParameterUniforms
+  layerUniforms: CloudLayerUniforms
   atmosphereUniforms: AtmosphereUniforms
 }
 
@@ -91,8 +91,8 @@ export class RenderPass extends PassBase {
 
   constructor(
     {
-      cloudParameterUniforms,
-      cloudLayerUniforms,
+      parameterUniforms,
+      layerUniforms,
       atmosphereUniforms,
       ...options
     }: RenderPassOptions,
@@ -102,8 +102,8 @@ export class RenderPass extends PassBase {
 
     this.currentMaterial = new RenderMaterial(
       {
-        cloudParameterUniforms,
-        cloudLayerUniforms,
+        parameterUniforms,
+        layerUniforms,
         atmosphereUniforms
       },
       atmosphere

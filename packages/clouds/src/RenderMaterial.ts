@@ -64,8 +64,8 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface RenderMaterialParameters {
-  cloudParameterUniforms: CloudParameterUniforms
-  cloudLayerUniforms: CloudLayerUniforms
+  parameterUniforms: CloudParameterUniforms
+  layerUniforms: CloudLayerUniforms
   atmosphereUniforms: AtmosphereUniforms
 }
 
@@ -135,8 +135,8 @@ export class RenderMaterial extends AtmosphereMaterialBase {
 
   constructor(
     {
-      cloudParameterUniforms,
-      cloudLayerUniforms,
+      parameterUniforms,
+      layerUniforms,
       atmosphereUniforms
     }: RenderMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
@@ -172,8 +172,8 @@ export class RenderMaterial extends AtmosphereMaterialBase {
           })
         ),
         uniforms: {
-          ...cloudParameterUniforms,
-          ...cloudLayerUniforms,
+          ...parameterUniforms,
+          ...layerUniforms,
           ...atmosphereUniforms,
 
           depthBuffer: new Uniform(null),
