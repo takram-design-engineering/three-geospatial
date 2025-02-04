@@ -6,7 +6,7 @@ import {
 } from '../PrecomputedTexturesLoader'
 
 export function useAtmosphereTextureProps(
-  url: string,
+  url = 'https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/9627216cc50057994c98a2118f3c4a23765d43b9/packages/atmosphere/assets',
   useHalfFloat?: boolean
 ): {
   textures: PrecomputedTextures
