@@ -29,7 +29,7 @@ const Scene: FC = () => {
 
   const { gl } = useThree()
   useEffect(() => {
-    turbulence.update(gl)
+    turbulence.render(gl)
   }, [turbulence, gl])
 
   const { gammaCorrect } = useControls({

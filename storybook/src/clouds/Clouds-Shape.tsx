@@ -30,7 +30,7 @@ const Scene: FC = () => {
 
   const { gl } = useThree()
   useEffect(() => {
-    shape.update(gl)
+    shape.render(gl)
   }, [shape, gl])
 
   const { gammaCorrect } = useControls({

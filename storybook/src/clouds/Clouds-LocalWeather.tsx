@@ -29,7 +29,7 @@ const Scene: FC = () => {
 
   const { gl } = useThree()
   useEffect(() => {
-    localWeather.update(gl)
+    localWeather.render(gl)
   }, [localWeather, gl])
 
   const { gammaCorrect } = useControls({
