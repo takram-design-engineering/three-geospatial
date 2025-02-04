@@ -97,7 +97,7 @@ const shadowPassParamKeys = [
   'minDensity',
   'minExtinction',
   'minTransmittance',
-  'maxOpticalDepthTailScale'
+  'opticalDepthTailScale'
 ] as const satisfies Array<keyof ShadowMaterialUniforms>
 
 const shadowMapsParamKeys = [
