@@ -19,6 +19,7 @@ import {
   getMoonDirectionECI,
   getSunDirectionECI
 } from '../celestialDirections'
+import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
 import {
   PrecomputedTexturesLoader,
   type PrecomputedTextures
@@ -93,8 +94,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
   AtmosphereProps
 >(function Atmosphere(
   {
-    textures:
-      texturesProp = 'https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/9627216cc50057994c98a2118f3c4a23765d43b9/packages/atmosphere/assets',
+    textures: texturesProp = DEFAULT_PRECOMPUTED_TEXTURES_URL,
     useHalfFloat,
     ellipsoid = Ellipsoid.WGS84,
     correctAltitude = true,
