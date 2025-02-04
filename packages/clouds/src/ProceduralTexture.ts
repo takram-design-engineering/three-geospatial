@@ -60,6 +60,7 @@ export class ProceduralTexture {
     texture.wrapS = RepeatWrapping
     texture.wrapT = RepeatWrapping
     texture.colorSpace = NoColorSpace
+    texture.needsUpdate = true
   }
 
   dispose(): void {
