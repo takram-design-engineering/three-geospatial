@@ -48,10 +48,10 @@ import {
   type CloudParameterUniforms
 } from './uniforms'
 
-import fragmentShader from './shaders/clouds.frag?raw'
 import clouds from './shaders/clouds.glsl?raw'
-import vertexShader from './shaders/clouds.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
+import fragmentShader from './shaders/render.frag?raw'
+import vertexShader from './shaders/render.vert?raw'
 import types from './shaders/types.glsl?raw'
 
 declare module 'three' {
@@ -63,13 +63,13 @@ declare module 'three' {
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
-export interface CloudsMaterialParameters {
-  cloudParameterUniforms: CloudParameterUniforms
-  cloudLayerUniforms: CloudLayerUniforms
+export interface RenderMaterialParameters {
+  parameterUniforms: CloudParameterUniforms
+  layerUniforms: CloudLayerUniforms
   atmosphereUniforms: AtmosphereUniforms
 }
 
-export interface CloudsMaterialUniforms
+export interface RenderMaterialUniforms
   extends CloudParameterUniforms,
     CloudLayerUniforms,
     AtmosphereUniforms {
@@ -125,8 +125,8 @@ export interface CloudsMaterialUniforms
   maxShadowLengthRayDistance: Uniform<number>
 }
 
-export class CloudsMaterial extends AtmosphereMaterialBase {
-  declare uniforms: AtmosphereMaterialBaseUniforms & CloudsMaterialUniforms
+export class RenderMaterial extends AtmosphereMaterialBase {
+  declare uniforms: AtmosphereMaterialBaseUniforms & RenderMaterialUniforms
 
   temporalUpscale = true
 
@@ -135,15 +135,15 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   constructor(
     {
-      cloudParameterUniforms,
-      cloudLayerUniforms,
+      parameterUniforms,
+      layerUniforms,
       atmosphereUniforms
-    }: CloudsMaterialParameters,
+    }: RenderMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super(
       {
-        name: 'CloudsMaterial',
+        name: 'RenderMaterial',
         glslVersion: GLSL3,
         vertexShader: resolveIncludes(vertexShader, {
           atmosphere: {
@@ -172,8 +172,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           })
         ),
         uniforms: {
-          ...cloudParameterUniforms,
-          ...cloudLayerUniforms,
+          ...parameterUniforms,
+          ...layerUniforms,
           ...atmosphereUniforms,
 
           depthBuffer: new Uniform(null),
@@ -233,7 +233,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           minShadowLengthStepSize: new Uniform(50),
           maxShadowLengthRayDistance: new Uniform(5e5)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
-          CloudsMaterialUniforms,
+          RenderMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
           SHAPE_DETAIL: '1',

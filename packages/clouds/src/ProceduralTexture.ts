@@ -15,30 +15,30 @@ import {
   type WebGLRenderer
 } from 'three'
 
-export interface RenderTextureParameters {
+export interface ProceduralTextureParameters {
   size: number
   fragmentShader: string
 }
 
-export class RenderTexture {
+export class ProceduralTexture {
   readonly size: number
-  needsUpdate = true
+  needsRender = true
 
   private readonly material: RawShaderMaterial
   private readonly mesh: Mesh
   private readonly renderTarget: WebGLRenderTarget
   private readonly camera = new Camera()
 
-  constructor({ size, fragmentShader }: RenderTextureParameters) {
+  constructor({ size, fragmentShader }: ProceduralTextureParameters) {
     this.size = size
     this.material = new RawShaderMaterial({
       glslVersion: GLSL3,
       vertexShader: /* glsl */ `
-        in vec2 uv;
+        in vec3 position;
         out vec2 vUv;
         void main() {
-          vUv = uv;
-          gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+          vUv = position.xy * 0.5 + 0.5;
+          gl_Position = vec4(position.xy, 0.0, 1.0);
         }
       `,
       fragmentShader,
@@ -60,6 +60,7 @@ export class RenderTexture {
     texture.wrapS = RepeatWrapping
     texture.wrapT = RepeatWrapping
     texture.colorSpace = NoColorSpace
+    texture.needsUpdate = true
   }
 
   dispose(): void {
@@ -67,11 +68,11 @@ export class RenderTexture {
     this.material.dispose()
   }
 
-  update(renderer: WebGLRenderer, deltaTime?: number): void {
-    if (!this.needsUpdate) {
+  render(renderer: WebGLRenderer, deltaTime?: number): void {
+    if (!this.needsRender) {
       return
     }
-    this.needsUpdate = false
+    this.needsRender = false
 
     const renderTarget = renderer.getRenderTarget()
     renderer.setRenderTarget(this.renderTarget)

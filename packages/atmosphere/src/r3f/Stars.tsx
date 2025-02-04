@@ -13,7 +13,7 @@ import { type Points } from 'three'
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
-import { SKY_RENDER_ORDER } from '../constants'
+import { DEFAULT_STARS_DATA_URL, SKY_RENDER_ORDER } from '../constants'
 import { StarsGeometry } from '../StarsGeometry'
 import {
   StarsMaterial,
@@ -39,10 +39,7 @@ export interface StarsProps extends PointsProps, AtmosphereMaterialProps {
 
 export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
   function Stars(
-    {
-      data: dataProp = 'https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/9627216cc50057994c98a2118f3c4a23765d43b9/packages/atmosphere/assets/stars.bin',
-      ...props
-    },
+    { data: dataProp = DEFAULT_STARS_DATA_URL, ...props },
     forwardedRef
   ) {
     const { textures, transientStates, ...contextProps } =

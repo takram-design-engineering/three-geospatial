@@ -1,12 +1,13 @@
 import { useLoader, useThree } from '@react-three/fiber'
 
+import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
 import {
   PrecomputedTexturesLoader,
   type PrecomputedTextures
 } from '../PrecomputedTexturesLoader'
 
 export function useAtmosphereTextureProps(
-  url: string,
+  url = DEFAULT_PRECOMPUTED_TEXTURES_URL,
   useHalfFloat?: boolean
 ): {
   textures: PrecomputedTextures

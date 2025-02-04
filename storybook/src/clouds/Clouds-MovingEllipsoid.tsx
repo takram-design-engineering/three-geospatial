@@ -4,11 +4,11 @@ import {
   OrbitControls,
   Sphere
 } from '@react-three/drei'
-import { Canvas, useFrame, useLoader } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { Fragment, useState, type FC } from 'react'
-import { NearestFilter, RedFormat, RepeatWrapping, Vector3 } from 'three'
+import { Vector3 } from 'three'
 
 import {
   AerialPerspective,
@@ -19,18 +19,9 @@ import {
   SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsCompositePass } from '@takram/three-clouds'
+import { type CloudsPass } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
-import {
-  createData3DTextureLoaderClass,
-  Ellipsoid,
-  Geodetic,
-  parseUint8Array,
-  radians,
-  STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH
-} from '@takram/three-geospatial'
+import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 
 import { EffectComposer } from '../helpers/EffectComposer'
@@ -39,7 +30,7 @@ import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-import { useCloudsControls } from './useCloudsControls'
+import { useCloudsControls } from './helpers/useCloudsControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -80,22 +71,7 @@ const Scene: FC = () => {
     atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
   })
 
-  const stbnTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RedFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_WIDTH,
-      height: STBN_TEXTURE_HEIGHT,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    'core/stbn.bin'
-  )
-
-  const [clouds, setClouds] = useState<CloudsCompositePass | null>(null)
+  const [clouds, setClouds] = useState<CloudsPass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)
 
   return (
@@ -119,6 +95,7 @@ const Scene: FC = () => {
         ref={setAtmosphere}
         textures='atmosphere'
         correctAltitude={correctAltitude}
+        stbn='core/stbn.bin'
       >
         <Sky />
         <SkyLight />
@@ -127,12 +104,7 @@ const Scene: FC = () => {
         <EffectComposer multisampling={0}>
           <Fragment key={JSON.stringify([enabled, toneMapping])}>
             {enabled && (
-              <Clouds
-                ref={setClouds}
-                stbnTexture={stbnTexture}
-                shadow-maxFar={1e5}
-                {...cloudsProps}
-              />
+              <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps} />
             )}
             <AerialPerspective />
             {toneMapping && (

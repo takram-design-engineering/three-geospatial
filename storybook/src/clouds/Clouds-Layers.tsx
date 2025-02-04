@@ -1,8 +1,8 @@
-import { Box, OrbitControls } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
+import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { Fragment, useEffect, useRef, useState, type FC } from 'react'
+import { useEffect, useRef, type FC } from 'react'
 import { Quaternion, Vector3, type Camera } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
@@ -11,8 +11,7 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsPass } from '@takram/three-clouds'
-import { Clouds } from '@takram/three-clouds/r3f'
+import { CloudLayer, Clouds } from '@takram/three-clouds/r3f'
 import {
   Ellipsoid,
   Geodetic,
@@ -20,14 +19,11 @@ import {
   type GeodeticLike
 } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
-import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
 import { Stats } from '../helpers/Stats'
-import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-import { useCloudsControls } from './helpers/useCloudsControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -61,15 +57,10 @@ const Scene: FC = () => {
     },
     { collapsed: true }
   )
-  const motionDate = useLocalDateControls({
-    longitude,
-    dayOfYear: 0
-  })
-  const { correctAltitude, photometric } = useControls(
-    'atmosphere',
+  const motionDate = useLocalDateControls(
     {
-      correctAltitude: true,
-      photometric: true
+      longitude,
+      dayOfYear: 0
     },
     { collapsed: true }
   )
@@ -92,54 +83,18 @@ const Scene: FC = () => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const [clouds, setClouds] = useState<CloudsPass | null>(null)
-  const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)
-
-  const { showBox: debugShowBox } = useControls(
-    'debug',
-    { showBox: false },
-    { collapsed: true }
-  )
-
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={1000} />
-      {debugShowBox && (
-        <EastNorthUpFrame
-          longitude={radians(longitude)}
-          latitude={radians(latitude)}
-        >
-          <Box
-            args={[2e3, 2e3, 2e3]}
-            position={[1e3, -2e3, 1e3]}
-            rotation={[Math.PI / 4, Math.PI / 4, 0]}
-          >
-            <meshBasicMaterial color='white' />
-          </Box>
-        </EastNorthUpFrame>
-      )}
-      <Atmosphere
-        ref={atmosphereRef}
-        textures='atmosphere'
-        correctAltitude={correctAltitude}
-        photometric={photometric}
-        stbn='core/stbn.bin'
-      >
-        <EffectComposer multisampling={0} enableNormalPass>
-          <Fragment key={JSON.stringify([enabled, toneMapping])}>
-            {enabled && (
-              <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps} />
-            )}
-            <AerialPerspective sky sunIrradiance skyIrradiance />
-            {toneMapping && (
-              <>
-                <LensFlare />
-                <ToneMapping mode={toneMappingMode} />
-                <SMAA />
-                <Dithering />
-              </>
-            )}
-          </Fragment>
+      <Atmosphere ref={atmosphereRef}>
+        <EffectComposer multisampling={0}>
+          <Clouds shadow-maxFar={1e5}>
+            <CloudLayer altitude={750} />
+          </Clouds>
+          <AerialPerspective sky />
+          <LensFlare />
+          <ToneMapping mode={toneMappingMode} />
+          <Dithering />
         </EffectComposer>
       </Atmosphere>
     </>

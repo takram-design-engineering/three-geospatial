@@ -91,7 +91,7 @@ or even `R3F: Hooks can only be used within the Canvas component!` error in the 
 
 If the Storybook build succeeded on the commit you’re currently on in the Github Actions, the problem is likely not in the source or Storybook configuration. I haven’t found a reliable way to prevent this problem or recover from it reliably.
 
-In most cases, removing the Storybook cache, resetting NX, restarting Storybook, and opening the Storybook in a *new browser window* will recover from it:
+In most cases, removing the Storybook cache, resetting NX, restarting Storybook, and opening the Storybook in a _new browser window_ will recover from it:
 
 ```sh
 rm -r storybook/node_modules

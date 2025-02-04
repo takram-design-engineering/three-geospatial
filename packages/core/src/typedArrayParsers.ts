@@ -1,5 +1,16 @@
 import { type TypedArray, type TypedArrayConstructor } from './typedArray'
 
+let hostLittleEndian: boolean | undefined
+
+function isHostLittleEndian(): boolean {
+  if (hostLittleEndian != null) {
+    return hostLittleEndian
+  }
+  const a = new Uint32Array([0x10000000])
+  const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength)
+  return b[0] === 0
+}
+
 type GetValue = keyof {
   [K in keyof DataView as DataView[K] extends (byteOffset: number) => number
     ? K
@@ -19,6 +30,9 @@ function parseTypedArray<K extends GetValue>(
   getValue: K,
   littleEndian = true
 ): TypedArray {
+  if (littleEndian === isHostLittleEndian()) {
+    return new TypedArray(buffer)
+  }
   const data = new DataView(buffer)
   const array = new TypedArray(data.byteLength / TypedArray.BYTES_PER_ELEMENT)
   for (
@@ -36,15 +50,11 @@ export type TypedArrayParser<T extends TypedArray> = (
   littleEndian?: boolean
 ) => T
 
-export const parseUint8Array: TypedArrayParser<Uint8Array> = (
-  buffer,
-  littleEndian
-) => parseTypedArray(buffer, Uint8Array, 'getUint8', littleEndian)
+export const parseUint8Array: TypedArrayParser<Uint8Array> = buffer =>
+  new Uint8Array(buffer)
 
-export const parseInt8Array: TypedArrayParser<Int8Array> = (
-  buffer,
-  littleEndian
-) => parseTypedArray(buffer, Int8Array, 'getInt8', littleEndian)
+export const parseInt8Array: TypedArrayParser<Int8Array> = buffer =>
+  new Int8Array(buffer)
 
 export const parseUint16Array: TypedArrayParser<Uint16Array> = (
   buffer,

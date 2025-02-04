@@ -65,8 +65,8 @@ const Scene: FC = () => {
 
   const { gl } = useThree()
   useEffect(() => {
-    shape.update(gl)
-    shapeDetail.update(gl)
+    shape.render(gl)
+    shapeDetail.render(gl)
   }, [shape, shapeDetail, gl])
 
   const { target } = useControls('target', {

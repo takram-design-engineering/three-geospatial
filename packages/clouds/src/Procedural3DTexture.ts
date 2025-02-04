@@ -14,30 +14,30 @@ import {
   type WebGLRenderer
 } from 'three'
 
-export interface Render3DTextureParameters {
+export interface Procedural3DTextureParameters {
   size: number
   fragmentShader: string
 }
 
-export class Render3DTexture {
+export class Procedural3DTexture {
   readonly size: number
-  needsUpdate = true
+  needsRender = true
 
   private readonly material: RawShaderMaterial
   private readonly mesh: Mesh
   private readonly renderTarget: WebGL3DRenderTarget
   private readonly camera = new Camera()
 
-  constructor({ size, fragmentShader }: Render3DTextureParameters) {
+  constructor({ size, fragmentShader }: Procedural3DTextureParameters) {
     this.size = size
     this.material = new RawShaderMaterial({
       glslVersion: GLSL3,
       vertexShader: /* glsl */ `
-        in vec2 uv;
+        in vec3 position;
         out vec2 vUv;
         void main() {
-          vUv = uv;
-          gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+          vUv = position.xy * 0.5 + 0.5;
+          gl_Position = vec4(position.xy, 0.0, 1.0);
         }
       `,
       fragmentShader,
@@ -59,6 +59,7 @@ export class Render3DTexture {
     texture.wrapT = RepeatWrapping
     texture.wrapR = RepeatWrapping
     texture.colorSpace = NoColorSpace
+    texture.needsUpdate = true
   }
 
   dispose(): void {
@@ -66,11 +67,11 @@ export class Render3DTexture {
     this.material.dispose()
   }
 
-  update(renderer: WebGLRenderer, deltaTime?: number): void {
-    if (!this.needsUpdate) {
+  render(renderer: WebGLRenderer, deltaTime?: number): void {
+    if (!this.needsRender) {
       return
     }
-    this.needsUpdate = false
+    this.needsRender = false
 
     // Unfortunately, rendering into 3D target requires as many draw calls as
     // the value of "size".

@@ -23,8 +23,8 @@ import vertexShader from './shaders/shadow.vert?raw'
 import structuredSampling from './shaders/structuredSampling.glsl?raw'
 
 export interface ShadowMaterialParameters {
-  cloudParameterUniforms: CloudParameterUniforms
-  cloudLayerUniforms: CloudLayerUniforms
+  parameterUniforms: CloudParameterUniforms
+  layerUniforms: CloudLayerUniforms
   atmosphereUniforms: AtmosphereUniforms
 }
 
@@ -53,9 +53,9 @@ export class ShadowMaterial extends RawShaderMaterial {
   declare uniforms: ShadowMaterialUniforms
 
   constructor({
-    atmosphereUniforms,
-    cloudParameterUniforms,
-    cloudLayerUniforms
+    parameterUniforms,
+    layerUniforms,
+    atmosphereUniforms
   }: ShadowMaterialParameters) {
     super({
       name: 'ShadowMaterial',
@@ -73,8 +73,8 @@ export class ShadowMaterial extends RawShaderMaterial {
         })
       ),
       uniforms: {
-        ...cloudParameterUniforms,
-        ...cloudLayerUniforms,
+        ...parameterUniforms,
+        ...layerUniforms,
         ...atmosphereUniforms,
 
         inverseShadowMatrices: new Uniform(

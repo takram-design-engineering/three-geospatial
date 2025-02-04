@@ -24,7 +24,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
 >(function AerialPerspective(props, forwardedRef) {
-  const { textures, transientStates, atoms, ...contextProps } =
+  const { textures, stbn, transientStates, atoms, ...contextProps } =
     useContext(AtmosphereContext)
 
   const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
@@ -86,6 +86,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       mainCamera={camera}
       normalBuffer={geometryTexture ?? normalPass?.texture ?? null}
       {...atmosphereParameters}
+      stbnTexture={stbn}
       {...others}
       octEncodedNormal={geometryTexture != null}
     />

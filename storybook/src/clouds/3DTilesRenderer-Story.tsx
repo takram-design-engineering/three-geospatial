@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer'
 import {
@@ -27,7 +27,6 @@ import {
   useState,
   type FC
 } from 'react'
-import { NearestFilter, RedFormat, RepeatWrapping } from 'three'
 import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
@@ -36,18 +35,9 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsCompositePass } from '@takram/three-clouds'
+import { type CloudsPass } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
-import {
-  createData3DTextureLoaderClass,
-  Geodetic,
-  parseUint8Array,
-  PointOfView,
-  radians,
-  STBN_TEXTURE_DEPTH,
-  STBN_TEXTURE_HEIGHT,
-  STBN_TEXTURE_WIDTH
-} from '@takram/three-geospatial'
+import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
   Depth,
   Dithering,
@@ -68,7 +58,7 @@ import {
 } from '../helpers/useLocalDateControls'
 import { usePovControls } from '../helpers/usePovControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-import { useCloudsControls } from './useCloudsControls'
+import { useCloudsControls } from './helpers/useCloudsControls'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -201,22 +191,7 @@ const Scene: FC<SceneProps> = ({
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const stbnTexture = useLoader(
-    createData3DTextureLoaderClass(parseUint8Array, {
-      format: RedFormat,
-      minFilter: NearestFilter,
-      magFilter: NearestFilter,
-      wrapS: RepeatWrapping,
-      wrapT: RepeatWrapping,
-      wrapR: RepeatWrapping,
-      width: STBN_TEXTURE_WIDTH,
-      height: STBN_TEXTURE_HEIGHT,
-      depth: STBN_TEXTURE_DEPTH
-    }),
-    'core/stbn.bin'
-  )
-
-  const [clouds, setClouds] = useState<CloudsCompositePass | null>(null)
+  const [clouds, setClouds] = useState<CloudsPass | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
     coverage,
     animate: true
@@ -230,6 +205,7 @@ const Scene: FC<SceneProps> = ({
       textures={atmosphereModel === 'default' ? 'atmosphere' : 'clouds'}
       correctAltitude={correctAltitude}
       photometric={photometric}
+      stbn='core/stbn.bin'
     >
       <Globe />
       <EffectComposer ref={composerRef} multisampling={0}>
@@ -250,7 +226,6 @@ const Scene: FC<SceneProps> = ({
               {enabled && (
                 <Clouds
                   ref={setClouds}
-                  stbnTexture={stbnTexture}
                   shadow-farScale={0.25}
                   {...cloudsProps}
                 />
@@ -261,7 +236,6 @@ const Scene: FC<SceneProps> = ({
                 skyIrradiance
                 correctGeometricError={correctGeometricError}
                 irradianceScale={2 / Math.PI}
-                stbnTexture={stbnTexture}
               />
             </>
           )}
