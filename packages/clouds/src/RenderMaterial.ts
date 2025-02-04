@@ -48,10 +48,10 @@ import {
   type CloudParameterUniforms
 } from './uniforms'
 
-import fragmentShader from './shaders/clouds.frag?raw'
 import clouds from './shaders/clouds.glsl?raw'
-import vertexShader from './shaders/clouds.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
+import fragmentShader from './shaders/render.frag?raw'
+import vertexShader from './shaders/render.vert?raw'
 import types from './shaders/types.glsl?raw'
 
 declare module 'three' {
