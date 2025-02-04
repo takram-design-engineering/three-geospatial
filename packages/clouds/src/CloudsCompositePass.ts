@@ -30,8 +30,8 @@ import { CloudShape } from './CloudShape'
 import { CloudShapeDetail } from './CloudShapeDetail'
 import { CloudsPass } from './CloudsPass'
 import { LocalWeather } from './LocalWeather'
-import { type Render3DTexture } from './Render3DTexture'
-import { type RenderTexture } from './RenderTexture'
+import { type Procedural3DTexture } from './Procedural3DTexture'
+import { type ProceduralTexture } from './ProceduralTexture'
 import { ShadowPass } from './ShadowPass'
 import { Turbulence } from './Turbulence'
 import { type CloudLayers } from './types'
@@ -127,10 +127,10 @@ export class CloudsCompositePass extends Pass {
   ]
 
   // Weather and shape texture generators
-  localWeather: RenderTexture = new LocalWeather()
-  shape: Render3DTexture = new CloudShape()
-  shapeDetail: Render3DTexture = new CloudShapeDetail()
-  turbulence: RenderTexture = new Turbulence()
+  localWeather: ProceduralTexture = new LocalWeather()
+  shape: Procedural3DTexture = new CloudShape()
+  shapeDetail: Procedural3DTexture = new CloudShapeDetail()
+  turbulence: ProceduralTexture = new Turbulence()
 
   correctAltitude = true
 
@@ -417,10 +417,10 @@ export class CloudsCompositePass extends Pass {
       cloudsPass.setShadowSize(width, height, depth)
     }
 
-    this.localWeather.update(renderer, deltaTime)
-    this.shape.update(renderer, deltaTime)
-    this.shapeDetail.update(renderer, deltaTime)
-    this.turbulence.update(renderer, deltaTime)
+    this.localWeather.render(renderer, deltaTime)
+    this.shape.render(renderer, deltaTime)
+    this.shapeDetail.render(renderer, deltaTime)
+    this.turbulence.render(renderer, deltaTime)
 
     ++this.frame
     this.updateSharedUniforms(deltaTime)

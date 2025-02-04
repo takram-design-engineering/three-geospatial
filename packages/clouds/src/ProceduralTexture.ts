@@ -2,33 +2,34 @@ import {
   Camera,
   GLSL3,
   LinearFilter,
+  LinearMipMapLinearFilter,
   Mesh,
   NoColorSpace,
   PlaneGeometry,
   RawShaderMaterial,
-  RedFormat,
   RepeatWrapping,
+  RGBAFormat,
   Uniform,
-  WebGL3DRenderTarget,
-  type Data3DTexture,
+  WebGLRenderTarget,
+  type Texture,
   type WebGLRenderer
 } from 'three'
 
-export interface Render3DTextureParameters {
+export interface ProceduralTextureParameters {
   size: number
   fragmentShader: string
 }
 
-export class Render3DTexture {
+export class ProceduralTexture {
   readonly size: number
-  needsUpdate = true
+  needsRender = true
 
   private readonly material: RawShaderMaterial
   private readonly mesh: Mesh
-  private readonly renderTarget: WebGL3DRenderTarget
+  private readonly renderTarget: WebGLRenderTarget
   private readonly camera = new Camera()
 
-  constructor({ size, fragmentShader }: Render3DTextureParameters) {
+  constructor({ size, fragmentShader }: ProceduralTextureParameters) {
     this.size = size
     this.material = new RawShaderMaterial({
       glslVersion: GLSL3,
@@ -47,17 +48,17 @@ export class Render3DTexture {
     })
     this.mesh = new Mesh(new PlaneGeometry(2, 2), this.material)
 
-    this.renderTarget = new WebGL3DRenderTarget(size, size, size, {
+    this.renderTarget = new WebGLRenderTarget(size, size, {
       depthBuffer: false,
       stencilBuffer: false,
-      format: RedFormat
+      format: RGBAFormat
     })
     const texture = this.renderTarget.texture
-    texture.minFilter = LinearFilter
+    texture.generateMipmaps = true
+    texture.minFilter = LinearMipMapLinearFilter
     texture.magFilter = LinearFilter
     texture.wrapS = RepeatWrapping
     texture.wrapT = RepeatWrapping
-    texture.wrapR = RepeatWrapping
     texture.colorSpace = NoColorSpace
   }
 
@@ -66,24 +67,19 @@ export class Render3DTexture {
     this.material.dispose()
   }
 
-  update(renderer: WebGLRenderer, deltaTime?: number): void {
-    if (!this.needsUpdate) {
+  render(renderer: WebGLRenderer, deltaTime?: number): void {
+    if (!this.needsRender) {
       return
     }
-    this.needsUpdate = false
+    this.needsRender = false
 
-    // Unfortunately, rendering into 3D target requires as many draw calls as
-    // the value of "size".
     const renderTarget = renderer.getRenderTarget()
-    for (let layer = 0; layer < this.size; ++layer) {
-      this.material.uniforms.layer.value = layer / this.size
-      renderer.setRenderTarget(this.renderTarget, layer)
-      renderer.render(this.mesh, this.camera)
-    }
+    renderer.setRenderTarget(this.renderTarget)
+    renderer.render(this.mesh, this.camera)
     renderer.setRenderTarget(renderTarget)
   }
 
-  get texture(): Data3DTexture {
+  get texture(): Texture {
     return this.renderTarget.texture
   }
 }
