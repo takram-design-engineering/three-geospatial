@@ -38,11 +38,11 @@ const ivec2 neighborOffsets[9] = ivec2[9](
   ivec2(1, 1)
 );
 
-const mat4 bayerIndices = mat4(
-  vec4(0.0, 12.0, 3.0, 15.0),
-  vec4(8.0, 4.0, 11.0, 7.0),
-  vec4(2.0, 14.0, 1.0, 13.0),
-  vec4(10.0, 6.0, 9.0, 5.0)
+const ivec4[4] bayerIndices = ivec4[4](
+  ivec4(0, 12, 3, 15),
+  ivec4(8, 4, 11, 7),
+  ivec4(2, 14, 1, 13),
+  ivec4(10, 6, 9, 5)
 );
 
 vec2 getUnjitteredUv(ivec2 coord) {
@@ -188,7 +188,7 @@ void main() {
 
   #ifdef TEMPORAL_UPSCALE
   ivec2 lowResCoord = coord / 4;
-  int bayerValue = int(bayerIndices[coord.x % 4][coord.y % 4]);
+  int bayerValue = bayerIndices[coord.x % 4][coord.y % 4];
   bool currentFrame = bayerValue == frame % 16;
   temporalUpscale(coord, lowResCoord, currentFrame, outputColor, outputShadowLength);
   #else // TEMPORAL_UPSCALE
