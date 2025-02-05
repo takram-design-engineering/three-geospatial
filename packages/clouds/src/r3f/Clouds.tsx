@@ -37,6 +37,8 @@ import {
   type CloudsPassChangeEvent
 } from '../CloudsPass'
 import {
+  CLOUD_SHAPE_DETAIL_TEXTURE_SIZE,
+  CLOUD_SHAPE_TEXTURE_SIZE,
   DEFAULT_LOCAL_WEATHER_URL,
   DEFAULT_SHAPE_DETAIL_URL,
   DEFAULT_SHAPE_URL,
@@ -207,8 +209,14 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
 
     const gl = useThree(({ gl }) => gl)
     const localWeatherTexture = useTextureState(localWeatherTextureProp, gl)
-    const shapeTexture = use3DTextureState(shapeTextureProp, 128)
-    const shapeDetailTexture = use3DTextureState(shapeDetailTextureProp, 32)
+    const shapeTexture = use3DTextureState(
+      shapeTextureProp,
+      CLOUD_SHAPE_TEXTURE_SIZE
+    )
+    const shapeDetailTexture = use3DTextureState(
+      shapeDetailTextureProp,
+      CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
+    )
     const turbulenceTexture = useTextureState(turbulenceTextureProp, gl)
 
     const { camera } = useContext(EffectComposerContext)
