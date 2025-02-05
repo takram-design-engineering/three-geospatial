@@ -11,7 +11,13 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsPass } from '@takram/three-clouds'
+import {
+  CloudShape,
+  CloudShapeDetail,
+  LocalWeather,
+  Turbulence,
+  type CloudsPass
+} from '@takram/three-clouds'
 import { CloudLayer, Clouds } from '@takram/three-clouds/r3f'
 import {
   Ellipsoid,
@@ -98,7 +104,7 @@ const Scene: FC = () => {
           <Fragment key={JSON.stringify([enabled, toneMapping])}>
             {enabled && (
               <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps}>
-                <CloudLayer altitude={750} />
+                <CloudLayer />
               </Clouds>
             )}
             <AerialPerspective sky />

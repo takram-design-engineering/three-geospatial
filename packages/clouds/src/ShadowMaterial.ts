@@ -21,6 +21,7 @@ import parameters from './shaders/parameters.glsl?raw'
 import fragmentShader from './shaders/shadow.frag?raw'
 import vertexShader from './shaders/shadow.vert?raw'
 import structuredSampling from './shaders/structuredSampling.glsl?raw'
+import types from './shaders/types.glsl?raw'
 
 export interface ShadowMaterialParameters {
   parameterUniforms: CloudParameterUniforms
@@ -67,6 +68,7 @@ export class ShadowMaterial extends RawShaderMaterial {
             math,
             raySphereIntersection
           },
+          types,
           parameters,
           structuredSampling,
           clouds

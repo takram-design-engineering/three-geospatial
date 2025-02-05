@@ -21,7 +21,16 @@ const CloudLayerImpl: FC<CloudLayerImplProps> = ({
   layerIndex,
   ...props
 }) => {
-  Object.assign(pass.cloudLayers[layerIndex], props)
+  pass.cloudLayers[layerIndex] = Object.assign(
+    pass.cloudLayers[layerIndex] ?? {},
+    props
+  )
+  if (props.densityProfile != null) {
+    pass.cloudLayers[layerIndex].densityProfile = Object.assign(
+      pass.cloudLayers[layerIndex].densityProfile ?? {},
+      props.densityProfile
+    )
+  }
   return null
 }
 

@@ -5,6 +5,7 @@ precision highp sampler3D;
 
 #include "core/math"
 #include "core/raySphereIntersection"
+#include "types"
 #include "parameters"
 #include "structuredSampling"
 #include "clouds"

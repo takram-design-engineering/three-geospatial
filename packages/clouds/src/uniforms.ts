@@ -66,6 +66,13 @@ export function createCloudParameterUniforms(
   }
 }
 
+interface DensityProfiles {
+  expTerm: Vector4
+  expScale: Vector4
+  linearTerm: Vector4
+  constantTerm: Vector4
+}
+
 export interface CloudLayerUniforms {
   minLayerHeights: Uniform<Vector4>
   maxLayerHeights: Uniform<Vector4>
@@ -79,6 +86,7 @@ export interface CloudLayerUniforms {
   maxHeight: Uniform<number>
   shadowTopHeight: Uniform<number>
   shadowBottomHeight: Uniform<number>
+  densityProfiles: Uniform<DensityProfiles>
 }
 
 export function createCloudLayerUniforms(): CloudLayerUniforms {
@@ -94,57 +102,98 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
     minHeight: new Uniform(0),
     maxHeight: new Uniform(0),
     shadowTopHeight: new Uniform(0),
-    shadowBottomHeight: new Uniform(0)
+    shadowBottomHeight: new Uniform(0),
+    densityProfiles: new Uniform({
+      expTerm: new Vector4(),
+      expScale: new Vector4(),
+      linearTerm: new Vector4(),
+      constantTerm: new Vector4()
+    })
   }
 }
 
-function normalizeLayers(layers: readonly CloudLayer[]): CloudLayer[] {
-  const result: CloudLayer[] = []
-  for (let i = 0; i < 4; ++i) {
-    result[i] = Object.assign({}, defaultCloudLayer, layers[i])
-  }
-  return result
+type NumericLayerKey = keyof {
+  [P in keyof CloudLayer as number extends CloudLayer[P] ? P : never]: any
 }
 
-function packVector<
-  K extends keyof {
-    [P in keyof CloudLayer as CloudLayer[P] extends number ? P : never]: any
-  }
->(layers: readonly CloudLayer[], key: K, uniform: Uniform<Vector4>): void {
-  uniform.value.set(
-    layers[0][key],
-    layers[1][key],
-    layers[2][key],
-    layers[3][key]
+function packVector<K extends NumericLayerKey>(
+  layers: readonly CloudLayer[],
+  key: K,
+  vector: Vector4
+): void {
+  const defaultValue = defaultCloudLayer[key]
+  vector.set(
+    layers[0]?.[key] ?? defaultValue,
+    layers[1]?.[key] ?? defaultValue,
+    layers[2]?.[key] ?? defaultValue,
+    layers[3]?.[key] ?? defaultValue
   )
+}
+
+function packSumVector<K1 extends NumericLayerKey, K2 extends NumericLayerKey>(
+  layers: readonly CloudLayer[],
+  key1: K1,
+  key2: K2,
+  vector: Vector4
+): void {
+  const { [key1]: defaultValue1, [key2]: defaultValue2 } = defaultCloudLayer
+  vector.set(
+    (layers[0]?.[key1] ?? defaultValue1) + (layers[0]?.[key2] ?? defaultValue2),
+    (layers[1]?.[key1] ?? defaultValue1) + (layers[1]?.[key2] ?? defaultValue2),
+    (layers[2]?.[key1] ?? defaultValue1) + (layers[2]?.[key2] ?? defaultValue2),
+    (layers[3]?.[key1] ?? defaultValue1) + (layers[3]?.[key2] ?? defaultValue2)
+  )
+}
+
+function packDensityProfileVector<K extends keyof DensityProfiles>(
+  layers: readonly CloudLayer[],
+  key: K,
+  densityProfiles: DensityProfiles
+): void {
+  const defaultValue = defaultCloudLayer.densityProfile[key]
+  densityProfiles[key].set(
+    layers[0]?.densityProfile?.[key] ?? defaultValue,
+    layers[1]?.densityProfile?.[key] ?? defaultValue,
+    layers[2]?.densityProfile?.[key] ?? defaultValue,
+    layers[3]?.densityProfile?.[key] ?? defaultValue
+  )
+}
+
+function packDensityProfiles(
+  layers: readonly CloudLayer[],
+  densityProfiles: DensityProfiles
+): void {
+  packDensityProfileVector(layers, 'expTerm', densityProfiles)
+  packDensityProfileVector(layers, 'expScale', densityProfiles)
+  packDensityProfileVector(layers, 'linearTerm', densityProfiles)
+  packDensityProfileVector(layers, 'constantTerm', densityProfiles)
 }
 
 export function updateCloudLayerUniforms(
   uniforms: CloudLayerUniforms,
-  layersInput: readonly CloudLayer[]
+  layers: readonly CloudLayer[]
 ): void {
-  const layers = normalizeLayers(layersInput)
-
-  packVector(layers, 'altitude', uniforms.minLayerHeights)
-  uniforms.maxLayerHeights.value.set(
-    layers[0].altitude + layers[0].height,
-    layers[1].altitude + layers[1].height,
-    layers[2].altitude + layers[2].height,
-    layers[3].altitude + layers[3].height
-  )
-  packVector(layers, 'densityScale', uniforms.densityScales)
-  packVector(layers, 'shapeAmount', uniforms.shapeAmounts)
-  packVector(layers, 'detailAmount', uniforms.detailAmounts)
-  packVector(layers, 'weatherExponent', uniforms.weatherExponents)
-  packVector(layers, 'shapeAlteringBias', uniforms.shapeAlteringBiases)
-  packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths)
+  packVector(layers, 'altitude', uniforms.minLayerHeights.value)
+  packSumVector(layers, 'altitude', 'height', uniforms.maxLayerHeights.value)
+  packVector(layers, 'densityScale', uniforms.densityScales.value)
+  packVector(layers, 'shapeAmount', uniforms.shapeAmounts.value)
+  packVector(layers, 'detailAmount', uniforms.detailAmounts.value)
+  packVector(layers, 'weatherExponent', uniforms.weatherExponents.value)
+  packVector(layers, 'shapeAlteringBias', uniforms.shapeAlteringBiases.value)
+  packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths.value)
+  packDensityProfiles(layers, uniforms.densityProfiles.value)
 
   let totalMinHeight = Infinity
   let totalMaxHeight = 0
   let shadowBottomHeight = Infinity
   let shadowTopHeight = 0
   for (let i = 0; i < layers.length; ++i) {
-    const { altitude, height, shadow = false } = layers[i]
+    const {
+      altitude = defaultCloudLayer.altitude,
+      height = defaultCloudLayer.height,
+      shadow = defaultCloudLayer.shadow
+    } = layers[i]
+
     const maxHeight = altitude + height
     if (height > 0) {
       if (altitude < totalMinHeight) {
