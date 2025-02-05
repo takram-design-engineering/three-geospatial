@@ -227,7 +227,7 @@ export function useCloudsControls(
       localWeatherVelocity: animate
         ? [defaultLocalWeatherVelocity ?? 0.001, 0]
         : [0, 0],
-      'shadowMaps-mapSize': [shadowMapSize, shadowMapSize],
+      'shadow-mapSize': [shadowMapSize, shadowMapSize],
       lightShafts
     }
   ]
