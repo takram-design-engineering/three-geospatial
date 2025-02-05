@@ -12,14 +12,17 @@ export function defineUniformShorthand<
   S extends { uniforms: Record<K, Uniform> },
   K extends keyof S['uniforms']
 >(destination: T, source: S, keys: readonly K[]): T & UniformShorthand<S, K> {
+  const descriptors: PropertyDescriptorMap = {}
   for (const key of keys) {
-    Object.defineProperty(destination, key, {
+    descriptors[key] = {
+      enumerable: true,
       get: () => source.uniforms[key].value,
       set: (value: S['uniforms'][K]) => {
         source.uniforms[key].value = value
       }
-    })
+    }
   }
+  Object.defineProperties(destination, descriptors)
   return destination as T & UniformShorthand<S, K>
 }
 
@@ -30,13 +33,16 @@ export function definePropertyShorthand<T, S, K extends keyof S>(
   source: S,
   keys: readonly K[]
 ): T & PropertyShorthand<S, K> {
+  const descriptors: PropertyDescriptorMap = {}
   for (const key of keys) {
-    Object.defineProperty(destination, key, {
+    descriptors[key] = {
+      enumerable: true,
       get: () => source[key],
       set: (value: S[K]) => {
         source[key] = value
       }
-    })
+    }
   }
+  Object.defineProperties(destination, descriptors)
   return destination as T & PropertyShorthand<S, K>
 }
