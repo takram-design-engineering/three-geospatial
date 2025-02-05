@@ -32,10 +32,10 @@ import {
 } from '@takram/three-geospatial/r3f'
 
 import {
-  CloudsPass,
+  CloudsEffect,
   cloudsPassOptionsDefaults,
-  type CloudsPassChangeEvent
-} from '../CloudsPass'
+  type CloudsEffectChangeEvent
+} from '../CloudsEffect'
 import {
   CLOUD_SHAPE_DETAIL_TEXTURE_SIZE,
   CLOUD_SHAPE_TEXTURE_SIZE,
@@ -50,12 +50,12 @@ import { CloudLayers, type CloudLayersChildren } from './CloudLayers'
 
 export type CloudsProps = Omit<
   PassThoughInstanceProps<
-    CloudsPass,
+    CloudsEffect,
     [],
     Partial<
-      CloudsPass &
-        ExpandNestedProps<CloudsPass, 'clouds'> &
-        ExpandNestedProps<CloudsPass, 'shadow'>
+      CloudsEffect &
+        ExpandNestedProps<CloudsEffect, 'clouds'> &
+        ExpandNestedProps<CloudsEffect, 'shadow'>
     >
   >,
   | 'localWeatherTexture'
@@ -137,7 +137,7 @@ function use3DTextureState(
   return data
 }
 
-export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
+export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
   function Clouds(
     {
       localWeatherTexture: localWeatherTextureProp = DEFAULT_LOCAL_WEATHER_URL,
@@ -159,18 +159,18 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
       ...props
     })
 
-    const pass = useMemo(() => new CloudsPass(), [])
+    const effect = useMemo(() => new CloudsEffect(), [])
     useEffect(() => {
       return () => {
-        pass.dispose()
+        effect.dispose()
       }
-    }, [pass])
+    }, [effect])
 
     useFrame(() => {
       if (transientStates != null) {
-        pass.sunDirection.copy(transientStates.sunDirection)
-        pass.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-        pass.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+        effect.sunDirection.copy(transientStates.sunDirection)
+        effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+        effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
       }
     })
 
@@ -179,33 +179,33 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
     const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
 
     useEffect(() => {
-      setOverlay(pass.atmosphereOverlay)
-      setShadow(pass.atmosphereShadow)
-      setShadowLength(pass.atmosphereShadowLength)
-    }, [pass, setOverlay, setShadow, setShadowLength])
+      setOverlay(effect.atmosphereOverlay)
+      setShadow(effect.atmosphereShadow)
+      setShadowLength(effect.atmosphereShadowLength)
+    }, [effect, setOverlay, setShadow, setShadowLength])
 
     const handleChange = useCallback(
-      (event: CloudsPassChangeEvent) => {
+      (event: CloudsEffectChangeEvent) => {
         switch (event.property) {
           case 'atmosphereOverlay':
-            setOverlay(pass.atmosphereOverlay)
+            setOverlay(effect.atmosphereOverlay)
             break
           case 'atmosphereShadow':
-            setShadow(pass.atmosphereShadow)
+            setShadow(effect.atmosphereShadow)
             break
           case 'atmosphereShadowLength':
-            setShadowLength(pass.atmosphereShadowLength)
+            setShadowLength(effect.atmosphereShadowLength)
             break
         }
       },
-      [pass, setOverlay, setShadow, setShadowLength]
+      [effect, setOverlay, setShadow, setShadowLength]
     )
     useEffect(() => {
-      pass.events.addEventListener('change', handleChange)
+      effect.events.addEventListener('change', handleChange)
       return () => {
-        pass.events.removeEventListener('change', handleChange)
+        effect.events.removeEventListener('change', handleChange)
       }
-    }, [pass, handleChange])
+    }, [effect, handleChange])
 
     const gl = useThree(({ gl }) => gl)
     const localWeatherTexture = useTextureState(localWeatherTextureProp, gl)
@@ -224,7 +224,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
       <>
         <primitive
           ref={forwardedRef}
-          object={pass}
+          object={effect}
           mainCamera={camera}
           {...atmosphereParameters}
           localWeatherTexture={localWeatherTexture}
@@ -234,7 +234,9 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsPass, CloudsProps>(
           stbnTexture={stbn}
           {...others}
         />
-        {children != null && <CloudLayers pass={pass}>{children}</CloudLayers>}
+        {children != null && (
+          <CloudLayers effect={effect}>{children}</CloudLayers>
+        )}
       </>
     )
   }

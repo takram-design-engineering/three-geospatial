@@ -1,6 +1,6 @@
 import { Children, type FC, type ReactElement } from 'react'
 
-import { type CloudsPass } from '../CloudsPass'
+import { type CloudsEffect } from '../CloudsEffect'
 import { type CloudLayerProps } from './CloudLayer'
 
 type CloudLayerChild =
@@ -12,22 +12,22 @@ type CloudLayerChild =
 export type CloudLayersChildren = CloudLayerChild | readonly CloudLayerChild[]
 
 interface CloudLayerImplProps extends CloudLayerProps {
-  pass: CloudsPass
+  effect: CloudsEffect
   layerIndex: number
 }
 
 const CloudLayerImpl: FC<CloudLayerImplProps> = ({
-  pass,
+  effect,
   layerIndex,
   ...props
 }) => {
-  pass.cloudLayers[layerIndex] = Object.assign(
-    pass.cloudLayers[layerIndex] ?? {},
+  effect.cloudLayers[layerIndex] = Object.assign(
+    effect.cloudLayers[layerIndex] ?? {},
     props
   )
   if (props.densityProfile != null) {
-    pass.cloudLayers[layerIndex].densityProfile = Object.assign(
-      pass.cloudLayers[layerIndex].densityProfile ?? {},
+    effect.cloudLayers[layerIndex].densityProfile = Object.assign(
+      effect.cloudLayers[layerIndex].densityProfile ?? {},
       props.densityProfile
     )
   }
@@ -35,11 +35,11 @@ const CloudLayerImpl: FC<CloudLayerImplProps> = ({
 }
 
 export interface CloudLayersProps {
-  pass: CloudsPass
+  effect: CloudsEffect
   children?: CloudLayersChildren
 }
 
-export const CloudLayers: FC<CloudLayersProps> = ({ pass, children }) => {
+export const CloudLayers: FC<CloudLayersProps> = ({ effect, children }) => {
   let layerIndex = 0
   return (
     children != null &&
@@ -51,7 +51,7 @@ export const CloudLayers: FC<CloudLayersProps> = ({ pass, children }) => {
         <CloudLayerImpl
           key={layerIndex}
           {...child.props}
-          pass={pass}
+          effect={effect}
           layerIndex={layerIndex++}
         />
       )
