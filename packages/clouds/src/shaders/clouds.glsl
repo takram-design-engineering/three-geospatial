@@ -88,6 +88,13 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
   return weather;
 }
 
+vec4 getLayerDensity(const vec4 heightFraction) {
+  // prettier-ignore
+  return densityProfiles.expTerm * exp(densityProfiles.expScale * heightFraction) +
+    densityProfiles.linearTerm * heightFraction +
+    densityProfiles.constantTerm;
+}
+
 struct MediaSample {
   float density;
   vec4 weight;
@@ -137,7 +144,7 @@ MediaSample sampleMedia(
       vec4(1.0 - detail),
       remapClamped(weather.heightFraction, vec4(0.2), vec4(0.4))
     );
-    modifier = mix(vec4(0.0), modifier, detailAmounts);
+    modifier = mix(vec4(0.0), modifier, shapeDetailAmounts);
     density = remapClamped(density * 2.0, vec4(modifier * 0.5), vec4(1.0));
 
     #ifdef DEBUG_SHOW_SAMPLE_COUNT
@@ -147,7 +154,7 @@ MediaSample sampleMedia(
   #endif // SHAPE_DETAIL
 
   // Nicely decrease the density at the bottom.
-  density = saturate(density * densityScales * (weather.heightFraction * 0.75 + 0.25));
+  density = saturate(density * densityScales * getLayerDensity(weather.heightFraction));
 
   MediaSample media;
   float densitySum = density.x + density.y + density.z + density.w;

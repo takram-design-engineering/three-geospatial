@@ -48,10 +48,10 @@ import {
   type CloudParameterUniforms
 } from './uniforms'
 
+import fragmentShader from './shaders/clouds.frag?raw'
 import clouds from './shaders/clouds.glsl?raw'
+import vertexShader from './shaders/clouds.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
-import fragmentShader from './shaders/render.frag?raw'
-import vertexShader from './shaders/render.vert?raw'
 import types from './shaders/types.glsl?raw'
 
 declare module 'three' {
@@ -63,13 +63,13 @@ declare module 'three' {
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
-export interface RenderMaterialParameters {
+export interface CloudsMaterialParameters {
   parameterUniforms: CloudParameterUniforms
   layerUniforms: CloudLayerUniforms
   atmosphereUniforms: AtmosphereUniforms
 }
 
-export interface RenderMaterialUniforms
+export interface CloudsMaterialUniforms
   extends CloudParameterUniforms,
     CloudLayerUniforms,
     AtmosphereUniforms {
@@ -127,8 +127,8 @@ export interface RenderMaterialUniforms
   maxShadowLengthRayDistance: Uniform<number>
 }
 
-export class RenderMaterial extends AtmosphereMaterialBase {
-  declare uniforms: AtmosphereMaterialBaseUniforms & RenderMaterialUniforms
+export class CloudsMaterial extends AtmosphereMaterialBase {
+  declare uniforms: AtmosphereMaterialBaseUniforms & CloudsMaterialUniforms
 
   temporalUpscale = true
 
@@ -140,12 +140,12 @@ export class RenderMaterial extends AtmosphereMaterialBase {
       parameterUniforms,
       layerUniforms,
       atmosphereUniforms
-    }: RenderMaterialParameters,
+    }: CloudsMaterialParameters,
     atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super(
       {
-        name: 'RenderMaterial',
+        name: 'CloudsMaterial',
         glslVersion: GLSL3,
         vertexShader: resolveIncludes(vertexShader, {
           atmosphere: {
@@ -235,7 +235,7 @@ export class RenderMaterial extends AtmosphereMaterialBase {
           minShadowLengthStepSize: new Uniform(50),
           maxShadowLengthRayDistance: new Uniform(5e5)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
-          RenderMaterialUniforms,
+          CloudsMaterialUniforms,
         defines: {
           DEPTH_PACKING: '0',
           SHAPE_DETAIL: '1',

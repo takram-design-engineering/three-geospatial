@@ -19,7 +19,7 @@ import {
   SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsPass } from '@takram/three-clouds'
+import { type CloudsEffect } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
@@ -71,7 +71,7 @@ const Scene: FC = () => {
     atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
   })
 
-  const [clouds, setClouds] = useState<CloudsPass | null>(null)
+  const [clouds, setClouds] = useState<CloudsEffect | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)
 
   return (

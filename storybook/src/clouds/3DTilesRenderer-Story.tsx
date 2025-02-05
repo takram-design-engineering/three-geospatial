@@ -35,7 +35,7 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsPass } from '@takram/three-clouds'
+import { type CloudsEffect } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
@@ -191,7 +191,7 @@ const Scene: FC<SceneProps> = ({
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
-  const [clouds, setClouds] = useState<CloudsPass | null>(null)
+  const [clouds, setClouds] = useState<CloudsEffect | null>(null)
   const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
     coverage,
     animate: true

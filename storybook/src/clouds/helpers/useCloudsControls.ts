@@ -1,28 +1,46 @@
 import { useFrame } from '@react-three/fiber'
+import { folder } from 'leva'
 import { useEffect } from 'react'
 
-import { type CloudsPass } from '@takram/three-clouds'
+import {
+  defaultCloudLayer,
+  type CloudLayer,
+  type CloudsEffect
+} from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
 
 import { useControls } from '../../helpers/useControls'
 
-export interface CloudsControlParams {
+type FlattenCloudLayer<Index extends number> = {
+  [K in keyof CloudLayer as `${K}${Index}`]: CloudLayer[K]
+}
+
+type FlatCloudLayers = FlattenCloudLayer<0> &
+  FlattenCloudLayer<1> &
+  FlattenCloudLayer<2> &
+  FlattenCloudLayer<3>
+
+export interface CloudsControlOptions {
+  coverage?: number
+  animate?: boolean
+  localWeatherVelocity?: number
+  layerControls?: boolean
+}
+
+export interface CloudsControlValues {
   enabled: boolean
   toneMapping: boolean
 }
 
 export function useCloudsControls(
-  pass: CloudsPass | null,
+  effect: CloudsEffect | null,
   {
     coverage: defaultCoverage,
     animate: defaultAnimate,
-    localWeatherVelocity: defaultLocalWeatherVelocity
-  }: {
-    coverage?: number
-    animate?: boolean
-    localWeatherVelocity?: number
-  } = {}
-): [CloudsControlParams, Partial<CloudsProps>] {
+    localWeatherVelocity: defaultLocalWeatherVelocity,
+    layerControls = true
+  }: CloudsControlOptions = {}
+): [CloudsControlValues, Partial<CloudsProps>] {
   const { enabled, coverage, animate, shapeDetail, lightShafts } = useControls(
     'clouds',
     {
@@ -35,11 +53,11 @@ export function useCloudsControls(
   )
 
   useEffect(() => {
-    if (pass == null) {
+    if (effect == null) {
       return
     }
-    pass.renderPass.currentMaterial.shapeDetail = shapeDetail
-  }, [pass, shapeDetail])
+    effect.cloudsPass.currentMaterial.shapeDetail = shapeDetail
+  }, [effect, shapeDetail])
 
   const { temporalUpscale, resolutionScale } = useControls(
     'clouds rendering',
@@ -67,12 +85,12 @@ export function useCloudsControls(
   )
 
   useEffect(() => {
-    if (pass != null) {
-      pass.shadowMaps.cascadeCount = cascadeCount
-      pass.shadowPass.temporalPass = shadowTemporalPass
-      pass.shadowPass.currentMaterial.temporalJitter = shadowTemporalJitter
+    if (effect != null) {
+      effect.shadowMaps.cascadeCount = cascadeCount
+      effect.shadowPass.temporalPass = shadowTemporalPass
+      effect.shadowPass.currentMaterial.temporalJitter = shadowTemporalJitter
     }
-  }, [pass, cascadeCount, shadowTemporalPass, shadowTemporalJitter])
+  }, [effect, cascadeCount, shadowTemporalPass, shadowTemporalJitter])
 
   const scatteringParams = useControls(
     'scattering',
@@ -114,21 +132,97 @@ export function useCloudsControls(
     { collapsed: true }
   )
 
+  const cloudLayersParams = useControls(
+    'cloud layers',
+    effect != null && layerControls
+      ? Array.from({ length: 4 }, () => ({})).reduce((schema, _, index) => {
+          const layer = effect?.cloudLayers[index]
+          return {
+            ...schema,
+            [`layer ${index}`]: folder(
+              {
+                [`altitude ${index}`]: {
+                  value: layer?.altitude ?? defaultCloudLayer.altitude,
+                  min: 0,
+                  max: 10000
+                },
+                [`height ${index}`]: {
+                  value: layer?.height ?? defaultCloudLayer.height,
+                  min: 0,
+                  max: 2000
+                },
+                [`densityScale ${index}`]: {
+                  value: layer?.densityScale ?? defaultCloudLayer.densityScale,
+                  min: 0,
+                  max: 1
+                },
+                [`shapeAmount ${index}`]: {
+                  value: layer?.shapeAmount ?? defaultCloudLayer.shapeAmount,
+                  min: 0,
+                  max: 1
+                },
+                [`shapeDetailAmount ${index}`]: {
+                  value:
+                    layer?.shapeDetailAmount ??
+                    defaultCloudLayer.shapeDetailAmount,
+                  min: 0,
+                  max: 1
+                },
+                [`weatherExponent ${index}`]: {
+                  value:
+                    layer?.weatherExponent ?? defaultCloudLayer.weatherExponent,
+                  min: 0,
+                  max: 3
+                },
+                [`shapeAlteringBias ${index}`]: {
+                  value:
+                    layer?.shapeAlteringBias ??
+                    defaultCloudLayer.shapeAlteringBias,
+                  min: 0,
+                  max: 1
+                },
+                [`coverageFilterWidth ${index}`]: {
+                  value:
+                    layer?.coverageFilterWidth ??
+                    defaultCloudLayer.coverageFilterWidth,
+                  min: 0,
+                  max: 1
+                },
+                [`shadow ${index}`]: layer?.shadow ?? defaultCloudLayer.shadow
+              },
+              { collapsed: index > 0 }
+            )
+          }
+        }, {})
+      : {},
+    { collapsed: true },
+    [effect, layerControls]
+  ) as FlatCloudLayers
+
   useFrame(() => {
-    if (pass == null) {
+    if (effect == null) {
       return
     }
     for (const key in scatteringParams) {
-      pass.renderPass.currentMaterial.uniforms[key].value =
+      effect.cloudsPass.currentMaterial.uniforms[key].value =
         scatteringParams[key as keyof typeof scatteringParams]
     }
     for (const key in cloudsRaymarchParams) {
-      pass.renderPass.currentMaterial.uniforms[key].value =
+      effect.cloudsPass.currentMaterial.uniforms[key].value =
         cloudsRaymarchParams[key as keyof typeof cloudsRaymarchParams]
     }
     for (const key in shadowRaymarchParams) {
-      pass.shadowPass.currentMaterial.uniforms[key].value =
+      effect.shadowPass.currentMaterial.uniforms[key].value =
         shadowRaymarchParams[key as keyof typeof shadowRaymarchParams]
+    }
+
+    if (layerControls) {
+      for (const key in cloudLayersParams) {
+        const field = key.slice(0, -2)
+        const index = +key.slice(-1)
+        ;(effect.cloudLayers as any)[index][field] =
+          cloudLayersParams[key as keyof typeof cloudLayersParams]
+      }
     }
   })
 
@@ -155,37 +249,37 @@ export function useCloudsControls(
   )
 
   useEffect(() => {
-    if (pass == null) {
+    if (effect == null) {
       return
     }
     if (debugShowSampleCount) {
-      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT = '1'
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT = '1'
     } else {
-      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT
     }
     if (debugShowFrontDepth) {
-      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH = '1'
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH = '1'
     } else {
-      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH
     }
     if (debugShowShadowMap) {
-      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP = '1'
     } else {
-      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SHADOW_MAP
     }
     if (debugShowCascades) {
-      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_CASCADES = '1'
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES = '1'
     } else {
-      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_CASCADES
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_CASCADES
     }
     if (debugShowUv) {
-      pass.renderPass.currentMaterial.defines.DEBUG_SHOW_UV = '1'
+      effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV = '1'
     } else {
-      delete pass.renderPass.currentMaterial.defines.DEBUG_SHOW_UV
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_UV
     }
-    pass.renderPass.currentMaterial.needsUpdate = true
+    effect.cloudsPass.currentMaterial.needsUpdate = true
   }, [
-    pass,
+    effect,
     debugShowSampleCount,
     debugShowFrontDepth,
     debugShowShadowMap,
@@ -194,21 +288,21 @@ export function useCloudsControls(
   ])
 
   useEffect(() => {
-    if (pass == null) {
+    if (effect == null) {
       return
     }
     if (debugShowShadowLength) {
-      pass.renderPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
+      effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH = '1'
     } else {
-      delete pass.renderPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
+      delete effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_SHADOW_LENGTH
     }
     if (debugShowVelocity) {
-      pass.renderPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
+      effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY = '1'
     } else {
-      delete pass.renderPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY
+      delete effect.cloudsPass.resolveMaterial.defines.DEBUG_SHOW_VELOCITY
     }
-    pass.renderPass.resolveMaterial.needsUpdate = true
-  }, [pass, debugShowShadowLength, debugShowVelocity])
+    effect.cloudsPass.resolveMaterial.needsUpdate = true
+  }, [effect, debugShowShadowLength, debugShowVelocity])
 
   return [
     {
