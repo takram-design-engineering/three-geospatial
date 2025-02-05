@@ -1,10 +1,10 @@
 import {
-  type Color,
   type NodeProps,
   type Overwrite,
-  type Vector2,
-  type Vector3,
-  type Vector4
+  type Color as R3FColor,
+  type Vector2 as R3FVector2,
+  type Vector3 as R3FVector3,
+  type Vector4 as R3FVector4
 } from '@react-three/fiber'
 import {
   type Color as ColorImpl,
@@ -19,10 +19,10 @@ import { type Callable } from '../types'
 // prettier-ignore
 export type ExtendedProps<T> = {
   [K in keyof T]:
-    Vector2Impl extends T[K] ? Vector2 | T[K] :
-    Vector3Impl extends T[K] ? Vector3 | T[K] :
-    Vector4Impl extends T[K] ? Vector4 | T[K] :
-    ColorImpl extends T[K] ? Color :
+    Vector2Impl extends T[K] ? R3FVector2 | T[K] :
+    Vector3Impl extends T[K] ? R3FVector3 | T[K] :
+    Vector4Impl extends T[K] ? R3FVector4 | T[K] :
+    ColorImpl extends T[K] ? R3FColor | T[K] :
     T[K]
 }
 
@@ -40,7 +40,7 @@ type WritableNonExtendableKeysOf<T> =
         Vector2Impl extends T[K] ? K :
         Vector3Impl extends T[K] ? K :
         Vector4Impl extends T[K] ? K :
-        Color extends T[K] ? K :
+        ColorImpl extends T[K] ? K :
         never
       ]: any
     }
