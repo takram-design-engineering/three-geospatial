@@ -23,7 +23,7 @@ export interface CloudLayer {
 export const defaultCloudLayer: RequiredDeep<CloudLayer> = {
   altitude: 0,
   height: 0,
-  densityScale: 0.15,
+  densityScale: 0.2,
   shapeAmount: 1,
   detailAmount: 1,
   weatherExponent: 1,
