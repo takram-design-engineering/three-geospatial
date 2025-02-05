@@ -144,7 +144,7 @@ MediaSample sampleMedia(
       vec4(1.0 - detail),
       remapClamped(weather.heightFraction, vec4(0.2), vec4(0.4))
     );
-    modifier = mix(vec4(0.0), modifier, detailAmounts);
+    modifier = mix(vec4(0.0), modifier, shapeDetailAmounts);
     density = remapClamped(density * 2.0, vec4(modifier * 0.5), vec4(1.0));
 
     #ifdef DEBUG_SHOW_SAMPLE_COUNT

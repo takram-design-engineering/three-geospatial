@@ -12,7 +12,7 @@ export interface CloudLayer {
   height?: number
   densityScale?: number
   shapeAmount?: number
-  detailAmount?: number
+  shapeDetailAmount?: number
   weatherExponent?: number
   shapeAlteringBias?: number
   coverageFilterWidth?: number
@@ -25,7 +25,7 @@ export const defaultCloudLayer: RequiredDeep<CloudLayer> = {
   height: 0,
   densityScale: 0.2,
   shapeAmount: 1,
-  detailAmount: 1,
+  shapeDetailAmount: 1,
   weatherExponent: 1,
   shapeAlteringBias: 0.35,
   coverageFilterWidth: 0.6,

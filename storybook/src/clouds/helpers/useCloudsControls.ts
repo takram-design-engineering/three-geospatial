@@ -161,8 +161,10 @@ export function useCloudsControls(
                   min: 0,
                   max: 1
                 },
-                [`detailAmount ${index}`]: {
-                  value: layer?.detailAmount ?? defaultCloudLayer.detailAmount,
+                [`shapeDetailAmount ${index}`]: {
+                  value:
+                    layer?.shapeDetailAmount ??
+                    defaultCloudLayer.shapeDetailAmount,
                   min: 0,
                   max: 1
                 },

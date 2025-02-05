@@ -78,7 +78,7 @@ export interface CloudLayerUniforms {
   maxLayerHeights: Uniform<Vector4>
   densityScales: Uniform<Vector4>
   shapeAmounts: Uniform<Vector4>
-  detailAmounts: Uniform<Vector4>
+  shapeDetailAmounts: Uniform<Vector4>
   weatherExponents: Uniform<Vector4>
   shapeAlteringBiases: Uniform<Vector4>
   coverageFilterWidths: Uniform<Vector4>
@@ -95,7 +95,7 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
     maxLayerHeights: new Uniform(new Vector4()),
     densityScales: new Uniform(new Vector4()),
     shapeAmounts: new Uniform(new Vector4()),
-    detailAmounts: new Uniform(new Vector4()),
+    shapeDetailAmounts: new Uniform(new Vector4()),
     weatherExponents: new Uniform(new Vector4()),
     shapeAlteringBiases: new Uniform(new Vector4()),
     coverageFilterWidths: new Uniform(new Vector4()),
@@ -177,7 +177,7 @@ export function updateCloudLayerUniforms(
   packSumVector(layers, 'altitude', 'height', uniforms.maxLayerHeights.value)
   packVector(layers, 'densityScale', uniforms.densityScales.value)
   packVector(layers, 'shapeAmount', uniforms.shapeAmounts.value)
-  packVector(layers, 'detailAmount', uniforms.detailAmounts.value)
+  packVector(layers, 'shapeDetailAmount', uniforms.shapeDetailAmounts.value)
   packVector(layers, 'weatherExponent', uniforms.weatherExponents.value)
   packVector(layers, 'shapeAlteringBias', uniforms.shapeAlteringBiases.value)
   packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths.value)
