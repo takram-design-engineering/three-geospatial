@@ -690,7 +690,9 @@ vec4 getCascadedShadowMaps(vec2 uv) {
   #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
   color = vec3((shadow.b + shadow.a) * maxOpticalDepthScale);
   #else // DEBUG_SHOW_SHADOW_MAP_TYPE
-  color = shadow.rgb * vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
+  color =
+    (shadow.rgb + vec3(0.0, 0.0, shadow.a)) *
+    vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
   #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
   return vec4(color, 1.0);
 }
