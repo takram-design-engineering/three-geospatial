@@ -72,6 +72,13 @@ export function applyVelocity(
 }
 
 const renderPassParamKeys = [
+  'scatterAnisotropy1',
+  'scatterAnisotropy2',
+  'scatterAnisotropyMix',
+  'skyIrradianceScale',
+  'groundIrradianceScale',
+  'powderScale',
+  'powderExponent',
   'maxIterationCount',
   'minStepSize',
   'maxStepSize',
