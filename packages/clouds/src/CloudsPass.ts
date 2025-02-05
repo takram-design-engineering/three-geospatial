@@ -56,20 +56,8 @@ import {
   type CloudParameterUniforms
 } from './uniforms'
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
-
-export function applyVelocity(
-  velocity: Vector2 | Vector3,
-  deltaTime: number,
-  ...results: Array<Vector2 | Vector3>
-): void {
-  const delta = vectorScratch
-    .fromArray(velocity.toArray())
-    .multiplyScalar(deltaTime)
-  for (let i = 0; i < results.length; ++i) {
-    results[i].add(delta)
-  }
-}
+const vector3Scratch = /*#__PURE__*/ new Vector3()
+const vector2Scratch = /*#__PURE__*/ new Vector2()
 
 const cloudsUniformKeys = [
   'maxIterationCount',
@@ -135,8 +123,12 @@ type ShadowShorthand =
 
 export interface CloudsPassChangeEvent {
   type: 'change'
-  target: CloudsPass
-  property: 'atmosphereOverlay' | 'atmosphereShadow' | 'atmosphereShadowLength'
+  target?: CloudsPass
+  property?: 'atmosphereOverlay' | 'atmosphereShadow' | 'atmosphereShadowLength'
+}
+
+const changeEvent: CloudsPassChangeEvent = {
+  type: 'change'
 }
 
 export interface CloudsPassOptions {
@@ -361,20 +353,14 @@ export class CloudsPass extends Pass {
 
     // Apply velocity to offset uniforms.
     const { parameterUniforms } = this
-    applyVelocity(
-      this.localWeatherVelocity,
-      deltaTime,
-      parameterUniforms.localWeatherOffset.value
+    parameterUniforms.localWeatherOffset.value.add(
+      vector2Scratch.copy(this.localWeatherVelocity).multiplyScalar(deltaTime)
     )
-    applyVelocity(
-      this.shapeVelocity,
-      deltaTime,
-      parameterUniforms.shapeOffset.value
+    parameterUniforms.shapeOffset.value.add(
+      vector3Scratch.copy(this.shapeVelocity).multiplyScalar(deltaTime)
     )
-    applyVelocity(
-      this.shapeDetailVelocity,
-      deltaTime,
-      parameterUniforms.shapeDetailOffset.value
+    parameterUniforms.shapeDetailOffset.value.add(
+      vector3Scratch.copy(this.shapeDetailVelocity).multiplyScalar(deltaTime)
     )
 
     // Update atmosphere uniforms.
@@ -382,7 +368,7 @@ export class CloudsPass extends Pass {
       .copy(this.ellipsoidMatrix)
       .invert()
     const cameraPositionECEF = this.mainCamera
-      .getWorldPosition(vectorScratch)
+      .getWorldPosition(vector3Scratch)
       .applyMatrix4(inverseEllipsoidMatrix)
       .sub(this.ellipsoidCenter)
 
@@ -403,7 +389,7 @@ export class CloudsPass extends Pass {
     // Increase light's distance to the target when the sun is at the horizon.
     const surfaceNormal = this.ellipsoid.getSurfaceNormal(
       cameraPositionECEF,
-      vectorScratch
+      vector3Scratch
     )
     const zenithAngle = this.sunDirection.dot(surfaceNormal)
     const distance = lerp(1e6, 1e3, zenithAngle)
@@ -413,7 +399,7 @@ export class CloudsPass extends Pass {
       // The sun direction must be rotated with the ellipsoid to ensure the
       // frusta are constructed correctly. Note this affects the transformation
       // in the shadow shader.
-      vectorScratch.copy(this.sunDirection).applyMatrix4(this.ellipsoidMatrix),
+      vector3Scratch.copy(this.sunDirection).applyMatrix4(this.ellipsoidMatrix),
       distance
     )
   }
@@ -429,11 +415,9 @@ export class CloudsPass extends Pass {
     } satisfies AtmosphereOverlay)
     if (prevOverlay !== nextOverlay) {
       this._atmosphereOverlay = nextOverlay
-      this.events.dispatchEvent({
-        type: 'change',
-        target: this,
-        property: 'atmosphereOverlay'
-      })
+      changeEvent.target = this
+      changeEvent.property = 'atmosphereOverlay'
+      this.events.dispatchEvent(changeEvent)
     }
 
     const prevShadow = this._atmosphereShadow
@@ -449,11 +433,9 @@ export class CloudsPass extends Pass {
     } satisfies AtmosphereShadow)
     if (prevShadow !== nextShadow) {
       this._atmosphereShadow = nextShadow
-      this.events.dispatchEvent({
-        type: 'change',
-        target: this,
-        property: 'atmosphereShadow'
-      })
+      changeEvent.target = this
+      changeEvent.property = 'atmosphereShadow'
+      this.events.dispatchEvent(changeEvent)
     }
 
     const prevShadowLength = this._atmosphereShadowLength
@@ -465,11 +447,9 @@ export class CloudsPass extends Pass {
         : null
     if (prevShadowLength !== nextShadowLength) {
       this._atmosphereShadowLength = nextShadowLength
-      this.events.dispatchEvent({
-        type: 'change',
-        target: this,
-        property: 'atmosphereShadowLength'
-      })
+      changeEvent.target = this
+      changeEvent.property = 'atmosphereShadowLength'
+      this.events.dispatchEvent(changeEvent)
     }
   }
 
