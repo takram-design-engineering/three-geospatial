@@ -16,7 +16,14 @@ type FlatCloudLayers = FlattenCloudLayer<0> &
   FlattenCloudLayer<2> &
   FlattenCloudLayer<3>
 
-export interface CloudsControlParams {
+export interface CloudsControlOptions {
+  coverage?: number
+  animate?: boolean
+  localWeatherVelocity?: number
+  layerControls?: boolean
+}
+
+export interface CloudsControlValues {
   enabled: boolean
   toneMapping: boolean
 }
@@ -26,13 +33,10 @@ export function useCloudsControls(
   {
     coverage: defaultCoverage,
     animate: defaultAnimate,
-    localWeatherVelocity: defaultLocalWeatherVelocity
-  }: {
-    coverage?: number
-    animate?: boolean
-    localWeatherVelocity?: number
-  } = {}
-): [CloudsControlParams, Partial<CloudsProps>] {
+    localWeatherVelocity: defaultLocalWeatherVelocity,
+    layerControls = true
+  }: CloudsControlOptions = {}
+): [CloudsControlValues, Partial<CloudsProps>] {
   const { enabled, coverage, animate, shapeDetail, lightShafts } = useControls(
     'clouds',
     {
@@ -126,60 +130,62 @@ export function useCloudsControls(
 
   const cloudLayersParams = useControls(
     'cloud layers',
-    pass?.cloudLayers.reduce(
-      (schema, layer, index) => ({
-        ...schema,
-        [`layer ${index}`]: folder(
-          {
-            [`altitude ${index}`]: {
-              value: layer.altitude,
-              min: 0,
-              max: 10000
-            },
-            [`height ${index}`]: {
-              value: layer.height,
-              min: 0,
-              max: 2000
-            },
-            [`densityScale ${index}`]: {
-              value: layer.densityScale,
-              min: 0,
-              max: 1
-            },
-            [`shapeAmount ${index}`]: {
-              value: layer.shapeAmount,
-              min: 0,
-              max: 1
-            },
-            [`detailAmount ${index}`]: {
-              value: layer.detailAmount,
-              min: 0,
-              max: 1
-            },
-            [`weatherExponent ${index}`]: {
-              value: layer.weatherExponent,
-              min: 0,
-              max: 3
-            },
-            [`shapeAlteringBias ${index}`]: {
-              value: layer.shapeAlteringBias,
-              min: 0,
-              max: 1
-            },
-            [`coverageFilterWidth ${index}`]: {
-              value: layer.coverageFilterWidth,
-              min: 0,
-              max: 1
-            },
-            [`shadow ${index}`]: layer.shadow ?? false
-          },
-          { collapsed: index > 0 }
-        )
-      }),
-      {}
-    ) ?? {},
+    layerControls
+      ? (pass?.cloudLayers.reduce(
+          (schema, layer, index) => ({
+            ...schema,
+            [`layer ${index}`]: folder(
+              {
+                [`altitude ${index}`]: {
+                  value: layer.altitude,
+                  min: 0,
+                  max: 10000
+                },
+                [`height ${index}`]: {
+                  value: layer.height,
+                  min: 0,
+                  max: 2000
+                },
+                [`densityScale ${index}`]: {
+                  value: layer.densityScale,
+                  min: 0,
+                  max: 1
+                },
+                [`shapeAmount ${index}`]: {
+                  value: layer.shapeAmount,
+                  min: 0,
+                  max: 1
+                },
+                [`detailAmount ${index}`]: {
+                  value: layer.detailAmount,
+                  min: 0,
+                  max: 1
+                },
+                [`weatherExponent ${index}`]: {
+                  value: layer.weatherExponent,
+                  min: 0,
+                  max: 3
+                },
+                [`shapeAlteringBias ${index}`]: {
+                  value: layer.shapeAlteringBias,
+                  min: 0,
+                  max: 1
+                },
+                [`coverageFilterWidth ${index}`]: {
+                  value: layer.coverageFilterWidth,
+                  min: 0,
+                  max: 1
+                },
+                [`shadow ${index}`]: layer.shadow ?? false
+              },
+              { collapsed: index > 0 }
+            )
+          }),
+          {}
+        ) ?? {})
+      : {},
     { collapsed: true },
-    [pass]
+    [pass, layerControls]
   ) as FlatCloudLayers
 
   useFrame(() => {
@@ -198,11 +204,14 @@ export function useCloudsControls(
       pass.shadowPass.currentMaterial.uniforms[key].value =
         shadowRaymarchParams[key as keyof typeof shadowRaymarchParams]
     }
-    for (const key in cloudLayersParams) {
-      const field = key.slice(0, -2)
-      const index = +key.slice(-1)
-      ;(pass.cloudLayers as any)[index][field] =
-        cloudLayersParams[key as keyof typeof cloudLayersParams]
+
+    if (layerControls) {
+      for (const key in cloudLayersParams) {
+        const field = key.slice(0, -2)
+        const index = +key.slice(-1)
+        ;(pass.cloudLayers as any)[index][field] =
+          cloudLayersParams[key as keyof typeof cloudLayersParams]
+      }
     }
   })
 

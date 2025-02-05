@@ -2,7 +2,7 @@ import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useEffect, useRef, type FC } from 'react'
+import { Fragment, useEffect, useRef, useState, type FC } from 'react'
 import { Quaternion, Vector3, type Camera } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
@@ -11,6 +11,7 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
+import { type CloudsPass } from '@takram/three-clouds'
 import { CloudLayer, Clouds } from '@takram/three-clouds/r3f'
 import {
   Ellipsoid,
@@ -24,6 +25,7 @@ import { Stats } from '../helpers/Stats'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
+import { useCloudsControls } from './helpers/useCloudsControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -83,18 +85,31 @@ const Scene: FC = () => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))
   })
 
+  const [clouds, setClouds] = useState<CloudsPass | null>(null)
+  const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
+    layerControls: false
+  })
+
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={1000} />
       <Atmosphere ref={atmosphereRef}>
         <EffectComposer multisampling={0}>
-          <Clouds shadow-maxFar={1e5}>
-            <CloudLayer altitude={750} />
-          </Clouds>
-          <AerialPerspective sky />
-          <LensFlare />
-          <ToneMapping mode={toneMappingMode} />
-          <Dithering />
+          <Fragment key={JSON.stringify([enabled, toneMapping])}>
+            {enabled && (
+              <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps}>
+                <CloudLayer altitude={750} />
+              </Clouds>
+            )}
+            <AerialPerspective sky />
+            {toneMapping && (
+              <>
+                <LensFlare />
+                <ToneMapping mode={toneMappingMode} />
+                <Dithering />
+              </>
+            )}
+          </Fragment>
         </EffectComposer>
       </Atmosphere>
     </>
