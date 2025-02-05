@@ -182,7 +182,8 @@ export class CloudsEffect extends Effect {
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.5
-    }
+    },
+    {}
   ]
 
   correctAltitude = true

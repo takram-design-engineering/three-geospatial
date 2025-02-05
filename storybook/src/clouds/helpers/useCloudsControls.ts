@@ -2,7 +2,11 @@ import { useFrame } from '@react-three/fiber'
 import { folder } from 'leva'
 import { useEffect } from 'react'
 
-import { type CloudLayer, type CloudsEffect } from '@takram/three-clouds'
+import {
+  defaultCloudLayer,
+  type CloudLayer,
+  type CloudsEffect
+} from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
 
 import { useControls } from '../../helpers/useControls'
@@ -130,59 +134,64 @@ export function useCloudsControls(
 
   const cloudLayersParams = useControls(
     'cloud layers',
-    layerControls
-      ? (effect?.cloudLayers.reduce(
-          (schema, layer, index) => ({
+    effect != null && layerControls
+      ? Array.from({ length: 4 }, () => ({})).reduce((schema, _, index) => {
+          const layer = effect?.cloudLayers[index]
+          return {
             ...schema,
             [`layer ${index}`]: folder(
               {
                 [`altitude ${index}`]: {
-                  value: layer.altitude,
+                  value: layer?.altitude ?? defaultCloudLayer.altitude,
                   min: 0,
                   max: 10000
                 },
                 [`height ${index}`]: {
-                  value: layer.height,
+                  value: layer?.height ?? defaultCloudLayer.height,
                   min: 0,
                   max: 2000
                 },
                 [`densityScale ${index}`]: {
-                  value: layer.densityScale,
+                  value: layer?.densityScale ?? defaultCloudLayer.densityScale,
                   min: 0,
                   max: 1
                 },
                 [`shapeAmount ${index}`]: {
-                  value: layer.shapeAmount,
+                  value: layer?.shapeAmount ?? defaultCloudLayer.shapeAmount,
                   min: 0,
                   max: 1
                 },
                 [`detailAmount ${index}`]: {
-                  value: layer.detailAmount,
+                  value: layer?.detailAmount ?? defaultCloudLayer.detailAmount,
                   min: 0,
                   max: 1
                 },
                 [`weatherExponent ${index}`]: {
-                  value: layer.weatherExponent,
+                  value:
+                    layer?.weatherExponent ?? defaultCloudLayer.weatherExponent,
                   min: 0,
                   max: 3
                 },
                 [`shapeAlteringBias ${index}`]: {
-                  value: layer.shapeAlteringBias,
+                  value:
+                    layer?.shapeAlteringBias ??
+                    defaultCloudLayer.shapeAlteringBias,
                   min: 0,
                   max: 1
                 },
                 [`coverageFilterWidth ${index}`]: {
-                  value: layer.coverageFilterWidth,
+                  value:
+                    layer?.coverageFilterWidth ??
+                    defaultCloudLayer.coverageFilterWidth,
                   min: 0,
                   max: 1
                 },
-                [`shadow ${index}`]: layer.shadow ?? false
+                [`shadow ${index}`]: layer?.shadow ?? defaultCloudLayer.shadow
               },
               { collapsed: index > 0 }
             )
-          }),
-          {}
-        ) ?? {})
+          }
+        }, {})
       : {},
     { collapsed: true },
     [effect, layerControls]
