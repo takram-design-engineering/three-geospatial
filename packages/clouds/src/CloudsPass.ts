@@ -72,13 +72,6 @@ export function applyVelocity(
 }
 
 const renderPassParamKeys = [
-  'scatterAnisotropy1',
-  'scatterAnisotropy2',
-  'scatterAnisotropyMix',
-  'skyIrradianceScale',
-  'groundIrradianceScale',
-  'powderScale',
-  'powderExponent',
   'maxIterationCount',
   'minStepSize',
   'maxStepSize',
@@ -638,6 +631,64 @@ export class CloudsPass extends Pass {
 
   set turbulenceDisplacement(value: number) {
     this.parameterUniforms.turbulenceDisplacement.value = value
+  }
+
+  // Scattering parameters
+
+  get scatterAnisotropy1(): number {
+    return this.renderPass.currentMaterial.uniforms.scatterAnisotropy1.value
+  }
+
+  set scatterAnisotropy1(value: number) {
+    this.renderPass.currentMaterial.uniforms.scatterAnisotropy1.value = value
+  }
+
+  get scatterAnisotropy2(): number {
+    return this.renderPass.currentMaterial.uniforms.scatterAnisotropy2.value
+  }
+
+  set scatterAnisotropy2(value: number) {
+    this.renderPass.currentMaterial.uniforms.scatterAnisotropy2.value = value
+  }
+
+  get scatterAnisotropyMix(): number {
+    return this.renderPass.currentMaterial.uniforms.scatterAnisotropyMix.value
+  }
+
+  set scatterAnisotropyMix(value: number) {
+    this.renderPass.currentMaterial.uniforms.scatterAnisotropyMix.value = value
+  }
+
+  get skyIrradianceScale(): number {
+    return this.renderPass.currentMaterial.uniforms.skyIrradianceScale.value
+  }
+
+  set skyIrradianceScale(value: number) {
+    this.renderPass.currentMaterial.uniforms.skyIrradianceScale.value = value
+  }
+
+  get groundIrradianceScale(): number {
+    return this.renderPass.currentMaterial.uniforms.groundIrradianceScale.value
+  }
+
+  set groundIrradianceScale(value: number) {
+    this.renderPass.currentMaterial.uniforms.groundIrradianceScale.value = value
+  }
+
+  get powderScale(): number {
+    return this.renderPass.currentMaterial.uniforms.powderScale.value
+  }
+
+  set powderScale(value: number) {
+    this.renderPass.currentMaterial.uniforms.powderScale.value = value
+  }
+
+  get powderExponent(): number {
+    return this.renderPass.currentMaterial.uniforms.powderExponent.value
+  }
+
+  set powderExponent(value: number) {
+    this.renderPass.currentMaterial.uniforms.powderExponent.value = value
   }
 
   // Atmosphere composition
