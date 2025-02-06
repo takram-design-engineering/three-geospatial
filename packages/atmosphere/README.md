@@ -219,7 +219,7 @@ function render(): void {
 
 - Although you can generate custom precomputed textures, the implementation is effectively limited to Earth’s atmosphere. For rendering atmospheres of other planets, consider implementing Sébastien Hillaire’s [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf).
 
-- Currently developed using GLSL. The node-based TSL is not used yet but is planned.
+- Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
 
 # API
 

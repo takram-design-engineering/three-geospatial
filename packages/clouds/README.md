@@ -18,9 +18,31 @@ yarn add @takram/three-clouds
 
 ## Synopsis
 
-## Possible improvements
-
 ## Limitations
+
+- The number of cloud layers is limited to 4. This is because the coverage of all layers is packed into a texture, and all layers are computed at once as `vec4` in the shaders.
+
+- It is difficult to maintain _the same_ rendering outputs while improving visual quality, performance, and adding new features, due to the way the clouds are modeled and ray marched.
+
+### Known issues
+
+- The temporal upscaling is still basic and prone to ghosting and smearing, especially when viewed through sparse clouds.
+
+### Possible improvements
+
+- Local weather is not tiled across the entire globe. It is tiled using cube-sphere UV, which results in several seams, not only at the poles. While a single tile cannot seamlessly cover a sphere, blending the seams can improve it.
+
+- The cloud base of each layer lines up at the same altitude, making it look artificial. This may be improved by tweaking the shape altering function.
+
+- While ray marching for the clouds uses adaptive steps (taking large steps in empty space and gradually increasing step size), the empty space between cloud layers could be skipped more efficiently by computing intersection distances with the cloud layer boundaries.
+
+- Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera’s depth onto the sun’s view.
+
+### Planned features
+
+- Introduce global cloud coverage and support rendering views from space.
+
+- Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
 
 ## Performance tweaks
 
@@ -57,7 +79,7 @@ yarn add @takram/three-clouds
 
 - **Shadow**
 
-  Performs ray marching in the sun’s orthographic projection and outputs the necessary values for computing the optical depth of clouds (BSM) during the main camera’s ray marching.
+  Performs ray marching in the sun’s orthographic projection and outputs the necessary values for computing the optical depth of the clouds (BSM) during the main camera’s ray marching.
 
   &rarr; [Shader](/packages/clouds/src/shaders/shadow.frag)
 
@@ -65,7 +87,7 @@ yarn add @takram/three-clouds
 
   Applies TAA on BSM, not for the aliasing at polygon edges, but rather to:
 
-  - Reduce spatial aliasing in BSM due to the high-frequency details of clouds relative to the output resolution.
+  - Reduce spatial aliasing in BSM due to the high-frequency details of the clouds relative to the output resolution.
   - Reduce temporal aliasing caused by temporal jitters during shadow ray marching.
 
   &rarr; [Shader](/packages/clouds/src/shaders/shadowResolve.frag)
@@ -78,13 +100,13 @@ yarn add @takram/three-clouds
 
 - **Clouds resolve**
 
-  Performs TAAU-like upscaling on the clouds pass output, reducing the computational cost of ray marching for clouds by approximately 1/16.
+  Performs TAAU-like upscaling on the clouds pass outputs, reducing the number of texels to ray march for the clouds by 1/16.
 
   &rarr; [Shader](/packages/clouds/src/shaders/cloudsResolve.frag)
 
 - **Aerial perspective**
 
-  This pass is part of [`atmosphere`](../atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
+  This pass is part of the [atmosphere package](../atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
 
   &rarr; [Documentation](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspectiveeffect)
 
