@@ -51,7 +51,7 @@ yarn add @takram/three-clouds
 
 [Source](/packages/clouds/src/CloudsEffect.ts)
 
-![](docs/rendering-path.png)
+![Rendering path diagram](docs/rendering-path.png)
 
 ### Parameters
 
