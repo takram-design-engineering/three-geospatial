@@ -90,9 +90,9 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
 
 vec4 getLayerDensity(const vec4 heightFraction) {
   // prettier-ignore
-  return densityProfiles.expTerm * exp(densityProfiles.expScale * heightFraction) +
-    densityProfiles.linearTerm * heightFraction +
-    densityProfiles.constantTerm;
+  return densityProfile.expTerms * exp(densityProfile.expScales * heightFraction) +
+    densityProfile.linearTerms * heightFraction +
+    densityProfile.constantTerms;
 }
 
 struct MediaSample {

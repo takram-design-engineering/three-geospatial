@@ -5,9 +5,9 @@ struct SunSkyIrradiance {
   vec3 maxSun;
 };
 
-struct DensityProfiles {
-  vec4 expTerm;
-  vec4 expScale;
-  vec4 linearTerm;
-  vec4 constantTerm;
+struct DensityProfile {
+  vec4 expTerms;
+  vec4 expScales;
+  vec4 linearTerms;
+  vec4 constantTerms;
 };

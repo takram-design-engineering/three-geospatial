@@ -49,4 +49,4 @@ uniform float minHeight;
 uniform float maxHeight;
 uniform float shadowTopHeight;
 uniform float shadowBottomHeight;
-uniform DensityProfiles densityProfiles;
+uniform DensityProfile densityProfile;
