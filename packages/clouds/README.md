@@ -41,15 +41,15 @@ yarn add @takram/three-clouds
 
 ## Clouds
 
-[Source](/packages/clouds/src/r3f/Clouds.tsx)
+&rarr; [Source](/packages/clouds/src/r3f/Clouds.tsx)
 
 ## CloudLayer
 
-[Source](/packages/clouds/src/r3f/CloudLayer.tsx)
+&rarr; [Source](/packages/clouds/src/r3f/CloudLayer.tsx)
 
 ## CloudsEffect
 
-[Source](/packages/clouds/src/CloudsEffect.ts)
+&rarr; [Source](/packages/clouds/src/CloudsEffect.ts)
 
 ### Details
 
@@ -59,6 +59,8 @@ yarn add @takram/three-clouds
 
   Performs ray marching in the sun’s orthographic projection and outputs the necessary values for computing the optical depth of clouds (BSM) during the main camera’s ray marching.
 
+  &rarr; [Shader](/packages/clouds/src/shaders/shadow.frag)
+
 - **Shadow resolve**
 
   Applies TAA on BSM, not for the aliasing at polygon edges, but rather to:
@@ -66,17 +68,25 @@ yarn add @takram/three-clouds
   - Reduce spatial aliasing in BSM due to the high-frequency details of clouds relative to the output resolution.
   - Reduce temporal aliasing caused by temporal jitters during shadow ray marching.
 
+  &rarr; [Shader](/packages/clouds/src/shaders/shadowResolve.frag)
+
 - **Clouds**
 
   Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective effect is already to the clouds here.
+
+  &rarr; [Shader](/packages/clouds/src/shaders/clouds.frag)
 
 - **Clouds resolve**
 
   Performs TAAU-like upscaling on the clouds pass output, reducing the computational cost of ray marching for clouds by approximately 1/16.
 
+  &rarr; [Shader](/packages/clouds/src/shaders/cloudsResolve.frag)
+
 - **Aerial perspective**
 
   This pass is part of [`atmosphere`](../atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
+
+  &rarr; [Documentation](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspectiveeffect)
 
 ### Parameters
 
@@ -373,19 +383,19 @@ splitLambda: number = 0.6
 
 ## LocalWeather
 
-[Source](/packages/clouds/src/LocalWeather.ts)
+&rarr; [Source](/packages/clouds/src/LocalWeather.ts)
 
 ## CloudShape
 
-[Source](/packages/clouds/src/CloudShape.ts)
+&rarr; [Source](/packages/clouds/src/CloudShape.ts)
 
 ## CloudShapeDetail
 
-[Source](/packages/clouds/src/CloudShapeDetail.ts)
+&rarr; [Source](/packages/clouds/src/CloudShapeDetail.ts)
 
 ## Turbulence
 
-[Source](/packages/clouds/src/Turbulence.ts)
+&rarr; [Source](/packages/clouds/src/Turbulence.ts)
 
 # References
 
