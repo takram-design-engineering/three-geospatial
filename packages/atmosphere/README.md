@@ -223,6 +223,8 @@ function render(): void {
 
 # API
 
+The underlying concepts of these components and classes might be a bit complex. If you have any questions, feel free to ask in the Issues or Discussions.
+
 **R3F components**
 
 - [`Atmosphere`](#atmosphere)
