@@ -13,7 +13,7 @@ export const qualityPresets: Record<
   // but it leads to a loss of higher frequency scattering, making it darker
   // overall, which suggests the need for a fudge factor to scale the radiance.
   low: {
-    resolutionScale: 0.75, // 0.5 is excessive.
+    resolutionScale: 0.75, // Obvious, but 0.5 is excessive.
     lightShafts: false, // Expensive
     shapeDetail: false, // Expensive
     turbulence: false, // Expensive
@@ -33,18 +33,17 @@ export const qualityPresets: Record<
       minDensity: 1e-4,
       minExtinction: 1e-4,
       minTransmittance: 1e-2, // Makes the primary march terminate earlier.
-      temporalPass: false, // Doesn't seem to impact the performance, though.
-      temporalJitter: false,
-      cascadeCount: 2, // Important
-      mapSize: /*#__PURE__*/ new Vector2(256, 256) // Important
+      cascadeCount: 2, // Obvious
+      mapSize: /*#__PURE__*/ new Vector2(256, 256) // Obvious
     }
   },
   medium: {
+    lightShafts: false, // Expensive
+    turbulence: false, // Expensive
     clouds: {
       minDensity: 1e-4,
       minExtinction: 1e-4,
       accurateSunSkyIrradiance: false,
-      multiScatteringOctaves: 5,
       maxIterationCountToSun: 2,
       maxIterationCountToGround: 1
     },
@@ -57,6 +56,7 @@ export const qualityPresets: Record<
   high: {}, // Consider the default settings as high quality.
   ultra: {
     shadow: {
+      maxIterationCount: 100,
       mapSize: /*#__PURE__*/ new Vector2(1024, 1024)
     }
   }
