@@ -1230,6 +1230,6 @@ Calculates the radiance of sunlight observed from a given position by sampling t
 
 [Source](/packages/atmosphere/src/getSunLightColor.ts)
 
-## License
+# License
 
 [MIT](LICENSE)
