@@ -17,9 +17,8 @@ const ivec2 varianceOffsets[4] = ivec2[4](ivec2(1, 0), ivec2(0, -1), ivec2(0, 1)
 
 // Reference: https://github.com/playdeadgames/temporal
 vec4 clipAABB(const vec4 current, const vec4 history, const vec4 minColor, const vec4 maxColor) {
-  const float epsilon = 1e-7;
   vec3 pClip = 0.5 * (maxColor.rgb + minColor.rgb);
-  vec3 eClip = 0.5 * (maxColor.rgb - minColor.rgb) + epsilon;
+  vec3 eClip = 0.5 * (maxColor.rgb - minColor.rgb) + 1e-7;
   vec4 vClip = history - vec4(pClip, current.a);
   vec3 vUnit = vClip.xyz / eClip;
   vec3 aUnit = abs(vUnit);
@@ -62,9 +61,9 @@ vec4 varianceClipping(
 
   const float N = float(VARIANCE_OFFSET_COUNT + 1);
   vec4 mean = moment1 / N;
-  vec4 variance = sqrt(max(moment2 / N - mean * mean, 0.0));
-  vec4 minColor = mean - variance * gamma;
-  vec4 maxColor = mean + variance * gamma;
+  vec4 varianceGamma = sqrt(max(moment2 / N - mean * mean, 0.0)) * gamma;
+  vec4 minColor = mean - varianceGamma;
+  vec4 maxColor = mean + varianceGamma;
   return clipAABB(clamp(mean, minColor, maxColor), history, minColor, maxColor);
 }
 
@@ -99,9 +98,9 @@ vec4 varianceClipping(
 
   const float N = float(VARIANCE_OFFSET_COUNT + 1);
   vec4 mean = moment1 / N;
-  vec4 variance = sqrt(max(moment2 / N - mean * mean, 0.0));
-  vec4 minColor = mean - variance * gamma;
-  vec4 maxColor = mean + variance * gamma;
+  vec4 varianceGamma = sqrt(max(moment2 / N - mean * mean, 0.0)) * gamma;
+  vec4 minColor = mean - varianceGamma;
+  vec4 maxColor = mean + varianceGamma;
   return clipAABB(clamp(mean, minColor, maxColor), history, minColor, maxColor);
 }
 
