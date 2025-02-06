@@ -51,7 +51,32 @@ yarn add @takram/three-clouds
 
 [Source](/packages/clouds/src/CloudsEffect.ts)
 
+### Details
+
 ![Rendering path diagram](docs/rendering-path.png)
+
+- **Shadow**
+
+  Performs ray marching in the sun’s orthographic projection and outputs the necessary values for computing the optical depth of clouds (BSM) during the main camera’s ray marching.
+
+- **Shadow resolve**
+
+  Applies TAA on BSM, not for the aliasing at polygon edges, but rather to:
+
+  - Reduce spatial aliasing in BSM due to the high-frequency details of clouds relative to the output resolution.
+  - Reduce temporal aliasing caused by temporal jitters during shadow ray marching.
+
+- **Clouds**
+
+  Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective effect is already to the clouds here.
+
+- **Clouds resolve**
+
+  Performs TAAU-like upscaling on the clouds pass output, reducing the computational cost of ray marching for clouds by approximately 1/16.
+
+- **Aerial perspective**
+
+  This pass is part of [`atmosphere`](../atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
 
 ### Parameters
 
