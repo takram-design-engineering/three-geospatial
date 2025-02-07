@@ -219,7 +219,7 @@ function render(): void {
 
 - Although you can generate custom precomputed textures, the implementation is effectively limited to Earth’s atmosphere. For rendering atmospheres of other planets, consider implementing Sébastien Hillaire’s [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf).
 
-- Currently developed using GLSL. The node-based TSL is not used yet but is planned.
+- Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
 
 # API
 
@@ -254,7 +254,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 
 Provides and synchronizes props of atmosphere components. It’s the recommended way to configure components unless you need finer control over properties of individual components.
 
-[Source](/packages/atmosphere/src/r3f/Atmosphere.tsx)
+&rarr; [Source](/packages/atmosphere/src/r3f/Atmosphere.tsx)
 
 ```tsx
 import { useFrame } from '@react-three/fiber'
@@ -431,7 +431,7 @@ Displays the sky in a screen quad.
 
 See [`SkyMaterial`](#skymaterial) for further details.
 
-[Source](/packages/atmosphere/src/r3f/Sky.tsx)
+&rarr; [Source](/packages/atmosphere/src/r3f/Sky.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -467,7 +467,7 @@ Represents the brightest stars as points at an infinite distance.
 
 See [`StarsMaterial`](#starsmaterial) for further details.
 
-[Source](/packages/atmosphere/src/r3f/Stars.tsx)
+&rarr; [Source](/packages/atmosphere/src/r3f/Stars.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -516,7 +516,7 @@ A light probe for indirect sky irradiance.
 
 See [`SkyLightProbe`](#skylightprobe) for further details.
 
-[Source](/packages/atmosphere/src/r3f/SkyLight.tsx)
+&rarr; [Source](/packages/atmosphere/src/r3f/SkyLight.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -563,7 +563,7 @@ A directional light representing the sun.
 
 See [`SunDirectionalLight`](#directionalsunlight) for further details.
 
-[Source](/packages/atmosphere/src/r3f/SunLight.tsx)
+&rarr; [Source](/packages/atmosphere/src/r3f/SunLight.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -610,7 +610,7 @@ A post-processing effect that renders atmospheric transparency and inscattered l
 
 See [`AerialPerspectiveEffect`](#aerialperspectiveeffect) for further details.
 
-[Source](/packages/atmosphere/src/r3f/AerialPerspective.tsx)
+&rarr; [Source](/packages/atmosphere/src/r3f/AerialPerspective.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -642,7 +642,7 @@ The parameters of [`AerialPerspectiveEffect`](#aerialperspectiveeffect) are expo
 
 The base class of [`SkyMaterial`](#skymaterial) and [`StarsMaterial`](#starsmaterial).
 
-[Source](/packages/atmosphere/src/AtmosphereMaterialBase.ts)
+&rarr; [Source](/packages/atmosphere/src/AtmosphereMaterialBase.ts)
 
 ### Parameters
 
@@ -726,7 +726,7 @@ A material for displaying the sky. Apply this to a screen quad.
 
 Despite its name, this material renders the atmosphere itself, along with the sun and moon. When viewed from within the atmosphere, it appears as the sky. From space, it represents Earth’s atmosphere with a flat ground.
 
-[Source](/packages/atmosphere/src/SkyMaterial.ts)
+&rarr; [Source](/packages/atmosphere/src/SkyMaterial.ts)
 
 ```ts
 const material = new SkyMaterial()
@@ -784,7 +784,7 @@ Represents the brightest stars as points at an infinite distance.
 
 The provided data ([stars.bin](/packages/atmosphere/assets/stars.bin)) contains the J2000 ECI directions, magnitudes and black body chromaticities of the 9,096 stars listed in [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html).
 
-[Source](/packages/atmosphere/src/StarsMaterial.ts)
+&rarr; [Source](/packages/atmosphere/src/StarsMaterial.ts)
 
 ```ts
 const data: ArrayBuffer = /* Load stars.bin */
@@ -833,7 +833,7 @@ A light probe for indirect sky irradiance.
 
 It calculates spherical harmonics of sky irradiance at its position by sampling the precomputed irradiance texture on the CPU.
 
-[Source](/packages/atmosphere/src/SkyLightProbe.ts)
+&rarr; [Source](/packages/atmosphere/src/SkyLightProbe.ts)
 
 ```ts
 const skyLight = new SkyLightProbe({ irradianceTexture })
@@ -903,7 +903,7 @@ A directional light representing the sun.
 
 It calculates the sun’s radiance by sampling the precomputed transmittance texture on the CPU.
 
-[Source](/packages/atmosphere/src/SunDirectionalLight.ts)
+&rarr; [Source](/packages/atmosphere/src/SunDirectionalLight.ts)
 
 ```ts
 const sunLight = new SunDirectionalLight({ transmittanceTexture })
@@ -984,7 +984,7 @@ A post-processing effect that renders atmospheric transparency and inscattered l
 
 This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
 
-[Source](/packages/atmosphere/src/AerialPerspectiveEffect.ts)
+&rarr; [Source](/packages/atmosphere/src/AerialPerspectiveEffect.ts)
 
 ```ts
 const aerialPerspective = new AerialPerspectiveEffect(camera, {
@@ -1195,7 +1195,7 @@ function getMoonDirectionECEF(date: number | Date, result?: Vector3): Vector3
 
 Obtains the direction to the sun and moon in ECEF coordinates for the specified UTC time. This internally uses [astronomy-engine](https://github.com/cosinekitty/astronomy) and it approximates UTC as being equivalent to UT1.
 
-[Source](/packages/atmosphere/src/celestialDirections.ts)
+&rarr; [Source](/packages/atmosphere/src/celestialDirections.ts)
 
 ### getECIToECEFRotationMatrix
 
@@ -1208,7 +1208,7 @@ function getECIToECEFRotationMatrix(
 
 Obtains the rotation matrix to convert coordinates from J2000 ECI to ECEF. This internally uses [astronomy-engine](https://github.com/cosinekitty/astronomy) and it approximates UTC as being equivalent to UT1.
 
-[Source](/packages/atmosphere/src/celestialDirections.ts)
+&rarr; [Source](/packages/atmosphere/src/celestialDirections.ts)
 
 ### getSunLightColor
 
@@ -1230,8 +1230,8 @@ function getSunLightColor(
 
 Calculates the radiance of sunlight observed from a given position by sampling the precomputed transmittance texture on the CPU.
 
-[Source](/packages/atmosphere/src/getSunLightColor.ts)
+&rarr; [Source](/packages/atmosphere/src/getSunLightColor.ts)
 
-## License
+# License
 
 [MIT](LICENSE)

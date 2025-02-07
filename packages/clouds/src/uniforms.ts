@@ -1,17 +1,21 @@
 import {
   Uniform,
+  Vector3,
   Vector4,
   type Data3DTexture,
   type Matrix4,
   type Texture,
-  type Vector2,
-  type Vector3
+  type Vector2
 } from 'three'
 import { type Primitive } from 'type-fest'
 
 import { type AtmosphereParameters } from '@takram/three-atmosphere'
 
-import { defaultCloudLayer, type CloudLayer } from './cloudLayer'
+import {
+  defaultCloudLayer,
+  type CloudLayer,
+  type DensityProfile
+} from './cloudLayer'
 
 export interface CloudParameterUniforms {
   // Participating medium
@@ -46,7 +50,7 @@ export function createCloudParameterUniforms(
 ): CloudParameterUniforms {
   return {
     // Participating medium
-    scatteringCoefficient: new Uniform(1.0),
+    scatteringCoefficient: new Uniform(1),
     absorptionCoefficient: new Uniform(0.02),
 
     // Weather and shape
@@ -66,16 +70,18 @@ export function createCloudParameterUniforms(
   }
 }
 
-interface DensityProfiles {
-  expTerm: Vector4
-  expScale: Vector4
-  linearTerm: Vector4
-  constantTerm: Vector4
+interface DensityProfileVectors {
+  expTerms: Vector4
+  expScales: Vector4
+  linearTerms: Vector4
+  constantTerms: Vector4
 }
 
 export interface CloudLayerUniforms {
   minLayerHeights: Uniform<Vector4>
   maxLayerHeights: Uniform<Vector4>
+  minIntervalHeights: Uniform<Vector3>
+  maxIntervalHeights: Uniform<Vector3>
   densityScales: Uniform<Vector4>
   shapeAmounts: Uniform<Vector4>
   shapeDetailAmounts: Uniform<Vector4>
@@ -86,13 +92,15 @@ export interface CloudLayerUniforms {
   maxHeight: Uniform<number>
   shadowTopHeight: Uniform<number>
   shadowBottomHeight: Uniform<number>
-  densityProfiles: Uniform<DensityProfiles>
+  densityProfile: Uniform<DensityProfileVectors>
 }
 
 export function createCloudLayerUniforms(): CloudLayerUniforms {
   return {
     minLayerHeights: new Uniform(new Vector4()),
     maxLayerHeights: new Uniform(new Vector4()),
+    minIntervalHeights: new Uniform(new Vector3()),
+    maxIntervalHeights: new Uniform(new Vector3()),
     densityScales: new Uniform(new Vector4()),
     shapeAmounts: new Uniform(new Vector4()),
     shapeDetailAmounts: new Uniform(new Vector4()),
@@ -103,11 +111,11 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
     maxHeight: new Uniform(0),
     shadowTopHeight: new Uniform(0),
     shadowBottomHeight: new Uniform(0),
-    densityProfiles: new Uniform({
-      expTerm: new Vector4(),
-      expScale: new Vector4(),
-      linearTerm: new Vector4(),
-      constantTerm: new Vector4()
+    densityProfile: new Uniform({
+      expTerms: new Vector4(),
+      expScales: new Vector4(),
+      linearTerms: new Vector4(),
+      constantTerms: new Vector4()
     })
   }
 }
@@ -119,10 +127,10 @@ type NumericLayerKey = keyof {
 function packVector<K extends NumericLayerKey>(
   layers: readonly CloudLayer[],
   key: K,
-  vector: Vector4
-): void {
+  result: Vector4
+): Vector4 {
   const defaultValue = defaultCloudLayer[key]
-  vector.set(
+  return result.set(
     layers[0]?.[key] ?? defaultValue,
     layers[1]?.[key] ?? defaultValue,
     layers[2]?.[key] ?? defaultValue,
@@ -130,14 +138,14 @@ function packVector<K extends NumericLayerKey>(
   )
 }
 
-function packSumVector<K1 extends NumericLayerKey, K2 extends NumericLayerKey>(
+function packVectorsSum<K1 extends NumericLayerKey, K2 extends NumericLayerKey>(
   layers: readonly CloudLayer[],
   key1: K1,
   key2: K2,
-  vector: Vector4
-): void {
+  result: Vector4
+): Vector4 {
   const { [key1]: defaultValue1, [key2]: defaultValue2 } = defaultCloudLayer
-  vector.set(
+  return result.set(
     (layers[0]?.[key1] ?? defaultValue1) + (layers[0]?.[key2] ?? defaultValue2),
     (layers[1]?.[key1] ?? defaultValue1) + (layers[1]?.[key2] ?? defaultValue2),
     (layers[2]?.[key1] ?? defaultValue1) + (layers[2]?.[key2] ?? defaultValue2),
@@ -145,13 +153,13 @@ function packSumVector<K1 extends NumericLayerKey, K2 extends NumericLayerKey>(
   )
 }
 
-function packDensityProfileVector<K extends keyof DensityProfiles>(
+function packDensityProfileVector<K extends keyof DensityProfile>(
   layers: readonly CloudLayer[],
   key: K,
-  densityProfiles: DensityProfiles
-): void {
+  result: Vector4
+): Vector4 {
   const defaultValue = defaultCloudLayer.densityProfile[key]
-  densityProfiles[key].set(
+  return result.set(
     layers[0]?.densityProfile?.[key] ?? defaultValue,
     layers[1]?.densityProfile?.[key] ?? defaultValue,
     layers[2]?.densityProfile?.[key] ?? defaultValue,
@@ -159,29 +167,76 @@ function packDensityProfileVector<K extends keyof DensityProfiles>(
   )
 }
 
-function packDensityProfiles(
+function packDensityProfile(
   layers: readonly CloudLayer[],
-  densityProfiles: DensityProfiles
+  densityProfile: DensityProfileVectors
 ): void {
-  packDensityProfileVector(layers, 'expTerm', densityProfiles)
-  packDensityProfileVector(layers, 'expScale', densityProfiles)
-  packDensityProfileVector(layers, 'linearTerm', densityProfiles)
-  packDensityProfileVector(layers, 'constantTerm', densityProfiles)
+  packDensityProfileVector(layers, 'expTerm', densityProfile.expTerms)
+  packDensityProfileVector(layers, 'expScale', densityProfile.expScales)
+  packDensityProfileVector(layers, 'linearTerm', densityProfile.linearTerms)
+  packDensityProfileVector(layers, 'constantTerm', densityProfile.constantTerms)
+}
+
+interface Interval {
+  min: number
+  max: number
+}
+
+const intervalsScratch: Interval[] = /*#__PURE__*/ Array.from(
+  { length: 4 },
+  () => ({ min: 0, max: 0 })
+)
+
+function compareIntervals(a: Interval, b: Interval): number {
+  return a.min - b.min
+}
+
+function packIntervalHeights(
+  minHeights: Vector4,
+  maxHeights: Vector4,
+  min: Vector3,
+  max: Vector3
+): void {
+  let [a, b, c, d] = intervalsScratch
+  ;[a.min, a.max] = [minHeights.x, maxHeights.x]
+  ;[b.min, b.max] = [minHeights.y, maxHeights.y]
+  ;[c.min, c.max] = [minHeights.z, maxHeights.z]
+  ;[d.min, d.max] = [minHeights.w, maxHeights.w]
+  intervalsScratch.sort(compareIntervals)
+  ;[a, b, c, d] = intervalsScratch
+  ;[min.x, max.x] = a.max < b.min ? [a.max, b.min] : [-1, -1]
+  ;[min.y, max.y] = b.max < c.min ? [b.max, c.min] : [-1, -1]
+  ;[min.z, max.z] = c.max < d.min ? [c.max, d.min] : [-1, -1]
 }
 
 export function updateCloudLayerUniforms(
   uniforms: CloudLayerUniforms,
   layers: readonly CloudLayer[]
 ): void {
-  packVector(layers, 'altitude', uniforms.minLayerHeights.value)
-  packSumVector(layers, 'altitude', 'height', uniforms.maxLayerHeights.value)
+  const minLayerHeights = packVector(
+    layers,
+    'altitude',
+    uniforms.minLayerHeights.value
+  )
+  const maxLayerHeights = packVectorsSum(
+    layers,
+    'altitude',
+    'height',
+    uniforms.maxLayerHeights.value
+  )
+  packIntervalHeights(
+    minLayerHeights,
+    maxLayerHeights,
+    uniforms.minIntervalHeights.value,
+    uniforms.maxIntervalHeights.value
+  )
   packVector(layers, 'densityScale', uniforms.densityScales.value)
   packVector(layers, 'shapeAmount', uniforms.shapeAmounts.value)
   packVector(layers, 'shapeDetailAmount', uniforms.shapeDetailAmounts.value)
   packVector(layers, 'weatherExponent', uniforms.weatherExponents.value)
   packVector(layers, 'shapeAlteringBias', uniforms.shapeAlteringBiases.value)
   packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths.value)
-  packDensityProfiles(layers, uniforms.densityProfiles.value)
+  packDensityProfile(layers, uniforms.densityProfile.value)
 
   let totalMinHeight = Infinity
   let totalMaxHeight = 0

@@ -41,6 +41,7 @@ import {
 import { CloudsPass } from './CloudsPass'
 import { Procedural3DTexture } from './Procedural3DTexture'
 import { ProceduralTexture } from './ProceduralTexture'
+import { defaults, qualityPresets, type QualityPreset } from './qualityPresets'
 import {
   type ShadowMaterial,
   type ShadowMaterialUniforms
@@ -78,6 +79,13 @@ const cloudsUniformKeys = [
   'maxShadowLengthRayDistance'
 ] as const satisfies Array<keyof CloudsMaterialUniforms>
 
+// prettier-ignore
+const cloudsMaterialParameterKeys = [
+  'multiScatteringOctaves',
+  'accurateSunSkyIrradiance',
+  'accuratePhaseFunction',
+] as const satisfies Array<keyof CloudsMaterial>
+
 const shadowUniformKeys = [
   'maxIterationCount',
   'minStepSize',
@@ -110,16 +118,23 @@ const shadowMapsParameterKeys = [
 type CloudsShorthand = UniformShorthand<
   CloudsMaterial,
   (typeof cloudsUniformKeys)[number]
->
+> &
+  PropertyShorthand<[CloudsMaterial, typeof cloudsMaterialParameterKeys]>
 
-// prettier-ignore
-type ShadowShorthand =
-  & UniformShorthand<ShadowMaterial, (typeof shadowUniformKeys)[number]>
-  & PropertyShorthand<[
-    ShadowMaterial, (typeof shadowMaterialParameterKeys),
-    ShadowPass, (typeof shadowPassParameterKeys),
-    CascadedShadowMaps, (typeof shadowMapsParameterKeys)
-  ]>
+type ShadowShorthand = UniformShorthand<
+  ShadowMaterial,
+  (typeof shadowUniformKeys)[number]
+> &
+  PropertyShorthand<
+    [
+      ShadowMaterial,
+      typeof shadowMaterialParameterKeys,
+      ShadowPass,
+      typeof shadowPassParameterKeys,
+      CascadedShadowMaps,
+      typeof shadowMapsParameterKeys
+    ]
+  >
 
 export interface CloudsEffectChangeEvent {
   type: 'change'
@@ -140,7 +155,7 @@ export interface CloudsEffectOptions {
 }
 
 export const cloudsPassOptionsDefaults = {
-  resolutionScale: 1,
+  resolutionScale: defaults.resolutionScale,
   width: Resolution.AUTO_SIZE,
   height: Resolution.AUTO_SIZE
 } satisfies CloudsEffectOptions
@@ -272,8 +287,8 @@ export class CloudsEffect extends Effect {
     }
 
     this.shadowMaps = new CascadedShadowMaps({
-      cascadeCount: 3,
-      mapSize: new Vector2().setScalar(512),
+      cascadeCount: defaults.shadow.cascadeCount,
+      mapSize: defaults.shadow.mapSize,
       splitLambda: 0.6
     })
 
@@ -310,10 +325,14 @@ export class CloudsEffect extends Effect {
     this.shadowPass = new ShadowPass(passOptions)
     this.cloudsPass = new CloudsPass(passOptions, atmosphere)
 
-    this.clouds = defineUniformShorthand(
-      {},
+    this.clouds = definePropertyShorthand(
+      defineUniformShorthand(
+        {},
+        this.cloudsPass.currentMaterial,
+        cloudsUniformKeys
+      ),
       this.cloudsPass.currentMaterial,
-      cloudsUniformKeys
+      cloudsMaterialParameterKeys
     )
     this.shadow = definePropertyShorthand(
       defineUniformShorthand(
@@ -516,6 +535,14 @@ export class CloudsEffect extends Effect {
   ): void {
     this.shadowPass.setDepthTexture(depthTexture, depthPacking)
     this.cloudsPass.setDepthTexture(depthTexture, depthPacking)
+  }
+
+  // eslint-disable-next-line accessor-pairs
+  set qualityPreset(value: QualityPreset) {
+    const { clouds, shadow, ...props } = qualityPresets[value]
+    Object.assign(this, props)
+    Object.assign(this.clouds, clouds)
+    Object.assign(this.shadow, shadow)
   }
 
   // Textures

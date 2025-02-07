@@ -381,11 +381,20 @@ vec4 marchClouds(
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
+
     vec3 position = rayDistance * rayDirection + rayOrigin;
+    float height = length(position) - bottomRadius;
+    float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance * 1e-5));
+
+    #if !defined(DEBUG_MARCH_INTERVALS)
+    if (insideLayerIntervals(height)) {
+      stepSize *= perspectiveStepScale;
+      rayDistance += mix(stepSize, maxStepSize, min(1.0, mipLevel));
+      continue;
+    }
+    #endif // !defined(DEBUG_MARCH_INTERVALS)
 
     // Sample rough weather.
-    float mipLevel = log2(max(1.0, rayStartTexelsPerPixel + rayDistance * 1e-5));
-    float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
 

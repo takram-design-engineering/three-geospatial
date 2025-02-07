@@ -74,10 +74,18 @@ vec4 marchClouds(
     if (rayDistance > maxRayDistance) {
       break; // Termination
     }
+
     vec3 position = rayDistance * rayDirection + rayOrigin;
+    float height = length(position) - bottomRadius;
+
+    #if !defined(DEBUG_MARCH_INTERVALS)
+    if (insideLayerIntervals(height)) {
+      rayDistance += stepSize;
+      continue;
+    }
+    #endif // !defined(DEBUG_MARCH_INTERVALS)
 
     // Sample rough weather.
-    float height = length(position) - bottomRadius;
     vec2 uv = getGlobeUv(position);
     WeatherSample weather = sampleWeather(uv, height, mipLevel);
 

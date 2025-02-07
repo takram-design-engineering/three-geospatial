@@ -28,6 +28,7 @@ import {
 } from '@takram/three-atmosphere/shaders'
 import {
   assertType,
+  clamp,
   Geodetic,
   resolveIncludes,
   unrollLoops
@@ -42,6 +43,7 @@ import {
 } from '@takram/three-geospatial/shaders'
 
 import { bayerOffsets } from './bayer'
+import { defaults } from './qualityPresets'
 import {
   type AtmosphereUniforms,
   type CloudLayerUniforms,
@@ -173,6 +175,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
             clouds
           })
         ),
+        // prettier-ignore
         uniforms: {
           ...parameterUniforms,
           ...layerUniforms,
@@ -203,20 +206,20 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           powderExponent: new Uniform(150),
 
           // Primary raymarch
-          maxIterationCount: new Uniform(500),
-          minStepSize: new Uniform(50),
-          maxStepSize: new Uniform(1000),
-          maxRayDistance: new Uniform(5e5),
-          perspectiveStepScale: new Uniform(1.01),
-          minDensity: new Uniform(1e-5),
-          minExtinction: new Uniform(1e-5),
-          minTransmittance: new Uniform(1e-2),
+          maxIterationCount: new Uniform(defaults.clouds.maxIterationCount),
+          minStepSize: new Uniform(defaults.clouds.minStepSize),
+          maxStepSize: new Uniform(defaults.clouds.maxStepSize),
+          maxRayDistance: new Uniform(defaults.clouds.maxRayDistance),
+          perspectiveStepScale: new Uniform(defaults.clouds.perspectiveStepScale),
+          minDensity: new Uniform(defaults.clouds.minDensity),
+          minExtinction: new Uniform(defaults.clouds.minExtinction),
+          minTransmittance: new Uniform(defaults.clouds.minTransmittance),
 
           // Secondary raymarch
-          maxIterationCountToSun: new Uniform(3),
-          maxIterationCountToGround: new Uniform(2),
-          minSecondaryStepSize: new Uniform(100),
-          secondaryStepScale: new Uniform(2),
+          maxIterationCountToSun: new Uniform(defaults.clouds.maxIterationCountToSun),
+          maxIterationCountToGround: new Uniform(defaults.clouds.maxIterationCountToGround),
+          minSecondaryStepSize: new Uniform(defaults.clouds.minSecondaryStepSize),
+          secondaryStepScale: new Uniform(defaults.clouds.secondaryStepScale),
 
           // Beer shadow map
           shadowBuffer: new Uniform(null),
@@ -231,25 +234,25 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           maxShadowFilterRadius: new Uniform(6),
 
           // Shadow length
-          maxShadowLengthIterationCount: new Uniform(500),
-          minShadowLengthStepSize: new Uniform(50),
-          maxShadowLengthRayDistance: new Uniform(5e5)
+          maxShadowLengthIterationCount: new Uniform(defaults.clouds.maxShadowLengthIterationCount),
+          minShadowLengthStepSize: new Uniform(defaults.clouds.minShadowLengthStepSize),
+          maxShadowLengthRayDistance: new Uniform(defaults.clouds.maxShadowLengthRayDistance)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
           CloudsMaterialUniforms,
         defines: {
-          DEPTH_PACKING: '0',
-          SHAPE_DETAIL: '1',
-          TURBULENCE: '1',
-          ACCURATE_SUN_SKY_IRRADIANCE: '1',
-          MULTI_SCATTERING_OCTAVES: '8',
-          POWDER: '1',
-          GROUND_IRRADIANCE: '1',
-          SHADOW_CASCADE_COUNT: '1',
-          SHADOW_LENGTH: '1'
+          DEPTH_PACKING: '0'
         }
       },
       atmosphere
     )
+
+    this.shapeDetail = defaults.shapeDetail
+    this.turbulence = defaults.turbulence
+    this.shadowLength = defaults.lightShafts
+    this.multiScatteringOctaves = defaults.clouds.multiScatteringOctaves
+    this.accurateSunSkyIrradiance = defaults.clouds.accurateSunSkyIrradiance
+    this.accuratePhaseFunction = defaults.clouds.accuratePhaseFunction
+    this.shadowCascadeCount = defaults.shadow.cascadeCount
   }
 
   override onBeforeRender(
@@ -275,7 +278,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
 
     const prevGroundIrradiance = this.defines.GROUND_IRRADIANCE != null
-    const nextGroundIrradiance = this.uniforms.groundIrradianceScale.value > 0
+    const nextGroundIrradiance =
+      this.uniforms.groundIrradianceScale.value > 0 &&
+      this.uniforms.maxIterationCountToGround.value > 0
     if (nextGroundIrradiance !== prevGroundIrradiance) {
       if (nextPowder) {
         this.defines.GROUND_IRRADIANCE = '1'
@@ -445,6 +450,32 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
+  get shadowLength(): boolean {
+    return this.defines.SHADOW_LENGTH != null
+  }
+
+  set shadowLength(value: boolean) {
+    if (value !== this.shadowLength) {
+      if (value) {
+        this.defines.SHADOW_LENGTH = '1'
+      } else {
+        delete this.defines.SHADOW_LENGTH
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get multiScatteringOctaves(): number {
+    return +this.defines.MULTI_SCATTERING_OCTAVES
+  }
+
+  set multiScatteringOctaves(value: number) {
+    if (value !== this.multiScatteringOctaves) {
+      this.defines.MULTI_SCATTERING_OCTAVES = `${clamp(Math.round(value), 1, 12)}`
+      this.needsUpdate = true
+    }
+  }
+
   get accurateSunSkyIrradiance(): boolean {
     return this.defines.ACCURATE_SUN_SKY_IRRADIANCE != null
   }
@@ -475,17 +506,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get multiScatteringOctaves(): number {
-    return +this.defines.MULTI_SCATTERING_OCTAVES
-  }
-
-  set multiScatteringOctaves(value: number) {
-    if (value !== this.multiScatteringOctaves) {
-      this.defines.MULTI_SCATTERING_OCTAVES = `${value}`
-      this.needsUpdate = true
-    }
-  }
-
   get shadowCascadeCount(): number {
     return +this.defines.SHADOW_CASCADE_COUNT
   }
@@ -493,21 +513,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   set shadowCascadeCount(value: number) {
     if (value !== this.shadowCascadeCount) {
       this.defines.SHADOW_CASCADE_COUNT = `${value}`
-      this.needsUpdate = true
-    }
-  }
-
-  get shadowLength(): boolean {
-    return this.defines.SHADOW_LENGTH != null
-  }
-
-  set shadowLength(value: boolean) {
-    if (value !== this.shadowLength) {
-      if (value) {
-        this.defines.SHADOW_LENGTH = '1'
-      } else {
-        delete this.defines.SHADOW_LENGTH
-      }
       this.needsUpdate = true
     }
   }

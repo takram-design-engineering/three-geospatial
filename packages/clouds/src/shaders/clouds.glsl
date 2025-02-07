@@ -54,6 +54,12 @@ float getMipLevel(const vec2 uv) {
   return max(0.0, 0.5 * log2(max(1.0, deltaMaxSqr)));
 }
 
+bool insideLayerIntervals(const float height) {
+  bvec3 gt = greaterThan(vec3(height), minIntervalHeights);
+  bvec3 lt = lessThan(vec3(height), maxIntervalHeights);
+  return any(bvec3(gt.x && lt.x, gt.y && lt.y, gt.z && lt.z));
+}
+
 struct WeatherSample {
   vec4 heightFraction; // Normalized height of each layer
   vec4 density;
@@ -90,9 +96,9 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
 
 vec4 getLayerDensity(const vec4 heightFraction) {
   // prettier-ignore
-  return densityProfiles.expTerm * exp(densityProfiles.expScale * heightFraction) +
-    densityProfiles.linearTerm * heightFraction +
-    densityProfiles.constantTerm;
+  return densityProfile.expTerms * exp(densityProfile.expScales * heightFraction) +
+    densityProfile.linearTerms * heightFraction +
+    densityProfile.constantTerms;
 }
 
 struct MediaSample {

@@ -48,9 +48,14 @@ const Scene: FC = () => {
     longitude,
     dayOfYear: 0
   })
-  const { correctAltitude } = useControls('atmosphere', {
-    correctAltitude: true
-  })
+  const { correctAltitude } = useControls(
+    'atmosphere',
+    {
+      correctAltitude: true,
+      photometric: true
+    },
+    { collapsed: true }
+  )
 
   const [atmosphere, setAtmosphere] = useState<AtmosphereApi | null>(null)
   useFrame(() => {

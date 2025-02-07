@@ -81,7 +81,7 @@ export const cascadedShadowMapsDefaults = {
 export class CascadedShadowMaps {
   readonly cascades: Cascade[] = []
 
-  mapSize: Vector2
+  readonly mapSize = new Vector2()
   maxFar: number | null
   farScale: number
   splitMode: FrustumSplitMode
@@ -109,7 +109,7 @@ export class CascadedShadowMaps {
       ...options
     }
     this.cascadeCount = cascadeCount
-    this.mapSize = mapSize
+    this.mapSize.copy(mapSize)
     this.maxFar = maxFar
     this.farScale = farScale
     this.splitMode = splitMode

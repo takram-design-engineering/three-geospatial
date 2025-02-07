@@ -39,6 +39,8 @@ uniform float turbulenceDisplacement;
 // Cloud layers
 uniform vec4 minLayerHeights;
 uniform vec4 maxLayerHeights;
+uniform vec3 minIntervalHeights;
+uniform vec3 maxIntervalHeights;
 uniform vec4 densityScales;
 uniform vec4 shapeAmounts;
 uniform vec4 shapeDetailAmounts;
@@ -49,4 +51,4 @@ uniform float minHeight;
 uniform float maxHeight;
 uniform float shadowTopHeight;
 uniform float shadowBottomHeight;
-uniform DensityProfiles densityProfiles;
+uniform DensityProfile densityProfile;
