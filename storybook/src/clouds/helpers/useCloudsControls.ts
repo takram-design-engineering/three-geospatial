@@ -228,6 +228,7 @@ export function useCloudsControls(
 
   const {
     showSampleCount: debugShowSampleCount,
+    marchIntervals: debugMarchIntervals,
     showFrontDepth: debugShowFrontDepth,
     showShadowMap: debugShowShadowMap,
     showCascades: debugShowCascades,
@@ -238,6 +239,7 @@ export function useCloudsControls(
     'debug',
     {
       showSampleCount: false,
+      marchIntervals: false,
       showFrontDepth: false,
       showShadowMap: false,
       showCascades: false,
@@ -256,6 +258,13 @@ export function useCloudsControls(
       effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT = '1'
     } else {
       delete effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_SAMPLE_COUNT
+    }
+    if (debugMarchIntervals) {
+      effect.cloudsPass.currentMaterial.defines.DEBUG_MARCH_INTERVALS = '1'
+      effect.shadowPass.currentMaterial.defines.DEBUG_MARCH_INTERVALS = '1'
+    } else {
+      delete effect.cloudsPass.currentMaterial.defines.DEBUG_MARCH_INTERVALS
+      delete effect.shadowPass.currentMaterial.defines.DEBUG_MARCH_INTERVALS
     }
     if (debugShowFrontDepth) {
       effect.cloudsPass.currentMaterial.defines.DEBUG_SHOW_FRONT_DEPTH = '1'
@@ -281,6 +290,7 @@ export function useCloudsControls(
   }, [
     effect,
     debugShowSampleCount,
+    debugMarchIntervals,
     debugShowFrontDepth,
     debugShowShadowMap,
     debugShowCascades,

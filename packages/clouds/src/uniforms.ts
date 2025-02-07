@@ -1,11 +1,11 @@
 import {
   Uniform,
+  Vector3,
   Vector4,
   type Data3DTexture,
   type Matrix4,
   type Texture,
-  type Vector2,
-  type Vector3
+  type Vector2
 } from 'three'
 import { type Primitive } from 'type-fest'
 
@@ -80,6 +80,8 @@ interface DensityProfileVectors {
 export interface CloudLayerUniforms {
   minLayerHeights: Uniform<Vector4>
   maxLayerHeights: Uniform<Vector4>
+  minIntervalHeights: Uniform<Vector3>
+  maxIntervalHeights: Uniform<Vector3>
   densityScales: Uniform<Vector4>
   shapeAmounts: Uniform<Vector4>
   shapeDetailAmounts: Uniform<Vector4>
@@ -97,6 +99,8 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
   return {
     minLayerHeights: new Uniform(new Vector4()),
     maxLayerHeights: new Uniform(new Vector4()),
+    minIntervalHeights: new Uniform(new Vector3()),
+    maxIntervalHeights: new Uniform(new Vector3()),
     densityScales: new Uniform(new Vector4()),
     shapeAmounts: new Uniform(new Vector4()),
     shapeDetailAmounts: new Uniform(new Vector4()),
@@ -124,9 +128,9 @@ function packVector<K extends NumericLayerKey>(
   layers: readonly CloudLayer[],
   key: K,
   result: Vector4
-): void {
+): Vector4 {
   const defaultValue = defaultCloudLayer[key]
-  result.set(
+  return result.set(
     layers[0]?.[key] ?? defaultValue,
     layers[1]?.[key] ?? defaultValue,
     layers[2]?.[key] ?? defaultValue,
@@ -139,9 +143,9 @@ function packVectorsSum<K1 extends NumericLayerKey, K2 extends NumericLayerKey>(
   key1: K1,
   key2: K2,
   result: Vector4
-): void {
+): Vector4 {
   const { [key1]: defaultValue1, [key2]: defaultValue2 } = defaultCloudLayer
-  result.set(
+  return result.set(
     (layers[0]?.[key1] ?? defaultValue1) + (layers[0]?.[key2] ?? defaultValue2),
     (layers[1]?.[key1] ?? defaultValue1) + (layers[1]?.[key2] ?? defaultValue2),
     (layers[2]?.[key1] ?? defaultValue1) + (layers[2]?.[key2] ?? defaultValue2),
@@ -153,9 +157,9 @@ function packDensityProfileVector<K extends keyof DensityProfile>(
   layers: readonly CloudLayer[],
   key: K,
   result: Vector4
-): void {
+): Vector4 {
   const defaultValue = defaultCloudLayer.densityProfile[key]
-  result.set(
+  return result.set(
     layers[0]?.densityProfile?.[key] ?? defaultValue,
     layers[1]?.densityProfile?.[key] ?? defaultValue,
     layers[2]?.densityProfile?.[key] ?? defaultValue,
@@ -173,12 +177,59 @@ function packDensityProfile(
   packDensityProfileVector(layers, 'constantTerm', densityProfile.constantTerms)
 }
 
+interface Interval {
+  min: number
+  max: number
+}
+
+const intervalsScratch: Interval[] = /*#__PURE__*/ Array.from(
+  { length: 4 },
+  () => ({ min: 0, max: 0 })
+)
+
+function compareIntervals(a: Interval, b: Interval): number {
+  return a.min - b.min
+}
+
+function packIntervalHeights(
+  minHeights: Vector4,
+  maxHeights: Vector4,
+  min: Vector3,
+  max: Vector3
+): void {
+  let [a, b, c, d] = intervalsScratch
+  ;[a.min, a.max] = [minHeights.x, maxHeights.x]
+  ;[b.min, b.max] = [minHeights.y, maxHeights.y]
+  ;[c.min, c.max] = [minHeights.z, maxHeights.z]
+  ;[d.min, d.max] = [minHeights.w, maxHeights.w]
+  intervalsScratch.sort(compareIntervals)
+  ;[a, b, c, d] = intervalsScratch
+  ;[min.x, max.x] = a.max < b.min ? [a.max, b.min] : [-1, -1]
+  ;[min.y, max.y] = b.max < c.min ? [b.max, c.min] : [-1, -1]
+  ;[min.z, max.z] = c.max < d.min ? [c.max, d.min] : [-1, -1]
+}
+
 export function updateCloudLayerUniforms(
   uniforms: CloudLayerUniforms,
   layers: readonly CloudLayer[]
 ): void {
-  packVector(layers, 'altitude', uniforms.minLayerHeights.value)
-  packVectorsSum(layers, 'altitude', 'height', uniforms.maxLayerHeights.value)
+  const minLayerHeights = packVector(
+    layers,
+    'altitude',
+    uniforms.minLayerHeights.value
+  )
+  const maxLayerHeights = packVectorsSum(
+    layers,
+    'altitude',
+    'height',
+    uniforms.maxLayerHeights.value
+  )
+  packIntervalHeights(
+    minLayerHeights,
+    maxLayerHeights,
+    uniforms.minIntervalHeights.value,
+    uniforms.maxIntervalHeights.value
+  )
   packVector(layers, 'densityScale', uniforms.densityScales.value)
   packVector(layers, 'shapeAmount', uniforms.shapeAmounts.value)
   packVector(layers, 'shapeDetailAmount', uniforms.shapeDetailAmounts.value)

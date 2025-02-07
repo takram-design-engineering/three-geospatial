@@ -34,8 +34,6 @@ yarn add @takram/three-clouds
 
 - The cloud base of each layer lines up at the same altitude, making it look artificial. This may be improved by tweaking the shape altering function.
 
-- While ray marching for the clouds uses adaptive steps (taking large steps in empty space and gradually increasing step size), the empty space between cloud layers could be skipped more efficiently by computing intersection distances with the cloud layer boundaries.
-
 - Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera’s depth onto the sun’s view.
 
 ### Planned features
@@ -100,7 +98,7 @@ yarn add @takram/three-clouds
 
 - **Clouds resolve**
 
-  Performs TAAU-like upscaling on the clouds pass outputs, reducing the number of texels to ray march for the clouds by 1/16.
+  Performs TAAU-like upscaling on the clouds pass outputs, reducing the number of texels to ray march in the clouds shader pass by 1/16.
 
   &rarr; [Shader](/packages/clouds/src/shaders/cloudsResolve.frag)
 
