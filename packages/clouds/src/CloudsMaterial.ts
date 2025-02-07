@@ -28,6 +28,7 @@ import {
 } from '@takram/three-atmosphere/shaders'
 import {
   assertType,
+  clamp,
   Geodetic,
   resolveIncludes,
   unrollLoops
@@ -470,7 +471,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   set multiScatteringOctaves(value: number) {
     if (value !== this.multiScatteringOctaves) {
-      this.defines.MULTI_SCATTERING_OCTAVES = `${value}`
+      this.defines.MULTI_SCATTERING_OCTAVES = `${clamp(Math.round(value), 1, 12)}`
       this.needsUpdate = true
     }
   }
