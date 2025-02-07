@@ -41,7 +41,7 @@ import {
 import { CloudsPass } from './CloudsPass'
 import { Procedural3DTexture } from './Procedural3DTexture'
 import { ProceduralTexture } from './ProceduralTexture'
-import { qualityPresets, type QualityPreset } from './qualityPresets'
+import { defaults, qualityPresets, type QualityPreset } from './qualityPresets'
 import {
   type ShadowMaterial,
   type ShadowMaterialUniforms
@@ -81,8 +81,9 @@ const cloudsUniformKeys = [
 
 // prettier-ignore
 const cloudsMaterialParameterKeys = [
+  'multiScatteringOctaves',
   'accurateSunSkyIrradiance',
-  'multiScatteringOctaves'
+  'accuratePhaseFunction',
 ] as const satisfies Array<keyof CloudsMaterial>
 
 const shadowUniformKeys = [
@@ -154,7 +155,7 @@ export interface CloudsEffectOptions {
 }
 
 export const cloudsPassOptionsDefaults = {
-  resolutionScale: 1,
+  resolutionScale: defaults.resolutionScale,
   width: Resolution.AUTO_SIZE,
   height: Resolution.AUTO_SIZE
 } satisfies CloudsEffectOptions
@@ -286,8 +287,8 @@ export class CloudsEffect extends Effect {
     }
 
     this.shadowMaps = new CascadedShadowMaps({
-      cascadeCount: 3,
-      mapSize: new Vector2().setScalar(512),
+      cascadeCount: defaults.shadow.cascadeCount,
+      mapSize: defaults.shadow.mapSize,
       splitLambda: 0.6
     })
 

@@ -377,8 +377,9 @@ splitLambda: number = 0.6
 
 ### Advanced parameters
 
-#### clouds.accurateSunSkyIrradiance
 #### clouds.multiScatteringOctaves
+#### clouds.accurateSunSkyIrradiance
+#### clouds.accuratePhaseFunction
 #### clouds.maxIterationCount
 #### clouds.minStepSize, clouds.maxStepSize
 #### clouds.maxRayDistance

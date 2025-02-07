@@ -10,6 +10,7 @@ import {
 import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
 import { math, raySphereIntersection } from '@takram/three-geospatial/shaders'
 
+import { defaults } from './qualityPresets'
 import {
   type AtmosphereUniforms,
   type CloudLayerUniforms,
@@ -90,23 +91,23 @@ export class ShadowMaterial extends RawShaderMaterial {
         stbnTexture: new Uniform(null),
 
         // Primary raymarch
-        maxIterationCount: new Uniform(50),
-        minStepSize: new Uniform(100),
-        maxStepSize: new Uniform(1000),
-        minDensity: new Uniform(1e-5),
-        minExtinction: new Uniform(1e-5),
-        minTransmittance: new Uniform(1e-4),
+        maxIterationCount: new Uniform(defaults.shadow.maxIterationCount),
+        minStepSize: new Uniform(defaults.shadow.minStepSize),
+        maxStepSize: new Uniform(defaults.shadow.maxStepSize),
+        minDensity: new Uniform(defaults.shadow.minDensity),
+        minExtinction: new Uniform(defaults.shadow.minExtinction),
+        minTransmittance: new Uniform(defaults.shadow.minTransmittance),
         opticalDepthTailScale: new Uniform(2)
       } satisfies ShadowMaterialUniforms,
       defines: {
         TEMPORAL_PASS: '1',
-        TEMPORAL_JITTER: '1',
-        SHAPE_DETAIL: '1',
-        TURBULENCE: '1'
+        TEMPORAL_JITTER: '1'
       }
     })
 
-    this.cascadeCount = 1
+    this.cascadeCount = defaults.shadow.cascadeCount
+    this.shapeDetail = defaults.shapeDetail
+    this.turbulence = defaults.turbulence
   }
 
   setSize(width: number, height: number): void {

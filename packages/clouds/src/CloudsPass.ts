@@ -17,6 +17,7 @@ import { type AtmosphereParameters } from '@takram/three-atmosphere'
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsResolveMaterial } from './CloudsResolveMaterial'
 import { PassBase, type PassBaseOptions } from './PassBase'
+import { defaults } from './qualityPresets'
 import {
   type AtmosphereUniforms,
   type CloudLayerUniforms,
@@ -114,7 +115,7 @@ export class CloudsPass extends PassBase {
 
     this.initRenderTargets({
       depthVelocity: true,
-      shadowLength: true
+      shadowLength: defaults.lightShafts
     })
   }
 
