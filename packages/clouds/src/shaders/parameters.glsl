@@ -11,6 +11,7 @@ uniform vec3 sunDirection;
 // Participating medium
 uniform float scatteringCoefficient;
 uniform float absorptionCoefficient;
+uniform vec3 albedo;
 
 // Primary raymarch
 uniform float minDensity;

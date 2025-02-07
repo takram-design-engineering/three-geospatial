@@ -217,9 +217,9 @@ coverageFilterWidth: number = 0.6
 
 ```ts
 densityProfile: DensityProfile = {
-  expTerm: number = 0
-  expScale: number = 0
-  linearTerm: number = 0.75
+  expTerm: number = 0,
+  expScale: number = 0,
+  linearTerm: number = 0.75,
   constantTerm: number = 0.25
 }
 ```

@@ -91,6 +91,7 @@ export interface CloudsMaterialUniforms
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Scattering
+  albedo: Uniform<Vector3>
   scatterAnisotropy1: Uniform<number>
   scatterAnisotropy2: Uniform<number>
   scatterAnisotropyMix: Uniform<number>
@@ -197,6 +198,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           stbnTexture: new Uniform(null),
 
           // Scattering
+          albedo: new Uniform(new Vector3()),
           scatterAnisotropy1: new Uniform(0.7),
           scatterAnisotropy2: new Uniform(-0.2),
           scatterAnisotropyMix: new Uniform(0.5),
@@ -265,6 +267,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   ): void {
     // Disable onBeforeRender in AtmosphereMaterialBase because we're rendering
     // into fullscreen quad with another camera for the scene projection.
+
+    const uniforms = this.uniforms
+    uniforms.albedo.value.setScalar(
+      uniforms.scatteringCoefficient.value /
+        (uniforms.absorptionCoefficient.value +
+          uniforms.scatteringCoefficient.value)
+    )
 
     const prevPowder = this.defines.POWDER != null
     const nextPowder = this.uniforms.powderScale.value > 0

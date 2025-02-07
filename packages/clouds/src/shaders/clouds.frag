@@ -453,9 +453,6 @@ vec4 marchClouds(
         );
       }
 
-      // TODO: It's constant. Move to vertex shader or uniform.
-      vec3 albedo = vec3(media.scattering / media.extinction);
-
       // I'm not sure skyIrradiance should be included in the scattering term.
       float scattering = multipleScattering(opticalDepth, cosTheta);
       vec3 radiance = albedo * scattering * (sunIrradiance + skyIrradiance);
