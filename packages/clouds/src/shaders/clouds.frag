@@ -73,10 +73,7 @@ in vec3 vCameraPosition;
 in vec3 vCameraDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
 in vec3 vEllipsoidCenter;
-
-#if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 in SunSkyIrradiance vSunSkyIrradiance;
-#endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 1) out vec3 outputDepthVelocity;
@@ -349,13 +346,11 @@ float multipleScattering(const float opticalDepth, const float cosTheta) {
   return scattering;
 }
 
-#if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 vec3 getInterpolatedSunSkyIrradiance(const float height, out vec3 skyIrradiance) {
   float heightFraction = remapClamped(height, minHeight, maxHeight);
   skyIrradiance = mix(vSunSkyIrradiance.minSky, vSunSkyIrradiance.maxSky, heightFraction);
   return mix(vSunSkyIrradiance.minSun, vSunSkyIrradiance.maxSun, heightFraction);
 }
-#endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
 vec4 marchClouds(
   const vec3 rayOrigin,
