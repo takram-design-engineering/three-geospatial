@@ -44,6 +44,8 @@ yarn add @takram/three-clouds
 
 ### Planned features
 
+- The altitude of cloud layers is determined relative to the ellipsoid surface, but in reality, the cloud base altitude is not constant with respect to either the ellipsoid or geopotential height. Thus, clouds appear too low in high-altitude non-mountain areas (e.g. east of the west coast of North America). This could be compensated for by considering observed average cloud base heights, [X](https://x.com/shotamatsuda/status/1885737165709254882).
+
 - Introduce global cloud coverage and support rendering views from space.
 
 - Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
