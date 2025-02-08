@@ -18,6 +18,10 @@ yarn add @takram/three-clouds
 
 ## Synopsis
 
+## Performance tweaks
+
+![](docs/cloud-shape.png)
+
 ## Limitations
 
 - The number of cloud layers is limited to 4. This is because the coverage of all layers is packed into a texture, and all layers are computed at once as `vec4` in the shaders.
@@ -27,6 +31,8 @@ yarn add @takram/three-clouds
 ### Known issues
 
 - The temporal upscaling is still basic and prone to ghosting and smearing, especially when viewed through sparse clouds.
+
+- Aerial perspective is applied to the clouds using transmittance-weighted front depth, an approximation that reduces the computation of atmospheric transparency. However, because this is a mean depth, it is not accurate for representing the depth of areas where distant sparse clouds overlap, and introduces artifacts.
 
 ### Possible improvements
 
@@ -41,8 +47,6 @@ yarn add @takram/three-clouds
 - Introduce global cloud coverage and support rendering views from space.
 
 - Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
-
-## Performance tweaks
 
 # API
 
@@ -92,7 +96,7 @@ yarn add @takram/three-clouds
 
 - **Clouds**
 
-  Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective effect is already to the clouds here.
+  Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective is already to the clouds here.
 
   &rarr; [Shader](/packages/clouds/src/shaders/clouds.frag)
 
