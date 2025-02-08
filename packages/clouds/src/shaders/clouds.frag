@@ -326,7 +326,7 @@ float marchOpticalDepth(
   );
 }
 
-float multipleScattering(const float opticalDepth, const float cosTheta) {
+float approximateMultipleScattering(const float opticalDepth, const float cosTheta) {
   // Multiple scattering approximation
   // See: https://fpsunflower.github.io/ckulla/data/oz_volumes.pdf
   // a: attenuation, b: contribution, c: phase attenuation
@@ -449,7 +449,7 @@ vec4 marchClouds(
       }
 
       // I'm not sure skyIrradiance should be included in the scattering term.
-      float scattering = multipleScattering(opticalDepth, cosTheta);
+      float scattering = approximateMultipleScattering(opticalDepth, cosTheta);
       vec3 radiance = albedo * scattering * (sunIrradiance + skyIrradiance);
 
       #ifdef GROUND_IRRADIANCE
@@ -562,11 +562,35 @@ float marchShadowLength(
     stepSize *= perspectiveStepScale;
     rayDistance += stepSize;
   }
+
   // Scale to the length unit because we only use this in atmosphere functions.
   return shadowLength * METER_TO_LENGTH_UNIT;
 }
 
 #endif // SHADOW_LENGTH
+
+#ifdef HAZE
+
+vec4 approximateHaze(vec3 rayOrigin, vec3 rayDirection, float maxRayDistance) {
+  float height = length(rayOrigin) - bottomRadius;
+  float angle = dot(normalize(rayOrigin), rayDirection);
+  float density = hazeDensityScale * exp(-height * hazeExpScale);
+
+  // Analytical optical depth where density exponentially decreases with height.
+  // Reference: https://iquilezles.org/articles/fog/
+  float opticalDepth =
+    density / hazeExpScale * (1.0 - exp(-maxRayDistance * angle * hazeExpScale)) / angle;
+
+  vec3 skyIrradiance;
+  vec3 sunIrradiance;
+  sunIrradiance = getInterpolatedSunSkyIrradiance(height, skyIrradiance);
+  vec3 scattering = albedo * RECIPROCAL_PI4 * (sunIrradiance + skyIrradiance);
+
+  float alpha = saturate(1.0 - exp(-opticalDepth));
+  return vec4(scattering * alpha, alpha);
+}
+
+#endif // HAZE
 
 void applyAerialPerspective(
   const vec3 cameraPosition,
@@ -596,7 +620,7 @@ void getRayNearFar(
   const vec3 cameraPosition,
   const vec3 rayDirection,
   out vec2 rayNearFar,
-  out vec2 shadowLengthRayNearFar
+  out vec2 shadowRayNearFar
 ) {
   bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
 
@@ -637,18 +661,18 @@ void getRayNearFar(
   #ifdef SHADOW_LENGTH
   if (cameraHeight < shadowTopHeight) {
     if (intersectsGround) {
-      shadowLengthRayNearFar = vec2(cameraNear, firstIntersections.x);
+      shadowRayNearFar = vec2(cameraNear, firstIntersections.x);
     } else {
-      shadowLengthRayNearFar = vec2(cameraNear, secondIntersections.w);
+      shadowRayNearFar = vec2(cameraNear, secondIntersections.w);
     }
   } else {
-    shadowLengthRayNearFar = vec2(firstIntersections.w, secondIntersections.w);
+    shadowRayNearFar = vec2(firstIntersections.w, secondIntersections.w);
     if (intersectsGround) {
       // Clamp the ray at the ground.
-      shadowLengthRayNearFar.y = firstIntersections.x;
+      shadowRayNearFar.y = firstIntersections.x;
     }
   }
-  shadowLengthRayNearFar.y = min(shadowLengthRayNearFar.y, maxShadowLengthRayDistance);
+  shadowRayNearFar.y = min(shadowRayNearFar.y, maxShadowLengthRayDistance);
   #endif // SHADOW_LENGTH
 }
 
@@ -714,12 +738,6 @@ void clampRaysAtSceneObjects(const vec3 rayDirection, inout vec2 nearFar1, inout
 // introduces many branches which may decrease coherency.
 
 void main() {
-  #ifdef SHADOW_LENGTH
-  outputShadowLength = 0.0;
-  #else // SHADOW_LENGTH
-  float outputShadowLength = 0.0;
-  #endif // SHADOW_LENGTH
-
   #ifdef DEBUG_SHOW_SHADOW_MAP
   outputColor = getCascadedShadowMaps(vUv);
   outputDepthVelocity = vec3(0.0);
@@ -729,54 +747,74 @@ void main() {
   vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
   vec3 rayDirection = normalize(vRayDirection);
   vec2 rayNearFar;
-  vec2 shadowLengthRayNearFar;
-  getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowLengthRayNearFar);
-  clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowLengthRayNearFar);
+  vec2 shadowRayNearFar;
+  getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowRayNearFar);
+  clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowRayNearFar);
 
   float stbn = getSTBN();
 
   if (any(lessThan(rayNearFar, vec2(0.0)))) {
+    vec4 color = vec4(0.0);
+    float shadowLength = 0.0;
+
     #ifdef SHADOW_LENGTH
-    if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
-      outputShadowLength = marchShadowLength(
-        shadowLengthRayNearFar.x * rayDirection + cameraPosition,
+    if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
+      shadowLength = marchShadowLength(
+        shadowRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
-        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
+        shadowRayNearFar.y - shadowRayNearFar.x,
         stbn
       );
     }
     #endif // SHADOW_LENGTH
 
-    outputColor = vec4(0.0);
+    #ifdef HAZE
+    color = approximateHaze(
+      cameraNear * rayDirection + cameraPosition,
+      rayDirection,
+      shadowRayNearFar.y - shadowRayNearFar.x - shadowLength
+    );
+    #endif // HAZE
+
+    outputColor = color;
     outputDepthVelocity = vec3(0.0);
+    #ifdef SHADOW_LENGTH
+    outputShadowLength = shadowLength;
+    #endif // SHADOW_LENGTH
     return; // Intersects with the ground, or no intersections.
   }
 
   if (rayNearFar.y < rayNearFar.x) {
+    vec4 color = vec4(0.0);
+    float shadowLength = 0.0;
+
     #ifdef SHADOW_LENGTH
-    if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
-      outputShadowLength = marchShadowLength(
-        shadowLengthRayNearFar.x * rayDirection + cameraPosition,
+    if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
+      shadowLength = marchShadowLength(
+        shadowRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
-        shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
+        shadowRayNearFar.y - shadowRayNearFar.x,
         stbn
       );
     }
     #endif // SHADOW_LENGTH
 
+    #ifdef HAZE
+    color = approximateHaze(
+      cameraNear * rayDirection + cameraPosition,
+      rayDirection,
+      shadowRayNearFar.y - shadowRayNearFar.x - shadowLength
+    );
+    #endif // HAZE
+
     // TODO: We can calculate velocity here, which reduces occlusion errors at
     // the edges, but suffers from floating-point precision errors on near
     // objects.
-    // vec3 frontPosition = cameraPosition + rayNearFar.y * rayDirection;
-    // vec3 frontPositionWorld = ECEFToWorld(frontPosition);
-    // vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
-    // prevClip /= prevClip.w;
-    // vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-    // vec2 velocity = (vUv - prevUv) * resolution;
-    // outputColor = vec4(0.0);
-    // outputDepthVelocity = vec3(rayNearFar.y, velocity);
-    outputColor = vec4(0.0);
+    outputColor = color;
     outputDepthVelocity = vec3(0.0);
+    #ifdef SHADOW_LENGTH
+    outputShadowLength = shadowLength;
+    #endif // SHADOW_LENGTH
     return; // Scene objects in front of the clouds layer boundary.
   }
 
@@ -786,7 +824,9 @@ void main() {
   #ifdef DEBUG_SHOW_UV
   outputColor = vec4(vec3(checker(globeUv, localWeatherRepeat)), 1.0);
   outputDepthVelocity = vec3(0.0);
+  #ifdef SHADOW_LENGTH
   outputShadowLength = 0.0;
+  #endif // SHADOW_LENGTH
   return;
   #endif // DEBUG_SHOW_UV
 
@@ -809,7 +849,9 @@ void main() {
   #ifdef DEBUG_SHOW_SAMPLE_COUNT
   outputColor = vec4(vec3(sampleCount) / vec3(500.0, 5.0, 5.0), 1.0);
   outputDepthVelocity = vec3(0.0);
+  #ifdef SHADOW_LENGTH
   outputShadowLength = 0.0;
+  #endif // SHADOW_LENGTH
   return;
   #endif // DEBUG_SHOW_SAMPLE_COUNT
 
@@ -820,24 +862,27 @@ void main() {
   #ifdef DEBUG_SHOW_FRONT_DEPTH
   outputColor = vec4(vec3(frontDepth / maxRayDistance), 1.0);
   outputDepthVelocity = vec3(0.0);
+  #ifdef SHADOW_LENGTH
   outputShadowLength = 0.0;
+  #endif // SHADOW_LENGTH
   return;
   #endif // DEBUG_SHOW_FRONT_DEPTH
 
   // Clamp the shadow length ray at the clouds.
-  shadowLengthRayNearFar.y = mix(
-    shadowLengthRayNearFar.y,
-    min(frontDepth, shadowLengthRayNearFar.y),
+  shadowRayNearFar.y = mix(
+    shadowRayNearFar.y,
+    min(frontDepth, shadowRayNearFar.y),
     // Interpolate by the alpha for smoother edges.
     frontDepthStep * color.a
   );
 
+  float shadowLength = 0.0;
   #ifdef SHADOW_LENGTH
-  if (all(greaterThanEqual(shadowLengthRayNearFar, vec2(0.0)))) {
-    outputShadowLength = marchShadowLength(
-      shadowLengthRayNearFar.x * rayDirection + cameraPosition,
+  if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
+    shadowLength = marchShadowLength(
+      shadowRayNearFar.x * rayDirection + cameraPosition,
       rayDirection,
-      shadowLengthRayNearFar.y - shadowLengthRayNearFar.x,
+      shadowRayNearFar.y - shadowRayNearFar.x,
       stbn
     );
   }
@@ -845,7 +890,17 @@ void main() {
 
   // Apply aerial perspective.
   vec3 frontPosition = cameraPosition + frontDepth * rayDirection;
-  applyAerialPerspective(cameraPosition, frontPosition, outputShadowLength, color);
+  applyAerialPerspective(cameraPosition, frontPosition, shadowLength, color);
+
+  #ifdef HAZE
+  vec4 haze = approximateHaze(
+    cameraNear * rayDirection + cameraPosition,
+    rayDirection,
+    shadowRayNearFar.y - shadowRayNearFar.x - shadowLength
+  );
+  color = color * (1.0 - haze.a) + haze;
+  #endif // HAZE
+
   outputColor = color;
 
   // Velocity for temporal resolution.
@@ -855,4 +910,8 @@ void main() {
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
   vec2 velocity = (vUv - prevUv) * resolution;
   outputDepthVelocity = vec3(frontDepth, velocity);
+
+  #ifdef SHADOW_LENGTH
+  outputShadowLength = shadowLength;
+  #endif // SHADOW_LENGTH
 }

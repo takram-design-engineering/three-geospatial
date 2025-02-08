@@ -128,6 +128,10 @@ export interface CloudsMaterialUniforms
   maxShadowLengthIterationCount: Uniform<number>
   minShadowLengthStepSize: Uniform<number>
   maxShadowLengthRayDistance: Uniform<number>
+
+  // Haze
+  hazeDensityScale: Uniform<number>
+  hazeExpScale: Uniform<number>
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
@@ -238,7 +242,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Shadow length
           maxShadowLengthIterationCount: new Uniform(defaults.clouds.maxShadowLengthIterationCount),
           minShadowLengthStepSize: new Uniform(defaults.clouds.minShadowLengthStepSize),
-          maxShadowLengthRayDistance: new Uniform(defaults.clouds.maxShadowLengthRayDistance)
+          maxShadowLengthRayDistance: new Uniform(defaults.clouds.maxShadowLengthRayDistance),
+
+          // Haze
+          hazeDensityScale: new Uniform(2e-5),
+          hazeExpScale: new Uniform(1e-3)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
           CloudsMaterialUniforms,
         defines: {
@@ -469,6 +477,21 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         this.defines.SHADOW_LENGTH = '1'
       } else {
         delete this.defines.SHADOW_LENGTH
+      }
+      this.needsUpdate = true
+    }
+  }
+
+  get haze(): boolean {
+    return this.defines.HAZE != null
+  }
+
+  set haze(value: boolean) {
+    if (value !== this.haze) {
+      if (value) {
+        this.defines.HAZE = '1'
+      } else {
+        delete this.defines.HAZE
       }
       this.needsUpdate = true
     }
