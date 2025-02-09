@@ -628,23 +628,21 @@ vec4 approximateHaze(
   const float cosTheta,
   const float shadowLength
 ) {
-  float height = length(rayOrigin) - bottomRadius;
-
+  float modulation = remapClamped(coverage, 0.2, 0.5);
+  if (cameraHeight * modulation < 0.0) {
+    return vec4(0.0);
+  }
   // Analytical optical depth where density exponentially decreases with height.
   // Reference: https://iquilezles.org/articles/fog/
   float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
-  float density = hazeDensityScale * exp(-height * hazeExpScale);
+  float density = modulation * hazeDensityScale * exp(-cameraHeight * hazeExpScale);
   float expTerm = 1.0 - exp(-(maxRayDistance - shadowLength) * angle * hazeExpScale);
   float opticalDepth = density / hazeExpScale * expTerm / angle;
 
-  vec3 skyIrradiance;
-  vec3 sunIrradiance = GetSunAndSkyIrradiance(
-    rayOrigin * METER_TO_LENGTH_UNIT,
-    sunDirection,
-    skyIrradiance
-  );
-
+  vec3 skyIrradiance = vSunSkyIrradiance.cameraSky;
+  vec3 sunIrradiance = vSunSkyIrradiance.cameraSun;
   vec3 inscatter = albedo * phaseFunction(cosTheta) * (sunIrradiance + skyIrradiance);
+
   float transmittance = exp(-opticalDepth);
   float alpha = saturate(1.0 - transmittance);
   return vec4(inscatter * alpha, alpha);
