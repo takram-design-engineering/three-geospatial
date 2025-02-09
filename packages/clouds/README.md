@@ -122,7 +122,7 @@ yarn add @takram/three-clouds
 - [Scattering](#scattering)
 - [Weather and shape](#weather-and-shape)
 - [Cascaded shadow maps](#cascaded-shadow-maps)
-- [Advanced parameters](#advanced-parameters)
+- [Advanced clouds parameters](#advanced-clouds-parameters)
 - [Advanced shadow parameters](#advanced-shadow-parameters)
 
 ### Rendering
@@ -381,7 +381,7 @@ splitMode: FrustumSplitMode = 'practical'
 splitLambda: number = 0.6
 ```
 
-### Advanced parameters
+### Advanced clouds parameters
 
 #### clouds.multiScatteringOctaves
 #### clouds.accurateSunSkyIrradiance
@@ -398,6 +398,8 @@ splitLambda: number = 0.6
 #### clouds.maxShadowLengthIterationCount
 #### clouds.minShadowLengthStepSize
 #### clouds.maxShadowLengthRayDistance
+#### clouds.hazeDensityScale
+#### clouds.hazeExpScale
 
 ### Advanced shadow parameters
 
