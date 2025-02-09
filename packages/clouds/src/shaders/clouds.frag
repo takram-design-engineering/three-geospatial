@@ -398,6 +398,9 @@ float approximateMultipleScattering(const float opticalDepth, const float cosThe
   return scattering;
 }
 
+// TODO: Construct spherical harmonics of degree 3 using 3 sample points on the
+// ground, with 2 of them positioned near the horizon occlusion points on the
+// sun direction plane.
 vec3 getGroundSunSkyIrradiance(
   const vec3 position,
   const vec3 surfaceNormal,
