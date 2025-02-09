@@ -245,7 +245,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           maxShadowLengthRayDistance: new Uniform(defaults.clouds.maxShadowLengthRayDistance),
 
           // Haze
-          hazeDensityScale: new Uniform(2e-5),
+          hazeDensityScale: new Uniform(3e-5),
           hazeExpScale: new Uniform(1e-3)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
           CloudsMaterialUniforms,
