@@ -34,6 +34,11 @@ SunSkyIrradiance sampleSunSkyIrradiance(const vec3 positionECEF) {
   vec3 surfaceNormal = normalize(positionECEF);
   vec2 radii = (bottomRadius + vec2(minHeight, maxHeight)) * METER_TO_LENGTH_UNIT;
   SunSkyIrradiance result;
+  result.cameraSun = GetSunAndSkyIrradiance(
+    positionECEF * METER_TO_LENGTH_UNIT,
+    sunDirection,
+    result.cameraSky
+  );
   result.minSun = GetSunAndSkyIrradiance(surfaceNormal * radii.x, sunDirection, result.minSky);
   result.maxSun = GetSunAndSkyIrradiance(surfaceNormal * radii.y, sunDirection, result.maxSky);
   return result;

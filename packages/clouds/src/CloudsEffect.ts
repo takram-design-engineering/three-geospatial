@@ -665,6 +665,14 @@ export class CloudsEffect extends Effect {
     this.shadowPass.currentMaterial.turbulence = value
   }
 
+  get haze(): boolean {
+    return this.cloudsPass.currentMaterial.haze
+  }
+
+  set haze(value: boolean) {
+    this.cloudsPass.currentMaterial.haze = value
+  }
+
   // Cloud parameter primitives
 
   get scatteringCoefficient(): number {

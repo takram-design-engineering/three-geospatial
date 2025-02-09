@@ -1,8 +1,10 @@
 struct SunSkyIrradiance {
-  vec3 minSky;
+  vec3 cameraSun;
+  vec3 cameraSky;
   vec3 minSun;
-  vec3 maxSky;
+  vec3 minSky;
   vec3 maxSun;
+  vec3 maxSky;
 };
 
 struct DensityProfile {
