@@ -275,6 +275,10 @@ float phaseFunction(const float cosTheta, const float attenuation) {
 
 #endif // ACCURATE_PHASE_FUNCTION
 
+float phaseFunction(const float cosTheta) {
+  return phaseFunction(cosTheta, 1.0);
+}
+
 float marchOpticalDepth(
   const vec3 rayOrigin,
   const vec3 rayDirection,
@@ -356,9 +360,9 @@ vec4 marchClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
   const float maxRayDistance,
+  const float cosTheta,
   const float jitter,
   const float rayStartTexelsPerPixel,
-  const vec3 sunDirection,
   out float frontDepth,
   out ivec3 sampleCount
 ) {
@@ -370,7 +374,6 @@ vec4 marchClouds(
   float stepSize = minStepSize;
   // I don't understand why spatial aliasing remains unless doubling the jitter.
   float rayDistance = stepSize * jitter * 2.0;
-  float cosTheta = dot(sunDirection, rayDirection);
 
   for (int i = 0; i < maxIterationCount; ++i) {
     if (rayDistance > maxRayDistance) {
@@ -564,30 +567,40 @@ float marchShadowLength(
   }
 
   // Scale to the length unit because we only use this in atmosphere functions.
-  return shadowLength * METER_TO_LENGTH_UNIT;
+  return shadowLength;
 }
 
 #endif // SHADOW_LENGTH
 
 #ifdef HAZE
 
-vec4 approximateHaze(vec3 rayOrigin, vec3 rayDirection, float maxRayDistance) {
+vec4 approximateHaze(
+  const vec3 rayOrigin,
+  const vec3 rayDirection,
+  const float maxRayDistance,
+  const float cosTheta,
+  const float shadowLength
+) {
   float height = length(rayOrigin) - bottomRadius;
-  float angle = dot(normalize(rayOrigin), rayDirection);
-  float density = hazeDensityScale * exp(-height * hazeExpScale);
 
   // Analytical optical depth where density exponentially decreases with height.
   // Reference: https://iquilezles.org/articles/fog/
-  float opticalDepth =
-    density / hazeExpScale * (1.0 - exp(-maxRayDistance * angle * hazeExpScale)) / angle;
+  float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
+  float density = hazeDensityScale * exp(-height * hazeExpScale);
+  float expTerm = 1.0 - exp(-(maxRayDistance - shadowLength) * angle * hazeExpScale);
+  float opticalDepth = density / hazeExpScale * expTerm / angle;
 
   vec3 skyIrradiance;
-  vec3 sunIrradiance;
-  sunIrradiance = getInterpolatedSunSkyIrradiance(height, skyIrradiance);
-  vec3 scattering = albedo * RECIPROCAL_PI4 * (sunIrradiance + skyIrradiance);
+  vec3 sunIrradiance = GetSunAndSkyIrradiance(
+    rayOrigin * METER_TO_LENGTH_UNIT,
+    sunDirection,
+    skyIrradiance
+  );
 
-  float alpha = saturate(1.0 - exp(-opticalDepth));
-  return vec4(scattering * alpha, alpha);
+  vec3 inscatter = albedo * phaseFunction(cosTheta) * (sunIrradiance + skyIrradiance);
+  float transmittance = exp(-opticalDepth);
+  float alpha = saturate(1.0 - transmittance);
+  return vec4(inscatter * alpha, alpha);
 }
 
 #endif // HAZE
@@ -602,7 +615,7 @@ void applyAerialPerspective(
   vec3 inscatter = GetSkyRadianceToPoint(
     cameraPosition * METER_TO_LENGTH_UNIT,
     frontPosition * METER_TO_LENGTH_UNIT,
-    shadowLength,
+    shadowLength * METER_TO_LENGTH_UNIT,
     sunDirection,
     transmittance
   );
@@ -620,7 +633,8 @@ void getRayNearFar(
   const vec3 cameraPosition,
   const vec3 rayDirection,
   out vec2 rayNearFar,
-  out vec2 shadowRayNearFar
+  out vec2 shadowRayNearFar,
+  out vec2 hazeRayNearFar
 ) {
   bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
 
@@ -674,6 +688,22 @@ void getRayNearFar(
   }
   shadowRayNearFar.y = min(shadowRayNearFar.y, maxShadowLengthRayDistance);
   #endif // SHADOW_LENGTH
+
+  #ifdef HAZE
+  if (cameraHeight < maxHeight) {
+    if (intersectsGround) {
+      hazeRayNearFar = vec2(cameraNear, firstIntersections.x);
+    } else {
+      hazeRayNearFar = vec2(cameraNear, secondIntersections.z);
+    }
+  } else {
+    hazeRayNearFar = vec2(cameraNear, secondIntersections.z);
+    if (intersectsGround) {
+      // Clamp the ray at the ground.
+      hazeRayNearFar.y = firstIntersections.x;
+    }
+  }
+  #endif // HAZE
 }
 
 #ifdef DEBUG_SHOW_SHADOW_MAP
@@ -723,7 +753,12 @@ vec4 getCascadedShadowMaps(vec2 uv) {
 }
 #endif // DEBUG_SHOW_SHADOW_MAP
 
-void clampRaysAtSceneObjects(const vec3 rayDirection, inout vec2 nearFar1, inout vec2 nearFar2) {
+void clampRaysAtSceneObjects(
+  const vec3 rayDirection,
+  inout vec2 nearFar1,
+  inout vec2 nearFar2,
+  inout vec2 nearFar3
+) {
   float depth = readDepth(vUv * targetUvScale + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
@@ -731,6 +766,7 @@ void clampRaysAtSceneObjects(const vec3 rayDirection, inout vec2 nearFar1, inout
     float rayDistance = -viewZ / dot(rayDirection, vCameraDirection);
     nearFar1.y = min(nearFar1.y, rayDistance);
     nearFar2.y = min(nearFar2.y, rayDistance);
+    nearFar3.y = min(nearFar3.y, rayDistance);
   }
 }
 
@@ -746,10 +782,13 @@ void main() {
 
   vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
   vec3 rayDirection = normalize(vRayDirection);
+  float cosTheta = dot(sunDirection, rayDirection);
+
   vec2 rayNearFar;
   vec2 shadowRayNearFar;
-  getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowRayNearFar);
-  clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowRayNearFar);
+  vec2 hazeRayNearFar;
+  getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowRayNearFar, hazeRayNearFar);
+  clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowRayNearFar, hazeRayNearFar);
 
   float stbn = getSTBN();
 
@@ -772,14 +811,16 @@ void main() {
     color = approximateHaze(
       cameraNear * rayDirection + cameraPosition,
       rayDirection,
-      shadowRayNearFar.y - shadowRayNearFar.x - shadowLength
+      hazeRayNearFar.y - hazeRayNearFar.x,
+      cosTheta,
+      shadowLength
     );
     #endif // HAZE
 
     outputColor = color;
     outputDepthVelocity = vec3(0.0);
     #ifdef SHADOW_LENGTH
-    outputShadowLength = shadowLength;
+    outputShadowLength = shadowLength * METER_TO_LENGTH_UNIT;
     #endif // SHADOW_LENGTH
     return; // Intersects with the ground, or no intersections.
   }
@@ -803,7 +844,9 @@ void main() {
     color = approximateHaze(
       cameraNear * rayDirection + cameraPosition,
       rayDirection,
-      shadowRayNearFar.y - shadowRayNearFar.x - shadowLength
+      hazeRayNearFar.y - hazeRayNearFar.x,
+      cosTheta,
+      shadowLength
     );
     #endif // HAZE
 
@@ -813,7 +856,7 @@ void main() {
     outputColor = color;
     outputDepthVelocity = vec3(0.0);
     #ifdef SHADOW_LENGTH
-    outputShadowLength = shadowLength;
+    outputShadowLength = shadowLength * METER_TO_LENGTH_UNIT;
     #endif // SHADOW_LENGTH
     return; // Scene objects in front of the clouds layer boundary.
   }
@@ -839,9 +882,9 @@ void main() {
     rayOrigin,
     rayDirection,
     rayNearFar.y - rayNearFar.x,
+    cosTheta,
     stbn,
     pow(2.0, mipLevel),
-    sunDirection,
     frontDepth,
     sampleCount
   );
@@ -856,8 +899,8 @@ void main() {
   #endif // DEBUG_SHOW_SAMPLE_COUNT
 
   // Front depth will be -1.0 when no samples are accumulated.
-  float frontDepthStep = step(0.0, frontDepth);
-  frontDepth = mix(rayNearFar.y, rayNearFar.x + frontDepth, frontDepthStep);
+  float frontDepthMask = step(0.0, frontDepth);
+  frontDepth = mix(rayNearFar.y, rayNearFar.x + frontDepth, frontDepthMask);
 
   #ifdef DEBUG_SHOW_FRONT_DEPTH
   outputColor = vec4(vec3(frontDepth / maxRayDistance), 1.0);
@@ -873,7 +916,7 @@ void main() {
     shadowRayNearFar.y,
     min(frontDepth, shadowRayNearFar.y),
     // Interpolate by the alpha for smoother edges.
-    frontDepthStep * color.a
+    color.a * frontDepthMask
   );
 
   float shadowLength = 0.0;
@@ -893,10 +936,20 @@ void main() {
   applyAerialPerspective(cameraPosition, frontPosition, shadowLength, color);
 
   #ifdef HAZE
+  // Clamp the haze ray at the clouds.
+  hazeRayNearFar.y = mix(
+    hazeRayNearFar.y,
+    min(frontDepth, hazeRayNearFar.y),
+    // Interpolate by the alpha for smoother edges.
+    color.a * frontDepthMask
+  );
+
   vec4 haze = approximateHaze(
     cameraNear * rayDirection + cameraPosition,
     rayDirection,
-    shadowRayNearFar.y - shadowRayNearFar.x - shadowLength
+    hazeRayNearFar.y - hazeRayNearFar.x,
+    cosTheta,
+    shadowLength
   );
   color = color * (1.0 - haze.a) + haze;
   #endif // HAZE
@@ -912,6 +965,6 @@ void main() {
   outputDepthVelocity = vec3(frontDepth, velocity);
 
   #ifdef SHADOW_LENGTH
-  outputShadowLength = shadowLength;
+  outputShadowLength = shadowLength * METER_TO_LENGTH_UNIT;
   #endif // SHADOW_LENGTH
 }
