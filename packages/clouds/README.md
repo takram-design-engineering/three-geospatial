@@ -436,8 +436,8 @@ In alphabetical order
   - Covers variance clipping in detail.
 - [Convincing Cloud Rendering – An Implementation of Real-Time Dynamic Volumetric Clouds in Frostbite](https://odr.chalmers.se/items/53d0fe07-df09-4cd1-ae7d-6c05491b52bf)
   - A comprehensive guide to rendering volumetric clouds.
-- [Interactive Multiple Anisotropic Scattering in Clouds](https://inria.hal.science/inria-00333007)
-  - Not specifically for real-time rendering, but provides the math behind light-cloud interactions.
+- [Deep Scattering - Rendering Atmospheric Clouds with Radiance-Predicting Neural Networks](https://dl.acm.org/doi/10.1145/3130800.3130880)
+  - Not specifically for real-time rendering, but provides visual references and the math behind light-cloud interactions.
 - [Nubis - Authoring Realtime Volumetric Cloudscapes with the Decima Engine](https://www.guerrilla-games.com/read/nubis-authoring-real-time-volumetric-cloudscapes-with-the-decima-engine)
   - A well-known presentation on volumetric clouds, similar to Guerrilla Games slides.
 - [Oz: The Great and Volumetric](https://www.researchgate.net/publication/262309690_Oz_the_great_and_volumetric)
