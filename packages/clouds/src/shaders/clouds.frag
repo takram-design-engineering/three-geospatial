@@ -235,6 +235,53 @@ float sampleShadowOpticalDepth(
     : 0.0;
 }
 
+#ifdef DEBUG_SHOW_SHADOW_MAP
+vec4 getCascadedShadowMaps(vec2 uv) {
+  vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
+  vec4 shadow = vec4(0.0);
+  if (uv.y > 0.5) {
+    if (uv.x < 0.5) {
+      shadow = texture(shadowBuffer, vec3(coord.xw, 0.0));
+    } else {
+      #if SHADOW_CASCADE_COUNT > 1
+      shadow = texture(shadowBuffer, vec3(coord.zw, 1.0));
+      #endif // SHADOW_CASCADE_COUNT > 1
+    }
+  } else {
+    if (uv.x < 0.5) {
+      #if SHADOW_CASCADE_COUNT > 2
+      shadow = texture(shadowBuffer, vec3(coord.xy, 2.0));
+      #endif // SHADOW_CASCADE_COUNT > 2
+    } else {
+      #if SHADOW_CASCADE_COUNT > 3
+      shadow = texture(shadowBuffer, vec3(coord.zy, 3.0));
+      #endif // SHADOW_CASCADE_COUNT > 3
+    }
+  }
+
+  #if !defined(DEBUG_SHOW_SHADOW_MAP_TYPE)
+  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
+  #endif // !defined(DEBUG_SHOW_SHADOW_MAP_TYPE
+
+  const float frontDepthScale = 1e-5;
+  const float meanExtinctionScale = 10.0;
+  const float maxOpticalDepthScale = 0.01;
+  vec3 color;
+  #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
+  color = vec3(shadow.r * frontDepthScale);
+  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
+  color = vec3(shadow.g * meanExtinctionScale);
+  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
+  color = vec3((shadow.b + shadow.a) * maxOpticalDepthScale);
+  #else // DEBUG_SHOW_SHADOW_MAP_TYPE
+  color =
+    (shadow.rgb + vec3(0.0, 0.0, shadow.a)) *
+    vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
+  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
+  return vec4(color, 1.0);
+}
+#endif // DEBUG_SHOW_SHADOW_MAP
+
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   vec2 g2 = g * g;
   vec2 denom = max(vec2(1e-7), pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
@@ -629,145 +676,111 @@ bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
   return mu < 0.0 && r * r * (mu * mu - 1.0) + bottomRadius * bottomRadius >= 0.0;
 }
 
-void getRayNearFar(
-  const vec3 cameraPosition,
-  const vec3 rayDirection,
-  out vec2 rayNearFar,
-  out vec2 shadowRayNearFar,
-  out vec2 hazeRayNearFar
-) {
-  bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
+struct IntersectionResult {
+  bool ground;
+  vec4 first;
+  vec4 second;
+};
 
-  vec4 firstIntersections;
-  vec4 secondIntersections;
+IntersectionResult getIntersections(const vec3 cameraPosition, const vec3 rayDirection) {
+  IntersectionResult intersections;
+  intersections.ground = rayIntersectsGround(cameraPosition, rayDirection);
   raySphereIntersections(
     cameraPosition,
     rayDirection,
     bottomRadius + vec4(0.0, minHeight, maxHeight, shadowTopHeight),
-    firstIntersections,
-    secondIntersections
+    intersections.first,
+    intersections.second
   );
+  return intersections;
+}
 
+vec2 getRayNearFar(const IntersectionResult intersections, const float rayDistanceToScene) {
+  vec2 nearFar;
   if (cameraHeight < minHeight) {
     // View below the clouds
-    if (intersectsGround) {
-      rayNearFar = vec2(-1.0); // No clouds to the ground
+    if (intersections.ground) {
+      nearFar = vec2(-1.0); // No clouds to the ground
     } else {
-      rayNearFar = vec2(secondIntersections.y, secondIntersections.z);
-      rayNearFar.y = min(rayNearFar.y, maxRayDistance);
+      nearFar = vec2(intersections.second.y, intersections.second.z);
+      nearFar.y = min(nearFar.y, maxRayDistance);
     }
   } else if (cameraHeight < maxHeight) {
     // View inside the total cloud layer
-    if (intersectsGround) {
-      rayNearFar = vec2(cameraNear, firstIntersections.y);
+    if (intersections.ground) {
+      nearFar = vec2(cameraNear, intersections.first.y);
     } else {
-      rayNearFar = vec2(cameraNear, secondIntersections.z);
+      nearFar = vec2(cameraNear, intersections.second.z);
     }
   } else {
     // View above the clouds
-    rayNearFar = vec2(firstIntersections.z, secondIntersections.z);
-    if (intersectsGround) {
+    nearFar = vec2(intersections.first.z, intersections.second.z);
+    if (intersections.ground) {
       // Clamp the ray at the min height.
-      rayNearFar.y = firstIntersections.y;
+      nearFar.y = intersections.first.y;
     }
   }
+  if (rayDistanceToScene >= 0.0) {
+    nearFar.y = min(nearFar.y, rayDistanceToScene);
+  }
+  return nearFar;
+}
 
-  #ifdef SHADOW_LENGTH
+#ifdef SHADOW_LENGTH
+vec2 getShadowRayNearFar(const IntersectionResult intersections, const float rayDistanceToScene) {
+  vec2 nearFar;
   if (cameraHeight < shadowTopHeight) {
-    if (intersectsGround) {
-      shadowRayNearFar = vec2(cameraNear, firstIntersections.x);
+    if (intersections.ground) {
+      nearFar = vec2(cameraNear, intersections.first.x);
     } else {
-      shadowRayNearFar = vec2(cameraNear, secondIntersections.w);
+      nearFar = vec2(cameraNear, intersections.second.w);
     }
   } else {
-    shadowRayNearFar = vec2(firstIntersections.w, secondIntersections.w);
-    if (intersectsGround) {
+    nearFar = vec2(intersections.first.w, intersections.second.w);
+    if (intersections.ground) {
       // Clamp the ray at the ground.
-      shadowRayNearFar.y = firstIntersections.x;
+      nearFar.y = intersections.first.x;
     }
   }
-  shadowRayNearFar.y = min(shadowRayNearFar.y, maxShadowLengthRayDistance);
-  #endif // SHADOW_LENGTH
+  nearFar.y = min(nearFar.y, maxShadowLengthRayDistance);
+  if (rayDistanceToScene >= 0.0) {
+    nearFar.y = min(nearFar.y, rayDistanceToScene);
+  }
+  return nearFar;
+}
+#endif // SHADOW_LENGTH
 
-  #ifdef HAZE
+#ifdef HAZE
+vec2 getHazeRayNearFar(const IntersectionResult intersections, const float rayDistanceToScene) {
+  vec2 nearFar;
   if (cameraHeight < maxHeight) {
-    if (intersectsGround) {
-      hazeRayNearFar = vec2(cameraNear, firstIntersections.x);
+    if (intersections.ground) {
+      nearFar = vec2(cameraNear, intersections.first.x);
     } else {
-      hazeRayNearFar = vec2(cameraNear, secondIntersections.z);
+      nearFar = vec2(cameraNear, intersections.second.z);
     }
   } else {
-    hazeRayNearFar = vec2(cameraNear, secondIntersections.z);
-    if (intersectsGround) {
+    nearFar = vec2(cameraNear, intersections.second.z);
+    if (intersections.ground) {
       // Clamp the ray at the ground.
-      hazeRayNearFar.y = firstIntersections.x;
+      nearFar.y = intersections.first.x;
     }
   }
-  #endif // HAZE
-}
-
-#ifdef DEBUG_SHOW_SHADOW_MAP
-vec4 getCascadedShadowMaps(vec2 uv) {
-  vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
-  vec4 shadow = vec4(0.0);
-  if (uv.y > 0.5) {
-    if (uv.x < 0.5) {
-      shadow = texture(shadowBuffer, vec3(coord.xw, 0.0));
-    } else {
-      #if SHADOW_CASCADE_COUNT > 1
-      shadow = texture(shadowBuffer, vec3(coord.zw, 1.0));
-      #endif // SHADOW_CASCADE_COUNT > 1
-    }
-  } else {
-    if (uv.x < 0.5) {
-      #if SHADOW_CASCADE_COUNT > 2
-      shadow = texture(shadowBuffer, vec3(coord.xy, 2.0));
-      #endif // SHADOW_CASCADE_COUNT > 2
-    } else {
-      #if SHADOW_CASCADE_COUNT > 3
-      shadow = texture(shadowBuffer, vec3(coord.zy, 3.0));
-      #endif // SHADOW_CASCADE_COUNT > 3
-    }
+  if (rayDistanceToScene >= 0.0) {
+    nearFar.y = min(nearFar.y, rayDistanceToScene);
   }
-
-  #if !defined(DEBUG_SHOW_SHADOW_MAP_TYPE)
-  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
-  #endif // !defined(DEBUG_SHOW_SHADOW_MAP_TYPE
-
-  const float frontDepthScale = 1e-5;
-  const float meanExtinctionScale = 10.0;
-  const float maxOpticalDepthScale = 0.01;
-  vec3 color;
-  #if DEBUG_SHOW_SHADOW_MAP_TYPE == 1
-  color = vec3(shadow.r * frontDepthScale);
-  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 2
-  color = vec3(shadow.g * meanExtinctionScale);
-  #elif DEBUG_SHOW_SHADOW_MAP_TYPE == 3
-  color = vec3((shadow.b + shadow.a) * maxOpticalDepthScale);
-  #else // DEBUG_SHOW_SHADOW_MAP_TYPE
-  color =
-    (shadow.rgb + vec3(0.0, 0.0, shadow.a)) *
-    vec3(frontDepthScale, meanExtinctionScale, maxOpticalDepthScale);
-  #endif // DEBUG_SHOW_SHADOW_MAP_TYPE
-  return vec4(color, 1.0);
+  return nearFar;
 }
-#endif // DEBUG_SHOW_SHADOW_MAP
+#endif // HAZE
 
-void clampRaysAtSceneObjects(
-  const vec3 rayDirection,
-  inout vec2 nearFar1,
-  inout vec2 nearFar2,
-  inout vec2 nearFar3
-) {
+float getRayDistanceToScene(const vec3 rayDirection) {
   float depth = readDepth(vUv * targetUvScale + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     float viewZ = getViewZ(depth);
-    float rayDistance = -viewZ / dot(rayDirection, vCameraDirection);
-    nearFar1.y = min(nearFar1.y, rayDistance);
-    nearFar2.y = min(nearFar2.y, rayDistance);
-    nearFar3.y = min(nearFar3.y, rayDistance);
+    return -viewZ / dot(rayDirection, vCameraDirection);
   }
+  return -1.0;
 }
 
 // TODO: Try separating the shadow length raymarch to another pass, as it
@@ -784,11 +797,15 @@ void main() {
   vec3 rayDirection = normalize(vRayDirection);
   float cosTheta = dot(sunDirection, rayDirection);
 
-  vec2 rayNearFar;
-  vec2 shadowRayNearFar;
-  vec2 hazeRayNearFar;
-  getRayNearFar(cameraPosition, rayDirection, rayNearFar, shadowRayNearFar, hazeRayNearFar);
-  clampRaysAtSceneObjects(rayDirection, rayNearFar, shadowRayNearFar, hazeRayNearFar);
+  IntersectionResult intersections = getIntersections(cameraPosition, rayDirection);
+  float rayDistanceToScene = getRayDistanceToScene(rayDirection);
+  vec2 rayNearFar = getRayNearFar(intersections, rayDistanceToScene);
+  #ifdef SHADOW_LENGTH
+  vec2 shadowRayNearFar = getShadowRayNearFar(intersections, rayDistanceToScene);
+  #endif // SHADOW_LENGTH
+  #ifdef HAZE
+  vec2 hazeRayNearFar = getHazeRayNearFar(intersections, rayDistanceToScene);
+  #endif // HAZE
 
   float stbn = getSTBN();
 
@@ -850,9 +867,8 @@ void main() {
     );
     #endif // HAZE
 
-    // TODO: We can calculate velocity here, which reduces occlusion errors at
-    // the edges, but suffers from floating-point precision errors on near
-    // objects.
+    // TODO: We can calculate velocity to reduce occlusion errors at the edges,
+    // but suffers from floating-point precision errors on near objects.
     outputColor = color;
     outputDepthVelocity = vec3(0.0);
     #ifdef SHADOW_LENGTH
@@ -911,6 +927,8 @@ void main() {
   return;
   #endif // DEBUG_SHOW_FRONT_DEPTH
 
+  float shadowLength = 0.0;
+  #ifdef SHADOW_LENGTH
   // Clamp the shadow length ray at the clouds.
   shadowRayNearFar.y = mix(
     shadowRayNearFar.y,
@@ -919,8 +937,6 @@ void main() {
     color.a * frontDepthMask
   );
 
-  float shadowLength = 0.0;
-  #ifdef SHADOW_LENGTH
   if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
     shadowLength = marchShadowLength(
       shadowRayNearFar.x * rayDirection + cameraPosition,
