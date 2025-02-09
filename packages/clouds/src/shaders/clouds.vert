@@ -28,20 +28,28 @@ out vec3 vCameraDirection; // Direction to the center of screen
 out vec3 vRayDirection; // Direction to the texel
 out vec3 vEllipsoidCenter;
 
-out SunSkyIrradiance vSunSkyIrradiance;
+out GroundIrradiance vGroundIrradiance;
+out CloudsIrradiance vCloudsIrradiance;
 
-SunSkyIrradiance sampleSunSkyIrradiance(const vec3 positionECEF) {
-  vec3 surfaceNormal = normalize(positionECEF);
-  vec2 radii = (bottomRadius + vec2(minHeight, maxHeight)) * METER_TO_LENGTH_UNIT;
-  SunSkyIrradiance result;
-  result.cameraSun = GetSunAndSkyIrradiance(
+void sampleSunSkyIrradiance(const vec3 positionECEF) {
+  vGroundIrradiance.sun = GetSunAndSkyIrradiance(
     positionECEF * METER_TO_LENGTH_UNIT,
     sunDirection,
-    result.cameraSky
+    vGroundIrradiance.sky
   );
-  result.minSun = GetSunAndSkyIrradiance(surfaceNormal * radii.x, sunDirection, result.minSky);
-  result.maxSun = GetSunAndSkyIrradiance(surfaceNormal * radii.y, sunDirection, result.maxSky);
-  return result;
+
+  vec3 surfaceNormal = normalize(positionECEF);
+  vec2 radii = (bottomRadius + vec2(minHeight, maxHeight)) * METER_TO_LENGTH_UNIT;
+  vCloudsIrradiance.minSun = GetSunAndSkyIrradiance(
+    surfaceNormal * radii.x,
+    sunDirection,
+    vCloudsIrradiance.minSky
+  );
+  vCloudsIrradiance.maxSun = GetSunAndSkyIrradiance(
+    surfaceNormal * radii.y,
+    sunDirection,
+    vCloudsIrradiance.maxSky
+  );
 }
 
 void main() {
@@ -54,7 +62,8 @@ void main() {
   vCameraDirection = rotation * normalize((inverseViewMatrix * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
   vRayDirection = rotation * worldDirection.xyz;
   vEllipsoidCenter = ellipsoidCenter + altitudeCorrection;
-  vSunSkyIrradiance = sampleSunSkyIrradiance(vCameraPosition - vEllipsoidCenter);
+
+  sampleSunSkyIrradiance(vCameraPosition - vEllipsoidCenter);
 
   gl_Position = vec4(position.xy, 1.0, 1.0);
 }

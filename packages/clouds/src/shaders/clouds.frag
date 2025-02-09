@@ -73,7 +73,8 @@ in vec3 vCameraPosition;
 in vec3 vCameraDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
 in vec3 vEllipsoidCenter;
-in SunSkyIrradiance vSunSkyIrradiance;
+in GroundIrradiance vGroundIrradiance;
+in CloudsIrradiance vCloudsIrradiance;
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 1) out vec3 outputDepthVelocity;
@@ -397,10 +398,32 @@ float approximateMultipleScattering(const float opticalDepth, const float cosThe
   return scattering;
 }
 
-vec3 getInterpolatedSunSkyIrradiance(const float height, out vec3 skyIrradiance) {
-  float heightFraction = remapClamped(height, minHeight, maxHeight);
-  skyIrradiance = mix(vSunSkyIrradiance.minSky, vSunSkyIrradiance.maxSky, heightFraction);
-  return mix(vSunSkyIrradiance.minSun, vSunSkyIrradiance.maxSun, heightFraction);
+vec3 getGroundSunSkyIrradiance(
+  const vec3 position,
+  const vec3 surfaceNormal,
+  const float height,
+  out vec3 skyIrradiance
+) {
+  #ifdef ACCURATE_SUN_SKY_IRRADIANCE
+  return GetSunAndSkyIrradiance(
+    (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
+    sunDirection,
+    skyIrradiance
+  );
+  #else // ACCURATE_SUN_SKY_IRRADIANCE
+  skyIrradiance = vGroundIrradiance.sky;
+  return vGroundIrradiance.sun;
+  #endif // ACCURATE_SUN_SKY_IRRADIANCE
+}
+
+vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3 skyIrradiance) {
+  #ifdef ACCURATE_SUN_SKY_IRRADIANCE
+  return GetSunAndSkyIrradiance(position * METER_TO_LENGTH_UNIT, sunDirection, skyIrradiance);
+  #else // ACCURATE_SUN_SKY_IRRADIANCE
+  float alpha = remapClamped(height, minHeight, maxHeight);
+  skyIrradiance = mix(vCloudsIrradiance.minSky, vCloudsIrradiance.maxSky, alpha);
+  return mix(vCloudsIrradiance.minSun, vCloudsIrradiance.maxSun, alpha);
+  #endif // ACCURATE_SUN_SKY_IRRADIANCE
 }
 
 vec4 marchClouds(
@@ -461,17 +484,7 @@ vec4 marchClouds(
 
     if (media.extinction > minExtinction) {
       vec3 skyIrradiance;
-      vec3 sunIrradiance;
-      #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-      sunIrradiance = GetSunAndSkyIrradiance(
-        position * METER_TO_LENGTH_UNIT,
-        sunDirection,
-        skyIrradiance
-      );
-      #else // ACCURATE_SUN_SKY_IRRADIANCE
-      sunIrradiance = getInterpolatedSunSkyIrradiance(height, skyIrradiance);
-      #endif // ACCURATE_SUN_SKY_IRRADIANCE
-
+      vec3 sunIrradiance = getCloudsSunSkyIrradiance(position, height, skyIrradiance);
       vec3 surfaceNormal = normalize(position);
 
       // March optical depth to the sun for finer details, which BSM lacks.
@@ -512,16 +525,13 @@ vec4 marchClouds(
           mipLevel,
           jitter
         );
-
-        #ifdef ACCURATE_SUN_SKY_IRRADIANCE
         vec3 skyIrradiance;
-        vec3 sunIrradiance = GetSunAndSkyIrradiance(
-          (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
-          sunDirection,
+        vec3 sunIrradiance = getGroundSunSkyIrradiance(
+          position,
+          surfaceNormal,
+          height,
           skyIrradiance
         );
-        #endif // ACCURATE_SUN_SKY_IRRADIANCE
-
         const float groundAlbedo = 0.3;
         vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
         vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
@@ -639,8 +649,8 @@ vec4 approximateHaze(
   float expTerm = 1.0 - exp(-(maxRayDistance - shadowLength) * angle * hazeExpScale);
   float opticalDepth = density / hazeExpScale * expTerm / angle;
 
-  vec3 skyIrradiance = vSunSkyIrradiance.cameraSky;
-  vec3 sunIrradiance = vSunSkyIrradiance.cameraSun;
+  vec3 skyIrradiance = vGroundIrradiance.sky;
+  vec3 sunIrradiance = vGroundIrradiance.sun;
   vec3 inscatter = albedo * phaseFunction(cosTheta) * (sunIrradiance + skyIrradiance);
 
   float transmittance = exp(-opticalDepth);
