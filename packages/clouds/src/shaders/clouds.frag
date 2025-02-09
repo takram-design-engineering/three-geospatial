@@ -426,6 +426,31 @@ vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3
   #endif // ACCURATE_SUN_SKY_IRRADIANCE
 }
 
+#ifdef GROUND_IRRADIANCE
+vec3 approximateIrradianceFromGround(
+  const vec3 position,
+  const vec3 surfaceNormal,
+  const float height,
+  const float mipLevel,
+  const float jitter
+) {
+  float opticalDepthToGround = marchOpticalDepth(
+    position,
+    -surfaceNormal,
+    maxIterationCountToGround,
+    mipLevel,
+    jitter
+  );
+  vec3 skyIrradiance;
+  vec3 sunIrradiance = getGroundSunSkyIrradiance(position, surfaceNormal, height, skyIrradiance);
+  const float groundAlbedo = 0.3;
+  vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
+  vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
+  vec3 bouncedIrradiance = bouncedLight * exp(-opticalDepthToGround);
+  return albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
+}
+#endif // GROUND_IRRADIANCE
+
 vec4 marchClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
@@ -518,31 +543,18 @@ vec4 marchClouds(
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (height < shadowTopHeight && mipLevel < 0.5) {
-        float opticalDepthToGround = marchOpticalDepth(
-          position,
-          -surfaceNormal,
-          maxIterationCountToGround,
-          mipLevel,
-          jitter
-        );
-        vec3 skyIrradiance;
-        vec3 sunIrradiance = getGroundSunSkyIrradiance(
+        radiance += approximateIrradianceFromGround(
           position,
           surfaceNormal,
           height,
-          skyIrradiance
+          mipLevel,
+          jitter
         );
-        const float groundAlbedo = 0.3;
-        vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
-        vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
-        vec3 bouncedIrradiance = bouncedLight * exp(-opticalDepthToGround);
-        radiance += albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
 
       // Crude approximation of sky gradient. Better than none in the shadows.
       float skyGradient = dot(0.5 + weather.heightFraction, media.weight);
-      // Assume isotropic scattering.
       radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
 
       // Finally multiply by extinction (redundant but kept for clarity).
