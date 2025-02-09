@@ -28,20 +28,21 @@ out vec3 vCameraDirection; // Direction to the center of screen
 out vec3 vRayDirection; // Direction to the texel
 out vec3 vEllipsoidCenter;
 
-#if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
-
 out SunSkyIrradiance vSunSkyIrradiance;
 
 SunSkyIrradiance sampleSunSkyIrradiance(const vec3 positionECEF) {
   vec3 surfaceNormal = normalize(positionECEF);
   vec2 radii = (bottomRadius + vec2(minHeight, maxHeight)) * METER_TO_LENGTH_UNIT;
   SunSkyIrradiance result;
+  result.cameraSun = GetSunAndSkyIrradiance(
+    positionECEF * METER_TO_LENGTH_UNIT,
+    sunDirection,
+    result.cameraSky
+  );
   result.minSun = GetSunAndSkyIrradiance(surfaceNormal * radii.x, sunDirection, result.minSky);
   result.maxSun = GetSunAndSkyIrradiance(surfaceNormal * radii.y, sunDirection, result.maxSky);
   return result;
 }
-
-#endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
 void main() {
   vUv = position.xy * 0.5 + 0.5;
@@ -53,10 +54,7 @@ void main() {
   vCameraDirection = rotation * normalize((inverseViewMatrix * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
   vRayDirection = rotation * worldDirection.xyz;
   vEllipsoidCenter = ellipsoidCenter + altitudeCorrection;
-
-  #if !defined(ACCURATE_SUN_SKY_IRRADIANCE)
   vSunSkyIrradiance = sampleSunSkyIrradiance(vCameraPosition - vEllipsoidCenter);
-  #endif // !defined(ACCURATE_SUN_SKY_IRRADIANCE)
 
   gl_Position = vec4(position.xy, 1.0, 1.0);
 }

@@ -26,7 +26,8 @@ function useRenderingControls(
       temporalUpscale: false,
       lightShafts: false,
       shapeDetail: false,
-      turbulence: false
+      turbulence: false,
+      haze: false
     }),
     { collapsed: true }
   )
@@ -41,7 +42,8 @@ function useRenderingControls(
       temporalUpscale: effect.temporalUpscale,
       lightShafts: effect.lightShafts,
       shapeDetail: effect.shapeDetail,
-      turbulence: effect.turbulence
+      turbulence: effect.turbulence,
+      haze: effect.haze
     })
     initRef.current = true
   }, [effect, qualityPreset, set])
