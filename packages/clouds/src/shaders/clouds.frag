@@ -628,7 +628,7 @@ vec4 approximateHaze(
   const float cosTheta,
   const float shadowLength
 ) {
-  float modulation = remapClamped(coverage, 0.2, 0.5);
+  float modulation = remapClamped(coverage, 0.2, 0.4);
   if (cameraHeight * modulation < 0.0) {
     return vec4(0.0);
   }
