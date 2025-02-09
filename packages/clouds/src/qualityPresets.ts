@@ -10,6 +10,7 @@ const values = {
   lightShafts: true,
   shapeDetail: true,
   turbulence: true,
+  haze: true,
   clouds: {
     multiScatteringOctaves: 8,
     accurateSunSkyIrradiance: true,
