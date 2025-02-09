@@ -661,7 +661,8 @@ vec4 approximateHaze(
   // Reference: https://iquilezles.org/articles/fog/
   float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
   float density = modulation * hazeDensityScale * exp(-cameraHeight * hazeExpScale);
-  float expTerm = 1.0 - exp(-(maxRayDistance - shadowLength) * angle * hazeExpScale);
+  float rayDistance = min(maxRayDistance, 5e4); // Avoid over-integration
+  float expTerm = 1.0 - exp(-(rayDistance - shadowLength) * angle * hazeExpScale);
   float opticalDepth = density / hazeExpScale * expTerm / angle;
 
   vec3 skyIrradiance = vGroundIrradiance.sky;
@@ -669,8 +670,9 @@ vec4 approximateHaze(
   vec3 inscatter = albedo * phaseFunction(cosTheta) * (sunIrradiance + skyIrradiance);
 
   float transmittance = exp(-opticalDepth);
+  float attenuation = sqrt(max(transmittance, 0.0)); // Approximate self-occlusion
   float alpha = saturate(1.0 - transmittance);
-  return vec4(inscatter * alpha, alpha);
+  return vec4(inscatter * attenuation * alpha, alpha);
 }
 
 #endif // HAZE
