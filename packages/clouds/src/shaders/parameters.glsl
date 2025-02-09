@@ -11,6 +11,7 @@ uniform vec3 sunDirection;
 // Participating medium
 uniform float scatteringCoefficient;
 uniform float absorptionCoefficient;
+uniform vec3 albedo;
 
 // Primary raymarch
 uniform float minDensity;
@@ -25,16 +26,24 @@ uniform float coverage;
 uniform sampler3D shapeTexture;
 uniform vec3 shapeRepeat;
 uniform vec3 shapeOffset;
+
 #ifdef SHAPE_DETAIL
 uniform sampler3D shapeDetailTexture;
 uniform vec3 shapeDetailRepeat;
 uniform vec3 shapeDetailOffset;
 #endif // SHAPE_DETAIL
+
 #ifdef TURBULENCE
 uniform sampler2D turbulenceTexture;
 uniform vec2 turbulenceRepeat;
 uniform float turbulenceDisplacement;
 #endif // TURBULENCE
+
+// Haze
+#ifdef HAZE
+uniform float hazeDensityScale;
+uniform float hazeExpScale;
+#endif // HAZE
 
 // Cloud layers
 uniform vec4 minLayerHeights;

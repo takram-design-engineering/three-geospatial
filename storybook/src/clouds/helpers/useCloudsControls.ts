@@ -26,7 +26,8 @@ function useRenderingControls(
       temporalUpscale: false,
       lightShafts: false,
       shapeDetail: false,
-      turbulence: false
+      turbulence: false,
+      haze: false
     }),
     { collapsed: true }
   )
@@ -41,7 +42,8 @@ function useRenderingControls(
       temporalUpscale: effect.temporalUpscale,
       lightShafts: effect.lightShafts,
       shapeDetail: effect.shapeDetail,
-      turbulence: effect.turbulence
+      turbulence: effect.turbulence,
+      haze: effect.haze
     })
     initRef.current = true
   }, [effect, qualityPreset, set])
@@ -216,7 +218,9 @@ function useAdvancedCloudsControls(
           step: 1
         },
         minShadowLengthStepSize: { value: 0, min: 50, max: 200, step: 1 },
-        maxShadowLengthRayDistance: { value: 0, min: 1e4, max: 1e6 }
+        maxShadowLengthRayDistance: { value: 0, min: 1e4, max: 1e6 },
+        hazeDensityScaleLog10: { value: 0, min: -7, max: -4 },
+        hazeExpScaleLog10: { value: 0, min: -4, max: -1 }
       }) satisfies Partial<
         Record<
           keyof CloudsEffect['clouds'] | `${keyof CloudsEffect['clouds']}Log10`,
@@ -248,7 +252,9 @@ function useAdvancedCloudsControls(
       maxIterationCountToGround: clouds.maxIterationCountToGround,
       maxShadowLengthIterationCount: clouds.maxShadowLengthIterationCount,
       minShadowLengthStepSize: clouds.minShadowLengthStepSize,
-      maxShadowLengthRayDistance: clouds.maxShadowLengthRayDistance
+      maxShadowLengthRayDistance: clouds.maxShadowLengthRayDistance,
+      hazeDensityScaleLog10: Math.log10(clouds.hazeDensityScale),
+      hazeExpScaleLog10: Math.log10(clouds.hazeExpScale)
     })
     initRef.current = true
   }, [effect, qualityPreset, set])
@@ -273,7 +279,9 @@ function useAdvancedCloudsControls(
     'clouds-maxShadowLengthIterationCount':
       params.maxShadowLengthIterationCount,
     'clouds-minShadowLengthStepSize': params.minShadowLengthStepSize,
-    'clouds-maxShadowLengthRayDistance': params.maxShadowLengthRayDistance
+    'clouds-maxShadowLengthRayDistance': params.maxShadowLengthRayDistance,
+    'clouds-hazeDensityScale': 10 ** params.hazeDensityScaleLog10,
+    'clouds-hazeExpScale': 10 ** params.hazeExpScaleLog10
   }
 }
 

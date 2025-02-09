@@ -10,6 +10,7 @@ const values = {
   lightShafts: true,
   shapeDetail: true,
   turbulence: true,
+  haze: true,
   clouds: {
     multiScatteringOctaves: 8,
     accurateSunSkyIrradiance: true,
@@ -19,7 +20,7 @@ const values = {
     maxIterationCount: 500,
     minStepSize: 50,
     maxStepSize: 1000,
-    maxRayDistance: 5e5,
+    maxRayDistance: 2e5,
     perspectiveStepScale: 1.01,
     minDensity: 1e-5,
     minExtinction: 1e-5,
@@ -34,7 +35,7 @@ const values = {
     // Shadow length
     maxShadowLengthIterationCount: 500,
     minShadowLengthStepSize: 50,
-    maxShadowLengthRayDistance: 5e5
+    maxShadowLengthRayDistance: 2e5
   },
   shadow: {
     cascadeCount: 3,
@@ -111,7 +112,6 @@ export const qualityPresets: Record<QualityPreset, Schema> = {
     ...defaults,
     shadow: {
       ...defaults.shadow,
-      maxIterationCount: 100,
       mapSize: /*#__PURE__*/ new Vector2(1024, 1024)
     }
   }

@@ -18,6 +18,10 @@ yarn add @takram/three-clouds
 
 ## Synopsis
 
+## Performance tweaks
+
+![](docs/cloud-shape.png)
+
 ## Limitations
 
 - The number of cloud layers is limited to 4. This is because the coverage of all layers is packed into a texture, and all layers are computed at once as `vec4` in the shaders.
@@ -27,6 +31,8 @@ yarn add @takram/three-clouds
 ### Known issues
 
 - The temporal upscaling is still basic and prone to ghosting and smearing, especially when viewed through sparse clouds.
+
+- Aerial perspective is applied to the clouds using transmittance-weighted front depth, an approximation that reduces the computation of atmospheric transparency. However, because this is a mean depth, it is not accurate for representing the depth of areas where distant sparse clouds overlap, and introduces artifacts.
 
 ### Possible improvements
 
@@ -38,11 +44,11 @@ yarn add @takram/three-clouds
 
 ### Planned features
 
+- The altitude of cloud layers is determined relative to the ellipsoid surface, but in reality, the cloud base altitude is not constant with respect to either the ellipsoid or geopotential height. Thus, clouds appear too low in high-altitude non-mountain areas (e.g. east of the west coast of North America). This could be compensated for by considering observed average cloud base heights, [X](https://x.com/shotamatsuda/status/1885737165709254882).
+
 - Introduce global cloud coverage and support rendering views from space.
 
 - Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
-
-## Performance tweaks
 
 # API
 
@@ -92,7 +98,7 @@ yarn add @takram/three-clouds
 
 - **Clouds**
 
-  Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective effect is already applied to the clouds here.
+  Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective is already to the clouds here.
 
   &rarr; [Shader](/packages/clouds/src/shaders/clouds.frag)
 
@@ -116,7 +122,7 @@ yarn add @takram/three-clouds
 - [Scattering](#scattering)
 - [Weather and shape](#weather-and-shape)
 - [Cascaded shadow maps](#cascaded-shadow-maps)
-- [Advanced parameters](#advanced-parameters)
+- [Advanced clouds parameters](#advanced-clouds-parameters)
 - [Advanced shadow parameters](#advanced-shadow-parameters)
 
 ### Rendering
@@ -217,9 +223,9 @@ coverageFilterWidth: number = 0.6
 
 ```ts
 densityProfile: DensityProfile = {
-  expTerm: number = 0
-  expScale: number = 0
-  linearTerm: number = 0.75
+  expTerm: number = 0,
+  expScale: number = 0,
+  linearTerm: number = 0.75,
   constantTerm: number = 0.25
 }
 ```
@@ -375,7 +381,7 @@ splitMode: FrustumSplitMode = 'practical'
 splitLambda: number = 0.6
 ```
 
-### Advanced parameters
+### Advanced clouds parameters
 
 #### clouds.multiScatteringOctaves
 #### clouds.accurateSunSkyIrradiance
@@ -392,6 +398,8 @@ splitLambda: number = 0.6
 #### clouds.maxShadowLengthIterationCount
 #### clouds.minShadowLengthStepSize
 #### clouds.maxShadowLengthRayDistance
+#### clouds.hazeDensityScale
+#### clouds.hazeExpScale
 
 ### Advanced shadow parameters
 

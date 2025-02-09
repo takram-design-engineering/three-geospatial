@@ -76,7 +76,9 @@ const cloudsUniformKeys = [
   'maxShadowFilterRadius',
   'maxShadowLengthIterationCount',
   'minShadowLengthStepSize',
-  'maxShadowLengthRayDistance'
+  'maxShadowLengthRayDistance',
+  'hazeDensityScale',
+  'hazeExpScale'
 ] as const satisfies Array<keyof CloudsMaterialUniforms>
 
 // prettier-ignore
@@ -663,6 +665,14 @@ export class CloudsEffect extends Effect {
   set turbulence(value: boolean) {
     this.cloudsPass.currentMaterial.turbulence = value
     this.shadowPass.currentMaterial.turbulence = value
+  }
+
+  get haze(): boolean {
+    return this.cloudsPass.currentMaterial.haze
+  }
+
+  set haze(value: boolean) {
+    this.cloudsPass.currentMaterial.haze = value
   }
 
   // Cloud parameter primitives
