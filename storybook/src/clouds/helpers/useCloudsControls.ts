@@ -1,5 +1,5 @@
 import { folder } from 'leva'
-import { type Schema } from 'leva/dist/declarations/src/types'
+import { type FolderInput, type Schema } from 'leva/dist/declarations/src/types'
 import { useEffect, useMemo, useRef } from 'react'
 import { type Material } from 'three'
 import { type PartialDeep } from 'type-fest'
@@ -9,6 +9,7 @@ import {
   type CloudLayer,
   type CloudsEffect,
   type CloudsQualityPreset,
+  type DensityProfile,
   type FrustumSplitMode
 } from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
@@ -366,59 +367,82 @@ function useCloudLayerControls(
         ...layer?.densityProfile
       }
     }
-    const layerSchema = {
-      altitude: {
-        value: params.altitude,
-        min: 0,
-        max: 10000
-      },
-      height: {
-        value: params.height,
-        min: 0,
-        max: 2000
-      },
-      densityScale: {
-        value: params.densityScale,
-        min: 0,
-        max: 1
-      },
-      shapeAmount: {
-        value: params.shapeAmount,
-        min: 0,
-        max: 1
-      },
-      shapeDetailAmount: {
-        value: params.shapeDetailAmount,
-        min: 0,
-        max: 1
-      },
-      weatherExponent: {
-        value: params.weatherExponent,
-        min: 0,
-        max: 3
-      },
-      shapeAlteringBias: {
-        value: params.shapeAlteringBias,
-        min: 0,
-        max: 1
-      },
-      coverageFilterWidth: {
-        value: params.coverageFilterWidth,
-        min: 0,
-        max: 1
-      },
-      shadow: params.shadow
-    } satisfies Partial<Record<keyof CloudLayer, Schema[string]>>
     return {
-      [`layer ${layerIndex + 1}`]: folder(
-        Object.entries(layerSchema).reduce(
-          (result, [key, value]) => ({
-            ...result,
-            [`${key} ${layerIndex + 1}`]: value
-          }),
-          {}
-        ),
-        { collapsed: layerIndex > 0 }
+      [`layer ${layerIndex}`]: folder(
+        {
+          altitude: {
+            value: params.altitude,
+            min: 0,
+            max: 10000
+          },
+          height: {
+            value: params.height,
+            min: 0,
+            max: 4000
+          },
+          densityScale: {
+            value: params.densityScale,
+            min: 0,
+            max: 1
+          },
+          shapeAmount: {
+            value: params.shapeAmount,
+            min: 0,
+            max: 1
+          },
+          shapeDetailAmount: {
+            value: params.shapeDetailAmount,
+            min: 0,
+            max: 1
+          },
+          weatherExponent: {
+            value: params.weatherExponent,
+            min: 0,
+            max: 3
+          },
+          shapeAlteringBias: {
+            value: params.shapeAlteringBias,
+            min: 0,
+            max: 1
+          },
+          coverageFilterWidth: {
+            value: params.coverageFilterWidth,
+            min: 0,
+            max: 1
+          },
+          shadow: {
+            value: params.shadow
+          },
+          'density profile': folder({
+            expTerm: {
+              value: params.densityProfile.expTerm,
+              min: 0,
+              max: 1
+            },
+            expScale: {
+              value: params.densityProfile.expScale,
+              min: -10,
+              max: 10
+            },
+            linearTerm: {
+              value: params.densityProfile.linearTerm,
+              min: -2,
+              max: 2
+            },
+            constantTerm: {
+              value: params.densityProfile.constantTerm,
+              min: -2,
+              max: 2
+            }
+          })
+        } satisfies Partial<Record<keyof CloudLayer, Schema[string]>> & {
+          'density profile': FolderInput<
+            Record<keyof DensityProfile, Schema[string]>
+          >
+        },
+        {
+          collapsed: layerIndex > 0
+        }
       )
     }
   }, [effect?.cloudLayers, layerIndex])
@@ -435,12 +459,20 @@ function useCloudLayerControls(
       return
     }
     for (const key in params) {
-      const layerKey = key.slice(0, -2)
-      const index = +key.slice(-1) - 1
-      const layer = effect.cloudLayers[index] as any
-      layer[layerKey] = params[key as keyof typeof params]
+      const layer = effect.cloudLayers[layerIndex] as any
+      if (
+        key === 'expTerm' ||
+        key === 'expScale' ||
+        key === 'linearTerm' ||
+        key === 'constantTerm'
+      ) {
+        layer.densityProfile ??= {}
+        layer.densityProfile[key] = params[key as keyof typeof params]
+      } else {
+        layer[key] = params[key as keyof typeof params]
+      }
     }
-  }, [effect, disabled, params])
+  }, [effect, layerIndex, disabled, params])
 }
 
 function useCloudLayersControls(
