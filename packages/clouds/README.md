@@ -40,6 +40,8 @@ yarn add @takram/three-clouds
 
 - The cloud base of each layer lines up at the same altitude, making it look artificial. This may be improved by tweaking the shape altering function.
 
+- Interpolated sun and sky irradiance, when `accurateSunSkyIrradiance` is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
+
 - Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera’s depth onto the sun’s view.
 
 ### Planned features
