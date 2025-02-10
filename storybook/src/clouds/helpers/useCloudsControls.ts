@@ -413,28 +413,31 @@ function useCloudLayerControls(
           shadow: {
             value: params.shadow
           },
-          'density profile': folder({
-            expTerm: {
-              value: params.densityProfile.expTerm,
-              min: 0,
-              max: 1
+          'density profile': folder(
+            {
+              expTerm: {
+                value: params.densityProfile.expTerm,
+                min: 0,
+                max: 1
+              },
+              expScale: {
+                value: params.densityProfile.expScale,
+                min: -10,
+                max: 10
+              },
+              linearTerm: {
+                value: params.densityProfile.linearTerm,
+                min: -2,
+                max: 2
+              },
+              constantTerm: {
+                value: params.densityProfile.constantTerm,
+                min: -2,
+                max: 2
+              }
             },
-            expScale: {
-              value: params.densityProfile.expScale,
-              min: -10,
-              max: 10
-            },
-            linearTerm: {
-              value: params.densityProfile.linearTerm,
-              min: -2,
-              max: 2
-            },
-            constantTerm: {
-              value: params.densityProfile.constantTerm,
-              min: -2,
-              max: 2
-            }
-          })
+            { collapsed: true }
+          )
         } satisfies Partial<Record<keyof CloudLayer, Schema[string]>> & {
           'density profile': FolderInput<
             Record<keyof DensityProfile, Schema[string]>
