@@ -115,12 +115,12 @@ export class ShadowMaterial extends RawShaderMaterial {
   }
 
   get cascadeCount(): number {
-    return +this.defines.CASCADE_COUNT
+    return parseInt(this.defines.CASCADE_COUNT)
   }
 
   set cascadeCount(value: number) {
     if (value !== this.cascadeCount) {
-      this.defines.CASCADE_COUNT = `${value}`
+      this.defines.CASCADE_COUNT = value.toFixed(0)
       this.needsUpdate = true
     }
   }

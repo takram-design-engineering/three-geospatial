@@ -1,6 +1,9 @@
-struct SunSkyIrradiance {
-  vec3 cameraSun;
-  vec3 cameraSky;
+struct GroundIrradiance {
+  vec3 sun;
+  vec3 sky;
+};
+
+struct CloudsIrradiance {
   vec3 minSun;
   vec3 minSky;
   vec3 maxSun;

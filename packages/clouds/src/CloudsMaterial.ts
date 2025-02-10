@@ -92,9 +92,6 @@ export interface CloudsMaterialUniforms
 
   // Scattering
   albedo: Uniform<Vector3>
-  scatterAnisotropy1: Uniform<number>
-  scatterAnisotropy2: Uniform<number>
-  scatterAnisotropyMix: Uniform<number>
   skyIrradianceScale: Uniform<number>
   groundIrradianceScale: Uniform<number>
   powderScale: Uniform<number>
@@ -203,9 +200,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Scattering
           albedo: new Uniform(new Vector3()),
-          scatterAnisotropy1: new Uniform(0.7),
-          scatterAnisotropy2: new Uniform(-0.2),
-          scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(2.5),
           groundIrradianceScale: new Uniform(3),
           powderScale: new Uniform(0.8),
@@ -245,7 +239,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           maxShadowLengthRayDistance: new Uniform(defaults.clouds.maxShadowLengthRayDistance),
 
           // Haze
-          hazeDensityScale: new Uniform(2e-5),
+          hazeDensityScale: new Uniform(3e-5),
           hazeExpScale: new Uniform(1e-3)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
           CloudsMaterialUniforms,
@@ -255,6 +249,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       },
       atmosphere
     )
+
+    // Ideally these should be uniforms, but perhaps due to the phase function
+    // is highly optimizable and used many times, defining them as macros
+    // improves performance by around 3-4 fps, depending on the device, though.
+    this.scatterAnisotropy1 = 0.7
+    this.scatterAnisotropy2 = -0.2
+    this.scatterAnisotropyMix = 0.5
 
     this.shapeDetail = defaults.shapeDetail
     this.turbulence = defaults.turbulence
@@ -427,12 +428,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   get depthPacking(): number {
-    return +this.defines.DEPTH_PACKING
+    return parseInt(this.defines.DEPTH_PACKING)
   }
 
   set depthPacking(value: number) {
     if (value !== this.depthPacking) {
-      this.defines.DEPTH_PACKING = `${value}`
+      this.defines.DEPTH_PACKING = value.toFixed(0)
       this.needsUpdate = true
     }
   }
@@ -497,13 +498,46 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     }
   }
 
+  get scatterAnisotropy1(): number {
+    return parseFloat(this.defines.SCATTER_ANISOTROPY_1)
+  }
+
+  set scatterAnisotropy1(value: number) {
+    if (value !== this.scatterAnisotropy1) {
+      this.defines.SCATTER_ANISOTROPY_1 = value.toFixed(7)
+      this.needsUpdate = true
+    }
+  }
+
+  get scatterAnisotropy2(): number {
+    return parseFloat(this.defines.SCATTER_ANISOTROPY_2)
+  }
+
+  set scatterAnisotropy2(value: number) {
+    if (value !== this.multiScatteringOctaves) {
+      this.defines.SCATTER_ANISOTROPY_2 = value.toFixed(7)
+      this.needsUpdate = true
+    }
+  }
+
+  get scatterAnisotropyMix(): number {
+    return parseFloat(this.defines.SCATTER_ANISOTROPY_MIX)
+  }
+
+  set scatterAnisotropyMix(value: number) {
+    if (value !== this.scatterAnisotropyMix) {
+      this.defines.SCATTER_ANISOTROPY_MIX = value.toFixed(7)
+      this.needsUpdate = true
+    }
+  }
+
   get multiScatteringOctaves(): number {
-    return +this.defines.MULTI_SCATTERING_OCTAVES
+    return parseInt(this.defines.MULTI_SCATTERING_OCTAVES)
   }
 
   set multiScatteringOctaves(value: number) {
     if (value !== this.multiScatteringOctaves) {
-      this.defines.MULTI_SCATTERING_OCTAVES = `${clamp(Math.round(value), 1, 12)}`
+      this.defines.MULTI_SCATTERING_OCTAVES = clamp(value, 1, 12).toFixed(0)
       this.needsUpdate = true
     }
   }
@@ -539,12 +573,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   get shadowCascadeCount(): number {
-    return +this.defines.SHADOW_CASCADE_COUNT
+    return parseInt(this.defines.SHADOW_CASCADE_COUNT)
   }
 
   set shadowCascadeCount(value: number) {
     if (value !== this.shadowCascadeCount) {
-      this.defines.SHADOW_CASCADE_COUNT = `${value}`
+      this.defines.SHADOW_CASCADE_COUNT = value.toFixed(0)
       this.needsUpdate = true
     }
   }

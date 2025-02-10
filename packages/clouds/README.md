@@ -40,6 +40,8 @@ yarn add @takram/three-clouds
 
 - The cloud base of each layer lines up at the same altitude, making it look artificial. This may be improved by tweaking the shape altering function.
 
+- Interpolated sun and sky irradiance, when `accurateSunSkyIrradiance` is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
+
 - Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera’s depth onto the sun’s view.
 
 ### Planned features
@@ -122,7 +124,7 @@ yarn add @takram/three-clouds
 - [Scattering](#scattering)
 - [Weather and shape](#weather-and-shape)
 - [Cascaded shadow maps](#cascaded-shadow-maps)
-- [Advanced parameters](#advanced-parameters)
+- [Advanced clouds parameters](#advanced-clouds-parameters)
 - [Advanced shadow parameters](#advanced-shadow-parameters)
 
 ### Rendering
@@ -381,7 +383,7 @@ splitMode: FrustumSplitMode = 'practical'
 splitLambda: number = 0.6
 ```
 
-### Advanced parameters
+### Advanced clouds parameters
 
 #### clouds.multiScatteringOctaves
 #### clouds.accurateSunSkyIrradiance
@@ -398,6 +400,8 @@ splitLambda: number = 0.6
 #### clouds.maxShadowLengthIterationCount
 #### clouds.minShadowLengthStepSize
 #### clouds.maxShadowLengthRayDistance
+#### clouds.hazeDensityScale
+#### clouds.hazeExpScale
 
 ### Advanced shadow parameters
 
@@ -434,8 +438,8 @@ In alphabetical order
   - Covers variance clipping in detail.
 - [Convincing Cloud Rendering – An Implementation of Real-Time Dynamic Volumetric Clouds in Frostbite](https://odr.chalmers.se/items/53d0fe07-df09-4cd1-ae7d-6c05491b52bf)
   - A comprehensive guide to rendering volumetric clouds.
-- [Interactive Multiple Anisotropic Scattering in Clouds](https://inria.hal.science/inria-00333007)
-  - Not specifically for real-time rendering, but provides the math behind light-cloud interactions.
+- [Deep Scattering - Rendering Atmospheric Clouds with Radiance-Predicting Neural Networks](https://dl.acm.org/doi/10.1145/3130800.3130880)
+  - Not specifically for real-time rendering, but provides visual references and the math behind light-cloud interactions.
 - [Nubis - Authoring Realtime Volumetric Cloudscapes with the Decima Engine](https://www.guerrilla-games.com/read/nubis-authoring-real-time-volumetric-cloudscapes-with-the-decima-engine)
   - A well-known presentation on volumetric clouds, similar to Guerrilla Games slides.
 - [Oz: The Great and Volumetric](https://www.researchgate.net/publication/262309690_Oz_the_great_and_volumetric)

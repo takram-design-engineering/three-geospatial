@@ -188,25 +188,35 @@ const intervalsScratch: Interval[] = /*#__PURE__*/ Array.from(
 )
 
 function compareIntervals(a: Interval, b: Interval): number {
-  return a.min - b.min
+  return a.min !== b.min ? a.min - b.min : a.max - b.max
+}
+
+function mergeIntervals(a: Interval, b: Interval): void {
+  if (a.min !== a.max && b.min !== b.max && b.min < a.max) {
+    ;[b.min, b.max] = [a.min, Math.max(a.max, b.max)]
+    ;[a.min, a.max] = [0, 0] // Invalidate
+  }
 }
 
 function packIntervalHeights(
-  minHeights: Vector4,
-  maxHeights: Vector4,
-  min: Vector3,
-  max: Vector3
+  min: Vector4,
+  max: Vector4,
+  minIntervals: Vector3,
+  maxIntervals: Vector3
 ): void {
   let [a, b, c, d] = intervalsScratch
-  ;[a.min, a.max] = [minHeights.x, maxHeights.x]
-  ;[b.min, b.max] = [minHeights.y, maxHeights.y]
-  ;[c.min, c.max] = [minHeights.z, maxHeights.z]
-  ;[d.min, d.max] = [minHeights.w, maxHeights.w]
+  ;[a.min, a.max] = [min.x, max.x]
+  ;[b.min, b.max] = [min.y, max.y]
+  ;[c.min, c.max] = [min.z, max.z]
+  ;[d.min, d.max] = [min.w, max.w]
   intervalsScratch.sort(compareIntervals)
   ;[a, b, c, d] = intervalsScratch
-  ;[min.x, max.x] = a.max < b.min ? [a.max, b.min] : [-1, -1]
-  ;[min.y, max.y] = b.max < c.min ? [b.max, c.min] : [-1, -1]
-  ;[min.z, max.z] = c.max < d.min ? [c.max, d.min] : [-1, -1]
+  mergeIntervals(a, b)
+  mergeIntervals(b, c)
+  mergeIntervals(c, d)
+  ;[minIntervals.x, maxIntervals.x] = [a.max, b.min]
+  ;[minIntervals.y, maxIntervals.y] = [b.max, c.min]
+  ;[minIntervals.z, maxIntervals.z] = [c.max, d.min]
 }
 
 export function updateCloudLayerUniforms(

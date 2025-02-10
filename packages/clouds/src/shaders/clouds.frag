@@ -32,9 +32,6 @@ uniform vec2 targetUvScale;
 uniform float mipLevelScale;
 
 // Scattering
-uniform float scatterAnisotropy1;
-uniform float scatterAnisotropy2;
-uniform float scatterAnisotropyMix;
 uniform float skyIrradianceScale;
 uniform float groundIrradianceScale;
 uniform float powderScale;
@@ -73,7 +70,8 @@ in vec3 vCameraPosition;
 in vec3 vCameraDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
 in vec3 vEllipsoidCenter;
-in SunSkyIrradiance vSunSkyIrradiance;
+in GroundIrradiance vGroundIrradiance;
+in CloudsIrradiance vCloudsIrradiance;
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 1) out vec3 outputDepthVelocity;
@@ -284,25 +282,30 @@ vec4 getCascadedShadowMaps(vec2 uv) {
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   vec2 g2 = g * g;
-  vec2 denom = max(vec2(1e-7), pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
-  return RECIPROCAL_PI4 * ((1.0 - g2) / denom);
+  // prettier-ignore
+  return RECIPROCAL_PI4 *
+    ((1.0 - g2) / max(vec2(1e-7), pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5))));
 }
 
 #ifdef ACCURATE_PHASE_FUNCTION
 
 float draine(float u, float g, float a) {
   float g2 = g * g;
+  // prettier-ignore
   return (1.0 - g2) *
-  (1.0 + a * u * u) /
-  (4.0 * (1.0 + a * (1.0 + 2.0 * g2) / 3.0) * PI * pow(1.0 + g2 - 2.0 * g * u, 1.5));
+    (1.0 + a * u * u) /
+    (4.0 * (1.0 + a * (1.0 + 2.0 * g2) / 3.0) * PI * pow(1.0 + g2 - 2.0 * g * u, 1.5));
 }
 
+// Numerically-fitted large particles (d=10) phase function. It appears to be
+// faster than dual-robe Henyey-Greenstein functions, but it won't be plausible
+// without a more precise multiple scattering.
 // Reference: https://research.nvidia.com/labs/rtr/approximate-mie/
 float phaseFunction(const float cosTheta, const float attenuation) {
-  const float gHG = 0.18702876788543576;
-  const float gD = 0.5937905847209213;
-  const float alpha = 27.113693722212247;
-  const float weight = 0.4981594843291369;
+  const float gHG = 0.988176691700256; // exp(-0.0990567/(d-1.67154))
+  const float gD = 0.5556712547839497; // exp(-2.20679/(d+3.91029) - 0.428934)
+  const float alpha = 21.995520856274638; // exp(3.62489 - 8.29288/(d+5.52825))
+  const float weight = 0.4819554318404214; // exp(-0.599085/(d-0.641583)-0.665888)
   return mix(
     henyeyGreenstein(vec2(gHG) * attenuation, cosTheta).x,
     draine(cosTheta, gD * attenuation, alpha),
@@ -313,8 +316,8 @@ float phaseFunction(const float cosTheta, const float attenuation) {
 #else // ACCURATE_PHASE_FUNCTION
 
 float phaseFunction(const float cosTheta, const float attenuation) {
-  vec2 g = vec2(scatterAnisotropy1, scatterAnisotropy2);
-  vec2 weights = vec2(1.0 - scatterAnisotropyMix, scatterAnisotropyMix);
+  const vec2 g = vec2(SCATTER_ANISOTROPY_1, SCATTER_ANISOTROPY_2);
+  vec2 weights = vec2(1.0 - SCATTER_ANISOTROPY_MIX, SCATTER_ANISOTROPY_MIX);
   // A similar approximation is described in the Frostbite's paper, where phase
   // angle is attenuated instead of anisotropy.
   return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
@@ -397,11 +400,61 @@ float approximateMultipleScattering(const float opticalDepth, const float cosThe
   return scattering;
 }
 
-vec3 getInterpolatedSunSkyIrradiance(const float height, out vec3 skyIrradiance) {
-  float heightFraction = remapClamped(height, minHeight, maxHeight);
-  skyIrradiance = mix(vSunSkyIrradiance.minSky, vSunSkyIrradiance.maxSky, heightFraction);
-  return mix(vSunSkyIrradiance.minSun, vSunSkyIrradiance.maxSun, heightFraction);
+// TODO: Construct spherical harmonics of degree 3 using 3 sample points on the
+// ground, with 2 of them positioned near the horizon occlusion points on the
+// sun direction plane.
+vec3 getGroundSunSkyIrradiance(
+  const vec3 position,
+  const vec3 surfaceNormal,
+  const float height,
+  out vec3 skyIrradiance
+) {
+  #ifdef ACCURATE_SUN_SKY_IRRADIANCE
+  return GetSunAndSkyIrradiance(
+    (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
+    sunDirection,
+    skyIrradiance
+  );
+  #else // ACCURATE_SUN_SKY_IRRADIANCE
+  skyIrradiance = vGroundIrradiance.sky;
+  return vGroundIrradiance.sun;
+  #endif // ACCURATE_SUN_SKY_IRRADIANCE
 }
+
+vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3 skyIrradiance) {
+  #ifdef ACCURATE_SUN_SKY_IRRADIANCE
+  return GetSunAndSkyIrradiance(position * METER_TO_LENGTH_UNIT, sunDirection, skyIrradiance);
+  #else // ACCURATE_SUN_SKY_IRRADIANCE
+  float alpha = remapClamped(height, minHeight, maxHeight);
+  skyIrradiance = mix(vCloudsIrradiance.minSky, vCloudsIrradiance.maxSky, alpha);
+  return mix(vCloudsIrradiance.minSun, vCloudsIrradiance.maxSun, alpha);
+  #endif // ACCURATE_SUN_SKY_IRRADIANCE
+}
+
+#ifdef GROUND_IRRADIANCE
+vec3 approximateIrradianceFromGround(
+  const vec3 position,
+  const vec3 surfaceNormal,
+  const float height,
+  const float mipLevel,
+  const float jitter
+) {
+  float opticalDepthToGround = marchOpticalDepth(
+    position,
+    -surfaceNormal,
+    maxIterationCountToGround,
+    mipLevel,
+    jitter
+  );
+  vec3 skyIrradiance;
+  vec3 sunIrradiance = getGroundSunSkyIrradiance(position, surfaceNormal, height, skyIrradiance);
+  const float groundAlbedo = 0.3;
+  vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
+  vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
+  vec3 bouncedIrradiance = bouncedLight * exp(-opticalDepthToGround);
+  return albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
+}
+#endif // GROUND_IRRADIANCE
 
 vec4 marchClouds(
   const vec3 rayOrigin,
@@ -461,17 +514,7 @@ vec4 marchClouds(
 
     if (media.extinction > minExtinction) {
       vec3 skyIrradiance;
-      vec3 sunIrradiance;
-      #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-      sunIrradiance = GetSunAndSkyIrradiance(
-        position * METER_TO_LENGTH_UNIT,
-        sunDirection,
-        skyIrradiance
-      );
-      #else // ACCURATE_SUN_SKY_IRRADIANCE
-      sunIrradiance = getInterpolatedSunSkyIrradiance(height, skyIrradiance);
-      #endif // ACCURATE_SUN_SKY_IRRADIANCE
-
+      vec3 sunIrradiance = getCloudsSunSkyIrradiance(position, height, skyIrradiance);
       vec3 surfaceNormal = normalize(position);
 
       // March optical depth to the sun for finer details, which BSM lacks.
@@ -505,34 +548,18 @@ vec4 marchClouds(
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (height < shadowTopHeight && mipLevel < 0.5) {
-        float opticalDepthToGround = marchOpticalDepth(
+        radiance += approximateIrradianceFromGround(
           position,
-          -surfaceNormal,
-          maxIterationCountToGround,
+          surfaceNormal,
+          height,
           mipLevel,
           jitter
         );
-
-        #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-        vec3 skyIrradiance;
-        vec3 sunIrradiance = GetSunAndSkyIrradiance(
-          (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
-          sunDirection,
-          skyIrradiance
-        );
-        #endif // ACCURATE_SUN_SKY_IRRADIANCE
-
-        const float groundAlbedo = 0.3;
-        vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
-        vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
-        vec3 bouncedIrradiance = bouncedLight * exp(-opticalDepthToGround);
-        radiance += albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
 
       // Crude approximation of sky gradient. Better than none in the shadows.
       float skyGradient = dot(0.5 + weather.heightFraction, media.weight);
-      // Assume isotropic scattering.
       radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
 
       // Finally multiply by extinction (redundant but kept for clarity).
@@ -634,18 +661,23 @@ vec4 approximateHaze(
   }
   // Analytical optical depth where density exponentially decreases with height.
   // Reference: https://iquilezles.org/articles/fog/
-  float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
   float density = modulation * hazeDensityScale * exp(-cameraHeight * hazeExpScale);
-  float expTerm = 1.0 - exp(-(maxRayDistance - shadowLength) * angle * hazeExpScale);
+  if (density < 1e-7) {
+    return vec4(0.0); // Prevent artifact in views from space
+  }
+  float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
+  float rayDistance = min(maxRayDistance, 5e4); // Avoid over-integration
+  float expTerm = 1.0 - exp(-(rayDistance - shadowLength) * angle * hazeExpScale);
   float opticalDepth = density / hazeExpScale * expTerm / angle;
 
-  vec3 skyIrradiance = vSunSkyIrradiance.cameraSky;
-  vec3 sunIrradiance = vSunSkyIrradiance.cameraSun;
+  vec3 skyIrradiance = vGroundIrradiance.sky;
+  vec3 sunIrradiance = vGroundIrradiance.sun;
   vec3 inscatter = albedo * phaseFunction(cosTheta) * (sunIrradiance + skyIrradiance);
 
   float transmittance = exp(-opticalDepth);
+  float attenuation = sqrt(max(transmittance, 0.0)); // Approximate self-occlusion
   float alpha = saturate(1.0 - transmittance);
-  return vec4(inscatter * alpha, alpha);
+  return vec4(inscatter * attenuation * alpha, alpha);
 }
 
 #endif // HAZE
