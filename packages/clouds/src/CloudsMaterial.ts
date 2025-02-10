@@ -92,8 +92,7 @@ export interface CloudsMaterialUniforms
 
   // Scattering
   albedo: Uniform<Vector3>
-  scatterAnisotropy1: Uniform<number>
-  scatterAnisotropy2: Uniform<number>
+  scatterAnisotropy: Uniform<Vector2>
   scatterAnisotropyMix: Uniform<number>
   skyIrradianceScale: Uniform<number>
   groundIrradianceScale: Uniform<number>
@@ -203,8 +202,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Scattering
           albedo: new Uniform(new Vector3()),
-          scatterAnisotropy1: new Uniform(0.7),
-          scatterAnisotropy2: new Uniform(-0.2),
+          scatterAnisotropy: new Uniform(new Vector2(0.7, -0.2)),
           scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(2.5),
           groundIrradianceScale: new Uniform(3),

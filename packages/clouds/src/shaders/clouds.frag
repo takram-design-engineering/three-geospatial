@@ -32,8 +32,7 @@ uniform vec2 targetUvScale;
 uniform float mipLevelScale;
 
 // Scattering
-uniform float scatterAnisotropy1;
-uniform float scatterAnisotropy2;
+uniform vec2 scatterAnisotropy;
 uniform float scatterAnisotropyMix;
 uniform float skyIrradianceScale;
 uniform float groundIrradianceScale;
@@ -285,17 +284,19 @@ vec4 getCascadedShadowMaps(vec2 uv) {
 
 vec2 henyeyGreenstein(const vec2 g, const float cosTheta) {
   vec2 g2 = g * g;
-  vec2 denom = max(vec2(1e-7), pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5)));
-  return RECIPROCAL_PI4 * ((1.0 - g2) / denom);
+  // prettier-ignore
+  return RECIPROCAL_PI4 *
+    ((1.0 - g2) / max(vec2(1e-7), pow(1.0 + g2 - 2.0 * g * cosTheta, vec2(1.5))));
 }
 
 #ifdef ACCURATE_PHASE_FUNCTION
 
 float draine(float u, float g, float a) {
   float g2 = g * g;
+  // prettier-ignore
   return (1.0 - g2) *
-  (1.0 + a * u * u) /
-  (4.0 * (1.0 + a * (1.0 + 2.0 * g2) / 3.0) * PI * pow(1.0 + g2 - 2.0 * g * u, 1.5));
+    (1.0 + a * u * u) /
+    (4.0 * (1.0 + a * (1.0 + 2.0 * g2) / 3.0) * PI * pow(1.0 + g2 - 2.0 * g * u, 1.5));
 }
 
 // Reference: https://research.nvidia.com/labs/rtr/approximate-mie/
@@ -314,11 +315,10 @@ float phaseFunction(const float cosTheta, const float attenuation) {
 #else // ACCURATE_PHASE_FUNCTION
 
 float phaseFunction(const float cosTheta, const float attenuation) {
-  vec2 g = vec2(scatterAnisotropy1, scatterAnisotropy2);
   vec2 weights = vec2(1.0 - scatterAnisotropyMix, scatterAnisotropyMix);
   // A similar approximation is described in the Frostbite's paper, where phase
   // angle is attenuated instead of anisotropy.
-  return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
+  return dot(henyeyGreenstein(scatterAnisotropy * attenuation, cosTheta), weights);
 }
 
 #endif // ACCURATE_PHASE_FUNCTION
