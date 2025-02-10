@@ -657,24 +657,32 @@ vec4 approximateHaze(
     return vec4(0.0);
   }
   // Analytical optical depth where density exponentially decreases with height.
-  // Reference: https://iquilezles.org/articles/fog/
+  // Based on: https://iquilezles.org/articles/fog/
   float density = modulation * hazeDensityScale * exp(-cameraHeight * hazeExpScale);
   if (density < 1e-7) {
     return vec4(0.0); // Prevent artifact in views from space
   }
   float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
   float rayDistance = min(maxRayDistance, 5e4); // Avoid over-integration
-  float expTerm = 1.0 - exp(-(rayDistance - shadowLength) * angle * hazeExpScale);
-  float opticalDepth = density / hazeExpScale * expTerm / angle;
+
+  // Derive optical depths separately for total ray distance and shadow length.
+  float expScale = angle * hazeExpScale;
+  float totalExpTerm = 1.0 - exp(-rayDistance * expScale);
+  float shadowExpTerm = 1.0 - exp(-min(rayDistance, shadowLength) * expScale);
+  float linearTerm = density / hazeExpScale / angle;
+  float opticalDepth = max((totalExpTerm - shadowExpTerm) * linearTerm, 0.0);
 
   vec3 skyIrradiance = vGroundIrradiance.sky;
   vec3 sunIrradiance = vGroundIrradiance.sun;
   vec3 inscatter = albedo * phaseFunction(cosTheta) * (sunIrradiance + skyIrradiance);
 
-  float transmittance = exp(-opticalDepth);
+  float transmittance = exp(-totalExpTerm * linearTerm);
   float attenuation = sqrt(max(transmittance, 0.0)); // Approximate self-occlusion
-  float alpha = saturate(1.0 - transmittance);
-  return vec4(inscatter * attenuation * alpha, alpha);
+  // Inscatter is attenuated by shadow length, but transmittance is not.
+  return vec4(
+    inscatter * attenuation * saturate(1.0 - exp(-opticalDepth)),
+    saturate(1.0 - transmittance)
+  );
 }
 
 #endif // HAZE
