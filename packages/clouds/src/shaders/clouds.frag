@@ -32,8 +32,6 @@ uniform vec2 targetUvScale;
 uniform float mipLevelScale;
 
 // Scattering
-uniform vec2 scatterAnisotropy;
-uniform float scatterAnisotropyMix;
 uniform float skyIrradianceScale;
 uniform float groundIrradianceScale;
 uniform float powderScale;
@@ -318,10 +316,11 @@ float phaseFunction(const float cosTheta, const float attenuation) {
 #else // ACCURATE_PHASE_FUNCTION
 
 float phaseFunction(const float cosTheta, const float attenuation) {
-  vec2 weights = vec2(1.0 - scatterAnisotropyMix, scatterAnisotropyMix);
+  const vec2 g = vec2(SCATTER_ANISOTROPY_1, SCATTER_ANISOTROPY_2);
+  vec2 weights = vec2(1.0 - SCATTER_ANISOTROPY_MIX, SCATTER_ANISOTROPY_MIX);
   // A similar approximation is described in the Frostbite's paper, where phase
   // angle is attenuated instead of anisotropy.
-  return dot(henyeyGreenstein(scatterAnisotropy * attenuation, cosTheta), weights);
+  return dot(henyeyGreenstein(g * attenuation, cosTheta), weights);
 }
 
 #endif // ACCURATE_PHASE_FUNCTION

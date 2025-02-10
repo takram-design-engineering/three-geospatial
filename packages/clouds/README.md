@@ -272,10 +272,11 @@ scatteringCoefficient: number = 1
 absorptionCoefficient: number = 0.02
 ```
 
-#### scatterAnisotropy, scatterAnisotropy, scatterAnisotropyMix
+#### scatterAnisotropy1, scatterAnisotropy2, scatterAnisotropyMix
 
 ```ts
-scatterAnisotropy: Vector2 = new Vector2(0.7, -0.2)
+scatterAnisotropy1: number = 0.7
+scatterAnisotropy2: number = -0.2
 scatterAnisotropyMix: number = 0.5
 ```
 

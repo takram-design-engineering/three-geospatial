@@ -711,16 +711,28 @@ export class CloudsEffect extends Effect {
 
   // Scattering parameters
 
-  get scatterAnisotropy(): Vector2 {
-    return this.cloudsPass.currentMaterial.uniforms.scatterAnisotropy.value
+  get scatterAnisotropy1(): number {
+    return this.cloudsPass.currentMaterial.scatterAnisotropy1
+  }
+
+  set scatterAnisotropy1(value: number) {
+    this.cloudsPass.currentMaterial.scatterAnisotropy1 = value
+  }
+
+  get scatterAnisotropy2(): number {
+    return this.cloudsPass.currentMaterial.scatterAnisotropy2
+  }
+
+  set scatterAnisotropy2(value: number) {
+    this.cloudsPass.currentMaterial.scatterAnisotropy2 = value
   }
 
   get scatterAnisotropyMix(): number {
-    return this.cloudsPass.currentMaterial.uniforms.scatterAnisotropyMix.value
+    return this.cloudsPass.currentMaterial.scatterAnisotropyMix
   }
 
   set scatterAnisotropyMix(value: number) {
-    this.cloudsPass.currentMaterial.uniforms.scatterAnisotropyMix.value = value
+    this.cloudsPass.currentMaterial.scatterAnisotropyMix = value
   }
 
   get skyIrradianceScale(): number {

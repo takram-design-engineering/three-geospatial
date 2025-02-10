@@ -92,8 +92,6 @@ export interface CloudsMaterialUniforms
 
   // Scattering
   albedo: Uniform<Vector3>
-  scatterAnisotropy: Uniform<Vector2>
-  scatterAnisotropyMix: Uniform<number>
   skyIrradianceScale: Uniform<number>
   groundIrradianceScale: Uniform<number>
   powderScale: Uniform<number>
@@ -202,8 +200,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Scattering
           albedo: new Uniform(new Vector3()),
-          scatterAnisotropy: new Uniform(new Vector2(0.7, -0.2)),
-          scatterAnisotropyMix: new Uniform(0.5),
           skyIrradianceScale: new Uniform(2.5),
           groundIrradianceScale: new Uniform(3),
           powderScale: new Uniform(0.8),
@@ -253,6 +249,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       },
       atmosphere
     )
+
+    // Ideally these should be uniforms, but perhaps due to the phase function
+    // is highly optimizable and used many times, defining them as macros
+    // improves performance by around 3-4 fps, depending on the device, though.
+    this.scatterAnisotropy1 = 0.7
+    this.scatterAnisotropy2 = -0.2
+    this.scatterAnisotropyMix = 0.5
 
     this.shapeDetail = defaults.shapeDetail
     this.turbulence = defaults.turbulence
@@ -491,6 +494,39 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       } else {
         delete this.defines.HAZE
       }
+      this.needsUpdate = true
+    }
+  }
+
+  get scatterAnisotropy1(): number {
+    return parseFloat(this.defines.SCATTER_ANISOTROPY_1)
+  }
+
+  set scatterAnisotropy1(value: number) {
+    if (value !== this.scatterAnisotropy1) {
+      this.defines.SCATTER_ANISOTROPY_1 = value.toPrecision(9)
+      this.needsUpdate = true
+    }
+  }
+
+  get scatterAnisotropy2(): number {
+    return parseFloat(this.defines.SCATTER_ANISOTROPY_2)
+  }
+
+  set scatterAnisotropy2(value: number) {
+    if (value !== this.multiScatteringOctaves) {
+      this.defines.SCATTER_ANISOTROPY_2 = value.toPrecision(9)
+      this.needsUpdate = true
+    }
+  }
+
+  get scatterAnisotropyMix(): number {
+    return parseFloat(this.defines.SCATTER_ANISOTROPY_MIX)
+  }
+
+  set scatterAnisotropyMix(value: number) {
+    if (value !== this.scatterAnisotropyMix) {
+      this.defines.SCATTER_ANISOTROPY_MIX = value.toPrecision(9)
       this.needsUpdate = true
     }
   }

@@ -83,8 +83,8 @@ function useScatteringControls(
     set({
       scatteringCoefficient: effect.scatteringCoefficient,
       absorptionCoefficient: effect.absorptionCoefficient,
-      scatterAnisotropy1: effect.scatterAnisotropy.x,
-      scatterAnisotropy2: effect.scatterAnisotropy.y,
+      scatterAnisotropy1: effect.scatterAnisotropy1,
+      scatterAnisotropy2: effect.scatterAnisotropy2,
       scatterAnisotropyMix: effect.scatterAnisotropyMix,
       skyIrradianceScale: effect.skyIrradianceScale,
       groundIrradianceScale: effect.groundIrradianceScale,
@@ -97,11 +97,7 @@ function useScatteringControls(
   if (!initRef.current) {
     return {}
   }
-  const { scatterAnisotropy1, scatterAnisotropy2, ...other } = params
-  return {
-    ...other,
-    scatterAnisotropy: [scatterAnisotropy1, scatterAnisotropy2]
-  }
+  return params
 }
 
 function useWeatherAndShapeControls(
