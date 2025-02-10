@@ -536,7 +536,7 @@ vec4 marchClouds(
           // distance.
           sunRayDistance,
           // Apply PCF only when the sun is close to the horizon.
-          maxShadowFilterRadius * saturate(1.0 - remap(dot(sunDirection, surfaceNormal), 0.0, 0.1)),
+          maxShadowFilterRadius * remapClamped(dot(sunDirection, surfaceNormal), 0.1, 0.0),
           jitter
         );
       }
@@ -601,10 +601,7 @@ vec4 marchClouds(
   // The final product of 5.9.1 and we'll evaluate this in aerial perspective.
   frontDepth = transmittanceSum > 0.0 ? weightedDistanceSum / transmittanceSum : -1.0;
 
-  return vec4(
-    radianceIntegral,
-    saturate(1.0 - remap(transmittanceIntegral, minTransmittance, 1.0))
-  );
+  return vec4(radianceIntegral, remapClamped(transmittanceIntegral, 1.0, minTransmittance));
 }
 
 #ifdef SHADOW_LENGTH

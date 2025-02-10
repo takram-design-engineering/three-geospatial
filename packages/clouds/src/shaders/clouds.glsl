@@ -129,7 +129,7 @@ MediaSample sampleMedia(
   turbulence =
     turbulenceDisplacement *
     (texture(turbulenceTexture, turbulenceUv).rgb * 2.0 - 1.0) *
-    dot(density, saturate(1.0 - remap(weather.heightFraction, vec4(0.0), vec4(0.3))));
+    dot(density, remapClamped(weather.heightFraction, vec4(0.3), vec4(0.0)));
   #endif // TURBULENCE
 
   vec3 shapePosition = (position + evolution + turbulence) * shapeRepeat + shapeOffset;
