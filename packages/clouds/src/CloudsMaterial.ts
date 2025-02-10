@@ -428,12 +428,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   get depthPacking(): number {
-    return +this.defines.DEPTH_PACKING
+    return parseInt(this.defines.DEPTH_PACKING)
   }
 
   set depthPacking(value: number) {
     if (value !== this.depthPacking) {
-      this.defines.DEPTH_PACKING = `${value}`
+      this.defines.DEPTH_PACKING = value.toFixed(0)
       this.needsUpdate = true
     }
   }
@@ -504,7 +504,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   set scatterAnisotropy1(value: number) {
     if (value !== this.scatterAnisotropy1) {
-      this.defines.SCATTER_ANISOTROPY_1 = value.toPrecision(9)
+      this.defines.SCATTER_ANISOTROPY_1 = value.toFixed(7)
       this.needsUpdate = true
     }
   }
@@ -515,7 +515,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   set scatterAnisotropy2(value: number) {
     if (value !== this.multiScatteringOctaves) {
-      this.defines.SCATTER_ANISOTROPY_2 = value.toPrecision(9)
+      this.defines.SCATTER_ANISOTROPY_2 = value.toFixed(7)
       this.needsUpdate = true
     }
   }
@@ -526,18 +526,18 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   set scatterAnisotropyMix(value: number) {
     if (value !== this.scatterAnisotropyMix) {
-      this.defines.SCATTER_ANISOTROPY_MIX = value.toPrecision(9)
+      this.defines.SCATTER_ANISOTROPY_MIX = value.toFixed(7)
       this.needsUpdate = true
     }
   }
 
   get multiScatteringOctaves(): number {
-    return +this.defines.MULTI_SCATTERING_OCTAVES
+    return parseInt(this.defines.MULTI_SCATTERING_OCTAVES)
   }
 
   set multiScatteringOctaves(value: number) {
     if (value !== this.multiScatteringOctaves) {
-      this.defines.MULTI_SCATTERING_OCTAVES = `${clamp(Math.round(value), 1, 12)}`
+      this.defines.MULTI_SCATTERING_OCTAVES = clamp(value, 1, 12).toFixed(0)
       this.needsUpdate = true
     }
   }
@@ -573,12 +573,12 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   get shadowCascadeCount(): number {
-    return +this.defines.SHADOW_CASCADE_COUNT
+    return parseInt(this.defines.SHADOW_CASCADE_COUNT)
   }
 
   set shadowCascadeCount(value: number) {
     if (value !== this.shadowCascadeCount) {
-      this.defines.SHADOW_CASCADE_COUNT = `${value}`
+      this.defines.SHADOW_CASCADE_COUNT = value.toFixed(0)
       this.needsUpdate = true
     }
   }
