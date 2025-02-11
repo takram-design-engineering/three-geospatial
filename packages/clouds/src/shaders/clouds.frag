@@ -541,9 +541,8 @@ vec4 marchClouds(
         );
       }
 
-      // I'm not sure skyIrradiance should be included in the scattering term.
       float scattering = approximateMultipleScattering(opticalDepth, cosTheta);
-      vec3 radiance = albedo * scattering * (sunIrradiance + skyIrradiance);
+      vec3 radiance = albedo * sunIrradiance * scattering;
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
@@ -675,13 +674,11 @@ vec4 approximateHaze(
   vec3 skyIrradiance = vGroundIrradiance.sky;
   vec3 sunIrradiance = vGroundIrradiance.sun;
   // TODO: Approximate multi-scattering, especially the ambient sky irradiance.
-  vec3 inscatter = albedo * phaseFunction(cosTheta) * (sunIrradiance + skyIrradiance);
+  vec3 irradiance = sunIrradiance * phaseFunction(cosTheta) + skyIrradiance * RECIPROCAL_PI4;
+  vec3 inscatter = albedo * irradiance * saturate(1.0 - exp(-effectiveOpticalDepth));
 
   // Inscatter is attenuated by shadow length, but transmittance is not.
-  return vec4(
-    inscatter * saturate(1.0 - exp(-effectiveOpticalDepth)),
-    saturate(1.0 - exp(-opticalDepth))
-  );
+  return vec4(inscatter, saturate(1.0 - exp(-opticalDepth)));
 }
 
 #endif // HAZE

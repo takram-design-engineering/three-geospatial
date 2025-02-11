@@ -220,7 +220,7 @@ function useAdvancedCloudsControls(
         },
         minShadowLengthStepSize: { value: 0, min: 50, max: 200, step: 1 },
         maxShadowLengthRayDistance: { value: 0, min: 1e4, max: 1e6 },
-        hazeDensityScaleLog10: { value: 0, min: -6, max: -2 },
+        hazeDensityScaleLog10: { value: 0, min: -6, max: -3 },
         hazeExpScaleLog10: { value: 0, min: -3, max: -1 }
       }) satisfies Partial<
         Record<
