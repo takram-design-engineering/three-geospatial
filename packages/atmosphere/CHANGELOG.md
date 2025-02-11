@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.1] - 2025-02-11
+
+### Fixed
+
+- Fixed incorrect precomputed scattering textures, [#33](https://github.com/takram-design-engineering/three-geospatial/issues/33).
+
 ## [0.7.0] - 2025-02-02
 
 ### Added
