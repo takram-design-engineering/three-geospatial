@@ -98,7 +98,7 @@ const fragmentShader = /* glsl */ `
     if (index >= int(size)) {
       discard;
     }
-    vec3 uvw = vec3(uv, (float(index)) / size);
+    vec3 uvw = vec3(fract(uv), (float(index)) / size);
     vec4 color = vec4(vec3(texture(inputTexture, uvw).r), 1.0);
     outputColor = gammaCorrect ? linearToOutputTexel(color) : color;
   }

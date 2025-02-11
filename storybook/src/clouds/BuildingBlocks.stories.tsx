@@ -1,10 +1,10 @@
 import { type Meta } from '@storybook/react'
 
-import _LocalWeather from './Clouds-LocalWeather'
-import _Shape from './Clouds-Shape'
-import _ShapeDetail from './Clouds-ShapeDetail'
-import _Turbulence from './Clouds-Turbulence'
-import _VolumetricShape from './Clouds-VolumetricShape'
+import _LocalWeather from './BuildingBlocks-LocalWeather'
+import _Shape from './BuildingBlocks-Shape'
+import _ShapeDetail from './BuildingBlocks-ShapeDetail'
+import _Turbulence from './BuildingBlocks-Turbulence'
+import _VolumetricShape from './BuildingBlocks-VolumetricShape'
 
 export default {
   title: 'clouds (WIP)/Building Blocks',
