@@ -635,8 +635,6 @@ float marchShadowLength(
     stepSize *= perspectiveStepScale;
     rayDistance += stepSize;
   }
-
-  // Scale to the length unit because we only use this in atmosphere functions.
   return shadowLength;
 }
 
@@ -655,16 +653,16 @@ vec4 approximateHaze(
   if (cameraHeight * modulation < 0.0) {
     return vec4(0.0);
   }
-  // Analytical optical depth where density exponentially decreases with height.
-  // Based on: https://iquilezles.org/articles/fog/
   float density = modulation * hazeDensityScale * exp(-cameraHeight * hazeExpScale);
   if (density < 1e-7) {
     return vec4(0.0); // Prevent artifact in views from space
   }
 
-  // Derive optical depths separately for total ray distance and shadow length.
+  // Analytical optical depth where density exponentially decreases with height.
+  // Based on: https://iquilezles.org/articles/fog/
   float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
   float expScale = angle * hazeExpScale;
+  // Derive the optical depths separately for with and without shadow length.
   float expTerm = 1.0 - exp(-maxRayDistance * expScale);
   float shadowExpTerm = 1.0 - exp(-min(maxRayDistance, shadowLength) * expScale);
   float linearTerm = density / hazeExpScale / angle;
@@ -840,6 +838,7 @@ void main() {
 
   float stbn = getSTBN();
 
+  // Ray is directed towards the ground.
   if (any(lessThan(rayNearFar, vec2(0.0)))) {
     vec4 color = vec4(0.0);
     float shadowLength = 0.0;
@@ -873,6 +872,7 @@ void main() {
     return; // Intersects with the ground, or no intersections.
   }
 
+  // Ray hits the scene objects in front of the cloud layers.
   if (rayNearFar.y < rayNearFar.x) {
     vec4 color = vec4(0.0);
     float shadowLength = 0.0;
@@ -900,6 +900,15 @@ void main() {
 
     // TODO: We can calculate velocity to reduce occlusion errors at the edges,
     // but suffers from floating-point precision errors on near objects.
+
+    // vec3 frontPosition = cameraPosition + rayNearFar.y * rayDirection;
+    // vec3 frontPositionWorld = ECEFToWorld(frontPosition);
+    // vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
+    // prevClip /= prevClip.w;
+    // vec2 prevUv = prevClip.xy * 0.5 + 0.5;
+    // vec2 velocity = (vUv - prevUv) * resolution;
+    // outputDepthVelocity = vec3(rayNearFar.y, velocity);
+
     outputColor = color;
     outputDepthVelocity = vec3(0.0);
     #ifdef SHADOW_LENGTH

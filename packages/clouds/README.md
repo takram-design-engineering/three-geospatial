@@ -30,7 +30,7 @@ yarn add @takram/three-clouds
 
 ### Known issues
 
-- The temporal upscaling is still basic and prone to ghosting and smearing, especially when viewed through sparse clouds.
+- The temporal upscaling is still basic and prone to ghosting and smearing, especially when viewed through sparse clouds, and disocclusion errors on scene objects.
 
 - Aerial perspective is applied to the clouds using transmittance-weighted front depth, an approximation that reduces the computation of atmospheric transparency. However, because this is a mean depth, it is not accurate for representing the depth of areas where distant sparse clouds overlap, and introduces artifacts.
 
@@ -91,7 +91,7 @@ yarn add @takram/three-clouds
 
 - **Shadow resolve**
 
-  Applies TAA on BSM, not for the aliasing at polygon edges, but rather to:
+  Applies TAA on BSM, not for the aliasing at polygon edges, but rather for temporal filtering:
 
   - Reduce spatial aliasing in BSM due to the high-frequency details of the clouds relative to the output resolution.
   - Reduce temporal aliasing caused by temporal jitters during shadow ray marching.
@@ -100,7 +100,7 @@ yarn add @takram/three-clouds
 
 - **Clouds**
 
-  Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective is already to the clouds here.
+  Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective is already applied to the clouds here.
 
   &rarr; [Shader](/packages/clouds/src/shaders/clouds.frag)
 
@@ -163,6 +163,12 @@ shapeDetail: boolean = true
 
 ```ts
 turbulence: boolean = true
+```
+
+#### haze
+
+```ts
+haze: boolean = true
 ```
 
 ### Cloud layers
