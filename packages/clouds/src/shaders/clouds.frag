@@ -662,26 +662,25 @@ vec4 approximateHaze(
   if (density < 1e-7) {
     return vec4(0.0); // Prevent artifact in views from space
   }
-  float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
-  float rayDistance = min(maxRayDistance, 5e4); // Avoid over-integration
 
   // Derive optical depths separately for total ray distance and shadow length.
+  float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
   float expScale = angle * hazeExpScale;
-  float totalExpTerm = 1.0 - exp(-rayDistance * expScale);
-  float shadowExpTerm = 1.0 - exp(-min(rayDistance, shadowLength) * expScale);
+  float expTerm = 1.0 - exp(-maxRayDistance * expScale);
+  float shadowExpTerm = 1.0 - exp(-min(maxRayDistance, shadowLength) * expScale);
   float linearTerm = density / hazeExpScale / angle;
-  float opticalDepth = max((totalExpTerm - shadowExpTerm) * linearTerm, 0.0);
+  float opticalDepth = expTerm * linearTerm;
+  float effectiveOpticalDepth = max((expTerm - shadowExpTerm) * linearTerm, 0.0);
 
   vec3 skyIrradiance = vGroundIrradiance.sky;
   vec3 sunIrradiance = vGroundIrradiance.sun;
+  // TODO: Approximate multi-scattering, especially the ambient sky irradiance.
   vec3 inscatter = albedo * phaseFunction(cosTheta) * (sunIrradiance + skyIrradiance);
 
-  float transmittance = exp(-totalExpTerm * linearTerm);
-  float attenuation = sqrt(max(transmittance, 0.0)); // Approximate self-occlusion
   // Inscatter is attenuated by shadow length, but transmittance is not.
   return vec4(
-    inscatter * attenuation * saturate(1.0 - exp(-opticalDepth)),
-    saturate(1.0 - transmittance)
+    inscatter * saturate(1.0 - exp(-effectiveOpticalDepth)),
+    saturate(1.0 - exp(-opticalDepth))
   );
 }
 
