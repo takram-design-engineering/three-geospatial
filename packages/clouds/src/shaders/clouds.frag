@@ -615,7 +615,7 @@ float marchShadowLength(
   float shadowLength = 0.0;
   float stepSize = minShadowLengthStepSize;
   float rayDistance = stepSize * jitter;
-  const float attenuationFactor = 1.0 - 5e-3;
+  const float attenuationFactor = 1.0 - 1e-3;
   float attenuation = 1.0;
 
   for (int i = 0; i < maxShadowLengthIterationCount; ++i) {
