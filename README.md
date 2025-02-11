@@ -36,6 +36,12 @@ cd three-geospatial
 pnpm install
 ```
 
+This repository uses [Git LFS](https://git-lfs.com) for assets. You may need to [install it](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) and pull/fetch the assets using:
+
+```sh
+git lfs pull
+```
+
 ### Commands
 
 Project level commands are defined in [`project.json`](project.json). Although library and app-specific commands are defined in the respective `project.json`, most of them are inferred targets, and you may need to run `nx show project {name}` to see them.
