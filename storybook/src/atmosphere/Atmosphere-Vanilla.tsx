@@ -88,6 +88,8 @@ function init(): void {
   // SkyLightProbe computes sky irradiance of its position.
   skyLight = new SkyLightProbe()
   skyLight.position.copy(position)
+  // @ts-expect-error Perhaps this is an issue in @types/three. Even adding new
+  // Light() results in a type error.
   scene.add(skyLight)
 
   // SunDirectionalLight computes sunlight transmittance to its target position.
@@ -103,6 +105,8 @@ function init(): void {
   sunLight.shadow.mapSize.width = 2048
   sunLight.shadow.mapSize.height = 2048
   sunLight.shadow.normalBias = 1
+  // @ts-expect-error Perhaps this is an issue in @types/three. Even adding new
+  // Light() results in a type error.
   scene.add(sunLight)
   scene.add(sunLight.target)
 
