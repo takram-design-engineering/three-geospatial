@@ -220,8 +220,8 @@ function useAdvancedCloudsControls(
         },
         minShadowLengthStepSize: { value: 0, min: 50, max: 200, step: 1 },
         maxShadowLengthRayDistance: { value: 0, min: 1e4, max: 1e6 },
-        hazeDensityScaleLog10: { value: 0, min: -7, max: -4 },
-        hazeExpScaleLog10: { value: 0, min: -4, max: -1 }
+        hazeDensityScaleLog10: { value: 0, min: -6, max: -2 },
+        hazeExpScaleLog10: { value: 0, min: -3, max: -1 }
       }) satisfies Partial<
         Record<
           keyof CloudsEffect['clouds'] | `${keyof CloudsEffect['clouds']}Log10`,
