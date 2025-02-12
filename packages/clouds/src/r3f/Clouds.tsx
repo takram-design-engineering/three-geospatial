@@ -149,7 +149,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
     },
     forwardedRef
   ) {
-    const { textures, stbn, transientStates, atoms, ...contextProps } =
+    const { textures, transientStates, atoms, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [atmosphereParameters, others] = separateProps({
@@ -231,7 +231,6 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
           shapeTexture={shapeTexture}
           shapeDetailTexture={shapeDetailTexture}
           turbulenceTexture={turbulenceTexture}
-          stbnTexture={stbn}
           {...others}
         />
         {children != null && (

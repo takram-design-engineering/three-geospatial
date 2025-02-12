@@ -10,13 +10,9 @@ import {
   useState,
   type ReactNode
 } from 'react'
-import { Matrix4, Vector3, type Data3DTexture, type Texture } from 'three'
+import { Matrix4, Vector3 } from 'three'
 
-import {
-  DEFAULT_STBN_URL,
-  Ellipsoid,
-  STBNLoader
-} from '@takram/three-geospatial'
+import { Ellipsoid } from '@takram/three-geospatial'
 
 import {
   getECIToECEFRotationMatrix,
@@ -66,7 +62,6 @@ export interface AtmosphereContextValue {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
-  stbn?: Data3DTexture | null
   transientStates?: AtmosphereTransientProps
   atoms: AtmosphereAtoms
 }
@@ -85,14 +80,12 @@ export interface AtmosphereProps {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
-  stbn?: Data3DTexture | string
   date?: number | Date
   children?: ReactNode
 }
 
 export interface AtmosphereApi extends AtmosphereTransientProps {
   textures?: PrecomputedTextures
-  stbn?: Texture
   updateByDate: (date: number | Date) => void
 }
 
@@ -106,7 +99,6 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     ellipsoid = Ellipsoid.WGS84,
     correctAltitude = true,
     photometric = true,
-    stbn: stbnProp = DEFAULT_STBN_URL,
     date,
     children
   },
@@ -143,25 +135,8 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     }
   }, [texturesProp, useHalfFloat])
 
-  // TODO: STBN will be loaded even when shadow is not used.
-  const [stbn, setSTBN] = useState(
-    typeof stbnProp !== 'string' ? stbnProp : undefined
-  )
-  useEffect(() => {
-    if (typeof stbnProp === 'string') {
-      const loader = new STBNLoader()
-      ;(async () => {
-        setSTBN(await loader.loadAsync(stbnProp))
-      })().catch(error => {
-        console.error(error)
-      })
-    } else {
-      setSTBN(stbnProp)
-    }
-  }, [stbnProp])
-
   const atoms = useMemo(
-    () => ({
+    (): AtmosphereAtoms => ({
       overlayAtom: atom<AtmosphereOverlay | null>(null),
       shadowAtom: atom<AtmosphereShadow | null>(null),
       shadowLengthAtom: atom<AtmosphereShadowLength | null>(null)
@@ -176,19 +151,10 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       ellipsoid,
       correctAltitude,
       photometric,
-      stbn,
       transientStates: transientStatesRef.current,
       atoms
     }),
-    [
-      textures,
-      useHalfFloat,
-      ellipsoid,
-      correctAltitude,
-      photometric,
-      stbn,
-      atoms
-    ]
+    [textures, useHalfFloat, ellipsoid, correctAltitude, photometric, atoms]
   )
 
   const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {
