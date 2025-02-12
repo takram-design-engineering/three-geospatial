@@ -1,6 +1,5 @@
 import { useFrame } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
-import { useAtomValue } from 'jotai'
 import { RenderPass } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { Texture } from 'three'
@@ -24,7 +23,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
 >(function AerialPerspective(props, forwardedRef) {
-  const { textures, transientStates, atoms, ...contextProps } =
+  const { textures, transientStates, ...contextProps } =
     useContext(AtmosphereContext)
 
   const [atmosphereParameters, { blendFunction, ...others }] = separateProps({
@@ -55,27 +54,15 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     }
   }, [effect])
 
-  const overlay = useAtomValue(atoms.overlayAtom)
-  useEffect(() => {
-    effect.overlay = overlay
-  }, [effect, overlay])
-
-  const shadow = useAtomValue(atoms.shadowAtom)
-  useEffect(() => {
-    effect.shadow = shadow
-  }, [effect, shadow])
-
-  const shadowLength = useAtomValue(atoms.shadowLengthAtom)
-  useEffect(() => {
-    effect.shadowLength = shadowLength
-  }, [effect, shadowLength])
-
   useFrame(() => {
     if (transientStates != null) {
       effect.sunDirection.copy(transientStates.sunDirection)
       effect.moonDirection.copy(transientStates.moonDirection)
       effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
       effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+      effect.overlay = transientStates.overlay
+      effect.shadow = transientStates.shadow
+      effect.shadowLength = transientStates.shadowLength
     }
   })
 

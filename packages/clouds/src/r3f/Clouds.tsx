@@ -1,6 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
-import { useSetAtom } from 'jotai'
 import {
   forwardRef,
   useCallback,
@@ -149,7 +148,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
     },
     forwardedRef
   ) {
-    const { textures, transientStates, atoms, ...contextProps } =
+    const { textures, transientStates, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [atmosphereParameters, others] = separateProps({
@@ -174,31 +173,37 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     })
 
-    const setOverlay = useSetAtom(atoms.overlayAtom)
-    const setShadow = useSetAtom(atoms.shadowAtom)
-    const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
-
     useEffect(() => {
-      setOverlay(effect.atmosphereOverlay)
-      setShadow(effect.atmosphereShadow)
-      setShadowLength(effect.atmosphereShadowLength)
-    }, [effect, setOverlay, setShadow, setShadowLength])
+      if (transientStates != null) {
+        transientStates.overlay = effect.atmosphereOverlay
+        transientStates.shadow = effect.atmosphereShadow
+        transientStates.shadowLength = effect.atmosphereShadowLength
+        return () => {
+          transientStates.overlay = null
+          transientStates.shadow = null
+          transientStates.shadowLength = null
+        }
+      }
+    }, [effect, transientStates])
 
     const handleChange = useCallback(
       (event: CloudsEffectChangeEvent) => {
+        if (transientStates == null) {
+          return
+        }
         switch (event.property) {
           case 'atmosphereOverlay':
-            setOverlay(effect.atmosphereOverlay)
+            transientStates.overlay = effect.atmosphereOverlay
             break
           case 'atmosphereShadow':
-            setShadow(effect.atmosphereShadow)
+            transientStates.shadow = effect.atmosphereShadow
             break
           case 'atmosphereShadowLength':
-            setShadowLength(effect.atmosphereShadowLength)
+            transientStates.shadowLength = effect.atmosphereShadowLength
             break
         }
       },
-      [effect, setOverlay, setShadow, setShadowLength]
+      [effect, transientStates]
     )
     useEffect(() => {
       effect.events.addEventListener('change', handleChange)

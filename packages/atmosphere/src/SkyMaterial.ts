@@ -68,6 +68,8 @@ export interface SkyMaterialUniforms {
 export class SkyMaterial extends AtmosphereMaterialBase {
   declare uniforms: AtmosphereMaterialBaseUniforms & SkyMaterialUniforms
 
+  shadowLength: AtmosphereShadowLength | null = null
+
   constructor(params?: SkyMaterialParameters) {
     const {
       sun,
@@ -120,23 +122,24 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     group: Group
   ): void {
     super.onBeforeRender(renderer, scene, camera, geometry, object, group)
-    const uniforms = this.uniforms
+
+    const { uniforms, defines } = this
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
 
-    const prevPerspectiveCamera = this.defines.PERSPECTIVE_CAMERA != null
+    const prevPerspectiveCamera = defines.PERSPECTIVE_CAMERA != null
     const nextPerspectiveCamera = camera.isPerspectiveCamera === true
     if (nextPerspectiveCamera !== prevPerspectiveCamera) {
       if (nextPerspectiveCamera) {
-        this.defines.PERSPECTIVE_CAMERA = '1'
+        defines.PERSPECTIVE_CAMERA = '1'
       } else {
-        delete this.defines.PERSPECTIVE_CAMERA
+        delete defines.PERSPECTIVE_CAMERA
       }
       this.needsUpdate = true
     }
 
     const color = this.groundAlbedo
-    const prevGroundAlbedo = this.defines.GROUND_ALBEDO != null
+    const prevGroundAlbedo = defines.GROUND_ALBEDO != null
     const nextGroundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
     if (nextGroundAlbedo !== prevGroundAlbedo) {
       if (nextGroundAlbedo) {
@@ -145,6 +148,22 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         delete this.defines.GROUND_ALBEDO
       }
       this.needsUpdate = true
+    }
+
+    const shadowLength = this.shadowLength
+    const prevShadowLength = defines.HAS_SHADOW_LENGTH != null
+    const nextShadowLength = shadowLength != null
+    if (nextShadowLength !== prevShadowLength) {
+      if (nextShadowLength) {
+        defines.HAS_SHADOW_LENGTH = '1'
+      } else {
+        delete defines.HAS_SHADOW_LENGTH
+        uniforms.shadowLengthBuffer.value = null
+      }
+      this.needsUpdate = true
+    }
+    if (nextShadowLength) {
+      uniforms.shadowLengthBuffer.value = shadowLength.map
     }
   }
 
@@ -213,17 +232,5 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     } else {
       this.uniforms[name].value = value as any
     }
-  }
-
-  // eslint-disable-next-line accessor-pairs
-  set shadowLength(value: AtmosphereShadowLength | null) {
-    if (value != null) {
-      this.defines.HAS_SHADOW_LENGTH = '1'
-      this.setUniform('shadowLengthBuffer', value.map)
-    } else {
-      delete this.defines.HAS_SHADOW_LENGTH
-      this.uniforms.shadowLengthBuffer.value = null
-    }
-    this.needsUpdate = true
   }
 }

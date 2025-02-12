@@ -1,5 +1,4 @@
 import { useThree } from '@react-three/fiber'
-import { atom, type WritableAtom } from 'jotai'
 import {
   createContext,
   forwardRef,
@@ -30,30 +29,15 @@ import {
   type AtmosphereShadowLength
 } from '../types'
 
-export interface AtmosphereTransientProps {
+export interface AtmosphereTransientStates {
   sunDirection: Vector3
   moonDirection: Vector3
   rotationMatrix: Matrix4
   ellipsoidCenter: Vector3
   ellipsoidMatrix: Matrix4
-}
-
-export interface AtmosphereAtoms {
-  overlayAtom: WritableAtom<
-    AtmosphereOverlay | null,
-    [AtmosphereOverlay | null],
-    void
-  >
-  shadowAtom: WritableAtom<
-    AtmosphereShadow | null,
-    [AtmosphereShadow | null],
-    void
-  >
-  shadowLengthAtom: WritableAtom<
-    AtmosphereShadowLength | null,
-    [AtmosphereShadowLength | null],
-    void
-  >
+  overlay: AtmosphereOverlay | null
+  shadow: AtmosphereShadow | null
+  shadowLength: AtmosphereShadowLength | null
 }
 
 export interface AtmosphereContextValue {
@@ -62,17 +46,10 @@ export interface AtmosphereContextValue {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
-  transientStates?: AtmosphereTransientProps
-  atoms: AtmosphereAtoms
+  transientStates?: AtmosphereTransientStates
 }
 
-export const AtmosphereContext = createContext<AtmosphereContextValue>({
-  atoms: {
-    overlayAtom: atom<AtmosphereOverlay | null>(null),
-    shadowAtom: atom<AtmosphereShadow | null>(null),
-    shadowLengthAtom: atom<AtmosphereShadowLength | null>(null)
-  }
-})
+export const AtmosphereContext = createContext<AtmosphereContextValue>({})
 
 export interface AtmosphereProps {
   textures?: PrecomputedTextures | string
@@ -84,7 +61,7 @@ export interface AtmosphereProps {
   children?: ReactNode
 }
 
-export interface AtmosphereApi extends AtmosphereTransientProps {
+export interface AtmosphereApi extends AtmosphereTransientStates {
   textures?: PrecomputedTextures
   updateByDate: (date: number | Date) => void
 }
@@ -109,7 +86,10 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     moonDirection: new Vector3(),
     rotationMatrix: new Matrix4(),
     ellipsoidCenter: new Vector3(),
-    ellipsoidMatrix: new Matrix4()
+    ellipsoidMatrix: new Matrix4(),
+    overlay: null,
+    shadow: null,
+    shadowLength: null
   })
 
   const gl = useThree(({ gl }) => gl)
@@ -135,15 +115,6 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     }
   }, [texturesProp, useHalfFloat])
 
-  const atoms = useMemo(
-    (): AtmosphereAtoms => ({
-      overlayAtom: atom<AtmosphereOverlay | null>(null),
-      shadowAtom: atom<AtmosphereShadow | null>(null),
-      shadowLengthAtom: atom<AtmosphereShadowLength | null>(null)
-    }),
-    []
-  )
-
   const context = useMemo(
     () => ({
       textures,
@@ -151,10 +122,9 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       ellipsoid,
       correctAltitude,
       photometric,
-      transientStates: transientStatesRef.current,
-      atoms
+      transientStates: transientStatesRef.current
     }),
-    [textures, useHalfFloat, ellipsoid, correctAltitude, photometric, atoms]
+    [textures, useHalfFloat, ellipsoid, correctAltitude, photometric]
   )
 
   const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {
