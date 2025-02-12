@@ -63,6 +63,7 @@ export type CloudsProps = Omit<
   | 'shapeTexture'
   | 'shapeDetailTexture'
   | 'turbulenceTexture'
+  | 'stbnTexture'
   | 'children'
 > & {
   localWeatherTexture?: Texture | ProceduralTexture | string

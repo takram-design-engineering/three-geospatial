@@ -1,9 +1,10 @@
 import { useFrame } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { RenderPass } from 'postprocessing'
-import { forwardRef, useContext, useEffect, useMemo } from 'react'
-import { Texture } from 'three'
+import { forwardRef, useContext, useEffect, useMemo, useState } from 'react'
+import { Texture, type Data3DTexture } from 'three'
 
+import { DEFAULT_STBN_URL, STBNLoader } from '@takram/three-geospatial'
 import { type PassThoughInstanceProps } from '@takram/three-geospatial/r3f'
 
 import {
@@ -13,16 +14,46 @@ import {
 import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
 
-export type AerialPerspectiveProps = PassThoughInstanceProps<
-  AerialPerspectiveEffect,
-  [],
-  Partial<AerialPerspectiveEffect>
->
+function useSTBNTextureState(
+  input?: string | Data3DTexture
+): Data3DTexture | null {
+  const [data, setData] = useState(
+    typeof input !== 'string' ? (input ?? null) : null
+  )
+  useEffect(() => {
+    if (typeof input === 'string') {
+      const loader = new STBNLoader()
+      ;(async () => {
+        setData(await loader.loadAsync(input))
+      })().catch(error => {
+        console.error(error)
+      })
+    } else {
+      setData(input ?? null)
+    }
+  }, [input])
+
+  return data
+}
+
+export type AerialPerspectiveProps = Omit<
+  PassThoughInstanceProps<
+    AerialPerspectiveEffect,
+    [],
+    Partial<AerialPerspectiveEffect>
+  >,
+  'stbnTexture'
+> & {
+  stbnTexture?: Data3DTexture | string
+}
 
 export const AerialPerspective = /*#__PURE__*/ forwardRef<
   AerialPerspectiveEffect,
   AerialPerspectiveProps
->(function AerialPerspective(props, forwardedRef) {
+>(function AerialPerspective(
+  { stbnTexture: stbnTextureProp = DEFAULT_STBN_URL, ...props },
+  forwardedRef
+) {
   const { textures, transientStates, ...contextProps } =
     useContext(AtmosphereContext)
 
@@ -54,6 +85,8 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
     }
   }, [effect])
 
+  const [needsSTBN, setNeedsSTBN] = useState(false)
+
   useFrame(() => {
     if (transientStates != null) {
       effect.sunDirection.copy(transientStates.sunDirection)
@@ -63,8 +96,17 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       effect.overlay = transientStates.overlay
       effect.shadow = transientStates.shadow
       effect.shadowLength = transientStates.shadowLength
+
+      // Load STBN only when the shadow is first enabled.
+      if (!needsSTBN && effect.shadow != null) {
+        setNeedsSTBN(true)
+      }
     }
   })
+
+  const stbnTexture = useSTBNTextureState(
+    needsSTBN ? stbnTextureProp : undefined
+  )
 
   return (
     <primitive
@@ -74,6 +116,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       normalBuffer={geometryTexture ?? normalPass?.texture ?? null}
       {...atmosphereParameters}
       {...others}
+      stbnTexture={stbnTexture}
       octEncodedNormal={geometryTexture != null}
     />
   )
