@@ -23,7 +23,9 @@ import {
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
 import {
   createData3DTextureLoaderClass,
-  parseUint8Array
+  DEFAULT_STBN_URL,
+  parseUint8Array,
+  STBNLoader
 } from '@takram/three-geospatial'
 import {
   type ExpandNestedProps,
@@ -67,6 +69,7 @@ export type CloudsProps = Omit<
   shapeTexture?: Data3DTexture | Procedural3DTexture | string
   shapeDetailTexture?: Data3DTexture | Procedural3DTexture | string
   turbulenceTexture?: Texture | ProceduralTexture | string
+  stbnTexture?: Data3DTexture | string
   children?: CloudLayersChildren
 }
 
@@ -136,6 +139,26 @@ function use3DTextureState(
   return data
 }
 
+function useSTBNTextureState(
+  input: string | Data3DTexture
+): Data3DTexture | null {
+  const [data, setData] = useState(typeof input !== 'string' ? input : null)
+  useEffect(() => {
+    if (typeof input === 'string') {
+      const loader = new STBNLoader()
+      ;(async () => {
+        setData(await loader.loadAsync(input))
+      })().catch(error => {
+        console.error(error)
+      })
+    } else {
+      setData(input)
+    }
+  }, [input])
+
+  return data
+}
+
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
   function Clouds(
     {
@@ -143,6 +166,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       shapeTexture: shapeTextureProp = DEFAULT_SHAPE_URL,
       shapeDetailTexture: shapeDetailTextureProp = DEFAULT_SHAPE_DETAIL_URL,
       turbulenceTexture: turbulenceTextureProp = DEFAULT_TURBULENCE_URL,
+      stbnTexture: stbnTextureProp = DEFAULT_STBN_URL,
       children,
       ...props
     },
@@ -223,6 +247,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
     )
     const turbulenceTexture = useTextureState(turbulenceTextureProp, gl)
+    const stbnTexture = useSTBNTextureState(stbnTextureProp)
 
     const { camera } = useContext(EffectComposerContext)
     return (
@@ -236,6 +261,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
           shapeTexture={shapeTexture}
           shapeDetailTexture={shapeDetailTexture}
           turbulenceTexture={turbulenceTexture}
+          stbnTexture={stbnTexture}
           {...others}
         />
         {children != null && (
