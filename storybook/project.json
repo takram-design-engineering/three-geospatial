@@ -5,5 +5,9 @@
   "projectType": "application",
   "tags": ["type:tool"],
   "// targets": "to see all targets run: nx show project storybook --web",
-  "targets": {}
+  "targets": {
+    "build": {
+      "dependsOn": ["typecheck"]
+    }
+  }
 }
