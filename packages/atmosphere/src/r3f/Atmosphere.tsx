@@ -40,6 +40,9 @@ export interface AtmosphereTransientStates {
   shadowLength: AtmosphereShadowLength | null
 }
 
+/** @deprecated Use AtmosphereTransientStates instead. */
+export type AtmosphereTransientProps = AtmosphereTransientStates
+
 export interface AtmosphereContextValue {
   textures?: PrecomputedTextures | null
   useHalfFloat?: boolean
