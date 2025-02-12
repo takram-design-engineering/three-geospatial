@@ -4,11 +4,11 @@ precision highp sampler2DArray;
 #include "core/math"
 #include "core/packing"
 #include "core/transform"
-#include "core/raySphereIntersection"
 #ifdef HAS_SHADOW
+#include "core/raySphereIntersection"
 #include "core/cascadedShadowMaps"
-#endif // HAS_SHADOW
 #include "core/poissonDisk"
+#endif // HAS_SHADOW
 #include "parameters"
 #include "functions"
 #include "sky"
