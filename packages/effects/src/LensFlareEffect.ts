@@ -12,7 +12,6 @@ import {
   HalfFloatType,
   Uniform,
   WebGLRenderTarget,
-  type Event,
   type Texture,
   type TextureDataType,
   type WebGLRenderer
@@ -125,10 +124,7 @@ export class LensFlareEffect extends Effect {
       resolutionY,
       resolutionScale
     )
-    this.resolution.addEventListener<keyof Event>(
-      'change' as keyof Event,
-      this.onResolutionChange
-    )
+    this.resolution.addEventListener('change', this.onResolutionChange)
 
     this.intensity = intensity
   }

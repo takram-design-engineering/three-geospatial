@@ -205,7 +205,6 @@ const Scene: FC<SceneProps> = ({
       textures={atmosphereModel === 'default' ? 'atmosphere' : 'clouds'}
       correctAltitude={correctAltitude}
       photometric={photometric}
-      stbn='core/stbn.bin'
     >
       <Globe />
       <EffectComposer ref={composerRef} multisampling={0}>

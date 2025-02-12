@@ -1,6 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
-import { useSetAtom } from 'jotai'
 import {
   forwardRef,
   useCallback,
@@ -24,7 +23,9 @@ import {
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
 import {
   createData3DTextureLoaderClass,
-  parseUint8Array
+  DEFAULT_STBN_URL,
+  parseUint8Array,
+  STBNLoader
 } from '@takram/three-geospatial'
 import {
   type ExpandNestedProps,
@@ -62,12 +63,14 @@ export type CloudsProps = Omit<
   | 'shapeTexture'
   | 'shapeDetailTexture'
   | 'turbulenceTexture'
+  | 'stbnTexture'
   | 'children'
 > & {
   localWeatherTexture?: Texture | ProceduralTexture | string
   shapeTexture?: Data3DTexture | Procedural3DTexture | string
   shapeDetailTexture?: Data3DTexture | Procedural3DTexture | string
   turbulenceTexture?: Texture | ProceduralTexture | string
+  stbnTexture?: Data3DTexture | string
   children?: CloudLayersChildren
 }
 
@@ -137,6 +140,26 @@ function use3DTextureState(
   return data
 }
 
+function useSTBNTextureState(
+  input: string | Data3DTexture
+): Data3DTexture | null {
+  const [data, setData] = useState(typeof input !== 'string' ? input : null)
+  useEffect(() => {
+    if (typeof input === 'string') {
+      const loader = new STBNLoader()
+      ;(async () => {
+        setData(await loader.loadAsync(input))
+      })().catch(error => {
+        console.error(error)
+      })
+    } else {
+      setData(input)
+    }
+  }, [input])
+
+  return data
+}
+
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
   function Clouds(
     {
@@ -144,12 +167,13 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       shapeTexture: shapeTextureProp = DEFAULT_SHAPE_URL,
       shapeDetailTexture: shapeDetailTextureProp = DEFAULT_SHAPE_DETAIL_URL,
       turbulenceTexture: turbulenceTextureProp = DEFAULT_TURBULENCE_URL,
+      stbnTexture: stbnTextureProp = DEFAULT_STBN_URL,
       children,
       ...props
     },
     forwardedRef
   ) {
-    const { textures, stbn, transientStates, atoms, ...contextProps } =
+    const { textures, transientStates, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [atmosphereParameters, others] = separateProps({
@@ -174,31 +198,37 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       }
     })
 
-    const setOverlay = useSetAtom(atoms.overlayAtom)
-    const setShadow = useSetAtom(atoms.shadowAtom)
-    const setShadowLength = useSetAtom(atoms.shadowLengthAtom)
-
     useEffect(() => {
-      setOverlay(effect.atmosphereOverlay)
-      setShadow(effect.atmosphereShadow)
-      setShadowLength(effect.atmosphereShadowLength)
-    }, [effect, setOverlay, setShadow, setShadowLength])
+      if (transientStates != null) {
+        transientStates.overlay = effect.atmosphereOverlay
+        transientStates.shadow = effect.atmosphereShadow
+        transientStates.shadowLength = effect.atmosphereShadowLength
+        return () => {
+          transientStates.overlay = null
+          transientStates.shadow = null
+          transientStates.shadowLength = null
+        }
+      }
+    }, [effect, transientStates])
 
     const handleChange = useCallback(
       (event: CloudsEffectChangeEvent) => {
+        if (transientStates == null) {
+          return
+        }
         switch (event.property) {
           case 'atmosphereOverlay':
-            setOverlay(effect.atmosphereOverlay)
+            transientStates.overlay = effect.atmosphereOverlay
             break
           case 'atmosphereShadow':
-            setShadow(effect.atmosphereShadow)
+            transientStates.shadow = effect.atmosphereShadow
             break
           case 'atmosphereShadowLength':
-            setShadowLength(effect.atmosphereShadowLength)
+            transientStates.shadowLength = effect.atmosphereShadowLength
             break
         }
       },
-      [effect, setOverlay, setShadow, setShadowLength]
+      [effect, transientStates]
     )
     useEffect(() => {
       effect.events.addEventListener('change', handleChange)
@@ -218,6 +248,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
       CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
     )
     const turbulenceTexture = useTextureState(turbulenceTextureProp, gl)
+    const stbnTexture = useSTBNTextureState(stbnTextureProp)
 
     const { camera } = useContext(EffectComposerContext)
     return (
@@ -231,7 +262,7 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
           shapeTexture={shapeTexture}
           shapeDetailTexture={shapeDetailTexture}
           turbulenceTexture={turbulenceTexture}
-          stbnTexture={stbn}
+          stbnTexture={stbnTexture}
           {...others}
         />
         {children != null && (

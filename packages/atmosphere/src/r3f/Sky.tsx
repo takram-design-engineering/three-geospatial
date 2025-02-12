@@ -1,6 +1,5 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useFrame, type MeshProps } from '@react-three/fiber'
-import { useAtomValue } from 'jotai'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { type BufferGeometry, type Color, type Mesh, type Vector3 } from 'three'
 
@@ -27,7 +26,7 @@ export type SkyProps = MeshProps &
 
 export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {
-    const { textures, transientStates, atoms, ...contextProps } =
+    const { textures, transientStates, ...contextProps } =
       useContext(AtmosphereContext)
 
     const [
@@ -55,19 +54,16 @@ export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
       }
     }, [material])
 
-    // TODO: Since cloud shadows are computed in post-processing, the shadow
-    // length texture is delayed by 1 frame.
-    const shadowLength = useAtomValue(atoms.shadowLengthAtom)
-    useEffect(() => {
-      material.shadowLength = shadowLength
-    }, [material, shadowLength])
-
     useFrame(() => {
       if (transientStates != null) {
         material.sunDirection.copy(transientStates.sunDirection)
         material.moonDirection.copy(transientStates.moonDirection)
         material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
         material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+
+        // TODO: Since cloud shadows are computed in post-processing, the shadow
+        // length texture is delayed by 1 frame.
+        material.shadowLength = transientStates.shadowLength
       }
     })
 

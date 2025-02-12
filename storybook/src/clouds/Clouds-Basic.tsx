@@ -123,7 +123,6 @@ const Scene: FC = () => {
         textures='atmosphere'
         correctAltitude={correctAltitude}
         photometric={photometric}
-        stbn='core/stbn.bin'
       >
         <EffectComposer multisampling={0} enableNormalPass>
           <Fragment key={JSON.stringify([enabled, toneMapping])}>

@@ -8,7 +8,6 @@ import {
   type Data3DTexture,
   type DataTexture,
   type DepthPackingStrategies,
-  type Event,
   type PerspectiveCamera,
   type Texture,
   type TextureDataType,
@@ -356,10 +355,7 @@ export class CloudsEffect extends Effect {
       resolutionY,
       resolutionScale
     )
-    this.resolution.addEventListener<keyof Event>(
-      'change' as keyof Event,
-      this.onResolutionChange
-    )
+    this.resolution.addEventListener('change', this.onResolutionChange)
   }
 
   private readonly onResolutionChange = (): void => {

@@ -100,7 +100,6 @@ const Scene: FC = () => {
         ref={setAtmosphere}
         textures='atmosphere'
         correctAltitude={correctAltitude}
-        stbn='core/stbn.bin'
       >
         <Sky />
         <SkyLight />

@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.8.0] - 2025-02-11
+
+### Changed
+
+- `Atmosphere`, `useAtmosphereTextureProps`: Precomputed textures will now be loaded directly from GitHub if `textures` prop is left undefined.
+- `Stars`: Data will now be loaded directly from GitHub if `data` prop is left undefined.
+- Improved safety of number conversion to GLSL macros.
+- Removed shadow length hack near the horizon.
+- Renamed `AtmosphereTransientProps` type to `AtmosphereTransientStates`.
+- Updated undocumented functions for preparing cloud and light shafts compositing.
+- Updated dependencies.
+
+### Fixed
+
+- `SkyMaterial`: Fixed changes to `groundAlbedo` didn’t trigger shader recompilation.
+- `Atmosphere`: STBN texture is now loaded only when necessary.
+- Removed dependency on `jotai`.
+- Fixed type error related to `Event`.
+
 ## [0.7.1] - 2025-02-11
 
 ### Fixed
@@ -15,17 +34,17 @@
 - Added uniform type definitions.
 - Added undocumented functions for preparing cloud and light shafts compositing.
 
-### Fixed
-
-- `StarsMaterial`: Fixed incorrect proxy to `magnitudeRange` uniform.
-- `StarsMaterial`: Ensured stars are not rendered in front of the ground.
-
 ### Changed
 
 - Switched to Vite’s native raw loading function for importing GLSL shaders.
 - Separated shader code exports in `@takram/three-atmosphere/shaders`.
 - Removed unused shader codes in atmosphere functions.
 - Updated dependencies.
+
+### Fixed
+
+- `StarsMaterial`: Fixed incorrect proxy to `magnitudeRange` uniform.
+- `StarsMaterial`: Ensured stars are not rendered in front of the ground.
 
 ## [0.6.0] - 2025-01-19
 
