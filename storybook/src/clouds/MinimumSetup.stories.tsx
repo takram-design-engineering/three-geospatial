@@ -30,7 +30,7 @@ export const MinimumSetup: StoryFn = () => (
       rotation: [0.6423512931563148, -0.2928348796035058, -0.8344824769956042]
     }}
   >
-    <Atmosphere date={new Date('2025-01-01T07:00:00Z')}>
+    <Atmosphere date={Date.parse('2025-01-01T07:00:00Z')}>
       <EffectComposer multisampling={0} enableNormalPass>
         <Clouds />
         <AerialPerspective sky sunIrradiance skyIrradiance />

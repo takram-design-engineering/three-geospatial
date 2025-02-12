@@ -9,9 +9,7 @@ import { LensFlare } from '@takram/three-geospatial-effects/r3f'
 export default {
   title: 'atmosphere/Minimum Setup',
   parameters: {
-    layout: 'fullscreen',
-    essentials: { disable: true },
-    interactions: { disable: true }
+    layout: 'fullscreen'
   }
 } satisfies Meta
 
@@ -29,7 +27,7 @@ export const MinimumSetup: StoryFn = () => (
       rotation: [0.7072729447236096, -0.48911705050206433, -1.1888907679219152]
     }}
   >
-    <Atmosphere date={new Date('2025-01-01T09:00:00Z')}>
+    <Atmosphere date={Date.parse('2025-01-01T09:00:00Z')}>
       <EffectComposer multisampling={0} enableNormalPass>
         <AerialPerspective sky sunIrradiance skyIrradiance />
         <LensFlare />
