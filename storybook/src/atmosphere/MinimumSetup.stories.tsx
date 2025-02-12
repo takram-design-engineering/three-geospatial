@@ -1,0 +1,40 @@
+import { Canvas } from '@react-three/fiber'
+import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
+import { type Meta, type StoryFn } from '@storybook/react'
+import { ToneMappingMode } from 'postprocessing'
+
+import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
+import { LensFlare } from '@takram/three-geospatial-effects/r3f'
+
+export default {
+  title: 'atmosphere/Minimum Setup',
+  parameters: {
+    layout: 'fullscreen',
+    essentials: { disable: true },
+    interactions: { disable: true }
+  }
+} satisfies Meta
+
+export const MinimumSetup: StoryFn = () => (
+  <Canvas
+    gl={{
+      antialias: false,
+      depth: false,
+      stencil: false,
+      toneMappingExposure: 10
+    }}
+    camera={{
+      // See the Sky/Basic story for deriving ECEF coordinates and rotation.
+      position: [5232062.795055689, -2.8678862431699113, 3639017.417296496],
+      rotation: [0.7072729447236096, -0.48911705050206433, -1.1888907679219152]
+    }}
+  >
+    <Atmosphere date={new Date('2025-01-01T09:00:00Z')}>
+      <EffectComposer multisampling={0} enableNormalPass>
+        <AerialPerspective sky sunIrradiance skyIrradiance />
+        <LensFlare />
+        <ToneMapping mode={ToneMappingMode.AGX} />
+      </EffectComposer>
+    </Atmosphere>
+  </Canvas>
+)

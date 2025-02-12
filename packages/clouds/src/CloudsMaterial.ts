@@ -259,6 +259,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
     this.shapeDetail = defaults.shapeDetail
     this.turbulence = defaults.turbulence
+    this.haze = defaults.haze
     this.shadowLength = defaults.lightShafts
     this.multiScatteringOctaves = defaults.clouds.multiScatteringOctaves
     this.accurateSunSkyIrradiance = defaults.clouds.accurateSunSkyIrradiance

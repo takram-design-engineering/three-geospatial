@@ -57,7 +57,7 @@ const Scene: FC = () => {
   })
   const { correctAltitude, photometric } = useControls('atmosphere', {
     correctAltitude: true,
-    photometric: false
+    photometric: true
   })
 
   const camera = useThree(({ camera }) => camera)
