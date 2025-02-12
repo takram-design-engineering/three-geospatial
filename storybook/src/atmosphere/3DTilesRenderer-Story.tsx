@@ -1,7 +1,7 @@
-import { css } from '@emotion/react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import {
+  CesiumIonAuthPlugin,
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
   TileCompressionPlugin,
@@ -14,7 +14,7 @@ import {
   TilesPlugin,
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtomValue } from 'jotai'
 import {
   EffectMaterial,
   type EffectComposer as EffectComposerImpl
@@ -44,6 +44,7 @@ import { googleMapsApiKeyAtom } from '../helpers/states'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
+import { useGoogleMapsAPIKeyControls } from '../helpers/useGoogleMapsAPIKeyControls'
 import {
   useLocalDateControls,
   type LocalDateControlsParams
@@ -59,13 +60,24 @@ const Globe: FC = () => {
     <TilesRenderer
       key={apiKey} // Reconstruct tiles when API key changes.
     >
-      <TilesPlugin
-        plugin={GoogleCloudAuthPlugin}
-        args={{
-          apiToken: apiKey,
-          autoRefreshToken: true
-        }}
-      />
+      {apiKey !== '' ? (
+        <TilesPlugin
+          plugin={GoogleCloudAuthPlugin}
+          args={{
+            apiToken: apiKey,
+            autoRefreshToken: true
+          }}
+        />
+      ) : (
+        <TilesPlugin
+          plugin={CesiumIonAuthPlugin}
+          args={{
+            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+            assetId: 2275207,
+            autoRefreshToken: true
+          }}
+        />
+      )}
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
       <TilesPlugin plugin={UpdateOnChangePlugin} />
@@ -225,51 +237,19 @@ const Scene: FC<SceneProps> = ({
 }
 
 export const Story: FC<SceneProps> = props => {
-  const [apiKey, setApiKey] = useAtom(googleMapsApiKeyAtom)
-  useControls('google maps', {
-    apiKey: {
-      value: apiKey,
-      onChange: value => {
-        setApiKey(value)
-      }
-    }
-  })
+  useGoogleMapsAPIKeyControls()
   return (
-    <>
-      <Canvas
-        gl={{
-          antialias: false,
-          depth: false,
-          stencil: false
-        }}
-        frameloop='demand'
-      >
-        <Stats />
-        <Scene {...props} />
-      </Canvas>
-      {apiKey === '' && (
-        <div
-          css={css`
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            color: white;
-            transform: translate(-50%, -50%);
-          `}
-        >
-          Enter{' '}
-          <a
-            href='https://developers.google.com/maps/documentation/tile/get-api-key'
-            target='_blank'
-            rel='noreferrer'
-            style={{ color: 'inherit' }}
-          >
-            Google Maps API key
-          </a>{' '}
-          at the top right of this screen.
-        </div>
-      )}
-    </>
+    <Canvas
+      gl={{
+        antialias: false,
+        depth: false,
+        stencil: false
+      }}
+      frameloop='demand'
+    >
+      <Stats />
+      <Scene {...props} />
+    </Canvas>
   )
 }
 
