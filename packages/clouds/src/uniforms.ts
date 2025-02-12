@@ -7,6 +7,7 @@ import {
   type Texture,
   type Vector2
 } from 'three'
+import invariant from 'tiny-invariant'
 import { type Primitive } from 'type-fest'
 
 import { type AtmosphereParameters } from '@takram/three-atmosphere'
@@ -177,46 +178,70 @@ function packDensityProfile(
   packDensityProfileVector(layers, 'constantTerm', densityProfile.constantTerms)
 }
 
-interface Interval {
-  min: number
-  max: number
+interface Entry {
+  value: number
+  flag: 0 | 1
 }
 
-const intervalsScratch: Interval[] = /*#__PURE__*/ Array.from(
-  { length: 4 },
+// prettier-ignore
+const entriesScratch: Entry[] = /*#__PURE__*/ Array.from(
+  { length: 8 },
+  () => ({ value: 0, flag: 0 })
+)
+// prettier-ignore
+const intervalsScratch = /*#__PURE__*/ Array.from(
+  { length: 3 },
   () => ({ min: 0, max: 0 })
 )
+const arrayScratch = /*#__PURE__*/ Array.from({ length: 8 }, () => 0)
 
-function compareIntervals(a: Interval, b: Interval): number {
-  return a.min !== b.min ? a.min - b.min : a.max - b.max
+function compareEntries(a: Entry, b: Entry): number {
+  return a.value !== b.value ? a.value - b.value : a.flag - b.flag
 }
 
-function mergeIntervals(a: Interval, b: Interval): void {
-  if (a.min !== a.max && b.min !== b.max && b.min < a.max) {
-    ;[b.min, b.max] = [a.min, Math.max(a.max, b.max)]
-    ;[a.min, a.max] = [0, 0] // Invalidate
-  }
-}
-
-function packIntervalHeights(
+// Redundant, but need to avoid creating garbage here as this runs every frame.
+export function packIntervalHeights(
   min: Vector4,
   max: Vector4,
   minIntervals: Vector3,
   maxIntervals: Vector3
 ): void {
-  let [a, b, c, d] = intervalsScratch
-  ;[a.min, a.max] = [min.x, max.x]
-  ;[b.min, b.max] = [min.y, max.y]
-  ;[c.min, c.max] = [min.z, max.z]
-  ;[d.min, d.max] = [min.w, max.w]
-  intervalsScratch.sort(compareIntervals)
-  ;[a, b, c, d] = intervalsScratch
-  mergeIntervals(a, b)
-  mergeIntervals(b, c)
-  mergeIntervals(c, d)
-  ;[minIntervals.x, maxIntervals.x] = [a.max, b.min]
-  ;[minIntervals.y, maxIntervals.y] = [b.max, c.min]
-  ;[minIntervals.z, maxIntervals.z] = [c.max, d.min]
+  min.toArray(arrayScratch)
+  max.toArray(arrayScratch, 4)
+  for (let i = 0; i < 8; ++i) {
+    const entry = entriesScratch[i]
+    entry.value = arrayScratch[i]
+    entry.flag = i < 4 ? 0 : 1
+  }
+  entriesScratch.sort(compareEntries)
+
+  // Reference: https://dilipkumar.medium.com/interval-coding-pattern-068c36197cf5
+  let intervalIndex = 0
+  let balance = 0
+  for (let entryIndex = 0; entryIndex < entriesScratch.length; ++entryIndex) {
+    const { value, flag } = entriesScratch[entryIndex]
+    if (balance === 0 && entryIndex > 0) {
+      const interval = intervalsScratch[intervalIndex++]
+      interval.min = entriesScratch[entryIndex - 1].value
+      interval.max = value
+    }
+    balance += flag === 0 ? 1 : -1
+  }
+  for (; intervalIndex < 3; ++intervalIndex) {
+    const interval = intervalsScratch[intervalIndex]
+    interval.min = 0
+    interval.max = 0
+  }
+
+  let interval = intervalsScratch[0]
+  minIntervals.x = interval.min
+  maxIntervals.x = interval.max
+  interval = intervalsScratch[1]
+  minIntervals.y = interval.min
+  maxIntervals.y = interval.max
+  interval = intervalsScratch[2]
+  minIntervals.z = interval.min
+  maxIntervals.z = interval.max
 }
 
 export function updateCloudLayerUniforms(
@@ -279,15 +304,15 @@ export function updateCloudLayerUniforms(
     uniforms.minHeight.value = totalMinHeight
     uniforms.maxHeight.value = totalMaxHeight
   } else {
+    invariant(totalMaxHeight === 0)
     uniforms.minHeight.value = 0
-    // TODO: Deal with empty cloud layers
   }
   if (shadowBottomHeight !== Infinity) {
     uniforms.shadowBottomHeight.value = shadowBottomHeight
     uniforms.shadowTopHeight.value = shadowTopHeight
   } else {
+    invariant(shadowTopHeight === 0)
     uniforms.shadowBottomHeight.value = 0
-    // TODO: Deal with empty cloud layers
   }
 }
 
