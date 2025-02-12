@@ -11,6 +11,7 @@ import {
 import {
   CameraTransition,
   GlobeControls,
+  TilesAttributionOverlay,
   TilesPlugin,
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
@@ -88,6 +89,7 @@ const Globe: FC = () => {
       />
       {/* Controls */}
       <GlobeControls enableDamping={true} />
+      <TilesAttributionOverlay />
     </TilesRenderer>
   )
 }

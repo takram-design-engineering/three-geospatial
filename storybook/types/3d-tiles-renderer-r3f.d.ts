@@ -13,7 +13,13 @@ declare module '3d-tiles-renderer/r3f' {
     Camera,
     Object3D
   } from 'three'
-  import type { ReactNode, Context, FC, RefAttributes } from 'react'
+  import type {
+    ReactNode,
+    Context,
+    FC,
+    RefAttributes,
+    ComponentProps
+  } from 'react'
 
   export const TilesRendererContext: Context<TilesRendererImpl | null>
 
@@ -91,4 +97,18 @@ declare module '3d-tiles-renderer/r3f' {
   export const CameraTransition: FC<
     CameraTransitionProps & RefAttributes<CameraTransitionManager>
   >
+
+  export interface CanvasDOMOverlayProps extends ComponentProps<'div'> {}
+
+  export const CanvasDOMOverlay: FC<
+    CanvasDOMOverlayProps & RefAttributes<'div'>
+  >
+
+  export interface TilesAttributionOverlayProps extends CanvasDOMOverlayPProps {
+    generateAttributions?:
+      | ((attribution: Array<{ type: string; value: any }>) => ReactNode)
+      | null
+  }
+
+  export const TilesAttributionOverlay: FC<TilesAttributionOverlayProps>
 }

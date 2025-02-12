@@ -11,6 +11,7 @@ import {
 } from '3d-tiles-renderer/plugins'
 import {
   GlobeControls,
+  TilesAttributionOverlay,
   TilesPlugin,
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
@@ -122,6 +123,7 @@ const Globe: FC = () => {
         maxAltitude={Math.PI * 0.55} // Permit grazing angles
         // maxDistance={7500} // Below the bottom of the top cloud layer, for now
       />
+      <TilesAttributionOverlay />
     </TilesRenderer>
   )
 }
