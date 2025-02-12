@@ -52,7 +52,7 @@ export function createCloudParameterUniforms(
   return {
     // Participating medium
     scatteringCoefficient: new Uniform(1),
-    absorptionCoefficient: new Uniform(0.02),
+    absorptionCoefficient: new Uniform(0),
 
     // Weather and shape
     coverage: new Uniform(0.3),

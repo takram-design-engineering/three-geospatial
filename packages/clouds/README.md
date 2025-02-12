@@ -277,7 +277,7 @@ stbnTexture: Data3DTexture | null = null
 
 ```ts
 scatteringCoefficient: number = 1
-absorptionCoefficient: number = 0.02
+absorptionCoefficient: number = 0
 ```
 
 #### scatterAnisotropy1, scatterAnisotropy2, scatterAnisotropyMix
