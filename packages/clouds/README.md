@@ -21,6 +21,7 @@ yarn add @takram/three-clouds
 ## Performance tweaks
 
 ![](docs/cloud-shape.png)
+![](docs/ray-march.png)
 
 ## Limitations
 
