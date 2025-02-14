@@ -8,7 +8,11 @@ import {
   type WebGLRenderTarget
 } from 'three'
 
-import { resolveIncludes, type UniformMap } from '@takram/three-geospatial'
+import {
+  define,
+  resolveIncludes,
+  type UniformMap
+} from '@takram/three-geospatial'
 import { depth, packing, transform } from '@takram/three-geospatial/shaders'
 
 import fragmentShader from './shaders/normalEffect.frag?raw'
@@ -107,33 +111,9 @@ export class NormalEffect extends Effect {
     this.uniforms.get('normalBuffer').value = value
   }
 
-  get octEncoded(): boolean {
-    return this.defines.has('OCT_ENCODED')
-  }
+  @define('OCT_ENCODED')
+  octEncoded: boolean
 
-  set octEncoded(value: boolean) {
-    if (value !== this.octEncoded) {
-      if (value) {
-        this.defines.set('OCT_ENCODED', '1')
-      } else {
-        this.defines.delete('OCT_ENCODED')
-      }
-      this.setChanged()
-    }
-  }
-
-  get reconstructFromDepth(): boolean {
-    return this.defines.has('RECONSTRUCT_FROM_DEPTH')
-  }
-
-  set reconstructFromDepth(value: boolean) {
-    if (value !== this.reconstructFromDepth) {
-      if (value) {
-        this.defines.set('RECONSTRUCT_FROM_DEPTH', '1')
-      } else {
-        this.defines.delete('RECONSTRUCT_FROM_DEPTH')
-      }
-      this.setChanged()
-    }
-  }
+  @define('RECONSTRUCT_FROM_DEPTH')
+  reconstructFromDepth: boolean
 }

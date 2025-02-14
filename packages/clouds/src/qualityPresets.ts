@@ -62,7 +62,6 @@ export const qualityPresets: Record<QualityPreset, Schema> = {
   // overall, which suggests the need for a fudge factor to scale the radiance.
   low: {
     ...defaults,
-    resolutionScale: 0.75, // Obvious, but 0.5 is excessive.
     lightShafts: false, // Expensive
     shapeDetail: false, // Expensive
     turbulence: false, // Expensive
@@ -76,7 +75,7 @@ export const qualityPresets: Record<QualityPreset, Schema> = {
       minExtinction: 1e-4,
       minTransmittance: 1e-1, // Makes the primary march terminate earlier.
       maxIterationCountToGround: 0, // Expensive
-      maxIterationCountToSun: 0 // Use only BSM for the optical depth.
+      maxIterationCountToSun: 1 // Only 1 march makes big difference
     },
     shadow: {
       ...defaults.shadow,

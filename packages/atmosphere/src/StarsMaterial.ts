@@ -12,7 +12,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { resolveIncludes } from '@takram/three-geospatial'
+import { define, resolveIncludes } from '@takram/three-geospatial'
 
 import {
   AtmosphereMaterialBase,
@@ -139,18 +139,6 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     this.uniforms.radianceScale.value = value
   }
 
-  get background(): boolean {
-    return this.defines.BACKGROUND != null
-  }
-
-  set background(value: boolean) {
-    if (value !== this.background) {
-      if (value) {
-        this.defines.BACKGROUND = '1'
-      } else {
-        delete this.defines.BACKGROUND
-      }
-      this.needsUpdate = true
-    }
-  }
+  @define('BACKGROUND')
+  background: boolean
 }

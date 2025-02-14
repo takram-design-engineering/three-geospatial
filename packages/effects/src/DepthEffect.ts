@@ -1,7 +1,11 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Uniform } from 'three'
 
-import { resolveIncludes, type UniformMap } from '@takram/three-geospatial'
+import {
+  define,
+  resolveIncludes,
+  type UniformMap
+} from '@takram/three-geospatial'
 import { depth, turbo } from '@takram/three-geospatial/shaders'
 
 import fragmentShader from './shaders/depthEffect.frag?raw'
@@ -52,20 +56,8 @@ export class DepthEffect extends Effect {
     this.useTurbo = useTurbo
   }
 
-  get useTurbo(): boolean {
-    return this.defines.has('USE_TURBO')
-  }
-
-  set useTurbo(value: boolean) {
-    if (this.useTurbo !== value) {
-      if (value) {
-        this.defines.set('USE_TURBO', '1')
-      } else {
-        this.defines.delete('USE_TURBO')
-      }
-      this.setChanged()
-    }
-  }
+  @define('USE_TURBO')
+  useTurbo: boolean
 
   get near(): number {
     return this.uniforms.get('near').value

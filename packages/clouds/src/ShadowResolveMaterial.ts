@@ -6,7 +6,13 @@ import {
   type DataArrayTexture
 } from 'three'
 
-import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
+import {
+  defineInt,
+  resolveIncludes,
+  unrollLoops
+} from '@takram/three-geospatial'
+
+import { defaults } from './qualityPresets'
 
 import fragmentShader from './shaders/shadowResolve.frag?raw'
 import vertexShader from './shaders/shadowResolve.vert?raw'
@@ -61,14 +67,6 @@ export class ShadowResolveMaterial extends RawShaderMaterial {
     this.uniforms.texelSize.value.set(1 / width, 1 / height)
   }
 
-  get cascadeCount(): number {
-    return parseInt(this.defines.CASCADE_COUNT)
-  }
-
-  set cascadeCount(value: number) {
-    if (value !== this.cascadeCount) {
-      this.defines.CASCADE_COUNT = value.toFixed(0)
-      this.needsUpdate = true
-    }
-  }
+  @defineInt('CASCADE_COUNT', { min: 1, max: 4 })
+  cascadeCount: number = defaults.shadow.cascadeCount
 }

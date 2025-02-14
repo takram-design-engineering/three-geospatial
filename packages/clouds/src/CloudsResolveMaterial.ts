@@ -12,7 +12,11 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
+import {
+  define,
+  resolveIncludes,
+  unrollLoops
+} from '@takram/three-geospatial'
 
 import { bayerOffsets } from './bayer'
 
@@ -74,11 +78,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
         jitterOffset: new Uniform(new Vector2()),
         varianceGamma: new Uniform(2),
         temporalAlpha: new Uniform(0.1)
-      } satisfies CloudsResolveMaterialUniforms,
-      defines: {
-        TEMPORAL_UPSCALE: '1',
-        SHADOW_LENGTH: '1'
-      }
+      } satisfies CloudsResolveMaterialUniforms
     })
   }
 
@@ -102,33 +102,9 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
     this.uniforms.jitterOffset.value.set(dx, dy)
   }
 
-  get temporalUpscale(): boolean {
-    return this.defines.TEMPORAL_UPSCALE != null
-  }
+  @define('TEMPORAL_UPSCALE')
+  temporalUpscale = true
 
-  set temporalUpscale(value: boolean) {
-    if (value !== this.temporalUpscale) {
-      if (value) {
-        this.defines.TEMPORAL_UPSCALE = '1'
-      } else {
-        delete this.defines.TEMPORAL_UPSCALE
-      }
-      this.needsUpdate = true
-    }
-  }
-
-  get shadowLength(): boolean {
-    return this.defines.SHADOW_LENGTH != null
-  }
-
-  set shadowLength(value: boolean) {
-    if (value !== this.shadowLength) {
-      if (value) {
-        this.defines.SHADOW_LENGTH = '1'
-      } else {
-        delete this.defines.SHADOW_LENGTH
-      }
-      this.needsUpdate = true
-    }
-  }
+  @define('SHADOW_LENGTH')
+  shadowLength = true
 }

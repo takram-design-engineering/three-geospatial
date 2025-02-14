@@ -13,6 +13,7 @@ import {
 } from 'three'
 
 import {
+  define,
   Ellipsoid,
   Geodetic,
   remap,
@@ -459,35 +460,11 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('normalBuffer').value = value
   }
 
-  get octEncodedNormal(): boolean {
-    return this.defines.has('OCT_ENCODED_NORMAL')
-  }
+  @define('OCT_ENCODED_NORMAL')
+  octEncodedNormal: boolean
 
-  set octEncodedNormal(value: boolean) {
-    if (value !== this.octEncodedNormal) {
-      if (value) {
-        this.defines.set('OCT_ENCODED_NORMAL', '1')
-      } else {
-        this.defines.delete('OCT_ENCODED_NORMAL')
-      }
-      this.setChanged()
-    }
-  }
-
-  get reconstructNormal(): boolean {
-    return this.defines.has('RECONSTRUCT_NORMAL')
-  }
-
-  set reconstructNormal(value: boolean) {
-    if (value !== this.reconstructNormal) {
-      if (value) {
-        this.defines.set('RECONSTRUCT_NORMAL', '1')
-      } else {
-        this.defines.delete('RECONSTRUCT_NORMAL')
-      }
-      this.setChanged()
-    }
-  }
+  @define('RECONSTRUCT_NORMAL')
+  reconstructNormal: boolean
 
   get irradianceTexture(): DataTexture | null {
     return this.uniforms.get('u_irradiance_texture').value
@@ -539,99 +516,27 @@ export class AerialPerspectiveEffect extends Effect {
     return this.uniforms.get('ellipsoidCenter').value
   }
 
-  get correctGeometricError(): boolean {
-    return this.defines.has('CORRECT_GEOMETRIC_ERROR')
-  }
+  @define('CORRECT_GEOMETRIC_ERROR')
+  correctGeometricError: boolean
 
-  set correctGeometricError(value: boolean) {
-    if (value !== this.correctGeometricError) {
-      if (value) {
-        this.defines.set('CORRECT_GEOMETRIC_ERROR', '1')
-      } else {
-        this.defines.delete('CORRECT_GEOMETRIC_ERROR')
-      }
-      this.setChanged()
-    }
-  }
-
-  get photometric(): boolean {
-    return this.defines.has('PHOTOMETRIC')
-  }
-
-  set photometric(value: boolean) {
-    if (value !== this.photometric) {
-      if (value) {
-        this.defines.set('PHOTOMETRIC', '1')
-      } else {
-        this.defines.delete('PHOTOMETRIC')
-      }
-      this.setChanged()
-    }
-  }
+  @define('PHOTOMETRIC')
+  photometric: boolean
 
   get sunDirection(): Vector3 {
     return this.uniforms.get('sunDirection').value
   }
 
-  get sunIrradiance(): boolean {
-    return this.defines.has('SUN_IRRADIANCE')
-  }
+  @define('SUN_IRRADIANCE')
+  sunIrradiance: boolean
 
-  set sunIrradiance(value: boolean) {
-    if (value !== this.sunIrradiance) {
-      if (value) {
-        this.defines.set('SUN_IRRADIANCE', '1')
-      } else {
-        this.defines.delete('SUN_IRRADIANCE')
-      }
-      this.setChanged()
-    }
-  }
+  @define('SKY_IRRADIANCE')
+  skyIrradiance: boolean
 
-  get skyIrradiance(): boolean {
-    return this.defines.has('SKY_IRRADIANCE')
-  }
+  @define('TRANSMITTANCE')
+  transmittance: boolean
 
-  set skyIrradiance(value: boolean) {
-    if (value !== this.skyIrradiance) {
-      if (value) {
-        this.defines.set('SKY_IRRADIANCE', '1')
-      } else {
-        this.defines.delete('SKY_IRRADIANCE')
-      }
-      this.setChanged()
-    }
-  }
-
-  get transmittance(): boolean {
-    return this.defines.has('TRANSMITTANCE')
-  }
-
-  set transmittance(value: boolean) {
-    if (value !== this.transmittance) {
-      if (value) {
-        this.defines.set('TRANSMITTANCE', '1')
-      } else {
-        this.defines.delete('TRANSMITTANCE')
-      }
-      this.setChanged()
-    }
-  }
-
-  get inscatter(): boolean {
-    return this.defines.has('INSCATTER')
-  }
-
-  set inscatter(value: boolean) {
-    if (value !== this.inscatter) {
-      if (value) {
-        this.defines.set('INSCATTER', '1')
-      } else {
-        this.defines.delete('INSCATTER')
-      }
-      this.setChanged()
-    }
-  }
+  @define('INSCATTER')
+  inscatter: boolean
 
   get irradianceScale(): number {
     return this.uniforms.get('irradianceScale').value
@@ -641,50 +546,14 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('irradianceScale').value = value
   }
 
-  get sky(): boolean {
-    return this.defines.has('SKY')
-  }
+  @define('SKY')
+  sky: boolean
 
-  set sky(value: boolean) {
-    if (value !== this.sky) {
-      if (value) {
-        this.defines.set('SKY', '1')
-      } else {
-        this.defines.delete('SKY')
-      }
-      this.setChanged()
-    }
-  }
+  @define('SUN')
+  sun: boolean
 
-  get sun(): boolean {
-    return this.defines.has('SUN')
-  }
-
-  set sun(value: boolean) {
-    if (value !== this.sun) {
-      if (value) {
-        this.defines.set('SUN', '1')
-      } else {
-        this.defines.delete('SUN')
-      }
-      this.setChanged()
-    }
-  }
-
-  get moon(): boolean {
-    return this.defines.has('MOON')
-  }
-
-  set moon(value: boolean) {
-    if (value !== this.moon) {
-      if (value) {
-        this.defines.set('MOON', '1')
-      } else {
-        this.defines.delete('MOON')
-      }
-      this.setChanged()
-    }
-  }
+  @define('MOON')
+  moon: boolean
 
   get moonDirection(): Vector3 {
     return this.uniforms.get('moonDirection').value
