@@ -13,7 +13,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { resolveIncludes } from '@takram/three-geospatial'
+import { define, resolveIncludes } from '@takram/three-geospatial'
 import { raySphereIntersection } from '@takram/three-geospatial/shaders'
 
 import {
@@ -167,35 +167,11 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     }
   }
 
-  get sun(): boolean {
-    return this.defines.SUN != null
-  }
+  @define('SUN')
+  sun: boolean
 
-  set sun(value: boolean) {
-    if (value !== this.sun) {
-      if (value) {
-        this.defines.SUN = '1'
-      } else {
-        delete this.defines.SUN
-      }
-      this.needsUpdate = true
-    }
-  }
-
-  get moon(): boolean {
-    return this.defines.MOON != null
-  }
-
-  set moon(value: boolean) {
-    if (value !== this.moon) {
-      if (value) {
-        this.defines.MOON = '1'
-      } else {
-        delete this.defines.MOON
-      }
-      this.needsUpdate = true
-    }
-  }
+  @define('MOON')
+  moon: boolean
 
   get moonDirection(): Vector3 {
     return this.uniforms.moonDirection.value
@@ -219,18 +195,5 @@ export class SkyMaterial extends AtmosphereMaterialBase {
 
   get groundAlbedo(): Color {
     return this.uniforms.groundAlbedo.value
-  }
-
-  private setUniform<K extends keyof SkyMaterialUniforms>(
-    name: K,
-    value:
-      | SkyMaterialUniforms[K]
-      | (SkyMaterialUniforms[K] extends Uniform<infer V> ? V : never)
-  ): void {
-    if (value instanceof Uniform) {
-      this.uniforms[name] = value
-    } else {
-      this.uniforms[name].value = value as any
-    }
   }
 }

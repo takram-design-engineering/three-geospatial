@@ -15,7 +15,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { Ellipsoid } from '@takram/three-geospatial'
+import { define, Ellipsoid } from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {
@@ -264,20 +264,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     return this.uniforms.ellipsoidCenter.value
   }
 
-  get photometric(): boolean {
-    return this.defines.PHOTOMETRIC != null
-  }
-
-  set photometric(value: boolean) {
-    if (value !== this.photometric) {
-      if (value) {
-        this.defines.PHOTOMETRIC = '1'
-      } else {
-        delete this.defines.PHOTOMETRIC
-      }
-      this.needsUpdate = true
-    }
-  }
+  @define('PHOTOMETRIC')
+  photometric: boolean
 
   get sunDirection(): Vector3 {
     return this.uniforms.sunDirection.value

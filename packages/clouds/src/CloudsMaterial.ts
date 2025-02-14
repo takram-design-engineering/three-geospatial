@@ -28,7 +28,9 @@ import {
 } from '@takram/three-atmosphere/shaders'
 import {
   assertType,
-  clamp,
+  define,
+  defineFloat,
+  defineInt,
   Geodetic,
   resolveIncludes,
   unrollLoops
@@ -242,29 +244,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           hazeDensityScale: new Uniform(3e-5),
           hazeExpScale: new Uniform(1e-3)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
-          CloudsMaterialUniforms,
-        defines: {
-          DEPTH_PACKING: '0'
-        }
+          CloudsMaterialUniforms
       },
       atmosphere
     )
-
-    // Ideally these should be uniforms, but perhaps due to the phase function
-    // is highly optimizable and used many times, defining them as macros
-    // improves performance by around 3-4 fps, depending on the device, though.
-    this.scatterAnisotropy1 = 0.7
-    this.scatterAnisotropy2 = -0.2
-    this.scatterAnisotropyMix = 0.5
-
-    this.shapeDetail = defaults.shapeDetail
-    this.turbulence = defaults.turbulence
-    this.haze = defaults.haze
-    this.shadowLength = defaults.lightShafts
-    this.multiScatteringOctaves = defaults.clouds.multiScatteringOctaves
-    this.accurateSunSkyIrradiance = defaults.clouds.accurateSunSkyIrradiance
-    this.accuratePhaseFunction = defaults.clouds.accuratePhaseFunction
-    this.shadowCascadeCount = defaults.shadow.cascadeCount
   }
 
   override onBeforeRender(
@@ -428,159 +411,42 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     this.uniforms.depthBuffer.value = value
   }
 
-  get depthPacking(): number {
-    return parseInt(this.defines.DEPTH_PACKING)
-  }
+  @defineInt('DEPTH_PACKING')
+  depthPacking = 0
 
-  set depthPacking(value: number) {
-    if (value !== this.depthPacking) {
-      this.defines.DEPTH_PACKING = value.toFixed(0)
-      this.needsUpdate = true
-    }
-  }
+  @define('SHAPE_DETAIL')
+  shapeDetail: boolean = defaults.shapeDetail
 
-  get shapeDetail(): boolean {
-    return this.defines.SHAPE_DETAIL != null
-  }
+  @define('TURBULENCE')
+  turbulence: boolean = defaults.turbulence
 
-  set shapeDetail(value: boolean) {
-    if (value !== this.shapeDetail) {
-      if (value) {
-        this.defines.SHAPE_DETAIL = '1'
-      } else {
-        delete this.defines.SHAPE_DETAIL
-      }
-      this.needsUpdate = true
-    }
-  }
+  @define('SHADOW_LENGTH')
+  shadowLength: boolean = defaults.lightShafts
 
-  get turbulence(): boolean {
-    return this.defines.TURBULENCE != null
-  }
+  @define('HAZE')
+  haze: boolean = defaults.haze
 
-  set turbulence(value: boolean) {
-    if (value !== this.turbulence) {
-      if (value) {
-        this.defines.TURBULENCE = '1'
-      } else {
-        delete this.defines.TURBULENCE
-      }
-      this.needsUpdate = true
-    }
-  }
+  @defineInt('MULTI_SCATTERING_OCTAVES', { min: 1, max: 12 })
+  multiScatteringOctaves: number = defaults.clouds.multiScatteringOctaves
 
-  get shadowLength(): boolean {
-    return this.defines.SHADOW_LENGTH != null
-  }
+  @define('ACCURATE_SUN_SKY_IRRADIANCE')
+  accurateSunSkyIrradiance: boolean = defaults.clouds.accurateSunSkyIrradiance
 
-  set shadowLength(value: boolean) {
-    if (value !== this.shadowLength) {
-      if (value) {
-        this.defines.SHADOW_LENGTH = '1'
-      } else {
-        delete this.defines.SHADOW_LENGTH
-      }
-      this.needsUpdate = true
-    }
-  }
+  @define('ACCURATE_PHASE_FUNCTION')
+  accuratePhaseFunction: boolean = defaults.clouds.accuratePhaseFunction
 
-  get haze(): boolean {
-    return this.defines.HAZE != null
-  }
+  @defineInt('SHADOW_CASCADE_COUNT')
+  shadowCascadeCount: number = defaults.shadow.cascadeCount
 
-  set haze(value: boolean) {
-    if (value !== this.haze) {
-      if (value) {
-        this.defines.HAZE = '1'
-      } else {
-        delete this.defines.HAZE
-      }
-      this.needsUpdate = true
-    }
-  }
+  // Ideally these should be uniforms, but perhaps due to the phase function
+  // is highly optimizable and used many times, defining them as macros
+  // improves fps by around 2-4, depending on the condition, though.
+  @defineFloat('SCATTER_ANISOTROPY_1')
+  scatterAnisotropy1 = 0.7
 
-  get scatterAnisotropy1(): number {
-    return parseFloat(this.defines.SCATTER_ANISOTROPY_1)
-  }
+  @defineFloat('SCATTER_ANISOTROPY_2')
+  scatterAnisotropy2 = -0.2
 
-  set scatterAnisotropy1(value: number) {
-    if (value !== this.scatterAnisotropy1) {
-      this.defines.SCATTER_ANISOTROPY_1 = value.toFixed(7)
-      this.needsUpdate = true
-    }
-  }
-
-  get scatterAnisotropy2(): number {
-    return parseFloat(this.defines.SCATTER_ANISOTROPY_2)
-  }
-
-  set scatterAnisotropy2(value: number) {
-    if (value !== this.multiScatteringOctaves) {
-      this.defines.SCATTER_ANISOTROPY_2 = value.toFixed(7)
-      this.needsUpdate = true
-    }
-  }
-
-  get scatterAnisotropyMix(): number {
-    return parseFloat(this.defines.SCATTER_ANISOTROPY_MIX)
-  }
-
-  set scatterAnisotropyMix(value: number) {
-    if (value !== this.scatterAnisotropyMix) {
-      this.defines.SCATTER_ANISOTROPY_MIX = value.toFixed(7)
-      this.needsUpdate = true
-    }
-  }
-
-  get multiScatteringOctaves(): number {
-    return parseInt(this.defines.MULTI_SCATTERING_OCTAVES)
-  }
-
-  set multiScatteringOctaves(value: number) {
-    if (value !== this.multiScatteringOctaves) {
-      this.defines.MULTI_SCATTERING_OCTAVES = clamp(value, 1, 12).toFixed(0)
-      this.needsUpdate = true
-    }
-  }
-
-  get accurateSunSkyIrradiance(): boolean {
-    return this.defines.ACCURATE_SUN_SKY_IRRADIANCE != null
-  }
-
-  set accurateSunSkyIrradiance(value: boolean) {
-    if (value !== this.accurateSunSkyIrradiance) {
-      if (value) {
-        this.defines.ACCURATE_SUN_SKY_IRRADIANCE = '1'
-      } else {
-        delete this.defines.ACCURATE_SUN_SKY_IRRADIANCE
-      }
-      this.needsUpdate = true
-    }
-  }
-
-  get accuratePhaseFunction(): boolean {
-    return this.defines.ACCURATE_PHASE_FUNCTION != null
-  }
-
-  set accuratePhaseFunction(value: boolean) {
-    if (value !== this.accuratePhaseFunction) {
-      if (value) {
-        this.defines.ACCURATE_PHASE_FUNCTION = '1'
-      } else {
-        delete this.defines.ACCURATE_PHASE_FUNCTION
-      }
-      this.needsUpdate = true
-    }
-  }
-
-  get shadowCascadeCount(): number {
-    return parseInt(this.defines.SHADOW_CASCADE_COUNT)
-  }
-
-  set shadowCascadeCount(value: number) {
-    if (value !== this.shadowCascadeCount) {
-      this.defines.SHADOW_CASCADE_COUNT = value.toFixed(0)
-      this.needsUpdate = true
-    }
-  }
+  @defineFloat('SCATTER_ANISOTROPY_MIX')
+  scatterAnisotropyMix = 0.5
 }

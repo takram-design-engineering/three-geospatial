@@ -7,7 +7,12 @@ import {
   type Data3DTexture
 } from 'three'
 
-import { resolveIncludes, unrollLoops } from '@takram/three-geospatial'
+import {
+  define,
+  defineInt,
+  resolveIncludes,
+  unrollLoops
+} from '@takram/three-geospatial'
 import { math, raySphereIntersection } from '@takram/three-geospatial/shaders'
 
 import { defaults } from './qualityPresets'
@@ -106,82 +111,24 @@ export class ShadowMaterial extends RawShaderMaterial {
     })
 
     this.cascadeCount = defaults.shadow.cascadeCount
-    this.shapeDetail = defaults.shapeDetail
-    this.turbulence = defaults.turbulence
   }
 
   setSize(width: number, height: number): void {
     this.uniforms.resolution.value.set(width, height)
   }
 
-  get cascadeCount(): number {
-    return parseInt(this.defines.CASCADE_COUNT)
-  }
+  @defineInt('CASCADE_COUNT', { min: 1, max: 4 })
+  cascadeCount: number = defaults.shadow.cascadeCount
 
-  set cascadeCount(value: number) {
-    if (value !== this.cascadeCount) {
-      this.defines.CASCADE_COUNT = value.toFixed(0)
-      this.needsUpdate = true
-    }
-  }
+  @define('TEMPORAL_PASS')
+  temporalPass = true
 
-  get temporalPass(): boolean {
-    return this.defines.TEMPORAL_PASS != null
-  }
+  @define('TEMPORAL_JITTER')
+  temporalJitter = true
 
-  set temporalPass(value: boolean) {
-    if (value !== this.temporalPass) {
-      if (value) {
-        this.defines.TEMPORAL_PASS = '1'
-      } else {
-        delete this.defines.TEMPORAL_PASS
-      }
-      this.needsUpdate = true
-    }
-  }
+  @define('SHAPE_DETAIL')
+  shapeDetail: boolean = defaults.shapeDetail
 
-  get temporalJitter(): boolean {
-    return this.defines.TEMPORAL_JITTER != null
-  }
-
-  set temporalJitter(value: boolean) {
-    if (value !== this.temporalJitter) {
-      if (value) {
-        this.defines.TEMPORAL_JITTER = '1'
-      } else {
-        delete this.defines.TEMPORAL_JITTER
-      }
-      this.needsUpdate = true
-    }
-  }
-
-  get shapeDetail(): boolean {
-    return this.defines.SHAPE_DETAIL != null
-  }
-
-  set shapeDetail(value: boolean) {
-    if (value !== this.shapeDetail) {
-      if (value) {
-        this.defines.SHAPE_DETAIL = '1'
-      } else {
-        delete this.defines.SHAPE_DETAIL
-      }
-      this.needsUpdate = true
-    }
-  }
-
-  get turbulence(): boolean {
-    return this.defines.TURBULENCE != null
-  }
-
-  set turbulence(value: boolean) {
-    if (value !== this.turbulence) {
-      if (value) {
-        this.defines.TURBULENCE = '1'
-      } else {
-        delete this.defines.TURBULENCE
-      }
-      this.needsUpdate = true
-    }
-  }
+  @define('TURBULENCE')
+  turbulence: boolean = defaults.turbulence
 }
