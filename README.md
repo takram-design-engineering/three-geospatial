@@ -64,6 +64,14 @@ Create a `.env` file in the root directory with the following variables:
 | `STORYBOOK_GOOGLE_MAP_API_KEY` | [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
 | `STORYBOOK_ION_API_TOKEN` | [Cesium Ion API access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/) |
 
+### Formatting and linting
+
+Run `nx format-all` to format your source code using Prettier. Ignore files you did not edit, as other files might also be formatted.
+
+Run `nx lint` to check for non-formatting-related code conventions.
+
+Alternatively, if you use VS Code, installing the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) can help. All coding conventions are defined in [.prettierrc](.prettierrc) and .[.prettierrc](.prettierrc), with no additional rules.
+
 ### Running Storybook
 
 All examples are created as [Storybook](https://storybook.js.org) stories, hosted at: https://takram-design-engineering.github.io/three-geospatial/.
