@@ -39,9 +39,10 @@ import {
   cascadedShadowMaps,
   depth,
   generators,
+  interleavedGradientNoise,
   math,
-  poissonDisk,
-  raySphereIntersection
+  raySphereIntersection,
+  vogelDisk
 } from '@takram/three-geospatial/shaders'
 
 import { bayerOffsets } from './bayer'
@@ -168,7 +169,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
               generators,
               raySphereIntersection,
               cascadedShadowMaps,
-              poissonDisk
+              interleavedGradientNoise,
+              vogelDisk
             },
             atmosphere: {
               parameters: atmosphereParameters,
@@ -435,8 +437,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   @define('ACCURATE_PHASE_FUNCTION')
   accuratePhaseFunction: boolean = defaults.clouds.accuratePhaseFunction
 
-  @defineInt('SHADOW_CASCADE_COUNT')
+  @defineInt('SHADOW_CASCADE_COUNT', { min: 1, max: 4 })
   shadowCascadeCount: number = defaults.shadow.cascadeCount
+
+  @defineInt('SHADOW_SAMPLE_COUNT', { min: 1, max: 16 })
+  shadowSampleCount = 8
 
   // Ideally these should be uniforms, but perhaps due to the phase function
   // is highly optimizable and used many times, defining them as macros

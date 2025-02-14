@@ -14,6 +14,7 @@ import {
 
 import {
   define,
+  defineInt,
   Ellipsoid,
   Geodetic,
   remap,
@@ -25,11 +26,12 @@ import {
 import {
   cascadedShadowMaps,
   depth,
+  interleavedGradientNoise,
   math,
   packing,
-  poissonDisk,
   raySphereIntersection,
-  transform
+  transform,
+  vogelDisk
 } from '@takram/three-geospatial/shaders'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
@@ -218,7 +220,8 @@ export class AerialPerspectiveEffect extends Effect {
             transform,
             raySphereIntersection,
             cascadedShadowMaps,
-            poissonDisk
+            interleavedGradientNoise,
+            vogelDisk
           },
           parameters,
           functions,
@@ -590,4 +593,7 @@ export class AerialPerspectiveEffect extends Effect {
   set shadowRadius(value: number) {
     this.uniforms.get('shadowRadius').value = value
   }
+
+  @defineInt('SHADOW_SAMPLE_COUNT', { min: 1, max: 16 })
+  shadowSampleCount = 8
 }
