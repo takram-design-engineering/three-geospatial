@@ -10,7 +10,8 @@ precision highp sampler2DArray;
 #include "core/generators"
 #include "core/raySphereIntersection"
 #include "core/cascadedShadowMaps"
-#include "core/poissonDisk"
+#include "core/interleavedGradientNoise"
+#include "core/vogelDisk"
 #include "atmosphere/parameters"
 #include "atmosphere/functions"
 #include "types"
@@ -190,19 +191,23 @@ float sampleShadowOpticalDepthPCF(
   float sum = 0.0;
   vec2 offset;
   #pragma unroll_loop_start
-  for (int i = 0; i < 32; ++i) {
-    #if UNROLLED_LOOP_INDEX < POISSON_DISK_COUNT
-    offset = poissonDisk[i];
+  for (int i = 0; i < 16; ++i) {
+    #if UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
+    offset = vogelDisk(
+      UNROLLED_LOOP_INDEX,
+      SHADOW_SAMPLE_COUNT,
+      interleavedGradientNoise(gl_FragCoord.xy + temporalJitter * resolution) * PI2
+    );
     sum += readShadowOpticalDepth(
       uv + offset * radius * shadowTexelSize,
       distanceToTop,
       distanceOffset,
       cascadeIndex
     );
-    #endif // UNROLLED_LOOP_INDEX < POISSON_DISK_COUNT
+    #endif // UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
   }
   #pragma unroll_loop_end
-  return sum / float(POISSON_DISK_COUNT);
+  return sum / float(SHADOW_SAMPLE_COUNT);
 }
 
 float sampleShadowOpticalDepth(
