@@ -202,7 +202,7 @@ function useAdvancedCloudsControls(
         multiScatteringOctaves: { value: 0, min: 1, max: 12, step: 1 },
         accurateSunSkyIrradiance: false,
         accuratePhaseFunction: false,
-        maxIterationCount: { value: 0, min: 100, max: 1000, step: 1 },
+        maxIterationCount: { value: 0, min: 10, max: 1000, step: 1 },
         minStepSize: { value: 0, min: 10, max: 200, step: 1 },
         maxStepSize: { value: 0, min: 200, max: 2000, step: 1 },
         maxRayDistance: { value: 0, min: 1e4, max: 1e6 },
@@ -214,7 +214,7 @@ function useAdvancedCloudsControls(
         maxIterationCountToGround: { value: 0, min: 0, max: 10, step: 1 },
         maxShadowLengthIterationCount: {
           value: 0,
-          min: 100,
+          min: 10,
           max: 1000,
           step: 1
         },
