@@ -1,10 +1,13 @@
-import { type Effect } from 'postprocessing'
 import { Material } from 'three'
 
 import { clamp } from './math'
 
+interface EffectLike {
+  defines: Map<string, string>
+}
+
 export function define(name: string) {
-  return <T extends Material | Effect, K extends keyof T>(
+  return <T extends Material | EffectLike, K extends keyof T>(
     target: T[K] extends boolean ? T : never,
     propertyKey: K
   ) => {
@@ -30,10 +33,10 @@ export function define(name: string) {
     } else {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, Effect>): boolean {
+        get(this: Extract<T, EffectLike>): boolean {
           return this.defines.has(name)
         },
-        set(this: Extract<T, Effect>, value: boolean) {
+        set(this: Extract<T, EffectLike>, value: boolean) {
           if (value !== this[propertyKey]) {
             if (value) {
               this.defines.set(name, '1')
@@ -60,7 +63,7 @@ export function defineInt(
     max = Number.MAX_SAFE_INTEGER
   }: DefineIntDecoratorOptions = {}
 ) {
-  return <T extends Material | Effect, K extends keyof T>(
+  return <T extends Material | EffectLike, K extends keyof T>(
     target: T[K] extends number ? T : never,
     propertyKey: K
   ) => {
@@ -83,11 +86,11 @@ export function defineInt(
     } else {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, Effect>): number {
+        get(this: Extract<T, EffectLike>): number {
           const value = this.defines.get(name)
           return value != null ? parseInt(value) : 0
         },
-        set(this: Extract<T, Effect>, value: number) {
+        set(this: Extract<T, EffectLike>, value: number) {
           const prevValue = this[propertyKey]
           if (value !== prevValue) {
             this.defines.set(name, clamp(value, min, max).toFixed(0))
@@ -113,7 +116,7 @@ export function defineFloat(
     precision = 7
   }: DefineFloatDecoratorOptions = {}
 ) {
-  return <T extends Material | Effect, K extends keyof T>(
+  return <T extends Material | EffectLike, K extends keyof T>(
     target: T[K] extends number ? T : never,
     propertyKey: K
   ) => {
@@ -136,11 +139,11 @@ export function defineFloat(
     } else {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, Effect>): number {
+        get(this: Extract<T, EffectLike>): number {
           const value = this.defines.get(name)
           return value != null ? parseFloat(value) : 0
         },
-        set(this: Extract<T, Effect>, value: number) {
+        set(this: Extract<T, EffectLike>, value: number) {
           const prevValue = this[propertyKey]
           if (value !== prevValue) {
             this.defines.set(name, clamp(value, min, max).toFixed(precision))
