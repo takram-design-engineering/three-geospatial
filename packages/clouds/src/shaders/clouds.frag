@@ -626,6 +626,8 @@ float marchShadowLength(
   const float attenuationFactor = 1.0 - 1e-3;
   float attenuation = 1.0;
 
+  // TODO: This march is closed, and sample resolution can be much lower.
+  // Refining the termination by binary search will make it much more efficient.
   for (int i = 0; i < maxShadowLengthIterationCount; ++i) {
     if (rayDistance > maxRayDistance) {
       break; // Termination
