@@ -14,12 +14,20 @@ import {
   type WebGLRenderer
 } from 'three'
 
-export interface Procedural3DTextureParameters {
+export interface Procedural3DTexture {
+  readonly size: number
+  readonly texture: Data3DTexture
+
+  dispose: () => void
+  render: (renderer: WebGLRenderer, deltaTime?: number) => void
+}
+
+export interface Procedural3DTextureBaseParameters {
   size: number
   fragmentShader: string
 }
 
-export class Procedural3DTexture {
+export class Procedural3DTextureBase implements Procedural3DTexture {
   readonly size: number
   needsRender = true
 
@@ -28,7 +36,7 @@ export class Procedural3DTexture {
   private readonly renderTarget: WebGL3DRenderTarget
   private readonly camera = new Camera()
 
-  constructor({ size, fragmentShader }: Procedural3DTextureParameters) {
+  constructor({ size, fragmentShader }: Procedural3DTextureBaseParameters) {
     this.size = size
     this.material = new RawShaderMaterial({
       glslVersion: GLSL3,

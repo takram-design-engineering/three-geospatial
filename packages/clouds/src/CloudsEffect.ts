@@ -1,15 +1,15 @@
 import { Effect, EffectAttribute, Resolution } from 'postprocessing'
 import {
   Camera,
+  Data3DTexture,
   EventDispatcher,
   Matrix4,
+  Texture,
   Vector2,
   Vector3,
-  type Data3DTexture,
   type DataTexture,
   type DepthPackingStrategies,
   type PerspectiveCamera,
-  type Texture,
   type TextureDataType,
   type WebGLRenderer,
   type WebGLRenderTarget
@@ -38,8 +38,8 @@ import {
   type CloudsMaterialUniforms
 } from './CloudsMaterial'
 import { CloudsPass } from './CloudsPass'
-import { Procedural3DTexture } from './Procedural3DTexture'
-import { ProceduralTexture } from './ProceduralTexture'
+import { type Procedural3DTexture } from './Procedural3DTexture'
+import { type ProceduralTexture } from './ProceduralTexture'
 import { defaults, qualityPresets, type QualityPreset } from './qualityPresets'
 import {
   type ShadowMaterial,
@@ -553,12 +553,12 @@ export class CloudsEffect extends Effect {
   }
 
   set localWeatherTexture(value: Texture | ProceduralTexture | null) {
-    if (value instanceof ProceduralTexture) {
-      this.proceduralLocalWeather = value
-      this.parameterUniforms.localWeatherTexture.value = value.texture
-    } else {
+    if (value instanceof Texture || value == null) {
       this.proceduralLocalWeather = undefined
       this.parameterUniforms.localWeatherTexture.value = value
+    } else {
+      this.proceduralLocalWeather = value
+      this.parameterUniforms.localWeatherTexture.value = value.texture
     }
   }
 
@@ -567,12 +567,12 @@ export class CloudsEffect extends Effect {
   }
 
   set shapeTexture(value: Data3DTexture | Procedural3DTexture | null) {
-    if (value instanceof Procedural3DTexture) {
-      this.proceduralShape = value
-      this.parameterUniforms.shapeTexture.value = value.texture
-    } else {
+    if (value instanceof Data3DTexture || value == null) {
       this.proceduralShape = undefined
       this.parameterUniforms.shapeTexture.value = value
+    } else {
+      this.proceduralShape = value
+      this.parameterUniforms.shapeTexture.value = value.texture
     }
   }
 
@@ -584,12 +584,12 @@ export class CloudsEffect extends Effect {
   }
 
   set shapeDetailTexture(value: Data3DTexture | Procedural3DTexture | null) {
-    if (value instanceof Procedural3DTexture) {
-      this.proceduralShapeDetail = value
-      this.parameterUniforms.shapeDetailTexture.value = value.texture
-    } else {
+    if (value instanceof Data3DTexture || value == null) {
       this.proceduralShapeDetail = undefined
       this.parameterUniforms.shapeDetailTexture.value = value
+    } else {
+      this.proceduralShapeDetail = value
+      this.parameterUniforms.shapeDetailTexture.value = value.texture
     }
   }
 
@@ -601,12 +601,12 @@ export class CloudsEffect extends Effect {
   }
 
   set turbulenceTexture(value: Texture | ProceduralTexture | null) {
-    if (value instanceof ProceduralTexture) {
-      this.proceduralTurbulence = value
-      this.parameterUniforms.turbulenceTexture.value = value.texture
-    } else {
+    if (value instanceof Texture || value == null) {
       this.proceduralTurbulence = undefined
       this.parameterUniforms.turbulenceTexture.value = value
+    } else {
+      this.proceduralTurbulence = value
+      this.parameterUniforms.turbulenceTexture.value = value.texture
     }
   }
 
