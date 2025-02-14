@@ -466,7 +466,7 @@ vec3 approximateIrradianceFromGround(
 vec4 marchClouds(
   const vec3 rayOrigin,
   const vec3 rayDirection,
-  const float maxRayDistance,
+  const vec2 rayNearFar,
   const float cosTheta,
   const float jitter,
   const float rayStartTexelsPerPixel,
@@ -478,7 +478,8 @@ vec4 marchClouds(
   float weightedDistanceSum = 0.0;
   float transmittanceSum = 0.0;
 
-  float stepSize = minStepSize;
+  float maxRayDistance = rayNearFar.y - rayNearFar.x;
+  float stepSize = minStepSize + (perspectiveStepScale - 1.0) * rayNearFar.x;
   // I don't understand why spatial aliasing remains unless doubling the jitter.
   float rayDistance = stepSize * jitter * 2.0;
 
@@ -615,11 +616,12 @@ vec4 marchClouds(
 float marchShadowLength(
   const vec3 rayOrigin,
   const vec3 rayDirection,
-  const float maxRayDistance,
+  const vec2 rayNearFar,
   const float jitter
 ) {
   float shadowLength = 0.0;
-  float stepSize = minShadowLengthStepSize;
+  float maxRayDistance = rayNearFar.y - rayNearFar.x;
+  float stepSize = minShadowLengthStepSize + (perspectiveStepScale - 1.0) * rayNearFar.x;
   float rayDistance = stepSize * jitter;
   const float attenuationFactor = 1.0 - 1e-3;
   float attenuation = 1.0;
@@ -855,7 +857,7 @@ void main() {
       shadowLength = marchShadowLength(
         shadowRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
-        shadowRayNearFar.y - shadowRayNearFar.x,
+        shadowRayNearFar,
         stbn
       );
     }
@@ -889,7 +891,7 @@ void main() {
       shadowLength = marchShadowLength(
         shadowRayNearFar.x * rayDirection + cameraPosition,
         rayDirection,
-        shadowRayNearFar.y - shadowRayNearFar.x,
+        shadowRayNearFar,
         stbn
       );
     }
@@ -944,7 +946,7 @@ void main() {
   vec4 color = marchClouds(
     rayOrigin,
     rayDirection,
-    rayNearFar.y - rayNearFar.x,
+    rayNearFar,
     cosTheta,
     stbn,
     pow(2.0, mipLevel),
@@ -988,7 +990,7 @@ void main() {
     shadowLength = marchShadowLength(
       shadowRayNearFar.x * rayDirection + cameraPosition,
       rayDirection,
-      shadowRayNearFar.y - shadowRayNearFar.x,
+      shadowRayNearFar,
       stbn
     );
   }
