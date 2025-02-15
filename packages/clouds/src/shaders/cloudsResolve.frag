@@ -1,6 +1,7 @@
 precision highp float;
 precision highp sampler2DArray;
 
+#include "core/turbo"
 #include "catmullRomSampling"
 #include "varianceClipping"
 
@@ -196,6 +197,6 @@ void main() {
   #endif // TEMPORAL_UPSCALE
 
   #if defined(SHADOW_LENGTH) && defined(DEBUG_SHOW_SHADOW_LENGTH)
-  outputColor = vec4(vec3(outputShadowLength * 0.05), 1.0);
+  outputColor = vec4(turbo(outputShadowLength * 0.05), 1.0);
   #endif // defined(SHADOW_LENGTH) && defined(DEBUG_SHOW_SHADOW_LENGTH)
 }
