@@ -42,6 +42,7 @@ import {
   interleavedGradientNoise,
   math,
   raySphereIntersection,
+  turbo,
   vogelDisk
 } from '@takram/three-geospatial/shaders'
 
@@ -166,6 +167,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
             core: {
               depth,
               math,
+              turbo,
               generators,
               raySphereIntersection,
               cascadedShadowMaps,
