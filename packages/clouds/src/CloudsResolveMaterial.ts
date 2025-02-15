@@ -12,11 +12,8 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import {
-  define,
-  resolveIncludes,
-  unrollLoops
-} from '@takram/three-geospatial'
+import { define, resolveIncludes, unrollLoops } from '@takram/three-geospatial'
+import { turbo } from '@takram/three-geospatial/shaders'
 
 import { bayerOffsets } from './bayer'
 
@@ -63,6 +60,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
       vertexShader,
       fragmentShader: unrollLoops(
         resolveIncludes(fragmentShader, {
+          core: { turbo },
           catmullRomSampling,
           varianceClipping
         })
