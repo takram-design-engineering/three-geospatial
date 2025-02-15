@@ -2,7 +2,12 @@
 
 [![npm version](https://img.shields.io/npm/v/@takram/three-clouds.svg?style=flat-square)](https://www.npmjs.com/package/@takram/three-clouds) [![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic)
 
-This library is under active development and is in pre-release status.
+A Three.js and R3F (React Three Fiber) implementation of geospatial volumetric clouds with features including:
+
+- Shadows cast on scene objects
+- Temporal upscaling and filtering
+- Light shafts (crepuscular rays)
+- Haze (sparse fog)
 
 This library is part of a project to prototype the rendering aspect of a Web GIS engine. For more details on the background and current status of this project, please refer to the [main README](/README.md).
 
@@ -14,11 +19,123 @@ This library is part of a project to prototype the rendering aspect of a Web GIS
 npm install @takram/three-clouds
 pnpm add @takram/three-clouds
 yarn add @takram/three-clouds
-``` -->
+```
 
-## Synopsis
+Peer dependencies include `three` and `postprocessing`, for R3F `react`, `@react-three/fiber`, and `@react-three/postprocessing`. -->
+
+## Usage
+
+### Default clouds
+
+Place [`Clouds`](#clouds) inside [`EffectComposer`](https://github.com/pmndrs/postprocessing) before [`AerialPerspective`](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspective).
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
+import { Clouds } from '@takram/three-clouds/r3f'
+
+const Scene = () => (
+  <Atmosphere>
+    <EffectComposer enableNormalPass>
+      <Clouds qualityPreset='high' coverage={0.4} />
+      <AerialPerspective sky skyIrradiance sunIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
+```
+
+![Example of Tokyo](docs/tokyo.jpg)
+[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo)
+
+![Example of Fuji](docs/fuji.jpg)
+[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--fuji)
+
+![Example of London](docs/london.jpg)
+[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--london)
+
+### Configuring cloud layers
+
+Clouds can be customized using [`CloudLayer`](#cloudlayer).
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
+import { Clouds } from '@takram/three-clouds/r3f'
+
+const Scene = () => (
+  <Atmosphere>
+    <EffectComposer enableNormalPass>
+      <Clouds qualityPreset='high' coverage={0.4}>
+        <CloudLayer altitude={750} height={650} />
+        <CloudLayer altitude={1000} height={1200} />
+        <CloudLayer
+          altitude={7500}
+          height={500}
+          densityScale={0.003}
+          shapeAmount={0.4}
+          shapeDetailAmount={0}
+          coverageFilterWidth={0.5}
+        />
+      </Clouds>
+      <AerialPerspective sky skyIrradiance sunIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
+```
+
+### Configuring weather
+
+Provide a path to your weather texture. This also applies to shape, shape detail, and turbulence textures.
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
+import { Clouds } from '@takram/three-clouds/r3f'
+
+const Scene = () => (
+  <Atmosphere>
+    <EffectComposer enableNormalPass>
+      <Clouds weatherTexture={/* path to weather texture */} />
+      <AerialPerspective sky skyIrradiance sunIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
+```
+
+### Generating textures procedurally
+
+Pass an object that implements from [`ProceduralTexture`](#proceduraltexture-procedural3dtexture). For shape and shape detail, use [`Procedural3DTexture`](#proceduraltexture-procedural3dtexture).
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
+import { ProceduralTextureBase } from '@takram/three-clouds'
+import { Clouds } from '@takram/three-clouds/r3f'
+
+const weatherTexture = new ProceduralTextureBase({
+  size: 512,
+  fragmentShader: /* glsl */ `
+    in vec2 vUv;
+    layout(location = 0) out vec4 outputColor;
+    void main() {
+      outputColor = ...;
+    }
+  `
+})
+
+const Scene = () => (
+  <Atmosphere>
+    <EffectComposer enableNormalPass>
+      <Clouds weatherTexture={weatherTexture} />
+      <AerialPerspective sky skyIrradiance sunIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
+```
 
 ## Performance tweaks
+
+Volumetric clouds are not a lightweight effect. Please refer to the [performance tweaks](#performance-tweaks) section to optimize for your target devices.
 
 ![](docs/cloud-shape.png)
 ![](docs/ray-march.png)
@@ -63,6 +180,7 @@ yarn add @takram/three-clouds
 **Three.js**
 
 - [`CloudsEffect`](#cloudseffect)
+- [`ProceduralTexture`, `Procedural3DTexture`](#proceduraltexture-procedural3dtexture)
 - [`LocalWeather`](#localweather)
 - [`CloudShape`](#cloudshape)
 - [`CloudShapeDetail`](#cloudshapedetail)
@@ -232,10 +350,10 @@ coverageFilterWidth: number = 0.6
 
 ```ts
 densityProfile: DensityProfile = {
-  expTerm: number = 0,
-  expScale: number = 0,
-  linearTerm: number = 0.75,
-  constantTerm: number = 0.25
+  expTerm: (number = 0),
+  expScale: (number = 0),
+  linearTerm: (number = 0.75),
+  constantTerm: (number = 0.25)
 }
 ```
 
@@ -392,32 +510,156 @@ splitLambda: number = 0.6
 
 ### Advanced clouds parameters
 
+These parameters are not intended to be adjusted unless you understand what the shader code does.
+
 #### clouds.multiScatteringOctaves
+
+```ts
+multiScatteringOctaves: number = 8
+```
+
+The number of octaves accumulated to approximate multiple scattering. A higher value results in brighter clouds, but values beyond 8 have no noticeable effect.
+
 #### clouds.accurateSunSkyIrradiance
+
+```ts
+accurateSunSkyIrradiance: boolean = true
+```
+
+Whether to sample sun and sky irradiance at every sample point during ray marching. If disabled, irradiance is approximated by interpolating values at the bottom and top of the total cloud layers above the camera, which is only plausible for small-scale scenes.
+
 #### clouds.accuratePhaseFunction
+
+```ts
+accuratePhaseFunction: boolean = false
+```
+
+Set this to true to use a numerically-fitted large particle (d=10) Mie phase function instead of the dual-robe Henyey-Greenstein function. However, it won't be plausible without a more precise computation of multiple scattering.
+
 #### clouds.maxIterationCount
+
+```ts
+maxIterationCount: number = 500
+```
+
+The limit on the number of iterations for the primary ray marching.
+
 #### clouds.minStepSize, clouds.maxStepSize
+
+```ts
+minStepSize: number = 50
+maxStepSize: number = 1000
+```
+
+Controls the step size for the primary ray marching.
+
 #### clouds.maxRayDistance
+
+```ts
+maxRayDistance: number = 2e5
+```
+
+The limit on the primary ray distance.
+
 #### clouds.perspectiveStepScale
+
+```ts
+perspectiveStepScale: number = 1.01
+```
+
+The growth factor of the step size during ray marching. This applies to both the primary rays and shadow length rays.
+
 #### clouds.minDensity, clouds.minExtinction, clouds.minTransmittance
+
+```ts
+minDensity: number = 1e-5
+minExtinction: number = 1e-5
+minTransmittance: number = 1e-2
+```
+
+The minimum thresholds for density, extinction and transmittance, which determine the early termination of the primary rays.
+
 #### clouds.maxIterationCountToSun, clouds.maxIterationCountToGround
-#### clouds.minSecondaryStepSize
-#### clouds.secondaryStepScale
+
+```ts
+maxIterationCountToSun: number = 3
+maxIterationCountToGround: number = 2
+```
+
+The number of steps for ray marching toward the sun and ground (secondary rays). This enhances cloud details, but is very costly, and values greater than 4 have little improvements on quality.
+
+#### clouds.minSecondaryStepSize, clouds.secondaryStepScale
+
+```ts
+minSecondaryStepSize: number = 100
+secondaryStepScale: number = 2
+```
+
+Controls the step size for the secondary ray marching.
+
 #### clouds.maxShadowFilterRadius
+
+```ts
+maxShadowFilterRadius: number = 6
+```
+
+The radius for PCF on BSM when the sun is near the horizon. Setting this to 0 disables PCF, but it will suffer from aliasing.
+
 #### clouds.maxShadowLengthIterationCount
+
+```ts
+maxShadowFilterRadius: number = 500
+```
+
+The limit on the number of iterations for the shadow length ray marching.
+
 #### clouds.minShadowLengthStepSize
+
+```ts
+minShadowLengthStepSize: number = 50
+```
+
+Controls the step size for the shadow length ray marching.
+
 #### clouds.maxShadowLengthRayDistance
+
+```ts
+maxShadowLengthRayDistance: number = 2e5
+```
+
+The limit on the shadow length ray distance.
+
 #### clouds.hazeDensityScale
+
+```ts
+hazeDensityScale: number = 3e-5
+```
+
+Controls the density of the haze. A greater value makes it denser.
+
 #### clouds.hazeExpScale
+
+```ts
+hazeExpScale: number = 1e-3
+```
+
+Controls the rate at which the haze density exponentially decreases with altitude. A lower value makes it more concentrated near the ground and spreads it more at higher altitudes.
 
 ### Advanced shadow parameters
 
 #### shadow.temporalPass
+
 #### shadow.temporalJitter
+
 #### shadow.maxIterationCount
+
 #### shadow.minStepSize, shadow.maxStepSize
+
 #### shadow.minDensity, shadow.minExtinction, shadow.minTransmittance
+
 #### shadow.opticalDepthTailScale
+
+## ProceduralTexture, Procedural3DTexture
 
 ## LocalWeather
 

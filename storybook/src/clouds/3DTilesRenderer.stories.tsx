@@ -26,13 +26,14 @@ export const Tokyo: StoryFn = () => (
 export const Fuji: StoryFn = () => (
   <Story
     dayOfYear={200}
-    timeOfDay={5.5}
+    timeOfDay={17.5}
     exposure={10}
-    longitude={138.802}
-    latitude={35.1345}
-    heading={60}
-    pitch={-12}
-    distance={1950}
+    longitude={138.6340}
+    latitude={35.5000}
+    heading={-91}
+    pitch={-27}
+    distance={8444}
+    coverage={0.4}
   />
 )
 

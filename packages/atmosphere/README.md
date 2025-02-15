@@ -14,7 +14,9 @@ pnpm add @takram/three-atmosphere
 yarn add @takram/three-atmosphere
 ```
 
-## Synopsis
+Peer dependencies include `three` and `postprocessing`, for R3F `react`, `@react-three/fiber`, `@react-three/postprocessing`, and `@react-three/drei`.
+
+## Usage
 
 ### Deferred lighting
 
@@ -47,10 +49,10 @@ const Scene = () => {
 ```
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
-[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan) (Requires [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) to display the scene.)
+[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
-[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji) (Requires [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) to display the scene.)
+[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
 
 ### Forward lighting
 
@@ -89,7 +91,7 @@ const Scene = () => {
 ```
 
 ![Example of forward lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
-[Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
+[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
 
 ### Transient update by date
 
