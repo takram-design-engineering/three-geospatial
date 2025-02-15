@@ -827,6 +827,9 @@ void main() {
   #ifdef DEBUG_SHOW_SHADOW_MAP
   outputColor = getCascadedShadowMaps(vUv);
   outputDepthVelocity = vec3(0.0);
+  #ifdef SHADOW_LENGTH
+  outputShadowLength = 0.0;
+  #endif // SHADOW_LENGTH
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 
