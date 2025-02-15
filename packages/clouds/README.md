@@ -135,10 +135,41 @@ const Scene = () => (
 
 ## Performance tweaks
 
-Volumetric clouds are not a lightweight effect. Please refer to the [performance tweaks](#performance-tweaks) section to optimize for your target devices.
+Volumetric clouds are not a lightweight effect. You will need to adjust the quality settings for your target devices.
+
+There are 4 quality presets that you may consider:
+
+- **Low**: Disables shape detail, light shafts, and turbulence, and significantly lowers the precision of ray marching
+- **Medium**: Disables light shafts and turbulence, as well as lowering the precision of ray marching
+- **High**: The baseline settings
+- **Ultra**: Increases the resolution of BSM
+
+If “Low” quality preset still does not meet your performance goal, consider using skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
+
+Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo). Note that they are relatively new devices as of this writing.
+
+| Device                | FPS    | Quality    | Temporal upscaling | Canvas resolution | Browser |
+| --------------------- | ------ | ---------- | ------------------ | ----------------- | ------- |
+| iPhone 13             | 36-53  | Low        | Yes                | 780×1326px        | Safari  |
+| iPad Pro (1st gen.)   | 30-32  | Low        | Yes                | 2388×1520px       | Safari  |
+| iPad Pro (M4)         | **60** | **Medium** | Yes                | 2420×1520px       | Safari  |
+| iPad Pro (M4)         | 43-55  | High       | Yes                | 2420×1520px       | Safari  |
+| MacBook Pro (M3 Max)  |        | High       | Yes                |                   | Chrome  |
+| Mac Studio (M2 Ultra) | **60** | **High**   | Yes                | 4K                | Chrome  |
+| Mac Studio (M2 Ultra) | **60** | **Ultra**  | Yes                | 4K                | Chrome  |
+| Mac Studio (M2 Ultra) | 29-31  | High       | **No**             | 4K                | Chrome  |
+| GeForce 4090          | **60** | **Ultra**  | Yes                | 4K                | Chrome  |
+| GeForce 4090          | **60** | **Ultra**  | **No**             | 4K                | Chrome  |
+
+The other factor that influences the performance is how clouds are modeled. Clouds are roughly modeled as shown in the image below.
 
 ![](docs/cloud-shape.png)
+
+Ray marching can be visualized as follows:
+
 ![](docs/ray-march.png)
+
+This illustrates that greater total cloud layer height increases computational cost, and excessive erosion reduces efficiency by causing rays to miss the clouds, leading to unnecessary sampling of weather textures.
 
 ## Limitations
 
@@ -150,7 +181,7 @@ Volumetric clouds are not a lightweight effect. Please refer to the [performance
 
 - The temporal upscaling is still basic and prone to ghosting and smearing, especially when viewed through sparse clouds, and disocclusion errors on scene objects.
 
-- Aerial perspective is applied to the clouds using transmittance-weighted front depth, an approximation that reduces the computation of atmospheric transparency. However, because this is a mean depth, it is not accurate for representing the depth of areas where distant sparse clouds overlap, and introduces artifacts.
+- Aerial perspective is applied to the clouds using transmittance-weighted mean depth of clouds, an approximation that reduces the computation of atmospheric transparency. However, because this is a mean depth, it is not accurate for representing the depth of areas where distant sparse clouds overlap, and introduces artifacts.
 
 ### Possible improvements
 
@@ -158,7 +189,7 @@ Volumetric clouds are not a lightweight effect. Please refer to the [performance
 
 - The cloud base of each layer lines up at the same altitude, making it look artificial. This may be improved by tweaking the shape altering function.
 
-- Interpolated sun and sky irradiance, when `accurateSunSkyIrradiance` is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
+- Interpolated sun and sky irradiance, when [`accurateSunSkyIrradiance`](#cloudsaccuratesunskyirradiance) is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
 
 - Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera’s depth onto the sun’s view.
 
@@ -210,7 +241,7 @@ Volumetric clouds are not a lightweight effect. Please refer to the [performance
 
 - **Shadow resolve**
 
-  Applies TAA on BSM, not for the aliasing at polygon edges, but rather for temporal filtering:
+  Applies temporal anti-aliasing (TAA) on BSM, not for the aliasing at polygon edges, but rather for temporal filtering:
 
   - Reduce spatial aliasing in BSM due to the high-frequency details of the clouds relative to the output resolution.
   - Reduce temporal aliasing caused by temporal jitters during shadow ray marching.
@@ -603,7 +634,7 @@ Controls the step size for the secondary ray marching.
 maxShadowFilterRadius: number = 6
 ```
 
-The radius for PCF on BSM when the sun is near the horizon. Setting this to 0 disables PCF, but it will suffer from aliasing.
+The radius for percentage-closer filtering (PCF) on BSM when the sun is near the horizon. Setting this to 0 disables PCF, but it will suffer from aliasing.
 
 #### clouds.maxShadowLengthIterationCount
 
