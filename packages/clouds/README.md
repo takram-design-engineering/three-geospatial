@@ -382,11 +382,15 @@ cloudLayers: CloudLayer[] = [defaultCloudLayer, ...]
 altitude: number = 0
 ```
 
+The altitude of the bottom of the cloud layer, measured from the ellipsoid surface.
+
 #### _layer_.height
 
 ```ts
 height: number = 0
 ```
+
+The height of the cloud layer. Settings this value to 0 disables the layer.
 
 #### _layer_.densityScale
 
@@ -394,11 +398,15 @@ height: number = 0
 densityScale: number = 0.2
 ```
 
+Controls the overall density of the clouds within the layer. Settings this value to 0 disables the layer.
+
 #### _layer_.shapeAmount
 
 ```ts
 shapeAmount: number = 1
 ```
+
+Controls the influence of the shape texture on the cloud layer.
 
 #### _layer_.shapeDetailAmount
 
@@ -406,11 +414,15 @@ shapeAmount: number = 1
 shapeDetailAmount: number = 1
 ```
 
+Controls the influence of the shape detail texture on the cloud layer.
+
 #### _layer_.weatherExponent
 
 ```ts
 weatherExponent: number = 1
 ```
+
+Controls the gradient of the weather texture. Values greater than 1 sharpen the gradient, while lower values flatten the weather making it more uniform.
 
 #### _layer_.shapeAlteringBias
 
@@ -418,28 +430,37 @@ weatherExponent: number = 1
 shapeAlteringBias: number = 0.35
 ```
 
+Controls the vertical bias of the cloud shape. A value of 1 results in symmetry, while 0 fully biases the shape at the bottom.
+
 #### _layer_.coverageFilterWidth
 
 ```ts
 coverageFilterWidth: number = 0.6
 ```
 
+Determines how the weather signal influences the shape-altered density. A value of 1 produces a linear gradient, ignoring weather signal, while 0 creates a sharp density transition at the weather signal.
+
 #### _layer_.densityProfile
 
+<!-- prettier-ignore -->
 ```ts
 densityProfile: DensityProfile = {
-  expTerm: (number = 0),
-  expScale: (number = 0),
-  linearTerm: (number = 0.75),
-  constantTerm: (number = 0.25)
+  expTerm: number = 0, // a
+  expScale: number = 0, // b
+  linearTerm: number = 0.75, // c
+  constantTerm: number = 0.25 // d
 }
 ```
+
+Controls how density varies with the height fraction ($\eta$), ranging from 0 to 1 within the cloud layer. Clouds are typically denser at the top and sparser at the bottom (hence the default values). You can adjust these parameters to define a different density distribution: $ae^{b\eta}+c\eta+d$.
 
 #### _layer_.shadow
 
 ```ts
 shadow: boolean = false
 ```
+
+Specifies whether this cloud layer defines the maximum height considered in BSM. All cloud layers below this layer will be included in BSM, while layers above it will be ignored. If enabled on multiple layers, the highest layer takes precedence.
 
 ### Textures
 
@@ -514,7 +535,7 @@ powderScale: number = 0.8
 powderExponent: number = 150
 ```
 
-Controls the “Beer-Powder” effect on the clouds. This is a fudge factor and you might adjust this value to make it look convincing to you.
+Controls the “Beer-Powder” term on the clouds. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
 ### Weather and shape
 
@@ -733,7 +754,7 @@ Controls the density of the haze. A greater value makes it denser.
 hazeExpScale: number = 1e-3
 ```
 
-Controls the rate at which the haze density exponentially decreases with altitude. A lower value makes it more concentrated near the ground and spreads it more at higher altitudes.
+Controls the rate at which the haze density exponentially decreases with altitude. A lower value makes it more concentrated near the ground, while a higher value spreads it more at higher altitudes.
 
 ### Advanced shadow parameters
 
