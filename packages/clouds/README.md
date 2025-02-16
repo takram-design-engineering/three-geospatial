@@ -193,6 +193,8 @@ This illustrates that greater total cloud layer height increases computational c
 
 - Interpolated sun and sky irradiance, when [`accurateSunSkyIrradiance`](#cloudsaccuratesunskyirradiance) is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
 
+- A large portion of weather sampling is wasted simply checking whether it is outside the cloud shell. However, since we already know the front depth and sample count at the texel from the reprojected previous frame, using this information to better estimate the ray marching range would make it much more efficient.
+
 - Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera’s depth onto the sun’s view.
 
 ### Planned features
