@@ -233,6 +233,14 @@ Nothing novel here, just an orchestration of existing techniques. See the [refer
 localWeatherTexture: Texture | ProceduralTexture | null = DEFAULT_LOCAL_WEATHER_URL
 ```
 
+The local weather texture, or a URL to it.
+
+Each channel corresponds to the local weather signal of a specific cloud layer. The texture must be tileable.
+
+Alternatively, you can pass an object that implements from [`ProceduralTexture`](#proceduraltexture-procedural3dtexture).
+
+If left undefined, the default texture will be loaded directly from GitHub.
+
 #### shapeTexture, shapeDetailTexture
 
 ```ts
@@ -240,17 +248,37 @@ shapeTexture: Data3DTexture | Procedural3DTexture | null = DEFAULT_SHAPE_URL
 shapeDetailTexture: Data3DTexture | Procedural3DTexture | null = DEFAULT_SHAPE_DETAIL_URL
 ```
 
+The shape and shape detail textures, or URLs to them.
+
+The red channel represents the inverse amount of erosion applied to the cloud shell (a value of 0 means more erosion). The texture must be tileable (stackable).
+
+Alternatively, you can pass objects that implement from [`Procedural3DTexture`](#proceduraltexture-procedural3dtexture).
+
+If left undefined, the default textures will be loaded directly from GitHub.
+
 #### turbulenceTexture
 
 ```ts
 turbulenceTexture: Texture | ProceduralTexture | null = DEFAULT_TURBULENCE_URL
 ```
 
+The turbulence texture, or a URL to it.
+
+The RGB value represents a 3D vector used for domain distortion of the shape and shape detail. The texture must be tileable.
+
+Alternatively, you can pass an object that implements from [`ProceduralTexture`](#proceduraltexture-procedural3dtexture).
+
+If left undefined, the default texture will be loaded directly from GitHub.
+
 #### stbnTexture
 
 ```ts
 stbnTexture: Data3DTexture | null = DEFAULT_STBN_URL
 ```
+
+A [spatiotemporal blue noise](https://research.nvidia.com/publication/2022-07_spatiotemporal-blue-noise-masks) (STBN) texture, or a URL to it.
+
+If left undefined, the default texture will be loaded directly from GitHub.
 
 ## CloudLayer
 
@@ -470,6 +498,8 @@ Specifies whether this cloud layer defines the maximum height considered in BSM.
 localWeatherTexture: Texture | ProceduralTexture | null = null
 ```
 
+Same as [localWeatherTexture](#localweathertexture), except that it does not accept URLs and no default texture will be loaded.
+
 #### shapeTexture, shapeDetailTexture
 
 ```ts
@@ -477,17 +507,23 @@ shapeTexture: Data3DTexture | Procedural3DTexture | null = null
 shapeDetailTexture: Data3DTexture | Procedural3DTexture | null = null
 ```
 
+Same as [shapeTexture, shapeDetailTexture](#shapetexture-shapedetailtexture), except that it does not accept URLs and no default texture will be loaded.
+
 #### turbulenceTexture
 
 ```ts
 turbulenceTexture: Texture | ProceduralTexture | null = null
 ```
 
+Same as [turbulenceTexture](#turbulencetexture), except that it does not accept URLs and no default texture will be loaded.
+
 #### stbnTexture
 
 ```ts
 stbnTexture: Data3DTexture | null = null
 ```
+
+Same as [stbnTexture](#stbntexture), except that it does not accept URLs and no default texture will be loaded.
 
 ### Scattering
 
@@ -535,7 +571,7 @@ powderScale: number = 0.8
 powderExponent: number = 150
 ```
 
-Controls the “Beer-Powder” term on the clouds. This is a fudge factor and you might adjust this value to make it look convincing to you.
+Controls the [“Beer-Powder” term](https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn) on the clouds. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
 ### Weather and shape
 
