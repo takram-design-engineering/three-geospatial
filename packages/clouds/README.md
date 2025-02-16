@@ -410,7 +410,7 @@ cloudLayers: CloudLayer[] = [defaultCloudLayer, ...]
 altitude: number = 0
 ```
 
-The altitude of the bottom of the cloud layer, measured from the ellipsoid surface.
+The altitude of the bottom of the cloud layer, measured from the ellipsoid surface in meters.
 
 #### _layer_.height
 
@@ -418,7 +418,7 @@ The altitude of the bottom of the cloud layer, measured from the ellipsoid surfa
 height: number = 0
 ```
 
-The height of the cloud layer. Settings this value to 0 disables the layer.
+The height of the cloud layer in meters. Settings this value to 0 disables the layer.
 
 #### _layer_.densityScale
 
@@ -544,7 +544,7 @@ scatterAnisotropy2: number = -0.2
 scatterAnisotropyMix: number = 0.5
 ```
 
-Controls dual-lobe Henyey-Greenstein phase function. Positive anisotropy strengthens forward scattering, and negative strengthens back-scattering. The two anisotropy values are combined using `scatterAnisotropyMix`.
+Controls dual-lobe Henyey-Greenstein phase function. Positive anisotropy strengthens forward scattering, and negative strengthens back-scattering. The two scattering phases are combined using `scatterAnisotropyMix`.
 
 These values take effect only when [`accuratePhaseFunction`](#cloudsaccuratephasefunction) is disabled.
 
@@ -681,7 +681,7 @@ Whether to sample sun and sky irradiance at every sample point during ray marchi
 accuratePhaseFunction: boolean = false
 ```
 
-Set this to true to use a numerically-fitted large particle (d=10) Mie phase function instead of the dual-lobe Henyey-Greenstein phase function. However, it won't be plausible without a more precise computation of multiple scattering.
+Set this to true to use a numerically-fitted large particle (d = 10 μm) Mie phase function instead of the dual-lobe Henyey-Greenstein phase function. However, it won't be plausible without a more precise computation of multiple scattering.
 
 #### clouds.maxIterationCount
 
@@ -698,7 +698,7 @@ minStepSize: number = 50
 maxStepSize: number = 1000
 ```
 
-Controls the step size for the primary ray marching.
+Controls the step size for the primary ray marching, in meters.
 
 #### clouds.maxRayDistance
 
@@ -706,7 +706,7 @@ Controls the step size for the primary ray marching.
 maxRayDistance: number = 2e5
 ```
 
-The limit on the primary ray distance.
+The limit on the primary ray distance, in meters.
 
 #### clouds.perspectiveStepScale
 
@@ -742,7 +742,7 @@ minSecondaryStepSize: number = 100
 secondaryStepScale: number = 2
 ```
 
-Controls the step size for the secondary ray marching.
+Controls the step size for the secondary ray marching, in meters.
 
 #### clouds.maxShadowFilterRadius
 
@@ -766,7 +766,7 @@ The limit on the number of iterations for the shadow length ray marching.
 minShadowLengthStepSize: number = 50
 ```
 
-Controls the step size for the shadow length ray marching.
+Controls the step size for the shadow length ray marching, in meters.
 
 #### clouds.maxShadowLengthRayDistance
 
@@ -774,7 +774,7 @@ Controls the step size for the shadow length ray marching.
 maxShadowLengthRayDistance: number = 2e5
 ```
 
-The limit on the shadow length ray distance.
+The limit on the shadow length ray distance, in meters.
 
 #### clouds.hazeDensityScale
 
