@@ -664,7 +664,7 @@ vec4 approximateHaze(
   if (cameraHeight * modulation < 0.0) {
     return vec4(0.0);
   }
-  float density = modulation * hazeDensityScale * exp(-cameraHeight * hazeExpScale);
+  float density = modulation * hazeDensityScale * exp(-cameraHeight * hazeExponent);
   if (density < 1e-7) {
     return vec4(0.0); // Prevent artifact in views from space
   }
@@ -672,11 +672,11 @@ vec4 approximateHaze(
   // Analytical optical depth where density exponentially decreases with height.
   // Based on: https://iquilezles.org/articles/fog/
   float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
-  float expScale = angle * hazeExpScale;
+  float exponent = angle * hazeExponent;
   // Derive the optical depths separately for with and without shadow length.
-  float expTerm = 1.0 - exp(-maxRayDistance * expScale);
-  float shadowExpTerm = 1.0 - exp(-min(maxRayDistance, shadowLength) * expScale);
-  float linearTerm = density / hazeExpScale / angle;
+  float expTerm = 1.0 - exp(-maxRayDistance * exponent);
+  float shadowExpTerm = 1.0 - exp(-min(maxRayDistance, shadowLength) * exponent);
+  float linearTerm = density / hazeExponent / angle;
   float opticalDepth = expTerm * linearTerm;
   float effectiveOpticalDepth = max((expTerm - shadowExpTerm) * linearTerm, 0.0);
 

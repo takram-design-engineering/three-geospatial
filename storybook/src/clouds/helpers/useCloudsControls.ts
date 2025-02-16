@@ -221,7 +221,7 @@ function useAdvancedCloudsControls(
         minShadowLengthStepSize: { value: 0, min: 50, max: 200, step: 1 },
         maxShadowLengthRayDistance: { value: 0, min: 1e4, max: 1e6 },
         hazeDensityScaleLog10: { value: 0, min: -6, max: -3 },
-        hazeExpScaleLog10: { value: 0, min: -3, max: -1 }
+        hazeExponentLog10: { value: 0, min: -3, max: -1 }
       }) satisfies Partial<
         Record<
           keyof CloudsEffect['clouds'] | `${keyof CloudsEffect['clouds']}Log10`,
@@ -255,7 +255,7 @@ function useAdvancedCloudsControls(
       minShadowLengthStepSize: clouds.minShadowLengthStepSize,
       maxShadowLengthRayDistance: clouds.maxShadowLengthRayDistance,
       hazeDensityScaleLog10: Math.log10(clouds.hazeDensityScale),
-      hazeExpScaleLog10: Math.log10(clouds.hazeExpScale)
+      hazeExponentLog10: Math.log10(clouds.hazeExponent)
     })
     initRef.current = true
   }, [effect, qualityPreset, set])
@@ -282,7 +282,7 @@ function useAdvancedCloudsControls(
     'clouds-minShadowLengthStepSize': params.minShadowLengthStepSize,
     'clouds-maxShadowLengthRayDistance': params.maxShadowLengthRayDistance,
     'clouds-hazeDensityScale': 10 ** params.hazeDensityScaleLog10,
-    'clouds-hazeExpScale': 10 ** params.hazeExpScaleLog10
+    'clouds-hazeExponent': 10 ** params.hazeExponentLog10
   }
 }
 
@@ -420,8 +420,8 @@ function useCloudLayerControls(
                 min: 0,
                 max: 1
               },
-              expScale: {
-                value: params.densityProfile.expScale,
+              exponent: {
+                value: params.densityProfile.exponent,
                 min: -10,
                 max: 10
               },
@@ -465,7 +465,7 @@ function useCloudLayerControls(
       const layer = effect.cloudLayers[layerIndex] as any
       if (
         key === 'expTerm' ||
-        key === 'expScale' ||
+        key === 'exponent' ||
         key === 'linearTerm' ||
         key === 'constantTerm'
       ) {

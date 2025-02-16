@@ -132,7 +132,7 @@ export interface CloudsMaterialUniforms
 
   // Haze
   hazeDensityScale: Uniform<number>
-  hazeExpScale: Uniform<number>
+  hazeExponent: Uniform<number>
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
@@ -246,7 +246,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Haze
           hazeDensityScale: new Uniform(3e-5),
-          hazeExpScale: new Uniform(1e-3)
+          hazeExponent: new Uniform(1e-3)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
           CloudsMaterialUniforms
       },

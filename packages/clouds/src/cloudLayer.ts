@@ -2,7 +2,7 @@ import { type RequiredDeep } from 'type-fest'
 
 export interface DensityProfile {
   expTerm?: number
-  expScale?: number
+  exponent?: number
   linearTerm?: number
   constantTerm?: number
 }
@@ -31,7 +31,7 @@ export const defaultCloudLayer: RequiredDeep<CloudLayer> = {
   coverageFilterWidth: 0.6,
   densityProfile: {
     expTerm: 0,
-    expScale: 0,
+    exponent: 0,
     linearTerm: 0.75,
     constantTerm: 0.25
   },

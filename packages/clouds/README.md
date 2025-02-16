@@ -474,7 +474,7 @@ Determines how the weather signal influences the shape-altered density. A value 
 ```ts
 densityProfile: DensityProfile = {
   expTerm: number = 0, // a
-  expScale: number = 0, // b
+  exponent: number = 0, // b
   linearTerm: number = 0.75, // c
   constantTerm: number = 0.25 // d
 }
@@ -681,7 +681,7 @@ Whether to sample sun and sky irradiance at every sample point during ray marchi
 accuratePhaseFunction: boolean = false
 ```
 
-Set this to true to use a numerically-fitted large particle (d = 10 μm) Mie phase function instead of the dual-lobe Henyey-Greenstein phase function. However, it won't be plausible without a more precise computation of multiple scattering.
+Set this to true to use a numerically-fitted large particle (d = 10 μm) Mie phase function instead of the dual-lobe Henyey-Greenstein phase function. However, it won’t be plausible without a more precise computation of multiple scattering.
 
 #### clouds.maxIterationCount
 
@@ -784,10 +784,10 @@ hazeDensityScale: number = 3e-5
 
 Controls the density of the haze. A greater value makes it denser.
 
-#### clouds.hazeExpScale
+#### clouds.hazeExponent
 
 ```ts
-hazeExpScale: number = 1e-3
+hazeExponent: number = 1e-3
 ```
 
 Controls the rate at which the haze density exponentially decreases with altitude. A lower value makes it more concentrated near the ground, while a higher value spreads it more at higher altitudes.
