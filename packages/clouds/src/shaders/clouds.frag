@@ -735,7 +735,7 @@ IntersectionResult getIntersections(const vec3 cameraPosition, const vec3 rayDir
   return intersections;
 }
 
-vec2 getRayNearFar(const IntersectionResult intersections, const float rayDistanceToScene) {
+vec2 getRayNearFar(const IntersectionResult intersections) {
   vec2 nearFar;
   if (cameraHeight < minHeight) {
     // View below the clouds
@@ -760,14 +760,11 @@ vec2 getRayNearFar(const IntersectionResult intersections, const float rayDistan
       nearFar.y = intersections.first.y;
     }
   }
-  if (rayDistanceToScene >= 0.0) {
-    nearFar.y = min(nearFar.y, rayDistanceToScene);
-  }
   return nearFar;
 }
 
 #ifdef SHADOW_LENGTH
-vec2 getShadowRayNearFar(const IntersectionResult intersections, const float rayDistanceToScene) {
+vec2 getShadowRayNearFar(const IntersectionResult intersections) {
   vec2 nearFar;
   if (cameraHeight < shadowTopHeight) {
     if (intersections.ground) {
@@ -783,15 +780,12 @@ vec2 getShadowRayNearFar(const IntersectionResult intersections, const float ray
     }
   }
   nearFar.y = min(nearFar.y, maxShadowLengthRayDistance);
-  if (rayDistanceToScene >= 0.0) {
-    nearFar.y = min(nearFar.y, rayDistanceToScene);
-  }
   return nearFar;
 }
 #endif // SHADOW_LENGTH
 
 #ifdef HAZE
-vec2 getHazeRayNearFar(const IntersectionResult intersections, const float rayDistanceToScene) {
+vec2 getHazeRayNearFar(const IntersectionResult intersections) {
   vec2 nearFar;
   if (cameraHeight < maxHeight) {
     if (intersections.ground) {
@@ -805,9 +799,6 @@ vec2 getHazeRayNearFar(const IntersectionResult intersections, const float rayDi
       // Clamp the ray at the ground.
       nearFar.y = intersections.first.x;
     }
-  }
-  if (rayDistanceToScene >= 0.0) {
-    nearFar.y = min(nearFar.y, rayDistanceToScene);
   }
   return nearFar;
 }
@@ -838,14 +829,24 @@ void main() {
   float cosTheta = dot(sunDirection, rayDirection);
 
   IntersectionResult intersections = getIntersections(cameraPosition, rayDirection);
-  float rayDistanceToScene = getRayDistanceToScene(rayDirection);
-  vec2 rayNearFar = getRayNearFar(intersections, rayDistanceToScene);
+  vec2 rayNearFar = getRayNearFar(intersections);
   #ifdef SHADOW_LENGTH
-  vec2 shadowRayNearFar = getShadowRayNearFar(intersections, rayDistanceToScene);
+  vec2 shadowRayNearFar = getShadowRayNearFar(intersections);
   #endif // SHADOW_LENGTH
   #ifdef HAZE
-  vec2 hazeRayNearFar = getHazeRayNearFar(intersections, rayDistanceToScene);
+  vec2 hazeRayNearFar = getHazeRayNearFar(intersections);
   #endif // HAZE
+
+  float rayDistanceToScene = getRayDistanceToScene(rayDirection);
+  if (rayDistanceToScene >= 0.0) {
+    rayNearFar.y = min(rayNearFar.y, rayDistanceToScene);
+    #ifdef SHADOW_LENGTH
+    shadowRayNearFar.y = min(shadowRayNearFar.y, rayDistanceToScene);
+    #endif // SHADOW_LENGTH
+    #ifdef HAZE
+    hazeRayNearFar.y = min(hazeRayNearFar.y, rayDistanceToScene);
+    #endif // HAZE
+  }
 
   bool intersectsGround = any(lessThan(rayNearFar, vec2(0.0)));
   bool intersectsScene = rayNearFar.y < rayNearFar.x;
