@@ -49,10 +49,10 @@ const Scene = () => {
 ```
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
+&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
+&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
 
 ### Forward lighting
 
@@ -91,7 +91,7 @@ const Scene = () => {
 ```
 
 ![Example of forward lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
+&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
 
 ### Transient update by date
 
@@ -296,7 +296,7 @@ const Scene = () => {
 #### textures
 
 ```ts
-textures: PrecomputedTextures | string = undefined
+textures: PrecomputedTextures | string = DEFAULT_PRECOMPUTED_TEXTURES_URL
 ```
 
 The [precomputed textures](assets), or a URL to the directory containing them.
@@ -505,7 +505,7 @@ The parameters of [`AtmosphereMaterialBase`](#atmospherematerialbase) and [`Star
 #### data
 
 ```ts
-data: ArrayBuffer | string = undefined
+data: ArrayBuffer | string = DEFAULT_STARS_DATA_URL
 ```
 
 The data containing the position and magnitude of the stars, or a URL to it.

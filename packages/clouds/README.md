@@ -4,7 +4,7 @@
 
 A Three.js and R3F (React Three Fiber) implementation of geospatial volumetric clouds with features including:
 
-- Shadows cast on scene objects
+- Beer shadow maps (BSM)  and shadows cast on scene objects
 - Temporal upscaling and filtering
 - Light shafts (crepuscular rays)
 - Haze (sparse fog)
@@ -45,13 +45,13 @@ const Scene = () => (
 ```
 
 ![Example of Tokyo](docs/tokyo.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo)
+&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo)
 
 ![Example of Fuji](docs/fuji.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--fuji)
+&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--fuji)
 
 ![Example of London](docs/london.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--london)
+&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--london)
 
 ### Configuring cloud layers
 
@@ -135,7 +135,7 @@ const Scene = () => (
 
 ## Performance tweaks
 
-Volumetric clouds are not a lightweight effect. You will need to adjust the quality settings for your target devices.
+Volumetric clouds are not a lightweight effect. You might need to adjust the quality settings for your target devices.
 
 There are 4 quality presets that you may consider:
 
@@ -144,22 +144,24 @@ There are 4 quality presets that you may consider:
 - **High**: The baseline settings
 - **Ultra**: Increases the resolution of BSM
 
-If “Low” quality preset still does not meet your performance goal, consider using skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
+If “Low” quality preset still does not meet your performance goal, then consider using skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
 
 Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo). Note that they are relatively new devices as of this writing.
 
-| Device                | FPS    | Quality    | Temporal upscaling | Canvas resolution | Browser |
-| --------------------- | ------ | ---------- | ------------------ | ----------------- | ------- |
-| iPhone 13             | 36-53  | Low        | Yes                | 780×1326px        | Safari  |
-| iPad Pro (1st gen.)   | 30-32  | Low        | Yes                | 2388×1520px       | Safari  |
-| iPad Pro (M4)         | **60** | **Medium** | Yes                | 2420×1520px       | Safari  |
-| iPad Pro (M4)         | 43-55  | High       | Yes                | 2420×1520px       | Safari  |
-| MacBook Pro (M3 Max)  |        | High       | Yes                |                   | Chrome  |
-| Mac Studio (M2 Ultra) | **60** | **High**   | Yes                | 4K                | Chrome  |
-| Mac Studio (M2 Ultra) | **60** | **Ultra**  | Yes                | 4K                | Chrome  |
-| Mac Studio (M2 Ultra) | 29-31  | High       | **No**             | 4K                | Chrome  |
-| GeForce 4090          | **60** | **Ultra**  | Yes                | 4K                | Chrome  |
-| GeForce 4090          | **60** | **Ultra**  | **No**             | 4K                | Chrome  |
+| Device                | FPS       | Quality preset | Temporal upscaling | Canvas resolution | Browser |
+| --------------------- | --------- | -------------- | ------------------ | ----------------- | ------- |
+| iPhone 13             | 36-53     | Low            | Yes                | 780×1326px        | Safari  |
+| iPad Pro (1st gen.)   | 30-32     | Low            | Yes                | 2388×1520px       | Safari  |
+| iPad Pro (M4)         | **60**    | **Medium**     | Yes                | 2420×1520px       | Safari  |
+| iPad Pro (M4)         | 43-55     | High           | Yes                | 2420×1520px       | Safari  |
+| MacBook Pro (M3 Max)  | **92-95** | **High**       | Yes                | 4K                | Chrome  |
+| MacBook Pro (M3 Max)  | **76-77** | **Ultra**      | Yes                | 4K                | Chrome  |
+| MacBook Pro (M3 Max)  | 31        | High           | **No**             | 4K                | Chrome  |
+| Mac Studio (M2 Ultra) | **60**    | **High**       | Yes                | 4K                | Chrome  |
+| Mac Studio (M2 Ultra) | **60**    | **Ultra**      | Yes                | 4K                | Chrome  |
+| Mac Studio (M2 Ultra) | 29-31     | High           | **No**             | 4K                | Chrome  |
+| GeForce 4090          | **60**    | **Ultra**      | Yes                | 4K                | Chrome  |
+| GeForce 4090          | **60**    | **Ultra**      | **No**             | 4K                | Chrome  |
 
 The other factor that influences the performance is how clouds are modeled. Clouds are roughly modeled as shown in the image below.
 
@@ -169,7 +171,7 @@ Ray marching can be visualized as follows:
 
 ![](docs/ray-march.png)
 
-This illustrates that greater total cloud layer height increases computational cost, and excessive erosion reduces efficiency by causing rays to miss the clouds, leading to unnecessary sampling of weather textures.
+This illustrates that greater total cloud layer height increases computational cost, and excessive erosion reduces efficiency by causing rays to miss the clouds, leading to unnecessary sampling of the weather texture.
 
 ## Limitations
 
@@ -195,13 +197,15 @@ This illustrates that greater total cloud layer height increases computational c
 
 ### Planned features
 
-- The altitude of cloud layers is determined relative to the ellipsoid surface, but in reality, the cloud base altitude is not constant with respect to either the ellipsoid or geopotential height. Thus, clouds appear too low in high-altitude non-mountain areas (e.g. east of the west coast of North America). This could be compensated for by considering observed average cloud base heights, [X](https://x.com/shotamatsuda/status/1885737165709254882).
+- The altitude of cloud layers is determined relative to the ellipsoid surface, but in reality, the cloud base altitude is not constant with respect to either the ellipsoid or geopotential height. Thus, clouds appear too low in high-altitude non-mountain areas (e.g. east of the west coast of North America). This could be compensated for by considering the observed average cloud base altitude, [X](https://x.com/shotamatsuda/status/1885737165709254882).
 
 - Introduce global cloud coverage and support rendering views from space.
 
 - Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
 
 # API
+
+Nothing novel here, just an orchestration of existing techniques. See the [references section](#references) for further details.
 
 **R3F components**
 
@@ -220,6 +224,33 @@ This illustrates that greater total cloud layer height increases computational c
 ## Clouds
 
 &rarr; [Source](/packages/clouds/src/r3f/Clouds.tsx)
+
+### Props
+
+#### localWeatherTexture
+
+```ts
+localWeatherTexture: Texture | ProceduralTexture | null = DEFAULT_LOCAL_WEATHER_URL
+```
+
+#### shapeTexture, shapeDetailTexture
+
+```ts
+shapeTexture: Data3DTexture | Procedural3DTexture | null = DEFAULT_SHAPE_URL
+shapeDetailTexture: Data3DTexture | Procedural3DTexture | null = DEFAULT_SHAPE_DETAIL_URL
+```
+
+#### turbulenceTexture
+
+```ts
+turbulenceTexture: Texture | ProceduralTexture | null = DEFAULT_TURBULENCE_URL
+```
+
+#### stbnTexture
+
+```ts
+stbnTexture: Data3DTexture | null = DEFAULT_STBN_URL
+```
 
 ## CloudLayer
 
@@ -282,8 +313,10 @@ This illustrates that greater total cloud layer height increases computational c
 #### qualityPreset
 
 ```ts
-qualityPreset: CloudsQualityPreset = undefined
+qualityPreset: 'low' | 'medium' | 'high' | 'ultra' = 'high'
 ```
+
+See also the [performance tweaks section](#performance-tweaks).
 
 #### resolutionScale
 
@@ -291,11 +324,17 @@ qualityPreset: CloudsQualityPreset = undefined
 resolutionScale: number = 1
 ```
 
+Specifies the final output resolution. For example, setting this to 0.5 reduces the total number of texels to compute by 1/4.
+
 #### temporalUpscale
 
 ```ts
 temporalUpscale: boolean = true
 ```
+
+Whether to perform temporal upscaling, which reduces the number of texels to ray march in the clouds pass by 1/16. It is recommended to keep this enabled unless targeting very high-performance devices.
+
+See also the [limitations section](#limitations), as this technique has tradeoffs.
 
 #### lightShafts
 
@@ -303,11 +342,15 @@ temporalUpscale: boolean = true
 lightShafts: boolean = true
 ```
 
+Whether to render light shafts (crepuscular rays) using additional ray marching. This enhances the visual impact of cloud-light interaction but is computationally expensive.
+
 #### shapeDetail
 
 ```ts
 shapeDetail: boolean = true
 ```
+
+Whether to sample the shape detail texture. This enhances cloud details but is computationally expensive.
 
 #### turbulence
 
@@ -315,11 +358,15 @@ shapeDetail: boolean = true
 turbulence: boolean = true
 ```
 
+Whether to apply turbulence at the bottom of clouds by sampling the turbulence texture. This adds a sense of wind but is computationally expensive.
+
 #### haze
 
 ```ts
 haze: boolean = true
 ```
+
+Whether to apply an approximated haze effect. This is inexpensive and recommended to keep enabled.
 
 ### Cloud layers
 
