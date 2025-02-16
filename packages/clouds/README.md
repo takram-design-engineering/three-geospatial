@@ -4,7 +4,7 @@
 
 A Three.js and R3F (React Three Fiber) implementation of geospatial volumetric clouds with features including:
 
-- Beer shadow maps (BSM)  and shadows cast on scene objects
+- Beer shadow maps (BSM) and shadows cast on scene objects
 - Temporal upscaling and filtering
 - Light shafts (crepuscular rays)
 - Haze (sparse fog)
@@ -477,6 +477,8 @@ scatteringCoefficient: number = 1
 absorptionCoefficient: number = 0
 ```
 
+The scattering coefficient ($\sigma_s$) and absorption coefficient ($\sigma_a$) following the standard definition in volumetric ray marching. Clouds are known to have an albedo very close to 1, defined as $\sigma_s/(\sigma_s+\sigma_a)$, so it is recommended to keep the absorption coefficient low, unless you want a different cloud appearance.
+
 #### scatterAnisotropy1, scatterAnisotropy2, scatterAnisotropyMix
 
 ```ts
@@ -485,11 +487,17 @@ scatterAnisotropy2: number = -0.2
 scatterAnisotropyMix: number = 0.5
 ```
 
+Controls dual-lobe Henyey-Greenstein phase function. Positive anisotropy strengthens forward scattering, and negative strengthens back-scattering. The two anisotropy values are combined using `scatterAnisotropyMix`.
+
+These values take effect only when [`accuratePhaseFunction`](#cloudsaccuratephasefunction) is disabled.
+
 #### skyIrradianceScale
 
 ```ts
 skyIrradianceScale: number = 2.5
 ```
+
+The contribution of sky irradiance. A value of 0 disables sky irradiance, while 1 represents single isotropic scattering. Since real-world sky light scatters multiple times, values greater than 1 make it more plausible.
 
 #### groundIrradianceScale
 
@@ -497,12 +505,16 @@ skyIrradianceScale: number = 2.5
 groundIrradianceScale: number = 3
 ```
 
+The contribution of irradiance bouncing off the ground. This is a fudge factor and you might adjust this value to make it look convincing to you.
+
 #### powderScale, powderExponent
 
 ```ts
 powderScale: number = 0.8
 powderExponent: number = 150
 ```
+
+Controls the “Beer-Powder” effect on the clouds. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
 ### Weather and shape
 
@@ -612,7 +624,7 @@ Whether to sample sun and sky irradiance at every sample point during ray marchi
 accuratePhaseFunction: boolean = false
 ```
 
-Set this to true to use a numerically-fitted large particle (d=10) Mie phase function instead of the dual-robe Henyey-Greenstein function. However, it won't be plausible without a more precise computation of multiple scattering.
+Set this to true to use a numerically-fitted large particle (d=10) Mie phase function instead of the dual-lobe Henyey-Greenstein phase function. However, it won't be plausible without a more precise computation of multiple scattering.
 
 #### clouds.maxIterationCount
 
