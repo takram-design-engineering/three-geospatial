@@ -415,8 +415,8 @@ export class CloudsEffect extends Effect {
       (cloudLayers[1]?.channel ?? channel) +
       (cloudLayers[2]?.channel ?? channel) +
       (cloudLayers[3]?.channel ?? channel)
-    this.cloudsPass.currentMaterial.weatherChannels = value
-    this.shadowPass.currentMaterial.weatherChannels = value
+    this.cloudsPass.currentMaterial.localWeatherChannels = value
+    this.shadowPass.currentMaterial.localWeatherChannels = value
   }
 
   private updateAtmosphereComposition(): void {

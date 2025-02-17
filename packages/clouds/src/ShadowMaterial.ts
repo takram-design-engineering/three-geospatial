@@ -118,10 +118,10 @@ export class ShadowMaterial extends RawShaderMaterial {
     this.uniforms.resolution.value.set(width, height)
   }
 
-  @defineExpression('WEATHER_CHANNELS', {
+  @defineExpression('LOCAL_WEATHER_CHANNELS', {
     validate: value => /[rgba]{4}/.test(value)
   })
-  weatherChannels = 'rgba'
+  localWeatherChannels = 'rgba'
 
   @defineInt('CASCADE_COUNT', { min: 1, max: 4 })
   cascadeCount: number = defaults.shadow.cascadeCount

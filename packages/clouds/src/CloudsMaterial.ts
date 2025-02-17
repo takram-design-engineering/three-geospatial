@@ -419,10 +419,10 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   @defineInt('DEPTH_PACKING')
   depthPacking = 0
 
-  @defineExpression('WEATHER_CHANNELS', {
+  @defineExpression('LOCAL_WEATHER_CHANNELS', {
     validate: value => /[rgba]{4}/.test(value)
   })
-  weatherChannels = 'rgba'
+  localWeatherChannels = 'rgba'
 
   @define('SHAPE_DETAIL')
   shapeDetail: boolean = defaults.shapeDetail

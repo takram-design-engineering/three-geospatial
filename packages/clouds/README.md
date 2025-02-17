@@ -21,7 +21,7 @@ pnpm add @takram/three-clouds
 yarn add @takram/three-clouds
 ```
 
-Peer dependencies include `three` and `postprocessing`, for R3F `react`, `@react-three/fiber`, and `@react-three/postprocessing`. -->
+Peer dependencies include `three` and `postprocessing`, as well as `react`, `@react-three/fiber`, and `@react-three/postprocessing` when using R3F. -->
 
 ## Usage
 
@@ -96,7 +96,7 @@ import { Clouds } from '@takram/three-clouds/r3f'
 const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
-      <Clouds weatherTexture={/* path to weather texture */} />
+      <Clouds localWeatherTexture={/* path to weather texture */} />
       <AerialPerspective sky skyIrradiance sunIrradiance />
     </EffectComposer>
   </Atmosphere>
@@ -113,7 +113,7 @@ import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
 import { ProceduralTextureBase } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 
-const weatherTexture = new ProceduralTextureBase({
+const localWeatherTexture = new ProceduralTextureBase({
   size: 512,
   fragmentShader: /* glsl */ `
     in vec2 vUv;
@@ -127,7 +127,7 @@ const weatherTexture = new ProceduralTextureBase({
 const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
-      <Clouds weatherTexture={weatherTexture} />
+      <Clouds localWeatherTexture={localWeatherTexture} />
       <AerialPerspective sky skyIrradiance sunIrradiance />
     </EffectComposer>
   </Atmosphere>
@@ -145,7 +145,7 @@ There are 4 quality presets that you may consider:
 - **High**: The baseline settings
 - **Ultra**: Increases the resolution of BSM
 
-If “Low” quality preset still does not meet your performance goal, then consider using skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
+If “Low” quality preset still does not meet your performance goal, then I recommend considering a skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
 
 Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo). Note that they are relatively new devices as of this writing.
 
@@ -715,7 +715,7 @@ Whether to sample sun and sky irradiance at every sample point during ray marchi
 accuratePhaseFunction: boolean = false
 ```
 
-Set this to true to use a numerically-fitted large particle (d = 10 μm) Mie phase function instead of the dual-lobe Henyey-Greenstein phase function. However, it won’t be plausible without a more precise computation of multiple scattering.
+Whether to use a [numerically-fitted Mie phase function](https://research.nvidia.com/labs/rtr/approximate-mie/) for large particles (d = 10 μm) instead of the dual-lobe Henyey-Greenstein phase function. However, it won’t be plausible without a more precise computation of multiple scattering.
 
 #### clouds.maxIterationCount
 
