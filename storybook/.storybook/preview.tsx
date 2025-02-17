@@ -33,7 +33,7 @@ const preview: Preview = {
     options: {
       storySort: {
         method: 'alphabetical',
-        order: ['README', '*', ['README', 'Minimum Setup', '*']]
+        order: ['README', '*', ['README', 'Minimal Setup', '*']]
       }
     }
   },
