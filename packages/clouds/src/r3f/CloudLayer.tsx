@@ -31,7 +31,6 @@ export const CloudLayer = forwardRef<CloudLayerImpl, CloudLayerProps>(
     const { layers, indexPool } = useContext(CloudLayersContext)
 
     const ref = useRef<CloudLayerData>({})
-    const indexRef = useRef<number>()
     const propsRef = useRef(props)
     propsRef.current = props
 
@@ -42,14 +41,11 @@ export const CloudLayer = forwardRef<CloudLayerImpl, CloudLayerProps>(
       if (index == null) {
         return
       }
-      indexRef.current = index
       layers[index] = ref.current
-
       applyProps(ref.current, propsRef.current)
 
       return () => {
         layers[index] = {}
-        indexRef.current = undefined
         indexPool.push(index)
       }
     }, [layers, indexPool])
