@@ -682,8 +682,8 @@ vec4 approximateHaze(
 
   vec3 skyIrradiance = vGroundIrradiance.sky;
   vec3 sunIrradiance = vGroundIrradiance.sun;
-  // TODO: Approximate multi-scattering, especially the ambient sky irradiance.
-  vec3 irradiance = sunIrradiance * phaseFunction(cosTheta) + skyIrradiance * RECIPROCAL_PI4;
+  vec3 irradiance = sunIrradiance * phaseFunction(cosTheta);
+  irradiance += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale;
   vec3 inscatter = albedo * irradiance * saturate(1.0 - exp(-effectiveOpticalDepth));
 
   // Inscatter is attenuated by shadow length, but transmittance is not.
