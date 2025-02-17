@@ -556,7 +556,7 @@ These values take effect only when [`accuratePhaseFunction`](#cloudsaccuratephas
 skyIrradianceScale: number = 2.5
 ```
 
-The contribution of sky irradiance. A value of 0 disables sky irradiance, while 1 represents single isotropic scattering. Since real-world sky light scatters multiple times, values greater than 1 make it more plausible.
+The contribution of sky irradiance. A value of 0 disables sky irradiance, while 1 represents single isotropic scattering. Since real-world sky light scatters multiple times with much more complex interactions, values greater than 1 make it more plausible.
 
 #### groundIrradianceScale
 
@@ -582,6 +582,10 @@ Controls the [“Beer-Powder” term](https://www.guerrilla-games.com/read/the-r
 ```ts
 coverage: number = 0.3
 ```
+
+Controls the overall amount of clouds in the sky. A value of 0 results in a clear sky, while a value of 1 means the sky is completely covered by clouds.
+
+Note that cloud coverage is also determined by other parameters, and this value does not directly correspond to the ratio of clouds covering the sky.
 
 #### localWeatherRepeat, localWeatherOffset
 
@@ -658,8 +662,6 @@ splitLambda: number = 0.6
 ```
 
 ### Advanced clouds parameters
-
-These parameters are not intended to be adjusted unless you understand what the shader code does.
 
 #### clouds.multiScatteringOctaves
 
@@ -798,15 +800,56 @@ Controls the rate at which the haze density exponentially decreases with altitud
 
 #### shadow.temporalPass
 
+```ts
+temporalPass: boolean = true
+```
+
+Whether to enable TAA pass on BSM to reduce aliasing.
+
 #### shadow.temporalJitter
+
+```ts
+temporalJitter: boolean = true
+```
+
+Whether to use STBN for sampling. When used with `temporalPass` enabled, this helps reduce spatial aliasing pronounced by Structured Volume Sampling (SVS).
+
+Disabling this option removes flickers but increases spatial aliasing.
 
 #### shadow.maxIterationCount
 
+```ts
+maxIterationCount: number = 50
+```
+
+The limit on the number of iterations for the primary ray marching.
+
 #### shadow.minStepSize, shadow.maxStepSize
+
+```ts
+minStepSize: number = 100
+maxStepSize: number = 1000
+```
+
+Controls the step size for the primary ray marching, in meters.
 
 #### shadow.minDensity, shadow.minExtinction, shadow.minTransmittance
 
+```ts
+minDensity: number = 1e-5
+minExtinction: number = 1e-5
+minTransmittance: number = 1e-4
+```
+
+The minimum thresholds for density, extinction and transmittance, which determine the early termination of the primary rays.
+
 #### shadow.opticalDepthTailScale
+
+```ts
+opticalDepthTailScale: number = 2
+```
+
+Controls the additional optical depth applied during early termination of rays. Increasing this value compensates for missing shadows in denser regions of clouds, where ray marching terminates early.
 
 ## ProceduralTexture, Procedural3DTexture
 
