@@ -66,9 +66,10 @@ const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
       <Clouds qualityPreset='high' coverage={0.4}>
-        <CloudLayer altitude={750} height={650} />
-        <CloudLayer altitude={1000} height={1200} />
+        <CloudLayer channel='r' altitude={750} height={650} />
+        <CloudLayer channel='g' altitude={1000} height={1200} />
         <CloudLayer
+          channel='b'
           altitude={7500}
           height={500}
           densityScale={0.003}
@@ -207,8 +208,6 @@ This illustrates that greater total cloud layer height increases computational c
 
 # API
 
-Nothing novel here, just an orchestration of existing techniques. See the [references section](#references) for further details.
-
 **R3F components**
 
 - [`Clouds`](#clouds)
@@ -291,6 +290,8 @@ If left undefined, the default texture will be loaded directly from GitHub.
 &rarr; [Source](/packages/clouds/src/CloudsEffect.ts)
 
 ### Details
+
+Nothing novel here, just a combination of existing techniques. See the [references section](#references) for further details.
 
 ![Rendering path diagram](docs/rendering-path.png)
 
@@ -405,6 +406,14 @@ Whether to apply an approximated haze effect. This is inexpensive and recommende
 ```ts
 cloudLayers: CloudLayer[] = [defaultCloudLayer, ...]
 ```
+
+#### _layer_.channel
+
+```ts
+channel: 'r' | 'g' | 'b' | 'a' = 'r'
+```
+
+The channel of the weather texture to use for this cloud layer. Multiple layers can share the same channel.
 
 #### _layer_.altitude
 
@@ -812,7 +821,7 @@ Whether to enable TAA pass on BSM to reduce aliasing.
 temporalJitter: boolean = true
 ```
 
-Whether to use STBN for sampling. When used with `temporalPass` enabled, this helps reduce spatial aliasing pronounced by Structured Volume Sampling (SVS).
+Whether to use STBN for sampling. When used with [`temporalPass`](#shadowtemporalpass) enabled, this helps reduce spatial aliasing pronounced by Structured Volume Sampling (SVS).
 
 Disabling this option removes flickers but increases spatial aliasing.
 

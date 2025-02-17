@@ -168,36 +168,36 @@ export const cloudsPassOptionsDefaults = {
 export class CloudsEffect extends Effect {
   readonly cloudLayers: CloudLayer[] = [
     {
+      channel: 'r',
       altitude: 750,
       height: 650,
       densityScale: 0.2,
       shapeAmount: 1,
       shapeDetailAmount: 1,
-      weatherChannel: 'r',
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.6,
       shadow: true
     },
     {
+      channel: 'g',
       altitude: 1000,
       height: 1200,
       densityScale: 0.2,
       shapeAmount: 1,
       shapeDetailAmount: 1,
-      weatherChannel: 'g',
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.6,
       shadow: true
     },
     {
+      channel: 'b',
       altitude: 7500,
       height: 500,
       densityScale: 0.003,
       shapeAmount: 0.4,
       shapeDetailAmount: 0,
-      weatherChannel: 'b',
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.5
