@@ -65,7 +65,7 @@ import { Clouds } from '@takram/three-clouds/r3f'
 const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
-      <Clouds qualityPreset='high' coverage={0.4}>
+      <Clouds disableDefaultLayers>
         <CloudLayer channel='r' altitude={750} height={650} />
         <CloudLayer channel='g' altitude={1000} height={1200} />
         <CloudLayer
@@ -228,17 +228,23 @@ This illustrates that greater total cloud layer height increases computational c
 
 ### Props
 
+The parameters of [`CloudsEffect`](#cloudseffect) are also exposed as props.
+
+#### disableDefaultLayers
+
+```ts
+disableDefaultLayers: boolean = false
+```
+
+Set this to remove the default cloud layers, creating a clear sky. You can then define your own layers from scratch using [`CloudLayer`](#cloudlayer).
+
 #### localWeatherTexture
 
 ```ts
 localWeatherTexture: Texture | ProceduralTexture | null = DEFAULT_LOCAL_WEATHER_URL
 ```
 
-The local weather texture, or a URL to it.
-
-Each channel corresponds to the local weather signal of a specific cloud layer. The texture must be tileable.
-
-Alternatively, you can pass an object that implements from [`ProceduralTexture`](#proceduraltexture-procedural3dtexture).
+The local weather texture, or a URL to it. See also [`localWeatherTexture`](#localweathertexture-1).
 
 If left undefined, the default texture will be loaded directly from GitHub.
 
@@ -249,11 +255,7 @@ shapeTexture: Data3DTexture | Procedural3DTexture | null = DEFAULT_SHAPE_URL
 shapeDetailTexture: Data3DTexture | Procedural3DTexture | null = DEFAULT_SHAPE_DETAIL_URL
 ```
 
-The shape and shape detail textures, or URLs to them.
-
-The red channel represents the inverse amount of erosion applied to the cloud shell (a value of 0 means more erosion). The texture must be tileable (stackable).
-
-Alternatively, you can pass objects that implement from [`Procedural3DTexture`](#proceduraltexture-procedural3dtexture).
+The shape and shape detail textures, or URLs to them. See also [`shapeTexture`, `shapeDetailTexture`](#shapetexture-shapedetailtexture-1).
 
 If left undefined, the default textures will be loaded directly from GitHub.
 
@@ -263,11 +265,7 @@ If left undefined, the default textures will be loaded directly from GitHub.
 turbulenceTexture: Texture | ProceduralTexture | null = DEFAULT_TURBULENCE_URL
 ```
 
-The turbulence texture, or a URL to it.
-
-The RGB value represents a 3D vector used for domain distortion of the shape and shape detail. The texture must be tileable.
-
-Alternatively, you can pass an object that implements from [`ProceduralTexture`](#proceduraltexture-procedural3dtexture).
+The turbulence texture, or a URL to it. See also [`turbulenceTexture`](#turbulencetexture-1).
 
 If left undefined, the default texture will be loaded directly from GitHub.
 
@@ -277,7 +275,7 @@ If left undefined, the default texture will be loaded directly from GitHub.
 stbnTexture: Data3DTexture | null = DEFAULT_STBN_URL
 ```
 
-A [spatiotemporal blue noise](https://research.nvidia.com/publication/2022-07_spatiotemporal-blue-noise-masks) (STBN) texture, or a URL to it.
+A spatiotemporal blue noise texture, or a URL to it. See also [`stbnTexture`](#stbntexture-1).
 
 If left undefined, the default texture will be loaded directly from GitHub.
 
@@ -491,7 +489,7 @@ densityProfile: DensityProfile = {
 }
 ```
 
-Controls how density varies with the height fraction ($\eta$), ranging from 0 to 1 within the cloud layer. Clouds are typically denser at the top and sparser at the bottom (hence the default values). You can adjust these parameters to define a different density distribution: $ae^{b\eta}+c\eta+d$.
+Determines how density varies with the height fraction ($\eta$), ranging from 0 to 1 within the cloud layer: $ae^{b\eta}+c\eta+d$. Clouds are typically denser at the top and sparser at the bottom (hence the default values). You can adjust these parameters to define a different density distribution.
 
 #### _layer_.shadow
 
@@ -499,7 +497,7 @@ Controls how density varies with the height fraction ($\eta$), ranging from 0 to
 shadow: boolean = false
 ```
 
-Specifies whether this cloud layer defines the maximum height considered in BSM. All cloud layers below this layer will be included in BSM, while layers above it will be ignored. If enabled on multiple layers, the highest layer takes precedence.
+Specifies whether this cloud layer should be included in BSM. All cloud layers at or below this layer will be included in BSM, while layers above it will be ignored. If enabled on multiple layers, the highest layer takes precedence.
 
 ### Textures
 
@@ -509,7 +507,11 @@ Specifies whether this cloud layer defines the maximum height considered in BSM.
 localWeatherTexture: Texture | ProceduralTexture | null = null
 ```
 
-Same as [localWeatherTexture](#localweathertexture), except that it does not accept URLs and no default texture will be loaded.
+The local weather texture.
+
+Each channel corresponds to the local weather signal of a specific cloud layer. The texture must be tileable.
+
+Alternatively, you can pass an object that implements from [`ProceduralTexture`](#proceduraltexture-proceduraltexture).
 
 #### shapeTexture, shapeDetailTexture
 
@@ -518,7 +520,11 @@ shapeTexture: Data3DTexture | Procedural3DTexture | null = null
 shapeDetailTexture: Data3DTexture | Procedural3DTexture | null = null
 ```
 
-Same as [shapeTexture, shapeDetailTexture](#shapetexture-shapedetailtexture), except that it does not accept URLs and no default texture will be loaded.
+The shape and shape detail textures.
+
+The red channel represents the inverse amount of erosion applied to the cloud shell (a value of 0 means more erosion). The texture must be tileable (stackable).
+
+Alternatively, you can pass objects that implement from [`Procedural3DTexture`](#proceduraltexture-procedural3dtexture).
 
 #### turbulenceTexture
 
@@ -526,7 +532,11 @@ Same as [shapeTexture, shapeDetailTexture](#shapetexture-shapedetailtexture), ex
 turbulenceTexture: Texture | ProceduralTexture | null = null
 ```
 
-Same as [turbulenceTexture](#turbulencetexture), except that it does not accept URLs and no default texture will be loaded.
+The turbulence texture.
+
+The RGB value represents a 3D vector used for domain distortion of the shape and shape detail. The texture must be tileable.
+
+Alternatively, you can pass an object that implements from [`ProceduralTexture`](#proceduraltexture-proceduraltexture).
 
 #### stbnTexture
 
@@ -534,7 +544,9 @@ Same as [turbulenceTexture](#turbulencetexture), except that it does not accept 
 stbnTexture: Data3DTexture | null = null
 ```
 
-Same as [stbnTexture](#stbntexture), except that it does not accept URLs and no default texture will be loaded.
+A [spatiotemporal blue noise](https://research.nvidia.com/publication/2022-07_spatiotemporal-blue-noise-masks) (STBN) texture.
+
+This is used for stochastic sampling. While not required, omitting it will make spatial and temporal aliasing highly noticeable.
 
 ### Scattering
 

@@ -41,3 +41,44 @@ export const defaultCloudLayer: RequiredDeep<CloudLayer> = {
   },
   shadow: false
 }
+
+export function createDefaultCloudLayers(): CloudLayer[] {
+  return [
+    {
+      channel: 'r',
+      altitude: 750,
+      height: 650,
+      densityScale: 0.2,
+      shapeAmount: 1,
+      shapeDetailAmount: 1,
+      weatherExponent: 1,
+      shapeAlteringBias: 0.35,
+      coverageFilterWidth: 0.6,
+      shadow: true
+    },
+    {
+      channel: 'g',
+      altitude: 1000,
+      height: 1200,
+      densityScale: 0.2,
+      shapeAmount: 1,
+      shapeDetailAmount: 1,
+      weatherExponent: 1,
+      shapeAlteringBias: 0.35,
+      coverageFilterWidth: 0.6,
+      shadow: true
+    },
+    {
+      channel: 'b',
+      altitude: 7500,
+      height: 500,
+      densityScale: 0.003,
+      shapeAmount: 0.4,
+      shapeDetailAmount: 0,
+      weatherExponent: 1,
+      shapeAlteringBias: 0.35,
+      coverageFilterWidth: 0.5
+    },
+    { channel: 'a' }
+  ]
+}

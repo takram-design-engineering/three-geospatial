@@ -49,29 +49,6 @@ import { type Procedural3DTexture } from '../Procedural3DTexture'
 import { type ProceduralTexture } from '../ProceduralTexture'
 import { CloudLayers } from './CloudLayers'
 
-export type CloudsProps = Omit<
-  PassThoughInstanceProps<
-    CloudsEffect,
-    [],
-    Partial<
-      CloudsEffect &
-        ExpandNestedProps<CloudsEffect, 'clouds'> &
-        ExpandNestedProps<CloudsEffect, 'shadow'>
-    >
-  >,
-  | 'localWeatherTexture'
-  | 'shapeTexture'
-  | 'shapeDetailTexture'
-  | 'turbulenceTexture'
-  | 'stbnTexture'
-> & {
-  localWeatherTexture?: Texture | ProceduralTexture | string
-  shapeTexture?: Data3DTexture | Procedural3DTexture | string
-  shapeDetailTexture?: Data3DTexture | Procedural3DTexture | string
-  turbulenceTexture?: Texture | ProceduralTexture | string
-  stbnTexture?: Data3DTexture | string
-}
-
 function useTextureState(
   input: string | Texture | ProceduralTexture,
   gl: WebGLRenderer
@@ -158,9 +135,34 @@ function useSTBNTextureState(
   return data
 }
 
+export type CloudsProps = Omit<
+  PassThoughInstanceProps<
+    CloudsEffect,
+    [],
+    Partial<
+      CloudsEffect &
+        ExpandNestedProps<CloudsEffect, 'clouds'> &
+        ExpandNestedProps<CloudsEffect, 'shadow'>
+    >
+  >,
+  | 'localWeatherTexture'
+  | 'shapeTexture'
+  | 'shapeDetailTexture'
+  | 'turbulenceTexture'
+  | 'stbnTexture'
+> & {
+  disableDefaultLayers?: boolean
+  localWeatherTexture?: Texture | ProceduralTexture | string
+  shapeTexture?: Data3DTexture | Procedural3DTexture | string
+  shapeDetailTexture?: Data3DTexture | Procedural3DTexture | string
+  turbulenceTexture?: Texture | ProceduralTexture | string
+  stbnTexture?: Data3DTexture | string
+}
+
 export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
   function Clouds(
     {
+      disableDefaultLayers = false,
       localWeatherTexture: localWeatherTextureProp = DEFAULT_LOCAL_WEATHER_URL,
       shapeTexture: shapeTextureProp = DEFAULT_SHAPE_URL,
       shapeDetailTexture: shapeDetailTextureProp = DEFAULT_SHAPE_DETAIL_URL,
@@ -263,9 +265,12 @@ export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
           stbnTexture={stbnTexture}
           {...others}
         />
-        {children != null && (
-          <CloudLayers effect={effect}>{children}</CloudLayers>
-        )}
+        <CloudLayers
+          layers={effect.cloudLayers}
+          disableDefault={disableDefaultLayers}
+        >
+          {children}
+        </CloudLayers>
       </>
     )
   }

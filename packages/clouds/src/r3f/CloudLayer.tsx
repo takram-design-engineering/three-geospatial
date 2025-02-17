@@ -13,14 +13,14 @@ import { CloudLayersContext } from './CloudLayers'
 
 export type CloudLayerImpl = CloudLayerData
 
-function applyProps(data: object, props: object): void {
-  for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key)) {
+function applyProps(target: object, source: object): void {
+  for (const key in target) {
+    if (Object.prototype.hasOwnProperty.call(target, key)) {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete data[key as keyof typeof data]
+      delete target[key as keyof typeof target]
     }
   }
-  Object.assign(data, props)
+  Object.assign(target, source)
 }
 
 export type CloudLayerProps = CloudLayerData &
@@ -36,7 +36,8 @@ export const CloudLayer = forwardRef<CloudLayerImpl, CloudLayerProps>(
     propsRef.current = props
 
     useLayoutEffect(() => {
-      // Sorting is just for predictability. Layer order is still not defined.
+      // Sorting is just for predictability. Layer order is still not defined,
+      // but it doesn't matter.
       const index = indexPool.sort((a, b) => a - b).shift()
       if (index == null) {
         return
@@ -53,7 +54,7 @@ export const CloudLayer = forwardRef<CloudLayerImpl, CloudLayerProps>(
       }
     }, [layers, indexPool])
 
-    // Surely this resets any modifications made via the ref.
+    // Surely this resets any modifications made via the forwarded ref.
     applyProps(ref.current, props)
 
     useImperativeHandle(forwardedRef, () => ref.current)
