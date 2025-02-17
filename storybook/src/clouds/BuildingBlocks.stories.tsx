@@ -7,7 +7,7 @@ import _Turbulence from './BuildingBlocks-Turbulence'
 import _VolumetricShape from './BuildingBlocks-VolumetricShape'
 
 export default {
-  title: 'clouds (WIP)/Building Blocks',
+  title: 'clouds/Building Blocks',
   parameters: {
     layout: 'fullscreen'
   }

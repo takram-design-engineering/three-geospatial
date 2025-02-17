@@ -4,7 +4,7 @@ import _Basic from './Clouds-Basic'
 import _MovingEllipsoid from './Clouds-MovingEllipsoid'
 
 export default {
-  title: 'clouds (WIP)/Clouds',
+  title: 'clouds/Clouds',
   parameters: {
     layout: 'fullscreen'
   }

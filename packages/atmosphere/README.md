@@ -49,10 +49,10 @@ const Scene = () => {
 ```
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
-&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--manhattan)
 
 ![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
-&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-photorealistic-tiles--fuji)
 
 ### Forward lighting
 
@@ -91,7 +91,7 @@ const Scene = () => {
 ```
 
 ![Example of forward lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
-&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
 
 ### Transient update by date
 
@@ -256,7 +256,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 
 Provides and synchronizes props of atmosphere components. It’s the recommended way to configure components unless you need finer control over properties of individual components.
 
-&rarr; [Source](/packages/atmosphere/src/r3f/Atmosphere.tsx)
+→ [Source](/packages/atmosphere/src/r3f/Atmosphere.tsx)
 
 ```tsx
 import { useFrame } from '@react-three/fiber'
@@ -433,7 +433,7 @@ Displays the sky in a screen quad.
 
 See [`SkyMaterial`](#skymaterial) for further details.
 
-&rarr; [Source](/packages/atmosphere/src/r3f/Sky.tsx)
+→ [Source](/packages/atmosphere/src/r3f/Sky.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -469,7 +469,7 @@ Represents the brightest stars as points at an infinite distance.
 
 See [`StarsMaterial`](#starsmaterial) for further details.
 
-&rarr; [Source](/packages/atmosphere/src/r3f/Stars.tsx)
+→ [Source](/packages/atmosphere/src/r3f/Stars.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -518,7 +518,7 @@ A light probe for indirect sky irradiance.
 
 See [`SkyLightProbe`](#skylightprobe) for further details.
 
-&rarr; [Source](/packages/atmosphere/src/r3f/SkyLight.tsx)
+→ [Source](/packages/atmosphere/src/r3f/SkyLight.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -565,7 +565,7 @@ A directional light representing the sun.
 
 See [`SunDirectionalLight`](#directionalsunlight) for further details.
 
-&rarr; [Source](/packages/atmosphere/src/r3f/SunLight.tsx)
+→ [Source](/packages/atmosphere/src/r3f/SunLight.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -612,7 +612,7 @@ A post-processing effect that renders atmospheric transparency and inscattered l
 
 See [`AerialPerspectiveEffect`](#aerialperspectiveeffect) for further details.
 
-&rarr; [Source](/packages/atmosphere/src/r3f/AerialPerspective.tsx)
+→ [Source](/packages/atmosphere/src/r3f/AerialPerspective.tsx)
 
 ```tsx
 import { useLoader } from '@react-three/fiber'
@@ -644,7 +644,7 @@ The parameters of [`AerialPerspectiveEffect`](#aerialperspectiveeffect) are expo
 
 The base class of [`SkyMaterial`](#skymaterial) and [`StarsMaterial`](#starsmaterial).
 
-&rarr; [Source](/packages/atmosphere/src/AtmosphereMaterialBase.ts)
+→ [Source](/packages/atmosphere/src/AtmosphereMaterialBase.ts)
 
 ### Parameters
 
@@ -728,7 +728,7 @@ A material for displaying the sky. Apply this to a screen quad.
 
 Despite its name, this material renders the atmosphere itself, along with the sun and moon. When viewed from within the atmosphere, it appears as the sky. From space, it represents Earth’s atmosphere with a flat ground.
 
-&rarr; [Source](/packages/atmosphere/src/SkyMaterial.ts)
+→ [Source](/packages/atmosphere/src/SkyMaterial.ts)
 
 ```ts
 const material = new SkyMaterial()
@@ -786,7 +786,7 @@ Represents the brightest stars as points at an infinite distance.
 
 The provided data ([stars.bin](/packages/atmosphere/assets/stars.bin)) contains the J2000 ECI directions, magnitudes and black body chromaticities of the 9,096 stars listed in [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html).
 
-&rarr; [Source](/packages/atmosphere/src/StarsMaterial.ts)
+→ [Source](/packages/atmosphere/src/StarsMaterial.ts)
 
 ```ts
 const data: ArrayBuffer = /* Load stars.bin */
@@ -835,7 +835,7 @@ A light probe for indirect sky irradiance.
 
 It calculates spherical harmonics of sky irradiance at its position by sampling the precomputed irradiance texture on the CPU.
 
-&rarr; [Source](/packages/atmosphere/src/SkyLightProbe.ts)
+→ [Source](/packages/atmosphere/src/SkyLightProbe.ts)
 
 ```ts
 const skyLight = new SkyLightProbe({ irradianceTexture })
@@ -905,7 +905,7 @@ A directional light representing the sun.
 
 It calculates the sun’s radiance by sampling the precomputed transmittance texture on the CPU.
 
-&rarr; [Source](/packages/atmosphere/src/SunDirectionalLight.ts)
+→ [Source](/packages/atmosphere/src/SunDirectionalLight.ts)
 
 ```ts
 const sunLight = new SunDirectionalLight({ transmittanceTexture })
@@ -986,7 +986,7 @@ A post-processing effect that renders atmospheric transparency and inscattered l
 
 This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
 
-&rarr; [Source](/packages/atmosphere/src/AerialPerspectiveEffect.ts)
+→ [Source](/packages/atmosphere/src/AerialPerspectiveEffect.ts)
 
 ```ts
 const aerialPerspective = new AerialPerspectiveEffect(camera, {
@@ -1197,7 +1197,7 @@ function getMoonDirectionECEF(date: number | Date, result?: Vector3): Vector3
 
 Obtains the direction to the sun and moon in ECEF coordinates for the specified UTC time. This internally uses [astronomy-engine](https://github.com/cosinekitty/astronomy) and it approximates UTC as being equivalent to UT1.
 
-&rarr; [Source](/packages/atmosphere/src/celestialDirections.ts)
+→ [Source](/packages/atmosphere/src/celestialDirections.ts)
 
 ### getECIToECEFRotationMatrix
 
@@ -1210,7 +1210,7 @@ function getECIToECEFRotationMatrix(
 
 Obtains the rotation matrix to convert coordinates from J2000 ECI to ECEF. This internally uses [astronomy-engine](https://github.com/cosinekitty/astronomy) and it approximates UTC as being equivalent to UT1.
 
-&rarr; [Source](/packages/atmosphere/src/celestialDirections.ts)
+→ [Source](/packages/atmosphere/src/celestialDirections.ts)
 
 ### getSunLightColor
 
@@ -1232,7 +1232,7 @@ function getSunLightColor(
 
 Calculates the radiance of sunlight observed from a given position by sampling the precomputed transmittance texture on the CPU.
 
-&rarr; [Source](/packages/atmosphere/src/getSunLightColor.ts)
+→ [Source](/packages/atmosphere/src/getSunLightColor.ts)
 
 # License
 

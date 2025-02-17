@@ -9,7 +9,7 @@ A Three.js and R3F (React Three Fiber) implementation of geospatial volumetric c
 - Light shafts (crepuscular rays)
 - Haze (sparse fog)
 
-This library is part of a project to prototype the rendering aspect of a Web GIS engine. For more details on the background and current status of this project, please refer to the [main README](/README.md).
+This library is under active development and is in pre-release status.
 
 **This document is a draft.**
 
@@ -44,14 +44,14 @@ const Scene = () => (
 )
 ```
 
-![Example of Tokyo](docs/tokyo.jpg)
-&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo)
+![Example of Tokyo](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/tokyo.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo)
 
-![Example of Fuji](docs/fuji.jpg)
-&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--fuji)
+![Example of Fuji](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/fuji.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--fuji)
 
-![Example of London](docs/london.jpg)
-&rarr; [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--london)
+![Example of London](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/london.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--london)
 
 ### Configuring cloud layers
 
@@ -166,11 +166,11 @@ Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takra
 
 The other factor that influences the performance is how clouds are modeled. Clouds are roughly modeled as shown in the image below.
 
-![](docs/cloud-shape.png)
+![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/cloud-shape.png)
 
 Ray marching can be visualized as follows:
 
-![](docs/ray-march.png)
+![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/ray-march.png)
 
 This illustrates that greater total cloud layer height increases computational cost, and excessive erosion reduces efficiency by causing rays to miss the clouds, leading to unnecessary sampling of the weather texture.
 
@@ -224,7 +224,7 @@ This illustrates that greater total cloud layer height increases computational c
 
 ## Clouds
 
-&rarr; [Source](/packages/clouds/src/r3f/Clouds.tsx)
+→ [Source](/packages/clouds/src/r3f/Clouds.tsx)
 
 ### Props
 
@@ -281,11 +281,11 @@ If left undefined, the default texture will be loaded directly from GitHub.
 
 ## CloudLayer
 
-&rarr; [Source](/packages/clouds/src/r3f/CloudLayer.tsx)
+→ [Source](/packages/clouds/src/r3f/CloudLayer.tsx)
 
 ## CloudsEffect
 
-&rarr; [Source](/packages/clouds/src/CloudsEffect.ts)
+→ [Source](/packages/clouds/src/CloudsEffect.ts)
 
 ### Details
 
@@ -297,7 +297,7 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 
   Performs ray marching in the sun’s orthographic projection and outputs the necessary values for computing the optical depth of the clouds (BSM) during the main camera’s ray marching.
 
-  &rarr; [Shader](/packages/clouds/src/shaders/shadow.frag)
+  → [Shader](/packages/clouds/src/shaders/shadow.frag)
 
 - **Shadow resolve**
 
@@ -306,25 +306,25 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
   - Reduce spatial aliasing in BSM due to the high-frequency details of the clouds relative to the output resolution.
   - Reduce temporal aliasing caused by temporal jitters during shadow ray marching.
 
-  &rarr; [Shader](/packages/clouds/src/shaders/shadowResolve.frag)
+  → [Shader](/packages/clouds/src/shaders/shadowResolve.frag)
 
 - **Clouds**
 
   Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective is already applied to the clouds here.
 
-  &rarr; [Shader](/packages/clouds/src/shaders/clouds.frag)
+  → [Shader](/packages/clouds/src/shaders/clouds.frag)
 
 - **Clouds resolve**
 
   Performs TAAU-like upscaling on the clouds pass outputs, reducing the number of texels to ray march in the clouds shader pass by 1/16.
 
-  &rarr; [Shader](/packages/clouds/src/shaders/cloudsResolve.frag)
+  → [Shader](/packages/clouds/src/shaders/cloudsResolve.frag)
 
 - **Aerial perspective**
 
   This pass is part of the [atmosphere package](../atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
 
-  &rarr; [Documentation](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspectiveeffect)
+  → [Documentation](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspectiveeffect)
 
 ### Parameters
 
@@ -879,19 +879,19 @@ Controls the additional optical depth applied during early termination of rays. 
 
 ## LocalWeather
 
-&rarr; [Source](/packages/clouds/src/LocalWeather.ts)
+→ [Source](/packages/clouds/src/LocalWeather.ts)
 
 ## CloudShape
 
-&rarr; [Source](/packages/clouds/src/CloudShape.ts)
+→ [Source](/packages/clouds/src/CloudShape.ts)
 
 ## CloudShapeDetail
 
-&rarr; [Source](/packages/clouds/src/CloudShapeDetail.ts)
+→ [Source](/packages/clouds/src/CloudShapeDetail.ts)
 
 ## Turbulence
 
-&rarr; [Source](/packages/clouds/src/Turbulence.ts)
+→ [Source](/packages/clouds/src/Turbulence.ts)
 
 # References
 
