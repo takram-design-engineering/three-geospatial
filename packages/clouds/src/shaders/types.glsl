@@ -12,7 +12,7 @@ struct CloudsIrradiance {
 
 struct DensityProfile {
   vec4 expTerms;
-  vec4 expScales;
+  vec4 exponents;
   vec4 linearTerms;
   vec4 constantTerms;
 };

@@ -77,7 +77,11 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
   weather.heightFraction = remapClamped(vec4(height), minLayerHeights, maxLayerHeights);
 
   vec4 localWeather = pow(
-    textureLod(localWeatherTexture, uv * localWeatherRepeat + localWeatherOffset, mipLevel),
+    textureLod(
+      localWeatherTexture,
+      uv * localWeatherRepeat + localWeatherOffset,
+      mipLevel
+    ).WEATHER_CHANNELS,
     weatherExponents
   );
   vec4 heightScale = shapeAlteringFunction(weather.heightFraction, shapeAlteringBiases);
@@ -96,7 +100,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
 
 vec4 getLayerDensity(const vec4 heightFraction) {
   // prettier-ignore
-  return densityProfile.expTerms * exp(densityProfile.expScales * heightFraction) +
+  return densityProfile.expTerms * exp(densityProfile.exponents * heightFraction) +
     densityProfile.linearTerms * heightFraction +
     densityProfile.constantTerms;
 }

@@ -154,3 +154,54 @@ export function defineFloat(
     }
   }
 }
+
+export interface DefineExpressionDecoratorOptions {
+  validate?: (value: string) => boolean
+}
+
+export function defineExpression(
+  name: string,
+  { validate }: DefineExpressionDecoratorOptions = {}
+) {
+  return <T extends Material | EffectLike, K extends keyof T>(
+    target: T[K] extends string ? T : never,
+    propertyKey: K
+  ) => {
+    if (target instanceof Material) {
+      Object.defineProperty(target, propertyKey, {
+        enumerable: true,
+        get(this: Extract<T, Material>): string {
+          return this.defines?.[name] ?? ''
+        },
+        set(this: Extract<T, Material>, value: string) {
+          if (value !== this[propertyKey]) {
+            if (validate?.(value) === false) {
+              console.error(`Expression validation failed: ${value}`)
+              return
+            }
+            this.defines ??= {}
+            this.defines[name] = value
+            this.needsUpdate = true
+          }
+        }
+      })
+    } else {
+      Object.defineProperty(target, propertyKey, {
+        enumerable: true,
+        get(this: Extract<T, EffectLike>): string {
+          return this.defines.get(name) ?? ''
+        },
+        set(this: Extract<T, EffectLike>, value: string) {
+          if (value !== this[propertyKey]) {
+            if (validate?.(value) === false) {
+              console.error(`Expression validation failed: ${value}`)
+              return
+            }
+            this.defines.set(name, value)
+            ;(this as any).setChanged() // Bypass protected privilege
+          }
+        }
+      })
+    }
+  }
+}

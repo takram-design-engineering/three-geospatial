@@ -8,7 +8,7 @@ import { Clouds } from '@takram/three-clouds/r3f'
 import { LensFlare } from '@takram/three-geospatial-effects/r3f'
 
 export default {
-  title: 'clouds (WIP)/Minimal Setup',
+  title: 'clouds/Minimal Setup',
   parameters: {
     layout: 'fullscreen'
   }

@@ -4,12 +4,12 @@
 
 A Three.js and R3F (React Three Fiber) implementation of geospatial volumetric clouds with features including:
 
-- Shadows cast on scene objects
+- Beer shadow maps (BSM) and shadows cast on scene objects
 - Temporal upscaling and filtering
 - Light shafts (crepuscular rays)
 - Haze (sparse fog)
 
-This library is part of a project to prototype the rendering aspect of a Web GIS engine. For more details on the background and current status of this project, please refer to the [main README](/README.md).
+This library is under active development and is in pre-release status.
 
 **This document is a draft.**
 
@@ -44,14 +44,14 @@ const Scene = () => (
 )
 ```
 
-![Example of Tokyo](docs/tokyo.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo)
+![Example of Tokyo](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/tokyo.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo)
 
-![Example of Fuji](docs/fuji.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--fuji)
+![Example of Fuji](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/fuji.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--fuji)
 
-![Example of London](docs/london.jpg)
-[&rarr; Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--london)
+![Example of London](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/london.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--london)
 
 ### Configuring cloud layers
 
@@ -65,10 +65,11 @@ import { Clouds } from '@takram/three-clouds/r3f'
 const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
-      <Clouds qualityPreset='high' coverage={0.4}>
-        <CloudLayer altitude={750} height={650} />
-        <CloudLayer altitude={1000} height={1200} />
+      <Clouds disableDefaultLayers>
+        <CloudLayer channel='r' altitude={750} height={650} />
+        <CloudLayer channel='g' altitude={1000} height={1200} />
         <CloudLayer
+          channel='b'
           altitude={7500}
           height={500}
           densityScale={0.003}
@@ -135,10 +136,43 @@ const Scene = () => (
 
 ## Performance tweaks
 
-Volumetric clouds are not a lightweight effect. Please refer to the [performance tweaks](#performance-tweaks) section to optimize for your target devices.
+Volumetric clouds are not a lightweight effect. You might need to adjust the quality settings for your target devices.
 
-![](docs/cloud-shape.png)
-![](docs/ray-march.png)
+There are 4 quality presets that you may consider:
+
+- **Low**: Disables shape detail, light shafts, and turbulence, and significantly lowers the precision of ray marching
+- **Medium**: Disables light shafts and turbulence, as well as lowering the precision of ray marching
+- **High**: The baseline settings
+- **Ultra**: Increases the resolution of BSM
+
+If “Low” quality preset still does not meet your performance goal, then consider using skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
+
+Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo). Note that they are relatively new devices as of this writing.
+
+| Device                | FPS       | Quality preset | Temporal upscaling | Canvas resolution | Browser |
+| --------------------- | --------- | -------------- | ------------------ | ----------------- | ------- |
+| iPhone 13             | 36-53     | Low            | Yes                | 780×1326px        | Safari  |
+| iPad Pro (1st gen.)   | 30-32     | Low            | Yes                | 2388×1520px       | Safari  |
+| iPad Pro (M4)         | **60**    | **Medium**     | Yes                | 2420×1520px       | Safari  |
+| iPad Pro (M4)         | 43-55     | High           | Yes                | 2420×1520px       | Safari  |
+| MacBook Pro (M3 Max)  | **92-95** | **High**       | Yes                | 4K                | Chrome  |
+| MacBook Pro (M3 Max)  | **76-77** | **Ultra**      | Yes                | 4K                | Chrome  |
+| MacBook Pro (M3 Max)  | 31        | High           | **No**             | 4K                | Chrome  |
+| Mac Studio (M2 Ultra) | **60**    | **High**       | Yes                | 4K                | Chrome  |
+| Mac Studio (M2 Ultra) | **60**    | **Ultra**      | Yes                | 4K                | Chrome  |
+| Mac Studio (M2 Ultra) | 29-31     | High           | **No**             | 4K                | Chrome  |
+| GeForce 4090          | **60**    | **Ultra**      | Yes                | 4K                | Chrome  |
+| GeForce 4090          | **60**    | **Ultra**      | **No**             | 4K                | Chrome  |
+
+The other factor that influences the performance is how clouds are modeled. Clouds are roughly modeled as shown in the image below.
+
+![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/cloud-shape.png)
+
+Ray marching can be visualized as follows:
+
+![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/ray-march.png)
+
+This illustrates that greater total cloud layer height increases computational cost, and excessive erosion reduces efficiency by causing rays to miss the clouds, leading to unnecessary sampling of the weather texture.
 
 ## Limitations
 
@@ -150,7 +184,7 @@ Volumetric clouds are not a lightweight effect. Please refer to the [performance
 
 - The temporal upscaling is still basic and prone to ghosting and smearing, especially when viewed through sparse clouds, and disocclusion errors on scene objects.
 
-- Aerial perspective is applied to the clouds using transmittance-weighted front depth, an approximation that reduces the computation of atmospheric transparency. However, because this is a mean depth, it is not accurate for representing the depth of areas where distant sparse clouds overlap, and introduces artifacts.
+- Aerial perspective is applied to the clouds using transmittance-weighted mean depth of clouds, an approximation that reduces the computation of atmospheric transparency. However, because this is a mean depth, it is not accurate for representing the depth of areas where distant sparse clouds overlap, and introduces artifacts.
 
 ### Possible improvements
 
@@ -158,13 +192,15 @@ Volumetric clouds are not a lightweight effect. Please refer to the [performance
 
 - The cloud base of each layer lines up at the same altitude, making it look artificial. This may be improved by tweaking the shape altering function.
 
-- Interpolated sun and sky irradiance, when `accurateSunSkyIrradiance` is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
+- Interpolated sun and sky irradiance, when [`accurateSunSkyIrradiance`](#cloudsaccuratesunskyirradiance) is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
+
+- A large portion of weather sampling is wasted simply checking whether it is outside the cloud shell. However, since we already know the front depth and sample count at the texel from the reprojected previous frame, using this information to better estimate the ray marching range would make it much more efficient.
 
 - Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera’s depth onto the sun’s view.
 
 ### Planned features
 
-- The altitude of cloud layers is determined relative to the ellipsoid surface, but in reality, the cloud base altitude is not constant with respect to either the ellipsoid or geopotential height. Thus, clouds appear too low in high-altitude non-mountain areas (e.g. east of the west coast of North America). This could be compensated for by considering observed average cloud base heights, [X](https://x.com/shotamatsuda/status/1885737165709254882).
+- The altitude of cloud layers is determined relative to the ellipsoid surface, but in reality, the cloud base altitude is not constant with respect to either the ellipsoid or geopotential height. Thus, clouds appear too low in high-altitude non-mountain areas (e.g. east of the west coast of North America). This could be compensated for by considering the observed average cloud base altitude, [X](https://x.com/shotamatsuda/status/1885737165709254882).
 
 - Introduce global cloud coverage and support rendering views from space.
 
@@ -188,17 +224,72 @@ Volumetric clouds are not a lightweight effect. Please refer to the [performance
 
 ## Clouds
 
-&rarr; [Source](/packages/clouds/src/r3f/Clouds.tsx)
+→ [Source](/packages/clouds/src/r3f/Clouds.tsx)
+
+### Props
+
+The parameters of [`CloudsEffect`](#cloudseffect) are also exposed as props.
+
+#### disableDefaultLayers
+
+```ts
+disableDefaultLayers: boolean = false
+```
+
+Set this to remove the default cloud layers, creating a clear sky. You can then define your own layers from scratch using [`CloudLayer`](#cloudlayer).
+
+#### localWeatherTexture
+
+```ts
+localWeatherTexture: Texture | ProceduralTexture | null = DEFAULT_LOCAL_WEATHER_URL
+```
+
+The local weather texture, or a URL to it. See also [`localWeatherTexture`](#localweathertexture-1).
+
+If left undefined, the default texture will be loaded directly from GitHub.
+
+#### shapeTexture, shapeDetailTexture
+
+```ts
+shapeTexture: Data3DTexture | Procedural3DTexture | null = DEFAULT_SHAPE_URL
+shapeDetailTexture: Data3DTexture | Procedural3DTexture | null = DEFAULT_SHAPE_DETAIL_URL
+```
+
+The shape and shape detail textures, or URLs to them. See also [`shapeTexture`, `shapeDetailTexture`](#shapetexture-shapedetailtexture-1).
+
+If left undefined, the default textures will be loaded directly from GitHub.
+
+#### turbulenceTexture
+
+```ts
+turbulenceTexture: Texture | ProceduralTexture | null = DEFAULT_TURBULENCE_URL
+```
+
+The turbulence texture, or a URL to it. See also [`turbulenceTexture`](#turbulencetexture-1).
+
+If left undefined, the default texture will be loaded directly from GitHub.
+
+#### stbnTexture
+
+```ts
+stbnTexture: Data3DTexture | null = DEFAULT_STBN_URL
+```
+
+A spatiotemporal blue noise texture, or a URL to it. See also [`stbnTexture`](#stbntexture-1).
+
+If left undefined, the default texture will be loaded directly from GitHub.
 
 ## CloudLayer
 
-&rarr; [Source](/packages/clouds/src/r3f/CloudLayer.tsx)
+→ [Source](/packages/clouds/src/r3f/CloudLayer.tsx)
 
 ## CloudsEffect
 
-&rarr; [Source](/packages/clouds/src/CloudsEffect.ts)
+→ [Source](/packages/clouds/src/CloudsEffect.ts)
 
 ### Details
+
+Nothing novel here, just a combination of existing techniques. See the [references section](#references) for further details.
 
 ![Rendering path diagram](docs/rendering-path.png)
 
@@ -206,36 +297,38 @@ Volumetric clouds are not a lightweight effect. Please refer to the [performance
 
   Performs ray marching in the sun’s orthographic projection and outputs the necessary values for computing the optical depth of the clouds (BSM) during the main camera’s ray marching.
 
-  &rarr; [Shader](/packages/clouds/src/shaders/shadow.frag)
+  → [Shader](/packages/clouds/src/shaders/shadow.frag)
 
 - **Shadow resolve**
 
-  Applies TAA on BSM, not for the aliasing at polygon edges, but rather for temporal filtering:
+  Applies temporal anti-aliasing (TAA) on BSM, not for the aliasing at polygon edges, but rather for temporal filtering:
 
   - Reduce spatial aliasing in BSM due to the high-frequency details of the clouds relative to the output resolution.
   - Reduce temporal aliasing caused by temporal jitters during shadow ray marching.
 
-  &rarr; [Shader](/packages/clouds/src/shaders/shadowResolve.frag)
+  → [Shader](/packages/clouds/src/shaders/shadowResolve.frag)
 
 - **Clouds**
 
   Renders the color and transparency of the clouds, optionally including the shadow length. The aerial perspective is already applied to the clouds here.
 
-  &rarr; [Shader](/packages/clouds/src/shaders/clouds.frag)
+  → [Shader](/packages/clouds/src/shaders/clouds.frag)
 
 - **Clouds resolve**
 
   Performs TAAU-like upscaling on the clouds pass outputs, reducing the number of texels to ray march in the clouds shader pass by 1/16.
 
-  &rarr; [Shader](/packages/clouds/src/shaders/cloudsResolve.frag)
+  → [Shader](/packages/clouds/src/shaders/cloudsResolve.frag)
 
 - **Aerial perspective**
 
   This pass is part of the [atmosphere package](../atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
 
-  &rarr; [Documentation](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspectiveeffect)
+  → [Documentation](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspectiveeffect)
 
 ### Parameters
+
+The number of parameters might seem overwhelming. To get started, try adjusting [`qualityPreset`](#qualitypreset), [`coverage`](#coverage), cloud layer’s [`altitude`](#layeraltitude), and [`height`](#layerheight) to suit your needs. You can also experiment with the parameters in the [Basic story](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic).
 
 - [Rendering](#rendering)
 - [Cloud layers](#cloud-layers)
@@ -245,14 +338,17 @@ Volumetric clouds are not a lightweight effect. Please refer to the [performance
 - [Cascaded shadow maps](#cascaded-shadow-maps)
 - [Advanced clouds parameters](#advanced-clouds-parameters)
 - [Advanced shadow parameters](#advanced-shadow-parameters)
+- The parameters of [`AtmosphereMaterialBase`](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#atmospherematerialbase)
 
 ### Rendering
 
 #### qualityPreset
 
 ```ts
-qualityPreset: CloudsQualityPreset = undefined
+qualityPreset: 'low' | 'medium' | 'high' | 'ultra' = 'high'
 ```
+
+See also the [performance tweaks section](#performance-tweaks).
 
 #### resolutionScale
 
@@ -260,11 +356,17 @@ qualityPreset: CloudsQualityPreset = undefined
 resolutionScale: number = 1
 ```
 
+Specifies the final output resolution. For example, setting this to 0.5 reduces the total number of texels to compute by 1/4.
+
 #### temporalUpscale
 
 ```ts
 temporalUpscale: boolean = true
 ```
+
+Whether to perform temporal upscaling, which reduces the number of texels to ray march in the clouds pass by 1/16. It is recommended to keep this enabled unless targeting very high-performance devices.
+
+See also the [limitations section](#limitations), as this technique has tradeoffs.
 
 #### lightShafts
 
@@ -272,11 +374,15 @@ temporalUpscale: boolean = true
 lightShafts: boolean = true
 ```
 
+Whether to render light shafts (crepuscular rays) using additional ray marching. This enhances the visual impact of cloud-light interaction but is computationally expensive.
+
 #### shapeDetail
 
 ```ts
 shapeDetail: boolean = true
 ```
+
+Whether to sample the shape detail texture. This enhances cloud details but is computationally expensive.
 
 #### turbulence
 
@@ -284,11 +390,15 @@ shapeDetail: boolean = true
 turbulence: boolean = true
 ```
 
+Whether to apply turbulence at the bottom of clouds by sampling the turbulence texture. This adds a sense of wind but is computationally expensive.
+
 #### haze
 
 ```ts
 haze: boolean = true
 ```
+
+Whether to apply an approximated haze effect. This is inexpensive and recommended to keep enabled.
 
 ### Cloud layers
 
@@ -298,11 +408,21 @@ haze: boolean = true
 cloudLayers: CloudLayer[] = [defaultCloudLayer, ...]
 ```
 
+#### _layer_.channel
+
+```ts
+channel: 'r' | 'g' | 'b' | 'a' = 'r'
+```
+
+The channel of the weather texture to use for this cloud layer. Multiple layers can share the same channel.
+
 #### _layer_.altitude
 
 ```ts
 altitude: number = 0
 ```
+
+The altitude of the bottom of the cloud layer, measured from the ellipsoid surface in meters.
 
 #### _layer_.height
 
@@ -310,11 +430,15 @@ altitude: number = 0
 height: number = 0
 ```
 
+The height of the cloud layer in meters. Settings this value to 0 disables the layer.
+
 #### _layer_.densityScale
 
 ```ts
 densityScale: number = 0.2
 ```
+
+Controls the overall density of the clouds within the layer. Settings this value to 0 disables the layer.
 
 #### _layer_.shapeAmount
 
@@ -322,11 +446,15 @@ densityScale: number = 0.2
 shapeAmount: number = 1
 ```
 
+Controls the influence of the shape texture on the cloud layer.
+
 #### _layer_.shapeDetailAmount
 
 ```ts
 shapeDetailAmount: number = 1
 ```
+
+Controls the influence of the shape detail texture on the cloud layer.
 
 #### _layer_.weatherExponent
 
@@ -334,11 +462,15 @@ shapeDetailAmount: number = 1
 weatherExponent: number = 1
 ```
 
+Controls the gradient of the weather texture. Values greater than 1 sharpen the gradient, while lower values flatten the weather making it more uniform.
+
 #### _layer_.shapeAlteringBias
 
 ```ts
 shapeAlteringBias: number = 0.35
 ```
+
+Controls the vertical bias of the cloud shape. A value of 1 results in symmetry, while 0 fully biases the shape at the bottom.
 
 #### _layer_.coverageFilterWidth
 
@@ -346,22 +478,29 @@ shapeAlteringBias: number = 0.35
 coverageFilterWidth: number = 0.6
 ```
 
+Determines how the weather signal influences the shape-altered density. A value of 1 produces a linear gradient, ignoring weather signal, while 0 creates a sharp density transition at the weather signal.
+
 #### _layer_.densityProfile
 
+<!-- prettier-ignore -->
 ```ts
 densityProfile: DensityProfile = {
-  expTerm: (number = 0),
-  expScale: (number = 0),
-  linearTerm: (number = 0.75),
-  constantTerm: (number = 0.25)
+  expTerm: number = 0, // a
+  exponent: number = 0, // b
+  linearTerm: number = 0.75, // c
+  constantTerm: number = 0.25 // d
 }
 ```
+
+Determines how density varies with the height fraction ($\eta$), ranging from 0 to 1 within the cloud layer: $ae^{b\eta}+c\eta+d$. Clouds are typically denser at the top and sparser at the bottom (hence the default values). You can adjust these parameters to define a different density distribution.
 
 #### _layer_.shadow
 
 ```ts
 shadow: boolean = false
 ```
+
+Specifies whether this cloud layer should be included in BSM. All cloud layers at or below this layer will be included in BSM, while layers above it will be ignored. If enabled on multiple layers, the highest layer takes precedence.
 
 ### Textures
 
@@ -371,6 +510,12 @@ shadow: boolean = false
 localWeatherTexture: Texture | ProceduralTexture | null = null
 ```
 
+The local weather texture.
+
+Each channel corresponds to the local weather signal of a specific cloud layer. The texture must be tileable.
+
+Alternatively, you can pass an object that implements from [`ProceduralTexture`](#proceduraltexture-proceduraltexture).
+
 #### shapeTexture, shapeDetailTexture
 
 ```ts
@@ -378,17 +523,33 @@ shapeTexture: Data3DTexture | Procedural3DTexture | null = null
 shapeDetailTexture: Data3DTexture | Procedural3DTexture | null = null
 ```
 
+The shape and shape detail textures.
+
+The red channel represents the inverse amount of erosion applied to the cloud shell (a value of 0 means more erosion). The texture must be tileable (stackable).
+
+Alternatively, you can pass objects that implement from [`Procedural3DTexture`](#proceduraltexture-procedural3dtexture).
+
 #### turbulenceTexture
 
 ```ts
 turbulenceTexture: Texture | ProceduralTexture | null = null
 ```
 
+The turbulence texture.
+
+The RGB value represents a 3D vector used for domain distortion of the shape and shape detail. The texture must be tileable.
+
+Alternatively, you can pass an object that implements from [`ProceduralTexture`](#proceduraltexture-proceduraltexture).
+
 #### stbnTexture
 
 ```ts
 stbnTexture: Data3DTexture | null = null
 ```
+
+A [spatiotemporal blue noise](https://research.nvidia.com/publication/2022-07_spatiotemporal-blue-noise-masks) (STBN) texture.
+
+This is used for stochastic sampling. While not required, omitting it will make spatial and temporal aliasing highly noticeable.
 
 ### Scattering
 
@@ -399,6 +560,8 @@ scatteringCoefficient: number = 1
 absorptionCoefficient: number = 0
 ```
 
+The scattering coefficient ($\sigma_s$) and absorption coefficient ($\sigma_a$) following the standard definition in volumetric ray marching. Clouds are known to have an albedo very close to 1, defined as $\sigma_s/(\sigma_s+\sigma_a)$, so it is recommended to keep the absorption coefficient low, unless you want a different cloud appearance.
+
 #### scatterAnisotropy1, scatterAnisotropy2, scatterAnisotropyMix
 
 ```ts
@@ -407,17 +570,25 @@ scatterAnisotropy2: number = -0.2
 scatterAnisotropyMix: number = 0.5
 ```
 
+Controls dual-lobe Henyey-Greenstein phase function. Positive anisotropy strengthens forward scattering, and negative strengthens back-scattering. The two scattering phases are combined using `scatterAnisotropyMix`.
+
+These values take effect only when [`accuratePhaseFunction`](#cloudsaccuratephasefunction) is disabled.
+
 #### skyIrradianceScale
 
 ```ts
 skyIrradianceScale: number = 2.5
 ```
 
+The contribution of sky irradiance. A value of 0 disables sky irradiance, while 1 represents single isotropic scattering. Since real-world sky light scatters multiple times with much more complex interactions, values greater than 1 make it more plausible.
+
 #### groundIrradianceScale
 
 ```ts
 groundIrradianceScale: number = 3
 ```
+
+The contribution of irradiance bouncing off the ground. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
 #### powderScale, powderExponent
 
@@ -426,6 +597,8 @@ powderScale: number = 0.8
 powderExponent: number = 150
 ```
 
+Controls the [“Beer-Powder” term](https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn) on the clouds. This is a fudge factor and you might adjust this value to make it look convincing to you.
+
 ### Weather and shape
 
 #### coverage
@@ -433,6 +606,10 @@ powderExponent: number = 150
 ```ts
 coverage: number = 0.3
 ```
+
+Controls the overall amount of clouds in the sky. A value of 0 results in a clear sky, while a value of 1 means the sky is completely covered by clouds.
+
+Note that cloud coverage is also determined by other parameters, and this value does not directly correspond to the ratio of clouds covering the sky.
 
 #### localWeatherRepeat, localWeatherOffset
 
@@ -510,8 +687,6 @@ splitLambda: number = 0.6
 
 ### Advanced clouds parameters
 
-These parameters are not intended to be adjusted unless you understand what the shader code does.
-
 #### clouds.multiScatteringOctaves
 
 ```ts
@@ -534,7 +709,7 @@ Whether to sample sun and sky irradiance at every sample point during ray marchi
 accuratePhaseFunction: boolean = false
 ```
 
-Set this to true to use a numerically-fitted large particle (d=10) Mie phase function instead of the dual-robe Henyey-Greenstein function. However, it won't be plausible without a more precise computation of multiple scattering.
+Set this to true to use a numerically-fitted large particle (d = 10 μm) Mie phase function instead of the dual-lobe Henyey-Greenstein phase function. However, it won’t be plausible without a more precise computation of multiple scattering.
 
 #### clouds.maxIterationCount
 
@@ -551,7 +726,7 @@ minStepSize: number = 50
 maxStepSize: number = 1000
 ```
 
-Controls the step size for the primary ray marching.
+Controls the step size for the primary ray marching, in meters.
 
 #### clouds.maxRayDistance
 
@@ -559,7 +734,7 @@ Controls the step size for the primary ray marching.
 maxRayDistance: number = 2e5
 ```
 
-The limit on the primary ray distance.
+The limit on the primary ray distance, in meters.
 
 #### clouds.perspectiveStepScale
 
@@ -595,7 +770,7 @@ minSecondaryStepSize: number = 100
 secondaryStepScale: number = 2
 ```
 
-Controls the step size for the secondary ray marching.
+Controls the step size for the secondary ray marching, in meters.
 
 #### clouds.maxShadowFilterRadius
 
@@ -603,7 +778,7 @@ Controls the step size for the secondary ray marching.
 maxShadowFilterRadius: number = 6
 ```
 
-The radius for PCF on BSM when the sun is near the horizon. Setting this to 0 disables PCF, but it will suffer from aliasing.
+The radius for percentage-closer filtering (PCF) on BSM when the sun is near the horizon. Setting this to 0 disables PCF, but it will suffer from aliasing.
 
 #### clouds.maxShadowLengthIterationCount
 
@@ -619,7 +794,7 @@ The limit on the number of iterations for the shadow length ray marching.
 minShadowLengthStepSize: number = 50
 ```
 
-Controls the step size for the shadow length ray marching.
+Controls the step size for the shadow length ray marching, in meters.
 
 #### clouds.maxShadowLengthRayDistance
 
@@ -627,7 +802,7 @@ Controls the step size for the shadow length ray marching.
 maxShadowLengthRayDistance: number = 2e5
 ```
 
-The limit on the shadow length ray distance.
+The limit on the shadow length ray distance, in meters.
 
 #### clouds.hazeDensityScale
 
@@ -637,45 +812,86 @@ hazeDensityScale: number = 3e-5
 
 Controls the density of the haze. A greater value makes it denser.
 
-#### clouds.hazeExpScale
+#### clouds.hazeExponent
 
 ```ts
-hazeExpScale: number = 1e-3
+hazeExponent: number = 1e-3
 ```
 
-Controls the rate at which the haze density exponentially decreases with altitude. A lower value makes it more concentrated near the ground and spreads it more at higher altitudes.
+Controls the rate at which the haze density exponentially decreases with altitude. A lower value makes it more concentrated near the ground, while a higher value spreads it more at higher altitudes.
 
 ### Advanced shadow parameters
 
 #### shadow.temporalPass
 
+```ts
+temporalPass: boolean = true
+```
+
+Whether to enable TAA pass on BSM to reduce aliasing.
+
 #### shadow.temporalJitter
+
+```ts
+temporalJitter: boolean = true
+```
+
+Whether to use STBN for sampling. When used with [`temporalPass`](#shadowtemporalpass) enabled, this helps reduce spatial aliasing pronounced by Structured Volume Sampling (SVS).
+
+Disabling this option removes flickers but increases spatial aliasing.
 
 #### shadow.maxIterationCount
 
+```ts
+maxIterationCount: number = 50
+```
+
+The limit on the number of iterations for the primary ray marching.
+
 #### shadow.minStepSize, shadow.maxStepSize
+
+```ts
+minStepSize: number = 100
+maxStepSize: number = 1000
+```
+
+Controls the step size for the primary ray marching, in meters.
 
 #### shadow.minDensity, shadow.minExtinction, shadow.minTransmittance
 
+```ts
+minDensity: number = 1e-5
+minExtinction: number = 1e-5
+minTransmittance: number = 1e-4
+```
+
+The minimum thresholds for density, extinction and transmittance, which determine the early termination of the primary rays.
+
 #### shadow.opticalDepthTailScale
+
+```ts
+opticalDepthTailScale: number = 2
+```
+
+Controls the additional optical depth applied during early termination of rays. Increasing this value compensates for missing shadows in denser regions of clouds, where ray marching terminates early.
 
 ## ProceduralTexture, Procedural3DTexture
 
 ## LocalWeather
 
-&rarr; [Source](/packages/clouds/src/LocalWeather.ts)
+→ [Source](/packages/clouds/src/LocalWeather.ts)
 
 ## CloudShape
 
-&rarr; [Source](/packages/clouds/src/CloudShape.ts)
+→ [Source](/packages/clouds/src/CloudShape.ts)
 
 ## CloudShapeDetail
 
-&rarr; [Source](/packages/clouds/src/CloudShapeDetail.ts)
+→ [Source](/packages/clouds/src/CloudShapeDetail.ts)
 
 ## Turbulence
 
-&rarr; [Source](/packages/clouds/src/Turbulence.ts)
+→ [Source](/packages/clouds/src/Turbulence.ts)
 
 # References
 

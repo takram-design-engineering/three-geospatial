@@ -73,7 +73,7 @@ export function createCloudParameterUniforms(
 
 interface DensityProfileVectors {
   expTerms: Vector4
-  expScales: Vector4
+  exponents: Vector4
   linearTerms: Vector4
   constantTerms: Vector4
 }
@@ -114,7 +114,7 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
     shadowBottomHeight: new Uniform(0),
     densityProfile: new Uniform({
       expTerms: new Vector4(),
-      expScales: new Vector4(),
+      exponents: new Vector4(),
       linearTerms: new Vector4(),
       constantTerms: new Vector4()
     })
@@ -173,7 +173,7 @@ function packDensityProfile(
   densityProfile: DensityProfileVectors
 ): void {
   packDensityProfileVector(layers, 'expTerm', densityProfile.expTerms)
-  packDensityProfileVector(layers, 'expScale', densityProfile.expScales)
+  packDensityProfileVector(layers, 'exponent', densityProfile.exponents)
   packDensityProfileVector(layers, 'linearTerm', densityProfile.linearTerms)
   packDensityProfileVector(layers, 'constantTerm', densityProfile.constantTerms)
 }

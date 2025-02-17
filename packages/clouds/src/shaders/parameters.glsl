@@ -42,7 +42,7 @@ uniform float turbulenceDisplacement;
 // Haze
 #ifdef HAZE
 uniform float hazeDensityScale;
-uniform float hazeExpScale;
+uniform float hazeExponent;
 #endif // HAZE
 
 // Cloud layers

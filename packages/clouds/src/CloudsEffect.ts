@@ -32,7 +32,11 @@ import {
 } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
-import { type CloudLayer } from './cloudLayer'
+import {
+  createDefaultCloudLayers,
+  defaultCloudLayer,
+  type CloudLayer
+} from './cloudLayer'
 import {
   type CloudsMaterial,
   type CloudsMaterialUniforms
@@ -77,7 +81,7 @@ const cloudsUniformKeys = [
   'minShadowLengthStepSize',
   'maxShadowLengthRayDistance',
   'hazeDensityScale',
-  'hazeExpScale'
+  'hazeExponent'
 ] as const satisfies Array<keyof CloudsMaterialUniforms>
 
 // prettier-ignore
@@ -166,41 +170,7 @@ export const cloudsPassOptionsDefaults = {
 // during hot reloading. This should not impact performance since this effect
 // can be merged.
 export class CloudsEffect extends Effect {
-  readonly cloudLayers: CloudLayer[] = [
-    {
-      altitude: 750,
-      height: 650,
-      densityScale: 0.2,
-      shapeAmount: 1,
-      shapeDetailAmount: 1,
-      weatherExponent: 1,
-      shapeAlteringBias: 0.35,
-      coverageFilterWidth: 0.6,
-      shadow: true
-    },
-    {
-      altitude: 1000,
-      height: 1200,
-      densityScale: 0.2,
-      shapeAmount: 1,
-      shapeDetailAmount: 1,
-      weatherExponent: 1,
-      shapeAlteringBias: 0.35,
-      coverageFilterWidth: 0.6,
-      shadow: true
-    },
-    {
-      altitude: 7500,
-      height: 500,
-      densityScale: 0.003,
-      shapeAmount: 0.4,
-      shapeDetailAmount: 0,
-      weatherExponent: 1,
-      shapeAlteringBias: 0.35,
-      coverageFilterWidth: 0.5
-    },
-    {}
-  ]
+  readonly cloudLayers: CloudLayer[] = createDefaultCloudLayers()
 
   correctAltitude = true
 
@@ -437,6 +407,18 @@ export class CloudsEffect extends Effect {
     )
   }
 
+  private updateWeatherTextureChannels(): void {
+    const { cloudLayers } = this
+    const { channel } = defaultCloudLayer
+    const value =
+      (cloudLayers[0]?.channel ?? channel) +
+      (cloudLayers[1]?.channel ?? channel) +
+      (cloudLayers[2]?.channel ?? channel) +
+      (cloudLayers[3]?.channel ?? channel)
+    this.cloudsPass.currentMaterial.weatherChannels = value
+    this.shadowPass.currentMaterial.weatherChannels = value
+  }
+
   private updateAtmosphereComposition(): void {
     const { shadowMaps, shadowPass, cloudsPass } = this
     const shadowUniforms = shadowPass.currentMaterial.uniforms
@@ -512,6 +494,7 @@ export class CloudsEffect extends Effect {
 
     ++this.frame
     this.updateSharedUniforms(deltaTime)
+    this.updateWeatherTextureChannels()
 
     shadowPass.update(renderer, this.frame, deltaTime)
     cloudsPass.shadowBuffer = shadowPass.outputBuffer

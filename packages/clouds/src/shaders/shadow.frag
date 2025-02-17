@@ -111,7 +111,7 @@ vec4 marchClouds(
       // See the discussion here: https://x.com/shotamatsuda/status/1886259549931520437
       maxOpticalDepthTail = min(
         opticalDepthTailScale * stepSize * exp(float(1 - sampleCount)),
-        50.0 // Excessive optical depth only introduces aliasing.
+        stepSize * 0.5 // Excessive optical depth only introduces aliasing.
       );
       break; // Early termination
     }

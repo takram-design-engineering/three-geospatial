@@ -29,6 +29,7 @@ import {
 import {
   assertType,
   define,
+  defineExpression,
   defineFloat,
   defineInt,
   Geodetic,
@@ -132,7 +133,7 @@ export interface CloudsMaterialUniforms
 
   // Haze
   hazeDensityScale: Uniform<number>
-  hazeExpScale: Uniform<number>
+  hazeExponent: Uniform<number>
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
@@ -246,7 +247,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Haze
           hazeDensityScale: new Uniform(3e-5),
-          hazeExpScale: new Uniform(1e-3)
+          hazeExponent: new Uniform(1e-3)
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
           CloudsMaterialUniforms
       },
@@ -417,6 +418,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   @defineInt('DEPTH_PACKING')
   depthPacking = 0
+
+  @defineExpression('WEATHER_CHANNELS', {
+    validate: value => /[rgba]{4}/.test(value)
+  })
+  weatherChannels = 'rgba'
 
   @define('SHAPE_DETAIL')
   shapeDetail: boolean = defaults.shapeDetail

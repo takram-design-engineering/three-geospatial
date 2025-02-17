@@ -1,58 +1,53 @@
-import { Children, type FC, type ReactElement } from 'react'
+import {
+  createContext,
+  useLayoutEffect,
+  useState,
+  type FC,
+  type ReactNode
+} from 'react'
 
-import { type CloudLayer } from '../cloudLayer'
-import { type CloudsEffect } from '../CloudsEffect'
-import { type CloudLayerProps } from './CloudLayer'
+import { createDefaultCloudLayers, type CloudLayer } from '../cloudLayer'
 
-type CloudLayerChild =
-  | ReactElement<CloudLayerProps>
-  | boolean
-  | null
-  | undefined
-
-export type CloudLayersChildren = CloudLayerChild | readonly CloudLayerChild[]
-
-interface CloudLayerImplProps extends CloudLayerProps {
+export interface CloudLayersContextValue {
   layers: CloudLayer[]
-  layerIndex: number
+  indexPool: Array<0 | 1 | 2 | 3>
 }
 
-const CloudLayerImpl: FC<CloudLayerImplProps> = ({
-  layers,
-  layerIndex,
-  ...props
-}) => {
-  layers[layerIndex] = Object.assign(layers[layerIndex] ?? {}, props)
-  if (props.densityProfile != null) {
-    layers[layerIndex].densityProfile = Object.assign(
-      layers[layerIndex].densityProfile ?? {},
-      props.densityProfile
-    )
-  }
-  return null
-}
+export const CloudLayersContext = createContext<CloudLayersContextValue>({
+  layers: [],
+  indexPool: []
+})
 
 export interface CloudLayersProps {
-  effect: CloudsEffect
-  children?: CloudLayersChildren
+  layers: CloudLayer[]
+  disableDefault?: boolean
+  children?: ReactNode
 }
 
-export const CloudLayers: FC<CloudLayersProps> = ({ effect, children }) => {
-  let layerIndex = 0
-  return (
-    children != null &&
-    Children.map(children, child => {
-      if (child == null || typeof child === 'boolean') {
-        return null
-      }
-      return (
-        <CloudLayerImpl
-          key={layerIndex}
-          {...child.props}
-          layers={effect.cloudLayers}
-          layerIndex={layerIndex++}
-        />
-      )
+export const CloudLayers: FC<CloudLayersProps> = ({
+  layers,
+  disableDefault = false,
+  children
+}) => {
+  const [context, setContext] = useState<CloudLayersContextValue>()
+
+  useLayoutEffect(() => {
+    if (disableDefault) {
+      Object.assign(layers, [{}, {}, {}, {}])
+    } else {
+      Object.assign(layers, createDefaultCloudLayers())
+    }
+    setContext({
+      layers,
+      indexPool: [0, 1, 2, 3]
     })
+  }, [layers, disableDefault])
+
+  return (
+    context != null && (
+      <CloudLayersContext.Provider value={context}>
+        {children}
+      </CloudLayersContext.Provider>
+    )
   )
 }
