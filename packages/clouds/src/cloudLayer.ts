@@ -1,5 +1,7 @@
 import { type RequiredDeep } from 'type-fest'
 
+type WeatherChannel = 'r' | 'g' | 'b' | 'a'
+
 export interface DensityProfile {
   expTerm?: number
   exponent?: number
@@ -13,6 +15,7 @@ export interface CloudLayer {
   densityScale?: number
   shapeAmount?: number
   shapeDetailAmount?: number
+  weatherChannel?: WeatherChannel
   weatherExponent?: number
   shapeAlteringBias?: number
   coverageFilterWidth?: number
@@ -26,6 +29,7 @@ export const defaultCloudLayer: RequiredDeep<CloudLayer> = {
   densityScale: 0.2,
   shapeAmount: 1,
   shapeDetailAmount: 1,
+  weatherChannel: 'r',
   weatherExponent: 1,
   shapeAlteringBias: 0.35,
   coverageFilterWidth: 0.6,

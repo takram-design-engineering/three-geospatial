@@ -29,6 +29,7 @@ import {
 import {
   assertType,
   define,
+  defineExpression,
   defineFloat,
   defineInt,
   Geodetic,
@@ -417,6 +418,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   @defineInt('DEPTH_PACKING')
   depthPacking = 0
+
+  @defineExpression('WEATHER_CHANNELS', {
+    validate: value => /[rgba]{4}/.test(value)
+  })
+  weatherChannels = 'rgba'
 
   @define('SHAPE_DETAIL')
   shapeDetail: boolean = defaults.shapeDetail

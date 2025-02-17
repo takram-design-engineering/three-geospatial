@@ -9,6 +9,7 @@ import {
 
 import {
   define,
+  defineExpression,
   defineInt,
   resolveIncludes,
   unrollLoops
@@ -116,6 +117,11 @@ export class ShadowMaterial extends RawShaderMaterial {
   setSize(width: number, height: number): void {
     this.uniforms.resolution.value.set(width, height)
   }
+
+  @defineExpression('WEATHER_CHANNELS', {
+    validate: value => /[rgba]{4}/.test(value)
+  })
+  weatherChannels = 'rgba'
 
   @defineInt('CASCADE_COUNT', { min: 1, max: 4 })
   cascadeCount: number = defaults.shadow.cascadeCount

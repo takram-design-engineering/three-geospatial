@@ -32,7 +32,7 @@ import {
 } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
-import { type CloudLayer } from './cloudLayer'
+import { defaultCloudLayer, type CloudLayer } from './cloudLayer'
 import {
   type CloudsMaterial,
   type CloudsMaterialUniforms
@@ -173,6 +173,7 @@ export class CloudsEffect extends Effect {
       densityScale: 0.2,
       shapeAmount: 1,
       shapeDetailAmount: 1,
+      weatherChannel: 'r',
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.6,
@@ -184,6 +185,7 @@ export class CloudsEffect extends Effect {
       densityScale: 0.2,
       shapeAmount: 1,
       shapeDetailAmount: 1,
+      weatherChannel: 'g',
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.6,
@@ -195,6 +197,7 @@ export class CloudsEffect extends Effect {
       densityScale: 0.003,
       shapeAmount: 0.4,
       shapeDetailAmount: 0,
+      weatherChannel: 'b',
       weatherExponent: 1,
       shapeAlteringBias: 0.35,
       coverageFilterWidth: 0.5
@@ -437,6 +440,18 @@ export class CloudsEffect extends Effect {
     )
   }
 
+  private updateWeatherTextureChannels(): void {
+    const { cloudLayers } = this
+    const { weatherChannel } = defaultCloudLayer
+    const value =
+      (cloudLayers[0]?.weatherChannel ?? weatherChannel) +
+      (cloudLayers[1]?.weatherChannel ?? weatherChannel) +
+      (cloudLayers[2]?.weatherChannel ?? weatherChannel) +
+      (cloudLayers[3]?.weatherChannel ?? weatherChannel)
+    this.cloudsPass.currentMaterial.weatherChannels = value
+    this.shadowPass.currentMaterial.weatherChannels = value
+  }
+
   private updateAtmosphereComposition(): void {
     const { shadowMaps, shadowPass, cloudsPass } = this
     const shadowUniforms = shadowPass.currentMaterial.uniforms
@@ -512,6 +527,7 @@ export class CloudsEffect extends Effect {
 
     ++this.frame
     this.updateSharedUniforms(deltaTime)
+    this.updateWeatherTextureChannels()
 
     shadowPass.update(renderer, this.frame, deltaTime)
     cloudsPass.shadowBuffer = shadowPass.outputBuffer
