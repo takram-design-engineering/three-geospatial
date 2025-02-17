@@ -59,5 +59,7 @@ export type PassThoughInstanceProps<
 >
 
 export type ExpandNestedProps<T, Prop extends keyof T & string> = {
-  [K in keyof T[Prop] as K extends string ? `${Prop}-${K}` : never]: T[Prop][K]
+  [K in keyof NonNullable<T[Prop]> as K extends string
+    ? `${Prop}-${K}`
+    : 'never']: NonNullable<T[Prop]>[K]
 }

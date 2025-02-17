@@ -1,58 +1,31 @@
-import { Children, type FC, type ReactElement } from 'react'
+import { createContext, useMemo, type FC, type ReactNode } from 'react'
 
 import { type CloudLayer } from '../cloudLayer'
 import { type CloudsEffect } from '../CloudsEffect'
-import { type CloudLayerProps } from './CloudLayer'
 
-type CloudLayerChild =
-  | ReactElement<CloudLayerProps>
-  | boolean
-  | null
-  | undefined
-
-export type CloudLayersChildren = CloudLayerChild | readonly CloudLayerChild[]
-
-interface CloudLayerImplProps extends CloudLayerProps {
+export interface CloudLayersContextValue {
   layers: CloudLayer[]
-  layerIndex: number
+  indexPool: number[]
 }
 
-const CloudLayerImpl: FC<CloudLayerImplProps> = ({
-  layers,
-  layerIndex,
-  ...props
-}) => {
-  layers[layerIndex] = Object.assign(layers[layerIndex] ?? {}, props)
-  if (props.densityProfile != null) {
-    layers[layerIndex].densityProfile = Object.assign(
-      layers[layerIndex].densityProfile ?? {},
-      props.densityProfile
-    )
-  }
-  return null
-}
+export const CloudLayersContext = createContext<CloudLayersContextValue>({
+  layers: [],
+  indexPool: []
+})
 
 export interface CloudLayersProps {
   effect: CloudsEffect
-  children?: CloudLayersChildren
+  children?: ReactNode
 }
 
 export const CloudLayers: FC<CloudLayersProps> = ({ effect, children }) => {
-  let layerIndex = 0
+  const context = useMemo(
+    () => ({ layers: effect.cloudLayers, indexPool: [0, 1, 2, 3] }),
+    [effect]
+  )
   return (
-    children != null &&
-    Children.map(children, child => {
-      if (child == null || typeof child === 'boolean') {
-        return null
-      }
-      return (
-        <CloudLayerImpl
-          key={layerIndex}
-          {...child.props}
-          layers={effect.cloudLayers}
-          layerIndex={layerIndex++}
-        />
-      )
-    })
+    <CloudLayersContext.Provider value={context}>
+      {children}
+    </CloudLayersContext.Provider>
   )
 }

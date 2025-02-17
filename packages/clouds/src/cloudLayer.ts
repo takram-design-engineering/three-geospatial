@@ -10,12 +10,12 @@ export interface DensityProfile {
 }
 
 export interface CloudLayer {
+  channel?: WeatherChannel
   altitude?: number
   height?: number
   densityScale?: number
   shapeAmount?: number
   shapeDetailAmount?: number
-  weatherChannel?: WeatherChannel
   weatherExponent?: number
   shapeAlteringBias?: number
   coverageFilterWidth?: number
@@ -24,12 +24,12 @@ export interface CloudLayer {
 }
 
 export const defaultCloudLayer: RequiredDeep<CloudLayer> = {
+  channel: 'r',
   altitude: 0,
   height: 0,
   densityScale: 0.2,
   shapeAmount: 1,
   shapeDetailAmount: 1,
-  weatherChannel: 'r',
   weatherExponent: 1,
   shapeAlteringBias: 0.35,
   coverageFilterWidth: 0.6,

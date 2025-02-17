@@ -47,7 +47,7 @@ import {
 } from '../constants'
 import { type Procedural3DTexture } from '../Procedural3DTexture'
 import { type ProceduralTexture } from '../ProceduralTexture'
-import { CloudLayers, type CloudLayersChildren } from './CloudLayers'
+import { CloudLayers } from './CloudLayers'
 
 export type CloudsProps = Omit<
   PassThoughInstanceProps<
@@ -64,14 +64,12 @@ export type CloudsProps = Omit<
   | 'shapeDetailTexture'
   | 'turbulenceTexture'
   | 'stbnTexture'
-  | 'children'
 > & {
   localWeatherTexture?: Texture | ProceduralTexture | string
   shapeTexture?: Data3DTexture | Procedural3DTexture | string
   shapeDetailTexture?: Data3DTexture | Procedural3DTexture | string
   turbulenceTexture?: Texture | ProceduralTexture | string
   stbnTexture?: Data3DTexture | string
-  children?: CloudLayersChildren
 }
 
 function useTextureState(

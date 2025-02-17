@@ -442,12 +442,12 @@ export class CloudsEffect extends Effect {
 
   private updateWeatherTextureChannels(): void {
     const { cloudLayers } = this
-    const { weatherChannel } = defaultCloudLayer
+    const { channel } = defaultCloudLayer
     const value =
-      (cloudLayers[0]?.weatherChannel ?? weatherChannel) +
-      (cloudLayers[1]?.weatherChannel ?? weatherChannel) +
-      (cloudLayers[2]?.weatherChannel ?? weatherChannel) +
-      (cloudLayers[3]?.weatherChannel ?? weatherChannel)
+      (cloudLayers[0]?.channel ?? channel) +
+      (cloudLayers[1]?.channel ?? channel) +
+      (cloudLayers[2]?.channel ?? channel) +
+      (cloudLayers[3]?.channel ?? channel)
     this.cloudsPass.currentMaterial.weatherChannels = value
     this.shadowPass.currentMaterial.weatherChannels = value
   }
