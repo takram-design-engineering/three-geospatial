@@ -224,6 +224,8 @@ This illustrates that greater total cloud layer height increases computational c
 
 ## Clouds
 
+The R3F counterpart of [`CloudsEffect`](#cloudseffect).
+
 → [Source](/packages/clouds/src/r3f/Clouds.tsx)
 
 ### Props
@@ -285,13 +287,17 @@ If left undefined, the default texture will be loaded directly from GitHub.
 
 ## CloudsEffect
 
+A post-processing effect that renders volumetric clouds. Although it is an effect and can render as a standalone, it is primarily intended to render clouds into buffers and then composited in `AerialPerspectiveEffect`.
+
+This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
+
 → [Source](/packages/clouds/src/CloudsEffect.ts)
 
-### Details
+### Rendering path
 
 Nothing novel here, just a combination of existing techniques. See the [references section](#references) for further details.
 
-![Rendering path diagram](docs/rendering-path.png)
+![Rendering path diagram](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/rendering-path.png)
 
 - **Shadow**
 
@@ -322,7 +328,7 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 
 - **Aerial perspective**
 
-  This pass is part of the [atmosphere package](../atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
+  This pass is part of the [atmosphere package](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
 
   → [Documentation](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspectiveeffect)
 

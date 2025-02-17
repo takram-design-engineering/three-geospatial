@@ -5,6 +5,7 @@ import {
   EventDispatcher,
   Matrix4,
   Texture,
+  Uniform,
   Vector2,
   Vector3,
   type DataTexture,
@@ -23,9 +24,11 @@ import {
   type AtmosphereShadowLength
 } from '@takram/three-atmosphere'
 import {
+  define,
   definePropertyShorthand,
   defineUniformShorthand,
   lerp,
+  UniformMap,
   type Ellipsoid,
   type PropertyShorthand,
   type UniformShorthand
@@ -59,6 +62,8 @@ import {
   type CloudLayerUniforms,
   type CloudParameterUniforms
 } from './uniforms'
+
+import fragmentShader from './shaders/cloudsEffect.frag?raw'
 
 const vector3Scratch = /*#__PURE__*/ new Vector3()
 const vector2Scratch = /*#__PURE__*/ new Vector2()
@@ -151,6 +156,10 @@ const changeEvent: CloudsEffectChangeEvent = {
   type: 'change'
 }
 
+export interface CloudsEffectUniforms {
+  cloudsBuffer: Uniform<Texture | null>
+}
+
 export interface CloudsEffectOptions {
   resolutionScale?: number
   width?: number
@@ -170,6 +179,8 @@ export const cloudsPassOptionsDefaults = {
 // during hot reloading. This should not impact performance since this effect
 // can be merged.
 export class CloudsEffect extends Effect {
+  declare uniforms: UniformMap<CloudsEffectUniforms>
+
   readonly cloudLayers: CloudLayer[] = createDefaultCloudLayers()
 
   correctAltitude = true
@@ -230,21 +241,10 @@ export class CloudsEffect extends Effect {
     options?: CloudsEffectOptions,
     private readonly atmosphere = AtmosphereParameters.DEFAULT
   ) {
-    super(
-      'CloudsEffect',
-      /* glsl */ `
-        void mainImage(
-          const vec4 inputColor,
-          const vec2 uv,
-          out vec4 outputColor
-        ) {
-          // Pass though here and we'll compose the clouds in
-          // AerialPerspectiveEffect, for now.
-          outputColor = inputColor;
-        }
-      `,
-      { attributes: EffectAttribute.DEPTH }
-    )
+    super('CloudsEffect', fragmentShader, {
+      attributes: EffectAttribute.DEPTH,
+      uniforms: new Map<string, Uniform>([['cloudsBuffer', new Uniform(null)]])
+    })
 
     const {
       resolutionScale,
@@ -501,6 +501,7 @@ export class CloudsEffect extends Effect {
     cloudsPass.update(renderer, this.frame, deltaTime)
 
     this.updateAtmosphereComposition()
+    this.uniforms.get('cloudsBuffer').value = this.cloudsPass.outputBuffer
   }
 
   override setSize(baseWidth: number, baseHeight: number): void {
@@ -517,6 +518,9 @@ export class CloudsEffect extends Effect {
     this.shadowPass.setDepthTexture(depthTexture, depthPacking)
     this.cloudsPass.setDepthTexture(depthTexture, depthPacking)
   }
+
+  @define('SKIP_RENDERING')
+  skipRendering = true
 
   // eslint-disable-next-line accessor-pairs
   set qualityPreset(value: QualityPreset) {
