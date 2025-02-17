@@ -328,6 +328,8 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 
 ### Parameters
 
+The number of parameters might seem overwhelming. To get started, try adjusting [`qualityPreset`](#qualitypreset), [`coverage`](#coverage), cloud layer’s [`altitude`](#layeraltitude), and [`height`](#layerheight) to suit your needs. You can also experiment with the parameters in the [Basic story](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic).
+
 - [Rendering](#rendering)
 - [Cloud layers](#cloud-layers)
 - [Textures](#textures)
@@ -336,6 +338,7 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 - [Cascaded shadow maps](#cascaded-shadow-maps)
 - [Advanced clouds parameters](#advanced-clouds-parameters)
 - [Advanced shadow parameters](#advanced-shadow-parameters)
+- The parameters of [`AtmosphereMaterialBase`](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#atmospherematerialbase)
 
 ### Rendering
 
