@@ -119,7 +119,7 @@ export class ShadowMaterial extends RawShaderMaterial {
   }
 
   @defineExpression('LOCAL_WEATHER_CHANNELS', {
-    validate: value => /[rgba]{4}/.test(value)
+    validate: value => /^[rgba]{4}$/.test(value)
   })
   localWeatherChannels = 'rgba'
 
