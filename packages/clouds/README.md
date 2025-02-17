@@ -45,13 +45,13 @@ const Scene = () => (
 ```
 
 ![Example of Tokyo](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/tokyo.jpg)
-→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-3d-tiles-renderer-integration--tokyo)
 
 ![Example of Fuji](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/fuji.jpg)
-→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--fuji)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-3d-tiles-renderer-integration--fuji)
 
 ![Example of London](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/london.jpg)
-→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--london)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-3d-tiles-renderer-integration--london)
 
 ### Configuring cloud layers
 
@@ -147,7 +147,7 @@ There are 4 quality presets that you may consider:
 
 If “Low” quality preset still does not meet your performance goal, then I recommend considering a skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
 
-Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-photorealistic-tiles--tokyo). Note that they are relatively new devices as of this writing.
+Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-3d-tiles-renderer-integration--tokyo). Note that they are relatively new devices as of this writing.
 
 | Device                | FPS       | Quality preset | Temporal upscaling | Canvas resolution | Browser |
 | --------------------- | --------- | -------------- | ------------------ | ----------------- | ------- |
