@@ -13,10 +13,11 @@ export interface CloudLayersContextValue {
   indexPool: Array<0 | 1 | 2 | 3>
 }
 
-export const CloudLayersContext = createContext<CloudLayersContextValue>({
-  layers: [],
-  indexPool: []
-})
+export const CloudLayersContext =
+  /*#__PURE__*/ createContext<CloudLayersContextValue>({
+    layers: [],
+    indexPool: []
+  })
 
 export interface CloudLayersProps {
   layers: CloudLayer[]

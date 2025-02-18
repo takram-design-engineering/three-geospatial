@@ -6,7 +6,8 @@ export interface TerrainContextValue {
   asset: IonAsset
 }
 
-export const TerrainContext = createContext<TerrainContextValue | null>(null)
+export const TerrainContext =
+  /*#__PURE__*/ createContext<TerrainContextValue | null>(null)
 
 export interface TerrainProviderProps extends IonAssetParams {
   children?: ReactNode
