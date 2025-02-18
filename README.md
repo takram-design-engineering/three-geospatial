@@ -70,7 +70,7 @@ Run `nx format-all` to format your source code using Prettier. Ignore files you 
 
 Run `nx lint` to check for non-formatting-related code conventions.
 
-Alternatively, if you use VS Code, installing the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) can help. All coding conventions are defined in [.prettierrc](.prettierrc) and .[.prettierrc](.prettierrc), with no additional rules.
+Alternatively, if you use VS Code, installing the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) can help.
 
 ### Running Storybook
 
