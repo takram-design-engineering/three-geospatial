@@ -18,8 +18,8 @@ float perlin(const vec3 point) {
 
 vec3 perlin3d(const vec3 point) {
   float perlin1 = perlin(point);
-  float perlin2 = perlin(vec3(point.y - 19.1, point.z + 33.4, point.x + 47.2));
-  float perlin3 = perlin(vec3(point.z + 74.2, point.x - 124.5, point.y + 99.4));
+  float perlin2 = perlin(point.yzx + vec3(-19.1, 33.4, 47.2));
+  float perlin3 = perlin(point.zxy + vec3(74.2, -124.5, 99.4));
   return vec3(perlin1, perlin2, perlin3);
 }
 
