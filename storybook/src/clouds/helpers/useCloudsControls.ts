@@ -370,6 +370,10 @@ function useCloudLayerControls(
     return {
       [`layer ${layerIndex}`]: folder(
         {
+          channel: {
+            value: params.channel,
+            options: ['r', 'g', 'b', 'a'] as const
+          },
           altitude: {
             value: params.altitude,
             min: 0,
