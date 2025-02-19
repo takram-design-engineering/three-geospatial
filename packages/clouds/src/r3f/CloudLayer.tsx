@@ -23,8 +23,11 @@ function applyProps(target: object, source: object): void {
   Object.assign(target, source)
 }
 
-export type CloudLayerProps = CloudLayerData &
-  ExpandNestedProps<CloudLayerData, 'densityProfile'>
+export interface CloudLayerProps
+  extends CloudLayerData,
+    ExpandNestedProps<CloudLayerData, 'densityProfile'> {
+  index?: number
+}
 
 export const CloudLayer = forwardRef<CloudLayerImpl, CloudLayerProps>(
   function CloudLayer(props, forwardedRef) {
