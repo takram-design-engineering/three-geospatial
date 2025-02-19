@@ -6,21 +6,20 @@ import {
   type ReactNode
 } from 'react'
 
-import { createDefaultCloudLayers, type CloudLayer } from '../cloudLayer'
+import { CloudLayer } from '../CloudLayer'
+import { CloudLayers as CloudLayersImpl } from '../CloudLayers'
 
 export interface CloudLayersContextValue {
-  layers: CloudLayer[]
-  indexPool: Array<0 | 1 | 2 | 3>
+  layers: CloudLayersImpl
+  indexPool: number[]
+  disableDefault: boolean
 }
 
 export const CloudLayersContext =
-  /*#__PURE__*/ createContext<CloudLayersContextValue>({
-    layers: [],
-    indexPool: []
-  })
+  /*#__PURE__*/ createContext<CloudLayersContextValue | null>(null)
 
 export interface CloudLayersProps {
-  layers: CloudLayer[]
+  layers: CloudLayersImpl
   disableDefault?: boolean
   children?: ReactNode
 }
@@ -33,14 +32,15 @@ export const CloudLayers: FC<CloudLayersProps> = ({
   const [context, setContext] = useState<CloudLayersContextValue>()
 
   useLayoutEffect(() => {
-    if (disableDefault) {
-      Object.assign(layers, [{}, {}, {}, {}])
-    } else {
-      Object.assign(layers, createDefaultCloudLayers())
-    }
+    layers.set(
+      disableDefault
+        ? Array(4).fill(CloudLayer.DEFAULT)
+        : CloudLayersImpl.DEFAULT
+    )
     setContext({
       layers,
-      indexPool: [0, 1, 2, 3]
+      indexPool: [0, 1, 2, 3],
+      disableDefault
     })
   }, [layers, disableDefault])
 

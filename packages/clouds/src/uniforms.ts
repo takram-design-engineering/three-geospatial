@@ -12,11 +12,7 @@ import { type Primitive } from 'type-fest'
 
 import { type AtmosphereParameters } from '@takram/three-atmosphere'
 
-import {
-  defaultCloudLayer,
-  type CloudLayer,
-  type DensityProfile
-} from './cloudLayer'
+import { type CloudLayers } from './CloudLayers'
 
 export interface CloudParameterUniforms {
   // Participating medium
@@ -121,169 +117,35 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
   }
 }
 
-type NumericLayerKey = keyof {
-  [P in keyof CloudLayer as number extends CloudLayer[P] ? P : never]: any
-}
-
-function packVector<K extends NumericLayerKey>(
-  layers: readonly CloudLayer[],
-  key: K,
-  result: Vector4
-): Vector4 {
-  const defaultValue = defaultCloudLayer[key]
-  return result.set(
-    layers[0]?.[key] ?? defaultValue,
-    layers[1]?.[key] ?? defaultValue,
-    layers[2]?.[key] ?? defaultValue,
-    layers[3]?.[key] ?? defaultValue
-  )
-}
-
-function packVectorsSum<K1 extends NumericLayerKey, K2 extends NumericLayerKey>(
-  layers: readonly CloudLayer[],
-  key1: K1,
-  key2: K2,
-  result: Vector4
-): Vector4 {
-  const { [key1]: defaultValue1, [key2]: defaultValue2 } = defaultCloudLayer
-  return result.set(
-    (layers[0]?.[key1] ?? defaultValue1) + (layers[0]?.[key2] ?? defaultValue2),
-    (layers[1]?.[key1] ?? defaultValue1) + (layers[1]?.[key2] ?? defaultValue2),
-    (layers[2]?.[key1] ?? defaultValue1) + (layers[2]?.[key2] ?? defaultValue2),
-    (layers[3]?.[key1] ?? defaultValue1) + (layers[3]?.[key2] ?? defaultValue2)
-  )
-}
-
-function packDensityProfileVector<K extends keyof DensityProfile>(
-  layers: readonly CloudLayer[],
-  key: K,
-  result: Vector4
-): Vector4 {
-  const defaultValue = defaultCloudLayer.densityProfile[key]
-  return result.set(
-    layers[0]?.densityProfile?.[key] ?? defaultValue,
-    layers[1]?.densityProfile?.[key] ?? defaultValue,
-    layers[2]?.densityProfile?.[key] ?? defaultValue,
-    layers[3]?.densityProfile?.[key] ?? defaultValue
-  )
-}
-
-function packDensityProfile(
-  layers: readonly CloudLayer[],
-  densityProfile: DensityProfileVectors
-): void {
-  packDensityProfileVector(layers, 'expTerm', densityProfile.expTerms)
-  packDensityProfileVector(layers, 'exponent', densityProfile.exponents)
-  packDensityProfileVector(layers, 'linearTerm', densityProfile.linearTerms)
-  packDensityProfileVector(layers, 'constantTerm', densityProfile.constantTerms)
-}
-
-interface Entry {
-  value: number
-  flag: 0 | 1
-}
-
-// prettier-ignore
-const entriesScratch: Entry[] = /*#__PURE__*/ Array.from(
-  { length: 8 },
-  () => ({ value: 0, flag: 0 })
-)
-// prettier-ignore
-const intervalsScratch = /*#__PURE__*/ Array.from(
-  { length: 3 },
-  () => ({ min: 0, max: 0 })
-)
-const arrayScratch = /*#__PURE__*/ Array.from({ length: 8 }, () => 0)
-
-function compareEntries(a: Entry, b: Entry): number {
-  return a.value !== b.value ? a.value - b.value : a.flag - b.flag
-}
-
-// Redundant, but need to avoid creating garbage here as this runs every frame.
-export function packIntervalHeights(
-  min: Vector4,
-  max: Vector4,
-  minIntervals: Vector3,
-  maxIntervals: Vector3
-): void {
-  min.toArray(arrayScratch)
-  max.toArray(arrayScratch, 4)
-  for (let i = 0; i < 8; ++i) {
-    const entry = entriesScratch[i]
-    entry.value = arrayScratch[i]
-    entry.flag = i < 4 ? 0 : 1
-  }
-  entriesScratch.sort(compareEntries)
-
-  // Reference: https://dilipkumar.medium.com/interval-coding-pattern-068c36197cf5
-  let intervalIndex = 0
-  let balance = 0
-  for (let entryIndex = 0; entryIndex < entriesScratch.length; ++entryIndex) {
-    const { value, flag } = entriesScratch[entryIndex]
-    if (balance === 0 && entryIndex > 0) {
-      const interval = intervalsScratch[intervalIndex++]
-      interval.min = entriesScratch[entryIndex - 1].value
-      interval.max = value
-    }
-    balance += flag === 0 ? 1 : -1
-  }
-  for (; intervalIndex < 3; ++intervalIndex) {
-    const interval = intervalsScratch[intervalIndex]
-    interval.min = 0
-    interval.max = 0
-  }
-
-  let interval = intervalsScratch[0]
-  minIntervals.x = interval.min
-  maxIntervals.x = interval.max
-  interval = intervalsScratch[1]
-  minIntervals.y = interval.min
-  maxIntervals.y = interval.max
-  interval = intervalsScratch[2]
-  minIntervals.z = interval.min
-  maxIntervals.z = interval.max
-}
-
 export function updateCloudLayerUniforms(
   uniforms: CloudLayerUniforms,
-  layers: readonly CloudLayer[]
+  layers: CloudLayers
 ): void {
-  const minLayerHeights = packVector(
-    layers,
-    'altitude',
-    uniforms.minLayerHeights.value
-  )
-  const maxLayerHeights = packVectorsSum(
-    layers,
-    'altitude',
-    'height',
-    uniforms.maxLayerHeights.value
-  )
-  packIntervalHeights(
-    minLayerHeights,
-    maxLayerHeights,
+  layers.packValues('altitude', uniforms.minLayerHeights.value)
+  layers.packSums('altitude', 'height', uniforms.maxLayerHeights.value)
+  layers.packIntervalHeights(
     uniforms.minIntervalHeights.value,
     uniforms.maxIntervalHeights.value
   )
-  packVector(layers, 'densityScale', uniforms.densityScales.value)
-  packVector(layers, 'shapeAmount', uniforms.shapeAmounts.value)
-  packVector(layers, 'shapeDetailAmount', uniforms.shapeDetailAmounts.value)
-  packVector(layers, 'weatherExponent', uniforms.weatherExponents.value)
-  packVector(layers, 'shapeAlteringBias', uniforms.shapeAlteringBiases.value)
-  packVector(layers, 'coverageFilterWidth', uniforms.coverageFilterWidths.value)
-  packDensityProfile(layers, uniforms.densityProfile.value)
+  layers.packValues('densityScale', uniforms.densityScales.value)
+  layers.packValues('shapeAmount', uniforms.shapeAmounts.value)
+  layers.packValues('shapeDetailAmount', uniforms.shapeDetailAmounts.value)
+  layers.packValues('weatherExponent', uniforms.weatherExponents.value)
+  layers.packValues('shapeAlteringBias', uniforms.shapeAlteringBiases.value)
+  layers.packValues('coverageFilterWidth', uniforms.coverageFilterWidths.value)
+
+  const densityProfile = uniforms.densityProfile.value
+  layers.packDensityProfiles('expTerm', densityProfile.expTerms)
+  layers.packDensityProfiles('exponent', densityProfile.exponents)
+  layers.packDensityProfiles('linearTerm', densityProfile.linearTerms)
+  layers.packDensityProfiles('constantTerm', densityProfile.constantTerms)
 
   let totalMinHeight = Infinity
   let totalMaxHeight = 0
   let shadowBottomHeight = Infinity
   let shadowTopHeight = 0
   for (let i = 0; i < layers.length; ++i) {
-    const {
-      altitude = defaultCloudLayer.altitude,
-      height = defaultCloudLayer.height,
-      shadow = defaultCloudLayer.shadow
-    } = layers[i]
-
+    const { altitude, height, shadow } = layers[i]
     const maxHeight = altitude + height
     if (height > 0) {
       if (altitude < totalMinHeight) {
