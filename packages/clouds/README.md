@@ -685,25 +685,40 @@ Controls the maximum turbulence displacement in meters. This applies where turbu
 cascadeCount: number = 3
 ```
 
+The number of shadow cascades.
+
 #### shadow.mapSize
 
 ```ts
 mapSize: Vector2 = new Vector2().setScalar(512)
 ```
 
-#### shadow.maxFar, shadow.farScale
+The resolution of each cascade in the shadow map.
+
+#### shadow.maxFar
 
 ```ts
 maxFar: number | null = null
+```
+
+The maximum far plane distance for rendering shadows within the main camera’s frustum. This limits the main camera’s frustum: shadows beyond this distance are not rendered, and setting a value larger than the main camera’s far plane has no effect.
+
+#### shadow.farScale
+
+```ts
 farScale: number = 1
 ```
+
+ A scale factor for the main camera’s far plane. This is useful when the far plane extends to a point like the horizon occlusion point, even though shadows do not need to be rendered that far. The resulting value is also limited by `shadow.maxFar`.
 
 #### shadow.splitMode, shadow.splitLambda
 
 ```ts
-splitMode: FrustumSplitMode = 'practical'
+splitMode: 'uniform' | 'logarithmic' | 'practical' = 'practical'
 splitLambda: number = 0.6
 ```
+
+Controls [how the main camera’s frustum is split](https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus). `splitLambda` is only applicable when `splitMode` is set to `practical`.
 
 ### Advanced clouds parameters
 
