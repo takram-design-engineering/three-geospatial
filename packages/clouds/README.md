@@ -624,25 +624,33 @@ localWeatherRepeat: Vector2 = new Vector2().setScalar(100)
 localWeatherOffset: Vector2 = new Vector2()
 ```
 
+The repeat and offset values of the local weather texture. It is tiled using cube-sphere UV on a globe sphere. A repeat value of 100 tiles the texture 100 times per edge of the cube-sphere, whereas an offset of 0.5 shifts it by half the tile size.
+
 #### localWeatherVelocity
 
 ```ts
 localWeatherVelocity: Vector2 = new Vector2()
 ```
 
-#### shapeRepeat, shapeDetailRepeat
+The rate at which `localWeatherOffset` changes per second. A non-zero value animates the clouds.
+
+#### shapeRepeat, shapeOffset
 
 ```ts
 shapeRepeat: Vector3 = new Vector3().setScalar(0.0003)
-shapeDetailRepeat: Vector3 = new Vector3().setScalar(0.006)
-```
-
-#### shapeOffset, shapeDetailOffset
-
-```ts
-shapeDetailOffset: Vector3 = new Vector3()
 shapeOffset: Vector3 = new Vector3()
 ```
+
+The repeat and offset values of the shape texture. It is stacked in the world coordinate. A value of 0.001 repeats the texture once per kilometer, whereas an offset of 0.5 shifts it by half the stack size.
+
+#### shapeDetailRepeat, shapeDetailOffset
+
+```ts
+shapeDetailRepeat: Vector3 = new Vector3().setScalar(0.006)
+shapeDetailOffset: Vector3 = new Vector3()
+```
+
+The repeat and offset values of the shape detail texture. It is stacked in the world coordinate. A value of 0.001 repeats the texture once per kilometer, whereas an offset of 0.5 shifts it by half the stack size.
 
 #### shapeVelocity, shapeDetailVelocity
 
@@ -651,17 +659,23 @@ shapeVelocity: Vector3 = new Vector3()
 shapeDetailVelocity: Vector3 = new Vector3()
 ```
 
+The rate at which `shapeOffset` and `shapeDetailOffset` change per second. A non-zero value animates the clouds.
+
 #### turbulenceRepeat
 
 ```ts
 turbulenceRepeat: Vector2 = new Vector2().setScalar(20)
 ```
 
+The repeat value of the turbulence texture. It is tiled in a local weather texture tile. A value of 10 tiles the texture 10 times per edge of local weather texture.
+
 #### turbulenceDisplacement
 
 ```ts
 turbulenceDisplacement: number = 350
 ```
+
+Controls the maximum turbulence displacement in meters. This applies where turbulence is strongest (value of 1) and at the bottom of the clouds.
 
 ### Cascaded shadow maps
 
@@ -732,7 +746,7 @@ minStepSize: number = 50
 maxStepSize: number = 1000
 ```
 
-Controls the step size for the primary ray marching, in meters.
+Controls the step size for the primary ray marching in meters.
 
 #### clouds.maxRayDistance
 
@@ -740,7 +754,7 @@ Controls the step size for the primary ray marching, in meters.
 maxRayDistance: number = 2e5
 ```
 
-The limit on the primary ray distance, in meters.
+The limit on the primary ray distance in meters.
 
 #### clouds.perspectiveStepScale
 
@@ -776,7 +790,7 @@ minSecondaryStepSize: number = 100
 secondaryStepScale: number = 2
 ```
 
-Controls the step size for the secondary ray marching, in meters.
+Controls the step size for the secondary ray marching in meters.
 
 #### clouds.maxShadowFilterRadius
 
@@ -800,7 +814,7 @@ The limit on the number of iterations for the shadow length ray marching.
 minShadowLengthStepSize: number = 50
 ```
 
-Controls the step size for the shadow length ray marching, in meters.
+Controls the step size for the shadow length ray marching in meters.
 
 #### clouds.maxShadowLengthRayDistance
 
@@ -808,7 +822,7 @@ Controls the step size for the shadow length ray marching, in meters.
 maxShadowLengthRayDistance: number = 2e5
 ```
 
-The limit on the shadow length ray distance, in meters.
+The limit on the shadow length ray distance in meters.
 
 #### clouds.hazeDensityScale
 
@@ -861,7 +875,7 @@ minStepSize: number = 100
 maxStepSize: number = 1000
 ```
 
-Controls the step size for the primary ray marching, in meters.
+Controls the step size for the primary ray marching in meters.
 
 #### shadow.minDensity, shadow.minExtinction, shadow.minTransmittance
 
