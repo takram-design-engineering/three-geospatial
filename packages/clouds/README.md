@@ -21,7 +21,7 @@ pnpm add @takram/three-clouds
 yarn add @takram/three-clouds
 ```
 
-Peer dependencies include `three` and `postprocessing`, for R3F `react`, `@react-three/fiber`, and `@react-three/postprocessing`. -->
+Peer dependencies include `three` and `postprocessing`, as well as `react`, `@react-three/fiber`, and `@react-three/postprocessing` when using R3F. -->
 
 ## Usage
 
@@ -96,7 +96,7 @@ import { Clouds } from '@takram/three-clouds/r3f'
 const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
-      <Clouds weatherTexture={/* path to weather texture */} />
+      <Clouds localWeatherTexture={/* path to weather texture */} />
       <AerialPerspective sky skyIrradiance sunIrradiance />
     </EffectComposer>
   </Atmosphere>
@@ -113,7 +113,7 @@ import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
 import { ProceduralTextureBase } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 
-const weatherTexture = new ProceduralTextureBase({
+const localWeatherTexture = new ProceduralTextureBase({
   size: 512,
   fragmentShader: /* glsl */ `
     in vec2 vUv;
@@ -127,7 +127,7 @@ const weatherTexture = new ProceduralTextureBase({
 const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
-      <Clouds weatherTexture={weatherTexture} />
+      <Clouds localWeatherTexture={localWeatherTexture} />
       <AerialPerspective sky skyIrradiance sunIrradiance />
     </EffectComposer>
   </Atmosphere>
@@ -145,7 +145,7 @@ There are 4 quality presets that you may consider:
 - **High**: The baseline settings
 - **Ultra**: Increases the resolution of BSM
 
-If “Low” quality preset still does not meet your performance goal, then consider using skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
+If “Low” quality preset still does not meet your performance goal, then I recommend considering a skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
 
 Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-3d-tiles-renderer-integration--tokyo). Note that they are relatively new devices as of this writing.
 
@@ -224,6 +224,8 @@ This illustrates that greater total cloud layer height increases computational c
 
 ## Clouds
 
+The R3F counterpart of [`CloudsEffect`](#cloudseffect).
+
 → [Source](/packages/clouds/src/r3f/Clouds.tsx)
 
 ### Props
@@ -285,13 +287,17 @@ If left undefined, the default texture will be loaded directly from GitHub.
 
 ## CloudsEffect
 
+A post-processing effect that renders volumetric clouds. Although it is an effect and can render as a standalone, it is primarily intended to render clouds into buffers and then composited in `AerialPerspectiveEffect`.
+
+This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
+
 → [Source](/packages/clouds/src/CloudsEffect.ts)
 
-### Details
+### Rendering path
 
 Nothing novel here, just a combination of existing techniques. See the [references section](#references) for further details.
 
-![Rendering path diagram](docs/rendering-path.png)
+![Rendering path diagram](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/clouds/docs/rendering-path.png)
 
 - **Shadow**
 
@@ -322,7 +328,7 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 
 - **Aerial perspective**
 
-  This pass is part of the [atmosphere package](../atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
+  This pass is part of the [atmosphere package](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere). It provides `overlay`, `shadow`, and `shadowLength` properties for compositing while applying atmospheric transparency and adding sun and sky irradiance into the scene.
 
   → [Documentation](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere#aerialperspectiveeffect)
 
@@ -618,25 +624,33 @@ localWeatherRepeat: Vector2 = new Vector2().setScalar(100)
 localWeatherOffset: Vector2 = new Vector2()
 ```
 
+The repeat and offset values of the local weather texture. It is tiled using cube-sphere UV on a globe sphere. A repeat value of 100 tiles the texture 100 times per edge of the cube-sphere, whereas an offset of 0.5 shifts it by half the tile size.
+
 #### localWeatherVelocity
 
 ```ts
 localWeatherVelocity: Vector2 = new Vector2()
 ```
 
-#### shapeRepeat, shapeDetailRepeat
+The rate at which `localWeatherOffset` changes per second. A non-zero value animates the clouds.
+
+#### shapeRepeat, shapeOffset
 
 ```ts
 shapeRepeat: Vector3 = new Vector3().setScalar(0.0003)
-shapeDetailRepeat: Vector3 = new Vector3().setScalar(0.006)
-```
-
-#### shapeOffset, shapeDetailOffset
-
-```ts
-shapeDetailOffset: Vector3 = new Vector3()
 shapeOffset: Vector3 = new Vector3()
 ```
+
+The repeat and offset values of the shape texture. It is stacked in the world coordinate. A value of 0.001 repeats the texture once per kilometer, whereas an offset of 0.5 shifts it by half the stack size.
+
+#### shapeDetailRepeat, shapeDetailOffset
+
+```ts
+shapeDetailRepeat: Vector3 = new Vector3().setScalar(0.006)
+shapeDetailOffset: Vector3 = new Vector3()
+```
+
+The repeat and offset values of the shape detail texture. It is stacked in the world coordinate. A value of 0.001 repeats the texture once per kilometer, whereas an offset of 0.5 shifts it by half the stack size.
 
 #### shapeVelocity, shapeDetailVelocity
 
@@ -645,17 +659,23 @@ shapeVelocity: Vector3 = new Vector3()
 shapeDetailVelocity: Vector3 = new Vector3()
 ```
 
+The rate at which `shapeOffset` and `shapeDetailOffset` change per second. A non-zero value animates the clouds.
+
 #### turbulenceRepeat
 
 ```ts
 turbulenceRepeat: Vector2 = new Vector2().setScalar(20)
 ```
 
+The repeat value of the turbulence texture. It is tiled in a local weather texture tile. A value of 10 tiles the texture 10 times per edge of local weather texture.
+
 #### turbulenceDisplacement
 
 ```ts
 turbulenceDisplacement: number = 350
 ```
+
+Controls the maximum turbulence displacement in meters. This applies where turbulence is strongest (value of 1) and at the bottom of the clouds.
 
 ### Cascaded shadow maps
 
@@ -665,25 +685,40 @@ turbulenceDisplacement: number = 350
 cascadeCount: number = 3
 ```
 
+The number of shadow cascades.
+
 #### shadow.mapSize
 
 ```ts
 mapSize: Vector2 = new Vector2().setScalar(512)
 ```
 
-#### shadow.maxFar, shadow.farScale
+The resolution of each cascade in the shadow map.
+
+#### shadow.maxFar
 
 ```ts
 maxFar: number | null = null
+```
+
+The maximum far plane distance for rendering shadows within the main camera’s frustum. This limits the main camera’s frustum: shadows beyond this distance are not rendered, and setting a value larger than the main camera’s far plane has no effect.
+
+#### shadow.farScale
+
+```ts
 farScale: number = 1
 ```
+
+ A scale factor for the main camera’s far plane. This is useful when the far plane extends to a point like the horizon occlusion point, even though shadows do not need to be rendered that far. The resulting value is also limited by `shadow.maxFar`.
 
 #### shadow.splitMode, shadow.splitLambda
 
 ```ts
-splitMode: FrustumSplitMode = 'practical'
+splitMode: 'uniform' | 'logarithmic' | 'practical' = 'practical'
 splitLambda: number = 0.6
 ```
+
+Controls [how the main camera’s frustum is split](https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus). `splitLambda` is only applicable when `splitMode` is set to `practical`.
 
 ### Advanced clouds parameters
 
@@ -709,7 +744,7 @@ Whether to sample sun and sky irradiance at every sample point during ray marchi
 accuratePhaseFunction: boolean = false
 ```
 
-Set this to true to use a numerically-fitted large particle (d = 10 μm) Mie phase function instead of the dual-lobe Henyey-Greenstein phase function. However, it won’t be plausible without a more precise computation of multiple scattering.
+Whether to use a [numerically-fitted Mie phase function](https://research.nvidia.com/labs/rtr/approximate-mie/) for large particles (d = 10 μm) instead of the dual-lobe Henyey-Greenstein phase function. However, it won’t be plausible without a more precise computation of multiple scattering.
 
 #### clouds.maxIterationCount
 
@@ -726,7 +761,7 @@ minStepSize: number = 50
 maxStepSize: number = 1000
 ```
 
-Controls the step size for the primary ray marching, in meters.
+Controls the step size for the primary ray marching in meters.
 
 #### clouds.maxRayDistance
 
@@ -734,7 +769,7 @@ Controls the step size for the primary ray marching, in meters.
 maxRayDistance: number = 2e5
 ```
 
-The limit on the primary ray distance, in meters.
+The limit on the primary ray distance in meters.
 
 #### clouds.perspectiveStepScale
 
@@ -770,7 +805,7 @@ minSecondaryStepSize: number = 100
 secondaryStepScale: number = 2
 ```
 
-Controls the step size for the secondary ray marching, in meters.
+Controls the step size for the secondary ray marching in meters.
 
 #### clouds.maxShadowFilterRadius
 
@@ -794,7 +829,7 @@ The limit on the number of iterations for the shadow length ray marching.
 minShadowLengthStepSize: number = 50
 ```
 
-Controls the step size for the shadow length ray marching, in meters.
+Controls the step size for the shadow length ray marching in meters.
 
 #### clouds.maxShadowLengthRayDistance
 
@@ -802,7 +837,7 @@ Controls the step size for the shadow length ray marching, in meters.
 maxShadowLengthRayDistance: number = 2e5
 ```
 
-The limit on the shadow length ray distance, in meters.
+The limit on the shadow length ray distance in meters.
 
 #### clouds.hazeDensityScale
 
@@ -855,7 +890,7 @@ minStepSize: number = 100
 maxStepSize: number = 1000
 ```
 
-Controls the step size for the primary ray marching, in meters.
+Controls the step size for the primary ray marching in meters.
 
 #### shadow.minDensity, shadow.minExtinction, shadow.minTransmittance
 

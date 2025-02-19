@@ -66,8 +66,8 @@ function useTextureState(
         texture.colorSpace = NoColorSpace
         texture.needsUpdate = true
 
-        // WORKAROUND: Unless the texture is initialized here, the color space
-        // resets to sRGB for unknown reason.
+        // WORKAROUND: The color space resets to sRGB for unknown reason, unless
+        // the texture is initialized here.
         gl.initTexture(texture)
 
         setData(texture)

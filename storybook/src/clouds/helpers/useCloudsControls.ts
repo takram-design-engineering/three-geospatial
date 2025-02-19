@@ -108,8 +108,23 @@ function useWeatherAndShapeControls(
     'weather and shape',
     () => ({
       localWeatherRepeat: { value: 0, min: 1, max: 200, step: 1 },
-      shapeRepeat1e4: { value: 0, min: 1, max: 10 },
-      shapeDetailRepeat1e3: { value: 0, min: 1, max: 10 },
+      localWeatherOffset: {
+        value: { x: 0, y: 0 },
+        min: 0,
+        max: 1
+      },
+      'shapeRepeat-1e4': { value: 0, min: 1, max: 10 },
+      shapeOffset: {
+        value: { x: 0, y: 0, z: 0 },
+        min: 0,
+        max: 1
+      },
+      'shapeDetailRepeat-1e3': { value: 0, min: 1, max: 10 },
+      shapeDetailOffset: {
+        value: { x: 0, y: 0, z: 0 },
+        min: 0,
+        max: 1
+      },
       turbulenceRepeat: { value: 0, min: 1, max: 50, step: 1 },
       turbulenceDisplacement: { value: 0, min: 1, max: 1000 }
     }),
@@ -123,8 +138,22 @@ function useWeatherAndShapeControls(
     }
     set({
       localWeatherRepeat: effect.localWeatherRepeat.x,
-      shapeRepeat1e4: effect.shapeRepeat.x * 1e4,
-      shapeDetailRepeat1e3: effect.shapeDetailRepeat.x * 1e3,
+      localWeatherOffset: {
+        x: effect.localWeatherOffset.x,
+        y: effect.localWeatherOffset.y
+      },
+      'shapeRepeat-1e4': effect.shapeRepeat.x * 1e4,
+      shapeOffset: {
+        x: effect.shapeOffset.x,
+        y: effect.shapeOffset.y,
+        z: effect.shapeOffset.z
+      },
+      'shapeDetailRepeat-1e3': effect.shapeDetailRepeat.x * 1e3,
+      shapeDetailOffset: {
+        x: effect.shapeDetailOffset.x,
+        y: effect.shapeDetailOffset.y,
+        z: effect.shapeDetailOffset.z
+      },
       turbulenceRepeat: effect.turbulenceRepeat.x,
       turbulenceDisplacement: effect.turbulenceDisplacement
     })
@@ -136,8 +165,22 @@ function useWeatherAndShapeControls(
   }
   return {
     localWeatherRepeat: params.localWeatherRepeat,
-    shapeRepeat: params.shapeRepeat1e4 * 1e-4,
-    shapeDetailRepeat: params.shapeDetailRepeat1e3 * 1e-3,
+    localWeatherOffset: [
+      params.localWeatherOffset.x,
+      params.localWeatherOffset.y
+    ],
+    shapeRepeat: params['shapeRepeat-1e4'] * 1e-4,
+    shapeOffset: [
+      params.shapeOffset.x,
+      params.shapeOffset.y,
+      params.shapeOffset.z
+    ],
+    shapeDetailRepeat: params['shapeDetailRepeat-1e3'] * 1e-3,
+    shapeDetailOffset: [
+      params.shapeDetailOffset.x,
+      params.shapeDetailOffset.y,
+      params.shapeDetailOffset.z
+    ],
     turbulenceRepeat: params.turbulenceRepeat,
     turbulenceDisplacement: params.turbulenceDisplacement
   }
@@ -207,9 +250,9 @@ function useAdvancedCloudsControls(
         maxStepSize: { value: 0, min: 200, max: 2000, step: 1 },
         maxRayDistance: { value: 0, min: 1e4, max: 1e6 },
         perspectiveStepScale: { value: 0, min: 1, max: 1.1 },
-        minDensityLog10: { value: 0, min: -7, max: -1 },
-        minExtinctionLog10: { value: 0, min: -7, max: -1 },
-        minTransmittanceLog10: { value: 0, min: -7, max: -1 },
+        'minDensity-log10': { value: 0, min: -7, max: -1 },
+        'minExtinction-log10': { value: 0, min: -7, max: -1 },
+        'minTransmittance-log10': { value: 0, min: -7, max: -1 },
         maxIterationCountToSun: { value: 0, min: 0, max: 10, step: 1 },
         maxIterationCountToGround: { value: 0, min: 0, max: 10, step: 1 },
         maxShadowLengthIterationCount: {
@@ -220,11 +263,12 @@ function useAdvancedCloudsControls(
         },
         minShadowLengthStepSize: { value: 0, min: 50, max: 200, step: 1 },
         maxShadowLengthRayDistance: { value: 0, min: 1e4, max: 1e6 },
-        hazeDensityScaleLog10: { value: 0, min: -6, max: -3 },
-        hazeExponentLog10: { value: 0, min: -3, max: -1 }
+        'hazeDensityScale-log10': { value: 0, min: -6, max: -3 },
+        'hazeExponent-log10': { value: 0, min: -3, max: -1 }
       }) satisfies Partial<
         Record<
-          keyof CloudsEffect['clouds'] | `${keyof CloudsEffect['clouds']}Log10`,
+          | keyof CloudsEffect['clouds']
+          | `${keyof CloudsEffect['clouds']}-log10`,
           Schema[string]
         >
       >,
@@ -246,16 +290,16 @@ function useAdvancedCloudsControls(
       maxStepSize: clouds.maxStepSize,
       maxRayDistance: clouds.maxRayDistance,
       perspectiveStepScale: clouds.perspectiveStepScale,
-      minDensityLog10: Math.log10(clouds.minDensity),
-      minExtinctionLog10: Math.log10(clouds.minExtinction),
-      minTransmittanceLog10: Math.log10(clouds.minTransmittance),
+      'minDensity-log10': Math.log10(clouds.minDensity),
+      'minExtinction-log10': Math.log10(clouds.minExtinction),
+      'minTransmittance-log10': Math.log10(clouds.minTransmittance),
       maxIterationCountToSun: clouds.maxIterationCountToSun,
       maxIterationCountToGround: clouds.maxIterationCountToGround,
       maxShadowLengthIterationCount: clouds.maxShadowLengthIterationCount,
       minShadowLengthStepSize: clouds.minShadowLengthStepSize,
       maxShadowLengthRayDistance: clouds.maxShadowLengthRayDistance,
-      hazeDensityScaleLog10: Math.log10(clouds.hazeDensityScale),
-      hazeExponentLog10: Math.log10(clouds.hazeExponent)
+      'hazeDensityScale-log10': Math.log10(clouds.hazeDensityScale),
+      'hazeExponent-log10': Math.log10(clouds.hazeExponent)
     })
     initRef.current = true
   }, [effect, qualityPreset, set])
@@ -272,17 +316,17 @@ function useAdvancedCloudsControls(
     'clouds-maxStepSize': params.maxStepSize,
     'clouds-maxRayDistance': params.maxRayDistance,
     'clouds-perspectiveStepScale': params.perspectiveStepScale,
-    'clouds-minDensity': 10 ** params.minDensityLog10,
-    'clouds-minExtinction': 10 ** params.minExtinctionLog10,
-    'clouds-minTransmittance': 10 ** params.minTransmittanceLog10,
+    'clouds-minDensity': 10 ** params['minDensity-log10'],
+    'clouds-minExtinction': 10 ** params['minExtinction-log10'],
+    'clouds-minTransmittance': 10 ** params['minTransmittance-log10'],
     'clouds-maxIterationCountToSun': params.maxIterationCountToSun,
     'clouds-maxIterationCountToGround': params.maxIterationCountToGround,
     'clouds-maxShadowLengthIterationCount':
       params.maxShadowLengthIterationCount,
     'clouds-minShadowLengthStepSize': params.minShadowLengthStepSize,
     'clouds-maxShadowLengthRayDistance': params.maxShadowLengthRayDistance,
-    'clouds-hazeDensityScale': 10 ** params.hazeDensityScaleLog10,
-    'clouds-hazeExponent': 10 ** params.hazeExponentLog10
+    'clouds-hazeDensityScale': 10 ** params['hazeDensityScale-log10'],
+    'clouds-hazeExponent': 10 ** params['hazeExponent-log10']
   }
 }
 
@@ -299,13 +343,14 @@ function useAdvancedShadowControls(
         maxIterationCount: { value: 50, min: 10, max: 100, step: 1 },
         minStepSize: { value: 0, min: 10, max: 200, step: 1 },
         maxStepSize: { value: 0, min: 200, max: 2000, step: 1 },
-        minDensityLog10: { value: 0, min: -7, max: -1 },
-        minExtinctionLog10: { value: 0, min: -7, max: -1 },
-        minTransmittanceLog10: { value: 0, min: -7, max: -1 },
+        'minDensity-log10': { value: 0, min: -7, max: -1 },
+        'minExtinction-log10': { value: 0, min: -7, max: -1 },
+        'minTransmittance-log10': { value: 0, min: -7, max: -1 },
         opticalDepthTailScale: { value: 0, min: 0, max: 4 }
       }) satisfies Partial<
         Record<
-          keyof CloudsEffect['shadow'] | `${keyof CloudsEffect['shadow']}Log10`,
+          | keyof CloudsEffect['shadow']
+          | `${keyof CloudsEffect['shadow']}-log10`,
           Schema[string]
         >
       >,
@@ -324,9 +369,9 @@ function useAdvancedShadowControls(
       maxIterationCount: shadow.maxIterationCount,
       minStepSize: shadow.minStepSize,
       maxStepSize: shadow.maxStepSize,
-      minDensityLog10: Math.log10(shadow.minDensity),
-      minExtinctionLog10: Math.log10(shadow.minExtinction),
-      minTransmittanceLog10: Math.log10(shadow.minTransmittance),
+      'minDensity-log10': Math.log10(shadow.minDensity),
+      'minExtinction-log10': Math.log10(shadow.minExtinction),
+      'minTransmittance-log10': Math.log10(shadow.minTransmittance),
       opticalDepthTailScale: shadow.opticalDepthTailScale
     })
     initRef.current = true
@@ -341,9 +386,9 @@ function useAdvancedShadowControls(
     'shadow-maxIterationCount': params.maxIterationCount,
     'shadow-minStepSize': params.minStepSize,
     'shadow-maxStepSize': params.maxStepSize,
-    'shadow-minDensity': 10 ** params.minDensityLog10,
-    'shadow-minExtinction': 10 ** params.minExtinctionLog10,
-    'shadow-minTransmittance': 10 ** params.minTransmittanceLog10,
+    'shadow-minDensity': 10 ** params['minDensity-log10'],
+    'shadow-minExtinction': 10 ** params['minExtinction-log10'],
+    'shadow-minTransmittance': 10 ** params['minTransmittance-log10'],
     'shadow-opticalDepthTailScale': params.opticalDepthTailScale
   }
 }
@@ -370,6 +415,10 @@ function useCloudLayerControls(
     return {
       [`layer ${layerIndex}`]: folder(
         {
+          channel: {
+            value: params.channel,
+            options: ['r', 'g', 'b', 'a'] as const
+          },
           altitude: {
             value: params.altitude,
             min: 0,

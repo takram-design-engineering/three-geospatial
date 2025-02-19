@@ -81,7 +81,7 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
       localWeatherTexture,
       uv * localWeatherRepeat + localWeatherOffset,
       mipLevel
-    ).WEATHER_CHANNELS,
+    ).LOCAL_WEATHER_CHANNELS,
     weatherExponents
   );
   vec4 heightScale = shapeAlteringFunction(weather.heightFraction, shapeAlteringBiases);

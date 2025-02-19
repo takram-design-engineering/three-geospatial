@@ -57,8 +57,8 @@ export interface Cascade {
 }
 
 export interface CascadedShadowMapsOptions {
-  cascadeCount?: number
-  mapSize?: Vector2
+  cascadeCount: number
+  mapSize: Vector2
   maxFar?: number | null
   farScale?: number
   splitMode?: FrustumSplitMode
@@ -68,8 +68,6 @@ export interface CascadedShadowMapsOptions {
 }
 
 export const cascadedShadowMapsDefaults = {
-  cascadeCount: 4,
-  mapSize: new Vector2(1024, 1024),
   maxFar: null,
   farScale: 1,
   splitMode: 'practical',

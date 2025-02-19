@@ -13,7 +13,7 @@ export const Tokyo: StoryFn = () => (
   <Story
     dayOfYear={170}
     timeOfDay={7.5}
-    exposure={15}
+    exposure={10}
     longitude={139.8146}
     latitude={35.7455}
     heading={-110}

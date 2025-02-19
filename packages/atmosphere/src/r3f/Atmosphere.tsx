@@ -52,7 +52,8 @@ export interface AtmosphereContextValue {
   transientStates?: AtmosphereTransientStates
 }
 
-export const AtmosphereContext = createContext<AtmosphereContextValue>({})
+export const AtmosphereContext =
+  /*#__PURE__*/ createContext<AtmosphereContextValue>({})
 
 export interface AtmosphereProps {
   textures?: PrecomputedTextures | string

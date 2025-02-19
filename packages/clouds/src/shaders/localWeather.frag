@@ -68,5 +68,16 @@ void main() {
     outputColor.b = perlin;
   }
 
+  // Extra
+  {
+    float perlin = getPerlinNoise(
+      point + vec3(-19.1, 33.4, 47.2),
+      32.0, // frequency
+      4 // octaveCount
+    );
+    perlin = smoothstep(-0.5, 0.5, perlin);
+    outputColor.a = perlin;
+  }
+
   outputColor.a = 1.0;
 }

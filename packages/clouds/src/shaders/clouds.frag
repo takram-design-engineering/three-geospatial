@@ -305,9 +305,8 @@ float draine(float u, float g, float a) {
     (4.0 * (1.0 + a * (1.0 + 2.0 * g2) / 3.0) * PI * pow(1.0 + g2 - 2.0 * g * u, 1.5));
 }
 
-// Numerically-fitted large particles (d=10) phase function. It appears to be
-// faster than dual-robe Henyey-Greenstein functions, but it won't be plausible
-// without a more precise multiple scattering.
+// Numerically-fitted large particles (d=10) phase function It won't be
+// plausible without a more precise multiple scattering.
 // Reference: https://research.nvidia.com/labs/rtr/approximate-mie/
 float phaseFunction(const float cosTheta, const float attenuation) {
   const float gHG = 0.988176691700256; // exp(-0.0990567/(d-1.67154))
@@ -863,7 +862,7 @@ void main() {
 
     vec2 globeUv = getGlobeUv(rayOrigin);
     #ifdef DEBUG_SHOW_UV
-    outputColor = vec4(vec3(checker(globeUv, localWeatherRepeat)), 1.0);
+    outputColor = vec4(vec3(checker(globeUv, localWeatherRepeat + localWeatherOffset)), 1.0);
     outputDepthVelocity = vec3(0.0);
     #ifdef SHADOW_LENGTH
     outputShadowLength = 0.0;
