@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 
-import { assertType, radians } from '@takram/three-geospatial'
+import { radians } from '@takram/three-geospatial'
 
 const paramKeys = [
   'solarIrradiance',
@@ -35,15 +35,7 @@ function applyOptions(
     if (target[key] instanceof Vector3) {
       target[key].copy(value as Vector3)
     } else {
-      type Keys = keyof AtmosphereParametersOptions
-      assertType<
-        keyof {
-          [K in Keys as AtmosphereParameters[K] extends Vector3
-            ? never
-            : K]: AtmosphereParameters[K]
-        }
-      >(key)
-      target[key] = value as Exclude<typeof value, Vector3>
+      ;(target as any)[key] = value
     }
   }
 }
