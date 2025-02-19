@@ -862,7 +862,7 @@ void main() {
 
     vec2 globeUv = getGlobeUv(rayOrigin);
     #ifdef DEBUG_SHOW_UV
-    outputColor = vec4(vec3(checker(globeUv, localWeatherRepeat)), 1.0);
+    outputColor = vec4(vec3(checker(globeUv, localWeatherRepeat + localWeatherOffset)), 1.0);
     outputDepthVelocity = vec3(0.0);
     #ifdef SHADOW_LENGTH
     outputShadowLength = 0.0;
