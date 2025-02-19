@@ -125,26 +125,22 @@ const shadowMapsParameterKeys = [
   'splitLambda'
 ] as const satisfies Array<keyof CascadedShadowMaps>
 
-type CloudsShorthand = UniformShorthand<
-  CloudsMaterial,
-  (typeof cloudsUniformKeys)[number]
-> &
-  PropertyShorthand<[CloudsMaterial, typeof cloudsMaterialParameterKeys]>
+interface CloudsShorthand
+  extends UniformShorthand<CloudsMaterial, (typeof cloudsUniformKeys)[number]>,
+    PropertyShorthand<[CloudsMaterial, typeof cloudsMaterialParameterKeys]> {}
 
-type ShadowShorthand = UniformShorthand<
-  ShadowMaterial,
-  (typeof shadowUniformKeys)[number]
-> &
-  PropertyShorthand<
-    [
-      ShadowMaterial,
-      typeof shadowMaterialParameterKeys,
-      ShadowPass,
-      typeof shadowPassParameterKeys,
-      CascadedShadowMaps,
-      typeof shadowMapsParameterKeys
-    ]
-  >
+interface ShadowShorthand
+  extends UniformShorthand<ShadowMaterial, (typeof shadowUniformKeys)[number]>,
+    PropertyShorthand<
+      [
+        ShadowMaterial,
+        typeof shadowMaterialParameterKeys,
+        ShadowPass,
+        typeof shadowPassParameterKeys,
+        CascadedShadowMaps,
+        typeof shadowMapsParameterKeys
+      ]
+    > {}
 
 export interface CloudsEffectChangeEvent {
   type: 'change'
