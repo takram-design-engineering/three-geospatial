@@ -84,6 +84,10 @@ WeatherSample sampleWeather(const vec2 uv, const float height, const float mipLe
     ).LOCAL_WEATHER_CHANNELS,
     weatherExponents
   );
+  #ifdef SHADOW
+  localWeather *= shadowLayerMask;
+  #endif // SHADOW
+
   vec4 heightScale = shapeAlteringFunction(weather.heightFraction, shapeAlteringBiases);
 
   // Modulation to control weather by coverage parameter.

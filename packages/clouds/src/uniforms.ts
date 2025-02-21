@@ -89,6 +89,7 @@ export interface CloudLayerUniforms {
   maxHeight: Uniform<number>
   shadowTopHeight: Uniform<number>
   shadowBottomHeight: Uniform<number>
+  shadowLayerMask: Uniform<Vector4>
   densityProfile: Uniform<DensityProfileVectors>
 }
 
@@ -108,6 +109,7 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
     maxHeight: new Uniform(0),
     shadowTopHeight: new Uniform(0),
     shadowBottomHeight: new Uniform(0),
+    shadowLayerMask: new Uniform(new Vector4()),
     densityProfile: new Uniform({
       expTerms: new Vector4(),
       exponents: new Vector4(),
@@ -116,6 +118,8 @@ export function createCloudLayerUniforms(): CloudLayerUniforms {
     })
   }
 }
+
+const shadowLayerMask = [0, 0, 0, 0]
 
 export function updateCloudLayerUniforms(
   uniforms: CloudLayerUniforms,
@@ -144,6 +148,7 @@ export function updateCloudLayerUniforms(
   let totalMaxHeight = 0
   let shadowBottomHeight = Infinity
   let shadowTopHeight = 0
+  shadowLayerMask.fill(0)
   for (let i = 0; i < layers.length; ++i) {
     const { altitude, height, shadow } = layers[i]
     const maxHeight = altitude + height
@@ -161,6 +166,7 @@ export function updateCloudLayerUniforms(
         shadowTopHeight = maxHeight
       }
     }
+    shadowLayerMask[i] = shadow ? 1 : 0
   }
   if (totalMinHeight !== Infinity) {
     uniforms.minHeight.value = totalMinHeight
@@ -176,6 +182,7 @@ export function updateCloudLayerUniforms(
     invariant(shadowTopHeight === 0)
     uniforms.shadowBottomHeight.value = 0
   }
+  uniforms.shadowLayerMask.value.fromArray(shadowLayerMask)
 }
 
 export interface AtmosphereUniforms {

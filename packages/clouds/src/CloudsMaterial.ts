@@ -4,6 +4,7 @@ import {
   Uniform,
   Vector2,
   Vector3,
+  Vector4,
   type BufferGeometry,
   type Camera,
   type Data3DTexture,
@@ -239,6 +240,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ),
           shadowFar: new Uniform(0),
           maxShadowFilterRadius: new Uniform(6),
+          shadowLayerMask: new Uniform(new Vector4().setScalar(1)), // Disable mask
 
           // Shadow length
           maxShadowLengthIterationCount: new Uniform(defaults.clouds.maxShadowLengthIterationCount),

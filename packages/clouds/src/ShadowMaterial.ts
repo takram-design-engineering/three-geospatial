@@ -106,6 +106,7 @@ export class ShadowMaterial extends RawShaderMaterial {
         opticalDepthTailScale: new Uniform(2)
       } satisfies ShadowMaterialUniforms,
       defines: {
+        SHADOW: '1',
         TEMPORAL_PASS: '1',
         TEMPORAL_JITTER: '1'
       }
