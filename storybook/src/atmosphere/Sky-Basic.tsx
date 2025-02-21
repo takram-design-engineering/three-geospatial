@@ -1,9 +1,8 @@
 import { OrbitControls } from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { useEffect, useRef, type FC } from 'react'
-import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
+import { useRef, type FC } from 'react'
 
 import {
   Atmosphere,
@@ -12,8 +11,8 @@ import {
 } from '@takram/three-atmosphere/r3f'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 
-import { applyLocation } from '../helpers/applyLocation'
 import { Stats } from '../helpers/Stats'
+import { useApplyLocation } from '../helpers/useApplyLocation'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
@@ -22,28 +21,13 @@ import { useToneMappingControls } from '../helpers/useToneMappingControls'
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls()
-  const motionDate = useLocalDateControls({
-    longitude,
-    dayOfYear: 0
-  })
+  const motionDate = useLocalDateControls({ longitude, dayOfYear: 0 })
   const { correctAltitude, photometric } = useControls('atmosphere', {
     correctAltitude: true,
     photometric: true
   })
 
-  const camera = useThree(({ camera }) => camera)
-  const controlsRef = useRef<OrbitControlsImpl>(null)
-  useEffect(() => {
-    const controls = controlsRef.current
-    if (controls != null) {
-      applyLocation(camera, controls, {
-        longitude,
-        latitude,
-        height
-      })
-    }
-  }, [longitude, latitude, height, camera])
-
+  const controlsRef = useApplyLocation({ longitude, latitude, height })
   const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))

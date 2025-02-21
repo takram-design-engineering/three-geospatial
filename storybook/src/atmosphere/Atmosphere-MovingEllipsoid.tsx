@@ -38,13 +38,8 @@ const up = new Vector3()
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
-  const { longitude, latitude, height } = useLocationControls({
-    height: 500
-  })
-  const motionDate = useLocalDateControls({
-    longitude,
-    dayOfYear: 0
-  })
+  const { longitude, latitude, height } = useLocationControls({ height: 500 })
+  const motionDate = useLocalDateControls({ longitude, dayOfYear: 0 })
   const { correctAltitude } = useControls('atmosphere', {
     correctAltitude: true
   })

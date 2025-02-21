@@ -9,7 +9,6 @@ import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useEffect, useRef, useState, type FC } from 'react'
 import { type Group } from 'three'
-import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import {
   Atmosphere,
@@ -20,8 +19,8 @@ import { radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
-import { applyLocation } from '../helpers/applyLocation'
 import { Stats } from '../helpers/Stats'
+import { useApplyLocation } from '../helpers/useApplyLocation'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
@@ -30,10 +29,7 @@ import { useToneMappingControls } from '../helpers/useToneMappingControls'
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls()
-  const motionDate = useLocalDateControls({
-    longitude,
-    dayOfYear: 0
-  })
+  const motionDate = useLocalDateControls({ longitude, dayOfYear: 0 })
   const { correctAltitude, photometric } = useControls('atmosphere', {
     correctAltitude: true,
     photometric: true
@@ -45,24 +41,13 @@ const Scene: FC = () => {
     scene.environment = envMap?.fbo.texture ?? null
   }, [scene, envMap])
 
-  const camera = useThree(({ camera }) => camera)
-  const controlsRef = useRef<OrbitControlsImpl>(null)
   const envMapParentRef = useRef<Group>(null)
-  useEffect(() => {
-    const controls = controlsRef.current
-    if (controls != null) {
-      applyLocation(
-        camera,
-        controls,
-        {
-          longitude,
-          latitude,
-          height
-        },
-        envMapParentRef.current?.position
-      )
+  const controlsRef = useApplyLocation(
+    { longitude, latitude, height },
+    position => {
+      envMapParentRef.current?.position.copy(position)
     }
-  }, [longitude, latitude, height, camera])
+  )
 
   const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {

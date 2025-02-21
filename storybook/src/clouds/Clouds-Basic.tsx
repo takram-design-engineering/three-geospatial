@@ -1,9 +1,8 @@
 import { Box, OrbitControls } from '@react-three/drei'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
-import { Fragment, useEffect, useRef, useState, type FC } from 'react'
-import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
+import { Fragment, useRef, useState, type FC } from 'react'
 
 import {
   AerialPerspective,
@@ -16,8 +15,8 @@ import { radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
-import { applyLocation } from '../helpers/applyLocation'
 import { Stats } from '../helpers/Stats'
+import { useApplyLocation } from '../helpers/useApplyLocation'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
@@ -33,10 +32,7 @@ const Scene: FC = () => {
     },
     { collapsed: true }
   )
-  const motionDate = useLocalDateControls({
-    longitude,
-    dayOfYear: 0
-  })
+  const motionDate = useLocalDateControls({ longitude, dayOfYear: 0 })
   const { correctAltitude, photometric } = useControls(
     'atmosphere',
     {
@@ -46,19 +42,7 @@ const Scene: FC = () => {
     { collapsed: true }
   )
 
-  const camera = useThree(({ camera }) => camera)
-  const controlsRef = useRef<OrbitControlsImpl>(null)
-  useEffect(() => {
-    const controls = controlsRef.current
-    if (controls != null) {
-      applyLocation(camera, controls, {
-        longitude,
-        latitude,
-        height
-      })
-    }
-  }, [longitude, latitude, height, camera])
-
+  const controlsRef = useApplyLocation({ longitude, latitude, height })
   const atmosphereRef = useRef<AtmosphereApi>(null)
   useFrame(() => {
     atmosphereRef.current?.updateByDate(new Date(motionDate.get()))

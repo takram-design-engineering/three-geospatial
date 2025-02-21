@@ -44,10 +44,7 @@ const Scene: FC = () => {
     longitude: 30,
     height: 300
   })
-  const motionDate = useLocalDateControls({
-    longitude,
-    dayOfYear: 0
-  })
+  const motionDate = useLocalDateControls({ longitude, dayOfYear: 0 })
   const { correctAltitude } = useControls(
     'atmosphere',
     {
