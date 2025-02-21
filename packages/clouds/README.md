@@ -325,10 +325,10 @@ const Scene = () => {
   // Modify an instance of the CloudLayer class transiently if props change
   // frequently.
   const layerRef = useRef<CloudLayerImpl>(null)
-  useFrame(({ time }) => {
+  useFrame(({ clock }) => {
     const layer = layerRef.current
     if (layer != null) {
-      layer.height += time
+      layer.height += clock.getDelta()
     }
   })
 
