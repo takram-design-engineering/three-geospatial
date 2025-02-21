@@ -3,7 +3,6 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { Fragment, useEffect, useRef, useState, type FC } from 'react'
-import { Quaternion, Vector3, type Camera } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import {
@@ -13,44 +12,17 @@ import {
 } from '@takram/three-atmosphere/r3f'
 import { type CloudsEffect } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
-import {
-  Ellipsoid,
-  Geodetic,
-  radians,
-  type GeodeticLike
-} from '@takram/three-geospatial'
+import { radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
+import { applyLocation } from '../helpers/applyLocation'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
 import { useCloudsControls } from './helpers/useCloudsControls'
-
-const geodetic = new Geodetic()
-const position = new Vector3()
-const up = new Vector3()
-const offset = new Vector3()
-const rotation = new Quaternion()
-
-function applyLocation(
-  camera: Camera,
-  controls: OrbitControlsImpl,
-  { longitude, latitude, height }: GeodeticLike
-): void {
-  geodetic.set(radians(longitude), radians(latitude), height)
-  geodetic.toECEF(position)
-  Ellipsoid.WGS84.getSurfaceNormal(position, up)
-
-  rotation.setFromUnitVectors(camera.up, up)
-  offset.copy(camera.position).sub(controls.target)
-  offset.applyQuaternion(rotation)
-  camera.up.copy(up)
-  camera.position.copy(position).add(offset)
-  controls.target.copy(position)
-}
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })

@@ -8,7 +8,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
 import { useEffect, useRef, useState, type FC } from 'react'
-import { Quaternion, Vector3, type Camera, type Group } from 'three'
+import { type Group } from 'three'
 import { type OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import {
@@ -16,43 +16,16 @@ import {
   Sky,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import {
-  Ellipsoid,
-  Geodetic,
-  radians,
-  type GeodeticLike
-} from '@takram/three-geospatial'
+import { radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 
+import { applyLocation } from '../helpers/applyLocation'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-
-const geodetic = new Geodetic()
-const position = new Vector3()
-const up = new Vector3()
-const offset = new Vector3()
-const rotation = new Quaternion()
-
-function applyLocation(
-  camera: Camera,
-  controls: OrbitControlsImpl,
-  { longitude, latitude, height }: GeodeticLike
-): void {
-  geodetic.set(radians(longitude), radians(latitude), height)
-  geodetic.toECEF(position)
-  Ellipsoid.WGS84.getSurfaceNormal(position, up)
-
-  rotation.setFromUnitVectors(camera.up, up)
-  offset.copy(camera.position).sub(controls.target)
-  offset.applyQuaternion(rotation)
-  camera.up.copy(up)
-  camera.position.copy(position).add(offset)
-  controls.target.copy(position)
-}
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
@@ -78,12 +51,16 @@ const Scene: FC = () => {
   useEffect(() => {
     const controls = controlsRef.current
     if (controls != null) {
-      applyLocation(camera, controls, {
-        longitude,
-        latitude,
-        height
-      })
-      envMapParentRef.current?.position.copy(position)
+      applyLocation(
+        camera,
+        controls,
+        {
+          longitude,
+          latitude,
+          height
+        },
+        envMapParentRef.current?.position
+      )
     }
   }, [longitude, latitude, height, camera])
 
@@ -102,7 +79,7 @@ const Scene: FC = () => {
         photometric={photometric}
       >
         <Sky />
-        <group ref={envMapParentRef} position={position}>
+        <group ref={envMapParentRef}>
           <RenderCubeTexture ref={setEnvMap} resolution={64}>
             <Sky
               // Increase this to avoid flickers. Total radiance doesn't change.
