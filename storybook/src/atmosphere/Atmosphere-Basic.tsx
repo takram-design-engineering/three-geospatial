@@ -209,9 +209,7 @@ const Scene: FC = () => {
 const Story: StoryFn = () => (
   <Canvas
     gl={{
-      antialias: false,
       depth: false,
-      stencil: false,
       logarithmicDepthBuffer: true
     }}
     camera={{ near: 100, far: 1e6 }}

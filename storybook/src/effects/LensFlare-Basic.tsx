@@ -42,13 +42,7 @@ const Scene: FC = () => {
 
 const Story: StoryFn = () => {
   return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false
-      }}
-    >
+    <Canvas gl={{ depth: false }}>
       <Scene />
     </Canvas>
   )

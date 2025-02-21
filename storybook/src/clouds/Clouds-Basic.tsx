@@ -102,14 +102,7 @@ const Scene: FC = () => {
 }
 
 const Story: StoryFn = () => (
-  <Canvas
-    gl={{
-      antialias: false,
-      depth: false,
-      stencil: false
-    }}
-    camera={{ near: 1, far: 4e5 }}
-  >
+  <Canvas gl={{ depth: false }} camera={{ near: 1, far: 4e5 }}>
     <Stats />
     <Scene />
   </Canvas>

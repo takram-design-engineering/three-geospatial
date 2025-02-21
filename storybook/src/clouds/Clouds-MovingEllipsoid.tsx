@@ -125,11 +125,7 @@ const Scene: FC = () => {
 
 const Story: StoryFn = () => (
   <Canvas
-    gl={{
-      antialias: false,
-      depth: false,
-      stencil: false
-    }}
+    gl={{ depth: false }}
     camera={{
       position: [2, 1, 2],
       near: 0.1,

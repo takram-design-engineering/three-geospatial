@@ -88,7 +88,7 @@ const Scene: FC = () => {
           />
         </TorusKnot>
       </EastNorthUpFrame>
-      <EffectComposer multisampling={8}>
+      <EffectComposer>
         <LensFlare />
         <ToneMapping mode={toneMappingMode} />
         <Dithering />
@@ -98,13 +98,7 @@ const Scene: FC = () => {
 }
 
 const Story: StoryFn = () => (
-  <Canvas
-    gl={{
-      antialias: false,
-      depth: false,
-      stencil: false
-    }}
-  >
+  <Canvas gl={{ depth: false }}>
     <Stats />
     <Scene />
   </Canvas>

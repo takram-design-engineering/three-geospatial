@@ -276,13 +276,7 @@ const Scene: FC<SceneProps> = ({
 export const Story: FC<SceneProps> = props => {
   useGoogleMapsAPIKeyControls()
   return (
-    <Canvas
-      gl={{
-        antialias: false,
-        depth: false,
-        stencil: false
-      }}
-    >
+    <Canvas gl={{ depth: false }}>
       <Stats />
       <Scene {...props} />
     </Canvas>
