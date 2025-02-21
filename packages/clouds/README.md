@@ -224,7 +224,35 @@ This illustrates that greater total cloud layer height increases computational c
 
 ## Clouds
 
-The R3F counterpart of [`CloudsEffect`](#cloudseffect).
+The R3F counterpart of `CloudsEffect`.
+
+See [`CloudsEffect`](#cloudseffect) for further details.
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
+import { Clouds } from '@takram/three-clouds/r3f'
+
+const Scene = () => (
+  <Atmosphere>
+    <EffectComposer enableNormalPass>
+      {/* Clouds is a post-processing effect. It should be placed inside
+      EffectComposer. */}
+      <Clouds
+        qualityPreset='high'
+        coverage={0.4}
+        // Just use dash-case to pierce into nested properties.
+        clouds-accurateSunSkyIrradiance
+        shadow-cascadeCount={3}
+      />
+      {/* By placing it inside Atmosphere along with AerialPerspective, the
+      output buffers are routed to AerialPerspective and composited into the
+      final render. */}
+      <AerialPerspective sky skyIrradiance sunIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
+```
 
 → [Source](/packages/clouds/src/r3f/Clouds.tsx)
 
@@ -283,6 +311,167 @@ If left undefined, the default texture will be loaded directly from GitHub.
 
 ## CloudLayer
 
+Represents a layer of clouds.
+
+There are two objects with the same name. One exported from `@takram/three-clouds`, and another from `@takram/three-clouds/r3f`, which is a React component that applies props into `CloudEffect`.
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'
+import { CloudLayer as CloudLayerImpl } from '@takram/three-clouds'
+import { CloudLayer, Clouds } from '@takram/three-clouds/r3f'
+
+const Scene = () => {
+  // Modify an instance of the CloudLayer class transiently if props change
+  // frequently.
+  const layerRef = useRef<CloudLayerImpl>(null)
+  useFrame(({ time }) => {
+    const layer = layerRef.current
+    if (layer != null) {
+      layer.height += time
+    }
+  })
+
+  return (
+    <Atmosphere>
+      <EffectComposer enableNormalPass>
+        {/* Set disableDefaultLayers to remove the default cloud layers.
+        Otherwise, CloudLayer props patches the default cloud layers. */}
+        <Clouds disableDefaultLayers>
+          <CloudLayer
+            channel='r' // Channel of the local weather texture
+            altitude={1000}
+            height={1000}
+            shadow
+          />
+          <CloudLayer
+            ref={layerRef}
+            channel='r' // Multiple layers can share the same channel.
+            altitude={2000}
+            height={800}
+            shadow
+          />
+          {/* Create fog near the ground, for example. */}
+          <CloudLayer
+            channel='a'
+            height={300}
+            densityScale={0.05}
+            shapeAmount={0.2}
+            shapeDetailAmount={0}
+            shapeAlteringBias={0.5}
+            coverageFilterWidth={1}
+            densityProfile={{
+              expTerm: 1,
+              exponent: 1e-3,
+              constantTerm: 0,
+              linearTerm: 0
+            }}
+          />
+          {/* The number of cloud layers is limited to 4. */}
+        </Clouds>
+        <AerialPerspective sky skyIrradiance sunIrradiance />
+      </EffectComposer>
+    </Atmosphere>
+  )
+}
+```
+
+### Parameters / props
+
+#### channel
+
+```ts
+channel: 'r' | 'g' | 'b' | 'a' = 'r'
+```
+
+The channel of the weather texture to use for this cloud layer. Multiple layers can share the same channel.
+
+#### altitude
+
+```ts
+altitude: number = 0
+```
+
+The altitude of the bottom of the cloud layer, measured from the ellipsoid surface in meters.
+
+#### height
+
+```ts
+height: number = 0
+```
+
+The height of the cloud layer in meters. Settings this value to 0 disables the layer.
+
+#### densityScale
+
+```ts
+densityScale: number = 0.2
+```
+
+Controls the overall density of the clouds within the layer. Settings this value to 0 disables the layer.
+
+#### shapeAmount
+
+```ts
+shapeAmount: number = 1
+```
+
+Controls the influence of the shape texture on the cloud layer.
+
+#### shapeDetailAmount
+
+```ts
+shapeDetailAmount: number = 1
+```
+
+Controls the influence of the shape detail texture on the cloud layer.
+
+#### weatherExponent
+
+```ts
+weatherExponent: number = 1
+```
+
+Controls the gradient of the weather texture. Values greater than 1 sharpen the gradient, while lower values flatten the weather making it more uniform.
+
+#### shapeAlteringBias
+
+```ts
+shapeAlteringBias: number = 0.35
+```
+
+Controls the vertical bias of the cloud shape. A value of 1 results in symmetry, while 0 fully biases the shape at the bottom.
+
+#### coverageFilterWidth
+
+```ts
+coverageFilterWidth: number = 0.6
+```
+
+Determines how the weather signal influences the shape-altered density. A value of 1 produces a linear gradient, ignoring weather signal, while 0 creates a sharp density transition at the weather signal.
+
+#### densityProfile
+
+<!-- prettier-ignore -->
+```ts
+densityProfile: DensityProfile = {
+  expTerm: number = 0, // a
+  exponent: number = 0, // b
+  linearTerm: number = 0.75, // c
+  constantTerm: number = 0.25 // d
+}
+```
+
+Determines how density varies with the height fraction ($\eta$), ranging from 0 to 1 within the cloud layer: $ae^{b\eta}+c\eta+d$. Clouds are typically denser at the top and sparser at the bottom (hence the default values). You can adjust these parameters to define a different density distribution.
+
+#### shadow
+
+```ts
+shadow: boolean = false
+```
+
+Specifies whether this cloud layer should be included in BSM.
+
 → [Source](/packages/clouds/src/r3f/CloudLayer.tsx)
 
 ## CloudsEffect
@@ -334,7 +523,7 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 
 ### Parameters
 
-The number of parameters might seem overwhelming. To get started, try adjusting [`qualityPreset`](#qualitypreset), [`coverage`](#coverage), cloud layer’s [`altitude`](#layeraltitude), and [`height`](#layerheight) to suit your needs. You can also experiment with the parameters in the [Basic story](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic).
+The number of parameters might seem overwhelming (though you may soon find yourself wanting more control). To get started, try adjusting [`qualityPreset`](#qualitypreset), [`coverage`](#coverage), cloud layer’s [`altitude`](#altitude), and [`height`](#height) to suit your needs. You can also experiment with the parameters in the [Basic story](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic).
 
 - [Rendering](#rendering)
 - [Cloud layers](#cloud-layers)
@@ -411,102 +600,10 @@ Whether to apply an approximated haze effect. This is inexpensive and recommende
 #### cloudLayers
 
 ```ts
-cloudLayers: CloudLayer[] = [defaultCloudLayer, ...]
+cloudLayers: CloudLayers = CloudLayers.DEFAULT
 ```
 
-#### _layer_.channel
-
-```ts
-channel: 'r' | 'g' | 'b' | 'a' = 'r'
-```
-
-The channel of the weather texture to use for this cloud layer. Multiple layers can share the same channel.
-
-#### _layer_.altitude
-
-```ts
-altitude: number = 0
-```
-
-The altitude of the bottom of the cloud layer, measured from the ellipsoid surface in meters.
-
-#### _layer_.height
-
-```ts
-height: number = 0
-```
-
-The height of the cloud layer in meters. Settings this value to 0 disables the layer.
-
-#### _layer_.densityScale
-
-```ts
-densityScale: number = 0.2
-```
-
-Controls the overall density of the clouds within the layer. Settings this value to 0 disables the layer.
-
-#### _layer_.shapeAmount
-
-```ts
-shapeAmount: number = 1
-```
-
-Controls the influence of the shape texture on the cloud layer.
-
-#### _layer_.shapeDetailAmount
-
-```ts
-shapeDetailAmount: number = 1
-```
-
-Controls the influence of the shape detail texture on the cloud layer.
-
-#### _layer_.weatherExponent
-
-```ts
-weatherExponent: number = 1
-```
-
-Controls the gradient of the weather texture. Values greater than 1 sharpen the gradient, while lower values flatten the weather making it more uniform.
-
-#### _layer_.shapeAlteringBias
-
-```ts
-shapeAlteringBias: number = 0.35
-```
-
-Controls the vertical bias of the cloud shape. A value of 1 results in symmetry, while 0 fully biases the shape at the bottom.
-
-#### _layer_.coverageFilterWidth
-
-```ts
-coverageFilterWidth: number = 0.6
-```
-
-Determines how the weather signal influences the shape-altered density. A value of 1 produces a linear gradient, ignoring weather signal, while 0 creates a sharp density transition at the weather signal.
-
-#### _layer_.densityProfile
-
-<!-- prettier-ignore -->
-```ts
-densityProfile: DensityProfile = {
-  expTerm: number = 0, // a
-  exponent: number = 0, // b
-  linearTerm: number = 0.75, // c
-  constantTerm: number = 0.25 // d
-}
-```
-
-Determines how density varies with the height fraction ($\eta$), ranging from 0 to 1 within the cloud layer: $ae^{b\eta}+c\eta+d$. Clouds are typically denser at the top and sparser at the bottom (hence the default values). You can adjust these parameters to define a different density distribution.
-
-#### _layer_.shadow
-
-```ts
-shadow: boolean = false
-```
-
-Specifies whether this cloud layer should be included in BSM. All cloud layers at or below this layer will be included in BSM, while layers above it will be ignored. If enabled on multiple layers, the highest layer takes precedence.
+Defines layers of clouds. See [`CloudLayer`](#cloudlayer) for further details.
 
 ### Textures
 
@@ -709,7 +806,7 @@ The maximum far plane distance for rendering shadows within the main camera’s 
 farScale: number = 1
 ```
 
- A scale factor for the main camera’s far plane. This is useful when the far plane extends to a point like the horizon occlusion point, even though shadows do not need to be rendered that far. The resulting value is also limited by `shadow.maxFar`.
+A scale factor for the main camera’s far plane. This is useful when the far plane extends to a point like the horizon occlusion point, even though shadows do not need to be rendered that far. The resulting value is also limited by `shadow.maxFar`.
 
 #### shadow.splitMode, shadow.splitLambda
 

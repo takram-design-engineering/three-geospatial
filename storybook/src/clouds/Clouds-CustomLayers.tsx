@@ -77,17 +77,16 @@ const Scene: FC = () => {
             <CloudLayer
               channel='a'
               height={300}
+              densityScale={0.05}
               shapeAmount={0.2}
               shapeDetailAmount={0}
-              weatherExponent={1}
-              coverageFilterWidth={1}
               shapeAlteringBias={0.5}
-              densityScale={0.05}
+              coverageFilterWidth={1}
               densityProfile={{
-                constantTerm: 0,
-                linearTerm: 0,
                 expTerm: 1,
-                exponent: 1e-3
+                exponent: 1e-3,
+                constantTerm: 0,
+                linearTerm: 0
               }}
             />
           </Clouds>
