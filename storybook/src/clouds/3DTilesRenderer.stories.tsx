@@ -28,8 +28,8 @@ export const Fuji: StoryFn = () => (
     dayOfYear={200}
     timeOfDay={17.5}
     exposure={10}
-    longitude={138.6340}
-    latitude={35.5000}
+    longitude={138.634}
+    latitude={35.5}
     heading={-91}
     pitch={-27}
     distance={8444}
