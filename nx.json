@@ -76,6 +76,7 @@
     }
   },
   "release": {
+    "projects": ["core", "effects", "atmosphere", "clouds"],
     "projectsRelationship": "independent"
   }
 }
