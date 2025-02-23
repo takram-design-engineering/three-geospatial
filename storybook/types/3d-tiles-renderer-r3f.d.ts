@@ -54,11 +54,11 @@ declare module '3d-tiles-renderer/r3f' {
     props: TilesPluginProps<Plugin, Params> & RefAttributes<Plugin>
   ): JSX.Element
 
-  export type TilesRendererProps = {
+  export interface TilesRendererProps extends Partial<TilesRendererImpl> {
     url?: string
     group?: GroupProps
     children?: ReactNode
-  } & Partial<TilesRendererImpl>
+  }
 
   export const TilesRenderer: FC<
     TilesRendererProps & RefAttributes<TilesRendererImpl>

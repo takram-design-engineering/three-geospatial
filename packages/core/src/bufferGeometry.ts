@@ -1,9 +1,10 @@
 import { Box3, BufferAttribute, BufferGeometry, Sphere, Vector3 } from 'three'
 
-export type BufferGeometryLike = Pick<
-  BufferGeometry,
-  'attributes' | 'index' | 'boundingBox' | 'boundingSphere'
->
+export interface BufferGeometryLike
+  extends Pick<
+    BufferGeometry,
+    'attributes' | 'index' | 'boundingBox' | 'boundingSphere'
+  > {}
 
 export function toBufferGeometryLike(
   geometry: BufferGeometry

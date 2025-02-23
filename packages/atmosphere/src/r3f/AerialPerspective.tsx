@@ -36,14 +36,15 @@ function useSTBNTextureState(
   return data
 }
 
-export type AerialPerspectiveProps = Omit<
-  PassThoughInstanceProps<
-    AerialPerspectiveEffect,
-    [],
-    Partial<AerialPerspectiveEffect>
-  >,
-  'stbnTexture'
-> & {
+export interface AerialPerspectiveProps
+  extends Omit<
+    PassThoughInstanceProps<
+      AerialPerspectiveEffect,
+      [],
+      Partial<AerialPerspectiveEffect>
+    >,
+    'stbnTexture'
+  > {
   stbnTexture?: Data3DTexture | string
 }
 

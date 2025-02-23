@@ -16,9 +16,7 @@ export default {
 export const MinimalSetup: StoryFn = () => (
   <Canvas
     gl={{
-      antialias: false,
       depth: false,
-      stencil: false,
       toneMappingExposure: 10
     }}
     camera={{

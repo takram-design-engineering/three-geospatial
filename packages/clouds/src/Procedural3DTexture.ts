@@ -14,13 +14,9 @@ import {
   type WebGLRenderer
 } from 'three'
 
-export interface Procedural3DTexture {
-  readonly size: number
-  readonly texture: Data3DTexture
+import { type ProceduralTexture } from './ProceduralTexture'
 
-  dispose: () => void
-  render: (renderer: WebGLRenderer, deltaTime?: number) => void
-}
+export type Procedural3DTexture = ProceduralTexture<Data3DTexture>
 
 export interface Procedural3DTextureBaseParameters {
   size: number

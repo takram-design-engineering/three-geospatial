@@ -13,16 +13,17 @@ import { separateProps } from './separateProps'
 
 export type SkyImpl = Mesh<BufferGeometry, SkyMaterial>
 
-export type SkyProps = MeshProps &
-  AtmosphereMaterialProps &
-  ExtendedProps<{
-    sun?: boolean
-    moon?: boolean
-    moonDirection?: Vector3
-    moonAngularRadius?: number
-    lunarRadianceScale?: number
-    groundAlbedo?: Color
-  }>
+export interface SkyProps
+  extends MeshProps,
+    AtmosphereMaterialProps,
+    ExtendedProps<{
+      sun?: boolean
+      moon?: boolean
+      moonDirection?: Vector3
+      moonAngularRadius?: number
+      lunarRadianceScale?: number
+      groundAlbedo?: Color
+    }> {}
 
 export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
   function Sky(props, forwardedRef) {

@@ -5,4 +5,4 @@ import { DepthEffect } from '../DepthEffect'
 
 export const Depth = wrapEffect(DepthEffect)
 
-export type DepthProps = ComponentPropsWithoutRef<typeof Depth>
+export interface DepthProps extends ComponentPropsWithoutRef<typeof Depth> {}

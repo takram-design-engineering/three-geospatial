@@ -30,18 +30,14 @@ type ParameterProperties<T> = {
   [K in WritableKeysOf<T> as T[K] extends Callable ? never : K]: T[K]
 }
 
-export type DataTextureParameters = Omit<
-  Partial<ParameterProperties<DataTexture>>,
-  'image'
-> & {
+export interface DataTextureParameters
+  extends Omit<Partial<ParameterProperties<DataTexture>>, 'image'> {
   width?: number
   height?: number
 }
 
-export type Data3DTextureParameters = Omit<
-  Partial<ParameterProperties<Data3DTexture>>,
-  'image'
-> & {
+export interface Data3DTextureParameters
+  extends Omit<Partial<ParameterProperties<Data3DTexture>>, 'image'> {
   width?: number
   height?: number
   depth?: number

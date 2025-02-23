@@ -15,9 +15,9 @@ import {
   type WebGLRenderer
 } from 'three'
 
-export interface ProceduralTexture {
+export interface ProceduralTexture<T extends Texture = Texture> {
   readonly size: number
-  readonly texture: Texture
+  readonly texture: T
 
   dispose: () => void
   render: (renderer: WebGLRenderer, deltaTime?: number) => void

@@ -41,7 +41,7 @@ export interface AtmosphereTransientStates {
 }
 
 /** @deprecated Use AtmosphereTransientStates instead. */
-export type AtmosphereTransientProps = AtmosphereTransientStates
+export interface AtmosphereTransientProps extends AtmosphereTransientStates {}
 
 export interface AtmosphereContextValue {
   textures?: PrecomputedTextures | null

@@ -5,11 +5,11 @@ import { type Material } from 'three'
 import { type PartialDeep } from 'type-fest'
 
 import {
-  defaultCloudLayer,
-  type CloudLayer,
+  CloudLayer,
+  type CloudLayerLike,
   type CloudsEffect,
   type CloudsQualityPreset,
-  type DensityProfile,
+  type DensityProfileLike,
   type FrustumSplitMode
 } from '@takram/three-clouds'
 import { type CloudsProps } from '@takram/three-clouds/r3f'
@@ -394,7 +394,7 @@ function useAdvancedShadowControls(
 }
 
 type CloudLayerSchema = PartialDeep<{
-  [K in keyof CloudLayer as `${K} ${1 | 2 | 3 | 4}`]: CloudLayer[K]
+  [K in keyof CloudLayerLike as `${K} ${1 | 2 | 3 | 4}`]: CloudLayerLike[K]
 }>
 
 function useCloudLayerControls(
@@ -405,10 +405,10 @@ function useCloudLayerControls(
   const schema = useMemo((): CloudLayerSchema => {
     const layer = effect?.cloudLayers[layerIndex]
     const params = {
-      ...defaultCloudLayer,
+      ...CloudLayer.DEFAULT,
       ...layer,
       densityProfile: {
-        ...defaultCloudLayer.densityProfile,
+        ...CloudLayer.DEFAULT.densityProfile,
         ...layer?.densityProfile
       }
     }
@@ -487,9 +487,9 @@ function useCloudLayerControls(
             },
             { collapsed: true }
           )
-        } satisfies Partial<Record<keyof CloudLayer, Schema[string]>> & {
+        } satisfies Partial<Record<keyof CloudLayerLike, Schema[string]>> & {
           'density profile': FolderInput<
-            Record<keyof DensityProfile, Schema[string]>
+            Record<keyof DensityProfileLike, Schema[string]>
           >
         },
         {

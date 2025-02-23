@@ -35,11 +35,7 @@ import {
 } from '@takram/three-geospatial'
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
-import {
-  createDefaultCloudLayers,
-  defaultCloudLayer,
-  type CloudLayer
-} from './cloudLayer'
+import { CloudLayers } from './CloudLayers'
 import {
   type CloudsMaterial,
   type CloudsMaterialUniforms
@@ -125,26 +121,22 @@ const shadowMapsParameterKeys = [
   'splitLambda'
 ] as const satisfies Array<keyof CascadedShadowMaps>
 
-type CloudsShorthand = UniformShorthand<
-  CloudsMaterial,
-  (typeof cloudsUniformKeys)[number]
-> &
-  PropertyShorthand<[CloudsMaterial, typeof cloudsMaterialParameterKeys]>
+interface CloudsShorthand
+  extends UniformShorthand<CloudsMaterial, (typeof cloudsUniformKeys)[number]>,
+    PropertyShorthand<[CloudsMaterial, typeof cloudsMaterialParameterKeys]> {}
 
-type ShadowShorthand = UniformShorthand<
-  ShadowMaterial,
-  (typeof shadowUniformKeys)[number]
-> &
-  PropertyShorthand<
-    [
-      ShadowMaterial,
-      typeof shadowMaterialParameterKeys,
-      ShadowPass,
-      typeof shadowPassParameterKeys,
-      CascadedShadowMaps,
-      typeof shadowMapsParameterKeys
-    ]
-  >
+interface ShadowShorthand
+  extends UniformShorthand<ShadowMaterial, (typeof shadowUniformKeys)[number]>,
+    PropertyShorthand<
+      [
+        ShadowMaterial,
+        typeof shadowMaterialParameterKeys,
+        ShadowPass,
+        typeof shadowPassParameterKeys,
+        CascadedShadowMaps,
+        typeof shadowMapsParameterKeys
+      ]
+    > {}
 
 export interface CloudsEffectChangeEvent {
   type: 'change'
@@ -181,7 +173,7 @@ export const cloudsPassOptionsDefaults = {
 export class CloudsEffect extends Effect {
   declare uniforms: UniformMap<CloudsEffectUniforms>
 
-  readonly cloudLayers: CloudLayer[] = createDefaultCloudLayers()
+  readonly cloudLayers = CloudLayers.DEFAULT.clone()
 
   correctAltitude = true
 
@@ -408,13 +400,7 @@ export class CloudsEffect extends Effect {
   }
 
   private updateWeatherTextureChannels(): void {
-    const { cloudLayers } = this
-    const { channel } = defaultCloudLayer
-    const value =
-      (cloudLayers[0]?.channel ?? channel) +
-      (cloudLayers[1]?.channel ?? channel) +
-      (cloudLayers[2]?.channel ?? channel) +
-      (cloudLayers[3]?.channel ?? channel)
+    const value = this.cloudLayers.localWeatherChannels
     this.cloudsPass.currentMaterial.localWeatherChannels = value
     this.shadowPass.currentMaterial.localWeatherChannels = value
   }

@@ -139,8 +139,6 @@ function init(): void {
   aerialPerspective = new AerialPerspectiveEffect(camera)
 
   renderer = new WebGLRenderer({
-    antialias: false,
-    stencil: false,
     depth: false,
     logarithmicDepthBuffer: true
   })

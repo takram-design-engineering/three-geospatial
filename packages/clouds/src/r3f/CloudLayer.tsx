@@ -1,59 +1,95 @@
 import {
   forwardRef,
   useContext,
-  useImperativeHandle,
+  useEffect,
   useLayoutEffect,
-  useRef
+  useState
 } from 'react'
 
 import { type ExpandNestedProps } from '@takram/three-geospatial/r3f'
 
-import { type CloudLayer as CloudLayerData } from '../cloudLayer'
+import {
+  CloudLayer as CloudLayerImpl,
+  type CloudLayerLike
+} from '../CloudLayer'
+import { CloudLayers } from '../CloudLayers'
 import { CloudLayersContext } from './CloudLayers'
 
-export type CloudLayerImpl = CloudLayerData
-
-function applyProps(target: object, source: object): void {
-  for (const key in target) {
-    if (Object.prototype.hasOwnProperty.call(target, key)) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete target[key as keyof typeof target]
-    }
-  }
-  Object.assign(target, source)
+export interface CloudLayerProps
+  extends CloudLayerLike,
+    ExpandNestedProps<CloudLayerLike, 'densityProfile'> {
+  index?: number
 }
 
-export type CloudLayerProps = CloudLayerData &
-  ExpandNestedProps<CloudLayerData, 'densityProfile'>
-
 export const CloudLayer = forwardRef<CloudLayerImpl, CloudLayerProps>(
-  function CloudLayer(props, forwardedRef) {
-    const { layers, indexPool } = useContext(CloudLayersContext)
+  function CloudLayer({ index: indexProp, ...props }, forwardedRef) {
+    const context = useContext(CloudLayersContext)
+    if (context == null) {
+      throw new Error(
+        'CloudLayer can only be used within the Clouds component!'
+      )
+    }
 
-    const ref = useRef<CloudLayerData>({})
-    const propsRef = useRef(props)
-    propsRef.current = props
+    const { layers, indexPool, disableDefault } = context
+    const [index, setIndex] = useState<number>()
 
     useLayoutEffect(() => {
-      // Sorting is just for predictability. Layer order is still not defined,
-      // but it doesn't matter.
-      const index = indexPool.sort((a, b) => a - b).shift()
+      if (indexProp != null) {
+        const poolIndex = indexPool.indexOf(indexProp)
+        if (poolIndex !== -1) {
+          indexPool.splice(poolIndex, 1)
+          setIndex(indexProp)
+          return () => {
+            indexPool.push(indexProp)
+            setIndex(undefined)
+          }
+        }
+      } else {
+        // Sorting is just for predictability. Layer order is still not defined,
+        // but it doesn't matter.
+        const index = indexPool.sort((a, b) => a - b).shift()
+        if (index != null) {
+          setIndex(index)
+          return () => {
+            indexPool.push(index)
+            setIndex(undefined)
+          }
+        }
+      }
+    }, [indexProp, layers, indexPool])
+
+    useLayoutEffect(() => {
       if (index == null) {
         return
       }
-      layers[index] = ref.current
-      applyProps(ref.current, propsRef.current)
-
+      const layer = layers[index]
       return () => {
-        layers[index] = {}
-        indexPool.push(index)
+        layer.copy(
+          disableDefault ? CloudLayerImpl.DEFAULT : CloudLayers.DEFAULT[index]
+        )
       }
-    }, [layers, indexPool])
+    }, [layers, index, disableDefault])
 
-    // Surely this resets any modifications made via the forwarded ref.
-    applyProps(ref.current, props)
+    useEffect(() => {
+      if (index == null) {
+        return
+      }
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(layers[index])
+      } else if (forwardedRef != null) {
+        forwardedRef.current = layers[index]
+      }
+    }, [forwardedRef, layers, index])
 
-    useImperativeHandle(forwardedRef, () => ref.current)
+    // Surely this resets any modifications made via forwarded ref.
+    if (index != null) {
+      const layer = layers[index]
+      layer.copy(
+        disableDefault ? CloudLayerImpl.DEFAULT : CloudLayers.DEFAULT[index]
+      )
+      layer.set(props)
+    }
+
     return null
   }
 )
