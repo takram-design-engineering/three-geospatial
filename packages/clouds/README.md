@@ -19,11 +19,11 @@ pnpm add @takram/three-clouds
 yarn add @takram/three-clouds
 ```
 
-Peer dependencies include `three` and `postprocessing`, as well as `react`, `@react-three/fiber`, `@react-three/postprocessing` and `@react-three/drei` (required by `@takram/three-atmosphere`) when using R3F.
+Peer dependencies include `three` and `postprocessing`, as well as `@react-three/fiber`, `@react-three/postprocessing` and `@react-three/drei` (required by `@takram/three-atmosphere`) when using R3F.
 
 ```
 three postprocessing
-react @react-three/fiber @react-three/postprocessing @react-three/drei
+@react-three/fiber @react-three/postprocessing @react-three/drei
 ```
 
 ## Usage
