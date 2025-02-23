@@ -9,19 +9,17 @@ A Three.js and R3F (React Three Fiber) implementation of geospatial volumetric c
 - Light shafts (crepuscular rays)
 - Haze (sparse fog)
 
-This library is under active development and is in pre-release status.
-
-**This document is a draft.**
+This library is part of a project to prototype the rendering aspect of a Web GIS engine. For more details on the background and current status of this project, please refer to the [main README](/README.md).
 
 ## Installation
 
-<!-- ```sh
+```sh
 npm install @takram/three-clouds
 pnpm add @takram/three-clouds
 yarn add @takram/three-clouds
 ```
 
-Peer dependencies include `three` and `postprocessing`, as well as `react`, `@react-three/fiber`, and `@react-three/postprocessing` when using R3F. -->
+Peer dependencies include `three` and `postprocessing`, as well as `react`, `@react-three/fiber`, and `@react-three/postprocessing` when using R3F.
 
 ## Usage
 
@@ -105,7 +103,7 @@ const Scene = () => (
 
 ### Generating textures procedurally
 
-Pass an object that implements from [`ProceduralTexture`](#proceduraltexture-procedural3dtexture). For shape and shape detail, use [`Procedural3DTexture`](#proceduraltexture-procedural3dtexture).
+Pass an object that implements [`ProceduralTexture`](#proceduraltexture-procedural3dtexture). For shape and shape detail, use [`Procedural3DTexture`](#proceduraltexture-procedural3dtexture).
 
 ```tsx
 import { EffectComposer } from '@react-three/postprocessing'
@@ -217,10 +215,6 @@ This illustrates that greater total cloud layer height increases computational c
 
 - [`CloudsEffect`](#cloudseffect)
 - [`ProceduralTexture`, `Procedural3DTexture`](#proceduraltexture-procedural3dtexture)
-- [`LocalWeather`](#localweather)
-- [`CloudShape`](#cloudshape)
-- [`CloudShapeDetail`](#cloudshapedetail)
-- [`Turbulence`](#turbulence)
 
 ## Clouds
 
@@ -523,7 +517,7 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 
 ### Parameters
 
-The number of parameters might seem overwhelming (though you may soon find yourself wanting more control). To get started, try adjusting [`qualityPreset`](#qualitypreset), [`coverage`](#coverage), cloud layer’s [`altitude`](#altitude), and [`height`](#height) to suit your needs. You can also experiment with the parameters in the [Basic story](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic).
+The number of parameters might seem overwhelming at first, but they provide fine control as needed. To get started, try adjusting [`qualityPreset`](#qualitypreset), [`coverage`](#coverage), cloud layer’s [`altitude`](#altitude), and [`height`](#height) to suit your needs. You can also experiment with the parameters in the [Basic story](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic).
 
 - [Rendering](#rendering)
 - [Cloud layers](#cloud-layers)
@@ -1009,19 +1003,74 @@ Controls the additional optical depth applied during early termination of rays. 
 
 ## ProceduralTexture, Procedural3DTexture
 
-## LocalWeather
+Interfaces for replacing texture files with classes that generate data procedurally. This reduces network payload at the cost of additional overhead during initialization.
+
+### Properties
+
+#### size
+
+```ts
+readonly size: number
+```
+
+The size of the output texture, assuming square or cubic dimensions.
+
+#### texture
+
+```ts
+readonly texture: Texture | Data3DTexture
+```
+
+The generated output texture.
+
+### Methods
+
+#### dispose
+
+```ts
+dispose: () => void
+```
+
+Frees the GPU-related resources allocated by this instance.
+
+#### render
+
+```ts
+render: (renderer: WebGLRenderer, deltaTime?: number) => void
+```
+
+Renders data to the output texture using the provided renderer. This method is called every frame.
+
+### Implementations
+
+#### LocalWeather
+
+Generates a procedural texture for [`localWeatherTexture`](#localweathertexture-1).
+
+```ts
+new LocalWeather()
+```
 
 → [Source](/packages/clouds/src/LocalWeather.ts)
 
-## CloudShape
+#### CloudShape, CloudShapeDetail
+
+Generates procedural textures for [`shapeTexture` and `shapeDetailTexture`](#shapetexture-shapedetailtexture-1).
+
+```ts
+new CloudShape()
+new CloudShapeDetail()
+```
 
 → [Source](/packages/clouds/src/CloudShape.ts)
 
-## CloudShapeDetail
+#### Turbulence
 
-→ [Source](/packages/clouds/src/CloudShapeDetail.ts)
+Generates a procedural texture for [`turbulenceTexture`](#turbulencetexture-1).
 
-## Turbulence
+```ts
+new Turbulence()
+```
 
 → [Source](/packages/clouds/src/Turbulence.ts)
 
