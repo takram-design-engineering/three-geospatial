@@ -1,7 +1,22 @@
 {
   "name": "@takram/three-geospatial",
   "version": "0.0.1-alpha.7",
+  "description": "Provides fundamental functions for rendering GIS data in Three.js and R3F",
+  "keywords": [
+    "three",
+    "three.js",
+    "geospatial"
+  ],
+  "homepage": "https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/core",
+  "bugs": {
+    "url": "https://github.com/takram-design-engineering/three-geospatial/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/takram-design-engineering/three-geospatial.git"
+  },
   "license": "MIT",
+  "author": "Shota Matsuda <shota@takram.com>",
   "type": "module",
   "exports": {
     ".": {
@@ -24,6 +39,7 @@
   "module": "./build/index.js",
   "types": "./types/index.d.ts",
   "files": [
+    "assets",
     "build",
     "src",
     "types",

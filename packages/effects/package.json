@@ -1,6 +1,22 @@
 {
   "name": "@takram/three-geospatial-effects",
   "version": "0.0.1-alpha.7",
+  "description": "A collection of post-processing effects",
+  "keywords": [
+    "three",
+    "three.js",
+    "geospatial"
+  ],
+  "homepage": "https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/effects",
+  "bugs": {
+    "url": "https://github.com/takram-design-engineering/three-geospatial/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/takram-design-engineering/three-geospatial.git"
+  },
+  "license": "MIT",
+  "author": "Shota Matsuda <shota@takram.com>",
   "type": "module",
   "exports": {
     ".": {
