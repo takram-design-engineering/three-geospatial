@@ -21,6 +21,11 @@ yarn add @takram/three-clouds
 
 Peer dependencies include `three` and `postprocessing`, as well as `react`, `@react-three/fiber`, and `@react-three/postprocessing` when using R3F.
 
+```
+three postprocessing
+react @react-three/fiber @react-three/postprocessing @react-three/drei
+```
+
 ## Usage
 
 ### Default clouds
