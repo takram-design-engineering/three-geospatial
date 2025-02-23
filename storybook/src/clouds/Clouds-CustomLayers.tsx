@@ -9,7 +9,6 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { LocalWeather } from '@takram/three-clouds'
 import { CloudLayer, Clouds } from '@takram/three-clouds/r3f'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 
@@ -45,12 +44,7 @@ const Scene: FC = () => {
       <OrbitControls ref={controlsRef} minDistance={1000} />
       <Atmosphere ref={atmosphereRef} textures='atmosphere'>
         <EffectComposer multisampling={0} enableNormalPass>
-          <Clouds
-            coverage={0.3}
-            shadow-maxFar={1e5}
-            disableDefaultLayers
-            localWeatherTexture={new LocalWeather()}
-          >
+          <Clouds coverage={0.3} shadow-maxFar={1e5} disableDefaultLayers>
             <CloudLayer
               channel='r'
               altitude={1000}
