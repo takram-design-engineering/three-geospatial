@@ -780,6 +780,14 @@ A scaling factor to adjust the brightness of the moon.
 | :-: | :-: |
 | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/lunar-radiance-scale-1.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/lunar-radiance-scale-5.jpg) |
 
+#### groundAlbedo
+
+```ts
+groundAlbedo: Color = new Color()
+```
+
+The albedo of the ground. Defaults to 0.
+
 ## StarsMaterial
 
 Represents the brightest stars as points at an infinite distance.
