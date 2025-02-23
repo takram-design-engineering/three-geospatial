@@ -321,4 +321,5 @@ $RECYCLE.BIN/
 
 storybook-static
 vite.config.*.timestamp*
+vitest.config.*.timestamp*
 .npmrc

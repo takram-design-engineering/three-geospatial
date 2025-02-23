@@ -162,18 +162,12 @@ const Scene: FC<SceneProps> = ({
   )
   usePovControls(camera, { collapsed: true })
   const motionDate = useLocalDateControls({ longitude, ...localDate })
-  const {
-    correctAltitude,
-    correctGeometricError,
-    photometric,
-    model: atmosphereModel
-  } = useControls(
+  const { correctAltitude, correctGeometricError, photometric } = useControls(
     'atmosphere',
     {
       correctAltitude: true,
       correctGeometricError: true,
-      photometric: true,
-      model: { value: 'default', options: ['default', 'hazy'] as const }
+      photometric: true
     },
     { collapsed: true }
   )
@@ -216,7 +210,6 @@ const Scene: FC<SceneProps> = ({
   return (
     <Atmosphere
       ref={atmosphereRef}
-      textures={atmosphereModel === 'default' ? 'atmosphere' : 'clouds'}
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
