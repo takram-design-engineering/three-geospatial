@@ -1,6 +1,19 @@
 # Changelog
 
-## [0.8.0] - 2025-02-11
+## [0.9.0] - 2025-02-23
+
+### Changed
+
+- Switched transpiler to Babel to support property decorators.
+- Updated prop types to use interfaces.
+- Refactored GLSL macro properties using decorators.
+- `AerialPerspectiveEffect`: Changed PCF filter for BSM to IGN + Vogel disk and reduced default sample count.
+
+### Fixed
+
+- Moved `type-fest` to dependencies.
+
+## [0.8.0] - 2025-02-12
 
 ### Changed
 
