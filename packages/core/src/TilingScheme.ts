@@ -42,17 +42,19 @@ export class TilingScheme {
     result = new TileCoordinate()
   ): TileCoordinate {
     const size = this.getSize(z, vectorScratch)
-    const width = this.rectangle.width / size.x
-    const height = this.rectangle.height / size.y
+    const { rectangle } = this
+    const width = rectangle.width / size.x
+    const height = rectangle.height / size.y
+    const { west, south, east } = rectangle
     let longitude = geodetic.longitude
-    if (this.rectangle.east < this.rectangle.west) {
+    if (east < west) {
       longitude += Math.PI * 2
     }
-    let x = Math.floor((longitude - this.rectangle.west) / width)
+    let x = Math.floor((longitude - west) / width)
     if (x >= size.x) {
       x = size.x - 1
     }
-    let y = Math.floor((geodetic.latitude - this.rectangle.south) / height)
+    let y = Math.floor((geodetic.latitude - south) / height)
     if (y >= size.y) {
       y = size.y - 1
     }
@@ -65,12 +67,14 @@ export class TilingScheme {
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/GeographicTilingScheme.js#L169
   getRectangle(tile: TileCoordinateLike, result = new Rectangle()): Rectangle {
     const size = this.getSize(tile.z, vectorScratch)
-    const width = this.rectangle.width / size.x
-    const height = this.rectangle.height / size.y
-    result.west = tile.x * width + this.rectangle.west
-    result.east = (tile.x + 1) * width + this.rectangle.west
-    result.north = this.rectangle.north - (size.y - tile.y - 1) * height
-    result.south = this.rectangle.north - (size.y - tile.y) * height
+    const { rectangle } = this
+    const width = rectangle.width / size.x
+    const height = rectangle.height / size.y
+    const { west, north } = rectangle
+    result.west = tile.x * width + west
+    result.east = (tile.x + 1) * width + west
+    result.north = north - (size.y - tile.y - 1) * height
+    result.south = north - (size.y - tile.y) * height
     return result
   }
 }
