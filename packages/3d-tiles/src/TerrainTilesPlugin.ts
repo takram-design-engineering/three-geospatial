@@ -7,7 +7,7 @@ import {
   type TilesRendererBase
 } from '3d-tiles-renderer'
 import stringTemplate from 'string-template'
-import { Mesh, MeshNormalMaterial, type Material } from 'three'
+import { Mesh, MeshStandardMaterial, type Material } from 'three'
 import invariant from 'tiny-invariant'
 import { type PartialDeep } from 'type-fest'
 
@@ -73,7 +73,7 @@ export class TerrainTilesPlugin {
   private tilesNeedUpdate = false
 
   constructor({
-    material = new MeshNormalMaterial(),
+    material = new MeshStandardMaterial(),
     rootGeometricError = 1e5,
     estimatedMinHeight = 0,
     estimatedMaxHeight = 4e3

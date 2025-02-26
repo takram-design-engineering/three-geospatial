@@ -13,6 +13,7 @@ import {
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
 import { type FC } from 'react'
+import { MeshNormalMaterial } from 'three'
 
 import { TerrainTilesPlugin } from '@takram/three-3d-tiles-support'
 
@@ -27,7 +28,10 @@ const Globe: FC = () => {
           autoRefreshToken: true
         }}
       />
-      <TilesPlugin plugin={TerrainTilesPlugin} />
+      <TilesPlugin
+        plugin={TerrainTilesPlugin}
+        args={{ material: new MeshNormalMaterial() }}
+      />
       <TilesPlugin plugin={UpdateOnChangePlugin} />
       <TilesPlugin plugin={TilesFadePlugin} />
       <GlobeControls enableDamping />
