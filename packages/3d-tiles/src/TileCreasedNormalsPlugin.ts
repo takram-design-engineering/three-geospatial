@@ -1,7 +1,24 @@
 import { type Tile } from '3d-tiles-renderer'
 import { BufferGeometry, Mesh, type Object3D } from 'three'
 
-import { toCreasedNormalsAsync } from './toCreasedNormalsAsync'
+import {
+  fromBufferGeometryLike,
+  toBufferGeometryLike
+} from '@takram/three-geospatial'
+import { queueTask } from '@takram/three-geospatial-worker'
+
+async function toCreasedNormalsAsync(
+  geometry: BufferGeometry,
+  creaseAngle?: number
+): Promise<BufferGeometry> {
+  const [geometryLike, transfer] = toBufferGeometryLike(geometry)
+  const result = await queueTask(
+    'toCreasedNormals',
+    [geometryLike, creaseAngle],
+    { transfer }
+  )
+  return fromBufferGeometryLike(result, geometry)
+}
 
 export interface TileCreasedNormalsPluginOptions {
   creaseAngle?: number
@@ -14,6 +31,7 @@ export class TileCreasedNormalsPlugin {
     this.options = { ...options }
   }
 
+  // Plugin method
   async processTileModel(scene: Object3D, tile: Tile): Promise<void> {
     const meshes: Array<Mesh<BufferGeometry>> = []
     scene.traverse(object => {
