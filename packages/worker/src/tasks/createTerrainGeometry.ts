@@ -1,6 +1,6 @@
 /* eslint-env worker */
 
-import decode from '@here/quantized-mesh-decoder'
+import decode, { type QuantizedMeshHeader } from '@here/quantized-mesh-decoder'
 import { type Vector3Like } from 'three'
 
 import {
@@ -21,6 +21,7 @@ export function createTerrainGeometry(
 ): TransferResult<{
   geometry: TerrainGeometry
   position: Vector3Like
+  header: QuantizedMeshHeader
 }> {
   const decoded = decode(data)
 
@@ -36,7 +37,8 @@ export function createTerrainGeometry(
   return Transfer(
     {
       geometry: geometryLike,
-      position: geometry.position
+      position: geometry.position,
+      header: decoded.header
     },
     transfer
   )

@@ -11,35 +11,18 @@ import {
 import { queueTask } from '@takram/three-geospatial-worker'
 
 import { IonAsset } from './IonAsset'
-
-interface Range {
-  startX: number
-  startY: number
-  endX: number
-  endY: number
-}
-
-// Note that no spec is available.
-interface Layer {
-  available: readonly Range[][]
-  bounds: readonly [number, number, number, number]
-  extensions: string[]
-  format: string
-  minzoom: number
-  maxzoom: number
-  tiles: string[]
-  version: string
-}
+import { type TerrainLayer } from './types'
 
 export class IonTerrain extends IonAsset {
   // TODO: Construct from layer.
   readonly tilingScheme = new TilingScheme()
 
-  private layerPromise?: Promise<Layer>
+  private layerPromise?: Promise<TerrainLayer>
 
-  async loadLayer(): Promise<Layer> {
+  async loadLayer(): Promise<TerrainLayer> {
     if (this.layerPromise == null) {
-      this.layerPromise = (async () => await this.fetch<Layer>('layer.json'))()
+      this.layerPromise = (async () =>
+        await this.fetch<TerrainLayer>('layer.json'))()
     }
     return await this.layerPromise
   }

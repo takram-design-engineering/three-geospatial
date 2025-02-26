@@ -114,7 +114,7 @@ const Globe: FC = () => {
         args={{ creaseAngle: radians(30) }}
       />
       <GlobeControls
-        enableDamping={true}
+        enableDamping
         // Globe controls adjust the camera height based on very low LoD tiles
         // during the initial load, causing the camera to unexpectedly jump to
         // the sky when set to a low altitude.
