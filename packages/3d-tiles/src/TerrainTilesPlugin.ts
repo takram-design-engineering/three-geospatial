@@ -7,7 +7,7 @@ import {
   type TilesRendererBase
 } from '3d-tiles-renderer'
 import stringTemplate from 'string-template'
-import { Mesh, MeshNormalMaterial } from 'three'
+import { Mesh, MeshNormalMaterial, type Material } from 'three'
 import invariant from 'tiny-invariant'
 import { type PartialDeep } from 'type-fest'
 
@@ -51,17 +51,38 @@ declare module '3d-tiles-renderer' {
 const coordinateScratch = /*#__PURE__*/ new TileCoordinate()
 const rectangleScratch = /*#__PURE__*/ new Rectangle()
 
+export interface TerrainTilesPluginOptions {
+  material?: Material
+  rootGeometricError?: number
+  estimatedMinHeight?: number
+  estimatedMaxHeight?: number
+}
+
 export class TerrainTilesPlugin {
+  material: Material
+  rootGeometricError: number
+  estimatedMinHeight: number
+  estimatedMaxHeight: number
+
   tiles: TilesRendererBase | null = null
   processQueue: PriorityQueue | null = null
-  rootGeometricError = 1e5
-  estimatedMinHeight = 0
-  estimatedMaxHeight = 4e3
 
   private url?: string
   private layer?: TerrainLayer
   private tilingScheme?: TilingScheme
   private tilesNeedUpdate = false
+
+  constructor({
+    material = new MeshNormalMaterial(),
+    rootGeometricError = 1e5,
+    estimatedMinHeight = 0,
+    estimatedMaxHeight = 4e3
+  }: TerrainTilesPluginOptions = {}) {
+    this.material = material
+    this.rootGeometricError = rootGeometricError
+    this.estimatedMinHeight = estimatedMinHeight
+    this.estimatedMaxHeight = estimatedMaxHeight
+  }
 
   get minLevel(): number {
     return this.layer?.minzoom ?? 0
@@ -208,7 +229,7 @@ export class TerrainTilesPlugin {
     tile.boundingVolume.region[5] = result.header.maxHeight
 
     const geometry = fromBufferGeometryLike(result.geometry)
-    const mesh = new Mesh(geometry, new MeshNormalMaterial())
+    const mesh = new Mesh(geometry, this.material)
     mesh.position.copy(result.position)
     return mesh
   }
@@ -252,7 +273,7 @@ export class TerrainTilesPlugin {
         this.tilingScheme = new TilingScheme(1, 1)
         break
       default:
-        throw new Error(`Scheme must be "tms": ${layer.scheme}`)
+        throw new Error(`Unknown projection: ${layer.projection}`)
     }
     this.url = tiles.rootURL
     this.layer = layer
