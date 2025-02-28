@@ -11,6 +11,7 @@ const Story: StoryFn = () => {
     <Canvas>
       <Data3DTextureViewer
         texture={textures.scatteringTexture}
+        fileName='scattering.exr'
         valueScale={0.5}
       />
     </Canvas>

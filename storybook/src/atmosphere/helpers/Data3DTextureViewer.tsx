@@ -1,23 +1,30 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useMemo, type FC } from 'react'
+import { button } from 'leva'
+import { useEffect, useMemo, useState, type FC } from 'react'
 import {
+  Data3DTexture,
   GLSL3,
+  LinearFilter,
+  NoColorSpace,
   ShaderMaterial,
   Uniform,
   Vector2,
-  Vector3,
-  type Data3DTexture
+  Vector3
 } from 'three'
+import { EXRLoader } from 'three-stdlib'
 
 import { useControls } from '../../helpers/useControls'
+import { createEXR3DTexture, saveEXR3DTexture } from './saveEXR3DTexture'
 
 export const Data3DTextureViewer: FC<{
   texture: Data3DTexture
+  fileName: string
   zoom?: number
   valueScale?: number
 }> = ({
   texture,
+  fileName,
   zoom: defaultZoom = 1,
   valueScale: defaultValueScale = 1
 }) => {
@@ -46,13 +53,50 @@ export const Data3DTextureViewer: FC<{
     [texture]
   )
 
-  const { gammaCorrect, zoom, valueScaleLog10 } = useControls({
+  const { gammaCorrect, zoom, valueScaleLog10, previewEXR } = useControls({
     gammaCorrect: true,
     zoom: { value: defaultZoom, min: 0.5, max: 10 },
-    valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 }
+    valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
+    previewEXR: false,
+    export: button(() => {
+      saveEXR3DTexture(texture, fileName).catch(error => {
+        console.error(error)
+      })
+    })
   })
 
+  const [exrTexture, setEXRTexture] = useState<Data3DTexture>()
+  useEffect(() => {
+    let canceled = false
+    ;(async () => {
+      const data = await createEXR3DTexture(texture)
+      if (canceled) {
+        return
+      }
+      const loader = new EXRLoader()
+      const parsed = loader.parse(data)
+      const exr = new Data3DTexture(
+        parsed.data,
+        parsed.width,
+        parsed.height / texture.image.depth,
+        texture.image.depth
+      )
+      exr.type = parsed.type
+      exr.minFilter = LinearFilter
+      exr.magFilter = LinearFilter
+      exr.colorSpace = NoColorSpace
+      exr.needsUpdate = true
+      setEXRTexture(exr)
+    })().catch(error => {
+      console.error(error)
+    })
+    return () => {
+      canceled = true
+    }
+  }, [texture])
+
   useFrame(({ size }) => {
+    material.uniforms.inputTexture.value = previewEXR ? exrTexture : texture
     material.uniforms.resolution.value.set(size.width, size.height)
     material.uniforms.zoom.value = zoom
     material.uniforms.columns.value = Math.floor(

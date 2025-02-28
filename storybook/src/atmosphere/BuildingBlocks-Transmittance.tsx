@@ -9,7 +9,11 @@ const Story: StoryFn = () => {
   const textures = useLoader(PrecomputedTexturesLoader, 'atmosphere')
   return (
     <Canvas>
-      <DataTextureViewer texture={textures.transmittanceTexture} zoom={2} />
+      <DataTextureViewer
+        texture={textures.transmittanceTexture}
+        fileName='transmittance.exr'
+        zoom={2}
+      />
     </Canvas>
   )
 }

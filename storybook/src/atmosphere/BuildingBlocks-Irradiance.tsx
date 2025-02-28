@@ -11,6 +11,7 @@ const Story: StoryFn = () => {
     <Canvas>
       <DataTextureViewer
         texture={textures.irradianceTexture}
+        fileName='irradiance.exr'
         zoom={4}
         valueScale={100}
       />
