@@ -1,4 +1,4 @@
-import { extend, useFrame, type Object3DNode } from '@react-three/fiber'
+import { extend, useFrame, type ThreeElement } from '@react-three/fiber'
 import {
   forwardRef,
   useContext,
@@ -14,10 +14,7 @@ import { AtmosphereContext } from './Atmosphere'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
-    sunDirectionalLight: Object3DNode<
-      SunDirectionalLight,
-      typeof SunDirectionalLight
-    >
+    sunDirectionalLight: ThreeElement<typeof SunDirectionalLight>
   }
 }
 

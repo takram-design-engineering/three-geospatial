@@ -1,5 +1,5 @@
 import { ScreenQuad } from '@react-three/drei'
-import { useFrame, type MeshProps } from '@react-three/fiber'
+import { useFrame, type ElementProps } from '@react-three/fiber'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 import { type BufferGeometry, type Color, type Mesh, type Vector3 } from 'three'
 
@@ -14,7 +14,7 @@ import { separateProps } from './separateProps'
 export type SkyImpl = Mesh<BufferGeometry, SkyMaterial>
 
 export interface SkyProps
-  extends MeshProps,
+  extends ElementProps<typeof Mesh>,
     AtmosphereMaterialProps,
     ExtendedProps<{
       sun?: boolean
