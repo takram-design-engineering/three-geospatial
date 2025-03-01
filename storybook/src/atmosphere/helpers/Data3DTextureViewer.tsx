@@ -10,7 +10,9 @@ import {
   ShaderMaterial,
   Uniform,
   Vector2,
-  Vector3
+  Vector3,
+  type FloatType,
+  type HalfFloatType
 } from 'three'
 import { EXRLoader } from 'three-stdlib'
 
@@ -20,11 +22,13 @@ import { createEXR3DTexture, saveEXR3DTexture } from './saveEXR3DTexture'
 export const Data3DTextureViewer: FC<{
   texture: Data3DTexture
   fileName: string
+  type?: typeof FloatType | typeof HalfFloatType
   zoom?: number
   valueScale?: number
 }> = ({
   texture,
   fileName,
+  type,
   zoom: defaultZoom = 1,
   valueScale: defaultValueScale = 1
 }) => {
@@ -53,23 +57,11 @@ export const Data3DTextureViewer: FC<{
     [texture]
   )
 
-  const { gammaCorrect, zoom, valueScaleLog10, previewEXR } = useControls({
-    gammaCorrect: true,
-    zoom: { value: defaultZoom, min: 0.5, max: 10 },
-    valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
-    previewEXR: false,
-    export: button(() => {
-      saveEXR3DTexture(texture, fileName).catch(error => {
-        console.error(error)
-      })
-    })
-  })
-
   const [exrTexture, setEXRTexture] = useState<Data3DTexture>()
   useEffect(() => {
     let canceled = false
     ;(async () => {
-      const data = await createEXR3DTexture(texture)
+      const data = await createEXR3DTexture(texture, type)
       if (canceled) {
         return
       }
@@ -93,7 +85,19 @@ export const Data3DTextureViewer: FC<{
     return () => {
       canceled = true
     }
-  }, [texture])
+  }, [texture, type])
+
+  const { gammaCorrect, zoom, valueScaleLog10, previewEXR } = useControls({
+    gammaCorrect: true,
+    zoom: { value: defaultZoom, min: 0.5, max: 10 },
+    valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
+    previewEXR: false,
+    export: button(() => {
+      saveEXR3DTexture(texture, fileName, type).catch(error => {
+        console.error(error)
+      })
+    })
+  })
 
   useFrame(({ size }) => {
     material.uniforms.inputTexture.value = previewEXR ? exrTexture : texture

@@ -10,7 +10,9 @@ import {
   NoColorSpace,
   ShaderMaterial,
   Uniform,
-  Vector2
+  Vector2,
+  type FloatType,
+  type HalfFloatType
 } from 'three'
 import { EXRLoader } from 'three-stdlib'
 
@@ -20,11 +22,13 @@ import { createEXRTexture, saveEXRTexture } from './saveEXRTexture'
 export const DataTextureViewer: FC<{
   texture: DataTexture
   fileName: string
+  type?: typeof FloatType | typeof HalfFloatType
   zoom?: number
   valueScale?: number
 }> = ({
   texture,
   fileName,
+  type,
   zoom: defaultZoom = 1,
   valueScale: defaultValueScale = 1
 }) => {
@@ -52,7 +56,7 @@ export const DataTextureViewer: FC<{
   useEffect(() => {
     let canceled = false
     ;(async () => {
-      const data = await createEXRTexture(texture)
+      const data = await createEXRTexture(texture, type)
       if (canceled) {
         return
       }
@@ -73,7 +77,7 @@ export const DataTextureViewer: FC<{
     return () => {
       canceled = true
     }
-  }, [texture])
+  }, [texture, type])
 
   const { gammaCorrect, zoom, valueScaleLog10, previewEXR } = useControls({
     gammaCorrect: true,
@@ -81,7 +85,7 @@ export const DataTextureViewer: FC<{
     valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
     previewEXR: false,
     export: button(() => {
-      saveEXRTexture(texture, fileName).catch(error => {
+      saveEXRTexture(texture, fileName, type).catch(error => {
         console.error(error)
       })
     })

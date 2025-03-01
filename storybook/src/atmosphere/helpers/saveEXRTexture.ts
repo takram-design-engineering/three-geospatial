@@ -10,12 +10,14 @@ import {
   Uniform,
   WebGLRenderer,
   WebGLRenderTarget,
-  type DataTexture
+  type DataTexture,
+  type FloatType
 } from 'three'
 import { EXRExporter } from 'three/addons/exporters/EXRExporter.js'
 
 export async function createEXRTexture(
-  texture: DataTexture
+  texture: DataTexture,
+  type: typeof FloatType | typeof HalfFloatType = HalfFloatType
 ): Promise<ArrayBuffer> {
   const material = new ShaderMaterial({
     glslVersion: GLSL3,
@@ -49,7 +51,7 @@ export async function createEXRTexture(
     texture.image.width,
     texture.image.height,
     {
-      type: HalfFloatType,
+      type,
       colorSpace: NoColorSpace
     }
   )
@@ -57,9 +59,7 @@ export async function createEXRTexture(
   renderer.render(scene, camera)
 
   const exporter = new EXRExporter()
-  const array = await exporter.parse(renderer, renderTarget, {
-    type: HalfFloatType
-  })
+  const array = await exporter.parse(renderer, renderTarget, { type })
 
   material.dispose()
   renderer.dispose()
@@ -69,9 +69,10 @@ export async function createEXRTexture(
 
 export async function saveEXRTexture(
   texture: DataTexture,
-  fileName: string
+  fileName: string,
+  type?: typeof FloatType | typeof HalfFloatType
 ): Promise<void> {
-  const buffer = await createEXRTexture(texture)
+  const buffer = await createEXRTexture(texture, type)
   const blob = new Blob([buffer])
 
   const a = document.createElement('a')
