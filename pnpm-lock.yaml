@@ -11,6 +11,9 @@ importers:
       '@here/quantized-mesh-decoder':
         specifier: ^1.2.8
         version: 1.2.8
+      '@petamoriken/float16':
+        specifier: ^3.9.1
+        version: 3.9.1
       '@react-three/drei':
         specifier: 9.121.4
         version: 9.121.4(@react-three/fiber@8.17.14(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.173.0))(@types/react@18.3.1)(@types/three@0.173.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.173.0)(use-sync-external-store@1.4.0(react@18.3.1))
@@ -2025,6 +2028,9 @@ packages:
 
   '@nx/workspace@20.4.6':
     resolution: {integrity: sha512-1rRRN4MJjghDvZSfCNpTn0IDkNJrU6W3VLn8cGjmJXJj8OXxbi3bYc1Ykk+zC99UmSRQ/8+SLorkX+FgTC1ODQ==}
+
+  '@petamoriken/float16@3.9.1':
+    resolution: {integrity: sha512-j+ejhYwY6PeB+v1kn7lZFACUIG97u90WxMuGosILFsl9d4Ovi0sjk0GlPfoEcx+FzvXZDAfioD+NGnnPamXgMA==}
 
   '@phenomnomnominal/tsquery@5.0.1':
     resolution: {integrity: sha512-3nVv+e2FQwsW8Aw6qTU6f+1rfcJ3hrcnvH/mu9i8YhxO+9sqbOfpL8m6PbET5+xKOlz/VSbp0RoYWYCtIsnmuA==}
@@ -10700,6 +10706,8 @@ snapshots:
       - '@swc-node/register'
       - '@swc/core'
       - debug
+
+  '@petamoriken/float16@3.9.1': {}
 
   '@phenomnomnominal/tsquery@5.0.1(typescript@5.7.3)':
     dependencies:

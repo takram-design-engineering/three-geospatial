@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@here/quantized-mesh-decoder": "^1.2.8",
+    "@petamoriken/float16": "^3.9.1",
     "@react-three/drei": "9.121.4",
     "@react-three/fiber": "8.17.14",
     "@react-three/postprocessing": "2.19.1",

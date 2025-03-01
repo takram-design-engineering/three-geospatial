@@ -1,7 +1,8 @@
-import { Loader, type TypedArray } from 'three'
+import { Loader } from 'three'
 import { type Class } from 'type-fest'
 
 import { ArrayBufferLoader } from './ArrayBufferLoader'
+import { type TypedArray } from './typedArray'
 import {
   parseFloat32Array,
   parseInt16Array,
