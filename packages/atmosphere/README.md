@@ -183,15 +183,11 @@ composer.addPass(
 // PrecomputedTexturesLoader defaults to loading single-precision float
 // textures. Check for OES_texture_float_linear and load the appropriate one.
 const texturesLoader = new PrecomputedTexturesLoader()
-texturesLoader.useHalfFloat =
-  renderer.getContext().getExtension('OES_texture_float_linear') == null
 texturesLoader.load('/assets', textures => {
   Object.assign(skyMaterial, textures)
-  skyMaterial.useHalfFloat = texturesLoader.useHalfFloat
   sunLight.transmittanceTexture = textures.transmittanceTexture
   skyLight.irradianceTexture = textures.irradianceTexture
   Object.assign(aerialPerspective, textures)
-  aerialPerspective.useHalfFloat = texturesLoader.useHalfFloat
 })
 
 const sunDirection = new Vector3()
@@ -307,14 +303,6 @@ textures: PrecomputedTextures | string = DEFAULT_PRECOMPUTED_TEXTURES_URL
 The [precomputed textures](assets), or a URL to the directory containing them.
 
 If left undefined, the textures will be loaded directly from GitHub.
-
-#### useHalfFloat
-
-```ts
-useHalfFloat: boolean = false
-```
-
-Whether the internal format of the textures is half-float.
 
 #### ellipsoid
 
@@ -662,14 +650,6 @@ transmittanceTexture: DataTexture | null = null
 ```
 
 The [precomputed textures](assets).
-
-#### useHalfFloat
-
-```ts
-useHalfFloat: boolean = false
-```
-
-See [useHalfFloat](#usehalffloat).
 
 #### ellipsoid
 
@@ -1061,14 +1041,6 @@ transmittanceTexture: DataTexture | null = null
 ```
 
 The [precomputed textures](assets).
-
-#### useHalfFloat
-
-```ts
-useHalfFloat: boolean = false
-```
-
-See [useHalfFloat](#usehalffloat).
 
 #### ellipsoid
 

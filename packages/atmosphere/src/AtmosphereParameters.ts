@@ -10,8 +10,7 @@ const paramKeys = [
   'rayleighScattering',
   'mieScattering',
   'miePhaseFunctionG',
-  'muSMinFloat',
-  'muSMinHalfFloat',
+  'muSMin',
   'skyRadianceToLuminance',
   'sunRadianceToLuminance',
   'luminousEfficiency'
@@ -50,8 +49,7 @@ export class AtmosphereParameters {
   rayleighScattering = new Vector3(0.005802, 0.013558, 0.0331)
   mieScattering = new Vector3(0.003996, 0.003996, 0.003996)
   miePhaseFunctionG = 0.8
-  muSMinFloat = Math.cos(radians(120))
-  muSMinHalfFloat = Math.cos(radians(102))
+  muSMin = Math.cos(radians(120))
 
   // Radiance to luminance conversion
   // prettier-ignore

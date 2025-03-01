@@ -1,4 +1,4 @@
-import { useLoader, useThree } from '@react-three/fiber'
+import { useLoader } from '@react-three/fiber'
 
 import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
 import {
@@ -8,21 +8,9 @@ import {
 
 export function useAtmosphereTextureProps(
   url = DEFAULT_PRECOMPUTED_TEXTURES_URL,
+  /** @deprecated useHalfFloat is now always true */
   useHalfFloat?: boolean
-): {
-  textures: PrecomputedTextures
-  useHalfFloat: boolean
-} {
-  const gl = useThree(({ gl }) => gl)
-  if (useHalfFloat == null) {
-    useHalfFloat =
-      gl.getContext().getExtension('OES_texture_float_linear') == null
-  }
-  const textures = useLoader(PrecomputedTexturesLoader, url, loader => {
-    loader.useHalfFloat = useHalfFloat
-  })
-  return {
-    textures,
-    useHalfFloat
-  }
+): { textures: PrecomputedTextures } {
+  const textures = useLoader(PrecomputedTexturesLoader, url)
+  return { textures }
 }

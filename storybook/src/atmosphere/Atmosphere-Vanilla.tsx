@@ -88,8 +88,6 @@ function init(): void {
   // SkyLightProbe computes sky irradiance of its position.
   skyLight = new SkyLightProbe()
   skyLight.position.copy(position)
-  // @ts-expect-error Perhaps this is an issue in @types/three. Even adding new
-  // Light() results in a type error.
   scene.add(skyLight)
 
   // SunDirectionalLight computes sunlight transmittance to its target position.
@@ -105,8 +103,6 @@ function init(): void {
   sunLight.shadow.mapSize.width = 2048
   sunLight.shadow.mapSize.height = 2048
   sunLight.shadow.normalBias = 1
-  // @ts-expect-error Perhaps this is an issue in @types/three. Even adding new
-  // Light() results in a type error.
   scene.add(sunLight)
   scene.add(sunLight.target)
 
@@ -168,8 +164,6 @@ function init(): void {
   // PrecomputedTexturesLoader defaults to loading single-precision float
   // textures. Check for OES_texture_float_linear and load the appropriate one.
   texturesLoader = new PrecomputedTexturesLoader()
-  texturesLoader.useHalfFloat =
-    renderer.getContext().getExtension('OES_texture_float_linear') == null
   texturesLoader.load('atmosphere', onPrecomputedTexturesLoad)
 
   container.appendChild(renderer.domElement)
@@ -178,11 +172,9 @@ function init(): void {
 
 function onPrecomputedTexturesLoad(textures: PrecomputedTextures): void {
   Object.assign(skyMaterial, textures)
-  skyMaterial.useHalfFloat = texturesLoader.useHalfFloat
   sunLight.transmittanceTexture = textures.transmittanceTexture
   skyLight.irradianceTexture = textures.irradianceTexture
   Object.assign(aerialPerspective, textures)
-  aerialPerspective.useHalfFloat = texturesLoader.useHalfFloat
 
   renderer.setAnimationLoop(render)
 }

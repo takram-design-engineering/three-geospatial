@@ -31,7 +31,8 @@ export interface PrecomputedTextures {
 }
 
 export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
-  useHalfFloat = false
+  /** @deprecated useHalfFloat is now always true */
+  useHalfFloat = true
 
   override load(
     url: string,
