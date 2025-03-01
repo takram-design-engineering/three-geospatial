@@ -1,7 +1,6 @@
 import { readFile, writeFile } from 'fs/promises'
-import { Float16Array } from '@petamoriken/float16'
 
-import { parseFloat32Array } from '@takram/three-geospatial'
+import { Float16Array, parseFloat32Array } from '@takram/three-geospatial'
 
 export default async function (): Promise<void> {
   const irradiance = new Float16Array([

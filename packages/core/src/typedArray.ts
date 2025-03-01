@@ -76,3 +76,5 @@ export function isTypedArray(value: unknown): value is TypedArray {
     value instanceof Float64Array
   )
 }
+
+export { Float16Array }

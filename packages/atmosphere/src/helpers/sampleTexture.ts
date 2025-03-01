@@ -1,8 +1,12 @@
-import { Float16Array } from '@petamoriken/float16'
 import { HalfFloatType, Vector3, type DataTexture, type Vector2 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { clamp, isTypedArray, type TypedArray } from '@takram/three-geospatial'
+import {
+  clamp,
+  Float16Array,
+  isTypedArray,
+  type TypedArray
+} from '@takram/three-geospatial'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()

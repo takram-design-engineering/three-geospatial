@@ -1,4 +1,3 @@
-import { Float16Array } from '@petamoriken/float16'
 import {
   ByteType,
   Data3DTexture,
@@ -18,7 +17,7 @@ import {
 import invariant from 'tiny-invariant'
 import { type Class, type WritableKeysOf } from 'type-fest'
 
-import { type TypedArray } from './typedArray'
+import { Float16Array, type TypedArray } from './typedArray'
 import {
   createTypedArrayLoaderClass,
   type TypedArrayLoader
