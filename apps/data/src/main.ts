@@ -1,10 +1,15 @@
 import path from 'path'
 import minimist from 'minimist'
 
+import atmosphere from './targets/atmosphere'
 import stars from './targets/stars'
 import stbn from './targets/stbn'
 
-const targets: Record<string, () => Promise<void> | undefined> = { stars, stbn }
+const targets: Record<string, () => Promise<void> | undefined> = {
+  atmosphere,
+  stars,
+  stbn
+}
 
 async function printTargets(): Promise<void> {
   console.log('Available targets:')

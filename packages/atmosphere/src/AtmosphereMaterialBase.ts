@@ -50,6 +50,7 @@ export interface AtmosphereMaterialProps {
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: DataTexture | null
+  /** @deprecated useHalfFloat is now always true */
   useHalfFloat?: boolean
 
   // Atmosphere controls
@@ -68,7 +69,6 @@ export interface AtmosphereMaterialBaseParameters
     AtmosphereMaterialProps {}
 
 export const atmosphereMaterialParametersBaseDefaults = {
-  useHalfFloat: false,
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
   photometric: true,
@@ -145,7 +145,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_rayleigh_scattering: new Uniform(atmosphere.rayleighScattering),
         u_mie_scattering: new Uniform(atmosphere.mieScattering),
         u_mie_phase_function_g: new Uniform(atmosphere.miePhaseFunctionG),
-        u_mu_s_min: new Uniform(0),
+        u_mu_s_min: new Uniform(atmosphere.muSMin),
         u_irradiance_texture: new Uniform(irradianceTexture),
         u_scattering_texture: new Uniform(scatteringTexture),
         u_single_mie_scattering_texture: new Uniform(scatteringTexture),
@@ -171,7 +171,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     })
 
     this.atmosphere = atmosphere
-    this.useHalfFloat = useHalfFloat
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.photometric = photometric
@@ -250,15 +249,13 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.uniforms.u_transmittance_texture.value = value
   }
 
+  /** @deprecated useHalfFloat is now always true */
   get useHalfFloat(): boolean {
-    return this.uniforms.u_mu_s_min.value === this.atmosphere.muSMinHalfFloat
+    return true
   }
 
-  set useHalfFloat(value: boolean) {
-    this.uniforms.u_mu_s_min.value = value
-      ? this.atmosphere.muSMinHalfFloat
-      : this.atmosphere.muSMinFloat
-  }
+  /** @deprecated useHalfFloat is now always true */
+  set useHalfFloat(value: boolean) {}
 
   get ellipsoidCenter(): Vector3 {
     return this.uniforms.ellipsoidCenter.value

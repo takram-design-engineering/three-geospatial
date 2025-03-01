@@ -1,14 +1,19 @@
-import { Vector3, type DataTexture, type Vector2 } from 'three'
+import { HalfFloatType, Vector3, type DataTexture, type Vector2 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { clamp } from '@takram/three-geospatial'
+import {
+  clamp,
+  Float16Array,
+  isTypedArray,
+  type TypedArray
+} from '@takram/three-geospatial'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
 function samplePixel(
-  data: Float32Array,
+  data: TypedArray,
   index: number,
   result: Vector3
 ): Vector3 {
@@ -21,8 +26,14 @@ export function sampleTexture(
   uv: Vector2,
   result: Vector3
 ): Vector3 {
-  const { data, width, height } = texture.image
-  invariant(data instanceof Float32Array)
+  const { width, height } = texture.image
+  invariant(isTypedArray(texture.image.data))
+  let data = texture.image.data
+  if (texture.type === HalfFloatType && data instanceof Uint16Array) {
+    // TODO: Cache instance
+    data = new Float16Array(data.buffer)
+  }
+
   const x = clamp(uv.x, 0, 1) * (width - 1)
   const y = clamp(uv.y, 0, 1) * (height - 1)
   const xi = Math.floor(x)

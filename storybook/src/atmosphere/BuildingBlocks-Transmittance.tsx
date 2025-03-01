@@ -6,10 +6,20 @@ import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import { DataTextureViewer } from './helpers/DataTextureViewer'
 
 const Story: StoryFn = () => {
-  const textures = useLoader(PrecomputedTexturesLoader, 'atmosphere')
+  const textures = useLoader(
+    PrecomputedTexturesLoader,
+    'atmosphere',
+    loader => {
+      loader.format = 'binary'
+    }
+  )
   return (
     <Canvas>
-      <DataTextureViewer texture={textures.transmittanceTexture} zoom={2} />
+      <DataTextureViewer
+        texture={textures.transmittanceTexture}
+        fileName='transmittance.exr'
+        zoom={2}
+      />
     </Canvas>
   )
 }

@@ -1,3 +1,5 @@
+import { Float16Array, getFloat16 } from '@petamoriken/float16'
+
 import { type TypedArray, type TypedArrayConstructor } from './typedArray'
 
 let hostLittleEndian: boolean | undefined
@@ -12,11 +14,13 @@ function isHostLittleEndian(): boolean {
   return hostLittleEndian
 }
 
-type GetValue = keyof {
-  [K in keyof DataView as DataView[K] extends (byteOffset: number) => number
-    ? K
-    : never]: DataView[K]
-}
+type GetValue =
+  | keyof {
+      [K in keyof DataView as DataView[K] extends (byteOffset: number) => number
+        ? K
+        : never]: DataView[K]
+    }
+  | 'getFloat16'
 
 function parseTypedArray<T extends TypedArrayConstructor, K extends GetValue>(
   buffer: ArrayBuffer,
@@ -32,9 +36,15 @@ function parseTypedArray<K extends GetValue>(
   littleEndian = true
 ): TypedArray {
   if (littleEndian === isHostLittleEndian()) {
+    // eslint-disable-next-line
+    // @ts-ignore False positive type error in Node.js
     return new TypedArray(buffer)
   }
-  const data = new DataView(buffer)
+  const data = Object.assign(new DataView(buffer), {
+    getFloat16(this: DataView, byteOffset: number, littleEndian?: boolean) {
+      return getFloat16(this, byteOffset, littleEndian)
+    }
+  })
   const array = new TypedArray(data.byteLength / TypedArray.BYTES_PER_ELEMENT)
   for (
     let index = 0, byteIndex = 0;
@@ -76,6 +86,11 @@ export const parseUint32Array: TypedArrayParser<Uint32Array> = (
   buffer,
   littleEndian
 ) => parseTypedArray(buffer, Uint32Array, 'getUint32', littleEndian)
+
+export const parseFloat16Array: TypedArrayParser<Float16Array> = (
+  buffer,
+  littleEndian
+) => parseTypedArray(buffer, Float16Array, 'getFloat16', littleEndian)
 
 export const parseFloat32Array: TypedArrayParser<Float32Array> = (
   buffer,

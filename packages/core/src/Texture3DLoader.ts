@@ -59,8 +59,8 @@ export class Texture3DLoader extends Loader<Data3DTexture> {
         texture.minFilter = LinearFilter
         texture.magFilter = LinearFilter
         texture.wrapS = RepeatWrapping
-        texture.wrapR = RepeatWrapping
         texture.wrapT = RepeatWrapping
+        texture.wrapR = RepeatWrapping
         texture.needsUpdate = true
 
         try {
