@@ -150,19 +150,3 @@ export function createDataTextureLoader<T extends TypedArray>(
 ): DataLoader<DataTexture, T> {
   return new (createDataTextureLoaderClass(parser, parameters))()
 }
-
-/** @deprecated Use createDataTextureLoaderClass instead. */
-export const Int16Data2DLoader =
-  /*#__PURE__*/ createDataTextureLoaderClass(parseInt16Array)
-
-/** @deprecated Use createDataTextureLoaderClass instead. */
-export const Uint16Data2DLoader =
-  /*#__PURE__*/ createDataTextureLoaderClass(parseUint16Array)
-
-/** @deprecated Use createDataTextureLoaderClass instead. */
-export const Float32Data2DLoader =
-  /*#__PURE__*/ createDataTextureLoaderClass(parseFloat32Array)
-
-/** @deprecated Use createData3DTextureLoaderClass instead. */
-export const Float32Data3DLoader =
-  /*#__PURE__*/ createData3DTextureLoaderClass(parseFloat32Array)
