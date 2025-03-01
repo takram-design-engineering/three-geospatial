@@ -36,7 +36,6 @@ export async function createEXR3DTexture(
           floor(gl_FragCoord.y / float(size.y))
         );
         outputColor = texelFetch(inputTexture, coord, 0);
-        outputColor.a = 1.0;
       }
     `,
     uniforms: {
