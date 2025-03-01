@@ -6,7 +6,13 @@ import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import { DataTextureViewer } from './helpers/DataTextureViewer'
 
 const Story: StoryFn = () => {
-  const textures = useLoader(PrecomputedTexturesLoader, 'atmosphere')
+  const textures = useLoader(
+    PrecomputedTexturesLoader,
+    'atmosphere',
+    loader => {
+      loader.format = 'binary'
+    }
+  )
   return (
     <Canvas>
       <DataTextureViewer
