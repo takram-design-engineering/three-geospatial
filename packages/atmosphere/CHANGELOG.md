@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.0] - 2025-03-02
+
+### Changed
+
+- Added OpenEXR precomputed textures and made them default, [#32](https://github.com/takram-design-engineering/three-geospatial/issues/32).
+- Updated binary precomputed textures to use half-float.
+- Deprecated `useHalfFloat`, as it is now always true.
+- Updated dependencies.
+
 ## [0.9.0] - 2025-02-23
 
 ### Changed
