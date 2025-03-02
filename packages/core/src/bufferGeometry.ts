@@ -1,10 +1,36 @@
-import { Box3, BufferAttribute, BufferGeometry, Sphere, Vector3 } from 'three'
+import {
+  Box3,
+  BufferAttribute,
+  BufferGeometry,
+  Sphere,
+  Vector3,
+  type TypedArray,
+  type Vector3Like
+} from 'three'
 
-export interface BufferGeometryLike
-  extends Pick<
-    BufferGeometry,
-    'attributes' | 'index' | 'boundingBox' | 'boundingSphere'
-  > {}
+export interface BufferGeometryLike {
+  attributes: Record<
+    string,
+    {
+      array: TypedArray
+      itemSize: number
+      normalized?: boolean
+    }
+  >
+  index?: {
+    array: TypedArray
+    itemSize: number
+    normalized?: boolean
+  } | null
+  boundingBox?: {
+    min: Vector3Like
+    max: Vector3Like
+  } | null
+  boundingSphere?: {
+    center: Vector3Like
+    radius: number
+  } | null
+}
 
 export function toBufferGeometryLike(
   geometry: BufferGeometry
