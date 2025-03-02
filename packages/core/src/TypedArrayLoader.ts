@@ -3,12 +3,7 @@ import { type Class } from 'type-fest'
 
 import { ArrayBufferLoader } from './ArrayBufferLoader'
 import { type TypedArray } from './typedArray'
-import {
-  parseFloat32Array,
-  parseInt16Array,
-  parseUint16Array,
-  type TypedArrayParser
-} from './typedArrayParsers'
+import { type TypedArrayParser } from './typedArrayParsers'
 
 export abstract class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
   abstract parseTypedArray(buffer: ArrayBuffer): T
@@ -56,15 +51,3 @@ export function createTypedArrayLoader<T extends TypedArray>(
 ): TypedArrayLoader<T> {
   return new (createTypedArrayLoaderClass(parser))()
 }
-
-/** @deprecated Use createTypedArrayLoaderClass instead. */
-export const Int16ArrayLoader =
-  /*#__PURE__*/ createTypedArrayLoaderClass(parseInt16Array)
-
-/** @deprecated Use createTypedArrayLoaderClass instead. */
-export const Uint16ArrayLoader =
-  /*#__PURE__*/ createTypedArrayLoaderClass(parseUint16Array)
-
-/** @deprecated Use createTypedArrayLoaderClass instead. */
-export const Float32ArrayLoader =
-  /*#__PURE__*/ createTypedArrayLoaderClass(parseFloat32Array)
