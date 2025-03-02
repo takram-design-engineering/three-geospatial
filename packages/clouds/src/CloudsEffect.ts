@@ -776,13 +776,13 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.transmittanceTexture = value
   }
 
+  /** @deprecated useHalfFloat is now always true */
   get useHalfFloat(): boolean {
-    return this.cloudsPass.currentMaterial.useHalfFloat
+    return true
   }
 
-  set useHalfFloat(value: boolean) {
-    this.cloudsPass.currentMaterial.useHalfFloat = value
-  }
+  /** @deprecated useHalfFloat is now always true */
+  set useHalfFloat(value: boolean) {}
 
   get ellipsoid(): Ellipsoid {
     return this.cloudsPass.currentMaterial.ellipsoid

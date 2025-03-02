@@ -78,7 +78,6 @@ export default defineConfig({
         'react-dom',
         'react/jsx-runtime',
         'three',
-        'three-stdlib',
         'postprocessing',
         '@react-three/fiber',
         '@react-three/drei',

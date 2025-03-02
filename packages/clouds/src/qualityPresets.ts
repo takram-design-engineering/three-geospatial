@@ -109,6 +109,10 @@ export const qualityPresets: Record<QualityPreset, Schema> = {
   high: defaults, // Consider high quality preset as default.
   ultra: {
     ...defaults,
+    clouds: {
+      ...defaults.clouds,
+      minStepSize: 10
+    },
     shadow: {
       ...defaults.shadow,
       mapSize: /*#__PURE__*/ new Vector2(1024, 1024)

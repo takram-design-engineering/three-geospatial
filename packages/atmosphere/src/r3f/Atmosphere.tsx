@@ -1,4 +1,3 @@
-import { useThree } from '@react-three/fiber'
 import {
   createContext,
   forwardRef,
@@ -45,6 +44,7 @@ export interface AtmosphereTransientProps extends AtmosphereTransientStates {}
 
 export interface AtmosphereContextValue {
   textures?: PrecomputedTextures | null
+  /** @deprecated useHalfFloat is now always true */
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
@@ -57,6 +57,7 @@ export const AtmosphereContext =
 
 export interface AtmosphereProps {
   textures?: PrecomputedTextures | string
+  /** @deprecated useHalfFloat is now always true */
   useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
@@ -96,19 +97,12 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     shadowLength: null
   })
 
-  const gl = useThree(({ gl }) => gl)
-  if (useHalfFloat == null) {
-    useHalfFloat =
-      gl.getContext().getExtension('OES_texture_float_linear') == null
-  }
-
   const [textures, setTextures] = useState(
     typeof texturesProp !== 'string' ? texturesProp : undefined
   )
   useEffect(() => {
     if (typeof texturesProp === 'string') {
       const loader = new PrecomputedTexturesLoader()
-      loader.useHalfFloat = useHalfFloat
       ;(async () => {
         setTextures(await loader.loadAsync(texturesProp))
       })().catch(error => {
@@ -117,18 +111,18 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     } else {
       setTextures(texturesProp)
     }
-  }, [texturesProp, useHalfFloat])
+  }, [texturesProp])
 
   const context = useMemo(
     () => ({
       textures,
-      useHalfFloat,
+      useHalfFloat: true,
       ellipsoid,
       correctAltitude,
       photometric,
       transientStates: transientStatesRef.current
     }),
-    [textures, useHalfFloat, ellipsoid, correctAltitude, photometric]
+    [textures, ellipsoid, correctAltitude, photometric]
   )
 
   const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {

@@ -1,22 +1,34 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useMemo, type FC } from 'react'
+import { button } from 'leva'
+import { useEffect, useMemo, useState, type FC } from 'react'
 import {
+  ClampToEdgeWrapping,
+  DataTexture,
   GLSL3,
+  LinearFilter,
+  NoColorSpace,
   ShaderMaterial,
   Uniform,
   Vector2,
-  type DataTexture
+  type FloatType,
+  type HalfFloatType
 } from 'three'
+import { EXRLoader } from 'three-stdlib'
 
 import { useControls } from '../../helpers/useControls'
+import { createEXRTexture, saveEXRTexture } from './saveEXRTexture'
 
 export const DataTextureViewer: FC<{
   texture: DataTexture
+  fileName: string
+  type?: typeof FloatType | typeof HalfFloatType
   zoom?: number
   valueScale?: number
 }> = ({
   texture,
+  fileName,
+  type,
   zoom: defaultZoom = 1,
   valueScale: defaultValueScale = 1
 }) => {
@@ -40,13 +52,47 @@ export const DataTextureViewer: FC<{
     [texture]
   )
 
-  const { gammaCorrect, zoom, valueScaleLog10 } = useControls({
+  const [exrTexture, setEXRTexture] = useState<DataTexture>()
+  useEffect(() => {
+    let canceled = false
+    ;(async () => {
+      const data = await createEXRTexture(texture, type)
+      if (canceled) {
+        return
+      }
+      const loader = new EXRLoader()
+      const parsed = loader.parse(data)
+      const exr = new DataTexture(parsed.data, parsed.width, parsed.height)
+      exr.type = parsed.type
+      exr.wrapS = ClampToEdgeWrapping
+      exr.wrapT = ClampToEdgeWrapping
+      exr.minFilter = LinearFilter
+      exr.magFilter = LinearFilter
+      exr.colorSpace = NoColorSpace
+      exr.needsUpdate = true
+      setEXRTexture(exr)
+    })().catch(error => {
+      console.error(error)
+    })
+    return () => {
+      canceled = true
+    }
+  }, [texture, type])
+
+  const { gammaCorrect, zoom, valueScaleLog10, previewEXR } = useControls({
     gammaCorrect: true,
     zoom: { value: defaultZoom, min: 0.5, max: 10 },
-    valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 }
+    valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
+    previewEXR: false,
+    export: button(() => {
+      saveEXRTexture(texture, fileName, type).catch(error => {
+        console.error(error)
+      })
+    })
   })
 
   useFrame(({ size }) => {
+    material.uniforms.inputTexture.value = previewEXR ? exrTexture : texture
     material.uniforms.resolution.value.set(size.width, size.height)
     material.uniforms.zoom.value = zoom
     material.uniforms.gammaCorrect.value = gammaCorrect

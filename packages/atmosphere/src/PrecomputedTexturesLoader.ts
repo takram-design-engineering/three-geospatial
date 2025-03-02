@@ -1,12 +1,17 @@
-import { Loader, type Data3DTexture, type DataTexture } from 'three'
-import { type Class } from 'type-fest'
+import {
+  LinearFilter,
+  Loader,
+  type Data3DTexture,
+  type DataTexture
+} from 'three'
+import { EXRLoader } from 'three-stdlib'
 import join from 'url-join'
 
 import {
-  createData3DTextureLoaderClass,
-  createDataTextureLoaderClass,
-  parseFloat32Array,
-  type DataLoader
+  createData3DTextureLoader,
+  createDataTextureLoader,
+  EXR3DLoader,
+  parseFloat16Array
 } from '@takram/three-geospatial'
 
 import {
@@ -20,8 +25,9 @@ import {
 } from './constants'
 
 interface LoadTextureOptions {
-  Loader: Class<DataLoader>
-  suffix?: string
+  loader: Loader<DataTexture | Data3DTexture>
+  extension: string
+  useHalfFloat?: boolean
 }
 
 export interface PrecomputedTextures {
@@ -31,7 +37,10 @@ export interface PrecomputedTextures {
 }
 
 export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
-  useHalfFloat = false
+  format: 'binary' | 'exr' = 'exr'
+
+  /** @deprecated useHalfFloat is now always true */
+  useHalfFloat = true
 
   override load(
     url: string,
@@ -42,18 +51,16 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
     const result: Record<string, DataTexture | Data3DTexture> = {}
     const loadTexture = (
       name: string,
-      { Loader, suffix = '' }: LoadTextureOptions
+      { loader, extension }: LoadTextureOptions
     ): void => {
-      const loader = new Loader(this.manager)
       loader.setRequestHeader(this.requestHeader)
       loader.setPath(this.path)
       loader.setWithCredentials(this.withCredentials)
       loader.load(
-        join(url, `${name}${suffix}.bin`),
+        join(url, `${name}${extension}`),
         texture => {
-          if (this.useHalfFloat) {
-            texture.internalFormat = 'RGBA16F'
-          }
+          texture.minFilter = LinearFilter
+          texture.magFilter = LinearFilter
           result[`${name}Texture`] = texture
           if (
             result.irradianceTexture != null &&
@@ -68,25 +75,44 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
       )
     }
 
-    loadTexture('irradiance', {
-      Loader: createDataTextureLoaderClass(parseFloat32Array, {
-        width: IRRADIANCE_TEXTURE_WIDTH,
-        height: IRRADIANCE_TEXTURE_HEIGHT
+    if (this.format === 'exr') {
+      loadTexture('irradiance', {
+        loader: new EXRLoader(this.manager),
+        extension: '.exr'
       })
-    })
-    loadTexture('scattering', {
-      Loader: createData3DTextureLoaderClass(parseFloat32Array, {
-        width: SCATTERING_TEXTURE_WIDTH,
-        height: SCATTERING_TEXTURE_HEIGHT,
-        depth: SCATTERING_TEXTURE_DEPTH
-      }),
-      suffix: this.useHalfFloat ? '' : '_float'
-    })
-    loadTexture('transmittance', {
-      Loader: createDataTextureLoaderClass(parseFloat32Array, {
-        width: TRANSMITTANCE_TEXTURE_WIDTH,
-        height: TRANSMITTANCE_TEXTURE_HEIGHT
+      loadTexture('scattering', {
+        loader: new EXR3DLoader(this.manager).setDepth(
+          SCATTERING_TEXTURE_DEPTH
+        ),
+        extension: '.exr'
       })
-    })
+      loadTexture('transmittance', {
+        loader: new EXRLoader(this.manager),
+        extension: '.exr'
+      })
+    } else {
+      loadTexture('irradiance', {
+        loader: createDataTextureLoader(parseFloat16Array, {
+          width: IRRADIANCE_TEXTURE_WIDTH,
+          height: IRRADIANCE_TEXTURE_HEIGHT
+        }),
+        extension: '.bin'
+      })
+      loadTexture('scattering', {
+        loader: createData3DTextureLoader(parseFloat16Array, {
+          width: SCATTERING_TEXTURE_WIDTH,
+          height: SCATTERING_TEXTURE_HEIGHT,
+          depth: SCATTERING_TEXTURE_DEPTH
+        }),
+        extension: '.bin'
+      })
+      loadTexture('transmittance', {
+        loader: createDataTextureLoader(parseFloat16Array, {
+          width: TRANSMITTANCE_TEXTURE_WIDTH,
+          height: TRANSMITTANCE_TEXTURE_HEIGHT
+        }),
+        extension: '.bin'
+      })
+    }
   }
 }

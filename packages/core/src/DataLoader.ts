@@ -1,33 +1,52 @@
 import {
   ByteType,
-  ClampToEdgeWrapping,
   Data3DTexture,
   DataTexture,
   FloatType,
+  HalfFloatType,
+  IntType,
   LinearFilter,
   Loader,
   RGBAFormat,
+  ShortType,
   UnsignedByteType,
-  type TypedArray
+  UnsignedIntType,
+  UnsignedShortType,
+  type TextureDataType
 } from 'three'
+import invariant from 'tiny-invariant'
 import { type Class, type WritableKeysOf } from 'type-fest'
 
-import { getTypedArrayElementType } from './typedArray'
+import { Float16Array, type TypedArray } from './typedArray'
 import {
   createTypedArrayLoaderClass,
   type TypedArrayLoader
 } from './TypedArrayLoader'
-import {
-  parseFloat32Array,
-  parseInt16Array,
-  parseUint16Array,
-  type TypedArrayParser
-} from './typedArrayParsers'
+import { type TypedArrayParser } from './typedArrayParsers'
 import { type Callable } from './types'
 
 // TODO: Move to types
 type ParameterProperties<T> = {
   [K in WritableKeysOf<T> as T[K] extends Callable ? never : K]: T[K]
+}
+
+function getTextureDataType(array: TypedArray): TextureDataType {
+  // prettier-ignore
+  const type = (
+    array instanceof Int8Array ? ByteType :
+    array instanceof Uint8Array ? UnsignedByteType :
+    array instanceof Uint8ClampedArray ? UnsignedByteType :
+    array instanceof Int16Array ? ShortType :
+    array instanceof Uint16Array ? UnsignedShortType :
+    array instanceof Int32Array ? IntType :
+    array instanceof Uint32Array ? UnsignedIntType :
+    array instanceof Float16Array ? HalfFloatType :
+    array instanceof Float32Array ? FloatType :
+    array instanceof Float64Array ? FloatType :
+    null
+  )
+  invariant(type != null)
+  return type
 }
 
 export interface DataTextureParameters
@@ -45,8 +64,6 @@ export interface Data3DTextureParameters
 
 const defaultDataTextureParameter = {
   format: RGBAFormat,
-  wrapS: ClampToEdgeWrapping,
-  wrapT: ClampToEdgeWrapping,
   minFilter: LinearFilter,
   magFilter: LinearFilter
 } satisfies DataTextureParameters & Data3DTextureParameters
@@ -74,7 +91,8 @@ export abstract class DataLoader<
     loader.load(
       url,
       array => {
-        texture.image.data = array as typeof texture.image.data
+        texture.image.data =
+          array instanceof Float16Array ? new Uint16Array(array.buffer) : array
         const { width, height, depth, ...params } = this.parameters
         if (width != null) {
           texture.image.width = width
@@ -87,13 +105,7 @@ export abstract class DataLoader<
         }
 
         // Populate the default texture type for the array type.
-        const type = getTypedArrayElementType(array)
-        texture.type =
-          type === 'uint8'
-            ? UnsignedByteType
-            : type === 'int8'
-              ? ByteType
-              : FloatType
+        texture.type = getTextureDataType(array)
 
         Object.assign(texture, params)
         texture.needsUpdate = true
@@ -150,19 +162,3 @@ export function createDataTextureLoader<T extends TypedArray>(
 ): DataLoader<DataTexture, T> {
   return new (createDataTextureLoaderClass(parser, parameters))()
 }
-
-/** @deprecated Use createDataTextureLoaderClass instead. */
-export const Int16Data2DLoader =
-  /*#__PURE__*/ createDataTextureLoaderClass(parseInt16Array)
-
-/** @deprecated Use createDataTextureLoaderClass instead. */
-export const Uint16Data2DLoader =
-  /*#__PURE__*/ createDataTextureLoaderClass(parseUint16Array)
-
-/** @deprecated Use createDataTextureLoaderClass instead. */
-export const Float32Data2DLoader =
-  /*#__PURE__*/ createDataTextureLoaderClass(parseFloat32Array)
-
-/** @deprecated Use createData3DTextureLoaderClass instead. */
-export const Float32Data3DLoader =
-  /*#__PURE__*/ createData3DTextureLoaderClass(parseFloat32Array)
