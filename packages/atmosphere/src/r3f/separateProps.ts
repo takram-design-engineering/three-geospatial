@@ -1,11 +1,13 @@
-import { type ExtendedProps } from '@takram/three-geospatial/r3f'
+import { type OverwriteMathProps } from '@takram/three-geospatial/r3f'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 
-export function separateProps<T extends ExtendedProps<AtmosphereMaterialProps>>(
+export function separateProps<
+  T extends OverwriteMathProps<AtmosphereMaterialProps>
+>(
   params: T
 ): [
-  ExtendedProps<AtmosphereMaterialProps>,
+  OverwriteMathProps<AtmosphereMaterialProps>,
   Omit<T, keyof AtmosphereMaterialProps>
 ] {
   const {
