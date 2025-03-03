@@ -26,9 +26,9 @@ export function createTerrainGeometry(
   const decoded = decode(data)
 
   const tilingScheme = new TilingScheme().copy(tilingSchemeLike)
-  const rectangle = tilingScheme.getRectangle({ x, y, z })
+  const region = tilingScheme.getRegion({ x, y, z })
 
-  const geometry = new TerrainGeometry(decoded, rectangle)
+  const geometry = new TerrainGeometry(decoded, region)
   geometry.computeBoundingSphere() // Much cheaper to compute this here.
   if (computeVertexNormals) {
     geometry.computeVertexNormals()

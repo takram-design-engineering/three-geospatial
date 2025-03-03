@@ -14,7 +14,7 @@ import { type PartialDeep } from 'type-fest'
 import {
   fromBufferGeometryLike,
   radians,
-  Rectangle,
+  Region,
   TileCoordinate,
   TilingScheme
 } from '@takram/three-geospatial'
@@ -49,7 +49,7 @@ declare module '3d-tiles-renderer' {
 }
 
 const coordinateScratch = /*#__PURE__*/ new TileCoordinate()
-const rectangleScratch = /*#__PURE__*/ new Rectangle()
+const regionScratch = /*#__PURE__*/ new Region()
 
 export interface TerrainTilesPluginOptions {
   material?: Material
@@ -130,11 +130,11 @@ export class TerrainTilesPlugin {
 
   private createTile(x: number, y: number, z: number): TileBase {
     invariant(this.tilingScheme != null)
-    const rectangle = this.tilingScheme.getRectangle(
+    const region = this.tilingScheme.getRegion(
       coordinateScratch.set(x, y, z),
-      rectangleScratch
+      regionScratch
     )
-    const { west, north, east, south } = rectangle
+    const { west, north, east, south } = region
     return {
       refine: 'REPLACE',
       geometricError: this.rootGeometricError / Math.pow(2, z),

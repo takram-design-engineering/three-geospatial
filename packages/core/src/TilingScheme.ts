@@ -1,7 +1,7 @@
 import { Vector2 } from 'three'
 
 import { type GeodeticLike } from './Geodetic'
-import { Rectangle, type RectangleLike } from './Rectangle'
+import { Region, type RegionLike } from './Region'
 import { TileCoordinate, type TileCoordinateLike } from './TileCoordinate'
 
 const vectorScratch = /*#__PURE__*/ new Vector2()
@@ -9,7 +9,7 @@ const vectorScratch = /*#__PURE__*/ new Vector2()
 export interface TilingSchemeLike {
   readonly width: number
   readonly height: number
-  readonly rectangle: RectangleLike
+  readonly region: RegionLike
 }
 
 // TODO: Support slippyMap and EPSG:3857
@@ -17,17 +17,17 @@ export class TilingScheme {
   constructor(
     public width = 2,
     public height = 1,
-    public rectangle = Rectangle.MAX
+    public region = Region.MAX
   ) {}
 
   clone(): TilingScheme {
-    return new TilingScheme(this.width, this.height, this.rectangle.clone())
+    return new TilingScheme(this.width, this.height, this.region.clone())
   }
 
   copy(other: TilingSchemeLike): this {
     this.width = other.width
     this.height = other.height
-    this.rectangle.copy(other.rectangle)
+    this.region.copy(other.region)
     return this
   }
 
@@ -42,10 +42,10 @@ export class TilingScheme {
     result = new TileCoordinate()
   ): TileCoordinate {
     const size = this.getSize(z, vectorScratch)
-    const { rectangle } = this
-    const width = rectangle.width / size.x
-    const height = rectangle.height / size.y
-    const { west, south, east } = rectangle
+    const { region } = this
+    const width = region.width / size.x
+    const height = region.height / size.y
+    const { west, south, east } = region
     let longitude = geodetic.longitude
     if (east < west) {
       longitude += Math.PI * 2
@@ -65,16 +65,21 @@ export class TilingScheme {
   }
 
   // Reference: https://github.com/CesiumGS/cesium/blob/1.122/packages/engine/Source/Core/GeographicTilingScheme.js#L169
-  getRectangle(tile: TileCoordinateLike, result = new Rectangle()): Rectangle {
+  getRegion(tile: TileCoordinateLike, result = new Region()): Region {
     const size = this.getSize(tile.z, vectorScratch)
-    const { rectangle } = this
-    const width = rectangle.width / size.x
-    const height = rectangle.height / size.y
-    const { west, north } = rectangle
+    const { region } = this
+    const width = region.width / size.x
+    const height = region.height / size.y
+    const { west, north } = region
     result.west = tile.x * width + west
     result.east = (tile.x + 1) * width + west
     result.north = north - (size.y - tile.y - 1) * height
     result.south = north - (size.y - tile.y) * height
     return result
+  }
+
+  /** @deprecated Use getRegion instead. */
+  getRectangle(...args: Parameters<TilingScheme['getRegion']>): Region {
+    return this.getRegion(...args)
   }
 }

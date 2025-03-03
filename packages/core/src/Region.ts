@@ -1,16 +1,22 @@
 import { Geodetic } from './Geodetic'
 
-export type RectangleTuple = [number, number, number, number]
+export type RegionTuple = [number, number, number, number]
 
-export interface RectangleLike {
+/** @deprecated Use RegionTuple instead. */
+export type RectangleTuple = RegionTuple
+
+export interface RegionLike {
   readonly west: number
   readonly south: number
   readonly east: number
   readonly north: number
 }
 
-export class Rectangle {
-  static readonly MAX = /*#__PURE__*/ new Rectangle(
+/** @deprecated Use RegionLike instead. */
+export type RectangleLike = RegionLike
+
+export class Region {
+  static readonly MAX = /*#__PURE__*/ new Region(
     Geodetic.MIN_LONGITUDE,
     Geodetic.MIN_LATITUDE,
     Geodetic.MAX_LONGITUDE,
@@ -44,11 +50,11 @@ export class Rectangle {
     return this
   }
 
-  clone(): Rectangle {
-    return new Rectangle(this.west, this.south, this.east, this.north)
+  clone(): Region {
+    return new Region(this.west, this.south, this.east, this.north)
   }
 
-  copy(other: RectangleLike): this {
+  copy(other: RegionLike): this {
     this.west = other.west
     this.south = other.south
     this.east = other.east
@@ -56,7 +62,7 @@ export class Rectangle {
     return this
   }
 
-  equals(other: RectangleLike): boolean {
+  equals(other: RegionLike): boolean {
     return (
       other.west === this.west &&
       other.south === this.south &&
@@ -95,3 +101,6 @@ export class Rectangle {
     yield this.north
   }
 }
+
+/** @deprecated Use Region instead. */
+export const Rectangle = Region

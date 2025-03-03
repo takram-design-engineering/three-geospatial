@@ -8,7 +8,7 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { Geodetic, lerp, type Rectangle } from '@takram/three-geospatial'
+import { Geodetic, lerp, type Region } from '@takram/three-geospatial'
 
 import { decodeOctNormal } from './decodeOctNormal'
 
@@ -20,7 +20,7 @@ export class TerrainGeometry extends BufferGeometry {
 
   constructor(
     readonly data: QuantizedMeshData,
-    rectangle: Rectangle
+    region: Region
   ) {
     super()
 
@@ -38,7 +38,7 @@ export class TerrainGeometry extends BufferGeometry {
     const index = new BufferAttribute(triangleIndices, 1)
     this.setIndex(index)
     const position = this.createPositionAttribute(vertexData, {
-      rectangle,
+      region,
       minHeight: data.header.minHeight,
       maxHeight: data.header.maxHeight
     })
@@ -86,7 +86,7 @@ export class TerrainGeometry extends BufferGeometry {
   createPositionAttribute(
     vertexData: Uint16Array,
     params: {
-      rectangle: Rectangle
+      region: Region
       minHeight: number
       maxHeight: number
     }
@@ -98,8 +98,8 @@ export class TerrainGeometry extends BufferGeometry {
     const vs = vertexData.subarray(vertexCount, vertexCount * 2)
     const heights = vertexData.subarray(vertexCount * 2, vertexCount * 3)
 
-    const { rectangle, minHeight, maxHeight } = params
-    const { west, south, east, north } = rectangle
+    const { region, minHeight, maxHeight } = params
+    const { west, south, east, north } = region
     for (
       let index = 0, vertexIndex = 0;
       index < array.length;
