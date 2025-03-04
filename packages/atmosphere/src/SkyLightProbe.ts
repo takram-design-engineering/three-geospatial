@@ -29,6 +29,7 @@ function getUvFromRMuS(
 // Constant term: L0 * sqrt(π)/2 == 0.5
 // Linear term: L1 * π/3 * sqrt(3)/sqrt(π) == n/2
 // See: https://github.com/mrdoob/three.js/blob/r170/src/math/SphericalHarmonics3.js#L85
+// See also: https://www.ppsloan.org/publications/StupidSH36.pdf
 const L0_COEFF = 1 / Math.sqrt(Math.PI)
 const L1_COEFF = Math.sqrt(3) / (2 * Math.sqrt(Math.PI))
 

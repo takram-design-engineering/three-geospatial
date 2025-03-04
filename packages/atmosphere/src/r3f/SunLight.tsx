@@ -9,7 +9,10 @@ import {
 import { mergeRefs } from 'react-merge-refs'
 import { Object3D } from 'three'
 
-import { SunDirectionalLight } from '../SunDirectionalLight'
+import {
+  SunDirectionalLight,
+  sunDirectionalLightParametersDefaults
+} from '../SunDirectionalLight'
 import { AtmosphereContext } from './Atmosphere'
 
 declare module '@react-three/fiber' {
@@ -48,6 +51,7 @@ export const SunLight = /*#__PURE__*/ forwardRef<
     <>
       <sunDirectionalLight
         ref={mergeRefs([ref, forwardedRef])}
+        {...sunDirectionalLightParametersDefaults}
         {...contextProps}
         {...textures}
         {...props}

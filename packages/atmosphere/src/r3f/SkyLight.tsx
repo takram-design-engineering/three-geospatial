@@ -7,7 +7,10 @@ import {
 } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 
-import { SkyLightProbe } from '../SkyLightProbe'
+import {
+  SkyLightProbe,
+  skyLightProbeParametersDefaults
+} from '../SkyLightProbe'
 import { AtmosphereContext } from './Atmosphere'
 
 declare module '@react-three/fiber' {
@@ -41,6 +44,7 @@ export const SkyLight = /*#__PURE__*/ forwardRef<SkyLightProbe, SkyLightProps>(
     return (
       <skyLightProbe
         ref={mergeRefs([ref, forwardedRef])}
+        {...skyLightProbeParametersDefaults}
         {...contextProps}
         {...textures}
         {...props}
