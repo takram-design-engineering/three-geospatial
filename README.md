@@ -16,8 +16,6 @@ Our contribution to the project is scheduled to conclude by March 2025.
 | [core](packages/core) | Provides fundamental functions for rendering GIS data | Alpha | [@takram/three-geospatial](https://www.npmjs.com/package/@takram/three-geospatial) |
 | [effects](packages/effects) | A collection of post-processing effects | Alpha | [@takram/three-geospatial-effects](https://www.npmjs.com/package/@takram/three-geospatial-effects) |
 
-Other packages not listed above are considered “examples” and are not intended for production use.
-
 ## Developing
 
 This repository uses a monorepo setup with [Nx](https://nx.dev). Please refer to its documentation for details of the concept.
@@ -114,8 +112,6 @@ rm -r storybook/node_modules
 nx reset
 nx storybook
 ```
-
-If the problem persists, try clearing the browser cache.
 
 ### Generating a library
 

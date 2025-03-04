@@ -1,8 +1,8 @@
-import { type ElementProps } from '@react-three/fiber'
+import { type MeshProps } from '@react-three/fiber'
 import { sumBy } from 'lodash-es'
 import { forwardRef, memo, useEffect, useMemo } from 'react'
 import { clear, suspend } from 'suspend-react'
-import { BatchedMesh, Matrix4, Vector3, type Mesh } from 'three'
+import { BatchedMesh, Matrix4, Vector3 } from 'three'
 
 import {
   TileCoordinate,
@@ -14,9 +14,7 @@ import { type IonTerrain } from '../IonTerrain'
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 
-export interface BatchedTerrainTileProps
-  extends TileCoordinateLike,
-    ElementProps<typeof Mesh> {
+export interface BatchedTerrainTileProps extends TileCoordinateLike, MeshProps {
   terrain: IonTerrain
   depth: number
   computeVertexNormals?: boolean

@@ -1,11 +1,16 @@
-import { type ElementProps } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
-import { NormalEffect, normalEffectOptionsDefaults } from '../NormalEffect'
+import {
+  NormalEffect,
+  normalEffectOptionsDefaults,
+  type NormalEffectOptions
+} from '../NormalEffect'
 import { type EffectComposerContextValue } from './EffectComposer'
+import { type EffectProps } from './types'
 
-export interface NormalProps extends ElementProps<typeof NormalEffect> {}
+export interface NormalProps
+  extends EffectProps<typeof NormalEffect, NormalEffectOptions> {}
 
 export const Normal = /*#__PURE__*/ forwardRef<NormalEffect, NormalProps>(
   function Normal(props, forwardedRef) {

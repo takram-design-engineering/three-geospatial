@@ -1,7 +1,7 @@
 import {
   extend,
-  type ElementProps,
-  type ThreeElement
+  type BufferGeometryNode,
+  type MeshProps
 } from '@react-three/fiber'
 import { forwardRef, useRef } from 'react'
 import { mergeRefs } from 'react-merge-refs'
@@ -11,12 +11,14 @@ import { EllipsoidGeometry } from '../EllipsoidGeometry'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
-    ellipsoidGeometry: ThreeElement<typeof EllipsoidGeometry>
+    ellipsoidGeometry: BufferGeometryNode<
+      EllipsoidGeometry,
+      typeof EllipsoidGeometry
+    >
   }
 }
 
-export interface EllipsoidMeshProps
-  extends Omit<ElementProps<typeof Mesh>, 'args'> {
+export interface EllipsoidMeshProps extends Omit<MeshProps, 'args'> {
   args?: ConstructorParameters<typeof EllipsoidGeometry>
 }
 

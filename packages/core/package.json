@@ -54,8 +54,8 @@
     "type-fest": "^4.33.0"
   },
   "peerDependencies": {
-    "@react-three/fiber": ">=9.0.4",
-    "react": ">=19.0",
+    "@react-three/fiber": ">=8.17.10",
+    "react": ">=18.0",
     "three": ">=0.170.0"
   },
   "publishConfig": {

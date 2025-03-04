@@ -1,12 +1,14 @@
-import { type ElementProps } from '@react-three/fiber'
 import { forwardRef, useEffect, useMemo } from 'react'
 
 import {
   LensFlareEffect,
-  lensFlareEffectOptionsDefaults
+  lensFlareEffectOptionsDefaults,
+  type LensFlareEffectOptions
 } from '../LensFlareEffect'
+import { type EffectProps } from './types'
 
-export interface LensFlareProps extends ElementProps<typeof LensFlareEffect> {}
+export interface LensFlareProps
+  extends EffectProps<typeof LensFlareEffect, LensFlareEffectOptions> {}
 
 export const LensFlare = /*#__PURE__*/ forwardRef<
   LensFlareEffect,

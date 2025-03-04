@@ -1,10 +1,11 @@
-import { useFrame, type ElementProps } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { RenderPass } from 'postprocessing'
 import { forwardRef, useContext, useEffect, useMemo, useState } from 'react'
 import { Texture, type Data3DTexture } from 'three'
 
 import { DEFAULT_STBN_URL, STBNLoader } from '@takram/three-geospatial'
+import { type PassThoughInstanceProps } from '@takram/three-geospatial/r3f'
 
 import {
   AerialPerspectiveEffect,
@@ -37,7 +38,11 @@ function useSTBNTextureState(
 
 export interface AerialPerspectiveProps
   extends Omit<
-    ElementProps<typeof AerialPerspectiveEffect, AerialPerspectiveEffect>,
+    PassThoughInstanceProps<
+      AerialPerspectiveEffect,
+      [],
+      Partial<AerialPerspectiveEffect>
+    >,
     'stbnTexture'
   > {
   stbnTexture?: Data3DTexture | string

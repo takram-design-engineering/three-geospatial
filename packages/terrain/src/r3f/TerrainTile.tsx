@@ -1,4 +1,4 @@
-import { type ElementProps } from '@react-three/fiber'
+import { type MeshProps } from '@react-three/fiber'
 import { forwardRef, memo, useEffect, useRef } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import { type BufferGeometry, type Mesh } from 'three'
@@ -8,9 +8,7 @@ import { type TerrainGeometry } from '@takram/three-terrain-core'
 
 import { type IonTerrain } from '../IonTerrain'
 
-export interface TerrainTileProps
-  extends TileCoordinateLike,
-    ElementProps<typeof Mesh> {
+export interface TerrainTileProps extends TileCoordinateLike, MeshProps {
   terrain: IonTerrain
   computeVertexNormals?: boolean
 }

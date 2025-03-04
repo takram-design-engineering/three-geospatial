@@ -1,4 +1,4 @@
-import { useFrame, useThree, type ElementProps } from '@react-three/fiber'
+import { useFrame, useThree, type PointsProps } from '@react-three/fiber'
 import {
   forwardRef,
   useContext,
@@ -30,9 +30,7 @@ declare module 'three' {
 
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
-export interface StarsProps
-  extends ElementProps<typeof Points>,
-    AtmosphereMaterialProps {
+export interface StarsProps extends PointsProps, AtmosphereMaterialProps {
   data?: ArrayBuffer | string
   pointSize?: number
   radianceScale?: number
