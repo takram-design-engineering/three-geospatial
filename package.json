@@ -11,7 +11,7 @@
   "dependencies": {
     "@here/quantized-mesh-decoder": "^1.2.8",
     "@petamoriken/float16": "^3.9.1",
-    "@react-three/drei": "10.0.3",
+    "@react-three/drei": "10.0.4",
     "@react-three/fiber": "9.0.4",
     "@react-three/postprocessing": "3.0.4",
     "astronomy-engine": "^2.1.19",
@@ -74,7 +74,7 @@
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "@types/string-template": "^1.0.6",
-    "@types/three": "0.173.0",
+    "@types/three": "0.174.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-react": "^4.3.4",
@@ -120,13 +120,13 @@
   },
   "pnpm": {
     "overrides": {
-      "@react-three/drei": "$@react-three/drei",
-      "@react-three/fiber": "$@react-three/fiber",
-      "@react-three/postprocessing": "$@react-three/postprocessing",
-      "postprocessing": "$postprocessing",
-      "react": "$react",
-      "react-dom": "$react-dom",
-      "three": "$three"
+      "@react-three/drei": ">=10.0.2",
+      "@react-three/fiber": ">=9.0.4",
+      "@react-three/postprocessing": ">=3.0.4",
+      "postprocessing": ">=6.36.7",
+      "react": ">=19.0",
+      "react-dom": ">=19.0",
+      "three": ">=0.170.0"
     }
   }
 }
