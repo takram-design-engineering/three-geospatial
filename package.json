@@ -117,5 +117,16 @@
     "vite": "^5.4.14",
     "vite-plugin-dts": "~3.8.3",
     "vitest": "^1.6.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "@react-three/drei": "$@react-three/drei",
+      "@react-three/fiber": "$@react-three/fiber",
+      "@react-three/postprocessing": "$@react-three/postprocessing",
+      "postprocessing": "$postprocessing",
+      "react": "$react",
+      "react-dom": "$react-dom",
+      "three": "$three"
+    }
   }
 }
