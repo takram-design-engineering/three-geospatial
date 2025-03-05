@@ -1,16 +1,14 @@
+import { type ElementProps } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { forwardRef, useContext, useEffect, useMemo } from 'react'
 
 import {
   GeometryEffect,
-  geometryEffectOptionsDefaults,
-  type GeometryEffectOptions
+  geometryEffectOptionsDefaults
 } from '../GeometryEffect'
 import { type EffectComposerContextValue } from './EffectComposer'
-import { type EffectProps } from './types'
 
-export interface GeometryProps
-  extends EffectProps<typeof GeometryEffect, GeometryEffectOptions> {}
+export interface GeometryProps extends ElementProps<typeof GeometryEffect> {}
 
 export const Geometry = /*#__PURE__*/ forwardRef<GeometryEffect, GeometryProps>(
   function Geometry(props, forwardedRef) {

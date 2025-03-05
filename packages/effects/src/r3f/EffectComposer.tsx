@@ -1,4 +1,4 @@
-import { useFrame, useInstanceHandle, useThree } from '@react-three/fiber'
+import { useFrame, useThree, type Instance } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import {
   Effect,
@@ -21,6 +21,7 @@ import {
   HalfFloatType,
   NoToneMapping,
   type Camera,
+  type Group,
   type Scene,
   type TextureDataType
 } from 'three'
@@ -120,19 +121,21 @@ export const EffectComposer = /*#__PURE__*/ forwardRef<
     enabled ? renderPriority : 0
   )
 
-  const group = useRef(null)
-  const instance = useInstanceHandle(group)
+  const group = useRef<Group>(null)
   useLayoutEffect(() => {
     const passes: Pass[] = []
-    if (group.current != null && instance.current != null && composer != null) {
-      const children = instance.current.objects as unknown[]
+    const groupInstance = (
+      group.current as (Group & { __r3f: Instance<Group> }) | null
+    )?.__r3f
+    if (groupInstance != null && composer != null) {
+      const children = groupInstance.children
       for (let i = 0; i < children.length; ++i) {
-        const child = children[i]
+        const child = children[i].object
         if (child instanceof Effect) {
           const effects: Effect[] = [child]
           if (!isConvolution(child)) {
             let next: unknown = null
-            while ((next = children[i + 1]) instanceof Effect) {
+            while ((next = children[i + 1]?.object) instanceof Effect) {
               if (isConvolution(next)) {
                 break
               }
@@ -156,7 +159,7 @@ export const EffectComposer = /*#__PURE__*/ forwardRef<
         composer?.removePass(pass)
       }
     }
-  }, [composer, children, camera, instance])
+  }, [composer, children, camera])
 
   useEffect(() => {
     const currentToneMapping = gl.toneMapping

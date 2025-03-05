@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame, useThree, type ElementProps } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import {
   forwardRef,
@@ -27,10 +27,7 @@ import {
   parseUint8Array,
   STBNLoader
 } from '@takram/three-geospatial'
-import {
-  type ExpandNestedProps,
-  type PassThoughInstanceProps
-} from '@takram/three-geospatial/r3f'
+import { type ExpandNestedProps } from '@takram/three-geospatial/r3f'
 
 import {
   CloudsEffect,
@@ -137,14 +134,11 @@ function useSTBNTextureState(
 
 export interface CloudsProps
   extends Omit<
-    PassThoughInstanceProps<
-      CloudsEffect,
-      [],
-      Partial<
-        CloudsEffect &
-          ExpandNestedProps<CloudsEffect, 'clouds'> &
-          ExpandNestedProps<CloudsEffect, 'shadow'>
-      >
+    ElementProps<
+      typeof CloudsEffect,
+      CloudsEffect &
+        ExpandNestedProps<CloudsEffect, 'clouds'> &
+        ExpandNestedProps<CloudsEffect, 'shadow'>
     >,
     | 'localWeatherTexture'
     | 'shapeTexture'

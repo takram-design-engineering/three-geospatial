@@ -45,10 +45,10 @@
     "n8ao": "^1.9.4"
   },
   "peerDependencies": {
-    "@react-three/fiber": ">=8.17.10",
-    "@react-three/postprocessing": ">=2.16.3",
+    "@react-three/fiber": ">=9.0.4",
+    "@react-three/postprocessing": ">=3.0.4",
     "postprocessing": ">=6.36.4",
-    "react": ">=18.0",
+    "react": ">=19.0",
     "three": ">=0.170.0"
   },
   "peerDependenciesMeta": {
