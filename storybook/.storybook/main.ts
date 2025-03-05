@@ -1,6 +1,7 @@
-import path from 'path'
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import type { StorybookConfig } from '@storybook/react-vite'
-import { mergeConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { build, mergeConfig } from 'vite'
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
@@ -28,7 +29,18 @@ const config: StorybookConfig = {
       href='https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap'
       rel='stylesheet'
     />
-  `
+  `,
+
+  viteFinal: async config =>
+    mergeConfig(config, {
+      plugins: [react(), nxViteTsPaths()],
+      worker: {
+        plugins: () => [nxViteTsPaths()]
+      },
+      build: {
+        sourcemap: true
+      }
+    })
 }
 
 export default config
