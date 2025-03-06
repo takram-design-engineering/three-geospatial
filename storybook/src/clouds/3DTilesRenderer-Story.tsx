@@ -2,7 +2,6 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer'
 import {
-  CesiumIonAuthPlugin,
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
   TileCompressionPlugin,
@@ -97,10 +96,9 @@ const Globe: FC = () => {
         />
       ) : (
         <TilesPlugin
-          plugin={CesiumIonAuthPlugin}
+          plugin={GoogleCloudAuthPlugin}
           args={{
-            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
-            assetId: 2275207,
+            apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
             autoRefreshToken: true
           }}
         />
