@@ -1,11 +1,5 @@
 import { type QuantizedMeshData } from '@here/quantized-mesh-decoder'
-import {
-  BufferAttribute,
-  BufferGeometry,
-  Sphere,
-  Vector3,
-  type TypedArray
-} from 'three'
+import { BufferAttribute, BufferGeometry, Sphere, Vector3 } from 'three'
 import invariant from 'tiny-invariant'
 
 import { Geodetic, lerp, type Rectangle } from '@takram/three-geospatial'
@@ -43,7 +37,7 @@ export class TerrainGeometry extends BufferGeometry {
       maxHeight: data.header.maxHeight
     })
     this.setAttribute('position', position)
-    const uv = this.createUvAttribute(position.array)
+    const uv = this.createUvAttribute(vertexData)
     this.setAttribute('uv', uv)
 
     if (extensions?.vertexNormals != null) {
@@ -65,6 +59,7 @@ export class TerrainGeometry extends BufferGeometry {
       super.computeVertexNormals()
       return
     }
+    invariant(vertexNormals.length % 2 === 0)
     const array = new Float32Array((vertexNormals.length / 2) * 3)
     for (
       let index = 0, normalIndex = 0;
@@ -92,11 +87,11 @@ export class TerrainGeometry extends BufferGeometry {
     }
   ): BufferAttribute {
     invariant(vertexData.length % 3 === 0)
-    const array = new Float32Array(vertexData.length)
     const vertexCount = vertexData.length / 3
     const us = vertexData.subarray(0, vertexCount)
     const vs = vertexData.subarray(vertexCount, vertexCount * 2)
     const heights = vertexData.subarray(vertexCount * 2, vertexCount * 3)
+    const array = new Float32Array(vertexCount * 3)
 
     const { rectangle, minHeight, maxHeight } = params
     const { west, south, east, north } = rectangle
@@ -119,16 +114,19 @@ export class TerrainGeometry extends BufferGeometry {
     return new BufferAttribute(array, 3)
   }
 
-  createUvAttribute(positionArray: TypedArray): BufferAttribute {
-    invariant(positionArray.length % 3 === 0)
-    const array = new Int16Array((positionArray.length / 3) * 2)
+  createUvAttribute(vertexData: Uint16Array): BufferAttribute {
+    invariant(vertexData.length % 3 === 0)
+    const vertexCount = vertexData.length / 3
+    const us = vertexData.subarray(0, vertexCount)
+    const vs = vertexData.subarray(vertexCount, vertexCount * 2)
+    const array = new Int16Array(vertexCount * 2)
     for (
-      let index = 0, positionIndex = 0;
+      let index = 0, vertexIndex = 0;
       index < array.length;
-      index += 2, positionIndex += 3
+      index += 2, ++vertexIndex
     ) {
-      array[index] = positionArray[positionIndex]
-      array[index + 1] = positionArray[positionIndex + 1]
+      array[index] = us[vertexIndex]
+      array[index + 1] = vs[vertexIndex]
     }
     return new BufferAttribute(array, 2, true)
   }
@@ -136,6 +134,7 @@ export class TerrainGeometry extends BufferGeometry {
   createPackedEncodedNormalAttribute(
     vertexNormals: Uint8Array
   ): BufferAttribute {
+    invariant(vertexNormals.length % 2 === 0)
     const array = new Float32Array(vertexNormals.length / 2)
     for (
       let index = 0, normalIndex = 0;
