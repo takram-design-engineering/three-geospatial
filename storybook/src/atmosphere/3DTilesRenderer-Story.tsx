@@ -1,5 +1,7 @@
+import { css } from '@emotion/react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
+import { type TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
@@ -14,12 +16,19 @@ import {
   TilesPlugin,
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
-import { useAtomValue } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import {
   EffectMaterial,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FC
+} from 'react'
 import { DRACOLoader } from 'three-stdlib'
 
 import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
@@ -40,7 +49,7 @@ import {
 
 import { EffectComposer } from '../helpers/EffectComposer'
 import { HaldLUT } from '../helpers/HaldLUT'
-import { googleMapsApiKeyAtom } from '../helpers/states'
+import { googleMapsApiKeyAtom, needsApiKeyAtom } from '../helpers/states'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
@@ -56,9 +65,26 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Globe: FC = () => {
   const apiKey = useAtomValue(googleMapsApiKeyAtom)
+
+  const [tiles, setTiles] = useState<TilesRendererImpl | null>(null)
+  const setNeedsApiKey = useSetAtom(needsApiKeyAtom)
+  useEffect(() => {
+    if (tiles == null) {
+      return
+    }
+    const callback = (): void => {
+      setNeedsApiKey(true)
+    }
+    tiles.addEventListener('load-error', callback)
+    return () => {
+      tiles.removeEventListener('load-error', callback)
+    }
+  }, [tiles, setNeedsApiKey])
+
   return (
     <TilesRenderer
       key={apiKey} // Reconstruct tiles when API key changes.
+      ref={setTiles}
     >
       {apiKey !== '' ? (
         <TilesPlugin
@@ -237,11 +263,40 @@ const Scene: FC<SceneProps> = ({
 
 export const Story: FC<SceneProps> = props => {
   useGoogleMapsAPIKeyControls()
+  const needsApiKey = useAtomValue(needsApiKeyAtom)
   return (
-    <Canvas gl={{ depth: false }} frameloop='demand'>
-      <Stats />
-      <Scene {...props} />
-    </Canvas>
+    <>
+      <Canvas gl={{ depth: false }} frameloop='demand'>
+        <Stats />
+        <Scene {...props} />
+      </Canvas>
+      {needsApiKey && (
+        <div
+          css={css`
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            color: white;
+            text-align: center;
+            line-height: 1.5;
+            transform: translate(-50%, -50%);
+          `}
+        >
+          Our API key has seemingly exceeded its daily quota.
+          <br />
+          Enter your{' '}
+          <a
+            href='https://developers.google.com/maps/documentation/tile/get-api-key'
+            target='_blank'
+            rel='noreferrer'
+            style={{ color: 'inherit' }}
+          >
+            Google Maps API key
+          </a>{' '}
+          at the top right of this screen, or check back tomorrow.
+        </div>
+      )}
+    </>
   )
 }
 
