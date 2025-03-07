@@ -13,6 +13,7 @@ declare module '3d-tiles-renderer/r3f' {
     Camera,
     Object3D
   } from 'three'
+  import type React from 'react'
   import type {
     ReactNode,
     Context,
@@ -52,7 +53,7 @@ declare module '3d-tiles-renderer/r3f' {
       : {}
   >(
     props: TilesPluginProps<Plugin, Params> & RefAttributes<Plugin>
-  ): JSX.Element
+  ): React.JSX.Element
 
   export interface TilesRendererProps extends Partial<TilesRendererImpl> {
     url?: string
