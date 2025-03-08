@@ -27,7 +27,6 @@ import {
 interface LoadTextureOptions {
   loader: Loader<DataTexture | Data3DTexture>
   extension: string
-  useHalfFloat?: boolean
 }
 
 export interface PrecomputedTextures {
@@ -38,9 +37,6 @@ export interface PrecomputedTextures {
 
 export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
   format: 'binary' | 'exr' = 'exr'
-
-  /** @deprecated useHalfFloat is now always true */
-  useHalfFloat = true
 
   override load(
     url: string,

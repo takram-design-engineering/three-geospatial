@@ -49,6 +49,3 @@ export class TileCreasedNormalsPlugin {
     )
   }
 }
-
-/** @deprecated Use TileCreasedNormalsPlugin instead. */
-export const TileCreaseNormalsPlugin = TileCreasedNormalsPlugin

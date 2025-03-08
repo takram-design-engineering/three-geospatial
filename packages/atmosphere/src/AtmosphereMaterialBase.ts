@@ -50,8 +50,6 @@ export interface AtmosphereMaterialProps {
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: DataTexture | null
-  /** @deprecated useHalfFloat is now always true */
-  useHalfFloat?: boolean
 
   // Atmosphere controls
   ellipsoid?: Ellipsoid
@@ -114,7 +112,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       irradianceTexture = null,
       scatteringTexture = null,
       transmittanceTexture = null,
-      useHalfFloat,
       ellipsoid,
       correctAltitude,
       photometric,
@@ -248,14 +245,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   set transmittanceTexture(value: DataTexture | null) {
     this.uniforms.u_transmittance_texture.value = value
   }
-
-  /** @deprecated useHalfFloat is now always true */
-  get useHalfFloat(): boolean {
-    return true
-  }
-
-  /** @deprecated useHalfFloat is now always true */
-  set useHalfFloat(value: boolean) {}
 
   get ellipsoidCenter(): Vector3 {
     return this.uniforms.ellipsoidCenter.value

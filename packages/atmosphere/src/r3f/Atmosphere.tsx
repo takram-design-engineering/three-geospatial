@@ -44,8 +44,6 @@ export interface AtmosphereTransientProps extends AtmosphereTransientStates {}
 
 export interface AtmosphereContextValue {
   textures?: PrecomputedTextures | null
-  /** @deprecated useHalfFloat is now always true */
-  useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
@@ -57,8 +55,6 @@ export const AtmosphereContext =
 
 export interface AtmosphereProps {
   textures?: PrecomputedTextures | string
-  /** @deprecated useHalfFloat is now always true */
-  useHalfFloat?: boolean
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
@@ -77,7 +73,6 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
 >(function Atmosphere(
   {
     textures: texturesProp = DEFAULT_PRECOMPUTED_TEXTURES_URL,
-    useHalfFloat,
     ellipsoid = Ellipsoid.WGS84,
     correctAltitude = true,
     photometric = true,
@@ -116,7 +111,6 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
   const context = useMemo(
     () => ({
       textures,
-      useHalfFloat: true,
       ellipsoid,
       correctAltitude,
       photometric,

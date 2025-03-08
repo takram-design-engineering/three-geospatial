@@ -7,9 +7,7 @@ import {
 } from '../PrecomputedTexturesLoader'
 
 export function useAtmosphereTextureProps(
-  url = DEFAULT_PRECOMPUTED_TEXTURES_URL,
-  /** @deprecated useHalfFloat is now always true */
-  useHalfFloat?: boolean
+  url = DEFAULT_PRECOMPUTED_TEXTURES_URL
 ): { textures: PrecomputedTextures } {
   const textures = useLoader(PrecomputedTexturesLoader, url)
   return { textures }

@@ -73,8 +73,6 @@ export interface AerialPerspectiveEffectOptions {
   irradianceTexture?: DataTexture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: DataTexture | null
-  /** @deprecated useHalfFloat is now always true */
-  useHalfFloat?: boolean
 
   // Atmosphere controls
   ellipsoid?: Ellipsoid
@@ -191,7 +189,6 @@ export class AerialPerspectiveEffect extends Effect {
       irradianceTexture = null,
       scatteringTexture = null,
       transmittanceTexture = null,
-      useHalfFloat, // eslint-disable-line @typescript-eslint/no-unused-vars
       ellipsoid,
       correctAltitude,
       correctGeometricError,
@@ -493,14 +490,6 @@ export class AerialPerspectiveEffect extends Effect {
   set transmittanceTexture(value: DataTexture | null) {
     this.uniforms.get('u_transmittance_texture').value = value
   }
-
-  /** @deprecated useHalfFloat is now always true */
-  get useHalfFloat(): boolean {
-    return true
-  }
-
-  /** @deprecated useHalfFloat is now always true */
-  set useHalfFloat(value: boolean) {}
 
   get ellipsoid(): Ellipsoid {
     return this._ellipsoid
