@@ -41,8 +41,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@takram/three-geospatial": "0.0.1-alpha.9",
-    "n8ao": "^1.9.4"
+    "@takram/three-geospatial": "0.0.1-alpha.9"
   },
   "peerDependencies": {
     "@react-three/fiber": ">=9.0.4",

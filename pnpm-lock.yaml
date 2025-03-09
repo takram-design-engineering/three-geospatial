@@ -44,9 +44,6 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
-      n8ao:
-        specifier: ^1.9.4
-        version: 1.9.4(postprocessing@6.37.0(three@0.174.0))(three@0.174.0)
       postprocessing:
         specifier: '>=6.36.7'
         version: 6.37.0(three@0.174.0)

@@ -18,7 +18,6 @@
     "axios": "^1.8.1",
     "axios-rate-limit": "^1.4.0",
     "lodash-es": "^4.17.21",
-    "n8ao": "^1.9.4",
     "postprocessing": "6.37.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
