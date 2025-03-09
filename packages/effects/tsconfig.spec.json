@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
+    "jsx": "react-jsx",
     "types": ["jest", "node"]
   },
   "include": [
