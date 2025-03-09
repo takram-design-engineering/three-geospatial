@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.3] - 2025-03-09
+
+### Changed
+
+- Updated dependencies.
+
 ## [0.1.2] - 2025-03-09
 
 Compatibility release to continue support for React 18 and R3F v8.
