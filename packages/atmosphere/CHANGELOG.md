@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.10.2] - 2025-03-09
+
+### Fixed
+
+- `SkyLight`, `SunLight`: Fixed props not rolling back when unset.
+
 ## [0.10.1] - 2025-03-09
 
 Compatibility release to continue support for React 18 and R3F v8.
