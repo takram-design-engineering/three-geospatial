@@ -1,6 +1,6 @@
 {
   "name": "@takram/three-clouds",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A Three.js and R3F implementation of geospatial volumetric clouds",
   "keywords": [
     "three",
@@ -45,8 +45,8 @@
     "README.md"
   ],
   "dependencies": {
-    "@takram/three-atmosphere": "0.10.1",
-    "@takram/three-geospatial": "0.1.0",
+    "@takram/three-atmosphere": "0.11.0",
+    "@takram/three-geospatial": "0.2.0",
     "tiny-invariant": "^1.3.3",
     "type-fest": "^4.34.1"
   },
