@@ -8,6 +8,10 @@ Updated peer dependencies to React 19 and R3F v9. For React 18 and R3F v8, use v
 
 - Migrated types and internal fields to R3F v9.
 
+## [0.1.2] - 2025-03-09
+
+Compatibility release to continue support for React 18 and R3F v8.
+
 ## [0.1.1] - 2025-03-02
 
 ### Changed
