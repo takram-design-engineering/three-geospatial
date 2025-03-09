@@ -264,6 +264,9 @@ importers:
       jest-environment-node:
         specifier: ^29.7.0
         version: 29.7.0
+      jiti:
+        specifier: 2.4.2
+        version: 2.4.2
       jotai:
         specifier: ^2.12.1
         version: 2.12.1(@types/react@18.3.1)(react@18.3.1)
@@ -15720,8 +15723,7 @@ snapshots:
       - supports-color
       - ts-node
 
-  jiti@2.4.2:
-    optional: true
+  jiti@2.4.2: {}
 
   jju@1.4.0: {}
 
