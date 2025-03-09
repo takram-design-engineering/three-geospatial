@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.10.1] - 2025-03-09
+
+Compatibility release to continue support for React 18 and R3F v8.
+
 ## [0.10.0] - 2025-03-02
 
 ### Changed

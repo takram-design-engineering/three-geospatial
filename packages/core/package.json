@@ -1,6 +1,6 @@
 {
   "name": "@takram/three-geospatial",
-  "version": "0.0.1-alpha.9",
+  "version": "0.1.0",
   "description": "Provides fundamental functions for rendering GIS data in Three.js and R3F",
   "keywords": [
     "three",
@@ -44,6 +44,7 @@
     "src",
     "types",
     "package.json",
+    "CHANGELOG.md",
     "README.md"
   ],
   "dependencies": {
