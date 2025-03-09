@@ -1,12 +1,19 @@
 # Changelog
 
-## Unreleased
+## [0.11.0] - 2025-03-09
 
 Updated peer dependencies to React 19 and R3F v9. For React 18 and R3F v8, use version 0.10.x, which will continue to receive fixes.
 
 ### Changed
 
 - Migrated types and internal fields to R3F v9.
+- Removed deprecated classes and properties.
+
+## [0.10.2] - 2025-03-09
+
+### Fixed
+
+- `SkyLight`, `SunLight`: Fixed props not rolling back when unset.
 
 ## [0.10.1] - 2025-03-09
 
