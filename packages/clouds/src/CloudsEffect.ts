@@ -286,7 +286,9 @@ export class CloudsEffect extends Effect {
       atmosphereUniforms: this.atmosphereUniforms
     }
     this.shadowPass = new ShadowPass(passOptions)
+    this.shadowPass.mainCamera = camera
     this.cloudsPass = new CloudsPass(passOptions, atmosphere)
+    this.cloudsPass.mainCamera = camera
 
     this.clouds = definePropertyShorthand(
       defineUniformShorthand(
