@@ -51,7 +51,6 @@ let skyLight: SkyLightProbe
 let sunLight: SunDirectionalLight
 let aerialPerspective: AerialPerspectiveEffect
 let composer: EffectComposer
-let texturesLoader: PrecomputedTexturesLoader
 
 const sunDirection = new Vector3()
 const moonDirection = new Vector3()
@@ -151,20 +150,18 @@ function init(): void {
     multisampling: 8
   })
   composer.addPass(new RenderPass(scene, camera))
+  composer.addPass(new EffectPass(camera, aerialPerspective))
   composer.addPass(
     new EffectPass(
       camera,
-      aerialPerspective,
       new LensFlareEffect(),
       new ToneMappingEffect({ mode: ToneMappingMode.AGX }),
       new DitheringEffect()
     )
   )
 
-  // PrecomputedTexturesLoader defaults to loading single-precision float
-  // textures. Check for OES_texture_float_linear and load the appropriate one.
-  texturesLoader = new PrecomputedTexturesLoader()
-  texturesLoader.load('atmosphere', onPrecomputedTexturesLoad)
+  // Load precomputed textures.
+  new PrecomputedTexturesLoader().load('atmosphere', onPrecomputedTexturesLoad)
 
   container.appendChild(renderer.domElement)
   window.addEventListener('resize', onWindowResize)
