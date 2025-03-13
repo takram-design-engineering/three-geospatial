@@ -3,7 +3,7 @@
 import { Canvas } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react'
 import {
-  GoogleCloudAuthPlugin,
+  CesiumIonAuthPlugin,
   TilesFadePlugin,
   UpdateOnChangePlugin
 } from '3d-tiles-renderer/plugins'
@@ -21,9 +21,10 @@ const Globe: FC = () => {
   return (
     <TilesRenderer>
       <TilesPlugin
-        plugin={GoogleCloudAuthPlugin}
+        plugin={CesiumIonAuthPlugin}
         args={{
-          apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
+          apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+          assetId: 1,
           autoRefreshToken: true
         }}
       />
