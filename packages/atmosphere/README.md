@@ -180,9 +180,8 @@ composer.addPass(
   )
 )
 
-// PrecomputedTexturesLoader defaults to loading single-precision float
-// textures. Check for OES_texture_float_linear and load the appropriate one.
 const texturesLoader = new PrecomputedTexturesLoader()
+texturesLoader.setTypeFromRenderer(renderer)
 texturesLoader.load('/assets', textures => {
   Object.assign(skyMaterial, textures)
   sunLight.transmittanceTexture = textures.transmittanceTexture
