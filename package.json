@@ -112,7 +112,7 @@
     "storybook": "^8.6.3",
     "ts-jest": "^29.2.6",
     "ts-node": "10.9.1",
-    "typescript": "5.7.3",
+    "typescript": "5.8.2",
     "verdaccio": "6.0.5",
     "vite": "6.2.1",
     "vite-plugin-dts": "4.5.3",
