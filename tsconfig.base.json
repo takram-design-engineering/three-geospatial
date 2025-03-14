@@ -36,7 +36,9 @@
       ],
       "@takram/three-terrain": ["packages/terrain/src/index.ts"],
       "@takram/three-terrain-core": ["packages/terrain-core/src/index.ts"],
-      "@takram/three-terrain/r3f": ["packages/terrain/src/r3f/index.ts"]
+      "@takram/three-terrain/r3f": ["packages/terrain/src/r3f/index.ts"],
+      "@takram/three-weather": ["packages/weather/src/index.ts"],
+      "@takram/three-weather/r3f": ["packages/weather/src/r3f/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
