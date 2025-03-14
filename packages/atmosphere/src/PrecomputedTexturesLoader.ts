@@ -1,8 +1,11 @@
 import {
+  FloatType,
+  HalfFloatType,
   LinearFilter,
   Loader,
   type Data3DTexture,
-  type DataTexture
+  type DataTexture,
+  type WebGLRenderer
 } from 'three'
 import { EXRLoader } from 'three-stdlib'
 import join from 'url-join'
@@ -11,6 +14,7 @@ import {
   createData3DTextureLoader,
   createDataTextureLoader,
   EXR3DLoader,
+  Float16Array,
   parseFloat16Array
 } from '@takram/three-geospatial'
 
@@ -38,6 +42,15 @@ export interface PrecomputedTextures {
 
 export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
   format: 'binary' | 'exr' = 'exr'
+  type: typeof FloatType | typeof HalfFloatType = HalfFloatType
+
+  setTypeFromRenderer(renderer: WebGLRenderer): this {
+    this.type =
+      renderer.getContext().getExtension('OES_texture_float_linear') == null
+        ? HalfFloatType
+        : FloatType
+    return this
+  }
 
   /** @deprecated useHalfFloat is now always true */
   useHalfFloat = true
@@ -61,6 +74,16 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
         texture => {
           texture.minFilter = LinearFilter
           texture.magFilter = LinearFilter
+
+          // Using a half-float buffer introduces artifacts seemingly due to
+          // insufficient precision in linear interpolation.
+          texture.type = this.type
+          if (this.type === FloatType) {
+            texture.image.data = new Float32Array(
+              new Float16Array(texture.image.data.buffer)
+            )
+          }
+
           result[`${name}Texture`] = texture
           if (
             result.irradianceTexture != null &&

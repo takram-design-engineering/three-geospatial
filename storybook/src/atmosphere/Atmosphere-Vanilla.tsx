@@ -161,9 +161,9 @@ function init(): void {
     )
   )
 
-  // PrecomputedTexturesLoader defaults to loading single-precision float
-  // textures. Check for OES_texture_float_linear and load the appropriate one.
+  // Load precomputed textures.
   texturesLoader = new PrecomputedTexturesLoader()
+  texturesLoader.setTypeFromRenderer(renderer)
   texturesLoader.load('atmosphere', onPrecomputedTexturesLoad)
 
   container.appendChild(renderer.domElement)
