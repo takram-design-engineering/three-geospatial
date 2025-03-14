@@ -51,7 +51,8 @@ export const skyMaterialParametersDefaults = {
   sun: true,
   moon: true,
   moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
-  lunarRadianceScale: 1
+  lunarRadianceScale: 1,
+  groundAlbedo: new Color(0)
 } satisfies SkyMaterialParameters
 
 export interface SkyMaterialUniforms {
