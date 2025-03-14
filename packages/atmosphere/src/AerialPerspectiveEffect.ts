@@ -141,7 +141,6 @@ export interface AerialPerspectiveEffectUniforms {
   u_mu_s_min: Uniform<number>
   u_irradiance_texture: Uniform<DataTexture | null>
   u_scattering_texture: Uniform<Data3DTexture | null>
-  u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
   u_transmittance_texture: Uniform<DataTexture | null>
 }
 
@@ -278,7 +277,6 @@ export class AerialPerspectiveEffect extends Effect {
             u_mu_s_min: new Uniform(atmosphere.muSMin),
             u_irradiance_texture: new Uniform(irradianceTexture),
             u_scattering_texture: new Uniform(scatteringTexture),
-            u_single_mie_scattering_texture: new Uniform(scatteringTexture),
             u_transmittance_texture: new Uniform(transmittanceTexture)
           } satisfies AerialPerspectiveEffectUniforms)
         ),
@@ -480,7 +478,6 @@ export class AerialPerspectiveEffect extends Effect {
 
   set scatteringTexture(value: Data3DTexture | null) {
     this.uniforms.get('u_scattering_texture').value = value
-    this.uniforms.get('u_single_mie_scattering_texture').value = value
   }
 
   get transmittanceTexture(): DataTexture | null {

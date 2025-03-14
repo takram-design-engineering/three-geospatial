@@ -9,5 +9,4 @@ uniform float u_mu_s_min;
 
 uniform sampler2D u_transmittance_texture;
 uniform sampler3D u_scattering_texture;
-uniform sampler3D u_single_mie_scattering_texture;
 uniform sampler2D u_irradiance_texture;

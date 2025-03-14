@@ -233,7 +233,6 @@ vec3 getExtrapolatedSingleMieScattering(const vec4 scattering) {
 
 vec3 getCombinedScattering(
   const sampler3D scattering_texture,
-  const sampler3D single_mie_scattering_texture,
   float r,
   float mu,
   float mu_s,
@@ -257,7 +256,6 @@ vec3 getCombinedScattering(
 vec3 getSkyRadiance(
   const sampler2D transmittance_texture,
   const sampler3D scattering_texture,
-  const sampler3D single_mie_scattering_texture,
   vec3 camera,
   const vec3 view_ray,
   float shadow_length,
@@ -289,7 +287,6 @@ vec3 getSkyRadiance(
   if (shadow_length == 0.0) {
     scattering = getCombinedScattering(
       scattering_texture,
-      single_mie_scattering_texture,
       r,
       mu,
       mu_s,
@@ -304,7 +301,6 @@ vec3 getSkyRadiance(
     float mu_s_p = (r * mu_s + d * nu) / r_p;
     scattering = getCombinedScattering(
       scattering_texture,
-      single_mie_scattering_texture,
       r_p,
       mu_p,
       mu_s_p,
@@ -329,7 +325,6 @@ vec3 getSkyRadiance(
 vec3 getSkyRadianceToPoint(
   const sampler2D transmittance_texture,
   const sampler3D scattering_texture,
-  const sampler3D single_mie_scattering_texture,
   vec3 camera,
   const vec3 point,
   float shadow_length,
@@ -364,7 +359,6 @@ vec3 getSkyRadianceToPoint(
   vec3 single_mie_scattering;
   vec3 scattering = getCombinedScattering(
     scattering_texture,
-    single_mie_scattering_texture,
     r,
     mu,
     mu_s,
@@ -379,7 +373,6 @@ vec3 getSkyRadianceToPoint(
   vec3 single_mie_scattering_p;
   vec3 scattering_p = getCombinedScattering(
     scattering_texture,
-    single_mie_scattering_texture,
     r_p,
     mu_p,
     mu_s_p,
@@ -455,7 +448,6 @@ vec3 getSkyRadiance(
   vec3 radiance = getSkyRadiance(
     u_transmittance_texture,
     u_scattering_texture,
-    u_single_mie_scattering_texture,
     camera,
     view_ray,
     shadow_length,
@@ -478,7 +470,6 @@ vec3 getSkyRadianceToPoint(
   vec3 inscatter = getSkyRadianceToPoint(
     u_transmittance_texture,
     u_scattering_texture,
-    u_single_mie_scattering_texture,
     camera,
     point,
     shadow_length,
