@@ -28,12 +28,12 @@ void main() {
   float r = length(cameraPosition);
   float mu = dot(cameraPosition, rayDirection) / r;
 
-  if (RayIntersectsGround(r, mu)) {
+  if (rayIntersectsGround(r, mu)) {
     discard;
   }
 
   vec3 transmittance;
-  vec3 radiance = GetSkyRadiance(
+  vec3 radiance = getSkyRadiance(
     vCameraPosition - vEllipsoidCenter,
     normalize(vRayDirection),
     0.0,

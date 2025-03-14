@@ -54,14 +54,14 @@ void main() {
     vec3 groundPosition = rayDirection * distanceToGround + cameraPosition;
     vec3 surfaceNormal = normalize(groundPosition);
     vec3 skyIrradiance;
-    vec3 sunIrradiance = GetSunAndSkyIrradiance(
+    vec3 sunIrradiance = getSunAndSkyIrradiance(
       cameraPosition,
       surfaceNormal,
       sunDirection,
       skyIrradiance
     );
     vec3 transmittance;
-    vec3 inscatter = GetSkyRadianceToPoint(
+    vec3 inscatter = getSkyRadianceToPoint(
       cameraPosition,
       u_bottom_radius * surfaceNormal,
       shadowLength,
