@@ -61,7 +61,7 @@
  */
 
 float clampCosine(float mu) {
-  return clamp(mu, float(-1.0), float(1.0));
+  return clamp(mu, -1.0, 1.0);
 }
 
 float clampDistance(float d) {
@@ -395,7 +395,7 @@ vec3 getSkyRadianceToPoint(
   single_mie_scattering = getExtrapolatedSingleMieScattering(
     vec4(scattering, single_mie_scattering.r)
   );
-  single_mie_scattering = single_mie_scattering * smoothstep(float(0.0), float(0.01), mu_s);
+  single_mie_scattering = single_mie_scattering * smoothstep(0.0, 0.01, mu_s);
   return scattering * rayleighPhaseFunction(nu) +
   single_mie_scattering * miePhaseFunction(u_mie_phase_function_g, nu);
 }
