@@ -118,5 +118,14 @@
     "vite": "6.2.1",
     "vite-plugin-dts": "4.5.3",
     "vitest": "^1.6.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "core-js",
+      "esbuild",
+      "nx",
+      "sharp"
+    ]
   }
 }
