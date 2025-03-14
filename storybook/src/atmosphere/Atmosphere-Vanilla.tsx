@@ -161,7 +161,9 @@ function init(): void {
   )
 
   // Load precomputed textures.
-  new PrecomputedTexturesLoader().load('atmosphere', onPrecomputedTexturesLoad)
+  new PrecomputedTexturesLoader()
+    .setTypeFromRenderer(renderer)
+    .load('atmosphere', onPrecomputedTexturesLoad)
 
   container.appendChild(renderer.domElement)
   window.addEventListener('resize', onWindowResize)

@@ -1,3 +1,4 @@
+import { useThree } from '@react-three/fiber'
 import {
   createContext,
   forwardRef,
@@ -92,12 +93,14 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     shadowLength: null
   })
 
+  const gl = useThree(({ gl }) => gl)
   const [textures, setTextures] = useState(
     typeof texturesProp !== 'string' ? texturesProp : undefined
   )
   useEffect(() => {
     if (typeof texturesProp === 'string') {
       const loader = new PrecomputedTexturesLoader()
+      loader.setTypeFromRenderer(gl)
       ;(async () => {
         setTextures(await loader.loadAsync(texturesProp))
       })().catch(error => {
@@ -106,7 +109,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     } else {
       setTextures(texturesProp)
     }
-  }, [texturesProp])
+  }, [texturesProp, gl])
 
   const context = useMemo(
     () => ({

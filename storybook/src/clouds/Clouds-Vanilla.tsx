@@ -150,7 +150,9 @@ function init(): void {
   )
 
   // Load precomputed textures.
-  new PrecomputedTexturesLoader().load('atmosphere', onPrecomputedTexturesLoad)
+  new PrecomputedTexturesLoader()
+    .setTypeFromRenderer(renderer)
+    .load('atmosphere', onPrecomputedTexturesLoad)
 
   // Load textures for the clouds.
   new TextureLoader().load('clouds/local_weather.png', onLocalWeatherLoad)
