@@ -1,6 +1,6 @@
 {
   "name": "@takram/three-geospatial-effects",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A collection of post-processing effects",
   "keywords": [
     "three",

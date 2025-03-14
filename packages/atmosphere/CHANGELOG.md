@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.1] - 2025-03-14
+
+### Fixed
+
+- Fixed artifacts due to insufficient precision of linear interpolation, [#41](https://github.com/takram-design-engineering/three-geospatial/issues/41).
+
 ## [0.11.0] - 2025-03-09
 
 Updated peer dependencies to React 19 and R3F v9. For React 18 and R3F v8, use version 0.10.x, which will continue to receive fixes.
