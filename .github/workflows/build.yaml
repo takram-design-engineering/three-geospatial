@@ -3,7 +3,9 @@ on:
     branches:
       - main
       - develop
+      - release
       - release/**
+      - fiber-v8
 
 permissions:
   contents: read
