@@ -104,16 +104,16 @@ vec2 getTransmittanceTextureUvFromRMu(float r, float mu) {
 }
 
 vec3 getTransmittanceToTopAtmosphereBoundary(
-  const sampler2D u_transmittance_texture,
+  const sampler2D transmittance_texture,
   float r,
   float mu
 ) {
   vec2 uv = getTransmittanceTextureUvFromRMu(r, mu);
-  return vec3(texture(u_transmittance_texture, uv));
+  return vec3(texture(transmittance_texture, uv));
 }
 
 vec3 getTransmittance(
-  const sampler2D u_transmittance_texture,
+  const sampler2D transmittance_texture,
   float r,
   float mu,
   float d,
@@ -123,23 +123,23 @@ vec3 getTransmittance(
   float mu_d = clampCosine((r * mu + d) / r_d);
   if (ray_r_mu_intersects_ground) {
     return min(
-      getTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r_d, -mu_d) /
-        getTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r, -mu),
+      getTransmittanceToTopAtmosphereBoundary(transmittance_texture, r_d, -mu_d) /
+        getTransmittanceToTopAtmosphereBoundary(transmittance_texture, r, -mu),
       vec3(1.0)
     );
   } else {
     return min(
-      getTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r, mu) /
-        getTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r_d, mu_d),
+      getTransmittanceToTopAtmosphereBoundary(transmittance_texture, r, mu) /
+        getTransmittanceToTopAtmosphereBoundary(transmittance_texture, r_d, mu_d),
       vec3(1.0)
     );
   }
 }
 
-vec3 getTransmittanceToSun(const sampler2D u_transmittance_texture, float r, float mu_s) {
+vec3 getTransmittanceToSun(const sampler2D transmittance_texture, float r, float mu_s) {
   float sin_theta_h = u_bottom_radius / r;
   float cos_theta_h = -sqrt(max(1.0 - sin_theta_h * sin_theta_h, 0.0));
-  return getTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r, mu_s) *
+  return getTransmittanceToTopAtmosphereBoundary(transmittance_texture, r, mu_s) *
   smoothstep(
     -sin_theta_h * u_sun_angular_radius,
     sin_theta_h * u_sun_angular_radius,
@@ -215,9 +215,9 @@ vec2 getIrradianceTextureUvFromRMuS(float r, float mu_s) {
   );
 }
 
-vec3 getIrradiance(const sampler2D u_irradiance_texture, float r, float mu_s) {
+vec3 getIrradiance(const sampler2D irradiance_texture, float r, float mu_s) {
   vec2 uv = getIrradianceTextureUvFromRMuS(r, mu_s);
-  return vec3(texture(u_irradiance_texture, uv));
+  return vec3(texture(irradiance_texture, uv));
 }
 
 vec3 getExtrapolatedSingleMieScattering(const vec4 scattering) {
@@ -232,8 +232,8 @@ vec3 getExtrapolatedSingleMieScattering(const vec4 scattering) {
 }
 
 vec3 getCombinedScattering(
-  const sampler3D u_scattering_texture,
-  const sampler3D u_single_mie_scattering_texture,
+  const sampler3D scattering_texture,
+  const sampler3D single_mie_scattering_texture,
   float r,
   float mu,
   float mu_s,
@@ -248,16 +248,16 @@ vec3 getCombinedScattering(
   vec3 uvw0 = vec3((tex_x + uvwz.y) / float(SCATTERING_TEXTURE_NU_SIZE), uvwz.z, uvwz.w);
   vec3 uvw1 = vec3((tex_x + 1.0 + uvwz.y) / float(SCATTERING_TEXTURE_NU_SIZE), uvwz.z, uvwz.w);
   vec4 combined_scattering =
-    texture(u_scattering_texture, uvw0) * (1.0 - lerp) + texture(u_scattering_texture, uvw1) * lerp;
+    texture(scattering_texture, uvw0) * (1.0 - lerp) + texture(scattering_texture, uvw1) * lerp;
   vec3 scattering = vec3(combined_scattering);
   single_mie_scattering = getExtrapolatedSingleMieScattering(combined_scattering);
   return scattering;
 }
 
 vec3 getSkyRadiance(
-  const sampler2D u_transmittance_texture,
-  const sampler3D u_scattering_texture,
-  const sampler3D u_single_mie_scattering_texture,
+  const sampler2D transmittance_texture,
+  const sampler3D scattering_texture,
+  const sampler3D single_mie_scattering_texture,
   vec3 camera,
   const vec3 view_ray,
   float shadow_length,
@@ -282,14 +282,14 @@ vec3 getSkyRadiance(
   bool ray_r_mu_intersects_ground = rayIntersectsGround(r, mu);
   transmittance = ray_r_mu_intersects_ground
     ? vec3(0.0)
-    : getTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r, mu);
+    : getTransmittanceToTopAtmosphereBoundary(transmittance_texture, r, mu);
   vec3 single_mie_scattering;
   vec3 scattering;
 
   if (shadow_length == 0.0) {
     scattering = getCombinedScattering(
-      u_scattering_texture,
-      u_single_mie_scattering_texture,
+      scattering_texture,
+      single_mie_scattering_texture,
       r,
       mu,
       mu_s,
@@ -303,8 +303,8 @@ vec3 getSkyRadiance(
     float mu_p = (r * mu + d) / r_p;
     float mu_s_p = (r * mu_s + d * nu) / r_p;
     scattering = getCombinedScattering(
-      u_scattering_texture,
-      u_single_mie_scattering_texture,
+      scattering_texture,
+      single_mie_scattering_texture,
       r_p,
       mu_p,
       mu_s_p,
@@ -313,7 +313,7 @@ vec3 getSkyRadiance(
       single_mie_scattering
     );
     vec3 shadow_transmittance = getTransmittance(
-      u_transmittance_texture,
+      transmittance_texture,
       r,
       mu,
       shadow_length,
@@ -327,9 +327,9 @@ vec3 getSkyRadiance(
 }
 
 vec3 getSkyRadianceToPoint(
-  const sampler2D u_transmittance_texture,
-  const sampler3D u_scattering_texture,
-  const sampler3D u_single_mie_scattering_texture,
+  const sampler2D transmittance_texture,
+  const sampler3D scattering_texture,
+  const sampler3D single_mie_scattering_texture,
   vec3 camera,
   const vec3 point,
   float shadow_length,
@@ -360,11 +360,11 @@ vec3 getSkyRadianceToPoint(
     mu = max(mu, mu_horiz + 0.004);
   }
 
-  transmittance = getTransmittance(u_transmittance_texture, r, mu, d, ray_r_mu_intersects_ground);
+  transmittance = getTransmittance(transmittance_texture, r, mu, d, ray_r_mu_intersects_ground);
   vec3 single_mie_scattering;
   vec3 scattering = getCombinedScattering(
-    u_scattering_texture,
-    u_single_mie_scattering_texture,
+    scattering_texture,
+    single_mie_scattering_texture,
     r,
     mu,
     mu_s,
@@ -378,8 +378,8 @@ vec3 getSkyRadianceToPoint(
   float mu_s_p = (r * mu_s + d * nu) / r_p;
   vec3 single_mie_scattering_p;
   vec3 scattering_p = getCombinedScattering(
-    u_scattering_texture,
-    u_single_mie_scattering_texture,
+    scattering_texture,
+    single_mie_scattering_texture,
     r_p,
     mu_p,
     mu_s_p,
@@ -390,7 +390,7 @@ vec3 getSkyRadianceToPoint(
   vec3 shadow_transmittance = transmittance;
   if (shadow_length > 0.0) {
     shadow_transmittance = getTransmittance(
-      u_transmittance_texture,
+      transmittance_texture,
       r,
       mu,
       d,
@@ -408,21 +408,21 @@ vec3 getSkyRadianceToPoint(
 }
 
 vec3 getSunAndSkyIrradiance(
-  const sampler2D u_transmittance_texture,
-  const sampler2D u_irradiance_texture,
+  const sampler2D transmittance_texture,
+  const sampler2D irradiance_texture,
   const vec3 point,
   const vec3 sun_direction,
   out vec3 sky_irradiance
 ) {
   float r = length(point);
   float mu_s = dot(point, sun_direction) / r;
-  sky_irradiance = getIrradiance(u_irradiance_texture, r, mu_s);
-  return u_solar_irradiance * getTransmittanceToSun(u_transmittance_texture, r, mu_s);
+  sky_irradiance = getIrradiance(irradiance_texture, r, mu_s);
+  return u_solar_irradiance * getTransmittanceToSun(transmittance_texture, r, mu_s);
 }
 
 vec3 getSunAndSkyIrradiance(
-  const sampler2D u_transmittance_texture,
-  const sampler2D u_irradiance_texture,
+  const sampler2D transmittance_texture,
+  const sampler2D irradiance_texture,
   const vec3 point,
   const vec3 normal,
   const vec3 sun_direction,
@@ -431,9 +431,9 @@ vec3 getSunAndSkyIrradiance(
   float r = length(point);
   float mu_s = dot(point, sun_direction) / r;
   sky_irradiance =
-    getIrradiance(u_irradiance_texture, r, mu_s) * (1.0 + dot(normal, point) / r) * 0.5;
+    getIrradiance(irradiance_texture, r, mu_s) * (1.0 + dot(normal, point) / r) * 0.5;
   return u_solar_irradiance *
-  getTransmittanceToSun(u_transmittance_texture, r, mu_s) *
+  getTransmittanceToSun(transmittance_texture, r, mu_s) *
   max(dot(normal, sun_direction), 0.0);
 }
 
