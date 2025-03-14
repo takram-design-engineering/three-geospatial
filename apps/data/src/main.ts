@@ -2,11 +2,13 @@ import path from 'path'
 import minimist from 'minimist'
 
 import atmosphere from './targets/atmosphere'
+import rain from './targets/rain'
 import stars from './targets/stars'
 import stbn from './targets/stbn'
 
 const targets: Record<string, () => Promise<void> | undefined> = {
   atmosphere,
+  rain,
   stars,
   stbn
 }
