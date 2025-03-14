@@ -122,7 +122,7 @@ If the problem persists, try clearing the browser cache.
 To generate a React library:
 
 ```sh
-nx generate @nx/react:library --name={name} --bundler=vite --directory=packages/{name} --compiler=swc --importPath={package_name} --style=none --unitTestRunner=jest --no-interactive
+nx generate @nx/react:library --name={name} --bundler=vite --directory=packages/{name} --compiler=babel --importPath={package_name} --style=none --unitTestRunner=jest --no-interactive
 ```
 
 To add a Storybook configuration:
