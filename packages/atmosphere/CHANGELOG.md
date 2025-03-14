@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.10.3] - 2025-03-14
+
+### Fixed
+
+- Fixed artifacts due to insufficient precision of linear interpolation, [#41](https://github.com/takram-design-engineering/three-geospatial/issues/41).
+
 ## [0.10.2] - 2025-03-09
 
 ### Fixed
