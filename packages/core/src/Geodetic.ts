@@ -23,11 +23,15 @@ export class Geodetic {
   static readonly MIN_LATITUDE = -Math.PI / 2
   static readonly MAX_LATITUDE = Math.PI / 2
 
-  constructor(
-    public longitude = 0,
-    public latitude = 0,
-    public height = 0
-  ) {}
+  longitude: number
+  latitude: number
+  height: number
+
+  constructor(longitude = 0, latitude = 0, height = 0) {
+    this.longitude = longitude
+    this.latitude = latitude
+    this.height = height
+  }
 
   set(longitude: number, latitude: number, height?: number): this {
     this.longitude = longitude

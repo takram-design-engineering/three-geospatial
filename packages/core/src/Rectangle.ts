@@ -17,12 +17,17 @@ export class Rectangle {
     Geodetic.MAX_LATITUDE
   )
 
-  constructor(
-    public west = 0,
-    public south = 0,
-    public east = 0,
-    public north = 0
-  ) {}
+  west: number
+  south: number
+  east: number
+  north: number
+
+  constructor(west = 0, south = 0, east = 0, north = 0) {
+    this.west = west
+    this.south = south
+    this.east = east
+    this.north = north
+  }
 
   get width(): number {
     let east = this.east

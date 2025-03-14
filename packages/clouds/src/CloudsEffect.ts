@@ -175,6 +175,8 @@ export class CloudsEffect extends Effect {
 
   readonly cloudLayers = CloudLayers.DEFAULT.clone()
 
+  private camera: Camera
+  private readonly atmosphere: AtmosphereParameters
   correctAltitude = true
 
   // Mutable instances of cloud parameter uniforms
@@ -229,14 +231,17 @@ export class CloudsEffect extends Effect {
   private readonly shadowMapSize = new Vector2()
 
   constructor(
-    private camera: Camera = new Camera(),
+    camera: Camera = new Camera(),
     options?: CloudsEffectOptions,
-    private readonly atmosphere = AtmosphereParameters.DEFAULT
+    atmosphere = AtmosphereParameters.DEFAULT
   ) {
     super('CloudsEffect', fragmentShader, {
       attributes: EffectAttribute.DEPTH,
       uniforms: new Map<string, Uniform>([['cloudsBuffer', new Uniform(null)]])
     })
+
+    this.camera = camera
+    this.atmosphere = atmosphere
 
     const {
       resolutionScale,

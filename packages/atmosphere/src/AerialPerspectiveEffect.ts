@@ -168,6 +168,8 @@ export const aerialPerspectiveEffectOptionsDefaults = {
 export class AerialPerspectiveEffect extends Effect {
   declare uniforms: UniformMap<AerialPerspectiveEffectUniforms>
 
+  private camera: Camera
+  private readonly atmosphere: AtmosphereParameters
   private _ellipsoid!: Ellipsoid
   readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
@@ -177,9 +179,9 @@ export class AerialPerspectiveEffect extends Effect {
   shadowLength: AtmosphereShadowLength | null = null
 
   constructor(
-    private camera = new Camera(),
+    camera = new Camera(),
     options?: AerialPerspectiveEffectOptions,
-    private readonly atmosphere = AtmosphereParameters.DEFAULT
+    atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       blendFunction,
@@ -299,6 +301,8 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
 
+    this.camera = camera
+    this.atmosphere = atmosphere
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
     this.ellipsoid = ellipsoid

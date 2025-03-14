@@ -14,11 +14,15 @@ export interface TilingSchemeLike {
 
 // TODO: Support slippyMap and EPSG:3857
 export class TilingScheme {
-  constructor(
-    public width = 2,
-    public height = 1,
-    public rectangle = Rectangle.MAX
-  ) {}
+  width: number
+  height: number
+  rectangle: Rectangle
+
+  constructor(width = 2, height = 1, rectangle = Rectangle.MAX) {
+    this.width = width
+    this.height = height
+    this.rectangle = rectangle
+  }
 
   clone(): TilingScheme {
     return new TilingScheme(this.width, this.height, this.rectangle.clone())

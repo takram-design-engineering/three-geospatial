@@ -4,12 +4,17 @@ export interface DensityProfileLike
   > {}
 
 export class DensityProfile {
-  constructor(
-    public expTerm = 0,
-    public exponent = 0,
-    public linearTerm = 0,
-    public constantTerm = 0
-  ) {}
+  expTerm: number
+  exponent: number
+  linearTerm: number
+  constantTerm: number
+
+  constructor(expTerm = 0, exponent = 0, linearTerm = 0, constantTerm = 0) {
+    this.expTerm = expTerm
+    this.exponent = exponent
+    this.linearTerm = linearTerm
+    this.constantTerm = constantTerm
+  }
 
   set(expTerm = 0, exponent = 0, linearTerm = 0, constantTerm = 0): this {
     this.expTerm = expTerm

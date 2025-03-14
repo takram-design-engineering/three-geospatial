@@ -10,12 +10,10 @@ const geodeticScratch = /*#__PURE__*/ new Geodetic()
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export class TerrainGeometry extends BufferGeometry {
+  readonly data: QuantizedMeshData
   position: Vector3
 
-  constructor(
-    readonly data: QuantizedMeshData,
-    rectangle: Rectangle
-  ) {
+  constructor(data: QuantizedMeshData, rectangle: Rectangle) {
     super()
 
     const { header, vertexData, triangleIndices, extensions } = data
@@ -23,6 +21,7 @@ export class TerrainGeometry extends BufferGeometry {
       throw new Error()
     }
 
+    this.data = data
     this.position = new Vector3(
       header.boundingSphereCenterX,
       header.boundingSphereCenterY,

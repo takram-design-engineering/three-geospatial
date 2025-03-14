@@ -21,10 +21,12 @@ export interface IonAssetParams {
 export class IonAsset {
   readonly assetId: number
 
+  private readonly params: Readonly<IonAssetParams>
   private endpointPromise?: Promise<AssetEndpoint>
 
-  constructor(private readonly params: Readonly<IonAssetParams>) {
+  constructor(params: Readonly<IonAssetParams>) {
     this.assetId = params.assetId
+    this.params = params
   }
 
   async loadEndpoint(): Promise<AssetEndpoint> {

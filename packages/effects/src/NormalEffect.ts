@@ -39,10 +39,9 @@ export const normalEffectOptionsDefaults = {
 export class NormalEffect extends Effect {
   declare uniforms: UniformMap<NormalEffectUniforms>
 
-  constructor(
-    private camera: Camera,
-    options?: NormalEffectOptions
-  ) {
+  private camera: Camera
+
+  constructor(camera: Camera, options?: NormalEffectOptions) {
     const {
       blendFunction,
       normalBuffer = null,
@@ -73,9 +72,8 @@ export class NormalEffect extends Effect {
         )
       }
     )
-    if (camera != null) {
-      this.mainCamera = camera
-    }
+
+    this.camera = camera
     this.octEncoded = octEncoded
     this.reconstructFromDepth = reconstructFromDepth
   }

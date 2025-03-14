@@ -97,7 +97,7 @@ export class CloudsPass extends PassBase {
       atmosphereUniforms,
       ...options
     }: CloudsPassOptions,
-    private readonly atmosphere: AtmosphereParameters
+    atmosphere: AtmosphereParameters
   ) {
     super('CloudsPass', options)
 

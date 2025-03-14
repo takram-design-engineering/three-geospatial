@@ -8,6 +8,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
+    "erasableSyntaxOnly": true,
     "target": "es2017",
     "module": "esnext",
     "lib": ["es2021", "dom"],

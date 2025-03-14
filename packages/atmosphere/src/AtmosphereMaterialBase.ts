@@ -99,6 +99,7 @@ export interface AtmosphereMaterialBaseUniforms {
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   declare uniforms: AtmosphereMaterialBaseUniforms
 
+  protected readonly atmosphere: AtmosphereParameters
   ellipsoid: Ellipsoid
   readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
@@ -106,7 +107,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   constructor(
     params?: AtmosphereMaterialBaseParameters,
-    protected readonly atmosphere = AtmosphereParameters.DEFAULT
+    atmosphere = AtmosphereParameters.DEFAULT
   ) {
     const {
       irradianceTexture = null,

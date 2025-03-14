@@ -3,7 +3,7 @@ import { BatchedMesh } from 'three'
 import { type TerrainGeometry } from '@takram/three-terrain-core'
 
 export class BatchedTerrainMesh extends BatchedMesh {
-  constructor(readonly geometries: readonly TerrainGeometry[]) {
+  constructor(geometries: readonly TerrainGeometry[]) {
     const vertexCount = geometries.reduce(
       (sum, geometry) => sum + geometry.getAttribute('position').count,
       0
