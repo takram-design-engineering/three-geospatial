@@ -1,6 +1,7 @@
 import { type Meta, type StoryFn } from '@storybook/react'
 
 import { Story } from './3DTilesRenderer-Story'
+import _Vanilla from './3DTilesRenderer-Vanilla'
 
 export default {
   title: 'atmosphere/3D Tiles Renderer Integration',
@@ -36,3 +37,5 @@ export const Manhattan: StoryFn = () => (
     timeOfDay={7.6}
   />
 )
+
+export const Vanilla = _Vanilla
