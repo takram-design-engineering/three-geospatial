@@ -1,10 +1,10 @@
 # Geospatial Rendering in Three.js
 
-This repository hosts a prototype of the rendering aspect of a Web GIS engine. It’s part of Takram’s client projects, commissioned by a company selected by the Cabinet Office of Japan under the SBIR (Small/Startup Business Innovation Research) program.
+A monorepo of libraries for enhancing geospatial rendering in Three.js.
 
-Since the Web GIS engine is planned to be developed as an open-source project, this prototype is also being developed openly. While it’s uncertain whether we can provide long-term maintenance, we hope this work proves to be valuable.
+This project takes a modular approach, allowing users to selectively use only the parts they need, rather than aiming to provide a comprehensive solution. It is designed to work in combination with existing, excellent libraries such as `3d-tiles-renderer`, `astronomy-engine`, and of course, Three.js and R3F (React Three Fiber).
 
-Our contribution to the project is scheduled to conclude by March 2025.
+This project originally started as a prototype focused on the rendering aspect of a Web GIS engine developed by Eukarya. It was part of Takram’s client work, commissioned by Eukarya under the SBIR (Small/Startup Business Innovation Research) program led by the Cabinet Office of Japan. Our contribution to the project concluded in March 2025.
 
 ## Packages
 
