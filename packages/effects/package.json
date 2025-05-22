@@ -1,6 +1,6 @@
 {
   "name": "@takram/three-geospatial-effects",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A collection of post-processing effects",
   "keywords": [
     "three",
@@ -42,7 +42,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@takram/three-geospatial": "0.2.0"
+    "@takram/three-geospatial": "0.2.1"
   },
   "peerDependencies": {
     "@react-three/fiber": ">=9.0.4",
