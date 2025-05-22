@@ -141,6 +141,9 @@ importers:
       '@nx/workspace':
         specifier: 20.5.0
         version: 20.5.0(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.7.3))(@swc/core@1.5.29(@swc/helpers@0.5.15))
+      '@rollup/plugin-replace':
+        specifier: ^6.0.2
+        version: 6.0.2(rollup@4.34.9)
       '@storybook/addon-essentials':
         specifier: 8.4.7
         version: 8.4.7(@types/react@19.0.10)(storybook@8.6.12(prettier@3.5.3))
@@ -2355,6 +2358,15 @@ packages:
       '@react-three/fiber': '>=9.0.4'
       react: '>=19.0'
       three: '>=0.170.0'
+
+  '@rollup/plugin-replace@6.0.2':
+    resolution: {integrity: sha512-7QaYCf8bqF04dOy7w/eHmJeNExxTYwvKAmlSAH/EaWWUzbT0h5sbF6bktFoX/0F/0qwng5/dWFMyf3gzaM8DsQ==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
 
   '@rollup/pluginutils@5.1.4':
     resolution: {integrity: sha512-USm05zrsFxYLPdWWq+K3STlWiT/3ELn3RcV5hJMghpeAIhxfsUIg6mt12CBJBInWMV4VneoV7SfGv8xIwo2qNQ==}
@@ -11211,6 +11223,13 @@ snapshots:
       three: 0.175.0
     transitivePeerDependencies:
       - '@types/three'
+
+  '@rollup/plugin-replace@6.0.2(rollup@4.34.9)':
+    dependencies:
+      '@rollup/pluginutils': 5.1.4(rollup@4.34.9)
+      magic-string: 0.30.17
+    optionalDependencies:
+      rollup: 4.34.9
 
   '@rollup/pluginutils@5.1.4(rollup@4.34.9)':
     dependencies:

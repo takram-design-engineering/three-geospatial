@@ -52,6 +52,7 @@
     "@nx/vite": "20.5.0",
     "@nx/web": "20.5.0",
     "@nx/workspace": "20.5.0",
+    "@rollup/plugin-replace": "^6.0.2",
     "@storybook/addon-essentials": "8.4.7",
     "@storybook/addon-interactions": "8.4.7",
     "@storybook/core-server": "8.4.7",

@@ -3,6 +3,7 @@
 import * as path from 'path'
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
+import replace from '@rollup/plugin-replace'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
@@ -53,7 +54,12 @@ export default defineConfig({
       output: [
         {
           format: 'es' as const,
-          chunkFileNames: 'build/shared.js'
+          chunkFileNames: 'build/shared.js',
+          plugins: [
+            replace({
+              'process.env.NODE_ENV': JSON.stringify('production')
+            })
+          ]
         },
         {
           format: 'cjs' as const,
