@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2] - 2025-05-23
+
+### Fixed
+
+- `Sky`: `groundAlbedo` prop now resets to default value when removed.
+- Removed `process.env.NODE_ENV` from the ES build output.
+
 ## [0.11.1] - 2025-03-14
 
 ### Fixed

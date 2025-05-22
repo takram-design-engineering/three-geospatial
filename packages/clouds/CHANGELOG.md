@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.2] - 2025-05-23
+
+### Fixed
+
+- Removed `process.env.NODE_ENV` from the ES build output.
+
 ## [0.2.1] - 2025-03-14
 
 ### Fixed
