@@ -407,7 +407,7 @@ vec3 GetSkyRadianceToPoint(
   single_mie_scattering * MiePhaseFunction(u_mie_phase_function_g, nu);
 }
 
-vec3 GetSunAndSkyIrradiance(
+vec3 GetSunAndSkyIrradianceForParticle(
   const sampler2D u_transmittance_texture,
   const sampler2D u_irradiance_texture,
   const vec3 point,
@@ -491,8 +491,8 @@ vec3 GetSkyRadianceToPoint(
   return inscatter;
 }
 
-vec3 GetSunAndSkyIrradiance(vec3 point, vec3 sun_direction, out vec3 sky_irradiance) {
-  vec3 sun_irradiance = GetSunAndSkyIrradiance(
+vec3 GetSunAndSkyIrradianceForParticle(vec3 point, vec3 sun_direction, out vec3 sky_irradiance) {
+  vec3 sun_irradiance = GetSunAndSkyIrradianceForParticle(
     u_transmittance_texture,
     u_irradiance_texture,
     point,

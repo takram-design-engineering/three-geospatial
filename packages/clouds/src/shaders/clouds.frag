@@ -416,7 +416,7 @@ vec3 getGroundSunSkyIrradiance(
   out vec3 skyIrradiance
 ) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIrradiance(
+  return GetSunAndSkyIrradianceForParticle(
     (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
     sunDirection,
     skyIrradiance
@@ -429,7 +429,7 @@ vec3 getGroundSunSkyIrradiance(
 
 vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3 skyIrradiance) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIrradiance(position * METER_TO_LENGTH_UNIT, sunDirection, skyIrradiance);
+  return GetSunAndSkyIrradianceForParticle(position * METER_TO_LENGTH_UNIT, sunDirection, skyIrradiance);
   #else // ACCURATE_SUN_SKY_IRRADIANCE
   float alpha = remapClamped(height, minHeight, maxHeight);
   skyIrradiance = mix(vCloudsIrradiance.minSky, vCloudsIrradiance.maxSky, alpha);
