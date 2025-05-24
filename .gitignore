@@ -323,3 +323,5 @@ storybook-static
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
 .npmrc
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
