@@ -679,15 +679,15 @@ These values take effect only when [`accuratePhaseFunction`](#cloudsaccuratephas
 #### skyIrradianceScale
 
 ```ts
-skyIrradianceScale: number = 2.5
+skyIrradianceScale: number = 1
 ```
 
-The contribution of sky irradiance. A value of 0 disables sky irradiance, while 1 represents single isotropic scattering. Since real-world sky light scatters multiple times with much more complex interactions, values greater than 1 make it more plausible.
+The contribution of sky irradiance. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
 #### groundIrradianceScale
 
 ```ts
-groundIrradianceScale: number = 3
+groundIrradianceScale: number = 1
 ```
 
 The contribution of irradiance bouncing off the ground. This is a fudge factor and you might adjust this value to make it look convincing to you.

@@ -416,8 +416,9 @@ vec3 getGroundSunSkyIrradiance(
   out vec3 skyIrradiance
 ) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIrradianceForParticle(
+  return GetSunAndSkyIrradiance(
     (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
+    surfaceNormal,
     sunDirection,
     skyIrradiance
   );
@@ -455,7 +456,7 @@ vec3 approximateIrradianceFromGround(
   vec3 skyIrradiance;
   vec3 sunIrradiance = getGroundSunSkyIrradiance(position, surfaceNormal, height, skyIrradiance);
   const float groundAlbedo = 0.3;
-  vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
+  vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance;
   vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
   vec3 bouncedIrradiance = bouncedLight * exp(-opticalDepthToGround);
   return albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;

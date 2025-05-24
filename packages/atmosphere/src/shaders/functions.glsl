@@ -416,7 +416,9 @@ vec3 GetSunAndSkyIrradianceForParticle(
 ) {
   float r = length(point);
   float mu_s = dot(point, sun_direction) / r;
-  sky_irradiance = GetIrradiance(u_irradiance_texture, r, mu_s);
+  // Integral of (1+dot(n,p))/2 over sphere yields 2π.
+  sky_irradiance = GetIrradiance(u_irradiance_texture, r, mu_s) * 2.0 * PI;
+  // Sunlight is directional. Just omit the cosine term.
   return u_solar_irradiance * GetTransmittanceToSun(u_transmittance_texture, r, mu_s);
 }
 

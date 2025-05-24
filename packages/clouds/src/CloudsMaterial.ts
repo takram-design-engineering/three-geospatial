@@ -208,8 +208,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Scattering
           albedo: new Uniform(new Vector3()),
-          skyIrradianceScale: new Uniform(2.5),
-          groundIrradianceScale: new Uniform(3),
+          skyIrradianceScale: new Uniform(1),
+          groundIrradianceScale: new Uniform(1),
           powderScale: new Uniform(0.8),
           powderExponent: new Uniform(150),
 
