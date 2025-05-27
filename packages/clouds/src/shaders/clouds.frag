@@ -552,8 +552,7 @@ vec4 marchClouds(
         );
       }
 
-      float scattering = approximateMultipleScattering(opticalDepth, cosTheta);
-      vec3 radiance = albedo * sunIrradiance * scattering;
+      vec3 radiance = sunIrradiance * approximateMultipleScattering(opticalDepth, cosTheta);
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
@@ -565,16 +564,16 @@ vec4 marchClouds(
           mipLevel,
           jitter
         );
-        radiance += albedo * groundIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
+        radiance += groundIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
 
       // Crude approximation of sky gradient. Better than none in the shadows.
       float skyGradient = dot(0.5 + weather.heightFraction, media.weight);
-      radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
+      radiance += skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
 
-      // Finally multiply by extinction.
-      radiance *= media.extinction;
+      // Finally multiply by scattering.
+      radiance *= media.scattering;
 
       #ifdef POWDER
       radiance *= 1.0 - powderScale * exp(-media.extinction * powderExponent);
@@ -688,7 +687,7 @@ vec4 approximateHaze(
   vec3 sunIrradiance = vGroundIrradiance.sun;
   vec3 irradiance = sunIrradiance * phaseFunction(cosTheta);
   irradiance += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale;
-  vec3 inscatter = albedo * irradiance * saturate(1.0 - exp(-effectiveOpticalDepth));
+  vec3 inscatter = scatteringAlbedo * irradiance * saturate(1.0 - exp(-effectiveOpticalDepth));
 
   // Inscatter is attenuated by shadow length, but transmittance is not.
   return vec4(inscatter, saturate(1.0 - exp(-opticalDepth)));
