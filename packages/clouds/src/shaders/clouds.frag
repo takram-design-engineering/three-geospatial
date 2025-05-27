@@ -569,7 +569,7 @@ vec4 marchClouds(
       #endif // GROUND_IRRADIANCE
 
       // Crude approximation of sky gradient. Better than none in the shadows.
-      float skyGradient = dot(0.5 + weather.heightFraction, media.weight);
+      float skyGradient = dot(weather.heightFraction * 0.5 + 0.5, media.weight);
       radiance += skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
 
       // Finally multiply by scattering.
