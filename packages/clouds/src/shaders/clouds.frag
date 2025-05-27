@@ -430,7 +430,11 @@ vec3 getGroundSunSkyIrradiance(
 
 vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3 skyIrradiance) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIrradianceForParticle(position * METER_TO_LENGTH_UNIT, sunDirection, skyIrradiance);
+  return GetSunAndSkyIrradianceForParticle(
+    position * METER_TO_LENGTH_UNIT,
+    sunDirection,
+    skyIrradiance
+  );
   #else // ACCURATE_SUN_SKY_IRRADIANCE
   float alpha = remapClamped(height, minHeight, maxHeight);
   skyIrradiance = mix(vCloudsIrradiance.minSky, vCloudsIrradiance.maxSky, alpha);
@@ -457,9 +461,8 @@ vec3 approximateIrradianceFromGround(
   vec3 sunIrradiance = getGroundSunSkyIrradiance(position, surfaceNormal, height, skyIrradiance);
   const float groundAlbedo = 0.3;
   vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance;
-  vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
-  vec3 bouncedIrradiance = bouncedLight * exp(-opticalDepthToGround);
-  return albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
+  vec3 bouncedRadiance = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
+  return bouncedRadiance * exp(-opticalDepthToGround);
 }
 #endif // GROUND_IRRADIANCE
 
@@ -555,13 +558,14 @@ vec4 marchClouds(
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (height < shadowTopHeight && mipLevel < 0.5) {
-        radiance += approximateIrradianceFromGround(
+        vec3 groundIrradiance = approximateIrradianceFromGround(
           position,
           surfaceNormal,
           height,
           mipLevel,
           jitter
         );
+        radiance += albedo * groundIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
 
@@ -569,7 +573,7 @@ vec4 marchClouds(
       float skyGradient = dot(0.5 + weather.heightFraction, media.weight);
       radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
 
-      // Finally multiply by extinction (redundant but kept for clarity).
+      // Finally multiply by extinction.
       radiance *= media.extinction;
 
       #ifdef POWDER
