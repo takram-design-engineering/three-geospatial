@@ -303,7 +303,12 @@ vec3 GetSkyRadiance(
       single_mie_scattering
     );
   } else {
-    float d = shadow_length;
+    // Use different points for Rayleigh and Mie scattering since a large shadow
+    // length for Rayleigh scattering leads to an overly orange tint, which
+    // doesn't work well with the clouds seemingly because their in-scattering
+    // is an approximation for terrain.
+    float rayleigh_shadow_length = min(shadow_length, u_max_rayleigh_shadow_length);
+    float d = rayleigh_shadow_length;
     float r_p = ClampRadius(sqrt(d * d + 2.0 * r * mu * d + r * r));
     float mu_p = (r * mu + d) / r_p;
     float mu_s_p = (r * mu_s + d * nu) / r_p;
@@ -317,15 +322,38 @@ vec3 GetSkyRadiance(
       ray_r_mu_intersects_ground,
       single_mie_scattering
     );
-    vec3 shadow_transmittance = GetTransmittance(
+    vec3 rayleigh_transmittance = GetTransmittance(
+      transmittance_texture,
+      r,
+      mu,
+      rayleigh_shadow_length,
+      ray_r_mu_intersects_ground
+    );
+
+    d = shadow_length;
+    r_p = ClampRadius(sqrt(d * d + 2.0 * r * mu * d + r * r));
+    mu_p = (r * mu + d) / r_p;
+    mu_s_p = (r * mu_s + d * nu) / r_p;
+    GetCombinedScattering(
+      scattering_texture,
+      single_mie_scattering_texture,
+      r_p,
+      mu_p,
+      mu_s_p,
+      nu,
+      ray_r_mu_intersects_ground,
+      single_mie_scattering
+    );
+    vec3 mie_transmittance = GetTransmittance(
       transmittance_texture,
       r,
       mu,
       shadow_length,
       ray_r_mu_intersects_ground
     );
-    scattering = scattering * shadow_transmittance;
-    single_mie_scattering = single_mie_scattering * shadow_transmittance;
+
+    scattering = scattering * rayleigh_transmittance;
+    single_mie_scattering = single_mie_scattering * mie_transmittance;
   }
   return scattering * RayleighPhaseFunction(nu) +
   single_mie_scattering * MiePhaseFunction(u_mie_phase_function_g, nu);

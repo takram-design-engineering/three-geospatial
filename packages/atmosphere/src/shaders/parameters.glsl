@@ -6,6 +6,7 @@ uniform vec3 u_rayleigh_scattering;
 uniform vec3 u_mie_scattering;
 uniform float u_mie_phase_function_g;
 uniform float u_mu_s_min;
+uniform float u_max_rayleigh_shadow_length;
 
 uniform sampler2D u_transmittance_texture;
 uniform sampler3D u_scattering_texture;
