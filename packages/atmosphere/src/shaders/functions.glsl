@@ -81,6 +81,11 @@ float DistanceToTopAtmosphereBoundary(float r, float mu) {
   return ClampDistance(-r * mu + SafeSqrt(discriminant));
 }
 
+float DistanceToBottomAtmosphereBoundary(float r, float mu) {
+  float discriminant = r * r * (mu * mu - 1.0) + u_bottom_radius * u_bottom_radius;
+  return ClampDistance(-r * mu - SafeSqrt(discriminant));
+}
+
 bool RayIntersectsGround(float r, float mu) {
   return mu < 0.0 && r * r * (mu * mu - 1.0) + u_bottom_radius * u_bottom_radius >= 0.0;
 }
@@ -114,10 +119,10 @@ vec3 GetTransmittanceToTopAtmosphereBoundary(
 
 vec3 GetTransmittance(
   const sampler2D u_transmittance_texture,
-  float r,
-  float mu,
-  float d,
-  bool ray_r_mu_intersects_ground
+  const float r,
+  const float mu,
+  const float d,
+  const bool ray_r_mu_intersects_ground
 ) {
   float r_d = ClampRadius(sqrt(d * d + 2.0 * r * mu * d + r * r));
   float mu_d = ClampCosine((r * mu + d) / r_d);
@@ -254,6 +259,58 @@ vec3 GetCombinedScattering(
   return scattering;
 }
 
+vec3 GetScatteringFromPoint(
+  const sampler2D u_transmittance_texture,
+  const sampler3D u_scattering_texture,
+  const sampler3D u_single_mie_scattering_texture,
+  const float r,
+  const float mu,
+  const float mu_s,
+  const float nu,
+  const float d,
+  const bool ray_r_mu_intersects_ground,
+  out vec3 single_mie_scattering
+) {
+  vec3 scattering = GetCombinedScattering(
+    u_scattering_texture,
+    u_single_mie_scattering_texture,
+    r,
+    mu,
+    mu_s,
+    nu,
+    ray_r_mu_intersects_ground,
+    single_mie_scattering
+  );
+  float r_p = ClampRadius(sqrt(d * d + 2.0 * r * mu * d + r * r));
+  float mu_p = (r * mu + d) / r_p;
+  float mu_s_p = (r * mu_s + d * nu) / r_p;
+  vec3 single_mie_scattering_p;
+  vec3 scattering_p = GetCombinedScattering(
+    u_scattering_texture,
+    u_single_mie_scattering_texture,
+    r_p,
+    mu_p,
+    mu_s_p,
+    nu,
+    ray_r_mu_intersects_ground,
+    single_mie_scattering_p
+  );
+  vec3 transmittance = GetTransmittance(
+    u_transmittance_texture,
+    r,
+    mu,
+    d,
+    ray_r_mu_intersects_ground
+  );
+  scattering = scattering - transmittance * scattering_p;
+  single_mie_scattering = single_mie_scattering - transmittance * single_mie_scattering_p;
+  single_mie_scattering = GetExtrapolatedSingleMieScattering(
+    vec4(scattering, single_mie_scattering.r)
+  );
+  single_mie_scattering = single_mie_scattering * smoothstep(float(0.0), float(0.01), mu_s);
+  return scattering;
+}
+
 vec3 GetSkyRadiance(
   const sampler2D u_transmittance_texture,
   const sampler3D u_scattering_texture,
@@ -283,44 +340,51 @@ vec3 GetSkyRadiance(
   transmittance = ray_r_mu_intersects_ground
     ? vec3(0.0)
     : GetTransmittanceToTopAtmosphereBoundary(u_transmittance_texture, r, mu);
-  vec3 single_mie_scattering;
-  vec3 scattering;
 
-  if (shadow_length == 0.0) {
-    scattering = GetCombinedScattering(
+  vec3 single_mie_scattering;
+  vec3 scattering = GetCombinedScattering(
+    u_scattering_texture,
+    u_single_mie_scattering_texture,
+    r,
+    mu,
+    mu_s,
+    nu,
+    ray_r_mu_intersects_ground,
+    single_mie_scattering
+  );
+
+  if (shadow_length > 0.0) {
+    float L = 200.0;
+    vec3 single_mie_scattering_p;
+    vec3 scattering_p = GetScatteringFromPoint(
+      u_transmittance_texture,
       u_scattering_texture,
       u_single_mie_scattering_texture,
       r,
       mu,
       mu_s,
       nu,
+      max(L - shadow_length, 0.0),
       ray_r_mu_intersects_ground,
-      single_mie_scattering
+      single_mie_scattering_p
     );
-  } else {
-    float d = shadow_length;
-    float r_p = ClampRadius(sqrt(d * d + 2.0 * r * mu * d + r * r));
-    float mu_p = (r * mu + d) / r_p;
-    float mu_s_p = (r * mu_s + d * nu) / r_p;
-    scattering = GetCombinedScattering(
+    scattering -= scattering_p;
+    single_mie_scattering -= single_mie_scattering_p;
+
+    scattering_p = GetScatteringFromPoint(
+      u_transmittance_texture,
       u_scattering_texture,
       u_single_mie_scattering_texture,
-      r_p,
-      mu_p,
-      mu_s_p,
-      nu,
-      ray_r_mu_intersects_ground,
-      single_mie_scattering
-    );
-    vec3 shadow_transmittance = GetTransmittance(
-      u_transmittance_texture,
       r,
       mu,
-      shadow_length,
-      ray_r_mu_intersects_ground
+      mu_s,
+      nu,
+      L,
+      ray_r_mu_intersects_ground,
+      single_mie_scattering_p
     );
-    scattering = scattering * shadow_transmittance;
-    single_mie_scattering = single_mie_scattering * shadow_transmittance;
+    scattering += scattering_p;
+    single_mie_scattering += single_mie_scattering_p;
   }
   return scattering * RayleighPhaseFunction(nu) +
   single_mie_scattering * MiePhaseFunction(u_mie_phase_function_g, nu);
