@@ -25,7 +25,7 @@ float orenNayarDiffuse(const vec3 L, const vec3 V, const vec3 N) {
 vec3 getSkyRadiance(
   const vec3 cameraPosition,
   const vec3 rayDirection,
-  float shadowLength,
+  const float shadowLength,
   const vec3 sunDirection,
   const vec3 moonDirection,
   const float moonAngularRadius,

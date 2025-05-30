@@ -626,7 +626,7 @@ float marchShadowLength(
   float maxRayDistance = rayNearFar.y - rayNearFar.x;
   float stepSize = minShadowLengthStepSize;
   float rayDistance = stepSize * jitter;
-  const float attenuationFactor = 1.0 - 1e-3;
+  const float attenuationFactor = 1.0 - 5e-4;
   float attenuation = 1.0;
 
   // TODO: This march is closed, and sample resolution can be much lower.
