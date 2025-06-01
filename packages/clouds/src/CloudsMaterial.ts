@@ -97,7 +97,7 @@ export interface CloudsMaterialUniforms
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Scattering
-  scatteringAlbedo: Uniform<Vector3>
+  scatteringAlbedo: Uniform<number>
   skyIrradianceScale: Uniform<number>
   groundIrradianceScale: Uniform<number>
   powderScale: Uniform<number>
@@ -207,7 +207,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           stbnTexture: new Uniform(null),
 
           // Scattering
-          scatteringAlbedo: new Uniform(new Vector3()),
+          scatteringAlbedo: new Uniform(1),
           skyIrradianceScale: new Uniform(1),
           groundIrradianceScale: new Uniform(1),
           powderScale: new Uniform(0.8),
@@ -269,11 +269,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     // into fullscreen quad with another camera for the scene projection.
 
     const uniforms = this.uniforms
-    uniforms.scatteringAlbedo.value.setScalar(
-      uniforms.scatteringCoefficient.value /
-        (uniforms.absorptionCoefficient.value +
-          uniforms.scatteringCoefficient.value)
-    )
+    const extinctionCoefficient =
+      uniforms.absorptionCoefficient.value +
+      uniforms.scatteringCoefficient.value
+    uniforms.scatteringAlbedo.value =
+      uniforms.scatteringCoefficient.value / extinctionCoefficient
 
     const prevPowder = this.defines.POWDER != null
     const nextPowder = this.uniforms.powderScale.value > 0
