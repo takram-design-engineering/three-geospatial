@@ -264,7 +264,9 @@ function useAdvancedCloudsControls(
         minShadowLengthStepSize: { value: 0, min: 50, max: 200, step: 1 },
         maxShadowLengthRayDistance: { value: 0, min: 1e4, max: 1e6 },
         'hazeDensityScale-log10': { value: 0, min: -6, max: -3 },
-        'hazeExponent-log10': { value: 0, min: -3, max: -1 }
+        'hazeExponent-log10': { value: 0, min: -3, max: -1 },
+        hazeScatteringCoefficient: { value: 0, min: 0, max: 5 },
+        hazeAbsorptionCoefficient: { value: 0, min: 0, max: 5 }
       }) satisfies Partial<
         Record<
           | keyof CloudsEffect['clouds']
@@ -299,7 +301,9 @@ function useAdvancedCloudsControls(
       minShadowLengthStepSize: clouds.minShadowLengthStepSize,
       maxShadowLengthRayDistance: clouds.maxShadowLengthRayDistance,
       'hazeDensityScale-log10': Math.log10(clouds.hazeDensityScale),
-      'hazeExponent-log10': Math.log10(clouds.hazeExponent)
+      'hazeExponent-log10': Math.log10(clouds.hazeExponent),
+      hazeScatteringCoefficient: clouds.hazeScatteringCoefficient,
+      hazeAbsorptionCoefficient: clouds.hazeAbsorptionCoefficient
     })
     initRef.current = true
   }, [effect, qualityPreset, set])
@@ -326,7 +330,9 @@ function useAdvancedCloudsControls(
     'clouds-minShadowLengthStepSize': params.minShadowLengthStepSize,
     'clouds-maxShadowLengthRayDistance': params.maxShadowLengthRayDistance,
     'clouds-hazeDensityScale': 10 ** params['hazeDensityScale-log10'],
-    'clouds-hazeExponent': 10 ** params['hazeExponent-log10']
+    'clouds-hazeExponent': 10 ** params['hazeExponent-log10'],
+    'clouds-hazeScatteringCoefficient': params.hazeScatteringCoefficient,
+    'clouds-hazeAbsorptionCoefficient': params.hazeAbsorptionCoefficient
   }
 }
 

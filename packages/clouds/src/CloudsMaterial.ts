@@ -97,7 +97,6 @@ export interface CloudsMaterialUniforms
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Scattering
-  scatteringAlbedo: Uniform<number>
   skyIrradianceScale: Uniform<number>
   groundIrradianceScale: Uniform<number>
   powderScale: Uniform<number>
@@ -135,6 +134,8 @@ export interface CloudsMaterialUniforms
   // Haze
   hazeDensityScale: Uniform<number>
   hazeExponent: Uniform<number>
+  hazeScatteringCoefficient: Uniform<number>
+  hazeAbsorptionCoefficient: Uniform<number>
 }
 
 export class CloudsMaterial extends AtmosphereMaterialBase {
@@ -207,7 +208,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           stbnTexture: new Uniform(null),
 
           // Scattering
-          scatteringAlbedo: new Uniform(1),
           skyIrradianceScale: new Uniform(1),
           groundIrradianceScale: new Uniform(1),
           powderScale: new Uniform(0.8),
@@ -249,7 +249,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
           // Haze
           hazeDensityScale: new Uniform(3e-5),
-          hazeExponent: new Uniform(1e-3)
+          hazeExponent: new Uniform(1e-3),
+          hazeScatteringCoefficient: new Uniform(0.9),
+          hazeAbsorptionCoefficient: new Uniform(0.5),
         } satisfies Partial<AtmosphereMaterialBaseUniforms> &
           CloudsMaterialUniforms
       },
@@ -267,13 +269,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   ): void {
     // Disable onBeforeRender in AtmosphereMaterialBase because we're rendering
     // into fullscreen quad with another camera for the scene projection.
-
-    const uniforms = this.uniforms
-    const extinctionCoefficient =
-      uniforms.absorptionCoefficient.value +
-      uniforms.scatteringCoefficient.value
-    uniforms.scatteringAlbedo.value =
-      uniforms.scatteringCoefficient.value / extinctionCoefficient
 
     const prevPowder = this.defines.POWDER != null
     const nextPowder = this.uniforms.powderScale.value > 0

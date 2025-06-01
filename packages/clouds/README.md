@@ -951,6 +951,15 @@ hazeExponent: number = 1e-3
 
 Controls the rate at which the haze density exponentially decreases with altitude. A lower value makes it more concentrated near the ground, while a higher value spreads it more at higher altitudes.
 
+#### clouds.hazeScatteringCoefficient, clouds.hazeAbsorptionCoefficient
+
+```ts
+hazeScatteringCoefficient: number = 0.9
+hazeAbsorptionCoefficient: number = 0.5
+```
+
+The scattering coefficient ($\sigma_s$) and absorption coefficient ($\sigma_a$) for haze.
+
 ### Advanced shadow parameters
 
 #### shadow.temporalPass

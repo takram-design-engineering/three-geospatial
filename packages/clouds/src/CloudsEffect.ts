@@ -82,7 +82,9 @@ const cloudsUniformKeys = [
   'minShadowLengthStepSize',
   'maxShadowLengthRayDistance',
   'hazeDensityScale',
-  'hazeExponent'
+  'hazeExponent',
+  'hazeScatteringCoefficient',
+  'hazeAbsorptionCoefficient'
 ] as const satisfies Array<keyof CloudsMaterialUniforms>
 
 // prettier-ignore

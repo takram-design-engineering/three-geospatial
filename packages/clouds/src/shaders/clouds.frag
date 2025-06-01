@@ -674,7 +674,8 @@ vec4 approximateHaze(
 
   // Analytical optical depth where density exponentially decreases with height.
   // Based on: https://iquilezles.org/articles/fog/
-  float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
+  vec3 normalAtHorizon = (rayOrigin - dot(rayOrigin, rayDirection) * rayDirection) / bottomRadius;
+  float angle = max(dot(normalAtHorizon, rayDirection), 1e-5);
   float exponent = angle * hazeExponent;
   float linearTerm = density / hazeExponent / angle;
 
@@ -690,7 +691,7 @@ vec4 approximateHaze(
   vec3 sunIrradiance = vGroundIrradiance.sun;
   vec3 inscatter = sunIrradiance * phaseFunction(cosTheta) * shadowTransmittance;
   inscatter += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale * transmittance;
-  inscatter *= scatteringAlbedo;
+  inscatter *= hazeScatteringCoefficient / (hazeAbsorptionCoefficient + hazeScatteringCoefficient);
   return vec4(inscatter, transmittance);
 }
 
@@ -990,7 +991,8 @@ void main() {
     cosTheta,
     shadowLength
   );
-  color = color * (1.0 - haze.a) + haze;
+  color.rgb = mix(color.rgb, haze.rgb, haze.a);
+  color.a = color.a * (1.0 - haze.a) + haze.a;
   #endif // HAZE
 
   outputColor = color;

@@ -1,4 +1,5 @@
 import { Matrix4, Vector3, type Ray } from 'three'
+import invariant from 'tiny-invariant'
 
 import {
   projectOnEllipsoidSurface,
@@ -115,14 +116,32 @@ export class Ellipsoid {
     radius: number,
     result = new Vector3()
   ): Vector3 {
-    const xySquared = this.radii.x ** 2
+    invariant(this.radii.x === this.radii.y)
+    const a2 = this.radii.x ** 2
+    const b2 = this.radii.z ** 2
     const normal = vectorScratch1
       .set(
-        surfacePosition.x / xySquared,
-        surfacePosition.y / xySquared,
-        surfacePosition.z / this.radii.z ** 2
+        surfacePosition.x / a2,
+        surfacePosition.y / a2,
+        surfacePosition.z / b2
       )
       .normalize()
     return result.copy(normal.multiplyScalar(-radius).add(surfacePosition))
+  }
+
+  getNormalAtHorizon(
+    position: Vector3,
+    direction: Vector3,
+    result = new Vector3()
+  ): Vector3 {
+    invariant(this.radii.x === this.radii.y)
+    const a2 = this.radii.x ** 2
+    const b2 = this.radii.z ** 2
+    const p = position
+    const v = direction
+    let t = (p.x * v.x + p.y * v.y) / a2 + (p.z * v.z) / b2
+    t /= (p.x ** 2 + p.y ** 2) / a2 + p.z ** 2 / b2
+    const q = vectorScratch1.copy(v).multiplyScalar(-t).add(position)
+    return result.set(q.x / a2, q.y / a2, q.z / b2).normalize()
   }
 }
