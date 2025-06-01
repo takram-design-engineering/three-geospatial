@@ -676,21 +676,22 @@ vec4 approximateHaze(
   // Based on: https://iquilezles.org/articles/fog/
   float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
   float exponent = angle * hazeExponent;
+  float linearTerm = density / hazeExponent / angle;
+
   // Derive the optical depths separately for with and without shadow length.
   float expTerm = 1.0 - exp(-maxRayDistance * exponent);
   float shadowExpTerm = 1.0 - exp(-min(maxRayDistance, shadowLength) * exponent);
-  float linearTerm = density / hazeExponent / angle;
   float opticalDepth = expTerm * linearTerm;
-  float effectiveOpticalDepth = max((expTerm - shadowExpTerm) * linearTerm, 0.0);
+  float shadowOpticalDepth = max((expTerm - shadowExpTerm) * linearTerm, 0.0);
+  float transmittance = saturate(1.0 - exp(-opticalDepth));
+  float shadowTransmittance = saturate(1.0 - exp(-shadowOpticalDepth));
 
   vec3 skyIrradiance = vGroundIrradiance.sky;
   vec3 sunIrradiance = vGroundIrradiance.sun;
-  vec3 irradiance = sunIrradiance * phaseFunction(cosTheta);
-  irradiance += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale;
-  vec3 inscatter = scatteringAlbedo * irradiance * saturate(1.0 - exp(-effectiveOpticalDepth));
-
-  // Inscatter is attenuated by shadow length, but transmittance is not.
-  return vec4(inscatter, saturate(1.0 - exp(-opticalDepth)));
+  vec3 inscatter = sunIrradiance * phaseFunction(cosTheta) * shadowTransmittance;
+  inscatter += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale * transmittance;
+  inscatter *= scatteringAlbedo;
+  return vec4(inscatter, transmittance);
 }
 
 #endif // HAZE
