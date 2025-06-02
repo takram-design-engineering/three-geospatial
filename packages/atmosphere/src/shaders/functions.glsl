@@ -435,7 +435,7 @@ vec3 GetSkyRadianceToPoint(
   single_mie_scattering = GetExtrapolatedSingleMieScattering(
     vec4(scattering, single_mie_scattering.r)
   );
-  single_mie_scattering = single_mie_scattering * smoothstep(float(0.0), float(0.01), mu_s);
+  single_mie_scattering = single_mie_scattering * smoothstep(0.0, 0.01, mu_s);
   return scattering * RayleighPhaseFunction(nu) +
   single_mie_scattering * MiePhaseFunction(u_mie_phase_function_g, nu);
 }

@@ -672,10 +672,16 @@ vec4 approximateHaze(
     return vec4(0.0); // Prevent artifact in views from space
   }
 
+  // Blend two normals by the difference in angle so that normal near the
+  // ground becomes that of the origin, and in the sky that of the horizon.
+  vec3 normalAtOrigin = normalize(rayOrigin);
+  vec3 normalAtHorizon = (rayOrigin - dot(rayOrigin, rayDirection) * rayDirection) / bottomRadius;
+  float alpha = remapClamped(dot(normalAtOrigin, normalAtHorizon), 0.9, 1.0);
+  vec3 normal = mix(normalAtOrigin, normalAtHorizon, alpha);
+
   // Analytical optical depth where density exponentially decreases with height.
   // Based on: https://iquilezles.org/articles/fog/
-  vec3 normalAtHorizon = (rayOrigin - dot(rayOrigin, rayDirection) * rayDirection) / bottomRadius;
-  float angle = max(dot(normalAtHorizon, rayDirection), 1e-5);
+  float angle = max(dot(normal, rayDirection), 1e-5);
   float exponent = angle * hazeExponent;
   float linearTerm = density / hazeExponent / angle;
 
