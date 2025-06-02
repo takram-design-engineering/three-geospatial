@@ -711,8 +711,7 @@ void applyAerialPerspective(
     sunDirection,
     transmittance
   );
-  float clampedAlpha = max(color.a, 1e-7);
-  color.rgb = mix(vec3(0.0), color.rgb * transmittance / clampedAlpha + inscatter, color.a);
+  color.rgb = color.rgb * transmittance + inscatter * color.a;
 }
 
 bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
