@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode
 } from 'react'
-import { Matrix4, Vector3 } from 'three'
+import { Matrix4, Vector3, type Texture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -35,6 +35,7 @@ export interface AtmosphereTransientStates {
   rotationMatrix: Matrix4
   ellipsoidCenter: Vector3
   ellipsoidMatrix: Matrix4
+  irradianceMaskBuffer: Texture | null
   overlay: AtmosphereOverlay | null
   shadow: AtmosphereShadow | null
   shadowLength: AtmosphereShadowLength | null
@@ -88,6 +89,7 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
     rotationMatrix: new Matrix4(),
     ellipsoidCenter: new Vector3(),
     ellipsoidMatrix: new Matrix4(),
+    irradianceMaskBuffer: null,
     overlay: null,
     shadow: null,
     shadowLength: null
