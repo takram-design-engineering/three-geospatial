@@ -14,6 +14,7 @@ import {
 
 import {
   define,
+  defineExpression,
   defineInt,
   Ellipsoid,
   Geodetic,
@@ -556,6 +557,11 @@ export class AerialPerspectiveEffect extends Effect {
       this.setChanged()
     }
   }
+
+  @defineExpression('IRRADIANCE_MASK_CHANNEL', {
+    validate: value => /^[rgba]$/.test(value)
+  })
+  irradianceMaskChannel = 'r'
 
   @define('SKY')
   sky: boolean

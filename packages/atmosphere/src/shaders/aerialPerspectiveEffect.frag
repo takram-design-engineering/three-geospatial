@@ -34,6 +34,9 @@ uniform float idealSphereAlpha;
 uniform sampler2D irradianceMaskBuffer;
 #endif // HAS_IRRADIANCE_MASK
 
+// prettier-ignore
+#define IRRADIANCE_MASK_CHANNEL_ IRRADIANCE_MASK_CHANNEL
+
 #ifdef HAS_OVERLAY
 uniform sampler2D overlayBuffer;
 #endif // HAS_OVERLAY
@@ -329,7 +332,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
   #ifdef HAS_IRRADIANCE_MASK
-  float irradianceMask = texture(irradianceMaskBuffer, uv).r;
+  float irradianceMask = texture(irradianceMaskBuffer, uv).IRRADIANCE_MASK_CHANNEL_;
   radiance = mix(inputColor.rgb, radiance, irradianceMask);
   #endif // HAS_IRRADIANCE_MASK
   #else // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
