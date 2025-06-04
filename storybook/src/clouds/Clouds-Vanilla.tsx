@@ -101,7 +101,7 @@ function init(): void {
   )
   group.add(torusKnot)
 
-  // Demonstrates deferred lighting here.
+  // Demonstrates post-process lighting here.
   aerialPerspective = new AerialPerspectiveEffect(camera)
   aerialPerspective.sky = true
   aerialPerspective.sunIrradiance = true

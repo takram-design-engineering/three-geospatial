@@ -127,7 +127,7 @@ function init(): void {
   torusKnot.receiveShadow = true
   group.add(torusKnot)
 
-  // Demonstrates forward lighting here. For deferred lighting, set
+  // Demonstrates light-source lighting here. For post-process lighting, set
   // sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
   // SunDirectionalLight, and provide a normal buffer to
   // AerialPerspectiveEffect.

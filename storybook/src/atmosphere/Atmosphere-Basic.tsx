@@ -85,7 +85,7 @@ const Scene: FC = () => {
   )
   const { mode, sun, sky } = useControls('lighting', {
     mode: {
-      options: ['deferred', 'forward'] as const
+      options: ['post-process', 'light-source'] as const
     },
     sun: true,
     sky: true
@@ -123,7 +123,7 @@ const Scene: FC = () => {
     >
       <OrbitControls ref={setControls} />
       <Sky />
-      {mode === 'forward' && (
+      {mode === 'light-source' && (
         <group position={position}>
           {sun && <SunLight />}
           {sky && <SkyLight />}
@@ -131,7 +131,7 @@ const Scene: FC = () => {
       )}
       <Stars data='atmosphere/stars.bin' />
       <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]}>
-        {mode === 'forward' ? (
+        {mode === 'light-source' ? (
           <meshLambertMaterial color='gray' />
         ) : (
           <meshBasicMaterial color='gray' />
@@ -144,7 +144,7 @@ const Scene: FC = () => {
           depth={5}
           computeVertexNormals
         >
-          {mode === 'forward' ? (
+          {mode === 'light-source' ? (
             <meshLambertMaterial color='gray' />
           ) : (
             <meshBasicMaterial color='gray' />
@@ -153,7 +153,7 @@ const Scene: FC = () => {
       </Suspense>
       <EastNorthUpFrame {...geodetic}>
         <TorusKnot args={[200, 60, 256, 64]} position={[0, 0, 20]}>
-          {mode === 'forward' ? (
+          {mode === 'light-source' ? (
             <meshLambertMaterial color='white' />
           ) : (
             <meshBasicMaterial color='white' />
@@ -177,8 +177,8 @@ const Scene: FC = () => {
         >
           {enabled && !normal && !depth && (
             <AerialPerspective
-              sunIrradiance={mode === 'deferred' && sun}
-              skyIrradiance={mode === 'deferred' && sky}
+              sunIrradiance={mode === 'post-process' && sun}
+              skyIrradiance={mode === 'post-process' && sky}
               transmittance={transmittance}
               inscatter={inscatter}
             />

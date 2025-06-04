@@ -23,7 +23,7 @@ three postprocessing
 
 ## Usage
 
-### Deferred lighting
+### Post-process lighting
 
 Suitable for large-scale scenes, but supports only Lambertian BRDF.
 
@@ -53,13 +53,13 @@ const Scene = () => {
 }
 ```
 
-![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
+![Example of post-process lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-3d-tiles-renderer-integration--manhattan)
 
-![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
+![Example of post-process lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-3d-tiles-renderer-integration--fuji)
 
-### Forward lighting
+### Light-source lighting
 
 Compatible with built-in Three.js materials and shadows, but both direct and indirect irradiance are approximated only for small-scale scenes.
 
@@ -95,7 +95,7 @@ const Scene = () => {
 }
 ```
 
-![Example of forward lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
+![Example of light-source lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
 
 ### Transient update by date
@@ -162,9 +162,9 @@ sunLight.target.position.copy(position)
 scene.add(sunLight)
 scene.add(sunLight.target)
 
-// Demonstrates forward lighting here. For deferred lighting, set sunIrradiance
-// and skyIrradiance to true, remove SkyLightProbe and SunDirectionalLight, and
-// provide a normal buffer to AerialPerspectiveEffect.
+// Demonstrates light-source lighting here. For post-process lighting, set
+// sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
+// SunDirectionalLight, and provide a normal buffer to AerialPerspectiveEffect.
 const aerialPerspective = new AerialPerspectiveEffect(camera)
 
 // Use floating-point render buffer, as radiance/luminance is stored here.
@@ -974,7 +974,7 @@ The distance from the target. Adjust this value if shadows are enabled for the l
 
 ## AerialPerspectiveEffect
 
-A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as deferred lighting.
+A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as post-process lighting.
 
 This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
 
@@ -1011,7 +1011,7 @@ Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s [`Effec
 normalBuffer: Texture | null = null
 ```
 
-The normal buffer used for deferred lighting. It is not required if both `sunIrradiance` and `skyIrradiance` are disabled.
+The normal buffer used for post-process lighting. It is not required if both `sunIrradiance` and `skyIrradiance` are disabled.
 
 `EffectComposer`’s default normal buffer lacks sufficient precision, causing banding in shaded areas. Using a floating-point normal buffer resolves this issue.
 
@@ -1104,7 +1104,7 @@ sunIrradiance: boolean = false
 skyIrradiance: boolean = false
 ```
 
-Whether to apply sun and sky irradiance as deferred lighting.
+Whether to apply sun and sky irradiance as post-process lighting.
 
 Enabling one without the other is physically incorrect and should only be done for demonstration purposes.
 
@@ -1125,7 +1125,7 @@ irradianceScale: number = 1
 
 This value adjusts the color buffer to reduce contrast.
 
-Deferred lighting treats the color buffer as albedo, but textures like those in Google Photorealistic 3D Tiles have baked lighting and shadows, resulting in higher contrast. Adjusting this value helps make it less noticeable.
+Post-process lighting treats the color buffer as albedo, but textures like those in Google Photorealistic 3D Tiles have baked lighting and shadows, resulting in higher contrast. Adjusting this value helps make it less noticeable.
 
 #### sky
 
