@@ -130,7 +130,7 @@ const Scene: FC = () => {
         </group>
       )}
       <Stars data='atmosphere/stars.bin' />
-      <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} receiveShadow>
+      <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]}>
         {mode === 'forward' ? (
           <meshLambertMaterial color='gray' />
         ) : (
@@ -143,8 +143,6 @@ const Scene: FC = () => {
           {...tile}
           depth={5}
           computeVertexNormals
-          receiveShadow
-          castShadow
         >
           {mode === 'forward' ? (
             <meshLambertMaterial color='gray' />
@@ -154,12 +152,7 @@ const Scene: FC = () => {
         </BatchedTerrainTile>
       </Suspense>
       <EastNorthUpFrame {...geodetic}>
-        <TorusKnot
-          args={[200, 60, 256, 64]}
-          position={[0, 0, 20]}
-          receiveShadow
-          castShadow
-        >
+        <TorusKnot args={[200, 60, 256, 64]} position={[0, 0, 20]}>
           {mode === 'forward' ? (
             <meshLambertMaterial color='white' />
           ) : (
