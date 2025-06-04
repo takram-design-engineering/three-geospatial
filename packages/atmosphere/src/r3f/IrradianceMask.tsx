@@ -9,8 +9,6 @@ import {
 } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 
-import { type ExpandNestedProps } from '@takram/three-geospatial/r3f'
-
 import { IrradianceMaskPass } from '../IrradianceMaskPass'
 import { AtmosphereContext } from './Atmosphere'
 
@@ -21,8 +19,7 @@ declare module '@react-three/fiber' {
 }
 
 export interface IrradianceMaskProps
-  extends Omit<ComponentPropsWithRef<'irradianceMaskPass'>, 'args'>,
-    Partial<ExpandNestedProps<IrradianceMaskPass, 'selection'>> {}
+  extends Omit<ComponentPropsWithRef<'irradianceMaskPass'>, 'args'> {}
 
 export const IrradianceMask = forwardRef<
   IrradianceMaskPass,

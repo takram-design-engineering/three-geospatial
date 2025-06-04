@@ -100,10 +100,6 @@ export class IrradianceMaskPass extends Pass {
     this.renderPass.mainCamera = value
   }
 
-  get texture(): Texture {
-    return this.renderTarget.texture
-  }
-
   override render(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget | null,
@@ -122,5 +118,17 @@ export class IrradianceMaskPass extends Pass {
     const resolution = this.resolution
     resolution.setBaseSize(width, height)
     this.renderTarget.setSize(resolution.width, resolution.height)
+  }
+
+  get texture(): Texture {
+    return this.renderTarget.texture
+  }
+
+  get selectionLayer(): number {
+    return this.selection.layer
+  }
+
+  set selectionLayer(value: number) {
+    this.selection.layer = value
   }
 }

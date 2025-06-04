@@ -64,7 +64,6 @@ const tile = new TilingScheme().getTile(geodetic, 7)
 
 const IRRADIANCE_MASK_LAYER = 10
 const layers = new Layers()
-layers.enable(0)
 layers.enable(IRRADIANCE_MASK_LAYER)
 
 const Scene: FC = () => {
@@ -205,7 +204,7 @@ const Scene: FC = () => {
             depth
           ])}
         >
-          <IrradianceMask selection-layer={IRRADIANCE_MASK_LAYER} />
+          <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
           {enabled && !normal && !depth && (
             <AerialPerspective
               sunIrradiance={sun}
