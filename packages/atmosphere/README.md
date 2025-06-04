@@ -106,6 +106,7 @@ import {
   SkyLight,
   SunLight
 } from '@takram/three-atmosphere/r3f'
+import { Layers } from 'three'
 
 const IRRADIANCE_MASK_LAYER = 10
 const layers = new Layers()
@@ -118,10 +119,12 @@ const Scene = () => (
       <SkyLight />
       <SunLight />
     </group>
-    <mesh> {/* ← This is lit in post-process */}
+    <mesh>
+      {/* This is lit in post-process */}
       <meshBasicMaterial />
     </mesh>
-    <mesh layers={layers}> {/* ← This is lit by light sources */}
+    <mesh layers={layers}>
+      {/* This is lit by light sources */}
       <meshPhysicalMaterial />
     </mesh>
     <EffectComposer enableNormalPass>
