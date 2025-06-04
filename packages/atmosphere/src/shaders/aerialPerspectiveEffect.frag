@@ -30,6 +30,10 @@ uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
+#ifdef HAS_IRRADIANCE_MASK
+uniform sampler2D irradianceMaskBuffer;
+#endif // HAS_IRRADIANCE_MASK
+
 #ifdef HAS_OVERLAY
 uniform sampler2D overlayBuffer;
 #endif // HAS_OVERLAY
@@ -324,6 +328,10 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
+  #ifdef HAS_IRRADIANCE_MASK
+  float irradianceMask = texture(irradianceMaskBuffer, uv).r;
+  radiance = mix(inputColor.rgb, radiance, irradianceMask);
+  #endif // HAS_IRRADIANCE_MASK
   #else // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)

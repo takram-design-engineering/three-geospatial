@@ -111,6 +111,7 @@ export interface AerialPerspectiveEffectUniforms {
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
   irradianceScale: Uniform<number>
+  irradianceMaskBuffer: Uniform<Texture | null>
   idealSphereAlpha: Uniform<number>
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
@@ -249,6 +250,7 @@ export class AerialPerspectiveEffect extends Effect {
             altitudeCorrection: new Uniform(new Vector3()),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
             irradianceScale: new Uniform(irradianceScale),
+            irradianceMaskBuffer: new Uniform(null),
             idealSphereAlpha: new Uniform(0),
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
@@ -534,6 +536,25 @@ export class AerialPerspectiveEffect extends Effect {
 
   set irradianceScale(value: number) {
     this.uniforms.get('irradianceScale').value = value
+  }
+
+  get irradianceMaskBuffer(): Texture | null {
+    return this.uniforms.get('irradianceMaskBuffer').value
+  }
+
+  set irradianceMaskBuffer(value: Texture | null) {
+    this.uniforms.get('irradianceMaskBuffer').value = value
+    const defines = this.defines
+    const prevValue = defines.has('HAS_IRRADIANCE_MASK')
+    const nextValue = value != null
+    if (nextValue !== prevValue) {
+      if (nextValue) {
+        defines.set('HAS_IRRADIANCE_MASK', '1')
+      } else {
+        defines.delete('HAS_IRRADIANCE_MASK')
+      }
+      this.setChanged()
+    }
   }
 
   @define('SKY')

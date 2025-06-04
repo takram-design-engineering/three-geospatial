@@ -1,6 +1,11 @@
 /// <reference types="vite/types/importMeta.d.ts" />
 
-import { OrbitControls, TorusKnot } from '@react-three/drei'
+import {
+  OrbitControls,
+  RenderCubeTexture,
+  TorusKnot,
+  type RenderCubeTextureApi
+} from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
@@ -13,10 +18,12 @@ import {
   type ComponentRef,
   type FC
 } from 'react'
+import { Layers, type Group } from 'three'
 
 import {
   AerialPerspective,
   Atmosphere,
+  IrradianceMask,
   Sky,
   SkyLight,
   Stars,
@@ -55,6 +62,11 @@ const terrain = new IonTerrain({
 })
 const tile = new TilingScheme().getTile(geodetic, 7)
 
+const IRRADIANCE_MASK_LAYER = 10
+const layers = new Layers()
+layers.enable(0)
+layers.enable(IRRADIANCE_MASK_LAYER)
+
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { lensFlare, normal, depth } = useControls(
@@ -83,12 +95,20 @@ const Scene: FC = () => {
       inscatter: true
     }
   )
-  const { mode, sun, sky } = useControls('lighting', {
-    mode: {
-      options: ['deferred', 'forward'] as const
-    },
+  const { sun, sky } = useControls('lighting', {
     sun: true,
     sky: true
+  })
+  const {
+    metalness,
+    roughness,
+    clearcoat,
+    envMap: useEnvMap
+  } = useControls('material', {
+    metalness: { value: 0, min: 0, max: 1 },
+    roughness: { value: 0, min: 0, max: 1 },
+    clearcoat: { value: 1, min: 0, max: 1 },
+    envMap: true
   })
 
   const { camera } = useThree()
@@ -112,8 +132,11 @@ const Scene: FC = () => {
       return
     }
     atmosphere.updateByDate(new Date(motionDate.get()))
+    envMapParentRef.current?.position.copy(position)
   })
 
+  const envMapParentRef = useRef<Group>(null)
+  const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
   return (
     <Atmosphere
       ref={atmosphereRef}
@@ -123,19 +146,25 @@ const Scene: FC = () => {
     >
       <OrbitControls ref={setControls} />
       <Sky />
-      {mode === 'forward' && (
-        <group position={position}>
-          {sun && <SunLight />}
-          {sky && <SkyLight />}
+      {useEnvMap && (
+        <group ref={envMapParentRef}>
+          <RenderCubeTexture ref={setEnvMap} resolution={64}>
+            <Sky
+              sun={sun}
+              groundAlbedo='gray'
+              // Increase this to avoid flickers. Total radiance doesn't change.
+              sunAngularRadius={0.1}
+            />
+          </RenderCubeTexture>
         </group>
       )}
+      <group position={position}>
+        {sun && <SunLight />}
+        {sky && <SkyLight />}
+      </group>
       <Stars data='atmosphere/stars.bin' />
       <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]}>
-        {mode === 'forward' ? (
-          <meshLambertMaterial color='gray' />
-        ) : (
-          <meshBasicMaterial color='gray' />
-        )}
+        <meshBasicMaterial color='gray' />
       </EllipsoidMesh>
       <Suspense>
         <BatchedTerrainTile
@@ -144,20 +173,22 @@ const Scene: FC = () => {
           depth={5}
           computeVertexNormals
         >
-          {mode === 'forward' ? (
-            <meshLambertMaterial color='gray' />
-          ) : (
-            <meshBasicMaterial color='gray' />
-          )}
+          <meshBasicMaterial color='gray' />
         </BatchedTerrainTile>
       </Suspense>
       <EastNorthUpFrame {...geodetic}>
-        <TorusKnot args={[200, 60, 256, 64]} position={[0, 0, 20]}>
-          {mode === 'forward' ? (
-            <meshLambertMaterial color='white' />
-          ) : (
-            <meshBasicMaterial color='white' />
-          )}
+        <TorusKnot
+          args={[200, 60, 256, 64]}
+          position={[0, 0, 20]}
+          layers={layers}
+        >
+          <meshPhysicalMaterial
+            color='black'
+            metalness={metalness}
+            roughness={roughness}
+            clearcoat={clearcoat}
+            envMap={useEnvMap ? envMap?.fbo.texture : null}
+          />
         </TorusKnot>
       </EastNorthUpFrame>
       <EffectComposer multisampling={0}>
@@ -165,7 +196,6 @@ const Scene: FC = () => {
           // Effects are order-dependant; we need to reconstruct the nodes.
           key={JSON.stringify([
             enabled,
-            mode,
             sun,
             sky,
             transmittance,
@@ -175,10 +205,11 @@ const Scene: FC = () => {
             depth
           ])}
         >
+          <IrradianceMask selection-layer={IRRADIANCE_MASK_LAYER} />
           {enabled && !normal && !depth && (
             <AerialPerspective
-              sunIrradiance={mode === 'deferred' && sun}
-              skyIrradiance={mode === 'deferred' && sky}
+              sunIrradiance={sun}
+              skyIrradiance={sky}
               transmittance={transmittance}
               inscatter={inscatter}
             />
