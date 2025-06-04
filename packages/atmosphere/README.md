@@ -27,30 +27,27 @@ three postprocessing
 
 Suitable for large-scale scenes, but supports only Lambertian BRDF.
 
+Lighting is applied in [`AerialPerspectiveEffect`](#aerialperspectiveeffect). Materials must be unlit (e.g. `MeshBasicMaterial`) and the render buffer is considered albedo.
+
 ```tsx
-import { useLoader } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
-import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
   Sky
 } from '@takram/three-atmosphere/r3f'
 
-const Scene = () => {
-  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
-  return (
-    <Atmosphere
-      textures={precomputedTextures}
-      date={/* Date object or timestamp */}
-    >
-      <Sky />
-      <EffectComposer enableNormalPass>
-        <AerialPerspective skyIrradiance sunIrradiance />
-      </EffectComposer>
-    </Atmosphere>
-  )
-}
+const Scene = () => (
+  <Atmosphere date={/* Date object or timestamp */}>
+    <Sky />
+    <mesh>
+      <meshBasicMaterial />
+    </mesh>
+    <EffectComposer enableNormalPass>
+      <AerialPerspective sunIrradiance skyIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
 ```
 
 ![Example of post-process lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
@@ -63,10 +60,10 @@ const Scene = () => {
 
 Compatible with built-in Three.js materials and shadows, but both direct and indirect irradiance are approximated only for small-scale scenes.
 
+Objects are lit by [`SunDirectionalLight`](#sundirectionallight), [`SkyLightProbe`](#skylightprobe), and possibly other light sources.
+
 ```tsx
-import { useLoader } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
-import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
@@ -75,28 +72,65 @@ import {
   SunLight
 } from '@takram/three-atmosphere/r3f'
 
-const Scene = () => {
-  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
-  return (
-    <Atmosphere
-      textures={precomputedTextures}
-      date={/* Date object or timestamp */}
-    >
-      <Sky />
-      <group position={/* ECEF coordinate in meters */}>
-        <SkyLight />
-        <SunLight />
-      </group>
-      <EffectComposer>
-        <AerialPerspective />
-      </EffectComposer>
-    </Atmosphere>
-  )
-}
+const Scene = () => (
+  <Atmosphere date={/* Date object or timestamp */}>
+    <Sky />
+    <group position={/* ECEF coordinate in meters */}>
+      <SkyLight />
+      <SunLight />
+    </group>
+    <mesh>
+      <meshPhysicalMaterial />
+    </mesh>
+    <EffectComposer>
+      <AerialPerspective />
+    </EffectComposer>
+  </Atmosphere>
+)
 ```
 
 ![Example of light-source lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
+
+### Mixed lighting
+
+Selectively applies the post-process and light-source lighting using [`IrradianceMaskPass`](#irradiancemaskpass) or an MRT texture. It combines the advantages of both, but transparency over the post-process lighting is not supported.
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import {
+  AerialPerspective,
+  Atmosphere,
+  IrradianceMask,
+  Sky,
+  SkyLight,
+  SunLight
+} from '@takram/three-atmosphere/r3f'
+
+const IRRADIANCE_MASK_LAYER = 10
+const layers = new Layers()
+layers.enable(IRRADIANCE_MASK_LAYER)
+
+const Scene = () => (
+  <Atmosphere date={/* Date object or timestamp */}>
+    <Sky />
+    <group position={/* ECEF coordinate in meters */}>
+      <SkyLight />
+      <SunLight />
+    </group>
+    <mesh> {/* ← This is lit in post-process */}
+      <meshBasicMaterial />
+    </mesh>
+    <mesh layers={layers}> {/* ← This is lit by light sources */}
+      <meshPhysicalMaterial />
+    </mesh>
+    <EffectComposer enableNormalPass>
+      <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+      <AerialPerspective sunIrradiance skyIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
+```
 
 ### Transient update by date
 
@@ -121,20 +155,6 @@ const Scene = () => {
     </Atmosphere>
   )
 }
-```
-
-### Non-suspending texture loading
-
-```tsx
-const Scene = () => (
-  // Provide a url instead of textures to load them asynchronously.
-  <Atmosphere textures='/assets'>
-    <Sky />
-    <EffectComposer>
-      <AerialPerspective />
-    </EffectComposer>
-  </Atmosphere>
-)
 ```
 
 ### Vanilla Three.js
@@ -235,6 +255,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SkyLight`](#skylight)
 - [`SunLight`](#sunlight)
 - [`AerialPerspective`](#aerialperspective)
+- [`IrradianceMask`](#irradiancemask)
 
 **Three.js**
 
@@ -244,6 +265,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SkyLightProbe`](#skylightprobe)
 - [`SunDirectionalLight`](#sundirectionallight)
 - [`AerialPerspectiveEffect`](#aerialperspectiveeffect)
+- [`IrradianceMaskPass`](#irradiancemaskpass)
 
 **Functions**
 
