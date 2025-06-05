@@ -1,11 +1,12 @@
 import { Canvas, useLoader } from '@react-three/fiber'
 import { type StoryFn } from '@storybook/react-vite'
+import { Suspense, type FC } from 'react'
 
 import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 
 import { DataTextureViewer } from './helpers/DataTextureViewer'
 
-const Story: StoryFn = () => {
+const Content: FC = () => {
   const textures = useLoader(
     PrecomputedTexturesLoader,
     'atmosphere',
@@ -23,5 +24,11 @@ const Story: StoryFn = () => {
     </Canvas>
   )
 }
+
+const Story: StoryFn = () => (
+  <Suspense>
+    <Content />
+  </Suspense>
+)
 
 export default Story
