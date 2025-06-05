@@ -44,9 +44,6 @@ importers:
       react-merge-refs:
         specifier: ^3.0.2
         version: 3.0.2(react@19.0.0)
-      suspend-react:
-        specifier: ^0.1.3
-        version: 0.1.3(react@19.0.0)
       three:
         specifier: '>=0.170.0'
         version: 0.175.0
@@ -65,9 +62,6 @@ importers:
       url-join:
         specifier: ^5.0.0
         version: 5.0.0
-      workerpool:
-        specifier: ^9.2.0
-        version: 9.2.0
     devDependencies:
       3d-tiles-renderer:
         specifier: ^0.4.10
@@ -318,6 +312,9 @@ importers:
       vitest:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@18.16.9)(@vitest/ui@1.6.1)(jsdom@22.1.0)(terser@5.39.0)
+      workerpool:
+        specifier: ^9.2.0
+        version: 9.2.0
 
 packages:
 
