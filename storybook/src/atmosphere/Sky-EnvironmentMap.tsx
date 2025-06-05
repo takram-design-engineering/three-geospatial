@@ -6,7 +6,7 @@ import {
 } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react'
+import { type StoryFn } from '@storybook/react-vite'
 import { useEffect, useRef, useState, type FC } from 'react'
 import { type Group } from 'three'
 

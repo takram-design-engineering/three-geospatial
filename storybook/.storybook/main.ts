@@ -1,11 +1,11 @@
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import type { StorybookConfig } from '@storybook/react-vite'
 import react from '@vitejs/plugin-react'
-import { build, mergeConfig } from 'vite'
+import { mergeConfig } from 'vite'
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: ['@storybook/addon-docs'],
   framework: {
     name: '@storybook/react-vite',
     options: {}
@@ -31,8 +31,8 @@ const config: StorybookConfig = {
     />
   `,
 
-  viteFinal: async config => {
-    const result = await mergeConfig(config, {
+  viteFinal: async config =>
+    mergeConfig(config, {
       plugins: [react(), nxViteTsPaths()],
       worker: {
         plugins: () => [nxViteTsPaths()]
@@ -41,16 +41,6 @@ const config: StorybookConfig = {
         sourcemap: true
       }
     })
-    // WORKAROUND: Resolved path of @storybook/theming seems broken.
-    // Error only occurs when @storybook/addon-docs is included.
-    // See createOptimizeDepsIncludeResolver() in vite.
-    if (result.optimizeDeps?.include != null) {
-      result.optimizeDeps.include = result.optimizeDeps.include.filter(
-        (id: string) => id !== '@storybook/theming'
-      )
-    }
-    return result
-  }
 }
 
 export default config
