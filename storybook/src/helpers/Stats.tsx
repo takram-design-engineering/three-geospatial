@@ -7,7 +7,7 @@ import { useControls } from '../helpers/useControls'
 export const Stats: FC = () => {
   const { show } = useControls('stats', { show: false }, { collapsed: true })
 
-  const statsRef = useRef<StatsImpl>()
+  const statsRef = useRef<StatsImpl>(undefined)
   const gl = useThree(({ gl }) => gl)
   useEffect(() => {
     if (!show) {

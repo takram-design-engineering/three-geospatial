@@ -15,7 +15,7 @@ export function useColorGradingControls(
 ): string | null {
   const data = useLoader(FileLoader, 'public/clut/index.json', loader => {
     loader.setResponseType('json')
-  }) as Entry[]
+  }) as unknown as Entry[]
 
   const films = useMemo(
     () =>
