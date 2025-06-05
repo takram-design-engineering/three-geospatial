@@ -94,11 +94,13 @@ const Scene: FC = () => {
     sky: true
   })
   const {
+    albedo,
     metalness,
     roughness,
     clearcoat,
     envMap: useEnvMap
   } = useControls('material', {
+    albedo: { value: 0, min: 0, max: 1 },
     metalness: { value: 0, min: 0, max: 1 },
     roughness: { value: 0, min: 0, max: 1 },
     clearcoat: { value: 1, min: 0, max: 1 },
@@ -177,7 +179,7 @@ const Scene: FC = () => {
           layers={layers}
         >
           <meshPhysicalMaterial
-            color='black'
+            color={[albedo, albedo, albedo]}
             metalness={metalness}
             roughness={roughness}
             clearcoat={clearcoat}
