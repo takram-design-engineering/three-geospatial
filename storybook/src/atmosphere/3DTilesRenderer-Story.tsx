@@ -31,7 +31,6 @@ import {
 } from 'react'
 import { DRACOLoader } from 'three-stdlib'
 
-import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
 import {
   AerialPerspective,
   Atmosphere,
@@ -59,6 +58,7 @@ import {
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
+import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')

@@ -5,7 +5,8 @@ import {
   fromBufferGeometryLike,
   toBufferGeometryLike
 } from '@takram/three-geospatial'
-import { queueTask } from '@takram/three-geospatial-worker'
+
+import { queueTask } from '../worker/pool'
 
 async function toCreasedNormalsAsync(
   geometry: BufferGeometry,

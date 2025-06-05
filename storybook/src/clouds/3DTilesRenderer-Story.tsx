@@ -33,7 +33,6 @@ import {
 } from 'react'
 import { DRACOLoader } from 'three-stdlib'
 
-import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
 import {
   AerialPerspective,
   Atmosphere,
@@ -63,6 +62,7 @@ import {
 } from '../helpers/useLocalDateControls'
 import { usePovControls } from '../helpers/usePovControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
+import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 import { useCloudsControls } from './helpers/useCloudsControls'
 
 const dracoLoader = new DRACOLoader()
