@@ -49,6 +49,9 @@ import { TileOverrideMaterialPlugin } from '../plugins/TileOverrideMaterialPlugi
 const geodetic = new Geodetic(radians(138.5), radians(36.2), 5000)
 const position = geodetic.toECEF()
 
+const terrainBasicMaterial = new MeshBasicMaterial({ color: 'gray' })
+const terrainLambertMaterial = new MeshLambertMaterial({ color: 'gray' })
+
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { lensFlare, normal, depth } = useControls(
@@ -136,7 +139,7 @@ const Scene: FC = () => {
         )}
       </EllipsoidMesh>
 
-      {/* Terrain of quantized mesh */}
+      {/* Quantized mesh terrain */}
       <TilesRenderer>
         <TilesPlugin
           plugin={CesiumIonAuthPlugin}
@@ -152,8 +155,8 @@ const Scene: FC = () => {
           args={{
             material:
               mode === 'light-source'
-                ? new MeshLambertMaterial({ color: 'gray' })
-                : new MeshBasicMaterial({ color: 'gray' })
+                ? terrainLambertMaterial
+                : terrainBasicMaterial
           }}
         />
       </TilesRenderer>

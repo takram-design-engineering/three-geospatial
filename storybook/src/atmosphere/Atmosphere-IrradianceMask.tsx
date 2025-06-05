@@ -9,16 +9,17 @@ import {
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react'
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
+import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   Fragment,
-  Suspense,
   useEffect,
   useRef,
   useState,
   type ComponentRef,
   type FC
 } from 'react'
-import { Layers, type Group } from 'three'
+import { Layers, MeshBasicMaterial, type Group } from 'three'
 
 import {
   AerialPerspective,
@@ -34,8 +35,7 @@ import {
   Ellipsoid,
   Geodetic,
   PointOfView,
-  radians,
-  TilingScheme
+  radians
 } from '@takram/three-geospatial'
 import {
   Depth,
@@ -44,23 +44,18 @@ import {
   Normal
 } from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame, EllipsoidMesh } from '@takram/three-geospatial/r3f'
-import { IonTerrain } from '@takram/three-terrain'
-import { BatchedTerrainTile } from '@takram/three-terrain/r3f'
 
 import { EffectComposer } from '../helpers/EffectComposer'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
+import { TileOverrideMaterialPlugin } from '../plugins/TileOverrideMaterialPlugin'
 
 const geodetic = new Geodetic(radians(138.5), radians(36.2), 5000)
 const position = geodetic.toECEF()
 
-const terrain = new IonTerrain({
-  assetId: 2767062, // Japan Regional Terrain
-  apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
-})
-const tile = new TilingScheme().getTile(geodetic, 7)
+const terrainMaterial = new MeshBasicMaterial({ color: 'gray' })
 
 const IRRADIANCE_MASK_LAYER = 10
 const layers = new Layers()
@@ -144,37 +139,37 @@ const Scene: FC = () => {
       photometric={photometric}
     >
       <OrbitControls ref={setControls} />
+
+      {/* Background objects and light sources */}
       <Sky />
-      {useEnvMap && (
-        <group ref={envMapParentRef}>
-          <RenderCubeTexture ref={setEnvMap} resolution={64}>
-            <Sky
-              sun={sun}
-              groundAlbedo='gray'
-              // Increase this to avoid flickers. Total radiance doesn't change.
-              sunAngularRadius={0.1}
-            />
-          </RenderCubeTexture>
-        </group>
-      )}
+      <Stars data='atmosphere/stars.bin' />
       <group position={position}>
         {sun && <SunLight />}
         {sky && <SkyLight />}
       </group>
-      <Stars data='atmosphere/stars.bin' />
+
+      {/* An ellipsoid mesh for fill empty region */}
       <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]}>
         <meshBasicMaterial color='gray' />
       </EllipsoidMesh>
-      <Suspense>
-        <BatchedTerrainTile
-          terrain={terrain}
-          {...tile}
-          depth={5}
-          computeVertexNormals
-        >
-          <meshBasicMaterial color='gray' />
-        </BatchedTerrainTile>
-      </Suspense>
+
+      {/* Quantized mesh terrain */}
+      <TilesRenderer>
+        <TilesPlugin
+          plugin={CesiumIonAuthPlugin}
+          args={{
+            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+            assetId: 2767062, // Japan Regional Terrain
+            autoRefreshToken: true
+          }}
+        />
+        <TilesPlugin
+          plugin={TileOverrideMaterialPlugin}
+          args={{ material: terrainMaterial }}
+        />
+      </TilesRenderer>
+
+      {/* Scene objects in a ENU frame */}
       <EastNorthUpFrame {...geodetic}>
         <TorusKnot
           args={[200, 60, 256, 64]}
@@ -190,6 +185,22 @@ const Scene: FC = () => {
           />
         </TorusKnot>
       </EastNorthUpFrame>
+
+      {/* Off-screen environment map */}
+      {useEnvMap && (
+        <group ref={envMapParentRef}>
+          <RenderCubeTexture ref={setEnvMap} resolution={64}>
+            <Sky
+              sun={sun}
+              groundAlbedo='gray'
+              // Increase this to avoid flickers. Total radiance doesn't change.
+              sunAngularRadius={0.1}
+            />
+          </RenderCubeTexture>
+        </group>
+      )}
+
+      {/* Post-processing */}
       <EffectComposer multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
