@@ -4,8 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "clean": "nx reset && rimraf --glob dist tmp \"packages/*/vite.config.ts.timestamp-*\"",
-    "storybook": "nx storybook storybook --port=4400 --no-open"
+    "clean": "nx reset && rimraf --glob dist tmp \"packages/*/vite.config.ts.timestamp-*\""
   },
   "dependencies": {
     "@petamoriken/float16": "^3.9.2",
