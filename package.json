@@ -34,7 +34,7 @@
     "workerpool": "^9.2.0"
   },
   "devDependencies": {
-    "3d-tiles-renderer": "0.4.7",
+    "3d-tiles-renderer": "^0.4.10",
     "@babel/core": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
     "@emotion/react": "11.14.0",
