@@ -9,7 +9,7 @@ export default {
   }
 } satisfies Meta
 
-export const Tokyo: StoryFn = () => <Story exposure={10} />
+export const Tokyo: StoryFn = () => <Story exposure={5} />
 
 export const Fuji: StoryFn = () => (
   <Story

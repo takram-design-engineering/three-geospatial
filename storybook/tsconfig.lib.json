@@ -4,6 +4,7 @@
     "outDir": "../dist/out-tsc",
     "types": [
       "node",
+      "vite/client",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ]

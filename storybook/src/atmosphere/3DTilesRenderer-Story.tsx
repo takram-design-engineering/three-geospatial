@@ -31,7 +31,6 @@ import {
 } from 'react'
 import { DRACOLoader } from 'three-stdlib'
 
-import { TileCreasedNormalsPlugin } from '@takram/three-3d-tiles-support'
 import {
   AerialPerspective,
   Atmosphere,
@@ -59,12 +58,17 @@ import {
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
+import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Globe: FC = () => {
-  const apiKey = useAtomValue(googleMapsApiKeyAtom)
+  const inputApiKey = useAtomValue(googleMapsApiKeyAtom)
+  const apiKey =
+    inputApiKey !== ''
+      ? inputApiKey
+      : import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
 
   const [tiles, setTiles] = useState<TilesRendererImpl | null>(null)
   const setNeedsApiKey = useSetAtom(needsApiKeyAtom)
@@ -83,26 +87,19 @@ const Globe: FC = () => {
 
   return (
     <TilesRenderer
-      key={apiKey} // Reconstruct tiles when API key changes.
       ref={setTiles}
+      // Reconstruct tiles when API key changes.
+      key={apiKey}
+      // The root URL sometimes becomes null without specifying the URL.
+      url={`https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiKey}`}
     >
-      {apiKey !== '' ? (
-        <TilesPlugin
-          plugin={GoogleCloudAuthPlugin}
-          args={{
-            apiToken: apiKey,
-            autoRefreshToken: true
-          }}
-        />
-      ) : (
-        <TilesPlugin
-          plugin={GoogleCloudAuthPlugin}
-          args={{
-            apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
-            autoRefreshToken: true
-          }}
-        />
-      )}
+      <TilesPlugin
+        plugin={GoogleCloudAuthPlugin}
+        args={{
+          apiToken: apiKey,
+          autoRefreshToken: true
+        }}
+      />
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
       <TilesPlugin plugin={UpdateOnChangePlugin} />
