@@ -1,7 +1,7 @@
 import { Box, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react'
+import { type StoryFn } from '@storybook/react-vite'
 import { Fragment, useRef, useState, type FC } from 'react'
 
 import {
