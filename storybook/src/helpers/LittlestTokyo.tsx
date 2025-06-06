@@ -24,14 +24,9 @@ export interface LittlestTokyoApi {
 
 export interface LittlestTokyoProps extends ComponentProps<'group'> {
   ref?: Ref<LittlestTokyoApi>
-  night?: boolean
 }
 
-export const LittlestTokyo: FC<LittlestTokyoProps> = ({
-  ref,
-  night = true,
-  ...props
-}) => {
+export const LittlestTokyo: FC<LittlestTokyoProps> = ({ ref, ...props }) => {
   const gltf = useGLTF(
     'https://rawcdn.githack.com/mrdoob/three.js/r175/examples/models/gltf/LittlestTokyo.glb'
   )
@@ -105,12 +100,7 @@ export const LittlestTokyo: FC<LittlestTokyoProps> = ({
 
   return (
     <group {...props}>
-      <primitive
-        object={gltf.scene}
-        position={userData.offset}
-        castShadow
-        receiveShadow
-      />
+      <primitive object={gltf.scene} position={userData.offset} />
       <pointLight
         ref={getRef}
         position={[95, 115, 29]}

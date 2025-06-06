@@ -109,10 +109,10 @@ const Scene: FC = () => {
 
   const iss = useGLTF('public/iss.glb')
   useEffect(() => {
-    iss.scene.traverse(object => {
-      object.layers = layers
-      object.receiveShadow = true
-      object.castShadow = true
+    Object.values(iss.meshes).forEach(mesh => {
+      mesh.layers = layers
+      mesh.receiveShadow = true
+      mesh.castShadow = true
     })
   }, [iss])
 
@@ -177,7 +177,6 @@ const Scene: FC = () => {
       <group rotation-x={-Math.PI / 2}>
         <primitive
           object={iss.scene}
-          scale={1}
           rotation-x={Math.PI / 2}
           rotation-y={Math.PI / 2}
         />
