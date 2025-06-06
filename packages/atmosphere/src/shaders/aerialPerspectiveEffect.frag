@@ -254,6 +254,12 @@ float getShadowRadius(const vec3 worldPosition) {
 #endif // HAS_SHADOW
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
+  #if defined(HAS_IRRADIANCE_MASK) && defined(DEBUG_SHOW_IRRADIANCE_MASK)
+  outputColor.rgb = vec3(texture(irradianceMaskBuffer, uv).IRRADIANCE_MASK_CHANNEL_);
+  outputColor.a = 1.0;
+  return;
+  #endif // defined(HAS_IRRADIANCE_MASK) && defined(DEBUG_SHOW_IRRADIANCE_MASK)
+
   float shadowLength = 0.0;
   #ifdef HAS_SHADOW_LENGTH
   shadowLength = texture(shadowLengthBuffer, uv).r;
