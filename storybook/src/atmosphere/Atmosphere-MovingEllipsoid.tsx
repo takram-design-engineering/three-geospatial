@@ -106,7 +106,7 @@ const Scene: FC = () => {
           distance={5}
           castShadow
           shadow-normalBias={0.1}
-          shadow-mapSize={[4096, 4096]}
+          shadow-mapSize={[2048, 2048]}
         >
           <orthographicCamera
             attach='shadow-camera'
