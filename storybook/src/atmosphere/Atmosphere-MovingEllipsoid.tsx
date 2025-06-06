@@ -88,7 +88,11 @@ const Scene: FC = () => {
       <GizmoHelper alignment='top-left' renderPriority={2}>
         <GizmoViewport />
       </GizmoHelper>
-      <OrbitControls target={[0, 1.8, 0]} minDistance={5} />
+      <OrbitControls
+        target={[0, 1.8, 0]}
+        minDistance={5}
+        maxPolarAngle={Math.PI / 2}
+      />
       <Plane args={[1000, 1000]} rotation-x={-Math.PI / 2} receiveShadow>
         <meshLambertMaterial color='white' />
       </Plane>
