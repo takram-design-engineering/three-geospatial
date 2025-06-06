@@ -50,28 +50,32 @@ layers.enable(IRRADIANCE_MASK_LAYER)
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 8 })
-  const { longitude, latitude, height } = useLocationControls({
-    longitude: -110,
-    latitude: 45,
-    height: 408000,
-    maxAltitude: 408000
-  })
+  const { longitude, latitude, height } = useLocationControls(
+    {
+      longitude: -110,
+      latitude: 45,
+      height: 408000,
+      maxAltitude: 408000
+    },
+    { collapsed: true }
+  )
   const motionDate = useLocalDateControls({
     longitude,
     timeOfDay: 19
   })
-  const { correctAltitude, photometric } = useControls('atmosphere', {
-    correctAltitude: true,
-    photometric: true
-  })
-  const { useEnvMap, showIrradianceMask, disableMask } = useControls(
-    'rendering',
+  const { correctAltitude, photometric } = useControls(
+    'atmosphere',
     {
-      useEnvMap: true,
-      showIrradianceMask: false,
-      disableMask: false
-    }
+      correctAltitude: true,
+      photometric: true
+    },
+    { collapsed: true }
   )
+  const { showMask, disableMask, useEnvMap } = useControls('rendering', {
+    showMask: false,
+    disableMask: false,
+    useEnvMap: true
+  })
 
   const [atmosphere, setAtmosphere] = useState<AtmosphereApi | null>(null)
   useEffect(() => {
@@ -118,13 +122,13 @@ const Scene: FC = () => {
     if (effect == null) {
       return
     }
-    if (showIrradianceMask) {
+    if (showMask) {
       effect.defines.set('DEBUG_SHOW_IRRADIANCE_MASK', '1')
     } else {
       effect.defines.delete('DEBUG_SHOW_IRRADIANCE_MASK')
     }
     ;(effect as any).setChanged()
-  }, [showIrradianceMask])
+  }, [showMask])
 
   return (
     <Atmosphere
