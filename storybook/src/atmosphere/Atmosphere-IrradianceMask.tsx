@@ -42,14 +42,12 @@ import { EffectComposer } from '../helpers/EffectComposer'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
+import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 
-const longitude = -110
-const latitude = 45
-const height = 408000
-const geodetic = new Geodetic(radians(longitude), radians(latitude), height)
-const position = geodetic.toECEF()
+const geodetic = new Geodetic()
+const position = new Vector3()
 const east = new Vector3()
 const north = new Vector3()
 const up = new Vector3()
@@ -63,18 +61,20 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 8 })
+  const { longitude, latitude, height } = useLocationControls({
+    longitude: -110,
+    latitude: 45,
+    height: 408000,
+    maxAltitude: 408000
+  })
   const motionDate = useLocalDateControls({
     longitude,
     timeOfDay: 19
   })
-  const { correctAltitude, photometric } = useControls(
-    'atmosphere',
-    {
-      correctAltitude: true,
-      photometric: true
-    },
-    { collapsed: true }
-  )
+  const { correctAltitude, photometric } = useControls('atmosphere', {
+    correctAltitude: true,
+    photometric: true
+  })
   const { useEnvMap, showIrradianceMask, disableMask } = useControls(
     'rendering',
     {
@@ -99,7 +99,7 @@ const Scene: FC = () => {
     // orientation aligns with X: north, Y: up, Z: east, for example.
     Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
     atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
-  }, [atmosphere])
+  }, [longitude, latitude, height, atmosphere])
 
   useFrame(() => {
     if (atmosphere != null) {
@@ -144,7 +144,7 @@ const Scene: FC = () => {
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
-      <OrbitControls />
+      <OrbitControls minDistance={20} maxDistance={1e5} />
 
       {/* Background objects and light sources */}
       <Sky />
