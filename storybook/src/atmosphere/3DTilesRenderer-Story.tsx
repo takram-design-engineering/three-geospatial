@@ -1,35 +1,11 @@
-import { css } from '@emotion/react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
-import {
-  GLTFExtensionsPlugin,
-  GoogleCloudAuthPlugin,
-  TileCompressionPlugin,
-  TilesFadePlugin,
-  UpdateOnChangePlugin
-} from '3d-tiles-renderer/plugins'
-import {
-  CameraTransition,
-  GlobeControls,
-  TilesAttributionOverlay,
-  TilesPlugin,
-  TilesRenderer
-} from '3d-tiles-renderer/r3f'
-import { useAtomValue, useSetAtom } from 'jotai'
+import { CameraTransition, GlobeControls } from '3d-tiles-renderer/r3f'
 import {
   EffectMaterial,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import {
-  Fragment,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type FC
-} from 'react'
-import { DRACOLoader } from 'three-stdlib'
+import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
 
 import {
   AerialPerspective,
@@ -47,8 +23,9 @@ import {
 } from '@takram/three-geospatial-effects/r3f'
 
 import { EffectComposer } from '../helpers/EffectComposer'
+import { Globe } from '../helpers/Globe'
+import { GoogleMapsAPIKeyPrompt } from '../helpers/GoogleMapsAPIKeyPrompt'
 import { HaldLUT } from '../helpers/HaldLUT'
-import { googleMapsApiKeyAtom, needsApiKeyAtom } from '../helpers/states'
 import { Stats } from '../helpers/Stats'
 import { useColorGradingControls } from '../helpers/useColorGradingControls'
 import { useControls } from '../helpers/useControls'
@@ -58,61 +35,6 @@ import {
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
-
-const dracoLoader = new DRACOLoader()
-dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
-
-const Globe: FC = () => {
-  const inputApiKey = useAtomValue(googleMapsApiKeyAtom)
-  const apiKey =
-    inputApiKey !== ''
-      ? inputApiKey
-      : import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
-
-  const [tiles, setTiles] = useState<TilesRendererImpl | null>(null)
-  const setNeedsApiKey = useSetAtom(needsApiKeyAtom)
-  useEffect(() => {
-    if (tiles == null) {
-      return
-    }
-    const callback = (): void => {
-      setNeedsApiKey(true)
-    }
-    tiles.addEventListener('load-error', callback)
-    return () => {
-      tiles.removeEventListener('load-error', callback)
-    }
-  }, [tiles, setNeedsApiKey])
-
-  return (
-    <TilesRenderer
-      ref={setTiles}
-      // Reconstruct tiles when API key changes.
-      key={apiKey}
-      // The root URL sometimes becomes null without specifying the URL.
-      url={`https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiKey}`}
-    >
-      <TilesPlugin
-        plugin={GoogleCloudAuthPlugin}
-        args={{
-          apiToken: apiKey,
-          autoRefreshToken: true
-        }}
-      />
-      <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
-      <TilesPlugin plugin={TileCompressionPlugin} />
-      <TilesPlugin plugin={UpdateOnChangePlugin} />
-      <TilesPlugin plugin={TilesFadePlugin} />
-      <TilesPlugin
-        plugin={TileCreasedNormalsPlugin}
-        args={{ creaseAngle: radians(30) }}
-      />
-      <GlobeControls enableDamping />
-      <TilesAttributionOverlay />
-    </TilesRenderer>
-  )
-}
 
 interface SceneProps extends LocalDateControlsParams {
   exposure?: number
@@ -213,7 +135,9 @@ const Scene: FC<SceneProps> = ({
     >
       <Sky />
       <Stars data='atmosphere/stars.bin' />
-      <Globe />
+      <Globe>
+        <GlobeControls enableDamping />
+      </Globe>
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
@@ -260,39 +184,13 @@ const Scene: FC<SceneProps> = ({
 
 export const Story: FC<SceneProps> = props => {
   useGoogleMapsAPIKeyControls()
-  const needsApiKey = useAtomValue(needsApiKeyAtom)
   return (
     <>
       <Canvas gl={{ depth: false }} frameloop='demand'>
         <Stats />
         <Scene {...props} />
       </Canvas>
-      {needsApiKey && (
-        <div
-          css={css`
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            color: white;
-            text-align: center;
-            line-height: 1.5;
-            transform: translate(-50%, -50%);
-          `}
-        >
-          Our API key has seemingly exceeded its daily quota.
-          <br />
-          Enter your{' '}
-          <a
-            href='https://developers.google.com/maps/documentation/tile/get-api-key'
-            target='_blank'
-            rel='noreferrer'
-            style={{ color: 'inherit' }}
-          >
-            Google Maps API key
-          </a>{' '}
-          at the top right of this screen, or check back tomorrow.
-        </div>
-      )}
+      <GoogleMapsAPIKeyPrompt />
     </>
   )
 }

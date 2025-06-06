@@ -10,20 +10,10 @@ import {
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react-vite'
-import {
-  GLTFExtensionsPlugin,
-  GoogleCloudAuthPlugin,
-  ReorientationPlugin,
-  UpdateOnChangePlugin
-} from '3d-tiles-renderer/plugins'
-import {
-  TilesAttributionOverlay,
-  TilesPlugin,
-  TilesRenderer
-} from '3d-tiles-renderer/r3f'
+import { ReorientationPlugin } from '3d-tiles-renderer/plugins'
+import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import { Fragment, useEffect, useRef, useState, type FC } from 'react'
 import { Layers, Vector3, type Group } from 'three'
-import { DRACOLoader } from 'three-stdlib'
 
 import { type AerialPerspectiveEffect } from '@takram/three-atmosphere'
 import {
@@ -39,12 +29,14 @@ import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 
 import { EffectComposer } from '../helpers/EffectComposer'
+import { Globe } from '../helpers/Globe'
+import { GoogleMapsAPIKeyPrompt } from '../helpers/GoogleMapsAPIKeyPrompt'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
+import { useGoogleMapsAPIKeyControls } from '../helpers/useGoogleMapsAPIKeyControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -55,9 +47,6 @@ const up = new Vector3()
 const IRRADIANCE_MASK_LAYER = 10
 const layers = new Layers()
 layers.enable(IRRADIANCE_MASK_LAYER)
-
-const dracoLoader = new DRACOLoader()
-dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 8 })
@@ -169,23 +158,7 @@ const Scene: FC = () => {
       {!useEnvMap && <SkyLight />}
 
       {/* Quantized mesh terrain */}
-      <TilesRenderer
-        // The root URL sometimes becomes null without specifying the URL.
-        url={`https://tile.googleapis.com/v1/3dtiles/root.json?key=${import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY}`}
-      >
-        <TilesPlugin
-          plugin={GoogleCloudAuthPlugin}
-          args={{
-            apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
-            autoRefreshToken: true
-          }}
-        />
-        <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
-        <TilesPlugin
-          plugin={TileCreasedNormalsPlugin}
-          args={{ creaseAngle: radians(30) }}
-        />
-        <TilesPlugin plugin={UpdateOnChangePlugin} />
+      <Globe>
         <TilesPlugin
           plugin={ReorientationPlugin}
           args={{
@@ -194,8 +167,7 @@ const Scene: FC = () => {
             height
           }}
         />
-        <TilesAttributionOverlay />
-      </TilesRenderer>
+      </Globe>
 
       {/* Scene objects in a ENU frame */}
       <group rotation-x={-Math.PI / 2}>
@@ -234,44 +206,48 @@ const Scene: FC = () => {
   )
 }
 
-const Story: StoryFn = () => (
-  <>
-    <Canvas
-      gl={{
-        depth: false,
-        logarithmicDepthBuffer: true
-      }}
-      camera={{ position: [80, 30, 100], near: 10, far: 1e7, fov: 40 }}
-      shadows
-    >
-      <Stats />
-      <Scene />
-    </Canvas>
-    <div
-      css={css`
-        position: absolute;
-        bottom: 16px;
-        right: 16px;
-        color: white;
-        font-size: small;
-        letter-spacing: 0.025em;
-      `}
-    >
-      Model:{' '}
-      <a
-        href='https://science.nasa.gov/resource/international-space-station-3d-model/'
-        target='_blank'
-        rel='noreferrer'
+const Story: StoryFn = () => {
+  useGoogleMapsAPIKeyControls()
+  return (
+    <>
+      <Canvas
+        gl={{
+          depth: false,
+          logarithmicDepthBuffer: true
+        }}
+        camera={{ position: [80, 30, 100], near: 10, far: 1e7, fov: 40 }}
+        shadows
       >
-        International Space Station 3D Model
-      </a>{' '}
-      by{' '}
-      <a href='https://www.nasa.gov/' target='_blank' rel='noreferrer'>
-        NASA
-      </a>
-      .
-    </div>
-  </>
-)
+        <Stats />
+        <Scene />
+      </Canvas>
+      <GoogleMapsAPIKeyPrompt />
+      <div
+        css={css`
+          position: absolute;
+          bottom: 16px;
+          right: 16px;
+          color: white;
+          font-size: small;
+          letter-spacing: 0.025em;
+        `}
+      >
+        Model:{' '}
+        <a
+          href='https://science.nasa.gov/resource/international-space-station-3d-model/'
+          target='_blank'
+          rel='noreferrer'
+        >
+          International Space Station 3D Model
+        </a>{' '}
+        by{' '}
+        <a href='https://www.nasa.gov/' target='_blank' rel='noreferrer'>
+          NASA
+        </a>
+        .
+      </div>
+    </>
+  )
+}
 
 export default Story
