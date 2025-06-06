@@ -43,7 +43,7 @@ export const LittlestTokyo: FC<LittlestTokyoProps> = ({
     [gltf.materials]
   )
   const emissive = useTexture(
-    '/public/littlest_tokyo_emissive.jpg',
+    'public/littlest_tokyo_emissive.jpg',
     texture => {
       texture.colorSpace = SRGBColorSpace
       texture.flipY = false
