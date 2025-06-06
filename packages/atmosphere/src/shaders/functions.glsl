@@ -359,6 +359,15 @@ vec3 GetSkyRadiance(
   single_mie_scattering * MiePhaseFunction(u_mie_phase_function_g, nu);
 }
 
+bool RayOutsideTopAtmosphereBoundary(const vec3 camera, const vec3 point, const float r) {
+  if (r < u_top_radius || length(point) < u_top_radius) {
+    return false;
+  }
+  vec3 ray = point - camera;
+  float t = -clamp(dot(camera, ray) / dot(ray, ray), 0.0, 1.0);
+  return length(camera + t * ray) > u_top_radius;
+}
+
 vec3 GetSkyRadianceToPoint(
   const sampler2D transmittance_texture,
   const sampler3D scattering_texture,
@@ -369,8 +378,12 @@ vec3 GetSkyRadianceToPoint(
   const vec3 sun_direction,
   out vec3 transmittance
 ) {
-  vec3 view_ray = normalize(point - camera);
   float r = length(camera);
+  if (RayOutsideTopAtmosphereBoundary(camera, point, r)) {
+    transmittance = vec3(1.0);
+    return vec3(0.0); // Avoid artifacts
+  }
+  vec3 view_ray = normalize(point - camera);
   float rmu = dot(camera, view_ray);
   float distance_to_top_atmosphere_boundary =
     -rmu - sqrt(rmu * rmu - r * r + u_top_radius * u_top_radius);
