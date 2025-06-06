@@ -42,13 +42,10 @@ export const LittlestTokyo: FC<LittlestTokyoProps> = ({
         .filter(material => material.map?.name === 'baseColor.jpg'),
     [gltf.materials]
   )
-  const emissive = useTexture(
-    'public/littlest_tokyo_emissive.jpg',
-    texture => {
-      texture.colorSpace = SRGBColorSpace
-      texture.flipY = false
-    }
-  )
+  const emissive = useTexture('public/littlest_tokyo_emissive.jpg', texture => {
+    texture.colorSpace = SRGBColorSpace
+    texture.flipY = false
+  })
 
   const userData: {
     init?: boolean
