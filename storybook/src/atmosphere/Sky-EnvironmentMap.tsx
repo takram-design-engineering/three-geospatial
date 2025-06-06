@@ -84,7 +84,6 @@ const Scene: FC = () => {
             metalness={0}
             roughness={1}
             clearcoat={0.5}
-            envMap={envMap?.fbo.texture}
           />
         </TorusKnot>
       </EastNorthUpFrame>

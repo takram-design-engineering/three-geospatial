@@ -8,7 +8,7 @@ import {
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react-vite'
-import { useRef, useState, type FC } from 'react'
+import { useEffect, useRef, useState, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import { type SunDirectionalLight } from '@takram/three-atmosphere'
@@ -48,17 +48,16 @@ const Scene: FC = () => {
     dayOfYear: 0,
     timeOfDay: 7.5
   })
-  const { correctAltitude } = useControls('atmosphere', {
-    correctAltitude: true
+  const { correctAltitude, photometric } = useControls('atmosphere', {
+    correctAltitude: true,
+    photometric: true
   })
 
   const [atmosphere, setAtmosphere] = useState<AtmosphereApi | null>(null)
-  useFrame(() => {
+  useEffect(() => {
     if (atmosphere == null) {
       return
     }
-    atmosphere.updateByDate(new Date(motionDate.get()))
-
     // Offset the ellipsoid so that the world space origin locates at the
     // position relative to the ellipsoid.
     geodetic.set(radians(longitude), radians(latitude), height)
@@ -69,6 +68,12 @@ const Scene: FC = () => {
     // orientation aligns with X: north, Y: up, Z: east, for example.
     Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
     atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
+  }, [longitude, latitude, height, atmosphere])
+
+  useFrame(() => {
+    if (atmosphere != null) {
+      atmosphere.updateByDate(new Date(motionDate.get()))
+    }
   })
 
   const modelRef = useRef<LittlestTokyoApi>(null)
@@ -101,6 +106,7 @@ const Scene: FC = () => {
         ref={setAtmosphere}
         textures='atmosphere'
         correctAltitude={correctAltitude}
+        photometric={photometric}
       >
         <Sky groundAlbedo='white' />
         <Stars data='atmosphere/stars.bin' />
