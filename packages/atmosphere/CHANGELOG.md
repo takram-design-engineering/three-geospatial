@@ -2,7 +2,7 @@
 
 ### Changed
 
-- Added support for the irradiance mask.
+- Added support for the irradiance mask, [#30](https://github.com/takram-design-engineering/three-geospatial/issues/30).
 
 ### Fixed
 
