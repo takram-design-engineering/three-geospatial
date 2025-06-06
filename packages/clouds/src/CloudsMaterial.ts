@@ -293,6 +293,16 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       }
       this.needsUpdate = true
     }
+
+    const prevLogarithmicDepthBuffer = this.defines.USE_LOGDEPTHBUF != null;
+    const nextLogarithmicDepthBuffer = renderer.capabilities.logarithmicDepthBuffer;
+    if(prevLogarithmicDepthBuffer !== nextLogarithmicDepthBuffer) {
+      if(nextLogarithmicDepthBuffer) {
+        this.defines.USE_LOGDEPTHBUF = '1';
+      } else {
+        delete this.defines.USE_LOGDEPTHBUF;
+      }
+    }
   }
 
   override copyCameraSettings(camera: Camera): void {
