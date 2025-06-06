@@ -114,7 +114,7 @@ const Scene: FC = () => {
     scene.environment = useEnvMap ? (envMap?.fbo.texture ?? null) : null
   }, [useEnvMap, envMap, scene])
 
-  const iss = useGLTF('assets/iss.glb')
+  const iss = useGLTF('public/iss.glb')
   useEffect(() => {
     iss.scene.traverse(object => {
       object.layers = layers
