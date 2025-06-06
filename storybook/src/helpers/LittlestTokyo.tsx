@@ -13,16 +13,10 @@ import {
 import {
   AnimationMixer,
   Box3,
-  Color,
   MeshStandardMaterial,
   SRGBColorSpace,
   type Light
 } from 'three'
-
-import { convertTemperatureToLinearSRGBChromaticity } from '@takram/three-atmosphere'
-
-const orange = new Color()
-convertTemperatureToLinearSRGBChromaticity(1500, orange)
 
 export interface LittlestTokyoApi {
   setLightIntensity: (value: number) => void
@@ -126,25 +120,25 @@ export const LittlestTokyo: FC<LittlestTokyoProps> = ({
       <pointLight
         ref={getRef}
         position={[64, 85, 184]}
-        color={orange}
+        color='orange'
         intensity={0.1}
       />
       <pointLight
         ref={getRef}
         position={[196, 85, 209]}
-        color={orange}
+        color='orange'
         intensity={0.1}
       />
       <pointLight
         ref={getRef}
         position={[196, 75, 43]}
-        color={orange}
+        color='orange'
         intensity={0.1}
       />
       <pointLight
         ref={getRef}
         position={[168, 72, -166]}
-        color={orange}
+        color='orange'
         intensity={0.1}
       />
       <rectAreaLight
