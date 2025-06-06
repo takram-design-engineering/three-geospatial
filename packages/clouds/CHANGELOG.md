@@ -1,5 +1,19 @@
 # Changelog
 
+### Changed
+
+- Added support for absorption in haze.
+- `CloudsMaterial`: Changed the default values of both `skyIrradianceScale` and `groundIrradianceScale` to 1.
+- `CloudsMaterial`: Added `hazeScatteringCoefficient` and `hazeAbsorptionCoefficient` which are separated from those of the clouds.
+
+### Fixed
+
+- Adjusted the scaling of irradiance for cloud particles to better reflect isotropic scattering.
+- Added a workaround so that the unlit rays towards far clouds appear orange.
+- Fixed incorrect handling of cloud transmittance and inscattered light when compositing into the render buffer.
+- Changed the behavior of unlit rays through haze so that they don't occlude sky light.
+- Improved approximation of the haze integral to reduce unnatural gradient just above the clouds at the horizon.
+
 ## [0.2.2] - 2025-05-23
 
 ### Fixed

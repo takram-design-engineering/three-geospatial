@@ -1,5 +1,13 @@
 # Changelog
 
+### Changed
+
+- Added support for the irradiance mask.
+
+### Fixed
+
+- `AerialPerspectiveEffect`: Fixed artifacts in transmittance and inscattered light for the points above the top atmosphere boundary.
+
 ## [0.11.2] - 2025-05-23
 
 ### Fixed
