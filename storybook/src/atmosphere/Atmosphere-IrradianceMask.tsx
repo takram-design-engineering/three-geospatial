@@ -266,18 +266,23 @@ const Scene: FC = () => {
       </group>
 
       {/* Post-processing */}
-      <EffectComposer multisampling={0} enableNormalPass>
-        <Fragment key={JSON.stringify([disableMask])}>
-          {!disableMask && (
-            <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
-          )}
-          <AerialPerspective ref={effectRef} sunIrradiance skyIrradiance />
-          <LensFlare />
-          <ToneMapping mode={toneMappingMode} />
-          <SMAA />
-          <Dithering />
-        </Fragment>
-      </EffectComposer>
+      {useMemo(
+        () => (
+          <EffectComposer multisampling={0} enableNormalPass>
+            <Fragment key={JSON.stringify([disableMask])}>
+              {!disableMask && (
+                <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+              )}
+              <AerialPerspective ref={effectRef} sunIrradiance skyIrradiance />
+              <LensFlare />
+              <ToneMapping mode={toneMappingMode} />
+              <SMAA />
+              <Dithering />
+            </Fragment>
+          </EffectComposer>
+        ),
+        [toneMappingMode, disableMask]
+      )}
     </Atmosphere>
   )
 }

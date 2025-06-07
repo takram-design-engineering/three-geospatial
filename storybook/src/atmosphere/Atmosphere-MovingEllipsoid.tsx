@@ -8,7 +8,7 @@ import {
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react-vite'
-import { useEffect, useRef, useState, type FC } from 'react'
+import { useEffect, useMemo, useRef, useState, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import { type SunDirectionalLight } from '@takram/three-atmosphere'
@@ -132,12 +132,17 @@ const Scene: FC = () => {
             far={1000}
           />
         </SunLight>
-        <EffectComposer multisampling={8}>
-          <AerialPerspective />
-          <LensFlare />
-          <ToneMapping mode={toneMappingMode} />
-          <Dithering />
-        </EffectComposer>
+        {useMemo(
+          () => (
+            <EffectComposer multisampling={8}>
+              <AerialPerspective />
+              <LensFlare />
+              <ToneMapping mode={toneMappingMode} />
+              <Dithering />
+            </EffectComposer>
+          ),
+          [toneMappingMode]
+        )}
       </Atmosphere>
     </>
   )
