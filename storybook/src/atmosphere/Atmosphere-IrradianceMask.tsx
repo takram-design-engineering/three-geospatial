@@ -221,7 +221,7 @@ const Scene: FC = () => {
       <SunLight
         distance={80}
         castShadow
-        shadow-normalBias={1}
+        shadow-normalBias={0.1}
         shadow-mapSize={[2048, 2048]}
       >
         <orthographicCamera
