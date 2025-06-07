@@ -12,13 +12,23 @@ import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react-vite'
 import { ReorientationPlugin } from '3d-tiles-renderer/plugins'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
-import { Fragment, useEffect, useRef, useState, type FC } from 'react'
-import { Layers, Vector3, type Group } from 'three'
+import {
+  Fragment,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type FC
+} from 'react'
+import { Layers, Matrix4, Vector3, type Group } from 'three'
 
 import { type AerialPerspectiveEffect } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
+  AtmosphereContext,
   IrradianceMask,
   Sky,
   SkyLight,
@@ -44,9 +54,84 @@ const east = new Vector3()
 const north = new Vector3()
 const up = new Vector3()
 
+const vectorScratch = new Vector3()
+const matrixScratch = new Matrix4()
+
 const IRRADIANCE_MASK_LAYER = 10
 const layers = new Layers()
 layers.enable(IRRADIANCE_MASK_LAYER)
+
+interface ISSProps extends ComponentProps<'group'> {}
+
+const ISS: FC<ISSProps> = ({ ...props }) => {
+  const iss = useGLTF('public/iss.glb')
+  useEffect(() => {
+    Object.values(iss.meshes).forEach(mesh => {
+      mesh.layers = layers
+      mesh.receiveShadow = true
+      mesh.castShadow = true
+    })
+  }, [iss])
+
+  const { trusses, solarPanels, radiators } = useMemo(() => {
+    const scene = iss.scene
+    return {
+      trusses: [
+        scene.getObjectByName('23_S4_Truss'),
+        scene.getObjectByName('20_P4_Truss')
+      ].filter(value => value != null),
+      solarPanels: [
+        scene.getObjectByName('23_S4_Truss_01'),
+        scene.getObjectByName('23_S4_Truss_02'),
+        scene.getObjectByName('32_S6_Truss_01'),
+        scene.getObjectByName('32_S6_Truss_02'),
+        scene.getObjectByName('20_P4_Truss_01'),
+        scene.getObjectByName('20_P4_Truss_02'),
+        scene.getObjectByName('08_P6_Truss_01'),
+        scene.getObjectByName('08_P6_Truss_02')
+      ].filter(value => value != null),
+      radiators: [
+        scene.getObjectByName('16_S1_Truss_02'),
+        scene.getObjectByName('17_P1_Truss_02')
+      ].filter(value => value != null)
+    }
+  }, [iss.scene])
+
+  const { transientStates } = useContext(AtmosphereContext)
+  useFrame(() => {
+    if (transientStates == null) {
+      return
+    }
+    const worldToLocal = matrixScratch.copy(iss.scene.matrixWorld).invert()
+    const sunDirection = vectorScratch
+      .copy(transientStates.sunDirection)
+      .applyMatrix4(transientStates.ellipsoidMatrix)
+      .normalize()
+      .applyMatrix4(worldToLocal)
+      .normalize()
+
+    const { x, y, z } = sunDirection
+    const trussAngle = Math.atan2(z, y)
+    const solarPanelAngle = Math.atan2(
+      x,
+      y * Math.cos(trussAngle) + z * Math.sin(trussAngle)
+    )
+    for (const truss of trusses) {
+      truss.rotation.x = trussAngle
+    }
+    for (const solarPanel of solarPanels) {
+      solarPanel.rotation.z = -solarPanelAngle
+    }
+
+    const sunDirectionXY = vectorScratch.set(x, y, 0).normalize()
+    const radiatorAngle = Math.atan2(sunDirectionXY.x, sunDirectionXY.y)
+    for (const radiator of radiators) {
+      radiator.rotation.z = -radiatorAngle
+    }
+  })
+
+  return <primitive object={iss.scene} {...props} />
+}
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 8 })
@@ -61,7 +146,7 @@ const Scene: FC = () => {
   )
   const motionDate = useLocalDateControls({
     longitude,
-    timeOfDay: 19
+    timeOfDay: 17
   })
   const { correctAltitude, photometric } = useControls(
     'atmosphere',
@@ -106,15 +191,6 @@ const Scene: FC = () => {
   useEffect(() => {
     scene.environment = useEnvMap ? (envMap?.fbo.texture ?? null) : null
   }, [useEnvMap, envMap, scene])
-
-  const iss = useGLTF('public/iss.glb')
-  useEffect(() => {
-    Object.values(iss.meshes).forEach(mesh => {
-      mesh.layers = layers
-      mesh.receiveShadow = true
-      mesh.castShadow = true
-    })
-  }, [iss])
 
   const effectRef = useRef<AerialPerspectiveEffect>(null)
   useEffect(() => {
@@ -163,6 +239,7 @@ const Scene: FC = () => {
 
       {/* Quantized mesh terrain */}
       <Globe>
+        {/* TODO: Improve ReorientationPlugin to support updating parameters. */}
         <TilesPlugin
           plugin={ReorientationPlugin}
           args={{
@@ -175,11 +252,7 @@ const Scene: FC = () => {
 
       {/* Scene objects in a ENU frame */}
       <group rotation-x={-Math.PI / 2}>
-        <primitive
-          object={iss.scene}
-          rotation-x={Math.PI / 2}
-          rotation-y={Math.PI / 2}
-        />
+        <ISS rotation-x={Math.PI / 2} rotation-y={Math.PI / 2} />
       </group>
 
       {/* Off-screen environment map */}

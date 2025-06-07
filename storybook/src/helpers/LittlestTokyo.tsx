@@ -88,12 +88,12 @@ export const LittlestTokyo: FC<LittlestTokyoProps> = ({ ref, ...props }) => {
     ref,
     () => ({
       setLightIntensity: (value: number) => {
-        materials.forEach(material => {
+        for (const material of materials) {
           material.emissive.setScalar(value * 0.5)
-        })
-        lightsRef.current.forEach(light => {
+        }
+        for (const light of lightsRef.current) {
           light.intensity = value * 0.1
-        })
+        }
       }
     }),
     [materials]
