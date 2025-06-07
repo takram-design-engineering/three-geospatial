@@ -13,6 +13,7 @@
 - Fixed incorrect handling of cloud transmittance and inscattered light when compositing into the render buffer.
 - Changed the behavior of unlit rays through haze so that they don't occlude sky light.
 - Improved approximation of the haze integral to reduce unnatural gradient just above the clouds at the horizon.
+- Fixed scene depth conversion when logarithmic depth is used, [#66](https://github.com/takram-design-engineering/three-geospatial/pull/66).
 
 ## [0.2.2] - 2025-05-23
 
