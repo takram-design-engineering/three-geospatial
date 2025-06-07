@@ -89,8 +89,8 @@ const Scene = () => (
 )
 ```
 
-![Example of light-source lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
-→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
+![Example of light-source lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/littlest-tokyo.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--moving-ellipsoid)
 
 ### Mixed lighting
 
@@ -436,9 +436,6 @@ atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
 ```
 
 See the [story](/storybook/src/atmosphere/Atmosphere-MovingEllipsoid.tsx) for complete example.
-
-![Example of moving ellipsoid](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/littlest-tokyo.jpg)
-→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--moving-ellipsoid)
 
 #### updateByDate
 
