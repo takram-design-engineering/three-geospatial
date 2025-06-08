@@ -40,13 +40,13 @@ export const Fuji: StoryFn = () => (
 export const London: StoryFn = () => (
   <Story
     dayOfYear={0}
-    timeOfDay={11}
+    timeOfDay={9.4}
     exposure={15}
     longitude={-0.1293}
     latitude={51.4836}
     heading={-94}
     pitch={-7}
     distance={3231}
-    coverage={0.45}
+    coverage={0.35}
   />
 )

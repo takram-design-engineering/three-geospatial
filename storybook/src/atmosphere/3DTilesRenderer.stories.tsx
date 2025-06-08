@@ -9,7 +9,18 @@ export default {
   }
 } satisfies Meta
 
-export const Tokyo: StoryFn = () => <Story exposure={5} />
+export const Manhattan: StoryFn = () => (
+  <Story
+    longitude={-73.9709}
+    latitude={40.7589}
+    heading={-155}
+    pitch={-35}
+    distance={3000}
+    exposure={60}
+    dayOfYear={1}
+    timeOfDay={7.6}
+  />
+)
 
 export const Fuji: StoryFn = () => (
   <Story
@@ -21,18 +32,5 @@ export const Fuji: StoryFn = () => (
     exposure={10}
     dayOfYear={260}
     timeOfDay={16}
-  />
-)
-
-export const Manhattan: StoryFn = () => (
-  <Story
-    longitude={-73.9709}
-    latitude={40.7589}
-    heading={-155}
-    pitch={-35}
-    distance={3000}
-    exposure={60}
-    dayOfYear={1}
-    timeOfDay={7.6}
   />
 )
