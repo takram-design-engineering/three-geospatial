@@ -9,7 +9,8 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react-vite'
 import { useEffect, useMemo, useRef, useState, type FC } from 'react'
-import { Vector3 } from 'three'
+import { CanvasTexture, Vector3 } from 'three'
+import invariant from 'tiny-invariant'
 
 import { type SunDirectionalLight } from '@takram/three-atmosphere'
 import {
@@ -92,6 +93,25 @@ const Scene: FC = () => {
     modelRef.current?.setLightIntensity(luminance < 0.25 ? 1 : 0)
   })
 
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1024
+    canvas.height = 1024
+    const ctx = canvas.getContext('2d')
+    invariant(ctx != null)
+    ctx.fillStyle = 'black'
+    ctx.fillRect(0, 0, 1024, 1024)
+    ctx.shadowColor = '#ffffff'
+    const t = 0.4
+    ctx.shadowBlur = 512 / t
+    ctx.shadowOffsetX = 1024
+    ctx.translate(-1024, 0)
+    ctx.arc(512, 512, 512 * t, 0, Math.PI * 2)
+    ctx.fillStyle = 'white'
+    ctx.fill()
+    return new CanvasTexture(canvas)
+  }, [])
+
   return (
     <>
       <GizmoHelper alignment='top-left' renderPriority={2}>
@@ -102,8 +122,8 @@ const Scene: FC = () => {
         minDistance={5}
         maxPolarAngle={Math.PI / 2}
       />
-      <Plane args={[1000, 1000]} rotation-x={-Math.PI / 2} receiveShadow>
-        <meshLambertMaterial color='white' />
+      <Plane args={[100, 100]} rotation-x={-Math.PI / 2} receiveShadow>
+        <meshLambertMaterial color='white' transparent alphaMap={texture} />
       </Plane>
       <LittlestTokyo ref={modelRef} scale={0.01} />
       <Atmosphere
@@ -124,12 +144,12 @@ const Scene: FC = () => {
         >
           <orthographicCamera
             attach='shadow-camera'
-            top={5}
-            bottom={-5}
-            left={-5}
-            right={5}
+            top={4}
+            bottom={-4}
+            left={-4}
+            right={4}
             near={0}
-            far={1000}
+            far={600}
           />
         </SunLight>
         {useMemo(

@@ -8,7 +8,7 @@ export interface LocationControlValues {
   longitude: number
   latitude: number
   height: number
-  maxAltitude?: number
+  maxHeight?: number
 }
 
 export function useLocationControls(
@@ -16,7 +16,7 @@ export function useLocationControls(
     longitude: initialLongitude = 0,
     latitude: initialLatitude = 35,
     height: initialHeight = 2000,
-    maxAltitude = 30000
+    maxHeight = 30000
   }: Partial<LocationControlValues> = {},
   folderSettings?: FolderSettings
 ): GeodeticLike {
@@ -25,10 +25,10 @@ export function useLocationControls(
     {
       longitude: { value: initialLongitude, min: -180, max: 180 },
       latitude: { value: initialLatitude, min: -90, max: 90 },
-      altitude: { value: initialHeight, min: 0, max: maxAltitude }
+      altitude: { value: initialHeight, min: 0, max: maxHeight }
     },
     folderSettings,
-    [maxAltitude]
+    [maxHeight]
   )
   return { longitude, latitude, height: altitude }
 }

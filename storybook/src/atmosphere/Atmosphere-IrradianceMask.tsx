@@ -140,7 +140,7 @@ const Scene: FC = () => {
       longitude: -110,
       latitude: 45,
       height: 408000,
-      maxAltitude: 408000
+      maxHeight: 408000
     },
     { collapsed: true }
   )
