@@ -7,6 +7,7 @@
 ### Fixed
 
 - `AerialPerspectiveEffect`: Fixed artifacts in transmittance and inscattered light for the points above the top atmosphere boundary.
+- Fixed the flashing artifacts that appear on surfaces shading the sun, [#47](https://github.com/takram-design-engineering/three-geospatial/issues/47).
 
 ## [0.11.2] - 2025-05-23
 
