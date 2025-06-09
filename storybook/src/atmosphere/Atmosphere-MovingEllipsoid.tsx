@@ -94,21 +94,23 @@ const Scene: FC = () => {
   })
 
   const texture = useMemo(() => {
+    const r = 512
     const canvas = document.createElement('canvas')
-    canvas.width = 1024
-    canvas.height = 1024
-    const ctx = canvas.getContext('2d')
-    invariant(ctx != null)
-    ctx.fillStyle = 'black'
-    ctx.fillRect(0, 0, 1024, 1024)
-    ctx.shadowColor = '#ffffff'
-    const t = 0.4
-    ctx.shadowBlur = 512 / t
-    ctx.shadowOffsetX = 1024
-    ctx.translate(-1024, 0)
-    ctx.arc(512, 512, 512 * t, 0, Math.PI * 2)
-    ctx.fillStyle = 'white'
-    ctx.fill()
+    canvas.width = r * 2
+    canvas.height = r * 2
+    const context = canvas.getContext('2d')
+    invariant(context != null)
+    const gradient = context.createRadialGradient(r, r, 0, r, r, r)
+    const sigma = 0.3
+    const count = 20
+    for (let i = 0; i <= count; ++i) {
+      const x = i / count
+      const y = Math.exp(-(x ** 2) / (2 * sigma * sigma))
+      const color = Math.round(y * 255)
+      gradient.addColorStop(x, `rgb(${color}, ${color}, ${color})`)
+    }
+    context.fillStyle = gradient
+    context.fillRect(0, 0, r * 2, r * 2)
     return new CanvasTexture(canvas)
   }, [])
 
