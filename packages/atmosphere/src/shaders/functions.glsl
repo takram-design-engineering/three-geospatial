@@ -226,7 +226,7 @@ vec3 GetIrradiance(const sampler2D irradiance_texture, const float r, const floa
 }
 
 vec3 GetExtrapolatedSingleMieScattering(const vec4 scattering) {
-  if (scattering.r <= 0.0) {
+  if (scattering.r < 1e-5) {
     return vec3(0.0);
   }
   return scattering.rgb *
