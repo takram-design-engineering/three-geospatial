@@ -156,9 +156,12 @@ const Scene: FC = () => {
     },
     { collapsed: true }
   )
-  const { showMask, disableMask, useEnvMap } = useControls('rendering', {
+  const { showMask, invertMask, disableMask } = useControls('irradiance mask', {
     showMask: false,
-    disableMask: false,
+    invertMask: false,
+    disableMask: false
+  })
+  const { useEnvMap } = useControls('rendering', {
     useEnvMap: true
   })
 
@@ -271,7 +274,10 @@ const Scene: FC = () => {
           <EffectComposer multisampling={0} enableNormalPass>
             <Fragment key={JSON.stringify([disableMask])}>
               {!disableMask && (
-                <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+                <IrradianceMask
+                  selectionLayer={IRRADIANCE_MASK_LAYER}
+                  inverted={invertMask}
+                />
               )}
               <AerialPerspective ref={effectRef} sunIrradiance skyIrradiance />
               <LensFlare />
@@ -281,7 +287,7 @@ const Scene: FC = () => {
             </Fragment>
           </EffectComposer>
         ),
-        [toneMappingMode, disableMask]
+        [toneMappingMode, invertMask, disableMask]
       )}
     </Atmosphere>
   )

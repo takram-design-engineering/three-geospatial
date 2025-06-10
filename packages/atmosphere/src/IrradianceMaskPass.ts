@@ -14,8 +14,9 @@ import {
   DepthTexture,
   LessEqualDepth,
   MeshBasicMaterial,
+  RedFormat,
   RGBADepthPacking,
-  SRGBColorSpace,
+  Uniform,
   UnsignedIntType,
   WebGLRenderTarget,
   type Camera,
@@ -26,6 +27,11 @@ import {
   type TextureDataType,
   type WebGLRenderer
 } from 'three'
+
+import { resolveIncludes } from '@takram/three-geospatial'
+import { depth } from '@takram/three-geospatial/shaders'
+
+import fragmentShader from './shaders/irradianceMask.frag?raw'
 
 declare module 'postprocessing' {
   interface DepthMaskMaterial {
@@ -57,11 +63,10 @@ export class IrradianceMaskPass extends Pass {
     this.renderPass.selection = this.selection
 
     // We need a separate depth buffer. See the discussion below.
-    this.depthTexture = new DepthTexture(1, 1)
-    this.depthTexture.type = UnsignedIntType
+    this.depthTexture = new DepthTexture(1, 1, UnsignedIntType)
     this.renderTarget = new WebGLRenderTarget(1, 1, {
-      depthTexture: this.depthTexture,
-      depthBuffer: true
+      format: RedFormat,
+      depthTexture: this.depthTexture
     })
 
     this.depthCopyPass0 = new DepthCopyPass({ depthPacking: RGBADepthPacking })
@@ -72,6 +77,10 @@ export class IrradianceMaskPass extends Pass {
     this.clearPass.overrideClearAlpha = 1
 
     const depthMaskMaterial = new DepthMaskMaterial()
+    depthMaskMaterial.fragmentShader = resolveIncludes(fragmentShader, {
+      core: { depth }
+    })
+    depthMaskMaterial.uniforms.inverted = new Uniform(false)
     depthMaskMaterial.copyCameraSettings(camera)
     depthMaskMaterial.depthBuffer0 = this.depthCopyPass0.texture
     depthMaskMaterial.depthPacking0 = RGBADepthPacking
@@ -102,18 +111,6 @@ export class IrradianceMaskPass extends Pass {
     this.renderPass.initialize(renderer, alpha, frameBufferType)
     this.clearPass.initialize(renderer, alpha, frameBufferType)
     this.depthMaskPass.initialize(renderer, alpha, frameBufferType)
-
-    if (renderer?.capabilities.logarithmicDepthBuffer) {
-      this.depthMaskPass.fullscreenMaterial.defines ??= {}
-      this.depthMaskPass.fullscreenMaterial.defines.LOG_DEPTH = '1'
-    }
-
-    if (frameBufferType !== undefined) {
-      this.renderTarget.texture.type = frameBufferType
-      if (renderer?.outputColorSpace === SRGBColorSpace) {
-        this.renderTarget.texture.colorSpace = SRGBColorSpace
-      }
-    }
   }
 
   override setDepthTexture(
@@ -140,7 +137,7 @@ export class IrradianceMaskPass extends Pass {
     this.depthCopyPass0.render(renderer, null, null)
     this.renderPass.render(renderer, this.renderTarget, null)
     this.depthCopyPass1.render(renderer, null, null)
-    this.clearPass.render(renderer, this.renderTarget, this.renderTarget)
+    this.clearPass.render(renderer, this.renderTarget, null)
     this.depthMaskPass.render(renderer, null, this.renderTarget)
 
     renderer.autoClear = autoClear
@@ -162,5 +159,13 @@ export class IrradianceMaskPass extends Pass {
 
   set selectionLayer(value: number) {
     this.selection.layer = value
+  }
+
+  get inverted(): boolean {
+    return this.depthMaskMaterial.uniforms.inverted.value
+  }
+
+  set inverted(value: boolean) {
+    this.depthMaskMaterial.uniforms.inverted.value = value
   }
 }

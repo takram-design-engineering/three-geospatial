@@ -3,7 +3,7 @@ import { EffectComposerContext } from '@react-three/postprocessing'
 import {
   forwardRef,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useRef,
   type ComponentPropsWithRef
 } from 'react'
@@ -28,11 +28,17 @@ export const IrradianceMask = forwardRef<
   const { transientStates } = useContext(AtmosphereContext)
   const ref = useRef<IrradianceMaskPass>(null)
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (ref.current == null) {
+      return
+    }
     if (transientStates != null) {
-      transientStates.irradianceMaskBuffer = ref.current?.texture ?? null
+      transientStates.irradianceMask = {
+        map: ref.current.texture,
+        channel: 'r'
+      }
       return () => {
-        transientStates.irradianceMaskBuffer = null
+        transientStates.irradianceMask = null
       }
     }
   }, [transientStates])

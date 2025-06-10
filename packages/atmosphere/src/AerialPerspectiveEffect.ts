@@ -14,7 +14,6 @@ import {
 
 import {
   define,
-  defineExpression,
   defineInt,
   Ellipsoid,
   Geodetic,
@@ -49,6 +48,7 @@ import {
 } from './constants'
 import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import {
+  AtmosphereIrradianceMask,
   type AtmosphereOverlay,
   type AtmosphereShadow,
   type AtmosphereShadowLength
@@ -112,7 +112,6 @@ export interface AerialPerspectiveEffectUniforms {
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
   irradianceScale: Uniform<number>
-  irradianceMaskBuffer: Uniform<Texture | null>
   idealSphereAlpha: Uniform<number>
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
@@ -131,6 +130,9 @@ export interface AerialPerspectiveEffectUniforms {
   stbnTexture: Uniform<Data3DTexture | null>
   frame: Uniform<number>
   shadowLengthBuffer: Uniform<Texture | null>
+
+  // Irradiance mask
+  irradianceMaskBuffer: Uniform<Texture | null>
 
   // Uniforms for atmosphere functions
   u_solar_irradiance: Uniform<Vector3>
@@ -178,6 +180,7 @@ export class AerialPerspectiveEffect extends Effect {
   overlay: AtmosphereOverlay | null = null
   shadow: AtmosphereShadow | null = null
   shadowLength: AtmosphereShadowLength | null = null
+  irradianceMask: AtmosphereIrradianceMask | null = null
 
   constructor(
     private camera = new Camera(),
@@ -251,7 +254,6 @@ export class AerialPerspectiveEffect extends Effect {
             altitudeCorrection: new Uniform(new Vector3()),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
             irradianceScale: new Uniform(irradianceScale),
-            irradianceMaskBuffer: new Uniform(null),
             idealSphereAlpha: new Uniform(0),
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
@@ -270,6 +272,9 @@ export class AerialPerspectiveEffect extends Effect {
             stbnTexture: new Uniform(null),
             frame: new Uniform(0),
             shadowLengthBuffer: new Uniform(null),
+
+            // Irradiance mask
+            irradianceMaskBuffer: new Uniform(null),
 
             // Uniforms for atmosphere functions
             u_solar_irradiance: new Uniform(atmosphere.solarIrradiance),
@@ -386,41 +391,46 @@ export class AerialPerspectiveEffect extends Effect {
     }
   }
 
-  private updateComposition(): void {
-    const { uniforms, defines, overlay, shadow, shadowLength } = this
-
-    const prevOverlay = defines.has('HAS_OVERLAY')
-    const nextOverlay = overlay != null
-    if (nextOverlay !== prevOverlay) {
-      if (nextOverlay) {
+  private updateOverlay(): boolean {
+    let needsUpdate = false
+    const { uniforms, defines, overlay } = this
+    const prevValue = defines.has('HAS_OVERLAY')
+    const nextValue = overlay != null
+    if (nextValue !== prevValue) {
+      if (nextValue) {
         defines.set('HAS_OVERLAY', '1')
       } else {
         defines.delete('HAS_OVERLAY')
         uniforms.get('overlayBuffer').value = null
       }
-      this.setChanged()
+      needsUpdate = true
     }
-    if (nextOverlay) {
+    if (nextValue) {
       uniforms.get('overlayBuffer').value = overlay.map
     }
+    return needsUpdate
+  }
 
-    const prevShadow = defines.has('HAS_SHADOW')
-    const nextShadow = shadow != null
-    if (nextShadow !== prevShadow) {
-      if (nextShadow) {
+  private updateShadow(): boolean {
+    let needsUpdate = false
+    const { uniforms, defines, shadow } = this
+    const prevValue = defines.has('HAS_SHADOW')
+    const nextValue = shadow != null
+    if (nextValue !== prevValue) {
+      if (nextValue) {
         defines.set('HAS_SHADOW', '1')
       } else {
         defines.delete('HAS_SHADOW')
         uniforms.get('shadowBuffer').value = null
       }
-      this.setChanged()
+      needsUpdate = true
     }
-    if (nextShadow) {
+    if (nextValue) {
       const prevCascadeCount = defines.get('SHADOW_CASCADE_COUNT')
       const nextCascadeCount = `${shadow.cascadeCount}`
       if (prevCascadeCount !== nextCascadeCount) {
         defines.set('SHADOW_CASCADE_COUNT', shadow.cascadeCount.toFixed(0))
-        this.setChanged()
+        needsUpdate = true
       }
       uniforms.get('shadowBuffer').value = shadow.map
       uniforms.get('shadowMapSize').value = shadow.mapSize
@@ -430,21 +440,58 @@ export class AerialPerspectiveEffect extends Effect {
       uniforms.get('shadowFar').value = shadow.far
       uniforms.get('shadowTopHeight').value = shadow.topHeight
     }
+    return needsUpdate
+  }
 
-    const prevShadowLength = defines.has('HAS_SHADOW_LENGTH')
-    const nextShadowLength = shadowLength != null
-    if (nextShadowLength !== prevShadowLength) {
-      if (nextShadowLength) {
+  private updateShadowLength(): boolean {
+    let needsUpdate = false
+    const { uniforms, defines, shadowLength } = this
+    const prevValue = defines.has('HAS_SHADOW_LENGTH')
+    const nextValue = shadowLength != null
+    if (nextValue !== prevValue) {
+      if (nextValue) {
         defines.set('HAS_SHADOW_LENGTH', '1')
       } else {
         defines.delete('HAS_SHADOW_LENGTH')
         uniforms.get('shadowLengthBuffer').value = null
       }
-      this.setChanged()
+      needsUpdate = true
     }
-    if (nextShadowLength) {
+    if (nextValue) {
       uniforms.get('shadowLengthBuffer').value = shadowLength.map
     }
+    return needsUpdate
+  }
+
+  private updateIrradianceMask(): boolean {
+    let needsUpdate = false
+    const { uniforms, defines, irradianceMask } = this
+    const prevValue = defines.has('HAS_IRRADIANCE_MASK')
+    const nextValue = irradianceMask != null
+    if (nextValue !== prevValue) {
+      if (nextValue) {
+        defines.set('HAS_IRRADIANCE_MASK', '1')
+      } else {
+        defines.delete('HAS_IRRADIANCE_MASK')
+        uniforms.get('irradianceMaskBuffer').value = null
+      }
+      needsUpdate = true
+    }
+    if (nextValue) {
+      uniforms.get('irradianceMaskBuffer').value = irradianceMask.map
+
+      const prevChannel = defines.get('IRRADIANCE_MASK_CHANNEL')
+      const nextChannel = irradianceMask.channel
+      if (nextChannel !== prevChannel) {
+        if (!/^[rgba]$/.test(nextChannel)) {
+          console.error(`Expression validation failed: ${nextChannel}`)
+        } else {
+          defines.set('IRRADIANCE_MASK_CHANNEL', nextChannel)
+          needsUpdate = true
+        }
+      }
+    }
+    return needsUpdate
   }
 
   override update(
@@ -453,7 +500,16 @@ export class AerialPerspectiveEffect extends Effect {
     deltaTime?: number
   ): void {
     this.copyCameraSettings(this.camera)
-    this.updateComposition()
+
+    let needsUpdate = false
+    needsUpdate ||= this.updateOverlay()
+    needsUpdate ||= this.updateShadow()
+    needsUpdate ||= this.updateShadowLength()
+    needsUpdate ||= this.updateIrradianceMask()
+    if (needsUpdate) {
+      this.setChanged()
+    }
+
     ++this.uniforms.get('frame').value
   }
 
@@ -538,30 +594,6 @@ export class AerialPerspectiveEffect extends Effect {
   set irradianceScale(value: number) {
     this.uniforms.get('irradianceScale').value = value
   }
-
-  get irradianceMaskBuffer(): Texture | null {
-    return this.uniforms.get('irradianceMaskBuffer').value
-  }
-
-  set irradianceMaskBuffer(value: Texture | null) {
-    this.uniforms.get('irradianceMaskBuffer').value = value
-    const defines = this.defines
-    const prevValue = defines.has('HAS_IRRADIANCE_MASK')
-    const nextValue = value != null
-    if (nextValue !== prevValue) {
-      if (nextValue) {
-        defines.set('HAS_IRRADIANCE_MASK', '1')
-      } else {
-        defines.delete('HAS_IRRADIANCE_MASK')
-      }
-      this.setChanged()
-    }
-  }
-
-  @defineExpression('IRRADIANCE_MASK_CHANNEL', {
-    validate: value => /^[rgba]$/.test(value)
-  })
-  irradianceMaskChannel = 'r'
 
   @define('SKY')
   sky: boolean

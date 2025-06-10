@@ -89,10 +89,10 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       effect.moonDirection.copy(transientStates.moonDirection)
       effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
       effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
-      effect.irradianceMaskBuffer = transientStates.irradianceMaskBuffer
       effect.overlay = transientStates.overlay
       effect.shadow = transientStates.shadow
       effect.shadowLength = transientStates.shadowLength
+      effect.irradianceMask = transientStates.irradianceMask
 
       // Load STBN only when the shadow is first enabled.
       if (!needsSTBN && effect.shadow != null) {
