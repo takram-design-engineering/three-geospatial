@@ -1,103 +1,127 @@
-import { Pass, RenderPass, Resolution, Selection } from 'postprocessing'
 import {
+  ClearPass,
+  DepthCopyPass,
+  DepthMaskMaterial,
+  DepthTestStrategy,
+  Pass,
+  RenderPass,
+  Selection,
+  ShaderPass
+} from 'postprocessing'
+import {
+  BasicDepthPacking,
   Color,
+  DepthTexture,
+  LessEqualDepth,
   MeshBasicMaterial,
-  NearestFilter,
+  RGBADepthPacking,
+  SRGBColorSpace,
+  UnsignedIntType,
   WebGLRenderTarget,
   type Camera,
+  type DepthPackingStrategies,
+  type Material,
   type Scene,
   type Texture,
+  type TextureDataType,
   type WebGLRenderer
 } from 'three'
 
-export interface IrradianceMaskPassOptions {
-  renderTarget?: WebGLRenderTarget
-  resolutionScale?: number
-  width?: number
-  height?: number
-  resolutionX?: number
-  resolutionY?: number
+declare module 'postprocessing' {
+  interface DepthMaskMaterial {
+    fullscreenMaterial: Material
+    copyCameraSettings: (camera: Camera) => void
+  }
 }
 
 export class IrradianceMaskPass extends Pass {
-  renderPass: RenderPass
-  renderTarget: WebGLRenderTarget
-  readonly resolution: Resolution
+  private readonly renderPass: RenderPass
+  private readonly depthTexture: DepthTexture
+  private readonly renderTarget: WebGLRenderTarget
+  private readonly depthCopyPass0: DepthCopyPass
+  private readonly depthCopyPass1: DepthCopyPass
+  private readonly clearPass: ClearPass
+  private readonly depthMaskMaterial: DepthMaskMaterial
+  private readonly depthMaskPass: ShaderPass
+
   readonly selection = new Selection()
 
-  private _mainScene: Scene
-  private _mainCamera: Camera
-
-  constructor(
-    scene: Scene,
-    camera: Camera,
-    {
-      renderTarget,
-      resolutionScale = 1,
-      width = Resolution.AUTO_SIZE,
-      height = Resolution.AUTO_SIZE,
-      resolutionX = width,
-      resolutionY = height
-    }: IrradianceMaskPassOptions = {}
-  ) {
+  constructor(scene: Scene, camera: Camera) {
     super('IrradianceMaskPass')
-
-    this._mainScene = scene
-    this._mainCamera = camera
     this.needsSwap = false
+    this.needsDepthTexture = true
 
-    this.renderPass = new RenderPass(
-      scene,
-      camera,
-      new MeshBasicMaterial({ color: 0 })
-    )
+    this.renderPass = new RenderPass(scene, camera, new MeshBasicMaterial())
     this.renderPass.ignoreBackground = true
     this.renderPass.skipShadowMapUpdate = true
     this.renderPass.selection = this.selection
 
-    const clearPass = this.renderPass.clearPass
-    clearPass.overrideClearColor = new Color(0xffffff)
-    clearPass.overrideClearAlpha = 1
+    // We need a separate depth buffer. See the discussion below.
+    this.depthTexture = new DepthTexture(1, 1)
+    this.depthTexture.type = UnsignedIntType
+    this.renderTarget = new WebGLRenderTarget(1, 1, {
+      depthTexture: this.depthTexture,
+      depthBuffer: true
+    })
 
-    if (renderTarget == null) {
-      this.renderTarget = new WebGLRenderTarget(1, 1, {
-        minFilter: NearestFilter,
-        magFilter: NearestFilter
-      })
-      this.renderTarget.texture.name = 'IrradianceMaskPass.Target'
-    } else {
-      this.renderTarget = renderTarget
-    }
+    this.depthCopyPass0 = new DepthCopyPass({ depthPacking: RGBADepthPacking })
+    this.depthCopyPass1 = new DepthCopyPass({ depthPacking: RGBADepthPacking })
 
-    this.resolution = new Resolution(
-      this,
-      resolutionX,
-      resolutionY,
-      resolutionScale
-    )
-    this.resolution.addEventListener('change', this.onResolutionChange)
+    this.clearPass = new ClearPass(true, false, false)
+    this.clearPass.overrideClearColor = new Color(0xffffff)
+    this.clearPass.overrideClearAlpha = 1
+
+    const depthMaskMaterial = new DepthMaskMaterial()
+    depthMaskMaterial.copyCameraSettings(camera)
+    depthMaskMaterial.depthBuffer0 = this.depthCopyPass0.texture
+    depthMaskMaterial.depthPacking0 = RGBADepthPacking
+    depthMaskMaterial.depthBuffer1 = this.depthCopyPass1.texture
+    depthMaskMaterial.depthPacking1 = RGBADepthPacking
+    depthMaskMaterial.depthMode = LessEqualDepth
+    depthMaskMaterial.maxDepthStrategy = DepthTestStrategy.DISCARD_MAX_DEPTH
+    this.depthMaskMaterial = depthMaskMaterial
+    this.depthMaskPass = new ShaderPass(depthMaskMaterial)
   }
 
-  private readonly onResolutionChange = (): void => {
-    this.setSize(this.resolution.baseWidth, this.resolution.baseHeight)
-  }
-
-  override get mainScene(): Scene {
-    return this._mainScene
-  }
-
+  // eslint-disable-next-line accessor-pairs
   override set mainScene(value: Scene) {
-    this._mainScene = value
     this.renderPass.mainScene = value
   }
 
-  override get mainCamera(): Camera {
-    return this._mainCamera
+  // eslint-disable-next-line accessor-pairs
+  override set mainCamera(value: Camera) {
+    this.renderPass.mainCamera = value
+    this.depthMaskMaterial.copyCameraSettings(value)
   }
 
-  override set mainCamera(value: Camera) {
-    this._mainCamera = value
-    this.renderPass.mainCamera = value
+  override initialize(
+    renderer: WebGLRenderer,
+    alpha: boolean,
+    frameBufferType: TextureDataType
+  ): void {
+    this.renderPass.initialize(renderer, alpha, frameBufferType)
+    this.clearPass.initialize(renderer, alpha, frameBufferType)
+    this.depthMaskPass.initialize(renderer, alpha, frameBufferType)
+
+    if (renderer?.capabilities.logarithmicDepthBuffer) {
+      this.depthMaskPass.fullscreenMaterial.defines ??= {}
+      this.depthMaskPass.fullscreenMaterial.defines.LOG_DEPTH = '1'
+    }
+
+    if (frameBufferType !== undefined) {
+      this.renderTarget.texture.type = frameBufferType
+      if (renderer?.outputColorSpace === SRGBColorSpace) {
+        this.renderTarget.texture.colorSpace = SRGBColorSpace
+      }
+    }
+  }
+
+  override setDepthTexture(
+    depthTexture: Texture,
+    depthPacking: DepthPackingStrategies = BasicDepthPacking
+  ): void {
+    this.depthCopyPass0.setDepthTexture(depthTexture, depthPacking)
+    this.depthCopyPass1.setDepthTexture(this.depthTexture, depthPacking)
   }
 
   override render(
@@ -109,15 +133,23 @@ export class IrradianceMaskPass extends Pass {
   ): void {
     const autoClear = renderer.autoClear
     renderer.autoClear = false
-    const renderTarget = this.renderToScreen ? null : this.renderTarget
-    this.renderPass.render(renderer, renderTarget, renderTarget)
+
+    // We cannot precisely compare the depth buffer and a texture rendered with
+    // MeshDepthMaterial. Store the current depth and the selection depth with
+    // the same packing and create a mask.
+    this.depthCopyPass0.render(renderer, null, null)
+    this.renderPass.render(renderer, this.renderTarget, null)
+    this.depthCopyPass1.render(renderer, null, null)
+    this.clearPass.render(renderer, this.renderTarget, this.renderTarget)
+    this.depthMaskPass.render(renderer, null, this.renderTarget)
+
     renderer.autoClear = autoClear
   }
 
   override setSize(width: number, height: number): void {
-    const resolution = this.resolution
-    resolution.setBaseSize(width, height)
-    this.renderTarget.setSize(resolution.width, resolution.height)
+    this.renderTarget.setSize(width, height)
+    this.depthCopyPass0.setSize(width, height)
+    this.depthCopyPass1.setSize(width, height)
   }
 
   get texture(): Texture {
