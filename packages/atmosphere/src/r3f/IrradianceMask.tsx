@@ -1,11 +1,12 @@
 import { extend, type ThreeElement } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import {
-  forwardRef,
   useContext,
   useEffect,
   useRef,
-  type ComponentPropsWithRef
+  type ComponentPropsWithoutRef,
+  type FC,
+  type Ref
 } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 
@@ -19,12 +20,14 @@ declare module '@react-three/fiber' {
 }
 
 export interface IrradianceMaskProps
-  extends Omit<ComponentPropsWithRef<'irradianceMaskPass'>, 'args'> {}
+  extends Omit<ComponentPropsWithoutRef<'irradianceMaskPass'>, 'args'> {
+  ref?: Ref<IrradianceMaskPass>
+}
 
-export const IrradianceMask = forwardRef<
-  IrradianceMaskPass,
-  IrradianceMaskProps
->(function IrradianceMask(props, forwardedRef) {
+export const IrradianceMask: FC<IrradianceMaskProps> = ({
+  ref: forwardedRef,
+  ...props
+}) => {
   const { transientStates } = useContext(AtmosphereContext)
   const ref = useRef<IrradianceMaskPass>(null)
 
@@ -52,4 +55,4 @@ export const IrradianceMask = forwardRef<
       args={[scene, camera]}
     />
   )
-})
+}

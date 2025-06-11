@@ -1,13 +1,14 @@
 import { useThree } from '@react-three/fiber'
 import {
   createContext,
-  forwardRef,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
-  type ReactNode
+  type FC,
+  type ReactNode,
+  type Ref
 } from 'react'
 import { Matrix4, Vector3 } from 'three'
 
@@ -56,7 +57,13 @@ export interface AtmosphereContextValue {
 export const AtmosphereContext =
   /*#__PURE__*/ createContext<AtmosphereContextValue>({})
 
+export interface AtmosphereApi extends AtmosphereTransientStates {
+  textures?: PrecomputedTextures
+  updateByDate: (date: number | Date) => void
+}
+
 export interface AtmosphereProps {
+  ref?: Ref<AtmosphereApi>
   textures?: PrecomputedTextures | string
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
@@ -65,25 +72,15 @@ export interface AtmosphereProps {
   children?: ReactNode
 }
 
-export interface AtmosphereApi extends AtmosphereTransientStates {
-  textures?: PrecomputedTextures
-  updateByDate: (date: number | Date) => void
-}
-
-export const Atmosphere = /*#__PURE__*/ forwardRef<
-  AtmosphereApi,
-  AtmosphereProps
->(function Atmosphere(
-  {
-    textures: texturesProp = DEFAULT_PRECOMPUTED_TEXTURES_URL,
-    ellipsoid = Ellipsoid.WGS84,
-    correctAltitude = true,
-    photometric = true,
-    date,
-    children
-  },
-  forwardedRef
-) {
+export const Atmosphere: FC<AtmosphereProps> = ({
+  ref: forwardedRef,
+  textures: texturesProp = DEFAULT_PRECOMPUTED_TEXTURES_URL,
+  ellipsoid = Ellipsoid.WGS84,
+  correctAltitude = true,
+  photometric = true,
+  date,
+  children
+}) => {
   const transientStatesRef = useRef({
     sunDirection: new Vector3(),
     moonDirection: new Vector3(),
@@ -157,4 +154,4 @@ export const Atmosphere = /*#__PURE__*/ forwardRef<
       {children}
     </AtmosphereContext.Provider>
   )
-})
+}

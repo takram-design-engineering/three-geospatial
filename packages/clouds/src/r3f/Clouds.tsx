@@ -1,12 +1,12 @@
 import { useFrame, useThree, type ElementProps } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import {
-  forwardRef,
   useCallback,
   useContext,
   useEffect,
   useMemo,
-  useState
+  useState,
+  type FC
 } from 'react'
 import {
   LinearFilter,
@@ -154,119 +154,115 @@ export interface CloudsProps
   stbnTexture?: Data3DTexture | string
 }
 
-export const Clouds = /*#__PURE__*/ forwardRef<CloudsEffect, CloudsProps>(
-  function Clouds(
-    {
-      disableDefaultLayers = false,
-      localWeatherTexture: localWeatherTextureProp = DEFAULT_LOCAL_WEATHER_URL,
-      shapeTexture: shapeTextureProp = DEFAULT_SHAPE_URL,
-      shapeDetailTexture: shapeDetailTextureProp = DEFAULT_SHAPE_DETAIL_URL,
-      turbulenceTexture: turbulenceTextureProp = DEFAULT_TURBULENCE_URL,
-      stbnTexture: stbnTextureProp = DEFAULT_STBN_URL,
-      children,
-      ...props
+export const Clouds: FC<CloudsProps> = ({
+  ref: forwardedRef,
+  disableDefaultLayers = false,
+  localWeatherTexture: localWeatherTextureProp = DEFAULT_LOCAL_WEATHER_URL,
+  shapeTexture: shapeTextureProp = DEFAULT_SHAPE_URL,
+  shapeDetailTexture: shapeDetailTextureProp = DEFAULT_SHAPE_DETAIL_URL,
+  turbulenceTexture: turbulenceTextureProp = DEFAULT_TURBULENCE_URL,
+  stbnTexture: stbnTextureProp = DEFAULT_STBN_URL,
+  children,
+  ...props
+}) => {
+  const { textures, transientStates, ...contextProps } =
+    useContext(AtmosphereContext)
+
+  const [atmosphereParameters, others] = separateProps({
+    ...cloudsPassOptionsDefaults,
+    ...contextProps,
+    ...textures,
+    ...props
+  })
+
+  const effect = useMemo(() => new CloudsEffect(), [])
+  useEffect(() => {
+    return () => {
+      effect.dispose()
+    }
+  }, [effect])
+
+  useFrame(() => {
+    if (transientStates != null) {
+      effect.sunDirection.copy(transientStates.sunDirection)
+      effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+      effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+    }
+  })
+
+  useEffect(() => {
+    if (transientStates != null) {
+      transientStates.overlay = effect.atmosphereOverlay
+      transientStates.shadow = effect.atmosphereShadow
+      transientStates.shadowLength = effect.atmosphereShadowLength
+      return () => {
+        transientStates.overlay = null
+        transientStates.shadow = null
+        transientStates.shadowLength = null
+      }
+    }
+  }, [effect, transientStates])
+
+  const handleChange = useCallback(
+    (event: CloudsEffectChangeEvent) => {
+      if (transientStates == null) {
+        return
+      }
+      switch (event.property) {
+        case 'atmosphereOverlay':
+          transientStates.overlay = effect.atmosphereOverlay
+          break
+        case 'atmosphereShadow':
+          transientStates.shadow = effect.atmosphereShadow
+          break
+        case 'atmosphereShadowLength':
+          transientStates.shadowLength = effect.atmosphereShadowLength
+          break
+      }
     },
-    forwardedRef
-  ) {
-    const { textures, transientStates, ...contextProps } =
-      useContext(AtmosphereContext)
+    [effect, transientStates]
+  )
+  useEffect(() => {
+    effect.events.addEventListener('change', handleChange)
+    return () => {
+      effect.events.removeEventListener('change', handleChange)
+    }
+  }, [effect, handleChange])
 
-    const [atmosphereParameters, others] = separateProps({
-      ...cloudsPassOptionsDefaults,
-      ...contextProps,
-      ...textures,
-      ...props
-    })
+  const gl = useThree(({ gl }) => gl)
+  const localWeatherTexture = useTextureState(localWeatherTextureProp, gl)
+  const shapeTexture = use3DTextureState(
+    shapeTextureProp,
+    CLOUD_SHAPE_TEXTURE_SIZE
+  )
+  const shapeDetailTexture = use3DTextureState(
+    shapeDetailTextureProp,
+    CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
+  )
+  const turbulenceTexture = useTextureState(turbulenceTextureProp, gl)
+  const stbnTexture = useSTBNTextureState(stbnTextureProp)
 
-    const effect = useMemo(() => new CloudsEffect(), [])
-    useEffect(() => {
-      return () => {
-        effect.dispose()
-      }
-    }, [effect])
-
-    useFrame(() => {
-      if (transientStates != null) {
-        effect.sunDirection.copy(transientStates.sunDirection)
-        effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-        effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
-      }
-    })
-
-    useEffect(() => {
-      if (transientStates != null) {
-        transientStates.overlay = effect.atmosphereOverlay
-        transientStates.shadow = effect.atmosphereShadow
-        transientStates.shadowLength = effect.atmosphereShadowLength
-        return () => {
-          transientStates.overlay = null
-          transientStates.shadow = null
-          transientStates.shadowLength = null
-        }
-      }
-    }, [effect, transientStates])
-
-    const handleChange = useCallback(
-      (event: CloudsEffectChangeEvent) => {
-        if (transientStates == null) {
-          return
-        }
-        switch (event.property) {
-          case 'atmosphereOverlay':
-            transientStates.overlay = effect.atmosphereOverlay
-            break
-          case 'atmosphereShadow':
-            transientStates.shadow = effect.atmosphereShadow
-            break
-          case 'atmosphereShadowLength':
-            transientStates.shadowLength = effect.atmosphereShadowLength
-            break
-        }
-      },
-      [effect, transientStates]
-    )
-    useEffect(() => {
-      effect.events.addEventListener('change', handleChange)
-      return () => {
-        effect.events.removeEventListener('change', handleChange)
-      }
-    }, [effect, handleChange])
-
-    const gl = useThree(({ gl }) => gl)
-    const localWeatherTexture = useTextureState(localWeatherTextureProp, gl)
-    const shapeTexture = use3DTextureState(
-      shapeTextureProp,
-      CLOUD_SHAPE_TEXTURE_SIZE
-    )
-    const shapeDetailTexture = use3DTextureState(
-      shapeDetailTextureProp,
-      CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
-    )
-    const turbulenceTexture = useTextureState(turbulenceTextureProp, gl)
-    const stbnTexture = useSTBNTextureState(stbnTextureProp)
-
-    const { camera } = useContext(EffectComposerContext)
-    return (
-      <>
-        <primitive
-          ref={forwardedRef}
-          object={effect}
-          mainCamera={camera}
-          {...atmosphereParameters}
-          localWeatherTexture={localWeatherTexture}
-          shapeTexture={shapeTexture}
-          shapeDetailTexture={shapeDetailTexture}
-          turbulenceTexture={turbulenceTexture}
-          stbnTexture={stbnTexture}
-          {...others}
-        />
-        <CloudLayers
-          layers={effect.cloudLayers}
-          disableDefault={disableDefaultLayers}
-        >
-          {children}
-        </CloudLayers>
-      </>
-    )
-  }
-)
+  const { camera } = useContext(EffectComposerContext)
+  return (
+    <>
+      <primitive
+        ref={forwardedRef}
+        object={effect}
+        mainCamera={camera}
+        {...atmosphereParameters}
+        localWeatherTexture={localWeatherTexture}
+        shapeTexture={shapeTexture}
+        shapeDetailTexture={shapeDetailTexture}
+        turbulenceTexture={turbulenceTexture}
+        stbnTexture={stbnTexture}
+        {...others}
+      />
+      <CloudLayers
+        layers={effect.cloudLayers}
+        disableDefault={disableDefaultLayers}
+      >
+        {children}
+      </CloudLayers>
+    </>
+  )
+}
