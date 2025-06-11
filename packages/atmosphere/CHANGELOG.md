@@ -1,11 +1,11 @@
 # Changelog
 
-## [0.12.0] - 2025-06-10
+## [0.12.0] - Unreleased
 
 ### Changed
 
 - Added support for the irradiance mask, [#30](https://github.com/takram-design-engineering/three-geospatial/issues/30).
-- Removed the use of `forwardRef` and add it in props.
+- Removed the use of `forwardRef` and added it in props.
 
 ### Fixed
 
