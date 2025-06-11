@@ -1,4 +1,5 @@
-import { forwardRef, useEffect, useMemo, type ReactNode } from 'react'
+import { type ElementProps } from '@react-three/fiber'
+import { useEffect, useMemo, type FC, type ReactNode } from 'react'
 import { Group, Matrix4, Vector3 } from 'three'
 import { type SetOptional } from 'type-fest'
 
@@ -26,18 +27,20 @@ class EastNorthUpFrameGroup extends Group {
 }
 
 export interface EastNorthUpFrameProps
-  extends SetOptional<GeodeticLike, 'height'> {
+  extends ElementProps<typeof EastNorthUpFrameGroup, EastNorthUpFrameGroup>,
+    SetOptional<GeodeticLike, 'height'> {
   ellipsoid?: Ellipsoid
   children?: ReactNode
 }
 
-export const EastNorthUpFrame = /*#__PURE__*/ forwardRef<
-  EastNorthUpFrameGroup,
-  EastNorthUpFrameProps
->(function EastNorthUpFrame(
-  { longitude, latitude, height = 0, ellipsoid = Ellipsoid.WGS84, children },
-  forwardedRef
-) {
+export const EastNorthUpFrame: FC<EastNorthUpFrameProps> = ({
+  ref: forwardedRef,
+  longitude,
+  latitude,
+  height = 0,
+  ellipsoid = Ellipsoid.WGS84,
+  children
+}) => {
   const group = useMemo(() => new EastNorthUpFrameGroup(), [])
 
   useEffect(() => {
@@ -49,4 +52,4 @@ export const EastNorthUpFrame = /*#__PURE__*/ forwardRef<
       {children}
     </primitive>
   )
-})
+}

@@ -3,7 +3,7 @@ import {
   type ElementProps,
   type ThreeElement
 } from '@react-three/fiber'
-import { forwardRef, useRef } from 'react'
+import { useRef, type FC } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import { type Mesh } from 'three'
 
@@ -20,15 +20,18 @@ export interface EllipsoidMeshProps
   args?: ConstructorParameters<typeof EllipsoidGeometry>
 }
 
-export const EllipsoidMesh = /*#__PURE__*/ forwardRef<Mesh, EllipsoidMeshProps>(
-  function Ellipsoid({ args, children, ...props }, forwardedRef) {
-    const ref = useRef<Mesh | null>(null)
-    extend({ EllipsoidGeometry })
-    return (
-      <mesh ref={mergeRefs([ref, forwardedRef])} {...props}>
-        <ellipsoidGeometry args={args} />
-        {children}
-      </mesh>
-    )
-  }
-)
+export const EllipsoidMesh: FC<EllipsoidMeshProps> = ({
+  ref: forwardedRef,
+  args,
+  children,
+  ...props
+}) => {
+  const ref = useRef<Mesh | null>(null)
+  extend({ EllipsoidGeometry })
+  return (
+    <mesh ref={mergeRefs([ref, forwardedRef])} {...props}>
+      <ellipsoidGeometry args={args} />
+      {children}
+    </mesh>
+  )
+}
