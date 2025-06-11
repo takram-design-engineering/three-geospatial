@@ -1,10 +1,13 @@
 # Changelog
 
+## [0.3.0] - 2025-06-10
+
 ### Changed
 
 - Added support for absorption in haze.
 - `CloudsMaterial`: Changed the default values of both `skyIrradianceScale` and `groundIrradianceScale` to 1.
 - `CloudsMaterial`: Added `hazeScatteringCoefficient` and `hazeAbsorptionCoefficient` which are separated from those of the clouds.
+- Removed the use of `forwardRef` and add it in props.
 
 ### Fixed
 

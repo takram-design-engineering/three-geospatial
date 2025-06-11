@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2] - 2025-06-10
+
+### Changed
+
+- Removed the use of `forwardRef` and add it in props.
+- Updated dependencies.
+
 ## [0.3.1] - 2025-05-23
 
 ### Fixed
