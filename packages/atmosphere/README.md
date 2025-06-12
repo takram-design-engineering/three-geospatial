@@ -120,11 +120,11 @@ const Scene = () => (
       <SunLight />
     </group>
     <mesh>
-      {/* This is lit in post-process */}
+      {/* This mesh is lit in post-process. */}
       <meshBasicMaterial />
     </mesh>
     <mesh layers={layers}>
-      {/* This is lit by light sources */}
+      {/* This mesh is lit by light sources. */}
       <meshPhysicalMaterial />
     </mesh>
     <EffectComposer enableNormalPass>
@@ -659,6 +659,46 @@ const Scene = () => {
 ### Props
 
 The parameters of [`AerialPerspectiveEffect`](#aerialperspectiveeffect) are exposed as props.
+
+## IrradianceMask
+
+A post-processing pass that renders a mask for the [mixed lighting](#mixed-lighting).
+
+See [`IrradianceMaskPass`](#irradiancemaskpass) for further details.
+
+→ [Source](/packages/atmosphere/src/r3f/IrradianceMask.tsx)
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import { Atmosphere, IrradianceMask } from '@takram/three-atmosphere/r3f'
+import { Layers } from 'three'
+
+const IRRADIANCE_MASK_LAYER = 10
+const layers = new Layers()
+layers.enable(IRRADIANCE_MASK_LAYER)
+
+const Scene = () => {
+  return (
+    <Atmosphere>
+      <mesh>
+        {/* This mesh is included in the mask. */}
+        <meshBasicMaterial />
+      </mesh>
+      <mesh layers={layers}>
+        {/* This mesh is masked out. */}
+        <meshPhysicalMaterial />
+      </mesh>
+      <EffectComposer>
+        <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+      </EffectComposer>
+    </Atmosphere>
+  )
+}
+```
+
+### Props
+
+The parameters of [`IrradianceMaskPass`](#irradiancemaskpass) are exposed as props.
 
 ## AtmosphereMaterialBase
 
@@ -1197,6 +1237,59 @@ lunarRadianceScale: number = 1
 ```
 
 See [lunarRadianceScale](#lunarradiancescale).
+
+## IrradianceMaskPass
+
+A post-processing pass that renders a mask for the [mixed lighting](#mixed-lighting).
+
+If you can afford using MRT, it is preferable to render this mask in your render pass instead.
+
+→ [Source](/packages/atmosphere/src/IrradianceMaskPass.ts)
+
+```ts
+const IRRADIANCE_MASK_LAYER = 10
+const layers = new Layers()
+layers.enable(IRRADIANCE_MASK_LAYER)
+
+const irradianceMask = new IrradianceMaskPass(scene, camera)
+irradianceMask.selectionLayers = IRRADIANCE_MASK_LAYER
+const aerialPerspective = new AerialPerspectiveEffect(camera, {
+  irradianceTexture,
+  scatteringTexture,
+  transmittanceTexture
+})
+
+const composer = new EffectComposer(renderer, {
+  frameBufferType: HalfFloatType
+})
+composer.addPass(new RenderPass(scene, camera))
+composer.addPass(irradianceMask)
+composer.addPass(
+  new EffectPass(
+    camera,
+    aerialPerspective,
+    new ToneMappingEffect({ mode: ToneMappingMode.AGX })
+  )
+)
+```
+
+### Parameters
+
+#### selectionLayer
+
+```ts
+selectionLayer: number = /* The next unique layer on creation */
+```
+
+Specifies the layer to which the meshes are assigned for rendering to the mask.
+
+#### inverted
+
+```ts
+inverted: boolean = false
+```
+
+By default, meshes with the selection layer are masked out from the post-process lighting. Set this to true when rendering the objects for the post-process lighting is less expensive (generally, fewer triangles) than that for the light-source lighting, and configure the layers accordingly.
 
 ## Functions
 
