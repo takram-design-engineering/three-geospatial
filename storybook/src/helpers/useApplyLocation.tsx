@@ -33,7 +33,7 @@ function applyLocation(
   controls.target.copy(position)
 }
 
-export type UseApplyLocationResult = RefObject<OrbitControls>
+export type UseApplyLocationResult = RefObject<OrbitControls | null>
 
 export function useApplyLocation(
   { longitude, latitude, height }: GeodeticLike,

@@ -1,7 +1,6 @@
-import { type Meta, type StoryFn } from '@storybook/react'
+import { type Meta, type StoryFn } from '@storybook/react-vite'
 
 import { Story } from './3DTilesRenderer-Story'
-import _Vanilla from './3DTilesRenderer-Vanilla'
 
 export default {
   title: 'atmosphere/3D Tiles Renderer Integration',
@@ -9,21 +8,6 @@ export default {
     layout: 'fullscreen'
   }
 } satisfies Meta
-
-export const Tokyo: StoryFn = () => <Story exposure={10} />
-
-export const Fuji: StoryFn = () => (
-  <Story
-    longitude={138.5973}
-    latitude={35.2138}
-    heading={71}
-    pitch={-31}
-    distance={7000}
-    exposure={10}
-    dayOfYear={260}
-    timeOfDay={16}
-  />
-)
 
 export const Manhattan: StoryFn = () => (
   <Story
@@ -38,4 +22,15 @@ export const Manhattan: StoryFn = () => (
   />
 )
 
-export const Vanilla = _Vanilla
+export const Fuji: StoryFn = () => (
+  <Story
+    longitude={138.5973}
+    latitude={35.2138}
+    heading={71}
+    pitch={-31}
+    distance={7000}
+    exposure={10}
+    dayOfYear={260}
+    timeOfDay={16}
+  />
+)

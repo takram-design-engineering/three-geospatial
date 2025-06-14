@@ -23,3 +23,8 @@ export interface AtmosphereShadow {
   far: number
   topHeight: number
 }
+
+export interface AtmosphereIrradianceMask {
+  map: Texture
+  channel: 'r' | 'g' | 'b' | 'a'
+}

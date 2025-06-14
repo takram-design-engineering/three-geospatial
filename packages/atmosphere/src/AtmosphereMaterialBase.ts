@@ -90,6 +90,7 @@ export interface AtmosphereMaterialBaseUniforms {
   u_mie_scattering: Uniform<Vector3>
   u_mie_phase_function_g: Uniform<number>
   u_mu_s_min: Uniform<number>
+  u_max_rayleigh_shadow_length: Uniform<number>
   u_irradiance_texture: Uniform<DataTexture | null>
   u_scattering_texture: Uniform<Data3DTexture | null>
   u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
@@ -143,6 +144,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         u_mie_scattering: new Uniform(atmosphere.mieScattering),
         u_mie_phase_function_g: new Uniform(atmosphere.miePhaseFunctionG),
         u_mu_s_min: new Uniform(atmosphere.muSMin),
+        u_max_rayleigh_shadow_length: new Uniform(10000 * METER_TO_LENGTH_UNIT),
         u_irradiance_texture: new Uniform(irradianceTexture),
         u_scattering_texture: new Uniform(scatteringTexture),
         u_single_mie_scattering_texture: new Uniform(scatteringTexture),

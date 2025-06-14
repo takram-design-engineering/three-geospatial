@@ -8,14 +8,15 @@ import {
   Pass
 } from 'postprocessing'
 import {
-  forwardRef,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
   type Context,
-  type ReactNode
+  type FC,
+  type ReactNode,
+  type RefAttributes
 } from 'react'
 import {
   HalfFloatType,
@@ -56,25 +57,22 @@ function isConvolution(effect: Effect): boolean {
   )
 }
 
-export const EffectComposer = /*#__PURE__*/ forwardRef<
-  EffectComposerImpl,
-  EffectComposerProps
->(function EffectComposer(
-  {
-    children,
-    camera: cameraProp,
-    scene: sceneProp,
-    enabled = true,
-    renderPriority = 1,
-    autoClear = true,
-    resolutionScale,
-    depthBuffer,
-    stencilBuffer = false,
-    multisampling = 8,
-    frameBufferType = HalfFloatType
-  },
-  forwardedRef
-) {
+export const EffectComposer: FC<
+  EffectComposerProps & RefAttributes<EffectComposerImpl>
+> = ({
+  ref: forwardedRef,
+  children,
+  camera: cameraProp,
+  scene: sceneProp,
+  enabled = true,
+  renderPriority = 1,
+  autoClear = true,
+  resolutionScale,
+  depthBuffer,
+  stencilBuffer = false,
+  multisampling = 8,
+  frameBufferType = HalfFloatType
+}) => {
   const gl = useThree(({ gl }) => gl)
   const defaultScene = useThree(({ scene }) => scene)
   const defaultCamera = useThree(({ camera }) => camera)
@@ -189,4 +187,4 @@ export const EffectComposer = /*#__PURE__*/ forwardRef<
       <group ref={group}>{children}</group>
     </EffectComposerContext.Provider>
   )
-})
+}

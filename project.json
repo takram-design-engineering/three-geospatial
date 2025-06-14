@@ -44,6 +44,12 @@
         "command": "nx build-storybook storybook --configuration=production"
       }
     },
+    "storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx storybook storybook --port=4400 --no-open"
+      }
+    },
     "local-registry": {
       "executor": "@nx/js:verdaccio",
       "options": {

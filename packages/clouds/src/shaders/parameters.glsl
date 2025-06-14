@@ -11,7 +11,6 @@ uniform vec3 sunDirection;
 // Participating medium
 uniform float scatteringCoefficient;
 uniform float absorptionCoefficient;
-uniform vec3 albedo;
 
 // Primary raymarch
 uniform float minDensity;
@@ -43,6 +42,8 @@ uniform float turbulenceDisplacement;
 #ifdef HAZE
 uniform float hazeDensityScale;
 uniform float hazeExponent;
+uniform float hazeScatteringCoefficient;
+uniform float hazeAbsorptionCoefficient;
 #endif // HAZE
 
 // Cloud layers

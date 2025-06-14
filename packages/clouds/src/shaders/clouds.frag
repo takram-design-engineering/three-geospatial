@@ -418,6 +418,7 @@ vec3 getGroundSunSkyIrradiance(
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
   return GetSunAndSkyIrradiance(
     (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
+    surfaceNormal,
     sunDirection,
     skyIrradiance
   );
@@ -429,7 +430,11 @@ vec3 getGroundSunSkyIrradiance(
 
 vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3 skyIrradiance) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIrradiance(position * METER_TO_LENGTH_UNIT, sunDirection, skyIrradiance);
+  return GetSunAndSkyIrradianceForParticle(
+    position * METER_TO_LENGTH_UNIT,
+    sunDirection,
+    skyIrradiance
+  );
   #else // ACCURATE_SUN_SKY_IRRADIANCE
   float alpha = remapClamped(height, minHeight, maxHeight);
   skyIrradiance = mix(vCloudsIrradiance.minSky, vCloudsIrradiance.maxSky, alpha);
@@ -455,10 +460,9 @@ vec3 approximateIrradianceFromGround(
   vec3 skyIrradiance;
   vec3 sunIrradiance = getGroundSunSkyIrradiance(position, surfaceNormal, height, skyIrradiance);
   const float groundAlbedo = 0.3;
-  vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance * RECIPROCAL_PI2;
-  vec3 bouncedLight = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
-  vec3 bouncedIrradiance = bouncedLight * exp(-opticalDepthToGround);
-  return albedo * bouncedIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
+  vec3 groundIrradiance = skyIrradiance + (1.0 - coverage) * sunIrradiance;
+  vec3 bouncedRadiance = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
+  return bouncedRadiance * exp(-opticalDepthToGround);
 }
 #endif // GROUND_IRRADIANCE
 
@@ -548,28 +552,28 @@ vec4 marchClouds(
         );
       }
 
-      float scattering = approximateMultipleScattering(opticalDepth, cosTheta);
-      vec3 radiance = albedo * sunIrradiance * scattering;
+      vec3 radiance = sunIrradiance * approximateMultipleScattering(opticalDepth, cosTheta);
 
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (height < shadowTopHeight && mipLevel < 0.5) {
-        radiance += approximateIrradianceFromGround(
+        vec3 groundIrradiance = approximateIrradianceFromGround(
           position,
           surfaceNormal,
           height,
           mipLevel,
           jitter
         );
+        radiance += groundIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
       }
       #endif // GROUND_IRRADIANCE
 
       // Crude approximation of sky gradient. Better than none in the shadows.
-      float skyGradient = dot(0.5 + weather.heightFraction, media.weight);
-      radiance += albedo * skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
+      float skyGradient = dot(weather.heightFraction * 0.5 + 0.5, media.weight);
+      radiance += skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
 
-      // Finally multiply by extinction (redundant but kept for clarity).
-      radiance *= media.extinction;
+      // Finally multiply by scattering.
+      radiance *= media.scattering;
 
       #ifdef POWDER
       radiance *= 1.0 - powderScale * exp(-media.extinction * powderExponent);
@@ -622,7 +626,7 @@ float marchShadowLength(
   float maxRayDistance = rayNearFar.y - rayNearFar.x;
   float stepSize = minShadowLengthStepSize;
   float rayDistance = stepSize * jitter;
-  const float attenuationFactor = 1.0 - 1e-3;
+  const float attenuationFactor = 1.0 - 5e-4;
   float attenuation = 1.0;
 
   // TODO: This march is closed, and sample resolution can be much lower.
@@ -668,25 +672,33 @@ vec4 approximateHaze(
     return vec4(0.0); // Prevent artifact in views from space
   }
 
+  // Blend two normals by the difference in angle so that normal near the
+  // ground becomes that of the origin, and in the sky that of the horizon.
+  vec3 normalAtOrigin = normalize(rayOrigin);
+  vec3 normalAtHorizon = (rayOrigin - dot(rayOrigin, rayDirection) * rayDirection) / bottomRadius;
+  float alpha = remapClamped(dot(normalAtOrigin, normalAtHorizon), 0.9, 1.0);
+  vec3 normal = mix(normalAtOrigin, normalAtHorizon, alpha);
+
   // Analytical optical depth where density exponentially decreases with height.
   // Based on: https://iquilezles.org/articles/fog/
-  float angle = max(dot(normalize(rayOrigin), rayDirection), 1e-5);
+  float angle = max(dot(normal, rayDirection), 1e-5);
   float exponent = angle * hazeExponent;
+  float linearTerm = density / hazeExponent / angle;
+
   // Derive the optical depths separately for with and without shadow length.
   float expTerm = 1.0 - exp(-maxRayDistance * exponent);
   float shadowExpTerm = 1.0 - exp(-min(maxRayDistance, shadowLength) * exponent);
-  float linearTerm = density / hazeExponent / angle;
   float opticalDepth = expTerm * linearTerm;
-  float effectiveOpticalDepth = max((expTerm - shadowExpTerm) * linearTerm, 0.0);
+  float shadowOpticalDepth = max((expTerm - shadowExpTerm) * linearTerm, 0.0);
+  float transmittance = saturate(1.0 - exp(-opticalDepth));
+  float shadowTransmittance = saturate(1.0 - exp(-shadowOpticalDepth));
 
   vec3 skyIrradiance = vGroundIrradiance.sky;
   vec3 sunIrradiance = vGroundIrradiance.sun;
-  vec3 irradiance = sunIrradiance * phaseFunction(cosTheta);
-  irradiance += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale;
-  vec3 inscatter = albedo * irradiance * saturate(1.0 - exp(-effectiveOpticalDepth));
-
-  // Inscatter is attenuated by shadow length, but transmittance is not.
-  return vec4(inscatter, saturate(1.0 - exp(-opticalDepth)));
+  vec3 inscatter = sunIrradiance * phaseFunction(cosTheta) * shadowTransmittance;
+  inscatter += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale * transmittance;
+  inscatter *= hazeScatteringCoefficient / (hazeAbsorptionCoefficient + hazeScatteringCoefficient);
+  return vec4(inscatter, transmittance);
 }
 
 #endif // HAZE
@@ -705,8 +717,7 @@ void applyAerialPerspective(
     sunDirection,
     transmittance
   );
-  float clampedAlpha = max(color.a, 1e-7);
-  color.rgb = mix(vec3(0.0), color.rgb * transmittance / clampedAlpha + inscatter, color.a);
+  color.rgb = color.rgb * transmittance + inscatter * color.a;
 }
 
 bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
@@ -985,7 +996,8 @@ void main() {
     cosTheta,
     shadowLength
   );
-  color = color * (1.0 - haze.a) + haze;
+  color.rgb = mix(color.rgb, haze.rgb, haze.a);
+  color.a = color.a * (1.0 - haze.a) + haze.a;
   #endif // HAZE
 
   outputColor = color;

@@ -23,50 +23,47 @@ three postprocessing
 
 ## Usage
 
-### Deferred lighting
+### Post-process lighting
 
 Suitable for large-scale scenes, but supports only Lambertian BRDF.
 
+Lighting is applied in [`AerialPerspectiveEffect`](#aerialperspectiveeffect). Materials must be unlit (e.g. `MeshBasicMaterial`) and the render buffer is considered albedo.
+
 ```tsx
-import { useLoader } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
-import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
   Sky
 } from '@takram/three-atmosphere/r3f'
 
-const Scene = () => {
-  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
-  return (
-    <Atmosphere
-      textures={precomputedTextures}
-      date={/* Date object or timestamp */}
-    >
-      <Sky />
-      <EffectComposer enableNormalPass>
-        <AerialPerspective skyIrradiance sunIrradiance />
-      </EffectComposer>
-    </Atmosphere>
-  )
-}
+const Scene = () => (
+  <Atmosphere date={/* Date object or timestamp */}>
+    <Sky />
+    <mesh>
+      <meshBasicMaterial />
+    </mesh>
+    <EffectComposer enableNormalPass>
+      <AerialPerspective sunIrradiance skyIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
 ```
 
-![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
+![Example of post-process lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/manhattan.jpg)
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-3d-tiles-renderer-integration--manhattan)
 
-![Example of deferred lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
+![Example of post-process lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/fuji.jpg)
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-3d-tiles-renderer-integration--fuji)
 
-### Forward lighting
+### Light-source lighting
 
 Compatible with built-in Three.js materials and shadows, but both direct and indirect irradiance are approximated only for small-scale scenes.
 
+Objects are lit by [`SunDirectionalLight`](#sundirectionallight), [`SkyLightProbe`](#skylightprobe), and possibly other light sources.
+
 ```tsx
-import { useLoader } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
-import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
@@ -75,28 +72,71 @@ import {
   SunLight
 } from '@takram/three-atmosphere/r3f'
 
-const Scene = () => {
-  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
-  return (
-    <Atmosphere
-      textures={precomputedTextures}
-      date={/* Date object or timestamp */}
-    >
-      <Sky />
-      <group position={/* ECEF coordinate in meters */}>
-        <SkyLight />
-        <SunLight />
-      </group>
-      <EffectComposer>
-        <AerialPerspective />
-      </EffectComposer>
-    </Atmosphere>
-  )
-}
+const Scene = () => (
+  <Atmosphere date={/* Date object or timestamp */}>
+    <Sky />
+    <group position={/* ECEF coordinate in meters */}>
+      <SkyLight />
+      <SunLight />
+    </group>
+    <mesh>
+      <meshPhysicalMaterial />
+    </mesh>
+    <EffectComposer>
+      <AerialPerspective />
+    </EffectComposer>
+  </Atmosphere>
+)
 ```
 
-![Example of forward lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/forward.jpg)
-→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--vanilla)
+![Example of light-source lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/littlest-tokyo.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--moving-ellipsoid)
+
+### Mixed lighting
+
+Selectively applies the post-process and light-source lighting using [`IrradianceMaskPass`](#irradiancemaskpass) or an MRT texture. It combines the advantages of both, but transparency over the post-process lighting is not supported.
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import {
+  AerialPerspective,
+  Atmosphere,
+  IrradianceMask,
+  Sky,
+  SkyLight,
+  SunLight
+} from '@takram/three-atmosphere/r3f'
+import { Layers } from 'three'
+
+const IRRADIANCE_MASK_LAYER = 10
+const layers = new Layers()
+layers.enable(IRRADIANCE_MASK_LAYER)
+
+const Scene = () => (
+  <Atmosphere date={/* Date object or timestamp */}>
+    <Sky />
+    <group position={/* ECEF coordinate in meters */}>
+      <SkyLight />
+      <SunLight />
+    </group>
+    <mesh>
+      {/* This mesh is lit in post-process. */}
+      <meshBasicMaterial />
+    </mesh>
+    <mesh layers={layers}>
+      {/* This mesh is lit by light sources. */}
+      <meshPhysicalMaterial />
+    </mesh>
+    <EffectComposer enableNormalPass>
+      <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+      <AerialPerspective sunIrradiance skyIrradiance />
+    </EffectComposer>
+  </Atmosphere>
+)
+```
+
+![Example of mixed lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/iss.jpg)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--irradiance-mask)
 
 ### Transient update by date
 
@@ -121,20 +161,6 @@ const Scene = () => {
     </Atmosphere>
   )
 }
-```
-
-### Non-suspending texture loading
-
-```tsx
-const Scene = () => (
-  // Provide a url instead of textures to load them asynchronously.
-  <Atmosphere textures='/assets'>
-    <Sky />
-    <EffectComposer>
-      <AerialPerspective />
-    </EffectComposer>
-  </Atmosphere>
-)
 ```
 
 ### Vanilla Three.js
@@ -162,9 +188,9 @@ sunLight.target.position.copy(position)
 scene.add(sunLight)
 scene.add(sunLight.target)
 
-// Demonstrates forward lighting here. For deferred lighting, set sunIrradiance
-// and skyIrradiance to true, remove SkyLightProbe and SunDirectionalLight, and
-// provide a normal buffer to AerialPerspectiveEffect.
+// Demonstrates light-source lighting here. For post-process lighting, set
+// sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
+// SunDirectionalLight, and provide a normal buffer to AerialPerspectiveEffect.
 const aerialPerspective = new AerialPerspectiveEffect(camera)
 
 // Use floating-point render buffer, as radiance/luminance is stored here.
@@ -235,6 +261,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SkyLight`](#skylight)
 - [`SunLight`](#sunlight)
 - [`AerialPerspective`](#aerialperspective)
+- [`IrradianceMask`](#irradiancemask)
 
 **Three.js**
 
@@ -244,6 +271,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SkyLightProbe`](#skylightprobe)
 - [`SunDirectionalLight`](#sundirectionallight)
 - [`AerialPerspectiveEffect`](#aerialperspectiveeffect)
+- [`IrradianceMaskPass`](#irradiancemaskpass)
 
 **Functions**
 
@@ -632,6 +660,46 @@ const Scene = () => {
 
 The parameters of [`AerialPerspectiveEffect`](#aerialperspectiveeffect) are exposed as props.
 
+## IrradianceMask
+
+A post-processing pass that renders a mask for the [mixed lighting](#mixed-lighting).
+
+See [`IrradianceMaskPass`](#irradiancemaskpass) for further details.
+
+→ [Source](/packages/atmosphere/src/r3f/IrradianceMask.tsx)
+
+```tsx
+import { EffectComposer } from '@react-three/postprocessing'
+import { Atmosphere, IrradianceMask } from '@takram/three-atmosphere/r3f'
+import { Layers } from 'three'
+
+const IRRADIANCE_MASK_LAYER = 10
+const layers = new Layers()
+layers.enable(IRRADIANCE_MASK_LAYER)
+
+const Scene = () => {
+  return (
+    <Atmosphere>
+      <mesh>
+        {/* This mesh is included in the mask. */}
+        <meshBasicMaterial />
+      </mesh>
+      <mesh layers={layers}>
+        {/* This mesh is masked out. */}
+        <meshPhysicalMaterial />
+      </mesh>
+      <EffectComposer>
+        <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+      </EffectComposer>
+    </Atmosphere>
+  )
+}
+```
+
+### Props
+
+The parameters of [`IrradianceMaskPass`](#irradiancemaskpass) are exposed as props.
+
 ## AtmosphereMaterialBase
 
 The base class of [`SkyMaterial`](#skymaterial) and [`StarsMaterial`](#starsmaterial).
@@ -974,7 +1042,7 @@ The distance from the target. Adjust this value if shadows are enabled for the l
 
 ## AerialPerspectiveEffect
 
-A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as deferred lighting.
+A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as post-process lighting.
 
 This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
 
@@ -1011,7 +1079,7 @@ Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s [`Effec
 normalBuffer: Texture | null = null
 ```
 
-The normal buffer used for deferred lighting. It is not required if both `sunIrradiance` and `skyIrradiance` are disabled.
+The normal buffer used for post-process lighting. It is not required if both `sunIrradiance` and `skyIrradiance` are disabled.
 
 `EffectComposer`’s default normal buffer lacks sufficient precision, causing banding in shaded areas. Using a floating-point normal buffer resolves this issue.
 
@@ -1104,7 +1172,7 @@ sunIrradiance: boolean = false
 skyIrradiance: boolean = false
 ```
 
-Whether to apply sun and sky irradiance as deferred lighting.
+Whether to apply sun and sky irradiance as post-process lighting.
 
 Enabling one without the other is physically incorrect and should only be done for demonstration purposes.
 
@@ -1125,7 +1193,7 @@ irradianceScale: number = 1
 
 This value adjusts the color buffer to reduce contrast.
 
-Deferred lighting treats the color buffer as albedo, but textures like those in Google Photorealistic 3D Tiles have baked lighting and shadows, resulting in higher contrast. Adjusting this value helps make it less noticeable.
+Post-process lighting treats the color buffer as albedo, but textures like those in Google Photorealistic 3D Tiles have baked lighting and shadows, resulting in higher contrast. Adjusting this value helps make it less noticeable.
 
 #### sky
 
@@ -1169,6 +1237,59 @@ lunarRadianceScale: number = 1
 ```
 
 See [lunarRadianceScale](#lunarradiancescale).
+
+## IrradianceMaskPass
+
+A post-processing pass that renders a mask for the [mixed lighting](#mixed-lighting).
+
+If you can afford using MRT, it is preferable to render this mask in your render pass instead.
+
+→ [Source](/packages/atmosphere/src/IrradianceMaskPass.ts)
+
+```ts
+const IRRADIANCE_MASK_LAYER = 10
+const layers = new Layers()
+layers.enable(IRRADIANCE_MASK_LAYER)
+
+const irradianceMask = new IrradianceMaskPass(scene, camera)
+irradianceMask.selectionLayers = IRRADIANCE_MASK_LAYER
+const aerialPerspective = new AerialPerspectiveEffect(camera, {
+  irradianceTexture,
+  scatteringTexture,
+  transmittanceTexture
+})
+
+const composer = new EffectComposer(renderer, {
+  frameBufferType: HalfFloatType
+})
+composer.addPass(new RenderPass(scene, camera))
+composer.addPass(irradianceMask)
+composer.addPass(
+  new EffectPass(
+    camera,
+    aerialPerspective,
+    new ToneMappingEffect({ mode: ToneMappingMode.AGX })
+  )
+)
+```
+
+### Parameters
+
+#### selectionLayer
+
+```ts
+selectionLayer: number = /* The next unique layer on creation */
+```
+
+Specifies the layer to which the meshes are assigned for rendering to the mask.
+
+#### inverted
+
+```ts
+inverted: boolean = false
+```
+
+By default, meshes with the selection layer are masked out from the post-process lighting. Set this to true when rendering the objects for the post-process lighting is less expensive (generally, fewer triangles) than that for the light-source lighting, and configure the layers accordingly.
 
 ## Functions
 

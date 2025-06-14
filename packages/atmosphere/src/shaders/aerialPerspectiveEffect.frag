@@ -30,6 +30,13 @@ uniform float lunarRadianceScale;
 uniform float irradianceScale;
 uniform float idealSphereAlpha;
 
+#ifdef HAS_IRRADIANCE_MASK
+uniform sampler2D irradianceMaskBuffer;
+#endif // HAS_IRRADIANCE_MASK
+
+// prettier-ignore
+#define IRRADIANCE_MASK_CHANNEL_ IRRADIANCE_MASK_CHANNEL
+
 #ifdef HAS_OVERLAY
 uniform sampler2D overlayBuffer;
 #endif // HAS_OVERLAY
@@ -247,6 +254,12 @@ float getShadowRadius(const vec3 worldPosition) {
 #endif // HAS_SHADOW
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
+  #if defined(HAS_IRRADIANCE_MASK) && defined(DEBUG_SHOW_IRRADIANCE_MASK)
+  outputColor.rgb = vec3(texture(irradianceMaskBuffer, uv).IRRADIANCE_MASK_CHANNEL_);
+  outputColor.a = 1.0;
+  return;
+  #endif // defined(HAS_IRRADIANCE_MASK) && defined(DEBUG_SHOW_IRRADIANCE_MASK)
+
   float shadowLength = 0.0;
   #ifdef HAS_SHADOW_LENGTH
   shadowLength = texture(shadowLengthBuffer, uv).r;
@@ -324,6 +337,10 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 radiance;
   #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
+  #ifdef HAS_IRRADIANCE_MASK
+  float irradianceMask = texture(irradianceMaskBuffer, uv).IRRADIANCE_MASK_CHANNEL_;
+  radiance = mix(inputColor.rgb, radiance, irradianceMask);
+  #endif // HAS_IRRADIANCE_MASK
   #else // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
   radiance = inputColor.rgb;
   #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)

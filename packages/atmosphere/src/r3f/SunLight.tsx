@@ -1,10 +1,11 @@
 import { extend, useFrame, type ThreeElement } from '@react-three/fiber'
 import {
-  forwardRef,
   useContext,
   useMemo,
   useRef,
-  type ComponentPropsWithRef
+  type ComponentPropsWithoutRef,
+  type FC,
+  type Ref
 } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import { Object3D } from 'three'
@@ -22,12 +23,15 @@ declare module '@react-three/fiber' {
 }
 
 export interface SunLightProps
-  extends Omit<ComponentPropsWithRef<'sunDirectionalLight'>, 'target'> {}
+  extends Omit<ComponentPropsWithoutRef<'sunDirectionalLight'>, 'target'> {
+  ref?: Ref<SunDirectionalLight>
+}
 
-export const SunLight = /*#__PURE__*/ forwardRef<
-  SunDirectionalLight,
-  SunLightProps
->(function SunLight({ position, ...props }, forwardedRef) {
+export const SunLight: FC<SunLightProps> = ({
+  ref: forwardedRef,
+  position,
+  ...props
+}) => {
   const { textures, transientStates, ...contextProps } =
     useContext(AtmosphereContext)
 
@@ -60,4 +64,4 @@ export const SunLight = /*#__PURE__*/ forwardRef<
       <primitive object={target} position={position} />
     </>
   )
-})
+}

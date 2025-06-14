@@ -3,16 +3,18 @@
 import { OrbitControls, TorusKnot } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react'
+import { type StoryFn } from '@storybook/react-vite'
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
+import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   Fragment,
-  Suspense,
   useEffect,
   useRef,
   useState,
   type ComponentRef,
   type FC
 } from 'react'
+import { MeshBasicMaterial, MeshLambertMaterial } from 'three'
 
 import {
   AerialPerspective,
@@ -27,8 +29,7 @@ import {
   Ellipsoid,
   Geodetic,
   PointOfView,
-  radians,
-  TilingScheme
+  radians
 } from '@takram/three-geospatial'
 import {
   Depth,
@@ -37,23 +38,19 @@ import {
   Normal
 } from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame, EllipsoidMesh } from '@takram/three-geospatial/r3f'
-import { IonTerrain } from '@takram/three-terrain'
-import { BatchedTerrainTile } from '@takram/three-terrain/r3f'
 
 import { EffectComposer } from '../helpers/EffectComposer'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
+import { TileOverrideMaterialPlugin } from '../plugins/TileOverrideMaterialPlugin'
 
 const geodetic = new Geodetic(radians(138.5), radians(36.2), 5000)
 const position = geodetic.toECEF()
 
-const terrain = new IonTerrain({
-  assetId: 2767062, // Japan Regional Terrain
-  apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN
-})
-const tile = new TilingScheme().getTile(geodetic, 7)
+const terrainBasicMaterial = new MeshBasicMaterial({ color: 'gray' })
+const terrainLambertMaterial = new MeshLambertMaterial({ color: 'gray' })
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
@@ -85,7 +82,7 @@ const Scene: FC = () => {
   )
   const { mode, sun, sky } = useControls('lighting', {
     mode: {
-      options: ['deferred', 'forward'] as const
+      options: ['post-process', 'light-source'] as const
     },
     sun: true,
     sky: true
@@ -122,51 +119,60 @@ const Scene: FC = () => {
       photometric={photometric}
     >
       <OrbitControls ref={setControls} />
+
+      {/* Background objects and light sources */}
       <Sky />
-      {mode === 'forward' && (
+      <Stars data='atmosphere/stars.bin' />
+      {mode === 'light-source' && (
         <group position={position}>
           {sun && <SunLight />}
           {sky && <SkyLight />}
         </group>
       )}
-      <Stars data='atmosphere/stars.bin' />
-      <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]} receiveShadow>
-        {mode === 'forward' ? (
+
+      {/* An ellipsoid mesh for fill empty region */}
+      <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]}>
+        {mode === 'light-source' ? (
           <meshLambertMaterial color='gray' />
         ) : (
           <meshBasicMaterial color='gray' />
         )}
       </EllipsoidMesh>
-      <Suspense>
-        <BatchedTerrainTile
-          terrain={terrain}
-          {...tile}
-          depth={5}
-          computeVertexNormals
-          receiveShadow
-          castShadow
-        >
-          {mode === 'forward' ? (
-            <meshLambertMaterial color='gray' />
-          ) : (
-            <meshBasicMaterial color='gray' />
-          )}
-        </BatchedTerrainTile>
-      </Suspense>
+
+      {/* Quantized mesh terrain */}
+      <TilesRenderer>
+        <TilesPlugin
+          plugin={CesiumIonAuthPlugin}
+          args={{
+            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+            assetId: 2767062, // Japan Regional Terrain
+            autoRefreshToken: true
+          }}
+        />
+        <TilesPlugin
+          key={mode}
+          plugin={TileOverrideMaterialPlugin}
+          args={{
+            material:
+              mode === 'light-source'
+                ? terrainLambertMaterial
+                : terrainBasicMaterial
+          }}
+        />
+      </TilesRenderer>
+
+      {/* Scene objects in a ENU frame */}
       <EastNorthUpFrame {...geodetic}>
-        <TorusKnot
-          args={[200, 60, 256, 64]}
-          position={[0, 0, 20]}
-          receiveShadow
-          castShadow
-        >
-          {mode === 'forward' ? (
+        <TorusKnot args={[200, 60, 256, 64]} position={[0, 0, 20]}>
+          {mode === 'light-source' ? (
             <meshLambertMaterial color='white' />
           ) : (
             <meshBasicMaterial color='white' />
           )}
         </TorusKnot>
       </EastNorthUpFrame>
+
+      {/* Post-processing */}
       <EffectComposer multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
@@ -184,8 +190,8 @@ const Scene: FC = () => {
         >
           {enabled && !normal && !depth && (
             <AerialPerspective
-              sunIrradiance={mode === 'deferred' && sun}
-              skyIrradiance={mode === 'deferred' && sky}
+              sunIrradiance={mode === 'post-process' && sun}
+              skyIrradiance={mode === 'post-process' && sky}
               transmittance={transmittance}
               inscatter={inscatter}
             />

@@ -1,6 +1,6 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useFrame, type ElementProps } from '@react-three/fiber'
-import { forwardRef, useContext, useEffect, useMemo } from 'react'
+import { useContext, useEffect, useMemo, type FC } from 'react'
 import { type BufferGeometry, type Color, type Mesh, type Vector3 } from 'three'
 
 import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
@@ -25,66 +25,64 @@ export interface SkyProps
       }
   > {}
 
-export const Sky = /*#__PURE__*/ forwardRef<SkyImpl, SkyProps>(
-  function Sky(props, forwardedRef) {
-    const { textures, transientStates, ...contextProps } =
-      useContext(AtmosphereContext)
+export const Sky: FC<SkyProps> = ({ ref: forwardedRef, ...props }) => {
+  const { textures, transientStates, ...contextProps } =
+    useContext(AtmosphereContext)
 
-    const [
-      atmosphereParameters,
-      {
-        sun,
-        moon,
-        moonDirection,
-        moonAngularRadius,
-        lunarRadianceScale,
-        groundAlbedo,
-        ...meshProps
-      }
-    ] = separateProps({
-      ...skyMaterialParametersDefaults,
-      ...contextProps,
-      ...textures,
-      ...props
-    })
+  const [
+    atmosphereParameters,
+    {
+      sun,
+      moon,
+      moonDirection,
+      moonAngularRadius,
+      lunarRadianceScale,
+      groundAlbedo,
+      ...meshProps
+    }
+  ] = separateProps({
+    ...skyMaterialParametersDefaults,
+    ...contextProps,
+    ...textures,
+    ...props
+  })
 
-    const material = useMemo(() => new SkyMaterial(), [])
-    useEffect(() => {
-      return () => {
-        material.dispose()
-      }
-    }, [material])
+  const material = useMemo(() => new SkyMaterial(), [])
+  useEffect(() => {
+    return () => {
+      material.dispose()
+    }
+  }, [material])
 
-    useFrame(() => {
-      if (transientStates != null) {
-        material.sunDirection.copy(transientStates.sunDirection)
-        material.moonDirection.copy(transientStates.moonDirection)
-        material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-        material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+  useFrame(() => {
+    if (transientStates != null) {
+      material.sunDirection.copy(transientStates.sunDirection)
+      material.moonDirection.copy(transientStates.moonDirection)
+      material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+      material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
 
-        // TODO: Since cloud shadows are computed in post-processing, the shadow
-        // length texture is delayed by 1 frame.
-        material.shadowLength = transientStates.shadowLength
-      }
-    })
+      // TODO: Since cloud shadows are computed in post-processing, the shadow
+      // length texture is delayed by 1 frame.
+      material.shadowLength = transientStates.shadowLength
+    }
+  })
 
-    return (
-      <ScreenQuad
-        renderOrder={SKY_RENDER_ORDER}
-        {...meshProps}
-        ref={forwardedRef}
-      >
-        <primitive
-          object={material}
-          {...atmosphereParameters}
-          sun={sun}
-          moon={moon}
-          moonDirection={moonDirection}
-          moonAngularRadius={moonAngularRadius}
-          lunarRadianceScale={lunarRadianceScale}
-          groundAlbedo={groundAlbedo}
-        />
-      </ScreenQuad>
-    )
-  }
-)
+  return (
+    <ScreenQuad
+      renderOrder={SKY_RENDER_ORDER}
+      {...meshProps}
+      ref={forwardedRef}
+    >
+      <primitive
+        object={material}
+        {...atmosphereParameters}
+        sun={sun}
+        moon={moon}
+        moonDirection={moonDirection}
+        moonAngularRadius={moonAngularRadius}
+        lunarRadianceScale={lunarRadianceScale}
+        groundAlbedo={groundAlbedo}
+      />
+    </ScreenQuad>
+  )
+}

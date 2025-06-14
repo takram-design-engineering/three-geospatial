@@ -1,4 +1,4 @@
-import { type StoryFn } from '@storybook/react'
+import { type StoryFn } from '@storybook/react-vite'
 import {
   EffectComposer,
   EffectPass,
@@ -7,7 +7,6 @@ import {
   ToneMappingEffect,
   ToneMappingMode
 } from 'postprocessing'
-import { useLayoutEffect } from 'react'
 import {
   Group,
   HalfFloatType,
@@ -29,7 +28,6 @@ import {
   type Texture
 } from 'three'
 import { OrbitControls } from 'three-stdlib'
-import invariant from 'tiny-invariant'
 
 import {
   AerialPerspectiveEffect,
@@ -69,10 +67,7 @@ const geodetic = new Geodetic(0, radians(67), 500)
 const position = geodetic.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
-function init(): void {
-  const container = document.getElementById('container')
-  invariant(container != null)
-
+function init(container: HTMLDivElement): void {
   const aspect = window.innerWidth / window.innerHeight
   camera = new PerspectiveCamera(75, aspect, 10, 1e6)
   camera.position.copy(position)
@@ -101,7 +96,7 @@ function init(): void {
   )
   group.add(torusKnot)
 
-  // Demonstrates deferred lighting here.
+  // Demonstrates post-process lighting here.
   aerialPerspective = new AerialPerspectiveEffect(camera)
   aerialPerspective.sky = true
   aerialPerspective.sunIrradiance = true
@@ -254,11 +249,14 @@ function render(): void {
   composer.render()
 }
 
-const Story: StoryFn = () => {
-  useLayoutEffect(() => {
-    init()
-  }, [])
-  return <div id='container' />
-}
+const Story: StoryFn = () => (
+  <div
+    ref={ref => {
+      if (ref != null) {
+        init(ref)
+      }
+    }}
+  />
+)
 
 export default Story

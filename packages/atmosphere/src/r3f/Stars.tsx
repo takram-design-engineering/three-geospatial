@@ -1,11 +1,11 @@
 import { useFrame, useThree, type ElementProps } from '@react-three/fiber'
 import {
-  forwardRef,
   useContext,
   useEffect,
   useMemo,
   useRef,
-  useState
+  useState,
+  type FC
 } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import { type Points } from 'three'
@@ -39,89 +39,88 @@ export interface StarsProps
   background?: boolean
 }
 
-export const Stars = /*#__PURE__*/ forwardRef<StarsImpl, StarsProps>(
-  function Stars(
-    { data: dataProp = DEFAULT_STARS_DATA_URL, ...props },
-    forwardedRef
-  ) {
-    const { textures, transientStates, ...contextProps } =
-      useContext(AtmosphereContext)
+export const Stars: FC<StarsProps> = ({
+  ref: forwardedRef,
+  data: dataProp = DEFAULT_STARS_DATA_URL,
+  ...props
+}) => {
+  const { textures, transientStates, ...contextProps } =
+    useContext(AtmosphereContext)
 
-    const [
-      atmosphereParameters,
-      { pointSize, radianceScale, background, ...others }
-    ] = separateProps({
-      ...starsMaterialParametersDefaults,
-      ...contextProps,
-      ...textures,
-      ...props
-    })
+  const [
+    atmosphereParameters,
+    { pointSize, radianceScale, background, ...others }
+  ] = separateProps({
+    ...starsMaterialParametersDefaults,
+    ...contextProps,
+    ...textures,
+    ...props
+  })
 
-    const [data, setData] = useState(
-      typeof dataProp !== 'string' ? dataProp : undefined
-    )
-    useEffect(() => {
-      if (typeof dataProp === 'string') {
-        const loader = new ArrayBufferLoader()
-        ;(async () => {
-          setData(await loader.loadAsync(dataProp))
-        })().catch(error => {
-          console.error(error)
-        })
-      } else {
-        setData(dataProp)
-      }
-    }, [dataProp])
-
-    const geometry = useMemo(
-      () => (data != null ? new StarsGeometry(data) : undefined),
-      [data]
-    )
-    useEffect(() => {
-      return () => {
-        geometry?.dispose()
-      }
-    }, [geometry])
-
-    const material = useMemo(() => new StarsMaterial(), [])
-    useEffect(() => {
-      return () => {
-        material.dispose()
-      }
-    }, [material])
-
-    const ref = useRef<Points>(null)
-    useFrame(({ camera }) => {
-      if (transientStates != null && camera.isPerspectiveCamera === true) {
-        material.sunDirection.copy(transientStates.sunDirection)
-        ref.current?.setRotationFromMatrix(transientStates.rotationMatrix)
-        material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-        material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
-      }
-    })
-
-    const camera = useThree(({ camera }) => camera)
-    if (geometry == null || camera.isPerspectiveCamera !== true) {
-      return null
+  const [data, setData] = useState(
+    typeof dataProp !== 'string' ? dataProp : undefined
+  )
+  useEffect(() => {
+    if (typeof dataProp === 'string') {
+      const loader = new ArrayBufferLoader()
+      ;(async () => {
+        setData(await loader.loadAsync(dataProp))
+      })().catch(error => {
+        console.error(error)
+      })
+    } else {
+      setData(dataProp)
     }
-    return (
-      <points
-        ref={mergeRefs([ref, forwardedRef])}
-        frustumCulled={false}
-        renderOrder={SKY_RENDER_ORDER + 1}
-        {...others}
-      >
-        <primitive object={geometry} />
-        <primitive
-          object={material}
-          {...atmosphereParameters}
-          pointSize={pointSize}
-          radianceScale={radianceScale}
-          background={background}
-          depthTest={true}
-          depthWrite={false}
-        />
-      </points>
-    )
+  }, [dataProp])
+
+  const geometry = useMemo(
+    () => (data != null ? new StarsGeometry(data) : undefined),
+    [data]
+  )
+  useEffect(() => {
+    return () => {
+      geometry?.dispose()
+    }
+  }, [geometry])
+
+  const material = useMemo(() => new StarsMaterial(), [])
+  useEffect(() => {
+    return () => {
+      material.dispose()
+    }
+  }, [material])
+
+  const ref = useRef<Points>(null)
+  useFrame(({ camera }) => {
+    if (transientStates != null && camera.isPerspectiveCamera === true) {
+      material.sunDirection.copy(transientStates.sunDirection)
+      ref.current?.setRotationFromMatrix(transientStates.rotationMatrix)
+      material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
+      material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+    }
+  })
+
+  const camera = useThree(({ camera }) => camera)
+  if (geometry == null || camera.isPerspectiveCamera !== true) {
+    return null
   }
-)
+  return (
+    <points
+      ref={mergeRefs([ref, forwardedRef])}
+      frustumCulled={false}
+      renderOrder={SKY_RENDER_ORDER + 1}
+      {...others}
+    >
+      <primitive object={geometry} />
+      <primitive
+        object={material}
+        {...atmosphereParameters}
+        pointSize={pointSize}
+        radianceScale={radianceScale}
+        background={background}
+        depthTest={true}
+        depthWrite={false}
+      />
+    </points>
+  )
+}

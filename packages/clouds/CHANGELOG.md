@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.3.0] - 2025-06-12
+
+### Changed
+
+- Added support for absorption in haze.
+- `CloudsMaterial`: Changed the default values of both `skyIrradianceScale` and `groundIrradianceScale` to 1.
+- `CloudsMaterial`: Added `hazeScatteringCoefficient` and `hazeAbsorptionCoefficient` which are separated from those of the clouds.
+- Removed the use of `forwardRef` and added it in props.
+
+### Fixed
+
+- Adjusted the scaling of irradiance for cloud particles to better reflect isotropic scattering.
+- Added a workaround so that the unlit rays towards far clouds appear orange.
+- Fixed incorrect handling of cloud transmittance and inscattered light when compositing into the render buffer.
+- Changed the behavior of unlit rays through haze so that they don't occlude sky light.
+- Improved approximation of the haze integral to reduce unnatural gradient just above the clouds at the horizon.
+- Fixed scene depth conversion when logarithmic depth is used, [#66](https://github.com/takram-design-engineering/three-geospatial/pull/66).
+
+## [0.2.2] - 2025-05-23
+
+### Fixed
+
+- Removed `process.env.NODE_ENV` from the ES build output.
+
 ## [0.2.1] - 2025-03-14
 
 ### Fixed

@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.12.0] - 2025-06-12
+
+### Changed
+
+- Added support for the irradiance mask, [#30](https://github.com/takram-design-engineering/three-geospatial/issues/30).
+- Removed the use of `forwardRef` and added it in props.
+
+### Fixed
+
+- `AerialPerspectiveEffect`: Fixed artifacts in transmittance and inscattered light for the points above the top atmosphere boundary.
+- Fixed the flashing artifacts that appear on surfaces shading the sun, [#47](https://github.com/takram-design-engineering/three-geospatial/issues/47).
+
+## [0.11.2] - 2025-05-23
+
+### Fixed
+
+- `Sky`: `groundAlbedo` prop now resets to default value when removed.
+- Removed `process.env.NODE_ENV` from the ES build output.
+
 ## [0.11.1] - 2025-03-14
 
 ### Fixed

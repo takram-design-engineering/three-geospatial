@@ -167,7 +167,7 @@ MediaSample sampleMedia(
   }
   #endif // SHAPE_DETAIL
 
-  // Nicely decrease the density at the bottom.
+  // Apply the density profiles.
   density = saturate(density * densityScales * getLayerDensity(weather.heightFraction));
 
   MediaSample media;

@@ -1,7 +1,7 @@
 import { useFrame, type ElementProps } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { RenderPass } from 'postprocessing'
-import { forwardRef, useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState, type FC } from 'react'
 import { Texture, type Data3DTexture } from 'three'
 
 import { DEFAULT_STBN_URL, STBNLoader } from '@takram/three-geospatial'
@@ -43,13 +43,11 @@ export interface AerialPerspectiveProps
   stbnTexture?: Data3DTexture | string
 }
 
-export const AerialPerspective = /*#__PURE__*/ forwardRef<
-  AerialPerspectiveEffect,
-  AerialPerspectiveProps
->(function AerialPerspective(
-  { stbnTexture: stbnTextureProp = DEFAULT_STBN_URL, ...props },
-  forwardedRef
-) {
+export const AerialPerspective: FC<AerialPerspectiveProps> = ({
+  ref: forwardedRef,
+  stbnTexture: stbnTextureProp = DEFAULT_STBN_URL,
+  ...props
+}) => {
   const { textures, transientStates, ...contextProps } =
     useContext(AtmosphereContext)
 
@@ -92,6 +90,7 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       effect.overlay = transientStates.overlay
       effect.shadow = transientStates.shadow
       effect.shadowLength = transientStates.shadowLength
+      effect.irradianceMask = transientStates.irradianceMask
 
       // Load STBN only when the shadow is first enabled.
       if (!needsSTBN && effect.shadow != null) {
@@ -116,4 +115,4 @@ export const AerialPerspective = /*#__PURE__*/ forwardRef<
       octEncodedNormal={geometryTexture != null}
     />
   )
-})
+}

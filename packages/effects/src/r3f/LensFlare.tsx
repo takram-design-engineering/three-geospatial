@@ -1,5 +1,5 @@
 import { type ElementProps } from '@react-three/fiber'
-import { forwardRef, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, type FC } from 'react'
 
 import {
   LensFlareEffect,
@@ -8,10 +8,10 @@ import {
 
 export interface LensFlareProps extends ElementProps<typeof LensFlareEffect> {}
 
-export const LensFlare = /*#__PURE__*/ forwardRef<
-  LensFlareEffect,
-  LensFlareProps
->(function LensFlare(props, forwardedRef) {
+export const LensFlare: FC<LensFlareProps> = ({
+  ref: forwardedRef,
+  ...props
+}) => {
   const { blendFunction, ...others } = {
     ...lensFlareEffectOptionsDefaults,
     ...props
@@ -25,4 +25,4 @@ export const LensFlare = /*#__PURE__*/ forwardRef<
   }, [effect])
 
   return <primitive ref={forwardedRef} object={effect} {...others} />
-})
+}

@@ -1,4 +1,4 @@
-import { type Meta } from '@storybook/react'
+import { type Meta } from '@storybook/react-vite'
 
 import _Basic from './Clouds-Basic'
 import _CustomLayers from './Clouds-CustomLayers'
