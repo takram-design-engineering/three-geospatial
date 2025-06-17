@@ -51,9 +51,7 @@ declare module '3d-tiles-renderer/r3f' {
     Params extends {} = ConstructorParameters<Plugin>[0] extends {}
       ? ConstructorParameters<Plugin>[0]
       : {}
-  >(
-    props: TilesPluginProps<Plugin, Params> & RefAttributes<Plugin>
-  ): React.JSX.Element
+  >(props: TilesPluginProps<Plugin, Params>): React.JSX.Element
 
   export interface TilesRendererProps extends Partial<TilesRendererImpl> {
     url?: string

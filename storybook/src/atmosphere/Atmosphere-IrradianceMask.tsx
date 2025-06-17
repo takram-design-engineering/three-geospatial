@@ -10,7 +10,6 @@ import {
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import { type StoryFn } from '@storybook/react-vite'
-import { ReorientationPlugin } from '3d-tiles-renderer/plugins'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import {
   Fragment,
@@ -47,6 +46,7 @@ import { useGoogleMapsAPIKeyControls } from '../helpers/useGoogleMapsAPIKeyContr
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useLocationControls } from '../helpers/useLocationControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
+import { ReorientationPlugin } from '../plugins/ReorientationPlugin'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -135,15 +135,12 @@ const ISS: FC<ISSProps> = ({ ...props }) => {
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 8 })
-  const { longitude, latitude, height } = useLocationControls(
-    {
-      longitude: -110,
-      latitude: 45,
-      height: 408000,
-      maxHeight: 408000
-    },
-    { collapsed: true }
-  )
+  const { longitude, latitude, height } = useLocationControls({
+    longitude: -110,
+    latitude: 45,
+    height: 408000,
+    maxHeight: 408000
+  })
   const motionDate = useLocalDateControls({
     longitude,
     timeOfDay: 17
@@ -209,6 +206,11 @@ const Scene: FC = () => {
     ;(effect as any).setChanged()
   }, [showMask])
 
+  const reorientationPluginRef = useRef<ReorientationPlugin>(null)
+  useEffect(() => {
+    reorientationPluginRef.current?.invalidate()
+  }, [longitude, latitude, height])
+
   return (
     <Atmosphere
       ref={setAtmosphere}
@@ -242,14 +244,12 @@ const Scene: FC = () => {
 
       {/* Quantized mesh terrain */}
       <Globe>
-        {/* TODO: Improve ReorientationPlugin to support updating parameters. */}
         <TilesPlugin
+          ref={reorientationPluginRef}
           plugin={ReorientationPlugin}
-          args={{
-            lon: radians(longitude),
-            lat: radians(latitude),
-            height
-          }}
+          lon={radians(longitude)}
+          lat={radians(latitude)}
+          height={height}
         />
       </Globe>
 
