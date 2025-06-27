@@ -21,7 +21,7 @@ importers:
         specifier: ^3.9.2
         version: 3.9.2
       '@react-three/drei':
-        specifier: ^10.3.0
+        specifier: '>=10.0.2'
         version: 10.3.0(@react-three/fiber@9.1.2(@types/react@19.0.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(three@0.177.0))(@types/react@19.0.10)(@types/three@0.177.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(three@0.177.0)
       '@react-three/fiber':
         specifier: '>=9.0.4'
@@ -33,7 +33,7 @@ importers:
         specifier: ^2.1.19
         version: 2.1.19
       postprocessing:
-        specifier: ^6.37.4
+        specifier: '>=6.36.7'
         version: 6.37.4(three@0.177.0)
       react:
         specifier: '>=19.0'
