@@ -20,7 +20,7 @@ precision highp sampler2DArray;
 #include "clouds"
 
 #if !defined(RECIPROCAL_PI4)
-#define RECIPROCAL_PI4 (0.07957747154594767)
+#define RECIPROCAL_PI4 0.07957747154594767
 #endif // !defined(RECIPROCAL_PI4)
 
 uniform sampler2D depthBuffer;
@@ -266,7 +266,7 @@ vec4 getCascadedShadowMaps(vec2 uv) {
   }
 
   #if !defined(DEBUG_SHOW_SHADOW_MAP_TYPE)
-  #define DEBUG_SHOW_SHADOW_MAP_TYPE (0)
+  #define DEBUG_SHOW_SHADOW_MAP_TYPE 0
   #endif // !defined(DEBUG_SHOW_SHADOW_MAP_TYPE
 
   const float frontDepthScale = 1e-5;

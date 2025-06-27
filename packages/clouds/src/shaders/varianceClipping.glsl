@@ -1,5 +1,5 @@
 #ifdef VARIANCE_9_SAMPLES
-#define VARIANCE_OFFSET_COUNT (8)
+#define VARIANCE_OFFSET_COUNT 8
 const ivec2 varianceOffsets[8] = ivec2[8](
   ivec2(-1, -1),
   ivec2(-1, 1),
@@ -11,7 +11,7 @@ const ivec2 varianceOffsets[8] = ivec2[8](
   ivec2(-1, 0)
 );
 #else // VARIANCE_9_SAMPLES
-#define VARIANCE_OFFSET_COUNT (4)
+#define VARIANCE_OFFSET_COUNT 4
 const ivec2 varianceOffsets[4] = ivec2[4](ivec2(1, 0), ivec2(0, -1), ivec2(0, 1), ivec2(-1, 0));
 #endif // VARIANCE_9_SAMPLES
 

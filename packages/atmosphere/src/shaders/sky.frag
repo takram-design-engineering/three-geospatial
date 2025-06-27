@@ -1,7 +1,7 @@
 precision highp float;
 precision highp sampler3D;
 
-#define RECIPROCAL_PI (0.3183098861837907)
+#define RECIPROCAL_PI 0.3183098861837907
 
 #include "core/raySphereIntersection"
 #include "parameters"
