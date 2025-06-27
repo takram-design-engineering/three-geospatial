@@ -1,6 +1,6 @@
 #include <common>
 
-#define SQRT_2 (0.7071067811865476)
+#define SQRT_2 0.7071067811865476
 
 uniform sampler2D inputBuffer;
 

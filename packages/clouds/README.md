@@ -496,7 +496,6 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 - **Shadow resolve**
 
   Applies temporal anti-aliasing (TAA) on BSM, not for the aliasing at polygon edges, but rather for temporal filtering:
-
   - Reduce spatial aliasing in BSM due to the high-frequency details of the clouds relative to the output resolution.
   - Reduce temporal aliasing caused by temporal jitters during shadow ray marching.
 

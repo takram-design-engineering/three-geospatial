@@ -1,8 +1,8 @@
 precision highp float;
 precision highp sampler2DArray;
 
-#define VARIANCE_9_SAMPLES (1)
-#define VARIANCE_SAMPLER_ARRAY (1)
+#define VARIANCE_9_SAMPLES 1
+#define VARIANCE_SAMPLER_ARRAY 1
 
 #include "varianceClipping"
 
