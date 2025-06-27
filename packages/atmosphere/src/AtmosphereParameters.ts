@@ -64,7 +64,7 @@ export class AtmosphereParameters {
 
     // We could store the raw luminance in the render buffer, but it easily
     // becomes saturated in precision.
-    const luminance = this.luminousEfficiency.dot(this.skyRadianceToLuminance)
+    const luminance = this.luminousEfficiency.dot(this.sunRadianceToLuminance)
     this.skyRadianceToRelativeLuminance
       .copy(this.skyRadianceToLuminance)
       .divideScalar(luminance)
