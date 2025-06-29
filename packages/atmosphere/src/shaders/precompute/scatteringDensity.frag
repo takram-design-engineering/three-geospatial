@@ -5,8 +5,6 @@ precision highp sampler3D;
 #include "functions"
 
 uniform AtmosphereParameters ATMOSPHERE;
-uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
-uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 
 uniform sampler2D transmittanceTexture;
 uniform sampler3D singleRayleighScatteringTexture;

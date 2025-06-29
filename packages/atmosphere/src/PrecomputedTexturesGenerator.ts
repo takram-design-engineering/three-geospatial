@@ -356,7 +356,7 @@ export class PrecomputedTexturesGenerator {
       IRRADIANCE_TEXTURE_WIDTH: IRRADIANCE_TEXTURE_WIDTH.toFixed(0),
       IRRADIANCE_TEXTURE_HEIGHT: IRRADIANCE_TEXTURE_HEIGHT.toFixed(0)
     })
-    Object.assign(material.uniforms, atmosphere.toStructuredUniforms())
+    material.uniforms.ATMOSPHERE = atmosphere.toStructuredUniform()
   }
 
   private render3DRenderTarget(
@@ -499,6 +499,10 @@ export class PrecomputedTexturesGenerator {
     blend: boolean,
     numScatteringOrders = 4
   ): void {
+    // Note that we have to render the same materials multiple times where:
+    // (1) different blending modes (2) rendering into 3D textures, because
+    // MRT isn't supported in these situations.
+
     const renderTarget = renderer.getRenderTarget()
 
     // Compute the transmittance, and store it in transmittanceTexture.
