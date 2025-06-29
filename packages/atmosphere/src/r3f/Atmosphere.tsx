@@ -107,7 +107,11 @@ export const Atmosphere: FC<AtmosphereProps> = ({
         console.error(error)
       })
     } else {
-      setTextures(texturesProp)
+      setTextures({
+        transmittanceTexture: texturesProp.transmittanceTexture,
+        scatteringTexture: texturesProp.scatteringTexture,
+        irradianceTexture: texturesProp.irradianceTexture
+      })
     }
   }, [texturesProp, gl])
 
