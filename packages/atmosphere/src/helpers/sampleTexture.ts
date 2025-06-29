@@ -12,6 +12,8 @@ const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
+const halfFloatCache = /*#__PURE__*/ new WeakMap<ArrayBuffer, Float16Array>()
+
 function samplePixel(
   data: TypedArray,
   index: number,
@@ -30,8 +32,11 @@ export function sampleTexture(
   invariant(isTypedArray(texture.image.data))
   let data = texture.image.data
   if (texture.type === HalfFloatType && data instanceof Uint16Array) {
-    // TODO: Cache instance
-    data = new Float16Array(data.buffer)
+    const cache = halfFloatCache.get(data.buffer)
+    if (cache == null) {
+      data = new Float16Array(data.buffer)
+      halfFloatCache.set(data.buffer, data)
+    }
   }
 
   const x = clamp(uv.x, 0, 1) * (width - 1)
