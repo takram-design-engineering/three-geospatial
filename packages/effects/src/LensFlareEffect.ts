@@ -90,14 +90,12 @@ export class LensFlareEffect extends Effect {
 
     this.renderTarget1 = new WebGLRenderTarget(1, 1, {
       depthBuffer: false,
-      stencilBuffer: false,
       type: HalfFloatType
     })
     this.renderTarget1.texture.name = 'LensFlare.Target1'
 
     this.renderTarget2 = new WebGLRenderTarget(1, 1, {
       depthBuffer: false,
-      stencilBuffer: false,
       type: HalfFloatType
     })
     this.renderTarget2.texture.name = 'LensFlare.Target2'

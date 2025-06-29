@@ -53,7 +53,6 @@ export class Procedural3DTextureBase implements Procedural3DTexture {
 
     this.renderTarget = new WebGL3DRenderTarget(size, size, size, {
       depthBuffer: false,
-      stencilBuffer: false,
       format: RedFormat
     })
     const texture = this.renderTarget.texture

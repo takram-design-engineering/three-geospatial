@@ -43,7 +43,6 @@ function createRenderTarget(
     shadowLength?: Texture
   } = new WebGLRenderTarget(1, 1, {
     depthBuffer: false,
-    stencilBuffer: false,
     type: HalfFloatType
   })
   renderTarget.texture.minFilter = LinearFilter
