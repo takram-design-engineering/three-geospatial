@@ -81,10 +81,9 @@ export class ProceduralTextureBase implements ProceduralTexture {
     }
     this.needsRender = false
 
-    const renderTarget = renderer.getRenderTarget()
     renderer.setRenderTarget(this.renderTarget)
     renderer.render(this.mesh, this.camera)
-    renderer.setRenderTarget(renderTarget)
+    renderer.setRenderTarget(null)
   }
 
   get texture(): Texture {
