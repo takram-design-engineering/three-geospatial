@@ -20,15 +20,13 @@ import {
   getSunDirectionECI
 } from '../celestialDirections'
 import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
-import {
-  PrecomputedTexturesLoader,
-  type PrecomputedTextures
-} from '../PrecomputedTexturesLoader'
+import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import {
   type AtmosphereIrradianceMask,
   type AtmosphereOverlay,
   type AtmosphereShadow,
-  type AtmosphereShadowLength
+  type AtmosphereShadowLength,
+  type PrecomputedTextures
 } from '../types'
 
 export interface AtmosphereTransientStates {
@@ -107,11 +105,7 @@ export const Atmosphere: FC<AtmosphereProps> = ({
         console.error(error)
       })
     } else {
-      setTextures({
-        transmittanceTexture: texturesProp.transmittanceTexture,
-        scatteringTexture: texturesProp.scatteringTexture,
-        irradianceTexture: texturesProp.irradianceTexture
-      })
+      setTextures(texturesProp)
     }
   }, [texturesProp, gl])
 

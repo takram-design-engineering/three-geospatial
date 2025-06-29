@@ -2,7 +2,6 @@ import {
   AddEquation,
   ClampToEdgeWrapping,
   CustomBlending,
-  Data3DTexture,
   DataTexture,
   FloatType,
   GLSL3,
@@ -21,6 +20,7 @@ import {
   Vector3,
   WebGL3DRenderTarget,
   WebGLRenderTarget,
+  type Data3DTexture,
   type Material,
   type Texture,
   type WebGLRenderer
@@ -41,6 +41,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
+import { type PrecomputedTextures } from './types'
 
 import definitions from './shaders/definitions.glsl?raw'
 import functions from './shaders/precompute/functions.glsl?raw'
@@ -141,29 +142,6 @@ function createDataTexture(width: number, height: number): DataTexture {
   texture.magFilter = LinearFilter
   texture.wrapS = ClampToEdgeWrapping
   texture.wrapT = ClampToEdgeWrapping
-  texture.colorSpace = NoColorSpace
-  texture.needsUpdate = true
-  return texture
-}
-
-function createData3DTexture(
-  width: number,
-  height: number,
-  depth: number
-): Data3DTexture {
-  const texture = new Data3DTexture(
-    new Float32Array(width * height * depth * 4),
-    width,
-    height,
-    depth
-  )
-  texture.type = FloatType
-  texture.format = RGBAFormat
-  texture.minFilter = LinearFilter
-  texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
-  texture.wrapR = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
   texture.needsUpdate = true
   return texture
@@ -286,21 +264,21 @@ export class PrecomputedTexturesGenerator {
     IRRADIANCE_TEXTURE_HEIGHT
   )
 
-  readonly transmittanceTexture = createDataTexture(
+  private readonly transmittanceTexture = createDataTexture(
     TRANSMITTANCE_TEXTURE_WIDTH,
     TRANSMITTANCE_TEXTURE_HEIGHT
   )
 
-  readonly scatteringTexture = createData3DTexture(
-    SCATTERING_TEXTURE_WIDTH,
-    SCATTERING_TEXTURE_HEIGHT,
-    SCATTERING_TEXTURE_DEPTH
-  )
-
-  readonly irradianceTexture = createDataTexture(
+  private readonly irradianceTexture = createDataTexture(
     IRRADIANCE_TEXTURE_WIDTH,
     IRRADIANCE_TEXTURE_HEIGHT
   )
+
+  readonly textures: PrecomputedTextures = {
+    transmittanceTexture: this.transmittanceTexture,
+    scatteringTexture: this.scatteringRenderTarget.texture,
+    irradianceTexture: this.irradianceTexture
+  }
 
   transmittanceMaterial = new RawShaderMaterial({
     glslVersion: GLSL3,
@@ -822,10 +800,6 @@ export class PrecomputedTexturesGenerator {
     ]).catch(error => {
       console.error(error)
     })
-    renderer.copyTextureToTexture(
-      this.scatteringRenderTarget.texture,
-      this.scatteringTexture
-    )
   }
 
   dispose(): void {
@@ -833,7 +807,6 @@ export class PrecomputedTexturesGenerator {
     this.scatteringRenderTarget.dispose()
     this.irradianceRenderTarget.dispose()
     this.transmittanceTexture.dispose()
-    this.scatteringTexture.dispose()
     this.irradianceTexture.dispose()
     this.transmittanceMaterial.dispose()
     this.directIrradianceMaterial.dispose()

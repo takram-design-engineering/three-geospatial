@@ -1,9 +1,17 @@
 import {
+  type Data3DTexture,
   type DataArrayTexture,
+  type DataTexture,
   type Matrix4,
   type Texture,
   type Vector2
 } from 'three'
+
+export interface PrecomputedTextures {
+  irradianceTexture: DataTexture
+  scatteringTexture: Data3DTexture
+  transmittanceTexture: DataTexture
+}
 
 export interface AtmosphereOverlay {
   map: Texture

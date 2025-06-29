@@ -27,16 +27,11 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
+import { type PrecomputedTextures } from './types'
 
 interface LoadTextureOptions {
   loader: Loader<DataTexture | Data3DTexture>
   extension: string
-}
-
-export interface PrecomputedTextures {
-  irradianceTexture: DataTexture
-  scatteringTexture: Data3DTexture
-  transmittanceTexture: DataTexture
 }
 
 export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
