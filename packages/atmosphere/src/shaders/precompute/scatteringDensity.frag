@@ -1,0 +1,33 @@
+precision highp float;
+precision highp sampler3D;
+
+#include "definitions"
+#include "functions"
+
+uniform AtmosphereParameters ATMOSPHERE;
+uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+
+uniform sampler2D transmittanceTexture;
+uniform sampler3D singleRayleighScatteringTexture;
+uniform sampler3D singleMieScatteringTexture;
+uniform sampler3D multipleScatteringTexture;
+uniform sampler2D irradianceTexture;
+uniform int scatteringOrder;
+uniform int layer;
+
+layout(location = 0) out vec4 scatteringDensity;
+
+void main() {
+  scatteringDensity.rgb = ComputeScatteringDensityTexture(
+    ATMOSPHERE,
+    transmittanceTexture,
+    singleRayleighScatteringTexture,
+    singleMieScatteringTexture,
+    multipleScatteringTexture,
+    irradianceTexture,
+    vec3(gl_FragCoord.xy, float(layer) + 0.5),
+    scatteringOrder
+  );
+  scatteringDensity.a = 1.0;
+}

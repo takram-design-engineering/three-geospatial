@@ -29,6 +29,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define assert(x)
+
 #define Length float
 #define Wavelength float
 #define Angle float

@@ -20,12 +20,12 @@ import {
   Vector3,
   WebGL3DRenderTarget,
   WebGLRenderTarget,
-  type Data3DTexture,
   type Material,
-  type Texture,
   type WebGLRenderer
 } from 'three'
 import invariant from 'tiny-invariant'
+
+import { resolveIncludes } from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {
@@ -43,47 +43,14 @@ import {
 } from './constants'
 import { type PrecomputedTextures } from './types'
 
-import definitions from './shaders/definitions.glsl?raw'
-import functions from './shaders/precompute/functions.glsl?raw'
-
-const header = /* glsl */ `
-  precision highp float;
-  precision highp sampler2D;
-  precision highp sampler3D;
-
-  #define assert(x)
-  #define COMBINED_SCATTERING_TEXTURES;
-
-  ${definitions}
-
-  const AtmosphereParameters ATMOSPHERE = AtmosphereParameters(
-    vec3(1.474000,1.850400,1.911980),
-    0.004675,
-    6360.000000,
-    6420.000000,
-    DensityProfile(DensityProfileLayer[2](
-      DensityProfileLayer(0.000000,0.000000,0.000000,0.000000,0.000000),
-      DensityProfileLayer(0.000000,1.000000,-0.125000,0.000000,0.000000)
-    )),
-    vec3(0.005802,0.013558,0.033100),
-    DensityProfile(DensityProfileLayer[2](
-      DensityProfileLayer(0.000000,0.000000,0.000000,0.000000,0.000000),
-      DensityProfileLayer(0.000000,1.000000,-0.833333,0.000000,0.000000)
-    )),
-    vec3(0.003996,0.003996,0.003996),
-    vec3(0.004440,0.004440,0.004440),
-    0.800000,
-    DensityProfile(DensityProfileLayer[2](
-      DensityProfileLayer(25.000000,0.000000,0.000000,0.066667,-0.666667),
-      DensityProfileLayer(0.000000,0.000000,0.000000,-0.066667,2.666667)
-    )),
-    vec3(0.000650,0.001881,0.000085),
-    vec3(0.100000,0.100000,0.100000),
-    -0.500000
-  );
-
-  ${functions}
-`
+import definitions from './shaders/bruneton/definitions.glsl?raw'
+import functions from './shaders/bruneton/functions.glsl?raw'
+import directIrradianceShader from './shaders/precompute/directIrradiance.frag?raw'
+import indirectIrradianceShader from './shaders/precompute/indirectIrradiance.frag?raw'
+import multipleScatteringShader from './shaders/precompute/multipleScattering.frag?raw'
+import scatteringDensityShader from './shaders/precompute/scatteringDensity.frag?raw'
+import singleScatteringShader from './shaders/precompute/singleScattering.frag?raw'
+import transmittanceShader from './shaders/precompute/transmittance.frag?raw'
 
 const vertexShader = /* glsl */ `
   precision highp float;
@@ -105,7 +72,6 @@ function createRenderTarget(width: number, height: number): WebGLRenderTarget {
   texture.wrapS = ClampToEdgeWrapping
   texture.wrapT = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
-  texture.needsUpdate = true
   return renderTarget
 }
 
@@ -126,7 +92,6 @@ function create3DRenderTarget(
   texture.wrapT = ClampToEdgeWrapping
   texture.wrapR = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
-  texture.needsUpdate = true
   return renderTarget
 }
 
@@ -143,7 +108,6 @@ function createDataTexture(width: number, height: number): DataTexture {
   texture.wrapS = ClampToEdgeWrapping
   texture.wrapT = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
-  texture.needsUpdate = true
   return texture
 }
 
@@ -283,119 +247,45 @@ export class PrecomputedTexturesGenerator {
   transmittanceMaterial = new RawShaderMaterial({
     glslVersion: GLSL3,
     vertexShader,
-    fragmentShader: /* glsl */ `
-      ${header}
-      layout(location = 0) out vec4 transmittance;
-      void main() {
-        transmittance.rgb = ComputeTransmittanceToTopAtmosphereBoundaryTexture(
-          ATMOSPHERE,
-          gl_FragCoord.xy
-        );
-        transmittance.a = 1.0;
-      }
-    `
+    fragmentShader: resolveIncludes(transmittanceShader, {
+      definitions,
+      functions
+    })
   })
 
   directIrradianceMaterial = new RawShaderMaterial({
     glslVersion: GLSL3,
     vertexShader,
-    fragmentShader: /* glsl */ `
-      ${header}
-      layout(location = 0) out vec4 outputColor;
-      uniform sampler2D transmittanceTexture;
-      void main() {
-        vec3 deltaIrradiance;
-        vec3 irradiance;
-        deltaIrradiance = ComputeDirectIrradianceTexture(
-          ATMOSPHERE,
-          transmittanceTexture,
-          gl_FragCoord.xy
-        );
-        irradiance = vec3(0.0);
-        outputColor = vec4(OUTPUT, 1.0);
-      }
-    `,
+    fragmentShader: resolveIncludes(directIrradianceShader, {
+      definitions,
+      functions
+    }),
     uniforms: {
       transmittanceTexture: new Uniform(null)
     }
-  }) as RawShaderMaterial & {
-    uniforms: {
-      transmittanceTexture: Uniform<Texture>
-    }
-  }
+  })
 
   singleScatteringMaterial = new RawShaderMaterial({
     glslVersion: GLSL3,
     vertexShader,
-    fragmentShader: /* glsl */ `
-      ${header}
-      layout(location = 0) out vec4 outputColor;
-      uniform mat3 luminanceFromRadiance;
-      uniform sampler2D transmittanceTexture;
-      uniform int layer;
-      void main() {
-        vec4 deltaRayleigh;
-        vec4 deltaMie;
-        vec4 scattering;
-        vec4 singleMieScattering;
-        ComputeSingleScatteringTexture(
-          ATMOSPHERE,
-          transmittanceTexture,
-          vec3(gl_FragCoord.xy, float(layer) + 0.5),
-          deltaRayleigh.rgb,
-          deltaMie.rgb
-        );
-        deltaRayleigh.a = 1.0;
-        deltaMie.a = 1.0;
-        scattering = vec4(
-          luminanceFromRadiance * deltaRayleigh.rgb,
-          (luminanceFromRadiance * deltaMie.rgb).r
-        );
-        singleMieScattering.rgb = luminanceFromRadiance * deltaMie.rgb;
-        singleMieScattering.a = 1.0;
-        outputColor = OUTPUT;
-      }
-    `,
+    fragmentShader: resolveIncludes(singleScatteringShader, {
+      definitions,
+      functions
+    }),
     uniforms: {
       luminanceFromRadiance: new Uniform(new Matrix3()),
       transmittanceTexture: new Uniform(null),
       layer: new Uniform(0)
     }
-  }) as RawShaderMaterial & {
-    uniforms: {
-      luminanceFromRadiance: Uniform<Matrix3>
-      transmittanceTexture: Uniform<Texture>
-      layer: Uniform<number>
-    }
-  }
+  })
 
   scatteringDensityMaterial = new RawShaderMaterial({
     glslVersion: GLSL3,
     vertexShader,
-    fragmentShader: /* glsl */ `
-      ${header}
-      layout(location = 0) out vec4 scatteringDensity;
-      uniform sampler2D transmittanceTexture;
-      uniform sampler3D singleRayleighScatteringTexture;
-      uniform sampler3D singleMieScatteringTexture;
-      uniform sampler3D multipleScatteringTexture;
-      uniform sampler2D irradianceTexture;
-      uniform int scatteringOrder;
-      uniform int layer;
-      void main() {
-        scatteringDensity.rgb = ComputeScatteringDensityTexture(
-          ATMOSPHERE,
-          transmittanceTexture,
-          singleRayleighScatteringTexture,
-          singleMieScatteringTexture,
-          multipleScatteringTexture,
-          irradianceTexture,
-          vec3(gl_FragCoord.xy, float(layer) + 0.5),
-          scatteringOrder
-        );
-        scatteringDensity.a = 1.0;
-      }
-    `,
+    fragmentShader: resolveIncludes(scatteringDensityShader, {
+      definitions,
+      functions
+    }),
     uniforms: {
       transmittanceTexture: new Uniform(null),
       singleRayleighScatteringTexture: new Uniform(null),
@@ -405,44 +295,15 @@ export class PrecomputedTexturesGenerator {
       scatteringOrder: new Uniform(0),
       layer: new Uniform(0)
     }
-  }) as RawShaderMaterial & {
-    uniforms: {
-      transmittanceTexture: Uniform<Texture>
-      singleRayleighScatteringTexture: Uniform<Data3DTexture>
-      singleMieScatteringTexture: Uniform<Data3DTexture>
-      multipleScatteringTexture: Uniform<Data3DTexture>
-      irradianceTexture: Uniform<Texture>
-      scatteringOrder: Uniform<number>
-      layer: Uniform<number>
-    }
-  }
+  })
 
   indirectIrradianceMaterial = new RawShaderMaterial({
     glslVersion: GLSL3,
     vertexShader,
-    fragmentShader: /* glsl */ `
-      ${header}
-      layout(location = 0) out vec4 outputColor;
-      uniform mat3 luminanceFromRadiance;
-      uniform sampler3D singleRayleighScatteringTexture;
-      uniform sampler3D singleMieScatteringTexture;
-      uniform sampler3D multipleScatteringTexture;
-      uniform int scatteringOrder;
-      void main() {
-        vec3 deltaIrradiance;
-        vec3 irradiance;
-        deltaIrradiance = ComputeIndirectIrradianceTexture(
-          ATMOSPHERE,
-          singleRayleighScatteringTexture,
-          singleMieScatteringTexture,
-          multipleScatteringTexture,
-          gl_FragCoord.xy,
-          scatteringOrder
-        );
-        irradiance = luminanceFromRadiance * deltaIrradiance;
-        outputColor = vec4(OUTPUT, 1.0);
-      }
-    `,
+    fragmentShader: resolveIncludes(indirectIrradianceShader, {
+      definitions,
+      functions
+    }),
     uniforms: {
       luminanceFromRadiance: new Uniform(new Matrix3()),
       singleRayleighScatteringTexture: new Uniform(null),
@@ -450,59 +311,22 @@ export class PrecomputedTexturesGenerator {
       multipleScatteringTexture: new Uniform(null),
       scatteringOrder: new Uniform(0)
     }
-  }) as RawShaderMaterial & {
-    uniforms: {
-      luminanceFromRadiance: Uniform<Matrix3>
-      singleRayleighScatteringTexture: Uniform<Data3DTexture>
-      singleMieScatteringTexture: Uniform<Data3DTexture>
-      multipleScatteringTexture: Uniform<Data3DTexture>
-      scatteringOrder: Uniform<number>
-    }
-  }
+  })
 
   multipleScatteringMaterial = new RawShaderMaterial({
     glslVersion: GLSL3,
     vertexShader,
-    fragmentShader: /* glsl */ `
-      ${header}
-      layout(location = 0) out vec4 outputColor;
-      uniform mat3 luminanceFromRadiance;
-      uniform sampler2D transmittanceTexture;
-      uniform sampler3D scatteringDensityTexture;
-      uniform int layer;
-      void main() {
-        vec4 deltaMultipleScattering;
-        vec4 scattering;
-        float nu;
-        deltaMultipleScattering.rgb = ComputeMultipleScatteringTexture(
-          ATMOSPHERE,
-          transmittanceTexture,
-          scatteringDensityTexture,
-          vec3(gl_FragCoord.xy, float(layer) + 0.5),
-          nu
-        );
-        deltaMultipleScattering.a = 1.0;
-        scattering = vec4(
-          luminanceFromRadiance * deltaMultipleScattering.rgb / RayleighPhaseFunction(nu),
-          0.0
-        );
-        outputColor = OUTPUT;
-      }
-    `,
+    fragmentShader: resolveIncludes(multipleScatteringShader, {
+      definitions,
+      functions
+    }),
     uniforms: {
       luminanceFromRadiance: new Uniform(new Matrix3()),
       transmittanceTexture: new Uniform(null),
       scatteringDensityTexture: new Uniform(null),
       layer: new Uniform(0)
     }
-  }) as RawShaderMaterial & {
-    uniforms: {
-      luminanceFromRadiance: Uniform<Matrix3>
-      transmittanceTexture: Uniform<Texture>
-      scatteringDensityTexture: Uniform<Data3DTexture>
-      layer: Uniform<number>
-    }
-  }
+  })
 
   private readonly camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1)
   private readonly scene = new Scene()
@@ -522,7 +346,6 @@ export class PrecomputedTexturesGenerator {
     material: RawShaderMaterial,
     atmosphere: AtmosphereParameters
   ): void {
-    // prettier-ignore
     Object.assign(material.defines, {
       TRANSMITTANCE_TEXTURE_WIDTH: TRANSMITTANCE_TEXTURE_WIDTH.toFixed(0),
       TRANSMITTANCE_TEXTURE_HEIGHT: TRANSMITTANCE_TEXTURE_HEIGHT.toFixed(0),
@@ -531,20 +354,15 @@ export class PrecomputedTexturesGenerator {
       SCATTERING_TEXTURE_MU_S_SIZE: SCATTERING_TEXTURE_MU_S_SIZE.toFixed(0),
       SCATTERING_TEXTURE_NU_SIZE: SCATTERING_TEXTURE_NU_SIZE.toFixed(0),
       IRRADIANCE_TEXTURE_WIDTH: IRRADIANCE_TEXTURE_WIDTH.toFixed(0),
-      IRRADIANCE_TEXTURE_HEIGHT: IRRADIANCE_TEXTURE_HEIGHT.toFixed(0),
-      SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().map(v => v.toFixed(12)).join(',')})`,
-      SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().map(v => v.toFixed(12)).join(',')})`
+      IRRADIANCE_TEXTURE_HEIGHT: IRRADIANCE_TEXTURE_HEIGHT.toFixed(0)
     })
+    Object.assign(material.uniforms, atmosphere.toStructuredUniforms())
   }
 
   private render3DRenderTarget(
     renderer: WebGLRenderer,
     renderTarget: WebGL3DRenderTarget,
-    material: Material & {
-      uniforms: {
-        layer: Uniform<number>
-      }
-    }
+    material: RawShaderMaterial
   ): void {
     for (let layer = 0; layer < renderTarget.depth; ++layer) {
       material.uniforms.layer.value = layer

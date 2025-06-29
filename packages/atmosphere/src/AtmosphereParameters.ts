@@ -1,6 +1,8 @@
-import { Color, Vector3 } from 'three'
+import { Color, Uniform, Vector3, type IUniform } from 'three'
 
 import { radians } from '@takram/three-geospatial'
+
+import { METER_TO_LENGTH_UNIT } from './constants'
 
 const paramKeys = [
   'solarIrradiance',
@@ -164,5 +166,62 @@ export class AtmosphereParameters {
     this.sunRadianceToRelativeLuminance
       .copy(this.sunRadianceToLuminance)
       .divideScalar(luminance)
+  }
+
+  toStructuredUniforms(): {
+    ATMOSPHERE: IUniform<object>
+    SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: IUniform<Vector3>
+    SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: IUniform<Vector3>
+  } {
+    return {
+      ATMOSPHERE: {
+        value: {
+          solar_irradiance: this.solarIrradiance,
+          sun_angular_radius: this.sunAngularRadius,
+          bottom_radius: this.bottomRadius * METER_TO_LENGTH_UNIT,
+          top_radius: this.topRadius * METER_TO_LENGTH_UNIT,
+          rayleigh_density: {
+            layers: this.rayleighDensity.map(layer => ({
+              width: layer.width,
+              exp_term: layer.expTerm,
+              exp_scale: layer.expScale,
+              linear_term: layer.linearTerm,
+              constant_term: layer.constantTerm
+            }))
+          },
+          rayleigh_scattering: this.rayleighScattering,
+          mie_density: {
+            layers: this.mieDensity.map(layer => ({
+              width: layer.width,
+              exp_term: layer.expTerm,
+              exp_scale: layer.expScale,
+              linear_term: layer.linearTerm,
+              constant_term: layer.constantTerm
+            }))
+          },
+          mie_scattering: this.mieScattering,
+          mie_extinction: this.mieExtinction,
+          mie_phase_function_g: this.miePhaseFunctionG,
+          absorption_density: {
+            layers: this.absorptionDensity.map(layer => ({
+              width: layer.width,
+              exp_term: layer.expTerm,
+              exp_scale: layer.expScale,
+              linear_term: layer.linearTerm,
+              constant_term: layer.constantTerm
+            }))
+          },
+          absorption_extinction: this.absorptionExtinction,
+          ground_albedo: this.groundAlbedo,
+          mu_s_min: this.muSMin
+        }
+      },
+      SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(
+        this.sunRadianceToRelativeLuminance
+      ),
+      SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(
+        this.skyRadianceToRelativeLuminance
+      )
+    }
   }
 }
