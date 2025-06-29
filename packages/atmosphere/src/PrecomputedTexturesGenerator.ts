@@ -1,5 +1,6 @@
 import {
   AddEquation,
+  Camera,
   ClampToEdgeWrapping,
   CustomBlending,
   DataTexture,
@@ -11,7 +12,6 @@ import {
   NoBlending,
   NoColorSpace,
   OneFactor,
-  OrthographicCamera,
   PlaneGeometry,
   RawShaderMaterial,
   RGBAFormat,
@@ -20,7 +20,7 @@ import {
   Vector3,
   WebGL3DRenderTarget,
   WebGLRenderTarget,
-  type Material,
+  type ShaderMaterialParameters,
   type WebGLRenderer
 } from 'three'
 import invariant from 'tiny-invariant'
@@ -171,47 +171,68 @@ class Context {
   }
 }
 
-function setBlending(material: Material, value: boolean): void {
-  material.transparent = value
-  material.blending = value ? CustomBlending : NoBlending
-  material.blendEquation = AddEquation
-  material.blendEquationAlpha = AddEquation
-  material.blendSrc = OneFactor
-  material.blendDst = OneFactor
-  material.blendSrcAlpha = OneFactor
-  material.blendDstAlpha = OneFactor
-}
+class PrecomputeMaterial extends RawShaderMaterial {
+  constructor(params: ShaderMaterialParameters) {
+    super({
+      glslVersion: GLSL3,
+      vertexShader,
+      ...params,
+      defines: {
+        TRANSMITTANCE_TEXTURE_WIDTH: TRANSMITTANCE_TEXTURE_WIDTH.toFixed(0),
+        TRANSMITTANCE_TEXTURE_HEIGHT: TRANSMITTANCE_TEXTURE_HEIGHT.toFixed(0),
+        SCATTERING_TEXTURE_R_SIZE: SCATTERING_TEXTURE_R_SIZE.toFixed(0),
+        SCATTERING_TEXTURE_MU_SIZE: SCATTERING_TEXTURE_MU_SIZE.toFixed(0),
+        SCATTERING_TEXTURE_MU_S_SIZE: SCATTERING_TEXTURE_MU_S_SIZE.toFixed(0),
+        SCATTERING_TEXTURE_NU_SIZE: SCATTERING_TEXTURE_NU_SIZE.toFixed(0),
+        IRRADIANCE_TEXTURE_WIDTH: IRRADIANCE_TEXTURE_WIDTH.toFixed(0),
+        IRRADIANCE_TEXTURE_HEIGHT: IRRADIANCE_TEXTURE_HEIGHT.toFixed(0),
+        ...params.defines
+      }
+    })
+  }
 
-function setContextUniforms(
-  material: RawShaderMaterial,
-  context: Context
-): void {
-  const uniforms = material.uniforms
-  if (uniforms.luminanceFromRadiance != null) {
-    uniforms.luminanceFromRadiance.value.copy(context.luminanceFromRadiance)
+  // eslint-disable-next-line accessor-pairs
+  set additive(value: boolean) {
+    this.transparent = value
+    this.blending = value ? CustomBlending : NoBlending
+    this.blendEquation = AddEquation
+    this.blendEquationAlpha = AddEquation
+    this.blendSrc = OneFactor
+    this.blendDst = OneFactor
+    this.blendSrcAlpha = OneFactor
+    this.blendDstAlpha = OneFactor
   }
-  if (uniforms.singleRayleighScatteringTexture != null) {
-    uniforms.singleRayleighScatteringTexture.value =
-      context.deltaRayleighScattering.texture
-  }
-  if (uniforms.singleMieScatteringTexture != null) {
-    uniforms.singleMieScatteringTexture.value =
-      context.deltaMieScattering.texture
-  }
-  if (uniforms.multipleScatteringTexture != null) {
-    uniforms.multipleScatteringTexture.value =
-      context.deltaMultipleScattering.texture
-  }
-  if (uniforms.scatteringDensityTexture != null) {
-    uniforms.scatteringDensityTexture.value =
-      context.deltaScatteringDensity.texture
-  }
-  if (uniforms.irradianceTexture != null) {
-    uniforms.irradianceTexture.value = context.deltaIrradiance.texture
+
+  setUniforms(context: Context): void {
+    const uniforms = this.uniforms
+    if (uniforms.luminanceFromRadiance != null) {
+      uniforms.luminanceFromRadiance.value.copy(context.luminanceFromRadiance)
+    }
+    if (uniforms.singleRayleighScatteringTexture != null) {
+      uniforms.singleRayleighScatteringTexture.value =
+        context.deltaRayleighScattering.texture
+    }
+    if (uniforms.singleMieScatteringTexture != null) {
+      uniforms.singleMieScatteringTexture.value =
+        context.deltaMieScattering.texture
+    }
+    if (uniforms.multipleScatteringTexture != null) {
+      uniforms.multipleScatteringTexture.value =
+        context.deltaMultipleScattering.texture
+    }
+    if (uniforms.scatteringDensityTexture != null) {
+      uniforms.scatteringDensityTexture.value =
+        context.deltaScatteringDensity.texture
+    }
+    if (uniforms.irradianceTexture != null) {
+      uniforms.irradianceTexture.value = context.deltaIrradiance.texture
+    }
   }
 }
 
 export class PrecomputedTexturesGenerator {
+  scatteringOrderCount = 4
+
   readonly transmittanceRenderTarget = createRenderTarget(
     TRANSMITTANCE_TEXTURE_WIDTH,
     TRANSMITTANCE_TEXTURE_HEIGHT
@@ -244,18 +265,14 @@ export class PrecomputedTexturesGenerator {
     irradianceTexture: this.irradianceTexture
   }
 
-  transmittanceMaterial = new RawShaderMaterial({
-    glslVersion: GLSL3,
-    vertexShader,
+  transmittanceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(transmittanceShader, {
       definitions,
       functions
     })
   })
 
-  directIrradianceMaterial = new RawShaderMaterial({
-    glslVersion: GLSL3,
-    vertexShader,
+  directIrradianceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(directIrradianceShader, {
       definitions,
       functions
@@ -265,9 +282,7 @@ export class PrecomputedTexturesGenerator {
     }
   })
 
-  singleScatteringMaterial = new RawShaderMaterial({
-    glslVersion: GLSL3,
-    vertexShader,
+  singleScatteringMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(singleScatteringShader, {
       definitions,
       functions
@@ -279,9 +294,7 @@ export class PrecomputedTexturesGenerator {
     }
   })
 
-  scatteringDensityMaterial = new RawShaderMaterial({
-    glslVersion: GLSL3,
-    vertexShader,
+  scatteringDensityMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(scatteringDensityShader, {
       definitions,
       functions
@@ -297,9 +310,7 @@ export class PrecomputedTexturesGenerator {
     }
   })
 
-  indirectIrradianceMaterial = new RawShaderMaterial({
-    glslVersion: GLSL3,
-    vertexShader,
+  indirectIrradianceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(indirectIrradianceShader, {
       definitions,
       functions
@@ -313,9 +324,7 @@ export class PrecomputedTexturesGenerator {
     }
   })
 
-  multipleScatteringMaterial = new RawShaderMaterial({
-    glslVersion: GLSL3,
-    vertexShader,
+  multipleScatteringMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(multipleScatteringShader, {
       definitions,
       functions
@@ -328,234 +337,185 @@ export class PrecomputedTexturesGenerator {
     }
   })
 
-  private readonly camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1)
+  private readonly renderer: WebGLRenderer
+  private readonly camera = new Camera()
   private readonly scene = new Scene()
   private readonly mesh = new Mesh(new PlaneGeometry(2, 2))
 
-  constructor(atmosphere = AtmosphereParameters.DEFAULT) {
-    this.configureMaterial(this.transmittanceMaterial, atmosphere)
-    this.configureMaterial(this.directIrradianceMaterial, atmosphere)
-    this.configureMaterial(this.singleScatteringMaterial, atmosphere)
-    this.configureMaterial(this.scatteringDensityMaterial, atmosphere)
-    this.configureMaterial(this.indirectIrradianceMaterial, atmosphere)
-    this.configureMaterial(this.multipleScatteringMaterial, atmosphere)
+  constructor(renderer: WebGLRenderer) {
+    this.renderer = renderer
     this.scene.add(this.mesh)
   }
 
-  private configureMaterial(
-    material: RawShaderMaterial,
-    atmosphere: AtmosphereParameters
-  ): void {
-    Object.assign(material.defines, {
-      TRANSMITTANCE_TEXTURE_WIDTH: TRANSMITTANCE_TEXTURE_WIDTH.toFixed(0),
-      TRANSMITTANCE_TEXTURE_HEIGHT: TRANSMITTANCE_TEXTURE_HEIGHT.toFixed(0),
-      SCATTERING_TEXTURE_R_SIZE: SCATTERING_TEXTURE_R_SIZE.toFixed(0),
-      SCATTERING_TEXTURE_MU_SIZE: SCATTERING_TEXTURE_MU_SIZE.toFixed(0),
-      SCATTERING_TEXTURE_MU_S_SIZE: SCATTERING_TEXTURE_MU_S_SIZE.toFixed(0),
-      SCATTERING_TEXTURE_NU_SIZE: SCATTERING_TEXTURE_NU_SIZE.toFixed(0),
-      IRRADIANCE_TEXTURE_WIDTH: IRRADIANCE_TEXTURE_WIDTH.toFixed(0),
-      IRRADIANCE_TEXTURE_HEIGHT: IRRADIANCE_TEXTURE_HEIGHT.toFixed(0)
-    })
-    material.uniforms.ATMOSPHERE = atmosphere.toStructuredUniform()
-  }
-
   private render3DRenderTarget(
-    renderer: WebGLRenderer,
     renderTarget: WebGL3DRenderTarget,
-    material: RawShaderMaterial
+    material: PrecomputeMaterial
   ): void {
     for (let layer = 0; layer < renderTarget.depth; ++layer) {
       material.uniforms.layer.value = layer
-      renderer.setRenderTarget(renderTarget, layer)
-      renderer.render(this.scene, this.camera)
+      this.renderer.setRenderTarget(renderTarget, layer)
+      this.renderer.render(this.scene, this.camera)
     }
   }
 
-  private computeTransmittance(
-    renderer: WebGLRenderer,
-    params: {
-      renderTarget: WebGLRenderTarget
-    }
-  ): void {
+  private computeTransmittance(params: {
+    renderTarget: WebGLRenderTarget
+  }): void {
     this.mesh.material = this.transmittanceMaterial
-    renderer.setRenderTarget(params.renderTarget)
-    renderer.render(this.scene, this.camera)
+    this.renderer.setRenderTarget(params.renderTarget)
+    this.renderer.render(this.scene, this.camera)
   }
 
-  private computeDirectIrradiance(
-    renderer: WebGLRenderer,
-    params: {
-      renderTarget: WebGLRenderTarget
-      output: 'deltaIrradiance' | 'irradiance'
-      blend: boolean
-    }
-  ): void {
+  private computeDirectIrradiance(params: {
+    renderTarget: WebGLRenderTarget
+    output: 'deltaIrradiance' | 'irradiance'
+    additive: boolean
+  }): void {
     const material = this.directIrradianceMaterial
     material.defines.OUTPUT = params.output
+    material.additive = params.additive
     material.needsUpdate = true
-    setBlending(material, params.blend)
 
     const uniforms = material.uniforms
     uniforms.transmittanceTexture.value = this.transmittanceRenderTarget.texture
 
     this.mesh.material = material
-    renderer.setRenderTarget(params.renderTarget)
-    renderer.render(this.scene, this.camera)
+    this.renderer.setRenderTarget(params.renderTarget)
+    this.renderer.render(this.scene, this.camera)
   }
 
-  private computeSingleScattering(
-    renderer: WebGLRenderer,
-    params: {
-      renderTarget: WebGL3DRenderTarget
-      context: Context
-      output:
-        | 'deltaRayleigh'
-        | 'deltaMie'
-        | 'scattering'
-        | 'singleMieScattering'
-      blend: boolean
-    }
-  ): void {
+  private computeSingleScattering(params: {
+    renderTarget: WebGL3DRenderTarget
+    context: Context
+    output: 'deltaRayleigh' | 'deltaMie' | 'scattering' | 'singleMieScattering'
+    additive: boolean
+  }): void {
     const material = this.singleScatteringMaterial
     material.defines.OUTPUT = params.output
+    material.additive = params.additive
     material.needsUpdate = true
-    setBlending(material, params.blend)
 
     const uniforms = material.uniforms
     uniforms.transmittanceTexture.value = this.transmittanceRenderTarget.texture
-    setContextUniforms(material, params.context)
+    material.setUniforms(params.context)
 
     this.mesh.material = material
-    this.render3DRenderTarget(renderer, params.renderTarget, material)
+    this.render3DRenderTarget(params.renderTarget, material)
   }
 
-  private computeScatteringDensity(
-    renderer: WebGLRenderer,
-    params: {
-      renderTarget: WebGL3DRenderTarget
-      context: Context
-      scatteringOrder: number
-    }
-  ): void {
+  private computeScatteringDensity(params: {
+    renderTarget: WebGL3DRenderTarget
+    context: Context
+    scatteringOrder: number
+  }): void {
     const material = this.scatteringDensityMaterial
     const uniforms = material.uniforms
     uniforms.transmittanceTexture.value = this.transmittanceRenderTarget.texture
     uniforms.scatteringOrder.value = params.scatteringOrder
-    setContextUniforms(material, params.context)
+    material.setUniforms(params.context)
 
     this.mesh.material = material
-    this.render3DRenderTarget(renderer, params.renderTarget, material)
+    this.render3DRenderTarget(params.renderTarget, material)
   }
 
-  private computeIndirectIrradiance(
-    renderer: WebGLRenderer,
-    params: {
-      renderTarget: WebGLRenderTarget
-      context: Context
-      scatteringOrder: number
-      output: 'deltaIrradiance' | 'irradiance'
-      blend: boolean
-    }
-  ): void {
+  private computeIndirectIrradiance(params: {
+    renderTarget: WebGLRenderTarget
+    context: Context
+    scatteringOrder: number
+    output: 'deltaIrradiance' | 'irradiance'
+    additive: boolean
+  }): void {
     const material = this.indirectIrradianceMaterial
     material.defines.OUTPUT = params.output
+    material.additive = params.additive
     material.needsUpdate = true
-    setBlending(material, params.blend)
 
     const uniforms = material.uniforms
     uniforms.scatteringOrder.value = params.scatteringOrder - 1
-    setContextUniforms(material, params.context)
+    material.setUniforms(params.context)
 
     this.mesh.material = material
-    renderer.setRenderTarget(params.renderTarget)
-    renderer.render(this.scene, this.camera)
+    this.renderer.setRenderTarget(params.renderTarget)
+    this.renderer.render(this.scene, this.camera)
   }
 
-  private computeMultipleScattering(
-    renderer: WebGLRenderer,
-    params: {
-      renderTarget: WebGL3DRenderTarget
-      context: Context
-      output: 'deltaMultipleScattering' | 'scattering'
-      blend: boolean
-    }
-  ): void {
+  private computeMultipleScattering(params: {
+    renderTarget: WebGL3DRenderTarget
+    context: Context
+    output: 'deltaMultipleScattering' | 'scattering'
+    additive: boolean
+  }): void {
     const material = this.multipleScatteringMaterial
     material.defines.OUTPUT = params.output
+    material.additive = params.additive
     material.needsUpdate = true
-    setBlending(material, params.blend)
 
     const uniforms = material.uniforms
     uniforms.transmittanceTexture.value = this.transmittanceRenderTarget.texture
-    setContextUniforms(material, params.context)
+    material.setUniforms(params.context)
 
     this.mesh.material = material
-    this.render3DRenderTarget(renderer, params.renderTarget, material)
+    this.render3DRenderTarget(params.renderTarget, material)
   }
 
-  private precompute(
-    renderer: WebGLRenderer,
-    context: Context,
-    blend: boolean,
-    numScatteringOrders = 4
-  ): void {
+  private precompute(context: Context, additive: boolean): void {
     // Note that we have to render the same materials multiple times where:
     // (1) different blending modes (2) rendering into 3D textures, because
     // MRT isn't supported in these situations.
 
-    const renderTarget = renderer.getRenderTarget()
+    const renderTarget = this.renderer.getRenderTarget()
 
     // Compute the transmittance, and store it in transmittanceTexture.
-    this.computeTransmittance(renderer, {
+    this.computeTransmittance({
       renderTarget: this.transmittanceRenderTarget
     })
 
     // Compute the direct irradiance, store it in deltaIrradiance and,
-    // depending on "blend", either initialize irradianceTexture with zeros or
-    // leave it unchanged (we don't want the direct irradiance in
+    // depending on "additive", either initialize irradianceTexture with zeros
+    // or leave it unchanged (we don't want the direct irradiance in
     // irradianceTexture, but only the irradiance from the sky).
-    this.computeDirectIrradiance(renderer, {
+    this.computeDirectIrradiance({
       renderTarget: context.deltaIrradiance,
       output: 'deltaIrradiance',
-      blend: false
+      additive: false
     })
-    this.computeDirectIrradiance(renderer, {
+    this.computeDirectIrradiance({
       renderTarget: this.irradianceRenderTarget,
       output: 'irradiance',
-      blend
+      additive
     })
 
     // Compute the rayleigh and mie single scattering, store them in
     // deltaRayleighScattering and deltaMieScattering, and either store them or
     // accumulate them in scatteringTexture and optional
     // mieScatteringTexture.
-    this.computeSingleScattering(renderer, {
+    this.computeSingleScattering({
       renderTarget: context.deltaRayleighScattering,
       context,
       output: 'deltaRayleigh',
-      blend: false
+      additive: false
     })
-    this.computeSingleScattering(renderer, {
+    this.computeSingleScattering({
       renderTarget: context.deltaMieScattering,
       context,
       output: 'deltaMie',
-      blend: false
+      additive: false
     })
-    this.computeSingleScattering(renderer, {
+    this.computeSingleScattering({
       renderTarget: this.scatteringRenderTarget,
       context,
       output: 'scattering',
-      blend
+      additive
     })
 
     // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
     for (
       let scatteringOrder = 2;
-      scatteringOrder <= numScatteringOrders;
+      scatteringOrder <= this.scatteringOrderCount;
       ++scatteringOrder
     ) {
       // Compute the scattering density, and store it in deltaScatteringDensity.
-      this.computeScatteringDensity(renderer, {
+      this.computeScatteringDensity({
         renderTarget: context.deltaScatteringDensity,
         context,
         scatteringOrder
@@ -563,47 +523,56 @@ export class PrecomputedTexturesGenerator {
 
       // Compute the indirect irradiance, store it in deltaIrradiance and
       // accumulate it in irradianceTexture.
-      this.computeIndirectIrradiance(renderer, {
+      this.computeIndirectIrradiance({
         renderTarget: context.deltaIrradiance,
         context,
         scatteringOrder,
         output: 'deltaIrradiance',
-        blend: false
+        additive: false
       })
-      this.computeIndirectIrradiance(renderer, {
+      this.computeIndirectIrradiance({
         renderTarget: this.irradianceRenderTarget,
         context,
         scatteringOrder,
         output: 'irradiance',
-        blend: true
+        additive: true
       })
 
       // Compute the multiple scattering, store it in deltaMultipleScattering,
       // and accumulate it in scatteringTexture.
-      this.computeMultipleScattering(renderer, {
+      this.computeMultipleScattering({
         renderTarget: context.deltaMultipleScattering,
         context,
         output: 'deltaMultipleScattering',
-        blend: false
+        additive: false
       })
-      this.computeMultipleScattering(renderer, {
+      this.computeMultipleScattering({
         renderTarget: this.scatteringRenderTarget,
         context,
         output: 'scattering',
-        blend: true
+        additive: true
       })
     }
 
-    renderer.setRenderTarget(renderTarget)
+    this.renderer.setRenderTarget(renderTarget)
   }
 
-  render(renderer: WebGLRenderer): void {
+  update(atmosphere = AtmosphereParameters.DEFAULT): PrecomputedTextures {
+    const atmosphereUniform = atmosphere.toStructuredUniform()
+    this.transmittanceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
+    this.directIrradianceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
+    this.singleScatteringMaterial.uniforms.ATMOSPHERE = atmosphereUniform
+    this.scatteringDensityMaterial.uniforms.ATMOSPHERE = atmosphereUniform
+    this.indirectIrradianceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
+    this.multipleScatteringMaterial.uniforms.ATMOSPHERE = atmosphereUniform
+
+    const renderer = this.renderer
     const context = new Context()
     context.lambdas.set(680, 550, 440)
     context.luminanceFromRadiance.identity()
     const autoClear = renderer.autoClear
     renderer.autoClear = false
-    this.precompute(renderer, context, false)
+    this.precompute(context, false)
     renderer.autoClear = autoClear
     context.dispose()
 
@@ -622,6 +591,8 @@ export class PrecomputedTexturesGenerator {
     ]).catch(error => {
       console.error(error)
     })
+
+    return this.textures
   }
 
   dispose(): void {
