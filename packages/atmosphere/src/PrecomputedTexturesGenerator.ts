@@ -1,6 +1,7 @@
 import {
-  AdditiveBlending,
+  AddEquation,
   ClampToEdgeWrapping,
+  CustomBlending,
   Data3DTexture,
   DataTexture,
   FloatType,
@@ -10,6 +11,7 @@ import {
   Mesh,
   NoBlending,
   NoColorSpace,
+  OneFactor,
   OrthographicCamera,
   PlaneGeometry,
   RawShaderMaterial,
@@ -167,14 +169,14 @@ function createData3DTexture(
   return texture
 }
 
-function readRenderTargetPixels(
+async function readRenderTargetPixels(
   renderer: WebGLRenderer,
   renderTarget: WebGLRenderTarget,
   texture: DataTexture
-): void {
+): Promise<void> {
   const buffer = texture.image.data
   invariant(buffer instanceof Float32Array)
-  renderer.readRenderTargetPixels(
+  await renderer.readRenderTargetPixelsAsync(
     renderTarget,
     0,
     0,
@@ -229,7 +231,13 @@ class Context {
 
 function setBlending(material: Material, value: boolean): void {
   material.transparent = value
-  material.blending = value ? AdditiveBlending : NoBlending
+  material.blending = value ? CustomBlending : NoBlending
+  material.blendEquation = AddEquation
+  material.blendEquationAlpha = AddEquation
+  material.blendSrc = OneFactor
+  material.blendDst = OneFactor
+  material.blendSrcAlpha = OneFactor
+  material.blendDstAlpha = OneFactor
 }
 
 function setContextUniforms(
@@ -695,6 +703,8 @@ export class PrecomputedTexturesGenerator {
     blend: boolean,
     numScatteringOrders = 4
   ): void {
+    const renderTarget = renderer.getRenderTarget()
+
     // Compute the transmittance, and store it in transmittanceTexture.
     this.computeTransmittance(renderer, {
       renderTarget: this.transmittanceRenderTarget
@@ -784,7 +794,7 @@ export class PrecomputedTexturesGenerator {
       })
     }
 
-    renderer.setRenderTarget(null)
+    renderer.setRenderTarget(renderTarget)
   }
 
   render(renderer: WebGLRenderer): void {
@@ -798,16 +808,20 @@ export class PrecomputedTexturesGenerator {
     context.dispose()
 
     // Transmittance and irradiance textures needs access to the pixel data.
-    readRenderTargetPixels(
-      renderer,
-      this.transmittanceRenderTarget,
-      this.transmittanceTexture
-    )
-    readRenderTargetPixels(
-      renderer,
-      this.irradianceRenderTarget,
-      this.irradianceTexture
-    )
+    Promise.all([
+      readRenderTargetPixels(
+        renderer,
+        this.transmittanceRenderTarget,
+        this.transmittanceTexture
+      ),
+      readRenderTargetPixels(
+        renderer,
+        this.irradianceRenderTarget,
+        this.irradianceTexture
+      )
+    ]).catch(error => {
+      console.error(error)
+    })
     renderer.copyTextureToTexture(
       this.scatteringRenderTarget.texture,
       this.scatteringTexture
