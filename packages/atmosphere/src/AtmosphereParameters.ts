@@ -4,6 +4,8 @@ import { radians } from '@takram/three-geospatial'
 
 import { METER_TO_LENGTH_UNIT } from './constants'
 
+const LUMINANCE_COEFFS = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
+
 const paramKeys = [
   'solarIrradiance',
   'sunAngularRadius',
@@ -20,8 +22,7 @@ const paramKeys = [
   'groundAlbedo',
   'muSMin',
   'skyRadianceToLuminance',
-  'sunRadianceToLuminance',
-  'luminousEfficiency'
+  'sunRadianceToLuminance'
 ] as const
 
 export interface AtmosphereParametersOptions
@@ -150,7 +151,6 @@ export class AtmosphereParameters {
   // prettier-ignore
   skyRadianceToLuminance = new Vector3(114974.916437, 71305.954816, 65310.548555)
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
-  luminousEfficiency = new Vector3(0.2126, 0.7152, 0.0722)
   skyRadianceToRelativeLuminance = new Vector3()
   sunRadianceToRelativeLuminance = new Vector3()
 
@@ -159,7 +159,7 @@ export class AtmosphereParameters {
 
     // We could store the raw luminance in the render buffer, but it easily
     // becomes saturated in precision.
-    const luminance = this.luminousEfficiency.dot(this.sunRadianceToLuminance)
+    const luminance = LUMINANCE_COEFFS.dot(this.sunRadianceToLuminance)
     this.skyRadianceToRelativeLuminance
       .copy(this.skyRadianceToLuminance)
       .divideScalar(luminance)
