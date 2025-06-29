@@ -1,3 +1,5 @@
+// Based on: https://github.com/ebruneton/precomputed_atmospheric_scattering/blob/master/atmosphere/definitions.glsl
+
 /**
  * Copyright (c) 2017 Eric Bruneton
  * All rights reserved.
@@ -27,43 +29,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*<h2>atmosphere/definitions.glsl</h2>
-
-<p>This GLSL file defines the physical types and constants which are used in the
-main <a href="functions.glsl.html">functions</a> of our atmosphere model, in
-such a way that they can be compiled by a GLSL compiler (a
-<a href="reference/definitions.h.html">C++ equivalent</a> of this file
-provides the same types and constants in C++, to allow the same functions to be
-compiled by a C++ compiler - see the <a href="../index.html">Introduction</a>).
-
-<h3>Physical quantities</h3>
-
-<p>The physical quantities we need for our atmosphere model are
-<a href="https://en.wikipedia.org/wiki/Radiometry">radiometric</a> and
-<a href="https://en.wikipedia.org/wiki/Photometry_(optics)">photometric</a>
-quantities. In GLSL we can't define custom numeric types to enforce the
-homogeneity of expressions at compile time, so we define all the physical
-quantities as <code>float</code>, with preprocessor macros (there is no
-<code>typedef</code> in GLSL).
-
-<p>We start with six base quantities: length, wavelength, angle, solid angle,
-power and luminous power (wavelength is also a length, but we distinguish the
-two for increased clarity).
-*/
-
 #define Length float
 #define Wavelength float
 #define Angle float
 #define SolidAngle float
 #define Power float
 #define LuminousPower float
-
-/*
-<p>From this we "derive" the irradiance, radiance, spectral irradiance,
-spectral radiance, luminance, etc, as well pure numbers, area, volume, etc (the
-actual derivation is done in the <a href="reference/definitions.h.html">C++
-equivalent</a> of this file).
-*/
 
 #define Number float
 #define InverseLength float
@@ -82,16 +53,6 @@ equivalent</a> of this file).
 #define Luminance float
 #define Illuminance float
 
-/*
-<p>We  also need vectors of physical quantities, mostly to represent functions
-depending on the wavelength. In this case the vector elements correspond to
-values of a function at some predefined wavelengths. Again, in GLSL we can't
-define custom vector types to enforce the homogeneity of expressions at compile
-time, so we define these vector types as <code>vec3</code>, with preprocessor
-macros. The full definitions are given in the
-<a href="reference/definitions.h.html">C++ equivalent</a> of this file).
-*/
-
 // A generic function from Wavelength to some other type.
 #define AbstractSpectrum vec3
 // A function from Wavelength to Number.
@@ -104,26 +65,17 @@ macros. The full definitions are given in the
 #define RadianceSpectrum vec3
 // A function from Wavelength to SpectralRadianceDensity.
 #define RadianceDensitySpectrum vec3
-// A function from Wavelength to ScaterringCoefficient.
+// A function from Wavelength to ScatteringCoefficient.
 #define ScatteringSpectrum vec3
 
 // A position in 3D (3 length values).
 #define Position vec3
-// A unit direction vector in 3D (3 unitless values).
+// A unit direction vector in 3D (3 unit-less values).
 #define Direction vec3
 // A vector of 3 luminance values.
 #define Luminance3 vec3
 // A vector of 3 illuminance values.
 #define Illuminance3 vec3
-
-/*
-<p>Finally, we also need precomputed textures containing physical quantities in
-each texel. Since we can't define custom sampler types to enforce the
-homogeneity of expressions at compile time in GLSL, we define these texture
-types as <code>sampler2D</code> and <code>sampler3D</code>, with preprocessor
-macros. The full definitions are given in the
-<a href="reference/definitions.h.html">C++ equivalent</a> of this file).
-*/
 
 #define TransmittanceTexture sampler2D
 #define AbstractScatteringTexture sampler3D
@@ -132,25 +84,12 @@ macros. The full definitions are given in the
 #define ScatteringDensityTexture sampler3D
 #define IrradianceTexture sampler2D
 
-/*
-<h3>Physical units</h3>
-
-<p>We can then define the units for our six base physical quantities:
-meter (m), nanometer (nm), radian (rad), steradian (sr), watt (watt) and lumen
-(lm):
-*/
-
 const Length m = 1.0;
 const Wavelength nm = 1.0;
 const Angle rad = 1.0;
 const SolidAngle sr = 1.0;
 const Power watt = 1.0;
 const LuminousPower lm = 1.0;
-
-/*
-<p>From which we can derive the units for some derived physical quantities,
-as well as some derived units (kilometer km, kilocandela kcd, degree deg):
-*/
 
 const float PI = 3.14159265358979323846;
 
@@ -171,14 +110,6 @@ const LuminousIntensity kcd = 1000.0 * cd;
 const Luminance cd_per_square_meter = cd / m2;
 const Luminance kcd_per_square_meter = kcd / m2;
 
-/*
-<h3>Atmosphere parameters</h3>
-
-<p>Using the above types, we can now define the parameters of our atmosphere
-model. We start with the definition of density profiles, which are needed for
-parameters that depend on the altitude:
-*/
-
 // An atmosphere layer of width 'width', and whose density is defined as
 //   'exp_term' * exp('exp_scale' * h) + 'linear_term' * h + 'constant_term',
 // clamped to [0,1], and where h is the altitude.
@@ -197,10 +128,6 @@ struct DensityProfileLayer {
 struct DensityProfile {
   DensityProfileLayer layers[2];
 };
-
-/*
-The atmosphere parameters are then defined by the following struct:
-*/
 
 struct AtmosphereParameters {
   // The solar irradiance at the top of the atmosphere.
@@ -233,7 +160,7 @@ struct AtmosphereParameters {
   // wavelength. The extinction coefficient at altitude h is equal to
   // 'mie_extinction' times 'mie_density' at this altitude.
   ScatteringSpectrum mie_extinction;
-  // The asymetry parameter for the Cornette-Shanks phase function for the
+  // The asymmetry parameter for the Cornette-Shanks phase function for the
   // aerosols.
   Number mie_phase_function_g;
   // The density profile of air molecules that absorb light (e.g. ozone), i.e.
