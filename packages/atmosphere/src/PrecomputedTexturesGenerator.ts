@@ -3,7 +3,6 @@ import {
   Camera,
   ClampToEdgeWrapping,
   CustomBlending,
-  DataTexture,
   FloatType,
   GLSL3,
   LinearFilter,
@@ -21,9 +20,9 @@ import {
   WebGL3DRenderTarget,
   WebGLRenderTarget,
   type ShaderMaterialParameters,
+  type Texture,
   type WebGLRenderer
 } from 'three'
-import invariant from 'tiny-invariant'
 
 import { resolveIncludes } from '@takram/three-geospatial'
 
@@ -96,40 +95,6 @@ function create3DRenderTarget(
   return renderTarget
 }
 
-function createDataTexture(width: number, height: number): DataTexture {
-  const texture = new DataTexture(
-    new Float32Array(width * height * 4),
-    width,
-    height,
-    RGBAFormat,
-    FloatType
-  )
-  texture.minFilter = LinearFilter
-  texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
-  texture.colorSpace = NoColorSpace
-  return texture
-}
-
-async function readRenderTargetPixels(
-  renderer: WebGLRenderer,
-  renderTarget: WebGLRenderTarget,
-  texture: DataTexture
-): Promise<void> {
-  const buffer = texture.image.data
-  invariant(buffer instanceof Float32Array)
-  await renderer.readRenderTargetPixelsAsync(
-    renderTarget,
-    0,
-    0,
-    renderTarget.width,
-    renderTarget.height,
-    buffer
-  )
-  texture.needsUpdate = true
-}
-
 // eslint-disable-next-line @typescript-eslint/promise-function-async
 function iterateAsyncIdle<T>(iterable: AsyncIterable<T>): Promise<T> {
   const iterator = iterable[Symbol.asyncIterator]()
@@ -150,6 +115,24 @@ function iterateAsyncIdle<T>(iterable: AsyncIterable<T>): Promise<T> {
     }
     requestIdleCallback(callback)
   })
+}
+
+async function readRenderTargetPixels(
+  renderer: WebGLRenderer,
+  renderTarget: WebGLRenderTarget,
+  texture: Texture
+): Promise<void> {
+  const { width, height } = renderTarget
+  const imageData = new Float32Array(width * height * 4)
+  await renderer.readRenderTargetPixelsAsync(
+    renderTarget,
+    0,
+    0,
+    renderTarget.width,
+    renderTarget.height,
+    imageData
+  )
+  texture.userData.imageData = imageData
 }
 
 class Context {
@@ -254,8 +237,6 @@ class PrecomputeMaterial extends RawShaderMaterial {
 }
 
 export class PrecomputedTexturesGenerator {
-  scatteringOrderCount = 4
-
   readonly transmittanceRenderTarget = createRenderTarget(
     TRANSMITTANCE_TEXTURE_WIDTH,
     TRANSMITTANCE_TEXTURE_HEIGHT
@@ -272,20 +253,10 @@ export class PrecomputedTexturesGenerator {
     IRRADIANCE_TEXTURE_HEIGHT
   )
 
-  private readonly transmittanceTexture = createDataTexture(
-    TRANSMITTANCE_TEXTURE_WIDTH,
-    TRANSMITTANCE_TEXTURE_HEIGHT
-  )
-
-  private readonly irradianceTexture = createDataTexture(
-    IRRADIANCE_TEXTURE_WIDTH,
-    IRRADIANCE_TEXTURE_HEIGHT
-  )
-
   readonly textures: PrecomputedTextures = {
-    transmittanceTexture: this.transmittanceTexture,
+    transmittanceTexture: this.transmittanceRenderTarget.texture,
     scatteringTexture: this.scatteringRenderTarget.texture,
-    irradianceTexture: this.irradianceTexture
+    irradianceTexture: this.irradianceRenderTarget.texture
   }
 
   transmittanceMaterial = new PrecomputeMaterial({
@@ -539,11 +510,7 @@ export class PrecomputedTexturesGenerator {
     yield
 
     // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
-    for (
-      let scatteringOrder = 2;
-      scatteringOrder <= this.scatteringOrderCount;
-      ++scatteringOrder
-    ) {
+    for (let scatteringOrder = 2; scatteringOrder <= 4; ++scatteringOrder) {
       // Compute the scattering density, and store it in deltaScatteringDensity.
       this.computeScatteringDensity({
         renderTarget: context.deltaScatteringDensity,
@@ -613,20 +580,16 @@ export class PrecomputedTexturesGenerator {
     context.dispose()
 
     // Transmittance and irradiance textures needs access to the pixel data.
-    Promise.all([
-      readRenderTargetPixels(
-        renderer,
-        this.transmittanceRenderTarget,
-        this.transmittanceTexture
-      ),
-      readRenderTargetPixels(
-        renderer,
-        this.irradianceRenderTarget,
-        this.irradianceTexture
-      )
-    ]).catch(error => {
-      console.error(error)
-    })
+    await readRenderTargetPixels(
+      this.renderer,
+      this.transmittanceRenderTarget,
+      this.transmittanceRenderTarget.texture
+    )
+    await readRenderTargetPixels(
+      this.renderer,
+      this.irradianceRenderTarget,
+      this.irradianceRenderTarget.texture
+    )
 
     return this.textures
   }
@@ -635,8 +598,6 @@ export class PrecomputedTexturesGenerator {
     this.transmittanceRenderTarget.dispose()
     this.scatteringRenderTarget.dispose()
     this.irradianceRenderTarget.dispose()
-    this.transmittanceTexture.dispose()
-    this.irradianceTexture.dispose()
     this.transmittanceMaterial.dispose()
     this.directIrradianceMaterial.dispose()
     this.singleScatteringMaterial.dispose()
