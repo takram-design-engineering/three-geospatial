@@ -336,6 +336,8 @@ export class PrecomputedTexturesGenerator {
   private readonly mesh = new Mesh(new PlaneGeometry(2, 2))
   private readonly scene = new Scene().add(this.mesh)
   private readonly camera = new Camera()
+  private updating = false
+  private disposed = false
 
   constructor(
     renderer: WebGLRenderer,
@@ -583,6 +585,8 @@ export class PrecomputedTexturesGenerator {
   async update(
     atmosphere = AtmosphereParameters.DEFAULT
   ): Promise<PrecomputedTextures> {
+    this.updating = true
+
     const atmosphereUniform = atmosphere.toStructuredUniform()
     this.transmittanceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
     this.directIrradianceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
@@ -613,10 +617,18 @@ export class PrecomputedTexturesGenerator {
       this.irradianceRenderTarget.texture
     )
 
+    this.updating = false
+    if (this.disposed) {
+      this.dispose()
+    }
     return this.textures
   }
 
   dispose(): void {
+    if (this.updating) {
+      this.disposed = true
+      return
+    }
     this.transmittanceRenderTarget.dispose()
     this.scatteringRenderTarget.dispose()
     this.irradianceRenderTarget.dispose()
