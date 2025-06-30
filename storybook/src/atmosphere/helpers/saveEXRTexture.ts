@@ -10,14 +10,15 @@ import {
   Uniform,
   WebGLRenderer,
   WebGLRenderTarget,
-  type DataTexture,
-  type FloatType
+  type Texture
 } from 'three'
 import { EXRExporter } from 'three/addons/exporters/EXRExporter.js'
 
+import { type AnyFloatType } from '@takram/three-geospatial'
+
 export async function createEXRTexture(
-  texture: DataTexture,
-  type: typeof FloatType | typeof HalfFloatType = HalfFloatType
+  texture: Texture,
+  type: AnyFloatType = HalfFloatType
 ): Promise<ArrayBuffer> {
   const material = new ShaderMaterial({
     glslVersion: GLSL3,
@@ -68,9 +69,9 @@ export async function createEXRTexture(
 }
 
 export async function saveEXRTexture(
-  texture: DataTexture,
+  texture: Texture,
   fileName: string,
-  type?: typeof FloatType | typeof HalfFloatType
+  type?: AnyFloatType
 ): Promise<void> {
   const buffer = await createEXRTexture(texture, type)
   const blob = new Blob([buffer])

@@ -11,18 +11,19 @@ import {
   ShaderMaterial,
   Uniform,
   Vector2,
-  type FloatType,
-  type HalfFloatType
+  type Texture
 } from 'three'
 import { EXRLoader } from 'three-stdlib'
+
+import { type AnyFloatType } from '@takram/three-geospatial'
 
 import { useControls } from '../../helpers/useControls'
 import { createEXRTexture, saveEXRTexture } from './saveEXRTexture'
 
 export const DataTextureViewer: FC<{
-  texture: DataTexture
+  texture: Texture
   fileName: string
-  type?: typeof FloatType | typeof HalfFloatType
+  type?: AnyFloatType
   zoom?: number
   valueScale?: number
 }> = ({

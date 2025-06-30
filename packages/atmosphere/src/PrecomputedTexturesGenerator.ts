@@ -5,6 +5,7 @@ import {
   CustomBlending,
   FloatType,
   GLSL3,
+  HalfFloatType,
   LinearFilter,
   Matrix3,
   Mesh,
@@ -24,7 +25,11 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { resolveIncludes } from '@takram/three-geospatial'
+import {
+  isFloatLinearSupported,
+  resolveIncludes,
+  type AnyFloatType
+} from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {
@@ -60,10 +65,14 @@ const vertexShader = /* glsl */ `
   }
 `
 
-function createRenderTarget(width: number, height: number): WebGLRenderTarget {
+function createRenderTarget(
+  type: AnyFloatType,
+  width: number,
+  height: number
+): WebGLRenderTarget {
   const renderTarget = new WebGLRenderTarget(width, height, {
     depthBuffer: false,
-    type: FloatType,
+    type,
     format: RGBAFormat
   })
   const texture = renderTarget.texture
@@ -76,13 +85,14 @@ function createRenderTarget(width: number, height: number): WebGLRenderTarget {
 }
 
 function create3DRenderTarget(
+  type: AnyFloatType,
   width: number,
   height: number,
   depth: number
 ): WebGL3DRenderTarget {
   const renderTarget = new WebGL3DRenderTarget(width, height, depth, {
     depthBuffer: false,
-    type: FloatType,
+    type,
     format: RGBAFormat
   })
   const texture = renderTarget.texture
@@ -138,36 +148,43 @@ async function readRenderTargetPixels(
 class Context {
   lambdas = new Vector3()
   luminanceFromRadiance = new Matrix3()
+  deltaIrradiance: WebGLRenderTarget
+  deltaRayleighScattering: WebGL3DRenderTarget
+  deltaMieScattering: WebGL3DRenderTarget
+  deltaScatteringDensity: WebGL3DRenderTarget
+  deltaMultipleScattering: WebGL3DRenderTarget
 
-  deltaIrradiance = createRenderTarget(
-    IRRADIANCE_TEXTURE_WIDTH,
-    IRRADIANCE_TEXTURE_HEIGHT
-  )
-
-  deltaRayleighScattering = create3DRenderTarget(
-    SCATTERING_TEXTURE_WIDTH,
-    SCATTERING_TEXTURE_HEIGHT,
-    SCATTERING_TEXTURE_DEPTH
-  )
-
-  deltaMieScattering = create3DRenderTarget(
-    SCATTERING_TEXTURE_WIDTH,
-    SCATTERING_TEXTURE_HEIGHT,
-    SCATTERING_TEXTURE_DEPTH
-  )
-
-  deltaScatteringDensity = create3DRenderTarget(
-    SCATTERING_TEXTURE_WIDTH,
-    SCATTERING_TEXTURE_HEIGHT,
-    SCATTERING_TEXTURE_DEPTH
-  )
-
-  // deltaMultipleScattering is only needed to compute scattering order 3 or
-  // more, while deltaRayleighScattering and deltaMieScattering are only needed
-  // to compute double scattering. Therefore, to save memory, we can store
-  // deltaRayleighScattering and deltaMultipleScattering in the same GPU
-  // texture.
-  deltaMultipleScattering = this.deltaRayleighScattering
+  constructor(type: AnyFloatType) {
+    this.deltaIrradiance = createRenderTarget(
+      type,
+      IRRADIANCE_TEXTURE_WIDTH,
+      IRRADIANCE_TEXTURE_HEIGHT
+    )
+    this.deltaRayleighScattering = create3DRenderTarget(
+      type,
+      SCATTERING_TEXTURE_WIDTH,
+      SCATTERING_TEXTURE_HEIGHT,
+      SCATTERING_TEXTURE_DEPTH
+    )
+    this.deltaMieScattering = create3DRenderTarget(
+      type,
+      SCATTERING_TEXTURE_WIDTH,
+      SCATTERING_TEXTURE_HEIGHT,
+      SCATTERING_TEXTURE_DEPTH
+    )
+    this.deltaScatteringDensity = create3DRenderTarget(
+      type,
+      SCATTERING_TEXTURE_WIDTH,
+      SCATTERING_TEXTURE_HEIGHT,
+      SCATTERING_TEXTURE_DEPTH
+    )
+    // deltaMultipleScattering is only needed to compute scattering order 3 or
+    // more, while deltaRayleighScattering and deltaMieScattering are only needed
+    // to compute double scattering. Therefore, to save memory, we can store
+    // deltaRayleighScattering and deltaMultipleScattering in the same GPU
+    // texture.
+    this.deltaMultipleScattering = this.deltaRayleighScattering
+  }
 
   dispose(): void {
     this.deltaIrradiance.dispose()
@@ -237,27 +254,10 @@ class PrecomputeMaterial extends RawShaderMaterial {
 }
 
 export class PrecomputedTexturesGenerator {
-  readonly transmittanceRenderTarget = createRenderTarget(
-    TRANSMITTANCE_TEXTURE_WIDTH,
-    TRANSMITTANCE_TEXTURE_HEIGHT
-  )
-
-  readonly scatteringRenderTarget = create3DRenderTarget(
-    SCATTERING_TEXTURE_WIDTH,
-    SCATTERING_TEXTURE_HEIGHT,
-    SCATTERING_TEXTURE_DEPTH
-  )
-
-  readonly irradianceRenderTarget = createRenderTarget(
-    IRRADIANCE_TEXTURE_WIDTH,
-    IRRADIANCE_TEXTURE_HEIGHT
-  )
-
-  readonly textures: PrecomputedTextures = {
-    transmittanceTexture: this.transmittanceRenderTarget.texture,
-    scatteringTexture: this.scatteringRenderTarget.texture,
-    irradianceTexture: this.irradianceRenderTarget.texture
-  }
+  readonly transmittanceRenderTarget: WebGLRenderTarget
+  readonly scatteringRenderTarget: WebGL3DRenderTarget
+  readonly irradianceRenderTarget: WebGLRenderTarget
+  readonly textures: PrecomputedTextures
 
   transmittanceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(transmittanceShader, {
@@ -332,13 +332,38 @@ export class PrecomputedTexturesGenerator {
   })
 
   private readonly renderer: WebGLRenderer
-  private readonly camera = new Camera()
-  private readonly scene = new Scene()
+  private readonly type: AnyFloatType
   private readonly mesh = new Mesh(new PlaneGeometry(2, 2))
+  private readonly scene = new Scene().add(this.mesh)
+  private readonly camera = new Camera()
 
-  constructor(renderer: WebGLRenderer) {
+  constructor(
+    renderer: WebGLRenderer,
+    type = isFloatLinearSupported(renderer) ? HalfFloatType : FloatType
+  ) {
     this.renderer = renderer
-    this.scene.add(this.mesh)
+    this.type = type
+    this.transmittanceRenderTarget = createRenderTarget(
+      type,
+      TRANSMITTANCE_TEXTURE_WIDTH,
+      TRANSMITTANCE_TEXTURE_HEIGHT
+    )
+    this.scatteringRenderTarget = create3DRenderTarget(
+      type,
+      SCATTERING_TEXTURE_WIDTH,
+      SCATTERING_TEXTURE_HEIGHT,
+      SCATTERING_TEXTURE_DEPTH
+    )
+    this.irradianceRenderTarget = createRenderTarget(
+      type,
+      IRRADIANCE_TEXTURE_WIDTH,
+      IRRADIANCE_TEXTURE_HEIGHT
+    )
+    this.textures = {
+      transmittanceTexture: this.transmittanceRenderTarget.texture,
+      scatteringTexture: this.scatteringRenderTarget.texture,
+      irradianceTexture: this.irradianceRenderTarget.texture
+    }
   }
 
   private render3DRenderTarget(
@@ -570,7 +595,7 @@ export class PrecomputedTexturesGenerator {
     this.multipleScatteringMaterial.uniforms.ATMOSPHERE = atmosphereUniform
 
     const renderer = this.renderer
-    const context = new Context()
+    const context = new Context(this.type)
     context.lambdas.set(680, 550, 440)
     context.luminanceFromRadiance.identity()
     const autoClear = renderer.autoClear

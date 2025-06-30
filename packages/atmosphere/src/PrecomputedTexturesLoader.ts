@@ -15,7 +15,9 @@ import {
   createDataTextureLoader,
   EXR3DLoader,
   Float16Array,
-  parseFloat16Array
+  isFloatLinearSupported,
+  parseFloat16Array,
+  type AnyFloatType
 } from '@takram/three-geospatial'
 
 import {
@@ -36,13 +38,10 @@ interface LoadTextureOptions {
 
 export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
   format: 'binary' | 'exr' = 'exr'
-  type: typeof FloatType | typeof HalfFloatType = HalfFloatType
+  type: AnyFloatType = HalfFloatType
 
   setTypeFromRenderer(renderer: WebGLRenderer): this {
-    this.type =
-      renderer.getContext().getExtension('OES_texture_float_linear') == null
-        ? HalfFloatType
-        : FloatType
+    this.type = isFloatLinearSupported(renderer) ? HalfFloatType : FloatType
     return this
   }
 
