@@ -8,7 +8,6 @@ import {
   Uniform,
   Vector2,
   Vector3,
-  type DataTexture,
   type DepthPackingStrategies,
   type PerspectiveCamera,
   type TextureDataType,
@@ -756,11 +755,11 @@ export class CloudsEffect extends Effect {
 
   // Atmosphere parameters
 
-  get irradianceTexture(): DataTexture | null {
+  get irradianceTexture(): Texture | null {
     return this.cloudsPass.currentMaterial.irradianceTexture
   }
 
-  set irradianceTexture(value: DataTexture | null) {
+  set irradianceTexture(value: Texture | null) {
     this.cloudsPass.currentMaterial.irradianceTexture = value
   }
 
@@ -772,11 +771,11 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.scatteringTexture = value
   }
 
-  get transmittanceTexture(): DataTexture | null {
+  get transmittanceTexture(): Texture | null {
     return this.cloudsPass.currentMaterial.transmittanceTexture
   }
 
-  set transmittanceTexture(value: DataTexture | null) {
+  set transmittanceTexture(value: Texture | null) {
     this.cloudsPass.currentMaterial.transmittanceTexture = value
   }
 

@@ -1,4 +1,4 @@
-import { LightProbe, Matrix4, Vector2, Vector3, type DataTexture } from 'three'
+import { LightProbe, Matrix4, Vector2, Vector3, type Texture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -39,7 +39,7 @@ const uvScratch = /*#__PURE__*/ new Vector2()
 const matrixScratch = /*#__PURE__*/ new Matrix4()
 
 export interface SkyLightProbeParameters {
-  irradianceTexture?: DataTexture | null
+  irradianceTexture?: Texture | null
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
@@ -53,7 +53,7 @@ export const skyLightProbeParametersDefaults = {
 } satisfies SkyLightProbeParameters
 
 export class SkyLightProbe extends LightProbe {
-  irradianceTexture: DataTexture | null
+  irradianceTexture: Texture | null
   ellipsoid: Ellipsoid
   readonly ellipsoidCenter = new Vector3()
   readonly ellipsoidMatrix = new Matrix4()

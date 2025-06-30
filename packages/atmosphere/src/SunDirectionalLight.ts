@@ -1,4 +1,4 @@
-import { DirectionalLight, Matrix4, Vector3, type DataTexture } from 'three'
+import { DirectionalLight, Matrix4, Vector3, type Texture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -9,7 +9,7 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 const matrixScratch = /*#__PURE__*/ new Matrix4()
 
 export interface SunDirectionalLightParameters {
-  transmittanceTexture?: DataTexture | null
+  transmittanceTexture?: Texture | null
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   photometric?: boolean
@@ -25,7 +25,7 @@ export const sunDirectionalLightParametersDefaults = {
 } satisfies SunDirectionalLightParameters
 
 export class SunDirectionalLight extends DirectionalLight {
-  transmittanceTexture: DataTexture | null
+  transmittanceTexture: Texture | null
   ellipsoid: Ellipsoid
   readonly ellipsoidCenter = new Vector3()
   readonly ellipsoidMatrix = new Matrix4()

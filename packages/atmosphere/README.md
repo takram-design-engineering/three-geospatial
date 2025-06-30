@@ -711,9 +711,9 @@ The base class of [`SkyMaterial`](#skymaterial) and [`StarsMaterial`](#starsmate
 #### irradianceTexture, scatteringTexture, transmittanceTexture
 
 ```ts
-irradianceTexture: DataTexture | null = null
+irradianceTexture: Texture | null = null
 scatteringTexture: Data3DTexture | null = null
-transmittanceTexture: DataTexture | null = null
+transmittanceTexture: Texture | null = null
 ```
 
 The [precomputed textures](assets).
@@ -913,7 +913,7 @@ Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/Ligh
 #### irradianceTexture
 
 ```ts
-irradianceTexture: DataTexture | null = null
+irradianceTexture: Texture | null = null
 ```
 
 The [precomputed irradiance texture](assets).
@@ -984,7 +984,7 @@ Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en
 #### transmittanceTexture
 
 ```ts
-transmittanceTexture: DataTexture | null = null
+transmittanceTexture: Texture | null = null
 ```
 
 The [precomputed transmittance texture](assets).
@@ -1102,9 +1102,9 @@ Whether to reconstruct normals from depth buffer.
 #### irradianceTexture, scatteringTexture, transmittanceTexture
 
 ```ts
-irradianceTexture: DataTexture | null = null
+irradianceTexture: Texture | null = null
 scatteringTexture: Data3DTexture | null = null
-transmittanceTexture: DataTexture | null = null
+transmittanceTexture: Texture | null = null
 ```
 
 The [precomputed textures](assets).
@@ -1327,7 +1327,7 @@ interface SunLightColorOptions {
 }
 
 function getSunLightColor(
-  transmittanceTexture: DataTexture,
+  transmittanceTexture: Texture,
   worldPosition: Vector3,
   sunDirection: Vector3,
   result?: Color,

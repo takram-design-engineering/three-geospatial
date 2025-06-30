@@ -6,7 +6,6 @@ import {
   Vector2,
   Vector3,
   type Data3DTexture,
-  type DataTexture,
   type Texture,
   type WebGLRenderer,
   type WebGLRenderTarget
@@ -71,9 +70,9 @@ export interface AerialPerspectiveEffectOptions {
   reconstructNormal?: boolean
 
   // Precomputed textures
-  irradianceTexture?: DataTexture | null
+  irradianceTexture?: Texture | null
   scatteringTexture?: Data3DTexture | null
-  transmittanceTexture?: DataTexture | null
+  transmittanceTexture?: Texture | null
 
   // Atmosphere controls
   ellipsoid?: Ellipsoid
@@ -144,10 +143,10 @@ export interface AerialPerspectiveEffectUniforms {
   u_mie_phase_function_g: Uniform<number>
   u_mu_s_min: Uniform<number>
   u_max_rayleigh_shadow_length: Uniform<number>
-  u_irradiance_texture: Uniform<DataTexture | null>
+  u_irradiance_texture: Uniform<Texture | null>
   u_scattering_texture: Uniform<Data3DTexture | null>
   u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
-  u_transmittance_texture: Uniform<DataTexture | null>
+  u_transmittance_texture: Uniform<Texture | null>
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -527,11 +526,11 @@ export class AerialPerspectiveEffect extends Effect {
   @define('RECONSTRUCT_NORMAL')
   reconstructNormal: boolean
 
-  get irradianceTexture(): DataTexture | null {
+  get irradianceTexture(): Texture | null {
     return this.uniforms.get('u_irradiance_texture').value
   }
 
-  set irradianceTexture(value: DataTexture | null) {
+  set irradianceTexture(value: Texture | null) {
     this.uniforms.get('u_irradiance_texture').value = value
   }
 
@@ -544,11 +543,11 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('u_single_mie_scattering_texture').value = value
   }
 
-  get transmittanceTexture(): DataTexture | null {
+  get transmittanceTexture(): Texture | null {
     return this.uniforms.get('u_transmittance_texture').value
   }
 
-  set transmittanceTexture(value: DataTexture | null) {
+  set transmittanceTexture(value: Texture | null) {
     this.uniforms.get('u_transmittance_texture').value = value
   }
 

@@ -1,12 +1,12 @@
 import {
   Matrix4,
   RawShaderMaterial,
+  Texture,
   Uniform,
   Vector3,
   type BufferGeometry,
   type Camera,
   type Data3DTexture,
-  type DataTexture,
   type Group,
   type Object3D,
   type Scene,
@@ -47,9 +47,9 @@ function includeRenderTargets(fragmentShader: string, count: number): string {
 
 export interface AtmosphereMaterialProps {
   // Precomputed textures
-  irradianceTexture?: DataTexture | null
+  irradianceTexture?: Texture | null
   scatteringTexture?: Data3DTexture | null
-  transmittanceTexture?: DataTexture | null
+  transmittanceTexture?: Texture | null
 
   // Atmosphere controls
   ellipsoid?: Ellipsoid
@@ -91,10 +91,10 @@ export interface AtmosphereMaterialBaseUniforms {
   u_mie_phase_function_g: Uniform<number>
   u_mu_s_min: Uniform<number>
   u_max_rayleigh_shadow_length: Uniform<number>
-  u_irradiance_texture: Uniform<DataTexture | null>
+  u_irradiance_texture: Uniform<Texture | null>
   u_scattering_texture: Uniform<Data3DTexture | null>
   u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
-  u_transmittance_texture: Uniform<DataTexture | null>
+  u_transmittance_texture: Uniform<Texture | null>
 }
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
@@ -223,11 +223,11 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.copyCameraSettings(camera)
   }
 
-  get irradianceTexture(): DataTexture | null {
+  get irradianceTexture(): Texture | null {
     return this.uniforms.u_irradiance_texture.value
   }
 
-  set irradianceTexture(value: DataTexture | null) {
+  set irradianceTexture(value: Texture | null) {
     this.uniforms.u_irradiance_texture.value = value
   }
 
@@ -240,11 +240,11 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.uniforms.u_single_mie_scattering_texture.value = value
   }
 
-  get transmittanceTexture(): DataTexture | null {
+  get transmittanceTexture(): Texture | null {
     return this.uniforms.u_transmittance_texture.value
   }
 
-  set transmittanceTexture(value: DataTexture | null) {
+  set transmittanceTexture(value: Texture | null) {
     this.uniforms.u_transmittance_texture.value = value
   }
 

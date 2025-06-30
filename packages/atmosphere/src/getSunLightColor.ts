@@ -1,4 +1,4 @@
-import { Color, Vector2, Vector3, type DataTexture } from 'three'
+import { Color, Vector2, Vector3, type Texture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -47,7 +47,7 @@ export interface SunLightColorOptions {
 
 // TODO: Consider partial visibility when the sun is at the horizon.
 export function getSunLightColor(
-  transmittanceTexture: DataTexture,
+  transmittanceTexture: Texture,
   worldPosition: Vector3,
   sunDirection: Vector3,
   result = new Color(),
