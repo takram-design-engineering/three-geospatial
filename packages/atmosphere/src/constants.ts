@@ -1,7 +1,7 @@
 import { Matrix3 } from 'three'
 
 // Reference to the latest assets.
-const ref = '82e00c5222d6cbc222af69abdf6d3f4fc9f63030'
+const ref = '7148c71d384a0008670df679c08fd1855519f639'
 export const DEFAULT_PRECOMPUTED_TEXTURES_URL = `https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/${ref}/packages/atmosphere/assets`
 export const DEFAULT_STARS_DATA_URL = `https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/${ref}/packages/atmosphere/assets/stars.bin`
 
