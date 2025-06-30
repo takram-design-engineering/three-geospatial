@@ -9,6 +9,7 @@ import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   Fragment,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ComponentRef,
@@ -16,6 +17,7 @@ import {
 } from 'react'
 import { MeshBasicMaterial, MeshLambertMaterial } from 'three'
 
+import { PrecomputedTexturesGenerator } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
@@ -88,7 +90,7 @@ const Scene: FC = () => {
     sky: true
   })
 
-  const { camera } = useThree()
+  const camera = useThree(({ camera }) => camera)
   const [controls, setControls] = useState<ComponentRef<
     typeof OrbitControls
   > | null>(null)
@@ -111,10 +113,24 @@ const Scene: FC = () => {
     atmosphere.updateByDate(new Date(motionDate.get()))
   })
 
+  const renderer = useThree(({ gl }) => gl)
+  const generator = useMemo(
+    () => new PrecomputedTexturesGenerator(renderer),
+    [renderer]
+  )
+  useEffect(() => {
+    generator.update().catch(error => {
+      console.log(error)
+    })
+    return () => {
+      generator.dispose()
+    }
+  }, [generator])
+
   return (
     <Atmosphere
       ref={atmosphereRef}
-      textures='atmosphere'
+      textures={generator.textures}
       correctAltitude={correctAltitude}
       photometric={photometric}
     >
