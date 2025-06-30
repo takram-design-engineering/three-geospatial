@@ -97,8 +97,7 @@ export const Atmosphere: FC<AtmosphereProps> = ({
   const renderer = useThree(({ gl }) => gl)
   useEffect(() => {
     if (typeof texturesProp === 'string') {
-      const loader = new PrecomputedTexturesLoader()
-      loader.setTypeFromRenderer(renderer)
+      const loader = new PrecomputedTexturesLoader().setType(renderer)
       ;(async () => {
         setTextures(await loader.loadAsync(texturesProp))
       })().catch(error => {

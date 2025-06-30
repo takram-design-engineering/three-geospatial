@@ -207,13 +207,13 @@ composer.addPass(
 )
 
 const texturesLoader = new PrecomputedTexturesLoader()
-texturesLoader.setTypeFromRenderer(renderer)
-texturesLoader.load('/assets', textures => {
-  Object.assign(skyMaterial, textures)
-  sunLight.transmittanceTexture = textures.transmittanceTexture
-  skyLight.irradianceTexture = textures.irradianceTexture
-  Object.assign(aerialPerspective, textures)
-})
+  .setType(renderer)
+  .load('/assets', textures => {
+    Object.assign(skyMaterial, textures)
+    sunLight.transmittanceTexture = textures.transmittanceTexture
+    skyLight.irradianceTexture = textures.irradianceTexture
+    Object.assign(aerialPerspective, textures)
+  })
 
 const sunDirection = new Vector3()
 const moonDirection = new Vector3()

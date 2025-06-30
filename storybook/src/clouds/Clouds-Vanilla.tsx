@@ -146,7 +146,7 @@ function init(container: HTMLDivElement): void {
 
   // Load precomputed textures.
   new PrecomputedTexturesLoader()
-    .setTypeFromRenderer(renderer)
+    .setType(renderer)
     .load('atmosphere', onPrecomputedTexturesLoad)
 
   // Load textures for the clouds.
