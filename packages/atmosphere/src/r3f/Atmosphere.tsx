@@ -91,14 +91,14 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     irradianceMask: null
   })
 
-  const gl = useThree(({ gl }) => gl)
   const [textures, setTextures] = useState(
     typeof texturesProp !== 'string' ? texturesProp : undefined
   )
+  const renderer = useThree(({ gl }) => gl)
   useEffect(() => {
     if (typeof texturesProp === 'string') {
       const loader = new PrecomputedTexturesLoader()
-      loader.setTypeFromRenderer(gl)
+      loader.setTypeFromRenderer(renderer)
       ;(async () => {
         setTextures(await loader.loadAsync(texturesProp))
       })().catch(error => {
@@ -107,7 +107,7 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     } else {
       setTextures(texturesProp)
     }
-  }, [texturesProp, gl])
+  }, [texturesProp, renderer])
 
   const context = useMemo(
     () => ({

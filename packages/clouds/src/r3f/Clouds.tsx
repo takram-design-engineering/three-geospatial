@@ -229,8 +229,8 @@ export const Clouds: FC<CloudsProps> = ({
     }
   }, [effect, handleChange])
 
-  const gl = useThree(({ gl }) => gl)
-  const localWeatherTexture = useTextureState(localWeatherTextureProp, gl)
+  const renderer = useThree(({ gl }) => gl)
+  const localWeatherTexture = useTextureState(localWeatherTextureProp, renderer)
   const shapeTexture = use3DTextureState(
     shapeTextureProp,
     CLOUD_SHAPE_TEXTURE_SIZE
@@ -239,7 +239,7 @@ export const Clouds: FC<CloudsProps> = ({
     shapeDetailTextureProp,
     CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
   )
-  const turbulenceTexture = useTextureState(turbulenceTextureProp, gl)
+  const turbulenceTexture = useTextureState(turbulenceTextureProp, renderer)
   const stbnTexture = useSTBNTextureState(stbnTextureProp)
 
   const { camera } = useContext(EffectComposerContext)

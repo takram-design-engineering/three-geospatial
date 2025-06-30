@@ -489,8 +489,6 @@ export class PrecomputedTexturesGenerator {
     this.computeTransmittance({
       renderTarget: this.transmittanceRenderTarget
     })
-    this.renderer.setRenderTarget(null)
-    yield
 
     // Compute the direct irradiance, store it in deltaIrradiance and,
     // depending on "additive", either initialize irradianceTexture with zeros
@@ -506,6 +504,7 @@ export class PrecomputedTexturesGenerator {
       output: 'irradiance',
       additive
     })
+
     this.renderer.setRenderTarget(null)
     yield
 
@@ -531,6 +530,7 @@ export class PrecomputedTexturesGenerator {
       output: 'scattering',
       additive
     })
+
     this.renderer.setRenderTarget(null)
     yield
 
@@ -542,8 +542,6 @@ export class PrecomputedTexturesGenerator {
         context,
         scatteringOrder
       })
-      this.renderer.setRenderTarget(null)
-      yield
 
       // Compute the indirect irradiance, store it in deltaIrradiance and
       // accumulate it in irradianceTexture.
@@ -561,8 +559,6 @@ export class PrecomputedTexturesGenerator {
         output: 'irradiance',
         additive: true
       })
-      this.renderer.setRenderTarget(null)
-      yield
 
       // Compute the multiple scattering, store it in deltaMultipleScattering,
       // and accumulate it in scatteringTexture.
@@ -578,6 +574,7 @@ export class PrecomputedTexturesGenerator {
         output: 'scattering',
         additive: true
       })
+
       this.renderer.setRenderTarget(null)
       yield
     }
