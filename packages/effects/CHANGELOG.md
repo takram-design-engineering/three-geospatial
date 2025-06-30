@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Migrated to core API changes.
+
 ## [0.3.2] - 2025-06-12
 
 ### Changed

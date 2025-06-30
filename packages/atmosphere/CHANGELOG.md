@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Added `PrecomputedTexturesGenerator`.
+- `PrecomputedTexturesLoader`: Renamed `setTypeFromRenderer()` to `setType()`.
+- `PrecomputedTexturesLoader`: `load()` returns textures that will be loaded asynchronously.
+- `PrecomputedTexturesLoader`: Takes format and type in the constructor.
+- Removed a slight night light from precomputed texture assets.
+- Relaxed the type of transmittance and irradiance textures from `DataTexture` to `Texture`.
+- Migrated to core API changes.
+
 ## [0.12.0] - 2025-06-12
 
 ### Changed
