@@ -32,8 +32,7 @@ import { OrbitControls } from 'three-stdlib'
 import {
   AerialPerspectiveEffect,
   getSunDirectionECEF,
-  PrecomputedTexturesLoader,
-  type PrecomputedTextures
+  PrecomputedTexturesLoader
 } from '@takram/three-atmosphere'
 import {
   CLOUD_SHAPE_DETAIL_TEXTURE_SIZE,
@@ -145,9 +144,11 @@ function init(container: HTMLDivElement): void {
   )
 
   // Load precomputed textures.
-  new PrecomputedTexturesLoader()
+  const textures = new PrecomputedTexturesLoader()
     .setType(renderer)
-    .load('atmosphere', onPrecomputedTexturesLoad)
+    .load('atmosphere')
+  Object.assign(aerialPerspective, textures)
+  Object.assign(clouds, textures)
 
   // Load textures for the clouds.
   new TextureLoader().load('clouds/local_weather.png', onLocalWeatherLoad)
@@ -166,6 +167,7 @@ function init(container: HTMLDivElement): void {
 
   container.appendChild(renderer.domElement)
   window.addEventListener('resize', onWindowResize)
+  renderer.setAnimationLoop(render)
 }
 
 function onCloudsChange(event: CloudsEffectChangeEvent): void {
@@ -180,13 +182,6 @@ function onCloudsChange(event: CloudsEffectChangeEvent): void {
       aerialPerspective.shadowLength = clouds.atmosphereShadowLength
       break
   }
-}
-
-function onPrecomputedTexturesLoad(textures: PrecomputedTextures): void {
-  Object.assign(aerialPerspective, textures)
-  Object.assign(clouds, textures)
-
-  renderer.setAnimationLoop(render)
 }
 
 function onLocalWeatherLoad(texture: Texture): void {

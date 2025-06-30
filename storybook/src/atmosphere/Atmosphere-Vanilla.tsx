@@ -30,8 +30,7 @@ import {
   PrecomputedTexturesLoader,
   SkyLightProbe,
   SkyMaterial,
-  SunDirectionalLight,
-  type PrecomputedTextures
+  SunDirectionalLight
 } from '@takram/three-atmosphere'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
@@ -156,20 +155,17 @@ function init(container: HTMLDivElement): void {
   )
 
   // Load precomputed textures.
-  new PrecomputedTexturesLoader()
+  const textures = new PrecomputedTexturesLoader()
     .setType(renderer)
-    .load('atmosphere', onPrecomputedTexturesLoad)
+    .load('atmosphere')
 
-  container.appendChild(renderer.domElement)
-  window.addEventListener('resize', onWindowResize)
-}
-
-function onPrecomputedTexturesLoad(textures: PrecomputedTextures): void {
   Object.assign(skyMaterial, textures)
   sunLight.transmittanceTexture = textures.transmittanceTexture
   skyLight.irradianceTexture = textures.irradianceTexture
   Object.assign(aerialPerspective, textures)
 
+  container.appendChild(renderer.domElement)
+  window.addEventListener('resize', onWindowResize)
   renderer.setAnimationLoop(render)
 }
 
