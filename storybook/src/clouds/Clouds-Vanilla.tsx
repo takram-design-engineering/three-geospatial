@@ -8,6 +8,7 @@ import {
   ToneMappingMode
 } from 'postprocessing'
 import {
+  Data3DTexture,
   Group,
   HalfFloatType,
   LinearFilter,
@@ -24,7 +25,6 @@ import {
   TorusKnotGeometry,
   Vector3,
   WebGLRenderer,
-  type Data3DTexture,
   type Texture
 } from 'three'
 import { OrbitControls } from 'three-stdlib'
@@ -42,7 +42,7 @@ import {
   type CloudsEffectChangeEvent
 } from '@takram/three-clouds'
 import {
-  createData3DTextureLoaderClass,
+  DataTextureLoader,
   Ellipsoid,
   Geodetic,
   parseUint8Array,
@@ -151,16 +151,16 @@ function init(container: HTMLDivElement): void {
 
   // Load textures for the clouds.
   new TextureLoader().load('clouds/local_weather.png', onLocalWeatherLoad)
-  new (createData3DTextureLoaderClass(parseUint8Array, {
+  new DataTextureLoader(Data3DTexture, parseUint8Array, {
     width: CLOUD_SHAPE_TEXTURE_SIZE,
     height: CLOUD_SHAPE_TEXTURE_SIZE,
     depth: CLOUD_SHAPE_TEXTURE_SIZE
-  }))().load('clouds/shape.bin', onShapeLoad)
-  new (createData3DTextureLoaderClass(parseUint8Array, {
+  }).load('clouds/shape.bin', onShapeLoad)
+  new DataTextureLoader(Data3DTexture, parseUint8Array, {
     width: CLOUD_SHAPE_DETAIL_TEXTURE_SIZE,
     height: CLOUD_SHAPE_DETAIL_TEXTURE_SIZE,
     depth: CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
-  }))().load('clouds/shape_detail.bin', onShapeDetailLoad)
+  }).load('clouds/shape_detail.bin', onShapeDetailLoad)
   new TextureLoader().load('clouds/turbulence.png', onTurbulenceLoad)
   new STBNLoader().load('core/stbn.bin', onSTBNLoad)
 

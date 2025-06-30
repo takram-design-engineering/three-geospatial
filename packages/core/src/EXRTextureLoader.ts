@@ -1,20 +1,28 @@
-import { Data3DTexture, Loader } from 'three'
+import { DataTexture, Loader, type LoadingManager } from 'three'
 import { EXRLoader } from 'three-stdlib'
 
-export class EXR3DLoader extends Loader<Data3DTexture> {
-  depth?: number
+export interface EXRTextureLoaderOptions {
+  width?: number
+  height?: number
+}
 
-  setDepth(value: number): this {
-    this.depth = value
-    return this
+export class EXRTextureLoader extends Loader<DataTexture> {
+  options: EXRTextureLoaderOptions
+
+  constructor(options: EXRTextureLoaderOptions = {}, manager?: LoadingManager) {
+    super(manager)
+    this.options = options
   }
 
   override load(
     url: string,
-    onLoad: (data: Data3DTexture) => void,
+    onLoad: (data: DataTexture) => void,
     onProgress?: (event: ProgressEvent) => void,
     onError?: (error: unknown) => void
-  ): void {
+  ): DataTexture {
+    const { width, height } = this.options
+    const texture = new DataTexture(null, width, height)
+
     const loader = new EXRLoader(this.manager)
     loader.setRequestHeader(this.requestHeader)
     loader.setPath(this.path)
@@ -22,9 +30,12 @@ export class EXR3DLoader extends Loader<Data3DTexture> {
     loader.load(
       url,
       exr => {
-        const { data, width, height } = exr.image
-        const depth = this.depth ?? Math.sqrt(height)
-        const texture = new Data3DTexture(data, width, height / depth, depth)
+        const { image } = exr
+        texture.image = {
+          data: image.data,
+          width: width ?? image.width,
+          height: height ?? image.height
+        }
         texture.type = exr.type
         texture.format = exr.format
         texture.colorSpace = exr.colorSpace
@@ -44,5 +55,7 @@ export class EXR3DLoader extends Loader<Data3DTexture> {
       onProgress,
       onError
     )
+
+    return texture
   }
 }

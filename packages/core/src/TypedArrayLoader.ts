@@ -1,12 +1,16 @@
-import { Loader } from 'three'
-import { type Class } from 'type-fest'
+import { Loader, type LoadingManager } from 'three'
 
 import { ArrayBufferLoader } from './ArrayBufferLoader'
 import { type TypedArray } from './typedArray'
 import { type TypedArrayParser } from './typedArrayParsers'
 
-export abstract class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
-  abstract parseTypedArray(buffer: ArrayBuffer): T
+export class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
+  parser: TypedArrayParser<T>
+
+  constructor(parser: TypedArrayParser<T>, manager?: LoadingManager) {
+    super(manager)
+    this.parser = parser
+  }
 
   override load(
     url: string,
@@ -22,7 +26,7 @@ export abstract class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
       url,
       arrayBuffer => {
         try {
-          onLoad(this.parseTypedArray(arrayBuffer))
+          onLoad(this.parser(arrayBuffer))
         } catch (error) {
           if (onError != null) {
             onError(error)
@@ -36,18 +40,4 @@ export abstract class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
       onError
     )
   }
-}
-
-export function createTypedArrayLoaderClass<T extends TypedArray>(
-  parser: TypedArrayParser<T>
-): Class<TypedArrayLoader<T>> {
-  return class extends TypedArrayLoader<T> {
-    readonly parseTypedArray = parser
-  }
-}
-
-export function createTypedArrayLoader<T extends TypedArray>(
-  parser: TypedArrayParser<T>
-): TypedArrayLoader<T> {
-  return new (createTypedArrayLoaderClass(parser))()
 }

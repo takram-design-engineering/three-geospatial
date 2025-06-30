@@ -9,20 +9,20 @@ import {
   type FC
 } from 'react'
 import {
+  Data3DTexture,
   LinearFilter,
   LinearMipMapLinearFilter,
   NoColorSpace,
   RedFormat,
   RepeatWrapping,
   TextureLoader,
-  type Data3DTexture,
   type Texture,
   type WebGLRenderer
 } from 'three'
 
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
 import {
-  createData3DTextureLoaderClass,
+  DataTextureLoader,
   DEFAULT_STBN_URL,
   parseUint8Array,
   STBNLoader
@@ -86,7 +86,7 @@ function use3DTextureState(
   const [data, setData] = useState(typeof input !== 'string' ? input : null)
   useEffect(() => {
     if (typeof input === 'string') {
-      const Loader = createData3DTextureLoaderClass(parseUint8Array, {
+      const loader = new DataTextureLoader(Data3DTexture, parseUint8Array, {
         width: size,
         height: size,
         depth: size,
@@ -98,7 +98,6 @@ function use3DTextureState(
         wrapR: RepeatWrapping,
         colorSpace: NoColorSpace
       })
-      const loader = new Loader()
       ;(async () => {
         setData(await loader.loadAsync(input))
       })().catch(error => {
