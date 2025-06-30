@@ -16,7 +16,7 @@ export class EXRTextureLoader extends Loader<DataTexture> {
 
   override load(
     url: string,
-    onLoad: (data: DataTexture) => void,
+    onLoad?: (data: DataTexture) => void,
     onProgress?: (event: ProgressEvent) => void,
     onError?: (error: unknown) => void
   ): DataTexture {
@@ -42,7 +42,7 @@ export class EXRTextureLoader extends Loader<DataTexture> {
         texture.needsUpdate = true
 
         try {
-          onLoad(texture)
+          onLoad?.(texture)
         } catch (error) {
           if (onError != null) {
             onError(error)

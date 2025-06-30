@@ -35,7 +35,7 @@ import { type PrecomputedTextures } from './types'
 interface LoaderLike<T> extends Loader<T> {
   load: (
     url: string,
-    onLoad: (data: T) => void,
+    onLoad?: (data: T) => void,
     onProgress?: (event: ProgressEvent) => void,
     onError?: (err: unknown) => void
   ) => T
@@ -77,7 +77,7 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
 
   override load(
     url: string,
-    onLoad: (data: PrecomputedTextures) => void,
+    onLoad?: (data: PrecomputedTextures) => void,
     onProgress?: (event: ProgressEvent) => void,
     onError?: (error: unknown) => void
   ): PrecomputedTextures {
@@ -111,7 +111,7 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
             textures.scatteringTexture != null &&
             textures.transmittanceTexture != null
           ) {
-            onLoad(textures as unknown as PrecomputedTextures)
+            onLoad?.(textures as unknown as PrecomputedTextures)
           }
         },
         onProgress,

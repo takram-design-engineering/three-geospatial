@@ -91,7 +91,7 @@ export class DataTextureLoader<
 
   override load(
     url: string,
-    onLoad: (data: T) => void,
+    onLoad?: (data: T) => void,
     onProgress?: (event: ProgressEvent) => void,
     onError?: (error: unknown) => void
   ): T {
@@ -123,7 +123,7 @@ export class DataTextureLoader<
 
         Object.assign(texture, options)
         texture.needsUpdate = true
-        onLoad(texture)
+        onLoad?.(texture)
       },
       onProgress,
       onError

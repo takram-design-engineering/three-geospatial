@@ -20,7 +20,7 @@ export class EXR3DTextureLoader extends Loader<Data3DTexture> {
 
   override load(
     url: string,
-    onLoad: (data: Data3DTexture) => void,
+    onLoad?: (data: Data3DTexture) => void,
     onProgress?: (event: ProgressEvent) => void,
     onError?: (error: unknown) => void
   ): Data3DTexture {
@@ -47,7 +47,7 @@ export class EXR3DTextureLoader extends Loader<Data3DTexture> {
         texture.needsUpdate = true
 
         try {
-          onLoad(texture)
+          onLoad?.(texture)
         } catch (error) {
           if (onError != null) {
             onError(error)
