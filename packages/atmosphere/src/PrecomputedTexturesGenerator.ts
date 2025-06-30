@@ -41,6 +41,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
+import { requestIdleCallback } from './helpers/requestIdleCallback'
 import { type PrecomputedTextures } from './types'
 
 import definitions from './shaders/bruneton/definitions.glsl?raw'
@@ -127,6 +128,28 @@ async function readRenderTargetPixels(
     buffer
   )
   texture.needsUpdate = true
+}
+
+// eslint-disable-next-line @typescript-eslint/promise-function-async
+function iterateAsyncIdle<T>(iterable: AsyncIterable<T>): Promise<T> {
+  const iterator = iterable[Symbol.asyncIterator]()
+  return new Promise<T>((resolve, reject) => {
+    const callback = (): void => {
+      iterator
+        .next()
+        .then(({ value, done }) => {
+          if (done === true) {
+            resolve(value)
+          } else {
+            requestIdleCallback(callback)
+          }
+        })
+        .catch(error => {
+          reject(error instanceof Error ? error : new Error())
+        })
+    }
+    requestIdleCallback(callback)
+  })
 }
 
 class Context {
@@ -458,17 +481,20 @@ export class PrecomputedTexturesGenerator {
     this.render3DRenderTarget(params.renderTarget, material)
   }
 
-  private precompute(context: Context, additive: boolean): void {
+  private async *precompute(
+    context: Context,
+    additive: boolean
+  ): AsyncIterable<void> {
     // Note that we have to render the same materials multiple times where:
     // (1) different blending modes (2) rendering into 3D textures, because
     // MRT isn't supported in these situations.
-
-    const renderTarget = this.renderer.getRenderTarget()
 
     // Compute the transmittance, and store it in transmittanceTexture.
     this.computeTransmittance({
       renderTarget: this.transmittanceRenderTarget
     })
+    this.renderer.setRenderTarget(null)
+    yield
 
     // Compute the direct irradiance, store it in deltaIrradiance and,
     // depending on "additive", either initialize irradianceTexture with zeros
@@ -484,6 +510,8 @@ export class PrecomputedTexturesGenerator {
       output: 'irradiance',
       additive
     })
+    this.renderer.setRenderTarget(null)
+    yield
 
     // Compute the rayleigh and mie single scattering, store them in
     // deltaRayleighScattering and deltaMieScattering, and either store them or
@@ -507,6 +535,8 @@ export class PrecomputedTexturesGenerator {
       output: 'scattering',
       additive
     })
+    this.renderer.setRenderTarget(null)
+    yield
 
     // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
     for (
@@ -520,6 +550,8 @@ export class PrecomputedTexturesGenerator {
         context,
         scatteringOrder
       })
+      this.renderer.setRenderTarget(null)
+      yield
 
       // Compute the indirect irradiance, store it in deltaIrradiance and
       // accumulate it in irradianceTexture.
@@ -537,6 +569,8 @@ export class PrecomputedTexturesGenerator {
         output: 'irradiance',
         additive: true
       })
+      this.renderer.setRenderTarget(null)
+      yield
 
       // Compute the multiple scattering, store it in deltaMultipleScattering,
       // and accumulate it in scatteringTexture.
@@ -552,12 +586,14 @@ export class PrecomputedTexturesGenerator {
         output: 'scattering',
         additive: true
       })
+      this.renderer.setRenderTarget(null)
+      yield
     }
-
-    this.renderer.setRenderTarget(renderTarget)
   }
 
-  update(atmosphere = AtmosphereParameters.DEFAULT): PrecomputedTextures {
+  async update(
+    atmosphere = AtmosphereParameters.DEFAULT
+  ): Promise<PrecomputedTextures> {
     const atmosphereUniform = atmosphere.toStructuredUniform()
     this.transmittanceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
     this.directIrradianceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
@@ -572,7 +608,7 @@ export class PrecomputedTexturesGenerator {
     context.luminanceFromRadiance.identity()
     const autoClear = renderer.autoClear
     renderer.autoClear = false
-    this.precompute(context, false)
+    await iterateAsyncIdle(this.precompute(context, false))
     renderer.autoClear = autoClear
     context.dispose()
 

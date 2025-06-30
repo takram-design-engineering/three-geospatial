@@ -30,6 +30,5 @@ export async function queueTask<T extends Method>(
   params?: MethodParams<T>,
   options?: ExecOptions
 ): Promise<MethodReturnType<T>> {
-  // eslint-disable-next-line @typescript-eslint/return-await
   return await createPool().exec(method, params, options)
 }
