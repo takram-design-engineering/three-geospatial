@@ -41,9 +41,6 @@ export interface AtmosphereTransientStates {
   irradianceMask: AtmosphereIrradianceMask | null
 }
 
-/** @deprecated Use AtmosphereTransientStates instead. */
-export interface AtmosphereTransientProps extends AtmosphereTransientStates {}
-
 export interface AtmosphereContextValue {
   textures?: PrecomputedTextures | null
   ellipsoid?: Ellipsoid
