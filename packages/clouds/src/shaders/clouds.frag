@@ -649,14 +649,6 @@ float marchShadowLength(
     vec3 position = rayDistance * rayDirection + rayOrigin;
     float opticalDepth = sampleShadowOpticalDepth(position, 0.0, 0.0, jitter);
     shadowLength += (1.0 - exp(-opticalDepth)) * stepSize * attenuation;
-
-    // Hack to prevent over-integration of shadow length. The shadow should be
-    // attenuated by the inscatter as the ray travels further.
-    attenuation *= attenuationFactor;
-    if (attenuation < 1e-5) {
-      break;
-    }
-
     stepSize *= perspectiveStepScale;
     rayDistance += stepSize;
   }
