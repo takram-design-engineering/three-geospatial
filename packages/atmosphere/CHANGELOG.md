@@ -4,16 +4,18 @@
 
 ### Added
 
-- Added `PrecomputedTexturesGenerator`.
+- Added `PrecomputedTexturesGenerator`. It's possible to apply atmospheric effects without loading assets now.
+- `PrecomputedTexturesLoader`: Added `higherOrderScattering` option to attenuate only single scattering by shadow length.
+- `PrecomputedTexturesLoader`: Added `singleMieScattering` option to reduce artifacts in Mie scattering.
 
 ### Changed
 
 - `PrecomputedTexturesLoader`: Deprecated and renamed `setTypeFromRenderer()` to `setType()`.
 - `PrecomputedTexturesLoader`: `load()` returns textures that will be loaded asynchronously.
 - `PrecomputedTexturesLoader`: Takes format and type in the constructor.
-- Removed a slight night light from precomputed texture assets.
+- Removed a slight night light from the precomputed textures.
 - Relaxed the type of transmittance and irradiance textures from `DataTexture` to `Texture`.
-- Deprecated `photometric` options and props. Now outputs luminance only.
+- Deprecated `photometric` options and props. It outputs luminance only now.
 - Deprecated and renamed `sunIrradiance` and `skyIrradiance` options and props to `sunLight` and `skyLight`.
 - Deprecated and renamed `IrradianceMask` to `LightingMask`.
 - `AerialPerspectiveEffect`: Deprecated and renamed `irradianceScale` to `albedoScale`.
