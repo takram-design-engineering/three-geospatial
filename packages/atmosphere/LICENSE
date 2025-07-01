@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 ---
 
-- [`src/shaders/functions.glsl`](src/shaders/functions.glsl)
+- [`src/shaders/bruneton`](src/shaders/bruneton)
 
 Copyright (c) 2017 Eric Bruneton
 All rights reserved.

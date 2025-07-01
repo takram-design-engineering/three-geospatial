@@ -68,6 +68,17 @@ export class DensityProfileLayer {
     this.linearTerm = linearTerm
     this.constantTerm = constantTerm
   }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  toUniform() {
+    return new Uniform({
+      width: this.width,
+      exp_term: this.expTerm,
+      exp_scale: this.expScale,
+      linear_term: this.linearTerm,
+      constant_term: this.constantTerm
+    })
+  }
 }
 
 export class AtmosphereParameters {
@@ -157,8 +168,8 @@ export class AtmosphereParameters {
   constructor(options?: AtmosphereParametersOptions) {
     applyOptions(this, options)
 
-    // We could store the raw luminance in the render buffer, but it easily
-    // becomes saturated in precision.
+    // Luminance values are too large for storing in half precision buffer.
+    // We divide them by the luminance of the sun with the unit radiance.
     const luminance = LUMINANCE_COEFFS.dot(this.sunRadianceToLuminance)
     this.sunRadianceToRelativeLuminance
       .copy(this.sunRadianceToLuminance)
@@ -176,35 +187,17 @@ export class AtmosphereParameters {
       bottom_radius: this.bottomRadius * METER_TO_LENGTH_UNIT,
       top_radius: this.topRadius * METER_TO_LENGTH_UNIT,
       rayleigh_density: {
-        layers: this.rayleighDensity.map(layer => ({
-          width: layer.width,
-          exp_term: layer.expTerm,
-          exp_scale: layer.expScale,
-          linear_term: layer.linearTerm,
-          constant_term: layer.constantTerm
-        }))
+        layers: this.rayleighDensity.map(layer => layer.toUniform().value)
       },
       rayleigh_scattering: this.rayleighScattering,
       mie_density: {
-        layers: this.mieDensity.map(layer => ({
-          width: layer.width,
-          exp_term: layer.expTerm,
-          exp_scale: layer.expScale,
-          linear_term: layer.linearTerm,
-          constant_term: layer.constantTerm
-        }))
+        layers: this.mieDensity.map(layer => layer.toUniform().value)
       },
       mie_scattering: this.mieScattering,
       mie_extinction: this.mieExtinction,
       mie_phase_function_g: this.miePhaseFunctionG,
       absorption_density: {
-        layers: this.absorptionDensity.map(layer => ({
-          width: layer.width,
-          exp_term: layer.expTerm,
-          exp_scale: layer.expScale,
-          linear_term: layer.linearTerm,
-          constant_term: layer.constantTerm
-        }))
+        layers: this.absorptionDensity.map(layer => layer.toUniform().value)
       },
       absorption_extinction: this.absorptionExtinction,
       ground_albedo: this.groundAlbedo,
