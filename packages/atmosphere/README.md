@@ -94,23 +94,23 @@ const Scene = () => (
 
 ### Mixed lighting
 
-Selectively applies the post-process and light-source lighting using [`IrradianceMaskPass`](#irradiancemaskpass) or an MRT texture. It combines the advantages of both, but transparency over the post-process lighting is not supported.
+Selectively applies the post-process and light-source lighting using [`LightingMaskPass`](#lightingmaskpass) or an MRT texture. It combines the advantages of both, but transparency over the post-process lighting is not supported.
 
 ```tsx
 import { EffectComposer } from '@react-three/postprocessing'
 import {
   AerialPerspective,
   Atmosphere,
-  IrradianceMask,
+  LightingMask,
   Sky,
   SkyLight,
   SunLight
 } from '@takram/three-atmosphere/r3f'
 import { Layers } from 'three'
 
-const IRRADIANCE_MASK_LAYER = 10
+const LIGHTING_MASK_LAYER = 10
 const layers = new Layers()
-layers.enable(IRRADIANCE_MASK_LAYER)
+layers.enable(LIGHTING_MASK_LAYER)
 
 const Scene = () => (
   <Atmosphere date={/* Date object or timestamp */}>
@@ -128,7 +128,7 @@ const Scene = () => (
       <meshPhysicalMaterial />
     </mesh>
     <EffectComposer enableNormalPass>
-      <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+      <LightingMask selectionLayer={LIGHTING_MASK_LAYER} />
       <AerialPerspective sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
@@ -260,7 +260,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SkyLight`](#skylight)
 - [`SunLight`](#sunlight)
 - [`AerialPerspective`](#aerialperspective)
-- [`IrradianceMask`](#irradiancemask)
+- [`LightingMask`](#lightingmask)
 
 **Three.js**
 
@@ -270,7 +270,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SkyLightProbe`](#skylightprobe)
 - [`SunDirectionalLight`](#sundirectionallight)
 - [`AerialPerspectiveEffect`](#aerialperspectiveeffect)
-- [`IrradianceMaskPass`](#irradiancemaskpass)
+- [`LightingMaskPass`](#lightingmaskpass)
 
 **Functions**
 
@@ -638,22 +638,22 @@ const Scene = () => {
 
 The parameters of [`AerialPerspectiveEffect`](#aerialperspectiveeffect) are exposed as props.
 
-## IrradianceMask
+## LightingMask
 
 A post-processing pass that renders a mask for the [mixed lighting](#mixed-lighting).
 
-See [`IrradianceMaskPass`](#irradiancemaskpass) for further details.
+See [`LightingMaskPass`](#lightingmaskpass) for further details.
 
-→ [Source](/packages/atmosphere/src/r3f/IrradianceMask.tsx)
+→ [Source](/packages/atmosphere/src/r3f/LightingMask.tsx)
 
 ```tsx
 import { EffectComposer } from '@react-three/postprocessing'
-import { Atmosphere, IrradianceMask } from '@takram/three-atmosphere/r3f'
+import { Atmosphere, LightingMask } from '@takram/three-atmosphere/r3f'
 import { Layers } from 'three'
 
-const IRRADIANCE_MASK_LAYER = 10
+const LIGHTING_MASK_LAYER = 10
 const layers = new Layers()
-layers.enable(IRRADIANCE_MASK_LAYER)
+layers.enable(LIGHTING_MASK_LAYER)
 
 const Scene = () => {
   return (
@@ -667,7 +667,7 @@ const Scene = () => {
         <meshPhysicalMaterial />
       </mesh>
       <EffectComposer>
-        <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+        <LightingMask selectionLayer={LIGHTING_MASK_LAYER} />
       </EffectComposer>
     </Atmosphere>
   )
@@ -676,7 +676,7 @@ const Scene = () => {
 
 ### Props
 
-The parameters of [`IrradianceMaskPass`](#irradiancemaskpass) are exposed as props.
+The parameters of [`LightingMaskPass`](#lightingmaskpass) are exposed as props.
 
 ## AtmosphereMaterialBase
 
@@ -1184,21 +1184,21 @@ lunarRadianceScale: number = 1
 
 See [lunarRadianceScale](#lunarradiancescale).
 
-## IrradianceMaskPass
+## LightingMaskPass
 
 A post-processing pass that renders a mask for the [mixed lighting](#mixed-lighting).
 
 If you can afford using MRT, it is preferable to render this mask in your render pass instead.
 
-→ [Source](/packages/atmosphere/src/IrradianceMaskPass.ts)
+→ [Source](/packages/atmosphere/src/LightingMaskPass.ts)
 
 ```ts
-const IRRADIANCE_MASK_LAYER = 10
+const LIGHTING_MASK_LAYER = 10
 const layers = new Layers()
-layers.enable(IRRADIANCE_MASK_LAYER)
+layers.enable(LIGHTING_MASK_LAYER)
 
-const irradianceMask = new IrradianceMaskPass(scene, camera)
-irradianceMask.selectionLayers = IRRADIANCE_MASK_LAYER
+const lightingMask = new LightingMaskPass(scene, camera)
+lightingMask.selectionLayers = LIGHTING_MASK_LAYER
 const aerialPerspective = new AerialPerspectiveEffect(camera, {
   irradianceTexture,
   scatteringTexture,
@@ -1209,7 +1209,7 @@ const composer = new EffectComposer(renderer, {
   frameBufferType: HalfFloatType
 })
 composer.addPass(new RenderPass(scene, camera))
-composer.addPass(irradianceMask)
+composer.addPass(lightingMask)
 composer.addPass(
   new EffectPass(
     camera,

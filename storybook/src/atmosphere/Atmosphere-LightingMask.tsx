@@ -28,7 +28,7 @@ import {
   AerialPerspective,
   Atmosphere,
   AtmosphereContext,
-  IrradianceMask,
+  LightingMask,
   Sky,
   SkyLight,
   SunLight,
@@ -57,9 +57,9 @@ const up = new Vector3()
 const vectorScratch = new Vector3()
 const matrixScratch = new Matrix4()
 
-const IRRADIANCE_MASK_LAYER = 10
+const LIGHTING_MASK_LAYER = 10
 const layers = new Layers()
-layers.enable(IRRADIANCE_MASK_LAYER)
+layers.enable(LIGHTING_MASK_LAYER)
 
 interface ISSProps extends ComponentProps<'group'> {}
 
@@ -150,7 +150,7 @@ const Scene: FC = () => {
     { correctAltitude: true },
     { collapsed: true }
   )
-  const { showMask, invertMask, disableMask } = useControls('irradiance mask', {
+  const { showMask, invertMask, disableMask } = useControls('lighting mask', {
     showMask: false,
     invertMask: false,
     disableMask: false
@@ -196,9 +196,9 @@ const Scene: FC = () => {
       return
     }
     if (showMask) {
-      effect.defines.set('DEBUG_SHOW_IRRADIANCE_MASK', '1')
+      effect.defines.set('DEBUG_SHOW_LIGHTING_MASK', '1')
     } else {
-      effect.defines.delete('DEBUG_SHOW_IRRADIANCE_MASK')
+      effect.defines.delete('DEBUG_SHOW_LIGHTING_MASK')
     }
     ;(effect as any).setChanged()
   }, [showMask])
@@ -270,8 +270,8 @@ const Scene: FC = () => {
           <EffectComposer multisampling={0} enableNormalPass>
             <Fragment key={JSON.stringify([disableMask])}>
               {!disableMask && (
-                <IrradianceMask
-                  selectionLayer={IRRADIANCE_MASK_LAYER}
+                <LightingMask
+                  selectionLayer={LIGHTING_MASK_LAYER}
                   inverted={invertMask}
                 />
               )}

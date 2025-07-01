@@ -50,7 +50,7 @@ import {
 } from './constants'
 import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import {
-  AtmosphereIrradianceMask,
+  AtmosphereLightingMask,
   type AtmosphereOverlay,
   type AtmosphereShadow,
   type AtmosphereShadowLength
@@ -137,8 +137,8 @@ export interface AerialPerspectiveEffectUniforms {
   frame: Uniform<number>
   shadowLengthBuffer: Uniform<Texture | null>
 
-  // Irradiance mask
-  irradianceMaskBuffer: Uniform<Texture | null>
+  // Lighting mask
+  lightingMaskBuffer: Uniform<Texture | null>
 
   // Uniforms for atmosphere functions
   ATMOSPHERE: AtmosphereParametersUniform
@@ -179,7 +179,7 @@ export class AerialPerspectiveEffect extends Effect {
   overlay: AtmosphereOverlay | null = null
   shadow: AtmosphereShadow | null = null
   shadowLength: AtmosphereShadowLength | null = null
-  irradianceMask: AtmosphereIrradianceMask | null = null
+  lightingMask: AtmosphereLightingMask | null = null
 
   constructor(
     private camera = new Camera(),
@@ -274,8 +274,8 @@ export class AerialPerspectiveEffect extends Effect {
             frame: new Uniform(0),
             shadowLengthBuffer: new Uniform(null),
 
-            // Irradiance mask
-            irradianceMaskBuffer: new Uniform(null),
+            // Lighting mask
+            lightingMaskBuffer: new Uniform(null),
 
             // Uniforms for atmosphere functions
             ATMOSPHERE: atmosphere.toUniform(),
@@ -455,30 +455,30 @@ export class AerialPerspectiveEffect extends Effect {
     return needsUpdate
   }
 
-  private updateIrradianceMask(): boolean {
+  private updateLightingMask(): boolean {
     let needsUpdate = false
-    const { uniforms, defines, irradianceMask } = this
-    const prevValue = defines.has('HAS_IRRADIANCE_MASK')
-    const nextValue = irradianceMask != null
+    const { uniforms, defines, lightingMask } = this
+    const prevValue = defines.has('HAS_LIGHTING_MASK')
+    const nextValue = lightingMask != null
     if (nextValue !== prevValue) {
       if (nextValue) {
-        defines.set('HAS_IRRADIANCE_MASK', '1')
+        defines.set('HAS_LIGHTING_MASK', '1')
       } else {
-        defines.delete('HAS_IRRADIANCE_MASK')
-        uniforms.get('irradianceMaskBuffer').value = null
+        defines.delete('HAS_LIGHTING_MASK')
+        uniforms.get('lightingMaskBuffer').value = null
       }
       needsUpdate = true
     }
     if (nextValue) {
-      uniforms.get('irradianceMaskBuffer').value = irradianceMask.map
+      uniforms.get('lightingMaskBuffer').value = lightingMask.map
 
-      const prevChannel = defines.get('IRRADIANCE_MASK_CHANNEL')
-      const nextChannel = irradianceMask.channel
+      const prevChannel = defines.get('LIGHTING_MASK_CHANNEL')
+      const nextChannel = lightingMask.channel
       if (nextChannel !== prevChannel) {
         if (!/^[rgba]$/.test(nextChannel)) {
           console.error(`Expression validation failed: ${nextChannel}`)
         } else {
-          defines.set('IRRADIANCE_MASK_CHANNEL', nextChannel)
+          defines.set('LIGHTING_MASK_CHANNEL', nextChannel)
           needsUpdate = true
         }
       }
@@ -497,7 +497,7 @@ export class AerialPerspectiveEffect extends Effect {
     needsUpdate ||= this.updateOverlay()
     needsUpdate ||= this.updateShadow()
     needsUpdate ||= this.updateShadowLength()
-    needsUpdate ||= this.updateIrradianceMask()
+    needsUpdate ||= this.updateLightingMask()
     if (needsUpdate) {
       this.setChanged()
     }

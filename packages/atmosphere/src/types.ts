@@ -31,7 +31,7 @@ export interface AtmosphereShadow {
   topHeight: number
 }
 
-export interface AtmosphereIrradianceMask {
+export interface AtmosphereLightingMask {
   map: Texture
   channel: 'r' | 'g' | 'b' | 'a'
 }

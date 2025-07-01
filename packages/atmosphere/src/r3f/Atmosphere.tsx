@@ -22,7 +22,7 @@ import {
 import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
 import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import {
-  type AtmosphereIrradianceMask,
+  type AtmosphereLightingMask,
   type AtmosphereOverlay,
   type AtmosphereShadow,
   type AtmosphereShadowLength,
@@ -38,7 +38,7 @@ export interface AtmosphereTransientStates {
   overlay: AtmosphereOverlay | null
   shadow: AtmosphereShadow | null
   shadowLength: AtmosphereShadowLength | null
-  irradianceMask: AtmosphereIrradianceMask | null
+  lightingMask: AtmosphereLightingMask | null
 }
 
 export interface AtmosphereContextValue {
@@ -82,7 +82,7 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     overlay: null,
     shadow: null,
     shadowLength: null,
-    irradianceMask: null
+    lightingMask: null
   })
 
   const [textures, setTextures] = useState(

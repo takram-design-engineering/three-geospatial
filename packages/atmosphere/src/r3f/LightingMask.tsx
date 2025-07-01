@@ -10,49 +10,55 @@ import {
 } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 
-import { IrradianceMaskPass } from '../IrradianceMaskPass'
+import { LightingMaskPass } from '../LightingMaskPass'
 import { AtmosphereContext } from './Atmosphere'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
-    irradianceMaskPass: ThreeElement<typeof IrradianceMaskPass>
+    lightingMaskPass: ThreeElement<typeof LightingMaskPass>
   }
 }
 
-export interface IrradianceMaskProps
-  extends Omit<ComponentPropsWithoutRef<'irradianceMaskPass'>, 'args'> {
-  ref?: Ref<IrradianceMaskPass>
+export interface LightingMaskProps
+  extends Omit<ComponentPropsWithoutRef<'lightingMaskPass'>, 'args'> {
+  ref?: Ref<LightingMaskPass>
 }
 
-export const IrradianceMask: FC<IrradianceMaskProps> = ({
+export const LightingMask: FC<LightingMaskProps> = ({
   ref: forwardedRef,
   ...props
 }) => {
   const { transientStates } = useContext(AtmosphereContext)
-  const ref = useRef<IrradianceMaskPass>(null)
+  const ref = useRef<LightingMaskPass>(null)
 
   useEffect(() => {
     if (ref.current == null) {
       return
     }
     if (transientStates != null) {
-      transientStates.irradianceMask = {
+      transientStates.lightingMask = {
         map: ref.current.texture,
         channel: 'r'
       }
       return () => {
-        transientStates.irradianceMask = null
+        transientStates.lightingMask = null
       }
     }
   }, [transientStates])
 
   const { scene, camera } = useContext(EffectComposerContext)
-  extend({ IrradianceMaskPass })
+  extend({ LightingMaskPass })
   return (
-    <irradianceMaskPass
+    <lightingMaskPass
       ref={mergeRefs([ref, forwardedRef])}
       {...props}
       args={[scene, camera]}
     />
   )
 }
+
+/** @deprecated Use LightingMaskProps instead. */
+export type IrradianceMaskProps = LightingMaskProps
+
+/** @deprecated Use LightingMask instead. */
+export const IrradianceMask = LightingMask

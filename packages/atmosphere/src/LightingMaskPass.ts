@@ -31,7 +31,7 @@ import {
 import { resolveIncludes } from '@takram/three-geospatial'
 import { depth } from '@takram/three-geospatial/shaders'
 
-import fragmentShader from './shaders/irradianceMask.frag?raw'
+import fragmentShader from './shaders/lightingMask.frag?raw'
 
 declare module 'postprocessing' {
   interface DepthMaskMaterial {
@@ -40,7 +40,7 @@ declare module 'postprocessing' {
   }
 }
 
-export class IrradianceMaskPass extends Pass {
+export class LightingMaskPass extends Pass {
   private readonly renderPass: RenderPass
   private readonly depthTexture: DepthTexture
   private readonly renderTarget: WebGLRenderTarget
@@ -53,7 +53,7 @@ export class IrradianceMaskPass extends Pass {
   readonly selection = new Selection()
 
   constructor(scene: Scene, camera: Camera) {
-    super('IrradianceMaskPass')
+    super('LightingMaskPass')
     this.needsSwap = false
     this.needsDepthTexture = true
 
@@ -169,3 +169,6 @@ export class IrradianceMaskPass extends Pass {
     this.depthMaskMaterial.uniforms.inverted.value = value
   }
 }
+
+/** @deprecated Use LightingMaskPass instead. */
+export const IrradianceMaskPass = LightingMaskPass
