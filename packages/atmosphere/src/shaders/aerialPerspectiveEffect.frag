@@ -19,8 +19,9 @@ uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 
 uniform sampler2D transmittance_texture;
 uniform sampler3D scattering_texture;
-uniform sampler3D single_mie_scattering_texture;
 uniform sampler2D irradiance_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler3D higher_order_scattering_texture;
 
 #define COMBINED_SCATTERING_TEXTURES
 #include "bruneton/common"

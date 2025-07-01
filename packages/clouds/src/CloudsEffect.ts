@@ -799,6 +799,14 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.transmittanceTexture = value
   }
 
+  get higherOrderScatteringTexture(): Data3DTexture | null {
+    return this.cloudsPass.currentMaterial.higherOrderScatteringTexture
+  }
+
+  set higherOrderScatteringTexture(value: Data3DTexture | null) {
+    this.cloudsPass.currentMaterial.higherOrderScatteringTexture = value
+  }
+
   get ellipsoid(): Ellipsoid {
     return this.cloudsPass.currentMaterial.ellipsoid
   }

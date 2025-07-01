@@ -53,6 +53,7 @@ export interface AtmosphereMaterialProps {
   irradianceTexture?: Texture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: Texture | null
+  higherOrderScatteringTexture?: Data3DTexture | null
 
   // Atmosphere controls
   ellipsoid?: Ellipsoid
@@ -88,8 +89,9 @@ export interface AtmosphereMaterialBaseUniforms {
   SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
   irradiance_texture: Uniform<Texture | null>
   scattering_texture: Uniform<Data3DTexture | null>
-  single_mie_scattering_texture: Uniform<Data3DTexture | null>
   transmittance_texture: Uniform<Texture | null>
+  single_mie_scattering_texture: Uniform<Data3DTexture | null>
+  higher_order_scattering_texture: Uniform<Data3DTexture | null>
 }
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
@@ -108,6 +110,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       irradianceTexture = null,
       scatteringTexture = null,
       transmittanceTexture = null,
+      higherOrderScatteringTexture = null,
       ellipsoid,
       correctAltitude,
       sunDirection,
@@ -135,8 +138,9 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.skyRadianceToRelativeLuminance),
         irradiance_texture: new Uniform(irradianceTexture),
         scattering_texture: new Uniform(scatteringTexture),
-        single_mie_scattering_texture: new Uniform(scatteringTexture),
         transmittance_texture: new Uniform(transmittanceTexture),
+        single_mie_scattering_texture: new Uniform(scatteringTexture),
+        higher_order_scattering_texture: new Uniform(higherOrderScatteringTexture),
         ...others.uniforms
       } satisfies AtmosphereMaterialBaseUniforms,
       defines: {
@@ -230,6 +234,14 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   set transmittanceTexture(value: Texture | null) {
     this.uniforms.transmittance_texture.value = value
+  }
+
+  get higherOrderScatteringTexture(): Data3DTexture | null {
+    return this.uniforms.higher_order_scattering_texture.value
+  }
+
+  set higherOrderScatteringTexture(value: Data3DTexture | null) {
+    this.uniforms.higher_order_scattering_texture.value = value
   }
 
   get ellipsoidCenter(): Vector3 {

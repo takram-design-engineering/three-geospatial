@@ -71,7 +71,7 @@ vec3 GetExtrapolatedSingleMieScattering(
 	    (atmosphere.rayleigh_scattering.r / atmosphere.mie_scattering.r) *
 	    (atmosphere.mie_scattering / atmosphere.rayleigh_scattering);
 }
-#endif
+#endif // COMBINED_SCATTERING_TEXTURES
 
 IrradianceSpectrum GetCombinedScattering(
     const in AtmosphereParameters atmosphere,
@@ -96,14 +96,35 @@ IrradianceSpectrum GetCombinedScattering(
   IrradianceSpectrum scattering = IrradianceSpectrum(combined_scattering);
   single_mie_scattering =
       GetExtrapolatedSingleMieScattering(atmosphere, combined_scattering);
-#else
+#else // COMBINED_SCATTERING_TEXTURES
   IrradianceSpectrum scattering = IrradianceSpectrum(
       texture(scattering_texture, uvw0) * (1.0 - lerp) +
       texture(scattering_texture, uvw1) * lerp);
   single_mie_scattering = IrradianceSpectrum(
       texture(single_mie_scattering_texture, uvw0) * (1.0 - lerp) +
       texture(single_mie_scattering_texture, uvw1) * lerp);
-#endif
+#endif // COMBINED_SCATTERING_TEXTURES
+  return scattering;
+}
+
+// @shotamatsuda: Added for reading higher-order scattering texture.
+IrradianceSpectrum GetScattering(
+    const in AtmosphereParameters atmosphere,
+    const in ReducedScatteringTexture scattering_texture,
+    Length r, Number mu, Number mu_s, Number nu,
+    bool ray_r_mu_intersects_ground) {
+  vec4 uvwz = GetScatteringTextureUvwzFromRMuMuSNu(
+      atmosphere, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
+  Number tex_coord_x = uvwz.x * Number(SCATTERING_TEXTURE_NU_SIZE - 1);
+  Number tex_x = floor(tex_coord_x);
+  Number lerp = tex_coord_x - tex_x;
+  vec3 uvw0 = vec3((tex_x + uvwz.y) / Number(SCATTERING_TEXTURE_NU_SIZE),
+      uvwz.z, uvwz.w);
+  vec3 uvw1 = vec3((tex_x + 1.0 + uvwz.y) / Number(SCATTERING_TEXTURE_NU_SIZE),
+      uvwz.z, uvwz.w);
+  IrradianceSpectrum scattering = IrradianceSpectrum(
+      texture(scattering_texture, uvw0) * (1.0 - lerp) +
+      texture(scattering_texture, uvw1) * lerp);
   return scattering;
 }
 
@@ -169,7 +190,16 @@ RadianceSpectrum GetSkyRadiance(
     DimensionlessSpectrum shadow_transmittance =
         GetTransmittance(atmosphere, transmittance_texture,
             r, mu, shadow_length, ray_r_mu_intersects_ground);
+    // @shotamatsuda: Occlude only single Rayleigh scattering by the shadow.
+#ifdef HAS_HIGHER_ORDER_SCATTERING
+    IrradianceSpectrum higher_order_scattering = GetScattering(
+        atmosphere, higher_order_scattering_texture,
+        r_p, mu_p, mu_s_p, nu, ray_r_mu_intersects_ground);
+    IrradianceSpectrum single_scattering = scattering - higher_order_scattering;
+    scattering = single_scattering * shadow_transmittance + higher_order_scattering;
+#else // HAS_HIGHER_ORDER_SCATTERING
     scattering = scattering * shadow_transmittance;
+#endif // HAS_HIGHER_ORDER_SCATTERING
     single_mie_scattering = single_mie_scattering * shadow_transmittance;
   }
   return scattering * RayleighPhaseFunction(nu) + single_mie_scattering *
@@ -269,13 +299,30 @@ RadianceSpectrum GetSkyRadianceToPoint(
     shadow_transmittance = GetTransmittance(atmosphere, transmittance_texture,
         r, mu, d, ray_r_mu_intersects_ground);
   }
+  // @shotamatsuda: Occlude only single Rayleigh scattering by the shadow.
+#ifdef HAS_HIGHER_ORDER_SCATTERING
+  IrradianceSpectrum higher_order_scattering = GetScattering(
+      atmosphere, higher_order_scattering_texture,
+      r, mu, mu_s, nu, ray_r_mu_intersects_ground);
+  IrradianceSpectrum single_scattering = scattering - higher_order_scattering;
+  IrradianceSpectrum higher_order_scattering_p = GetScattering(
+      atmosphere, higher_order_scattering_texture,
+      r_p, mu_p, mu_s_p, nu, ray_r_mu_intersects_ground);
+  IrradianceSpectrum single_scattering_p =
+      scattering_p - higher_order_scattering_p;
+  scattering =
+      single_scattering - shadow_transmittance * single_scattering_p +
+      higher_order_scattering - transmittance * higher_order_scattering_p;
+#else // HAS_HIGHER_ORDER_SCATTERING
   scattering = scattering - shadow_transmittance * scattering_p;
+#endif // HAS_HIGHER_ORDER_SCATTERING
+
   single_mie_scattering =
       single_mie_scattering - shadow_transmittance * single_mie_scattering_p;
 #ifdef COMBINED_SCATTERING_TEXTURES
   single_mie_scattering = GetExtrapolatedSingleMieScattering(
       atmosphere, vec4(scattering, single_mie_scattering.r));
-#endif
+#endif // COMBINED_SCATTERING_TEXTURES
 
   // Hack to avoid rendering artifacts when the sun is below the horizon.
   single_mie_scattering = single_mie_scattering *
