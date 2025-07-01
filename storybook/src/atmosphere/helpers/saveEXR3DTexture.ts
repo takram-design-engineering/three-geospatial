@@ -52,14 +52,11 @@ export async function createEXR3DTexture(
   scene.add(quad)
   const camera = new Camera()
 
-  const renderTarget = new WebGLRenderTarget(
-    texture.image.width,
-    texture.image.height * texture.image.depth,
-    {
-      type,
-      colorSpace: NoColorSpace
-    }
-  )
+  const { width, height, depth } = texture
+  const renderTarget = new WebGLRenderTarget(width, height * depth, {
+    type,
+    colorSpace: NoColorSpace
+  })
   renderer.setRenderTarget(renderTarget)
   renderer.render(scene, camera)
   renderer.setRenderTarget(null)
@@ -80,7 +77,6 @@ export async function saveEXR3DTexture(
 ): Promise<void> {
   const buffer = await createEXR3DTexture(renderer, texture, type)
   const blob = new Blob([buffer])
-
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = fileName

@@ -46,7 +46,7 @@ const Content: FC = () => {
           ? generator.textures.transmittanceTexture
           : textures.transmittanceTexture
       }
-      fileName='transmittance.exr'
+      name='transmittance'
       zoom={2}
     />
   )

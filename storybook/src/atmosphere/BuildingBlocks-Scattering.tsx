@@ -46,7 +46,7 @@ const Content: FC = () => {
           ? generator.textures.scatteringTexture
           : textures.scatteringTexture
       }
-      fileName='scattering.exr'
+      name='scattering'
       valueScale={0.5}
     />
   )

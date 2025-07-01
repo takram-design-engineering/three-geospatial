@@ -46,7 +46,7 @@ const Content: FC = () => {
           ? generator.textures.irradianceTexture
           : textures.irradianceTexture
       }
-      fileName='irradiance.exr'
+      name='irradiance'
       zoom={4}
       valueScale={100}
     />

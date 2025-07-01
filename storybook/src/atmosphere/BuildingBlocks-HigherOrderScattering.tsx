@@ -59,7 +59,7 @@ const Content: FC = () => {
   return (
     <Data3DTextureViewer
       texture={texture}
-      fileName='higher_order_scattering.exr'
+      name='higher_order_scattering'
       valueScale={0.5}
     />
   )

@@ -17,17 +17,18 @@ import { EXRLoader } from 'three-stdlib'
 import { type AnyFloatType } from '@takram/three-geospatial'
 
 import { useControls } from '../../helpers/useControls'
+import { saveBinary3DTexture } from './saveBinary3DTexture'
 import { createEXR3DTexture, saveEXR3DTexture } from './saveEXR3DTexture'
 
 export const Data3DTextureViewer: FC<{
   texture: Data3DTexture
-  fileName: string
+  name: string
   type?: AnyFloatType
   zoom?: number
   valueScale?: number
 }> = ({
   texture,
-  fileName,
+  name,
   type,
   zoom: defaultZoom = 1,
   valueScale: defaultValueScale = 1
@@ -64,8 +65,13 @@ export const Data3DTextureViewer: FC<{
     zoom: { value: defaultZoom, min: 0.5, max: 10 },
     valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
     previewEXR: false,
-    export: button(() => {
-      saveEXR3DTexture(renderer, texture, fileName, type).catch(error => {
+    saveEXR: button(() => {
+      saveEXR3DTexture(renderer, texture, `${name}.exr`, type).catch(error => {
+        console.error(error)
+      })
+    }),
+    saveBinary: button(() => {
+      saveBinary3DTexture(renderer, texture, `${name}.bin`).catch(error => {
         console.error(error)
       })
     })

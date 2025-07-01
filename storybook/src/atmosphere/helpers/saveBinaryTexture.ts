@@ -1,5 +1,6 @@
 import {
   Camera,
+  FloatType,
   GLSL3,
   HalfFloatType,
   Mesh,
@@ -12,15 +13,15 @@ import {
   type Texture,
   type WebGLRenderer
 } from 'three'
-import { EXRExporter } from 'three/addons/exporters/EXRExporter.js'
 
-import { type AnyFloatType } from '@takram/three-geospatial'
+import { Float16Array, type AnyFloatType } from '@takram/three-geospatial'
 
-export async function createEXRTexture(
+export async function saveBinaryTexture(
   renderer: WebGLRenderer,
   texture: Texture,
+  fileName: string,
   type: AnyFloatType = HalfFloatType
-): Promise<ArrayBuffer> {
+): Promise<void> {
   const material = new ShaderMaterial({
     glslVersion: GLSL3,
     vertexShader: /* glsl */ `
@@ -48,29 +49,26 @@ export async function createEXRTexture(
 
   const { width, height } = texture
   const renderTarget = new WebGLRenderTarget(width, height, {
-    type,
+    type: FloatType,
     colorSpace: NoColorSpace
   })
   renderer.setRenderTarget(renderTarget)
   renderer.render(scene, camera)
   renderer.setRenderTarget(null)
 
-  const exporter = new EXRExporter()
-  const array = await exporter.parse(renderer, renderTarget, { type })
+  const array = new Float32Array(width * height * 4)
+  await renderer.readRenderTargetPixelsAsync(
+    renderTarget,
+    0,
+    0,
+    width,
+    height,
+    array
+  )
 
-  material.dispose()
-  renderTarget.dispose()
-  return array.buffer
-}
-
-export async function saveEXRTexture(
-  renderer: WebGLRenderer,
-  texture: Texture,
-  fileName: string,
-  type?: AnyFloatType
-): Promise<void> {
-  const buffer = await createEXRTexture(renderer, texture, type)
-  const blob = new Blob([buffer])
+  const blob = new Blob([
+    type === HalfFloatType ? new Float16Array(array).buffer : array.buffer
+  ])
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = fileName
