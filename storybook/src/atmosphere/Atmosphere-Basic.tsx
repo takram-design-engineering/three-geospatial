@@ -116,9 +116,7 @@ const Scene: FC = () => {
     [renderer]
   )
   useEffect(() => {
-    generator.update().catch(error => {
-      console.log(error)
-    })
+    void generator.update()
     return () => {
       generator.dispose()
     }
