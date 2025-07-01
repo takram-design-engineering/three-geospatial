@@ -291,7 +291,7 @@ export class AerialPerspectiveEffect extends Effect {
             scattering_texture: new Uniform(scatteringTexture),
             transmittance_texture: new Uniform(transmittanceTexture),
             single_mie_scattering_texture: new Uniform(scatteringTexture),
-            higher_order_scattering_texture: new Uniform(higherOrderScatteringTexture),
+            higher_order_scattering_texture: new Uniform(null),
           } satisfies AerialPerspectiveEffectUniforms)
         ),
         // prettier-ignore
@@ -311,6 +311,7 @@ export class AerialPerspectiveEffect extends Effect {
 
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
+    this.higherOrderScatteringTexture = higherOrderScatteringTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.correctGeometricError = correctGeometricError
@@ -551,12 +552,17 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('transmittance_texture').value = value
   }
 
+  /** @private */
+  @define('HAS_HIGHER_ORDER_SCATTERING')
+  hasHigherOrderScattering = false
+
   get higherOrderScatteringTexture(): Data3DTexture | null {
     return this.uniforms.get('higher_order_scattering_texture').value
   }
 
   set higherOrderScatteringTexture(value: Data3DTexture | null) {
     this.uniforms.get('higher_order_scattering_texture').value = value
+    this.hasHigherOrderScattering = value != null
   }
 
   get ellipsoid(): Ellipsoid {

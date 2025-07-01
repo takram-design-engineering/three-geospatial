@@ -108,6 +108,7 @@ IrradianceSpectrum GetCombinedScattering(
 }
 
 // @shotamatsuda: Added for reading higher-order scattering texture.
+#ifdef HAS_HIGHER_ORDER_SCATTERING
 IrradianceSpectrum GetScattering(
     const in AtmosphereParameters atmosphere,
     const in ReducedScatteringTexture scattering_texture,
@@ -127,6 +128,7 @@ IrradianceSpectrum GetScattering(
       texture(scattering_texture, uvw1) * lerp);
   return scattering;
 }
+#endif // HAS_HIGHER_ORDER_SCATTERING
 
 RadianceSpectrum GetSkyRadiance(
     const in AtmosphereParameters atmosphere,

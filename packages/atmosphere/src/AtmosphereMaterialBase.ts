@@ -15,7 +15,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { Ellipsoid } from '@takram/three-geospatial'
+import { define, Ellipsoid } from '@takram/three-geospatial'
 
 import {
   AtmosphereParameters,
@@ -140,7 +140,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         scattering_texture: new Uniform(scatteringTexture),
         transmittance_texture: new Uniform(transmittanceTexture),
         single_mie_scattering_texture: new Uniform(scatteringTexture),
-        higher_order_scattering_texture: new Uniform(higherOrderScatteringTexture),
+        higher_order_scattering_texture: new Uniform(null),
         ...others.uniforms
       } satisfies AtmosphereMaterialBaseUniforms,
       defines: {
@@ -159,6 +159,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     })
 
     this.atmosphere = atmosphere
+    this.higherOrderScatteringTexture = higherOrderScatteringTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.renderTargetCount = renderTargetCount
@@ -236,12 +237,17 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.uniforms.transmittance_texture.value = value
   }
 
+  /** @private */
+  @define('HAS_HIGHER_ORDER_SCATTERING')
+  hasHigherOrderScattering = false
+
   get higherOrderScatteringTexture(): Data3DTexture | null {
     return this.uniforms.higher_order_scattering_texture.value
   }
 
   set higherOrderScatteringTexture(value: Data3DTexture | null) {
     this.uniforms.higher_order_scattering_texture.value = value
+    this.hasHigherOrderScattering = value != null
   }
 
   get ellipsoidCenter(): Vector3 {
