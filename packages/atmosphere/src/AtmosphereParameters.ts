@@ -1,4 +1,4 @@
-import { Color, Vector3, type IUniform } from 'three'
+import { Color, Uniform, Vector3 } from 'three'
 
 import { radians } from '@takram/three-geospatial'
 
@@ -168,48 +168,51 @@ export class AtmosphereParameters {
       .divideScalar(luminance)
   }
 
-  toStructuredUniform(): IUniform<object> {
-    return {
-      value: {
-        solar_irradiance: this.solarIrradiance,
-        sun_angular_radius: this.sunAngularRadius,
-        bottom_radius: this.bottomRadius * METER_TO_LENGTH_UNIT,
-        top_radius: this.topRadius * METER_TO_LENGTH_UNIT,
-        rayleigh_density: {
-          layers: this.rayleighDensity.map(layer => ({
-            width: layer.width,
-            exp_term: layer.expTerm,
-            exp_scale: layer.expScale,
-            linear_term: layer.linearTerm,
-            constant_term: layer.constantTerm
-          }))
-        },
-        rayleigh_scattering: this.rayleighScattering,
-        mie_density: {
-          layers: this.mieDensity.map(layer => ({
-            width: layer.width,
-            exp_term: layer.expTerm,
-            exp_scale: layer.expScale,
-            linear_term: layer.linearTerm,
-            constant_term: layer.constantTerm
-          }))
-        },
-        mie_scattering: this.mieScattering,
-        mie_extinction: this.mieExtinction,
-        mie_phase_function_g: this.miePhaseFunctionG,
-        absorption_density: {
-          layers: this.absorptionDensity.map(layer => ({
-            width: layer.width,
-            exp_term: layer.expTerm,
-            exp_scale: layer.expScale,
-            linear_term: layer.linearTerm,
-            constant_term: layer.constantTerm
-          }))
-        },
-        absorption_extinction: this.absorptionExtinction,
-        ground_albedo: this.groundAlbedo,
-        mu_s_min: this.muSMin
-      }
-    }
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  toStructuredUniform() {
+    return new Uniform({
+      solar_irradiance: this.solarIrradiance,
+      sun_angular_radius: this.sunAngularRadius,
+      bottom_radius: this.bottomRadius * METER_TO_LENGTH_UNIT,
+      top_radius: this.topRadius * METER_TO_LENGTH_UNIT,
+      rayleigh_density: {
+        layers: this.rayleighDensity.map(layer => ({
+          width: layer.width,
+          exp_term: layer.expTerm,
+          exp_scale: layer.expScale,
+          linear_term: layer.linearTerm,
+          constant_term: layer.constantTerm
+        }))
+      },
+      rayleigh_scattering: this.rayleighScattering,
+      mie_density: {
+        layers: this.mieDensity.map(layer => ({
+          width: layer.width,
+          exp_term: layer.expTerm,
+          exp_scale: layer.expScale,
+          linear_term: layer.linearTerm,
+          constant_term: layer.constantTerm
+        }))
+      },
+      mie_scattering: this.mieScattering,
+      mie_extinction: this.mieExtinction,
+      mie_phase_function_g: this.miePhaseFunctionG,
+      absorption_density: {
+        layers: this.absorptionDensity.map(layer => ({
+          width: layer.width,
+          exp_term: layer.expTerm,
+          exp_scale: layer.expScale,
+          linear_term: layer.linearTerm,
+          constant_term: layer.constantTerm
+        }))
+      },
+      absorption_extinction: this.absorptionExtinction,
+      ground_albedo: this.groundAlbedo,
+      mu_s_min: this.muSMin
+    })
   }
 }
+
+export type AtmosphereParametersUniform = ReturnType<
+  AtmosphereParameters['toStructuredUniform']
+>
