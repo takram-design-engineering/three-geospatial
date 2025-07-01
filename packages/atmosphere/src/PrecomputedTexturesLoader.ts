@@ -124,8 +124,9 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
         join(url, path),
         texture => {
           texture.type = this.type
-          // Parse FP16 stored in Uint16Array of EXR textures.
-          if (texture.image.data instanceof Uint16Array) {
+          // EXR and binary data are parsed to Uint16Array, which must be
+          // converted to Float32Array when FloatType is used.
+          if (this.type === FloatType) {
             texture.image.data = new Float32Array(
               new Float16Array(texture.image.data.buffer)
             )
