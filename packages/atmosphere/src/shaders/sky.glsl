@@ -1,9 +1,10 @@
 vec3 getLunarRadiance(const float moonAngularRadius) {
   // Not a physical number but the order of 10^-6 relative to the sun may fit.
-  vec3 radiance = u_solar_irradiance * 0.000002 / (PI * moonAngularRadius * moonAngularRadius);
-  #ifdef PHOTOMETRIC
-  radiance *= SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
-  #endif // PHOTOMETRIC
+  vec3 radiance =
+    ATMOSPHERE.solar_irradiance *
+    0.000002 /
+    (PI * moonAngularRadius * moonAngularRadius) *
+    SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
   return radiance;
 }
 
@@ -32,7 +33,7 @@ vec3 getSkyRadiance(
   const float lunarRadianceScale
 ) {
   vec3 transmittance;
-  vec3 radiance = GetSkyRadiance(
+  vec3 radiance = GetSkyLuminance(
     cameraPosition,
     rayDirection,
     shadowLength,
@@ -51,10 +52,14 @@ vec3 getSkyRadiance(
 
   #ifdef SUN
   float viewDotSun = dot(rayDirection, sunDirection);
-  if (viewDotSun > cos(u_sun_angular_radius)) {
+  if (viewDotSun > cos(ATMOSPHERE.sun_angular_radius)) {
     float angle = acos(clamp(viewDotSun, -1.0, 1.0));
-    float antialias = smoothstep(u_sun_angular_radius, u_sun_angular_radius - fragmentAngle, angle);
-    radiance += transmittance * GetSolarRadiance() * antialias;
+    float antialias = smoothstep(
+      ATMOSPHERE.sun_angular_radius,
+      ATMOSPHERE.sun_angular_radius - fragmentAngle,
+      angle
+    );
+    radiance += transmittance * GetSolarLuminance() * antialias;
   }
   #endif // SUN
 

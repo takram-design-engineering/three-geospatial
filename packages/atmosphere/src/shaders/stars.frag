@@ -1,8 +1,20 @@
 precision highp float;
 precision highp sampler3D;
 
-#include "parameters"
-#include "functions"
+#include "bruneton/definitions"
+
+uniform AtmosphereParameters ATMOSPHERE;
+uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+
+uniform sampler2D transmittance_texture;
+uniform sampler3D scattering_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler2D irradiance_texture;
+
+#define COMBINED_SCATTERING_TEXTURES
+#include "bruneton/common"
+#include "bruneton/runtime"
 
 uniform vec3 sunDirection;
 
@@ -28,12 +40,12 @@ void main() {
   float r = length(cameraPosition);
   float mu = dot(cameraPosition, rayDirection) / r;
 
-  if (RayIntersectsGround(r, mu)) {
+  if (RayIntersectsGround(ATMOSPHERE, r, mu)) {
     discard;
   }
 
   vec3 transmittance;
-  vec3 radiance = GetSkyRadiance(
+  vec3 radiance = GetSkyLuminance(
     vCameraPosition - vEllipsoidCenter,
     normalize(vRayDirection),
     0.0,

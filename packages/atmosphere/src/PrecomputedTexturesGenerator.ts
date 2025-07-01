@@ -263,8 +263,8 @@ export class PrecomputedTexturesGenerator {
   transmittanceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(transmittanceShader, {
       bruneton: {
-        definitions,
         common,
+        definitions,
         precompute
       }
     })
@@ -273,8 +273,8 @@ export class PrecomputedTexturesGenerator {
   directIrradianceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(directIrradianceShader, {
       bruneton: {
-        definitions,
         common,
+        definitions,
         precompute
       }
     }),
@@ -286,8 +286,8 @@ export class PrecomputedTexturesGenerator {
   singleScatteringMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(singleScatteringShader, {
       bruneton: {
-        definitions,
         common,
+        definitions,
         precompute
       }
     }),
@@ -301,8 +301,8 @@ export class PrecomputedTexturesGenerator {
   scatteringDensityMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(scatteringDensityShader, {
       bruneton: {
-        definitions,
         common,
+        definitions,
         precompute
       }
     }),
@@ -320,8 +320,8 @@ export class PrecomputedTexturesGenerator {
   indirectIrradianceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(indirectIrradianceShader, {
       bruneton: {
-        definitions,
         common,
+        definitions,
         precompute
       }
     }),
@@ -337,8 +337,8 @@ export class PrecomputedTexturesGenerator {
   multipleScatteringMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(multipleScatteringShader, {
       bruneton: {
-        definitions,
         common,
+        definitions,
         precompute
       }
     }),
@@ -606,7 +606,7 @@ export class PrecomputedTexturesGenerator {
   ): Promise<PrecomputedTextures> {
     this.updating = true
 
-    const atmosphereUniform = atmosphere.toStructuredUniform()
+    const atmosphereUniform = atmosphere.toUniform()
     this.transmittanceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
     this.directIrradianceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
     this.singleScatteringMaterial.uniforms.ATMOSPHERE = atmosphereUniform

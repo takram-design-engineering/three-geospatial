@@ -13,8 +13,22 @@ precision highp sampler2DArray;
 #include "core/cascadedShadowMaps"
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
-#include "atmosphere/parameters"
-#include "atmosphere/functions"
+
+#include "atmosphere/bruneton/definitions"
+
+uniform AtmosphereParameters ATMOSPHERE;
+uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+
+uniform sampler2D transmittance_texture;
+uniform sampler3D scattering_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler2D irradiance_texture;
+
+#define COMBINED_SCATTERING_TEXTURES
+#include "atmosphere/bruneton/common"
+#include "atmosphere/bruneton/runtime"
+
 #include "types"
 #include "parameters"
 #include "clouds"
@@ -416,7 +430,7 @@ vec3 getGroundSunSkyIrradiance(
   out vec3 skyIrradiance
 ) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIrradiance(
+  return GetSunAndSkyIlluminance(
     (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
     surfaceNormal,
     sunDirection,
@@ -430,7 +444,7 @@ vec3 getGroundSunSkyIrradiance(
 
 vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3 skyIrradiance) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIrradianceForParticle(
+  return GetSunAndSkyIlluminanceForParticle(
     position * METER_TO_LENGTH_UNIT,
     sunDirection,
     skyIrradiance
@@ -710,7 +724,7 @@ void applyAerialPerspective(
   inout vec4 color
 ) {
   vec3 transmittance;
-  vec3 inscatter = GetSkyRadianceToPoint(
+  vec3 inscatter = GetSkyLuminanceToPoint(
     cameraPosition * METER_TO_LENGTH_UNIT,
     frontPosition * METER_TO_LENGTH_UNIT,
     shadowLength * METER_TO_LENGTH_UNIT,

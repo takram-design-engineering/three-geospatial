@@ -148,11 +148,11 @@ export class AtmosphereParameters {
   muSMin = Math.cos(radians(120))
 
   // Radiance to luminance conversion
+  sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
   // prettier-ignore
   skyRadianceToLuminance = new Vector3(114974.916437, 71305.954816, 65310.548555)
-  sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
-  skyRadianceToRelativeLuminance = new Vector3()
   sunRadianceToRelativeLuminance = new Vector3()
+  skyRadianceToRelativeLuminance = new Vector3()
 
   constructor(options?: AtmosphereParametersOptions) {
     applyOptions(this, options)
@@ -160,16 +160,16 @@ export class AtmosphereParameters {
     // We could store the raw luminance in the render buffer, but it easily
     // becomes saturated in precision.
     const luminance = LUMINANCE_COEFFS.dot(this.sunRadianceToLuminance)
-    this.skyRadianceToRelativeLuminance
-      .copy(this.skyRadianceToLuminance)
-      .divideScalar(luminance)
     this.sunRadianceToRelativeLuminance
       .copy(this.sunRadianceToLuminance)
+      .divideScalar(luminance)
+    this.skyRadianceToRelativeLuminance
+      .copy(this.skyRadianceToLuminance)
       .divideScalar(luminance)
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  toStructuredUniform() {
+  toUniform() {
     return new Uniform({
       solar_irradiance: this.solarIrradiance,
       sun_angular_radius: this.sunAngularRadius,
@@ -214,5 +214,5 @@ export class AtmosphereParameters {
 }
 
 export type AtmosphereParametersUniform = ReturnType<
-  AtmosphereParameters['toStructuredUniform']
+  AtmosphereParameters['toUniform']
 >

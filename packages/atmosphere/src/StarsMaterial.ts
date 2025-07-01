@@ -21,8 +21,9 @@ import {
   type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
 
-import functions from './shaders/functions.glsl?raw'
-import parameters from './shaders/parameters.glsl?raw'
+import common from './shaders/bruneton/common.glsl?raw'
+import definitions from './shaders/bruneton/definitions.glsl?raw'
+import runtime from './shaders/bruneton/runtime.glsl?raw'
 import fragmentShader from './shaders/stars.frag?raw'
 import vertexShader from './shaders/stars.vert?raw'
 
@@ -72,12 +73,13 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     super({
       name: 'StarsMaterial',
       glslVersion: GLSL3,
-      vertexShader: resolveIncludes(vertexShader, {
-        parameters
-      }),
+      vertexShader,
       fragmentShader: resolveIncludes(fragmentShader, {
-        parameters,
-        functions
+        bruneton: {
+          common,
+          definitions,
+          runtime
+        }
       }),
       ...others,
       uniforms: {

@@ -1,8 +1,21 @@
 precision highp float;
 precision highp sampler3D;
 
-#include "atmosphere/parameters"
-#include "atmosphere/functions"
+#include "atmosphere/bruneton/definitions"
+
+uniform AtmosphereParameters ATMOSPHERE;
+uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+
+uniform sampler2D transmittance_texture;
+uniform sampler3D scattering_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler2D irradiance_texture;
+
+#define COMBINED_SCATTERING_TEXTURES
+#include "atmosphere/bruneton/common"
+#include "atmosphere/bruneton/runtime"
+
 #include "types"
 
 uniform mat4 inverseProjectionMatrix;
@@ -32,7 +45,7 @@ out GroundIrradiance vGroundIrradiance;
 out CloudsIrradiance vCloudsIrradiance;
 
 void sampleSunSkyIrradiance(const vec3 positionECEF) {
-  vGroundIrradiance.sun = GetSunAndSkyIrradianceForParticle(
+  vGroundIrradiance.sun = GetSunAndSkyIlluminanceForParticle(
     positionECEF * METER_TO_LENGTH_UNIT,
     sunDirection,
     vGroundIrradiance.sky
@@ -40,12 +53,12 @@ void sampleSunSkyIrradiance(const vec3 positionECEF) {
 
   vec3 surfaceNormal = normalize(positionECEF);
   vec2 radii = (bottomRadius + vec2(minHeight, maxHeight)) * METER_TO_LENGTH_UNIT;
-  vCloudsIrradiance.minSun = GetSunAndSkyIrradianceForParticle(
+  vCloudsIrradiance.minSun = GetSunAndSkyIlluminanceForParticle(
     surfaceNormal * radii.x,
     sunDirection,
     vCloudsIrradiance.minSky
   );
-  vCloudsIrradiance.maxSun = GetSunAndSkyIrradianceForParticle(
+  vCloudsIrradiance.maxSun = GetSunAndSkyIlluminanceForParticle(
     surfaceNormal * radii.y,
     sunDirection,
     vCloudsIrradiance.maxSky

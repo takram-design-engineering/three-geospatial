@@ -10,8 +10,22 @@ precision highp sampler2DArray;
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
 #endif // HAS_SHADOW
-#include "parameters"
-#include "functions"
+
+#include "bruneton/definitions"
+
+uniform AtmosphereParameters ATMOSPHERE;
+uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+
+uniform sampler2D transmittance_texture;
+uniform sampler3D scattering_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler2D irradiance_texture;
+
+#define COMBINED_SCATTERING_TEXTURES
+#include "bruneton/common"
+#include "bruneton/runtime"
+
 #include "sky"
 
 uniform sampler2D normalBuffer;
@@ -79,7 +93,7 @@ void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
 
   // Correct way is slerp, but this will be small-angle interpolation anyways.
   vec3 sphereNormal = normalize(positionECEF / vEllipsoidRadiiSquared);
-  vec3 spherePosition = u_bottom_radius * sphereNormal;
+  vec3 spherePosition = ATMOSPHERE.bottom_radius * sphereNormal;
   normalECEF = mix(normalECEF, sphereNormal, idealSphereAlpha);
   positionECEF = mix(positionECEF, spherePosition, idealSphereAlpha);
 }
@@ -96,7 +110,7 @@ vec3 getSunSkyIrradiance(
   // defined, regard the inputColor as radiance at the texel.
   vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
-  vec3 sunIrradiance = GetSunAndSkyIrradiance(positionECEF, normal, sunDirection, skyIrradiance);
+  vec3 sunIrradiance = GetSunAndSkyIlluminance(positionECEF, normal, sunDirection, skyIrradiance);
 
   #ifdef HAS_SHADOW
   sunIrradiance *= sunTransmittance;
@@ -117,7 +131,7 @@ vec3 getSunSkyIrradiance(
 
 void applyTransmittanceInscatter(const vec3 positionECEF, float shadowLength, inout vec3 radiance) {
   vec3 transmittance;
-  vec3 inscatter = GetSkyRadianceToPoint(
+  vec3 inscatter = GetSkyLuminanceToPoint(
     vCameraPosition - vGeometryEllipsoidCenter,
     positionECEF,
     shadowLength,

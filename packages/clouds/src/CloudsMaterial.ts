@@ -24,9 +24,10 @@ import {
   type AtmosphereMaterialBaseUniforms
 } from '@takram/three-atmosphere'
 import {
-  parameters as atmosphereParameters,
-  functions
-} from '@takram/three-atmosphere/shaders'
+  common,
+  definitions,
+  runtime
+} from '@takram/three-atmosphere/shaders/bruneton'
 import {
   assertType,
   define,
@@ -160,8 +161,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         glslVersion: GLSL3,
         vertexShader: resolveIncludes(vertexShader, {
           atmosphere: {
-            parameters: atmosphereParameters,
-            functions
+            bruneton: {
+              common,
+              definitions,
+              runtime
+            }
           },
           types
         }),
@@ -178,8 +182,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
               vogelDisk
             },
             atmosphere: {
-              parameters: atmosphereParameters,
-              functions
+              bruneton: {
+                common,
+                definitions,
+                runtime
+              }
             },
             types,
             parameters,

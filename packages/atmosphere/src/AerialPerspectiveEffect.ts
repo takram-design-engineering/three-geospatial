@@ -33,7 +33,10 @@ import {
   vogelDisk
 } from '@takram/three-geospatial/shaders'
 
-import { AtmosphereParameters } from './AtmosphereParameters'
+import {
+  AtmosphereParameters,
+  type AtmosphereParametersUniform
+} from './AtmosphereParameters'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
@@ -55,8 +58,9 @@ import {
 
 import fragmentShader from './shaders/aerialPerspectiveEffect.frag?raw'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert?raw'
-import functions from './shaders/functions.glsl?raw'
-import parameters from './shaders/parameters.glsl?raw'
+import common from './shaders/bruneton/common.glsl?raw'
+import definitions from './shaders/bruneton/definitions.glsl?raw'
+import runtime from './shaders/bruneton/runtime.glsl?raw'
 import skyShader from './shaders/sky.glsl?raw'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
@@ -133,19 +137,13 @@ export interface AerialPerspectiveEffectUniforms {
   irradianceMaskBuffer: Uniform<Texture | null>
 
   // Uniforms for atmosphere functions
-  u_solar_irradiance: Uniform<Vector3>
-  u_sun_angular_radius: Uniform<number>
-  u_bottom_radius: Uniform<number>
-  u_top_radius: Uniform<number>
-  u_rayleigh_scattering: Uniform<Vector3>
-  u_mie_scattering: Uniform<Vector3>
-  u_mie_phase_function_g: Uniform<number>
-  u_mu_s_min: Uniform<number>
-  u_max_rayleigh_shadow_length: Uniform<number>
-  u_irradiance_texture: Uniform<Texture | null>
-  u_scattering_texture: Uniform<Data3DTexture | null>
-  u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
-  u_transmittance_texture: Uniform<Texture | null>
+  ATMOSPHERE: AtmosphereParametersUniform
+  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
+  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
+  irradiance_texture: Uniform<Texture | null>
+  scattering_texture: Uniform<Data3DTexture | null>
+  single_mie_scattering_texture: Uniform<Data3DTexture | null>
+  transmittance_texture: Uniform<Texture | null>
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -223,16 +221,17 @@ export class AerialPerspectiveEffect extends Effect {
             interleavedGradientNoise,
             vogelDisk
           },
-          parameters,
-          functions,
+          bruneton: {
+            common,
+            definitions,
+            runtime
+          },
           sky: skyShader
         })
       ),
       {
         blendFunction,
-        vertexShader: resolveIncludes(vertexShader, {
-          parameters
-        }),
+        vertexShader,
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
         uniforms: new Map<string, Uniform>(
@@ -273,19 +272,13 @@ export class AerialPerspectiveEffect extends Effect {
             irradianceMaskBuffer: new Uniform(null),
 
             // Uniforms for atmosphere functions
-            u_solar_irradiance: new Uniform(atmosphere.solarIrradiance),
-            u_sun_angular_radius: new Uniform(atmosphere.sunAngularRadius),
-            u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_LENGTH_UNIT),
-            u_top_radius: new Uniform(atmosphere.topRadius * METER_TO_LENGTH_UNIT),
-            u_rayleigh_scattering: new Uniform(atmosphere.rayleighScattering),
-            u_mie_scattering: new Uniform(atmosphere.mieScattering),
-            u_mie_phase_function_g: new Uniform(atmosphere.miePhaseFunctionG),
-            u_mu_s_min: new Uniform(atmosphere.muSMin),
-            u_max_rayleigh_shadow_length: new Uniform(10000 * METER_TO_LENGTH_UNIT),
-            u_irradiance_texture: new Uniform(irradianceTexture),
-            u_scattering_texture: new Uniform(scatteringTexture),
-            u_single_mie_scattering_texture: new Uniform(scatteringTexture),
-            u_transmittance_texture: new Uniform(transmittanceTexture)
+            ATMOSPHERE: atmosphere.toUniform(),
+            SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.sunRadianceToRelativeLuminance),
+            SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.skyRadianceToRelativeLuminance),
+            irradiance_texture: new Uniform(irradianceTexture),
+            scattering_texture: new Uniform(scatteringTexture),
+            single_mie_scattering_texture: new Uniform(scatteringTexture),
+            transmittance_texture: new Uniform(transmittanceTexture)
           } satisfies AerialPerspectiveEffectUniforms)
         ),
         // prettier-ignore
@@ -298,9 +291,7 @@ export class AerialPerspectiveEffect extends Effect {
           ['SCATTERING_TEXTURE_NU_SIZE', SCATTERING_TEXTURE_NU_SIZE.toFixed(0)],
           ['IRRADIANCE_TEXTURE_WIDTH', IRRADIANCE_TEXTURE_WIDTH.toFixed(0)],
           ['IRRADIANCE_TEXTURE_HEIGHT', IRRADIANCE_TEXTURE_HEIGHT.toFixed(0)],
-          ['METER_TO_LENGTH_UNIT', METER_TO_LENGTH_UNIT.toFixed(7)],
-          ['SUN_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().map(v => v.toFixed(12)).join(',')})`],
-          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().map(v => v.toFixed(12)).join(',')})`]
+          ['METER_TO_LENGTH_UNIT', METER_TO_LENGTH_UNIT.toFixed(7)]
         ])
       }
     )
@@ -523,28 +514,28 @@ export class AerialPerspectiveEffect extends Effect {
   reconstructNormal: boolean
 
   get irradianceTexture(): Texture | null {
-    return this.uniforms.get('u_irradiance_texture').value
+    return this.uniforms.get('irradiance_texture').value
   }
 
   set irradianceTexture(value: Texture | null) {
-    this.uniforms.get('u_irradiance_texture').value = value
+    this.uniforms.get('irradiance_texture').value = value
   }
 
   get scatteringTexture(): Data3DTexture | null {
-    return this.uniforms.get('u_scattering_texture').value
+    return this.uniforms.get('scattering_texture').value
   }
 
   set scatteringTexture(value: Data3DTexture | null) {
-    this.uniforms.get('u_scattering_texture').value = value
-    this.uniforms.get('u_single_mie_scattering_texture').value = value
+    this.uniforms.get('scattering_texture').value = value
+    this.uniforms.get('single_mie_scattering_texture').value = value
   }
 
   get transmittanceTexture(): Texture | null {
-    return this.uniforms.get('u_transmittance_texture').value
+    return this.uniforms.get('transmittance_texture').value
   }
 
   set transmittanceTexture(value: Texture | null) {
-    this.uniforms.get('u_transmittance_texture').value = value
+    this.uniforms.get('transmittance_texture').value = value
   }
 
   get ellipsoid(): Ellipsoid {
