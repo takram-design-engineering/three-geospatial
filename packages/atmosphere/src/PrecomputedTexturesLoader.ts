@@ -83,7 +83,7 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
       format = 'exr',
       type = HalfFloatType,
       combinedScattering = true,
-      higherOrderScattering = false
+      higherOrderScattering = true
     }: PrecomputedTexturesLoaderOptions = {},
     manager?: LoadingManager
   ) {
