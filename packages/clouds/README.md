@@ -675,21 +675,21 @@ Controls dual-lobe Henyey-Greenstein phase function. Positive anisotropy strengt
 
 These values take effect only when [`accuratePhaseFunction`](#cloudsaccuratephasefunction) is disabled.
 
-#### skyIrradianceScale
+#### skyLightScale
 
 ```ts
-skyIrradianceScale: number = 1
+skyLightScale: number = 1
 ```
 
-The contribution of sky irradiance. This is a fudge factor and you might adjust this value to make it look convincing to you.
+The contribution of sky light. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
-#### groundIrradianceScale
+#### groundBounceScale
 
 ```ts
-groundIrradianceScale: number = 1
+groundBounceScale: number = 1
 ```
 
-The contribution of irradiance bouncing off the ground. This is a fudge factor and you might adjust this value to make it look convincing to you.
+The contribution of light bouncing off the ground. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
 #### powderScale, powderExponent
 

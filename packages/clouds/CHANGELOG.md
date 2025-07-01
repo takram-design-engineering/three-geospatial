@@ -4,6 +4,7 @@
 
 ### Changed
 
+- `CloudsEffect`: Deprecated `skyIrradianceScale` and `groundIrradianceScale`. Renamed them to `skyLightScale` and `groundBounceScale`.
 - Migrated to core API changes.
 
 ## [0.3.0] - 2025-06-12

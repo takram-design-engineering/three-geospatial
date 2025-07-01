@@ -98,8 +98,8 @@ export interface CloudsMaterialUniforms
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Scattering
-  skyIrradianceScale: Uniform<number>
-  groundIrradianceScale: Uniform<number>
+  skyLightScale: Uniform<number>
+  groundBounceScale: Uniform<number>
   powderScale: Uniform<number>
   powderExponent: Uniform<number>
 
@@ -215,8 +215,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           stbnTexture: new Uniform(null),
 
           // Scattering
-          skyIrradianceScale: new Uniform(1),
-          groundIrradianceScale: new Uniform(1),
+          skyLightScale: new Uniform(1),
+          groundBounceScale: new Uniform(1),
           powderScale: new Uniform(0.8),
           powderExponent: new Uniform(150),
 
@@ -299,15 +299,15 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       this.needsUpdate = true
     }
 
-    const prevGroundIrradiance = this.defines.GROUND_IRRADIANCE != null
+    const prevGroundIrradiance = this.defines.GROUND_BOUNCE != null
     const nextGroundIrradiance =
-      this.uniforms.groundIrradianceScale.value > 0 &&
+      this.uniforms.groundBounceScale.value > 0 &&
       this.uniforms.maxIterationCountToGround.value > 0
     if (nextGroundIrradiance !== prevGroundIrradiance) {
       if (nextPowder) {
-        this.defines.GROUND_IRRADIANCE = '1'
+        this.defines.GROUND_BOUNCE = '1'
       } else {
-        delete this.defines.GROUND_IRRADIANCE
+        delete this.defines.GROUND_BOUNCE
       }
       this.needsUpdate = true
     }

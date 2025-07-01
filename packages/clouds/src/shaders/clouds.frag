@@ -50,8 +50,8 @@ uniform float mipLevelScale;
 // Scattering
 const vec2 scatterAnisotropy = vec2(SCATTER_ANISOTROPY_1, SCATTER_ANISOTROPY_2);
 const float scatterAnisotropyMix = SCATTER_ANISOTROPY_MIX;
-uniform float skyIrradianceScale;
-uniform float groundIrradianceScale;
+uniform float skyLightScale;
+uniform float groundBounceScale;
 uniform float powderScale;
 uniform float powderExponent;
 
@@ -452,7 +452,7 @@ vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3
   #endif // ACCURATE_SUN_SKY_IRRADIANCE
 }
 
-#ifdef GROUND_IRRADIANCE
+#ifdef GROUND_BOUNCE
 vec3 approximateRadianceFromGround(
   const vec3 position,
   const vec3 surfaceNormal,
@@ -474,7 +474,7 @@ vec3 approximateRadianceFromGround(
   vec3 bouncedRadiance = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
   return bouncedRadiance * exp(-opticalDepthToGround);
 }
-#endif // GROUND_IRRADIANCE
+#endif // GROUND_BOUNCE
 
 vec4 marchClouds(
   const vec3 rayOrigin,
@@ -564,23 +564,23 @@ vec4 marchClouds(
 
       vec3 radiance = sunIrradiance * approximateMultipleScattering(opticalDepth, cosTheta);
 
-      #ifdef GROUND_IRRADIANCE
+      #ifdef GROUND_BOUNCE
       // Fudge factor for the irradiance from ground.
       if (height < shadowTopHeight && mipLevel < 0.5) {
-        vec3 groundIrradiance = approximateRadianceFromGround(
+        vec3 groundRadiance = approximateRadianceFromGround(
           position,
           surfaceNormal,
           height,
           mipLevel,
           jitter
         );
-        radiance += groundIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
+        radiance += groundRadiance * RECIPROCAL_PI4 * groundBounceScale;
       }
-      #endif // GROUND_IRRADIANCE
+      #endif // GROUND_BOUNCE
 
       // Crude approximation of sky gradient. Better than none in the shadows.
       float skyGradient = dot(weather.heightFraction * 0.5 + 0.5, media.weight);
-      radiance += skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
+      radiance += skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyLightScale;
 
       // Finally multiply by scattering.
       radiance *= media.scattering;
@@ -706,7 +706,7 @@ vec4 approximateHaze(
   vec3 skyIrradiance = vGroundIrradiance.sky;
   vec3 sunIrradiance = vGroundIrradiance.sun;
   vec3 inscatter = sunIrradiance * phaseFunction(cosTheta) * shadowTransmittance;
-  inscatter += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale * transmittance;
+  inscatter += skyIrradiance * RECIPROCAL_PI4 * skyLightScale * transmittance;
   inscatter *= hazeScatteringCoefficient / (hazeAbsorptionCoefficient + hazeScatteringCoefficient);
   return vec4(inscatter, transmittance);
 }

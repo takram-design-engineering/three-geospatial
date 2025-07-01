@@ -67,8 +67,8 @@ function useScatteringControls(
       scatterAnisotropy1: { value: 0, min: 0, max: 1 },
       scatterAnisotropy2: { value: 0, min: -1, max: 0 },
       scatterAnisotropyMix: { value: 0, min: 0, max: 1 },
-      skyIrradianceScale: { value: 0, min: 0, max: 5 },
-      groundIrradianceScale: { value: 0, min: 0, max: 10 },
+      skyLightScale: { value: 0, min: 0, max: 5 },
+      groundBounceScale: { value: 0, min: 0, max: 10 },
       powderScale: { value: 0, min: 0, max: 1 },
       powderExponent: { value: 0, min: 1, max: 1000 }
     }),
@@ -86,8 +86,8 @@ function useScatteringControls(
       scatterAnisotropy1: effect.scatterAnisotropy1,
       scatterAnisotropy2: effect.scatterAnisotropy2,
       scatterAnisotropyMix: effect.scatterAnisotropyMix,
-      skyIrradianceScale: effect.skyIrradianceScale,
-      groundIrradianceScale: effect.groundIrradianceScale,
+      skyLightScale: effect.skyLightScale,
+      groundBounceScale: effect.groundBounceScale,
       powderScale: effect.powderScale,
       powderExponent: effect.powderExponent
     })
