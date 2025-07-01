@@ -5,7 +5,6 @@ import {
   useImperativeHandle,
   useMemo,
   useRef,
-  useState,
   type FC,
   type ReactNode,
   type Ref
@@ -85,22 +84,28 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     lightingMask: null
   })
 
-  const [textures, setTextures] = useState(
-    typeof texturesProp !== 'string' ? texturesProp : undefined
-  )
   const renderer = useThree(({ gl }) => gl)
+  const loadedTextures = useMemo(
+    () =>
+      typeof texturesProp === 'string'
+        ? new PrecomputedTexturesLoader().setType(renderer).load(texturesProp)
+        : undefined,
+    [texturesProp, renderer]
+  )
   useEffect(() => {
-    if (typeof texturesProp === 'string') {
-      const loader = new PrecomputedTexturesLoader().setType(renderer)
-      ;(async () => {
-        setTextures(await loader.loadAsync(texturesProp))
-      })().catch(error => {
-        console.error(error)
-      })
-    } else {
-      setTextures(texturesProp)
+    if (loadedTextures != null) {
+      return () => {
+        for (const texture of Object.values(loadedTextures) as Array<
+          PrecomputedTextures[keyof PrecomputedTextures]
+        >) {
+          texture?.dispose()
+        }
+      }
     }
-  }, [texturesProp, renderer])
+  }, [loadedTextures])
+
+  const textures =
+    typeof texturesProp === 'string' ? loadedTextures : texturesProp
 
   const context = useMemo(
     () => ({
