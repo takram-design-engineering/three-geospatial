@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Added `PrecomputedTexturesGenerator`.
+
 ### Changed
 
 - Added `PrecomputedTexturesGenerator`.
@@ -10,6 +14,8 @@
 - `PrecomputedTexturesLoader`: Takes format and type in the constructor.
 - Removed a slight night light from precomputed texture assets.
 - Relaxed the type of transmittance and irradiance textures from `DataTexture` to `Texture`.
+- Deprecated `sunIrradiance` and `skyIrradiance` options and props. Renamed them to `sunLight` and `skyLight`.
+- Deprecated `photometric` options and props. Now outputs luminance only.
 - Migrated to core API changes.
 
 ## [0.12.0] - 2025-06-12
