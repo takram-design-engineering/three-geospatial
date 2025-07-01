@@ -264,6 +264,7 @@ export class PrecomputedTexturesGenerator {
   readonly transmittanceRenderTarget: WebGLRenderTarget
   readonly scatteringRenderTarget: WebGL3DRenderTarget
   readonly irradianceRenderTarget: WebGLRenderTarget
+  readonly singleMieScatteringRenderTarget?: WebGL3DRenderTarget
   readonly higherOrderScatteringRenderTarget?: WebGL3DRenderTarget
   readonly textures: PrecomputedTextures
 
@@ -359,7 +360,6 @@ export class PrecomputedTexturesGenerator {
 
   private readonly renderer: WebGLRenderer
   private readonly type: AnyFloatType
-  private readonly combinedScattering: boolean
   private readonly mesh = new Mesh(new PlaneGeometry(2, 2))
   private readonly scene = new Scene().add(this.mesh)
   private readonly camera = new Camera()
@@ -376,7 +376,6 @@ export class PrecomputedTexturesGenerator {
   ) {
     this.renderer = renderer
     this.type = type
-    this.combinedScattering = combinedScattering
 
     this.transmittanceRenderTarget = createRenderTarget(
       type,
@@ -394,6 +393,14 @@ export class PrecomputedTexturesGenerator {
       IRRADIANCE_TEXTURE_WIDTH,
       IRRADIANCE_TEXTURE_HEIGHT
     )
+    if (!combinedScattering) {
+      this.singleMieScatteringRenderTarget = create3DRenderTarget(
+        type,
+        SCATTERING_TEXTURE_WIDTH,
+        SCATTERING_TEXTURE_HEIGHT,
+        SCATTERING_TEXTURE_DEPTH
+      )
+    }
     if (higherOrderScattering) {
       this.higherOrderScatteringRenderTarget = create3DRenderTarget(
         type,
@@ -406,6 +413,7 @@ export class PrecomputedTexturesGenerator {
       transmittanceTexture: this.transmittanceRenderTarget.texture,
       scatteringTexture: this.scatteringRenderTarget.texture,
       irradianceTexture: this.irradianceRenderTarget.texture,
+      singleMieScatteringTexture: this.singleMieScatteringRenderTarget?.texture,
       higherOrderScatteringTexture:
         this.higherOrderScatteringRenderTarget?.texture
     }
@@ -575,6 +583,14 @@ export class PrecomputedTexturesGenerator {
       output: 'scattering',
       additive
     })
+    if (this.singleMieScatteringRenderTarget != null) {
+      this.computeSingleScattering({
+        renderTarget: this.singleMieScatteringRenderTarget,
+        context,
+        output: 'singleMieScattering',
+        additive
+      })
+    }
 
     this.renderer.setRenderTarget(null)
     yield
@@ -684,6 +700,7 @@ export class PrecomputedTexturesGenerator {
     this.transmittanceRenderTarget.dispose()
     this.scatteringRenderTarget.dispose()
     this.irradianceRenderTarget.dispose()
+    this.singleMieScatteringRenderTarget?.dispose()
     this.higherOrderScatteringRenderTarget?.dispose()
 
     this.transmittanceMaterial.dispose()
