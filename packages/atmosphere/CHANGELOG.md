@@ -16,6 +16,8 @@
 - Deprecated `photometric` options and props. Now outputs luminance only.
 - Deprecated and renamed `sunIrradiance` and `skyIrradiance` options and props to `sunLight` and `skyLight`.
 - Deprecated and renamed `IrradianceMask` to `LightingMask`.
+- `AerialPerspectiveEffect`: Deprecated and renamed `irradianceScale` to `albedoScale`.
+- `StarsMaterial`: Deprecated and renamed `radianceScale` to `intensity`.
 - Migrated to core API changes.
 
 ## [0.12.0] - 2025-06-12

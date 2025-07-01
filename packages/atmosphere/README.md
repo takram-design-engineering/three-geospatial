@@ -843,10 +843,10 @@ pointSize: number = 1
 
 The size of each star, in points.
 
-#### radianceScale
+#### intensity
 
 ```ts
-radianceScale: number = 1
+intensity: number = 1
 ```
 
 A scaling factor to adjust the brightness of the stars.
@@ -1131,10 +1131,10 @@ inscatter: boolean = true
 
 Whether to account for the atmospheric transmittance and inscattered light.
 
-#### irradianceScale
+#### albedoScale
 
 ```ts
-irradianceScale: number = 1
+albedoScale: number = 1
 ```
 
 This value adjusts the color buffer to reduce contrast.

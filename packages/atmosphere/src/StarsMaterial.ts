@@ -36,14 +36,16 @@ declare module 'three' {
 export interface StarsMaterialParameters
   extends AtmosphereMaterialBaseParameters {
   pointSize?: number
+  /** @deprecated Use intensity instead. */
   radianceScale?: number
+  intensity?: number
   background?: boolean
 }
 
 export const starsMaterialParametersDefaults = {
   ...atmosphereMaterialParametersBaseDefaults,
   pointSize: 1,
-  radianceScale: 1,
+  intensity: 1,
   background: true
 } satisfies StarsMaterialParameters
 
@@ -56,7 +58,7 @@ export interface StarsMaterialUniforms {
   cameraFar: Uniform<number>
   pointSize: Uniform<number>
   magnitudeRange: Uniform<Vector2>
-  radianceScale: Uniform<number>
+  intensity: Uniform<number>
 }
 
 export class StarsMaterial extends AtmosphereMaterialBase {
@@ -65,7 +67,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
   pointSize: number
 
   constructor(params?: StarsMaterialParameters) {
-    const { pointSize, radianceScale, background, ...others } = {
+    const { pointSize, radianceScale, intensity, background, ...others } = {
       ...starsMaterialParametersDefaults,
       ...params
     }
@@ -90,7 +92,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
         cameraFar: new Uniform(0),
         pointSize: new Uniform(0),
         magnitudeRange: new Uniform(new Vector2(-2, 8)),
-        radianceScale: new Uniform(radianceScale),
+        intensity: new Uniform(radianceScale ?? intensity),
         ...others.uniforms
       } satisfies StarsMaterialUniforms,
       defines: {
@@ -133,12 +135,22 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     return this.uniforms.magnitudeRange.value
   }
 
+  /** @deprecated Use intensity instead. */
   get radianceScale(): number {
-    return this.uniforms.radianceScale.value
+    return this.intensity
   }
 
+  /** @deprecated Use intensity instead. */
   set radianceScale(value: number) {
-    this.uniforms.radianceScale.value = value
+    this.intensity = value
+  }
+
+  get intensity(): number {
+    return this.uniforms.intensity.value
+  }
+
+  set intensity(value: number) {
+    this.uniforms.intensity.value = value
   }
 
   @define('BACKGROUND')

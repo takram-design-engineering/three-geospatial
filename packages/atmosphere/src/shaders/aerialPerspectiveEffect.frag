@@ -41,7 +41,7 @@ uniform vec3 sunDirection;
 uniform vec3 moonDirection;
 uniform float moonAngularRadius;
 uniform float lunarRadianceScale;
-uniform float irradianceScale;
+uniform float albedoScale;
 uniform float idealSphereAlpha;
 
 #ifdef HAS_LIGHTING_MASK
@@ -108,7 +108,7 @@ vec3 getSunSkyIrradiance(
 ) {
   // Assume lambertian BRDF. If both SUN_LIGHT and SKY_LIGHT are not defined,
   // regard the inputColor as radiance at the texel.
-  vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
+  vec3 diffuse = inputColor * albedoScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(positionECEF, normal, sunDirection, skyIrradiance);
 
@@ -117,11 +117,11 @@ vec3 getSunSkyIrradiance(
   #endif // HAS_SHADOW
 
   #if defined(SUN_LIGHT) && defined(SKY_LIGHT)
-  return albedo * (sunIrradiance + skyIrradiance);
+  return diffuse * (sunIrradiance + skyIrradiance);
   #elif defined(SUN_LIGHT)
-  return albedo * sunIrradiance;
+  return diffuse * sunIrradiance;
   #elif defined(SKY_LIGHT)
-  return albedo * skyIrradiance;
+  return diffuse * skyIrradiance;
   #endif // defined(SUN_LIGHT) && defined(SKY_LIGHT)
 }
 

@@ -33,7 +33,7 @@ const Scene: FC = () => {
         ref={starsRef}
         data='atmosphere/stars.bin'
         scale={[2, 2, 2]}
-        radianceScale={5}
+        intensity={5}
         background={false}
       />
       <EffectComposer multisampling={0}>

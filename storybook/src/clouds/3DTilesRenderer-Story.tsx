@@ -188,7 +188,7 @@ const Scene: FC<SceneProps> = ({
                 sunLight
                 skyLight
                 correctGeometricError={correctGeometricError}
-                irradianceScale={2 / Math.PI}
+                albedoScale={2 / Math.PI}
               />
             </>
           )}

@@ -156,7 +156,7 @@ const Scene: FC<SceneProps> = ({
               transmittance={transmittance}
               inscatter={inscatter}
               correctGeometricError={correctGeometricError}
-              irradianceScale={2 / Math.PI}
+              albedoScale={2 / Math.PI}
             />
           )}
           {lensFlare && <LensFlare />}

@@ -14,7 +14,7 @@ uniform mat4 inverseEllipsoidMatrix;
 uniform vec3 altitudeCorrection;
 uniform float pointSize;
 uniform vec2 magnitudeRange;
-uniform float radianceScale;
+uniform float intensity;
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in float magnitude;
@@ -29,7 +29,7 @@ void main() {
   // Magnitude is stored between 0 to 1 within the given range.
   float m = mix(magnitudeRange.x, magnitudeRange.y, magnitude);
   vec3 v = pow(vec3(10.0), -vec3(magnitudeRange, m) / 2.5);
-  vColor = vec3(radianceScale * color);
+  vColor = vec3(intensity * color);
   vColor *= saturate((v.z - v.y) / (v.x - v.y));
 
   #ifdef BACKGROUND

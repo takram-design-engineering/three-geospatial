@@ -93,7 +93,9 @@ export interface AerialPerspectiveEffectOptions {
   skyLight?: boolean
   transmittance?: boolean
   inscatter?: boolean
+  /** @deprecated Use albedoScale instead. */
   irradianceScale?: number
+  albedoScale?: number
   sky?: boolean
   sun?: boolean
 
@@ -117,7 +119,7 @@ export interface AerialPerspectiveEffectUniforms {
   inverseEllipsoidMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
-  irradianceScale: Uniform<number>
+  albedoScale: Uniform<number>
   idealSphereAlpha: Uniform<number>
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
@@ -161,7 +163,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   skyLight: false,
   transmittance: true,
   inscatter: true,
-  irradianceScale: 1,
+  albedoScale: 1,
   sky: false,
   sun: true,
   moon: true,
@@ -205,6 +207,7 @@ export class AerialPerspectiveEffect extends Effect {
       transmittance,
       inscatter,
       irradianceScale,
+      albedoScale,
       sky,
       sun,
       moon,
@@ -254,7 +257,7 @@ export class AerialPerspectiveEffect extends Effect {
             inverseEllipsoidMatrix: new Uniform(new Matrix4()),
             altitudeCorrection: new Uniform(new Vector3()),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
-            irradianceScale: new Uniform(irradianceScale),
+            albedoScale: new Uniform(irradianceScale ?? albedoScale),
             idealSphereAlpha: new Uniform(0),
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
@@ -596,12 +599,22 @@ export class AerialPerspectiveEffect extends Effect {
   @define('INSCATTER')
   inscatter: boolean
 
+  /** @deprecated Use albedoScale instead. */
   get irradianceScale(): number {
-    return this.uniforms.get('irradianceScale').value
+    return this.albedoScale
   }
 
+  /** @deprecated Use albedoScale instead. */
   set irradianceScale(value: number) {
-    this.uniforms.get('irradianceScale').value = value
+    this.albedoScale = value
+  }
+
+  get albedoScale(): number {
+    return this.uniforms.get('albedoScale').value
+  }
+
+  set albedoScale(value: number) {
+    this.uniforms.get('albedoScale').value = value
   }
 
   @define('SKY')
