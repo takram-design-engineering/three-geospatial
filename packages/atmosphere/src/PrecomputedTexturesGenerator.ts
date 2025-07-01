@@ -254,10 +254,17 @@ class PrecomputeMaterial extends RawShaderMaterial {
   }
 }
 
+export interface PrecomputedTexturesGeneratorOptions {
+  type?: AnyFloatType
+  combinedScattering?: boolean
+  higherOrderScattering?: boolean
+}
+
 export class PrecomputedTexturesGenerator {
   readonly transmittanceRenderTarget: WebGLRenderTarget
   readonly scatteringRenderTarget: WebGL3DRenderTarget
   readonly irradianceRenderTarget: WebGLRenderTarget
+  readonly higherOrderScatteringRenderTarget?: WebGL3DRenderTarget
   readonly textures: PrecomputedTextures
 
   transmittanceMaterial = new PrecomputeMaterial({
@@ -352,6 +359,7 @@ export class PrecomputedTexturesGenerator {
 
   private readonly renderer: WebGLRenderer
   private readonly type: AnyFloatType
+  private readonly combinedScattering: boolean
   private readonly mesh = new Mesh(new PlaneGeometry(2, 2))
   private readonly scene = new Scene().add(this.mesh)
   private readonly camera = new Camera()
@@ -360,10 +368,16 @@ export class PrecomputedTexturesGenerator {
 
   constructor(
     renderer: WebGLRenderer,
-    type = isFloatLinearSupported(renderer) ? HalfFloatType : FloatType
+    {
+      type = isFloatLinearSupported(renderer) ? HalfFloatType : FloatType,
+      combinedScattering = true,
+      higherOrderScattering = true
+    }: PrecomputedTexturesGeneratorOptions = {}
   ) {
     this.renderer = renderer
     this.type = type
+    this.combinedScattering = combinedScattering
+
     this.transmittanceRenderTarget = createRenderTarget(
       type,
       TRANSMITTANCE_TEXTURE_WIDTH,
@@ -380,10 +394,20 @@ export class PrecomputedTexturesGenerator {
       IRRADIANCE_TEXTURE_WIDTH,
       IRRADIANCE_TEXTURE_HEIGHT
     )
+    if (higherOrderScattering) {
+      this.higherOrderScatteringRenderTarget = create3DRenderTarget(
+        type,
+        SCATTERING_TEXTURE_WIDTH,
+        SCATTERING_TEXTURE_HEIGHT,
+        SCATTERING_TEXTURE_DEPTH
+      )
+    }
     this.textures = {
       transmittanceTexture: this.transmittanceRenderTarget.texture,
       scatteringTexture: this.scatteringRenderTarget.texture,
-      irradianceTexture: this.irradianceRenderTarget.texture
+      irradianceTexture: this.irradianceRenderTarget.texture,
+      higherOrderScatteringTexture:
+        this.higherOrderScatteringRenderTarget?.texture
     }
   }
 
@@ -595,6 +619,14 @@ export class PrecomputedTexturesGenerator {
         output: 'scattering',
         additive: true
       })
+      if (this.higherOrderScatteringRenderTarget != null) {
+        this.computeMultipleScattering({
+          renderTarget: this.higherOrderScatteringRenderTarget,
+          context,
+          output: 'scattering',
+          additive: true
+        })
+      }
 
       this.renderer.setRenderTarget(null)
       yield
@@ -648,15 +680,19 @@ export class PrecomputedTexturesGenerator {
       this.disposed = true
       return
     }
+
     this.transmittanceRenderTarget.dispose()
     this.scatteringRenderTarget.dispose()
     this.irradianceRenderTarget.dispose()
+    this.higherOrderScatteringRenderTarget?.dispose()
+
     this.transmittanceMaterial.dispose()
     this.directIrradianceMaterial.dispose()
     this.singleScatteringMaterial.dispose()
     this.scatteringDensityMaterial.dispose()
     this.indirectIrradianceMaterial.dispose()
     this.multipleScatteringMaterial.dispose()
+
     this.mesh.geometry.dispose()
   }
 }
