@@ -48,8 +48,9 @@ import {
 import { requestIdleCallback } from './helpers/requestIdleCallback'
 import { type PrecomputedTextures } from './types'
 
+import common from './shaders/bruneton/common.glsl?raw'
 import definitions from './shaders/bruneton/definitions.glsl?raw'
-import functions from './shaders/bruneton/functions.glsl?raw'
+import precompute from './shaders/bruneton/precompute.glsl?raw'
 import directIrradianceShader from './shaders/precompute/directIrradiance.frag?raw'
 import indirectIrradianceShader from './shaders/precompute/indirectIrradiance.frag?raw'
 import multipleScatteringShader from './shaders/precompute/multipleScattering.frag?raw'
@@ -261,15 +262,21 @@ export class PrecomputedTexturesGenerator {
 
   transmittanceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(transmittanceShader, {
-      definitions,
-      functions
+      bruneton: {
+        definitions,
+        common,
+        precompute
+      }
     })
   })
 
   directIrradianceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(directIrradianceShader, {
-      definitions,
-      functions
+      bruneton: {
+        definitions,
+        common,
+        precompute
+      }
     }),
     uniforms: {
       transmittanceTexture: new Uniform(null)
@@ -278,8 +285,11 @@ export class PrecomputedTexturesGenerator {
 
   singleScatteringMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(singleScatteringShader, {
-      definitions,
-      functions
+      bruneton: {
+        definitions,
+        common,
+        precompute
+      }
     }),
     uniforms: {
       luminanceFromRadiance: new Uniform(new Matrix3()),
@@ -290,8 +300,11 @@ export class PrecomputedTexturesGenerator {
 
   scatteringDensityMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(scatteringDensityShader, {
-      definitions,
-      functions
+      bruneton: {
+        definitions,
+        common,
+        precompute
+      }
     }),
     uniforms: {
       transmittanceTexture: new Uniform(null),
@@ -306,8 +319,11 @@ export class PrecomputedTexturesGenerator {
 
   indirectIrradianceMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(indirectIrradianceShader, {
-      definitions,
-      functions
+      bruneton: {
+        definitions,
+        common,
+        precompute
+      }
     }),
     uniforms: {
       luminanceFromRadiance: new Uniform(new Matrix3()),
@@ -320,8 +336,11 @@ export class PrecomputedTexturesGenerator {
 
   multipleScatteringMaterial = new PrecomputeMaterial({
     fragmentShader: resolveIncludes(multipleScatteringShader, {
-      definitions,
-      functions
+      bruneton: {
+        definitions,
+        common,
+        precompute
+      }
     }),
     uniforms: {
       luminanceFromRadiance: new Uniform(new Matrix3()),

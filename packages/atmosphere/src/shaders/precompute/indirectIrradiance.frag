@@ -1,8 +1,9 @@
 precision highp float;
 precision highp sampler3D;
 
-#include "definitions"
-#include "functions"
+#include "bruneton/definitions"
+#include "bruneton/common"
+#include "bruneton/precompute"
 
 uniform AtmosphereParameters ATMOSPHERE;
 
