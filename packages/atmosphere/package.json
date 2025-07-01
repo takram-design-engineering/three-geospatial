@@ -36,6 +36,11 @@
       "import": "./build/shaders.js",
       "require": "./build/shaders.cjs",
       "types": "./types/shaders/index.d.ts"
+    },
+    "./shaders/bruneton": {
+      "import": "./build/shaders/bruneton.js",
+      "require": "./build/shaders/bruneton.cjs",
+      "types": "./types/shaders/bruneton/index.d.ts"
     }
   },
   "main": "./build/index.cjs",
