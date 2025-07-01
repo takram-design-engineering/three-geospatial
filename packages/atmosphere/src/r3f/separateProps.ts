@@ -28,6 +28,8 @@ export function separateProps<
       irradianceTexture,
       scatteringTexture,
       transmittanceTexture,
+      singleMieScatteringTexture,
+      higherOrderScatteringTexture,
       ellipsoid,
       correctAltitude,
       sunDirection,
