@@ -108,7 +108,7 @@ IrradianceSpectrum GetCombinedScattering(
 }
 
 // @shotamatsuda: Added for reading higher-order scattering texture.
-#ifdef HAS_HIGHER_ORDER_SCATTERING
+#ifdef HAS_HIGHER_ORDER_SCATTERING_TEXTURE
 IrradianceSpectrum GetScattering(
     const in AtmosphereParameters atmosphere,
     const in ReducedScatteringTexture scattering_texture,
@@ -128,7 +128,7 @@ IrradianceSpectrum GetScattering(
       texture(scattering_texture, uvw1) * lerp);
   return scattering;
 }
-#endif // HAS_HIGHER_ORDER_SCATTERING
+#endif // HAS_HIGHER_ORDER_SCATTERING_TEXTURE
 
 RadianceSpectrum GetSkyRadiance(
     const in AtmosphereParameters atmosphere,
@@ -193,15 +193,15 @@ RadianceSpectrum GetSkyRadiance(
         GetTransmittance(atmosphere, transmittance_texture,
             r, mu, shadow_length, ray_r_mu_intersects_ground);
     // @shotamatsuda: Occlude only single Rayleigh scattering by the shadow.
-#ifdef HAS_HIGHER_ORDER_SCATTERING
+#ifdef HAS_HIGHER_ORDER_SCATTERING_TEXTURE
     IrradianceSpectrum higher_order_scattering = GetScattering(
         atmosphere, higher_order_scattering_texture,
         r_p, mu_p, mu_s_p, nu, ray_r_mu_intersects_ground);
     IrradianceSpectrum single_scattering = scattering - higher_order_scattering;
     scattering = single_scattering * shadow_transmittance + higher_order_scattering;
-#else // HAS_HIGHER_ORDER_SCATTERING
+#else // HAS_HIGHER_ORDER_SCATTERING_TEXTURE
     scattering = scattering * shadow_transmittance;
-#endif // HAS_HIGHER_ORDER_SCATTERING
+#endif // HAS_HIGHER_ORDER_SCATTERING_TEXTURE
     single_mie_scattering = single_mie_scattering * shadow_transmittance;
   }
   return scattering * RayleighPhaseFunction(nu) + single_mie_scattering *
@@ -302,7 +302,7 @@ RadianceSpectrum GetSkyRadianceToPoint(
         r, mu, d, ray_r_mu_intersects_ground);
   }
   // @shotamatsuda: Occlude only single Rayleigh scattering by the shadow.
-#ifdef HAS_HIGHER_ORDER_SCATTERING
+#ifdef HAS_HIGHER_ORDER_SCATTERING_TEXTURE
   IrradianceSpectrum higher_order_scattering = GetScattering(
       atmosphere, higher_order_scattering_texture,
       r, mu, mu_s, nu, ray_r_mu_intersects_ground);
@@ -315,9 +315,9 @@ RadianceSpectrum GetSkyRadianceToPoint(
   scattering =
       single_scattering - shadow_transmittance * single_scattering_p +
       higher_order_scattering - transmittance * higher_order_scattering_p;
-#else // HAS_HIGHER_ORDER_SCATTERING
+#else // HAS_HIGHER_ORDER_SCATTERING_TEXTURE
   scattering = scattering - shadow_transmittance * scattering_p;
-#endif // HAS_HIGHER_ORDER_SCATTERING
+#endif // HAS_HIGHER_ORDER_SCATTERING_TEXTURE
 
   single_mie_scattering =
       single_mie_scattering - shadow_transmittance * single_mie_scattering_p;

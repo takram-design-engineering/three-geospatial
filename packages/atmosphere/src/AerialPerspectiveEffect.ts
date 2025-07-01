@@ -77,6 +77,7 @@ export interface AerialPerspectiveEffectOptions {
   irradianceTexture?: Texture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: Texture | null
+  singleMieScatteringTexture?: Data3DTexture | null
   higherOrderScatteringTexture?: Data3DTexture | null
 
   // Atmosphere controls
@@ -198,6 +199,7 @@ export class AerialPerspectiveEffect extends Effect {
       irradianceTexture = null,
       scatteringTexture = null,
       transmittanceTexture = null,
+      singleMieScatteringTexture = null,
       higherOrderScatteringTexture = null,
       ellipsoid,
       correctAltitude,
@@ -290,7 +292,7 @@ export class AerialPerspectiveEffect extends Effect {
             irradiance_texture: new Uniform(irradianceTexture),
             scattering_texture: new Uniform(scatteringTexture),
             transmittance_texture: new Uniform(transmittanceTexture),
-            single_mie_scattering_texture: new Uniform(scatteringTexture),
+            single_mie_scattering_texture: new Uniform(null),
             higher_order_scattering_texture: new Uniform(null),
           } satisfies AerialPerspectiveEffectUniforms)
         ),
@@ -311,6 +313,7 @@ export class AerialPerspectiveEffect extends Effect {
 
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
+    this.singleMieScatteringTexture = singleMieScatteringTexture
     this.higherOrderScatteringTexture = higherOrderScatteringTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
@@ -541,7 +544,6 @@ export class AerialPerspectiveEffect extends Effect {
 
   set scatteringTexture(value: Data3DTexture | null) {
     this.uniforms.get('scattering_texture').value = value
-    this.uniforms.get('single_mie_scattering_texture').value = value
   }
 
   get transmittanceTexture(): Texture | null {
@@ -553,8 +555,21 @@ export class AerialPerspectiveEffect extends Effect {
   }
 
   /** @private */
-  @define('HAS_HIGHER_ORDER_SCATTERING')
-  hasHigherOrderScattering = false
+  @define('COMBINED_SCATTERING_TEXTURES')
+  combinedScatteringTextures = false
+
+  get singleMieScatteringTexture(): Data3DTexture | null {
+    return this.uniforms.get('single_mie_scattering_texture').value
+  }
+
+  set singleMieScatteringTexture(value: Data3DTexture | null) {
+    this.uniforms.get('single_mie_scattering_texture').value = value
+    this.combinedScatteringTextures = value == null
+  }
+
+  /** @private */
+  @define('HAS_HIGHER_ORDER_SCATTERING_TEXTURE')
+  hasHigherOrderScatteringTexture = false
 
   get higherOrderScatteringTexture(): Data3DTexture | null {
     return this.uniforms.get('higher_order_scattering_texture').value
@@ -562,7 +577,7 @@ export class AerialPerspectiveEffect extends Effect {
 
   set higherOrderScatteringTexture(value: Data3DTexture | null) {
     this.uniforms.get('higher_order_scattering_texture').value = value
-    this.hasHigherOrderScattering = value != null
+    this.hasHigherOrderScatteringTexture = value != null
   }
 
   get ellipsoid(): Ellipsoid {

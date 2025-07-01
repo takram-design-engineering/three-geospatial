@@ -9,8 +9,9 @@ import {
 export interface PrecomputedTextures {
   irradianceTexture: Texture
   scatteringTexture: Data3DTexture
-  higherOrderScatteringTexture?: Data3DTexture
   transmittanceTexture: Texture
+  singleMieScatteringTexture?: Data3DTexture
+  higherOrderScatteringTexture?: Data3DTexture
 }
 
 export interface AtmosphereOverlay {

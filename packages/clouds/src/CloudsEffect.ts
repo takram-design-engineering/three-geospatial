@@ -799,6 +799,14 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.transmittanceTexture = value
   }
 
+  get singleMieScatteringTexture(): Data3DTexture | null {
+    return this.cloudsPass.currentMaterial.singleMieScatteringTexture
+  }
+
+  set singleMieScatteringTexture(value: Data3DTexture | null) {
+    this.cloudsPass.currentMaterial.singleMieScatteringTexture = value
+  }
+
   get higherOrderScatteringTexture(): Data3DTexture | null {
     return this.cloudsPass.currentMaterial.higherOrderScatteringTexture
   }

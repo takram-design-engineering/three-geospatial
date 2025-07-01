@@ -53,6 +53,7 @@ export interface AtmosphereMaterialProps {
   irradianceTexture?: Texture | null
   scatteringTexture?: Data3DTexture | null
   transmittanceTexture?: Texture | null
+  singleMieScatteringTexture?: Data3DTexture | null
   higherOrderScatteringTexture?: Data3DTexture | null
 
   // Atmosphere controls
@@ -110,6 +111,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       irradianceTexture = null,
       scatteringTexture = null,
       transmittanceTexture = null,
+      singleMieScatteringTexture = null,
       higherOrderScatteringTexture = null,
       ellipsoid,
       correctAltitude,
@@ -139,7 +141,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         irradiance_texture: new Uniform(irradianceTexture),
         scattering_texture: new Uniform(scatteringTexture),
         transmittance_texture: new Uniform(transmittanceTexture),
-        single_mie_scattering_texture: new Uniform(scatteringTexture),
+        single_mie_scattering_texture: new Uniform(null),
         higher_order_scattering_texture: new Uniform(null),
         ...others.uniforms
       } satisfies AtmosphereMaterialBaseUniforms,
@@ -159,6 +161,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     })
 
     this.atmosphere = atmosphere
+    this.singleMieScatteringTexture = singleMieScatteringTexture
     this.higherOrderScatteringTexture = higherOrderScatteringTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
@@ -226,7 +229,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   set scatteringTexture(value: Data3DTexture | null) {
     this.uniforms.scattering_texture.value = value
-    this.uniforms.single_mie_scattering_texture.value = value
   }
 
   get transmittanceTexture(): Texture | null {
@@ -238,8 +240,21 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   }
 
   /** @private */
-  @define('HAS_HIGHER_ORDER_SCATTERING')
-  hasHigherOrderScattering = false
+  @define('COMBINED_SCATTERING_TEXTURES')
+  combinedScatteringTextures = false
+
+  get singleMieScatteringTexture(): Data3DTexture | null {
+    return this.uniforms.single_mie_scattering_texture.value
+  }
+
+  set singleMieScatteringTexture(value: Data3DTexture | null) {
+    this.uniforms.single_mie_scattering_texture.value = value
+    this.combinedScatteringTextures = value == null
+  }
+
+  /** @private */
+  @define('HAS_HIGHER_ORDER_SCATTERING_TEXTURE')
+  hasHigherOrderScatteringTexture = false
 
   get higherOrderScatteringTexture(): Data3DTexture | null {
     return this.uniforms.higher_order_scattering_texture.value
@@ -247,7 +262,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   set higherOrderScatteringTexture(value: Data3DTexture | null) {
     this.uniforms.higher_order_scattering_texture.value = value
-    this.hasHigherOrderScattering = value != null
+    this.hasHigherOrderScatteringTexture = value != null
   }
 
   get ellipsoidCenter(): Vector3 {
