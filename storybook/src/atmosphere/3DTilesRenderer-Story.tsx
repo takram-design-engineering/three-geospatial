@@ -151,8 +151,8 @@ const Scene: FC<SceneProps> = ({
         >
           {enabled && !normal && !depth && (
             <AerialPerspective
-              sunIrradiance={sun}
-              skyIrradiance={sky}
+              sunLight={sun}
+              skyLight={sky}
               transmittance={transmittance}
               inscatter={inscatter}
               correctGeometricError={correctGeometricError}

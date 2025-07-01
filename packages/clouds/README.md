@@ -41,7 +41,7 @@ const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
       <Clouds qualityPreset='high' coverage={0.4} />
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -81,7 +81,7 @@ const Scene = () => (
           coverageFilterWidth={0.5}
         />
       </Clouds>
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -100,7 +100,7 @@ const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
       <Clouds localWeatherTexture={/* path to weather texture */} />
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -131,7 +131,7 @@ const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
       <Clouds localWeatherTexture={localWeatherTexture} />
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -247,7 +247,7 @@ const Scene = () => (
       {/* By placing it inside Atmosphere along with AerialPerspective, the
       output buffers are routed to AerialPerspective and composited into the
       final render. */}
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -368,7 +368,7 @@ const Scene = () => {
           />
           {/* The number of cloud layers is limited to 4. */}
         </Clouds>
-        <AerialPerspective sky skyIrradiance sunIrradiance />
+        <AerialPerspective sky sunLight skyLight />
       </EffectComposer>
     </Atmosphere>
   )

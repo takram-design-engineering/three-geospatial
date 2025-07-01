@@ -44,7 +44,7 @@ const Scene = () => (
       <meshBasicMaterial />
     </mesh>
     <EffectComposer enableNormalPass>
-      <AerialPerspective sunIrradiance skyIrradiance />
+      <AerialPerspective sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -129,7 +129,7 @@ const Scene = () => (
     </mesh>
     <EffectComposer enableNormalPass>
       <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
-      <AerialPerspective sunIrradiance skyIrradiance />
+      <AerialPerspective sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -189,7 +189,7 @@ scene.add(sunLight)
 scene.add(sunLight.target)
 
 // Demonstrates light-source lighting here. For post-process lighting, set
-// sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
+// sunLight and skyLight to true, remove SkyLightProbe and
 // SunDirectionalLight, and provide a normal buffer to AerialPerspectiveEffect.
 const aerialPerspective = new AerialPerspectiveEffect(camera)
 
@@ -1033,7 +1033,7 @@ Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s [`Effec
 normalBuffer: Texture | null = null
 ```
 
-The normal buffer used for post-process lighting. It is not required if both `sunIrradiance` and `skyIrradiance` are disabled.
+The normal buffer used for post-process lighting. It is not required if both `sunLight` and `skyLight` are disabled.
 
 `EffectComposer`’s default normal buffer lacks sufficient precision, causing banding in shaded areas. Using a floating-point normal buffer resolves this issue.
 
@@ -1111,11 +1111,11 @@ sunDirection: Vector3 = new Vector3()
 
 See [sunDirection](#sundirection).
 
-#### sunIrradiance, skyIrradiance
+#### sunLight, skyLight
 
 ```ts
-sunIrradiance: boolean = false
-skyIrradiance: boolean = false
+sunLight: boolean = false
+skyLight: boolean = false
 ```
 
 Whether to apply sun and sky irradiance as post-process lighting.

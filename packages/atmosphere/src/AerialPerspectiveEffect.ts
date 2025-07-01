@@ -85,8 +85,12 @@ export interface AerialPerspectiveEffectOptions {
   sunDirection?: Vector3
 
   // Rendering options
+  /** @deprecated Use sunLight instead. */
   sunIrradiance?: boolean
+  sunLight?: boolean
+  /** @deprecated Use skyLight instead. */
   skyIrradiance?: boolean
+  skyLight?: boolean
   transmittance?: boolean
   inscatter?: boolean
   irradianceScale?: number
@@ -153,8 +157,8 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
   correctGeometricError: true,
-  sunIrradiance: false,
-  skyIrradiance: false,
+  sunLight: false,
+  skyLight: false,
   transmittance: true,
   inscatter: true,
   irradianceScale: 1,
@@ -195,7 +199,9 @@ export class AerialPerspectiveEffect extends Effect {
       correctGeometricError,
       sunDirection,
       sunIrradiance,
+      sunLight,
       skyIrradiance,
+      skyLight,
       transmittance,
       inscatter,
       irradianceScale,
@@ -301,8 +307,8 @@ export class AerialPerspectiveEffect extends Effect {
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.correctGeometricError = correctGeometricError
-    this.sunIrradiance = sunIrradiance
-    this.skyIrradiance = skyIrradiance
+    this.sunLight = sunIrradiance ?? sunLight
+    this.skyLight = skyIrradiance ?? skyLight
     this.transmittance = transmittance
     this.inscatter = inscatter
     this.sky = sky
@@ -558,11 +564,31 @@ export class AerialPerspectiveEffect extends Effect {
     return this.uniforms.get('sunDirection').value
   }
 
-  @define('SUN_IRRADIANCE')
-  sunIrradiance: boolean
+  /** @deprecated Use sunLight instead. */
+  get sunIrradiance(): boolean {
+    return this.sunLight
+  }
 
-  @define('SKY_IRRADIANCE')
-  skyIrradiance: boolean
+  /** @deprecated Use sunLight instead. */
+  set sunIrradiance(value: boolean) {
+    this.sunLight = value
+  }
+
+  @define('SUN_LIGHT')
+  sunLight: boolean
+
+  /** @deprecated Use skyLight instead. */
+  get skyIrradiance(): boolean {
+    return this.skyLight
+  }
+
+  /** @deprecated Use skyLight instead. */
+  set skyIrradiance(value: boolean) {
+    this.skyLight = value
+  }
+
+  @define('SKY_LIGHT')
+  skyLight: boolean
 
   @define('TRANSMITTANCE')
   transmittance: boolean

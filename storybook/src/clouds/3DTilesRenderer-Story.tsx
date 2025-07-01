@@ -185,8 +185,8 @@ const Scene: FC<SceneProps> = ({
               )}
               <AerialPerspective
                 sky
-                sunIrradiance
-                skyIrradiance
+                sunLight
+                skyLight
                 correctGeometricError={correctGeometricError}
                 irradianceScale={2 / Math.PI}
               />

@@ -98,7 +98,7 @@ void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
   positionECEF = mix(positionECEF, spherePosition, idealSphereAlpha);
 }
 
-#if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+#if defined(SUN_LIGHT) || defined(SKY_LIGHT)
 
 vec3 getSunSkyIrradiance(
   const vec3 positionECEF,
@@ -106,8 +106,8 @@ vec3 getSunSkyIrradiance(
   const vec3 inputColor,
   const float sunTransmittance
 ) {
-  // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
-  // defined, regard the inputColor as radiance at the texel.
+  // Assume lambertian BRDF. If both SUN_LIGHT and SKY_LIGHT are not defined,
+  // regard the inputColor as radiance at the texel.
   vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIlluminance(positionECEF, normal, sunDirection, skyIrradiance);
@@ -116,16 +116,16 @@ vec3 getSunSkyIrradiance(
   sunIrradiance *= sunTransmittance;
   #endif // HAS_SHADOW
 
-  #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
+  #if defined(SUN_LIGHT) && defined(SKY_LIGHT)
   return albedo * (sunIrradiance + skyIrradiance);
-  #elif defined(SUN_IRRADIANCE)
+  #elif defined(SUN_LIGHT)
   return albedo * sunIrradiance;
-  #elif defined(SKY_IRRADIANCE)
+  #elif defined(SKY_LIGHT)
   return albedo * skyIrradiance;
-  #endif // defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
+  #endif // defined(SUN_LIGHT) && defined(SKY_LIGHT)
 }
 
-#endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+#endif // defined(SUN_LIGHT) || defined(SKY_LIGHT)
 
 #if defined(TRANSMITTANCE) || defined(INSCATTER)
 
@@ -349,15 +349,15 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // HAS_SHADOW
 
   vec3 radiance;
-  #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+  #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
   radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
   #ifdef HAS_IRRADIANCE_MASK
   float irradianceMask = texture(irradianceMaskBuffer, uv).IRRADIANCE_MASK_CHANNEL_;
   radiance = mix(inputColor.rgb, radiance, irradianceMask);
   #endif // HAS_IRRADIANCE_MASK
-  #else // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+  #else // defined(SUN_LIGHT) || defined(SKY_LIGHT)
   radiance = inputColor.rgb;
-  #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+  #endif // defined(SUN_LIGHT) || defined(SKY_LIGHT)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
   applyTransmittanceInscatter(positionECEF, shadowLength, radiance);

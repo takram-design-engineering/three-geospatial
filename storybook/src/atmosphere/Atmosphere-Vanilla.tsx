@@ -122,7 +122,7 @@ function init(container: HTMLDivElement): void {
   group.add(torusKnot)
 
   // Demonstrates light-source lighting here. For post-process lighting, set
-  // sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
+  // sunLight and skyLight to true, remove SkyLightProbe and
   // SunDirectionalLight, and provide a normal buffer to
   // AerialPerspectiveEffect.
   aerialPerspective = new AerialPerspectiveEffect(camera)

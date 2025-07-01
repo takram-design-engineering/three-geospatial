@@ -275,7 +275,7 @@ const Scene: FC = () => {
                   inverted={invertMask}
                 />
               )}
-              <AerialPerspective ref={effectRef} sunIrradiance skyIrradiance />
+              <AerialPerspective ref={effectRef} sunLight skyLight />
               <LensFlare />
               <ToneMapping mode={toneMappingMode} />
               <SMAA />

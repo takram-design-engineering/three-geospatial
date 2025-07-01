@@ -98,8 +98,8 @@ function init(container: HTMLDivElement): void {
   // Demonstrates post-process lighting here.
   aerialPerspective = new AerialPerspectiveEffect(camera)
   aerialPerspective.sky = true
-  aerialPerspective.sunIrradiance = true
-  aerialPerspective.skyIrradiance = true
+  aerialPerspective.sunLight = true
+  aerialPerspective.skyLight = true
 
   // For the lighting in AerialPerspectiveEffect to work, we must provide a
   // normal buffer. Alternatively, this can be sourced from the MRT output.

@@ -81,7 +81,7 @@ const Scene: FC = () => {
             {enabled && (
               <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps} />
             )}
-            <AerialPerspective sky sunIrradiance skyIrradiance />
+            <AerialPerspective sky sunLight skyLight />
             {toneMapping && (
               <>
                 <LensFlare />

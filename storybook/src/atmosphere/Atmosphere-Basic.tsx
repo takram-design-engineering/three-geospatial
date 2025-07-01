@@ -202,8 +202,8 @@ const Scene: FC = () => {
         >
           {enabled && !normal && !depth && (
             <AerialPerspective
-              sunIrradiance={mode === 'post-process' && sun}
-              skyIrradiance={mode === 'post-process' && sky}
+              sunLight={mode === 'post-process' && sun}
+              skyLight={mode === 'post-process' && sky}
               transmittance={transmittance}
               inscatter={inscatter}
             />
