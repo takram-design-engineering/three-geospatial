@@ -1,9 +1,8 @@
 import { ScreenQuad } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { button } from 'leva'
-import { useEffect, useMemo, useState, type FC } from 'react'
+import { useEffect, useMemo, type FC } from 'react'
 import {
-  ClampToEdgeWrapping,
   DataTexture,
   GLSL3,
   LinearFilter,
@@ -53,32 +52,7 @@ export const DataTextureViewer: FC<{
     [texture]
   )
 
-  const [exrTexture, setEXRTexture] = useState<DataTexture>()
-  useEffect(() => {
-    let canceled = false
-    ;(async () => {
-      const data = await createEXRTexture(texture, type)
-      if (canceled) {
-        return
-      }
-      const loader = new EXRLoader()
-      const parsed = loader.parse(data)
-      const exr = new DataTexture(parsed.data, parsed.width, parsed.height)
-      exr.type = parsed.type
-      exr.wrapS = ClampToEdgeWrapping
-      exr.wrapT = ClampToEdgeWrapping
-      exr.minFilter = LinearFilter
-      exr.magFilter = LinearFilter
-      exr.colorSpace = NoColorSpace
-      exr.needsUpdate = true
-      setEXRTexture(exr)
-    })().catch(error => {
-      console.error(error)
-    })
-    return () => {
-      canceled = true
-    }
-  }, [texture, type])
+  const renderer = useThree(({ gl }) => gl)
 
   const { gammaCorrect, zoom, valueScaleLog10, previewEXR } = useControls({
     gammaCorrect: true,
@@ -86,11 +60,39 @@ export const DataTextureViewer: FC<{
     valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
     previewEXR: false,
     export: button(() => {
-      saveEXRTexture(texture, fileName, type).catch(error => {
+      saveEXRTexture(renderer, texture, fileName, type).catch(error => {
         console.error(error)
       })
     })
   })
+
+  const exrTexture = useMemo(() => new DataTexture(), [])
+  useEffect(() => {
+    let canceled = false
+    ;(async () => {
+      const data = await createEXRTexture(renderer, texture, type)
+      if (canceled) {
+        return
+      }
+      const loader = new EXRLoader()
+      const parsed = loader.parse(data)
+      exrTexture.image = {
+        data: parsed.data,
+        width: parsed.width,
+        height: parsed.height
+      }
+      exrTexture.type = parsed.type
+      exrTexture.minFilter = LinearFilter
+      exrTexture.magFilter = LinearFilter
+      exrTexture.colorSpace = NoColorSpace
+      exrTexture.needsUpdate = true
+    })().catch(error => {
+      console.error(error)
+    })
+    return () => {
+      canceled = true
+    }
+  }, [texture, type, renderer, previewEXR, exrTexture])
 
   useFrame(({ size }) => {
     material.uniforms.inputTexture.value = previewEXR ? exrTexture : texture

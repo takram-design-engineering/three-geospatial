@@ -8,15 +8,16 @@ import {
   Scene,
   ShaderMaterial,
   Uniform,
-  WebGLRenderer,
   WebGLRenderTarget,
-  type Texture
+  type Texture,
+  type WebGLRenderer
 } from 'three'
 import { EXRExporter } from 'three/addons/exporters/EXRExporter.js'
 
 import { type AnyFloatType } from '@takram/three-geospatial'
 
 export async function createEXRTexture(
+  renderer: WebGLRenderer,
   texture: Texture,
   type: AnyFloatType = HalfFloatType
 ): Promise<ArrayBuffer> {
@@ -47,7 +48,6 @@ export async function createEXRTexture(
   scene.add(quad)
   const camera = new Camera()
 
-  const renderer = new WebGLRenderer()
   const renderTarget = new WebGLRenderTarget(
     texture.image.width,
     texture.image.height,
@@ -58,22 +58,23 @@ export async function createEXRTexture(
   )
   renderer.setRenderTarget(renderTarget)
   renderer.render(scene, camera)
+  renderer.setRenderTarget(null)
 
   const exporter = new EXRExporter()
   const array = await exporter.parse(renderer, renderTarget, { type })
 
   material.dispose()
-  renderer.dispose()
   renderTarget.dispose()
   return array.buffer
 }
 
 export async function saveEXRTexture(
+  renderer: WebGLRenderer,
   texture: Texture,
   fileName: string,
   type?: AnyFloatType
 ): Promise<void> {
-  const buffer = await createEXRTexture(texture, type)
+  const buffer = await createEXRTexture(renderer, texture, type)
   const blob = new Blob([buffer])
 
   const a = document.createElement('a')

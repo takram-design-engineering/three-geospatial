@@ -41,28 +41,57 @@ interface LoaderLike<T> extends Loader<T> {
   ) => T
 }
 
-interface LoadTextureOptions<
-  T extends Texture,
-  L extends LoaderLike<T> = LoaderLike<T>
-> {
-  loader: L
-  extension: string
+interface LoadTextureOptions<T> {
+  key: string
+  loader: LoaderLike<T>
+  path: string
+}
+
+const TRANSMITTANCE_SIZE = {
+  width: TRANSMITTANCE_TEXTURE_WIDTH,
+  height: TRANSMITTANCE_TEXTURE_HEIGHT
+}
+
+const SCATTERING_SIZE = {
+  width: SCATTERING_TEXTURE_WIDTH,
+  height: SCATTERING_TEXTURE_HEIGHT,
+  depth: SCATTERING_TEXTURE_DEPTH
+}
+
+const IRRADIANCE_SIZE = {
+  width: IRRADIANCE_TEXTURE_WIDTH,
+  height: IRRADIANCE_TEXTURE_HEIGHT
 }
 
 export type PrecomputedTexturesFormat = 'binary' | 'exr'
 
+export interface PrecomputedTexturesLoaderOptions {
+  format?: PrecomputedTexturesFormat
+  type?: AnyFloatType
+  combinedScattering?: boolean
+  higherOrderScattering?: boolean
+}
+
 export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
   format: PrecomputedTexturesFormat
   type: AnyFloatType
+  combinedScattering: boolean
+  higherOrderScattering: boolean
 
   constructor(
-    format: PrecomputedTexturesFormat = 'exr',
-    type: AnyFloatType = HalfFloatType,
+    {
+      format = 'exr',
+      type = HalfFloatType,
+      combinedScattering = true,
+      higherOrderScattering = false
+    }: PrecomputedTexturesLoaderOptions = {},
     manager?: LoadingManager
   ) {
     super(manager)
     this.format = format
     this.type = type
+    this.combinedScattering = combinedScattering
+    this.higherOrderScattering = higherOrderScattering
   }
 
   setType(renderer: WebGLRenderer): this {
@@ -83,15 +112,16 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
   ): PrecomputedTextures {
     const textures: Record<string, Texture> = {}
 
-    const loadTexture = <T extends Texture>(
-      name: 'irradiance' | 'scattering' | 'transmittance',
-      { loader, extension }: LoadTextureOptions<T>
-    ): T => {
+    const loadTexture = <T extends Texture>({
+      key,
+      loader,
+      path
+    }: LoadTextureOptions<T>): T => {
       loader.setRequestHeader(this.requestHeader)
       loader.setPath(this.path)
       loader.setWithCredentials(this.withCredentials)
       return loader.load(
-        join(url, `${name}${extension}`),
+        join(url, path),
         texture => {
           texture.minFilter = LinearFilter
           texture.magFilter = LinearFilter
@@ -105,11 +135,15 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
             )
           }
 
-          textures[`${name}Texture`] = texture
+          textures[`${key}Texture`] = texture
           if (
             textures.irradianceTexture != null &&
             textures.scatteringTexture != null &&
-            textures.transmittanceTexture != null
+            textures.transmittanceTexture != null &&
+            (this.combinedScattering ||
+              textures.singleMieScatteringTexture != null) &&
+            (!this.higherOrderScattering ||
+              textures.higherOrderScatteringTexture != null)
           ) {
             onLoad?.(textures as unknown as PrecomputedTextures)
           }
@@ -119,86 +153,95 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
       )
     }
 
-    let irradianceOptions: LoadTextureOptions<DataTexture>
-    let scatteringOptions: LoadTextureOptions<Data3DTexture>
-    let transmittanceOptions: LoadTextureOptions<DataTexture>
-
     if (this.format === 'exr') {
-      irradianceOptions = {
-        loader: new EXRTextureLoader(
-          {
-            width: IRRADIANCE_TEXTURE_WIDTH,
-            height: IRRADIANCE_TEXTURE_HEIGHT
-          },
-          this.manager
-        ),
-        extension: '.exr'
-      }
-      scatteringOptions = {
-        loader: new EXR3DTextureLoader(
-          {
-            width: SCATTERING_TEXTURE_WIDTH,
-            height: SCATTERING_TEXTURE_HEIGHT,
-            depth: SCATTERING_TEXTURE_DEPTH
-          },
-          this.manager
-        ),
-        extension: '.exr'
-      }
-      transmittanceOptions = {
-        loader: new EXRTextureLoader(
-          {
-            width: TRANSMITTANCE_TEXTURE_WIDTH,
-            height: TRANSMITTANCE_TEXTURE_HEIGHT
-          },
-          this.manager
-        ),
-        extension: '.exr'
+      return {
+        transmittanceTexture: loadTexture({
+          key: 'transmittance',
+          loader: new EXRTextureLoader(TRANSMITTANCE_SIZE, this.manager),
+          path: 'transmittance.exr'
+        }),
+        scatteringTexture: loadTexture({
+          key: 'scattering',
+          loader: new EXR3DTextureLoader(SCATTERING_SIZE, this.manager),
+          path: 'scattering.exr'
+        }),
+        irradianceTexture: loadTexture({
+          key: 'irradiance',
+          loader: new EXRTextureLoader(IRRADIANCE_SIZE, this.manager),
+          path: 'irradiance.exr'
+        }),
+        singleMieScatteringTexture: !this.combinedScattering
+          ? loadTexture({
+              key: 'singleMieScattering',
+              loader: new EXR3DTextureLoader(SCATTERING_SIZE, this.manager),
+              path: 'single_mie_scattering.exr'
+            })
+          : undefined,
+        higherOrderScatteringTexture: this.higherOrderScattering
+          ? loadTexture({
+              key: 'higherOrderScattering',
+              loader: new EXR3DTextureLoader(SCATTERING_SIZE, this.manager),
+              path: 'higher_order_scattering.exr'
+            })
+          : undefined
       }
     } else {
-      irradianceOptions = {
-        loader: new DataTextureLoader(
-          DataTexture,
-          parseFloat16Array,
-          {
-            width: IRRADIANCE_TEXTURE_WIDTH,
-            height: IRRADIANCE_TEXTURE_HEIGHT
-          },
-          this.manager
-        ),
-        extension: '.bin'
+      return {
+        transmittanceTexture: loadTexture({
+          key: 'transmittance',
+          loader: new DataTextureLoader(
+            DataTexture,
+            parseFloat16Array,
+            TRANSMITTANCE_SIZE,
+            this.manager
+          ),
+          path: 'transmittance.bin'
+        }),
+        scatteringTexture: loadTexture({
+          key: 'scattering',
+          loader: new DataTextureLoader(
+            Data3DTexture,
+            parseFloat16Array,
+            SCATTERING_SIZE,
+            this.manager
+          ),
+          path: 'scattering.bin'
+        }),
+        irradianceTexture: loadTexture({
+          key: 'irradiance',
+          loader: new DataTextureLoader(
+            DataTexture,
+            parseFloat16Array,
+            IRRADIANCE_SIZE,
+            this.manager
+          ),
+          path: 'irradiance.bin'
+        }),
+        singleMieScatteringTexture: !this.combinedScattering
+          ? loadTexture({
+              key: 'singleMieScattering',
+              loader: new DataTextureLoader(
+                Data3DTexture,
+                parseFloat16Array,
+                SCATTERING_SIZE,
+                this.manager
+              ),
+              path: 'single_mie_scattering.bin'
+            })
+          : undefined,
+        higherOrderScatteringTexture: this.higherOrderScattering
+          ? loadTexture({
+              key: 'higherOrderScattering',
+              loader: new DataTextureLoader(
+                Data3DTexture,
+                parseFloat16Array,
+                SCATTERING_SIZE,
+                this.manager
+              ),
+              path: 'higher_order_scattering.bin'
+            })
+          : undefined
       }
-      scatteringOptions = {
-        loader: new DataTextureLoader(
-          Data3DTexture,
-          parseFloat16Array,
-          {
-            width: SCATTERING_TEXTURE_WIDTH,
-            height: SCATTERING_TEXTURE_HEIGHT,
-            depth: SCATTERING_TEXTURE_DEPTH
-          },
-          this.manager
-        ),
-        extension: '.bin'
-      }
-      transmittanceOptions = {
-        loader: new DataTextureLoader(
-          DataTexture,
-          parseFloat16Array,
-          {
-            width: TRANSMITTANCE_TEXTURE_WIDTH,
-            height: TRANSMITTANCE_TEXTURE_HEIGHT
-          },
-          this.manager
-        ),
-        extension: '.bin'
-      }
-    }
-
-    return {
-      irradianceTexture: loadTexture('irradiance', irradianceOptions),
-      scatteringTexture: loadTexture('scattering', scatteringOptions),
-      transmittanceTexture: loadTexture('transmittance', transmittanceOptions)
     }
   }
 }

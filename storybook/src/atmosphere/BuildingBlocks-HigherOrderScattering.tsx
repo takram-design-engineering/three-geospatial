@@ -10,8 +10,14 @@ import {
 import { useControls } from '../helpers/useControls'
 import { Data3DTextureViewer } from './helpers/Data3DTextureViewer'
 
-const binaryLoader = new PrecomputedTexturesLoader('binary')
-const exrLoader = new PrecomputedTexturesLoader('exr')
+const binaryLoader = new PrecomputedTexturesLoader({
+  format: 'binary',
+  higherOrderScattering: true
+})
+const exrLoader = new PrecomputedTexturesLoader({
+  format: 'exr',
+  higherOrderScattering: true
+})
 
 const Content: FC = () => {
   const { source } = useControls({
@@ -53,7 +59,7 @@ const Content: FC = () => {
   return (
     <Data3DTextureViewer
       texture={texture}
-      fileName='scattering.exr'
+      fileName='higher_order_scattering.exr'
       valueScale={0.5}
     />
   )

@@ -10,8 +10,8 @@ import {
 import { useControls } from '../helpers/useControls'
 import { Data3DTextureViewer } from './helpers/Data3DTextureViewer'
 
-const binaryLoader = new PrecomputedTexturesLoader('binary')
-const exrLoader = new PrecomputedTexturesLoader('exr')
+const binaryLoader = new PrecomputedTexturesLoader({ format: 'binary' })
+const exrLoader = new PrecomputedTexturesLoader({ format: 'exr' })
 
 const Content: FC = () => {
   const { source } = useControls({
