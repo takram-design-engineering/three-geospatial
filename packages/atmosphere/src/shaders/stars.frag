@@ -45,7 +45,7 @@ void main() {
   }
 
   vec3 transmittance;
-  vec3 radiance = GetSkyLuminance(
+  vec3 radiance = GetSkyRadiance(
     vCameraPosition - vEllipsoidCenter,
     normalize(vRayDirection),
     0.0,

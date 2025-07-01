@@ -45,7 +45,7 @@ out GroundIrradiance vGroundIrradiance;
 out CloudsIrradiance vCloudsIrradiance;
 
 void sampleSunSkyIrradiance(const vec3 positionECEF) {
-  vGroundIrradiance.sun = GetSunAndSkyIlluminanceForParticle(
+  vGroundIrradiance.sun = GetSunAndSkyScalarIrradiance(
     positionECEF * METER_TO_LENGTH_UNIT,
     sunDirection,
     vGroundIrradiance.sky
@@ -53,12 +53,12 @@ void sampleSunSkyIrradiance(const vec3 positionECEF) {
 
   vec3 surfaceNormal = normalize(positionECEF);
   vec2 radii = (bottomRadius + vec2(minHeight, maxHeight)) * METER_TO_LENGTH_UNIT;
-  vCloudsIrradiance.minSun = GetSunAndSkyIlluminanceForParticle(
+  vCloudsIrradiance.minSun = GetSunAndSkyScalarIrradiance(
     surfaceNormal * radii.x,
     sunDirection,
     vCloudsIrradiance.minSky
   );
-  vCloudsIrradiance.maxSun = GetSunAndSkyIlluminanceForParticle(
+  vCloudsIrradiance.maxSun = GetSunAndSkyScalarIrradiance(
     surfaceNormal * radii.y,
     sunDirection,
     vCloudsIrradiance.maxSky

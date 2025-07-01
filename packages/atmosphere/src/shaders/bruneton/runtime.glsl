@@ -306,7 +306,7 @@ IrradianceSpectrum GetSunAndSkyIrradiance(
 }
 
 // @shotamatsuda: Added for the clouds.
-IrradianceSpectrum GetSunAndSkyIrradianceForParticle(
+IrradianceSpectrum GetSunAndSkyScalarIrradiance(
     const in AtmosphereParameters atmosphere,
     const in TransmittanceTexture transmittance_texture,
     const in IrradianceTexture irradiance_texture,
@@ -359,12 +359,18 @@ Illuminance3 GetSunAndSkyIlluminance(
 }
 
 // @shotamatsuda: Added for the clouds.
-Illuminance3 GetSunAndSkyIlluminanceForParticle(
+Illuminance3 GetSunAndSkyScalarIlluminance(
     Position p,  Direction sun_direction,
     out IrradianceSpectrum sky_irradiance) {
-  IrradianceSpectrum sun_irradiance = GetSunAndSkyIrradianceForParticle(
+  IrradianceSpectrum sun_irradiance = GetSunAndSkyScalarIrradiance(
       ATMOSPHERE, transmittance_texture, irradiance_texture, p,
       sun_direction, sky_irradiance);
   sky_irradiance *= SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
   return sun_irradiance * SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
 }
+
+#define GetSolarRadiance GetSolarLuminance
+#define GetSkyRadiance GetSkyLuminance
+#define GetSkyRadianceToPoint GetSkyLuminanceToPoint
+#define GetSunAndSkyIrradiance GetSunAndSkyIlluminance
+#define GetSunAndSkyScalarIrradiance GetSunAndSkyScalarIlluminance

@@ -430,7 +430,7 @@ vec3 getGroundSunSkyIrradiance(
   out vec3 skyIrradiance
 ) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIlluminance(
+  return GetSunAndSkyIrradiance(
     (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
     surfaceNormal,
     sunDirection,
@@ -444,11 +444,7 @@ vec3 getGroundSunSkyIrradiance(
 
 vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3 skyIrradiance) {
   #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIlluminanceForParticle(
-    position * METER_TO_LENGTH_UNIT,
-    sunDirection,
-    skyIrradiance
-  );
+  return GetSunAndSkyScalarIrradiance(position * METER_TO_LENGTH_UNIT, sunDirection, skyIrradiance);
   #else // ACCURATE_SUN_SKY_IRRADIANCE
   float alpha = remapClamped(height, minHeight, maxHeight);
   skyIrradiance = mix(vCloudsIrradiance.minSky, vCloudsIrradiance.maxSky, alpha);
@@ -457,7 +453,7 @@ vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3
 }
 
 #ifdef GROUND_IRRADIANCE
-vec3 approximateIrradianceFromGround(
+vec3 approximateRadianceFromGround(
   const vec3 position,
   const vec3 surfaceNormal,
   const float height,
@@ -571,7 +567,7 @@ vec4 marchClouds(
       #ifdef GROUND_IRRADIANCE
       // Fudge factor for the irradiance from ground.
       if (height < shadowTopHeight && mipLevel < 0.5) {
-        vec3 groundIrradiance = approximateIrradianceFromGround(
+        vec3 groundIrradiance = approximateRadianceFromGround(
           position,
           surfaceNormal,
           height,
@@ -724,7 +720,7 @@ void applyAerialPerspective(
   inout vec4 color
 ) {
   vec3 transmittance;
-  vec3 inscatter = GetSkyLuminanceToPoint(
+  vec3 inscatter = GetSkyRadianceToPoint(
     cameraPosition * METER_TO_LENGTH_UNIT,
     frontPosition * METER_TO_LENGTH_UNIT,
     shadowLength * METER_TO_LENGTH_UNIT,

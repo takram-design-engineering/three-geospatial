@@ -33,7 +33,7 @@ vec3 getSkyRadiance(
   const float lunarRadianceScale
 ) {
   vec3 transmittance;
-  vec3 radiance = GetSkyLuminance(
+  vec3 radiance = GetSkyRadiance(
     cameraPosition,
     rayDirection,
     shadowLength,
@@ -59,7 +59,7 @@ vec3 getSkyRadiance(
       ATMOSPHERE.sun_angular_radius - fragmentAngle,
       angle
     );
-    radiance += transmittance * GetSolarLuminance() * antialias;
+    radiance += transmittance * GetSolarRadiance() * antialias;
   }
   #endif // SUN
 

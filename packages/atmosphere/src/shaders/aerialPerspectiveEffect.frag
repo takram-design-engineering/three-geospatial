@@ -110,7 +110,7 @@ vec3 getSunSkyIrradiance(
   // regard the inputColor as radiance at the texel.
   vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
-  vec3 sunIrradiance = GetSunAndSkyIlluminance(positionECEF, normal, sunDirection, skyIrradiance);
+  vec3 sunIrradiance = GetSunAndSkyIrradiance(positionECEF, normal, sunDirection, skyIrradiance);
 
   #ifdef HAS_SHADOW
   sunIrradiance *= sunTransmittance;
@@ -131,7 +131,7 @@ vec3 getSunSkyIrradiance(
 
 void applyTransmittanceInscatter(const vec3 positionECEF, float shadowLength, inout vec3 radiance) {
   vec3 transmittance;
-  vec3 inscatter = GetSkyLuminanceToPoint(
+  vec3 inscatter = GetSkyRadianceToPoint(
     vCameraPosition - vGeometryEllipsoidCenter,
     positionECEF,
     shadowLength,
