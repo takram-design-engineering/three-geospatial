@@ -243,7 +243,7 @@ function useAdvancedCloudsControls(
     () =>
       ({
         multiScatteringOctaves: { value: 0, min: 1, max: 12, step: 1 },
-        accurateSunSkyIrradiance: false,
+        accurateSunSkyLight: false,
         accuratePhaseFunction: false,
         maxIterationCount: { value: 0, min: 10, max: 1000, step: 1 },
         minStepSize: { value: 0, min: 10, max: 200, step: 1 },
@@ -285,7 +285,7 @@ function useAdvancedCloudsControls(
     }
     set({
       multiScatteringOctaves: clouds.multiScatteringOctaves,
-      accurateSunSkyIrradiance: clouds.accurateSunSkyIrradiance,
+      accurateSunSkyLight: clouds.accurateSunSkyLight,
       accuratePhaseFunction: clouds.accuratePhaseFunction,
       maxIterationCount: clouds.maxIterationCount,
       minStepSize: clouds.minStepSize,
@@ -313,7 +313,7 @@ function useAdvancedCloudsControls(
   }
   return {
     'clouds-multiScatteringOctaves': params.multiScatteringOctaves,
-    'clouds-accurateSunSkyIrradiance': params.accurateSunSkyIrradiance,
+    'clouds-accurateSunSkyLight': params.accurateSunSkyLight,
     'clouds-accuratePhaseFunction': params.accuratePhaseFunction,
     'clouds-maxIterationCount': params.maxIterationCount,
     'clouds-minStepSize': params.minStepSize,

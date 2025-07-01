@@ -454,8 +454,18 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   @defineInt('MULTI_SCATTERING_OCTAVES', { min: 1, max: 12 })
   multiScatteringOctaves: number = defaults.clouds.multiScatteringOctaves
 
-  @define('ACCURATE_SUN_SKY_IRRADIANCE')
-  accurateSunSkyIrradiance: boolean = defaults.clouds.accurateSunSkyIrradiance
+  /** @deprecated Use accurateSunSkyLight instead. */
+  get accurateSunSkyIrradiance(): boolean {
+    return this.accurateSunSkyLight
+  }
+
+  /** @deprecated Use accurateSunSkyLight instead. */
+  set accurateSunSkyIrradiance(value: boolean) {
+    this.accurateSunSkyLight = value
+  }
+
+  @define('ACCURATE_SUN_SKY_LIGHT')
+  accurateSunSkyLight: boolean = defaults.clouds.accurateSunSkyLight
 
   @define('ACCURATE_PHASE_FUNCTION')
   accuratePhaseFunction: boolean = defaults.clouds.accuratePhaseFunction

@@ -5,7 +5,7 @@
 ### Changed
 
 - Deprecated `photometric` options and props. Now outputs luminance only.
-- `CloudsEffect`: Deprecated and renamed `skyIrradianceScale` and `groundIrradianceScale` to `skyLightScale` and `groundBounceScale`.
+- `CloudsEffect`: Deprecated and renamed `skyIrradianceScale`, `groundIrradianceScale` and `accurateSunSkyIrradiance` to `skyLightScale`, `groundBounceScale` and `accurateSunSkyLight`.
 - Migrated to core API changes.
 
 ## [0.3.0] - 2025-06-12

@@ -13,7 +13,7 @@ const values = {
   haze: true,
   clouds: {
     multiScatteringOctaves: 8,
-    accurateSunSkyIrradiance: true,
+    accurateSunSkyLight: true,
     accuratePhaseFunction: false,
 
     // Primary raymarch
@@ -67,7 +67,7 @@ export const qualityPresets: Record<QualityPreset, Schema> = {
     turbulence: false, // Expensive
     clouds: {
       ...defaults.clouds,
-      accurateSunSkyIrradiance: false, // Greatly reduces texel reads.
+      accurateSunSkyLight: false, // Greatly reduces texel reads.
       maxIterationCount: 200,
       minStepSize: 100,
       maxRayDistance: 1e5,
@@ -95,7 +95,7 @@ export const qualityPresets: Record<QualityPreset, Schema> = {
       ...defaults.clouds,
       minDensity: 1e-4,
       minExtinction: 1e-4,
-      accurateSunSkyIrradiance: false,
+      accurateSunSkyLight: false,
       maxIterationCountToSun: 2,
       maxIterationCountToGround: 1
     },

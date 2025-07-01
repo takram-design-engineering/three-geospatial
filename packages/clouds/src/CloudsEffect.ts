@@ -89,7 +89,7 @@ const cloudsUniformKeys = [
 // prettier-ignore
 const cloudsMaterialParameterKeys = [
   'multiScatteringOctaves',
-  'accurateSunSkyIrradiance',
+  'accurateSunSkyLight',
   'accuratePhaseFunction',
 ] as const satisfies Array<keyof CloudsMaterial>
 
