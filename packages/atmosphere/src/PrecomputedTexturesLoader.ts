@@ -123,17 +123,15 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
       return loader.load(
         join(url, path),
         texture => {
-          texture.minFilter = LinearFilter
-          texture.magFilter = LinearFilter
-
-          // Using a half-float buffer introduces artifacts seemingly due to
-          // insufficient precision in linear interpolation.
           texture.type = this.type
-          if (this.type === FloatType) {
+          // Parse FP16 stored in Uint16Array of EXR textures.
+          if (texture.image.data instanceof Uint16Array) {
             texture.image.data = new Float32Array(
               new Float16Array(texture.image.data.buffer)
             )
           }
+          texture.minFilter = LinearFilter
+          texture.magFilter = LinearFilter
 
           textures[`${key}Texture`] = texture
           if (
