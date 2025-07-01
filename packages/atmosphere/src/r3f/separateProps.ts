@@ -16,7 +16,6 @@ export function separateProps<
     transmittanceTexture,
     ellipsoid,
     correctAltitude,
-    photometric,
     sunDirection,
     sunAngularRadius,
     renderTargetCount,
@@ -29,7 +28,6 @@ export function separateProps<
       transmittanceTexture,
       ellipsoid,
       correctAltitude,
-      photometric,
       sunDirection,
       sunAngularRadius,
       renderTargetCount

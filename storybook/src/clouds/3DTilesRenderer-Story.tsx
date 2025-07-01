@@ -114,12 +114,11 @@ const Scene: FC<SceneProps> = ({
   const camera = useThree(({ camera }) => camera)
   usePovControls(camera, { collapsed: true })
   const motionDate = useLocalDateControls({ longitude, ...localDate })
-  const { correctAltitude, correctGeometricError, photometric } = useControls(
+  const { correctAltitude, correctGeometricError } = useControls(
     'atmosphere',
     {
       correctAltitude: true,
-      correctGeometricError: true,
-      photometric: true
+      correctGeometricError: true
     },
     { collapsed: true }
   )
@@ -160,11 +159,7 @@ const Scene: FC<SceneProps> = ({
   useKeyboardControl()
 
   return (
-    <Atmosphere
-      ref={atmosphereRef}
-      correctAltitude={correctAltitude}
-      photometric={photometric}
-    >
+    <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
       <GlobeAndControls />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment

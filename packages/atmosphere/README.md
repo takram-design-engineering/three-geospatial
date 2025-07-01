@@ -355,19 +355,6 @@ An example at an altitude of 2,000 meters and a latitude of 35°:
 | :-: | :-: |
 | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/altitude-correction-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/altitude-correction-true.jpg) |
 
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-Whether to store luminance instead of radiance in render buffers.
-
-<!-- prettier-ignore -->
-| `photometric = false` | `photometric = true` |
-| :-: | :-: |
-| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/photometric-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/photometric-true.jpg) |
-
 #### date
 
 ```ts
@@ -734,14 +721,6 @@ correctAltitude: boolean = true
 
 See [correctAltitude](#correctaltitude).
 
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-See [photometric](#photometric).
-
 #### sunDirection
 
 ```ts
@@ -934,14 +913,6 @@ correctAltitude: boolean = true
 
 See [correctAltitude](#correctaltitude)
 
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-See [photometric](#photometric).
-
 #### sunDirection
 
 ```ts
@@ -1004,14 +975,6 @@ correctAltitude: boolean = true
 ```
 
 See [correctAltitude](#correctaltitude)
-
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-See [photometric](#photometric).
 
 #### sunDirection
 
@@ -1139,14 +1102,6 @@ Disable this option if your scene contains objects that penetrate the atmosphere
 | `correctGeometricError = false` | `correctGeometricError = true` |
 | :-: | :-: |
 | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/correct-geometric-error-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/correct-geometric-error-true.jpg) |
-
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-See [photometric](#photometric).
 
 #### sunDirection
 
@@ -1314,7 +1269,6 @@ Obtains the rotation matrix to convert coordinates from J2000 ECI to ECEF. This 
 interface SunLightColorOptions {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
-  photometric?: boolean
 }
 
 function getSunLightColor(

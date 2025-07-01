@@ -54,7 +54,6 @@ export interface AtmosphereMaterialProps {
   // Atmosphere controls
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
-  photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
 
@@ -69,7 +68,6 @@ export interface AtmosphereMaterialBaseParameters
 export const atmosphereMaterialParametersBaseDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
-  photometric: true,
   renderTargetCount: 1
 } satisfies AtmosphereMaterialBaseParameters
 
@@ -115,7 +113,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       transmittanceTexture = null,
       ellipsoid,
       correctAltitude,
-      photometric,
       sunDirection,
       sunAngularRadius,
       renderTargetCount,
@@ -172,7 +169,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.atmosphere = atmosphere
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
-    this.photometric = photometric
     this.renderTargetCount = renderTargetCount
   }
 
@@ -251,9 +247,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   get ellipsoidCenter(): Vector3 {
     return this.uniforms.ellipsoidCenter.value
   }
-
-  @define('PHOTOMETRIC')
-  photometric: boolean
 
   get sunDirection(): Vector3 {
     return this.uniforms.sunDirection.value

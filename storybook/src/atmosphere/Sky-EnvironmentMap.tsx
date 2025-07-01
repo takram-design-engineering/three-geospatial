@@ -30,9 +30,8 @@ const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
   const { longitude, latitude, height } = useLocationControls()
   const motionDate = useLocalDateControls({ longitude, dayOfYear: 0 })
-  const { correctAltitude, photometric } = useControls('atmosphere', {
-    correctAltitude: true,
-    photometric: true
+  const { correctAltitude } = useControls('atmosphere', {
+    correctAltitude: true
   })
 
   const scene = useThree(({ scene }) => scene)
@@ -61,7 +60,6 @@ const Scene: FC = () => {
         ref={atmosphereRef}
         textures='atmosphere'
         correctAltitude={correctAltitude}
-        photometric={photometric}
       >
         <Sky />
         <group ref={envMapParentRef}>

@@ -145,12 +145,9 @@ const Scene: FC = () => {
     longitude,
     timeOfDay: 17
   })
-  const { correctAltitude, photometric } = useControls(
+  const { correctAltitude } = useControls(
     'atmosphere',
-    {
-      correctAltitude: true,
-      photometric: true
-    },
+    { correctAltitude: true },
     { collapsed: true }
   )
   const { showMask, invertMask, disableMask } = useControls('irradiance mask', {
@@ -216,7 +213,6 @@ const Scene: FC = () => {
       ref={setAtmosphere}
       textures='atmosphere'
       correctAltitude={correctAltitude}
-      photometric={photometric}
     >
       <OrbitControls minDistance={20} maxDistance={1e5} />
 

@@ -66,12 +66,9 @@ const Scene: FC = () => {
     { collapsed: true }
   )
   const motionDate = useLocalDateControls()
-  const { correctAltitude, photometric } = useControls(
+  const { correctAltitude } = useControls(
     'atmosphere',
-    {
-      correctAltitude: true,
-      photometric: true
-    },
+    { correctAltitude: true },
     { collapsed: true }
   )
   const { enabled, transmittance, inscatter } = useControls(
@@ -132,7 +129,6 @@ const Scene: FC = () => {
       ref={atmosphereRef}
       textures={generator.textures}
       correctAltitude={correctAltitude}
-      photometric={photometric}
     >
       <OrbitControls ref={setControls} />
 

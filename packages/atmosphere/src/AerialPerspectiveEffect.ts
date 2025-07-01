@@ -78,7 +78,6 @@ export interface AerialPerspectiveEffectOptions {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   correctGeometricError?: boolean
-  photometric?: boolean
   sunDirection?: Vector3
 
   // Rendering options
@@ -156,7 +155,6 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
   correctGeometricError: true,
-  photometric: true,
   sunIrradiance: false,
   skyIrradiance: false,
   transmittance: true,
@@ -197,7 +195,6 @@ export class AerialPerspectiveEffect extends Effect {
       ellipsoid,
       correctAltitude,
       correctGeometricError,
-      photometric,
       sunDirection,
       sunIrradiance,
       skyIrradiance,
@@ -313,7 +310,6 @@ export class AerialPerspectiveEffect extends Effect {
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.correctGeometricError = correctGeometricError
-    this.photometric = photometric
     this.sunIrradiance = sunIrradiance
     this.skyIrradiance = skyIrradiance
     this.transmittance = transmittance
@@ -566,9 +562,6 @@ export class AerialPerspectiveEffect extends Effect {
 
   @define('CORRECT_GEOMETRIC_ERROR')
   correctGeometricError: boolean
-
-  @define('PHOTOMETRIC')
-  photometric: boolean
 
   get sunDirection(): Vector3 {
     return this.uniforms.get('sunDirection').value

@@ -71,14 +71,10 @@ const Scene: FC<SceneProps> = ({
     { collapsed: true }
   )
   const motionDate = useLocalDateControls({ longitude, ...localDate })
-  const { correctAltitude, correctGeometricError, photometric } = useControls(
-    'atmosphere',
-    {
-      correctAltitude: true,
-      correctGeometricError: true,
-      photometric: true
-    }
-  )
+  const { correctAltitude, correctGeometricError } = useControls('atmosphere', {
+    correctAltitude: true,
+    correctGeometricError: true
+  })
   const {
     enable: enabled,
     sun,
@@ -131,7 +127,6 @@ const Scene: FC<SceneProps> = ({
       ref={atmosphereRef}
       textures='atmosphere'
       correctAltitude={correctAltitude}
-      photometric={photometric}
     >
       <Sky />
       <Stars data='atmosphere/stars.bin' />

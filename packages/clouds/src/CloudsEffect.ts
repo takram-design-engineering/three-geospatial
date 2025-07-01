@@ -787,14 +787,6 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.ellipsoid = value
   }
 
-  get photometric(): boolean {
-    return this.cloudsPass.currentMaterial.photometric
-  }
-
-  set photometric(value: boolean) {
-    this.cloudsPass.currentMaterial.photometric = value
-  }
-
   get sunAngularRadius(): number {
     return this.cloudsPass.currentMaterial.sunAngularRadius
   }

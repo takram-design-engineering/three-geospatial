@@ -12,7 +12,6 @@ export interface SunDirectionalLightParameters {
   transmittanceTexture?: Texture | null
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
-  photometric?: boolean
   sunDirection?: Vector3
   distance?: number
 }
@@ -20,7 +19,6 @@ export interface SunDirectionalLightParameters {
 export const sunDirectionalLightParametersDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
-  photometric: true,
   distance: 1
 } satisfies SunDirectionalLightParameters
 
@@ -30,7 +28,6 @@ export class SunDirectionalLight extends DirectionalLight {
   readonly ellipsoidCenter = new Vector3()
   readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
-  photometric: boolean
   readonly sunDirection: Vector3
   distance: number
 
@@ -43,7 +40,6 @@ export class SunDirectionalLight extends DirectionalLight {
       irradianceTexture = null,
       ellipsoid,
       correctAltitude,
-      photometric,
       sunDirection,
       distance
     } = { ...sunDirectionalLightParametersDefaults, ...params }
@@ -51,7 +47,6 @@ export class SunDirectionalLight extends DirectionalLight {
     this.transmittanceTexture = irradianceTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
-    this.photometric = photometric
     this.sunDirection = sunDirection?.clone() ?? new Vector3()
     this.distance = distance
   }
@@ -82,8 +77,7 @@ export class SunDirectionalLight extends DirectionalLight {
       this.color,
       {
         ellipsoid: this.ellipsoid,
-        correctAltitude: this.correctAltitude,
-        photometric: this.photometric
+        correctAltitude: this.correctAltitude
       },
       this.atmosphere
     )

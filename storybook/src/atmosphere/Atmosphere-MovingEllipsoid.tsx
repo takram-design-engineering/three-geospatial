@@ -49,12 +49,9 @@ const Scene: FC = () => {
     dayOfYear: 0,
     timeOfDay: 7.3
   })
-  const { correctAltitude, photometric } = useControls(
+  const { correctAltitude } = useControls(
     'atmosphere',
-    {
-      correctAltitude: true,
-      photometric: true
-    },
+    { correctAltitude: true },
     { collapsed: true }
   )
 
@@ -132,7 +129,6 @@ const Scene: FC = () => {
         ref={setAtmosphere}
         textures='atmosphere'
         correctAltitude={correctAltitude}
-        photometric={photometric}
       >
         <Sky groundAlbedo='white' />
         <Stars data='atmosphere/stars.bin' />

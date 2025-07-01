@@ -33,12 +33,9 @@ const Scene: FC = () => {
     { collapsed: true }
   )
   const motionDate = useLocalDateControls({ longitude, dayOfYear: 0 })
-  const { correctAltitude, photometric } = useControls(
+  const { correctAltitude } = useControls(
     'atmosphere',
-    {
-      correctAltitude: true,
-      photometric: true
-    },
+    { correctAltitude: true },
     { collapsed: true }
   )
 
@@ -78,7 +75,6 @@ const Scene: FC = () => {
         ref={atmosphereRef}
         textures='atmosphere'
         correctAltitude={correctAltitude}
-        photometric={photometric}
       >
         <EffectComposer multisampling={0} enableNormalPass>
           <Fragment key={JSON.stringify([enabled, toneMapping])}>
