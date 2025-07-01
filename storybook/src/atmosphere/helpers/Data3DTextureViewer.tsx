@@ -1,7 +1,7 @@
 import { ScreenQuad } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { button } from 'leva'
-import { useEffect, useMemo, useState, type FC } from 'react'
+import { useEffect, useMemo, type FC } from 'react'
 import {
   Data3DTexture,
   GLSL3,
@@ -10,24 +10,25 @@ import {
   ShaderMaterial,
   Uniform,
   Vector2,
-  Vector3,
-  type FloatType,
-  type HalfFloatType
+  Vector3
 } from 'three'
 import { EXRLoader } from 'three-stdlib'
 
+import { type AnyFloatType } from '@takram/three-geospatial'
+
 import { useControls } from '../../helpers/useControls'
+import { saveBinary3DTexture } from './saveBinary3DTexture'
 import { createEXR3DTexture, saveEXR3DTexture } from './saveEXR3DTexture'
 
 export const Data3DTextureViewer: FC<{
   texture: Data3DTexture
-  fileName: string
-  type?: typeof FloatType | typeof HalfFloatType
+  name: string
+  type?: AnyFloatType
   zoom?: number
   valueScale?: number
 }> = ({
   texture,
-  fileName,
+  name,
   type,
   zoom: defaultZoom = 1,
   valueScale: defaultValueScale = 1
@@ -57,47 +58,53 @@ export const Data3DTextureViewer: FC<{
     [texture]
   )
 
-  const [exrTexture, setEXRTexture] = useState<Data3DTexture>()
-  useEffect(() => {
-    let canceled = false
-    ;(async () => {
-      const data = await createEXR3DTexture(texture, type)
-      if (canceled) {
-        return
-      }
-      const loader = new EXRLoader()
-      const parsed = loader.parse(data)
-      const exr = new Data3DTexture(
-        parsed.data,
-        parsed.width,
-        parsed.height / texture.image.depth,
-        texture.image.depth
-      )
-      exr.type = parsed.type
-      exr.minFilter = LinearFilter
-      exr.magFilter = LinearFilter
-      exr.colorSpace = NoColorSpace
-      exr.needsUpdate = true
-      setEXRTexture(exr)
-    })().catch(error => {
-      console.error(error)
-    })
-    return () => {
-      canceled = true
-    }
-  }, [texture, type])
+  const renderer = useThree(({ gl }) => gl)
 
   const { gammaCorrect, zoom, valueScaleLog10, previewEXR } = useControls({
     gammaCorrect: true,
     zoom: { value: defaultZoom, min: 0.5, max: 10 },
     valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
     previewEXR: false,
-    export: button(() => {
-      saveEXR3DTexture(texture, fileName, type).catch(error => {
+    saveEXR: button(() => {
+      saveEXR3DTexture(renderer, texture, `${name}.exr`, type).catch(error => {
+        console.error(error)
+      })
+    }),
+    saveBinary: button(() => {
+      saveBinary3DTexture(renderer, texture, `${name}.bin`).catch(error => {
         console.error(error)
       })
     })
   })
+
+  const exrTexture = useMemo(() => new Data3DTexture(), [])
+  useEffect(() => {
+    let canceled = false
+    ;(async () => {
+      const data = await createEXR3DTexture(renderer, texture, type)
+      if (canceled) {
+        return
+      }
+      const loader = new EXRLoader()
+      const parsed = loader.parse(data)
+      exrTexture.image = {
+        data: parsed.data,
+        width: parsed.width,
+        height: parsed.height / texture.depth,
+        depth: texture.depth
+      }
+      exrTexture.type = parsed.type
+      exrTexture.minFilter = LinearFilter
+      exrTexture.magFilter = LinearFilter
+      exrTexture.colorSpace = NoColorSpace
+      exrTexture.needsUpdate = true
+    })().catch(error => {
+      console.error(error)
+    })
+    return () => {
+      canceled = true
+    }
+  }, [texture, type, renderer, previewEXR, exrTexture])
 
   useFrame(({ size }) => {
     material.uniforms.inputTexture.value = previewEXR ? exrTexture : texture
@@ -148,7 +155,7 @@ const fragmentShader = /* glsl */ `
     if (index >= int(size.z)) {
       discard;
     }
-    vec3 uvw = vec3(fract(uv), (float(index)) / size.z);
+    vec3 uvw = vec3(fract(uv), (float(index) + 0.5) / size.z);
     vec4 color = vec4(texture(inputTexture, uvw).rgb * valueScale, 1.0);
     outputColor = gammaCorrect ? linearToOutputTexel(color) : color;
   }

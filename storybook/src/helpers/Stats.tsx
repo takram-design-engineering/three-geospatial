@@ -8,7 +8,7 @@ export const Stats: FC = () => {
   const { show } = useControls('stats', { show: false }, { collapsed: true })
 
   const statsRef = useRef<StatsImpl>(undefined)
-  const gl = useThree(({ gl }) => gl)
+  const renderer = useThree(({ gl }) => gl)
   useEffect(() => {
     if (!show) {
       statsRef.current = undefined
@@ -18,7 +18,7 @@ export const Stats: FC = () => {
       trackGPU: true,
       precision: 0
     })
-    stats.init(gl).catch(error => {
+    stats.init(renderer).catch(error => {
       console.error(error)
     })
     statsRef.current = stats
@@ -26,7 +26,7 @@ export const Stats: FC = () => {
     return () => {
       document.body.removeChild(stats.dom)
     }
-  }, [show, gl])
+  }, [show, renderer])
 
   useFrame(() => {
     statsRef.current?.update()

@@ -13,8 +13,22 @@ precision highp sampler2DArray;
 #include "core/cascadedShadowMaps"
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
-#include "atmosphere/parameters"
-#include "atmosphere/functions"
+
+#include "atmosphere/bruneton/definitions"
+
+uniform AtmosphereParameters ATMOSPHERE;
+uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+
+uniform sampler2D transmittance_texture;
+uniform sampler3D scattering_texture;
+uniform sampler2D irradiance_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler3D higher_order_scattering_texture;
+
+#include "atmosphere/bruneton/common"
+#include "atmosphere/bruneton/runtime"
+
 #include "types"
 #include "parameters"
 #include "clouds"
@@ -36,8 +50,8 @@ uniform float mipLevelScale;
 // Scattering
 const vec2 scatterAnisotropy = vec2(SCATTER_ANISOTROPY_1, SCATTER_ANISOTROPY_2);
 const float scatterAnisotropyMix = SCATTER_ANISOTROPY_MIX;
-uniform float skyIrradianceScale;
-uniform float groundIrradianceScale;
+uniform float skyLightScale;
+uniform float groundBounceScale;
 uniform float powderScale;
 uniform float powderExponent;
 
@@ -415,35 +429,31 @@ vec3 getGroundSunSkyIrradiance(
   const float height,
   out vec3 skyIrradiance
 ) {
-  #ifdef ACCURATE_SUN_SKY_IRRADIANCE
+  #ifdef ACCURATE_SUN_SKY_LIGHT
   return GetSunAndSkyIrradiance(
     (position - surfaceNormal * height) * METER_TO_LENGTH_UNIT,
     surfaceNormal,
     sunDirection,
     skyIrradiance
   );
-  #else // ACCURATE_SUN_SKY_IRRADIANCE
+  #else // ACCURATE_SUN_SKY_LIGHT
   skyIrradiance = vGroundIrradiance.sky;
   return vGroundIrradiance.sun;
-  #endif // ACCURATE_SUN_SKY_IRRADIANCE
+  #endif // ACCURATE_SUN_SKY_LIGHT
 }
 
 vec3 getCloudsSunSkyIrradiance(const vec3 position, const float height, out vec3 skyIrradiance) {
-  #ifdef ACCURATE_SUN_SKY_IRRADIANCE
-  return GetSunAndSkyIrradianceForParticle(
-    position * METER_TO_LENGTH_UNIT,
-    sunDirection,
-    skyIrradiance
-  );
-  #else // ACCURATE_SUN_SKY_IRRADIANCE
+  #ifdef ACCURATE_SUN_SKY_LIGHT
+  return GetSunAndSkyScalarIrradiance(position * METER_TO_LENGTH_UNIT, sunDirection, skyIrradiance);
+  #else // ACCURATE_SUN_SKY_LIGHT
   float alpha = remapClamped(height, minHeight, maxHeight);
   skyIrradiance = mix(vCloudsIrradiance.minSky, vCloudsIrradiance.maxSky, alpha);
   return mix(vCloudsIrradiance.minSun, vCloudsIrradiance.maxSun, alpha);
-  #endif // ACCURATE_SUN_SKY_IRRADIANCE
+  #endif // ACCURATE_SUN_SKY_LIGHT
 }
 
-#ifdef GROUND_IRRADIANCE
-vec3 approximateIrradianceFromGround(
+#ifdef GROUND_BOUNCE
+vec3 approximateRadianceFromGround(
   const vec3 position,
   const vec3 surfaceNormal,
   const float height,
@@ -464,7 +474,7 @@ vec3 approximateIrradianceFromGround(
   vec3 bouncedRadiance = groundAlbedo * RECIPROCAL_PI * groundIrradiance;
   return bouncedRadiance * exp(-opticalDepthToGround);
 }
-#endif // GROUND_IRRADIANCE
+#endif // GROUND_BOUNCE
 
 vec4 marchClouds(
   const vec3 rayOrigin,
@@ -554,23 +564,23 @@ vec4 marchClouds(
 
       vec3 radiance = sunIrradiance * approximateMultipleScattering(opticalDepth, cosTheta);
 
-      #ifdef GROUND_IRRADIANCE
+      #ifdef GROUND_BOUNCE
       // Fudge factor for the irradiance from ground.
       if (height < shadowTopHeight && mipLevel < 0.5) {
-        vec3 groundIrradiance = approximateIrradianceFromGround(
+        vec3 groundRadiance = approximateRadianceFromGround(
           position,
           surfaceNormal,
           height,
           mipLevel,
           jitter
         );
-        radiance += groundIrradiance * RECIPROCAL_PI4 * groundIrradianceScale;
+        radiance += groundRadiance * RECIPROCAL_PI4 * groundBounceScale;
       }
-      #endif // GROUND_IRRADIANCE
+      #endif // GROUND_BOUNCE
 
       // Crude approximation of sky gradient. Better than none in the shadows.
       float skyGradient = dot(weather.heightFraction * 0.5 + 0.5, media.weight);
-      radiance += skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyIrradianceScale;
+      radiance += skyIrradiance * RECIPROCAL_PI4 * skyGradient * skyLightScale;
 
       // Finally multiply by scattering.
       radiance *= media.scattering;
@@ -638,14 +648,6 @@ float marchShadowLength(
     vec3 position = rayDistance * rayDirection + rayOrigin;
     float opticalDepth = sampleShadowOpticalDepth(position, 0.0, 0.0, jitter);
     shadowLength += (1.0 - exp(-opticalDepth)) * stepSize * attenuation;
-
-    // Hack to prevent over-integration of shadow length. The shadow should be
-    // attenuated by the inscatter as the ray travels further.
-    attenuation *= attenuationFactor;
-    if (attenuation < 1e-5) {
-      break;
-    }
-
     stepSize *= perspectiveStepScale;
     rayDistance += stepSize;
   }
@@ -696,7 +698,7 @@ vec4 approximateHaze(
   vec3 skyIrradiance = vGroundIrradiance.sky;
   vec3 sunIrradiance = vGroundIrradiance.sun;
   vec3 inscatter = sunIrradiance * phaseFunction(cosTheta) * shadowTransmittance;
-  inscatter += skyIrradiance * RECIPROCAL_PI4 * skyIrradianceScale * transmittance;
+  inscatter += skyIrradiance * RECIPROCAL_PI4 * skyLightScale * transmittance;
   inscatter *= hazeScatteringCoefficient / (hazeAbsorptionCoefficient + hazeScatteringCoefficient);
   return vec4(inscatter, transmittance);
 }

@@ -20,8 +20,7 @@ import {
 
 function createRenderTarget(name: string): WebGLArrayRenderTarget {
   const renderTarget = new WebGLArrayRenderTarget(1, 1, 1, {
-    depthBuffer: false,
-    stencilBuffer: false
+    depthBuffer: false
   })
   // Constructor option doesn't work
   renderTarget.texture.type = HalfFloatType

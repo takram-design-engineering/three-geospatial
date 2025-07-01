@@ -1,5 +1,4 @@
-import { HalfFloatType, Vector3, type DataTexture, type Vector2 } from 'three'
-import invariant from 'tiny-invariant'
+import { HalfFloatType, Vector3, type Texture, type Vector2 } from 'three'
 
 import {
   clamp,
@@ -12,6 +11,28 @@ const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
+const float16ArrayCache = /*#__PURE__*/ new WeakMap<ArrayBuffer, Float16Array>()
+
+function getImageData(texture: Texture): TypedArray | undefined {
+  // Image data is stored in the userData in case of normal texture.
+  // See PrecomputedTexturesGenerator.
+  let data: TypedArray | undefined = isTypedArray(texture.image.data)
+    ? texture.image.data
+    : isTypedArray(texture.userData.imageData)
+      ? texture.userData.imageData
+      : undefined
+
+  // Prevent Float16Array instance from being created in every frame.
+  if (texture.type === HalfFloatType && data instanceof Uint16Array) {
+    const cache = float16ArrayCache.get(data.buffer)
+    if (cache == null) {
+      data = new Float16Array(data.buffer)
+      float16ArrayCache.set(data.buffer, data)
+    }
+  }
+  return data
+}
+
 function samplePixel(
   data: TypedArray,
   index: number,
@@ -22,18 +43,15 @@ function samplePixel(
 }
 
 export function sampleTexture(
-  texture: DataTexture,
+  texture: Texture,
   uv: Vector2,
   result: Vector3
 ): Vector3 {
-  const { width, height } = texture.image
-  invariant(isTypedArray(texture.image.data))
-  let data = texture.image.data
-  if (texture.type === HalfFloatType && data instanceof Uint16Array) {
-    // TODO: Cache instance
-    data = new Float16Array(data.buffer)
+  const data = getImageData(texture)
+  if (data == null) {
+    return result.setScalar(0)
   }
-
+  const { width, height } = texture.image
   const x = clamp(uv.x, 0, 1) * (width - 1)
   const y = clamp(uv.y, 0, 1) * (height - 1)
   const xi = Math.floor(x)

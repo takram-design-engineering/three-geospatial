@@ -31,7 +31,7 @@ export const MinimalSetup: StoryFn = () => (
     <Atmosphere date={Date.parse('2025-01-01T07:00:00Z')}>
       <EffectComposer multisampling={0} enableNormalPass>
         <Clouds />
-        <AerialPerspective sky sunIrradiance skyIrradiance />
+        <AerialPerspective sky sunLight skyLight />
         <LensFlare />
         <ToneMapping mode={ToneMappingMode.AGX} />
       </EffectComposer>

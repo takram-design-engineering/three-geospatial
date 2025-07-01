@@ -6,18 +6,21 @@ import {
   type BufferGeometry,
   type Camera,
   type Data3DTexture,
-  type DataTexture,
   type Group,
   type Object3D,
   type Scene,
   type ShaderMaterialParameters,
+  type Texture,
   type WebGLProgramParametersWithUniforms,
   type WebGLRenderer
 } from 'three'
 
 import { define, Ellipsoid } from '@takram/three-geospatial'
 
-import { AtmosphereParameters } from './AtmosphereParameters'
+import {
+  AtmosphereParameters,
+  type AtmosphereParametersUniform
+} from './AtmosphereParameters'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
@@ -47,14 +50,15 @@ function includeRenderTargets(fragmentShader: string, count: number): string {
 
 export interface AtmosphereMaterialProps {
   // Precomputed textures
-  irradianceTexture?: DataTexture | null
+  irradianceTexture?: Texture | null
   scatteringTexture?: Data3DTexture | null
-  transmittanceTexture?: DataTexture | null
+  transmittanceTexture?: Texture | null
+  singleMieScatteringTexture?: Data3DTexture | null
+  higherOrderScatteringTexture?: Data3DTexture | null
 
   // Atmosphere controls
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
-  photometric?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
 
@@ -69,7 +73,6 @@ export interface AtmosphereMaterialBaseParameters
 export const atmosphereMaterialParametersBaseDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
-  photometric: true,
   renderTargetCount: 1
 } satisfies AtmosphereMaterialBaseParameters
 
@@ -82,19 +85,14 @@ export interface AtmosphereMaterialBaseUniforms {
   sunDirection: Uniform<Vector3>
 
   // Uniforms for atmosphere functions
-  u_solar_irradiance: Uniform<Vector3>
-  u_sun_angular_radius: Uniform<number>
-  u_bottom_radius: Uniform<number>
-  u_top_radius: Uniform<number>
-  u_rayleigh_scattering: Uniform<Vector3>
-  u_mie_scattering: Uniform<Vector3>
-  u_mie_phase_function_g: Uniform<number>
-  u_mu_s_min: Uniform<number>
-  u_max_rayleigh_shadow_length: Uniform<number>
-  u_irradiance_texture: Uniform<DataTexture | null>
-  u_scattering_texture: Uniform<Data3DTexture | null>
-  u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
-  u_transmittance_texture: Uniform<DataTexture | null>
+  ATMOSPHERE: AtmosphereParametersUniform
+  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
+  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
+  irradiance_texture: Uniform<Texture | null>
+  scattering_texture: Uniform<Data3DTexture | null>
+  transmittance_texture: Uniform<Texture | null>
+  single_mie_scattering_texture: Uniform<Data3DTexture | null>
+  higher_order_scattering_texture: Uniform<Data3DTexture | null>
 }
 
 export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
@@ -113,9 +111,10 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       irradianceTexture = null,
       scatteringTexture = null,
       transmittanceTexture = null,
+      singleMieScatteringTexture = null,
+      higherOrderScatteringTexture = null,
       ellipsoid,
       correctAltitude,
-      photometric,
       sunDirection,
       sunAngularRadius,
       renderTargetCount,
@@ -136,22 +135,16 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
 
         // Uniforms for atmosphere functions
-        u_solar_irradiance: new Uniform(atmosphere.solarIrradiance),
-        u_sun_angular_radius: new Uniform(sunAngularRadius ?? atmosphere.sunAngularRadius),
-        u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_LENGTH_UNIT),
-        u_top_radius: new Uniform(atmosphere.topRadius * METER_TO_LENGTH_UNIT),
-        u_rayleigh_scattering: new Uniform(atmosphere.rayleighScattering),
-        u_mie_scattering: new Uniform(atmosphere.mieScattering),
-        u_mie_phase_function_g: new Uniform(atmosphere.miePhaseFunctionG),
-        u_mu_s_min: new Uniform(atmosphere.muSMin),
-        u_max_rayleigh_shadow_length: new Uniform(10000 * METER_TO_LENGTH_UNIT),
-        u_irradiance_texture: new Uniform(irradianceTexture),
-        u_scattering_texture: new Uniform(scatteringTexture),
-        u_single_mie_scattering_texture: new Uniform(scatteringTexture),
-        u_transmittance_texture: new Uniform(transmittanceTexture),
-        ...others.uniforms,
+        ATMOSPHERE: atmosphere.toUniform(),
+        SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.sunRadianceToRelativeLuminance),
+        SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.skyRadianceToRelativeLuminance),
+        irradiance_texture: new Uniform(irradianceTexture),
+        scattering_texture: new Uniform(scatteringTexture),
+        transmittance_texture: new Uniform(transmittanceTexture),
+        single_mie_scattering_texture: new Uniform(null),
+        higher_order_scattering_texture: new Uniform(null),
+        ...others.uniforms
       } satisfies AtmosphereMaterialBaseUniforms,
-      // prettier-ignore
       defines: {
         PI: `${Math.PI}`,
         TRANSMITTANCE_TEXTURE_WIDTH: TRANSMITTANCE_TEXTURE_WIDTH.toFixed(0),
@@ -163,16 +156,15 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         IRRADIANCE_TEXTURE_WIDTH: IRRADIANCE_TEXTURE_WIDTH.toFixed(0),
         IRRADIANCE_TEXTURE_HEIGHT: IRRADIANCE_TEXTURE_HEIGHT.toFixed(0),
         METER_TO_LENGTH_UNIT: METER_TO_LENGTH_UNIT.toFixed(7),
-        SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().map(v => v.toFixed(12)).join(',')})`,
-        SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().map(v => v.toFixed(12)).join(',')})`,
         ...others.defines
       }
     })
 
     this.atmosphere = atmosphere
+    this.singleMieScatteringTexture = singleMieScatteringTexture
+    this.higherOrderScatteringTexture = higherOrderScatteringTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
-    this.photometric = photometric
     this.renderTargetCount = renderTargetCount
   }
 
@@ -223,48 +215,70 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this.copyCameraSettings(camera)
   }
 
-  get irradianceTexture(): DataTexture | null {
-    return this.uniforms.u_irradiance_texture.value
+  get irradianceTexture(): Texture | null {
+    return this.uniforms.irradiance_texture.value
   }
 
-  set irradianceTexture(value: DataTexture | null) {
-    this.uniforms.u_irradiance_texture.value = value
+  set irradianceTexture(value: Texture | null) {
+    this.uniforms.irradiance_texture.value = value
   }
 
   get scatteringTexture(): Data3DTexture | null {
-    return this.uniforms.u_scattering_texture.value
+    return this.uniforms.scattering_texture.value
   }
 
   set scatteringTexture(value: Data3DTexture | null) {
-    this.uniforms.u_scattering_texture.value = value
-    this.uniforms.u_single_mie_scattering_texture.value = value
+    this.uniforms.scattering_texture.value = value
   }
 
-  get transmittanceTexture(): DataTexture | null {
-    return this.uniforms.u_transmittance_texture.value
+  get transmittanceTexture(): Texture | null {
+    return this.uniforms.transmittance_texture.value
   }
 
-  set transmittanceTexture(value: DataTexture | null) {
-    this.uniforms.u_transmittance_texture.value = value
+  set transmittanceTexture(value: Texture | null) {
+    this.uniforms.transmittance_texture.value = value
+  }
+
+  /** @private */
+  @define('COMBINED_SCATTERING_TEXTURES')
+  combinedScatteringTextures = false
+
+  get singleMieScatteringTexture(): Data3DTexture | null {
+    return this.uniforms.single_mie_scattering_texture.value
+  }
+
+  set singleMieScatteringTexture(value: Data3DTexture | null) {
+    this.uniforms.single_mie_scattering_texture.value = value
+    this.combinedScatteringTextures = value == null
+  }
+
+  /** @private */
+  @define('HAS_HIGHER_ORDER_SCATTERING_TEXTURE')
+  hasHigherOrderScatteringTexture = false
+
+  get higherOrderScatteringTexture(): Data3DTexture | null {
+    return this.uniforms.higher_order_scattering_texture.value
+  }
+
+  set higherOrderScatteringTexture(value: Data3DTexture | null) {
+    this.uniforms.higher_order_scattering_texture.value = value
+    this.hasHigherOrderScatteringTexture = value != null
   }
 
   get ellipsoidCenter(): Vector3 {
     return this.uniforms.ellipsoidCenter.value
   }
 
-  @define('PHOTOMETRIC')
-  photometric: boolean
-
   get sunDirection(): Vector3 {
     return this.uniforms.sunDirection.value
   }
 
   get sunAngularRadius(): number {
-    return this.uniforms.u_sun_angular_radius.value
+    return this.uniforms.ATMOSPHERE.value.sun_angular_radius
   }
 
   set sunAngularRadius(value: number) {
-    this.uniforms.u_sun_angular_radius.value = value
+    this.uniforms.ATMOSPHERE.value.sun_angular_radius = value
   }
 
   /** @package */

@@ -1,4 +1,4 @@
-import { Color, Vector2, Vector3, type DataTexture } from 'three'
+import { Color, Vector2, Vector3, type Texture } from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -42,19 +42,17 @@ const uvScratch = /*#__PURE__*/ new Vector2()
 export interface SunLightColorOptions {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
-  photometric?: boolean
 }
 
 // TODO: Consider partial visibility when the sun is at the horizon.
 export function getSunLightColor(
-  transmittanceTexture: DataTexture,
+  transmittanceTexture: Texture,
   worldPosition: Vector3,
   sunDirection: Vector3,
   result = new Color(),
   {
     ellipsoid = Ellipsoid.WGS84,
-    correctAltitude = true,
-    photometric = true
+    correctAltitude = true
   }: SunLightColorOptions = {},
   atmosphere = AtmosphereParameters.DEFAULT
 ): Color {
@@ -98,9 +96,8 @@ export function getSunLightColor(
     }
   }
 
-  const radiance = transmittance.multiply(atmosphere.solarIrradiance)
-  if (photometric) {
-    radiance.multiply(atmosphere.sunRadianceToRelativeLuminance)
-  }
+  const radiance = transmittance
+    .multiply(atmosphere.solarIrradiance)
+    .multiply(atmosphere.sunRadianceToRelativeLuminance)
   return result.setFromVector3(radiance)
 }

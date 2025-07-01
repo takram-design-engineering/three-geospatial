@@ -8,16 +8,18 @@ import {
   Scene,
   ShaderMaterial,
   Uniform,
-  WebGLRenderer,
   WebGLRenderTarget,
-  type DataTexture,
-  type FloatType
+  type Texture,
+  type WebGLRenderer
 } from 'three'
 import { EXRExporter } from 'three/addons/exporters/EXRExporter.js'
 
+import { type AnyFloatType } from '@takram/three-geospatial'
+
 export async function createEXRTexture(
-  texture: DataTexture,
-  type: typeof FloatType | typeof HalfFloatType = HalfFloatType
+  renderer: WebGLRenderer,
+  texture: Texture,
+  type: AnyFloatType = HalfFloatType
 ): Promise<ArrayBuffer> {
   const material = new ShaderMaterial({
     glslVersion: GLSL3,
@@ -31,9 +33,7 @@ export async function createEXRTexture(
       uniform sampler2D inputTexture;
       out vec4 outputColor;
       void main() {
-        // Flipping Y isn't needed, as Texture already flipped it by default.
         outputColor = texelFetch(inputTexture, ivec2(gl_FragCoord.xy), 0);
-        outputColor.a = 1.0;
       }
     `,
     uniforms: {
@@ -46,35 +46,31 @@ export async function createEXRTexture(
   scene.add(quad)
   const camera = new Camera()
 
-  const renderer = new WebGLRenderer()
-  const renderTarget = new WebGLRenderTarget(
-    texture.image.width,
-    texture.image.height,
-    {
-      type,
-      colorSpace: NoColorSpace
-    }
-  )
+  const { width, height } = texture
+  const renderTarget = new WebGLRenderTarget(width, height, {
+    type,
+    colorSpace: NoColorSpace
+  })
   renderer.setRenderTarget(renderTarget)
   renderer.render(scene, camera)
+  renderer.setRenderTarget(null)
 
   const exporter = new EXRExporter()
   const array = await exporter.parse(renderer, renderTarget, { type })
 
   material.dispose()
-  renderer.dispose()
   renderTarget.dispose()
   return array.buffer
 }
 
 export async function saveEXRTexture(
-  texture: DataTexture,
+  renderer: WebGLRenderer,
+  texture: Texture,
   fileName: string,
-  type?: typeof FloatType | typeof HalfFloatType
+  type?: AnyFloatType
 ): Promise<void> {
-  const buffer = await createEXRTexture(texture, type)
+  const buffer = await createEXRTexture(renderer, texture, type)
   const blob = new Blob([buffer])
-
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = fileName

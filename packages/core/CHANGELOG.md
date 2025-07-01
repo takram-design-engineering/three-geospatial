@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Removed loader factory functions and changed loaders to be configurable, since `useLoader` can now accept loader instances.
+- Renamed `DataLoader` to `DataTextureLoader`.
+- Renamed `EXR3DLoader` to `EXR3DTextureLoader`.
+- Added `EXRTextureLoader`.
+- Removed `Texture3DLoader`.
+
 ## [0.2.2] - 2025-06-12
 
 ### Changed

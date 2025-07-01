@@ -8,7 +8,6 @@ import {
   Uniform,
   Vector2,
   Vector3,
-  type DataTexture,
   type DepthPackingStrategies,
   type PerspectiveCamera,
   type TextureDataType,
@@ -90,7 +89,7 @@ const cloudsUniformKeys = [
 // prettier-ignore
 const cloudsMaterialParameterKeys = [
   'multiScatteringOctaves',
-  'accurateSunSkyIrradiance',
+  'accurateSunSkyLight',
   'accuratePhaseFunction',
 ] as const satisfies Array<keyof CloudsMaterial>
 
@@ -708,20 +707,40 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.scatterAnisotropyMix = value
   }
 
+  /** @deprecated Use skyLightScale instead. */
   get skyIrradianceScale(): number {
-    return this.cloudsPass.currentMaterial.uniforms.skyIrradianceScale.value
+    return this.skyLightScale
   }
 
+  /** @deprecated Use skyLightScale instead. */
   set skyIrradianceScale(value: number) {
-    this.cloudsPass.currentMaterial.uniforms.skyIrradianceScale.value = value
+    this.skyLightScale = value
   }
 
+  get skyLightScale(): number {
+    return this.cloudsPass.currentMaterial.uniforms.skyLightScale.value
+  }
+
+  set skyLightScale(value: number) {
+    this.cloudsPass.currentMaterial.uniforms.skyLightScale.value = value
+  }
+
+  /** @deprecated Use groundBounceScale instead. */
   get groundIrradianceScale(): number {
-    return this.cloudsPass.currentMaterial.uniforms.groundIrradianceScale.value
+    return this.groundBounceScale
   }
 
+  /** @deprecated Use groundBounceScale instead. */
   set groundIrradianceScale(value: number) {
-    this.cloudsPass.currentMaterial.uniforms.groundIrradianceScale.value = value
+    this.groundBounceScale = value
+  }
+
+  get groundBounceScale(): number {
+    return this.cloudsPass.currentMaterial.uniforms.groundBounceScale.value
+  }
+
+  set groundBounceScale(value: number) {
+    this.cloudsPass.currentMaterial.uniforms.groundBounceScale.value = value
   }
 
   get powderScale(): number {
@@ -756,11 +775,11 @@ export class CloudsEffect extends Effect {
 
   // Atmosphere parameters
 
-  get irradianceTexture(): DataTexture | null {
+  get irradianceTexture(): Texture | null {
     return this.cloudsPass.currentMaterial.irradianceTexture
   }
 
-  set irradianceTexture(value: DataTexture | null) {
+  set irradianceTexture(value: Texture | null) {
     this.cloudsPass.currentMaterial.irradianceTexture = value
   }
 
@@ -772,12 +791,28 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.scatteringTexture = value
   }
 
-  get transmittanceTexture(): DataTexture | null {
+  get transmittanceTexture(): Texture | null {
     return this.cloudsPass.currentMaterial.transmittanceTexture
   }
 
-  set transmittanceTexture(value: DataTexture | null) {
+  set transmittanceTexture(value: Texture | null) {
     this.cloudsPass.currentMaterial.transmittanceTexture = value
+  }
+
+  get singleMieScatteringTexture(): Data3DTexture | null {
+    return this.cloudsPass.currentMaterial.singleMieScatteringTexture
+  }
+
+  set singleMieScatteringTexture(value: Data3DTexture | null) {
+    this.cloudsPass.currentMaterial.singleMieScatteringTexture = value
+  }
+
+  get higherOrderScatteringTexture(): Data3DTexture | null {
+    return this.cloudsPass.currentMaterial.higherOrderScatteringTexture
+  }
+
+  set higherOrderScatteringTexture(value: Data3DTexture | null) {
+    this.cloudsPass.currentMaterial.higherOrderScatteringTexture = value
   }
 
   get ellipsoid(): Ellipsoid {
@@ -786,14 +821,6 @@ export class CloudsEffect extends Effect {
 
   set ellipsoid(value: Ellipsoid) {
     this.cloudsPass.currentMaterial.ellipsoid = value
-  }
-
-  get photometric(): boolean {
-    return this.cloudsPass.currentMaterial.photometric
-  }
-
-  set photometric(value: boolean) {
-    this.cloudsPass.currentMaterial.photometric = value
   }
 
   get sunAngularRadius(): number {

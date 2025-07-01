@@ -24,8 +24,9 @@ import {
 } from './AtmosphereMaterialBase'
 import { type AtmosphereShadowLength } from './types'
 
-import functions from './shaders/functions.glsl?raw'
-import parameters from './shaders/parameters.glsl?raw'
+import common from './shaders/bruneton/common.glsl?raw'
+import definitions from './shaders/bruneton/definitions.glsl?raw'
+import runtime from './shaders/bruneton/runtime.glsl?raw'
 import fragmentShader from './shaders/sky.frag?raw'
 import sky from './shaders/sky.glsl?raw'
 import vertexShader from './shaders/sky.vert?raw'
@@ -85,13 +86,14 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     super({
       name: 'SkyMaterial',
       glslVersion: GLSL3,
-      vertexShader: resolveIncludes(vertexShader, {
-        parameters
-      }),
+      vertexShader,
       fragmentShader: resolveIncludes(fragmentShader, {
         core: { raySphereIntersection },
-        parameters,
-        functions,
+        bruneton: {
+          common,
+          definitions,
+          runtime
+        },
         sky
       }),
       ...others,

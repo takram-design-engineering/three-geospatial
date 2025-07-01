@@ -44,7 +44,7 @@ const Scene = () => (
       <meshBasicMaterial />
     </mesh>
     <EffectComposer enableNormalPass>
-      <AerialPerspective sunIrradiance skyIrradiance />
+      <AerialPerspective sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -94,23 +94,23 @@ const Scene = () => (
 
 ### Mixed lighting
 
-Selectively applies the post-process and light-source lighting using [`IrradianceMaskPass`](#irradiancemaskpass) or an MRT texture. It combines the advantages of both, but transparency over the post-process lighting is not supported.
+Selectively applies the post-process and light-source lighting using [`LightingMaskPass`](#lightingmaskpass) or an MRT texture. It combines the advantages of both, but transparency over the post-process lighting is not supported.
 
 ```tsx
 import { EffectComposer } from '@react-three/postprocessing'
 import {
   AerialPerspective,
   Atmosphere,
-  IrradianceMask,
+  LightingMask,
   Sky,
   SkyLight,
   SunLight
 } from '@takram/three-atmosphere/r3f'
 import { Layers } from 'three'
 
-const IRRADIANCE_MASK_LAYER = 10
+const LIGHTING_MASK_LAYER = 10
 const layers = new Layers()
-layers.enable(IRRADIANCE_MASK_LAYER)
+layers.enable(LIGHTING_MASK_LAYER)
 
 const Scene = () => (
   <Atmosphere date={/* Date object or timestamp */}>
@@ -128,8 +128,8 @@ const Scene = () => (
       <meshPhysicalMaterial />
     </mesh>
     <EffectComposer enableNormalPass>
-      <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
-      <AerialPerspective sunIrradiance skyIrradiance />
+      <LightingMask selectionLayer={LIGHTING_MASK_LAYER} />
+      <AerialPerspective sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -189,7 +189,7 @@ scene.add(sunLight)
 scene.add(sunLight.target)
 
 // Demonstrates light-source lighting here. For post-process lighting, set
-// sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
+// sunLight and skyLight to true, remove SkyLightProbe and
 // SunDirectionalLight, and provide a normal buffer to AerialPerspectiveEffect.
 const aerialPerspective = new AerialPerspectiveEffect(camera)
 
@@ -206,14 +206,13 @@ composer.addPass(
   )
 )
 
-const texturesLoader = new PrecomputedTexturesLoader()
-texturesLoader.setTypeFromRenderer(renderer)
-texturesLoader.load('/assets', textures => {
-  Object.assign(skyMaterial, textures)
-  sunLight.transmittanceTexture = textures.transmittanceTexture
-  skyLight.irradianceTexture = textures.irradianceTexture
-  Object.assign(aerialPerspective, textures)
-})
+const textures = new PrecomputedTexturesLoader()
+  .setType(renderer)
+  .load('/assets')
+Object.assign(skyMaterial, textures)
+sunLight.transmittanceTexture = textures.transmittanceTexture
+skyLight.irradianceTexture = textures.irradianceTexture
+Object.assign(aerialPerspective, textures)
 
 const sunDirection = new Vector3()
 const moonDirection = new Vector3()
@@ -261,7 +260,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SkyLight`](#skylight)
 - [`SunLight`](#sunlight)
 - [`AerialPerspective`](#aerialperspective)
-- [`IrradianceMask`](#irradiancemask)
+- [`LightingMask`](#lightingmask)
 
 **Three.js**
 
@@ -271,7 +270,7 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SkyLightProbe`](#skylightprobe)
 - [`SunDirectionalLight`](#sundirectionallight)
 - [`AerialPerspectiveEffect`](#aerialperspectiveeffect)
-- [`IrradianceMaskPass`](#irradiancemaskpass)
+- [`LightingMaskPass`](#lightingmaskpass)
 
 **Functions**
 
@@ -355,19 +354,6 @@ An example at an altitude of 2,000 meters and a latitude of 35°:
 | `correctAltitude = false` | `correctAltitude = true` |
 | :-: | :-: |
 | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/altitude-correction-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/altitude-correction-true.jpg) |
-
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-Whether to store luminance instead of radiance in render buffers.
-
-<!-- prettier-ignore -->
-| `photometric = false` | `photometric = true` |
-| :-: | :-: |
-| ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/photometric-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/photometric-true.jpg) |
 
 #### date
 
@@ -548,23 +534,19 @@ import {
   IRRADIANCE_TEXTURE_WIDTH
 } from '@takram/three-atmosphere'
 import { SkyLight } from '@takram/three-atmosphere/r3f'
-import {
-  createDataTextureLoaderClass,
-  parseFloat32Array
-} from '@takram/three-geospatial'
-import { Vector3 } from 'three'
+import { DataTextureLoader, parseFloat32Array } from '@takram/three-geospatial'
+import { DataTexture, Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
 const sunDirection = getSunDirectionECEF(/* date */)
 
+const loader = new DataTextureLoader(DataTexture, parseFloat32Array, {
+  width: IRRADIANCE_TEXTURE_WIDTH,
+  height: IRRADIANCE_TEXTURE_HEIGHT
+})
+
 const Scene = () => {
-  const irradianceTexture = useLoader(
-    createDataTextureLoaderClass(parseFloat32Array, {
-      width: IRRADIANCE_TEXTURE_WIDTH,
-      height: IRRADIANCE_TEXTURE_HEIGHT
-    }),
-    '/assets/irradiance.bin'
-  )
+  const irradianceTexture = useLoader(loader, '/assets/irradiance.bin')
   return (
     <SkyLight
       irradianceTexture={irradianceTexture}
@@ -595,23 +577,19 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from '@takram/three-atmosphere'
 import { SunLight } from '@takram/three-atmosphere/r3f'
-import {
-  createDataTextureLoaderClass,
-  parseFloat32Array
-} from '@takram/three-geospatial'
-import { Vector3 } from 'three'
+import { DataTextureLoader, parseFloat32Array } from '@takram/three-geospatial'
+import { DataTexture, Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
 const sunDirection = getSunDirectionECEF(/* date */)
 
+const loader = new DataTextureLoader(DataTexture, parseFloat32Array, {
+  width: TRANSMITTANCE_TEXTURE_WIDTH,
+  height: TRANSMITTANCE_TEXTURE_HEIGHT
+})
+
 const Scene = () => {
-  const transmittanceTexture = useLoader(
-    createDataTextureLoaderClass(parseFloat32Array, {
-      width: TRANSMITTANCE_TEXTURE_WIDTH,
-      height: TRANSMITTANCE_TEXTURE_HEIGHT
-    }),
-    '/assets/transmittance.bin'
-  )
+  const transmittanceTexture = useLoader(loader, '/assets/transmittance.bin')
   return (
     <SunLight
       transmittanceTexture={transmittanceTexture}
@@ -660,22 +638,22 @@ const Scene = () => {
 
 The parameters of [`AerialPerspectiveEffect`](#aerialperspectiveeffect) are exposed as props.
 
-## IrradianceMask
+## LightingMask
 
 A post-processing pass that renders a mask for the [mixed lighting](#mixed-lighting).
 
-See [`IrradianceMaskPass`](#irradiancemaskpass) for further details.
+See [`LightingMaskPass`](#lightingmaskpass) for further details.
 
-→ [Source](/packages/atmosphere/src/r3f/IrradianceMask.tsx)
+→ [Source](/packages/atmosphere/src/r3f/LightingMask.tsx)
 
 ```tsx
 import { EffectComposer } from '@react-three/postprocessing'
-import { Atmosphere, IrradianceMask } from '@takram/three-atmosphere/r3f'
+import { Atmosphere, LightingMask } from '@takram/three-atmosphere/r3f'
 import { Layers } from 'three'
 
-const IRRADIANCE_MASK_LAYER = 10
+const LIGHTING_MASK_LAYER = 10
 const layers = new Layers()
-layers.enable(IRRADIANCE_MASK_LAYER)
+layers.enable(LIGHTING_MASK_LAYER)
 
 const Scene = () => {
   return (
@@ -689,7 +667,7 @@ const Scene = () => {
         <meshPhysicalMaterial />
       </mesh>
       <EffectComposer>
-        <IrradianceMask selectionLayer={IRRADIANCE_MASK_LAYER} />
+        <LightingMask selectionLayer={LIGHTING_MASK_LAYER} />
       </EffectComposer>
     </Atmosphere>
   )
@@ -698,7 +676,7 @@ const Scene = () => {
 
 ### Props
 
-The parameters of [`IrradianceMaskPass`](#irradiancemaskpass) are exposed as props.
+The parameters of [`LightingMaskPass`](#lightingmaskpass) are exposed as props.
 
 ## AtmosphereMaterialBase
 
@@ -711,9 +689,9 @@ The base class of [`SkyMaterial`](#skymaterial) and [`StarsMaterial`](#starsmate
 #### irradianceTexture, scatteringTexture, transmittanceTexture
 
 ```ts
-irradianceTexture: DataTexture | null = null
+irradianceTexture: Texture | null = null
 scatteringTexture: Data3DTexture | null = null
-transmittanceTexture: DataTexture | null = null
+transmittanceTexture: Texture | null = null
 ```
 
 The [precomputed textures](assets).
@@ -742,14 +720,6 @@ correctAltitude: boolean = true
 ```
 
 See [correctAltitude](#correctaltitude).
-
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-See [photometric](#photometric).
 
 #### sunDirection
 
@@ -873,10 +843,10 @@ pointSize: number = 1
 
 The size of each star, in points.
 
-#### radianceScale
+#### intensity
 
 ```ts
-radianceScale: number = 1
+intensity: number = 1
 ```
 
 A scaling factor to adjust the brightness of the stars.
@@ -913,7 +883,7 @@ Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/Ligh
 #### irradianceTexture
 
 ```ts
-irradianceTexture: DataTexture | null = null
+irradianceTexture: Texture | null = null
 ```
 
 The [precomputed irradiance texture](assets).
@@ -942,14 +912,6 @@ correctAltitude: boolean = true
 ```
 
 See [correctAltitude](#correctaltitude)
-
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-See [photometric](#photometric).
 
 #### sunDirection
 
@@ -984,7 +946,7 @@ Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en
 #### transmittanceTexture
 
 ```ts
-transmittanceTexture: DataTexture | null = null
+transmittanceTexture: Texture | null = null
 ```
 
 The [precomputed transmittance texture](assets).
@@ -1013,14 +975,6 @@ correctAltitude: boolean = true
 ```
 
 See [correctAltitude](#correctaltitude)
-
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-See [photometric](#photometric).
 
 #### sunDirection
 
@@ -1079,7 +1033,7 @@ Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s [`Effec
 normalBuffer: Texture | null = null
 ```
 
-The normal buffer used for post-process lighting. It is not required if both `sunIrradiance` and `skyIrradiance` are disabled.
+The normal buffer used for post-process lighting. It is not required if both `sunLight` and `skyLight` are disabled.
 
 `EffectComposer`’s default normal buffer lacks sufficient precision, causing banding in shaded areas. Using a floating-point normal buffer resolves this issue.
 
@@ -1102,9 +1056,9 @@ Whether to reconstruct normals from depth buffer.
 #### irradianceTexture, scatteringTexture, transmittanceTexture
 
 ```ts
-irradianceTexture: DataTexture | null = null
+irradianceTexture: Texture | null = null
 scatteringTexture: Data3DTexture | null = null
-transmittanceTexture: DataTexture | null = null
+transmittanceTexture: Texture | null = null
 ```
 
 The [precomputed textures](assets).
@@ -1149,14 +1103,6 @@ Disable this option if your scene contains objects that penetrate the atmosphere
 | :-: | :-: |
 | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/correct-geometric-error-false.jpg) | ![](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/correct-geometric-error-true.jpg) |
 
-#### photometric
-
-```ts
-photometric: boolean = true
-```
-
-See [photometric](#photometric).
-
 #### sunDirection
 
 ```ts
@@ -1165,11 +1111,11 @@ sunDirection: Vector3 = new Vector3()
 
 See [sunDirection](#sundirection).
 
-#### sunIrradiance, skyIrradiance
+#### sunLight, skyLight
 
 ```ts
-sunIrradiance: boolean = false
-skyIrradiance: boolean = false
+sunLight: boolean = false
+skyLight: boolean = false
 ```
 
 Whether to apply sun and sky irradiance as post-process lighting.
@@ -1185,10 +1131,10 @@ inscatter: boolean = true
 
 Whether to account for the atmospheric transmittance and inscattered light.
 
-#### irradianceScale
+#### albedoScale
 
 ```ts
-irradianceScale: number = 1
+albedoScale: number = 1
 ```
 
 This value adjusts the color buffer to reduce contrast.
@@ -1238,21 +1184,21 @@ lunarRadianceScale: number = 1
 
 See [lunarRadianceScale](#lunarradiancescale).
 
-## IrradianceMaskPass
+## LightingMaskPass
 
 A post-processing pass that renders a mask for the [mixed lighting](#mixed-lighting).
 
 If you can afford using MRT, it is preferable to render this mask in your render pass instead.
 
-→ [Source](/packages/atmosphere/src/IrradianceMaskPass.ts)
+→ [Source](/packages/atmosphere/src/LightingMaskPass.ts)
 
 ```ts
-const IRRADIANCE_MASK_LAYER = 10
+const LIGHTING_MASK_LAYER = 10
 const layers = new Layers()
-layers.enable(IRRADIANCE_MASK_LAYER)
+layers.enable(LIGHTING_MASK_LAYER)
 
-const irradianceMask = new IrradianceMaskPass(scene, camera)
-irradianceMask.selectionLayers = IRRADIANCE_MASK_LAYER
+const lightingMask = new LightingMaskPass(scene, camera)
+lightingMask.selectionLayers = LIGHTING_MASK_LAYER
 const aerialPerspective = new AerialPerspectiveEffect(camera, {
   irradianceTexture,
   scatteringTexture,
@@ -1263,7 +1209,7 @@ const composer = new EffectComposer(renderer, {
   frameBufferType: HalfFloatType
 })
 composer.addPass(new RenderPass(scene, camera))
-composer.addPass(irradianceMask)
+composer.addPass(lightingMask)
 composer.addPass(
   new EffectPass(
     camera,
@@ -1323,11 +1269,10 @@ Obtains the rotation matrix to convert coordinates from J2000 ECI to ECEF. This 
 interface SunLightColorOptions {
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
-  photometric?: boolean
 }
 
 function getSunLightColor(
-  transmittanceTexture: DataTexture,
+  transmittanceTexture: Texture,
   worldPosition: Vector3,
   sunDirection: Vector3,
   result?: Color,

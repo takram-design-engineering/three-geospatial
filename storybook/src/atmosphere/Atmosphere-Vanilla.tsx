@@ -30,8 +30,7 @@ import {
   PrecomputedTexturesLoader,
   SkyLightProbe,
   SkyMaterial,
-  SunDirectionalLight,
-  type PrecomputedTextures
+  SunDirectionalLight
 } from '@takram/three-atmosphere'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
@@ -123,7 +122,7 @@ function init(container: HTMLDivElement): void {
   group.add(torusKnot)
 
   // Demonstrates light-source lighting here. For post-process lighting, set
-  // sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
+  // sunLight and skyLight to true, remove SkyLightProbe and
   // SunDirectionalLight, and provide a normal buffer to
   // AerialPerspectiveEffect.
   aerialPerspective = new AerialPerspectiveEffect(camera)
@@ -156,20 +155,17 @@ function init(container: HTMLDivElement): void {
   )
 
   // Load precomputed textures.
-  new PrecomputedTexturesLoader()
-    .setTypeFromRenderer(renderer)
-    .load('atmosphere', onPrecomputedTexturesLoad)
+  const textures = new PrecomputedTexturesLoader()
+    .setType(renderer)
+    .load('atmosphere')
 
-  container.appendChild(renderer.domElement)
-  window.addEventListener('resize', onWindowResize)
-}
-
-function onPrecomputedTexturesLoad(textures: PrecomputedTextures): void {
   Object.assign(skyMaterial, textures)
   sunLight.transmittanceTexture = textures.transmittanceTexture
   skyLight.irradianceTexture = textures.irradianceTexture
   Object.assign(aerialPerspective, textures)
 
+  container.appendChild(renderer.domElement)
+  window.addEventListener('resize', onWindowResize)
   renderer.setAnimationLoop(render)
 }
 

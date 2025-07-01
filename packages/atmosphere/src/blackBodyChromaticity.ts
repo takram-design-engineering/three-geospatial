@@ -1,15 +1,10 @@
-import { Color, Matrix3, Vector3 } from 'three'
+import { Color, Vector3 } from 'three'
 
 import { clamp, saturate } from '@takram/three-geospatial'
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
+import { XYZ_TO_SRGB } from './constants'
 
-// prettier-ignore
-const XYZToLinearRGB = /*#__PURE__*/ new Matrix3(
-  3.2404542, -1.5371385, -0.4985314,
-  -0.9692660, 1.8760108, 0.0415560,
-  0.0556434, -0.2040259, 1.0572252
-)
+const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export function convertTemperatureToLinearSRGBChromaticity(
   temperature: number,
@@ -34,7 +29,7 @@ export function convertTemperatureToLinearSRGBChromaticity(
   const Z = y > 0 ? ((1 - x - y) * Y) / y : 0
 
   // Convert XYZ to linear sRGB chromaticity
-  const color = vectorScratch.set(X, Y, Z).applyMatrix3(XYZToLinearRGB)
+  const color = vectorScratch.set(X, Y, Z).applyMatrix3(XYZ_TO_SRGB)
   // XYZ directly converted from spectral locus doesn't fall inside RGB.
   color.x = saturate(color.x)
   color.y = saturate(color.y)

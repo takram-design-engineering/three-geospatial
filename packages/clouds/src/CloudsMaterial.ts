@@ -24,9 +24,10 @@ import {
   type AtmosphereMaterialBaseUniforms
 } from '@takram/three-atmosphere'
 import {
-  parameters as atmosphereParameters,
-  functions
-} from '@takram/three-atmosphere/shaders'
+  common,
+  definitions,
+  runtime
+} from '@takram/three-atmosphere/shaders/bruneton'
 import {
   assertType,
   define,
@@ -97,8 +98,8 @@ export interface CloudsMaterialUniforms
   stbnTexture: Uniform<Data3DTexture | null>
 
   // Scattering
-  skyIrradianceScale: Uniform<number>
-  groundIrradianceScale: Uniform<number>
+  skyLightScale: Uniform<number>
+  groundBounceScale: Uniform<number>
   powderScale: Uniform<number>
   powderExponent: Uniform<number>
 
@@ -160,8 +161,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         glslVersion: GLSL3,
         vertexShader: resolveIncludes(vertexShader, {
           atmosphere: {
-            parameters: atmosphereParameters,
-            functions
+            bruneton: {
+              common,
+              definitions,
+              runtime
+            }
           },
           types
         }),
@@ -178,8 +182,11 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
               vogelDisk
             },
             atmosphere: {
-              parameters: atmosphereParameters,
-              functions
+              bruneton: {
+                common,
+                definitions,
+                runtime
+              }
             },
             types,
             parameters,
@@ -208,8 +215,8 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           stbnTexture: new Uniform(null),
 
           // Scattering
-          skyIrradianceScale: new Uniform(1),
-          groundIrradianceScale: new Uniform(1),
+          skyLightScale: new Uniform(1),
+          groundBounceScale: new Uniform(1),
           powderScale: new Uniform(0.8),
           powderExponent: new Uniform(150),
 
@@ -292,15 +299,15 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       this.needsUpdate = true
     }
 
-    const prevGroundIrradiance = this.defines.GROUND_IRRADIANCE != null
+    const prevGroundIrradiance = this.defines.GROUND_BOUNCE != null
     const nextGroundIrradiance =
-      this.uniforms.groundIrradianceScale.value > 0 &&
+      this.uniforms.groundBounceScale.value > 0 &&
       this.uniforms.maxIterationCountToGround.value > 0
     if (nextGroundIrradiance !== prevGroundIrradiance) {
       if (nextPowder) {
-        this.defines.GROUND_IRRADIANCE = '1'
+        this.defines.GROUND_BOUNCE = '1'
       } else {
-        delete this.defines.GROUND_IRRADIANCE
+        delete this.defines.GROUND_BOUNCE
       }
       this.needsUpdate = true
     }
@@ -447,8 +454,18 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   @defineInt('MULTI_SCATTERING_OCTAVES', { min: 1, max: 12 })
   multiScatteringOctaves: number = defaults.clouds.multiScatteringOctaves
 
-  @define('ACCURATE_SUN_SKY_IRRADIANCE')
-  accurateSunSkyIrradiance: boolean = defaults.clouds.accurateSunSkyIrradiance
+  /** @deprecated Use accurateSunSkyLight instead. */
+  get accurateSunSkyIrradiance(): boolean {
+    return this.accurateSunSkyLight
+  }
+
+  /** @deprecated Use accurateSunSkyLight instead. */
+  set accurateSunSkyIrradiance(value: boolean) {
+    this.accurateSunSkyLight = value
+  }
+
+  @define('ACCURATE_SUN_SKY_LIGHT')
+  accurateSunSkyLight: boolean = defaults.clouds.accurateSunSkyLight
 
   @define('ACCURATE_PHASE_FUNCTION')
   accuratePhaseFunction: boolean = defaults.clouds.accuratePhaseFunction

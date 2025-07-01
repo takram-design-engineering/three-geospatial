@@ -9,6 +9,7 @@ import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   Fragment,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ComponentRef,
@@ -16,6 +17,7 @@ import {
 } from 'react'
 import { MeshBasicMaterial, MeshLambertMaterial } from 'three'
 
+import { PrecomputedTexturesGenerator } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,
@@ -64,12 +66,9 @@ const Scene: FC = () => {
     { collapsed: true }
   )
   const motionDate = useLocalDateControls()
-  const { correctAltitude, photometric } = useControls(
+  const { correctAltitude } = useControls(
     'atmosphere',
-    {
-      correctAltitude: true,
-      photometric: true
-    },
+    { correctAltitude: true },
     { collapsed: true }
   )
   const { enabled, transmittance, inscatter } = useControls(
@@ -88,7 +87,7 @@ const Scene: FC = () => {
     sky: true
   })
 
-  const { camera } = useThree()
+  const camera = useThree(({ camera }) => camera)
   const [controls, setControls] = useState<ComponentRef<
     typeof OrbitControls
   > | null>(null)
@@ -111,12 +110,23 @@ const Scene: FC = () => {
     atmosphere.updateByDate(new Date(motionDate.get()))
   })
 
+  const renderer = useThree(({ gl }) => gl)
+  const generator = useMemo(
+    () => new PrecomputedTexturesGenerator(renderer),
+    [renderer]
+  )
+  useEffect(() => {
+    void generator.update()
+    return () => {
+      generator.dispose()
+    }
+  }, [generator])
+
   return (
     <Atmosphere
       ref={atmosphereRef}
-      textures='atmosphere'
+      textures={generator.textures}
       correctAltitude={correctAltitude}
-      photometric={photometric}
     >
       <OrbitControls ref={setControls} />
 
@@ -190,8 +200,8 @@ const Scene: FC = () => {
         >
           {enabled && !normal && !depth && (
             <AerialPerspective
-              sunIrradiance={mode === 'post-process' && sun}
-              skyIrradiance={mode === 'post-process' && sky}
+              sunLight={mode === 'post-process' && sun}
+              skyLight={mode === 'post-process' && sky}
               transmittance={transmittance}
               inscatter={inscatter}
             />

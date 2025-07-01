@@ -155,7 +155,7 @@ For more complete examples, see the Storybook.
         group.add(torusKnot)
 
         // Demonstrates light-source lighting here. For post-process lighting, set
-        // sunIrradiance and skyIrradiance to true, remove SkyLightProbe and
+        // sunLight and skyLight to true, remove SkyLightProbe and
         // SunDirectionalLight, and provide a normal buffer to
         // AerialPerspectiveEffect.
         aerialPerspective = new AerialPerspectiveEffect(camera)
@@ -188,23 +188,16 @@ For more complete examples, see the Storybook.
         )
 
         // Load precomputed textures.
-        new PrecomputedTexturesLoader()
-          .setTypeFromRenderer(renderer)
-          .load(
-            'https://unpkg.com/@takram/three-atmosphere@0.11.2/assets',
-            onPrecomputedTexturesLoad
-          )
-
-        container.appendChild(renderer.domElement)
-        window.addEventListener('resize', onWindowResize)
-      }
-
-      function onPrecomputedTexturesLoad(textures) {
+        const textures = new PrecomputedTexturesLoader()
+          .setType(renderer)
+          .load('https://unpkg.com/@takram/three-atmosphere@0.11.2/assets')
         Object.assign(skyMaterial, textures)
         sunLight.transmittanceTexture = textures.transmittanceTexture
         skyLight.irradianceTexture = textures.irradianceTexture
         Object.assign(aerialPerspective, textures)
 
+        container.appendChild(renderer.domElement)
+        window.addEventListener('resize', onWindowResize)
         renderer.setAnimationLoop(render)
       }
 

@@ -20,15 +20,13 @@ import {
   getSunDirectionECI
 } from '../celestialDirections'
 import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
+import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import {
-  PrecomputedTexturesLoader,
-  type PrecomputedTextures
-} from '../PrecomputedTexturesLoader'
-import {
-  type AtmosphereIrradianceMask,
+  type AtmosphereLightingMask,
   type AtmosphereOverlay,
   type AtmosphereShadow,
-  type AtmosphereShadowLength
+  type AtmosphereShadowLength,
+  type PrecomputedTextures
 } from '../types'
 
 export interface AtmosphereTransientStates {
@@ -40,17 +38,13 @@ export interface AtmosphereTransientStates {
   overlay: AtmosphereOverlay | null
   shadow: AtmosphereShadow | null
   shadowLength: AtmosphereShadowLength | null
-  irradianceMask: AtmosphereIrradianceMask | null
+  lightingMask: AtmosphereLightingMask | null
 }
-
-/** @deprecated Use AtmosphereTransientStates instead. */
-export interface AtmosphereTransientProps extends AtmosphereTransientStates {}
 
 export interface AtmosphereContextValue {
   textures?: PrecomputedTextures | null
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
-  photometric?: boolean
   transientStates?: AtmosphereTransientStates
 }
 
@@ -67,7 +61,6 @@ export interface AtmosphereProps {
   textures?: PrecomputedTextures | string
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
-  photometric?: boolean
   date?: number | Date
   children?: ReactNode
 }
@@ -77,7 +70,6 @@ export const Atmosphere: FC<AtmosphereProps> = ({
   textures: texturesProp = DEFAULT_PRECOMPUTED_TEXTURES_URL,
   ellipsoid = Ellipsoid.WGS84,
   correctAltitude = true,
-  photometric = true,
   date,
   children
 }) => {
@@ -90,17 +82,16 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     overlay: null,
     shadow: null,
     shadowLength: null,
-    irradianceMask: null
+    lightingMask: null
   })
 
-  const gl = useThree(({ gl }) => gl)
   const [textures, setTextures] = useState(
     typeof texturesProp !== 'string' ? texturesProp : undefined
   )
+  const renderer = useThree(({ gl }) => gl)
   useEffect(() => {
     if (typeof texturesProp === 'string') {
-      const loader = new PrecomputedTexturesLoader()
-      loader.setTypeFromRenderer(gl)
+      const loader = new PrecomputedTexturesLoader().setType(renderer)
       ;(async () => {
         setTextures(await loader.loadAsync(texturesProp))
       })().catch(error => {
@@ -109,17 +100,16 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     } else {
       setTextures(texturesProp)
     }
-  }, [texturesProp, gl])
+  }, [texturesProp, renderer])
 
   const context = useMemo(
     () => ({
       textures,
       ellipsoid,
       correctAltitude,
-      photometric,
       transientStates: transientStatesRef.current
     }),
-    [textures, ellipsoid, correctAltitude, photometric]
+    [textures, ellipsoid, correctAltitude]
   )
 
   const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {

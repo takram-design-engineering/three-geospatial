@@ -84,7 +84,7 @@ const Scene: FC = () => {
               }}
             />
           </Clouds>
-          <AerialPerspective sky sunIrradiance skyIrradiance />
+          <AerialPerspective sky sunLight skyLight />
           <LensFlare />
           <ToneMapping mode={toneMappingMode} />
           <SMAA />

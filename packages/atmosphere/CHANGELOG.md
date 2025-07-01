@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added `PrecomputedTexturesGenerator`.
+
+### Changed
+
+- `PrecomputedTexturesLoader`: Deprecated and renamed `setTypeFromRenderer()` to `setType()`.
+- `PrecomputedTexturesLoader`: `load()` returns textures that will be loaded asynchronously.
+- `PrecomputedTexturesLoader`: Takes format and type in the constructor.
+- Removed a slight night light from precomputed texture assets.
+- Relaxed the type of transmittance and irradiance textures from `DataTexture` to `Texture`.
+- Deprecated `photometric` options and props. Now outputs luminance only.
+- Deprecated and renamed `sunIrradiance` and `skyIrradiance` options and props to `sunLight` and `skyLight`.
+- Deprecated and renamed `IrradianceMask` to `LightingMask`.
+- `AerialPerspectiveEffect`: Deprecated and renamed `irradianceScale` to `albedoScale`.
+- `StarsMaterial`: Deprecated and renamed `radianceScale` to `intensity`.
+- Migrated to core API changes.
+
 ## [0.12.0] - 2025-06-12
 
 ### Changed

@@ -5,11 +5,8 @@ export function setArrayRenderTargetLayers(
   renderer: WebGLRenderer,
   outputBuffer: WebGLArrayRenderTarget
 ): void {
-  const glTexture = (
-    renderer.properties.get(outputBuffer.texture) as {
-      __webglTexture?: WebGLTexture
-    }
-  ).__webglTexture
+  const property: any = renderer.properties.get(outputBuffer.texture)
+  const glTexture: WebGLTexture | undefined = property.__webglTexture
 
   const gl = renderer.getContext()
   invariant(gl instanceof WebGL2RenderingContext)

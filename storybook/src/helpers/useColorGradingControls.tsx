@@ -5,6 +5,8 @@ import { FileLoader } from 'three'
 
 import { useControls } from './useControls'
 
+const jsonLoader = new FileLoader().setResponseType('json')
+
 interface Entry {
   manufacturer: string
   file: string
@@ -13,9 +15,10 @@ interface Entry {
 export function useColorGradingControls(
   folderSettings?: FolderSettings
 ): string | null {
-  const data = useLoader(FileLoader, 'public/clut/index.json', loader => {
-    loader.setResponseType('json')
-  }) as unknown as Entry[]
+  const data = useLoader(
+    jsonLoader,
+    'public/clut/index.json'
+  ) as unknown as Entry[]
 
   const films = useMemo(
     () =>

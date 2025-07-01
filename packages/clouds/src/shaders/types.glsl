@@ -10,7 +10,7 @@ struct CloudsIrradiance {
   vec3 maxSky;
 };
 
-struct DensityProfile {
+struct CloudDensityProfile {
   vec4 expTerms;
   vec4 exponents;
   vec4 linearTerms;

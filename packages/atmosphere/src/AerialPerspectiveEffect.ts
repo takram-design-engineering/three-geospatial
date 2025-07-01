@@ -6,7 +6,6 @@ import {
   Vector2,
   Vector3,
   type Data3DTexture,
-  type DataTexture,
   type Texture,
   type WebGLRenderer,
   type WebGLRenderTarget
@@ -34,7 +33,10 @@ import {
   vogelDisk
 } from '@takram/three-geospatial/shaders'
 
-import { AtmosphereParameters } from './AtmosphereParameters'
+import {
+  AtmosphereParameters,
+  type AtmosphereParametersUniform
+} from './AtmosphereParameters'
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
   IRRADIANCE_TEXTURE_WIDTH,
@@ -48,7 +50,7 @@ import {
 } from './constants'
 import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import {
-  AtmosphereIrradianceMask,
+  AtmosphereLightingMask,
   type AtmosphereOverlay,
   type AtmosphereShadow,
   type AtmosphereShadowLength
@@ -56,8 +58,9 @@ import {
 
 import fragmentShader from './shaders/aerialPerspectiveEffect.frag?raw'
 import vertexShader from './shaders/aerialPerspectiveEffect.vert?raw'
-import functions from './shaders/functions.glsl?raw'
-import parameters from './shaders/parameters.glsl?raw'
+import common from './shaders/bruneton/common.glsl?raw'
+import definitions from './shaders/bruneton/definitions.glsl?raw'
+import runtime from './shaders/bruneton/runtime.glsl?raw'
 import skyShader from './shaders/sky.glsl?raw'
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
@@ -71,23 +74,30 @@ export interface AerialPerspectiveEffectOptions {
   reconstructNormal?: boolean
 
   // Precomputed textures
-  irradianceTexture?: DataTexture | null
+  irradianceTexture?: Texture | null
   scatteringTexture?: Data3DTexture | null
-  transmittanceTexture?: DataTexture | null
+  transmittanceTexture?: Texture | null
+  singleMieScatteringTexture?: Data3DTexture | null
+  higherOrderScatteringTexture?: Data3DTexture | null
 
   // Atmosphere controls
   ellipsoid?: Ellipsoid
   correctAltitude?: boolean
   correctGeometricError?: boolean
-  photometric?: boolean
   sunDirection?: Vector3
 
   // Rendering options
+  /** @deprecated Use sunLight instead. */
   sunIrradiance?: boolean
+  sunLight?: boolean
+  /** @deprecated Use skyLight instead. */
   skyIrradiance?: boolean
+  skyLight?: boolean
   transmittance?: boolean
   inscatter?: boolean
+  /** @deprecated Use albedoScale instead. */
   irradianceScale?: number
+  albedoScale?: number
   sky?: boolean
   sun?: boolean
 
@@ -111,7 +121,7 @@ export interface AerialPerspectiveEffectUniforms {
   inverseEllipsoidMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
-  irradianceScale: Uniform<number>
+  albedoScale: Uniform<number>
   idealSphereAlpha: Uniform<number>
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
@@ -131,23 +141,18 @@ export interface AerialPerspectiveEffectUniforms {
   frame: Uniform<number>
   shadowLengthBuffer: Uniform<Texture | null>
 
-  // Irradiance mask
-  irradianceMaskBuffer: Uniform<Texture | null>
+  // Lighting mask
+  lightingMaskBuffer: Uniform<Texture | null>
 
   // Uniforms for atmosphere functions
-  u_solar_irradiance: Uniform<Vector3>
-  u_sun_angular_radius: Uniform<number>
-  u_bottom_radius: Uniform<number>
-  u_top_radius: Uniform<number>
-  u_rayleigh_scattering: Uniform<Vector3>
-  u_mie_scattering: Uniform<Vector3>
-  u_mie_phase_function_g: Uniform<number>
-  u_mu_s_min: Uniform<number>
-  u_max_rayleigh_shadow_length: Uniform<number>
-  u_irradiance_texture: Uniform<DataTexture | null>
-  u_scattering_texture: Uniform<Data3DTexture | null>
-  u_single_mie_scattering_texture: Uniform<Data3DTexture | null>
-  u_transmittance_texture: Uniform<DataTexture | null>
+  ATMOSPHERE: AtmosphereParametersUniform
+  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
+  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
+  irradiance_texture: Uniform<Texture | null>
+  scattering_texture: Uniform<Data3DTexture | null>
+  transmittance_texture: Uniform<Texture | null>
+  single_mie_scattering_texture: Uniform<Data3DTexture | null>
+  higher_order_scattering_texture: Uniform<Data3DTexture | null>
 }
 
 export const aerialPerspectiveEffectOptionsDefaults = {
@@ -157,12 +162,11 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
   correctGeometricError: true,
-  photometric: true,
-  sunIrradiance: false,
-  skyIrradiance: false,
+  sunLight: false,
+  skyLight: false,
   transmittance: true,
   inscatter: true,
-  irradianceScale: 1,
+  albedoScale: 1,
   sky: false,
   sun: true,
   moon: true,
@@ -180,7 +184,7 @@ export class AerialPerspectiveEffect extends Effect {
   overlay: AtmosphereOverlay | null = null
   shadow: AtmosphereShadow | null = null
   shadowLength: AtmosphereShadowLength | null = null
-  irradianceMask: AtmosphereIrradianceMask | null = null
+  lightingMask: AtmosphereLightingMask | null = null
 
   constructor(
     private camera = new Camera(),
@@ -195,16 +199,20 @@ export class AerialPerspectiveEffect extends Effect {
       irradianceTexture = null,
       scatteringTexture = null,
       transmittanceTexture = null,
+      singleMieScatteringTexture = null,
+      higherOrderScatteringTexture = null,
       ellipsoid,
       correctAltitude,
       correctGeometricError,
-      photometric,
       sunDirection,
       sunIrradiance,
+      sunLight,
       skyIrradiance,
+      skyLight,
       transmittance,
       inscatter,
       irradianceScale,
+      albedoScale,
       sky,
       sun,
       moon,
@@ -227,16 +235,17 @@ export class AerialPerspectiveEffect extends Effect {
             interleavedGradientNoise,
             vogelDisk
           },
-          parameters,
-          functions,
+          bruneton: {
+            common,
+            definitions,
+            runtime
+          },
           sky: skyShader
         })
       ),
       {
         blendFunction,
-        vertexShader: resolveIncludes(vertexShader, {
-          parameters
-        }),
+        vertexShader,
         attributes: EffectAttribute.DEPTH,
         // prettier-ignore
         uniforms: new Map<string, Uniform>(
@@ -253,7 +262,7 @@ export class AerialPerspectiveEffect extends Effect {
             inverseEllipsoidMatrix: new Uniform(new Matrix4()),
             altitudeCorrection: new Uniform(new Vector3()),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
-            irradianceScale: new Uniform(irradianceScale),
+            albedoScale: new Uniform(irradianceScale ?? albedoScale),
             idealSphereAlpha: new Uniform(0),
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
@@ -273,23 +282,18 @@ export class AerialPerspectiveEffect extends Effect {
             frame: new Uniform(0),
             shadowLengthBuffer: new Uniform(null),
 
-            // Irradiance mask
-            irradianceMaskBuffer: new Uniform(null),
+            // Lighting mask
+            lightingMaskBuffer: new Uniform(null),
 
             // Uniforms for atmosphere functions
-            u_solar_irradiance: new Uniform(atmosphere.solarIrradiance),
-            u_sun_angular_radius: new Uniform(atmosphere.sunAngularRadius),
-            u_bottom_radius: new Uniform(atmosphere.bottomRadius * METER_TO_LENGTH_UNIT),
-            u_top_radius: new Uniform(atmosphere.topRadius * METER_TO_LENGTH_UNIT),
-            u_rayleigh_scattering: new Uniform(atmosphere.rayleighScattering),
-            u_mie_scattering: new Uniform(atmosphere.mieScattering),
-            u_mie_phase_function_g: new Uniform(atmosphere.miePhaseFunctionG),
-            u_mu_s_min: new Uniform(atmosphere.muSMin),
-            u_max_rayleigh_shadow_length: new Uniform(10000 * METER_TO_LENGTH_UNIT),
-            u_irradiance_texture: new Uniform(irradianceTexture),
-            u_scattering_texture: new Uniform(scatteringTexture),
-            u_single_mie_scattering_texture: new Uniform(scatteringTexture),
-            u_transmittance_texture: new Uniform(transmittanceTexture)
+            ATMOSPHERE: atmosphere.toUniform(),
+            SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.sunRadianceToRelativeLuminance),
+            SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.skyRadianceToRelativeLuminance),
+            irradiance_texture: new Uniform(irradianceTexture),
+            scattering_texture: new Uniform(scatteringTexture),
+            transmittance_texture: new Uniform(transmittanceTexture),
+            single_mie_scattering_texture: new Uniform(null),
+            higher_order_scattering_texture: new Uniform(null),
           } satisfies AerialPerspectiveEffectUniforms)
         ),
         // prettier-ignore
@@ -302,21 +306,20 @@ export class AerialPerspectiveEffect extends Effect {
           ['SCATTERING_TEXTURE_NU_SIZE', SCATTERING_TEXTURE_NU_SIZE.toFixed(0)],
           ['IRRADIANCE_TEXTURE_WIDTH', IRRADIANCE_TEXTURE_WIDTH.toFixed(0)],
           ['IRRADIANCE_TEXTURE_HEIGHT', IRRADIANCE_TEXTURE_HEIGHT.toFixed(0)],
-          ['METER_TO_LENGTH_UNIT', METER_TO_LENGTH_UNIT.toFixed(7)],
-          ['SUN_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.sunRadianceToRelativeLuminance.toArray().map(v => v.toFixed(12)).join(',')})`],
-          ['SKY_SPECTRAL_RADIANCE_TO_LUMINANCE', `vec3(${atmosphere.skyRadianceToRelativeLuminance.toArray().map(v => v.toFixed(12)).join(',')})`]
+          ['METER_TO_LENGTH_UNIT', METER_TO_LENGTH_UNIT.toFixed(7)]
         ])
       }
     )
 
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
+    this.singleMieScatteringTexture = singleMieScatteringTexture
+    this.higherOrderScatteringTexture = higherOrderScatteringTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.correctGeometricError = correctGeometricError
-    this.photometric = photometric
-    this.sunIrradiance = sunIrradiance
-    this.skyIrradiance = skyIrradiance
+    this.sunLight = sunIrradiance ?? sunLight
+    this.skyLight = skyIrradiance ?? skyLight
     this.transmittance = transmittance
     this.inscatter = inscatter
     this.sky = sky
@@ -463,30 +466,30 @@ export class AerialPerspectiveEffect extends Effect {
     return needsUpdate
   }
 
-  private updateIrradianceMask(): boolean {
+  private updateLightingMask(): boolean {
     let needsUpdate = false
-    const { uniforms, defines, irradianceMask } = this
-    const prevValue = defines.has('HAS_IRRADIANCE_MASK')
-    const nextValue = irradianceMask != null
+    const { uniforms, defines, lightingMask } = this
+    const prevValue = defines.has('HAS_LIGHTING_MASK')
+    const nextValue = lightingMask != null
     if (nextValue !== prevValue) {
       if (nextValue) {
-        defines.set('HAS_IRRADIANCE_MASK', '1')
+        defines.set('HAS_LIGHTING_MASK', '1')
       } else {
-        defines.delete('HAS_IRRADIANCE_MASK')
-        uniforms.get('irradianceMaskBuffer').value = null
+        defines.delete('HAS_LIGHTING_MASK')
+        uniforms.get('lightingMaskBuffer').value = null
       }
       needsUpdate = true
     }
     if (nextValue) {
-      uniforms.get('irradianceMaskBuffer').value = irradianceMask.map
+      uniforms.get('lightingMaskBuffer').value = lightingMask.map
 
-      const prevChannel = defines.get('IRRADIANCE_MASK_CHANNEL')
-      const nextChannel = irradianceMask.channel
+      const prevChannel = defines.get('LIGHTING_MASK_CHANNEL')
+      const nextChannel = lightingMask.channel
       if (nextChannel !== prevChannel) {
         if (!/^[rgba]$/.test(nextChannel)) {
           console.error(`Expression validation failed: ${nextChannel}`)
         } else {
-          defines.set('IRRADIANCE_MASK_CHANNEL', nextChannel)
+          defines.set('LIGHTING_MASK_CHANNEL', nextChannel)
           needsUpdate = true
         }
       }
@@ -505,7 +508,7 @@ export class AerialPerspectiveEffect extends Effect {
     needsUpdate ||= this.updateOverlay()
     needsUpdate ||= this.updateShadow()
     needsUpdate ||= this.updateShadowLength()
-    needsUpdate ||= this.updateIrradianceMask()
+    needsUpdate ||= this.updateLightingMask()
     if (needsUpdate) {
       this.setChanged()
     }
@@ -527,29 +530,54 @@ export class AerialPerspectiveEffect extends Effect {
   @define('RECONSTRUCT_NORMAL')
   reconstructNormal: boolean
 
-  get irradianceTexture(): DataTexture | null {
-    return this.uniforms.get('u_irradiance_texture').value
+  get irradianceTexture(): Texture | null {
+    return this.uniforms.get('irradiance_texture').value
   }
 
-  set irradianceTexture(value: DataTexture | null) {
-    this.uniforms.get('u_irradiance_texture').value = value
+  set irradianceTexture(value: Texture | null) {
+    this.uniforms.get('irradiance_texture').value = value
   }
 
   get scatteringTexture(): Data3DTexture | null {
-    return this.uniforms.get('u_scattering_texture').value
+    return this.uniforms.get('scattering_texture').value
   }
 
   set scatteringTexture(value: Data3DTexture | null) {
-    this.uniforms.get('u_scattering_texture').value = value
-    this.uniforms.get('u_single_mie_scattering_texture').value = value
+    this.uniforms.get('scattering_texture').value = value
   }
 
-  get transmittanceTexture(): DataTexture | null {
-    return this.uniforms.get('u_transmittance_texture').value
+  get transmittanceTexture(): Texture | null {
+    return this.uniforms.get('transmittance_texture').value
   }
 
-  set transmittanceTexture(value: DataTexture | null) {
-    this.uniforms.get('u_transmittance_texture').value = value
+  set transmittanceTexture(value: Texture | null) {
+    this.uniforms.get('transmittance_texture').value = value
+  }
+
+  /** @private */
+  @define('COMBINED_SCATTERING_TEXTURES')
+  combinedScatteringTextures = false
+
+  get singleMieScatteringTexture(): Data3DTexture | null {
+    return this.uniforms.get('single_mie_scattering_texture').value
+  }
+
+  set singleMieScatteringTexture(value: Data3DTexture | null) {
+    this.uniforms.get('single_mie_scattering_texture').value = value
+    this.combinedScatteringTextures = value == null
+  }
+
+  /** @private */
+  @define('HAS_HIGHER_ORDER_SCATTERING_TEXTURE')
+  hasHigherOrderScatteringTexture = false
+
+  get higherOrderScatteringTexture(): Data3DTexture | null {
+    return this.uniforms.get('higher_order_scattering_texture').value
+  }
+
+  set higherOrderScatteringTexture(value: Data3DTexture | null) {
+    this.uniforms.get('higher_order_scattering_texture').value = value
+    this.hasHigherOrderScatteringTexture = value != null
   }
 
   get ellipsoid(): Ellipsoid {
@@ -568,18 +596,35 @@ export class AerialPerspectiveEffect extends Effect {
   @define('CORRECT_GEOMETRIC_ERROR')
   correctGeometricError: boolean
 
-  @define('PHOTOMETRIC')
-  photometric: boolean
-
   get sunDirection(): Vector3 {
     return this.uniforms.get('sunDirection').value
   }
 
-  @define('SUN_IRRADIANCE')
-  sunIrradiance: boolean
+  /** @deprecated Use sunLight instead. */
+  get sunIrradiance(): boolean {
+    return this.sunLight
+  }
 
-  @define('SKY_IRRADIANCE')
-  skyIrradiance: boolean
+  /** @deprecated Use sunLight instead. */
+  set sunIrradiance(value: boolean) {
+    this.sunLight = value
+  }
+
+  @define('SUN_LIGHT')
+  sunLight: boolean
+
+  /** @deprecated Use skyLight instead. */
+  get skyIrradiance(): boolean {
+    return this.skyLight
+  }
+
+  /** @deprecated Use skyLight instead. */
+  set skyIrradiance(value: boolean) {
+    this.skyLight = value
+  }
+
+  @define('SKY_LIGHT')
+  skyLight: boolean
 
   @define('TRANSMITTANCE')
   transmittance: boolean
@@ -587,12 +632,22 @@ export class AerialPerspectiveEffect extends Effect {
   @define('INSCATTER')
   inscatter: boolean
 
+  /** @deprecated Use albedoScale instead. */
   get irradianceScale(): number {
-    return this.uniforms.get('irradianceScale').value
+    return this.albedoScale
   }
 
+  /** @deprecated Use albedoScale instead. */
   set irradianceScale(value: number) {
-    this.uniforms.get('irradianceScale').value = value
+    this.albedoScale = value
+  }
+
+  get albedoScale(): number {
+    return this.uniforms.get('albedoScale').value
+  }
+
+  set albedoScale(value: number) {
+    this.uniforms.get('albedoScale').value = value
   }
 
   @define('SKY')

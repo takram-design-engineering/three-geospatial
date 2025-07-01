@@ -53,7 +53,6 @@ export class Procedural3DTextureBase implements Procedural3DTexture {
 
     this.renderTarget = new WebGL3DRenderTarget(size, size, size, {
       depthBuffer: false,
-      stencilBuffer: false,
       format: RedFormat
     })
     const texture = this.renderTarget.texture
@@ -79,13 +78,12 @@ export class Procedural3DTextureBase implements Procedural3DTexture {
 
     // Unfortunately, rendering into 3D target requires as many draw calls as
     // the value of "size".
-    const renderTarget = renderer.getRenderTarget()
     for (let layer = 0; layer < this.size; ++layer) {
       this.material.uniforms.layer.value = layer / this.size
       renderer.setRenderTarget(this.renderTarget, layer)
       renderer.render(this.mesh, this.camera)
     }
-    renderer.setRenderTarget(renderTarget)
+    renderer.setRenderTarget(null)
   }
 
   get texture(): Data3DTexture {

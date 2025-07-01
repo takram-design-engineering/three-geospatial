@@ -10,8 +10,22 @@ precision highp sampler2DArray;
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
 #endif // HAS_SHADOW
-#include "parameters"
-#include "functions"
+
+#include "bruneton/definitions"
+
+uniform AtmosphereParameters ATMOSPHERE;
+uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+
+uniform sampler2D transmittance_texture;
+uniform sampler3D scattering_texture;
+uniform sampler2D irradiance_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler3D higher_order_scattering_texture;
+
+#include "bruneton/common"
+#include "bruneton/runtime"
+
 #include "sky"
 
 uniform sampler2D normalBuffer;
@@ -27,15 +41,15 @@ uniform vec3 sunDirection;
 uniform vec3 moonDirection;
 uniform float moonAngularRadius;
 uniform float lunarRadianceScale;
-uniform float irradianceScale;
+uniform float albedoScale;
 uniform float idealSphereAlpha;
 
-#ifdef HAS_IRRADIANCE_MASK
-uniform sampler2D irradianceMaskBuffer;
-#endif // HAS_IRRADIANCE_MASK
+#ifdef HAS_LIGHTING_MASK
+uniform sampler2D lightingMaskBuffer;
+#endif // HAS_LIGHTING_MASK
 
 // prettier-ignore
-#define IRRADIANCE_MASK_CHANNEL_ IRRADIANCE_MASK_CHANNEL
+#define LIGHTING_MASK_CHANNEL_ LIGHTING_MASK_CHANNEL
 
 #ifdef HAS_OVERLAY
 uniform sampler2D overlayBuffer;
@@ -79,12 +93,12 @@ void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
 
   // Correct way is slerp, but this will be small-angle interpolation anyways.
   vec3 sphereNormal = normalize(positionECEF / vEllipsoidRadiiSquared);
-  vec3 spherePosition = u_bottom_radius * sphereNormal;
+  vec3 spherePosition = ATMOSPHERE.bottom_radius * sphereNormal;
   normalECEF = mix(normalECEF, sphereNormal, idealSphereAlpha);
   positionECEF = mix(positionECEF, spherePosition, idealSphereAlpha);
 }
 
-#if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+#if defined(SUN_LIGHT) || defined(SKY_LIGHT)
 
 vec3 getSunSkyIrradiance(
   const vec3 positionECEF,
@@ -92,9 +106,9 @@ vec3 getSunSkyIrradiance(
   const vec3 inputColor,
   const float sunTransmittance
 ) {
-  // Assume lambertian BRDF. If both SUN_IRRADIANCE and SKY_IRRADIANCE are not
-  // defined, regard the inputColor as radiance at the texel.
-  vec3 albedo = inputColor * irradianceScale * RECIPROCAL_PI;
+  // Assume lambertian BRDF. If both SUN_LIGHT and SKY_LIGHT are not defined,
+  // regard the inputColor as radiance at the texel.
+  vec3 diffuse = inputColor * albedoScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(positionECEF, normal, sunDirection, skyIrradiance);
 
@@ -102,16 +116,16 @@ vec3 getSunSkyIrradiance(
   sunIrradiance *= sunTransmittance;
   #endif // HAS_SHADOW
 
-  #if defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
-  return albedo * (sunIrradiance + skyIrradiance);
-  #elif defined(SUN_IRRADIANCE)
-  return albedo * sunIrradiance;
-  #elif defined(SKY_IRRADIANCE)
-  return albedo * skyIrradiance;
-  #endif // defined(SUN_IRRADIANCE) && defined(SKY_IRRADIANCE)
+  #if defined(SUN_LIGHT) && defined(SKY_LIGHT)
+  return diffuse * (sunIrradiance + skyIrradiance);
+  #elif defined(SUN_LIGHT)
+  return diffuse * sunIrradiance;
+  #elif defined(SKY_LIGHT)
+  return diffuse * skyIrradiance;
+  #endif // defined(SUN_LIGHT) && defined(SKY_LIGHT)
 }
 
-#endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+#endif // defined(SUN_LIGHT) || defined(SKY_LIGHT)
 
 #if defined(TRANSMITTANCE) || defined(INSCATTER)
 
@@ -254,11 +268,11 @@ float getShadowRadius(const vec3 worldPosition) {
 #endif // HAS_SHADOW
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
-  #if defined(HAS_IRRADIANCE_MASK) && defined(DEBUG_SHOW_IRRADIANCE_MASK)
-  outputColor.rgb = vec3(texture(irradianceMaskBuffer, uv).IRRADIANCE_MASK_CHANNEL_);
+  #if defined(HAS_LIGHTING_MASK) && defined(DEBUG_SHOW_LIGHTING_MASK)
+  outputColor.rgb = vec3(texture(lightingMaskBuffer, uv).LIGHTING_MASK_CHANNEL_);
   outputColor.a = 1.0;
   return;
-  #endif // defined(HAS_IRRADIANCE_MASK) && defined(DEBUG_SHOW_IRRADIANCE_MASK)
+  #endif // defined(HAS_LIGHTING_MASK) && defined(DEBUG_SHOW_LIGHTING_MASK)
 
   float shadowLength = 0.0;
   #ifdef HAS_SHADOW_LENGTH
@@ -335,15 +349,15 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // HAS_SHADOW
 
   vec3 radiance;
-  #if defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+  #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
   radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
-  #ifdef HAS_IRRADIANCE_MASK
-  float irradianceMask = texture(irradianceMaskBuffer, uv).IRRADIANCE_MASK_CHANNEL_;
-  radiance = mix(inputColor.rgb, radiance, irradianceMask);
-  #endif // HAS_IRRADIANCE_MASK
-  #else // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+  #ifdef HAS_LIGHTING_MASK
+  float lightingMask = texture(lightingMaskBuffer, uv).LIGHTING_MASK_CHANNEL_;
+  radiance = mix(inputColor.rgb, radiance, lightingMask);
+  #endif // HAS_LIGHTING_MASK
+  #else // defined(SUN_LIGHT) || defined(SKY_LIGHT)
   radiance = inputColor.rgb;
-  #endif // defined(SUN_IRRADIANCE) || defined(SKY_IRRADIANCE)
+  #endif // defined(SUN_LIGHT) || defined(SKY_LIGHT)
 
   #if defined(TRANSMITTANCE) || defined(INSCATTER)
   applyTransmittanceInscatter(positionECEF, shadowLength, radiance);

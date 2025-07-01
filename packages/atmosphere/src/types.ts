@@ -1,9 +1,18 @@
 import {
+  type Data3DTexture,
   type DataArrayTexture,
   type Matrix4,
   type Texture,
   type Vector2
 } from 'three'
+
+export interface PrecomputedTextures {
+  irradianceTexture: Texture
+  scatteringTexture: Data3DTexture
+  transmittanceTexture: Texture
+  singleMieScatteringTexture?: Data3DTexture
+  higherOrderScatteringTexture?: Data3DTexture
+}
 
 export interface AtmosphereOverlay {
   map: Texture
@@ -24,7 +33,7 @@ export interface AtmosphereShadow {
   topHeight: number
 }
 
-export interface AtmosphereIrradianceMask {
+export interface AtmosphereLightingMask {
   map: Texture
   channel: 'r' | 'g' | 'b' | 'a'
 }

@@ -9,20 +9,20 @@ import {
   type FC
 } from 'react'
 import {
+  Data3DTexture,
   LinearFilter,
   LinearMipMapLinearFilter,
   NoColorSpace,
   RedFormat,
   RepeatWrapping,
   TextureLoader,
-  type Data3DTexture,
   type Texture,
   type WebGLRenderer
 } from 'three'
 
 import { AtmosphereContext, separateProps } from '@takram/three-atmosphere/r3f'
 import {
-  createData3DTextureLoaderClass,
+  DataTextureLoader,
   DEFAULT_STBN_URL,
   parseUint8Array,
   STBNLoader
@@ -86,7 +86,7 @@ function use3DTextureState(
   const [data, setData] = useState(typeof input !== 'string' ? input : null)
   useEffect(() => {
     if (typeof input === 'string') {
-      const Loader = createData3DTextureLoaderClass(parseUint8Array, {
+      const loader = new DataTextureLoader(Data3DTexture, parseUint8Array, {
         width: size,
         height: size,
         depth: size,
@@ -98,7 +98,6 @@ function use3DTextureState(
         wrapR: RepeatWrapping,
         colorSpace: NoColorSpace
       })
-      const loader = new Loader()
       ;(async () => {
         setData(await loader.loadAsync(input))
       })().catch(error => {
@@ -229,8 +228,8 @@ export const Clouds: FC<CloudsProps> = ({
     }
   }, [effect, handleChange])
 
-  const gl = useThree(({ gl }) => gl)
-  const localWeatherTexture = useTextureState(localWeatherTextureProp, gl)
+  const renderer = useThree(({ gl }) => gl)
+  const localWeatherTexture = useTextureState(localWeatherTextureProp, renderer)
   const shapeTexture = use3DTextureState(
     shapeTextureProp,
     CLOUD_SHAPE_TEXTURE_SIZE
@@ -239,7 +238,7 @@ export const Clouds: FC<CloudsProps> = ({
     shapeDetailTextureProp,
     CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
   )
-  const turbulenceTexture = useTextureState(turbulenceTextureProp, gl)
+  const turbulenceTexture = useTextureState(turbulenceTextureProp, renderer)
   const stbnTexture = useSTBNTextureState(stbnTextureProp)
 
   const { camera } = useContext(EffectComposerContext)

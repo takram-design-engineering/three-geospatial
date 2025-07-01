@@ -73,14 +73,14 @@ export const EffectComposer: FC<
   multisampling = 8,
   frameBufferType = HalfFloatType
 }) => {
-  const gl = useThree(({ gl }) => gl)
+  const renderer = useThree(({ gl }) => gl)
   const defaultScene = useThree(({ scene }) => scene)
   const defaultCamera = useThree(({ camera }) => camera)
   const scene = sceneProp ?? defaultScene
   const camera = cameraProp ?? defaultCamera
 
   const [composer, geometryPass] = useMemo(() => {
-    const composer = new EffectComposerImpl(gl, {
+    const composer = new EffectComposerImpl(renderer, {
       depthBuffer,
       stencilBuffer,
       multisampling,
@@ -90,7 +90,7 @@ export const EffectComposer: FC<
     composer.addPass(geometryPass)
     return [composer, geometryPass]
   }, [
-    gl,
+    renderer,
     scene,
     camera,
     depthBuffer,
@@ -107,13 +107,13 @@ export const EffectComposer: FC<
   useFrame(
     (state, delta) => {
       if (enabled) {
-        const currentAutoClear = gl.autoClear
-        gl.autoClear = autoClear
+        const currentAutoClear = renderer.autoClear
+        renderer.autoClear = autoClear
         if (stencilBuffer && !autoClear) {
-          gl.clearStencil()
+          renderer.clearStencil()
         }
         composer.render(delta)
-        gl.autoClear = currentAutoClear
+        renderer.autoClear = currentAutoClear
       }
     },
     enabled ? renderPriority : 0
@@ -160,12 +160,12 @@ export const EffectComposer: FC<
   }, [composer, children, camera])
 
   useEffect(() => {
-    const currentToneMapping = gl.toneMapping
-    gl.toneMapping = NoToneMapping
+    const currentToneMapping = renderer.toneMapping
+    renderer.toneMapping = NoToneMapping
     return () => {
-      gl.toneMapping = currentToneMapping
+      renderer.toneMapping = currentToneMapping
     }
-  }, [gl])
+  }, [renderer])
 
   const context = useMemo(
     (): EffectComposerContextValue => ({

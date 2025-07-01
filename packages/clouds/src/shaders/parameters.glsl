@@ -62,4 +62,4 @@ uniform float maxHeight;
 uniform float shadowTopHeight;
 uniform float shadowBottomHeight;
 uniform vec4 shadowLayerMask;
-uniform DensityProfile densityProfile;
+uniform CloudDensityProfile densityProfile;

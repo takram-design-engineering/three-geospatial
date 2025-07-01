@@ -41,7 +41,7 @@ const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
       <Clouds qualityPreset='high' coverage={0.4} />
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -81,7 +81,7 @@ const Scene = () => (
           coverageFilterWidth={0.5}
         />
       </Clouds>
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -100,7 +100,7 @@ const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
       <Clouds localWeatherTexture={/* path to weather texture */} />
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -131,7 +131,7 @@ const Scene = () => (
   <Atmosphere>
     <EffectComposer enableNormalPass>
       <Clouds localWeatherTexture={localWeatherTexture} />
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -195,7 +195,7 @@ This illustrates that greater total cloud layer height increases computational c
 
 - The cloud base of each layer lines up at the same altitude, making it look artificial. This may be improved by tweaking the shape altering function.
 
-- Interpolated sun and sky irradiance, when [`accurateSunSkyIrradiance`](#cloudsaccuratesunskyirradiance) is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
+- Interpolated sun and sky irradiance, when [`accurateSunSkyLight`](#cloudsaccuratesunskylight) is set to false, could be improved by using spherical harmonics to approximate the radial gradient of the sky.
 
 - A large portion of weather sampling is wasted simply checking whether it is outside the cloud shell. However, since we already know the front depth and sample count at the texel from the reprojected previous frame, using this information to better estimate the ray marching range would make it much more efficient.
 
@@ -241,13 +241,13 @@ const Scene = () => (
         qualityPreset='high'
         coverage={0.4}
         // Just use dash-case to pierce into nested properties.
-        clouds-accurateSunSkyIrradiance
+        clouds-accurateSunSkyLight
         shadow-cascadeCount={3}
       />
       {/* By placing it inside Atmosphere along with AerialPerspective, the
       output buffers are routed to AerialPerspective and composited into the
       final render. */}
-      <AerialPerspective sky skyIrradiance sunIrradiance />
+      <AerialPerspective sky sunLight skyLight />
     </EffectComposer>
   </Atmosphere>
 )
@@ -368,7 +368,7 @@ const Scene = () => {
           />
           {/* The number of cloud layers is limited to 4. */}
         </Clouds>
-        <AerialPerspective sky skyIrradiance sunIrradiance />
+        <AerialPerspective sky sunLight skyLight />
       </EffectComposer>
     </Atmosphere>
   )
@@ -675,21 +675,21 @@ Controls dual-lobe Henyey-Greenstein phase function. Positive anisotropy strengt
 
 These values take effect only when [`accuratePhaseFunction`](#cloudsaccuratephasefunction) is disabled.
 
-#### skyIrradianceScale
+#### skyLightScale
 
 ```ts
-skyIrradianceScale: number = 1
+skyLightScale: number = 1
 ```
 
-The contribution of sky irradiance. This is a fudge factor and you might adjust this value to make it look convincing to you.
+The contribution of sky light. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
-#### groundIrradianceScale
+#### groundBounceScale
 
 ```ts
-groundIrradianceScale: number = 1
+groundBounceScale: number = 1
 ```
 
-The contribution of irradiance bouncing off the ground. This is a fudge factor and you might adjust this value to make it look convincing to you.
+The contribution of light bouncing off the ground. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
 #### powderScale, powderExponent
 
@@ -825,10 +825,10 @@ multiScatteringOctaves: number = 8
 
 The number of octaves accumulated to approximate multiple scattering. A higher value results in brighter clouds, but values beyond 8 have no noticeable effect.
 
-#### clouds.accurateSunSkyIrradiance
+#### clouds.accurateSunSkyLight
 
 ```ts
-accurateSunSkyIrradiance: boolean = true
+accurateSunSkyLight: boolean = true
 ```
 
 Whether to sample sun and sky irradiance at every sample point during ray marching. If disabled, irradiance is approximated by interpolating values at the bottom and top of the total cloud layers above the camera, which is only plausible for small-scale scenes.
