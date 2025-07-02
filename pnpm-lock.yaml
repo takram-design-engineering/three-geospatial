@@ -37,8 +37,8 @@ importers:
         version: 5.0.0
     devDependencies:
       3d-tiles-renderer:
-        specifier: ^0.4.11
-        version: 0.4.11(@react-three/fiber@9.1.4(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0)
+        specifier: 0.4.10
+        version: 0.4.10(@react-three/fiber@9.1.4(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0)
       '@babel/core':
         specifier: ^7.27.7
         version: 7.27.7
@@ -309,8 +309,8 @@ importers:
 
 packages:
 
-  3d-tiles-renderer@0.4.11:
-    resolution: {integrity: sha512-aXnd0mv8eMbeSbn5ERacN/ZsDwSycQ8Ar5kfv7I2C//fFTP6VH3jqkn5Av2LHo6gJ6bBv5fQ6Gek+PqsQhFkWg==}
+  3d-tiles-renderer@0.4.10:
+    resolution: {integrity: sha512-gUXHg+Fzbcr9uSk7UZhN2/8smueAkIG2keiD3queaYuCxYgsh/97zX5FpduFy7dfdCdSIJDgUKHLHLCfrLQV3g==}
     peerDependencies:
       '@react-three/fiber': 9.1.4
       react: 19.0.0
@@ -8196,7 +8196,7 @@ packages:
 
 snapshots:
 
-  3d-tiles-renderer@0.4.11(@react-three/fiber@9.1.4(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0):
+  3d-tiles-renderer@0.4.10(@react-three/fiber@9.1.4(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.177.0):
     dependencies:
       three: 0.177.0
     optionalDependencies:
