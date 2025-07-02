@@ -48,6 +48,9 @@ function applyOptions(
   }
 }
 
+// An atmosphere layer of width 'width', and whose density is defined as:
+//   expTerm * exp(expScale * h) + linearTerm * h + constantTerm
+// clamped to [0, 1], and where h is the altitude.
 export class DensityProfileLayer {
   width: number
   expTerm: number
@@ -80,6 +83,12 @@ export class DensityProfileLayer {
     })
   }
 }
+
+// An atmosphere density profile made of several layers on top of each other
+// (from bottom to top). The width of the last layer is ignored, i.e. it always
+// extend to the top atmosphere boundary. The profile values vary between 0
+// (null density) to 1 (maximum density).
+type DensityProfile = [DensityProfileLayer, DensityProfileLayer]
 
 export class AtmosphereParameters {
   static readonly DEFAULT = /*#__PURE__*/ new AtmosphereParameters()

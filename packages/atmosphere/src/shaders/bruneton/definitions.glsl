@@ -105,18 +105,13 @@ const Angle deg = pi / 180.0;
 const Irradiance watt_per_square_meter = watt / m2;
 const Radiance watt_per_square_meter_per_sr = watt / (m2 * sr);
 const SpectralIrradiance watt_per_square_meter_per_nm = watt / (m2 * nm);
-const SpectralRadiance watt_per_square_meter_per_sr_per_nm =
-    watt / (m2 * sr * nm);
-const SpectralRadianceDensity watt_per_cubic_meter_per_sr_per_nm =
-    watt / (m3 * sr * nm);
+const SpectralRadiance watt_per_square_meter_per_sr_per_nm = watt / (m2 * sr * nm);
+const SpectralRadianceDensity watt_per_cubic_meter_per_sr_per_nm = watt / (m3 * sr * nm);
 const LuminousIntensity cd = lm / sr;
 const LuminousIntensity kcd = 1000.0 * cd;
 const Luminance cd_per_square_meter = cd / m2;
 const Luminance kcd_per_square_meter = kcd / m2;
 
-// An atmosphere layer of width 'width', and whose density is defined as
-//   'exp_term' * exp('exp_scale' * h) + 'linear_term' * h + 'constant_term',
-// clamped to [0,1], and where h is the altitude.
 struct DensityProfileLayer {
   Length width;
   Number exp_term;
@@ -125,10 +120,6 @@ struct DensityProfileLayer {
   Number constant_term;
 };
 
-// An atmosphere density profile made of several layers on top of each other
-// (from bottom to top). The width of the last layer is ignored, i.e. it always
-// extend to the top atmosphere boundary. The profile values vary between 0
-// (null density) to 1 (maximum density).
 struct DensityProfile {
   DensityProfileLayer layers[2];
 };
