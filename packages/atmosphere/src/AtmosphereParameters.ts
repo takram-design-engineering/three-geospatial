@@ -2,8 +2,6 @@ import { Color, Uniform, Vector3 } from 'three'
 
 import { radians } from '@takram/three-geospatial'
 
-import { METER_TO_LENGTH_UNIT } from './constants'
-
 const LUMINANCE_COEFFS = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 
 const paramKeys = [
@@ -101,16 +99,17 @@ export class AtmosphereParameters {
   sunAngularRadius = 0.004675
 
   // The distance between the planet center and the bottom of the atmosphere in
-  // meters.
-  bottomRadius = 6360000
+  // kilometers.
+  bottomRadius = 6360
 
   // The distance between the planet center and the top of the atmosphere in
-  // meters.
-  topRadius = 6420000
+  // kilometers.
+  topRadius = 6420
 
   // The density profile of air molecules, i.e. a function from altitude to
   // dimensionless values between 0 (null density) and 1 (maximum density).
-  rayleighDensity = [
+  // prettier-ignore
+  rayleighDensity: DensityProfile = [
     new DensityProfileLayer(0, 0, 0, 0, 0),
     new DensityProfileLayer(0, 1, -0.125, 0, 0)
   ]
@@ -123,8 +122,9 @@ export class AtmosphereParameters {
 
   // The density profile of aerosols, i.e. a function from altitude to
   // dimensionless values between 0 (null density) and 1 (maximum density).
-  mieDensity = [
-    new DensityProfileLayer(0, 0, 0, 0, 0.0),
+  // prettier-ignore
+  mieDensity: DensityProfile = [
+    new DensityProfileLayer(0, 0, 0, 0, 0),
     new DensityProfileLayer(0, 1, -0.833333, 0, 0)
   ]
 
@@ -147,9 +147,10 @@ export class AtmosphereParameters {
   // The density profile of air molecules that absorb light (e.g. ozone), i.e.
   // a function from altitude to dimensionless values between 0 (null density)
   // and 1 (maximum density).
-  absorptionDensity = [
-    new DensityProfileLayer(25, 0, 0, 0.066667, -0.666667),
-    new DensityProfileLayer(0, 0, 0, -0.066667, 2.666667)
+  // prettier-ignore
+  absorptionDensity: DensityProfile = [
+    new DensityProfileLayer(25, 0, 0, 1 / 15, -2 / 3),
+    new DensityProfileLayer(0, 0, 0, -1 / 15, 8 / 3)
   ]
 
   // The extinction coefficient of molecules that absorb light (e.g. ozone) at
@@ -193,8 +194,8 @@ export class AtmosphereParameters {
     return new Uniform({
       solar_irradiance: this.solarIrradiance,
       sun_angular_radius: this.sunAngularRadius,
-      bottom_radius: this.bottomRadius * METER_TO_LENGTH_UNIT,
-      top_radius: this.topRadius * METER_TO_LENGTH_UNIT,
+      bottom_radius: this.bottomRadius,
+      top_radius: this.topRadius,
       rayleigh_density: {
         layers: this.rayleighDensity.map(layer => layer.toUniform().value)
       },

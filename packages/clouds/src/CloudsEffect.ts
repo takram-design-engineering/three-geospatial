@@ -374,7 +374,7 @@ export class CloudsEffect extends Effect {
     if (this.correctAltitude) {
       getAltitudeCorrectionOffset(
         cameraPositionECEF,
-        this.atmosphere.bottomRadius,
+        this.atmosphere,
         this.ellipsoid,
         altitudeCorrection,
         false

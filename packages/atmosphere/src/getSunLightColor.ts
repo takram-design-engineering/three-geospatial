@@ -4,6 +4,7 @@ import { Ellipsoid } from '@takram/three-geospatial'
 
 import { AtmosphereParameters } from './AtmosphereParameters'
 import {
+  METER_TO_LENGTH_UNIT,
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
@@ -66,7 +67,7 @@ export function getSunLightColor(
       camera.sub(
         ellipsoid.getOsculatingSphereCenter(
           surfacePosition,
-          atmosphere.bottomRadius,
+          atmosphere.bottomRadius / METER_TO_LENGTH_UNIT,
           vectorScratch2
         )
       )

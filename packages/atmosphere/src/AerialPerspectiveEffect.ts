@@ -256,7 +256,7 @@ export class AerialPerspectiveEffect extends Effect {
             inverseProjectionMatrix: new Uniform(new Matrix4()),
             inverseViewMatrix: new Uniform(new Matrix4()),
             cameraPosition: new Uniform(new Vector3()),
-            bottomRadius: new Uniform(atmosphere.bottomRadius),
+            bottomRadius: new Uniform(atmosphere.bottomRadius / METER_TO_LENGTH_UNIT),
             ellipsoidRadii: new Uniform(new Vector3()),
             ellipsoidCenter: new Uniform(new Vector3()),
             inverseEllipsoidMatrix: new Uniform(new Matrix4()),
@@ -385,7 +385,7 @@ export class AerialPerspectiveEffect extends Effect {
     if (this.correctAltitude) {
       getAltitudeCorrectionOffset(
         cameraPositionECEF,
-        this.atmosphere.bottomRadius,
+        this.atmosphere,
         this.ellipsoid,
         altitudeCorrection.value
       )

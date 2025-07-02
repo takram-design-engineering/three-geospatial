@@ -2,11 +2,14 @@ import { Vector3 } from 'three'
 
 import { type Ellipsoid } from '@takram/three-geospatial'
 
+import { type AtmosphereParameters } from './AtmosphereParameters'
+import { METER_TO_LENGTH_UNIT } from './constants'
+
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export function getAltitudeCorrectionOffset(
   cameraPosition: Vector3,
-  bottomRadius: number,
+  atmosphere: AtmosphereParameters,
   ellipsoid: Ellipsoid,
   result: Vector3,
   clipToSurface = true
@@ -22,7 +25,7 @@ export function getAltitudeCorrectionOffset(
         !clipToSurface || surfacePosition.lengthSq() < cameraPosition.lengthSq()
           ? surfacePosition
           : cameraPosition,
-        bottomRadius,
+        atmosphere.bottomRadius / METER_TO_LENGTH_UNIT,
         result
       )
     : result.setScalar(0)
