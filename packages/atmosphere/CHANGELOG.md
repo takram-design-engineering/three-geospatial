@@ -22,6 +22,11 @@
 - `StarsMaterial`: Deprecated and renamed `radianceScale` to `intensity`.
 - Migrated to core API changes.
 
+### Fixed
+
+- `AerialPerspectiveEffect`: Fixed saturated inscattered light when the camera is located below the bottom atmosphere and `correctGeometricError` is enabled.
+- `Atmosphere`: Fixed potential texture memory leaks.
+
 ## [0.12.0] - 2025-06-12
 
 ### Changed
