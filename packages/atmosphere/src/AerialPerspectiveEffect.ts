@@ -362,12 +362,12 @@ export class AerialPerspectiveEffect extends Effect {
 
     try {
       // Calculate the projected scale of the globe in clip space used to
-      // interpolate between the globe true normals and idealized normals to avoid
-      // lighting artifacts.
+      // interpolate between the globe true normals and idealized normals to
+      // avoid lighting artifacts.
       const cameraHeight =
         geodeticScratch.setFromECEF(cameraPositionECEF).height
       const projectedScale = vectorScratch2
-        .set(0, this.ellipsoid.maximumRadius, -cameraHeight)
+        .set(0, this.ellipsoid.maximumRadius, -Math.max(0.0, cameraHeight))
         .applyMatrix4(projectionMatrix)
 
       // Calculate interpolation alpha
