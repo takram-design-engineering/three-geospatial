@@ -1280,7 +1280,7 @@ By default, meshes with the selection layer are masked out from the post-process
 
 TODO
 
-### Suspend until the textures have been fully generated
+### Suspend until textures are fully generated
 
 ```ts
 import { Canvas, useThree } from '@react-three/fiber'
@@ -1324,6 +1324,59 @@ const App = () => (
 ## PrecomputedTexturesLoader
 
 TODO
+
+### Non-blocking texture loading
+
+```ts
+import { Canvas, useThree } from '@react-three/fiber'
+import { useMemo } from 'react'
+
+import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
+import { Atmosphere } from '@takram/three-atmosphere/r3f'
+
+const loader = new PrecomputedTexturesLoader()
+
+const Scene = () => {
+  const renderer = useThree(({ gl }) => gl)
+  const textures = useMemo(
+    () => loader.setType(renderer).load(url),
+    [renderer]
+  )
+  return <Atmosphere textures={textures} />
+}
+
+const App = () => (
+  <Canvas>
+    <Scene />
+  </Canvas>
+)
+```
+
+### Suspend until textures are fully loaded
+
+```ts
+import { Canvas, useLoader, useThree } from '@react-three/fiber'
+import { Suspense } from 'react'
+
+import { PrecomputedTexturesLoader } from '@takram/three-atmosphere'
+import { Atmosphere } from '@takram/three-atmosphere/r3f'
+
+const loader = new PrecomputedTexturesLoader()
+
+const Scene = () => {
+  const renderer = useThree(({ gl }) => gl)
+  const textures = useLoader(loader.setType(renderer), url)
+  return <Atmosphere textures={textures} />
+}
+
+const App = () => (
+  <Canvas>
+    <Suspense>
+      <Scene />
+    </Suspense>
+  </Canvas>
+)
+```
 
 ## Functions
 
