@@ -187,7 +187,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     if (this.correctAltitude) {
       getAltitudeCorrectionOffset(
         cameraPositionECEF,
-        this.atmosphere,
+        this.atmosphere.bottomRadius,
         this.ellipsoid,
         altitudeCorrection
       )

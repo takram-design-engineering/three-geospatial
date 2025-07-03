@@ -10,10 +10,7 @@ import {
 import invariant from 'tiny-invariant'
 import type { Primitive } from 'type-fest'
 
-import {
-  METER_TO_LENGTH_UNIT,
-  type AtmosphereParameters
-} from '@takram/three-atmosphere'
+import type { AtmosphereParameters } from '@takram/three-atmosphere'
 
 import type { CloudLayers } from './CloudLayers'
 
@@ -210,8 +207,8 @@ export function createAtmosphereUniforms(
   instances: AtmosphereUniformInstances
 ): AtmosphereUniforms {
   return {
-    bottomRadius: new Uniform(atmosphere.bottomRadius / METER_TO_LENGTH_UNIT),
-    topRadius: new Uniform(atmosphere.topRadius / METER_TO_LENGTH_UNIT),
+    bottomRadius: new Uniform(atmosphere.bottomRadius),
+    topRadius: new Uniform(atmosphere.topRadius),
     ellipsoidCenter: new Uniform(instances.ellipsoidCenter),
     ellipsoidMatrix: new Uniform(instances.ellipsoidMatrix),
     inverseEllipsoidMatrix: new Uniform(instances.inverseEllipsoidMatrix),

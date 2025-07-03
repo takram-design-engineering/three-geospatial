@@ -2,6 +2,8 @@ import { Color, Uniform, Vector3 } from 'three'
 
 import { radians } from '@takram/three-geospatial'
 
+import { METER_TO_LENGTH_UNIT } from './constants'
+
 const LUMINANCE_COEFFS = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 
 const paramKeys = [
@@ -99,12 +101,12 @@ export class AtmosphereParameters {
   sunAngularRadius = 0.004675
 
   // The distance between the planet center and the bottom of the atmosphere in
-  // kilometers.
-  bottomRadius = 6360
+  // meters.
+  bottomRadius = 6360000
 
   // The distance between the planet center and the top of the atmosphere in
-  // kilometers.
-  topRadius = 6420
+  // meters.
+  topRadius = 6420000
 
   // The density profile of air molecules, i.e. a function from altitude to
   // dimensionless values between 0 (null density) and 1 (maximum density).
@@ -194,8 +196,8 @@ export class AtmosphereParameters {
     return new Uniform({
       solar_irradiance: this.solarIrradiance,
       sun_angular_radius: this.sunAngularRadius,
-      bottom_radius: this.bottomRadius,
-      top_radius: this.topRadius,
+      bottom_radius: this.bottomRadius * METER_TO_LENGTH_UNIT,
+      top_radius: this.topRadius * METER_TO_LENGTH_UNIT,
       rayleigh_density: {
         layers: this.rayleighDensity.map(layer => layer.toUniform().value)
       },
