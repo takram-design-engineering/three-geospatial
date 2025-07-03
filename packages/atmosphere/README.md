@@ -1280,6 +1280,47 @@ By default, meshes with the selection layer are masked out from the post-process
 
 TODO
 
+### Suspend until the textures have been fully generated
+
+```ts
+import { Canvas, useThree } from '@react-three/fiber'
+import { Suspense, useEffect } from 'react'
+import { suspend } from 'suspend-react'
+
+import { PrecomputedTexturesGenerator } from '@takram/three-atmosphere'
+import { Atmosphere } from '@takram/three-atmosphere/r3f'
+
+const Scene = () => {
+  const renderer = useThree(({ gl }) => gl)
+  const textures = suspend(async () => {
+    const generator = new PrecomputedTexturesGenerator(renderer)
+    const textures = await generator.update()
+    // Transfers ownership of the textures. We are now responsible for
+    // deallocating them when they are no longer needed.
+    generator.dispose({ textures: false })
+    return textures
+  }, [PrecomputedTexturesGenerator, renderer])
+
+  useEffect(() => {
+    return () => {
+      for (const texture of Object.values(textures)) {
+        texture?.dispose()
+      }
+    }
+  }, [textures])
+
+  return <Atmosphere textures={textures} />
+}
+
+const App = () => (
+  <Canvas>
+    <Suspense>
+      <Scene />
+    </Suspense>
+  </Canvas>
+)
+```
+
 ## PrecomputedTexturesLoader
 
 TODO

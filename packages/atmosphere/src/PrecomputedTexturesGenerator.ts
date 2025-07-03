@@ -362,7 +362,7 @@ export class PrecomputedTexturesGenerator {
   private readonly scene = new Scene().add(this.mesh)
   private readonly camera = new Camera()
   private updating = false
-  private disposed = false
+  private disposeQueue: (() => void) | undefined
 
   constructor(
     renderer: WebGLRenderer,
@@ -680,16 +680,26 @@ export class PrecomputedTexturesGenerator {
     )
 
     this.updating = false
-    if (this.disposed) {
-      this.dispose()
-    }
+    this.disposeQueue?.()
     return this.textures
   }
 
-  dispose(): void {
+  dispose(options: { textures?: boolean } = {}): void {
     if (this.updating) {
-      this.disposed = true
+      this.disposeQueue = () => {
+        this.dispose(options)
+        this.disposeQueue = undefined
+      }
       return
+    }
+
+    const { textures: disposeTextures = true } = options
+    if (!disposeTextures) {
+      this.transmittanceRenderTarget.textures.splice(0, 1)
+      this.scatteringRenderTarget.textures.splice(0, 1)
+      this.irradianceRenderTarget.textures.splice(0, 1)
+      this.singleMieScatteringRenderTarget?.textures.splice(0, 1)
+      this.higherOrderScatteringRenderTarget?.textures.splice(0, 1)
     }
 
     this.transmittanceRenderTarget.dispose()
@@ -697,14 +707,12 @@ export class PrecomputedTexturesGenerator {
     this.irradianceRenderTarget.dispose()
     this.singleMieScatteringRenderTarget?.dispose()
     this.higherOrderScatteringRenderTarget?.dispose()
-
     this.transmittanceMaterial.dispose()
     this.directIrradianceMaterial.dispose()
     this.singleScatteringMaterial.dispose()
     this.scatteringDensityMaterial.dispose()
     this.indirectIrradianceMaterial.dispose()
     this.multipleScatteringMaterial.dispose()
-
     this.mesh.geometry.dispose()
   }
 }
