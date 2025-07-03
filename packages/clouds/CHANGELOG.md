@@ -10,6 +10,10 @@
 - `groundIrradianceScale` and `accurateSunSkyIrradiance` to `skyLightScale`, `groundBounceScale` and `accurateSunSkyLight`.
 - Migrated to core API changes.
 
+### Fixed
+
+- Fixed unnecessary side effects of type-only imports.
+
 ## [0.3.0] - 2025-06-12
 
 ### Changed

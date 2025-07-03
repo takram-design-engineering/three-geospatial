@@ -10,6 +10,10 @@
 - Added `EXRTextureLoader`.
 - Removed `Texture3DLoader`.
 
+### Fixed
+
+- Fixed unnecessary side effects of type-only imports.
+
 ## [0.2.2] - 2025-06-12
 
 ### Changed

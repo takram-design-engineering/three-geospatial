@@ -26,6 +26,7 @@
 
 - `AerialPerspectiveEffect`: Fixed saturated inscattered light when the camera is located below the bottom atmosphere and `correctGeometricError` is enabled.
 - `Atmosphere`: Fixed potential texture memory leaks.
+- Fixed unnecessary side effects of type-only imports.
 
 ## [0.12.0] - 2025-06-12
 
