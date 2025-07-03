@@ -22,7 +22,8 @@ import {
   Sky,
   SkyLight,
   Stars,
-  SunLight
+  SunLight,
+  type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import {
   Ellipsoid,
