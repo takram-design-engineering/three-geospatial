@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 
 import { Float16Array, parseFloat32Array } from '@takram/three-geospatial'
 

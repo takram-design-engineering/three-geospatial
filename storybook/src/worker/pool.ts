@@ -8,14 +8,11 @@ import worker from './worker?worker&url'
 let pool: Pool | undefined
 
 function createPool(): Pool {
-  return (
-    pool ??
-    (pool = workerpool.pool(worker, {
-      workerOpts: {
-        type: 'module'
-      }
-    }))
-  )
+  return (pool ??= workerpool.pool(worker, {
+    workerOpts: {
+      type: 'module'
+    }
+  }))
 }
 
 type Method = keyof typeof methods

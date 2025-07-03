@@ -66,14 +66,14 @@ export const Data3DTextureViewer: FC<{
     valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
     previewEXR: false,
     saveEXR: button(() => {
-      saveEXR3DTexture(renderer, texture, `${name}.exr`, type).catch(error => {
-        console.error(error)
-      })
+      saveEXR3DTexture(renderer, texture, `${name}.exr`, type).catch(
+        (error: unknown) => {
+          console.error(error)
+        }
+      )
     }),
     saveBinary: button(() => {
-      saveBinary3DTexture(renderer, texture, `${name}.bin`).catch(error => {
-        console.error(error)
-      })
+      saveBinary3DTexture(renderer, texture, `${name}.bin`)
     })
   })
 
@@ -98,7 +98,7 @@ export const Data3DTextureViewer: FC<{
       exrTexture.magFilter = LinearFilter
       exrTexture.colorSpace = NoColorSpace
       exrTexture.needsUpdate = true
-    })().catch(error => {
+    })().catch((error: unknown) => {
       console.error(error)
     })
     return () => {

@@ -181,6 +181,7 @@ function onCloudsChange(event: CloudsEffectChangeEvent): void {
     case 'atmosphereShadowLength':
       aerialPerspective.shadowLength = clouds.atmosphereShadowLength
       break
+    default:
   }
 }
 

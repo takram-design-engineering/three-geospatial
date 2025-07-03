@@ -12,7 +12,7 @@ export const LensFlare: FC<LensFlareProps> = ({
   ref: forwardedRef,
   ...props
 }) => {
-  const { blendFunction, ...others } = {
+  const { blendFunction: _, ...others } = {
     ...lensFlareEffectOptionsDefaults,
     ...props
   }

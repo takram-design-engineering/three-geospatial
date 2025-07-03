@@ -44,11 +44,7 @@ export const Procedural3DTextureViewer: FC<{
     {
       gammaCorrect: false,
       save: button(() => {
-        saveProcedural3DTexture(createProceduralTexture(), fileName).catch(
-          error => {
-            console.error(error)
-          }
-        )
+        saveProcedural3DTexture(createProceduralTexture(), fileName)
       })
     },
     [fileName]

@@ -1,7 +1,7 @@
-import { createReadStream } from 'fs'
-import { mkdir, writeFile } from 'fs/promises'
-import { dirname } from 'path'
-import { createInterface } from 'readline'
+import { createReadStream } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
+import { createInterface } from 'node:readline'
 import { maxBy, meanBy, minBy } from 'lodash'
 import { Color } from 'three'
 import invariant from 'tiny-invariant'
@@ -127,7 +127,7 @@ async function writeRecords(
   }
   try {
     await mkdir(dirname(path), { recursive: true })
-  } catch (error) {}
+  } catch (error: unknown) {}
   await writeFile(path, data)
 
   return {

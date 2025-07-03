@@ -34,7 +34,7 @@ export class TileCreasedNormalsPlugin {
 
   // Plugin method
   async processTileModel(scene: Object3D, tile: Tile): Promise<void> {
-    const meshes: Array<Mesh<BufferGeometry>> = []
+    const meshes: Mesh[] = []
     scene.traverse(object => {
       if (object instanceof Mesh && object.geometry instanceof BufferGeometry) {
         meshes.push(object)

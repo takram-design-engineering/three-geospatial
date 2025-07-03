@@ -67,7 +67,7 @@ export const Stars: FC<StarsProps> = ({
       const loader = new ArrayBufferLoader()
       ;(async () => {
         setData(await loader.loadAsync(dataProp))
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {

@@ -517,17 +517,19 @@ function useCloudLayerControls(
       return
     }
     for (const key in params) {
-      const layer = effect.cloudLayers[layerIndex] as any
-      if (
-        key === 'expTerm' ||
-        key === 'exponent' ||
-        key === 'linearTerm' ||
-        key === 'constantTerm'
-      ) {
-        layer.densityProfile ??= {}
-        layer.densityProfile[key] = params[key as keyof typeof params]
-      } else {
-        layer[key] = params[key as keyof typeof params]
+      if (Object.hasOwn(params, key)) {
+        const layer = effect.cloudLayers[layerIndex] as any
+        if (
+          key === 'expTerm' ||
+          key === 'exponent' ||
+          key === 'linearTerm' ||
+          key === 'constantTerm'
+        ) {
+          layer.densityProfile ??= {}
+          layer.densityProfile[key] = params[key as keyof typeof params]
+        } else {
+          layer[key] = params[key as keyof typeof params]
+        }
       }
     }
   }, [effect, layerIndex, disabled, params])

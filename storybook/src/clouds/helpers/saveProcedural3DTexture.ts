@@ -12,10 +12,10 @@ import invariant from 'tiny-invariant'
 
 import type { Procedural3DTexture } from '@takram/three-clouds'
 
-export async function saveProcedural3DTexture(
+export function saveProcedural3DTexture(
   proceduralTexture: Procedural3DTexture,
   fileName: string
-): Promise<void> {
+): void {
   const material = new ShaderMaterial({
     glslVersion: GLSL3,
     vertexShader: /* glsl */ `

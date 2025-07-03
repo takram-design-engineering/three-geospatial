@@ -103,7 +103,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
         moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
         moonAngularRadius: new Uniform(moonAngularRadius),
         lunarRadianceScale: new Uniform(lunarRadianceScale),
-        groundAlbedo: new Uniform(groundAlbedo?.clone() ?? new Color(0)),
+        groundAlbedo: new Uniform(groundAlbedo.clone()),
         shadowLengthBuffer: new Uniform(null),
         ...others.uniforms
       } satisfies SkyMaterialUniforms,

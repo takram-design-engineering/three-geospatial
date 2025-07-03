@@ -68,7 +68,7 @@ function useTextureState(
         gl.initTexture(texture)
 
         setData(texture)
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {
@@ -100,7 +100,7 @@ function use3DTextureState(
       })
       ;(async () => {
         setData(await loader.loadAsync(input))
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {
@@ -120,7 +120,7 @@ function useSTBNTextureState(
       const loader = new STBNLoader()
       ;(async () => {
         setData(await loader.loadAsync(input))
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {
@@ -217,6 +217,7 @@ export const Clouds: FC<CloudsProps> = ({
         case 'atmosphereShadowLength':
           transientStates.shadowLength = effect.atmosphereShadowLength
           break
+        default:
       }
     },
     [effect, transientStates]

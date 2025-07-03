@@ -16,12 +16,12 @@ import {
 
 import { Float16Array, type AnyFloatType } from '@takram/three-geospatial'
 
-export async function saveBinary3DTexture(
+export function saveBinary3DTexture(
   renderer: WebGLRenderer,
   texture: Texture,
   fileName: string,
   type: AnyFloatType = HalfFloatType
-): Promise<void> {
+): void {
   const material = new ShaderMaterial({
     glslVersion: GLSL3,
     vertexShader: /* glsl */ `
