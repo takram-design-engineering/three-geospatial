@@ -1278,9 +1278,87 @@ By default, meshes with the selection layer are masked out from the post-process
 
 ## PrecomputedTexturesGenerator
 
-TODO
+A class for generating the [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
 
-### Suspend until textures are fully generated
+→ [Source](/packages/atmosphere/src/PrecomputedTexturesGenerator.ts)
+
+```ts
+const generator = new PrecomputedTexturesGenerator(renderer, {
+  combinedScattering,
+  higherOrderScattering
+})
+generator.update().catch(error => {
+  console.error(error)
+})
+
+const aerialPerspective = new AerialPerspectiveEffect(camera, {
+  ...generator.textures
+})
+```
+
+### Constructor options
+
+#### type
+
+```ts
+type: AnyFloatType = /* Depends on the renderer's capabilities */
+```
+
+Specifies the type of intermediate render targets and precomputed textures. It defaults to `FloatType` if the provided renderer supports the linear filtering on `FloatType`. Otherwise, it falls back to `HalfFloatType`.
+
+#### combinedScattering
+
+```ts
+combinedScattering: boolean = true
+```
+
+Specifies whether only the red component of the single Mie scattering is stored in the alpha channel of the scattering texture. This reduces total memory by extrapolating green and blue components, but it is prone to artifacts when the red component is very small.
+
+In most cases, it’s okay to leave this option enabled.
+
+#### higherOrderScattering
+
+```ts
+higherOrderScattering: boolean = true
+```
+
+Specifies whether to generate a separate texture for higher-order (N ≥ 2) scattering. Using this information, only single scattering is attenuated in shadowed segments of the rays.
+
+### Properties
+
+#### textures
+
+```ts
+textures: PrecomputedTextures
+```
+
+The generated [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
+
+### Methods
+
+#### update
+
+```ts
+async update(): Promise<PrecomputedTextures>
+```
+
+Performs the precomputation and updates the `textures` property.
+
+This is an async function that performs precomputation incrementally over multiple frames so that you can render a meaningful result earlier. It doesn’t need to be awaited because the textures in the `textures` property are allocated when the instance is created.
+
+#### dispose
+
+```ts
+dispose(options?: { textures?: boolean = true }): void
+```
+
+Frees the GPU-related resources allocated by this instance, as usual.
+
+It optionally takes a `textures` flag, which instructs it not to deallocate the precomputed textures, effectively transferring ownership of them to the caller.
+
+### Recipes
+
+#### Suspend until textures are fully generated
 
 ```ts
 import { Canvas, useThree } from '@react-three/fiber'
@@ -1325,7 +1403,9 @@ const App = () => (
 
 TODO
 
-### Non-blocking texture loading
+### Recipes
+
+#### Non-blocking texture loading
 
 ```ts
 import { Canvas, useThree } from '@react-three/fiber'
@@ -1352,7 +1432,7 @@ const App = () => (
 )
 ```
 
-### Suspend until textures are fully loaded
+#### Suspend until textures are fully loaded
 
 ```ts
 import { Canvas, useLoader, useThree } from '@react-three/fiber'
