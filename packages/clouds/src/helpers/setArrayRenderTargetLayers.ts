@@ -1,4 +1,4 @@
-import { type WebGLArrayRenderTarget, type WebGLRenderer } from 'three'
+import type { WebGLArrayRenderTarget, WebGLRenderer } from 'three'
 import invariant from 'tiny-invariant'
 
 export function setArrayRenderTargetLayers(

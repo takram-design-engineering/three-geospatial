@@ -1,6 +1,6 @@
 import { Vector2 } from 'three'
 
-import { type GeodeticLike } from './Geodetic'
+import type { GeodeticLike } from './Geodetic'
 import { Rectangle, type RectangleLike } from './Rectangle'
 import { TileCoordinate, type TileCoordinateLike } from './TileCoordinate'
 

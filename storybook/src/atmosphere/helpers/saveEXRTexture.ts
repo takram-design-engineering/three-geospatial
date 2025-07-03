@@ -14,7 +14,7 @@ import {
 } from 'three'
 import { EXRExporter } from 'three/addons/exporters/EXRExporter.js'
 
-import { type AnyFloatType } from '@takram/three-geospatial'
+import type { AnyFloatType } from '@takram/three-geospatial'
 
 export async function createEXRTexture(
   renderer: WebGLRenderer,

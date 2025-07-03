@@ -1,5 +1,5 @@
 import { useLoader } from '@react-three/fiber'
-import { type FolderSettings } from 'leva/dist/declarations/src/types'
+import type { FolderSettings } from 'leva/dist/declarations/src/types'
 import { useMemo } from 'react'
 import { FileLoader } from 'three'
 

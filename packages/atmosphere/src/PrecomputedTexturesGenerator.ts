@@ -46,7 +46,7 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 import { requestIdleCallback } from './helpers/requestIdleCallback'
-import { type PrecomputedTextures } from './types'
+import type { PrecomputedTextures } from './types'
 
 import common from './shaders/bruneton/common.glsl?raw'
 import definitions from './shaders/bruneton/definitions.glsl?raw'

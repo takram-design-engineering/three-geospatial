@@ -14,7 +14,7 @@ import {
 } from 'three'
 import { EXRLoader } from 'three-stdlib'
 
-import { type AnyFloatType } from '@takram/three-geospatial'
+import type { AnyFloatType } from '@takram/three-geospatial'
 
 import { useControls } from '../../helpers/useControls'
 import { saveBinaryTexture } from './saveBinaryTexture'

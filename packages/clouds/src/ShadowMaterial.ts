@@ -17,10 +17,10 @@ import {
 import { math, raySphereIntersection } from '@takram/three-geospatial/shaders'
 
 import { defaults } from './qualityPresets'
-import {
-  type AtmosphereUniforms,
-  type CloudLayerUniforms,
-  type CloudParameterUniforms
+import type {
+  AtmosphereUniforms,
+  CloudLayerUniforms,
+  CloudParameterUniforms
 } from './uniforms'
 
 import clouds from './shaders/clouds.glsl?raw'

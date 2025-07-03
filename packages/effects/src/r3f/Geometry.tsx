@@ -1,4 +1,4 @@
-import { type ElementProps } from '@react-three/fiber'
+import type { ElementProps } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import { useContext, useEffect, useMemo, type FC } from 'react'
 
@@ -6,7 +6,7 @@ import {
   GeometryEffect,
   geometryEffectOptionsDefaults
 } from '../GeometryEffect'
-import { type EffectComposerContextValue } from './EffectComposer'
+import type { EffectComposerContextValue } from './EffectComposer'
 
 export interface GeometryProps extends ElementProps<typeof GeometryEffect> {}
 

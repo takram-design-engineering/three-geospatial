@@ -22,11 +22,11 @@ import {
   type Wrapping
 } from 'three'
 import invariant from 'tiny-invariant'
-import { type Class } from 'type-fest'
+import type { Class } from 'type-fest'
 
 import { Float16Array, type TypedArray } from './typedArray'
 import { TypedArrayLoader } from './TypedArrayLoader'
-import { type TypedArrayParser } from './typedArrayParsers'
+import type { TypedArrayParser } from './typedArrayParsers'
 
 function getTextureDataType(array: TypedArray): TextureDataType {
   // prettier-ignore

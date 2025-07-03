@@ -1,4 +1,4 @@
-import { type MathType, type MathTypes } from '@react-three/fiber'
+import type { MathType, MathTypes } from '@react-three/fiber'
 
 export type OverwriteMathProps<T> = {
   [K in keyof T]: Exclude<T[K], undefined> extends MathTypes

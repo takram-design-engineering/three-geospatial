@@ -22,7 +22,7 @@ import {
   type AtmosphereMaterialBaseParameters,
   type AtmosphereMaterialBaseUniforms
 } from './AtmosphereMaterialBase'
-import { type AtmosphereShadowLength } from './types'
+import type { AtmosphereShadowLength } from './types'
 
 import common from './shaders/bruneton/common.glsl?raw'
 import definitions from './shaders/bruneton/definitions.glsl?raw'

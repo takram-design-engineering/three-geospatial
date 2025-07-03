@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { type GlobeControls } from '3d-tiles-renderer'
+import type { GlobeControls } from '3d-tiles-renderer'
 import { useSpring } from 'framer-motion'
 import { useEffect } from 'react'
 import { useKeyPress } from 'react-use'

@@ -1,7 +1,7 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { useRef, type FC } from 'react'
 
 import {

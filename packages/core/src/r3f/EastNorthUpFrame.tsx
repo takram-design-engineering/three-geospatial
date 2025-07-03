@@ -1,7 +1,7 @@
-import { type ElementProps } from '@react-three/fiber'
+import type { ElementProps } from '@react-three/fiber'
 import { useEffect, useMemo, type FC, type ReactNode } from 'react'
 import { Group, Matrix4, Vector3 } from 'three'
-import { type SetOptional } from 'type-fest'
+import type { SetOptional } from 'type-fest'
 
 import { Ellipsoid } from '../Ellipsoid'
 import { Geodetic, type GeodeticLike } from '../Geodetic'

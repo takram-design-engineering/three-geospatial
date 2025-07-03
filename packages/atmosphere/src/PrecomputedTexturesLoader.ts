@@ -30,7 +30,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
-import { type PrecomputedTextures } from './types'
+import type { PrecomputedTextures } from './types'
 
 interface LoaderLike<T> extends Loader<T> {
   load: (

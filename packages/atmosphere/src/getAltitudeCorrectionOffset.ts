@@ -1,8 +1,8 @@
 import { Vector3 } from 'three'
 
-import { type Ellipsoid } from '@takram/three-geospatial'
+import type { Ellipsoid } from '@takram/three-geospatial'
 
-import { type AtmosphereParameters } from './AtmosphereParameters'
+import type { AtmosphereParameters } from './AtmosphereParameters'
 import { METER_TO_LENGTH_UNIT } from './constants'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()

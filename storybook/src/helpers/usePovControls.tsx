@@ -1,5 +1,5 @@
 import { button } from 'leva'
-import { type FolderSettings } from 'leva/dist/declarations/src/types'
+import type { FolderSettings } from 'leva/dist/declarations/src/types'
 import { Ray, type Camera } from 'three'
 
 import {

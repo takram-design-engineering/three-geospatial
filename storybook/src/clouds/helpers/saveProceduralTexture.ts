@@ -9,7 +9,7 @@ import {
   WebGLRenderer
 } from 'three'
 
-import { type ProceduralTexture } from '@takram/three-clouds'
+import type { ProceduralTexture } from '@takram/three-clouds'
 
 export async function saveProceduralTexture(
   proceduralTexture: ProceduralTexture,

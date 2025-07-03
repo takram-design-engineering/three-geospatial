@@ -7,7 +7,7 @@ import {
   type Ref
 } from 'react'
 
-import { type ExpandNestedProps } from '@takram/three-geospatial/r3f'
+import type { ExpandNestedProps } from '@takram/three-geospatial/r3f'
 
 import {
   CloudLayer as CloudLayerImpl,

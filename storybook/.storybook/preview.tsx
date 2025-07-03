@@ -1,4 +1,4 @@
-import { Preview } from '@storybook/react-vite'
+import type { Preview } from '@storybook/react-vite'
 import { LevaPanel, LevaStoreProvider, useCreateStore } from 'leva'
 import { styled } from 'leva/plugin'
 import { useCallback, useState } from 'react'

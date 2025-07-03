@@ -1,8 +1,8 @@
 import { Loader, type LoadingManager } from 'three'
 
 import { ArrayBufferLoader } from './ArrayBufferLoader'
-import { type TypedArray } from './typedArray'
-import { type TypedArrayParser } from './typedArrayParsers'
+import type { TypedArray } from './typedArray'
+import type { TypedArrayParser } from './typedArrayParsers'
 
 export class TypedArrayLoader<T extends TypedArray> extends Loader<T> {
   parser: TypedArrayParser<T>

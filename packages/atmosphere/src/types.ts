@@ -1,9 +1,9 @@
-import {
-  type Data3DTexture,
-  type DataArrayTexture,
-  type Matrix4,
-  type Texture,
-  type Vector2
+import type {
+  Data3DTexture,
+  DataArrayTexture,
+  Matrix4,
+  Texture,
+  Vector2
 } from 'three'
 
 export interface PrecomputedTextures {

@@ -1,7 +1,7 @@
 import { Pass } from 'postprocessing'
 import { Camera } from 'three'
 
-import { type CascadedShadowMaps } from './CascadedShadowMaps'
+import type { CascadedShadowMaps } from './CascadedShadowMaps'
 
 export interface PassBaseOptions {
   shadow: CascadedShadowMaps

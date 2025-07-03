@@ -7,12 +7,12 @@ import {
 } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { useEffect, useMemo, useRef, useState, type FC } from 'react'
 import { CanvasTexture, Vector3 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { type SunDirectionalLight } from '@takram/three-atmosphere'
+import type { SunDirectionalLight } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,

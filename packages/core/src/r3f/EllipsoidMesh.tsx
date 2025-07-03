@@ -5,7 +5,7 @@ import {
 } from '@react-three/fiber'
 import { useRef, type FC } from 'react'
 import { mergeRefs } from 'react-merge-refs'
-import { type Mesh } from 'three'
+import type { Mesh } from 'three'
 
 import { EllipsoidGeometry } from '../EllipsoidGeometry'
 

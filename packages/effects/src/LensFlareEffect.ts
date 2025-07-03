@@ -17,7 +17,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { type UniformMap } from '@takram/three-geospatial'
+import type { UniformMap } from '@takram/three-geospatial'
 
 import { DownsampleThresholdMaterial } from './DownsampleThresholdMaterial'
 import { LensFlareFeaturesMaterial } from './LensFlareFeaturesMaterial'

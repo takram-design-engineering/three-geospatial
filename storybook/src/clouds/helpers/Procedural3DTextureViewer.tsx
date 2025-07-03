@@ -4,7 +4,7 @@ import { button } from 'leva'
 import { useEffect, useMemo, type FC } from 'react'
 import { GLSL3, ShaderMaterial, Uniform, Vector2 } from 'three'
 
-import { type Procedural3DTexture } from '@takram/three-clouds'
+import type { Procedural3DTexture } from '@takram/three-clouds'
 
 import { useControls } from '../../helpers/useControls'
 import { saveProcedural3DTexture } from './saveProcedural3DTexture'

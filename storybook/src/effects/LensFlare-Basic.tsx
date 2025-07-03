@@ -1,7 +1,7 @@
 import { Environment, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { ToneMappingMode } from 'postprocessing'
 import { useMemo, type FC } from 'react'
 

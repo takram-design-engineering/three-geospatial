@@ -1,4 +1,4 @@
-import { type Uniform } from 'three'
+import type { Uniform } from 'three'
 
 // TODO: Make mutable value types (e.g. vectors, matrices) read-only.
 

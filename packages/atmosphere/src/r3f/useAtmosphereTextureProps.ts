@@ -2,7 +2,7 @@ import { useLoader, useThree } from '@react-three/fiber'
 
 import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
 import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
-import { type PrecomputedTextures } from '../types'
+import type { PrecomputedTextures } from '../types'
 
 const loader = new PrecomputedTexturesLoader()
 

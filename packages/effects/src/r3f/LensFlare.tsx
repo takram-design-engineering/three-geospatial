@@ -1,4 +1,4 @@
-import { type ElementProps } from '@react-three/fiber'
+import type { ElementProps } from '@react-three/fiber'
 import { useEffect, useMemo, type FC } from 'react'
 
 import {

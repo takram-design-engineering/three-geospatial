@@ -1,4 +1,4 @@
-import { type Tile } from '3d-tiles-renderer'
+import type { Tile } from '3d-tiles-renderer'
 import { BufferGeometry, Mesh, type Object3D } from 'three'
 
 import {

@@ -1,7 +1,4 @@
-import {
-  type TilesRenderer,
-  type TilesRendererEventMap
-} from '3d-tiles-renderer'
+import type { TilesRenderer, TilesRendererEventMap } from '3d-tiles-renderer'
 import { Mesh, type Material } from 'three'
 
 export interface TileOverrideMaterialPluginOptions {

@@ -9,7 +9,7 @@ import {
 } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import {
   Fragment,
@@ -23,7 +23,7 @@ import {
 } from 'react'
 import { Layers, Matrix4, Vector3, type Group } from 'three'
 
-import { type AerialPerspectiveEffect } from '@takram/three-atmosphere'
+import type { AerialPerspectiveEffect } from '@takram/three-atmosphere'
 import {
   AerialPerspective,
   Atmosphere,

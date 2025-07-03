@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
-import { type Meta, type StoryFn } from '@storybook/react-vite'
+import type { Meta, StoryFn } from '@storybook/react-vite'
 import { ToneMappingMode } from 'postprocessing'
 
 import { AerialPerspective, Atmosphere } from '@takram/three-atmosphere/r3f'

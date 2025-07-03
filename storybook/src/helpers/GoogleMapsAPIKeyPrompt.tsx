@@ -1,6 +1,6 @@
 import { css } from '@emotion/react'
 import { useAtomValue } from 'jotai'
-import { type FC } from 'react'
+import type { FC } from 'react'
 
 import { needsApiKeyAtom } from './states'
 

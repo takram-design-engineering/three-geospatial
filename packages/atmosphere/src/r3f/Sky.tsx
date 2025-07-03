@@ -1,9 +1,9 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useFrame, type ElementProps } from '@react-three/fiber'
 import { useContext, useEffect, useMemo, type FC } from 'react'
-import { type BufferGeometry, type Color, type Mesh, type Vector3 } from 'three'
+import type { BufferGeometry, Color, Mesh, Vector3 } from 'three'
 
-import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
+import type { AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 import { SKY_RENDER_ORDER } from '../constants'
 import { SkyMaterial, skyMaterialParametersDefaults } from '../SkyMaterial'
 import { AtmosphereContext } from './Atmosphere'

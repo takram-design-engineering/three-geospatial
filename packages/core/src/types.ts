@@ -1,4 +1,4 @@
-import { type FloatType, type HalfFloatType, type Uniform } from 'three'
+import type { FloatType, HalfFloatType, Uniform } from 'three'
 
 export type Callable = (...args: any) => any
 
