@@ -1,6 +1,6 @@
-import { type FolderSettings } from 'leva/dist/declarations/src/types'
+import type { FolderSettings } from 'leva/dist/declarations/src/types'
 
-import { type GeodeticLike } from '@takram/three-geospatial'
+import type { GeodeticLike } from '@takram/three-geospatial'
 
 import { useControls } from './useControls'
 

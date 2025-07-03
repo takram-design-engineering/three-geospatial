@@ -1,4 +1,4 @@
-import { type Meta } from '@storybook/react-vite'
+import type { Meta } from '@storybook/react-vite'
 
 import _HigherOrderScattering from './BuildingBlocks-HigherOrderScattering'
 import _Irradiance from './BuildingBlocks-Irradiance'

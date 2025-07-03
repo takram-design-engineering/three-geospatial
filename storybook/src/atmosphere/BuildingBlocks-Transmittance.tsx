@@ -1,5 +1,5 @@
 import { Canvas, useLoader, useThree } from '@react-three/fiber'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { useEffect, useMemo, type FC } from 'react'
 
 import {

@@ -1,6 +1,6 @@
 import { useTexture } from '@react-three/drei'
 import { LUT, type LUTProps } from '@react-three/postprocessing'
-import { type LUT3DEffect } from 'postprocessing'
+import type { LUT3DEffect } from 'postprocessing'
 import { useMemo, type FC, type RefAttributes } from 'react'
 
 import { createHaldLookupTexture } from '@takram/three-geospatial-effects'

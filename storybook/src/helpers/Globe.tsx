@@ -1,4 +1,4 @@
-import { type TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
+import type { TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,

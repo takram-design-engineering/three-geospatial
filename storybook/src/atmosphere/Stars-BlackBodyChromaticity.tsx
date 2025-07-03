@@ -1,4 +1,4 @@
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { useMemo } from 'react'
 import { Color } from 'three'
 

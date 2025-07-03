@@ -1,7 +1,7 @@
 import { Box, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { Fragment, useRef, useState, type FC } from 'react'
 
 import {
@@ -9,7 +9,7 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsEffect } from '@takram/three-clouds'
+import type { CloudsEffect } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import { radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'

@@ -8,14 +8,14 @@ import {
   type Vector2
 } from 'three'
 import invariant from 'tiny-invariant'
-import { type Primitive } from 'type-fest'
+import type { Primitive } from 'type-fest'
 
 import {
   METER_TO_LENGTH_UNIT,
   type AtmosphereParameters
 } from '@takram/three-atmosphere'
 
-import { type CloudLayers } from './CloudLayers'
+import type { CloudLayers } from './CloudLayers'
 
 export interface CloudParameterUniforms {
   // Participating medium

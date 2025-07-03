@@ -24,7 +24,7 @@ function useSTBNTextureState(
       const loader = new STBNLoader()
       ;(async () => {
         setData(await loader.loadAsync(input))
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {

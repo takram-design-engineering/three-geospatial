@@ -14,7 +14,7 @@ import {
 } from 'three'
 import { EXRLoader } from 'three-stdlib'
 
-import { type AnyFloatType } from '@takram/three-geospatial'
+import type { AnyFloatType } from '@takram/three-geospatial'
 
 import { useControls } from '../../helpers/useControls'
 import { saveBinaryTexture } from './saveBinaryTexture'
@@ -61,14 +61,18 @@ export const DataTextureViewer: FC<{
     valueScaleLog10: { value: Math.log10(defaultValueScale), min: -5, max: 5 },
     previewEXR: false,
     saveEXR: button(() => {
-      saveEXRTexture(renderer, texture, `${name}.exr`, type).catch(error => {
-        console.error(error)
-      })
+      saveEXRTexture(renderer, texture, `${name}.exr`, type).catch(
+        (error: unknown) => {
+          console.error(error)
+        }
+      )
     }),
     saveBinary: button(() => {
-      saveBinaryTexture(renderer, texture, `${name}.bin`).catch(error => {
-        console.error(error)
-      })
+      saveBinaryTexture(renderer, texture, `${name}.bin`).catch(
+        (error: unknown) => {
+          console.error(error)
+        }
+      )
     })
   })
 
@@ -92,7 +96,7 @@ export const DataTextureViewer: FC<{
       exrTexture.magFilter = LinearFilter
       exrTexture.colorSpace = NoColorSpace
       exrTexture.needsUpdate = true
-    })().catch(error => {
+    })().catch((error: unknown) => {
       console.error(error)
     })
     return () => {

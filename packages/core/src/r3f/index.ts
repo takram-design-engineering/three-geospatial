@@ -1,3 +1,3 @@
 export * from './EastNorthUpFrame'
 export * from './EllipsoidMesh'
-export * from './types'
+export type * from './types'

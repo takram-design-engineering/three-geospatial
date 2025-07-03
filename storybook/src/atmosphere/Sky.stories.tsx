@@ -1,4 +1,4 @@
-import { type Meta } from '@storybook/react-vite'
+import type { Meta } from '@storybook/react-vite'
 
 import _Basic from './Sky-Basic'
 import _EnvironmentMap from './Sky-EnvironmentMap'

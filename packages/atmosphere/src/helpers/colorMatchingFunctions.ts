@@ -1,6 +1,6 @@
 // Reference: https://cie.co.at/datatable/cie-1931-colour-matching-functions-2-degree-observer
 
-import { type Vector3 } from 'three'
+import type { Vector3 } from 'three'
 
 // prettier-ignore
 const DATA: ReadonlyArray<

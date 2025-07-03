@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { useEffect, useState, type ComponentRef, type FC } from 'react'
 import { Vector3 } from 'three'
 

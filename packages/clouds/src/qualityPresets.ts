@@ -1,7 +1,7 @@
 import { Vector2 } from 'three'
-import { type PartialDeep, type SharedUnionFieldsDeep } from 'type-fest'
+import type { PartialDeep, SharedUnionFieldsDeep } from 'type-fest'
 
-import { type CloudsEffect } from './CloudsEffect'
+import type { CloudsEffect } from './CloudsEffect'
 
 export type QualityPreset = 'low' | 'medium' | 'high' | 'ultra'
 

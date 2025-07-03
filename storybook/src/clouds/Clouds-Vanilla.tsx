@@ -1,4 +1,4 @@
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import {
   EffectComposer,
   EffectPass,
@@ -181,6 +181,7 @@ function onCloudsChange(event: CloudsEffectChangeEvent): void {
     case 'atmosphereShadowLength':
       aerialPerspective.shadowLength = clouds.atmosphereShadowLength
       break
+    default:
   }
 }
 

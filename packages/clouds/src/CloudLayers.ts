@@ -1,7 +1,7 @@
-import { type Vector3, type Vector4 } from 'three'
+import type { Vector3, Vector4 } from 'three'
 
 import { CloudLayer, type CloudLayerLike } from './CloudLayer'
-import { type DensityProfileLike } from './DensityProfile'
+import type { DensityProfileLike } from './DensityProfile'
 
 type NumericKey = keyof {
   [P in keyof CloudLayer as number extends CloudLayer[P] ? P : never]: any

@@ -1,5 +1,5 @@
 import { LookupTexture, RawImageData } from 'postprocessing'
-import { type Texture } from 'three'
+import type { Texture } from 'three'
 
 export function createHaldLookupTexture(texture: Texture): LookupTexture {
   const { image } = texture

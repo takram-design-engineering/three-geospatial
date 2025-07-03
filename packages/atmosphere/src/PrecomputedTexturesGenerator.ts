@@ -46,7 +46,7 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 import { requestIdleCallback } from './helpers/requestIdleCallback'
-import { type PrecomputedTextures } from './types'
+import type { PrecomputedTextures } from './types'
 
 import common from './shaders/bruneton/common.glsl?raw'
 import definitions from './shaders/bruneton/definitions.glsl?raw'
@@ -107,22 +107,20 @@ function create3DRenderTarget(
 }
 
 // eslint-disable-next-line @typescript-eslint/promise-function-async
-function iterateAsyncIdle<T>(iterable: AsyncIterable<T>): Promise<T> {
-  const iterator = iterable[Symbol.asyncIterator]()
+function iterateIdle<T>(iterable: Iterable<T>): Promise<T> {
+  const iterator = iterable[Symbol.iterator]()
   return new Promise<T>((resolve, reject) => {
     const callback = (): void => {
-      iterator
-        .next()
-        .then(({ value, done }) => {
-          if (done === true) {
-            resolve(value)
-          } else {
-            requestIdleCallback(callback)
-          }
-        })
-        .catch(error => {
-          reject(error instanceof Error ? error : new Error())
-        })
+      try {
+        const { value, done } = iterator.next()
+        if (done === true) {
+          resolve(value)
+        } else {
+          requestIdleCallback(callback)
+        }
+      } catch (error: unknown) {
+        reject(error instanceof Error ? error : new Error())
+      }
     }
     requestIdleCallback(callback)
   })
@@ -530,10 +528,7 @@ export class PrecomputedTexturesGenerator {
     this.render3DRenderTarget(params.renderTarget, material)
   }
 
-  private async *precompute(
-    context: Context,
-    additive: boolean
-  ): AsyncIterable<void> {
+  private *precompute(context: Context, additive: boolean): Iterable<void> {
     // Note that we have to render the same materials multiple times where:
     // (1) different blending modes (2) rendering into 3D textures, because
     // MRT isn't supported in these situations.
@@ -668,7 +663,7 @@ export class PrecomputedTexturesGenerator {
     context.luminanceFromRadiance.identity()
     const autoClear = renderer.autoClear
     renderer.autoClear = false
-    await iterateAsyncIdle(this.precompute(context, false))
+    await iterateIdle(this.precompute(context, false))
     renderer.autoClear = autoClear
     context.dispose()
 

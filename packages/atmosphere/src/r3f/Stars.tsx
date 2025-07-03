@@ -8,11 +8,11 @@ import {
   type FC
 } from 'react'
 import { mergeRefs } from 'react-merge-refs'
-import { type Points } from 'three'
+import type { Points } from 'three'
 
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
-import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
+import type { AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 import { DEFAULT_STARS_DATA_URL, SKY_RENDER_ORDER } from '../constants'
 import { StarsGeometry } from '../StarsGeometry'
 import {
@@ -67,7 +67,7 @@ export const Stars: FC<StarsProps> = ({
       const loader = new ArrayBufferLoader()
       ;(async () => {
         setData(await loader.loadAsync(dataProp))
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {

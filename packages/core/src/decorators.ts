@@ -23,7 +23,6 @@ export function define(name: string) {
               this.defines ??= {}
               this.defines[name] = '1'
             } else {
-              // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
               delete this.defines?.[name]
             }
             this.needsUpdate = true

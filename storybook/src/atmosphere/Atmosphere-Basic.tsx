@@ -3,7 +3,7 @@
 import { OrbitControls, TorusKnot } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {

@@ -160,11 +160,13 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       }
     })
 
-    this.atmosphere = atmosphere
     this.singleMieScatteringTexture = singleMieScatteringTexture
     this.higherOrderScatteringTexture = higherOrderScatteringTexture
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
+    if (sunAngularRadius != null) {
+      this.sunAngularRadius = sunAngularRadius
+    }
     this.renderTargetCount = renderTargetCount
   }
 

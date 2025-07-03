@@ -6,7 +6,7 @@ import {
 } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type StoryFn } from '@storybook/react-vite'
+import type { StoryFn } from '@storybook/react-vite'
 import { Fragment, useState, type FC } from 'react'
 import { Vector3 } from 'three'
 
@@ -19,7 +19,7 @@ import {
   SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsEffect } from '@takram/three-clouds'
+import type { CloudsEffect } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'

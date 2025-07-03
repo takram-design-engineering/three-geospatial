@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
-import { type GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer'
+import type { GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer'
 import { GlobeControls } from '3d-tiles-renderer/r3f'
 import {
   EffectMaterial,
@@ -20,7 +20,7 @@ import {
   Atmosphere,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import { type CloudsEffect } from '@takram/three-clouds'
+import type { CloudsEffect } from '@takram/three-clouds'
 import { Clouds } from '@takram/three-clouds/r3f'
 import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {

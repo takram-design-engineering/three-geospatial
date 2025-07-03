@@ -1,5 +1,4 @@
-/* eslint-disable */
-import { type Config } from 'jest'
+import type { Config } from 'jest'
 
 export default {
   displayName: 'clouds',

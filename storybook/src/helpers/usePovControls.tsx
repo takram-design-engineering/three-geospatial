@@ -1,5 +1,5 @@
 import { button } from 'leva'
-import { type FolderSettings } from 'leva/dist/declarations/src/types'
+import type { FolderSettings } from 'leva/dist/declarations/src/types'
 import { Ray, type Camera } from 'three'
 
 import {
@@ -33,7 +33,7 @@ export function usePovControls(
         let geodetic
         try {
           geodetic = new Geodetic().setFromECEF(target)
-        } catch (error) {
+        } catch (error: unknown) {
           return // Ignore
         }
         navigator.clipboard
@@ -46,7 +46,7 @@ export function usePovControls(
               `distance={${Math.round(pov.distance)}}`
             ].join('\n')
           )
-          .catch(error => {
+          .catch((error: unknown) => {
             console.error(error)
           })
       })

@@ -12,16 +12,16 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { type AtmosphereParameters } from '@takram/three-atmosphere'
+import type { AtmosphereParameters } from '@takram/three-atmosphere'
 
 import { CloudsMaterial } from './CloudsMaterial'
 import { CloudsResolveMaterial } from './CloudsResolveMaterial'
 import { PassBase, type PassBaseOptions } from './PassBase'
 import { defaults } from './qualityPresets'
-import {
-  type AtmosphereUniforms,
-  type CloudLayerUniforms,
-  type CloudParameterUniforms
+import type {
+  AtmosphereUniforms,
+  CloudLayerUniforms,
+  CloudParameterUniforms
 } from './uniforms'
 
 type RenderTarget = WebGLRenderTarget & {

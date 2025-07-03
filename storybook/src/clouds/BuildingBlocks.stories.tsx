@@ -1,4 +1,4 @@
-import { type Meta } from '@storybook/react-vite'
+import type { Meta } from '@storybook/react-vite'
 
 import _LocalWeather from './BuildingBlocks-LocalWeather'
 import _Shape from './BuildingBlocks-Shape'

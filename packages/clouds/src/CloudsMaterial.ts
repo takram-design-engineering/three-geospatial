@@ -51,10 +51,10 @@ import {
 
 import { bayerOffsets } from './bayer'
 import { defaults } from './qualityPresets'
-import {
-  type AtmosphereUniforms,
-  type CloudLayerUniforms,
-  type CloudParameterUniforms
+import type {
+  AtmosphereUniforms,
+  CloudLayerUniforms,
+  CloudParameterUniforms
 } from './uniforms'
 
 import fragmentShader from './shaders/clouds.frag?raw'

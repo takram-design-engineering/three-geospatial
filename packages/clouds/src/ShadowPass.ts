@@ -12,10 +12,10 @@ import { PassBase, type PassBaseOptions } from './PassBase'
 import { ShaderArrayPass } from './ShaderArrayPass'
 import { ShadowMaterial } from './ShadowMaterial'
 import { ShadowResolveMaterial } from './ShadowResolveMaterial'
-import {
-  type AtmosphereUniforms,
-  type CloudLayerUniforms,
-  type CloudParameterUniforms
+import type {
+  AtmosphereUniforms,
+  CloudLayerUniforms,
+  CloudParameterUniforms
 } from './uniforms'
 
 function createRenderTarget(name: string): WebGLArrayRenderTarget {

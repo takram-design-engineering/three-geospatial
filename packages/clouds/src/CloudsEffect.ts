@@ -35,18 +35,12 @@ import {
 
 import { CascadedShadowMaps } from './CascadedShadowMaps'
 import { CloudLayers } from './CloudLayers'
-import {
-  type CloudsMaterial,
-  type CloudsMaterialUniforms
-} from './CloudsMaterial'
+import type { CloudsMaterial, CloudsMaterialUniforms } from './CloudsMaterial'
 import { CloudsPass } from './CloudsPass'
-import { type Procedural3DTexture } from './Procedural3DTexture'
-import { type ProceduralTexture } from './ProceduralTexture'
+import type { Procedural3DTexture } from './Procedural3DTexture'
+import type { ProceduralTexture } from './ProceduralTexture'
 import { defaults, qualityPresets, type QualityPreset } from './qualityPresets'
-import {
-  type ShadowMaterial,
-  type ShadowMaterialUniforms
-} from './ShadowMaterial'
+import type { ShadowMaterial, ShadowMaterialUniforms } from './ShadowMaterial'
 import { ShadowPass } from './ShadowPass'
 import {
   createAtmosphereUniforms,

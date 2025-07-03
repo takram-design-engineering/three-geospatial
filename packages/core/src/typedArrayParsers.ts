@@ -1,6 +1,6 @@
 import { Float16Array, getFloat16 } from '@petamoriken/float16'
 
-import { type TypedArray, type TypedArrayConstructor } from './typedArray'
+import type { TypedArray, TypedArrayConstructor } from './typedArray'
 
 let hostLittleEndian: boolean | undefined
 

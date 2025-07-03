@@ -30,7 +30,7 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
-import { type PrecomputedTextures } from './types'
+import type { PrecomputedTextures } from './types'
 
 interface LoaderLike<T> extends Loader<T> {
   load: (
@@ -110,7 +110,7 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
     onProgress?: (event: ProgressEvent) => void,
     onError?: (error: unknown) => void
   ): PrecomputedTextures {
-    const textures: Record<string, Texture> = {}
+    const textures: Record<string, Texture | undefined> = {}
 
     const loadTexture = <T extends Texture>({
       key,

@@ -1,21 +1,18 @@
 import workerpool, { type Pool } from 'workerpool'
-import { type ExecOptions } from 'workerpool/types/types'
+import type { ExecOptions } from 'workerpool/types/types'
 
-import { type TransferResult } from './transfer'
-import { type methods } from './worker'
+import type { TransferResult } from './transfer'
+import type { methods } from './worker'
 import worker from './worker?worker&url'
 
 let pool: Pool | undefined
 
 function createPool(): Pool {
-  return (
-    pool ??
-    (pool = workerpool.pool(worker, {
-      workerOpts: {
-        type: 'module'
-      }
-    }))
-  )
+  return (pool ??= workerpool.pool(worker, {
+    workerOpts: {
+      type: 'module'
+    }
+  }))
 }
 
 type Method = keyof typeof methods

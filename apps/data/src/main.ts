@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 import minimist from 'minimist'
 
 import atmosphere from './targets/atmosphere'
@@ -11,7 +11,7 @@ const targets: Record<string, () => Promise<void> | undefined> = {
   stbn
 }
 
-async function printTargets(): Promise<void> {
+function printTargets(): void {
   console.log('Available targets:')
   Object.keys(targets).forEach(name => {
     console.log(`  - ${path.parse(name).name}`)
@@ -22,13 +22,13 @@ async function main(): Promise<void> {
   const argv = minimist(process.argv.slice(2))
   const target = targets[argv.target]
   if (target == null) {
-    await printTargets()
+    printTargets()
     process.exit(0)
   }
   await target()
 }
 
-main().catch(error => {
+main().catch((error: unknown) => {
   console.error(error)
   process.exit(1)
 })

@@ -1,8 +1,8 @@
 import { folder } from 'leva'
-import { type FolderInput, type Schema } from 'leva/dist/declarations/src/types'
+import type { FolderInput, Schema } from 'leva/dist/declarations/src/types'
 import { useEffect, useMemo, useRef } from 'react'
-import { type Material } from 'three'
-import { type PartialDeep } from 'type-fest'
+import type { Material } from 'three'
+import type { PartialDeep } from 'type-fest'
 
 import {
   CloudLayer,
@@ -12,7 +12,7 @@ import {
   type DensityProfileLike,
   type FrustumSplitMode
 } from '@takram/three-clouds'
-import { type CloudsProps } from '@takram/three-clouds/r3f'
+import type { CloudsProps } from '@takram/three-clouds/r3f'
 
 import { useControls } from '../../helpers/useControls'
 
@@ -517,17 +517,19 @@ function useCloudLayerControls(
       return
     }
     for (const key in params) {
-      const layer = effect.cloudLayers[layerIndex] as any
-      if (
-        key === 'expTerm' ||
-        key === 'exponent' ||
-        key === 'linearTerm' ||
-        key === 'constantTerm'
-      ) {
-        layer.densityProfile ??= {}
-        layer.densityProfile[key] = params[key as keyof typeof params]
-      } else {
-        layer[key] = params[key as keyof typeof params]
+      if (Object.hasOwn(params, key)) {
+        const layer = effect.cloudLayers[layerIndex] as any
+        if (
+          key === 'expTerm' ||
+          key === 'exponent' ||
+          key === 'linearTerm' ||
+          key === 'constantTerm'
+        ) {
+          layer.densityProfile ??= {}
+          layer.densityProfile[key] = params[key as keyof typeof params]
+        } else {
+          layer[key] = params[key as keyof typeof params]
+        }
       }
     }
   }, [effect, layerIndex, disabled, params])

@@ -1,5 +1,5 @@
 import { wrapEffect } from '@react-three/postprocessing'
-import { type ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithoutRef } from 'react'
 
 import { DepthEffect } from '../DepthEffect'
 

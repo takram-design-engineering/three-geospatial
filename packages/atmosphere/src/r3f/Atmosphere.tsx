@@ -20,12 +20,12 @@ import {
 } from '../celestialDirections'
 import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
 import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
-import {
-  type AtmosphereLightingMask,
-  type AtmosphereOverlay,
-  type AtmosphereShadow,
-  type AtmosphereShadowLength,
-  type PrecomputedTextures
+import type {
+  AtmosphereLightingMask,
+  AtmosphereOverlay,
+  AtmosphereShadow,
+  AtmosphereShadowLength,
+  PrecomputedTextures
 } from '../types'
 
 export interface AtmosphereTransientStates {

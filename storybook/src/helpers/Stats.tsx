@@ -18,7 +18,7 @@ export const Stats: FC = () => {
       trackGPU: true,
       precision: 0
     })
-    stats.init(renderer).catch(error => {
+    stats.init(renderer).catch((error: unknown) => {
       console.error(error)
     })
     statsRef.current = stats

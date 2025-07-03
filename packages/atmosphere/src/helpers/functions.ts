@@ -1,4 +1,4 @@
-import { type AtmosphereParameters } from '../AtmosphereParameters'
+import type { AtmosphereParameters } from '../AtmosphereParameters'
 
 export function safeSqrt(a: number): number {
   return Math.sqrt(Math.max(a, 0))

@@ -1,6 +1,6 @@
-import { type OverwriteMathProps } from '@takram/three-geospatial/r3f'
+import type { OverwriteMathProps } from '@takram/three-geospatial/r3f'
 
-import { type AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
+import type { AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
 
 export function separateProps<
   T extends OverwriteMathProps<AtmosphereMaterialProps>

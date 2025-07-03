@@ -27,7 +27,7 @@ import {
   parseUint8Array,
   STBNLoader
 } from '@takram/three-geospatial'
-import { type ExpandNestedProps } from '@takram/three-geospatial/r3f'
+import type { ExpandNestedProps } from '@takram/three-geospatial/r3f'
 
 import {
   CloudsEffect,
@@ -42,8 +42,8 @@ import {
   DEFAULT_SHAPE_URL,
   DEFAULT_TURBULENCE_URL
 } from '../constants'
-import { type Procedural3DTexture } from '../Procedural3DTexture'
-import { type ProceduralTexture } from '../ProceduralTexture'
+import type { Procedural3DTexture } from '../Procedural3DTexture'
+import type { ProceduralTexture } from '../ProceduralTexture'
 import { CloudLayers } from './CloudLayers'
 
 function useTextureState(
@@ -68,7 +68,7 @@ function useTextureState(
         gl.initTexture(texture)
 
         setData(texture)
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {
@@ -100,7 +100,7 @@ function use3DTextureState(
       })
       ;(async () => {
         setData(await loader.loadAsync(input))
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {
@@ -120,7 +120,7 @@ function useSTBNTextureState(
       const loader = new STBNLoader()
       ;(async () => {
         setData(await loader.loadAsync(input))
-      })().catch(error => {
+      })().catch((error: unknown) => {
         console.error(error)
       })
     } else {
@@ -217,6 +217,7 @@ export const Clouds: FC<CloudsProps> = ({
         case 'atmosphereShadowLength':
           transientStates.shadowLength = effect.atmosphereShadowLength
           break
+        default:
       }
     },
     [effect, transientStates]

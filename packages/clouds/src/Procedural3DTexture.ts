@@ -14,7 +14,7 @@ import {
   type WebGLRenderer
 } from 'three'
 
-import { type ProceduralTexture } from './ProceduralTexture'
+import type { ProceduralTexture } from './ProceduralTexture'
 
 export type Procedural3DTexture = ProceduralTexture<Data3DTexture>
 

@@ -1,9 +1,9 @@
 import { ShaderPass, type CopyMaterial } from 'postprocessing'
-import {
-  type Uniform,
-  type WebGLArrayRenderTarget,
-  type WebGLRenderer,
-  type WebGLRenderTarget
+import type {
+  Uniform,
+  WebGLArrayRenderTarget,
+  WebGLRenderer,
+  WebGLRenderTarget
 } from 'three'
 
 import { setArrayRenderTargetLayers } from './helpers/setArrayRenderTargetLayers'

@@ -1,7 +1,7 @@
 import { useThree } from '@react-three/fiber'
 import { useEffect, useRef, type RefObject } from 'react'
 import { Quaternion, Vector3, type Camera } from 'three'
-import { type OrbitControls } from 'three-stdlib'
+import type { OrbitControls } from 'three-stdlib'
 
 import {
   Ellipsoid,
