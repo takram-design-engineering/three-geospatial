@@ -95,7 +95,7 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
   }
 
   setType(renderer: WebGLRenderer): this {
-    this.type = isFloatLinearSupported(renderer) ? HalfFloatType : FloatType
+    this.type = isFloatLinearSupported(renderer) ? FloatType : HalfFloatType
     return this
   }
 

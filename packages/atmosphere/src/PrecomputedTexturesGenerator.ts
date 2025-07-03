@@ -369,7 +369,7 @@ export class PrecomputedTexturesGenerator {
   constructor(
     renderer: WebGLRenderer,
     {
-      type = isFloatLinearSupported(renderer) ? HalfFloatType : FloatType,
+      type = isFloatLinearSupported(renderer) ? FloatType : HalfFloatType,
       combinedScattering = true,
       higherOrderScattering = true
     }: PrecomputedTexturesGeneratorOptions = {}
