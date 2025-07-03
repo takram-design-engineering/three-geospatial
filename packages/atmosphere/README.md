@@ -136,7 +136,7 @@ const Scene = () => (
 ```
 
 ![Example of mixed lighting](https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/iss.jpg)
-→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--irradiance-mask)
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--lighting-mask)
 
 ### Transient update by date
 
@@ -206,9 +206,12 @@ composer.addPass(
   )
 )
 
-const textures = new PrecomputedTexturesLoader()
-  .setType(renderer)
-  .load('/assets')
+const generator = new PrecomputedTexturesGenerator(renderer)
+generator.update().catch((error: unknown) => {
+  console.error(error)
+})
+
+const { textures } = generator
 Object.assign(skyMaterial, textures)
 sunLight.transmittanceTexture = textures.transmittanceTexture
 skyLight.irradianceTexture = textures.irradianceTexture
@@ -271,6 +274,8 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`SunDirectionalLight`](#sundirectionallight)
 - [`AerialPerspectiveEffect`](#aerialperspectiveeffect)
 - [`LightingMaskPass`](#lightingmaskpass)
+- [`PrecomputedTexturesGenerator`](#precomputedtexturesgenerator)
+- [`PrecomputedTexturesLoader`](#precomputedtexturesloader)
 
 **Functions**
 
@@ -286,14 +291,19 @@ Provides and synchronizes props of atmosphere components. It’s the recommended
 → [Source](/packages/atmosphere/src/r3f/Atmosphere.tsx)
 
 ```tsx
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useLoader, useThree } from '@react-three/fiber'
+import {
+  DEFAULT_PRECOMPUTED_TEXTURES_URL,
+  PrecomputedTexturesLoader
+} from '@takram/three-atmosphere'
 import {
   Atmosphere,
   Sky,
-  useAtmosphereTextureProps,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
 import { useRef } from 'react'
+
+const loader = new PrecomputedTexturesLoader()
 
 const Scene = () => {
   const atmosphereRef = useRef<AtmosphereApi>(null)
@@ -304,13 +314,13 @@ const Scene = () => {
     atmosphereRef.current?.updateByDate(new Date())
   })
 
-  // The choice of precomputed textures depends on whether single-precision
-  // float or half-float textures are supported. Some devices don't support
-  // single-precision textures, so this hook fallbacks to half-float textures
-  // when necessary.
-  const textureProps = useAtmosphereTextureProps('/assets')
+  const renderer = useThree(({ gl }) => gl)
+  const textures = useLoader(
+    loader.setType(renderer),
+    DEFAULT_PRECOMPUTED_TEXTURES_URL
+  )
   return (
-    <Atmosphere ref={atmosphereRef} {...textureProps}>
+    <Atmosphere ref={atmosphereRef} {...textures}>
       <Sky />
       ...
     </Atmosphere>
@@ -323,12 +333,12 @@ const Scene = () => {
 #### textures
 
 ```ts
-textures: PrecomputedTextures | string = DEFAULT_PRECOMPUTED_TEXTURES_URL
+textures: PrecomputedTextures | string = undefined
 ```
 
-The [precomputed textures](assets), or a URL to the directory containing them.
+The [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance), or a URL to the directory containing them.
 
-If left undefined, the textures will be loaded directly from GitHub.
+If left undefined, the textures will be generated using [`PrecomputedTexturesGenerator`](#precomputedtexturesgenerator).
 
 #### ellipsoid
 
@@ -445,24 +455,16 @@ See [`SkyMaterial`](#skymaterial) for further details.
 import { useLoader } from '@react-three/fiber'
 import {
   getMoonDirectionECEF,
-  getSunDirectionECEF,
-  PrecomputedTexturesLoader
+  getSunDirectionECEF
 } from '@takram/three-atmosphere'
 import { Sky } from '@takram/three-atmosphere/r3f'
 
 const sunDirection = getSunDirectionECEF(/* date */)
 const moonDirection = getMoonDirectionECEF(/* date */)
 
-const Scene = () => {
-  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
-  return (
-    <Sky
-      {...precomputedTextures}
-      sunDirection={sunDirection}
-      moonDirection={moonDirection}
-    />
-  )
-}
+const Scene = () => (
+  <Sky sunDirection={sunDirection} moonDirection={moonDirection} />
+)
 ```
 
 ### Props
@@ -481,8 +483,7 @@ See [`StarsMaterial`](#starsmaterial) for further details.
 import { useLoader } from '@react-three/fiber'
 import {
   getECIToECEFRotationMatrix,
-  getSunDirectionECEF,
-  PrecomputedTexturesLoader
+  getSunDirectionECEF
 } from '@takram/three-atmosphere'
 import { Stars } from '@takram/three-atmosphere/r3f'
 import { ArrayBufferLoader } from '@takram/three-geospatial'
@@ -491,11 +492,9 @@ const sunDirection = getSunDirectionECEF(/* date */)
 const rotationMatrix = getECIToECEFRotationMatrix(/* date */)
 
 const Scene = () => {
-  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
   const starsData = useLoader(ArrayBufferLoader, '/assets/stars.bin')
   return (
     <Stars
-      {...precomputedTextures}
       data={starsData}
       sunDirection={sunDirection}
       matrix={rotationMatrix}
@@ -527,26 +526,26 @@ See [`SkyLightProbe`](#skylightprobe) for further details.
 → [Source](/packages/atmosphere/src/r3f/SkyLight.tsx)
 
 ```tsx
-import { useLoader } from '@react-three/fiber'
+import { useLoader, useThree, useLoader } from '@react-three/fiber'
 import {
+  DEFAULT_PRECOMPUTED_TEXTURES_URL,
   getSunDirectionECEF,
-  IRRADIANCE_TEXTURE_HEIGHT,
-  IRRADIANCE_TEXTURE_WIDTH
+  PrecomputedTexturesLoader
 } from '@takram/three-atmosphere'
 import { SkyLight } from '@takram/three-atmosphere/r3f'
-import { DataTextureLoader, parseFloat32Array } from '@takram/three-geospatial'
 import { DataTexture, Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
 const sunDirection = getSunDirectionECEF(/* date */)
 
-const loader = new DataTextureLoader(DataTexture, parseFloat32Array, {
-  width: IRRADIANCE_TEXTURE_WIDTH,
-  height: IRRADIANCE_TEXTURE_HEIGHT
-})
+const loader = new PrecomputedTexturesLoader()
 
 const Scene = () => {
-  const irradianceTexture = useLoader(loader, '/assets/irradiance.bin')
+  const renderer = useThree(({ gl }) => gl)
+  const { irradianceTexture } = useLoader(
+    loader.setType(renderer),
+    DEFAULT_PRECOMPUTED_TEXTURES_URL
+  )
   return (
     <SkyLight
       irradianceTexture={irradianceTexture}
@@ -570,26 +569,26 @@ See [`SunDirectionalLight`](#directionalsunlight) for further details.
 → [Source](/packages/atmosphere/src/r3f/SunLight.tsx)
 
 ```tsx
-import { useLoader } from '@react-three/fiber'
+import { useLoader, useThree, useLoader } from '@react-three/fiber'
 import {
   getSunDirectionECEF,
-  TRANSMITTANCE_TEXTURE_HEIGHT,
-  TRANSMITTANCE_TEXTURE_WIDTH
+  DEFAULT_PRECOMPUTED_TEXTURES_URL,
+  PrecomputedTexturesLoader
 } from '@takram/three-atmosphere'
 import { SunLight } from '@takram/three-atmosphere/r3f'
-import { DataTextureLoader, parseFloat32Array } from '@takram/three-geospatial'
 import { DataTexture, Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
 const sunDirection = getSunDirectionECEF(/* date */)
 
-const loader = new DataTextureLoader(DataTexture, parseFloat32Array, {
-  width: TRANSMITTANCE_TEXTURE_WIDTH,
-  height: TRANSMITTANCE_TEXTURE_HEIGHT
-})
+const loader = new PrecomputedTexturesLoader()
 
 const Scene = () => {
-  const transmittanceTexture = useLoader(loader, '/assets/transmittance.bin')
+  const renderer = useThree(({ gl }) => gl)
+  const { transmittanceTexture } = useLoader(
+    loader.setType(renderer),
+    DEFAULT_PRECOMPUTED_TEXTURES_URL
+  )
   return (
     <SunLight
       transmittanceTexture={transmittanceTexture}
@@ -613,9 +612,10 @@ See [`AerialPerspectiveEffect`](#aerialperspectiveeffect) for further details.
 → [Source](/packages/atmosphere/src/r3f/AerialPerspective.tsx)
 
 ```tsx
-import { useLoader } from '@react-three/fiber'
+import { useLoader, useThree, useLoader } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import {
+  DEFAULT_PRECOMPUTED_TEXTURES_URL,
   getSunDirectionECEF,
   PrecomputedTexturesLoader
 } from '@takram/three-atmosphere'
@@ -624,11 +624,17 @@ import { Vector3 } from 'three'
 
 const sunDirection = getSunDirectionECEF(/* date */)
 
+const loader = new PrecomputedTexturesLoader()
+
 const Scene = () => {
-  const precomputedTextures = useLoader(PrecomputedTexturesLoader, '/assets')
+  const renderer = useThree(({ gl }) => gl)
+  const textures = useLoader(
+    loader.setType(renderer),
+    DEFAULT_PRECOMPUTED_TEXTURES_URL
+  )
   return (
     <EffectComposer>
-      <AerialPerspective {...precomputedTextures} sunDirection={sunDirection} />
+      <AerialPerspective {...textures} sunDirection={sunDirection} />
     </EffectComposer>
   )
 }
@@ -694,7 +700,23 @@ scatteringTexture: Data3DTexture | null = null
 transmittanceTexture: Texture | null = null
 ```
 
-The [precomputed textures](assets).
+The [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
+
+#### singleMieScatteringTexture
+
+```ts
+singleMieScatteringTexture: Data3DTexture | null = null
+```
+
+TODO
+
+#### higherOrderScatteringTexture
+
+```ts
+higherOrderScatteringTexture: Data3DTexture | null = null
+```
+
+TODO
 
 #### ellipsoid
 
@@ -886,7 +908,7 @@ Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/Ligh
 irradianceTexture: Texture | null = null
 ```
 
-The [precomputed irradiance texture](assets).
+The [precomputed irradiance texture](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
 
 #### ellipsoid
 
@@ -949,7 +971,7 @@ Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en
 transmittanceTexture: Texture | null = null
 ```
 
-The [precomputed transmittance texture](assets).
+The [precomputed transmittance texture](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--transmittance).
 
 #### ellipsoid
 
@@ -1006,7 +1028,8 @@ This is for use with the [`postprocessing`](https://github.com/pmndrs/postproces
 const aerialPerspective = new AerialPerspectiveEffect(camera, {
   irradianceTexture,
   scatteringTexture,
-  transmittanceTexture
+  transmittanceTexture,
+  higherOrderScatteringTexture
 })
 getSunDirectionECEF(/* date */, aerialPerspective.sunDirection)
 
@@ -1061,7 +1084,23 @@ scatteringTexture: Data3DTexture | null = null
 transmittanceTexture: Texture | null = null
 ```
 
-The [precomputed textures](assets).
+The [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
+
+#### singleMieScatteringTexture
+
+```ts
+singleMieScatteringTexture: Data3DTexture | null = null
+```
+
+TODO
+
+#### higherOrderScatteringTexture
+
+```ts
+higherOrderScatteringTexture: Data3DTexture | null = null
+```
+
+TODO
 
 #### ellipsoid
 
@@ -1236,6 +1275,14 @@ inverted: boolean = false
 ```
 
 By default, meshes with the selection layer are masked out from the post-process lighting. Set this to true when rendering the objects for the post-process lighting is less expensive (generally, fewer triangles) than that for the light-source lighting, and configure the layers accordingly.
+
+## PrecomputedTexturesGenerator
+
+TODO
+
+## PrecomputedTexturesLoader
+
+TODO
 
 ## Functions
 
