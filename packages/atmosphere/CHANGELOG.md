@@ -21,6 +21,7 @@
 - Deprecated and renamed `IrradianceMask` to `LightingMask`.
 - `AerialPerspectiveEffect`: Deprecated and renamed `irradianceScale` to `albedoScale`.
 - `StarsMaterial`: Deprecated and renamed `radianceScale` to `intensity`.
+- Deprecated `useAtmosphereTextureProps`.
 - Migrated to core API changes.
 
 ### Fixed
