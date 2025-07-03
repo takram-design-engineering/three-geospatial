@@ -27,7 +27,7 @@ import {
   AerialPerspectiveEffect,
   getMoonDirectionECEF,
   getSunDirectionECEF,
-  PrecomputedTexturesLoader,
+  PrecomputedTexturesGenerator,
   SkyLightProbe,
   SkyMaterial,
   SunDirectionalLight
@@ -154,11 +154,13 @@ function init(container: HTMLDivElement): void {
     )
   )
 
-  // Load precomputed textures.
-  const textures = new PrecomputedTexturesLoader()
-    .setType(renderer)
-    .load('atmosphere')
+  // Generate precomputed textures.
+  const generator = new PrecomputedTexturesGenerator(renderer)
+  generator.update().catch((error: unknown) => {
+    console.error(error)
+  })
 
+  const { textures } = generator
   Object.assign(skyMaterial, textures)
   sunLight.transmittanceTexture = textures.transmittanceTexture
   skyLight.irradianceTexture = textures.irradianceTexture

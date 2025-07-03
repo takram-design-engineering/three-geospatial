@@ -125,11 +125,7 @@ const Scene: FC = () => {
         <meshLambertMaterial color='white' transparent alphaMap={texture} />
       </Plane>
       <LittlestTokyo ref={modelRef} scale={0.01} />
-      <Atmosphere
-        ref={setAtmosphere}
-        textures='atmosphere'
-        correctAltitude={correctAltitude}
-      >
+      <Atmosphere ref={setAtmosphere} correctAltitude={correctAltitude}>
         <Sky groundAlbedo='white' />
         <Stars data='atmosphere/stars.bin' />
         <SkyLight />

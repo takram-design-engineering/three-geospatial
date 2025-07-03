@@ -123,11 +123,7 @@ const Scene: FC<SceneProps> = ({
   })
 
   return (
-    <Atmosphere
-      ref={atmosphereRef}
-      textures='atmosphere'
-      correctAltitude={correctAltitude}
-    >
+    <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
       <Sky />
       <Stars data='atmosphere/stars.bin' />
       <Globe>

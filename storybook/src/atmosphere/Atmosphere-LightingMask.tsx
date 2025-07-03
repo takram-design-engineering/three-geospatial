@@ -209,11 +209,7 @@ const Scene: FC = () => {
   }, [longitude, latitude, height])
 
   return (
-    <Atmosphere
-      ref={setAtmosphere}
-      textures='atmosphere'
-      correctAltitude={correctAltitude}
-    >
+    <Atmosphere ref={setAtmosphere} correctAltitude={correctAltitude}>
       <OrbitControls minDistance={20} maxDistance={1e5} />
 
       {/* Background objects and light sources */}

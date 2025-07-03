@@ -71,11 +71,7 @@ const Scene: FC = () => {
           </Box>
         </EastNorthUpFrame>
       )}
-      <Atmosphere
-        ref={atmosphereRef}
-        textures='atmosphere'
-        correctAltitude={correctAltitude}
-      >
+      <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
         <EffectComposer multisampling={0} enableNormalPass>
           <Fragment key={JSON.stringify([enabled, toneMapping])}>
             {enabled && (

@@ -56,11 +56,7 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={5} />
-      <Atmosphere
-        ref={atmosphereRef}
-        textures='atmosphere'
-        correctAltitude={correctAltitude}
-      >
+      <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
         <Sky />
         <group ref={envMapParentRef}>
           <RenderCubeTexture ref={setEnvMap} resolution={64}>

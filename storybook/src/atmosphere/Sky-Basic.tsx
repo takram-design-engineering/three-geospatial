@@ -35,11 +35,7 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={5} />
-      <Atmosphere
-        ref={atmosphereRef}
-        textures='atmosphere'
-        correctAltitude={correctAltitude}
-      >
+      <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
         <Sky />
       </Atmosphere>
       <EffectComposer multisampling={0}>

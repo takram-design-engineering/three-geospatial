@@ -42,7 +42,7 @@ const Scene: FC = () => {
   return (
     <>
       <OrbitControls ref={controlsRef} minDistance={1000} />
-      <Atmosphere ref={atmosphereRef} textures='atmosphere'>
+      <Atmosphere ref={atmosphereRef}>
         <EffectComposer multisampling={0} enableNormalPass>
           <Clouds coverage={0.3} shadow-maxFar={1e5} disableDefaultLayers>
             <CloudLayer

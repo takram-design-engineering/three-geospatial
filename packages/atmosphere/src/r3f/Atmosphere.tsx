@@ -18,7 +18,7 @@ import {
   getMoonDirectionECI,
   getSunDirectionECI
 } from '../celestialDirections'
-import { DEFAULT_PRECOMPUTED_TEXTURES_URL } from '../constants'
+import { PrecomputedTexturesGenerator } from '../PrecomputedTexturesGenerator'
 import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import type {
   AtmosphereLightingMask,
@@ -66,7 +66,7 @@ export interface AtmosphereProps {
 
 export const Atmosphere: FC<AtmosphereProps> = ({
   ref: forwardedRef,
-  textures: texturesProp = DEFAULT_PRECOMPUTED_TEXTURES_URL,
+  textures: texturesProp,
   ellipsoid = Ellipsoid.WGS84,
   correctAltitude = true,
   date,
@@ -104,8 +104,27 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     }
   }, [loadedTextures])
 
+  const generator = useMemo(
+    () =>
+      texturesProp == null
+        ? new PrecomputedTexturesGenerator(renderer)
+        : undefined,
+    [texturesProp, renderer]
+  )
+  useEffect(() => {
+    if (generator != null) {
+      generator.update().catch((error: unknown) => {
+        console.error(error)
+      })
+      return () => {
+        generator.dispose()
+      }
+    }
+  }, [generator])
+
   const textures =
-    typeof texturesProp === 'string' ? loadedTextures : texturesProp
+    generator?.textures ??
+    (typeof texturesProp === 'string' ? loadedTextures : texturesProp)
 
   const context = useMemo(
     () => ({

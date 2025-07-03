@@ -90,11 +90,7 @@ const Scene: FC = () => {
         followCamera
         infiniteGrid
       /> */}
-      <Atmosphere
-        ref={setAtmosphere}
-        textures='atmosphere'
-        correctAltitude={correctAltitude}
-      >
+      <Atmosphere ref={setAtmosphere} correctAltitude={correctAltitude}>
         <Sky />
         <SkyLight />
         <SunLight />
