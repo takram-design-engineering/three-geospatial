@@ -38,7 +38,7 @@ const config: StorybookConfig = {
         plugins: () => [nxViteTsPaths()]
       },
       build: {
-        sourcemap: true
+        sourcemap: process.env.NODE_ENV !== 'production'
       }
     })
 }
