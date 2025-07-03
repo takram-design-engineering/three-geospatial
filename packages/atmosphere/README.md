@@ -1331,6 +1331,15 @@ Calculates the radiance of sunlight observed from a given position by sampling t
 
 → [Source](/packages/atmosphere/src/getSunLightColor.ts)
 
+# References
+
+In alphabetical order
+
+- [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf)
+- [Outdoor Light Scattering Sample Update](https://www.intel.com/content/dam/develop/external/us/en/documents/outdoor-light-scattering-update.pdf)
+- [Physically Based Real-Time Rendering of Atmospheres using Mie Theory](https://diglib.eg.org/items/1fb6b85a-b3f8-4817-975f-f65634020f03)
+- [Precomputed Atmospheric Scattering](https://inria.hal.science/inria-00288758/en)
+
 # License
 
 [MIT](LICENSE)
