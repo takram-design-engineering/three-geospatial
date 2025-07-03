@@ -1,9 +1,8 @@
 import { extend, type ThreeElement } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
 import {
+  useCallback,
   useContext,
-  useEffect,
-  useRef,
   type ComponentPropsWithoutRef,
   type FC,
   type Ref
@@ -29,28 +28,29 @@ export const LightingMask: FC<LightingMaskProps> = ({
   ...props
 }) => {
   const { transientStates } = useContext(AtmosphereContext)
-  const ref = useRef<LightingMaskPass>(null)
 
-  useEffect(() => {
-    if (ref.current == null) {
-      return
-    }
-    if (transientStates != null) {
-      transientStates.lightingMask = {
-        map: ref.current.texture,
-        channel: 'r'
+  const getRef = useCallback(
+    (pass: LightingMaskPass | null) => {
+      if (pass != null) {
+        if (transientStates != null) {
+          transientStates.lightingMask = {
+            map: pass.texture,
+            channel: 'r'
+          }
+          return () => {
+            transientStates.lightingMask = null
+          }
+        }
       }
-      return () => {
-        transientStates.lightingMask = null
-      }
-    }
-  }, [transientStates])
+    },
+    [transientStates]
+  )
 
   const { scene, camera } = useContext(EffectComposerContext)
   extend({ LightingMaskPass })
   return (
     <lightingMaskPass
-      ref={mergeRefs([ref, forwardedRef])}
+      ref={mergeRefs([getRef, forwardedRef])}
       {...props}
       args={[scene, camera]}
     />

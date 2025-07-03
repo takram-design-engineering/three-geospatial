@@ -1,13 +1,6 @@
 import { useFrame, useThree, type ElementProps } from '@react-three/fiber'
 import { EffectComposerContext } from '@react-three/postprocessing'
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type FC
-} from 'react'
+import { useCallback, useContext, useEffect, useMemo, type FC } from 'react'
 import {
   Data3DTexture,
   LinearFilter,
@@ -46,89 +39,82 @@ import type { Procedural3DTexture } from '../Procedural3DTexture'
 import type { ProceduralTexture } from '../ProceduralTexture'
 import { CloudLayers } from './CloudLayers'
 
-function useTextureState(
+function useLoadTexture(
   input: string | Texture | ProceduralTexture,
   gl: WebGLRenderer
 ): Texture | ProceduralTexture | null {
-  const [data, setData] = useState(typeof input !== 'string' ? input : null)
+  const loadedTexture = useMemo(
+    () =>
+      typeof input === 'string'
+        ? new TextureLoader().load(input, texture => {
+            texture.minFilter = LinearMipMapLinearFilter
+            texture.magFilter = LinearFilter
+            texture.wrapS = RepeatWrapping
+            texture.wrapT = RepeatWrapping
+            texture.colorSpace = NoColorSpace
+            texture.needsUpdate = true
+          })
+        : undefined,
+    [input]
+  )
   useEffect(() => {
-    if (typeof input === 'string') {
-      const loader = new TextureLoader()
-      ;(async () => {
-        const texture = await loader.loadAsync(input)
-        texture.minFilter = LinearMipMapLinearFilter
-        texture.magFilter = LinearFilter
-        texture.wrapS = RepeatWrapping
-        texture.wrapT = RepeatWrapping
-        texture.colorSpace = NoColorSpace
-        texture.needsUpdate = true
-
-        // WORKAROUND: The color space resets to sRGB for unknown reason, unless
-        // the texture is initialized here.
-        gl.initTexture(texture)
-
-        setData(texture)
-      })().catch((error: unknown) => {
-        console.error(error)
-      })
-    } else {
-      setData(input)
+    if (loadedTexture != null) {
+      return () => {
+        loadedTexture.dispose()
+      }
     }
-  }, [input, gl])
-
-  return data
+  }, [loadedTexture])
+  return (typeof input === 'string' ? loadedTexture : input) ?? null
 }
 
-function use3DTextureState(
+function useLoad3DTexture(
   input: string | Data3DTexture | Procedural3DTexture,
   size: number
 ): Data3DTexture | Procedural3DTexture | null {
-  const [data, setData] = useState(typeof input !== 'string' ? input : null)
+  const loadedTexture = useMemo(
+    () =>
+      typeof input === 'string'
+        ? new DataTextureLoader(Data3DTexture, parseUint8Array, {
+            width: size,
+            height: size,
+            depth: size,
+            format: RedFormat,
+            minFilter: LinearFilter,
+            magFilter: LinearFilter,
+            wrapS: RepeatWrapping,
+            wrapT: RepeatWrapping,
+            wrapR: RepeatWrapping,
+            colorSpace: NoColorSpace
+          }).load(input)
+        : undefined,
+    [input, size]
+  )
   useEffect(() => {
-    if (typeof input === 'string') {
-      const loader = new DataTextureLoader(Data3DTexture, parseUint8Array, {
-        width: size,
-        height: size,
-        depth: size,
-        format: RedFormat,
-        minFilter: LinearFilter,
-        magFilter: LinearFilter,
-        wrapS: RepeatWrapping,
-        wrapT: RepeatWrapping,
-        wrapR: RepeatWrapping,
-        colorSpace: NoColorSpace
-      })
-      ;(async () => {
-        setData(await loader.loadAsync(input))
-      })().catch((error: unknown) => {
-        console.error(error)
-      })
-    } else {
-      setData(input)
+    if (loadedTexture != null) {
+      return () => {
+        loadedTexture.dispose()
+      }
     }
-  }, [input, size])
-
-  return data
+  }, [loadedTexture])
+  return (typeof input === 'string' ? loadedTexture : input) ?? null
 }
 
-function useSTBNTextureState(
+function useLoadSTBNTexture(
   input: string | Data3DTexture
 ): Data3DTexture | null {
-  const [data, setData] = useState(typeof input !== 'string' ? input : null)
+  const loadedTexture = useMemo(
+    () =>
+      typeof input === 'string' ? new STBNLoader().load(input) : undefined,
+    [input]
+  )
   useEffect(() => {
-    if (typeof input === 'string') {
-      const loader = new STBNLoader()
-      ;(async () => {
-        setData(await loader.loadAsync(input))
-      })().catch((error: unknown) => {
-        console.error(error)
-      })
-    } else {
-      setData(input)
+    if (loadedTexture != null) {
+      return () => {
+        loadedTexture.dispose()
+      }
     }
-  }, [input])
-
-  return data
+  }, [loadedTexture])
+  return (typeof input === 'string' ? loadedTexture : input) ?? null
 }
 
 export interface CloudsProps
@@ -230,17 +216,17 @@ export const Clouds: FC<CloudsProps> = ({
   }, [effect, handleChange])
 
   const renderer = useThree(({ gl }) => gl)
-  const localWeatherTexture = useTextureState(localWeatherTextureProp, renderer)
-  const shapeTexture = use3DTextureState(
+  const localWeatherTexture = useLoadTexture(localWeatherTextureProp, renderer)
+  const shapeTexture = useLoad3DTexture(
     shapeTextureProp,
     CLOUD_SHAPE_TEXTURE_SIZE
   )
-  const shapeDetailTexture = use3DTextureState(
+  const shapeDetailTexture = useLoad3DTexture(
     shapeDetailTextureProp,
     CLOUD_SHAPE_DETAIL_TEXTURE_SIZE
   )
-  const turbulenceTexture = useTextureState(turbulenceTextureProp, renderer)
-  const stbnTexture = useSTBNTextureState(stbnTextureProp)
+  const turbulenceTexture = useLoadTexture(turbulenceTextureProp, renderer)
+  const stbnTexture = useLoadSTBNTexture(stbnTextureProp)
 
   const { camera } = useContext(EffectComposerContext)
   return (

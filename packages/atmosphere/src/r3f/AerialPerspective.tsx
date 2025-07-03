@@ -13,26 +13,22 @@ import {
 import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
 
-function useSTBNTextureState(
+function useLoadSTBNTexture(
   input?: string | Data3DTexture
 ): Data3DTexture | null {
-  const [data, setData] = useState(
-    typeof input !== 'string' ? (input ?? null) : null
+  const loadedData = useMemo(
+    () =>
+      typeof input === 'string' ? new STBNLoader().load(input) : undefined,
+    [input]
   )
   useEffect(() => {
-    if (typeof input === 'string') {
-      const loader = new STBNLoader()
-      ;(async () => {
-        setData(await loader.loadAsync(input))
-      })().catch((error: unknown) => {
-        console.error(error)
-      })
-    } else {
-      setData(input ?? null)
+    if (loadedData != null) {
+      return () => {
+        loadedData.dispose()
+      }
     }
-  }, [input])
-
-  return data
+  }, [loadedData])
+  return (typeof input === 'string' ? loadedData : input) ?? null
 }
 
 export interface AerialPerspectiveProps
@@ -99,7 +95,7 @@ export const AerialPerspective: FC<AerialPerspectiveProps> = ({
     }
   })
 
-  const stbnTexture = useSTBNTextureState(
+  const stbnTexture = useLoadSTBNTexture(
     needsSTBN ? stbnTextureProp : undefined
   )
 
