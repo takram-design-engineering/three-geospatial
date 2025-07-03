@@ -16,19 +16,19 @@ import { separateProps } from './separateProps'
 function useLoadSTBNTexture(
   input?: string | Data3DTexture
 ): Data3DTexture | null {
-  const loadedData = useMemo(
+  const loadedTexture = useMemo(
     () =>
       typeof input === 'string' ? new STBNLoader().load(input) : undefined,
     [input]
   )
   useEffect(() => {
-    if (loadedData != null) {
+    if (loadedTexture != null) {
       return () => {
-        loadedData.dispose()
+        loadedTexture.dispose()
       }
     }
-  }, [loadedData])
-  return (typeof input === 'string' ? loadedData : input) ?? null
+  }, [loadedTexture])
+  return (typeof input === 'string' ? loadedTexture : input) ?? null
 }
 
 export interface AerialPerspectiveProps
