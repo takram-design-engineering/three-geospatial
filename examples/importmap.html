@@ -8,13 +8,13 @@ For more complete examples, see the Storybook.
     <script type="importmap">
       {
         "imports": {
-          "three": "https://unpkg.com/three@0.175.0/build/three.module.js",
-          "three/": "https://unpkg.com/three@0.175.0/",
+          "three": "https://unpkg.com/three@0.177.0/build/three.module.js",
+          "three/": "https://unpkg.com/three@0.177.0/",
           "postprocessing": "https://unpkg.com/postprocessing@6.37.3/build/index.js",
-          "@takram/three-geospatial": "https://unpkg.com/@takram/three-geospatial@0.2.1/build/index.js",
-          "@takram/three-geospatial/shaders": "https://unpkg.com/@takram/three-geospatial@0.2.1/build/shaders.js",
-          "@takram/three-geospatial-effects": "https://unpkg.com/@takram/three-geospatial-effects@0.3.1/build/index.js",
-          "@takram/three-atmosphere": "https://unpkg.com/@takram/three-atmosphere@0.11.2/build/index.js"
+          "@takram/three-geospatial": "https://unpkg.com/@takram/three-geospatial@0.3.0/build/index.js",
+          "@takram/three-geospatial/shaders": "https://unpkg.com/@takram/three-geospatial@0.3.0/build/shaders.js",
+          "@takram/three-geospatial-effects": "https://unpkg.com/@takram/three-geospatial-effects@0.4.0/build/index.js",
+          "@takram/three-atmosphere": "https://unpkg.com/@takram/three-atmosphere@0.13.0/build/index.js"
         }
       }
     </script>
@@ -58,7 +58,7 @@ For more complete examples, see the Storybook.
         AerialPerspectiveEffect,
         getMoonDirectionECEF,
         getSunDirectionECEF,
-        PrecomputedTexturesLoader,
+        PrecomputedTexturesGenerator,
         SkyLightProbe,
         SkyMaterial,
         SunDirectionalLight
@@ -187,10 +187,13 @@ For more complete examples, see the Storybook.
           )
         )
 
-        // Load precomputed textures.
-        const textures = new PrecomputedTexturesLoader()
-          .setType(renderer)
-          .load('https://unpkg.com/@takram/three-atmosphere@0.11.2/assets')
+        // Generate precomputed textures.
+        const generator = new PrecomputedTexturesGenerator(renderer)
+        generator.update().catch(error => {
+          console.error(error)
+        })
+
+        const textures = generator.textures
         Object.assign(skyMaterial, textures)
         sunLight.transmittanceTexture = textures.transmittanceTexture
         skyLight.irradianceTexture = textures.irradianceTexture
