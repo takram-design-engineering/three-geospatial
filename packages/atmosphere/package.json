@@ -1,6 +1,6 @@
 {
   "name": "@takram/three-atmosphere",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "A Three.js and R3F implementation of Precomputed Atmospheric Scattering",
   "keywords": [
     "three",
@@ -56,7 +56,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@takram/three-geospatial": "0.2.2",
+    "@takram/three-geospatial": "0.3.0",
     "astronomy-engine": "^2.1.19",
     "react-merge-refs": "^3.0.2",
     "url-join": "^5.0.0"
