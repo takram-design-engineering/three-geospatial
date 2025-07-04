@@ -334,7 +334,7 @@ This texture is not required until you encounter problems.
 
 An optional LUT texture that contains only higher-order (N ≥ 2) scattering terms. By using this information, it can attenuate only single scattering in the shadowed segments of rays.
 
-This texture is not required unless you have shadow length information, or you use the [`clouds`](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/clouds) package with the [`lightShafts`](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/clouds#lightshafts) option enabled.
+This texture is not required unless you have shadow length information, or you use the [clouds package](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/clouds) with the [`lightShafts`](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/clouds#lightshafts) option enabled.
 
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--higher-order-scattering)
 
@@ -1335,7 +1335,7 @@ Specifies the type of intermediate render targets and precomputed textures. It d
 combinedScattering: boolean = true
 ```
 
-Setting this option stores the red component of the single Mie scattering texture in the scattering texture’s alpha channel, and omits generating the [`singleMieScatteringTexture`](#singlemiescatteringtexture).
+Setting this option to `false` generates the `singleMieScatteringTexture`.
 
 See [`singleMieScatteringTexture`](#singlemiescatteringtexture) for further details.
 
@@ -1379,7 +1379,7 @@ dispose(options?: { textures?: boolean = true }): void
 
 Frees the GPU-related resources allocated by this instance, as usual.
 
-Setting the optional `textures` flag to `false` instructs it not to deallocate the precomputed textures, effectively transferring their ownership to the caller.
+Setting the optional `textures` flag to `false` doesn’t deallocate the precomputed textures, effectively transferring their ownership to the caller.
 
 ### Recipes
 
@@ -1426,7 +1426,66 @@ const App = () => (
 
 ## PrecomputedTexturesLoader
 
-TODO
+An aggregated loader class for the precomputed textures.
+
+→ [Source](/packages/atmosphere/src/PrecomputedTexturesLoader.ts)
+
+```ts
+const loader = new PrecomputedTexturesLoader(options).setType(renderer)
+const textures = loader.load(url)
+
+const aerialPerspective = new AerialPerspectiveEffect(camera, {
+  ...textures
+})
+```
+
+### Constructor options
+
+#### format
+
+```ts
+format: 'exr' | 'binary' = 'exr'
+```
+
+Specifies the format of precomputed textures to load.
+
+#### type
+
+```ts
+type: AnyFloatType = HalfFloatType
+```
+
+Specifies the type of precomputed textures.
+
+#### combinedScattering
+
+```ts
+combinedScattering: boolean = true
+```
+
+Setting this option to `false` loads the `singleMieScatteringTexture`.
+
+See [`singleMieScatteringTexture`](#singlemiescatteringtexture) for further details.
+
+#### higherOrderScattering
+
+```ts
+higherOrderScattering: boolean = true
+```
+
+Specifies whether to load the `higherOrderScatteringTexture`.
+
+See [`higherOrderScatteringTexture`](#higherorderscatteringtexture) for further details.
+
+### Methods
+
+#### setType
+
+```ts
+setType(renderer: WebGLRenderer): this
+```
+
+Sets the type of precomputed textures to `FloatType` if the provided renderer supports the linear filtering on `FloatType`. Otherwise, it falls back to `HalfFloatType`.
 
 ### Recipes
 
