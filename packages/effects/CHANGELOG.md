@@ -5,6 +5,7 @@
 ### Changed
 
 - Migrated to core API changes.
+- Updated dependencies.
 
 ### Fixed
 

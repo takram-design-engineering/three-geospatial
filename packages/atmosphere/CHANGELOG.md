@@ -5,8 +5,10 @@
 ### Added
 
 - Added `PrecomputedTexturesGenerator`. It's now possible to apply atmospheric effects without needing to load assets.
-- `PrecomputedTexturesLoader`: Added a `higherOrderScattering` option to attenuate only single scattering by shadow length.
 - `PrecomputedTexturesLoader`: Added a `singleMieScattering` option to reduce artifacts in Mie scattering.
+- `PrecomputedTexturesLoader`: Added a `higherOrderScattering` option to attenuate only single scattering by shadow length.
+- `AerialPerspectiveEffect`, `AtmosphereMaterialBase`: Added `singleMieScatteringTexture` and `higherOrderScatteringTexture` props.
+- Added `PrecomputedTextures` interface.
 
 ### Changed
 
@@ -14,15 +16,19 @@
 - `PrecomputedTexturesLoader`: Deprecated and renamed `setTypeFromRenderer()` to `setType()`.
 - `PrecomputedTexturesLoader`: `load()` returns textures that will be loaded asynchronously.
 - `PrecomputedTexturesLoader`: Takes both format and type in the constructor.
+- Reorganized the atmosphere shaders.
 - Removed a slight night light from the precomputed textures.
 - Relaxed the type of transmittance and irradiance textures from `DataTexture` to `Texture`.
-- Deprecated `photometric` options and props. It now outputs only luminance.
+- Removed `photometric` options and props. It now outputs only luminance.
+- Changed CPU texture sampling to cache Float16Array instances.
+- React components no longer trigger React state changes when textures are loaded.
 - Deprecated and renamed `sunIrradiance` and `skyIrradiance` options and props to `sunLight` and `skyLight`.
 - Deprecated and renamed `IrradianceMask` to `LightingMask`.
 - `AerialPerspectiveEffect`: Deprecated and renamed `irradianceScale` to `albedoScale`.
 - `StarsMaterial`: Deprecated and renamed `radianceScale` to `intensity`.
 - Deprecated `useAtmosphereTextureProps`.
 - Migrated to core API changes.
+- Updated dependencies.
 
 ### Fixed
 

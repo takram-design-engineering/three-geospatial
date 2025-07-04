@@ -9,6 +9,7 @@
 - Renamed `EXR3DLoader` to `EXR3DTextureLoader`.
 - Added `EXRTextureLoader`.
 - Removed `Texture3DLoader`.
+- Updated dependencies.
 
 ### Fixed
 

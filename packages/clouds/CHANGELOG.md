@@ -2,13 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+- `CloudsEffect`: Added `singleMieScatteringTexture` and `higherOrderScatteringTexture` props.
+
 ### Changed
 
-- Deprecated `photometric` options and props. It outputs luminance only now.
+- Removed `photometric` options and props. It outputs luminance only now.
 - Removed the shadow length attenuation hack.
-- `CloudsEffect`: Deprecated and renamed `skyIrradianceScale`
-- `groundIrradianceScale` and `accurateSunSkyIrradiance` to `skyLightScale`, `groundBounceScale` and `accurateSunSkyLight`.
+- React components no longer trigger React state changes when textures are loaded.
+- `CloudsEffect`: Deprecated and renamed `skyIrradianceScale`, `groundIrradianceScale` and `accurateSunSkyIrradiance` to `skyLightScale`, `groundBounceScale` and `accurateSunSkyLight`.
 - Migrated to core API changes.
+- Updated dependencies.
 
 ### Fixed
 
