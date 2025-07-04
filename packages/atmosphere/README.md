@@ -251,6 +251,26 @@ function render(): void {
 
 - Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
 
+## Note on lighting methods
+
+I have observed some confusion between the _post-process lighting_ and _light-source lighting_. This is a follow-up note.
+
+The _post-process lighting_ represents the correct lighting model, except that the current implementation only supports the Lambertian BRDF. Surfaces are lit in the post-processing stage by [`AerialPerspective`](#aerialperspective) when [`sunLight` and `skyLight`](#sunlight-skylight) are enabled. It could support various BRDFs if we could afford deferred rendering, but not quite yet, especially without TSL.
+
+Pixel values in the render buffer (the output of [`RenderPass`](https://pmndrs.github.io/postprocessing/public/docs/class/src/passes/RenderPass.js~RenderPass.html)) are considered _surface albedo_ and are usually rendered using [`MeshBasicMaterial`](https://threejs.org/docs/#api/en/materials/MeshBasicMaterial). `MeshBasicMaterial` is an unlit material and is not affected by light sources in the scene.
+
+The _light-source lighting_ approximates the post-process lighting by taking the incoming radiance computed at a single point in the scene using [`SunDirectionalLight`](#sundirectionallight) and [`SkyLightProbe`](#skylightprobe) and applying it to every point in the scene.
+
+It offers other BRDFs using built-in materials such as [`MeshPhysicalMaterial`](https://threejs.org/docs/#api/en/materials/MeshPhysicalMaterial). Such materials are lit materials, and their outgoing radiance (lit by light sources) is stored in the render buffer (completely black if there are no light sources), so they cannot be considered surface albedo.
+
+Fortunately, since `MeshBasicMaterial` is always unlit regardless of light sources, we can store both albedo and lit surface radiance information in a single render buffer. This will produce the correct results if we enable `sunLight` and `skyLight` only for albedo pixels. That’s the purpose of [`LightingMask`](#lightingmask).
+
+Rules of thumb:
+
+- Use `MeshBasicMaterial` under _post-process lighting_.
+- Any materials can be used under _light-source lighting_.
+- Don’t enable `sunLight` or `skyLight` on `AerialPerspective` when using `SunDirectionalLight` and `SkyLightProbe`, unless correctly masked using `LightingMask`.
+
 # API
 
 The underlying concepts of these components and classes might be a bit complex. If you have any questions, feel free to ask in the Issues or Discussions.
