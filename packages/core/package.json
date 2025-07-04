@@ -49,7 +49,6 @@
   ],
   "dependencies": {
     "@petamoriken/float16": "^3.9.1",
-    "react-merge-refs": "^3.0.2",
     "three-stdlib": "2.36.0",
     "tiny-invariant": "^1.3.3",
     "type-fest": "^4.33.0"
