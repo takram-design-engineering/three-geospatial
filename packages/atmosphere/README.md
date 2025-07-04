@@ -255,6 +255,10 @@ function render(): void {
 
 The underlying concepts of these components and classes might be a bit complex. If you have any questions, feel free to ask in the Issues or Discussions.
 
+**Interfaces**
+
+- [`PrecomputedTextures`](#precomputedtextures)
+
 **R3F components**
 
 - [`Atmosphere`](#atmosphere)
@@ -283,6 +287,56 @@ The underlying concepts of these components and classes might be a bit complex. 
 - [`getMoonDirectionECEF`](#getsundirectionecef-getmoondirectionecef)
 - [`getECIToECEFRotationMatrix`](#getecitoecefrotationmatrix)
 - [`getSunLightColor`](#getsunlightcolor)
+
+## PrecomputedTextures
+
+An interface for the collection of precomputed textures.
+
+```ts
+interface PrecomputedTextures {
+  irradianceTexture: Texture
+  scatteringTexture: Data3DTexture
+  transmittanceTexture: Texture
+  singleMieScatteringTexture?: Data3DTexture
+  higherOrderScatteringTexture?: Data3DTexture
+}
+```
+
+### Properties
+
+#### transmittanceTexture
+
+A 2D LUT texture that contains the transmittance between an arbitrary point in the atmosphere and the atmosphere’s top boundary. The LUT is parameterized by view height and the angle between view direction and zenith.
+
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--transmittance)
+
+#### scatteringTexture
+
+A 4D LUT packed into a 3D texture. It contains the Rayleigh scattering and the red component of single Mie scattering terms. The LUT is parameterized by view height, the angle between view direction and zenith, the angle between sun direction and zenith, and the angle between view and sun direction.
+
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--scattering)
+
+#### irradianceTexture
+
+A 2D LUT texture that contains the indirect irradiance on horizontal surfaces. The LUT is parameterized by view height and the angle between sun direction and zenith.
+
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance)
+
+#### singleMieScatteringTexture
+
+An optional LUT texture that contains the full RGB components of the single Mie scattering term. This might reduce artifacts when the red component of the single Mie scattering term is very small.
+
+This texture is not required until you encounter problems.
+
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--single-mie-scattering)
+
+#### higherOrderScatteringTexture
+
+An optional LUT texture that contains only higher-order (N ≥ 2) scattering terms. By using this information, it can attenuate only single scattering in the shadowed segments of rays.
+
+This texture is not required unless you have shadow length information, or you use the [`clouds`](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/clouds) package with the [`lightShafts`](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/clouds#lightshafts) option enabled.
+
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--higher-order-scattering)
 
 ## Atmosphere
 
@@ -336,7 +390,7 @@ const Scene = () => {
 textures: PrecomputedTextures | string = undefined
 ```
 
-The [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance), or a URL to the directory containing them.
+The [precomputed textures](#precomputedtextures), or a URL to the directory containing them.
 
 If left undefined, the textures will be generated using [`PrecomputedTexturesGenerator`](#precomputedtexturesgenerator).
 
@@ -692,31 +746,17 @@ The base class of [`SkyMaterial`](#skymaterial) and [`StarsMaterial`](#starsmate
 
 ### Parameters
 
-#### irradianceTexture, scatteringTexture, transmittanceTexture
+#### irradianceTexture, scatteringTexture, transmittanceTexture, singleMieScatteringTexture, higherOrderScatteringTexture
 
 ```ts
 irradianceTexture: Texture | null = null
 scatteringTexture: Data3DTexture | null = null
 transmittanceTexture: Texture | null = null
-```
-
-The [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
-
-#### singleMieScatteringTexture
-
-```ts
 singleMieScatteringTexture: Data3DTexture | null = null
-```
-
-TODO
-
-#### higherOrderScatteringTexture
-
-```ts
 higherOrderScatteringTexture: Data3DTexture | null = null
 ```
 
-TODO
+The [precomputed textures](#precomputedtextures).
 
 #### ellipsoid
 
@@ -908,7 +948,7 @@ Extends [`LightProbe`](https://threejs.org/docs/?q=lightprobe#api/en/lights/Ligh
 irradianceTexture: Texture | null = null
 ```
 
-The [precomputed irradiance texture](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
+The [precomputed irradiance texture](#irradiancetexture).
 
 #### ellipsoid
 
@@ -971,7 +1011,7 @@ Extends [`DirectionalLight`](https://threejs.org/docs/?q=DirectionalLight#api/en
 transmittanceTexture: Texture | null = null
 ```
 
-The [precomputed transmittance texture](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--transmittance).
+The [precomputed transmittance texture](#transmittancetexture).
 
 #### ellipsoid
 
@@ -1076,31 +1116,17 @@ reconstructNormal: boolean = false
 
 Whether to reconstruct normals from depth buffer.
 
-#### irradianceTexture, scatteringTexture, transmittanceTexture
+#### irradianceTexture, scatteringTexture, transmittanceTexture, singleMieScatteringTexture, higherOrderScatteringTexture
 
 ```ts
 irradianceTexture: Texture | null = null
 scatteringTexture: Data3DTexture | null = null
 transmittanceTexture: Texture | null = null
-```
-
-The [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
-
-#### singleMieScatteringTexture
-
-```ts
 singleMieScatteringTexture: Data3DTexture | null = null
-```
-
-TODO
-
-#### higherOrderScatteringTexture
-
-```ts
 higherOrderScatteringTexture: Data3DTexture | null = null
 ```
 
-TODO
+The [precomputed textures](#precomputedtextures).
 
 #### ellipsoid
 
@@ -1278,15 +1304,12 @@ By default, meshes with the selection layer are masked out from the post-process
 
 ## PrecomputedTexturesGenerator
 
-A class for generating the [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
+A class for generating the [precomputed textures](#precomputedtextures).
 
 → [Source](/packages/atmosphere/src/PrecomputedTexturesGenerator.ts)
 
 ```ts
-const generator = new PrecomputedTexturesGenerator(renderer, {
-  combinedScattering,
-  higherOrderScattering
-})
+const generator = new PrecomputedTexturesGenerator(renderer, options)
 generator.update().catch(error => {
   console.error(error)
 })
@@ -1312,9 +1335,9 @@ Specifies the type of intermediate render targets and precomputed textures. It d
 combinedScattering: boolean = true
 ```
 
-Specifies whether only the red component of the single Mie scattering is stored in the alpha channel of the scattering texture. This reduces total memory by extrapolating green and blue components, but it is prone to artifacts when the red component is very small.
+Setting this option stores the red component of the single Mie scattering texture in the scattering texture’s alpha channel, and omits generating the [`singleMieScatteringTexture`](#singlemiescatteringtexture).
 
-In most cases, it’s okay to leave this option enabled.
+See [`singleMieScatteringTexture`](#singlemiescatteringtexture) for further details.
 
 #### higherOrderScattering
 
@@ -1322,7 +1345,9 @@ In most cases, it’s okay to leave this option enabled.
 higherOrderScattering: boolean = true
 ```
 
-Specifies whether to generate a separate texture for higher-order (N ≥ 2) scattering. Using this information, only single scattering is attenuated in shadowed segments of the rays.
+Specifies whether to generate the `higherOrderScatteringTexture`.
+
+See [`higherOrderScatteringTexture`](#higherorderscatteringtexture) for further details.
 
 ### Properties
 
@@ -1332,7 +1357,7 @@ Specifies whether to generate a separate texture for higher-order (N ≥ 2) scat
 textures: PrecomputedTextures
 ```
 
-The generated [precomputed textures](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--irradiance).
+The generated [precomputed textures](#precomputedtextures).
 
 ### Methods
 
@@ -1354,7 +1379,7 @@ dispose(options?: { textures?: boolean = true }): void
 
 Frees the GPU-related resources allocated by this instance, as usual.
 
-It optionally takes a `textures` flag, which instructs it not to deallocate the precomputed textures, effectively transferring ownership of them to the caller.
+Setting the optional `textures` flag to `false` instructs it not to deallocate the precomputed textures, effectively transferring their ownership to the caller.
 
 ### Recipes
 
