@@ -1319,7 +1319,7 @@ const aerialPerspective = new AerialPerspectiveEffect(camera, {
 })
 ```
 
-### Constructor options
+### Parameters
 
 #### type
 
@@ -1439,7 +1439,7 @@ const aerialPerspective = new AerialPerspectiveEffect(camera, {
 })
 ```
 
-### Constructor options
+### Parameters
 
 #### format
 
@@ -1597,6 +1597,11 @@ In alphabetical order
 - [Outdoor Light Scattering Sample Update](https://www.intel.com/content/dam/develop/external/us/en/documents/outdoor-light-scattering-update.pdf)
 - [Physically Based Real-Time Rendering of Atmospheres using Mie Theory](https://diglib.eg.org/items/1fb6b85a-b3f8-4817-975f-f65634020f03)
 - [Precomputed Atmospheric Scattering](https://inria.hal.science/inria-00288758/en)
+
+**Implementation references**
+
+- [Precomputed Atmospheric Scattering](https://github.com/ebruneton/precomputed_atmospheric_scattering)
+- [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html)
 
 # License
 
