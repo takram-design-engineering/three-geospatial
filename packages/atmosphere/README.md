@@ -513,8 +513,8 @@ import {
 } from '@takram/three-atmosphere'
 import { Sky } from '@takram/three-atmosphere/r3f'
 
-const sunDirection = getSunDirectionECEF(/* date */)
-const moonDirection = getMoonDirectionECEF(/* date */)
+const sunDirection = getSunDirectionECEF(/* Date object or timestamp */)
+const moonDirection = getMoonDirectionECEF(/* Date object or timestamp */)
 
 const Scene = () => (
   <Sky sunDirection={sunDirection} moonDirection={moonDirection} />
@@ -542,8 +542,9 @@ import {
 import { Stars } from '@takram/three-atmosphere/r3f'
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
-const sunDirection = getSunDirectionECEF(/* date */)
-const rotationMatrix = getECIToECEFRotationMatrix(/* date */)
+const sunDirection = getSunDirectionECEF(/* Date object or timestamp */)
+const rotationMatrix =
+  getECIToECEFRotationMatrix(/* Date object or timestamp */)
 
 const Scene = () => {
   const starsData = useLoader(ArrayBufferLoader, '/assets/stars.bin')
@@ -590,7 +591,7 @@ import { SkyLight } from '@takram/three-atmosphere/r3f'
 import { DataTexture, Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
-const sunDirection = getSunDirectionECEF(/* date */)
+const sunDirection = getSunDirectionECEF(/* Date object or timestamp */)
 
 const loader = new PrecomputedTexturesLoader()
 
@@ -633,7 +634,7 @@ import { SunLight } from '@takram/three-atmosphere/r3f'
 import { DataTexture, Vector3 } from 'three'
 
 const position = new Vector3(/* ECEF coordinate in meters */)
-const sunDirection = getSunDirectionECEF(/* date */)
+const sunDirection = getSunDirectionECEF(/* Date object or timestamp */)
 
 const loader = new PrecomputedTexturesLoader()
 
@@ -676,7 +677,7 @@ import {
 import { AerialPerspective } from '@takram/three-atmosphere/r3f'
 import { Vector3 } from 'three'
 
-const sunDirection = getSunDirectionECEF(/* date */)
+const sunDirection = getSunDirectionECEF(/* Date object or timestamp */)
 
 const loader = new PrecomputedTexturesLoader()
 
@@ -816,7 +817,7 @@ Despite its name, this material renders the atmosphere itself, along with the su
 
 ```ts
 const material = new SkyMaterial()
-getSunDirectionECEF(/* date */, material.sunDirection)
+getSunDirectionECEF(date, material.sunDirection)
 const sky = new Mesh(new PlaneGeometry(2, 2), material)
 sky.frustumCulled = false
 scene.add(sky)
@@ -881,15 +882,17 @@ The provided data ([stars.bin](/packages/atmosphere/assets/stars.bin)) contains 
 → [Source](/packages/atmosphere/src/StarsMaterial.ts)
 
 ```ts
-const data: ArrayBuffer = /* Load stars.bin */
 const material = new StarsMaterial({
   irradianceTexture,
   scatteringTexture,
   transmittanceTexture
 })
-getSunDirectionECEF(/* date */, material.sunDirection)
-const stars = new Points(new StarsGeometry(data), material)
-stars.setRotationFromMatrix(getECIToECEFRotationMatrix(/* date */))
+getSunDirectionECEF(date, material.sunDirection)
+const stars = new Points(
+  new StarsGeometry(await new ArrayBufferLoader(url).loadAsync()),
+  material
+)
+stars.setRotationFromMatrix(getECIToECEFRotationMatrix(date))
 scene.add(stars)
 ```
 
@@ -931,8 +934,8 @@ It calculates spherical harmonics of sky irradiance at its position by sampling 
 
 ```ts
 const skyLight = new SkyLightProbe({ irradianceTexture })
-skyLight.position.set(/* ECEF coordinate in meters */)
-getSunDirectionECEF(/* date */, skyLight.sunDirection)
+skyLight.position.set(position)
+getSunDirectionECEF(date, skyLight.sunDirection)
 scene.add(skyLight)
 
 skyLight.update()
@@ -993,8 +996,8 @@ It calculates the sun’s radiance by sampling the precomputed transmittance tex
 
 ```ts
 const sunLight = new SunDirectionalLight({ transmittanceTexture })
-sunLight.target.position.set(/* ECEF coordinate in meters */)
-getSunDirectionECEF(/* date */, sunLight.sunDirection)
+sunLight.target.position.set(position)
+getSunDirectionECEF(date, sunLight.sunDirection)
 scene.add(sunLight)
 scene.add(sunLight.target)
 
@@ -1071,7 +1074,7 @@ const aerialPerspective = new AerialPerspectiveEffect(camera, {
   transmittanceTexture,
   higherOrderScatteringTexture
 })
-getSunDirectionECEF(/* date */, aerialPerspective.sunDirection)
+getSunDirectionECEF(position, aerialPerspective.sunDirection)
 
 const composer = new EffectComposer(renderer, {
   frameBufferType: HalfFloatType
@@ -1374,7 +1377,7 @@ This is an async function that performs precomputation incrementally over multip
 #### dispose
 
 ```ts
-dispose(options?: { textures?: boolean = true }): void
+dispose(options?: { textures: boolean = true }): void
 ```
 
 Frees the GPU-related resources allocated by this instance, as usual.
