@@ -13,8 +13,8 @@ export default {
   }
 } satisfies Meta
 
-export const Irradiance = _Irradiance
-export const Scattering = _Scattering
 export const Transmittance = _Transmittance
+export const Scattering = _Scattering
+export const Irradiance = _Irradiance
 export const SingleMieScattering = _SingleMieScattering
 export const HigherOrderScattering = _HigherOrderScattering
