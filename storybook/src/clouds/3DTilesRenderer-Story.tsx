@@ -82,6 +82,7 @@ const GlobeAndControls: FC = () => {
 
 interface SceneProps extends LocalDateControlsParams {
   exposure?: number
+  fov?: number
   longitude?: number
   latitude?: number
   heading?: number
@@ -213,11 +214,11 @@ const Scene: FC<SceneProps> = ({
   )
 }
 
-export const Story: FC<SceneProps> = props => {
+export const Story: FC<SceneProps> = ({ fov, ...props }) => {
   useGoogleMapsAPIKeyControls()
   return (
     <>
-      <Canvas gl={{ depth: false }}>
+      <Canvas gl={{ depth: false }} camera={{ fov }}>
         <Stats />
         <Scene {...props} />
       </Canvas>

@@ -38,6 +38,7 @@ import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 interface SceneProps extends LocalDateControlsParams {
   exposure?: number
+  fov?: number
   longitude?: number
   latitude?: number
   heading?: number
@@ -173,11 +174,11 @@ const Scene: FC<SceneProps> = ({
   )
 }
 
-export const Story: FC<SceneProps> = props => {
+export const Story: FC<SceneProps> = ({ fov, ...props }) => {
   useGoogleMapsAPIKeyControls()
   return (
     <>
-      <Canvas gl={{ depth: false }} frameloop='demand'>
+      <Canvas gl={{ depth: false }} camera={{ fov }} frameloop='demand'>
         <Stats />
         <Scene {...props} />
       </Canvas>
