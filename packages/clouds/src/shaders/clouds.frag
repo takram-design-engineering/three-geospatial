@@ -16,9 +16,9 @@ precision highp sampler2DArray;
 
 #include "atmosphere/bruneton/definitions"
 
-uniform AtmosphereParameters ATMOSPHERE;
-uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
-uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform AtmosphereParameters atmosphere;
+uniform vec3 sunSpectralRadianceToLuminance;
+uniform vec3 skySpectralRadianceToLuminance;
 
 uniform sampler2D transmittance_texture;
 uniform sampler3D scattering_texture;

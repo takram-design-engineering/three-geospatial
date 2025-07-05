@@ -13,9 +13,9 @@ precision highp sampler2DArray;
 
 #include "bruneton/definitions"
 
-uniform AtmosphereParameters ATMOSPHERE;
-uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
-uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform AtmosphereParameters atmosphere;
+uniform vec3 sunSpectralRadianceToLuminance;
+uniform vec3 skySpectralRadianceToLuminance;
 
 uniform sampler2D transmittance_texture;
 uniform sampler3D scattering_texture;
@@ -93,7 +93,7 @@ void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
 
   // Correct way is slerp, but this will be small-angle interpolation anyways.
   vec3 sphereNormal = normalize(positionECEF / vEllipsoidRadiiSquared);
-  vec3 spherePosition = ATMOSPHERE.bottom_radius * sphereNormal;
+  vec3 spherePosition = atmosphere.bottom_radius * sphereNormal;
   normalECEF = mix(normalECEF, sphereNormal, idealSphereAlpha);
   positionECEF = mix(positionECEF, spherePosition, idealSphereAlpha);
 }

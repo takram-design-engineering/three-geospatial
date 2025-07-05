@@ -650,12 +650,12 @@ export class PrecomputedTexturesGenerator {
     this.updating = true
 
     const atmosphereUniform = atmosphere.toUniform()
-    this.transmittanceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
-    this.directIrradianceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
-    this.singleScatteringMaterial.uniforms.ATMOSPHERE = atmosphereUniform
-    this.scatteringDensityMaterial.uniforms.ATMOSPHERE = atmosphereUniform
-    this.indirectIrradianceMaterial.uniforms.ATMOSPHERE = atmosphereUniform
-    this.multipleScatteringMaterial.uniforms.ATMOSPHERE = atmosphereUniform
+    this.transmittanceMaterial.uniforms.atmosphere = atmosphereUniform
+    this.directIrradianceMaterial.uniforms.atmosphere = atmosphereUniform
+    this.singleScatteringMaterial.uniforms.atmosphere = atmosphereUniform
+    this.scatteringDensityMaterial.uniforms.atmosphere = atmosphereUniform
+    this.indirectIrradianceMaterial.uniforms.atmosphere = atmosphereUniform
+    this.multipleScatteringMaterial.uniforms.atmosphere = atmosphereUniform
 
     const renderer = this.renderer
     const context = new Context(this.type)

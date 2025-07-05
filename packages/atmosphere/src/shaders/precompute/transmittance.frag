@@ -5,13 +5,13 @@ precision highp sampler3D;
 #include "bruneton/common"
 #include "bruneton/precompute"
 
-uniform AtmosphereParameters ATMOSPHERE;
+uniform AtmosphereParameters atmosphere;
 
 layout(location = 0) out vec4 transmittance;
 
 void main() {
   transmittance.rgb = ComputeTransmittanceToTopAtmosphereBoundaryTexture(
-    ATMOSPHERE,
+    atmosphere,
     gl_FragCoord.xy
   );
   transmittance.a = 1.0;

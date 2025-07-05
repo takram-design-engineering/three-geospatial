@@ -5,7 +5,7 @@ precision highp sampler3D;
 #include "bruneton/common"
 #include "bruneton/precompute"
 
-uniform AtmosphereParameters ATMOSPHERE;
+uniform AtmosphereParameters atmosphere;
 
 uniform mat3 luminanceFromRadiance;
 uniform sampler2D transmittanceTexture;
@@ -19,7 +19,7 @@ void main() {
   vec4 scattering;
   float nu;
   deltaMultipleScattering.rgb = ComputeMultipleScatteringTexture(
-    ATMOSPHERE,
+    atmosphere,
     transmittanceTexture,
     scatteringDensityTexture,
     vec3(gl_FragCoord.xy, float(layer) + 0.5),

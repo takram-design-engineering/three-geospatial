@@ -145,9 +145,9 @@ export interface AerialPerspectiveEffectUniforms {
   lightingMaskBuffer: Uniform<Texture | null>
 
   // Uniforms for atmosphere functions
-  ATMOSPHERE: AtmosphereParametersUniform
-  SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
-  SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: Uniform<Vector3>
+  atmosphere: AtmosphereParametersUniform
+  sunSpectralRadianceToLuminance: Uniform<Vector3>
+  skySpectralRadianceToLuminance: Uniform<Vector3>
   irradiance_texture: Uniform<Texture | null>
   scattering_texture: Uniform<Data3DTexture | null>
   transmittance_texture: Uniform<Texture | null>
@@ -286,9 +286,9 @@ export class AerialPerspectiveEffect extends Effect {
             lightingMaskBuffer: new Uniform(null),
 
             // Uniforms for atmosphere functions
-            ATMOSPHERE: atmosphere.toUniform(),
-            SUN_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.sunRadianceToRelativeLuminance),
-            SKY_SPECTRAL_RADIANCE_TO_LUMINANCE: new Uniform(atmosphere.skyRadianceToRelativeLuminance),
+            atmosphere: atmosphere.toUniform(),
+            sunSpectralRadianceToLuminance: new Uniform(atmosphere.sunRadianceToRelativeLuminance),
+            skySpectralRadianceToLuminance: new Uniform(atmosphere.skyRadianceToRelativeLuminance),
             irradiance_texture: new Uniform(irradianceTexture),
             scattering_texture: new Uniform(scatteringTexture),
             transmittance_texture: new Uniform(transmittanceTexture),

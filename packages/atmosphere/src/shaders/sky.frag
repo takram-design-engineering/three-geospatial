@@ -7,9 +7,9 @@ precision highp sampler3D;
 
 #include "bruneton/definitions"
 
-uniform AtmosphereParameters ATMOSPHERE;
-uniform vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
-uniform vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+uniform AtmosphereParameters atmosphere;
+uniform vec3 sunSpectralRadianceToLuminance;
+uniform vec3 skySpectralRadianceToLuminance;
 
 uniform sampler2D transmittance_texture;
 uniform sampler3D scattering_texture;
@@ -45,7 +45,7 @@ bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
   float r = length(cameraPosition);
   float mu = dot(cameraPosition, rayDirection) / r;
   return mu < 0.0 &&
-  r * r * (mu * mu - 1.0) + ATMOSPHERE.bottom_radius * ATMOSPHERE.bottom_radius >= 0.0;
+  r * r * (mu * mu - 1.0) + atmosphere.bottom_radius * atmosphere.bottom_radius >= 0.0;
 }
 
 void main() {
@@ -64,7 +64,7 @@ void main() {
     float distanceToGround = raySphereFirstIntersection(
       cameraPosition,
       rayDirection,
-      ATMOSPHERE.bottom_radius
+      atmosphere.bottom_radius
     );
     vec3 groundPosition = rayDirection * distanceToGround + cameraPosition;
     vec3 surfaceNormal = normalize(groundPosition);
@@ -78,7 +78,7 @@ void main() {
     vec3 transmittance;
     vec3 inscatter = GetSkyRadianceToPoint(
       cameraPosition,
-      ATMOSPHERE.bottom_radius * surfaceNormal,
+      atmosphere.bottom_radius * surfaceNormal,
       shadowLength,
       sunDirection,
       transmittance

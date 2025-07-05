@@ -5,7 +5,7 @@ precision highp sampler3D;
 #include "bruneton/common"
 #include "bruneton/precompute"
 
-uniform AtmosphereParameters ATMOSPHERE;
+uniform AtmosphereParameters atmosphere;
 
 uniform mat3 luminanceFromRadiance;
 uniform sampler3D singleRayleighScatteringTexture;
@@ -19,7 +19,7 @@ void main() {
   vec3 deltaIrradiance;
   vec3 irradiance;
   deltaIrradiance = ComputeIndirectIrradianceTexture(
-    ATMOSPHERE,
+    atmosphere,
     singleRayleighScatteringTexture,
     singleMieScatteringTexture,
     multipleScatteringTexture,

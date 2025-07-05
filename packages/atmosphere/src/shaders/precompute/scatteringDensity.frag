@@ -5,7 +5,7 @@ precision highp sampler3D;
 #include "bruneton/common"
 #include "bruneton/precompute"
 
-uniform AtmosphereParameters ATMOSPHERE;
+uniform AtmosphereParameters atmosphere;
 
 uniform sampler2D transmittanceTexture;
 uniform sampler3D singleRayleighScatteringTexture;
@@ -19,7 +19,7 @@ layout(location = 0) out vec4 scatteringDensity;
 
 void main() {
   scatteringDensity.rgb = ComputeScatteringDensityTexture(
-    ATMOSPHERE,
+    atmosphere,
     transmittanceTexture,
     singleRayleighScatteringTexture,
     singleMieScatteringTexture,
