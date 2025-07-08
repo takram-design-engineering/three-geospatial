@@ -79,15 +79,6 @@ export interface CascadedShadowOptions {
   fade?: boolean
 }
 
-export const cascadedShadowDefaults = {
-  maxFar: null,
-  farScale: 1,
-  splitMode: 'practical',
-  splitLambda: 0.5,
-  margin: 0,
-  fade: true
-} satisfies Partial<CascadedShadowOptions>
-
 export class CascadedShadow {
   readonly cascades: Cascade[] = []
 
@@ -108,16 +99,13 @@ export class CascadedShadow {
     const {
       cascadeCount,
       mapSize,
-      maxFar,
-      farScale,
-      splitMode,
-      splitLambda,
-      margin,
-      fade
-    } = {
-      ...cascadedShadowDefaults,
-      ...options
-    }
+      maxFar = null,
+      farScale = 1,
+      splitMode = 'practical',
+      splitLambda = 0.5,
+      margin = 0,
+      fade = true
+    } = options
     this.cascadeCount = cascadeCount
     this.mapSize.copy(mapSize)
     this.maxFar = maxFar
