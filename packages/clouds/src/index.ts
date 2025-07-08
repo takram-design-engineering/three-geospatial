@@ -1,5 +1,4 @@
 export type { QualityPreset as CloudsQualityPreset } from './qualityPresets'
-export type { FrustumSplitMode } from './helpers/splitFrustum'
 
 export * from './CloudLayer'
 export * from './CloudLayers'

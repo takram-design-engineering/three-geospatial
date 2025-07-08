@@ -9,10 +9,10 @@ import {
   type CloudLayerLike,
   type CloudsEffect,
   type CloudsQualityPreset,
-  type DensityProfileLike,
-  type FrustumSplitMode
+  type DensityProfileLike
 } from '@takram/three-clouds'
 import type { CloudsProps } from '@takram/three-clouds/r3f'
+import type { FrustumSplitMode } from '@takram/three-geospatial'
 
 import { useControls } from '../../helpers/useControls'
 
