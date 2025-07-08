@@ -28,6 +28,7 @@
 
 import {
   Box3,
+  Camera,
   Matrix4,
   Object3D,
   Vector2,
@@ -46,14 +47,25 @@ const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 const frustumScratch = /*#__PURE__*/ new FrustumCorners()
 const boxScratch = /*#__PURE__*/ new Box3()
 
-export interface Cascade {
-  readonly interval: Vector2
-  readonly matrix: Matrix4
-  readonly inverseMatrix: Matrix4
-  readonly projectionMatrix: Matrix4
-  readonly inverseProjectionMatrix: Matrix4
-  readonly viewMatrix: Matrix4
-  readonly inverseViewMatrix: Matrix4
+export class Cascade {
+  readonly interval = new Vector2()
+  readonly camera = new Camera()
+
+  get projectionMatrix(): Matrix4 {
+    return this.camera.projectionMatrix
+  }
+
+  get inverseProjectionMatrix(): Matrix4 {
+    return this.camera.projectionMatrixInverse
+  }
+
+  get viewMatrix(): Matrix4 {
+    return this.camera.matrixWorldInverse
+  }
+
+  get inverseViewMatrix(): Matrix4 {
+    return this.camera.matrixWorld
+  }
 }
 
 export interface CascadedShadowMapsOptions {
@@ -123,15 +135,7 @@ export class CascadedShadowMaps {
   set cascadeCount(value: number) {
     if (value !== this.cascadeCount) {
       for (let i = 0; i < value; ++i) {
-        this.cascades[i] ??= {
-          interval: new Vector2(),
-          matrix: new Matrix4(),
-          inverseMatrix: new Matrix4(),
-          projectionMatrix: new Matrix4(),
-          inverseProjectionMatrix: new Matrix4(),
-          viewMatrix: new Matrix4(),
-          inverseViewMatrix: new Matrix4()
-        }
+        this.cascades[i] ??= new Cascade()
       }
       this.cascades.length = value
     }
@@ -272,8 +276,6 @@ export class CascadedShadowMaps {
     const cascadeCount = this.cascadeCount
     for (let i = 0; i < cascadeCount; ++i) {
       const {
-        matrix,
-        inverseMatrix,
         projectionMatrix,
         inverseProjectionMatrix,
         viewMatrix,
@@ -281,8 +283,6 @@ export class CascadedShadowMaps {
       } = cascades[i]
       inverseProjectionMatrix.copy(projectionMatrix).invert()
       viewMatrix.copy(inverseViewMatrix).invert()
-      matrix.copy(projectionMatrix).multiply(viewMatrix)
-      inverseMatrix.copy(inverseViewMatrix).multiply(inverseProjectionMatrix)
     }
   }
 }

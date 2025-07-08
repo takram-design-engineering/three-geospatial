@@ -162,7 +162,9 @@ export class CloudsPass extends PassBase {
     for (let i = 0; i < shadow.cascadeCount; ++i) {
       const cascade = shadow.cascades[i]
       currentUniforms.shadowIntervals.value[i].copy(cascade.interval)
-      currentUniforms.shadowMatrices.value[i].copy(cascade.matrix)
+      currentUniforms.shadowMatrices.value[i]
+        .copy(cascade.projectionMatrix)
+        .multiply(cascade.viewMatrix)
     }
     currentUniforms.shadowFar.value = shadow.far
   }

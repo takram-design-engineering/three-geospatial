@@ -98,7 +98,9 @@ export class ShadowPass extends PassBase {
     const currentUniforms = this.currentMaterial.uniforms
     for (let i = 0; i < shadow.cascadeCount; ++i) {
       const cascade = shadow.cascades[i]
-      currentUniforms.inverseShadowMatrices.value[i].copy(cascade.inverseMatrix)
+      currentUniforms.inverseShadowMatrices.value[i]
+        .copy(cascade.inverseViewMatrix)
+        .multiply(cascade.inverseProjectionMatrix)
     }
   }
 
@@ -107,7 +109,9 @@ export class ShadowPass extends PassBase {
     const uniforms = this.currentMaterial.uniforms
     for (let i = 0; i < shadow.cascadeCount; ++i) {
       const cascade = shadow.cascades[i]
-      uniforms.reprojectionMatrices.value[i].copy(cascade.matrix)
+      uniforms.reprojectionMatrices.value[i]
+        .copy(cascade.projectionMatrix)
+        .multiply(cascade.viewMatrix)
     }
   }
 
