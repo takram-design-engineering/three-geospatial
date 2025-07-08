@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 ---
 
-- [`src/CascadedShadowMaps.ts`](src/CascadedShadowMaps.ts)
+- [`src/CascadedShadow.ts`](src/CascadedShadow.ts)
 - [`src/helpers/FrustumCorners.ts`](src/helpers/FrustumCorners.ts)
 
 MIT License

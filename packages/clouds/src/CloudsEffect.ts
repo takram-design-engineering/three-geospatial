@@ -23,7 +23,7 @@ import {
   type AtmosphereShadowLength
 } from '@takram/three-atmosphere'
 import {
-  CascadedShadowMaps,
+  CascadedShadow,
   define,
   definePropertyShorthand,
   defineUniformShorthand,
@@ -107,14 +107,14 @@ const shadowPassParameterKeys = [
   'temporalPass'
 ] as const satisfies Array<keyof ShadowPass>
 
-const shadowMapsParameterKeys = [
+const cascadedShadowParameterKeys = [
   'cascadeCount',
   'mapSize',
   'maxFar',
   'farScale',
   'splitMode',
   'splitLambda'
-] as const satisfies Array<keyof CascadedShadowMaps>
+] as const satisfies Array<keyof CascadedShadow>
 
 interface CloudsShorthand
   extends UniformShorthand<CloudsMaterial, (typeof cloudsUniformKeys)[number]>,
@@ -128,8 +128,8 @@ interface ShadowShorthand
         typeof shadowMaterialParameterKeys,
         ShadowPass,
         typeof shadowPassParameterKeys,
-        CascadedShadowMaps,
-        typeof shadowMapsParameterKeys
+        CascadedShadow,
+        typeof cascadedShadowParameterKeys
       ]
     > {}
 
@@ -203,7 +203,7 @@ export class CloudsEffect extends Effect {
   private proceduralShapeDetail?: Procedural3DTexture
   private proceduralTurbulence?: ProceduralTexture
 
-  readonly shadowMaps: CascadedShadowMaps
+  readonly cascadedShadow: CascadedShadow
   readonly shadowPass: ShadowPass
   readonly cloudsPass: CloudsPass
 
@@ -244,7 +244,7 @@ export class CloudsEffect extends Effect {
       ...options
     }
 
-    this.shadowMaps = new CascadedShadowMaps({
+    this.cascadedShadow = new CascadedShadow({
       cascadeCount: defaults.shadow.cascadeCount,
       mapSize: defaults.shadow.mapSize,
       splitLambda: 0.6
@@ -275,7 +275,7 @@ export class CloudsEffect extends Effect {
     })
 
     const passOptions = {
-      shadow: this.shadowMaps,
+      shadow: this.cascadedShadow,
       parameterUniforms: this.parameterUniforms,
       layerUniforms: this.layerUniforms,
       atmosphereUniforms: this.atmosphereUniforms
@@ -304,8 +304,8 @@ export class CloudsEffect extends Effect {
       shadowMaterialParameterKeys,
       this.shadowPass,
       shadowPassParameterKeys,
-      this.shadowMaps,
-      shadowMapsParameterKeys
+      this.cascadedShadow,
+      cascadedShadowParameterKeys
     )
 
     this.resolution = new Resolution(
@@ -386,7 +386,7 @@ export class CloudsEffect extends Effect {
     const zenithAngle = this.sunDirection.dot(surfaceNormal)
     const distance = lerp(1e6, 1e3, zenithAngle)
 
-    this.shadowMaps.update(
+    this.cascadedShadow.update(
       this.camera as PerspectiveCamera,
       // The sun direction must be rotated with the ellipsoid to ensure the
       // frusta are constructed correctly. Note this affects the transformation
@@ -403,7 +403,7 @@ export class CloudsEffect extends Effect {
   }
 
   private updateAtmosphereComposition(): void {
-    const { shadowMaps, shadowPass, cloudsPass } = this
+    const { cascadedShadow, shadowPass, cloudsPass } = this
     const shadowUniforms = shadowPass.currentMaterial.uniforms
     const cloudsUniforms = cloudsPass.currentMaterial.uniforms
 
@@ -421,12 +421,12 @@ export class CloudsEffect extends Effect {
     const prevShadow = this._atmosphereShadow
     const nextShadow = Object.assign(this._atmosphereShadow ?? {}, {
       map: shadowPass.outputBuffer,
-      mapSize: shadowMaps.mapSize,
-      cascadeCount: shadowMaps.cascadeCount,
+      mapSize: cascadedShadow.mapSize,
+      cascadeCount: cascadedShadow.cascadeCount,
       intervals: cloudsUniforms.shadowIntervals.value,
       matrices: cloudsUniforms.shadowMatrices.value,
       inverseMatrices: shadowUniforms.inverseShadowMatrices.value,
-      far: shadowMaps.far,
+      far: cascadedShadow.far,
       topHeight: cloudsUniforms.shadowTopHeight.value
     } satisfies AtmosphereShadow)
     if (prevShadow !== nextShadow) {
@@ -456,13 +456,13 @@ export class CloudsEffect extends Effect {
     inputBuffer: WebGLRenderTarget,
     deltaTime = 0
   ): void {
-    const { shadowMaps, shadowPass, cloudsPass } = this
+    const { cascadedShadow, shadowPass, cloudsPass } = this
     if (
-      shadowMaps.cascadeCount !== this.shadowCascadeCount ||
-      !shadowMaps.mapSize.equals(this.shadowMapSize)
+      cascadedShadow.cascadeCount !== this.shadowCascadeCount ||
+      !cascadedShadow.mapSize.equals(this.shadowMapSize)
     ) {
-      const { width, height } = shadowMaps.mapSize
-      const depth = shadowMaps.cascadeCount
+      const { width, height } = cascadedShadow.mapSize
+      const depth = cascadedShadow.cascadeCount
       this.shadowMapSize.set(width, height)
       this.shadowCascadeCount = depth
 

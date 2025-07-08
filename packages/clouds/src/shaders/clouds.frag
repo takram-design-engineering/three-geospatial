@@ -10,7 +10,7 @@ precision highp sampler2DArray;
 #include "core/turbo"
 #include "core/generators"
 #include "core/raySphereIntersection"
-#include "core/cascadedShadowMaps"
+#include "core/cascadedShadow"
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
 
@@ -256,7 +256,7 @@ float sampleShadowOpticalDepth(
 }
 
 #ifdef DEBUG_SHOW_SHADOW_MAP
-vec4 getCascadedShadowMaps(vec2 uv) {
+vec4 getCascadedShadow(vec2 uv) {
   vec4 coord = vec4(vUv, vUv - 0.5) * 2.0;
   vec4 shadow = vec4(0.0);
   if (uv.y > 0.5) {
@@ -828,7 +828,7 @@ float getRayDistanceToScene(const vec3 rayDirection) {
 
 void main() {
   #ifdef DEBUG_SHOW_SHADOW_MAP
-  outputColor = getCascadedShadowMaps(vUv);
+  outputColor = getCascadedShadow(vUv);
   outputDepthVelocity = vec3(0.0);
   #ifdef SHADOW_LENGTH
   outputShadowLength = 0.0;

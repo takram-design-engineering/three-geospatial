@@ -6,7 +6,7 @@ precision highp sampler2DArray;
 #include "core/transform"
 #ifdef HAS_SHADOW
 #include "core/raySphereIntersection"
-#include "core/cascadedShadowMaps"
+#include "core/cascadedShadow"
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
 #endif // HAS_SHADOW

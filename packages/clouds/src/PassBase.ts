@@ -1,14 +1,14 @@
 import { Pass } from 'postprocessing'
 import { Camera } from 'three'
 
-import type { CascadedShadowMaps } from '@takram/three-geospatial'
+import type { CascadedShadow } from '@takram/three-geospatial'
 
 export interface PassBaseOptions {
-  shadow: CascadedShadowMaps
+  shadow: CascadedShadow
 }
 
 export abstract class PassBase extends Pass {
-  shadow: CascadedShadowMaps
+  shadow: CascadedShadow
 
   private _mainCamera = new Camera()
 

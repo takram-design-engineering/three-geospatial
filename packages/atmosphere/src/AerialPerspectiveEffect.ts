@@ -23,7 +23,7 @@ import {
   type UniformMap
 } from '@takram/three-geospatial'
 import {
-  cascadedShadowMaps,
+  cascadedShadow,
   depth,
   interleavedGradientNoise,
   math,
@@ -231,7 +231,7 @@ export class AerialPerspectiveEffect extends Effect {
             math,
             transform,
             raySphereIntersection,
-            cascadedShadowMaps,
+            cascadedShadow,
             interleavedGradientNoise,
             vogelDisk
           },

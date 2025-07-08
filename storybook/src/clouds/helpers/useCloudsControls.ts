@@ -186,7 +186,7 @@ function useWeatherAndShapeControls(
   }
 }
 
-function useCascadedShadowMapsControls(
+function useCascadedShadowControls(
   effect: CloudsEffect | null,
   qualityPreset: CloudsQualityPreset
 ): CloudsProps {
@@ -667,7 +667,7 @@ export function useCloudsControls(
   const rendering = useRenderingControls(effect, qualityPreset)
   const scattering = useScatteringControls(effect, qualityPreset)
   const weatherAndShape = useWeatherAndShapeControls(effect, qualityPreset)
-  const cascadedShadowMaps = useCascadedShadowMapsControls(
+  const cascadedShadow = useCascadedShadowControls(
     effect,
     qualityPreset
   )
@@ -699,7 +699,7 @@ export function useCloudsControls(
       ...rendering,
       ...scattering,
       ...weatherAndShape,
-      ...cascadedShadowMaps,
+      ...cascadedShadow,
       ...advancedClouds,
       ...advancedShadow,
       localWeatherVelocity: animate ? [0.001, 0] : [0, 0],

@@ -68,7 +68,7 @@ export class Cascade {
   }
 }
 
-export interface CascadedShadowMapsOptions {
+export interface CascadedShadowOptions {
   cascadeCount: number
   mapSize: Vector2
   maxFar?: number | null
@@ -79,16 +79,16 @@ export interface CascadedShadowMapsOptions {
   fade?: boolean
 }
 
-export const cascadedShadowMapsDefaults = {
+export const cascadedShadowDefaults = {
   maxFar: null,
   farScale: 1,
   splitMode: 'practical',
   splitLambda: 0.5,
   margin: 0,
   fade: true
-} satisfies Partial<CascadedShadowMapsOptions>
+} satisfies Partial<CascadedShadowOptions>
 
-export class CascadedShadowMaps {
+export class CascadedShadow {
   readonly cascades: Cascade[] = []
 
   readonly mapSize = new Vector2()
@@ -104,7 +104,7 @@ export class CascadedShadowMaps {
   private readonly splits: number[] = []
   private _far = 0
 
-  constructor(options: CascadedShadowMapsOptions) {
+  constructor(options: CascadedShadowOptions) {
     const {
       cascadeCount,
       mapSize,
@@ -115,7 +115,7 @@ export class CascadedShadowMaps {
       margin,
       fade
     } = {
-      ...cascadedShadowMapsDefaults,
+      ...cascadedShadowDefaults,
       ...options
     }
     this.cascadeCount = cascadeCount
