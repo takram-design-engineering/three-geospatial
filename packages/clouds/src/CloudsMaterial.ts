@@ -122,6 +122,7 @@ export interface CloudsMaterialUniforms
   // Beer shadow map
   shadowBuffer: Uniform<DataArrayTexture | null>
   shadowTexelSize: Uniform<Vector2>
+  shadowCascadeCount: Uniform<number>
   shadowIntervals: Uniform<Vector2[]>
   shadowMatrices: Uniform<Matrix4[]>
   shadowFar: Uniform<number>
@@ -239,6 +240,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           // Beer shadow map
           shadowBuffer: new Uniform(null),
           shadowTexelSize: new Uniform(new Vector2()),
+          shadowCascadeCount: new Uniform(defaults.shadow.cascadeCount),
           shadowIntervals: new Uniform(
             Array.from({ length: 4 }, () => new Vector2()) // Populate the max number of elements
           ),
@@ -469,9 +471,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   @define('ACCURATE_PHASE_FUNCTION')
   accuratePhaseFunction: boolean = defaults.clouds.accuratePhaseFunction
-
-  @defineInt('SHADOW_CASCADE_COUNT', { min: 1, max: 4 })
-  shadowCascadeCount: number = defaults.shadow.cascadeCount
 
   @defineInt('SHADOW_SAMPLE_COUNT', { min: 1, max: 16 })
   shadowSampleCount = 8

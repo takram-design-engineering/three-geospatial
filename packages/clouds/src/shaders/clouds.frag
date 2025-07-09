@@ -71,8 +71,9 @@ uniform float secondaryStepScale;
 // Beer shadow map
 uniform sampler2DArray shadowBuffer;
 uniform vec2 shadowTexelSize;
-uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
-uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
+uniform int shadowCascadeCount;
+uniform vec2 shadowIntervals[4];
+uniform mat4 shadowMatrices[4];
 uniform float shadowFar;
 uniform float maxShadowFilterRadius;
 
@@ -148,6 +149,7 @@ vec3 getCascadeColor(const vec3 rayPosition) {
   int cascadeIndex = getCascadeIndex(
     viewMatrix,
     worldPosition,
+    shadowCascadeCount,
     shadowIntervals,
     cameraNear,
     shadowFar
@@ -164,6 +166,7 @@ vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
+    shadowCascadeCount,
     shadowIntervals,
     cameraNear,
     shadowFar,
@@ -239,6 +242,7 @@ float sampleShadowOpticalDepth(
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
+    shadowCascadeCount,
     shadowIntervals,
     cameraNear,
     shadowFar,
@@ -262,20 +266,18 @@ vec4 getCascadedShadow(vec2 uv) {
   if (uv.y > 0.5) {
     if (uv.x < 0.5) {
       shadow = texture(shadowBuffer, vec3(coord.xw, 0.0));
-    } else {
-      #if SHADOW_CASCADE_COUNT > 1
+    } else if (shadowCascadeCount > 1) {
       shadow = texture(shadowBuffer, vec3(coord.zw, 1.0));
-      #endif // SHADOW_CASCADE_COUNT > 1
     }
   } else {
     if (uv.x < 0.5) {
-      #if SHADOW_CASCADE_COUNT > 2
-      shadow = texture(shadowBuffer, vec3(coord.xy, 2.0));
-      #endif // SHADOW_CASCADE_COUNT > 2
+      if (shadowCascadeCount > 2) {
+        shadow = texture(shadowBuffer, vec3(coord.xy, 2.0));
+      }
     } else {
-      #if SHADOW_CASCADE_COUNT > 3
-      shadow = texture(shadowBuffer, vec3(coord.zy, 3.0));
-      #endif // SHADOW_CASCADE_COUNT > 3
+      if (shadowCascadeCount > 3) {
+        shadow = texture(shadowBuffer, vec3(coord.zy, 3.0));
+      }
     }
   }
 

@@ -126,11 +126,14 @@ export interface AerialPerspectiveEffectUniforms {
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
   lunarRadianceScale: Uniform<number>
+  stbnTexture: Uniform<Data3DTexture | null>
+  frame: Uniform<number>
 
-  // Composition and shadow
+  // Overlay and overlay shadow
   overlayBuffer: Uniform<Texture | null>
   overlayShadow: Uniform<{
     map: Texture | null
+    cascadeCount: number
     intervals: Vector2[]
     matrices: Matrix4[]
     inverseMatrices: Matrix4[]
@@ -138,8 +141,8 @@ export interface AerialPerspectiveEffectUniforms {
     topHeight: number
   }>
   overlayShadowRadius: Uniform<number>
-  stbnTexture: Uniform<Data3DTexture | null>
-  frame: Uniform<number>
+
+  // Shadow length
   shadowLengthBuffer: Uniform<Texture | null>
 
   // Lighting mask
@@ -275,6 +278,7 @@ export class AerialPerspectiveEffect extends Effect {
             overlayBuffer: new Uniform(null),
             overlayShadow: new Uniform({
               map: null,
+              cascadeCount: 0,
               intervals: [],
               matrices: [],
               inverseMatrices: [],
@@ -282,6 +286,8 @@ export class AerialPerspectiveEffect extends Effect {
               topHeight: 0
             }),
             overlayShadowRadius: new Uniform(3),
+
+            // Shadow length
             shadowLengthBuffer: new Uniform(null),
 
             // Lighting mask
@@ -431,17 +437,9 @@ export class AerialPerspectiveEffect extends Effect {
       needsUpdate = true
     }
     if (nextValue) {
-      const prevCascadeCount = defines.get('SHADOW_CASCADE_COUNT')
-      const nextCascadeCount = `${overlayShadow.cascadeCount}`
-      if (prevCascadeCount !== nextCascadeCount) {
-        defines.set(
-          'SHADOW_CASCADE_COUNT',
-          overlayShadow.cascadeCount.toFixed(0)
-        )
-        needsUpdate = true
-      }
       const uniform = uniforms.get('overlayShadow').value
       uniform.map = overlayShadow.map
+      uniform.cascadeCount = overlayShadow.cascadeCount
       uniform.intervals = overlayShadow.intervals
       uniform.matrices = overlayShadow.matrices
       uniform.inverseMatrices = overlayShadow.inverseMatrices

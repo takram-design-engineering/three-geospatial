@@ -226,7 +226,7 @@ export class CloudsPass extends PassBase {
   }
 
   setShadowSize(width: number, height: number, depth: number): void {
-    this.currentMaterial.shadowCascadeCount = depth
+    this.currentMaterial.uniforms.shadowCascadeCount.value = depth
     this.currentMaterial.setShadowSize(width, height)
   }
 

@@ -56,9 +56,10 @@ uniform sampler2D overlayBuffer;
 #ifdef HAS_OVERLAY_SHADOW
 struct OverlayShadow {
   sampler2DArray map;
-  vec2 intervals[SHADOW_CASCADE_COUNT];
-  mat4 matrices[SHADOW_CASCADE_COUNT];
-  mat4 inverseMatrices[SHADOW_CASCADE_COUNT];
+  int cascadeCount;
+  vec2 intervals[4];
+  mat4 matrices[4];
+  mat4 inverseMatrices[4];
   float far;
   float topHeight;
 };
@@ -163,7 +164,7 @@ float getSTBN() {
 }
 
 vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
-  mat4 matrices[SHADOW_CASCADE_COUNT] = overlayShadow.matrices;
+  mat4 matrices[4] = overlayShadow.matrices;
   vec4 clip = matrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
   return clip.xy * 0.5 + 0.5;
@@ -228,6 +229,7 @@ float sampleShadowOpticalDepth(
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
+    overlayShadow.cascadeCount,
     overlayShadow.intervals,
     cameraNear,
     overlayShadow.far,
@@ -239,7 +241,7 @@ float sampleShadowOpticalDepth(
 }
 
 float getOverlayShadowRadius(const vec3 worldPosition) {
-  mat4 matrices[SHADOW_CASCADE_COUNT] = overlayShadow.matrices;
+  mat4 matrices[4] = overlayShadow.matrices;
   vec4 clip = matrices[0] * vec4(worldPosition, 1.0);
   clip /= clip.w;
 
@@ -250,7 +252,7 @@ float getOverlayShadowRadius(const vec3 worldPosition) {
   vec4 clipY = clip + offset.zyzz;
 
   // Convert back to world space.
-  mat4 inverseMatrices[SHADOW_CASCADE_COUNT] = overlayShadow.inverseMatrices;
+  mat4 inverseMatrices[4] = overlayShadow.inverseMatrices;
   vec4 worldX = inverseMatrices[0] * clipX;
   vec4 worldY = inverseMatrices[0] * clipY;
 
