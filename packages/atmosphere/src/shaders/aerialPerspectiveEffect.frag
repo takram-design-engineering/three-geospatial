@@ -56,15 +56,21 @@ uniform sampler2D overlayBuffer;
 #endif // HAS_OVERLAY
 
 #ifdef HAS_SHADOW
-uniform sampler2DArray shadowBuffer;
-uniform vec2 shadowIntervals[SHADOW_CASCADE_COUNT];
-uniform mat4 shadowMatrices[SHADOW_CASCADE_COUNT];
-uniform mat4 inverseShadowMatrices[SHADOW_CASCADE_COUNT];
-uniform float shadowFar;
-uniform float shadowTopHeight;
-uniform float shadowRadius;
+
+struct OverlayShadow {
+  sampler2DArray map;
+  vec2 intervals[SHADOW_CASCADE_COUNT];
+  mat4 matrices[SHADOW_CASCADE_COUNT];
+  mat4 inverseMatrices[SHADOW_CASCADE_COUNT];
+  float far;
+  float topHeight;
+};
+
+uniform OverlayShadow overlayShadow;
+uniform float overlayShadowRadius;
 uniform sampler3D stbnTexture;
 uniform int frame;
+
 #endif // HAS_SHADOW
 
 #ifdef HAS_SHADOW_LENGTH
@@ -157,7 +163,7 @@ float getSTBN() {
 }
 
 vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
-  vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  vec4 clip = overlayShadow.matrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
   return clip.xy * 0.5 + 0.5;
 }
@@ -169,14 +175,14 @@ float getDistanceToShadowTop(const vec3 positionECEF) {
     positionECEF / METER_TO_LENGTH_UNIT, // TODO: Make units consistent
     sunDirection,
     vec3(0.0),
-    bottomRadius + shadowTopHeight
+    bottomRadius + overlayShadow.topHeight
   );
 }
 
 float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int cascadeIndex) {
   // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
-  vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
-  return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
+  vec4 value = texture(overlayShadow.map, vec3(uv, float(cascadeIndex)));
+  return min(value.b, value.g * max(0.0, distanceToTop - value.r));
 }
 
 float sampleShadowOpticalDepthPCF(
@@ -190,7 +196,7 @@ float sampleShadowOpticalDepthPCF(
     return 0.0;
   }
 
-  vec2 texelSize = vec2(1.0) / vec2(textureSize(shadowBuffer, 0).xy);
+  vec2 texelSize = vec2(1.0) / vec2(textureSize(overlayShadow.map, 0).xy);
   float sum = 0.0;
   vec2 offset;
   #pragma unroll_loop_start
@@ -221,9 +227,9 @@ float sampleShadowOpticalDepth(
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
-    shadowIntervals,
+    overlayShadow.intervals,
     cameraNear,
-    shadowFar,
+    overlayShadow.far,
     jitter
   );
   return cascadeIndex >= 0
@@ -232,18 +238,18 @@ float sampleShadowOpticalDepth(
 }
 
 float getShadowRadius(const vec3 worldPosition) {
-  vec4 clip = shadowMatrices[0] * vec4(worldPosition, 1.0);
+  vec4 clip = overlayShadow.matrices[0] * vec4(worldPosition, 1.0);
   clip /= clip.w;
 
   // Offset by 1px in each direction in shadow's clip coordinates.
-  vec2 shadowSize = vec2(textureSize(shadowBuffer, 0));
+  vec2 shadowSize = vec2(textureSize(overlayShadow.map, 0));
   vec3 offset = vec3(2.0 / shadowSize, 0.0);
   vec4 clipX = clip + offset.xzzz;
   vec4 clipY = clip + offset.zyzz;
 
   // Convert back to world space.
-  vec4 worldX = inverseShadowMatrices[0] * clipX;
-  vec4 worldY = inverseShadowMatrices[0] * clipY;
+  vec4 worldX = overlayShadow.inverseMatrices[0] * clipX;
+  vec4 worldY = overlayShadow.inverseMatrices[0] * clipY;
 
   // Project into the main camera's clip space.
   mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
@@ -260,7 +266,7 @@ float getShadowRadius(const vec3 worldPosition) {
   vec2 offsetY = (projectedY.xy * 0.5 + 0.5) * resolution;
   float size = max(length(offsetX - center), length(offsetY - center));
 
-  return remapClamped(size, 10.0, 50.0, 0.0, shadowRadius);
+  return remapClamped(size, 10.0, 50.0, 0.0, overlayShadowRadius);
 }
 
 #endif // HAS_SHADOW
@@ -348,8 +354,9 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   correctGeometricError(positionECEF, normalECEF);
   #endif // CORRECT_GEOMETRIC_ERROR
 
-  vec3 radiance;
   float sunTransmittance = getSunTransmittance(worldPosition, positionECEF);
+
+  vec3 radiance;
   #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
   radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
   #ifdef HAS_LIGHTING_MASK

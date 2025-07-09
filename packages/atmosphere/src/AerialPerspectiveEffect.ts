@@ -129,14 +129,15 @@ export interface AerialPerspectiveEffectUniforms {
 
   // Composition and shadow
   overlayBuffer: Uniform<Texture | null>
-  shadowBuffer: Uniform<Texture | null>
-  shadowMapSize: Uniform<Vector2>
-  shadowIntervals: Uniform<Vector2[]>
-  shadowMatrices: Uniform<Matrix4[]>
-  inverseShadowMatrices: Uniform<Matrix4[]>
-  shadowFar: Uniform<number>
-  shadowTopHeight: Uniform<number>
-  shadowRadius: Uniform<number>
+  overlayShadow: Uniform<{
+    map: Texture | null
+    intervals: Vector2[]
+    matrices: Matrix4[]
+    inverseMatrices: Matrix4[]
+    far: number
+    topHeight: number
+  }>
+  overlayShadowRadius: Uniform<number>
   stbnTexture: Uniform<Data3DTexture | null>
   frame: Uniform<number>
   shadowLengthBuffer: Uniform<Texture | null>
@@ -270,14 +271,15 @@ export class AerialPerspectiveEffect extends Effect {
 
             // Composition and shadow
             overlayBuffer: new Uniform(null),
-            shadowBuffer: new Uniform(null),
-            shadowMapSize: new Uniform(new Vector2()),
-            shadowIntervals: new Uniform([]),
-            shadowMatrices: new Uniform([]),
-            inverseShadowMatrices: new Uniform([]),
-            shadowFar: new Uniform(0),
-            shadowTopHeight: new Uniform(0),
-            shadowRadius: new Uniform(3),
+            overlayShadow: new Uniform({
+              map: null,
+              intervals: [],
+              matrices: [],
+              inverseMatrices: [],
+              far: 0,
+              topHeight: 0
+            }),
+            overlayShadowRadius: new Uniform(3),
             stbnTexture: new Uniform(null),
             frame: new Uniform(0),
             shadowLengthBuffer: new Uniform(null),
@@ -424,7 +426,7 @@ export class AerialPerspectiveEffect extends Effect {
         defines.set('HAS_SHADOW', '1')
       } else {
         defines.delete('HAS_SHADOW')
-        uniforms.get('shadowBuffer').value = null
+        uniforms.get('overlayShadow').value.map = null
       }
       needsUpdate = true
     }
@@ -435,13 +437,13 @@ export class AerialPerspectiveEffect extends Effect {
         defines.set('SHADOW_CASCADE_COUNT', shadow.cascadeCount.toFixed(0))
         needsUpdate = true
       }
-      uniforms.get('shadowBuffer').value = shadow.map
-      uniforms.get('shadowMapSize').value = shadow.mapSize
-      uniforms.get('shadowIntervals').value = shadow.intervals
-      uniforms.get('shadowMatrices').value = shadow.matrices
-      uniforms.get('inverseShadowMatrices').value = shadow.inverseMatrices
-      uniforms.get('shadowFar').value = shadow.far
-      uniforms.get('shadowTopHeight').value = shadow.topHeight
+      const uniform = uniforms.get('overlayShadow').value
+      uniform.map = shadow.map
+      uniform.intervals = shadow.intervals
+      uniform.matrices = shadow.matrices
+      uniform.inverseMatrices = shadow.inverseMatrices
+      uniform.far = shadow.far
+      uniform.topHeight = shadow.topHeight
     }
     return needsUpdate
   }
@@ -687,12 +689,12 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('stbnTexture').value = value
   }
 
-  get shadowRadius(): number {
-    return this.uniforms.get('shadowRadius').value
+  get overlayShadowRadius(): number {
+    return this.uniforms.get('overlayShadowRadius').value
   }
 
-  set shadowRadius(value: number) {
-    this.uniforms.get('shadowRadius').value = value
+  set overlayShadowRadius(value: number) {
+    this.uniforms.get('overlayShadowRadius').value = value
   }
 
   @defineInt('SHADOW_SAMPLE_COUNT', { min: 1, max: 16 })
