@@ -175,8 +175,8 @@ function onCloudsChange(event: CloudsEffectChangeEvent): void {
     case 'atmosphereOverlay':
       aerialPerspective.overlay = clouds.atmosphereOverlay
       break
-    case 'atmosphereShadow':
-      aerialPerspective.shadow = clouds.atmosphereShadow
+    case 'atmosphereOverlayShadow':
+      aerialPerspective.overlayShadow = clouds.atmosphereOverlayShadow
       break
     case 'atmosphereShadowLength':
       aerialPerspective.shadowLength = clouds.atmosphereShadowLength

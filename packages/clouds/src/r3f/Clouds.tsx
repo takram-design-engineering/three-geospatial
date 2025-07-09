@@ -178,11 +178,11 @@ export const Clouds: FC<CloudsProps> = ({
   useEffect(() => {
     if (transientStates != null) {
       transientStates.overlay = effect.atmosphereOverlay
-      transientStates.shadow = effect.atmosphereShadow
+      transientStates.overlayShadow = effect.atmosphereOverlayShadow
       transientStates.shadowLength = effect.atmosphereShadowLength
       return () => {
         transientStates.overlay = null
-        transientStates.shadow = null
+        transientStates.overlayShadow = null
         transientStates.shadowLength = null
       }
     }
@@ -197,8 +197,8 @@ export const Clouds: FC<CloudsProps> = ({
         case 'atmosphereOverlay':
           transientStates.overlay = effect.atmosphereOverlay
           break
-        case 'atmosphereShadow':
-          transientStates.shadow = effect.atmosphereShadow
+        case 'atmosphereOverlayShadow':
+          transientStates.overlayShadow = effect.atmosphereOverlayShadow
           break
         case 'atmosphereShadowLength':
           transientStates.shadowLength = effect.atmosphereShadowLength

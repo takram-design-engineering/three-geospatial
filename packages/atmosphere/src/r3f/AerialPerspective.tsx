@@ -84,12 +84,12 @@ export const AerialPerspective: FC<AerialPerspectiveProps> = ({
       effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
       effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
       effect.overlay = transientStates.overlay
-      effect.shadow = transientStates.shadow
+      effect.overlayShadow = transientStates.overlayShadow
       effect.shadowLength = transientStates.shadowLength
       effect.lightingMask = transientStates.lightingMask
 
       // Load STBN only when the shadow is first enabled.
-      if (!needsSTBN && effect.shadow != null) {
+      if (!needsSTBN && effect.overlayShadow != null) {
         setNeedsSTBN(true)
       }
     }

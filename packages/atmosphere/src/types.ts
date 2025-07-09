@@ -22,7 +22,7 @@ export interface AtmosphereShadowLength {
   map: Texture
 }
 
-export interface AtmosphereShadow {
+export interface AtmosphereOverlayShadow {
   map: DataArrayTexture
   mapSize: Vector2
   cascadeCount: number

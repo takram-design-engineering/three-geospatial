@@ -23,7 +23,7 @@ import { PrecomputedTexturesLoader } from '../PrecomputedTexturesLoader'
 import type {
   AtmosphereLightingMask,
   AtmosphereOverlay,
-  AtmosphereShadow,
+  AtmosphereOverlayShadow,
   AtmosphereShadowLength,
   PrecomputedTextures
 } from '../types'
@@ -35,7 +35,7 @@ export interface AtmosphereTransientStates {
   ellipsoidCenter: Vector3
   ellipsoidMatrix: Matrix4
   overlay: AtmosphereOverlay | null
-  shadow: AtmosphereShadow | null
+  overlayShadow: AtmosphereOverlayShadow | null
   shadowLength: AtmosphereShadowLength | null
   lightingMask: AtmosphereLightingMask | null
 }
@@ -79,7 +79,7 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     ellipsoidCenter: new Vector3(),
     ellipsoidMatrix: new Matrix4(),
     overlay: null,
-    shadow: null,
+    overlayShadow: null,
     shadowLength: null,
     lightingMask: null
   })

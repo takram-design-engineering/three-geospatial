@@ -19,7 +19,7 @@ import {
   AtmosphereParameters,
   getAltitudeCorrectionOffset,
   type AtmosphereOverlay,
-  type AtmosphereShadow,
+  type AtmosphereOverlayShadow,
   type AtmosphereShadowLength
 } from '@takram/three-atmosphere'
 import {
@@ -136,7 +136,10 @@ interface ShadowShorthand
 export interface CloudsEffectChangeEvent {
   type: 'change'
   target?: CloudsEffect
-  property?: 'atmosphereOverlay' | 'atmosphereShadow' | 'atmosphereShadowLength'
+  property?:
+    | 'atmosphereOverlay'
+    | 'atmosphereOverlayShadow'
+    | 'atmosphereShadowLength'
 }
 
 const changeEvent: CloudsEffectChangeEvent = {
@@ -211,7 +214,7 @@ export class CloudsEffect extends Effect {
   readonly shadow: ShadowShorthand
 
   private _atmosphereOverlay: AtmosphereOverlay | null = null
-  private _atmosphereShadow: AtmosphereShadow | null = null
+  private _atmosphereOverlayShadow: AtmosphereOverlayShadow | null = null
   private _atmosphereShadowLength: AtmosphereShadowLength | null = null
 
   readonly resolution: Resolution
@@ -418,8 +421,8 @@ export class CloudsEffect extends Effect {
       this.events.dispatchEvent(changeEvent)
     }
 
-    const prevShadow = this._atmosphereShadow
-    const nextShadow = Object.assign(this._atmosphereShadow ?? {}, {
+    const prevShadow = this._atmosphereOverlayShadow
+    const nextShadow = Object.assign(this._atmosphereOverlayShadow ?? {}, {
       map: shadowPass.outputBuffer,
       mapSize: cascadedShadow.mapSize,
       cascadeCount: cascadedShadow.cascadeCount,
@@ -428,11 +431,11 @@ export class CloudsEffect extends Effect {
       inverseMatrices: shadowUniforms.inverseShadowMatrices.value,
       far: cascadedShadow.far,
       topHeight: cloudsUniforms.shadowTopHeight.value
-    } satisfies AtmosphereShadow)
+    } satisfies AtmosphereOverlayShadow)
     if (prevShadow !== nextShadow) {
-      this._atmosphereShadow = nextShadow
+      this._atmosphereOverlayShadow = nextShadow
       changeEvent.target = this
-      changeEvent.property = 'atmosphereShadow'
+      changeEvent.property = 'atmosphereOverlayShadow'
       this.events.dispatchEvent(changeEvent)
     }
 
@@ -759,8 +762,8 @@ export class CloudsEffect extends Effect {
     return this._atmosphereOverlay
   }
 
-  get atmosphereShadow(): AtmosphereShadow | null {
-    return this._atmosphereShadow
+  get atmosphereOverlayShadow(): AtmosphereOverlayShadow | null {
+    return this._atmosphereOverlayShadow
   }
 
   get atmosphereShadowLength(): AtmosphereShadowLength | null {

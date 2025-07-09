@@ -163,7 +163,8 @@ float getSTBN() {
 }
 
 vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
-  vec4 clip = overlayShadow.matrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  mat4 matrices[SHADOW_CASCADE_COUNT] = overlayShadow.matrices;
+  vec4 clip = matrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
   return clip.xy * 0.5 + 0.5;
 }
@@ -237,8 +238,9 @@ float sampleShadowOpticalDepth(
     : 0.0;
 }
 
-float getShadowRadius(const vec3 worldPosition) {
-  vec4 clip = overlayShadow.matrices[0] * vec4(worldPosition, 1.0);
+float getOverlayShadowRadius(const vec3 worldPosition) {
+  mat4 matrices[SHADOW_CASCADE_COUNT] = overlayShadow.matrices;
+  vec4 clip = matrices[0] * vec4(worldPosition, 1.0);
   clip /= clip.w;
 
   // Offset by 1px in each direction in shadow's clip coordinates.
@@ -248,8 +250,9 @@ float getShadowRadius(const vec3 worldPosition) {
   vec4 clipY = clip + offset.zyzz;
 
   // Convert back to world space.
-  vec4 worldX = overlayShadow.inverseMatrices[0] * clipX;
-  vec4 worldY = overlayShadow.inverseMatrices[0] * clipY;
+  mat4 inverseMatrices[SHADOW_CASCADE_COUNT] = overlayShadow.inverseMatrices;
+  vec4 worldX = inverseMatrices[0] * clipX;
+  vec4 worldY = inverseMatrices[0] * clipY;
 
   // Project into the main camera's clip space.
   mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
@@ -274,7 +277,7 @@ float getShadowRadius(const vec3 worldPosition) {
 float getSunTransmittance(const vec3 worldPosition, const vec3 positionECEF) {
   #ifdef HAS_SHADOW
   float stbn = getSTBN();
-  float radius = getShadowRadius(worldPosition);
+  float radius = getOverlayShadowRadius(worldPosition);
   float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
   return exp(-opticalDepth);
   #else // HAS_SHADOW

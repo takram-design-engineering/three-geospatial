@@ -52,7 +52,7 @@ import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import {
   AtmosphereLightingMask,
   type AtmosphereOverlay,
-  type AtmosphereShadow,
+  type AtmosphereOverlayShadow,
   type AtmosphereShadowLength
 } from './types'
 
@@ -183,7 +183,7 @@ export class AerialPerspectiveEffect extends Effect {
   correctAltitude: boolean
 
   overlay: AtmosphereOverlay | null = null
-  shadow: AtmosphereShadow | null = null
+  overlayShadow: AtmosphereOverlayShadow | null = null
   shadowLength: AtmosphereShadowLength | null = null
   lightingMask: AtmosphereLightingMask | null = null
 
@@ -416,11 +416,11 @@ export class AerialPerspectiveEffect extends Effect {
     return needsUpdate
   }
 
-  private updateShadow(): boolean {
+  private updateOverlayShadow(): boolean {
     let needsUpdate = false
-    const { uniforms, defines, shadow } = this
+    const { uniforms, defines, overlayShadow } = this
     const prevValue = defines.has('HAS_SHADOW')
-    const nextValue = shadow != null
+    const nextValue = overlayShadow != null
     if (nextValue !== prevValue) {
       if (nextValue) {
         defines.set('HAS_SHADOW', '1')
@@ -432,18 +432,21 @@ export class AerialPerspectiveEffect extends Effect {
     }
     if (nextValue) {
       const prevCascadeCount = defines.get('SHADOW_CASCADE_COUNT')
-      const nextCascadeCount = `${shadow.cascadeCount}`
+      const nextCascadeCount = `${overlayShadow.cascadeCount}`
       if (prevCascadeCount !== nextCascadeCount) {
-        defines.set('SHADOW_CASCADE_COUNT', shadow.cascadeCount.toFixed(0))
+        defines.set(
+          'SHADOW_CASCADE_COUNT',
+          overlayShadow.cascadeCount.toFixed(0)
+        )
         needsUpdate = true
       }
       const uniform = uniforms.get('overlayShadow').value
-      uniform.map = shadow.map
-      uniform.intervals = shadow.intervals
-      uniform.matrices = shadow.matrices
-      uniform.inverseMatrices = shadow.inverseMatrices
-      uniform.far = shadow.far
-      uniform.topHeight = shadow.topHeight
+      uniform.map = overlayShadow.map
+      uniform.intervals = overlayShadow.intervals
+      uniform.matrices = overlayShadow.matrices
+      uniform.inverseMatrices = overlayShadow.inverseMatrices
+      uniform.far = overlayShadow.far
+      uniform.topHeight = overlayShadow.topHeight
     }
     return needsUpdate
   }
@@ -506,11 +509,11 @@ export class AerialPerspectiveEffect extends Effect {
   ): void {
     this.copyCameraSettings(this.camera)
 
-    let needsUpdate = false
-    needsUpdate ||= this.updateOverlay()
-    needsUpdate ||= this.updateShadow()
-    needsUpdate ||= this.updateShadowLength()
-    needsUpdate ||= this.updateLightingMask()
+    const needsUpdate =
+      this.updateOverlay() ||
+      this.updateOverlayShadow() ||
+      this.updateShadowLength() ||
+      this.updateLightingMask()
     if (needsUpdate) {
       this.setChanged()
     }
