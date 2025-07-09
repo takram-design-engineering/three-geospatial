@@ -174,10 +174,8 @@ float getDistanceToShadowTop(const vec3 positionECEF) {
 }
 
 float readShadowOpticalDepth(const vec2 uv, const float distanceToTop, const int cascadeIndex) {
-  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth, a: maxOpticalDepthTail
+  // r: frontDepth, g: meanExtinction, b: maxOpticalDepth
   vec4 shadow = texture(shadowBuffer, vec3(uv, float(cascadeIndex)));
-  // Omit adding maxOpticalDepthTail to avoid pronounced aliasing. Ground
-  // shadow will be attenuated by inscatter anyways.
   return min(shadow.b, shadow.g * max(0.0, distanceToTop - shadow.r));
 }
 
@@ -267,6 +265,17 @@ float getShadowRadius(const vec3 worldPosition) {
 
 #endif // HAS_SHADOW
 
+float getSunTransmittance(const vec3 worldPosition, const vec3 positionECEF) {
+  #ifdef HAS_SHADOW
+  float stbn = getSTBN();
+  float radius = getShadowRadius(worldPosition);
+  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
+  return exp(-opticalDepth);
+  #else // HAS_SHADOW
+  return 1.0;
+  #endif // HAS_SHADOW
+}
+
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #if defined(HAS_LIGHTING_MASK) && defined(DEBUG_SHOW_LIGHTING_MASK)
   outputColor.rgb = vec3(texture(lightingMaskBuffer, uv).LIGHTING_MASK_CHANNEL_);
@@ -339,16 +348,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   correctGeometricError(positionECEF, normalECEF);
   #endif // CORRECT_GEOMETRIC_ERROR
 
-  #ifdef HAS_SHADOW
-  float stbn = getSTBN();
-  float radius = getShadowRadius(worldPosition);
-  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
-  float sunTransmittance = exp(-opticalDepth);
-  #else // HAS_SHADOW
-  float sunTransmittance = 1.0;
-  #endif // HAS_SHADOW
-
   vec3 radiance;
+  float sunTransmittance = getSunTransmittance(worldPosition, positionECEF);
   #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
   radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
   #ifdef HAS_LIGHTING_MASK
