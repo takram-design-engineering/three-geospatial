@@ -24,6 +24,7 @@ import type {
   AtmosphereLightingMask,
   AtmosphereOverlay,
   AtmosphereOverlayShadow,
+  AtmosphereSceneShadow,
   AtmosphereShadowLength,
   PrecomputedTextures
 } from '../types'
@@ -38,6 +39,7 @@ export interface AtmosphereTransientStates {
   overlayShadow: AtmosphereOverlayShadow | null
   shadowLength: AtmosphereShadowLength | null
   lightingMask: AtmosphereLightingMask | null
+  sceneShadow: AtmosphereSceneShadow | null
 }
 
 export interface AtmosphereContextValue {
@@ -81,7 +83,8 @@ export const Atmosphere: FC<AtmosphereProps> = ({
     overlay: null,
     overlayShadow: null,
     shadowLength: null,
-    lightingMask: null
+    lightingMask: null,
+    sceneShadow: null
   })
 
   const renderer = useThree(({ gl }) => gl)

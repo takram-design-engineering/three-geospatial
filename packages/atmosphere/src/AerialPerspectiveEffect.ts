@@ -51,6 +51,7 @@ import {
 import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
 import {
   AtmosphereLightingMask,
+  AtmosphereSceneShadow,
   type AtmosphereOverlay,
   type AtmosphereOverlayShadow,
   type AtmosphereShadowLength
@@ -148,6 +149,17 @@ export interface AerialPerspectiveEffectUniforms {
   // Lighting mask
   lightingMaskBuffer: Uniform<Texture | null>
 
+  // Scene shadow
+  sceneShadow: Uniform<{
+    maps: Texture[]
+    cascadeCount: number
+    intervals: Vector2[]
+    matrices: Matrix4[]
+    inverseMatrices: Matrix4[]
+    near: number
+    far: number
+  }>
+
   // Uniforms for atmosphere functions
   atmosphere: AtmosphereParametersUniform
   sunSpectralRadianceToLuminance: Uniform<Vector3>
@@ -189,6 +201,7 @@ export class AerialPerspectiveEffect extends Effect {
   overlayShadow: AtmosphereOverlayShadow | null = null
   shadowLength: AtmosphereShadowLength | null = null
   lightingMask: AtmosphereLightingMask | null = null
+  sceneShadow: AtmosphereSceneShadow | null = null
 
   constructor(
     private camera = new Camera(),
@@ -292,6 +305,17 @@ export class AerialPerspectiveEffect extends Effect {
 
             // Lighting mask
             lightingMaskBuffer: new Uniform(null),
+
+            // Scene shadow
+            sceneShadow: new Uniform({
+              maps: [],
+              cascadeCount: 0,
+              intervals: [],
+              matrices: [],
+              inverseMatrices: [],
+              near: 0,
+              far: 0
+            }),
 
             // Uniforms for atmosphere functions
             atmosphere: atmosphere.toUniform(),
@@ -500,6 +524,33 @@ export class AerialPerspectiveEffect extends Effect {
     return needsUpdate
   }
 
+  private updateSceneShadow(): boolean {
+    let needsUpdate = false
+    const { uniforms, defines, sceneShadow } = this
+    const prevValue = defines.has('HAS_SCENE_SHADOW')
+    const nextValue = sceneShadow != null
+    if (nextValue !== prevValue) {
+      if (nextValue) {
+        defines.set('HAS_SCENE_SHADOW', '1')
+      } else {
+        defines.delete('HAS_SCENE_SHADOW')
+        uniforms.get('sceneShadow').value.maps = []
+      }
+      needsUpdate = true
+    }
+    if (nextValue) {
+      const uniform = uniforms.get('sceneShadow').value
+      uniform.maps = sceneShadow.maps
+      uniform.cascadeCount = sceneShadow.cascadeCount
+      uniform.intervals = sceneShadow.intervals
+      uniform.matrices = sceneShadow.matrices
+      uniform.inverseMatrices = sceneShadow.inverseMatrices
+      uniform.near = sceneShadow.near
+      uniform.far = sceneShadow.far
+    }
+    return needsUpdate
+  }
+
   override update(
     renderer: WebGLRenderer,
     inputBuffer: WebGLRenderTarget,
@@ -511,7 +562,8 @@ export class AerialPerspectiveEffect extends Effect {
       this.updateOverlay() ||
       this.updateOverlayShadow() ||
       this.updateShadowLength() ||
-      this.updateLightingMask()
+      this.updateLightingMask() ||
+      this.updateSceneShadow()
     if (needsUpdate) {
       this.setChanged()
     }

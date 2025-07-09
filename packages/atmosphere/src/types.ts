@@ -36,3 +36,13 @@ export interface AtmosphereLightingMask {
   map: Texture
   channel: 'r' | 'g' | 'b' | 'a'
 }
+
+export interface AtmosphereSceneShadow {
+  maps: Texture[]
+  cascadeCount: number
+  intervals: Vector2[]
+  matrices: Matrix4[]
+  inverseMatrices: Matrix4[]
+  near: number
+  far: number
+}

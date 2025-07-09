@@ -56,7 +56,7 @@ export class Cascade {
   // Save for constructing directional lights later.
   readonly lightPosition = new Vector3()
   readonly lightTarget = new Vector3()
-  shadowCameraParams = {
+  projectionParams = {
     left: 0,
     right: 0,
     top: 0,
@@ -75,7 +75,7 @@ export class Cascade {
   ): void {
     this.projectionMatrix.makeOrthographic(left, right, top, bottom, near, far)
     this.inverseProjectionMatrix.copy(this.projectionMatrix).invert()
-    this.shadowCameraParams = { left, right, top, bottom, near, far }
+    this.projectionParams = { left, right, top, bottom, near, far }
   }
 
   updateViewMatrix(position: Vector3, target: Vector3): void {

@@ -87,6 +87,7 @@ export const AerialPerspective: FC<AerialPerspectiveProps> = ({
       effect.overlayShadow = transientStates.overlayShadow
       effect.shadowLength = transientStates.shadowLength
       effect.lightingMask = transientStates.lightingMask
+      effect.sceneShadow = transientStates.sceneShadow
 
       // Load STBN only when the shadow is first enabled.
       if (!needsSTBN && effect.overlayShadow != null) {

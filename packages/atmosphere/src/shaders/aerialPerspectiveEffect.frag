@@ -78,6 +78,19 @@ uniform sampler2D lightingMaskBuffer;
 // prettier-ignore
 #define LIGHTING_MASK_CHANNEL_ LIGHTING_MASK_CHANNEL
 
+#ifdef HAS_SCENE_SHADOW
+struct SceneShadow {
+  sampler2D maps[4];
+  int cascadeCount;
+  vec2 intervals[4];
+  mat4 matrices[4];
+  mat4 inverseMatrices[4];
+  float near;
+  float far;
+};
+uniform SceneShadow sceneShadow;
+#endif // HAS_SCENE_SHADOW
+
 varying vec3 vCameraPosition;
 varying vec3 vRayDirection;
 varying vec3 vEllipsoidCenter;
