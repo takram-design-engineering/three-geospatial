@@ -4,12 +4,12 @@ precision highp sampler2DArray;
 #include "core/math"
 #include "core/packing"
 #include "core/transform"
-#ifdef HAS_SHADOW
+#ifdef HAS_OVERLAY_SHADOW
 #include "core/raySphereIntersection"
 #include "core/cascadedShadow"
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
-#endif // HAS_SHADOW
+#endif // HAS_OVERLAY_SHADOW
 
 #include "bruneton/definitions"
 
@@ -44,19 +44,16 @@ uniform float lunarRadianceScale;
 uniform float albedoScale;
 uniform float idealSphereAlpha;
 
-#ifdef HAS_LIGHTING_MASK
-uniform sampler2D lightingMaskBuffer;
-#endif // HAS_LIGHTING_MASK
-
-// prettier-ignore
-#define LIGHTING_MASK_CHANNEL_ LIGHTING_MASK_CHANNEL
+#ifdef HAS_OVERLAY_SHADOW
+uniform sampler3D stbnTexture;
+uniform int frame;
+#endif // HAS_OVERLAY_SHADOW
 
 #ifdef HAS_OVERLAY
 uniform sampler2D overlayBuffer;
 #endif // HAS_OVERLAY
 
-#ifdef HAS_SHADOW
-
+#ifdef HAS_OVERLAY_SHADOW
 struct OverlayShadow {
   sampler2DArray map;
   vec2 intervals[SHADOW_CASCADE_COUNT];
@@ -65,17 +62,20 @@ struct OverlayShadow {
   float far;
   float topHeight;
 };
-
 uniform OverlayShadow overlayShadow;
 uniform float overlayShadowRadius;
-uniform sampler3D stbnTexture;
-uniform int frame;
-
-#endif // HAS_SHADOW
+#endif // HAS_OVERLAY_SHADOW
 
 #ifdef HAS_SHADOW_LENGTH
 uniform sampler2D shadowLengthBuffer;
 #endif // HAS_SHADOW_LENGTH
+
+#ifdef HAS_LIGHTING_MASK
+uniform sampler2D lightingMaskBuffer;
+#endif // HAS_LIGHTING_MASK
+
+// prettier-ignore
+#define LIGHTING_MASK_CHANNEL_ LIGHTING_MASK_CHANNEL
 
 varying vec3 vCameraPosition;
 varying vec3 vRayDirection;
@@ -118,9 +118,9 @@ vec3 getSunSkyIrradiance(
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(positionECEF, normal, sunDirection, skyIrradiance);
 
-  #ifdef HAS_SHADOW
+  #ifdef HAS_OVERLAY_SHADOW
   sunIrradiance *= sunTransmittance;
-  #endif // HAS_SHADOW
+  #endif // HAS_OVERLAY_SHADOW
 
   #if defined(SUN_LIGHT) && defined(SKY_LIGHT)
   return diffuse * (sunIrradiance + skyIrradiance);
@@ -154,7 +154,7 @@ void applyTransmittanceInscatter(const vec3 positionECEF, float shadowLength, in
 
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
-#ifdef HAS_SHADOW
+#ifdef HAS_OVERLAY_SHADOW
 
 float getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
@@ -272,17 +272,17 @@ float getOverlayShadowRadius(const vec3 worldPosition) {
   return remapClamped(size, 10.0, 50.0, 0.0, overlayShadowRadius);
 }
 
-#endif // HAS_SHADOW
+#endif // HAS_OVERLAY_SHADOW
 
 float getSunTransmittance(const vec3 worldPosition, const vec3 positionECEF) {
-  #ifdef HAS_SHADOW
+  #ifdef HAS_OVERLAY_SHADOW
   float stbn = getSTBN();
   float radius = getOverlayShadowRadius(worldPosition);
   float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
   return exp(-opticalDepth);
-  #else // HAS_SHADOW
+  #else // HAS_OVERLAY_SHADOW
   return 1.0;
-  #endif // HAS_SHADOW
+  #endif // HAS_OVERLAY_SHADOW
 }
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {

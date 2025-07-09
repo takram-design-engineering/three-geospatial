@@ -268,8 +268,10 @@ export class AerialPerspectiveEffect extends Effect {
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
             lunarRadianceScale: new Uniform(lunarRadianceScale),
+            stbnTexture: new Uniform(null),
+            frame: new Uniform(0),
 
-            // Composition and shadow
+            // Overlay and overlay shadow
             overlayBuffer: new Uniform(null),
             overlayShadow: new Uniform({
               map: null,
@@ -280,8 +282,6 @@ export class AerialPerspectiveEffect extends Effect {
               topHeight: 0
             }),
             overlayShadowRadius: new Uniform(3),
-            stbnTexture: new Uniform(null),
-            frame: new Uniform(0),
             shadowLengthBuffer: new Uniform(null),
 
             // Lighting mask
@@ -295,7 +295,7 @@ export class AerialPerspectiveEffect extends Effect {
             scattering_texture: new Uniform(scatteringTexture),
             transmittance_texture: new Uniform(transmittanceTexture),
             single_mie_scattering_texture: new Uniform(null),
-            higher_order_scattering_texture: new Uniform(null),
+            higher_order_scattering_texture: new Uniform(null)
           } satisfies AerialPerspectiveEffectUniforms)
         ),
         // prettier-ignore
@@ -419,13 +419,13 @@ export class AerialPerspectiveEffect extends Effect {
   private updateOverlayShadow(): boolean {
     let needsUpdate = false
     const { uniforms, defines, overlayShadow } = this
-    const prevValue = defines.has('HAS_SHADOW')
+    const prevValue = defines.has('HAS_OVERLAY_SHADOW')
     const nextValue = overlayShadow != null
     if (nextValue !== prevValue) {
       if (nextValue) {
-        defines.set('HAS_SHADOW', '1')
+        defines.set('HAS_OVERLAY_SHADOW', '1')
       } else {
-        defines.delete('HAS_SHADOW')
+        defines.delete('HAS_OVERLAY_SHADOW')
         uniforms.get('overlayShadow').value.map = null
       }
       needsUpdate = true
