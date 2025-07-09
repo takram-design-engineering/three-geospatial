@@ -424,7 +424,6 @@ export class CloudsEffect extends Effect {
     const prevShadow = this._atmosphereOverlayShadow
     const nextShadow = Object.assign(this._atmosphereOverlayShadow ?? {}, {
       map: shadowPass.outputBuffer,
-      mapSize: cascadedShadow.mapSize,
       cascadeCount: cascadedShadow.cascadeCount,
       intervals: cloudsUniforms.shadowIntervals.value,
       matrices: cloudsUniforms.shadowMatrices.value,

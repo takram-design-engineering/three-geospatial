@@ -24,7 +24,6 @@ export interface AtmosphereShadowLength {
 
 export interface AtmosphereOverlayShadow {
   map: DataArrayTexture
-  mapSize: Vector2
   cascadeCount: number
   intervals: Vector2[]
   matrices: Matrix4[]
