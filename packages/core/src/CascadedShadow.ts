@@ -28,7 +28,6 @@
 
 import {
   Box3,
-  Camera,
   Matrix4,
   Object3D,
   Vector2,
@@ -49,22 +48,43 @@ const boxScratch = /*#__PURE__*/ new Box3()
 
 export class Cascade {
   readonly interval = new Vector2()
-  readonly camera = new Camera()
+  readonly projectionMatrix = new Matrix4()
+  readonly inverseProjectionMatrix = new Matrix4()
+  readonly viewMatrix = new Matrix4()
+  readonly inverseViewMatrix = new Matrix4()
 
-  get projectionMatrix(): Matrix4 {
-    return this.camera.projectionMatrix
+  // Save for constructing directional lights later.
+  readonly lightPosition = new Vector3()
+  readonly lightTarget = new Vector3()
+  shadowCameraParams = {
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    near: 0,
+    far: 0
   }
 
-  get inverseProjectionMatrix(): Matrix4 {
-    return this.camera.projectionMatrixInverse
+  updateProjectionMatrix(
+    left: number,
+    right: number,
+    top: number,
+    bottom: number,
+    near: number,
+    far: number
+  ): void {
+    this.projectionMatrix.makeOrthographic(left, right, top, bottom, near, far)
+    this.inverseProjectionMatrix.copy(this.projectionMatrix).invert()
+    this.shadowCameraParams = { left, right, top, bottom, near, far }
   }
 
-  get viewMatrix(): Matrix4 {
-    return this.camera.matrixWorldInverse
-  }
-
-  get inverseViewMatrix(): Matrix4 {
-    return this.camera.matrixWorld
+  updateViewMatrix(position: Vector3, target: Vector3): void {
+    this.inverseViewMatrix
+      .lookAt(target, position, Object3D.DEFAULT_UP)
+      .setPosition(position)
+    this.viewMatrix.copy(this.inverseViewMatrix).invert()
+    this.lightPosition.copy(position)
+    this.lightTarget.copy(target)
   }
 }
 
@@ -90,9 +110,9 @@ export class CascadedShadow {
   margin: number
   fade: boolean
 
-  private readonly cameraFrustum = new FrustumCorners()
-  private readonly frusta: FrustumCorners[] = []
-  private readonly splits: number[] = []
+  readonly cameraFrustum = new FrustumCorners()
+  readonly frusta: FrustumCorners[] = []
+  readonly splits: number[] = []
   private _far = 0
 
   constructor(options: CascadedShadowOptions) {
@@ -209,7 +229,7 @@ export class CascadedShadow {
       const right = radius
       const top = radius
       const bottom = -radius
-      cascade.projectionMatrix.makeOrthographic(
+      cascade.updateProjectionMatrix(
         left,
         right,
         top,
@@ -226,24 +246,22 @@ export class CascadedShadow {
         bbox.expandByPoint(near[j])
         bbox.expandByPoint(far[j])
       }
-      const center = bbox.getCenter(vectorScratch1)
-      center.z = bbox.max.z + margin
+      const target = bbox.getCenter(vectorScratch1)
+      target.z = bbox.max.z + margin
 
       // Round light-space translation to even texel increments.
       const texelWidth = (right - left) / mapSize.width
       const texelHeight = (top - bottom) / mapSize.height
-      center.x = Math.round(center.x / texelWidth) * texelWidth
-      center.y = Math.round(center.y / texelHeight) * texelHeight
+      target.x = Math.round(target.x / texelWidth) * texelWidth
+      target.y = Math.round(target.y / texelHeight) * texelHeight
 
-      // Update inverse view matrix.
-      center.applyMatrix4(lightOrientationMatrix)
+      // Update view matrix.
+      target.applyMatrix4(lightOrientationMatrix)
       const position = vectorScratch2
         .copy(sunDirection)
         .multiplyScalar(distance)
-        .add(center)
-      cascade.inverseViewMatrix
-        .lookAt(center, position, Object3D.DEFAULT_UP)
-        .setPosition(position)
+        .add(target)
+      cascade.updateViewMatrix(position, target)
     }
   }
 
@@ -259,18 +277,5 @@ export class CascadedShadow {
 
     this.updateIntervals(camera)
     this.updateMatrices(camera, sunDirection, distance)
-
-    const cascades = this.cascades
-    const cascadeCount = this.cascadeCount
-    for (let i = 0; i < cascadeCount; ++i) {
-      const {
-        projectionMatrix,
-        inverseProjectionMatrix,
-        viewMatrix,
-        inverseViewMatrix
-      } = cascades[i]
-      inverseProjectionMatrix.copy(projectionMatrix).invert()
-      viewMatrix.copy(inverseViewMatrix).invert()
-    }
   }
 }
