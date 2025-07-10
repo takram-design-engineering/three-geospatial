@@ -306,15 +306,18 @@ float readSceneShadow(const vec2 uv, const int cascadeIndex, const float compare
     }
   }
   #pragma unroll_loop_end
-  return step(compare, depth);
+  return step(depth, compare); // lit = 0, shadow = 1
 }
 
 float sampleSceneShadowPCF(const vec3 worldPosition, const int cascadeIndex, const float jitter) {
   vec4 clip = sceneShadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
+  if (clip.z < -1.0 || clip.z > 1.0) {
+    return 0.0; // Needs to test against clip space Z in this case.
+  }
   vec2 uv = clip.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-    return 1.0;
+    return 0.0;
   }
 
   vec2 texelSize;
@@ -358,6 +361,31 @@ float sampleSceneShadow(vec3 viewPosition, vec3 worldPosition, const float jitte
     : 0.0;
 }
 
+#ifdef DEBUG_SHOW_SCENE_SHADOW_MAP
+float getCascadedSceneShadow(vec2 uv) {
+  vec4 coord = vec4(uv, uv - 0.5) * 2.0;
+  float depth = 0.0;
+  if (uv.y > 0.5) {
+    if (uv.x < 0.5) {
+      depth = unpackRGBAToDepth(texture(sceneShadowMaps[0], coord.xw));
+    } else if (sceneShadow.cascadeCount > 1) {
+      depth = unpackRGBAToDepth(texture(sceneShadowMaps[1], coord.zw));
+    }
+  } else {
+    if (uv.x < 0.5) {
+      if (sceneShadow.cascadeCount > 2) {
+        depth = unpackRGBAToDepth(texture(sceneShadowMaps[2], coord.xy));
+      }
+    } else {
+      if (sceneShadow.cascadeCount > 3) {
+        depth = unpackRGBAToDepth(texture(sceneShadowMaps[3], coord.zy));
+      }
+    }
+  }
+  return depth;
+}
+#endif // DEBUG_SHOW_SCENE_SHADOW_MAP
+
 #endif // HAS_SCENE_SHADOW
 
 float getSunTransmittance(
@@ -378,7 +406,7 @@ float getSunTransmittance(
   #endif // HAS_OVERLAY_SHADOW
 
   #ifdef HAS_SCENE_SHADOW
-  transmittance *= sampleSceneShadow(viewPosition, worldPosition, stbn);
+  transmittance *= 1.0 - sampleSceneShadow(viewPosition, worldPosition, stbn);
   #endif // HAS_SCENE_SHADOW
 
   return transmittance;
@@ -390,6 +418,12 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   outputColor.a = 1.0;
   return;
   #endif // defined(HAS_LIGHTING_MASK) && defined(DEBUG_SHOW_LIGHTING_MASK)
+
+  #if defined(HAS_SCENE_SHADOW) && defined(DEBUG_SHOW_SCENE_SHADOW_MAP)
+  outputColor.rgb = vec3(getCascadedSceneShadow(uv));
+  outputColor.a = 1.0;
+  return;
+  #endif // defined(HAS_SCENE_SHADOW) && defined(DEBUG_SHOW_SCENE_SHADOW_MAP)
 
   float shadowLength = 0.0;
   #ifdef HAS_SHADOW_LENGTH
