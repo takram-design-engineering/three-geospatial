@@ -159,6 +159,7 @@ export interface AerialPerspectiveEffectUniforms {
     near: number
     far: number
   }>
+  sceneShadowRadius: Uniform<number>
 
   // Uniforms for atmosphere functions
   atmosphere: AtmosphereParametersUniform
@@ -316,6 +317,7 @@ export class AerialPerspectiveEffect extends Effect {
               near: 0,
               far: 0
             }),
+            sceneShadowRadius: new Uniform(2),
 
             // Uniforms for atmosphere functions
             atmosphere: atmosphere.toUniform(),
@@ -748,6 +750,14 @@ export class AerialPerspectiveEffect extends Effect {
 
   set overlayShadowRadius(value: number) {
     this.uniforms.get('overlayShadowRadius').value = value
+  }
+
+  get sceneShadowRadius(): number {
+    return this.uniforms.get('sceneShadowRadius').value
+  }
+
+  set sceneShadowRadius(value: number) {
+    this.uniforms.get('sceneShadowRadius').value = value
   }
 
   @defineInt('SHADOW_SAMPLE_COUNT', { min: 1, max: 16 })

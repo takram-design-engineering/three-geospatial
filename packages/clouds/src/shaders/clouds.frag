@@ -149,10 +149,10 @@ vec3 getCascadeColor(const vec3 rayPosition) {
   int cascadeIndex = getCascadeIndex(
     viewMatrix,
     worldPosition,
-    shadowCascadeCount,
-    shadowIntervals,
     cameraNear,
-    shadowFar
+    shadowFar,
+    shadowCascadeCount,
+    shadowIntervals
   );
   vec2 uv = getShadowUv(worldPosition, cascadeIndex);
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
@@ -166,10 +166,10 @@ vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
-    shadowCascadeCount,
-    shadowIntervals,
     cameraNear,
     shadowFar,
+    shadowCascadeCount,
+    shadowIntervals,
     jitter
   );
   return cascadeIndex >= 0
@@ -242,10 +242,10 @@ float sampleShadowOpticalDepth(
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
-    shadowCascadeCount,
-    shadowIntervals,
     cameraNear,
     shadowFar,
+    shadowCascadeCount,
+    shadowIntervals,
     jitter
   );
   return cascadeIndex >= 0

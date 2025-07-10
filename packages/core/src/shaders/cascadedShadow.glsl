@@ -17,10 +17,10 @@ int getCascadeIndex(const float depth, const int cascadeCount, const vec2 interv
 
 int getCascadeIndex(
   const vec3 viewPosition,
-  const int cascadeCount,
-  const vec2 intervals[4],
   const float near,
-  const float far
+  const float far,
+  const int cascadeCount,
+  const vec2 intervals[4]
 ) {
   float depth = viewZToOrthographicDepth(viewPosition.z, near, far);
   return getCascadeIndex(depth, cascadeCount, intervals);
@@ -29,10 +29,10 @@ int getCascadeIndex(
 int getCascadeIndex(
   const mat4 viewMatrix,
   const vec3 worldPosition,
-  const int cascadeCount,
-  const vec2 intervals[4],
   const float near,
-  const float far
+  const float far,
+  const int cascadeCount,
+  const vec2 intervals[4]
 ) {
   vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, near, far);
@@ -87,10 +87,10 @@ int getFadedCascadeIndex(
 
 int getFadedCascadeIndex(
   const vec3 viewPosition,
-  const int cascadeCount,
-  const vec2 intervals[4],
   const float near,
   const float far,
+  const int cascadeCount,
+  const vec2 intervals[4],
   const float jitter
 ) {
   float depth = viewZToOrthographicDepth(viewPosition.z, near, far);
@@ -100,10 +100,10 @@ int getFadedCascadeIndex(
 int getFadedCascadeIndex(
   const mat4 viewMatrix,
   const vec3 worldPosition,
-  const int cascadeCount,
-  const vec2 intervals[4],
   const float near,
   const float far,
+  const int cascadeCount,
+  const vec2 intervals[4],
   const float jitter
 ) {
   vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);

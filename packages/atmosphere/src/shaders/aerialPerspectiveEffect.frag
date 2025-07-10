@@ -1,14 +1,22 @@
 precision highp sampler2DArray;
 
+#if defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW)
+#define HAS_ANY_SHADOW
+#endif // defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW)
+
 #include "core/depth"
 #include "core/math"
 #include "core/packing"
 #include "core/transform"
-#ifdef HAS_OVERLAY_SHADOW
-#include "core/raySphereIntersection"
+
+#ifdef HAS_ANY_SHADOW
 #include "core/cascadedShadow"
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
+#endif // HAS_ANY_SHADOW
+
+#ifdef HAS_OVERLAY_SHADOW
+#include "core/raySphereIntersection"
 #endif // HAS_OVERLAY_SHADOW
 
 #include "bruneton/definitions"
@@ -44,10 +52,10 @@ uniform float lunarRadianceScale;
 uniform float albedoScale;
 uniform float idealSphereAlpha;
 
-#ifdef HAS_OVERLAY_SHADOW
+#ifdef HAS_ANY_SHADOW
 uniform sampler3D stbnTexture;
 uniform int frame;
-#endif // HAS_OVERLAY_SHADOW
+#endif // HAS_ANY_SHADOW
 
 #ifdef HAS_OVERLAY
 uniform sampler2D overlayBuffer;
@@ -65,6 +73,8 @@ struct OverlayShadow {
 };
 uniform OverlayShadow overlayShadow;
 uniform float overlayShadowRadius;
+#define overlayShadowMatrices overlayShadow.matrices
+#define overlayShadowInverseMatrices overlayShadow.inverseMatrices
 #endif // HAS_OVERLAY_SHADOW
 
 #ifdef HAS_SHADOW_LENGTH
@@ -89,6 +99,10 @@ struct SceneShadow {
   float far;
 };
 uniform SceneShadow sceneShadow;
+uniform float sceneShadowRadius;
+#define sceneShadowMaps sceneShadow.maps
+#define sceneShadowMatrices sceneShadow.matrices
+#define sceneShadowInverseMatrices sceneShadow.inverseMatrices
 #endif // HAS_SCENE_SHADOW
 
 varying vec3 vCameraPosition;
@@ -131,10 +145,7 @@ vec3 getSunSkyIrradiance(
   vec3 diffuse = inputColor * albedoScale * RECIPROCAL_PI;
   vec3 skyIrradiance;
   vec3 sunIrradiance = GetSunAndSkyIrradiance(positionECEF, normal, sunDirection, skyIrradiance);
-
-  #ifdef HAS_OVERLAY_SHADOW
   sunIrradiance *= sunTransmittance;
-  #endif // HAS_OVERLAY_SHADOW
 
   #if defined(SUN_LIGHT) && defined(SKY_LIGHT)
   return diffuse * (sunIrradiance + skyIrradiance);
@@ -168,20 +179,15 @@ void applyTransmittanceInscatter(const vec3 positionECEF, float shadowLength, in
 
 #endif // defined(TRANSMITTANCE) || defined(INSCATTER)
 
-#ifdef HAS_OVERLAY_SHADOW
-
+#ifdef HAS_ANY_SHADOW
 float getSTBN() {
   ivec3 size = textureSize(stbnTexture, 0);
   vec3 scale = 1.0 / vec3(size);
   return texture(stbnTexture, vec3(gl_FragCoord.xy, float(frame % size.z)) * scale).r;
 }
+#endif // HAS_ANY_SHADOW
 
-vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
-  mat4 matrices[4] = overlayShadow.matrices;
-  vec4 clip = matrices[cascadeIndex] * vec4(worldPosition, 1.0);
-  clip /= clip.w;
-  return clip.xy * 0.5 + 0.5;
-}
+#ifdef HAS_OVERLAY_SHADOW
 
 float getDistanceToShadowTop(const vec3 positionECEF) {
   // Distance to the top of the shadows along the sun direction, which matches
@@ -206,7 +212,9 @@ float sampleShadowOpticalDepthPCF(
   const float radius,
   const int cascadeIndex
 ) {
-  vec2 uv = getShadowUv(worldPosition, cascadeIndex);
+  vec4 clip = overlayShadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  clip /= clip.w;
+  vec2 uv = clip.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return 0.0;
   }
@@ -242,10 +250,10 @@ float sampleShadowOpticalDepth(
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
-    overlayShadow.cascadeCount,
-    overlayShadow.intervals,
     cameraNear,
     overlayShadow.far,
+    overlayShadow.cascadeCount,
+    overlayShadow.intervals,
     jitter
   );
   return cascadeIndex >= 0
@@ -253,9 +261,8 @@ float sampleShadowOpticalDepth(
     : 0.0;
 }
 
-float getOverlayShadowRadius(const vec3 worldPosition) {
-  mat4 matrices[4] = overlayShadow.matrices;
-  vec4 clip = matrices[0] * vec4(worldPosition, 1.0);
+float deriveOverlayShadowRadius(const vec3 worldPosition) {
+  vec4 clip = overlayShadowMatrices[0] * vec4(worldPosition, 1.0);
   clip /= clip.w;
 
   // Offset by 1px in each direction in shadow's clip coordinates.
@@ -265,9 +272,8 @@ float getOverlayShadowRadius(const vec3 worldPosition) {
   vec4 clipY = clip + offset.zyzz;
 
   // Convert back to world space.
-  mat4 inverseMatrices[4] = overlayShadow.inverseMatrices;
-  vec4 worldX = inverseMatrices[0] * clipX;
-  vec4 worldY = inverseMatrices[0] * clipY;
+  vec4 worldX = overlayShadowInverseMatrices[0] * clipX;
+  vec4 worldY = overlayShadowInverseMatrices[0] * clipY;
 
   // Project into the main camera's clip space.
   mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
@@ -289,15 +295,93 @@ float getOverlayShadowRadius(const vec3 worldPosition) {
 
 #endif // HAS_OVERLAY_SHADOW
 
-float getSunTransmittance(const vec3 worldPosition, const vec3 positionECEF) {
-  #ifdef HAS_OVERLAY_SHADOW
+#ifdef HAS_SCENE_SHADOW
+
+float readSceneShadow(const vec2 uv, const int cascadeIndex, const float compare) {
+  float depth;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; ++i) {
+    if (UNROLLED_LOOP_INDEX == cascadeIndex) {
+      depth = unpackRGBAToDepth(texture(sceneShadowMaps[UNROLLED_LOOP_INDEX], uv));
+    }
+  }
+  #pragma unroll_loop_end
+  return step(compare, depth);
+}
+
+float sampleSceneShadowPCF(const vec3 worldPosition, const int cascadeIndex, const float jitter) {
+  vec4 clip = sceneShadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  clip /= clip.w;
+  vec2 uv = clip.xy * 0.5 + 0.5;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    return 1.0;
+  }
+
+  vec2 texelSize;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 4; ++i) {
+    if (UNROLLED_LOOP_INDEX == cascadeIndex) {
+      texelSize = vec2(1.0) / vec2(textureSize(sceneShadowMaps[UNROLLED_LOOP_INDEX], 0).xy);
+    }
+  }
+  #pragma unroll_loop_end
+
+  float compare = clip.z * 0.5 + 0.5;
+  float sum = 0.0;
+  vec2 offset;
+  #pragma unroll_loop_start
+  for (int i = 0; i < 16; ++i) {
+    #if UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
+    offset = vogelDisk(
+      UNROLLED_LOOP_INDEX,
+      SHADOW_SAMPLE_COUNT,
+      interleavedGradientNoise(gl_FragCoord.xy) * PI2
+    );
+    sum += readSceneShadow(uv + offset * sceneShadowRadius * texelSize, cascadeIndex, compare);
+    #endif // UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
+  }
+  #pragma unroll_loop_end
+  return sum / float(SHADOW_SAMPLE_COUNT);
+}
+
+float sampleSceneShadow(vec3 viewPosition, vec3 worldPosition, const float jitter) {
+  int cascadeIndex = getFadedCascadeIndex(
+    viewPosition,
+    cameraNear,
+    sceneShadow.far,
+    sceneShadow.cascadeCount,
+    sceneShadow.intervals,
+    jitter
+  );
+  return cascadeIndex >= 0
+    ? sampleSceneShadowPCF(worldPosition, cascadeIndex, jitter)
+    : 0.0;
+}
+
+#endif // HAS_SCENE_SHADOW
+
+float getSunTransmittance(
+  const vec3 viewPosition,
+  const vec3 worldPosition,
+  const vec3 positionECEF
+) {
+  float transmittance = 1.0;
+
+  #ifdef HAS_ANY_SHADOW
   float stbn = getSTBN();
-  float radius = getOverlayShadowRadius(worldPosition);
+  #endif // HAS_ANY_SHADOW
+
+  #ifdef HAS_OVERLAY_SHADOW
+  float radius = deriveOverlayShadowRadius(worldPosition);
   float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
-  return exp(-opticalDepth);
-  #else // HAS_OVERLAY_SHADOW
-  return 1.0;
+  transmittance *= exp(-opticalDepth);
   #endif // HAS_OVERLAY_SHADOW
+
+  #ifdef HAS_SCENE_SHADOW
+  transmittance *= sampleSceneShadow(viewPosition, worldPosition, stbn);
+  #endif // HAS_SCENE_SHADOW
+
+  return transmittance;
 }
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
@@ -372,7 +456,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   correctGeometricError(positionECEF, normalECEF);
   #endif // CORRECT_GEOMETRIC_ERROR
 
-  float sunTransmittance = getSunTransmittance(worldPosition, positionECEF);
+  float sunTransmittance = getSunTransmittance(viewPosition, worldPosition, positionECEF);
 
   vec3 radiance;
   #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
