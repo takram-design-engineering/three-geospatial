@@ -118,12 +118,6 @@ vec3 ECEFToWorld(const vec3 positionECEF) {
   return mat3(ellipsoidMatrix) * (positionECEF + vEllipsoidCenter);
 }
 
-vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
-  vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
-  clip /= clip.w;
-  return clip.xy * 0.5 + 0.5;
-}
-
 float getDistanceToShadowTop(const vec3 rayPosition) {
   // Distance to the top of the shadows along the sun direction, which matches
   // the ray origin of BSM.
@@ -154,7 +148,9 @@ vec3 getCascadeColor(const vec3 rayPosition) {
     shadowCascadeCount,
     shadowIntervals
   );
-  vec2 uv = getShadowUv(worldPosition, cascadeIndex);
+  vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  clip /= clip.w;
+  vec2 uv = clip.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return vec3(1.0);
   }
@@ -199,7 +195,9 @@ float sampleShadowOpticalDepthPCF(
   const float radius,
   const int cascadeIndex
 ) {
-  vec2 uv = getShadowUv(worldPosition, cascadeIndex);
+  vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+  clip /= clip.w;
+  vec2 uv = clip.xy * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     return 0.0;
   }
