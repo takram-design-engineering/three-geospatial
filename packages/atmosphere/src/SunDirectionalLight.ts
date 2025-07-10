@@ -51,14 +51,17 @@ export class SunDirectionalLight extends DirectionalLight {
     this.distance = distance
   }
 
-  update(): void {
+  updatePosition(): void {
     this.position
       .copy(this.sunDirection)
       .applyMatrix4(this.ellipsoidMatrix)
       .normalize()
       .multiplyScalar(this.distance)
       .add(this.target.position)
+  }
 
+  update(): void {
+    this.updatePosition()
     if (this.transmittanceTexture == null) {
       return
     }
@@ -70,6 +73,7 @@ export class SunDirectionalLight extends DirectionalLight {
       .getWorldPosition(vectorScratch)
       .applyMatrix4(inverseEllipsoidMatrix)
       .sub(this.ellipsoidCenter)
+
     getSunLightColor(
       this.transmittanceTexture,
       cameraPositionECEF,
