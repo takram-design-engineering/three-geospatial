@@ -44,7 +44,7 @@ import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
 import { useLocalDateControls } from '../helpers/useLocalDateControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
-import { TileOverrideMaterialPlugin } from '../plugins/TileOverrideMaterialPlugin'
+import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
 
 const geodetic = new Geodetic(radians(138.5), radians(36.2), 5000)
 const position = geodetic.toECEF()
@@ -143,7 +143,7 @@ const Scene: FC = () => {
         />
         <TilesPlugin
           key={mode}
-          plugin={TileOverrideMaterialPlugin}
+          plugin={TileMeshPropsPlugin}
           args={{
             material:
               mode === 'light-source'
