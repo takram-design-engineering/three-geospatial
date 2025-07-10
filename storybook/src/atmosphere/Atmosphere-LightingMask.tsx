@@ -264,7 +264,10 @@ const Scene: FC = () => {
       {useMemo(
         () => (
           <EffectComposer multisampling={0} enableNormalPass>
-            <Fragment key={JSON.stringify([disableMask])}>
+            <Fragment
+              // Effects are order-dependant; we need to reconstruct the nodes.
+              key={JSON.stringify([disableMask])}
+            >
               {!disableMask && (
                 <LightingMask
                   selectionLayer={LIGHTING_MASK_LAYER}

@@ -168,31 +168,21 @@ const Scene: FC = () => {
       <EffectComposer multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
-          key={JSON.stringify([
-            enabled,
-            mode,
-            sun,
-            sky,
-            transmittance,
-            inscatter,
-            lensFlare,
-            normal,
-            depth
-          ])}
+          key={JSON.stringify([enabled, mode, lensFlare, normal, depth])}
         >
-          {enabled && !normal && !depth && (
-            <AerialPerspective
-              sunLight={mode === 'post-process' && sun}
-              skyLight={mode === 'post-process' && sky}
-              transmittance={transmittance}
-              inscatter={inscatter}
-            />
-          )}
-          {lensFlare && <LensFlare />}
           {depth && <Depth useTurbo />}
           {normal && <Normal />}
-          {!normal && !depth && (
+          {!depth && !normal && (
             <>
+              {enabled && (
+                <AerialPerspective
+                  sunLight={mode === 'post-process' && sun}
+                  skyLight={mode === 'post-process' && sky}
+                  transmittance={transmittance}
+                  inscatter={inscatter}
+                />
+              )}
+              {lensFlare && <LensFlare />}
               <ToneMapping mode={toneMappingMode} />
               <SMAA />
               <Dithering />

@@ -133,34 +133,23 @@ const Scene: FC<SceneProps> = ({
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
-          key={JSON.stringify([
-            enabled,
-            sun,
-            sky,
-            transmittance,
-            inscatter,
-            correctGeometricError,
-            lensFlare,
-            normal,
-            depth,
-            lut
-          ])}
+          key={JSON.stringify([depth, enabled, lensFlare, lut, normal])}
         >
-          {enabled && !normal && !depth && (
-            <AerialPerspective
-              sunLight={sun}
-              skyLight={sky}
-              transmittance={transmittance}
-              inscatter={inscatter}
-              correctGeometricError={correctGeometricError}
-              albedoScale={2 / Math.PI}
-            />
-          )}
-          {lensFlare && <LensFlare />}
           {depth && <Depth useTurbo />}
           {normal && <Normal />}
-          {!normal && !depth && (
+          {!depth && !normal && (
             <>
+              {enabled && (
+                <AerialPerspective
+                  sunLight={sun}
+                  skyLight={sky}
+                  transmittance={transmittance}
+                  inscatter={inscatter}
+                  correctGeometricError={correctGeometricError}
+                  albedoScale={2 / Math.PI}
+                />
+              )}
+              {lensFlare && <LensFlare />}
               <ToneMapping mode={toneMappingMode} />
               {lut != null && <HaldLUT path={lut} />}
               <SMAA />

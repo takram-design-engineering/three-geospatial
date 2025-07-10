@@ -46,7 +46,7 @@ const Scene: FC = () => {
   })
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
-  const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds)
+  const [{ enabled, exclusive }, cloudsProps] = useCloudsControls(clouds)
 
   const { showBox: debugShowBox } = useControls(
     'debug',
@@ -73,12 +73,15 @@ const Scene: FC = () => {
       )}
       <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
         <EffectComposer multisampling={0} enableNormalPass>
-          <Fragment key={JSON.stringify([enabled, toneMapping])}>
+          <Fragment
+            // Effects are order-dependant; we need to reconstruct the nodes.
+            key={JSON.stringify([enabled, exclusive])}
+          >
             {enabled && (
               <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps} />
             )}
             <AerialPerspective sky sunLight skyLight />
-            {toneMapping && (
+            {!exclusive && (
               <>
                 <LensFlare />
                 <ToneMapping mode={toneMappingMode} />

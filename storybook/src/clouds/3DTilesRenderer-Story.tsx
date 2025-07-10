@@ -152,7 +152,7 @@ const Scene: FC<SceneProps> = ({
   })
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)
-  const [{ enabled, toneMapping }, cloudsProps] = useCloudsControls(clouds, {
+  const [{ enabled, exclusive }, cloudsProps] = useCloudsControls(clouds, {
     coverage,
     animate: true
   })
@@ -166,15 +166,16 @@ const Scene: FC<SceneProps> = ({
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
           key={JSON.stringify([
-            correctGeometricError,
-            lensFlare,
-            normal,
             depth,
-            lut,
             enabled,
-            toneMappingMode
+            exclusive,
+            lensFlare,
+            lut,
+            normal
           ])}
         >
+          {depth && <Depth useTurbo />}
+          {normal && <Normal />}
           {!normal && !depth && (
             <>
               {enabled && (
@@ -191,15 +192,9 @@ const Scene: FC<SceneProps> = ({
                 correctGeometricError={correctGeometricError}
                 albedoScale={2 / Math.PI}
               />
-            </>
-          )}
-          {toneMapping && (
+              {!exclusive && (
             <>
               {lensFlare && <LensFlare />}
-              {depth && <Depth useTurbo />}
-              {normal && <Normal />}
-              {!normal && !depth && (
-                <>
                   <ToneMapping mode={toneMappingMode} />
                   {lut != null && <HaldLUT path={lut} />}
                   <SMAA />

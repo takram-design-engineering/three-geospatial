@@ -638,7 +638,7 @@ export interface CloudsControlOptions {
 
 export interface CloudsControlValues {
   enabled: boolean
-  toneMapping: boolean
+  exclusive: boolean
 }
 
 export function useCloudsControls(
@@ -667,10 +667,7 @@ export function useCloudsControls(
   const rendering = useRenderingControls(effect, qualityPreset)
   const scattering = useScatteringControls(effect, qualityPreset)
   const weatherAndShape = useWeatherAndShapeControls(effect, qualityPreset)
-  const cascadedShadow = useCascadedShadowControls(
-    effect,
-    qualityPreset
-  )
+  const cascadedShadow = useCascadedShadowControls(effect, qualityPreset)
   const advancedClouds = useAdvancedCloudsControls(effect, qualityPreset)
   const advancedShadow = useAdvancedShadowControls(effect, qualityPreset)
   useCloudLayersControls(effect, !layerControls)
@@ -686,12 +683,12 @@ export function useCloudsControls(
   return [
     {
       enabled,
-      toneMapping:
-        !showSampleCount &&
-        !showFrontDepth &&
-        !showUv &&
-        !showShadowMap &&
-        !showShadowLength
+      exclusive:
+        showSampleCount ||
+        showFrontDepth ||
+        showUv ||
+        showShadowMap ||
+        showShadowLength
     },
     {
       coverage,
