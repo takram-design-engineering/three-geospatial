@@ -1,15 +1,6 @@
 // Reference: https://github.com/mrdoob/three.js/blob/r171/examples/jsm/csm/CSMShader.js
 
-int getCascadeIndex(
-  const mat4 viewMatrix,
-  const vec3 worldPosition,
-  const int cascadeCount,
-  const vec2 intervals[4],
-  const float near,
-  const float far
-) {
-  vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
-  float depth = viewZToOrthographicDepth(viewPosition.z, near, far);
+int getCascadeIndex(const float depth, const int cascadeCount, const vec2 intervals[4]) {
   vec2 interval;
   #pragma unroll_loop_start
   for (int i = 0; i < 4; ++i) {
@@ -24,18 +15,36 @@ int getCascadeIndex(
   return cascadeCount - 1;
 }
 
-int getFadedCascadeIndex(
+int getCascadeIndex(
+  const vec3 viewPosition,
+  const int cascadeCount,
+  const vec2 intervals[4],
+  const float near,
+  const float far
+) {
+  float depth = viewZToOrthographicDepth(viewPosition.z, near, far);
+  return getCascadeIndex(depth, cascadeCount, intervals);
+}
+
+int getCascadeIndex(
   const mat4 viewMatrix,
   const vec3 worldPosition,
   const int cascadeCount,
   const vec2 intervals[4],
   const float near,
-  const float far,
-  const float jitter
+  const float far
 ) {
   vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
   float depth = viewZToOrthographicDepth(viewPosition.z, near, far);
+  return getCascadeIndex(depth, cascadeCount, intervals);
+}
 
+int getFadedCascadeIndex(
+  const float depth,
+  const int cascadeCount,
+  const vec2 intervals[4],
+  const float jitter
+) {
   vec2 interval;
   float intervalCenter;
   float closestEdge;
@@ -74,4 +83,30 @@ int getFadedCascadeIndex(
   return jitter <= alpha
     ? nextIndex
     : prevIndex;
+}
+
+int getFadedCascadeIndex(
+  const vec3 viewPosition,
+  const int cascadeCount,
+  const vec2 intervals[4],
+  const float near,
+  const float far,
+  const float jitter
+) {
+  float depth = viewZToOrthographicDepth(viewPosition.z, near, far);
+  return getFadedCascadeIndex(depth, cascadeCount, intervals, jitter);
+}
+
+int getFadedCascadeIndex(
+  const mat4 viewMatrix,
+  const vec3 worldPosition,
+  const int cascadeCount,
+  const vec2 intervals[4],
+  const float near,
+  const float far,
+  const float jitter
+) {
+  vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
+  float depth = viewZToOrthographicDepth(viewPosition.z, near, far);
+  return getFadedCascadeIndex(depth, cascadeCount, intervals, jitter);
 }
