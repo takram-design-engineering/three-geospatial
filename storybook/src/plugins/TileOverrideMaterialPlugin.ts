@@ -17,8 +17,12 @@ export class TileOverrideMaterialPlugin {
     scene,
     visible
   }: TilesRendererEventMap['tile-visibility-change']): void => {
-    if (visible && scene instanceof Mesh) {
-      scene.material = this.options.material
+    if (visible) {
+      scene.traverse(object => {
+        if (object instanceof Mesh) {
+          object.material = this.options.material
+        }
+      })
     }
   }
 
