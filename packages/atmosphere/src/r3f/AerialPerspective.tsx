@@ -92,7 +92,9 @@ export const AerialPerspective: FC<AerialPerspectiveProps> = ({
       // Load STBN only when the shadow is first enabled.
       if (
         !needsSTBN &&
-        (effect.overlayShadow != null || effect.sceneShadow != null)
+        (effect.overlayShadow != null ||
+          effect.sceneShadow != null ||
+          props.screenSpaceShadow === true)
       ) {
         setNeedsSTBN(true)
       }

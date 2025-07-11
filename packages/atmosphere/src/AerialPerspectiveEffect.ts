@@ -29,6 +29,7 @@ import {
   math,
   packing,
   raySphereIntersection,
+  screenSpaceRaycast,
   transform,
   vogelDisk
 } from '@takram/three-geospatial/shaders'
@@ -244,13 +245,14 @@ export class AerialPerspectiveEffect extends Effect {
       unrollLoops(
         resolveIncludes(fragmentShader, {
           core: {
-            depth,
-            packing,
-            math,
-            transform,
-            raySphereIntersection,
             cascadedShadow,
+            depth,
             interleavedGradientNoise,
+            math,
+            packing,
+            raySphereIntersection,
+            screenSpaceRaycast,
+            transform,
             vogelDisk
           },
           bruneton: {
@@ -762,4 +764,7 @@ export class AerialPerspectiveEffect extends Effect {
 
   @defineInt('SHADOW_SAMPLE_COUNT', { min: 1, max: 16 })
   shadowSampleCount = 8
+
+  @define('SCREEN_SPACE_SHADOW')
+  screenSpaceShadow = false
 }

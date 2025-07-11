@@ -1,23 +1,27 @@
 precision highp sampler2DArray;
 
-#if defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW)
+#if defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW) || defined(SCREEN_SPACE_SHADOW)
 #define HAS_ANY_SHADOW
-#endif // defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW)
+#endif // defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW) || defined(SCREEN_SPACE_SHADOW)
 
 #include "core/depth"
 #include "core/math"
 #include "core/packing"
 #include "core/transform"
 
-#ifdef HAS_ANY_SHADOW
+#if defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW)
 #include "core/cascadedShadow"
 #include "core/interleavedGradientNoise"
 #include "core/vogelDisk"
-#endif // HAS_ANY_SHADOW
+#endif // defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW)
 
 #ifdef HAS_OVERLAY_SHADOW
 #include "core/raySphereIntersection"
 #endif // HAS_OVERLAY_SHADOW
+
+#ifdef SCREEN_SPACE_SHADOW
+#include "core/screenSpaceRaycast"
+#endif // SCREEN_SPACE_SHADOW
 
 #include "bruneton/definitions"
 
@@ -388,25 +392,47 @@ float getCascadedSceneShadow(vec2 uv) {
 
 #endif // HAS_SCENE_SHADOW
 
+#ifdef SCREEN_SPACE_SHADOW
+float getScreenSpaceShadow(const vec3 viewPosition, const vec3 viewNormal, const float jitter) {
+  vec2 hitUV;
+  vec3 hitPosition;
+  float rayLength;
+  int iterationCount;
+  const float normalBias = 0.0001;
+  bool hit = screenSpaceRaycast(
+    defaultScreenSpaceRaycastOptions,
+    viewPosition - viewNormal * viewPosition.z * normalBias,
+    (viewMatrix * vec4(sunDirection, 0.0)).xyz,
+    projectionMatrix,
+    texelSize,
+    jitter,
+    hitUV,
+    hitPosition,
+    rayLength,
+    iterationCount
+  );
+  return hit
+    ? 0.0
+    : 1.0;
+}
+#endif // SCREEN_SPACE_SHADOW
+
 float getSunTransmittance(
   const vec3 viewPosition,
   const vec3 worldPosition,
-  const vec3 positionECEF
+  const vec3 positionECEF,
+  const float jitter
 ) {
   float transmittance = 1.0;
 
-  #ifdef HAS_ANY_SHADOW
-  float stbn = getSTBN();
-  #endif // HAS_ANY_SHADOW
-
   #ifdef HAS_OVERLAY_SHADOW
   float radius = deriveOverlayShadowRadius(worldPosition);
-  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
+  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, jitter);
   transmittance *= exp(-opticalDepth);
   #endif // HAS_OVERLAY_SHADOW
 
   #ifdef HAS_SCENE_SHADOW
-  transmittance *= 1.0 - sampleSceneShadow(viewPosition, worldPosition, stbn);
+  transmittance *= 1.0 - sampleSceneShadow(viewPosition, worldPosition, jitter);
   #endif // HAS_SCENE_SHADOW
 
   return transmittance;
@@ -490,7 +516,15 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   correctGeometricError(positionECEF, normalECEF);
   #endif // CORRECT_GEOMETRIC_ERROR
 
-  float sunTransmittance = getSunTransmittance(viewPosition, worldPosition, positionECEF);
+  float sunTransmittance = 1.0;
+
+  #ifdef HAS_ANY_SHADOW
+  float stbn = getSTBN();
+  sunTransmittance *= getSunTransmittance(viewPosition, worldPosition, positionECEF, stbn);
+  #ifdef SCREEN_SPACE_SHADOW
+  sunTransmittance *= getScreenSpaceShadow(viewPosition, viewNormal, stbn);
+  #endif // SCREEN_SPACE_SHADOW
+  #endif // HAS_ANY_SHADOW
 
   vec3 radiance;
   #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
