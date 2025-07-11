@@ -7,8 +7,8 @@ import {
   type Texture
 } from 'three'
 
-import fragmentShader from './shaders/lensFlareFeatures.frag?raw'
-import vertexShader from './shaders/lensFlareFeatures.vert?raw'
+import fragmentShader from './shaders/lensFlareFeaturesMaterial.frag?raw'
+import vertexShader from './shaders/lensFlareFeaturesMaterial.vert?raw'
 
 export interface LensFlareFeaturesMaterialParameters
   extends ShaderMaterialParameters {

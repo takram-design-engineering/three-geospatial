@@ -25,8 +25,8 @@ import type {
 
 import clouds from './shaders/clouds.glsl?raw'
 import parameters from './shaders/parameters.glsl?raw'
-import fragmentShader from './shaders/shadow.frag?raw'
-import vertexShader from './shaders/shadow.vert?raw'
+import fragmentShader from './shaders/shadowMaterial.frag?raw'
+import vertexShader from './shaders/shadowMaterial.vert?raw'
 import structuredSampling from './shaders/structuredSampling.glsl?raw'
 import types from './shaders/types.glsl?raw'
 

@@ -18,8 +18,8 @@ import { turbo } from '@takram/three-geospatial/shaders'
 import { bayerOffsets } from './bayer'
 
 import catmullRomSampling from './shaders/catmullRomSampling.glsl?raw'
-import fragmentShader from './shaders/cloudsResolve.frag?raw'
-import vertexShader from './shaders/cloudsResolve.vert?raw'
+import fragmentShader from './shaders/cloudsResolveMaterial.frag?raw'
+import vertexShader from './shaders/cloudsResolveMaterial.vert?raw'
 import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface CloudsResolveMaterialParameters {

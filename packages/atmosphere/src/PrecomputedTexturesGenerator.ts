@@ -51,12 +51,12 @@ import type { PrecomputedTextures } from './types'
 import common from './shaders/bruneton/common.glsl?raw'
 import definitions from './shaders/bruneton/definitions.glsl?raw'
 import precompute from './shaders/bruneton/precompute.glsl?raw'
-import directIrradianceShader from './shaders/precompute/directIrradiance.frag?raw'
-import indirectIrradianceShader from './shaders/precompute/indirectIrradiance.frag?raw'
-import multipleScatteringShader from './shaders/precompute/multipleScattering.frag?raw'
-import scatteringDensityShader from './shaders/precompute/scatteringDensity.frag?raw'
-import singleScatteringShader from './shaders/precompute/singleScattering.frag?raw'
-import transmittanceShader from './shaders/precompute/transmittance.frag?raw'
+import directIrradianceShader from './shaders/precompute/directIrradianceMaterial.frag?raw'
+import indirectIrradianceShader from './shaders/precompute/indirectIrradianceMaterial.frag?raw'
+import multipleScatteringShader from './shaders/precompute/multipleScatteringMaterial.frag?raw'
+import scatteringDensityShader from './shaders/precompute/scatteringDensityMaterial.frag?raw'
+import singleScatteringShader from './shaders/precompute/singleScatteringMaterial.frag?raw'
+import transmittanceShader from './shaders/precompute/transmittanceMaterial.frag?raw'
 
 const vertexShader = /* glsl */ `
   precision highp float;

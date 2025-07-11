@@ -31,7 +31,7 @@ import {
 import { resolveIncludes } from '@takram/three-geospatial'
 import { depth } from '@takram/three-geospatial/shaders'
 
-import fragmentShader from './shaders/lightingMask.frag?raw'
+import fragmentShader from './shaders/lightingMaskPass.frag?raw'
 
 declare module 'postprocessing' {
   interface DepthMaskMaterial {

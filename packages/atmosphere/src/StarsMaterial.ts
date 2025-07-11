@@ -24,8 +24,8 @@ import {
 import common from './shaders/bruneton/common.glsl?raw'
 import definitions from './shaders/bruneton/definitions.glsl?raw'
 import runtime from './shaders/bruneton/runtime.glsl?raw'
-import fragmentShader from './shaders/stars.frag?raw'
-import vertexShader from './shaders/stars.vert?raw'
+import fragmentShader from './shaders/starsMaterial.frag?raw'
+import vertexShader from './shaders/starsMaterial.vert?raw'
 
 declare module 'three' {
   interface Camera {

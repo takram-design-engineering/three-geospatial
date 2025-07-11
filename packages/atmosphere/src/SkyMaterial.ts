@@ -27,9 +27,9 @@ import type { AtmosphereShadowLength } from './types'
 import common from './shaders/bruneton/common.glsl?raw'
 import definitions from './shaders/bruneton/definitions.glsl?raw'
 import runtime from './shaders/bruneton/runtime.glsl?raw'
-import fragmentShader from './shaders/sky.frag?raw'
 import sky from './shaders/sky.glsl?raw'
-import vertexShader from './shaders/sky.vert?raw'
+import fragmentShader from './shaders/skyMaterial.frag?raw'
+import vertexShader from './shaders/skyMaterial.vert?raw'
 
 declare module 'three' {
   interface Camera {

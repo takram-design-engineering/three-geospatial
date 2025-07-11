@@ -57,9 +57,9 @@ import type {
   CloudParameterUniforms
 } from './uniforms'
 
-import fragmentShader from './shaders/clouds.frag?raw'
 import clouds from './shaders/clouds.glsl?raw'
-import vertexShader from './shaders/clouds.vert?raw'
+import fragmentShader from './shaders/cloudsMaterial.frag?raw'
+import vertexShader from './shaders/cloudsMaterial.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
 import types from './shaders/types.glsl?raw'
 

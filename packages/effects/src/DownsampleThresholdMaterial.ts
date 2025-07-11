@@ -7,8 +7,8 @@ import {
   type Texture
 } from 'three'
 
-import fragmentShader from './shaders/downsampleThreshold.frag?raw'
-import vertexShader from './shaders/downsampleThreshold.vert?raw'
+import fragmentShader from './shaders/downsampleThresholdMaterial.frag?raw'
+import vertexShader from './shaders/downsampleThresholdMaterial.vert?raw'
 
 export interface DownsampleThresholdMaterialParameters
   extends ShaderMaterialParameters {

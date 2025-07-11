@@ -4,7 +4,7 @@ import { math } from '@takram/three-geospatial/shaders'
 import { CLOUD_SHAPE_DETAIL_TEXTURE_SIZE } from './constants'
 import { Procedural3DTextureBase } from './Procedural3DTexture'
 
-import fragmentShader from './shaders/cloudShapeDetail.frag?raw'
+import fragmentShader from './shaders/cloudShapeDetailMaterial.frag?raw'
 import perlin from './shaders/perlin.glsl?raw'
 import tileableNoise from './shaders/tileableNoise.glsl?raw'
 

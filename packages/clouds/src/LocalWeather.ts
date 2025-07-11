@@ -3,7 +3,7 @@ import { math } from '@takram/three-geospatial/shaders'
 
 import { ProceduralTextureBase } from './ProceduralTexture'
 
-import fragmentShader from './shaders/localWeather.frag?raw'
+import fragmentShader from './shaders/localWeatherMaterial.frag?raw'
 import perlin from './shaders/perlin.glsl?raw'
 import tileableNoise from './shaders/tileableNoise.glsl?raw'
 

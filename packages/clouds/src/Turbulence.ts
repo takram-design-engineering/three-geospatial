@@ -5,7 +5,7 @@ import { ProceduralTextureBase } from './ProceduralTexture'
 
 import perlin from './shaders/perlin.glsl?raw'
 import tileableNoise from './shaders/tileableNoise.glsl?raw'
-import fragmentShader from './shaders/turbulence.frag?raw'
+import fragmentShader from './shaders/turbulenceMaterial.frag?raw'
 
 export class Turbulence extends ProceduralTextureBase {
   constructor() {

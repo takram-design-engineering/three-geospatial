@@ -14,8 +14,8 @@ import {
 
 import { defaults } from './qualityPresets'
 
-import fragmentShader from './shaders/shadowResolve.frag?raw'
-import vertexShader from './shaders/shadowResolve.vert?raw'
+import fragmentShader from './shaders/shadowResolveMaterial.frag?raw'
+import vertexShader from './shaders/shadowResolveMaterial.vert?raw'
 import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface ShadowResolveMaterialParameters {
