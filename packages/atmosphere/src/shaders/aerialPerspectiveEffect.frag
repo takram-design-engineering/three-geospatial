@@ -412,28 +412,33 @@ float getScreenSpaceShadow(const vec3 viewPosition, const vec3 viewNormal, const
     iterationCount
   );
   return hit
-    ? 0.0
-    : 1.0;
+    ? 1.0
+    : 0.0;
 }
 #endif // SCREEN_SPACE_SHADOW
 
 float getSunTransmittance(
   const vec3 viewPosition,
+  const vec3 viewNormal,
   const vec3 worldPosition,
-  const vec3 positionECEF,
-  const float jitter
+  const vec3 positionECEF
 ) {
   float transmittance = 1.0;
+  float stbn = getSTBN();
 
   #ifdef HAS_OVERLAY_SHADOW
   float radius = deriveOverlayShadowRadius(worldPosition);
-  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, jitter);
+  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
   transmittance *= exp(-opticalDepth);
   #endif // HAS_OVERLAY_SHADOW
 
   #ifdef HAS_SCENE_SHADOW
-  transmittance *= 1.0 - sampleSceneShadow(viewPosition, worldPosition, jitter);
+  transmittance *= 1.0 - sampleSceneShadow(viewPosition, worldPosition, stbn);
   #endif // HAS_SCENE_SHADOW
+
+  #ifdef SCREEN_SPACE_SHADOW
+  transmittance *= 1.0 - getScreenSpaceShadow(viewPosition, viewNormal, stbn);
+  #endif // SCREEN_SPACE_SHADOW
 
   return transmittance;
 }
@@ -519,11 +524,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float sunTransmittance = 1.0;
 
   #ifdef HAS_ANY_SHADOW
-  float stbn = getSTBN();
-  sunTransmittance *= getSunTransmittance(viewPosition, worldPosition, positionECEF, stbn);
-  #ifdef SCREEN_SPACE_SHADOW
-  sunTransmittance *= getScreenSpaceShadow(viewPosition, viewNormal, stbn);
-  #endif // SCREEN_SPACE_SHADOW
+  sunTransmittance *= getSunTransmittance(viewPosition, viewNormal, worldPosition, positionECEF);
   #endif // HAS_ANY_SHADOW
 
   vec3 radiance;
