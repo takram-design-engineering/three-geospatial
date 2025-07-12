@@ -225,15 +225,12 @@ float sampleShadowOpticalDepthPCF(
 
   vec2 texelSize = vec2(1.0) / vec2(textureSize(overlayShadow.map, 0).xy);
   float sum = 0.0;
+  float phi = interleavedGradientNoise(gl_FragCoord.xy) * PI2;
   vec2 offset;
   #pragma unroll_loop_start
   for (int i = 0; i < 16; ++i) {
     #if UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
-    offset = vogelDisk(
-      UNROLLED_LOOP_INDEX,
-      SHADOW_SAMPLE_COUNT,
-      interleavedGradientNoise(gl_FragCoord.xy) * PI2
-    );
+    offset = vogelDisk(UNROLLED_LOOP_INDEX, SHADOW_SAMPLE_COUNT, phi);
     sum += readShadowOpticalDepth(uv + offset * radius * texelSize, distanceToTop, cascadeIndex);
     #endif // UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
   }
@@ -335,15 +332,12 @@ float sampleSceneShadowPCF(const vec3 worldPosition, const int cascadeIndex, con
 
   float compare = clip.z * 0.5 + 0.5;
   float sum = 0.0;
+  float phi = interleavedGradientNoise(gl_FragCoord.xy) * PI2;
   vec2 offset;
   #pragma unroll_loop_start
   for (int i = 0; i < 16; ++i) {
     #if UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
-    offset = vogelDisk(
-      UNROLLED_LOOP_INDEX,
-      SHADOW_SAMPLE_COUNT,
-      interleavedGradientNoise(gl_FragCoord.xy) * PI2
-    );
+    offset = vogelDisk(UNROLLED_LOOP_INDEX, SHADOW_SAMPLE_COUNT, phi);
     sum += readSceneShadow(uv + offset * sceneShadowRadius * texelSize, cascadeIndex, compare);
     #endif // UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
   }

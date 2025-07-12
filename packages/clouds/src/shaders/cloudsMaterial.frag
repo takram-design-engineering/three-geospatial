@@ -205,15 +205,12 @@ float sampleShadowOpticalDepthPCF(
     return readShadowOpticalDepth(uv, distanceToTop, distanceOffset, cascadeIndex);
   }
   float sum = 0.0;
+  float phi = interleavedGradientNoise(gl_FragCoord.xy + temporalJitter * resolution) * PI2;
   vec2 offset;
   #pragma unroll_loop_start
   for (int i = 0; i < 16; ++i) {
     #if UNROLLED_LOOP_INDEX < SHADOW_SAMPLE_COUNT
-    offset = vogelDisk(
-      UNROLLED_LOOP_INDEX,
-      SHADOW_SAMPLE_COUNT,
-      interleavedGradientNoise(gl_FragCoord.xy + temporalJitter * resolution) * PI2
-    );
+    offset = vogelDisk(UNROLLED_LOOP_INDEX, SHADOW_SAMPLE_COUNT, phi);
     sum += readShadowOpticalDepth(
       uv + offset * radius * shadowTexelSize,
       distanceToTop,
