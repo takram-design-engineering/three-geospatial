@@ -109,6 +109,14 @@ export class ScreenSpaceShadowPass extends Pass {
     return this.renderTarget.texture
   }
 
+  get normalBuffer(): Texture | null {
+    return this.screenSpaceShadowMaterial.uniforms.normalBuffer.value
+  }
+
+  set normalBuffer(value: Texture | null) {
+    this.screenSpaceShadowMaterial.uniforms.normalBuffer.value = value
+  }
+
   get sunDirection(): Vector3 {
     return this.screenSpaceShadowMaterial.uniforms.sunDirection.value
   }

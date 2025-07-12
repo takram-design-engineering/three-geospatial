@@ -1,5 +1,4 @@
 precision highp float;
-precision highp sampler3D;
 
 #include <packing>
 
@@ -8,8 +7,12 @@ precision highp sampler3D;
 
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 uniform highp sampler2D depthBuffer;
+uniform highp sampler2D normalBuffer;
+uniform highp sampler3D stbnTexture;
 #else // GL_FRAGMENT_PRECISION_HIGH
 uniform mediump sampler2D depthBuffer;
+uniform mediump sampler2D normalBuffer;
+uniform mediump sampler3D stbnTexture;
 #endif // GL_FRAGMENT_PRECISION_HIGH
 
 uniform mat4 projectionMatrix;
@@ -19,7 +22,6 @@ uniform float cameraNear;
 uniform float cameraFar;
 uniform vec2 texelSize;
 uniform vec3 sunDirection;
-uniform sampler3D stbnTexture;
 uniform int frame;
 
 in vec2 vUv;
@@ -69,13 +71,13 @@ void main() {
     inverseProjectionMatrix
   );
   vec3 viewNormal;
-  // #ifdef RECONSTRUCT_NORMAL
+  #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);
   vec3 dy = dFdy(viewPosition);
   viewNormal = normalize(cross(dx, dy));
-  // #else // RECONSTRUCT_NORMAL
-  // viewNormal = readNormal(vUv);
-  // #endif // RECONSTRUCT_NORMAL
+  #else // RECONSTRUCT_NORMAL
+  viewNormal = texture(normalBuffer, vUv).rgb * 2.0 - 1.0;
+  #endif // RECONSTRUCT_NORMAL
 
   vec2 hitUv;
   vec3 hitPosition;

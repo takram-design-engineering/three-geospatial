@@ -38,6 +38,7 @@ import vertexShader from './shaders/screenSpaceShadowMaterial.vert?raw'
 export interface ScreenSpaceShadowMaterialUniforms {
   [key: string]: Uniform<unknown>
   depthBuffer: Uniform<Texture | null>
+  normalBuffer: Uniform<Texture | null>
   projectionMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>
   viewMatrix: Uniform<Matrix4>
@@ -66,6 +67,7 @@ export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
       depthTest: false,
       uniforms: {
         depthBuffer: new Uniform(null),
+        normalBuffer: new Uniform(null),
         projectionMatrix: new Uniform(new Matrix4()),
         inverseProjectionMatrix: new Uniform(new Matrix4()),
         viewMatrix: new Uniform(new Matrix4()),
@@ -125,4 +127,7 @@ export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
 
   @defineInt('DEPTH_PACKING')
   depthPacking: DepthPackingStrategies = RGBADepthPacking
+
+  @define('RECONSTRUCT_NORMAL')
+  reconstructNormal = false
 }
