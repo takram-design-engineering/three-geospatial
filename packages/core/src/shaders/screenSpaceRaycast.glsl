@@ -32,13 +32,13 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MAX_SSR_ITERATIONS
-#define MAX_SSR_ITERATIONS 1000
-#endif // MAX_SSR_ITERATIONS
+#ifndef SSR_MAX_ITERATIONS
+#define SSR_MAX_ITERATIONS 1000
+#endif // SSR_MAX_ITERATIONS
 
-#ifndef MAX_SSR_BINARY_SEARCH_ITERATIONS
-#define MAX_SSR_BINARY_SEARCH_ITERATIONS 64
-#endif // MAX_SSR_BINARY_SEARCH_ITERATIONS
+#ifndef SSR_MAX_BINARY_SEARCH_ITERATIONS
+#define SSR_MAX_BINARY_SEARCH_ITERATIONS 64
+#endif // SSR_MAX_BINARY_SEARCH_ITERATIONS
 
 struct ScreenSpaceRaycastOptions {
   int iterations;
@@ -161,7 +161,7 @@ bool screenSpaceRaycast(
 
   bool intersect = false;
   int count = 0;
-  for (int i = 0; i < MAX_SSR_ITERATIONS; ++i) {
+  for (int i = 0; i < SSR_MAX_ITERATIONS; ++i) {
     if (i >= options.iterations) {
       break;
     }
@@ -195,7 +195,7 @@ bool screenSpaceRaycast(
     zA = PQK.z / PQK.w;
     zB = zA;
 
-    for (int i = 0; i < MAX_SSR_BINARY_SEARCH_ITERATIONS; ++i) {
+    for (int i = 0; i < SSR_MAX_BINARY_SEARCH_ITERATIONS; ++i) {
       if (i >= options.binarySearchIterations) {
         break;
       }
