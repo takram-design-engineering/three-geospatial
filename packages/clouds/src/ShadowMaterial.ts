@@ -76,10 +76,10 @@ export class ShadowMaterial extends RawShaderMaterial {
             math,
             raySphereIntersection
           },
-          types,
+          clouds,
           parameters,
           structuredSampling,
-          clouds
+          types
         })
       ),
       blending: NoBlending,

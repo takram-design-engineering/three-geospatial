@@ -1,6 +1,7 @@
 precision highp float;
 precision highp sampler2DArray;
 
+#include "core/bayer"
 #include "core/turbo"
 #include "catmullRomSampling"
 #include "varianceClipping"
@@ -37,13 +38,6 @@ const ivec2 neighborOffsets[9] = ivec2[9](
   ivec2(1, -1),
   ivec2(1, 0),
   ivec2(1, 1)
-);
-
-const ivec4[4] bayerIndices = ivec4[4](
-  ivec4(0, 12, 3, 15),
-  ivec4(8, 4, 11, 7),
-  ivec4(2, 14, 1, 13),
-  ivec4(10, 6, 9, 5)
 );
 
 vec2 getUnjitteredUv(ivec2 coord) {

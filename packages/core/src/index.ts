@@ -2,6 +2,7 @@ export type { FrustumSplitMode } from './helpers/splitFrustum'
 
 export * from './ArrayBufferLoader'
 export * from './assertions'
+export * from './bayer'
 export * from './bufferGeometry'
 export * from './capabilities'
 export * from './CascadedShadow'

@@ -29,6 +29,7 @@ import {
 } from '@takram/three-atmosphere/shaders/bruneton'
 import {
   assertType,
+  bayerOffsets,
   define,
   defineExpression,
   defineFloat,
@@ -48,7 +49,6 @@ import {
   vogelDisk
 } from '@takram/three-geospatial/shaders'
 
-import { bayerOffsets } from './bayer'
 import { defaults } from './qualityPresets'
 import type {
   AtmosphereUniforms,
@@ -171,13 +171,13 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         fragmentShader: unrollLoops(
           resolveIncludes(fragmentShader, {
             core: {
-              depth,
-              math,
-              turbo,
-              generators,
-              raySphereIntersection,
               cascadedShadow,
+              depth,
+              generators,
               interleavedGradientNoise,
+              math,
+              raySphereIntersection,
+              turbo,
               vogelDisk
             },
             atmosphere: {
