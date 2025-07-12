@@ -82,7 +82,7 @@ bool screenSpaceRaycast(
   const mat4 projectionMatrix,
   const vec2 texelSize,
   const float jitter,
-  out vec2 hitUV, // In UV
+  out vec2 hitUv, // In UV
   out vec3 hitPosition, // In view space
   out float rayLength,
   out int iterationCount
@@ -173,14 +173,14 @@ bool screenSpaceRaycast(
     zA = zB;
     zB = (dPQK.z * 0.5 + PQK.z) / (dPQK.w * 0.5 + PQK.w);
 
-    hitUV = permute ? PQK.yx : PQK.xy;
-    hitUV *= texelSize;
-    if (hitUV.x < 0.0 || hitUV.x > 1.0 || hitUV.y < 0.0 || hitUV.y > 1.0) {
+    hitUv = permute ? PQK.yx : PQK.xy;
+    hitUv *= texelSize;
+    if (hitUv.x < 0.0 || hitUv.x > 1.0 || hitUv.y < 0.0 || hitUv.y > 1.0) {
       // Need to terminate here for a screen-space shadow use.
       // TODO: Revisit this in SSR later.
       break;
     }
-    intersect = rayIntersectsDepth(zA, zB, hitUV, options.thickness);
+    intersect = rayIntersectsDepth(zA, zB, hitUv, options.thickness);
 
     count = i;
   }
@@ -204,11 +204,11 @@ bool screenSpaceRaycast(
       zA = zB;
       zB = (dPQK.z * -0.5 + PQK.z) / (dPQK.w * -0.5 + PQK.w);
 
-      hitUV = permute ? PQK.yx : PQK.xy;
-      hitUV *= texelSize;
+      hitUv = permute ? PQK.yx : PQK.xy;
+      hitUv *= texelSize;
 
       originalStepSize *= 0.5;
-      stride = rayIntersectsDepth(zA, zB, hitUV, options.thickness)
+      stride = rayIntersectsDepth(zA, zB, hitUv, options.thickness)
         ? -originalStepSize
         : originalStepSize;
     }

@@ -393,11 +393,17 @@ float getCascadedSceneShadow(vec2 uv) {
 #endif // HAS_SCENE_SHADOW
 
 #ifdef SCREEN_SPACE_SHADOW
-float getScreenSpaceShadow(const vec3 viewPosition, const vec3 viewNormal, const float jitter) {
-  vec2 hitUV;
+float getScreenSpaceShadow(
+  const vec2 uv,
+  const vec3 viewPosition,
+  const vec3 viewNormal,
+  const float jitter
+) {
+  vec2 hitUv;
   vec3 hitPosition;
   float rayLength;
   int iterationCount;
+
   const float normalBias = 0.0001;
   bool hit = screenSpaceRaycast(
     defaultScreenSpaceRaycastOptions,
@@ -406,18 +412,18 @@ float getScreenSpaceShadow(const vec3 viewPosition, const vec3 viewNormal, const
     projectionMatrix,
     texelSize,
     jitter,
-    hitUV,
+    hitUv,
     hitPosition,
     rayLength,
     iterationCount
   );
-  return hit
-    ? 1.0
-    : 0.0;
+  return float(hit);
 }
 #endif // SCREEN_SPACE_SHADOW
 
+#ifdef HAS_ANY_SHADOW
 float getSunTransmittance(
+  const vec2 uv,
   const vec3 viewPosition,
   const vec3 viewNormal,
   const vec3 worldPosition,
@@ -437,11 +443,12 @@ float getSunTransmittance(
   #endif // HAS_SCENE_SHADOW
 
   #ifdef SCREEN_SPACE_SHADOW
-  transmittance *= 1.0 - getScreenSpaceShadow(viewPosition, viewNormal, stbn);
+  transmittance *= 1.0 - getScreenSpaceShadow(uv, viewPosition, viewNormal, stbn);
   #endif // SCREEN_SPACE_SHADOW
 
   return transmittance;
 }
+#endif // HAS_ANY_SHADOW
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #if defined(HAS_LIGHTING_MASK) && defined(DEBUG_SHOW_LIGHTING_MASK)
@@ -527,7 +534,13 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float sunTransmittance = 1.0;
 
   #ifdef HAS_ANY_SHADOW
-  sunTransmittance *= getSunTransmittance(viewPosition, viewNormal, worldPosition, positionECEF);
+  sunTransmittance *= getSunTransmittance(
+    uv,
+    viewPosition,
+    viewNormal,
+    worldPosition,
+    positionECEF
+  );
   #endif // HAS_ANY_SHADOW
 
   vec3 radiance;
