@@ -24,6 +24,16 @@ uniform vec2 texelSize;
 uniform vec3 sunDirection;
 uniform int frame;
 
+// Configurations
+uniform int iterations;
+uniform int binarySearchIterations;
+uniform float thickness;
+uniform float stepSize;
+uniform float minStepSize;
+uniform float minStepSizeDistance;
+uniform float maxRayDistance;
+uniform float normalBias;
+
 in vec2 vUv;
 
 layout(location = 0) out vec4 outputColor;
@@ -79,15 +89,24 @@ void main() {
   viewNormal = texture(normalBuffer, vUv).rgb * 2.0 - 1.0;
   #endif // RECONSTRUCT_NORMAL
 
+  ScreenSpaceRaycastOptions options = ScreenSpaceRaycastOptions(
+    iterations,
+    binarySearchIterations,
+    thickness,
+    stepSize,
+    minStepSize,
+    minStepSizeDistance,
+    maxRayDistance
+  );
+
   vec2 hitUv;
   vec3 hitPosition;
   float rayLength;
   int iterationCount;
 
-  const float normalBias = 0.0001;
   float stbn = getSTBN();
   bool hit = screenSpaceRaycast(
-    defaultScreenSpaceRaycastOptions,
+    options,
     viewPosition - viewNormal * viewPosition.z * normalBias,
     (viewMatrix * vec4(sunDirection, 0.0)).xyz,
     projectionMatrix,

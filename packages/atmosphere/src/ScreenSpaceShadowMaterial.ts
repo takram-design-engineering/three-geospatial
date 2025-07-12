@@ -48,6 +48,17 @@ export interface ScreenSpaceShadowMaterialUniforms {
   sunDirection: Uniform<Vector3>
   stbnTexture: Uniform<Data3DTexture | null>
   frame: Uniform<number>
+
+  // Configurations
+  iterations: Uniform<number>
+  binarySearchIterations: Uniform<number>
+  thickness: Uniform<number>
+  stepSize: Uniform<number> // In pixels
+  minStepSize: Uniform<number> // In pixels
+  // The step size will be "minStepSize" for the ray starting at this distance.
+  minStepSizeDistance: Uniform<number>
+  maxRayDistance: Uniform<number>
+  normalBias: Uniform<number>
 }
 
 export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
@@ -76,7 +87,17 @@ export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
         texelSize: new Uniform(new Vector2()),
         sunDirection: new Uniform(new Vector3()),
         stbnTexture: new Uniform(null),
-        frame: new Uniform(0)
+        frame: new Uniform(0),
+
+        // Configurations
+        iterations: new Uniform(100),
+        binarySearchIterations: new Uniform(4),
+        thickness: new Uniform(100),
+        stepSize: new Uniform(20),
+        minStepSize: new Uniform(2),
+        minStepSizeDistance: new Uniform(5000),
+        maxRayDistance: new Uniform(10000),
+        normalBias: new Uniform(0.0001)
       } satisfies ScreenSpaceShadowMaterialUniforms
     })
   }

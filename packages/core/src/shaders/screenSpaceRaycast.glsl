@@ -51,16 +51,6 @@ struct ScreenSpaceRaycastOptions {
   float maxRayDistance;
 };
 
-const ScreenSpaceRaycastOptions defaultScreenSpaceRaycastOptions = ScreenSpaceRaycastOptions(
-  100, // iterations
-  4, // binarySearchIterations
-  100.0, // thickness
-  20.0, // stepSize
-  2.0, // minStepSize
-  5000.0, // minStepSizeDistance
-  10000.0 // maxRayDistance
-);
-
 bool rayIntersectsDepth(float zA, float zB, const vec2 uv, const float thickness) {
   if (zA > zB) {
     float tmp = zA;
