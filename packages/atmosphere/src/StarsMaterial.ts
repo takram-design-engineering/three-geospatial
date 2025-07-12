@@ -1,5 +1,4 @@
 import {
-  GLSL3,
   Matrix4,
   Uniform,
   Vector2,
@@ -74,7 +73,6 @@ export class StarsMaterial extends AtmosphereMaterialBase {
 
     super({
       name: 'StarsMaterial',
-      glslVersion: GLSL3,
       vertexShader,
       fragmentShader: resolveIncludes(fragmentShader, {
         bruneton: {

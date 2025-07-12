@@ -1,6 +1,5 @@
 import {
   Color,
-  GLSL3,
   Matrix4,
   Uniform,
   Vector3,
@@ -85,7 +84,6 @@ export class SkyMaterial extends AtmosphereMaterialBase {
 
     super({
       name: 'SkyMaterial',
-      glslVersion: GLSL3,
       vertexShader,
       fragmentShader: resolveIncludes(fragmentShader, {
         core: { raySphereIntersection },

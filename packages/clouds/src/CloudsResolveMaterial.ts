@@ -1,5 +1,6 @@
 import {
   GLSL3,
+  NoBlending,
   RawShaderMaterial,
   Uniform,
   Vector2,
@@ -65,6 +66,10 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
           varianceClipping
         })
       ),
+      blending: NoBlending,
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false,
       uniforms: {
         colorBuffer: new Uniform(colorBuffer),
         depthVelocityBuffer: new Uniform(depthVelocityBuffer),

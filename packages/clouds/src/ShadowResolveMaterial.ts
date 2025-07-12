@@ -1,5 +1,6 @@
 import {
   GLSL3,
+  NoBlending,
   RawShaderMaterial,
   Uniform,
   Vector2,
@@ -48,6 +49,10 @@ export class ShadowResolveMaterial extends RawShaderMaterial {
           varianceClipping
         })
       ),
+      blending: NoBlending,
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false,
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
         historyBuffer: new Uniform(historyBuffer),

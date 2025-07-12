@@ -1,5 +1,4 @@
 import {
-  GLSL3,
   Matrix4,
   Uniform,
   Vector2,
@@ -159,7 +158,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     super(
       {
         name: 'CloudsMaterial',
-        glslVersion: GLSL3,
         vertexShader: resolveIncludes(vertexShader, {
           atmosphere: {
             bruneton: {

@@ -1,5 +1,7 @@
 import {
+  GLSL3,
   Matrix4,
+  NoBlending,
   RawShaderMaterial,
   Uniform,
   Vector3,
@@ -122,6 +124,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     } = { ...atmosphereMaterialParametersBaseDefaults, ...params }
 
     super({
+      glslVersion: GLSL3,
+      blending: NoBlending,
       toneMapped: false,
       depthWrite: false,
       depthTest: false,

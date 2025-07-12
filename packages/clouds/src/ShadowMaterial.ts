@@ -1,6 +1,7 @@
 import {
   GLSL3,
   Matrix4,
+  NoBlending,
   RawShaderMaterial,
   Uniform,
   Vector2,
@@ -81,6 +82,10 @@ export class ShadowMaterial extends RawShaderMaterial {
           clouds
         })
       ),
+      blending: NoBlending,
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false,
       uniforms: {
         ...parameterUniforms,
         ...layerUniforms,

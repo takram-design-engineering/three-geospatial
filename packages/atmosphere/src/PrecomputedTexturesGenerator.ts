@@ -198,6 +198,10 @@ class PrecomputeMaterial extends RawShaderMaterial {
     super({
       glslVersion: GLSL3,
       vertexShader,
+      blending: NoBlending,
+      toneMapped: false,
+      depthWrite: false,
+      depthTest: false,
       ...params,
       defines: {
         TRANSMITTANCE_TEXTURE_WIDTH: TRANSMITTANCE_TEXTURE_WIDTH.toFixed(0),
