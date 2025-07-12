@@ -1,8 +1,8 @@
 precision highp sampler2DArray;
 
-#if defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW) || defined(SCREEN_SPACE_SHADOW)
+#if defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW)
 #define HAS_ANY_SHADOW
-#endif // defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW) || defined(SCREEN_SPACE_SHADOW)
+#endif // defined(HAS_OVERLAY_SHADOW) || defined(HAS_SCENE_SHADOW)
 
 #include "core/depth"
 #include "core/math"
@@ -18,10 +18,6 @@ precision highp sampler2DArray;
 #ifdef HAS_OVERLAY_SHADOW
 #include "core/raySphereIntersection"
 #endif // HAS_OVERLAY_SHADOW
-
-#ifdef SCREEN_SPACE_SHADOW
-#include "core/screenSpaceRaycast"
-#endif // SCREEN_SPACE_SHADOW
 
 #include "bruneton/definitions"
 
@@ -108,6 +104,10 @@ uniform float sceneShadowRadius;
 #define sceneShadowMatrices sceneShadow.matrices
 #define sceneShadowInverseMatrices sceneShadow.inverseMatrices
 #endif // HAS_SCENE_SHADOW
+
+#ifdef SCREEN_SPACE_SHADOW
+uniform sampler2D screenSpaceShadowBuffer;
+#endif // SCREEN_SPACE_SHADOW
 
 varying vec3 vCameraPosition;
 varying vec3 vRayDirection;
@@ -392,36 +392,6 @@ float getCascadedSceneShadow(vec2 uv) {
 
 #endif // HAS_SCENE_SHADOW
 
-#ifdef SCREEN_SPACE_SHADOW
-float getScreenSpaceShadow(
-  const vec2 uv,
-  const vec3 viewPosition,
-  const vec3 viewNormal,
-  const float jitter
-) {
-  vec2 hitUv;
-  vec3 hitPosition;
-  float rayLength;
-  int iterationCount;
-
-  const float normalBias = 0.0001;
-  bool hit = screenSpaceRaycast(
-    defaultScreenSpaceRaycastOptions,
-    viewPosition - viewNormal * viewPosition.z * normalBias,
-    (viewMatrix * vec4(sunDirection, 0.0)).xyz,
-    projectionMatrix,
-    texelSize,
-    jitter,
-    hitUv,
-    hitPosition,
-    rayLength,
-    iterationCount
-  );
-  return float(hit);
-}
-#endif // SCREEN_SPACE_SHADOW
-
-#ifdef HAS_ANY_SHADOW
 float getSunTransmittance(
   const vec2 uv,
   const vec3 viewPosition,
@@ -430,6 +400,8 @@ float getSunTransmittance(
   const vec3 positionECEF
 ) {
   float transmittance = 1.0;
+
+  #ifdef HAS_ANY_SHADOW
   float stbn = getSTBN();
 
   #ifdef HAS_OVERLAY_SHADOW
@@ -441,14 +413,15 @@ float getSunTransmittance(
   #ifdef HAS_SCENE_SHADOW
   transmittance *= 1.0 - sampleSceneShadow(viewPosition, worldPosition, stbn);
   #endif // HAS_SCENE_SHADOW
+  #endif // HAS_ANY_SHADOW
 
   #ifdef SCREEN_SPACE_SHADOW
-  transmittance *= 1.0 - getScreenSpaceShadow(uv, viewPosition, viewNormal, stbn);
+  vec4 screenSpaceShadow = texture(screenSpaceShadowBuffer, uv);
+  transmittance *= 1.0 - screenSpaceShadow.r;
   #endif // SCREEN_SPACE_SHADOW
 
   return transmittance;
 }
-#endif // HAS_ANY_SHADOW
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #if defined(HAS_LIGHTING_MASK) && defined(DEBUG_SHOW_LIGHTING_MASK)
@@ -531,17 +504,13 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   correctGeometricError(positionECEF, normalECEF);
   #endif // CORRECT_GEOMETRIC_ERROR
 
-  float sunTransmittance = 1.0;
-
-  #ifdef HAS_ANY_SHADOW
-  sunTransmittance *= getSunTransmittance(
+  float sunTransmittance = getSunTransmittance(
     uv,
     viewPosition,
     viewNormal,
     worldPosition,
     positionECEF
   );
-  #endif // HAS_ANY_SHADOW
 
   vec3 radiance;
   #if defined(SUN_LIGHT) || defined(SKY_LIGHT)

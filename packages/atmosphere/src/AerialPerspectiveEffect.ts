@@ -1,7 +1,9 @@
 import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import {
   Camera,
+  DepthPackingStrategies,
   Matrix4,
+  TextureDataType,
   Uniform,
   Vector2,
   Vector3,
@@ -50,6 +52,7 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from './constants'
 import { getAltitudeCorrectionOffset } from './getAltitudeCorrectionOffset'
+import { ScreenSpaceShadowPass } from './ScreenSpaceShadowPass'
 import {
   AtmosphereLightingMask,
   AtmosphereSceneShadow,
@@ -131,7 +134,7 @@ export interface AerialPerspectiveEffectUniforms {
   stbnTexture: Uniform<Data3DTexture | null>
   frame: Uniform<number>
 
-  // Overlay and overlay shadow
+  // Compositions
   overlayBuffer: Uniform<Texture | null>
   overlayShadow: Uniform<{
     map: Texture | null
@@ -143,14 +146,8 @@ export interface AerialPerspectiveEffectUniforms {
     topHeight: number
   }>
   overlayShadowRadius: Uniform<number>
-
-  // Shadow length
   shadowLengthBuffer: Uniform<Texture | null>
-
-  // Lighting mask
   lightingMaskBuffer: Uniform<Texture | null>
-
-  // Scene shadow
   sceneShadow: Uniform<{
     maps: Texture[]
     cascadeCount: number
@@ -161,6 +158,7 @@ export interface AerialPerspectiveEffectUniforms {
     far: number
   }>
   sceneShadowRadius: Uniform<number>
+  screenSpaceShadowBuffer: Uniform<Texture | null>
 
   // Uniforms for atmosphere functions
   atmosphere: AtmosphereParametersUniform
@@ -205,6 +203,8 @@ export class AerialPerspectiveEffect extends Effect {
   lightingMask: AtmosphereLightingMask | null = null
   sceneShadow: AtmosphereSceneShadow | null = null
 
+  private readonly screenSpaceShadowPass: ScreenSpaceShadowPass
+
   constructor(
     private camera = new Camera(),
     options?: AerialPerspectiveEffectOptions,
@@ -240,6 +240,10 @@ export class AerialPerspectiveEffect extends Effect {
       lunarRadianceScale
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
+    // TODO: Create the resources (especially the GPU resources) for the
+    // screen-space shadow only when they are needed.
+    const screenSpaceShadowPass = new ScreenSpaceShadowPass()
+
     super(
       'AerialPerspectiveEffect',
       unrollLoops(
@@ -270,7 +274,7 @@ export class AerialPerspectiveEffect extends Effect {
         // prettier-ignore
         uniforms: new Map<string, Uniform>(
           Object.entries({
-            normalBuffer: new Uniform(normalBuffer),
+            normalBuffer: new Uniform(null),
             projectionMatrix: new Uniform(new Matrix4()),
             viewMatrix: new Uniform(new Matrix4()),
             inverseProjectionMatrix: new Uniform(new Matrix4()),
@@ -290,7 +294,7 @@ export class AerialPerspectiveEffect extends Effect {
             stbnTexture: new Uniform(null),
             frame: new Uniform(0),
 
-            // Overlay and overlay shadow
+            // Compositions
             overlayBuffer: new Uniform(null),
             overlayShadow: new Uniform({
               map: null,
@@ -302,14 +306,8 @@ export class AerialPerspectiveEffect extends Effect {
               topHeight: 0
             }),
             overlayShadowRadius: new Uniform(3),
-
-            // Shadow length
             shadowLengthBuffer: new Uniform(null),
-
-            // Lighting mask
             lightingMaskBuffer: new Uniform(null),
-
-            // Scene shadow
             sceneShadow: new Uniform({
               maps: [],
               cascadeCount: 0,
@@ -320,6 +318,7 @@ export class AerialPerspectiveEffect extends Effect {
               far: 0
             }),
             sceneShadowRadius: new Uniform(2),
+            screenSpaceShadowBuffer: new Uniform(screenSpaceShadowPass.texture),
 
             // Uniforms for atmosphere functions
             atmosphere: atmosphere.toUniform(),
@@ -347,6 +346,8 @@ export class AerialPerspectiveEffect extends Effect {
       }
     )
 
+    this.screenSpaceShadowPass = screenSpaceShadowPass
+    this.normalBuffer = normalBuffer
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
     this.singleMieScatteringTexture = singleMieScatteringTexture
@@ -428,6 +429,8 @@ export class AerialPerspectiveEffect extends Effect {
     } else {
       altitudeCorrection.value.setScalar(0)
     }
+
+    this.screenSpaceShadowPass.mainCamera = camera
   }
 
   private updateOverlay(): boolean {
@@ -573,6 +576,31 @@ export class AerialPerspectiveEffect extends Effect {
     }
 
     ++this.uniforms.get('frame').value
+
+    if (this.screenSpaceShadow) {
+      const { screenSpaceShadowPass } = this
+      screenSpaceShadowPass.sunDirection.copy(this.sunDirection)
+      screenSpaceShadowPass.render(renderer, null, null)
+    }
+  }
+
+  override initialize(
+    renderer: WebGLRenderer,
+    alpha: boolean,
+    frameBufferType: TextureDataType
+  ): void {
+    this.screenSpaceShadowPass.initialize(renderer, alpha, frameBufferType)
+  }
+
+  override setDepthTexture(
+    depthTexture: Texture,
+    depthPacking?: DepthPackingStrategies
+  ): void {
+    this.screenSpaceShadowPass.setDepthTexture(depthTexture, depthPacking)
+  }
+
+  override setSize(width: number, height: number): void {
+    this.screenSpaceShadowPass.setSize(width, height)
   }
 
   get normalBuffer(): Texture | null {
@@ -581,6 +609,7 @@ export class AerialPerspectiveEffect extends Effect {
 
   set normalBuffer(value: Texture | null) {
     this.uniforms.get('normalBuffer').value = value
+    this.screenSpaceShadowPass.normalBuffer = value
   }
 
   @define('OCT_ENCODED_NORMAL')
@@ -744,6 +773,7 @@ export class AerialPerspectiveEffect extends Effect {
 
   set stbnTexture(value: Data3DTexture | null) {
     this.uniforms.get('stbnTexture').value = value
+    this.screenSpaceShadowPass.stbnTexture = value
   }
 
   get overlayShadowRadius(): number {
