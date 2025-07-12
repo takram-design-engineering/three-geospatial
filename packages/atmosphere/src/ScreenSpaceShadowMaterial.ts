@@ -108,7 +108,7 @@ export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
 
-    this.perspectiveCamera = camera.isPerspectiveCamera === true
+    this._perspectiveCamera = camera.isPerspectiveCamera === true
     assertType<PerspectiveCamera | OrthographicCamera>(camera)
     uniforms.cameraNear.value = camera.near
     uniforms.cameraFar.value = camera.far
@@ -126,7 +126,7 @@ export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
     object: Object3D,
     group: Group
   ): void {
-    this.logarithmicDepthBuffer = renderer.capabilities.logarithmicDepthBuffer
+    this._logarithmicDepthBuffer = renderer.capabilities.logarithmicDepthBuffer
     ++this.uniforms.frame.value
   }
 
@@ -140,11 +140,11 @@ export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
 
   /** @private */
   @define('PERSPECTIVE_CAMERA')
-  perspectiveCamera = false
+  _perspectiveCamera = false
 
   /** @private */
   @define('USE_LOGDEPTHBUF')
-  logarithmicDepthBuffer = false
+  _logarithmicDepthBuffer = false
 
   @defineInt('DEPTH_PACKING')
   depthPacking: DepthPackingStrategies = RGBADepthPacking

@@ -128,23 +128,23 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
 
-    this.perspectiveCamera = camera.isPerspectiveCamera === true
+    this._perspectiveCamera = camera.isPerspectiveCamera === true
     const color = this.groundAlbedo
-    this.hasGroundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
-    this.hasShadowLength = this.shadowLength != null
+    this._hasGroundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
+    this._hasShadowLength = this.shadowLength != null
   }
 
   /** @private */
   @define('PERSPECTIVE_CAMERA')
-  perspectiveCamera = false
+  _perspectiveCamera = false
 
   /** @private */
   @define('HAS_GROUND_ALBEDO')
-  hasGroundAlbedo = false
+  _hasGroundAlbedo = false
 
   /** @private */
   @define('HAS_SHADOW_LENGTH')
-  hasShadowLength = false
+  _hasShadowLength = false
 
   @define('SUN')
   sun: boolean

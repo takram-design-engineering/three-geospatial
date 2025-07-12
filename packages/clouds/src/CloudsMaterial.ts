@@ -278,9 +278,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     // into fullscreen quad with another camera for the scene projection.
 
     const uniforms = this.uniforms
-    this.logarithmicDepthBuffer = renderer.capabilities.logarithmicDepthBuffer
-    this.powder = uniforms.powderScale.value > 0
-    this.groundBounce =
+    this._logarithmicDepthBuffer = renderer.capabilities.logarithmicDepthBuffer
+    this._powder = uniforms.powderScale.value > 0
+    this._groundBounce =
       uniforms.groundBounceScale.value > 0 &&
       uniforms.maxIterationCountToGround.value > 0
   }
@@ -288,7 +288,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   override copyCameraSettings(camera: Camera): void {
     // Intentionally omit the call of super.
 
-    this.perspectiveCamera = camera.isPerspectiveCamera === true
+    this._perspectiveCamera = camera.isPerspectiveCamera === true
 
     const uniforms = this.uniforms
     uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
@@ -395,19 +395,19 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
 
   /** @private */
   @define('PERSPECTIVE_CAMERA')
-  perspectiveCamera = false
+  _perspectiveCamera = false
 
   /** @private */
   @define('USE_LOGDEPTHBUF')
-  logarithmicDepthBuffer = false
+  _logarithmicDepthBuffer = false
 
   /** @private */
   @define('POWDER')
-  powder = false
+  _powder = false
 
   /** @private */
   @define('GROUND_BOUNCE')
-  groundBounce = false
+  _groundBounce = false
 
   @defineInt('DEPTH_PACKING')
   depthPacking = 0

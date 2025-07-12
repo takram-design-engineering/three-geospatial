@@ -59,7 +59,7 @@ export class LightingMaskMaterial extends RawShaderMaterial {
   }
 
   copyCameraSettings(camera: Camera): void {
-    this.perspectiveCamera = camera.isPerspectiveCamera === true
+    this._perspectiveCamera = camera.isPerspectiveCamera === true
     assertType<PerspectiveCamera | OrthographicCamera>(camera)
     const uniforms = this.uniforms
     uniforms.cameraNear.value = camera.near
@@ -92,7 +92,7 @@ export class LightingMaskMaterial extends RawShaderMaterial {
 
   /** @private */
   @define('PERSPECTIVE_CAMERA')
-  perspectiveCamera = false
+  _perspectiveCamera = false
 
   @defineInt('DEPTH_PACKING_0')
   depthPacking0: DepthPackingStrategies = RGBADepthPacking
