@@ -277,56 +277,18 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     // Disable onBeforeRender in AtmosphereMaterialBase because we're rendering
     // into fullscreen quad with another camera for the scene projection.
 
-    const prevLogarithmicDepthBuffer = this.defines.USE_LOGDEPTHBUF != null
-    const nextLogarithmicDepthBuffer =
-      renderer.capabilities.logarithmicDepthBuffer
-    if (nextLogarithmicDepthBuffer !== prevLogarithmicDepthBuffer) {
-      if (nextLogarithmicDepthBuffer) {
-        this.defines.USE_LOGDEPTHBUF = '1'
-      } else {
-        delete this.defines.USE_LOGDEPTHBUF
-      }
-    }
-
-    const prevPowder = this.defines.POWDER != null
-    const nextPowder = this.uniforms.powderScale.value > 0
-    if (nextPowder !== prevPowder) {
-      if (nextPowder) {
-        this.defines.POWDER = '1'
-      } else {
-        delete this.defines.POWDER
-      }
-      this.needsUpdate = true
-    }
-
-    const prevGroundIrradiance = this.defines.GROUND_BOUNCE != null
-    const nextGroundIrradiance =
-      this.uniforms.groundBounceScale.value > 0 &&
-      this.uniforms.maxIterationCountToGround.value > 0
-    if (nextGroundIrradiance !== prevGroundIrradiance) {
-      if (nextPowder) {
-        this.defines.GROUND_BOUNCE = '1'
-      } else {
-        delete this.defines.GROUND_BOUNCE
-      }
-      this.needsUpdate = true
-    }
+    const uniforms = this.uniforms
+    this.logarithmicDepthBuffer = renderer.capabilities.logarithmicDepthBuffer
+    this.powder = uniforms.powderScale.value > 0
+    this.groundBounce =
+      uniforms.groundBounceScale.value > 0 &&
+      uniforms.maxIterationCountToGround.value > 0
   }
 
   override copyCameraSettings(camera: Camera): void {
     // Intentionally omit the call of super.
 
-    if (camera.isPerspectiveCamera === true) {
-      if (this.defines.PERSPECTIVE_CAMERA !== '1') {
-        this.defines.PERSPECTIVE_CAMERA = '1'
-        this.needsUpdate = true
-      }
-    } else {
-      if (this.defines.PERSPECTIVE_CAMERA != null) {
-        delete this.defines.PERSPECTIVE_CAMERA
-        this.needsUpdate = true
-      }
-    }
+    this.perspectiveCamera = camera.isPerspectiveCamera === true
 
     const uniforms = this.uniforms
     uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
@@ -430,6 +392,22 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   set depthBuffer(value: Texture | null) {
     this.uniforms.depthBuffer.value = value
   }
+
+  /** @private */
+  @define('PERSPECTIVE_CAMERA')
+  perspectiveCamera = false
+
+  /** @private */
+  @define('USE_LOGDEPTHBUF')
+  logarithmicDepthBuffer = false
+
+  /** @private */
+  @define('POWDER')
+  powder = false
+
+  /** @private */
+  @define('GROUND_BOUNCE')
+  groundBounce = false
 
   @defineInt('DEPTH_PACKING')
   depthPacking = 0

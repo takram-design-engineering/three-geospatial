@@ -124,49 +124,27 @@ export class SkyMaterial extends AtmosphereMaterialBase {
   ): void {
     super.onBeforeRender(renderer, scene, camera, geometry, object, group)
 
-    const { uniforms, defines } = this
+    const { uniforms } = this
     uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
 
-    const prevPerspectiveCamera = defines.PERSPECTIVE_CAMERA != null
-    const nextPerspectiveCamera = camera.isPerspectiveCamera === true
-    if (nextPerspectiveCamera !== prevPerspectiveCamera) {
-      if (nextPerspectiveCamera) {
-        defines.PERSPECTIVE_CAMERA = '1'
-      } else {
-        delete defines.PERSPECTIVE_CAMERA
-      }
-      this.needsUpdate = true
-    }
-
+    this.perspectiveCamera = camera.isPerspectiveCamera === true
     const color = this.groundAlbedo
-    const prevGroundAlbedo = defines.GROUND_ALBEDO != null
-    const nextGroundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
-    if (nextGroundAlbedo !== prevGroundAlbedo) {
-      if (nextGroundAlbedo) {
-        this.defines.GROUND_ALBEDO = '1'
-      } else {
-        delete this.defines.GROUND_ALBEDO
-      }
-      this.needsUpdate = true
-    }
-
-    const shadowLength = this.shadowLength
-    const prevShadowLength = defines.HAS_SHADOW_LENGTH != null
-    const nextShadowLength = shadowLength != null
-    if (nextShadowLength !== prevShadowLength) {
-      if (nextShadowLength) {
-        defines.HAS_SHADOW_LENGTH = '1'
-      } else {
-        delete defines.HAS_SHADOW_LENGTH
-        uniforms.shadowLengthBuffer.value = null
-      }
-      this.needsUpdate = true
-    }
-    if (nextShadowLength) {
-      uniforms.shadowLengthBuffer.value = shadowLength.map
-    }
+    this.hasGroundAlbedo = color.r !== 0 || color.g !== 0 || color.b !== 0
+    this.hasShadowLength = this.shadowLength != null
   }
+
+  /** @private */
+  @define('PERSPECTIVE_CAMERA')
+  perspectiveCamera = false
+
+  /** @private */
+  @define('HAS_GROUND_ALBEDO')
+  hasGroundAlbedo = false
+
+  /** @private */
+  @define('HAS_SHADOW_LENGTH')
+  hasShadowLength = false
 
   @define('SUN')
   sun: boolean

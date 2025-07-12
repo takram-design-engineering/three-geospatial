@@ -3,6 +3,7 @@ import {
   DepthPackingStrategies,
   GLSL3,
   NoBlending,
+  OrthographicCamera,
   PerspectiveCamera,
   RawShaderMaterial,
   RGBADepthPacking,
@@ -10,7 +11,12 @@ import {
   Uniform
 } from 'three'
 
-import { define, defineInt, resolveIncludes } from '@takram/three-geospatial'
+import {
+  assertType,
+  define,
+  defineInt,
+  resolveIncludes
+} from '@takram/three-geospatial'
 import { depth } from '@takram/three-geospatial/shaders'
 
 import fragmentShader from './shaders/lightingMaskMaterial.frag?raw'
@@ -53,13 +59,11 @@ export class LightingMaskMaterial extends RawShaderMaterial {
   }
 
   copyCameraSettings(camera: Camera): void {
-    const isPerspectiveCamera = camera instanceof PerspectiveCamera
-    this.isPerspectiveCamera = isPerspectiveCamera
-    if (isPerspectiveCamera) {
-      const uniforms = this.uniforms
-      uniforms.cameraNear.value = camera.near
-      uniforms.cameraFar.value = camera.far
-    }
+    this.perspectiveCamera = camera.isPerspectiveCamera === true
+    assertType<PerspectiveCamera | OrthographicCamera>(camera)
+    const uniforms = this.uniforms
+    uniforms.cameraNear.value = camera.near
+    uniforms.cameraFar.value = camera.far
   }
 
   get inputBuffer(): Texture | null {
@@ -86,8 +90,9 @@ export class LightingMaskMaterial extends RawShaderMaterial {
     this.uniforms.depthBuffer1.value = value
   }
 
+  /** @private */
   @define('PERSPECTIVE_CAMERA')
-  isPerspectiveCamera = false
+  perspectiveCamera = false
 
   @defineInt('DEPTH_PACKING_0')
   depthPacking0: DepthPackingStrategies = RGBADepthPacking

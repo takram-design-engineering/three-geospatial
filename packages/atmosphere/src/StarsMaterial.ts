@@ -118,16 +118,12 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     uniforms.cameraFar.value = camera.far
     uniforms.pointSize.value = this.pointSize * renderer.getPixelRatio()
 
-    const isPerspectiveCamera = camera.isPerspectiveCamera === true
-    if ((this.defines.PERSPECTIVE_CAMERA != null) !== isPerspectiveCamera) {
-      if (isPerspectiveCamera) {
-        this.defines.PERSPECTIVE_CAMERA = '1'
-      } else {
-        delete this.defines.PERSPECTIVE_CAMERA
-      }
-      this.needsUpdate = true
-    }
+    this.perspectiveCamera = camera.isPerspectiveCamera === true
   }
+
+  /** @private */
+  @define('PERSPECTIVE_CAMERA')
+  perspectiveCamera = false
 
   get magnitudeRange(): Vector2 {
     return this.uniforms.magnitudeRange.value

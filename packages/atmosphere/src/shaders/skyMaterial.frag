@@ -57,7 +57,7 @@ void main() {
   vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
   vec3 rayDirection = normalize(vRayDirection);
 
-  #ifdef GROUND_ALBEDO
+  #ifdef HAS_GROUND_ALBEDO
 
   bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
   if (intersectsGround) {
@@ -97,7 +97,7 @@ void main() {
     );
   }
 
-  #else // GROUND_ALBEDO
+  #else // HAS_GROUND_ALBEDO
 
   outputColor.rgb = getSkyRadiance(
     cameraPosition,
@@ -109,7 +109,7 @@ void main() {
     lunarRadianceScale
   );
 
-  #endif // GROUND_ALBEDO
+  #endif // HAS_GROUND_ALBEDO
 
   outputColor.a = 1.0;
 
