@@ -100,7 +100,7 @@ DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundary(
     const in AtmosphereParameters atmosphere, Length r, Number mu) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
-  return exp(-(
+  vec3 opticalDepth = (
       atmosphere.rayleigh_scattering *
           ComputeOpticalLengthToTopAtmosphereBoundary(
               atmosphere, atmosphere.rayleigh_density, r, mu) +
@@ -109,7 +109,12 @@ DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundary(
               atmosphere, atmosphere.mie_density, r, mu) +
       atmosphere.absorption_extinction *
           ComputeOpticalLengthToTopAtmosphereBoundary(
-              atmosphere, atmosphere.absorption_density, r, mu)));
+              atmosphere, atmosphere.absorption_density, r, mu));
+  #ifdef TRANSMITTANCE_PRECISION_LOG
+  return opticalDepth;
+  #else // TRANSMITTANCE_PRECISION_LOG
+  return exp(-opticalDepth);
+  #endif // TRANSMITTANCE_PRECISION_LOG
 }
 
 Number GetUnitRangeFromTextureCoord(Number u, int texture_size) {

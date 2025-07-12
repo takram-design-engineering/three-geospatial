@@ -24,6 +24,7 @@ import {
   type Texture,
   type WebGLRenderer
 } from 'three'
+import invariant from 'tiny-invariant'
 
 import {
   isFloatLinearSupported,
@@ -147,6 +148,7 @@ async function readRenderTargetPixels(
 class Context {
   lambdas = new Vector3()
   luminanceFromRadiance = new Matrix3()
+  opticalDepth?: WebGLRenderTarget
   deltaIrradiance: WebGLRenderTarget
   deltaRayleighScattering: WebGL3DRenderTarget
   deltaMieScattering: WebGL3DRenderTarget
@@ -154,6 +156,13 @@ class Context {
   deltaMultipleScattering: WebGL3DRenderTarget
 
   constructor(type: AnyFloatType) {
+    if (type === HalfFloatType) {
+      this.opticalDepth = createRenderTarget(
+        type,
+        TRANSMITTANCE_TEXTURE_WIDTH,
+        TRANSMITTANCE_TEXTURE_HEIGHT
+      )
+    }
     this.deltaIrradiance = createRenderTarget(
       type,
       IRRADIANCE_TEXTURE_WIDTH,
@@ -186,6 +195,7 @@ class Context {
   }
 
   dispose(): void {
+    this.opticalDepth?.dispose()
     this.deltaIrradiance.dispose()
     this.deltaRayleighScattering.dispose()
     this.deltaMieScattering.dispose()
@@ -431,23 +441,47 @@ export class PrecomputedTexturesGenerator {
   private computeTransmittance(params: {
     renderTarget: WebGLRenderTarget
   }): void {
-    this.mesh.material = this.transmittanceMaterial
+    const material = this.transmittanceMaterial
+    delete material.defines.TRANSMITTANCE_PRECISION_LOG
+    material.needsUpdate = true
+
+    this.mesh.material = material
+    this.renderer.setRenderTarget(params.renderTarget)
+    this.renderer.render(this.scene, this.camera)
+  }
+
+  private computeOpticalDepth(params: {
+    renderTarget: WebGLRenderTarget
+  }): void {
+    const material = this.transmittanceMaterial
+    material.defines.TRANSMITTANCE_PRECISION_LOG = '1'
+    material.needsUpdate = true
+
+    this.mesh.material = material
     this.renderer.setRenderTarget(params.renderTarget)
     this.renderer.render(this.scene, this.camera)
   }
 
   private computeDirectIrradiance(params: {
     renderTarget: WebGLRenderTarget
+    context: Context
     output: 'deltaIrradiance' | 'irradiance'
     additive: boolean
   }): void {
     const material = this.directIrradianceMaterial
     material.defines.OUTPUT = params.output
     material.additive = params.additive
+    if (this.type === HalfFloatType) {
+      material.defines.TRANSMITTANCE_PRECISION_LOG = '1'
+    } else {
+      delete material.defines.TRANSMITTANCE_PRECISION_LOG
+    }
     material.needsUpdate = true
 
     const uniforms = material.uniforms
-    uniforms.transmittanceTexture.value = this.transmittanceRenderTarget.texture
+    uniforms.transmittanceTexture.value =
+      params.context.opticalDepth?.texture ??
+      this.transmittanceRenderTarget.texture
 
     this.mesh.material = material
     this.renderer.setRenderTarget(params.renderTarget)
@@ -463,10 +497,17 @@ export class PrecomputedTexturesGenerator {
     const material = this.singleScatteringMaterial
     material.defines.OUTPUT = params.output
     material.additive = params.additive
+    if (this.type === HalfFloatType) {
+      material.defines.TRANSMITTANCE_PRECISION_LOG = '1'
+    } else {
+      delete material.defines.TRANSMITTANCE_PRECISION_LOG
+    }
     material.needsUpdate = true
 
     const uniforms = material.uniforms
-    uniforms.transmittanceTexture.value = this.transmittanceRenderTarget.texture
+    uniforms.transmittanceTexture.value =
+      params.context.opticalDepth?.texture ??
+      this.transmittanceRenderTarget.texture
     material.setUniforms(params.context)
 
     this.mesh.material = material
@@ -479,8 +520,17 @@ export class PrecomputedTexturesGenerator {
     scatteringOrder: number
   }): void {
     const material = this.scatteringDensityMaterial
+    if (this.type === HalfFloatType) {
+      material.defines.TRANSMITTANCE_PRECISION_LOG = '1'
+    } else {
+      delete material.defines.TRANSMITTANCE_PRECISION_LOG
+    }
+    material.needsUpdate = true
+
     const uniforms = material.uniforms
-    uniforms.transmittanceTexture.value = this.transmittanceRenderTarget.texture
+    uniforms.transmittanceTexture.value =
+      params.context.opticalDepth?.texture ??
+      this.transmittanceRenderTarget.texture
     uniforms.scatteringOrder.value = params.scatteringOrder
     material.setUniforms(params.context)
 
@@ -518,10 +568,17 @@ export class PrecomputedTexturesGenerator {
     const material = this.multipleScatteringMaterial
     material.defines.OUTPUT = params.output
     material.additive = params.additive
+    if (this.type === HalfFloatType) {
+      material.defines.TRANSMITTANCE_PRECISION_LOG = '1'
+    } else {
+      delete material.defines.TRANSMITTANCE_PRECISION_LOG
+    }
     material.needsUpdate = true
 
     const uniforms = material.uniforms
-    uniforms.transmittanceTexture.value = this.transmittanceRenderTarget.texture
+    uniforms.transmittanceTexture.value =
+      params.context.opticalDepth?.texture ??
+      this.transmittanceRenderTarget.texture
     material.setUniforms(params.context)
 
     this.mesh.material = material
@@ -538,17 +595,28 @@ export class PrecomputedTexturesGenerator {
       renderTarget: this.transmittanceRenderTarget
     })
 
+    // Compute the optical depth, and store it in opticalDepth. Avoid having
+    // tiny transmittance values underflow to 0 due to half-float precision.
+    if (this.type === HalfFloatType) {
+      invariant(context.opticalDepth != null)
+      this.computeOpticalDepth({
+        renderTarget: context.opticalDepth
+      })
+    }
+
     // Compute the direct irradiance, store it in deltaIrradiance and,
     // depending on "additive", either initialize irradianceTexture with zeros
     // or leave it unchanged (we don't want the direct irradiance in
     // irradianceTexture, but only the irradiance from the sky).
     this.computeDirectIrradiance({
       renderTarget: context.deltaIrradiance,
+      context,
       output: 'deltaIrradiance',
       additive: false
     })
     this.computeDirectIrradiance({
       renderTarget: this.irradianceRenderTarget,
+      context,
       output: 'irradiance',
       additive
     })
