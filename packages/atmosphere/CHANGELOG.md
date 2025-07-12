@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fixed the transmittance values underflow to zero in half-float precision at the precomputation stage.
+
 ## [0.13.0] - 2025-07-05
 
 ### Added
