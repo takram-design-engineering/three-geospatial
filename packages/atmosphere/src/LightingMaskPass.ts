@@ -1,44 +1,21 @@
-import {
-  ClearPass,
-  DepthCopyPass,
-  DepthMaskMaterial,
-  DepthTestStrategy,
-  Pass,
-  RenderPass,
-  Selection,
-  ShaderPass
-} from 'postprocessing'
+import { DepthCopyPass, Pass, RenderPass, Selection } from 'postprocessing'
 import {
   BasicDepthPacking,
-  Color,
   DepthTexture,
-  LessEqualDepth,
   MeshBasicMaterial,
   RedFormat,
   RGBADepthPacking,
-  Uniform,
   UnsignedIntType,
   WebGLRenderTarget,
   type Camera,
   type DepthPackingStrategies,
-  type Material,
   type Scene,
   type Texture,
   type TextureDataType,
   type WebGLRenderer
 } from 'three'
 
-import { resolveIncludes } from '@takram/three-geospatial'
-import { depth } from '@takram/three-geospatial/shaders'
-
-import fragmentShader from './shaders/lightingMaskPass.frag?raw'
-
-declare module 'postprocessing' {
-  interface DepthMaskMaterial {
-    fullscreenMaterial: Material
-    copyCameraSettings: (camera: Camera) => void
-  }
-}
+import { LightingMaskMaterial } from './LightingMaskMaterial'
 
 export class LightingMaskPass extends Pass {
   private readonly renderPass: RenderPass
@@ -46,9 +23,7 @@ export class LightingMaskPass extends Pass {
   private readonly renderTarget: WebGLRenderTarget
   private readonly depthCopyPass0: DepthCopyPass
   private readonly depthCopyPass1: DepthCopyPass
-  private readonly clearPass: ClearPass
-  private readonly depthMaskMaterial: DepthMaskMaterial
-  private readonly depthMaskPass: ShaderPass
+  private readonly lightingMaskMaterial: LightingMaskMaterial
 
   readonly selection = new Selection()
 
@@ -72,24 +47,11 @@ export class LightingMaskPass extends Pass {
     this.depthCopyPass0 = new DepthCopyPass({ depthPacking: RGBADepthPacking })
     this.depthCopyPass1 = new DepthCopyPass({ depthPacking: RGBADepthPacking })
 
-    this.clearPass = new ClearPass(true, false, false)
-    this.clearPass.overrideClearColor = new Color(0xffffff)
-    this.clearPass.overrideClearAlpha = 1
-
-    const depthMaskMaterial = new DepthMaskMaterial()
-    depthMaskMaterial.fragmentShader = resolveIncludes(fragmentShader, {
-      core: { depth }
-    })
-    depthMaskMaterial.uniforms.inverted = new Uniform(false)
-    depthMaskMaterial.copyCameraSettings(camera)
-    depthMaskMaterial.depthBuffer0 = this.depthCopyPass0.texture
-    depthMaskMaterial.depthPacking0 = RGBADepthPacking
-    depthMaskMaterial.depthBuffer1 = this.depthCopyPass1.texture
-    depthMaskMaterial.depthPacking1 = RGBADepthPacking
-    depthMaskMaterial.depthMode = LessEqualDepth
-    depthMaskMaterial.maxDepthStrategy = DepthTestStrategy.DISCARD_MAX_DEPTH
-    this.depthMaskMaterial = depthMaskMaterial
-    this.depthMaskPass = new ShaderPass(depthMaskMaterial)
+    const lightingMaskMaterial = new LightingMaskMaterial()
+    lightingMaskMaterial.copyCameraSettings(camera)
+    lightingMaskMaterial.depthBuffer0 = this.depthCopyPass0.texture
+    lightingMaskMaterial.depthBuffer1 = this.depthCopyPass1.texture
+    this.lightingMaskMaterial = lightingMaskMaterial
   }
 
   // eslint-disable-next-line accessor-pairs
@@ -100,7 +62,7 @@ export class LightingMaskPass extends Pass {
   // eslint-disable-next-line accessor-pairs
   override set mainCamera(value: Camera) {
     this.renderPass.mainCamera = value
-    this.depthMaskMaterial.copyCameraSettings(value)
+    this.lightingMaskMaterial.copyCameraSettings(value)
   }
 
   override initialize(
@@ -109,8 +71,6 @@ export class LightingMaskPass extends Pass {
     frameBufferType: TextureDataType
   ): void {
     this.renderPass.initialize(renderer, alpha, frameBufferType)
-    this.clearPass.initialize(renderer, alpha, frameBufferType)
-    this.depthMaskPass.initialize(renderer, alpha, frameBufferType)
   }
 
   override setDepthTexture(
@@ -134,11 +94,14 @@ export class LightingMaskPass extends Pass {
     // We cannot precisely compare the depth buffer and a texture rendered with
     // MeshDepthMaterial. Store the current depth and the selection depth with
     // the same packing and create a mask.
+    const renderTarget = this.renderTarget
     this.depthCopyPass0.render(renderer, null, null)
-    this.renderPass.render(renderer, this.renderTarget, null)
+    this.renderPass.render(renderer, renderTarget, null)
     this.depthCopyPass1.render(renderer, null, null)
-    this.clearPass.render(renderer, this.renderTarget, null)
-    this.depthMaskPass.render(renderer, null, this.renderTarget)
+
+    this.fullscreenMaterial = this.lightingMaskMaterial
+    renderer.setRenderTarget(this.renderToScreen ? null : renderTarget)
+    renderer.render(this.scene, this.camera)
 
     renderer.autoClear = autoClear
   }
@@ -162,11 +125,11 @@ export class LightingMaskPass extends Pass {
   }
 
   get inverted(): boolean {
-    return this.depthMaskMaterial.uniforms.inverted.value
+    return this.lightingMaskMaterial.uniforms.inverted.value
   }
 
   set inverted(value: boolean) {
-    this.depthMaskMaterial.uniforms.inverted.value = value
+    this.lightingMaskMaterial.uniforms.inverted.value = value
   }
 }
 
