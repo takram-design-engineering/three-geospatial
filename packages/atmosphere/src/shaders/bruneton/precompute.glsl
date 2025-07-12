@@ -100,7 +100,7 @@ DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundary(
     const in AtmosphereParameters atmosphere, Length r, Number mu) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
-  vec3 opticalDepth = (
+  vec3 optical_depth = (
       atmosphere.rayleigh_scattering *
           ComputeOpticalLengthToTopAtmosphereBoundary(
               atmosphere, atmosphere.rayleigh_density, r, mu) +
@@ -111,9 +111,9 @@ DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundary(
           ComputeOpticalLengthToTopAtmosphereBoundary(
               atmosphere, atmosphere.absorption_density, r, mu));
   #ifdef TRANSMITTANCE_PRECISION_LOG
-  return opticalDepth;
+  return optical_depth;
   #else // TRANSMITTANCE_PRECISION_LOG
-  return exp(-opticalDepth);
+  return exp(-optical_depth);
   #endif // TRANSMITTANCE_PRECISION_LOG
 }
 

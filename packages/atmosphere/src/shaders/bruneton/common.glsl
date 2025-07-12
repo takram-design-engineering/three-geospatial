@@ -133,14 +133,14 @@ DimensionlessSpectrum GetTransmittanceToTopAtmosphereBoundary(
   #ifdef TRANSMITTANCE_PRECISION_LOG
   // Manually interpolate the transmittance instead of the optical depth.
   const vec2 size = vec2(TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
-  const vec3 texelSize = vec3(1.0 / size, 0.0);
+  const vec3 texel_size = vec3(1.0 / size, 0.0);
   vec2 coord = (uv * size) - 0.5;
-  vec2 i = (floor(coord) + 0.5) * texelSize.xy;
+  vec2 i = (floor(coord) + 0.5) * texel_size.xy;
   vec2 f = fract(coord);
   vec4 t1 = exp(-texture(transmittance_texture, i));
-  vec4 t2 = exp(-texture(transmittance_texture, i + texelSize.xz));
-  vec4 t3 = exp(-texture(transmittance_texture, i + texelSize.zy));
-  vec4 t4 = exp(-texture(transmittance_texture, i + texelSize.xy));
+  vec4 t2 = exp(-texture(transmittance_texture, i + texel_size.xz));
+  vec4 t3 = exp(-texture(transmittance_texture, i + texel_size.zy));
+  vec4 t4 = exp(-texture(transmittance_texture, i + texel_size.xy));
   return DimensionlessSpectrum(mix(mix(t1, t2, f.x), mix(t3, t4, f.x), f.y));
   #else // TRANSMITTANCE_PRECISION_LOG
   return DimensionlessSpectrum(texture(transmittance_texture, uv));
