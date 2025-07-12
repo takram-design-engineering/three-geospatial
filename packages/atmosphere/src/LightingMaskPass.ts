@@ -27,7 +27,7 @@ export class LightingMaskPass extends Pass {
 
   readonly selection = new Selection()
 
-  constructor(scene: Scene, camera: Camera) {
+  constructor(scene?: Scene, camera?: Camera) {
     super('LightingMaskPass')
     this.needsSwap = false
     this.needsDepthTexture = true
@@ -48,7 +48,9 @@ export class LightingMaskPass extends Pass {
     this.depthCopyPass1 = new DepthCopyPass({ depthPacking: RGBADepthPacking })
 
     const lightingMaskMaterial = new LightingMaskMaterial()
-    lightingMaskMaterial.copyCameraSettings(camera)
+    if (camera != null) {
+      lightingMaskMaterial.copyCameraSettings(camera)
+    }
     lightingMaskMaterial.depthBuffer0 = this.depthCopyPass0.texture
     lightingMaskMaterial.depthBuffer1 = this.depthCopyPass1.texture
     this.lightingMaskMaterial = lightingMaskMaterial
