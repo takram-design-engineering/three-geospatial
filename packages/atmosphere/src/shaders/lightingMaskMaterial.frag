@@ -46,7 +46,9 @@ void main() {
   depth.y = texture(depthBuffer1, vUv).r;
   #endif // DEPTH_PACKING_1 == 3201
 
+  #ifdef USE_LOGDEPTHBUF
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
+  #endif // USE_LOGDEPTHBUF
 
   #ifdef PERSPECTIVE_CAMERA
   depth.x = viewZToOrthographicDepth(getViewZ(depth.x), cameraNear, cameraFar);

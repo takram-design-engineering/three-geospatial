@@ -492,7 +492,10 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     #endif // HAS_OVERLAY
     return;
   }
+
+  #ifdef USE_LOGDEPTHBUF
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
+  #endif // USE_LOGDEPTHBUF
 
   // Reconstruct position and normal in world space.
   vec3 viewPosition = screenToView(
