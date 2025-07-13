@@ -25,17 +25,6 @@ const Scene: FC = () => {
     depth: false
   })
 
-  const effectComposer = useMemo(
-    () => (
-      <EffectComposer key={Math.random()}>
-        {output !== 'render' && <Geometry output={output} />}
-        {depth && <Depth useTurbo />}
-        {output === 'render' && !depth && <ToneMapping />}
-      </EffectComposer>
-    ),
-    [output, depth]
-  )
-
   const Material = (
     {
       basic: 'meshBasicMaterial',
@@ -51,7 +40,7 @@ const Scene: FC = () => {
       <OrbitControls />
       <ambientLight />
       <directionalLight position={[1, 1, 1]} />
-      {effectComposer}
+
       {[...Array(10)].map((_, x, { length }) => {
         const n = length - 1
         return [...Array(10)].map((_, y, { length }) => {
@@ -75,6 +64,17 @@ const Scene: FC = () => {
           )
         })
       })}
+
+      {useMemo(
+        () => (
+          <EffectComposer key={JSON.stringify([output, depth])}>
+            {output !== 'render' && <Geometry output={output} />}
+            {depth && <Depth useTurbo />}
+            {output === 'render' && !depth && <ToneMapping />}
+          </EffectComposer>
+        ),
+        [output, depth]
+      )}
     </>
   )
 }

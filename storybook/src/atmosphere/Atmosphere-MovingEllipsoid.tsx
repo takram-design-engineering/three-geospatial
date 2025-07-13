@@ -146,17 +146,12 @@ const Scene: FC = () => {
             far={600}
           />
         </SunLight>
-        {useMemo(
-          () => (
-            <EffectComposer multisampling={8}>
-              <AerialPerspective />
-              <LensFlare />
-              <ToneMapping mode={toneMappingMode} />
-              <Dithering />
-            </EffectComposer>
-          ),
-          [toneMappingMode]
-        )}
+        <EffectComposer multisampling={8}>
+          <AerialPerspective />
+          <LensFlare />
+          <ToneMapping mode={toneMappingMode} />
+          <Dithering />
+        </EffectComposer>
       </Atmosphere>
     </>
   )

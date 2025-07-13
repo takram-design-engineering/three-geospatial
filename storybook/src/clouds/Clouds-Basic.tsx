@@ -2,7 +2,7 @@ import { Box, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { EffectComposer, SMAA, ToneMapping } from '@react-three/postprocessing'
 import type { StoryFn } from '@storybook/react-vite'
-import { Fragment, useRef, useState, type FC } from 'react'
+import { Fragment, useMemo, useRef, useState, type FC } from 'react'
 
 import {
   AerialPerspective,
@@ -72,25 +72,34 @@ const Scene: FC = () => {
         </EastNorthUpFrame>
       )}
       <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
-        <EffectComposer multisampling={0} enableNormalPass>
-          <Fragment
-            // Effects are order-dependant; we need to reconstruct the nodes.
-            key={JSON.stringify([enabled, exclusive])}
-          >
-            {enabled && (
-              <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps} />
-            )}
-            <AerialPerspective sky sunLight skyLight />
-            {!exclusive && (
-              <>
-                <LensFlare />
-                <ToneMapping mode={toneMappingMode} />
-                <SMAA />
-                <Dithering />
-              </>
-            )}
-          </Fragment>
-        </EffectComposer>
+        {useMemo(
+          () => (
+            <EffectComposer multisampling={0} enableNormalPass>
+              <Fragment
+                // Effects are order-dependant; we need to reconstruct the nodes.
+                key={JSON.stringify([enabled, exclusive])}
+              >
+                {enabled && (
+                  <Clouds
+                    ref={setClouds}
+                    shadow-maxFar={1e5}
+                    {...cloudsProps}
+                  />
+                )}
+                <AerialPerspective sky sunLight skyLight />
+                {!exclusive && (
+                  <>
+                    <LensFlare />
+                    <ToneMapping mode={toneMappingMode} />
+                    <SMAA />
+                    <Dithering />
+                  </>
+                )}
+              </Fragment>
+            </EffectComposer>
+          ),
+          [cloudsProps, enabled, exclusive, toneMappingMode]
+        )}
       </Atmosphere>
     </>
   )

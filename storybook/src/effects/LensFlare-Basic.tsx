@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import type { StoryFn } from '@storybook/react-vite'
 import { ToneMappingMode } from 'postprocessing'
-import { useMemo, type FC } from 'react'
+import { Fragment, useMemo, type FC } from 'react'
 
 import { LensFlare } from '@takram/three-geospatial-effects/r3f'
 
@@ -14,28 +14,27 @@ const Scene: FC = () => {
     enabled: true
   })
 
-  const effectComposer = useMemo(
-    () => (
-      <EffectComposer key={Math.random()}>
-        <>
-          {enabled && (
-            <LensFlare
-              intensity={0.1}
-              featuresMaterial-ghostAmount={0.1}
-              featuresMaterial-haloAmount={0.1}
-            />
-          )}
-          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        </>
-      </EffectComposer>
-    ),
-    [enabled]
-  )
   return (
     <>
       <OrbitControls />
       <Environment files='public/hdri/wooden_lounge_4k.hdr' background />
-      {effectComposer}
+      {useMemo(
+        () => (
+          <EffectComposer>
+            <Fragment key={JSON.stringify([enabled])}>
+              {enabled && (
+                <LensFlare
+                  intensity={0.1}
+                  featuresMaterial-ghostAmount={0.1}
+                  featuresMaterial-haloAmount={0.1}
+                />
+              )}
+              <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+            </Fragment>
+          </EffectComposer>
+        ),
+        [enabled]
+      )}
     </>
   )
 }

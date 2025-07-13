@@ -5,7 +5,7 @@ import {
   EffectMaterial,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
+import { Fragment, useLayoutEffect, useMemo, useRef, type FC } from 'react'
 
 import {
   AerialPerspective,
@@ -130,34 +130,51 @@ const Scene: FC<SceneProps> = ({
       <Globe>
         <GlobeControls enableDamping />
       </Globe>
-      <EffectComposer ref={composerRef} multisampling={0}>
-        <Fragment
-          // Effects are order-dependant; we need to reconstruct the nodes.
-          key={JSON.stringify([depth, enabled, lensFlare, lut, normal])}
-        >
-          {depth && <Depth useTurbo />}
-          {normal && <Normal />}
-          {!depth && !normal && (
-            <>
-              {enabled && (
-                <AerialPerspective
-                  sunLight={sun}
-                  skyLight={sky}
-                  transmittance={transmittance}
-                  inscatter={inscatter}
-                  correctGeometricError={correctGeometricError}
-                  albedoScale={2 / Math.PI}
-                />
+      {useMemo(
+        () => (
+          <EffectComposer ref={composerRef} multisampling={0}>
+            <Fragment
+              // Effects are order-dependant; we need to reconstruct the nodes.
+              key={JSON.stringify([depth, enabled, lensFlare, lut, normal])}
+            >
+              {depth && <Depth useTurbo />}
+              {normal && <Normal />}
+              {!depth && !normal && (
+                <>
+                  {enabled && (
+                    <AerialPerspective
+                      sunLight={sun}
+                      skyLight={sky}
+                      transmittance={transmittance}
+                      inscatter={inscatter}
+                      correctGeometricError={correctGeometricError}
+                      albedoScale={2 / Math.PI}
+                    />
+                  )}
+                  {lensFlare && <LensFlare />}
+                  <ToneMapping mode={toneMappingMode} />
+                  {lut != null && <HaldLUT path={lut} />}
+                  <SMAA />
+                  <Dithering />
+                </>
               )}
-              {lensFlare && <LensFlare />}
-              <ToneMapping mode={toneMappingMode} />
-              {lut != null && <HaldLUT path={lut} />}
-              <SMAA />
-              <Dithering />
-            </>
-          )}
-        </Fragment>
-      </EffectComposer>
+            </Fragment>
+          </EffectComposer>
+        ),
+        [
+          correctGeometricError,
+          depth,
+          enabled,
+          inscatter,
+          lensFlare,
+          lut,
+          normal,
+          sky,
+          sun,
+          toneMappingMode,
+          transmittance
+        ]
+      )}
       <CameraTransition mode={orthographic ? 'orthographic' : 'perspective'} />
     </Atmosphere>
   )

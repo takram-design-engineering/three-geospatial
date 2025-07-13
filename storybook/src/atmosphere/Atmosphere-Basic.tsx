@@ -9,6 +9,7 @@ import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   Fragment,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ComponentRef,
@@ -165,31 +166,47 @@ const Scene: FC = () => {
       </EastNorthUpFrame>
 
       {/* Post-processing */}
-      <EffectComposer multisampling={0}>
-        <Fragment
-          // Effects are order-dependant; we need to reconstruct the nodes.
-          key={JSON.stringify([enabled, mode, lensFlare, normal, depth])}
-        >
-          {depth && <Depth useTurbo />}
-          {normal && <Normal />}
-          {!depth && !normal && (
-            <>
-              {enabled && (
-                <AerialPerspective
-                  sunLight={mode === 'post-process' && sun}
-                  skyLight={mode === 'post-process' && sky}
-                  transmittance={transmittance}
-                  inscatter={inscatter}
-                />
+      {useMemo(
+        () => (
+          <EffectComposer multisampling={0}>
+            <Fragment
+              // Effects are order-dependant; we need to reconstruct the nodes.
+              key={JSON.stringify([enabled, mode, lensFlare, normal, depth])}
+            >
+              {depth && <Depth useTurbo />}
+              {normal && <Normal />}
+              {!depth && !normal && (
+                <>
+                  {enabled && (
+                    <AerialPerspective
+                      sunLight={mode === 'post-process' && sun}
+                      skyLight={mode === 'post-process' && sky}
+                      transmittance={transmittance}
+                      inscatter={inscatter}
+                    />
+                  )}
+                  {lensFlare && <LensFlare />}
+                  <ToneMapping mode={toneMappingMode} />
+                  <SMAA />
+                  <Dithering />
+                </>
               )}
-              {lensFlare && <LensFlare />}
-              <ToneMapping mode={toneMappingMode} />
-              <SMAA />
-              <Dithering />
-            </>
-          )}
-        </Fragment>
-      </EffectComposer>
+            </Fragment>
+          </EffectComposer>
+        ),
+        [
+          depth,
+          enabled,
+          inscatter,
+          lensFlare,
+          mode,
+          normal,
+          sky,
+          sun,
+          toneMappingMode,
+          transmittance
+        ]
+      )}
     </Atmosphere>
   )
 }

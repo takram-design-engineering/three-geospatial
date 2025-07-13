@@ -10,6 +10,7 @@ import {
   Fragment,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type FC
@@ -162,49 +163,64 @@ const Scene: FC<SceneProps> = ({
   return (
     <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
       <GlobeAndControls />
-      <EffectComposer ref={composerRef} multisampling={0}>
-        <Fragment
-          // Effects are order-dependant; we need to reconstruct the nodes.
-          key={JSON.stringify([
-            depth,
-            enabled,
-            exclusive,
-            lensFlare,
-            lut,
-            normal
-          ])}
-        >
-          {depth && <Depth useTurbo />}
-          {normal && <Normal />}
-          {!normal && !depth && (
-            <>
-              {enabled && (
-                <Clouds
-                  ref={setClouds}
-                  shadow-farScale={0.25}
-                  {...cloudsProps}
-                />
-              )}
-              <AerialPerspective
-                sky
-                sunLight
-                skyLight
-                correctGeometricError={correctGeometricError}
-                albedoScale={2 / Math.PI}
-              />
-              {!exclusive && (
-            <>
-              {lensFlare && <LensFlare />}
-                  <ToneMapping mode={toneMappingMode} />
-                  {lut != null && <HaldLUT path={lut} />}
-                  <SMAA />
-                  <Dithering />
+      {useMemo(
+        () => (
+          <EffectComposer ref={composerRef} multisampling={0}>
+            <Fragment
+              // Effects are order-dependant; we need to reconstruct the nodes.
+              key={JSON.stringify([
+                depth,
+                enabled,
+                exclusive,
+                lensFlare,
+                lut,
+                normal
+              ])}
+            >
+              {depth && <Depth useTurbo />}
+              {normal && <Normal />}
+              {!normal && !depth && (
+                <>
+                  {enabled && (
+                    <Clouds
+                      ref={setClouds}
+                      shadow-farScale={0.25}
+                      {...cloudsProps}
+                    />
+                  )}
+                  <AerialPerspective
+                    sky
+                    sunLight
+                    skyLight
+                    correctGeometricError={correctGeometricError}
+                    albedoScale={2 / Math.PI}
+                  />
+                  {!exclusive && (
+                    <>
+                      {lensFlare && <LensFlare />}
+                      <ToneMapping mode={toneMappingMode} />
+                      {lut != null && <HaldLUT path={lut} />}
+                      <SMAA />
+                      <Dithering />
+                    </>
+                  )}
                 </>
               )}
-            </>
-          )}
-        </Fragment>
-      </EffectComposer>
+            </Fragment>
+          </EffectComposer>
+        ),
+        [
+          cloudsProps,
+          correctGeometricError,
+          depth,
+          enabled,
+          exclusive,
+          lensFlare,
+          lut,
+          normal,
+          toneMappingMode
+        ]
+      )}
     </Atmosphere>
   )
 }

@@ -7,7 +7,7 @@ import {
 import { Canvas, useFrame } from '@react-three/fiber'
 import { SMAA, ToneMapping } from '@react-three/postprocessing'
 import type { StoryFn } from '@storybook/react-vite'
-import { Fragment, useState, type FC } from 'react'
+import { Fragment, useMemo, useState, type FC } from 'react'
 import { Vector3 } from 'three'
 
 import {
@@ -95,25 +95,34 @@ const Scene: FC = () => {
         <SkyLight />
         <SunLight />
         <Stars data='atmosphere/stars.bin' />
-        <EffectComposer multisampling={0}>
-          <Fragment
-            // Effects are order-dependant; we need to reconstruct the nodes.
-            key={JSON.stringify([enabled, exclusive])}
-          >
-            {enabled && (
-              <Clouds ref={setClouds} shadow-maxFar={1e5} {...cloudsProps} />
-            )}
-            <AerialPerspective />
-            {!exclusive && (
-              <>
-                <LensFlare />
-                <ToneMapping mode={toneMappingMode} />
-                <SMAA />
-                <Dithering />
-              </>
-            )}
-          </Fragment>
-        </EffectComposer>
+        {useMemo(
+          () => (
+            <EffectComposer multisampling={0}>
+              <Fragment
+                // Effects are order-dependant; we need to reconstruct the nodes.
+                key={JSON.stringify([enabled, exclusive])}
+              >
+                {enabled && (
+                  <Clouds
+                    ref={setClouds}
+                    shadow-maxFar={1e5}
+                    {...cloudsProps}
+                  />
+                )}
+                <AerialPerspective />
+                {!exclusive && (
+                  <>
+                    <LensFlare />
+                    <ToneMapping mode={toneMappingMode} />
+                    <SMAA />
+                    <Dithering />
+                  </>
+                )}
+              </Fragment>
+            </EffectComposer>
+          ),
+          [cloudsProps, enabled, exclusive, toneMappingMode]
+        )}
       </Atmosphere>
     </>
   )

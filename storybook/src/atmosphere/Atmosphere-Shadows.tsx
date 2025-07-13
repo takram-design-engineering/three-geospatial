@@ -13,6 +13,7 @@ import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   Fragment,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ComponentRef,
@@ -214,38 +215,56 @@ const Scene: FC = () => {
       ))}
 
       {/* Post-processing */}
-      <EffectComposer multisampling={0}>
-        <Fragment
-          // Effects are order-dependant; we need to reconstruct the nodes.
-          key={JSON.stringify([enabled, mode, lensFlare, normal, depth])}
-        >
-          {depth && <Depth useTurbo />}
-          {normal && <Normal />}
-          {!depth && !normal && (
-            <>
-              {enabled && (
-                <AerialPerspective
-                  ref={setAerialPerspective}
-                  sunLight={mode === 'post-process' && sun}
-                  skyLight={mode === 'post-process' && sky}
-                  transmittance={transmittance}
-                  inscatter={inscatter}
-                  screenSpaceShadow={screenSpaceShadow}
-                />
-              )}
-              {!showShadowMap && (
+      {useMemo(
+        () => (
+          <EffectComposer multisampling={0}>
+            <Fragment
+              // Effects are order-dependant; we need to reconstruct the nodes.
+              key={JSON.stringify([enabled, mode, lensFlare, normal, depth])}
+            >
+              {depth && <Depth useTurbo />}
+              {normal && <Normal />}
+              {!depth && !normal && (
                 <>
-                  <N8AO intensity={3} aoRadius={20} />
-                  {lensFlare && <LensFlare />}
-                  <ToneMapping mode={toneMappingMode} />
-                  <SMAA />
-                  <Dithering />
+                  {enabled && (
+                    <AerialPerspective
+                      ref={setAerialPerspective}
+                      sunLight={mode === 'post-process' && sun}
+                      skyLight={mode === 'post-process' && sky}
+                      transmittance={transmittance}
+                      inscatter={inscatter}
+                      screenSpaceShadow={screenSpaceShadow}
+                    />
+                  )}
+                  {!showShadowMap && (
+                    <>
+                      <N8AO intensity={3} aoRadius={20} />
+                      {lensFlare && <LensFlare />}
+                      <ToneMapping mode={toneMappingMode} />
+                      <SMAA />
+                      <Dithering />
+                    </>
+                  )}
                 </>
               )}
-            </>
-          )}
-        </Fragment>
-      </EffectComposer>
+            </Fragment>
+          </EffectComposer>
+        ),
+        [
+          depth,
+          enabled,
+          inscatter,
+          lensFlare,
+          mode,
+          normal,
+          screenSpaceShadow,
+          showShadowMap,
+          sky,
+          sun,
+          toneMappingMode,
+          transmittance
+        ]
+      )}
     </Atmosphere>
   )
 }
