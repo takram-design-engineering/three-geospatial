@@ -73,13 +73,8 @@ void main() {
   #endif // USE_LOGDEPTHBUF
 
   // Reconstruct position and normal in world space.
-  vec3 viewPosition = screenToView(
-    vUv,
-    depth,
-    getViewZ(depth),
-    projectionMatrix,
-    inverseProjectionMatrix
-  );
+  float viewZ = getViewZ(depth);
+  vec3 viewPosition = screenToView(vUv, depth, viewZ, projectionMatrix, inverseProjectionMatrix);
   vec3 viewNormal;
   #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);

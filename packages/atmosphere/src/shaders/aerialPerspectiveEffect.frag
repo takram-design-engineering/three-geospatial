@@ -239,6 +239,7 @@ float sampleShadowOpticalDepthPCF(
 }
 
 float sampleShadowOpticalDepth(
+  const float viewZ,
   const vec3 worldPosition,
   const vec3 positionECEF,
   const float radius,
@@ -249,8 +250,7 @@ float sampleShadowOpticalDepth(
     return 0.0;
   }
   int cascadeIndex = getFadedCascadeIndex(
-    viewMatrix,
-    worldPosition,
+    viewZ,
     cameraNear,
     overlayShadow.far,
     overlayShadow.cascadeCount,
@@ -345,9 +345,9 @@ float sampleSceneShadowPCF(const vec3 worldPosition, const int cascadeIndex, con
   return sum / float(SHADOW_SAMPLE_COUNT);
 }
 
-float sampleSceneShadow(vec3 viewPosition, vec3 worldPosition, const float jitter) {
+float sampleSceneShadow(const float viewZ, const vec3 worldPosition, const float jitter) {
   int cascadeIndex = getFadedCascadeIndex(
-    viewPosition,
+    viewZ,
     cameraNear,
     sceneShadow.far,
     sceneShadow.cascadeCount,
@@ -388,8 +388,7 @@ float getCascadedSceneShadow(vec2 uv) {
 
 float getSunTransmittance(
   const vec2 uv,
-  const vec3 viewPosition,
-  const vec3 viewNormal,
+  const float viewZ,
   const vec3 worldPosition,
   const vec3 positionECEF
 ) {
@@ -400,12 +399,12 @@ float getSunTransmittance(
 
   #ifdef HAS_OVERLAY_SHADOW
   float radius = deriveOverlayShadowRadius(worldPosition);
-  float opticalDepth = sampleShadowOpticalDepth(worldPosition, positionECEF, radius, stbn);
+  float opticalDepth = sampleShadowOpticalDepth(viewZ, worldPosition, positionECEF, radius, stbn);
   transmittance *= exp(-opticalDepth);
   #endif // HAS_OVERLAY_SHADOW
 
   #ifdef HAS_SCENE_SHADOW
-  transmittance *= 1.0 - sampleSceneShadow(viewPosition, worldPosition, stbn);
+  transmittance *= 1.0 - sampleSceneShadow(viewZ, worldPosition, stbn);
   #endif // HAS_SCENE_SHADOW
   #endif // HAS_ANY_SHADOW
 
@@ -471,13 +470,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // USE_LOGDEPTHBUF
 
   // Reconstruct position and normal in world space.
-  vec3 viewPosition = screenToView(
-    uv,
-    depth,
-    getViewZ(depth),
-    projectionMatrix,
-    inverseProjectionMatrix
-  );
+  float viewZ = getViewZ(depth);
+  vec3 viewPosition = screenToView(uv, depth, viewZ, projectionMatrix, inverseProjectionMatrix);
   vec3 viewNormal;
   #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);
@@ -497,13 +491,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   correctGeometricError(positionECEF, normalECEF);
   #endif // CORRECT_GEOMETRIC_ERROR
 
-  float sunTransmittance = getSunTransmittance(
-    uv,
-    viewPosition,
-    viewNormal,
-    worldPosition,
-    positionECEF
-  );
+  float sunTransmittance = getSunTransmittance(uv, viewZ, worldPosition, positionECEF);
 
   vec3 radiance;
   #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
