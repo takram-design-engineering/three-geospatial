@@ -255,6 +255,7 @@ float sampleShadowOpticalDepth(
       overlayShadow.far,
       overlayShadow.cascadeCount,
       overlayShadow.intervals,
+      0.5,
       jitter
     ),
     overlayShadow.cascadeCount
