@@ -3,6 +3,7 @@ import type { Meta } from '@storybook/react-vite'
 import _Basic from './Atmosphere-Basic'
 import _LightingMask from './Atmosphere-LightingMask'
 import _MovingEllipsoid from './Atmosphere-MovingEllipsoid'
+import _Shadows from './Atmosphere-Shadows'
 import _Vanilla from './Atmosphere-Vanilla'
 
 export default {
@@ -15,4 +16,5 @@ export default {
 export const Basic = _Basic
 export const LightingMask = _LightingMask
 export const MovingEllipsoid = _MovingEllipsoid
+export const Shadows = _Shadows
 export const Vanilla = _Vanilla
