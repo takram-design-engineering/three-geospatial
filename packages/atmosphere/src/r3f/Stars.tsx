@@ -96,7 +96,7 @@ export const Stars: FC<StarsProps> = ({
   useFrame(({ camera }) => {
     if (transientStates != null && camera.isPerspectiveCamera === true) {
       material.sunDirection.copy(transientStates.sunDirection)
-      ref.current?.setRotationFromMatrix(transientStates.rotationMatrix)
+      ref.current?.setRotationFromMatrix(transientStates.inertialToECEFMatrix)
       material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
       material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
     }

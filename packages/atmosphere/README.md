@@ -462,10 +462,10 @@ The normalized direction to the sun and moon in ECEF coordinates. This value is 
 
 The default values are [0, 0, 0].
 
-#### rotationMatrix
+#### inertialToECEFMatrix
 
 ```ts
-rotationMatrix: Matrix4
+inertialToECEFMatrix: Matrix4
 ```
 
 The rotation matrix for converting ECI to ECEF coordinates. This value is shared with descendant components and is overwritten by the [`date`](#date) prop or the [`updateByDate`](#updatebydate) function.
@@ -563,7 +563,7 @@ import { Stars } from '@takram/three-atmosphere/r3f'
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
 const sunDirection = getSunDirectionECEF(/* Date object or timestamp */)
-const rotationMatrix =
+const inertialToECEFMatrix =
   getECIToECEFRotationMatrix(/* Date object or timestamp */)
 
 const Scene = () => {
@@ -572,7 +572,7 @@ const Scene = () => {
     <Stars
       data={starsData}
       sunDirection={sunDirection}
-      matrix={rotationMatrix}
+      matrix={inertialToECEFMatrix}
     />
   )
 }
