@@ -575,11 +575,13 @@ export class AerialPerspectiveEffect extends Effect {
       this.setChanged()
     }
 
-    ++this.uniforms.get('frame').value
+    const frame = this.uniforms.get('frame')
+    ++frame.value
 
     if (this.screenSpaceShadow) {
       const { screenSpaceShadowPass } = this
       screenSpaceShadowPass.sunDirection.copy(this.sunDirection)
+      screenSpaceShadowPass.frame = frame.value
       screenSpaceShadowPass.render(renderer, null, null)
     }
   }

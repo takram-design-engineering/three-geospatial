@@ -127,7 +127,6 @@ export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
     group: Group
   ): void {
     this._logarithmicDepthBuffer = renderer.capabilities.logarithmicDepthBuffer
-    ++this.uniforms.frame.value
   }
 
   get depthBuffer(): Texture | null {

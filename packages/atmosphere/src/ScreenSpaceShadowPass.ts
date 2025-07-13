@@ -130,4 +130,12 @@ export class ScreenSpaceShadowPass extends Pass {
   set stbnTexture(value: Data3DTexture | null) {
     this.screenSpaceShadowMaterial.uniforms.stbnTexture.value = value
   }
+
+  get frame(): number {
+    return this.screenSpaceShadowMaterial.uniforms.frame.value
+  }
+
+  set frame(value: number) {
+    this.screenSpaceShadowMaterial.uniforms.frame.value = value
+  }
 }
