@@ -32,6 +32,7 @@ import {
   BufferAttribute,
   BufferGeometry,
   DoubleSide,
+  Float32BufferAttribute,
   Group,
   LineBasicMaterial,
   LineSegments,
@@ -46,16 +47,54 @@ import {
 
 import type { CascadedShadow } from './CascadedShadow'
 
-const frustumIndices = /*#__PURE__*/ new Uint16Array([
-  0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7
-])
+class LightFrustumHelper extends LineSegments<BufferGeometry, Material> {
+  box: Box3
+
+  constructor(box: Box3, color: ColorRepresentation = 0xffff00) {
+    const indices = new Uint16Array([
+      0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7, 0,
+      2, 1, 3, 8, 9
+    ])
+    const positions = [
+      1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1,
+      1, -1, -1, 0, 0, 1, 0, 0, -1
+    ]
+    const geometry = new BufferGeometry()
+    geometry.setIndex(new BufferAttribute(indices, 1))
+    geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+
+    super(geometry, new LineBasicMaterial({ color, toneMapped: false }))
+
+    this.box = box
+    this.geometry.computeBoundingSphere()
+  }
+
+  updateMatrixWorld(force = false): void {
+    const box = this.box
+    if (box.isEmpty()) {
+      return
+    }
+    box.getCenter(this.position)
+    box.getSize(this.scale)
+    this.scale.multiplyScalar(0.5)
+    super.updateMatrixWorld(force)
+  }
+
+  dispose(): void {
+    this.geometry.dispose()
+    this.material.dispose()
+  }
+}
 
 function createFrustumLines(
   color: ColorRepresentation
 ): LineSegments<BufferGeometry, Material> {
+  const indices = new Uint16Array([
+    0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7
+  ])
   const positions = new Float32Array(24)
   const geometry = new BufferGeometry()
-  geometry.setIndex(new BufferAttribute(frustumIndices, 1))
+  geometry.setIndex(new BufferAttribute(indices, 1))
   geometry.setAttribute('position', new BufferAttribute(positions, 3, false))
   return new LineSegments(geometry, new LineBasicMaterial({ color }))
 }
@@ -74,13 +113,13 @@ export class CascadedShadowHelper extends Group {
   }> = []
   private readonly lightFrusta: Array<{
     group: Group
-    helper: Box3Helper
+    helper: LightFrustumHelper
   }> = []
 
   constructor(
     cascadedShadow: CascadedShadow,
-    frustumColor: ColorRepresentation = 'white',
-    lightFrustumColor: ColorRepresentation = 'yellow'
+    frustumColor: ColorRepresentation = 0xffffff,
+    lightFrustumColor: ColorRepresentation = 0xffff00
   ) {
     super()
     this.cascadedShadow = cascadedShadow
@@ -154,7 +193,7 @@ export class CascadedShadowHelper extends Group {
       frusta.pop()?.group.removeFromParent()
     }
     while (frusta.length < cascadeCount) {
-      const helper = new Box3Helper(new Box3(), this.lightFrustumColor)
+      const helper = new LightFrustumHelper(new Box3(), this.lightFrustumColor)
       const group = new Group().add(helper)
       this.add(group)
       frusta.push({ group, helper })
