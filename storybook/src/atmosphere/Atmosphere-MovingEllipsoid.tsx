@@ -60,16 +60,15 @@ const Scene: FC = () => {
     if (atmosphere == null) {
       return
     }
-    // Offset the ellipsoid so that the world space origin locates at the
-    // position relative to the ellipsoid.
+    // Move and rotate the ellipsoid so that the world space origin locates at
+    // the given geographic coordinate, and the camera's orientation aligns with
+    // X: north, Y: up, Z: east, for example.
     geodetic.set(radians(longitude), radians(latitude), height)
     geodetic.toECEF(position)
-    atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
-
-    // Rotate the ellipsoid around the world space origin so that the camera's
-    // orientation aligns with X: north, Y: up, Z: east, for example.
     Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-    atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
+    atmosphere.worldToECEFMatrix
+      .makeBasis(north, up, east)
+      .setPosition(position)
   }, [longitude, latitude, height, atmosphere])
 
   useFrame(() => {
