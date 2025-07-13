@@ -19,12 +19,15 @@ import {
   resolveIncludes,
   unrollLoops
 } from '@takram/three-geospatial'
-import { bayer, turbo } from '@takram/three-geospatial/shaders'
+import {
+  bayer,
+  catmullRomSampling,
+  turbo,
+  varianceClipping
+} from '@takram/three-geospatial/shaders'
 
-import catmullRomSampling from './shaders/catmullRomSampling.glsl?raw'
 import fragmentShader from './shaders/cloudsResolveMaterial.frag?raw'
 import vertexShader from './shaders/cloudsResolveMaterial.vert?raw'
-import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface CloudsResolveMaterialParameters {
   colorBuffer?: Texture | null
@@ -64,9 +67,12 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
       vertexShader,
       fragmentShader: unrollLoops(
         resolveIncludes(fragmentShader, {
-          core: { bayer, turbo },
-          catmullRomSampling,
-          varianceClipping
+          core: {
+            bayer,
+            catmullRomSampling,
+            turbo,
+            varianceClipping
+          }
         })
       ),
       blending: NoBlending,

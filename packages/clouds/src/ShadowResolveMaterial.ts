@@ -12,12 +12,12 @@ import {
   resolveIncludes,
   unrollLoops
 } from '@takram/three-geospatial'
+import { varianceClipping } from '@takram/three-geospatial/shaders'
 
 import { defaults } from './qualityPresets'
 
 import fragmentShader from './shaders/shadowResolveMaterial.frag?raw'
 import vertexShader from './shaders/shadowResolveMaterial.vert?raw'
-import varianceClipping from './shaders/varianceClipping.glsl?raw'
 
 export interface ShadowResolveMaterialParameters {
   inputBuffer?: DataArrayTexture | null
@@ -46,7 +46,7 @@ export class ShadowResolveMaterial extends RawShaderMaterial {
       vertexShader,
       fragmentShader: unrollLoops(
         resolveIncludes(fragmentShader, {
-          varianceClipping
+          core: { varianceClipping }
         })
       ),
       blending: NoBlending,

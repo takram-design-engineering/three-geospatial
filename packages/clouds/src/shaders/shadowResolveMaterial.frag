@@ -4,7 +4,7 @@ precision highp sampler2DArray;
 #define VARIANCE_9_SAMPLES 1
 #define VARIANCE_SAMPLER_ARRAY 1
 
-#include "varianceClipping"
+#include "core/varianceClipping"
 
 uniform sampler2DArray inputBuffer;
 uniform sampler2DArray historyBuffer;

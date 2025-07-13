@@ -3,8 +3,8 @@ precision highp sampler2DArray;
 
 #include "core/bayer"
 #include "core/turbo"
-#include "catmullRomSampling"
-#include "varianceClipping"
+#include "core/catmullRomSampling"
+#include "core/varianceClipping"
 
 uniform sampler2D colorBuffer;
 uniform sampler2D depthVelocityBuffer;
