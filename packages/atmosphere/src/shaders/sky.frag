@@ -35,7 +35,6 @@ uniform sampler2D shadowLengthBuffer;
 in vec2 vUv;
 in vec3 vCameraPosition;
 in vec3 vRayDirection;
-in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor;
 
@@ -54,7 +53,7 @@ void main() {
   shadowLength = texture(shadowLengthBuffer, vUv).r;
   #endif // HAS_SHADOW_LENGTH
 
-  vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
+  vec3 cameraPosition = vCameraPosition;
   vec3 rayDirection = normalize(vRayDirection);
 
   #ifdef GROUND_ALBEDO

@@ -4,8 +4,7 @@ precision highp sampler3D;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform vec3 cameraPosition;
-uniform vec3 ellipsoidCenter;
-uniform mat4 inverseEllipsoidMatrix;
+uniform mat4 worldToECEFMatrix;
 uniform vec3 altitudeCorrection;
 
 layout(location = 0) in vec3 position;
@@ -13,7 +12,6 @@ layout(location = 0) in vec3 position;
 out vec2 vUv;
 out vec3 vCameraPosition;
 out vec3 vRayDirection;
-out vec3 vEllipsoidCenter;
 
 void getCameraRay(out vec3 origin, out vec3 direction) {
   bool isPerspective = inverseProjectionMatrix[2][3] != 0.0; // 4th entry in the 3rd column
@@ -47,10 +45,9 @@ void main() {
   vec3 direction, origin;
   getCameraRay(origin, direction);
 
-  mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vCameraPosition = rotation * origin.xyz * METER_TO_LENGTH_UNIT;
-  vRayDirection = rotation * direction.xyz;
-  vEllipsoidCenter = (ellipsoidCenter + altitudeCorrection) * METER_TO_LENGTH_UNIT;
+  vec3 cameraPositionECEF = (worldToECEFMatrix * vec4(origin, 1.0)).xyz;
+  vCameraPosition = (cameraPositionECEF - altitudeCorrection) * METER_TO_LENGTH_UNIT;
+  vRayDirection = (worldToECEFMatrix * vec4(direction, 0.0)).xyz;
 
   gl_Position = vec4(position.xy, 1.0, 1.0);
 }
