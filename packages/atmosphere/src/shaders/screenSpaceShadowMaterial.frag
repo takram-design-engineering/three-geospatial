@@ -36,7 +36,7 @@ uniform float normalBias;
 
 in vec2 vUv;
 
-layout(location = 0) out vec4 outputColor;
+layout(location = 0) out vec2 outputColor;
 
 float readDepth(const vec2 uv) {
   #if DEPTH_PACKING == 3201
@@ -118,5 +118,5 @@ void main() {
     iterationCount
   );
 
-  outputColor = vec4(hit, hitUv, rayLength);
+  outputColor = vec2(hit, rayLength);
 }

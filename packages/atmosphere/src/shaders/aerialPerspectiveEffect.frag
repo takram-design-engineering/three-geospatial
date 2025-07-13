@@ -410,8 +410,7 @@ float getSunTransmittance(
   #endif // HAS_ANY_SHADOW
 
   #ifdef SCREEN_SPACE_SHADOW
-  vec4 screenSpaceShadow = texture(screenSpaceShadowBuffer, uv);
-  transmittance *= 1.0 - screenSpaceShadow.r;
+  transmittance *= 1.0 - texture(screenSpaceShadowBuffer, uv).r;
   #endif // SCREEN_SPACE_SHADOW
 
   return transmittance;

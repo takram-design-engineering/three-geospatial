@@ -2,6 +2,7 @@ import { Pass, Resolution } from 'postprocessing'
 import {
   BasicDepthPacking,
   HalfFloatType,
+  RGFormat,
   WebGLRenderTarget,
   type Camera,
   type Data3DTexture,
@@ -55,6 +56,7 @@ export class ScreenSpaceShadowPass extends Pass {
 
     this.renderTarget = new WebGLRenderTarget(1, 1, {
       type: HalfFloatType,
+      format: RGFormat,
       depthBuffer: false
     })
     this.screenSpaceShadowMaterial = new ScreenSpaceShadowMaterial()
