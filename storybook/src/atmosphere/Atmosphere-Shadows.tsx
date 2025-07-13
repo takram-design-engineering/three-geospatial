@@ -159,7 +159,7 @@ const Scene: FC = () => {
         {sky && <SkyLight />}
         {sun && <SunLight />}
       </group>
-      {sceneShadow && <SceneShadow cascadeCount={3} maxFar={5000} />}
+      {sceneShadow && <SceneShadow mapSize={2048} maxFar={5000} margin={200} />}
 
       {/* An ellipsoid mesh for fill empty region */}
       <EllipsoidMesh

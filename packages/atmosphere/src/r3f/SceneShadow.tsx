@@ -3,23 +3,25 @@ import { useContext, useEffect, useMemo, type FC, type Ref } from 'react'
 import { Vector2 } from 'three'
 
 import type { FrustumSplitMode } from '@takram/three-geospatial'
+import type { OverwriteMathProps } from '@takram/three-geospatial/r3f'
 
 import { SceneShadowMaps } from '../SceneShadowMaps'
 import { AtmosphereContext } from './Atmosphere'
 
-export interface SceneShadowProps {
-  ref?: Ref<SceneShadowMaps>
+export interface SceneShadowProps
+  extends OverwriteMathProps<{
+    ref?: Ref<SceneShadowMaps>
 
-  // CascadedShadow
-  cascadeCount?: number
-  mapSize?: Vector2
-  maxFar?: number | null
-  farScale?: number
-  splitMode?: FrustumSplitMode
-  splitLambda?: number
-  margin?: number
-  fade?: boolean
-}
+    // CascadedShadow
+    cascadeCount?: number
+    mapSize?: Vector2
+    maxFar?: number | null
+    farScale?: number
+    splitMode?: FrustumSplitMode
+    splitLambda?: number
+    margin?: number
+    fade?: boolean
+  }> {}
 
 export const SceneShadow: FC<SceneShadowProps> = ({
   ref: forwardedRef,
@@ -29,8 +31,7 @@ export const SceneShadow: FC<SceneShadowProps> = ({
     () =>
       new SceneShadowMaps({
         cascadeCount: 2,
-        mapSize: new Vector2().setScalar(2048),
-        maxFar: 5000
+        mapSize: new Vector2().setScalar(1024)
       }),
     []
   )
