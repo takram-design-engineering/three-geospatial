@@ -31,11 +31,8 @@ import type {
 export interface AtmosphereTransientStates {
   sunDirection: Vector3
   moonDirection: Vector3
-  /** @deprecated Use inertialToECEFMatrix instead. */
-  rotationMatrix: Matrix4
+  worldToECEFMatrix: Matrix4
   inertialToECEFMatrix: Matrix4
-  ellipsoidCenter: Vector3
-  ellipsoidMatrix: Matrix4
   overlay: AtmosphereOverlay | null
   shadow: AtmosphereShadow | null
   shadowLength: AtmosphereShadowLength | null
@@ -74,14 +71,11 @@ export const Atmosphere: FC<AtmosphereProps> = ({
   date,
   children
 }) => {
-  const inertialToECEFMatrixRef = useRef(new Matrix4())
   const transientStatesRef = useRef({
     sunDirection: new Vector3(),
     moonDirection: new Vector3(),
-    rotationMatrix: inertialToECEFMatrixRef.current,
-    inertialToECEFMatrix: inertialToECEFMatrixRef.current,
-    ellipsoidCenter: new Vector3(),
-    ellipsoidMatrix: new Matrix4(),
+    worldToECEFMatrix: new Matrix4(),
+    inertialToECEFMatrix: new Matrix4(),
     overlay: null,
     shadow: null,
     shadowLength: null,

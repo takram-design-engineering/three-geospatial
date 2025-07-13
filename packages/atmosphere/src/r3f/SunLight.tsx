@@ -43,8 +43,7 @@ export const SunLight: FC<SunLightProps> = ({
     }
     if (transientStates != null) {
       light.sunDirection.copy(transientStates.sunDirection)
-      light.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-      light.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+      light.worldToECEFMatrix.copy(transientStates.worldToECEFMatrix)
       light.update()
     }
   })

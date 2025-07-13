@@ -117,8 +117,7 @@ export interface AerialPerspectiveEffectUniforms {
   cameraPosition: Uniform<Vector3>
   bottomRadius: Uniform<number>
   ellipsoidRadii: Uniform<Vector3>
-  ellipsoidCenter: Uniform<Vector3>
-  inverseEllipsoidMatrix: Uniform<Matrix4>
+  worldToECEFMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
   albedoScale: Uniform<number>
@@ -258,8 +257,7 @@ export class AerialPerspectiveEffect extends Effect {
             cameraPosition: new Uniform(new Vector3()),
             bottomRadius: new Uniform(atmosphere.bottomRadius),
             ellipsoidRadii: new Uniform(new Vector3()),
-            ellipsoidCenter: new Uniform(new Vector3()),
-            inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+            worldToECEFMatrix: new Uniform(new Matrix4()),
             altitudeCorrection: new Uniform(new Vector3()),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
             albedoScale: new Uniform(irradianceScale ?? albedoScale),
@@ -351,14 +349,10 @@ export class AerialPerspectiveEffect extends Effect {
     const cameraPosition = camera.getWorldPosition(
       uniforms.get('cameraPosition').value
     )
-    const inverseEllipsoidMatrix = uniforms
-      .get('inverseEllipsoidMatrix')
-      .value.copy(this.ellipsoidMatrix)
-      .invert()
+    const worldToECEFMatrix = uniforms.get('worldToECEFMatrix').value
     const cameraPositionECEF = vectorScratch1
       .copy(cameraPosition)
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(uniforms.get('ellipsoidCenter').value)
+      .applyMatrix4(worldToECEFMatrix)
 
     try {
       // Calculate the projected scale of the globe in clip space used to
@@ -589,8 +583,8 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('ellipsoidRadii').value.copy(value.radii)
   }
 
-  get ellipsoidCenter(): Vector3 {
-    return this.uniforms.get('ellipsoidCenter').value
+  get worldToECEFMatrix(): Matrix4 {
+    return this.uniforms.get('worldToECEFMatrix').value
   }
 
   @define('CORRECT_GEOMETRIC_ERROR')
