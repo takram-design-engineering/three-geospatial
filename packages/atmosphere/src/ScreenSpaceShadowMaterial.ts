@@ -50,8 +50,8 @@ export interface ScreenSpaceShadowMaterialUniforms {
   frame: Uniform<number>
 
   // Configurations
-  iterations: Uniform<number>
-  binarySearchIterations: Uniform<number>
+  maxIterationCount: Uniform<number>
+  maxBinarySearchIterationCount: Uniform<number>
   thickness: Uniform<number>
   stepSize: Uniform<number> // In pixels
   minStepSize: Uniform<number> // In pixels
@@ -90,14 +90,14 @@ export class ScreenSpaceShadowMaterial extends RawShaderMaterial {
         frame: new Uniform(0),
 
         // Configurations
-        iterations: new Uniform(100),
-        binarySearchIterations: new Uniform(4),
+        maxIterationCount: new Uniform(256),
+        maxBinarySearchIterationCount: new Uniform(4),
         thickness: new Uniform(100),
-        stepSize: new Uniform(20),
-        minStepSize: new Uniform(2),
+        stepSize: new Uniform(16),
+        minStepSize: new Uniform(4),
         minStepSizeDistance: new Uniform(5000),
         maxRayDistance: new Uniform(10000),
-        normalBias: new Uniform(0.0001)
+        normalBias: new Uniform(0.001)
       } satisfies ScreenSpaceShadowMaterialUniforms
     })
   }

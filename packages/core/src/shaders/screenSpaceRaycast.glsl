@@ -32,17 +32,17 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SSR_MAX_ITERATIONS
-#define SSR_MAX_ITERATIONS 1000
-#endif // SSR_MAX_ITERATIONS
+#ifndef SSR_MAX_ITERATION_COUNT
+#define SSR_MAX_ITERATION_COUNT 1000
+#endif // SSR_MAX_ITERATION_COUNT
 
-#ifndef SSR_MAX_BINARY_SEARCH_ITERATIONS
-#define SSR_MAX_BINARY_SEARCH_ITERATIONS 64
-#endif // SSR_MAX_BINARY_SEARCH_ITERATIONS
+#ifndef SSR_MAX_BINARY_SEARCH_ITERATION_COUNT
+#define SSR_MAX_BINARY_SEARCH_ITERATION_COUNT 64
+#endif // SSR_MAX_BINARY_SEARCH_ITERATION_COUNT
 
 struct ScreenSpaceRaycastOptions {
-  int iterations;
-  int binarySearchIterations;
+  int maxIterationCount;
+  int maxBinarySearchIterationCount;
   float thickness;
   float stepSize; // In pixels
   float minStepSize; // In pixels
@@ -154,8 +154,8 @@ bool screenSpaceRaycast(
 
   bool intersect = false;
   int count = 0;
-  for (int i = 0; i < SSR_MAX_ITERATIONS; ++i) {
-    if (i >= options.iterations) {
+  for (int i = 0; i < SSR_MAX_ITERATION_COUNT; ++i) {
+    if (i >= options.maxIterationCount) {
       break;
     }
     if (intersect) {
@@ -188,8 +188,8 @@ bool screenSpaceRaycast(
     zA = PQK.z / PQK.w;
     zB = zA;
 
-    for (int i = 0; i < SSR_MAX_BINARY_SEARCH_ITERATIONS; ++i) {
-      if (i >= options.binarySearchIterations) {
+    for (int i = 0; i < SSR_MAX_BINARY_SEARCH_ITERATION_COUNT; ++i) {
+      if (i >= options.maxBinarySearchIterationCount) {
         break;
       }
 

@@ -25,8 +25,8 @@ uniform vec3 sunDirection;
 uniform int frame;
 
 // Configurations
-uniform int iterations;
-uniform int binarySearchIterations;
+uniform int maxIterationCount;
+uniform int maxBinarySearchIterationCount;
 uniform float thickness;
 uniform float stepSize;
 uniform float minStepSize;
@@ -90,8 +90,8 @@ void main() {
   #endif // RECONSTRUCT_NORMAL
 
   ScreenSpaceRaycastOptions options = ScreenSpaceRaycastOptions(
-    iterations,
-    binarySearchIterations,
+    maxIterationCount,
+    maxBinarySearchIterationCount,
     thickness,
     stepSize,
     minStepSize,
