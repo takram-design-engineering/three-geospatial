@@ -72,7 +72,7 @@ export class ScreenSpaceShadowPass extends Pass {
   }
 
   // eslint-disable-next-line accessor-pairs
-  set mainCamera(value: Camera) {
+  override set mainCamera(value: Camera) {
     this.screenSpaceShadowMaterial.copyCameraSettings(value)
   }
 

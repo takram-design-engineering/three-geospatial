@@ -18,11 +18,11 @@ export abstract class PassBase extends Pass {
     this.shadow = shadow
   }
 
-  get mainCamera(): Camera {
+  override get mainCamera(): Camera {
     return this._mainCamera
   }
 
-  set mainCamera(value: Camera) {
+  override set mainCamera(value: Camera) {
     this._mainCamera = value
   }
 }
