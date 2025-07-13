@@ -94,7 +94,8 @@ const Scene: FC = () => {
       enabled: true,
       transmittance: true,
       inscatter: true
-    }
+    },
+    { collapsed: true }
   )
   const { mode, sun, sky } = useControls('lighting', {
     mode: {
@@ -103,14 +104,13 @@ const Scene: FC = () => {
     sun: true,
     sky: true
   })
-  const { sceneShadow, screenSpaceShadow, showShadowMap } = useControls(
-    'shadow',
-    {
-      sceneShadow: true,
-      screenSpaceShadow: false,
-      showShadowMap: false
-    }
-  )
+  const { enabled: sceneShadow, showShadowMap } = useControls('scene shadow', {
+    enabled: true,
+    showShadowMap: false
+  })
+  const { enabled: screenSpaceShadow } = useControls('screen space shadow', {
+    enabled: false
+  })
 
   const camera = useThree(({ camera }) => camera)
   const [controls, setControls] = useState<ComponentRef<
@@ -207,9 +207,9 @@ const Scene: FC = () => {
           />
           <TilesPlugin
             plugin={GLTFExtensionsPlugin}
-            rtc
             dracoLoader={dracoLoader}
             ktxLoader={ktx2loader}
+            rtc
           />
         </TilesRenderer>
       ))}
