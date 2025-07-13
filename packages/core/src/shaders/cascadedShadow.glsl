@@ -40,6 +40,7 @@ int getFadedCascadeIndex(
   const float shadowFar,
   const int cascadeCount,
   const vec2 intervals[4],
+  const float fadeWidth,
   const float jitter
 ) {
   float depth = viewZToOrthographicDepth(viewZ, cameraNear, shadowFar);
@@ -57,7 +58,7 @@ int getFadedCascadeIndex(
       interval = intervals[i];
       intervalCenter = (interval.x + interval.y) * 0.5;
       closestEdge = depth < intervalCenter ? interval.x : interval.y;
-      margin = closestEdge * closestEdge * 0.5;
+      margin = closestEdge * closestEdge * fadeWidth;
       interval += margin * vec2(-0.5, 0.5);
 
       if (depth >= interval.x && depth < interval.y) {
@@ -81,6 +82,7 @@ int getFadedCascadeIndex(
   const float shadowFar,
   const int cascadeCount,
   const vec2 intervals[4],
+  const float fadeWidth,
   const float jitter
 ) {
   vec4 viewPosition = viewMatrix * vec4(worldPosition, 1.0);
@@ -90,6 +92,7 @@ int getFadedCascadeIndex(
     shadowFar,
     cascadeCount,
     intervals,
+    fadeWidth,
     jitter
   );
 }

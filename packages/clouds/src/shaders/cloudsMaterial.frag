@@ -171,6 +171,7 @@ vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
       shadowFar,
       shadowCascadeCount,
       shadowIntervals,
+      0.5,
       jitter
     ),
     shadowCascadeCount
@@ -247,6 +248,7 @@ float sampleShadowOpticalDepth(
       shadowFar,
       shadowCascadeCount,
       shadowIntervals,
+      0.5,
       jitter
     ),
     shadowCascadeCount

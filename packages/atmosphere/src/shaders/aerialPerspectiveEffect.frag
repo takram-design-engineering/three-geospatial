@@ -352,6 +352,7 @@ float sampleSceneShadow(const float viewZ, const vec3 worldPosition, const float
     sceneShadow.far,
     sceneShadow.cascadeCount,
     sceneShadow.intervals,
+    0.5,
     jitter
   );
   return cascadeIndex >= 0
@@ -513,4 +514,26 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #ifdef HAS_OVERLAY
   outputColor.rgb = outputColor.rgb * (1.0 - overlay.a) + overlay.rgb;
   #endif // HAS_OVERLAY
+
+  #ifdef DEBUG_SHOW_CASCADES
+  const vec3 cascadeColors[4] = vec3[4](
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(1.0, 1.0, 0.0)
+  );
+  int cascadeIndex = getFadedCascadeIndex(
+    viewZ,
+    cameraNear,
+    sceneShadow.far,
+    sceneShadow.cascadeCount,
+    sceneShadow.intervals,
+    0.5,
+    getSTBN()
+  );
+  if (cascadeIndex < sceneShadow.cascadeCount) {
+    vec3 cascadeColor = cascadeColors[cascadeIndex];
+    outputColor.rgb = mix(outputColor.rgb, cascadeColor, 0.5);
+  }
+  #endif // DEBUG_SHOW_CASCADES
 }

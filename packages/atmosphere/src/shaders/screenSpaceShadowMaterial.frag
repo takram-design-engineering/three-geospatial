@@ -93,6 +93,7 @@ void main() {
     sceneShadow.far,
     sceneShadow.cascadeCount,
     sceneShadow.intervals,
+    0.5,
     stbn
   );
   if (cascadeIndex < sceneShadow.cascadeCount) {
