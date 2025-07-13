@@ -140,14 +140,18 @@ const vec3 cascadeColors[4] = vec3[4](
 
 vec3 getCascadeColor(const vec3 rayPosition) {
   vec3 worldPosition = ECEFToWorld(rayPosition);
-  int cascadeIndex = getCascadeIndex(
-    viewMatrix,
-    worldPosition,
-    cameraNear,
-    shadowFar,
-    shadowCascadeCount,
-    shadowIntervals
+  int cascadeIndex = extendLastCascade(
+    getCascadeIndex(
+      viewMatrix,
+      worldPosition,
+      cameraNear,
+      shadowFar,
+      shadowCascadeCount,
+      shadowIntervals
+    ),
+    shadowCascadeCount
   );
+
   vec4 clip = shadowMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
   clip /= clip.w;
   vec2 uv = clip.xy * 0.5 + 0.5;
@@ -159,18 +163,19 @@ vec3 getCascadeColor(const vec3 rayPosition) {
 
 vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
   vec3 worldPosition = ECEFToWorld(rayPosition);
-  int cascadeIndex = getFadedCascadeIndex(
-    viewMatrix,
-    worldPosition,
-    cameraNear,
-    shadowFar,
-    shadowCascadeCount,
-    shadowIntervals,
-    jitter
+  int cascadeIndex = extendLastCascade(
+    getFadedCascadeIndex(
+      viewMatrix,
+      worldPosition,
+      cameraNear,
+      shadowFar,
+      shadowCascadeCount,
+      shadowIntervals,
+      jitter
+    ),
+    shadowCascadeCount
   );
-  return cascadeIndex >= 0
-    ? cascadeColors[cascadeIndex]
-    : vec3(1.0);
+  return cascadeColors[cascadeIndex];
 }
 
 #endif // DEBUG_SHOW_CASCADES
@@ -234,24 +239,25 @@ float sampleShadowOpticalDepth(
     return 0.0;
   }
   vec3 worldPosition = ECEFToWorld(rayPosition);
-  int cascadeIndex = getFadedCascadeIndex(
-    viewMatrix,
-    worldPosition,
-    cameraNear,
-    shadowFar,
-    shadowCascadeCount,
-    shadowIntervals,
-    jitter
-  );
-  return cascadeIndex >= 0
-    ? sampleShadowOpticalDepthPCF(
+  int cascadeIndex = extendLastCascade(
+    getFadedCascadeIndex(
+      viewMatrix,
       worldPosition,
-      distanceToTop,
-      distanceOffset,
-      radius,
-      cascadeIndex
-    )
-    : 0.0;
+      cameraNear,
+      shadowFar,
+      shadowCascadeCount,
+      shadowIntervals,
+      jitter
+    ),
+    shadowCascadeCount
+  );
+  return sampleShadowOpticalDepthPCF(
+    worldPosition,
+    distanceToTop,
+    distanceOffset,
+    radius,
+    cascadeIndex
+  );
 }
 
 #ifdef DEBUG_SHOW_SHADOW_MAP

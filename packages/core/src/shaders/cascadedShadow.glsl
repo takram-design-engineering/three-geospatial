@@ -19,7 +19,7 @@ int getCascadeIndex(
     }
   }
   #pragma unroll_loop_end
-  return cascadeCount - 1;
+  return cascadeCount;
 }
 
 int getCascadeIndex(
@@ -43,13 +43,12 @@ int getFadedCascadeIndex(
   const float jitter
 ) {
   float depth = viewZToOrthographicDepth(viewZ, cameraNear, shadowFar);
-
   vec2 interval;
   float intervalCenter;
   float closestEdge;
   float margin;
-  int nextIndex = -1;
-  int prevIndex = -1;
+  int nextIndex = cascadeCount;
+  int prevIndex = cascadeCount;
   float alpha;
 
   #pragma unroll_loop_start
@@ -61,19 +60,10 @@ int getFadedCascadeIndex(
       margin = closestEdge * closestEdge * 0.5;
       interval += margin * vec2(-0.5, 0.5);
 
-      if (UNROLLED_LOOP_INDEX < cascadeCount - 1) {
-        if (depth >= interval.x && depth < interval.y) {
-          prevIndex = nextIndex;
-          nextIndex = UNROLLED_LOOP_INDEX;
-          alpha = saturate(min(depth - interval.x, interval.y - depth) / margin);
-        }
-      } else {
-        // Don't fade out the last cascade.
-        if (depth >= interval.x) {
-          prevIndex = nextIndex;
-          nextIndex = UNROLLED_LOOP_INDEX;
-          alpha = saturate((depth - interval.x) / margin);
-        }
+      if (depth >= interval.x && depth < interval.y) {
+        prevIndex = nextIndex;
+        nextIndex = UNROLLED_LOOP_INDEX;
+        alpha = saturate(min(depth - interval.x, interval.y - depth) / margin);
       }
     }
   }
@@ -102,4 +92,8 @@ int getFadedCascadeIndex(
     intervals,
     jitter
   );
+}
+
+int extendLastCascade(const int cascadeIndex, const int cascadeCount) {
+  return min(cascadeIndex, cascadeCount - 1);
 }

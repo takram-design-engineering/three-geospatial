@@ -249,17 +249,18 @@ float sampleShadowOpticalDepth(
   if (distanceToTop <= 0.0) {
     return 0.0;
   }
-  int cascadeIndex = getFadedCascadeIndex(
-    viewZ,
-    cameraNear,
-    overlayShadow.far,
-    overlayShadow.cascadeCount,
-    overlayShadow.intervals,
-    jitter
+  int cascadeIndex = extendLastCascade(
+    getFadedCascadeIndex(
+      viewZ,
+      cameraNear,
+      overlayShadow.far,
+      overlayShadow.cascadeCount,
+      overlayShadow.intervals,
+      jitter
+    ),
+    overlayShadow.cascadeCount
   );
-  return cascadeIndex >= 0
-    ? sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, radius, cascadeIndex)
-    : 0.0;
+  return sampleShadowOpticalDepthPCF(worldPosition, distanceToTop, radius, cascadeIndex);
 }
 
 float deriveOverlayShadowRadius(const vec3 worldPosition) {
