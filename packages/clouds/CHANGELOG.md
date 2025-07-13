@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.1] - 2025-07-14
+
+### Changed
+
+- Updated the dependency to atmosphere.
+
 ## [0.4.0] - 2025-07-05
 
 ### Added
