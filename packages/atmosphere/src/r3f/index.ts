@@ -1,6 +1,7 @@
 export * from './AerialPerspective'
 export * from './Atmosphere'
 export * from './LightingMask'
+export * from './SceneShadow'
 export * from './separateProps'
 export * from './Sky'
 export * from './SkyLight'

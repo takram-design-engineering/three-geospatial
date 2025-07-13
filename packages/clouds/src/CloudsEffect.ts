@@ -389,7 +389,7 @@ export class CloudsEffect extends Effect {
     const zenithAngle = this.sunDirection.dot(surfaceNormal)
     const distance = lerp(1e6, 1e3, zenithAngle)
 
-    this.cascadedShadow.update(
+    this.cascadedShadow.updateCascades(
       this.camera as PerspectiveCamera,
       // The sun direction must be rotated with the ellipsoid to ensure the
       // frusta are constructed correctly. Note this affects the transformation

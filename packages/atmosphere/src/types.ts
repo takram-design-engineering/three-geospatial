@@ -38,7 +38,7 @@ export interface AtmosphereLightingMask {
 }
 
 export interface AtmosphereSceneShadow {
-  maps: Texture[]
+  maps: Array<Texture | null>
   cascadeCount: number
   intervals: Vector2[]
   matrices: Matrix4[]

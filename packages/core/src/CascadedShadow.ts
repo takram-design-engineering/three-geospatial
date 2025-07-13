@@ -32,12 +32,20 @@ import {
   Object3D,
   Vector2,
   Vector3,
+  type Camera,
   type PerspectiveCamera
 } from 'three'
 import invariant from 'tiny-invariant'
 
+import { assertType } from './assertions'
 import { FrustumCorners } from './helpers/FrustumCorners'
 import { splitFrustum, type FrustumSplitMode } from './helpers/splitFrustum'
+
+declare module 'three' {
+  interface Camera {
+    isPerspectiveCamera?: boolean
+  }
+}
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
@@ -265,11 +273,16 @@ export class CascadedShadow {
     }
   }
 
-  update(
-    camera: PerspectiveCamera,
+  updateCascades(
+    camera: Camera,
     sunDirection: Vector3,
     distance?: number
   ): void {
+    if (camera.isPerspectiveCamera !== true) {
+      return
+    }
+    assertType<PerspectiveCamera>(camera)
+
     this._far =
       this.maxFar != null
         ? Math.min(this.maxFar, camera.far * this.farScale)
