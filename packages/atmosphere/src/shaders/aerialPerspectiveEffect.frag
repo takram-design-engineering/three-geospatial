@@ -95,7 +95,6 @@ struct SceneShadow {
   vec2 intervals[4];
   mat4 matrices[4];
   mat4 inverseMatrices[4];
-  float near;
   float far;
 };
 uniform SceneShadow sceneShadow;

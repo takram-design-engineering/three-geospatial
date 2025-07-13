@@ -13,6 +13,7 @@ import {
 } from 'three'
 
 import { ScreenSpaceShadowMaterial } from './ScreenSpaceShadowMaterial'
+import type { AtmosphereSceneShadow } from './types'
 
 declare module 'postprocessing' {
   interface DepthPass {
@@ -137,5 +138,13 @@ export class ScreenSpaceShadowPass extends Pass {
 
   set frame(value: number) {
     this.screenSpaceShadowMaterial.uniforms.frame.value = value
+  }
+
+  get sceneShadow(): AtmosphereSceneShadow | null {
+    return this.screenSpaceShadowMaterial.sceneShadow
+  }
+
+  set sceneShadow(value: AtmosphereSceneShadow | null) {
+    this.screenSpaceShadowMaterial.sceneShadow = value
   }
 }

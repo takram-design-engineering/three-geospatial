@@ -129,7 +129,8 @@ export class CascadedShadowHelper extends Group {
       color: frustumColor,
       transparent: true,
       opacity: 0.1,
-      side: DoubleSide
+      side: DoubleSide,
+      depthWrite: false
     })
     this.cameraFrustumLines = createFrustumLines(frustumColor)
     this.add(this.cameraFrustumLines)

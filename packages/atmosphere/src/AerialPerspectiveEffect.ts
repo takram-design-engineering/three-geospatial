@@ -552,7 +552,6 @@ export class AerialPerspectiveEffect extends Effect {
       uniform.intervals = sceneShadow.intervals
       uniform.matrices = sceneShadow.matrices
       uniform.inverseMatrices = sceneShadow.inverseMatrices
-      uniform.near = sceneShadow.near
       uniform.far = sceneShadow.far
     }
     return needsUpdate
@@ -580,6 +579,7 @@ export class AerialPerspectiveEffect extends Effect {
 
     if (this.screenSpaceShadow) {
       const { screenSpaceShadowPass } = this
+      screenSpaceShadowPass.sceneShadow = this.sceneShadow
       screenSpaceShadowPass.sunDirection.copy(this.sunDirection)
       screenSpaceShadowPass.frame = frame.value
       screenSpaceShadowPass.render(renderer, null, null)

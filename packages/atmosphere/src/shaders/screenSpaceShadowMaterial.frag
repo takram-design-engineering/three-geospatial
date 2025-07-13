@@ -1,7 +1,9 @@
 precision highp float;
 
+#include <common>
 #include <packing>
 
+#include "core/cascadedShadow"
 #include "core/depth"
 #include "core/transform"
 
@@ -33,6 +35,15 @@ uniform float minStepSize;
 uniform float minStepSizeDistance;
 uniform float maxRayDistance;
 uniform float normalBias;
+
+#ifdef HAS_SCENE_SHADOW
+struct SceneShadow {
+  int cascadeCount;
+  vec2 intervals[4];
+  float far;
+};
+uniform SceneShadow sceneShadow;
+#endif // HAS_SCENE_SHADOW
 
 in vec2 vUv;
 
@@ -72,8 +83,24 @@ void main() {
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
   #endif // USE_LOGDEPTHBUF
 
-  // Reconstruct position and normal in world space.
+  float stbn = getSTBN();
   float viewZ = getViewZ(depth);
+
+  #ifdef HAS_SCENE_SHADOW
+  int cascadeIndex = getFadedCascadeIndex(
+    viewZ,
+    cameraNear,
+    sceneShadow.far,
+    sceneShadow.cascadeCount,
+    sceneShadow.intervals,
+    stbn
+  );
+  if (cascadeIndex < sceneShadow.cascadeCount) {
+    discard;
+  }
+  #endif // HAS_SCENE_SHADOW
+
+  // Reconstruct position and normal in world space.
   vec3 viewPosition = screenToView(vUv, depth, viewZ, projectionMatrix, inverseProjectionMatrix);
   vec3 viewNormal;
   #ifdef RECONSTRUCT_NORMAL
@@ -99,7 +126,6 @@ void main() {
   float rayLength;
   int iterationCount;
 
-  float stbn = getSTBN();
   bool hit = screenSpaceRaycast(
     options,
     viewPosition - viewNormal * viewPosition.z * normalBias,

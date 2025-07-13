@@ -43,6 +43,5 @@ export interface AtmosphereSceneShadow {
   intervals: Vector2[]
   matrices: Matrix4[]
   inverseMatrices: Matrix4[]
-  near: number
   far: number
 }
