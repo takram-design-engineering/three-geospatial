@@ -58,6 +58,9 @@ bool rayIntersectsDepth(float zA, float zB, const vec2 uv, const float thickness
     zB = tmp;
   }
   float depth = readDepth(uv);
+  if (depth >= 1.0 - 1e-7) {
+    return false;
+  }
   #ifdef USE_LOGDEPTHBUF
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
   #endif // USE_LOGDEPTHBUF
