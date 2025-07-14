@@ -28,6 +28,8 @@ function getImageData(texture: Texture): TypedArray | undefined {
     if (cache == null) {
       data = new Float16Array(data.buffer)
       float16ArrayCache.set(data.buffer, data)
+    } else {
+      data = cache
     }
   }
   return data

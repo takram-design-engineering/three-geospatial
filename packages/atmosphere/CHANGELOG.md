@@ -7,6 +7,12 @@
 - Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix`.
 - `Atmosphere`: Renamed `rotationMatrix` to `inertialToECEFMatrix`.
 
+## [0.13.2] - 2025-07-14
+
+### Fixed
+
+- Fixed `PrecomputedTexturesGenerator` incorrectly reads FP32 values from half-float textures on the CPU.
+
 ## [0.13.1] - 2025-07-14
 
 ### Fixed

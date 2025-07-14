@@ -6,6 +6,12 @@
 
 - Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix`.
 
+## [0.4.2] - 2025-07-14
+
+### Changed
+
+- Updated the dependency to atmosphere.
+
 ## [0.4.1] - 2025-07-14
 
 ### Changed
