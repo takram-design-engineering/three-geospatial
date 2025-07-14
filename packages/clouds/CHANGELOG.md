@@ -9,6 +9,12 @@
   - `CloudsEffect`: `skyIrradianceScale`, `groundIrradianceScale`
   - `CloudsMaterial`: `accurateSunSkyIrradiance`
 
+## [0.4.2] - 2025-07-14
+
+### Changed
+
+- Updated the dependency to atmosphere.
+
 ## [0.4.1] - 2025-07-14
 
 ### Changed

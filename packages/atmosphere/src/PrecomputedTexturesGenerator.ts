@@ -133,7 +133,10 @@ async function readRenderTargetPixels(
   texture: Texture
 ): Promise<void> {
   const { width, height } = renderTarget
-  const imageData = new Float32Array(width * height * 4)
+  const imageData =
+    texture.type === HalfFloatType
+      ? new Uint16Array(width * height * 4)
+      : new Float32Array(width * height * 4)
   await renderer.readRenderTargetPixelsAsync(
     renderTarget,
     0,
