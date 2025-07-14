@@ -189,7 +189,7 @@ export interface AtmosphereUniforms {
   bottomRadius: Uniform<number>
   topRadius: Uniform<number>
   worldToECEFMatrix: Uniform<Matrix4>
-  ECEFToWorldMatrix: Uniform<Matrix4>
+  ecefToWorldMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
 }
@@ -209,7 +209,7 @@ export function createAtmosphereUniforms(
     bottomRadius: new Uniform(atmosphere.bottomRadius),
     topRadius: new Uniform(atmosphere.topRadius),
     worldToECEFMatrix: new Uniform(instances.worldToECEFMatrix),
-    ECEFToWorldMatrix: new Uniform(instances.ECEFToWorldMatrix),
+    ecefToWorldMatrix: new Uniform(instances.ecefToWorldMatrix),
     altitudeCorrection: new Uniform(instances.altitudeCorrection),
     sunDirection: new Uniform(instances.sunDirection)
   }

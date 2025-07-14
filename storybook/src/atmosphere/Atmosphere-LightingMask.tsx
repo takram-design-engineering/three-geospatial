@@ -100,7 +100,7 @@ const ISS: FC<ISSProps> = ({ ...props }) => {
     if (transientStates == null) {
       return
     }
-    const ECEFToWorld = rotationScratch1
+    const ecefToWorld = rotationScratch1
       .setFromMatrix4(transientStates.worldToECEFMatrix)
       .transpose()
     const worldToLocal = rotationScratch2
@@ -108,7 +108,7 @@ const ISS: FC<ISSProps> = ({ ...props }) => {
       .transpose()
     const sunDirection = vectorScratch
       .copy(transientStates.sunDirection)
-      .applyMatrix3(ECEFToWorld)
+      .applyMatrix3(ecefToWorld)
       .normalize()
       .applyMatrix3(worldToLocal)
       .normalize()

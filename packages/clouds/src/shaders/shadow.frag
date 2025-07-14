@@ -168,7 +168,7 @@ void cascade(
   // Velocity for temporal resolution.
   #ifdef TEMPORAL_PASS
   vec3 frontPosition = color.x * rayDirection + rayOrigin;
-  vec3 frontPositionWorld = (ECEFToWorldMatrix * vec4(frontPosition - altitudeCorrection, 1.0)).xyz;
+  vec3 frontPositionWorld = (ecefToWorldMatrix * vec4(frontPosition - altitudeCorrection, 1.0)).xyz;
   vec4 prevClip = reprojectionMatrices[cascadeIndex] * vec4(frontPositionWorld, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;

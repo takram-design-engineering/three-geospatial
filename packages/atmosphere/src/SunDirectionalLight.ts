@@ -58,13 +58,13 @@ export class SunDirectionalLight extends DirectionalLight {
 
   update(): void {
     const worldToECEFMatrix = this.worldToECEFMatrix
-    const ECEFToWorldRotation = rotationScratch
+    const ecefToWorldRotation = rotationScratch
       .setFromMatrix4(worldToECEFMatrix)
       .transpose()
 
     this.position
       .copy(this.sunDirection)
-      .applyMatrix3(ECEFToWorldRotation)
+      .applyMatrix3(ecefToWorldRotation)
       .normalize()
       .multiplyScalar(this.distance)
       .add(this.target.position)

@@ -88,7 +88,7 @@ export class SkyLightProbe extends LightProbe {
     }
 
     const worldToECEFMatrix = this.worldToECEFMatrix
-    const ECEFToWorldRotation = rotationScratch
+    const ecefToWorldRotation = rotationScratch
       .setFromMatrix4(worldToECEFMatrix)
       .transpose()
 
@@ -120,7 +120,7 @@ export class SkyLightProbe extends LightProbe {
 
     const normal = this.ellipsoid
       .getSurfaceNormal(cameraPositionECEF)
-      .applyMatrix3(ECEFToWorldRotation)
+      .applyMatrix3(ecefToWorldRotation)
     const coefficients = this.sh.coefficients
     coefficients[0].copy(irradiance).multiplyScalar(L0_COEFF)
     coefficients[1].copy(irradiance).multiplyScalar(L1_COEFF * normal.y)

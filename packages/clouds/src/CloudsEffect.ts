@@ -185,7 +185,7 @@ export class CloudsEffect extends Effect {
 
   // Mutable instances of atmosphere parameter uniforms
   readonly worldToECEFMatrix = new Matrix4()
-  private readonly ECEFToWorldMatrix = new Matrix4()
+  private readonly ecefToWorldMatrix = new Matrix4()
   private readonly altitudeCorrection = new Vector3()
   readonly sunDirection = new Vector3()
 
@@ -269,7 +269,7 @@ export class CloudsEffect extends Effect {
 
     this.atmosphereUniforms = createAtmosphereUniforms(atmosphere, {
       worldToECEFMatrix: this.worldToECEFMatrix,
-      ECEFToWorldMatrix: this.ECEFToWorldMatrix,
+      ecefToWorldMatrix: this.ecefToWorldMatrix,
       altitudeCorrection: this.altitudeCorrection,
       sunDirection: this.sunDirection
     })
@@ -357,7 +357,7 @@ export class CloudsEffect extends Effect {
 
     // Update atmosphere uniforms.
     const worldToECEFMatrix = this.worldToECEFMatrix
-    this.ECEFToWorldMatrix.copy(worldToECEFMatrix).invert()
+    this.ecefToWorldMatrix.copy(worldToECEFMatrix).invert()
 
     const cameraPositionECEF = this.camera
       .getWorldPosition(vector3Scratch)
@@ -385,12 +385,12 @@ export class CloudsEffect extends Effect {
     const zenithAngle = this.sunDirection.dot(surfaceNormal)
     const distance = lerp(1e6, 1e3, zenithAngle)
 
-    const ECEFToWorldRotation = rotationScratch
+    const ecefToWorldRotation = rotationScratch
       .setFromMatrix4(worldToECEFMatrix)
       .transpose()
     this.shadowMaps.update(
       this.camera as PerspectiveCamera,
-      vector3Scratch.copy(this.sunDirection).applyMatrix3(ECEFToWorldRotation),
+      vector3Scratch.copy(this.sunDirection).applyMatrix3(ecefToWorldRotation),
       distance
     )
   }

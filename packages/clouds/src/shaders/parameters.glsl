@@ -5,7 +5,7 @@ uniform sampler3D stbnTexture;
 // Atmosphere
 uniform float bottomRadius;
 uniform mat4 worldToECEFMatrix;
-uniform mat4 ECEFToWorldMatrix;
+uniform mat4 ecefToWorldMatrix;
 uniform vec3 altitudeCorrection;
 uniform vec3 sunDirection;
 
