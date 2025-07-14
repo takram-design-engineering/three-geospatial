@@ -34,9 +34,6 @@ import { useCloudsControls } from './helpers/useCloudsControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
-const east = new Vector3()
-const north = new Vector3()
-const up = new Vector3()
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
@@ -58,16 +55,11 @@ const Scene: FC = () => {
     }
     atmosphere.updateByDate(new Date(motionDate.get()))
 
-    // Offset the ellipsoid so that the world space origin locates at the
-    // position relative to the ellipsoid.
     geodetic.set(radians(longitude), radians(latitude), height)
-    geodetic.toECEF(position)
-    atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
-
-    // Rotate the ellipsoid around the world space origin so that the camera's
-    // orientation aligns with X: east, Y: up, Z: north, for example.
-    Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-    atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
+    Ellipsoid.WGS84.getNorthUpEastFrame(
+      geodetic.toECEF(position),
+      atmosphere.worldToECEFMatrix
+    )
   })
 
   const [clouds, setClouds] = useState<CloudsEffect | null>(null)

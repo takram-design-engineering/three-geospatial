@@ -462,26 +462,25 @@ The normalized direction to the sun and moon in ECEF coordinates. This value is 
 
 The default values are [0, 0, 0].
 
-#### rotationMatrix
+#### inertialToECEFMatrix
 
 ```ts
-rotationMatrix: Matrix4
+inertialToECEFMatrix: Matrix4
 ```
 
 The rotation matrix for converting ECI to ECEF coordinates. This value is shared with descendant components and is overwritten by the [`date`](#date) prop or the [`updateByDate`](#updatebydate) function.
 
 The default value is an identity matrix.
 
-#### ellipsoidCenter, ellipsoidMatrix
+#### worldToECEFMatrix
 
 ```ts
-ellipsoidCenter: Vector3
-ellipsoidMatrix: Matrix4
+worldToECEFMatrix: Matrix4
 ```
 
-The center coordinates and rotation matrix of the ellipsoid. Use these values to define a reference frame or, more commonly, to move the ellipsoid for working around the world space origin and adapting to Three.js’s Y-up coordinate system.
+The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js’s Y-up coordinate system.
 
-The default value of `ellipsoidCenter` is [0, 0, 0], and `ellipsoidMatrix` is an identity matrix.
+The default value is an identity matrix, and it must be orthogonal and consist only of translation and rotation (no scaling).
 
 ```ts
 import { type AtmosphereApi } from '@takram/three-atmosphere/r3f'
@@ -495,14 +494,14 @@ const up = new Vector3()
 
 declare const atmosphere: AtmosphereApi
 
-// Offset the ellipsoid so that the world space origin locates at the
-// position relative to the ellipsoid.
-atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
-
-// Rotate the ellipsoid around the world space origin so that the camera's
-// orientation aligns with X: north, Y: up, Z: east, for example.
+// Move and rotate the ellipsoid so that the world space origin locates at
+// the given geographic coordinate, and the scene's orientation aligns with
+// X: north, Y: up, Z: east, for example.
 Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
+atmosphere.worldToECEFMatrix.makeBasis(north, up, east).setPosition(position)
+
+// Alternatively in this case, simply:
+Ellipsoid.WGS84.getNorthUpEastFrame(position, atmosphere.worldToECEFMatrix)
 ```
 
 See the [story](/storybook/src/atmosphere/Atmosphere-MovingEllipsoid.tsx) for complete example.
@@ -563,7 +562,7 @@ import { Stars } from '@takram/three-atmosphere/r3f'
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
 const sunDirection = getSunDirectionECEF(/* Date object or timestamp */)
-const rotationMatrix =
+const inertialToECEFMatrix =
   getECIToECEFRotationMatrix(/* Date object or timestamp */)
 
 const Scene = () => {
@@ -572,7 +571,7 @@ const Scene = () => {
     <Stars
       data={starsData}
       sunDirection={sunDirection}
-      matrix={rotationMatrix}
+      matrix={inertialToECEFMatrix}
     />
   )
 }
@@ -787,14 +786,13 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 See [ellipsoid](#ellipsoid).
 
-#### ellipsoidCenter, ellipsoidMatrix
+#### worldToECEFMatrix
 
 ```ts
-ellipsoidCenter: Vector3
-ellipsoidMatrix: Matrix4
+worldToECEFMatrix: Matrix4
 ```
 
-See [ellipsoidCenter, ellipsoidMatrix](#ellipsoidcenter-ellipsoidmatrix).
+See [worldToECEFMatrix](#worldtoecefmatrix).
 
 #### correctAltitude
 
@@ -981,14 +979,13 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 See [ellipsoid](#ellipsoid).
 
-#### ellipsoidCenter, ellipsoidMatrix
+#### worldToECEFMatrix
 
 ```ts
-ellipsoidCenter: Vector3
-ellipsoidMatrix: Matrix4
+worldToECEFMatrix: Matrix4
 ```
 
-See [ellipsoidCenter, ellipsoidMatrix](#ellipsoidcenter-ellipsoidmatrix).
+See [worldToECEFMatrix](#worldtoecefmatrix).
 
 #### correctAltitude
 
@@ -1044,14 +1041,13 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 See [ellipsoid](#ellipsoid).
 
-#### ellipsoidCenter, ellipsoidMatrix
+#### worldToECEFMatrix
 
 ```ts
-ellipsoidCenter: Vector3
-ellipsoidMatrix: Matrix4
+worldToECEFMatrix: Matrix4
 ```
 
-See [ellipsoidCenter, ellipsoidMatrix](#ellipsoidcenter-ellipsoidmatrix).
+See [worldToECEFMatrix](#worldtoecefmatrix).
 
 #### correctAltitude
 
@@ -1159,14 +1155,13 @@ ellipsoid: Ellipsoid = Ellipsoid.WGS84
 
 See [ellipsoid](#ellipsoid).
 
-#### ellipsoidCenter, ellipsoidMatrix
+#### worldToECEFMatrix
 
 ```ts
-ellipsoidCenter: Vector3
-ellipsoidMatrix: Matrix4
+worldToECEFMatrix: Matrix4
 ```
 
-See [ellipsoidCenter, ellipsoidMatrix](#ellipsoidcenter-ellipsoidmatrix).
+See [worldToECEFMatrix](#worldtoecefmatrix).
 
 #### correctAltitude
 

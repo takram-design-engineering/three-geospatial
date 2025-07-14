@@ -20,7 +20,6 @@ uniform float maxStepSize;
 uniform float opticalDepthTailScale;
 
 in vec2 vUv;
-in vec3 vEllipsoidCenter;
 
 layout(location = 0) out vec4 outputColor[CASCADE_COUNT];
 
@@ -154,11 +153,8 @@ void cascade(
   vec2 clip = vUv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrices[cascadeIndex] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
-  vec3 sunPosition = mat3(inverseEllipsoidMatrix) * point.xyz - vEllipsoidCenter;
+  vec3 sunPosition = (worldToECEFMatrix * vec4(point.xyz, 1.0)).xyz + altitudeCorrection;
 
-  // The sun direction is in ECEF. Since the view matrix is constructed with the
-  // ellipsoid matrix already applied, there's no need to apply the inverse
-  // matrix here.
   vec3 rayDirection = normalize(-sunDirection);
   float rayNear;
   float rayFar;
@@ -172,7 +168,7 @@ void cascade(
   // Velocity for temporal resolution.
   #ifdef TEMPORAL_PASS
   vec3 frontPosition = color.x * rayDirection + rayOrigin;
-  vec3 frontPositionWorld = mat3(ellipsoidMatrix) * (frontPosition + vEllipsoidCenter);
+  vec3 frontPositionWorld = (ecefToWorldMatrix * vec4(frontPosition - altitudeCorrection, 1.0)).xyz;
   vec4 prevClip = reprojectionMatrices[cascadeIndex] * vec4(frontPositionWorld, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;

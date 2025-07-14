@@ -1,4 +1,10 @@
-import { DirectionalLight, Matrix4, Vector3, type Texture } from 'three'
+import {
+  DirectionalLight,
+  Matrix3,
+  Matrix4,
+  Vector3,
+  type Texture
+} from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -6,7 +12,7 @@ import { AtmosphereParameters } from './AtmosphereParameters'
 import { getSunLightColor } from './getSunLightColor'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
-const matrixScratch = /*#__PURE__*/ new Matrix4()
+const rotationScratch = /*#__PURE__*/ new Matrix3()
 
 export interface SunDirectionalLightParameters {
   transmittanceTexture?: Texture | null
@@ -25,8 +31,7 @@ export const sunDirectionalLightParametersDefaults = {
 export class SunDirectionalLight extends DirectionalLight {
   transmittanceTexture: Texture | null
   ellipsoid: Ellipsoid
-  readonly ellipsoidCenter = new Vector3()
-  readonly ellipsoidMatrix = new Matrix4()
+  readonly worldToECEFMatrix = new Matrix4()
   correctAltitude: boolean
   readonly sunDirection: Vector3
   distance: number
@@ -52,9 +57,13 @@ export class SunDirectionalLight extends DirectionalLight {
   }
 
   updatePosition(): void {
+    const ecefToWorldRotation = rotationScratch
+      .setFromMatrix4(this.worldToECEFMatrix)
+      .transpose()
+
     this.position
       .copy(this.sunDirection)
-      .applyMatrix4(this.ellipsoidMatrix)
+      .applyMatrix3(ecefToWorldRotation)
       .normalize()
       .multiplyScalar(this.distance)
       .add(this.target.position)
@@ -66,13 +75,9 @@ export class SunDirectionalLight extends DirectionalLight {
       return
     }
 
-    const inverseEllipsoidMatrix = matrixScratch
-      .copy(this.ellipsoidMatrix)
-      .invert()
     const cameraPositionECEF = this.target
       .getWorldPosition(vectorScratch)
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(this.ellipsoidCenter)
+      .applyMatrix4(this.worldToECEFMatrix)
 
     getSunLightColor(
       this.transmittanceTexture,

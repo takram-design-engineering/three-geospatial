@@ -43,14 +43,13 @@ uniform mat4 viewMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform float bottomRadius;
-uniform vec3 ellipsoidCenter;
-uniform mat4 inverseEllipsoidMatrix;
+uniform mat4 worldToECEFMatrix;
+uniform float geometricErrorCorrectionAmount;
 uniform vec3 sunDirection;
 uniform vec3 moonDirection;
 uniform float moonAngularRadius;
 uniform float lunarRadianceScale;
 uniform float albedoScale;
-uniform float idealSphereAlpha;
 
 #ifdef HAS_ANY_SHADOW
 uniform sampler3D stbnTexture;
@@ -110,8 +109,7 @@ uniform sampler2D screenSpaceShadowBuffer;
 
 varying vec3 vCameraPosition;
 varying vec3 vRayDirection;
-varying vec3 vEllipsoidCenter;
-varying vec3 vGeometryEllipsoidCenter;
+varying vec3 vGeometryAltitudeCorrection;
 varying vec3 vEllipsoidRadiiSquared;
 
 vec3 readNormal(const vec2 uv) {
@@ -131,8 +129,8 @@ void correctGeometricError(inout vec3 positionECEF, inout vec3 normalECEF) {
   // Correct way is slerp, but this will be small-angle interpolation anyways.
   vec3 sphereNormal = normalize(positionECEF / vEllipsoidRadiiSquared);
   vec3 spherePosition = atmosphere.bottom_radius * sphereNormal;
-  normalECEF = mix(normalECEF, sphereNormal, idealSphereAlpha);
-  positionECEF = mix(positionECEF, spherePosition, idealSphereAlpha);
+  normalECEF = mix(normalECEF, sphereNormal, geometricErrorCorrectionAmount);
+  positionECEF = mix(positionECEF, spherePosition, geometricErrorCorrectionAmount);
 }
 
 #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
@@ -166,7 +164,7 @@ vec3 getSunSkyIrradiance(
 void applyTransmittanceInscatter(const vec3 positionECEF, float shadowLength, inout vec3 radiance) {
   vec3 transmittance;
   vec3 inscatter = GetSkyRadianceToPoint(
-    vCameraPosition - vGeometryEllipsoidCenter,
+    vCameraPosition,
     positionECEF,
     shadowLength,
     sunDirection,
@@ -448,7 +446,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     #ifdef SKY
     vec3 rayDirection = normalize(vRayDirection);
     outputColor.rgb = getSkyRadiance(
-      vCameraPosition - vEllipsoidCenter,
+      vCameraPosition,
       rayDirection,
       shadowLength,
       sunDirection,
@@ -484,10 +482,10 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   #endif // RECONSTRUCT_NORMAL
 
   vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
-  vec3 worldNormal = normalize(mat3(inverseViewMatrix) * viewNormal);
-  mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vec3 positionECEF = rotation * worldPosition * METER_TO_LENGTH_UNIT - vGeometryEllipsoidCenter;
-  vec3 normalECEF = rotation * worldNormal;
+  vec3 worldNormal = (inverseViewMatrix * vec4(viewNormal, 0.0)).xyz;
+  vec3 positionECEF = (worldToECEFMatrix * vec4(worldPosition, 1.0)).xyz;
+  positionECEF = positionECEF * METER_TO_LENGTH_UNIT + vGeometryAltitudeCorrection;
+  vec3 normalECEF = (worldToECEFMatrix * vec4(worldNormal, 0.0)).xyz;
 
   #ifdef CORRECT_GEOMETRIC_ERROR
   correctGeometricError(positionECEF, normalECEF);

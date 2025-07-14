@@ -16,14 +16,17 @@ export function getAltitudeCorrectionOffset(
     vectorScratch
   )
   return surfacePosition != null
-    ? ellipsoid.getOsculatingSphereCenter(
-        // Move the center of the atmosphere's inner sphere down to intersect
-        // the viewpoint when it's located underground.
-        !clipToSurface || surfacePosition.lengthSq() < cameraPosition.lengthSq()
-          ? surfacePosition
-          : cameraPosition,
-        bottomRadius,
-        result
-      )
+    ? ellipsoid
+        .getOsculatingSphereCenter(
+          // Move the center of the atmosphere's inner sphere down to intersect
+          // the viewpoint when it's located underground.
+          !clipToSurface ||
+            surfacePosition.lengthSq() < cameraPosition.lengthSq()
+            ? surfacePosition
+            : cameraPosition,
+          bottomRadius,
+          result
+        )
+        .negate()
     : result.setScalar(0)
 }

@@ -58,8 +58,7 @@ export const Sky: FC<SkyProps> = ({ ref: forwardedRef, ...props }) => {
     if (transientStates != null) {
       material.sunDirection.copy(transientStates.sunDirection)
       material.moonDirection.copy(transientStates.moonDirection)
-      material.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-      material.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+      material.worldToECEFMatrix.copy(transientStates.worldToECEFMatrix)
 
       // TODO: Since cloud shadows are computed in post-processing, the shadow
       // length texture is delayed by 1 frame.

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix`.
+- `Atmosphere`: Renamed `rotationMatrix` to `inertialToECEFMatrix`.
+
+## [0.13.1] - 2025-07-14
+
 ### Fixed
 
 - Fixed the transmittance values underflow to zero in half-float precision at the precomputation stage.

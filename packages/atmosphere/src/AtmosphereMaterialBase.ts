@@ -81,8 +81,7 @@ export const atmosphereMaterialParametersBaseDefaults = {
 export interface AtmosphereMaterialBaseUniforms {
   [key: string]: Uniform<unknown>
   cameraPosition: Uniform<Vector3>
-  ellipsoidCenter: Uniform<Vector3>
-  inverseEllipsoidMatrix: Uniform<Matrix4>
+  worldToECEFMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
 
@@ -101,7 +100,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   declare uniforms: AtmosphereMaterialBaseUniforms
 
   ellipsoid: Ellipsoid
-  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
   private _renderTargetCount!: number
 
@@ -133,8 +131,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
       // prettier-ignore
       uniforms: {
         cameraPosition: new Uniform(new Vector3()),
-        ellipsoidCenter: new Uniform(new Vector3()),
-        inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+        worldToECEFMatrix: new Uniform(new Matrix4()),
         altitudeCorrection: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
 
@@ -179,13 +176,9 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     const cameraPosition = camera.getWorldPosition(
       uniforms.cameraPosition.value
     )
-    const inverseEllipsoidMatrix = uniforms.inverseEllipsoidMatrix.value
-      .copy(this.ellipsoidMatrix)
-      .invert()
     const cameraPositionECEF = vectorScratch
       .copy(cameraPosition)
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(uniforms.ellipsoidCenter.value)
+      .applyMatrix4(uniforms.worldToECEFMatrix.value)
 
     const altitudeCorrection = uniforms.altitudeCorrection.value
     if (this.correctAltitude) {
@@ -271,8 +264,8 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
     this._hasHigherOrderScatteringTexture = value != null
   }
 
-  get ellipsoidCenter(): Vector3 {
-    return this.uniforms.ellipsoidCenter.value
+  get worldToECEFMatrix(): Matrix4 {
+    return this.uniforms.worldToECEFMatrix.value
   }
 
   get sunDirection(): Vector3 {
