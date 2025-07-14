@@ -5,6 +5,9 @@
 ### Breaking changes
 
 - Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix`.
+- Removed deprecated fields and exports, including:
+  - `CloudsEffect`: `skyIrradianceScale`, `groundIrradianceScale`
+  - `CloudsMaterial`: `accurateSunSkyIrradiance`
 
 ## [0.4.1] - 2025-07-14
 

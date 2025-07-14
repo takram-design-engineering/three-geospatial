@@ -6,6 +6,14 @@
 
 - Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix`.
 - `Atmosphere`: Renamed `rotationMatrix` to `inertialToECEFMatrix`.
+- Removed deprecated fields and exports, including:
+  - `AerialPerspectiveEffect`: `sunIrradiance`, `skyIrradiance`, `irradianceScale`
+  - `PrecomputedTexturesLoader`: `setTypeFromRenderer`
+  - `Stars`, `StarsMaterial`: `radianceScale`
+  - `IrradianceMask`
+  - `IrradianceMaskProps`
+  - `IrradianceMaskPass`
+  - `useAtmosphereTextureProps`
 
 ## [0.13.1] - 2025-07-14
 

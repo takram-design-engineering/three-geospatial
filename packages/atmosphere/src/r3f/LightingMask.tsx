@@ -56,9 +56,3 @@ export const LightingMask: FC<LightingMaskProps> = ({
     />
   )
 }
-
-/** @deprecated Use LightingMaskProps instead. */
-export type IrradianceMaskProps = LightingMaskProps
-
-/** @deprecated Use LightingMask instead. */
-export const IrradianceMask = LightingMask

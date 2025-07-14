@@ -702,32 +702,12 @@ export class CloudsEffect extends Effect {
     this.cloudsPass.currentMaterial.scatterAnisotropyMix = value
   }
 
-  /** @deprecated Use skyLightScale instead. */
-  get skyIrradianceScale(): number {
-    return this.skyLightScale
-  }
-
-  /** @deprecated Use skyLightScale instead. */
-  set skyIrradianceScale(value: number) {
-    this.skyLightScale = value
-  }
-
   get skyLightScale(): number {
     return this.cloudsPass.currentMaterial.uniforms.skyLightScale.value
   }
 
   set skyLightScale(value: number) {
     this.cloudsPass.currentMaterial.uniforms.skyLightScale.value = value
-  }
-
-  /** @deprecated Use groundBounceScale instead. */
-  get groundIrradianceScale(): number {
-    return this.groundBounceScale
-  }
-
-  /** @deprecated Use groundBounceScale instead. */
-  set groundIrradianceScale(value: number) {
-    this.groundBounceScale = value
   }
 
   get groundBounceScale(): number {
