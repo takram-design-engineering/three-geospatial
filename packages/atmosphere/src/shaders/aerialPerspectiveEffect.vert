@@ -42,7 +42,7 @@ void mainSupport() {
   getCameraRay(origin, direction);
 
   vec3 cameraPositionECEF = (worldToECEFMatrix * vec4(origin, 1.0)).xyz;
-  vCameraPosition = (cameraPositionECEF - altitudeCorrection) * METER_TO_LENGTH_UNIT;
+  vCameraPosition = (cameraPositionECEF + altitudeCorrection) * METER_TO_LENGTH_UNIT;
   vRayDirection = (worldToECEFMatrix * vec4(direction, 0.0)).xyz;
 
   vGeometryAltitudeCorrection = altitudeCorrection * METER_TO_LENGTH_UNIT;

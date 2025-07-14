@@ -46,7 +46,7 @@ void main() {
   getCameraRay(origin, direction);
 
   vec3 cameraPositionECEF = (worldToECEFMatrix * vec4(origin, 1.0)).xyz;
-  vCameraPosition = (cameraPositionECEF - altitudeCorrection) * METER_TO_LENGTH_UNIT;
+  vCameraPosition = (cameraPositionECEF + altitudeCorrection) * METER_TO_LENGTH_UNIT;
   vRayDirection = (worldToECEFMatrix * vec4(direction, 0.0)).xyz;
 
   gl_Position = vec4(position.xy, 1.0, 1.0);

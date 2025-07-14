@@ -113,7 +113,7 @@ float getViewZ(const float depth) {
 }
 
 vec3 ECEFToWorld(const vec3 positionECEF) {
-  return (ECEFToWorldMatrix * vec4(positionECEF + altitudeCorrection, 1.0)).xyz;
+  return (ECEFToWorldMatrix * vec4(positionECEF - altitudeCorrection, 1.0)).xyz;
 }
 
 vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
@@ -835,7 +835,7 @@ void main() {
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 
-  vec3 cameraPosition = vCameraPosition - altitudeCorrection;
+  vec3 cameraPosition = vCameraPosition + altitudeCorrection;
   vec3 rayDirection = normalize(vRayDirection);
   float cosTheta = dot(sunDirection, rayDirection);
 

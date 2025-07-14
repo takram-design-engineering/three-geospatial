@@ -153,7 +153,7 @@ void cascade(
   vec2 clip = vUv * 2.0 - 1.0;
   vec4 point = inverseShadowMatrices[cascadeIndex] * vec4(clip.xy, -1.0, 1.0);
   point /= point.w;
-  vec3 sunPosition = (worldToECEFMatrix * vec4(point.xyz, 1.0)).xyz - altitudeCorrection;
+  vec3 sunPosition = (worldToECEFMatrix * vec4(point.xyz, 1.0)).xyz + altitudeCorrection;
 
   vec3 rayDirection = normalize(-sunDirection);
   float rayNear;
@@ -168,7 +168,7 @@ void cascade(
   // Velocity for temporal resolution.
   #ifdef TEMPORAL_PASS
   vec3 frontPosition = color.x * rayDirection + rayOrigin;
-  vec3 frontPositionWorld = (ECEFToWorldMatrix * vec4(frontPosition + altitudeCorrection, 1.0)).xyz;
+  vec3 frontPositionWorld = (ECEFToWorldMatrix * vec4(frontPosition - altitudeCorrection, 1.0)).xyz;
   vec4 prevClip = reprojectionMatrices[cascadeIndex] * vec4(frontPositionWorld, 1.0);
   prevClip /= prevClip.w;
   vec2 prevUv = prevClip.xy * 0.5 + 0.5;

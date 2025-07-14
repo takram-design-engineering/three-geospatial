@@ -330,7 +330,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
   vec3 worldNormal = (inverseViewMatrix * vec4(viewNormal, 0.0)).xyz;
   vec3 positionECEF = (worldToECEFMatrix * vec4(worldPosition, 1.0)).xyz;
-  positionECEF = positionECEF * METER_TO_LENGTH_UNIT - vGeometryAltitudeCorrection;
+  positionECEF = positionECEF * METER_TO_LENGTH_UNIT + vGeometryAltitudeCorrection;
   vec3 normalECEF = (worldToECEFMatrix * vec4(worldNormal, 0.0)).xyz;
 
   #ifdef CORRECT_GEOMETRIC_ERROR

@@ -34,7 +34,7 @@ void main() {
   #ifdef BACKGROUND
   vec3 worldDirection = normalize(matrixWorld * vec4(position, 1.0)).xyz;
   vec3 cameraPositionECEF = (worldToECEFMatrix * vec4(cameraPosition, 1.0)).xyz;
-  vCameraPosition = (cameraPositionECEF - altitudeCorrection) * METER_TO_LENGTH_UNIT;
+  vCameraPosition = (cameraPositionECEF + altitudeCorrection) * METER_TO_LENGTH_UNIT;
   vRayDirection = (worldToECEFMatrix * vec4(worldDirection, 0.0)).xyz;
   gl_Position =
     projectionMatrix * viewMatrix * vec4(cameraPosition + worldDirection * cameraFar, 1.0);

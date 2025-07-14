@@ -73,7 +73,7 @@ void main() {
   vCameraDirection = (worldToECEFMatrix * vec4(cameraDirection, 0.0)).xyz;
   vRayDirection = (worldToECEFMatrix * vec4(worldDirection, 0.0)).xyz;
 
-  sampleSunSkyIrradiance(vCameraPosition - altitudeCorrection);
+  sampleSunSkyIrradiance(vCameraPosition + altitudeCorrection);
 
   gl_Position = vec4(position.xy, 1.0, 1.0);
 }
