@@ -119,9 +119,9 @@ export interface AerialPerspectiveEffectUniforms {
   ellipsoidRadii: Uniform<Vector3>
   worldToECEFMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
+  geometricErrorCorrectionAmount: Uniform<number>
   sunDirection: Uniform<Vector3>
   albedoScale: Uniform<number>
-  idealSphereAlpha: Uniform<number>
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
   lunarRadianceScale: Uniform<number>
@@ -259,9 +259,9 @@ export class AerialPerspectiveEffect extends Effect {
             ellipsoidRadii: new Uniform(new Vector3()),
             worldToECEFMatrix: new Uniform(new Matrix4()),
             altitudeCorrection: new Uniform(new Vector3()),
+            geometricErrorCorrectionAmount: new Uniform(0),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
             albedoScale: new Uniform(irradianceScale ?? albedoScale),
-            idealSphereAlpha: new Uniform(0),
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
             lunarRadianceScale: new Uniform(lunarRadianceScale),
@@ -364,11 +364,10 @@ export class AerialPerspectiveEffect extends Effect {
         .set(0, this.ellipsoid.maximumRadius, -Math.max(0.0, cameraHeight))
         .applyMatrix4(projectionMatrix)
 
-      // Calculate interpolation alpha
       // Interpolation values are picked to match previous rough globe scales to
       // match the previous "camera height" approach for interpolation.
       // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
-      uniforms.get('idealSphereAlpha').value = saturate(
+      uniforms.get('geometricErrorCorrectionAmount').value = saturate(
         remap(projectedScale.y, 41.5, 13.8, 0, 1)
       )
     } catch (error) {
