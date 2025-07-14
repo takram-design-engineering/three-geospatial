@@ -101,7 +101,7 @@ export class SkyLightProbe extends LightProbe {
         vectorScratch2
       )
       if (surfacePosition != null) {
-        cameraPositionECEF.sub(
+        cameraPositionECEF.add(
           getAltitudeCorrectionOffset(
             surfacePosition,
             this.atmosphere.bottomRadius,
