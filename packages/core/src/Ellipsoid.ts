@@ -79,6 +79,14 @@ export class Ellipsoid {
     return result.makeBasis(east, north, up).setPosition(position)
   }
 
+  getNorthUpEastFrame(position: Vector3, result = new Matrix4()): Matrix4 {
+    const east = vectorScratch1
+    const north = vectorScratch2
+    const up = vectorScratch3
+    this.getEastNorthUpVectors(position, east, north, up)
+    return result.makeBasis(north, up, east).setPosition(position)
+  }
+
   getIntersection(ray: Ray, result = new Vector3()): Vector3 | undefined {
     const reciprocalRadii = this.reciprocalRadii(vectorScratch1)
     const p = vectorScratch2.copy(reciprocalRadii).multiply(ray.origin)

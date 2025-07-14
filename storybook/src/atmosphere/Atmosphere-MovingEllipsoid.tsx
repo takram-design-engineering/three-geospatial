@@ -35,9 +35,6 @@ import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
-const east = new Vector3()
-const north = new Vector3()
-const up = new Vector3()
 const vectorScratch = new Vector3()
 const luminousEfficiency = new Vector3(0.2126, 0.7152, 0.0722)
 
@@ -60,16 +57,11 @@ const Scene: FC = () => {
     if (atmosphere == null) {
       return
     }
-    // Offset the ellipsoid so that the world space origin locates at the
-    // position relative to the ellipsoid.
     geodetic.set(radians(longitude), radians(latitude), height)
-    geodetic.toECEF(position)
-    atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
-
-    // Rotate the ellipsoid around the world space origin so that the camera's
-    // orientation aligns with X: north, Y: up, Z: east, for example.
-    Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-    atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
+    Ellipsoid.WGS84.getNorthUpEastFrame(
+      geodetic.toECEF(position),
+      atmosphere.worldToECEFMatrix
+    )
   }, [longitude, latitude, height, atmosphere])
 
   useFrame(() => {

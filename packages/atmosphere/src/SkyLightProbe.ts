@@ -1,4 +1,11 @@
-import { LightProbe, Matrix4, Vector2, Vector3, type Texture } from 'three'
+import {
+  LightProbe,
+  Matrix3,
+  Matrix4,
+  Vector2,
+  Vector3,
+  type Texture
+} from 'three'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -36,7 +43,7 @@ const L1_COEFF = Math.sqrt(3) / (2 * Math.sqrt(Math.PI))
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const uvScratch = /*#__PURE__*/ new Vector2()
-const matrixScratch = /*#__PURE__*/ new Matrix4()
+const rotationScratch = /*#__PURE__*/ new Matrix3()
 
 export interface SkyLightProbeParameters {
   irradianceTexture?: Texture | null
@@ -53,8 +60,7 @@ export const skyLightProbeParametersDefaults = {
 export class SkyLightProbe extends LightProbe {
   irradianceTexture: Texture | null
   ellipsoid: Ellipsoid
-  readonly ellipsoidCenter = new Vector3()
-  readonly ellipsoidMatrix = new Matrix4()
+  readonly worldToECEFMatrix = new Matrix4()
   correctAltitude: boolean
   readonly sunDirection: Vector3
 
@@ -81,13 +87,13 @@ export class SkyLightProbe extends LightProbe {
       return
     }
 
-    const inverseEllipsoidMatrix = matrixScratch
-      .copy(this.ellipsoidMatrix)
-      .invert()
+    const worldToECEFMatrix = this.worldToECEFMatrix
+    const ecefToWorldRotation = rotationScratch
+      .setFromMatrix4(worldToECEFMatrix)
+      .transpose()
+
     const cameraPosition = this.getWorldPosition(vectorScratch1)
-    const cameraPositionECEF = cameraPosition
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(this.ellipsoidCenter)
+    const cameraPositionECEF = cameraPosition.applyMatrix4(worldToECEFMatrix)
 
     if (this.correctAltitude) {
       const surfacePosition = this.ellipsoid.projectOnSurface(
@@ -95,7 +101,7 @@ export class SkyLightProbe extends LightProbe {
         vectorScratch2
       )
       if (surfacePosition != null) {
-        cameraPositionECEF.sub(
+        cameraPositionECEF.add(
           getAltitudeCorrectionOffset(
             surfacePosition,
             this.atmosphere.bottomRadius,
@@ -114,7 +120,7 @@ export class SkyLightProbe extends LightProbe {
 
     const normal = this.ellipsoid
       .getSurfaceNormal(cameraPositionECEF)
-      .applyMatrix4(this.ellipsoidMatrix)
+      .applyMatrix3(ecefToWorldRotation)
     const coefficients = this.sh.coefficients
     coefficients[0].copy(irradiance).multiplyScalar(L0_COEFF)
     coefficients[1].copy(irradiance).multiplyScalar(L1_COEFF * normal.y)

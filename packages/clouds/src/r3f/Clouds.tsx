@@ -170,8 +170,7 @@ export const Clouds: FC<CloudsProps> = ({
   useFrame(() => {
     if (transientStates != null) {
       effect.sunDirection.copy(transientStates.sunDirection)
-      effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-      effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+      effect.worldToECEFMatrix.copy(transientStates.worldToECEFMatrix)
     }
   })
 

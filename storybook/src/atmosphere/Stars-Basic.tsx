@@ -15,13 +15,13 @@ const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 50 })
   const motionDate = useLocalDateControls()
 
-  const rotationMatrixRef = useRef(new Matrix4())
+  const inertialToECEFMatrixRef = useRef(new Matrix4())
   const starsRef = useRef<StarsImpl>(null)
   useFrame(() => {
     const date = new Date(motionDate.get())
-    getECIToECEFRotationMatrix(date, rotationMatrixRef.current)
+    getECIToECEFRotationMatrix(date, inertialToECEFMatrixRef.current)
     if (starsRef.current != null) {
-      starsRef.current.setRotationFromMatrix(rotationMatrixRef.current)
+      starsRef.current.setRotationFromMatrix(inertialToECEFMatrixRef.current)
     }
   })
 

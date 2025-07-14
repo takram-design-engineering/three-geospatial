@@ -81,8 +81,7 @@ export const AerialPerspective: FC<AerialPerspectiveProps> = ({
     if (transientStates != null) {
       effect.sunDirection.copy(transientStates.sunDirection)
       effect.moonDirection.copy(transientStates.moonDirection)
-      effect.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-      effect.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+      effect.worldToECEFMatrix.copy(transientStates.worldToECEFMatrix)
       effect.overlay = transientStates.overlay
       effect.shadow = transientStates.shadow
       effect.shadowLength = transientStates.shadowLength

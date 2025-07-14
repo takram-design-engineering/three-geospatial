@@ -40,8 +40,7 @@ export const SkyLight: FC<SkyLightProps> = ({
     }
     if (transientStates != null) {
       probe.sunDirection.copy(transientStates.sunDirection)
-      probe.ellipsoidCenter.copy(transientStates.ellipsoidCenter)
-      probe.ellipsoidMatrix.copy(transientStates.ellipsoidMatrix)
+      probe.worldToECEFMatrix.copy(transientStates.worldToECEFMatrix)
       probe.update()
     }
   })

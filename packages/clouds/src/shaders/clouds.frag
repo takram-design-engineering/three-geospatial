@@ -87,7 +87,6 @@ in vec2 vUv;
 in vec3 vCameraPosition;
 in vec3 vCameraDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
-in vec3 vEllipsoidCenter;
 in GroundIrradiance vGroundIrradiance;
 in CloudsIrradiance vCloudsIrradiance;
 
@@ -113,8 +112,8 @@ float getViewZ(const float depth) {
   #endif // PERSPECTIVE_CAMERA
 }
 
-vec3 ECEFToWorld(const vec3 positionECEF) {
-  return mat3(ellipsoidMatrix) * (positionECEF + vEllipsoidCenter);
+vec3 ecefToWorld(const vec3 positionECEF) {
+  return (ecefToWorldMatrix * vec4(positionECEF - altitudeCorrection, 1.0)).xyz;
 }
 
 vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
@@ -144,7 +143,7 @@ const vec3 cascadeColors[4] = vec3[4](
 );
 
 vec3 getCascadeColor(const vec3 rayPosition) {
-  vec3 worldPosition = ECEFToWorld(rayPosition);
+  vec3 worldPosition = ecefToWorld(rayPosition);
   int cascadeIndex = getCascadeIndex(
     viewMatrix,
     worldPosition,
@@ -160,7 +159,7 @@ vec3 getCascadeColor(const vec3 rayPosition) {
 }
 
 vec3 getFadedCascadeColor(const vec3 rayPosition, const float jitter) {
-  vec3 worldPosition = ECEFToWorld(rayPosition);
+  vec3 worldPosition = ecefToWorld(rayPosition);
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
@@ -235,7 +234,7 @@ float sampleShadowOpticalDepth(
   if (distanceToTop <= 0.0) {
     return 0.0;
   }
-  vec3 worldPosition = ECEFToWorld(rayPosition);
+  vec3 worldPosition = ecefToWorld(rayPosition);
   int cascadeIndex = getFadedCascadeIndex(
     viewMatrix,
     worldPosition,
@@ -836,7 +835,7 @@ void main() {
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 
-  vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
+  vec3 cameraPosition = vCameraPosition + altitudeCorrection;
   vec3 rayDirection = normalize(vRayDirection);
   float cosTheta = dot(sunDirection, rayDirection);
 
@@ -947,7 +946,7 @@ void main() {
     applyAerialPerspective(cameraPosition, frontPosition, shadowLength, color);
 
     // Velocity for temporal resolution.
-    vec3 frontPositionWorld = ECEFToWorld(frontPosition);
+    vec3 frontPositionWorld = ecefToWorld(frontPosition);
     vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
     prevClip /= prevClip.w;
     vec2 prevUv = prevClip.xy * 0.5 + 0.5;
@@ -971,7 +970,7 @@ void main() {
 
     // if (intersectsScene) {
     //   vec3 frontPosition = cameraPosition + rayNearFar.y * rayDirection;
-    //   vec3 frontPositionWorld = ECEFToWorld(frontPosition);
+    //   vec3 frontPositionWorld = ecefToWorld(frontPosition);
     //   vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
     //   prevClip /= prevClip.w;
     //   vec2 prevUv = prevClip.xy * 0.5 + 0.5;

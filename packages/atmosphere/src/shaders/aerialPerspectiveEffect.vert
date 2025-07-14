@@ -1,16 +1,14 @@
 uniform mat4 inverseViewMatrix;
 uniform mat4 inverseProjectionMatrix;
 uniform vec3 cameraPosition;
-uniform vec3 ellipsoidCenter;
-uniform mat4 inverseEllipsoidMatrix;
+uniform mat4 worldToECEFMatrix;
 uniform vec3 altitudeCorrection;
+uniform float geometricErrorCorrectionAmount;
 uniform vec3 ellipsoidRadii;
-uniform float idealSphereAlpha;
 
 varying vec3 vCameraPosition;
 varying vec3 vRayDirection;
-varying vec3 vEllipsoidCenter;
-varying vec3 vGeometryEllipsoidCenter;
+varying vec3 vGeometryAltitudeCorrection;
 varying vec3 vEllipsoidRadiiSquared;
 
 void getCameraRay(out vec3 origin, out vec3 direction) {
@@ -43,19 +41,17 @@ void mainSupport() {
   vec3 direction, origin;
   getCameraRay(origin, direction);
 
-  mat3 rotation = mat3(inverseEllipsoidMatrix);
-  vCameraPosition = rotation * origin.xyz * METER_TO_LENGTH_UNIT;
-  vRayDirection = rotation * direction.xyz;
+  vec3 cameraPositionECEF = (worldToECEFMatrix * vec4(origin, 1.0)).xyz;
+  vCameraPosition = (cameraPositionECEF + altitudeCorrection) * METER_TO_LENGTH_UNIT;
+  vRayDirection = (worldToECEFMatrix * vec4(direction, 0.0)).xyz;
 
-  vEllipsoidCenter = (ellipsoidCenter + altitudeCorrection) * METER_TO_LENGTH_UNIT;
-  #ifdef CORRECT_GEOMETRIC_ERROR
-  // Gradually turn off altitude correction for aerial perspective as geometric
-  // error correction takes effect.
+  vGeometryAltitudeCorrection = altitudeCorrection * METER_TO_LENGTH_UNIT;
+  // Gradually turn off the altitude correction on geometries as the geometric
+  // error correction takes effect, because that on the ideal sphere will be
+  // over corrected.
   // See: https://github.com/takram-design-engineering/three-geospatial/pull/23#issuecomment-2542914656
-  vGeometryEllipsoidCenter =
-    (ellipsoidCenter + mix(altitudeCorrection, vec3(0.0), idealSphereAlpha)) * METER_TO_LENGTH_UNIT;
-  #else
-  vGeometryEllipsoidCenter = vEllipsoidCenter;
+  #ifdef CORRECT_GEOMETRIC_ERROR
+  vGeometryAltitudeCorrection *= 1.0 - geometricErrorCorrectionAmount;
   #endif // CORRECT_GEOMETRIC_ERROR
 
   vec3 radii = ellipsoidRadii * METER_TO_LENGTH_UNIT;

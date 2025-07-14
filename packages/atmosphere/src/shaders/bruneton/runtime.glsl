@@ -409,7 +409,7 @@ Illuminance3 GetSunAndSkyIlluminance(
 
 // @shotamatsuda: Added for the clouds.
 Illuminance3 GetSunAndSkyScalarIlluminance(
-    Position p,  Direction sun_direction,
+    Position p, Direction sun_direction,
     out IrradianceSpectrum sky_irradiance) {
   IrradianceSpectrum sun_irradiance = GetSunAndSkyScalarIrradiance(
       ATMOSPHERE, transmittance_texture, irradiance_texture, p,

@@ -21,7 +21,7 @@ import {
   type ComponentProps,
   type FC
 } from 'react'
-import { Layers, Matrix4, Vector3, type Group } from 'three'
+import { Layers, Matrix3, Vector3, type Group } from 'three'
 
 import type { AerialPerspectiveEffect } from '@takram/three-atmosphere'
 import {
@@ -50,12 +50,10 @@ import { ReorientationPlugin } from '../plugins/ReorientationPlugin'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
-const east = new Vector3()
-const north = new Vector3()
-const up = new Vector3()
 
 const vectorScratch = new Vector3()
-const matrixScratch = new Matrix4()
+const rotationScratch1 = new Matrix3()
+const rotationScratch2 = new Matrix3()
 
 const LIGHTING_MASK_LAYER = 10
 const layers = new Layers()
@@ -102,12 +100,17 @@ const ISS: FC<ISSProps> = ({ ...props }) => {
     if (transientStates == null) {
       return
     }
-    const worldToLocal = matrixScratch.copy(iss.scene.matrixWorld).invert()
+    const ecefToWorld = rotationScratch1
+      .setFromMatrix4(transientStates.worldToECEFMatrix)
+      .transpose()
+    const worldToLocal = rotationScratch2
+      .setFromMatrix4(iss.scene.matrixWorld)
+      .transpose()
     const sunDirection = vectorScratch
       .copy(transientStates.sunDirection)
-      .applyMatrix4(transientStates.ellipsoidMatrix)
+      .applyMatrix3(ecefToWorld)
       .normalize()
-      .applyMatrix4(worldToLocal)
+      .applyMatrix3(worldToLocal)
       .normalize()
 
     const { x, y, z } = sunDirection
@@ -164,16 +167,11 @@ const Scene: FC = () => {
     if (atmosphere == null) {
       return
     }
-    // Offset the ellipsoid so that the world space origin locates at the
-    // position relative to the ellipsoid.
     geodetic.set(radians(longitude), radians(latitude), height)
-    geodetic.toECEF(position)
-    atmosphere.ellipsoidCenter.copy(position).multiplyScalar(-1)
-
-    // Rotate the ellipsoid around the world space origin so that the camera's
-    // orientation aligns with X: north, Y: up, Z: east, for example.
-    Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-    atmosphere.ellipsoidMatrix.makeBasis(north, up, east).invert()
+    Ellipsoid.WGS84.getNorthUpEastFrame(
+      geodetic.toECEF(position),
+      atmosphere.worldToECEFMatrix
+    )
   }, [longitude, latitude, height, atmosphere])
 
   useFrame(() => {

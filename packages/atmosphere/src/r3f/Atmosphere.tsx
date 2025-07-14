@@ -31,9 +31,8 @@ import type {
 export interface AtmosphereTransientStates {
   sunDirection: Vector3
   moonDirection: Vector3
-  rotationMatrix: Matrix4
-  ellipsoidCenter: Vector3
-  ellipsoidMatrix: Matrix4
+  worldToECEFMatrix: Matrix4
+  inertialToECEFMatrix: Matrix4
   overlay: AtmosphereOverlay | null
   shadow: AtmosphereShadow | null
   shadowLength: AtmosphereShadowLength | null
@@ -75,9 +74,8 @@ export const Atmosphere: FC<AtmosphereProps> = ({
   const transientStatesRef = useRef({
     sunDirection: new Vector3(),
     moonDirection: new Vector3(),
-    rotationMatrix: new Matrix4(),
-    ellipsoidCenter: new Vector3(),
-    ellipsoidMatrix: new Matrix4(),
+    worldToECEFMatrix: new Matrix4(),
+    inertialToECEFMatrix: new Matrix4(),
     overlay: null,
     shadow: null,
     shadowLength: null,
@@ -137,12 +135,14 @@ export const Atmosphere: FC<AtmosphereProps> = ({
   )
 
   const updateByDate: AtmosphereApi['updateByDate'] = useMemo(() => {
-    const { sunDirection, moonDirection, rotationMatrix } =
+    const { sunDirection, moonDirection, inertialToECEFMatrix } =
       transientStatesRef.current
     return date => {
-      getECIToECEFRotationMatrix(date, rotationMatrix)
-      getSunDirectionECI(date, sunDirection).applyMatrix4(rotationMatrix)
-      getMoonDirectionECI(date, moonDirection).applyMatrix4(rotationMatrix)
+      getECIToECEFRotationMatrix(date, inertialToECEFMatrix)
+      getSunDirectionECI(date, sunDirection).applyMatrix4(inertialToECEFMatrix)
+      getMoonDirectionECI(date, moonDirection).applyMatrix4(
+        inertialToECEFMatrix
+      )
     }
   }, [])
 

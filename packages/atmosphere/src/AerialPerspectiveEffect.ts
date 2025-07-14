@@ -117,12 +117,11 @@ export interface AerialPerspectiveEffectUniforms {
   cameraPosition: Uniform<Vector3>
   bottomRadius: Uniform<number>
   ellipsoidRadii: Uniform<Vector3>
-  ellipsoidCenter: Uniform<Vector3>
-  inverseEllipsoidMatrix: Uniform<Matrix4>
+  worldToECEFMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
+  geometricErrorCorrectionAmount: Uniform<number>
   sunDirection: Uniform<Vector3>
   albedoScale: Uniform<number>
-  idealSphereAlpha: Uniform<number>
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
   lunarRadianceScale: Uniform<number>
@@ -178,7 +177,6 @@ export class AerialPerspectiveEffect extends Effect {
   declare uniforms: UniformMap<AerialPerspectiveEffectUniforms>
 
   private _ellipsoid!: Ellipsoid
-  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
 
   overlay: AtmosphereOverlay | null = null
@@ -258,12 +256,11 @@ export class AerialPerspectiveEffect extends Effect {
             cameraPosition: new Uniform(new Vector3()),
             bottomRadius: new Uniform(atmosphere.bottomRadius),
             ellipsoidRadii: new Uniform(new Vector3()),
-            ellipsoidCenter: new Uniform(new Vector3()),
-            inverseEllipsoidMatrix: new Uniform(new Matrix4()),
+            worldToECEFMatrix: new Uniform(new Matrix4()),
             altitudeCorrection: new Uniform(new Vector3()),
+            geometricErrorCorrectionAmount: new Uniform(0),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
             albedoScale: new Uniform(irradianceScale ?? albedoScale),
-            idealSphereAlpha: new Uniform(0),
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
             lunarRadianceScale: new Uniform(lunarRadianceScale),
@@ -351,14 +348,10 @@ export class AerialPerspectiveEffect extends Effect {
     const cameraPosition = camera.getWorldPosition(
       uniforms.get('cameraPosition').value
     )
-    const inverseEllipsoidMatrix = uniforms
-      .get('inverseEllipsoidMatrix')
-      .value.copy(this.ellipsoidMatrix)
-      .invert()
+    const worldToECEFMatrix = uniforms.get('worldToECEFMatrix').value
     const cameraPositionECEF = vectorScratch1
       .copy(cameraPosition)
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(uniforms.get('ellipsoidCenter').value)
+      .applyMatrix4(worldToECEFMatrix)
 
     try {
       // Calculate the projected scale of the globe in clip space used to
@@ -370,11 +363,10 @@ export class AerialPerspectiveEffect extends Effect {
         .set(0, this.ellipsoid.maximumRadius, -Math.max(0.0, cameraHeight))
         .applyMatrix4(projectionMatrix)
 
-      // Calculate interpolation alpha
       // Interpolation values are picked to match previous rough globe scales to
       // match the previous "camera height" approach for interpolation.
       // See: https://github.com/takram-design-engineering/three-geospatial/pull/23
-      uniforms.get('idealSphereAlpha').value = saturate(
+      uniforms.get('geometricErrorCorrectionAmount').value = saturate(
         remap(projectedScale.y, 41.5, 13.8, 0, 1)
       )
     } catch (error) {
@@ -589,8 +581,8 @@ export class AerialPerspectiveEffect extends Effect {
     this.uniforms.get('ellipsoidRadii').value.copy(value.radii)
   }
 
-  get ellipsoidCenter(): Vector3 {
-    return this.uniforms.get('ellipsoidCenter').value
+  get worldToECEFMatrix(): Matrix4 {
+    return this.uniforms.get('worldToECEFMatrix').value
   }
 
   @define('CORRECT_GEOMETRIC_ERROR')
