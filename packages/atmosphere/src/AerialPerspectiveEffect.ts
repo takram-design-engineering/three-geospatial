@@ -177,7 +177,6 @@ export class AerialPerspectiveEffect extends Effect {
   declare uniforms: UniformMap<AerialPerspectiveEffectUniforms>
 
   private _ellipsoid!: Ellipsoid
-  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
 
   overlay: AtmosphereOverlay | null = null

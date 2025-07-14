@@ -98,7 +98,6 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
   declare uniforms: AtmosphereMaterialBaseUniforms
 
   ellipsoid: Ellipsoid
-  readonly ellipsoidMatrix = new Matrix4()
   correctAltitude: boolean
   private _renderTargetCount!: number
 
