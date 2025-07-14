@@ -3,6 +3,7 @@ import {
   Camera,
   Data3DTexture,
   EventDispatcher,
+  Matrix3,
   Matrix4,
   Texture,
   Uniform,
@@ -56,6 +57,7 @@ import fragmentShader from './shaders/cloudsEffect.frag?raw'
 
 const vector3Scratch = /*#__PURE__*/ new Vector3()
 const vector2Scratch = /*#__PURE__*/ new Vector2()
+const rotationScratch = /*#__PURE__*/ new Matrix3()
 
 const cloudsUniformKeys = [
   'maxIterationCount',
@@ -182,9 +184,8 @@ export class CloudsEffect extends Effect {
   readonly turbulenceRepeat = new Vector2().setScalar(20)
 
   // Mutable instances of atmosphere parameter uniforms
-  readonly ellipsoidCenter = new Vector3()
-  readonly ellipsoidMatrix = new Matrix4()
-  private readonly inverseEllipsoidMatrix = new Matrix4()
+  readonly worldToECEFMatrix = new Matrix4()
+  private readonly ECEFToWorldMatrix = new Matrix4()
   private readonly altitudeCorrection = new Vector3()
   readonly sunDirection = new Vector3()
 
@@ -267,9 +268,8 @@ export class CloudsEffect extends Effect {
     this.layerUniforms = createCloudLayerUniforms()
 
     this.atmosphereUniforms = createAtmosphereUniforms(atmosphere, {
-      ellipsoidCenter: this.ellipsoidCenter,
-      ellipsoidMatrix: this.ellipsoidMatrix,
-      inverseEllipsoidMatrix: this.inverseEllipsoidMatrix,
+      worldToECEFMatrix: this.worldToECEFMatrix,
+      ECEFToWorldMatrix: this.ECEFToWorldMatrix,
       altitudeCorrection: this.altitudeCorrection,
       sunDirection: this.sunDirection
     })
@@ -356,13 +356,12 @@ export class CloudsEffect extends Effect {
     )
 
     // Update atmosphere uniforms.
-    const inverseEllipsoidMatrix = this.inverseEllipsoidMatrix
-      .copy(this.ellipsoidMatrix)
-      .invert()
+    const worldToECEFMatrix = this.worldToECEFMatrix
+    this.ECEFToWorldMatrix.copy(worldToECEFMatrix).invert()
+
     const cameraPositionECEF = this.camera
       .getWorldPosition(vector3Scratch)
-      .applyMatrix4(inverseEllipsoidMatrix)
-      .sub(this.ellipsoidCenter)
+      .applyMatrix4(this.worldToECEFMatrix)
 
     const altitudeCorrection = this.altitudeCorrection
     if (this.correctAltitude) {
@@ -386,12 +385,12 @@ export class CloudsEffect extends Effect {
     const zenithAngle = this.sunDirection.dot(surfaceNormal)
     const distance = lerp(1e6, 1e3, zenithAngle)
 
+    const ECEFToWorldRotation = rotationScratch
+      .setFromMatrix4(worldToECEFMatrix)
+      .transpose()
     this.shadowMaps.update(
       this.camera as PerspectiveCamera,
-      // The sun direction must be rotated with the ellipsoid to ensure the
-      // frusta are constructed correctly. Note this affects the transformation
-      // in the shadow shader.
-      vector3Scratch.copy(this.sunDirection).applyMatrix4(this.ellipsoidMatrix),
+      vector3Scratch.copy(this.sunDirection).applyMatrix3(ECEFToWorldRotation),
       distance
     )
   }

@@ -188,9 +188,8 @@ export function updateCloudLayerUniforms(
 export interface AtmosphereUniforms {
   bottomRadius: Uniform<number>
   topRadius: Uniform<number>
-  ellipsoidCenter: Uniform<Vector3>
-  ellipsoidMatrix: Uniform<Matrix4>
-  inverseEllipsoidMatrix: Uniform<Matrix4>
+  worldToECEFMatrix: Uniform<Matrix4>
+  ECEFToWorldMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
 }
@@ -209,9 +208,8 @@ export function createAtmosphereUniforms(
   return {
     bottomRadius: new Uniform(atmosphere.bottomRadius),
     topRadius: new Uniform(atmosphere.topRadius),
-    ellipsoidCenter: new Uniform(instances.ellipsoidCenter),
-    ellipsoidMatrix: new Uniform(instances.ellipsoidMatrix),
-    inverseEllipsoidMatrix: new Uniform(instances.inverseEllipsoidMatrix),
+    worldToECEFMatrix: new Uniform(instances.worldToECEFMatrix),
+    ECEFToWorldMatrix: new Uniform(instances.ECEFToWorldMatrix),
     altitudeCorrection: new Uniform(instances.altitudeCorrection),
     sunDirection: new Uniform(instances.sunDirection)
   }

@@ -375,8 +375,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     )
     const cameraPositionECEF = vectorScratch
       .copy(cameraPosition)
-      .applyMatrix4(uniforms.inverseEllipsoidMatrix.value)
-      .sub(uniforms.ellipsoidCenter.value)
+      .applyMatrix4(uniforms.worldToECEFMatrix.value)
 
     try {
       uniforms.cameraHeight.value =

@@ -87,7 +87,6 @@ in vec2 vUv;
 in vec3 vCameraPosition;
 in vec3 vCameraDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
-in vec3 vEllipsoidCenter;
 in GroundIrradiance vGroundIrradiance;
 in CloudsIrradiance vCloudsIrradiance;
 
@@ -114,7 +113,7 @@ float getViewZ(const float depth) {
 }
 
 vec3 ECEFToWorld(const vec3 positionECEF) {
-  return mat3(ellipsoidMatrix) * (positionECEF + vEllipsoidCenter);
+  return (ECEFToWorldMatrix * vec4(positionECEF + altitudeCorrection, 1.0)).xyz;
 }
 
 vec2 getShadowUv(const vec3 worldPosition, const int cascadeIndex) {
@@ -836,7 +835,7 @@ void main() {
   return;
   #endif // DEBUG_SHOW_SHADOW_MAP
 
-  vec3 cameraPosition = vCameraPosition - vEllipsoidCenter;
+  vec3 cameraPosition = vCameraPosition - altitudeCorrection;
   vec3 rayDirection = normalize(vRayDirection);
   float cosTheta = dot(sunDirection, rayDirection);
 

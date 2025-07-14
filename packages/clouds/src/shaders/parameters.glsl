@@ -4,8 +4,9 @@ uniform sampler3D stbnTexture;
 
 // Atmosphere
 uniform float bottomRadius;
-uniform mat4 ellipsoidMatrix;
-uniform mat4 inverseEllipsoidMatrix;
+uniform mat4 worldToECEFMatrix;
+uniform mat4 ECEFToWorldMatrix;
+uniform vec3 altitudeCorrection;
 uniform vec3 sunDirection;
 
 // Participating medium
