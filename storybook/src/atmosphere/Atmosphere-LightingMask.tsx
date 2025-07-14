@@ -50,9 +50,6 @@ import { ReorientationPlugin } from '../plugins/ReorientationPlugin'
 
 const geodetic = new Geodetic()
 const position = new Vector3()
-const east = new Vector3()
-const north = new Vector3()
-const up = new Vector3()
 
 const vectorScratch = new Vector3()
 const rotationScratch1 = new Matrix3()
@@ -171,11 +168,10 @@ const Scene: FC = () => {
       return
     }
     geodetic.set(radians(longitude), radians(latitude), height)
-    geodetic.toECEF(position)
-    Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-    atmosphere.worldToECEFMatrix
-      .makeBasis(north, up, east)
-      .setPosition(position)
+    Ellipsoid.WGS84.getNorthUpEastFrame(
+      geodetic.toECEF(position),
+      atmosphere.worldToECEFMatrix
+    )
   }, [longitude, latitude, height, atmosphere])
 
   useFrame(() => {
