@@ -148,7 +148,7 @@ export interface AerialPerspectiveEffectUniforms {
   shadowLengthBuffer: Uniform<Texture | null>
   lightingMaskBuffer: Uniform<Texture | null>
   sceneShadow: Uniform<{
-    maps: Texture[]
+    maps: Array<Texture | null>
     cascadeCount: number
     intervals: Vector2[]
     matrices: Matrix4[]
