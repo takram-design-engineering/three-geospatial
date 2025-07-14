@@ -135,8 +135,9 @@ RadianceSpectrum GetSkyRadiance(
     const in TransmittanceTexture transmittance_texture,
     const in ReducedScatteringTexture scattering_texture,
     const in ReducedScatteringTexture single_mie_scattering_texture,
-    Position camera, const in Direction view_ray, Length shadow_length,
-    const in Direction sun_direction, out DimensionlessSpectrum transmittance) {
+    Position camera, const in Direction view_ray, const in Length shadow_length,
+    const in Direction sun_direction, const in bool clamp_mu_at_horizon,
+    out DimensionlessSpectrum transmittance) {
   // Compute the distance to the top atmosphere boundary along the view ray,
   // assuming the viewer is in space (or NaN if the view ray does not intersect
   // the atmosphere).
@@ -160,6 +161,12 @@ RadianceSpectrum GetSkyRadiance(
   }
   // Compute the r, mu, mu_s and nu parameters needed for the texture lookups.
   Number mu = rmu / r;
+  // @shotamatsuda: For rendering points below the bottom atmosphere.
+  if (clamp_mu_at_horizon) {
+    Number mu_horizon = -sqrt(1.0 -
+        (atmosphere.bottom_radius * atmosphere.bottom_radius) / (r * r));
+    mu = max(rmu / r, mu_horizon + 1e-3); // Add margin
+  }
   Number mu_s = dot(camera, sun_direction) / r;
   Number nu = dot(view_ray, sun_direction);
   bool ray_r_mu_intersects_ground = RayIntersectsGround(atmosphere, r, mu);
@@ -208,16 +215,26 @@ RadianceSpectrum GetSkyRadiance(
       MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
 }
 
-// @shotamatsuda: Added for avoiding artifacts below.
-bool RayOutsideTopAtmosphereBoundary(
-    const in AtmosphereParameters atmosphere,
-    const in Position camera, const in Position point, const in Length r) {
-  if (r < atmosphere.top_radius || length(point) < atmosphere.top_radius) {
-    return false;
-  }
+// @shotamatsuda: Returns the point on the ray closest to the origin.
+vec3 ClosestPointOnRay(const in Position camera, const in Position point) {
   vec3 ray = point - camera;
-  float t = -clamp(dot(camera, ray) / dot(ray, ray), 0.0, 1.0);
-  return length(camera + t * ray) > atmosphere.top_radius;
+  float t = clamp(-dot(camera, ray) / dot(ray, ray), 0.0, 1.0);
+  return camera + t * ray;
+}
+
+// @shotamatsuda: Moves the camera and point outside of the bottom atmosphere
+// maintaining the relation.
+void MoveOutsideBottomAtmosphere(
+    const in AtmosphereParameters atmosphere,
+    const in Position ray_point,
+    const in Length ray_radius,
+    inout Position camera, inout Position point) {
+  float R = atmosphere.bottom_radius + 0.05; // Add margin
+  if ((length(camera) < R || length(point) < R) && ray_radius < R) {
+    vec3 offset = (R / ray_radius - 1.0) * ray_point;
+    point += offset;
+    camera += offset;
+  }
 }
 
 RadianceSpectrum GetSkyRadianceToPoint(
@@ -225,12 +242,17 @@ RadianceSpectrum GetSkyRadianceToPoint(
     const in TransmittanceTexture transmittance_texture,
     const in ReducedScatteringTexture scattering_texture,
     const in ReducedScatteringTexture single_mie_scattering_texture,
-    Position camera, const in Position point, Length shadow_length,
+    Position camera, Position point, Length shadow_length,
     const in Direction sun_direction, out DimensionlessSpectrum transmittance) {
+  // @shotamatsuda: Render somewhat meaningful scattering for the points under
+  // the bottom atmosphere.
+  Position ray_point = ClosestPointOnRay(camera, point);
+  Length ray_radius = length(ray_point);
+  MoveOutsideBottomAtmosphere(atmosphere, ray_point, ray_radius, camera, point);
+
   // @shotamatsuda: Avoid artifacts when the ray is located outside of the top
   // atmosphere boundary.
-  Length r = length(camera);
-  if (RayOutsideTopAtmosphereBoundary(atmosphere, camera, point, r)) {
+  if (ray_radius > atmosphere.top_radius) {
     transmittance = vec3(1.0);
     return vec3(0.0);
   }
@@ -239,6 +261,7 @@ RadianceSpectrum GetSkyRadianceToPoint(
   // assuming the viewer is in space (or NaN if the view ray does not intersect
   // the atmosphere).
   Direction view_ray = normalize(point - camera);
+  Length r = length(camera);
   Length rmu = dot(camera, view_ray);
   // @shotamatsuda: Use SafeSqrt instead.
   // See: https://github.com/takram-design-engineering/three-geospatial/pull/26
@@ -381,11 +404,12 @@ Luminance3 GetSolarLuminance() {
 
 Luminance3 GetSkyLuminance(
     Position camera, Direction view_ray, Length shadow_length,
-    Direction sun_direction, out DimensionlessSpectrum transmittance) {
+    Direction sun_direction, bool clamp_mu_at_horizon,
+    out DimensionlessSpectrum transmittance) {
   return GetSkyRadiance(ATMOSPHERE, transmittance_texture,
       scattering_texture, single_mie_scattering_texture,
-      camera, view_ray, shadow_length, sun_direction, transmittance) *
-      SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+      camera, view_ray, shadow_length, sun_direction, clamp_mu_at_horizon,
+      transmittance) * SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 }
 
 Luminance3 GetSkyLuminanceToPoint(

@@ -130,6 +130,7 @@ DimensionlessSpectrum GetTransmittanceToTopAtmosphereBoundary(
     Length r, Number mu) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   vec2 uv = GetTransmittanceTextureUvFromRMu(atmosphere, r, mu);
+  // @shotamatsuda: Added for the precomputation stage in half-float precision.
   #ifdef TRANSMITTANCE_PRECISION_LOG
   // Manually interpolate the transmittance instead of the optical depth.
   const vec2 size = vec2(TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);

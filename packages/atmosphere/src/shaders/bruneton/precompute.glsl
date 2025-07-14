@@ -110,6 +110,7 @@ DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundary(
       atmosphere.absorption_extinction *
           ComputeOpticalLengthToTopAtmosphereBoundary(
               atmosphere, atmosphere.absorption_density, r, mu));
+  // @shotamatsuda: Added for the precomputation stage in half-float precision.
   #ifdef TRANSMITTANCE_PRECISION_LOG
   return optical_depth;
   #else // TRANSMITTANCE_PRECISION_LOG
