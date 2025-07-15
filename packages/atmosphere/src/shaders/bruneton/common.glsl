@@ -57,24 +57,24 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-Number ClampCosine(Number mu) {
+Number ClampCosine(const Number mu) {
   return clamp(mu, Number(-1.0), Number(1.0));
 }
 
-Length ClampDistance(Length d) {
+Length ClampDistance(const Length d) {
   return max(d, 0.0 * m);
 }
 
-Length ClampRadius(const AtmosphereParameters atmosphere, Length r) {
+Length ClampRadius(const AtmosphereParameters atmosphere, const Length r) {
   return clamp(r, atmosphere.bottom_radius, atmosphere.top_radius);
 }
 
-Length SafeSqrt(Area a) {
+Length SafeSqrt(const Area a) {
   return sqrt(max(a, 0.0 * m2));
 }
 
 Length DistanceToTopAtmosphereBoundary(const AtmosphereParameters atmosphere,
-    Length r, Number mu) {
+    const Length r, const Number mu) {
   assert(r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   Area discriminant = r * r * (mu * mu - 1.0) +
@@ -83,7 +83,7 @@ Length DistanceToTopAtmosphereBoundary(const AtmosphereParameters atmosphere,
 }
 
 Length DistanceToBottomAtmosphereBoundary(const AtmosphereParameters atmosphere,
-    Length r, Number mu) {
+    const Length r, const Number mu) {
   assert(r >= atmosphere.bottom_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   Area discriminant = r * r * (mu * mu - 1.0) +
@@ -92,19 +92,19 @@ Length DistanceToBottomAtmosphereBoundary(const AtmosphereParameters atmosphere,
 }
 
 bool RayIntersectsGround(const AtmosphereParameters atmosphere,
-    Length r, Number mu) {
+    const Length r, const Number mu) {
   assert(r >= atmosphere.bottom_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   return mu < 0.0 && r * r * (mu * mu - 1.0) +
       atmosphere.bottom_radius * atmosphere.bottom_radius >= 0.0 * m2;
 }
 
-Number GetTextureCoordFromUnitRange(Number x, int texture_size) {
+Number GetTextureCoordFromUnitRange(const Number x, const int texture_size) {
   return 0.5 / Number(texture_size) + x * (1.0 - 1.0 / Number(texture_size));
 }
 
 vec2 GetTransmittanceTextureUvFromRMu(const AtmosphereParameters atmosphere,
-    Length r, Number mu) {
+    const Length r, const Number mu) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -127,7 +127,7 @@ vec2 GetTransmittanceTextureUvFromRMu(const AtmosphereParameters atmosphere,
 DimensionlessSpectrum GetTransmittanceToTopAtmosphereBoundary(
     const AtmosphereParameters atmosphere,
     const TransmittanceTexture transmittance_texture,
-    Length r, Number mu) {
+    const Length r, const Number mu) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   vec2 uv = GetTransmittanceTextureUvFromRMu(atmosphere, r, mu);
   // @shotamatsuda: Added for the precomputation stage in half-float precision.
@@ -151,7 +151,8 @@ DimensionlessSpectrum GetTransmittanceToTopAtmosphereBoundary(
 DimensionlessSpectrum GetTransmittance(
     const AtmosphereParameters atmosphere,
     const TransmittanceTexture transmittance_texture,
-    Length r, Number mu, Length d, bool ray_r_mu_intersects_ground) {
+    const Length r, const Number mu, const Length d,
+    const bool ray_r_mu_intersects_ground) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   assert(d >= 0.0 * m);
@@ -179,7 +180,7 @@ DimensionlessSpectrum GetTransmittance(
 DimensionlessSpectrum GetTransmittanceToSun(
     const AtmosphereParameters atmosphere,
     const TransmittanceTexture transmittance_texture,
-    Length r, Number mu_s) {
+    const Length r, const Number mu_s) {
   Number sin_theta_h = atmosphere.bottom_radius / r;
   Number cos_theta_h = -sqrt(max(1.0 - sin_theta_h * sin_theta_h, 0.0));
   return GetTransmittanceToTopAtmosphereBoundary(
@@ -189,19 +190,19 @@ DimensionlessSpectrum GetTransmittanceToSun(
                  mu_s - cos_theta_h);
 }
 
-InverseSolidAngle RayleighPhaseFunction(Number nu) {
+InverseSolidAngle RayleighPhaseFunction(const Number nu) {
   InverseSolidAngle k = 3.0 / (16.0 * PI * sr);
   return k * (1.0 + nu * nu);
 }
 
-InverseSolidAngle MiePhaseFunction(Number g, Number nu) {
+InverseSolidAngle MiePhaseFunction(const Number g, const Number nu) {
   InverseSolidAngle k = 3.0 / (8.0 * PI * sr) * (1.0 - g * g) / (2.0 + g * g);
   return k * (1.0 + nu * nu) / pow(1.0 + g * g - 2.0 * g * nu, 1.5);
 }
 
 vec4 GetScatteringTextureUvwzFromRMuMuSNu(const AtmosphereParameters atmosphere,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground) {
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
@@ -260,7 +261,7 @@ vec4 GetScatteringTextureUvwzFromRMuMuSNu(const AtmosphereParameters atmosphere,
 }
 
 vec2 GetIrradianceTextureUvFromRMuS(const AtmosphereParameters atmosphere,
-    Length r, Number mu_s) {
+    const Length r, const Number mu_s) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
   Number x_r = (r - atmosphere.bottom_radius) /
@@ -273,7 +274,7 @@ vec2 GetIrradianceTextureUvFromRMuS(const AtmosphereParameters atmosphere,
 IrradianceSpectrum GetIrradiance(
     const AtmosphereParameters atmosphere,
     const IrradianceTexture irradiance_texture,
-    Length r, Number mu_s) {
+    const Length r, const Number mu_s) {
   vec2 uv = GetIrradianceTextureUvFromRMuS(atmosphere, r, mu_s);
   return IrradianceSpectrum(texture(irradiance_texture, uv));
 }

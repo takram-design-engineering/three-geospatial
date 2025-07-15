@@ -57,13 +57,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-Number GetLayerDensity(const DensityProfileLayer layer, Length altitude) {
+Number GetLayerDensity(const DensityProfileLayer layer, const Length altitude) {
   Number density = layer.exp_term * exp(layer.exp_scale * altitude) +
       layer.linear_term * altitude + layer.constant_term;
   return clamp(density, Number(0.0), Number(1.0));
 }
 
-Number GetProfileDensity(const DensityProfile profile, Length altitude) {
+Number GetProfileDensity(const DensityProfile profile, const Length altitude) {
   DensityProfileLayer layers[2] = profile.layers;
   return altitude < layers[0].width
     ? GetLayerDensity(layers[0], altitude)
@@ -72,7 +72,7 @@ Number GetProfileDensity(const DensityProfile profile, Length altitude) {
 
 Length ComputeOpticalLengthToTopAtmosphereBoundary(
     const AtmosphereParameters atmosphere, const DensityProfile profile,
-    Length r, Number mu) {
+    const Length r, const Number mu) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   // Number of intervals for the numerical integration.
@@ -97,7 +97,7 @@ Length ComputeOpticalLengthToTopAtmosphereBoundary(
 }
 
 DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundary(
-    const AtmosphereParameters atmosphere, Length r, Number mu) {
+    const AtmosphereParameters atmosphere, const Length r, const Number mu) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   vec3 optical_depth = (
@@ -118,7 +118,7 @@ DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundary(
   #endif // TRANSMITTANCE_PRECISION_LOG
 }
 
-Number GetUnitRangeFromTextureCoord(Number u, int texture_size) {
+Number GetUnitRangeFromTextureCoord(const Number u, const int texture_size) {
   return (u - 0.5 / Number(texture_size)) / (1.0 - 1.0 / Number(texture_size));
 }
 
@@ -158,8 +158,8 @@ DimensionlessSpectrum ComputeTransmittanceToTopAtmosphereBoundaryTexture(
 void ComputeSingleScatteringIntegrand(
     const AtmosphereParameters atmosphere,
     const TransmittanceTexture transmittance_texture,
-    Length r, Number mu, Number mu_s, Number nu, Length d,
-    bool ray_r_mu_intersects_ground,
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const Length d, const bool ray_r_mu_intersects_ground,
     out DimensionlessSpectrum rayleigh, out DimensionlessSpectrum mie) {
   Length r_d = ClampRadius(atmosphere, sqrt(d * d + 2.0 * r * mu * d + r * r));
   Number mu_s_d = ClampCosine((r * mu_s + d * nu) / r_d);
@@ -187,8 +187,8 @@ Length DistanceToNearestAtmosphereBoundary(const AtmosphereParameters atmosphere
 void ComputeSingleScattering(
     const AtmosphereParameters atmosphere,
     const TransmittanceTexture transmittance_texture,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground,
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground,
     out IrradianceSpectrum rayleigh, out IrradianceSpectrum mie) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
@@ -316,8 +316,8 @@ void ComputeSingleScatteringTexture(const AtmosphereParameters atmosphere,
 AbstractSpectrum GetScattering(
     const AtmosphereParameters atmosphere,
     const AbstractScatteringTexture scattering_texture,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground) {
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground) {
   vec4 uvwz = GetScatteringTextureUvwzFromRMuMuSNu(
       atmosphere, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
   Number tex_coord_x = uvwz.x * Number(SCATTERING_TEXTURE_NU_SIZE - 1);
@@ -336,9 +336,9 @@ RadianceSpectrum GetScattering(
     const ReducedScatteringTexture single_rayleigh_scattering_texture,
     const ReducedScatteringTexture single_mie_scattering_texture,
     const ScatteringTexture multiple_scattering_texture,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground,
-    int scattering_order) {
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground,
+    const int scattering_order) {
   if (scattering_order == 1) {
     IrradianceSpectrum rayleigh = GetScattering(
         atmosphere, single_rayleigh_scattering_texture, r, mu, mu_s, nu,
@@ -358,7 +358,7 @@ RadianceSpectrum GetScattering(
 IrradianceSpectrum GetIrradiance(
     const AtmosphereParameters atmosphere,
     const IrradianceTexture irradiance_texture,
-    Length r, Number mu_s);
+    const Length r, const Number mu_s);
 
 RadianceDensitySpectrum ComputeScatteringDensity(
     const AtmosphereParameters atmosphere,
@@ -367,7 +367,8 @@ RadianceDensitySpectrum ComputeScatteringDensity(
     const ReducedScatteringTexture single_mie_scattering_texture,
     const ScatteringTexture multiple_scattering_texture,
     const IrradianceTexture irradiance_texture,
-    Length r, Number mu, Number mu_s, Number nu, int scattering_order) {
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const int scattering_order) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
@@ -463,8 +464,8 @@ RadianceSpectrum ComputeMultipleScattering(
     const AtmosphereParameters atmosphere,
     const TransmittanceTexture transmittance_texture,
     const ScatteringDensityTexture scattering_density_texture,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground) {
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
@@ -513,7 +514,7 @@ RadianceDensitySpectrum ComputeScatteringDensityTexture(
     const ReducedScatteringTexture single_mie_scattering_texture,
     const ScatteringTexture multiple_scattering_texture,
     const IrradianceTexture irradiance_texture,
-    const vec3 frag_coord, int scattering_order) {
+    const vec3 frag_coord, const int scattering_order) {
   Length r;
   Number mu;
   Number mu_s;
@@ -546,7 +547,7 @@ RadianceSpectrum ComputeMultipleScatteringTexture(
 IrradianceSpectrum ComputeDirectIrradiance(
     const AtmosphereParameters atmosphere,
     const TransmittanceTexture transmittance_texture,
-    Length r, Number mu_s) {
+    const Length r, const Number mu_s) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
 
@@ -568,7 +569,7 @@ IrradianceSpectrum ComputeIndirectIrradiance(
     const ReducedScatteringTexture single_rayleigh_scattering_texture,
     const ReducedScatteringTexture single_mie_scattering_texture,
     const ScatteringTexture multiple_scattering_texture,
-    Length r, Number mu_s, int scattering_order) {
+    const Length r, const Number mu_s, const int scattering_order) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
   assert(scattering_order >= 1);
@@ -629,7 +630,7 @@ IrradianceSpectrum ComputeIndirectIrradianceTexture(
     const ReducedScatteringTexture single_rayleigh_scattering_texture,
     const ReducedScatteringTexture single_mie_scattering_texture,
     const ScatteringTexture multiple_scattering_texture,
-    const vec2 frag_coord, int scattering_order) {
+    const vec2 frag_coord, const int scattering_order) {
   Length r;
   Number mu_s;
   GetRMuSFromIrradianceTextureUv(

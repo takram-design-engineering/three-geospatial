@@ -77,8 +77,8 @@ IrradianceSpectrum GetCombinedScattering(
     const AtmosphereParameters atmosphere,
     const ReducedScatteringTexture scattering_texture,
     const ReducedScatteringTexture single_mie_scattering_texture,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground,
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground,
     out IrradianceSpectrum single_mie_scattering) {
   vec4 uvwz = GetScatteringTextureUvwzFromRMuMuSNu(
       atmosphere, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
@@ -112,8 +112,8 @@ IrradianceSpectrum GetCombinedScattering(
 IrradianceSpectrum GetScattering(
     const AtmosphereParameters atmosphere,
     const ReducedScatteringTexture scattering_texture,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground) {
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground) {
   vec4 uvwz = GetScatteringTextureUvwzFromRMuMuSNu(
       atmosphere, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
   Number tex_coord_x = uvwz.x * Number(SCATTERING_TEXTURE_NU_SIZE - 1);
@@ -224,7 +224,9 @@ vec3 ClosestPointOnRay(const Position camera, const Position point) {
 }
 
 // @shotamatsuda: Moves the camera and point outside of the bottom atmosphere
-// maintaining the relation.
+// maintaining the relation. This effectively clamps the scattering at the
+// "eps", but it should be okay because a point at such altitude suffers from
+// lots of precision errors anyways.
 void MoveOutsideBottomAtmosphere(
     const AtmosphereParameters atmosphere,
     inout Position camera, inout Position point) {
@@ -246,13 +248,13 @@ RadianceSpectrum GetSkyRadianceToPoint(
     const TransmittanceTexture transmittance_texture,
     const ReducedScatteringTexture scattering_texture,
     const ReducedScatteringTexture single_mie_scattering_texture,
-    Position camera, Position point, Length shadow_length,
+    Position camera, Position point, const Length shadow_length,
     const Direction sun_direction, out DimensionlessSpectrum transmittance) {
   // @shotamatsuda: Render somewhat meaningful scattering for the points under
   // the bottom atmosphere.
   MoveOutsideBottomAtmosphere(atmosphere, camera, point);
 
-  // @shotamatsuda: Avoid artifacts when the ray is located outside of the top
+  // @shotamatsuda: Avoid artifacts when the ray does not intersect the top
   // atmosphere boundary.
   if (length(ClosestPointOnRay(camera, point)) > atmosphere.top_radius) {
     transmittance = vec3(1.0);
