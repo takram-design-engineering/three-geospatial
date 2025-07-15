@@ -872,6 +872,7 @@ void main() {
   float frontDepth = rayNearFar.y;
   vec3 depthVelocity = vec3(0.0);
   float shadowLength = 0.0;
+  bool hitClouds = false;
 
   if (!intersectsGround && !intersectsScene) {
     vec3 rayOrigin = rayNearFar.x * rayDirection + cameraPosition;
@@ -912,7 +913,8 @@ void main() {
     #endif // DEBUG_SHOW_SAMPLE_COUNT
 
     // Front depth will be -1.0 when no samples are accumulated.
-    if (marchedFrontDepth >= 0.0) {
+    hitClouds = marchedFrontDepth >= 0.0;
+    if (hitClouds) {
       frontDepth = rayNearFar.x + marchedFrontDepth;
 
       #ifdef SHADOW_LENGTH
@@ -922,6 +924,16 @@ void main() {
         min(frontDepth, shadowRayNearFar.y),
         color.a // Interpolate by the alpha for smoother edges.
       );
+
+      // Shadow length must be computed before applying aerial perspective.
+      if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
+        shadowLength = marchShadowLength(
+          shadowRayNearFar.x * rayDirection + cameraPosition,
+          rayDirection,
+          shadowRayNearFar,
+          stbn
+        );
+      }
       #endif // SHADOW_LENGTH
 
       #ifdef HAZE
@@ -932,32 +944,22 @@ void main() {
         color.a // Interpolate by the alpha for smoother edges.
       );
       #endif // HAZE
+
+      // Apply aerial perspective.
+      vec3 frontPosition = cameraPosition + frontDepth * rayDirection;
+      applyAerialPerspective(cameraPosition, frontPosition, shadowLength, color);
+
+      // Velocity for temporal resolution.
+      vec3 frontPositionWorld = ecefToWorld(frontPosition);
+      vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
+      prevClip /= prevClip.w;
+      vec2 prevUv = prevClip.xy * 0.5 + 0.5;
+      vec2 velocity = vUv - prevUv;
+      depthVelocity = vec3(frontDepth, velocity);
     }
+  }
 
-    #ifdef SHADOW_LENGTH
-    if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
-      shadowLength = marchShadowLength(
-        shadowRayNearFar.x * rayDirection + cameraPosition,
-        rayDirection,
-        shadowRayNearFar,
-        stbn
-      );
-    }
-    #endif // SHADOW_LENGTH
-
-    // Apply aerial perspective.
-    vec3 frontPosition = cameraPosition + frontDepth * rayDirection;
-    applyAerialPerspective(cameraPosition, frontPosition, shadowLength, color);
-
-    // Velocity for temporal resolution.
-    vec3 frontPositionWorld = ecefToWorld(frontPosition);
-    vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
-    prevClip /= prevClip.w;
-    vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-    vec2 velocity = vUv - prevUv;
-    depthVelocity = vec3(frontDepth, velocity);
-
-  } else {
+  if (!hitClouds) {
     #ifdef SHADOW_LENGTH
     if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
       shadowLength = marchShadowLength(
