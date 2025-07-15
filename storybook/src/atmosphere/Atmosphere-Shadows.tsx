@@ -38,19 +38,13 @@ import {
   SunLight,
   type AtmosphereApi
 } from '@takram/three-atmosphere/r3f'
-import {
-  Ellipsoid,
-  Geodetic,
-  PointOfView,
-  radians
-} from '@takram/three-geospatial'
+import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
   Depth,
   Dithering,
   LensFlare,
   Normal
 } from '@takram/three-geospatial-effects/r3f'
-import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
 
 import { EffectComposer } from '../helpers/EffectComposer'
 import { Stats } from '../helpers/Stats'
@@ -164,12 +158,6 @@ const Scene: FC = () => {
         {sun && <SunLight />}
       </group>
       {sceneShadow && <SceneShadow mapSize={2048} maxFar={5000} margin={200} />}
-
-      {/* An ellipsoid mesh for fill empty region */}
-      <EllipsoidMesh
-        args={[Ellipsoid.WGS84.radii, 360, 180]}
-        material={mode === 'light-source' ? lambertMaterial : basicMaterial}
-      />
 
       {/* Quantized mesh terrain */}
       <TilesRenderer>

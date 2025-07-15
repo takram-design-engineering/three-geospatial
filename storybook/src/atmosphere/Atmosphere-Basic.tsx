@@ -50,8 +50,8 @@ import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
 const geodetic = new Geodetic(radians(138.5), radians(36.2), 5000)
 const position = geodetic.toECEF()
 
-const terrainBasicMaterial = new MeshBasicMaterial({ color: 'gray' })
-const terrainLambertMaterial = new MeshLambertMaterial({ color: 'gray' })
+const terrainBasicMaterial = new MeshBasicMaterial({ color: 0x808080 })
+const terrainLambertMaterial = new MeshLambertMaterial({ color: 0x808080 })
 
 const Scene: FC = () => {
   const { toneMappingMode } = useToneMappingControls({ exposure: 10 })
@@ -110,7 +110,11 @@ const Scene: FC = () => {
   })
 
   return (
-    <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
+    <Atmosphere
+      ref={atmosphereRef}
+      correctAltitude={correctAltitude}
+      ground={false}
+    >
       <OrbitControls ref={setControls} />
 
       {/* Background objects and light sources */}
