@@ -170,7 +170,7 @@ RadianceSpectrum GetSkyRadiance(
   if (clamp_mu_at_horizon) {
     Number mu_horizon = -SafeSqrt(1.0 -
         (atmosphere.bottom_radius * atmosphere.bottom_radius) / (r * r));
-    const Number eps = 0.01;
+    const Number eps = 0.001;
     mu = max(rmu / r, mu_horizon + eps);
   }
   Number mu_s = dot(camera, sun_direction) / r;
