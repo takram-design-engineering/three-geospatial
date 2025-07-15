@@ -142,6 +142,11 @@ RadianceSpectrum GetSkyRadiance(
   // assuming the viewer is in space (or NaN if the view ray does not intersect
   // the atmosphere).
   Length r = length(camera);
+  // @shotamatsuda: For rendering points below the bottom atmosphere.
+  if (!clamp_mu_at_horizon && r < atmosphere.bottom_radius) {
+    r = atmosphere.bottom_radius;
+    camera = normalize(camera) * r;
+  }
   Length rmu = dot(camera, view_ray);
   // @shotamatsuda: Use SafeSqrt instead.
   // See: https://github.com/takram-design-engineering/three-geospatial/pull/26
@@ -409,8 +414,13 @@ Luminance3 GetSolarLuminance() {
 
 Luminance3 GetSkyLuminance(
     const Position camera, Direction view_ray, const Length shadow_length,
-    const Direction sun_direction, const bool clamp_mu_at_horizon,
-    out DimensionlessSpectrum transmittance) {
+    const Direction sun_direction, out DimensionlessSpectrum transmittance) {
+  #ifdef GROUND
+  const bool clamp_mu_at_horizon = false;
+  #else // GROUND
+  const bool clamp_mu_at_horizon = true;
+  #endif // GROUND
+
   return GetSkyRadiance(ATMOSPHERE, transmittance_texture,
       scattering_texture, single_mie_scattering_texture,
       camera, view_ray, shadow_length, sun_direction, clamp_mu_at_horizon,

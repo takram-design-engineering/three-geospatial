@@ -46,7 +46,7 @@ void main() {
   vec3 radiance = GetSkyRadiance(
     vCameraPosition,
     normalize(vRayDirection),
-    0.0,
+    0.0, // Shadow length
     sunDirection,
     transmittance
   );

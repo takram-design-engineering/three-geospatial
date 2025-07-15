@@ -100,12 +100,11 @@ export interface AerialPerspectiveEffectOptions {
   albedoScale?: number
   sky?: boolean
   sun?: boolean
-
-  // Moon
   moon?: boolean
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
+  ground?: boolean
 }
 
 export interface AerialPerspectiveEffectUniforms {
@@ -170,7 +169,8 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   sun: true,
   moon: true,
   moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
-  lunarRadianceScale: 1
+  lunarRadianceScale: 1,
+  ground: true
 } satisfies AerialPerspectiveEffectOptions
 
 export class AerialPerspectiveEffect extends Effect {
@@ -216,7 +216,8 @@ export class AerialPerspectiveEffect extends Effect {
       moon,
       moonDirection,
       moonAngularRadius,
-      lunarRadianceScale
+      lunarRadianceScale,
+      ground
     } = { ...aerialPerspectiveEffectOptionsDefaults, ...options }
 
     super(
@@ -322,6 +323,7 @@ export class AerialPerspectiveEffect extends Effect {
     this.sky = sky
     this.sun = sun
     this.moon = moon
+    this.ground = ground
   }
 
   get mainCamera(): Camera {
@@ -670,6 +672,9 @@ export class AerialPerspectiveEffect extends Effect {
   set lunarRadianceScale(value: number) {
     this.uniforms.get('lunarRadianceScale').value = value
   }
+
+  @define('GROUND')
+  ground: boolean
 
   get stbnTexture(): Data3DTexture | null {
     return this.uniforms.get('stbnTexture').value
