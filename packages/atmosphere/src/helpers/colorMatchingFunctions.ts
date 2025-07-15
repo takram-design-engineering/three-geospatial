@@ -1,6 +1,11 @@
 // Reference: https://cie.co.at/datatable/cie-1931-colour-matching-functions-2-degree-observer
 
-import type { Vector3 } from 'three'
+import { Vector3 } from 'three'
+import invariant from 'tiny-invariant'
+
+import { XYZ_TO_SRGB } from '../constants'
+
+const vectorScratch = /*#__PURE__*/ new Vector3()
 
 // prettier-ignore
 const DATA: ReadonlyArray<
@@ -105,6 +110,7 @@ const DATA: ReadonlyArray<
 
 export const MIN_LAMBDA = 360
 export const MAX_LAMBDA = 830
+export const MAX_LUMINOUS_EFFICACY = 683
 
 export function getCIEColorMatchingFunctionValue(
   wavelength: number,
@@ -123,4 +129,40 @@ export function getCIEColorMatchingFunctionValue(
     prev[2] * (1 - t) + next[2] * t,
     prev[3] * (1 - t) + next[3] * t
   )
+}
+
+function interpolate(
+  wavelengths: readonly number[],
+  wavelengthFunction: readonly number[],
+  wavelength: number
+): number {
+  invariant(wavelengthFunction.length === wavelengths.length)
+  if (wavelength < wavelengths[0]) {
+    return wavelengthFunction[0]
+  }
+  for (let i = 0; i < wavelengths.length - 1; ++i) {
+    if (wavelength < wavelengths[i + 1]) {
+      const u =
+        (wavelength - wavelengths[i]) / (wavelengths[i + 1] - wavelengths[i])
+      return wavelengthFunction[i] * (1 - u) + wavelengthFunction[i + 1] * u
+    }
+  }
+  return wavelengthFunction[wavelengthFunction.length - 1]
+}
+
+export function convertSpectrumToLinearSRGB(
+  wavelengths: readonly number[],
+  spectrum: readonly number[],
+  result = new Vector3()
+): Vector3 {
+  result.setScalar(0)
+  for (let lambda = MIN_LAMBDA; lambda < MAX_LAMBDA; ++lambda) {
+    const value = interpolate(wavelengths, spectrum, lambda)
+    result.add(
+      getCIEColorMatchingFunctionValue(lambda, vectorScratch).multiplyScalar(
+        value
+      )
+    )
+  }
+  return result.applyMatrix3(XYZ_TO_SRGB).multiplyScalar(MAX_LUMINOUS_EFFICACY)
 }
