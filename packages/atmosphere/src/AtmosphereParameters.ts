@@ -113,7 +113,7 @@ export class AtmosphereParameters {
   // prettier-ignore
   rayleighDensity: DensityProfile = [
     new DensityProfileLayer(0, 0, 0, 0, 0),
-    new DensityProfileLayer(0, 1, -0.125, 0, 0)
+    new DensityProfileLayer(0, 1, -1 / 8, 0, 0)
   ]
 
   // The scattering coefficient of air molecules at the altitude where their
@@ -127,20 +127,20 @@ export class AtmosphereParameters {
   // prettier-ignore
   mieDensity: DensityProfile = [
     new DensityProfileLayer(0, 0, 0, 0, 0),
-    new DensityProfileLayer(0, 1, -0.833333, 0, 0)
+    new DensityProfileLayer(0, 1, -1 / 1.2, 0, 0)
   ]
 
   // The scattering coefficient of aerosols at the altitude where their density
   // is maximum (usually the bottom of the atmosphere), as a function of
   // wavelength. The scattering coefficient at altitude h is equal to
   // "mieScattering" times "mieDensity" at this altitude.
-  mieScattering = new Vector3(0.003996, 0.003996, 0.003996)
+  mieScattering = new Vector3().setScalar(0.003996)
 
   // The extinction coefficient of aerosols at the altitude where their density
   // is maximum (usually the bottom of the atmosphere), as a function of
   // wavelength. The extinction coefficient at altitude h is equal to
   // "mieExtinction" times "mieDensity" at this altitude.
-  mieExtinction = new Vector3(0.00444, 0.00444, 0.00444)
+  mieExtinction = new Vector3().setScalar(0.00444)
 
   // The asymmetry parameter for the Cornette-Shanks phase function for the
   // aerosols.
