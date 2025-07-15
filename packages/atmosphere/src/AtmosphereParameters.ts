@@ -181,7 +181,8 @@ export class AtmosphereParameters {
     applyOptions(this, options)
 
     // Luminance values are too large for storing in half precision buffer.
-    // We divide them by the luminance of the sun with the unit radiance.
+    // We use relative luminance normalized so that a unit radiance with the
+    // solar spectral distribution corresponds to a luminance of 1.
     const luminance = LUMINANCE_COEFFS.dot(this.sunRadianceToLuminance)
     this.sunRadianceToRelativeLuminance
       .copy(this.sunRadianceToLuminance)
