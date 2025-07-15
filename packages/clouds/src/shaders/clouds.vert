@@ -38,6 +38,7 @@ out vec2 vUv;
 out vec3 vCameraPosition;
 out vec3 vCameraDirection; // Direction to the center of screen
 out vec3 vRayDirection; // Direction to the texel
+out vec3 vViewPosition;
 
 out GroundIrradiance vGroundIrradiance;
 out CloudsIrradiance vCloudsIrradiance;
@@ -72,6 +73,7 @@ void main() {
   vCameraPosition = (worldToECEFMatrix * vec4(cameraPosition, 1.0)).xyz;
   vCameraDirection = (worldToECEFMatrix * vec4(cameraDirection, 0.0)).xyz;
   vRayDirection = (worldToECEFMatrix * vec4(worldDirection, 0.0)).xyz;
+  vViewPosition = viewPosition;
 
   sampleSunSkyIrradiance(vCameraPosition + altitudeCorrection);
 

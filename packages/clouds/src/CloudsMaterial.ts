@@ -87,6 +87,7 @@ export interface CloudsMaterialUniforms
   inverseProjectionMatrix: Uniform<Matrix4>
   inverseViewMatrix: Uniform<Matrix4>
   reprojectionMatrix: Uniform<Matrix4>
+  viewReprojectionMatrix: Uniform<Matrix4>
   resolution: Uniform<Vector2>
   cameraNear: Uniform<number>
   cameraFar: Uniform<number>
@@ -204,6 +205,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           inverseProjectionMatrix: new Uniform(new Matrix4()),
           inverseViewMatrix: new Uniform(new Matrix4()),
           reprojectionMatrix: new Uniform(new Matrix4()),
+          viewReprojectionMatrix: new Uniform(new Matrix4()),
           resolution: new Uniform(new Vector2()),
           cameraNear: new Uniform(0),
           cameraFar: new Uniform(0),
@@ -338,7 +340,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       this.previousViewMatrix ?? camera.matrixWorldInverse
 
     const inverseProjectionMatrix = uniforms.inverseProjectionMatrix.value
+    const inverseViewMatrix = uniforms.inverseViewMatrix.value
     const reprojectionMatrix = uniforms.reprojectionMatrix.value
+    const viewReprojectionMatrix = uniforms.viewReprojectionMatrix.value
     if (this.temporalUpscale) {
       const frame = uniforms.frame.value % 16
       const resolution = uniforms.resolution.value
@@ -357,6 +361,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       reprojectionMatrix.elements[8] += dx * 2
       reprojectionMatrix.elements[9] += dy * 2
       reprojectionMatrix.multiply(previousViewMatrix)
+      viewReprojectionMatrix
+        .copy(reprojectionMatrix)
+        .multiply(inverseViewMatrix)
     } else {
       uniforms.temporalJitter.value.setScalar(0)
       uniforms.mipLevelScale.value = 1
@@ -364,6 +371,9 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
       reprojectionMatrix
         .copy(previousProjectionMatrix)
         .multiply(previousViewMatrix)
+      viewReprojectionMatrix
+        .copy(reprojectionMatrix)
+        .multiply(inverseViewMatrix)
     }
 
     assertType<PerspectiveCamera | OrthographicCamera>(camera)
