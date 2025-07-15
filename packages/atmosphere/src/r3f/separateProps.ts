@@ -20,6 +20,7 @@ export function separateProps<
     correctAltitude,
     sunDirection,
     sunAngularRadius,
+    ground,
     renderTargetCount,
     ...others
   } = params
@@ -34,6 +35,7 @@ export function separateProps<
       correctAltitude,
       sunDirection,
       sunAngularRadius,
+      ground,
       renderTargetCount
     },
     others

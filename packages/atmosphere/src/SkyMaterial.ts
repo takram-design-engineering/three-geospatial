@@ -43,6 +43,7 @@ export interface SkyMaterialParameters
   moonDirection?: Vector3
   moonAngularRadius?: number
   lunarRadianceScale?: number
+  ground?: boolean
   groundAlbedo?: Color
 }
 
@@ -52,6 +53,7 @@ export const skyMaterialParametersDefaults = {
   moon: true,
   moonAngularRadius: 0.0045, // ≈ 15.5 arcminutes
   lunarRadianceScale: 1,
+  ground: true,
   groundAlbedo: new Color(0)
 } satisfies SkyMaterialParameters
 
@@ -78,6 +80,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
       moonDirection,
       moonAngularRadius,
       lunarRadianceScale,
+      ground,
       groundAlbedo,
       ...others
     } = { ...skyMaterialParametersDefaults, ...params }
@@ -112,6 +115,7 @@ export class SkyMaterial extends AtmosphereMaterialBase {
     })
     this.sun = sun
     this.moon = moon
+    this.ground = ground
   }
 
   override onBeforeRender(
@@ -151,6 +155,9 @@ export class SkyMaterial extends AtmosphereMaterialBase {
 
   @define('MOON')
   moon: boolean
+
+  @define('GROUND')
+  ground: boolean
 
   get moonDirection(): Vector3 {
     return this.uniforms.moonDirection.value

@@ -149,7 +149,11 @@ const Scene: FC = () => {
   }, [showShadowMap, aerialPerspective])
 
   return (
-    <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
+    <Atmosphere
+      ref={atmosphereRef}
+      correctAltitude={correctAltitude}
+      ground={false}
+    >
       <OrbitControls ref={setControls} />
 
       {/* Background objects and light sources */}

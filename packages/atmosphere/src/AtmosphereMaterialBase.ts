@@ -63,6 +63,7 @@ export interface AtmosphereMaterialProps {
   correctAltitude?: boolean
   sunDirection?: Vector3
   sunAngularRadius?: number
+  ground?: boolean
 
   // For internal use only
   renderTargetCount?: number

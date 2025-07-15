@@ -124,7 +124,11 @@ const Scene: FC<SceneProps> = ({
   })
 
   return (
-    <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
+    <Atmosphere
+      ref={atmosphereRef}
+      correctAltitude={correctAltitude}
+      ground={false}
+    >
       <Sky />
       <Stars data='atmosphere/stars.bin' />
       <Globe>

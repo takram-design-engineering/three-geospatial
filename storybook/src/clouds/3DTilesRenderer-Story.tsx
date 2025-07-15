@@ -161,7 +161,11 @@ const Scene: FC<SceneProps> = ({
   useKeyboardControl()
 
   return (
-    <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
+    <Atmosphere
+      ref={atmosphereRef}
+      correctAltitude={correctAltitude}
+      ground={false}
+    >
       <GlobeAndControls />
       {useMemo(
         () => (

@@ -37,13 +37,15 @@ export interface StarsMaterialParameters
   pointSize?: number
   intensity?: number
   background?: boolean
+  ground?: boolean
 }
 
 export const starsMaterialParametersDefaults = {
   ...atmosphereMaterialParametersBaseDefaults,
   pointSize: 1,
   intensity: 1,
-  background: true
+  background: true,
+  ground: true
 } satisfies StarsMaterialParameters
 
 export interface StarsMaterialUniforms {
@@ -64,7 +66,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
   pointSize: number
 
   constructor(params?: StarsMaterialParameters) {
-    const { pointSize, intensity, background, ...others } = {
+    const { pointSize, intensity, background, ground, ...others } = {
       ...starsMaterialParametersDefaults,
       ...params
     }
@@ -97,6 +99,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
     })
     this.pointSize = pointSize
     this.background = background
+    this.ground = ground
   }
 
   override onBeforeRender(
@@ -137,4 +140,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
 
   @define('BACKGROUND')
   background: boolean
+
+  @define('GROUND')
+  ground: boolean
 }
