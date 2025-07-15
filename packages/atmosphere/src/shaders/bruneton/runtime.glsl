@@ -163,9 +163,10 @@ RadianceSpectrum GetSkyRadiance(
   Number mu = rmu / r;
   // @shotamatsuda: For rendering points below the bottom atmosphere.
   if (clamp_mu_at_horizon) {
-    Number mu_horizon = -sqrt(1.0 -
+    Number mu_horizon = -SafeSqrt(1.0 -
         (atmosphere.bottom_radius * atmosphere.bottom_radius) / (r * r));
-    mu = max(rmu / r, mu_horizon + 1e-3); // Add margin
+    const Number eps = 0.01;
+    mu = max(rmu / r, mu_horizon + eps);
   }
   Number mu_s = dot(camera, sun_direction) / r;
   Number nu = dot(view_ray, sun_direction);
@@ -217,8 +218,8 @@ RadianceSpectrum GetSkyRadiance(
 
 // @shotamatsuda: Returns the point on the ray closest to the origin.
 vec3 ClosestPointOnRay(const in Position camera, const in Position point) {
-  vec3 ray = point - camera;
-  float t = clamp(-dot(camera, ray) / dot(ray, ray), 0.0, 1.0);
+  Position ray = point - camera;
+  Number t = clamp(-dot(camera, ray) / dot(ray, ray), 0.0, 1.0);
   return camera + t * ray;
 }
 
@@ -226,12 +227,15 @@ vec3 ClosestPointOnRay(const in Position camera, const in Position point) {
 // maintaining the relation.
 void MoveOutsideBottomAtmosphere(
     const in AtmosphereParameters atmosphere,
-    const in Position ray_point,
-    const in Length ray_radius,
     inout Position camera, inout Position point) {
-  float R = atmosphere.bottom_radius + 0.05; // Add margin
-  if ((length(camera) < R || length(point) < R) && ray_radius < R) {
-    vec3 offset = (R / ray_radius - 1.0) * ray_point;
+  const Length eps = 1.0;
+  Length bottom_radius = atmosphere.bottom_radius + eps;
+  Length r_camera = length(camera);
+  Length r_point = length(point);
+  if (r_camera < bottom_radius || r_point < bottom_radius) {
+    Position offset = r_camera < r_point
+        ? (bottom_radius / r_camera - 1.0) * camera
+        : (bottom_radius / r_point - 1.0) * point;
     point += offset;
     camera += offset;
   }
@@ -246,13 +250,11 @@ RadianceSpectrum GetSkyRadianceToPoint(
     const in Direction sun_direction, out DimensionlessSpectrum transmittance) {
   // @shotamatsuda: Render somewhat meaningful scattering for the points under
   // the bottom atmosphere.
-  Position ray_point = ClosestPointOnRay(camera, point);
-  Length ray_radius = length(ray_point);
-  MoveOutsideBottomAtmosphere(atmosphere, ray_point, ray_radius, camera, point);
+  MoveOutsideBottomAtmosphere(atmosphere, camera, point);
 
   // @shotamatsuda: Avoid artifacts when the ray is located outside of the top
   // atmosphere boundary.
-  if (ray_radius > atmosphere.top_radius) {
+  if (length(ClosestPointOnRay(camera, point)) > atmosphere.top_radius) {
     transmittance = vec3(1.0);
     return vec3(0.0);
   }
@@ -287,9 +289,10 @@ RadianceSpectrum GetSkyRadianceToPoint(
   // finite atmosphere texture resolution and finite floating point precision.
   // See: https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32
   if (!ray_r_mu_intersects_ground) {
-    float mu_horiz = -SafeSqrt(1.0 - atmosphere.bottom_radius / r *
-      (atmosphere.bottom_radius / r));
-    mu = max(mu, mu_horiz + 0.004);
+    Number mu_horizon = -SafeSqrt(1.0 -
+        (atmosphere.bottom_radius * atmosphere.bottom_radius) / (r * r));
+    const Number eps = 0.004;
+    mu = max(mu, mu_horizon + eps);
   }
 
   transmittance = GetTransmittance(atmosphere, transmittance_texture,
