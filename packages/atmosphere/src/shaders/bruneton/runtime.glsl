@@ -59,7 +59,7 @@
 
 #ifdef COMBINED_SCATTERING_TEXTURES
 vec3 GetExtrapolatedSingleMieScattering(
-    const in AtmosphereParameters atmosphere, const in vec4 scattering) {
+    const AtmosphereParameters atmosphere, const vec4 scattering) {
   // Algebraically this can never be negative, but rounding errors can produce
   // that effect for sufficiently short view rays.
   // @shotamatsuda: Avoid division by infinitesimal values.
@@ -74,11 +74,11 @@ vec3 GetExtrapolatedSingleMieScattering(
 #endif // COMBINED_SCATTERING_TEXTURES
 
 IrradianceSpectrum GetCombinedScattering(
-    const in AtmosphereParameters atmosphere,
-    const in ReducedScatteringTexture scattering_texture,
-    const in ReducedScatteringTexture single_mie_scattering_texture,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground,
+    const AtmosphereParameters atmosphere,
+    const ReducedScatteringTexture scattering_texture,
+    const ReducedScatteringTexture single_mie_scattering_texture,
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground,
     out IrradianceSpectrum single_mie_scattering) {
   vec4 uvwz = GetScatteringTextureUvwzFromRMuMuSNu(
       atmosphere, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
@@ -110,10 +110,10 @@ IrradianceSpectrum GetCombinedScattering(
 // @shotamatsuda: Added for reading higher-order scattering texture.
 #ifdef HAS_HIGHER_ORDER_SCATTERING_TEXTURE
 IrradianceSpectrum GetScattering(
-    const in AtmosphereParameters atmosphere,
-    const in ReducedScatteringTexture scattering_texture,
-    Length r, Number mu, Number mu_s, Number nu,
-    bool ray_r_mu_intersects_ground) {
+    const AtmosphereParameters atmosphere,
+    const ReducedScatteringTexture scattering_texture,
+    const Length r, const Number mu, const Number mu_s, const Number nu,
+    const bool ray_r_mu_intersects_ground) {
   vec4 uvwz = GetScatteringTextureUvwzFromRMuMuSNu(
       atmosphere, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
   Number tex_coord_x = uvwz.x * Number(SCATTERING_TEXTURE_NU_SIZE - 1);
@@ -131,16 +131,22 @@ IrradianceSpectrum GetScattering(
 #endif // HAS_HIGHER_ORDER_SCATTERING_TEXTURE
 
 RadianceSpectrum GetSkyRadiance(
-    const in AtmosphereParameters atmosphere,
-    const in TransmittanceTexture transmittance_texture,
-    const in ReducedScatteringTexture scattering_texture,
-    const in ReducedScatteringTexture single_mie_scattering_texture,
-    Position camera, const in Direction view_ray, Length shadow_length,
-    const in Direction sun_direction, out DimensionlessSpectrum transmittance) {
+    const AtmosphereParameters atmosphere,
+    const TransmittanceTexture transmittance_texture,
+    const ReducedScatteringTexture scattering_texture,
+    const ReducedScatteringTexture single_mie_scattering_texture,
+    Position camera, const Direction view_ray, const Length shadow_length,
+    const Direction sun_direction, const bool clamp_mu_at_horizon,
+    out DimensionlessSpectrum transmittance) {
   // Compute the distance to the top atmosphere boundary along the view ray,
   // assuming the viewer is in space (or NaN if the view ray does not intersect
   // the atmosphere).
   Length r = length(camera);
+  // @shotamatsuda: For rendering points below the bottom atmosphere.
+  if (!clamp_mu_at_horizon && r < atmosphere.bottom_radius) {
+    r = atmosphere.bottom_radius;
+    camera = normalize(camera) * r;
+  }
   Length rmu = dot(camera, view_ray);
   // @shotamatsuda: Use SafeSqrt instead.
   // See: https://github.com/takram-design-engineering/three-geospatial/pull/26
@@ -160,6 +166,13 @@ RadianceSpectrum GetSkyRadiance(
   }
   // Compute the r, mu, mu_s and nu parameters needed for the texture lookups.
   Number mu = rmu / r;
+  // @shotamatsuda: For rendering points below the bottom atmosphere.
+  if (clamp_mu_at_horizon) {
+    Number mu_horizon = -SafeSqrt(1.0 -
+        (atmosphere.bottom_radius * atmosphere.bottom_radius) / (r * r));
+    const Number eps = 0.01;
+    mu = max(rmu / r, mu_horizon + eps);
+  }
   Number mu_s = dot(camera, sun_direction) / r;
   Number nu = dot(view_ray, sun_direction);
   bool ray_r_mu_intersects_ground = RayIntersectsGround(atmosphere, r, mu);
@@ -208,29 +221,47 @@ RadianceSpectrum GetSkyRadiance(
       MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
 }
 
-// @shotamatsuda: Added for avoiding artifacts below.
-bool RayOutsideTopAtmosphereBoundary(
-    const in AtmosphereParameters atmosphere,
-    const in Position camera, const in Position point, const in Length r) {
-  if (r < atmosphere.top_radius || length(point) < atmosphere.top_radius) {
-    return false;
+// @shotamatsuda: Returns the point on the ray closest to the origin.
+vec3 ClosestPointOnRay(const Position camera, const Position point) {
+  Position ray = point - camera;
+  Number t = clamp(-dot(camera, ray) / dot(ray, ray), 0.0, 1.0);
+  return camera + t * ray;
+}
+
+// @shotamatsuda: Moves the camera and point outside of the bottom atmosphere
+// maintaining the relation. This effectively clamps the scattering at the
+// "eps", but it should be okay because a point at such altitude suffers from
+// lots of precision errors anyways.
+void MoveOutsideBottomAtmosphere(
+    const AtmosphereParameters atmosphere,
+    inout Position camera, inout Position point) {
+  const Length eps = 1.0;
+  Length bottom_radius = atmosphere.bottom_radius + eps;
+  Length r_camera = length(camera);
+  Length r_point = length(point);
+  if (r_camera < bottom_radius || r_point < bottom_radius) {
+    Position offset = r_camera < r_point
+        ? (bottom_radius / r_camera - 1.0) * camera
+        : (bottom_radius / r_point - 1.0) * point;
+    point += offset;
+    camera += offset;
   }
-  vec3 ray = point - camera;
-  float t = -clamp(dot(camera, ray) / dot(ray, ray), 0.0, 1.0);
-  return length(camera + t * ray) > atmosphere.top_radius;
 }
 
 RadianceSpectrum GetSkyRadianceToPoint(
-    const in AtmosphereParameters atmosphere,
-    const in TransmittanceTexture transmittance_texture,
-    const in ReducedScatteringTexture scattering_texture,
-    const in ReducedScatteringTexture single_mie_scattering_texture,
-    Position camera, const in Position point, Length shadow_length,
-    const in Direction sun_direction, out DimensionlessSpectrum transmittance) {
-  // @shotamatsuda: Avoid artifacts when the ray is located outside of the top
+    const AtmosphereParameters atmosphere,
+    const TransmittanceTexture transmittance_texture,
+    const ReducedScatteringTexture scattering_texture,
+    const ReducedScatteringTexture single_mie_scattering_texture,
+    Position camera, Position point, const Length shadow_length,
+    const Direction sun_direction, out DimensionlessSpectrum transmittance) {
+  // @shotamatsuda: Render somewhat meaningful scattering for the points under
+  // the bottom atmosphere.
+  MoveOutsideBottomAtmosphere(atmosphere, camera, point);
+
+  // @shotamatsuda: Avoid artifacts when the ray does not intersect the top
   // atmosphere boundary.
-  Length r = length(camera);
-  if (RayOutsideTopAtmosphereBoundary(atmosphere, camera, point, r)) {
+  if (length(ClosestPointOnRay(camera, point)) > atmosphere.top_radius) {
     transmittance = vec3(1.0);
     return vec3(0.0);
   }
@@ -239,6 +270,7 @@ RadianceSpectrum GetSkyRadianceToPoint(
   // assuming the viewer is in space (or NaN if the view ray does not intersect
   // the atmosphere).
   Direction view_ray = normalize(point - camera);
+  Length r = length(camera);
   Length rmu = dot(camera, view_ray);
   // @shotamatsuda: Use SafeSqrt instead.
   // See: https://github.com/takram-design-engineering/three-geospatial/pull/26
@@ -264,9 +296,10 @@ RadianceSpectrum GetSkyRadianceToPoint(
   // finite atmosphere texture resolution and finite floating point precision.
   // See: https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32
   if (!ray_r_mu_intersects_ground) {
-    float mu_horiz = -SafeSqrt(1.0 - atmosphere.bottom_radius / r *
-      (atmosphere.bottom_radius / r));
-    mu = max(mu, mu_horiz + 0.004);
+    Number mu_horizon = -SafeSqrt(1.0 -
+        (atmosphere.bottom_radius * atmosphere.bottom_radius) / (r * r));
+    const Number eps = 0.004;
+    mu = max(mu, mu_horizon + eps);
   }
 
   transmittance = GetTransmittance(atmosphere, transmittance_texture,
@@ -335,10 +368,10 @@ RadianceSpectrum GetSkyRadianceToPoint(
 }
 
 IrradianceSpectrum GetSunAndSkyIrradiance(
-    const in AtmosphereParameters atmosphere,
-    const in TransmittanceTexture transmittance_texture,
-    const in IrradianceTexture irradiance_texture,
-    const in Position point, const in Direction normal, const in Direction sun_direction,
+    const AtmosphereParameters atmosphere,
+    const TransmittanceTexture transmittance_texture,
+    const IrradianceTexture irradiance_texture,
+    const Position point, const Direction normal, const Direction sun_direction,
     out IrradianceSpectrum sky_irradiance) {
   Length r = length(point);
   Number mu_s = dot(point, sun_direction) / r;
@@ -356,10 +389,10 @@ IrradianceSpectrum GetSunAndSkyIrradiance(
 
 // @shotamatsuda: Added for the clouds.
 IrradianceSpectrum GetSunAndSkyScalarIrradiance(
-    const in AtmosphereParameters atmosphere,
-    const in TransmittanceTexture transmittance_texture,
-    const in IrradianceTexture irradiance_texture,
-    const in Position point, const in Direction sun_direction,
+    const AtmosphereParameters atmosphere,
+    const TransmittanceTexture transmittance_texture,
+    const IrradianceTexture irradiance_texture,
+    const Position point, const Direction sun_direction,
     out IrradianceSpectrum sky_irradiance) {
   Length r = length(point);
   Number mu_s = dot(point, sun_direction) / r;
@@ -380,17 +413,23 @@ Luminance3 GetSolarLuminance() {
 }
 
 Luminance3 GetSkyLuminance(
-    Position camera, Direction view_ray, Length shadow_length,
-    Direction sun_direction, out DimensionlessSpectrum transmittance) {
+    const Position camera, Direction view_ray, const Length shadow_length,
+    const Direction sun_direction, out DimensionlessSpectrum transmittance) {
+  #ifdef GROUND
+  const bool clamp_mu_at_horizon = false;
+  #else // GROUND
+  const bool clamp_mu_at_horizon = true;
+  #endif // GROUND
+
   return GetSkyRadiance(ATMOSPHERE, transmittance_texture,
       scattering_texture, single_mie_scattering_texture,
-      camera, view_ray, shadow_length, sun_direction, transmittance) *
-      SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+      camera, view_ray, shadow_length, sun_direction, clamp_mu_at_horizon,
+      transmittance) * SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 }
 
 Luminance3 GetSkyLuminanceToPoint(
-    Position camera, Position point, Length shadow_length,
-    Direction sun_direction, out DimensionlessSpectrum transmittance) {
+    const Position camera, const Position point, const Length shadow_length,
+    const Direction sun_direction, out DimensionlessSpectrum transmittance) {
   return GetSkyRadianceToPoint(ATMOSPHERE, transmittance_texture,
       scattering_texture, single_mie_scattering_texture,
       camera, point, shadow_length, sun_direction, transmittance) *
@@ -398,7 +437,7 @@ Luminance3 GetSkyLuminanceToPoint(
 }
 
 Illuminance3 GetSunAndSkyIlluminance(
-    Position p, Direction normal, Direction sun_direction,
+    const Position p, const Direction normal, const Direction sun_direction,
     out IrradianceSpectrum sky_irradiance) {
   IrradianceSpectrum sun_irradiance = GetSunAndSkyIrradiance(
       ATMOSPHERE, transmittance_texture, irradiance_texture, p, normal,
@@ -409,7 +448,7 @@ Illuminance3 GetSunAndSkyIlluminance(
 
 // @shotamatsuda: Added for the clouds.
 Illuminance3 GetSunAndSkyScalarIlluminance(
-    Position p, Direction sun_direction,
+    const Position p, const Direction sun_direction,
     out IrradianceSpectrum sky_irradiance) {
   IrradianceSpectrum sun_irradiance = GetSunAndSkyScalarIrradiance(
       ATMOSPHERE, transmittance_texture, irradiance_texture, p,

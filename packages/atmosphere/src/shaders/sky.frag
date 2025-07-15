@@ -40,13 +40,6 @@ layout(location = 0) out vec4 outputColor;
 
 #include <mrt_layout>
 
-bool rayIntersectsGround(const vec3 cameraPosition, const vec3 rayDirection) {
-  float r = length(cameraPosition);
-  float mu = dot(cameraPosition, rayDirection) / r;
-  return mu < 0.0 &&
-  r * r * (mu * mu - 1.0) + ATMOSPHERE.bottom_radius * ATMOSPHERE.bottom_radius >= 0.0;
-}
-
 void main() {
   float shadowLength = 0.0;
   #ifdef HAS_SHADOW_LENGTH
@@ -58,7 +51,9 @@ void main() {
 
   #ifdef GROUND_ALBEDO
 
-  bool intersectsGround = rayIntersectsGround(cameraPosition, rayDirection);
+  float r = length(cameraPosition);
+  float mu = dot(cameraPosition, rayDirection) / r;
+  bool intersectsGround = RayIntersectsGround(ATMOSPHERE, r, mu);
   if (intersectsGround) {
     float distanceToGround = raySphereFirstIntersection(
       cameraPosition,
