@@ -40,24 +40,6 @@ const ivec2 neighborOffsets[9] = ivec2[9](
   ivec2(1, 1)
 );
 
-vec2 getUnjitteredUv(ivec2 coord) {
-  return (vec2(coord) + 0.5 - jitterOffset) * texelSize;
-}
-
-vec4 getClosestFragment(const vec2 uv) {
-  vec4 result = vec4(1e7, 0.0, 0.0, 0.0);
-  vec4 neighbor;
-  #pragma unroll_loop_start
-  for (int i = 0; i < 9; ++i) {
-    neighbor = textureOffset(depthVelocityBuffer, uv, neighborOffsets[i]);
-    if (neighbor.r < result.r) {
-      result = neighbor;
-    }
-  }
-  #pragma unroll_loop_end
-  return result;
-}
-
 vec4 getClosestFragment(const ivec2 coord) {
   vec4 result = vec4(1e7, 0.0, 0.0, 0.0);
   vec4 neighbor;
@@ -79,25 +61,22 @@ void temporalUpscale(
   out vec4 outputColor,
   out float outputShadowLength
 ) {
-  #if !defined(DEBUG_SHOW_VELOCITY)
+  vec4 currentColor = texelFetch(colorBuffer, lowResCoord, 0);
+  #ifdef SHADOW_LENGTH
+  vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, lowResCoord, 0).rgb, 1.0);
+  #endif // SHADOW_LENGTH
+
   if (currentFrame) {
     // Use the texel just rendered without any accumulation.
-    outputColor = texelFetch(colorBuffer, lowResCoord, 0);
+    outputColor = currentColor;
     #ifdef SHADOW_LENGTH
-    outputShadowLength = texelFetch(shadowLengthBuffer, lowResCoord, 0).r;
+    outputShadowLength = currentShadowLength.r;
     #endif // SHADOW_LENGTH
     return;
   }
-  #endif // !defined(DEBUG_SHOW_VELOCITY)
 
-  vec2 unjitteredUv = getUnjitteredUv(coord);
-  vec4 currentColor = texture(colorBuffer, unjitteredUv);
-  #ifdef SHADOW_LENGTH
-  vec4 currentShadowLength = vec4(texture(shadowLengthBuffer, unjitteredUv).rgb, 1.0);
-  #endif // SHADOW_LENGTH
-
-  vec4 depthVelocity = getClosestFragment(unjitteredUv);
-  vec2 velocity = depthVelocity.gb * texelSize;
+  vec4 depthVelocity = getClosestFragment(lowResCoord);
+  vec2 velocity = depthVelocity.gb;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
     outputColor = currentColor;
@@ -114,10 +93,6 @@ void temporalUpscale(
   vec4 historyColor = texture(colorHistoryBuffer, prevUv);
   vec4 clippedColor = varianceClipping(colorBuffer, vUv, currentColor, historyColor, varianceGamma);
   outputColor = clippedColor;
-
-  #ifdef DEBUG_SHOW_VELOCITY
-  outputColor.rgb = outputColor.rgb + vec3(abs(velocity), 0.0);
-  #endif // DEBUG_SHOW_VELOCITY
 
   #ifdef SHADOW_LENGTH
   // Sampling the shadow length history using scene depth doesn't make much
@@ -143,7 +118,7 @@ void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float out
   #endif // SHADOW_LENGTH
 
   vec4 depthVelocity = getClosestFragment(coord);
-  vec2 velocity = depthVelocity.gb * texelSize;
+  vec2 velocity = depthVelocity.gb;
 
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
@@ -157,10 +132,6 @@ void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float out
   vec4 historyColor = texture(colorHistoryBuffer, prevUv);
   vec4 clippedColor = varianceClipping(colorBuffer, coord, currentColor, historyColor);
   outputColor = mix(clippedColor, currentColor, temporalAlpha);
-
-  #ifdef DEBUG_SHOW_VELOCITY
-  outputColor.rgb = outputColor.rgb + vec3(abs(velocity), 0.0);
-  #endif // DEBUG_SHOW_VELOCITY
 
   #ifdef SHADOW_LENGTH
   vec4 historyShadowLength = vec4(texture(shadowLengthHistoryBuffer, prevUv).rgb, 1.0);
@@ -193,4 +164,8 @@ void main() {
   #if defined(SHADOW_LENGTH) && defined(DEBUG_SHOW_SHADOW_LENGTH)
   outputColor = vec4(turbo(outputShadowLength * 0.05), 1.0);
   #endif // defined(SHADOW_LENGTH) && defined(DEBUG_SHOW_SHADOW_LENGTH)
+
+  #ifdef DEBUG_SHOW_VELOCITY
+  outputColor.rgb = outputColor.rgb + vec3(abs(texture(depthVelocityBuffer, vUv).gb) * 10.0, 0.0);
+  #endif // DEBUG_SHOW_VELOCITY
 }

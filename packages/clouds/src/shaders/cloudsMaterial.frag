@@ -40,6 +40,7 @@ uniform sampler3D higher_order_scattering_texture;
 uniform sampler2D depthBuffer;
 uniform mat4 viewMatrix;
 uniform mat4 reprojectionMatrix;
+uniform mat4 viewReprojectionMatrix;
 uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
@@ -88,6 +89,7 @@ in vec2 vUv;
 in vec3 vCameraPosition;
 in vec3 vCameraDirection; // Direction to the center of screen
 in vec3 vRayDirection; // Direction to the texel
+in vec3 vViewPosition;
 in GroundIrradiance vGroundIrradiance;
 in CloudsIrradiance vCloudsIrradiance;
 
@@ -818,16 +820,17 @@ vec2 getHazeRayNearFar(const IntersectionResult intersections) {
 }
 #endif // HAZE
 
-float getRayDistanceToScene(const vec3 rayDirection) {
+float getRayDistanceToScene(const vec3 rayDirection, out float viewZ) {
   float depth = readDepth(vUv * targetUvScale + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     #ifdef USE_LOGDEPTHBUF
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     #endif // USE_LOGDEPTHBUF
-    float viewZ = getViewZ(depth);
+    viewZ = getViewZ(depth);
     return -viewZ / dot(rayDirection, vCameraDirection);
   }
-  return -1.0;
+  viewZ = 0.0;
+  return 0.0;
 }
 
 void main() {
@@ -853,8 +856,9 @@ void main() {
   vec2 hazeRayNearFar = getHazeRayNearFar(intersections);
   #endif // HAZE
 
-  float rayDistanceToScene = getRayDistanceToScene(rayDirection);
-  if (rayDistanceToScene >= 0.0) {
+  float sceneViewZ;
+  float rayDistanceToScene = getRayDistanceToScene(rayDirection, sceneViewZ);
+  if (rayDistanceToScene > 0.0) {
     rayNearFar.y = min(rayNearFar.y, rayDistanceToScene);
     #ifdef SHADOW_LENGTH
     shadowRayNearFar.y = min(shadowRayNearFar.y, rayDistanceToScene);
@@ -873,6 +877,7 @@ void main() {
   float frontDepth = rayNearFar.y;
   vec3 depthVelocity = vec3(0.0);
   float shadowLength = 0.0;
+  bool hitClouds = false;
 
   if (!intersectsGround && !intersectsScene) {
     vec3 rayOrigin = rayNearFar.x * rayDirection + cameraPosition;
@@ -913,7 +918,8 @@ void main() {
     #endif // DEBUG_SHOW_SAMPLE_COUNT
 
     // Front depth will be -1.0 when no samples are accumulated.
-    if (marchedFrontDepth >= 0.0) {
+    hitClouds = marchedFrontDepth >= 0.0;
+    if (hitClouds) {
       frontDepth = rayNearFar.x + marchedFrontDepth;
 
       #ifdef SHADOW_LENGTH
@@ -923,6 +929,16 @@ void main() {
         min(frontDepth, shadowRayNearFar.y),
         color.a // Interpolate by the alpha for smoother edges.
       );
+
+      // Shadow length must be computed before applying aerial perspective.
+      if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
+        shadowLength = marchShadowLength(
+          shadowRayNearFar.x * rayDirection + cameraPosition,
+          rayDirection,
+          shadowRayNearFar,
+          stbn
+        );
+      }
       #endif // SHADOW_LENGTH
 
       #ifdef HAZE
@@ -933,8 +949,22 @@ void main() {
         color.a // Interpolate by the alpha for smoother edges.
       );
       #endif // HAZE
-    }
 
+      // Apply aerial perspective.
+      vec3 frontPosition = cameraPosition + frontDepth * rayDirection;
+      applyAerialPerspective(cameraPosition, frontPosition, shadowLength, color);
+
+      // Velocity for temporal resolution.
+      vec3 frontPositionWorld = ecefToWorld(frontPosition);
+      vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
+      prevClip /= prevClip.w;
+      vec2 prevUv = prevClip.xy * 0.5 + 0.5;
+      vec2 velocity = vUv - prevUv;
+      depthVelocity = vec3(frontDepth, velocity);
+    }
+  }
+
+  if (!hitClouds) {
     #ifdef SHADOW_LENGTH
     if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
       shadowLength = marchShadowLength(
@@ -946,43 +976,15 @@ void main() {
     }
     #endif // SHADOW_LENGTH
 
-    // Apply aerial perspective.
-    vec3 frontPosition = cameraPosition + frontDepth * rayDirection;
-    applyAerialPerspective(cameraPosition, frontPosition, shadowLength, color);
-
-    // Velocity for temporal resolution.
-    vec3 frontPositionWorld = ecefToWorld(frontPosition);
-    vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
+    // Velocity for temporal resolution. Here reproject in the view space for
+    // greatly reducing the precision errors.
+    frontDepth = sceneViewZ < 0.0 ? -sceneViewZ : cameraFar;
+    vec3 frontView = vViewPosition * frontDepth;
+    vec4 prevClip = viewReprojectionMatrix * vec4(frontView, 1.0);
     prevClip /= prevClip.w;
     vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-    vec2 velocity = (vUv - prevUv) * resolution;
+    vec2 velocity = vUv - prevUv;
     depthVelocity = vec3(frontDepth, velocity);
-
-  } else {
-    #ifdef SHADOW_LENGTH
-    if (all(greaterThanEqual(shadowRayNearFar, vec2(0.0)))) {
-      shadowLength = marchShadowLength(
-        shadowRayNearFar.x * rayDirection + cameraPosition,
-        rayDirection,
-        shadowRayNearFar,
-        stbn
-      );
-    }
-    #endif // SHADOW_LENGTH
-
-    // TODO: We can calculate velocity to reduce occlusion errors at the edges,
-    // but suffers from floating-point precision errors on near objects.
-
-    // if (intersectsScene) {
-    //   vec3 frontPosition = cameraPosition + rayNearFar.y * rayDirection;
-    //   vec3 frontPositionWorld = ecefToWorld(frontPosition);
-    //   vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
-    //   prevClip /= prevClip.w;
-    //   vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-    //   vec2 velocity = (vUv - prevUv) * resolution;
-    //   depthVelocity = vec3(rayNearFar.y, velocity);
-    // }
-
   }
 
   #ifdef DEBUG_SHOW_FRONT_DEPTH
