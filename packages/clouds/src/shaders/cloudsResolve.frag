@@ -46,24 +46,6 @@ const ivec4[4] bayerIndices = ivec4[4](
   ivec4(10, 6, 9, 5)
 );
 
-vec2 getUnjitteredUv(ivec2 coord) {
-  return (vec2(coord) + 0.5 - jitterOffset) * texelSize;
-}
-
-vec4 getClosestFragment(const vec2 uv) {
-  vec4 result = vec4(1e7, 0.0, 0.0, 0.0);
-  vec4 neighbor;
-  #pragma unroll_loop_start
-  for (int i = 0; i < 9; ++i) {
-    neighbor = textureOffset(depthVelocityBuffer, uv, neighborOffsets[i]);
-    if (neighbor.r < result.r) {
-      result = neighbor;
-    }
-  }
-  #pragma unroll_loop_end
-  return result;
-}
-
 vec4 getClosestFragment(const ivec2 coord) {
   vec4 result = vec4(1e7, 0.0, 0.0, 0.0);
   vec4 neighbor;
@@ -85,22 +67,21 @@ void temporalUpscale(
   out vec4 outputColor,
   out float outputShadowLength
 ) {
+  vec4 currentColor = texelFetch(colorBuffer, lowResCoord, 0);
+  #ifdef SHADOW_LENGTH
+  vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, lowResCoord, 0).rgb, 1.0);
+  #endif // SHADOW_LENGTH
+
   if (currentFrame) {
     // Use the texel just rendered without any accumulation.
-    outputColor = texelFetch(colorBuffer, lowResCoord, 0);
+    outputColor = currentColor;
     #ifdef SHADOW_LENGTH
-    outputShadowLength = texelFetch(shadowLengthBuffer, lowResCoord, 0).r;
+    outputShadowLength = currentShadowLength.r;
     #endif // SHADOW_LENGTH
     return;
   }
 
-  vec2 unjitteredUv = getUnjitteredUv(coord);
-  vec4 currentColor = texture(colorBuffer, unjitteredUv);
-  #ifdef SHADOW_LENGTH
-  vec4 currentShadowLength = vec4(texture(shadowLengthBuffer, unjitteredUv).rgb, 1.0);
-  #endif // SHADOW_LENGTH
-
-  vec4 depthVelocity = getClosestFragment(unjitteredUv);
+  vec4 depthVelocity = getClosestFragment(lowResCoord);
   vec2 velocity = depthVelocity.gb;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
