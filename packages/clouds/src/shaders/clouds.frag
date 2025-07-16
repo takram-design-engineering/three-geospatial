@@ -971,17 +971,15 @@ void main() {
     }
     #endif // SHADOW_LENGTH
 
-    if (sceneViewZ < 0.0) {
-      // Velocity for temporal resolution. Here reproject in the view space for
-      // greatly reducing the precision errors.
-      frontDepth = -sceneViewZ;
-      vec3 frontView = vViewPosition * frontDepth;
-      vec4 prevClip = viewReprojectionMatrix * vec4(frontView, 1.0);
-      prevClip /= prevClip.w;
-      vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-      vec2 velocity = vUv - prevUv;
-      depthVelocity = vec3(frontDepth, velocity);
-    }
+    // Velocity for temporal resolution. Here reproject in the view space for
+    // greatly reducing the precision errors.
+    frontDepth = sceneViewZ < 0.0 ? -sceneViewZ : cameraFar;
+    vec3 frontView = vViewPosition * frontDepth;
+    vec4 prevClip = viewReprojectionMatrix * vec4(frontView, 1.0);
+    prevClip /= prevClip.w;
+    vec2 prevUv = prevClip.xy * 0.5 + 0.5;
+    vec2 velocity = vUv - prevUv;
+    depthVelocity = vec3(frontDepth, velocity);
   }
 
   #ifdef DEBUG_SHOW_FRONT_DEPTH
