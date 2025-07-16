@@ -20,8 +20,8 @@ import {
   unrollLoops
 } from '@takram/three-geospatial'
 import {
-  bayer,
   catmullRomSampling,
+  temporalResolve,
   turbo,
   varianceClipping
 } from '@takram/three-geospatial/shaders'
@@ -68,10 +68,10 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
       fragmentShader: unrollLoops(
         resolveIncludes(fragmentShader, {
           core: {
-            bayer,
             catmullRomSampling,
             turbo,
-            varianceClipping
+            varianceClipping,
+            temporalResolve
           }
         })
       ),

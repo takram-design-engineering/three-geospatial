@@ -1,8 +1,8 @@
 precision highp float;
 precision highp sampler2DArray;
 
-#include "core/bayer"
 #include "core/turbo"
+#include "core/temporalResolve"
 #include "core/catmullRomSampling"
 #include "core/varianceClipping"
 
@@ -28,34 +28,7 @@ layout(location = 0) out vec4 outputColor;
 layout(location = 1) out float outputShadowLength;
 #endif // SHADOW_LENGTH
 
-const ivec2 neighborOffsets[9] = ivec2[9](
-  ivec2(-1, -1),
-  ivec2(-1, 0),
-  ivec2(-1, 1),
-  ivec2(0, -1),
-  ivec2(0, 0),
-  ivec2(0, 1),
-  ivec2(1, -1),
-  ivec2(1, 0),
-  ivec2(1, 1)
-);
-
-vec4 getClosestFragment(const ivec2 coord) {
-  vec4 result = vec4(1e7, 0.0, 0.0, 0.0);
-  vec4 neighbor;
-  #pragma unroll_loop_start
-  for (int i = 0; i < 9; ++i) {
-    neighbor = texelFetchOffset(depthVelocityBuffer, coord, 0, neighborOffsets[i]);
-    if (neighbor.r < result.r) {
-      result = neighbor;
-    }
-  }
-  #pragma unroll_loop_end
-  return result;
-}
-
 void temporalUpscale(
-  const ivec2 coord,
   const ivec2 lowResCoord,
   const bool currentFrame,
   out vec4 outputColor,
@@ -75,7 +48,7 @@ void temporalUpscale(
     return;
   }
 
-  vec4 depthVelocity = getClosestFragment(lowResCoord);
+  vec4 depthVelocity = getClosestFragment(depthVelocityBuffer, lowResCoord);
   vec2 velocity = depthVelocity.gb;
   vec2 prevUv = vUv - velocity;
   if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
@@ -111,13 +84,17 @@ void temporalUpscale(
   #endif // SHADOW_LENGTH
 }
 
-void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float outputShadowLength) {
-  vec4 currentColor = texelFetch(colorBuffer, coord, 0);
+void temporalAntialiasing(
+  const ivec2 fragCoord,
+  out vec4 outputColor,
+  out float outputShadowLength
+) {
+  vec4 currentColor = texelFetch(colorBuffer, fragCoord, 0);
   #ifdef SHADOW_LENGTH
-  vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, coord, 0).rgb, 1.0);
+  vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, fragCoord, 0).rgb, 1.0);
   #endif // SHADOW_LENGTH
 
-  vec4 depthVelocity = getClosestFragment(coord);
+  vec4 depthVelocity = getClosestFragment(depthVelocityBuffer, fragCoord);
   vec2 velocity = depthVelocity.gb;
 
   vec2 prevUv = vUv - velocity;
@@ -130,14 +107,14 @@ void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float out
   }
 
   vec4 historyColor = texture(colorHistoryBuffer, prevUv);
-  vec4 clippedColor = varianceClipping(colorBuffer, coord, currentColor, historyColor);
+  vec4 clippedColor = varianceClipping(colorBuffer, fragCoord, currentColor, historyColor);
   outputColor = mix(clippedColor, currentColor, temporalAlpha);
 
   #ifdef SHADOW_LENGTH
   vec4 historyShadowLength = vec4(texture(shadowLengthHistoryBuffer, prevUv).rgb, 1.0);
   vec4 clippedShadowLength = varianceClipping(
     shadowLengthBuffer,
-    coord,
+    fragCoord,
     currentShadowLength,
     historyShadowLength
   );
@@ -146,19 +123,18 @@ void temporalAntialiasing(const ivec2 coord, out vec4 outputColor, out float out
 }
 
 void main() {
-  ivec2 coord = ivec2(gl_FragCoord.xy);
+  ivec2 fragCoord = ivec2(gl_FragCoord.xy);
 
   #if !defined(SHADOW_LENGTH)
   float outputShadowLength;
   #endif // !defined(SHADOW_LENGTH)
 
   #ifdef TEMPORAL_UPSCALE
-  ivec2 lowResCoord = coord / 4;
-  int bayerValue = bayerIndices[coord.x % 4][coord.y % 4];
-  bool currentFrame = bayerValue == frame % 16;
-  temporalUpscale(coord, lowResCoord, currentFrame, outputColor, outputShadowLength);
+  bool currentFrame;
+  ivec2 lowResCoord = getLowResCoord(fragCoord, frame, currentFrame);
+  temporalUpscale(lowResCoord, currentFrame, outputColor, outputShadowLength);
   #else // TEMPORAL_UPSCALE
-  temporalAntialiasing(coord, outputColor, outputShadowLength);
+  temporalAntialiasing(fragCoord, outputColor, outputShadowLength);
   #endif // TEMPORAL_UPSCALE
 
   #if defined(SHADOW_LENGTH) && defined(DEBUG_SHOW_SHADOW_LENGTH)
