@@ -1,4 +1,5 @@
 import {
+  DepthPackingStrategies,
   Matrix4,
   Uniform,
   Vector2,
@@ -419,7 +420,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   _groundBounce = false
 
   @defineInt('DEPTH_PACKING')
-  depthPacking = 0
+  depthPacking: DepthPackingStrategies | 0 = 0
 
   @defineExpression('LOCAL_WEATHER_CHANNELS', {
     validate: value => /^[rgba]{4}$/.test(value)
