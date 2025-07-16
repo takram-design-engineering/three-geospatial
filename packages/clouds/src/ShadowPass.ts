@@ -1,3 +1,4 @@
+import { Pass } from 'postprocessing'
 import {
   HalfFloatType,
   LinearFilter,
@@ -8,15 +9,11 @@ import {
 } from 'three'
 import invariant from 'tiny-invariant'
 
-import { PassBase, type PassBaseOptions } from './PassBase'
+import type { CascadedShadow } from '@takram/three-geospatial'
+
 import { ShaderArrayPass } from './ShaderArrayPass'
-import { ShadowMaterial } from './ShadowMaterial'
+import { ShadowMaterial, type ShadowMaterialParameters } from './ShadowMaterial'
 import { ShadowResolveMaterial } from './ShadowResolveMaterial'
-import type {
-  AtmosphereUniforms,
-  CloudLayerUniforms,
-  CloudParameterUniforms
-} from './uniforms'
 
 function createRenderTarget(name: string): WebGLArrayRenderTarget {
   const renderTarget = new WebGLArrayRenderTarget(1, 1, 1, {
@@ -30,13 +27,13 @@ function createRenderTarget(name: string): WebGLArrayRenderTarget {
   return renderTarget
 }
 
-export interface ShadowPassOptions extends PassBaseOptions {
-  parameterUniforms: CloudParameterUniforms
-  layerUniforms: CloudLayerUniforms
-  atmosphereUniforms: AtmosphereUniforms
+export interface ShadowPassOptions extends ShadowMaterialParameters {
+  shadow: CascadedShadow
 }
 
-export class ShadowPass extends PassBase {
+export class ShadowPass extends Pass {
+  shadow: CascadedShadow
+
   private currentRenderTarget!: WebGLArrayRenderTarget
   readonly currentMaterial: ShadowMaterial
   readonly currentPass: ShaderArrayPass
@@ -48,19 +45,11 @@ export class ShadowPass extends PassBase {
   private width = 0
   private height = 0
 
-  constructor({
-    parameterUniforms,
-    layerUniforms,
-    atmosphereUniforms,
-    ...options
-  }: ShadowPassOptions) {
-    super('ShadowPass', options)
+  constructor({ shadow, ...others }: ShadowPassOptions) {
+    super('ShadowPass')
 
-    this.currentMaterial = new ShadowMaterial({
-      parameterUniforms,
-      layerUniforms,
-      atmosphereUniforms
-    })
+    this.shadow = shadow
+    this.currentMaterial = new ShadowMaterial(others)
     this.currentPass = new ShaderArrayPass(this.currentMaterial)
     this.resolveMaterial = new ShadowResolveMaterial()
     this.resolvePass = new ShaderArrayPass(this.resolveMaterial)
