@@ -149,10 +149,11 @@ export class CloudsPass extends PassBase {
     this.historyRenderTarget = history
 
     const resolveUniforms = this.resolveMaterial.uniforms
-    resolveUniforms.colorBuffer.value = current.texture
+    console.log(resolveUniforms)
+    resolveUniforms.inputBuffer.value = current.texture
     resolveUniforms.depthVelocityBuffer.value = current.depthVelocity
     resolveUniforms.shadowLengthBuffer.value = current.shadowLength
-    resolveUniforms.colorHistoryBuffer.value = history.texture
+    resolveUniforms.historyBuffer.value = history.texture
     resolveUniforms.shadowLengthHistoryBuffer.value = history.shadowLength
   }
 
@@ -180,7 +181,7 @@ export class CloudsPass extends PassBase {
     this.historyRenderTarget = nextHistory
 
     const resolveUniforms = this.resolveMaterial.uniforms
-    resolveUniforms.colorHistoryBuffer.value = nextHistory.texture
+    resolveUniforms.historyBuffer.value = nextHistory.texture
     resolveUniforms.shadowLengthHistoryBuffer.value = nextHistory.shadowLength
   }
 

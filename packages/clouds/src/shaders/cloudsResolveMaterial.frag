@@ -6,9 +6,9 @@ precision highp sampler2DArray;
 #include "core/catmullRomSampling"
 #include "core/varianceClipping"
 
-uniform sampler2D colorBuffer;
+uniform sampler2D inputBuffer;
 uniform sampler2D depthVelocityBuffer;
-uniform sampler2D colorHistoryBuffer;
+uniform sampler2D historyBuffer;
 
 #ifdef SHADOW_LENGTH
 uniform sampler2D shadowLengthBuffer;
@@ -34,7 +34,7 @@ void temporalUpscale(
   out vec4 outputColor,
   out float outputShadowLength
 ) {
-  vec4 currentColor = texelFetch(colorBuffer, lowResCoord, 0);
+  vec4 currentColor = texelFetch(inputBuffer, lowResCoord, 0);
   #ifdef SHADOW_LENGTH
   vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, lowResCoord, 0).rgb, 1.0);
   #endif // SHADOW_LENGTH
@@ -62,9 +62,9 @@ void temporalUpscale(
   // Variance clipping with a large variance gamma seems to work fine for
   // upsampling. This increases ghosting, of course, but it's hard to notice on
   // clouds.
-  // vec4 historyColor = textureCatmullRom(colorHistoryBuffer, prevUv);
-  vec4 historyColor = texture(colorHistoryBuffer, prevUv);
-  vec4 clippedColor = varianceClipping(colorBuffer, vUv, currentColor, historyColor, varianceGamma);
+  // vec4 historyColor = textureCatmullRom(historyBuffer, prevUv);
+  vec4 historyColor = texture(historyBuffer, prevUv);
+  vec4 clippedColor = varianceClipping(inputBuffer, vUv, currentColor, historyColor, varianceGamma);
   outputColor = clippedColor;
 
   #ifdef SHADOW_LENGTH
@@ -89,7 +89,7 @@ void temporalAntialiasing(
   out vec4 outputColor,
   out float outputShadowLength
 ) {
-  vec4 currentColor = texelFetch(colorBuffer, fragCoord, 0);
+  vec4 currentColor = texelFetch(inputBuffer, fragCoord, 0);
   #ifdef SHADOW_LENGTH
   vec4 currentShadowLength = vec4(texelFetch(shadowLengthBuffer, fragCoord, 0).rgb, 1.0);
   #endif // SHADOW_LENGTH
@@ -106,8 +106,8 @@ void temporalAntialiasing(
     return; // Rejection
   }
 
-  vec4 historyColor = texture(colorHistoryBuffer, prevUv);
-  vec4 clippedColor = varianceClipping(colorBuffer, fragCoord, currentColor, historyColor);
+  vec4 historyColor = texture(historyBuffer, prevUv);
+  vec4 clippedColor = varianceClipping(inputBuffer, fragCoord, currentColor, historyColor);
   outputColor = mix(clippedColor, currentColor, temporalAlpha);
 
   #ifdef SHADOW_LENGTH

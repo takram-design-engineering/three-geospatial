@@ -22,12 +22,14 @@ export interface TemporalResolveMaterialParameters
   fragmentShader?: string
   vertexShader?: string
   inputBuffer?: Texture | null
+  depthVelocityBuffer?: Texture | null
   historyBuffer?: Texture | null
 }
 
 export interface TemporalResolveMaterialUniforms {
   [key: string]: Uniform<unknown>
   inputBuffer: Uniform<Texture | null>
+  depthVelocityBuffer: Uniform<Texture | null>
   historyBuffer: Uniform<Texture | null>
   texelSize: Uniform<Vector2>
   frame: Uniform<number>
@@ -36,11 +38,14 @@ export interface TemporalResolveMaterialUniforms {
   temporalAlpha: Uniform<number>
 }
 
-export class TemporalResolveMaterial extends RawShaderMaterial {
-  declare uniforms: TemporalResolveMaterialUniforms
+export class TemporalResolveMaterial<
+  Uniforms extends Record<string, Uniform<unknown>> = {}
+> extends RawShaderMaterial {
+  declare uniforms: Uniforms & TemporalResolveMaterialUniforms
 
   constructor({
     inputBuffer = null,
+    depthVelocityBuffer = null,
     historyBuffer = null,
     ...others
   }: TemporalResolveMaterialParameters) {
@@ -51,8 +56,10 @@ export class TemporalResolveMaterial extends RawShaderMaterial {
       toneMapped: false,
       depthWrite: false,
       depthTest: false,
+      ...others,
       uniforms: {
         inputBuffer: new Uniform(inputBuffer),
+        depthVelocityBuffer: new Uniform(depthVelocityBuffer),
         historyBuffer: new Uniform(historyBuffer),
         texelSize: new Uniform(new Vector2()),
         frame: new Uniform(0),
@@ -60,8 +67,7 @@ export class TemporalResolveMaterial extends RawShaderMaterial {
         varianceGamma: new Uniform(2),
         temporalAlpha: new Uniform(0.1),
         ...others.uniforms
-      } satisfies TemporalResolveMaterialUniforms,
-      ...others
+      } satisfies TemporalResolveMaterialUniforms
     })
   }
 

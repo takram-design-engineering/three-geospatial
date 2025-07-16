@@ -143,9 +143,9 @@ export class TemporalPass<
     this.historyRenderTarget = history
 
     const resolveUniforms = this.resolveMaterial.uniforms
-    resolveUniforms.colorBuffer.value = current.texture
+    resolveUniforms.inputBuffer.value = current.texture
     resolveUniforms.depthVelocityBuffer.value = current.depthVelocity
-    resolveUniforms.colorHistoryBuffer.value = history.texture
+    resolveUniforms.historyBuffer.value = history.texture
   }
 
   copyCameraSettings(camera: Camera): void {
@@ -213,7 +213,7 @@ export class TemporalPass<
     this.historyRenderTarget = nextHistory
 
     const resolveUniforms = this.resolveMaterial.uniforms
-    resolveUniforms.colorHistoryBuffer.value = nextHistory.texture
+    resolveUniforms.historyBuffer.value = nextHistory.texture
   }
 
   update(renderer: WebGLRenderer, frame: number, deltaTime: number): void {
