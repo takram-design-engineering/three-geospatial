@@ -44,7 +44,7 @@ uniform mat4 viewReprojectionMatrix;
 uniform float cameraNear;
 uniform float cameraFar;
 uniform float cameraHeight;
-uniform vec2 temporalJitter;
+uniform vec2 temporalJitterUv;
 uniform vec2 targetUvScale;
 uniform float mipLevelScale;
 
@@ -212,7 +212,7 @@ float sampleShadowOpticalDepthPCF(
     return readShadowOpticalDepth(uv, distanceToTop, distanceOffset, cascadeIndex);
   }
   float sum = 0.0;
-  float phi = interleavedGradientNoise(gl_FragCoord.xy + temporalJitter * resolution) * PI2;
+  float phi = interleavedGradientNoise(gl_FragCoord.xy + temporalJitterUv * resolution) * PI2;
   vec2 offset;
   #pragma unroll_loop_start
   for (int i = 0; i < 16; ++i) {
@@ -821,7 +821,7 @@ vec2 getHazeRayNearFar(const IntersectionResult intersections) {
 #endif // HAZE
 
 float getRayDistanceToScene(const vec3 rayDirection, out float viewZ) {
-  float depth = readDepth(vUv * targetUvScale + temporalJitter);
+  float depth = readDepth(vUv * targetUvScale + temporalJitterUv);
   if (depth < 1.0 - 1e-7) {
     #ifdef USE_LOGDEPTHBUF
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
@@ -959,7 +959,7 @@ void main() {
       vec4 prevClip = reprojectionMatrix * vec4(frontPositionWorld, 1.0);
       prevClip /= prevClip.w;
       vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-      vec2 velocity = vUv - prevUv;
+      vec2 velocity = vUv + temporalJitterUv - prevUv;
       depthVelocity = vec3(frontDepth, velocity);
     }
   }
@@ -983,7 +983,7 @@ void main() {
     vec4 prevClip = viewReprojectionMatrix * vec4(frontView, 1.0);
     prevClip /= prevClip.w;
     vec2 prevUv = prevClip.xy * 0.5 + 0.5;
-    vec2 velocity = vUv - prevUv;
+    vec2 velocity = vUv + temporalJitterUv - prevUv;
     depthVelocity = vec3(frontDepth, velocity);
   }
 

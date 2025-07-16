@@ -11,8 +11,6 @@ import {
   type DataArrayTexture,
   type Group,
   type Object3D,
-  type OrthographicCamera,
-  type PerspectiveCamera,
   type Scene,
   type Texture,
   type WebGLRenderer
@@ -29,14 +27,13 @@ import {
   runtime
 } from '@takram/three-atmosphere/shaders/bruneton'
 import {
-  assertType,
-  bayerOffsets,
   define,
   defineExpression,
   defineFloat,
   defineInt,
   Geodetic,
   resolveIncludes,
+  TemporalMaterial,
   unrollLoops
 } from '@takram/three-geospatial'
 import {
@@ -63,14 +60,14 @@ import vertexShader from './shaders/cloudsMaterial.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
 import types from './shaders/types.glsl?raw'
 
+const vectorScratch = /*#__PURE__*/ new Vector3()
+const geodeticScratch = /*#__PURE__*/ new Geodetic()
+
 declare module 'three' {
   interface Camera {
     isPerspectiveCamera?: boolean
   }
 }
-
-const vectorScratch = /*#__PURE__*/ new Vector3()
-const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export interface CloudsMaterialParameters {
   parameterUniforms: CloudParameterUniforms
@@ -86,17 +83,19 @@ export interface CloudsMaterialUniforms
   viewMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>
   inverseViewMatrix: Uniform<Matrix4>
+  cameraHeight: Uniform<number>
+  mipLevelScale: Uniform<number>
+  stbnTexture: Uniform<Data3DTexture | null>
+
+  // Temporal material uniforms
   reprojectionMatrix: Uniform<Matrix4>
   viewReprojectionMatrix: Uniform<Matrix4>
   resolution: Uniform<Vector2>
   cameraNear: Uniform<number>
   cameraFar: Uniform<number>
-  cameraHeight: Uniform<number>
   frame: Uniform<number>
-  temporalJitter: Uniform<Vector2>
+  temporalJitterUv: Uniform<Vector2>
   targetUvScale: Uniform<Vector2>
-  mipLevelScale: Uniform<number>
-  stbnTexture: Uniform<Data3DTexture | null>
 
   // Scattering
   skyLightScale: Uniform<number>
@@ -141,13 +140,13 @@ export interface CloudsMaterialUniforms
   hazeAbsorptionCoefficient: Uniform<number>
 }
 
-export class CloudsMaterial extends AtmosphereMaterialBase {
+export class CloudsMaterial
+  extends AtmosphereMaterialBase
+  implements TemporalMaterial
+{
   declare uniforms: AtmosphereMaterialBaseUniforms & CloudsMaterialUniforms
 
   temporalUpscale = true
-
-  private previousProjectionMatrix?: Matrix4
-  private previousViewMatrix?: Matrix4
 
   constructor(
     {
@@ -200,21 +199,23 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
           ...layerUniforms,
           ...atmosphereUniforms,
 
-          depthBuffer: new Uniform(null),
           viewMatrix: new Uniform(new Matrix4()),
           inverseProjectionMatrix: new Uniform(new Matrix4()),
           inverseViewMatrix: new Uniform(new Matrix4()),
+          depthBuffer: new Uniform(null),
+          cameraHeight: new Uniform(0),
+          mipLevelScale: new Uniform(1),
+          stbnTexture: new Uniform(null),
+
+          // Temporal material uniforms
           reprojectionMatrix: new Uniform(new Matrix4()),
           viewReprojectionMatrix: new Uniform(new Matrix4()),
           resolution: new Uniform(new Vector2()),
           cameraNear: new Uniform(0),
           cameraFar: new Uniform(0),
-          cameraHeight: new Uniform(0),
           frame: new Uniform(0),
-          temporalJitter: new Uniform(new Vector2()),
+          temporalJitterUv: new Uniform(new Vector2()),
           targetUvScale: new Uniform(new Vector2()),
-          mipLevelScale: new Uniform(1),
-          stbnTexture: new Uniform(null),
 
           // Scattering
           skyLightScale: new Uniform(1),
@@ -289,59 +290,14 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   override copyCameraSettings(camera: Camera): void {
-    // Intentionally omit the call of super.
+    super.copyCameraSettings(camera)
 
     this._perspectiveCamera = camera.isPerspectiveCamera === true
 
     const uniforms = this.uniforms
     uniforms.viewMatrix.value.copy(camera.matrixWorldInverse)
+    uniforms.inverseProjectionMatrix.value.copy(camera.projectionMatrixInverse)
     uniforms.inverseViewMatrix.value.copy(camera.matrixWorld)
-
-    const previousProjectionMatrix =
-      this.previousProjectionMatrix ?? camera.projectionMatrix
-    const previousViewMatrix =
-      this.previousViewMatrix ?? camera.matrixWorldInverse
-
-    const inverseProjectionMatrix = uniforms.inverseProjectionMatrix.value
-    const inverseViewMatrix = uniforms.inverseViewMatrix.value
-    const reprojectionMatrix = uniforms.reprojectionMatrix.value
-    const viewReprojectionMatrix = uniforms.viewReprojectionMatrix.value
-    if (this.temporalUpscale) {
-      const frame = uniforms.frame.value % 16
-      const resolution = uniforms.resolution.value
-      const offset = bayerOffsets[frame]
-      const dx = ((offset.x - 0.5) / resolution.x) * 4
-      const dy = ((offset.y - 0.5) / resolution.y) * 4
-      uniforms.temporalJitter.value.set(dx, dy)
-      uniforms.mipLevelScale.value = 0.25 // NOTE: Not exactly
-      inverseProjectionMatrix.copy(camera.projectionMatrix)
-      inverseProjectionMatrix.elements[8] += dx * 2
-      inverseProjectionMatrix.elements[9] += dy * 2
-      inverseProjectionMatrix.invert()
-
-      // Jitter the previous projection matrix with the current jitter.
-      reprojectionMatrix.copy(previousProjectionMatrix)
-      reprojectionMatrix.elements[8] += dx * 2
-      reprojectionMatrix.elements[9] += dy * 2
-      reprojectionMatrix.multiply(previousViewMatrix)
-      viewReprojectionMatrix
-        .copy(reprojectionMatrix)
-        .multiply(inverseViewMatrix)
-    } else {
-      uniforms.temporalJitter.value.setScalar(0)
-      uniforms.mipLevelScale.value = 1
-      inverseProjectionMatrix.copy(camera.projectionMatrixInverse)
-      reprojectionMatrix
-        .copy(previousProjectionMatrix)
-        .multiply(previousViewMatrix)
-      viewReprojectionMatrix
-        .copy(reprojectionMatrix)
-        .multiply(inverseViewMatrix)
-    }
-
-    assertType<PerspectiveCamera | OrthographicCamera>(camera)
-    uniforms.cameraNear.value = camera.near
-    uniforms.cameraFar.value = camera.far
 
     const cameraPosition = camera.getWorldPosition(
       uniforms.cameraPosition.value
@@ -356,39 +312,6 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     } catch (error) {
       // Abort when unable to project position to the ellipsoid surface.
     }
-  }
-
-  // copyCameraSettings can be called multiple times within a frame. Only
-  // reliable way is to explicitly store the matrices.
-  copyReprojectionMatrix(camera: Camera): void {
-    this.previousProjectionMatrix ??= new Matrix4()
-    this.previousViewMatrix ??= new Matrix4()
-    this.previousProjectionMatrix.copy(camera.projectionMatrix)
-    this.previousViewMatrix.copy(camera.matrixWorldInverse)
-  }
-
-  setSize(
-    width: number,
-    height: number,
-    targetWidth?: number,
-    targetHeight?: number
-  ): void {
-    this.uniforms.resolution.value.set(width, height)
-    if (targetWidth != null && targetHeight != null) {
-      // The size of the high-resolution target buffer differs from the upscaled
-      // resolution, which is a multiple of 4. This must be corrected when
-      // reading from the depth buffer.
-      this.uniforms.targetUvScale.value.set(
-        width / targetWidth,
-        height / targetHeight
-      )
-    } else {
-      this.uniforms.targetUvScale.value.setScalar(1)
-    }
-
-    // Invalidate reprojection.
-    this.previousProjectionMatrix = undefined
-    this.previousViewMatrix = undefined
   }
 
   setShadowSize(width: number, height: number): void {
