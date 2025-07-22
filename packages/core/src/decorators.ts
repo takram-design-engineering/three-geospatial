@@ -1,4 +1,3 @@
-import type { Effect } from 'postprocessing'
 import { Material } from 'three'
 
 import { clamp } from './math'
@@ -38,10 +37,10 @@ export function define(name: string) {
     } else {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, Effect>): boolean {
+        get(this: Extract<T, EffectLike>): boolean {
           return this.defines.has(name)
         },
-        set(this: Extract<T, Effect>, value: boolean) {
+        set(this: Extract<T, EffectLike>, value: boolean) {
           if (value !== this[propertyKey]) {
             if (value) {
               this.defines.set(name, '1')
@@ -91,11 +90,11 @@ export function defineInt(
     } else {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, Effect>): number {
+        get(this: Extract<T, EffectLike>): number {
           const value = this.defines.get(name)
           return value != null ? parseInt(value) : 0
         },
-        set(this: Extract<T, Effect>, value: number) {
+        set(this: Extract<T, EffectLike>, value: number) {
           const prevValue = this[propertyKey]
           if (value !== prevValue) {
             this.defines.set(name, clamp(value, min, max).toFixed(0))
@@ -144,11 +143,11 @@ export function defineFloat(
     } else {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, Effect>): number {
+        get(this: Extract<T, EffectLike>): number {
           const value = this.defines.get(name)
           return value != null ? parseFloat(value) : 0
         },
-        set(this: Extract<T, Effect>, value: number) {
+        set(this: Extract<T, EffectLike>, value: number) {
           const prevValue = this[propertyKey]
           if (value !== prevValue) {
             this.defines.set(name, clamp(value, min, max).toFixed(precision))
@@ -193,10 +192,10 @@ export function defineExpression(
     } else {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, Effect>): string {
+        get(this: Extract<T, EffectLike>): string {
           return this.defines.get(name) ?? ''
         },
-        set(this: Extract<T, Effect>, value: string) {
+        set(this: Extract<T, EffectLike>, value: string) {
           if (value !== this[propertyKey]) {
             if (validate?.(value) === false) {
               console.error(`Expression validation failed: ${value}`)
