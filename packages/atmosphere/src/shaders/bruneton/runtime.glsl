@@ -228,24 +228,37 @@ vec3 ClosestPointOnRay(const Position camera, const Position point) {
   return camera + t * ray;
 }
 
-// @shotamatsuda: Moves the camera and point outside of the bottom atmosphere
-// maintaining the relation. This effectively clamps the scattering at the
-// "eps", but it should be okay because a point at such altitude suffers from
-// lots of precision errors anyways.
-void MoveOutsideBottomAtmosphere(
+vec2 RaySphereIntersections(
+    const Position camera, const Direction direction, const Length radius) {
+  float b = 2.0 * dot(direction, camera);
+  float c = dot(camera, camera) - radius * radius;
+  float discriminant = b * b - 4.0 * c;
+  float Q = sqrt(discriminant);
+  return vec2(-b - Q, -b + Q) * 0.5;
+}
+
+// @shotamatsuda: Clip the view ray at the bottom atmosphere boundary.
+bool ClipAtBottomAtmosphere(
     const AtmosphereParameters atmosphere,
-    inout Position camera, inout Position point) {
-  const Length eps = 1.0;
+    const Direction view_ray, inout Position camera, inout Position point) {
+  const Length eps = 0.0;
   Length bottom_radius = atmosphere.bottom_radius + eps;
   Length r_camera = length(camera);
   Length r_point = length(point);
-  if (r_camera < bottom_radius || r_point < bottom_radius) {
-    Position offset = r_camera < r_point
-        ? (bottom_radius / r_camera - 1.0) * camera
-        : (bottom_radius / r_point - 1.0) * point;
-    point += offset;
-    camera += offset;
+  bool camera_below = r_camera < bottom_radius;
+  bool point_below = r_point < bottom_radius;
+  if (camera_below && point_below) {
+    return false;
   }
+
+  vec2 t = RaySphereIntersections(camera, view_ray, bottom_radius);
+  Position intersection = camera + view_ray * (camera_below ? t.y : t.x);
+  if (camera_below) {
+    camera = intersection;
+  } else if (point_below) {
+    point = intersection;
+  }
+  return true;
 }
 
 RadianceSpectrum GetSkyRadianceToPoint(
@@ -255,10 +268,6 @@ RadianceSpectrum GetSkyRadianceToPoint(
     const ReducedScatteringTexture single_mie_scattering_texture,
     Position camera, Position point, const Length shadow_length,
     const Direction sun_direction, out DimensionlessSpectrum transmittance) {
-  // @shotamatsuda: Render somewhat meaningful scattering for the points under
-  // the bottom atmosphere.
-  MoveOutsideBottomAtmosphere(atmosphere, camera, point);
-
   // @shotamatsuda: Avoid artifacts when the ray does not intersect the top
   // atmosphere boundary.
   if (length(ClosestPointOnRay(camera, point)) > atmosphere.top_radius) {
@@ -266,10 +275,15 @@ RadianceSpectrum GetSkyRadianceToPoint(
     return vec3(0.0);
   }
 
+  Direction view_ray = normalize(point - camera);
+  if (!ClipAtBottomAtmosphere(atmosphere, view_ray, camera, point)) {
+    transmittance = vec3(1.0);
+    return vec3(0.0);
+  }
+
   // Compute the distance to the top atmosphere boundary along the view ray,
   // assuming the viewer is in space (or NaN if the view ray does not intersect
   // the atmosphere).
-  Direction view_ray = normalize(point - camera);
   Length r = length(camera);
   Length rmu = dot(camera, view_ray);
   // @shotamatsuda: Use SafeSqrt instead.
