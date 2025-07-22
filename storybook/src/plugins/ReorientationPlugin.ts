@@ -5,12 +5,6 @@ declare module '3d-tiles-renderer/plugins' {
     lat?: number
     lon?: number
     height?: number
-
-    transformLatLonHeightToOrigin: (
-      lat: number,
-      lon: number,
-      height?: number
-    ) => void
   }
 }
 
