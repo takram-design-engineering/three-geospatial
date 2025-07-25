@@ -128,6 +128,8 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/unified-signatures': 'off',
+      '@typescript-eslint/prefer-for-of': 'off',
 
       // To be determined. Turn this off for now.
       '@typescript-eslint/no-misused-spread': 'off',

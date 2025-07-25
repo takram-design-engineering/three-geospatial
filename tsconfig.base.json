@@ -31,6 +31,9 @@
       "@takram/three-atmosphere/shaders/bruneton": [
         "packages/atmosphere/src/shaders/bruneton/index.ts"
       ],
+      "@takram/three-atmosphere/webgpu": [
+        "packages/atmosphere/src/webgpu/index.ts"
+      ],
       "@takram/three-clouds": [
         "packages/clouds/src/index.ts"
       ],
@@ -51,6 +54,9 @@
       ],
       "@takram/three-geospatial/shaders": [
         "packages/core/src/shaders/index.ts"
+      ],
+      "@takram/three-geospatial/webgpu": [
+        "packages/core/src/webgpu/index.ts"
       ]
     }
   },
