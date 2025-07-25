@@ -178,9 +178,9 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
       const t2 = exp(transmittanceTexture.sample(i.add(texelSize.xz)).negate())
       const t3 = exp(transmittanceTexture.sample(i.add(texelSize.zy)).negate())
       const t4 = exp(transmittanceTexture.sample(i.add(texelSize.xy)).negate())
-      return vec3(mix(mix(t1, t2, f.x), mix(t3, t4, f.x), f.y))
+      return mix(mix(t1, t2, f.x), mix(t3, t4, f.x), f.y).rgb
     } else {
-      return vec3(transmittanceTexture.sample(uv))
+      return transmittanceTexture.sample(uv).rgb
     }
   }
 )
@@ -217,14 +217,14 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
             transmittanceTexture,
             radiusEnd,
             cosAlphaEnd.negate(),
-            false
+            storeOpticalDepth
           ).div(
             getTransmittanceToTopAtmosphereBoundary(
               atmosphere,
               transmittanceTexture,
               radius,
               cosAlpha.negate(),
-              false
+              storeOpticalDepth
             )
           ),
           vec3(1)
@@ -238,14 +238,14 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
             transmittanceTexture,
             radius,
             cosAlpha,
-            false
+            storeOpticalDepth
           ).div(
             getTransmittanceToTopAtmosphereBoundary(
               atmosphere,
               transmittanceTexture,
               radiusEnd,
               cosAlphaEnd,
-              false
+              storeOpticalDepth
             )
           ),
           vec3(1)
@@ -429,6 +429,6 @@ export const getIrradiance = /*#__PURE__*/ Fnv(
     cosPhi: Float
   ): IrradianceSpectrum => {
     const uv = getIrradianceTextureUv(atmosphere, radius, cosPhi)
-    return vec3(irradianceTexture.sample(uv))
+    return irradianceTexture.sample(uv).rgb
   }
 )

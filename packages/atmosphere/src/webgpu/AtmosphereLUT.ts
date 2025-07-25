@@ -466,6 +466,7 @@ export class AtmosphereLUT {
 
   private computeScatteringDensity(
     {
+      deltaIrradiance,
       deltaRayleighScattering,
       deltaMieScattering,
       deltaScatteringDensity,
@@ -481,7 +482,7 @@ export class AtmosphereLUT {
       texture3D(deltaRayleighScattering.texture),
       texture3D(deltaMieScattering.texture),
       texture3D(deltaMultipleScattering.texture),
-      texture(this.irradianceTexture),
+      texture(deltaIrradiance.texture),
       vec3(screenCoordinate, layer.add(0.5)),
       int(scatteringOrder),
       opticalDepth != null

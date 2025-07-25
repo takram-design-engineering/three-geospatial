@@ -669,12 +669,10 @@ export const getScattering0 = /*#__PURE__*/ Fnv(
       coord.z,
       coord.w
     )
-    return vec3(
-      scatteringTexture
-        .sample(coord0)
-        .mul(lerp.oneMinus())
-        .add(scatteringTexture.sample(coord1).mul(lerp))
-    )
+    return scatteringTexture
+      .sample(coord0)
+      .mul(lerp.oneMinus())
+      .add(scatteringTexture.sample(coord1).mul(lerp)).rgb
   }
 )
 
