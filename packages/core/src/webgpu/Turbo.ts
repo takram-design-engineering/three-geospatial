@@ -1,12 +1,14 @@
-import { Fn } from 'three/src/nodes/TSL.js'
-import { add, mul, sub, vec3 } from 'three/tsl'
+import { add, sub, vec3, type ShaderNodeObject } from 'three/tsl'
+import type { Node } from 'three/webgpu'
 
-export const turbo = /*#__PURE__*/ Fn<[number]>(([x]) => {
+import { Fnv } from './Fnv'
+
+export const turbo = /*#__PURE__*/ Fnv((x: ShaderNodeObject<Node>) => {
   // prettier-ignore
-  const r = add(0.1357, mul(x, sub(4.5974, mul(x, sub(42.3277, mul(x, sub(130.5887, mul(x, sub(150.5666, mul(x, 58.1375))))))))))
+  const r = add(0.1357, x.mul(sub(4.5974, x.mul(sub(42.3277, x.mul(sub(130.5887, x.mul(sub(150.5666, x.mul(58.1375))))))))))
   // prettier-ignore
-  const g = add(0.0914, mul(x, add(2.1856, mul(x, sub(4.8052, mul(x, sub(14.0195, mul(x, add(4.2109, mul(x, 2.7747))))))))))
+  const g = add(0.0914, x.mul(add(2.1856, x.mul(sub(4.8052, x.mul(sub(14.0195, x.mul(add(4.2109, x.mul(2.7747))))))))))
   // prettier-ignore
-  const b = add(0.1067, mul(x, sub(12.5925, mul(x, sub(60.1097, mul(x, sub(109.0745, mul(x, sub(88.5066, mul(x, 26.8183))))))))))
+  const b = add(0.1067, x.mul(sub(12.5925, x.mul(sub(60.1097, x.mul(sub(109.0745, x.mul(sub(88.5066, x.mul(26.8183))))))))))
   return vec3(r, g, b)
 })
