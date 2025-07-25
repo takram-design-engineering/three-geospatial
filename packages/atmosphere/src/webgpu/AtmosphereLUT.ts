@@ -1,5 +1,6 @@
 import {
   AddEquation,
+  Box3,
   ClampToEdgeWrapping,
   CustomBlending,
   Data3DTexture,
@@ -12,9 +13,11 @@ import {
   RenderTarget,
   RenderTarget3D,
   RGBAFormat,
+  Vector3,
   type Texture
 } from 'three'
 import {
+  exp,
   int,
   mat3,
   mrt,
@@ -28,11 +31,15 @@ import {
 import {
   NodeMaterial,
   QuadMesh,
+  type Node,
   type Renderer,
   type UniformNode
 } from 'three/webgpu'
 
-import type { AnyFloatType } from '@takram/three-geospatial'
+import {
+  isFloatLinearSupported,
+  type AnyFloatType
+} from '@takram/three-geospatial'
 
 import {
   IRRADIANCE_TEXTURE_HEIGHT,
@@ -60,6 +67,15 @@ declare module 'three' {
     textures: Data3DTexture[]
   }
 }
+
+const scatteringTextureRegion = /*#__PURE__#*/ new Box3(
+  /*#__PURE__#*/ new Vector3(),
+  /*#__PURE__#*/ new Vector3(
+    SCATTERING_TEXTURE_WIDTH,
+    SCATTERING_TEXTURE_HEIGHT,
+    SCATTERING_TEXTURE_DEPTH
+  )
+)
 
 function createRenderTarget(
   textureType: AnyFloatType,
@@ -147,6 +163,7 @@ function iterateIdle<T>(iterable: Iterable<T>): Promise<T> {
 class Context {
   lambdas = vec3()
   luminanceFromRadiance = mat3()
+
   opticalDepth?: RenderTarget
   deltaIrradiance: RenderTarget
   deltaRayleighScattering: RenderTarget3D
@@ -154,37 +171,37 @@ class Context {
   deltaScatteringDensity: RenderTarget3D
   deltaMultipleScattering: RenderTarget3D
 
-  constructor(type: AnyFloatType) {
-    if (type === HalfFloatType) {
+  constructor(textureType: AnyFloatType) {
+    if (textureType === HalfFloatType) {
       this.opticalDepth = createRenderTarget(
-        type,
+        textureType,
         TRANSMITTANCE_TEXTURE_WIDTH,
         TRANSMITTANCE_TEXTURE_HEIGHT,
-        'transmittance'
+        'opticalDepth'
       )
     }
     this.deltaIrradiance = createRenderTarget(
-      type,
+      textureType,
       IRRADIANCE_TEXTURE_WIDTH,
       IRRADIANCE_TEXTURE_HEIGHT,
       'deltaIrradiance'
     )
     this.deltaRayleighScattering = createRenderTarget3D(
-      type,
+      textureType,
       SCATTERING_TEXTURE_WIDTH,
       SCATTERING_TEXTURE_HEIGHT,
       SCATTERING_TEXTURE_DEPTH,
-      'deltaRayleigh'
+      'deltaRayleighScattering'
     )
     this.deltaMieScattering = createRenderTarget3D(
-      type,
+      textureType,
       SCATTERING_TEXTURE_WIDTH,
       SCATTERING_TEXTURE_HEIGHT,
       SCATTERING_TEXTURE_DEPTH,
-      'deltaMie'
+      'deltaMieScattering'
     )
     this.deltaScatteringDensity = createRenderTarget3D(
-      type,
+      textureType,
       SCATTERING_TEXTURE_WIDTH,
       SCATTERING_TEXTURE_HEIGHT,
       SCATTERING_TEXTURE_DEPTH,
@@ -228,11 +245,11 @@ export interface AtmosphereLUTOptions {
 }
 
 export class AtmosphereLUT {
-  readonly transmittanceRenderTarget: RenderTarget
-  readonly scatteringRenderTarget: RenderTarget3D
-  readonly irradianceRenderTarget: RenderTarget
+  private readonly transmittanceRenderTarget: RenderTarget
+  private readonly irradianceRenderTarget: RenderTarget
+  private readonly scatteringRenderTarget: RenderTarget3D
   readonly singleMieScatteringTexture?: Data3DTexture
-  readonly higherOrderScatteringTexture?: Data3DTexture
+  private readonly higherOrderScatteringRenderTarget?: RenderTarget3D
 
   private readonly renderer: Renderer
   private readonly textureType: AnyFloatType
@@ -240,22 +257,31 @@ export class AtmosphereLUT {
   private readonly material = new AdditiveNodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
 
+  private updating = false
+  private disposeQueue: (() => void) | undefined
+
   get transmittanceTexture(): Texture {
     return this.transmittanceRenderTarget.texture
-  }
-
-  get scatteringTexture(): Texture {
-    return this.scatteringRenderTarget.texture
   }
 
   get irradianceTexture(): Texture {
     return this.irradianceRenderTarget.texture
   }
 
+  get scatteringTexture(): Texture {
+    return this.scatteringRenderTarget.texture
+  }
+
+  get higherOrderScatteringTexture(): Texture | undefined {
+    return this.higherOrderScatteringRenderTarget?.texture
+  }
+
   constructor(
     renderer: Renderer,
     {
-      textureType = FloatType,
+      textureType = isFloatLinearSupported(renderer)
+        ? FloatType
+        : HalfFloatType,
       combinedScattering = true,
       higherOrderScattering = true
     }: AtmosphereLUTOptions = {}
@@ -268,18 +294,18 @@ export class AtmosphereLUT {
       TRANSMITTANCE_TEXTURE_HEIGHT,
       'transmittance'
     )
+    this.irradianceRenderTarget = createRenderTarget(
+      textureType,
+      IRRADIANCE_TEXTURE_WIDTH,
+      IRRADIANCE_TEXTURE_HEIGHT,
+      'irradiance'
+    )
     this.scatteringRenderTarget = createRenderTarget3D(
       textureType,
       SCATTERING_TEXTURE_WIDTH,
       SCATTERING_TEXTURE_HEIGHT,
       SCATTERING_TEXTURE_DEPTH,
       'scattering'
-    )
-    this.irradianceRenderTarget = createRenderTarget(
-      textureType,
-      IRRADIANCE_TEXTURE_WIDTH,
-      IRRADIANCE_TEXTURE_HEIGHT,
-      'irradiance'
     )
     if (!combinedScattering) {
       this.singleMieScatteringTexture = createTexture3D(
@@ -291,7 +317,7 @@ export class AtmosphereLUT {
       )
     }
     if (higherOrderScattering) {
-      this.higherOrderScatteringTexture = createTexture3D(
+      this.higherOrderScatteringRenderTarget = createRenderTarget3D(
         textureType,
         SCATTERING_TEXTURE_WIDTH,
         SCATTERING_TEXTURE_HEIGHT,
@@ -299,70 +325,88 @@ export class AtmosphereLUT {
         'higherOrderScattering'
       )
     }
-
-    const { material } = this
-    material.depthTest = false
-    material.depthWrite = false
   }
 
-  private clearRenderTarget(renderTarget: RenderTarget): void {
-    this.renderer.setRenderTarget(renderTarget)
-    void this.renderer.clearColor()
-  }
-
-  private clearRenderTarget3D(renderTarget: RenderTarget3D): void {
-    for (let layer = 0; layer < renderTarget.depth; ++layer) {
-      this.renderer.setRenderTarget(renderTarget, layer)
+  private clearRenderTarget(renderTarget?: RenderTarget): void {
+    if (renderTarget == null) {
+      return
+    }
+    if (renderTarget instanceof RenderTarget3D) {
+      for (let i = 0; i < renderTarget.depth; ++i) {
+        this.renderer.setRenderTarget(renderTarget, i)
+        void this.renderer.clearColor()
+      }
+    } else {
+      this.renderer.setRenderTarget(renderTarget)
       void this.renderer.clearColor()
     }
   }
 
   private renderToRenderTarget(
     renderTarget: RenderTarget,
-    textures?: Texture[]
+    textures?: readonly Texture[]
   ): void {
     if (textures != null) {
       renderTarget.textures.push(...textures)
     }
-    this.renderer.setRenderTarget(this.transmittanceRenderTarget)
+    this.renderer.setRenderTarget(renderTarget)
     this.mesh.render(this.renderer)
     renderTarget.textures.length = 1
   }
 
   private renderToRenderTarget3D(
     renderTarget: RenderTarget3D,
-    layerUniform: UniformNode<number>,
-    textures?: Data3DTexture[]
+    layer: UniformNode<number>,
+    textures?: readonly Data3DTexture[]
   ): void {
     if (textures != null) {
       renderTarget.textures.push(...textures)
     }
-    for (let layer = 0; layer < renderTarget.depth; ++layer) {
-      layerUniform.value = layer
-      this.renderer.setRenderTarget(renderTarget, layer)
+    for (let i = 0; i < renderTarget.depth; ++i) {
+      layer.value = i
+      this.renderer.setRenderTarget(renderTarget, i)
       this.mesh.render(this.renderer)
     }
     renderTarget.textures.length = 1
   }
 
-  private computeTransmittance(): void {
-    this.material.fragmentNode =
-      computeTransmittanceToTopAtmosphereBoundaryTexture(
-        this.atmosphere,
-        screenCoordinate
-      )
+  private computeTransmittance({ opticalDepth }: Context): void {
+    const result = computeTransmittanceToTopAtmosphereBoundaryTexture(
+      this.atmosphere,
+      screenCoordinate,
+      opticalDepth != null
+    )
+
+    if (opticalDepth != null) {
+      // Compute the optical depth, and store it in opticalDepth. Avoid having
+      // tiny transmittance values underflow to 0 due to half-float precision.
+      this.material.fragmentNode = mrt({
+        transmittance: exp(result.negate()),
+        opticalDepth: result
+      })
+    } else {
+      this.material.fragmentNode = result
+    }
     this.material.additive = false
     this.material.needsUpdate = true
 
-    this.renderToRenderTarget(this.transmittanceRenderTarget)
+    this.renderToRenderTarget(
+      this.transmittanceRenderTarget,
+      [opticalDepth?.texture].filter(value => value != null)
+    )
   }
 
-  private computeDirectIrradiance(context: Context): void {
+  private computeDirectIrradiance({
+    deltaIrradiance,
+    opticalDepth
+  }: Context): void {
     const irradiance = computeDirectIrradianceTexture(
       this.atmosphere,
-      texture(this.transmittanceTexture),
-      screenCoordinate
+      texture(opticalDepth?.texture ?? this.transmittanceTexture),
+      screenCoordinate,
+      opticalDepth != null
     )
+
     this.material.fragmentNode = mrt({
       deltaIrradiance: vec4(irradiance, 1),
       irradiance: vec4(vec3(0), 1)
@@ -371,130 +415,177 @@ export class AtmosphereLUT {
     this.material.needsUpdate = true
 
     // Turn off blending on the deltaIrradiance.
-    this.clearRenderTarget(context.deltaIrradiance)
+    this.clearRenderTarget(deltaIrradiance)
 
     this.renderToRenderTarget(this.irradianceRenderTarget, [
-      context.deltaIrradiance.texture
+      deltaIrradiance.texture
     ])
   }
 
-  private computeSingleScattering(context: Context): void {
+  private computeSingleScattering({
+    luminanceFromRadiance,
+    deltaRayleighScattering,
+    deltaMieScattering,
+    opticalDepth
+  }: Context): void {
     const layer = uniform(0)
     const singleScattering = computeSingleScatteringTexture(
       this.atmosphere,
-      texture(this.transmittanceTexture),
-      vec3(screenCoordinate, layer.add(0.5))
+      texture(opticalDepth?.texture ?? this.transmittanceTexture),
+      vec3(screenCoordinate, layer.add(0.5)),
+      opticalDepth != null
     )
     const rayleigh = singleScattering.get('rayleigh')
     const mie = singleScattering.get('mie')
+
     this.material.fragmentNode = mrt({
-      scattering: vec4(rayleigh.rgb, mie.r).mul(context.luminanceFromRadiance),
-      deltaRayleigh: vec4(rayleigh.rgb, 1),
-      deltaMie: vec4(mie.rgb, 1)
+      scattering: vec4(rayleigh.rgb, mie.r).mul(luminanceFromRadiance),
+      deltaRayleighScattering: vec4(rayleigh.rgb, 1),
+      deltaMieScattering: vec4(mie.rgb, 1)
     })
     this.material.additive = true
     this.material.needsUpdate = true
 
     // Turn off blending on the deltaRayleighScattering and deltaMieScattering.
-    this.clearRenderTarget3D(context.deltaRayleighScattering)
-    this.clearRenderTarget3D(context.deltaMieScattering)
+    this.clearRenderTarget(deltaRayleighScattering)
+    this.clearRenderTarget(deltaMieScattering)
 
     this.renderToRenderTarget3D(this.scatteringRenderTarget, layer, [
-      context.deltaRayleighScattering.texture,
-      context.deltaMieScattering.texture
+      deltaRayleighScattering.texture,
+      deltaMieScattering.texture
     ])
+
+    if (this.singleMieScatteringTexture != null) {
+      this.renderer.copyTextureToTexture(
+        deltaMieScattering.texture,
+        this.singleMieScatteringTexture,
+        scatteringTextureRegion
+      )
+    }
   }
 
   private computeScatteringDensity(
-    context: Context,
+    {
+      deltaRayleighScattering,
+      deltaMieScattering,
+      deltaScatteringDensity,
+      deltaMultipleScattering,
+      opticalDepth
+    }: Context,
     scatteringOrder: number
   ): void {
     const layer = uniform(0)
     const radiance = computeScatteringDensityTexture(
       this.atmosphere,
-      texture(this.transmittanceTexture),
-      texture3D(context.deltaRayleighScattering.texture),
-      texture3D(context.deltaMieScattering.texture),
-      texture3D(context.deltaMultipleScattering.texture),
+      texture(opticalDepth?.texture ?? this.transmittanceTexture),
+      texture3D(deltaRayleighScattering.texture),
+      texture3D(deltaMieScattering.texture),
+      texture3D(deltaMultipleScattering.texture),
       texture(this.irradianceTexture),
       vec3(screenCoordinate, layer.add(0.5)),
-      int(scatteringOrder)
+      int(scatteringOrder),
+      opticalDepth != null
     )
+
     this.material.fragmentNode = vec4(radiance, 1)
     this.material.additive = false
     this.material.needsUpdate = true
 
-    this.renderToRenderTarget3D(context.deltaScatteringDensity, layer)
+    this.renderToRenderTarget3D(deltaScatteringDensity, layer)
   }
 
   private computeIndirectIrradiance(
-    context: Context,
+    {
+      luminanceFromRadiance,
+      deltaIrradiance,
+      deltaRayleighScattering,
+      deltaMieScattering,
+      deltaMultipleScattering
+    }: Context,
     scatteringOrder: number
   ): void {
     const irradiance = computeIndirectIrradianceTexture(
       this.atmosphere,
-      texture3D(context.deltaRayleighScattering.texture),
-      texture3D(context.deltaMieScattering.texture),
-      texture3D(context.deltaMultipleScattering.texture),
+      texture3D(deltaRayleighScattering.texture),
+      texture3D(deltaMieScattering.texture),
+      texture3D(deltaMultipleScattering.texture),
       screenCoordinate,
       int(scatteringOrder - 1)
     )
+
     this.material.fragmentNode = mrt({
       deltaIrradiance: irradiance,
-      irradiance: irradiance.mul(context.luminanceFromRadiance)
+      irradiance: irradiance.mul(luminanceFromRadiance)
     })
     this.material.additive = true
     this.material.needsUpdate = true
 
     // Turn off blending on the deltaIrradiance.
-    this.clearRenderTarget(context.deltaIrradiance)
+    this.clearRenderTarget(deltaIrradiance)
 
     this.renderToRenderTarget(this.irradianceRenderTarget, [
-      context.deltaIrradiance.texture
+      deltaIrradiance.texture
     ])
   }
 
-  private computeMultipleScattering(context: Context): void {
+  private computeMultipleScattering({
+    luminanceFromRadiance,
+    deltaScatteringDensity,
+    deltaMultipleScattering,
+    opticalDepth
+  }: Context): void {
     const layer = uniform(0)
     const multipleScattering = computeMultipleScatteringTexture(
       this.atmosphere,
-      texture(this.transmittanceTexture),
-      texture3D(context.deltaScatteringDensity.texture),
-      vec3(screenCoordinate, layer.add(0.5))
+      texture(opticalDepth?.texture ?? this.transmittanceTexture),
+      texture3D(deltaScatteringDensity.texture),
+      vec3(screenCoordinate, layer.add(0.5)),
+      opticalDepth != null
     )
     const radiance = multipleScattering.get('radiance')
     const cosTheta = multipleScattering.get('cosTheta')
-    this.material.fragmentNode = mrt({
-      scattering: vec4(
-        radiance
-          .mul(context.luminanceFromRadiance)
-          .div(rayleighPhaseFunction(cosTheta)),
-        0
-      ),
-      // deltaMultipleScattering is shared with deltaRayleigh.
-      deltaRayleigh: vec4(radiance, 1)
-    })
+    const luminance = radiance
+      .mul(luminanceFromRadiance)
+      .div(rayleighPhaseFunction(cosTheta))
+
+    const mrtLayout: Record<string, Node> = {
+      scattering: vec4(luminance, 0),
+      // deltaMultipleScattering is shared with deltaRayleighScattering.
+      deltaRayleighScattering: vec4(radiance, 1)
+    }
+    if (this.higherOrderScatteringRenderTarget != null) {
+      mrtLayout.higherOrderScattering = vec4(luminance, 1)
+    }
+    this.material.fragmentNode = mrt(mrtLayout)
     this.material.additive = true
     this.material.needsUpdate = true
 
     // Turn off blending on the deltaMultipleScattering.
-    this.clearRenderTarget3D(context.deltaMultipleScattering)
+    this.clearRenderTarget(deltaMultipleScattering)
 
-    this.renderToRenderTarget3D(this.scatteringRenderTarget, layer, [
-      context.deltaMultipleScattering.texture
-    ])
+    this.renderToRenderTarget3D(
+      this.scatteringRenderTarget,
+      layer,
+      [
+        deltaMultipleScattering.texture,
+        this.higherOrderScatteringRenderTarget?.texture
+      ].filter(value => value != null)
+    )
   }
 
   private *precompute(context: Context): Iterable<void> {
+    this.clearRenderTarget(this.transmittanceRenderTarget)
     this.clearRenderTarget(this.irradianceRenderTarget)
-    this.clearRenderTarget3D(this.scatteringRenderTarget)
-    this.clearRenderTarget3D(context.deltaRayleighScattering)
-    this.clearRenderTarget3D(context.deltaMieScattering)
-    this.clearRenderTarget3D(context.deltaScatteringDensity)
-    this.clearRenderTarget3D(context.deltaMultipleScattering)
+    this.clearRenderTarget(this.scatteringRenderTarget)
+    this.clearRenderTarget(this.higherOrderScatteringRenderTarget)
+    this.clearRenderTarget(context.opticalDepth)
+    this.clearRenderTarget(context.deltaRayleighScattering)
+    this.clearRenderTarget(context.deltaMieScattering)
+    this.clearRenderTarget(context.deltaScatteringDensity)
+    this.clearRenderTarget(context.deltaMultipleScattering)
 
     // Compute the transmittance, and store it in transmittanceTexture.
-    this.computeTransmittance()
+    this.computeTransmittance(context)
 
     // Compute the direct irradiance, store it in deltaIrradiance and,
     // depending on "additive", either initialize irradianceTexture with zeros
@@ -531,8 +622,10 @@ export class AtmosphereLUT {
   }
 
   async update(): Promise<void> {
+    this.updating = true
+
     const renderer = this.renderer
-    const context = new Context(HalfFloatType)
+    const context = new Context(this.textureType)
     const autoClear = renderer.autoClear
     renderer.autoClear = false
     context.lambdas.value.set(680, 550, 440)
@@ -540,5 +633,35 @@ export class AtmosphereLUT {
     await iterateIdle(this.precompute(context))
     renderer.autoClear = autoClear
     context.dispose()
+
+    this.updating = false
+    this.disposeQueue?.()
+  }
+
+  dispose(options: { textures?: boolean } = {}): void {
+    if (this.updating) {
+      this.disposeQueue = () => {
+        this.dispose(options)
+        this.disposeQueue = undefined
+      }
+      return
+    }
+
+    const { textures: disposeTextures = true } = options
+    if (!disposeTextures) {
+      this.transmittanceRenderTarget.textures.splice(0, 1)
+      this.irradianceRenderTarget.textures.splice(0, 1)
+      this.scatteringRenderTarget.textures.splice(0, 1)
+      this.higherOrderScatteringRenderTarget?.textures.splice(0, 1)
+    } else {
+      this.singleMieScatteringTexture?.dispose()
+    }
+
+    this.transmittanceRenderTarget.dispose()
+    this.irradianceRenderTarget.dispose()
+    this.scatteringRenderTarget.dispose()
+    this.higherOrderScatteringRenderTarget?.dispose()
+    this.material.dispose()
+    this.mesh.geometry.dispose()
   }
 }

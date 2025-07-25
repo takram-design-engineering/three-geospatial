@@ -85,12 +85,12 @@ declare module 'three/src/nodes/TSL.js' {
   }
 }
 
-const TransmittanceParamsStruct = struct({
+const TransmittanceParamsStruct = /*#__PURE__*/ struct({
   radius: 'float',
   cosAlpha: 'float'
 })
 
-const ScatteringParamsStruct = struct({
+const ScatteringParamsStruct = /*#__PURE__*/ struct({
   radius: 'float',
   cosAlpha: 'float',
   cosPhi: 'float',
@@ -98,20 +98,37 @@ const ScatteringParamsStruct = struct({
   rayIntersectsGround: 'bool'
 })
 
-const IrradianceParamsStruct = struct({
+const IrradianceParamsStruct = /*#__PURE__*/ struct({
   radius: 'float',
   cosPhi: 'float'
 })
 
-const SingleScatteringStruct = struct({
+const SingleScatteringStruct = /*#__PURE__*/ struct({
   rayleigh: 'vec3',
   mie: 'vec3'
 })
 
-const MultipleScatteringStruct = struct({
+const MultipleScatteringStruct = /*#__PURE__*/ struct({
   radiance: 'vec3',
   cosTheta: 'float'
 })
+
+const TRANSMITTANCE_TEXTURE_SIZE = /*#__PURE__*/ vec2(
+  TRANSMITTANCE_TEXTURE_WIDTH,
+  TRANSMITTANCE_TEXTURE_HEIGHT
+).toConst()
+
+const IRRADIANCE_TEXTURE_SIZE = /*#__PURE__*/ vec2(
+  IRRADIANCE_TEXTURE_WIDTH,
+  IRRADIANCE_TEXTURE_HEIGHT
+).toConst()
+
+const SCATTERING_TEXTURE_SIZE = /*#__PURE__*/ vec4(
+  SCATTERING_TEXTURE_NU_SIZE - 1,
+  SCATTERING_TEXTURE_MU_S_SIZE,
+  SCATTERING_TEXTURE_MU_SIZE,
+  SCATTERING_TEXTURE_R_SIZE
+).toConst()
 
 export const getLayerDensity = /*#__PURE__*/ Fnv(
   (layer: DensityProfileLayer, altitude: Length): Float => {
@@ -151,7 +168,7 @@ export const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
       .div(SAMPLE_COUNT)
       .toVar()
 
-    const result = float(0).toVar()
+    const opticalDepth = float(0).toVar()
     Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
       const rayLength = mul(float(i), stepSize).toVar()
 
@@ -170,10 +187,10 @@ export const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
 
       // Sample weight from the trapezoidal rule.
       const weight = select(equal(i, 0).or(equal(i, SAMPLE_COUNT)), 0.5, 1)
-      result.addAssign(y.mul(weight).mul(stepSize))
+      opticalDepth.addAssign(y.mul(weight).mul(stepSize))
     })
 
-    return result
+    return opticalDepth
   }
 )
 
@@ -182,8 +199,7 @@ export const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
     atmosphere: AtmosphereParams,
     radius: Length,
     cosAlpha: Float,
-    // eslint-disable-next-line @typescript-eslint/no-inferrable-types
-    precisionLog: boolean = false
+    storeOpticalDepth: boolean
   ): DimensionlessSpectrum => {
     const opticalDepth = add(
       atmosphere.rayleighScattering.mul(
@@ -211,7 +227,7 @@ export const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
         )
       )
     )
-    if (precisionLog) {
+    if (storeOpticalDepth) {
       return opticalDepth
     } else {
       return exp(opticalDepth.negate())
@@ -269,14 +285,13 @@ export const getParamsFromTransmittanceTextureUv = /*#__PURE__*/ Fnv(
   }
 )
 
-const TRANSMITTANCE_TEXTURE_SIZE = vec2(
-  TRANSMITTANCE_TEXTURE_WIDTH,
-  TRANSMITTANCE_TEXTURE_HEIGHT
-).toConst()
-
 export const computeTransmittanceToTopAtmosphereBoundaryTexture =
   /*#__PURE__*/ Fnv(
-    (atmosphere: AtmosphereParams, fragCoord: Vec2): DimensionlessSpectrum => {
+    (
+      atmosphere: AtmosphereParams,
+      fragCoord: Vec2,
+      storeOpticalDepth: boolean
+    ): DimensionlessSpectrum => {
       const params = getParamsFromTransmittanceTextureUv(
         atmosphere,
         fragCoord.div(TRANSMITTANCE_TEXTURE_SIZE)
@@ -284,7 +299,8 @@ export const computeTransmittanceToTopAtmosphereBoundaryTexture =
       return computeTransmittanceToTopAtmosphereBoundary(
         atmosphere,
         params.get('radius'),
-        params.get('cosAlpha')
+        params.get('cosAlpha'),
+        storeOpticalDepth
       )
     }
   )
@@ -298,7 +314,8 @@ export const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
     cosPhi: Float,
     cosTheta: Float,
     rayLength: Length,
-    rayIntersectsGround: Bool
+    rayIntersectsGround: Bool,
+    storeOpticalDepth: boolean
   ): StructNode => {
     const radiusEnd = clampRadius(
       atmosphere,
@@ -318,14 +335,16 @@ export const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
       radius,
       cosAlpha,
       rayLength,
-      rayIntersectsGround
+      rayIntersectsGround,
+      storeOpticalDepth
     )
       .mul(
         getTransmittanceToSun(
           atmosphere,
           transmittanceTexture,
           radiusEnd,
-          cosPhiEnd
+          cosPhiEnd,
+          storeOpticalDepth
         )
       )
       .toVar()
@@ -375,7 +394,8 @@ export const computeSingleScattering = /*#__PURE__*/ Fnv(
     cosAlpha: Float,
     cosPhi: Float,
     cosTheta: Float,
-    rayIntersectsGround: Bool
+    rayIntersectsGround: Bool,
+    storeOpticalDepth: boolean
   ) => {
     const SAMPLE_COUNT = 50
 
@@ -403,7 +423,8 @@ export const computeSingleScattering = /*#__PURE__*/ Fnv(
         cosPhi,
         cosTheta,
         rayLength,
-        rayIntersectsGround
+        rayIntersectsGround,
+        storeOpticalDepth
       )
       const deltaRayleigh = deltaRayleighMie.get('rayleigh')
       const deltaMie = deltaRayleighMie.get('mie')
@@ -547,15 +568,8 @@ export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
   }
 )
 
-const SCATTERING_TEXTURE_SIZE = vec4(
-  SCATTERING_TEXTURE_NU_SIZE - 1,
-  SCATTERING_TEXTURE_MU_S_SIZE,
-  SCATTERING_TEXTURE_MU_SIZE,
-  SCATTERING_TEXTURE_R_SIZE
-).toConst()
-
 export const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
-  (atmosphere: AtmosphereParams, fragCoord: Vec2) => {
+  (atmosphere: AtmosphereParams, fragCoord: Vec3) => {
     const fragCoordCosTheta = floor(
       fragCoord.x.div(SCATTERING_TEXTURE_MU_S_SIZE)
     )
@@ -599,7 +613,8 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
-    fragCoord: Vec3
+    fragCoord: Vec3,
+    storeOpticalDepth: boolean
   ) => {
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
@@ -617,7 +632,8 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ Fnv(
       cosAlpha,
       cosPhi,
       cosTheta,
-      rayIntersectsGround
+      rayIntersectsGround,
+      storeOpticalDepth
     )
   }
 )
@@ -730,7 +746,8 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
     cosAlpha: Float,
     cosPhi: Float,
     cosTheta: Float,
-    scatteringOrder: Int
+    scatteringOrder: Int,
+    storeOpticalDepth: boolean
   ): RadianceDensitySpectrum => {
     // Compute unit direction vectors for the zenith, the view direction omega
     // and and the sun direction omega_s, such that the cosine of the
@@ -781,7 +798,8 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
             radius,
             cosTheta,
             distanceToGround,
-            bool(true)
+            bool(true),
+            storeOpticalDepth
           )
         )
         groundAlbedo.assign(atmosphere.groundAlbedo)
@@ -876,7 +894,8 @@ export const computeMultipleScattering = /*#__PURE__*/ Fnv(
     cosAlpha: Float,
     cosPhi: Float,
     cosTheta: Float,
-    rayIntersectsGround: Bool
+    rayIntersectsGround: Bool,
+    storeOpticalDepth: boolean
   ): RadianceSpectrum => {
     const SAMPLE_COUNT = 50
 
@@ -929,7 +948,8 @@ export const computeMultipleScattering = /*#__PURE__*/ Fnv(
             radius,
             cosAlpha,
             rayLength,
-            rayIntersectsGround
+            rayIntersectsGround,
+            storeOpticalDepth
           )
         )
         .mul(stepSize)
@@ -951,8 +971,9 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
     singleMieScatteringTexture: ReducedScatteringTexture,
     multipleScatteringTexture: ScatteringTexture,
     irradianceTexture: IrradianceTexture,
-    fragCoord: Vec2,
-    scatteringOrder: Int
+    fragCoord: Vec3,
+    scatteringOrder: Int,
+    storeOpticalDepth: boolean
   ): RadianceDensitySpectrum => {
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
@@ -973,7 +994,8 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
       cosAlpha,
       cosPhi,
       cosTheta,
-      scatteringOrder
+      scatteringOrder,
+      storeOpticalDepth
     )
   }
 )
@@ -983,7 +1005,8 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
     scatteringDensityTexture: ScatteringDensityTexture,
-    fragCoord: Vec2
+    fragCoord: Vec3,
+    storeOpticalDepth: boolean
   ): RadianceSpectrum => {
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
@@ -1002,7 +1025,8 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
       cosAlpha,
       cosPhi,
       cosTheta,
-      rayIntersectsGround
+      rayIntersectsGround,
+      storeOpticalDepth
     )
     return MultipleScatteringStruct(radiance, cosTheta)
   }
@@ -1013,7 +1037,8 @@ export const computeDirectIrradiance = /*#__PURE__*/ Fnv(
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
-    cosPhi: Float
+    cosPhi: Float,
+    storeOpticalDepth: boolean
   ): IrradianceSpectrum => {
     const alpha = atmosphere.sunAngularRadius
 
@@ -1035,7 +1060,8 @@ export const computeDirectIrradiance = /*#__PURE__*/ Fnv(
           atmosphere,
           transmittanceTexture,
           radius,
-          cosPhi
+          cosPhi,
+          storeOpticalDepth
         )
       )
       .mul(averageCosineFactor)
@@ -1112,16 +1138,12 @@ export const getParamsFromIrradianceTextureUv = /*#__PURE__*/ Fnv(
   }
 )
 
-const IRRADIANCE_TEXTURE_SIZE = vec2(
-  IRRADIANCE_TEXTURE_WIDTH,
-  IRRADIANCE_TEXTURE_HEIGHT
-).toConst()
-
 export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
-    fragCoord: Vec2
+    fragCoord: Vec2,
+    storeOpticalDepth: boolean
   ): IrradianceSpectrum => {
     const params = getParamsFromIrradianceTextureUv(
       atmosphere,
@@ -1133,7 +1155,8 @@ export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
       atmosphere,
       transmittanceTexture,
       radius,
-      cosPhi
+      cosPhi,
+      storeOpticalDepth
     )
   }
 )

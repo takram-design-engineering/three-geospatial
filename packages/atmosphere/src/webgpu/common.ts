@@ -158,14 +158,13 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
     cosAlpha: Float,
-    // eslint-disable-next-line @typescript-eslint/no-inferrable-types
-    precisionLog: boolean = false
+    storeOpticalDepth: boolean
   ): DimensionlessSpectrum => {
     const uv = getTransmittanceTextureUv(atmosphere, radius, cosAlpha)
 
     // Added for the precomputation stage in half-float precision. Manually
     // interpolate the transmittance instead of the optical depth.
-    if (precisionLog) {
+    if (storeOpticalDepth) {
       // TODO: Separate to sampleLinear() function.
       const size = vec2(
         TRANSMITTANCE_TEXTURE_WIDTH,
@@ -193,7 +192,8 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
     radius: Length,
     cosAlpha: Float,
     rayLength: Length,
-    rayIntersectsGround: Bool
+    rayIntersectsGround: Bool,
+    storeOpticalDepth: boolean
   ): DimensionlessSpectrum => {
     const radiusEnd = clampRadius(
       atmosphere,
@@ -216,13 +216,15 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
             atmosphere,
             transmittanceTexture,
             radiusEnd,
-            cosAlphaEnd.negate()
+            cosAlphaEnd.negate(),
+            false
           ).div(
             getTransmittanceToTopAtmosphereBoundary(
               atmosphere,
               transmittanceTexture,
               radius,
-              cosAlpha.negate()
+              cosAlpha.negate(),
+              false
             )
           ),
           vec3(1)
@@ -235,13 +237,15 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
             atmosphere,
             transmittanceTexture,
             radius,
-            cosAlpha
+            cosAlpha,
+            false
           ).div(
             getTransmittanceToTopAtmosphereBoundary(
               atmosphere,
               transmittanceTexture,
               radiusEnd,
-              cosAlphaEnd
+              cosAlphaEnd,
+              false
             )
           ),
           vec3(1)
@@ -257,7 +261,8 @@ export const getTransmittanceToSun = /*#__PURE__*/ Fnv(
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
-    cosPhi: Float
+    cosPhi: Float,
+    storeOpticalDepth: boolean
   ): DimensionlessSpectrum => {
     const sinHorizon = atmosphere.bottomRadius.div(radius).toVar()
     const cosHorizon = sqrt(max(sub(1, sinHorizon.mul(sinHorizon)), 0)).negate()
@@ -265,7 +270,8 @@ export const getTransmittanceToSun = /*#__PURE__*/ Fnv(
       atmosphere,
       transmittanceTexture,
       radius,
-      cosPhi
+      cosPhi,
+      storeOpticalDepth
     ).mul(
       smoothstep(
         sinHorizon.negate().mul(atmosphere.sunAngularRadius),
