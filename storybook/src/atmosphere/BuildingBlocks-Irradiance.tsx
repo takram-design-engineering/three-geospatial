@@ -47,7 +47,7 @@ const Content: FC = () => {
           : textures.irradianceTexture
       }
       name='irradiance'
-      zoom={4}
+      zoom={8}
       valueScale={100}
     />
   )

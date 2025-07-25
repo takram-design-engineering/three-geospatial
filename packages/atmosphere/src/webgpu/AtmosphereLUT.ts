@@ -51,7 +51,7 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from '../constants'
 import { rayleighPhaseFunction } from './common'
-import { AtmosphereParams } from './definitions'
+import { AtmosphereParams, type Options } from './definitions'
 import {
   computeDirectIrradianceTexture,
   computeIndirectIrradianceTexture,
@@ -170,6 +170,7 @@ class Context {
   deltaMieScattering: RenderTarget3D
   deltaScatteringDensity: RenderTarget3D
   deltaMultipleScattering: RenderTarget3D
+  options: Options
 
   constructor(textureType: AnyFloatType) {
     if (textureType === HalfFloatType) {
@@ -213,6 +214,10 @@ class Context {
     // deltaRayleighScattering and deltaMultipleScattering in the same GPU
     // texture.
     this.deltaMultipleScattering = this.deltaRayleighScattering
+
+    this.options = {
+      transmittancePrecisionLog: this.opticalDepth != null
+    }
   }
 
   dispose(): void {
@@ -370,14 +375,14 @@ export class AtmosphereLUT {
     renderTarget.textures.length = 1
   }
 
-  private computeTransmittance({ opticalDepth }: Context): void {
+  private computeTransmittance({ opticalDepth, options }: Context): void {
     const result = computeTransmittanceToTopAtmosphereBoundaryTexture(
       this.atmosphere,
       screenCoordinate,
-      opticalDepth != null
-    )
+      options
+    ).toVar()
 
-    if (opticalDepth != null) {
+    if (options.transmittancePrecisionLog === true) {
       // Compute the optical depth, and store it in opticalDepth. Avoid having
       // tiny transmittance values underflow to 0 due to half-float precision.
       this.material.fragmentNode = mrt({
@@ -398,13 +403,14 @@ export class AtmosphereLUT {
 
   private computeDirectIrradiance({
     deltaIrradiance,
-    opticalDepth
+    opticalDepth,
+    options
   }: Context): void {
     const irradiance = computeDirectIrradianceTexture(
       this.atmosphere,
       texture(opticalDepth?.texture ?? this.transmittanceTexture),
       screenCoordinate,
-      opticalDepth != null
+      options
     )
 
     this.material.fragmentNode = mrt({
@@ -426,15 +432,16 @@ export class AtmosphereLUT {
     luminanceFromRadiance,
     deltaRayleighScattering,
     deltaMieScattering,
-    opticalDepth
+    opticalDepth,
+    options
   }: Context): void {
     const layer = uniform(0)
     const singleScattering = computeSingleScatteringTexture(
       this.atmosphere,
       texture(opticalDepth?.texture ?? this.transmittanceTexture),
       vec3(screenCoordinate, layer.add(0.5)),
-      opticalDepth != null
-    )
+      options
+    ).toVar()
     const rayleigh = singleScattering.get('rayleigh')
     const mie = singleScattering.get('mie')
 
@@ -471,7 +478,8 @@ export class AtmosphereLUT {
       deltaMieScattering,
       deltaScatteringDensity,
       deltaMultipleScattering,
-      opticalDepth
+      opticalDepth,
+      options
     }: Context,
     scatteringOrder: number
   ): void {
@@ -485,7 +493,7 @@ export class AtmosphereLUT {
       texture(deltaIrradiance.texture),
       vec3(screenCoordinate, layer.add(0.5)),
       int(scatteringOrder),
-      opticalDepth != null
+      options
     )
 
     this.material.fragmentNode = vec4(radiance, 1)
@@ -512,7 +520,7 @@ export class AtmosphereLUT {
       texture3D(deltaMultipleScattering.texture),
       screenCoordinate,
       int(scatteringOrder - 1)
-    )
+    ).toVar()
 
     this.material.fragmentNode = mrt({
       deltaIrradiance: irradiance,
@@ -533,7 +541,8 @@ export class AtmosphereLUT {
     luminanceFromRadiance,
     deltaScatteringDensity,
     deltaMultipleScattering,
-    opticalDepth
+    opticalDepth,
+    options
   }: Context): void {
     const layer = uniform(0)
     const multipleScattering = computeMultipleScatteringTexture(
@@ -541,13 +550,14 @@ export class AtmosphereLUT {
       texture(opticalDepth?.texture ?? this.transmittanceTexture),
       texture3D(deltaScatteringDensity.texture),
       vec3(screenCoordinate, layer.add(0.5)),
-      opticalDepth != null
-    )
+      options
+    ).toVar()
     const radiance = multipleScattering.get('radiance')
     const cosTheta = multipleScattering.get('cosTheta')
     const luminance = radiance
       .mul(luminanceFromRadiance)
       .div(rayleighPhaseFunction(cosTheta))
+      .toVar()
 
     const mrtLayout: Record<string, Node> = {
       scattering: vec4(luminance, 0),

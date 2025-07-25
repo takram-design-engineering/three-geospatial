@@ -119,3 +119,7 @@ export class AtmosphereParams {
   groundAlbedo = uniform(new Color().setScalar(0.1))
   minCosPhi = uniform(Math.cos(radians(120)))
 }
+
+export interface Options {
+  transmittancePrecisionLog?: boolean
+}
