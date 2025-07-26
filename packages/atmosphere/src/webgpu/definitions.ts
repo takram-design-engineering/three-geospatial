@@ -117,9 +117,13 @@ export class AtmosphereParams {
   }
   absorptionExtinction = uniform(new Vector3(0.00065, 0.001881, 0.000085))
   groundAlbedo = uniform(new Color().setScalar(0.1))
-  minCosPhi = uniform(Math.cos(radians(120)))
+  minCosSun = uniform(Math.cos(radians(120)))
 }
 
 export interface Options {
   transmittancePrecisionLog?: boolean
+  combinedScatteringTextures?: boolean
+  higherOrderScatteringTexture?: boolean
+  constrainCameraAboveGround?: boolean
+  hideGround?: boolean
 }

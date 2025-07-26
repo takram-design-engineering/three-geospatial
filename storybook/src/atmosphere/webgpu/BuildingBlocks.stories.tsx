@@ -7,7 +7,7 @@ import _SingleMieScattering from './BuildingBlocks-SingleMieScattering'
 import _Transmittance from './BuildingBlocks-Transmittance'
 
 export default {
-  title: 'atmosphere/webgpu/Building Blocks',
+  title: 'atmosphere/WebGPU (Experimental)/Building Blocks',
   parameters: {
     layout: 'fullscreen'
   }

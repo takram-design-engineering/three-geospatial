@@ -7,6 +7,7 @@ import {
   FloatType,
   HalfFloatType,
   LinearFilter,
+  Matrix3,
   NoBlending,
   NoColorSpace,
   OneFactor,
@@ -161,8 +162,8 @@ function iterateIdle<T>(iterable: Iterable<T>): Promise<T> {
 }
 
 class Context {
-  lambdas = vec3()
-  luminanceFromRadiance = mat3()
+  lambdas = vec3(680, 550, 440).toVar()
+  luminanceFromRadiance = mat3(new Matrix3().identity()).toVar()
 
   opticalDepth?: RenderTarget
   deltaIrradiance: RenderTarget
@@ -553,10 +554,10 @@ export class AtmosphereLUT {
       options
     ).toVar()
     const radiance = multipleScattering.get('radiance')
-    const cosTheta = multipleScattering.get('cosTheta')
+    const cosViewSun = multipleScattering.get('cosViewSun')
     const luminance = radiance
       .mul(luminanceFromRadiance)
-      .div(rayleighPhaseFunction(cosTheta))
+      .div(rayleighPhaseFunction(cosViewSun))
       .toVar()
 
     const mrtLayout: Record<string, Node> = {
@@ -635,14 +636,11 @@ export class AtmosphereLUT {
   async update(): Promise<void> {
     this.updating = true
 
-    const renderer = this.renderer
     const context = new Context(this.textureType)
-    const autoClear = renderer.autoClear
-    renderer.autoClear = false
-    context.lambdas.value.set(680, 550, 440)
-    context.luminanceFromRadiance.value.identity()
+    const prevAutoClear = this.renderer.autoClear
+    this.renderer.autoClear = false
     await iterateIdle(this.precompute(context))
-    renderer.autoClear = autoClear
+    this.renderer.autoClear = prevAutoClear
     context.dispose()
 
     this.updating = false

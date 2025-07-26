@@ -1,9 +1,67 @@
+// Based on: https://github.com/ebruneton/precomputed_atmospheric_scattering/blob/master/atmosphere/functions.glsl
+
+/**
+ * Copyright (c) 2017 Eric Bruneton
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holders nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Precomputed Atmospheric Scattering
+ * Copyright (c) 2008 INRIA
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holders nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 import {
   add,
   bool,
   clamp,
   cos,
-  dot,
   equal,
   exp,
   float,
@@ -12,7 +70,6 @@ import {
   Loop,
   max,
   min,
-  mod,
   mul,
   normalize,
   PI,
@@ -47,7 +104,7 @@ import {
   distanceToBottomAtmosphereBoundary,
   distanceToTopAtmosphereBoundary,
   getIrradiance,
-  getScatteringTextureCoord,
+  getScattering,
   getTransmittance,
   getTransmittanceToSun,
   getTransmittanceToTopAtmosphereBoundary,
@@ -56,8 +113,6 @@ import {
   rayleighPhaseFunction
 } from './common'
 import type {
-  AbstractScatteringTexture,
-  AbstractSpectrum,
   AtmosphereParams,
   Bool,
   DensityProfile,
@@ -86,51 +141,6 @@ declare module 'three/src/nodes/TSL.js' {
   }
 }
 
-const TransmittanceParamsStruct = /*#__PURE__*/ struct({
-  radius: 'float',
-  cosAlpha: 'float'
-})
-
-const ScatteringParamsStruct = /*#__PURE__*/ struct({
-  radius: 'float',
-  cosAlpha: 'float',
-  cosPhi: 'float',
-  cosTheta: 'float',
-  rayIntersectsGround: 'bool'
-})
-
-const IrradianceParamsStruct = /*#__PURE__*/ struct({
-  radius: 'float',
-  cosPhi: 'float'
-})
-
-const SingleScatteringStruct = /*#__PURE__*/ struct({
-  rayleigh: 'vec3',
-  mie: 'vec3'
-})
-
-const MultipleScatteringStruct = /*#__PURE__*/ struct({
-  radiance: 'vec3',
-  cosTheta: 'float'
-})
-
-const TRANSMITTANCE_TEXTURE_SIZE = /*#__PURE__*/ vec2(
-  TRANSMITTANCE_TEXTURE_WIDTH,
-  TRANSMITTANCE_TEXTURE_HEIGHT
-).toConst()
-
-const IRRADIANCE_TEXTURE_SIZE = /*#__PURE__*/ vec2(
-  IRRADIANCE_TEXTURE_WIDTH,
-  IRRADIANCE_TEXTURE_HEIGHT
-).toConst()
-
-const SCATTERING_TEXTURE_SIZE = /*#__PURE__*/ vec4(
-  SCATTERING_TEXTURE_NU_SIZE - 1,
-  SCATTERING_TEXTURE_MU_S_SIZE,
-  SCATTERING_TEXTURE_MU_SIZE,
-  SCATTERING_TEXTURE_R_SIZE
-).toConst()
-
 export const getLayerDensity = /*#__PURE__*/ Fnv(
   (layer: DensityProfileLayer, altitude: Length): Float => {
     return layer.expTerm
@@ -156,34 +166,29 @@ export const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
     atmosphere: AtmosphereParams,
     profile: DensityProfile,
     radius: Length,
-    cosAlpha: Float
+    cosView: Float
   ): Length => {
     const SAMPLE_COUNT = 500
-
-    // The integration step, i.e. the length of each integration interval.
     const stepSize = distanceToTopAtmosphereBoundary(
       atmosphere,
       radius,
-      cosAlpha
+      cosView
     )
       .div(SAMPLE_COUNT)
       .toVar()
 
     const opticalDepth = float(0).toVar()
     Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
-      const rayLength = mul(float(i), stepSize).toVar()
+      const rayLength = float(i).mul(stepSize).toVar()
 
       // Distance between the current sample point and the planet center.
       const r = sqrt(
-        add(
-          rayLength.pow2(),
-          mul(2, radius, cosAlpha, rayLength),
-          radius.pow2()
-        )
+        add(rayLength.pow2(), mul(2, radius, cosView, rayLength), radius.pow2())
       ).toVar()
 
-      // Number density at the current sample point (divided by the number density
-      // at the bottom of the atmosphere, yielding a dimensionless number).
+      // Number density at the current sample point (divided by the number
+      // density at the bottom of the atmosphere, yielding a dimensionless
+      // number).
       const y = getProfileDensity(r.sub(atmosphere.bottomRadius), profile)
 
       // Sample weight from the trapezoidal rule.
@@ -199,8 +204,8 @@ export const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     radius: Length,
-    cosAlpha: Float,
-    options?: Options
+    cosView: Float,
+    options: Options
   ): DimensionlessSpectrum => {
     const opticalDepth = add(
       atmosphere.rayleighScattering.mul(
@@ -208,7 +213,7 @@ export const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
           atmosphere,
           atmosphere.rayleighDensity,
           radius,
-          cosAlpha
+          cosView
         )
       ),
       atmosphere.mieExtinction.mul(
@@ -216,7 +221,7 @@ export const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
           atmosphere,
           atmosphere.mieDensity,
           radius,
-          cosAlpha
+          cosView
         )
       ),
       atmosphere.absorptionExtinction.mul(
@@ -224,7 +229,7 @@ export const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
           atmosphere,
           atmosphere.absorptionDensity,
           radius,
-          cosAlpha
+          cosView
         )
       )
     ).toVar()
@@ -244,9 +249,15 @@ export const getUnitRangeFromTextureCoord = /*#__PURE__*/ Fnv(
   }
 )
 
-export const getParamsFromTransmittanceTextureUv = /*#__PURE__*/ Fnv(
-  (atmosphere: AtmosphereParams, uv: Vec2): StructNode => {
-    const cosAlphaUnit = getUnitRangeFromTextureCoord(
+const transmittanceParamsStruct = /*#__PURE__*/ struct({
+  radius: 'float',
+  cosView: 'float'
+})
+type TransmittanceParamsStruct = ShaderNodeObject<StructNode>
+
+export const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
+  (atmosphere: AtmosphereParams, uv: Vec2): TransmittanceParamsStruct => {
+    const cosViewUnit = getUnitRangeFromTextureCoord(
       uv.x,
       TRANSMITTANCE_TEXTURE_WIDTH
     )
@@ -260,21 +271,21 @@ export const getParamsFromTransmittanceTextureUv = /*#__PURE__*/ Fnv(
       atmosphere.topRadius.pow2().sub(atmosphere.bottomRadius.pow2())
     ).toVar()
 
-    // Distance to the horizon, from which we can compute r:
+    // Distance to the horizon, from which we can compute radius.
     const distanceToHorizon = H.mul(radiusUnit).toVar()
     const radius = sqrt(
       distanceToHorizon.pow2().add(atmosphere.bottomRadius.pow2())
     )
 
-    // Distance to the top atmosphere boundary for the ray (r,mu), and its
-    // minimum and maximum values over all mu - obtained for (r,1) and
-    // (r,mu_horizon) - from which we can recover mu:
+    // Distance to the top atmosphere boundary for the ray (radius, cosView),
+    // and its minimum and maximum values over all cosView - obtained for
+    // (radius, 1) and (radius, cosHorizon) - from which we can recover cosView.
     const minDistance = atmosphere.topRadius.sub(radius).toVar()
     const maxDistance = distanceToHorizon.add(H)
     const distance = minDistance
-      .add(cosAlphaUnit.mul(maxDistance.sub(minDistance)))
+      .add(cosViewUnit.mul(maxDistance.sub(minDistance)))
       .toVar()
-    const cosAlpha = select(
+    const cosView = select(
       distance.equal(0),
       1,
       H.pow2()
@@ -282,59 +293,70 @@ export const getParamsFromTransmittanceTextureUv = /*#__PURE__*/ Fnv(
         .sub(distance.pow2())
         .div(radius.mul(2).mul(distance))
     )
-    return TransmittanceParamsStruct(radius, cosAlpha)
+    return transmittanceParamsStruct(radius, cosView)
   }
 )
+
+const TRANSMITTANCE_TEXTURE_SIZE = /*#__PURE__*/ vec2(
+  TRANSMITTANCE_TEXTURE_WIDTH,
+  TRANSMITTANCE_TEXTURE_HEIGHT
+).toConst()
 
 export const computeTransmittanceToTopAtmosphereBoundaryTexture =
   /*#__PURE__*/ Fnv(
     (
       atmosphere: AtmosphereParams,
       fragCoord: Vec2,
-      options?: Options
+      options: Options
     ): DimensionlessSpectrum => {
-      const params = getParamsFromTransmittanceTextureUv(
+      const params = getParamsFromTransmittanceTextureUV(
         atmosphere,
         fragCoord.div(TRANSMITTANCE_TEXTURE_SIZE)
       )
       return computeTransmittanceToTopAtmosphereBoundary(
         atmosphere,
         params.get('radius'),
-        params.get('cosAlpha'),
+        params.get('cosView'),
         options
       )
     }
   )
+
+const singleScatteringStruct = /*#__PURE__*/ struct({
+  rayleigh: 'vec3',
+  mie: 'vec3'
+})
+type SingleScatteringStruct = ShaderNodeObject<StructNode>
 
 export const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
-    cosAlpha: Float,
-    cosPhi: Float,
-    cosTheta: Float,
+    cosView: Float,
+    cosSun: Float,
+    cosViewSun: Float,
     rayLength: Length,
     rayIntersectsGround: Bool,
-    options?: Options
-  ): StructNode => {
+    options: Options
+  ): SingleScatteringStruct => {
     const radiusEnd = clampRadius(
       atmosphere,
       sqrt(
         rayLength
           .pow2()
-          .add(radius.mul(2).mul(cosAlpha).mul(rayLength))
+          .add(radius.mul(2).mul(cosView).mul(rayLength))
           .add(radius.pow2())
       )
     ).toVar()
-    const cosPhiEnd = clampCosine(
-      radius.mul(cosPhi).add(rayLength.mul(cosTheta)).div(radiusEnd)
+    const cosSunEnd = clampCosine(
+      radius.mul(cosSun).add(rayLength.mul(cosViewSun)).div(radiusEnd)
     )
     const transmittance = getTransmittance(
       atmosphere,
       transmittanceTexture,
       radius,
-      cosAlpha,
+      cosView,
       rayLength,
       rayIntersectsGround,
       options
@@ -344,7 +366,7 @@ export const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
           atmosphere,
           transmittanceTexture,
           radiusEnd,
-          cosPhiEnd,
+          cosSunEnd,
           options
         )
       )
@@ -362,7 +384,7 @@ export const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
         atmosphere.mieDensity
       )
     )
-    return SingleScatteringStruct(rayleigh, mie)
+    return singleScatteringStruct(rayleigh, mie)
   }
 )
 
@@ -370,17 +392,17 @@ export const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     radius: Length,
-    cosAlpha: Float,
+    cosView: Float,
     rayIntersectsGround: Bool
   ): Length => {
     const result = float().toVar()
     If(rayIntersectsGround, () => {
       result.assign(
-        distanceToBottomAtmosphereBoundary(atmosphere, radius, cosAlpha)
+        distanceToBottomAtmosphereBoundary(atmosphere, radius, cosView)
       )
     }).Else(() => {
       result.assign(
-        distanceToTopAtmosphereBoundary(atmosphere, radius, cosAlpha)
+        distanceToTopAtmosphereBoundary(atmosphere, radius, cosView)
       )
     })
     return result
@@ -392,19 +414,17 @@ export const computeSingleScattering = /*#__PURE__*/ Fnv(
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
-    cosAlpha: Float,
-    cosPhi: Float,
-    cosTheta: Float,
+    cosView: Float,
+    cosSun: Float,
+    cosViewSun: Float,
     rayIntersectsGround: Bool,
-    options?: Options
-  ) => {
+    options: Options
+  ): SingleScatteringStruct => {
     const SAMPLE_COUNT = 50
-
-    // The integration step, i.e. the length of each integration interval.
     const stepSize = distanceToNearestAtmosphereBoundary(
       atmosphere,
       radius,
-      cosAlpha,
+      cosView,
       rayIntersectsGround
     )
       .div(SAMPLE_COUNT)
@@ -413,16 +433,16 @@ export const computeSingleScattering = /*#__PURE__*/ Fnv(
     const rayleighSum = vec3(0).toVar()
     const mieSum = vec3(0).toVar()
     Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
-      const rayLength = mul(float(i), stepSize)
+      const rayLength = float(i).mul(stepSize)
 
       // The Rayleigh and Mie single scattering at the current sample point.
       const deltaRayleighMie = computeSingleScatteringIntegrand(
         atmosphere,
         transmittanceTexture,
         radius,
-        cosAlpha,
-        cosPhi,
-        cosTheta,
+        cosView,
+        cosSun,
+        cosViewSun,
         rayLength,
         rayIntersectsGround,
         options
@@ -444,12 +464,21 @@ export const computeSingleScattering = /*#__PURE__*/ Fnv(
       .mul(stepSize)
       .mul(atmosphere.solarIrradiance)
       .mul(atmosphere.mieScattering)
-    return SingleScatteringStruct(rayleigh, mie)
+    return singleScatteringStruct(rayleigh, mie)
   }
 )
 
+const scatteringParamsStruct = /*#__PURE__*/ struct({
+  radius: 'float',
+  cosView: 'float',
+  cosSun: 'float',
+  cosViewSun: 'float',
+  rayIntersectsGround: 'bool'
+})
+type ScatteringParamsStruct = ShaderNodeObject<StructNode>
+
 export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
-  (atmosphere: AtmosphereParams, coord: Vec4) => {
+  (atmosphere: AtmosphereParams, coord: Vec4): ScatteringParamsStruct => {
     // Distance to top atmosphere boundary for a horizontal ray at ground level.
     const H = sqrt(
       sub(atmosphere.topRadius.pow2(), atmosphere.bottomRadius.pow2())
@@ -463,12 +492,12 @@ export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
       add(distanceToHorizon.pow2(), atmosphere.bottomRadius.pow2())
     )
 
-    const cosAlpha = float().toVar()
+    const cosView = float().toVar()
     const rayIntersectsGround = bool().toVar()
     If(coord.z.lessThan(0.5), () => {
-      // Distance to the ground for the ray (r,mu), and its minimum and maximum
-      // values over all mu - obtained for (r,-1) and (r,mu_horizon) - from which
-      // we can recover mu:
+      // Distance to the ground for the ray (radius, cosView), and its minimum
+      // and maximum values over all cosView - obtained for (radius, -1) and
+      // (radius, cosHorizon) - from which we can recover cosView.
       const minDistance = radius.sub(atmosphere.bottomRadius).toVar()
       const maxDistance = distanceToHorizon
       const distance = minDistance
@@ -483,10 +512,10 @@ export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
             )
         )
         .toVar()
-      cosAlpha.assign(
+      cosView.assign(
         select(
           distance.equal(0),
-          float(-1),
+          -1,
           clampCosine(
             distanceToHorizon
               .pow2()
@@ -498,9 +527,10 @@ export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
       )
       rayIntersectsGround.assign(bool(true))
     }).Else(() => {
-      // Distance to the top atmosphere boundary for the ray (r,mu), and its
-      // minimum and maximum values over all mu - obtained for (r,1) and
-      // (r,mu_horizon) - from which we can recover mu:
+      // Distance to the top atmosphere boundary for the ray (radius, cosView),
+      // and its minimum and maximum values over all cosView - obtained for
+      // (radius, 1) and (radius, cosHorizon) - from which we can recover
+      // cosView.
       const minDistance = atmosphere.topRadius.sub(radius).toVar()
       const maxDistance = distanceToHorizon.add(H)
       const distance = minDistance
@@ -515,7 +545,7 @@ export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
             )
         )
         .toVar()
-      cosAlpha.assign(
+      cosView.assign(
         select(
           distance.equal(0),
           1,
@@ -530,7 +560,7 @@ export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
       rayIntersectsGround.assign(bool(false))
     })
 
-    const cosPhiUnit = getUnitRangeFromTextureCoord(
+    const cosSunUnit = getUnitRangeFromTextureCoord(
       coord.y,
       SCATTERING_TEXTURE_MU_S_SIZE
     ).toVar()
@@ -541,14 +571,14 @@ export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
     const D = distanceToTopAtmosphereBoundary(
       atmosphere,
       atmosphere.bottomRadius,
-      atmosphere.minCosPhi
+      atmosphere.minCosSun
     )
     const A = remap(D, minDistance, maxDistance).toVar()
-    const a = A.sub(cosPhiUnit.mul(A)).div(cosPhiUnit.mul(A).add(1))
+    const a = A.sub(cosSunUnit.mul(A)).div(cosSunUnit.mul(A).add(1))
     const distance = minDistance
       .add(min(a, A).mul(maxDistance.sub(minDistance)))
       .toVar()
-    const cosPhi = select(
+    const cosSun = select(
       distance.equal(0),
       1,
       clampCosine(
@@ -557,54 +587,61 @@ export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
           .div(atmosphere.bottomRadius.mul(2).mul(distance))
       )
     )
-    const cosTheta = clampCosine(coord.x.mul(2).sub(1))
+    const cosViewSun = clampCosine(coord.x.mul(2).sub(1))
 
-    return ScatteringParamsStruct(
+    return scatteringParamsStruct(
       radius,
-      cosAlpha,
-      cosPhi,
-      cosTheta,
+      cosView,
+      cosSun,
+      cosViewSun,
       rayIntersectsGround
     )
   }
 )
 
+const SCATTERING_TEXTURE_SIZE = /*#__PURE__*/ vec4(
+  SCATTERING_TEXTURE_NU_SIZE - 1,
+  SCATTERING_TEXTURE_MU_S_SIZE,
+  SCATTERING_TEXTURE_MU_SIZE,
+  SCATTERING_TEXTURE_R_SIZE
+).toConst()
+
 export const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
-  (atmosphere: AtmosphereParams, fragCoord: Vec3) => {
-    const fragCoordCosTheta = floor(
+  (atmosphere: AtmosphereParams, fragCoord: Vec3): ScatteringParamsStruct => {
+    const fragCoordCosViewSun = floor(
       fragCoord.x.div(SCATTERING_TEXTURE_MU_S_SIZE)
     )
-    const fragCoordCosPhi = mod(fragCoord.x, SCATTERING_TEXTURE_MU_S_SIZE)
+    const fragCoordCosSun = fragCoord.x.mod(SCATTERING_TEXTURE_MU_S_SIZE)
     const coord = vec4(
-      fragCoordCosTheta,
-      fragCoordCosPhi,
+      fragCoordCosViewSun,
+      fragCoordCosSun,
       fragCoord.y,
       fragCoord.z
     ).div(SCATTERING_TEXTURE_SIZE)
     const params = getParamsFromScatteringTextureCoord(atmosphere, coord)
     const radius = params.get('radius')
-    const cosAlpha = params.get('cosAlpha')
-    const cosPhi = params.get('cosPhi')
-    const cosTheta = params.get('cosTheta')
+    const cosView = params.get('cosView')
+    const cosSun = params.get('cosSun')
+    const cosViewSun = params.get('cosViewSun')
     const rayIntersectsGround = params.get('rayIntersectsGround')
 
-    // Clamp nu to its valid range of values, given mu and mu_s.
-    cosTheta.assign(
+    // Clamp cosViewSun to its valid range of values, given cosView and cosSun.
+    cosViewSun.assign(
       clamp(
-        cosTheta,
-        cosAlpha
-          .mul(cosPhi)
-          .sub(sqrt(cosAlpha.pow2().oneMinus().mul(cosPhi.pow2().oneMinus()))),
-        cosAlpha
-          .mul(cosPhi)
-          .add(sqrt(cosAlpha.pow2().oneMinus().mul(cosPhi.pow2().oneMinus())))
+        cosViewSun,
+        cosView
+          .mul(cosSun)
+          .sub(sqrt(cosView.pow2().oneMinus().mul(cosSun.pow2().oneMinus()))),
+        cosView
+          .mul(cosSun)
+          .add(sqrt(cosView.pow2().oneMinus().mul(cosSun.pow2().oneMinus())))
       )
     )
-    return ScatteringParamsStruct(
+    return scatteringParamsStruct(
       radius,
-      cosAlpha,
-      cosPhi,
-      cosTheta,
+      cosView,
+      cosSun,
+      cosViewSun,
       rayIntersectsGround
     )
   }
@@ -615,116 +652,78 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ Fnv(
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
     fragCoord: Vec3,
-    options?: Options
+    options: Options
   ) => {
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
       fragCoord
     )
     const radius = params.get('radius')
-    const cosAlpha = params.get('cosAlpha')
-    const cosPhi = params.get('cosPhi')
-    const cosTheta = params.get('cosTheta')
+    const cosView = params.get('cosView')
+    const cosSun = params.get('cosSun')
+    const cosViewSun = params.get('cosViewSun')
     const rayIntersectsGround = params.get('rayIntersectsGround')
     return computeSingleScattering(
       atmosphere,
       transmittanceTexture,
       radius,
-      cosAlpha,
-      cosPhi,
-      cosTheta,
+      cosView,
+      cosSun,
+      cosViewSun,
       rayIntersectsGround,
       options
     )
   }
 )
 
-export const getScattering0 = /*#__PURE__*/ Fnv(
-  (
-    atmosphere: AtmosphereParams,
-    scatteringTexture: AbstractScatteringTexture,
-    radius: Length,
-    cosAlpha: Float,
-    cosPhi: Float,
-    cosTheta: Float,
-    rayIntersectsGround: Bool
-  ): AbstractSpectrum => {
-    const coord = getScatteringTextureCoord(
-      atmosphere,
-      radius,
-      cosAlpha,
-      cosPhi,
-      cosTheta,
-      rayIntersectsGround
-    ).toVar()
-    const texCoordX = coord.x.mul(SCATTERING_TEXTURE_NU_SIZE - 1).toVar()
-    const texX = floor(texCoordX).toVar()
-    const lerp = texCoordX.sub(texX).toVar()
-    const coord0 = vec3(
-      texX.add(coord.y).div(SCATTERING_TEXTURE_NU_SIZE),
-      coord.z,
-      coord.w
-    )
-    const coord1 = vec3(
-      texX.add(1).add(coord.y).div(SCATTERING_TEXTURE_NU_SIZE),
-      coord.z,
-      coord.w
-    )
-    return scatteringTexture
-      .sample(coord0)
-      .mul(lerp.oneMinus())
-      .add(scatteringTexture.sample(coord1).mul(lerp)).rgb
-  }
-)
-
-export const getScattering1 = /*#__PURE__*/ Fnv(
+export const getScatteringForOrder = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     singleRayleighScatteringTexture: ReducedScatteringTexture,
     singleMieScatteringTexture: ReducedScatteringTexture,
     multipleScatteringTexture: ScatteringTexture,
     radius: Length,
-    cosAlpha: Float,
-    cosPhi: Float,
-    cosTheta: Float,
+    cosView: Float,
+    cosSun: Float,
+    cosViewSun: Float,
     rayIntersectsGround: Bool,
     scatteringOrder: Int
   ): RadianceSpectrum => {
     const result = vec3().toVar()
     If(scatteringOrder.equal(1), () => {
-      const rayleigh = getScattering0(
+      const rayleigh = getScattering(
         atmosphere,
         singleRayleighScatteringTexture,
         radius,
-        cosAlpha,
-        cosPhi,
-        cosTheta,
+        cosView,
+        cosSun,
+        cosViewSun,
         rayIntersectsGround
       )
-      const mie = getScattering0(
+      const mie = getScattering(
         atmosphere,
         singleMieScatteringTexture,
         radius,
-        cosAlpha,
-        cosPhi,
-        cosTheta,
+        cosView,
+        cosSun,
+        cosViewSun,
         rayIntersectsGround
       )
       result.assign(
         add(
-          rayleigh.mul(rayleighPhaseFunction(cosTheta)),
-          mie.mul(miePhaseFunction(atmosphere.miePhaseFunctionG, cosTheta))
+          rayleigh.mul(rayleighPhaseFunction(cosViewSun)),
+          mie.mul(miePhaseFunction(atmosphere.miePhaseFunctionG, cosViewSun))
         )
       )
     }).Else(() => {
       result.assign(
-        getScattering0(
+        getScattering(
           atmosphere,
           multipleScatteringTexture,
           radius,
-          cosAlpha,
-          cosPhi,
-          cosTheta,
+          cosView,
+          cosSun,
+          cosViewSun,
           rayIntersectsGround
         )
       )
@@ -742,36 +741,36 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
     multipleScatteringTexture: ScatteringTexture,
     irradianceTexture: IrradianceTexture,
     radius: Length,
-    cosAlpha: Float,
-    cosPhi: Float,
-    cosTheta: Float,
+    cosView: Float,
+    cosSun: Float,
+    cosViewSun: Float,
     scatteringOrder: Int,
-    options?: Options
+    options: Options
   ): RadianceDensitySpectrum => {
     // Compute unit direction vectors for the zenith, the view direction omega
-    // and and the sun direction omega_s, such that the cosine of the
-    // view-zenith angle is mu, the cosine of the sun-zenith angle is mu_s, and
-    // the cosine of the view-sun angle is nu. The goal is to simplify
+    // and the sun direction omegaSun, such that the cosine of the view-zenith
+    // angle is cosView, the cosine of the sun-zenith angle is cosSun, and
+    // the cosine of the view-sun angle is cosViewSun. The goal is to simplify
     // computations below.
     const zenithDirection = vec3(0, 0, 1).toConst()
-    const omega = vec3(sqrt(cosAlpha.pow2().oneMinus()), 0, cosAlpha).toVar()
+    const omega = vec3(sqrt(cosView.pow2().oneMinus()), 0, cosView).toVar()
     const sunDirectionX = select(
       omega.x.equal(0),
       0,
-      cosTheta.sub(cosAlpha.mul(cosPhi)).div(omega.x)
+      cosViewSun.sub(cosView.mul(cosSun)).div(omega.x)
     ).toVar()
     const sunDirectionY = sqrt(
-      max(sunDirectionX.pow2().add(cosPhi.pow2()).oneMinus(), 0)
+      max(sunDirectionX.pow2().add(cosSun.pow2()).oneMinus(), 0)
     )
-    const omegaS = vec3(sunDirectionX, sunDirectionY, cosPhi)
+    const omegaSun = vec3(sunDirectionX, sunDirectionY, cosSun).toVar()
     const SAMPLE_COUNT = 16
-    const dPhi = PI.div(SAMPLE_COUNT)
-    const dTheta = PI.div(SAMPLE_COUNT)
+    const deltaPhi = PI.div(SAMPLE_COUNT).toConst()
+    const deltaTheta = PI.div(SAMPLE_COUNT).toConst()
     const radiance = vec3(0).toVar()
 
-    // Nested loops for the integral over all the incident directions omega_i.
+    // Nested loops for the integral over all the incident directions omegaI.
     Loop({ start: 0, end: SAMPLE_COUNT }, ({ i: l }) => {
-      const theta = float(l).add(0.5).mul(dTheta)
+      const theta = float(l).add(0.5).mul(deltaTheta)
       const cosTheta = cos(theta).toVar()
       const sinTheta = sin(theta).toVar()
       const rayRadiusThetaIntersectsGround = rayIntersectsGround(
@@ -785,7 +784,6 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
       const distanceToGround = float(0).toVar()
       const transmittanceToGround = vec3(0).toVar()
       const groundAlbedo = vec3(0).toVar()
-
       If(rayRadiusThetaIntersectsGround, () => {
         distanceToGround.assign(
           distanceToBottomAtmosphereBoundary(atmosphere, radius, cosTheta)
@@ -805,27 +803,27 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
       })
 
       Loop({ start: 0, end: mul(SAMPLE_COUNT, 2) }, ({ i: m }) => {
-        const phi = float(m).add(0.5).mul(dPhi).toVar()
+        const phi = float(m).add(0.5).mul(deltaPhi).toVar()
         const omegaI = vec3(
           cos(phi).mul(sinTheta),
           sin(phi).mul(sinTheta),
           cosTheta
         ).toVar()
-        const dOmegaI = dTheta.mul(dPhi).mul(sin(theta)).toVar()
+        const dOmegaI = deltaTheta.mul(deltaPhi).mul(sin(theta)).toVar()
 
-        // The radiance L_i arriving from direction omega_i after n-1 bounces is
-        // the sum of a term given by the precomputed scattering texture for the
+        // The radiance arriving from direction omegaI after n-1 bounces is the
+        // sum of a term given by the precomputed scattering texture for the
         // (n-1)-th order:
-        const cosTheta1 = dot(omegaS, omegaI)
-        const incidentRadiance = getScattering1(
+        const cosViewSun1 = omegaSun.dot(omegaI)
+        const incidentRadiance = getScatteringForOrder(
           atmosphere,
           singleRayleighScatteringTexture,
           singleMieScatteringTexture,
           multipleScatteringTexture,
           radius,
           omegaI.z,
-          cosPhi,
-          cosTheta1,
+          cosSun,
+          cosViewSun1,
           rayRadiusThetaIntersectsGround,
           scatteringOrder.sub(1)
         ).toVar()
@@ -841,18 +839,18 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
           atmosphere,
           irradianceTexture,
           atmosphere.bottomRadius,
-          dot(groundNormal, omegaS)
+          groundNormal.dot(omegaSun)
         )
         incidentRadiance.addAssign(
           transmittanceToGround.mul(groundAlbedo).div(PI).mul(groundIrradiance)
         )
 
-        // The radiance finally scattered from direction omega_i towards
+        // The radiance finally scattered from direction omegaI towards
         // direction -omega is the product of the incident radiance, the
         // scattering coefficient, and the phase function for directions omega
-        // and omega_i (all this summed over all particle types, i.e. Rayleigh
+        // and omegaI (all this summed over all particle types, i.e. Rayleigh
         // and Mie).
-        const cosTheta2 = dot(omega, omegaI).toVar()
+        const cosViewSun2 = omega.dot(omegaI).toVar()
         const rayleighDensity = getProfileDensity(
           radius.sub(atmosphere.bottomRadius),
           atmosphere.rayleighDensity
@@ -867,11 +865,11 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
               add(
                 atmosphere.rayleighScattering
                   .mul(rayleighDensity)
-                  .mul(rayleighPhaseFunction(cosTheta2)),
+                  .mul(rayleighPhaseFunction(cosViewSun2)),
                 atmosphere.mieScattering
                   .mul(mieDensity)
                   .mul(
-                    miePhaseFunction(atmosphere.miePhaseFunctionG, cosTheta2)
+                    miePhaseFunction(atmosphere.miePhaseFunctionG, cosViewSun2)
                   )
               )
             )
@@ -890,19 +888,17 @@ export const computeMultipleScattering = /*#__PURE__*/ Fnv(
     transmittanceTexture: TransmittanceTexture,
     scatteringDensityTexture: ScatteringDensityTexture,
     radius: Length,
-    cosAlpha: Float,
-    cosPhi: Float,
-    cosTheta: Float,
+    cosView: Float,
+    cosSun: Float,
+    cosViewSun: Float,
     rayIntersectsGround: Bool,
-    options?: Options
+    options: Options
   ): RadianceSpectrum => {
     const SAMPLE_COUNT = 50
-
-    // The integration step, i.e. the length of each integration interval.
     const stepSize = distanceToNearestAtmosphereBoundary(
       atmosphere,
       radius,
-      cosAlpha,
+      cosView,
       rayIntersectsGround
     )
       .div(SAMPLE_COUNT)
@@ -912,32 +908,32 @@ export const computeMultipleScattering = /*#__PURE__*/ Fnv(
     Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
       const rayLength = float(i).mul(stepSize)
 
-      // The r, mu and mu_s parameters at the current integration point (see the
-      // single scattering section for a detailed explanation).
+      // The radius, cosView and cosSun parameters at the current integration
+      // point (see the single scattering section for a detailed explanation).
       const radiusI = clampRadius(
         atmosphere,
         sqrt(
           rayLength
             .mul(rayLength)
-            .add(radius.mul(2).mul(cosAlpha).mul(rayLength))
+            .add(radius.mul(2).mul(cosView).mul(rayLength))
             .add(radius.mul(radius))
         )
       )
-      const cosAlphaI = clampCosine(
-        radius.mul(cosAlpha).add(rayLength).div(radiusI)
+      const cosViewI = clampCosine(
+        radius.mul(cosView).add(rayLength).div(radiusI)
       )
-      const cosPhiI = clampCosine(
-        radius.mul(cosPhi).add(rayLength.mul(cosTheta)).div(radiusI)
+      const cosSunI = clampCosine(
+        radius.mul(cosSun).add(rayLength.mul(cosViewSun)).div(radiusI)
       )
 
       // The Rayleigh and Mie multiple scattering at the current sample point.
-      const radiance = getScattering0(
+      const radiance = getScattering(
         atmosphere,
         scatteringDensityTexture,
         radiusI,
-        cosAlphaI,
-        cosPhiI,
-        cosTheta,
+        cosViewI,
+        cosSunI,
+        cosViewSun,
         rayIntersectsGround
       )
         .mul(
@@ -945,7 +941,7 @@ export const computeMultipleScattering = /*#__PURE__*/ Fnv(
             atmosphere,
             transmittanceTexture,
             radius,
-            cosAlpha,
+            cosView,
             rayLength,
             rayIntersectsGround,
             options
@@ -972,16 +968,16 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
     irradianceTexture: IrradianceTexture,
     fragCoord: Vec3,
     scatteringOrder: Int,
-    options?: Options
+    options: Options
   ): RadianceDensitySpectrum => {
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
       fragCoord
     )
     const radius = params.get('radius')
-    const cosAlpha = params.get('cosAlpha')
-    const cosPhi = params.get('cosPhi')
-    const cosTheta = params.get('cosTheta')
+    const cosView = params.get('cosView')
+    const cosSun = params.get('cosSun')
+    const cosViewSun = params.get('cosViewSun')
     return computeScatteringDensity(
       atmosphere,
       transmittanceTexture,
@@ -990,14 +986,20 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
       multipleScatteringTexture,
       irradianceTexture,
       radius,
-      cosAlpha,
-      cosPhi,
-      cosTheta,
+      cosView,
+      cosSun,
+      cosViewSun,
       scatteringOrder,
       options
     )
   }
 )
+
+const multipleScatteringStruct = /*#__PURE__*/ struct({
+  radiance: 'vec3',
+  cosViewSun: 'float'
+})
+type MultipleScatteringStruct = ShaderNodeObject<StructNode>
 
 export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
   (
@@ -1005,29 +1007,29 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
     transmittanceTexture: TransmittanceTexture,
     scatteringDensityTexture: ScatteringDensityTexture,
     fragCoord: Vec3,
-    options?: Options
-  ): RadianceSpectrum => {
+    options: Options
+  ): MultipleScatteringStruct => {
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
       fragCoord
     )
     const radius = params.get('radius')
-    const cosAlpha = params.get('cosAlpha')
-    const cosPhi = params.get('cosPhi')
-    const cosTheta = params.get('cosTheta')
+    const cosView = params.get('cosView')
+    const cosSun = params.get('cosSun')
+    const cosViewSun = params.get('cosViewSun')
     const rayIntersectsGround = params.get('rayIntersectsGround')
     const radiance = computeMultipleScattering(
       atmosphere,
       transmittanceTexture,
       scatteringDensityTexture,
       radius,
-      cosAlpha,
-      cosPhi,
-      cosTheta,
+      cosView,
+      cosSun,
+      cosViewSun,
       rayIntersectsGround,
       options
     )
-    return MultipleScatteringStruct(radiance, cosTheta)
+    return multipleScatteringStruct(radiance, cosViewSun)
   }
 )
 
@@ -1036,20 +1038,20 @@ export const computeDirectIrradiance = /*#__PURE__*/ Fnv(
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
-    cosPhi: Float,
-    options?: Options
+    cosSun: Float,
+    options: Options
   ): IrradianceSpectrum => {
     const alpha = atmosphere.sunAngularRadius
 
-    // Approximate average of the cosine factor mu_s over the visible fraction
+    // Approximate average of the cosine factor cosSun over the visible fraction
     // of the Sun disc.
     const averageCosineFactor = select(
-      cosPhi.lessThan(alpha.negate()),
+      cosSun.lessThan(alpha.negate()),
       0,
       select(
-        cosPhi.greaterThan(alpha),
-        cosPhi,
-        cosPhi.add(alpha).pow2().div(alpha.mul(4))
+        cosSun.greaterThan(alpha),
+        cosSun,
+        cosSun.add(alpha).pow2().div(alpha.mul(4))
       )
     )
 
@@ -1059,7 +1061,7 @@ export const computeDirectIrradiance = /*#__PURE__*/ Fnv(
           atmosphere,
           transmittanceTexture,
           radius,
-          cosPhi,
+          cosSun,
           options
         )
       )
@@ -1074,15 +1076,15 @@ export const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
     singleMieScatteringTexture: ReducedScatteringTexture,
     multipleScatteringTexture: ScatteringTexture,
     radius: Length,
-    cosPhi: Float,
+    cosSun: Float,
     scatteringOrder: Int
   ): IrradianceSpectrum => {
     const SAMPLE_COUNT = 32
-    const deltaPhi = PI.div(SAMPLE_COUNT).toVar()
-    const deltaTheta = PI.div(SAMPLE_COUNT).toVar()
+    const deltaPhi = PI.div(SAMPLE_COUNT).toConst()
+    const deltaTheta = PI.div(SAMPLE_COUNT).toConst()
 
     const result = vec3(0).toVar()
-    const omegaS = vec3(sqrt(cosPhi.pow2().oneMinus()), 0, cosPhi).toVar()
+    const omegaSun = vec3(sqrt(cosSun.pow2().oneMinus()), 0, cosSun).toVar()
 
     Loop({ start: 0, end: SAMPLE_COUNT / 2 }, ({ i: j }) => {
       const theta = float(j).add(0.5).mul(deltaTheta).toVar()
@@ -1095,17 +1097,17 @@ export const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
           cos(theta)
         ).toVar()
         const deltaOmega = deltaTheta.mul(deltaPhi).mul(sin(theta))
-        const cosTheta = dot(omega, omegaS)
+        const cosViewSun = omega.dot(omegaSun)
         result.addAssign(
-          getScattering1(
+          getScatteringForOrder(
             atmosphere,
             singleRayleighScatteringTexture,
             singleMieScatteringTexture,
             multipleScatteringTexture,
             radius,
             omega.z,
-            cosPhi,
-            cosTheta,
+            cosSun,
+            cosViewSun,
             bool(false),
             scatteringOrder
           )
@@ -1119,9 +1121,15 @@ export const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
   }
 )
 
-export const getParamsFromIrradianceTextureUv = /*#__PURE__*/ Fnv(
-  (atmosphere: AtmosphereParams, uv: Vec2) => {
-    const cosPhiUnit = getUnitRangeFromTextureCoord(
+const irradianceParamsStruct = /*#__PURE__*/ struct({
+  radius: 'float',
+  cosSun: 'float'
+})
+type IrradianceParamsStruct = ShaderNodeObject<StructNode>
+
+export const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(
+  (atmosphere: AtmosphereParams, uv: Vec2): IrradianceParamsStruct => {
+    const cosSunUnit = getUnitRangeFromTextureCoord(
       uv.x,
       IRRADIANCE_TEXTURE_WIDTH
     )
@@ -1132,29 +1140,34 @@ export const getParamsFromIrradianceTextureUv = /*#__PURE__*/ Fnv(
     const radius = atmosphere.bottomRadius.add(
       radiusUnit.mul(atmosphere.topRadius.sub(atmosphere.bottomRadius))
     )
-    const cosPhi = clampCosine(cosPhiUnit.mul(2).sub(1))
-    return IrradianceParamsStruct(radius, cosPhi)
+    const cosSun = clampCosine(cosSunUnit.mul(2).sub(1))
+    return irradianceParamsStruct(radius, cosSun)
   }
 )
+
+const IRRADIANCE_TEXTURE_SIZE = /*#__PURE__*/ vec2(
+  IRRADIANCE_TEXTURE_WIDTH,
+  IRRADIANCE_TEXTURE_HEIGHT
+).toConst()
 
 export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
     fragCoord: Vec2,
-    options?: Options
+    options: Options
   ): IrradianceSpectrum => {
-    const params = getParamsFromIrradianceTextureUv(
+    const params = getParamsFromIrradianceTextureUV(
       atmosphere,
       fragCoord.div(IRRADIANCE_TEXTURE_SIZE)
     )
     const radius = params.get('radius')
-    const cosPhi = params.get('cosPhi')
+    const cosSun = params.get('cosSun')
     return computeDirectIrradiance(
       atmosphere,
       transmittanceTexture,
       radius,
-      cosPhi,
+      cosSun,
       options
     )
   }
@@ -1169,19 +1182,19 @@ export const computeIndirectIrradianceTexture = /*#__PURE__*/ Fnv(
     fragCoord: Vec2,
     scatteringOrder: Int
   ): IrradianceSpectrum => {
-    const params = getParamsFromIrradianceTextureUv(
+    const params = getParamsFromIrradianceTextureUV(
       atmosphere,
       fragCoord.div(IRRADIANCE_TEXTURE_SIZE)
     )
     const radius = params.get('radius')
-    const cosPhi = params.get('cosPhi')
+    const cosSun = params.get('cosSun')
     return computeIndirectIrradiance(
       atmosphere,
       singleRayleighScatteringTexture,
       singleMieScatteringTexture,
       multipleScatteringTexture,
       radius,
-      cosPhi,
+      cosSun,
       scatteringOrder
     )
   }
