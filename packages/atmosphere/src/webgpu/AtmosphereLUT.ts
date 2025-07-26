@@ -52,7 +52,7 @@ import {
   TRANSMITTANCE_TEXTURE_WIDTH
 } from '../constants'
 import { rayleighPhaseFunction } from './common'
-import { AtmosphereParams, type Options } from './definitions'
+import { AtmosphereParams } from './definitions'
 import {
   computeDirectIrradianceTexture,
   computeIndirectIrradianceTexture,
@@ -171,10 +171,9 @@ class Context {
   deltaMieScattering: RenderTarget3D
   deltaScatteringDensity: RenderTarget3D
   deltaMultipleScattering: RenderTarget3D
-  options: Options
 
-  constructor(textureType: AnyFloatType) {
-    if (textureType === HalfFloatType) {
+  constructor(textureType: AnyFloatType, transmittancePrecisionLog = false) {
+    if (transmittancePrecisionLog) {
       this.opticalDepth = createRenderTarget(
         textureType,
         TRANSMITTANCE_TEXTURE_WIDTH,
@@ -215,10 +214,6 @@ class Context {
     // deltaRayleighScattering and deltaMultipleScattering in the same GPU
     // texture.
     this.deltaMultipleScattering = this.deltaRayleighScattering
-
-    this.options = {
-      transmittancePrecisionLog: this.opticalDepth != null
-    }
   }
 
   dispose(): void {
@@ -254,7 +249,7 @@ export class AtmosphereLUT {
   private readonly transmittanceRenderTarget: RenderTarget
   private readonly irradianceRenderTarget: RenderTarget
   private readonly scatteringRenderTarget: RenderTarget3D
-  readonly singleMieScatteringTexture?: Data3DTexture
+  readonly singleMieScatteringTexture: Data3DTexture | null = null
   private readonly higherOrderScatteringRenderTarget?: RenderTarget3D
 
   private readonly renderer: Renderer
@@ -278,8 +273,8 @@ export class AtmosphereLUT {
     return this.scatteringRenderTarget.texture
   }
 
-  get higherOrderScatteringTexture(): Texture | undefined {
-    return this.higherOrderScatteringRenderTarget?.texture
+  get higherOrderScatteringTexture(): Texture | null {
+    return this.higherOrderScatteringRenderTarget?.texture ?? null
   }
 
   constructor(
@@ -376,14 +371,13 @@ export class AtmosphereLUT {
     renderTarget.textures.length = 1
   }
 
-  private computeTransmittance({ opticalDepth, options }: Context): void {
+  private computeTransmittance({ opticalDepth }: Context): void {
     const result = computeTransmittanceToTopAtmosphereBoundaryTexture(
       this.atmosphere,
-      screenCoordinate,
-      options
+      screenCoordinate
     ).toVar()
 
-    if (options.transmittancePrecisionLog === true) {
+    if (this.atmosphere.options.transmittancePrecisionLog) {
       // Compute the optical depth, and store it in opticalDepth. Avoid having
       // tiny transmittance values underflow to 0 due to half-float precision.
       this.material.fragmentNode = mrt({
@@ -404,14 +398,12 @@ export class AtmosphereLUT {
 
   private computeDirectIrradiance({
     deltaIrradiance,
-    opticalDepth,
-    options
+    opticalDepth
   }: Context): void {
     const irradiance = computeDirectIrradianceTexture(
       this.atmosphere,
       texture(opticalDepth?.texture ?? this.transmittanceTexture),
-      screenCoordinate,
-      options
+      screenCoordinate
     )
 
     this.material.fragmentNode = mrt({
@@ -433,15 +425,13 @@ export class AtmosphereLUT {
     luminanceFromRadiance,
     deltaRayleighScattering,
     deltaMieScattering,
-    opticalDepth,
-    options
+    opticalDepth
   }: Context): void {
     const layer = uniform(0)
     const singleScattering = computeSingleScatteringTexture(
       this.atmosphere,
       texture(opticalDepth?.texture ?? this.transmittanceTexture),
-      vec3(screenCoordinate, layer.add(0.5)),
-      options
+      vec3(screenCoordinate, layer.add(0.5))
     ).toVar()
     const rayleigh = singleScattering.get('rayleigh')
     const mie = singleScattering.get('mie')
@@ -479,8 +469,7 @@ export class AtmosphereLUT {
       deltaMieScattering,
       deltaScatteringDensity,
       deltaMultipleScattering,
-      opticalDepth,
-      options
+      opticalDepth
     }: Context,
     scatteringOrder: number
   ): void {
@@ -493,8 +482,7 @@ export class AtmosphereLUT {
       texture3D(deltaMultipleScattering.texture),
       texture(deltaIrradiance.texture),
       vec3(screenCoordinate, layer.add(0.5)),
-      int(scatteringOrder),
-      options
+      int(scatteringOrder)
     )
 
     this.material.fragmentNode = vec4(radiance, 1)
@@ -542,16 +530,14 @@ export class AtmosphereLUT {
     luminanceFromRadiance,
     deltaScatteringDensity,
     deltaMultipleScattering,
-    opticalDepth,
-    options
+    opticalDepth
   }: Context): void {
     const layer = uniform(0)
     const multipleScattering = computeMultipleScatteringTexture(
       this.atmosphere,
       texture(opticalDepth?.texture ?? this.transmittanceTexture),
       texture3D(deltaScatteringDensity.texture),
-      vec3(screenCoordinate, layer.add(0.5)),
-      options
+      vec3(screenCoordinate, layer.add(0.5))
     ).toVar()
     const radiance = multipleScattering.get('radiance')
     const cosViewSun = multipleScattering.get('cosViewSun')

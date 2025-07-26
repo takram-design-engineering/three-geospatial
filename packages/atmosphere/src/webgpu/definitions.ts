@@ -88,6 +88,14 @@ export interface DensityProfile {
   layers: [DensityProfileLayer, DensityProfileLayer]
 }
 
+export interface Options {
+  transmittancePrecisionLog: boolean
+  combinedScatteringTextures: boolean
+  higherOrderScatteringTexture: boolean
+  constrainCameraAboveGround: boolean
+  hideGround: boolean
+}
+
 export class AtmosphereParams {
   solarIrradiance = uniform(new Vector3(1.474, 1.8504, 1.91198))
   sunAngularRadius = uniform(0.004675)
@@ -118,12 +126,15 @@ export class AtmosphereParams {
   absorptionExtinction = uniform(new Vector3(0.00065, 0.001881, 0.000085))
   groundAlbedo = uniform(new Color().setScalar(0.1))
   minCosSun = uniform(Math.cos(radians(120)))
-}
 
-export interface Options {
-  transmittancePrecisionLog?: boolean
-  combinedScatteringTextures?: boolean
-  higherOrderScatteringTexture?: boolean
-  constrainCameraAboveGround?: boolean
-  hideGround?: boolean
+  sunRadianceToLuminance = uniform(new Vector3())
+  skyRadianceToLuminance = uniform(new Vector3())
+
+  options: Options = {
+    transmittancePrecisionLog: false,
+    combinedScatteringTextures: true,
+    higherOrderScatteringTexture: true,
+    constrainCameraAboveGround: false,
+    hideGround: false
+  }
 }
