@@ -82,6 +82,7 @@ import type { StructNode } from 'three/webgpu'
 import { Fnv } from '@takram/three-geospatial/webgpu'
 
 import { SCATTERING_TEXTURE_NU_SIZE } from '../constants'
+import type { AtmosphereParams } from './AtmosphereParams'
 import {
   clampRadius,
   getIrradiance,
@@ -96,7 +97,6 @@ import {
   safeSqrt
 } from './common'
 import type {
-  AtmosphereParams,
   Bool,
   Direction,
   Float,
@@ -109,7 +109,7 @@ import type {
   Vec2,
   Vec3,
   Vec4
-} from './definitions'
+} from './types'
 
 const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, scattering: Vec4): Vec3 => {

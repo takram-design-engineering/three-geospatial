@@ -51,8 +51,8 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from '../constants'
+import { AtmosphereParams } from './AtmosphereParams'
 import { rayleighPhaseFunction } from './common'
-import { AtmosphereParams } from './definitions'
 import {
   computeDirectIrradianceTexture,
   computeIndirectIrradianceTexture,

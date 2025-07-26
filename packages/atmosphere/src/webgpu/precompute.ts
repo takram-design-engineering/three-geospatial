@@ -98,6 +98,11 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from '../constants'
+import type {
+  AtmosphereParams,
+  DensityProfile,
+  DensityProfileLayer
+} from './AtmosphereParams'
 import {
   clampCosine,
   clampRadius,
@@ -113,10 +118,7 @@ import {
   rayleighPhaseFunction
 } from './common'
 import type {
-  AtmosphereParams,
   Bool,
-  DensityProfile,
-  DensityProfileLayer,
   DimensionlessSpectrum,
   Float,
   Int,
@@ -132,7 +134,7 @@ import type {
   Vec2,
   Vec3,
   Vec4
-} from './definitions'
+} from './types'
 
 declare module 'three/src/nodes/TSL.js' {
   interface NodeElements {

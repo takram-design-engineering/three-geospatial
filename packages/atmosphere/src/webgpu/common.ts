@@ -94,11 +94,11 @@ import {
   TRANSMITTANCE_TEXTURE_HEIGHT,
   TRANSMITTANCE_TEXTURE_WIDTH
 } from '../constants'
+import type { AtmosphereParams } from './AtmosphereParams'
 import type {
   AbstractScatteringTexture,
   AbstractSpectrum,
   Area,
-  AtmosphereParams,
   Bool,
   DimensionlessSpectrum,
   Float,
@@ -109,7 +109,7 @@ import type {
   TransmittanceTexture,
   Vec2,
   Vec4
-} from './definitions'
+} from './types'
 
 export const clampCosine = /*#__PURE__*/ Fnv((cosine: Float): Float => {
   return clamp(cosine, -1, 1)
