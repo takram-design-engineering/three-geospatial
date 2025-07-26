@@ -111,7 +111,7 @@ import type {
   Vec4
 } from './definitions'
 
-export const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
+const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, scattering: Vec4): Vec3 => {
     // Algebraically this can never be negative, but rounding errors can produce
     // that effect for sufficiently short view rays.
@@ -140,7 +140,7 @@ const combinedScatteringStruct = /*#__PURE__*/ struct({
 })
 type CombinedScatteringStruct = ShaderNodeObject<StructNode>
 
-export const getCombinedScattering = /*#__PURE__*/ Fnv(
+const getCombinedScattering = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     scatteringTexture: ReducedScatteringTexture,
@@ -438,7 +438,6 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
 
     // Hack to avoid rendering artifacts near the horizon, due to finite
     // atmosphere texture resolution and finite floating point precision.
-    // See: https://github.com/ebruneton/precomputed_atmospheric_scattering/pull/32
     If(not(viewRayIntersectsGround), () => {
       const cosHorizon = safeSqrt(
         atmosphere.bottomRadius.pow2().div(radius.pow2()).oneMinus()
@@ -588,7 +587,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
 )
 
 // Returns the distance of the point on the ray from the planet origin.
-export const distanceToClosestPointOnRay = /*#__PURE__*/ Fnv(
+const distanceToClosestPointOnRay = /*#__PURE__*/ Fnv(
   (camera: Position, point: Position): Length => {
     const ray = point.sub(camera).toVar()
     const t = camera.dot(ray).negate().div(ray.dot(ray)).saturate()
@@ -596,7 +595,7 @@ export const distanceToClosestPointOnRay = /*#__PURE__*/ Fnv(
   }
 )
 
-export const raySphereIntersections = /*#__PURE__*/ Fnv(
+const raySphereIntersections = /*#__PURE__*/ Fnv(
   (camera: Position, direction: Direction, radius: Length): Vec2 => {
     const b = direction.dot(camera).mul(2).toVar()
     const c = camera.dot(camera).sub(radius.pow2())
@@ -613,7 +612,7 @@ const raySegmentStruct = /*#__PURE__*/ struct({
 type RaySegmentStruct = ShaderNodeObject<StructNode>
 
 // Clip the view ray at the bottom atmosphere boundary.
-export const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
+const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     camera: Position,

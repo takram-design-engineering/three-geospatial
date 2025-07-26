@@ -140,7 +140,7 @@ declare module 'three/src/nodes/TSL.js' {
   }
 }
 
-export const getLayerDensity = /*#__PURE__*/ Fnv(
+const getLayerDensity = /*#__PURE__*/ Fnv(
   (layer: DensityProfileLayer, altitude: Length): Float => {
     return layer.expTerm
       .mul(exp(layer.expScale.mul(altitude)))
@@ -150,7 +150,7 @@ export const getLayerDensity = /*#__PURE__*/ Fnv(
   }
 )
 
-export const getProfileDensity = /*#__PURE__*/ Fnv(
+const getProfileDensity = /*#__PURE__*/ Fnv(
   (altitude: Length, profile: DensityProfile): Float => {
     return select(
       altitude.lessThan(profile.layers[0].width),
@@ -160,7 +160,7 @@ export const getProfileDensity = /*#__PURE__*/ Fnv(
   }
 )
 
-export const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
+const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     profile: DensityProfile,
@@ -199,7 +199,7 @@ export const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   }
 )
 
-export const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
+const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     radius: Length,
@@ -239,7 +239,7 @@ export const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   }
 )
 
-export const getUnitRangeFromTextureCoord = /*#__PURE__*/ Fnv(
+const getUnitRangeFromTextureCoord = /*#__PURE__*/ Fnv(
   (coord: Float, textureSize: Float): Float => {
     return coord
       .sub(textureSize.reciprocal().mul(0.5))
@@ -253,7 +253,7 @@ const transmittanceParamsStruct = /*#__PURE__*/ struct({
 })
 type TransmittanceParamsStruct = ShaderNodeObject<StructNode>
 
-export const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
+const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, uv: Vec2): TransmittanceParamsStruct => {
     const cosViewUnit = getUnitRangeFromTextureCoord(
       uv.x,
@@ -321,7 +321,7 @@ const singleScatteringStruct = /*#__PURE__*/ struct({
 })
 type SingleScatteringStruct = ShaderNodeObject<StructNode>
 
-export const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
+const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
@@ -378,7 +378,7 @@ export const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
   }
 )
 
-export const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ Fnv(
+const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     radius: Length,
@@ -399,7 +399,7 @@ export const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ Fnv(
   }
 )
 
-export const computeSingleScattering = /*#__PURE__*/ Fnv(
+const computeSingleScattering = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
@@ -465,7 +465,7 @@ const scatteringParamsStruct = /*#__PURE__*/ struct({
 })
 type ScatteringParamsStruct = ShaderNodeObject<StructNode>
 
-export const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
+const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, coord: Vec4): ScatteringParamsStruct => {
     // Distance to top atmosphere boundary for a horizontal ray at ground level.
     const H = sqrt(
@@ -594,7 +594,7 @@ const SCATTERING_TEXTURE_SIZE = /*#__PURE__*/ vec4(
   SCATTERING_TEXTURE_R_SIZE
 ).toConst()
 
-export const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
+const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, fragCoord: Vec3): ScatteringParamsStruct => {
     const fragCoordCosViewSun = floor(
       fragCoord.x.div(SCATTERING_TEXTURE_MU_S_SIZE)
@@ -662,7 +662,7 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ Fnv(
   }
 )
 
-export const getScatteringForOrder = /*#__PURE__*/ Fnv(
+const getScatteringForOrder = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     singleRayleighScatteringTexture: ReducedScatteringTexture,
@@ -718,7 +718,7 @@ export const getScatteringForOrder = /*#__PURE__*/ Fnv(
   }
 )
 
-export const computeScatteringDensity = /*#__PURE__*/ Fnv(
+const computeScatteringDensity = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
@@ -793,7 +793,7 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
           sin(phi).mul(sinTheta),
           cosTheta
         ).toVar()
-        const dOmegaI = deltaTheta.mul(deltaPhi).mul(sin(theta)).toVar()
+        const deltaOmegaI = deltaTheta.mul(deltaPhi).mul(sin(theta)).toVar()
 
         // The radiance arriving from direction omegaI after n-1 bounces is the
         // sum of a term given by the precomputed scattering texture for the
@@ -857,7 +857,7 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
                   )
               )
             )
-            .mul(dOmegaI)
+            .mul(deltaOmegaI)
         )
       })
     })
@@ -866,7 +866,7 @@ export const computeScatteringDensity = /*#__PURE__*/ Fnv(
   }
 )
 
-export const computeMultipleScattering = /*#__PURE__*/ Fnv(
+const computeMultipleScattering = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
@@ -1011,7 +1011,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
   }
 )
 
-export const computeDirectIrradiance = /*#__PURE__*/ Fnv(
+const computeDirectIrradiance = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
@@ -1045,7 +1045,7 @@ export const computeDirectIrradiance = /*#__PURE__*/ Fnv(
   }
 )
 
-export const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
+const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     singleRayleighScatteringTexture: ReducedScatteringTexture,
@@ -1103,7 +1103,7 @@ const irradianceParamsStruct = /*#__PURE__*/ struct({
 })
 type IrradianceParamsStruct = ShaderNodeObject<StructNode>
 
-export const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(
+const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, uv: Vec2): IrradianceParamsStruct => {
     const cosSunUnit = getUnitRangeFromTextureCoord(
       uv.x,

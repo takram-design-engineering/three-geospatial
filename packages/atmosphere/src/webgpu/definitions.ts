@@ -10,6 +10,10 @@ import {
 
 import { radians } from '@takram/three-geospatial'
 
+// These types only provide for annotations, and not guarantee the type safety.
+// I'm working on storing the dimensions in the types, but most of TSL functions
+// are not generic and don't preserve the types anyways.
+
 type N<T extends Node> = ShaderNodeObject<T>
 
 export type Length<T extends Node = Node> = N<T>

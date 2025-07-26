@@ -572,6 +572,9 @@ export class AtmosphereLUT {
   }
 
   private *precompute(context: Context): Iterable<void> {
+    // MRT doesn't work unless clearing the render target first. Perhaps it's a
+    // limitation of WebGPU. I saw a similar comment in Three.js source code but
+    // can't recall where.
     this.clearRenderTarget(this.transmittanceRenderTarget)
     this.clearRenderTarget(this.irradianceRenderTarget)
     this.clearRenderTarget(this.scatteringRenderTarget)
