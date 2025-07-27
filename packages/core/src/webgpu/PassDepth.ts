@@ -31,9 +31,9 @@ export class PassDepth extends TempNode {
 
   constructor(
     camera: Camera,
-    depthNode: Node<number>,
-    near?: number | Node<number>,
-    far?: number | Node<number>
+    depthNode: ShaderNode<number>,
+    near?: ShaderNode<number>,
+    far?: ShaderNode<number>
   ) {
     super('vec3')
     this.camera = camera
