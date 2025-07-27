@@ -246,17 +246,19 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
       )
       .toVar()
 
-    const radiance = vec3(0).toVar()
-    const transmittance = vec3(1).toVar()
-
     // If the viewer is in space and the view ray intersects the atmosphere,
-    // move the viewer to the top atmosphere boundary along the view ray. If the
-    // view ray does not intersect the atmosphere, simply return zero radiance.
+    // move the viewer to the top atmosphere boundary along the view ray.
     If(distanceToTop.greaterThan(0), () => {
       movedCamera.assign(movedCamera.add(viewRay.mul(distanceToTop)))
       radius.assign(atmosphere.topRadius)
       radiusCosView.addAssign(distanceToTop)
+    })
 
+    const radiance = vec3(0).toVar()
+    const transmittance = vec3(1).toVar()
+
+    // If the view ray does not intersect the atmosphere, simply return 0.
+    If(radius.lessThanEqual(atmosphere.topRadius), () => {
       // Compute the scattering parameters needed for the texture lookups.
       const cosView = radiusCosView.div(radius).toVar()
       const cosSun = movedCamera.dot(sunDirection).div(radius).toVar()
@@ -428,7 +430,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
     const cosView = radiusCosView.div(radius).toVar()
     const cosSun = movedCamera.dot(sunDirection).div(radius).toVar()
     const cosViewSun = viewRay.dot(sunDirection).toVar()
-    const distanceToPoint = length(point.sub(movedCamera)).toVar()
+    const distanceToPoint = movedCamera.distance(point).toVar()
     const viewRayIntersectsGround = rayIntersectsGround(
       atmosphere,
       radius,
