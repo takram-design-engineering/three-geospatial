@@ -308,7 +308,7 @@ export const computeTransmittanceToTopAtmosphereBoundaryTexture =
       const params = getParamsFromTransmittanceTextureUV(
         atmosphere,
         fragCoord.div(TRANSMITTANCE_TEXTURE_SIZE)
-      )
+      ).toVar()
       return computeTransmittanceToTopAtmosphereBoundary(
         atmosphere,
         params.get('radius'),
@@ -436,7 +436,7 @@ const computeSingleScattering = /*#__PURE__*/ Fnv(
         cosViewSun,
         rayLength,
         rayIntersectsGround
-      )
+      ).toVar()
       const deltaRayleigh = deltaRayleighMie.get('rayleigh')
       const deltaMie = deltaRayleighMie.get('mie')
 
@@ -608,7 +608,10 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
       fragCoord.y,
       fragCoord.z
     ).div(SCATTERING_TEXTURE_SIZE)
-    const params = getParamsFromScatteringTextureCoord(atmosphere, coord)
+    const params = getParamsFromScatteringTextureCoord(
+      atmosphere,
+      coord
+    ).toVar()
     const radius = params.get('radius')
     const cosView = params.get('cosView')
     const cosSun = params.get('cosSun')
@@ -646,7 +649,7 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ Fnv(
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
       fragCoord
-    )
+    ).toVar()
     const radius = params.get('radius')
     const cosView = params.get('cosView')
     const cosSun = params.get('cosSun')
@@ -956,7 +959,7 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
       fragCoord
-    )
+    ).toVar()
     const radius = params.get('radius')
     const cosView = params.get('cosView')
     const cosSun = params.get('cosSun')
@@ -993,7 +996,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
     const params = getParamsFromScatteringTextureFragCoord(
       atmosphere,
       fragCoord
-    )
+    ).toVar()
     const radius = params.get('radius')
     const cosView = params.get('cosView')
     const cosSun = params.get('cosSun')
@@ -1137,7 +1140,7 @@ export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
     const params = getParamsFromIrradianceTextureUV(
       atmosphere,
       fragCoord.div(IRRADIANCE_TEXTURE_SIZE)
-    )
+    ).toVar()
     const radius = params.get('radius')
     const cosSun = params.get('cosSun')
     return computeDirectIrradiance(
@@ -1161,7 +1164,7 @@ export const computeIndirectIrradianceTexture = /*#__PURE__*/ Fnv(
     const params = getParamsFromIrradianceTextureUV(
       atmosphere,
       fragCoord.div(IRRADIANCE_TEXTURE_SIZE)
-    )
+    ).toVar()
     const radius = params.get('radius')
     const cosSun = params.get('cosSun')
     return computeIndirectIrradiance(

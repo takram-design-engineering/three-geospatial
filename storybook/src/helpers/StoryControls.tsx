@@ -7,6 +7,7 @@ import { atom, useAtomValue, useSetAtom, type PrimitiveAtom } from 'jotai'
 import { selectAtom } from 'jotai/utils'
 import {
   createContext,
+  memo,
   useCallback,
   useContext,
   useEffect,
@@ -61,19 +62,14 @@ export function createStory<Args extends Record<string, any>>(
   StoryComponent: StoryFn<Args>,
   overrideArgs?: Args
 ): StoryObj {
-  const Component = StoryComponent as FC
+  const Component = memo(StoryComponent as FC)
   return {
     render: (args: Record<string, any>) => {
       const argsAtom = useMemo(() => atom({}), [])
       useSetAtom(argsAtom)(args)
       return (
         <StoryContext value={argsAtom}>
-          {useMemo(
-            () => (
-              <Component />
-            ),
-            []
-          )}
+          <Component />
         </StoryContext>
       )
     },

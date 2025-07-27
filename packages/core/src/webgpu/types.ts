@@ -27,10 +27,10 @@ export type NodeValue =
 
 export type Node<
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  T extends NodeValue
+  T extends NodeValue = NodeValue
 > = N
 
 export type ShaderNode<
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  T extends NodeValue
+  T extends NodeValue = NodeValue
 > = ShaderNodeObject<N>

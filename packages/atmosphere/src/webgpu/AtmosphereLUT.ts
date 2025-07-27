@@ -590,6 +590,8 @@ export class AtmosphereLUT {
 
     // Compute the transmittance, and store it in transmittanceTexture.
     this.computeTransmittance(context)
+    this.renderer.setRenderTarget(null)
+    yield
 
     // Compute the direct irradiance, store it in deltaIrradiance and,
     // depending on "additive", either initialize irradianceTexture with zeros
@@ -611,15 +613,18 @@ export class AtmosphereLUT {
     for (let scatteringOrder = 2; scatteringOrder <= 4; ++scatteringOrder) {
       // Compute the scattering density, and store it in deltaScatteringDensity.
       this.computeScatteringDensity(context, scatteringOrder)
+      this.renderer.setRenderTarget(null)
+      yield
 
       // Compute the indirect irradiance, store it in deltaIrradiance and
       // accumulate it in irradianceTexture.
       this.computeIndirectIrradiance(context, scatteringOrder)
+      this.renderer.setRenderTarget(null)
+      yield
 
       // Compute the multiple scattering, store it in deltaMultipleScattering,
       // and accumulate it in scatteringTexture.
       this.computeMultipleScattering(context)
-
       this.renderer.setRenderTarget(null)
       yield
     }
