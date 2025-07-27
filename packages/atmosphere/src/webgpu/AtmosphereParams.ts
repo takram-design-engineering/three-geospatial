@@ -79,4 +79,26 @@ export class AtmosphereParams {
     constrainCameraAboveGround: false,
     hideGround: false
   }
+
+  constructor() {
+    const sunRadianceToLuminance = new Vector3(
+      98242.786222,
+      69954.398112,
+      66475.012354
+    )
+    const skyRadianceToLuminance = new Vector3(
+      114974.916437,
+      71305.954816,
+      65310.548555
+    )
+    const luminance = new Vector3(0.2126, 0.7152, 0.0722).dot(
+      sunRadianceToLuminance
+    )
+    this.sunRadianceToLuminance.value
+      .copy(sunRadianceToLuminance)
+      .divideScalar(luminance)
+    this.skyRadianceToLuminance.value
+      .copy(skyRadianceToLuminance)
+      .divideScalar(luminance)
+  }
 }
