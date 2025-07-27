@@ -9,14 +9,21 @@ export const WebGPUCanvas: FC<CanvasProps> = props => (
       const renderer = new WebGPURenderer({
         ...(props as any),
         requiredLimits: {
+          // Require enough bytes for FP32 x 3 attachments to compute the
+          // atmosphere LUTs in the single-float precision.
+          // TODO: Fallback to a non-MRT LUT generation, or in the half-float
+          // precision if it's not supported.
           maxColorAttachmentBytesPerSample: 48
         }
       })
       await renderer.init()
       setTimeout(() => {
-        // R3F overrides configurations.
+        // R3F overrides the configurations.
         renderer.toneMapping = NoToneMapping
       })
+      // Require the model-view matrix premultiplied on the CPU side.
+      // See: https://github.com/mrdoob/three.js/issues/30955
+      renderer.highPrecision = true
       return renderer
     }}
   />
