@@ -209,7 +209,7 @@ const radianceTransferStruct = /*#__PURE__*/ struct({
 })
 type RadianceTransferStruct = ShaderNodeObject<StructNode>
 
-export const getSkyRadiance = /*#__PURE__*/ Fnv(
+const getSkyRadiance = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
@@ -635,7 +635,7 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
   }
 )
 
-export const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
+const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
     transmittanceTexture: TransmittanceTexture,
