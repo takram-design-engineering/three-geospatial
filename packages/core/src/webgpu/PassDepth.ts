@@ -1,4 +1,4 @@
-import type { Camera } from 'three'
+import type { Camera, Vector3 } from 'three'
 import {
   float,
   nodeObject,
@@ -17,7 +17,7 @@ declare module 'three' {
   }
 }
 
-export class Depth extends TempNode {
+export class PassDepth extends TempNode {
   static get type(): string {
     return 'Depth'
   }
@@ -46,7 +46,7 @@ export class Depth extends TempNode {
       typeof far === 'number' ? float(far) : (far ?? this.cameraFarNode)
   }
 
-  setup(builder: NodeBuilder): Node<number> {
+  setup(builder: NodeBuilder): Node<Vector3> {
     const {
       camera,
       depthNode: depth,
@@ -66,6 +66,6 @@ export class Depth extends TempNode {
   }
 }
 
-export const depth = (
-  ...params: ConstructorParameters<typeof Depth>
-): Node<number> => nodeObject(new Depth(...params))
+export const passDepth = (
+  ...params: ConstructorParameters<typeof PassDepth>
+): Node<number> => nodeObject(new PassDepth(...params))

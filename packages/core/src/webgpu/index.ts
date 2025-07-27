@@ -1,6 +1,6 @@
 export * from './Dithering'
 export * from './Fnv'
-export * from './Normal'
+export * from './PassDepth'
+export * from './PassNormal'
 export * from './Turbo'
-export * from './Depth'
 export type * from './types'
