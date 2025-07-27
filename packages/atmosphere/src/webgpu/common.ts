@@ -252,8 +252,8 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
       atmosphere,
       sqrt(
         rayLength
-          .mul(rayLength)
-          .add(mul(2, radius).mul(cosView).mul(rayLength))
+          .pow2()
+          .add(mul(2, radius, cosView, rayLength))
           .add(radius.pow2())
       )
     ).toVar()
@@ -261,9 +261,9 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
       radius.mul(cosView).add(rayLength).div(radiusEnd)
     ).toVar()
 
-    const result = vec3().toVar()
+    const transmittance = vec3().toVar()
     If(rayIntersectsGround, () => {
-      result.assign(
+      transmittance.assign(
         min(
           getTransmittanceToTopAtmosphereBoundary(
             atmosphere,
@@ -282,7 +282,7 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
         )
       )
     }).Else(() => {
-      result.assign(
+      transmittance.assign(
         min(
           getTransmittanceToTopAtmosphereBoundary(
             atmosphere,
@@ -301,7 +301,7 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
         )
       )
     })
-    return result
+    return transmittance
   }
 )
 
@@ -389,7 +389,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
       // (radius, cosHorizon).
       const distance = radiusCosView.negate().sub(safeSqrt(discriminant))
       const minDistance = radius.sub(atmosphere.bottomRadius).toVar()
-      const maxDistance = distanceToHorizon.toVar()
+      const maxDistance = distanceToHorizon
       cosViewCoord.assign(
         sub(
           0.5,
