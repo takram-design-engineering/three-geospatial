@@ -70,7 +70,7 @@ const Content: FC = () => {
         SCATTERING_TEXTURE_DEPTH
       ).toConst()
       const uvw = screenCenterUVW(size, 2)
-      return texture3D(lut.scatteringTexture).sample(uvw).mul(0.5)
+      return texture3D(lut.scatteringTexture).sample(uvw).rgb.mul(0.5)
     })()
     return material
   }, [lut])

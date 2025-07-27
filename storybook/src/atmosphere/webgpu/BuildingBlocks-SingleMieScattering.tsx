@@ -78,7 +78,7 @@ const Content: FC = () => {
       ).toConst()
       const uvw = screenCenterUVW(size, 2)
       invariant(lut.singleMieScatteringTexture != null)
-      return texture3D(lut.singleMieScatteringTexture).sample(uvw).mul(0.5)
+      return texture3D(lut.singleMieScatteringTexture).sample(uvw).rgb.mul(0.5)
     })()
     return material
   }, [lut])
