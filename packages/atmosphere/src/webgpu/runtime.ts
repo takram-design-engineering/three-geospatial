@@ -123,11 +123,9 @@ const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
       singleMieScattering.assign(
         scattering.rgb
           .mul(scattering.a)
-          .div(
-            scattering.r
-              .mul(rayleighScattering.r.div(mieScattering.r))
-              .mul(mieScattering.div(rayleighScattering))
-          )
+          .div(scattering.r)
+          .mul(rayleighScattering.r.div(mieScattering.r))
+          .mul(mieScattering.div(rayleighScattering))
       )
     })
     return singleMieScattering
