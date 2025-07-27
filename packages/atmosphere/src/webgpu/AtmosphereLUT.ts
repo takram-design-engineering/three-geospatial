@@ -437,9 +437,9 @@ export class AtmosphereLUT {
     const mie = singleScattering.get('mie')
 
     this.material.fragmentNode = mrt({
-      scattering: vec4(rayleigh.rgb, mie.r).mul(luminanceFromRadiance),
-      deltaRayleighScattering: vec4(rayleigh.rgb, 1),
-      deltaMieScattering: vec4(mie.rgb, 1)
+      scattering: vec4(rayleigh.mul(luminanceFromRadiance), mie.mul(luminanceFromRadiance).r),
+      deltaRayleighScattering: vec4(rayleigh, 1),
+      deltaMieScattering: vec4(mie.mul(luminanceFromRadiance), 1)
     })
     this.material.additive = true
     this.material.needsUpdate = true
