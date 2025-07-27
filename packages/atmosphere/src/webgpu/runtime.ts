@@ -58,6 +58,7 @@
  */
 
 import {
+  add,
   bool,
   float,
   floor,
@@ -118,15 +119,14 @@ const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
     const singleMieScattering = vec3(0).toVar()
     // Avoid division by infinitesimal values.
     If(scattering.r.greaterThanEqual(1e-5), () => {
+      const { rayleighScattering, mieScattering } = atmosphere
       singleMieScattering.assign(
         scattering.rgb
           .mul(scattering.a)
           .div(
-            mul(
-              scattering.r,
-              atmosphere.rayleighScattering.r.div(atmosphere.mieScattering.r),
-              atmosphere.mieScattering.div(atmosphere.rayleighScattering)
-            )
+            scattering.r
+              .mul(rayleighScattering.r.div(mieScattering.r))
+              .mul(mieScattering.div(rayleighScattering))
           )
       )
     })
