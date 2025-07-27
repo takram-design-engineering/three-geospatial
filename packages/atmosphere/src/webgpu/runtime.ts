@@ -606,7 +606,8 @@ const raySphereIntersections = /*#__PURE__*/ Fnv(
 
 const raySegmentStruct = /*#__PURE__*/ struct({
   camera: 'vec3',
-  point: 'vec3'
+  point: 'vec3',
+  degenerate: 'bool'
 })
 type RaySegmentStruct = ShaderNodeObject<StructNode>
 
@@ -628,9 +629,11 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
 
     // The ray segment degenerates when the both camera and point are below the
     // bottom atmosphere boundary.
-    const clippedCamera = select(cameraBelow, intersection, camera)
-    const clippedPoint = select(pointBelow, intersection, point)
-    return raySegmentStruct(clippedCamera, clippedPoint)
+    return raySegmentStruct(
+      select(cameraBelow, intersection, camera),
+      select(pointBelow, intersection, point),
+      cameraBelow.and(pointBelow)
+    )
   }
 )
 
@@ -662,8 +665,9 @@ const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
       ).toVar()
       const clippedCamera = clippedRaySegment.get('camera')
       const clippedPoint = clippedRaySegment.get('point')
+      const degenerate = clippedRaySegment.get('degenerate')
 
-      If(not(clippedCamera.equal(clippedPoint)), () => {
+      If(not(degenerate), () => {
         const result = getSkyRadianceToPointImpl(
           atmosphere,
           transmittanceTexture,
