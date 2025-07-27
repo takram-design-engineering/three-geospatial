@@ -176,27 +176,26 @@ const getCombinedScattering = /*#__PURE__*/ Fnv(
     const scattering = vec3().toVar()
     const singleMieScattering = vec3().toVar()
     if (atmosphere.options.combinedScatteringTextures) {
-      const combinedScattering = scatteringTexture
-        .sample(coord0)
-        .mul(lerp.oneMinus())
-        .add(scatteringTexture.sample(coord1).mul(lerp))
-        .rgb.toVar()
-      scattering.assign(combinedScattering)
+      const combinedScattering = add(
+        scatteringTexture.sample(coord0).mul(lerp.oneMinus()),
+        scatteringTexture.sample(coord1).mul(lerp)
+      ).toVar()
+      scattering.assign(combinedScattering.rgb)
       singleMieScattering.assign(
         getExtrapolatedSingleMieScattering(atmosphere, combinedScattering)
       )
     } else {
       scattering.assign(
-        scatteringTexture
-          .sample(coord0)
-          .mul(lerp.oneMinus())
-          .add(scatteringTexture.sample(coord1).mul(lerp)).rgb
+        add(
+          scatteringTexture.sample(coord0).mul(lerp.oneMinus()),
+          scatteringTexture.sample(coord1).mul(lerp)
+        ).rgb
       )
       singleMieScattering.assign(
-        singleMieScatteringTexture
-          .sample(coord0)
-          .mul(lerp.oneMinus())
-          .add(singleMieScatteringTexture.sample(coord1).mul(lerp)).rgb
+        add(
+          singleMieScatteringTexture.sample(coord0).mul(lerp.oneMinus()),
+          singleMieScatteringTexture.sample(coord1).mul(lerp)
+        ).rgb
       )
     }
     return combinedScatteringStruct(scattering, singleMieScattering)
