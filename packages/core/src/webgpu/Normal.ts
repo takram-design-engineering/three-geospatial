@@ -1,8 +1,7 @@
-import type { ShaderNodeObject } from 'three/tsl'
-import type { Node } from 'three/webgpu'
+import type { Vector3 } from 'three'
 
-import { Fnv } from './Fnv'
+import type { Node } from './types'
 
-export const normal = /*#__PURE__*/ Fnv((normal: ShaderNodeObject<Node>) => {
+export const normal = (normal: Node<Vector3>): Node<Vector3> => {
   return normal.mul(0.5).add(0.5)
-})
+}
