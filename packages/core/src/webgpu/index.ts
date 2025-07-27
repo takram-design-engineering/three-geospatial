@@ -1,7 +1,6 @@
 export * from './Dithering'
 export * from './Fnv'
-export * from './PassDepth'
-export * from './PassNormal'
+export * from './DepthToColor'
 export * from './transformations'
 export * from './Turbo'
 export type * from './types'

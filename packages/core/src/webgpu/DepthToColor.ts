@@ -17,9 +17,9 @@ declare module 'three' {
   }
 }
 
-export class PassDepth extends TempNode {
+export class DepthToColor extends TempNode {
   static get type(): string {
-    return 'Depth'
+    return 'DepthToColor'
   }
 
   camera: Camera
@@ -32,8 +32,8 @@ export class PassDepth extends TempNode {
   constructor(
     camera: Camera,
     depthNode: ShaderNode<number>,
-    near?: ShaderNode<number>,
-    far?: ShaderNode<number>
+    near?: number | ShaderNode<number>,
+    far?: number | ShaderNode<number>
   ) {
     super('vec3')
     this.camera = camera
@@ -66,6 +66,6 @@ export class PassDepth extends TempNode {
   }
 }
 
-export const passDepth = (
-  ...params: ConstructorParameters<typeof PassDepth>
-): Node<number> => nodeObject(new PassDepth(...params))
+export const depthToColor = (
+  ...params: ConstructorParameters<typeof DepthToColor>
+): Node<number> => nodeObject(new DepthToColor(...params))
