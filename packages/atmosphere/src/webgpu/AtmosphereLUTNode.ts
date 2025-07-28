@@ -299,20 +299,14 @@ class LUTTexture3DNode extends Texture3DNode {
   }
 }
 
-export interface AtmosphereLUTOptions {
-  textureType?: AnyFloatType
-  combinedScattering?: boolean
-  higherOrderScattering?: boolean
-}
-
 export class AtmosphereLUTNode extends TempNode {
   static get type(): string {
     return 'AtmosphereLUTNode'
   }
 
-  readonly parameters = new AtmosphereParameters()
+  readonly parameters: AtmosphereParameters
+  textureType?: AnyFloatType // TODO
 
-  private textureType?: AnyFloatType
   private readonly material = new AdditiveNodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
 
@@ -329,10 +323,10 @@ export class AtmosphereLUTNode extends TempNode {
   private updating = false
   private disposeQueue: (() => void) | undefined
 
-  constructor({ textureType }: AtmosphereLUTOptions = {}) {
+  constructor(parameters = new AtmosphereParameters()) {
     super(null)
 
-    this.textureType = textureType
+    this.parameters = parameters
     this.transmittanceRT = createRenderTarget('transmittance')
     this.irradianceRT = createRenderTarget('irradiance')
     this.scatteringRT = createRenderTarget3D('scattering')
@@ -341,7 +335,7 @@ export class AtmosphereLUTNode extends TempNode {
 
     this.updateBeforeType = NodeUpdateType.NONE
     this.updateType = NodeUpdateType.NONE
-    this.global = true
+    this.global = true // TODO
   }
 
   getTexture(name: LUTName<2>): Texture

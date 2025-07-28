@@ -143,7 +143,7 @@ const getLayerDensity = /*#__PURE__*/ Fnv(
 )
 
 const getProfileDensity = /*#__PURE__*/ Fnv(
-  (altitude: Length, profile: DensityProfile): Float => {
+  (profile: DensityProfile, altitude: Length): Float => {
     return select(
       altitude.lessThan(profile.layers[0].width),
       getLayerDensity(profile.layers[0], altitude),
@@ -180,7 +180,7 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
       // Number density at the current sample point (divided by the number
       // density at the bottom of the atmosphere, yielding a dimensionless
       // number).
-      const y = getProfileDensity(r.sub(parameters.bottomRadius), profile)
+      const y = getProfileDensity(profile, r.sub(parameters.bottomRadius))
 
       // Sample weight from the trapezoidal rule.
       const weight = select(equal(i, 0).or(equal(i, SAMPLE_COUNT)), 0.5, 1)
@@ -289,7 +289,10 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
 
 export const computeTransmittanceToTopAtmosphereBoundaryTexture =
   /*#__PURE__*/ Fnv(
-    (parameters: AtmosphereParameters, fragCoord: Vec2): DimensionlessSpectrum => {
+    (
+      parameters: AtmosphereParameters,
+      fragCoord: Vec2
+    ): DimensionlessSpectrum => {
       const transmittanceParams = getParamsFromTransmittanceTextureUV(
         parameters,
         fragCoord.div(vec2(parameters.transmittanceTextureSize))
@@ -351,14 +354,14 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
 
     const rayleigh = transmittance.mul(
       getProfileDensity(
-        radiusEnd.sub(parameters.bottomRadius),
-        parameters.rayleighDensity
+        parameters.rayleighDensity,
+        radiusEnd.sub(parameters.bottomRadius)
       )
     )
     const mie = transmittance.mul(
       getProfileDensity(
-        radiusEnd.sub(parameters.bottomRadius),
-        parameters.mieDensity
+        parameters.mieDensity,
+        radiusEnd.sub(parameters.bottomRadius)
       )
     )
     return singleScatteringStruct(rayleigh, mie)
@@ -578,7 +581,10 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
 )
 
 const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
-  (parameters: AtmosphereParameters, fragCoord: Vec3): ScatteringParamsStruct => {
+  (
+    parameters: AtmosphereParameters,
+    fragCoord: Vec3
+  ): ScatteringParamsStruct => {
     const fragCoordCosViewSun = floor(
       fragCoord.x.div(parameters.scatteringTextureCosSunSize)
     )
@@ -830,12 +836,12 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
         // and Mie).
         const cosViewSun2 = omega.dot(omegaI).toVar()
         const rayleighDensity = getProfileDensity(
-          radius.sub(parameters.bottomRadius),
-          parameters.rayleighDensity
+          parameters.rayleighDensity,
+          radius.sub(parameters.bottomRadius)
         )
         const mieDensity = getProfileDensity(
-          radius.sub(parameters.bottomRadius),
-          parameters.mieDensity
+          parameters.mieDensity,
+          radius.sub(parameters.bottomRadius)
         )
         radiance.addAssign(
           incidentRadiance
