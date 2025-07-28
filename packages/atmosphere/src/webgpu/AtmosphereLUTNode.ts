@@ -35,6 +35,7 @@ import {
   NodeMaterial,
   NodeUpdateType,
   QuadMesh,
+  RendererUtils,
   TempNode,
   Texture3DNode,
   TextureNode,
@@ -158,12 +159,14 @@ async function timeSlice<T>(iterable: Iterable<T>): Promise<T> {
   })
 }
 
+let rendererState: RendererUtils.RendererState
+
 function run(renderer: Renderer, task: () => void): boolean {
-  const prevAutoClear = renderer.autoClear
+  rendererState = RendererUtils.resetRendererState(renderer, rendererState)
+  renderer.setClearColor(0, 0)
   renderer.autoClear = false
   task()
-  renderer.setRenderTarget(null)
-  renderer.autoClear = prevAutoClear
+  RendererUtils.restoreRendererState(renderer, rendererState)
   return true
 }
 
@@ -319,6 +322,7 @@ export class AtmosphereLUTNode extends TempNode {
     Record<LUTName, ShaderNodeObject<LUTTextureNode | LUTTexture3DNode>>
   > = {}
 
+  private lutVersion?: number
   private updating = false
   private disposeQueue: (() => void) | undefined
 
@@ -332,7 +336,7 @@ export class AtmosphereLUTNode extends TempNode {
     this.singleMieScatteringRT = createRenderTarget3D('singleMieScattering')
     this.higherOrderScatteringRT = createRenderTarget3D('higherOrderScattering')
 
-    this.updateBeforeType = NodeUpdateType.NONE
+    this.updateBeforeType = NodeUpdateType.RENDER
     this.updateType = NodeUpdateType.NONE
     this.global = true // TODO
   }
@@ -618,16 +622,18 @@ export class AtmosphereLUTNode extends TempNode {
     // MRT doesn't work unless clearing the render target first. Perhaps it's a
     // limitation of WebGPU. I saw a similar comment in Three.js source code but
     // can't recall where.
-    clearRenderTarget(renderer, this.transmittanceRT)
-    clearRenderTarget(renderer, this.irradianceRT)
-    clearRenderTarget(renderer, this.scatteringRT)
-    clearRenderTarget(renderer, this.singleMieScatteringRT)
-    clearRenderTarget(renderer, this.higherOrderScatteringRT)
-    clearRenderTarget(renderer, context.opticalDepthRT)
-    clearRenderTarget(renderer, context.deltaRayleighScatteringRT)
-    clearRenderTarget(renderer, context.deltaMieScatteringRT)
-    clearRenderTarget(renderer, context.deltaScatteringDensityRT)
-    clearRenderTarget(renderer, context.deltaMultipleScatteringRT)
+    yield run(renderer, () => {
+      clearRenderTarget(renderer, this.transmittanceRT)
+      clearRenderTarget(renderer, this.irradianceRT)
+      clearRenderTarget(renderer, this.scatteringRT)
+      clearRenderTarget(renderer, this.singleMieScatteringRT)
+      clearRenderTarget(renderer, this.higherOrderScatteringRT)
+      clearRenderTarget(renderer, context.opticalDepthRT)
+      clearRenderTarget(renderer, context.deltaRayleighScatteringRT)
+      clearRenderTarget(renderer, context.deltaMieScatteringRT)
+      clearRenderTarget(renderer, context.deltaScatteringDensityRT)
+      clearRenderTarget(renderer, context.deltaMultipleScatteringRT)
+    })
 
     // Compute the transmittance, and store it in transmittanceTexture.
     yield run(renderer, () => {
@@ -667,17 +673,22 @@ export class AtmosphereLUTNode extends TempNode {
         this.computeMultipleScattering(renderer, context)
       })
     }
+
+    this.material.fragmentNode = null
   }
 
   updateBefore({ renderer }: Partial<NodeFrame>): void {
-    if (renderer == null) {
+    if (renderer == null || this.version === this.lutVersion) {
       return
     }
+    this.lutVersion = this.version
+
     invariant(this.textureType != null)
     const context = new Context(this.textureType, this.parameters)
     this.updating = true
 
-    timeSlice(this.precompute(renderer, context))
+    // TODO: Race condition
+    void timeSlice(this.precompute(renderer, context))
       .catch((error: unknown) => {
         throw error instanceof Error ? error : new Error()
       })
@@ -722,8 +733,6 @@ export class AtmosphereLUTNode extends TempNode {
         this.parameters.scatteringTextureSize
       )
     }
-
-    this.updateBefore(builder)
     return super.setup(builder)
   }
 
