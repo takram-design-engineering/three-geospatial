@@ -265,7 +265,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
       const cosViewSun = viewRay.dot(sunDirection).toVar()
 
       const viewRayIntersectsGround = bool(false).toVar()
-      if (parameters.options.hideGround) {
+      if (!parameters.options.hideGround) {
         viewRayIntersectsGround.assign(
           rayIntersectsGround(parameters, radius, cosView)
         )
