@@ -1,5 +1,5 @@
 import type { ArgTypes, StoryFn, StoryObj } from '@storybook/react-vite'
-import { useSpring } from 'framer-motion'
+import { useSpring, type MotionValue } from 'framer-motion'
 import {
   atom,
   getDefaultStore,
@@ -152,12 +152,12 @@ export function useTransientControl<TArgs extends Args, T>(
 
 export function useSpringControl<TArgs extends Args>(
   selector: (args: TArgs) => number,
-  onChange: (value: number) => void
-): void {
+  onChange?: (value: number) => void
+): MotionValue<number> {
   const argsAtom = useContext(StoryContext)
   const store = getDefaultStore()
   const value = selector(store.get(argsAtom) as TArgs)
-  onChange(value) // Initial callback
+  onChange?.(value) // Initial callback
 
   // Transient update on the spring value.
   const springValue = useSpring(value, springOptions)
@@ -170,6 +170,10 @@ export function useSpringControl<TArgs extends Args>(
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
   useEffect(() => {
-    return springValue.on('change', onChangeRef.current)
+    return springValue.on('change', value => {
+      onChangeRef.current?.(value)
+    })
   }, [springValue])
+
+  return springValue
 }
