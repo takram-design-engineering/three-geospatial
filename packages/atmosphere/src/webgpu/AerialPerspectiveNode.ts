@@ -71,7 +71,7 @@ export class AerialPerspectiveNode extends TempNode {
 
   // Dependency nodes
   camera: Camera
-  albedoNode: TextureNode
+  colorNode: TextureNode
   depthNode: TextureNode
   normalNode: TextureNode
   lutNode: AtmosphereLUTNode
@@ -119,16 +119,16 @@ export class AerialPerspectiveNode extends TempNode {
 
   constructor(
     camera: Camera,
-    albedoNode: TextureNode,
-    depthNode: TextureNode,
+    colorNode: TextureNode,
     normalNode: TextureNode,
+    depthNode: TextureNode,
     lutNode: AtmosphereLUTNode
   ) {
     super('vec4')
     this.camera = camera
-    this.albedoNode = albedoNode
-    this.depthNode = depthNode
+    this.colorNode = colorNode
     this.normalNode = normalNode
+    this.depthNode = depthNode
     this.lutNode = lutNode
 
     this.updateBeforeType = NodeUpdateType.RENDER
@@ -223,7 +223,7 @@ export class AerialPerspectiveNode extends TempNode {
       const skyIlluminance = sunSkyLuminance.get('skyIlluminance')
 
       // Lambertian diffuse
-      const albedo = this.albedoNode.sample(screenUV)
+      const albedo = this.colorNode.sample(screenUV)
       const diffuse = albedo.div(PI).mul(sunIlluminance.add(skyIlluminance))
 
       // Scattering between the camera to the surface
