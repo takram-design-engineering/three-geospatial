@@ -30,6 +30,7 @@ import {
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import { AtmosphereParameters } from './AtmosphereParameters'
+import { needsUpdate } from './decorators'
 import {
   getSkyLuminance,
   getSkyLuminanceToPoint,
@@ -68,25 +69,25 @@ export class AerialPerspectiveNode extends TempNode {
     return 'AerialPerspectiveNode'
   }
 
-  // Dependency nodes
-  camera: Camera
-  colorNode: TextureNode
-  depthNode: TextureNode
-  normalNode: TextureNode
-  lutNode: AtmosphereLUTNode
+  // Dependencies
+  @needsUpdate camera: Camera
+  @needsUpdate colorNode: TextureNode
+  @needsUpdate depthNode: TextureNode
+  @needsUpdate normalNode: TextureNode
+  @needsUpdate lutNode: AtmosphereLUTNode
 
-  // TODO: Options
-  ellipsoid = Ellipsoid.WGS84
-  correctAltitude = true
-  correctGeometricError = true
-  sunLight = true
-  skyLight = true
-  transmittance = true
-  inscatter = true
-  sky = true
-  sun = true
-  moon = true
-  ground = true
+  // Static options
+  @needsUpdate ellipsoid = Ellipsoid.WGS84
+  @needsUpdate correctAltitude = true
+  @needsUpdate correctGeometricError = true
+  @needsUpdate sunLight = true
+  @needsUpdate skyLight = true
+  @needsUpdate transmittance = true
+  @needsUpdate inscatter = true
+  @needsUpdate sky = true
+  @needsUpdate sun = true
+  @needsUpdate moon = true
+  @needsUpdate ground = true
 
   readonly atmosphere = new AtmosphereParameters()
   readonly worldToECEFMatrix = new Matrix4().identity()
