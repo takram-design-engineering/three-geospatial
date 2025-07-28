@@ -132,6 +132,9 @@ export default defineConfig(
       '@typescript-eslint/prefer-for-of': 'off',
       '@typescript-eslint/class-literal-property-style': 'off',
 
+      // Method signature has a purpose.
+      '@typescript-eslint/method-signature-style': 'off',
+
       // To be determined. Turn this off for now.
       '@typescript-eslint/no-misused-spread': 'off',
 
