@@ -8,7 +8,6 @@ import {
   positionGeometry,
   screenUV,
   uniform,
-  vec2,
   vec3,
   vec4,
   type ShaderNodeObject
@@ -106,15 +105,15 @@ export class AerialPerspectiveNode extends TempNode {
     worldToECEFMatrix: uniformUpdate(new Matrix4(), self => {
       self.value.copy(this.worldToECEFMatrix)
     }),
-    cameraPositionECEF: uniform(new Vector3()),
     cameraNear: uniformUpdate(0, self => {
       self.value = this.camera.near ?? 0
     }),
     cameraFar: uniformUpdate(0, self => {
       self.value = this.camera.far ?? 0
     }),
-    sunDirectionECEF: uniform(this.sunDirection),
-    altitudeCorrectionECEF: uniform(new Vector3())
+    cameraPositionECEF: uniform(new Vector3()),
+    altitudeCorrectionECEF: uniform(new Vector3()),
+    sunDirectionECEF: uniform(this.sunDirection)
   }
 
   constructor(
@@ -158,8 +157,8 @@ export class AerialPerspectiveNode extends TempNode {
       cameraNear,
       cameraFar,
       cameraPositionECEF,
-      sunDirectionECEF,
-      altitudeCorrectionECEF
+      altitudeCorrectionECEF,
+      sunDirectionECEF
     } = this.uniforms
 
     const cameraPositionUnit = cameraPositionECEF
@@ -199,7 +198,7 @@ export class AerialPerspectiveNode extends TempNode {
       // Position of the surface
       const viewZ = depthToViewZ(this.camera, depth, cameraNear, cameraFar)
       const positionView = screenToView(
-        vec2(screenUV.x, screenUV.y.oneMinus()),
+        screenUV,
         depth,
         viewZ,
         projectionMatrix,

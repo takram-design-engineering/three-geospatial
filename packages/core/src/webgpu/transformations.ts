@@ -3,6 +3,7 @@ import {
   int,
   orthographicDepthToViewZ,
   perspectiveDepthToViewZ,
+  vec2,
   vec3,
   vec4
 } from 'three/tsl'
@@ -33,7 +34,8 @@ export const screenToView = /*#__PURE__*/ Fnv(
   ): Node<Vector3> => {
     const scale = projectionMatrix.element(int(2)).element(int(3))
     const offset = projectionMatrix.element(int(3)).element(int(3))
-    const clip = vec4(vec3(uv, depth).mul(2).sub(1), 1).toVar()
+    const flippedUV = vec2(uv.x, uv.y.oneMinus())
+    const clip = vec4(vec3(flippedUV, depth).mul(2).sub(1), 1).toVar()
     const clipW = viewZ.mul(scale).add(offset)
     clip.mulAssign(clipW)
     return inverseProjectionMatrix.mul(clip).xyz
