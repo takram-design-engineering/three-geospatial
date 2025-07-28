@@ -84,16 +84,6 @@ import {
 
 import { Fnv } from '@takram/three-geospatial/webgpu'
 
-import {
-  IRRADIANCE_TEXTURE_HEIGHT,
-  IRRADIANCE_TEXTURE_WIDTH,
-  SCATTERING_TEXTURE_MU_S_SIZE,
-  SCATTERING_TEXTURE_MU_SIZE,
-  SCATTERING_TEXTURE_NU_SIZE,
-  SCATTERING_TEXTURE_R_SIZE,
-  TRANSMITTANCE_TEXTURE_HEIGHT,
-  TRANSMITTANCE_TEXTURE_WIDTH
-} from '../constants'
 import type { AtmosphereParams } from './AtmosphereParams'
 import type {
   AbstractScatteringTexture,
@@ -201,8 +191,14 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ Fnv(
     const radiusUnit = distanceToHorizon.div(H)
 
     return vec2(
-      getTextureCoordFromUnitRange(cosViewUnit, TRANSMITTANCE_TEXTURE_WIDTH),
-      getTextureCoordFromUnitRange(radiusUnit, TRANSMITTANCE_TEXTURE_HEIGHT)
+      getTextureCoordFromUnitRange(
+        cosViewUnit,
+        atmosphere.transmittanceTextureSize.x
+      ),
+      getTextureCoordFromUnitRange(
+        radiusUnit,
+        atmosphere.transmittanceTextureSize.y
+      )
     )
   }
 )
@@ -220,10 +216,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
     // interpolate the transmittance instead of the optical depth.
     if (atmosphere.options.transmittancePrecisionLog) {
       // TODO: Separate to sampleLinear() function.
-      const size = vec2(
-        TRANSMITTANCE_TEXTURE_WIDTH,
-        TRANSMITTANCE_TEXTURE_HEIGHT
-      ).toConst()
+      const size = vec2(atmosphere.transmittanceTextureSize).toConst()
       const texelSize = vec3(div(1, size), 0).toConst()
       const coord = uv.mul(size).sub(0.5).toVar()
       const i = floor(coord).add(0.5).mul(texelSize.xy).toVar()
@@ -370,7 +363,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
 
     const radiusCoord = getTextureCoordFromUnitRange(
       distanceToHorizon.div(H),
-      SCATTERING_TEXTURE_R_SIZE
+      atmosphere.scatteringTextureRadiusSize
     )
 
     // Discriminant of the quadratic equation for the intersections of the ray
@@ -399,7 +392,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
               0,
               remap(distance, minDistance, maxDistance)
             ),
-            SCATTERING_TEXTURE_MU_SIZE / 2
+            atmosphere.scatteringTextureCosViewSize / 2
           ).mul(0.5)
         )
       )
@@ -417,7 +410,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
           0.5,
           getTextureCoordFromUnitRange(
             remap(distance, minDistance, maxDistance),
-            SCATTERING_TEXTURE_MU_SIZE / 2
+            atmosphere.scatteringTextureCosViewSize / 2
           ).mul(0.5)
         )
       )
@@ -446,7 +439,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
     // get more texture samples near the horizon.
     const cosSunCoord = getTextureCoordFromUnitRange(
       max(sub(1, a.div(A)), 0).div(add(1, a)),
-      SCATTERING_TEXTURE_MU_S_SIZE
+      atmosphere.scatteringTextureCosSunSize
     )
     const cosViewSunCoord = cosViewSun.add(1).div(2)
 
@@ -472,16 +465,18 @@ export const getScattering = /*#__PURE__*/ Fnv(
       cosViewSun,
       rayIntersectsGround
     ).toVar()
-    const texCoordX = coord.x.mul(SCATTERING_TEXTURE_NU_SIZE - 1).toVar()
+    const texCoordX = coord.x
+      .mul(atmosphere.scatteringTextureCosViewSunSize - 1)
+      .toVar()
     const texX = floor(texCoordX).toVar()
     const lerp = texCoordX.sub(texX).toVar()
     const coord0 = vec3(
-      texX.add(coord.y).div(SCATTERING_TEXTURE_NU_SIZE),
+      texX.add(coord.y).div(atmosphere.scatteringTextureCosViewSunSize),
       coord.z,
       coord.w
     )
     const coord1 = vec3(
-      texX.add(1).add(coord.y).div(SCATTERING_TEXTURE_NU_SIZE),
+      texX.add(1).add(coord.y).div(atmosphere.scatteringTextureCosViewSunSize),
       coord.z,
       coord.w
     )
@@ -501,8 +496,14 @@ export const getIrradianceTextureUV = /*#__PURE__*/ Fnv(
     )
     const cosSunUnit = cosSun.mul(0.5).add(0.5)
     return vec2(
-      getTextureCoordFromUnitRange(cosSunUnit, IRRADIANCE_TEXTURE_WIDTH),
-      getTextureCoordFromUnitRange(radiusUnit, IRRADIANCE_TEXTURE_HEIGHT)
+      getTextureCoordFromUnitRange(
+        cosSunUnit,
+        atmosphere.irradianceTextureSize.x
+      ),
+      getTextureCoordFromUnitRange(
+        radiusUnit,
+        atmosphere.irradianceTextureSize.y
+      )
     )
   }
 )

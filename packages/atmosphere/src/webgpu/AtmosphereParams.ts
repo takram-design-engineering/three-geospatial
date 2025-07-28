@@ -1,4 +1,4 @@
-import { Color, Vector3 } from 'three'
+import { Color, Vector2, Vector3 } from 'three'
 import { uniform, type ShaderNodeObject } from 'three/tsl'
 import type { UniformNode } from 'three/webgpu'
 
@@ -79,6 +79,18 @@ export class AtmosphereParams {
     constrainCameraAboveGround: false,
     hideGround: false
   }
+
+  transmittanceTextureSize = new Vector2(256, 64)
+  irradianceTextureSize = new Vector2(64, 16)
+  scatteringTextureRadiusSize = 32
+  scatteringTextureCosViewSize = 128
+  scatteringTextureCosSunSize = 32
+  scatteringTextureCosViewSunSize = 8
+  scatteringTextureSize = new Vector3(
+    this.scatteringTextureCosViewSunSize * this.scatteringTextureCosSunSize,
+    this.scatteringTextureCosViewSize,
+    this.scatteringTextureRadiusSize
+  )
 
   constructor() {
     const sunRadianceToLuminance = new Vector3(

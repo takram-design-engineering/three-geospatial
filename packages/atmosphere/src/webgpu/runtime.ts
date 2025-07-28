@@ -82,7 +82,6 @@ import type { StructNode } from 'three/webgpu'
 
 import { Fnv } from '@takram/three-geospatial/webgpu'
 
-import { SCATTERING_TEXTURE_NU_SIZE } from '../constants'
 import type { AtmosphereParams } from './AtmosphereParams'
 import {
   clampRadius,
@@ -157,16 +156,18 @@ const getCombinedScattering = /*#__PURE__*/ Fnv(
       cosViewSun,
       rayIntersectsGround
     ).toVar()
-    const texCoordX = coord.x.mul(SCATTERING_TEXTURE_NU_SIZE - 1).toVar()
+    const texCoordX = coord.x
+      .mul(atmosphere.scatteringTextureCosViewSunSize - 1)
+      .toVar()
     const texX = floor(texCoordX).toVar()
     const lerp = texCoordX.sub(texX).toVar()
     const coord0 = vec3(
-      texX.add(coord.y).div(SCATTERING_TEXTURE_NU_SIZE),
+      texX.add(coord.y).div(atmosphere.scatteringTextureCosViewSunSize),
       coord.z,
       coord.w
     ).toVar()
     const coord1 = vec3(
-      texX.add(1).add(coord.y).div(SCATTERING_TEXTURE_NU_SIZE),
+      texX.add(1).add(coord.y).div(atmosphere.scatteringTextureCosViewSunSize),
       coord.z,
       coord.w
     ).toVar()

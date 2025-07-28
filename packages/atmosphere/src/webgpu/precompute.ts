@@ -88,16 +88,6 @@ import type { Node, StructNode } from 'three/webgpu'
 
 import { Fnv } from '@takram/three-geospatial/webgpu'
 
-import {
-  IRRADIANCE_TEXTURE_HEIGHT,
-  IRRADIANCE_TEXTURE_WIDTH,
-  SCATTERING_TEXTURE_MU_S_SIZE,
-  SCATTERING_TEXTURE_MU_SIZE,
-  SCATTERING_TEXTURE_NU_SIZE,
-  SCATTERING_TEXTURE_R_SIZE,
-  TRANSMITTANCE_TEXTURE_HEIGHT,
-  TRANSMITTANCE_TEXTURE_WIDTH
-} from '../constants'
 import type {
   AtmosphereParams,
   DensityProfile,
@@ -259,11 +249,11 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, uv: Vec2): TransmittanceParamsStruct => {
     const cosViewUnit = getUnitRangeFromTextureCoord(
       uv.x,
-      TRANSMITTANCE_TEXTURE_WIDTH
+      atmosphere.transmittanceTextureSize.x
     )
     const radiusUnit = getUnitRangeFromTextureCoord(
       uv.y,
-      TRANSMITTANCE_TEXTURE_HEIGHT
+      atmosphere.transmittanceTextureSize.y
     )
 
     // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -297,17 +287,12 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
   }
 )
 
-const TRANSMITTANCE_TEXTURE_SIZE = /*#__PURE__*/ vec2(
-  TRANSMITTANCE_TEXTURE_WIDTH,
-  TRANSMITTANCE_TEXTURE_HEIGHT
-).toConst()
-
 export const computeTransmittanceToTopAtmosphereBoundaryTexture =
   /*#__PURE__*/ Fnv(
     (atmosphere: AtmosphereParams, fragCoord: Vec2): DimensionlessSpectrum => {
       const params = getParamsFromTransmittanceTextureUV(
         atmosphere,
-        fragCoord.div(TRANSMITTANCE_TEXTURE_SIZE)
+        fragCoord.div(vec2(atmosphere.transmittanceTextureSize))
       ).toVar()
       return computeTransmittanceToTopAtmosphereBoundary(
         atmosphere,
@@ -476,7 +461,10 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
 
     // Distance to the horizon.
     const distanceToHorizon = H.mul(
-      getUnitRangeFromTextureCoord(coord.w, SCATTERING_TEXTURE_R_SIZE)
+      getUnitRangeFromTextureCoord(
+        coord.w,
+        atmosphere.scatteringTextureRadiusSize
+      )
     ).toVar()
     const radius = sqrt(
       add(distanceToHorizon.pow2(), atmosphere.bottomRadius.pow2())
@@ -497,7 +485,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
             .mul(
               getUnitRangeFromTextureCoord(
                 coord.z.mul(2).oneMinus(),
-                SCATTERING_TEXTURE_MU_SIZE / 2
+                atmosphere.scatteringTextureCosViewSize / 2
               )
             )
         )
@@ -530,7 +518,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
             .mul(
               getUnitRangeFromTextureCoord(
                 coord.z.mul(2).sub(1),
-                SCATTERING_TEXTURE_MU_SIZE / 2
+                atmosphere.scatteringTextureCosViewSize / 2
               )
             )
         )
@@ -552,7 +540,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
 
     const cosSunUnit = getUnitRangeFromTextureCoord(
       coord.y,
-      SCATTERING_TEXTURE_MU_S_SIZE
+      atmosphere.scatteringTextureCosSunSize
     ).toVar()
     const minDistance = atmosphere.topRadius
       .sub(atmosphere.bottomRadius)
@@ -589,25 +577,26 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
   }
 )
 
-const SCATTERING_TEXTURE_SIZE = /*#__PURE__*/ vec4(
-  SCATTERING_TEXTURE_NU_SIZE - 1,
-  SCATTERING_TEXTURE_MU_S_SIZE,
-  SCATTERING_TEXTURE_MU_SIZE,
-  SCATTERING_TEXTURE_R_SIZE
-).toConst()
-
 const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, fragCoord: Vec3): ScatteringParamsStruct => {
     const fragCoordCosViewSun = floor(
-      fragCoord.x.div(SCATTERING_TEXTURE_MU_S_SIZE)
+      fragCoord.x.div(atmosphere.scatteringTextureCosSunSize)
     )
-    const fragCoordCosSun = fragCoord.x.mod(SCATTERING_TEXTURE_MU_S_SIZE)
+    const fragCoordCosSun = fragCoord.x.mod(
+      atmosphere.scatteringTextureCosSunSize
+    )
+    const size = vec4(
+      atmosphere.scatteringTextureCosViewSunSize - 1,
+      atmosphere.scatteringTextureCosSunSize,
+      atmosphere.scatteringTextureCosViewSize,
+      atmosphere.scatteringTextureRadiusSize
+    ).toConst()
     const coord = vec4(
       fragCoordCosViewSun,
       fragCoordCosSun,
       fragCoord.y,
       fragCoord.z
-    ).div(SCATTERING_TEXTURE_SIZE)
+    ).div(size)
     const params = getParamsFromScatteringTextureCoord(
       atmosphere,
       coord
@@ -1112,11 +1101,11 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(
   (atmosphere: AtmosphereParams, uv: Vec2): IrradianceParamsStruct => {
     const cosSunUnit = getUnitRangeFromTextureCoord(
       uv.x,
-      IRRADIANCE_TEXTURE_WIDTH
+      atmosphere.irradianceTextureSize.x
     )
     const radiusUnit = getUnitRangeFromTextureCoord(
       uv.y,
-      IRRADIANCE_TEXTURE_HEIGHT
+      atmosphere.irradianceTextureSize.y
     )
     const radius = atmosphere.bottomRadius.add(
       radiusUnit.mul(atmosphere.topRadius.sub(atmosphere.bottomRadius))
@@ -1126,11 +1115,6 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(
   }
 )
 
-const IRRADIANCE_TEXTURE_SIZE = /*#__PURE__*/ vec2(
-  IRRADIANCE_TEXTURE_WIDTH,
-  IRRADIANCE_TEXTURE_HEIGHT
-).toConst()
-
 export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
   (
     atmosphere: AtmosphereParams,
@@ -1139,7 +1123,7 @@ export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
   ): IrradianceSpectrum => {
     const params = getParamsFromIrradianceTextureUV(
       atmosphere,
-      fragCoord.div(IRRADIANCE_TEXTURE_SIZE)
+      fragCoord.div(vec2(atmosphere.irradianceTextureSize))
     ).toVar()
     const radius = params.get('radius')
     const cosSun = params.get('cosSun')
@@ -1163,7 +1147,7 @@ export const computeIndirectIrradianceTexture = /*#__PURE__*/ Fnv(
   ): IrradianceSpectrum => {
     const params = getParamsFromIrradianceTextureUV(
       atmosphere,
-      fragCoord.div(IRRADIANCE_TEXTURE_SIZE)
+      fragCoord.div(vec2(atmosphere.irradianceTextureSize))
     ).toVar()
     const radius = params.get('radius')
     const cosSun = params.get('cosSun')
