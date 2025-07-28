@@ -55,7 +55,7 @@ function maskArgTypes<TArgs extends Args>(
           `${prefix}${key}`,
           {
             ...value,
-            name: naturalCase(key),
+            name: value?.name ?? naturalCase(key),
             table:
               value?.table != null
                 ? {
