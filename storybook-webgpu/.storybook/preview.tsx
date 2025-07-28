@@ -19,8 +19,7 @@ const preview: Preview = {
     backgrounds: {
       value: 'dark'
     }
-  },
-  decorators: [Story => <Story />]
+  }
 }
 
 export default preview
