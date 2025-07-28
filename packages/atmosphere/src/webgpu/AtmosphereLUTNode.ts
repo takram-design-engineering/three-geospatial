@@ -186,11 +186,13 @@ class Context {
   deltaMultipleScatteringRT = this.deltaRayleighScatteringRT
 
   constructor(textureType: AnyFloatType, atmosphere: AtmosphereParams) {
-    setupRenderTarget(
-      this.opticalDepthRT,
-      textureType,
-      atmosphere.transmittanceTextureSize
-    )
+    if (atmosphere.options.transmittancePrecisionLog) {
+      setupRenderTarget(
+        this.opticalDepthRT,
+        textureType,
+        atmosphere.transmittanceTextureSize
+      )
+    }
     setupRenderTarget(
       this.deltaIrradianceRT,
       textureType,
@@ -712,16 +714,20 @@ export class AtmosphereLUTNode extends TempNode {
       this.textureType,
       this.atmosphere.scatteringTextureSize
     )
-    setupRenderTarget3D(
-      this.singleMieScatteringRT,
-      this.textureType,
-      this.atmosphere.scatteringTextureSize
-    )
-    setupRenderTarget3D(
-      this.higherOrderScatteringRT,
-      this.textureType,
-      this.atmosphere.scatteringTextureSize
-    )
+    if (!this.atmosphere.options.combinedScatteringTextures) {
+      setupRenderTarget3D(
+        this.singleMieScatteringRT,
+        this.textureType,
+        this.atmosphere.scatteringTextureSize
+      )
+    }
+    if (this.atmosphere.options.higherOrderScatteringTexture) {
+      setupRenderTarget3D(
+        this.higherOrderScatteringRT,
+        this.textureType,
+        this.atmosphere.scatteringTextureSize
+      )
+    }
 
     this.updateBefore(builder)
     return super.setup(builder)
