@@ -35,6 +35,7 @@ import {
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
+import { usePovControls } from '../helpers/usePovControls'
 
 interface SceneProps extends LocalDateControlsParams {
   exposure?: number
@@ -70,6 +71,8 @@ const Scene: FC<SceneProps> = ({
     },
     { collapsed: true }
   )
+  const camera = useThree(({ camera }) => camera)
+  usePovControls(camera, { collapsed: true })
   const motionDate = useLocalDateControls({ longitude, ...localDate })
   const { correctAltitude, correctGeometricError } = useControls('atmosphere', {
     correctAltitude: true,
@@ -89,7 +92,6 @@ const Scene: FC<SceneProps> = ({
     inscatter: true
   })
 
-  const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
     // Check the camera position to see if we've already moved it to globe surface
     if (camera.position.length() > 10) {
@@ -181,7 +183,7 @@ export const Story: FC<SceneProps> = props => {
   useGoogleMapsAPIKeyControls()
   return (
     <>
-      <Canvas gl={{ depth: false }} frameloop='demand'>
+      <Canvas gl={{ depth: false }} >
         <Stats />
         <Scene {...props} />
       </Canvas>
