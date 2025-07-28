@@ -1,4 +1,3 @@
-import { useThree } from '@react-three/fiber'
 import type { ArgTypes, StoryFn, StoryObj } from '@storybook/react-vite'
 import { useSpring } from 'framer-motion'
 import {
@@ -7,8 +6,7 @@ import {
   useAtomValue,
   useSetAtom,
   type PrimitiveAtom,
-  type SetStateAction,
-  type WritableAtom
+  type SetStateAction
 } from 'jotai'
 import { selectAtom } from 'jotai/utils'
 import {
@@ -142,14 +140,12 @@ export function useTransientControl<TArgs extends Args, T>(
   const value = selector(store.get(argsAtom) as TArgs)
   onChange(value) // Initial callback
 
-  const { invalidate } = useThree()
   const prevValueRef = useRef(value)
   store.sub(argsAtom, () => {
     const value = selector(store.get(argsAtom) as TArgs)
     if (value !== prevValueRef.current) {
       onChange(value, prevValueRef.current)
       prevValueRef.current = value
-      invalidate() // For the "demand" frameloop
     }
   })
 }
@@ -171,13 +167,9 @@ export function useSpringControl<TArgs extends Args>(
     springValue.set(value)
   })
 
-  const { invalidate } = useThree()
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
   useEffect(() => {
-    return springValue.on('change', () => {
-      onChangeRef.current(springValue.get())
-      invalidate() // For the "demand" frameloop
-    })
-  }, [springValue, invalidate])
+    return springValue.on('change', onChangeRef.current)
+  }, [springValue])
 }
