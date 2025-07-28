@@ -223,8 +223,8 @@ export class AerialPerspectiveNode extends TempNode {
       const skyIlluminance = sunSkyLuminance.get('skyIlluminance')
 
       // Lambertian diffuse
-      const albedo = this.colorNode.sample(screenUV)
-      const diffuse = albedo.div(PI).mul(sunIlluminance.add(skyIlluminance))
+      const color = this.colorNode.sample(screenUV)
+      const diffuse = color.rgb.div(PI).mul(sunIlluminance.add(skyIlluminance))
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
@@ -245,12 +245,12 @@ export class AerialPerspectiveNode extends TempNode {
     If(depth.greaterThanEqual(1 - 1e-8), () => {
       // Render the sky (the scattering seen from the camera to an infinite
       // distance) for very far depths.
-      outLuminance.assign(skyLuminance)
+      outLuminance.rgb.assign(skyLuminance)
     }).Else(() => {
-      outLuminance.assign(surfaceLuminance)
+      outLuminance.rgb.assign(surfaceLuminance)
     })
 
-    return outLuminance
+    return vec4(outLuminance, 1)
   }
 }
 
