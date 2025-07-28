@@ -17,7 +17,7 @@ const Content: FC = () => {
 
     material.colorNode = Fn(() => {
       const lut = atmosphereLUT()
-      const size = vec3(lut.atmosphere.scatteringTextureSize)
+      const size = vec3(lut.parameters.scatteringTextureSize)
       const uvw = wrapTileUVW(size, 2)
       return lut.getTextureNode('scattering').sample(uvw).rgb.mul(0.5)
     })()

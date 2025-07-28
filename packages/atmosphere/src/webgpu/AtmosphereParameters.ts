@@ -38,7 +38,7 @@ interface Options {
   hideGround: boolean
 }
 
-export class AtmosphereParams {
+export class AtmosphereParameters {
   solarIrradiance = uniform(new Vector3(1.474, 1.8504, 1.91198))
   sunAngularRadius = uniform(0.004675)
   bottomRadius = uniform(6360)

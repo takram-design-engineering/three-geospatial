@@ -52,7 +52,7 @@ import {
   type AnyFloatType
 } from '@takram/three-geospatial'
 
-import { AtmosphereParams } from './AtmosphereParams'
+import { AtmosphereParameters } from './AtmosphereParameters'
 import { rayleighPhaseFunction } from './common'
 import {
   computeDirectIrradianceTexture,
@@ -185,33 +185,33 @@ class Context {
   // texture.
   deltaMultipleScatteringRT = this.deltaRayleighScatteringRT
 
-  constructor(textureType: AnyFloatType, atmosphere: AtmosphereParams) {
-    if (atmosphere.options.transmittancePrecisionLog) {
+  constructor(textureType: AnyFloatType, parameters: AtmosphereParameters) {
+    if (parameters.options.transmittancePrecisionLog) {
       setupRenderTarget(
         this.opticalDepthRT,
         textureType,
-        atmosphere.transmittanceTextureSize
+        parameters.transmittanceTextureSize
       )
     }
     setupRenderTarget(
       this.deltaIrradianceRT,
       textureType,
-      atmosphere.irradianceTextureSize
+      parameters.irradianceTextureSize
     )
     setupRenderTarget3D(
       this.deltaRayleighScatteringRT,
       textureType,
-      atmosphere.scatteringTextureSize
+      parameters.scatteringTextureSize
     )
     setupRenderTarget3D(
       this.deltaMieScatteringRT,
       textureType,
-      atmosphere.scatteringTextureSize
+      parameters.scatteringTextureSize
     )
     setupRenderTarget3D(
       this.deltaScatteringDensityRT,
       textureType,
-      atmosphere.scatteringTextureSize
+      parameters.scatteringTextureSize
     )
   }
 
@@ -225,16 +225,17 @@ class Context {
 }
 
 class AdditiveNodeMaterial extends NodeMaterial {
+  blendEquation = AddEquation
+  blendEquationAlpha = AddEquation
+  blendSrc = OneFactor
+  blendDst = OneFactor
+  blendSrcAlpha = OneFactor
+  blendDstAlpha = OneFactor
+
   // eslint-disable-next-line accessor-pairs
   set additive(value: boolean) {
     this.transparent = value
     this.blending = value ? CustomBlending : NoBlending
-    this.blendEquation = AddEquation
-    this.blendEquationAlpha = AddEquation
-    this.blendSrc = OneFactor
-    this.blendDst = OneFactor
-    this.blendSrcAlpha = OneFactor
-    this.blendDstAlpha = OneFactor
   }
 }
 
@@ -309,7 +310,7 @@ export class AtmosphereLUTNode extends TempNode {
     return 'AtmosphereLUTNode'
   }
 
-  readonly atmosphere = new AtmosphereParams()
+  readonly parameters = new AtmosphereParameters()
 
   private textureType?: AnyFloatType
   private readonly material = new AdditiveNodeMaterial()
@@ -396,11 +397,11 @@ export class AtmosphereLUTNode extends TempNode {
     { opticalDepthRT }: Context
   ): void {
     const result = computeTransmittanceToTopAtmosphereBoundaryTexture(
-      this.atmosphere,
+      this.parameters,
       screenCoordinate
     ).toVar()
 
-    if (this.atmosphere.options.transmittancePrecisionLog) {
+    if (this.parameters.options.transmittancePrecisionLog) {
       // Compute the optical depth, and store it in opticalDepth. Avoid having
       // tiny transmittance values underflow to 0 due to half-float precision.
       this.material.fragmentNode = mrt({
@@ -414,7 +415,7 @@ export class AtmosphereLUTNode extends TempNode {
     this.material.needsUpdate = true
 
     this.renderToRenderTarget(renderer, this.transmittanceRT, [
-      this.atmosphere.options.transmittancePrecisionLog
+      this.parameters.options.transmittancePrecisionLog
         ? opticalDepthRT.texture
         : undefined
     ])
@@ -425,9 +426,9 @@ export class AtmosphereLUTNode extends TempNode {
     { deltaIrradianceRT, opticalDepthRT }: Context
   ): void {
     const irradiance = computeDirectIrradianceTexture(
-      this.atmosphere,
+      this.parameters,
       texture(
-        this.atmosphere.options.transmittancePrecisionLog
+        this.parameters.options.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
@@ -460,9 +461,9 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const layer = uniform(0)
     const singleScattering = computeSingleScatteringTexture(
-      this.atmosphere,
+      this.parameters,
       texture(
-        this.atmosphere.options.transmittancePrecisionLog
+        this.parameters.options.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
@@ -491,11 +492,11 @@ export class AtmosphereLUTNode extends TempNode {
       deltaMieScatteringRT.texture
     ])
 
-    if (!this.atmosphere.options.combinedScatteringTextures) {
+    if (!this.parameters.options.combinedScatteringTextures) {
       renderer.copyTextureToTexture(
         deltaMieScatteringRT.texture,
         this.singleMieScatteringRT.texture,
-        new Box3(new Vector3(), this.atmosphere.scatteringTextureSize)
+        new Box3(new Vector3(), this.parameters.scatteringTextureSize)
       )
     }
   }
@@ -514,9 +515,9 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const layer = uniform(0)
     const radiance = computeScatteringDensityTexture(
-      this.atmosphere,
+      this.parameters,
       texture(
-        this.atmosphere.options.transmittancePrecisionLog
+        this.parameters.options.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
@@ -547,7 +548,7 @@ export class AtmosphereLUTNode extends TempNode {
     scatteringOrder: number
   ): void {
     const irradiance = computeIndirectIrradianceTexture(
-      this.atmosphere,
+      this.parameters,
       texture3D(deltaRayleighScatteringRT.texture),
       texture3D(deltaMieScatteringRT.texture),
       texture3D(deltaMultipleScatteringRT.texture),
@@ -581,9 +582,9 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const layer = uniform(0)
     const multipleScattering = computeMultipleScatteringTexture(
-      this.atmosphere,
+      this.parameters,
       texture(
-        this.atmosphere.options.transmittancePrecisionLog
+        this.parameters.options.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
@@ -602,7 +603,7 @@ export class AtmosphereLUTNode extends TempNode {
       // deltaMultipleScattering is shared with deltaRayleighScattering.
       deltaRayleighScattering: vec4(radiance, 1)
     }
-    if (this.atmosphere.options.higherOrderScatteringTexture) {
+    if (this.parameters.options.higherOrderScatteringTexture) {
       mrtLayout.higherOrderScattering = vec4(luminance, 1)
     }
     this.material.fragmentNode = mrt(mrtLayout)
@@ -614,7 +615,7 @@ export class AtmosphereLUTNode extends TempNode {
 
     this.renderToRenderTarget3D(renderer, this.scatteringRT, layer, [
       deltaMultipleScatteringRT.texture,
-      this.atmosphere.options.higherOrderScatteringTexture
+      this.parameters.options.higherOrderScatteringTexture
         ? this.higherOrderScatteringRT.texture
         : undefined
     ])
@@ -680,7 +681,7 @@ export class AtmosphereLUTNode extends TempNode {
       return
     }
     invariant(this.textureType != null)
-    const context = new Context(this.textureType, this.atmosphere)
+    const context = new Context(this.textureType, this.parameters)
     this.updating = true
 
     timeSlice(this.precompute(renderer, context))
@@ -702,30 +703,30 @@ export class AtmosphereLUTNode extends TempNode {
     setupRenderTarget(
       this.transmittanceRT,
       this.textureType,
-      this.atmosphere.transmittanceTextureSize
+      this.parameters.transmittanceTextureSize
     )
     setupRenderTarget(
       this.irradianceRT,
       this.textureType,
-      this.atmosphere.irradianceTextureSize
+      this.parameters.irradianceTextureSize
     )
     setupRenderTarget3D(
       this.scatteringRT,
       this.textureType,
-      this.atmosphere.scatteringTextureSize
+      this.parameters.scatteringTextureSize
     )
-    if (!this.atmosphere.options.combinedScatteringTextures) {
+    if (!this.parameters.options.combinedScatteringTextures) {
       setupRenderTarget3D(
         this.singleMieScatteringRT,
         this.textureType,
-        this.atmosphere.scatteringTextureSize
+        this.parameters.scatteringTextureSize
       )
     }
-    if (this.atmosphere.options.higherOrderScatteringTexture) {
+    if (this.parameters.options.higherOrderScatteringTexture) {
       setupRenderTarget3D(
         this.higherOrderScatteringRT,
         this.textureType,
-        this.atmosphere.scatteringTextureSize
+        this.parameters.scatteringTextureSize
       )
     }
 

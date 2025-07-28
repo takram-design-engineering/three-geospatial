@@ -17,7 +17,7 @@ const Content: FC = () => {
 
     material.colorNode = Fn(() => {
       const lut = atmosphereLUT()
-      const size = vec2(lut.atmosphere.transmittanceTextureSize)
+      const size = vec2(lut.parameters.transmittanceTextureSize)
       const uv = screenCenterUV(size, 4)
       return lut.getTextureNode('transmittance').sample(uv)
     })()
