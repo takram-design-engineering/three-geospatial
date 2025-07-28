@@ -5,7 +5,7 @@ import { NodeMaterial } from 'three/webgpu'
 
 import { atmosphereLUT } from '@takram/three-atmosphere/webgpu'
 
-import { WebGPUCanvas } from '../../helpers/webgpu/WebGPUCanvas'
+import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { wrapTileUVW } from './helpers/wrapTileUVW'
 
 const Content: FC = () => {
@@ -17,9 +17,9 @@ const Content: FC = () => {
 
     material.colorNode = Fn(() => {
       const lut = atmosphereLUT()
-      const size = vec3(lut.parameters.scatteringTextureSize)
+      const size = vec3(lut.parameters.scatteringTextureSize).toConst()
       const uvw = wrapTileUVW(size, 2)
-      return lut.getTextureNode('scattering').sample(uvw).rgb.mul(0.5)
+      return lut.getTextureNode('singleMieScattering').sample(uvw).rgb.mul(0.5)
     })()
     return material
   }, [])

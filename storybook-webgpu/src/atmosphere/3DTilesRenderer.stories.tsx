@@ -1,13 +1,10 @@
 import type { Meta } from '@storybook/react-vite'
 
-import { createStory } from '../../helpers/StoryControls'
+import { createStory } from '../helpers/StoryControls'
 import { Story } from './3DTilesRenderer-Story'
 
 export default {
-  title: 'atmosphere/WebGPU (Experimental)/3D Tiles Renderer Integration',
-  parameters: {
-    layout: 'fullscreen'
-  }
+  title: 'atmosphere/3D Tiles Renderer Integration'
 } satisfies Meta
 
 export const Manhattan = createStory(

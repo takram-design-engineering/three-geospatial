@@ -1,12 +1,12 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useMemo, type FC } from 'react'
-import { Fn, positionGeometry, vec2, vec4 } from 'three/tsl'
+import { Fn, positionGeometry, vec3, vec4 } from 'three/tsl'
 import { NodeMaterial } from 'three/webgpu'
 
 import { atmosphereLUT } from '@takram/three-atmosphere/webgpu'
 
-import { WebGPUCanvas } from '../../helpers/webgpu/WebGPUCanvas'
-import { screenCenterUV } from './helpers/screenCenterUV'
+import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { wrapTileUVW } from './helpers/wrapTileUVW'
 
 const Content: FC = () => {
   const material = useMemo(() => {
@@ -17,9 +17,9 @@ const Content: FC = () => {
 
     material.colorNode = Fn(() => {
       const lut = atmosphereLUT()
-      const size = vec2(lut.parameters.transmittanceTextureSize)
-      const uv = screenCenterUV(size, 4)
-      return lut.getTextureNode('transmittance').sample(uv)
+      const size = vec3(lut.parameters.scatteringTextureSize)
+      const uvw = wrapTileUVW(size, 2)
+      return lut.getTextureNode('higherOrderScattering').sample(uvw).mul(0.5)
     })()
     return material
   }, [])

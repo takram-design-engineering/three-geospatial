@@ -2,6 +2,6 @@ import { create } from 'storybook/theming'
 
 export default create({
   base: 'dark',
-  brandTitle: '@takram/three-geospatial',
+  brandTitle: '@takram/three-geospatial Experimental WebGPU',
   brandUrl: 'https://github.com/takram-design-engineering/three-geospatial/'
 })

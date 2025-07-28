@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { GlobeControls, TilesPlugin } from '3d-tiles-renderer/r3f'
+import { GlobeControls } from '3d-tiles-renderer/r3f'
 import { useEffect, useLayoutEffect, type FC } from 'react'
 import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
 import {
@@ -16,16 +16,18 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 
-import { Globe } from '../../helpers/Globe'
+import { localDateArgTypes } from '../controls/localDate'
+import { toneMappingArgTypes } from '../controls/toneMapping'
+import { Globe } from '../helpers/Globe'
 import {
+  useControl,
   useSpringControl,
   useTransientControl,
   type StoryFC
-} from '../../helpers/StoryControls'
-import { useLocalDate } from '../../helpers/useLocalDate'
-import { useResource } from '../../helpers/useResource'
-import { WebGPUCanvas } from '../../helpers/webgpu/WebGPUCanvas'
-import { TileNodeMaterialReplacementPlugin } from '../../plugins/TileNodeMaterialReplacementPlugin'
+} from '../helpers/StoryControls'
+import { useLocalDate } from '../helpers/useLocalDate'
+import { useResource } from '../helpers/useResource'
+import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 const Scene: FC<StoryProps> = ({
   longitude,
@@ -57,15 +59,15 @@ const Scene: FC<StoryProps> = ({
       ),
     [scene, camera]
   )
-  const lutNode = useResource(() => atmosphereLUT())
-  const apNode = useResource(
+  const atmosphereLUTNode = useResource(() => atmosphereLUT())
+  const aerialPerspectiveNode = useResource(
     () =>
       aerialPerspective(
         camera,
         passNode.getTextureNode('output'),
         passNode.getTextureNode('normal'),
         passNode.getTextureNode('depth'),
-        lutNode
+        atmosphereLUTNode
       ),
     [passNode]
   )
@@ -75,8 +77,8 @@ const Scene: FC<StoryProps> = ({
   )
 
   useEffect(() => {
-    postProcessing.outputNode = apNode
-  }, [postProcessing, apNode])
+    postProcessing.outputNode = aerialPerspectiveNode
+  }, [postProcessing, aerialPerspectiveNode])
 
   useFrame(() => {
     postProcessing.render()
@@ -100,13 +102,15 @@ const Scene: FC<StoryProps> = ({
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
   useLocalDate(longitude, dayOfYear, timeOfDay, date => {
-    getSunDirectionECEF(date, apNode.sunDirection)
+    getSunDirectionECEF(date, aerialPerspectiveNode.sunDirection)
   })
 
+  const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
+    googleMapsApiKey !== '' ? googleMapsApiKey : undefined
+  )
   return (
-    <Globe>
+    <Globe apiKey={apiKey}>
       <GlobeControls enableDamping />
-      <TilesPlugin plugin={TileNodeMaterialReplacementPlugin} />
     </Globe>
   )
 }
@@ -126,6 +130,7 @@ interface StoryProps {
 }
 
 interface StoryArgs {
+  googleMapsApiKey: string
   toneMapping: ToneMapping
   exposure: number
   dayOfYear: number
@@ -139,48 +144,8 @@ Story.args = {
 
 Story.argTypes = {
   googleMapsApiKey: { control: 'text' },
-  toneMapping: {
-    options: [1, 2, 3, 4, 6, 7],
-    control: {
-      type: 'select',
-      labels: {
-        1: 'Linear',
-        2: 'Reinhard',
-        3: 'Cineon',
-        4: 'ACES Filmic',
-        6: 'AgX',
-        7: 'Neutral'
-      }
-    },
-    table: { category: 'tone mapping' }
-  },
-  exposure: {
-    control: {
-      type: 'range',
-      min: 1,
-      max: 100,
-      step: 1
-    },
-    table: { category: 'tone mapping' }
-  },
-  dayOfYear: {
-    control: {
-      type: 'range',
-      min: 1,
-      max: 365,
-      step: 1
-    },
-    table: { category: 'local date' }
-  },
-  timeOfDay: {
-    control: {
-      type: 'range',
-      min: 0,
-      max: 24,
-      step: 0.1
-    },
-    table: { category: 'local date' }
-  }
+  ...toneMappingArgTypes,
+  ...localDateArgTypes
 }
 
 export default Story

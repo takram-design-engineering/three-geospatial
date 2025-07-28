@@ -5,7 +5,7 @@ import { NodeMaterial } from 'three/webgpu'
 
 import { atmosphereLUT } from '@takram/three-atmosphere/webgpu'
 
-import { WebGPUCanvas } from '../../helpers/webgpu/WebGPUCanvas'
+import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { screenCenterUV } from './helpers/screenCenterUV'
 
 const Content: FC = () => {

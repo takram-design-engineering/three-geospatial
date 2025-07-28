@@ -44,10 +44,22 @@
         "command": "nx build-storybook storybook --configuration=production"
       }
     },
+    "build-storybook-webgpu": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx build-storybook storybook-webgpu --configuration=production"
+      }
+    },
     "storybook": {
       "executor": "nx:run-commands",
       "options": {
         "command": "nx storybook storybook --port=4400 --no-open"
+      }
+    },
+    "storybook-webgpu": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx storybook storybook-webgpu --port=4400 --no-open"
       }
     },
     "local-registry": {

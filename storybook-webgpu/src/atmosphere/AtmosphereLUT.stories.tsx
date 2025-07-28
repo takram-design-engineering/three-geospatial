@@ -7,10 +7,7 @@ import _SingleMieScattering from './AtmosphereLUT-SingleMieScattering'
 import _Transmittance from './AtmosphereLUT-Transmittance'
 
 export default {
-  title: 'atmosphere/WebGPU (Experimental)/Atmosphere LUT',
-  parameters: {
-    layout: 'fullscreen'
-  }
+  title: 'atmosphere/Atmosphere LUT'
 } satisfies Meta
 
 export const Transmittance = _Transmittance
