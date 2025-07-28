@@ -21,7 +21,6 @@ import {
 import {
   exp,
   int,
-  mat3,
   mrt,
   nodeObject,
   screenCoordinate,
@@ -117,8 +116,8 @@ function setupRenderTarget3D(
 ): void {
   renderTarget.texture.type = textureType
   renderTarget.setSize(size.x, size.y, size.z)
-  // As of r178, calling setSize() to RenderTarget3D marks the texture as an
-  // array texture, and subsequent calls to the textures in the GPU cannot find
+  // As of r178, calling setSize() to a RenderTarget3D marks the texture as an
+  // array texture, and subsequent calls to the texture in the GPU cannot find
   // overloaded functions.
   renderTarget.texture.isArrayTexture = false
 }
@@ -169,8 +168,8 @@ function run(renderer: Renderer, task: () => void): boolean {
 }
 
 class Context {
-  lambdas = vec3(680, 550, 440).toVar()
-  luminanceFromRadiance = mat3(new Matrix3().identity()).toVar()
+  lambdas = uniform(new Vector3(680, 550, 440))
+  luminanceFromRadiance = uniform(new Matrix3().identity())
 
   opticalDepthRT = createRenderTarget('opticalDepth')
   deltaIrradianceRT = createRenderTarget('deltaIrradiance')

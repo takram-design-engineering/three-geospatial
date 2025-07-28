@@ -178,12 +178,7 @@ export class AerialPerspectiveNode extends TempNode {
       .toVertexStage()
       .normalize()
 
-    const luminance = vec3().toVar()
-
-    const depth = this.depthNode.sample(screenUV)
-    If(depth.greaterThanEqual(1 - 1e-8), () => {
-      // Render the sky (the scattering seen from the camera to a infinite
-      // distance) for very far depths.
+    const skyLuminance = Fn(() => {
       const luminanceTransfer = getSkyLuminance(
         this.lutNode,
         cameraPositionUnit,
@@ -192,8 +187,10 @@ export class AerialPerspectiveNode extends TempNode {
         sunDirectionECEF
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
-      luminance.assign(inscatter)
-    }).Else(() => {
+      return inscatter // TODO: Direct luminance
+    })()
+
+    const surfaceLuminance = Fn(() => {
       // Normal vector of the surface
       const normalView = this.normalNode.sample(screenUV).xyz
       const normalWorld = inverseViewMatrix.mul(vec4(normalView, 0)).xyz
@@ -239,10 +236,21 @@ export class AerialPerspectiveNode extends TempNode {
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
       const transmittance = luminanceTransfer.get('transmittance')
-      luminance.assign(diffuse.mul(transmittance).add(inscatter))
+      return diffuse.mul(transmittance).add(inscatter)
+    })()
+
+    const outLuminance = vec3().toVar()
+
+    const depth = this.depthNode.sample(screenUV)
+    If(depth.greaterThanEqual(1 - 1e-8), () => {
+      // Render the sky (the scattering seen from the camera to an infinite
+      // distance) for very far depths.
+      outLuminance.assign(skyLuminance)
+    }).Else(() => {
+      outLuminance.assign(surfaceLuminance)
     })
 
-    return luminance
+    return outLuminance
   }
 }
 
