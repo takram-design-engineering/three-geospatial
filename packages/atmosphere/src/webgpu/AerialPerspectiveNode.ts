@@ -53,7 +53,7 @@ declare module 'three/webgpu' {
   }
 }
 
-function renderUniform<T>(
+function uniformUpdate<T>(
   value: T,
   callback: (self: ShaderNodeObject<UniformNode<T>>) => void
 ): ShaderNodeObject<UniformNode<T>> {
@@ -94,23 +94,23 @@ export class AerialPerspectiveNode extends TempNode {
   readonly sunDirection = new Vector3()
 
   private readonly uniforms = {
-    projectionMatrix: renderUniform(new Matrix4(), self => {
+    projectionMatrix: uniformUpdate(new Matrix4(), self => {
       self.value.copy(this.camera.projectionMatrix)
     }),
-    inverseProjectionMatrix: renderUniform(new Matrix4(), self => {
+    inverseProjectionMatrix: uniformUpdate(new Matrix4(), self => {
       self.value.copy(this.camera.projectionMatrixInverse)
     }),
-    inverseViewMatrix: renderUniform(new Matrix4(), self => {
+    inverseViewMatrix: uniformUpdate(new Matrix4(), self => {
       self.value.copy(this.camera.matrixWorld)
     }),
-    worldToECEFMatrix: renderUniform(new Matrix4(), self => {
+    worldToECEFMatrix: uniformUpdate(new Matrix4(), self => {
       self.value.copy(this.worldToECEFMatrix)
     }),
     cameraPositionECEF: uniform(new Vector3()),
-    cameraNear: renderUniform(0, self => {
+    cameraNear: uniformUpdate(0, self => {
       self.value = this.camera.near ?? 0
     }),
-    cameraFar: renderUniform(0, self => {
+    cameraFar: uniformUpdate(0, self => {
       self.value = this.camera.far ?? 0
     }),
     sunDirectionECEF: uniform(this.sunDirection),
@@ -194,12 +194,12 @@ export class AerialPerspectiveNode extends TempNode {
       const inscatter = luminanceTransfer.get('luminance')
       luminance.assign(inscatter)
     }).Else(() => {
-      // Normal vector of the texel point
+      // Normal vector of the surface
       const normalView = this.normalNode.sample(screenUV).xyz
       const normalWorld = inverseViewMatrix.mul(vec4(normalView, 0)).xyz
       const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
 
-      // Position of the texel point
+      // Position of the surface
       const viewZ = depthToViewZ(this.camera, depth, cameraNear, cameraFar)
       const positionView = screenToView(
         vec2(screenUV.x, screenUV.y.oneMinus()),
@@ -215,7 +215,7 @@ export class AerialPerspectiveNode extends TempNode {
       positionECEF.addAssign(altitudeCorrectionECEF)
       const positionUnit = positionECEF.mul(worldToUnitLength).toVar()
 
-      // Direct and indirect illuminance
+      // Direct and indirect illuminance on the surface
       const sunSkyLuminance = getSunAndSkyIlluminance(
         this.lutNode,
         positionUnit,
@@ -229,7 +229,7 @@ export class AerialPerspectiveNode extends TempNode {
       const albedo = this.albedoNode.sample(screenUV)
       const diffuse = albedo.div(PI).mul(sunIlluminance.add(skyIlluminance))
 
-      // Scattering between the camera to the texel point.
+      // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
         this.lutNode,
         cameraPositionUnit,

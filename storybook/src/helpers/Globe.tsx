@@ -1,3 +1,4 @@
+import { useThree } from '@react-three/fiber'
 import type { TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
 import {
   GLTFExtensionsPlugin,
@@ -14,6 +15,7 @@ import {
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useEffect, useState, type FC, type ReactNode, type Ref } from 'react'
 import { mergeRefs } from 'react-merge-refs'
+import { WebGLRenderer } from 'three'
 import { DRACOLoader } from 'three-stdlib'
 
 import { radians } from '@takram/three-geospatial'
@@ -50,6 +52,8 @@ export const Globe: FC<GlobeProps> = ({ ref, children }) => {
     }
   }, [tiles, setNeedsApiKey])
 
+  const renderer = useThree(({ gl }) => gl)
+
   return (
     <TilesRenderer
       ref={mergeRefs([ref, setTiles])}
@@ -68,7 +72,9 @@ export const Globe: FC<GlobeProps> = ({ ref, children }) => {
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
       <TilesPlugin plugin={UpdateOnChangePlugin} />
-      <TilesPlugin plugin={TilesFadePlugin} />
+      {renderer instanceof WebGLRenderer && (
+        <TilesPlugin plugin={TilesFadePlugin} />
+      )}
       <TilesPlugin
         plugin={TileCreasedNormalsPlugin}
         args={{ creaseAngle: radians(30) }}
