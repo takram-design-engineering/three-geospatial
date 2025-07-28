@@ -574,7 +574,16 @@ export class AtmosphereLUT {
     )
   }
 
-  private *precompute(context: Context): Iterable<void> {
+  private run(task: () => void): boolean {
+    const prevAutoClear = this.renderer.autoClear
+    this.renderer.autoClear = false
+    task()
+    this.renderer.setRenderTarget(null)
+    this.renderer.autoClear = prevAutoClear
+    return true
+  }
+
+  private *precompute(context: Context): Iterable<boolean> {
     // MRT doesn't work unless clearing the render target first. Perhaps it's a
     // limitation of WebGPU. I saw a similar comment in Three.js source code but
     // can't recall where.
@@ -589,44 +598,44 @@ export class AtmosphereLUT {
     this.clearRenderTarget(context.deltaMultipleScattering)
 
     // Compute the transmittance, and store it in transmittanceTexture.
-    this.computeTransmittance(context)
-    this.renderer.setRenderTarget(null)
-    yield
+    yield this.run(() => {
+      this.computeTransmittance(context)
+    })
 
     // Compute the direct irradiance, store it in deltaIrradiance and,
     // depending on "additive", either initialize irradianceTexture with zeros
     // or leave it unchanged (we don't want the direct irradiance in
     // irradianceTexture, but only the irradiance from the sky).
-    this.computeDirectIrradiance(context)
-    this.renderer.setRenderTarget(null)
-    yield
+    yield this.run(() => {
+      this.computeDirectIrradiance(context)
+    })
 
     // Compute the rayleigh and mie single scattering, store them in
     // deltaRayleighScattering and deltaMieScattering, and either store them or
     // accumulate them in scatteringTexture and optional
     // mieScatteringTexture.
-    this.computeSingleScattering(context)
-    this.renderer.setRenderTarget(null)
-    yield
+    yield this.run(() => {
+      this.computeSingleScattering(context)
+    })
 
     // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
     for (let scatteringOrder = 2; scatteringOrder <= 4; ++scatteringOrder) {
       // Compute the scattering density, and store it in deltaScatteringDensity.
-      this.computeScatteringDensity(context, scatteringOrder)
-      this.renderer.setRenderTarget(null)
-      yield
+      yield this.run(() => {
+        this.computeScatteringDensity(context, scatteringOrder)
+      })
 
       // Compute the indirect irradiance, store it in deltaIrradiance and
       // accumulate it in irradianceTexture.
-      this.computeIndirectIrradiance(context, scatteringOrder)
-      this.renderer.setRenderTarget(null)
-      yield
+      yield this.run(() => {
+        this.computeIndirectIrradiance(context, scatteringOrder)
+      })
 
       // Compute the multiple scattering, store it in deltaMultipleScattering,
       // and accumulate it in scatteringTexture.
-      this.computeMultipleScattering(context)
-      this.renderer.setRenderTarget(null)
-      yield
+      yield this.run(() => {
+        this.computeMultipleScattering(context)
+      })
     }
   }
 
@@ -634,10 +643,7 @@ export class AtmosphereLUT {
     this.updating = true
 
     const context = new Context(this.textureType)
-    const prevAutoClear = this.renderer.autoClear
-    this.renderer.autoClear = false
     await iterateIdle(this.precompute(context))
-    this.renderer.autoClear = prevAutoClear
     context.dispose()
 
     this.updating = false
