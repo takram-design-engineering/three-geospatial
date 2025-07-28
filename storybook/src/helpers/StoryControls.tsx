@@ -26,7 +26,7 @@ export const StoryContext = createContext(atom<Record<string, any>>({}))
 
 const prefix = '&'
 
-function obfuscate<Args extends Record<string, any>>(args: Args): Args {
+function maskArgs<Args extends Record<string, any>>(args: Args): Args {
   return Object.fromEntries(
     Object.entries(args).map(([key, value]) => [`${prefix}${key}`, value])
   ) as Args
@@ -36,20 +36,30 @@ function naturalCase(key: string): string {
   return key.replace(/(?<=[a-zA-Z])(?=[A-Z])/g, ' ').toLowerCase()
 }
 
-function obfuscateTypes<Args extends Record<string, any>>(
+function maskArgTypes<Args extends Record<string, any>>(
   args?: Partial<ArgTypes<Args>>
 ): Partial<ArgTypes<Args>> {
   return args != null
     ? (Object.fromEntries(
         Object.entries(args).map(([key, value]) => [
           `${prefix}${key}`,
-          { ...value, name: naturalCase(key) }
+          {
+            ...value,
+            name: naturalCase(key),
+            table:
+              value?.table != null
+                ? {
+                    ...value.table,
+                    category: value.table.category?.replace(/ /g, '\u00a0')
+                  }
+                : undefined
+          }
         ])
       ) as Partial<ArgTypes<Args>>)
     : {}
 }
 
-function deobfuscate<Args extends Record<string, any>>(args: Args): Args {
+function unmaskArgs<Args extends Record<string, any>>(args: Args): Args {
   return Object.fromEntries(
     Object.entries(args).map(([key, value]) => [
       key.slice(prefix.length),
@@ -73,11 +83,11 @@ export function createStory<Args extends Record<string, any>>(
         </StoryContext>
       )
     },
-    args: obfuscate({
+    args: maskArgs({
       ...StoryComponent.args,
       ...overrideArgs
     }),
-    argTypes: obfuscateTypes<Args>(StoryComponent.argTypes)
+    argTypes: maskArgTypes<Args>(StoryComponent.argTypes)
   }
 }
 
@@ -89,7 +99,7 @@ export function useControl<Args extends Record<string, any>, T>(
   selectorRef.current = selector
   // The selector function must be stable.
   const selectorCallback = useCallback((args: Args, prevValue?: T) => {
-    return selectorRef.current(deobfuscate<Args>(args), prevValue)
+    return selectorRef.current(unmaskArgs<Args>(args), prevValue)
   }, [])
   return useAtomValue(
     selectAtom(argsAtom as PrimitiveAtom<Args>, selectorCallback)
