@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/rules-of-hooks */
+
 import type { ArgTypes, StoryFn, StoryObj } from '@storybook/react-vite'
 import { useSpring, type MotionValue } from 'framer-motion'
 import {
@@ -19,6 +21,7 @@ import {
   useRef,
   type FC
 } from 'react'
+import { useArgs } from 'storybook/preview-api'
 
 import { springOptions } from './springOptions'
 
@@ -81,12 +84,22 @@ function unmaskArgs<TArgs extends Args>(args: TArgs): TArgs {
 export function createStory<Props, TArgs extends Args>(
   StoryComponent: StoryFC<Props, TArgs>,
   props?: Props,
-  overrideArgs?: TArgs
+  overrideArgs?: Partial<TArgs>
 ): StoryObj {
   const Component = memo(StoryComponent as FC)
+  const maskedArgs = maskArgs({ ...StoryComponent.args, ...overrideArgs })
   return {
     render: (args: Args) => {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
+      // Storybook remembers the values in the args, which I don't like, but it
+      // doesn't provide an option to disable it. Reset them to the initial
+      // values on being unmounted.
+      const [, updateArgs] = useArgs()
+      useEffect(() => {
+        return () => {
+          updateArgs(maskedArgs)
+        }
+      }, [updateArgs])
+
       const argsAtom = useMemo(() => {
         const primitive = atom({})
         return atom(
@@ -100,7 +113,6 @@ export function createStory<Props, TArgs extends Args>(
         )
       }, [])
 
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       useSetAtom(argsAtom)(args)
       return (
         <StoryContext value={argsAtom}>
@@ -108,10 +120,7 @@ export function createStory<Props, TArgs extends Args>(
         </StoryContext>
       )
     },
-    args: maskArgs({
-      ...StoryComponent.args,
-      ...overrideArgs
-    }),
+    args: maskedArgs,
     argTypes: maskArgTypes<TArgs>(StoryComponent.argTypes)
   }
 }
