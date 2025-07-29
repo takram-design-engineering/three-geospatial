@@ -52,6 +52,7 @@ import {
   type AnyFloatType
 } from '@takram/three-geospatial'
 
+import { requestIdleCallback } from '../helpers/requestIdleCallback'
 import { AtmosphereParameters } from './AtmosphereParameters'
 import { rayleighPhaseFunction } from './common'
 import {
