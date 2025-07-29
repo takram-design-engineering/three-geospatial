@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { GlobeControls } from '3d-tiles-renderer/r3f'
-import { useEffect, useLayoutEffect, type FC } from 'react'
+import { useEffect, type FC } from 'react'
 import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
 import {
   AgXToneMapping,
@@ -14,7 +14,6 @@ import {
   aerialPerspective,
   atmosphereLUT
 } from '@takram/three-atmosphere/webgpu'
-import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 
 import { localDateArgTypes } from '../controls/localDate'
 import { toneMappingArgTypes } from '../controls/toneMapping'
@@ -26,6 +25,10 @@ import {
   type StoryFC
 } from '../helpers/StoryControls'
 import { useLocalDate } from '../helpers/useLocalDate'
+import {
+  usePointOfView,
+  type PointOfViewProps
+} from '../helpers/usePointOfView'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
@@ -40,14 +43,13 @@ const Scene: FC<StoryProps> = ({
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  useLayoutEffect(() => {
-    new PointOfView(distance, radians(heading), radians(pitch)).decompose(
-      new Geodetic(radians(longitude), radians(latitude)).toECEF(),
-      camera.position,
-      camera.quaternion,
-      camera.up
-    )
-  }, [longitude, latitude, heading, pitch, distance, camera])
+  usePointOfView({
+    longitude,
+    latitude,
+    heading,
+    pitch,
+    distance
+  })
 
   const passNode = useResource(
     () =>
@@ -121,13 +123,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   </WebGPUCanvas>
 )
 
-interface StoryProps {
-  longitude: number
-  latitude: number
-  heading: number
-  pitch: number
-  distance: number
-}
+interface StoryProps extends PointOfViewProps {}
 
 interface StoryArgs {
   googleMapsApiKey: string
