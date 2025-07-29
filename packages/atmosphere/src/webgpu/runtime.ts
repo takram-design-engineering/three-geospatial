@@ -175,7 +175,7 @@ const getCombinedScattering = /*#__PURE__*/ Fnv(
 
     const scattering = vec3().toVar()
     const singleMieScattering = vec3().toVar()
-    if (parameters.options.combinedScatteringTextures) {
+    if (parameters.combinedScatteringTextures) {
       const combinedScattering = add(
         scatteringTexture.sample(coord0).mul(lerp.oneMinus()),
         scatteringTexture.sample(coord1).mul(lerp)
@@ -224,7 +224,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
     // below it.
     const radius = length(camera).toVar()
     const movedCamera = camera.toVar()
-    if (parameters.options.constrainCameraAboveGround) {
+    if (parameters.constrainCameraAboveGround) {
       If(radius.lessThan(parameters.bottomRadius), () => {
         radius.assign(parameters.bottomRadius)
         movedCamera.assign(normalize(camera).mul(radius))
@@ -265,7 +265,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
       const cosViewSun = viewRay.dot(sunDirection).toVar()
 
       const viewRayIntersectsGround = bool(false).toVar()
-      if (!parameters.options.hideGround) {
+      if (!parameters.hideGround) {
         viewRayIntersectsGround.assign(
           rayIntersectsGround(parameters, radius, cosView)
         )
@@ -349,7 +349,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
         ).toVar()
 
         // Occlude only single Rayleigh scattering by the shadow.
-        if (parameters.options.higherOrderScatteringTexture) {
+        if (parameters.higherOrderScatteringTexture) {
           const higherOrderScattering = getScattering(
             parameters,
             higherOrderScatteringTexture,
@@ -522,7 +522,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
         )
       )
     })
-    if (parameters.options.higherOrderScatteringTexture) {
+    if (parameters.higherOrderScatteringTexture) {
       // Occlude only the single Rayleigh scattering by the shadow.
       const higherOrderScattering = getScattering(
         parameters,
@@ -558,7 +558,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
     singleMieScattering.assign(
       singleMieScattering.sub(shadowTransmittance.mul(singleMieScatteringP))
     )
-    if (parameters.options.combinedScatteringTextures) {
+    if (parameters.combinedScatteringTextures) {
       singleMieScattering.assign(
         getExtrapolatedSingleMieScattering(
           parameters,

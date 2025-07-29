@@ -230,7 +230,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
 
     // Added for the precomputation stage in half-float precision. Manually
     // interpolate the transmittance instead of the optical depth.
-    if (parameters.options.transmittancePrecisionLog) {
+    if (parameters.transmittancePrecisionLog) {
       // TODO: Separate to sampleLinear() function.
       const size = vec2(parameters.transmittanceTextureSize).toConst()
       const texelSize = vec3(div(1, size), 0).toConst()

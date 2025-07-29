@@ -223,7 +223,7 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
         )
       )
     ).toVar()
-    if (parameters.options.transmittancePrecisionLog) {
+    if (parameters.transmittancePrecisionLog) {
       return opticalDepth
     } else {
       return exp(opticalDepth.negate())

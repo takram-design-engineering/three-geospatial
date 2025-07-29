@@ -1,31 +1,24 @@
 import { Color, Vector2, Vector3 } from 'three'
-import type { ShaderNodeObject } from 'three/tsl'
 
-import { radians } from '@takram/three-geospatial'
+import { assertType, radians } from '@takram/three-geospatial'
 import {
   referenceWith,
   uniformType,
-  type Node,
-  type NodeValue
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
-type Uniform<T> = T extends NodeValue
-  ? ShaderNodeObject<Node>
-  : 'getUniform' extends keyof T
-    ? T['getUniform'] extends (...args: any[]) => infer R
-      ? R
-      : never
-    : never
-
-type Uniforms<T, Exclude = never> = {
-  [K in keyof T as Uniform<T[K]> extends never ? never : K]: K extends Exclude
-    ? T[K]
-    : Uniform<T[K]>
+function createUniformProxy<
+  T extends {},
+  U extends {},
+  R = Omit<T, keyof U> & U
+>(target: T, uniforms: U): R {
+  return new Proxy(target, {
+    get: (target, propertyName) => {
+      assertType<keyof T & keyof U>(propertyName)
+      return uniforms[propertyName] ?? target[propertyName]
+    }
+  }) as unknown as R
 }
-
-const luminanceCoefficients = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
-
-export type UniformDensityProfileLayer = Uniforms<DensityProfileLayer>
 
 export class DensityProfileLayer {
   @uniformType('float') width: number
@@ -48,14 +41,10 @@ export class DensityProfileLayer {
     this.constantTerm = constantTerm
   }
 
-  private uniforms?: UniformDensityProfileLayer
-
-  getUniform(worldToUnit: Node<number>): UniformDensityProfileLayer {
-    if (this.uniforms != null) {
-      return this.uniforms
-    }
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  private createUniform(worldToUnit: Node<number>) {
     const reference = referenceWith(this)
-    return (this.uniforms = {
+    return createUniformProxy(this, {
       width: reference('width').mul(worldToUnit),
       expTerm: reference('expTerm'),
       expScale: reference('expScale'),
@@ -63,11 +52,17 @@ export class DensityProfileLayer {
       constantTerm: reference('constantTerm')
     })
   }
+
+  private uniforms?: UniformDensityProfileLayer
+
+  getUniform(worldToUnit: Node<number>): UniformDensityProfileLayer {
+    return (this.uniforms ??= this.createUniform(worldToUnit))
+  }
 }
 
-export interface UniformDensityProfile {
-  layers: [UniformDensityProfileLayer, UniformDensityProfileLayer]
-}
+export type UniformDensityProfileLayer = ReturnType<
+  DensityProfileLayer['createUniform']
+>
 
 export class DensityProfile {
   layers: [DensityProfileLayer, DensityProfileLayer]
@@ -76,41 +71,26 @@ export class DensityProfile {
     this.layers = layers
   }
 
-  private uniforms?: UniformDensityProfile
-
-  getUniform(worldToUnit: Node<number>): UniformDensityProfile {
-    if (this.uniforms != null) {
-      return this.uniforms
-    }
-    return (this.uniforms = {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  private createUniform(worldToUnit: Node<number>) {
+    return createUniformProxy(this, {
       layers: [
         this.layers[0].getUniform(worldToUnit),
         this.layers[1].getUniform(worldToUnit)
-      ]
+      ] as const
     })
+  }
+
+  private uniforms?: UniformDensityProfile
+
+  getUniform(worldToUnit: Node<number>): UniformDensityProfile {
+    return (this.uniforms ??= this.createUniform(worldToUnit))
   }
 }
 
-interface Options {
-  transmittancePrecisionLog: boolean
-  combinedScatteringTextures: boolean
-  higherOrderScatteringTexture: boolean
-  constrainCameraAboveGround: boolean
-  hideGround: boolean
-}
+export type UniformDensityProfile = ReturnType<DensityProfile['createUniform']>
 
-export type UniformAtmosphereParameters = Uniforms<
-  AtmosphereParameters,
-  | 'transmittanceTextureSize'
-  | 'irradianceTextureSize'
-  | 'scatteringTextureRadiusSize'
-  | 'scatteringTextureCosViewSize'
-  | 'scatteringTextureCosSunSize'
-  | 'scatteringTextureCosViewSunSize'
-  | 'scatteringTextureSize'
-> & {
-  options: Options
-}
+const luminanceCoefficients = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 
 export class AtmosphereParameters {
   @uniformType('float')
@@ -212,13 +192,11 @@ export class AtmosphereParameters {
   luminanceScale = 1 / luminanceCoefficients.dot(this.sunRadianceToLuminance)
 
   // Static options
-  options = {
-    transmittancePrecisionLog: false,
-    combinedScatteringTextures: true,
-    higherOrderScatteringTexture: true,
-    constrainCameraAboveGround: false,
-    hideGround: false
-  }
+  transmittancePrecisionLog = false
+  combinedScatteringTextures = true
+  higherOrderScatteringTexture = true
+  constrainCameraAboveGround = false
+  hideGround = false
 
   // Constants
   transmittanceTextureSize = new Vector2(256, 64)
@@ -233,15 +211,11 @@ export class AtmosphereParameters {
     this.scatteringTextureRadiusSize
   )
 
-  private uniforms?: UniformAtmosphereParameters
-
-  getUniform(): UniformAtmosphereParameters {
-    if (this.uniforms != null) {
-      return this.uniforms
-    }
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  private createUniform() {
     const reference = referenceWith(this)
     const worldToUnit = reference('worldToUnit')
-    return (this.uniforms = {
+    return createUniformProxy(this, {
       worldToUnit,
       solarIrradiance: reference('solarIrradiance'),
       sunAngularRadius: reference('sunAngularRadius'),
@@ -259,15 +233,17 @@ export class AtmosphereParameters {
       minCosSun: reference('minCosSun'),
       sunRadianceToLuminance: reference('sunRadianceToLuminance'),
       skyRadianceToLuminance: reference('skyRadianceToLuminance'),
-      luminanceScale: reference('luminanceScale'),
-      transmittanceTextureSize: this.transmittanceTextureSize,
-      irradianceTextureSize: this.irradianceTextureSize,
-      scatteringTextureRadiusSize: this.scatteringTextureRadiusSize,
-      scatteringTextureCosViewSize: this.scatteringTextureCosViewSize,
-      scatteringTextureCosSunSize: this.scatteringTextureCosSunSize,
-      scatteringTextureCosViewSunSize: this.scatteringTextureCosViewSunSize,
-      scatteringTextureSize: this.scatteringTextureSize,
-      options: this.options
+      luminanceScale: reference('luminanceScale')
     })
   }
+
+  private uniforms?: UniformAtmosphereParameters
+
+  getUniform(): UniformAtmosphereParameters {
+    return (this.uniforms ??= this.createUniform())
+  }
 }
+
+export type UniformAtmosphereParameters = ReturnType<
+  AtmosphereParameters['createUniform']
+>
