@@ -83,7 +83,7 @@ import type { StructNode } from 'three/webgpu'
 import { Fnv } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import type { AtmosphereParameters } from './AtmosphereParameters'
+import type { UniformAtmosphereParameters } from './AtmosphereParameters'
 import {
   clampRadius,
   getIrradiance,
@@ -113,7 +113,7 @@ import type {
 } from './types'
 
 const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
-  (parameters: AtmosphereParameters, scattering: Vec4): Vec3 => {
+  (parameters: UniformAtmosphereParameters, scattering: Vec4): Vec3 => {
     // Algebraically this can never be negative, but rounding errors can produce
     // that effect for sufficiently short view rays.
     const singleMieScattering = vec3(0).toVar()
@@ -140,7 +140,7 @@ type CombinedScatteringStruct = ShaderNodeObject<StructNode>
 
 const getCombinedScattering = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     scatteringTexture: ReducedScatteringTexture,
     singleMieScatteringTexture: ReducedScatteringTexture,
     radius: Length,
@@ -210,7 +210,7 @@ type RadianceTransferStruct = ShaderNodeObject<StructNode>
 
 const getSkyRadiance = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     transmittanceTexture: TransmittanceTexture,
     scatteringTexture: ReducedScatteringTexture,
     singleMieScatteringTexture: ReducedScatteringTexture,
@@ -390,7 +390,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
 
 const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     transmittanceTexture: TransmittanceTexture,
     scatteringTexture: ReducedScatteringTexture,
     singleMieScatteringTexture: ReducedScatteringTexture,
@@ -616,7 +616,7 @@ type RaySegmentStruct = ShaderNodeObject<StructNode>
 // Clip the view ray at the bottom atmosphere boundary.
 const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     camera: Position,
     point: Position
   ): RaySegmentStruct => {
@@ -641,7 +641,7 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
 
 const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     transmittanceTexture: TransmittanceTexture,
     scatteringTexture: ReducedScatteringTexture,
     singleMieScatteringTexture: ReducedScatteringTexture,
@@ -699,7 +699,7 @@ type SunAndSkyIrradianceStruct = ShaderNodeObject<StructNode>
 
 const getSunAndSkyIrradiance = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     transmittanceTexture: TransmittanceTexture,
     irradianceTexture: IrradianceTexture,
     point: Position,
@@ -729,7 +729,7 @@ const getSunAndSkyIrradiance = /*#__PURE__*/ Fnv(
 
 const getSunAndSkyScalarIrradiance = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     transmittanceTexture: TransmittanceTexture,
     irradianceTexture: IrradianceTexture,
     point: Position,
@@ -757,11 +757,11 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ Fnv(
 
 export const getSolarLuminance = /*#__PURE__*/ Fnv(
   (atmosphereLUT: AtmosphereLUTNode): Luminance3 => {
-    const parameters = atmosphereLUT.parameters
+    const parameters = atmosphereLUT.parameters.getUniform()
     return mul(
       PI,
       parameters.sunAngularRadius.pow2(),
-      parameters.sunRadianceToLuminance
+      parameters.sunRadianceToLuminance.mul(parameters.luminanceScale)
     )
   }
 )
@@ -780,7 +780,7 @@ export const getSkyLuminance = /*#__PURE__*/ Fnv(
     shadowLength: Length,
     sunDirection: Direction
   ): LuminanceTransferStruct => {
-    const parameters = atmosphereLUT.parameters
+    const parameters = atmosphereLUT.parameters.getUniform()
     const radianceTransfer = getSkyRadiance(
       parameters,
       atmosphereLUT.getTextureNode('transmittance'),
@@ -795,7 +795,7 @@ export const getSkyLuminance = /*#__PURE__*/ Fnv(
 
     const luminance = radianceTransfer
       .get('radiance')
-      .mul(parameters.skyRadianceToLuminance)
+      .mul(parameters.skyRadianceToLuminance.mul(parameters.luminanceScale))
     return luminanceTransferStruct(
       luminance,
       radianceTransfer.get('transmittance')
@@ -811,7 +811,7 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ Fnv(
     shadowLength: Length,
     sunDirection: Direction
   ): LuminanceTransferStruct => {
-    const parameters = atmosphereLUT.parameters
+    const parameters = atmosphereLUT.parameters.getUniform()
     const radianceTransfer = getSkyRadianceToPoint(
       parameters,
       atmosphereLUT.getTextureNode('transmittance'),
@@ -826,7 +826,7 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ Fnv(
 
     const luminance = radianceTransfer
       .get('radiance')
-      .mul(parameters.skyRadianceToLuminance)
+      .mul(parameters.skyRadianceToLuminance.mul(parameters.luminanceScale))
     return luminanceTransferStruct(
       luminance,
       radianceTransfer.get('transmittance')
@@ -847,7 +847,7 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
     normal: Direction,
     sunDirection: Direction
   ): SunAndSkyIlluminanceStruct => {
-    const parameters = atmosphereLUT.parameters
+    const parameters = atmosphereLUT.parameters.getUniform()
     const sunSkyIrradiance = getSunAndSkyIrradiance(
       parameters,
       atmosphereLUT.getTextureNode('transmittance'),
@@ -859,10 +859,10 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
 
     const sunIlluminance = sunSkyIrradiance
       .get('sunIrradiance')
-      .mul(parameters.sunRadianceToLuminance)
+      .mul(parameters.sunRadianceToLuminance.mul(parameters.luminanceScale))
     const skyIlluminance = sunSkyIrradiance
       .get('skyIrradiance')
-      .mul(parameters.skyRadianceToLuminance)
+      .mul(parameters.skyRadianceToLuminance.mul(parameters.luminanceScale))
     return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
   }
 )
@@ -874,7 +874,7 @@ export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ Fnv(
     point: Position,
     sunDirection: Direction
   ): SunAndSkyIlluminanceStruct => {
-    const parameters = atmosphereLUT.parameters
+    const parameters = atmosphereLUT.parameters.getUniform()
     const sunSkyIrradiance = getSunAndSkyScalarIrradiance(
       parameters,
       atmosphereLUT.getTextureNode('transmittance'),
@@ -885,10 +885,10 @@ export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ Fnv(
 
     const sunIlluminance = sunSkyIrradiance
       .get('sunIrradiance')
-      .mul(parameters.sunRadianceToLuminance)
+      .mul(parameters.sunRadianceToLuminance.mul(parameters.luminanceScale))
     const skyIlluminance = sunSkyIrradiance
       .get('skyIrradiance')
-      .mul(parameters.skyRadianceToLuminance)
+      .mul(parameters.skyRadianceToLuminance.mul(parameters.luminanceScale))
     return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
   }
 )

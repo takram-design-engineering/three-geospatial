@@ -124,7 +124,6 @@ export class AtmosphereParameters {
 
   // The density profile of aerosols, i.e. a function from altitude to
   // dimensionless values between 0 (null density) and 1 (maximum density).
-  // prettier-ignore
   mieDensity: DensityProfile = [
     new DensityProfileLayer(0, 0, 0, 0, 0),
     new DensityProfileLayer(0, 1, -0.833333, 0, 0)
@@ -149,7 +148,6 @@ export class AtmosphereParameters {
   // The density profile of air molecules that absorb light (e.g. ozone), i.e.
   // a function from altitude to dimensionless values between 0 (null density)
   // and 1 (maximum density).
-  // prettier-ignore
   absorptionDensity: DensityProfile = [
     new DensityProfileLayer(25, 0, 0, 1 / 15, -2 / 3),
     new DensityProfileLayer(0, 0, 0, -1 / 15, 8 / 3)

@@ -84,7 +84,7 @@ import {
 
 import { Fnv } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereParameters } from './AtmosphereParameters'
+import type { UniformAtmosphereParameters } from './AtmosphereParameters'
 import type {
   AbstractScatteringTexture,
   AbstractSpectrum,
@@ -110,7 +110,7 @@ export const clampDistance = /*#__PURE__*/ Fnv((distance: Length): Length => {
 })
 
 export const clampRadius = /*#__PURE__*/ Fnv(
-  (parameters: AtmosphereParameters, radius: Length): Length => {
+  (parameters: UniformAtmosphereParameters, radius: Length): Length => {
     return clamp(radius, parameters.bottomRadius, parameters.topRadius)
   }
 )
@@ -120,7 +120,11 @@ export const safeSqrt = /*#__PURE__*/ Fnv((area: Area): Length => {
 })
 
 export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
-  (parameters: AtmosphereParameters, radius: Length, cosView: Float): Length => {
+  (
+    parameters: UniformAtmosphereParameters,
+    radius: Length,
+    cosView: Float
+  ): Length => {
     const discriminant = radius
       .mul(radius)
       .mul(cosView.pow2().sub(1))
@@ -132,7 +136,11 @@ export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
 )
 
 export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ Fnv(
-  (parameters: AtmosphereParameters, radius: Length, cosView: Float): Length => {
+  (
+    parameters: UniformAtmosphereParameters,
+    radius: Length,
+    cosView: Float
+  ): Length => {
     const discriminant = radius
       .pow2()
       .mul(cosView.pow2().sub(1))
@@ -144,7 +152,11 @@ export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ Fnv(
 )
 
 export const rayIntersectsGround = /*#__PURE__*/ Fnv(
-  (parameters: AtmosphereParameters, radius: Length, cosView: Float): Bool => {
+  (
+    parameters: UniformAtmosphereParameters,
+    radius: Length,
+    cosView: Float
+  ): Bool => {
     return cosView
       .lessThan(0)
       .and(
@@ -166,7 +178,11 @@ export const getTextureCoordFromUnitRange = /*#__PURE__*/ Fnv(
 )
 
 export const getTransmittanceTextureUV = /*#__PURE__*/ Fnv(
-  (parameters: AtmosphereParameters, radius: Length, cosView: Float): Vec2 => {
+  (
+    parameters: UniformAtmosphereParameters,
+    radius: Length,
+    cosView: Float
+  ): Vec2 => {
     // Distance to top atmosphere boundary for a horizontal ray at ground level.
     const H = sqrt(
       parameters.topRadius.pow2().sub(parameters.bottomRadius.pow2())
@@ -205,7 +221,7 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ Fnv(
 
 export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
     cosView: Float
@@ -234,7 +250,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
 
 export const getTransmittance = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
     cosView: Float,
@@ -300,7 +316,7 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
 
 export const getTransmittanceToSun = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     transmittanceTexture: TransmittanceTexture,
     radius: Length,
     cosSun: Float
@@ -344,7 +360,7 @@ export const miePhaseFunction = /*#__PURE__*/ Fnv(
 
 export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     radius: Length,
     cosView: Float,
     cosSun: Float,
@@ -449,7 +465,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
 
 export const getScattering = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     scatteringTexture: AbstractScatteringTexture,
     radius: Length,
     cosView: Float,
@@ -488,7 +504,11 @@ export const getScattering = /*#__PURE__*/ Fnv(
 )
 
 export const getIrradianceTextureUV = /*#__PURE__*/ Fnv(
-  (parameters: AtmosphereParameters, radius: Length, cosSun: Float): Vec2 => {
+  (
+    parameters: UniformAtmosphereParameters,
+    radius: Length,
+    cosSun: Float
+  ): Vec2 => {
     const radiusUnit = remap(
       radius,
       parameters.bottomRadius,
@@ -510,7 +530,7 @@ export const getIrradianceTextureUV = /*#__PURE__*/ Fnv(
 
 export const getIrradiance = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParameters,
+    parameters: UniformAtmosphereParameters,
     irradianceTexture: IrradianceTexture,
     radius: Length,
     cosSun: Float

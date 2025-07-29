@@ -29,7 +29,6 @@ import {
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import { AtmosphereParameters } from './AtmosphereParameters'
 import { needsUpdate } from './decorators'
 import {
   getSkyLuminance,
@@ -62,8 +61,6 @@ function uniformUpdate<T>(
   })
 }
 
-const worldToUnitLength = 0.001
-
 export class AerialPerspectiveNode extends TempNode {
   static get type(): string {
     return 'AerialPerspectiveNode'
@@ -89,7 +86,6 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate moon = true
   @needsUpdate ground = true
 
-  readonly atmosphere = new AtmosphereParameters()
   readonly worldToECEFMatrix = new Matrix4().identity()
   readonly sunDirection = new Vector3()
 
@@ -143,7 +139,7 @@ export class AerialPerspectiveNode extends TempNode {
 
     getAltitudeCorrectionOffset(
       cameraPositionECEF.value,
-      this.atmosphere.bottomRadius.value / worldToUnitLength,
+      this.lutNode.parameters.bottomRadius,
       this.ellipsoid,
       altitudeCorrectionECEF.value
     )
@@ -162,9 +158,11 @@ export class AerialPerspectiveNode extends TempNode {
       sunDirectionECEF
     } = this.uniforms
 
+    const { worldToUnit } = this.lutNode.parameters.getUniform()
+
     const cameraPositionUnit = cameraPositionECEF
       .add(altitudeCorrectionECEF)
-      .mul(worldToUnitLength)
+      .mul(worldToUnit)
       .toVertexStage()
 
     const rayDirectionECEF = Fn(() => {
@@ -210,7 +208,7 @@ export class AerialPerspectiveNode extends TempNode {
         .mul(vec4(positionWorld, 1))
         .xyz.toVar()
       positionECEF.addAssign(altitudeCorrectionECEF)
-      const positionUnit = positionECEF.mul(worldToUnitLength).toVar()
+      const positionUnit = positionECEF.mul(worldToUnit).toVar()
 
       // Direct and indirect illuminance on the surface
       const sunSkyLuminance = getSunAndSkyIlluminance(
