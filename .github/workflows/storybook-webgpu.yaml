@@ -34,12 +34,12 @@ jobs:
           STORYBOOK_GOOGLE_MAP_API_KEY: ${{secrets.STORYBOOK_GOOGLE_MAP_API_KEY}}
 
       - run: |
-          mkdir -p storybook-webgpu/storybook-static/webgpu
-          mv storybook-webgpu/storybook-static/* storybook-webgpu/storybook-static/webgpu/
+          mkdir -p public/webgpu
+          cp -r storybook-webgpu/storybook-static/. public/webgpu/
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: 'storybook-webgpu/storybook-static'
+          path: 'public'
 
       - uses: actions/deploy-pages@v4
         with:
