@@ -23,13 +23,13 @@ import {
 import { Ellipsoid } from '@takram/three-geospatial'
 import {
   depthToViewZ,
+  needsUpdate,
   screenToView,
   type Node
 } from '@takram/three-geospatial/webgpu'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import { needsUpdate } from './decorators'
 import {
   getSkyLuminance,
   getSkyLuminanceToPoint,
