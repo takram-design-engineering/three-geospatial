@@ -618,7 +618,7 @@ export class AtmosphereLUTNode extends TempNode {
     ])
   }
 
-  private *precompute(renderer: Renderer, context: Context): Iterable<boolean> {
+  private *compute(renderer: Renderer, context: Context): Iterable<boolean> {
     // MRT doesn't work unless clearing the render target first. Perhaps it's a
     // limitation of WebGPU. I saw a similar comment in Three.js source code but
     // can't recall where.
@@ -677,26 +677,29 @@ export class AtmosphereLUTNode extends TempNode {
     this.material.fragmentNode = null
   }
 
+  async updateTextures(renderer: Renderer): Promise<void> {
+    invariant(this.textureType != null)
+    const context = new Context(this.textureType, this.parameters)
+    this.updating = true
+    try {
+      await timeSlice(this.compute(renderer, context))
+    } finally {
+      this.updating = false
+      context.dispose()
+      this.disposeQueue?.()
+    }
+  }
+
   updateBefore({ renderer }: Partial<NodeFrame>): void {
     if (renderer == null || this.version === this.lutVersion) {
       return
     }
     this.lutVersion = this.version
 
-    invariant(this.textureType != null)
-    const context = new Context(this.textureType, this.parameters)
-    this.updating = true
-
     // TODO: Race condition
-    void timeSlice(this.precompute(renderer, context))
-      .catch((error: unknown) => {
-        throw error instanceof Error ? error : new Error()
-      })
-      .finally(() => {
-        this.updating = false
-        context.dispose()
-        this.disposeQueue?.()
-      })
+    this.updateTextures(renderer).catch((error: unknown) => {
+      throw error instanceof Error ? error : new Error()
+    })
   }
 
   setup(builder: NodeBuilder): unknown {
