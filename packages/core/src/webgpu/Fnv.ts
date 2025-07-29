@@ -14,24 +14,24 @@ function createProxy<T extends Record<string | symbol, any>>(value: T): T {
   })
 }
 
-// WORKAROUND: As of r178, "Fn" always expects the callback function as an
+// WORKAROUND: As of r178, "Fn" always expects the callback function to be an
 // object form if the type of the first argument is a plain object. This is not
 // a limitation of "Fnv" but "Fn" itself.
-// For example:
-//   Fn(([a, b]) => {})([{ a: 1 }, 1])
-// It doesn't work because "Fn" passes { a: 1 } to [a, b] and causes a runtime
-// error because { a: 1 } is not iterable.
+// For example,
+//   Fn(([a, b]) => {})({ a: 1 }, 1)
+// which doesn't work because "Fn" passes { a: 1 } instead of [{ a: 1 }, 1] to
+// [a, b] and causes a runtime error because { a: 1 } is not iterable.
 // This behavior can be bypassed when the prototype of the object in the first
 // argument is not Object.prototype.
 function workaround<T extends readonly unknown[]>(args: T): any {
   const [value, ...rest] = args
   if (value != null && Object.getPrototypeOf(value) === Object.prototype) {
-    let wrapper = cache.get(value)
-    if (wrapper == null) {
-      wrapper = createProxy(value)
-      cache.set(value, wrapper)
+    let proxy = cache.get(value)
+    if (proxy == null) {
+      proxy = createProxy(value)
+      cache.set(value, proxy)
     }
-    return [wrapper, ...rest]
+    return [proxy, ...rest]
   }
   return args
 }

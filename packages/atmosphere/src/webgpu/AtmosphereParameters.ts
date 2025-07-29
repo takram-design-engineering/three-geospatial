@@ -2,7 +2,7 @@ import { Color, Vector2, Vector3 } from 'three'
 
 import { assertType, radians } from '@takram/three-geospatial'
 import {
-  referenceWith,
+  referenceTo,
   uniformType,
   type Node
 } from '@takram/three-geospatial/webgpu'
@@ -43,7 +43,7 @@ export class DensityProfileLayer {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private createUniform(worldToUnit: Node<number>) {
-    const reference = referenceWith(this)
+    const reference = referenceTo(this)
     return createUniformProxy(this, {
       width: reference('width').mul(worldToUnit),
       expTerm: reference('expTerm'),
@@ -213,7 +213,7 @@ export class AtmosphereParameters {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private createUniform() {
-    const reference = referenceWith(this)
+    const reference = referenceTo(this)
     const worldToUnit = reference('worldToUnit')
     return createUniformProxy(this, {
       worldToUnit,

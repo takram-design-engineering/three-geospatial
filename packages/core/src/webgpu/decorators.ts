@@ -2,11 +2,13 @@ interface NeedsUpdate {
   set needsUpdate(value: boolean)
 }
 
-export function needsUpdate<T extends NeedsUpdate, K extends keyof T & string>(
-  target: T,
-  propertyKey: K
-): void {
-  const privateKey = Symbol(propertyKey)
+export function needsUpdate<
+  T extends NeedsUpdate,
+  K extends keyof {
+    [K in keyof T as K extends string ? K : never]: unknown
+  }
+>(target: T, propertyKey: K): void {
+  const privateKey = Symbol(propertyKey as string)
   Object.defineProperty(target, privateKey, {
     enumerable: false,
     configurable: true,

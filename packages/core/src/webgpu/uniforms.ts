@@ -2,6 +2,8 @@ import { reference, uniform, type ShaderNodeObject } from 'three/tsl'
 import type { NodeFrame, ReferenceNode, UniformNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { assertType } from '../assertions'
+
 declare module 'three/webgpu' {
   interface Node {
     onRenderUpdate(
@@ -26,7 +28,12 @@ const uniformTypesKey = Symbol('uniformTypes')
 
 // TODO: Use Stage 3 decorator, but it will break every other decorator.
 export function uniformType(type: string) {
-  return <T extends {}, K extends keyof T & string>(
+  return <
+    T extends {},
+    K extends keyof {
+      [K in keyof T as K extends string ? K : never]: unknown
+    }
+  >(
     target: T,
     propertyKey: K
   ): void => {
@@ -43,13 +50,17 @@ export function uniformType(type: string) {
     }
     const uniformTypes = constructor[uniformTypesKey]
     invariant(uniformTypes != null)
-    uniformTypes[propertyKey] = type
+    uniformTypes[propertyKey as string] = type
   }
 }
 
-export function referenceWith<T extends {}>(
+export function referenceTo<T extends {}>(
   target: T
-): (propertyName: string) => ShaderNodeObject<ReferenceNode<T>> {
+): (
+  propertyName: keyof {
+    [K in keyof T as K extends string ? K : never]: unknown
+  }
+) => ShaderNodeObject<ReferenceNode<T>> {
   const uniformTypes = (
     target.constructor as {
       [uniformTypesKey]?: Record<string, string>
@@ -61,7 +72,8 @@ export function referenceWith<T extends {}>(
       `No uniform annotations were found in ${target.constructor.name}`
     )
   }
-  return (propertyName: string) => {
+  return propertyName => {
+    assertType<string>(propertyName)
     const uniformType = uniformTypes?.[propertyName]
     if (uniformType == null) {
       throw new Error(
