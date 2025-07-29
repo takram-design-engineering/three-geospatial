@@ -69,7 +69,7 @@ const Scene: FC<StoryProps> = ({
         passNode.getTextureNode('depth'),
         atmosphereLUTNode
       ),
-    [passNode]
+    [camera, passNode, atmosphereLUTNode]
   )
   const postProcessing = useResource(
     () => new PostProcessing(renderer),
@@ -115,7 +115,7 @@ const Scene: FC<StoryProps> = ({
   )
 }
 
-export const Story: StoryFC<StoryProps> = props => (
+export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
     <Scene {...props} />
   </WebGPUCanvas>

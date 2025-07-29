@@ -9,11 +9,11 @@ export function useResource<T extends Resource>(
   deps: readonly unknown[] = []
 ): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const node = useMemo(() => callback(), deps)
+  const resource = useMemo(() => callback(), deps)
   useEffect(() => {
     return () => {
-      node.dispose?.()
+      resource.dispose?.()
     }
-  }, [node])
-  return node
+  }, [resource])
+  return resource
 }

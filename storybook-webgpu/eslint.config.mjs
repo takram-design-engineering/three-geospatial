@@ -20,6 +20,10 @@ export default defineConfig(
       'storybook/no-uninstalled-addons': [
         'error',
         { packageJsonLocation: '../package.json' }
+      ],
+      'react-hooks/exhaustive-deps': [
+        'warn',
+        { additionalHooks: 'useResource' }
       ]
     }
   }
