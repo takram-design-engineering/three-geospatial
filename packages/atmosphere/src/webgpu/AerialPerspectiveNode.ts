@@ -6,6 +6,7 @@ import {
   NodeUpdateType,
   PI,
   positionGeometry,
+  reference,
   screenUV,
   uniform,
   vec3,
@@ -15,8 +16,7 @@ import {
   TempNode,
   type NodeBuilder,
   type NodeFrame,
-  type TextureNode,
-  type UniformNode
+  type TextureNode
 } from 'three/webgpu'
 
 import { Ellipsoid } from '@takram/three-geospatial'
@@ -52,15 +52,6 @@ declare module 'three/webgpu' {
   }
 }
 
-function uniformUpdate<T>(
-  value: T,
-  callback: (self: ShaderNode<UniformNode<T>>) => void
-): ShaderNode<UniformNode<T>> {
-  return uniform(value).onRenderUpdate((_, self) => {
-    callback(self)
-  })
-}
-
 export class AerialPerspectiveNode extends TempNode {
   static get type(): string {
     return 'AerialPerspectiveNode'
@@ -92,25 +83,16 @@ export class AerialPerspectiveNode extends TempNode {
   // Parameters
   worldToECEFMatrix = new Matrix4().identity()
 
-  private readonly uniforms = {
-    projectionMatrix: uniformUpdate(new Matrix4(), self => {
-      self.value.copy(this.camera.projectionMatrix)
-    }),
-    inverseProjectionMatrix: uniformUpdate(new Matrix4(), self => {
-      self.value.copy(this.camera.projectionMatrixInverse)
-    }),
-    inverseViewMatrix: uniformUpdate(new Matrix4(), self => {
-      self.value.copy(this.camera.matrixWorld)
-    }),
-    worldToECEFMatrix: uniformUpdate(new Matrix4(), self => {
-      self.value.copy(this.worldToECEFMatrix)
-    }),
-    cameraNear: uniformUpdate(0, self => {
-      self.value = this.camera.near ?? 0
-    }),
-    cameraFar: uniformUpdate(0, self => {
-      self.value = this.camera.far ?? 0
-    }),
+  // WORKAROUND: The leading underscore avoids infinite recursion.
+  // https://github.com/mrdoob/three.js/issues/31522
+  // prettier-ignore
+  private readonly _uniforms = {
+    projectionMatrix: reference('camera.projectionMatrix', 'mat4', this),
+    inverseProjectionMatrix: reference('camera.projectionMatrixInverse', 'mat4', this),
+    inverseViewMatrix: reference('camera.matrixWorld', 'mat4', this),
+    worldToECEFMatrix: reference('worldToECEFMatrix', 'mat4', this),
+    cameraNear: reference('camera.near', 'float', this),
+    cameraFar: reference('camera.far', 'float', this),
     cameraPositionECEF: uniform(new Vector3()),
     altitudeCorrectionECEF: uniform(new Vector3())
   }
@@ -133,7 +115,7 @@ export class AerialPerspectiveNode extends TempNode {
   }
 
   updateBefore(frame: NodeFrame): void {
-    const { cameraPositionECEF, altitudeCorrectionECEF } = this.uniforms
+    const { cameraPositionECEF, altitudeCorrectionECEF } = this._uniforms
 
     cameraPositionECEF.value
       .setFromMatrixPosition(this.camera.matrixWorld)
@@ -157,7 +139,7 @@ export class AerialPerspectiveNode extends TempNode {
       cameraFar,
       cameraPositionECEF,
       altitudeCorrectionECEF
-    } = this.uniforms
+    } = this._uniforms
 
     const { worldToUnit } = this.lutNode.parameters.getUniform()
 

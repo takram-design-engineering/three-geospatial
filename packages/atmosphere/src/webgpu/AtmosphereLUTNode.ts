@@ -318,7 +318,7 @@ export class AtmosphereLUTNode extends TempNode {
   private readonly singleMieScatteringRT: RenderTarget3D
   private readonly higherOrderScatteringRT: RenderTarget3D
 
-  // WORKAROUND: The leading underscore avoids the infinite recursion.
+  // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNodes: Partial<
     Record<

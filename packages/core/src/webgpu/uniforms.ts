@@ -1,5 +1,5 @@
-import { reference, uniform } from 'three/tsl'
-import type { NodeFrame, ReferenceNode, UniformNode } from 'three/webgpu'
+import { reference } from 'three/tsl'
+import type { NodeFrame, ReferenceNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { assertType } from '../assertions'
@@ -11,18 +11,6 @@ declare module 'three/webgpu' {
       callback: (this: this, frame: NodeFrame, self: this) => void
     ): this
   }
-}
-
-export function uniformUpdate<T>(
-  value: T,
-  callback: (self: ShaderNode<UniformNode<T>>) => T | undefined
-): ShaderNode<UniformNode<T>> {
-  return uniform(value).onRenderUpdate((_, self) => {
-    const value = callback(self)
-    if (value != null) {
-      self.value = value
-    }
-  })
 }
 
 const uniformTypesKey = Symbol('uniformTypes')
