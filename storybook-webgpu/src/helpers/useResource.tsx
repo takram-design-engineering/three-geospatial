@@ -12,7 +12,11 @@ export function useResource<T extends Resource>(
   const resource = useMemo(() => callback(), deps)
   useEffect(() => {
     return () => {
-      resource.dispose?.()
+      if (Array.isArray(resource)) {
+        resource.forEach(resource => resource.dispose?.())
+      } else {
+        resource.dispose?.()
+      }
     }
   }, [resource])
   return resource
