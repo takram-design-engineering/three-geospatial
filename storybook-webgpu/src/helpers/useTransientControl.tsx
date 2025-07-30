@@ -1,6 +1,6 @@
 import type { Args } from '@storybook/react-vite'
 import { getDefaultStore } from 'jotai'
-import { useContext, useRef } from 'react'
+import { useContext, useEffect, useRef } from 'react'
 import shallowEqual from 'shallowequal'
 
 import { StoryContext } from './StoryContext'
@@ -14,12 +14,19 @@ export function useTransientControl<TArgs extends Args, T>(
   const value = selector(store.get(argsAtom) as TArgs)
   onChange(value) // Initial callback
 
+  const selectorRef = useRef(selector)
+  selectorRef.current = selector
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+
   const prevValueRef = useRef(value)
-  store.sub(argsAtom, () => {
-    const value = selector(store.get(argsAtom) as TArgs)
-    if (!shallowEqual(value, prevValueRef.current)) {
-      onChange(value, prevValueRef.current)
-      prevValueRef.current = value
-    }
-  })
+  useEffect(() => {
+    return store.sub(argsAtom, () => {
+      const value = selectorRef.current(store.get(argsAtom) as TArgs)
+      if (!shallowEqual(value, prevValueRef.current)) {
+        onChangeRef.current(value, prevValueRef.current)
+        prevValueRef.current = value
+      }
+    })
+  }, [argsAtom, store])
 }

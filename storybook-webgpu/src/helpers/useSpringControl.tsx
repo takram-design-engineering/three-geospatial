@@ -18,10 +18,14 @@ export function useSpringControl<TArgs extends Args>(
   // Transient update on the spring value.
   const springValue = useSpring(value, springOptions)
   springValue.set(value)
-  store.sub(argsAtom, () => {
-    const value = selector(store.get(argsAtom) as TArgs)
-    springValue.set(value)
-  })
+  const selectorRef = useRef(selector)
+  selectorRef.current = selector
+  useEffect(() => {
+    return store.sub(argsAtom, () => {
+      const value = selectorRef.current(store.get(argsAtom) as TArgs)
+      springValue.set(value)
+    })
+  }, [argsAtom, store, springValue])
 
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
