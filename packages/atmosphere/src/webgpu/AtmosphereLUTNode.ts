@@ -327,7 +327,7 @@ export class AtmosphereLUTNode extends TempNode {
     >
   > = {}
 
-  private lutVersion?: number
+  private currentVersion?: number
   private updating = false
   private disposeQueue: (() => void) | undefined
 
@@ -704,10 +704,10 @@ export class AtmosphereLUTNode extends TempNode {
   }
 
   updateBefore({ renderer }: Partial<NodeFrame>): void {
-    if (renderer == null || this.version === this.lutVersion) {
+    if (renderer == null || this.version === this.currentVersion) {
       return
     }
-    this.lutVersion = this.version
+    this.currentVersion = this.version
 
     // TODO: Race condition
     this.updateTextures(renderer).catch((error: unknown) => {

@@ -1,3 +1,36 @@
+import invariant from 'tiny-invariant'
+
+import { NODE_TYPES } from './internals'
+import type { NodeType } from './types'
+
+// TODO: Use Stage 3 decorator, but it will break every other decorator.
+export function nodeType(type: NodeType) {
+  return <
+    T extends {},
+    K extends keyof {
+      [K in keyof T as K extends string ? K : never]: unknown
+    }
+  >(
+    target: T,
+    propertyKey: K
+  ): void => {
+    const constructor = target.constructor as {
+      [NODE_TYPES]?: Record<string, NodeType>
+    }
+    if (!Object.hasOwn(constructor, NODE_TYPES)) {
+      Object.defineProperty(constructor, NODE_TYPES, {
+        value: {},
+        enumerable: false,
+        configurable: true,
+        writable: true
+      })
+    }
+    const nodeTypes = constructor[NODE_TYPES]
+    invariant(nodeTypes != null)
+    nodeTypes[propertyKey as string] = type
+  }
+}
+
 interface NeedsUpdate {
   set needsUpdate(value: boolean)
 }

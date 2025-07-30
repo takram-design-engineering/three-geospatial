@@ -1,11 +1,7 @@
 import { Vector2, Vector3 } from 'three'
 
 import { assertType, radians } from '@takram/three-geospatial'
-import {
-  referenceTo,
-  uniformType,
-  type Node
-} from '@takram/three-geospatial/webgpu'
+import { Node, nodeType, referenceTo } from '@takram/three-geospatial/webgpu'
 
 import {
   Angle,
@@ -31,11 +27,11 @@ function createUniformProxy<
 }
 
 export class DensityProfileLayer {
-  @uniformType(Length) width: number
-  @uniformType(Dimensionless) expTerm: number
-  @uniformType(InverseLength) expScale: number
-  @uniformType(InverseLength) linearTerm: number
-  @uniformType(Dimensionless) constantTerm: number
+  @nodeType(Length) width: number
+  @nodeType(Dimensionless) expTerm: number
+  @nodeType(InverseLength) expScale: number
+  @nodeType(InverseLength) linearTerm: number
+  @nodeType(Dimensionless) constantTerm: number
 
   constructor(
     width: number,
@@ -63,10 +59,10 @@ export class DensityProfileLayer {
     })
   }
 
-  private uniforms?: UniformDensityProfileLayer
+  private _uniforms?: UniformDensityProfileLayer
 
   getUniform(worldToUnit: Node<'float'>): UniformDensityProfileLayer {
-    return (this.uniforms ??= this.createUniform(worldToUnit))
+    return (this._uniforms ??= this.createUniform(worldToUnit))
   }
 }
 
@@ -91,10 +87,10 @@ export class DensityProfile {
     })
   }
 
-  private uniforms?: UniformDensityProfile
+  private _uniforms?: UniformDensityProfile
 
   getUniform(worldToUnit: Node<'float'>): UniformDensityProfile {
-    return (this.uniforms ??= this.createUniform(worldToUnit))
+    return (this._uniforms ??= this.createUniform(worldToUnit))
   }
 }
 
@@ -105,23 +101,23 @@ const luminanceCoefficients = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 // TODO: Length is in meters but some coefficients seem too small for the
 // mediump precision. Revisit if it causes any visual errors.
 export class AtmosphereParameters {
-  @uniformType(Dimensionless)
+  @nodeType(Dimensionless)
   worldToUnit = 0.001
 
   // The solar irradiance at the top of the atmosphere.
-  @uniformType(IrradianceSpectrum)
+  @nodeType(IrradianceSpectrum)
   solarIrradiance = new Vector3(1.474, 1.8504, 1.91198)
 
   // The sun's angular radius in.
-  @uniformType(Angle)
+  @nodeType(Angle)
   sunAngularRadius = 0.004675
 
   // The distance between the planet center and the bottom of the atmosphere.
-  @uniformType(Length)
+  @nodeType(Length)
   bottomRadius = 6360000
 
   // The distance between the planet center and the top of the atmosphere.
-  @uniformType(Length)
+  @nodeType(Length)
   topRadius = 6420000
 
   // The density profile of air molecules.
@@ -132,7 +128,7 @@ export class AtmosphereParameters {
 
   // The scattering coefficient of air molecules at the altitude where their
   // density is maximum.
-  @uniformType(ScatteringSpectrum)
+  @nodeType(ScatteringSpectrum)
   rayleighScattering = new Vector3(0.000005802, 0.000013558, 0.0000331)
 
   // The density profile of aerosols.
@@ -143,16 +139,16 @@ export class AtmosphereParameters {
 
   // The scattering coefficient of aerosols at the altitude where their density
   // is maximum.
-  @uniformType(ScatteringSpectrum)
+  @nodeType(ScatteringSpectrum)
   mieScattering = new Vector3().setScalar(0.000003996)
 
   // The extinction coefficient of aerosols at the altitude where their density
   // is maximum.
-  @uniformType(ScatteringSpectrum)
+  @nodeType(ScatteringSpectrum)
   mieExtinction = new Vector3().setScalar(0.00000444)
 
   // The anisotropy parameter for the Cornette-Shanks phase function.
-  @uniformType(Dimensionless)
+  @nodeType(Dimensionless)
   miePhaseFunctionG = 0.8
 
   // The density profile of air molecules that absorb light (e.g. ozone).
@@ -163,26 +159,26 @@ export class AtmosphereParameters {
 
   // The extinction coefficient of molecules that absorb light (e.g. ozone) at
   // the altitude where their density is maximum.
-  @uniformType(ScatteringSpectrum)
+  @nodeType(ScatteringSpectrum)
   absorptionExtinction = new Vector3(0.00000065, 0.000001881, 0.000000085)
 
   // The average albedo of the ground.
-  @uniformType(DimensionlessSpectrum)
+  @nodeType(DimensionlessSpectrum)
   groundAlbedo = new Vector3().setScalar(0.1)
 
   // The cosine of the maximum sun zenith angle for which atmospheric scattering
   // must be precomputed (for maximum precision, use the smallest Sun zenith
   // angle yielding negligible sky light radiance values.
-  @uniformType(Dimensionless)
+  @nodeType(Dimensionless)
   minCosSun = Math.cos(radians(102))
 
-  @uniformType(DimensionlessSpectrum)
+  @nodeType(DimensionlessSpectrum)
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
 
-  @uniformType(DimensionlessSpectrum)
+  @nodeType(DimensionlessSpectrum)
   skyRadianceToLuminance = new Vector3(114974.91644, 71305.954816, 65310.548555)
 
-  @uniformType(Dimensionless)
+  @nodeType(Dimensionless)
   luminanceScale = 1 / luminanceCoefficients.dot(this.sunRadianceToLuminance)
 
   // Whether to store the optical depth instead of the transmittance in the
@@ -199,11 +195,12 @@ export class AtmosphereParameters {
   // (n >= 2) for a better approximation of the multi-scattering occlusion.
   higherOrderScatteringTexture = true
 
-  // Whether to clamp the camera position at the bottom atmosphere boundary.
+  // Whether to clamp the camera position at the bottom atmosphere boundary in
+  // the rendering stage.
   constrainCameraAboveGround = false
 
   // Whether to hide the ground in the sky by extrapolating the scattering at
-  // the horizon.
+  // the horizon in the rendering stage.
   hideGround = false
 
   // Texture sizes:
@@ -250,10 +247,10 @@ export class AtmosphereParameters {
     })
   }
 
-  private uniforms?: UniformAtmosphereParameters
+  private _uniforms?: UniformAtmosphereParameters
 
   getUniform(): UniformAtmosphereParameters {
-    return (this.uniforms ??= this.createUniform())
+    return (this._uniforms ??= this.createUniform())
   }
 }
 
