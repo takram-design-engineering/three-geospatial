@@ -54,25 +54,27 @@ const Scene: FC<StoryProps> = ({
 
   const sunDirection = useResource(() => uniform(new Vector3()))
 
-  const postProcessing = useResource(() => {
+  const [postProcessing] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output: diffuseColor,
         normal: normalView
       })
     )
+    const lutNode = atmosphereLUT()
     const aerialPerspectiveNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('normal'),
       passNode.getTextureNode('depth'),
-      atmosphereLUT()
+      lutNode
     )
     aerialPerspectiveNode.sunDirectionNode = sunDirection
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialPerspectiveNode
-    return postProcessing
+
+    return [postProcessing, lutNode]
   }, [renderer, scene, camera, sunDirection])
 
   useFrame(() => {

@@ -16,7 +16,8 @@ import { NodeMaterial } from 'three/webgpu'
 
 import {
   atmosphereLUT,
-  type AtmosphereLUTTextureName
+  type AtmosphereLUTTextureName,
+  type AtmosphereParameters
 } from '@takram/three-atmosphere/webgpu'
 import { Fnv, type ShaderNode } from '@takram/three-geospatial/webgpu'
 
@@ -25,8 +26,8 @@ import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 export const textureUV = Fnv(
-  (size: ShaderNode<'vec2'>, zoom: ShaderNode<'float'>) => {
-    const scale = screenSize.div(size).div(zoom).toVar()
+  (textureSize: ShaderNode<'vec2'>, zoom: ShaderNode<'float'>) => {
+    const scale = screenSize.div(textureSize).div(zoom).toVar()
     const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toVar()
     If(
       or(
@@ -43,7 +44,7 @@ export const textureUV = Fnv(
   }
 )
 
-const Content: FC<StoryProps> = ({ name }) => {
+const Content: FC<StoryProps> = ({ name, ...options }) => {
   const zoom = uniform(0)
   const valueExponent = uniform(0)
 
@@ -51,8 +52,9 @@ const Content: FC<StoryProps> = ({ name }) => {
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
 
   const lutNode = useResource(() => atmosphereLUT())
-  const size = vec2(lutNode.parameters[`${name}TextureSize`])
-  const uv = textureUV(size, zoom)
+  lutNode.parameters.set(options)
+  const textureSize = vec2(lutNode.parameters[`${name}TextureSize`])
+  const uv = textureUV(textureSize, zoom)
 
   material.colorNode = lutNode
     .getTextureNode(name)
@@ -70,7 +72,7 @@ const Content: FC<StoryProps> = ({ name }) => {
   return <ScreenQuad material={material} />
 }
 
-interface StoryProps {
+interface StoryProps extends Partial<AtmosphereParameters> {
   name: AtmosphereLUTTextureName<2>
 }
 

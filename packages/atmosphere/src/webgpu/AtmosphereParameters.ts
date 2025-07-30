@@ -211,6 +211,11 @@ export class AtmosphereParameters {
     this.scatteringTextureRadiusSize
   )
 
+  set(value: Partial<AtmosphereParameters>): this {
+    Object.assign(this, value)
+    return this
+  }
+
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private createUniform() {
     const reference = referenceTo(this)

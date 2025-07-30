@@ -16,7 +16,7 @@ const argTypes: ArgTypes = {
       max: 32,
       step: 0.1
     },
-    table: { category: 'viewer' }
+    table: { category: 'display' }
   },
   valueExponent: {
     control: {
@@ -25,12 +25,14 @@ const argTypes: ArgTypes = {
       max: 5,
       step: 0.1
     },
-    table: { category: 'viewer' }
+    table: { category: 'display' }
   }
 }
 
 export const Transmittance = createStory(Story2D, {
-  props: { name: 'transmittance' },
+  props: {
+    name: 'transmittance'
+  },
   args: {
     zoom: 4,
     valueExponent: 0
@@ -39,7 +41,9 @@ export const Transmittance = createStory(Story2D, {
 })
 
 export const Irradiance = createStory(Story2D, {
-  props: { name: 'irradiance' },
+  props: {
+    name: 'irradiance'
+  },
   args: {
     zoom: 16,
     valueExponent: 2
@@ -48,7 +52,9 @@ export const Irradiance = createStory(Story2D, {
 })
 
 export const Scattering = createStory(Story3D, {
-  props: { name: 'scattering' },
+  props: {
+    name: 'scattering'
+  },
   args: {
     zoom: 2,
     valueExponent: Math.log10(0.5)
@@ -57,7 +63,10 @@ export const Scattering = createStory(Story3D, {
 })
 
 export const SingleMieScattering = createStory(Story3D, {
-  props: { name: 'singleMieScattering' },
+  props: {
+    name: 'singleMieScattering',
+    combinedScatteringTextures: false
+  },
   args: {
     zoom: 2,
     valueExponent: Math.log10(0.5)
@@ -66,7 +75,9 @@ export const SingleMieScattering = createStory(Story3D, {
 })
 
 export const HigherOrderScattering = createStory(Story3D, {
-  props: { name: 'higherOrderScattering' },
+  props: {
+    name: 'higherOrderScattering'
+  },
   args: {
     zoom: 2,
     valueExponent: Math.log10(0.5)

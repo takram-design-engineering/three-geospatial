@@ -4,7 +4,7 @@ interface Resource {
   dispose?: () => void
 }
 
-export function useResource<T extends Resource>(
+export function useResource<T extends Resource | Resource[]>(
   callback: () => T,
   deps: readonly unknown[] = []
 ): T {
