@@ -24,7 +24,7 @@ import {
   depthToViewZ,
   needsUpdate,
   NodeObject,
-  screenToView,
+  screenToPositionView,
   type Node
 } from '@takram/three-geospatial/webgpu'
 
@@ -163,7 +163,7 @@ export class AerialPerspectiveNode extends TempNode {
 
       // Position of the surface
       const viewZ = depthToViewZ(this.camera, depth, cameraNear, cameraFar)
-      const positionView = screenToView(
+      const positionView = screenToPositionView(
         screenUV,
         depth,
         viewZ,

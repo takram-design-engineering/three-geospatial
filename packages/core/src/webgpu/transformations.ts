@@ -33,7 +33,7 @@ export const depthToViewZ = /*#__PURE__*/ Fnv(
   }
 )
 
-export const screenToView = /*#__PURE__*/ Fnv(
+export const screenToPositionView = /*#__PURE__*/ Fnv(
   (
     uv: NodeObject<'vec2'>,
     depth: NodeObject<'float'>,
