@@ -1,5 +1,9 @@
 import type { Texture3DNode, TextureNode } from 'three/webgpu'
 
+// These types only provide for annotations, and not guarantee the type safety.
+// I'm working on storing the dimensions in the types, but most of TSL functions
+// are not generic and don't preserve the types anyways.
+
 export type Length = 'float'
 export type Wavelength = 'float'
 export type Angle = 'float'

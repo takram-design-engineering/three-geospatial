@@ -108,7 +108,7 @@ import type {
   Position,
   ReducedScatteringTextureNode,
   TransmittanceTextureNode
-} from './types'
+} from './dimensional'
 
 const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
   (

@@ -11,7 +11,7 @@ import {
   IrradianceSpectrum,
   Length,
   ScatteringSpectrum
-} from './types'
+} from './dimensional'
 
 function createContextProxy<
   T extends {},

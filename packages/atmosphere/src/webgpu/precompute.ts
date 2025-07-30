@@ -119,7 +119,7 @@ import type {
   ScatteringDensityTextureNode,
   ScatteringTextureNode,
   TransmittanceTextureNode
-} from './types'
+} from './dimensional'
 
 declare module 'three/src/nodes/TSL.js' {
   interface NodeElements {

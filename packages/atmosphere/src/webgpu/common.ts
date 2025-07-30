@@ -96,7 +96,7 @@ import type {
   IrradianceTextureNode,
   Length,
   TransmittanceTextureNode
-} from './types'
+} from './dimensional'
 
 export const clampCosine = /*#__PURE__*/ Fnv(
   (cosine: NodeObject<'float'>): Node<'float'> => {
