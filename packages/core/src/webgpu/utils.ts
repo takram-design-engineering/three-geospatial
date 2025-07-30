@@ -18,10 +18,10 @@ type NodeValuePropertyKey<T> = keyof {
     : never]: unknown
 }
 
-function getNodeTypes<T extends {}>(target: T): Record<string, NodeType> {
+function getNodeTypes<T extends {}>(target: T): Record<keyof T, NodeType> {
   const nodeTypes = (
     target.constructor as {
-      [NODE_TYPES]?: Record<string, NodeType>
+      [NODE_TYPES]?: Record<keyof T, NodeType>
     }
   )[NODE_TYPES]
 
@@ -34,11 +34,11 @@ function getNodeTypes<T extends {}>(target: T): Record<string, NodeType> {
 }
 
 export function referenceTo<T extends {}>(target: T) {
-  const types = getNodeTypes(target)
+  const nodeTypes = getNodeTypes(target)
   return <K extends NodeValuePropertyKey<T>>(
     propertyName: K
   ): NodeObject<ReferenceNode<T>> => {
-    const nodeType = types?.[propertyName as string]
+    const nodeType = nodeTypes[propertyName]
     if (nodeType == null) {
       throw new Error(
         `Node type annotation was not found for property "${String(propertyName)}" in ${target.constructor.name}`
@@ -49,13 +49,13 @@ export function referenceTo<T extends {}>(target: T) {
 }
 
 export function propertyOf<T extends {}>(target: T) {
-  const types = getNodeTypes(target)
+  const nodeTypes = getNodeTypes(target)
   return <K extends NodeValuePropertyKey<T>>(
     propertyName: K,
     transformValue?: (self: T[K]) => T[K],
     transformNode?: (node: NodeObject) => NodeObject
   ): NodeObject<VarNode> => {
-    const nodeType = types?.[propertyName as string]
+    const nodeType = nodeTypes[propertyName]
     if (nodeType == null) {
       throw new Error(
         `Node type annotation was not found for property "${String(propertyName)}" in ${target.constructor.name}`
