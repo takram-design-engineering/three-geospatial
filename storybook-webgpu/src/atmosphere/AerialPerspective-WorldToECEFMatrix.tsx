@@ -36,7 +36,7 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing
 
-  const sunDirection = useMemo(() => uniform(new Vector3()), [])
+  const sunDirectionECEF = useMemo(() => uniform(new Vector3()), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
   const [postProcessing] = useResource(() => {
@@ -54,14 +54,14 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('depth'),
       lutNode
     )
-    aerialNode.sunDirectionNode = sunDirection
+    aerialNode.sunDirectionECEFNode = sunDirectionECEF
     aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, lutNode]
-  }, [renderer, scene, camera, sunDirection, worldToECEFMatrix])
+  }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix])
 
   useFrame(() => {
     postProcessing.render()
@@ -103,7 +103,7 @@ const Scene: FC<StoryProps> = () => {
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
   useLocalDate(longitude, dayOfYear, timeOfDay, date => {
-    getSunDirectionECEF(date, sunDirection.value)
+    getSunDirectionECEF(date, sunDirectionECEF.value)
   })
 
   return (

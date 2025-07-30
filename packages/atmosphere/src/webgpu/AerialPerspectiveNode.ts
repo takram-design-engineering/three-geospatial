@@ -49,7 +49,7 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate lutNode: AtmosphereLUTNode
 
   // Optional dependencies
-  @needsUpdate sunDirectionNode: Node<'vec3'> = vec3()
+  @needsUpdate sunDirectionECEFNode: Node<'vec3'> = vec3()
 
   // Static options
   @needsUpdate ellipsoid = Ellipsoid.WGS84
@@ -149,7 +149,7 @@ export class AerialPerspectiveNode extends TempNode {
         cameraPositionUnit,
         rayDirectionECEF,
         0, // TODO: Shadow length
-        this.sunDirectionNode
+        this.sunDirectionECEFNode
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
       return inscatter // TODO: Direct luminance
@@ -182,7 +182,7 @@ export class AerialPerspectiveNode extends TempNode {
         this.lutNode,
         positionUnit,
         normalECEF,
-        this.sunDirectionNode
+        this.sunDirectionECEFNode
       ).toVar()
       const sunIlluminance = sunSkyLuminance.get('sunIlluminance')
       const skyIlluminance = sunSkyLuminance.get('skyIlluminance')
@@ -197,7 +197,7 @@ export class AerialPerspectiveNode extends TempNode {
         cameraPositionUnit,
         positionUnit,
         0, // TODO: Shadow length
-        this.sunDirectionNode
+        this.sunDirectionECEFNode
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
       const transmittance = luminanceTransfer.get('transmittance')

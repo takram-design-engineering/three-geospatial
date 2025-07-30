@@ -46,7 +46,7 @@ const Scene: FC<StoryProps> = ({
 
   // Post-processing
 
-  const sunDirection = useMemo(() => uniform(new Vector3()), [])
+  const sunDirectionECEF = useMemo(() => uniform(new Vector3()), [])
 
   const [postProcessing] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
@@ -63,13 +63,13 @@ const Scene: FC<StoryProps> = ({
       passNode.getTextureNode('depth'),
       lutNode
     )
-    aerialNode.sunDirectionNode = sunDirection
+    aerialNode.sunDirectionECEFNode = sunDirectionECEF
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, lutNode]
-  }, [renderer, scene, camera, sunDirection])
+  }, [renderer, scene, camera, sunDirectionECEF])
 
   useFrame(() => {
     postProcessing.render()
@@ -106,7 +106,7 @@ const Scene: FC<StoryProps> = ({
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
   useLocalDate(longitude, dayOfYear, timeOfDay, date => {
-    getSunDirectionECEF(date, sunDirection.value)
+    getSunDirectionECEF(date, sunDirectionECEF.value)
   })
 
   // Google Maps API key
