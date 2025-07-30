@@ -112,74 +112,57 @@ export class AtmosphereParameters {
   @uniformType(IrradianceSpectrum)
   solarIrradiance = new Vector3(1.474, 1.8504, 1.91198)
 
-  // The sun's angular radius. Warning: the implementation uses approximations
-  // that are valid only if this angle is smaller than 0.1 radians.
+  // The sun's angular radius in.
   @uniformType(Angle)
   sunAngularRadius = 0.004675
 
-  // The distance between the planet center and the bottom of the atmosphere in
-  // meters.
+  // The distance between the planet center and the bottom of the atmosphere.
   @uniformType(Length)
   bottomRadius = 6360000
 
-  // The distance between the planet center and the top of the atmosphere in
-  // meters.
+  // The distance between the planet center and the top of the atmosphere.
   @uniformType(Length)
   topRadius = 6420000
 
-  // The density profile of air molecules, i.e. a function from altitude to
-  // dimensionless values between 0 (null density) and 1 (maximum density).
-  // prettier-ignore
+  // The density profile of air molecules.
   rayleighDensity = new DensityProfile([
     new DensityProfileLayer(0, 0, 0, 0, 0),
     new DensityProfileLayer(0, 1, -1 / 8000, 0, 0)
   ])
 
   // The scattering coefficient of air molecules at the altitude where their
-  // density is maximum (usually the bottom of the atmosphere), as a function of
-  // wavelength. The scattering coefficient at altitude h is equal to
-  // "rayleighScattering" times "rayleighDensity" at this altitude.
+  // density is maximum.
   @uniformType(ScatteringSpectrum)
   rayleighScattering = new Vector3(0.000005802, 0.000013558, 0.0000331)
 
-  // The density profile of aerosols, i.e. a function from altitude to
-  // dimensionless values between 0 (null density) and 1 (maximum density).
+  // The density profile of aerosols.
   mieDensity = new DensityProfile([
     new DensityProfileLayer(0, 0, 0, 0, 0),
     new DensityProfileLayer(0, 1, -1 / 1200, 0, 0)
   ])
 
   // The scattering coefficient of aerosols at the altitude where their density
-  // is maximum (usually the bottom of the atmosphere), as a function of
-  // wavelength. The scattering coefficient at altitude h is equal to
-  // "mieScattering" times "mieDensity" at this altitude.
+  // is maximum.
   @uniformType(ScatteringSpectrum)
   mieScattering = new Vector3().setScalar(0.000003996)
 
   // The extinction coefficient of aerosols at the altitude where their density
-  // is maximum (usually the bottom of the atmosphere), as a function of
-  // wavelength. The extinction coefficient at altitude h is equal to
-  // "mieExtinction" times "mieDensity" at this altitude.
+  // is maximum.
   @uniformType(ScatteringSpectrum)
   mieExtinction = new Vector3().setScalar(0.00000444)
 
-  // The asymmetry parameter for the Cornette-Shanks phase function for the
-  // aerosols.
+  // The anisotropy parameter for the Cornette-Shanks phase function.
   @uniformType(Dimensionless)
   miePhaseFunctionG = 0.8
 
-  // The density profile of air molecules that absorb light (e.g. ozone), i.e.
-  // a function from altitude to dimensionless values between 0 (null density)
-  // and 1 (maximum density).
+  // The density profile of air molecules that absorb light (e.g. ozone).
   absorptionDensity = new DensityProfile([
     new DensityProfileLayer(25000, 0, 0, 1 / 15000, -2 / 3),
     new DensityProfileLayer(0, 0, 0, -1 / 15000, 8 / 3)
   ])
 
   // The extinction coefficient of molecules that absorb light (e.g. ozone) at
-  // the altitude where their density is maximum, as a function of wavelength.
-  // The extinction coefficient at altitude h is equal to
-  // "absorptionExtinction" times "absorptionDensity" at this altitude.
+  // the altitude where their density is maximum.
   @uniformType(ScatteringSpectrum)
   absorptionExtinction = new Vector3(0.00000065, 0.000001881, 0.000000085)
 
@@ -187,10 +170,9 @@ export class AtmosphereParameters {
   @uniformType(DimensionlessSpectrum)
   groundAlbedo = new Vector3().setScalar(0.1)
 
-  // The cosine of the maximum Sun zenith angle for which atmospheric scattering
+  // The cosine of the maximum sun zenith angle for which atmospheric scattering
   // must be precomputed (for maximum precision, use the smallest Sun zenith
-  // angle yielding negligible sky light radiance values. For instance, for the
-  // Earth case, 102 degrees is a good choice - yielding muSMin = -0.2).
+  // angle yielding negligible sky light radiance values.
   @uniformType(Dimensionless)
   minCosSun = Math.cos(radians(102))
 
@@ -203,14 +185,28 @@ export class AtmosphereParameters {
   @uniformType(Dimensionless)
   luminanceScale = 1 / luminanceCoefficients.dot(this.sunRadianceToLuminance)
 
-  // Static options
+  // Whether to store the optical depth instead of the transmittance in the
+  // transmittance textures. Linear filtering on logarithmic numbers yields
+  // non-linear interpolations so that sampling will be performed manually, thus
+  // this should be enabled only in the precomputation stage.
   transmittancePrecisionLog = false
+
+  // Whether to store the single Mie scattering in the alpha channel of the
+  // scattering texture, reducing the memory footprint on the GPU.
   combinedScatteringTextures = true
+
+  // Whether to generate and use a separate texture for higher-order scattering
+  // (n >= 2) for a better approximation of the multi-scattering occlusion.
   higherOrderScatteringTexture = true
+
+  // Whether to clamp the camera position at the bottom atmosphere boundary.
   constrainCameraAboveGround = false
+
+  // Whether to hide the ground in the sky by extrapolating the scattering at
+  // the horizon.
   hideGround = false
 
-  // Texture sizes
+  // Texture sizes:
   transmittanceTextureSize = new Vector2(256, 64)
   irradianceTextureSize = new Vector2(64, 16)
   scatteringTextureRadiusSize = 32
@@ -224,8 +220,7 @@ export class AtmosphereParameters {
   )
 
   set(value: Partial<AtmosphereParameters>): this {
-    Object.assign(this, value)
-    return this
+    return Object.assign(this, value)
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
