@@ -52,7 +52,7 @@ export function propertyOf<T extends {}>(target: T) {
   const nodeTypes = getNodeTypes(target)
   return <K extends NodeValuePropertyKey<T>>(
     propertyName: K,
-    transformValue?: (self: T[K]) => T[K],
+    transformValue?: (value: T[K]) => T[K],
     transformNode?: (node: NodeObject) => NodeObject
   ): NodeObject<VarNode> => {
     const nodeType = nodeTypes[propertyName]

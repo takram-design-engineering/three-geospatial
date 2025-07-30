@@ -51,10 +51,10 @@ export class DensityProfileLayer {
   getContext(worldToUnit: number) {
     const property = propertyOf<DensityProfileLayer>(this)
     return createContextProxy(this, {
-      width: property('width', self => self * worldToUnit),
+      width: property('width', value => value * worldToUnit),
       expTerm: property('expTerm'),
-      expScale: property('expScale', self => self / worldToUnit),
-      linearTerm: property('linearTerm', self => self / worldToUnit),
+      expScale: property('expScale', value => value / worldToUnit),
+      linearTerm: property('linearTerm', value => value / worldToUnit),
       constantTerm: property('constantTerm')
     })
   }
@@ -209,23 +209,23 @@ export class AtmosphereParameters {
       worldToUnit: property('worldToUnit'),
       solarIrradiance: property('solarIrradiance'),
       sunAngularRadius: property('sunAngularRadius'),
-      bottomRadius: property('bottomRadius', self => self * this.worldToUnit),
-      topRadius: property('topRadius', self => self * this.worldToUnit),
+      bottomRadius: property('bottomRadius', value => value * this.worldToUnit),
+      topRadius: property('topRadius', value => value * this.worldToUnit),
       rayleighDensity: this.rayleighDensity.getContext(this.worldToUnit),
-      rayleighScattering: property('rayleighScattering', self =>
-        self.divideScalar(this.worldToUnit)
+      rayleighScattering: property('rayleighScattering', value =>
+        value.divideScalar(this.worldToUnit)
       ),
       mieDensity: this.mieDensity.getContext(this.worldToUnit),
-      mieScattering: property('mieScattering', self =>
-        self.divideScalar(this.worldToUnit)
+      mieScattering: property('mieScattering', value =>
+        value.divideScalar(this.worldToUnit)
       ),
-      mieExtinction: property('mieExtinction', self =>
-        self.divideScalar(this.worldToUnit)
+      mieExtinction: property('mieExtinction', value =>
+        value.divideScalar(this.worldToUnit)
       ),
       miePhaseFunctionG: property('miePhaseFunctionG'),
       absorptionDensity: this.absorptionDensity.getContext(this.worldToUnit),
-      absorptionExtinction: property('absorptionExtinction', self =>
-        self.divideScalar(this.worldToUnit)
+      absorptionExtinction: property('absorptionExtinction', value =>
+        value.divideScalar(this.worldToUnit)
       ),
       groundAlbedo: property('groundAlbedo'),
       minCosSun: property('minCosSun'),
