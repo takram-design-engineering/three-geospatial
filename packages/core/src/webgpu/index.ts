@@ -1,5 +1,4 @@
 export * from './decorators'
-export * from './Dithering'
 export * from './Fnv'
 export * from './transformations'
 export * from './utils'
