@@ -36,22 +36,6 @@ import {
   getSunAndSkyIlluminance
 } from './runtime'
 
-declare module 'three' {
-  interface Camera {
-    isPerspectiveCamera?: boolean
-    near?: number
-    far?: number
-  }
-}
-
-declare module 'three/webgpu' {
-  interface Node {
-    onRenderUpdate(
-      callback: (this: this, frame: NodeFrame, self: this) => void
-    ): this
-  }
-}
-
 export class AerialPerspectiveNode extends TempNode {
   static get type(): string {
     return 'AerialPerspectiveNode'
