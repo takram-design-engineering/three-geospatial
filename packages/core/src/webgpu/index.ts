@@ -1,5 +1,5 @@
 export * from './decorators'
 export * from './Fnv'
+export * from './node'
 export * from './transformations'
 export * from './utils'
-export type * from './node'
