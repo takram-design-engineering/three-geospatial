@@ -13,7 +13,6 @@ import {
 
 import { Fnv } from './Fnv'
 import type { Node, NodeObject } from './node'
-import { turbo } from './Turbo'
 
 declare module 'three' {
   interface Camera {
@@ -49,6 +48,24 @@ export const screenToView = /*#__PURE__*/ Fnv(
     const clipW = viewZ.mul(scale).add(offset)
     clip.mulAssign(clipW)
     return inverseProjectionMatrix.mul(clip).xyz
+  }
+)
+
+// A fifth-order polynomial approximation of Turbo color map.
+// See: https://observablehq.com/@mbostock/turbo
+export const turbo = /*#__PURE__*/ Fnv(
+  (x: NodeObject<'float'>): Node<'vec3'> => {
+    const coeffs = [
+      vec3(58.1375, 2.7747, 26.8183).toConst(),
+      vec3(-150.5666, 4.2109, -88.5066).toConst(),
+      vec3(130.5887, -14.0195, 109.0745).toConst(),
+      vec3(-42.3277, 4.8052, -60.1097).toConst(),
+      vec3(4.5974, 2.1856, 12.5925).toConst(),
+      vec3(0.1357, 0.0914, 0.1067).toConst()
+    ]
+    return coeffs
+      .slice(1)
+      .reduce<NodeObject>((y, offset) => offset.add(x.mul(y)), coeffs[0])
   }
 )
 
