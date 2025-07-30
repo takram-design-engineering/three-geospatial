@@ -1,4 +1,4 @@
-import { Matrix4, Vector3, type Camera, type Vector4 } from 'three'
+import { Matrix4, Vector3, type Camera } from 'three'
 import {
   Fn,
   If,
@@ -9,8 +9,7 @@ import {
   screenUV,
   uniform,
   vec3,
-  vec4,
-  type ShaderNodeObject
+  vec4
 } from 'three/tsl'
 import {
   TempNode,
@@ -25,6 +24,7 @@ import {
   depthToViewZ,
   needsUpdate,
   screenToView,
+  ShaderNode,
   type Node
 } from '@takram/three-geospatial/webgpu'
 
@@ -54,8 +54,8 @@ declare module 'three/webgpu' {
 
 function uniformUpdate<T>(
   value: T,
-  callback: (self: ShaderNodeObject<UniformNode<T>>) => void
-): ShaderNodeObject<UniformNode<T>> {
+  callback: (self: ShaderNode<UniformNode<T>>) => void
+): ShaderNode<UniformNode<T>> {
   return uniform(value).onRenderUpdate((_, self) => {
     callback(self)
   })
@@ -74,7 +74,7 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate lutNode: AtmosphereLUTNode
 
   // Optional dependencies
-  @needsUpdate sunDirectionNode: Node<Vector3> = vec3()
+  @needsUpdate sunDirectionNode: Node<'vec3'> = vec3()
 
   // Static options
   @needsUpdate ellipsoid = Ellipsoid.WGS84
@@ -147,7 +147,7 @@ export class AerialPerspectiveNode extends TempNode {
     )
   }
 
-  setup(builder: NodeBuilder): Node<Vector4> {
+  setup(builder: NodeBuilder): Node<'vec4'> {
     const {
       projectionMatrix,
       inverseProjectionMatrix,
@@ -255,5 +255,5 @@ export class AerialPerspectiveNode extends TempNode {
 
 export const aerialPerspective = (
   ...params: ConstructorParameters<typeof AerialPerspectiveNode>
-): ShaderNodeObject<AerialPerspectiveNode> =>
+): ShaderNode<AerialPerspectiveNode> =>
   nodeObject(new AerialPerspectiveNode(...params))

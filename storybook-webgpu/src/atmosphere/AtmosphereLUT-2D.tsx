@@ -10,23 +10,22 @@ import {
   screenUV,
   uniform,
   vec2,
-  vec4,
-  type ShaderNodeObject
+  vec4
 } from 'three/tsl'
-import { NodeMaterial, type Node } from 'three/webgpu'
+import { NodeMaterial } from 'three/webgpu'
 
 import {
   atmosphereLUT,
   type AtmosphereLUTTextureName
 } from '@takram/three-atmosphere/webgpu'
-import { Fnv } from '@takram/three-geospatial/webgpu'
+import { Fnv, type ShaderNode } from '@takram/three-geospatial/webgpu'
 
 import { useTransientControl, type StoryFC } from '../helpers/StoryControls'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 export const textureUV = Fnv(
-  (size: ShaderNodeObject<Node>, zoom: ShaderNodeObject<Node>) => {
+  (size: ShaderNode<'vec2'>, zoom: ShaderNode<'float'>) => {
     const scale = screenSize.div(size).div(zoom).toVar()
     const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toVar()
     If(

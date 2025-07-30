@@ -1,4 +1,4 @@
-import type { Camera, Matrix4, Vector2, Vector3 } from 'three'
+import type { Camera } from 'three'
 import {
   int,
   orthographicDepthToViewZ,
@@ -14,10 +14,10 @@ import type { Node, ShaderNode } from './types'
 export const depthToViewZ = /*#__PURE__*/ Fnv(
   (
     camera: Camera,
-    depth: ShaderNode<number>,
-    cameraNear: ShaderNode<number>,
-    cameraFar: ShaderNode<number>
-  ): Node<number> => {
+    depth: ShaderNode<'float'>,
+    cameraNear: ShaderNode<'float'>,
+    cameraFar: ShaderNode<'float'>
+  ): Node<'float'> => {
     return camera.isPerspectiveCamera === true
       ? perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
       : orthographicDepthToViewZ(depth, cameraNear, cameraFar)
@@ -26,12 +26,12 @@ export const depthToViewZ = /*#__PURE__*/ Fnv(
 
 export const screenToView = /*#__PURE__*/ Fnv(
   (
-    uv: ShaderNode<Vector2>,
-    depth: ShaderNode<number>,
-    viewZ: ShaderNode<number>,
-    projectionMatrix: ShaderNode<Matrix4>,
-    inverseProjectionMatrix: ShaderNode<Matrix4>
-  ): Node<Vector3> => {
+    uv: ShaderNode<'vec2'>,
+    depth: ShaderNode<'float'>,
+    viewZ: ShaderNode<'float'>,
+    projectionMatrix: ShaderNode<'mat4'>,
+    inverseProjectionMatrix: ShaderNode<'mat4'>
+  ): Node<'vec3'> => {
     const scale = projectionMatrix.element(int(2)).element(int(3))
     const offset = projectionMatrix.element(int(3)).element(int(3))
     const flippedUV = vec2(uv.x, uv.y.oneMinus())

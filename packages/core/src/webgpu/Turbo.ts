@@ -1,11 +1,10 @@
-import type { Vector3 } from 'three'
 import { add, sub, vec3 } from 'three/tsl'
 
 import { Fnv } from './Fnv'
 import type { Node, ShaderNode } from './types'
 
 export const turbo = /*#__PURE__*/ Fnv(
-  (x: ShaderNode<number>): Node<Vector3> => {
+  (x: ShaderNode<'float'>): Node<'vec3'> => {
     // prettier-ignore
     const r = add(0.1357, x.mul(sub(4.5974, x.mul(sub(42.3277, x.mul(sub(130.5887, x.mul(sub(150.5666, x.mul(58.1375))))))))))
     // prettier-ignore

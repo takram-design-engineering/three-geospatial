@@ -1,8 +1,9 @@
-import { reference, uniform, type ShaderNodeObject } from 'three/tsl'
+import { reference, uniform } from 'three/tsl'
 import type { NodeFrame, ReferenceNode, UniformNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { assertType } from '../assertions'
+import type { NodeType, ShaderNode } from './types'
 
 declare module 'three/webgpu' {
   interface Node {
@@ -14,8 +15,8 @@ declare module 'three/webgpu' {
 
 export function uniformUpdate<T>(
   value: T,
-  callback: (self: ShaderNodeObject<UniformNode<T>>) => T | undefined
-): ShaderNodeObject<UniformNode<T>> {
+  callback: (self: ShaderNode<UniformNode<T>>) => T | undefined
+): ShaderNode<UniformNode<T>> {
   return uniform(value).onRenderUpdate((_, self) => {
     const value = callback(self)
     if (value != null) {
@@ -27,7 +28,7 @@ export function uniformUpdate<T>(
 const uniformTypesKey = Symbol('uniformTypes')
 
 // TODO: Use Stage 3 decorator, but it will break every other decorator.
-export function uniformType(type: string) {
+export function uniformType(type: NodeType) {
   return <
     T extends {},
     K extends keyof {
@@ -38,7 +39,7 @@ export function uniformType(type: string) {
     propertyKey: K
   ): void => {
     const constructor = target.constructor as {
-      [uniformTypesKey]?: Record<string, string>
+      [uniformTypesKey]?: Record<string, NodeType>
     }
     if (!Object.hasOwn(constructor, uniformTypesKey)) {
       Object.defineProperty(constructor, uniformTypesKey, {
@@ -60,10 +61,10 @@ export function referenceTo<T extends {}>(
   propertyName: keyof {
     [K in keyof T as K extends string ? K : never]: unknown
   }
-) => ShaderNodeObject<ReferenceNode<T>> {
+) => ShaderNode<ReferenceNode<T>> {
   const uniformTypes = (
     target.constructor as {
-      [uniformTypesKey]?: Record<string, string>
+      [uniformTypesKey]?: Record<string, NodeType>
     }
   )[uniformTypesKey]
 

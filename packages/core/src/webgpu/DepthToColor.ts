@@ -1,4 +1,4 @@
-import type { Camera, Vector3 } from 'three'
+import type { Camera } from 'three'
 import {
   float,
   nodeObject,
@@ -23,17 +23,17 @@ export class DepthToColor extends TempNode {
   }
 
   camera: Camera
-  cameraNearNode: Node<number>
-  cameraFarNode: Node<number>
-  depthNode: Node<number>
-  nearNode: Node<number>
-  farNode: Node<number>
+  cameraNearNode: Node<'float'>
+  cameraFarNode: Node<'float'>
+  depthNode: Node<'float'>
+  nearNode: Node<'float'>
+  farNode: Node<'float'>
 
   constructor(
     camera: Camera,
-    depthNode: ShaderNode<number>,
-    near?: number | ShaderNode<number>,
-    far?: number | ShaderNode<number>
+    depthNode: ShaderNode<'float'>,
+    near?: number | ShaderNode<'float'>,
+    far?: number | ShaderNode<'float'>
   ) {
     super('vec3')
     this.camera = camera
@@ -46,7 +46,7 @@ export class DepthToColor extends TempNode {
       typeof far === 'number' ? float(far) : (far ?? this.cameraFarNode)
   }
 
-  setup(builder: NodeBuilder): Node<Vector3> {
+  setup(builder: NodeBuilder): Node<'vec3'> {
     const {
       camera,
       depthNode: depth,
@@ -55,12 +55,12 @@ export class DepthToColor extends TempNode {
       nearNode: near,
       farNode: far
     } = this
-    let node: ShaderNode<number>
+    let node: ShaderNode<'float'>
     if (camera.isPerspectiveCamera === true) {
       const viewZ = perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
-      node = viewZToOrthographicDepth(viewZ, near, far) as ShaderNode<number>
+      node = viewZToOrthographicDepth(viewZ, near, far) as ShaderNode<'float'>
     } else {
-      node = viewZToOrthographicDepth(depth, near, far) as ShaderNode<number>
+      node = viewZToOrthographicDepth(depth, near, far) as ShaderNode<'float'>
     }
     return turbo(node.saturate().oneMinus())
   }
@@ -68,4 +68,4 @@ export class DepthToColor extends TempNode {
 
 export const depthToColor = (
   ...params: ConstructorParameters<typeof DepthToColor>
-): Node<number> => nodeObject(new DepthToColor(...params))
+): Node<'float'> => nodeObject(new DepthToColor(...params))

@@ -42,7 +42,7 @@ export class DensityProfileLayer {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createUniform(worldToUnit: Node<number>) {
+  private createUniform(worldToUnit: Node<'float'>) {
     const reference = referenceTo(this)
     return createUniformProxy(this, {
       width: reference('width').mul(worldToUnit),
@@ -55,7 +55,7 @@ export class DensityProfileLayer {
 
   private uniforms?: UniformDensityProfileLayer
 
-  getUniform(worldToUnit: Node<number>): UniformDensityProfileLayer {
+  getUniform(worldToUnit: Node<'float'>): UniformDensityProfileLayer {
     return (this.uniforms ??= this.createUniform(worldToUnit))
   }
 }
@@ -72,7 +72,7 @@ export class DensityProfile {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createUniform(worldToUnit: Node<number>) {
+  private createUniform(worldToUnit: Node<'float'>) {
     return createUniformProxy(this, {
       layers: [
         this.layers[0].getUniform(worldToUnit),
@@ -83,7 +83,7 @@ export class DensityProfile {
 
   private uniforms?: UniformDensityProfile
 
-  getUniform(worldToUnit: Node<number>): UniformDensityProfile {
+  getUniform(worldToUnit: Node<'float'>): UniformDensityProfile {
     return (this.uniforms ??= this.createUniform(worldToUnit))
   }
 }

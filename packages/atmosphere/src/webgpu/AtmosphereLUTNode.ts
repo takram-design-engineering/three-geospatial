@@ -28,8 +28,7 @@ import {
   texture3D,
   uniform,
   vec3,
-  vec4,
-  type ShaderNodeObject
+  vec4
 } from 'three/tsl'
 import {
   NodeMaterial,
@@ -51,6 +50,7 @@ import {
   isFloatLinearSupported,
   type AnyFloatType
 } from '@takram/three-geospatial'
+import type { ShaderNode } from '@takram/three-geospatial/webgpu'
 
 import { requestIdleCallback } from '../helpers/requestIdleCallback'
 import { AtmosphereParameters } from './AtmosphereParameters'
@@ -323,7 +323,7 @@ export class AtmosphereLUTNode extends TempNode {
   private readonly _textureNodes: Partial<
     Record<
       AtmosphereLUTTextureName,
-      ShaderNodeObject<LUTTextureNode | LUTTexture3DNode>
+      ShaderNode<LUTTextureNode | LUTTexture3DNode>
     >
   > = {}
 
@@ -352,15 +352,13 @@ export class AtmosphereLUTNode extends TempNode {
     return this[`${name}RT`].texture
   }
 
-  getTextureNode(
-    name: AtmosphereLUTTextureName<2>
-  ): ShaderNodeObject<LUTTextureNode>
+  getTextureNode(name: AtmosphereLUTTextureName<2>): ShaderNode<LUTTextureNode>
   getTextureNode(
     name: AtmosphereLUTTextureName<3>
-  ): ShaderNodeObject<LUTTexture3DNode>
+  ): ShaderNode<LUTTexture3DNode>
   getTextureNode(
     name: AtmosphereLUTTextureName
-  ): ShaderNodeObject<LUTTextureNode | LUTTexture3DNode> {
+  ): ShaderNode<LUTTextureNode | LUTTexture3DNode> {
     return (this._textureNodes[name] ??= nodeObject(
       textureDimensions[name] === 2
         ? new LUTTextureNode(
@@ -775,5 +773,4 @@ export class AtmosphereLUTNode extends TempNode {
 
 export const atmosphereLUT = (
   ...args: ConstructorParameters<typeof AtmosphereLUTNode>
-): ShaderNodeObject<AtmosphereLUTNode> =>
-  nodeObject(new AtmosphereLUTNode(...args))
+): ShaderNode<AtmosphereLUTNode> => nodeObject(new AtmosphereLUTNode(...args))

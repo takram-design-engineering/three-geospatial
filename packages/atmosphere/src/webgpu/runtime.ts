@@ -75,12 +75,15 @@ import {
   struct,
   vec2,
   vec3,
-  vec4,
-  type ShaderNodeObject
+  vec4
 } from 'three/tsl'
 import type { StructNode } from 'three/webgpu'
 
-import { Fnv } from '@takram/three-geospatial/webgpu'
+import {
+  Fnv,
+  type Node,
+  type ShaderNode
+} from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import type { UniformAtmosphereParameters } from './AtmosphereParameters'
@@ -98,22 +101,20 @@ import {
   safeSqrt
 } from './common'
 import type {
-  Bool,
   Direction,
-  Float,
-  IrradianceTexture,
+  IrradianceTextureNode,
   Length,
   Luminance3,
   Position,
-  ReducedScatteringTexture,
-  TransmittanceTexture,
-  Vec2,
-  Vec3,
-  Vec4
+  ReducedScatteringTextureNode,
+  TransmittanceTextureNode
 } from './types'
 
 const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
-  (parameters: UniformAtmosphereParameters, scattering: Vec4): Vec3 => {
+  (
+    parameters: UniformAtmosphereParameters,
+    scattering: ShaderNode<'vec4'>
+  ): Node<'vec3'> => {
     // Algebraically this can never be negative, but rounding errors can produce
     // that effect for sufficiently short view rays.
     const singleMieScattering = vec3(0).toVar()
@@ -136,18 +137,18 @@ const combinedScatteringStruct = /*#__PURE__*/ struct({
   scattering: 'vec3',
   singleMieScattering: 'vec3'
 })
-type CombinedScatteringStruct = ShaderNodeObject<StructNode>
+type CombinedScatteringStruct = ShaderNode<StructNode>
 
 const getCombinedScattering = /*#__PURE__*/ Fnv(
   (
     parameters: UniformAtmosphereParameters,
-    scatteringTexture: ReducedScatteringTexture,
-    singleMieScatteringTexture: ReducedScatteringTexture,
-    radius: Length,
-    cosView: Float,
-    cosSun: Float,
-    cosViewSun: Float,
-    rayIntersectsGround: Bool
+    scatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    radius: ShaderNode<Length>,
+    cosView: ShaderNode<'float'>,
+    cosSun: ShaderNode<'float'>,
+    cosViewSun: ShaderNode<'float'>,
+    rayIntersectsGround: ShaderNode<'bool'>
   ): CombinedScatteringStruct => {
     const coord = getScatteringTextureCoord(
       parameters,
@@ -206,19 +207,19 @@ const radianceTransferStruct = /*#__PURE__*/ struct({
   radiance: 'vec3',
   transmittance: 'vec3'
 })
-type RadianceTransferStruct = ShaderNodeObject<StructNode>
+type RadianceTransferStruct = ShaderNode<StructNode>
 
 const getSkyRadiance = /*#__PURE__*/ Fnv(
   (
     parameters: UniformAtmosphereParameters,
-    transmittanceTexture: TransmittanceTexture,
-    scatteringTexture: ReducedScatteringTexture,
-    singleMieScatteringTexture: ReducedScatteringTexture,
-    higherOrderScatteringTexture: ReducedScatteringTexture,
-    camera: Position,
-    viewRay: Direction,
-    shadowLength: Length,
-    sunDirection: Direction
+    transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
+    scatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    higherOrderScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    camera: ShaderNode<Position>,
+    viewRay: ShaderNode<Direction>,
+    shadowLength: ShaderNode<Length>,
+    sunDirection: ShaderNode<Direction>
   ): RadianceTransferStruct => {
     // Clamp the viewer at the bottom atmosphere boundary for rendering points
     // below it.
@@ -391,14 +392,14 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
 const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
   (
     parameters: UniformAtmosphereParameters,
-    transmittanceTexture: TransmittanceTexture,
-    scatteringTexture: ReducedScatteringTexture,
-    singleMieScatteringTexture: ReducedScatteringTexture,
-    higherOrderScatteringTexture: ReducedScatteringTexture,
-    camera: Position,
-    point: Position,
-    shadowLength: Length,
-    sunDirection: Direction
+    transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
+    scatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    higherOrderScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    camera: ShaderNode<Position>,
+    point: ShaderNode<Position>,
+    shadowLength: ShaderNode<Length>,
+    sunDirection: ShaderNode<Direction>
   ): RadianceTransferStruct => {
     // Compute the distance to the top atmosphere boundary along the view ray,
     // assuming the viewer is in space.
@@ -589,7 +590,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
 
 // Returns the distance of the point on the ray from the planet origin.
 const distanceToClosestPointOnRay = /*#__PURE__*/ Fnv(
-  (camera: Position, point: Position): Length => {
+  (camera: ShaderNode<Position>, point: ShaderNode<Position>): Node<Length> => {
     const ray = point.sub(camera).toVar()
     const t = camera.dot(ray).negate().div(ray.dot(ray)).saturate()
     return length(camera.add(t.mul(ray)))
@@ -597,7 +598,11 @@ const distanceToClosestPointOnRay = /*#__PURE__*/ Fnv(
 )
 
 const raySphereIntersections = /*#__PURE__*/ Fnv(
-  (camera: Position, direction: Direction, radius: Length): Vec2 => {
+  (
+    camera: ShaderNode<Position>,
+    direction: ShaderNode<Direction>,
+    radius: ShaderNode<Length>
+  ): Node<'vec2'> => {
     const b = direction.dot(camera).mul(2).toVar()
     const c = camera.dot(camera).sub(radius.pow2())
     const discriminant = b.pow2().sub(mul(4, c))
@@ -611,14 +616,14 @@ const raySegmentStruct = /*#__PURE__*/ struct({
   point: 'vec3',
   degenerate: 'bool'
 })
-type RaySegmentStruct = ShaderNodeObject<StructNode>
+type RaySegmentStruct = ShaderNode<StructNode>
 
 // Clip the view ray at the bottom atmosphere boundary.
 const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
   (
     parameters: UniformAtmosphereParameters,
-    camera: Position,
-    point: Position
+    camera: ShaderNode<Position>,
+    point: ShaderNode<Position>
   ): RaySegmentStruct => {
     const eps = float(0).toConst()
     const bottomRadius = parameters.bottomRadius.add(eps).toVar()
@@ -642,14 +647,14 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
 const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
   (
     parameters: UniformAtmosphereParameters,
-    transmittanceTexture: TransmittanceTexture,
-    scatteringTexture: ReducedScatteringTexture,
-    singleMieScatteringTexture: ReducedScatteringTexture,
-    higherOrderScatteringTexture: ReducedScatteringTexture,
-    camera: Position,
-    point: Position,
-    shadowLength: Length,
-    sunDirection: Direction
+    transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
+    scatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    higherOrderScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
+    camera: ShaderNode<Position>,
+    point: ShaderNode<Position>,
+    shadowLength: ShaderNode<Length>,
+    sunDirection: ShaderNode<Direction>
   ): RadianceTransferStruct => {
     const radiance = vec3(0).toVar()
     const transmittance = vec3(1).toVar()
@@ -695,16 +700,16 @@ const sunAndSkyIrradianceStruct = /*#__PURE__*/ struct({
   sunIrradiance: 'vec3',
   skyIrradiance: 'vec3'
 })
-type SunAndSkyIrradianceStruct = ShaderNodeObject<StructNode>
+type SunAndSkyIrradianceStruct = ShaderNode<StructNode>
 
 const getSunAndSkyIrradiance = /*#__PURE__*/ Fnv(
   (
     parameters: UniformAtmosphereParameters,
-    transmittanceTexture: TransmittanceTexture,
-    irradianceTexture: IrradianceTexture,
-    point: Position,
-    normal: Direction,
-    sunDirection: Direction
+    transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
+    irradianceTexture: ShaderNode<IrradianceTextureNode>,
+    point: ShaderNode<Position>,
+    normal: ShaderNode<Direction>,
+    sunDirection: ShaderNode<Direction>
   ): SunAndSkyIrradianceStruct => {
     const radius = length(point).toVar()
     const cosSun = point.dot(sunDirection).div(radius).toVar()
@@ -730,10 +735,10 @@ const getSunAndSkyIrradiance = /*#__PURE__*/ Fnv(
 const getSunAndSkyScalarIrradiance = /*#__PURE__*/ Fnv(
   (
     parameters: UniformAtmosphereParameters,
-    transmittanceTexture: TransmittanceTexture,
-    irradianceTexture: IrradianceTexture,
-    point: Position,
-    sunDirection: Direction
+    transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
+    irradianceTexture: ShaderNode<IrradianceTextureNode>,
+    point: ShaderNode<Position>,
+    sunDirection: ShaderNode<Direction>
   ): SunAndSkyIrradianceStruct => {
     const radius = length(point).toVar()
     const cosSun = point.dot(sunDirection).div(radius).toVar()
@@ -756,7 +761,7 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ Fnv(
 )
 
 export const getSolarLuminance = /*#__PURE__*/ Fnv(
-  (atmosphereLUT: AtmosphereLUTNode): Luminance3 => {
+  (atmosphereLUT: AtmosphereLUTNode): Node<Luminance3> => {
     const parameters = atmosphereLUT.parameters.getUniform()
     return mul(
       PI,
@@ -770,15 +775,15 @@ const luminanceTransferStruct = /*#__PURE__*/ struct({
   luminance: 'vec3',
   transmittance: 'vec3'
 })
-type LuminanceTransferStruct = ShaderNodeObject<StructNode>
+type LuminanceTransferStruct = ShaderNode<StructNode>
 
 export const getSkyLuminance = /*#__PURE__*/ Fnv(
   (
     atmosphereLUT: AtmosphereLUTNode,
-    camera: Position,
-    viewRay: Direction,
-    shadowLength: Length,
-    sunDirection: Direction
+    camera: ShaderNode<Position>,
+    viewRay: ShaderNode<Direction>,
+    shadowLength: ShaderNode<Length>,
+    sunDirection: ShaderNode<Direction>
   ): LuminanceTransferStruct => {
     const parameters = atmosphereLUT.parameters.getUniform()
     const radianceTransfer = getSkyRadiance(
@@ -806,10 +811,10 @@ export const getSkyLuminance = /*#__PURE__*/ Fnv(
 export const getSkyLuminanceToPoint = /*#__PURE__*/ Fnv(
   (
     atmosphereLUT: AtmosphereLUTNode,
-    camera: Position,
-    point: Position,
-    shadowLength: Length,
-    sunDirection: Direction
+    camera: ShaderNode<Position>,
+    point: ShaderNode<Position>,
+    shadowLength: ShaderNode<Length>,
+    sunDirection: ShaderNode<Direction>
   ): LuminanceTransferStruct => {
     const parameters = atmosphereLUT.parameters.getUniform()
     const radianceTransfer = getSkyRadianceToPoint(
@@ -838,14 +843,14 @@ const sunAndSkyIlluminanceStruct = /*#__PURE__*/ struct({
   sunIlluminance: 'vec3',
   skyIlluminance: 'vec3'
 })
-type SunAndSkyIlluminanceStruct = ShaderNodeObject<StructNode>
+type SunAndSkyIlluminanceStruct = ShaderNode<StructNode>
 
 export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
   (
     atmosphereLUT: AtmosphereLUTNode,
-    point: Position,
-    normal: Direction,
-    sunDirection: Direction
+    point: ShaderNode<Position>,
+    normal: ShaderNode<Direction>,
+    sunDirection: ShaderNode<Direction>
   ): SunAndSkyIlluminanceStruct => {
     const parameters = atmosphereLUT.parameters.getUniform()
     const sunSkyIrradiance = getSunAndSkyIrradiance(
@@ -871,8 +876,8 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
 export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ Fnv(
   (
     atmosphereLUT: AtmosphereLUTNode,
-    point: Position,
-    sunDirection: Direction
+    point: ShaderNode<Position>,
+    sunDirection: ShaderNode<Direction>
   ): SunAndSkyIlluminanceStruct => {
     const parameters = atmosphereLUT.parameters.getUniform()
     const sunSkyIrradiance = getSunAndSkyScalarIrradiance(
