@@ -40,17 +40,11 @@ const Scene: FC<StoryProps> = ({
   pitch,
   distance
 }) => {
-  usePointOfView({
-    longitude,
-    latitude,
-    heading,
-    pitch,
-    distance
-  })
-
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
+
+  // Post-processing
 
   const sunDirection = useMemo(() => uniform(new Vector3()), [])
 
@@ -81,6 +75,8 @@ const Scene: FC<StoryProps> = ({
     postProcessing.render()
   }, 1)
 
+  // Tone mapping controls
+
   useTransientControl(
     ({ toneMapping }: StoryArgs) => toneMapping,
     toneMapping => {
@@ -88,7 +84,6 @@ const Scene: FC<StoryProps> = ({
       postProcessing.needsUpdate = true
     }
   )
-
   useSpringControl(
     ({ exposure }: StoryArgs) => exposure,
     exposure => {
@@ -96,15 +91,30 @@ const Scene: FC<StoryProps> = ({
     }
   )
 
+  // Apply the initial point of view
+
+  usePointOfView({
+    longitude,
+    latitude,
+    heading,
+    pitch,
+    distance
+  })
+
+  // Local date controls (depends on the longitude of the location)
+
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
   useLocalDate(longitude, dayOfYear, timeOfDay, date => {
     getSunDirectionECEF(date, sunDirection.value)
   })
 
+  // Google Maps API key
+
   const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
     googleMapsApiKey !== '' ? googleMapsApiKey : undefined
   )
+
   return (
     <Globe apiKey={apiKey}>
       <GlobeControls enableDamping />

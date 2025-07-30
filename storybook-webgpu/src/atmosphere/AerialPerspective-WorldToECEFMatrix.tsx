@@ -34,6 +34,8 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
+  // Post-processing
+
   const sunDirection = useMemo(() => uniform(new Vector3()), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
@@ -65,6 +67,8 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.render()
   }, 1)
 
+  // Tone mapping controls
+
   useTransientControl(
     ({ toneMapping }: StoryArgs) => toneMapping,
     toneMapping => {
@@ -72,13 +76,14 @@ const Scene: FC<StoryProps> = () => {
       postProcessing.needsUpdate = true
     }
   )
-
   useSpringControl(
     ({ exposure }: StoryArgs) => exposure,
     exposure => {
       renderer.toneMappingExposure = exposure
     }
   )
+
+  // Location controls
 
   const longitude = useSpringControl(({ longitude }: StoryArgs) => longitude)
   const latitude = useSpringControl(({ latitude }: StoryArgs) => latitude)
@@ -92,6 +97,8 @@ const Scene: FC<StoryProps> = () => {
       )
     }
   )
+
+  // Local date controls (depends on the longitude of the location)
 
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
@@ -126,7 +133,13 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  toneMapping: AgXToneMapping
+  toneMapping: AgXToneMapping,
+  exposure: 10,
+  dayOfYear: 0,
+  timeOfDay: 9,
+  longitude: 30,
+  latitude: 0,
+  height: 300
 }
 
 Story.argTypes = {

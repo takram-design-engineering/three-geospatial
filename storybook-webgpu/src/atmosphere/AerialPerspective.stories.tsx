@@ -7,13 +7,4 @@ export default {
   title: 'atmosphere/Aerial Perspective'
 } satisfies Meta
 
-export const WorldToECEFMatrix = createStory(WorldToECEFMatrixStory, {
-  args: {
-    exposure: 10,
-    dayOfYear: 0,
-    timeOfDay: 9,
-    longitude: 30,
-    latitude: 0,
-    height: 300
-  }
-})
+export const WorldToECEFMatrix = createStory(WorldToECEFMatrixStory)
