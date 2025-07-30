@@ -100,21 +100,26 @@ import {
   rayleighPhaseFunction,
   safeSqrt
 } from './common'
-import type {
-  Direction,
-  IrradianceTextureNode,
-  Length,
+import {
+  DimensionlessSpectrum,
+  Illuminance3,
+  IrradianceSpectrum,
   Luminance3,
   Position,
-  ReducedScatteringTextureNode,
-  TransmittanceTextureNode
+  RadianceSpectrum,
+  type Dimensionless,
+  type Direction,
+  type IrradianceTextureNode,
+  type Length,
+  type ReducedScatteringTextureNode,
+  type TransmittanceTextureNode
 } from './dimensional'
 
 const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersContext,
     scattering: NodeObject<'vec4'>
-  ): Node<'vec3'> => {
+  ): Node<IrradianceSpectrum> => {
     // Algebraically this can never be negative, but rounding errors can produce
     // that effect for sufficiently short view rays.
     const singleMieScattering = vec3(0).toVar()
@@ -134,8 +139,8 @@ const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
 )
 
 const combinedScatteringStruct = /*#__PURE__*/ struct({
-  scattering: 'vec3',
-  singleMieScattering: 'vec3'
+  scattering: IrradianceSpectrum,
+  singleMieScattering: IrradianceSpectrum
 })
 type CombinedScatteringStruct = NodeObject<StructNode>
 
@@ -145,9 +150,9 @@ const getCombinedScattering = /*#__PURE__*/ Fnv(
     scatteringTexture: NodeObject<ReducedScatteringTextureNode>,
     singleMieScatteringTexture: NodeObject<ReducedScatteringTextureNode>,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>,
-    cosSun: NodeObject<'float'>,
-    cosViewSun: NodeObject<'float'>,
+    cosView: NodeObject<Dimensionless>,
+    cosSun: NodeObject<Dimensionless>,
+    cosViewSun: NodeObject<Dimensionless>,
     rayIntersectsGround: NodeObject<'bool'>
   ): CombinedScatteringStruct => {
     const coord = getScatteringTextureCoord(
@@ -204,8 +209,8 @@ const getCombinedScattering = /*#__PURE__*/ Fnv(
 )
 
 const radianceTransferStruct = /*#__PURE__*/ struct({
-  radiance: 'vec3',
-  transmittance: 'vec3'
+  radiance: RadianceSpectrum,
+  transmittance: DimensionlessSpectrum
 })
 type RadianceTransferStruct = NodeObject<StructNode>
 
@@ -612,8 +617,8 @@ const raySphereIntersections = /*#__PURE__*/ Fnv(
 )
 
 const raySegmentStruct = /*#__PURE__*/ struct({
-  camera: 'vec3',
-  point: 'vec3',
+  camera: Position,
+  point: Position,
   degenerate: 'bool'
 })
 type RaySegmentStruct = NodeObject<StructNode>
@@ -697,8 +702,8 @@ const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
 )
 
 const sunAndSkyIrradianceStruct = /*#__PURE__*/ struct({
-  sunIrradiance: 'vec3',
-  skyIrradiance: 'vec3'
+  sunIrradiance: IrradianceSpectrum,
+  skyIrradiance: IrradianceSpectrum
 })
 type SunAndSkyIrradianceStruct = NodeObject<StructNode>
 
@@ -772,8 +777,8 @@ export const getSolarLuminance = /*#__PURE__*/ Fnv(
 )
 
 const luminanceTransferStruct = /*#__PURE__*/ struct({
-  luminance: 'vec3',
-  transmittance: 'vec3'
+  luminance: Luminance3,
+  transmittance: DimensionlessSpectrum
 })
 type LuminanceTransferStruct = NodeObject<StructNode>
 
@@ -840,8 +845,8 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ Fnv(
 )
 
 const sunAndSkyIlluminanceStruct = /*#__PURE__*/ struct({
-  sunIlluminance: 'vec3',
-  skyIlluminance: 'vec3'
+  sunIlluminance: Illuminance3,
+  skyIlluminance: Illuminance3
 })
 type SunAndSkyIlluminanceStruct = NodeObject<StructNode>
 

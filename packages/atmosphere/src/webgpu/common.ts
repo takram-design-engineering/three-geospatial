@@ -90,6 +90,7 @@ import type {
   AbstractScatteringTextureNode,
   AbstractSpectrum,
   Area,
+  Dimensionless,
   DimensionlessSpectrum,
   InverseSolidAngle,
   IrradianceSpectrum,
@@ -99,7 +100,7 @@ import type {
 } from './dimensional'
 
 export const clampCosine = /*#__PURE__*/ Fnv(
-  (cosine: NodeObject<'float'>): Node<'float'> => {
+  (cosine: NodeObject<Dimensionless>): Node<Dimensionless> => {
     return clamp(cosine, -1, 1)
   }
 )
@@ -129,7 +130,7 @@ export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersContext,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>
+    cosView: NodeObject<Dimensionless>
   ): Node<Length> => {
     const discriminant = radius
       .mul(radius)
@@ -145,7 +146,7 @@ export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersContext,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>
+    cosView: NodeObject<Dimensionless>
   ): Node<Length> => {
     const discriminant = radius
       .pow2()
@@ -161,7 +162,7 @@ export const rayIntersectsGround = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersContext,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>
+    cosView: NodeObject<Dimensionless>
   ): Node<'bool'> => {
     return cosView
       .lessThan(0)
@@ -178,7 +179,7 @@ export const rayIntersectsGround = /*#__PURE__*/ Fnv(
 export const getTextureCoordFromUnitRange = /*#__PURE__*/ Fnv(
   (
     unit: NodeObject<'float'>,
-    textureSize: NodeObject<'float'>
+    textureSize: NodeObject<'int'>
   ): Node<'float'> => {
     return div(0.5, textureSize).add(
       unit.mul(textureSize.reciprocal().oneMinus())
@@ -190,7 +191,7 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersContext,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>
+    cosView: NodeObject<Dimensionless>
   ): Node<'vec2'> => {
     // Distance to top atmosphere boundary for a horizontal ray at ground level.
     const H = sqrt(
@@ -233,7 +234,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
     parameters: AtmosphereParametersContext,
     transmittanceTexture: NodeObject<TransmittanceTextureNode>,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>
+    cosView: NodeObject<Dimensionless>
   ): Node<DimensionlessSpectrum> => {
     const uv = getTransmittanceTextureUV(parameters, radius, cosView)
 
@@ -262,7 +263,7 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
     parameters: AtmosphereParametersContext,
     transmittanceTexture: TransmittanceTextureNode,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>,
+    cosView: NodeObject<Dimensionless>,
     rayLength: NodeObject<Length>,
     rayIntersectsGround: NodeObject<'bool'>
   ): Node<DimensionlessSpectrum> => {
@@ -328,7 +329,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ Fnv(
     parameters: AtmosphereParametersContext,
     transmittanceTexture: TransmittanceTextureNode,
     radius: NodeObject<Length>,
-    cosSun: NodeObject<'float'>
+    cosSun: NodeObject<Dimensionless>
   ): Node<DimensionlessSpectrum> => {
     const sinHorizon = parameters.bottomRadius.div(radius).toVar()
     const cosHorizon = sqrt(max(sub(1, sinHorizon.mul(sinHorizon)), 0)).negate()
@@ -350,7 +351,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ Fnv(
 // Rayleigh phase function:
 // p(\theta) = \frac{3}{16\pi}(1+\cos^2\theta)
 export const rayleighPhaseFunction = /*#__PURE__*/ Fnv(
-  (cosViewSun: NodeObject<'float'>): Node<InverseSolidAngle> => {
+  (cosViewSun: NodeObject<Dimensionless>): Node<InverseSolidAngle> => {
     const k = div(3, mul(16, PI))
     return k.mul(cosViewSun.pow2().add(1))
   }
@@ -360,8 +361,8 @@ export const rayleighPhaseFunction = /*#__PURE__*/ Fnv(
 // p(g,\theta) = \frac{3}{8\pi}\frac{(1-g^2)(1+\cos^2\theta)}{(2+g^2)(1+g^2-2g\cos\theta)^{3/2}}
 export const miePhaseFunction = /*#__PURE__*/ Fnv(
   (
-    g: NodeObject<'float'>,
-    cosViewSun: NodeObject<'float'>
+    g: NodeObject<Dimensionless>,
+    cosViewSun: NodeObject<Dimensionless>
   ): Node<InverseSolidAngle> => {
     const k = div(3, PI.mul(8)).mul(g.pow2().oneMinus()).div(g.pow2().add(2))
     return k
@@ -374,9 +375,9 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersContext,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>,
-    cosSun: NodeObject<'float'>,
-    cosViewSun: NodeObject<'float'>,
+    cosView: NodeObject<Dimensionless>,
+    cosSun: NodeObject<Dimensionless>,
+    cosViewSun: NodeObject<Dimensionless>,
     viewRayIntersectsGround: NodeObject<'bool'>
   ): Node<'vec4'> => {
     // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -479,9 +480,9 @@ export const getScattering = /*#__PURE__*/ Fnv(
     parameters: AtmosphereParametersContext,
     scatteringTexture: NodeObject<AbstractScatteringTextureNode>,
     radius: NodeObject<Length>,
-    cosView: NodeObject<'float'>,
-    cosSun: NodeObject<'float'>,
-    cosViewSun: NodeObject<'float'>,
+    cosView: NodeObject<Dimensionless>,
+    cosSun: NodeObject<Dimensionless>,
+    cosViewSun: NodeObject<Dimensionless>,
     rayIntersectsGround: NodeObject<'bool'>
   ): Node<AbstractSpectrum> => {
     const coord = getScatteringTextureCoord(
@@ -518,7 +519,7 @@ export const getIrradianceTextureUV = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersContext,
     radius: NodeObject<Length>,
-    cosSun: NodeObject<'float'>
+    cosSun: NodeObject<Dimensionless>
   ): Node<'vec2'> => {
     const radiusUnit = radius.remap(
       parameters.bottomRadius,
@@ -543,7 +544,7 @@ export const getIrradiance = /*#__PURE__*/ Fnv(
     parameters: AtmosphereParametersContext,
     irradianceTexture: NodeObject<IrradianceTextureNode>,
     radius: NodeObject<Length>,
-    cosSun: NodeObject<'float'>
+    cosSun: NodeObject<Dimensionless>
   ): Node<IrradianceSpectrum> => {
     const uv = getIrradianceTextureUV(parameters, radius, cosSun)
     return irradianceTexture.sample(uv).rgb
