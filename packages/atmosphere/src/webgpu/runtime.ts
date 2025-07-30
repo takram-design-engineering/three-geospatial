@@ -605,7 +605,7 @@ const raySphereIntersections = /*#__PURE__*/ Fnv(
   ): Node<'vec2'> => {
     const b = direction.dot(camera).mul(2).toVar()
     const c = camera.dot(camera).sub(radius.pow2())
-    const discriminant = b.pow2().sub(mul(4, c))
+    const discriminant = b.pow2().sub(c.mul(4))
     const Q = sqrt(discriminant).toVar()
     return vec2(b.negate().sub(Q), b.negate().add(Q)).mul(0.5)
   }

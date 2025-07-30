@@ -73,12 +73,10 @@ import {
   mul,
   normalize,
   PI,
-  remap,
   select,
   sin,
   sqrt,
   struct,
-  sub,
   vec2,
   vec3,
   vec4
@@ -336,7 +334,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
       sqrt(
         rayLength
           .pow2()
-          .add(radius.mul(2).mul(cosView).mul(rayLength))
+          .add(mul(2, radius, cosView, rayLength))
           .add(radius.pow2())
       )
     ).toVar()
@@ -443,14 +441,18 @@ const computeSingleScattering = /*#__PURE__*/ Fnv(
       mieSum.addAssign(deltaMie.mul(weight))
     })
 
-    const rayleigh = rayleighSum
-      .mul(stepSize)
-      .mul(parameters.solarIrradiance)
-      .mul(parameters.rayleighScattering)
-    const mie = mieSum
-      .mul(stepSize)
-      .mul(parameters.solarIrradiance)
-      .mul(parameters.mieScattering)
+    const rayleigh = mul(
+      rayleighSum,
+      stepSize,
+      parameters.solarIrradiance,
+      parameters.rayleighScattering
+    )
+    const mie = mul(
+      mieSum,
+      stepSize,
+      parameters.solarIrradiance,
+      parameters.mieScattering
+    )
     return singleScatteringStruct(rayleigh, mie)
   }
 )
@@ -471,7 +473,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
   ): ScatteringParamsStruct => {
     // Distance to top atmosphere boundary for a horizontal ray at ground level.
     const H = sqrt(
-      sub(parameters.topRadius.pow2(), parameters.bottomRadius.pow2())
+      parameters.topRadius.pow2().sub(parameters.bottomRadius.pow2())
     ).toVar()
 
     // Distance to the horizon.
@@ -482,7 +484,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
       )
     ).toVar()
     const radius = sqrt(
-      add(distanceToHorizon.pow2(), parameters.bottomRadius.pow2())
+      distanceToHorizon.pow2().add(parameters.bottomRadius.pow2())
     )
 
     const cosView = float().toVar()
@@ -514,7 +516,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
               .pow2()
               .add(distance.pow2())
               .negate()
-              .div(radius.mul(2).mul(distance))
+              .div(mul(2, radius, distance))
           )
         )
       )
@@ -546,7 +548,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
             H.pow2()
               .sub(distanceToHorizon.pow2())
               .sub(distance.pow2())
-              .div(radius.mul(2).mul(distance))
+              .div(mul(2, radius, distance))
           )
         )
       )
@@ -566,7 +568,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
       parameters.bottomRadius,
       parameters.minCosSun
     )
-    const A = remap(D, minDistance, maxDistance).toVar()
+    const A = D.remap(minDistance, maxDistance).toVar()
     const a = A.sub(cosSunUnit.mul(A)).div(cosSunUnit.mul(A).add(1))
     const distance = minDistance
       .add(min(a, A).mul(maxDistance.sub(minDistance)))
@@ -577,7 +579,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
       clampCosine(
         H.pow2()
           .sub(distance.pow2())
-          .div(parameters.bottomRadius.mul(2).mul(distance))
+          .div(mul(2, parameters.bottomRadius, distance))
       )
     )
     const cosViewSun = clampCosine(coord.x.mul(2).sub(1))
@@ -856,20 +858,21 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
           radius.sub(parameters.bottomRadius)
         )
         radiance.addAssign(
-          incidentRadiance
-            .mul(
-              add(
-                parameters.rayleighScattering
-                  .mul(rayleighDensity)
-                  .mul(rayleighPhaseFunction(cosViewSun2)),
-                parameters.mieScattering
-                  .mul(mieDensity)
-                  .mul(
-                    miePhaseFunction(parameters.miePhaseFunctionG, cosViewSun2)
-                  )
+          incidentRadiance.mul(
+            add(
+              mul(
+                parameters.rayleighScattering,
+                rayleighDensity,
+                rayleighPhaseFunction(cosViewSun2)
+              ),
+              mul(
+                parameters.mieScattering,
+                mieDensity,
+                miePhaseFunction(parameters.miePhaseFunctionG, cosViewSun2)
               )
-            )
-            .mul(deltaOmegaI)
+            ),
+            deltaOmegaI
+          )
         )
       })
     })
@@ -910,7 +913,7 @@ const computeMultipleScattering = /*#__PURE__*/ Fnv(
         sqrt(
           rayLength
             .mul(rayLength)
-            .add(radius.mul(2).mul(cosView).mul(rayLength))
+            .add(mul(2, radius, cosView, rayLength))
             .add(radius.mul(radius))
         )
       )

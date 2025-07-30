@@ -58,7 +58,6 @@
  */
 
 import {
-  add,
   clamp,
   div,
   exp,
@@ -71,8 +70,6 @@ import {
   mix,
   mul,
   PI,
-  pow,
-  remap,
   select,
   smoothstep,
   sqrt,
@@ -215,7 +212,7 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ Fnv(
     )
     const minDistance = parameters.topRadius.sub(radius).toVar()
     const maxDistance = distanceToHorizon.add(H)
-    const cosViewUnit = remap(distanceToTop, minDistance, maxDistance)
+    const cosViewUnit = distanceToTop.remap(minDistance, maxDistance)
     const radiusUnit = distanceToHorizon.div(H)
 
     return vec2(
@@ -245,7 +242,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
     if (parameters.transmittancePrecisionLog) {
       // TODO: Separate to sampleLinear() function.
       const size = vec2(parameters.transmittanceTextureSize).toConst()
-      const texelSize = vec3(div(1, size), 0).toConst()
+      const texelSize = vec3(size.reciprocal(), 0).toConst()
       const coord = uv.mul(size).sub(0.5).toVar()
       const i = floor(coord).add(0.5).mul(texelSize.xy).toVar()
       const f = fract(coord).toVar()
@@ -355,7 +352,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ Fnv(
 export const rayleighPhaseFunction = /*#__PURE__*/ Fnv(
   (cosViewSun: ShaderNode<'float'>): Node<InverseSolidAngle> => {
     const k = div(3, mul(16, PI))
-    return k.mul(add(1, cosViewSun.pow2()))
+    return k.mul(cosViewSun.pow2().add(1))
   }
 )
 
@@ -366,10 +363,10 @@ export const miePhaseFunction = /*#__PURE__*/ Fnv(
     g: ShaderNode<'float'>,
     cosViewSun: ShaderNode<'float'>
   ): Node<InverseSolidAngle> => {
-    const k = div(3, mul(8, PI)).mul(g.pow2().oneMinus()).div(add(2, g.pow2()))
+    const k = div(3, PI.mul(8)).mul(g.pow2().oneMinus()).div(g.pow2().add(2))
     return k
-      .mul(add(1, cosViewSun.pow2()))
-      .div(pow(add(1, g.pow2().sub(mul(2, g).mul(cosViewSun))), 1.5))
+      .mul(cosViewSun.pow2().add(1))
+      .div(g.pow2().sub(g.mul(2).mul(cosViewSun)).add(1).pow(1.5))
   }
 )
 
@@ -421,7 +418,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
             select(
               maxDistance.equal(minDistance),
               0,
-              remap(distance, minDistance, maxDistance)
+              distance.remap(minDistance, maxDistance)
             ),
             parameters.scatteringTextureCosViewSize / 2
           ).mul(0.5)
@@ -437,13 +434,12 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
       const minDistance = parameters.topRadius.sub(radius).toVar()
       const maxDistance = distanceToHorizon.add(H)
       cosViewCoord.assign(
-        add(
-          0.5,
-          getTextureCoordFromUnitRange(
-            remap(distance, minDistance, maxDistance),
-            parameters.scatteringTextureCosViewSize / 2
-          ).mul(0.5)
+        getTextureCoordFromUnitRange(
+          distance.remap(minDistance, maxDistance),
+          parameters.scatteringTextureCosViewSize / 2
         )
+          .mul(0.5)
+          .add(0.5)
       )
     })
 
@@ -456,20 +452,20 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
       parameters.bottomRadius,
       cosSun
     )
-    const a = remap(d, minDistance, maxDistance).toVar()
+    const a = d.remap(minDistance, maxDistance).toVar()
     const D = distanceToTopAtmosphereBoundary(
       parameters,
       parameters.bottomRadius,
       parameters.minCosSun
     )
-    const A = remap(D, minDistance, maxDistance)
+    const A = D.remap(minDistance, maxDistance)
 
     // An ad-hoc function equal to 0 for cosSun = minCosSun (because then
     // d = D and thus a = A), equal to 1 for cosSun = 1 (because then d =
     // minDistance and thus a = 0), and with a large slope around cosSun = 0, to
     // get more texture samples near the horizon.
     const cosSunCoord = getTextureCoordFromUnitRange(
-      max(sub(1, a.div(A)), 0).div(add(1, a)),
+      max(a.div(A).oneMinus(), 0).div(a.add(1)),
       parameters.scatteringTextureCosSunSize
     )
     const cosViewSunCoord = cosViewSun.add(1).div(2)
@@ -524,8 +520,7 @@ export const getIrradianceTextureUV = /*#__PURE__*/ Fnv(
     radius: ShaderNode<Length>,
     cosSun: ShaderNode<'float'>
   ): Node<'vec2'> => {
-    const radiusUnit = remap(
-      radius,
+    const radiusUnit = radius.remap(
       parameters.bottomRadius,
       parameters.topRadius
     )
