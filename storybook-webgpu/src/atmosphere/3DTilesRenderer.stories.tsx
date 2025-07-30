@@ -7,34 +7,32 @@ export default {
   title: 'atmosphere/3D Tiles Renderer Integration'
 } satisfies Meta
 
-export const Manhattan = createStory(
-  Story,
-  {
+export const Manhattan = createStory(Story, {
+  props: {
     longitude: -73.9709,
     latitude: 40.7589,
     heading: -155,
     pitch: -35,
     distance: 3000
   },
-  {
+  args: {
     exposure: 60,
     dayOfYear: 1,
     timeOfDay: 7.6
   }
-)
+})
 
-export const Fuji = createStory(
-  Story,
-  {
+export const Fuji = createStory(Story, {
+  props: {
     longitude: 138.5973,
     latitude: 35.2138,
     heading: 71,
     pitch: -31,
     distance: 7000
   },
-  {
+  args: {
     exposure: 10,
     dayOfYear: 260,
     timeOfDay: 16
   }
-)
+})

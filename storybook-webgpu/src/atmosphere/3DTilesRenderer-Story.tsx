@@ -117,12 +117,6 @@ const Scene: FC<StoryProps> = ({
   )
 }
 
-export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <WebGPUCanvas>
-    <Scene {...props} />
-  </WebGPUCanvas>
-)
-
 interface StoryProps extends PointOfViewProps {}
 
 interface StoryArgs {
@@ -132,6 +126,12 @@ interface StoryArgs {
   dayOfYear: number
   timeOfDay: number
 }
+
+export const Story: StoryFC<StoryProps, StoryArgs> = props => (
+  <WebGPUCanvas>
+    <Scene {...props} />
+  </WebGPUCanvas>
+)
 
 Story.args = {
   googleMapsApiKey: '',

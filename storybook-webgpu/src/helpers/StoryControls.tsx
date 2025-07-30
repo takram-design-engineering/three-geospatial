@@ -21,6 +21,7 @@ import {
   useRef,
   type FC
 } from 'react'
+import shallowEqual from 'shallowequal'
 import { useArgs } from 'storybook/preview-api'
 
 import { springOptions } from './springOptions'
@@ -83,8 +84,15 @@ function unmaskArgs<TArgs extends Args>(args: TArgs): TArgs {
 
 export function createStory<Props, TArgs extends Args>(
   StoryComponent: StoryFC<Props, TArgs>,
-  props?: Props,
-  overrideArgs?: Partial<TArgs>
+  {
+    props,
+    args: overrideArgs,
+    argTypes: overrideArgTypes
+  }: {
+    props?: Props
+    args?: Partial<TArgs>
+    argTypes?: Partial<ArgTypes>
+  } = {}
 ): StoryObj {
   const Component = memo(StoryComponent as FC)
   const maskedArgs = maskArgs({ ...StoryComponent.args, ...overrideArgs })
@@ -121,7 +129,10 @@ export function createStory<Props, TArgs extends Args>(
       )
     },
     args: maskedArgs,
-    argTypes: maskArgTypes<TArgs>(StoryComponent.argTypes)
+    argTypes: maskArgTypes<TArgs>({
+      ...StoryComponent.argTypes,
+      ...overrideArgTypes
+    })
   }
 }
 
@@ -136,7 +147,7 @@ export function useControl<TArgs extends Args, T>(
     return selectorRef.current(args)
   }, [])
   return useAtomValue(
-    selectAtom(argsAtom as PrimitiveAtom<TArgs>, selectorCallback)
+    selectAtom(argsAtom as PrimitiveAtom<TArgs>, selectorCallback, shallowEqual)
   )
 }
 
@@ -152,7 +163,7 @@ export function useTransientControl<TArgs extends Args, T>(
   const prevValueRef = useRef(value)
   store.sub(argsAtom, () => {
     const value = selector(store.get(argsAtom) as TArgs)
-    if (value !== prevValueRef.current) {
+    if (!shallowEqual(value, prevValueRef.current)) {
       onChange(value, prevValueRef.current)
       prevValueRef.current = value
     }

@@ -1,17 +1,75 @@
-import type { Meta } from '@storybook/react-vite'
+import type { ArgTypes, Meta } from '@storybook/react-vite'
 
-import _HigherOrderScattering from './AtmosphereLUT-HigherOrderScattering'
-import _Irradiance from './AtmosphereLUT-Irradiance'
-import _Scattering from './AtmosphereLUT-Scattering'
-import _SingleMieScattering from './AtmosphereLUT-SingleMieScattering'
-import _Transmittance from './AtmosphereLUT-Transmittance'
+import { createStory } from '../helpers/StoryControls'
+import Story2D from './AtmosphereLUT-2D'
+import Story3D from './AtmosphereLUT-3D'
 
 export default {
   title: 'atmosphere/Atmosphere LUT'
 } satisfies Meta
 
-export const Transmittance = _Transmittance
-export const Scattering = _Scattering
-export const Irradiance = _Irradiance
-export const SingleMieScattering = _SingleMieScattering
-export const HigherOrderScattering = _HigherOrderScattering
+const argTypes: ArgTypes = {
+  zoom: {
+    control: {
+      type: 'range',
+      min: 1,
+      max: 32,
+      step: 0.1
+    },
+    table: { category: 'viewer' }
+  },
+  valueExponent: {
+    control: {
+      type: 'range',
+      min: -5,
+      max: 5,
+      step: 0.1
+    },
+    table: { category: 'viewer' }
+  }
+}
+
+export const Transmittance = createStory(Story2D, {
+  props: { name: 'transmittance' },
+  args: {
+    zoom: 4,
+    valueExponent: 0
+  },
+  argTypes
+})
+
+export const Irradiance = createStory(Story2D, {
+  props: { name: 'irradiance' },
+  args: {
+    zoom: 16,
+    valueExponent: 2
+  },
+  argTypes
+})
+
+export const Scattering = createStory(Story3D, {
+  props: { name: 'scattering' },
+  args: {
+    zoom: 2,
+    valueExponent: Math.log10(0.5)
+  },
+  argTypes
+})
+
+export const SingleMieScattering = createStory(Story3D, {
+  props: { name: 'singleMieScattering' },
+  args: {
+    zoom: 2,
+    valueExponent: Math.log10(0.5)
+  },
+  argTypes
+})
+
+export const HigherOrderScattering = createStory(Story3D, {
+  props: { name: 'higherOrderScattering' },
+  args: {
+    zoom: 2,
+    valueExponent: Math.log10(0.5)
+  },
+  argTypes
+})

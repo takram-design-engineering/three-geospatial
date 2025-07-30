@@ -242,7 +242,7 @@ class AdditiveNodeMaterial extends NodeMaterial {
   }
 }
 
-const lutTypes = {
+const textureDimensions = {
   transmittance: 2,
   irradiance: 2,
   scattering: 3,
@@ -250,7 +250,10 @@ const lutTypes = {
   higherOrderScattering: 3
 } as const
 
-type LUTName<D extends 2 | 3 = 2 | 3, T = typeof lutTypes> = keyof {
+export type AtmosphereLUTTextureName<
+  D extends 2 | 3 = 2 | 3,
+  T = typeof textureDimensions
+> = keyof {
   [K in keyof T as T[K] extends D ? K : never]: unknown
 }
 
@@ -260,12 +263,10 @@ class LUTTextureNode extends TextureNode {
   }
 
   private readonly lutNode: AtmosphereLUTNode
-  private readonly lutName: LUTName<2>
 
-  constructor(lutNode: AtmosphereLUTNode, lutName: LUTName<2>) {
-    super(lutNode.getTexture(lutName))
+  constructor(lutNode: AtmosphereLUTNode, texture: Texture) {
+    super(texture)
     this.lutNode = lutNode
-    this.lutName = lutName
   }
 
   setup(builder: NodeBuilder): unknown {
@@ -274,7 +275,7 @@ class LUTTextureNode extends TextureNode {
   }
 
   clone(): this {
-    return new LUTTextureNode(this.lutNode, this.lutName) as this
+    return new LUTTextureNode(this.lutNode, this.value) as this
   }
 }
 
@@ -284,12 +285,10 @@ class LUTTexture3DNode extends Texture3DNode {
   }
 
   private readonly lutNode: AtmosphereLUTNode
-  private readonly lutName: LUTName<3>
 
-  constructor(lutNode: AtmosphereLUTNode, lutName: LUTName<3>) {
-    super(lutNode.getTexture(lutName))
+  constructor(lutNode: AtmosphereLUTNode, texture: Texture) {
+    super(texture)
     this.lutNode = lutNode
-    this.lutName = lutName
   }
 
   setup(builder: NodeBuilder): unknown {
@@ -298,7 +297,7 @@ class LUTTexture3DNode extends Texture3DNode {
   }
 
   clone(): this {
-    return new LUTTexture3DNode(this.lutNode, this.lutName) as this
+    return new LUTTexture3DNode(this.lutNode, this.value) as this
   }
 }
 
@@ -319,8 +318,13 @@ export class AtmosphereLUTNode extends TempNode {
   private readonly singleMieScatteringRT: RenderTarget3D
   private readonly higherOrderScatteringRT: RenderTarget3D
 
-  private readonly textureNodes: Partial<
-    Record<LUTName, ShaderNodeObject<LUTTextureNode | LUTTexture3DNode>>
+  // WORKAROUND: The leading underscore avoids the infinite recursion.
+  // https://github.com/mrdoob/three.js/issues/31522
+  private readonly _textureNodes: Partial<
+    Record<
+      AtmosphereLUTTextureName,
+      ShaderNodeObject<LUTTextureNode | LUTTexture3DNode>
+    >
   > = {}
 
   private lutVersion?: number
@@ -342,21 +346,31 @@ export class AtmosphereLUTNode extends TempNode {
     this.global = true // TODO
   }
 
-  getTexture(name: LUTName<2>): Texture
-  getTexture(name: LUTName<3>): Data3DTexture
-  getTexture(name: LUTName): Texture | Data3DTexture {
+  getTexture(name: AtmosphereLUTTextureName<2>): Texture
+  getTexture(name: AtmosphereLUTTextureName<3>): Data3DTexture
+  getTexture(name: AtmosphereLUTTextureName): Texture | Data3DTexture {
     return this[`${name}RT`].texture
   }
 
-  getTextureNode(name: LUTName<2>): ShaderNodeObject<LUTTextureNode>
-  getTextureNode(name: LUTName<3>): ShaderNodeObject<LUTTexture3DNode>
   getTextureNode(
-    name: LUTName
+    name: AtmosphereLUTTextureName<2>
+  ): ShaderNodeObject<LUTTextureNode>
+  getTextureNode(
+    name: AtmosphereLUTTextureName<3>
+  ): ShaderNodeObject<LUTTexture3DNode>
+  getTextureNode(
+    name: AtmosphereLUTTextureName
   ): ShaderNodeObject<LUTTextureNode | LUTTexture3DNode> {
-    return (this.textureNodes[name] ??= nodeObject(
-      lutTypes[name] === 2
-        ? new LUTTextureNode(this, name as LUTName<2>)
-        : new LUTTexture3DNode(this, name as LUTName<3>)
+    return (this._textureNodes[name] ??= nodeObject(
+      textureDimensions[name] === 2
+        ? new LUTTextureNode(
+            this,
+            this.getTexture(name as AtmosphereLUTTextureName<2>)
+          )
+        : new LUTTexture3DNode(
+            this,
+            this.getTexture(name as AtmosphereLUTTextureName<3>)
+          )
     ))
   }
 
