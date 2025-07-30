@@ -8,8 +8,8 @@ import {
 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
+import type { Node, NodeObject } from './node'
 import { turbo } from './Turbo'
-import type { Node, ShaderNode } from './node'
 
 declare module 'three' {
   interface Camera {
@@ -31,9 +31,9 @@ export class DepthToColor extends TempNode {
 
   constructor(
     camera: Camera,
-    depthNode: ShaderNode<'float'>,
-    near?: number | ShaderNode<'float'>,
-    far?: number | ShaderNode<'float'>
+    depthNode: NodeObject<'float'>,
+    near?: number | NodeObject<'float'>,
+    far?: number | NodeObject<'float'>
   ) {
     super('vec3')
     this.camera = camera
@@ -55,12 +55,12 @@ export class DepthToColor extends TempNode {
       nearNode: near,
       farNode: far
     } = this
-    let node: ShaderNode<'float'>
+    let node: NodeObject<'float'>
     if (camera.isPerspectiveCamera === true) {
       const viewZ = perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
-      node = viewZToOrthographicDepth(viewZ, near, far) as ShaderNode<'float'>
+      node = viewZToOrthographicDepth(viewZ, near, far) as NodeObject<'float'>
     } else {
-      node = viewZToOrthographicDepth(depth, near, far) as ShaderNode<'float'>
+      node = viewZToOrthographicDepth(depth, near, far) as NodeObject<'float'>
     }
     return turbo(node.saturate().oneMinus())
   }

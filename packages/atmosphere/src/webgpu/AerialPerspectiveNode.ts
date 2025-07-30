@@ -23,8 +23,8 @@ import { Ellipsoid } from '@takram/three-geospatial'
 import {
   depthToViewZ,
   needsUpdate,
+  NodeObject,
   screenToView,
-  ShaderNode,
   type Node
 } from '@takram/three-geospatial/webgpu'
 
@@ -237,5 +237,5 @@ export class AerialPerspectiveNode extends TempNode {
 
 export const aerialPerspective = (
   ...params: ConstructorParameters<typeof AerialPerspectiveNode>
-): ShaderNode<AerialPerspectiveNode> =>
+): NodeObject<AerialPerspectiveNode> =>
   nodeObject(new AerialPerspectiveNode(...params))

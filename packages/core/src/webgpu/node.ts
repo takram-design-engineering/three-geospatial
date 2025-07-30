@@ -32,30 +32,20 @@ import {
 } from 'three/tsl'
 import type { Node as N } from 'three/webgpu'
 
-export const nodeFunctions = {
-  float,
-  int,
-  uint,
+// prettier-ignore
+const nodes = {
+  float, int, uint,
   bool,
-  vec2,
-  ivec2,
-  uvec2,
-  bvec2,
-  vec3,
-  ivec3,
-  uvec3,
-  bvec3,
-  vec4,
-  ivec4,
-  uvec4,
-  bvec4,
+  vec2, ivec2, uvec2, bvec2,
+  vec3, ivec3, uvec3, bvec3,
+  vec4, ivec4, uvec4, bvec4,
   mat2,
   mat3,
   mat4,
   color
 } as const
 
-export type NodeType = keyof typeof nodeFunctions
+export type NodeType = keyof typeof nodes
 
 export type NodeValueType =
   | number
@@ -82,22 +72,11 @@ export type NodeTypeOf<T extends NodeValueType> =
 
 // prettier-ignore
 export type NodeValueTypeOf<T extends NodeType> =
-  T extends 'float' ? number :
-  T extends 'int' ? number :
-  T extends 'uint' ? number :
+  T extends 'float' | 'int' | 'uint' ? number :
   T extends 'bool' ? boolean :
-  T extends 'vec2' ? Vector2 :
-  T extends 'ivec2' ? Vector2 :
-  T extends 'uvec2' ? Vector2 :
-  T extends 'bvec2' ? Vector2 :
-  T extends 'vec3' ? Vector3 :
-  T extends 'ivec3' ? Vector3 :
-  T extends 'uvec3' ? Vector3 :
-  T extends 'bvec3' ? Vector3 :
-  T extends 'vec4' ? Vector4 :
-  T extends 'ivec4' ? Vector4 :
-  T extends 'uvec4' ? Vector4 :
-  T extends 'bvec4' ? Vector4 :
+  T extends 'vec2' | 'ivec2' | 'uvec2' | 'bvec2' ? Vector2 :
+  T extends 'vec3' | 'ivec3' | 'uvec3' | 'bvec3' ? Vector3 :
+  T extends 'vec4' | 'ivec4' | 'uvec4' | 'bvec4' ? Vector4 :
   T extends 'mat2' ? Matrix2 :
   T extends 'mat3' ? Matrix3 :
   T extends 'mat4' ? Matrix4 :
@@ -112,9 +91,9 @@ export type Node<
   T extends NodeType | N = NodeType | N
 > = N
 
-export type ShaderNode<T extends NodeType | N = NodeType | N> =
+export type NodeObject<T extends NodeType | N = NodeType | N> =
   ShaderNodeObject<T extends N ? T : Node<T>>
 
-export function node<T extends NodeType>(type: T): (typeof nodeFunctions)[T] {
-  return nodeFunctions[type]
+export function node<T extends NodeType>(type: T): (typeof nodes)[T] {
+  return nodes[type]
 }

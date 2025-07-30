@@ -9,14 +9,14 @@ import {
 } from 'three/tsl'
 
 import { Fnv } from './Fnv'
-import type { Node, ShaderNode } from './node'
+import type { Node, NodeObject } from './node'
 
 export const depthToViewZ = /*#__PURE__*/ Fnv(
   (
     camera: Camera,
-    depth: ShaderNode<'float'>,
-    cameraNear: ShaderNode<'float'>,
-    cameraFar: ShaderNode<'float'>
+    depth: NodeObject<'float'>,
+    cameraNear: NodeObject<'float'>,
+    cameraFar: NodeObject<'float'>
   ): Node<'float'> => {
     return camera.isPerspectiveCamera === true
       ? perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
@@ -26,11 +26,11 @@ export const depthToViewZ = /*#__PURE__*/ Fnv(
 
 export const screenToView = /*#__PURE__*/ Fnv(
   (
-    uv: ShaderNode<'vec2'>,
-    depth: ShaderNode<'float'>,
-    viewZ: ShaderNode<'float'>,
-    projectionMatrix: ShaderNode<'mat4'>,
-    inverseProjectionMatrix: ShaderNode<'mat4'>
+    uv: NodeObject<'vec2'>,
+    depth: NodeObject<'float'>,
+    viewZ: NodeObject<'float'>,
+    projectionMatrix: NodeObject<'mat4'>,
+    inverseProjectionMatrix: NodeObject<'mat4'>
   ): Node<'vec3'> => {
     const scale = projectionMatrix.element(int(2)).element(int(3))
     const offset = projectionMatrix.element(int(3)).element(int(3))

@@ -1,14 +1,13 @@
-import { reference, type ShaderNodeObject } from 'three/tsl'
+import { reference } from 'three/tsl'
 import type { ReferenceNode, VarNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { NODE_TYPES } from './internals'
 import {
   node,
-  type Node,
+  type NodeObject,
   type NodeType,
-  type NodeValueType,
-  type ShaderNode
+  type NodeValueType
 } from './node'
 
 type NodeValuePropertyKey<T> = keyof {
@@ -38,7 +37,7 @@ export function referenceTo<T extends {}>(target: T) {
   const types = getNodeTypes(target)
   return <K extends NodeValuePropertyKey<T>>(
     propertyName: K
-  ): ShaderNode<ReferenceNode<T>> => {
+  ): NodeObject<ReferenceNode<T>> => {
     const nodeType = types?.[propertyName as string]
     if (nodeType == null) {
       throw new Error(
@@ -54,8 +53,8 @@ export function propertyOf<T extends {}>(target: T) {
   return <K extends NodeValuePropertyKey<T>>(
     propertyName: K,
     transformValue?: (self: T[K]) => T[K],
-    transformNode?: (node: ShaderNodeObject<Node>) => ShaderNodeObject<Node>
-  ): ShaderNodeObject<VarNode> => {
+    transformNode?: (node: NodeObject) => NodeObject
+  ): NodeObject<VarNode> => {
     const nodeType = types?.[propertyName as string]
     if (nodeType == null) {
       throw new Error(
@@ -71,10 +70,10 @@ export function propertyOf<T extends {}>(target: T) {
       }
       propertyValue = transformValue(propertyValue)
     }
-    let result = node(nodeType)(propertyValue as any)
+    let propertyNode = node(nodeType)(propertyValue as any)
     if (transformNode != null) {
-      result = transformNode(result)
+      propertyNode = transformNode(propertyNode)
     }
-    return result.toVar()
+    return propertyNode.toVar()
   }
 }

@@ -19,14 +19,14 @@ import {
   type AtmosphereLUTTextureName,
   type AtmosphereParameters
 } from '@takram/three-atmosphere/webgpu'
-import { Fnv, type ShaderNode } from '@takram/three-geospatial/webgpu'
+import { Fnv, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import { useTransientControl, type StoryFC } from '../helpers/StoryControls'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 export const textureUV = Fnv(
-  (textureSize: ShaderNode<'vec2'>, zoom: ShaderNode<'float'>) => {
+  (textureSize: NodeObject<'vec2'>, zoom: NodeObject<'float'>) => {
     const scale = screenSize.div(textureSize).div(zoom).toVar()
     const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toVar()
     If(
