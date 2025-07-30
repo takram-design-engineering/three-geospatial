@@ -1,5 +1,7 @@
-import { motionValue, useTransform, type MotionValue } from 'framer-motion'
-import { useEffect, useMemo, useRef } from 'react'
+import { useTransform, type MotionValue } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+
+import { useMaybeMotionValue } from './useMaybeMotionValue'
 
 function getLocalDate(
   longitude: number,
@@ -12,15 +14,6 @@ function getLocalDate(
       ? [Date.UTC(year, 0, 1, 0, 0, 0, 0), longitude / 15]
       : [+new Date(year, 0, 1, 0, 0, 0, 0), 0]
   return epoch + (Math.floor(dayOfYear) * 24 + timeOfDay - offset) * 3600000
-}
-
-function useMaybeMotionValue(
-  value: number | MotionValue<number>
-): MotionValue<number> {
-  return useMemo(
-    () => (typeof value === 'number' ? motionValue(value) : value),
-    [value]
-  )
 }
 
 export function useLocalDate(

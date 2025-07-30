@@ -26,6 +26,7 @@ export interface GlobeProps {
   apiKey?: string
   children?: ReactNode
 }
+
 export const Globe: FC<GlobeProps> = ({
   ref,
   apiKey = import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
