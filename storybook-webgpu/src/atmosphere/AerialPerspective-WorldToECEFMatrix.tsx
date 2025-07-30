@@ -45,18 +45,18 @@ const Scene: FC<StoryProps> = () => {
       })
     )
     const lutNode = atmosphereLUT()
-    const aerialPerspectiveNode = aerialPerspective(
+    const aerialNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('normal'),
       passNode.getTextureNode('depth'),
       lutNode
     )
-    aerialPerspectiveNode.sunDirectionNode = sunDirection
-    aerialPerspectiveNode.worldToECEFMatrix = worldToECEFMatrix
+    aerialNode.sunDirectionNode = sunDirection
+    aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = aerialPerspectiveNode
+    postProcessing.outputNode = aerialNode
 
     return [postProcessing, lutNode]
   }, [renderer, scene, camera, sunDirection, worldToECEFMatrix])

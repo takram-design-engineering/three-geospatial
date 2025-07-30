@@ -12,9 +12,7 @@ export function useCombinedChange<const T extends MotionValue[]>(
   values: T,
   onChange: (values: InferValues<T>) => void
 ): void {
-  const ref = useRef<InferValues<T>>(
-    values.map(value => value.get()) as InferValues<T>
-  )
+  const ref = useRef(values.map(value => value.get()) as InferValues<T>)
   onChange(ref.current) // Initial callback
 
   useEffect(() => {
