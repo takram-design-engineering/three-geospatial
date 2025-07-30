@@ -1,7 +1,7 @@
+import { OrbitControls, Sphere } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { GlobeControls } from '3d-tiles-renderer/r3f'
 import { useMemo, type FC } from 'react'
-import { Vector3 } from 'three'
+import { Matrix4, Vector3 } from 'three'
 import { diffuseColor, mrt, normalView, pass, uniform } from 'three/tsl'
 import {
   AgXToneMapping,
@@ -15,44 +15,27 @@ import {
   aerialPerspective,
   atmosphereLUT
 } from '@takram/three-atmosphere/webgpu'
+import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
 import { localDateArgTypes } from '../controls/localDate'
 import { toneMappingArgTypes } from '../controls/toneMapping'
-import { Globe } from '../helpers/Globe'
 import {
-  useControl,
   useSpringControl,
   useTransientControl,
   type StoryFC
 } from '../helpers/StoryControls'
+import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useLocalDate } from '../helpers/useLocalDate'
-import {
-  usePointOfView,
-  type PointOfViewProps
-} from '../helpers/usePointOfView'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
-const Scene: FC<StoryProps> = ({
-  longitude,
-  latitude,
-  heading,
-  pitch,
-  distance
-}) => {
-  usePointOfView({
-    longitude,
-    latitude,
-    heading,
-    pitch,
-    distance
-  })
-
+const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
   const sunDirection = useMemo(() => uniform(new Vector3()), [])
+  const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
   const [postProcessing] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
@@ -70,12 +53,13 @@ const Scene: FC<StoryProps> = ({
       lutNode
     )
     aerialPerspectiveNode.sunDirectionNode = sunDirection
+    aerialPerspectiveNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialPerspectiveNode
 
     return [postProcessing, lutNode]
-  }, [renderer, scene, camera, sunDirection])
+  }, [renderer, scene, camera, sunDirection, worldToECEFMatrix])
 
   useFrame(() => {
     postProcessing.render()
@@ -96,47 +80,82 @@ const Scene: FC<StoryProps> = ({
     }
   )
 
+  const longitude = useSpringControl(({ longitude }: StoryArgs) => longitude)
+  const latitude = useSpringControl(({ latitude }: StoryArgs) => latitude)
+  const height = useSpringControl(({ height }: StoryArgs) => height)
+  useCombinedChange(
+    [longitude, latitude, height],
+    ([longitude, latitude, height]) => {
+      Ellipsoid.WGS84.getNorthUpEastFrame(
+        new Geodetic(radians(longitude), radians(latitude), height).toECEF(),
+        worldToECEFMatrix
+      )
+    }
+  )
+
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
   useLocalDate(longitude, dayOfYear, timeOfDay, date => {
     getSunDirectionECEF(date, sunDirection.value)
   })
 
-  const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
-    googleMapsApiKey !== '' ? googleMapsApiKey : undefined
-  )
   return (
-    <Globe apiKey={apiKey}>
-      <GlobeControls enableDamping />
-    </Globe>
+    <>
+      <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
+      <Sphere args={[0.5, 128, 128]} position={[0, 0.5, 0]} />
+    </>
   )
 }
 
-interface StoryProps extends PointOfViewProps {}
+interface StoryProps {}
 
 interface StoryArgs {
-  googleMapsApiKey: string
   toneMapping: ToneMapping
   exposure: number
   dayOfYear: number
   timeOfDay: number
+  longitude: number
+  latitude: number
+  height: number
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <WebGPUCanvas>
+  <WebGPUCanvas camera={{ position: [2, 1, 2] }}>
     <Scene {...props} />
   </WebGPUCanvas>
 )
 
 Story.args = {
-  googleMapsApiKey: '',
   toneMapping: AgXToneMapping
 }
 
 Story.argTypes = {
-  googleMapsApiKey: { control: 'text' },
   ...toneMappingArgTypes,
-  ...localDateArgTypes
+  ...localDateArgTypes,
+  longitude: {
+    control: {
+      type: 'range',
+      min: -180,
+      max: 180
+    },
+    table: { category: 'location' }
+  },
+  latitude: {
+    control: {
+      type: 'range',
+      min: -90,
+      max: 90
+    },
+    table: { category: 'location' }
+  },
+  height: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 30000
+    },
+    table: { category: 'location' }
+  }
 }
 
 export default Story

@@ -1,5 +1,5 @@
-import { useTransform, type MotionValue } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { motionValue, useTransform, type MotionValue } from 'framer-motion'
+import { useEffect, useMemo, useRef } from 'react'
 
 function getLocalDate(
   longitude: number,
@@ -14,15 +14,28 @@ function getLocalDate(
   return epoch + (Math.floor(dayOfYear) * 24 + timeOfDay - offset) * 3600000
 }
 
+function useMaybeMotionValue(
+  value: number | MotionValue<number>
+): MotionValue<number> {
+  return useMemo(
+    () => (typeof value === 'number' ? motionValue(value) : value),
+    [value]
+  )
+}
+
 export function useLocalDate(
-  longitude: number, // In degrees
-  dayOfYear: MotionValue<number>,
-  timeOfDay: MotionValue<number>,
+  longitude: number | MotionValue<number>, // In degrees
+  dayOfYear: number | MotionValue<number>,
+  timeOfDay: number | MotionValue<number>,
   onChange?: (date: number) => void
 ): MotionValue<number> {
+  const longitudeValue = useMaybeMotionValue(longitude)
+  const dayOfYearValue = useMaybeMotionValue(dayOfYear)
+  const timeOfDayValue = useMaybeMotionValue(timeOfDay)
+
   const motionDate = useTransform(
-    [dayOfYear, timeOfDay],
-    ([dayOfYear, timeOfDay]: number[]) =>
+    [longitudeValue, dayOfYearValue, timeOfDayValue],
+    ([longitude, dayOfYear, timeOfDay]: number[]) =>
       getLocalDate(longitude, dayOfYear, timeOfDay)
   )
 
