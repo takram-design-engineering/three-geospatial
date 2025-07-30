@@ -90,9 +90,9 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type {
-  UniformAtmosphereParameters,
-  UniformDensityProfile,
-  UniformDensityProfileLayer
+  AtmosphereParametersContext,
+  DensityProfileContext,
+  DensityProfileLayerContext
 } from './AtmosphereParameters'
 import {
   clampCosine,
@@ -129,7 +129,7 @@ declare module 'three/src/nodes/TSL.js' {
 
 const getLayerDensity = /*#__PURE__*/ Fnv(
   (
-    layer: UniformDensityProfileLayer,
+    layer: DensityProfileLayerContext,
     altitude: ShaderNode<Length>
   ): Node<'float'> => {
     return layer.expTerm
@@ -142,7 +142,7 @@ const getLayerDensity = /*#__PURE__*/ Fnv(
 
 const getProfileDensity = /*#__PURE__*/ Fnv(
   (
-    profile: UniformDensityProfile,
+    profile: DensityProfileContext,
     altitude: ShaderNode<Length>
   ): Node<'float'> => {
     return select(
@@ -155,8 +155,8 @@ const getProfileDensity = /*#__PURE__*/ Fnv(
 
 const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
-    profile: UniformDensityProfile,
+    parameters: AtmosphereParametersContext,
+    profile: DensityProfileContext,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>
   ): Node<Length> => {
@@ -194,7 +194,7 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
 
 const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>
   ): Node<DimensionlessSpectrum> => {
@@ -251,7 +251,7 @@ type TransmittanceParamsStruct = ShaderNode<StructNode>
 
 const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     uv: ShaderNode<'vec2'>
   ): TransmittanceParamsStruct => {
     const cosViewUnit = getUnitRangeFromTextureCoord(
@@ -297,7 +297,7 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
 export const computeTransmittanceToTopAtmosphereBoundaryTexture =
   /*#__PURE__*/ Fnv(
     (
-      parameters: UniformAtmosphereParameters,
+      parameters: AtmosphereParametersContext,
       fragCoord: ShaderNode<'vec2'>
     ): Node<DimensionlessSpectrum> => {
       const transmittanceParams = getParamsFromTransmittanceTextureUV(
@@ -320,7 +320,7 @@ type SingleScatteringStruct = ShaderNode<StructNode>
 
 const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>,
@@ -377,7 +377,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
 
 const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>,
     rayIntersectsGround: ShaderNode<'bool'>
@@ -398,7 +398,7 @@ const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ Fnv(
 
 const computeSingleScattering = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>,
@@ -468,7 +468,7 @@ type ScatteringParamsStruct = ShaderNode<StructNode>
 
 const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     coord: ShaderNode<'vec4'>
   ): ScatteringParamsStruct => {
     // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -596,7 +596,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
 
 const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     fragCoord: ShaderNode<'vec3'>
   ): ScatteringParamsStruct => {
     const fragCoordCosViewSun = floor(
@@ -651,7 +651,7 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
 
 export const computeSingleScatteringTexture = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     fragCoord: ShaderNode<'vec3'>
   ) => {
@@ -678,7 +678,7 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ Fnv(
 
 const getScatteringForOrder = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     singleRayleighScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
     singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
     multipleScatteringTexture: ShaderNode<ScatteringTextureNode>,
@@ -734,7 +734,7 @@ const getScatteringForOrder = /*#__PURE__*/ Fnv(
 
 const computeScatteringDensity = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     singleRayleighScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
     singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
@@ -883,7 +883,7 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
 
 const computeMultipleScattering = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     scatteringDensityTexture: ShaderNode<ScatteringDensityTextureNode>,
     radius: ShaderNode<Length>,
@@ -957,7 +957,7 @@ const computeMultipleScattering = /*#__PURE__*/ Fnv(
 
 export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     singleRayleighScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
     singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
@@ -998,7 +998,7 @@ type MultipleScatteringStruct = ShaderNode<StructNode>
 
 export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     scatteringDensityTexture: ShaderNode<ScatteringDensityTextureNode>,
     fragCoord: ShaderNode<'vec3'>
@@ -1028,7 +1028,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
 
 const computeDirectIrradiance = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     radius: ShaderNode<Length>,
     cosSun: ShaderNode<'float'>
@@ -1062,7 +1062,7 @@ const computeDirectIrradiance = /*#__PURE__*/ Fnv(
 
 const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     singleRayleighScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
     singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
     multipleScatteringTexture: ShaderNode<ScatteringTextureNode>,
@@ -1120,7 +1120,7 @@ type IrradianceParamsStruct = ShaderNode<StructNode>
 
 const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     uv: ShaderNode<'vec2'>
   ): IrradianceParamsStruct => {
     const cosSunUnit = getUnitRangeFromTextureCoord(
@@ -1141,7 +1141,7 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(
 
 export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     fragCoord: ShaderNode<'vec2'>
   ): Node<IrradianceSpectrum> => {
@@ -1162,7 +1162,7 @@ export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
 
 export const computeIndirectIrradianceTexture = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     singleRayleighScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
     singleMieScatteringTexture: ShaderNode<ReducedScatteringTextureNode>,
     multipleScatteringTexture: ShaderNode<ScatteringTextureNode>,

@@ -1,7 +1,7 @@
 import { add, sub, vec3 } from 'three/tsl'
 
 import { Fnv } from './Fnv'
-import type { Node, ShaderNode } from './types'
+import type { Node, ShaderNode } from './node'
 
 export const turbo = /*#__PURE__*/ Fnv(
   (x: ShaderNode<'float'>): Node<'vec3'> => {

@@ -85,7 +85,7 @@ import {
   type ShaderNode
 } from '@takram/three-geospatial/webgpu'
 
-import type { UniformAtmosphereParameters } from './AtmosphereParameters'
+import type { AtmosphereParametersContext } from './AtmosphereParameters'
 import type {
   AbstractScatteringTextureNode,
   AbstractSpectrum,
@@ -112,7 +112,7 @@ export const clampDistance = /*#__PURE__*/ Fnv(
 
 export const clampRadius = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>
   ): Node<Length> => {
     return clamp(radius, parameters.bottomRadius, parameters.topRadius)
@@ -127,7 +127,7 @@ export const safeSqrt = /*#__PURE__*/ Fnv(
 
 export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>
   ): Node<Length> => {
@@ -143,7 +143,7 @@ export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
 
 export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>
   ): Node<Length> => {
@@ -159,7 +159,7 @@ export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ Fnv(
 
 export const rayIntersectsGround = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>
   ): Node<'bool'> => {
@@ -188,7 +188,7 @@ export const getTextureCoordFromUnitRange = /*#__PURE__*/ Fnv(
 
 export const getTransmittanceTextureUV = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>
   ): Node<'vec2'> => {
@@ -230,7 +230,7 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ Fnv(
 
 export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: ShaderNode<TransmittanceTextureNode>,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>
@@ -259,7 +259,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
 
 export const getTransmittance = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: TransmittanceTextureNode,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>,
@@ -325,7 +325,7 @@ export const getTransmittance = /*#__PURE__*/ Fnv(
 
 export const getTransmittanceToSun = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     transmittanceTexture: TransmittanceTextureNode,
     radius: ShaderNode<Length>,
     cosSun: ShaderNode<'float'>
@@ -372,7 +372,7 @@ export const miePhaseFunction = /*#__PURE__*/ Fnv(
 
 export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>,
     cosSun: ShaderNode<'float'>,
@@ -476,7 +476,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
 
 export const getScattering = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     scatteringTexture: ShaderNode<AbstractScatteringTextureNode>,
     radius: ShaderNode<Length>,
     cosView: ShaderNode<'float'>,
@@ -516,7 +516,7 @@ export const getScattering = /*#__PURE__*/ Fnv(
 
 export const getIrradianceTextureUV = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     radius: ShaderNode<Length>,
     cosSun: ShaderNode<'float'>
   ): Node<'vec2'> => {
@@ -540,7 +540,7 @@ export const getIrradianceTextureUV = /*#__PURE__*/ Fnv(
 
 export const getIrradiance = /*#__PURE__*/ Fnv(
   (
-    parameters: UniformAtmosphereParameters,
+    parameters: AtmosphereParametersContext,
     irradianceTexture: ShaderNode<IrradianceTextureNode>,
     radius: ShaderNode<Length>,
     cosSun: ShaderNode<'float'>

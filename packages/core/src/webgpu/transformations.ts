@@ -9,7 +9,7 @@ import {
 } from 'three/tsl'
 
 import { Fnv } from './Fnv'
-import type { Node, ShaderNode } from './types'
+import type { Node, ShaderNode } from './node'
 
 export const depthToViewZ = /*#__PURE__*/ Fnv(
   (

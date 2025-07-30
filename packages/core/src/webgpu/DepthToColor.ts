@@ -9,7 +9,7 @@ import {
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import { turbo } from './Turbo'
-import type { Node, ShaderNode } from './types'
+import type { Node, ShaderNode } from './node'
 
 declare module 'three' {
   interface Camera {

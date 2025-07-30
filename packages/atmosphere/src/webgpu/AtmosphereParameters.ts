@@ -1,7 +1,7 @@
 import { Vector2, Vector3 } from 'three'
 
 import { assertType, radians } from '@takram/three-geospatial'
-import { Node, nodeType, referenceTo } from '@takram/three-geospatial/webgpu'
+import { nodeType, propertyOf } from '@takram/three-geospatial/webgpu'
 
 import {
   Angle,
@@ -13,7 +13,7 @@ import {
   ScatteringSpectrum
 } from './types'
 
-function createUniformProxy<
+function createContextProxy<
   T extends {},
   U extends {},
   R = Omit<T, keyof U> & U
@@ -48,26 +48,20 @@ export class DensityProfileLayer {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createUniform(worldToUnit: Node<'float'>) {
-    const reference = referenceTo(this)
-    return createUniformProxy(this, {
-      width: reference('width').mul(worldToUnit),
-      expTerm: reference('expTerm'),
-      expScale: reference('expScale').div(worldToUnit),
-      linearTerm: reference('linearTerm').div(worldToUnit),
-      constantTerm: reference('constantTerm')
+  getContext(worldToUnit: number) {
+    const property = propertyOf<DensityProfileLayer>(this)
+    return createContextProxy(this, {
+      width: property('width', self => self * worldToUnit),
+      expTerm: property('expTerm'),
+      expScale: property('expScale', self => self / worldToUnit),
+      linearTerm: property('linearTerm', self => self / worldToUnit),
+      constantTerm: property('constantTerm')
     })
-  }
-
-  private _uniforms?: UniformDensityProfileLayer
-
-  getUniform(worldToUnit: Node<'float'>): UniformDensityProfileLayer {
-    return (this._uniforms ??= this.createUniform(worldToUnit))
   }
 }
 
-export type UniformDensityProfileLayer = ReturnType<
-  DensityProfileLayer['createUniform']
+export type DensityProfileLayerContext = ReturnType<
+  DensityProfileLayer['getContext']
 >
 
 export class DensityProfile {
@@ -78,28 +72,20 @@ export class DensityProfile {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createUniform(worldToUnit: Node<'float'>) {
-    return createUniformProxy(this, {
+  getContext(worldToUnit: number) {
+    return createContextProxy(this, {
       layers: [
-        this.layers[0].getUniform(worldToUnit),
-        this.layers[1].getUniform(worldToUnit)
+        this.layers[0].getContext(worldToUnit),
+        this.layers[1].getContext(worldToUnit)
       ] as const
     })
   }
-
-  private _uniforms?: UniformDensityProfile
-
-  getUniform(worldToUnit: Node<'float'>): UniformDensityProfile {
-    return (this._uniforms ??= this.createUniform(worldToUnit))
-  }
 }
 
-export type UniformDensityProfile = ReturnType<DensityProfile['createUniform']>
+export type DensityProfileContext = ReturnType<DensityProfile['getContext']>
 
 const luminanceCoefficients = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 
-// TODO: Length is in meters but some coefficients seem too small for the
-// mediump precision. Revisit if it causes any visual errors.
 export class AtmosphereParameters {
   @nodeType(Dimensionless)
   worldToUnit = 0.001
@@ -216,44 +202,40 @@ export class AtmosphereParameters {
     this.scatteringTextureRadiusSize
   )
 
-  set(value: Partial<AtmosphereParameters>): this {
-    return Object.assign(this, value)
-  }
-
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createUniform() {
-    const reference = referenceTo(this)
-    const worldToUnit = reference('worldToUnit')
-    // prettier-ignore
-    return createUniformProxy(this, {
-      worldToUnit,
-      solarIrradiance: reference('solarIrradiance'),
-      sunAngularRadius: reference('sunAngularRadius'),
-      bottomRadius: reference('bottomRadius').mul(worldToUnit),
-      topRadius: reference('topRadius').mul(worldToUnit),
-      rayleighDensity: this.rayleighDensity.getUniform(worldToUnit),
-      rayleighScattering: reference('rayleighScattering').div(worldToUnit),
-      mieDensity: this.mieDensity.getUniform(worldToUnit),
-      mieScattering: reference('mieScattering').div(worldToUnit),
-      mieExtinction: reference('mieExtinction').div(worldToUnit),
-      miePhaseFunctionG: reference('miePhaseFunctionG'),
-      absorptionDensity: this.absorptionDensity.getUniform(worldToUnit),
-      absorptionExtinction: reference('absorptionExtinction').div(worldToUnit),
-      groundAlbedo: reference('groundAlbedo'),
-      minCosSun: reference('minCosSun'),
-      sunRadianceToLuminance: reference('sunRadianceToLuminance'),
-      skyRadianceToLuminance: reference('skyRadianceToLuminance'),
-      luminanceScale: reference('luminanceScale')
+  getContext() {
+    const property = propertyOf<AtmosphereParameters>(this)
+    return createContextProxy(this, {
+      worldToUnit: property('worldToUnit'),
+      solarIrradiance: property('solarIrradiance'),
+      sunAngularRadius: property('sunAngularRadius'),
+      bottomRadius: property('bottomRadius', self => self * this.worldToUnit),
+      topRadius: property('topRadius', self => self * this.worldToUnit),
+      rayleighDensity: this.rayleighDensity.getContext(this.worldToUnit),
+      rayleighScattering: property('rayleighScattering', self =>
+        self.divideScalar(this.worldToUnit)
+      ),
+      mieDensity: this.mieDensity.getContext(this.worldToUnit),
+      mieScattering: property('mieScattering', self =>
+        self.divideScalar(this.worldToUnit)
+      ),
+      mieExtinction: property('mieExtinction', self =>
+        self.divideScalar(this.worldToUnit)
+      ),
+      miePhaseFunctionG: property('miePhaseFunctionG'),
+      absorptionDensity: this.absorptionDensity.getContext(this.worldToUnit),
+      absorptionExtinction: property('absorptionExtinction', self =>
+        self.divideScalar(this.worldToUnit)
+      ),
+      groundAlbedo: property('groundAlbedo'),
+      minCosSun: property('minCosSun'),
+      sunRadianceToLuminance: property('sunRadianceToLuminance'),
+      skyRadianceToLuminance: property('skyRadianceToLuminance'),
+      luminanceScale: property('luminanceScale')
     })
-  }
-
-  private _uniforms?: UniformAtmosphereParameters
-
-  getUniform(): UniformAtmosphereParameters {
-    return (this._uniforms ??= this.createUniform())
   }
 }
 
-export type UniformAtmosphereParameters = ReturnType<
-  AtmosphereParameters['createUniform']
+export type AtmosphereParametersContext = ReturnType<
+  AtmosphereParameters['getContext']
 >

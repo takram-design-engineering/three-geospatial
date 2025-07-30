@@ -141,7 +141,7 @@ export class AerialPerspectiveNode extends TempNode {
       altitudeCorrectionECEF
     } = this._uniforms
 
-    const { worldToUnit } = this.lutNode.parameters.getUniform()
+    const { worldToUnit } = this.lutNode.parameters.getContext()
 
     const cameraPositionUnit = cameraPositionECEF
       .add(altitudeCorrectionECEF)

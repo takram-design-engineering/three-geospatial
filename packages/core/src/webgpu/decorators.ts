@@ -1,7 +1,7 @@
 import invariant from 'tiny-invariant'
 
 import { NODE_TYPES } from './internals'
-import type { NodeType } from './types'
+import type { NodeType } from './node'
 
 // TODO: Use Stage 3 decorator, but it will break every other decorator.
 export function nodeType(type: NodeType) {

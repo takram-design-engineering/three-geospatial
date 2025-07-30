@@ -407,7 +407,7 @@ export class AtmosphereLUTNode extends TempNode {
     { opticalDepthRT }: Context
   ): void {
     const result = computeTransmittanceToTopAtmosphereBoundaryTexture(
-      this.parameters.getUniform(),
+      this.parameters.getContext(),
       screenCoordinate
     ).toVar()
 
@@ -436,7 +436,7 @@ export class AtmosphereLUTNode extends TempNode {
     { deltaIrradianceRT, opticalDepthRT }: Context
   ): void {
     const irradiance = computeDirectIrradianceTexture(
-      this.parameters.getUniform(),
+      this.parameters.getContext(),
       texture(
         this.parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
@@ -471,7 +471,7 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const layer = uniform(0)
     const singleScattering = computeSingleScatteringTexture(
-      this.parameters.getUniform(),
+      this.parameters.getContext(),
       texture(
         this.parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
@@ -525,7 +525,7 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const layer = uniform(0)
     const radiance = computeScatteringDensityTexture(
-      this.parameters.getUniform(),
+      this.parameters.getContext(),
       texture(
         this.parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
@@ -558,7 +558,7 @@ export class AtmosphereLUTNode extends TempNode {
     scatteringOrder: number
   ): void {
     const irradiance = computeIndirectIrradianceTexture(
-      this.parameters.getUniform(),
+      this.parameters.getContext(),
       texture3D(deltaRayleighScatteringRT.texture),
       texture3D(deltaMieScatteringRT.texture),
       texture3D(deltaMultipleScatteringRT.texture),
@@ -592,7 +592,7 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const layer = uniform(0)
     const multipleScattering = computeMultipleScatteringTexture(
-      this.parameters.getUniform(),
+      this.parameters.getContext(),
       texture(
         this.parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture

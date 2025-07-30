@@ -52,7 +52,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
 
   const lutNode = useResource(() => atmosphereLUT())
-  lutNode.parameters.set(options)
+  Object.assign(lutNode.parameters, options)
   const textureSize = vec2(lutNode.parameters[`${name}TextureSize`])
   const uv = textureUV(textureSize, zoom)
 

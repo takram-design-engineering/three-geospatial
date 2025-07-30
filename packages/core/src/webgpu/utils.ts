@@ -1,17 +1,25 @@
-import { reference } from 'three/tsl'
-import type { ReferenceNode } from 'three/webgpu'
+import { reference, type ShaderNodeObject } from 'three/tsl'
+import type { ReferenceNode, VarNode } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
-import { assertType } from '../assertions'
 import { NODE_TYPES } from './internals'
-import type { NodeType, ShaderNode } from './types'
+import {
+  node,
+  type Node,
+  type NodeType,
+  type NodeValueType,
+  type ShaderNode
+} from './node'
 
-export function referenceTo<T extends {}>(
-  target: T
-): (
-  propertyName: keyof {
-    [K in keyof T as K extends string ? K : never]: unknown
-  }
-) => ShaderNode<ReferenceNode<T>> {
+type NodeValuePropertyKey<T> = keyof {
+  [K in keyof T as K extends string
+    ? T[K] extends NodeValueType
+      ? K
+      : never
+    : never]: unknown
+}
+
+function getNodeTypes<T extends {}>(target: T): Record<string, NodeType> {
   const nodeTypes = (
     target.constructor as {
       [NODE_TYPES]?: Record<string, NodeType>
@@ -20,17 +28,53 @@ export function referenceTo<T extends {}>(
 
   if (nodeTypes == null) {
     throw new Error(
-      `No uniform annotations were found in ${target.constructor.name}`
+      `No node type annotations were found in ${target.constructor.name}`
     )
   }
-  return propertyName => {
-    assertType<string>(propertyName)
-    const nodeType = nodeTypes?.[propertyName]
+  return nodeTypes
+}
+
+export function referenceTo<T extends {}>(target: T) {
+  const types = getNodeTypes(target)
+  return <K extends NodeValuePropertyKey<T>>(
+    propertyName: K
+  ): ShaderNode<ReferenceNode<T>> => {
+    const nodeType = types?.[propertyName as string]
     if (nodeType == null) {
       throw new Error(
-        `Uniform type was not found for property "${propertyName}" in ${target.constructor.name}`
+        `Node type annotation was not found for property "${String(propertyName)}" in ${target.constructor.name}`
       )
     }
-    return reference(propertyName, nodeType, target)
+    return reference(propertyName as string, nodeType, target)
+  }
+}
+
+export function propertyOf<T extends {}>(target: T) {
+  const types = getNodeTypes(target)
+  return <K extends NodeValuePropertyKey<T>>(
+    propertyName: K,
+    transformValue?: (self: T[K]) => T[K],
+    transformNode?: (node: ShaderNodeObject<Node>) => ShaderNodeObject<Node>
+  ): ShaderNodeObject<VarNode> => {
+    const nodeType = types?.[propertyName as string]
+    if (nodeType == null) {
+      throw new Error(
+        `Node type annotation was not found for property "${String(propertyName)}" in ${target.constructor.name}`
+      )
+    }
+    let propertyValue = target[propertyName]
+    if (transformValue != null) {
+      if (typeof propertyValue === 'object' && propertyValue != null) {
+        invariant('clone' in propertyValue)
+        invariant(typeof propertyValue.clone === 'function')
+        propertyValue = propertyValue.clone()
+      }
+      propertyValue = transformValue(propertyValue)
+    }
+    let result = node(nodeType)(propertyValue as any)
+    if (transformNode != null) {
+      result = transformNode(result)
+    }
+    return result.toVar()
   }
 }
