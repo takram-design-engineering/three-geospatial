@@ -73,6 +73,9 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate normalNode: TextureNode
   @needsUpdate lutNode: AtmosphereLUTNode
 
+  // Optional dependencies
+  @needsUpdate sunDirectionNode: Node<Vector3> = vec3()
+
   // Static options
   @needsUpdate ellipsoid = Ellipsoid.WGS84
   @needsUpdate correctAltitude = true
@@ -86,8 +89,8 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate moon = true
   @needsUpdate ground = true
 
-  readonly worldToECEFMatrix = new Matrix4().identity()
-  readonly sunDirection = new Vector3()
+  // Parameters
+  worldToECEFMatrix = new Matrix4().identity()
 
   private readonly uniforms = {
     projectionMatrix: uniformUpdate(new Matrix4(), self => {
@@ -109,8 +112,7 @@ export class AerialPerspectiveNode extends TempNode {
       self.value = this.camera.far ?? 0
     }),
     cameraPositionECEF: uniform(new Vector3()),
-    altitudeCorrectionECEF: uniform(new Vector3()),
-    sunDirectionECEF: uniform(this.sunDirection)
+    altitudeCorrectionECEF: uniform(new Vector3())
   }
 
   constructor(
@@ -154,8 +156,7 @@ export class AerialPerspectiveNode extends TempNode {
       cameraNear,
       cameraFar,
       cameraPositionECEF,
-      altitudeCorrectionECEF,
-      sunDirectionECEF
+      altitudeCorrectionECEF
     } = this.uniforms
 
     const { worldToUnit } = this.lutNode.parameters.getUniform()
@@ -182,7 +183,7 @@ export class AerialPerspectiveNode extends TempNode {
         cameraPositionUnit,
         rayDirectionECEF,
         0, // TODO: Shadow length
-        sunDirectionECEF
+        this.sunDirectionNode
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
       return inscatter // TODO: Direct luminance
@@ -215,7 +216,7 @@ export class AerialPerspectiveNode extends TempNode {
         this.lutNode,
         positionUnit,
         normalECEF,
-        sunDirectionECEF
+        this.sunDirectionNode
       ).toVar()
       const sunIlluminance = sunSkyLuminance.get('sunIlluminance')
       const skyIlluminance = sunSkyLuminance.get('skyIlluminance')
@@ -230,7 +231,7 @@ export class AerialPerspectiveNode extends TempNode {
         cameraPositionUnit,
         positionUnit,
         0, // TODO: Shadow length
-        sunDirectionECEF
+        this.sunDirectionNode
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
       const transmittance = luminanceTransfer.get('transmittance')

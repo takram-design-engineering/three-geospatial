@@ -1,7 +1,8 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { GlobeControls } from '3d-tiles-renderer/r3f'
-import { useEffect, type FC } from 'react'
-import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
+import type { FC } from 'react'
+import { Vector3 } from 'three'
+import { diffuseColor, mrt, normalView, pass, uniform } from 'three/tsl'
 import {
   AgXToneMapping,
   PostProcessing,
@@ -39,10 +40,6 @@ const Scene: FC<StoryProps> = ({
   pitch,
   distance
 }) => {
-  const renderer = useThree<Renderer>(({ gl }) => gl as any)
-  const scene = useThree(({ scene }) => scene)
-  const camera = useThree(({ camera }) => camera)
-
   usePointOfView({
     longitude,
     latitude,
@@ -51,36 +48,32 @@ const Scene: FC<StoryProps> = ({
     distance
   })
 
-  const passNode = useResource(
-    () =>
-      pass(scene, camera).setMRT(
-        mrt({
-          output: diffuseColor,
-          normal: normalView
-        })
-      ),
-    [scene, camera]
-  )
-  const atmosphereLUTNode = useResource(() => atmosphereLUT())
-  const aerialPerspectiveNode = useResource(
-    () =>
-      aerialPerspective(
-        camera,
-        passNode.getTextureNode('output'),
-        passNode.getTextureNode('normal'),
-        passNode.getTextureNode('depth'),
-        atmosphereLUTNode
-      ),
-    [camera, passNode, atmosphereLUTNode]
-  )
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer),
-    [renderer]
-  )
+  const renderer = useThree<Renderer>(({ gl }) => gl as any)
+  const scene = useThree(({ scene }) => scene)
+  const camera = useThree(({ camera }) => camera)
 
-  useEffect(() => {
+  const sunDirection = useResource(() => uniform(new Vector3()))
+
+  const postProcessing = useResource(() => {
+    const passNode = pass(scene, camera).setMRT(
+      mrt({
+        output: diffuseColor,
+        normal: normalView
+      })
+    )
+    const aerialPerspectiveNode = aerialPerspective(
+      camera,
+      passNode.getTextureNode('output'),
+      passNode.getTextureNode('normal'),
+      passNode.getTextureNode('depth'),
+      atmosphereLUT()
+    )
+    aerialPerspectiveNode.sunDirectionNode = sunDirection
+
+    const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialPerspectiveNode
-  }, [postProcessing, aerialPerspectiveNode])
+    return postProcessing
+  }, [renderer, scene, camera, sunDirection])
 
   useFrame(() => {
     postProcessing.render()
@@ -104,7 +97,7 @@ const Scene: FC<StoryProps> = ({
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
   useLocalDate(longitude, dayOfYear, timeOfDay, date => {
-    getSunDirectionECEF(date, aerialPerspectiveNode.sunDirection)
+    getSunDirectionECEF(date, sunDirection.value)
   })
 
   const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
