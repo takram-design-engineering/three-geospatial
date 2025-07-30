@@ -77,7 +77,6 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import type { StructNode } from 'three/webgpu'
 
 import {
   Fnv,
@@ -142,7 +141,7 @@ const combinedScatteringStruct = /*#__PURE__*/ struct({
   scattering: IrradianceSpectrum,
   singleMieScattering: IrradianceSpectrum
 })
-type CombinedScatteringStruct = NodeObject<StructNode>
+type CombinedScatteringStruct = ReturnType<typeof combinedScatteringStruct>
 
 const getCombinedScattering = /*#__PURE__*/ Fnv(
   (
@@ -212,7 +211,7 @@ const radianceTransferStruct = /*#__PURE__*/ struct({
   radiance: RadianceSpectrum,
   transmittance: DimensionlessSpectrum
 })
-type RadianceTransferStruct = NodeObject<StructNode>
+type RadianceTransferStruct = ReturnType<typeof radianceTransferStruct>
 
 const getSkyRadiance = /*#__PURE__*/ Fnv(
   (
@@ -621,7 +620,7 @@ const raySegmentStruct = /*#__PURE__*/ struct({
   point: Position,
   degenerate: 'bool'
 })
-type RaySegmentStruct = NodeObject<StructNode>
+type RaySegmentStruct = ReturnType<typeof raySegmentStruct>
 
 // Clip the view ray at the bottom atmosphere boundary.
 const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
@@ -705,7 +704,7 @@ const sunAndSkyIrradianceStruct = /*#__PURE__*/ struct({
   sunIrradiance: IrradianceSpectrum,
   skyIrradiance: IrradianceSpectrum
 })
-type SunAndSkyIrradianceStruct = NodeObject<StructNode>
+type SunAndSkyIrradianceStruct = ReturnType<typeof sunAndSkyIrradianceStruct>
 
 const getSunAndSkyIrradiance = /*#__PURE__*/ Fnv(
   (
@@ -780,7 +779,7 @@ const luminanceTransferStruct = /*#__PURE__*/ struct({
   luminance: Luminance3,
   transmittance: DimensionlessSpectrum
 })
-type LuminanceTransferStruct = NodeObject<StructNode>
+type LuminanceTransferStruct = ReturnType<typeof luminanceTransferStruct>
 
 export const getSkyLuminance = /*#__PURE__*/ Fnv(
   (
@@ -848,7 +847,7 @@ const sunAndSkyIlluminanceStruct = /*#__PURE__*/ struct({
   sunIlluminance: Illuminance3,
   skyIlluminance: Illuminance3
 })
-type SunAndSkyIlluminanceStruct = NodeObject<StructNode>
+type SunAndSkyIlluminanceStruct = ReturnType<typeof sunAndSkyIlluminanceStruct>
 
 export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
   (

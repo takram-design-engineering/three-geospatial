@@ -81,7 +81,6 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import type { StructNode } from 'three/webgpu'
 
 import {
   Fnv,
@@ -248,7 +247,7 @@ const transmittanceParamsStruct = /*#__PURE__*/ struct({
   radius: Length,
   cosView: Dimensionless
 })
-type TransmittanceParamsStruct = NodeObject<StructNode>
+type TransmittanceParamsStruct = ReturnType<typeof transmittanceParamsStruct>
 
 const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
   (
@@ -317,7 +316,7 @@ const singleScatteringStruct = /*#__PURE__*/ struct({
   rayleigh: DimensionlessSpectrum,
   mie: DimensionlessSpectrum
 })
-type SingleScatteringStruct = NodeObject<StructNode>
+type SingleScatteringStruct = ReturnType<typeof singleScatteringStruct>
 
 const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
   (
@@ -465,7 +464,7 @@ const scatteringParamsStruct = /*#__PURE__*/ struct({
   cosViewSun: Dimensionless,
   rayIntersectsGround: 'bool'
 })
-type ScatteringParamsStruct = NodeObject<StructNode>
+type ScatteringParamsStruct = ReturnType<typeof scatteringParamsStruct>
 
 const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
   (
@@ -995,7 +994,7 @@ const multipleScatteringStruct = /*#__PURE__*/ struct({
   radiance: RadianceSpectrum,
   cosViewSun: Dimensionless
 })
-type MultipleScatteringStruct = NodeObject<StructNode>
+type MultipleScatteringStruct = ReturnType<typeof multipleScatteringStruct>
 
 export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
   (
@@ -1117,7 +1116,7 @@ const irradianceParamsStruct = /*#__PURE__*/ struct({
   radius: Length,
   cosSun: Dimensionless
 })
-type IrradianceParamsStruct = NodeObject<StructNode>
+type IrradianceParamsStruct = ReturnType<typeof irradianceParamsStruct>
 
 const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(
   (
