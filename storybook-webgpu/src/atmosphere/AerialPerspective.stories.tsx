@@ -1,6 +1,6 @@
 import type { Meta } from '@storybook/react-vite'
 
-import { createStory } from '../helpers/StoryControls'
+import { createStory } from '../helpers/createStory'
 import { Story as WorldToECEFMatrixStory } from './AerialPerspective-WorldToECEFMatrix'
 
 export default {

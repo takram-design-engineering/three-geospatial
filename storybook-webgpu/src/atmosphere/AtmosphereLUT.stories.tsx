@@ -1,6 +1,6 @@
 import type { ArgTypes, Meta } from '@storybook/react-vite'
 
-import { createStory } from '../helpers/StoryControls'
+import { createStory } from '../helpers/createStory'
 import Story2D from './AtmosphereLUT-2D'
 import Story3D from './AtmosphereLUT-3D'
 

@@ -18,19 +18,17 @@ import {
 
 import { localDateArgTypes } from '../controls/localDate'
 import { toneMappingArgTypes } from '../controls/toneMapping'
+import type { StoryFC } from '../helpers/createStory'
 import { Globe } from '../helpers/Globe'
-import {
-  useControl,
-  useSpringControl,
-  useTransientControl,
-  type StoryFC
-} from '../helpers/StoryControls'
+import { useControl } from '../helpers/useControl'
 import { useLocalDate } from '../helpers/useLocalDate'
 import {
   usePointOfView,
   type PointOfViewProps
 } from '../helpers/usePointOfView'
 import { useResource } from '../helpers/useResource'
+import { useSpringControl } from '../helpers/useSpringControl'
+import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 const Scene: FC<StoryProps> = ({

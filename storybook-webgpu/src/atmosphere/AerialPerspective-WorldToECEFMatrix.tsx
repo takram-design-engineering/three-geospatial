@@ -19,14 +19,12 @@ import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
 import { localDateArgTypes } from '../controls/localDate'
 import { toneMappingArgTypes } from '../controls/toneMapping'
-import {
-  useSpringControl,
-  useTransientControl,
-  type StoryFC
-} from '../helpers/StoryControls'
+import type { StoryFC } from '../helpers/createStory'
 import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useLocalDate } from '../helpers/useLocalDate'
 import { useResource } from '../helpers/useResource'
+import { useSpringControl } from '../helpers/useSpringControl'
+import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 const Scene: FC<StoryProps> = () => {

@@ -25,8 +25,9 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Fnv, type NodeObject } from '@takram/three-geospatial/webgpu'
 
-import { useTransientControl, type StoryFC } from '../helpers/StoryControls'
+import type { StoryFC } from '../helpers/createStory'
 import { useResource } from '../helpers/useResource'
+import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 export const textureUVW = Fnv(

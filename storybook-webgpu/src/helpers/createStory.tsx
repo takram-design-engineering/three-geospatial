@@ -1,38 +1,15 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
-import type { ArgTypes, StoryFn, StoryObj } from '@storybook/react-vite'
-import { useSpring, type MotionValue } from 'framer-motion'
-import {
-  atom,
-  getDefaultStore,
-  useAtomValue,
-  useSetAtom,
-  type PrimitiveAtom,
-  type SetStateAction
-} from 'jotai'
-import { selectAtom } from 'jotai/utils'
-import {
-  createContext,
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  type FC
-} from 'react'
-import shallowEqual from 'shallowequal'
+import type { Args, ArgTypes, StoryFn, StoryObj } from '@storybook/react-vite'
+import { atom, useSetAtom, type SetStateAction } from 'jotai'
+import { memo, useEffect, useMemo, type FC } from 'react'
 import { useArgs } from 'storybook/preview-api'
 
-import { springOptions } from './springOptions'
-
-export type Args = Record<string, any>
+import { StoryContext } from './StoryContext'
 
 export type StoryFC<Props = {}, TArgs = Args> = FC<Props> & {
   [K in keyof StoryFn<TArgs>]: StoryFn<TArgs>[K]
 }
-
-export const StoryContext = createContext<PrimitiveAtom<Args>>(atom({}))
 
 // Storybook doesn't provide an option to disable saving the args in URL params.
 // It's a bit hacky, but adding an "unsafe" character to the arg names prevents
@@ -134,66 +111,4 @@ export function createStory<Props, TArgs extends Args>(
       ...overrideArgTypes
     })
   }
-}
-
-export function useControl<TArgs extends Args, T>(
-  selector: (args: TArgs) => T
-): T {
-  const argsAtom = useContext(StoryContext)
-  const selectorRef = useRef(selector)
-  selectorRef.current = selector
-  // The selector function must be stable.
-  const selectorCallback = useCallback((args: TArgs) => {
-    return selectorRef.current(args)
-  }, [])
-  return useAtomValue(
-    selectAtom(argsAtom as PrimitiveAtom<TArgs>, selectorCallback, shallowEqual)
-  )
-}
-
-export function useTransientControl<TArgs extends Args, T>(
-  selector: (args: TArgs) => T,
-  onChange: (value: T, prevValue?: T) => void
-): void {
-  const argsAtom = useContext(StoryContext)
-  const store = getDefaultStore()
-  const value = selector(store.get(argsAtom) as TArgs)
-  onChange(value) // Initial callback
-
-  const prevValueRef = useRef(value)
-  store.sub(argsAtom, () => {
-    const value = selector(store.get(argsAtom) as TArgs)
-    if (!shallowEqual(value, prevValueRef.current)) {
-      onChange(value, prevValueRef.current)
-      prevValueRef.current = value
-    }
-  })
-}
-
-export function useSpringControl<TArgs extends Args>(
-  selector: (args: TArgs) => number,
-  onChange?: (value: number) => void
-): MotionValue<number> {
-  const argsAtom = useContext(StoryContext)
-  const store = getDefaultStore()
-  const value = selector(store.get(argsAtom) as TArgs)
-  onChange?.(value) // Initial callback
-
-  // Transient update on the spring value.
-  const springValue = useSpring(value, springOptions)
-  springValue.set(value)
-  store.sub(argsAtom, () => {
-    const value = selector(store.get(argsAtom) as TArgs)
-    springValue.set(value)
-  })
-
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
-  useEffect(() => {
-    return springValue.on('change', value => {
-      onChangeRef.current?.(value)
-    })
-  }, [springValue])
-
-  return springValue
 }
