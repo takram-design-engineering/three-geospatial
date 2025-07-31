@@ -14,18 +14,18 @@ import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
 import {
   localDateArgTypes,
+  useLocalDateControl,
   type LocalDateArgTypes
 } from '../controls/localDate'
 import {
   toneMappingArgTypes,
+  useToneMappingControl,
   type ToneMappingArgTypes
 } from '../controls/toneMapping'
 import type { StoryFC } from '../helpers/createStory'
 import { useCombinedChange } from '../helpers/useCombinedChange'
-import { useLocalDate } from '../helpers/useLocalDate'
 import { useResource } from '../helpers/useResource'
 import { useSpringControl } from '../helpers/useSpringControl'
-import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 const Scene: FC<StoryProps> = () => {
@@ -33,7 +33,7 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  // Post-processing
+  // Post-processing:
 
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
@@ -67,23 +67,13 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.render()
   }, 1)
 
-  // Tone mapping controls
+  // Tone mapping control:
 
-  useTransientControl(
-    ({ toneMapping }: StoryArgs) => toneMapping,
-    toneMapping => {
-      renderer.toneMapping = toneMapping
-      postProcessing.needsUpdate = true
-    }
-  )
-  useSpringControl(
-    ({ exposure }: StoryArgs) => exposure,
-    exposure => {
-      renderer.toneMappingExposure = exposure
-    }
-  )
+  useToneMappingControl(() => {
+    postProcessing.needsUpdate = true
+  })
 
-  // Location controls
+  // Location control:
 
   const longitude = useSpringControl(({ longitude }: StoryArgs) => longitude)
   const latitude = useSpringControl(({ latitude }: StoryArgs) => latitude)
@@ -98,11 +88,9 @@ const Scene: FC<StoryProps> = () => {
     }
   )
 
-  // Local date controls (depends on the longitude of the location)
+  // Local date control (depends on the longitude of the location):
 
-  const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
-  const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
-  useLocalDate(longitude, dayOfYear, timeOfDay, date => {
+  useLocalDateControl(longitude, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
 

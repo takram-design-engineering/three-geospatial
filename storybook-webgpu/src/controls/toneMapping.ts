@@ -1,3 +1,4 @@
+import { useThree } from '@react-three/fiber'
 import type { ArgTypes } from '@storybook/react-vite'
 import {
   ACESFilmicToneMapping,
@@ -8,6 +9,10 @@ import {
   ReinhardToneMapping,
   type ToneMapping
 } from 'three'
+import type { Renderer } from 'three/webgpu'
+
+import { useSpringControl } from '../helpers/useSpringControl'
+import { useTransientControl } from '../helpers/useTransientControl'
 
 export interface ToneMappingArgTypes {
   toneMapping: ToneMapping
@@ -46,4 +51,23 @@ export const toneMappingArgTypes: ArgTypes<ToneMappingArgTypes> = {
     },
     table: { category: 'tone mapping' }
   }
+}
+
+export function useToneMappingControl(
+  onChange?: (toneMapping: ToneMapping) => void
+): void {
+  const renderer = useThree<Renderer>(({ gl }) => gl as any)
+  useTransientControl(
+    ({ toneMapping }: ToneMappingArgTypes) => toneMapping,
+    value => {
+      renderer.toneMapping = value
+      onChange?.(value)
+    }
+  )
+  useSpringControl(
+    ({ exposure }: ToneMappingArgTypes) => exposure,
+    value => {
+      renderer.toneMappingExposure = value
+    }
+  )
 }

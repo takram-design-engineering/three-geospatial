@@ -25,23 +25,24 @@ import {
 
 import {
   localDateArgTypes,
+  useLocalDateControl,
   type LocalDateArgTypes
 } from '../controls/localDate'
-import type { PhysicalMaterialArgTypes } from '../controls/physicalMaterial'
+import {
+  usePhysicalMaterialControl,
+  type PhysicalMaterialArgTypes
+} from '../controls/physicalMaterial'
 import {
   toneMappingArgTypes,
+  useToneMappingControl,
   type ToneMappingArgTypes
 } from '../controls/toneMapping'
 import type { StoryFC } from '../helpers/createStory'
-import { useLocalDate } from '../helpers/useLocalDate'
-import { usePhysicalMaterial } from '../helpers/usePhysicalMaterial'
 import {
   usePointOfView,
   type PointOfViewProps
 } from '../helpers/usePointOfView'
 import { useResource } from '../helpers/useResource'
-import { useSpringControl } from '../helpers/useSpringControl'
-import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
 
@@ -65,7 +66,7 @@ const Scene: FC<StoryProps> = ({
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  // Post-processing
+  // Post-processing:
 
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
@@ -101,22 +102,6 @@ const Scene: FC<StoryProps> = ({
     postProcessing.render()
   }, 1)
 
-  // Tone mapping controls
-
-  useTransientControl(
-    ({ toneMapping }: StoryArgs) => toneMapping,
-    toneMapping => {
-      renderer.toneMapping = toneMapping
-      postProcessing.needsUpdate = true
-    }
-  )
-  useSpringControl(
-    ({ exposure }: StoryArgs) => exposure,
-    exposure => {
-      renderer.toneMappingExposure = exposure
-    }
-  )
-
   // Apply the initial point of view
 
   usePointOfView({
@@ -128,11 +113,15 @@ const Scene: FC<StoryProps> = ({
     distance
   })
 
-  // Local date controls (depends on the longitude of the location)
+  // Tone mapping control:
 
-  const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
-  const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
-  useLocalDate(138.5, dayOfYear, timeOfDay, date => {
+  useToneMappingControl(() => {
+    postProcessing.needsUpdate = true
+  })
+
+  // Local date control (depends on the longitude of the location):
+
+  useLocalDateControl(138.5, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
 
@@ -161,7 +150,7 @@ const Scene: FC<StoryProps> = ({
         <TilesPlugin
           plugin={TileMeshPropsPlugin}
           args={{
-            material: usePhysicalMaterial()
+            material: usePhysicalMaterialControl()
           }}
         />
       </TilesRenderer>

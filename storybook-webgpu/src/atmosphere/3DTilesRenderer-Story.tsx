@@ -13,23 +13,22 @@ import {
 
 import {
   localDateArgTypes,
+  useLocalDateControl,
   type LocalDateArgTypes
 } from '../controls/localDate'
 import {
   toneMappingArgTypes,
+  useToneMappingControl,
   type ToneMappingArgTypes
 } from '../controls/toneMapping'
 import type { StoryFC } from '../helpers/createStory'
 import { Globe } from '../helpers/Globe'
 import { useControl } from '../helpers/useControl'
-import { useLocalDate } from '../helpers/useLocalDate'
 import {
   usePointOfView,
   type PointOfViewProps
 } from '../helpers/usePointOfView'
 import { useResource } from '../helpers/useResource'
-import { useSpringControl } from '../helpers/useSpringControl'
-import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 const Scene: FC<StoryProps> = ({
@@ -44,7 +43,7 @@ const Scene: FC<StoryProps> = ({
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  // Post-processing
+  // Post-processing:
 
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
 
@@ -76,23 +75,7 @@ const Scene: FC<StoryProps> = ({
     postProcessing.render()
   }, 1)
 
-  // Tone mapping controls
-
-  useTransientControl(
-    ({ toneMapping }: StoryArgs) => toneMapping,
-    toneMapping => {
-      renderer.toneMapping = toneMapping
-      postProcessing.needsUpdate = true
-    }
-  )
-  useSpringControl(
-    ({ exposure }: StoryArgs) => exposure,
-    exposure => {
-      renderer.toneMappingExposure = exposure
-    }
-  )
-
-  // Apply the initial point of view
+  // Apply the initial point of view:
 
   usePointOfView({
     longitude,
@@ -103,15 +86,19 @@ const Scene: FC<StoryProps> = ({
     distance
   })
 
-  // Local date controls (depends on the longitude of the location)
+  // Tone mapping control:
 
-  const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
-  const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
-  useLocalDate(longitude, dayOfYear, timeOfDay, date => {
+  useToneMappingControl(() => {
+    postProcessing.needsUpdate = true
+  })
+
+  // Local date control (depends on the longitude of the location):
+
+  useLocalDateControl(longitude, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
 
-  // Google Maps API key
+  // Google Maps API key:
 
   const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
     googleMapsApiKey !== '' ? googleMapsApiKey : undefined
