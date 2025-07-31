@@ -1,10 +1,21 @@
-import { OrbitControls, Sphere } from '@react-three/drei'
-import { useFrame, useThree } from '@react-three/fiber'
+import {
+  extend,
+  useFrame,
+  useThree,
+  type ThreeElement
+} from '@react-three/fiber'
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
+import {
+  GlobeControls,
+  TilesPlugin,
+  TilesRenderer
+} from '3d-tiles-renderer/r3f'
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
-import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
+import { mrt, normalView, output, pass } from 'three/tsl'
 import {
   AgXToneMapping,
+  MeshPhysicalNodeMaterial,
   PostProcessing,
   type Renderer,
   type ToneMapping
@@ -13,21 +24,41 @@ import {
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
+  AtmosphereLight,
+  AtmosphereLightNode,
   atmosphereLUT
 } from '@takram/three-atmosphere/webgpu'
-import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
 import { localDateArgTypes } from '../controls/localDate'
 import { toneMappingArgTypes } from '../controls/toneMapping'
 import type { StoryFC } from '../helpers/createStory'
-import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useLocalDate } from '../helpers/useLocalDate'
+import {
+  usePointOfView,
+  type PointOfViewProps
+} from '../helpers/usePointOfView'
 import { useResource } from '../helpers/useResource'
 import { useSpringControl } from '../helpers/useSpringControl'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
 
-const Scene: FC<StoryProps> = () => {
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    atmosphereLight: ThreeElement<typeof AtmosphereLight>
+  }
+}
+
+extend({ AtmosphereLight })
+
+const Scene: FC<StoryProps> = ({
+  longitude,
+  latitude,
+  height,
+  heading,
+  pitch,
+  distance
+}) => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
@@ -37,14 +68,16 @@ const Scene: FC<StoryProps> = () => {
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
-  const [postProcessing] = useResource(() => {
+  // Share the LUT node with both AerialPerspectiveNode and AtmosphereLight.
+  const lutNode = useResource(() => atmosphereLUT())
+
+  const postProcessing = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
-        output: diffuseColor,
+        output,
         normal: normalView
       })
     )
-    const lutNode = atmosphereLUT()
     const aerialNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
@@ -52,15 +85,14 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('depth'),
       lutNode
     )
-    aerialNode.light = true
     aerialNode.sunDirectionECEF = sunDirectionECEF
     aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
-    return [postProcessing, lutNode]
-  }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix])
+    return postProcessing
+  }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix, lutNode])
 
   useFrame(() => {
     postProcessing.render()
@@ -72,7 +104,6 @@ const Scene: FC<StoryProps> = () => {
     ({ toneMapping }: StoryArgs) => toneMapping,
     toneMapping => {
       renderer.toneMapping = toneMapping
-      postProcessing.needsUpdate = true
     }
   )
   useSpringControl(
@@ -82,51 +113,78 @@ const Scene: FC<StoryProps> = () => {
     }
   )
 
-  // Location controls
+  // Apply the initial point of view
 
-  const longitude = useSpringControl(({ longitude }: StoryArgs) => longitude)
-  const latitude = useSpringControl(({ latitude }: StoryArgs) => latitude)
-  const height = useSpringControl(({ height }: StoryArgs) => height)
-  useCombinedChange(
-    [longitude, latitude, height],
-    ([longitude, latitude, height]) => {
-      Ellipsoid.WGS84.getNorthUpEastFrame(
-        new Geodetic(radians(longitude), radians(latitude), height).toECEF(),
-        worldToECEFMatrix
-      )
-    }
-  )
+  usePointOfView({
+    longitude,
+    latitude,
+    height,
+    heading,
+    pitch,
+    distance
+  })
 
   // Local date controls (depends on the longitude of the location)
 
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
-  useLocalDate(longitude, dayOfYear, timeOfDay, date => {
+  useLocalDate(138.5, dayOfYear, timeOfDay, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
 
   return (
     <>
-      <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
-      <Sphere args={[0.5, 128, 128]} position={[0, 0.5, 0]} />
+      <atmosphereLight
+        ref={light => {
+          if (light != null) {
+            // Share the references to sync updates with the light.
+            light.worldToECEFMatrix = worldToECEFMatrix
+            light.sunDirectionECEF = sunDirectionECEF
+          }
+        }}
+        lutNode={lutNode}
+      />
+      <GlobeControls enableDamping />
+      <TilesRenderer>
+        <TilesPlugin
+          plugin={CesiumIonAuthPlugin}
+          args={{
+            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+            assetId: 2767062, // Japan Regional Terrain
+            autoRefreshToken: true
+          }}
+        />
+        <TilesPlugin
+          plugin={TileMeshPropsPlugin}
+          args={{
+            material: new MeshPhysicalNodeMaterial({
+              color: 'white',
+              roughness: 0.5,
+              metalness: 0.5,
+              clearcoat: 1
+            })
+          }}
+        />
+      </TilesRenderer>
     </>
   )
 }
 
-interface StoryProps {}
+interface StoryProps extends PointOfViewProps {}
 
 interface StoryArgs {
   toneMapping: ToneMapping
   exposure: number
   dayOfYear: number
   timeOfDay: number
-  longitude: number
-  latitude: number
-  height: number
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <WebGPUCanvas camera={{ position: [2, 1, 2] }}>
+  <WebGPUCanvas
+    gl={renderer => {
+      renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+    }}
+  >
     <Scene {...props} />
   </WebGPUCanvas>
 )
@@ -135,39 +193,12 @@ Story.args = {
   toneMapping: AgXToneMapping,
   exposure: 10,
   dayOfYear: 0,
-  timeOfDay: 9,
-  longitude: 30,
-  latitude: 35,
-  height: 300
+  timeOfDay: 9
 }
 
 Story.argTypes = {
   ...toneMappingArgTypes,
-  ...localDateArgTypes,
-  longitude: {
-    control: {
-      type: 'range',
-      min: -180,
-      max: 180
-    },
-    table: { category: 'location' }
-  },
-  latitude: {
-    control: {
-      type: 'range',
-      min: -90,
-      max: 90
-    },
-    table: { category: 'location' }
-  },
-  height: {
-    control: {
-      type: 'range',
-      min: 0,
-      max: 30000
-    },
-    table: { category: 'location' }
-  }
+  ...localDateArgTypes
 }
 
 export default Story

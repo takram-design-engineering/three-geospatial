@@ -1,10 +1,16 @@
 import { OrbitControls, Sphere } from '@react-three/drei'
-import { useFrame, useThree } from '@react-three/fiber'
+import {
+  extend,
+  useFrame,
+  useThree,
+  type ThreeElement
+} from '@react-three/fiber'
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
-import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
+import { mrt, normalView, output, pass } from 'three/tsl'
 import {
   AgXToneMapping,
+  MeshPhysicalNodeMaterial,
   PostProcessing,
   type Renderer,
   type ToneMapping
@@ -13,6 +19,8 @@ import {
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
+  AtmosphereLight,
+  AtmosphereLightNode,
   atmosphereLUT
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
@@ -27,6 +35,14 @@ import { useSpringControl } from '../helpers/useSpringControl'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    atmosphereLight: ThreeElement<typeof AtmosphereLight>
+  }
+}
+
+extend({ AtmosphereLight })
+
 const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
@@ -37,14 +53,16 @@ const Scene: FC<StoryProps> = () => {
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
-  const [postProcessing] = useResource(() => {
+  // Share the LUT node with both AerialPerspectiveNode and AtmosphereLight.
+  const lutNode = useResource(() => atmosphereLUT())
+
+  const postProcessing = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
-        output: diffuseColor,
+        output,
         normal: normalView
       })
     )
-    const lutNode = atmosphereLUT()
     const aerialNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
@@ -52,15 +70,15 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('depth'),
       lutNode
     )
-    aerialNode.light = true
+    aerialNode.light = false
     aerialNode.sunDirectionECEF = sunDirectionECEF
     aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
-    return [postProcessing, lutNode]
-  }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix])
+    return postProcessing
+  }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix, lutNode])
 
   useFrame(() => {
     postProcessing.render()
@@ -72,7 +90,6 @@ const Scene: FC<StoryProps> = () => {
     ({ toneMapping }: StoryArgs) => toneMapping,
     toneMapping => {
       renderer.toneMapping = toneMapping
-      postProcessing.needsUpdate = true
     }
   )
   useSpringControl(
@@ -107,8 +124,26 @@ const Scene: FC<StoryProps> = () => {
 
   return (
     <>
+      <atmosphereLight
+        ref={light => {
+          if (light != null) {
+            // Share the references to sync updates with the light.
+            light.worldToECEFMatrix = worldToECEFMatrix
+            light.sunDirectionECEF = sunDirectionECEF
+          }
+        }}
+        lutNode={lutNode}
+      />
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
-      <Sphere args={[0.5, 128, 128]} position={[0, 0.5, 0]} />
+      <Sphere
+        args={[0.5, 128, 128]}
+        position={[0, 0.5, 0]}
+        material={
+          new MeshPhysicalNodeMaterial({
+            color: 'white'
+          })
+        }
+      />
     </>
   )
 }
@@ -126,7 +161,12 @@ interface StoryArgs {
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <WebGPUCanvas camera={{ position: [2, 1, 2] }}>
+  <WebGPUCanvas
+    gl={renderer => {
+      renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+    }}
+    camera={{ position: [2, 1, 2] }}
+  >
     <Scene {...props} />
   </WebGPUCanvas>
 )

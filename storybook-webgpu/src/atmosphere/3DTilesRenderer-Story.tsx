@@ -34,6 +34,7 @@ import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 const Scene: FC<StoryProps> = ({
   longitude,
   latitude,
+  height,
   heading,
   pitch,
   distance
@@ -61,6 +62,7 @@ const Scene: FC<StoryProps> = ({
       passNode.getTextureNode('depth'),
       lutNode
     )
+    aerialNode.light = true
     aerialNode.sunDirectionECEF = sunDirectionECEF
 
     const postProcessing = new PostProcessing(renderer)
@@ -94,6 +96,7 @@ const Scene: FC<StoryProps> = ({
   usePointOfView({
     longitude,
     latitude,
+    height,
     heading,
     pitch,
     distance
