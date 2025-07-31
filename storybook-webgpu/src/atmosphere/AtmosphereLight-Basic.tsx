@@ -61,7 +61,7 @@ const Scene: FC<StoryProps> = () => {
   // Share the LUT node with both AerialPerspectiveNode and AtmosphereLight.
   const lutNode = useResource(() => atmosphereLUT())
 
-  const postProcessing = useResource(() => {
+  const [postProcessing] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output,
@@ -82,7 +82,7 @@ const Scene: FC<StoryProps> = () => {
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
-    return postProcessing
+    return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix, lutNode])
 
   useFrame(() => {
@@ -95,6 +95,7 @@ const Scene: FC<StoryProps> = () => {
     ({ toneMapping }: StoryArgs) => toneMapping,
     toneMapping => {
       renderer.toneMapping = toneMapping
+      postProcessing.needsUpdate = true
     }
   )
   useSpringControl(
@@ -162,8 +163,10 @@ interface StoryArgs
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
-    gl={renderer => {
-      renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+    renderer={{
+      onInit: renderer => {
+        renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+      }
     }}
     camera={{ position: [2, 1, 2] }}
   >

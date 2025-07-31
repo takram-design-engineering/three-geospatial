@@ -1,15 +1,17 @@
-import { MeshPhysicalNodeMaterial } from 'three/webgpu'
+import {
+  MeshPhysicalNodeMaterial,
+  type MeshPhysicalNodeMaterialParameters
+} from 'three/webgpu'
 
 import type { PhysicalMaterialArgTypes } from '../controls/physicalMaterial'
 import { useResource } from './useResource'
 import { useTransientControl } from './useTransientControl'
 
-export function usePhysicalMaterial(): MeshPhysicalNodeMaterial {
+export function usePhysicalMaterial(
+  initialParams?: MeshPhysicalNodeMaterialParameters
+): MeshPhysicalNodeMaterial {
   const material = useResource(
-    () =>
-      new MeshPhysicalNodeMaterial({
-        color: 'white'
-      })
+    () => new MeshPhysicalNodeMaterial(initialParams)
   )
 
   useTransientControl(
@@ -28,7 +30,11 @@ export function usePhysicalMaterial(): MeshPhysicalNodeMaterial {
     }),
     ({ color, ...values }) => {
       material.color.setStyle(color)
-      Object.assign(material, values)
+      for (const [key, value] of Object.entries(values)) {
+        if (value != null) {
+          material[key as keyof PhysicalMaterialArgTypes] = value as any
+        }
+      }
     }
   )
 

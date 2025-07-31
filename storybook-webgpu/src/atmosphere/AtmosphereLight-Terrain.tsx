@@ -13,13 +13,7 @@ import {
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
 import { mrt, normalView, output, pass } from 'three/tsl'
-import {
-  AgXToneMapping,
-  MeshPhysicalNodeMaterial,
-  PostProcessing,
-  type Renderer,
-  type ToneMapping
-} from 'three/webgpu'
+import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
@@ -29,10 +23,18 @@ import {
   atmosphereLUT
 } from '@takram/three-atmosphere/webgpu'
 
-import { localDateArgTypes } from '../controls/localDate'
-import { toneMappingArgTypes } from '../controls/toneMapping'
+import {
+  localDateArgTypes,
+  type LocalDateArgTypes
+} from '../controls/localDate'
+import type { PhysicalMaterialArgTypes } from '../controls/physicalMaterial'
+import {
+  toneMappingArgTypes,
+  type ToneMappingArgTypes
+} from '../controls/toneMapping'
 import type { StoryFC } from '../helpers/createStory'
 import { useLocalDate } from '../helpers/useLocalDate'
+import { usePhysicalMaterial } from '../helpers/usePhysicalMaterial'
 import {
   usePointOfView,
   type PointOfViewProps
@@ -71,7 +73,7 @@ const Scene: FC<StoryProps> = ({
   // Share the LUT node with both AerialPerspectiveNode and AtmosphereLight.
   const lutNode = useResource(() => atmosphereLUT())
 
-  const postProcessing = useResource(() => {
+  const [postProcessing] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output,
@@ -85,13 +87,14 @@ const Scene: FC<StoryProps> = ({
       passNode.getTextureNode('depth'),
       lutNode
     )
+    aerialNode.light = false
     aerialNode.sunDirectionECEF = sunDirectionECEF
     aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
-    return postProcessing
+    return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix, lutNode])
 
   useFrame(() => {
@@ -104,6 +107,7 @@ const Scene: FC<StoryProps> = ({
     ({ toneMapping }: StoryArgs) => toneMapping,
     toneMapping => {
       renderer.toneMapping = toneMapping
+      postProcessing.needsUpdate = true
     }
   )
   useSpringControl(
@@ -157,12 +161,7 @@ const Scene: FC<StoryProps> = ({
         <TilesPlugin
           plugin={TileMeshPropsPlugin}
           args={{
-            material: new MeshPhysicalNodeMaterial({
-              color: 'white',
-              roughness: 0.5,
-              metalness: 0.5,
-              clearcoat: 1
-            })
+            material: usePhysicalMaterial()
           }}
         />
       </TilesRenderer>
@@ -172,17 +171,17 @@ const Scene: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs {
-  toneMapping: ToneMapping
-  exposure: number
-  dayOfYear: number
-  timeOfDay: number
-}
+interface StoryArgs
+  extends ToneMappingArgTypes,
+    LocalDateArgTypes,
+    PhysicalMaterialArgTypes {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
-    gl={renderer => {
-      renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+    renderer={{
+      onInit: renderer => {
+        renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+      }
     }}
   >
     <Scene {...props} />
@@ -193,7 +192,8 @@ Story.args = {
   toneMapping: AgXToneMapping,
   exposure: 10,
   dayOfYear: 0,
-  timeOfDay: 9
+  timeOfDay: 9,
+  color: '#808080'
 }
 
 Story.argTypes = {
