@@ -48,6 +48,9 @@ declare module '@react-three/fiber' {
 
 extend({ AtmosphereLight })
 
+const geodetic = new Geodetic()
+const position = new Vector3()
+
 const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
@@ -104,7 +107,9 @@ const Scene: FC<StoryProps> = () => {
     [longitude, latitude, height],
     ([longitude, latitude, height]) => {
       Ellipsoid.WGS84.getNorthUpEastFrame(
-        new Geodetic(radians(longitude), radians(latitude), height).toECEF(),
+        geodetic
+          .set(radians(longitude), radians(latitude), height)
+          .toECEF(position),
         worldToECEFMatrix
       )
     }
