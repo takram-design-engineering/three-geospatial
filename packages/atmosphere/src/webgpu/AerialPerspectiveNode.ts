@@ -164,7 +164,13 @@ export class AerialPerspectiveNode extends TempNode {
       const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
 
       // Position of the surface
-      const viewZ = depthToViewZ(this.camera, depth, cameraNear, cameraFar)
+      const viewZ = depthToViewZ(
+        depth,
+        cameraNear,
+        cameraFar,
+        this.camera.isPerspectiveCamera,
+        builder.renderer.logarithmicDepthBuffer
+      )
       const positionView = screenToPositionView(
         screenUV,
         depth,

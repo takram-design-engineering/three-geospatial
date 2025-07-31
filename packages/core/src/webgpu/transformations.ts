@@ -2,6 +2,7 @@ import type { Camera } from 'three'
 import {
   float,
   int,
+  logarithmicDepthToViewZ,
   orthographicDepthToViewZ,
   perspectiveDepthToViewZ,
   reference,
@@ -20,18 +21,19 @@ declare module 'three' {
   }
 }
 
-export const depthToViewZ = /*#__PURE__*/ Fnv(
-  (
-    camera: Camera,
-    depth: NodeObject<'float'>,
-    cameraNear: NodeObject<'float'>,
-    cameraFar: NodeObject<'float'>
-  ): Node<'float'> => {
-    return camera.isPerspectiveCamera === true
+export const depthToViewZ = (
+  depth: NodeObject<'float'>,
+  cameraNear: NodeObject<'float'>,
+  cameraFar: NodeObject<'float'>,
+  perspectiveDepth = true,
+  logarithmicDepth = false
+): Node<'float'> => {
+  return logarithmicDepth
+    ? logarithmicDepthToViewZ(depth, cameraNear, cameraFar)
+    : perspectiveDepth
       ? perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
       : orthographicDepthToViewZ(depth, cameraNear, cameraFar)
-  }
-)
+}
 
 export const screenToPositionView = /*#__PURE__*/ Fnv(
   (
