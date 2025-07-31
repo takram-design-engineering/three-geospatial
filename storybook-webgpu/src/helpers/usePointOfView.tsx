@@ -6,6 +6,7 @@ import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 export interface PointOfViewProps {
   longitude: number
   latitude: number
+  height?: number
   heading: number
   pitch: number
   distance: number
@@ -14,6 +15,7 @@ export interface PointOfViewProps {
 export function usePointOfView({
   longitude,
   latitude,
+  height = 0,
   heading,
   pitch,
   distance
@@ -21,10 +23,10 @@ export function usePointOfView({
   const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
     new PointOfView(distance, radians(heading), radians(pitch)).decompose(
-      new Geodetic(radians(longitude), radians(latitude)).toECEF(),
+      new Geodetic(radians(longitude), radians(latitude), height).toECEF(),
       camera.position,
       camera.quaternion,
       camera.up
     )
-  }, [longitude, latitude, heading, pitch, distance, camera])
+  }, [longitude, latitude, height, heading, pitch, distance, camera])
 }
