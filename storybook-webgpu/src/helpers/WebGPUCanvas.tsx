@@ -2,7 +2,11 @@ import { Canvas, type CanvasProps } from '@react-three/fiber'
 import type { FC } from 'react'
 import { NoToneMapping, WebGPURenderer } from 'three/webgpu'
 
-export const WebGPUCanvas: FC<CanvasProps> = props => (
+export interface WebGPUCanvasProps extends Omit<CanvasProps, 'gl'> {
+  gl?: (renderer: WebGPURenderer) => void | Promise<void>
+}
+
+export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({ gl, ...props }) => (
   <Canvas
     {...props}
     gl={async props => {
@@ -17,13 +21,17 @@ export const WebGPUCanvas: FC<CanvasProps> = props => (
         }
       })
       await renderer.init()
+
+      // R3F overrides the configurations.
       setTimeout(() => {
-        // R3F overrides the configurations.
         renderer.toneMapping = NoToneMapping
       })
+
       // Require the model-view matrix premultiplied on the CPU side.
       // See: https://github.com/mrdoob/three.js/issues/30955
       renderer.highPrecision = true
+
+      await gl?.(renderer)
       return renderer
     }}
   />

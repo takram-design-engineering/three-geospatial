@@ -736,6 +736,24 @@ const getSunAndSkyIrradiance = /*#__PURE__*/ Fnv(
   }
 )
 
+const getSkyIrradiance = /*#__PURE__*/ Fnv(
+  (
+    parameters: AtmosphereParametersContext,
+    irradianceTexture: NodeObject<IrradianceTextureNode>,
+    point: NodeObject<Position>,
+    normal: NodeObject<Direction>,
+    sunDirection: NodeObject<Direction>
+  ): Node<IrradianceSpectrum> => {
+    const radius = length(point).toVar()
+    const cosSun = point.dot(sunDirection).div(radius).toVar()
+
+    // Indirect irradiance (approximated if the surface is not horizontal).
+    return getIrradiance(parameters, irradianceTexture, radius, cosSun).mul(
+      normal.dot(point).div(radius).add(1).mul(0.5)
+    )
+  }
+)
+
 const getSunAndSkyScalarIrradiance = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersContext,
@@ -873,6 +891,27 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
       .get('skyIrradiance')
       .mul(parameters.skyRadianceToLuminance.mul(parameters.luminanceScale))
     return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
+  }
+)
+
+export const getSkyIlluminance = /*#__PURE__*/ Fnv(
+  (
+    atmosphereLUT: AtmosphereLUTNode,
+    point: NodeObject<Position>,
+    normal: NodeObject<Direction>,
+    sunDirection: NodeObject<Direction>
+  ): Node<Illuminance3> => {
+    const parameters = atmosphereLUT.parameters.getContext()
+    const sunSkyIrradiance = getSkyIrradiance(
+      parameters,
+      atmosphereLUT.getTextureNode('irradiance'),
+      point,
+      normal,
+      sunDirection
+    )
+    return sunSkyIrradiance.mul(
+      parameters.skyRadianceToLuminance.mul(parameters.luminanceScale)
+    )
   }
 )
 

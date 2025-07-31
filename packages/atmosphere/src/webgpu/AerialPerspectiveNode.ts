@@ -59,7 +59,7 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate ellipsoid = Ellipsoid.WGS84
   @needsUpdate correctAltitude = true
   @needsUpdate correctGeometricError = true
-  @needsUpdate light: 'sun' | 'sky' | boolean = true
+  @needsUpdate light = false
   @needsUpdate transmittance = true
   @needsUpdate inscatter = true
   @needsUpdate sky = true
@@ -176,7 +176,9 @@ export class AerialPerspectiveNode extends TempNode {
       const positionECEF = worldToECEFMatrix
         .mul(vec4(positionWorld, 1))
         .xyz.toVar()
-      positionECEF.addAssign(altitudeCorrectionECEF)
+      if (this.correctAltitude) {
+        positionECEF.addAssign(altitudeCorrectionECEF)
+      }
       const positionUnit = positionECEF.mul(worldToUnit).toVar()
 
       // Direct and indirect illuminance on the surface
@@ -191,8 +193,9 @@ export class AerialPerspectiveNode extends TempNode {
 
       // Lambertian diffuse
       const color = this.colorNode.sample(screenUV)
-      const diffuse = color.rgb.div(PI).mul(sunIlluminance.add(skyIlluminance))
-      // const diffuse = color.rgb
+      const diffuse = this.light
+        ? color.rgb.div(PI).mul(sunIlluminance.add(skyIlluminance))
+        : color
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(

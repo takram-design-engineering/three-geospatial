@@ -1,4 +1,6 @@
 export * from './AerialPerspectiveNode'
+export * from './AtmosphereLight'
+export * from './AtmosphereLightNode'
 export * from './AtmosphereLUTNode'
 export * from './AtmosphereParameters'
 export * from './runtime'
