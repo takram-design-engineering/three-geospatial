@@ -21,6 +21,7 @@ import {
 import {
   exp,
   int,
+  mat3,
   mrt,
   nodeObject,
   screenCoordinate,
@@ -172,8 +173,8 @@ function run(renderer: Renderer, task: () => void): boolean {
 }
 
 class Context {
-  lambdas = uniform(new Vector3(680, 550, 440))
-  luminanceFromRadiance = uniform(new Matrix3().identity())
+  lambdas = vec3(680, 550, 440).toVar()
+  luminanceFromRadiance = mat3(new Matrix3().identity()).toVar()
 
   opticalDepthRT = createRenderTarget('opticalDepth')
   deltaIrradianceRT = createRenderTarget('deltaIrradiance')
@@ -703,7 +704,7 @@ export class AtmosphereLUTNode extends TempNode {
     }
   }
 
-  updateBefore({ renderer }: Partial<NodeFrame>): void {
+  updateBefore({ renderer }: NodeFrame): void {
     if (renderer == null || this.version === this.currentVersion) {
       return
     }

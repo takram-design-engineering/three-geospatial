@@ -136,7 +136,7 @@ Story.args = {
   dayOfYear: 0,
   timeOfDay: 9,
   longitude: 30,
-  latitude: 0,
+  latitude: 35,
   height: 300
 }
 
