@@ -80,7 +80,7 @@ export class NormalEffect extends Effect {
     this.reconstructFromDepth = reconstructFromDepth
   }
 
-  get mainCamera(): Camera {
+  override get mainCamera(): Camera {
     return this.camera
   }
 

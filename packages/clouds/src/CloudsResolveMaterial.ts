@@ -84,7 +84,7 @@ export class CloudsResolveMaterial extends RawShaderMaterial {
     this.uniforms.texelSize.value.set(1 / width, 1 / height)
   }
 
-  onBeforeRender(
+  override onBeforeRender(
     renderer: WebGLRenderer,
     scene: Scene,
     camera: Camera,

@@ -38,7 +38,7 @@ import {
 } from './runtime'
 
 export class AerialPerspectiveNode extends TempNode {
-  static get type(): string {
+  static override get type(): string {
     return 'AerialPerspectiveNode'
   }
 
@@ -99,7 +99,7 @@ export class AerialPerspectiveNode extends TempNode {
     this.updateBeforeType = NodeUpdateType.RENDER
   }
 
-  updateBefore(frame: NodeFrame): void {
+  override updateBefore(frame: NodeFrame): void {
     const { cameraPositionECEF, altitudeCorrectionECEF } = this._uniforms
 
     cameraPositionECEF.value
@@ -114,7 +114,7 @@ export class AerialPerspectiveNode extends TempNode {
     )
   }
 
-  setup(builder: NodeBuilder): Node<'vec4'> {
+  override setup(builder: NodeBuilder): Node<'vec4'> {
     const {
       projectionMatrix,
       inverseProjectionMatrix,

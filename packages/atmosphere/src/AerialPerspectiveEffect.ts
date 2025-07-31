@@ -326,7 +326,7 @@ export class AerialPerspectiveEffect extends Effect {
     this.ground = ground
   }
 
-  get mainCamera(): Camera {
+  override get mainCamera(): Camera {
     return this.camera
   }
 

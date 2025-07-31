@@ -139,7 +139,7 @@ export class ShadowPass extends PassBase {
     }
   }
 
-  setSize(
+  override setSize(
     width: number,
     height: number,
     depth = this.shadow.cascadeCount

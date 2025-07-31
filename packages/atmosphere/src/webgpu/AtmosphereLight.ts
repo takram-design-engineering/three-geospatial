@@ -6,7 +6,7 @@ import { nodeType } from '@takram/three-geospatial/webgpu'
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 
 export class AtmosphereLight extends Light {
-  readonly type = 'AtmosphereLight'
+  override readonly type = 'AtmosphereLight'
 
   lutNode?: AtmosphereLUTNode
 
@@ -24,7 +24,7 @@ export class AtmosphereLight extends Light {
     this.lutNode = lutNode
   }
 
-  copy(source: this, recursive?: boolean): this {
+  override copy(source: this, recursive?: boolean): this {
     super.copy(source, recursive)
     this.lutNode = source.lutNode
     this.ellipsoid = source.ellipsoid

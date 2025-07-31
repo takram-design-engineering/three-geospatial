@@ -15,6 +15,7 @@
       "dom"
     ],
     "strict": true,
+    "noImplicitOverride": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",

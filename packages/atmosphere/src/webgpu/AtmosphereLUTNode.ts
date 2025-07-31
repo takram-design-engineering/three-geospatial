@@ -229,12 +229,12 @@ class Context {
 }
 
 class AdditiveNodeMaterial extends NodeMaterial {
-  blendEquation = AddEquation
-  blendEquationAlpha = AddEquation
-  blendSrc = OneFactor
-  blendDst = OneFactor
-  blendSrcAlpha = OneFactor
-  blendDstAlpha = OneFactor
+  override blendEquation = AddEquation
+  override blendEquationAlpha = AddEquation
+  override blendSrc = OneFactor
+  override blendDst = OneFactor
+  override blendSrcAlpha = OneFactor
+  override blendDstAlpha = OneFactor
 
   // eslint-disable-next-line accessor-pairs
   set additive(value: boolean) {
@@ -259,7 +259,7 @@ export type AtmosphereLUTTextureName<
 }
 
 class LUTTextureNode extends TextureNode {
-  static get type(): string {
+  static override get type(): string {
     return 'LUTTextureNode'
   }
 
@@ -270,18 +270,18 @@ class LUTTextureNode extends TextureNode {
     this.lutNode = lutNode
   }
 
-  setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): unknown {
     this.lutNode.build(builder)
     return super.setup(builder)
   }
 
-  clone(): this {
+  override clone(): this {
     return new LUTTextureNode(this.lutNode, this.value) as this
   }
 }
 
 class LUTTexture3DNode extends Texture3DNode {
-  static get type(): string {
+  static override get type(): string {
     return 'LUTTexture3DNode'
   }
 
@@ -292,18 +292,18 @@ class LUTTexture3DNode extends Texture3DNode {
     this.lutNode = lutNode
   }
 
-  setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): unknown {
     this.lutNode.build(builder)
     return super.setup(builder)
   }
 
-  clone(): this {
+  override clone(): this {
     return new LUTTexture3DNode(this.lutNode, this.value) as this
   }
 }
 
 export class AtmosphereLUTNode extends TempNode {
-  static get type(): string {
+  static override get type(): string {
     return 'AtmosphereLUTNode'
   }
 
@@ -704,7 +704,7 @@ export class AtmosphereLUTNode extends TempNode {
     }
   }
 
-  updateBefore({ renderer }: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): void {
     if (renderer == null || this.version === this.currentVersion) {
       return
     }
@@ -716,7 +716,7 @@ export class AtmosphereLUTNode extends TempNode {
     })
   }
 
-  setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): unknown {
     this.textureType = isFloatLinearSupported(builder.renderer)
       ? (this.textureType ?? FloatType)
       : HalfFloatType
@@ -753,7 +753,7 @@ export class AtmosphereLUTNode extends TempNode {
     return super.setup(builder)
   }
 
-  dispose(): void {
+  override dispose(): void {
     if (this.updating) {
       this.disposeQueue = () => {
         this.dispose()

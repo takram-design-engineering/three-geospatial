@@ -40,7 +40,7 @@ type CorrectLightingContext = {
 }
 
 export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
-  static get type(): string {
+  static override get type(): string {
     return 'AtmosphereLightNode'
   }
 
@@ -116,7 +116,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     }
     const positionUnit = positionECEF.mul(worldToUnit).toVar()
 
-    // Compute indirect illuminance and store in the context.
+    // Compute the indirect illuminance to store it in the context.
     const skyIlluminance = getSkyIlluminance(
       lutNode,
       positionUnit,

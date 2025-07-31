@@ -7,7 +7,7 @@ export interface EllipsoidGeometryParameters {
 }
 
 export class EllipsoidGeometry extends BufferGeometry {
-  readonly type = 'EllipsoidGeometry'
+  override readonly type = 'EllipsoidGeometry'
 
   parameters: EllipsoidGeometryParameters
 
@@ -99,7 +99,7 @@ export class EllipsoidGeometry extends BufferGeometry {
     this.setAttribute('uv', new BufferAttribute(uvs, 2))
   }
 
-  copy(source: EllipsoidGeometry): this {
+  override copy(source: EllipsoidGeometry): this {
     super.copy(source)
     this.parameters = { ...source.parameters }
     return this
