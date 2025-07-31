@@ -54,7 +54,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     'vec3',
     this
   )
-  private readonly ecefToWorldMatrix = uniform(new Matrix4())
+  private readonly ecefToWorldMatrix = uniform(new Matrix4().identity())
   private readonly altitudeCorrectionECEF = uniform(new Vector3())
 
   override update(): void {
@@ -135,7 +135,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     ).xyz
 
     // Compute the direct luminance of the sun.
-    const radius = length(positionUnit)
+    const radius = length(positionUnit).toVar()
     const cosSun = positionUnit.dot(sunDirectionECEF).div(radius)
     const sunTransmittance = getTransmittanceToSun(
       parameters,
