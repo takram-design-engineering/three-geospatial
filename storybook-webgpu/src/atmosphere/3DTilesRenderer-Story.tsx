@@ -3,12 +3,7 @@ import { GlobeControls } from '3d-tiles-renderer/r3f'
 import { useMemo, type FC } from 'react'
 import { Vector3 } from 'three'
 import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
-import {
-  AgXToneMapping,
-  PostProcessing,
-  type Renderer,
-  type ToneMapping
-} from 'three/webgpu'
+import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
@@ -16,8 +11,14 @@ import {
   atmosphereLUT
 } from '@takram/three-atmosphere/webgpu'
 
-import { localDateArgTypes } from '../controls/localDate'
-import { toneMappingArgTypes } from '../controls/toneMapping'
+import {
+  localDateArgTypes,
+  type LocalDateArgTypes
+} from '../controls/localDate'
+import {
+  toneMappingArgTypes,
+  type ToneMappingArgTypes
+} from '../controls/toneMapping'
 import type { StoryFC } from '../helpers/createStory'
 import { Globe } from '../helpers/Globe'
 import { useControl } from '../helpers/useControl'
@@ -125,12 +126,8 @@ const Scene: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs {
+interface StoryArgs extends ToneMappingArgTypes, LocalDateArgTypes {
   googleMapsApiKey: string
-  toneMapping: ToneMapping
-  exposure: number
-  dayOfYear: number
-  timeOfDay: number
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (

@@ -5,10 +5,16 @@ import {
   CineonToneMapping,
   LinearToneMapping,
   NeutralToneMapping,
-  ReinhardToneMapping
+  ReinhardToneMapping,
+  type ToneMapping
 } from 'three'
 
-export const toneMappingArgTypes: ArgTypes = {
+export interface ToneMappingArgTypes {
+  toneMapping: ToneMapping
+  exposure: number
+}
+
+export const toneMappingArgTypes: ArgTypes<ToneMappingArgTypes> = {
   toneMapping: {
     options: [
       LinearToneMapping,

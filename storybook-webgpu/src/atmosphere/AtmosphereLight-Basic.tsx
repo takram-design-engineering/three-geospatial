@@ -8,13 +8,7 @@ import {
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
 import { mrt, normalView, output, pass } from 'three/tsl'
-import {
-  AgXToneMapping,
-  MeshPhysicalNodeMaterial,
-  PostProcessing,
-  type Renderer,
-  type ToneMapping
-} from 'three/webgpu'
+import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
@@ -25,11 +19,22 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
-import { localDateArgTypes } from '../controls/localDate'
-import { toneMappingArgTypes } from '../controls/toneMapping'
+import {
+  localDateArgTypes,
+  type LocalDateArgTypes
+} from '../controls/localDate'
+import {
+  physicalMaterialArgTypes,
+  type PhysicalMaterialArgTypes
+} from '../controls/physicalMaterial'
+import {
+  toneMappingArgTypes,
+  type ToneMappingArgTypes
+} from '../controls/toneMapping'
 import type { StoryFC } from '../helpers/createStory'
 import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useLocalDate } from '../helpers/useLocalDate'
+import { usePhysicalMaterial } from '../helpers/usePhysicalMaterial'
 import { useResource } from '../helpers/useResource'
 import { useSpringControl } from '../helpers/useSpringControl'
 import { useTransientControl } from '../helpers/useTransientControl'
@@ -138,11 +143,7 @@ const Scene: FC<StoryProps> = () => {
       <Sphere
         args={[0.5, 128, 128]}
         position={[0, 0.5, 0]}
-        material={
-          new MeshPhysicalNodeMaterial({
-            color: 'white'
-          })
-        }
+        material={usePhysicalMaterial()}
       />
     </>
   )
@@ -150,11 +151,10 @@ const Scene: FC<StoryProps> = () => {
 
 interface StoryProps {}
 
-interface StoryArgs {
-  toneMapping: ToneMapping
-  exposure: number
-  dayOfYear: number
-  timeOfDay: number
+interface StoryArgs
+  extends ToneMappingArgTypes,
+    LocalDateArgTypes,
+    PhysicalMaterialArgTypes {
   longitude: number
   latitude: number
   height: number
@@ -176,6 +176,9 @@ Story.args = {
   exposure: 10,
   dayOfYear: 0,
   timeOfDay: 9,
+  color: '#ffffff',
+  roughness: 0.5,
+  metalness: 0.5,
   longitude: 30,
   latitude: 35,
   height: 300
@@ -184,6 +187,7 @@ Story.args = {
 Story.argTypes = {
   ...toneMappingArgTypes,
   ...localDateArgTypes,
+  ...physicalMaterialArgTypes,
   longitude: {
     control: {
       type: 'range',

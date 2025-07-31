@@ -3,12 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
 import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
-import {
-  AgXToneMapping,
-  PostProcessing,
-  type Renderer,
-  type ToneMapping
-} from 'three/webgpu'
+import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
@@ -17,8 +12,14 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
-import { localDateArgTypes } from '../controls/localDate'
-import { toneMappingArgTypes } from '../controls/toneMapping'
+import {
+  localDateArgTypes,
+  type LocalDateArgTypes
+} from '../controls/localDate'
+import {
+  toneMappingArgTypes,
+  type ToneMappingArgTypes
+} from '../controls/toneMapping'
 import type { StoryFC } from '../helpers/createStory'
 import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useLocalDate } from '../helpers/useLocalDate'
@@ -115,11 +116,7 @@ const Scene: FC<StoryProps> = () => {
 
 interface StoryProps {}
 
-interface StoryArgs {
-  toneMapping: ToneMapping
-  exposure: number
-  dayOfYear: number
-  timeOfDay: number
+interface StoryArgs extends ToneMappingArgTypes, LocalDateArgTypes {
   longitude: number
   latitude: number
   height: number

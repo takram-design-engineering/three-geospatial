@@ -1,6 +1,11 @@
 import type { ArgTypes } from '@storybook/react-vite'
 
-export const localDateArgTypes: ArgTypes = {
+export interface LocalDateArgTypes {
+  dayOfYear: number
+  timeOfDay: number
+}
+
+export const localDateArgTypes: ArgTypes<LocalDateArgTypes> = {
   dayOfYear: {
     control: {
       type: 'range',
