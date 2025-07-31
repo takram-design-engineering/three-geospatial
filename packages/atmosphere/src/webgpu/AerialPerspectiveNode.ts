@@ -1,4 +1,4 @@
-import { Matrix4, Vector3, type Camera } from 'three'
+import { Light, Matrix4, Vector3, type Camera } from 'three'
 import {
   Fn,
   If,
@@ -24,6 +24,7 @@ import {
   depthToViewZ,
   needsUpdate,
   NodeObject,
+  nodeType,
   screenToPositionView,
   type Node
 } from '@takram/three-geospatial/webgpu'
@@ -48,24 +49,23 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate normalNode: TextureNode
   @needsUpdate lutNode: AtmosphereLUTNode
 
-  // Optional dependencies
-  @needsUpdate sunDirectionECEFNode: Node<'vec3'> = vec3()
+  @nodeType('mat4')
+  worldToECEFMatrix = new Matrix4().identity()
+
+  @nodeType('vec3')
+  sunDirectionECEF = new Vector3().copy(Light.DEFAULT_UP)
 
   // Static options
   @needsUpdate ellipsoid = Ellipsoid.WGS84
   @needsUpdate correctAltitude = true
   @needsUpdate correctGeometricError = true
-  @needsUpdate sunLight = true
-  @needsUpdate skyLight = true
+  @needsUpdate light: 'sun' | 'sky' | boolean = true
   @needsUpdate transmittance = true
   @needsUpdate inscatter = true
   @needsUpdate sky = true
   @needsUpdate sun = true
   @needsUpdate moon = true
   @needsUpdate ground = true
-
-  // Parameters
-  worldToECEFMatrix = new Matrix4().identity()
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
@@ -78,7 +78,8 @@ export class AerialPerspectiveNode extends TempNode {
     cameraNear: reference('camera.near', 'float', this),
     cameraFar: reference('camera.far', 'float', this),
     cameraPositionECEF: uniform(new Vector3()),
-    altitudeCorrectionECEF: uniform(new Vector3())
+    altitudeCorrectionECEF: uniform(new Vector3()),
+    sunDirectionECEF: reference('sunDirectionECEF', 'vec3', this)
   }
 
   constructor(
@@ -122,7 +123,8 @@ export class AerialPerspectiveNode extends TempNode {
       cameraNear,
       cameraFar,
       cameraPositionECEF,
-      altitudeCorrectionECEF
+      altitudeCorrectionECEF,
+      sunDirectionECEF
     } = this._uniforms
 
     const { worldToUnit } = this.lutNode.parameters.getContext()
@@ -149,7 +151,7 @@ export class AerialPerspectiveNode extends TempNode {
         cameraPositionUnit,
         rayDirectionECEF,
         0, // TODO: Shadow length
-        this.sunDirectionECEFNode
+        sunDirectionECEF
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
       return inscatter // TODO: Direct luminance
@@ -178,18 +180,19 @@ export class AerialPerspectiveNode extends TempNode {
       const positionUnit = positionECEF.mul(worldToUnit).toVar()
 
       // Direct and indirect illuminance on the surface
-      const sunSkyLuminance = getSunAndSkyIlluminance(
+      const sunSkyIlluminance = getSunAndSkyIlluminance(
         this.lutNode,
         positionUnit,
         normalECEF,
-        this.sunDirectionECEFNode
+        sunDirectionECEF
       ).toVar()
-      const sunIlluminance = sunSkyLuminance.get('sunIlluminance')
-      const skyIlluminance = sunSkyLuminance.get('skyIlluminance')
+      const sunIlluminance = sunSkyIlluminance.get('sunIlluminance')
+      const skyIlluminance = sunSkyIlluminance.get('skyIlluminance')
 
       // Lambertian diffuse
       const color = this.colorNode.sample(screenUV)
       const diffuse = color.rgb.div(PI).mul(sunIlluminance.add(skyIlluminance))
+      // const diffuse = color.rgb
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
@@ -197,7 +200,7 @@ export class AerialPerspectiveNode extends TempNode {
         cameraPositionUnit,
         positionUnit,
         0, // TODO: Shadow length
-        this.sunDirectionECEFNode
+        sunDirectionECEF
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
       const transmittance = luminanceTransfer.get('transmittance')

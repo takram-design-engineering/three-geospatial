@@ -2,7 +2,7 @@ import { OrbitControls, Sphere } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
-import { diffuseColor, mrt, normalView, pass, uniform } from 'three/tsl'
+import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
 import {
   AgXToneMapping,
   PostProcessing,
@@ -34,7 +34,7 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing
 
-  const sunDirectionECEF = useMemo(() => uniform(new Vector3()), [])
+  const sunDirectionECEF = useMemo(() => new Vector3(), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
   const [postProcessing] = useResource(() => {
@@ -52,7 +52,7 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('depth'),
       lutNode
     )
-    aerialNode.sunDirectionECEFNode = sunDirectionECEF
+    aerialNode.sunDirectionECEF = sunDirectionECEF
     aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
@@ -101,7 +101,7 @@ const Scene: FC<StoryProps> = () => {
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
   useLocalDate(longitude, dayOfYear, timeOfDay, date => {
-    getSunDirectionECEF(date, sunDirectionECEF.value)
+    getSunDirectionECEF(date, sunDirectionECEF)
   })
 
   return (

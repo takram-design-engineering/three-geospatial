@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { GlobeControls } from '3d-tiles-renderer/r3f'
 import { useMemo, type FC } from 'react'
 import { Vector3 } from 'three'
-import { diffuseColor, mrt, normalView, pass, uniform } from 'three/tsl'
+import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
 import {
   AgXToneMapping,
   PostProcessing,
@@ -44,7 +44,7 @@ const Scene: FC<StoryProps> = ({
 
   // Post-processing
 
-  const sunDirectionECEF = useMemo(() => uniform(new Vector3()), [])
+  const sunDirectionECEF = useMemo(() => new Vector3(), [])
 
   const [postProcessing] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
@@ -61,7 +61,7 @@ const Scene: FC<StoryProps> = ({
       passNode.getTextureNode('depth'),
       lutNode
     )
-    aerialNode.sunDirectionECEFNode = sunDirectionECEF
+    aerialNode.sunDirectionECEF = sunDirectionECEF
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
@@ -104,7 +104,7 @@ const Scene: FC<StoryProps> = ({
   const dayOfYear = useSpringControl(({ dayOfYear }: StoryArgs) => dayOfYear)
   const timeOfDay = useSpringControl(({ timeOfDay }: StoryArgs) => timeOfDay)
   useLocalDate(longitude, dayOfYear, timeOfDay, date => {
-    getSunDirectionECEF(date, sunDirectionECEF.value)
+    getSunDirectionECEF(date, sunDirectionECEF)
   })
 
   // Google Maps API key
