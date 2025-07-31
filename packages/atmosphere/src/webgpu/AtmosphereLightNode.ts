@@ -1,6 +1,6 @@
+import { Matrix4, Vector3, type Camera } from 'three'
 import type { LightingContext } from 'three/src/nodes/TSL.js'
 import {
-  cameraPosition,
   cameraViewMatrix,
   length,
   normalWorld,
@@ -11,11 +11,10 @@ import {
 } from 'three/tsl'
 import {
   AnalyticLightNode,
-  Matrix4,
-  Vector3,
   type NodeBuilder,
   type NodeFrame
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import { assertType } from '@takram/three-geospatial'
 import type { Node, NodeObject } from '@takram/three-geospatial/webgpu'
@@ -54,31 +53,6 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     'vec3',
     this
   )
-  private readonly ecefToWorldMatrix = uniform(new Matrix4().identity())
-  private readonly altitudeCorrectionECEF = uniform(new Vector3())
-
-  override update(): void {
-    // Intentionally omit the call of super.
-
-    const light = this.light
-    const lutNode = light?.lutNode
-    if (light == null || lutNode == null) {
-      return
-    }
-
-    const { ecefToWorldMatrix, altitudeCorrectionECEF } = this
-
-    ecefToWorldMatrix.value.copy(light.worldToECEFMatrix).invert()
-
-    getAltitudeCorrectionOffset(
-      altitudeCorrectionECEF.value
-        .copy(cameraPosition.value)
-        .applyMatrix4(light.worldToECEFMatrix),
-      lutNode.parameters.bottomRadius,
-      light.ellipsoid,
-      altitudeCorrectionECEF.value
-    )
-  }
 
   override setup(builder: NodeBuilder): void {
     // Intentionally omit the call of super.
@@ -89,13 +63,30 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       return
     }
 
+    const ecefToWorldMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
+      (_, self) => {
+        self.value.copy(light.worldToECEFMatrix).invert()
+      }
+    )
+
+    // The cameraPosition node doesn't seem to work with post-processing.
+    const camera = (builder as NodeBuilder & { camera?: Camera }).camera
+    invariant(camera != null)
+    const altitudeCorrectionECEF = uniform(new Vector3()).onRenderUpdate(
+      (_, self) => {
+        getAltitudeCorrectionOffset(
+          self.value
+            .setFromMatrixPosition(camera.matrixWorld)
+            .applyMatrix4(light.worldToECEFMatrix),
+          lutNode.parameters.bottomRadius,
+          light.ellipsoid,
+          self.value
+        )
+      }
+    )
+
     // Uniforms derived from the light properties:
-    const {
-      worldToECEFMatrix,
-      ecefToWorldMatrix,
-      altitudeCorrectionECEF,
-      sunDirectionECEF
-    } = this
+    const { worldToECEFMatrix, sunDirectionECEF } = this
 
     // Parameters defined in the LUT:
     const parameters = lutNode.parameters.getContext()
