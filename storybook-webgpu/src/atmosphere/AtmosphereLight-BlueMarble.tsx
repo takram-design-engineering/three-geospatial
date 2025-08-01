@@ -34,9 +34,9 @@ import {
 import {
   outputPassArgs,
   outputPassArgTypes,
-  useOutputPassControl
+  useOutputPassControl,
+  type OutputPassArgs
 } from '../controls/outputPassControls'
-import type { PhysicalMaterialArgTypes } from '../controls/physicalMaterialControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -158,10 +158,7 @@ const blueMarble = ({
 
 interface StoryProps {}
 
-interface StoryArgs
-  extends ToneMappingArgs,
-    LocalDateArgs,
-    PhysicalMaterialArgTypes {}
+interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas

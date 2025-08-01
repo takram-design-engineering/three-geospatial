@@ -20,7 +20,8 @@ import {
 import {
   outputPassArgs,
   outputPassArgTypes,
-  useOutputPassControl
+  useOutputPassControl,
+  type OutputPassArgs
 } from '../controls/outputPassControls'
 import {
   toneMappingArgs,
@@ -125,7 +126,7 @@ const Scene: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs extends ToneMappingArgs, LocalDateArgs {
+interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
   googleMapsApiKey: string
 }
 

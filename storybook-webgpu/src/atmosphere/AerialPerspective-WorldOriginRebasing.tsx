@@ -26,7 +26,8 @@ import {
 import {
   outputPassArgs,
   outputPassArgTypes,
-  useOutputPassControl
+  useOutputPassControl,
+  type OutputPassArgs
 } from '../controls/outputPassControls'
 import {
   toneMappingArgs,
@@ -107,7 +108,11 @@ const Scene: FC<StoryProps> = () => {
 
 interface StoryProps {}
 
-interface StoryArgs extends ToneMappingArgs, LocalDateArgs, LocationArgs {}
+interface StoryArgs
+  extends OutputPassArgs,
+    ToneMappingArgs,
+    LocalDateArgs,
+    LocationArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas camera={{ position: [2, 1, 2] }}>

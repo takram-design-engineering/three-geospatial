@@ -27,12 +27,14 @@ import {
 import {
   locationArgs,
   locationArgTypes,
-  useLocationControl
+  useLocationControl,
+  type LocationArgs
 } from '../controls/locationControls'
 import {
   outputPassArgs,
   outputPassArgTypes,
-  useOutputPassControl
+  useOutputPassControl,
+  type OutputPassArgs
 } from '../controls/outputPassControls'
 import {
   physicalMaterialArgTypes,
@@ -138,13 +140,11 @@ const Scene: FC<StoryProps> = () => {
 interface StoryProps {}
 
 interface StoryArgs
-  extends ToneMappingArgs,
+  extends OutputPassArgs,
+    ToneMappingArgs,
     LocalDateArgs,
-    PhysicalMaterialArgTypes {
-  longitude: number
-  latitude: number
-  height: number
-}
+    LocationArgs,
+    PhysicalMaterialArgTypes {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
