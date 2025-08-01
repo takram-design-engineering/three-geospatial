@@ -12,11 +12,12 @@ import {
 } from '3d-tiles-renderer/r3f'
 import type { FC, ReactNode, Ref } from 'react'
 import { DRACOLoader } from 'three-stdlib'
+import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
-import { TileNodeMaterialReplacementPlugin } from '../plugins/TileNodeMaterialReplacementPlugin'
+import { TileOverrideMaterialPlugin } from '../plugins/TileOverrideMaterialPlugin'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -24,12 +25,14 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 export interface GlobeProps {
   ref?: Ref<TilesRendererImpl>
   apiKey?: string
+  overrideMaterial?: typeof NodeMaterial
   children?: ReactNode
 }
 
 export const Globe: FC<GlobeProps> = ({
   ref,
   apiKey = import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
+  overrideMaterial = MeshBasicNodeMaterial,
   children
 }) => (
   <TilesRenderer
@@ -53,7 +56,10 @@ export const Globe: FC<GlobeProps> = ({
       plugin={TileCreasedNormalsPlugin}
       args={{ creaseAngle: radians(30) }}
     />
-    <TilesPlugin plugin={TileNodeMaterialReplacementPlugin} />
+    <TilesPlugin
+      plugin={TileOverrideMaterialPlugin}
+      args={[overrideMaterial]}
+    />
     {children}
     <TilesAttributionOverlay />
   </TilesRenderer>
