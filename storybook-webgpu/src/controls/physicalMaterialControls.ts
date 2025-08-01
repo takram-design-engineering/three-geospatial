@@ -72,7 +72,7 @@ export const physicalMaterialArgTypes =
     }
   })
 
-export function usePhysicalMaterialControl(
+export function usePhysicalMaterialControls(
   initialParams?: MeshPhysicalNodeMaterialParameters
 ): MeshPhysicalNodeMaterial {
   const material = useResource(

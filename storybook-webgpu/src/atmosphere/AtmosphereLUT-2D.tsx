@@ -24,7 +24,7 @@ import { Fnv, type NodeObject } from '@takram/three-geospatial/webgpu'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
-  useToneMappingControl,
+  useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
@@ -64,14 +64,16 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
 
   material.colorNode = lutNode.getTextureNode(name).sample(uv).rgb
 
+  // Tone mapping controls:
+  useToneMappingControls()
+
+  // Display controls:
   useTransientControl(
     ({ zoom }: StoryArgs) => ({ zoom }),
     value => {
       zoom.value = value.zoom
     }
   )
-
-  useToneMappingControl()
 
   return <ScreenQuad material={material} />
 }

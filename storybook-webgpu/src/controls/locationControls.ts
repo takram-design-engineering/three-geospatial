@@ -57,7 +57,7 @@ export const locationArgTypes = (
 const geodetic = new Geodetic()
 const position = new Vector3()
 
-export function useLocationControl(
+export function useLocationControls(
   worldToECEFMatrix: Matrix4,
   onChange?: (longitude: number, latitude: number, height: number) => void
 ): [MotionValue<number>, MotionValue<number>, MotionValue<number>] {

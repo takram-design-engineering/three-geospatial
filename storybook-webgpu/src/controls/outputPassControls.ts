@@ -35,7 +35,7 @@ export const outputPassArgTypes = (): ArgTypes<OutputPassArgs> => ({
   }
 })
 
-export function useOutputPassControl(
+export function useOutputPassControls(
   passNode: PassNode,
   camera: Camera,
   onChange: (outputNode?: Node) => void

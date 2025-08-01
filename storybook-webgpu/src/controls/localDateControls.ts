@@ -52,7 +52,7 @@ function getLocalDate(
   return epoch + (Math.floor(dayOfYear) * 24 + timeOfDay - offset) * 3600000
 }
 
-export function useLocalDateControl(
+export function useLocalDateControls(
   longitude: number | MotionValue<number>, // In degrees
   onChange?: (date: number) => void
 ): MotionValue<number> {

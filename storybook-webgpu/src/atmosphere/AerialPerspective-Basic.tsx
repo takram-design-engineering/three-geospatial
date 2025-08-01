@@ -30,19 +30,19 @@ import {
 import {
   localDateArgs,
   localDateArgTypes,
-  useLocalDateControl,
+  useLocalDateControls,
   type LocalDateArgs
 } from '../controls/localDateControls'
 import {
   outputPassArgs,
   outputPassArgTypes,
-  useOutputPassControl,
+  useOutputPassControls,
   type OutputPassArgs
 } from '../controls/outputPassControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
-  useToneMappingControl,
+  useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
@@ -121,19 +121,19 @@ const Scene: FC<StoryProps> = ({
     distance
   })
 
-  // Output pass control:
-  useOutputPassControl(passNode, camera, outputNode => {
+  // Output pass controls:
+  useOutputPassControls(passNode, camera, outputNode => {
     postProcessing.outputNode = outputNode ?? aerialNode
     postProcessing.needsUpdate = true
   })
 
-  // Tone mapping control:
-  useToneMappingControl(() => {
+  // Tone mapping controls:
+  useToneMappingControls(() => {
     postProcessing.needsUpdate = true
   })
 
-  // Local date control (depends on the longitude of the location):
-  useLocalDateControl(longitude, date => {
+  // Local date controls (depends on the longitude of the location):
+  useLocalDateControls(longitude, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
 

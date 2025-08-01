@@ -21,31 +21,31 @@ import {
 import {
   localDateArgs,
   localDateArgTypes,
-  useLocalDateControl,
+  useLocalDateControls,
   type LocalDateArgs
 } from '../controls/localDateControls'
 import {
   locationArgs,
   locationArgTypes,
-  useLocationControl,
+  useLocationControls,
   type LocationArgs
 } from '../controls/locationControls'
 import {
   outputPassArgs,
   outputPassArgTypes,
-  useOutputPassControl,
+  useOutputPassControls,
   type OutputPassArgs
 } from '../controls/outputPassControls'
 import {
   physicalMaterialArgs,
   physicalMaterialArgTypes,
-  usePhysicalMaterialControl,
+  usePhysicalMaterialControls,
   type PhysicalMaterialArgTypes
 } from '../controls/physicalMaterialControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
-  useToneMappingControl,
+  useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
@@ -97,22 +97,22 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.render()
   }, 1)
 
-  // Output pass control:
-  useOutputPassControl(passNode, camera, outputNode => {
+  // Output pass controls:
+  useOutputPassControls(passNode, camera, outputNode => {
     postProcessing.outputNode = outputNode ?? aerialNode
     postProcessing.needsUpdate = true
   })
 
-  // Tone mapping control:
-  useToneMappingControl(() => {
+  // Tone mapping controls:
+  useToneMappingControls(() => {
     postProcessing.needsUpdate = true
   })
 
-  // Location control:
-  const [longitude] = useLocationControl(worldToECEFMatrix)
+  // Location controls:
+  const [longitude] = useLocationControls(worldToECEFMatrix)
 
-  // Local date control (depends on the longitude of the location):
-  useLocalDateControl(longitude, date => {
+  // Local date controls (depends on the longitude of the location):
+  useLocalDateControls(longitude, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
 
@@ -132,7 +132,7 @@ const Scene: FC<StoryProps> = () => {
       <Sphere
         args={[0.5, 128, 128]}
         position={[0, 0.5, 0]}
-        material={usePhysicalMaterialControl()}
+        material={usePhysicalMaterialControls()}
       />
     </>
   )

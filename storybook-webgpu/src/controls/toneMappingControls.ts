@@ -73,7 +73,7 @@ export const toneMappingArgTypes = (): ArgTypes<ToneMappingArgs> => ({
   }
 })
 
-export function useToneMappingControl(
+export function useToneMappingControls(
   onChange?: (toneMapping: ToneMapping) => void
 ): void {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
