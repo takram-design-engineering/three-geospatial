@@ -212,7 +212,7 @@ Story.argTypes = {
     minHeight: 3000,
     maxHeight: 408000
   }),
-  ...localDateArgTypes
+  ...localDateArgTypes()
 }
 
 export default Story
