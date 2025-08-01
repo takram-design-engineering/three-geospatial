@@ -91,12 +91,13 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  ...toneMappingArgs,
-  toneMapping: LinearToneMapping
+  ...toneMappingArgs({
+    toneMapping: LinearToneMapping
+  })
 }
 
 Story.argTypes = {
-  ...toneMappingArgTypes,
+  ...toneMappingArgTypes(),
   zoom: {
     control: {
       type: 'range',
