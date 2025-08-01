@@ -2,6 +2,7 @@ import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../helpers/createStory'
 import { Story as BasicStory } from './AtmosphereLight-Basic'
+import { Story as BlueMarbleStory } from './AtmosphereLight-BlueMarble'
 import { Story as TerrainStory } from './AtmosphereLight-Terrain'
 
 export default {
@@ -20,3 +21,5 @@ export const Terrain = createStory(TerrainStory, {
     distance: 2000
   }
 })
+
+export const BlueMarble = createStory(BlueMarbleStory)
