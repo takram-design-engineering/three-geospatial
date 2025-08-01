@@ -6,6 +6,7 @@ import {
   CineonToneMapping,
   LinearToneMapping,
   NeutralToneMapping,
+  NoToneMapping,
   ReinhardToneMapping,
   type ToneMapping
 } from 'three'
@@ -14,13 +15,28 @@ import type { Renderer } from 'three/webgpu'
 import { useSpringControl } from '../helpers/useSpringControl'
 import { useTransientControl } from '../helpers/useTransientControl'
 
-export interface ToneMappingArgTypes {
+export interface ToneMappingArgs {
+  toneMappingEnabled: boolean
   toneMapping: ToneMapping
-  exposure: number
+  toneMappingExposure: number
 }
 
-export const toneMappingArgTypes: ArgTypes<ToneMappingArgTypes> = {
+export const toneMappingArgs: ToneMappingArgs = {
+  toneMappingEnabled: true,
+  toneMapping: AgXToneMapping,
+  toneMappingExposure: 1
+}
+
+export const toneMappingArgTypes: ArgTypes<ToneMappingArgs> = {
+  toneMappingEnabled: {
+    name: 'enabled',
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'tone mapping' }
+  },
   toneMapping: {
+    name: 'mode',
     options: [
       LinearToneMapping,
       ReinhardToneMapping,
@@ -42,7 +58,8 @@ export const toneMappingArgTypes: ArgTypes<ToneMappingArgTypes> = {
     },
     table: { category: 'tone mapping' }
   },
-  exposure: {
+  toneMappingExposure: {
+    name: 'exposure',
     control: {
       type: 'range',
       min: 1,
@@ -57,15 +74,20 @@ export function useToneMappingControl(
   onChange?: (toneMapping: ToneMapping) => void
 ): void {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
+
   useTransientControl(
-    ({ toneMapping }: ToneMappingArgTypes) => toneMapping,
-    value => {
-      renderer.toneMapping = value
+    ({ toneMappingEnabled, toneMapping }: ToneMappingArgs) => [
+      toneMappingEnabled,
+      toneMapping
+    ],
+    ([enabled, value]) => {
+      renderer.toneMapping = enabled ? value : NoToneMapping
       onChange?.(value)
     }
   )
+
   useSpringControl(
-    ({ exposure }: ToneMappingArgTypes) => exposure,
+    ({ toneMappingExposure: exposure }: ToneMappingArgs) => exposure,
     value => {
       renderer.toneMappingExposure = value
     }

@@ -9,7 +9,6 @@ import { useMemo, type FC } from 'react'
 import { TextureLoader, Vector3 } from 'three'
 import { mix, mul, pass, texture, uv, vec3 } from 'three/tsl'
 import {
-  AgXToneMapping,
   MeshPhysicalNodeMaterial,
   PostProcessing,
   type MeshPhysicalNodeMaterialParameters,
@@ -27,16 +26,23 @@ import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
 
 import {
+  localDateArgs,
   localDateArgTypes,
   useLocalDateControl,
-  type LocalDateArgTypes
-} from '../controls/localDate'
-import type { PhysicalMaterialArgTypes } from '../controls/physicalMaterial'
+  type LocalDateArgs
+} from '../controls/localDateControls'
 import {
+  outputPassArgs,
+  outputPassArgTypes,
+  useOutputPassControl
+} from '../controls/outputPassControls'
+import type { PhysicalMaterialArgTypes } from '../controls/physicalMaterialControls'
+import {
+  toneMappingArgs,
   toneMappingArgTypes,
   useToneMappingControl,
-  type ToneMappingArgTypes
-} from '../controls/toneMapping'
+  type ToneMappingArgs
+} from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
@@ -54,15 +60,15 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  // Post-processing:
-
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
 
-  // Share the LUT node with both AerialPerspectiveNode and AtmosphereLight.
-  const lutNode = useResource(() => atmosphereLUT())
+  // Post-processing:
 
-  const [postProcessing] = useResource(() => {
+  const [postProcessing, passNode, lutNode, aerialNode] = useResource(() => {
     const passNode = pass(scene, camera)
+
+    const lutNode = atmosphereLUT()
+
     const aerialNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
@@ -70,27 +76,32 @@ const Scene: FC<StoryProps> = () => {
       null,
       lutNode
     )
-    aerialNode.light = false
-    aerialNode.sunDirectionECEF = sunDirectionECEF
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
-    return [postProcessing, passNode, aerialNode]
-  }, [renderer, scene, camera, sunDirectionECEF, lutNode])
+    return [postProcessing, passNode, lutNode, aerialNode]
+  }, [renderer, scene, camera])
+
+  aerialNode.light = false
+  aerialNode.sunDirectionECEF = sunDirectionECEF
 
   useFrame(() => {
     postProcessing.render()
   }, 1)
 
-  // Tone mapping control:
+  // Output pass control:
+  useOutputPassControl(passNode, camera, outputNode => {
+    postProcessing.outputNode = outputNode ?? aerialNode
+    postProcessing.needsUpdate = true
+  })
 
+  // Tone mapping control:
   useToneMappingControl(() => {
     postProcessing.needsUpdate = true
   })
 
   // Local date control (depends on the longitude of the location):
-
   useLocalDateControl(0, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
@@ -148,8 +159,8 @@ const blueMarble = ({
 interface StoryProps {}
 
 interface StoryArgs
-  extends ToneMappingArgTypes,
-    LocalDateArgTypes,
+  extends ToneMappingArgs,
+    LocalDateArgs,
     PhysicalMaterialArgTypes {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -173,13 +184,16 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  toneMapping: AgXToneMapping,
-  exposure: 4,
+  ...outputPassArgs,
+  ...toneMappingArgs,
+  ...localDateArgs,
+  toneMappingExposure: 4,
   dayOfYear: 180,
   timeOfDay: 4
 }
 
 Story.argTypes = {
+  ...outputPassArgTypes,
   ...toneMappingArgTypes,
   ...localDateArgTypes
 }

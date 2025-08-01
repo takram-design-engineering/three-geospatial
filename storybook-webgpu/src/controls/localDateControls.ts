@@ -5,12 +5,17 @@ import { useEffect, useRef } from 'react'
 import { useMaybeMotionValue } from '../helpers/useMaybeMotionValue'
 import { useSpringControl } from '../helpers/useSpringControl'
 
-export interface LocalDateArgTypes {
+export interface LocalDateArgs {
   dayOfYear: number
   timeOfDay: number
 }
 
-export const localDateArgTypes: ArgTypes<LocalDateArgTypes> = {
+export const localDateArgs: LocalDateArgs = {
+  dayOfYear: 0,
+  timeOfDay: 0
+}
+
+export const localDateArgTypes: ArgTypes<LocalDateArgs> = {
   dayOfYear: {
     control: {
       type: 'range',
@@ -50,10 +55,10 @@ export function useLocalDateControl(
 ): MotionValue<number> {
   const longitude = useMaybeMotionValue(longitudeValue)
   const dayOfYear = useSpringControl(
-    ({ dayOfYear }: LocalDateArgTypes) => dayOfYear
+    ({ dayOfYear }: LocalDateArgs) => dayOfYear
   )
   const timeOfDay = useSpringControl(
-    ({ timeOfDay }: LocalDateArgTypes) => timeOfDay
+    ({ timeOfDay }: LocalDateArgs) => timeOfDay
   )
 
   const motionDate = useTransform(

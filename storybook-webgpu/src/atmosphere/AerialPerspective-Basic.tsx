@@ -14,7 +14,6 @@ import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
 import { mrt, normalView, output, pass } from 'three/tsl'
 import {
-  AgXToneMapping,
   MeshBasicNodeMaterial,
   PostProcessing,
   type Renderer
@@ -29,15 +28,22 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 
 import {
+  localDateArgs,
   localDateArgTypes,
   useLocalDateControl,
-  type LocalDateArgTypes
-} from '../controls/localDate'
+  type LocalDateArgs
+} from '../controls/localDateControls'
 import {
+  outputPassArgs,
+  outputPassArgTypes,
+  useOutputPassControl
+} from '../controls/outputPassControls'
+import {
+  toneMappingArgs,
   toneMappingArgTypes,
   useToneMappingControl,
-  type ToneMappingArgTypes
-} from '../controls/toneMapping'
+  type ToneMappingArgs
+} from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
 import {
   usePointOfView,
@@ -67,21 +73,21 @@ const Scene: FC<StoryProps> = ({
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  // Post-processing:
-
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
-  // Share the LUT node with both AerialPerspectiveNode and AtmosphereLight.
-  const lutNode = useResource(() => atmosphereLUT())
+  // Post-processing:
 
-  const [postProcessing] = useResource(() => {
+  const [postProcessing, passNode, lutNode, aerialNode] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output,
         normal: normalView
       })
     )
+
+    const lutNode = atmosphereLUT()
+
     const aerialNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
@@ -89,22 +95,22 @@ const Scene: FC<StoryProps> = ({
       passNode.getTextureNode('normal'),
       lutNode
     )
-    aerialNode.light = true
-    aerialNode.sunDirectionECEF = sunDirectionECEF
-    aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
-    return [postProcessing, passNode, aerialNode]
-  }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix, lutNode])
+    return [postProcessing, passNode, lutNode, aerialNode]
+  }, [renderer, scene, camera])
+
+  aerialNode.light = true
+  aerialNode.sunDirectionECEF = sunDirectionECEF
+  aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
   useFrame(() => {
     postProcessing.render()
   }, 1)
 
-  // Apply the initial point of view
-
+  // Apply the initial point of view.
   usePointOfView({
     longitude,
     latitude,
@@ -114,14 +120,18 @@ const Scene: FC<StoryProps> = ({
     distance
   })
 
-  // Tone mapping control:
+  // Output pass control:
+  useOutputPassControl(passNode, camera, outputNode => {
+    postProcessing.outputNode = outputNode ?? aerialNode
+    postProcessing.needsUpdate = true
+  })
 
+  // Tone mapping control:
   useToneMappingControl(() => {
     postProcessing.needsUpdate = true
   })
 
   // Local date control (depends on the longitude of the location):
-
   useLocalDateControl(longitude, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
@@ -161,7 +171,7 @@ const Scene: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs extends ToneMappingArgTypes, LocalDateArgTypes {}
+interface StoryArgs extends ToneMappingArgs, LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
@@ -176,13 +186,16 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  toneMapping: AgXToneMapping,
-  exposure: 10,
+  ...outputPassArgs,
+  ...toneMappingArgs,
+  ...localDateArgs,
+  toneMappingExposure: 10,
   dayOfYear: 0,
   timeOfDay: 9
 }
 
 Story.argTypes = {
+  ...outputPassArgTypes,
   ...toneMappingArgTypes,
   ...localDateArgTypes
 }

@@ -5,7 +5,7 @@ import shallowEqual from 'shallowequal'
 
 import { StoryContext } from './StoryContext'
 
-export function useTransientControl<TArgs extends Args, T>(
+export function useTransientControl<TArgs extends Args, const T>(
   selector: (args: TArgs) => T,
   onChange: (value: T, prevValue?: T) => void
 ): void {

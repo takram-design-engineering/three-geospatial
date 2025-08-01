@@ -16,7 +16,7 @@ export const Manhattan = createStory(Story, {
     distance: 3000
   },
   args: {
-    exposure: 60,
+    toneMappingExposure: 60,
     dayOfYear: 1,
     timeOfDay: 7.6
   }
@@ -31,7 +31,7 @@ export const Fuji = createStory(Story, {
     distance: 7000
   },
   args: {
-    exposure: 10,
+    toneMappingExposure: 10,
     dayOfYear: 260,
     timeOfDay: 16
   }

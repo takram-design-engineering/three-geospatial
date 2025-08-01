@@ -58,23 +58,23 @@ export const screenToPositionView = /*#__PURE__*/ Fnv(
 export const turbo = /*#__PURE__*/ Fnv(
   (x: NodeObject<'float'>): Node<'vec3'> => {
     const coeffs = [
-      vec3(58.1375, 2.7747, 26.8183).toConst(),
       vec3(-150.5666, 4.2109, -88.5066).toConst(),
       vec3(130.5887, -14.0195, 109.0745).toConst(),
       vec3(-42.3277, 4.8052, -60.1097).toConst(),
       vec3(4.5974, 2.1856, 12.5925).toConst(),
       vec3(0.1357, 0.0914, 0.1067).toConst()
     ]
-    return coeffs
-      .slice(1)
-      .reduce<NodeObject>((y, offset) => offset.add(x.mul(y)), coeffs[0])
+    return coeffs.reduce<NodeObject>(
+      (y, offset) => offset.add(x.mul(y)),
+      vec3(58.1375, 2.7747, 26.8183).toConst()
+    )
   }
 )
 
 export const depthToColor = /*#__PURE__*/ Fnv(
   (
-    camera: Camera,
     depth: NodeObject<'float'>,
+    camera: Camera,
     near?: number | NodeObject<'float'>,
     far?: number | NodeObject<'float'>
   ): Node<'vec3'> => {

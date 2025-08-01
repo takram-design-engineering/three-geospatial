@@ -3,45 +3,52 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
 import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
-import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
+import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
   atmosphereLUT
 } from '@takram/three-atmosphere/webgpu'
-import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
 import {
+  localDateArgs,
   localDateArgTypes,
   useLocalDateControl,
-  type LocalDateArgTypes
-} from '../controls/localDate'
+  type LocalDateArgs
+} from '../controls/localDateControls'
 import {
+  locationArgs,
+  locationArgTypes,
+  useLocationControl,
+  type LocationArgs
+} from '../controls/locationControls'
+import {
+  outputPassArgs,
+  outputPassArgTypes,
+  useOutputPassControl
+} from '../controls/outputPassControls'
+import {
+  toneMappingArgs,
   toneMappingArgTypes,
   useToneMappingControl,
-  type ToneMappingArgTypes
-} from '../controls/toneMapping'
+  type ToneMappingArgs
+} from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
-import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useResource } from '../helpers/useResource'
-import { useSpringControl } from '../helpers/useSpringControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
-
-const geodetic = new Geodetic()
-const position = new Vector3()
 
 const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  // Post-processing:
-
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
   const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
-  const [postProcessing] = useResource(() => {
+  // Post-processing:
+
+  const [postProcessing, passNode, , aerialNode] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output: diffuseColor,
@@ -56,45 +63,36 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('normal'),
       lutNode
     )
-    aerialNode.light = true
-    aerialNode.sunDirectionECEF = sunDirectionECEF
-    aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, lutNode, aerialNode]
-  }, [renderer, scene, camera, sunDirectionECEF, worldToECEFMatrix])
+  }, [renderer, scene, camera])
+
+  aerialNode.light = true
+  aerialNode.sunDirectionECEF = sunDirectionECEF
+  aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
   useFrame(() => {
     postProcessing.render()
   }, 1)
 
-  // Tone mapping control:
+  // Output pass control:
+  useOutputPassControl(passNode, camera, outputNode => {
+    postProcessing.outputNode = outputNode ?? aerialNode
+    postProcessing.needsUpdate = true
+  })
 
+  // Tone mapping control:
   useToneMappingControl(() => {
     postProcessing.needsUpdate = true
   })
 
   // Location control:
-
-  const longitude = useSpringControl(({ longitude }: StoryArgs) => longitude)
-  const latitude = useSpringControl(({ latitude }: StoryArgs) => latitude)
-  const height = useSpringControl(({ height }: StoryArgs) => height)
-  useCombinedChange(
-    [longitude, latitude, height],
-    ([longitude, latitude, height]) => {
-      Ellipsoid.WGS84.getNorthUpEastFrame(
-        geodetic
-          .set(radians(longitude), radians(latitude), height)
-          .toECEF(position),
-        worldToECEFMatrix
-      )
-    }
-  )
+  const [longitude] = useLocationControl(worldToECEFMatrix)
 
   // Local date control (depends on the longitude of the location):
-
   useLocalDateControl(longitude, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
@@ -109,11 +107,7 @@ const Scene: FC<StoryProps> = () => {
 
 interface StoryProps {}
 
-interface StoryArgs extends ToneMappingArgTypes, LocalDateArgTypes {
-  longitude: number
-  latitude: number
-  height: number
-}
+interface StoryArgs extends ToneMappingArgs, LocalDateArgs, LocationArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas camera={{ position: [2, 1, 2] }}>
@@ -122,8 +116,11 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  toneMapping: AgXToneMapping,
-  exposure: 10,
+  ...outputPassArgs,
+  ...toneMappingArgs,
+  ...localDateArgs,
+  ...locationArgs,
+  toneMappingExposure: 10,
   dayOfYear: 0,
   timeOfDay: 9,
   longitude: 30,
@@ -132,32 +129,10 @@ Story.args = {
 }
 
 Story.argTypes = {
+  ...outputPassArgTypes,
   ...toneMappingArgTypes,
   ...localDateArgTypes,
-  longitude: {
-    control: {
-      type: 'range',
-      min: -180,
-      max: 180
-    },
-    table: { category: 'location' }
-  },
-  latitude: {
-    control: {
-      type: 'range',
-      min: -90,
-      max: 90
-    },
-    table: { category: 'location' }
-  },
-  height: {
-    control: {
-      type: 'range',
-      min: 0,
-      max: 30000
-    },
-    table: { category: 'location' }
-  }
+  ...locationArgTypes
 }
 
 export default Story
