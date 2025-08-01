@@ -58,8 +58,8 @@ const Scene: FC<StoryProps> = ({
     const aerialNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
-      passNode.getTextureNode('normal'),
       passNode.getTextureNode('depth'),
+      passNode.getTextureNode('normal'),
       lutNode
     )
     aerialNode.light = true

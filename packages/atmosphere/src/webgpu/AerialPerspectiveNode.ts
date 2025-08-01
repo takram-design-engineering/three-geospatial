@@ -22,6 +22,7 @@ import {
 import { Ellipsoid } from '@takram/three-geospatial'
 import {
   depthToViewZ,
+  Fnv,
   needsUpdate,
   NodeObject,
   nodeType,
@@ -46,7 +47,7 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate camera: Camera
   @needsUpdate colorNode: TextureNode
   @needsUpdate depthNode: TextureNode
-  @needsUpdate normalNode: TextureNode
+  @needsUpdate normalNode: TextureNode | null | undefined
   @needsUpdate lutNode: AtmosphereLUTNode
 
   @nodeType('mat4')
@@ -85,8 +86,8 @@ export class AerialPerspectiveNode extends TempNode {
   constructor(
     camera: Camera,
     colorNode: TextureNode,
-    normalNode: TextureNode,
     depthNode: TextureNode,
+    normalNode: TextureNode | null | undefined,
     lutNode: AtmosphereLUTNode
   ) {
     super('vec4')
@@ -129,10 +130,9 @@ export class AerialPerspectiveNode extends TempNode {
 
     const { worldToUnit } = this.lutNode.parameters.getContext()
 
-    const cameraPositionUnit = cameraPositionECEF
-      .add(altitudeCorrectionECEF)
-      .mul(worldToUnit)
-      .toVertexStage()
+    const cameraPositionUnit = this.correctAltitude
+      ? cameraPositionECEF.add(altitudeCorrectionECEF).mul(worldToUnit)
+      : cameraPositionECEF.mul(worldToUnit)
 
     const rayDirectionECEF = Fn(() => {
       const positionView = inverseProjectionMatrix.mul(
@@ -158,11 +158,6 @@ export class AerialPerspectiveNode extends TempNode {
     })()
 
     const surfaceLuminance = Fn(() => {
-      // Normal vector of the surface
-      const normalView = this.normalNode.sample(screenUV).xyz
-      const normalWorld = inverseViewMatrix.mul(vec4(normalView, 0)).xyz
-      const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
-
       // Position of the surface
       const viewZ = depthToViewZ(
         depth,
@@ -187,21 +182,31 @@ export class AerialPerspectiveNode extends TempNode {
       }
       const positionUnit = positionECEF.mul(worldToUnit).toVar()
 
-      // Direct and indirect illuminance on the surface
-      const sunSkyIlluminance = getSunAndSkyIlluminance(
-        this.lutNode,
-        positionUnit,
-        normalECEF,
-        sunDirectionECEF
-      ).toVar()
-      const sunIlluminance = sunSkyIlluminance.get('sunIlluminance')
-      const skyIlluminance = sunSkyIlluminance.get('skyIlluminance')
+      const indirect = Fnv((): Node<'vec3'> => {
+        if (this.normalNode == null) {
+          throw new Error(
+            'The "normalNode" is required when the "light" is set.'
+          )
+        }
+        // Normal vector of the surface
+        const normalView = this.normalNode.sample(screenUV).xyz
+        const normalWorld = inverseViewMatrix.mul(vec4(normalView, 0)).xyz
+        const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
 
-      // Lambertian diffuse
+        // Direct and indirect illuminance on the surface
+        const sunSkyIlluminance = getSunAndSkyIlluminance(
+          this.lutNode,
+          positionUnit,
+          normalECEF,
+          sunDirectionECEF
+        ).toVar()
+        const sunIlluminance = sunSkyIlluminance.get('sunIlluminance')
+        const skyIlluminance = sunSkyIlluminance.get('skyIlluminance')
+        return PI.reciprocal().mul(sunIlluminance.add(skyIlluminance))
+      })
+
       const color = this.colorNode.sample(screenUV)
-      const diffuse = this.light
-        ? color.rgb.div(PI).mul(sunIlluminance.add(skyIlluminance))
-        : color
+      const diffuse = this.light ? color.mul(indirect()) : color
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(

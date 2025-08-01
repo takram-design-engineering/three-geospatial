@@ -83,6 +83,7 @@ function createRenderTarget(name: string): RenderTarget {
   texture.wrapS = ClampToEdgeWrapping
   texture.wrapT = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
+  texture.generateMipmaps = false
   texture.name = name
   return renderTarget
 }
@@ -99,6 +100,7 @@ function createRenderTarget3D(name: string): RenderTarget3D {
   texture.wrapT = ClampToEdgeWrapping
   texture.wrapR = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
+  texture.generateMipmaps = false
   texture.name = name
   return renderTarget
 }

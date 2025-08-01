@@ -12,7 +12,7 @@ import {
 } from '3d-tiles-renderer/r3f'
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
-import { mrt, normalView, output, pass } from 'three/tsl'
+import { pass } from 'three/tsl'
 import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -75,17 +75,12 @@ const Scene: FC<StoryProps> = ({
   const lutNode = useResource(() => atmosphereLUT())
 
   const [postProcessing] = useResource(() => {
-    const passNode = pass(scene, camera).setMRT(
-      mrt({
-        output,
-        normal: normalView
-      })
-    )
+    const passNode = pass(scene, camera)
     const aerialNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
-      passNode.getTextureNode('normal'),
       passNode.getTextureNode('depth'),
+      null,
       lutNode
     )
     aerialNode.light = false
