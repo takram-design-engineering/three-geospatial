@@ -1,5 +1,6 @@
 import { ScreenQuad } from '@react-three/drei'
 import type { FC } from 'react'
+import { LinearToneMapping } from 'three'
 import {
   Discard,
   float,
@@ -8,7 +9,6 @@ import {
   ivec2,
   max,
   positionGeometry,
-  pow,
   screenSize,
   screenUV,
   uniform,
@@ -25,6 +25,12 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Fnv, type NodeObject } from '@takram/three-geospatial/webgpu'
 
+import {
+  toneMappingArgs,
+  toneMappingArgTypes,
+  useToneMappingControl,
+  type ToneMappingArgs
+} from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
 import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
@@ -51,7 +57,6 @@ export const textureUVW = Fnv(
 
 const Content: FC<StoryProps> = ({ name, ...options }) => {
   const zoom = uniform(0)
-  const valueExponent = uniform(0)
 
   const material = useResource(() => new NodeMaterial())
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
@@ -60,18 +65,16 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
   Object.assign(lutNode.parameters, options)
   const textureSize = vec3(lutNode.parameters.scatteringTextureSize)
   const uvw = textureUVW(textureSize, zoom)
-  material.colorNode = lutNode
-    .getTextureNode(name)
-    .sample(uvw)
-    .rgb.mul(pow(10, valueExponent))
+  material.colorNode = lutNode.getTextureNode(name).sample(uvw).rgb
 
   useTransientControl(
-    ({ zoom, valueExponent }: StoryArgs) => ({ zoom, valueExponent }),
+    ({ zoom }: StoryArgs) => ({ zoom }),
     value => {
       zoom.value = value.zoom
-      valueExponent.value = value.valueExponent
     }
   )
+
+  useToneMappingControl()
 
   return <ScreenQuad material={material} />
 }
@@ -80,15 +83,32 @@ interface StoryProps extends Partial<AtmosphereParameters> {
   name: AtmosphereLUTTextureName<3>
 }
 
-interface StoryArgs {
+interface StoryArgs extends ToneMappingArgs {
   zoom: number
-  valueExponent: number
 }
 
-export const Story3D: StoryFC<StoryProps, StoryArgs> = props => (
+export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
     <Content {...props} />
   </WebGPUCanvas>
 )
 
-export default Story3D
+Story.args = {
+  ...toneMappingArgs,
+  toneMapping: LinearToneMapping
+}
+
+Story.argTypes = {
+  ...toneMappingArgTypes,
+  zoom: {
+    control: {
+      type: 'range',
+      min: 1,
+      max: 32,
+      step: 0.1
+    },
+    table: { category: 'display' }
+  }
+}
+
+export default Story

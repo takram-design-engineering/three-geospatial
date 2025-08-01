@@ -1,33 +1,12 @@
-import type { ArgTypes, Meta } from '@storybook/react-vite'
+import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../helpers/createStory'
-import Story2D from './AtmosphereLUT-2D'
-import Story3D from './AtmosphereLUT-3D'
+import { Story as Story2D } from './AtmosphereLUT-2D'
+import { Story as Story3D } from './AtmosphereLUT-3D'
 
 export default {
   title: 'atmosphere/Atmosphere LUT'
 } satisfies Meta
-
-const argTypes: ArgTypes = {
-  zoom: {
-    control: {
-      type: 'range',
-      min: 1,
-      max: 32,
-      step: 0.1
-    },
-    table: { category: 'display' }
-  },
-  valueExponent: {
-    control: {
-      type: 'range',
-      min: -5,
-      max: 5,
-      step: 0.1
-    },
-    table: { category: 'display' }
-  }
-}
 
 export const Transmittance = createStory(Story2D, {
   props: {
@@ -35,9 +14,8 @@ export const Transmittance = createStory(Story2D, {
   },
   args: {
     zoom: 4,
-    valueExponent: 0
-  },
-  argTypes
+    toneMappingExposure: 1
+  }
 })
 
 export const Irradiance = createStory(Story2D, {
@@ -46,9 +24,8 @@ export const Irradiance = createStory(Story2D, {
   },
   args: {
     zoom: 16,
-    valueExponent: 2
-  },
-  argTypes
+    toneMappingExposure: 100
+  }
 })
 
 export const Scattering = createStory(Story3D, {
@@ -57,9 +34,8 @@ export const Scattering = createStory(Story3D, {
   },
   args: {
     zoom: 2,
-    valueExponent: Math.log10(0.5)
-  },
-  argTypes
+    toneMappingExposure: 0.5
+  }
 })
 
 export const SingleMieScattering = createStory(Story3D, {
@@ -69,9 +45,8 @@ export const SingleMieScattering = createStory(Story3D, {
   },
   args: {
     zoom: 2,
-    valueExponent: Math.log10(0.5)
-  },
-  argTypes
+    toneMappingExposure: 0.5
+  }
 })
 
 export const HigherOrderScattering = createStory(Story3D, {
@@ -80,7 +55,6 @@ export const HigherOrderScattering = createStory(Story3D, {
   },
   args: {
     zoom: 2,
-    valueExponent: Math.log10(0.5)
-  },
-  argTypes
+    toneMappingExposure: 0.5
+  }
 })

@@ -62,9 +62,9 @@ export const toneMappingArgTypes: ArgTypes<ToneMappingArgs> = {
     name: 'exposure',
     control: {
       type: 'range',
-      min: 1,
+      min: 0.1,
       max: 100,
-      step: 1
+      step: 0.1
     },
     table: { category: 'tone mapping' }
   }
