@@ -12,8 +12,13 @@ import {
 } from '3d-tiles-renderer/r3f'
 import { useMemo, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
-import { pass } from 'three/tsl'
-import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
+import { mrt, normalView, output, pass } from 'three/tsl'
+import {
+  AgXToneMapping,
+  MeshBasicNodeMaterial,
+  PostProcessing,
+  type Renderer
+} from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
@@ -28,10 +33,6 @@ import {
   useLocalDateControl,
   type LocalDateArgTypes
 } from '../controls/localDate'
-import {
-  usePhysicalMaterialControl,
-  type PhysicalMaterialArgTypes
-} from '../controls/physicalMaterial'
 import {
   toneMappingArgTypes,
   useToneMappingControl,
@@ -75,15 +76,20 @@ const Scene: FC<StoryProps> = ({
   const lutNode = useResource(() => atmosphereLUT())
 
   const [postProcessing] = useResource(() => {
-    const passNode = pass(scene, camera)
+    const passNode = pass(scene, camera).setMRT(
+      mrt({
+        output,
+        normal: normalView
+      })
+    )
     const aerialNode = aerialPerspective(
       camera,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
-      null,
+      passNode.getTextureNode('normal'),
       lutNode
     )
-    aerialNode.light = false
+    aerialNode.light = true
     aerialNode.sunDirectionECEF = sunDirectionECEF
     aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
@@ -116,7 +122,7 @@ const Scene: FC<StoryProps> = ({
 
   // Local date control (depends on the longitude of the location):
 
-  useLocalDateControl(138.5, date => {
+  useLocalDateControl(longitude, date => {
     getSunDirectionECEF(date, sunDirectionECEF)
   })
 
@@ -145,7 +151,7 @@ const Scene: FC<StoryProps> = ({
         <TilesPlugin
           plugin={TileMeshPropsPlugin}
           args={{
-            material: usePhysicalMaterialControl()
+            material: useMemo(() => new MeshBasicNodeMaterial(), [])
           }}
         />
       </TilesRenderer>
@@ -155,10 +161,7 @@ const Scene: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs
-  extends ToneMappingArgTypes,
-    LocalDateArgTypes,
-    PhysicalMaterialArgTypes {}
+interface StoryArgs extends ToneMappingArgTypes, LocalDateArgTypes {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
@@ -176,8 +179,7 @@ Story.args = {
   toneMapping: AgXToneMapping,
   exposure: 10,
   dayOfYear: 0,
-  timeOfDay: 9,
-  color: '#808080'
+  timeOfDay: 9
 }
 
 Story.argTypes = {

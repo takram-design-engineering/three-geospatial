@@ -19,8 +19,8 @@ function createProxy<T extends Record<string | symbol, any>>(value: T): T {
 // a limitation of "Fnv" but "Fn" itself.
 // For example,
 //   Fn(([a, b]) => {})({ a: 1 }, 1)
-// which doesn't work because "Fn" passes { a: 1 } instead of [{ a: 1 }, 1] to
-// [a, b] and causes a runtime error because { a: 1 } is not iterable.
+// doesn't work because "Fn" passes { a: 1 } instead of [{ a: 1 }, 1] to [a, b]
+// and causes a runtime error because { a: 1 } is not iterable.
 // This behavior can be bypassed when the prototype of the object in the first
 // argument is not Object.prototype.
 function workaround<T extends readonly unknown[]>(args: T): any {

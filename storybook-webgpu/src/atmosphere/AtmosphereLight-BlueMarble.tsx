@@ -119,7 +119,7 @@ const blueMarble = ({
   cloudAlbedo = 0.95,
   oceanRoughness = 0.4,
   oceanIOR = 1.33,
-  emissiveColor = vec3(1, 0.6, 0.5).mul(0.05)
+  emissiveColor = vec3(1, 0.6, 0.5).mul(0.002)
 } = {}): MeshPhysicalNodeMaterialParameters => {
   const color = new TextureLoader().load('public/blue_marble/color.webp')
   const ocean = new TextureLoader().load('public/blue_marble/ocean.webp')

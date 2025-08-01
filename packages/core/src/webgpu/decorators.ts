@@ -3,7 +3,8 @@ import invariant from 'tiny-invariant'
 import { NODE_TYPES } from './internals'
 import type { NodeType } from './node'
 
-// TODO: Use Stage 3 decorator, but it will break every other decorator.
+// TODO: Use the stage 2 decorator with metadata support, but it will break
+// every other decorator.
 export function nodeType(type: NodeType) {
   return <
     T extends {},

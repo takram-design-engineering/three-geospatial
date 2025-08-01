@@ -316,7 +316,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
   }
 
   override copyCameraSettings(camera: Camera): void {
-    // Intentionally omit the call of super.
+    // Intentionally omit the call to super.
 
     if (camera.isPerspectiveCamera === true) {
       if (this.defines.PERSPECTIVE_CAMERA !== '1') {

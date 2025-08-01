@@ -55,7 +55,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
   )
 
   override setup(builder: NodeBuilder): void {
-    // Intentionally omit the call of super.
+    // Intentionally omit the call to super.
 
     const light = this.light
     const lutNode = light?.lutNode
