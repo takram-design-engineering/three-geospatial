@@ -181,18 +181,20 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  ...outputPassArgs,
-  ...toneMappingArgs,
-  ...localDateArgs,
-  toneMappingExposure: 4,
-  dayOfYear: 180,
-  timeOfDay: 4
+  ...outputPassArgs(),
+  ...toneMappingArgs({
+    toneMappingExposure: 4
+  }),
+  ...localDateArgs({
+    dayOfYear: 180,
+    timeOfDay: 4
+  })
 }
 
 Story.argTypes = {
-  ...outputPassArgTypes,
-  ...toneMappingArgTypes,
-  ...localDateArgTypes
+  ...outputPassArgTypes(),
+  ...toneMappingArgTypes(),
+  ...localDateArgTypes()
 }
 
 export default Story

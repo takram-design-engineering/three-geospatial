@@ -138,16 +138,16 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   googleMapsApiKey: '',
-  ...outputPassArgs,
-  ...toneMappingArgs,
-  ...localDateArgs
+  ...outputPassArgs(),
+  ...toneMappingArgs(),
+  ...localDateArgs()
 }
 
 Story.argTypes = {
   googleMapsApiKey: { control: 'text' },
-  ...outputPassArgTypes,
-  ...toneMappingArgTypes,
-  ...localDateArgTypes
+  ...outputPassArgTypes(),
+  ...toneMappingArgTypes(),
+  ...localDateArgTypes()
 }
 
 export default Story

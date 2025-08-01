@@ -15,50 +15,62 @@ export interface PhysicalMaterialArgTypes {
   clearcoatRoughness: number
 }
 
-export const physicalMaterialArgTypes: ArgTypes<PhysicalMaterialArgTypes> = {
-  color: {
-    control: {
-      type: 'color'
+export const physicalMaterialArgs = (
+  defaults?: Partial<PhysicalMaterialArgTypes>
+): PhysicalMaterialArgTypes => ({
+  color: '#ffffff',
+  roughness: 0.5,
+  metalness: 0.5,
+  clearcoat: 0,
+  clearcoatRoughness: 0,
+  ...defaults
+})
+
+export const physicalMaterialArgTypes =
+  (): ArgTypes<PhysicalMaterialArgTypes> => ({
+    color: {
+      control: {
+        type: 'color'
+      },
+      table: { category: 'physical material' }
     },
-    table: { category: 'physical material' }
-  },
-  roughness: {
-    control: {
-      type: 'range',
-      min: 0,
-      max: 1,
-      step: 0.01
+    roughness: {
+      control: {
+        type: 'range',
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      table: { category: 'physical material' }
     },
-    table: { category: 'physical material' }
-  },
-  metalness: {
-    control: {
-      type: 'range',
-      min: 0,
-      max: 1,
-      step: 0.01
+    metalness: {
+      control: {
+        type: 'range',
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      table: { category: 'physical material' }
     },
-    table: { category: 'physical material' }
-  },
-  clearcoat: {
-    control: {
-      type: 'range',
-      min: 0,
-      max: 1,
-      step: 0.01
+    clearcoat: {
+      control: {
+        type: 'range',
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      table: { category: 'physical material' }
     },
-    table: { category: 'physical material' }
-  },
-  clearcoatRoughness: {
-    control: {
-      type: 'range',
-      min: 0,
-      max: 1,
-      step: 0.01
-    },
-    table: { category: 'physical material' }
-  }
-}
+    clearcoatRoughness: {
+      control: {
+        type: 'range',
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      table: { category: 'physical material' }
+    }
+  })
 
 export function usePhysicalMaterialControl(
   initialParams?: MeshPhysicalNodeMaterialParameters

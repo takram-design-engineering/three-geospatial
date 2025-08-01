@@ -37,6 +37,7 @@ import {
   type OutputPassArgs
 } from '../controls/outputPassControls'
 import {
+  physicalMaterialArgs,
   physicalMaterialArgTypes,
   usePhysicalMaterialControl,
   type PhysicalMaterialArgTypes
@@ -142,8 +143,8 @@ interface StoryProps {}
 interface StoryArgs
   extends OutputPassArgs,
     ToneMappingArgs,
-    LocalDateArgs,
     LocationArgs,
+    LocalDateArgs,
     PhysicalMaterialArgTypes {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -160,27 +161,28 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  ...outputPassArgs,
-  ...toneMappingArgs,
-  ...localDateArgs,
-  ...locationArgs,
-  toneMappingExposure: 10,
-  dayOfYear: 0,
-  timeOfDay: 9,
-  color: '#ffffff',
-  roughness: 0.5,
-  metalness: 0.5,
-  longitude: 30,
-  latitude: 35,
-  height: 300
+  ...outputPassArgs(),
+  ...toneMappingArgs({
+    toneMappingExposure: 10
+  }),
+  ...locationArgs({
+    longitude: 30,
+    latitude: 35,
+    height: 300
+  }),
+  ...localDateArgs({
+    dayOfYear: 0,
+    timeOfDay: 9
+  }),
+  ...physicalMaterialArgs()
 }
 
 Story.argTypes = {
-  ...outputPassArgTypes,
-  ...toneMappingArgTypes,
-  ...localDateArgTypes,
-  ...locationArgTypes,
-  ...physicalMaterialArgTypes
+  ...outputPassArgTypes(),
+  ...toneMappingArgTypes(),
+  ...locationArgTypes(),
+  ...localDateArgTypes(),
+  ...physicalMaterialArgTypes()
 }
 
 export default Story

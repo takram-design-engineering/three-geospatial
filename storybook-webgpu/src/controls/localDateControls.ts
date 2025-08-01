@@ -10,12 +10,15 @@ export interface LocalDateArgs {
   timeOfDay: number
 }
 
-export const localDateArgs: LocalDateArgs = {
+export const localDateArgs = (
+  defaults?: Partial<LocalDateArgs>
+): LocalDateArgs => ({
   dayOfYear: 0,
-  timeOfDay: 0
-}
+  timeOfDay: 0,
+  ...defaults
+})
 
-export const localDateArgTypes: ArgTypes<LocalDateArgs> = {
+export const localDateArgTypes = (): ArgTypes<LocalDateArgs> => ({
   dayOfYear: {
     control: {
       type: 'range',
@@ -34,7 +37,7 @@ export const localDateArgTypes: ArgTypes<LocalDateArgs> = {
     },
     table: { category: 'local date' }
   }
-}
+})
 
 function getLocalDate(
   longitude: number,
@@ -50,10 +53,10 @@ function getLocalDate(
 }
 
 export function useLocalDateControl(
-  longitudeValue: number | MotionValue<number>, // In degrees
+  longitude: number | MotionValue<number>, // In degrees
   onChange?: (date: number) => void
 ): MotionValue<number> {
-  const longitude = useMaybeMotionValue(longitudeValue)
+  const motionLongitude = useMaybeMotionValue(longitude)
   const dayOfYear = useSpringControl(
     ({ dayOfYear }: LocalDateArgs) => dayOfYear
   )
@@ -62,7 +65,7 @@ export function useLocalDateControl(
   )
 
   const motionDate = useTransform(
-    [longitude, dayOfYear, timeOfDay],
+    [motionLongitude, dayOfYear, timeOfDay],
     ([longitude, dayOfYear, timeOfDay]: number[]) =>
       getLocalDate(longitude, dayOfYear, timeOfDay)
   )

@@ -13,13 +13,21 @@ export interface LocationArgs {
   height: number
 }
 
-export const locationArgs: LocationArgs = {
+export const locationArgs = (
+  defaults?: Partial<LocationArgs>
+): LocationArgs => ({
   longitude: 0,
   latitude: 0,
-  height: 0
-}
+  height: 0,
+  ...defaults
+})
 
-export const locationArgTypes: ArgTypes<LocationArgs> = {
+export const locationArgTypes = (
+  defaults: {
+    minHeight?: number
+    maxHeight?: number
+  } = {}
+): ArgTypes<LocationArgs> => ({
   longitude: {
     control: {
       type: 'range',
@@ -39,18 +47,19 @@ export const locationArgTypes: ArgTypes<LocationArgs> = {
   height: {
     control: {
       type: 'range',
-      min: 0,
-      max: 30000
+      min: defaults.minHeight ?? 0,
+      max: defaults.maxHeight ?? 30000
     },
     table: { category: 'location' }
   }
-}
+})
 
 const geodetic = new Geodetic()
 const position = new Vector3()
 
 export function useLocationControl(
-  worldToECEFMatrix: Matrix4
+  worldToECEFMatrix: Matrix4,
+  onChange?: (longitude: number, latitude: number, height: number) => void
 ): [MotionValue<number>, MotionValue<number>, MotionValue<number>] {
   const longitude = useSpringControl(({ longitude }: LocationArgs) => longitude)
   const latitude = useSpringControl(({ latitude }: LocationArgs) => latitude)
@@ -65,6 +74,7 @@ export function useLocationControl(
           .toECEF(position),
         worldToECEFMatrix
       )
+      onChange?.(longitude, latitude, height)
     }
   )
 

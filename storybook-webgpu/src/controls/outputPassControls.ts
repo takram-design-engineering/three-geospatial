@@ -12,12 +12,15 @@ export interface OutputPassArgs {
   normal: boolean
 }
 
-export const outputPassArgs: OutputPassArgs = {
+export const outputPassArgs = (
+  defaults?: Partial<OutputPassArgs>
+): OutputPassArgs => ({
   depth: false,
-  normal: false
-}
+  normal: false,
+  ...defaults
+})
 
-export const outputPassArgTypes: ArgTypes<OutputPassArgs> = {
+export const outputPassArgTypes = (): ArgTypes<OutputPassArgs> => ({
   depth: {
     control: {
       type: 'boolean'
@@ -30,7 +33,7 @@ export const outputPassArgTypes: ArgTypes<OutputPassArgs> = {
     },
     table: { category: 'output pass' }
   }
-}
+})
 
 export function useOutputPassControl(
   passNode: PassNode,

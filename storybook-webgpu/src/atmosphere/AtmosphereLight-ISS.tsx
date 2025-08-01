@@ -1,20 +1,16 @@
+import { OrbitControls } from '@react-three/drei'
 import {
   extend,
   useFrame,
   useThree,
   type ThreeElement
 } from '@react-three/fiber'
-import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
-import {
-  GlobeControls,
-  TilesPlugin,
-  TilesRenderer
-} from '3d-tiles-renderer/r3f'
-import { useMemo, type FC } from 'react'
+import { TilesPlugin } from '3d-tiles-renderer/r3f'
+import { useMemo, useState, type FC } from 'react'
 import { Matrix4, Vector3 } from 'three'
-import { mrt, normalView, output, pass } from 'three/tsl'
+import { pass } from 'three/tsl'
 import {
-  MeshBasicNodeMaterial,
+  MeshLambertNodeMaterial,
   PostProcessing,
   type Renderer
 } from 'three/webgpu'
@@ -26,6 +22,7 @@ import {
   AtmosphereLightNode,
   atmosphereLUT
 } from '@takram/three-atmosphere/webgpu'
+import { radians } from '@takram/three-geospatial'
 
 import {
   localDateArgs,
@@ -33,6 +30,12 @@ import {
   useLocalDateControl,
   type LocalDateArgs
 } from '../controls/localDateControls'
+import {
+  locationArgs,
+  locationArgTypes,
+  useLocationControl,
+  type LocationArgs
+} from '../controls/locationControls'
 import {
   outputPassArgs,
   outputPassArgTypes,
@@ -46,13 +49,11 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
-import {
-  usePointOfView,
-  type PointOfViewProps
-} from '../helpers/usePointOfView'
+import { Globe } from '../helpers/Globe'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
-import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
+import { ISS } from '../models/ISS'
+import { ReorientationPlugin } from '../plugins/ReorientationPlugin'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
@@ -62,30 +63,18 @@ declare module '@react-three/fiber' {
 
 extend({ AtmosphereLight })
 
-const Scene: FC<StoryProps> = ({
-  longitude,
-  latitude,
-  height,
-  heading,
-  pitch,
-  distance
-}) => {
+const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
+  const worldToECEFMatrix = useMemo(() => new Matrix4(), [])
   const sunDirectionECEF = useMemo(() => new Vector3(), [])
-  const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
 
   // Post-processing:
 
   const [postProcessing, passNode, lutNode, aerialNode] = useResource(() => {
-    const passNode = pass(scene, camera).setMRT(
-      mrt({
-        output,
-        normal: normalView
-      })
-    )
+    const passNode = pass(scene, camera)
 
     const lutNode = atmosphereLUT()
 
@@ -93,7 +82,7 @@ const Scene: FC<StoryProps> = ({
       camera,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
-      passNode.getTextureNode('normal'),
+      null,
       lutNode
     )
 
@@ -103,23 +92,13 @@ const Scene: FC<StoryProps> = ({
     return [postProcessing, passNode, lutNode, aerialNode]
   }, [renderer, scene, camera])
 
-  aerialNode.light = true
-  aerialNode.sunDirectionECEF = sunDirectionECEF
+  aerialNode.light = false
   aerialNode.worldToECEFMatrix = worldToECEFMatrix
+  aerialNode.sunDirectionECEF = sunDirectionECEF
 
   useFrame(() => {
     postProcessing.render()
   }, 1)
-
-  // Apply the initial point of view.
-  usePointOfView({
-    longitude,
-    latitude,
-    height,
-    heading,
-    pitch,
-    distance
-  })
 
   // Output pass control:
   useOutputPassControl(passNode, camera, outputNode => {
@@ -131,6 +110,21 @@ const Scene: FC<StoryProps> = ({
   useToneMappingControl(() => {
     postProcessing.needsUpdate = true
   })
+
+  // Location control:
+  const [reorientationPlugin, setReorientationPlugin] =
+    useState<ReorientationPlugin | null>(null)
+  const [longitude] = useLocationControl(
+    worldToECEFMatrix,
+    (longitude, latitude, height) => {
+      if (reorientationPlugin != null) {
+        reorientationPlugin.lon = radians(longitude)
+        reorientationPlugin.lat = radians(latitude)
+        reorientationPlugin.height = height
+        reorientationPlugin.invalidate()
+      }
+    }
+  )
 
   // Local date control (depends on the longitude of the location):
   useLocalDateControl(longitude, date => {
@@ -149,37 +143,46 @@ const Scene: FC<StoryProps> = ({
         }}
         lutNode={lutNode}
       />
-      <GlobeControls enableDamping />
-      <TilesRenderer>
-        <TilesPlugin
-          plugin={CesiumIonAuthPlugin}
-          args={{
-            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
-            assetId: 2767062, // Japan Regional Terrain
-            autoRefreshToken: true
-          }}
+      <OrbitControls minDistance={20} maxDistance={1e5} />
+      <group rotation-x={-Math.PI / 2}>
+        <ISS
+          worldToECEFMatrix={worldToECEFMatrix}
+          sunDirectionECEF={sunDirectionECEF}
+          rotation-x={Math.PI / 2}
+          rotation-y={Math.PI / 2}
         />
+      </group>
+      <Globe overrideMaterial={MeshLambertNodeMaterial}>
         <TilesPlugin
-          plugin={TileMeshPropsPlugin}
-          args={{
-            material: useMemo(() => new MeshBasicNodeMaterial(), [])
-          }}
+          ref={setReorientationPlugin}
+          plugin={ReorientationPlugin}
         />
-      </TilesRenderer>
+      </Globe>
     </>
   )
 }
 
-interface StoryProps extends PointOfViewProps {}
+interface StoryProps {}
 
-interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {}
+interface StoryArgs
+  extends OutputPassArgs,
+    ToneMappingArgs,
+    LocationArgs,
+    LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
     renderer={{
+      logarithmicDepthBuffer: true,
       onInit: renderer => {
         renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
       }
+    }}
+    camera={{
+      fov: 50,
+      position: [80, 30, 100],
+      near: 10,
+      far: 1e7
     }}
   >
     <Scene {...props} />
@@ -189,18 +192,27 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   ...outputPassArgs(),
   ...toneMappingArgs({
-    toneMappingExposure: 10
+    toneMappingExposure: 4
+  }),
+  ...locationArgs({
+    longitude: -110,
+    latitude: 45,
+    height: 408000
   }),
   ...localDateArgs({
-    dayOfYear: 0,
-    timeOfDay: 9
+    dayOfYear: 170,
+    timeOfDay: 17
   })
 }
 
 Story.argTypes = {
   ...outputPassArgTypes(),
   ...toneMappingArgTypes(),
-  ...localDateArgTypes()
+  ...locationArgTypes({
+    minHeight: 3000,
+    maxHeight: 408000
+  }),
+  ...localDateArgTypes
 }
 
 export default Story

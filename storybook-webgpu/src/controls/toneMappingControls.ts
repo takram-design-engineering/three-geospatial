@@ -21,13 +21,16 @@ export interface ToneMappingArgs {
   toneMappingExposure: number
 }
 
-export const toneMappingArgs: ToneMappingArgs = {
+export const toneMappingArgs = (
+  defaults?: Partial<ToneMappingArgs>
+): ToneMappingArgs => ({
   toneMappingEnabled: true,
   toneMapping: AgXToneMapping,
-  toneMappingExposure: 1
-}
+  toneMappingExposure: 1,
+  ...defaults
+})
 
-export const toneMappingArgTypes: ArgTypes<ToneMappingArgs> = {
+export const toneMappingArgTypes = (): ArgTypes<ToneMappingArgs> => ({
   toneMappingEnabled: {
     name: 'enabled',
     control: {
@@ -68,7 +71,7 @@ export const toneMappingArgTypes: ArgTypes<ToneMappingArgs> = {
     },
     table: { category: 'tone mapping' }
   }
-}
+})
 
 export function useToneMappingControl(
   onChange?: (toneMapping: ToneMapping) => void

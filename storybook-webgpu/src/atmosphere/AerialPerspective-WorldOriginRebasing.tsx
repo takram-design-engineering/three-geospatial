@@ -111,8 +111,8 @@ interface StoryProps {}
 interface StoryArgs
   extends OutputPassArgs,
     ToneMappingArgs,
-    LocalDateArgs,
-    LocationArgs {}
+    LocationArgs,
+    LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas camera={{ position: [2, 1, 2] }}>
@@ -121,23 +121,26 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  ...outputPassArgs,
-  ...toneMappingArgs,
-  ...localDateArgs,
-  ...locationArgs,
-  toneMappingExposure: 10,
-  dayOfYear: 0,
-  timeOfDay: 9,
-  longitude: 30,
-  latitude: 35,
-  height: 300
+  ...outputPassArgs(),
+  ...toneMappingArgs({
+    toneMappingExposure: 10
+  }),
+  ...locationArgs({
+    longitude: 30,
+    latitude: 35,
+    height: 300
+  }),
+  ...localDateArgs({
+    dayOfYear: 0,
+    timeOfDay: 9
+  })
 }
 
 Story.argTypes = {
-  ...outputPassArgTypes,
-  ...toneMappingArgTypes,
-  ...localDateArgTypes,
-  ...locationArgTypes
+  ...outputPassArgTypes(),
+  ...toneMappingArgTypes(),
+  ...locationArgTypes(),
+  ...localDateArgTypes()
 }
 
 export default Story
