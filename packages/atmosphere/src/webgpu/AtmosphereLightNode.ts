@@ -65,7 +65,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
 
     const ecefToWorldMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
       (_, self) => {
-        self.value.copy(light.worldToECEFMatrix).invert()
+        self.value.copy(light.worldToECEFMatrix).transpose()
       }
     )
 
