@@ -109,7 +109,6 @@ const Scene: FC<StoryProps> = () => {
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 512, 256]}
-        rotation-z={Math.PI}
         material={useMemo(() => new MeshPhysicalNodeMaterial(blueMarble()), [])}
       />
     </>
@@ -163,7 +162,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     }}
     camera={{
       fov: 60,
-      position: [2e7, 0, 0],
+      position: [-2e7, 0, 0],
       up: [0, 0, 1],
       near: 1e4,
       far: 1e9
@@ -177,7 +176,7 @@ Story.args = {
   toneMapping: AgXToneMapping,
   exposure: 4,
   dayOfYear: 180,
-  timeOfDay: 16
+  timeOfDay: 4
 }
 
 Story.argTypes = {
