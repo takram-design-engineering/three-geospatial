@@ -120,7 +120,7 @@ const Scene: FC<StoryProps> = () => {
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 512, 256]}
-        material={useMemo(() => new MeshPhysicalNodeMaterial(blueMarble()), [])}
+        material={useResource(() => new MeshPhysicalNodeMaterial(blueMarble()))}
       />
     </>
   )

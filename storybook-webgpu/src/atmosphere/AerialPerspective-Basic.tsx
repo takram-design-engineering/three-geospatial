@@ -162,7 +162,7 @@ const Scene: FC<StoryProps> = ({
         <TilesPlugin
           plugin={TileMeshPropsPlugin}
           args={{
-            material: useMemo(() => new MeshBasicNodeMaterial(), [])
+            material: useResource(() => new MeshBasicNodeMaterial())
           }}
         />
       </TilesRenderer>
