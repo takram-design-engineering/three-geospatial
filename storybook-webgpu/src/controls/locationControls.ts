@@ -1,5 +1,5 @@
 import type { ArgTypes } from '@storybook/react-vite'
-import type { MotionValue } from 'framer-motion'
+import type { MotionValue } from 'motion/react'
 import { Vector3, type Matrix4 } from 'three'
 
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'

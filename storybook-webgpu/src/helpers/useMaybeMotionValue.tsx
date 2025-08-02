@@ -1,4 +1,4 @@
-import { MotionValue, motionValue } from 'framer-motion'
+import { MotionValue, motionValue } from 'motion/react'
 import { useMemo } from 'react'
 
 export function useMaybeMotionValue<T>(

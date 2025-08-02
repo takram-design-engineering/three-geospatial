@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useSpring } from 'framer-motion'
 import type { FolderSettings } from 'leva/dist/declarations/src/types'
+import { useSpring } from 'motion/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect } from 'react'
 

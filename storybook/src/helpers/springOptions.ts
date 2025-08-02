@@ -1,4 +1,4 @@
-import type { SpringOptions } from 'framer-motion'
+import type { SpringOptions } from 'motion/react'
 
 export const springOptions: SpringOptions = {
   mass: 1,

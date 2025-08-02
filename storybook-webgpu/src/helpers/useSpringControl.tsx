@@ -1,6 +1,6 @@
 import type { Args } from '@storybook/react-vite'
-import { useSpring, type MotionValue } from 'framer-motion'
 import { getDefaultStore } from 'jotai'
+import { useSpring, type MotionValue } from 'motion/react'
 import { useContext, useEffect, useRef } from 'react'
 
 import { springOptions } from './springOptions'

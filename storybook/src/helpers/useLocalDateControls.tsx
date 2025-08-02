@@ -1,8 +1,8 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { getDayOfYear } from 'date-fns'
-import { useMotionValue, useSpring, type MotionValue } from 'framer-motion'
 import { button } from 'leva'
 import type { FolderSettings } from 'leva/dist/declarations/src/types'
+import { useMotionValue, useSpring, type MotionValue } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { springOptions } from './springOptions'

@@ -1,5 +1,5 @@
 import type { ArgTypes } from '@storybook/react-vite'
-import { useTransform, type MotionValue } from 'framer-motion'
+import { useTransform, type MotionValue } from 'motion/react'
 import { useEffect, useRef } from 'react'
 
 import { useMaybeMotionValue } from '../helpers/useMaybeMotionValue'
