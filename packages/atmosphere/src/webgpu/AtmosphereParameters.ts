@@ -34,11 +34,11 @@ export class DensityProfileLayer {
   @nodeType(Dimensionless) constantTerm: number
 
   constructor(
-    width: number,
-    expTerm: number,
-    expScale: number,
-    linearTerm: number,
-    constantTerm: number
+    width = 0,
+    expTerm = 0,
+    expScale = 0,
+    linearTerm = 0,
+    constantTerm = 0
   ) {
     this.width = width
     this.expTerm = expTerm
@@ -57,6 +57,19 @@ export class DensityProfileLayer {
       linearTerm: property('linearTerm', value => value / worldToUnit),
       constantTerm: property('constantTerm')
     })
+  }
+
+  copy(other: DensityProfileLayer): this {
+    this.width = other.width
+    this.expTerm = other.expTerm
+    this.expScale = other.expScale
+    this.linearTerm = other.linearTerm
+    this.constantTerm = other.constantTerm
+    return this
+  }
+
+  clone(): DensityProfileLayer {
+    return new DensityProfileLayer().copy(this)
   }
 }
 
@@ -79,6 +92,15 @@ export class DensityProfile {
         this.layers[1].getContext(worldToUnit)
       ] as const
     })
+  }
+
+  copy(other: DensityProfile): this {
+    this.layers = [other.layers[0].clone(), other.layers[1].clone()]
+    return this
+  }
+
+  clone(): DensityProfile {
+    return new DensityProfile([this.layers[0].clone(), this.layers[1].clone()])
   }
 }
 
@@ -108,8 +130,8 @@ export class AtmosphereParameters {
 
   // The density profile of air molecules.
   rayleighDensity = new DensityProfile([
-    new DensityProfileLayer(0, 0, 0, 0, 0),
-    new DensityProfileLayer(0, 1, -1 / 8000, 0, 0)
+    new DensityProfileLayer(),
+    new DensityProfileLayer(0, 1, -1 / 8000)
   ])
 
   // The scattering coefficient of air molecules at the altitude where their
@@ -119,8 +141,8 @@ export class AtmosphereParameters {
 
   // The density profile of aerosols.
   mieDensity = new DensityProfile([
-    new DensityProfileLayer(0, 0, 0, 0, 0),
-    new DensityProfileLayer(0, 1, -1 / 1200, 0, 0)
+    new DensityProfileLayer(),
+    new DensityProfileLayer(0, 1, -1 / 1200)
   ])
 
   // The scattering coefficient of aerosols at the altitude where their density
@@ -181,14 +203,6 @@ export class AtmosphereParameters {
   // (n >= 2) for a better approximation of the multi-scattering occlusion.
   higherOrderScatteringTexture = true
 
-  // Whether to clamp the camera position at the bottom atmosphere boundary in
-  // the rendering stage.
-  constrainCameraAboveGround = false
-
-  // Whether to hide the ground in the sky by extrapolating the scattering at
-  // the horizon in the rendering stage.
-  hideGround = false
-
   // Texture sizes:
   transmittanceTextureSize = new Vector2(256, 64)
   irradianceTextureSize = new Vector2(64, 16)
@@ -233,6 +247,42 @@ export class AtmosphereParameters {
       skyRadianceToLuminance: property('skyRadianceToLuminance'),
       luminanceScale: property('luminanceScale')
     })
+  }
+
+  copy(other: AtmosphereParameters): this {
+    this.worldToUnit = other.worldToUnit
+    this.solarIrradiance.copy(other.solarIrradiance)
+    this.sunAngularRadius = other.sunAngularRadius
+    this.bottomRadius = other.bottomRadius
+    this.topRadius = other.topRadius
+    this.rayleighDensity.copy(other.rayleighDensity)
+    this.rayleighScattering.copy(other.rayleighScattering)
+    this.mieDensity.copy(other.mieDensity)
+    this.mieScattering.copy(other.mieScattering)
+    this.mieExtinction.copy(other.mieExtinction)
+    this.miePhaseFunctionG = other.miePhaseFunctionG
+    this.absorptionDensity.copy(other.absorptionDensity)
+    this.absorptionExtinction.copy(other.absorptionExtinction)
+    this.groundAlbedo.copy(other.groundAlbedo)
+    this.minCosSun = other.minCosSun
+    this.sunRadianceToLuminance.copy(other.sunRadianceToLuminance)
+    this.skyRadianceToLuminance.copy(other.skyRadianceToLuminance)
+    this.luminanceScale = other.luminanceScale
+    this.transmittancePrecisionLog = other.transmittancePrecisionLog
+    this.combinedScatteringTextures = other.combinedScatteringTextures
+    this.higherOrderScatteringTexture = other.higherOrderScatteringTexture
+    this.transmittanceTextureSize.copy(other.transmittanceTextureSize)
+    this.irradianceTextureSize.copy(other.irradianceTextureSize)
+    this.scatteringTextureRadiusSize = other.scatteringTextureRadiusSize
+    this.scatteringTextureCosViewSize = other.scatteringTextureCosViewSize
+    this.scatteringTextureCosSunSize = other.scatteringTextureCosSunSize
+    this.scatteringTextureCosViewSunSize = other.scatteringTextureCosViewSunSize
+    this.scatteringTextureSize.copy(other.scatteringTextureSize)
+    return this
+  }
+
+  clone(): AtmosphereParameters {
+    return new AtmosphereParameters().copy(this)
   }
 }
 
