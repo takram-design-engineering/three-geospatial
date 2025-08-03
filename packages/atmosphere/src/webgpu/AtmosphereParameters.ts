@@ -47,8 +47,14 @@ export class DensityProfileLayer {
     this.constantTerm = constantTerm
   }
 
+  private nodes?: DensityProfileLayerNodes
+
+  getNodes(worldToUnit: number): DensityProfileLayerNodes {
+    return (this.nodes ??= this.createNodes(worldToUnit))
+  }
+
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  getContext(worldToUnit: number) {
+  createNodes(worldToUnit: number) {
     const property = propertyOf<DensityProfileLayer>(this)
     return createContextProxy(this, {
       width: property('width', value => value * worldToUnit),
@@ -73,8 +79,8 @@ export class DensityProfileLayer {
   }
 }
 
-export type DensityProfileLayerContext = ReturnType<
-  DensityProfileLayer['getContext']
+export type DensityProfileLayerNodes = ReturnType<
+  DensityProfileLayer['createNodes']
 >
 
 export class DensityProfile {
@@ -84,12 +90,18 @@ export class DensityProfile {
     this.layers = layers
   }
 
+  private nodes?: DensityProfileNodes
+
+  getNodes(worldToUnit: number): DensityProfileNodes {
+    return (this.nodes ??= this.createNodes(worldToUnit))
+  }
+
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  getContext(worldToUnit: number) {
+  createNodes(worldToUnit: number) {
     return createContextProxy(this, {
       layers: [
-        this.layers[0].getContext(worldToUnit),
-        this.layers[1].getContext(worldToUnit)
+        this.layers[0].getNodes(worldToUnit),
+        this.layers[1].getNodes(worldToUnit)
       ] as const
     })
   }
@@ -104,7 +116,7 @@ export class DensityProfile {
   }
 }
 
-export type DensityProfileContext = ReturnType<DensityProfile['getContext']>
+export type DensityProfileNodes = ReturnType<DensityProfile['createNodes']>
 
 const luminanceCoefficients = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 
@@ -216,8 +228,14 @@ export class AtmosphereParameters {
     this.scatteringTextureRadiusSize
   )
 
+  private nodes?: AtmosphereParametersNodes
+
+  getNodes(): AtmosphereParametersNodes {
+    return (this.nodes ??= this.createNodes())
+  }
+
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  getContext() {
+  private createNodes() {
     const property = propertyOf<AtmosphereParameters>(this)
     return createContextProxy(this, {
       worldToUnit: property('worldToUnit'),
@@ -225,11 +243,11 @@ export class AtmosphereParameters {
       sunAngularRadius: property('sunAngularRadius'),
       bottomRadius: property('bottomRadius', value => value * this.worldToUnit),
       topRadius: property('topRadius', value => value * this.worldToUnit),
-      rayleighDensity: this.rayleighDensity.getContext(this.worldToUnit),
+      rayleighDensity: this.rayleighDensity.getNodes(this.worldToUnit),
       rayleighScattering: property('rayleighScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
-      mieDensity: this.mieDensity.getContext(this.worldToUnit),
+      mieDensity: this.mieDensity.getNodes(this.worldToUnit),
       mieScattering: property('mieScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
@@ -237,7 +255,7 @@ export class AtmosphereParameters {
         value.divideScalar(this.worldToUnit)
       ),
       miePhaseFunctionG: property('miePhaseFunctionG'),
-      absorptionDensity: this.absorptionDensity.getContext(this.worldToUnit),
+      absorptionDensity: this.absorptionDensity.getNodes(this.worldToUnit),
       absorptionExtinction: property('absorptionExtinction', value =>
         value.divideScalar(this.worldToUnit)
       ),
@@ -286,6 +304,6 @@ export class AtmosphereParameters {
   }
 }
 
-export type AtmosphereParametersContext = ReturnType<
-  AtmosphereParameters['getContext']
+export type AtmosphereParametersNodes = ReturnType<
+  AtmosphereParameters['createNodes']
 >

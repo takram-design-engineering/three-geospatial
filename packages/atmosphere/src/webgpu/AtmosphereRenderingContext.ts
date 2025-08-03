@@ -27,7 +27,7 @@ export class AtmosphereRenderingContext {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private createNodes() {
-    const { worldToUnit } = this.parameters.getContext()
+    const { worldToUnit } = this.parameters.getNodes()
 
     const worldToECEFMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
       (_, self) => {

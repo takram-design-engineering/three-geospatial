@@ -57,7 +57,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     } = renderingContext.getNodes()
 
     // Parameters defined in the LUT:
-    const parameters = lutNode.parameters.getContext()
+    const parameters = lutNode.parameters.getNodes()
     const {
       worldToUnit,
       solarIrradiance,

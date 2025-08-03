@@ -63,7 +63,7 @@ export class AerialPerspectiveNode extends TempNode {
       cameraPositionUnit
     } = this.renderingContext.getNodes()
 
-    const { worldToUnit } = this.lutNode.parameters.getContext()
+    const { worldToUnit } = this.lutNode.parameters.getNodes()
 
     const colorUV = this.colorNode.uvNode ?? uv()
     const depth = this.depthNode.sample(colorUV).r.toVar()
