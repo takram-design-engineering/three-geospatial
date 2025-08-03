@@ -156,20 +156,21 @@ export class AerialPerspectiveNode extends TempNode {
       return inscatter // TODO: Direct luminance
     })()
 
-    const nvNode = this.colorNode.uvNode ?? uv()
+    const colorUV = this.colorNode.uvNode ?? uv()
+    const depth = this.depthNode.sample(colorUV).r.toVar()
 
     const surfaceLuminance = Fn(() => {
       // Position of the surface
       const viewZ = depthToViewZ(
-        this.depthNode.r,
+        depth,
         cameraNear,
         cameraFar,
         this.camera.isPerspectiveCamera,
         builder.renderer.logarithmicDepthBuffer
       )
       const positionView = screenToPositionView(
-        nvNode,
-        this.depthNode.r,
+        colorUV,
+        depth,
         viewZ,
         projectionMatrix,
         inverseProjectionMatrix
@@ -190,7 +191,7 @@ export class AerialPerspectiveNode extends TempNode {
           )
         }
         // Normal vector of the surface
-        const normalView = this.normalNode.xyz
+        const normalView = this.normalNode.sample(colorUV).xyz
         const normalWorld = inverseViewMatrix.mul(vec4(normalView, 0)).xyz
         const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
 
@@ -207,8 +208,8 @@ export class AerialPerspectiveNode extends TempNode {
       })
 
       const diffuse = this.lighting
-        ? this.colorNode.rgb.mul(indirect())
-        : this.colorNode.rgb
+        ? this.colorNode.sample(colorUV).rgb.mul(indirect())
+        : this.colorNode.sample(colorUV).rgb
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
@@ -225,7 +226,7 @@ export class AerialPerspectiveNode extends TempNode {
 
     const outLuminance = vec3().toVar()
 
-    If(this.depthNode.r.greaterThanEqual(1 - 1e-8), () => {
+    If(depth.greaterThanEqual(1 - 1e-8), () => {
       // Render the sky (the scattering seen from the camera to an infinite
       // distance) for very far depths.
       outLuminance.rgb.assign(skyLuminance)
