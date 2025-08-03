@@ -71,7 +71,7 @@ const Scene: FC<StoryProps> = () => {
     return [postProcessing, passNode, lutNode, aerialNode]
   }, [renderer, scene, camera])
 
-  aerialNode.light = true
+  aerialNode.lighting = true
   aerialNode.sunDirectionECEF = sunDirectionECEF
   aerialNode.worldToECEFMatrix = worldToECEFMatrix
 

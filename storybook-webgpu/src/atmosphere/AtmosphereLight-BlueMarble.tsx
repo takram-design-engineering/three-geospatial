@@ -83,7 +83,7 @@ const Scene: FC<StoryProps> = () => {
     return [postProcessing, passNode, lutNode, aerialNode]
   }, [renderer, scene, camera])
 
-  aerialNode.light = false
+  aerialNode.lighting = false
   aerialNode.sunDirectionECEF = sunDirectionECEF
 
   useFrame(() => {

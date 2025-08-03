@@ -59,7 +59,7 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate ellipsoid = Ellipsoid.WGS84
   @needsUpdate correctAltitude = true
   @needsUpdate correctGeometricError = true
-  @needsUpdate light = false
+  @needsUpdate lighting = false
   @needsUpdate transmittance = true
   @needsUpdate inscatter = true
   @needsUpdate sky = true
@@ -206,7 +206,7 @@ export class AerialPerspectiveNode extends TempNode {
         return PI.reciprocal().mul(sunIlluminance.add(skyIlluminance))
       })
 
-      const diffuse = this.light
+      const diffuse = this.lighting
         ? this.colorNode.rgb.mul(indirect())
         : this.colorNode.rgb
 
