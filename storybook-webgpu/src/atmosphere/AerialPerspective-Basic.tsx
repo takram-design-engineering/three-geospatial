@@ -11,7 +11,6 @@ import {
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
 import { useMemo, type FC } from 'react'
-import { Matrix4, Vector3 } from 'three'
 import { mrt, normalView, output, pass } from 'three/tsl'
 import {
   MeshBasicNodeMaterial,
@@ -24,7 +23,8 @@ import {
   aerialPerspective,
   AtmosphereLight,
   AtmosphereLightNode,
-  atmosphereLUT
+  atmosphereLUT,
+  AtmosphereRenderingContext
 } from '@takram/three-atmosphere/webgpu'
 
 import {
@@ -74,8 +74,8 @@ const Scene: FC<StoryProps> = ({
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const sunDirectionECEF = useMemo(() => new Vector3(), [])
-  const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
+  const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
+  renderingContext.camera = camera
 
   // Post-processing:
 
@@ -90,7 +90,7 @@ const Scene: FC<StoryProps> = ({
     const lutNode = atmosphereLUT()
 
     const aerialNode = aerialPerspective(
-      camera,
+      renderingContext,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('normal'),
@@ -101,11 +101,9 @@ const Scene: FC<StoryProps> = ({
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, lutNode, aerialNode]
-  }, [renderer, scene, camera])
+  }, [renderer, scene, camera, renderingContext])
 
   aerialNode.lighting = true
-  aerialNode.sunDirectionECEF = sunDirectionECEF
-  aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
   useFrame(() => {
     postProcessing.render()
@@ -134,21 +132,12 @@ const Scene: FC<StoryProps> = ({
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    getSunDirectionECEF(date, sunDirectionECEF)
+    getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
   })
 
   return (
     <>
-      <atmosphereLight
-        ref={light => {
-          if (light != null) {
-            // Share the references to sync updates with the light.
-            light.worldToECEFMatrix = worldToECEFMatrix
-            light.sunDirectionECEF = sunDirectionECEF
-          }
-        }}
-        lutNode={lutNode}
-      />
+      <atmosphereLight args={[renderingContext, lutNode]} />
       <GlobeControls enableDamping />
       <TilesRenderer>
         <TilesPlugin

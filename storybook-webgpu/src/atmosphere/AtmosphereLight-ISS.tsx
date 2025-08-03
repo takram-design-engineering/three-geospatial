@@ -7,7 +7,6 @@ import {
 } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import { useMemo, useState, type FC } from 'react'
-import { Matrix4, Vector3 } from 'three'
 import { pass } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
@@ -20,7 +19,8 @@ import {
   aerialPerspective,
   AtmosphereLight,
   AtmosphereLightNode,
-  atmosphereLUT
+  atmosphereLUT,
+  AtmosphereRenderingContext
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
 
@@ -68,8 +68,8 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const worldToECEFMatrix = useMemo(() => new Matrix4(), [])
-  const sunDirectionECEF = useMemo(() => new Vector3(), [])
+  const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
+  renderingContext.camera = camera
 
   // Post-processing:
 
@@ -79,7 +79,7 @@ const Scene: FC<StoryProps> = () => {
     const lutNode = atmosphereLUT()
 
     const aerialNode = aerialPerspective(
-      camera,
+      renderingContext,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
       null,
@@ -90,11 +90,9 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, lutNode, aerialNode]
-  }, [renderer, scene, camera])
+  }, [renderer, scene, camera, renderingContext])
 
   aerialNode.lighting = false
-  aerialNode.worldToECEFMatrix = worldToECEFMatrix
-  aerialNode.sunDirectionECEF = sunDirectionECEF
 
   useFrame(() => {
     postProcessing.render()
@@ -115,7 +113,7 @@ const Scene: FC<StoryProps> = () => {
   const [reorientationPlugin, setReorientationPlugin] =
     useState<ReorientationPlugin | null>(null)
   const [longitude] = useLocationControls(
-    worldToECEFMatrix,
+    renderingContext.worldToECEFMatrix,
     (longitude, latitude, height) => {
       if (reorientationPlugin != null) {
         reorientationPlugin.lon = radians(longitude)
@@ -128,26 +126,17 @@ const Scene: FC<StoryProps> = () => {
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    getSunDirectionECEF(date, sunDirectionECEF)
+    getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
   })
 
   return (
     <>
-      <atmosphereLight
-        ref={light => {
-          if (light != null) {
-            // Share the references to sync updates with the light.
-            light.worldToECEFMatrix = worldToECEFMatrix
-            light.sunDirectionECEF = sunDirectionECEF
-          }
-        }}
-        lutNode={lutNode}
-      />
+      <atmosphereLight args={[renderingContext, lutNode]} />
       <OrbitControls minDistance={20} maxDistance={1e5} />
       <group rotation-x={-Math.PI / 2}>
         <ISS
-          worldToECEFMatrix={worldToECEFMatrix}
-          sunDirectionECEF={sunDirectionECEF}
+          worldToECEFMatrix={renderingContext.worldToECEFMatrix}
+          sunDirectionECEF={renderingContext.sunDirectionECEF}
           rotation-x={Math.PI / 2}
           rotation-y={Math.PI / 2}
         />

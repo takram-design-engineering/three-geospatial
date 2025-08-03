@@ -18,8 +18,8 @@ let caches: WeakMap<{}, Record<string, {}>> | undefined
 // nodes to the same object, thus using accessors to the same object with the
 // same property multiple times yields duplicated uniforms.
 function getCache<T extends {}, U extends {}>(
-  name: string,
   object: T,
+  name: string,
   callback: () => U
 ): U {
   caches ??= new WeakMap<{}, Record<string, {}>>()
@@ -32,30 +32,36 @@ function getCache<T extends {}, U extends {}>(
 }
 
 export const projectionMatrix = (camera: Camera): NodeObject<'mat4'> =>
-  getCache('projectionMatrix', camera, () =>
+  getCache(camera, 'projectionMatrix', () =>
     reference('projectionMatrix', 'mat4', camera)
   )
 
 export const viewMatrix = (camera: Camera): NodeObject<'mat4'> =>
-  getCache('viewMatrix', camera, () =>
+  getCache(camera, 'viewMatrix', () =>
     reference('matrixWorldInverse', 'mat4', camera)
   )
 
 export const inverseProjectionMatrix = (camera: Camera): NodeObject<'mat4'> =>
-  getCache('inverseProjectionMatrix', camera, () =>
+  getCache(camera, 'inverseProjectionMatrix', () =>
     reference('projectionMatrixInverse', 'mat4', camera)
   )
 
 export const inverseViewMatrix = (camera: Camera): NodeObject<'mat4'> =>
-  getCache('inverseViewMatrix', camera, () =>
+  getCache(camera, 'inverseViewMatrix', () =>
     reference('matrixWorld', 'mat4', camera)
   )
 
 export const cameraPositionWorld = (
   camera: Camera
 ): NodeObject<UniformNode<Vector3>> =>
-  getCache('cameraPositionWorld', camera, () =>
+  getCache(camera, 'cameraPositionWorld', () =>
     uniform(new Vector3()).onRenderUpdate((_, self) =>
       self.value.setFromMatrixPosition(camera.matrixWorld)
     )
   )
+
+export const cameraNear = (camera: Camera): NodeObject<'float'> =>
+  getCache(camera, 'cameraNear', () => reference('near', 'float', camera))
+
+export const cameraFar = (camera: Camera): NodeObject<'float'> =>
+  getCache(camera, 'cameraFar', () => reference('far', 'float', camera))

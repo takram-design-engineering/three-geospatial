@@ -1,14 +1,14 @@
 import { OrbitControls, Sphere } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useMemo, type FC } from 'react'
-import { Matrix4, Vector3 } from 'three'
 import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  atmosphereLUT
+  atmosphereLUT,
+  AtmosphereRenderingContext
 } from '@takram/three-atmosphere/webgpu'
 
 import {
@@ -44,8 +44,8 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const sunDirectionECEF = useMemo(() => new Vector3(), [])
-  const worldToECEFMatrix = useMemo(() => new Matrix4().identity(), [])
+  const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
+  renderingContext.camera = camera
 
   // Post-processing:
 
@@ -58,7 +58,7 @@ const Scene: FC<StoryProps> = () => {
     )
     const lutNode = atmosphereLUT()
     const aerialNode = aerialPerspective(
-      camera,
+      renderingContext,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('normal'),
@@ -69,11 +69,9 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, lutNode, aerialNode]
-  }, [renderer, scene, camera])
+  }, [renderer, scene, camera, renderingContext])
 
   aerialNode.lighting = true
-  aerialNode.sunDirectionECEF = sunDirectionECEF
-  aerialNode.worldToECEFMatrix = worldToECEFMatrix
 
   useFrame(() => {
     postProcessing.render()
@@ -91,11 +89,11 @@ const Scene: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  const [longitude] = useLocationControls(worldToECEFMatrix)
+  const [longitude] = useLocationControls(renderingContext.worldToECEFMatrix)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    getSunDirectionECEF(date, sunDirectionECEF)
+    getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
   })
 
   return (

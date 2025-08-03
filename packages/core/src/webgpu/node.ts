@@ -88,11 +88,12 @@ export type NodeValueTypeOf<T extends NodeType> =
 
 export type Node<
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  T extends NodeType | N = NodeType | N
+  T extends NodeType = NodeType
 > = N
 
-export type NodeObject<T extends NodeType | N = NodeType | N> =
-  ShaderNodeObject<T extends N ? T : Node<T>>
+export type NodeObject<T extends NodeType | N = N> = ShaderNodeObject<
+  T extends NodeType ? Node<T> : T
+>
 
 export function node<T extends NodeType>(type: T): (typeof nodes)[T] {
   return nodes[type]
