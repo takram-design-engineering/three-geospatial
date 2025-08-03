@@ -7,8 +7,8 @@ import {
   PI,
   positionGeometry,
   reference,
-  screenUV,
   uniform,
+  uv,
   vec3,
   vec4
 } from 'three/tsl'
@@ -43,11 +43,10 @@ export class AerialPerspectiveNode extends TempNode {
     return 'AerialPerspectiveNode'
   }
 
-  // Dependencies
   @needsUpdate camera: Camera
-  @needsUpdate colorNode: TextureNode
-  @needsUpdate depthNode: TextureNode
-  @needsUpdate normalNode: TextureNode | null | undefined
+  @needsUpdate colorNode: NodeObject<TextureNode>
+  @needsUpdate depthNode: NodeObject<TextureNode>
+  @needsUpdate normalNode: NodeObject<TextureNode> | null | undefined
   @needsUpdate lutNode: AtmosphereLUTNode
 
   @nodeType('mat4')
@@ -85,9 +84,9 @@ export class AerialPerspectiveNode extends TempNode {
 
   constructor(
     camera: Camera,
-    colorNode: TextureNode,
-    depthNode: TextureNode,
-    normalNode: TextureNode | null | undefined,
+    colorNode: NodeObject<TextureNode>,
+    depthNode: NodeObject<TextureNode>,
+    normalNode: NodeObject<TextureNode> | null | undefined,
     lutNode: AtmosphereLUTNode
   ) {
     super('vec4')
@@ -157,18 +156,20 @@ export class AerialPerspectiveNode extends TempNode {
       return inscatter // TODO: Direct luminance
     })()
 
+    const nvNode = this.colorNode.uvNode ?? uv()
+
     const surfaceLuminance = Fn(() => {
       // Position of the surface
       const viewZ = depthToViewZ(
-        depth,
+        this.depthNode.r,
         cameraNear,
         cameraFar,
         this.camera.isPerspectiveCamera,
         builder.renderer.logarithmicDepthBuffer
       )
       const positionView = screenToPositionView(
-        screenUV,
-        depth,
+        nvNode,
+        this.depthNode.r,
         viewZ,
         projectionMatrix,
         inverseProjectionMatrix
@@ -189,7 +190,7 @@ export class AerialPerspectiveNode extends TempNode {
           )
         }
         // Normal vector of the surface
-        const normalView = this.normalNode.sample(screenUV).xyz
+        const normalView = this.normalNode.xyz
         const normalWorld = inverseViewMatrix.mul(vec4(normalView, 0)).xyz
         const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
 
@@ -205,8 +206,9 @@ export class AerialPerspectiveNode extends TempNode {
         return PI.reciprocal().mul(sunIlluminance.add(skyIlluminance))
       })
 
-      const color = this.colorNode.sample(screenUV)
-      const diffuse = this.light ? color.mul(indirect()) : color
+      const diffuse = this.light
+        ? this.colorNode.rgb.mul(indirect())
+        : this.colorNode.rgb
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
@@ -223,8 +225,7 @@ export class AerialPerspectiveNode extends TempNode {
 
     const outLuminance = vec3().toVar()
 
-    const depth = this.depthNode.sample(screenUV)
-    If(depth.greaterThanEqual(1 - 1e-8), () => {
+    If(this.depthNode.r.greaterThanEqual(1 - 1e-8), () => {
       // Render the sky (the scattering seen from the camera to an infinite
       // distance) for very far depths.
       outLuminance.rgb.assign(skyLuminance)
