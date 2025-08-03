@@ -67,7 +67,7 @@ export class SkyNode extends TempNode {
       directionECEF,
       0, // TODO: Shadow length
       sunDirectionECEF
-    ).toVar()
+    )
     const inscatter = luminanceTransfer.get('luminance')
 
     return inscatter // TODO: Direct luminance

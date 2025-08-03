@@ -112,7 +112,7 @@ export class AerialPerspectiveNode extends TempNode {
           positionUnit,
           normalECEF,
           sunDirectionECEF
-        ).toVar()
+        )
         const sunIlluminance = sunSkyIlluminance.get('sunIlluminance')
         const skyIlluminance = sunSkyIlluminance.get('skyIlluminance')
         return PI.reciprocal().mul(sunIlluminance.add(skyIlluminance))
@@ -129,7 +129,7 @@ export class AerialPerspectiveNode extends TempNode {
         positionUnit,
         0, // TODO: Shadow length
         sunDirectionECEF
-      ).toVar()
+      )
       const inscatter = luminanceTransfer.get('luminance')
       const transmittance = luminanceTransfer.get('transmittance')
       return diffuse.mul(transmittance).add(inscatter)

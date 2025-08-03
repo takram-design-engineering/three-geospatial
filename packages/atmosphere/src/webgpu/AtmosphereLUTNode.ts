@@ -409,7 +409,7 @@ export class AtmosphereLUTNode extends TempNode {
     renderer: Renderer,
     { opticalDepthRT }: Context
   ): void {
-    const result = computeTransmittanceToTopAtmosphereBoundaryTexture(
+    const transmittance = computeTransmittanceToTopAtmosphereBoundaryTexture(
       this.parameters.getNodes(),
       screenCoordinate
     ).toVar()
@@ -418,11 +418,11 @@ export class AtmosphereLUTNode extends TempNode {
       // Compute the optical depth, and store it in opticalDepth. Avoid having
       // tiny transmittance values underflow to 0 due to half-float precision.
       this.material.fragmentNode = mrt({
-        transmittance: exp(result.negate()),
-        opticalDepth: result
+        transmittance: exp(transmittance.negate()),
+        opticalDepth: transmittance
       })
     } else {
-      this.material.fragmentNode = result
+      this.material.fragmentNode = transmittance
     }
     this.material.additive = false
     this.material.needsUpdate = true
@@ -481,7 +481,7 @@ export class AtmosphereLUTNode extends TempNode {
           : this.transmittanceRT.texture
       ),
       vec3(screenCoordinate, layer.add(0.5))
-    ).toVar()
+    )
     const rayleigh = singleScattering.get('rayleigh')
     const mie = singleScattering.get('mie')
 
@@ -603,7 +603,7 @@ export class AtmosphereLUTNode extends TempNode {
       ),
       texture3D(deltaScatteringDensityRT.texture),
       vec3(screenCoordinate, layer.add(0.5))
-    ).toVar()
+    )
     const radiance = multipleScattering.get('radiance')
     const cosViewSun = multipleScattering.get('cosViewSun')
     const luminance = radiance
