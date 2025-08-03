@@ -43,11 +43,11 @@ export class AerialPerspectiveNode extends TempNode {
     return 'AerialPerspectiveNode'
   }
 
-  @needsUpdate camera: Camera
-  @needsUpdate colorNode: NodeObject<TextureNode>
-  @needsUpdate depthNode: NodeObject<TextureNode>
-  @needsUpdate normalNode: NodeObject<TextureNode> | null | undefined
-  @needsUpdate lutNode: AtmosphereLUTNode
+  @needsUpdate() camera: Camera
+  @needsUpdate() colorNode: NodeObject<TextureNode>
+  @needsUpdate() depthNode: NodeObject<TextureNode>
+  @needsUpdate() normalNode: NodeObject<TextureNode> | null | undefined
+  @needsUpdate() lutNode: AtmosphereLUTNode
 
   @nodeType('mat4')
   worldToECEFMatrix = new Matrix4().identity()
@@ -56,16 +56,16 @@ export class AerialPerspectiveNode extends TempNode {
   sunDirectionECEF = new Vector3().copy(Light.DEFAULT_UP)
 
   // Static options
-  @needsUpdate ellipsoid = Ellipsoid.WGS84
-  @needsUpdate correctAltitude = true
-  @needsUpdate correctGeometricError = true
-  @needsUpdate lighting = false
-  @needsUpdate transmittance = true
-  @needsUpdate inscatter = true
-  @needsUpdate sky = true
-  @needsUpdate sun = true
-  @needsUpdate moon = true
-  @needsUpdate ground = true
+  @needsUpdate() ellipsoid = Ellipsoid.WGS84
+  @needsUpdate() correctAltitude = true
+  @needsUpdate() correctGeometricError = true
+  @needsUpdate() lighting = false
+  @needsUpdate() transmittance = true
+  @needsUpdate() inscatter = true
+  @needsUpdate() sky = true
+  @needsUpdate() sun = true
+  @needsUpdate() moon = true
+  @needsUpdate() ground = true
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
