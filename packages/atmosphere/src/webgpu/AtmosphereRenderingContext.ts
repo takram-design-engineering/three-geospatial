@@ -19,14 +19,14 @@ export class AtmosphereRenderingContext {
   sunDirectionECEF = new Vector3().copy(Light.DEFAULT_UP)
   @needsUpdate() correctAltitude = true
 
-  private uniforms?: AtmosphereRenderingContextUniforms
+  private nodes?: AtmosphereRenderingContextNodes
 
   constructor(options: AtmosphereRenderingContextOptions = {}) {
     Object.assign(this, options)
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createUniforms() {
+  private createNodes() {
     const { worldToUnit } = this.parameters.getContext()
 
     const worldToECEFMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
@@ -77,13 +77,13 @@ export class AtmosphereRenderingContext {
     }
   }
 
-  getUniforms(): AtmosphereRenderingContextUniforms {
-    return (this.uniforms ??= this.createUniforms())
+  getNodes(): AtmosphereRenderingContextNodes {
+    return (this.nodes ??= this.createNodes())
   }
 
   // eslint-disable-next-line accessor-pairs
   set needsUpdate(value: boolean) {
-    this.uniforms = undefined
+    this.nodes = undefined
   }
 
   copy(other: AtmosphereRenderingContext): this {
@@ -100,6 +100,6 @@ export class AtmosphereRenderingContext {
   }
 }
 
-export type AtmosphereRenderingContextUniforms = ReturnType<
-  AtmosphereRenderingContext['createUniforms']
+export type AtmosphereRenderingContextNodes = ReturnType<
+  AtmosphereRenderingContext['createNodes']
 >

@@ -54,7 +54,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       ecefToWorldMatrix,
       sunDirectionECEF,
       altitudeCorrectionECEF
-    } = renderingContext.getUniforms()
+    } = renderingContext.getNodes()
 
     // Parameters defined in the LUT:
     const parameters = lutNode.parameters.getContext()

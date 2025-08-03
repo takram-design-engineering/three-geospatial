@@ -45,7 +45,7 @@ export class SkyNode extends TempNode {
   override setup(builder: NodeBuilder): Node<'vec3'> {
     const { camera } = this.renderingContext
     const { worldToECEFMatrix, sunDirectionECEF, cameraPositionUnit } =
-      this.renderingContext.getUniforms()
+      this.renderingContext.getNodes()
 
     // Direction of the camera ray:
     const directionECEF = Fn(() => {

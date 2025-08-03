@@ -61,7 +61,7 @@ export class AerialPerspectiveNode extends TempNode {
       sunDirectionECEF,
       altitudeCorrectionECEF,
       cameraPositionUnit
-    } = this.renderingContext.getUniforms()
+    } = this.renderingContext.getNodes()
 
     const { worldToUnit } = this.lutNode.parameters.getContext()
 
