@@ -62,9 +62,9 @@ export class AerialPerspectiveNode extends TempNode {
   @needsUpdate() lighting = false
   @needsUpdate() transmittance = true
   @needsUpdate() inscatter = true
-  @needsUpdate() sky = true
-  @needsUpdate() sun = true
-  @needsUpdate() moon = true
+  @needsUpdate() sky = true // TODO: Change to skyNode
+  @needsUpdate() sun = true // TODO: Move to skyNode
+  @needsUpdate() moon = true // TODO: Move to skyNode
   @needsUpdate() ground = true
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
