@@ -16,7 +16,6 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { assertType } from '@takram/three-geospatial'
 import type { Node, NodeObject } from '@takram/three-geospatial/webgpu'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
@@ -24,18 +23,23 @@ import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
 import { getSkyIlluminance } from './runtime'
 
+type CorrectLightingContext = {
+  [K in keyof LightingContext]: LightingContext[K] extends Node
+    ? NodeObject<LightingContext[K]>
+    : LightingContext[K]
+}
+
 declare module 'three/webgpu' {
   interface Node {
     onRenderUpdate(
       callback: (this: this, frame: NodeFrame, self: this) => void
     ): this
   }
-}
 
-type CorrectLightingContext = {
-  [K in keyof LightingContext]: LightingContext[K] extends Node
-    ? NodeObject<LightingContext[K]>
-    : LightingContext[K]
+  interface NodeBuilder {
+    camera?: Camera
+    context: CorrectLightingContext
+  }
 }
 
 export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
@@ -70,7 +74,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     )
 
     // The cameraPosition node doesn't seem to work with post-processing.
-    const camera = (builder as NodeBuilder & { camera?: Camera }).camera
+    const { camera } = builder
     invariant(camera != null)
     const altitudeCorrectionECEF = uniform(new Vector3()).onRenderUpdate(
       (_, self) => {
@@ -114,7 +118,6 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       normalECEF,
       sunDirectionECEF
     )
-    assertType<NodeBuilder & { context: CorrectLightingContext }>(builder)
     builder.context.irradiance.addAssign(skyIlluminance)
 
     // Derive the view-space sun direction.
