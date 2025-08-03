@@ -1,3 +1,4 @@
+export * from './accessors'
 export * from './decorators'
 export * from './Fnv'
 export * from './node'
