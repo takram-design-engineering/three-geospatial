@@ -145,7 +145,13 @@ export class SkyNode extends TempNode {
         if (this.showSun) {
           const cosViewSun = rayDirectionECEF.dot(sunDirectionECEF).toVar()
           If(cosViewSun.greaterThan(cos(sunAngularRadius)), () => {
-            sunLuminance.assign(getSolarLuminance(this.lutNode))
+            const angle = acos(cosViewSun.clamp(-1, 1))
+            const antialias = smoothstep(
+              sunAngularRadius,
+              sunAngularRadius.sub(fragmentAngle),
+              angle
+            )
+            sunLuminance.assign(getSolarLuminance(this.lutNode).mul(antialias))
           })
         }
 

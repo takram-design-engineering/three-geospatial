@@ -1,11 +1,5 @@
 import type { LightingContext } from 'three/src/nodes/TSL.js'
-import {
-  cameraViewMatrix,
-  length,
-  normalWorld,
-  positionWorld,
-  vec4
-} from 'three/tsl'
+import { cameraViewMatrix, normalWorld, positionWorld, vec4 } from 'three/tsl'
 import {
   AnalyticLightNode,
   type NodeBuilder,

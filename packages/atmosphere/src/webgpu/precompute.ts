@@ -772,7 +772,7 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
       const theta = float(l).add(0.5).mul(deltaTheta)
       const cosTheta = cos(theta).toVar()
       const sinTheta = sin(theta).toVar()
-      const rayRadiusThetaIntersectsGround = rayIntersectsGround(
+      const omegaRayIntersectsGround = rayIntersectsGround(
         parameters,
         radius,
         cosTheta
@@ -783,7 +783,7 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
       const distanceToGround = float(0).toVar()
       const transmittanceToGround = vec3(0).toVar()
       const groundAlbedo = vec3(0).toVar()
-      If(rayRadiusThetaIntersectsGround, () => {
+      If(omegaRayIntersectsGround, () => {
         distanceToGround.assign(
           distanceToBottomAtmosphereBoundary(parameters, radius, cosTheta)
         )
@@ -823,7 +823,7 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
           omegaI.z,
           cosSun,
           cosViewSun1,
-          rayRadiusThetaIntersectsGround,
+          omegaRayIntersectsGround,
           scatteringOrder.sub(1)
         ).toVar()
 

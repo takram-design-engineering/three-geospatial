@@ -273,12 +273,15 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
       const cosSun = movedCamera.dot(sunDirection).div(radius).toVar()
       const cosViewSun = viewRay.dot(sunDirection).toVar()
 
-      const viewRayIntersectsGround = bool(false).toVar()
-      if (showGround) {
-        viewRayIntersectsGround.assign(
-          rayIntersectsGround(parameters, radius, cosView)
-        )
-      }
+      const viewRayIntersectsGround = rayIntersectsGround(
+        parameters,
+        radius,
+        cosView
+      ).toVar()
+      const scatteringRayIntersectsGround = showGround
+        ? viewRayIntersectsGround
+        : bool(false)
+
       transmittance.assign(
         select(
           viewRayIntersectsGround,
@@ -304,7 +307,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
           cosView,
           cosSun,
           cosViewSun,
-          viewRayIntersectsGround
+          scatteringRayIntersectsGround
         ).toVar()
         scattering.assign(combinedScattering.get('scattering'))
         singleMieScattering.assign(
@@ -341,7 +344,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
           cosViewP,
           cosSunP,
           cosViewSun,
-          viewRayIntersectsGround
+          scatteringRayIntersectsGround
         ).toVar()
         scattering.assign(combinedScattering.get('scattering'))
         singleMieScattering.assign(
@@ -354,7 +357,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
           radius,
           cosView,
           shadowLength,
-          viewRayIntersectsGround
+          scatteringRayIntersectsGround
         ).toVar()
 
         // Occlude only single Rayleigh scattering by the shadow.
@@ -366,7 +369,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
             cosViewP,
             cosSunP,
             cosViewSun,
-            viewRayIntersectsGround
+            scatteringRayIntersectsGround
           ).toVar()
           scattering.assign(
             scattering
