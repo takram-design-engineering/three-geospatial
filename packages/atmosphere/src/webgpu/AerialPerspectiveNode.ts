@@ -19,6 +19,13 @@ import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
 import { getSkyLuminanceToPoint, getSunAndSkyIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
+export interface AerialPerspectiveNodeOptions {
+  correctGeometricError?: boolean
+  lighting?: boolean
+  transmittance?: boolean
+  inscatter?: boolean
+}
+
 export class AerialPerspectiveNode extends TempNode {
   static override get type(): string {
     return 'AerialPerspectiveNode'
@@ -42,7 +49,8 @@ export class AerialPerspectiveNode extends TempNode {
     colorNode: NodeObject<TextureNode>,
     depthNode: NodeObject<TextureNode>,
     normalNode: NodeObject<TextureNode> | null | undefined,
-    lutNode: AtmosphereLUTNode
+    lutNode: AtmosphereLUTNode,
+    options?: AerialPerspectiveNodeOptions
   ) {
     super('vec4')
     this.renderingContext = renderingContext
@@ -51,6 +59,7 @@ export class AerialPerspectiveNode extends TempNode {
     this.depthNode = depthNode
     this.lutNode = lutNode
     this.skyNode = sky(renderingContext, lutNode)
+    Object.assign(this, options)
   }
 
   override setup(builder: NodeBuilder): Node<'vec4'> {

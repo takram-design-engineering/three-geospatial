@@ -80,7 +80,8 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
       null,
-      lutNode
+      lutNode,
+      { lighting: false }
     )
 
     const postProcessing = new PostProcessing(renderer)
@@ -88,8 +89,6 @@ const Scene: FC<StoryProps> = () => {
 
     return [postProcessing, passNode, lutNode, aerialNode]
   }, [renderer, scene, camera, renderingContext])
-
-  aerialNode.lighting = false
 
   useFrame(() => {
     postProcessing.render()
