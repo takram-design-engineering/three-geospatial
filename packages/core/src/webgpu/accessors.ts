@@ -55,8 +55,8 @@ export const cameraPositionWorld = (
   camera: Camera
 ): NodeObject<UniformNode<Vector3>> =>
   getCache(camera, 'cameraPositionWorld', () =>
-    uniform(new Vector3()).onRenderUpdate((_, self) =>
-      self.value.setFromMatrixPosition(camera.matrixWorld)
+    uniform(new Vector3()).onRenderUpdate((_, { value }) =>
+      value.setFromMatrixPosition(camera.matrixWorld)
     )
   )
 

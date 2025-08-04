@@ -60,8 +60,8 @@ export function referenceTo<T extends {}>(target: T): ReferenceFunction<T> {
         invariant(typeof propertyValue.copy === 'function')
         // Transformation on an object (with clone and copy methods):
         return uniform(propertyValue.clone(), nodeType).onRenderUpdate(
-          (_, self) => {
-            self.value = transformValue(self.value.copy(target[propertyName]))
+          (_, { value }) => {
+            value = transformValue(value.copy(target[propertyName]))
           }
         )
       } else {

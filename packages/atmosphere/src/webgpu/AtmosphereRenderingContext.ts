@@ -1,4 +1,4 @@
-import { Camera, Light, Matrix4, Vector3 } from 'three'
+import { Camera, Matrix4, Vector3 } from 'three'
 import { uniform } from 'three/tsl'
 
 import { Ellipsoid, type WritableProperties } from '@takram/three-geospatial'
@@ -15,8 +15,8 @@ export class AtmosphereRenderingContext {
   camera = new Camera()
   ellipsoid = Ellipsoid.WGS84
   worldToECEFMatrix = new Matrix4().identity()
-  sunDirectionECEF = new Vector3().copy(Light.DEFAULT_UP)
-  moonDirectionECEF = new Vector3().copy(Light.DEFAULT_UP)
+  sunDirectionECEF = new Vector3()
+  moonDirectionECEF = new Vector3()
   correctAltitude = true
 
   private nodes?: AtmosphereRenderingContextNodes
@@ -30,40 +30,40 @@ export class AtmosphereRenderingContext {
     const { worldToUnit } = this.parameters.getNodes()
 
     const worldToECEFMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
-      (_, self) => {
-        self.value.copy(this.worldToECEFMatrix)
+      (_, { value }) => {
+        value.copy(this.worldToECEFMatrix)
       }
     )
     const ecefToWorldMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
-      (_, self) => {
+      (_, { value }) => {
         // The worldToECEFMatrix must be orthogonal.
-        self.value.copy(this.worldToECEFMatrix).transpose()
+        value.copy(this.worldToECEFMatrix).transpose()
       }
     )
     const sunDirectionECEF = uniform(new Vector3()).onRenderUpdate(
-      (_, self) => {
-        self.value.copy(this.sunDirectionECEF)
+      (_, { value }) => {
+        value.copy(this.sunDirectionECEF)
       }
     )
     const moonDirectionECEF = uniform(new Vector3()).onRenderUpdate(
-      (_, self) => {
-        self.value.copy(this.moonDirectionECEF)
+      (_, { value }) => {
+        value.copy(this.moonDirectionECEF)
       }
     )
     const cameraPositionECEF = uniform(new Vector3()).onRenderUpdate(
-      (_, self) => {
-        self.value
+      (_, { value }) => {
+        value
           .setFromMatrixPosition(this.camera.matrixWorld)
           .applyMatrix4(this.worldToECEFMatrix)
       }
     )
     const altitudeCorrectionECEF = uniform(new Vector3()).onRenderUpdate(
-      (_, self) => {
+      (_, { value }) => {
         getAltitudeCorrectionOffset(
           cameraPositionECEF.value,
           this.parameters.bottomRadius,
           this.ellipsoid,
-          self.value
+          value
         )
       }
     )
