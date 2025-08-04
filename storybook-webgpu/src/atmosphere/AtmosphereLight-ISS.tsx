@@ -14,13 +14,17 @@ import {
   type Renderer
 } from 'three/webgpu'
 
-import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  getMoonDirectionECEF,
+  getSunDirectionECEF
+} from '@takram/three-atmosphere'
 import {
   aerialPerspective,
   AtmosphereLight,
   AtmosphereLightNode,
   atmosphereLUT,
-  AtmosphereRenderingContext
+  AtmosphereRenderingContext,
+  skyBox
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
 
@@ -51,6 +55,7 @@ import {
 import type { StoryFC } from '../helpers/createStory'
 import { Globe } from '../helpers/Globe'
 import { useResource } from '../helpers/useResource'
+import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { ISS } from '../models/ISS'
 import { ReorientationPlugin } from '../plugins/ReorientationPlugin'
@@ -126,7 +131,16 @@ const Scene: FC<StoryProps> = () => {
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
     getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
+    getMoonDirectionECEF(date, renderingContext.moonDirectionECEF)
   })
+
+  useTransientControl(
+    ({ environmentMap }: StoryArgs) => environmentMap,
+    value => {
+      scene.environmentNode?.dispose()
+      scene.environmentNode = value ? skyBox(renderingContext, lutNode) : null
+    }
+  )
 
   return (
     <>
@@ -156,7 +170,9 @@ interface StoryArgs
   extends OutputPassArgs,
     ToneMappingArgs,
     LocationArgs,
-    LocalDateArgs {}
+    LocalDateArgs {
+  environmentMap: boolean
+}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
@@ -188,9 +204,10 @@ Story.args = {
     height: 408000
   }),
   ...localDateArgs({
-    dayOfYear: 170,
+    dayOfYear: 216,
     timeOfDay: 17
-  })
+  }),
+  environmentMap: true
 }
 
 Story.argTypes = {
@@ -200,7 +217,12 @@ Story.argTypes = {
     minHeight: 3000,
     maxHeight: 408000
   }),
-  ...localDateArgTypes()
+  ...localDateArgTypes(),
+  environmentMap: {
+    control: {
+      type: 'boolean'
+    }
+  }
 }
 
 export default Story

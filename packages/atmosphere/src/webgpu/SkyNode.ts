@@ -4,7 +4,6 @@ import {
   cos,
   dFdx,
   dFdy,
-  Fn,
   If,
   max,
   nodeObject,
@@ -97,6 +96,7 @@ export interface SkyNodeOptions {
   showSun?: boolean
   showMoon?: boolean
   showGround?: boolean
+  useContextCamera?: boolean
 }
 
 export class SkyNode extends TempNode {
@@ -114,6 +114,7 @@ export class SkyNode extends TempNode {
   showSun = true
   showMoon = true
   showGround = true
+  useContextCamera = true
 
   constructor(
     renderingContext: AtmosphereRenderingContext,
@@ -191,7 +192,6 @@ export class SkyNode extends TempNode {
   )
 
   override setup(builder: NodeBuilder): Node<'vec3'> {
-    const { camera } = this.renderingContext
     const {
       worldToECEFMatrix,
       sunDirectionECEF,
@@ -205,7 +205,13 @@ export class SkyNode extends TempNode {
     const moonAngularRadius = reference('moonAngularRadius')
 
     // Direction of the camera ray:
-    const rayDirectionECEF = Fn(() => {
+    const rayDirectionECEF = Fnv(() => builder => {
+      const camera = this.useContextCamera
+        ? this.renderingContext.camera
+        : builder.camera
+      if (camera == null) {
+        return vec3()
+      }
       const positionView = inverseProjectionMatrix(camera).mul(
         vec4(positionGeometry, 1)
       ).xyz
