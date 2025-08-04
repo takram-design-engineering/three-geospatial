@@ -210,7 +210,7 @@ export class SkyNode extends TempNode {
       0, // TODO: Shadow length
       sunDirectionECEF,
       { showGround: this.showGround }
-    ).toVar()
+    )
     const inscatter = luminanceTransfer.get('luminance')
     const transmittance = luminanceTransfer.get('transmittance')
 

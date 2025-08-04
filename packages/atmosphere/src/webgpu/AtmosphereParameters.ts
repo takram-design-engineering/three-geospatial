@@ -1,7 +1,7 @@
 import { Vector2, Vector3 } from 'three'
 
 import { assertType, radians } from '@takram/three-geospatial'
-import { nodeType, propertyOf } from '@takram/three-geospatial/webgpu'
+import { nodeType, referenceTo } from '@takram/three-geospatial/webgpu'
 
 import {
   Angle,
@@ -55,13 +55,13 @@ export class DensityProfileLayer {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   createNodes(worldToUnit: number) {
-    const property = propertyOf<DensityProfileLayer>(this)
+    const reference = referenceTo<DensityProfileLayer>(this)
     return createContextProxy(this, {
-      width: property('width', value => value * worldToUnit),
-      expTerm: property('expTerm'),
-      expScale: property('expScale', value => value / worldToUnit),
-      linearTerm: property('linearTerm', value => value / worldToUnit),
-      constantTerm: property('constantTerm')
+      width: reference('width', value => value * worldToUnit),
+      expTerm: reference('expTerm'),
+      expScale: reference('expScale', value => value / worldToUnit),
+      linearTerm: reference('linearTerm', value => value / worldToUnit),
+      constantTerm: reference('constantTerm')
     })
   }
 
@@ -237,34 +237,37 @@ export class AtmosphereParameters {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private createNodes() {
-    const property = propertyOf<AtmosphereParameters>(this)
+    const reference = referenceTo<AtmosphereParameters>(this)
     return createContextProxy(this, {
-      worldToUnit: property('worldToUnit'),
-      solarIrradiance: property('solarIrradiance'),
-      sunAngularRadius: property('sunAngularRadius'),
-      bottomRadius: property('bottomRadius', value => value * this.worldToUnit),
-      topRadius: property('topRadius', value => value * this.worldToUnit),
+      worldToUnit: reference('worldToUnit'),
+      solarIrradiance: reference('solarIrradiance'),
+      sunAngularRadius: reference('sunAngularRadius'),
+      bottomRadius: reference(
+        'bottomRadius',
+        value => value * this.worldToUnit
+      ),
+      topRadius: reference('topRadius', value => value * this.worldToUnit),
       rayleighDensity: this.rayleighDensity.getNodes(this.worldToUnit),
-      rayleighScattering: property('rayleighScattering', value =>
+      rayleighScattering: reference('rayleighScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
       mieDensity: this.mieDensity.getNodes(this.worldToUnit),
-      mieScattering: property('mieScattering', value =>
+      mieScattering: reference('mieScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
-      mieExtinction: property('mieExtinction', value =>
+      mieExtinction: reference('mieExtinction', value =>
         value.divideScalar(this.worldToUnit)
       ),
-      miePhaseFunctionG: property('miePhaseFunctionG'),
+      miePhaseFunctionG: reference('miePhaseFunctionG'),
       absorptionDensity: this.absorptionDensity.getNodes(this.worldToUnit),
-      absorptionExtinction: property('absorptionExtinction', value =>
+      absorptionExtinction: reference('absorptionExtinction', value =>
         value.divideScalar(this.worldToUnit)
       ),
-      groundAlbedo: property('groundAlbedo'),
-      minCosSun: property('minCosSun'),
-      sunRadianceToLuminance: property('sunRadianceToLuminance'),
-      skyRadianceToLuminance: property('skyRadianceToLuminance'),
-      luminanceScale: property('luminanceScale')
+      groundAlbedo: reference('groundAlbedo'),
+      minCosSun: reference('minCosSun'),
+      sunRadianceToLuminance: reference('sunRadianceToLuminance'),
+      skyRadianceToLuminance: reference('skyRadianceToLuminance'),
+      luminanceScale: reference('luminanceScale')
     })
   }
 

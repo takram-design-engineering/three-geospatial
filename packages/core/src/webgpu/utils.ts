@@ -1,14 +1,9 @@
-import { reference } from 'three/tsl'
-import type { ReferenceNode, VarNode } from 'three/webgpu'
+import { uniform } from 'three/tsl'
+import type { UniformNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { NODE_TYPES } from './internals'
-import {
-  node,
-  type NodeObject,
-  type NodeType,
-  type NodeValueType
-} from './node'
+import type { NodeObject, NodeType, NodeValueType } from './node'
 
 type NodeValuePropertyKey<T> = keyof {
   [K in keyof T as K extends string
@@ -33,47 +28,51 @@ function getNodeTypes<T extends {}>(target: T): Record<keyof T, NodeType> {
   return nodeTypes
 }
 
-export function referenceTo<T extends {}>(target: T) {
-  const nodeTypes = getNodeTypes(target)
-  return <K extends NodeValuePropertyKey<T>>(
+export interface ReferenceFunction<T extends {}> {
+  <K extends NodeValuePropertyKey<T>>(
     propertyName: K
-  ): NodeObject<ReferenceNode<T>> => {
-    const nodeType = nodeTypes[propertyName]
-    if (nodeType == null) {
-      throw new Error(
-        `Node type annotation was not found for property "${String(propertyName)}" in ${target.constructor.name}`
-      )
-    }
-    return reference(propertyName as string, nodeType, target)
-  }
+  ): NodeObject<UniformNode<unknown>>
+
+  <K extends NodeValuePropertyKey<T>>(
+    propertyName: K,
+    transformValue: (value: T[K]) => T[K]
+  ): NodeObject<UniformNode<T[K]>>
 }
 
-export function propertyOf<T extends {}>(target: T) {
+export function referenceTo<T extends {}>(target: T): ReferenceFunction<T> {
   const nodeTypes = getNodeTypes(target)
   return <K extends NodeValuePropertyKey<T>>(
     propertyName: K,
-    transformValue?: (value: T[K]) => T[K],
-    transformNode?: (node: NodeObject) => NodeObject
-  ): NodeObject<VarNode> => {
+    transformValue?: (value: T[K]) => T[K]
+  ): NodeObject<UniformNode<unknown>> => {
     const nodeType = nodeTypes[propertyName]
     if (nodeType == null) {
       throw new Error(
         `Node type annotation was not found for property "${String(propertyName)}" in ${target.constructor.name}`
       )
     }
-    let propertyValue = target[propertyName]
+    const propertyValue = target[propertyName]
     if (transformValue != null) {
       if (typeof propertyValue === 'object' && propertyValue != null) {
         invariant('clone' in propertyValue)
         invariant(typeof propertyValue.clone === 'function')
-        propertyValue = propertyValue.clone()
+        invariant('copy' in propertyValue)
+        invariant(typeof propertyValue.copy === 'function')
+        // Transformation on an object (with clone and copy methods):
+        return uniform(propertyValue.clone(), nodeType).onRenderUpdate(
+          (_, self) => {
+            self.value = transformValue(self.value.copy(target[propertyName]))
+          }
+        )
+      } else {
+        // Transformation on a primitive:
+        return uniform(propertyValue, nodeType).onRenderUpdate((_, self) => {
+          self.value = transformValue(target[propertyName])
+        })
       }
-      propertyValue = transformValue(propertyValue)
+    } else {
+      // No transformation:
+      return uniform(nodeType).onRenderUpdate(() => target[propertyName])
     }
-    let propertyNode = node(nodeType)(propertyValue as any)
-    if (transformNode != null) {
-      propertyNode = transformNode(propertyNode)
-    }
-    return propertyNode.toVar()
   }
 }
