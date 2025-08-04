@@ -35,6 +35,7 @@ export class AtmosphereRenderingContext {
     )
     const ecefToWorldMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
       (_, self) => {
+        // The worldToECEFMatrix must be orthogonal.
         self.value.copy(this.worldToECEFMatrix).transpose()
       }
     )

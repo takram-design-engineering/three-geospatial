@@ -1,17 +1,16 @@
-import { Camera } from 'three'
+import type { Camera } from 'three'
 import { Fn, nodeObject, positionGeometry, vec4 } from 'three/tsl'
-import { NodeBuilder, TempNode } from 'three/webgpu'
+import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
   inverseProjectionMatrix,
   inverseViewMatrix,
-  needsUpdate,
-  Node,
+  type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
+import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
+import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
 import { getSkyLuminance } from './runtime'
 
 declare module 'three/webgpu' {
@@ -20,26 +19,34 @@ declare module 'three/webgpu' {
   }
 }
 
+export interface SkyNodeOptions {
+  showSun?: boolean
+  showMoon?: boolean
+  showGround?: boolean
+}
+
 export class SkyNode extends TempNode {
   static override get type(): string {
     return 'SkyNode'
   }
 
-  @needsUpdate() renderingContext: AtmosphereRenderingContext
-  @needsUpdate() lutNode: AtmosphereLUTNode
+  renderingContext: AtmosphereRenderingContext
+  lutNode: AtmosphereLUTNode
 
   // Static options
-  @needsUpdate() sun = true
-  @needsUpdate() moon = true
-  @needsUpdate() ground = true
+  showSun = true
+  showMoon = true
+  showGround = true
 
   constructor(
     renderingContext: AtmosphereRenderingContext,
-    lutNode: AtmosphereLUTNode
+    lutNode: AtmosphereLUTNode,
+    options?: SkyNodeOptions
   ) {
-    super('vec4')
+    super('vec3')
     this.renderingContext = renderingContext
     this.lutNode = lutNode
+    Object.assign(this, options)
   }
 
   override setup(builder: NodeBuilder): Node<'vec3'> {
@@ -55,8 +62,7 @@ export class SkyNode extends TempNode {
       const directionWorld = inverseViewMatrix(camera).mul(
         vec4(positionView, 0)
       ).xyz
-      const directionECEF = worldToECEFMatrix.mul(vec4(directionWorld, 0)).xyz
-      return directionECEF
+      return worldToECEFMatrix.mul(vec4(directionWorld, 0)).xyz
     })()
       .toVertexStage()
       .normalize()
@@ -66,7 +72,8 @@ export class SkyNode extends TempNode {
       cameraPositionUnit,
       directionECEF,
       0, // TODO: Shadow length
-      sunDirectionECEF
+      sunDirectionECEF,
+      { showGround: this.showGround }
     )
     const inscatter = luminanceTransfer.get('luminance')
 

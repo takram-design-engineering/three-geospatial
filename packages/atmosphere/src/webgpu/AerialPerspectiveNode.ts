@@ -27,9 +27,9 @@ export class AerialPerspectiveNode extends TempNode {
   renderingContext: AtmosphereRenderingContext
   colorNode: NodeObject<TextureNode>
   depthNode: NodeObject<TextureNode>
-  normalNode: NodeObject<TextureNode> | null | undefined
+  normalNode?: NodeObject<TextureNode> | null
   lutNode: AtmosphereLUTNode
-  skyNode: NodeObject | null | undefined
+  skyNode: NodeObject<'vec3'>
 
   // Static options
   correctGeometricError = true

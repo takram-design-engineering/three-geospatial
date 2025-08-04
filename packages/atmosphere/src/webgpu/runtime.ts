@@ -213,6 +213,11 @@ const radianceTransferStruct = /*#__PURE__*/ struct({
 })
 type RadianceTransferStruct = ReturnType<typeof radianceTransferStruct>
 
+interface SkyRadianceOptions {
+  constrainCamera?: boolean
+  showGround?: boolean
+}
+
 const getSkyRadiance = /*#__PURE__*/ Fnv(
   (
     parameters: AtmosphereParametersNodes,
@@ -223,13 +228,14 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
     camera: NodeObject<Position>,
     viewRay: NodeObject<Direction>,
     shadowLength: NodeObject<Length>,
-    sunDirection: NodeObject<Direction>
+    sunDirection: NodeObject<Direction>,
+    { constrainCamera = true, showGround = true }: SkyRadianceOptions = {}
   ): RadianceTransferStruct => {
     // Clamp the viewer at the bottom atmosphere boundary for rendering points
     // below it.
     const radius = length(camera).toVar()
     const movedCamera = camera.toVar()
-    if (parameters.constrainCameraAboveGround) {
+    if (constrainCamera) {
       If(radius.lessThan(parameters.bottomRadius), () => {
         radius.assign(parameters.bottomRadius)
         movedCamera.assign(normalize(camera).mul(radius))
@@ -270,7 +276,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
       const cosViewSun = viewRay.dot(sunDirection).toVar()
 
       const viewRayIntersectsGround = bool(false).toVar()
-      if (!parameters.hideGround) {
+      if (showGround) {
         viewRayIntersectsGround.assign(
           rayIntersectsGround(parameters, radius, cosView)
         )
@@ -798,13 +804,16 @@ const luminanceTransferStruct = /*#__PURE__*/ struct({
 })
 type LuminanceTransferStruct = ReturnType<typeof luminanceTransferStruct>
 
+export interface SkyLuminanceOptions extends SkyRadianceOptions {}
+
 export const getSkyLuminance = /*#__PURE__*/ Fnv(
   (
     atmosphereLUT: AtmosphereLUTNode,
     camera: NodeObject<Position>,
     viewRay: NodeObject<Direction>,
     shadowLength: NodeObject<Length>,
-    sunDirection: NodeObject<Direction>
+    sunDirection: NodeObject<Direction>,
+    options?: SkyLuminanceOptions
   ): LuminanceTransferStruct => {
     const parameters = atmosphereLUT.parameters.getNodes()
     const radianceTransfer = getSkyRadiance(
@@ -816,7 +825,8 @@ export const getSkyLuminance = /*#__PURE__*/ Fnv(
       camera,
       viewRay,
       shadowLength,
-      sunDirection
+      sunDirection,
+      options
     )
 
     const luminance = radianceTransfer
