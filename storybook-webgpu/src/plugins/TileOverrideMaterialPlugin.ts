@@ -13,10 +13,10 @@ function replaceMaterials(
   // eslint-disable-next-line new-cap
   const nodeMaterial = new overrideMaterial()
   if (nodeMaterial != null) {
-    // @ts-expect-error I don't now why this works, because there're no
-    // documentation about this as of r178. Does a NodeMaterial lookup the "map"
-    // property perhaps?
-    nodeMaterial.map = material.map
+    if ('map' in material && 'map' in nodeMaterial) {
+      nodeMaterial.map = material.map
+      material.map = null
+    }
     mesh.material = nodeMaterial
     material.dispose()
   }
