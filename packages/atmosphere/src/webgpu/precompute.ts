@@ -768,7 +768,8 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
     const radiance = vec3(0).toVar()
 
     // Nested loops for the integral over all the incident directions omegaI.
-    Loop({ start: 0, end: SAMPLE_COUNT }, ({ i: l }) => {
+    // @ts-expect-error Missing type
+    Loop({ start: 0, end: SAMPLE_COUNT, name: 'l' }, ({ l }) => {
       const theta = float(l).add(0.5).mul(deltaTheta)
       const cosTheta = cos(theta).toVar()
       const sinTheta = sin(theta).toVar()
@@ -800,7 +801,8 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
         groundAlbedo.assign(parameters.groundAlbedo)
       })
 
-      Loop({ start: 0, end: mul(SAMPLE_COUNT, 2) }, ({ i: m }) => {
+      // @ts-expect-error Missing type
+      Loop({ start: 0, end: mul(SAMPLE_COUNT, 2), name: 'm' }, ({ m }) => {
         const phi = float(m).add(0.5).mul(deltaPhi).toVar()
         const omegaI = vec3(
           cos(phi).mul(sinTheta),
@@ -1077,7 +1079,8 @@ const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
     const result = vec3(0).toVar()
     const omegaSun = vec3(sqrt(cosSun.pow2().oneMinus()), 0, cosSun).toVar()
 
-    Loop({ start: 0, end: SAMPLE_COUNT / 2 }, ({ i: j }) => {
+    // @ts-expect-error Missing type
+    Loop({ start: 0, end: SAMPLE_COUNT / 2, name: 'j' }, ({ j }) => {
       const theta = float(j).add(0.5).mul(deltaTheta).toVar()
 
       Loop({ start: 0, end: SAMPLE_COUNT * 2 }, ({ i }) => {
