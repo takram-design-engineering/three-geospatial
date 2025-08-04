@@ -2,7 +2,6 @@ import { Camera, Light, Matrix4, Vector3 } from 'three'
 import { uniform } from 'three/tsl'
 
 import { Ellipsoid, type WritableProperties } from '@takram/three-geospatial'
-import { needsUpdate } from '@takram/three-geospatial/webgpu'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import { AtmosphereParameters } from './AtmosphereParameters'
@@ -17,7 +16,7 @@ export class AtmosphereRenderingContext {
   ellipsoid = Ellipsoid.WGS84
   worldToECEFMatrix = new Matrix4().identity()
   sunDirectionECEF = new Vector3().copy(Light.DEFAULT_UP)
-  @needsUpdate() correctAltitude = true
+  correctAltitude = true
 
   private nodes?: AtmosphereRenderingContextNodes
 

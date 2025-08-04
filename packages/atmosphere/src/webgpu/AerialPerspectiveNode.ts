@@ -8,15 +8,14 @@ import {
   Fnv,
   inverseProjectionMatrix,
   inverseViewMatrix,
-  needsUpdate,
-  NodeObject,
   projectionMatrix,
   screenToPositionView,
-  type Node
+  type Node,
+  type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
+import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
 import { getSkyLuminanceToPoint, getSunAndSkyIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
@@ -25,18 +24,18 @@ export class AerialPerspectiveNode extends TempNode {
     return 'AerialPerspectiveNode'
   }
 
-  @needsUpdate() renderingContext: AtmosphereRenderingContext
-  @needsUpdate() colorNode: NodeObject<TextureNode>
-  @needsUpdate() depthNode: NodeObject<TextureNode>
-  @needsUpdate() normalNode: NodeObject<TextureNode> | null | undefined
-  @needsUpdate() lutNode: AtmosphereLUTNode
-  @needsUpdate() skyNode: NodeObject | null | undefined
+  renderingContext: AtmosphereRenderingContext
+  colorNode: NodeObject<TextureNode>
+  depthNode: NodeObject<TextureNode>
+  normalNode: NodeObject<TextureNode> | null | undefined
+  lutNode: AtmosphereLUTNode
+  skyNode: NodeObject | null | undefined
 
   // Static options
-  @needsUpdate() correctGeometricError = true
-  @needsUpdate() lighting = false
-  @needsUpdate() transmittance = true
-  @needsUpdate() inscatter = true
+  correctGeometricError = true
+  lighting = false
+  transmittance = true
+  inscatter = true
 
   constructor(
     renderingContext: AtmosphereRenderingContext,
