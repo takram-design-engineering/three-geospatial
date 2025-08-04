@@ -4,7 +4,6 @@ import {
   cos,
   dFdx,
   dFdy,
-  float,
   Fn,
   If,
   max,
@@ -23,6 +22,8 @@ import {
   Fnv,
   inverseProjectionMatrix,
   inverseViewMatrix,
+  nodeType,
+  referenceTo,
   type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
@@ -106,11 +107,13 @@ export class SkyNode extends TempNode {
   renderingContext: AtmosphereRenderingContext
   lutNode: AtmosphereLUTNode
 
+  @nodeType('float')
+  moonAngularRadius = 0.0045 // ≈ 15.5 arcminutes
+
   // Static options
   showSun = true
   showMoon = true
   showGround = true
-  moonAngularRadius = 0.0045 // ≈ 15.5 arcminutes
 
   constructor(
     renderingContext: AtmosphereRenderingContext,
@@ -190,6 +193,9 @@ export class SkyNode extends TempNode {
     } = this.renderingContext.getNodes()
     const { sunAngularRadius } = this.renderingContext.parameters.getNodes()
 
+    const reference = referenceTo<SkyNode>(this)
+    const moonAngularRadius = reference('moonAngularRadius')
+
     // Direction of the camera ray:
     const rayDirectionECEF = Fn(() => {
       const positionView = inverseProjectionMatrix(camera).mul(
@@ -219,7 +225,7 @@ export class SkyNode extends TempNode {
       sunDirectionECEF,
       moonDirectionECEF,
       sunAngularRadius,
-      float(this.moonAngularRadius)
+      moonAngularRadius
     )
     return inscatter.add(sunMoonLuminance.mul(transmittance))
   }
