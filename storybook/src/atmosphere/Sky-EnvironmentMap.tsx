@@ -37,7 +37,7 @@ const Scene: FC = () => {
   const scene = useThree(({ scene }) => scene)
   const [envMap, setEnvMap] = useState<RenderCubeTextureApi | null>(null)
   useEffect(() => {
-    scene.background = envMap?.fbo.texture ?? null
+    scene.environment = envMap?.fbo.texture ?? null
   }, [scene, envMap])
 
   const envMapParentRef = useRef<Group>(null)
@@ -57,7 +57,7 @@ const Scene: FC = () => {
     <>
       <OrbitControls ref={controlsRef} minDistance={5} />
       <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
-        {/* <Sky /> */}
+        <Sky />
         <group ref={envMapParentRef}>
           <RenderCubeTexture ref={setEnvMap} resolution={64}>
             <Sky
