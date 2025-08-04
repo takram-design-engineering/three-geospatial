@@ -8,7 +8,10 @@ import {
 import { useMemo, type FC } from 'react'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
-import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  getMoonDirectionECEF,
+  getSunDirectionECEF
+} from '@takram/three-atmosphere'
 import {
   AtmosphereLight,
   AtmosphereLightNode,
@@ -94,12 +97,13 @@ const Scene: FC<StoryProps> = () => {
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
     getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
+    getMoonDirectionECEF(date, renderingContext.moonDirectionECEF)
   })
 
   return (
     <>
       <atmosphereLight args={[renderingContext, lutNode]} />
-      <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
+      <OrbitControls target={[0, 0, 0]} minDistance={1} />
     </>
   )
 }
@@ -119,7 +123,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
         renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
       }
     }}
-    camera={{ position: [2, 1, 2] }}
+    camera={{ position: [1, 0, 0] }}
   >
     <Scene {...props} />
   </WebGPUCanvas>

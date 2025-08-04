@@ -791,11 +791,9 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ Fnv(
 export const getSolarLuminance = /*#__PURE__*/ Fnv(
   (atmosphereLUT: AtmosphereLUTNode): Node<Luminance3> => {
     const parameters = atmosphereLUT.parameters.getNodes()
-    return mul(
-      PI,
-      parameters.sunAngularRadius.pow2(),
-      parameters.sunRadianceToLuminance.mul(parameters.luminanceScale)
-    )
+    return parameters.solarIrradiance
+      .div(PI.mul(parameters.sunAngularRadius.pow2()))
+      .mul(parameters.sunRadianceToLuminance.mul(parameters.luminanceScale))
   }
 )
 

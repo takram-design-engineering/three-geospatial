@@ -128,7 +128,7 @@ export class AtmosphereParameters {
   @nodeType(IrradianceSpectrum)
   solarIrradiance = new Vector3(1.474, 1.8504, 1.91198)
 
-  // The sun's angular radius in.
+  // The sun's angular radius.
   @nodeType(Angle)
   sunAngularRadius = 0.004675
 
@@ -183,8 +183,9 @@ export class AtmosphereParameters {
   absorptionExtinction = new Vector3(0.00000065, 0.000001881, 0.000000085)
 
   // The average albedo of the ground.
+  // https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
   @nodeType(DimensionlessSpectrum)
-  groundAlbedo = new Vector3().setScalar(0.1)
+  groundAlbedo = new Vector3().setScalar(0.3)
 
   // The cosine of the maximum sun zenith angle for which atmospheric scattering
   // must be precomputed (for maximum precision, use the smallest Sun zenith

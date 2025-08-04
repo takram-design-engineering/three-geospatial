@@ -16,6 +16,7 @@ export class AtmosphereRenderingContext {
   ellipsoid = Ellipsoid.WGS84
   worldToECEFMatrix = new Matrix4().identity()
   sunDirectionECEF = new Vector3().copy(Light.DEFAULT_UP)
+  moonDirectionECEF = new Vector3().copy(Light.DEFAULT_UP)
   correctAltitude = true
 
   private nodes?: AtmosphereRenderingContextNodes
@@ -42,6 +43,11 @@ export class AtmosphereRenderingContext {
     const sunDirectionECEF = uniform(new Vector3()).onRenderUpdate(
       (_, self) => {
         self.value.copy(this.sunDirectionECEF)
+      }
+    )
+    const moonDirectionECEF = uniform(new Vector3()).onRenderUpdate(
+      (_, self) => {
+        self.value.copy(this.moonDirectionECEF)
       }
     )
     const cameraPositionECEF = uniform(new Vector3()).onRenderUpdate(
@@ -72,6 +78,7 @@ export class AtmosphereRenderingContext {
       worldToECEFMatrix,
       ecefToWorldMatrix,
       sunDirectionECEF,
+      moonDirectionECEF,
       altitudeCorrectionECEF,
       cameraPositionUnit
     }
