@@ -481,7 +481,7 @@ export class AtmosphereLUTNode extends TempNode {
           : this.transmittanceRT.texture
       ),
       vec3(screenCoordinate, layer.add(0.5))
-    )
+    ).toVar()
     const rayleigh = singleScattering.get('rayleigh')
     const mie = singleScattering.get('mie')
 
@@ -603,7 +603,7 @@ export class AtmosphereLUTNode extends TempNode {
       ),
       texture3D(deltaScatteringDensityRT.texture),
       vec3(screenCoordinate, layer.add(0.5))
-    )
+    ).toVar()
     const radiance = multipleScattering.get('radiance')
     const cosViewSun = multipleScattering.get('cosViewSun')
     const luminance = radiance

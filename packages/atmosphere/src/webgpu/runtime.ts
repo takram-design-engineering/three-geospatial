@@ -307,7 +307,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
           cosSun,
           cosViewSun,
           viewRayIntersectsGround
-        )
+        ).toVar()
         scattering.assign(combinedScattering.get('scattering'))
         singleMieScattering.assign(
           combinedScattering.get('singleMieScattering')
@@ -344,7 +344,7 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
           cosSunP,
           cosViewSun,
           viewRayIntersectsGround
-        )
+        ).toVar()
         scattering.assign(combinedScattering.get('scattering'))
         singleMieScattering.assign(
           combinedScattering.get('singleMieScattering')
@@ -478,7 +478,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
       cosSun,
       cosViewSun,
       viewRayIntersectsGround
-    )
+    ).toVar()
     const scattering = combinedScattering.get('scattering')
     const singleMieScattering = combinedScattering.get('singleMieScattering')
 
@@ -515,7 +515,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
       cosSunP,
       cosViewSun,
       viewRayIntersectsGround
-    )
+    ).toVar()
     const scatteringP = combinedScatteringP.get('scattering')
     const singleMieScatteringP = combinedScatteringP.get('singleMieScattering')
 
@@ -679,13 +679,13 @@ const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
         parameters,
         camera,
         point
-      )
+      ).toVar()
       const clippedCamera = clippedRaySegment.get('camera')
       const clippedPoint = clippedRaySegment.get('point')
       const degenerate = clippedRaySegment.get('degenerate')
 
       If(not(degenerate), () => {
-        const radianceTransfer = getSkyRadianceToPointImpl(
+        const result = getSkyRadianceToPointImpl(
           parameters,
           transmittanceTexture,
           scatteringTexture,
@@ -695,9 +695,10 @@ const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
           clippedPoint,
           shadowLength,
           sunDirection
-        )
-        radiance.assign(radianceTransfer.get('radiance'))
-        transmittance.assign(radianceTransfer.get('transmittance'))
+        ).toVar()
+
+        radiance.assign(result.get('radiance'))
+        transmittance.assign(result.get('transmittance'))
       })
     })
 
@@ -827,7 +828,7 @@ export const getSkyLuminance = /*#__PURE__*/ Fnv(
       shadowLength,
       sunDirection,
       options
-    )
+    ).toVar()
 
     const luminance = radianceTransfer
       .get('radiance')
@@ -858,7 +859,7 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ Fnv(
       point,
       shadowLength,
       sunDirection
-    )
+    ).toVar()
 
     const luminance = radianceTransfer
       .get('radiance')
@@ -891,7 +892,7 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
       point,
       normal,
       sunDirection
-    )
+    ).toVar()
 
     const sunIlluminance = sunSkyIrradiance
       .get('sunIrradiance')
@@ -938,7 +939,7 @@ export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ Fnv(
       atmosphereLUT.getTextureNode('irradiance'),
       point,
       sunDirection
-    )
+    ).toVar()
 
     const sunIlluminance = sunSkyIrradiance
       .get('sunIrradiance')

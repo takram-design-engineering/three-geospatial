@@ -303,7 +303,7 @@ export const computeTransmittanceToTopAtmosphereBoundaryTexture =
       const transmittanceParams = getParamsFromTransmittanceTextureUV(
         parameters,
         fragCoord.div(vec2(parameters.transmittanceTextureSize))
-      )
+      ).toVar()
       return computeTransmittanceToTopAtmosphereBoundary(
         parameters,
         transmittanceParams.get('radius'),
@@ -431,7 +431,7 @@ const computeSingleScattering = /*#__PURE__*/ Fnv(
         cosViewSun,
         rayLength,
         rayIntersectsGround
-      )
+      ).toVar()
       const deltaRayleigh = deltaRayleighMie.get('rayleigh')
       const deltaMie = deltaRayleighMie.get('mie')
 
@@ -620,7 +620,7 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ Fnv(
     const scatteringParams = getParamsFromScatteringTextureCoord(
       parameters,
       coord
-    )
+    ).toVar()
     const radius = scatteringParams.get('radius')
     const cosView = scatteringParams.get('cosView')
     const cosSun = scatteringParams.get('cosSun')
@@ -658,7 +658,7 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ Fnv(
     const scatteringParams = getParamsFromScatteringTextureFragCoord(
       parameters,
       fragCoord
-    )
+    ).toVar()
     const radius = scatteringParams.get('radius')
     const cosView = scatteringParams.get('cosView')
     const cosSun = scatteringParams.get('cosSun')
@@ -971,7 +971,7 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
     const scatteringParams = getParamsFromScatteringTextureFragCoord(
       parameters,
       fragCoord
-    )
+    ).toVar()
     const radius = scatteringParams.get('radius')
     const cosView = scatteringParams.get('cosView')
     const cosSun = scatteringParams.get('cosSun')
@@ -1008,7 +1008,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
     const scatteringParams = getParamsFromScatteringTextureFragCoord(
       parameters,
       fragCoord
-    )
+    ).toVar()
     const radius = scatteringParams.get('radius')
     const cosView = scatteringParams.get('cosView')
     const cosSun = scatteringParams.get('cosSun')
@@ -1151,7 +1151,7 @@ export const computeDirectIrradianceTexture = /*#__PURE__*/ Fnv(
     const irradianceParams = getParamsFromIrradianceTextureUV(
       parameters,
       fragCoord.div(vec2(parameters.irradianceTextureSize))
-    )
+    ).toVar()
     const radius = irradianceParams.get('radius')
     const cosSun = irradianceParams.get('cosSun')
     return computeDirectIrradiance(
@@ -1175,7 +1175,7 @@ export const computeIndirectIrradianceTexture = /*#__PURE__*/ Fnv(
     const irradianceParams = getParamsFromIrradianceTextureUV(
       parameters,
       fragCoord.div(vec2(parameters.irradianceTextureSize))
-    )
+    ).toVar()
     const radius = irradianceParams.get('radius')
     const cosSun = irradianceParams.get('cosSun')
     return computeIndirectIrradiance(
