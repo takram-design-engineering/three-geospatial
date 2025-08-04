@@ -20,7 +20,7 @@ export class AtmosphereLight extends Light {
 
   override copy(source: this, recursive?: boolean): this {
     super.copy(source, recursive)
-    // TODO: Consider copying.
+    // Copy by reference here:
     this.renderingContext = source.renderingContext
     this.lutNode = source.lutNode
     return this

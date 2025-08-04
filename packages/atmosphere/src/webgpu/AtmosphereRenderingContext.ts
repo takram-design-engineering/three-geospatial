@@ -88,16 +88,13 @@ export class AtmosphereRenderingContext {
     return (this.nodes ??= this.createNodes())
   }
 
-  // eslint-disable-next-line accessor-pairs
-  set needsUpdate(value: boolean) {
-    this.nodes = undefined
-  }
-
   copy(other: AtmosphereRenderingContext): this {
     this.parameters.copy(other.parameters)
     this.camera.copy(other.camera)
+    this.ellipsoid = other.ellipsoid
     this.worldToECEFMatrix.copy(other.worldToECEFMatrix)
     this.sunDirectionECEF.copy(other.sunDirectionECEF)
+    this.moonDirectionECEF.copy(other.moonDirectionECEF)
     this.correctAltitude = other.correctAltitude
     return this
   }
