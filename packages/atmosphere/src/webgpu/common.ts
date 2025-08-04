@@ -133,7 +133,7 @@ export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
     cosView: NodeObject<Dimensionless>
   ): Node<Length> => {
     const discriminant = radius
-      .mul(radius)
+      .pow2()
       .mul(cosView.pow2().sub(1))
       .add(parameters.topRadius.pow2())
     return clampDistance(
@@ -332,7 +332,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ Fnv(
     cosSun: NodeObject<Dimensionless>
   ): Node<DimensionlessSpectrum> => {
     const sinHorizon = parameters.bottomRadius.div(radius).toVar()
-    const cosHorizon = sqrt(max(sub(1, sinHorizon.mul(sinHorizon)), 0)).negate()
+    const cosHorizon = sqrt(max(sinHorizon.pow2().oneMinus(), 0)).negate()
     return getTransmittanceToTopAtmosphereBoundary(
       parameters,
       transmittanceTexture,

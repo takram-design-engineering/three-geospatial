@@ -91,7 +91,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     ).xyz
 
     // Compute the direct luminance of the sun.
-    const radius = length(positionUnit).toVar()
+    const radius = positionUnit.length().toVar()
     const cosSun = positionUnit.dot(sunDirectionECEF).div(radius)
     const sunTransmittance = getTransmittanceToSun(
       parameters,

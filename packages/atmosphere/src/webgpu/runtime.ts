@@ -63,10 +63,8 @@ import {
   float,
   floor,
   If,
-  length,
   max,
   mul,
-  normalize,
   not,
   PI,
   select,
@@ -233,12 +231,12 @@ const getSkyRadiance = /*#__PURE__*/ Fnv(
   ): RadianceTransferStruct => {
     // Clamp the viewer at the bottom atmosphere boundary for rendering points
     // below it.
-    const radius = length(camera).toVar()
+    const radius = camera.length().toVar()
     const movedCamera = camera.toVar()
     if (constrainCamera) {
       If(radius.lessThan(parameters.bottomRadius), () => {
         radius.assign(parameters.bottomRadius)
-        movedCamera.assign(normalize(camera).mul(radius))
+        movedCamera.assign(camera.normalize().mul(radius))
       })
     }
 
@@ -413,8 +411,8 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ Fnv(
   ): RadianceTransferStruct => {
     // Compute the distance to the top atmosphere boundary along the view ray,
     // assuming the viewer is in space.
-    const viewRay = normalize(point.sub(camera)).toVar()
-    const radius = length(camera).toVar()
+    const viewRay = point.sub(camera).normalize().toVar()
+    const radius = camera.length().toVar()
     const radiusCosView = camera.dot(viewRay).toVar()
     const distanceToTop = radiusCosView
       .negate()
@@ -603,7 +601,7 @@ const distanceToClosestPointOnRay = /*#__PURE__*/ Fnv(
   (camera: NodeObject<Position>, point: NodeObject<Position>): Node<Length> => {
     const ray = point.sub(camera).toVar()
     const t = camera.dot(ray).negate().div(ray.dot(ray)).saturate()
-    return length(camera.add(t.mul(ray)))
+    return camera.add(t.mul(ray)).length()
   }
 )
 
@@ -637,10 +635,10 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ Fnv(
   ): RaySegmentStruct => {
     const eps = float(0).toConst()
     const bottomRadius = parameters.bottomRadius.add(eps).toVar()
-    const cameraBelow = length(camera).lessThan(bottomRadius).toVar()
-    const pointBelow = length(point).lessThan(bottomRadius).toVar()
+    const cameraBelow = camera.length().lessThan(bottomRadius).toVar()
+    const pointBelow = point.length().lessThan(bottomRadius).toVar()
 
-    const viewRay = normalize(point.sub(camera)).toVar()
+    const viewRay = point.sub(camera).normalize().toVar()
     const t = raySphereIntersections(camera, viewRay, bottomRadius)
     const intersection = camera.add(viewRay.mul(select(cameraBelow, t.y, t.x)))
 
@@ -721,7 +719,7 @@ const getSunAndSkyIrradiance = /*#__PURE__*/ Fnv(
     normal: NodeObject<Direction>,
     sunDirection: NodeObject<Direction>
   ): SunAndSkyIrradianceStruct => {
-    const radius = length(point).toVar()
+    const radius = point.length().toVar()
     const cosSun = point.dot(sunDirection).div(radius).toVar()
 
     // Direct irradiance.
@@ -750,7 +748,7 @@ const getSkyIrradiance = /*#__PURE__*/ Fnv(
     normal: NodeObject<Direction>,
     sunDirection: NodeObject<Direction>
   ): Node<IrradianceSpectrum> => {
-    const radius = length(point).toVar()
+    const radius = point.length().toVar()
     const cosSun = point.dot(sunDirection).div(radius).toVar()
 
     // Indirect irradiance (approximated if the surface is not horizontal).
@@ -768,7 +766,7 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ Fnv(
     point: NodeObject<Position>,
     sunDirection: NodeObject<Direction>
   ): SunAndSkyIrradianceStruct => {
-    const radius = length(point).toVar()
+    const radius = point.length().toVar()
     const cosSun = point.dot(sunDirection).div(radius).toVar()
 
     // Indirect irradiance. Integral over sphere yields 2π.

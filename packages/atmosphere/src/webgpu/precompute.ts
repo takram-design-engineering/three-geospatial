@@ -71,7 +71,6 @@ import {
   max,
   min,
   mul,
-  normalize,
   PI,
   select,
   sin,
@@ -288,7 +287,7 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
       H.pow2()
         .sub(distanceToHorizon.pow2())
         .sub(distance.pow2())
-        .div(radius.mul(2).mul(distance))
+        .div(mul(2, radius, distance))
     )
     return transmittanceParamsStruct(radius, cosView)
   }
@@ -832,9 +831,10 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
         // whose last bounce is on the ground. This contribution is the product
         // of the transmittance to the ground, the ground albedo, the ground
         // BRDF, and the irradiance received on the ground after n-2 bounces.
-        const groundNormal = normalize(
-          zenithDirection.mul(radius).add(omegaI.mul(distanceToGround))
-        )
+        const groundNormal = zenithDirection
+          .mul(radius)
+          .add(omegaI.mul(distanceToGround))
+          .normalize()
         const groundIrradiance = getIrradiance(
           parameters,
           irradianceTexture,
@@ -914,9 +914,9 @@ const computeMultipleScattering = /*#__PURE__*/ Fnv(
         parameters,
         sqrt(
           rayLength
-            .mul(rayLength)
+            .pow2()
             .add(mul(2, radius, cosView, rayLength))
-            .add(radius.mul(radius))
+            .add(radius.pow2())
         )
       )
       const cosViewI = clampCosine(
