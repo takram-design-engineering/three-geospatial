@@ -29,6 +29,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
+import { AtmosphereParametersNodes } from './AtmosphereParameters'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
 import type { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
@@ -41,10 +42,9 @@ declare module 'three/webgpu' {
 
 const getLunarRadiance = /*#__PURE__*/ Fnv(
   (
-    atmosphereLUT: AtmosphereLUTNode,
+    parameters: AtmosphereParametersNodes,
     moonAngularRadius: NodeObject<'float'>
   ): Node<Luminance3> => {
-    const parameters = atmosphereLUT.parameters.getNodes()
     return (
       parameters.solarIrradiance
         // Visual magnitude of the sun: m1 = -26.74
@@ -128,10 +128,10 @@ export class SkyNode extends TempNode {
 
   private readonly setupSunMoon = Fnv(
     (
+      parameters: AtmosphereParametersNodes,
       rayDirectionECEF: NodeObject<'vec3'>,
       sunDirectionECEF: NodeObject<'vec3'>,
       moonDirectionECEF: NodeObject<'vec3'>,
-      sunAngularRadius: NodeObject<'float'>,
       moonAngularRadius: NodeObject<'float'>
     ): Node<'vec3'> => {
       const sunLuminance = vec3(0).toVar()
@@ -143,6 +143,7 @@ export class SkyNode extends TempNode {
         const fragmentAngle = ddx.distance(ddy).div(rayDirectionECEF.length())
 
         if (this.showSun) {
+          const { sunAngularRadius } = parameters
           const cosViewSun = rayDirectionECEF.dot(sunDirectionECEF).toVar()
           If(cosViewSun.greaterThan(cos(sunAngularRadius)), () => {
             const angle = acos(cosViewSun.clamp(-1, 1))
@@ -151,7 +152,7 @@ export class SkyNode extends TempNode {
               sunAngularRadius.sub(fragmentAngle),
               angle
             )
-            sunLuminance.assign(getSolarLuminance(this.lutNode).mul(antialias))
+            sunLuminance.assign(getSolarLuminance(parameters).mul(antialias))
           })
         }
 
@@ -178,7 +179,7 @@ export class SkyNode extends TempNode {
               angle
             )
             moonLuminance.assign(
-              getLunarRadiance(this.lutNode, moonAngularRadius)
+              getLunarRadiance(parameters, moonAngularRadius)
                 .mul(diffuse)
                 .mul(antialias)
             )
@@ -197,7 +198,8 @@ export class SkyNode extends TempNode {
       moonDirectionECEF,
       cameraPositionUnit
     } = this.renderingContext.getNodes()
-    const { sunAngularRadius } = this.renderingContext.parameters.getNodes()
+
+    const parameters = this.renderingContext.parameters.getNodes()
 
     const reference = referenceTo<SkyNode>(this)
     const moonAngularRadius = reference('moonAngularRadius')
@@ -216,6 +218,7 @@ export class SkyNode extends TempNode {
       .normalize()
 
     const luminanceTransfer = getSkyLuminance(
+      parameters,
       this.lutNode,
       cameraPositionUnit,
       rayDirectionECEF,
@@ -227,10 +230,10 @@ export class SkyNode extends TempNode {
     const transmittance = luminanceTransfer.get('transmittance')
 
     const sunMoonLuminance = this.setupSunMoon(
+      parameters,
       rayDirectionECEF,
       sunDirectionECEF,
       moonDirectionECEF,
-      sunAngularRadius,
       moonAngularRadius
     )
     return inscatter.add(sunMoonLuminance.mul(transmittance))

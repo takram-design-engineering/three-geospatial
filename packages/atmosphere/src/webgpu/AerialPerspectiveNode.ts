@@ -62,7 +62,8 @@ export class AerialPerspectiveNode extends TempNode {
       cameraPositionUnit
     } = this.renderingContext.getNodes()
 
-    const { worldToUnit } = this.lutNode.parameters.getNodes()
+    const parameters = this.renderingContext.parameters.getNodes()
+    const { worldToUnit } = parameters
 
     const colorUV = this.colorNode.uvNode ?? uv()
     const depth = this.depthNode.sample(colorUV).r.toVar()
@@ -107,6 +108,7 @@ export class AerialPerspectiveNode extends TempNode {
 
         // Direct and indirect illuminance on the surface
         const sunSkyIlluminance = getSunAndSkyIlluminance(
+          parameters,
           this.lutNode,
           positionUnit,
           normalECEF,
@@ -123,6 +125,7 @@ export class AerialPerspectiveNode extends TempNode {
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
+        parameters,
         this.lutNode,
         cameraPositionUnit,
         positionUnit,

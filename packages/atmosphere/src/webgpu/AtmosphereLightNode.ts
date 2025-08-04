@@ -50,8 +50,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       altitudeCorrectionECEF
     } = renderingContext.getNodes()
 
-    // Parameters defined in the LUT:
-    const parameters = lutNode.parameters.getNodes()
+    const parameters = renderingContext.parameters.getNodes()
     const {
       worldToUnit,
       solarIrradiance,
@@ -69,6 +68,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
 
     // Compute the indirect illuminance to store it in the context.
     const skyIlluminance = getSkyIlluminance(
+      parameters,
       lutNode,
       positionUnit,
       normalECEF,

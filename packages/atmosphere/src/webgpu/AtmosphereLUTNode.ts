@@ -309,7 +309,7 @@ export class AtmosphereLUTNode extends TempNode {
     return 'AtmosphereLUTNode'
   }
 
-  readonly parameters: AtmosphereParameters
+  parameters = new AtmosphereParameters()
   textureType?: AnyFloatType // TODO
 
   private readonly material = new AdditiveNodeMaterial()
@@ -334,10 +334,9 @@ export class AtmosphereLUTNode extends TempNode {
   private updating = false
   private disposeQueue: (() => void) | undefined
 
-  constructor(parameters = new AtmosphereParameters()) {
+  constructor() {
     super(null)
 
-    this.parameters = parameters
     this.transmittanceRT = createRenderTarget('transmittance')
     this.irradianceRT = createRenderTarget('irradiance')
     this.scatteringRT = createRenderTarget3D('scattering')
