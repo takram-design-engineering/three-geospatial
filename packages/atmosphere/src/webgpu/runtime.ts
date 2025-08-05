@@ -99,15 +99,15 @@ import {
 } from './common'
 import {
   DimensionlessSpectrum,
+  Direction,
   Illuminance3,
   IrradianceSpectrum,
+  Length,
   Luminance3,
   Position,
   RadianceSpectrum,
   type Dimensionless,
-  type Direction,
   type IrradianceTextureNode,
-  type Length,
   type ReducedScatteringTextureNode,
   type TransmittanceTextureNode
 } from './dimensional'
@@ -606,7 +606,14 @@ const distanceToClosestPointOnRay = /*#__PURE__*/ Fnv(
     const t = camera.dot(ray).negate().div(ray.dot(ray)).saturate()
     return camera.add(t.mul(ray)).length()
   }
-)
+).setLayout({
+  type: Length,
+  name: 'distanceToClosestPointOnRay',
+  inputs: [
+    { name: 'camera', type: Position },
+    { name: 'point', type: Position }
+  ]
+})
 
 const raySphereIntersections = /*#__PURE__*/ Fnv(
   (
@@ -620,7 +627,15 @@ const raySphereIntersections = /*#__PURE__*/ Fnv(
     const Q = sqrt(discriminant).toVar()
     return vec2(b.negate().sub(Q), b.negate().add(Q)).mul(0.5)
   }
-)
+).setLayout({
+  type: 'vec2',
+  name: 'raySphereIntersections',
+  inputs: [
+    { name: 'camera', type: Position },
+    { name: 'direction', type: Direction },
+    { name: 'radius', type: Length }
+  ]
+})
 
 const raySegmentStruct = /*#__PURE__*/ struct({
   camera: Position,

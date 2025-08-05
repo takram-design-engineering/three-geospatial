@@ -234,13 +234,20 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
 const getUnitRangeFromTextureCoord = /*#__PURE__*/ Fnv(
   (
     coord: NodeObject<'float'>,
-    textureSize: NodeObject<'int'>
+    textureSize: NodeObject<'float'>
   ): Node<'float'> => {
     return coord
       .sub(textureSize.reciprocal().mul(0.5))
       .div(textureSize.reciprocal().oneMinus())
   }
-)
+).setLayout({
+  type: 'float',
+  name: 'getUnitRangeFromTextureCoord',
+  inputs: [
+    { name: 'coord', type: 'float' },
+    { name: 'textureSize', type: 'float' }
+  ]
+})
 
 const transmittanceParamsStruct = /*#__PURE__*/ struct({
   radius: Length,

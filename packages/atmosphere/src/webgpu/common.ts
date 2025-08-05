@@ -86,30 +86,38 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereParametersNodes } from './AtmosphereParameters'
-import type {
-  AbstractScatteringTextureNode,
-  AbstractSpectrum,
+import {
   Area,
   Dimensionless,
-  DimensionlessSpectrum,
   InverseSolidAngle,
-  IrradianceSpectrum,
-  IrradianceTextureNode,
-  Length,
-  TransmittanceTextureNode
+  type AbstractScatteringTextureNode,
+  type AbstractSpectrum,
+  type DimensionlessSpectrum,
+  type IrradianceSpectrum,
+  type IrradianceTextureNode,
+  type Length,
+  type TransmittanceTextureNode
 } from './dimensional'
 
 export const clampCosine = /*#__PURE__*/ Fnv(
   (cosine: NodeObject<Dimensionless>): Node<Dimensionless> => {
     return clamp(cosine, -1, 1)
   }
-)
+).setLayout({
+  type: Dimensionless,
+  name: 'clampCosine',
+  inputs: [{ name: 'cosine', type: Dimensionless }]
+})
 
 export const clampDistance = /*#__PURE__*/ Fnv(
   (distance: NodeObject<Length>): Node<Length> => {
     return max(distance, 0)
   }
-)
+).setLayout({
+  type: Dimensionless,
+  name: 'clampDistance',
+  inputs: [{ name: 'cosine', type: Dimensionless }]
+})
 
 export const clampRadius = /*#__PURE__*/ Fnv(
   (
@@ -124,7 +132,11 @@ export const safeSqrt = /*#__PURE__*/ Fnv(
   (area: NodeObject<Area>): Node<Length> => {
     return sqrt(max(area, 0))
   }
-)
+).setLayout({
+  type: Dimensionless,
+  name: 'safeSqrt',
+  inputs: [{ name: 'area', type: Area }]
+})
 
 export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
   (
@@ -179,13 +191,20 @@ export const rayIntersectsGround = /*#__PURE__*/ Fnv(
 export const getTextureCoordFromUnitRange = /*#__PURE__*/ Fnv(
   (
     unit: NodeObject<'float'>,
-    textureSize: NodeObject<'int'>
+    textureSize: NodeObject<'float'>
   ): Node<'float'> => {
     return div(0.5, textureSize).add(
       unit.mul(textureSize.reciprocal().oneMinus())
     )
   }
-)
+).setLayout({
+  type: 'float',
+  name: 'getTextureCoordFromUnitRange',
+  inputs: [
+    { name: 'unit', type: 'float' },
+    { name: 'textureSize', type: 'float' }
+  ]
+})
 
 export const getTransmittanceTextureUV = /*#__PURE__*/ Fnv(
   (
@@ -355,7 +374,11 @@ export const rayleighPhaseFunction = /*#__PURE__*/ Fnv(
     const k = div(3, mul(16, PI))
     return k.mul(cosViewSun.pow2().add(1))
   }
-)
+).setLayout({
+  type: InverseSolidAngle,
+  name: 'rayleighPhaseFunction',
+  inputs: [{ name: 'cosViewSun', type: Dimensionless }]
+})
 
 // Cornette-Shanks phase function:
 // p(g,\theta) = \frac{3}{8\pi}\frac{(1-g^2)(1+\cos^2\theta)}{(2+g^2)(1+g^2-2g\cos\theta)^{3/2}}
@@ -369,7 +392,14 @@ export const miePhaseFunction = /*#__PURE__*/ Fnv(
       .mul(cosViewSun.pow2().add(1))
       .div(g.pow2().sub(g.mul(2).mul(cosViewSun)).add(1).pow(1.5))
   }
-)
+).setLayout({
+  type: InverseSolidAngle,
+  name: 'miePhaseFunction',
+  inputs: [
+    { name: 'g', type: Dimensionless },
+    { name: 'cosViewSun', type: Dimensionless }
+  ]
+})
 
 export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
   (
