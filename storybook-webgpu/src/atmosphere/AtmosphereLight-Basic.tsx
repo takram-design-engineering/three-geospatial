@@ -12,6 +12,7 @@ import { PostProcessing, type Renderer } from 'three/webgpu'
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
+  atmosphereEnvironment,
   AtmosphereLight,
   AtmosphereLightNode,
   atmosphereLUT,
@@ -50,6 +51,7 @@ import {
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
 import { useResource } from '../helpers/useResource'
+import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 declare module '@react-three/fiber' {
@@ -113,6 +115,19 @@ const Scene: FC<StoryProps> = () => {
     getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
   })
 
+  const envNode = useResource(() =>
+    atmosphereEnvironment(renderingContext, lutNode)
+  )
+  useTransientControl(
+    ({ environmentMap }: StoryArgs) => environmentMap,
+    value => {
+      // As of r178, the scene's environmentNode does not trigger updates on the
+      // assigned node. Also assign it to the backgroundNode to workaround here.
+      scene.environmentNode = value ? envNode : null
+      scene.backgroundNode = value ? envNode : null
+    }
+  )
+
   return (
     <>
       <atmosphereLight args={[renderingContext, lutNode]} />
@@ -133,7 +148,9 @@ interface StoryArgs
     ToneMappingArgs,
     LocationArgs,
     LocalDateArgs,
-    PhysicalMaterialArgTypes {}
+    PhysicalMaterialArgTypes {
+  environmentMap: boolean
+}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
@@ -162,7 +179,8 @@ Story.args = {
     dayOfYear: 0,
     timeOfDay: 9
   }),
-  ...physicalMaterialArgs()
+  ...physicalMaterialArgs(),
+  environmentMap: true
 }
 
 Story.argTypes = {
@@ -170,7 +188,12 @@ Story.argTypes = {
   ...toneMappingArgTypes(),
   ...locationArgTypes(),
   ...localDateArgTypes(),
-  ...physicalMaterialArgTypes()
+  ...physicalMaterialArgTypes(),
+  environmentMap: {
+    control: {
+      type: 'boolean'
+    }
+  }
 }
 
 export default Story

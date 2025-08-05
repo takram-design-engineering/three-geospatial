@@ -20,11 +20,11 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
+  atmosphereEnvironment,
   AtmosphereLight,
   AtmosphereLightNode,
   atmosphereLUT,
-  AtmosphereRenderingContext,
-  skyBox
+  AtmosphereRenderingContext
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
 
@@ -55,7 +55,6 @@ import {
 import type { StoryFC } from '../helpers/createStory'
 import { Globe } from '../helpers/Globe'
 import { useResource } from '../helpers/useResource'
-import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { ISS } from '../models/ISS'
 import { ReorientationPlugin } from '../plugins/ReorientationPlugin'
@@ -134,13 +133,13 @@ const Scene: FC<StoryProps> = () => {
     getMoonDirectionECEF(date, renderingContext.moonDirectionECEF)
   })
 
-  useTransientControl(
-    ({ environmentMap }: StoryArgs) => environmentMap,
-    value => {
-      scene.environmentNode?.dispose()
-      scene.environmentNode = value ? skyBox(renderingContext, lutNode) : null
-    }
+  const envNode = useResource(() =>
+    atmosphereEnvironment(renderingContext, lutNode)
   )
+  // As of r178, the scene's environmentNode does not trigger updates on the
+  // assigned node. Also assign it to the backgroundNode to workaround here.
+  scene.environmentNode = envNode
+  scene.backgroundNode = envNode
 
   return (
     <>
@@ -170,9 +169,7 @@ interface StoryArgs
   extends OutputPassArgs,
     ToneMappingArgs,
     LocationArgs,
-    LocalDateArgs {
-  environmentMap: boolean
-}
+    LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
@@ -206,8 +203,7 @@ Story.args = {
   ...localDateArgs({
     dayOfYear: 216,
     timeOfDay: 17
-  }),
-  environmentMap: true
+  })
 }
 
 Story.argTypes = {
@@ -217,12 +213,7 @@ Story.argTypes = {
     minHeight: 3000,
     maxHeight: 408000
   }),
-  ...localDateArgTypes(),
-  environmentMap: {
-    control: {
-      type: 'boolean'
-    }
-  }
+  ...localDateArgTypes()
 }
 
 export default Story

@@ -1,12 +1,22 @@
 import type { LightingContext } from 'three/src/nodes/TSL.js'
-import { cameraViewMatrix, normalWorld, positionWorld, vec4 } from 'three/tsl'
+import {
+  cameraViewMatrix,
+  normalWorld,
+  positionWorld,
+  select,
+  vec4
+} from 'three/tsl'
 import {
   AnalyticLightNode,
   type NodeBuilder,
   type NodeFrame
 } from 'three/webgpu'
 
-import type { Node, NodeObject } from '@takram/three-geospatial/webgpu'
+import {
+  referenceTo,
+  type Node,
+  type NodeObject
+} from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
@@ -38,10 +48,17 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
   override setup(builder: NodeBuilder): void {
     // Intentionally omit the call to super.
 
-    const { renderingContext, lutNode } = this.light ?? {}
+    if (this.light == null) {
+      return
+    }
+    const { renderingContext, lutNode } = this.light
     if (renderingContext == null || lutNode == null) {
       return
     }
+
+    const reference = referenceTo(this.light)
+    const direct = reference('direct')
+    const indirect = reference('indirect')
 
     const {
       worldToECEFMatrix,
@@ -73,7 +90,8 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       positionUnit,
       normalECEF,
       sunDirectionECEF
-    )
+    ).mul(select(indirect, 1, 0))
+
     builder.context.irradiance.addAssign(skyIlluminance)
 
     // Derive the view-space sun direction.
@@ -96,6 +114,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const sunLuminance = solarIrradiance
       .mul(sunTransmittance)
       .mul(sunRadianceToLuminance.mul(luminanceScale))
+      .mul(select(direct, 1, 0))
 
     // Setup a direct light in the lighting model.
     builder.lightsNode.setupDirectLight(builder, this, {
