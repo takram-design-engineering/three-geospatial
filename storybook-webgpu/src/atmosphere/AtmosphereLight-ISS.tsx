@@ -205,31 +205,31 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  ...outputPassArgs(),
-  ...toneMappingArgs({
-    toneMappingExposure: 4
+  ...localDateArgs({
+    dayOfYear: 216,
+    timeOfDay: 17
   }),
   ...locationArgs({
     longitude: -110,
     latitude: 45,
     height: 408000
   }),
-  ...localDateArgs({
-    dayOfYear: 216,
-    timeOfDay: 17
-  })
+  ...toneMappingArgs({
+    toneMappingExposure: 4
+  }),
+  ...outputPassArgs()
 }
 
 Story.argTypes = {
-  ...outputPassArgTypes({
-    hasNormal: false
-  }),
-  ...toneMappingArgTypes(),
+  ...localDateArgTypes(),
   ...locationArgTypes({
     minHeight: 3000,
     maxHeight: 408000
   }),
-  ...localDateArgTypes()
+  ...toneMappingArgTypes(),
+  ...outputPassArgTypes({
+    hasNormal: false
+  })
 }
 
 export default Story

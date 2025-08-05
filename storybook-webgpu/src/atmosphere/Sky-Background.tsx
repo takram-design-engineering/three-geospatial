@@ -85,27 +85,24 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  ...toneMappingArgs({
-    toneMappingExposure: 10
+  showSun: true,
+  showMoon: true,
+  showGround: true,
+  ...localDateArgs({
+    dayOfYear: 0,
+    timeOfDay: 9
   }),
   ...locationArgs({
     longitude: 30,
     latitude: 35,
     height: 300
   }),
-  ...localDateArgs({
-    dayOfYear: 0,
-    timeOfDay: 9
-  }),
-  showSun: true,
-  showMoon: true,
-  showGround: true
+  ...toneMappingArgs({
+    toneMappingExposure: 10
+  })
 }
 
 Story.argTypes = {
-  ...toneMappingArgTypes(),
-  ...locationArgTypes(),
-  ...localDateArgTypes(),
   showSun: {
     control: {
       type: 'boolean'
@@ -120,7 +117,10 @@ Story.argTypes = {
     control: {
       type: 'boolean'
     }
-  }
+  },
+  ...localDateArgTypes(),
+  ...locationArgTypes(),
+  ...toneMappingArgTypes()
 }
 
 export default Story

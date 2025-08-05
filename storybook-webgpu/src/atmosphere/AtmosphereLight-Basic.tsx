@@ -176,33 +176,26 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  ...outputPassArgs(),
-  ...toneMappingArgs({
-    toneMappingExposure: 10
+  directLight: true,
+  indirectLight: true,
+  environmentMap: false,
+  ...physicalMaterialArgs(),
+  ...localDateArgs({
+    dayOfYear: 0,
+    timeOfDay: 9
   }),
   ...locationArgs({
     longitude: 30,
     latitude: 35,
     height: 300
   }),
-  ...localDateArgs({
-    dayOfYear: 0,
-    timeOfDay: 9
+  ...toneMappingArgs({
+    toneMappingExposure: 10
   }),
-  ...physicalMaterialArgs(),
-  directLight: true,
-  indirectLight: true,
-  environmentMap: false
+  ...outputPassArgs()
 }
 
 Story.argTypes = {
-  ...outputPassArgTypes({
-    hasNormal: false
-  }),
-  ...toneMappingArgTypes(),
-  ...locationArgTypes(),
-  ...localDateArgTypes(),
-  ...physicalMaterialArgTypes(),
   directLight: {
     control: {
       type: 'boolean'
@@ -217,7 +210,14 @@ Story.argTypes = {
     control: {
       type: 'boolean'
     }
-  }
+  },
+  ...physicalMaterialArgTypes(),
+  ...localDateArgTypes(),
+  ...locationArgTypes(),
+  ...toneMappingArgTypes(),
+  ...outputPassArgTypes({
+    hasNormal: false
+  })
 }
 
 export default Story

@@ -96,22 +96,22 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
+  zoom: 1,
   ...toneMappingArgs({
     toneMapping: LinearToneMapping
   })
 }
 
 Story.argTypes = {
-  ...toneMappingArgTypes(),
   zoom: {
     control: {
       type: 'range',
       min: 1,
       max: 32,
       step: 0.1
-    },
-    table: { category: 'display' }
-  }
+    }
+  },
+  ...toneMappingArgTypes()
 }
 
 export default Story

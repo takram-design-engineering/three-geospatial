@@ -99,16 +99,15 @@ Story.args = {
 }
 
 Story.argTypes = {
-  ...toneMappingArgTypes(),
   zoom: {
     control: {
       type: 'range',
       min: 1,
       max: 32,
       step: 0.1
-    },
-    table: { category: 'display' }
-  }
+    }
+  },
+  ...toneMappingArgTypes()
 }
 
 export default Story
