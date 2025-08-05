@@ -13,7 +13,11 @@ import {
   type NodeBuilder
 } from 'three/webgpu'
 
-import { referenceTo, type NodeObject } from '@takram/three-geospatial/webgpu'
+import {
+  referenceTo,
+  type Node,
+  type NodeObject
+} from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
@@ -39,9 +43,9 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     return 'AtmosphereLightNode'
   }
 
-  override setupDirect(builder: NodeBuilder): DirectLightData | undefined {
-    // Intentionally omit the call to super.
+  private originalColorNode?: Node
 
+  override setupDirect(builder: NodeBuilder): DirectLightData | undefined {
     if (this.light == null) {
       return
     }
@@ -115,7 +119,8 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     // WORKAROUND: As of r178, the lightColor in the DirectLightData must
     // depends on the colorNode of AnalyticLight, otherwise the shadow camera
     // doesn't follow the direction of the light.
-    this.colorNode = sunLuminance.mul(this.colorNode)
+    this.originalColorNode ??= this.colorNode
+    this.colorNode = sunLuminance.mul(this.originalColorNode)
 
     return {
       lightDirection: sunDirectionView,
