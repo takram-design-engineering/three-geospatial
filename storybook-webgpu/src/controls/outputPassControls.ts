@@ -20,16 +20,23 @@ export const outputPassArgs = (
   ...defaults
 })
 
-export const outputPassArgTypes = (): ArgTypes<OutputPassArgs> => ({
+export const outputPassArgTypes = (
+  options: {
+    hasDepth?: boolean
+    hasNormal?: boolean
+  } = {}
+): ArgTypes<OutputPassArgs> => ({
   depth: {
     control: {
-      type: 'boolean'
+      type: 'boolean',
+      disable: options.hasDepth === false
     },
     table: { category: 'output pass' }
   },
   normal: {
     control: {
-      type: 'boolean'
+      type: 'boolean',
+      disable: options.hasNormal === false
     },
     table: { category: 'output pass' }
   }

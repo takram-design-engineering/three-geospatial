@@ -184,7 +184,9 @@ Story.args = {
 }
 
 Story.argTypes = {
-  ...outputPassArgTypes(),
+  ...outputPassArgTypes({
+    hasNormal: false
+  }),
   ...toneMappingArgTypes(),
   ...localDateArgTypes()
 }

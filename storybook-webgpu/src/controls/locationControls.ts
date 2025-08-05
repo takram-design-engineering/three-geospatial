@@ -23,7 +23,7 @@ export const locationArgs = (
 })
 
 export const locationArgTypes = (
-  defaults: {
+  options: {
     minHeight?: number
     maxHeight?: number
   } = {}
@@ -47,8 +47,8 @@ export const locationArgTypes = (
   height: {
     control: {
       type: 'range',
-      min: defaults.minHeight ?? 0,
-      max: defaults.maxHeight ?? 30000
+      min: options.minHeight ?? 0,
+      max: options.maxHeight ?? 30000
     },
     table: { category: 'location' }
   }
