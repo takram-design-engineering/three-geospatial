@@ -47,16 +47,18 @@ const Scene: FC<StoryProps> = () => {
   const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
   renderingContext.camera = camera
 
+  const lutNode = useResource(() => atmosphereLUT())
+
   // Post-processing:
 
-  const [postProcessing, passNode, , aerialNode] = useResource(() => {
+  const [postProcessing, passNode, aerialNode] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output: diffuseColor,
         normal: normalView
       })
     )
-    const lutNode = atmosphereLUT()
+
     const aerialNode = aerialPerspective(
       renderingContext,
       passNode.getTextureNode('output'),
@@ -69,8 +71,8 @@ const Scene: FC<StoryProps> = () => {
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
-    return [postProcessing, passNode, lutNode, aerialNode]
-  }, [renderer, scene, camera, renderingContext])
+    return [postProcessing, passNode, aerialNode]
+  }, [renderer, scene, camera, renderingContext, lutNode])
 
   useFrame(() => {
     postProcessing.render()

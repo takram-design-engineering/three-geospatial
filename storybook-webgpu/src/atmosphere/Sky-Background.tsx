@@ -67,12 +67,7 @@ const Scene: FC<StoryProps> = () => {
     getMoonDirectionECEF(date, renderingContext.moonDirectionECEF)
   })
 
-  return (
-    <>
-      <atmosphereLight args={[renderingContext, lutNode]} />
-      <OrbitControls target={[0, 0, 0]} minDistance={1} />
-    </>
-  )
+  return <OrbitControls target={[0, 0, 0]} minDistance={1} />
 }
 
 interface StoryProps {}
