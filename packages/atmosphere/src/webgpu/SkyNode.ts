@@ -82,13 +82,14 @@ const getLunarRadiance = /*#__PURE__*/ Fnv(
 const intersectSphere = /*#__PURE__*/ Fnv(
   (
     rayDirection: NodeObject<'vec3'>,
-    directionToCenter: NodeObject<'vec3'>,
+    centerDirection: NodeObject<'vec3'>,
     angularRadius: NodeObject<'float'>
   ): NodeObject<'vec3'> => {
-    const p = directionToCenter.negate().toVar()
-    const cosPRay = p.dot(rayDirection).toVar()
-    const discriminant = p.dot(p).sub(angularRadius.pow2())
-    return cosPRay.negate().sub(sqrt(cosPRay.pow2().sub(discriminant)))
+    const cosRay = centerDirection.dot(rayDirection).toVar()
+    const discriminant = centerDirection
+      .dot(centerDirection)
+      .sub(angularRadius.pow2())
+    return cosRay.sub(sqrt(cosRay.pow2().sub(discriminant)))
   }
 )
 

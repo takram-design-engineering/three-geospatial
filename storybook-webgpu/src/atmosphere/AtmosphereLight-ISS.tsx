@@ -141,7 +141,22 @@ const Scene: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight args={[renderingContext, lutNode]} />
+      <atmosphereLight
+        args={[renderingContext, lutNode, 80]}
+        castShadow
+        shadow-normalBias={0.1}
+        shadow-mapSize={[2048, 2048]}
+      >
+        <orthographicCamera
+          attach='shadow-camera'
+          top={60}
+          bottom={-60}
+          left={-60}
+          right={60}
+          near={0}
+          far={160}
+        />
+      </atmosphereLight>
       <OrbitControls minDistance={20} maxDistance={1e5} />
       <group rotation-x={-Math.PI / 2}>
         <ISS
@@ -183,6 +198,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
       near: 10,
       far: 1e7
     }}
+    shadows
   >
     <Scene {...props} />
   </WebGPUCanvas>

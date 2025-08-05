@@ -1,4 +1,4 @@
-import type { LightingContext } from 'three/src/nodes/TSL.js'
+import type { DirectLightData, LightingContext } from 'three/src/nodes/TSL.js'
 import {
   cameraViewMatrix,
   normalWorld,
@@ -8,35 +8,29 @@ import {
 } from 'three/tsl'
 import {
   AnalyticLightNode,
-  type NodeBuilder,
-  type NodeFrame
+  type Light,
+  type LightingNode,
+  type NodeBuilder
 } from 'three/webgpu'
 
-import {
-  referenceTo,
-  type Node,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import { referenceTo, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
 import { getSkyIlluminance } from './runtime'
 
-type CorrectLightingContext = {
-  [K in keyof LightingContext]: LightingContext[K] extends Node
-    ? NodeObject<LightingContext[K]>
-    : LightingContext[K]
-}
-
 declare module 'three/webgpu' {
-  interface Node {
-    onRenderUpdate(
-      callback: (this: this, frame: NodeFrame, self: this) => void
-    ): this
+  interface NodeBuilder {
+    context: {
+      [K in keyof LightingContext]: LightingContext[K] extends Node
+        ? NodeObject<LightingContext[K]>
+        : LightingContext[K]
+    }
   }
 
-  interface NodeBuilder {
-    context: CorrectLightingContext
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface AnalyticLightNode<T extends Light> extends LightingNode {
+    colorNode: Node
   }
 }
 
@@ -45,7 +39,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     return 'AtmosphereLightNode'
   }
 
-  override setup(builder: NodeBuilder): void {
+  override setupDirect(builder: NodeBuilder): DirectLightData | undefined {
     // Intentionally omit the call to super.
 
     if (this.light == null) {
@@ -92,6 +86,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       sunDirectionECEF
     ).mul(select(indirect, 1, 0))
 
+    // Yes, it's an indirect but should be fine to update it here.
     builder.context.irradiance.addAssign(skyIlluminance)
 
     // Derive the view-space sun direction.
@@ -111,15 +106,20 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       radius,
       cosSun
     )
+
     const sunLuminance = solarIrradiance
       .mul(sunTransmittance)
       .mul(sunRadianceToLuminance.mul(luminanceScale))
       .mul(select(direct, 1, 0))
 
-    // Setup a direct light in the lighting model.
-    builder.lightsNode.setupDirectLight(builder, this, {
+    // WORKAROUND: As of r178, the lightColor in the DirectLightData must
+    // depends on the colorNode of AnalyticLight, otherwise the shadow camera
+    // doesn't follow the direction of the light.
+    this.colorNode = sunLuminance.mul(this.colorNode)
+
+    return {
       lightDirection: sunDirectionView,
-      lightColor: sunLuminance
-    })
+      lightColor: this.colorNode
+    }
   }
 }
