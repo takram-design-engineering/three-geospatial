@@ -24,7 +24,7 @@ import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
-import { sky, type SkyNode, type SkyNodeOptions } from './SkyNode'
+import { skyWorld, type SkyNode, type SkyNodeOptions } from './SkyNode'
 
 class QuadGeometry extends BufferGeometry {
   constructor() {
@@ -48,10 +48,7 @@ function setupRenderTarget(renderTarget: CubeRenderTarget, size: number): void {
 }
 
 export interface SkyEnvironmentNodeOptions
-  extends Omit<
-    SkyNodeOptions,
-    'showSun' | 'showMoon' | 'showGround' | 'useContextCamera'
-  > {
+  extends Omit<SkyNodeOptions, 'showSun' | 'showMoon'> {
   textureSize?: number
 }
 
@@ -81,12 +78,10 @@ export class SkyEnvironmentNode extends CubeTextureNode {
     })
     super(renderTarget.texture)
 
-    this.skyNode = sky(renderingContext, lutNode, {
+    this.skyNode = skyWorld(renderingContext, lutNode, {
       ...options,
       showSun: false,
-      showMoon: false,
-      showGround: true,
-      useContextCamera: false
+      showMoon: false
     })
     this.textureSize = textureSize
     this.renderTarget = renderTarget

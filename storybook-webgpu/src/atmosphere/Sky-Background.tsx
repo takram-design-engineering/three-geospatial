@@ -1,7 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import { useMemo, type FC } from 'react'
-import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
   getMoonDirectionECEF,
@@ -10,7 +9,7 @@ import {
 import {
   atmosphereLUT,
   AtmosphereRenderingContext,
-  sky,
+  skyBackground,
   type SkyNodeOptions
 } from '@takram/three-atmosphere/webgpu'
 
@@ -38,20 +37,10 @@ import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 const Scene: FC<StoryProps> = () => {
-  const renderer = useThree<Renderer>(({ gl }) => gl as any)
-  const camera = useThree(({ camera }) => camera)
+  const scene = useThree(({ scene }) => scene)
 
   const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
-  renderingContext.camera = camera
-
   const lutNode = useResource(() => atmosphereLUT())
-
-  // Post-processing:
-
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer),
-    [renderer]
-  )
 
   useTransientControl(
     ({ showSun, showMoon, showGround }: StoryArgs): SkyNodeOptions => ({
@@ -60,21 +49,14 @@ const Scene: FC<StoryProps> = () => {
       showGround
     }),
     options => {
-      const skyNode = sky(renderingContext, lutNode, options)
-      postProcessing.outputNode?.dispose()
-      postProcessing.outputNode = skyNode
-      postProcessing.needsUpdate = true
+      const skyNode = skyBackground(renderingContext, lutNode, options)
+      scene.backgroundNode?.dispose()
+      scene.backgroundNode = skyNode
     }
   )
 
-  useFrame(() => {
-    postProcessing.render()
-  }, 1)
-
   // Tone mapping controls:
-  useToneMappingControls(() => {
-    postProcessing.needsUpdate = true
-  })
+  useToneMappingControls()
 
   // Location controls:
   const [longitude] = useLocationControls(renderingContext.worldToECEFMatrix)

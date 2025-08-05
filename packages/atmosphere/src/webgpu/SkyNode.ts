@@ -6,12 +6,14 @@ import {
   dFdy,
   If,
   max,
-  nodeObject,
+  nodeProxy,
   PI,
   positionGeometry,
   select,
+  sin,
   smoothstep,
   sqrt,
+  uv,
   vec3,
   vec4
 } from 'three/tsl'
@@ -38,6 +40,25 @@ declare module 'three/webgpu' {
     camera?: Camera
   }
 }
+
+const cameraDirectionWorld = /*#__PURE__*/ Fnv((camera: Camera) => {
+  const positionView = inverseProjectionMatrix(camera).mul(
+    vec4(positionGeometry, 1)
+  ).xyz
+  const directionWorld = inverseViewMatrix(camera).mul(
+    vec4(positionView, 0)
+  ).xyz
+  return directionWorld
+})
+
+const equirectangularWorld = /*#__PURE__*/ Fnv(
+  (equirectUV: NodeObject<'vec2'>) => {
+    const theta = equirectUV.y.oneMinus().mul(PI).toVar()
+    const phi = equirectUV.x.oneMinus().mul(2, PI).toVar()
+    const sinTheta = sin(theta).toVar()
+    return vec3(sinTheta.mul(sin(phi)), cos(theta), sinTheta.mul(cos(phi)))
+  }
+)
 
 const getLunarRadiance = /*#__PURE__*/ Fnv(
   (
@@ -92,6 +113,12 @@ const orenNayarDiffuse = /*#__PURE__*/ Fnv(
   }
 )
 
+const SCREEN = 'POST_PROCESSING'
+const WORLD = 'RENDERER'
+const EQUIRECTANGULAR = 'EQUIRECTANGULAR'
+
+type SkyNodeScope = typeof SCREEN | typeof WORLD | typeof EQUIRECTANGULAR
+
 export interface SkyNodeOptions {
   showSun?: boolean
   showMoon?: boolean
@@ -114,14 +141,17 @@ export class SkyNode extends TempNode {
   showSun = true
   showMoon = true
   showGround = true
-  useContextCamera = true
+
+  private readonly scope: SkyNodeScope = SCREEN
 
   constructor(
+    scope: SkyNodeScope,
     renderingContext: AtmosphereRenderingContext,
     lutNode: AtmosphereLUTNode,
     options?: SkyNodeOptions
   ) {
     super('vec3')
+    this.scope = scope
     this.renderingContext = renderingContext
     this.lutNode = lutNode
     Object.assign(this, options)
@@ -206,18 +236,21 @@ export class SkyNode extends TempNode {
 
     // Direction of the camera ray:
     const rayDirectionECEF = Fnv(() => builder => {
-      const camera = this.useContextCamera
-        ? this.renderingContext.camera
-        : builder.camera
-      if (camera == null) {
-        return vec3()
+      let directionWorld
+      switch (this.scope) {
+        case SCREEN:
+          directionWorld = cameraDirectionWorld(this.renderingContext.camera)
+          break
+        case WORLD:
+          directionWorld =
+            builder.camera != null
+              ? cameraDirectionWorld(builder.camera)
+              : vec3()
+          break
+        case EQUIRECTANGULAR:
+          directionWorld = equirectangularWorld(uv())
+          break
       }
-      const positionView = inverseProjectionMatrix(camera).mul(
-        vec4(positionGeometry, 1)
-      ).xyz
-      const directionWorld = inverseViewMatrix(camera).mul(
-        vec4(positionView, 0)
-      ).xyz
       return worldToECEFMatrix.mul(vec4(directionWorld, 0)).xyz
     })()
       .toVertexStage()
@@ -246,6 +279,6 @@ export class SkyNode extends TempNode {
   }
 }
 
-export const sky = (
-  ...args: ConstructorParameters<typeof SkyNode>
-): NodeObject<SkyNode> => nodeObject(new SkyNode(...args))
+export const sky = nodeProxy(SkyNode, SCREEN)
+export const skyWorld = nodeProxy(SkyNode, WORLD)
+export const skyBackground = nodeProxy(SkyNode, EQUIRECTANGULAR)
