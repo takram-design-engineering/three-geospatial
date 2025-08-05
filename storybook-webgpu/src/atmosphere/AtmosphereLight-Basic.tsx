@@ -5,7 +5,7 @@ import {
   useThree,
   type ThreeElement
 } from '@react-three/fiber'
-import { useMemo, type FC } from 'react'
+import { useMemo, useRef, type FC } from 'react'
 import { pass } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
@@ -116,19 +116,29 @@ const Scene: FC<StoryProps> = () => {
   })
 
   const envNode = useResource(() => skyEnvironment(renderingContext, lutNode))
+  const lightRef = useRef<AtmosphereLight>(null)
   useTransientControl(
-    ({ environmentMap }: StoryArgs) => environmentMap,
-    value => {
+    ({ directLight, indirectLight, environmentMap }: StoryArgs) => ({
+      directLight,
+      indirectLight,
+      environmentMap
+    }),
+    ({ directLight, indirectLight, environmentMap }) => {
+      const light = lightRef.current
+      if (light != null) {
+        light.direct = directLight
+        light.indirect = indirectLight && !environmentMap
+      }
       // As of r178, the scene's environmentNode does not trigger updates on the
       // assigned node. Also assign it to the backgroundNode to workaround here.
-      scene.environmentNode = value ? envNode : null
-      scene.backgroundNode = value ? envNode : null
+      scene.environmentNode = environmentMap ? envNode : null
+      scene.backgroundNode = environmentMap ? envNode : null
     }
   )
 
   return (
     <>
-      <atmosphereLight args={[renderingContext, lutNode]} />
+      <atmosphereLight ref={lightRef} args={[renderingContext, lutNode]} />
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere
         args={[0.5, 128, 128]}
@@ -147,6 +157,8 @@ interface StoryArgs
     LocationArgs,
     LocalDateArgs,
     PhysicalMaterialArgTypes {
+  directLight: boolean
+  indirectLight: boolean
   environmentMap: boolean
 }
 
@@ -178,7 +190,9 @@ Story.args = {
     timeOfDay: 9
   }),
   ...physicalMaterialArgs(),
-  environmentMap: true
+  directLight: true,
+  indirectLight: true,
+  environmentMap: false
 }
 
 Story.argTypes = {
@@ -187,6 +201,16 @@ Story.argTypes = {
   ...locationArgTypes(),
   ...localDateArgTypes(),
   ...physicalMaterialArgTypes(),
+  directLight: {
+    control: {
+      type: 'boolean'
+    }
+  },
+  indirectLight: {
+    control: {
+      type: 'boolean'
+    }
+  },
   environmentMap: {
     control: {
       type: 'boolean'
