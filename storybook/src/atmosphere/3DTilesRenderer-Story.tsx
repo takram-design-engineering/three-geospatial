@@ -34,8 +34,8 @@ import {
   useLocalDateControls,
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
-import { useToneMappingControls } from '../helpers/useToneMappingControls'
 import { usePovControls } from '../helpers/usePovControls'
+import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 interface SceneProps extends LocalDateControlsParams {
   exposure?: number
@@ -183,7 +183,7 @@ export const Story: FC<SceneProps> = props => {
   useGoogleMapsAPIKeyControls()
   return (
     <>
-      <Canvas gl={{ depth: false }} >
+      <Canvas gl={{ depth: false }} frameloop='demand'>
         <Stats />
         <Scene {...props} />
       </Canvas>

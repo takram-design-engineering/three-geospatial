@@ -10,8 +10,6 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {}
   },
-  logLevel: 'error',
-
   staticDirs: [
     { from: '../assets', to: '/public' },
     { from: '../../packages/core/assets', to: '/core' },
