@@ -5,9 +5,12 @@ import {
 } from 'three/webgpu'
 
 import { useResource } from '../helpers/useResource'
-import { useTransientControl } from '../helpers/useTransientControl'
+import {
+  useSpringColorControl,
+  useSpringControl
+} from '../helpers/useSpringControl'
 
-export interface PhysicalMaterialArgTypes {
+export interface PhysicalMaterialArgs {
   color: string
   roughness: number
   metalness: number
@@ -16,8 +19,8 @@ export interface PhysicalMaterialArgTypes {
 }
 
 export const physicalMaterialArgs = (
-  defaults?: Partial<PhysicalMaterialArgTypes>
-): PhysicalMaterialArgTypes => ({
+  defaults?: Partial<PhysicalMaterialArgs>
+): PhysicalMaterialArgs => ({
   color: '#ffffff',
   roughness: 0.5,
   metalness: 0.5,
@@ -26,51 +29,50 @@ export const physicalMaterialArgs = (
   ...defaults
 })
 
-export const physicalMaterialArgTypes =
-  (): ArgTypes<PhysicalMaterialArgTypes> => ({
-    color: {
-      control: {
-        type: 'color'
-      },
-      table: { category: 'physical material' }
+export const physicalMaterialArgTypes = (): ArgTypes<PhysicalMaterialArgs> => ({
+  color: {
+    control: {
+      type: 'color'
     },
-    roughness: {
-      control: {
-        type: 'range',
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      table: { category: 'physical material' }
+    table: { category: 'physical material' }
+  },
+  roughness: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 1,
+      step: 0.01
     },
-    metalness: {
-      control: {
-        type: 'range',
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      table: { category: 'physical material' }
+    table: { category: 'physical material' }
+  },
+  metalness: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 1,
+      step: 0.01
     },
-    clearcoat: {
-      control: {
-        type: 'range',
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      table: { category: 'physical material' }
+    table: { category: 'physical material' }
+  },
+  clearcoat: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 1,
+      step: 0.01
     },
-    clearcoatRoughness: {
-      control: {
-        type: 'range',
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      table: { category: 'physical material' }
-    }
-  })
+    table: { category: 'physical material' }
+  },
+  clearcoatRoughness: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    table: { category: 'physical material' }
+  }
+})
 
 export function usePhysicalMaterialControls(
   initialParams?: MeshPhysicalNodeMaterialParameters
@@ -79,29 +81,27 @@ export function usePhysicalMaterialControls(
     () => new MeshPhysicalNodeMaterial(initialParams)
   )
 
-  useTransientControl(
-    ({
-      color,
-      roughness,
-      metalness,
-      clearcoat,
-      clearcoatRoughness
-    }: PhysicalMaterialArgTypes) => ({
-      color,
-      roughness,
-      metalness,
-      clearcoat,
-      clearcoatRoughness
-    }),
-    ({ color, ...values }) => {
-      material.color.setStyle(color)
-      for (const [key, value] of Object.entries(values)) {
-        if (value != null) {
-          material[key as keyof PhysicalMaterialArgTypes] = value as any
-        }
-      }
+  useSpringColorControl(
+    ({ color }: PhysicalMaterialArgs) => color,
+    ([r, g, b]) => {
+      material.color.setRGB(r, g, b)
     }
   )
+
+  for (const name of [
+    'roughness',
+    'metalness',
+    'clearcoat',
+    'clearcoatRoughness'
+  ] as const) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useSpringControl(
+      ({ [name]: value }: PhysicalMaterialArgs) => value,
+      value => {
+        material[name] = value
+      }
+    )
+  }
 
   return material
 }

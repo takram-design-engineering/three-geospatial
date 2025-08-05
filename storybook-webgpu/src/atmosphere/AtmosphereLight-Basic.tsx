@@ -41,7 +41,7 @@ import {
   physicalMaterialArgs,
   physicalMaterialArgTypes,
   usePhysicalMaterialControls,
-  type PhysicalMaterialArgTypes
+  type PhysicalMaterialArgs
 } from '../controls/physicalMaterialControls'
 import {
   toneMappingArgs,
@@ -156,7 +156,7 @@ interface StoryArgs
     ToneMappingArgs,
     LocationArgs,
     LocalDateArgs,
-    PhysicalMaterialArgTypes {
+    PhysicalMaterialArgs {
   directLight: boolean
   indirectLight: boolean
   environmentMap: boolean
