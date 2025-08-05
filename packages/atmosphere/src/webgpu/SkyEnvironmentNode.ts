@@ -1,64 +1,32 @@
-import {
-  BufferGeometry,
-  CubeCamera,
-  Float32BufferAttribute,
-  HalfFloatType,
-  Mesh,
-  RGBAFormat,
-  Scene,
-  Sphere,
-  Vector3,
-  type CubeTexture
-} from 'three'
-import { nodeObject, positionGeometry, vec4 } from 'three/tsl'
+import { CubeCamera, HalfFloatType, Mesh, RGBAFormat, Scene } from 'three'
+import { nodeObject, pmremTexture, positionGeometry, vec4 } from 'three/tsl'
 import {
   WebGLCubeRenderTarget as CubeRenderTarget,
-  CubeTextureNode,
   NodeMaterial,
   NodeUpdateType,
+  TempNode,
   type NodeBuilder,
   type NodeFrame
 } from 'three/webgpu'
 
+import { QuadGeometry } from '@takram/three-geospatial'
 import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
 import { skyWorld, type SkyNode, type SkyNodeOptions } from './SkyNode'
 
-class QuadGeometry extends BufferGeometry {
-  constructor() {
-    super()
-    this.boundingSphere = new Sphere()
-    this.boundingSphere.set(new Vector3(), Infinity)
-    this.setAttribute(
-      'position',
-      new Float32BufferAttribute([-1, -1, 3, -1, -1, 3], 2)
-    )
-  }
-}
-
-function setupRenderTarget(renderTarget: CubeRenderTarget, size: number): void {
-  renderTarget.setSize(size, size)
-  for (const image of renderTarget.texture.images) {
-    image.width = size
-    image.height = size
-    image.depth = size
-  }
-}
-
 export interface SkyEnvironmentNodeOptions
   extends Omit<SkyNodeOptions, 'showSun' | 'showMoon'> {
-  textureSize?: number
+  size?: number
 }
 
-export class SkyEnvironmentNode extends CubeTextureNode {
+export class SkyEnvironmentNode extends TempNode {
   static override get type(): string {
     return 'SkyEnvironmentNode'
   }
 
   skyNode: SkyNode
-  textureSize: number
 
   private readonly renderTarget: CubeRenderTarget
   private readonly camera: CubeCamera
@@ -69,37 +37,29 @@ export class SkyEnvironmentNode extends CubeTextureNode {
   constructor(
     renderingContext: AtmosphereRenderingContext,
     lutNode: AtmosphereLUTNode,
-    { textureSize = 64, ...options }: SkyEnvironmentNodeOptions = {}
+    { size = 64, ...options }: SkyEnvironmentNodeOptions = {}
   ) {
-    const renderTarget = new CubeRenderTarget(1, {
-      depthBuffer: false,
-      type: HalfFloatType,
-      format: RGBAFormat
-    })
-    super(renderTarget.texture)
+    super('cubeTexture')
 
     this.skyNode = skyWorld(renderingContext, lutNode, {
       ...options,
       showSun: false,
       showMoon: false
     })
-    this.textureSize = textureSize
-    this.renderTarget = renderTarget
+
+    this.renderTarget = new CubeRenderTarget(size, {
+      depthBuffer: false,
+      type: HalfFloatType,
+      format: RGBAFormat
+    })
     this.camera = new CubeCamera(0.1, 1000, this.renderTarget)
 
     this.updateBeforeType = NodeUpdateType.RENDER
   }
 
-  get texture(): CubeTexture {
-    return this.renderTarget.texture
-  }
-
   override updateBefore({ renderer }: NodeFrame): void {
     if (renderer == null) {
       return
-    }
-    if (this.renderTarget.width !== this.textureSize) {
-      setupRenderTarget(this.renderTarget, this.textureSize)
     }
     // TODO: Don't render when the camera doesn't move.
     this.camera.update(renderer, this.scene)
@@ -108,7 +68,7 @@ export class SkyEnvironmentNode extends CubeTextureNode {
   override setup(builder: NodeBuilder): unknown {
     this.material.vertexNode = vec4(positionGeometry.xy, 0, 1)
     this.material.fragmentNode = this.skyNode
-    return super.setup(builder)
+    return pmremTexture(this.renderTarget.texture)
   }
 
   override dispose(): void {
@@ -122,8 +82,4 @@ export class SkyEnvironmentNode extends CubeTextureNode {
 
 export const skyEnvironment = (
   ...args: ConstructorParameters<typeof SkyEnvironmentNode>
-): NodeObject =>
-  // WORKAROUND: ShaderNodeObject<UniformNode> is not assignable to
-  // ShaderNodeObject<Node>, which causes type error when assigning this to
-  // scene.environmentNode.
-  nodeObject(new SkyEnvironmentNode(...args)) as unknown as NodeObject
+): NodeObject<SkyEnvironmentNode> => nodeObject(new SkyEnvironmentNode(...args))

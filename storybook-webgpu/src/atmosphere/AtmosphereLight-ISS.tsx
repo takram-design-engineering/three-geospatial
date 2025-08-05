@@ -134,10 +134,7 @@ const Scene: FC<StoryProps> = () => {
   })
 
   const envNode = useResource(() => skyEnvironment(renderingContext, lutNode))
-  // As of r178, the scene's environmentNode does not trigger updates on the
-  // assigned node. Also assign it to the backgroundNode to workaround here.
   scene.environmentNode = envNode
-  scene.backgroundNode = envNode
 
   return (
     <>

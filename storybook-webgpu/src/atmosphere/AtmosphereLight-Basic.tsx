@@ -129,10 +129,7 @@ const Scene: FC<StoryProps> = () => {
         light.direct = directLight
         light.indirect = indirectLight && !environmentMap
       }
-      // As of r178, the scene's environmentNode does not trigger updates on the
-      // assigned node. Also assign it to the backgroundNode to workaround here.
       scene.environmentNode = environmentMap ? envNode : null
-      scene.backgroundNode = environmentMap ? envNode : null
     }
   )
 
