@@ -40,8 +40,8 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
-import { useControl } from '../helpers/useControl'
 import { useResource } from '../helpers/useResource'
+import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 declare module '@react-three/fiber' {
@@ -61,26 +61,26 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const skyOptions = useControl(
-    ({ showSun, showMoon, showGround }: StoryArgs): SkyNodeOptions => ({
-      showSun,
-      showMoon,
-      showGround
-    })
-  )
-
   const lutNode = useResource(() => atmosphereLUT())
-  const skyNode = useResource(
-    () => sky(renderingContext, lutNode, skyOptions),
-    [renderingContext, lutNode, skyOptions]
-  )
 
   const postProcessing = useResource(
     () => new PostProcessing(renderer),
     [renderer]
   )
 
-  postProcessing.outputNode = skyNode
+  useTransientControl(
+    ({ showSun, showMoon, showGround }: StoryArgs): SkyNodeOptions => ({
+      showSun,
+      showMoon,
+      showGround
+    }),
+    options => {
+      const skyNode = sky(renderingContext, lutNode, options)
+      postProcessing.outputNode?.dispose()
+      postProcessing.outputNode = skyNode
+      postProcessing.needsUpdate = true
+    }
+  )
 
   useFrame(() => {
     postProcessing.render()
