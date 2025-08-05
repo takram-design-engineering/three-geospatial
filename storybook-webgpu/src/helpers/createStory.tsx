@@ -24,14 +24,7 @@ function formatArgTypes<TArgs extends Args>(
           key,
           {
             ...value,
-            name: value?.name ?? naturalCase(key),
-            table:
-              value?.table != null
-                ? {
-                    ...value.table,
-                    category: value.table.category?.replace(/ /g, '\u00a0')
-                  }
-                : undefined
+            name: value?.name ?? naturalCase(key)
           }
         ])
       ) as Partial<ArgTypes<TArgs>>)
