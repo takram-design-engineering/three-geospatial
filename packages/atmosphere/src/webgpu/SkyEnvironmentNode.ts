@@ -47,7 +47,7 @@ function setupRenderTarget(renderTarget: CubeRenderTarget, size: number): void {
   }
 }
 
-export interface AtmosphereEnvironmentNodeOptions
+export interface SkyEnvironmentNodeOptions
   extends Omit<
     SkyNodeOptions,
     'showSun' | 'showMoon' | 'showGround' | 'useContextCamera'
@@ -55,9 +55,9 @@ export interface AtmosphereEnvironmentNodeOptions
   textureSize?: number
 }
 
-export class AtmosphereEnvironmentNode extends CubeTextureNode {
+export class SkyEnvironmentNode extends CubeTextureNode {
   static override get type(): string {
-    return 'AtmosphereEnvironmentNode'
+    return 'SkyEnvironmentNode'
   }
 
   skyNode: SkyNode
@@ -72,7 +72,7 @@ export class AtmosphereEnvironmentNode extends CubeTextureNode {
   constructor(
     renderingContext: AtmosphereRenderingContext,
     lutNode: AtmosphereLUTNode,
-    { textureSize = 64, ...options }: AtmosphereEnvironmentNodeOptions = {}
+    { textureSize = 64, ...options }: SkyEnvironmentNodeOptions = {}
   ) {
     const renderTarget = new CubeRenderTarget(1, {
       depthBuffer: false,
@@ -125,10 +125,10 @@ export class AtmosphereEnvironmentNode extends CubeTextureNode {
   }
 }
 
-export const atmosphereEnvironment = (
-  ...args: ConstructorParameters<typeof AtmosphereEnvironmentNode>
+export const skyEnvironment = (
+  ...args: ConstructorParameters<typeof SkyEnvironmentNode>
 ): NodeObject =>
   // WORKAROUND: ShaderNodeObject<UniformNode> is not assignable to
   // ShaderNodeObject<Node>, which causes type error when assigning this to
   // scene.environmentNode.
-  nodeObject(new AtmosphereEnvironmentNode(...args)) as unknown as NodeObject
+  nodeObject(new SkyEnvironmentNode(...args)) as unknown as NodeObject

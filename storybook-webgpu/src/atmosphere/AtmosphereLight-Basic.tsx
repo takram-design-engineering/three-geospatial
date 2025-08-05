@@ -12,11 +12,11 @@ import { PostProcessing, type Renderer } from 'three/webgpu'
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  atmosphereEnvironment,
   AtmosphereLight,
   AtmosphereLightNode,
   atmosphereLUT,
-  AtmosphereRenderingContext
+  AtmosphereRenderingContext,
+  skyEnvironment
 } from '@takram/three-atmosphere/webgpu'
 
 import {
@@ -115,9 +115,7 @@ const Scene: FC<StoryProps> = () => {
     getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
   })
 
-  const envNode = useResource(() =>
-    atmosphereEnvironment(renderingContext, lutNode)
-  )
+  const envNode = useResource(() => skyEnvironment(renderingContext, lutNode))
   useTransientControl(
     ({ environmentMap }: StoryArgs) => environmentMap,
     value => {
