@@ -54,10 +54,10 @@ export const textureUV = Fnv(
 const Content: FC<StoryProps> = ({ name, ...options }) => {
   const zoom = uniform(0)
 
-  const material = useResource(() => new NodeMaterial())
+  const material = useResource(() => new NodeMaterial(), [])
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
 
-  const lutNode = useResource(() => atmosphereLUT())
+  const lutNode = useResource(() => atmosphereLUT(), [])
   Object.assign(lutNode.parameters, options)
   const textureSize = vec2(lutNode.parameters[`${name}TextureSize`])
   const uv = textureUV(textureSize, zoom)

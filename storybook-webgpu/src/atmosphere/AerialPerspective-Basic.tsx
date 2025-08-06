@@ -77,7 +77,7 @@ const Scene: FC<StoryProps> = ({
   const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
   renderingContext.camera = camera
 
-  const lutNode = useResource(() => atmosphereLUT())
+  const lutNode = useResource(() => atmosphereLUT(), [])
 
   // Post-processing:
 
@@ -150,7 +150,7 @@ const Scene: FC<StoryProps> = ({
         <TilesPlugin
           plugin={TileMeshPropsPlugin}
           args={{
-            material: useResource(() => new MeshBasicNodeMaterial())
+            material: useResource(() => new MeshBasicNodeMaterial(), [])
           }}
         />
       </TilesRenderer>

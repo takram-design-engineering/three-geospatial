@@ -78,7 +78,8 @@ export function usePhysicalMaterialControls(
   initialParams?: MeshPhysicalNodeMaterialParameters
 ): MeshPhysicalNodeMaterial {
   const material = useResource(
-    () => new MeshPhysicalNodeMaterial(initialParams)
+    () => new MeshPhysicalNodeMaterial(initialParams),
+    [initialParams]
   )
 
   useSpringColorControl(

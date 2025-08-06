@@ -75,7 +75,7 @@ const Scene: FC<StoryProps> = () => {
   const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
   renderingContext.camera = camera
 
-  const lutNode = useResource(() => atmosphereLUT())
+  const lutNode = useResource(() => atmosphereLUT(), [])
 
   // Post-processing:
 
@@ -133,7 +133,10 @@ const Scene: FC<StoryProps> = () => {
     getMoonDirectionECEF(date, renderingContext.moonDirectionECEF)
   })
 
-  const envNode = useResource(() => skyEnvironment(renderingContext, lutNode))
+  const envNode = useResource(
+    () => skyEnvironment(renderingContext, lutNode),
+    [renderingContext, lutNode]
+  )
   scene.environmentNode = envNode
 
   return (

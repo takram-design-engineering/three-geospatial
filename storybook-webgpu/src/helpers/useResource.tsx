@@ -6,7 +6,7 @@ interface Resource {
 
 export function useResource<T extends Resource | Resource[]>(
   callback: () => T,
-  deps: readonly unknown[] = []
+  deps: readonly unknown[]
 ): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const resource = useMemo(() => callback(), deps)

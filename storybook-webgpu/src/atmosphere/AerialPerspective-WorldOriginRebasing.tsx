@@ -47,7 +47,7 @@ const Scene: FC<StoryProps> = () => {
   const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
   renderingContext.camera = camera
 
-  const lutNode = useResource(() => atmosphereLUT())
+  const lutNode = useResource(() => atmosphereLUT(), [])
 
   // Post-processing:
 

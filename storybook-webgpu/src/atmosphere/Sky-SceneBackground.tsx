@@ -40,7 +40,7 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
 
   const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
-  const lutNode = useResource(() => atmosphereLUT())
+  const lutNode = useResource(() => atmosphereLUT(), [])
 
   useTransientControl(
     ({ showSun, showMoon, showGround }: StoryArgs): SkyNodeOptions => ({

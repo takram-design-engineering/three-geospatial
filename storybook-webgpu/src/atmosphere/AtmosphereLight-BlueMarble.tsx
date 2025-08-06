@@ -64,7 +64,7 @@ const Scene: FC<StoryProps> = () => {
   const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
   renderingContext.camera = camera
 
-  const lutNode = useResource(() => atmosphereLUT())
+  const lutNode = useResource(() => atmosphereLUT(), [])
 
   // Post-processing:
 
@@ -112,7 +112,10 @@ const Scene: FC<StoryProps> = () => {
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 512, 256]}
-        material={useResource(() => new MeshPhysicalNodeMaterial(blueMarble()))}
+        material={useResource(
+          () => new MeshPhysicalNodeMaterial(blueMarble()),
+          []
+        )}
       />
     </>
   )
