@@ -30,7 +30,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import { AtmosphereParametersNodes } from './AtmosphereParameters'
+import { AtmosphereParametersUniforms } from './AtmosphereParameters'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
 import type { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
@@ -56,7 +56,7 @@ const equirectangularWorld = /*#__PURE__*/ Fnv(
 
 const getLunarRadiance = /*#__PURE__*/ Fnv(
   (
-    parameters: AtmosphereParametersNodes,
+    parameters: AtmosphereParametersUniforms,
     moonAngularRadius: NodeObject<'float'>
   ): Node<Luminance3> => {
     return (
@@ -154,7 +154,7 @@ export class SkyNode extends TempNode {
 
   private readonly setupSunMoon = Fnv(
     (
-      parameters: AtmosphereParametersNodes,
+      parameters: AtmosphereParametersUniforms,
       rayDirectionECEF: NodeObject<'vec3'>,
       sunDirectionECEF: NodeObject<'vec3'>,
       moonDirectionECEF: NodeObject<'vec3'>,
@@ -222,9 +222,9 @@ export class SkyNode extends TempNode {
       sunDirectionECEF,
       moonDirectionECEF,
       cameraPositionUnit
-    } = this.renderingContext.getNodes()
+    } = this.renderingContext.getUniforms()
 
-    const parameters = this.renderingContext.parameters.getNodes()
+    const parameters = this.renderingContext.parameters.getUniforms()
 
     const reference = referenceTo<SkyNode>(this)
     const moonAngularRadius = reference('moonAngularRadius')

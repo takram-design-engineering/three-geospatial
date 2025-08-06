@@ -1,10 +1,12 @@
 import { Camera, Matrix4, Vector3 } from 'three'
-import { uniform } from 'three/tsl'
+import { uniform, uniformGroup } from 'three/tsl'
 
 import { Ellipsoid, type WritableProperties } from '@takram/three-geospatial'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import { AtmosphereParameters } from './AtmosphereParameters'
+
+const groupNode = /*#__PURE__*/ uniformGroup('AtmosphereRenderingContext')
 
 export type AtmosphereRenderingContextOptions = Partial<
   WritableProperties<AtmosphereRenderingContext>
@@ -19,54 +21,60 @@ export class AtmosphereRenderingContext {
   moonDirectionECEF = new Vector3()
   correctAltitude = true
 
-  private nodes?: AtmosphereRenderingContextNodes
+  private nodes?: AtmosphereRenderingContextUniforms
 
   constructor(options: AtmosphereRenderingContextOptions = {}) {
     Object.assign(this, options)
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createNodes() {
-    const { worldToUnit } = this.parameters.getNodes()
+  private createUniforms() {
+    const { worldToUnit } = this.parameters.getUniforms()
 
-    const worldToECEFMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
-      (_, { value }) => {
+    const worldToECEFMatrix = uniform(new Matrix4().identity())
+      .setGroup(groupNode)
+      .label('worldToECEFMatrix')
+      .onRenderUpdate((_, { value }) => {
         value.copy(this.worldToECEFMatrix)
-      }
-    )
-    const ecefToWorldMatrix = uniform(new Matrix4().identity()).onRenderUpdate(
-      (_, { value }) => {
+      })
+    const ecefToWorldMatrix = uniform(new Matrix4().identity())
+      .setGroup(groupNode)
+      .label('ecefToWorldMatrix')
+      .onRenderUpdate((_, { value }) => {
         // The worldToECEFMatrix must be orthogonal.
         value.copy(this.worldToECEFMatrix).transpose()
-      }
-    )
-    const sunDirectionECEF = uniform(new Vector3()).onRenderUpdate(
-      (_, { value }) => {
+      })
+    const sunDirectionECEF = uniform(new Vector3())
+      .setGroup(groupNode)
+      .label('sunDirectionECEF')
+      .onRenderUpdate((_, { value }) => {
         value.copy(this.sunDirectionECEF)
-      }
-    )
-    const moonDirectionECEF = uniform(new Vector3()).onRenderUpdate(
-      (_, { value }) => {
+      })
+    const moonDirectionECEF = uniform(new Vector3())
+      .setGroup(groupNode)
+      .label('moonDirectionECEF')
+      .onRenderUpdate((_, { value }) => {
         value.copy(this.moonDirectionECEF)
-      }
-    )
-    const cameraPositionECEF = uniform(new Vector3()).onRenderUpdate(
-      (_, { value }) => {
+      })
+    const cameraPositionECEF = uniform(new Vector3())
+      .setGroup(groupNode)
+      .label('cameraPositionECEF')
+      .onRenderUpdate((_, { value }) => {
         value
           .setFromMatrixPosition(this.camera.matrixWorld)
           .applyMatrix4(this.worldToECEFMatrix)
-      }
-    )
-    const altitudeCorrectionECEF = uniform(new Vector3()).onRenderUpdate(
-      (_, { value }) => {
+      })
+    const altitudeCorrectionECEF = uniform(new Vector3())
+      .setGroup(groupNode)
+      .label('altitudeCorrectionECEF')
+      .onRenderUpdate((_, { value }) => {
         getAltitudeCorrectionOffset(
           cameraPositionECEF.value,
           this.parameters.bottomRadius,
           this.ellipsoid,
           value
         )
-      }
-    )
+      })
     const cameraPositionUnit = (
       this.correctAltitude
         ? cameraPositionECEF.add(altitudeCorrectionECEF).mul(worldToUnit)
@@ -84,8 +92,8 @@ export class AtmosphereRenderingContext {
     }
   }
 
-  getNodes(): AtmosphereRenderingContextNodes {
-    return (this.nodes ??= this.createNodes())
+  getUniforms(): AtmosphereRenderingContextUniforms {
+    return (this.nodes ??= this.createUniforms())
   }
 
   copy(other: AtmosphereRenderingContext): this {
@@ -104,6 +112,6 @@ export class AtmosphereRenderingContext {
   }
 }
 
-export type AtmosphereRenderingContextNodes = ReturnType<
-  AtmosphereRenderingContext['createNodes']
+export type AtmosphereRenderingContextUniforms = ReturnType<
+  AtmosphereRenderingContext['createUniforms']
 >

@@ -49,9 +49,9 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       ecefToWorldMatrix,
       sunDirectionECEF,
       altitudeCorrectionECEF
-    } = renderingContext.getNodes()
+    } = renderingContext.getUniforms()
 
-    const parameters = renderingContext.parameters.getNodes()
+    const parameters = renderingContext.parameters.getUniforms()
     const {
       worldToUnit,
       solarIrradiance,

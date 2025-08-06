@@ -1,5 +1,5 @@
 import { uniform } from 'three/tsl'
-import type { UniformNode } from 'three/webgpu'
+import type { UniformGroupNode, UniformNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { NODE_TYPES } from './internals'
@@ -28,6 +28,11 @@ function getNodeTypes<T extends {}>(target: T): Record<keyof T, NodeType> {
   return nodeTypes
 }
 
+export interface ReferenceOptions {
+  group?: UniformGroupNode
+  withName?: boolean
+}
+
 export interface ReferenceFunction<T extends {}> {
   <K extends NodeValuePropertyKey<T>>(
     propertyName: K
@@ -39,7 +44,10 @@ export interface ReferenceFunction<T extends {}> {
   ): NodeObject<UniformNode<T[K]>>
 }
 
-export function referenceTo<T extends {}>(target: T): ReferenceFunction<T> {
+export function referenceTo<T extends {}>(
+  target: T,
+  { group, withName = false }: ReferenceOptions = {}
+): ReferenceFunction<T> {
   const nodeTypes = getNodeTypes(target)
   return <K extends NodeValuePropertyKey<T>>(
     propertyName: K,
@@ -51,6 +59,8 @@ export function referenceTo<T extends {}>(target: T): ReferenceFunction<T> {
         `Node type annotation was not found for property "${String(propertyName)}" in ${target.constructor.name}`
       )
     }
+
+    let result
     const propertyValue = target[propertyName]
     if (transformValue != null) {
       if (typeof propertyValue === 'object' && propertyValue != null) {
@@ -59,20 +69,28 @@ export function referenceTo<T extends {}>(target: T): ReferenceFunction<T> {
         invariant('copy' in propertyValue)
         invariant(typeof propertyValue.copy === 'function')
         // Transformation on an object (with clone and copy methods):
-        return uniform(propertyValue.clone(), nodeType).onRenderUpdate(
+        result = uniform(propertyValue.clone(), nodeType).onRenderUpdate(
           (_, { value }) => {
             value = transformValue(value.copy(target[propertyName]))
           }
         )
       } else {
         // Transformation on a primitive:
-        return uniform(propertyValue, nodeType).onRenderUpdate((_, self) => {
+        result = uniform(propertyValue, nodeType).onRenderUpdate((_, self) => {
           self.value = transformValue(target[propertyName])
         })
       }
     } else {
       // No transformation:
-      return uniform(nodeType).onRenderUpdate(() => target[propertyName])
+      result = uniform(nodeType).onRenderUpdate(() => target[propertyName])
     }
+
+    if (group != null) {
+      result = result.setGroup(group)
+    }
+    if (withName) {
+      result = result.label(propertyName as string)
+    }
+    return result
   }
 }

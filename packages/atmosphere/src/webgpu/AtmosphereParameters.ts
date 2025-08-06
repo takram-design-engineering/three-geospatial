@@ -1,4 +1,5 @@
 import { Vector2, Vector3 } from 'three'
+import { uniformGroup } from 'three/tsl'
 
 import { assertType, radians } from '@takram/three-geospatial'
 import { nodeType, referenceTo } from '@takram/three-geospatial/webgpu'
@@ -26,6 +27,8 @@ function createContextProxy<
   }) as unknown as R
 }
 
+const groupNode = /*#__PURE__*/ uniformGroup('AtmosphereParameters')
+
 export class DensityProfileLayer {
   @nodeType(Length) width: number
   @nodeType(Dimensionless) expTerm: number
@@ -47,15 +50,17 @@ export class DensityProfileLayer {
     this.constantTerm = constantTerm
   }
 
-  private nodes?: DensityProfileLayerNodes
+  private nodes?: DensityProfileLayerUniforms
 
-  getNodes(worldToUnit: number): DensityProfileLayerNodes {
-    return (this.nodes ??= this.createNodes(worldToUnit))
+  getUniforms(worldToUnit: number): DensityProfileLayerUniforms {
+    return (this.nodes ??= this.createUniforms(worldToUnit))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createNodes(worldToUnit: number) {
-    const reference = referenceTo<DensityProfileLayer>(this)
+  createUniforms(worldToUnit: number) {
+    const reference = referenceTo<DensityProfileLayer>(this, {
+      group: groupNode
+    })
     return createContextProxy(this, {
       width: reference('width', value => value * worldToUnit),
       expTerm: reference('expTerm'),
@@ -79,8 +84,8 @@ export class DensityProfileLayer {
   }
 }
 
-export type DensityProfileLayerNodes = ReturnType<
-  DensityProfileLayer['createNodes']
+export type DensityProfileLayerUniforms = ReturnType<
+  DensityProfileLayer['createUniforms']
 >
 
 export class DensityProfile {
@@ -90,18 +95,18 @@ export class DensityProfile {
     this.layers = layers
   }
 
-  private nodes?: DensityProfileNodes
+  private nodes?: DensityProfileUniforms
 
-  getNodes(worldToUnit: number): DensityProfileNodes {
-    return (this.nodes ??= this.createNodes(worldToUnit))
+  getUniforms(worldToUnit: number): DensityProfileUniforms {
+    return (this.nodes ??= this.createUniforms(worldToUnit))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createNodes(worldToUnit: number) {
+  createUniforms(worldToUnit: number) {
     return createContextProxy(this, {
       layers: [
-        this.layers[0].getNodes(worldToUnit),
-        this.layers[1].getNodes(worldToUnit)
+        this.layers[0].getUniforms(worldToUnit),
+        this.layers[1].getUniforms(worldToUnit)
       ] as const
     })
   }
@@ -116,7 +121,9 @@ export class DensityProfile {
   }
 }
 
-export type DensityProfileNodes = ReturnType<DensityProfile['createNodes']>
+export type DensityProfileUniforms = ReturnType<
+  DensityProfile['createUniforms']
+>
 
 const luminanceCoefficients = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 
@@ -229,15 +236,18 @@ export class AtmosphereParameters {
     this.scatteringTextureRadiusSize
   )
 
-  private nodes?: AtmosphereParametersNodes
+  private nodes?: AtmosphereParametersUniforms
 
-  getNodes(): AtmosphereParametersNodes {
-    return (this.nodes ??= this.createNodes())
+  getUniforms(): AtmosphereParametersUniforms {
+    return (this.nodes ??= this.createUniforms())
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createNodes() {
-    const reference = referenceTo<AtmosphereParameters>(this)
+  private createUniforms() {
+    const reference = referenceTo<AtmosphereParameters>(this, {
+      group: groupNode,
+      withName: true
+    })
     return createContextProxy(this, {
       worldToUnit: reference('worldToUnit'),
       solarIrradiance: reference('solarIrradiance'),
@@ -247,11 +257,11 @@ export class AtmosphereParameters {
         value => value * this.worldToUnit
       ),
       topRadius: reference('topRadius', value => value * this.worldToUnit),
-      rayleighDensity: this.rayleighDensity.getNodes(this.worldToUnit),
+      rayleighDensity: this.rayleighDensity.getUniforms(this.worldToUnit),
       rayleighScattering: reference('rayleighScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
-      mieDensity: this.mieDensity.getNodes(this.worldToUnit),
+      mieDensity: this.mieDensity.getUniforms(this.worldToUnit),
       mieScattering: reference('mieScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
@@ -259,7 +269,7 @@ export class AtmosphereParameters {
         value.divideScalar(this.worldToUnit)
       ),
       miePhaseFunctionG: reference('miePhaseFunctionG'),
-      absorptionDensity: this.absorptionDensity.getNodes(this.worldToUnit),
+      absorptionDensity: this.absorptionDensity.getUniforms(this.worldToUnit),
       absorptionExtinction: reference('absorptionExtinction', value =>
         value.divideScalar(this.worldToUnit)
       ),
@@ -308,6 +318,6 @@ export class AtmosphereParameters {
   }
 }
 
-export type AtmosphereParametersNodes = ReturnType<
-  AtmosphereParameters['createNodes']
+export type AtmosphereParametersUniforms = ReturnType<
+  AtmosphereParameters['createUniforms']
 >
