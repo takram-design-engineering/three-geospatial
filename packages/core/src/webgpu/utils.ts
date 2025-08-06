@@ -89,7 +89,7 @@ export function referenceTo<T extends {}>(
       result = result.setGroup(group)
     }
     if (withName) {
-      result = result.label(propertyName as string)
+      result = result.setName(propertyName as string)
     }
     return result
   }

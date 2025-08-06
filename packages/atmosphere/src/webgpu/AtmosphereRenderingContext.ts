@@ -33,32 +33,32 @@ export class AtmosphereRenderingContext {
 
     const worldToECEFMatrix = uniform(new Matrix4().identity())
       .setGroup(groupNode)
-      .label('worldToECEFMatrix')
+      .setName('worldToECEFMatrix')
       .onRenderUpdate((_, { value }) => {
         value.copy(this.worldToECEFMatrix)
       })
     const ecefToWorldMatrix = uniform(new Matrix4().identity())
       .setGroup(groupNode)
-      .label('ecefToWorldMatrix')
+      .setName('ecefToWorldMatrix')
       .onRenderUpdate((_, { value }) => {
         // The worldToECEFMatrix must be orthogonal.
         value.copy(this.worldToECEFMatrix).transpose()
       })
     const sunDirectionECEF = uniform(new Vector3())
       .setGroup(groupNode)
-      .label('sunDirectionECEF')
+      .setName('sunDirectionECEF')
       .onRenderUpdate((_, { value }) => {
         value.copy(this.sunDirectionECEF)
       })
     const moonDirectionECEF = uniform(new Vector3())
       .setGroup(groupNode)
-      .label('moonDirectionECEF')
+      .setName('moonDirectionECEF')
       .onRenderUpdate((_, { value }) => {
         value.copy(this.moonDirectionECEF)
       })
     const cameraPositionECEF = uniform(new Vector3())
       .setGroup(groupNode)
-      .label('cameraPositionECEF')
+      .setName('cameraPositionECEF')
       .onRenderUpdate((_, { value }) => {
         value
           .setFromMatrixPosition(this.camera.matrixWorld)
@@ -66,7 +66,7 @@ export class AtmosphereRenderingContext {
       })
     const altitudeCorrectionECEF = uniform(new Vector3())
       .setGroup(groupNode)
-      .label('altitudeCorrectionECEF')
+      .setName('altitudeCorrectionECEF')
       .onRenderUpdate((_, { value }) => {
         getAltitudeCorrectionOffset(
           cameraPositionECEF.value,
