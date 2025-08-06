@@ -28,6 +28,7 @@ import {
   texture,
   texture3D,
   uniform,
+  uniformGroup,
   vec3,
   vec4
 } from 'three/tsl'
@@ -297,6 +298,8 @@ class LUTTexture3DNode extends Texture3DNode {
   }
 }
 
+const groupNode = /*#__PURE__*/ uniformGroup('AtmosphereLUT')
+
 export class AtmosphereLUTNode extends TempNode {
   static override get type(): string {
     return 'AtmosphereLUTNode'
@@ -354,17 +357,22 @@ export class AtmosphereLUTNode extends TempNode {
   getTextureNode(
     name: AtmosphereLUTTextureName
   ): NodeObject<LUTTextureNode | LUTTexture3DNode> {
-    return (this._textureNodes[name] ??= nodeObject(
-      textureDimensions[name] === 2
-        ? new LUTTextureNode(
-            this,
-            this.getTexture(name as AtmosphereLUTTextureName<2>)
-          )
-        : new LUTTexture3DNode(
-            this,
-            this.getTexture(name as AtmosphereLUTTextureName<3>)
-          )
-    ))
+    return (
+      (this._textureNodes[name] ??= nodeObject(
+        textureDimensions[name] === 2
+          ? new LUTTextureNode(
+              this,
+              this.getTexture(name as AtmosphereLUTTextureName<2>)
+            )
+          : new LUTTexture3DNode(
+              this,
+              this.getTexture(name as AtmosphereLUTTextureName<3>)
+            )
+      ))
+        // NOTE: Group and name doesn't seem to have effect on textures (r179).
+        .setGroup(groupNode)
+        .setName(name)
+    )
   }
 
   private renderToRenderTarget(
