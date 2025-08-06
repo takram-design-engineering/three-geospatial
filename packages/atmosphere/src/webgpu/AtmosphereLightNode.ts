@@ -24,18 +24,16 @@ import { getTransmittanceToSun } from './common'
 import { getSkyIlluminance } from './runtime'
 
 declare module 'three/webgpu' {
-  interface NodeBuilder {
-    context: {
-      [K in keyof LightingContext]: LightingContext[K] extends Node
-        ? NodeObject<LightingContext[K]>
-        : LightingContext[K]
-    }
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface AnalyticLightNode<T extends Light> extends LightingNode {
     colorNode: Node
   }
+}
+
+type CorrectLightingContext = {
+  [K in keyof LightingContext]: LightingContext[K] extends Node
+    ? NodeObject<LightingContext[K]>
+    : LightingContext[K]
 }
 
 export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
@@ -91,7 +89,8 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     ).mul(select(indirect, 1, 0))
 
     // Yes, it's an indirect but should be fine to update it here.
-    builder.context.irradiance.addAssign(skyIlluminance)
+    const context = builder.getContext() as CorrectLightingContext
+    context.irradiance.addAssign(skyIlluminance)
 
     // Derive the view-space sun direction.
     const sunDirectionWorld = ecefToWorldMatrix.mul(
