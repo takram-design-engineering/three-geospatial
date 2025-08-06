@@ -28,12 +28,6 @@
 
 import { Vector3, type Camera, type Matrix4 } from 'three'
 
-declare module 'three' {
-  interface Camera {
-    isOrthographicCamera?: boolean
-  }
-}
-
 export class FrustumCorners {
   readonly near = [new Vector3(), new Vector3(), new Vector3(), new Vector3()]
   readonly far = [new Vector3(), new Vector3(), new Vector3(), new Vector3()]

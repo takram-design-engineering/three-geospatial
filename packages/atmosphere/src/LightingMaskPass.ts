@@ -21,7 +21,6 @@ import {
   WebGLRenderTarget,
   type Camera,
   type DepthPackingStrategies,
-  type Material,
   type Scene,
   type Texture,
   type TextureDataType,
@@ -32,13 +31,6 @@ import { resolveIncludes } from '@takram/three-geospatial'
 import { depth } from '@takram/three-geospatial/shaders'
 
 import fragmentShader from './shaders/lightingMask.frag?raw'
-
-declare module 'postprocessing' {
-  interface DepthMaskMaterial {
-    fullscreenMaterial: Material
-    copyCameraSettings: (camera: Camera) => void
-  }
-}
 
 export class LightingMaskPass extends Pass {
   private readonly renderPass: RenderPass

@@ -1,16 +1,8 @@
 import { Vector3, type Camera } from 'three'
 import { reference, uniform } from 'three/tsl'
-import type { NodeFrame, UniformNode } from 'three/webgpu'
+import type { UniformNode } from 'three/webgpu'
 
 import type { NodeObject } from './node'
-
-declare module 'three/webgpu' {
-  interface Node {
-    onRenderUpdate(
-      callback: (this: this, frame: NodeFrame, self: this) => void
-    ): this
-  }
-}
 
 let caches: WeakMap<{}, Record<string, {}>> | undefined
 
@@ -55,9 +47,9 @@ export const cameraPositionWorld = (
   camera: Camera
 ): NodeObject<UniformNode<Vector3>> =>
   getCache(camera, 'cameraPositionWorld', () =>
-    uniform(new Vector3()).onRenderUpdate((_, { value }) =>
+    uniform(new Vector3()).onRenderUpdate((_, { value }) => {
       value.setFromMatrixPosition(camera.matrixWorld)
-    )
+    })
   )
 
 export const cameraNear = (camera: Camera): NodeObject<'float'> =>

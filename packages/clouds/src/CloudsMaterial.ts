@@ -63,12 +63,6 @@ import vertexShader from './shaders/clouds.vert?raw'
 import parameters from './shaders/parameters.glsl?raw'
 import types from './shaders/types.glsl?raw'
 
-declare module 'three' {
-  interface Camera {
-    isPerspectiveCamera?: boolean
-  }
-}
-
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 

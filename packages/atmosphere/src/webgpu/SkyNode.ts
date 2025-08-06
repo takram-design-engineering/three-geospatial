@@ -35,12 +35,6 @@ import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
 import type { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
 
-declare module 'three/webgpu' {
-  interface NodeBuilder {
-    camera?: Camera
-  }
-}
-
 const cameraDirectionWorld = /*#__PURE__*/ Fnv((camera: Camera) => {
   const positionView = inverseProjectionMatrix(camera).mul(
     vec4(positionGeometry, 1)

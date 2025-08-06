@@ -65,13 +65,6 @@ import {
   computeTransmittanceToTopAtmosphereBoundaryTexture
 } from './precompute'
 
-declare module 'three' {
-  interface RenderTarget3D {
-    texture: Data3DTexture
-    textures: Data3DTexture[]
-  }
-}
-
 function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,

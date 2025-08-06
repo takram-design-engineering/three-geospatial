@@ -15,12 +15,6 @@ import {
 import { Fnv } from './Fnv'
 import type { Node, NodeObject } from './node'
 
-declare module 'three' {
-  interface Camera {
-    isPerspectiveCamera?: boolean
-  }
-}
-
 export const depthToViewZ = (
   depth: NodeObject<'float'>,
   cameraNear: NodeObject<'float'>,

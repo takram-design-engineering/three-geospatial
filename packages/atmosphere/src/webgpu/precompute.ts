@@ -120,12 +120,6 @@ import {
   type TransmittanceTextureNode
 } from './dimensional'
 
-declare module 'three/src/nodes/TSL.js' {
-  interface NodeElements {
-    get: (node: Node, name: string) => NodeObject
-  }
-}
-
 const getLayerDensity = /*#__PURE__*/ Fnv(
   (
     layer: DensityProfileLayerNodes,

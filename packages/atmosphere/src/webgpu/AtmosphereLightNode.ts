@@ -6,12 +6,7 @@ import {
   select,
   vec4
 } from 'three/tsl'
-import {
-  AnalyticLightNode,
-  type Light,
-  type LightingNode,
-  type NodeBuilder
-} from 'three/webgpu'
+import { AnalyticLightNode, type NodeBuilder } from 'three/webgpu'
 
 import {
   referenceTo,
@@ -22,13 +17,6 @@ import {
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
 import { getSkyIlluminance } from './runtime'
-
-declare module 'three/webgpu' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface AnalyticLightNode<T extends Light> extends LightingNode {
-    colorNode: Node
-  }
-}
 
 type CorrectLightingContext = {
   [K in keyof LightingContext]: LightingContext[K] extends Node
