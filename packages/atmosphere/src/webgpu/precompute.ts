@@ -243,10 +243,13 @@ const getUnitRangeFromTextureCoord = /*#__PURE__*/ Fnv(
   ]
 })
 
-const transmittanceParamsStruct = /*#__PURE__*/ struct({
+const transmittanceParamsStruct = /*#__PURE__*/ struct(
+  {
   radius: Length,
   cosView: Dimensionless
-})
+  },
+  'TransmittanceParams'
+)
 type TransmittanceParamsStruct = ReturnType<typeof transmittanceParamsStruct>
 
 const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ Fnv(
@@ -312,10 +315,13 @@ export const computeTransmittanceToTopAtmosphereBoundaryTexture =
     }
   )
 
-const singleScatteringStruct = /*#__PURE__*/ struct({
+const singleScatteringStruct = /*#__PURE__*/ struct(
+  {
   rayleigh: DimensionlessSpectrum,
   mie: DimensionlessSpectrum
-})
+  },
+  'SingleScattering'
+)
 type SingleScatteringStruct = ReturnType<typeof singleScatteringStruct>
 
 const computeSingleScatteringIntegrand = /*#__PURE__*/ Fnv(
@@ -457,13 +463,16 @@ const computeSingleScattering = /*#__PURE__*/ Fnv(
   }
 )
 
-const scatteringParamsStruct = /*#__PURE__*/ struct({
+const scatteringParamsStruct = /*#__PURE__*/ struct(
+  {
   radius: Length,
   cosView: Dimensionless,
   cosSun: Dimensionless,
   cosViewSun: Dimensionless,
   rayIntersectsGround: 'bool'
-})
+  },
+  'ScatteringParams'
+)
 type ScatteringParamsStruct = ReturnType<typeof scatteringParamsStruct>
 
 const getParamsFromScatteringTextureCoord = /*#__PURE__*/ Fnv(
@@ -993,10 +1002,13 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
   }
 )
 
-const multipleScatteringStruct = /*#__PURE__*/ struct({
+const multipleScatteringStruct = /*#__PURE__*/ struct(
+  {
   radiance: RadianceSpectrum,
   cosViewSun: Dimensionless
-})
+  },
+  'MultipleScattering'
+)
 type MultipleScatteringStruct = ReturnType<typeof multipleScatteringStruct>
 
 export const computeMultipleScatteringTexture = /*#__PURE__*/ Fnv(
@@ -1116,10 +1128,13 @@ const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
   }
 )
 
-const irradianceParamsStruct = /*#__PURE__*/ struct({
+const irradianceParamsStruct = /*#__PURE__*/ struct(
+  {
   radius: Length,
   cosSun: Dimensionless
-})
+  },
+  'IrradianceParams'
+)
 type IrradianceParamsStruct = ReturnType<typeof irradianceParamsStruct>
 
 const getParamsFromIrradianceTextureUV = /*#__PURE__*/ Fnv(

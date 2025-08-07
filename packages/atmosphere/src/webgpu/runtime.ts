@@ -135,10 +135,13 @@ const getExtrapolatedSingleMieScattering = /*#__PURE__*/ Fnv(
   }
 )
 
-const combinedScatteringStruct = /*#__PURE__*/ struct({
-  scattering: IrradianceSpectrum,
-  singleMieScattering: IrradianceSpectrum
-})
+const combinedScatteringStruct = /*#__PURE__*/ struct(
+  {
+    scattering: IrradianceSpectrum,
+    singleMieScattering: IrradianceSpectrum
+  },
+  'CombinedScattering'
+)
 type CombinedScatteringStruct = ReturnType<typeof combinedScatteringStruct>
 
 const getCombinedScattering = /*#__PURE__*/ Fnv(
@@ -205,10 +208,13 @@ const getCombinedScattering = /*#__PURE__*/ Fnv(
   }
 )
 
-const radianceTransferStruct = /*#__PURE__*/ struct({
-  radiance: RadianceSpectrum,
-  transmittance: DimensionlessSpectrum
-})
+const radianceTransferStruct = /*#__PURE__*/ struct(
+  {
+    radiance: RadianceSpectrum,
+    transmittance: DimensionlessSpectrum
+  },
+  'RadianceTransfer'
+)
 type RadianceTransferStruct = ReturnType<typeof radianceTransferStruct>
 
 interface SkyRadianceOptions {
@@ -637,11 +643,14 @@ const raySphereIntersections = /*#__PURE__*/ Fnv(
   ]
 })
 
-const raySegmentStruct = /*#__PURE__*/ struct({
-  camera: Position,
-  point: Position,
-  degenerate: 'bool'
-})
+const raySegmentStruct = /*#__PURE__*/ struct(
+  {
+    camera: Position,
+    point: Position,
+    degenerate: 'bool'
+  },
+  'RaySegment'
+)
 type RaySegmentStruct = ReturnType<typeof raySegmentStruct>
 
 // Clip the view ray at the bottom atmosphere boundary.
@@ -722,10 +731,13 @@ const getSkyRadianceToPoint = /*#__PURE__*/ Fnv(
   }
 )
 
-const sunAndSkyIrradianceStruct = /*#__PURE__*/ struct({
-  sunIrradiance: IrradianceSpectrum,
-  skyIrradiance: IrradianceSpectrum
-})
+const sunAndSkyIrradianceStruct = /*#__PURE__*/ struct(
+  {
+    sunIrradiance: IrradianceSpectrum,
+    skyIrradiance: IrradianceSpectrum
+  },
+  'SunAndSkyIrradiance'
+)
 type SunAndSkyIrradianceStruct = ReturnType<typeof sunAndSkyIrradianceStruct>
 
 const getSunAndSkyIrradiance = /*#__PURE__*/ Fnv(
@@ -812,10 +824,13 @@ export const getSolarLuminance = /*#__PURE__*/ Fnv(
   }
 )
 
-const luminanceTransferStruct = /*#__PURE__*/ struct({
-  luminance: Luminance3,
-  transmittance: DimensionlessSpectrum
-})
+const luminanceTransferStruct = /*#__PURE__*/ struct(
+  {
+    luminance: Luminance3,
+    transmittance: DimensionlessSpectrum
+  },
+  'LuminanceTransfer'
+)
 type LuminanceTransferStruct = ReturnType<typeof luminanceTransferStruct>
 
 export interface SkyLuminanceOptions extends SkyRadianceOptions {}
@@ -884,10 +899,13 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ Fnv(
   }
 )
 
-const sunAndSkyIlluminanceStruct = /*#__PURE__*/ struct({
-  sunIlluminance: Illuminance3,
-  skyIlluminance: Illuminance3
-})
+const sunAndSkyIlluminanceStruct = /*#__PURE__*/ struct(
+  {
+    sunIlluminance: Illuminance3,
+    skyIlluminance: Illuminance3
+  },
+  'SunAndSkyIlluminance'
+)
 type SunAndSkyIlluminanceStruct = ReturnType<typeof sunAndSkyIlluminanceStruct>
 
 export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
