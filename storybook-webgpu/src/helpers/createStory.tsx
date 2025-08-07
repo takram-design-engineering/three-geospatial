@@ -36,16 +36,16 @@ export function createStory<Props, TArgs extends Args>(
   {
     props,
     args: overrideArgs,
-    argTypes: overrideArgTypes
+    argTypes: overrideArgTypes,
+    ...others
   }: {
     props?: Props
-    args?: Partial<TArgs>
-    argTypes?: Partial<ArgTypes>
-  } = {}
+  } & Omit<StoryObj, 'render'> = {}
 ): StoryObj {
   const Component = memo(StoryComponent as FC)
   const initialArgs = { ...StoryComponent.args, ...overrideArgs }
   return {
+    ...others,
     render: (args: Args) => {
       // Storybook remembers the values in the args, which I don't like, but it
       // doesn't provide an option to disable it. Reset them to the initial

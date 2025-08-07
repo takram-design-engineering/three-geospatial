@@ -1,12 +1,38 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../helpers/createStory'
-import { Story as BasicStory } from './Sky-Basic'
-import { Story as SceneBackgroundStory } from './Sky-SceneBackground'
 
 export default {
-  title: 'atmosphere/Sky'
+  title: 'atmosphere/Sky',
+  parameters: {
+    docs: {
+      codePanel: true,
+      source: {
+        language: 'tsx'
+      }
+    }
+  }
 } satisfies Meta
 
-export const Basic = createStory(BasicStory)
-export const SceneBackground = createStory(SceneBackgroundStory)
+export const Basic = createStory((await import('./Sky-Basic')).Story, {
+  parameters: {
+    docs: {
+      source: {
+        code: (await import('./Sky-Basic?raw')).default
+      }
+    }
+  }
+})
+
+export const SceneBackground = createStory(
+  (await import('./Sky-SceneBackground')).Story,
+  {
+    parameters: {
+      docs: {
+        source: {
+          code: (await import('./Sky-SceneBackground?raw')).default
+        }
+      }
+    }
+  }
+)
