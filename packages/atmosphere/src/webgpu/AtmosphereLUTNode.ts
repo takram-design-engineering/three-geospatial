@@ -771,6 +771,7 @@ export class AtmosphereLUTNode extends TempNode {
     this.higherOrderScatteringRT.dispose()
     this.material.dispose()
     this.mesh.geometry.dispose()
+    this.parameters.dispose()
   }
 }
 

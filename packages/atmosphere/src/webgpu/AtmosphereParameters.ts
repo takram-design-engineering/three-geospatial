@@ -14,13 +14,15 @@ import {
   ScatteringSpectrum
 } from './dimensional'
 
-function createContextProxy<
-  T extends {},
-  U extends {},
-  R = Omit<T, keyof U> & U
->(target: T, uniforms: U): R {
+function createProxy<T extends {}, U extends {}, R = Omit<T, keyof U> & U>(
+  target: T,
+  uniforms: U
+): R {
   return new Proxy(target, {
     get: (target, propertyName) => {
+      if (propertyName === 'uniforms') {
+        return // Cyclic
+      }
       assertType<keyof T & keyof U>(propertyName)
       return uniforms[propertyName] ?? target[propertyName]
     }
@@ -50,10 +52,10 @@ export class DensityProfileLayer {
     this.constantTerm = constantTerm
   }
 
-  private nodes?: DensityProfileLayerUniforms
+  private uniforms?: DensityProfileLayerUniforms
 
   getUniforms(worldToUnit: number): DensityProfileLayerUniforms {
-    return (this.nodes ??= this.createUniforms(worldToUnit))
+    return (this.uniforms ??= this.createUniforms(worldToUnit))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -61,7 +63,7 @@ export class DensityProfileLayer {
     const reference = referenceTo<DensityProfileLayer>(this, {
       group: groupNode
     })
-    return createContextProxy(this, {
+    return createProxy(this, {
       width: reference('width', value => value * worldToUnit),
       expTerm: reference('expTerm'),
       expScale: reference('expScale', value => value / worldToUnit),
@@ -82,6 +84,21 @@ export class DensityProfileLayer {
   clone(): DensityProfileLayer {
     return new DensityProfileLayer().copy(this)
   }
+
+  dispose(): void {
+    const { uniforms } = this
+    if (uniforms == null) {
+      return
+    }
+    for (const key in uniforms) {
+      if (Object.hasOwn(uniforms, key)) {
+        const uniform = uniforms[key as keyof typeof uniforms]
+        if (typeof uniform === 'object' && 'dispose' in uniform) {
+          uniform.dispose()
+        }
+      }
+    }
+  }
 }
 
 export type DensityProfileLayerUniforms = ReturnType<
@@ -95,15 +112,15 @@ export class DensityProfile {
     this.layers = layers
   }
 
-  private nodes?: DensityProfileUniforms
+  private uniforms?: DensityProfileUniforms
 
   getUniforms(worldToUnit: number): DensityProfileUniforms {
-    return (this.nodes ??= this.createUniforms(worldToUnit))
+    return (this.uniforms ??= this.createUniforms(worldToUnit))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   createUniforms(worldToUnit: number) {
-    return createContextProxy(this, {
+    return createProxy(this, {
       layers: [
         this.layers[0].getUniforms(worldToUnit),
         this.layers[1].getUniforms(worldToUnit)
@@ -118,6 +135,11 @@ export class DensityProfile {
 
   clone(): DensityProfile {
     return new DensityProfile([this.layers[0].clone(), this.layers[1].clone()])
+  }
+
+  dispose(): void {
+    this.layers[0].dispose()
+    this.layers[1].dispose()
   }
 }
 
@@ -236,10 +258,10 @@ export class AtmosphereParameters {
     this.scatteringTextureRadiusSize
   )
 
-  private nodes?: AtmosphereParametersUniforms
+  private uniforms?: AtmosphereParametersUniforms
 
   getUniforms(): AtmosphereParametersUniforms {
-    return (this.nodes ??= this.createUniforms())
+    return (this.uniforms ??= this.createUniforms())
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -248,7 +270,7 @@ export class AtmosphereParameters {
       group: groupNode,
       withName: true
     })
-    return createContextProxy(this, {
+    return createProxy(this, {
       worldToUnit: reference('worldToUnit'),
       solarIrradiance: reference('solarIrradiance'),
       sunAngularRadius: reference('sunAngularRadius'),
@@ -315,6 +337,25 @@ export class AtmosphereParameters {
 
   clone(): AtmosphereParameters {
     return new AtmosphereParameters().copy(this)
+  }
+
+  dispose(): void {
+    this.rayleighDensity.dispose()
+    this.mieDensity.dispose()
+    this.absorptionDensity.dispose()
+
+    const { uniforms } = this
+    if (uniforms == null) {
+      return
+    }
+    for (const key in uniforms) {
+      if (Object.hasOwn(uniforms, key)) {
+        const uniform = uniforms[key as keyof typeof uniforms]
+        if (typeof uniform === 'object' && 'dispose' in uniform) {
+          uniform.dispose()
+        }
+      }
+    }
   }
 }
 

@@ -114,6 +114,10 @@ export class AtmosphereRenderingContext {
   clone(): AtmosphereRenderingContext {
     return new AtmosphereRenderingContext().copy(this)
   }
+
+  dispose(): void {
+    this.parameters.dispose()
+  }
 }
 
 export type AtmosphereRenderingContextUniforms = ReturnType<
