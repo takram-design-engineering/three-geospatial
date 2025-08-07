@@ -1,5 +1,5 @@
 import { Vector2, Vector3 } from 'three'
-import { uniformGroup } from 'three/tsl'
+import { sharedUniformGroup } from 'three/tsl'
 
 import { assertType, radians } from '@takram/three-geospatial'
 import { nodeType, referenceTo } from '@takram/three-geospatial/webgpu'
@@ -27,7 +27,7 @@ function createContextProxy<
   }) as unknown as R
 }
 
-const groupNode = /*#__PURE__*/ uniformGroup('AtmosphereParameters')
+const groupNode = /*#__PURE__*/ sharedUniformGroup('AtmosphereParameters') // TODO: Update if necessary
 
 export class DensityProfileLayer {
   @nodeType(Length) width: number

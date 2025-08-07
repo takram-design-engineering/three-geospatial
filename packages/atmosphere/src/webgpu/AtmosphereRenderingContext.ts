@@ -1,12 +1,16 @@
 import { Camera, Matrix4, Vector3 } from 'three'
-import { uniform, uniformGroup } from 'three/tsl'
+import { sharedUniformGroup, uniform } from 'three/tsl'
 
 import { Ellipsoid, type WritableProperties } from '@takram/three-geospatial'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import { AtmosphereParameters } from './AtmosphereParameters'
 
-const groupNode = /*#__PURE__*/ uniformGroup('AtmosphereRenderingContext')
+const groupNode = /*#__PURE__*/ sharedUniformGroup(
+  'AtmosphereRenderingContext'
+).onRenderUpdate(() => {
+  groupNode.needsUpdate = true
+})
 
 export type AtmosphereRenderingContextOptions = Partial<
   WritableProperties<AtmosphereRenderingContext>
