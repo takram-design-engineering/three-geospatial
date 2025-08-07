@@ -8,15 +8,15 @@ import { depthToColor, type Node } from '@takram/three-geospatial/webgpu'
 import { useTransientControl } from '../helpers/useTransientControl'
 
 export interface OutputPassArgs {
-  depth: boolean
-  normal: boolean
+  outputDepth: boolean
+  outputNormal: boolean
 }
 
 export const outputPassArgs = (
   defaults?: Partial<OutputPassArgs>
 ): OutputPassArgs => ({
-  depth: false,
-  normal: false,
+  outputDepth: false,
+  outputNormal: false,
   ...defaults
 })
 
@@ -26,14 +26,16 @@ export const outputPassArgTypes = (
     hasNormal?: boolean
   } = {}
 ): ArgTypes<OutputPassArgs> => ({
-  depth: {
+  outputDepth: {
+    name: 'depth',
     control: {
       type: 'boolean',
       disable: options.hasDepth === false
     },
     table: { category: 'output pass' }
   },
-  normal: {
+  outputNormal: {
+    name: 'normal',
     control: {
       type: 'boolean',
       disable: options.hasNormal === false
@@ -48,16 +50,19 @@ export function useOutputPassControls(
   onChange: (outputNode?: Node) => void
 ): void {
   useTransientControl(
-    ({ depth, normal }: OutputPassArgs) => ({ depth, normal }),
-    ({ depth, normal }) => {
-      onChange(
-        // In reverse order:
-        normal
-          ? directionToColor(passNode.getTextureNode('normal'))
-          : depth
-            ? depthToColor(passNode.getTextureNode('depth'), camera)
-            : undefined
-      )
+    ({ outputDepth, outputNormal }: OutputPassArgs) => ({
+      outputDepth,
+      outputNormal
+    }),
+    ({ outputDepth, outputNormal }) => {
+      let pass: Node | undefined = undefined
+      // In reverse order:
+      if (outputNormal) {
+        pass = directionToColor(passNode.getTextureNode('normal'))
+      } else if (outputDepth) {
+        pass = depthToColor(passNode.getTextureNode('depth'), camera)
+      }
+      onChange(pass)
     }
   )
 }

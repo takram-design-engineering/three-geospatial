@@ -80,6 +80,7 @@ const Scene: FC<StoryProps> = () => {
   // Output pass controls:
   useOutputPassControls(passNode, camera, outputNode => {
     postProcessing.outputNode = outputNode ?? aerialNode
+    postProcessing.outputColorTransform = outputNode == null
     postProcessing.needsUpdate = true
   })
 
