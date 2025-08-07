@@ -68,7 +68,7 @@ const Scene: FC<StoryProps> = ({
 
     const aerialNode = aerialPerspective(
       renderingContext,
-      passNode.getTextureNode('output'),
+      passNode.getTextureNode('output').mul(2 / 3),
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('normal'),
       lutNode

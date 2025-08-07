@@ -32,9 +32,9 @@ export class AerialPerspectiveNode extends TempNode {
   }
 
   renderingContext: AtmosphereRenderingContext
-  colorNode: NodeObject<TextureNode>
-  depthNode: NodeObject<TextureNode>
-  normalNode?: NodeObject<TextureNode> | null
+  colorNode: NodeObject | NodeObject<TextureNode>
+  depthNode: NodeObject | NodeObject<TextureNode>
+  normalNode?: NodeObject | NodeObject<TextureNode> | null
   lutNode: AtmosphereLUTNode
   skyNode?: NodeObject<'vec3'> | null
 
@@ -46,9 +46,9 @@ export class AerialPerspectiveNode extends TempNode {
 
   constructor(
     renderingContext: AtmosphereRenderingContext,
-    colorNode: NodeObject<TextureNode>,
-    depthNode: NodeObject<TextureNode>,
-    normalNode: NodeObject<TextureNode> | null | undefined,
+    colorNode: NodeObject | NodeObject<TextureNode>,
+    depthNode: NodeObject | NodeObject<TextureNode>,
+    normalNode: NodeObject | NodeObject<TextureNode> | null | undefined,
     lutNode: AtmosphereLUTNode,
     options?: AerialPerspectiveNodeOptions
   ) {
@@ -76,8 +76,7 @@ export class AerialPerspectiveNode extends TempNode {
     const parameters = this.renderingContext.parameters.getUniforms()
     const { worldToUnit } = parameters
 
-    const colorUV = this.colorNode.uvNode ?? uv()
-    const depth = this.depthNode.sample(colorUV).r.toVar()
+    const depth = this.depthNode.r.toVar()
 
     const surfaceLuminance = Fn(() => {
       // Position of the surface
@@ -89,7 +88,7 @@ export class AerialPerspectiveNode extends TempNode {
         builder.renderer.logarithmicDepthBuffer
       )
       const positionView = screenToPositionView(
-        colorUV,
+        uv(),
         depth,
         viewZ,
         projectionMatrix(camera),
@@ -111,7 +110,7 @@ export class AerialPerspectiveNode extends TempNode {
           )
         }
         // Normal vector of the surface
-        const normalView = this.normalNode.sample(colorUV).xyz
+        const normalView = this.normalNode.xyz
         const normalWorld = inverseViewMatrix(camera).mul(
           vec4(normalView, 0)
         ).xyz
@@ -131,8 +130,8 @@ export class AerialPerspectiveNode extends TempNode {
       })
 
       const diffuse = this.lighting
-        ? this.colorNode.sample(colorUV).rgb.mul(indirect())
-        : this.colorNode.sample(colorUV).rgb
+        ? this.colorNode.rgb.mul(indirect())
+        : this.colorNode.rgb
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
