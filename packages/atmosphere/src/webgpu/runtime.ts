@@ -140,7 +140,7 @@ const combinedScatteringStruct = /*#__PURE__*/ struct(
     scattering: IrradianceSpectrum,
     singleMieScattering: IrradianceSpectrum
   },
-  'CombinedScattering'
+  'combinedScattering'
 )
 type CombinedScatteringStruct = ReturnType<typeof combinedScatteringStruct>
 
@@ -213,7 +213,7 @@ const radianceTransferStruct = /*#__PURE__*/ struct(
     radiance: RadianceSpectrum,
     transmittance: DimensionlessSpectrum
   },
-  'RadianceTransfer'
+  'radianceTransfer'
 )
 type RadianceTransferStruct = ReturnType<typeof radianceTransferStruct>
 
@@ -649,7 +649,7 @@ const raySegmentStruct = /*#__PURE__*/ struct(
     point: Position,
     degenerate: 'bool'
   },
-  'RaySegment'
+  'raySegment'
 )
 type RaySegmentStruct = ReturnType<typeof raySegmentStruct>
 
@@ -736,7 +736,7 @@ const sunAndSkyIrradianceStruct = /*#__PURE__*/ struct(
     sunIrradiance: IrradianceSpectrum,
     skyIrradiance: IrradianceSpectrum
   },
-  'SunAndSkyIrradiance'
+  'sunAndSkyIrradiance'
 )
 type SunAndSkyIrradianceStruct = ReturnType<typeof sunAndSkyIrradianceStruct>
 
@@ -829,7 +829,7 @@ const luminanceTransferStruct = /*#__PURE__*/ struct(
     luminance: Luminance3,
     transmittance: DimensionlessSpectrum
   },
-  'LuminanceTransfer'
+  'luminanceTransfer'
 )
 type LuminanceTransferStruct = ReturnType<typeof luminanceTransferStruct>
 
@@ -904,7 +904,7 @@ const sunAndSkyIlluminanceStruct = /*#__PURE__*/ struct(
     sunIlluminance: Illuminance3,
     skyIlluminance: Illuminance3
   },
-  'SunAndSkyIlluminance'
+  'sunAndSkyIlluminance'
 )
 type SunAndSkyIlluminanceStruct = ReturnType<typeof sunAndSkyIlluminanceStruct>
 

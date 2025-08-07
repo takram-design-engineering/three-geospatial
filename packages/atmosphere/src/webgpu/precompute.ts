@@ -245,10 +245,10 @@ const getUnitRangeFromTextureCoord = /*#__PURE__*/ Fnv(
 
 const transmittanceParamsStruct = /*#__PURE__*/ struct(
   {
-  radius: Length,
-  cosView: Dimensionless
+    radius: Length,
+    cosView: Dimensionless
   },
-  'TransmittanceParams'
+  'transmittanceParams'
 )
 type TransmittanceParamsStruct = ReturnType<typeof transmittanceParamsStruct>
 
@@ -317,10 +317,10 @@ export const computeTransmittanceToTopAtmosphereBoundaryTexture =
 
 const singleScatteringStruct = /*#__PURE__*/ struct(
   {
-  rayleigh: DimensionlessSpectrum,
-  mie: DimensionlessSpectrum
+    rayleigh: DimensionlessSpectrum,
+    mie: DimensionlessSpectrum
   },
-  'SingleScattering'
+  'singleScattering'
 )
 type SingleScatteringStruct = ReturnType<typeof singleScatteringStruct>
 
@@ -465,13 +465,13 @@ const computeSingleScattering = /*#__PURE__*/ Fnv(
 
 const scatteringParamsStruct = /*#__PURE__*/ struct(
   {
-  radius: Length,
-  cosView: Dimensionless,
-  cosSun: Dimensionless,
-  cosViewSun: Dimensionless,
-  rayIntersectsGround: 'bool'
+    radius: Length,
+    cosView: Dimensionless,
+    cosSun: Dimensionless,
+    cosViewSun: Dimensionless,
+    rayIntersectsGround: 'bool'
   },
-  'ScatteringParams'
+  'scatteringParams'
 )
 type ScatteringParamsStruct = ReturnType<typeof scatteringParamsStruct>
 
@@ -1004,10 +1004,10 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ Fnv(
 
 const multipleScatteringStruct = /*#__PURE__*/ struct(
   {
-  radiance: RadianceSpectrum,
-  cosViewSun: Dimensionless
+    radiance: RadianceSpectrum,
+    cosViewSun: Dimensionless
   },
-  'MultipleScattering'
+  'multipleScattering'
 )
 type MultipleScatteringStruct = ReturnType<typeof multipleScatteringStruct>
 
@@ -1130,10 +1130,10 @@ const computeIndirectIrradiance = /*#__PURE__*/ Fnv(
 
 const irradianceParamsStruct = /*#__PURE__*/ struct(
   {
-  radius: Length,
-  cosSun: Dimensionless
+    radius: Length,
+    cosSun: Dimensionless
   },
-  'IrradianceParams'
+  'irradianceParams'
 )
 type IrradianceParamsStruct = ReturnType<typeof irradianceParamsStruct>
 

@@ -7,7 +7,7 @@ import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import { AtmosphereParameters } from './AtmosphereParameters'
 
 const groupNode = /*#__PURE__*/ sharedUniformGroup(
-  'AtmosphereRenderingContext'
+  'atmosphereRenderingContext'
 ).onRenderUpdate(() => {
   groupNode.needsUpdate = true
 })

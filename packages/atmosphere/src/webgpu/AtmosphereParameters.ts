@@ -27,7 +27,7 @@ function createContextProxy<
   }) as unknown as R
 }
 
-const groupNode = /*#__PURE__*/ sharedUniformGroup('AtmosphereParameters') // TODO: Update if necessary
+const groupNode = /*#__PURE__*/ sharedUniformGroup('atmosphereParameters') // TODO: Update if necessary
 
 export class DensityProfileLayer {
   @nodeType(Length) width: number
