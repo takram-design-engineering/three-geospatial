@@ -425,7 +425,7 @@ const computeSingleScattering = /*#__PURE__*/ Fnv(
     const rayleighSum = vec3(0).toVar()
     const mieSum = vec3(0).toVar()
     Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
-      const rayLength = float(i).mul(stepSize)
+      const rayLength = float(i).mul(stepSize).toVar()
 
       // The Rayleigh and Mie single scattering at the current sample point.
       const deltaRayleighMie = computeSingleScatteringIntegrand(
@@ -779,7 +779,7 @@ const computeScatteringDensity = /*#__PURE__*/ Fnv(
     // Nested loops for the integral over all the incident directions omegaI.
     // @ts-expect-error Missing type
     Loop({ start: 0, end: SAMPLE_COUNT, name: 'l' }, ({ l }) => {
-      const theta = float(l).add(0.5).mul(deltaTheta)
+      const theta = float(l).add(0.5).mul(deltaTheta).toVar()
       const cosTheta = cos(theta).toVar()
       const sinTheta = sin(theta).toVar()
       const omegaRayIntersectsGround = rayIntersectsGround(
@@ -916,7 +916,7 @@ const computeMultipleScattering = /*#__PURE__*/ Fnv(
 
     const radianceSum = vec3(0).toVar()
     Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
-      const rayLength = float(i).mul(stepSize)
+      const rayLength = float(i).mul(stepSize).toVar()
 
       // The radius, cosView and cosSun parameters at the current integration
       // point (see the single scattering section for a detailed explanation).
