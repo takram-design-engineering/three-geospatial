@@ -1,6 +1,8 @@
 import type { TilesRenderer, TilesRendererEventMap } from '3d-tiles-renderer'
-import { Mesh } from 'three'
+import { Mesh, type Texture } from 'three'
 import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
+
+import { assertType } from '@takram/three-geospatial'
 
 function replaceMaterials(
   mesh: Mesh,
@@ -12,14 +14,13 @@ function replaceMaterials(
   }
   // eslint-disable-next-line new-cap
   const nodeMaterial = new overrideMaterial()
-  if (nodeMaterial != null) {
-    if ('map' in material && 'map' in nodeMaterial) {
-      nodeMaterial.map = material.map
-      material.map = null
-    }
-    mesh.material = nodeMaterial
-    material.dispose()
+  if ('map' in material && material.map != null && 'map' in nodeMaterial) {
+    assertType<Texture | null>(material.map)
+    assertType<Texture | null>(nodeMaterial.map)
+    nodeMaterial.map = material.map.clone()
   }
+  mesh.material = nodeMaterial
+  material.dispose()
 }
 
 export class TileOverrideMaterialPlugin {
