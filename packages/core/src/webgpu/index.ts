@@ -1,4 +1,5 @@
 export * from './accessors'
+export * from './debug'
 export * from './decorators'
 export * from './Fnv'
 export * from './node'
