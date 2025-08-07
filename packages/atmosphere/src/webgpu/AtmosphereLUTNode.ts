@@ -771,7 +771,7 @@ export class AtmosphereLUTNode extends TempNode {
     this.higherOrderScatteringRT.dispose()
     this.material.dispose()
     this.mesh.geometry.dispose()
-    this.parameters.dispose()
+    this.parameters.dispose() // TODO: Conditionally depending on the creator.
 
     const nodes = this._textureNodes
     for (const key in nodes) {

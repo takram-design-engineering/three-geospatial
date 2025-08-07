@@ -163,6 +163,11 @@ export class AerialPerspectiveNode extends TempNode {
 
     return vec4(outLuminance, 1)
   }
+
+  override dispose(): void {
+    super.dispose()
+    this.skyNode?.dispose() // TODO: Conditionally depending on the creator.
+  }
 }
 
 export const aerialPerspective = (

@@ -74,7 +74,7 @@ export class SkyEnvironmentNode extends TempNode {
   override dispose(): void {
     super.dispose()
     this.renderTarget.dispose()
-    this.skyNode.dispose()
+    this.skyNode.dispose() // TODO: Conditionally depending on the creator.
     this.material.dispose()
     this.mesh.geometry.dispose()
   }
