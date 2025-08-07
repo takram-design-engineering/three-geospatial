@@ -772,6 +772,14 @@ export class AtmosphereLUTNode extends TempNode {
     this.material.dispose()
     this.mesh.geometry.dispose()
     this.parameters.dispose()
+
+    const nodes = this._textureNodes
+    for (const key in nodes) {
+      if (Object.hasOwn(nodes, key)) {
+        const uniform = nodes[key as keyof typeof nodes]
+        uniform?.dispose()
+      }
+    }
   }
 }
 
