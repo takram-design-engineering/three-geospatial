@@ -59,6 +59,8 @@ export class AerialPerspectiveNode extends TempNode {
     this.depthNode = depthNode
     this.lutNode = lutNode
     this.skyNode = sky(renderingContext, lutNode)
+
+    this.lighting = normalNode != null
     Object.assign(this, options)
   }
 

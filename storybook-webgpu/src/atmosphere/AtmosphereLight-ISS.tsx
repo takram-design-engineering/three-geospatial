@@ -87,8 +87,7 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
       null,
-      lutNode,
-      { lighting: false }
+      lutNode
     )
 
     const postProcessing = new PostProcessing(renderer)
