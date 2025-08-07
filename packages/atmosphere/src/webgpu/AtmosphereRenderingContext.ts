@@ -25,7 +25,7 @@ export class AtmosphereRenderingContext {
   moonDirectionECEF = new Vector3()
   correctAltitude = true
 
-  private nodes?: AtmosphereRenderingContextUniforms
+  private uniforms?: AtmosphereRenderingContextUniforms
 
   constructor(options: AtmosphereRenderingContextOptions = {}) {
     Object.assign(this, options)
@@ -97,7 +97,7 @@ export class AtmosphereRenderingContext {
   }
 
   getUniforms(): AtmosphereRenderingContextUniforms {
-    return (this.nodes ??= this.createUniforms())
+    return (this.uniforms ??= this.createUniforms())
   }
 
   copy(other: AtmosphereRenderingContext): this {
@@ -117,6 +117,17 @@ export class AtmosphereRenderingContext {
 
   dispose(): void {
     this.parameters.dispose()
+
+    const { uniforms } = this
+    if (uniforms == null) {
+      return
+    }
+    for (const key in uniforms) {
+      if (Object.hasOwn(uniforms, key)) {
+        const uniform = uniforms[key as keyof typeof uniforms]
+        uniform.dispose()
+      }
+    }
   }
 }
 
