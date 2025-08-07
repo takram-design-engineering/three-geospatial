@@ -56,7 +56,7 @@ export const toneMappingArgTypes = (): ArgTypes<ToneMappingArgs> => ({
         [CineonToneMapping]: 'Cineon',
         [ACESFilmicToneMapping]: 'ACES Filmic',
         [AgXToneMapping]: 'AgX',
-        [NeutralToneMapping]: 'Neutral'
+        [NeutralToneMapping]: 'Khronos PBR Neutral'
       }
     },
     table: { category: 'tone mapping' }
