@@ -1,6 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useMemo, type FC } from 'react'
+import type { FC } from 'react'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
@@ -41,7 +41,10 @@ const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
+  const renderingContext = useResource(
+    () => new AtmosphereRenderingContext(),
+    []
+  )
   renderingContext.camera = camera
 
   const lutNode = useResource(() => atmosphereLUT(), [])

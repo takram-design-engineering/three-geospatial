@@ -5,7 +5,7 @@ import {
   useThree,
   type ThreeElement
 } from '@react-three/fiber'
-import { useMemo, useRef, type FC } from 'react'
+import { useRef, type FC } from 'react'
 import { pass } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
@@ -67,7 +67,10 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
+  const renderingContext = useResource(
+    () => new AtmosphereRenderingContext(),
+    []
+  )
   renderingContext.camera = camera
 
   const lutNode = useResource(() => atmosphereLUT(), [])

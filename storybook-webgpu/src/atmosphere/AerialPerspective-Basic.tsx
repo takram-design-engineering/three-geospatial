@@ -10,7 +10,7 @@ import {
   TilesPlugin,
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
-import { useMemo, type FC } from 'react'
+import type { FC } from 'react'
 import { mrt, normalView, output, pass } from 'three/tsl'
 import {
   MeshBasicNodeMaterial,
@@ -74,7 +74,10 @@ const Scene: FC<StoryProps> = ({
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
+  const renderingContext = useResource(
+    () => new AtmosphereRenderingContext(),
+    []
+  )
   renderingContext.camera = camera
 
   const lutNode = useResource(() => atmosphereLUT(), [])

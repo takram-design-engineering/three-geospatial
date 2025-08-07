@@ -1,6 +1,6 @@
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import { useMemo, type FC } from 'react'
+import type { FC } from 'react'
 
 import {
   getMoonDirectionECEF,
@@ -39,7 +39,10 @@ import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
 
-  const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
+  const renderingContext = useResource(
+    () => new AtmosphereRenderingContext(),
+    []
+  )
   const lutNode = useResource(() => atmosphereLUT(), [])
 
   useTransientControl(

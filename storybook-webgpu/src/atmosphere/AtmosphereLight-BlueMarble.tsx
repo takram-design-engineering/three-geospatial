@@ -5,7 +5,7 @@ import {
   useThree,
   type ThreeElement
 } from '@react-three/fiber'
-import { useMemo, type FC } from 'react'
+import type { FC } from 'react'
 import { TextureLoader } from 'three'
 import { mix, mul, pass, texture, uv, vec3 } from 'three/tsl'
 import {
@@ -61,7 +61,10 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const renderingContext = useMemo(() => new AtmosphereRenderingContext(), [])
+  const renderingContext = useResource(
+    () => new AtmosphereRenderingContext(),
+    []
+  )
   renderingContext.camera = camera
 
   const lutNode = useResource(() => atmosphereLUT(), [])
