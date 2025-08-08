@@ -122,7 +122,7 @@ const Scene: FC<StoryProps> = () => {
         reorientationPlugin.lon = radians(longitude)
         reorientationPlugin.lat = radians(latitude)
         reorientationPlugin.height = height
-        reorientationPlugin.invalidate()
+        reorientationPlugin.update()
       }
     }
   )

@@ -24,8 +24,9 @@ function replaceMaterials(
 }
 
 export class TileMaterialReplacementPlugin {
-  readonly overrideMaterial: typeof NodeMaterial
   tiles?: TilesRenderer
+
+  private readonly overrideMaterial: typeof NodeMaterial
 
   constructor(Material: typeof NodeMaterial = MeshBasicNodeMaterial) {
     this.overrideMaterial = Material
