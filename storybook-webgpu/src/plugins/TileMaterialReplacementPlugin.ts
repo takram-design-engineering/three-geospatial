@@ -23,7 +23,7 @@ function replaceMaterials(
   material.dispose()
 }
 
-export class TileOverrideMaterialPlugin {
+export class TileMaterialReplacementPlugin {
   readonly overrideMaterial: typeof NodeMaterial
   tiles?: TilesRenderer
 

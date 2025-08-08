@@ -52,7 +52,7 @@ import {
 } from '../helpers/usePointOfView'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
-import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
+import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
@@ -148,10 +148,8 @@ const Scene: FC<StoryProps> = ({
           }}
         />
         <TilesPlugin
-          plugin={TileMeshPropsPlugin}
-          args={{
-            material: useResource(() => new MeshBasicNodeMaterial(), [])
-          }}
+          plugin={TileMaterialReplacementPlugin}
+          args={MeshBasicNodeMaterial}
         />
       </TilesRenderer>
     </>

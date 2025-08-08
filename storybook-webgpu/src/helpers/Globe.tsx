@@ -17,7 +17,7 @@ import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 import { radians } from '@takram/three-geospatial'
 
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
-import { TileOverrideMaterialPlugin } from '../plugins/TileOverrideMaterialPlugin'
+import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -57,7 +57,7 @@ export const Globe: FC<GlobeProps> = ({
       args={{ creaseAngle: radians(30) }}
     />
     <TilesPlugin
-      plugin={TileOverrideMaterialPlugin}
+      plugin={TileMaterialReplacementPlugin}
       args={[overrideMaterial]}
     />
     {children}

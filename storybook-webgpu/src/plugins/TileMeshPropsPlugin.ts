@@ -2,11 +2,17 @@ import { applyProps, type ElementProps } from '@react-three/fiber'
 import type { TilesRenderer, TilesRendererEventMap } from '3d-tiles-renderer'
 import { Mesh } from 'three'
 
+type MeshProps = Omit<
+  ElementProps<typeof Mesh>,
+  // Overwriting materials can cause leaks.
+  'material'
+>
+
 export class TileMeshPropsPlugin {
-  readonly props: ElementProps<typeof Mesh>
+  readonly props: MeshProps
   tiles?: TilesRenderer
 
-  constructor(options?: ElementProps<typeof Mesh>) {
+  constructor(options?: MeshProps) {
     this.props = { ...options }
   }
 
