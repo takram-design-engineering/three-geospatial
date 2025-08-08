@@ -1,25 +1,30 @@
 import type { Camera } from 'three'
 import {
+  abs,
   acos,
   cos,
   dFdx,
   dFdy,
+  fwidth,
   If,
   max,
+  mix,
   nodeProxy,
   PI,
   positionGeometry,
   select,
-  sin,
   smoothstep,
   sqrt,
   uv,
+  vec2,
   vec3,
   vec4
 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
+  directionToEquirectUV,
+  equirectUVToDirection,
   Fnv,
   inverseProjectionMatrix,
   inverseViewMatrix,
@@ -44,15 +49,6 @@ const cameraDirectionWorld = /*#__PURE__*/ Fnv((camera: Camera) => {
   ).xyz
   return directionWorld
 })
-
-const equirectangularWorld = /*#__PURE__*/ Fnv(
-  (equirectUV: NodeObject<'vec2'>) => {
-    const theta = equirectUV.y.oneMinus().mul(PI).toVar()
-    const phi = equirectUV.x.oneMinus().mul(2, PI).toVar()
-    const sinTheta = sin(theta).toVar()
-    return vec3(sinTheta.mul(sin(phi)), cos(theta), sinTheta.mul(cos(phi)))
-  }
-)
 
 const getLunarRadiance = /*#__PURE__*/ Fnv(
   (
@@ -108,6 +104,21 @@ const orenNayarDiffuse = /*#__PURE__*/ Fnv(
   }
 )
 
+const equirectGrid = /*#__PURE__*/ Fnv(
+  (
+    direction: NodeObject<'vec3'>,
+    lineWidth: NodeObject<'float'>
+  ): Node<'float'> => {
+    const count = vec2(90, 45)
+    const uv = directionToEquirectUV(direction)
+    const deltaUV = fwidth(uv)
+    const width = lineWidth.mul(deltaUV).mul(0.5)
+    const distance = abs(uv.mul(count).fract().sub(0.5)).div(count)
+    const mask = smoothstep(width, width.add(deltaUV), distance).oneMinus()
+    return mask.x.add(mask.y).clamp(0, 1)
+  }
+)
+
 const SCREEN = 'POST_PROCESSING'
 const WORLD = 'RENDERER'
 const EQUIRECTANGULAR = 'EQUIRECTANGULAR'
@@ -136,6 +147,7 @@ export class SkyNode extends TempNode {
   showSun = true
   showMoon = true
   showGround = true
+  debugEquirectGrid = false
 
   private readonly scope: SkyNodeScope = SCREEN
 
@@ -243,13 +255,17 @@ export class SkyNode extends TempNode {
               : vec3()
           break
         case EQUIRECTANGULAR:
-          directionWorld = equirectangularWorld(uv())
+          directionWorld = equirectUVToDirection(uv())
           break
       }
       return worldToECEFMatrix.mul(vec4(directionWorld, 0)).xyz
     })()
       .toVertexStage()
       .normalize()
+
+    if (this.debugEquirectGrid) {
+      return mix(vec3(1), vec3(0), equirectGrid(rayDirectionECEF, 1))
+    }
 
     const luminanceTransfer = getSkyLuminance(
       parameters,

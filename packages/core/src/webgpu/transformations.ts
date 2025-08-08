@@ -1,11 +1,17 @@
 import type { Camera } from 'three'
 import {
+  asin,
+  atan,
+  cos,
   float,
   int,
   logarithmicDepthToViewZ,
   orthographicDepthToViewZ,
   perspectiveDepthToViewZ,
+  PI,
   reference,
+  sin,
+  sub,
   vec2,
   vec3,
   vec4,
@@ -93,5 +99,22 @@ export const depthToColor = /*#__PURE__*/ Fnv(
       ) as NodeObject<'float'>
     }
     return turbo(orthoDepth.saturate().oneMinus())
+  }
+)
+
+export const directionToEquirectUV = /*#__PURE__*/ Fnv(
+  (direction: NodeObject<'vec2'>) => {
+    const u = atan(direction.z, direction.x).div(2, PI).add(0.5)
+    const v = asin(direction.y.clamp(-1, 1)).div(PI).add(0.5)
+    return vec2(u, v)
+  }
+)
+
+export const equirectUVToDirection = /*#__PURE__*/ Fnv(
+  (uv: NodeObject<'vec2'>) => {
+    const lambda = sub(0.5, uv.x).mul(2, PI)
+    const phi = sub(uv.y, 0.5).mul(PI)
+    const cosPhi = cos(phi)
+    return vec3(cosPhi.mul(cos(lambda)), sin(phi), cosPhi.mul(sin(lambda)))
   }
 )

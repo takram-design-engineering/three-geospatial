@@ -126,7 +126,7 @@ export class AerialPerspectiveNode extends TempNode {
         ).toVar()
         const sunIlluminance = sunSkyIlluminance.get('sunIlluminance')
         const skyIlluminance = sunSkyIlluminance.get('skyIlluminance')
-        return PI.reciprocal().mul(sunIlluminance.add(skyIlluminance))
+        return sunIlluminance.add(skyIlluminance).div(PI)
       })
 
       const diffuse = this.lighting
