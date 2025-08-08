@@ -31,6 +31,10 @@ function formatArgTypes<TArgs extends Args>(
     : {}
 }
 
+// TODO: Somehow prevent Storybook from storing args state in URL parameters,
+// because it triggers re-rendering of the entire tree and computationally too
+// heavy.
+
 export function createStory<Props, TArgs extends Args>(
   StoryComponent: StoryFC<Props, TArgs>,
   {
