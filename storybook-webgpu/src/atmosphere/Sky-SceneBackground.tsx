@@ -39,10 +39,7 @@ import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
 
-  const renderingContext = useResource(
-    () => new AtmosphereRenderingContext(),
-    []
-  )
+  const context = useResource(() => new AtmosphereRenderingContext(), [])
   const lutNode = useResource(() => atmosphereLUT(), [])
 
   useTransientControl(
@@ -52,7 +49,7 @@ const Scene: FC<StoryProps> = () => {
       showGround
     }),
     options => {
-      const skyNode = skyBackground(renderingContext, lutNode, options)
+      const skyNode = skyBackground(context, lutNode, options)
       scene.backgroundNode?.dispose()
       scene.backgroundNode = skyNode
     }
@@ -62,12 +59,12 @@ const Scene: FC<StoryProps> = () => {
   useToneMappingControls()
 
   // Location controls:
-  const [longitude] = useLocationControls(renderingContext.worldToECEFMatrix)
+  const [longitude] = useLocationControls(context.worldToECEFMatrix)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
-    getMoonDirectionECEF(date, renderingContext.moonDirectionECEF)
+    getSunDirectionECEF(date, context.sunDirectionECEF)
+    getMoonDirectionECEF(date, context.moonDirectionECEF)
   })
 
   return <OrbitControls target={[0, 0, 0]} minDistance={1} />

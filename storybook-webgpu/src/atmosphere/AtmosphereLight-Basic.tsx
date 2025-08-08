@@ -67,11 +67,8 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const renderingContext = useResource(
-    () => new AtmosphereRenderingContext(),
-    []
-  )
-  renderingContext.camera = camera
+  const context = useResource(() => new AtmosphereRenderingContext(), [])
+  context.camera = camera
 
   const lutNode = useResource(() => atmosphereLUT(), [])
 
@@ -81,7 +78,7 @@ const Scene: FC<StoryProps> = () => {
     const passNode = pass(scene, camera)
 
     const aerialNode = aerialPerspective(
-      renderingContext,
+      context,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
       null,
@@ -92,7 +89,7 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, aerialNode]
-  }, [renderer, scene, camera, renderingContext, lutNode])
+  }, [renderer, scene, camera, context, lutNode])
 
   useFrame(() => {
     postProcessing.render()
@@ -111,16 +108,16 @@ const Scene: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  const [longitude] = useLocationControls(renderingContext.worldToECEFMatrix)
+  const [longitude] = useLocationControls(context.worldToECEFMatrix)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
+    getSunDirectionECEF(date, context.sunDirectionECEF)
   })
 
   const envNode = useResource(
-    () => skyEnvironment(renderingContext, lutNode),
-    [renderingContext, lutNode]
+    () => skyEnvironment(context, lutNode),
+    [context, lutNode]
   )
   const lightRef = useRef<AtmosphereLight>(null)
   useTransientControl(
@@ -141,7 +138,7 @@ const Scene: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight ref={lightRef} args={[renderingContext, lutNode]} />
+      <atmosphereLight ref={lightRef} args={[context, lutNode]} />
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere
         args={[0.5, 128, 128]}

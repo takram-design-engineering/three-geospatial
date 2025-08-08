@@ -1,6 +1,6 @@
 import { css } from '@emotion/react'
 import { Canvas, type CanvasProps } from '@react-three/fiber'
-import { useEffect, useRef, useState, type FC } from 'react'
+import { useEffect, useState, type FC } from 'react'
 import type { WebGPURendererParameters } from 'three/src/renderers/webgpu/WebGPURenderer.js'
 import { WebGPURenderer } from 'three/webgpu'
 

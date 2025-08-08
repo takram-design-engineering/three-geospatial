@@ -61,11 +61,8 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const renderingContext = useResource(
-    () => new AtmosphereRenderingContext(),
-    []
-  )
-  renderingContext.camera = camera
+  const context = useResource(() => new AtmosphereRenderingContext(), [])
+  context.camera = camera
 
   const lutNode = useResource(() => atmosphereLUT(), [])
 
@@ -75,7 +72,7 @@ const Scene: FC<StoryProps> = () => {
     const passNode = pass(scene, camera)
 
     const aerialNode = aerialPerspective(
-      renderingContext,
+      context,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
       null,
@@ -86,7 +83,7 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, aerialNode]
-  }, [renderer, scene, camera, renderingContext, lutNode])
+  }, [renderer, scene, camera, context, lutNode])
 
   useFrame(() => {
     postProcessing.render()
@@ -106,12 +103,12 @@ const Scene: FC<StoryProps> = () => {
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(0, date => {
-    getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
+    getSunDirectionECEF(date, context.sunDirectionECEF)
   })
 
   return (
     <>
-      <atmosphereLight args={[renderingContext, lutNode]} />
+      <atmosphereLight args={[context, lutNode]} />
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 512, 256]}

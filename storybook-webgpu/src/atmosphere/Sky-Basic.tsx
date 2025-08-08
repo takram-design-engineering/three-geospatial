@@ -41,11 +41,8 @@ const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const renderingContext = useResource(
-    () => new AtmosphereRenderingContext(),
-    []
-  )
-  renderingContext.camera = camera
+  const context = useResource(() => new AtmosphereRenderingContext(), [])
+  context.camera = camera
 
   const lutNode = useResource(() => atmosphereLUT(), [])
 
@@ -63,7 +60,7 @@ const Scene: FC<StoryProps> = () => {
       showGround
     }),
     options => {
-      const skyNode = sky(renderingContext, lutNode, options)
+      const skyNode = sky(context, lutNode, options)
       postProcessing.outputNode?.dispose()
       postProcessing.outputNode = skyNode
       postProcessing.needsUpdate = true
@@ -80,12 +77,12 @@ const Scene: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  const [longitude] = useLocationControls(renderingContext.worldToECEFMatrix)
+  const [longitude] = useLocationControls(context.worldToECEFMatrix)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
-    getMoonDirectionECEF(date, renderingContext.moonDirectionECEF)
+    getSunDirectionECEF(date, context.sunDirectionECEF)
+    getMoonDirectionECEF(date, context.moonDirectionECEF)
   })
 
   return <OrbitControls target={[0, 0, 0]} minDistance={1} />

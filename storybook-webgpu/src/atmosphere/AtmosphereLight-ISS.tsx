@@ -72,11 +72,8 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const renderingContext = useResource(
-    () => new AtmosphereRenderingContext(),
-    []
-  )
-  renderingContext.camera = camera
+  const context = useResource(() => new AtmosphereRenderingContext(), [])
+  context.camera = camera
 
   const lutNode = useResource(() => atmosphereLUT(), [])
 
@@ -86,7 +83,7 @@ const Scene: FC<StoryProps> = () => {
     const passNode = pass(scene, camera)
 
     const aerialNode = aerialPerspective(
-      renderingContext,
+      context,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
       null,
@@ -97,7 +94,7 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, aerialNode]
-  }, [renderer, scene, camera, renderingContext, lutNode])
+  }, [renderer, scene, camera, context, lutNode])
 
   useFrame(() => {
     postProcessing.render()
@@ -119,7 +116,7 @@ const Scene: FC<StoryProps> = () => {
   const [reorientationPlugin, setReorientationPlugin] =
     useState<ReorientationPlugin | null>(null)
   const [longitude] = useLocationControls(
-    renderingContext.worldToECEFMatrix,
+    context.worldToECEFMatrix,
     (longitude, latitude, height) => {
       if (reorientationPlugin != null) {
         reorientationPlugin.lon = radians(longitude)
@@ -132,20 +129,20 @@ const Scene: FC<StoryProps> = () => {
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    getSunDirectionECEF(date, renderingContext.sunDirectionECEF)
-    getMoonDirectionECEF(date, renderingContext.moonDirectionECEF)
+    getSunDirectionECEF(date, context.sunDirectionECEF)
+    getMoonDirectionECEF(date, context.moonDirectionECEF)
   })
 
   const envNode = useResource(
-    () => skyEnvironment(renderingContext, lutNode),
-    [renderingContext, lutNode]
+    () => skyEnvironment(context, lutNode),
+    [context, lutNode]
   )
   scene.environmentNode = envNode
 
   return (
     <>
       <atmosphereLight
-        args={[renderingContext, lutNode, 80]}
+        args={[context, lutNode, 80]}
         castShadow
         shadow-normalBias={0.1}
         shadow-mapSize={[2048, 2048]}
@@ -163,8 +160,8 @@ const Scene: FC<StoryProps> = () => {
       <OrbitControls minDistance={20} maxDistance={1e5} />
       <group rotation-x={-Math.PI / 2}>
         <ISS
-          worldToECEFMatrix={renderingContext.worldToECEFMatrix}
-          sunDirectionECEF={renderingContext.sunDirectionECEF}
+          worldToECEFMatrix={context.worldToECEFMatrix}
+          sunDirectionECEF={context.sunDirectionECEF}
           rotation-x={Math.PI / 2}
           rotation-y={Math.PI / 2}
         />
