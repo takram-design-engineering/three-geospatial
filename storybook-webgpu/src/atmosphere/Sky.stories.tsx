@@ -1,6 +1,11 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../helpers/createStory'
+import { Story as BasicStory } from './Sky-Basic'
+import { Story as SceneBackgroundStory } from './Sky-SceneBackground'
+
+import BasicCode from './Sky-Basic?raw'
+import SceneBackgroundCode from './Sky-SceneBackground?raw'
 
 export default {
   title: 'atmosphere/Sky',
@@ -14,25 +19,22 @@ export default {
   }
 } satisfies Meta
 
-export const Basic = createStory((await import('./Sky-Basic')).Story, {
+export const Basic = createStory(BasicStory, {
   parameters: {
     docs: {
       source: {
-        code: (await import('./Sky-Basic?raw')).default
+        code: BasicCode
       }
     }
   }
 })
 
-export const SceneBackground = createStory(
-  (await import('./Sky-SceneBackground')).Story,
-  {
-    parameters: {
-      docs: {
-        source: {
-          code: (await import('./Sky-SceneBackground?raw')).default
-        }
+export const SceneBackground = createStory(SceneBackgroundStory, {
+  parameters: {
+    docs: {
+      source: {
+        code: SceneBackgroundCode
       }
     }
   }
-)
+})
