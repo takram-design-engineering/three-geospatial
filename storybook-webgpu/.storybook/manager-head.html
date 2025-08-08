@@ -14,3 +14,18 @@
     visibility: hidden;
   }
 </style>
+
+<script>
+  // WORKAROUND: Prevent Storybook from storing args state in URL.
+  const replaceState = window.history.replaceState
+  window.history.replaceState = (data, unused, url) => {
+    const index = url?.indexOf('?') ?? -1
+    if (index !== -1) {
+      const params = new URLSearchParams(url.slice(index + 1))
+      params.delete('args')
+      const query = decodeURIComponent(params.toString())
+      url = `${url.slice(0, index)}?${query}`
+    }
+    return replaceState.apply(window.history, [data, unused, url])
+  }
+</script>
