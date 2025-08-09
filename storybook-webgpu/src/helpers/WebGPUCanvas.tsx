@@ -18,8 +18,8 @@ export const availableAtom = atom(
 const MessageContainer = styled('div')`
   position: absolute;
   top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 16px;
+  left: 16px;
   color: white;
   font-size: small;
   letter-spacing: 0.025em;
@@ -31,9 +31,8 @@ const Message: FC<{ forceWebGL: boolean }> = ({ forceWebGL }) => {
   if (!available) {
     return (
       <MessageContainer>
-        Your browser does not support WebGPU yet.
-        <br />
-        Running under WebGL2 as a fallback.
+        Your browser does not support WebGPU yet. Running under WebGL2 as a
+        fallback.
       </MessageContainer>
     )
   }

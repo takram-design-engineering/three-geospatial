@@ -286,7 +286,7 @@ const Overlay = styled('div')`
   td,
   th {
     padding: 0;
-    padding-top: 8px;
+    font-weight: normal;
   }
 
   th {
