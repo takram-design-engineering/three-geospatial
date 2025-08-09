@@ -142,6 +142,9 @@ export class SkyNode extends TempNode {
   @nodeType('float')
   moonAngularRadius = 0.0045 // ≈ 15.5 arcminutes
 
+  @nodeType('float')
+  moonIntensity = 1
+
   // Static options
   showSun = true
   showMoon = true
@@ -169,7 +172,8 @@ export class SkyNode extends TempNode {
       rayDirectionECEF: NodeObject<'vec3'>,
       sunDirectionECEF: NodeObject<'vec3'>,
       moonDirectionECEF: NodeObject<'vec3'>,
-      moonAngularRadius: NodeObject<'float'>
+      moonAngularRadius: NodeObject<'float'>,
+      moonIntensity: NodeObject<'float'>
     ): Node<'vec3'> => {
       const sunLuminance = vec3(0).toVar()
       const moonLuminance = vec3(0).toVar()
@@ -217,6 +221,7 @@ export class SkyNode extends TempNode {
             )
             moonLuminance.assign(
               getLunarRadiance(parameters, moonAngularRadius)
+                .mul(moonIntensity)
                 .mul(diffuse)
                 .mul(antialias)
             )
@@ -239,6 +244,7 @@ export class SkyNode extends TempNode {
 
     const reference = referenceTo<SkyNode>(this)
     const moonAngularRadius = reference('moonAngularRadius')
+    const moonIntensity = reference('moonIntensity')
 
     // Direction of the camera ray:
     const rayDirectionECEF = Fnv(() => builder => {
@@ -283,7 +289,8 @@ export class SkyNode extends TempNode {
       rayDirectionECEF,
       sunDirectionECEF,
       moonDirectionECEF,
-      moonAngularRadius
+      moonAngularRadius,
+      moonIntensity
     )
     return inscatter.add(sunMoonLuminance.mul(transmittance))
   }
