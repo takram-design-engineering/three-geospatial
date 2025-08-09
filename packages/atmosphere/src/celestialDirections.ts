@@ -5,6 +5,7 @@ import {
   KM_PER_AU,
   Pivot,
   Rotation_EQJ_EQD,
+  RotationAxis,
   SiderealTime,
   type RotationMatrix,
   type Vector
@@ -80,17 +81,6 @@ function getDirectionECI(
   return result.normalize()
 }
 
-function getDirectionECEF(
-  body: Body,
-  time: AstroTime,
-  result: Vector3,
-  observer?: Vector3
-): Vector3 {
-  const matrixECIToECEF = getECIToECEFRotationMatrix(time, matrixScratch1)
-  getDirectionECI(body, time, result, observer, matrixECIToECEF)
-  return result.applyMatrix4(matrixECIToECEF)
-}
-
 export function getSunDirectionECI(
   date: number | Date | AstroTime,
   result = new Vector3(),
@@ -107,12 +97,25 @@ export function getMoonDirectionECI(
   return getDirectionECI(Body.Moon, toAstroTime(date), result, observer)
 }
 
+export function getMoonAxisECI(
+  date: number | Date | AstroTime,
+  result = new Vector3()
+): Vector3 {
+  return fromAstroVector(
+    RotationAxis(Body.Moon, toAstroTime(date)).north,
+    result
+  )
+}
+
 export function getSunDirectionECEF(
   date: number | Date | AstroTime,
   result = new Vector3(),
   observer?: Vector3
 ): Vector3 {
-  return getDirectionECEF(Body.Sun, toAstroTime(date), result, observer)
+  const time = toAstroTime(date)
+  return getDirectionECI(Body.Sun, time, result, observer).applyMatrix4(
+    getECIToECEFRotationMatrix(time, matrixScratch1)
+  )
 }
 
 export function getMoonDirectionECEF(
@@ -120,5 +123,18 @@ export function getMoonDirectionECEF(
   result = new Vector3(),
   observer?: Vector3
 ): Vector3 {
-  return getDirectionECEF(Body.Moon, toAstroTime(date), result, observer)
+  const time = toAstroTime(date)
+  return getDirectionECI(Body.Moon, time, result, observer).applyMatrix4(
+    getECIToECEFRotationMatrix(time, matrixScratch1)
+  )
+}
+
+export function getMoonAxisECEF(
+  date: number | Date | AstroTime,
+  result = new Vector3()
+): Vector3 {
+  const time = toAstroTime(date)
+  return getMoonAxisECI(time, result).applyMatrix4(
+    getECIToECEFRotationMatrix(time, matrixScratch1)
+  )
 }

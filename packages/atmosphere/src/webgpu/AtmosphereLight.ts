@@ -49,7 +49,8 @@ export class AtmosphereLight extends DirectionalLight {
     if (renderingContext == null) {
       return
     }
-    const { ecefToWorldMatrix, sunDirectionECEF } = renderingContext.getUniforms()
+    const { ecefToWorldMatrix, sunDirectionECEF } =
+      renderingContext.getUniforms()
     this.position
       .copy(sunDirectionECEF.value)
       .applyMatrix3(rotationScratch.setFromMatrix4(ecefToWorldMatrix.value))

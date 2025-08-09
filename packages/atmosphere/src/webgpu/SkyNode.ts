@@ -174,7 +174,7 @@ export class SkyNode extends TempNode {
       worldToECEFMatrix,
       sunDirectionECEF,
       moonDirectionECEF,
-      moonNorthPoleECEF,
+      moonAxisECEF,
       cameraPositionUnit
     } = this.renderingContext.getUniforms()
 
@@ -261,7 +261,7 @@ export class SkyNode extends TempNode {
             // provided the direction to the north pole from the moon center.
             // TODO: Maybe have a matrix uniform and construct it on the CPU?
             const centerToView = moonDirectionECEF.negate().toVar()
-            const z = moonNorthPoleECEF
+            const z = moonAxisECEF
             const x = centerToView.sub(z.mul(centerToView.dot(z))).normalize()
             const y = z.cross(x).normalize()
             const normal = rayDirectionECEF

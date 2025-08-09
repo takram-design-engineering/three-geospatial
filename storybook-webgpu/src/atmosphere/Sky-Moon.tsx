@@ -7,7 +7,6 @@ import {
   Equator,
   Horizon,
   Illumination,
-  MakeTime,
   Observer,
   Pivot,
   RotateVector,
@@ -38,8 +37,11 @@ import {
 } from 'three/webgpu'
 
 import {
-  getMoonDirectionECEF,
-  getSunDirectionECEF
+  getECIToECEFRotationMatrix,
+  getMoonAxisECI,
+  getMoonDirectionECI,
+  getSunDirectionECI,
+  toAstroTime
 } from '@takram/three-atmosphere'
 import {
   atmosphereLUT,
@@ -47,6 +49,7 @@ import {
   sky
 } from '@takram/three-atmosphere/webgpu'
 import { degrees, Geodetic, radians } from '@takram/three-geospatial'
+import { dithering } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -80,16 +83,16 @@ const stateAtom = atom<{
   sunHOR: HorizontalCoordinates
   moonEQU: EquatorialCoordinates
   moonHOR: HorizontalCoordinates
+  moonScale: number
+  moonIntensity: number
 }>()
 
 const up = new Vector3(0, 1, 0)
 const east = new Vector3(0, 0, 1)
 
-const geodeticScratch = new Geodetic()
-const vectorScratch1 = new Vector3()
-const vectorScratch2 = new Vector3()
+const geodetic = new Geodetic()
 
-const sphereGeometry = new SphereGeometry(0.0025)
+const sphereGeometry = new SphereGeometry(0.005)
 const circleGeometry = new BufferGeometry().setFromPoints(
   new Shape().arc(0, 0, 1, 0, Math.PI * 2).getPoints(90)
 )
@@ -125,8 +128,9 @@ const Direction: FC<{ name: 'sun' | 'moon' }> = ({ name }) => {
       }),
     []
   )
-  const [azimuthLine, altitudeLine] = useMemo(
+  const [azimuthLine, altitudeLine, horizonLine] = useMemo(
     () => [
+      new Line(circleGeometry, lineMaterial),
       new Line(circleGeometry, lineMaterial),
       new Line(circleGeometry, lineMaterial)
     ],
@@ -135,28 +139,30 @@ const Direction: FC<{ name: 'sun' | 'moon' }> = ({ name }) => {
 
   useEffect(() => {
     const store = getDefaultStore()
+
+    const vector1 = new Vector3()
+    const vector2 = new Vector3()
     const callback = (): void => {
       const state = store.get(stateAtom)
       if (state == null) {
         return
       }
       const { altitude, azimuth } = state[`${name}HOR`]
-      const direction = vectorScratch1.setFromSphericalCoords(
+      const direction = vector1.setFromSphericalCoords(
         1,
         radians(90 - altitude),
         radians(90 - azimuth)
       )
       directionPoint.position.copy(direction)
 
-      const theta = vectorScratch2.copy(up).cross(direction).normalize()
+      const theta = vector2.copy(up).cross(direction).normalize()
       azimuthLine.quaternion.setFromUnitVectors(east, theta)
 
-      const phi = vectorScratch2
-        .copy(direction)
-        .multiplyScalar(direction.dot(up))
+      const phi = vector2.copy(direction).multiplyScalar(direction.dot(up))
       phi.subVectors(up, phi).normalize()
       altitudeLine.quaternion.setFromUnitVectors(east, phi)
     }
+
     callback()
     return store.sub(stateAtom, callback)
   }, [name, directionPoint, azimuthLine, altitudeLine])
@@ -166,6 +172,7 @@ const Direction: FC<{ name: 'sun' | 'moon' }> = ({ name }) => {
       <primitive object={directionPoint} />
       <primitive object={azimuthLine} />
       <primitive object={altitudeLine} />
+      <primitive object={horizonLine} rotation-x={Math.PI / 2} />
     </group>
   )
 }
@@ -184,21 +191,18 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, toneMappingNode] = useResource(() => {
+  const [postProcessing, skyNode, toneMappingNode] = useResource(() => {
     const passNode = pass(scene, camera)
-
     const skyNode = sky(context, lutNode)
-    skyNode.moonAngularRadius *= 5
-    skyNode.moonIntensity *= 5
-
     const toneMappingNode = toneMapping(AgXToneMapping, exposureNode, skyNode)
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = toneMappingNode.rgb
       .mul(passNode.a.oneMinus())
       .add(passNode.rgb)
+      .add(dithering())
 
-    return [postProcessing, toneMappingNode]
+    return [postProcessing, skyNode, toneMappingNode]
   }, [renderer, scene, camera, context, lutNode, exposureNode])
 
   useFrame(() => {
@@ -231,18 +235,38 @@ const Scene: FC<StoryProps> = () => {
   // Local date controls (depends on the longitude of the location):
   const date = useLocalDateControls(longitude)
 
+  // The moon scale and intensity:
+  const moonScale = useSpringControl(
+    ({ moonScale }: StoryArgs) => moonScale,
+    value => {
+      skyNode.moonAngularRadius = 0.0045 * value
+    }
+  )
+  const moonIntensity = useSpringControl(
+    ({ moonIntensity }: StoryArgs) => moonIntensity,
+    value => {
+      skyNode.moonIntensity = value
+    }
+  )
+
+  // Update sun and moon state:
   const set = useSetAtom(stateAtom)
   useCombinedChange(
-    [longitude, latitude, height, date],
-    ([longitude, latitude, height, date]) => {
-      const observerECEF = geodeticScratch
-        .set(radians(longitude), radians(latitude), height)
-        .toECEF()
-      getSunDirectionECEF(date, context.sunDirectionECEF)
-      getMoonDirectionECEF(date, context.moonDirectionECEF, observerECEF)
+    [longitude, latitude, height, date, moonScale, moonIntensity],
+    ([longitude, latitude, height, date, moonScale, moonIntensity]) => {
+      const time = toAstroTime(date)
+      const matrixECIToECEF = getECIToECEFRotationMatrix(time)
+
+      const { sunDirectionECEF, moonDirectionECEF, moonAxisECEF } = context
+      getSunDirectionECI(time, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
+      getMoonDirectionECI(
+        time,
+        moonDirectionECEF,
+        geodetic.set(radians(longitude), radians(latitude), height).toECEF()
+      ).applyMatrix4(matrixECIToECEF)
+      getMoonAxisECI(time, moonAxisECEF).applyMatrix4(matrixECIToECEF)
 
       const observer = new Observer(latitude, longitude, height)
-      const time = MakeTime(new Date(date))
       const sunEQU = Equator(Body.Sun, time, observer, true, false)
       const sunHOR = Horizon(time, observer, sunEQU.ra, sunEQU.dec)
       const moonEQU = Equator(Body.Moon, time, observer, true, false)
@@ -253,7 +277,9 @@ const Scene: FC<StoryProps> = () => {
         sunEQU,
         sunHOR,
         moonEQU,
-        moonHOR
+        moonHOR,
+        moonScale,
+        moonIntensity
       })
     }
   )
@@ -267,14 +293,11 @@ const Scene: FC<StoryProps> = () => {
   )
 }
 
-interface StoryProps {}
-
-interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {}
-
 const Overlay = styled('div')`
   position: absolute;
   bottom: 16px;
   left: 16px;
+  max-width: calc(100% - 32px);
   color: rgba(255, 255, 255, calc(2 / 3));
   font-size: small;
   letter-spacing: 0.025em;
@@ -287,6 +310,7 @@ const Overlay = styled('div')`
   th {
     padding: 0;
     font-weight: normal;
+    vertical-align: top;
   }
 
   th {
@@ -307,76 +331,81 @@ const Info: FC = () => {
   if (state == null) {
     return null
   }
-  const { time, observer, moonEQU, moonHOR, sunEQU } = state
+
+  const { time, observer, moonHOR, sunEQU, moonScale, moonIntensity } = state
   const { azimuth, altitude } = moonHOR
 
   let rotation = Rotation_EQD_HOR(time, observer)
-  rotation = Pivot(rotation, 2 /* zenith */, moonHOR.azimuth)
-  rotation = Pivot(rotation, 1 /* west */, moonHOR.altitude)
+  rotation = Pivot(rotation, 2, moonHOR.azimuth)
+  rotation = Pivot(rotation, 1, moonHOR.altitude)
 
-  let sunVector = RotateVector(rotation, moonEQU.vec)
-  const sunRadius = sunVector.Length()
-  sunVector.x /= sunRadius
-  sunVector.y /= sunRadius
-  sunVector.z /= sunRadius
-  sunVector = RotateVector(rotation, sunEQU.vec)
-
+  const sunVector = RotateVector(rotation, sunEQU.vec)
   const tilt = degrees(Math.atan2(sunVector.y, sunVector.z))
   const illumination = Illumination(Body.Moon, time)
   const angle = AngleFromSun(Body.Moon, time)
+
   return (
     <Overlay>
-      Moon’s apparent size and brightness are 5 times greater than the actual.
+      Moon’s apparent size is <Value>{moonScale.toFixed(1)}</Value> times and
+      brightness is <Value>{moonIntensity.toFixed(1)}</Value> times greater
+      than the actual.
       <table>
         <tbody>
           <tr>
             <th>Azimuth</th>
             <td>
-              <Value>{azimuth.toFixed(3)}</Value> degrees
+              <Value>{azimuth.toFixed(2)}</Value> deg
             </td>
           </tr>
           <tr>
             <th>Altitude</th>
             <td>
-              <Value>{altitude.toFixed(3)}</Value> degrees
+              <Value>{altitude.toFixed(2)}</Value> deg
             </td>
           </tr>
           <tr>
             <th>Sun vector</th>
             <td>
-              X <Value>{sunVector.x.toFixed(6)}</Value> Y{' '}
-              <Value>{sunVector.y.toFixed(6)}</Value> Z{' '}
-              <Value>{sunVector.z.toFixed(6)}</Value>
+              X <Value>{sunVector.x.toFixed(4)}</Value> Y{' '}
+              <Value>{sunVector.y.toFixed(4)}</Value> Z{' '}
+              <Value>{sunVector.z.toFixed(4)}</Value>
             </td>
           </tr>
           <tr>
             <th>Tilt angle of sunlit side</th>
             <td>
-              <Value>{tilt.toFixed(3)}</Value> degrees counterclockwise from up
+              <Value>{tilt.toFixed(2)}</Value> deg counter-clockwise from up
             </td>
           </tr>
           <tr>
             <th>Magnitude</th>
             <td>
-              <Value>{illumination.mag.toFixed(3)}</Value>
+              <Value>{illumination.mag.toFixed(2)}</Value>
             </td>
           </tr>
           <tr>
             <th>Phase angle</th>
             <td>
-              <Value>{illumination.phase_angle.toFixed(2)}</Value> degrees
+              <Value>{illumination.phase_angle.toFixed(2)}</Value> deg
             </td>
           </tr>
           <tr>
             <th>Angle between sun and moon</th>
             <td>
-              <Value>{angle.toFixed(2)}</Value> degrees
+              <Value>{angle.toFixed(2)}</Value> deg
             </td>
           </tr>
         </tbody>
       </table>
     </Overlay>
   )
+}
+
+interface StoryProps {}
+
+interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
+  moonScale: number
+  moonIntensity: number
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -389,6 +418,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
+  moonScale: 10,
+  moonIntensity: 100,
   ...localDateArgs({
     dayOfYear: 300,
     timeOfDay: 17.5
@@ -399,12 +430,27 @@ Story.args = {
     height: 300
   }),
   ...toneMappingArgs({
+    toneMappingEnabled: true,
     toneMappingExposure: 100
   }),
   ...rendererArgs()
 }
 
 Story.argTypes = {
+  moonScale: {
+    control: {
+      type: 'range',
+      min: 1,
+      max: 20
+    }
+  },
+  moonIntensity: {
+    control: {
+      type: 'range',
+      min: 1,
+      max: 1000
+    }
+  },
   ...localDateArgTypes(),
   ...locationArgTypes(),
   ...toneMappingArgTypes(),
