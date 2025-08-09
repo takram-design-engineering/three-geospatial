@@ -229,18 +229,18 @@ const Scene: FC<StoryProps> = () => {
   )
 
   // Local date controls (depends on the longitude of the location):
-  const date = useLocalDateControls(longitude, date => {
-    const observer = geodeticScratch
-      .set(radians(longitude.get()), radians(latitude.get()), height.get())
-      .toECEF()
-    getSunDirectionECEF(date, context.sunDirectionECEF)
-    getMoonDirectionECEF(date, context.moonDirectionECEF, observer)
-  })
+  const date = useLocalDateControls(longitude)
 
   const set = useSetAtom(stateAtom)
   useCombinedChange(
     [longitude, latitude, height, date],
     ([longitude, latitude, height, date]) => {
+      const observerECEF = geodeticScratch
+        .set(radians(longitude), radians(latitude), height)
+        .toECEF()
+      getSunDirectionECEF(date, context.sunDirectionECEF)
+      getMoonDirectionECEF(date, context.moonDirectionECEF, observerECEF)
+
       const observer = new Observer(latitude, longitude, height)
       const time = MakeTime(new Date(date))
       const sunEQU = Equator(Body.Sun, time, observer, true, false)
