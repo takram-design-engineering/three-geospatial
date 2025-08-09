@@ -17,7 +17,7 @@ import {
   type HorizontalCoordinates
 } from 'astronomy-engine'
 import { atom, getDefaultStore, useAtomValue, useSetAtom } from 'jotai'
-import { useMemo, useRef, type FC } from 'react'
+import { useEffect, useMemo, useRef, type FC } from 'react'
 import {
   AgXToneMapping,
   BufferGeometry,
@@ -133,27 +133,33 @@ const Direction: FC<{ name: 'sun' | 'moon' }> = ({ name }) => {
     [lineMaterial]
   )
 
-  useFrame(() => {
+  useEffect(() => {
     const store = getDefaultStore()
-    const state = store.get(stateAtom)
-    if (state == null) {
-      return
+    const callback = (): void => {
+      const state = store.get(stateAtom)
+      if (state == null) {
+        return
+      }
+      const { altitude, azimuth } = state[`${name}HOR`]
+      const direction = vectorScratch1.setFromSphericalCoords(
+        1,
+        radians(90 - altitude),
+        radians(90 - azimuth)
+      )
+      directionPoint.position.copy(direction)
+
+      const theta = vectorScratch2.copy(up).cross(direction).normalize()
+      azimuthLine.quaternion.setFromUnitVectors(east, theta)
+
+      const phi = vectorScratch2
+        .copy(direction)
+        .multiplyScalar(direction.dot(up))
+      phi.subVectors(up, phi).normalize()
+      altitudeLine.quaternion.setFromUnitVectors(east, phi)
     }
-    const { altitude, azimuth } = state[`${name}HOR`]
-    const direction = vectorScratch1.setFromSphericalCoords(
-      1,
-      radians(90 - altitude),
-      radians(90 - azimuth)
-    )
-    directionPoint.position.copy(direction)
-
-    const theta = vectorScratch2.copy(up).cross(direction).normalize()
-    azimuthLine.quaternion.setFromUnitVectors(east, theta)
-
-    const phi = vectorScratch2.copy(direction).multiplyScalar(direction.dot(up))
-    phi.subVectors(up, phi).normalize()
-    altitudeLine.quaternion.setFromUnitVectors(east, phi)
-  })
+    callback()
+    return store.sub(stateAtom, callback)
+  }, [name, directionPoint, azimuthLine, altitudeLine])
 
   return (
     <group ref={groupRef}>
