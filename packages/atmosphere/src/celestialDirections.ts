@@ -2,13 +2,18 @@ import {
   AstroTime,
   Body,
   GeoVector,
+  KM_PER_AU,
   Pivot,
   Rotation_EQJ_EQD,
   SiderealTime
 } from 'astronomy-engine'
 import { Matrix4, Vector3 } from 'three'
 
-const matrixScratch = /*#__PURE__*/ new Matrix4()
+const METER_TO_AU = 0.001 / KM_PER_AU
+
+const vectorScratch = /*#__PURE__*/ new Vector3()
+const matrixScratch1 = /*#__PURE__*/ new Matrix4()
+const matrixScratch2 = /*#__PURE__*/ new Matrix4()
 
 // Prefer number to be JS timestamp.
 function makeTime(value: number | Date | AstroTime): AstroTime {
@@ -35,45 +40,67 @@ export function getECIToECEFRotationMatrix(
 function getDirectionECI(
   body: Body,
   time: AstroTime,
-  result: Vector3
+  result: Vector3,
+  observer?: Vector3,
+  matrixECIToECEF?: Matrix4
 ): Vector3 {
   const { x, y, z } = GeoVector(body, time, false)
-  return result.set(x, y, z).normalize()
+  result.set(x, y, z)
+  if (observer != null) {
+    const matrixECEFToECI =
+      matrixECIToECEF != null
+        ? // matrixScratch1 can be in use by getDirectionECEF()
+          matrixScratch2.copy(matrixECIToECEF).transpose()
+        : getECIToECEFRotationMatrix(time, matrixScratch2).transpose()
+    result.sub(
+      vectorScratch
+        .copy(observer)
+        .applyMatrix4(matrixECEFToECI)
+        .multiplyScalar(METER_TO_AU)
+    )
+  }
+  return result.normalize()
 }
 
 function getDirectionECEF(
   body: Body,
   time: AstroTime,
-  result: Vector3
+  result: Vector3,
+  observer?: Vector3
 ): Vector3 {
-  const matrix = getECIToECEFRotationMatrix(time, matrixScratch)
-  return getDirectionECI(body, time, result).applyMatrix4(matrix)
+  const matrixECIToECEF = getECIToECEFRotationMatrix(time, matrixScratch1)
+  getDirectionECI(body, time, result, observer, matrixECIToECEF)
+  return result.applyMatrix4(matrixECIToECEF)
 }
 
 export function getSunDirectionECI(
   date: number | Date | AstroTime,
-  result = new Vector3()
+  result = new Vector3(),
+  observer?: Vector3
 ): Vector3 {
-  return getDirectionECI(Body.Sun, makeTime(date), result)
+  return getDirectionECI(Body.Sun, makeTime(date), result, observer)
 }
 
 export function getMoonDirectionECI(
   date: number | Date | AstroTime,
-  result = new Vector3()
+  result = new Vector3(),
+  observer?: Vector3
 ): Vector3 {
-  return getDirectionECI(Body.Moon, makeTime(date), result)
+  return getDirectionECI(Body.Moon, makeTime(date), result, observer)
 }
 
 export function getSunDirectionECEF(
   date: number | Date | AstroTime,
-  result = new Vector3()
+  result = new Vector3(),
+  observer?: Vector3
 ): Vector3 {
-  return getDirectionECEF(Body.Sun, makeTime(date), result)
+  return getDirectionECEF(Body.Sun, makeTime(date), result, observer)
 }
 
 export function getMoonDirectionECEF(
   date: number | Date | AstroTime,
-  result = new Vector3()
+  result = new Vector3(),
+  observer?: Vector3
 ): Vector3 {
-  return getDirectionECEF(Body.Moon, makeTime(date), result)
+  return getDirectionECEF(Body.Moon, makeTime(date), result, observer)
 }
