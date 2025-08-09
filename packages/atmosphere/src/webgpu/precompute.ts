@@ -235,8 +235,8 @@ const getUnitRangeFromTextureCoord = /*#__PURE__*/ Fnv(
       .div(textureSize.reciprocal().oneMinus())
   }
 ).setLayout({
-  type: 'float',
   name: 'getUnitRangeFromTextureCoord',
+  type: 'float',
   inputs: [
     { name: 'coord', type: 'float' },
     { name: 'textureSize', type: 'float' }

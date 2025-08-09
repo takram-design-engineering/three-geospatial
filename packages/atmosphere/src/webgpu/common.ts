@@ -104,8 +104,8 @@ export const clampCosine = /*#__PURE__*/ Fnv(
     return clamp(cosine, -1, 1)
   }
 ).setLayout({
-  type: Dimensionless,
   name: 'clampCosine',
+  type: Dimensionless,
   inputs: [{ name: 'cosine', type: Dimensionless }]
 })
 
@@ -114,8 +114,8 @@ export const clampDistance = /*#__PURE__*/ Fnv(
     return max(distance, 0)
   }
 ).setLayout({
-  type: Dimensionless,
   name: 'clampDistance',
+  type: Dimensionless,
   inputs: [{ name: 'cosine', type: Dimensionless }]
 })
 
@@ -133,8 +133,8 @@ export const safeSqrt = /*#__PURE__*/ Fnv(
     return sqrt(max(area, 0))
   }
 ).setLayout({
-  type: Dimensionless,
   name: 'safeSqrt',
+  type: Dimensionless,
   inputs: [{ name: 'area', type: Area }]
 })
 
@@ -198,8 +198,8 @@ export const getTextureCoordFromUnitRange = /*#__PURE__*/ Fnv(
     )
   }
 ).setLayout({
-  type: 'float',
   name: 'getTextureCoordFromUnitRange',
+  type: 'float',
   inputs: [
     { name: 'unit', type: 'float' },
     { name: 'textureSize', type: 'float' }
@@ -375,8 +375,8 @@ export const rayleighPhaseFunction = /*#__PURE__*/ Fnv(
     return k.mul(cosViewSun.pow2().add(1))
   }
 ).setLayout({
-  type: InverseSolidAngle,
   name: 'rayleighPhaseFunction',
+  type: InverseSolidAngle,
   inputs: [{ name: 'cosViewSun', type: Dimensionless }]
 })
 
@@ -393,8 +393,8 @@ export const miePhaseFunction = /*#__PURE__*/ Fnv(
       .div(g.pow2().sub(g.mul(2).mul(cosViewSun)).add(1).pow(1.5))
   }
 ).setLayout({
-  type: InverseSolidAngle,
   name: 'miePhaseFunction',
+  type: InverseSolidAngle,
   inputs: [
     { name: 'g', type: Dimensionless },
     { name: 'cosViewSun', type: Dimensionless }

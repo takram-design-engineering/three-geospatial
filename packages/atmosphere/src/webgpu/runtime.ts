@@ -613,8 +613,8 @@ const distanceToClosestPointOnRay = /*#__PURE__*/ Fnv(
     return camera.add(t.mul(ray)).length()
   }
 ).setLayout({
-  type: Length,
   name: 'distanceToClosestPointOnRay',
+  type: Length,
   inputs: [
     { name: 'camera', type: Position },
     { name: 'point', type: Position }
@@ -634,8 +634,8 @@ const raySphereIntersections = /*#__PURE__*/ Fnv(
     return vec2(b.negate().sub(Q), b.negate().add(Q)).mul(0.5)
   }
 ).setLayout({
-  type: 'vec2',
   name: 'raySphereIntersections',
+  type: 'vec2',
   inputs: [
     { name: 'camera', type: Position },
     { name: 'direction', type: Direction },
