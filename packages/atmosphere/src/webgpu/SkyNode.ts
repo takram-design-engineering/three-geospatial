@@ -119,8 +119,8 @@ const equirectGrid = /*#__PURE__*/ Fnv(
   }
 )
 
-const SCREEN = 'POST_PROCESSING'
-const WORLD = 'RENDERER'
+const SCREEN = 'SCREEN'
+const WORLD = 'WORLD'
 const EQUIRECTANGULAR = 'EQUIRECTANGULAR'
 
 type SkyNodeScope = typeof SCREEN | typeof WORLD | typeof EQUIRECTANGULAR
@@ -129,7 +129,6 @@ export interface SkyNodeOptions {
   showSun?: boolean
   showMoon?: boolean
   showGround?: boolean
-  useContextCamera?: boolean
 }
 
 export class SkyNode extends TempNode {
