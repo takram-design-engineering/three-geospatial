@@ -179,7 +179,7 @@ Story.args = {
     timeOfDay: 9
   }),
   ...toneMappingArgs({
-    toneMappingExposure: 10
+    toneMappingExposure: 5
   }),
   ...outputPassArgs(),
   ...rendererArgs()
