@@ -319,8 +319,13 @@ const Overlay = styled('div')`
   }
 `
 
-const Value = styled('span')`
-  color: white;
+const Value = styled('span')<{ off?: boolean }>`
+  color: rgba(
+    255,
+    255,
+    255,
+    ${({ off = false }) => (off ? 'calc(2 / 3)' : '1')}
+  );
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 `
@@ -366,8 +371,8 @@ const Info: FC = () => {
           <tr>
             <th>Sun vector</th>
             <td>
-              X <Value>{sunVector.x.toFixed(4)}</Value> Y{' '}
-              <Value>{sunVector.y.toFixed(4)}</Value> Z{' '}
+              X = <Value>{sunVector.x.toFixed(4)}</Value>, Y ={' '}
+              <Value>{sunVector.y.toFixed(4)}</Value>, Z ={' '}
               <Value>{sunVector.z.toFixed(4)}</Value>
             </td>
           </tr>
@@ -387,7 +392,9 @@ const Info: FC = () => {
           <tr>
             <th>Phase angle</th>
             <td>
-              <Value>{illumination.phase_angle.toFixed(2)}</Value> deg
+              <Value>{illumination.phase_angle.toFixed(2)}</Value> deg (
+              <Value off>0</Value> deg = full, <Value off>90</Value> deg = half,{' '}
+              <Value off>180</Value> deg = new)
             </td>
           </tr>
           <tr>
