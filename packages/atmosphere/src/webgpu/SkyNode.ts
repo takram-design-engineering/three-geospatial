@@ -203,7 +203,8 @@ export class SkyNode extends TempNode {
           )
           If(intersection.greaterThan(0), () => {
             const normal = rayDirectionECEF
-              .sub(moonDirectionECEF.mul(intersection))
+              .mul(intersection)
+              .sub(moonDirectionECEF)
               .normalize()
             const diffuse = orenNayarDiffuse(
               sunDirectionECEF,
