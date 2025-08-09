@@ -346,9 +346,9 @@ const Info: FC = () => {
 
   return (
     <Overlay>
-      Moon’s apparent size is <Value>{moonScale.toFixed(1)}</Value> times and
-      brightness is <Value>{moonIntensity.toFixed(1)}</Value> times greater
-      than the actual.
+      The moon’s apparent size is <Value>{moonScale.toFixed(1)}</Value> times
+      its actual size, and its luminance is{' '}
+      <Value>{moonIntensity.toFixed(1)}</Value> times its actual luminance.
       <table>
         <tbody>
           <tr>
@@ -374,7 +374,8 @@ const Info: FC = () => {
           <tr>
             <th>Tilt angle of sunlit side</th>
             <td>
-              <Value>{tilt.toFixed(2)}</Value> deg counter-clockwise from up
+              <Value>{Math.abs(tilt).toFixed(2)}</Value> deg{' '}
+              {tilt < 0 ? 'clockwise' : 'counter-clockwise'} from up
             </td>
           </tr>
           <tr>
@@ -441,7 +442,8 @@ Story.argTypes = {
     control: {
       type: 'range',
       min: 1,
-      max: 20
+      max: 20,
+      step: 0.1
     }
   },
   moonIntensity: {
