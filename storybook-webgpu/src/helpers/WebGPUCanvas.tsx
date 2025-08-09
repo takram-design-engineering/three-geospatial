@@ -1,8 +1,47 @@
-import { css } from '@emotion/react'
+import styled from '@emotion/styled'
 import { Canvas, type CanvasProps } from '@react-three/fiber'
-import { useEffect, useState, type FC } from 'react'
+import { atom, useAtomValue } from 'jotai'
+import { Suspense, type FC } from 'react'
 import type { WebGPURendererParameters } from 'three/src/renderers/webgpu/WebGPURenderer.js'
 import { WebGPURenderer } from 'three/webgpu'
+
+import type { RendererArgs } from '../controls/rendererControls'
+import { useControl } from './useControl'
+
+export const availableAtom = atom(
+  async () =>
+    typeof navigator !== 'undefined' &&
+    navigator.gpu !== undefined &&
+    (await navigator.gpu.requestAdapter()) != null
+)
+
+const MessageContainer = styled('div')`
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: small;
+  letter-spacing: 0.025em;
+  text-align: center;
+`
+
+const Message: FC<{ forceWebGL: boolean }> = ({ forceWebGL }) => {
+  const available = useAtomValue(availableAtom)
+  if (!available) {
+    return (
+      <MessageContainer>
+        Your browser does not support WebGPU yet.
+        <br />
+        Running under WebGL2 as a fallback.
+      </MessageContainer>
+    )
+  }
+  if (forceWebGL) {
+    return <MessageContainer>Running under WebGL2.</MessageContainer>
+  }
+  return null
+}
 
 export interface WebGPUCanvasProps extends Omit<CanvasProps, 'gl'> {
   renderer?: WebGPURendererParameters & {
@@ -14,25 +53,11 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
   renderer: { onInit, ...otherProps } = {},
   ...canvasProps
 }) => {
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    ;(async () => {
-      const available =
-        typeof navigator !== 'undefined' &&
-        navigator.gpu !== undefined &&
-        (await navigator.gpu.requestAdapter()) != null
-
-      if (!available) {
-        setVisible(true)
-      }
-    })().catch((error: unknown) => {
-      console.error(error)
-    })
-  }, [])
-
+  const forceWebGL = useControl(({ forceWebGL }: RendererArgs) => forceWebGL)
   return (
     <>
       <Canvas
+        key={forceWebGL ? 'webgl' : 'webgpu'}
         {...canvasProps}
         gl={async props => {
           const renderer = new WebGPURenderer({
@@ -45,7 +70,8 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
               // precision if it's not supported.
               maxColorAttachmentBytesPerSample: 48,
               ...otherProps.requiredLimits
-            }
+            },
+            forceWebGL
           })
           await renderer.init()
 
@@ -57,24 +83,9 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
           return renderer
         }}
       />
-      {visible && (
-        <div
-          css={css`
-            position: absolute;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-size: small;
-            letter-spacing: 0.025em;
-            text-align: center;
-          `}
-        >
-          Your browser does not support WebGPU yet.
-          <br />
-          Running under WebGL2 as a fallback.
-        </div>
-      )}
+      <Suspense>
+        <Message forceWebGL={forceWebGL} />
+      </Suspense>
     </>
   )
 }

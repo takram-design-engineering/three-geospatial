@@ -26,6 +26,7 @@ import {
   useLocationControls,
   type LocationArgs
 } from '../controls/locationControls'
+import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -117,7 +118,8 @@ Story.args = {
   }),
   ...toneMappingArgs({
     toneMappingExposure: 10
-  })
+  }),
+  ...rendererArgs()
 }
 
 Story.argTypes = {
@@ -138,7 +140,8 @@ Story.argTypes = {
   },
   ...localDateArgTypes(),
   ...locationArgTypes(),
-  ...toneMappingArgTypes()
+  ...toneMappingArgTypes(),
+  ...rendererArgTypes()
 }
 
 export default Story

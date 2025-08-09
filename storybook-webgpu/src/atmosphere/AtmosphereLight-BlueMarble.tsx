@@ -38,6 +38,7 @@ import {
   useOutputPassControls,
   type OutputPassArgs
 } from '../controls/outputPassControls'
+import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -183,7 +184,8 @@ Story.args = {
   ...toneMappingArgs({
     toneMappingExposure: 2
   }),
-  ...outputPassArgs()
+  ...outputPassArgs(),
+  ...rendererArgs()
 }
 
 Story.argTypes = {
@@ -191,7 +193,8 @@ Story.argTypes = {
   ...toneMappingArgTypes(),
   ...outputPassArgTypes({
     hasNormal: false
-  })
+  }),
+  ...rendererArgTypes()
 }
 
 export default Story

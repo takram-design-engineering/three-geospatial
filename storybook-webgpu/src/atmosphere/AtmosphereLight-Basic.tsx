@@ -43,6 +43,7 @@ import {
   usePhysicalMaterialControls,
   type PhysicalMaterialArgs
 } from '../controls/physicalMaterialControls'
+import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -192,7 +193,8 @@ Story.args = {
   ...toneMappingArgs({
     toneMappingExposure: 10
   }),
-  ...outputPassArgs()
+  ...outputPassArgs(),
+  ...rendererArgs()
 }
 
 Story.argTypes = {
@@ -217,7 +219,8 @@ Story.argTypes = {
   ...toneMappingArgTypes(),
   ...outputPassArgTypes({
     hasNormal: false
-  })
+  }),
+  ...rendererArgTypes()
 }
 
 export default Story

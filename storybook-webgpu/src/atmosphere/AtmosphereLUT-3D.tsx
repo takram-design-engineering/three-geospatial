@@ -25,6 +25,7 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Fnv, type NodeObject } from '@takram/three-geospatial/webgpu'
 
+import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -99,7 +100,8 @@ Story.args = {
   zoom: 1,
   ...toneMappingArgs({
     toneMapping: LinearToneMapping
-  })
+  }),
+  ...rendererArgs()
 }
 
 Story.argTypes = {
@@ -111,7 +113,8 @@ Story.argTypes = {
       step: 0.1
     }
   },
-  ...toneMappingArgTypes()
+  ...toneMappingArgTypes(),
+  ...rendererArgTypes()
 }
 
 export default Story

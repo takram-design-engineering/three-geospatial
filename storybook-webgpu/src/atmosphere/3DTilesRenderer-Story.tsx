@@ -23,6 +23,7 @@ import {
   useOutputPassControls,
   type OutputPassArgs
 } from '../controls/outputPassControls'
+import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -139,14 +140,16 @@ Story.args = {
   googleMapsApiKey: '',
   ...localDateArgs(),
   ...toneMappingArgs(),
-  ...outputPassArgs()
+  ...outputPassArgs(),
+  ...rendererArgs()
 }
 
 Story.argTypes = {
   googleMapsApiKey: { control: 'text' },
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
-  ...outputPassArgTypes()
+  ...outputPassArgTypes(),
+  ...rendererArgTypes()
 }
 
 export default Story

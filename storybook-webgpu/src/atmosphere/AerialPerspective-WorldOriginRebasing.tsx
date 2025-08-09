@@ -29,6 +29,7 @@ import {
   useOutputPassControls,
   type OutputPassArgs
 } from '../controls/outputPassControls'
+import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -132,14 +133,16 @@ Story.args = {
   ...toneMappingArgs({
     toneMappingExposure: 10
   }),
-  ...outputPassArgs()
+  ...outputPassArgs(),
+  ...rendererArgs()
 }
 
 Story.argTypes = {
   ...localDateArgTypes(),
   ...locationArgTypes(),
   ...toneMappingArgTypes(),
-  ...outputPassArgTypes()
+  ...outputPassArgTypes(),
+  ...rendererArgTypes()
 }
 
 export default Story
