@@ -381,7 +381,7 @@ const Info: FC = () => {
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <>
-    <WebGPUCanvas camera={{ position: [1, -0.3, 0] }}>
+    <WebGPUCanvas camera={{ fov: 90, position: [1, -0.3, 0] }}>
       <Scene {...props} />
     </WebGPUCanvas>
     <Info />
