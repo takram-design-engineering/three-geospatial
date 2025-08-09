@@ -5,6 +5,7 @@ import {
   cos,
   dFdx,
   dFdy,
+  equirectUV,
   fwidth,
   If,
   max,
@@ -15,16 +16,21 @@ import {
   select,
   smoothstep,
   sqrt,
+  texture,
   uv,
   vec2,
   vec3,
   vec4
 } from 'three/tsl'
-import { TempNode, type NodeBuilder } from 'three/webgpu'
+import {
+  TempNode,
+  TextureLoader,
+  TextureNode,
+  type NodeBuilder
+} from 'three/webgpu'
 
 import {
-  directionToEquirectUV,
-  equirectUVToDirection,
+  equirectWorld,
   Fnv,
   inverseProjectionMatrix,
   inverseViewMatrix,
@@ -34,6 +40,7 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
+import { DEFAULT_MOON_TEXTURE_URL } from '../constants'
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import { AtmosphereParametersUniforms } from './AtmosphereParameters'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
@@ -108,7 +115,7 @@ const equirectGrid = /*#__PURE__*/ Fnv(
     lineWidth: NodeObject<'float'>
   ): Node<'float'> => {
     const count = vec2(90, 45)
-    const uv = directionToEquirectUV(direction)
+    const uv = equirectUV(direction)
     const deltaUV = fwidth(uv)
     const width = lineWidth.mul(deltaUV).mul(0.5)
     const distance = abs(uv.mul(count).fract().sub(0.5)).div(count)
@@ -137,11 +144,9 @@ export class SkyNode extends TempNode {
   renderingContext: AtmosphereRenderingContext
   lutNode: AtmosphereLUTNode
 
-  @nodeType('float')
-  moonAngularRadius = 0.0045 // ≈ 15.5 arcminutes
-
-  @nodeType('float')
-  moonIntensity = 1
+  @nodeType('float') moonAngularRadius = 0.0045 // ≈ 15.5 arcminutes
+  @nodeType('float') moonIntensity = 1
+  moonTexture?: TextureNode | null
 
   // Static options
   showSun = true
@@ -164,15 +169,64 @@ export class SkyNode extends TempNode {
     Object.assign(this, options)
   }
 
-  private readonly setupSunMoon = Fnv(
-    (
-      parameters: AtmosphereParametersUniforms,
-      rayDirectionECEF: NodeObject<'vec3'>,
-      sunDirectionECEF: NodeObject<'vec3'>,
-      moonDirectionECEF: NodeObject<'vec3'>,
-      moonAngularRadius: NodeObject<'float'>,
-      moonIntensity: NodeObject<'float'>
-    ): Node<'vec3'> => {
+  override setup(builder: NodeBuilder): Node<'vec3'> {
+    const {
+      worldToECEFMatrix,
+      sunDirectionECEF,
+      moonDirectionECEF,
+      moonNorthPoleECEF,
+      cameraPositionUnit
+    } = this.renderingContext.getUniforms()
+
+    const parameters = this.renderingContext.parameters.getUniforms()
+
+    const reference = referenceTo<SkyNode>(this)
+    const moonAngularRadius = reference('moonAngularRadius')
+    const moonIntensity = reference('moonIntensity')
+
+    this.moonTexture ??= texture(
+      new TextureLoader().load(DEFAULT_MOON_TEXTURE_URL)
+    )
+
+    // Direction of the camera ray:
+    const rayDirectionECEF = Fnv(() => builder => {
+      let directionWorld
+      switch (this.scope) {
+        case SCREEN:
+          directionWorld = cameraDirectionWorld(this.renderingContext.camera)
+          break
+        case WORLD:
+          directionWorld =
+            builder.camera != null
+              ? cameraDirectionWorld(builder.camera)
+              : vec3()
+          break
+        case EQUIRECTANGULAR:
+          directionWorld = equirectWorld(uv())
+          break
+      }
+      return worldToECEFMatrix.mul(vec4(directionWorld, 0)).xyz
+    })()
+      .toVertexStage()
+      .normalize()
+
+    if (this.debugEquirectGrid) {
+      return mix(vec3(1), vec3(0), equirectGrid(rayDirectionECEF, 1))
+    }
+
+    const luminanceTransfer = getSkyLuminance(
+      parameters,
+      this.lutNode,
+      cameraPositionUnit,
+      rayDirectionECEF,
+      0, // TODO: Shadow length
+      sunDirectionECEF,
+      { showGround: this.showGround }
+    )
+    const inscatter = luminanceTransfer.get('luminance')
+    const transmittance = luminanceTransfer.get('transmittance')
+
+    const sunMoonLuminance = Fnv((): Node<'vec3'> => {
       const sunLuminance = vec3(0).toVar()
       const moonLuminance = vec3(0).toVar()
 
@@ -202,10 +256,26 @@ export class SkyNode extends TempNode {
             moonAngularRadius
           )
           If(intersection.greaterThan(0), () => {
+            // Ignoring libration, the moon always faces its prime meridian to
+            // the observer. Thus, we can construct an orthonormal basis,
+            // provided the direction to the north pole from the moon center.
+            // TODO: Maybe have a matrix uniform and construct it on the CPU?
+            const centerToView = moonDirectionECEF.negate().toVar()
+            const z = moonNorthPoleECEF
+            const x = centerToView.sub(z.mul(centerToView.dot(z))).normalize()
+            const y = z.cross(x).normalize()
             const normal = rayDirectionECEF
               .mul(intersection)
               .sub(moonDirectionECEF)
               .normalize()
+              .toVar()
+
+            const nx = normal.dot(x)
+            const ny = normal.dot(y)
+            const nz = normal.dot(z)
+            const uv = equirectUV(vec3(nx, nz, ny)) // equirectUV() expects Y-up
+            const color = this.moonTexture?.level(0).sample(uv) ?? 1
+
             const diffuse = orenNayarDiffuse(
               sunDirectionECEF,
               rayDirectionECEF.negate(),
@@ -221,6 +291,7 @@ export class SkyNode extends TempNode {
             moonLuminance.assign(
               getLunarRadiance(parameters, moonAngularRadius)
                 .mul(moonIntensity)
+                .mul(color)
                 .mul(diffuse)
                 .mul(antialias)
             )
@@ -228,70 +299,9 @@ export class SkyNode extends TempNode {
         }
       }
       return sunLuminance.add(moonLuminance)
-    }
-  )
+    })
 
-  override setup(builder: NodeBuilder): Node<'vec3'> {
-    const {
-      worldToECEFMatrix,
-      sunDirectionECEF,
-      moonDirectionECEF,
-      cameraPositionUnit
-    } = this.renderingContext.getUniforms()
-
-    const parameters = this.renderingContext.parameters.getUniforms()
-
-    const reference = referenceTo<SkyNode>(this)
-    const moonAngularRadius = reference('moonAngularRadius')
-    const moonIntensity = reference('moonIntensity')
-
-    // Direction of the camera ray:
-    const rayDirectionECEF = Fnv(() => builder => {
-      let directionWorld
-      switch (this.scope) {
-        case SCREEN:
-          directionWorld = cameraDirectionWorld(this.renderingContext.camera)
-          break
-        case WORLD:
-          directionWorld =
-            builder.camera != null
-              ? cameraDirectionWorld(builder.camera)
-              : vec3()
-          break
-        case EQUIRECTANGULAR:
-          directionWorld = equirectUVToDirection(uv())
-          break
-      }
-      return worldToECEFMatrix.mul(vec4(directionWorld, 0)).xyz
-    })()
-      .toVertexStage()
-      .normalize()
-
-    if (this.debugEquirectGrid) {
-      return mix(vec3(1), vec3(0), equirectGrid(rayDirectionECEF, 1))
-    }
-
-    const luminanceTransfer = getSkyLuminance(
-      parameters,
-      this.lutNode,
-      cameraPositionUnit,
-      rayDirectionECEF,
-      0, // TODO: Shadow length
-      sunDirectionECEF,
-      { showGround: this.showGround }
-    )
-    const inscatter = luminanceTransfer.get('luminance')
-    const transmittance = luminanceTransfer.get('transmittance')
-
-    const sunMoonLuminance = this.setupSunMoon(
-      parameters,
-      rayDirectionECEF,
-      sunDirectionECEF,
-      moonDirectionECEF,
-      moonAngularRadius,
-      moonIntensity
-    )
-    return inscatter.add(sunMoonLuminance.mul(transmittance))
+    return inscatter.add(sunMoonLuminance().mul(transmittance))
   }
 }
 

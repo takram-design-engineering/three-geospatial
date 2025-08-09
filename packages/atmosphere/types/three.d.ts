@@ -1,6 +1,6 @@
-import type { Camera, Data3DTexture, Light } from 'three'
+import type { Camera, Data3DTexture, Light, Texture } from 'three'
 import type { ShaderNodeObject } from 'three/tsl'
-import type { LightingNode, Node, NodeFrame } from 'three/webgpu'
+import type { LightingNode, Node, NodeFrame, UniformNode } from 'three/webgpu'
 
 export {}
 
@@ -29,6 +29,19 @@ declare module 'three/webgpu' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface AnalyticLightNode<T extends Light> extends LightingNode {
     colorNode: Node
+  }
+
+  interface TextureNode extends UniformNode<Texture> {
+    blur(amountNode: number | Node): ShaderNodeObject<TextureNode>
+    level(levelNode: number | Node): ShaderNodeObject<TextureNode>
+    size(levelNode: number | Node): ShaderNodeObject<TextureNode>
+    bias(biasNode: number | Node): ShaderNodeObject<TextureNode>
+    compare(compareNode: number | Node): ShaderNodeObject<TextureNode>
+    grad(
+      gradeNodeX: number | Node,
+      gradeNodeY: number | Node
+    ): ShaderNodeObject<TextureNode>
+    depth(depthNode: number | Node): ShaderNodeObject<TextureNode>
   }
 }
 

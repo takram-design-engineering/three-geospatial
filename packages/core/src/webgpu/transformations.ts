@@ -1,7 +1,5 @@
 import type { Camera } from 'three'
 import {
-  asin,
-  atan,
   cos,
   float,
   int,
@@ -103,15 +101,7 @@ export const depthToColor = /*#__PURE__*/ Fnv(
   }
 )
 
-export const directionToEquirectUV = /*#__PURE__*/ Fnv(
-  (direction: NodeObject<'vec3'>): Node<'vec2'> => {
-    const u = atan(direction.z, direction.x).div(PI2).add(0.5)
-    const v = asin(direction.y.clamp(-1, 1)).div(PI).add(0.5)
-    return vec2(u, v)
-  }
-)
-
-export const equirectUVToDirection = /*#__PURE__*/ Fnv(
+export const equirectWorld = /*#__PURE__*/ Fnv(
   (uv: NodeObject<'vec2'>): Node<'vec3'> => {
     const lambda = sub(0.5, uv.x).mul(PI2)
     const phi = sub(uv.y, 0.5).mul(PI)
