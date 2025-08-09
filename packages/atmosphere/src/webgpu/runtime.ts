@@ -67,6 +67,7 @@ import {
   mul,
   not,
   PI,
+  PI2,
   select,
   smoothstep,
   sqrt,
@@ -805,7 +806,7 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ Fnv(
       irradianceTexture,
       radius,
       cosSun
-    ).mul(2, PI)
+    ).mul(PI2)
 
     // Direct irradiance. Omit the cosine term.
     const sunIrradiance = parameters.solarIrradiance.mul(

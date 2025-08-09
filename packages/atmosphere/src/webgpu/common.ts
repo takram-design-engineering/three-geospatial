@@ -73,7 +73,6 @@ import {
   select,
   smoothstep,
   sqrt,
-  sub,
   vec2,
   vec3,
   vec4
@@ -260,7 +259,6 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
     // Added for the precomputation stage in half-float precision. Manually
     // interpolate the transmittance instead of the optical depth.
     if (parameters.transmittancePrecisionLog) {
-      // TODO: Separate to sampleLinear() function.
       const size = vec2(parameters.transmittanceTextureSize).toConst()
       const texelSize = vec3(size.reciprocal(), 0).toConst()
       const coord = uv.mul(size).sub(0.5).toVar()
@@ -443,17 +441,16 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
       const minDistance = radius.sub(parameters.bottomRadius).toVar()
       const maxDistance = distanceToHorizon
       cosViewCoord.assign(
-        sub(
-          0.5,
-          getTextureCoordFromUnitRange(
-            select(
-              maxDistance.equal(minDistance),
-              0,
-              distance.remap(minDistance, maxDistance)
-            ),
-            parameters.scatteringTextureCosViewSize / 2
-          ).mul(0.5)
+        getTextureCoordFromUnitRange(
+          select(
+            maxDistance.equal(minDistance),
+            0,
+            distance.remap(minDistance, maxDistance)
+          ),
+          parameters.scatteringTextureCosViewSize / 2
         )
+          .oneMinus()
+          .mul(0.5)
       )
     }).Else(() => {
       // Distance to the top atmosphere boundary for the ray (radius, cosView),
@@ -469,8 +466,8 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
           distance.remap(minDistance, maxDistance),
           parameters.scatteringTextureCosViewSize / 2
         )
+          .add(1)
           .mul(0.5)
-          .add(0.5)
       )
     })
 
@@ -499,7 +496,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ Fnv(
       max(a.div(A).oneMinus(), 0).div(a.add(1)),
       parameters.scatteringTextureCosSunSize
     )
-    const cosViewSunCoord = cosViewSun.add(1).div(2)
+    const cosViewSunCoord = cosViewSun.add(1).mul(0.5)
 
     return vec4(cosViewSunCoord, cosSunCoord, cosViewCoord, radiusCoord)
   }

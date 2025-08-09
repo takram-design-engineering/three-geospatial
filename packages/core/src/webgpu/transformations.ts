@@ -9,6 +9,7 @@ import {
   orthographicDepthToViewZ,
   perspectiveDepthToViewZ,
   PI,
+  PI2,
   reference,
   sin,
   sub,
@@ -103,16 +104,16 @@ export const depthToColor = /*#__PURE__*/ Fnv(
 )
 
 export const directionToEquirectUV = /*#__PURE__*/ Fnv(
-  (direction: NodeObject<'vec2'>) => {
-    const u = atan(direction.z, direction.x).div(2, PI).add(0.5)
+  (direction: NodeObject<'vec3'>): Node<'vec2'> => {
+    const u = atan(direction.z, direction.x).div(PI2).add(0.5)
     const v = asin(direction.y.clamp(-1, 1)).div(PI).add(0.5)
     return vec2(u, v)
   }
 )
 
 export const equirectUVToDirection = /*#__PURE__*/ Fnv(
-  (uv: NodeObject<'vec2'>) => {
-    const lambda = sub(0.5, uv.x).mul(2, PI)
+  (uv: NodeObject<'vec2'>): Node<'vec3'> => {
+    const lambda = sub(0.5, uv.x).mul(PI2)
     const phi = sub(uv.y, 0.5).mul(PI)
     const cosPhi = cos(phi)
     return vec3(cosPhi.mul(cos(lambda)), sin(phi), cosPhi.mul(sin(lambda)))

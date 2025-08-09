@@ -230,9 +230,8 @@ const getUnitRangeFromTextureCoord = /*#__PURE__*/ Fnv(
     coord: NodeObject<'float'>,
     textureSize: NodeObject<'float'>
   ): Node<'float'> => {
-    return coord
-      .sub(textureSize.reciprocal().mul(0.5))
-      .div(textureSize.reciprocal().oneMinus())
+    const texelSize = textureSize.reciprocal()
+    return coord.sub(texelSize.mul(0.5)).div(texelSize.oneMinus())
   }
 ).setLayout({
   name: 'getUnitRangeFromTextureCoord',
