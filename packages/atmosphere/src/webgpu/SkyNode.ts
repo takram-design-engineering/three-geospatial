@@ -76,10 +76,8 @@ const intersectSphere = /*#__PURE__*/ Fnv(
     angularRadius: NodeObject<'float'>
   ): NodeObject<'vec3'> => {
     const cosRay = centerDirection.dot(rayDirection).toVar()
-    const discriminant = centerDirection
-      .dot(centerDirection)
-      .sub(angularRadius.pow2())
-    return cosRay.sub(sqrt(cosRay.pow2().sub(discriminant)))
+    const discriminant = cosRay.pow2().sub(cos(angularRadius).pow2())
+    return cosRay.sub(sqrt(discriminant))
   }
 )
 
@@ -204,12 +202,12 @@ export class SkyNode extends TempNode {
             moonAngularRadius
           )
           If(intersection.greaterThan(0), () => {
-            const normal = moonDirectionECEF
-              .sub(rayDirectionECEF.mul(intersection))
+            const normal = rayDirectionECEF
+              .sub(moonDirectionECEF.mul(intersection))
               .normalize()
             const diffuse = orenNayarDiffuse(
-              sunDirectionECEF.negate(),
-              rayDirectionECEF,
+              sunDirectionECEF,
+              rayDirectionECEF.negate(),
               normal
             )
             const cosViewMoon = rayDirectionECEF.dot(moonDirectionECEF)
