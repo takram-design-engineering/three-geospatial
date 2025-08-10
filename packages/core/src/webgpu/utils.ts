@@ -36,7 +36,7 @@ export interface ReferenceOptions {
 export interface ReferenceFunction<T extends {}> {
   <K extends NodeValuePropertyKey<T>>(
     propertyName: K
-  ): NodeObject<UniformNode<unknown>>
+  ): NodeObject<UniformNode<T[K]>>
 
   <K extends NodeValuePropertyKey<T>>(
     propertyName: K,
