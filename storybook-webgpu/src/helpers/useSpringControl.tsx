@@ -2,6 +2,7 @@ import type { Args } from '@storybook/react-vite'
 import { getDefaultStore } from 'jotai'
 import {
   useMotionValue,
+  useMotionValueEvent,
   useSpring,
   useTransform,
   type MotionValue
@@ -20,7 +21,6 @@ export function useSpringControl<TArgs extends Args>(
   const argsAtom = useContext(StoryContext)
   const store = getDefaultStore()
   const value = selector(store.get(argsAtom) as TArgs)
-  onChange?.(value) // Initial callback
 
   // Transient update on the spring value.
   const springValue = useSpring(value, springOptions)
@@ -34,13 +34,10 @@ export function useSpringControl<TArgs extends Args>(
     })
   }, [argsAtom, store, springValue])
 
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
-  useEffect(() => {
-    return springValue.on('change', value => {
-      onChangeRef.current?.(value)
-    })
-  }, [springValue])
+  onChange?.(value) // Initial callback
+  useMotionValueEvent(springValue, 'change', value => {
+    onChange?.(value)
+  })
 
   return springValue
 }
@@ -59,7 +56,6 @@ export function useSpringColorControl<TArgs extends Args>(
   const argsAtom = useContext(StoryContext)
   const store = getDefaultStore()
   const value = selector(store.get(argsAtom) as TArgs)
-  onChange?.(styleToRGB(value)) // Initial callback
 
   const style = useMotionValue(value)
   style.set(value)
@@ -86,10 +82,9 @@ export function useSpringColorControl<TArgs extends Args>(
     })
   }, [argsAtom, store, style])
 
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
+  onChange?.(styleToRGB(value)) // Initial callback
   useCombinedChange([springR, springG, springB], rgb => {
-    onChangeRef.current?.(rgb)
+    onChange?.(rgb)
   })
 
   return useTransform([springR, springG, springB], ([r, g, b]: number[]) =>

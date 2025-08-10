@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import type { FolderSettings } from 'leva/dist/declarations/src/types'
-import { useSpring } from 'motion/react'
+import { useMotionValueEvent, useSpring } from 'motion/react'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect } from 'react'
 
@@ -49,11 +49,9 @@ export function useToneMappingControls(
   })
 
   const { invalidate } = useThree()
-  useEffect(() => {
-    return springExposure.on('change', () => {
-      invalidate()
-    })
-  }, [springExposure, invalidate])
+  useMotionValueEvent(springExposure, 'change', () => {
+    invalidate()
+  })
 
   return values
 }

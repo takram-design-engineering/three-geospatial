@@ -1,6 +1,9 @@
 import type { ArgTypes } from '@storybook/react-vite'
-import { useTransform, type MotionValue } from 'motion/react'
-import { useEffect, useRef } from 'react'
+import {
+  useMotionValueEvent,
+  useTransform,
+  type MotionValue
+} from 'motion/react'
 
 import { useMaybeMotionValue } from '../helpers/useMaybeMotionValue'
 import { useSpringControl } from '../helpers/useSpringControl'
@@ -71,14 +74,9 @@ export function useLocalDateControls(
   )
 
   onChange?.(motionDate.get()) // Initial callback
-
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
-  useEffect(() => {
-    return motionDate.on('change', date => {
-      onChangeRef.current?.(date)
-    })
-  }, [motionDate])
+  useMotionValueEvent(motionDate, 'change', value => {
+    onChange?.(value)
+  })
 
   return motionDate
 }
