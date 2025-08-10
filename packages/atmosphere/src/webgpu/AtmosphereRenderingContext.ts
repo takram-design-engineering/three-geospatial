@@ -23,7 +23,7 @@ export class AtmosphereRenderingContext {
   worldToECEFMatrix = new Matrix4().identity()
   sunDirectionECEF = new Vector3()
   moonDirectionECEF = new Vector3()
-  moonAxisECEF = new Vector3()
+  moonLocalToECEFMatrix = new Matrix4().identity()
   correctAltitude = true
 
   private uniforms?: AtmosphereRenderingContextUniforms
@@ -61,11 +61,11 @@ export class AtmosphereRenderingContext {
       .onRenderUpdate((_, { value }) => {
         value.copy(this.moonDirectionECEF)
       })
-    const moonAxisECEF = uniform(new Vector3())
+    const moonLocalToECEFMatrix = uniform(new Matrix4())
       .setGroup(groupNode)
-      .setName('moonAxisECEF')
+      .setName('moonLocalToECEFMatrix')
       .onRenderUpdate((_, { value }) => {
-        value.copy(this.moonAxisECEF)
+        value.copy(this.moonLocalToECEFMatrix)
       })
     const cameraPositionECEF = uniform(new Vector3())
       .setGroup(groupNode)
@@ -98,7 +98,7 @@ export class AtmosphereRenderingContext {
       ecefToWorldMatrix,
       sunDirectionECEF,
       moonDirectionECEF,
-      moonAxisECEF,
+      moonLocalToECEFMatrix,
       altitudeCorrectionECEF,
       cameraPositionUnit
     }
@@ -115,7 +115,7 @@ export class AtmosphereRenderingContext {
     this.worldToECEFMatrix.copy(other.worldToECEFMatrix)
     this.sunDirectionECEF.copy(other.sunDirectionECEF)
     this.moonDirectionECEF.copy(other.moonDirectionECEF)
-    this.moonAxisECEF.copy(other.moonAxisECEF)
+    this.moonLocalToECEFMatrix.copy(other.moonLocalToECEFMatrix)
     this.correctAltitude = other.correctAltitude
     return this
   }

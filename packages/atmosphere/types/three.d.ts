@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/prefer-function-type */
+
 import type { Camera, Data3DTexture, Light, Texture } from 'three'
 import type { ShaderNodeObject } from 'three/tsl'
 import type { LightingNode, Node, NodeFrame, UniformNode } from 'three/webgpu'
@@ -26,7 +29,6 @@ declare module 'three/webgpu' {
     camera?: Camera
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface AnalyticLightNode<T extends Light> extends LightingNode {
     colorNode: Node
   }
@@ -48,5 +50,19 @@ declare module 'three/webgpu' {
 declare module 'three/src/nodes/TSL.js' {
   interface NodeElements {
     get: (node: Node, name: string) => ShaderNodeObject
+  }
+
+  interface Matrix3Function {
+    (
+      n11: number | Node,
+      n12: number | Node,
+      n13: number | Node,
+      n21: number | Node,
+      n22: number | Node,
+      n23: number | Node,
+      n31: number | Node,
+      n32: number | Node,
+      n33: number | Node
+    ): ShaderNodeObject<ConstNode<Matrix3>>
   }
 }

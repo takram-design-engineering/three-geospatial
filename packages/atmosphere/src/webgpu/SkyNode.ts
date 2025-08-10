@@ -22,7 +22,7 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import { Matrix4, TempNode, TextureNode, type NodeBuilder } from 'three/webgpu'
+import { TempNode, TextureNode, type NodeBuilder } from 'three/webgpu'
 
 import {
   equirectWorld,
@@ -181,7 +181,7 @@ export class SkyNode extends TempNode {
       worldToECEFMatrix,
       sunDirectionECEF,
       moonDirectionECEF,
-      moonAxisECEF,
+      moonLocalToECEFMatrix,
       cameraPositionUnit
     } = this.renderingContext.getUniforms()
 
@@ -257,23 +257,6 @@ export class SkyNode extends TempNode {
         luminance.addAssign(sunLuminance)
       }
 
-      const localToECEFMatrix = uniform(
-        new Matrix4().identity()
-      ).onRenderUpdate((_, self) => {
-        // Ignoring libration, the moon always faces its prime meridian to the
-        // observer. With the direction to the north pole from the moon center,
-        // we can construct an orthonormal basis.
-        const centerToView = moonDirectionECEF.value.clone().negate()
-        const z = moonAxisECEF.value.clone()
-        const x = centerToView
-          .clone()
-          .sub(z.clone().multiplyScalar(centerToView.dot(z)))
-          .normalize()
-        const y = z.clone().cross(x).normalize()
-        self.value.makeBasis(x, y, z)
-      })
-      const ecefToLocalMatrix = localToECEFMatrix.transpose()
-
       // Compute the luminance of the moon:
       const cosMoonRadius = uniform(0).onRenderUpdate((_, self) => {
         self.value = Math.cos(moonAngularRadius.value)
@@ -294,7 +277,8 @@ export class SkyNode extends TempNode {
           .sub(moonDirectionECEF)
           .normalize()
           .toVar()
-        const normalLocal = ecefToLocalMatrix
+        const normalLocal = moonLocalToECEFMatrix
+          .transpose()
           .mul(vec4(normalECEF, 0))
           .xyz.toVar()
         const uv = equirectUV(normalLocal.xzy) // The equirectUV expects Y-up
@@ -315,14 +299,14 @@ export class SkyNode extends TempNode {
           const normalTangent = moonNormalTexture.sample(uv).xyz.mul(2).sub(1)
           const tangentToLocal = mat3Columns(tangent, bitangent, normalLocal)
           normalLocal.assign(tangentToLocal.mul(normalTangent).normalize())
-          normalECEF.assign(localToECEFMatrix.mul(vec4(normalLocal, 0)).xyz)
+          normalECEF.assign(moonLocalToECEFMatrix.mul(vec4(normalLocal, 0)).xyz)
         }
 
         const color = moonColorTexture?.sample(uv).xyz ?? 1
         const diffuse = orenNayarDiffuse(
           sunDirectionECEF,
           rayDirectionECEF.negate(),
-          normalECEF.add(moonAxisECEF.mul(0))
+          normalECEF
         )
         const antialias = smoothstep(
           moonAngularRadius,
