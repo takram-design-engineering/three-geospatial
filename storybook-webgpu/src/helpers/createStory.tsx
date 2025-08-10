@@ -7,7 +7,11 @@ import { useArgs } from 'storybook/preview-api'
 
 import { StoryContext } from './StoryContext'
 
-export type StoryFC<Props = {}, TArgs = Args> = FC<Props> & {
+export type StoryFC<Props = {}, TArgs = Args> = FC<
+  Props & {
+    updateArgs: (args: Partial<TArgs>) => void
+  }
+> & {
   [K in keyof StoryFn<TArgs>]: StoryFn<TArgs>[K]
 }
 
@@ -42,7 +46,7 @@ export function createStory<Props, TArgs extends Args>(
     props?: Props
   } & Pick<StoryObj<TArgs>, 'args' | 'argTypes' | 'parameters'> = {}
 ): StoryObj {
-  const Component = memo(StoryComponent as FC)
+  const Component = memo(StoryComponent) as any
   const initialArgs = { ...StoryComponent.args, ...overrideArgs }
   return {
     ...others,
@@ -73,7 +77,7 @@ export function createStory<Props, TArgs extends Args>(
       useSetAtom(argsAtom)(args)
       return (
         <StoryContext value={argsAtom}>
-          <Component {...props} />
+          <Component {...props} updateArgs={updateArgs} />
         </StoryContext>
       )
     },
