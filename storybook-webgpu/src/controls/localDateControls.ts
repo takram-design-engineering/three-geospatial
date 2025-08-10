@@ -11,6 +11,7 @@ import { useSpringControl } from '../helpers/useSpringControl'
 export interface LocalDateArgs {
   dayOfYear: number
   timeOfDay: number
+  year?: number
 }
 
 export const localDateArgs = (
@@ -45,9 +46,9 @@ export const localDateArgTypes = (): ArgTypes<LocalDateArgs> => ({
 function getLocalDate(
   longitude: number,
   dayOfYear: number,
-  timeOfDay: number
+  timeOfDay: number,
+  year: number
 ): number {
-  const year = new Date().getFullYear()
   const [epoch, offset] =
     longitude != null
       ? [Date.UTC(year, 0, 1, 0, 0, 0, 0), longitude / 15]
@@ -60,6 +61,9 @@ export function useLocalDateControls(
   onChange?: (date: number) => void
 ): MotionValue<number> {
   const motionLongitude = useMaybeMotionValue(longitude)
+  const year = useSpringControl(
+    ({ year }: LocalDateArgs) => year ?? new Date().getFullYear()
+  )
   const dayOfYear = useSpringControl(
     ({ dayOfYear }: LocalDateArgs) => dayOfYear
   )
@@ -68,9 +72,9 @@ export function useLocalDateControls(
   )
 
   const motionDate = useTransform(
-    [motionLongitude, dayOfYear, timeOfDay],
-    ([longitude, dayOfYear, timeOfDay]: number[]) =>
-      getLocalDate(longitude, dayOfYear, timeOfDay)
+    [motionLongitude, dayOfYear, timeOfDay, year],
+    ([longitude, dayOfYear, timeOfDay, year]: number[]) =>
+      getLocalDate(longitude, dayOfYear, timeOfDay, year)
   )
 
   onChange?.(motionDate.get()) // Initial callback
