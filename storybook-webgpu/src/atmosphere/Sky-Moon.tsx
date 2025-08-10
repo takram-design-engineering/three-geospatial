@@ -22,10 +22,10 @@ import {
 } from 'astronomy-engine'
 import { atom, getDefaultStore, useAtomValue, useSetAtom } from 'jotai'
 import {
-  ComponentRef,
   useEffect,
   useMemo,
   useRef,
+  type ComponentRef,
   type FC,
   type ReactNode
 } from 'react'
@@ -551,11 +551,11 @@ interface StoryProps {}
 
 interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
   zoom: number
-  moonScale: number
-  moonIntensity: number
   showOverlay: boolean
   trackMoon: boolean
   northUp: boolean
+  moonScale: number
+  moonIntensity: number
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -569,13 +569,13 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   zoom: 1,
-  moonScale: 1,
-  moonIntensity: 10,
   showOverlay: true,
   trackMoon: false,
   northUp: false,
+  moonScale: 1,
+  moonIntensity: 10,
   ...localDateArgs({
-    dayOfYear: 300,
+    dayOfYear: 301,
     timeOfDay: 17.5
   }),
   ...locationArgs({
@@ -595,26 +595,12 @@ Story.argTypes = {
     control: {
       type: 'range',
       min: 1,
-      max: 50,
+      max: 75,
       step: 0.1
-    }
-  },
-  moonScale: {
-    control: {
-      type: 'range',
-      min: 1,
-      max: 20,
-      step: 0.1
-    }
-  },
-  moonIntensity: {
-    control: {
-      type: 'range',
-      min: 1,
-      max: 1000
     }
   },
   showOverlay: {
+    name: 'overlay',
     control: {
       type: 'boolean'
     }
@@ -628,6 +614,25 @@ Story.argTypes = {
     control: {
       type: 'boolean'
     }
+  },
+  moonScale: {
+    name: 'scale',
+    control: {
+      type: 'range',
+      min: 1,
+      max: 20,
+      step: 0.1
+    },
+    table: { category: 'moon' }
+  },
+  moonIntensity: {
+    name: 'intensity',
+    control: {
+      type: 'range',
+      min: 1,
+      max: 1000
+    },
+    table: { category: 'moon' }
   },
   ...localDateArgTypes(),
   ...locationArgTypes(),

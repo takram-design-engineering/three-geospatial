@@ -8,7 +8,7 @@ import {
   type Renderer
 } from 'three/webgpu'
 
-import { QuadGeometry } from '@takram/three-geospatial'
+import { QuadGeometry } from '../QuadGeometry'
 
 export function debugShader(renderer: Renderer, node: Node): void {
   const material = new NodeMaterial()
