@@ -28,6 +28,22 @@ See [NASA Images and Media Usage Guidelines](https://www.nasa.gov/nasa-brand-cen
 
 Credit: NASA
 
+## moon/color.webp
+
+[NASA CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/).
+
+See [NASA Images and Media Usage Guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/).
+
+Credit: NASA
+
+## moon/normal.webp
+
+[NASA CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/).
+
+See [NASA Images and Media Usage Guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/).
+
+Credit: NASA
+
 ## iss.glb
 
 [International Space Station 3D Model](https://science.nasa.gov/resource/international-space-station-3d-model/).
@@ -35,9 +51,3 @@ Credit: NASA
 See [NASA Images and Media Usage Guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/).
 
 Credit: NASA
-
-## moon.webp
-
-CC Attribution 4.0, [Solar System Scope](https://www.solarsystemscope.com/textures/).
-
-Credit: Solar System Scope
