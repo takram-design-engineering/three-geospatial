@@ -107,6 +107,15 @@ const Direction: FC<{ name: 'sun' | 'moon' }> = ({ name }) => {
       group.position.setFromMatrixPosition(camera.matrixWorld)
     }
   })
+  useTransientControl(
+    ({ showOverlay }: StoryArgs) => showOverlay,
+    value => {
+      const group = groupRef.current
+      if (group != null) {
+        group.visible = value
+      }
+    }
+  )
 
   const pointMaterial = useResource(
     () =>
@@ -414,6 +423,7 @@ interface StoryProps {}
 interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
   moonScale: number
   moonIntensity: number
+  showOverlay: boolean
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -428,6 +438,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   moonScale: 10,
   moonIntensity: 100,
+  showOverlay: true,
   ...localDateArgs({
     dayOfYear: 300,
     timeOfDay: 17.5
@@ -458,6 +469,11 @@ Story.argTypes = {
       type: 'range',
       min: 1,
       max: 1000
+    }
+  },
+  showOverlay: {
+    control: {
+      type: 'boolean'
     }
   },
   ...localDateArgTypes(),
