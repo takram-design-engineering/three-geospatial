@@ -40,7 +40,7 @@ export function createStory<Props, TArgs extends Args>(
     ...others
   }: {
     props?: Props
-  } & Omit<StoryObj, 'render'> = {}
+  } & Pick<StoryObj<TArgs>, 'args' | 'argTypes' | 'parameters'> = {}
 ): StoryObj {
   const Component = memo(StoryComponent as FC)
   const initialArgs = { ...StoryComponent.args, ...overrideArgs }
