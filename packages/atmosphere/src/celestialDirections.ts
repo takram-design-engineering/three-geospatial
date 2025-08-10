@@ -10,13 +10,18 @@ import {
   type RotationMatrix,
   type Vector
 } from 'astronomy-engine'
-import { Matrix4, Vector3 } from 'three'
+import { Matrix4, Quaternion, Vector3 } from 'three'
+
+import { radians } from '@takram/three-geospatial'
 
 const METER_TO_AU = 0.001 / KM_PER_AU
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
+const vector1Scratch = /*#__PURE__*/ new Vector3()
+const vector2Scratch = /*#__PURE__*/ new Vector3()
+const vector3Scratch = /*#__PURE__*/ new Vector3()
 const matrixScratch1 = /*#__PURE__*/ new Matrix4()
 const matrixScratch2 = /*#__PURE__*/ new Matrix4()
+const quaternionScratch = /*#__PURE__*/ new Quaternion()
 
 export function toAstroTime(value: number | Date | AstroTime): AstroTime {
   return value instanceof AstroTime
@@ -56,6 +61,27 @@ export function getECIToECEFRotationMatrix(
   return fromAstroRotationMatrix(matrix, result)
 }
 
+export function getMoonLocalToECIRotationMatrix(
+  date: number | Date | AstroTime,
+  result = new Matrix4()
+): Matrix4 {
+  const time = toAstroTime(date)
+  const axis = RotationAxis(Body.Moon, time)
+  const north = fromAstroVector(axis.north, vector1Scratch)
+
+  // The spin in the AxisInfo is defined as the angle of the prime meridian
+  // measured from the ascending node of the body's equator on the reference
+  // equator to the east.
+  // See: https://link.springer.com/content/pdf/10.1007/s10569-007-9072-y.pdf
+  const spin = radians(axis.spin)
+  const ascendingNode = vector2Scratch.set(0, 0, 1).cross(north).normalize()
+  const primeMeridian = ascendingNode
+    .applyQuaternion(quaternionScratch.setFromAxisAngle(north, spin))
+    .normalize()
+  const east = vector3Scratch.copy(north).cross(primeMeridian).normalize()
+  return result.makeBasis(primeMeridian, east, north)
+}
+
 function getDirectionECI(
   body: Body,
   time: AstroTime,
@@ -72,7 +98,7 @@ function getDirectionECI(
           matrixScratch2.copy(matrixECIToECEF).transpose()
         : getECIToECEFRotationMatrix(time, matrixScratch2).transpose()
     result.sub(
-      vectorScratch
+      vector1Scratch
         .copy(observer)
         .applyMatrix4(matrixECEFToECI)
         .multiplyScalar(METER_TO_AU)
@@ -97,16 +123,6 @@ export function getMoonDirectionECI(
   return getDirectionECI(Body.Moon, toAstroTime(date), result, observer)
 }
 
-export function getMoonAxisECI(
-  date: number | Date | AstroTime,
-  result = new Vector3()
-): Vector3 {
-  return fromAstroVector(
-    RotationAxis(Body.Moon, toAstroTime(date)).north,
-    result
-  )
-}
-
 export function getSunDirectionECEF(
   date: number | Date | AstroTime,
   result = new Vector3(),
@@ -125,16 +141,6 @@ export function getMoonDirectionECEF(
 ): Vector3 {
   const time = toAstroTime(date)
   return getDirectionECI(Body.Moon, time, result, observer).applyMatrix4(
-    getECIToECEFRotationMatrix(time, matrixScratch1)
-  )
-}
-
-export function getMoonAxisECEF(
-  date: number | Date | AstroTime,
-  result = new Vector3()
-): Vector3 {
-  const time = toAstroTime(date)
-  return getMoonAxisECI(time, result).applyMatrix4(
     getECIToECEFRotationMatrix(time, matrixScratch1)
   )
 }
