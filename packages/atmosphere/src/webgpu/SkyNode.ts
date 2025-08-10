@@ -1,9 +1,7 @@
 import type { Camera } from 'three'
 import {
   abs,
-  acos,
-  dFdx,
-  dFdy,
+  cos,
   equirectUV,
   fwidth,
   If,
@@ -16,7 +14,6 @@ import {
   select,
   smoothstep,
   sqrt,
-  uniform,
   uv,
   vec2,
   vec3,
@@ -90,7 +87,7 @@ const intersectSphere = /*#__PURE__*/ Fnv(
     const discriminant = centerDirection
       .dot(centerDirection)
       .sub(angularRadius.pow2())
-    return cosRay.sub(sqrt(cosRay.pow2().sub(discriminant)))
+    return cosRay.sub(sqrt(cosRay.pow2().sub(discriminant).max(0)))
   }
 )
 
@@ -230,40 +227,37 @@ export class SkyNode extends TempNode {
     )
     const inscatter = luminanceTransfer.get('luminance')
     const transmittance = luminanceTransfer.get('transmittance')
-
-    // Compute the luminance of the sun and moon:
     const luminance = vec3(0).toVar()
-    if (this.showSun || this.showMoon) {
-      const ddx = dFdx(rayDirectionECEF)
-      const ddy = dFdy(rayDirectionECEF)
-      const fragmentAngle = ddx.distance(ddy).div(rayDirectionECEF.length())
 
-      // Compute the luminance of the sun:
+    // Compute the luminance of the sun:
+    if (this.showSun) {
       const { sunAngularRadius } = parameters
-      const cosSunRadius = uniform(0).onRenderUpdate((_, self) => {
-        self.value = Math.cos(sunAngularRadius.value)
-      })
-      const cosViewSun = rayDirectionECEF.dot(sunDirectionECEF).toVar()
+      const chordThreshold = cos(sunAngularRadius).oneMinus().mul(2)
+      const chordVector = rayDirectionECEF.sub(sunDirectionECEF)
+      const chordLength = chordVector.dot(chordVector)
+      const filterWidth = fwidth(chordLength)
+
       const sunLuminance = vec3().toVar()
-      If(cosViewSun.greaterThan(cosSunRadius), () => {
+      If(chordLength.lessThan(chordThreshold), () => {
         const antialias = smoothstep(
-          sunAngularRadius,
-          sunAngularRadius.sub(fragmentAngle),
-          acos(cosViewSun.clamp(-1, 1))
+          chordThreshold,
+          chordThreshold.sub(filterWidth),
+          chordLength
         )
         sunLuminance.assign(getSolarLuminance(parameters).mul(antialias))
       })
-      if (this.showSun) {
-        luminance.addAssign(sunLuminance)
-      }
+      luminance.addAssign(sunLuminance)
+    }
 
-      // Compute the luminance of the moon:
-      const cosMoonRadius = uniform(0).onRenderUpdate((_, self) => {
-        self.value = Math.cos(moonAngularRadius.value)
-      })
-      const cosViewMoon = rayDirectionECEF.dot(moonDirectionECEF).toVar()
+    // Compute the luminance of the moon:
+    if (this.showMoon) {
+      const chordThreshold = cos(moonAngularRadius).oneMinus().mul(2)
+      const chordVector = rayDirectionECEF.sub(moonDirectionECEF)
+      const chordLength = chordVector.dot(chordVector)
+      const filterWidth = fwidth(chordLength)
+
       const moonLuminance = vec3().toVar()
-      If(cosViewMoon.greaterThan(cosMoonRadius), () => {
+      If(chordLength.lessThan(chordThreshold), () => {
         const intersection = intersectSphere(
           rayDirectionECEF,
           moonDirectionECEF,
@@ -308,10 +302,11 @@ export class SkyNode extends TempNode {
           rayDirectionECEF.negate(),
           normalECEF
         )
+
         const antialias = smoothstep(
-          moonAngularRadius,
-          moonAngularRadius.sub(fragmentAngle),
-          acos(cosViewMoon.clamp(-1, 1))
+          chordThreshold,
+          chordThreshold.sub(filterWidth),
+          chordLength
         )
         moonLuminance.assign(
           getLunarRadiance(parameters, moonAngularRadius)
@@ -321,9 +316,7 @@ export class SkyNode extends TempNode {
             .mul(antialias)
         )
       })
-      if (this.showMoon) {
-        luminance.addAssign(moonLuminance)
-      }
+      luminance.addAssign(moonLuminance)
     }
 
     return inscatter.add(luminance.mul(transmittance))
