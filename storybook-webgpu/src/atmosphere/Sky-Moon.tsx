@@ -1,6 +1,10 @@
 import styled from '@emotion/styled'
-import { OrbitControls } from '@react-three/drei'
-import { useFrame, useThree } from '@react-three/fiber'
+import {
+  extend,
+  useFrame,
+  useThree,
+  type ThreeElement
+} from '@react-three/fiber'
 import {
   AngleFromSun,
   Body,
@@ -16,22 +20,23 @@ import {
   type HorizontalCoordinates
 } from 'astronomy-engine'
 import { atom, getDefaultStore, useAtomValue, useSetAtom } from 'jotai'
-import { useEffect, useMemo, useRef, type FC } from 'react'
+import { useMotionValue, useMotionValueEvent, useSpring } from 'motion/react'
+import { useEffect, useMemo, useRef, type FC, type ReactNode } from 'react'
+import { useEvent } from 'react-use'
 import {
   AgXToneMapping,
   BufferGeometry,
   Line,
-  Mesh,
   NoToneMapping,
   Shape,
-  SphereGeometry,
   Vector3,
-  type Group
+  type Group,
+  type PerspectiveCamera
 } from 'three'
 import { pass, toneMapping, uniform } from 'three/tsl'
 import {
   LineBasicNodeMaterial,
-  MeshBasicNodeMaterial,
+  LineDashedNodeMaterial,
   PostProcessing,
   type Renderer
 } from 'three/webgpu'
@@ -48,7 +53,13 @@ import {
   AtmosphereRenderingContext,
   sky
 } from '@takram/three-atmosphere/webgpu'
-import { degrees, Geodetic, radians } from '@takram/three-geospatial'
+import {
+  assertType,
+  clamp,
+  degrees,
+  Geodetic,
+  radians
+} from '@takram/three-geospatial'
 import { dithering } from '@takram/three-geospatial/webgpu'
 
 import {
@@ -70,11 +81,21 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { springOptions } from '../helpers/springOptions'
 import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useResource } from '../helpers/useResource'
 import { useSpringControl } from '../helpers/useSpringControl'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+
+extend({ LineObject: Line })
+
+// declare `line_` as a JSX element so that typescript doesn't complain
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    lineObject: ThreeElement<typeof Line>
+  }
+}
 
 const stateAtom = atom<{
   time: AstroTime
@@ -89,17 +110,30 @@ const stateAtom = atom<{
 
 const up = new Vector3(0, 1, 0)
 const east = new Vector3(0, 0, 1)
-
 const geodetic = new Geodetic()
 
-const sphereGeometry = new SphereGeometry(0.005)
 const circleGeometry = new BufferGeometry().setFromPoints(
   new Shape().arc(0, 0, 1, 0, Math.PI * 2).getPoints(90)
 )
 
-const Direction: FC<{ name: 'sun' | 'moon' }> = ({ name }) => {
-  const camera = useThree(({ camera }) => camera)
+const cameraFov = uniform(0).onRenderUpdate(({ camera }, self) => {
+  assertType<PerspectiveCamera>(camera)
+  self.value = camera.fov
+})
 
+function directionFromHOR(
+  coord: HorizontalCoordinates,
+  result: Vector3
+): Vector3 {
+  return result.setFromSphericalCoords(
+    1,
+    radians(90 - coord.altitude),
+    radians(90 - coord.azimuth)
+  )
+}
+
+const Overlay: FC<{ children?: ReactNode }> = ({ children }) => {
+  const camera = useThree(({ camera }) => camera)
   const groupRef = useRef<Group>(null)
   useFrame(() => {
     const group = groupRef.current
@@ -116,34 +150,57 @@ const Direction: FC<{ name: 'sun' | 'moon' }> = ({ name }) => {
       }
     }
   )
+  return <group ref={groupRef}>{children}</group>
+}
 
-  const pointMaterial = useResource(
+const PrimaryCircles: FC = () => {
+  const material = useResource(
     () =>
-      new MeshBasicNodeMaterial({
-        color: '#808080'
+      new LineDashedNodeMaterial({
+        color: '#666666',
+        dashSizeNode: cameraFov.radians().mul(0.005),
+        gapSizeNode: cameraFov.radians().mul(0.005)
       }),
     []
   )
-  const directionPoint = useMemo(
-    () => new Mesh(sphereGeometry, pointMaterial),
-    [pointMaterial]
+  return (
+    <Overlay>
+      <lineObject
+        ref={ref => ref?.computeLineDistances()}
+        geometry={circleGeometry}
+        material={material}
+      />
+      <lineObject
+        ref={ref => ref?.computeLineDistances()}
+        geometry={circleGeometry}
+        material={material}
+        rotation-y={Math.PI / 2}
+      />
+      <lineObject
+        ref={ref => ref?.computeLineDistances()}
+        geometry={circleGeometry}
+        material={material}
+        rotation-x={Math.PI / 2}
+      />
+    </Overlay>
   )
-  const lineMaterial = useResource(
+}
+
+const MoonOverlay: FC<{ angularRadius: number }> = ({ angularRadius }) => {
+  const material = useResource(
     () =>
       new LineBasicNodeMaterial({
-        color: '#808080',
-        transparent: true,
-        opacity: 0.5
+        color: '#666666'
       }),
     []
   )
-  const [azimuthLine, altitudeLine, horizonLine] = useMemo(
+  const [target, azimuth, altitude] = useMemo(
     () => [
-      new Line(circleGeometry, lineMaterial),
-      new Line(circleGeometry, lineMaterial),
-      new Line(circleGeometry, lineMaterial)
+      new Line(circleGeometry, material),
+      new Line(circleGeometry, material),
+      new Line(circleGeometry, material)
     ],
-    [lineMaterial]
+    [material]
   )
 
   useEffect(() => {
@@ -156,33 +213,28 @@ const Direction: FC<{ name: 'sun' | 'moon' }> = ({ name }) => {
       if (state == null) {
         return
       }
-      const { altitude, azimuth } = state[`${name}HOR`]
-      const direction = vector1.setFromSphericalCoords(
-        1,
-        radians(90 - altitude),
-        radians(90 - azimuth)
-      )
-      directionPoint.position.copy(direction)
+      const direction = directionFromHOR(state.moonHOR, vector1)
+      target.position.copy(direction)
+      target.quaternion.setFromUnitVectors(east, direction)
 
       const theta = vector2.copy(up).cross(direction).normalize()
-      azimuthLine.quaternion.setFromUnitVectors(east, theta)
+      azimuth.quaternion.setFromUnitVectors(east, theta)
 
       const phi = vector2.copy(direction).multiplyScalar(direction.dot(up))
       phi.subVectors(up, phi).normalize()
-      altitudeLine.quaternion.setFromUnitVectors(east, phi)
+      altitude.quaternion.setFromUnitVectors(east, phi)
     }
 
     callback()
     return store.sub(stateAtom, callback)
-  }, [name, directionPoint, azimuthLine, altitudeLine])
+  }, [angularRadius, target, azimuth, altitude])
 
   return (
-    <group ref={groupRef}>
-      <primitive object={directionPoint} />
-      <primitive object={azimuthLine} />
-      <primitive object={altitudeLine} />
-      <primitive object={horizonLine} rotation-x={Math.PI / 2} />
-    </group>
+    <Overlay>
+      <primitive object={target} scale={angularRadius * 2} />
+      <primitive object={azimuth} />
+      <primitive object={altitude} />
+    </Overlay>
   )
 }
 
@@ -293,16 +345,53 @@ const Scene: FC<StoryProps> = () => {
     }
   )
 
+  // Change camera's fov by wheel.
+  assertType<PerspectiveCamera>(camera)
+  const motionFov = useMotionValue(camera.fov)
+  const springFov = useSpring(motionFov, springOptions)
+  useEvent('wheel', (event: WheelEvent) => {
+    const minFov = 2.5
+    const maxFov = 90
+    const delta = 0.95 ** Math.abs(event.deltaY * 0.01)
+    if (event.deltaY > 0) {
+      motionFov.set(clamp(motionFov.get() / delta, minFov, maxFov))
+    } else {
+      motionFov.set(clamp(motionFov.get() * delta, minFov, maxFov))
+    }
+  })
+  useMotionValueEvent(springFov, 'change', value => {
+    camera.fov = value
+    camera.updateProjectionMatrix()
+  })
+
+  // Track the moon:
+  useEffect(() => {
+    const store = getDefaultStore()
+    const vector1 = new Vector3()
+    const vector2 = new Vector3()
+    const callback = (): void => {
+      const state = store.get(stateAtom)
+      if (state == null) {
+        return
+      }
+      const position = vector2.setFromMatrixPosition(camera.matrixWorld)
+      const direction = directionFromHOR(state.moonHOR, vector1)
+      camera.lookAt(position.add(direction))
+    }
+    callback()
+    return store.sub(stateAtom, callback)
+  }, [camera])
+
   return (
     <>
-      <OrbitControls target={[0, 0, 0]} minDistance={1} />
-      <Direction name='moon' />
-      <Direction name='sun' />
+      {/* <OrbitControls target={[0, 0, 0]} minDistance={1} enableZoom={false} /> */}
+      <PrimaryCircles />
+      <MoonOverlay angularRadius={0.0045} />
     </>
   )
 }
 
-const Overlay = styled('div')`
+const InfoElement = styled('div')`
   position: absolute;
   bottom: 16px;
   left: 16px;
@@ -359,7 +448,7 @@ const Info: FC = () => {
   const angle = AngleFromSun(Body.Moon, time)
 
   return (
-    <Overlay>
+    <InfoElement>
       The moon’s apparent size is <Value>{moonScale.toFixed(1)}</Value> times
       its actual size, and its luminance is{' '}
       <Value>{moonIntensity.toFixed(1)}</Value> times its actual luminance.
@@ -414,7 +503,7 @@ const Info: FC = () => {
           </tr>
         </tbody>
       </table>
-    </Overlay>
+    </InfoElement>
   )
 }
 
@@ -428,7 +517,7 @@ interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <>
-    <WebGPUCanvas camera={{ fov: 90, position: [1, -0.3, 0] }}>
+    <WebGPUCanvas camera={{ fov: 5, position: [1, -0.3, 0] }}>
       <Scene {...props} />
     </WebGPUCanvas>
     <Info />
@@ -436,8 +525,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  moonScale: 10,
-  moonIntensity: 100,
+  moonScale: 1,
+  moonIntensity: 10,
   showOverlay: true,
   ...localDateArgs({
     dayOfYear: 300,
@@ -450,7 +539,7 @@ Story.args = {
   }),
   ...toneMappingArgs({
     toneMappingEnabled: true,
-    toneMappingExposure: 100
+    toneMappingExposure: 10
   }),
   ...rendererArgs()
 }
