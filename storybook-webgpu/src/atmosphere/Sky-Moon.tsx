@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { OrbitControls } from '@react-three/drei'
 import {
   extend,
   useFrame,
@@ -20,20 +21,30 @@ import {
   type HorizontalCoordinates
 } from 'astronomy-engine'
 import { atom, getDefaultStore, useAtomValue, useSetAtom } from 'jotai'
-import { useMotionValue, useMotionValueEvent, useSpring } from 'motion/react'
-import { useEffect, useMemo, useRef, type FC, type ReactNode } from 'react'
-import { useEvent } from 'react-use'
+import {
+  ComponentRef,
+  useEffect,
+  useMemo,
+  useRef,
+  type FC,
+  type ReactNode
+} from 'react'
 import {
   AgXToneMapping,
   BufferGeometry,
   Line,
+  LinearSRGBColorSpace,
+  Matrix4,
+  NoColorSpace,
   NoToneMapping,
+  Object3D,
   Shape,
+  TextureLoader,
   Vector3,
   type Group,
   type PerspectiveCamera
 } from 'three'
-import { pass, toneMapping, uniform } from 'three/tsl'
+import { div, pass, texture, toneMapping, uniform } from 'three/tsl'
 import {
   LineBasicNodeMaterial,
   LineDashedNodeMaterial,
@@ -43,8 +54,8 @@ import {
 
 import {
   getECIToECEFRotationMatrix,
-  getMoonAxisECI,
   getMoonDirectionECI,
+  getMoonLocalToECIRotationMatrix,
   getSunDirectionECI,
   toAstroTime
 } from '@takram/three-atmosphere'
@@ -55,7 +66,6 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import {
   assertType,
-  clamp,
   degrees,
   Geodetic,
   radians
@@ -81,8 +91,8 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
-import { springOptions } from '../helpers/springOptions'
 import { useCombinedChange } from '../helpers/useCombinedChange'
+import { useControl } from '../helpers/useControl'
 import { useResource } from '../helpers/useResource'
 import { useSpringControl } from '../helpers/useSpringControl'
 import { useTransientControl } from '../helpers/useTransientControl'
@@ -90,7 +100,6 @@ import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 extend({ LineObject: Line })
 
-// declare `line_` as a JSX element so that typescript doesn't complain
 declare module '@react-three/fiber' {
   interface ThreeElements {
     lineObject: ThreeElement<typeof Line>
@@ -116,9 +125,9 @@ const circleGeometry = new BufferGeometry().setFromPoints(
   new Shape().arc(0, 0, 1, 0, Math.PI * 2).getPoints(90)
 )
 
-const cameraFov = uniform(0).onRenderUpdate(({ camera }, self) => {
+const cameraZoom = uniform(1).onRenderUpdate(({ camera }, self) => {
   assertType<PerspectiveCamera>(camera)
-  self.value = camera.fov
+  self.value = camera.zoom
 })
 
 function directionFromHOR(
@@ -141,16 +150,12 @@ const Overlay: FC<{ children?: ReactNode }> = ({ children }) => {
       group.position.setFromMatrixPosition(camera.matrixWorld)
     }
   })
-  useTransientControl(
-    ({ showOverlay }: StoryArgs) => showOverlay,
-    value => {
-      const group = groupRef.current
-      if (group != null) {
-        group.visible = value
-      }
-    }
+  const showOverlay = useControl(({ showOverlay }: StoryArgs) => showOverlay)
+  return (
+    <group ref={groupRef} visible={showOverlay}>
+      {children}
+    </group>
   )
-  return <group ref={groupRef}>{children}</group>
 }
 
 const PrimaryCircles: FC = () => {
@@ -158,8 +163,8 @@ const PrimaryCircles: FC = () => {
     () =>
       new LineDashedNodeMaterial({
         color: '#666666',
-        dashSizeNode: cameraFov.radians().mul(0.005),
-        gapSizeNode: cameraFov.radians().mul(0.005)
+        dashSizeNode: div(0.005, cameraZoom),
+        gapSizeNode: div(0.005, cameraZoom)
       }),
     []
   )
@@ -254,7 +259,21 @@ const Scene: FC<StoryProps> = () => {
 
   const [postProcessing, skyNode, toneMappingNode] = useResource(() => {
     const passNode = pass(scene, camera)
+
     const skyNode = sky(context, lutNode)
+    skyNode.moonColorTexture = texture(
+      new TextureLoader().load('public/moon/color.webp', texture => {
+        texture.colorSpace = LinearSRGBColorSpace
+        texture.anisotropy = 16
+      })
+    )
+    skyNode.moonNormalTexture = texture(
+      new TextureLoader().load('public/moon/normal.webp', texture => {
+        texture.colorSpace = NoColorSpace
+        texture.anisotropy = 16
+      })
+    )
+
     const toneMappingNode = toneMapping(AgXToneMapping, exposureNode, skyNode)
 
     const postProcessing = new PostProcessing(renderer)
@@ -310,7 +329,7 @@ const Scene: FC<StoryProps> = () => {
     }
   )
 
-  // Update sun and moon state:
+  // Update the sun and moon state:
   const set = useSetAtom(stateAtom)
   useCombinedChange(
     [longitude, latitude, height, date, moonScale, moonIntensity],
@@ -318,14 +337,19 @@ const Scene: FC<StoryProps> = () => {
       const time = toAstroTime(date)
       const matrixECIToECEF = getECIToECEFRotationMatrix(time)
 
-      const { sunDirectionECEF, moonDirectionECEF, moonAxisECEF } = context
+      const { sunDirectionECEF, moonDirectionECEF } = context
       getSunDirectionECI(time, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
       getMoonDirectionECI(
         time,
         moonDirectionECEF,
         geodetic.set(radians(longitude), radians(latitude), height).toECEF()
       ).applyMatrix4(matrixECIToECEF)
-      getMoonAxisECI(time, moonAxisECEF).applyMatrix4(matrixECIToECEF)
+
+      const { moonLocalToECEFMatrix } = context
+      getMoonLocalToECIRotationMatrix(
+        time,
+        moonLocalToECEFMatrix
+      ).multiplyMatrices(matrixECIToECEF, moonLocalToECEFMatrix)
 
       const observer = new Observer(latitude, longitude, height)
       const sunEQU = Equator(Body.Sun, time, observer, true, false)
@@ -345,30 +369,29 @@ const Scene: FC<StoryProps> = () => {
     }
   )
 
-  // Change camera's fov by wheel.
-  assertType<PerspectiveCamera>(camera)
-  const motionFov = useMotionValue(camera.fov)
-  const springFov = useSpring(motionFov, springOptions)
-  useEvent('wheel', (event: WheelEvent) => {
-    const minFov = 2.5
-    const maxFov = 90
-    const delta = 0.95 ** Math.abs(event.deltaY * 0.01)
-    if (event.deltaY > 0) {
-      motionFov.set(clamp(motionFov.get() / delta, minFov, maxFov))
-    } else {
-      motionFov.set(clamp(motionFov.get() * delta, minFov, maxFov))
+  // Zoom control:
+  useSpringControl(
+    ({ zoom }: StoryArgs) => zoom,
+    value => {
+      camera.zoom = value
+      camera.updateProjectionMatrix()
     }
-  })
-  useMotionValueEvent(springFov, 'change', value => {
-    camera.fov = value
-    camera.updateProjectionMatrix()
-  })
+  )
 
-  // Track the moon:
+  // Tracking the moon:
+  const orbitControlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
+  const { trackMoon, northUp } = useControl(
+    ({ trackMoon, northUp }: StoryArgs) => ({ trackMoon, northUp })
+  )
   useEffect(() => {
-    const store = getDefaultStore()
+    if (!trackMoon) {
+      return
+    }
     const vector1 = new Vector3()
     const vector2 = new Vector3()
+    const matrix = new Matrix4()
+
+    const store = getDefaultStore()
     const callback = (): void => {
       const state = store.get(stateAtom)
       if (state == null) {
@@ -376,15 +399,28 @@ const Scene: FC<StoryProps> = () => {
       }
       const position = vector2.setFromMatrixPosition(camera.matrixWorld)
       const direction = directionFromHOR(state.moonHOR, vector1)
+      if (northUp) {
+        camera.up
+          .set(0, 0, 1)
+          .applyMatrix4(matrix.copy(context.worldToECEFMatrix).transpose())
+      } else {
+        camera.up.copy(Object3D.DEFAULT_UP)
+      }
       camera.lookAt(position.add(direction))
     }
     callback()
     return store.sub(stateAtom, callback)
-  }, [camera])
+  }, [camera, context, trackMoon, northUp])
 
   return (
     <>
-      {/* <OrbitControls target={[0, 0, 0]} minDistance={1} enableZoom={false} /> */}
+      <OrbitControls
+        ref={orbitControlsRef}
+        target={[0, 0, 0]}
+        minDistance={1}
+        enableZoom={false} // Conflicts with the zoom arg
+        enabled={!trackMoon}
+      />
       <PrimaryCircles />
       <MoonOverlay angularRadius={0.0045} />
     </>
@@ -510,14 +546,17 @@ const Info: FC = () => {
 interface StoryProps {}
 
 interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
+  zoom: number
   moonScale: number
   moonIntensity: number
   showOverlay: boolean
+  trackMoon: boolean
+  northUp: boolean
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <>
-    <WebGPUCanvas camera={{ fov: 5, position: [1, -0.3, 0] }}>
+    <WebGPUCanvas camera={{ position: [1, -0.3, 0] }}>
       <Scene {...props} />
     </WebGPUCanvas>
     <Info />
@@ -525,9 +564,12 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
+  zoom: 1,
   moonScale: 1,
   moonIntensity: 10,
   showOverlay: true,
+  trackMoon: false,
+  northUp: false,
   ...localDateArgs({
     dayOfYear: 300,
     timeOfDay: 17.5
@@ -545,6 +587,14 @@ Story.args = {
 }
 
 Story.argTypes = {
+  zoom: {
+    control: {
+      type: 'range',
+      min: 1,
+      max: 50,
+      step: 0.1
+    }
+  },
   moonScale: {
     control: {
       type: 'range',
@@ -561,6 +611,16 @@ Story.argTypes = {
     }
   },
   showOverlay: {
+    control: {
+      type: 'boolean'
+    }
+  },
+  trackMoon: {
+    control: {
+      type: 'boolean'
+    }
+  },
+  northUp: {
     control: {
       type: 'boolean'
     }
