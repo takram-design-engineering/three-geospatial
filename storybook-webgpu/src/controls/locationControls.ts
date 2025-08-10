@@ -32,7 +32,8 @@ export const locationArgTypes = (
     control: {
       type: 'range',
       min: -180,
-      max: 180
+      max: 180,
+      step: 0.1
     },
     table: { category: 'location' }
   },
@@ -40,7 +41,8 @@ export const locationArgTypes = (
     control: {
       type: 'range',
       min: -90,
-      max: 90
+      max: 90,
+      step: 0.1
     },
     table: { category: 'location' }
   },
