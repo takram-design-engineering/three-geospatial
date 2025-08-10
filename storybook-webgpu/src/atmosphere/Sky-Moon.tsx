@@ -351,6 +351,7 @@ const Scene: FC<StoryProps> = () => {
         moonLocalToECEFMatrix
       ).multiplyMatrices(matrixECIToECEF, moonLocalToECEFMatrix)
 
+      try {
       const observer = new Observer(latitude, longitude, height)
       const sunEQU = Equator(Body.Sun, time, observer, true, false)
       const sunHOR = Horizon(time, observer, sunEQU.ra, sunEQU.dec)
@@ -366,6 +367,9 @@ const Scene: FC<StoryProps> = () => {
         moonScale,
         moonIntensity
       })
+      } catch (error) {
+        console.error(error)
+      }
     }
   )
 
