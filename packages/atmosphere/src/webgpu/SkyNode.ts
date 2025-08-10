@@ -2,12 +2,12 @@ import type { Camera } from 'three'
 import {
   abs,
   acos,
-  cos,
   dFdx,
   dFdy,
   equirectUV,
   fwidth,
   If,
+  mat3,
   max,
   mix,
   nodeProxy,
@@ -16,18 +16,13 @@ import {
   select,
   smoothstep,
   sqrt,
-  texture,
+  uniform,
   uv,
   vec2,
   vec3,
   vec4
 } from 'three/tsl'
-import {
-  TempNode,
-  TextureLoader,
-  TextureNode,
-  type NodeBuilder
-} from 'three/webgpu'
+import { Matrix4, TempNode, TextureNode, type NodeBuilder } from 'three/webgpu'
 
 import {
   equirectWorld,
@@ -40,12 +35,21 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-import { DEFAULT_MOON_TEXTURE_URL } from '../constants'
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import { AtmosphereParametersUniforms } from './AtmosphereParameters'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
 import type { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
+
+const mat3Columns = /*#__PURE__*/ Fnv(
+  (
+    c0: NodeObject<'vec3'>,
+    c1: NodeObject<'vec3'>,
+    c2: NodeObject<'vec3'>
+  ): Node<'mat3'> => {
+    return mat3(c0.x, c0.y, c0.z, c1.x, c1.y, c1.z, c2.x, c2.y, c2.z)
+  }
+)
 
 const cameraDirectionWorld = /*#__PURE__*/ Fnv((camera: Camera) => {
   const positionView = inverseProjectionMatrix(camera).mul(
@@ -83,8 +87,10 @@ const intersectSphere = /*#__PURE__*/ Fnv(
     angularRadius: NodeObject<'float'>
   ): NodeObject<'vec3'> => {
     const cosRay = centerDirection.dot(rayDirection).toVar()
-    const discriminant = cosRay.pow2().sub(cos(angularRadius).pow2())
-    return cosRay.sub(sqrt(discriminant))
+    const discriminant = centerDirection
+      .dot(centerDirection)
+      .sub(angularRadius.pow2())
+    return cosRay.sub(sqrt(cosRay.pow2().sub(discriminant)))
   }
 )
 
@@ -146,7 +152,8 @@ export class SkyNode extends TempNode {
 
   @nodeType('float') moonAngularRadius = 0.0045 // ≈ 15.5 arcminutes
   @nodeType('float') moonIntensity = 1
-  moonTexture?: TextureNode | null
+  moonColorTexture?: TextureNode | null
+  moonNormalTexture?: TextureNode | null
 
   // Static options
   showSun = true
@@ -183,10 +190,8 @@ export class SkyNode extends TempNode {
     const reference = referenceTo<SkyNode>(this)
     const moonAngularRadius = reference('moonAngularRadius')
     const moonIntensity = reference('moonIntensity')
-
-    this.moonTexture ??= texture(
-      new TextureLoader().load(DEFAULT_MOON_TEXTURE_URL)
-    )
+    const moonColorTexture = this.moonColorTexture
+    const moonNormalTexture = this.moonNormalTexture
 
     // Direction of the camera ray:
     const rayDirectionECEF = Fnv(() => builder => {
@@ -226,82 +231,118 @@ export class SkyNode extends TempNode {
     const inscatter = luminanceTransfer.get('luminance')
     const transmittance = luminanceTransfer.get('transmittance')
 
-    const sunMoonLuminance = Fnv((): Node<'vec3'> => {
-      const sunLuminance = vec3(0).toVar()
-      const moonLuminance = vec3(0).toVar()
+    // Compute the luminance of the sun and moon:
+    const luminance = vec3(0).toVar()
+    if (this.showSun || this.showMoon) {
+      const ddx = dFdx(rayDirectionECEF)
+      const ddy = dFdy(rayDirectionECEF)
+      const fragmentAngle = ddx.distance(ddy).div(rayDirectionECEF.length())
 
-      if (this.showSun || this.showMoon) {
-        const ddx = dFdx(rayDirectionECEF)
-        const ddy = dFdy(rayDirectionECEF)
-        const fragmentAngle = ddx.distance(ddy).div(rayDirectionECEF.length())
-
-        if (this.showSun) {
-          const { sunAngularRadius } = parameters
-          const cosViewSun = rayDirectionECEF.dot(sunDirectionECEF).toVar()
-          If(cosViewSun.greaterThan(cos(sunAngularRadius)), () => {
-            const angle = acos(cosViewSun.clamp(-1, 1))
-            const antialias = smoothstep(
-              sunAngularRadius,
-              sunAngularRadius.sub(fragmentAngle),
-              angle
-            )
-            sunLuminance.assign(getSolarLuminance(parameters).mul(antialias))
-          })
-        }
-
-        if (this.showMoon) {
-          const intersection = intersectSphere(
-            rayDirectionECEF,
-            moonDirectionECEF,
-            moonAngularRadius
-          )
-          If(intersection.greaterThan(0), () => {
-            // Ignoring libration, the moon always faces its prime meridian to
-            // the observer. Thus, we can construct an orthonormal basis,
-            // provided the direction to the north pole from the moon center.
-            // TODO: Maybe have a matrix uniform and construct it on the CPU?
-            const centerToView = moonDirectionECEF.negate().toVar()
-            const z = moonAxisECEF
-            const x = centerToView.sub(z.mul(centerToView.dot(z))).normalize()
-            const y = z.cross(x).normalize()
-            const normal = rayDirectionECEF
-              .mul(intersection)
-              .sub(moonDirectionECEF)
-              .normalize()
-              .toVar()
-
-            const nx = normal.dot(x)
-            const ny = normal.dot(y)
-            const nz = normal.dot(z)
-            const uv = equirectUV(vec3(nx, nz, ny)) // equirectUV() expects Y-up
-            const color = this.moonTexture?.level(0).sample(uv) ?? 1
-
-            const diffuse = orenNayarDiffuse(
-              sunDirectionECEF,
-              rayDirectionECEF.negate(),
-              normal
-            )
-            const cosViewMoon = rayDirectionECEF.dot(moonDirectionECEF)
-            const angle = acos(cosViewMoon.clamp(-1, 1))
-            const antialias = smoothstep(
-              moonAngularRadius,
-              moonAngularRadius.sub(fragmentAngle),
-              angle
-            )
-            moonLuminance.assign(
-              getLunarRadiance(parameters, moonAngularRadius)
-                .mul(moonIntensity)
-                .mul(color)
-                .mul(diffuse)
-                .mul(antialias)
-            )
-          })
-        }
+      // Compute the luminance of the sun:
+      const { sunAngularRadius } = parameters
+      const cosSunRadius = uniform(0).onRenderUpdate((_, self) => {
+        self.value = Math.cos(sunAngularRadius.value)
+      })
+      const cosViewSun = rayDirectionECEF.dot(sunDirectionECEF).toVar()
+      const sunLuminance = vec3().toVar()
+      If(cosViewSun.greaterThan(cosSunRadius), () => {
+        const antialias = smoothstep(
+          sunAngularRadius,
+          sunAngularRadius.sub(fragmentAngle),
+          acos(cosViewSun.clamp(-1, 1))
+        )
+        sunLuminance.assign(getSolarLuminance(parameters).mul(antialias))
+      })
+      if (this.showSun) {
+        luminance.addAssign(sunLuminance)
       }
-      return sunLuminance.add(moonLuminance)
-    })
 
-    return inscatter.add(sunMoonLuminance().mul(transmittance))
+      const localToECEFMatrix = uniform(
+        new Matrix4().identity()
+      ).onRenderUpdate((_, self) => {
+        // Ignoring libration, the moon always faces its prime meridian to the
+        // observer. With the direction to the north pole from the moon center,
+        // we can construct an orthonormal basis.
+        const centerToView = moonDirectionECEF.value.clone().negate()
+        const z = moonAxisECEF.value.clone()
+        const x = centerToView
+          .clone()
+          .sub(z.clone().multiplyScalar(centerToView.dot(z)))
+          .normalize()
+        const y = z.clone().cross(x).normalize()
+        self.value.makeBasis(x, y, z)
+      })
+      const ecefToLocalMatrix = localToECEFMatrix.transpose()
+
+      // Compute the luminance of the moon:
+      const cosMoonRadius = uniform(0).onRenderUpdate((_, self) => {
+        self.value = Math.cos(moonAngularRadius.value)
+      })
+      const cosViewMoon = rayDirectionECEF.dot(moonDirectionECEF).toVar()
+      const moonLuminance = vec3().toVar()
+      If(cosViewMoon.greaterThan(cosMoonRadius), () => {
+        const intersection = intersectSphere(
+          rayDirectionECEF,
+          moonDirectionECEF,
+          moonAngularRadius
+        )
+
+        // Derive the normal vector in the moon local space at the intersection,
+        // and the equirectangular UV.
+        const normalECEF = rayDirectionECEF
+          .mul(intersection)
+          .sub(moonDirectionECEF)
+          .normalize()
+          .toVar()
+        const normalLocal = ecefToLocalMatrix
+          .mul(vec4(normalECEF, 0))
+          .xyz.toVar()
+        const uv = equirectUV(normalLocal.xzy) // The equirectUV expects Y-up
+
+        if (moonNormalTexture != null) {
+          // Apply the normal texture and convert it back to the ECEF space.
+          const localX = vec3(1, 0, 0).toConst()
+          const localZ = vec3(0, 0, 1).toConst()
+          const tangent = localZ.cross(normalLocal).toVar()
+          tangent.assign(
+            select(
+              tangent.dot(tangent).lessThan(1e-7),
+              localX.cross(normalLocal).normalize(),
+              tangent.normalize()
+            )
+          )
+          const bitangent = normalLocal.cross(tangent).normalize()
+          const normalTangent = moonNormalTexture.sample(uv).xyz.mul(2).sub(1)
+          const tangentToLocal = mat3Columns(tangent, bitangent, normalLocal)
+          normalLocal.assign(tangentToLocal.mul(normalTangent).normalize())
+          normalECEF.assign(localToECEFMatrix.mul(vec4(normalLocal, 0)).xyz)
+        }
+
+        const color = moonColorTexture?.sample(uv).xyz ?? 1
+        const diffuse = orenNayarDiffuse(
+          sunDirectionECEF,
+          rayDirectionECEF.negate(),
+          normalECEF.add(moonAxisECEF.mul(0))
+        )
+        const antialias = smoothstep(
+          moonAngularRadius,
+          moonAngularRadius.sub(fragmentAngle),
+          acos(cosViewMoon.clamp(-1, 1))
+        )
+        moonLuminance.assign(
+          getLunarRadiance(parameters, moonAngularRadius)
+            .mul(moonIntensity)
+            .mul(color)
+            .mul(diffuse)
+            .mul(antialias)
+        )
+      })
+      if (this.showMoon) {
+        luminance.addAssign(moonLuminance)
+      }
+    }
+
+    return inscatter.add(luminance.mul(transmittance))
   }
 }
 
