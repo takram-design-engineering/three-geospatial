@@ -3,6 +3,7 @@ import {
   abs,
   cos,
   equirectUV,
+  Fn,
   fwidth,
   If,
   mat3,
@@ -227,97 +228,103 @@ export class SkyNode extends TempNode {
     )
     const inscatter = luminanceTransfer.get('luminance')
     const transmittance = luminanceTransfer.get('transmittance')
-    const luminance = vec3(0).toVar()
 
-    // Compute the luminance of the sun:
-    if (this.showSun) {
-      const { sunAngularRadius } = parameters
-      const chordThreshold = cos(sunAngularRadius).oneMinus().mul(2)
-      const chordVector = rayDirectionECEF.sub(sunDirectionECEF)
-      const chordLength = chordVector.dot(chordVector)
-      const filterWidth = fwidth(chordLength)
+    // WORKAROUND: As of r179, assign() can only be used inside "Fn".
+    const luminance = Fn(() => {
+      const luminance = vec3(0).toVar()
 
-      const sunLuminance = vec3().toVar()
-      If(chordLength.lessThan(chordThreshold), () => {
-        const antialias = smoothstep(
-          chordThreshold,
-          chordThreshold.sub(filterWidth),
-          chordLength
-        )
-        sunLuminance.assign(getSolarLuminance(parameters).mul(antialias))
-      })
-      luminance.addAssign(sunLuminance)
-    }
+      // Compute the luminance of the sun:
+      if (this.showSun) {
+        const { sunAngularRadius } = parameters
+        const chordThreshold = cos(sunAngularRadius).oneMinus().mul(2)
+        const chordVector = rayDirectionECEF.sub(sunDirectionECEF)
+        const chordLength = chordVector.dot(chordVector)
+        const filterWidth = fwidth(chordLength)
 
-    // Compute the luminance of the moon:
-    if (this.showMoon) {
-      const chordThreshold = cos(moonAngularRadius).oneMinus().mul(2)
-      const chordVector = rayDirectionECEF.sub(moonDirectionECEF)
-      const chordLength = chordVector.dot(chordVector)
-      const filterWidth = fwidth(chordLength)
-
-      const moonLuminance = vec3().toVar()
-      If(chordLength.lessThan(chordThreshold), () => {
-        const intersection = intersectSphere(
-          rayDirectionECEF,
-          moonDirectionECEF,
-          moonAngularRadius
-        )
-
-        // Derive the normal vector in the moon local space at the intersection,
-        // and the equirectangular UV.
-        const normalECEF = rayDirectionECEF
-          .mul(intersection)
-          .sub(moonDirectionECEF)
-          .normalize()
-          .toVar()
-        const normalMF = moonFixedToECEFMatrix
-          .transpose()
-          .mul(vec4(normalECEF, 0))
-          .xyz.toVar()
-        const uv = equirectUV(normalMF.xzy) // The equirectUV expects Y-up
-
-        if (moonNormalTexture != null) {
-          // Apply the normal texture and convert it back to the ECEF space.
-          const localX = vec3(1, 0, 0).toConst()
-          const localZ = vec3(0, 0, 1).toConst()
-          const tangent = localZ.cross(normalMF).toVar()
-          tangent.assign(
-            select(
-              tangent.dot(tangent).lessThan(1e-7),
-              localX.cross(normalMF).normalize(),
-              tangent.normalize()
-            )
+        const sunLuminance = vec3().toVar()
+        If(chordLength.lessThan(chordThreshold), () => {
+          const antialias = smoothstep(
+            chordThreshold,
+            chordThreshold.sub(filterWidth),
+            chordLength
           )
-          const bitangent = normalMF.cross(tangent).normalize()
-          const normalTangent = moonNormalTexture.sample(uv).xyz.mul(2).sub(1)
-          const tangentToLocal = mat3Columns(tangent, bitangent, normalMF)
-          normalMF.assign(tangentToLocal.mul(normalTangent).normalize())
-          normalECEF.assign(moonFixedToECEFMatrix.mul(vec4(normalMF, 0)).xyz)
-        }
+          sunLuminance.assign(getSolarLuminance(parameters).mul(antialias))
+        })
+        luminance.addAssign(sunLuminance)
+      }
 
-        const color = moonColorTexture?.sample(uv).xyz ?? 1
-        const diffuse = orenNayarDiffuse(
-          sunDirectionECEF,
-          rayDirectionECEF.negate(),
-          normalECEF
-        )
+      // Compute the luminance of the moon:
+      if (this.showMoon) {
+        const chordThreshold = cos(moonAngularRadius).oneMinus().mul(2)
+        const chordVector = rayDirectionECEF.sub(moonDirectionECEF)
+        const chordLength = chordVector.dot(chordVector)
+        const filterWidth = fwidth(chordLength)
 
-        const antialias = smoothstep(
-          chordThreshold,
-          chordThreshold.sub(filterWidth),
-          chordLength
-        )
-        moonLuminance.assign(
-          getLunarRadiance(parameters, moonAngularRadius)
-            .mul(moonIntensity)
-            .mul(color)
-            .mul(diffuse)
-            .mul(antialias)
-        )
-      })
-      luminance.addAssign(moonLuminance)
-    }
+        const moonLuminance = vec3().toVar()
+        If(chordLength.lessThan(chordThreshold), () => {
+          const intersection = intersectSphere(
+            rayDirectionECEF,
+            moonDirectionECEF,
+            moonAngularRadius
+          )
+
+          // Derive the normal vector in the moon local space at the
+          // intersection, and the equirectangular UV.
+          const normalECEF = rayDirectionECEF
+            .mul(intersection)
+            .sub(moonDirectionECEF)
+            .normalize()
+            .toVar()
+          const normalMF = moonFixedToECEFMatrix
+            .transpose()
+            .mul(vec4(normalECEF, 0))
+            .xyz.toVar()
+          const uv = equirectUV(normalMF.xzy) // The equirectUV expects Y-up
+
+          if (moonNormalTexture != null) {
+            // Apply the normal texture and convert it back to the ECEF space.
+            const localX = vec3(1, 0, 0).toConst()
+            const localZ = vec3(0, 0, 1).toConst()
+            const tangent = localZ.cross(normalMF).toVar()
+            tangent.assign(
+              select(
+                tangent.dot(tangent).lessThan(1e-7),
+                localX.cross(normalMF).normalize(),
+                tangent.normalize()
+              )
+            )
+            const bitangent = normalMF.cross(tangent).normalize()
+            const normalTangent = moonNormalTexture.sample(uv).xyz.mul(2).sub(1)
+            const tangentToLocal = mat3Columns(tangent, bitangent, normalMF)
+            normalMF.assign(tangentToLocal.mul(normalTangent).normalize())
+            normalECEF.assign(moonFixedToECEFMatrix.mul(vec4(normalMF, 0)).xyz)
+          }
+
+          const color = moonColorTexture?.sample(uv).xyz ?? 1
+          const diffuse = orenNayarDiffuse(
+            sunDirectionECEF,
+            rayDirectionECEF.negate(),
+            normalECEF
+          )
+
+          const antialias = smoothstep(
+            chordThreshold,
+            chordThreshold.sub(filterWidth),
+            chordLength
+          )
+          moonLuminance.assign(
+            getLunarRadiance(parameters, moonAngularRadius)
+              .mul(moonIntensity)
+              .mul(color)
+              .mul(diffuse)
+              .mul(antialias)
+          )
+        })
+        luminance.addAssign(moonLuminance)
+      }
+
+      return luminance
+    })()
 
     return inscatter.add(luminance.mul(transmittance))
   }
