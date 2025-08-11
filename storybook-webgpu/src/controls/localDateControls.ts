@@ -1,17 +1,15 @@
 import type { ArgTypes } from '@storybook/react-vite'
-import {
-  useMotionValueEvent,
-  useTransform,
-  type MotionValue
-} from 'motion/react'
+import { MotionValue, useMotionValueEvent, useTransform } from 'motion/react'
 
 import { useMaybeMotionValue } from '../helpers/useMaybeMotionValue'
+import { useMotionControl } from '../helpers/useMotionControl'
 import { useSpringControl } from '../helpers/useSpringControl'
+import type { LocationArgs } from './locationControls'
 
 export interface LocalDateArgs {
   dayOfYear: number
   timeOfDay: number
-  year?: number
+  year: number
 }
 
 export const localDateArgs = (
@@ -19,6 +17,7 @@ export const localDateArgs = (
 ): LocalDateArgs => ({
   dayOfYear: 0,
   timeOfDay: 0,
+  year: new Date().getFullYear(),
   ...defaults
 })
 
@@ -40,6 +39,14 @@ export const localDateArgTypes = (): ArgTypes<LocalDateArgs> => ({
       step: 0.1
     },
     table: { category: 'local date' }
+  },
+  year: {
+    control: {
+      type: 'range',
+      min: 2000,
+      max: 2050
+    },
+    table: { category: 'local date' }
   }
 })
 
@@ -49,32 +56,51 @@ function getLocalDate(
   timeOfDay: number,
   year: number
 ): number {
-  const [epoch, offset] =
-    longitude != null
-      ? [Date.UTC(year, 0, 1, 0, 0, 0, 0), longitude / 15]
-      : [+new Date(year, 0, 1, 0, 0, 0, 0), 0]
-  return epoch + (Math.floor(dayOfYear) * 24 + timeOfDay - offset) * 3600000
+  const epoch = Date.UTC(year, 0, 1, 0, 0, 0, 0)
+  const offset = longitude / 15
+  return epoch + ((dayOfYear - 1) * 24 + timeOfDay - offset) * 3600000
 }
 
 export function useLocalDateControls(
-  longitude: number | MotionValue<number>, // In degrees
+  longitude: number | MotionValue<number>,
   onChange?: (date: number) => void
+): MotionValue<number>
+
+export function useLocalDateControls(
+  onChange?: (date: number) => void
+): MotionValue<number>
+
+export function useLocalDateControls(
+  arg1?: number | MotionValue<number> | ((date: number) => void),
+  arg2?: (date: number) => void
 ): MotionValue<number> {
-  const motionLongitude = useMaybeMotionValue(longitude)
-  const year = useSpringControl(
-    ({ year }: LocalDateArgs) => year ?? new Date().getFullYear()
-  )
+  const [longitudeParam, onChange] =
+    typeof arg1 === 'number' || arg1 instanceof MotionValue
+      ? [arg1, arg2]
+      : [undefined, arg1]
+
+  const longitude =
+    longitudeParam != null
+      ? // eslint-disable-next-line react-hooks/rules-of-hooks
+        useMaybeMotionValue(longitudeParam)
+      : // eslint-disable-next-line react-hooks/rules-of-hooks
+        useSpringControl(
+          ({ longitude }: Partial<LocationArgs>) => longitude ?? 0
+        )
+
   const dayOfYear = useSpringControl(
     ({ dayOfYear }: LocalDateArgs) => dayOfYear
   )
   const timeOfDay = useSpringControl(
     ({ timeOfDay }: LocalDateArgs) => timeOfDay
   )
+  const year = useMotionControl(({ year }: LocalDateArgs) => year)
 
   const motionDate = useTransform(
-    [motionLongitude, dayOfYear, timeOfDay, year],
-    ([longitude, dayOfYear, timeOfDay, year]: number[]) =>
-      getLocalDate(longitude, dayOfYear, timeOfDay, year)
+    [longitude, dayOfYear, timeOfDay, year],
+    ([longitude, dayOfYear, timeOfDay, year]: number[]) => {
+      return getLocalDate(longitude, Math.floor(dayOfYear), timeOfDay, year)
+    }
   )
 
   onChange?.(motionDate.get()) // Initial callback

@@ -50,3 +50,22 @@ export const Moon = createStory(MoonStory, {
     }
   }
 })
+
+export const MoonSurface = createStory(MoonStory, {
+  args: {
+    zoom: 75,
+    showOverlay: false,
+    trackMoon: true,
+    dayOfYear: 65,
+    timeOfDay: 16.5,
+    longitude: 139.7528,
+    latitude: 35.6852
+  },
+  parameters: {
+    docs: {
+      source: {
+        code: MoonCode
+      }
+    }
+  }
+})

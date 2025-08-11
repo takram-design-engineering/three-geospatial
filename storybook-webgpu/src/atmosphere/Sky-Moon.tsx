@@ -21,6 +21,7 @@ import {
   type HorizontalCoordinates
 } from 'astronomy-engine'
 import { atom, getDefaultStore, useAtomValue, useSetAtom } from 'jotai'
+import { useMotionValueEvent, type MotionValue } from 'motion/react'
 import {
   useEffect,
   useMemo,
@@ -120,6 +121,7 @@ const stateAtom = atom<{
 const up = new Vector3(0, 1, 0)
 const east = new Vector3(0, 0, 1)
 const geodetic = new Geodetic()
+const moonAngularRadius = 0.0045
 
 const circleGeometry = new BufferGeometry().setFromPoints(
   new Shape().arc(0, 0, 1, 0, Math.PI * 2).getPoints(90)
@@ -191,7 +193,7 @@ const PrimaryCircles: FC = () => {
   )
 }
 
-const MoonOverlay: FC<{ angularRadius: number }> = ({ angularRadius }) => {
+const MoonOverlay: FC<{ moonScale: MotionValue<number> }> = ({ moonScale }) => {
   const material = useResource(
     () =>
       new LineBasicNodeMaterial({
@@ -208,12 +210,12 @@ const MoonOverlay: FC<{ angularRadius: number }> = ({ angularRadius }) => {
     [material]
   )
 
-  useEffect(() => {
-    const store = getDefaultStore()
+  const store = getDefaultStore()
 
+  const update = useMemo(() => {
     const vector1 = new Vector3()
     const vector2 = new Vector3()
-    const callback = (): void => {
+    return () => {
       const state = store.get(stateAtom)
       if (state == null) {
         return
@@ -221,6 +223,7 @@ const MoonOverlay: FC<{ angularRadius: number }> = ({ angularRadius }) => {
       const direction = directionFromHOR(state.moonHOR, vector1)
       target.position.copy(direction)
       target.quaternion.setFromUnitVectors(east, direction)
+      target.scale.setScalar(moonAngularRadius * moonScale.get() * 2)
 
       const theta = vector2.copy(up).cross(direction).normalize()
       azimuth.quaternion.setFromUnitVectors(east, theta)
@@ -229,14 +232,20 @@ const MoonOverlay: FC<{ angularRadius: number }> = ({ angularRadius }) => {
       phi.subVectors(up, phi).normalize()
       altitude.quaternion.setFromUnitVectors(east, phi)
     }
+  }, [target, azimuth, altitude, store, moonScale])
 
-    callback()
-    return store.sub(stateAtom, callback)
-  }, [angularRadius, target, azimuth, altitude])
+  useMotionValueEvent(moonScale, 'change', () => {
+    update()
+  })
+
+  useEffect(() => {
+    update()
+    return store.sub(stateAtom, update)
+  }, [store, update])
 
   return (
     <Overlay>
-      <primitive object={target} scale={angularRadius * 2} />
+      <primitive object={target} />
       <primitive object={azimuth} />
       <primitive object={altitude} />
     </Overlay>
@@ -262,13 +271,13 @@ const Scene: FC<StoryProps> = () => {
 
     const skyNode = sky(context, lutNode)
     skyNode.moonColorTexture = texture(
-      new TextureLoader().load('public/moon/color.webp', texture => {
+      new TextureLoader().load('public/moon/color_large.webp', texture => {
         texture.colorSpace = LinearSRGBColorSpace
         texture.anisotropy = 16
       })
     )
     skyNode.moonNormalTexture = texture(
-      new TextureLoader().load('public/moon/normal.webp', texture => {
+      new TextureLoader().load('public/moon/normal_large.webp', texture => {
         texture.colorSpace = NoColorSpace
         texture.anisotropy = 16
       })
@@ -313,13 +322,13 @@ const Scene: FC<StoryProps> = () => {
   )
 
   // Local date controls (depends on the longitude of the location):
-  const date = useLocalDateControls(longitude)
+  const date = useLocalDateControls()
 
   // The moon scale and intensity:
   const moonScale = useSpringControl(
     ({ moonScale }: StoryArgs) => moonScale,
     value => {
-      skyNode.moonAngularRadius = 0.0045 * value
+      skyNode.moonAngularRadius = moonAngularRadius * value
     }
   )
   const moonIntensity = useSpringControl(
@@ -352,21 +361,21 @@ const Scene: FC<StoryProps> = () => {
       ).multiplyMatrices(matrixECIToECEF, moonLocalToECEFMatrix)
 
       try {
-      const observer = new Observer(latitude, longitude, height)
-      const sunEQU = Equator(Body.Sun, time, observer, true, false)
-      const sunHOR = Horizon(time, observer, sunEQU.ra, sunEQU.dec)
-      const moonEQU = Equator(Body.Moon, time, observer, true, false)
-      const moonHOR = Horizon(time, observer, moonEQU.ra, moonEQU.dec)
-      set({
-        observer,
-        time,
-        sunEQU,
-        sunHOR,
-        moonEQU,
-        moonHOR,
-        moonScale,
-        moonIntensity
-      })
+        const observer = new Observer(latitude, longitude, height)
+        const sunEQU = Equator(Body.Sun, time, observer, true, false)
+        const sunHOR = Horizon(time, observer, sunEQU.ra, sunEQU.dec)
+        const moonEQU = Equator(Body.Moon, time, observer, true, false)
+        const moonHOR = Horizon(time, observer, moonEQU.ra, moonEQU.dec)
+        set({
+          observer,
+          time,
+          sunEQU,
+          sunHOR,
+          moonEQU,
+          moonHOR,
+          moonScale,
+          moonIntensity
+        })
       } catch (error) {
         console.error(error)
       }
@@ -426,7 +435,7 @@ const Scene: FC<StoryProps> = () => {
         enabled={!trackMoon}
       />
       <PrimaryCircles />
-      <MoonOverlay angularRadius={0.0045} />
+      <MoonOverlay moonScale={moonScale} />
     </>
   )
 }
@@ -595,7 +604,7 @@ Story.argTypes = {
     control: {
       type: 'range',
       min: 1,
-      max: 75,
+      max: 100,
       step: 0.1
     }
   },

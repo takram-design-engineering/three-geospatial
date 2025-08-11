@@ -78,10 +78,10 @@ const Scene: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  const [longitude] = useLocationControls(context.worldToECEFMatrix)
+  useLocationControls(context.worldToECEFMatrix)
 
   // Local date controls (depends on the longitude of the location):
-  useLocalDateControls(longitude, date => {
+  useLocalDateControls(date => {
     getSunDirectionECEF(date, context.sunDirectionECEF)
     getMoonDirectionECEF(date, context.moonDirectionECEF)
   })

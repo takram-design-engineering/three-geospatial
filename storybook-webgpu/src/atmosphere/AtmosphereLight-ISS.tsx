@@ -116,7 +116,7 @@ const Scene: FC<StoryProps> = () => {
   // Location controls:
   const [reorientationPlugin, setReorientationPlugin] =
     useState<ReorientationPlugin | null>(null)
-  const [longitude] = useLocationControls(
+  useLocationControls(
     context.worldToECEFMatrix,
     (longitude, latitude, height) => {
       if (reorientationPlugin != null) {
@@ -129,7 +129,7 @@ const Scene: FC<StoryProps> = () => {
   )
 
   // Local date controls (depends on the longitude of the location):
-  useLocalDateControls(longitude, date => {
+  useLocalDateControls(date => {
     getSunDirectionECEF(date, context.sunDirectionECEF)
     getMoonDirectionECEF(date, context.moonDirectionECEF)
   })
