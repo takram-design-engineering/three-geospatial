@@ -56,7 +56,7 @@ import {
 import {
   getECIToECEFRotationMatrix,
   getMoonDirectionECI,
-  getMoonLocalToECIRotationMatrix,
+  getMoonFixedToECIRotationMatrix,
   getSunDirectionECI,
   toAstroTime
 } from '@takram/three-atmosphere'
@@ -110,9 +110,9 @@ declare module '@react-three/fiber' {
 const stateAtom = atom<{
   time: AstroTime
   observer: Observer
-  sunEQU: EquatorialCoordinates
+  sunEQD: EquatorialCoordinates
   sunHOR: HorizontalCoordinates
-  moonEQU: EquatorialCoordinates
+  moonEQD: EquatorialCoordinates
   moonHOR: HorizontalCoordinates
   moonScale: number
   moonIntensity: number
@@ -354,24 +354,24 @@ const Scene: FC<StoryProps> = () => {
         geodetic.set(radians(longitude), radians(latitude), height).toECEF()
       ).applyMatrix4(matrixECIToECEF)
 
-      const { moonLocalToECEFMatrix } = context
-      getMoonLocalToECIRotationMatrix(
+      const { moonFixedToECEFMatrix } = context
+      getMoonFixedToECIRotationMatrix(
         time,
-        moonLocalToECEFMatrix
-      ).multiplyMatrices(matrixECIToECEF, moonLocalToECEFMatrix)
+        moonFixedToECEFMatrix
+      ).multiplyMatrices(matrixECIToECEF, moonFixedToECEFMatrix)
 
       try {
         const observer = new Observer(latitude, longitude, height)
-        const sunEQU = Equator(Body.Sun, time, observer, true, false)
-        const sunHOR = Horizon(time, observer, sunEQU.ra, sunEQU.dec)
-        const moonEQU = Equator(Body.Moon, time, observer, true, false)
-        const moonHOR = Horizon(time, observer, moonEQU.ra, moonEQU.dec)
+        const sunEQD = Equator(Body.Sun, time, observer, true, false)
+        const sunHOR = Horizon(time, observer, sunEQD.ra, sunEQD.dec)
+        const moonEQD = Equator(Body.Moon, time, observer, true, false)
+        const moonHOR = Horizon(time, observer, moonEQD.ra, moonEQD.dec)
         set({
           observer,
           time,
-          sunEQU,
+          sunEQD,
           sunHOR,
-          moonEQU,
+          moonEQD,
           moonHOR,
           moonScale,
           moonIntensity
@@ -484,14 +484,14 @@ const Info: FC = () => {
     return null
   }
 
-  const { time, observer, moonHOR, sunEQU, moonScale, moonIntensity } = state
+  const { time, observer, moonHOR, sunEQD, moonScale, moonIntensity } = state
   const { azimuth, altitude } = moonHOR
 
   let rotation = Rotation_EQD_HOR(time, observer)
   rotation = Pivot(rotation, 2, moonHOR.azimuth)
   rotation = Pivot(rotation, 1, moonHOR.altitude)
 
-  const sunVector = RotateVector(rotation, sunEQU.vec)
+  const sunVector = RotateVector(rotation, sunEQD.vec)
   const tilt = degrees(Math.atan2(sunVector.y, sunVector.z))
   const illumination = Illumination(Body.Moon, time)
   const angle = AngleFromSun(Body.Moon, time)

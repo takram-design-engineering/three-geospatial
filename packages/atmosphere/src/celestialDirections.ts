@@ -61,7 +61,7 @@ export function getECIToECEFRotationMatrix(
   return fromAstroRotationMatrix(matrix, result)
 }
 
-export function getMoonLocalToECIRotationMatrix(
+export function getMoonFixedToECIRotationMatrix(
   date: number | Date | AstroTime,
   result = new Matrix4()
 ): Matrix4 {

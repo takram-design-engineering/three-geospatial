@@ -178,7 +178,7 @@ export class SkyNode extends TempNode {
       worldToECEFMatrix,
       sunDirectionECEF,
       moonDirectionECEF,
-      moonLocalToECEFMatrix,
+      moonFixedToECEFMatrix,
       cameraPositionUnit
     } = this.renderingContext.getUniforms()
 
@@ -271,29 +271,29 @@ export class SkyNode extends TempNode {
           .sub(moonDirectionECEF)
           .normalize()
           .toVar()
-        const normalLocal = moonLocalToECEFMatrix
+        const normalMF = moonFixedToECEFMatrix
           .transpose()
           .mul(vec4(normalECEF, 0))
           .xyz.toVar()
-        const uv = equirectUV(normalLocal.xzy) // The equirectUV expects Y-up
+        const uv = equirectUV(normalMF.xzy) // The equirectUV expects Y-up
 
         if (moonNormalTexture != null) {
           // Apply the normal texture and convert it back to the ECEF space.
           const localX = vec3(1, 0, 0).toConst()
           const localZ = vec3(0, 0, 1).toConst()
-          const tangent = localZ.cross(normalLocal).toVar()
+          const tangent = localZ.cross(normalMF).toVar()
           tangent.assign(
             select(
               tangent.dot(tangent).lessThan(1e-7),
-              localX.cross(normalLocal).normalize(),
+              localX.cross(normalMF).normalize(),
               tangent.normalize()
             )
           )
-          const bitangent = normalLocal.cross(tangent).normalize()
+          const bitangent = normalMF.cross(tangent).normalize()
           const normalTangent = moonNormalTexture.sample(uv).xyz.mul(2).sub(1)
-          const tangentToLocal = mat3Columns(tangent, bitangent, normalLocal)
-          normalLocal.assign(tangentToLocal.mul(normalTangent).normalize())
-          normalECEF.assign(moonLocalToECEFMatrix.mul(vec4(normalLocal, 0)).xyz)
+          const tangentToLocal = mat3Columns(tangent, bitangent, normalMF)
+          normalMF.assign(tangentToLocal.mul(normalTangent).normalize())
+          normalECEF.assign(moonFixedToECEFMatrix.mul(vec4(normalMF, 0)).xyz)
         }
 
         const color = moonColorTexture?.sample(uv).xyz ?? 1
