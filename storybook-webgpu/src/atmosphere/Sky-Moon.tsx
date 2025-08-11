@@ -23,6 +23,7 @@ import {
 import { atom, getDefaultStore, useAtomValue, useSetAtom } from 'jotai'
 import { useMotionValueEvent, type MotionValue } from 'motion/react'
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -120,8 +121,12 @@ const stateAtom = atom<{
 
 const up = new Vector3(0, 1, 0)
 const east = new Vector3(0, 0, 1)
-const geodetic = new Geodetic()
 const moonAngularRadius = 0.0045
+
+const geodetic = new Geodetic()
+const vector1 = new Vector3()
+const vector2 = new Vector3()
+const matrix = new Matrix4()
 
 const circleGeometry = new BufferGeometry().setFromPoints(
   new Shape().arc(0, 0, 1, 0, Math.PI * 2).getPoints(90)
@@ -212,26 +217,22 @@ const MoonOverlay: FC<{ moonScale: MotionValue<number> }> = ({ moonScale }) => {
 
   const store = getDefaultStore()
 
-  const update = useMemo(() => {
-    const vector1 = new Vector3()
-    const vector2 = new Vector3()
-    return () => {
-      const state = store.get(stateAtom)
-      if (state == null) {
-        return
-      }
-      const direction = directionFromHOR(state.moonHOR, vector1)
-      target.position.copy(direction)
-      target.quaternion.setFromUnitVectors(east, direction)
-      target.scale.setScalar(moonAngularRadius * moonScale.get() * 2)
-
-      const theta = vector2.copy(up).cross(direction).normalize()
-      azimuth.quaternion.setFromUnitVectors(east, theta)
-
-      const phi = vector2.copy(direction).multiplyScalar(direction.dot(up))
-      phi.subVectors(up, phi).normalize()
-      altitude.quaternion.setFromUnitVectors(east, phi)
+  const update = useCallback(() => {
+    const state = store.get(stateAtom)
+    if (state == null) {
+      return
     }
+    const direction = directionFromHOR(state.moonHOR, vector1)
+    target.position.copy(direction)
+    target.quaternion.setFromUnitVectors(east, direction)
+    target.scale.setScalar(moonAngularRadius * moonScale.get() * 2)
+
+    const theta = vector2.copy(up).cross(direction).normalize()
+    azimuth.quaternion.setFromUnitVectors(east, theta)
+
+    const phi = vector2.copy(direction).multiplyScalar(direction.dot(up))
+    phi.subVectors(up, phi).normalize()
+    altitude.quaternion.setFromUnitVectors(east, phi)
   }, [target, azimuth, altitude, store, moonScale])
 
   useMotionValueEvent(moonScale, 'change', () => {
@@ -392,45 +393,38 @@ const Scene: FC<StoryProps> = () => {
   )
 
   // Tracking the moon:
-  const orbitControlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
   const { trackMoon, northUp } = useControl(
     ({ trackMoon, northUp }: StoryArgs) => ({ trackMoon, northUp })
   )
-  useEffect(() => {
-    if (!trackMoon) {
+
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
+  const store = getDefaultStore()
+
+  useFrame(() => {
+    const controls = controlsRef.current
+    const state = store.get(stateAtom)
+    if (controls == null || state == null) {
       return
     }
-    const vector1 = new Vector3()
-    const vector2 = new Vector3()
-    const matrix = new Matrix4()
+    const position = vector1.setFromMatrixPosition(camera.matrixWorld)
+    const direction = directionFromHOR(state.moonHOR, vector2)
+    matrix.copy(context.worldToECEFMatrix).transpose()
 
-    const store = getDefaultStore()
-    const callback = (): void => {
-      const state = store.get(stateAtom)
-      if (state == null) {
-        return
-      }
-      const position = vector2.setFromMatrixPosition(camera.matrixWorld)
-      const direction = directionFromHOR(state.moonHOR, vector1)
-      if (northUp) {
-        camera.up
-          .set(0, 0, 1)
-          .applyMatrix4(matrix.copy(context.worldToECEFMatrix).transpose())
-      } else {
-        camera.up.copy(Object3D.DEFAULT_UP)
-      }
-      camera.lookAt(position.add(direction))
+    if (northUp) {
+      camera.up.set(0, 0, 1).applyMatrix4(matrix)
+    } else {
+      camera.up.copy(Object3D.DEFAULT_UP)
     }
-    callback()
-    return store.sub(stateAtom, callback)
-  }, [camera, context, trackMoon, northUp])
+    if (trackMoon) {
+      controls.target.copy(position.add(direction))
+    }
+    controls.update()
+  })
 
   return (
     <>
       <OrbitControls
-        ref={orbitControlsRef}
-        target={[0, 0, 0]}
-        minDistance={1}
+        ref={controlsRef}
         enableZoom={false} // Conflicts with the zoom arg
         enabled={!trackMoon}
       />

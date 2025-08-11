@@ -326,7 +326,7 @@ export class SkyNode extends TempNode {
       return luminance
     })()
 
-    return inscatter.add(luminance.mul(transmittance))
+    return luminance.mul(transmittance).add(inscatter)
   }
 }
 
