@@ -78,17 +78,18 @@ const getLunarRadiance = /*#__PURE__*/ Fnv(
   }
 )
 
-const intersectSphere = /*#__PURE__*/ Fnv(
+const raySphereIntersectionNormal = /*#__PURE__*/ Fnv(
   (
     rayDirection: NodeObject<'vec3'>,
     centerDirection: NodeObject<'vec3'>,
     angularRadius: NodeObject<'float'>
   ): NodeObject<'vec3'> => {
     const cosRay = centerDirection.dot(rayDirection).toVar()
-    const discriminant = centerDirection
-      .dot(centerDirection)
-      .sub(angularRadius.pow2())
-    return cosRay.sub(sqrt(cosRay.pow2().sub(discriminant).max(0)))
+    // The vector from the centerDirection to the projection point on the ray.
+    const P = centerDirection.sub(rayDirection.mul(cosRay)).negate().toVar()
+    // The half chord length along the ray.
+    const s = sqrt(angularRadius.pow2().sub(P.dot(P)).max(0))
+    return P.sub(rayDirection.mul(s)).div(angularRadius)
   }
 )
 
@@ -262,19 +263,11 @@ export class SkyNode extends TempNode {
 
         const moonLuminance = vec3().toVar()
         If(chordLength.lessThan(chordThreshold), () => {
-          const intersection = intersectSphere(
+          const normalECEF = raySphereIntersectionNormal(
             rayDirectionECEF,
             moonDirectionECEF,
             moonAngularRadius
-          )
-
-          // Derive the normal vector in the moon local space at the
-          // intersection, and the equirectangular UV.
-          const normalECEF = rayDirectionECEF
-            .mul(intersection)
-            .sub(moonDirectionECEF)
-            .normalize()
-            .toVar()
+          ).toVar()
           const normalMF = moonFixedToECEFMatrix
             .transpose()
             .mul(vec4(normalECEF, 0))
