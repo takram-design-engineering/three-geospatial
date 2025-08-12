@@ -442,6 +442,8 @@ const InfoElement = styled('div')`
   color: rgba(255, 255, 255, calc(2 / 3));
   font-size: small;
   letter-spacing: 0.025em;
+  pointer-events: none;
+  user-select: none;
 
   table {
     margin-top: 8px;
