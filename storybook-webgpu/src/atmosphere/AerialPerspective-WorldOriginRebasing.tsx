@@ -1,5 +1,5 @@
 import { OrbitControls, Sphere } from '@react-three/drei'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
 import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
@@ -37,6 +37,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
@@ -74,7 +75,7 @@ const Scene: FC<StoryProps> = () => {
     return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, context, lutNode])
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
 

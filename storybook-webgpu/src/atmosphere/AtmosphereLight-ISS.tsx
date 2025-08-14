@@ -1,10 +1,5 @@
 import { OrbitControls } from '@react-three/drei'
-import {
-  extend,
-  useFrame,
-  useThree,
-  type ThreeElement
-} from '@react-three/fiber'
+import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import { useState, type FC } from 'react'
 import { pass } from 'three/tsl'
@@ -55,6 +50,7 @@ import {
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
 import { Globe } from '../helpers/Globe'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { ISS } from '../models/ISS'
@@ -97,7 +93,7 @@ const Scene: FC<StoryProps> = () => {
     return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, context, lutNode])
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
 

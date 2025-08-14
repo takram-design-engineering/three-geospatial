@@ -1,9 +1,4 @@
-import {
-  extend,
-  useFrame,
-  useThree,
-  type ThreeElement
-} from '@react-three/fiber'
+import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
 import {
   GlobeControls,
@@ -47,6 +42,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import {
   usePointOfView,
   type PointOfViewProps
@@ -104,7 +100,7 @@ const Scene: FC<StoryProps> = ({
     return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, context, lutNode])
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
 

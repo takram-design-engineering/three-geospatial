@@ -1,7 +1,8 @@
 import { useGLTF } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, type ComponentProps, type FC } from 'react'
 import { Matrix3, Vector3, type Matrix4 } from 'three'
+
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 
 const vector = new Vector3()
 const rotation = new Matrix3()
@@ -48,7 +49,7 @@ export const ISS: FC<ISSProps> = ({
     }
   }, [iss.scene])
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     const sunDirectionLocal = vector
       .copy(sunDirectionECEF)
       .applyMatrix3(rotation.setFromMatrix4(worldToECEFMatrix).transpose())

@@ -1,10 +1,5 @@
 import { OrbitControls } from '@react-three/drei'
-import {
-  extend,
-  useFrame,
-  useThree,
-  type ThreeElement
-} from '@react-three/fiber'
+import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import type { FC } from 'react'
 import { TextureLoader } from 'three'
 import { mix, mul, pass, texture, uv, vec3 } from 'three/tsl'
@@ -46,6 +41,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
@@ -86,7 +82,7 @@ const Scene: FC<StoryProps> = () => {
     return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, context, lutNode])
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
 
