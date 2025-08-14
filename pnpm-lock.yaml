@@ -11,7 +11,7 @@ overrides:
   postprocessing: 6.37.6
   react: 19.0.0
   react-dom: 19.0.0
-  three: 0.179.1
+  three: github:mrdoob/three.js#dev
 
 importers:
 
@@ -316,7 +316,7 @@ packages:
       '@react-three/fiber': 9.3.0
       react: 19.0.0
       react-dom: 19.0.0
-      three: 0.179.1
+      three: '>=0.166.0'
     peerDependenciesMeta:
       '@react-three/fiber':
         optional: true
@@ -2048,7 +2048,7 @@ packages:
     resolution: {integrity: sha512-Obb0/gEd/HReTlg8ttaYk+0m62gQJmCblMOjHSMHRrBP2zdfKMHLCRbh/6ex9fSUJMKdjjIEiohwkbGD3wj2Nw==}
     version: 3.1.0
     peerDependencies:
-      three: 0.179.1
+      three: '>= 0.159.0'
 
   '@napi-rs/nice-android-arm-eabi@1.0.4':
     resolution: {integrity: sha512-OZFMYUkih4g6HCKTjqJHhMUlgvPiDuSLZPbPBWHLjKmFTv74COzRlq/gwHtmEVaR39mJQ6ZyttDl2HNMUbLVoA==}
@@ -2430,7 +2430,7 @@ packages:
       '@react-three/fiber': 9.3.0
       react: 19.0.0
       react-dom: 19.0.0
-      three: 0.179.1
+      three: '>=0.159'
     peerDependenciesMeta:
       react-dom:
         optional: true
@@ -2446,7 +2446,7 @@ packages:
       react: 19.0.0
       react-dom: 19.0.0
       react-native: '>=0.78'
-      three: 0.179.1
+      three: '>=0.156'
     peerDependenciesMeta:
       expo:
         optional: true
@@ -2467,7 +2467,7 @@ packages:
     peerDependencies:
       '@react-three/fiber': 9.3.0
       react: 19.0.0
-      three: 0.179.1
+      three: '>= 0.156.0'
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -4044,7 +4044,7 @@ packages:
     version: 3.1.0
     engines: {node: '>=20.11.0', npm: '>=10.8.2'}
     peerDependencies:
-      three: 0.179.1
+      three: '>=0.126.1'
 
   caniuse-lite@1.0.30001731:
     resolution: {integrity: sha512-lDdp2/wrOmTRWuoB5DpfNkC0rJDU8DqRa6nYL6HK6sytw70QMopt/NIc/9SM7ylItlBWfACXk0tEn37UWM/+mg==}
@@ -6174,14 +6174,14 @@ packages:
     version: 0.10.8
     peerDependencies:
       '@types/three': '>=0.134.0'
-      three: 0.179.1
+      three: '>=0.134.0'
 
   maath@0.6.0:
     resolution: {integrity: sha512-dSb2xQuP7vDnaYqfoKzlApeRcR2xtN8/f7WV/TMAkBC8552TwTLtOO0JTcSygkYMjNDPoo6V01jTw/aPi4JrMw==}
     version: 0.6.0
     peerDependencies:
       '@types/three': '>=0.144.0'
-      three: 0.179.1
+      three: '>=0.144.0'
 
   magic-string@0.30.17:
     resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
@@ -6231,7 +6231,7 @@ packages:
     resolution: {integrity: sha512-/TQj+JdZkeSUOl5Mk2J7eLcYTLiQm2IDzmlSvYm7ov15anEcDJ92GHqqazxTSreeNgfnYu24kiEvvv0WlbCdFQ==}
     version: 3.3.1
     peerDependencies:
-      three: 0.179.1
+      three: '>=0.137'
 
   meshoptimizer@0.22.0:
     resolution: {integrity: sha512-IebiK79sqIy+E4EgOr+CAw+Ke8hAspXKzBd0JdgEmPHiAwmvEj2S4h1rfvo+o/BnfEYd/jAOg5IeeIjzlzSnDg==}
@@ -6377,7 +6377,7 @@ packages:
     version: 1.10.1
     peerDependencies:
       postprocessing: 6.37.6
-      three: 0.179.1
+      three: '>=0.137'
 
   nano-css@5.6.2:
     resolution: {integrity: sha512-+6bHaC8dSDGALM1HJjOHVXpuastdu2xFoZlC77Jh4cg+33Zcgm+Gxd+1xsnpZK14eyHObSp82+ll5y3SX75liw==}
@@ -6730,7 +6730,7 @@ packages:
     resolution: {integrity: sha512-KrdKLf1257RkoIk3z3nhRS0aToKrX2xJgtR0lbnOQUjd+1I4GVNv1gQYsQlfRglvEXjpzrwqOA5fXfoDBimadg==}
     version: 6.37.6
     peerDependencies:
-      three: 0.179.1
+      three: '>= 0.157.0 < 0.179.0'
 
   potpack@1.0.2:
     resolution: {integrity: sha512-choctRBIV9EMT9WGAZHn3V7t0Z2pMQyl0EZE6pFc/6ml3ssw7Dlf/oAOvFwjm1HVsqfQN8GfeFyJ+d8tRzqueQ==}
@@ -7324,13 +7324,13 @@ packages:
     version: 2.4.2
     peerDependencies:
       '@types/three': '*'
-      three: 0.179.1
+      three: '*'
 
   stats-gl@3.6.0:
     resolution: {integrity: sha512-Bpi5nwvC2pls9lcI5sGqAcUqB/2kMYfsR4KoAglXFtY3YUdm7lJFg8FqS7eKKNgg3ruDMNCuwU+uRwPOwJiGnw==}
     version: 3.6.0
     peerDependencies:
-      three: 0.179.1
+      three: '*'
     peerDependenciesMeta:
       three:
         optional: true
@@ -7549,13 +7549,13 @@ packages:
     resolution: {integrity: sha512-4G5lBaF+g2auKX3P0yqx+MJC6oVt6sB5k+CchS6Ob0qvH0YIhuUk1eYr7ktsIpY+albCqE80/FVQGV190PmiAg==}
     version: 0.8.3
     peerDependencies:
-      three: 0.179.1
+      three: '>= 0.159.0'
 
   three-stdlib@2.36.0:
     resolution: {integrity: sha512-kv0Byb++AXztEGsULgMAs8U2jgUdz6HPpAB/wDJnLiLlaWQX2APHhiTJIN7rqW+Of0eRgcp7jn05U1BsCP3xBA==}
     version: 2.36.0
     peerDependencies:
-      three: 0.179.1
+      three: '>=0.128.0'
 
   three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea:
     resolution: {tarball: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea}
@@ -7656,13 +7656,13 @@ packages:
     resolution: {integrity: sha512-V50EwcYGruV5rUZ9F4aNsrytGdKcXKALjEtQXIOBfhVoZU9VAqZNIoGQ3TMiooVqFAbR1w15T+f+8gkzoFzawg==}
     version: 0.52.4
     peerDependencies:
-      three: 0.179.1
+      three: '>=0.125.0'
 
   troika-three-utils@0.52.4:
     resolution: {integrity: sha512-NORAStSVa/BDiG52Mfudk4j1FG4jC4ILutB3foPnfGbOeIs9+G5vZLa0pnmnaftZUGm4UwSoqEpWdqvC7zms3A==}
     version: 0.52.4
     peerDependencies:
-      three: 0.179.1
+      three: '>=0.125.0'
 
   troika-worker-utils@0.52.0:
     resolution: {integrity: sha512-W1CpvTHykaPH5brv5VHLfQo9D1OYuo0cSBEUQFFT/nBUzM8iD6Lq2/tgG/f1OelbAS1WtaTPQzE5uM49egnngw==}
