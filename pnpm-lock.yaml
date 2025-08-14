@@ -38,7 +38,7 @@ importers:
     devDependencies:
       3d-tiles-renderer:
         specifier: 0.4.13
-        version: 0.4.13(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1)
+        version: 0.4.13(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       '@babel/core':
         specifier: ^7.28.0
         version: 7.28.0
@@ -95,13 +95,13 @@ importers:
         version: 21.3.11(@babel/traverse@7.28.0)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.23)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@21.3.11(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.23)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))(verdaccio@6.1.6(encoding@0.1.13)(typanion@3.14.0))
       '@react-three/drei':
         specifier: 10.6.1
-        version: 10.6.1(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1))(@types/react@19.0.0)(@types/three@0.179.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1)
+        version: 10.6.1(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea))(@types/react@19.0.0)(@types/three@0.179.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       '@react-three/fiber':
         specifier: 9.3.0
-        version: 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1)
+        version: 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       '@react-three/postprocessing':
         specifier: 3.0.4
-        version: 3.0.4(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1))(@types/three@0.179.0)(react@19.0.0)(three@0.179.1)
+        version: 3.0.4(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea))(@types/three@0.179.0)(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       '@rollup/plugin-replace':
         specifier: ^6.0.2
         version: 6.0.2(rollup@4.46.2)
@@ -239,7 +239,7 @@ importers:
         version: 21.3.11(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.23)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))
       postprocessing:
         specifier: 6.37.6
-        version: 6.37.6(three@0.179.1)
+        version: 6.37.6(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -266,16 +266,16 @@ importers:
         version: 0.34.3
       stats-gl:
         specifier: ^3.6.0
-        version: 3.6.0(three@0.179.1)
+        version: 3.6.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       storybook:
         specifier: 9.1.0
         version: 9.1.0(@testing-library/dom@10.4.0)(prettier@3.6.2)(vite@6.3.5(@types/node@22.17.0)(jiti@2.4.2)(terser@5.43.1)(yaml@2.8.0))
       three:
-        specifier: 0.179.1
-        version: 0.179.1
+        specifier: github:mrdoob/three.js#dev
+        version: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
       three-stdlib:
         specifier: 2.36.0
-        version: 2.36.0(three@0.179.1)
+        version: 2.36.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       ts-jest:
         specifier: 29.4.0
         version: 29.4.0(@babel/core@7.28.0)(@jest/transform@30.0.5)(@jest/types@30.0.5)(babel-jest@30.0.5(@babel/core@7.28.0))(esbuild@0.19.12)(jest-util@30.0.5)(jest@30.0.5(@types/node@22.17.0)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.19.12))(ts-node@10.9.1(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.17.0)(typescript@5.8.3)))(typescript@5.8.3)
@@ -311,6 +311,7 @@ packages:
 
   3d-tiles-renderer@0.4.13:
     resolution: {integrity: sha512-xVg+yv3ChBb5JPQyghz1jhhORT29IUb7XiX5FRcGKRc671iWdFznsOVMLQaEhOqhgViTpX0Q5GTIwOxBp8wJCg==}
+    version: 0.4.13
     peerDependencies:
       '@react-three/fiber': 9.3.0
       react: 19.0.0
@@ -2045,6 +2046,7 @@ packages:
 
   '@monogrid/gainmap-js@3.1.0':
     resolution: {integrity: sha512-Obb0/gEd/HReTlg8ttaYk+0m62gQJmCblMOjHSMHRrBP2zdfKMHLCRbh/6ex9fSUJMKdjjIEiohwkbGD3wj2Nw==}
+    version: 3.1.0
     peerDependencies:
       three: 0.179.1
 
@@ -2423,6 +2425,7 @@ packages:
 
   '@react-three/drei@10.6.1':
     resolution: {integrity: sha512-UqqHO+REMgdiyiAVDGDJq6UVh5ABnTIIDw7D4auCl4z6mRk91x+M//S75NkLLiyiPk1epr002sZ4gvw3tZbRAA==}
+    version: 10.6.1
     peerDependencies:
       '@react-three/fiber': 9.3.0
       react: 19.0.0
@@ -2434,6 +2437,7 @@ packages:
 
   '@react-three/fiber@9.3.0':
     resolution: {integrity: sha512-myPe3YL/C8+Eq939/4qIVEPBW/uxV0iiUbmjfwrs9sGKYDG8ib8Dz3Okq7BQt8P+0k4igedONbjXMQy84aDFmQ==}
+    version: 9.3.0
     peerDependencies:
       expo: '>=43.0'
       expo-asset: '>=8.4'
@@ -2459,6 +2463,7 @@ packages:
 
   '@react-three/postprocessing@3.0.4':
     resolution: {integrity: sha512-e4+F5xtudDYvhxx3y0NtWXpZbwvQ0x1zdOXWTbXMK6fFLVDd4qucN90YaaStanZGS4Bd5siQm0lGL/5ogf8iDQ==}
+    version: 3.0.4
     peerDependencies:
       '@react-three/fiber': 9.3.0
       react: 19.0.0
@@ -4036,6 +4041,7 @@ packages:
 
   camera-controls@3.1.0:
     resolution: {integrity: sha512-w5oULNpijgTRH0ARFJJ0R5ct1nUM3R3WP7/b8A6j9uTGpRfnsypc/RBMPQV8JQDPayUe37p/TZZY1PcUr4czOQ==}
+    version: 3.1.0
     engines: {node: '>=20.11.0', npm: '>=10.8.2'}
     peerDependencies:
       three: 0.179.1
@@ -6165,12 +6171,14 @@ packages:
 
   maath@0.10.8:
     resolution: {integrity: sha512-tRvbDF0Pgqz+9XUa4jjfgAQ8/aPKmQdWXilFu2tMy4GWj4NOsx99HlULO4IeREfbO3a0sA145DZYyvXPkybm0g==}
+    version: 0.10.8
     peerDependencies:
       '@types/three': '>=0.134.0'
       three: 0.179.1
 
   maath@0.6.0:
     resolution: {integrity: sha512-dSb2xQuP7vDnaYqfoKzlApeRcR2xtN8/f7WV/TMAkBC8552TwTLtOO0JTcSygkYMjNDPoo6V01jTw/aPi4JrMw==}
+    version: 0.6.0
     peerDependencies:
       '@types/three': '>=0.144.0'
       three: 0.179.1
@@ -6221,6 +6229,7 @@ packages:
 
   meshline@3.3.1:
     resolution: {integrity: sha512-/TQj+JdZkeSUOl5Mk2J7eLcYTLiQm2IDzmlSvYm7ov15anEcDJ92GHqqazxTSreeNgfnYu24kiEvvv0WlbCdFQ==}
+    version: 3.3.1
     peerDependencies:
       three: 0.179.1
 
@@ -6365,6 +6374,7 @@ packages:
 
   n8ao@1.10.1:
     resolution: {integrity: sha512-hhI1pC+BfOZBV1KMwynBrVlIm8wqLxj/abAWhF2nZ0qQKyzTSQa1QtLVS2veRiuoBQXojxobcnp0oe+PUoxf/w==}
+    version: 1.10.1
     peerDependencies:
       postprocessing: 6.37.6
       three: 0.179.1
@@ -6718,6 +6728,7 @@ packages:
 
   postprocessing@6.37.6:
     resolution: {integrity: sha512-KrdKLf1257RkoIk3z3nhRS0aToKrX2xJgtR0lbnOQUjd+1I4GVNv1gQYsQlfRglvEXjpzrwqOA5fXfoDBimadg==}
+    version: 6.37.6
     peerDependencies:
       three: 0.179.1
 
@@ -7310,12 +7321,14 @@ packages:
 
   stats-gl@2.4.2:
     resolution: {integrity: sha512-g5O9B0hm9CvnM36+v7SFl39T7hmAlv541tU81ME8YeSb3i1CIP5/QdDeSB3A0la0bKNHpxpwxOVRo2wFTYEosQ==}
+    version: 2.4.2
     peerDependencies:
       '@types/three': '*'
       three: 0.179.1
 
   stats-gl@3.6.0:
     resolution: {integrity: sha512-Bpi5nwvC2pls9lcI5sGqAcUqB/2kMYfsR4KoAglXFtY3YUdm7lJFg8FqS7eKKNgg3ruDMNCuwU+uRwPOwJiGnw==}
+    version: 3.6.0
     peerDependencies:
       three: 0.179.1
     peerDependenciesMeta:
@@ -7534,16 +7547,19 @@ packages:
 
   three-mesh-bvh@0.8.3:
     resolution: {integrity: sha512-4G5lBaF+g2auKX3P0yqx+MJC6oVt6sB5k+CchS6Ob0qvH0YIhuUk1eYr7ktsIpY+albCqE80/FVQGV190PmiAg==}
+    version: 0.8.3
     peerDependencies:
       three: 0.179.1
 
   three-stdlib@2.36.0:
     resolution: {integrity: sha512-kv0Byb++AXztEGsULgMAs8U2jgUdz6HPpAB/wDJnLiLlaWQX2APHhiTJIN7rqW+Of0eRgcp7jn05U1BsCP3xBA==}
+    version: 2.36.0
     peerDependencies:
       three: 0.179.1
 
-  three@0.179.1:
-    resolution: {integrity: sha512-5y/elSIQbrvKOISxpwXCR4sQqHtGiOI+MKLc3SsBdDXA2hz3Mdp3X59aUp8DyybMa34aeBwbFTpdoLJaUDEWSw==}
+  three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea:
+    resolution: {tarball: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea}
+    version: 0.179.1
 
   throttle-debounce@3.0.1:
     resolution: {integrity: sha512-dTEWWNu6JmeVXY0ZYoPuH5cRIwc0MeGbJwah9KUNYSJwommQpCzTySTpEe8Gs1J23aeWEuAobe4Ag7EHVt/LOg==}
@@ -7638,11 +7654,13 @@ packages:
 
   troika-three-text@0.52.4:
     resolution: {integrity: sha512-V50EwcYGruV5rUZ9F4aNsrytGdKcXKALjEtQXIOBfhVoZU9VAqZNIoGQ3TMiooVqFAbR1w15T+f+8gkzoFzawg==}
+    version: 0.52.4
     peerDependencies:
       three: 0.179.1
 
   troika-three-utils@0.52.4:
     resolution: {integrity: sha512-NORAStSVa/BDiG52Mfudk4j1FG4jC4ILutB3foPnfGbOeIs9+G5vZLa0pnmnaftZUGm4UwSoqEpWdqvC7zms3A==}
+    version: 0.52.4
     peerDependencies:
       three: 0.179.1
 
@@ -8304,11 +8322,11 @@ packages:
 
 snapshots:
 
-  3d-tiles-renderer@0.4.13(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1):
+  3d-tiles-renderer@0.4.13(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
     optionalDependencies:
-      '@react-three/fiber': 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1)
+      '@react-three/fiber': 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
@@ -10235,10 +10253,10 @@ snapshots:
       '@module-federation/runtime': 0.17.1
       '@module-federation/sdk': 0.17.1
 
-  '@monogrid/gainmap-js@3.1.0(three@0.179.1)':
+  '@monogrid/gainmap-js@3.1.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)':
     dependencies:
       promise-worker-transferable: 1.0.4
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
   '@napi-rs/nice-android-arm-eabi@1.0.4':
     optional: true
@@ -10888,28 +10906,28 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.28.2
 
-  '@react-three/drei@10.6.1(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1))(@types/react@19.0.0)(@types/three@0.179.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1)':
+  '@react-three/drei@10.6.1(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea))(@types/react@19.0.0)(@types/three@0.179.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)':
     dependencies:
       '@babel/runtime': 7.28.2
       '@mediapipe/tasks-vision': 0.10.17
-      '@monogrid/gainmap-js': 3.1.0(three@0.179.1)
-      '@react-three/fiber': 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1)
+      '@monogrid/gainmap-js': 3.1.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
+      '@react-three/fiber': 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       '@use-gesture/react': 10.3.1(react@19.0.0)
-      camera-controls: 3.1.0(three@0.179.1)
+      camera-controls: 3.1.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       cross-env: 7.0.3
       detect-gpu: 5.0.70
       glsl-noise: 0.0.0
       hls.js: 1.6.7
-      maath: 0.10.8(@types/three@0.179.0)(three@0.179.1)
-      meshline: 3.3.1(three@0.179.1)
+      maath: 0.10.8(@types/three@0.179.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
+      meshline: 3.3.1(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       react: 19.0.0
-      stats-gl: 2.4.2(@types/three@0.179.0)(three@0.179.1)
+      stats-gl: 2.4.2(@types/three@0.179.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       stats.js: 0.17.0
       suspend-react: 0.1.3(react@19.0.0)
-      three: 0.179.1
-      three-mesh-bvh: 0.8.3(three@0.179.1)
-      three-stdlib: 2.36.0(three@0.179.1)
-      troika-three-text: 0.52.4(three@0.179.1)
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
+      three-mesh-bvh: 0.8.3(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
+      three-stdlib: 2.36.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
+      troika-three-text: 0.52.4(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       tunnel-rat: 0.1.2(@types/react@19.0.0)(react@19.0.0)
       use-sync-external-store: 1.5.0(react@19.0.0)
       utility-types: 3.11.0
@@ -10921,7 +10939,7 @@ snapshots:
       - '@types/three'
       - immer
 
-  '@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1)':
+  '@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)':
     dependencies:
       '@babel/runtime': 7.28.2
       '@types/react-reconciler': 0.32.0(@types/react@19.0.0)
@@ -10934,7 +10952,7 @@ snapshots:
       react-use-measure: 2.1.7(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       scheduler: 0.25.0
       suspend-react: 0.1.3(react@19.0.0)
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
       use-sync-external-store: 1.5.0(react@19.0.0)
       zustand: 5.0.7(@types/react@19.0.0)(react@19.0.0)(use-sync-external-store@1.5.0(react@19.0.0))
     optionalDependencies:
@@ -10943,14 +10961,14 @@ snapshots:
       - '@types/react'
       - immer
 
-  '@react-three/postprocessing@3.0.4(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1))(@types/three@0.179.0)(react@19.0.0)(three@0.179.1)':
+  '@react-three/postprocessing@3.0.4(@react-three/fiber@9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea))(@types/three@0.179.0)(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)':
     dependencies:
-      '@react-three/fiber': 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.179.1)
-      maath: 0.6.0(@types/three@0.179.0)(three@0.179.1)
-      n8ao: 1.10.1(postprocessing@6.37.6(three@0.179.1))(three@0.179.1)
-      postprocessing: 6.37.6(three@0.179.1)
+      '@react-three/fiber': 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
+      maath: 0.6.0(@types/three@0.179.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
+      n8ao: 1.10.1(postprocessing@6.37.6(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea))(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
+      postprocessing: 6.37.6(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       react: 19.0.0
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
     transitivePeerDependencies:
       - '@types/three'
 
@@ -12753,9 +12771,9 @@ snapshots:
 
   camelcase@6.3.0: {}
 
-  camera-controls@3.1.0(three@0.179.1):
+  camera-controls@3.1.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
   caniuse-lite@1.0.30001731: {}
 
@@ -15372,15 +15390,15 @@ snapshots:
 
   lz-string@1.5.0: {}
 
-  maath@0.10.8(@types/three@0.179.0)(three@0.179.1):
+  maath@0.10.8(@types/three@0.179.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
       '@types/three': 0.179.0
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
-  maath@0.6.0(@types/three@0.179.0)(three@0.179.1):
+  maath@0.6.0(@types/three@0.179.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
       '@types/three': 0.179.0
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
   magic-string@0.30.17:
     dependencies:
@@ -15419,9 +15437,9 @@ snapshots:
 
   merge2@1.4.1: {}
 
-  meshline@3.3.1(three@0.179.1):
+  meshline@3.3.1(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
   meshoptimizer@0.22.0: {}
 
@@ -15528,10 +15546,10 @@ snapshots:
 
   muggle-string@0.4.1: {}
 
-  n8ao@1.10.1(postprocessing@6.37.6(three@0.179.1))(three@0.179.1):
+  n8ao@1.10.1(postprocessing@6.37.6(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea))(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
-      postprocessing: 6.37.6(three@0.179.1)
-      three: 0.179.1
+      postprocessing: 6.37.6(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
   nano-css@5.6.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
@@ -15920,9 +15938,9 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postprocessing@6.37.6(three@0.179.1):
+  postprocessing@6.37.6(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
   potpack@1.0.2: {}
 
@@ -16615,14 +16633,14 @@ snapshots:
       stack-generator: 2.0.10
       stacktrace-gps: 3.1.2
 
-  stats-gl@2.4.2(@types/three@0.179.0)(three@0.179.1):
+  stats-gl@2.4.2(@types/three@0.179.0)(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
       '@types/three': 0.179.0
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
-  stats-gl@3.6.0(three@0.179.1):
+  stats-gl@3.6.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     optionalDependencies:
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
   stats.js@0.17.0: {}
 
@@ -16888,11 +16906,11 @@ snapshots:
     dependencies:
       real-require: 0.2.0
 
-  three-mesh-bvh@0.8.3(three@0.179.1):
+  three-mesh-bvh@0.8.3(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
-  three-stdlib@2.36.0(three@0.179.1):
+  three-stdlib@2.36.0(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
       '@types/draco3d': 1.4.10
       '@types/offscreencanvas': 2019.7.3
@@ -16900,9 +16918,9 @@ snapshots:
       draco3d: 1.5.7
       fflate: 0.6.10
       potpack: 1.0.2
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
-  three@0.179.1: {}
+  three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea: {}
 
   throttle-debounce@3.0.1: {}
 
@@ -16978,17 +16996,17 @@ snapshots:
 
   tree-kill@1.2.2: {}
 
-  troika-three-text@0.52.4(three@0.179.1):
+  troika-three-text@0.52.4(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
       bidi-js: 1.0.3
-      three: 0.179.1
-      troika-three-utils: 0.52.4(three@0.179.1)
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
+      troika-three-utils: 0.52.4(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea)
       troika-worker-utils: 0.52.0
       webgl-sdf-generator: 1.1.1
 
-  troika-three-utils@0.52.4(three@0.179.1):
+  troika-three-utils@0.52.4(three@https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea):
     dependencies:
-      three: 0.179.1
+      three: https://codeload.github.com/mrdoob/three.js/tar.gz/4203d2b3038651557be00b831735f014995cadea
 
   troika-worker-utils@0.52.0: {}
 
