@@ -14,7 +14,6 @@ const config: StorybookConfig = {
     actions: false,
     interactions: false
   },
-  logLevel: 'error',
 
   staticDirs: [{ from: '../assets', to: '/public' }],
 
