@@ -271,8 +271,9 @@ class LUTTextureNode extends TextureNode {
     return super.setup(builder)
   }
 
-  override clone(): this {
-    return new LUTTextureNode(this.lutNode, this.value) as this
+  // @ts-expect-error Wrong use of "this" in the library type.
+  override clone(): LUTTextureNode {
+    return new LUTTextureNode(this.lutNode, this.value)
   }
 }
 
@@ -293,8 +294,9 @@ class LUTTexture3DNode extends Texture3DNode {
     return super.setup(builder)
   }
 
-  override clone(): this {
-    return new LUTTexture3DNode(this.lutNode, this.value) as this
+  // @ts-expect-error Wrong use of "this" in the library type.
+  override clone(): LUTTexture3DNode {
+    return new LUTTexture3DNode(this.lutNode, this.value)
   }
 }
 
