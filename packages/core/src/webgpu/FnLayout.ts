@@ -1,4 +1,9 @@
-import type { ProxiedTuple, ShaderNodeFn, Struct } from 'three/src/nodes/TSL.js'
+import type {
+  ProxiedTuple,
+  ShaderCallNodeInternal,
+  ShaderNodeFn,
+  Struct
+} from 'three/src/nodes/TSL.js'
 import { Fn } from 'three/tsl'
 import type { NodeBuilder, Texture3DNode, TextureNode } from 'three/webgpu'
 
@@ -44,7 +49,9 @@ type FnLayoutResult<
   Inputs extends readonly FnInputLayout[],
   Args extends readonly unknown[] = InferCallbackArgs<Inputs>
 > = (
-  callback: (...args: [...Args, NodeBuilder]) => InferLayoutType<T>
+  callback: (
+    ...args: [...Args, NodeBuilder]
+  ) => InferLayoutType<T> | NodeObject<ShaderCallNodeInternal>
 ) => ShaderNodeFn<ProxiedTuple<Args>>
 
 function transformType(type: FnLayoutType): string {
