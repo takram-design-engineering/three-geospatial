@@ -169,8 +169,8 @@ function run(renderer: Renderer, task: () => void): boolean {
 }
 
 class Context {
-  lambdas = vec3(680, 550, 440).toVar()
-  luminanceFromRadiance = mat3(new Matrix3().identity()).toVar()
+  lambdas = vec3(680, 550, 440)
+  luminanceFromRadiance = mat3(new Matrix3().identity())
 
   opticalDepthRT = createRenderTarget('opticalDepth')
   deltaIrradianceRT = createRenderTarget('deltaIrradiance')
@@ -410,9 +410,13 @@ export class AtmosphereLUTNode extends TempNode {
     { opticalDepthRT }: Context
   ): void {
     const transmittance = computeTransmittanceToTopAtmosphereBoundaryTexture(
-      this.parameters.getUniforms(),
       screenCoordinate
-    ).toVar()
+    ).context({
+      atmosphere: {
+        parameters: this.parameters,
+        uniforms: this.parameters.getUniforms()
+      }
+    })
 
     if (this.parameters.transmittancePrecisionLog) {
       // Compute the optical depth, and store it in opticalDepth. Avoid having
@@ -439,14 +443,18 @@ export class AtmosphereLUTNode extends TempNode {
     { deltaIrradianceRT, opticalDepthRT }: Context
   ): void {
     const irradiance = computeDirectIrradianceTexture(
-      this.parameters.getUniforms(),
       texture(
         this.parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
       screenCoordinate
-    )
+    ).context({
+      atmosphere: {
+        parameters: this.parameters,
+        uniforms: this.parameters.getUniforms()
+      }
+    })
 
     this.material.fragmentNode = mrt({
       deltaIrradiance: vec4(irradiance, 1),
@@ -473,15 +481,21 @@ export class AtmosphereLUTNode extends TempNode {
     }: Context
   ): void {
     const layer = uniform(0)
+
     const singleScattering = computeSingleScatteringTexture(
-      this.parameters.getUniforms(),
       texture(
         this.parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
       vec3(screenCoordinate, layer.add(0.5))
-    ).toVar()
+    ).context({
+      atmosphere: {
+        parameters: this.parameters,
+        uniforms: this.parameters.getUniforms()
+      }
+    })
+
     const rayleigh = singleScattering.get('rayleigh')
     const mie = singleScattering.get('mie')
 
@@ -493,6 +507,7 @@ export class AtmosphereLUTNode extends TempNode {
       deltaRayleighScattering: vec4(rayleigh, 1),
       deltaMieScattering: vec4(mie.mul(luminanceFromRadiance), 1)
     })
+
     this.material.additive = true
     this.material.needsUpdate = true
 
@@ -528,7 +543,6 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const layer = uniform(0)
     const radiance = computeScatteringDensityTexture(
-      this.parameters.getUniforms(),
       texture(
         this.parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
@@ -540,7 +554,12 @@ export class AtmosphereLUTNode extends TempNode {
       texture(deltaIrradianceRT.texture),
       vec3(screenCoordinate, layer.add(0.5)),
       int(scatteringOrder)
-    )
+    ).context({
+      atmosphere: {
+        parameters: this.parameters,
+        uniforms: this.parameters.getUniforms()
+      }
+    })
 
     this.material.fragmentNode = vec4(radiance, 1)
     this.material.additive = false
@@ -561,13 +580,17 @@ export class AtmosphereLUTNode extends TempNode {
     scatteringOrder: number
   ): void {
     const irradiance = computeIndirectIrradianceTexture(
-      this.parameters.getUniforms(),
       texture3D(deltaRayleighScatteringRT.texture),
       texture3D(deltaMieScatteringRT.texture),
       texture3D(deltaMultipleScatteringRT.texture),
       screenCoordinate,
       int(scatteringOrder - 1)
-    ).toVar()
+    ).context({
+      atmosphere: {
+        parameters: this.parameters,
+        uniforms: this.parameters.getUniforms()
+      }
+    })
 
     this.material.fragmentNode = mrt({
       deltaIrradiance: irradiance,
@@ -595,7 +618,6 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const layer = uniform(0)
     const multipleScattering = computeMultipleScatteringTexture(
-      this.parameters.getUniforms(),
       texture(
         this.parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
@@ -603,13 +625,18 @@ export class AtmosphereLUTNode extends TempNode {
       ),
       texture3D(deltaScatteringDensityRT.texture),
       vec3(screenCoordinate, layer.add(0.5))
-    ).toVar()
+    ).context({
+      atmosphere: {
+        parameters: this.parameters,
+        uniforms: this.parameters.getUniforms()
+      }
+    })
+
     const radiance = multipleScattering.get('radiance')
     const cosViewSun = multipleScattering.get('cosViewSun')
     const luminance = radiance
       .mul(luminanceFromRadiance)
       .div(rayleighPhaseFunction(cosViewSun))
-      .toVar()
 
     const mrtLayout: Record<string, Node> = {
       scattering: vec4(luminance, 0),
