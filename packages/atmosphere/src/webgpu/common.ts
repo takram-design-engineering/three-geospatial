@@ -98,7 +98,7 @@ export const clampCosine = /*#__PURE__*/ FnLayout({
   name: 'clampCosine',
   type: Dimensionless,
   inputs: [{ name: 'cosine', type: Dimensionless }]
-})(cosine => {
+})(([cosine]) => {
   return clamp(cosine, -1, 1)
 })
 
@@ -106,7 +106,7 @@ export const clampDistance = /*#__PURE__*/ FnLayout({
   name: 'clampDistance',
   type: Dimensionless,
   inputs: [{ name: 'cosine', type: Dimensionless }]
-})(distance => {
+})(([distance]) => {
   return max(distance, 0)
 })
 
@@ -114,7 +114,7 @@ export const clampRadius = /*#__PURE__*/ FnLayout({
   name: 'clampRadius',
   type: Length,
   inputs: [{ name: 'radius', type: Length }]
-})((radius, builder) => {
+})(([radius], builder) => {
   const { uniforms } = getAtmosphereContext(builder)
   return clamp(radius, uniforms.bottomRadius, uniforms.topRadius)
 })
@@ -123,7 +123,7 @@ export const safeSqrt = /*#__PURE__*/ FnLayout({
   name: 'safeSqrt',
   type: Dimensionless,
   inputs: [{ name: 'area', type: Area }]
-})(area => {
+})(([area]) => {
   return sqrt(max(area, 0))
 })
 
@@ -134,7 +134,7 @@ export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless }
   ]
-})((radius, cosView, builder) => {
+})(([radius, cosView], builder) => {
   const { uniforms } = getAtmosphereContext(builder)
   const discriminant = radius
     .pow2()
@@ -150,7 +150,7 @@ export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless }
   ]
-})((radius, cosView, builder) => {
+})(([radius, cosView], builder) => {
   const { uniforms } = getAtmosphereContext(builder)
   const discriminant = radius
     .pow2()
@@ -166,7 +166,7 @@ export const rayIntersectsGround = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless }
   ]
-})((radius, cosView, builder) => {
+})(([radius, cosView], builder) => {
   const { uniforms } = getAtmosphereContext(builder)
   return cosView
     .lessThan(0)
@@ -186,7 +186,7 @@ export const getTextureCoordFromUnitRange = /*#__PURE__*/ FnLayout({
     { name: 'unit', type: 'float' },
     { name: 'textureSize', type: 'float' }
   ]
-})((unit, textureSize) => {
+})(([unit, textureSize]) => {
   return div(0.5, textureSize).add(
     unit.mul(textureSize.reciprocal().oneMinus())
   )
@@ -199,7 +199,7 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless }
   ]
-})((radius, cosView, builder) => {
+})(([radius, cosView], builder) => {
   const { parameters, uniforms } = getAtmosphereContext(builder)
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -242,7 +242,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless }
   ]
-})((transmittanceTexture, radius, cosView, builder) => {
+})(([transmittanceTexture, radius, cosView], builder) => {
   const { parameters } = getAtmosphereContext(builder)
   const uv = getTransmittanceTextureUV(radius, cosView)
 
@@ -275,13 +275,13 @@ export const getTransmittance = /*#__PURE__*/ FnLayout({
     { name: 'rayLength', type: Length },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
-})((
+})(([
   transmittanceTexture,
   radius,
   cosView,
   rayLength,
   viewRayIntersectsGround
-) => {
+]) => {
   const radiusEnd = clampRadius(
     sqrt(
       rayLength
@@ -342,7 +342,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless }
   ]
-})((transmittanceTexture, radius, cosSun, builder) => {
+})(([transmittanceTexture, radius, cosSun], builder) => {
   const { uniforms } = getAtmosphereContext(builder)
   const sinHorizon = uniforms.bottomRadius.div(radius).toVar()
   const cosHorizon = sqrt(max(sinHorizon.pow2().oneMinus(), 0)).negate()
@@ -365,7 +365,7 @@ export const rayleighPhaseFunction = /*#__PURE__*/ FnLayout({
   name: 'rayleighPhaseFunction',
   type: InverseSolidAngle,
   inputs: [{ name: 'cosViewSun', type: Dimensionless }]
-})(cosViewSun => {
+})(([cosViewSun]) => {
   const k = div(3, mul(16, PI))
   return k.mul(cosViewSun.pow2().add(1))
 })
@@ -379,7 +379,7 @@ export const miePhaseFunction = /*#__PURE__*/ FnLayout({
     { name: 'g', type: Dimensionless },
     { name: 'cosViewSun', type: Dimensionless }
   ]
-})((g, cosViewSun) => {
+})(([g, cosViewSun]) => {
   const k = div(3, PI.mul(8)).mul(g.pow2().oneMinus()).div(g.pow2().add(2))
   return k
     .mul(cosViewSun.pow2().add(1))
@@ -397,7 +397,10 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     { name: 'cosViewSun', type: Dimensionless },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
-})((radius, cosView, cosSun, cosViewSun, viewRayIntersectsGround, builder) => {
+})((
+  [radius, cosView, cosSun, cosViewSun, viewRayIntersectsGround],
+  builder
+) => {
   const { parameters, uniforms } = getAtmosphereContext(builder)
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -499,12 +502,14 @@ export const getScattering = /*#__PURE__*/ FnLayout({
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
-  scatteringTexture,
-  radius,
-  cosView,
-  cosSun,
-  cosViewSun,
-  viewRayIntersectsGround,
+  [
+    scatteringTexture,
+    radius,
+    cosView,
+    cosSun,
+    cosViewSun,
+    viewRayIntersectsGround
+  ],
   builder
 ) => {
   const { parameters } = getAtmosphereContext(builder)
@@ -544,7 +549,7 @@ export const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosSun', type: Dimensionless }
   ]
-})((radius, cosSun, builder) => {
+})(([radius, cosSun], builder) => {
   const { parameters, uniforms } = getAtmosphereContext(builder)
   const radiusUnit = radius.remap(uniforms.bottomRadius, uniforms.topRadius)
   const cosSunUnit = cosSun.mul(0.5).add(0.5)
@@ -566,7 +571,7 @@ export const getIrradiance = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosSun', type: Dimensionless }
   ]
-})((irradianceTexture, radius, cosSun) => {
+})(([irradianceTexture, radius, cosSun]) => {
   const uv = getIrradianceTextureUV(radius, cosSun)
   return irradianceTexture.sample(uv).rgb
 })

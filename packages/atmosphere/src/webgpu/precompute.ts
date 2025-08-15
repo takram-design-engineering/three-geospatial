@@ -199,7 +199,7 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless }
   ]
-})((radius, cosView, builder) => {
+})(([radius, cosView], builder) => {
   const { parameters, uniforms } = getAtmosphereContext(builder)
 
   const opticalDepth = add(
@@ -240,7 +240,7 @@ const getUnitRangeFromTextureCoord = /*#__PURE__*/ FnLayout({
     { name: 'coord', type: 'float' },
     { name: 'textureSize', type: 'float' }
   ]
-})((coord, textureSize) => {
+})(([coord, textureSize]) => {
   const texelSize = textureSize.reciprocal()
   return coord.sub(texelSize.mul(0.5)).div(texelSize.oneMinus())
 })
@@ -258,7 +258,7 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   name: 'getParamsFromTransmittanceTextureUV',
   type: transmittanceParamsStruct,
   inputs: [{ name: 'uv', type: 'vec2' }]
-})((uv, builder) => {
+})(([uv], builder) => {
   const { parameters, uniforms } = getAtmosphereContext(builder)
   const cosViewUnit = getUnitRangeFromTextureCoord(
     uv.x,
@@ -305,7 +305,7 @@ export const computeTransmittanceToTopAtmosphereBoundaryTexture =
     name: 'computeTransmittanceToTopAtmosphereBoundaryTexture',
     type: DimensionlessSpectrum,
     inputs: [{ name: 'fragCoord', type: 'vec2' }]
-  })((fragCoord, builder) => {
+  })(([fragCoord], builder) => {
     const { parameters } = getAtmosphereContext(builder)
     const transmittanceParams = getParamsFromTransmittanceTextureUV(
       fragCoord.div(vec2(parameters.transmittanceTextureSize))
@@ -338,13 +338,15 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
-  transmittanceTexture,
-  radius,
-  cosView,
-  cosSun,
-  cosViewSun,
-  rayLength,
-  viewRayIntersectsGround,
+  [
+    transmittanceTexture,
+    radius,
+    cosView,
+    cosSun,
+    cosViewSun,
+    rayLength,
+    viewRayIntersectsGround
+  ],
   builder
 ) => {
   const { uniforms } = getAtmosphereContext(builder)
@@ -391,7 +393,7 @@ const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
-})((radius, cosView, viewRayIntersectsGround) => {
+})(([radius, cosView, viewRayIntersectsGround]) => {
   const result = float().toVar()
   If(viewRayIntersectsGround, () => {
     result.assign(distanceToBottomAtmosphereBoundary(radius, cosView))
@@ -414,12 +416,14 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
-  transmittanceTexture,
-  radius,
-  cosView,
-  cosSun,
-  cosViewSun,
-  viewRayIntersectsGround,
+  [
+    transmittanceTexture,
+    radius,
+    cosView,
+    cosSun,
+    cosViewSun,
+    viewRayIntersectsGround
+  ],
   builder
 ) => {
   const { uniforms } = getAtmosphereContext(builder)
@@ -488,7 +492,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   name: 'getParamsFromScatteringTextureCoord',
   type: scatteringParamsStruct,
   inputs: [{ name: 'coord', type: 'vec4' }]
-})((coord, builder) => {
+})(([coord], builder) => {
   const { parameters, uniforms } = getAtmosphereContext(builder)
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -615,7 +619,7 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
   name: 'getParamsFromScatteringTextureFragCoord',
   type: scatteringParamsStruct,
   inputs: [{ name: 'fragCoord', type: 'vec3' }]
-})((fragCoord, builder) => {
+})(([fragCoord], builder) => {
   const { parameters } = getAtmosphereContext(builder)
 
   const fragCoordCosViewSun = floor(
@@ -674,7 +678,7 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ FnLayout({
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'fragCoord', type: 'vec3' }
   ]
-})((transmittanceTexture, fragCoord) => {
+})(([transmittanceTexture, fragCoord]) => {
   const scatteringParams =
     getParamsFromScatteringTextureFragCoord(fragCoord).toVar()
   const radius = scatteringParams.get('radius')
@@ -710,15 +714,17 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
     { name: 'scatteringOrder', type: 'int' }
   ]
 })((
-  singleRayleighScatteringTexture,
-  singleMieScatteringTexture,
-  multipleScatteringTexture,
-  radius,
-  cosView,
-  cosSun,
-  cosViewSun,
-  viewRayIntersectsGround,
-  scatteringOrder,
+  [
+    singleRayleighScatteringTexture,
+    singleMieScatteringTexture,
+    multipleScatteringTexture,
+    radius,
+    cosView,
+    cosSun,
+    cosViewSun,
+    viewRayIntersectsGround,
+    scatteringOrder
+  ],
   builder
 ) => {
   const { uniforms } = getAtmosphereContext(builder)
@@ -779,16 +785,18 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
     { name: 'scatteringOrder', type: 'int' }
   ]
 })((
-  transmittanceTexture,
-  singleRayleighScatteringTexture,
-  singleMieScatteringTexture,
-  multipleScatteringTexture,
-  irradianceTexture,
-  radius,
-  cosView,
-  cosSun,
-  cosViewSun,
-  scatteringOrder,
+  [
+    transmittanceTexture,
+    singleRayleighScatteringTexture,
+    singleMieScatteringTexture,
+    multipleScatteringTexture,
+    irradianceTexture,
+    radius,
+    cosView,
+    cosSun,
+    cosViewSun,
+    scatteringOrder
+  ],
   builder
 ) => {
   const { uniforms } = getAtmosphereContext(builder)
@@ -939,7 +947,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
     { name: 'cosViewSun', type: Dimensionless },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
-})((
+})(([
   transmittanceTexture,
   scatteringDensityTexture,
   radius,
@@ -947,7 +955,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
   cosSun,
   cosViewSun,
   viewRayIntersectsGround
-) => {
+]) => {
   const SAMPLE_COUNT = 50
   const stepSize = distanceToNearestAtmosphereBoundary(
     radius,
@@ -1019,7 +1027,7 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ FnLayout({
     { name: 'fragCoord', type: 'vec3' },
     { name: 'scatteringOrder', type: 'int' }
   ]
-})((
+})(([
   transmittanceTexture,
   singleRayleighScatteringTexture,
   singleMieScatteringTexture,
@@ -1027,7 +1035,7 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ FnLayout({
   irradianceTexture,
   fragCoord,
   scatteringOrder
-) => {
+]) => {
   const scatteringParams =
     getParamsFromScatteringTextureFragCoord(fragCoord).toVar()
   const radius = scatteringParams.get('radius')
@@ -1065,7 +1073,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnLayout({
     { name: 'scatteringDensityTexture', type: ScatteringDensityTexture },
     { name: 'fragCoord', type: 'vec3' }
   ]
-})((transmittanceTexture, scatteringDensityTexture, fragCoord) => {
+})(([transmittanceTexture, scatteringDensityTexture, fragCoord]) => {
   const scatteringParams =
     getParamsFromScatteringTextureFragCoord(fragCoord).toVar()
   const radius = scatteringParams.get('radius')
@@ -1096,7 +1104,7 @@ const computeDirectIrradiance = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosSun', type: Dimensionless }
   ]
-})((transmittanceTexture, radius, cosSun, builder) => {
+})(([transmittanceTexture, radius, cosSun], builder) => {
   const { uniforms } = getAtmosphereContext(builder)
   const alpha = uniforms.sunAngularRadius
 
@@ -1135,14 +1143,14 @@ const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
     { name: 'cosSun', type: Dimensionless },
     { name: 'scatteringOrder', type: 'int' }
   ]
-})((
+})(([
   singleRayleighScatteringTexture,
   singleMieScatteringTexture,
   multipleScatteringTexture,
   radius,
   cosSun,
   scatteringOrder
-) => {
+]) => {
   const SAMPLE_COUNT = 32
   const deltaPhi = PI.div(SAMPLE_COUNT).toConst()
   const deltaTheta = PI.div(SAMPLE_COUNT).toConst()
@@ -1197,7 +1205,7 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
   name: 'getParamsFromIrradianceTextureUV',
   type: irradianceParamsStruct,
   inputs: [{ name: 'uv', type: 'vec2' }]
-})((uv, builder) => {
+})(([uv], builder) => {
   const { parameters, uniforms } = getAtmosphereContext(builder)
   const cosSunUnit = getUnitRangeFromTextureCoord(
     uv.x,
@@ -1222,7 +1230,7 @@ export const computeDirectIrradianceTexture = /*#__PURE__*/ FnLayout({
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'fragCoord', type: 'vec2' }
   ]
-})((transmittanceTexture, fragCoord, builder) => {
+})(([transmittanceTexture, fragCoord], builder) => {
   const { parameters } = getAtmosphereContext(builder)
   const irradianceParams = getParamsFromIrradianceTextureUV(
     fragCoord.div(vec2(parameters.irradianceTextureSize))
@@ -1244,11 +1252,13 @@ export const computeIndirectIrradianceTexture = /*#__PURE__*/ FnLayout({
     { name: 'scatteringOrder', type: 'int' }
   ]
 })((
-  singleRayleighScatteringTexture,
-  singleMieScatteringTexture,
-  multipleScatteringTexture,
-  fragCoord,
-  scatteringOrder,
+  [
+    singleRayleighScatteringTexture,
+    singleMieScatteringTexture,
+    multipleScatteringTexture,
+    fragCoord,
+    scatteringOrder
+  ],
   builder
 ) => {
   const { parameters } = getAtmosphereContext(builder)

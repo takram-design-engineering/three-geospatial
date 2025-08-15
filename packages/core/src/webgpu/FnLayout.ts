@@ -50,7 +50,7 @@ export type FnLayoutResult<
   Nodes extends readonly unknown[] = InferNodeObjects<Inputs>
 > = (
   callback: (
-    ...args: [...Nodes, NodeBuilder]
+    ...args: [] extends Nodes ? [NodeBuilder] : [Nodes, NodeBuilder]
   ) => InferNodeObject<T> | NodeObject<ShaderCallNodeInternal>
 ) => ShaderNodeFn<ProxiedTuple<Nodes>>
 
@@ -72,16 +72,9 @@ export function FnLayout<
   ...layout
 }: FnLayout<T, Inputs>): FnLayoutResult<T, Inputs> {
   return typeOnly
-    ? callback =>
-        Fn((args: unknown[], builder: NodeBuilder) =>
-          // @ts-expect-error Ignore
-          callback(...args, builder)
-        )
+    ? callback => Fn(callback as any)
     : callback =>
-        Fn((args: unknown[], builder: NodeBuilder) =>
-          // @ts-expect-error Ignore
-          callback(...args, builder)
-        ).setLayout({
+        Fn(callback as any).setLayout({
           ...layout,
           type: transformType(layout.type),
           inputs:
