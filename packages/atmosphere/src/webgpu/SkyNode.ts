@@ -1,6 +1,5 @@
 import type { Camera } from 'three'
 import {
-  abs,
   cos,
   equirectUV,
   Fn,
@@ -16,13 +15,13 @@ import {
   smoothstep,
   sqrt,
   uv,
-  vec2,
   vec3,
   vec4
 } from 'three/tsl'
 import { TempNode, TextureNode, type NodeBuilder } from 'three/webgpu'
 
 import {
+  equirectGrid,
   equirectWorld,
   Fnv,
   inverseProjectionMatrix,
@@ -112,21 +111,6 @@ const orenNayarDiffuse = /*#__PURE__*/ Fnv(
     const A = (1 / Math.PI) * (1 - 0.5 * (1 / 1.33) + 0.17 * (1 / 1.13))
     const B = (1 / Math.PI) * (0.45 * (1 / 1.09))
     return max(0, cosLight).mul(s.div(t).mul(B).add(A))
-  }
-)
-
-const equirectGrid = /*#__PURE__*/ Fnv(
-  (
-    direction: NodeObject<'vec3'>,
-    lineWidth: NodeObject<'float'>
-  ): Node<'float'> => {
-    const count = vec2(90, 45)
-    const uv = equirectUV(direction)
-    const deltaUV = fwidth(uv)
-    const width = lineWidth.mul(deltaUV).mul(0.5)
-    const distance = abs(uv.mul(count).fract().sub(0.5)).div(count)
-    const mask = smoothstep(width, width.add(deltaUV), distance).oneMinus()
-    return mask.x.add(mask.y).clamp(0, 1)
   }
 )
 
