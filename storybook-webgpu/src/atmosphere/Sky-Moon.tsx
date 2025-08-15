@@ -189,12 +189,12 @@ const PrimaryCircles: FC = () => {
         ref={ref => ref?.computeLineDistances()}
         geometry={semicircleGeometry}
         material={northMaterial}
-        rotation-z={Math.PI}
       />
       <lineObject
         ref={ref => ref?.computeLineDistances()}
         geometry={semicircleGeometry}
         material={material}
+        rotation-z={Math.PI}
       />
       <lineObject
         ref={ref => ref?.computeLineDistances()}
