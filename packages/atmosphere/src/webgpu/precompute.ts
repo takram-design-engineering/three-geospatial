@@ -335,7 +335,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
     { name: 'cosSun', type: Dimensionless },
     { name: 'cosViewSun', type: Dimensionless },
     { name: 'rayLength', type: Length },
-    { name: 'rayIntersectsGround', type: 'bool' }
+    { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
   transmittanceTexture,
@@ -478,7 +478,7 @@ const scatteringParamsStruct = /*#__PURE__*/ struct(
     cosView: Dimensionless,
     cosSun: Dimensionless,
     cosViewSun: Dimensionless,
-    rayIntersectsGround: 'bool'
+    viewRayIntersectsGround: 'bool'
   },
   'scatteringParams'
 )
@@ -508,7 +508,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   )
 
   const cosView = float().toVar()
-  const rayIntersectsGround = bool().toVar()
+  const viewRayIntersectsGround = bool().toVar()
   If(coord.z.lessThan(0.5), () => {
     // Distance to the ground for the ray (radius, cosView), and its minimum
     // and maximum values over all cosView - obtained for (radius, -1) and
@@ -540,7 +540,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
         )
       )
     )
-    rayIntersectsGround.assign(bool(true))
+    viewRayIntersectsGround.assign(bool(true))
   }).Else(() => {
     // Distance to the top atmosphere boundary for the ray (radius, cosView),
     // and its minimum and maximum values over all cosView - obtained for
@@ -572,7 +572,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
         )
       )
     )
-    rayIntersectsGround.assign(bool(false))
+    viewRayIntersectsGround.assign(bool(false))
   })
 
   const cosSunUnit = getUnitRangeFromTextureCoord(
@@ -606,7 +606,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     cosView,
     cosSun,
     cosViewSun,
-    rayIntersectsGround
+    viewRayIntersectsGround
   )
 })
 
@@ -641,7 +641,9 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
   const cosView = scatteringParams.get('cosView')
   const cosSun = scatteringParams.get('cosSun')
   const cosViewSun = scatteringParams.get('cosViewSun')
-  const rayIntersectsGround = scatteringParams.get('rayIntersectsGround')
+  const viewRayIntersectsGround = scatteringParams.get(
+    'viewRayIntersectsGround'
+  )
 
   // Clamp cosViewSun to its valid range of values, given cosView and cosSun.
   cosViewSun.assign(
@@ -660,7 +662,7 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
     cosView,
     cosSun,
     cosViewSun,
-    rayIntersectsGround
+    viewRayIntersectsGround
   )
 })
 
@@ -679,14 +681,16 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ FnLayout({
   const cosView = scatteringParams.get('cosView')
   const cosSun = scatteringParams.get('cosSun')
   const cosViewSun = scatteringParams.get('cosViewSun')
-  const rayIntersectsGround = scatteringParams.get('rayIntersectsGround')
+  const viewRayIntersectsGround = scatteringParams.get(
+    'viewRayIntersectsGround'
+  )
   return computeSingleScattering(
     transmittanceTexture,
     radius,
     cosView,
     cosSun,
     cosViewSun,
-    rayIntersectsGround
+    viewRayIntersectsGround
   )
 })
 
@@ -702,7 +706,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless },
     { name: 'cosSun', type: Dimensionless },
     { name: 'cosViewSun', type: Dimensionless },
-    { name: 'rayIntersectsGround', type: 'bool' },
+    { name: 'viewRayIntersectsGround', type: 'bool' },
     { name: 'scatteringOrder', type: 'int' }
   ]
 })((
@@ -713,7 +717,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
   cosView,
   cosSun,
   cosViewSun,
-  rayIntersectsGround,
+  viewRayIntersectsGround,
   scatteringOrder,
   builder
 ) => {
@@ -727,7 +731,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
       cosView,
       cosSun,
       cosViewSun,
-      rayIntersectsGround
+      viewRayIntersectsGround
     )
     const mie = getScattering(
       singleMieScatteringTexture,
@@ -735,7 +739,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
       cosView,
       cosSun,
       cosViewSun,
-      rayIntersectsGround
+      viewRayIntersectsGround
     )
     result.assign(
       add(
@@ -751,7 +755,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
         cosView,
         cosSun,
         cosViewSun,
-        rayIntersectsGround
+        viewRayIntersectsGround
       )
     )
   })
@@ -933,7 +937,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless },
     { name: 'cosSun', type: Dimensionless },
     { name: 'cosViewSun', type: Dimensionless },
-    { name: 'rayIntersectsGround', type: 'bool' }
+    { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
   transmittanceTexture,
@@ -942,13 +946,13 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
   cosView,
   cosSun,
   cosViewSun,
-  rayIntersectsGround
+  viewRayIntersectsGround
 ) => {
   const SAMPLE_COUNT = 50
   const stepSize = distanceToNearestAtmosphereBoundary(
     radius,
     cosView,
-    rayIntersectsGround
+    viewRayIntersectsGround
   )
     .div(SAMPLE_COUNT)
     .toVar()
@@ -981,7 +985,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
       cosViewI,
       cosSunI,
       cosViewSun,
-      rayIntersectsGround
+      viewRayIntersectsGround
     )
       .mul(
         getTransmittance(
@@ -989,7 +993,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
           radius,
           cosView,
           rayLength,
-          rayIntersectsGround
+          viewRayIntersectsGround
         )
       )
       .mul(stepSize)
@@ -1068,7 +1072,9 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnLayout({
   const cosView = scatteringParams.get('cosView')
   const cosSun = scatteringParams.get('cosSun')
   const cosViewSun = scatteringParams.get('cosViewSun')
-  const rayIntersectsGround = scatteringParams.get('rayIntersectsGround')
+  const viewRayIntersectsGround = scatteringParams.get(
+    'viewRayIntersectsGround'
+  )
   const radiance = computeMultipleScattering(
     transmittanceTexture,
     scatteringDensityTexture,
@@ -1076,7 +1082,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnLayout({
     cosView,
     cosSun,
     cosViewSun,
-    rayIntersectsGround
+    viewRayIntersectsGround
   )
   return multipleScatteringStruct(radiance, cosViewSun)
 })

@@ -156,7 +156,7 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless },
     { name: 'cosSun', type: Dimensionless },
     { name: 'cosViewSun', type: Dimensionless },
-    { name: 'rayIntersectsGround', type: 'bool' }
+    { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
   scatteringTexture,
@@ -165,7 +165,7 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
   cosView,
   cosSun,
   cosViewSun,
-  rayIntersectsGround,
+  viewRayIntersectsGround,
   builder
 ) => {
   const { parameters } = getAtmosphereContext(builder)
@@ -175,7 +175,7 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
     cosView,
     cosSun,
     cosViewSun,
-    rayIntersectsGround
+    viewRayIntersectsGround
   ).toVar()
   const texCoordX = coord.x
     .mul(parameters.scatteringTextureCosViewSunSize - 1)
