@@ -77,14 +77,8 @@ import {
   vec4
 } from 'three/tsl'
 
-import {
-  FnLayout,
-  Fnv,
-  type Node,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import { FnLayout } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import {
   clampRadius,
   getIrradiance,
@@ -112,9 +106,7 @@ import {
   Position,
   RadianceSpectrum,
   ReducedScatteringTexture,
-  TransmittanceTexture,
-  type ReducedScatteringTextureNode,
-  type TransmittanceTextureNode
+  TransmittanceTexture
 } from './dimensional'
 
 // TODO: Cannot add layouts on any of these functions due to unknown bugs in the
@@ -236,193 +228,186 @@ const radianceTransferStruct = /*#__PURE__*/ struct(
   },
   'radianceTransfer'
 )
-type RadianceTransferStruct = ReturnType<typeof radianceTransferStruct>
 
-interface SkyRadianceOptions {
-  constrainCamera?: boolean
-  showGround?: boolean
-}
+const getSkyRadiance = /*#__PURE__*/ FnLayout({
+  typeOnly: true,
+  name: 'getSkyRadiance',
+  type: radianceTransferStruct,
+  inputs: [
+    { name: 'transmittanceTexture', type: TransmittanceTexture },
+    { name: 'scatteringTexture', type: ReducedScatteringTexture },
+    { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
+    { name: 'higherOrderScatteringTexture', type: ReducedScatteringTexture },
+    { name: 'camera', type: Position },
+    { name: 'viewRay', type: Direction },
+    { name: 'shadowLength', type: Length },
+    { name: 'sunDirection', type: Direction }
+  ]
+})((
+  transmittanceTexture,
+  scatteringTexture,
+  singleMieScatteringTexture,
+  higherOrderScatteringTexture,
+  camera,
+  viewRay,
+  shadowLength,
+  sunDirection,
+  builder
+) => {
+  const { parameters, uniforms, options } = getAtmosphereContext(builder)
 
-const getSkyRadiance = /*#__PURE__*/ Fnv(
-  (
-    transmittanceTexture: NodeObject<TransmittanceTextureNode>,
-    scatteringTexture: NodeObject<ReducedScatteringTextureNode>,
-    singleMieScatteringTexture: NodeObject<ReducedScatteringTextureNode>,
-    higherOrderScatteringTexture: NodeObject<ReducedScatteringTextureNode>,
-    camera: NodeObject<Position>,
-    viewRay: NodeObject<Direction>,
-    shadowLength: NodeObject<Length>,
-    sunDirection: NodeObject<Direction>,
-    { constrainCamera = true, showGround = true }: SkyRadianceOptions = {}
-  ) =>
-    (builder): RadianceTransferStruct => {
-      const { parameters, uniforms } = getAtmosphereContext(builder)
+  // Clamp the viewer at the bottom atmosphere boundary for rendering points
+  // below it.
+  const radius = camera.length().toVar()
+  const movedCamera = camera.toVar()
+  if (options.constrainCamera) {
+    If(radius.lessThan(uniforms.bottomRadius), () => {
+      radius.assign(uniforms.bottomRadius)
+      movedCamera.assign(camera.normalize().mul(radius))
+    })
+  }
 
-      // Clamp the viewer at the bottom atmosphere boundary for rendering points
-      // below it.
-      const radius = camera.length().toVar()
-      const movedCamera = camera.toVar()
-      if (constrainCamera) {
-        If(radius.lessThan(uniforms.bottomRadius), () => {
-          radius.assign(uniforms.bottomRadius)
-          movedCamera.assign(camera.normalize().mul(radius))
-        })
-      }
+  // Compute the distance to the top atmosphere boundary along the view ray,
+  // assuming the viewer is in space.
+  const radiusCosView = movedCamera.dot(viewRay).toVar()
+  const distanceToTop = radiusCosView
+    .negate()
+    .sub(
+      safeSqrt(
+        radiusCosView.pow2().sub(radius.pow2()).add(uniforms.topRadius.pow2())
+      )
+    )
+    .toVar()
 
-      // Compute the distance to the top atmosphere boundary along the view ray,
-      // assuming the viewer is in space.
-      const radiusCosView = movedCamera.dot(viewRay).toVar()
-      const distanceToTop = radiusCosView
-        .negate()
-        .sub(
-          safeSqrt(
-            radiusCosView
-              .pow2()
-              .sub(radius.pow2())
-              .add(uniforms.topRadius.pow2())
-          )
-        )
-        .toVar()
+  // If the viewer is in space and the view ray intersects the atmosphere,
+  // move the viewer to the top atmosphere boundary along the view ray.
+  If(distanceToTop.greaterThan(0), () => {
+    movedCamera.assign(movedCamera.add(viewRay.mul(distanceToTop)))
+    radius.assign(uniforms.topRadius)
+    radiusCosView.addAssign(distanceToTop)
+  })
 
-      // If the viewer is in space and the view ray intersects the atmosphere,
-      // move the viewer to the top atmosphere boundary along the view ray.
-      If(distanceToTop.greaterThan(0), () => {
-        movedCamera.assign(movedCamera.add(viewRay.mul(distanceToTop)))
-        radius.assign(uniforms.topRadius)
-        radiusCosView.addAssign(distanceToTop)
-      })
+  const radiance = vec3(0).toVar()
+  const transmittance = vec3(1).toVar()
 
-      const radiance = vec3(0).toVar()
-      const transmittance = vec3(1).toVar()
+  // If the view ray does not intersect the atmosphere, simply return 0.
+  If(radius.lessThanEqual(uniforms.topRadius), () => {
+    // Compute the scattering parameters needed for the texture lookups.
+    const cosView = radiusCosView.div(radius).toVar()
+    const cosSun = movedCamera.dot(sunDirection).div(radius).toVar()
+    const cosViewSun = viewRay.dot(sunDirection).toVar()
 
-      // If the view ray does not intersect the atmosphere, simply return 0.
-      If(radius.lessThanEqual(uniforms.topRadius), () => {
-        // Compute the scattering parameters needed for the texture lookups.
-        const cosView = radiusCosView.div(radius).toVar()
-        const cosSun = movedCamera.dot(sunDirection).div(radius).toVar()
-        const cosViewSun = viewRay.dot(sunDirection).toVar()
+    const viewRayIntersectsGround = rayIntersectsGround(radius, cosView).toVar()
+    const scatteringRayIntersectsGround = options.showGround
+      ? viewRayIntersectsGround
+      : bool(false)
 
-        const viewRayIntersectsGround = rayIntersectsGround(
+    transmittance.assign(
+      select(
+        viewRayIntersectsGround,
+        vec3(0),
+        getTransmittanceToTopAtmosphereBoundary(
+          transmittanceTexture,
           radius,
           cosView
+        )
+      )
+    )
+
+    const scattering = vec3().toVar()
+    const singleMieScattering = vec3().toVar()
+
+    If(shadowLength.equal(0), () => {
+      const combinedScattering = getCombinedScattering(
+        scatteringTexture,
+        singleMieScatteringTexture,
+        radius,
+        cosView,
+        cosSun,
+        cosViewSun,
+        scatteringRayIntersectsGround
+      ).toVar()
+      scattering.assign(combinedScattering.get('scattering'))
+      singleMieScattering.assign(combinedScattering.get('singleMieScattering'))
+    }).Else(() => {
+      // Case of light shafts, we omit the scattering between the camera and
+      // the point at shadowLength.
+      const radiusP = clampRadius(
+        sqrt(
+          shadowLength
+            .pow2()
+            .add(mul(2, radius, cosView, shadowLength))
+            .add(radius.pow2())
+        )
+      ).toVar()
+      const cosViewP = radius
+        .mul(cosView)
+        .add(shadowLength)
+        .div(radiusP)
+        .toVar()
+      const cosSunP = radius
+        .mul(cosSun)
+        .add(shadowLength.mul(cosViewSun))
+        .div(radiusP)
+        .toVar()
+
+      const combinedScattering = getCombinedScattering(
+        scatteringTexture,
+        singleMieScatteringTexture,
+        radiusP,
+        cosViewP,
+        cosSunP,
+        cosViewSun,
+        scatteringRayIntersectsGround
+      ).toVar()
+      scattering.assign(combinedScattering.get('scattering'))
+      singleMieScattering.assign(combinedScattering.get('singleMieScattering'))
+
+      const shadowTransmittance = getTransmittance(
+        transmittanceTexture,
+        radius,
+        cosView,
+        shadowLength,
+        scatteringRayIntersectsGround
+      ).toVar()
+
+      // Occlude only single Rayleigh scattering by the shadow.
+      if (parameters.higherOrderScatteringTexture) {
+        const higherOrderScattering = getScattering(
+          higherOrderScatteringTexture,
+          radiusP,
+          cosViewP,
+          cosSunP,
+          cosViewSun,
+          scatteringRayIntersectsGround
         ).toVar()
-        const scatteringRayIntersectsGround = showGround
-          ? viewRayIntersectsGround
-          : bool(false)
-
-        transmittance.assign(
-          select(
-            viewRayIntersectsGround,
-            vec3(0),
-            getTransmittanceToTopAtmosphereBoundary(
-              transmittanceTexture,
-              radius,
-              cosView
-            )
-          )
-        )
-
-        const scattering = vec3().toVar()
-        const singleMieScattering = vec3().toVar()
-
-        If(shadowLength.equal(0), () => {
-          const combinedScattering = getCombinedScattering(
-            scatteringTexture,
-            singleMieScatteringTexture,
-            radius,
-            cosView,
-            cosSun,
-            cosViewSun,
-            scatteringRayIntersectsGround
-          ).toVar()
-          scattering.assign(combinedScattering.get('scattering'))
-          singleMieScattering.assign(
-            combinedScattering.get('singleMieScattering')
-          )
-        }).Else(() => {
-          // Case of light shafts, we omit the scattering between the camera and
-          // the point at shadowLength.
-          const radiusP = clampRadius(
-            sqrt(
-              shadowLength
-                .pow2()
-                .add(mul(2, radius, cosView, shadowLength))
-                .add(radius.pow2())
-            )
-          ).toVar()
-          const cosViewP = radius
-            .mul(cosView)
-            .add(shadowLength)
-            .div(radiusP)
-            .toVar()
-          const cosSunP = radius
-            .mul(cosSun)
-            .add(shadowLength.mul(cosViewSun))
-            .div(radiusP)
-            .toVar()
-
-          const combinedScattering = getCombinedScattering(
-            scatteringTexture,
-            singleMieScatteringTexture,
-            radiusP,
-            cosViewP,
-            cosSunP,
-            cosViewSun,
-            scatteringRayIntersectsGround
-          ).toVar()
-          scattering.assign(combinedScattering.get('scattering'))
-          singleMieScattering.assign(
-            combinedScattering.get('singleMieScattering')
-          )
-
-          const shadowTransmittance = getTransmittance(
-            transmittanceTexture,
-            radius,
-            cosView,
-            shadowLength,
-            scatteringRayIntersectsGround
-          ).toVar()
-
-          // Occlude only single Rayleigh scattering by the shadow.
-          if (parameters.higherOrderScatteringTexture) {
-            const higherOrderScattering = getScattering(
-              higherOrderScatteringTexture,
-              radiusP,
-              cosViewP,
-              cosSunP,
-              cosViewSun,
-              scatteringRayIntersectsGround
-            ).toVar()
-            scattering.assign(
-              scattering
-                .sub(higherOrderScattering)
-                .mul(shadowTransmittance)
-                .add(higherOrderScattering)
-            )
-          } else {
-            scattering.assign(scattering.mul(shadowTransmittance))
-          }
-          singleMieScattering.assign(
-            singleMieScattering.mul(shadowTransmittance)
-          )
-        })
-
-        // Finally combine the multiple Rayleigh scattering and the single Mie
-        // scattering, applying their phase functions.
-        radiance.assign(
+        scattering.assign(
           scattering
-            .mul(rayleighPhaseFunction(cosViewSun))
-            .add(
-              singleMieScattering.mul(
-                miePhaseFunction(uniforms.miePhaseFunctionG, cosViewSun)
-              )
-            )
+            .sub(higherOrderScattering)
+            .mul(shadowTransmittance)
+            .add(higherOrderScattering)
         )
-      })
+      } else {
+        scattering.assign(scattering.mul(shadowTransmittance))
+      }
+      singleMieScattering.assign(singleMieScattering.mul(shadowTransmittance))
+    })
 
-      return radianceTransferStruct(radiance, transmittance)
-    }
-)
+    // Finally combine the multiple Rayleigh scattering and the single Mie
+    // scattering, applying their phase functions.
+    radiance.assign(
+      scattering
+        .mul(rayleighPhaseFunction(cosViewSun))
+        .add(
+          singleMieScattering.mul(
+            miePhaseFunction(uniforms.miePhaseFunctionG, cosViewSun)
+          )
+        )
+    )
+  })
+
+  return radianceTransferStruct(radiance, transmittance)
+})
 
 const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   typeOnly: true,
@@ -859,73 +844,70 @@ const luminanceTransferStruct = /*#__PURE__*/ struct(
   },
   'luminanceTransfer'
 )
-type LuminanceTransferStruct = ReturnType<typeof luminanceTransferStruct>
 
-export interface SkyLuminanceOptions extends SkyRadianceOptions {}
+export const getSkyLuminance = /*#__PURE__*/ FnLayout({
+  typeOnly: true,
+  name: 'getSkyLuminance',
+  type: luminanceTransferStruct,
+  inputs: [
+    { name: 'camera', type: Position },
+    { name: 'viewRay', type: Direction },
+    { name: 'shadowLength', type: Length },
+    { name: 'sunDirection', type: Direction }
+  ]
+})((camera, viewRay, shadowLength, sunDirection, builder) => {
+  const { uniforms, textures } = getAtmosphereContext(builder)
+  const radianceTransfer = getSkyRadiance(
+    textures.transmittance,
+    textures.scattering,
+    textures.singleMieScattering,
+    textures.higherOrderScattering,
+    camera,
+    viewRay,
+    shadowLength,
+    sunDirection
+  ).toVar()
 
-export const getSkyLuminance = /*#__PURE__*/ Fnv(
-  (
-    lutNode: AtmosphereLUTNode,
-    camera: NodeObject<Position>,
-    viewRay: NodeObject<Direction>,
-    shadowLength: NodeObject<Length>,
-    sunDirection: NodeObject<Direction>,
-    options?: SkyLuminanceOptions
-  ) =>
-    (builder): LuminanceTransferStruct => {
-      const { uniforms } = getAtmosphereContext(builder)
-      const radianceTransfer = getSkyRadiance(
-        lutNode.getTextureNode('transmittance'),
-        lutNode.getTextureNode('scattering'),
-        lutNode.getTextureNode('singleMieScattering'),
-        lutNode.getTextureNode('higherOrderScattering'),
-        camera,
-        viewRay,
-        shadowLength,
-        sunDirection,
-        options
-      ).toVar()
+  const luminance = radianceTransfer
+    .get('radiance')
+    .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
+  return luminanceTransferStruct(
+    luminance,
+    radianceTransfer.get('transmittance')
+  )
+})
 
-      const luminance = radianceTransfer
-        .get('radiance')
-        .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
-      return luminanceTransferStruct(
-        luminance,
-        radianceTransfer.get('transmittance')
-      )
-    }
-)
+export const getSkyLuminanceToPoint = /*#__PURE__*/ FnLayout({
+  typeOnly: true,
+  name: 'getSkyLuminanceToPoint',
+  type: luminanceTransferStruct,
+  inputs: [
+    { name: 'camera', type: Position },
+    { name: 'point', type: Position },
+    { name: 'shadowLength', type: Length },
+    { name: 'sunDirection', type: Direction }
+  ]
+})((camera, point, shadowLength, sunDirection, builder) => {
+  const { uniforms, textures } = getAtmosphereContext(builder)
+  const radianceTransfer = getSkyRadianceToPoint(
+    textures.transmittance,
+    textures.scattering,
+    textures.singleMieScattering,
+    textures.higherOrderScattering,
+    camera,
+    point,
+    shadowLength,
+    sunDirection
+  ).toVar()
 
-export const getSkyLuminanceToPoint = /*#__PURE__*/ Fnv(
-  (
-    lutNode: AtmosphereLUTNode,
-    camera: NodeObject<Position>,
-    point: NodeObject<Position>,
-    shadowLength: NodeObject<Length>,
-    sunDirection: NodeObject<Direction>
-  ) =>
-    (builder): LuminanceTransferStruct => {
-      const { uniforms } = getAtmosphereContext(builder)
-      const radianceTransfer = getSkyRadianceToPoint(
-        lutNode.getTextureNode('transmittance'),
-        lutNode.getTextureNode('scattering'),
-        lutNode.getTextureNode('singleMieScattering'),
-        lutNode.getTextureNode('higherOrderScattering'),
-        camera,
-        point,
-        shadowLength,
-        sunDirection
-      ).toVar()
-
-      const luminance = radianceTransfer
-        .get('radiance')
-        .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
-      return luminanceTransferStruct(
-        luminance,
-        radianceTransfer.get('transmittance')
-      )
-    }
-)
+  const luminance = radianceTransfer
+    .get('radiance')
+    .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
+  return luminanceTransferStruct(
+    luminance,
+    radianceTransfer.get('transmittance')
+  )
+})
 
 const sunAndSkyIlluminanceStruct = /*#__PURE__*/ struct(
   {
@@ -934,78 +916,80 @@ const sunAndSkyIlluminanceStruct = /*#__PURE__*/ struct(
   },
   'sunAndSkyIlluminance'
 )
-type SunAndSkyIlluminanceStruct = ReturnType<typeof sunAndSkyIlluminanceStruct>
 
-export const getSunAndSkyIlluminance = /*#__PURE__*/ Fnv(
-  (
-    lutNode: AtmosphereLUTNode,
-    point: NodeObject<Position>,
-    normal: NodeObject<Direction>,
-    sunDirection: NodeObject<Direction>
-  ) =>
-    (builder): SunAndSkyIlluminanceStruct => {
-      const { uniforms } = getAtmosphereContext(builder)
-      const sunSkyIrradiance = getSunAndSkyIrradiance(
-        lutNode.getTextureNode('transmittance'),
-        lutNode.getTextureNode('irradiance'),
-        point,
-        normal,
-        sunDirection
-      ).toVar()
+export const getSunAndSkyIlluminance = /*#__PURE__*/ FnLayout({
+  typeOnly: true,
+  name: 'getSunAndSkyIlluminance',
+  type: sunAndSkyIlluminanceStruct,
+  inputs: [
+    { name: 'point', type: Position },
+    { name: 'normal', type: Direction },
+    { name: 'sunDirection', type: Direction }
+  ]
+})((point, normal, sunDirection, builder) => {
+  const { uniforms, textures } = getAtmosphereContext(builder)
+  const sunSkyIrradiance = getSunAndSkyIrradiance(
+    textures.transmittance,
+    textures.irradiance,
+    point,
+    normal,
+    sunDirection
+  ).toVar()
 
-      const sunIlluminance = sunSkyIrradiance
-        .get('sunIrradiance')
-        .mul(uniforms.sunRadianceToLuminance.mul(uniforms.luminanceScale))
-      const skyIlluminance = sunSkyIrradiance
-        .get('skyIrradiance')
-        .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
-      return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
-    }
-)
+  const sunIlluminance = sunSkyIrradiance
+    .get('sunIrradiance')
+    .mul(uniforms.sunRadianceToLuminance.mul(uniforms.luminanceScale))
+  const skyIlluminance = sunSkyIrradiance
+    .get('skyIrradiance')
+    .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
+  return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
+})
 
-export const getSkyIlluminance = /*#__PURE__*/ Fnv(
-  (
-    lutNode: AtmosphereLUTNode,
-    point: NodeObject<Position>,
-    normal: NodeObject<Direction>,
-    sunDirection: NodeObject<Direction>
-  ) =>
-    (builder): Node<Illuminance3> => {
-      const { uniforms } = getAtmosphereContext(builder)
-      const sunSkyIrradiance = getSkyIrradiance(
-        lutNode.getTextureNode('irradiance'),
-        point,
-        normal,
-        sunDirection
-      )
-      return sunSkyIrradiance.mul(
-        uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale)
-      )
-    }
-)
+export const getSkyIlluminance = /*#__PURE__*/ FnLayout({
+  typeOnly: true,
+  name: 'getSkyIlluminance',
+  type: Illuminance3,
+  inputs: [
+    { name: 'point', type: Position },
+    { name: 'normal', type: Direction },
+    { name: 'sunDirection', type: Direction }
+  ]
+})((point, normal, sunDirection, builder) => {
+  const { uniforms, textures } = getAtmosphereContext(builder)
+  const sunSkyIrradiance = getSkyIrradiance(
+    textures.irradiance,
+    point,
+    normal,
+    sunDirection
+  )
+  return sunSkyIrradiance.mul(
+    uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale)
+  )
+})
 
 // Added for the cloud particles.
-export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ Fnv(
-  (
-    lutNode: AtmosphereLUTNode,
-    point: NodeObject<Position>,
-    sunDirection: NodeObject<Direction>
-  ) =>
-    (builder): SunAndSkyIlluminanceStruct => {
-      const { uniforms } = getAtmosphereContext(builder)
-      const sunSkyIrradiance = getSunAndSkyScalarIrradiance(
-        lutNode.getTextureNode('transmittance'),
-        lutNode.getTextureNode('irradiance'),
-        point,
-        sunDirection
-      ).toVar()
+export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ FnLayout({
+  typeOnly: true,
+  name: 'getSunAndSkyScalarIlluminance',
+  type: sunAndSkyIlluminanceStruct,
+  inputs: [
+    { name: 'point', type: Position },
+    { name: 'sunDirection', type: Direction }
+  ]
+})((point, sunDirection, builder) => {
+  const { uniforms, textures } = getAtmosphereContext(builder)
+  const sunSkyIrradiance = getSunAndSkyScalarIrradiance(
+    textures.transmittance,
+    textures.irradiance,
+    point,
+    sunDirection
+  ).toVar()
 
-      const sunIlluminance = sunSkyIrradiance
-        .get('sunIrradiance')
-        .mul(uniforms.sunRadianceToLuminance.mul(uniforms.luminanceScale))
-      const skyIlluminance = sunSkyIrradiance
-        .get('skyIrradiance')
-        .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
-      return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
-    }
-)
+  const sunIlluminance = sunSkyIrradiance
+    .get('sunIrradiance')
+    .mul(uniforms.sunRadianceToLuminance.mul(uniforms.luminanceScale))
+  const skyIlluminance = sunSkyIrradiance
+    .get('skyIrradiance')
+    .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
+  return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
+})

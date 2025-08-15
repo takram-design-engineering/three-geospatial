@@ -387,7 +387,7 @@ export const miePhaseFunction = /*#__PURE__*/ FnLayout({
 })
 
 export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // WORKAROUND: Adding a layout on this breaks the reference to minCosSun.
+  typeOnly: true, // WORKAROUND: Adding a layout on this breaks the reference to uniforms.
   type: 'vec4',
   name: 'getScatteringTextureCoord',
   inputs: [
@@ -537,6 +537,7 @@ export const getScattering = /*#__PURE__*/ FnLayout({
 })
 
 export const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
+  typeOnly: true, // WORKAROUND: Adding a layout on this breaks the reference to uniforms.
   name: 'getIrradianceTextureUV',
   type: 'vec2',
   inputs: [
