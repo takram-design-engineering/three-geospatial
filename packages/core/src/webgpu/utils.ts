@@ -31,6 +31,7 @@ function getNodeTypes<T extends {}>(target: T): Record<keyof T, NodeType> {
 export interface ReferenceOptions {
   group?: UniformGroupNode
   withName?: boolean
+  prefix?: string
 }
 
 export interface ReferenceFunction<T extends {}> {
@@ -46,7 +47,7 @@ export interface ReferenceFunction<T extends {}> {
 
 export function referenceTo<T extends {}>(
   target: T,
-  { group, withName = false }: ReferenceOptions = {}
+  { group, withName = false, prefix = '' }: ReferenceOptions = {}
 ): ReferenceFunction<T> {
   const nodeTypes = getNodeTypes(target)
   return <K extends NodeValuePropertyKey<T>>(
@@ -89,7 +90,7 @@ export function referenceTo<T extends {}>(
       result = result.setGroup(group)
     }
     if (withName) {
-      result = result.setName(propertyName as string)
+      result = result.setName(`${prefix}${propertyName as string}`)
     }
     return result
   }

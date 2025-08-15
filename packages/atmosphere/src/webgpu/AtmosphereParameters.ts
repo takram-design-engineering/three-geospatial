@@ -39,14 +39,19 @@ export class DensityProfileLayer {
 
   private uniforms?: DensityProfileLayerUniforms
 
-  getUniforms(owner: AtmosphereParameters): DensityProfileLayerUniforms {
-    return (this.uniforms ??= this.createUniforms(owner))
+  getUniforms(
+    owner: AtmosphereParameters,
+    prefix: string
+  ): DensityProfileLayerUniforms {
+    return (this.uniforms ??= this.createUniforms(owner, prefix))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createUniforms(owner: AtmosphereParameters) {
+  createUniforms(owner: AtmosphereParameters, prefix: string) {
     const reference = referenceTo<DensityProfileLayer>(this, {
-      group: groupNode
+      group: groupNode,
+      withName: true,
+      prefix: `${prefix}_`
     })
     return {
       width: reference('width', value => value * owner.worldToUnit),
@@ -104,16 +109,19 @@ export class DensityProfile {
 
   private uniforms?: DensityProfileUniforms
 
-  getUniforms(owner: AtmosphereParameters): DensityProfileUniforms {
-    return (this.uniforms ??= this.createUniforms(owner))
+  getUniforms(
+    owner: AtmosphereParameters,
+    prefix: string
+  ): DensityProfileUniforms {
+    return (this.uniforms ??= this.createUniforms(owner, prefix))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createUniforms(owner: AtmosphereParameters) {
+  createUniforms(owner: AtmosphereParameters, prefix: string) {
     return {
       layers: [
-        this.layers[0].getUniforms(owner),
-        this.layers[1].getUniforms(owner)
+        this.layers[0].getUniforms(owner, `${prefix}_0`),
+        this.layers[1].getUniforms(owner, `${prefix}_1`)
       ] as const
     }
   }
@@ -274,11 +282,14 @@ export class AtmosphereParameters {
         value => value * this.worldToUnit
       ),
       topRadius: reference('topRadius', value => value * this.worldToUnit),
-      rayleighDensity: this.rayleighDensity.getUniforms(this),
+      rayleighDensity: this.rayleighDensity.getUniforms(
+        this,
+        'rayleighDensity'
+      ),
       rayleighScattering: reference('rayleighScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
-      mieDensity: this.mieDensity.getUniforms(this),
+      mieDensity: this.mieDensity.getUniforms(this, 'mieDensity'),
       mieScattering: reference('mieScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
@@ -286,7 +297,10 @@ export class AtmosphereParameters {
         value.divideScalar(this.worldToUnit)
       ),
       miePhaseFunctionG: reference('miePhaseFunctionG'),
-      absorptionDensity: this.absorptionDensity.getUniforms(this),
+      absorptionDensity: this.absorptionDensity.getUniforms(
+        this,
+        'absorptionDensity'
+      ),
       absorptionExtinction: reference('absorptionExtinction', value =>
         value.divideScalar(this.worldToUnit)
       ),
