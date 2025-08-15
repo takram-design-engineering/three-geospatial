@@ -88,17 +88,3 @@ export function FnLayout<
             })) ?? []
         })
 }
-
-// Example:
-// const s = struct({ a: 'vec3', b: 'float' })
-// const f = FnLayout({
-//   name: 'f',
-//   type: s,
-//   inputs: [
-//     { name: 'a', type: 'vec3' },
-//     { name: 'b', type: 'float' },
-//     { name: 'c', type: 'float' }
-//   ]
-// })(([a, b, c]) => {
-//   return s(a.mul(b).add(c), b.mul(c))
-// })
