@@ -13,14 +13,14 @@ import type { NodeObject, NodeType } from './node'
 // texture types.
 type FnLayoutType = NodeType | Struct | 'texture' | 'texture3D'
 
-export interface FnInputLayout<T extends FnLayoutType = FnLayoutType> {
+export interface FnLayoutInput<T extends FnLayoutType = FnLayoutType> {
   name: string
   type: T
 }
 
 export interface FnLayout<
   T extends FnLayoutType,
-  Inputs extends readonly FnInputLayout[] = []
+  Inputs extends readonly FnLayoutInput[] = []
 > {
   typeOnly?: boolean
   name: string
@@ -28,7 +28,7 @@ export interface FnLayout<
   inputs?: Inputs
 }
 
-type InferLayoutType<T extends FnLayoutType> = T extends NodeType
+type InferNodeType<T extends FnLayoutType> = T extends NodeType
   ? NodeObject<T>
   : T extends Struct
     ? ReturnType<T>
@@ -38,20 +38,20 @@ type InferLayoutType<T extends FnLayoutType> = T extends NodeType
         ? NodeObject<Texture3DNode>
         : never
 
-type InferCallbackArgs<Inputs extends readonly FnInputLayout[]> = {
-  [K in keyof Inputs]: Inputs[K] extends FnInputLayout<infer U>
-    ? InferLayoutType<U>
+type InferCallbackArgs<Inputs extends readonly FnLayoutInput[]> = {
+  [K in keyof Inputs]: Inputs[K] extends FnLayoutInput<infer U>
+    ? InferNodeType<U>
     : never
 }
 
-type FnLayoutResult<
+export type FnLayoutResult<
   T extends FnLayoutType,
-  Inputs extends readonly FnInputLayout[],
+  Inputs extends readonly FnLayoutInput[],
   Args extends readonly unknown[] = InferCallbackArgs<Inputs>
 > = (
   callback: (
     ...args: [...Args, NodeBuilder]
-  ) => InferLayoutType<T> | NodeObject<ShaderCallNodeInternal>
+  ) => InferNodeType<T> | NodeObject<ShaderCallNodeInternal>
 ) => ShaderNodeFn<ProxiedTuple<Args>>
 
 function transformType(type: FnLayoutType): string {
@@ -66,9 +66,12 @@ function transformType(type: FnLayoutType): string {
 
 export function FnLayout<
   T extends FnLayoutType,
-  const Inputs extends readonly FnInputLayout[] = []
->(layout: FnLayout<T, Inputs>): FnLayoutResult<T, Inputs> {
-  return layout.typeOnly === true
+  const Inputs extends readonly FnLayoutInput[] = []
+>({
+  typeOnly = false,
+  ...layout
+}: FnLayout<T, Inputs>): FnLayoutResult<T, Inputs> {
+  return typeOnly
     ? callback =>
         Fn((args: unknown[], builder: NodeBuilder) =>
           // @ts-expect-error Ignore
