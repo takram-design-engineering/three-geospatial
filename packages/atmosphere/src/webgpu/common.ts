@@ -235,8 +235,8 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
 
 export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
   typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
-  type: DimensionlessSpectrum,
   name: 'getTransmittanceToTopAtmosphereBoundary',
+  type: DimensionlessSpectrum,
   inputs: [
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'radius', type: Length },
@@ -266,8 +266,8 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
 
 export const getTransmittance = /*#__PURE__*/ FnLayout({
   typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
-  type: DimensionlessSpectrum,
   name: 'getTransmittance',
+  type: DimensionlessSpectrum,
   inputs: [
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'radius', type: Length },
@@ -335,8 +335,8 @@ export const getTransmittance = /*#__PURE__*/ FnLayout({
 
 export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
   typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
-  type: DimensionlessSpectrum,
   name: 'getTransmittanceToSun',
+  type: DimensionlessSpectrum,
   inputs: [
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'radius', type: Length },
@@ -388,8 +388,8 @@ export const miePhaseFunction = /*#__PURE__*/ FnLayout({
 
 export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   typeOnly: true, // WORKAROUND: Adding a layout on this breaks the reference to uniforms.
-  type: 'vec4',
   name: 'getScatteringTextureCoord',
+  type: 'vec4',
   inputs: [
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless },
@@ -488,8 +488,8 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 
 export const getScattering = /*#__PURE__*/ FnLayout({
   typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
-  type: AbstractSpectrum,
   name: 'getScattering',
+  type: AbstractSpectrum,
   inputs: [
     { name: 'scatteringTexture', type: AbstractScatteringTexture },
     { name: 'radius', type: Length },
@@ -559,8 +559,8 @@ export const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 
 export const getIrradiance = /*#__PURE__*/ FnLayout({
   typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
-  type: IrradianceSpectrum,
   name: 'getIrradiance',
+  type: IrradianceSpectrum,
   inputs: [
     { name: 'irradianceTexture', type: IrradianceTexture },
     { name: 'radius', type: Length },

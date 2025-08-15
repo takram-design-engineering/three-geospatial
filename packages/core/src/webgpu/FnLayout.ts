@@ -28,7 +28,7 @@ export interface FnLayout<
   inputs?: Inputs
 }
 
-type InferNodeType<T extends FnLayoutType> = T extends NodeType
+type InferNodeObject<T extends FnLayoutType> = T extends NodeType
   ? NodeObject<T>
   : T extends Struct
     ? ReturnType<T>
@@ -38,21 +38,21 @@ type InferNodeType<T extends FnLayoutType> = T extends NodeType
         ? NodeObject<Texture3DNode>
         : never
 
-type InferCallbackArgs<Inputs extends readonly FnLayoutInput[]> = {
-  [K in keyof Inputs]: Inputs[K] extends FnLayoutInput<infer U>
-    ? InferNodeType<U>
+type InferNodeObjects<Inputs extends readonly FnLayoutInput[]> = {
+  [K in keyof Inputs]: Inputs[K] extends FnLayoutInput<infer T>
+    ? InferNodeObject<T>
     : never
 }
 
 export type FnLayoutResult<
   T extends FnLayoutType,
   Inputs extends readonly FnLayoutInput[],
-  Args extends readonly unknown[] = InferCallbackArgs<Inputs>
+  Nodes extends readonly unknown[] = InferNodeObjects<Inputs>
 > = (
   callback: (
-    ...args: [...Args, NodeBuilder]
-  ) => InferNodeType<T> | NodeObject<ShaderCallNodeInternal>
-) => ShaderNodeFn<ProxiedTuple<Args>>
+    ...args: [...Nodes, NodeBuilder]
+  ) => InferNodeObject<T> | NodeObject<ShaderCallNodeInternal>
+) => ShaderNodeFn<ProxiedTuple<Nodes>>
 
 function transformType(type: FnLayoutType): string {
   if (typeof type === 'string') {
