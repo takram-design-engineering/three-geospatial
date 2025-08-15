@@ -127,6 +127,9 @@ const matrix = new Matrix4()
 const circleGeometry = new BufferGeometry().setFromPoints(
   new Shape().arc(0, 0, 1, 0, Math.PI * 2).getPoints(90)
 )
+const semicircleGeometry = new BufferGeometry().setFromPoints(
+  new Shape().arc(0, 0, 1, -Math.PI / 2, Math.PI / 2).getPoints(90)
+)
 
 const cameraZoom = uniform(1).onRenderUpdate(({ camera }, self) => {
   assertType<PerspectiveCamera>(camera)
@@ -171,11 +174,26 @@ const PrimaryCircles: FC = () => {
       }),
     []
   )
+  const northMaterial = useResource(
+    () =>
+      new LineDashedNodeMaterial({
+        color: '#cc0000',
+        dashSizeNode: div(0.005, cameraZoom),
+        gapSizeNode: div(0.005, cameraZoom)
+      }),
+    []
+  )
   return (
     <Overlay>
       <lineObject
         ref={ref => ref?.computeLineDistances()}
-        geometry={circleGeometry}
+        geometry={semicircleGeometry}
+        material={northMaterial}
+        rotation-z={Math.PI}
+      />
+      <lineObject
+        ref={ref => ref?.computeLineDistances()}
+        geometry={semicircleGeometry}
         material={material}
       />
       <lineObject
