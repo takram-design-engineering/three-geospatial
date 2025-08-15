@@ -1,5 +1,5 @@
 import { Vector2, Vector3 } from 'three'
-import { sharedUniformGroup } from 'three/tsl'
+import { uniformGroup } from 'three/tsl'
 
 import { radians } from '@takram/three-geospatial'
 import { nodeType, referenceTo } from '@takram/three-geospatial/webgpu'
@@ -14,7 +14,7 @@ import {
   ScatteringSpectrum
 } from './dimensional'
 
-const groupNode = /*#__PURE__*/ sharedUniformGroup('atmosphereParameters') // TODO: Update if necessary
+const groupNode = /*#__PURE__*/ uniformGroup('atmosphereParameters')
 
 export class DensityProfileLayer {
   @nodeType(Length) width: number
@@ -39,22 +39,27 @@ export class DensityProfileLayer {
 
   private uniforms?: DensityProfileLayerUniforms
 
-  getUniforms(worldToUnit: number): DensityProfileLayerUniforms {
-    return (this.uniforms ??= this.createUniforms(worldToUnit))
+  getUniforms(owner: AtmosphereParameters): DensityProfileLayerUniforms {
+    return (this.uniforms ??= this.createUniforms(owner))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createUniforms(worldToUnit: number) {
+  createUniforms(owner: AtmosphereParameters) {
     const reference = referenceTo<DensityProfileLayer>(this, {
       group: groupNode
     })
     return {
-      width: reference('width', value => value * worldToUnit),
+      width: reference('width', value => value * owner.worldToUnit),
       expTerm: reference('expTerm'),
-      expScale: reference('expScale', value => value / worldToUnit),
-      linearTerm: reference('linearTerm', value => value / worldToUnit),
+      expScale: reference('expScale', value => value / owner.worldToUnit),
+      linearTerm: reference('linearTerm', value => value / owner.worldToUnit),
       constantTerm: reference('constantTerm')
     }
+  }
+
+  // eslint-disable-next-line accessor-pairs, @typescript-eslint/class-methods-use-this
+  set needsUpdate(value: boolean) {
+    groupNode.needsUpdate = value
   }
 
   copy(other: DensityProfileLayer): this {
@@ -99,18 +104,23 @@ export class DensityProfile {
 
   private uniforms?: DensityProfileUniforms
 
-  getUniforms(worldToUnit: number): DensityProfileUniforms {
-    return (this.uniforms ??= this.createUniforms(worldToUnit))
+  getUniforms(owner: AtmosphereParameters): DensityProfileUniforms {
+    return (this.uniforms ??= this.createUniforms(owner))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createUniforms(worldToUnit: number) {
+  createUniforms(owner: AtmosphereParameters) {
     return {
       layers: [
-        this.layers[0].getUniforms(worldToUnit),
-        this.layers[1].getUniforms(worldToUnit)
+        this.layers[0].getUniforms(owner),
+        this.layers[1].getUniforms(owner)
       ] as const
     }
+  }
+
+  // eslint-disable-next-line accessor-pairs, @typescript-eslint/class-methods-use-this
+  set needsUpdate(value: boolean) {
+    groupNode.needsUpdate = value
   }
 
   copy(other: DensityProfile): this {
@@ -264,11 +274,11 @@ export class AtmosphereParameters {
         value => value * this.worldToUnit
       ),
       topRadius: reference('topRadius', value => value * this.worldToUnit),
-      rayleighDensity: this.rayleighDensity.getUniforms(this.worldToUnit),
+      rayleighDensity: this.rayleighDensity.getUniforms(this),
       rayleighScattering: reference('rayleighScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
-      mieDensity: this.mieDensity.getUniforms(this.worldToUnit),
+      mieDensity: this.mieDensity.getUniforms(this),
       mieScattering: reference('mieScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
@@ -276,7 +286,7 @@ export class AtmosphereParameters {
         value.divideScalar(this.worldToUnit)
       ),
       miePhaseFunctionG: reference('miePhaseFunctionG'),
-      absorptionDensity: this.absorptionDensity.getUniforms(this.worldToUnit),
+      absorptionDensity: this.absorptionDensity.getUniforms(this),
       absorptionExtinction: reference('absorptionExtinction', value =>
         value.divideScalar(this.worldToUnit)
       ),
@@ -286,6 +296,11 @@ export class AtmosphereParameters {
       skyRadianceToLuminance: reference('skyRadianceToLuminance'),
       luminanceScale: reference('luminanceScale')
     }
+  }
+
+  // eslint-disable-next-line accessor-pairs, @typescript-eslint/class-methods-use-this
+  set needsUpdate(value: boolean) {
+    groupNode.needsUpdate = value
   }
 
   copy(other: AtmosphereParameters): this {
