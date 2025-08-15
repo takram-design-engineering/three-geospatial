@@ -69,18 +69,3 @@ export function getAtmosphereContext(builder: NodeBuilder): AtmosphereContext {
   }
   return atmosphere as AtmosphereContext
 }
-
-export function setAtmosphereContext(
-  builder: NodeBuilder,
-  parameters: AtmosphereParameters,
-  renderingContext: AtmosphereRenderingContext,
-  lutNode: AtmosphereLUTNode,
-  options?: Partial<AtmosphereContextOptions>
-): void {
-  builder.getContext().atmosphere = createAtmosphereContext(
-    parameters,
-    renderingContext,
-    lutNode,
-    options
-  )
-}
