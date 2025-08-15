@@ -340,8 +340,6 @@ export class AtmosphereLUTNode extends TempNode {
     this.higherOrderScatteringRT = createRenderTarget3D('higherOrderScattering')
 
     this.updateBeforeType = NodeUpdateType.RENDER
-    this.updateType = NodeUpdateType.NONE
-    this.global = true // TODO
   }
 
   getTexture(name: AtmosphereLUTTextureName<2>): Texture
