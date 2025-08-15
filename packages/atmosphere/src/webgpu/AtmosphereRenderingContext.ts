@@ -80,7 +80,9 @@ export class AtmosphereRenderingContext {
       .setName('altitudeCorrectionECEF')
       .onRenderUpdate((_, { value }) => {
         getAltitudeCorrectionOffset(
-          cameraPositionECEF.value,
+          value
+            .setFromMatrixPosition(this.camera.matrixWorld)
+            .applyMatrix4(this.worldToECEFMatrix),
           this.parameters.bottomRadius,
           this.ellipsoid,
           value
