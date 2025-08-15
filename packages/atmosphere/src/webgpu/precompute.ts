@@ -83,7 +83,7 @@ import {
 
 import {
   FnLayout,
-  Fnv,
+  FnVar,
   type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
@@ -124,7 +124,7 @@ import {
 // TODO: Cannot add layouts on any of these functions due to unknown bugs in the
 // TSL builder, and there's no way to specify a texture or sampler type.
 
-const getLayerDensity = /*#__PURE__*/ Fnv(
+const getLayerDensity = /*#__PURE__*/ FnVar(
   (
     layer: DensityProfileLayerUniforms,
     altitude: NodeObject<Length>
@@ -137,7 +137,7 @@ const getLayerDensity = /*#__PURE__*/ Fnv(
   }
 )
 
-const getProfileDensity = /*#__PURE__*/ Fnv(
+const getProfileDensity = /*#__PURE__*/ FnVar(
   (
     profile: DensityProfileUniforms,
     altitude: NodeObject<Length>
@@ -150,7 +150,7 @@ const getProfileDensity = /*#__PURE__*/ Fnv(
   }
 )
 
-const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ Fnv(
+const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
   (
     profile: DensityProfileUniforms,
     radius: NodeObject<Length>,

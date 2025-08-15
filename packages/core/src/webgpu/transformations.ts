@@ -17,7 +17,7 @@ import {
   viewZToOrthographicDepth
 } from 'three/tsl'
 
-import { Fnv } from './Fnv'
+import { FnVar } from './FnVar'
 import type { Node, NodeObject } from './node'
 
 export const depthToViewZ = (
@@ -34,7 +34,7 @@ export const depthToViewZ = (
       : orthographicDepthToViewZ(depth, cameraNear, cameraFar)
 }
 
-export const screenToPositionView = /*#__PURE__*/ Fnv(
+export const screenToPositionView = /*#__PURE__*/ FnVar(
   (
     uv: NodeObject<'vec2'>,
     depth: NodeObject<'float'>,
@@ -54,7 +54,7 @@ export const screenToPositionView = /*#__PURE__*/ Fnv(
 
 // A fifth-order polynomial approximation of Turbo color map.
 // See: https://observablehq.com/@mbostock/turbo
-export const turbo = /*#__PURE__*/ Fnv(
+export const turbo = /*#__PURE__*/ FnVar(
   (x: NodeObject<'float'>): Node<'vec3'> => {
     const coeffs = [
       vec3(-150.5666, 4.2109, -88.5066).toConst(),
@@ -70,7 +70,7 @@ export const turbo = /*#__PURE__*/ Fnv(
   }
 )
 
-export const depthToColor = /*#__PURE__*/ Fnv(
+export const depthToColor = /*#__PURE__*/ FnVar(
   (
     depth: NodeObject<'float'>,
     camera: Camera,
@@ -101,7 +101,7 @@ export const depthToColor = /*#__PURE__*/ Fnv(
   }
 )
 
-export const equirectWorld = /*#__PURE__*/ Fnv(
+export const equirectWorld = /*#__PURE__*/ FnVar(
   (uv: NodeObject<'vec2'>): Node<'vec3'> => {
     const lambda = sub(0.5, uv.x).mul(PI2)
     const phi = sub(uv.y, 0.5).mul(PI)

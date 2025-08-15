@@ -23,7 +23,7 @@ import { TempNode, TextureNode, type NodeBuilder } from 'three/webgpu'
 import {
   equirectGrid,
   equirectWorld,
-  Fnv,
+  FnVar,
   inverseProjectionMatrix,
   inverseViewMatrix,
   nodeType,
@@ -39,7 +39,7 @@ import { createAtmosphereContext } from './context'
 import type { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
 
-const mat3Columns = /*#__PURE__*/ Fnv(
+const mat3Columns = /*#__PURE__*/ FnVar(
   (
     c0: NodeObject<'vec3'>,
     c1: NodeObject<'vec3'>,
@@ -49,7 +49,7 @@ const mat3Columns = /*#__PURE__*/ Fnv(
   }
 )
 
-const cameraDirectionWorld = /*#__PURE__*/ Fnv((camera: Camera) => {
+const cameraDirectionWorld = /*#__PURE__*/ FnVar((camera: Camera) => {
   const positionView = inverseProjectionMatrix(camera).mul(
     vec4(positionGeometry, 1)
   ).xyz
@@ -59,7 +59,7 @@ const cameraDirectionWorld = /*#__PURE__*/ Fnv((camera: Camera) => {
   return directionWorld
 })
 
-const getLunarRadiance = /*#__PURE__*/ Fnv(
+const getLunarRadiance = /*#__PURE__*/ FnVar(
   (
     parameters: AtmosphereParametersUniforms,
     moonAngularRadius: NodeObject<'float'>
@@ -78,7 +78,7 @@ const getLunarRadiance = /*#__PURE__*/ Fnv(
   }
 )
 
-const raySphereIntersectionNormal = /*#__PURE__*/ Fnv(
+const raySphereIntersectionNormal = /*#__PURE__*/ FnVar(
   (
     rayDirection: NodeObject<'vec3'>,
     centerDirection: NodeObject<'vec3'>,
@@ -95,7 +95,7 @@ const raySphereIntersectionNormal = /*#__PURE__*/ Fnv(
 
 // Oren-Nayar diffuse of roughness = 1 and albedo = 1:
 // Reference: https://mimosa-pudica.net/improved-oren-nayar.html
-const orenNayarDiffuse = /*#__PURE__*/ Fnv(
+const orenNayarDiffuse = /*#__PURE__*/ FnVar(
   (
     lightDirection: NodeObject<'vec3'>,
     viewDirection: NodeObject<'vec3'>,
@@ -185,7 +185,7 @@ export class SkyNode extends TempNode {
     const moonNormalTexture = this.moonNormalTexture
 
     // Direction of the camera ray:
-    const rayDirectionECEF = Fnv(() => builder => {
+    const rayDirectionECEF = FnVar(() => builder => {
       let directionWorld
       switch (this.scope) {
         case SCREEN:

@@ -23,7 +23,7 @@ import {
   type AtmosphereLUTTexture3DName,
   type AtmosphereParameters
 } from '@takram/three-atmosphere/webgpu'
-import { Fnv, type NodeObject } from '@takram/three-geospatial/webgpu'
+import { FnVar, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
@@ -37,7 +37,7 @@ import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
-export const textureUVW = Fnv(
+export const textureUVW = FnVar(
   (textureSize: NodeObject<'vec3'>, zoom: NodeObject<'float'>) => {
     const uv = vec2(screenUV.x, screenUV.y)
       .mul(screenSize)
