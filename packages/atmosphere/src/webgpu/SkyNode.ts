@@ -36,6 +36,7 @@ import {
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import { AtmosphereParametersUniforms } from './AtmosphereParameters'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
+import { createAtmosphereContext } from './context'
 import type { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
 
@@ -176,6 +177,13 @@ export class SkyNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): Node<'vec3'> {
+    builder.getContext().atmosphere = createAtmosphereContext(
+      this.renderingContext.parameters,
+      this.renderingContext,
+      this.lutNode,
+      { showGround: this.showGround }
+    )
+
     const {
       worldToECEFMatrix,
       sunDirectionECEF,
@@ -219,13 +227,10 @@ export class SkyNode extends TempNode {
     }
 
     const luminanceTransfer = getSkyLuminance(
-      parameters,
-      this.lutNode,
       cameraPositionUnit,
       rayDirectionECEF,
       0, // TODO: Shadow length
-      sunDirectionECEF,
-      { showGround: this.showGround }
+      sunDirectionECEF
     )
     const inscatter = luminanceTransfer.get('luminance')
     const transmittance = luminanceTransfer.get('transmittance')
@@ -249,7 +254,7 @@ export class SkyNode extends TempNode {
             chordThreshold.sub(filterWidth),
             chordLength
           )
-          sunLuminance.assign(getSolarLuminance(parameters).mul(antialias))
+          sunLuminance.assign(getSolarLuminance().mul(antialias))
         })
         luminance.addAssign(sunLuminance)
       }

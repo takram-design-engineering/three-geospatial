@@ -16,6 +16,7 @@ import {
 
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
+import { createAtmosphereContext } from './context'
 import { getSkyIlluminance } from './runtime'
 
 type CorrectLightingContext = {
@@ -39,6 +40,11 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     if (renderingContext == null || lutNode == null) {
       return
     }
+    builder.getContext().atmosphere = createAtmosphereContext(
+      renderingContext.parameters,
+      renderingContext,
+      lutNode
+    )
 
     const reference = referenceTo(this.light)
     const direct = reference('direct')
@@ -69,8 +75,6 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
 
     // Compute the indirect illuminance to store it in the context.
     const skyIlluminance = getSkyIlluminance(
-      parameters,
-      lutNode,
       positionUnit,
       normalECEF,
       sunDirectionECEF
@@ -92,7 +96,6 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const radius = positionUnit.length().toVar()
     const cosSun = positionUnit.dot(sunDirectionECEF).div(radius)
     const sunTransmittance = getTransmittanceToSun(
-      parameters,
       lutNode.getTextureNode('transmittance'),
       radius,
       cosSun

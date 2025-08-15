@@ -5,18 +5,20 @@ import type { NodeBuilder } from 'three/webgpu'
 type NonCallable<T> = T extends (...args: any[]) => any ? never : T
 
 export function Fnv<Args extends readonly unknown[], R>(
-  fn: (...args: Args) => (builder: NodeBuilder) => R
+  callback: (...args: Args) => (builder: NodeBuilder) => R
 ): ShaderNodeFn<ProxiedTuple<Args>>
 
 export function Fnv<Args extends readonly unknown[], R>(
-  fn: (...args: Args) => NonCallable<R>
+  callback: (...args: Args) => NonCallable<R>
 ): ShaderNodeFn<ProxiedTuple<Args>>
 
 export function Fnv<Args extends readonly unknown[], R>(
-  fn: ((...args: Args) => R) | ((...args: Args) => (builder: NodeBuilder) => R)
+  callback:
+    | ((...args: Args) => R)
+    | ((...args: Args) => (builder: NodeBuilder) => R)
 ): ShaderNodeFn<ProxiedTuple<Args>> {
   return Fn((args: Args, builder: NodeBuilder) => {
-    const result = fn(...args)
+    const result = callback(...args)
     return typeof result === 'function'
       ? (result as (builder: NodeBuilder) => R)(builder)
       : result

@@ -16,6 +16,7 @@ import {
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
+import { createAtmosphereContext } from './context'
 import { getSkyLuminanceToPoint, getSunAndSkyIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
@@ -65,6 +66,12 @@ export class AerialPerspectiveNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): Node<'vec4'> {
+    builder.getContext().atmosphere = createAtmosphereContext(
+      this.renderingContext.parameters,
+      this.renderingContext,
+      this.lutNode
+    )
+
     const { camera } = this.renderingContext
     const {
       worldToECEFMatrix,
@@ -118,12 +125,10 @@ export class AerialPerspectiveNode extends TempNode {
 
         // Direct and indirect illuminance on the surface
         const sunSkyIlluminance = getSunAndSkyIlluminance(
-          parameters,
-          this.lutNode,
           positionUnit,
           normalECEF,
           sunDirectionECEF
-        ).toVar()
+        )
         const sunIlluminance = sunSkyIlluminance.get('sunIlluminance')
         const skyIlluminance = sunSkyIlluminance.get('skyIlluminance')
         return sunIlluminance.add(skyIlluminance).div(PI)
@@ -135,8 +140,6 @@ export class AerialPerspectiveNode extends TempNode {
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
-        parameters,
-        this.lutNode,
         cameraPositionUnit,
         positionUnit,
         0, // TODO: Shadow length
@@ -145,7 +148,7 @@ export class AerialPerspectiveNode extends TempNode {
       const inscatter = luminanceTransfer.get('luminance')
       const transmittance = luminanceTransfer.get('transmittance')
       return diffuse.mul(transmittance).add(inscatter)
-    })()
+    })().context(builder.getContext())
 
     const outLuminance = vec3().toVar()
 

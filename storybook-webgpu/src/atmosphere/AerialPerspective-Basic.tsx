@@ -1,9 +1,4 @@
-import {
-  extend,
-  useFrame,
-  useThree,
-  type ThreeElement
-} from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
 import {
   GlobeControls,
@@ -21,8 +16,6 @@ import {
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereLight,
-  AtmosphereLightNode,
   atmosphereLUT,
   AtmosphereRenderingContext
 } from '@takram/three-atmosphere/webgpu'
@@ -47,6 +40,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import {
   usePointOfView,
   type PointOfViewProps
@@ -54,14 +48,6 @@ import {
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
-
-declare module '@react-three/fiber' {
-  interface ThreeElements {
-    atmosphereLight: ThreeElement<typeof AtmosphereLight>
-  }
-}
-
-extend({ AtmosphereLight })
 
 const Scene: FC<StoryProps> = ({
   longitude,
@@ -104,7 +90,7 @@ const Scene: FC<StoryProps> = ({
     return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, context, lutNode])
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
 
@@ -137,7 +123,6 @@ const Scene: FC<StoryProps> = ({
 
   return (
     <>
-      <atmosphereLight args={[context, lutNode]} />
       <GlobeControls enableDamping />
       <TilesRenderer>
         <TilesPlugin
@@ -162,13 +147,7 @@ interface StoryProps extends PointOfViewProps {}
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <WebGPUCanvas
-    renderer={{
-      onInit: renderer => {
-        renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
-      }
-    }}
-  >
+  <WebGPUCanvas>
     <Scene {...props} />
   </WebGPUCanvas>
 )

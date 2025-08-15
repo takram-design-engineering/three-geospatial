@@ -1,11 +1,6 @@
 import styled from '@emotion/styled'
 import { OrbitControls } from '@react-three/drei'
-import {
-  extend,
-  useFrame,
-  useThree,
-  type ThreeElement
-} from '@react-three/fiber'
+import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import {
   AngleFromSun,
   Body,
@@ -95,6 +90,7 @@ import {
 import type { StoryFC } from '../helpers/createStory'
 import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useControl } from '../helpers/useControl'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { useSpringControl } from '../helpers/useSpringControl'
 import { useTransientControl } from '../helpers/useTransientControl'
@@ -151,7 +147,7 @@ function directionFromHOR(
 const Overlay: FC<{ children?: ReactNode }> = ({ children }) => {
   const camera = useThree(({ camera }) => camera)
   const groupRef = useRef<Group>(null)
-  useFrame(() => {
+  useGuardedFrame(() => {
     const group = groupRef.current
     if (group != null) {
       group.position.setFromMatrixPosition(camera.matrixWorld)
@@ -295,7 +291,7 @@ const Scene: FC<StoryProps> = () => {
     return [postProcessing, skyNode, toneMappingNode]
   }, [renderer, scene, camera, context, lutNode, exposureNode])
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
 
@@ -400,7 +396,7 @@ const Scene: FC<StoryProps> = () => {
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
   const store = getDefaultStore()
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     const controls = controlsRef.current
     const state = store.get(stateAtom)
     if (controls == null || state == null) {

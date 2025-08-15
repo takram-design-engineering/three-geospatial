@@ -1,5 +1,3 @@
-import type { Texture3DNode, TextureNode } from 'three/webgpu'
-
 // These types only provide for annotations, and not guarantee the type safety.
 // I'm working on storing the dimensions in the types, but most of TSL functions
 // are not generic and don't preserve the types anyways.
@@ -41,12 +39,12 @@ export type Direction = 'vec3'
 export type Luminance3 = 'vec3'
 export type Illuminance3 = 'vec3'
 
-export type TransmittanceTextureNode = TextureNode
-export type AbstractScatteringTextureNode = Texture3DNode
-export type ReducedScatteringTextureNode = Texture3DNode
-export type ScatteringTextureNode = Texture3DNode
-export type ScatteringDensityTextureNode = Texture3DNode
-export type IrradianceTextureNode = TextureNode
+export type TransmittanceTexture = 'texture'
+export type AbstractScatteringTexture = 'texture3D'
+export type ReducedScatteringTexture = 'texture3D'
+export type ScatteringTexture = 'texture3D'
+export type ScatteringDensityTexture = 'texture3D'
+export type IrradianceTexture = 'texture'
 
 export const Length = 'float'
 export const Wavelength = 'float'
@@ -84,3 +82,10 @@ export const Position = 'vec3'
 export const Direction = 'vec3'
 export const Luminance3 = 'vec3'
 export const Illuminance3 = 'vec3'
+
+export const TransmittanceTexture = 'texture'
+export const AbstractScatteringTexture = 'texture3D'
+export const ReducedScatteringTexture = 'texture3D'
+export const ScatteringTexture = 'texture3D'
+export const ScatteringDensityTexture = 'texture3D'
+export const IrradianceTexture = 'texture'

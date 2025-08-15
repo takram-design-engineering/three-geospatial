@@ -1,6 +1,7 @@
 export * from './accessors'
 export * from './debug'
 export * from './decorators'
+export * from './FnLayout'
 export * from './Fnv'
 export * from './generators'
 export * from './node'

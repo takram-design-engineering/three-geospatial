@@ -1,7 +1,7 @@
 import { Vector2, Vector3 } from 'three'
 import { sharedUniformGroup } from 'three/tsl'
 
-import { assertType, radians } from '@takram/three-geospatial'
+import { radians } from '@takram/three-geospatial'
 import { nodeType, referenceTo } from '@takram/three-geospatial/webgpu'
 
 import {
@@ -13,21 +13,6 @@ import {
   Length,
   ScatteringSpectrum
 } from './dimensional'
-
-function createProxy<T extends {}, U extends {}, R = Omit<T, keyof U> & U>(
-  target: T,
-  uniforms: U
-): R {
-  return new Proxy(target, {
-    get: (target, propertyName) => {
-      if (propertyName === 'uniforms') {
-        return // Cyclic
-      }
-      assertType<keyof T & keyof U>(propertyName)
-      return uniforms[propertyName] ?? target[propertyName]
-    }
-  }) as unknown as R
-}
 
 const groupNode = /*#__PURE__*/ sharedUniformGroup('atmosphereParameters') // TODO: Update if necessary
 
@@ -63,13 +48,13 @@ export class DensityProfileLayer {
     const reference = referenceTo<DensityProfileLayer>(this, {
       group: groupNode
     })
-    return createProxy(this, {
+    return {
       width: reference('width', value => value * worldToUnit),
       expTerm: reference('expTerm'),
       expScale: reference('expScale', value => value / worldToUnit),
       linearTerm: reference('linearTerm', value => value / worldToUnit),
       constantTerm: reference('constantTerm')
-    })
+    }
   }
 
   copy(other: DensityProfileLayer): this {
@@ -120,12 +105,12 @@ export class DensityProfile {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   createUniforms(worldToUnit: number) {
-    return createProxy(this, {
+    return {
       layers: [
         this.layers[0].getUniforms(worldToUnit),
         this.layers[1].getUniforms(worldToUnit)
       ] as const
-    })
+    }
   }
 
   copy(other: DensityProfile): this {
@@ -270,7 +255,7 @@ export class AtmosphereParameters {
       group: groupNode,
       withName: true
     })
-    return createProxy(this, {
+    return {
       worldToUnit: reference('worldToUnit'),
       solarIrradiance: reference('solarIrradiance'),
       sunAngularRadius: reference('sunAngularRadius'),
@@ -300,7 +285,7 @@ export class AtmosphereParameters {
       sunRadianceToLuminance: reference('sunRadianceToLuminance'),
       skyRadianceToLuminance: reference('skyRadianceToLuminance'),
       luminanceScale: reference('luminanceScale')
-    })
+    }
   }
 
   copy(other: AtmosphereParameters): this {

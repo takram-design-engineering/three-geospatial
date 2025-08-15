@@ -1,4 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import { GlobeControls } from '3d-tiles-renderer/r3f'
 import type { FC } from 'react'
 import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
@@ -33,6 +33,7 @@ import {
 import type { StoryFC } from '../helpers/createStory'
 import { Globe } from '../helpers/Globe'
 import { useControl } from '../helpers/useControl'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import {
   usePointOfView,
   type PointOfViewProps
@@ -81,7 +82,7 @@ const Scene: FC<StoryProps> = ({
     return [postProcessing, passNode, aerialNode]
   }, [renderer, camera, scene, context, lutNode])
 
-  useFrame(() => {
+  useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
 
