@@ -80,7 +80,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
 }
 
 interface StoryProps extends Partial<AtmosphereParameters> {
-  name: AtmosphereLUTTextureName<2>
+  name: AtmosphereLUTTextureName
 }
 
 interface StoryArgs extends ToneMappingArgs {

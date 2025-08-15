@@ -239,20 +239,16 @@ class AdditiveNodeMaterial extends NodeMaterial {
   }
 }
 
-const textureDimensions = {
-  transmittance: 2,
-  irradiance: 2,
-  scattering: 3,
-  singleMieScattering: 3,
-  higherOrderScattering: 3
-} as const
+const textureNames = ['transmittance', 'irradiance'] as const
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const texture3DNames = [
+  'scattering',
+  'singleMieScattering',
+  'higherOrderScattering'
+] as const
 
-export type AtmosphereLUTTextureName<
-  D extends 2 | 3 = 2 | 3,
-  T = typeof textureDimensions
-> = keyof {
-  [K in keyof T as T[K] extends D ? K : never]: unknown
-}
+export type AtmosphereLUTTextureName = (typeof textureNames)[number]
+export type AtmosphereLUTTexture3DName = (typeof texture3DNames)[number]
 
 class LUTTextureNode extends TextureNode {
   static override get type(): string {
@@ -323,7 +319,7 @@ export class AtmosphereLUTNode extends TempNode {
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNodes: Partial<
     Record<
-      AtmosphereLUTTextureName,
+      AtmosphereLUTTextureName | AtmosphereLUTTexture3DName,
       NodeObject<LUTTextureNode | LUTTexture3DNode>
     >
   > = {}
@@ -344,29 +340,29 @@ export class AtmosphereLUTNode extends TempNode {
     this.updateBeforeType = NodeUpdateType.RENDER
   }
 
-  getTexture(name: AtmosphereLUTTextureName<2>): Texture
-  getTexture(name: AtmosphereLUTTextureName<3>): Data3DTexture
-  getTexture(name: AtmosphereLUTTextureName): Texture | Data3DTexture {
+  getTexture(name: AtmosphereLUTTextureName): Texture
+  getTexture(name: AtmosphereLUTTexture3DName): Data3DTexture
+  getTexture(
+    name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName
+  ): Texture | Data3DTexture {
     return this[`${name}RT`].texture
   }
 
-  getTextureNode(name: AtmosphereLUTTextureName<2>): NodeObject<LUTTextureNode>
+  getTextureNode(name: AtmosphereLUTTextureName): NodeObject<LUTTextureNode>
+  getTextureNode(name: AtmosphereLUTTexture3DName): NodeObject<LUTTexture3DNode>
   getTextureNode(
-    name: AtmosphereLUTTextureName<3>
-  ): NodeObject<LUTTexture3DNode>
-  getTextureNode(
-    name: AtmosphereLUTTextureName
+    name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName
   ): NodeObject<LUTTextureNode | LUTTexture3DNode> {
     return (
       (this._textureNodes[name] ??= nodeObject(
-        textureDimensions[name] === 2
+        textureNames.includes(name as AtmosphereLUTTextureName)
           ? new LUTTextureNode(
               this,
-              this.getTexture(name as AtmosphereLUTTextureName<2>)
+              this.getTexture(name as AtmosphereLUTTextureName)
             )
           : new LUTTexture3DNode(
               this,
-              this.getTexture(name as AtmosphereLUTTextureName<3>)
+              this.getTexture(name as AtmosphereLUTTexture3DName)
             )
       ))
         // NOTE: Group and name doesn't seem to have effect on textures (r179).

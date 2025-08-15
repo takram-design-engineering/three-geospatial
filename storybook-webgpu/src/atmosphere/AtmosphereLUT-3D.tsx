@@ -20,7 +20,7 @@ import { NodeMaterial } from 'three/webgpu'
 
 import {
   atmosphereLUT,
-  type AtmosphereLUTTextureName,
+  type AtmosphereLUTTexture3DName,
   type AtmosphereParameters
 } from '@takram/three-atmosphere/webgpu'
 import { Fnv, type NodeObject } from '@takram/three-geospatial/webgpu'
@@ -83,7 +83,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
 }
 
 interface StoryProps extends Partial<AtmosphereParameters> {
-  name: AtmosphereLUTTextureName<3>
+  name: AtmosphereLUTTexture3DName
 }
 
 interface StoryArgs extends ToneMappingArgs {
