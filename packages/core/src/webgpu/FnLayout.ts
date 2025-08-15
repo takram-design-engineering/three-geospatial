@@ -15,12 +15,12 @@ export interface FnInputLayout<T extends FnLayoutType = FnLayoutType> {
 
 export interface FnLayout<
   T extends FnLayoutType,
-  Inputs extends readonly FnInputLayout[]
+  Inputs extends readonly FnInputLayout[] = []
 > {
   typeOnly?: boolean
   name: string
   type: T
-  inputs: Inputs
+  inputs?: Inputs
 }
 
 type InferLayoutType<T extends FnLayoutType> = T extends NodeType
@@ -59,7 +59,7 @@ function transformType(type: FnLayoutType): string {
 
 export function FnLayout<
   T extends FnLayoutType,
-  const Inputs extends readonly FnInputLayout[]
+  const Inputs extends readonly FnInputLayout[] = []
 >(layout: FnLayout<T, Inputs>): FnLayoutResult<T, Inputs> {
   return layout.typeOnly === true
     ? callback => Fn((args, builder) => callback(...args, builder))
@@ -67,10 +67,11 @@ export function FnLayout<
         Fn((args, builder) => callback(...args, builder)).setLayout({
           ...layout,
           type: transformType(layout.type),
-          inputs: layout.inputs.map(input => ({
-            ...input,
-            type: transformType(input.type)
-          }))
+          inputs:
+            layout.inputs?.map(input => ({
+              ...input,
+              type: transformType(input.type)
+            })) ?? []
         })
 }
 
