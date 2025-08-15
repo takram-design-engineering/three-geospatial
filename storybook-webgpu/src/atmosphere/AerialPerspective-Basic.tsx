@@ -133,7 +133,6 @@ const Scene: FC<StoryProps> = ({
 
   return (
     <>
-      <atmosphereLight args={[context, lutNode]} />
       <GlobeControls enableDamping />
       <TilesRenderer>
         <TilesPlugin
