@@ -62,9 +62,16 @@ export function FnLayout<
   const Inputs extends readonly FnInputLayout[] = []
 >(layout: FnLayout<T, Inputs>): FnLayoutResult<T, Inputs> {
   return layout.typeOnly === true
-    ? callback => Fn((args, builder) => callback(...args, builder))
+    ? callback =>
+        Fn((args: unknown[], builder: NodeBuilder) =>
+          // @ts-expect-error Ignore
+          callback(...args, builder)
+        )
     : callback =>
-        Fn((args, builder) => callback(...args, builder)).setLayout({
+        Fn((args: unknown[], builder: NodeBuilder) =>
+          // @ts-expect-error Ignore
+          callback(...args, builder)
+        ).setLayout({
           ...layout,
           type: transformType(layout.type),
           inputs:
