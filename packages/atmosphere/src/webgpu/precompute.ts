@@ -89,8 +89,8 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type {
-  DensityProfileLayerUniforms,
-  DensityProfileUniforms
+  DensityProfileLayerNodes,
+  DensityProfileNodes
 } from './AtmosphereParameters'
 import {
   clampCosine,
@@ -126,7 +126,7 @@ import {
 
 const getLayerDensity = /*#__PURE__*/ FnVar(
   (
-    layer: DensityProfileLayerUniforms,
+    layer: DensityProfileLayerNodes,
     altitude: NodeObject<Length>
   ): Node<Dimensionless> => {
     return layer.expTerm
@@ -139,7 +139,7 @@ const getLayerDensity = /*#__PURE__*/ FnVar(
 
 const getProfileDensity = /*#__PURE__*/ FnVar(
   (
-    profile: DensityProfileUniforms,
+    profile: DensityProfileNodes,
     altitude: NodeObject<Length>
   ): Node<Dimensionless> => {
     return select(
@@ -152,12 +152,12 @@ const getProfileDensity = /*#__PURE__*/ FnVar(
 
 const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
   (
-    profile: DensityProfileUniforms,
+    profile: DensityProfileNodes,
     radius: NodeObject<Length>,
     cosView: NodeObject<Dimensionless>
   ) =>
     (builder): Node<Length> => {
-      const { uniforms } = getAtmosphereContext(builder)
+      const { nodes } = getAtmosphereContext(builder)
 
       const SAMPLE_COUNT = 500
       const stepSize = distanceToTopAtmosphereBoundary(radius, cosView)
@@ -180,7 +180,7 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
         // Number density at the current sample point (divided by the number
         // density at the bottom of the atmosphere, yielding a dimensionless
         // number).
-        const y = getProfileDensity(profile, r.sub(uniforms.bottomRadius))
+        const y = getProfileDensity(profile, r.sub(nodes.bottomRadius))
 
         // Sample weight from the trapezoidal rule.
         const weight = select(equal(i, 0).or(equal(i, SAMPLE_COUNT)), 0.5, 1)
@@ -200,26 +200,26 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const { parameters, uniforms } = getAtmosphereContext(builder)
+  const { parameters, nodes } = getAtmosphereContext(builder)
 
   const opticalDepth = add(
-    uniforms.rayleighScattering.mul(
+    nodes.rayleighScattering.mul(
       computeOpticalDepthToTopAtmosphereBoundary(
-        uniforms.rayleighDensity,
+        nodes.rayleighDensity,
         radius,
         cosView
       )
     ),
-    uniforms.mieExtinction.mul(
+    nodes.mieExtinction.mul(
       computeOpticalDepthToTopAtmosphereBoundary(
-        uniforms.mieDensity,
+        nodes.mieDensity,
         radius,
         cosView
       )
     ),
-    uniforms.absorptionExtinction.mul(
+    nodes.absorptionExtinction.mul(
       computeOpticalDepthToTopAtmosphereBoundary(
-        uniforms.absorptionDensity,
+        nodes.absorptionDensity,
         radius,
         cosView
       )
@@ -259,7 +259,7 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   type: transmittanceParamsStruct,
   inputs: [{ name: 'uv', type: 'vec2' }]
 })(([uv], builder) => {
-  const { parameters, uniforms } = getAtmosphereContext(builder)
+  const { parameters, nodes } = getAtmosphereContext(builder)
   const cosViewUnit = getUnitRangeFromTextureCoord(
     uv.x,
     parameters.transmittanceTextureSize.x
@@ -270,20 +270,16 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   )
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(
-    uniforms.topRadius.pow2().sub(uniforms.bottomRadius.pow2())
-  ).toVar()
+  const H = sqrt(nodes.topRadius.pow2().sub(nodes.bottomRadius.pow2())).toVar()
 
   // Distance to the horizon, from which we can compute radius.
   const distanceToHorizon = H.mul(radiusUnit).toVar()
-  const radius = sqrt(
-    distanceToHorizon.pow2().add(uniforms.bottomRadius.pow2())
-  )
+  const radius = sqrt(distanceToHorizon.pow2().add(nodes.bottomRadius.pow2()))
 
   // Distance to the top atmosphere boundary for the ray (radius, cosView),
   // and its minimum and maximum values over all cosView - obtained for
   // (radius, 1) and (radius, cosHorizon) - from which we can recover cosView.
-  const minDistance = uniforms.topRadius.sub(radius).toVar()
+  const minDistance = nodes.topRadius.sub(radius).toVar()
   const maxDistance = distanceToHorizon.add(H)
   const distance = minDistance
     .add(cosViewUnit.mul(maxDistance.sub(minDistance)))
@@ -349,7 +345,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
 
   const radiusEnd = clampRadius(
     sqrt(
@@ -373,13 +369,10 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
     .toVar()
 
   const rayleigh = transmittance.mul(
-    getProfileDensity(
-      uniforms.rayleighDensity,
-      radiusEnd.sub(uniforms.bottomRadius)
-    )
+    getProfileDensity(nodes.rayleighDensity, radiusEnd.sub(nodes.bottomRadius))
   )
   const mie = transmittance.mul(
-    getProfileDensity(uniforms.mieDensity, radiusEnd.sub(uniforms.bottomRadius))
+    getProfileDensity(nodes.mieDensity, radiusEnd.sub(nodes.bottomRadius))
   )
   return singleScatteringStruct(rayleigh, mie)
 })
@@ -426,7 +419,7 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
 
   const SAMPLE_COUNT = 50
   const stepSize = distanceToNearestAtmosphereBoundary(
@@ -464,15 +457,10 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
   const rayleigh = mul(
     rayleighSum,
     stepSize,
-    uniforms.solarIrradiance,
-    uniforms.rayleighScattering
+    nodes.solarIrradiance,
+    nodes.rayleighScattering
   )
-  const mie = mul(
-    mieSum,
-    stepSize,
-    uniforms.solarIrradiance,
-    uniforms.mieScattering
-  )
+  const mie = mul(mieSum, stepSize, nodes.solarIrradiance, nodes.mieScattering)
   return singleScatteringStruct(rayleigh, mie)
 })
 
@@ -493,12 +481,10 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   type: scatteringParamsStruct,
   inputs: [{ name: 'coord', type: 'vec4' }]
 })(([coord], builder) => {
-  const { parameters, uniforms } = getAtmosphereContext(builder)
+  const { parameters, nodes } = getAtmosphereContext(builder)
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(
-    uniforms.topRadius.pow2().sub(uniforms.bottomRadius.pow2())
-  ).toVar()
+  const H = sqrt(nodes.topRadius.pow2().sub(nodes.bottomRadius.pow2())).toVar()
 
   // Distance to the horizon.
   const distanceToHorizon = H.mul(
@@ -507,9 +493,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
       parameters.scatteringTextureRadiusSize
     )
   ).toVar()
-  const radius = sqrt(
-    distanceToHorizon.pow2().add(uniforms.bottomRadius.pow2())
-  )
+  const radius = sqrt(distanceToHorizon.pow2().add(nodes.bottomRadius.pow2()))
 
   const cosView = float().toVar()
   const viewRayIntersectsGround = bool().toVar()
@@ -517,7 +501,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     // Distance to the ground for the ray (radius, cosView), and its minimum
     // and maximum values over all cosView - obtained for (radius, -1) and
     // (radius, cosHorizon) - from which we can recover cosView.
-    const minDistance = radius.sub(uniforms.bottomRadius).toVar()
+    const minDistance = radius.sub(nodes.bottomRadius).toVar()
     const maxDistance = distanceToHorizon
     const distance = minDistance
       .add(
@@ -550,7 +534,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     // and its minimum and maximum values over all cosView - obtained for
     // (radius, 1) and (radius, cosHorizon) - from which we can recover
     // cosView.
-    const minDistance = uniforms.topRadius.sub(radius).toVar()
+    const minDistance = nodes.topRadius.sub(radius).toVar()
     const maxDistance = distanceToHorizon.add(H)
     const distance = minDistance
       .add(
@@ -583,12 +567,9 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     coord.y,
     parameters.scatteringTextureCosSunSize
   ).toVar()
-  const minDistance = uniforms.topRadius.sub(uniforms.bottomRadius).toVar()
+  const minDistance = nodes.topRadius.sub(nodes.bottomRadius).toVar()
   const maxDistance = H
-  const D = distanceToTopAtmosphereBoundary(
-    uniforms.bottomRadius,
-    uniforms.minCosSun
-  )
+  const D = distanceToTopAtmosphereBoundary(nodes.bottomRadius, nodes.minCosSun)
   const A = D.remap(minDistance, maxDistance).toVar()
   const a = A.sub(cosSunUnit.mul(A)).div(cosSunUnit.mul(A).add(1))
   const distance = minDistance
@@ -600,7 +581,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     clampCosine(
       H.pow2()
         .sub(distance.pow2())
-        .div(mul(2, uniforms.bottomRadius, distance))
+        .div(mul(2, nodes.bottomRadius, distance))
     )
   )
   const cosViewSun = clampCosine(coord.x.mul(2).sub(1))
@@ -727,7 +708,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
 
   const result = vec3().toVar()
   If(scatteringOrder.equal(1), () => {
@@ -750,7 +731,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
     result.assign(
       add(
         rayleigh.mul(rayleighPhaseFunction(cosViewSun)),
-        mie.mul(miePhaseFunction(uniforms.miePhaseFunctionG, cosViewSun))
+        mie.mul(miePhaseFunction(nodes.miePhaseFunctionG, cosViewSun))
       )
     )
   }).Else(() => {
@@ -799,7 +780,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
 
   // Compute unit direction vectors for the zenith, the view direction omega
   // and the sun direction omegaSun, such that the cosine of the view-zenith
@@ -851,7 +832,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
           bool(true)
         )
       )
-      groundAlbedo.assign(uniforms.groundAlbedo)
+      groundAlbedo.assign(nodes.groundAlbedo)
     })
 
     // @ts-expect-error Missing type
@@ -890,7 +871,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
         .normalize()
       const groundIrradiance = getIrradiance(
         irradianceTexture,
-        uniforms.bottomRadius,
+        nodes.bottomRadius,
         groundNormal.dot(omegaSun)
       )
       incidentRadiance.addAssign(
@@ -904,25 +885,25 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
       // and Mie).
       const cosViewSun2 = omega.dot(omegaI).toVar()
       const rayleighDensity = getProfileDensity(
-        uniforms.rayleighDensity,
-        radius.sub(uniforms.bottomRadius)
+        nodes.rayleighDensity,
+        radius.sub(nodes.bottomRadius)
       )
       const mieDensity = getProfileDensity(
-        uniforms.mieDensity,
-        radius.sub(uniforms.bottomRadius)
+        nodes.mieDensity,
+        radius.sub(nodes.bottomRadius)
       )
       radiance.addAssign(
         incidentRadiance.mul(
           add(
             mul(
-              uniforms.rayleighScattering,
+              nodes.rayleighScattering,
               rayleighDensity,
               rayleighPhaseFunction(cosViewSun2)
             ),
             mul(
-              uniforms.mieScattering,
+              nodes.mieScattering,
               mieDensity,
-              miePhaseFunction(uniforms.miePhaseFunctionG, cosViewSun2)
+              miePhaseFunction(nodes.miePhaseFunctionG, cosViewSun2)
             )
           ),
           deltaOmegaI
@@ -1105,8 +1086,8 @@ const computeDirectIrradiance = /*#__PURE__*/ FnLayout({
     { name: 'cosSun', type: Dimensionless }
   ]
 })(([transmittanceTexture, radius, cosSun], builder) => {
-  const { uniforms } = getAtmosphereContext(builder)
-  const alpha = uniforms.sunAngularRadius
+  const { nodes } = getAtmosphereContext(builder)
+  const alpha = nodes.sunAngularRadius
 
   // Approximate average of the cosine factor cosSun over the visible fraction
   // of the Sun disc.
@@ -1120,7 +1101,7 @@ const computeDirectIrradiance = /*#__PURE__*/ FnLayout({
     )
   )
 
-  return uniforms.solarIrradiance
+  return nodes.solarIrradiance
     .mul(
       getTransmittanceToTopAtmosphereBoundary(
         transmittanceTexture,
@@ -1206,7 +1187,7 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
   type: irradianceParamsStruct,
   inputs: [{ name: 'uv', type: 'vec2' }]
 })(([uv], builder) => {
-  const { parameters, uniforms } = getAtmosphereContext(builder)
+  const { parameters, nodes } = getAtmosphereContext(builder)
   const cosSunUnit = getUnitRangeFromTextureCoord(
     uv.x,
     parameters.irradianceTextureSize.x
@@ -1215,8 +1196,8 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
     uv.y,
     parameters.irradianceTextureSize.y
   )
-  const radius = uniforms.bottomRadius.add(
-    radiusUnit.mul(uniforms.topRadius.sub(uniforms.bottomRadius))
+  const radius = nodes.bottomRadius.add(
+    radiusUnit.mul(nodes.topRadius.sub(nodes.bottomRadius))
   )
   const cosSun = clampCosine(cosSunUnit.mul(2).sub(1))
   return irradianceParamsStruct(radius, cosSun)

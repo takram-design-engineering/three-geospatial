@@ -4,16 +4,16 @@ import type { NodeBuilder, Texture3DNode } from 'three/webgpu'
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import type {
   AtmosphereParameters,
-  AtmosphereParametersUniforms
+  AtmosphereParametersNodes
 } from './AtmosphereParameters'
 import type {
   AtmosphereRenderingContext,
-  AtmosphereRenderingContextUniforms
+  AtmosphereRenderingContextNodes
 } from './AtmosphereRenderingContext'
 
-export interface AtmosphereContextUniforms
-  extends AtmosphereParametersUniforms,
-    AtmosphereRenderingContextUniforms {}
+export interface AtmosphereContextNodes
+  extends AtmosphereParametersNodes,
+    AtmosphereRenderingContextNodes {}
 
 export interface AtmosphereContextOptions {
   constrainCamera: boolean
@@ -22,7 +22,7 @@ export interface AtmosphereContextOptions {
 
 export interface AtmosphereContext {
   parameters: AtmosphereParameters
-  uniforms: AtmosphereContextUniforms
+  nodes: AtmosphereContextNodes
   textures: {
     transmittance: TextureNode
     irradiance: TextureNode
@@ -39,13 +39,13 @@ export function createAtmosphereContext(
   lutNode: AtmosphereLUTNode,
   options?: Partial<AtmosphereContextOptions>
 ): AtmosphereContext {
-  const uniforms: AtmosphereContextUniforms = {
-    ...parameters.getUniforms(),
-    ...renderingContext?.getUniforms()
+  const nodes: AtmosphereContextNodes = {
+    ...parameters.getNodes(),
+    ...renderingContext?.getNodes()
   }
   return {
     parameters,
-    uniforms,
+    nodes,
     textures: {
       transmittance: lutNode.getTextureNode('transmittance'),
       irradiance: lutNode.getTextureNode('irradiance'),

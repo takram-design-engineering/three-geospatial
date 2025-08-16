@@ -17,11 +17,8 @@ export class AtmosphereLight extends DirectionalLight {
   renderingContext?: AtmosphereRenderingContext
   lutNode?: AtmosphereLUTNode
 
-  @nodeType('int')
-  direct = true
-
-  @nodeType('int')
-  indirect = true
+  @nodeType('int') direct = true
+  @nodeType('int') indirect = true
 
   // Distance to the target position.
   distance: number
@@ -50,7 +47,7 @@ export class AtmosphereLight extends DirectionalLight {
       return
     }
     const { ecefToWorldMatrix, sunDirectionECEF } =
-      renderingContext.getUniforms()
+      renderingContext.getNodes()
     this.position
       .copy(sunDirectionECEF.value)
       .applyMatrix3(rotationScratch.setFromMatrix4(ecefToWorldMatrix.value))

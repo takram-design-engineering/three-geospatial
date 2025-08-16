@@ -410,7 +410,7 @@ export class AtmosphereLUTNode extends TempNode {
     ).context({
       atmosphere: {
         parameters: this.parameters,
-        uniforms: this.parameters.getUniforms()
+        nodes: this.parameters.getNodes()
       }
     })
 
@@ -448,7 +448,7 @@ export class AtmosphereLUTNode extends TempNode {
     ).context({
       atmosphere: {
         parameters: this.parameters,
-        uniforms: this.parameters.getUniforms()
+        nodes: this.parameters.getNodes()
       }
     })
 
@@ -488,7 +488,7 @@ export class AtmosphereLUTNode extends TempNode {
     ).context({
       atmosphere: {
         parameters: this.parameters,
-        uniforms: this.parameters.getUniforms()
+        nodes: this.parameters.getNodes()
       }
     })
 
@@ -553,7 +553,7 @@ export class AtmosphereLUTNode extends TempNode {
     ).context({
       atmosphere: {
         parameters: this.parameters,
-        uniforms: this.parameters.getUniforms()
+        nodes: this.parameters.getNodes()
       }
     })
 
@@ -584,7 +584,7 @@ export class AtmosphereLUTNode extends TempNode {
     ).context({
       atmosphere: {
         parameters: this.parameters,
-        uniforms: this.parameters.getUniforms()
+        nodes: this.parameters.getNodes()
       }
     })
 
@@ -624,7 +624,7 @@ export class AtmosphereLUTNode extends TempNode {
     ).context({
       atmosphere: {
         parameters: this.parameters,
-        uniforms: this.parameters.getUniforms()
+        nodes: this.parameters.getNodes()
       }
     })
 

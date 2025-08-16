@@ -118,14 +118,14 @@ const getExtrapolatedSingleMieScattering = /*#__PURE__*/ FnLayout({
   type: IrradianceSpectrum,
   inputs: [{ name: 'scattering', type: AbstractSpectrum }]
 })(([scattering], builder) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
 
   // Algebraically this can never be negative, but rounding errors can produce
   // that effect for sufficiently short view rays.
   const singleMieScattering = vec3(0).toVar()
   // Avoid division by infinitesimal values.
   If(scattering.r.greaterThanEqual(1e-5), () => {
-    const { rayleighScattering, mieScattering } = uniforms
+    const { rayleighScattering, mieScattering } = nodes
     singleMieScattering.assign(
       scattering.rgb
         .mul(scattering.a)
@@ -258,15 +258,15 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { parameters, uniforms, options } = getAtmosphereContext(builder)
+  const { parameters, nodes, options } = getAtmosphereContext(builder)
 
   // Clamp the viewer at the bottom atmosphere boundary for rendering points
   // below it.
   const radius = camera.length().toVar()
   const movedCamera = camera.toVar()
   if (options.constrainCamera) {
-    If(radius.lessThan(uniforms.bottomRadius), () => {
-      radius.assign(uniforms.bottomRadius)
+    If(radius.lessThan(nodes.bottomRadius), () => {
+      radius.assign(nodes.bottomRadius)
       movedCamera.assign(camera.normalize().mul(radius))
     })
   }
@@ -278,7 +278,7 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
     .negate()
     .sub(
       safeSqrt(
-        radiusCosView.pow2().sub(radius.pow2()).add(uniforms.topRadius.pow2())
+        radiusCosView.pow2().sub(radius.pow2()).add(nodes.topRadius.pow2())
       )
     )
     .toVar()
@@ -287,7 +287,7 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
   // move the viewer to the top atmosphere boundary along the view ray.
   If(distanceToTop.greaterThan(0), () => {
     movedCamera.assign(movedCamera.add(viewRay.mul(distanceToTop)))
-    radius.assign(uniforms.topRadius)
+    radius.assign(nodes.topRadius)
     radiusCosView.addAssign(distanceToTop)
   })
 
@@ -295,7 +295,7 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
   const transmittance = vec3(1).toVar()
 
   // If the view ray does not intersect the atmosphere, simply return 0.
-  If(radius.lessThanEqual(uniforms.topRadius), () => {
+  If(radius.lessThanEqual(nodes.topRadius), () => {
     // Compute the scattering parameters needed for the texture lookups.
     const cosView = radiusCosView.div(radius).toVar()
     const cosSun = movedCamera.dot(sunDirection).div(radius).toVar()
@@ -404,7 +404,7 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
         .mul(rayleighPhaseFunction(cosViewSun))
         .add(
           singleMieScattering.mul(
-            miePhaseFunction(uniforms.miePhaseFunctionG, cosViewSun)
+            miePhaseFunction(nodes.miePhaseFunctionG, cosViewSun)
           )
         )
     )
@@ -440,7 +440,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { parameters, uniforms } = getAtmosphereContext(builder)
+  const { parameters, nodes } = getAtmosphereContext(builder)
 
   // Compute the distance to the top atmosphere boundary along the view ray,
   // assuming the viewer is in space.
@@ -451,7 +451,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
     .negate()
     .sub(
       safeSqrt(
-        radiusCosView.pow2().sub(radius.pow2()).add(uniforms.topRadius.pow2())
+        radiusCosView.pow2().sub(radius.pow2()).add(nodes.topRadius.pow2())
       )
     )
     .toVar()
@@ -461,7 +461,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   const movedCamera = camera.toVar()
   If(distanceToTop.greaterThan(0), () => {
     movedCamera.assign(movedCamera.add(viewRay.mul(distanceToTop)))
-    radius.assign(uniforms.topRadius)
+    radius.assign(nodes.topRadius)
     radiusCosView.addAssign(distanceToTop)
   })
 
@@ -476,7 +476,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   // atmosphere texture resolution and finite floating point precision.
   If(not(viewRayIntersectsGround), () => {
     const cosHorizon = safeSqrt(
-      uniforms.bottomRadius.pow2().div(radius.pow2()).oneMinus()
+      nodes.bottomRadius.pow2().div(radius.pow2()).oneMinus()
     )
       .negate()
       .toVar()
@@ -602,7 +602,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
       .mul(rayleighPhaseFunction(cosViewSun))
       .add(
         singleMieScattering.mul(
-          miePhaseFunction(uniforms.miePhaseFunctionG, cosViewSun)
+          miePhaseFunction(nodes.miePhaseFunctionG, cosViewSun)
         )
       )
   )
@@ -660,9 +660,9 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ FnLayout({
     { name: 'point', type: Position }
   ]
 })(([camera, point], builder) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
   const eps = float(0).toConst()
-  const bottomRadius = uniforms.bottomRadius.add(eps).toVar()
+  const bottomRadius = nodes.bottomRadius.add(eps).toVar()
   const cameraBelow = camera.length().lessThan(bottomRadius).toVar()
   const pointBelow = point.length().lessThan(bottomRadius).toVar()
 
@@ -706,14 +706,14 @@ const getSkyRadianceToPoint = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
   const radiance = vec3(0).toVar()
   const transmittance = vec3(1).toVar()
 
   // Avoid artifacts when the ray does not intersect the top atmosphere
   // boundary.
   const distanceToRay = distanceToClosestPointOnRay(camera, point)
-  If(distanceToRay.lessThan(uniforms.topRadius), () => {
+  If(distanceToRay.lessThan(nodes.topRadius), () => {
     // Clip the ray at the bottom atmosphere boundary for rendering points
     // below it.
     const clippedRaySegment = clipRayAtBottomAtmosphere(camera, point).toVar()
@@ -764,12 +764,12 @@ const getSunAndSkyIrradiance = /*#__PURE__*/ FnLayout({
   [transmittanceTexture, irradianceTexture, point, normal, sunDirection],
   builder
 ) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
   const radius = point.length().toVar()
   const cosSun = point.dot(sunDirection).div(radius).toVar()
 
   // Direct irradiance.
-  const sunIrradiance = uniforms.solarIrradiance.mul(
+  const sunIrradiance = nodes.solarIrradiance.mul(
     getTransmittanceToSun(transmittanceTexture, radius, cosSun),
     normal.dot(sunDirection).max(0)
   )
@@ -816,7 +816,7 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ FnLayout({
   [transmittanceTexture, irradianceTexture, point, sunDirection],
   builder
 ) => {
-  const { uniforms } = getAtmosphereContext(builder)
+  const { nodes } = getAtmosphereContext(builder)
   const radius = point.length().toVar()
   const cosSun = point.dot(sunDirection).div(radius).toVar()
 
@@ -826,7 +826,7 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ FnLayout({
   )
 
   // Direct irradiance. Omit the cosine term.
-  const sunIrradiance = uniforms.solarIrradiance.mul(
+  const sunIrradiance = nodes.solarIrradiance.mul(
     getTransmittanceToSun(transmittanceTexture, radius, cosSun)
   )
 
@@ -838,10 +838,10 @@ export const getSolarLuminance = /*#__PURE__*/ FnLayout({
   name: 'getSolarLuminance',
   type: Luminance3
 })(builder => {
-  const { uniforms } = getAtmosphereContext(builder)
-  return uniforms.solarIrradiance
-    .div(PI.mul(uniforms.sunAngularRadius.pow2()))
-    .mul(uniforms.sunRadianceToLuminance.mul(uniforms.luminanceScale))
+  const { nodes } = getAtmosphereContext(builder)
+  return nodes.solarIrradiance
+    .div(PI.mul(nodes.sunAngularRadius.pow2()))
+    .mul(nodes.sunRadianceToLuminance.mul(nodes.luminanceScale))
 })
 
 const luminanceTransferStruct = /*#__PURE__*/ struct(
@@ -863,7 +863,7 @@ export const getSkyLuminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([camera, viewRay, shadowLength, sunDirection], builder) => {
-  const { uniforms, textures } = getAtmosphereContext(builder)
+  const { nodes, textures } = getAtmosphereContext(builder)
   const radianceTransfer = getSkyRadiance(
     textures.transmittance,
     textures.scattering,
@@ -877,7 +877,7 @@ export const getSkyLuminance = /*#__PURE__*/ FnLayout({
 
   const luminance = radianceTransfer
     .get('radiance')
-    .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
+    .mul(nodes.skyRadianceToLuminance.mul(nodes.luminanceScale))
   return luminanceTransferStruct(
     luminance,
     radianceTransfer.get('transmittance')
@@ -895,7 +895,7 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([camera, point, shadowLength, sunDirection], builder) => {
-  const { uniforms, textures } = getAtmosphereContext(builder)
+  const { nodes, textures } = getAtmosphereContext(builder)
   const radianceTransfer = getSkyRadianceToPoint(
     textures.transmittance,
     textures.scattering,
@@ -909,7 +909,7 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ FnLayout({
 
   const luminance = radianceTransfer
     .get('radiance')
-    .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
+    .mul(nodes.skyRadianceToLuminance.mul(nodes.luminanceScale))
   return luminanceTransferStruct(
     luminance,
     radianceTransfer.get('transmittance')
@@ -934,7 +934,7 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, normal, sunDirection], builder) => {
-  const { uniforms, textures } = getAtmosphereContext(builder)
+  const { nodes, textures } = getAtmosphereContext(builder)
   const sunSkyIrradiance = getSunAndSkyIrradiance(
     textures.transmittance,
     textures.irradiance,
@@ -945,10 +945,10 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ FnLayout({
 
   const sunIlluminance = sunSkyIrradiance
     .get('sunIrradiance')
-    .mul(uniforms.sunRadianceToLuminance.mul(uniforms.luminanceScale))
+    .mul(nodes.sunRadianceToLuminance.mul(nodes.luminanceScale))
   const skyIlluminance = sunSkyIrradiance
     .get('skyIrradiance')
-    .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
+    .mul(nodes.skyRadianceToLuminance.mul(nodes.luminanceScale))
   return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
 })
 
@@ -962,7 +962,7 @@ export const getSkyIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, normal, sunDirection], builder) => {
-  const { uniforms, textures } = getAtmosphereContext(builder)
+  const { nodes, textures } = getAtmosphereContext(builder)
   const sunSkyIrradiance = getSkyIrradiance(
     textures.irradiance,
     point,
@@ -970,7 +970,7 @@ export const getSkyIlluminance = /*#__PURE__*/ FnLayout({
     sunDirection
   )
   return sunSkyIrradiance.mul(
-    uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale)
+    nodes.skyRadianceToLuminance.mul(nodes.luminanceScale)
   )
 })
 
@@ -984,7 +984,7 @@ export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, sunDirection], builder) => {
-  const { uniforms, textures } = getAtmosphereContext(builder)
+  const { nodes, textures } = getAtmosphereContext(builder)
   const sunSkyIrradiance = getSunAndSkyScalarIrradiance(
     textures.transmittance,
     textures.irradiance,
@@ -994,9 +994,9 @@ export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ FnLayout({
 
   const sunIlluminance = sunSkyIrradiance
     .get('sunIrradiance')
-    .mul(uniforms.sunRadianceToLuminance.mul(uniforms.luminanceScale))
+    .mul(nodes.sunRadianceToLuminance.mul(nodes.luminanceScale))
   const skyIlluminance = sunSkyIrradiance
     .get('skyIrradiance')
-    .mul(uniforms.skyRadianceToLuminance.mul(uniforms.luminanceScale))
+    .mul(nodes.skyRadianceToLuminance.mul(nodes.luminanceScale))
   return sunAndSkyIlluminanceStruct(sunIlluminance, skyIlluminance)
 })

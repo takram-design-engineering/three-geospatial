@@ -26,15 +26,15 @@ export class AtmosphereRenderingContext {
   moonFixedToECEFMatrix = new Matrix4().identity()
   correctAltitude = true
 
-  private uniforms?: AtmosphereRenderingContextUniforms
+  private nodes?: AtmosphereRenderingContextNodes
 
   constructor(options: AtmosphereRenderingContextOptions = {}) {
     Object.assign(this, options)
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createUniforms() {
-    const { worldToUnit } = this.parameters.getUniforms()
+  private createNodes() {
+    const { worldToUnit } = this.parameters.getNodes()
 
     const worldToECEFMatrix = uniform(new Matrix4().identity())
       .setGroup(groupNode)
@@ -106,8 +106,8 @@ export class AtmosphereRenderingContext {
     }
   }
 
-  getUniforms(): AtmosphereRenderingContextUniforms {
-    return (this.uniforms ??= this.createUniforms())
+  getNodes(): AtmosphereRenderingContextNodes {
+    return (this.nodes ??= this.createNodes())
   }
 
   copy(other: AtmosphereRenderingContext): this {
@@ -129,19 +129,19 @@ export class AtmosphereRenderingContext {
   dispose(): void {
     this.parameters.dispose()
 
-    const { uniforms } = this
-    if (uniforms == null) {
+    const { nodes } = this
+    if (nodes == null) {
       return
     }
-    for (const key in uniforms) {
-      if (Object.hasOwn(uniforms, key)) {
-        const uniform = uniforms[key as keyof typeof uniforms]
-        uniform.dispose()
+    for (const key in nodes) {
+      if (Object.hasOwn(nodes, key)) {
+        const node = nodes[key as keyof typeof nodes]
+        node.dispose()
       }
     }
   }
 }
 
-export type AtmosphereRenderingContextUniforms = ReturnType<
-  AtmosphereRenderingContext['createUniforms']
+export type AtmosphereRenderingContextNodes = ReturnType<
+  AtmosphereRenderingContext['createNodes']
 >

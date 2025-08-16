@@ -37,17 +37,17 @@ export class DensityProfileLayer {
     this.constantTerm = constantTerm
   }
 
-  private uniforms?: DensityProfileLayerUniforms
+  private nodes?: DensityProfileLayerNodes
 
-  getUniforms(
+  getNodes(
     owner: AtmosphereParameters,
     prefix: string
-  ): DensityProfileLayerUniforms {
-    return (this.uniforms ??= this.createUniforms(owner, prefix))
+  ): DensityProfileLayerNodes {
+    return (this.nodes ??= this.createNodes(owner, prefix))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createUniforms(owner: AtmosphereParameters, prefix: string) {
+  createNodes(owner: AtmosphereParameters, prefix: string) {
     const reference = referenceTo<DensityProfileLayer>(this, {
       group: groupNode,
       withName: true,
@@ -81,23 +81,23 @@ export class DensityProfileLayer {
   }
 
   dispose(): void {
-    const { uniforms } = this
-    if (uniforms == null) {
+    const { nodes } = this
+    if (nodes == null) {
       return
     }
-    for (const key in uniforms) {
-      if (Object.hasOwn(uniforms, key)) {
-        const uniform = uniforms[key as keyof typeof uniforms]
-        if (typeof uniform === 'object' && 'dispose' in uniform) {
-          uniform.dispose()
+    for (const key in nodes) {
+      if (Object.hasOwn(nodes, key)) {
+        const node = nodes[key as keyof typeof nodes]
+        if (typeof node === 'object' && 'dispose' in node) {
+          node.dispose()
         }
       }
     }
   }
 }
 
-export type DensityProfileLayerUniforms = ReturnType<
-  DensityProfileLayer['createUniforms']
+export type DensityProfileLayerNodes = ReturnType<
+  DensityProfileLayer['createNodes']
 >
 
 export class DensityProfile {
@@ -107,21 +107,18 @@ export class DensityProfile {
     this.layers = layers
   }
 
-  private uniforms?: DensityProfileUniforms
+  private nodes?: DensityProfileNodes
 
-  getUniforms(
-    owner: AtmosphereParameters,
-    prefix: string
-  ): DensityProfileUniforms {
-    return (this.uniforms ??= this.createUniforms(owner, prefix))
+  getNodes(owner: AtmosphereParameters, prefix: string): DensityProfileNodes {
+    return (this.nodes ??= this.createNodes(owner, prefix))
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createUniforms(owner: AtmosphereParameters, prefix: string) {
+  createNodes(owner: AtmosphereParameters, prefix: string) {
     return {
       layers: [
-        this.layers[0].getUniforms(owner, `${prefix}_0`),
-        this.layers[1].getUniforms(owner, `${prefix}_1`)
+        this.layers[0].getNodes(owner, `${prefix}_0`),
+        this.layers[1].getNodes(owner, `${prefix}_1`)
       ] as const
     }
   }
@@ -146,9 +143,7 @@ export class DensityProfile {
   }
 }
 
-export type DensityProfileUniforms = ReturnType<
-  DensityProfile['createUniforms']
->
+export type DensityProfileNodes = ReturnType<DensityProfile['createNodes']>
 
 const luminanceCoefficients = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 
@@ -261,14 +256,14 @@ export class AtmosphereParameters {
     this.scatteringTextureRadiusSize
   )
 
-  private uniforms?: AtmosphereParametersUniforms
+  private nodes?: AtmosphereParametersNodes
 
-  getUniforms(): AtmosphereParametersUniforms {
-    return (this.uniforms ??= this.createUniforms())
+  getNodes(): AtmosphereParametersNodes {
+    return (this.nodes ??= this.createNodes())
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createUniforms() {
+  private createNodes() {
     const reference = referenceTo<AtmosphereParameters>(this, {
       group: groupNode,
       withName: true
@@ -282,14 +277,11 @@ export class AtmosphereParameters {
         value => value * this.worldToUnit
       ),
       topRadius: reference('topRadius', value => value * this.worldToUnit),
-      rayleighDensity: this.rayleighDensity.getUniforms(
-        this,
-        'rayleighDensity'
-      ),
+      rayleighDensity: this.rayleighDensity.getNodes(this, 'rayleighDensity'),
       rayleighScattering: reference('rayleighScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
-      mieDensity: this.mieDensity.getUniforms(this, 'mieDensity'),
+      mieDensity: this.mieDensity.getNodes(this, 'mieDensity'),
       mieScattering: reference('mieScattering', value =>
         value.divideScalar(this.worldToUnit)
       ),
@@ -297,7 +289,7 @@ export class AtmosphereParameters {
         value.divideScalar(this.worldToUnit)
       ),
       miePhaseFunctionG: reference('miePhaseFunctionG'),
-      absorptionDensity: this.absorptionDensity.getUniforms(
+      absorptionDensity: this.absorptionDensity.getNodes(
         this,
         'absorptionDensity'
       ),
@@ -358,21 +350,21 @@ export class AtmosphereParameters {
     this.mieDensity.dispose()
     this.absorptionDensity.dispose()
 
-    const { uniforms } = this
-    if (uniforms == null) {
+    const { nodes } = this
+    if (nodes == null) {
       return
     }
-    for (const key in uniforms) {
-      if (Object.hasOwn(uniforms, key)) {
-        const uniform = uniforms[key as keyof typeof uniforms]
-        if (typeof uniform === 'object' && 'dispose' in uniform) {
-          uniform.dispose()
+    for (const key in nodes) {
+      if (Object.hasOwn(nodes, key)) {
+        const node = nodes[key as keyof typeof nodes]
+        if (typeof node === 'object' && 'dispose' in node) {
+          node.dispose()
         }
       }
     }
   }
 }
 
-export type AtmosphereParametersUniforms = ReturnType<
-  AtmosphereParameters['createUniforms']
+export type AtmosphereParametersNodes = ReturnType<
+  AtmosphereParameters['createNodes']
 >
