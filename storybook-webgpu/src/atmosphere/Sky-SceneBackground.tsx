@@ -9,8 +9,7 @@ import {
 import {
   atmosphereLUT,
   AtmosphereRenderingContext,
-  skyBackground,
-  type SkyNodeOptions
+  skyBackground
 } from '@takram/three-atmosphere/webgpu'
 
 import {
@@ -44,13 +43,14 @@ const Scene: FC<StoryProps> = () => {
   const lutNode = useResource(() => atmosphereLUT(), [])
 
   useTransientControl(
-    ({ showSun, showMoon, showGround }: StoryArgs): SkyNodeOptions => ({
+    ({ showSun, showMoon, showGround }: StoryArgs) => ({
       showSun,
       showMoon,
       showGround
     }),
     options => {
-      const skyNode = skyBackground(context, lutNode, options)
+      const skyNode = skyBackground(context, lutNode)
+      Object.assign(skyNode, options)
       scene.backgroundNode?.dispose()
       scene.backgroundNode = skyNode
     }

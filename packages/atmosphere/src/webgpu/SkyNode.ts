@@ -120,12 +120,6 @@ const EQUIRECTANGULAR = 'EQUIRECTANGULAR'
 
 type SkyNodeScope = typeof SCREEN | typeof WORLD | typeof EQUIRECTANGULAR
 
-export interface SkyNodeOptions {
-  showSun?: boolean
-  showMoon?: boolean
-  showGround?: boolean
-}
-
 export class SkyNode extends TempNode {
   static override get type(): string {
     return 'SkyNode'
@@ -150,14 +144,12 @@ export class SkyNode extends TempNode {
   constructor(
     scope: SkyNodeScope,
     renderingContext: AtmosphereRenderingContext,
-    lutNode: AtmosphereLUTNode,
-    options?: SkyNodeOptions
+    lutNode: AtmosphereLUTNode
   ) {
     super('vec3')
     this.scope = scope
     this.renderingContext = renderingContext
     this.lutNode = lutNode
-    Object.assign(this, options)
   }
 
   override setup(builder: NodeBuilder): Node<'vec3'> {

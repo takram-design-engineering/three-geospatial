@@ -14,12 +14,7 @@ import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
-import { skyWorld, type SkyNode, type SkyNodeOptions } from './SkyNode'
-
-export interface SkyEnvironmentNodeOptions
-  extends Omit<SkyNodeOptions, 'showSun' | 'showMoon'> {
-  size?: number
-}
+import { skyWorld, type SkyNode } from './SkyNode'
 
 export class SkyEnvironmentNode extends TempNode {
   static override get type(): string {
@@ -37,15 +32,13 @@ export class SkyEnvironmentNode extends TempNode {
   constructor(
     renderingContext: AtmosphereRenderingContext,
     lutNode: AtmosphereLUTNode,
-    { size = 64, ...options }: SkyEnvironmentNodeOptions = {}
+    size = 64
   ) {
     super('cubeTexture')
 
-    this.skyNode = skyWorld(renderingContext, lutNode, {
-      ...options,
-      showSun: false,
-      showMoon: false
-    })
+    this.skyNode = skyWorld(renderingContext, lutNode)
+    this.skyNode.showSun = false
+    this.skyNode.showMoon = false
 
     this.renderTarget = new CubeRenderTarget(size, {
       depthBuffer: false,

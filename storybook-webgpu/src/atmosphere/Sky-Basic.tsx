@@ -10,8 +10,7 @@ import {
 import {
   atmosphereLUT,
   AtmosphereRenderingContext,
-  sky,
-  type SkyNodeOptions
+  sky
 } from '@takram/three-atmosphere/webgpu'
 
 import {
@@ -56,13 +55,14 @@ const Scene: FC<StoryProps> = () => {
   )
 
   useTransientControl(
-    ({ showSun, showMoon, showGround }: StoryArgs): SkyNodeOptions => ({
+    ({ showSun, showMoon, showGround }: StoryArgs) => ({
       showSun,
       showMoon,
       showGround
     }),
     options => {
-      const skyNode = sky(context, lutNode, options)
+      const skyNode = sky(context, lutNode)
+      Object.assign(skyNode, options)
       postProcessing.outputNode?.dispose()
       postProcessing.outputNode = skyNode
       postProcessing.needsUpdate = true

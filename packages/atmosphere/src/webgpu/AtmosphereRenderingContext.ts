@@ -1,7 +1,7 @@
 import { Camera, Matrix4, Vector3 } from 'three'
 import { sharedUniformGroup, uniform } from 'three/tsl'
 
-import { Ellipsoid, type WritableProperties } from '@takram/three-geospatial'
+import { Ellipsoid } from '@takram/three-geospatial'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import { AtmosphereParameters } from './AtmosphereParameters'
@@ -12,12 +12,9 @@ const groupNode = /*#__PURE__*/ sharedUniformGroup(
   groupNode.needsUpdate = true
 })
 
-export type AtmosphereRenderingContextOptions = Partial<
-  WritableProperties<AtmosphereRenderingContext>
->
-
 export class AtmosphereRenderingContext {
-  parameters = new AtmosphereParameters()
+  parameters: AtmosphereParameters
+
   camera = new Camera()
   ellipsoid = Ellipsoid.WGS84
   worldToECEFMatrix = new Matrix4().identity()
@@ -28,8 +25,8 @@ export class AtmosphereRenderingContext {
 
   private nodes?: AtmosphereRenderingContextNodes
 
-  constructor(options: AtmosphereRenderingContextOptions = {}) {
-    Object.assign(this, options)
+  constructor(parameters = new AtmosphereParameters()) {
+    this.parameters = parameters
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
