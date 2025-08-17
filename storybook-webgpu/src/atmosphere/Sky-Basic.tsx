@@ -53,13 +53,22 @@ const Scene: FC<StoryProps> = () => {
   }, [renderer, context])
 
   useTransientControl(
-    ({ showSun, showMoon, showGround }: StoryArgs) => ({
+    ({ showSun, showMoon }: StoryArgs) => ({
       showSun,
-      showMoon,
-      showGround
+      showMoon
     }),
     options => {
       Object.assign(skyNode, options)
+      postProcessing.needsUpdate = true
+    }
+  )
+
+  useTransientControl(
+    ({ showGround }: StoryArgs) => ({
+      showGround
+    }),
+    ({ showGround }) => {
+      context.showGround = showGround
       postProcessing.needsUpdate = true
     }
   )

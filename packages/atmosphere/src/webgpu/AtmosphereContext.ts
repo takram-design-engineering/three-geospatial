@@ -1,6 +1,7 @@
 import { Camera, Matrix4, Vector3 } from 'three'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { uniform, uniformGroup } from 'three/tsl'
-import type { NodeBuilder } from 'three/webgpu'
+import { Node, type NodeBuilder } from 'three/webgpu'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -14,7 +15,7 @@ const groupNode = /*#__PURE__*/ uniformGroup(
   groupNode.needsUpdate = true
 })
 
-export class AtmosphereContext {
+export class AtmosphereContext extends Node {
   parameters: AtmosphereParameters
   lutNode: AtmosphereLUTNode
 
@@ -38,8 +39,19 @@ export class AtmosphereContext {
     parameters = new AtmosphereParameters(),
     lutNode = new AtmosphereLUTNode(parameters)
   ) {
+    super(null)
     this.parameters = parameters
     this.lutNode = lutNode
+  }
+
+  override customCacheKey(): number {
+    return hash(
+      this.camera.id,
+      ...this.ellipsoid.radii,
+      +this.correctAltitude,
+      +this.constrainCamera,
+      +this.showGround
+    )
   }
 
   static get(builder: NodeBuilder): AtmosphereContext {
@@ -130,7 +142,9 @@ export class AtmosphereContext {
     return (this.nodes ??= this.createNodes())
   }
 
-  dispose(): void {
+  override dispose(): void {
+    super.dispose()
+
     this.parameters.dispose()
     this.lutNode.dispose()
 
