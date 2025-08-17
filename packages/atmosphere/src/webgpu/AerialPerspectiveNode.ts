@@ -14,9 +14,7 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
-import { createAtmosphereContext } from './context'
+import type { AtmosphereContext } from './AtmosphereContext'
 import { getSkyLuminanceToPoint, getSunAndSkyIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
@@ -25,53 +23,47 @@ export class AerialPerspectiveNode extends TempNode {
     return 'AerialPerspectiveNode'
   }
 
-  renderingContext: AtmosphereRenderingContext
+  private readonly atmosphereContext: AtmosphereContext
+
   colorNode: NodeObject | NodeObject<TextureNode>
   depthNode: NodeObject | NodeObject<TextureNode>
   normalNode?: NodeObject | NodeObject<TextureNode> | null
-  lutNode: AtmosphereLUTNode
-  skyNode?: NodeObject<'vec3'> | null
+  skyNode?: NodeObject | null
 
-  // Static options
+  // Static options:
   correctGeometricError = true
   lighting = false
   transmittance = true
   inscatter = true
 
   constructor(
-    renderingContext: AtmosphereRenderingContext,
+    atmosphereContext: AtmosphereContext,
     colorNode: NodeObject | NodeObject<TextureNode>,
     depthNode: NodeObject | NodeObject<TextureNode>,
-    normalNode: NodeObject | NodeObject<TextureNode> | null | undefined,
-    lutNode: AtmosphereLUTNode
+    normalNode: NodeObject | NodeObject<TextureNode> | null | undefined
   ) {
     super('vec4')
-    this.renderingContext = renderingContext
+    this.atmosphereContext = atmosphereContext
     this.colorNode = colorNode
     this.normalNode = normalNode
     this.depthNode = depthNode
-    this.lutNode = lutNode
-    this.skyNode = sky(renderingContext, lutNode)
+    this.skyNode = sky(atmosphereContext)
 
     this.lighting = normalNode != null
   }
 
   override setup(builder: NodeBuilder): Node<'vec4'> {
-    builder.getContext().atmosphere = createAtmosphereContext(
-      this.renderingContext.parameters,
-      this.renderingContext,
-      this.lutNode
-    )
+    builder.getContext().atmosphere = this.atmosphereContext
 
-    const { camera } = this.renderingContext
+    const { camera } = this.atmosphereContext
     const {
       worldToECEFMatrix,
       sunDirectionECEF,
       altitudeCorrectionECEF,
       cameraPositionUnit
-    } = this.renderingContext.getNodes()
+    } = this.atmosphereContext.getNodes()
 
-    const parameters = this.renderingContext.parameters.getNodes()
+    const parameters = this.atmosphereContext.parameters.getNodes()
     const { worldToUnit } = parameters
 
     const depth = this.depthNode.r.toVar()
@@ -96,7 +88,7 @@ export class AerialPerspectiveNode extends TempNode {
         vec4(positionView, 1)
       ).xyz
       let positionECEF = worldToECEFMatrix.mul(vec4(positionWorld, 1)).xyz
-      if (this.renderingContext.correctAltitude) {
+      if (this.atmosphereContext.correctAltitude) {
         positionECEF = positionECEF.add(altitudeCorrectionECEF)
       }
       const positionUnit = positionECEF.mul(worldToUnit).toVar()
@@ -160,7 +152,7 @@ export class AerialPerspectiveNode extends TempNode {
 
   override dispose(): void {
     super.dispose()
-    this.skyNode?.dispose() // TODO: Conditionally depending on the creator.
+    this.skyNode?.dispose() // TODO: Conditionally depending on the owner.
   }
 }
 

@@ -300,7 +300,7 @@ export class AtmosphereLUTNode extends TempNode {
     return 'AtmosphereLUTNode'
   }
 
-  parameters = new AtmosphereParameters()
+  parameters: AtmosphereParameters
   textureType?: AnyFloatType // TODO
 
   private readonly material = new AdditiveNodeMaterial()
@@ -325,9 +325,10 @@ export class AtmosphereLUTNode extends TempNode {
   private updating = false
   private disposeQueue: (() => void) | undefined
 
-  constructor() {
+  constructor(parameters = new AtmosphereParameters()) {
     super(null)
 
+    this.parameters = parameters
     this.transmittanceRT = createRenderTarget('transmittance')
     this.irradianceRT = createRenderTarget('irradiance')
     this.scatteringRT = createRenderTarget3D('scattering')
@@ -399,12 +400,7 @@ export class AtmosphereLUTNode extends TempNode {
   ): void {
     const transmittance = computeTransmittanceToTopAtmosphereBoundaryTexture(
       screenCoordinate
-    ).context({
-      atmosphere: {
-        parameters: this.parameters,
-        nodes: this.parameters.getNodes()
-      }
-    })
+    ).context({ atmosphere: { parameters: this.parameters } })
 
     if (this.parameters.transmittancePrecisionLog) {
       // Compute the optical depth, and store it in opticalDepth. Avoid having
@@ -437,12 +433,7 @@ export class AtmosphereLUTNode extends TempNode {
           : this.transmittanceRT.texture
       ),
       screenCoordinate
-    ).context({
-      atmosphere: {
-        parameters: this.parameters,
-        nodes: this.parameters.getNodes()
-      }
-    })
+    ).context({ atmosphere: { parameters: this.parameters } })
 
     this.material.fragmentNode = mrt({
       deltaIrradiance: vec4(irradiance, 1),
@@ -477,12 +468,7 @@ export class AtmosphereLUTNode extends TempNode {
           : this.transmittanceRT.texture
       ),
       vec3(screenCoordinate, layer.add(0.5))
-    ).context({
-      atmosphere: {
-        parameters: this.parameters,
-        nodes: this.parameters.getNodes()
-      }
-    })
+    ).context({ atmosphere: { parameters: this.parameters } })
 
     const rayleigh = singleScattering.get('rayleigh')
     const mie = singleScattering.get('mie')
@@ -542,12 +528,7 @@ export class AtmosphereLUTNode extends TempNode {
       texture(deltaIrradianceRT.texture),
       vec3(screenCoordinate, layer.add(0.5)),
       int(scatteringOrder)
-    ).context({
-      atmosphere: {
-        parameters: this.parameters,
-        nodes: this.parameters.getNodes()
-      }
-    })
+    ).context({ atmosphere: { parameters: this.parameters } })
 
     this.material.fragmentNode = vec4(radiance, 1)
     this.material.additive = false
@@ -573,12 +554,7 @@ export class AtmosphereLUTNode extends TempNode {
       texture3D(deltaMultipleScatteringRT.texture),
       screenCoordinate,
       int(scatteringOrder - 1)
-    ).context({
-      atmosphere: {
-        parameters: this.parameters,
-        nodes: this.parameters.getNodes()
-      }
-    })
+    ).context({ atmosphere: { parameters: this.parameters } })
 
     this.material.fragmentNode = mrt({
       deltaIrradiance: irradiance,
@@ -613,12 +589,7 @@ export class AtmosphereLUTNode extends TempNode {
       ),
       texture3D(deltaScatteringDensityRT.texture),
       vec3(screenCoordinate, layer.add(0.5))
-    ).context({
-      atmosphere: {
-        parameters: this.parameters,
-        nodes: this.parameters.getNodes()
-      }
-    })
+    ).context({ atmosphere: { parameters: this.parameters } })
 
     const radiance = multipleScattering.get('radiance')
     const cosViewSun = multipleScattering.get('cosViewSun')
@@ -786,7 +757,7 @@ export class AtmosphereLUTNode extends TempNode {
     this.higherOrderScatteringRT.dispose()
     this.material.dispose()
     this.mesh.geometry.dispose()
-    this.parameters.dispose() // TODO: Conditionally depending on the creator.
+    this.parameters.dispose() // TODO: Conditionally depending on the owner.
 
     const nodes = this._textureNodes
     for (const key in nodes) {

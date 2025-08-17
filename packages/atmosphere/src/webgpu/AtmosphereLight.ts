@@ -3,8 +3,7 @@ import { DirectionalLight } from 'three/webgpu'
 
 import { nodeType } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
+import type { AtmosphereContext } from './AtmosphereContext'
 
 const rotationScratch = new Matrix3()
 
@@ -14,8 +13,7 @@ const rotationScratch = new Matrix3()
 export class AtmosphereLight extends DirectionalLight {
   override readonly type = 'DirectionalLight'
 
-  renderingContext?: AtmosphereRenderingContext
-  lutNode?: AtmosphereLUTNode
+  atmosphereContext?: AtmosphereContext
 
   @nodeType('int') direct = true
   @nodeType('int') indirect = true
@@ -23,14 +21,9 @@ export class AtmosphereLight extends DirectionalLight {
   // Distance to the target position.
   distance: number
 
-  constructor(
-    renderingContext?: AtmosphereRenderingContext,
-    lutNode?: AtmosphereLUTNode,
-    distance = 1
-  ) {
+  constructor(atmosphereContext?: AtmosphereContext, distance = 1) {
     super()
-    this.renderingContext = renderingContext
-    this.lutNode = lutNode
+    this.atmosphereContext = atmosphereContext
     this.distance = distance
   }
 
@@ -42,12 +35,11 @@ export class AtmosphereLight extends DirectionalLight {
   }
 
   private updatePosition(): void {
-    const { renderingContext } = this
-    if (renderingContext == null) {
+    const { atmosphereContext: context } = this
+    if (context == null) {
       return
     }
-    const { ecefToWorldMatrix, sunDirectionECEF } =
-      renderingContext.getNodes()
+    const { ecefToWorldMatrix, sunDirectionECEF } = context.getNodes()
     this.position
       .copy(sunDirectionECEF.value)
       .applyMatrix3(rotationScratch.setFromMatrix4(ecefToWorldMatrix.value))
@@ -61,9 +53,7 @@ export class AtmosphereLight extends DirectionalLight {
 
   override copy(source: this, recursive?: boolean): this {
     super.copy(source, recursive)
-    // Copy by reference here:
-    this.renderingContext = source.renderingContext
-    this.lutNode = source.lutNode
+    this.atmosphereContext = source.atmosphereContext // Copy by reference here
     return this
   }
 }

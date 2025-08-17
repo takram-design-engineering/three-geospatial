@@ -7,11 +7,7 @@ import {
   getMoonDirectionECEF,
   getSunDirectionECEF
 } from '@takram/three-atmosphere'
-import {
-  atmosphereLUT,
-  AtmosphereRenderingContext,
-  sky
-} from '@takram/three-atmosphere/webgpu'
+import { AtmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
 
 import {
   localDateArgs,
@@ -42,10 +38,8 @@ const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereRenderingContext(), [])
+  const context = useResource(() => new AtmosphereContext(), [])
   context.camera = camera
-
-  const lutNode = useResource(() => atmosphereLUT(), [])
 
   // Post-processing:
 
@@ -61,7 +55,7 @@ const Scene: FC<StoryProps> = () => {
       showGround
     }),
     options => {
-      const skyNode = sky(context, lutNode)
+      const skyNode = sky(context)
       Object.assign(skyNode, options)
       postProcessing.outputNode?.dispose()
       postProcessing.outputNode = skyNode

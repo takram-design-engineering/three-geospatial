@@ -1,38 +1,59 @@
 import { Camera, Matrix4, Vector3 } from 'three'
-import { sharedUniformGroup, uniform } from 'three/tsl'
+import { uniform, uniformGroup } from 'three/tsl'
+import type { NodeBuilder } from 'three/webgpu'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
+import { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import { AtmosphereParameters } from './AtmosphereParameters'
 
-const groupNode = /*#__PURE__*/ sharedUniformGroup(
-  'atmosphereRenderingContext'
+const groupNode = /*#__PURE__*/ uniformGroup(
+  'atmosphereContext'
 ).onRenderUpdate(() => {
   groupNode.needsUpdate = true
 })
 
-export class AtmosphereRenderingContext {
+export class AtmosphereContext {
   parameters: AtmosphereParameters
+  lutNode: AtmosphereLUTNode
 
   camera = new Camera()
   ellipsoid = Ellipsoid.WGS84
+
+  // Parameters exposed as uniform nodes:
   worldToECEFMatrix = new Matrix4().identity()
   sunDirectionECEF = new Vector3()
   moonDirectionECEF = new Vector3()
   moonFixedToECEFMatrix = new Matrix4().identity()
+
+  // Static options:
   correctAltitude = true
+  constrainCamera = true
+  showGround = true
 
-  private nodes?: AtmosphereRenderingContextNodes
+  private nodes?: AtmosphereContextNodes
 
-  constructor(parameters = new AtmosphereParameters()) {
+  constructor(
+    parameters = new AtmosphereParameters(),
+    lutNode = new AtmosphereLUTNode(parameters)
+  ) {
     this.parameters = parameters
+    this.lutNode = lutNode
+  }
+
+  static get(builder: NodeBuilder): AtmosphereContext {
+    const atmosphereContext = builder.getContext().atmosphere
+    if (atmosphereContext == null) {
+      throw new Error(
+        'AtmosphereContext does not found in the builder context.'
+      )
+    }
+    return atmosphereContext as AtmosphereContext
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private createNodes() {
-    const { worldToUnit } = this.parameters.getNodes()
-
     const worldToECEFMatrix = uniform(new Matrix4().identity())
       .setGroup(groupNode)
       .setName('worldToECEFMatrix')
@@ -85,6 +106,8 @@ export class AtmosphereRenderingContext {
           value
         )
       })
+
+    const { worldToUnit } = this.parameters.getNodes()
     const cameraPositionUnit = (
       this.correctAltitude
         ? cameraPositionECEF.add(altitudeCorrectionECEF).mul(worldToUnit)
@@ -103,11 +126,11 @@ export class AtmosphereRenderingContext {
     }
   }
 
-  getNodes(): AtmosphereRenderingContextNodes {
+  getNodes(): AtmosphereContextNodes {
     return (this.nodes ??= this.createNodes())
   }
 
-  copy(other: AtmosphereRenderingContext): this {
+  copy(other: AtmosphereContext): this {
     this.parameters.copy(other.parameters)
     this.camera.copy(other.camera)
     this.ellipsoid = other.ellipsoid
@@ -119,12 +142,13 @@ export class AtmosphereRenderingContext {
     return this
   }
 
-  clone(): AtmosphereRenderingContext {
-    return new AtmosphereRenderingContext().copy(this)
+  clone(): AtmosphereContext {
+    return new AtmosphereContext().copy(this)
   }
 
   dispose(): void {
     this.parameters.dispose()
+    this.lutNode.dispose()
 
     const { nodes } = this
     if (nodes == null) {
@@ -139,6 +163,6 @@ export class AtmosphereRenderingContext {
   }
 }
 
-export type AtmosphereRenderingContextNodes = ReturnType<
-  AtmosphereRenderingContext['createNodes']
+export type AtmosphereContextNodes = ReturnType<
+  AtmosphereContext['createNodes']
 >

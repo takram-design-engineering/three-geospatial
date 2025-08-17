@@ -12,8 +12,7 @@ import {
 import { QuadGeometry } from '@takram/three-geospatial'
 import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
-import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
+import type { AtmosphereContext } from './AtmosphereContext'
 import { skyWorld, type SkyNode } from './SkyNode'
 
 export class SkyEnvironmentNode extends TempNode {
@@ -29,14 +28,10 @@ export class SkyEnvironmentNode extends TempNode {
   private readonly mesh = new Mesh(new QuadGeometry(), this.material)
   private readonly scene = new Scene().add(this.mesh)
 
-  constructor(
-    renderingContext: AtmosphereRenderingContext,
-    lutNode: AtmosphereLUTNode,
-    size = 64
-  ) {
+  constructor(atmosphereContext: AtmosphereContext, size = 64) {
     super('cubeTexture')
 
-    this.skyNode = skyWorld(renderingContext, lutNode)
+    this.skyNode = skyWorld(atmosphereContext)
     this.skyNode.showSun = false
     this.skyNode.showMoon = false
 
@@ -67,7 +62,7 @@ export class SkyEnvironmentNode extends TempNode {
   override dispose(): void {
     super.dispose()
     this.renderTarget.dispose()
-    this.skyNode.dispose() // TODO: Conditionally depending on the creator.
+    this.skyNode.dispose() // TODO: Conditionally depending on the owner.
     this.material.dispose()
     this.mesh.geometry.dispose()
   }

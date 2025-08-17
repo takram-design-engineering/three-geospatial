@@ -56,11 +56,7 @@ import {
   getSunDirectionECI,
   toAstroTime
 } from '@takram/three-atmosphere'
-import {
-  atmosphereLUT,
-  AtmosphereRenderingContext,
-  sky
-} from '@takram/three-atmosphere/webgpu'
+import { AtmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
 import {
   assertType,
   degrees,
@@ -273,10 +269,9 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereRenderingContext(), [])
+  const context = useResource(() => new AtmosphereContext(), [])
   context.camera = camera
 
-  const lutNode = useResource(() => atmosphereLUT(), [])
   const exposureNode = useResource(() => uniform(1), [])
 
   // Post-processing:
@@ -284,7 +279,7 @@ const Scene: FC<StoryProps> = () => {
   const [postProcessing, skyNode, toneMappingNode] = useResource(() => {
     const passNode = pass(scene, camera)
 
-    const skyNode = sky(context, lutNode)
+    const skyNode = sky(context)
     skyNode.moonColorTexture = texture(
       new TextureLoader().load('public/moon/color_large.webp', texture => {
         texture.colorSpace = LinearSRGBColorSpace
@@ -307,7 +302,7 @@ const Scene: FC<StoryProps> = () => {
       .add(dithering())
 
     return [postProcessing, skyNode, toneMappingNode]
-  }, [renderer, scene, camera, context, lutNode, exposureNode])
+  }, [renderer, scene, camera, context, exposureNode])
 
   useGuardedFrame(() => {
     postProcessing.render()

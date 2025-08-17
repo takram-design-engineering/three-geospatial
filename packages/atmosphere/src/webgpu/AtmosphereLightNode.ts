@@ -17,7 +17,6 @@ import {
 
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
-import { createAtmosphereContext } from './context'
 import { getSkyIlluminance } from './runtime'
 
 type CorrectLightingContext = {
@@ -37,8 +36,8 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     if (this.light == null) {
       return
     }
-    const { renderingContext, lutNode } = this.light
-    if (renderingContext == null || lutNode == null) {
+    const { atmosphereContext } = this.light
+    if (atmosphereContext == null) {
       return
     }
 
@@ -51,9 +50,9 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       ecefToWorldMatrix,
       sunDirectionECEF,
       altitudeCorrectionECEF
-    } = renderingContext.getNodes()
+    } = atmosphereContext.getNodes()
 
-    const parameters = renderingContext.parameters.getNodes()
+    const parameters = atmosphereContext.parameters.getNodes()
     const {
       worldToUnit,
       solarIrradiance,
@@ -64,7 +63,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     // Derive the ECEF normal vector and the unit-space position of the vertex.
     const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
     let positionECEF = worldToECEFMatrix.mul(vec4(positionWorld, 1)).xyz
-    if (renderingContext.correctAltitude) {
+    if (atmosphereContext.correctAltitude) {
       positionECEF = positionECEF.add(altitudeCorrectionECEF)
     }
     const positionUnit = positionECEF.mul(worldToUnit).toVar()
@@ -73,19 +72,15 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const skyIlluminance = Fn(builder => {
       // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that
       // provided to the setupDirect().
-      builder.getContext().atmosphere = createAtmosphereContext(
-        renderingContext.parameters,
-        renderingContext,
-        lutNode
-      )
+      builder.getContext().atmosphere = atmosphereContext
       return getSkyIlluminance(positionUnit, normalECEF, sunDirectionECEF).mul(
         select(indirect, 1, 0)
       )
     })()
 
     // Yes, it's an indirect but should be fine to update it here.
-    const context = builder.getContext() as CorrectLightingContext
-    context.irradiance.addAssign(skyIlluminance)
+    const lightingContext = builder.getContext() as CorrectLightingContext
+    lightingContext.irradiance.addAssign(skyIlluminance)
 
     // Derive the view-space sun direction.
     const sunDirectionWorld = ecefToWorldMatrix.mul(
@@ -101,13 +96,9 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const sunTransmittance = Fn(builder => {
       // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that
       // provided to the setupDirect().
-      builder.getContext().atmosphere = createAtmosphereContext(
-        renderingContext.parameters,
-        renderingContext,
-        lutNode
-      )
+      builder.getContext().atmosphere = atmosphereContext
       return getTransmittanceToSun(
-        lutNode.getTextureNode('transmittance'),
+        atmosphereContext.lutNode.getTextureNode('transmittance'),
         radius,
         cosSun
       )

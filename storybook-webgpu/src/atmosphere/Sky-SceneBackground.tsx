@@ -7,8 +7,7 @@ import {
   getSunDirectionECEF
 } from '@takram/three-atmosphere'
 import {
-  atmosphereLUT,
-  AtmosphereRenderingContext,
+  AtmosphereContext,
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 
@@ -39,8 +38,7 @@ import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
 
-  const context = useResource(() => new AtmosphereRenderingContext(), [])
-  const lutNode = useResource(() => atmosphereLUT(), [])
+  const context = useResource(() => new AtmosphereContext(), [])
 
   useTransientControl(
     ({ showSun, showMoon, showGround }: StoryArgs) => ({
@@ -49,7 +47,7 @@ const Scene: FC<StoryProps> = () => {
       showGround
     }),
     options => {
-      const skyNode = skyBackground(context, lutNode)
+      const skyNode = skyBackground(context)
       Object.assign(skyNode, options)
       scene.backgroundNode?.dispose()
       scene.backgroundNode = skyNode

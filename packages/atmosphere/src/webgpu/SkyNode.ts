@@ -32,10 +32,8 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereLUTNode } from './AtmosphereLUTNode'
+import type { AtmosphereContext } from './AtmosphereContext'
 import { AtmosphereParametersNodes } from './AtmosphereParameters'
-import type { AtmosphereRenderingContext } from './AtmosphereRenderingContext'
-import { createAtmosphereContext } from './context'
 import type { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
 
@@ -125,8 +123,7 @@ export class SkyNode extends TempNode {
     return 'SkyNode'
   }
 
-  renderingContext: AtmosphereRenderingContext
-  lutNode: AtmosphereLUTNode
+  private readonly atmosphereContext: AtmosphereContext
 
   @nodeType('float') moonAngularRadius = 0.0045 // ≈ 15.5 arcminutes
   @nodeType('float') moonIntensity = 1
@@ -136,29 +133,18 @@ export class SkyNode extends TempNode {
   // Static options
   showSun = true
   showMoon = true
-  showGround = true
   debugEquirectGrid = false
 
   private readonly scope: SkyNodeScope = SCREEN
 
-  constructor(
-    scope: SkyNodeScope,
-    renderingContext: AtmosphereRenderingContext,
-    lutNode: AtmosphereLUTNode
-  ) {
+  constructor(scope: SkyNodeScope, context: AtmosphereContext) {
     super('vec3')
     this.scope = scope
-    this.renderingContext = renderingContext
-    this.lutNode = lutNode
+    this.atmosphereContext = context
   }
 
   override setup(builder: NodeBuilder): Node<'vec3'> {
-    builder.getContext().atmosphere = createAtmosphereContext(
-      this.renderingContext.parameters,
-      this.renderingContext,
-      this.lutNode,
-      { showGround: this.showGround }
-    )
+    builder.getContext().atmosphere = this.atmosphereContext
 
     const {
       worldToECEFMatrix,
@@ -166,9 +152,9 @@ export class SkyNode extends TempNode {
       moonDirectionECEF,
       moonFixedToECEFMatrix,
       cameraPositionUnit
-    } = this.renderingContext.getNodes()
+    } = this.atmosphereContext.getNodes()
 
-    const parameters = this.renderingContext.parameters.getNodes()
+    const parameters = this.atmosphereContext.parameters.getNodes()
 
     const reference = referenceTo<SkyNode>(this)
     const moonAngularRadius = reference('moonAngularRadius')
@@ -181,7 +167,7 @@ export class SkyNode extends TempNode {
       let directionWorld
       switch (this.scope) {
         case SCREEN:
-          directionWorld = cameraDirectionWorld(this.renderingContext.camera)
+          directionWorld = cameraDirectionWorld(this.atmosphereContext.camera)
           break
         case WORLD:
           directionWorld =

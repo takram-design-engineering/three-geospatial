@@ -13,10 +13,9 @@ import {
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
+  AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode,
-  atmosphereLUT,
-  AtmosphereRenderingContext
+  AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
@@ -58,10 +57,8 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereRenderingContext(), [])
+  const context = useResource(() => new AtmosphereContext(), [])
   context.camera = camera
-
-  const lutNode = useResource(() => atmosphereLUT(), [])
 
   // Post-processing:
 
@@ -72,15 +69,14 @@ const Scene: FC<StoryProps> = () => {
       context,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
-      null,
-      lutNode
+      null
     )
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, aerialNode]
-  }, [renderer, scene, camera, context, lutNode])
+  }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
     postProcessing.render()
@@ -105,7 +101,7 @@ const Scene: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight args={[context, lutNode]} />
+      <atmosphereLight args={[context]} />
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 512, 256]}

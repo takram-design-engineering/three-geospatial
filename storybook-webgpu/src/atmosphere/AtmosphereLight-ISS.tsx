@@ -15,10 +15,9 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  atmosphereLUT,
-  AtmosphereRenderingContext,
   skyEnvironment
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
@@ -69,10 +68,8 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereRenderingContext(), [])
+  const context = useResource(() => new AtmosphereContext(), [])
   context.camera = camera
-
-  const lutNode = useResource(() => atmosphereLUT(), [])
 
   // Post-processing:
 
@@ -83,15 +80,14 @@ const Scene: FC<StoryProps> = () => {
       context,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth'),
-      null,
-      lutNode
+      null
     )
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, aerialNode]
-  }, [renderer, scene, camera, context, lutNode])
+  }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
     postProcessing.render()
@@ -130,16 +126,13 @@ const Scene: FC<StoryProps> = () => {
     getMoonDirectionECEF(date, context.moonDirectionECEF)
   })
 
-  const envNode = useResource(
-    () => skyEnvironment(context, lutNode),
-    [context, lutNode]
-  )
+  const envNode = useResource(() => skyEnvironment(context), [context])
   scene.environmentNode = envNode
 
   return (
     <>
       <atmosphereLight
-        args={[context, lutNode, 80]}
+        args={[context, 80]}
         castShadow
         shadow-normalBias={0.1}
         shadow-mapSize={[2048, 2048]}
