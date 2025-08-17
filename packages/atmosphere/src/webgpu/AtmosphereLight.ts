@@ -15,8 +15,8 @@ export class AtmosphereLight extends DirectionalLight {
 
   atmosphereContext?: AtmosphereContext
 
-  @nodeType('int') direct = true
-  @nodeType('int') indirect = true
+  @nodeType('bool') direct = true
+  @nodeType('bool') indirect = true
 
   // Distance to the target position.
   distance: number
