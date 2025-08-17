@@ -1,9 +1,9 @@
 import {
   add,
+  Fn,
   luminance,
   nodeObject,
   passTexture,
-  reference,
   smoothstep,
   uniform,
   uv,
@@ -28,71 +28,11 @@ import {
 } from 'three/webgpu'
 
 import {
-  FnVar,
+  nodeType,
+  referenceTo,
   type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
-
-const fragment = /*#__PURE__*/ FnVar(
-  (
-    input: TextureNode,
-    inputSize: NodeObject<'vec2'>,
-    level: NodeObject<'float'>,
-    range: NodeObject<'float'>
-  ) => {
-    const texelSize = inputSize.reciprocal()
-
-    // outer1  --  outer2  --  outer3
-    //   --  inner1  --  inner2  --
-    // outer4  --  center  --  outer5
-    //   --  inner3  --  inner4  --
-    // outer6  --  outer7  --  outer8
-    const inner1 = texelSize.mul(vec2(-1, 1)).add(uv()).toVertexStage()
-    const inner2 = texelSize.mul(vec2(1, 1)).add(uv()).toVertexStage()
-    const inner3 = texelSize.mul(vec2(-1, -1)).add(uv()).toVertexStage()
-    const inner4 = texelSize.mul(vec2(1, -1)).add(uv()).toVertexStage()
-    const outer1 = texelSize.mul(vec2(-2, 2)).add(uv()).toVertexStage()
-    const outer2 = texelSize.mul(vec2(0, 2)).add(uv()).toVertexStage()
-    const outer3 = texelSize.mul(vec2(2, 2)).add(uv()).toVertexStage()
-    const outer4 = texelSize.mul(vec2(-2, 0)).add(uv()).toVertexStage()
-    const outer5 = texelSize.mul(vec2(2, 0)).add(uv()).toVertexStage()
-    const outer6 = texelSize.mul(vec2(-2, -2)).add(uv()).toVertexStage()
-    const outer7 = texelSize.mul(vec2(0, -2)).add(uv()).toVertexStage()
-    const outer8 = texelSize.mul(vec2(2, -2)).add(uv()).toVertexStage()
-
-    const result = input.sample(uv()).mul(0.125)
-
-    result.addAssign(
-      add(
-        input.sample(outer1),
-        input.sample(outer3),
-        input.sample(outer6),
-        input.sample(outer8)
-      ).mul(0.03125)
-    )
-
-    result.addAssign(
-      add(
-        input.sample(outer2),
-        input.sample(outer4),
-        input.sample(outer5),
-        input.sample(outer7)
-      ).mul(0.0625)
-    )
-
-    result.addAssign(
-      add(
-        input.sample(inner1),
-        input.sample(inner2),
-        input.sample(inner3),
-        input.sample(inner4)
-      ).mul(0.125)
-    )
-
-    const scale = smoothstep(level, level.add(range), luminance(result))
-    return vec4(result.rgb.mul(scale), result.a)
-  }
-)
 
 function createRenderTarget(): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
@@ -117,26 +57,32 @@ export class DownsampleThresholdNode extends TempNode {
   }
 
   inputNode: TextureNode
-  thresholdLevel = 0
-  thresholdRange = 0
+  @nodeType('float') thresholdLevel: number
+  @nodeType('float') thresholdRange: number
+  resolution: Vector2
 
-  private readonly renderTarget: RenderTarget
+  private readonly renderTarget = createRenderTarget()
   private readonly material = new NodeMaterial()
+  private readonly mesh = new QuadMesh(this.material)
 
-  private readonly mesh = new QuadMesh()
-  private readonly inputSize = uniform(new Vector2())
+  private readonly texelSize = uniform(new Vector2())
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNode: TextureNode
 
-  constructor(inputNode: TextureNode, thresholdLevel = 10, thresholdRange = 1) {
+  constructor(
+    inputNode: TextureNode,
+    thresholdLevel = 10,
+    thresholdRange = 1,
+    resolution = new Vector2(0.5, 0.5)
+  ) {
     super('vec4')
     this.inputNode = inputNode
     this.thresholdLevel = thresholdLevel
     this.thresholdRange = thresholdRange
+    this.resolution = resolution
 
-    this.renderTarget = createRenderTarget()
     this._textureNode = passTexture(this, this.renderTarget.texture)
 
     this.updateBeforeType = NodeUpdateType.RENDER
@@ -147,7 +93,9 @@ export class DownsampleThresholdNode extends TempNode {
   }
 
   setSize(width: number, height: number): void {
-    this.renderTarget.setSize(Math.floor(width / 2), Math.floor(height / 2))
+    const w = Math.round(width * this.resolution.x)
+    const h = Math.round(height * this.resolution.y)
+    this.renderTarget.setSize(w, h)
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -156,10 +104,10 @@ export class DownsampleThresholdNode extends TempNode {
     }
     rendererState = RendererUtils.resetRendererState(renderer, rendererState)
 
-    const { inputNode } = this
-    this.setSize(inputNode.value.width, inputNode.value.height)
+    const { width, height } = this.inputNode.value
+    this.setSize(width, height)
 
-    this.inputSize.value.set(inputNode.value.width, inputNode.value.height)
+    this.texelSize.value.set(1 / width, 1 / height)
     renderer.setRenderTarget(this.renderTarget)
     this.mesh.render(renderer)
 
@@ -167,16 +115,68 @@ export class DownsampleThresholdNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): Node<'vec4'> {
-    const { material } = this
-    material.fragmentNode = fragment(
-      this.inputNode,
-      this.inputSize,
-      reference('thresholdLevel', 'float', this),
-      reference('thresholdRange', 'float', this)
-    )
-    material.needsUpdate = true
+    const { inputNode, texelSize } = this
+    const reference = referenceTo<DownsampleThresholdNode>(this)
+    const thresholdLevel = reference('thresholdLevel')
+    const thresholdRange = reference('thresholdRange')
 
-    this.mesh.material = material
+    const kernel = Fn(() => {
+      // outer1  --  outer2  --  outer3
+      //   --  inner1  --  inner2  --
+      // outer4  --  center  --  outer5
+      //   --  inner3  --  inner4  --
+      // outer6  --  outer7  --  outer8
+      const center = uv()
+      const inner1 = vec2(-1, 1).mul(texelSize).add(center).toVertexStage()
+      const inner2 = vec2(1, 1).mul(texelSize).add(center).toVertexStage()
+      const inner3 = vec2(-1, -1).mul(texelSize).add(center).toVertexStage()
+      const inner4 = vec2(1, -1).mul(texelSize).add(center).toVertexStage()
+      const outer1 = vec2(-2, 2).mul(texelSize).add(center).toVertexStage()
+      const outer2 = vec2(0, 2).mul(texelSize).add(center).toVertexStage()
+      const outer3 = vec2(2, 2).mul(texelSize).add(center).toVertexStage()
+      const outer4 = vec2(-2, 0).mul(texelSize).add(center).toVertexStage()
+      const outer5 = vec2(2, 0).mul(texelSize).add(center).toVertexStage()
+      const outer6 = vec2(-2, -2).mul(texelSize).add(center).toVertexStage()
+      const outer7 = vec2(0, -2).mul(texelSize).add(center).toVertexStage()
+      const outer8 = vec2(2, -2).mul(texelSize).add(center).toVertexStage()
+
+      const result = inputNode.sample(center).mul(0.125)
+      result.addAssign(
+        add(
+          inputNode.sample(outer1),
+          inputNode.sample(outer3),
+          inputNode.sample(outer6),
+          inputNode.sample(outer8)
+        ).mul(0.03125)
+      )
+      result.addAssign(
+        add(
+          inputNode.sample(outer2),
+          inputNode.sample(outer4),
+          inputNode.sample(outer5),
+          inputNode.sample(outer7)
+        ).mul(0.0625)
+      )
+      result.addAssign(
+        add(
+          inputNode.sample(inner1),
+          inputNode.sample(inner2),
+          inputNode.sample(inner3),
+          inputNode.sample(inner4)
+        ).mul(0.125)
+      )
+
+      const scale = smoothstep(
+        thresholdLevel,
+        thresholdLevel.add(thresholdRange),
+        luminance(result)
+      )
+      return vec4(result.rgb.mul(scale), result.a)
+    })
+
+    const { material } = this
+    material.fragmentNode = kernel()
+    material.needsUpdate = true
 
     return this._textureNode
   }
