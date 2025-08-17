@@ -130,22 +130,6 @@ export class AtmosphereContext {
     return (this.nodes ??= this.createNodes())
   }
 
-  copy(other: AtmosphereContext): this {
-    this.parameters.copy(other.parameters)
-    this.camera.copy(other.camera)
-    this.ellipsoid = other.ellipsoid
-    this.worldToECEFMatrix.copy(other.worldToECEFMatrix)
-    this.sunDirectionECEF.copy(other.sunDirectionECEF)
-    this.moonDirectionECEF.copy(other.moonDirectionECEF)
-    this.moonFixedToECEFMatrix.copy(other.moonFixedToECEFMatrix)
-    this.correctAltitude = other.correctAltitude
-    return this
-  }
-
-  clone(): AtmosphereContext {
-    return new AtmosphereContext().copy(this)
-  }
-
   dispose(): void {
     this.parameters.dispose()
     this.lutNode.dispose()
