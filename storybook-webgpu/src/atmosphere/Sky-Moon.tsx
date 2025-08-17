@@ -308,6 +308,13 @@ const Scene: FC<StoryProps> = () => {
     postProcessing.render()
   }, 1)
 
+  useSpringControl(
+    ({ toneMappingExposure }: ToneMappingArgs) => toneMappingExposure,
+    value => {
+      exposureNode.value = value
+    }
+  )
+
   // Tone mapping controls:
   useTransientControl(
     ({ toneMappingEnabled, toneMapping }: ToneMappingArgs) => [
@@ -317,12 +324,6 @@ const Scene: FC<StoryProps> = () => {
     ([enabled, value]) => {
       toneMappingNode.toneMapping = enabled ? value : NoToneMapping
       postProcessing.needsUpdate = true
-    }
-  )
-  useSpringControl(
-    ({ toneMappingExposure }: ToneMappingArgs) => toneMappingExposure,
-    value => {
-      exposureNode.value = value
     }
   )
 

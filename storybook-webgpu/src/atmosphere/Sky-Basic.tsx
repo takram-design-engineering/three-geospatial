@@ -63,6 +63,10 @@ const Scene: FC<StoryProps> = () => {
     }
   )
 
+  useGuardedFrame(() => {
+    postProcessing.render()
+  }, 1)
+
   useTransientControl(
     ({ showGround }: StoryArgs) => ({
       showGround
@@ -72,10 +76,6 @@ const Scene: FC<StoryProps> = () => {
       postProcessing.needsUpdate = true
     }
   )
-
-  useGuardedFrame(() => {
-    postProcessing.render()
-  }, 1)
 
   // Tone mapping controls:
   useToneMappingControls(() => {

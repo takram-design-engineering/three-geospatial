@@ -83,7 +83,6 @@ const Scene: FC<StoryProps> = () => {
     )
 
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, context])

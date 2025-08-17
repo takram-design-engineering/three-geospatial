@@ -73,7 +73,6 @@ const Scene: FC<StoryProps> = ({
     )
 
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, aerialNode]
   }, [renderer, camera, scene, context])
@@ -81,16 +80,6 @@ const Scene: FC<StoryProps> = ({
   useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
-
-  // Apply the initial point of view.
-  usePointOfView({
-    longitude,
-    latitude,
-    height,
-    heading,
-    pitch,
-    distance
-  })
 
   // Output pass controls:
   useOutputPassControls(passNode, camera, outputNode => {
@@ -102,6 +91,16 @@ const Scene: FC<StoryProps> = ({
   // Tone mapping controls:
   useToneMappingControls(() => {
     postProcessing.needsUpdate = true
+  })
+
+  // Apply the initial point of view.
+  usePointOfView({
+    longitude,
+    latitude,
+    height,
+    heading,
+    pitch,
+    distance
   })
 
   // Local date controls (depends on the longitude of the location):
