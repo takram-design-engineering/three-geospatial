@@ -40,7 +40,7 @@ export class AerialPerspectiveNode extends TempNode {
     atmosphereContext: AtmosphereContext,
     colorNode: NodeObject | NodeObject<TextureNode>,
     depthNode: NodeObject | NodeObject<TextureNode>,
-    normalNode: NodeObject | NodeObject<TextureNode> | null | undefined
+    normalNode?: NodeObject | NodeObject<TextureNode> | null
   ) {
     super('vec4')
     this.atmosphereContext = atmosphereContext
