@@ -120,37 +120,43 @@ function setupRenderTarget3D(
   renderTarget.texture.isArrayTexture = false
 }
 
-function clearRenderTarget(
+async function clearRenderTarget(
   renderer: Renderer,
   renderTarget?: RenderTarget
-): void {
+): Promise<void> {
   if (renderTarget != null) {
     if (renderTarget instanceof RenderTarget3D) {
+      const promises: Array<Promise<void>> = []
       for (let i = 0; i < renderTarget.depth; ++i) {
         renderer.setRenderTarget(renderTarget, i)
-        void renderer.clearColor()
+        const promise = renderer.clearColor()
+        if (promise != null) {
+          promises.push(promise)
+        }
       }
+      await Promise.all(promises)
     } else {
       renderer.setRenderTarget(renderTarget)
-      void renderer.clearColor()
+      await renderer.clearColor()
     }
   }
 }
 
-async function timeSlice<T>(iterable: Iterable<T>): Promise<T> {
-  const iterator = iterable[Symbol.iterator]()
+async function timeSlice<T>(iterable: AsyncIterable<T>): Promise<T> {
+  const iterator = iterable[Symbol.asyncIterator]()
   return await new Promise<T>((resolve, reject) => {
     const callback = (): void => {
-      try {
-        const { value, done } = iterator.next()
-        if (done === true) {
-          resolve(value)
-        } else {
-          requestIdleCallback(callback)
-        }
-      } catch (error: unknown) {
-        reject(error instanceof Error ? error : new Error())
-      }
+      Promise.resolve(iterator.next())
+        .then(({ value, done }) => {
+          if (done === true) {
+            resolve(value as T)
+          } else {
+            requestIdleCallback(callback)
+          }
+        })
+        .catch((error: unknown) => {
+          reject(error instanceof Error ? error : new Error())
+        })
     }
     requestIdleCallback(callback)
   })
@@ -158,13 +164,16 @@ async function timeSlice<T>(iterable: Iterable<T>): Promise<T> {
 
 let rendererState: RendererUtils.RendererState
 
-function run(renderer: Renderer, task: () => void): boolean {
+async function run(
+  renderer: Renderer,
+  task: () => Promise<void>
+): Promise<boolean> {
   rendererState = RendererUtils.resetRendererState(renderer, rendererState)
   renderer.setClearColor(0, 0)
   renderer.autoClear = false
-  task()
+  const promise = task()
   RendererUtils.restoreRendererState(renderer, rendererState)
-  return true
+  return await promise.then(() => true)
 }
 
 class Context {
@@ -364,45 +373,49 @@ export class AtmosphereLUTNode extends TempNode {
     ))
   }
 
-  private renderToRenderTarget(
+  private async renderToRenderTarget(
     renderer: Renderer,
     renderTarget: RenderTarget,
     textures?: ReadonlyArray<Texture | undefined>
-  ): void {
+  ): Promise<void> {
     if (textures != null) {
       renderTarget.textures.push(...textures.filter(value => value != null))
     }
     renderer.setRenderTarget(renderTarget)
-    this.mesh.render(renderer)
+    await this.mesh.renderAsync(renderer)
     renderTarget.textures.length = 1
   }
 
-  private renderToRenderTarget3D(
+  private async renderToRenderTarget3D(
     renderer: Renderer,
     renderTarget: RenderTarget3D,
     layer: UniformNode<number>,
     textures?: ReadonlyArray<Data3DTexture | undefined>
-  ): void {
+  ): Promise<void> {
     if (textures != null) {
       renderTarget.textures.push(...textures.filter(value => value != null))
     }
+    const promises: Array<Promise<void>> = []
     for (let i = 0; i < renderTarget.depth; ++i) {
       layer.value = i
       renderer.setRenderTarget(renderTarget, i)
-      this.mesh.render(renderer)
+      promises.push(this.mesh.renderAsync(renderer))
     }
     renderTarget.textures.length = 1
+    await Promise.all(promises)
   }
 
-  private computeTransmittance(
+  private async computeTransmittance(
     renderer: Renderer,
     { opticalDepthRT }: Context
-  ): void {
+  ): Promise<void> {
+    const { parameters } = this
+
     const transmittance = computeTransmittanceToTopAtmosphereBoundaryTexture(
       screenCoordinate
-    ).context({ atmosphere: { parameters: this.parameters } })
+    ).context({ atmosphere: { parameters } })
 
-    if (this.parameters.transmittancePrecisionLog) {
+    if (parameters.transmittancePrecisionLog) {
       // Compute the optical depth, and store it in opticalDepth. Avoid having
       // tiny transmittance values underflow to 0 due to half-float precision.
       this.material.fragmentNode = mrt({
@@ -415,25 +428,25 @@ export class AtmosphereLUTNode extends TempNode {
     this.material.additive = false
     this.material.needsUpdate = true
 
-    this.renderToRenderTarget(renderer, this.transmittanceRT, [
-      this.parameters.transmittancePrecisionLog
-        ? opticalDepthRT.texture
-        : undefined
+    await this.renderToRenderTarget(renderer, this.transmittanceRT, [
+      parameters.transmittancePrecisionLog ? opticalDepthRT.texture : undefined
     ])
   }
 
-  private computeDirectIrradiance(
+  private async computeDirectIrradiance(
     renderer: Renderer,
     { deltaIrradianceRT, opticalDepthRT }: Context
-  ): void {
+  ): Promise<void> {
+    const { parameters } = this
+
     const irradiance = computeDirectIrradianceTexture(
       texture(
-        this.parameters.transmittancePrecisionLog
+        parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
       screenCoordinate
-    ).context({ atmosphere: { parameters: this.parameters } })
+    ).context({ atmosphere: { parameters } })
 
     this.material.fragmentNode = mrt({
       deltaIrradiance: vec4(irradiance, 1),
@@ -442,15 +455,21 @@ export class AtmosphereLUTNode extends TempNode {
     this.material.additive = true
     this.material.needsUpdate = true
 
-    // Turn off blending on the deltaIrradiance.
-    clearRenderTarget(renderer, deltaIrradianceRT)
+    const promises: Array<Promise<void>> = []
 
-    this.renderToRenderTarget(renderer, this.irradianceRT, [
-      deltaIrradianceRT.texture
-    ])
+    // Turn off blending on the deltaIrradiance.
+    promises.push(clearRenderTarget(renderer, deltaIrradianceRT))
+
+    promises.push(
+      this.renderToRenderTarget(renderer, this.irradianceRT, [
+        deltaIrradianceRT.texture
+      ])
+    )
+
+    await Promise.all(promises)
   }
 
-  private computeSingleScattering(
+  private async computeSingleScattering(
     renderer: Renderer,
     {
       luminanceFromRadiance,
@@ -458,17 +477,18 @@ export class AtmosphereLUTNode extends TempNode {
       deltaMieScatteringRT,
       opticalDepthRT
     }: Context
-  ): void {
+  ): Promise<void> {
+    const { parameters } = this
     const layer = uniform(0)
 
     const singleScattering = computeSingleScatteringTexture(
       texture(
-        this.parameters.transmittancePrecisionLog
+        parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
       vec3(screenCoordinate, layer.add(0.5))
-    ).context({ atmosphere: { parameters: this.parameters } })
+    ).context({ atmosphere: { parameters } })
 
     const rayleigh = singleScattering.get('rayleigh')
     const mie = singleScattering.get('mie')
@@ -485,25 +505,31 @@ export class AtmosphereLUTNode extends TempNode {
     this.material.additive = true
     this.material.needsUpdate = true
 
+    const promises: Array<Promise<void>> = []
+
     // Turn off blending on the deltaRayleighScattering and deltaMieScattering.
-    clearRenderTarget(renderer, deltaRayleighScatteringRT)
-    clearRenderTarget(renderer, deltaMieScatteringRT)
+    promises.push(clearRenderTarget(renderer, deltaRayleighScatteringRT))
+    promises.push(clearRenderTarget(renderer, deltaMieScatteringRT))
 
-    this.renderToRenderTarget3D(renderer, this.scatteringRT, layer, [
-      deltaRayleighScatteringRT.texture,
-      deltaMieScatteringRT.texture
-    ])
+    promises.push(
+      this.renderToRenderTarget3D(renderer, this.scatteringRT, layer, [
+        deltaRayleighScatteringRT.texture,
+        deltaMieScatteringRT.texture
+      ])
+    )
 
-    if (!this.parameters.combinedScatteringTextures) {
+    await Promise.all(promises)
+
+    if (!parameters.combinedScatteringTextures) {
       renderer.copyTextureToTexture(
         deltaMieScatteringRT.texture,
         this.singleMieScatteringRT.texture,
-        new Box3(new Vector3(), this.parameters.scatteringTextureSize)
+        new Box3(new Vector3(), parameters.scatteringTextureSize)
       )
     }
   }
 
-  private computeScatteringDensity(
+  private async computeScatteringDensity(
     renderer: Renderer,
     {
       deltaIrradianceRT,
@@ -514,11 +540,13 @@ export class AtmosphereLUTNode extends TempNode {
       opticalDepthRT
     }: Context,
     scatteringOrder: number
-  ): void {
+  ): Promise<void> {
+    const { parameters } = this
     const layer = uniform(0)
+
     const radiance = computeScatteringDensityTexture(
       texture(
-        this.parameters.transmittancePrecisionLog
+        parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
@@ -528,16 +556,16 @@ export class AtmosphereLUTNode extends TempNode {
       texture(deltaIrradianceRT.texture),
       vec3(screenCoordinate, layer.add(0.5)),
       int(scatteringOrder)
-    ).context({ atmosphere: { parameters: this.parameters } })
+    ).context({ atmosphere: { parameters } })
 
     this.material.fragmentNode = vec4(radiance, 1)
     this.material.additive = false
     this.material.needsUpdate = true
 
-    this.renderToRenderTarget3D(renderer, deltaScatteringDensityRT, layer)
+    await this.renderToRenderTarget3D(renderer, deltaScatteringDensityRT, layer)
   }
 
-  private computeIndirectIrradiance(
+  private async computeIndirectIrradiance(
     renderer: Renderer,
     {
       luminanceFromRadiance,
@@ -547,14 +575,16 @@ export class AtmosphereLUTNode extends TempNode {
       deltaMultipleScatteringRT
     }: Context,
     scatteringOrder: number
-  ): void {
+  ): Promise<void> {
+    const { parameters } = this
+
     const irradiance = computeIndirectIrradianceTexture(
       texture3D(deltaRayleighScatteringRT.texture),
       texture3D(deltaMieScatteringRT.texture),
       texture3D(deltaMultipleScatteringRT.texture),
       screenCoordinate,
       int(scatteringOrder - 1)
-    ).context({ atmosphere: { parameters: this.parameters } })
+    ).context({ atmosphere: { parameters } })
 
     this.material.fragmentNode = mrt({
       deltaIrradiance: irradiance,
@@ -563,15 +593,21 @@ export class AtmosphereLUTNode extends TempNode {
     this.material.additive = true
     this.material.needsUpdate = true
 
-    // Turn off blending on the deltaIrradiance.
-    clearRenderTarget(renderer, deltaIrradianceRT)
+    const promises: Array<Promise<void>> = []
 
-    this.renderToRenderTarget(renderer, this.irradianceRT, [
-      deltaIrradianceRT.texture
-    ])
+    // Turn off blending on the deltaIrradiance.
+    promises.push(clearRenderTarget(renderer, deltaIrradianceRT))
+
+    promises.push(
+      this.renderToRenderTarget(renderer, this.irradianceRT, [
+        deltaIrradianceRT.texture
+      ])
+    )
+
+    await Promise.all(promises)
   }
 
-  private computeMultipleScattering(
+  private async computeMultipleScattering(
     renderer: Renderer,
     {
       luminanceFromRadiance,
@@ -579,17 +615,19 @@ export class AtmosphereLUTNode extends TempNode {
       deltaMultipleScatteringRT,
       opticalDepthRT
     }: Context
-  ): void {
+  ): Promise<void> {
+    const { parameters } = this
     const layer = uniform(0)
+
     const multipleScattering = computeMultipleScatteringTexture(
       texture(
-        this.parameters.transmittancePrecisionLog
+        parameters.transmittancePrecisionLog
           ? opticalDepthRT.texture
           : this.transmittanceRT.texture
       ),
       texture3D(deltaScatteringDensityRT.texture),
       vec3(screenCoordinate, layer.add(0.5))
-    ).context({ atmosphere: { parameters: this.parameters } })
+    ).context({ atmosphere: { parameters } })
 
     const radiance = multipleScattering.get('radiance')
     const cosViewSun = multipleScattering.get('cosViewSun')
@@ -602,77 +640,88 @@ export class AtmosphereLUTNode extends TempNode {
       // deltaMultipleScattering is shared with deltaRayleighScattering.
       deltaRayleighScattering: vec4(radiance, 1)
     }
-    if (this.parameters.higherOrderScatteringTexture) {
+    if (parameters.higherOrderScatteringTexture) {
       mrtLayout.higherOrderScattering = vec4(luminance, 1)
     }
     this.material.fragmentNode = mrt(mrtLayout)
     this.material.additive = true
     this.material.needsUpdate = true
 
-    // Turn off blending on the deltaMultipleScattering.
-    clearRenderTarget(renderer, deltaMultipleScatteringRT)
+    const promises: Array<Promise<void>> = []
 
-    this.renderToRenderTarget3D(renderer, this.scatteringRT, layer, [
-      deltaMultipleScatteringRT.texture,
-      this.parameters.higherOrderScatteringTexture
-        ? this.higherOrderScatteringRT.texture
-        : undefined
-    ])
+    // Turn off blending on the deltaMultipleScattering.
+    promises.push(clearRenderTarget(renderer, deltaMultipleScatteringRT))
+
+    promises.push(
+      this.renderToRenderTarget3D(renderer, this.scatteringRT, layer, [
+        deltaMultipleScatteringRT.texture,
+        parameters.higherOrderScatteringTexture
+          ? this.higherOrderScatteringRT.texture
+          : undefined
+      ])
+    )
+
+    await Promise.all(promises)
   }
 
-  private *compute(renderer: Renderer, context: Context): Iterable<boolean> {
+  private async *compute(
+    renderer: Renderer,
+    context: Context
+  ): AsyncIterable<boolean> {
     // MRT doesn't work unless clearing the render target first. Perhaps it's a
     // limitation of WebGPU. I saw a similar comment in Three.js source code but
     // can't recall where.
-    yield run(renderer, () => {
-      clearRenderTarget(renderer, this.transmittanceRT)
-      clearRenderTarget(renderer, this.irradianceRT)
-      clearRenderTarget(renderer, this.scatteringRT)
-      clearRenderTarget(renderer, this.singleMieScatteringRT)
-      clearRenderTarget(renderer, this.higherOrderScatteringRT)
-      clearRenderTarget(renderer, context.opticalDepthRT)
-      clearRenderTarget(renderer, context.deltaRayleighScatteringRT)
-      clearRenderTarget(renderer, context.deltaMieScatteringRT)
-      clearRenderTarget(renderer, context.deltaScatteringDensityRT)
-      clearRenderTarget(renderer, context.deltaMultipleScatteringRT)
+    yield run(renderer, async () => {
+      await Promise.all([
+        clearRenderTarget(renderer, this.transmittanceRT),
+        clearRenderTarget(renderer, this.irradianceRT),
+        clearRenderTarget(renderer, this.scatteringRT),
+        clearRenderTarget(renderer, this.singleMieScatteringRT),
+        clearRenderTarget(renderer, this.higherOrderScatteringRT),
+        clearRenderTarget(renderer, context.opticalDepthRT),
+        clearRenderTarget(renderer, context.deltaRayleighScatteringRT),
+        clearRenderTarget(renderer, context.deltaMieScatteringRT),
+        clearRenderTarget(renderer, context.deltaScatteringDensityRT),
+        clearRenderTarget(renderer, context.deltaMultipleScatteringRT)
+      ])
     })
 
     // Compute the transmittance, and store it in transmittanceTexture.
-    yield run(renderer, () => {
-      this.computeTransmittance(renderer, context)
+    yield run(renderer, async () => {
+      await this.computeTransmittance(renderer, context)
     })
 
     // Compute the direct irradiance, store it in deltaIrradiance and,
     // depending on "additive", either initialize irradianceTexture with zeros
     // or leave it unchanged (we don't want the direct irradiance in
     // irradianceTexture, but only the irradiance from the sky).
-    yield run(renderer, () => {
-      this.computeDirectIrradiance(renderer, context)
+    yield run(renderer, async () => {
+      await this.computeDirectIrradiance(renderer, context)
     })
 
     // Compute the rayleigh and mie single scattering, store them in
     // deltaRayleighScattering and deltaMieScattering, and either store them or
     // accumulate them in scatteringTexture and optional
     // mieScatteringTexture.
-    yield run(renderer, () => {
-      this.computeSingleScattering(renderer, context)
+    yield run(renderer, async () => {
+      await this.computeSingleScattering(renderer, context)
     })
 
     // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
     for (let scatteringOrder = 2; scatteringOrder <= 4; ++scatteringOrder) {
       // Compute the scattering density, and store it in deltaScatteringDensity.
-      yield run(renderer, () => {
-        this.computeScatteringDensity(renderer, context, scatteringOrder)
+      yield run(renderer, async () => {
+        await this.computeScatteringDensity(renderer, context, scatteringOrder)
       })
       // Compute the indirect irradiance, store it in deltaIrradiance and
       // accumulate it in irradianceTexture.
-      yield run(renderer, () => {
-        this.computeIndirectIrradiance(renderer, context, scatteringOrder)
+      yield run(renderer, async () => {
+        await this.computeIndirectIrradiance(renderer, context, scatteringOrder)
       })
       // Compute the multiple scattering, store it in deltaMultipleScattering,
       // and accumulate it in scatteringTexture.
-      yield run(renderer, () => {
-        this.computeMultipleScattering(renderer, context)
+      yield run(renderer, async () => {
+        await this.computeMultipleScattering(renderer, context)
       })
     }
 
@@ -709,33 +758,34 @@ export class AtmosphereLUTNode extends TempNode {
       ? (this.textureType ?? FloatType)
       : HalfFloatType
 
+    const { parameters } = this
     setupRenderTarget(
       this.transmittanceRT,
       this.textureType,
-      this.parameters.transmittanceTextureSize
+      parameters.transmittanceTextureSize
     )
     setupRenderTarget(
       this.irradianceRT,
       this.textureType,
-      this.parameters.irradianceTextureSize
+      parameters.irradianceTextureSize
     )
     setupRenderTarget3D(
       this.scatteringRT,
       this.textureType,
-      this.parameters.scatteringTextureSize
+      parameters.scatteringTextureSize
     )
-    if (!this.parameters.combinedScatteringTextures) {
+    if (!parameters.combinedScatteringTextures) {
       setupRenderTarget3D(
         this.singleMieScatteringRT,
         this.textureType,
-        this.parameters.scatteringTextureSize
+        parameters.scatteringTextureSize
       )
     }
-    if (this.parameters.higherOrderScatteringTexture) {
+    if (parameters.higherOrderScatteringTexture) {
       setupRenderTarget3D(
         this.higherOrderScatteringRT,
         this.textureType,
-        this.parameters.scatteringTextureSize
+        parameters.scatteringTextureSize
       )
     }
     return super.setup(builder)
