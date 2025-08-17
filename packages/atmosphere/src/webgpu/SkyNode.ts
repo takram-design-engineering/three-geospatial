@@ -1,4 +1,5 @@
 import type { Camera } from 'three'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   cos,
   equirectUV,
@@ -7,7 +8,6 @@ import {
   If,
   mat3,
   max,
-  mix,
   nodeProxy,
   PI,
   positionGeometry,
@@ -21,7 +21,6 @@ import {
 import { TempNode, TextureNode, type NodeBuilder } from 'three/webgpu'
 
 import {
-  equirectGrid,
   equirectWorld,
   FnVar,
   inverseProjectionMatrix,
@@ -130,10 +129,9 @@ export class SkyNode extends TempNode {
   moonColorTexture?: TextureNode | null
   moonNormalTexture?: TextureNode | null
 
-  // Static options
+  // Static options:
   showSun = true
   showMoon = true
-  debugEquirectGrid = false
 
   private readonly scope: SkyNodeScope = SCREEN
 
@@ -141,6 +139,15 @@ export class SkyNode extends TempNode {
     super('vec3')
     this.scope = scope
     this.atmosphereContext = context
+  }
+
+  override customCacheKey(): number {
+    return hash(
+      this.moonColorTexture?.getCacheKey() ?? 0,
+      this.moonNormalTexture?.getCacheKey() ?? 0,
+      +this.showSun,
+      +this.showMoon
+    )
   }
 
   override setup(builder: NodeBuilder): Node<'vec3'> {
@@ -183,10 +190,6 @@ export class SkyNode extends TempNode {
     })()
       .toVertexStage()
       .normalize()
-
-    if (this.debugEquirectGrid) {
-      return mix(vec3(1), vec3(0), equirectGrid(rayDirectionECEF, 1))
-    }
 
     const luminanceTransfer = getSkyLuminance(
       cameraPositionUnit,

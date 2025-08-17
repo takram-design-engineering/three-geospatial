@@ -43,10 +43,14 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer),
-    [renderer]
-  )
+  const [postProcessing, skyNode] = useResource(() => {
+    const skyNode = sky(context)
+
+    const postProcessing = new PostProcessing(renderer)
+    postProcessing.outputNode = skyNode
+
+    return [postProcessing, skyNode]
+  }, [renderer, context])
 
   useTransientControl(
     ({ showSun, showMoon, showGround }: StoryArgs) => ({
@@ -55,10 +59,7 @@ const Scene: FC<StoryProps> = () => {
       showGround
     }),
     options => {
-      const skyNode = sky(context)
       Object.assign(skyNode, options)
-      postProcessing.outputNode?.dispose()
-      postProcessing.outputNode = skyNode
       postProcessing.needsUpdate = true
     }
   )

@@ -1,3 +1,4 @@
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { Discard, Fn, If, nodeObject, PI, uv, vec3, vec4 } from 'three/tsl'
 import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 
@@ -50,6 +51,17 @@ export class AerialPerspectiveNode extends TempNode {
     this.skyNode = sky(atmosphereContext)
 
     this.lighting = normalNode != null
+  }
+
+  override customCacheKey(): number {
+    return hash(
+      this.normalNode?.getCacheKey() ?? 0,
+      this.skyNode?.getCacheKey() ?? 0,
+      +this.correctGeometricError,
+      +this.lighting,
+      +this.transmittance,
+      +this.inscatter
+    )
   }
 
   override setup(builder: NodeBuilder): Node<'vec4'> {
@@ -130,7 +142,15 @@ export class AerialPerspectiveNode extends TempNode {
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
       const transmittance = luminanceTransfer.get('transmittance')
-      return diffuse.mul(transmittance).add(inscatter)
+
+      let output = diffuse
+      if (this.transmittance) {
+        output = output.mul(transmittance)
+      }
+      if (this.inscatter) {
+        output = output.add(inscatter)
+      }
+      return output
     })().context(builder.getContext())
 
     const outLuminance = vec3().toVar()

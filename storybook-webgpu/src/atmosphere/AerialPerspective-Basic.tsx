@@ -45,6 +45,7 @@ import {
   type PointOfViewProps
 } from '../helpers/usePointOfView'
 import { useResource } from '../helpers/useResource'
+import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 
@@ -81,7 +82,6 @@ const Scene: FC<StoryProps> = ({
     )
 
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = aerialNode
 
     return [postProcessing, passNode, aerialNode]
   }, [renderer, scene, camera, context])
@@ -89,6 +89,15 @@ const Scene: FC<StoryProps> = ({
   useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
+
+  useTransientControl(
+    ({ transmittance, inscatter }: StoryArgs) => ({ transmittance, inscatter }),
+    ({ transmittance, inscatter }) => {
+      aerialNode.transmittance = transmittance
+      aerialNode.inscatter = inscatter
+      postProcessing.needsUpdate = true
+    }
+  )
 
   // Apply the initial point of view.
   usePointOfView({
@@ -140,7 +149,10 @@ const Scene: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {}
+interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
+  transmittance: boolean
+  inscatter: boolean
+}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
@@ -149,6 +161,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
+  transmittance: true,
+  inscatter: true,
   ...localDateArgs({
     dayOfYear: 0,
     timeOfDay: 9
@@ -161,6 +175,16 @@ Story.args = {
 }
 
 Story.argTypes = {
+  transmittance: {
+    control: {
+      type: 'boolean'
+    }
+  },
+  inscatter: {
+    control: {
+      type: 'boolean'
+    }
+  },
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes(),

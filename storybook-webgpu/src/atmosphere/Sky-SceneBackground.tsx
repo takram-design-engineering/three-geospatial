@@ -39,6 +39,9 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
 
   const context = useResource(() => new AtmosphereContext(), [])
+  const skyNode = useResource(() => skyBackground(context), [context])
+
+  scene.backgroundNode = skyNode
 
   useTransientControl(
     ({ showSun, showMoon, showGround }: StoryArgs) => ({
@@ -47,10 +50,8 @@ const Scene: FC<StoryProps> = () => {
       showGround
     }),
     options => {
-      const skyNode = skyBackground(context)
       Object.assign(skyNode, options)
-      scene.backgroundNode?.dispose()
-      scene.backgroundNode = skyNode
+      skyNode.needsUpdate = true
     }
   )
 
