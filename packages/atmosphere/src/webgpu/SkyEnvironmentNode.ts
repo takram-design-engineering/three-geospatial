@@ -29,7 +29,7 @@ export class SkyEnvironmentNode extends TempNode {
   private readonly scene = new Scene().add(this.mesh)
 
   constructor(atmosphereContext: AtmosphereContext, size = 64) {
-    super('cubeTexture')
+    super('vec3')
 
     this.skyNode = skyWorld(atmosphereContext)
     this.skyNode.showSun = false
