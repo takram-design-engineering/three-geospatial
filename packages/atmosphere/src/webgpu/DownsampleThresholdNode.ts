@@ -26,6 +26,7 @@ import {
   type NodeFrame,
   type TextureNode
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import {
   nodeType,
@@ -55,7 +56,7 @@ export class DownsampleThresholdNode extends TempNode {
     return 'DownsampleThresholdNode'
   }
 
-  inputNode: TextureNode
+  inputNode: TextureNode | null
   @nodeType('float') thresholdLevel: number
   @nodeType('float') thresholdRange: number
   resolution: Vector2
@@ -71,7 +72,7 @@ export class DownsampleThresholdNode extends TempNode {
   private readonly _textureNode: TextureNode
 
   constructor(
-    inputNode: TextureNode,
+    inputNode: TextureNode | null,
     thresholdLevel = 10,
     thresholdRange = 1,
     resolution = new Vector2(0.5, 0.5)
@@ -103,7 +104,10 @@ export class DownsampleThresholdNode extends TempNode {
     }
     rendererState = RendererUtils.resetRendererState(renderer, rendererState)
 
-    const { width, height } = this.inputNode.value
+    const { inputNode } = this
+    invariant(inputNode != null)
+
+    const { width, height } = inputNode.value
     this.setSize(width, height)
 
     this.texelSize.value.set(1 / width, 1 / height)
@@ -115,6 +119,7 @@ export class DownsampleThresholdNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { inputNode, texelSize } = this
+    invariant(inputNode != null)
     const reference = referenceTo<DownsampleThresholdNode>(this)
     const thresholdLevel = reference('thresholdLevel')
     const thresholdRange = reference('thresholdRange')
@@ -177,6 +182,7 @@ export class DownsampleThresholdNode extends TempNode {
     material.fragmentNode = main()
     material.needsUpdate = true
 
+    this._textureNode.uvNode = inputNode.uvNode
     return this._textureNode
   }
 

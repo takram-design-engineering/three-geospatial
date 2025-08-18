@@ -1,5 +1,5 @@
 import {
-  float,
+  add,
   Fn,
   mix,
   nodeObject,
@@ -26,6 +26,7 @@ import {
   type NodeFrame,
   type TextureNode
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import { clampToBorder, type NodeObject } from '@takram/three-geospatial/webgpu'
 
@@ -51,7 +52,7 @@ export class MipmapBlurNode extends TempNode {
     return 'MipmapBlurNode'
   }
 
-  inputNode: TextureNode
+  inputNode: TextureNode | null
   levels: number
 
   private readonly downsampleRTs: RenderTarget[] = []
@@ -67,7 +68,7 @@ export class MipmapBlurNode extends TempNode {
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNode: TextureNode
 
-  constructor(inputNode: TextureNode, levels = 8) {
+  constructor(inputNode: TextureNode | null, levels = 8) {
     super('vec4')
     this.inputNode = inputNode
     this.levels = levels
@@ -116,6 +117,7 @@ export class MipmapBlurNode extends TempNode {
       texelSize,
       previousNode
     } = this
+    invariant(inputNode != null)
 
     const originalTexture = inputNode.value
 
@@ -149,6 +151,7 @@ export class MipmapBlurNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { inputNode, texelSize, previousNode } = this
+    invariant(inputNode != null)
 
     const downsample = Fn(() => {
       const center = uv()
@@ -165,50 +168,53 @@ export class MipmapBlurNode extends TempNode {
       const uv11 = vec2(0, -2).mul(texelSize).add(center).toVertexStage()
       const uv12 = vec2(2, -2).mul(texelSize).add(center).toVertexStage()
 
-      const innerWeight = float(1 / 4 / 2)
-      const outerWeight = float(1 / 9 / 2)
-      let weight: NodeObject
+      const innerWeight = 1 / 4 / 2
+      const outerWeight = 1 / 9 / 2
 
       const result = inputNode.sample(center).mul(outerWeight)
 
-      weight = innerWeight.mul(
-        vec4(
-          clampToBorder(uv01),
-          clampToBorder(uv02),
-          clampToBorder(uv03),
-          clampToBorder(uv04)
-        )
-      )
-      result.addAssign(inputNode.sample(uv01).mul(weight.x))
-      result.addAssign(inputNode.sample(uv02).mul(weight.y))
-      result.addAssign(inputNode.sample(uv03).mul(weight.z))
-      result.addAssign(inputNode.sample(uv04).mul(weight.w))
+      let weight: NodeObject
+      weight = vec4(
+        clampToBorder(uv01),
+        clampToBorder(uv02),
+        clampToBorder(uv03),
+        clampToBorder(uv04)
+      ).mul(innerWeight)
 
-      weight = outerWeight.mul(
-        vec4(
-          clampToBorder(uv05),
-          clampToBorder(uv06),
-          clampToBorder(uv07),
-          clampToBorder(uv08)
-        )
+      result.addAssign(
+        inputNode.sample(uv01).mul(weight.x),
+        inputNode.sample(uv02).mul(weight.y),
+        inputNode.sample(uv03).mul(weight.z),
+        inputNode.sample(uv04).mul(weight.w)
       )
-      result.addAssign(inputNode.sample(uv05).mul(weight.x))
-      result.addAssign(inputNode.sample(uv06).mul(weight.y))
-      result.addAssign(inputNode.sample(uv07).mul(weight.z))
-      result.addAssign(inputNode.sample(uv08).mul(weight.w))
 
-      weight = outerWeight.mul(
-        vec4(
-          clampToBorder(uv09),
-          clampToBorder(uv10),
-          clampToBorder(uv11),
-          clampToBorder(uv12)
-        )
+      weight = vec4(
+        clampToBorder(uv05),
+        clampToBorder(uv06),
+        clampToBorder(uv07),
+        clampToBorder(uv08)
+      ).mul(outerWeight)
+
+      result.addAssign(
+        inputNode.sample(uv05).mul(weight.x),
+        inputNode.sample(uv06).mul(weight.y),
+        inputNode.sample(uv07).mul(weight.z),
+        inputNode.sample(uv08).mul(weight.w)
       )
-      result.addAssign(inputNode.sample(uv09).mul(weight.x))
-      result.addAssign(inputNode.sample(uv10).mul(weight.y))
-      result.addAssign(inputNode.sample(uv11).mul(weight.z))
-      result.addAssign(inputNode.sample(uv12).mul(weight.w))
+
+      weight = vec4(
+        clampToBorder(uv09),
+        clampToBorder(uv10),
+        clampToBorder(uv11),
+        clampToBorder(uv12)
+      ).mul(outerWeight)
+
+      result.addAssign(
+        inputNode.sample(uv09).mul(weight.x),
+        inputNode.sample(uv10).mul(weight.y),
+        inputNode.sample(uv11).mul(weight.z),
+        inputNode.sample(uv12).mul(weight.w)
+      )
 
       return result
     })
@@ -224,18 +230,21 @@ export class MipmapBlurNode extends TempNode {
       const uv7 = vec2(0, -1).mul(texelSize).add(center).toVertexStage()
       const uv8 = vec2(1, -1).mul(texelSize).add(center).toVertexStage()
 
-      const result = vec4(0)
-
-      result.addAssign(inputNode.sample(uv1).mul(0.0625))
-      result.addAssign(inputNode.sample(uv2).mul(0.125))
-      result.addAssign(inputNode.sample(uv3).mul(0.0625))
-      result.addAssign(inputNode.sample(uv4).mul(0.125))
-      result.addAssign(inputNode.sample(center).mul(0.25))
-      result.addAssign(inputNode.sample(uv5).mul(0.125))
-      result.addAssign(inputNode.sample(uv6).mul(0.0625))
-      result.addAssign(inputNode.sample(uv7).mul(0.125))
-      result.addAssign(inputNode.sample(uv8).mul(0.0625))
-
+      const result = add(
+        inputNode.sample(center).mul(0.25),
+        add(
+          inputNode.sample(uv2),
+          inputNode.sample(uv4),
+          inputNode.sample(uv5),
+          inputNode.sample(uv7)
+        ).mul(0.125),
+        add(
+          inputNode.sample(uv1),
+          inputNode.sample(uv3),
+          inputNode.sample(uv6),
+          inputNode.sample(uv8)
+        ).mul(0.0625)
+      )
       return mix(previousNode.sample(center), result, 0.85)
     })
 
@@ -245,6 +254,7 @@ export class MipmapBlurNode extends TempNode {
     downsampleMaterial.needsUpdate = true
     upsampleMaterial.needsUpdate = true
 
+    this._textureNode.uvNode = inputNode.uvNode
     return this._textureNode
   }
 

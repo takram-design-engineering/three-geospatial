@@ -31,6 +31,7 @@ import {
   type NodeFrame,
   type TextureNode
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import {
   FnLayout,
@@ -61,7 +62,7 @@ export class LensFlareFeaturesNode extends TempNode {
     return 'LensFlareFeaturesNode'
   }
 
-  inputNode: TextureNode
+  inputNode: TextureNode | null
   @nodeType('float') ghostAmount: number
   @nodeType('float') haloAmount: number
   @nodeType('float') chromaticAberration: number
@@ -78,7 +79,7 @@ export class LensFlareFeaturesNode extends TempNode {
   private readonly _textureNode: TextureNode
 
   constructor(
-    inputNode: TextureNode,
+    inputNode: TextureNode | null,
     ghostAmount = 0.001,
     haloAmount = 0.001,
     chromaticAberration = 10
@@ -108,7 +109,10 @@ export class LensFlareFeaturesNode extends TempNode {
     }
     rendererState = RendererUtils.resetRendererState(renderer, rendererState)
 
-    const { width, height } = this.inputNode.value
+    const { inputNode } = this
+    invariant(inputNode != null)
+
+    const { width, height } = inputNode.value
     this.setSize(width, height)
 
     this.texelSize.value.set(1 / width, 1 / height)
@@ -121,6 +125,7 @@ export class LensFlareFeaturesNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { inputNode, texelSize, aspectRatio } = this
+    invariant(inputNode != null)
     const reference = referenceTo<LensFlareFeaturesNode>(this)
     const ghostAmount = reference('ghostAmount')
     const haloAmount = reference('haloAmount')
@@ -228,6 +233,7 @@ export class LensFlareFeaturesNode extends TempNode {
     )
     material.needsUpdate = true
 
+    this._textureNode.uvNode = inputNode.uvNode
     return this._textureNode
   }
 

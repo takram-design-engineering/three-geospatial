@@ -16,6 +16,7 @@ import {
   type NodeFrame,
   type TextureNode
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
@@ -52,7 +53,7 @@ export class GaussianBlurNode extends TempNode {
     return 'GaussianBlurNode'
   }
 
-  inputNode: TextureNode
+  inputNode: TextureNode | null
   kernelSize: number
   iterations: number
   resolution: Vector2
@@ -70,7 +71,7 @@ export class GaussianBlurNode extends TempNode {
   private readonly _textureNode: TextureNode
 
   constructor(
-    inputNode: TextureNode,
+    inputNode: TextureNode | null,
     kernelSize = 35,
     iterations = 1,
     resolution = new Vector2(1, 1)
@@ -104,6 +105,7 @@ export class GaussianBlurNode extends TempNode {
     rendererState = RendererUtils.resetRendererState(renderer, rendererState)
 
     const { horizontalRT, verticalRT, mesh, inputNode, direction } = this
+    invariant(inputNode != null)
 
     const originalTexture = inputNode.value
 
@@ -131,6 +133,7 @@ export class GaussianBlurNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { inputNode, texelSize, direction } = this
+    invariant(inputNode != null)
     const kernel = new GaussKernel(this.kernelSize, 2)
 
     const main = Fn(() => {
@@ -156,6 +159,7 @@ export class GaussianBlurNode extends TempNode {
 
     this.mesh.material = material
 
+    this._textureNode.uvNode = inputNode.uvNode
     return this._textureNode
   }
 
