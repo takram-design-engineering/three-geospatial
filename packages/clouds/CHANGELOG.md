@@ -1,16 +1,16 @@
 # Changelog
 
-## Unreleased
-
-### Breaking changes
-
-- Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix`.
-
-## [0.4.2] - 2025-07-14
+## [0.5.0] - 2025-08-19
 
 ### Changed
 
-- Updated the dependency to atmosphere.
+- Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix` (breaking change).
+- Updated dependencies.
+
+### Fixed
+
+- Improved the reprojection during temporal upscaling.
+- Fixed noise in the velocity vector during temporal upscaling.
 
 ## [0.4.1] - 2025-07-14
 
