@@ -1,11 +1,21 @@
 # Changelog
 
-## Unreleased
+## [0.14.0] - 2025-08-19
 
-### Breaking changes
+### Added
 
-- Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix`.
-- `Atmosphere`: Renamed `rotationMatrix` to `inertialToECEFMatrix`.
+- `AerialPerspectiveEffect`, `SkyMaterial`: Added `ground` option.
+
+### Changed
+
+- Removed `ellipsoidCenter` and `ellipsoidMatrix`. They have been replaced by `worldToECEFMatrix` (breaking change).
+- `Atmosphere`: Renamed `rotationMatrix` to `inertialToECEFMatrix` (breaking change).
+- Updated dependencies.
+
+### Fixed
+
+- Atmosphere now correctly renders the surface below the ellipsoid surface, [5](https://github.com/takram-design-engineering/three-geospatial/issues/5).
+- Fixed the nutation and precession that were incorrectly accounted for in the celestial directions.
 
 ## [0.13.2] - 2025-07-14
 

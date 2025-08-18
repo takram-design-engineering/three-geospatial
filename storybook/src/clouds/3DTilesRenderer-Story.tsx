@@ -159,11 +159,7 @@ const Scene: FC<SceneProps> = ({
   useKeyboardControl()
 
   return (
-    <Atmosphere
-      ref={atmosphereRef}
-      correctAltitude={correctAltitude}
-      ground={false}
-    >
+    <Atmosphere ref={atmosphereRef} correctAltitude={correctAltitude}>
       <GlobeAndControls />
       <EffectComposer ref={composerRef} multisampling={0}>
         <Fragment
