@@ -48,6 +48,8 @@ function createRenderTarget(): RenderTarget {
   return renderTarget
 }
 
+const sizeScratch = /*#__PURE__*/ new Vector2()
+
 let rendererState: RendererUtils.RendererState
 
 export class MipmapBlurNode extends TempNode {
@@ -57,6 +59,7 @@ export class MipmapBlurNode extends TempNode {
 
   inputNode: TextureNode | null
   levels: number
+  resolutionScale: Vector2
 
   private readonly downsampleRTs: RenderTarget[] = []
   private readonly upsampleRTs: RenderTarget[] = []
@@ -71,10 +74,15 @@ export class MipmapBlurNode extends TempNode {
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNode: TextureNode
 
-  constructor(inputNode: TextureNode | null, levels = 8) {
+  constructor(
+    inputNode: TextureNode | null,
+    levels = 8,
+    resolutionScale = new Vector2(0.5, 0.5)
+  ) {
     super('vec4')
     this.inputNode = inputNode
     this.levels = levels
+    this.resolutionScale = resolutionScale
 
     for (let i = 0; i < levels; ++i) {
       this.downsampleRTs[i] = createRenderTarget()
@@ -92,10 +100,10 @@ export class MipmapBlurNode extends TempNode {
     return this._textureNode
   }
 
-  setSize(width: number, height: number): void {
-    const { downsampleRTs, upsampleRTs } = this
-    let w = width
-    let h = height
+  setSize(width: number, height: number): this {
+    const { resolutionScale, downsampleRTs, upsampleRTs } = this
+    let w = Math.max(Math.round(width * resolutionScale.x), 1)
+    let h = Math.max(Math.round(height * resolutionScale.y), 1)
     for (let i = 0; i < this.levels; ++i) {
       w = Math.max(Math.round(w / 2), 1)
       h = Math.max(Math.round(h / 2), 1)
@@ -104,6 +112,7 @@ export class MipmapBlurNode extends TempNode {
         upsampleRTs[i].setSize(w, h)
       }
     }
+    return this
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -124,8 +133,8 @@ export class MipmapBlurNode extends TempNode {
 
     const originalTexture = inputNode.value
 
-    const { width, height } = inputNode.value
-    this.setSize(width, height)
+    const size = renderer.getDrawingBufferSize(sizeScratch)
+    this.setSize(size.width, size.height)
 
     mesh.material = this.downsampleMaterial
     for (const renderTarget of downsampleRTs) {

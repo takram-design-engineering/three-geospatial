@@ -51,6 +51,8 @@ function createRenderTarget(): RenderTarget {
   return renderTarget
 }
 
+const sizeScratch = /*#__PURE__*/ new Vector2()
+
 let rendererState: RendererUtils.RendererState
 
 export class DownsampleThresholdNode extends TempNode {
@@ -61,7 +63,7 @@ export class DownsampleThresholdNode extends TempNode {
   inputNode: TextureNode | null
   @nodeType('float') thresholdLevel: number
   @nodeType('float') thresholdRange: number
-  resolution: Vector2
+  resolutionScale: Vector2
 
   private readonly renderTarget = createRenderTarget()
   private readonly material = new NodeMaterial()
@@ -77,13 +79,13 @@ export class DownsampleThresholdNode extends TempNode {
     inputNode: TextureNode | null,
     thresholdLevel = 10,
     thresholdRange = 1,
-    resolution = new Vector2(0.5, 0.5)
+    resolutionScale = new Vector2(0.5, 0.5)
   ) {
     super('vec4')
     this.inputNode = inputNode
     this.thresholdLevel = thresholdLevel
     this.thresholdRange = thresholdRange
-    this.resolution = resolution
+    this.resolutionScale = resolutionScale
 
     this._textureNode = outputTexture(this, this.renderTarget.texture)
 
@@ -94,10 +96,12 @@ export class DownsampleThresholdNode extends TempNode {
     return this._textureNode
   }
 
-  setSize(width: number, height: number): void {
-    const w = Math.max(Math.round(width * this.resolution.x), 1)
-    const h = Math.max(Math.round(height * this.resolution.y), 1)
+  setSize(width: number, height: number): this {
+    const { resolutionScale } = this
+    const w = Math.max(Math.round(width * resolutionScale.x), 1)
+    const h = Math.max(Math.round(height * resolutionScale.y), 1)
     this.renderTarget.setSize(w, h)
+    return this
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -109,9 +113,10 @@ export class DownsampleThresholdNode extends TempNode {
     const { inputNode } = this
     invariant(inputNode != null)
 
-    const { width, height } = inputNode.value
-    this.setSize(width, height)
+    const size = renderer.getDrawingBufferSize(sizeScratch)
+    this.setSize(size.width, size.height)
 
+    const { width, height } = inputNode.value
     this.texelSize.value.set(1 / width, 1 / height)
     renderer.setRenderTarget(this.renderTarget)
     this.mesh.render(renderer)

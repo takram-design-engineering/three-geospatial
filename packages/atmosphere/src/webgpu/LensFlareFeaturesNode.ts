@@ -57,6 +57,8 @@ function createRenderTarget(): RenderTarget {
   return renderTarget
 }
 
+const sizeScratch = /*#__PURE__*/ new Vector2()
+
 let rendererState: RendererUtils.RendererState
 
 export class LensFlareFeaturesNode extends TempNode {
@@ -68,6 +70,7 @@ export class LensFlareFeaturesNode extends TempNode {
   @nodeType('float') ghostAmount: number
   @nodeType('float') haloAmount: number
   @nodeType('float') chromaticAberration: number
+  resolutionScale: Vector2
 
   private readonly renderTarget = createRenderTarget()
   private readonly material = new NodeMaterial()
@@ -84,13 +87,15 @@ export class LensFlareFeaturesNode extends TempNode {
     inputNode: TextureNode | null,
     ghostAmount = 0.001,
     haloAmount = 0.001,
-    chromaticAberration = 10
+    chromaticAberration = 10,
+    resolutionScale = new Vector2(0.5, 0.5)
   ) {
     super('vec4')
     this.inputNode = inputNode
     this.ghostAmount = ghostAmount
     this.haloAmount = haloAmount
     this.chromaticAberration = chromaticAberration
+    this.resolutionScale = resolutionScale
 
     this._textureNode = outputTexture(this, this.renderTarget.texture)
 
@@ -101,8 +106,12 @@ export class LensFlareFeaturesNode extends TempNode {
     return this._textureNode
   }
 
-  setSize(width: number, height: number): void {
-    this.renderTarget.setSize(width, height)
+  setSize(width: number, height: number): this {
+    const { resolutionScale } = this
+    const w = Math.max(Math.round(width * resolutionScale.x), 1)
+    const h = Math.max(Math.round(height * resolutionScale.y), 1)
+    this.renderTarget.setSize(w, h)
+    return this
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -114,9 +123,10 @@ export class LensFlareFeaturesNode extends TempNode {
     const { inputNode } = this
     invariant(inputNode != null)
 
-    const { width, height } = inputNode.value
-    this.setSize(width, height)
+    const size = renderer.getDrawingBufferSize(sizeScratch)
+    this.setSize(size.width, size.height)
 
+    const { width, height } = inputNode.value
     this.texelSize.value.set(1 / width, 1 / height)
     this.aspectRatio.value = width / height
     renderer.setRenderTarget(this.renderTarget)

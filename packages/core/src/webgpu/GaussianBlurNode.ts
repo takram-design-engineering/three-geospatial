@@ -49,6 +49,8 @@ function createRenderTarget(): RenderTarget {
   return renderTarget
 }
 
+const sizeScratch = /*#__PURE__*/ new Vector2()
+
 let rendererState: RendererUtils.RendererState
 
 export class GaussianBlurNode extends TempNode {
@@ -59,7 +61,7 @@ export class GaussianBlurNode extends TempNode {
   inputNode: TextureNode | null
   kernelSize: number
   iterations: number
-  resolution: Vector2
+  resolutionScale: Vector2
 
   private readonly horizontalRT = createRenderTarget()
   private readonly verticalRT = createRenderTarget()
@@ -77,13 +79,13 @@ export class GaussianBlurNode extends TempNode {
     inputNode: TextureNode | null,
     kernelSize = 35,
     iterations = 1,
-    resolution = new Vector2(1, 1)
+    resolutionScale = new Vector2(1, 1)
   ) {
     super('vec4')
     this.inputNode = inputNode
     this.kernelSize = kernelSize
     this.iterations = iterations
-    this.resolution = resolution
+    this.resolutionScale = resolutionScale
 
     this._textureNode = outputTexture(this, this.verticalRT.texture)
 
@@ -94,11 +96,13 @@ export class GaussianBlurNode extends TempNode {
     return this._textureNode
   }
 
-  setSize(width: number, height: number): void {
-    const w = Math.max(Math.round(width * this.resolution.x), 1)
-    const h = Math.max(Math.round(height * this.resolution.y), 1)
+  setSize(width: number, height: number): this {
+    const { resolutionScale } = this
+    const w = Math.max(Math.round(width * resolutionScale.x), 1)
+    const h = Math.max(Math.round(height * resolutionScale.y), 1)
     this.horizontalRT.setSize(w, h)
     this.verticalRT.setSize(w, h)
+    return this
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -112,9 +116,10 @@ export class GaussianBlurNode extends TempNode {
 
     const originalTexture = inputNode.value
 
-    const { width, height } = inputNode.value
-    this.setSize(width, height)
+    const size = renderer.getDrawingBufferSize(sizeScratch)
+    this.setSize(size.width, size.height)
 
+    const { width, height } = inputNode.value
     this.texelSize.value.set(1 / width, 1 / height)
 
     for (let i = 0; i < this.iterations; ++i) {
