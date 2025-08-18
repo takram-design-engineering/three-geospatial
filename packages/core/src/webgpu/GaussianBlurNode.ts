@@ -66,7 +66,7 @@ export class GaussianBlurNode extends TempNode {
   private readonly horizontalRT = createRenderTarget()
   private readonly verticalRT = createRenderTarget()
   private readonly material = new NodeMaterial()
-  private readonly mesh = new QuadMesh()
+  private readonly mesh = new QuadMesh(this.material)
 
   private readonly texelSize = uniform(new Vector2())
   private readonly direction = uniform(new Vector2())
@@ -165,8 +165,6 @@ export class GaussianBlurNode extends TempNode {
     const { material } = this
     material.fragmentNode = main()
     material.needsUpdate = true
-
-    this.mesh.material = material
 
     this._textureNode.uvNode = inputNode.uvNode
     return this._textureNode
