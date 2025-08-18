@@ -1,17 +1,19 @@
 import { GaussKernel } from 'postprocessing'
-import { add, Fn, nodeObject, uniform, uv } from 'three/tsl'
 import {
   ClampToEdgeWrapping,
   HalfFloatType,
   LinearFilter,
+  RenderTarget,
+  RGBAFormat,
+  Vector2
+} from 'three'
+import { add, Fn, nodeObject, uniform, uv } from 'three/tsl'
+import {
   NodeMaterial,
   NodeUpdateType,
   QuadMesh,
   RendererUtils,
-  RenderTarget,
-  RGBAFormat,
   TempNode,
-  Vector2,
   type NodeBuilder,
   type NodeFrame,
   type TextureNode

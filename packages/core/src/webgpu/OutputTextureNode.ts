@@ -1,10 +1,6 @@
+import type { Texture } from 'three'
 import { nodeObject } from 'three/tsl'
-import {
-  TextureNode,
-  type Node,
-  type NodeBuilder,
-  type Texture
-} from 'three/webgpu'
+import { TextureNode, type Node, type NodeBuilder } from 'three/webgpu'
 
 import type { NodeObject } from './node'
 
