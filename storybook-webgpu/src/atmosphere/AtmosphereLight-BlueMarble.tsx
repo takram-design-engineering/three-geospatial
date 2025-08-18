@@ -41,7 +41,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
-import { useGuardedFrame } from '../helpers/useGuardedFrame'
+import { useAsyncFrame } from '../helpers/useAsyncFrame'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
@@ -78,8 +78,8 @@ const Scene: FC<StoryProps> = () => {
     return [postProcessing, passNode, aerialNode, lensFlareNode]
   }, [renderer, scene, camera, context])
 
-  useGuardedFrame(() => {
-    postProcessing.render()
+  useAsyncFrame(async () => {
+    await postProcessing.renderAsync()
   }, 1)
 
   // Output pass controls:
