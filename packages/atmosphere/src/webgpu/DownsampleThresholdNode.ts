@@ -30,7 +30,6 @@ import {
 import {
   nodeType,
   referenceTo,
-  type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
@@ -93,8 +92,8 @@ export class DownsampleThresholdNode extends TempNode {
   }
 
   setSize(width: number, height: number): void {
-    const w = Math.round(width * this.resolution.x)
-    const h = Math.round(height * this.resolution.y)
+    const w = Math.max(Math.round(width * this.resolution.x), 1)
+    const h = Math.max(Math.round(height * this.resolution.y), 1)
     this.renderTarget.setSize(w, h)
   }
 
@@ -114,13 +113,13 @@ export class DownsampleThresholdNode extends TempNode {
     RendererUtils.restoreRendererState(renderer, rendererState)
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> {
+  override setup(builder: NodeBuilder): unknown {
     const { inputNode, texelSize } = this
     const reference = referenceTo<DownsampleThresholdNode>(this)
     const thresholdLevel = reference('thresholdLevel')
     const thresholdRange = reference('thresholdRange')
 
-    const kernel = Fn(() => {
+    const main = Fn(() => {
       // outer1  --  outer2  --  outer3
       //   --  inner1  --  inner2  --
       // outer4  --  center  --  outer5
@@ -175,7 +174,7 @@ export class DownsampleThresholdNode extends TempNode {
     })
 
     const { material } = this
-    material.fragmentNode = kernel()
+    material.fragmentNode = main()
     material.needsUpdate = true
 
     return this._textureNode

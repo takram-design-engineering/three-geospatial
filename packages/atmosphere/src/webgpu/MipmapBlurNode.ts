@@ -27,11 +27,7 @@ import {
   type TextureNode
 } from 'three/webgpu'
 
-import {
-  clampToBorder,
-  type Node,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import { clampToBorder, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 function createRenderTarget(): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
@@ -97,8 +93,8 @@ export class MipmapBlurNode extends TempNode {
     let w = width
     let h = height
     for (let i = 0; i < this.levels; ++i) {
-      w = Math.round(w / 2)
-      h = Math.round(h / 2)
+      w = Math.max(Math.round(w / 2), 1)
+      h = Math.max(Math.round(h / 2), 1)
       downsampleRTs[i].setSize(w, h)
       if (i < this.levels - 1) {
         upsampleRTs[i].setSize(w, h)
@@ -151,7 +147,7 @@ export class MipmapBlurNode extends TempNode {
     inputNode.value = originalTexture
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> {
+  override setup(builder: NodeBuilder): unknown {
     const { inputNode, texelSize, previousNode } = this
 
     const downsample = Fn(() => {

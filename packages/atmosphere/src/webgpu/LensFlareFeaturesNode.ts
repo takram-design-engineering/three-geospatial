@@ -36,7 +36,6 @@ import {
   FnLayout,
   nodeType,
   referenceTo,
-  type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
@@ -120,7 +119,7 @@ export class LensFlareFeaturesNode extends TempNode {
     RendererUtils.restoreRendererState(renderer, rendererState)
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> {
+  override setup(builder: NodeBuilder): unknown {
     const { inputNode, texelSize, aspectRatio } = this
     const reference = referenceTo<LensFlareFeaturesNode>(this)
     const ghostAmount = reference('ghostAmount')
