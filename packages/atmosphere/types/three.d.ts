@@ -47,13 +47,6 @@ declare module 'three/webgpu' {
   }
 }
 
-declare module 'three/tsl' {
-  export const passTexture: (
-    pass: Node,
-    texture: Texture
-  ) => ShaderNodeObject<PassTextureNode>
-}
-
 declare module 'three/src/nodes/TSL.js' {
   interface NodeElements {
     get: (node: Node, name: string) => ShaderNodeObject

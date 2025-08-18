@@ -1,6 +1,6 @@
 import { nodeObject } from 'three/tsl'
 import {
-  TextureNode,
+  Texture3DNode,
   type Node,
   type NodeBuilder,
   type Texture
@@ -14,9 +14,9 @@ declare module 'three/webgpu' {
   }
 }
 
-export class OutputTextureNode extends TextureNode {
+export class OutputTexture3DNode extends Texture3DNode {
   static override get type(): string {
-    return 'OutputTextureNode'
+    return 'OutputTexture3DNode'
   }
 
   owner: Node
@@ -38,6 +38,7 @@ export class OutputTextureNode extends TextureNode {
   }
 }
 
-export const outputTexture = (
-  ...args: ConstructorParameters<typeof OutputTextureNode>
-): NodeObject<OutputTextureNode> => nodeObject(new OutputTextureNode(...args))
+export const outputTexture3D = (
+  ...args: ConstructorParameters<typeof OutputTexture3DNode>
+): NodeObject<OutputTexture3DNode> =>
+  nodeObject(new OutputTexture3DNode(...args))

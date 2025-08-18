@@ -37,12 +37,12 @@ import {
   QuadMesh,
   RendererUtils,
   TempNode,
-  Texture3DNode,
-  TextureNode,
   type Node,
   type NodeBuilder,
   type NodeFrame,
   type Renderer,
+  type Texture3DNode,
+  type TextureNode,
   type UniformNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
@@ -51,7 +51,13 @@ import {
   isFloatLinearSupported,
   type AnyFloatType
 } from '@takram/three-geospatial'
-import type { NodeObject } from '@takram/three-geospatial/webgpu'
+import {
+  outputTexture,
+  outputTexture3D,
+  type NodeObject,
+  type OutputTexture3DNode,
+  type OutputTextureNode
+} from '@takram/three-geospatial/webgpu'
 
 import { requestIdleCallback } from '../helpers/requestIdleCallback'
 import { AtmosphereParameters } from './AtmosphereParameters'
@@ -258,52 +264,6 @@ const texture3DNames = [
 export type AtmosphereLUTTextureName = (typeof textureNames)[number]
 export type AtmosphereLUTTexture3DName = (typeof texture3DNames)[number]
 
-class LUTTextureNode extends TextureNode {
-  static override get type(): string {
-    return 'LUTTextureNode'
-  }
-
-  private readonly lutNode: AtmosphereLUTNode
-
-  constructor(lutNode: AtmosphereLUTNode, texture: Texture) {
-    super(texture)
-    this.lutNode = lutNode
-  }
-
-  override setup(builder: NodeBuilder): unknown {
-    this.lutNode.build(builder)
-    return super.setup(builder)
-  }
-
-  // @ts-expect-error Wrong use of "this" in the library type.
-  override clone(): LUTTextureNode {
-    return new LUTTextureNode(this.lutNode, this.value)
-  }
-}
-
-class LUTTexture3DNode extends Texture3DNode {
-  static override get type(): string {
-    return 'LUTTexture3DNode'
-  }
-
-  private readonly lutNode: AtmosphereLUTNode
-
-  constructor(lutNode: AtmosphereLUTNode, texture: Texture) {
-    super(texture)
-    this.lutNode = lutNode
-  }
-
-  override setup(builder: NodeBuilder): unknown {
-    this.lutNode.build(builder)
-    return super.setup(builder)
-  }
-
-  // @ts-expect-error Wrong use of "this" in the library type.
-  override clone(): LUTTexture3DNode {
-    return new LUTTexture3DNode(this.lutNode, this.value)
-  }
-}
-
 export class AtmosphereLUTNode extends TempNode {
   static override get type(): string {
     return 'AtmosphereLUTNode'
@@ -326,7 +286,7 @@ export class AtmosphereLUTNode extends TempNode {
   private readonly _textureNodes: Partial<
     Record<
       AtmosphereLUTTextureName | AtmosphereLUTTexture3DName,
-      NodeObject<LUTTextureNode | LUTTexture3DNode>
+      NodeObject<OutputTextureNode | OutputTexture3DNode>
     >
   > = {}
 
@@ -355,22 +315,14 @@ export class AtmosphereLUTNode extends TempNode {
     return this[`${name}RT`].texture
   }
 
-  getTextureNode(name: AtmosphereLUTTextureName): NodeObject<LUTTextureNode>
-  getTextureNode(name: AtmosphereLUTTexture3DName): NodeObject<LUTTexture3DNode>
+  getTextureNode(name: AtmosphereLUTTextureName): NodeObject<TextureNode>
+  getTextureNode(name: AtmosphereLUTTexture3DName): NodeObject<Texture3DNode>
   getTextureNode(
     name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName
-  ): NodeObject<LUTTextureNode | LUTTexture3DNode> {
-    return (this._textureNodes[name] ??= nodeObject(
-      textureNames.includes(name as AtmosphereLUTTextureName)
-        ? new LUTTextureNode(
-            this,
-            this.getTexture(name as AtmosphereLUTTextureName)
-          )
-        : new LUTTexture3DNode(
-            this,
-            this.getTexture(name as AtmosphereLUTTexture3DName)
-          )
-    ))
+  ): NodeObject<TextureNode> | NodeObject<Texture3DNode> {
+    return (this._textureNodes[name] ??= textureNames.includes(name as any)
+      ? outputTexture(this, this.getTexture(name as any))
+      : outputTexture3D(this, this.getTexture(name as any)))
   }
 
   private async renderToRenderTarget(
