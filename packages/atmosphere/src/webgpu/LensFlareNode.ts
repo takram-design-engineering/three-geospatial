@@ -42,8 +42,8 @@ export class LensFlareNode extends TempNode {
     blurNode.inputNode = thresholdNode.getTextureNode()
     featuresNode.inputNode = blurNode.getTextureNode()
 
-    // input → bloom
-    bloomNode.inputNode = inputNode
+    // input → threshold → bloom
+    bloomNode.inputNode = thresholdNode.getTextureNode()
 
     const reference = referenceTo<LensFlareNode>(this)
     const intensity = reference('intensity')
