@@ -7,7 +7,6 @@ import {
   min,
   mul,
   nodeObject,
-  passTexture,
   sub,
   uniform,
   uv,
@@ -36,6 +35,7 @@ import invariant from 'tiny-invariant'
 import {
   FnLayout,
   nodeType,
+  outputTexture,
   referenceTo,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
@@ -90,7 +90,7 @@ export class LensFlareFeaturesNode extends TempNode {
     this.haloAmount = haloAmount
     this.chromaticAberration = chromaticAberration
 
-    this._textureNode = passTexture(this, this.renderTarget.texture)
+    this._textureNode = outputTexture(this, this.renderTarget.texture)
 
     this.updateBeforeType = NodeUpdateType.RENDER
   }

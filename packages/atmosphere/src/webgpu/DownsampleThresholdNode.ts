@@ -3,7 +3,6 @@ import {
   Fn,
   luminance,
   nodeObject,
-  passTexture,
   smoothstep,
   uniform,
   uv,
@@ -30,6 +29,7 @@ import invariant from 'tiny-invariant'
 
 import {
   nodeType,
+  outputTexture,
   referenceTo,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
@@ -83,7 +83,7 @@ export class DownsampleThresholdNode extends TempNode {
     this.thresholdRange = thresholdRange
     this.resolution = resolution
 
-    this._textureNode = passTexture(this, this.renderTarget.texture)
+    this._textureNode = outputTexture(this, this.renderTarget.texture)
 
     this.updateBeforeType = NodeUpdateType.RENDER
   }

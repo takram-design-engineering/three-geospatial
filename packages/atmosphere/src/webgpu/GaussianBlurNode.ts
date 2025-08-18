@@ -1,5 +1,5 @@
 import { GaussKernel } from 'postprocessing'
-import { add, Fn, nodeObject, passTexture, uniform, uv } from 'three/tsl'
+import { add, Fn, nodeObject, uniform, uv } from 'three/tsl'
 import {
   ClampToEdgeWrapping,
   HalfFloatType,
@@ -18,7 +18,7 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { NodeObject } from '@takram/three-geospatial/webgpu'
+import { outputTexture, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 declare module 'postprocessing' {
   interface GaussKernel {
@@ -82,7 +82,7 @@ export class GaussianBlurNode extends TempNode {
     this.iterations = iterations
     this.resolution = resolution
 
-    this._textureNode = passTexture(this, this.verticalRT.texture)
+    this._textureNode = outputTexture(this, this.verticalRT.texture)
 
     this.updateBeforeType = NodeUpdateType.RENDER
   }

@@ -3,7 +3,6 @@ import {
   Fn,
   mix,
   nodeObject,
-  passTexture,
   texture,
   uniform,
   uv,
@@ -28,7 +27,11 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { clampToBorder, type NodeObject } from '@takram/three-geospatial/webgpu'
+import {
+  clampToBorder,
+  outputTexture,
+  type NodeObject
+} from '@takram/three-geospatial/webgpu'
 
 function createRenderTarget(): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
@@ -80,7 +83,7 @@ export class MipmapBlurNode extends TempNode {
       }
     }
 
-    this._textureNode = passTexture(this, this.upsampleRTs[0].texture)
+    this._textureNode = outputTexture(this, this.upsampleRTs[0].texture)
 
     this.updateBeforeType = NodeUpdateType.RENDER
   }
