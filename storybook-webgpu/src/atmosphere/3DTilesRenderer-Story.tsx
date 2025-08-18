@@ -1,13 +1,20 @@
 import { useThree } from '@react-three/fiber'
 import { GlobeControls } from '3d-tiles-renderer/r3f'
 import type { FC } from 'react'
-import { diffuseColor, mrt, normalView, pass } from 'three/tsl'
+import {
+  convertToTexture,
+  diffuseColor,
+  mrt,
+  normalView,
+  pass
+} from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContext
+  AtmosphereContext,
+  lensFlare
 } from '@takram/three-atmosphere/webgpu'
 
 import {
@@ -57,7 +64,7 @@ const Scene: FC<StoryProps> = ({
 
   // Post-processing:
 
-  const [postProcessing, passNode, aerialNode] = useResource(() => {
+  const [postProcessing, passNode, , lensFlareNode] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output: diffuseColor,
@@ -71,10 +78,11 @@ const Scene: FC<StoryProps> = ({
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('normal')
     )
+    const lensFlareNode = lensFlare(convertToTexture(aerialNode))
 
     const postProcessing = new PostProcessing(renderer)
 
-    return [postProcessing, passNode, aerialNode]
+    return [postProcessing, passNode, aerialNode, lensFlareNode]
   }, [renderer, camera, scene, context])
 
   useGuardedFrame(() => {
@@ -83,7 +91,7 @@ const Scene: FC<StoryProps> = ({
 
   // Output pass controls:
   useOutputPassControls(passNode, camera, outputNode => {
-    postProcessing.outputNode = outputNode ?? aerialNode
+    postProcessing.outputNode = outputNode ?? lensFlareNode
     postProcessing.outputColorTransform = outputNode == null
     postProcessing.needsUpdate = true
   })
