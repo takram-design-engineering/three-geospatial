@@ -132,42 +132,28 @@ export class DownsampleThresholdNode extends TempNode {
     const thresholdRange = reference('thresholdRange')
 
     const main = Fn(() => {
-      // outer1  --  outer2  --  outer3
+      // outer5  --  outer1  --  outer6
       //   --  inner1  --  inner2  --
-      // outer4  --  center  --  outer5
+      // outer2  --  center  --  outer3
       //   --  inner3  --  inner4  --
-      // outer6  --  outer7  --  outer8
+      // outer7  --  outer4  --  outer8
       const center = uv()
-      const inner1 = vec2(-1, 1).mul(texelSize).add(center).toVertexStage()
-      const inner2 = vec2(1, 1).mul(texelSize).add(center).toVertexStage()
-      const inner3 = vec2(-1, -1).mul(texelSize).add(center).toVertexStage()
-      const inner4 = vec2(1, -1).mul(texelSize).add(center).toVertexStage()
-      const outer1 = vec2(-2, 2).mul(texelSize).add(center).toVertexStage()
-      const outer2 = vec2(0, 2).mul(texelSize).add(center).toVertexStage()
-      const outer3 = vec2(2, 2).mul(texelSize).add(center).toVertexStage()
-      const outer4 = vec2(-2, 0).mul(texelSize).add(center).toVertexStage()
-      const outer5 = vec2(2, 0).mul(texelSize).add(center).toVertexStage()
-      const outer6 = vec2(-2, -2).mul(texelSize).add(center).toVertexStage()
-      const outer7 = vec2(0, -2).mul(texelSize).add(center).toVertexStage()
-      const outer8 = vec2(2, -2).mul(texelSize).add(center).toVertexStage()
+      const offset1 = vec4(1, 1, -1, -1).mul(texelSize.xyxy).add(center.xyxy)
+      const offset2 = vec4(2, 2, -2, -2).mul(texelSize.xyxy).add(center.xyxy)
+      const inner1 = offset1.zy.toVertexStage()
+      const inner2 = offset1.xy.toVertexStage()
+      const inner3 = offset1.zw.toVertexStage()
+      const inner4 = offset1.xw.toVertexStage()
+      const outer1 = vec2(center.x, offset2.y).toVertexStage()
+      const outer2 = vec2(offset2.z, center.y).toVertexStage()
+      const outer3 = vec2(offset2.x, center.y).toVertexStage()
+      const outer4 = vec2(center.x, offset2.w).toVertexStage()
+      const outer5 = offset2.zy.toVertexStage()
+      const outer6 = offset2.xy.toVertexStage()
+      const outer7 = offset2.zw.toVertexStage()
+      const outer8 = offset2.xw.toVertexStage()
 
       const result = inputNode.sample(center).mul(0.125)
-      result.addAssign(
-        add(
-          inputNode.sample(outer1),
-          inputNode.sample(outer3),
-          inputNode.sample(outer6),
-          inputNode.sample(outer8)
-        ).mul(0.03125)
-      )
-      result.addAssign(
-        add(
-          inputNode.sample(outer2),
-          inputNode.sample(outer4),
-          inputNode.sample(outer5),
-          inputNode.sample(outer7)
-        ).mul(0.0625)
-      )
       result.addAssign(
         add(
           inputNode.sample(inner1),
@@ -175,6 +161,22 @@ export class DownsampleThresholdNode extends TempNode {
           inputNode.sample(inner3),
           inputNode.sample(inner4)
         ).mul(0.125)
+      )
+      result.addAssign(
+        add(
+          inputNode.sample(outer1),
+          inputNode.sample(outer2),
+          inputNode.sample(outer3),
+          inputNode.sample(outer4)
+        ).mul(0.0625)
+      )
+      result.addAssign(
+        add(
+          inputNode.sample(outer5),
+          inputNode.sample(outer6),
+          inputNode.sample(outer7),
+          inputNode.sample(outer8)
+        ).mul(0.03125)
       )
 
       const scale = smoothstep(
