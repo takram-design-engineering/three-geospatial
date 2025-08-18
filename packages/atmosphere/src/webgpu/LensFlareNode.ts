@@ -54,6 +54,14 @@ export class LensFlareNode extends TempNode {
 
     return nodeObject(inputNode).add(add(bloom, features).mul(intensity))
   }
+
+  override dispose(): void {
+    super.dispose()
+    this.thresholdNode.dispose()
+    this.blurNode.dispose()
+    this.featuresNode.dispose()
+    this.bloomNode.dispose()
+  }
 }
 
 export const lensFlare = (
