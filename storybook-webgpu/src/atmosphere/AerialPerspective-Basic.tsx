@@ -6,7 +6,7 @@ import {
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
 import type { FC } from 'react'
-import { mrt, normalView, output, pass } from 'three/tsl'
+import { convertToTexture, mrt, normalView, output, pass } from 'three/tsl'
 import {
   MeshBasicNodeMaterial,
   PostProcessing,
@@ -16,7 +16,8 @@ import {
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContext
+  AtmosphereContext,
+  lensFlare
 } from '@takram/three-atmosphere/webgpu'
 
 import {
@@ -66,25 +67,27 @@ const Scene: FC<StoryProps> = ({
 
   // Post-processing:
 
-  const [postProcessing, passNode, aerialNode] = useResource(() => {
-    const passNode = pass(scene, camera).setMRT(
-      mrt({
-        output,
-        normal: normalView
-      })
-    )
+  const [postProcessing, passNode, aerialNode, lensFlareNode] =
+    useResource(() => {
+      const passNode = pass(scene, camera).setMRT(
+        mrt({
+          output,
+          normal: normalView
+        })
+      )
 
-    const aerialNode = aerialPerspective(
-      context,
-      passNode.getTextureNode('output'),
-      passNode.getTextureNode('depth'),
-      passNode.getTextureNode('normal')
-    )
+      const aerialNode = aerialPerspective(
+        context,
+        passNode.getTextureNode('output'),
+        passNode.getTextureNode('depth'),
+        passNode.getTextureNode('normal')
+      )
+      const lensFlareNode = lensFlare(convertToTexture(aerialNode))
 
-    const postProcessing = new PostProcessing(renderer)
+      const postProcessing = new PostProcessing(renderer)
 
-    return [postProcessing, passNode, aerialNode]
-  }, [renderer, scene, camera, context])
+      return [postProcessing, passNode, aerialNode, lensFlareNode]
+    }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
     postProcessing.render()
@@ -101,7 +104,7 @@ const Scene: FC<StoryProps> = ({
 
   // Output pass controls:
   useOutputPassControls(passNode, camera, outputNode => {
-    postProcessing.outputNode = outputNode ?? aerialNode
+    postProcessing.outputNode = outputNode ?? lensFlareNode
     postProcessing.outputColorTransform = outputNode == null
     postProcessing.needsUpdate = true
   })

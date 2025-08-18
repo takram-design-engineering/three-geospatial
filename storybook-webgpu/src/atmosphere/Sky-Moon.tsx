@@ -41,7 +41,14 @@ import {
   type Group,
   type PerspectiveCamera
 } from 'three'
-import { div, pass, texture, toneMapping, uniform } from 'three/tsl'
+import {
+  convertToTexture,
+  div,
+  pass,
+  texture,
+  toneMapping,
+  uniform
+} from 'three/tsl'
 import {
   LineBasicNodeMaterial,
   LineDashedNodeMaterial,
@@ -56,7 +63,11 @@ import {
   getSunDirectionECI,
   toAstroTime
 } from '@takram/three-atmosphere'
-import { AtmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
+import {
+  AtmosphereContext,
+  lensFlare,
+  sky
+} from '@takram/three-atmosphere/webgpu'
 import {
   assertType,
   degrees,
@@ -276,7 +287,7 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, skyNode, toneMappingNode] = useResource(() => {
+  const [postProcessing, skyNode, , toneMappingNode] = useResource(() => {
     const passNode = pass(scene, camera)
 
     const skyNode = sky(context)
@@ -293,7 +304,12 @@ const Scene: FC<StoryProps> = () => {
       })
     )
 
-    const toneMappingNode = toneMapping(AgXToneMapping, exposureNode, skyNode)
+    const lensFlareNode = lensFlare(convertToTexture(skyNode))
+    const toneMappingNode = toneMapping(
+      AgXToneMapping,
+      exposureNode,
+      lensFlareNode
+    )
 
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = toneMappingNode.rgb
@@ -301,7 +317,7 @@ const Scene: FC<StoryProps> = () => {
       .add(passNode.rgb)
       .add(dithering())
 
-    return [postProcessing, skyNode, toneMappingNode]
+    return [postProcessing, skyNode, lensFlareNode, toneMappingNode]
   }, [renderer, scene, camera, context, exposureNode])
 
   useGuardedFrame(() => {

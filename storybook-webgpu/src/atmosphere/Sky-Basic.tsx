@@ -1,13 +1,18 @@
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
+import { convertToTexture } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
   getMoonDirectionECEF,
   getSunDirectionECEF
 } from '@takram/three-atmosphere'
-import { AtmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
+import {
+  AtmosphereContext,
+  lensFlare,
+  sky
+} from '@takram/three-atmosphere/webgpu'
 
 import {
   localDateArgs,
@@ -45,11 +50,12 @@ const Scene: FC<StoryProps> = () => {
 
   const [postProcessing, skyNode] = useResource(() => {
     const skyNode = sky(context)
+    const lensFlareNode = lensFlare(convertToTexture(skyNode))
 
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = skyNode
+    postProcessing.outputNode = lensFlareNode
 
-    return [postProcessing, skyNode]
+    return [postProcessing, skyNode, lensFlareNode]
   }, [renderer, context])
 
   useTransientControl(
