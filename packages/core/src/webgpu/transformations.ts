@@ -1,5 +1,6 @@
 import type { Camera } from 'three'
 import {
+  and,
   cos,
   float,
   int,
@@ -107,5 +108,18 @@ export const equirectWorld = /*#__PURE__*/ FnVar(
     const phi = sub(uv.y, 0.5).mul(PI)
     const cosPhi = cos(phi)
     return vec3(cosPhi.mul(cos(lambda)), sin(phi), cosPhi.mul(sin(lambda)))
+  }
+)
+
+export const clampToBorder = /*#__PURE__*/ FnVar(
+  (uv: NodeObject<'vec2'>): Node<'float'> => {
+    return float(
+      and(
+        uv.x.greaterThanEqual(0),
+        uv.x.lessThanEqual(1),
+        uv.y.greaterThanEqual(0),
+        uv.y.lessThanEqual(1)
+      )
+    )
   }
 )

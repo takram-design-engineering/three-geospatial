@@ -1,7 +1,7 @@
 import { OrbitControls, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useRef, type FC } from 'react'
-import { pass } from 'three/tsl'
+import { convertToTexture, pass } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -10,6 +10,7 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
+  lensFlare,
   skyEnvironment
 } from '@takram/three-atmosphere/webgpu'
 
@@ -68,7 +69,7 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, passNode, aerialNode] = useResource(() => {
+  const [postProcessing, passNode, , lensFlareNode] = useResource(() => {
     const passNode = pass(scene, camera)
 
     const aerialNode = aerialPerspective(
@@ -76,10 +77,11 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth')
     )
+    const lensFlareNode = lensFlare(convertToTexture(aerialNode))
 
     const postProcessing = new PostProcessing(renderer)
 
-    return [postProcessing, passNode, aerialNode]
+    return [postProcessing, passNode, aerialNode, lensFlareNode]
   }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
@@ -88,7 +90,7 @@ const Scene: FC<StoryProps> = () => {
 
   // Output pass controls:
   useOutputPassControls(passNode, camera, outputNode => {
-    postProcessing.outputNode = outputNode ?? aerialNode
+    postProcessing.outputNode = outputNode ?? lensFlareNode
     postProcessing.outputColorTransform = outputNode == null
     postProcessing.needsUpdate = true
   })

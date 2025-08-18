@@ -1,7 +1,13 @@
-import { CubeCamera, HalfFloatType, Mesh, RGBAFormat, Scene } from 'three'
+import {
+  CubeCamera,
+  WebGLCubeRenderTarget as CubeRenderTarget,
+  HalfFloatType,
+  Mesh,
+  RGBAFormat,
+  Scene
+} from 'three'
 import { nodeObject, pmremTexture, positionGeometry, vec4 } from 'three/tsl'
 import {
-  WebGLCubeRenderTarget as CubeRenderTarget,
   NodeMaterial,
   NodeUpdateType,
   TempNode,

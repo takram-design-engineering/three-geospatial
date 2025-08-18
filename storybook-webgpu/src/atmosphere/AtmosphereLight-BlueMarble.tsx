@@ -2,7 +2,7 @@ import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import type { FC } from 'react'
 import { TextureLoader } from 'three'
-import { mix, mul, pass, texture, uv, vec3 } from 'three/tsl'
+import { convertToTexture, mix, mul, pass, texture, uv, vec3 } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
   PostProcessing,
@@ -15,7 +15,8 @@ import {
   aerialPerspective,
   AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode
+  AtmosphereLightNode,
+  lensFlare
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
@@ -62,7 +63,7 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, passNode, aerialNode] = useResource(() => {
+  const [postProcessing, passNode, , lensFlareNode] = useResource(() => {
     const passNode = pass(scene, camera)
 
     const aerialNode = aerialPerspective(
@@ -70,10 +71,11 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth')
     )
+    const lensFlareNode = lensFlare(convertToTexture(aerialNode))
 
     const postProcessing = new PostProcessing(renderer)
 
-    return [postProcessing, passNode, aerialNode]
+    return [postProcessing, passNode, aerialNode, lensFlareNode]
   }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
@@ -82,7 +84,7 @@ const Scene: FC<StoryProps> = () => {
 
   // Output pass controls:
   useOutputPassControls(passNode, camera, outputNode => {
-    postProcessing.outputNode = outputNode ?? aerialNode
+    postProcessing.outputNode = outputNode ?? lensFlareNode
     postProcessing.outputColorTransform = outputNode == null
     postProcessing.needsUpdate = true
   })
