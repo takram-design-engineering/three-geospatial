@@ -9,11 +9,7 @@ import {
 } from 'three/tsl'
 import { AnalyticLightNode, type NodeBuilder } from 'three/webgpu'
 
-import {
-  referenceTo,
-  type Node,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import type { Node, NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
@@ -41,9 +37,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       return
     }
 
-    const reference = referenceTo(this.light)
-    const direct = reference('direct')
-    const indirect = reference('indirect')
+    const { directNode, indirectNode } = this.light
 
     const {
       worldToECEFMatrix,
@@ -74,7 +68,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       // provided to the setupDirect().
       builder.getContext().atmosphere = atmosphereContext
       return getSkyIlluminance(positionUnit, normalECEF, sunDirectionECEF).mul(
-        select(indirect, 1, 0)
+        select(indirectNode, 1, 0)
       )
     })()
 
@@ -107,7 +101,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const sunLuminance = solarIrradiance
       .mul(sunTransmittance)
       .mul(sunRadianceToLuminance.mul(luminanceScale))
-      .mul(select(direct, 1, 0))
+      .mul(select(directNode, 1, 0))
 
     // WORKAROUND: As of r178, the lightColor in the DirectLightData must
     // depends on the colorNode of AnalyticLight, otherwise the shadow camera
