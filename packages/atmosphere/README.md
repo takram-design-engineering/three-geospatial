@@ -502,7 +502,7 @@ atmosphere.worldToECEFMatrix.makeBasis(north, up, east).setPosition(position)
 Ellipsoid.WGS84.getNorthUpEastFrame(position, atmosphere.worldToECEFMatrix)
 ```
 
-See the [story](/storybook/src/atmosphere/Atmosphere-MovingEllipsoid.tsx) for complete example.
+See the [story](/storybook/src/atmosphere/Atmosphere-WorldOriginRebasing.tsx) for complete example.
 
 #### updateByDate
 
