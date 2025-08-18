@@ -18,7 +18,8 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { outputTexture, type NodeObject } from '@takram/three-geospatial/webgpu'
+import type { NodeObject } from './node'
+import { outputTexture } from './OutputTextureNode'
 
 declare module 'postprocessing' {
   interface GaussKernel {
@@ -134,6 +135,7 @@ export class GaussianBlurNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const { inputNode, texelSize, direction } = this
     invariant(inputNode != null)
+    // TODO: Remove the dependency to postprocessing.
     const kernel = new GaussKernel(this.kernelSize, 2)
 
     const main = Fn(() => {

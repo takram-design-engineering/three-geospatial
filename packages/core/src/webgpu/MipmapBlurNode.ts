@@ -27,11 +27,9 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import {
-  clampToBorder,
-  outputTexture,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import type { NodeObject } from './node'
+import { outputTexture } from './OutputTextureNode'
+import { clampToBorder } from './transformations'
 
 function createRenderTarget(): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
