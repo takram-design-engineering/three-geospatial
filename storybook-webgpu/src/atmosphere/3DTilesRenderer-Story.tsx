@@ -38,8 +38,8 @@ import {
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
 import { Globe } from '../helpers/Globe'
-import { useAsyncFrame } from '../helpers/useAsyncFrame'
 import { useControl } from '../helpers/useControl'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import {
   usePointOfView,
   type PointOfViewProps
@@ -85,8 +85,8 @@ const Scene: FC<StoryProps> = ({
     return [postProcessing, passNode, aerialNode, lensFlareNode]
   }, [renderer, camera, scene, context])
 
-  useAsyncFrame(async () => {
-    await postProcessing.renderAsync()
+  useGuardedFrame(() => {
+    postProcessing.render()
   }, 1)
 
   // Output pass controls:

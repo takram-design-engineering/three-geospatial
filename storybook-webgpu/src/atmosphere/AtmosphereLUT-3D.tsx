@@ -37,7 +37,7 @@ import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
-export const textureUVW = FnVar(
+const textureUVW = FnVar(
   (textureSize: NodeObject<'vec3'>, zoom: NodeObject<'float'>) => {
     const uv = vec2(screenUV.x, screenUV.y)
       .mul(screenSize)

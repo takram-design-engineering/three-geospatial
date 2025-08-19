@@ -95,7 +95,6 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
-import { useAsyncFrame } from '../helpers/useAsyncFrame'
 import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useControl } from '../helpers/useControl'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
@@ -321,8 +320,8 @@ const Scene: FC<StoryProps> = () => {
     return [postProcessing, skyNode, lensFlareNode, toneMappingNode]
   }, [renderer, scene, camera, context, exposureNode])
 
-  useAsyncFrame(async () => {
-    await postProcessing.renderAsync()
+  useGuardedFrame(() => {
+    postProcessing.render()
   }, 1)
 
   useSpringControl(
