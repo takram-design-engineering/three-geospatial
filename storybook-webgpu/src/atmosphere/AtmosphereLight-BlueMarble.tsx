@@ -1,8 +1,18 @@
 import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import type { FC } from 'react'
-import { TextureLoader } from 'three'
-import { convertToTexture, mix, mul, pass, texture, uv, vec3 } from 'three/tsl'
+import { AgXToneMapping, TextureLoader } from 'three'
+import {
+  convertToTexture,
+  mix,
+  mul,
+  pass,
+  texture,
+  toneMapping,
+  uniform,
+  uv,
+  vec3
+} from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
   PostProcessing,
@@ -20,6 +30,7 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
+import { dithering } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -63,20 +74,29 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, passNode] = useResource(() => {
+  const [postProcessing, passNode, , , toneMappingNode] = useResource(() => {
     const passNode = pass(scene, camera)
-
     const aerialNode = aerialPerspective(
       context,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth')
     )
     const lensFlareNode = lensFlare(convertToTexture(aerialNode))
-
+    const toneMappingNode = toneMapping(
+      AgXToneMapping,
+      uniform(0),
+      lensFlareNode
+    )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = lensFlareNode
+    postProcessing.outputNode = toneMappingNode.add(dithering())
 
-    return [postProcessing, passNode, aerialNode, lensFlareNode]
+    return [
+      postProcessing,
+      passNode,
+      aerialNode,
+      lensFlareNode,
+      toneMappingNode
+    ]
   }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
@@ -96,7 +116,7 @@ const Scene: FC<StoryProps> = () => {
   )
 
   // Tone mapping controls:
-  useToneMappingControls(() => {
+  useToneMappingControls(toneMappingNode, () => {
     postProcessing.needsUpdate = true
   })
 

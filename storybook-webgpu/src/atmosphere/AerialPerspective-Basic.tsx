@@ -6,7 +6,16 @@ import {
   TilesRenderer
 } from '3d-tiles-renderer/r3f'
 import type { FC } from 'react'
-import { convertToTexture, mrt, normalView, output, pass } from 'three/tsl'
+import { AgXToneMapping } from 'three'
+import {
+  convertToTexture,
+  mrt,
+  normalView,
+  output,
+  pass,
+  toneMapping,
+  uniform
+} from 'three/tsl'
 import {
   MeshBasicNodeMaterial,
   PostProcessing,
@@ -19,6 +28,7 @@ import {
   AtmosphereContext,
   lensFlare
 } from '@takram/three-atmosphere/webgpu'
+import { dithering } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -67,27 +77,37 @@ const Scene: FC<StoryProps> = ({
 
   // Post-processing:
 
-  const [postProcessing, passNode, aerialNode] = useResource(() => {
-    const passNode = pass(scene, camera).setMRT(
-      mrt({
-        output,
-        normal: normalView
-      })
-    )
+  const [postProcessing, passNode, aerialNode, , toneMappingNode] =
+    useResource(() => {
+      const passNode = pass(scene, camera).setMRT(
+        mrt({
+          output,
+          normal: normalView
+        })
+      )
+      const aerialNode = aerialPerspective(
+        context,
+        passNode.getTextureNode('output'),
+        passNode.getTextureNode('depth'),
+        passNode.getTextureNode('normal')
+      )
+      const lensFlareNode = lensFlare(convertToTexture(aerialNode))
+      const toneMappingNode = toneMapping(
+        AgXToneMapping,
+        uniform(0),
+        lensFlareNode
+      )
+      const postProcessing = new PostProcessing(renderer)
+      postProcessing.outputNode = toneMappingNode.add(dithering())
 
-    const aerialNode = aerialPerspective(
-      context,
-      passNode.getTextureNode('output'),
-      passNode.getTextureNode('depth'),
-      passNode.getTextureNode('normal')
-    )
-    const lensFlareNode = lensFlare(convertToTexture(aerialNode))
-
-    const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = lensFlareNode
-
-    return [postProcessing, passNode, aerialNode, lensFlareNode]
-  }, [renderer, scene, camera, context])
+      return [
+        postProcessing,
+        passNode,
+        aerialNode,
+        lensFlareNode,
+        toneMappingNode
+      ]
+    }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
     postProcessing.render()
@@ -114,7 +134,7 @@ const Scene: FC<StoryProps> = ({
   )
 
   // Tone mapping controls:
-  useToneMappingControls(() => {
+  useToneMappingControls(toneMappingNode, () => {
     postProcessing.needsUpdate = true
   })
 

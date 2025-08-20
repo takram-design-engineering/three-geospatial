@@ -1,7 +1,8 @@
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
-import { convertToTexture } from 'three/tsl'
+import { AgXToneMapping } from 'three'
+import { convertToTexture, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
@@ -48,14 +49,18 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, skyNode] = useResource(() => {
+  const [postProcessing, skyNode, , toneMappingNode] = useResource(() => {
     const skyNode = sky(context)
     const lensFlareNode = lensFlare(convertToTexture(skyNode))
-
+    const toneMappingNode = toneMapping(
+      AgXToneMapping,
+      uniform(0),
+      lensFlareNode
+    )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = lensFlareNode
+    postProcessing.outputNode = toneMappingNode
 
-    return [postProcessing, skyNode, lensFlareNode]
+    return [postProcessing, skyNode, lensFlareNode, toneMappingNode]
   }, [renderer, context])
 
   useTransientControl(
@@ -84,7 +89,7 @@ const Scene: FC<StoryProps> = () => {
   )
 
   // Tone mapping controls:
-  useToneMappingControls(() => {
+  useToneMappingControls(toneMappingNode, () => {
     postProcessing.needsUpdate = true
   })
 

@@ -1,12 +1,15 @@
 import { OrbitControls, Sphere } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
+import { AgXToneMapping } from 'three'
 import {
   convertToTexture,
   diffuseColor,
   mrt,
   normalView,
-  pass
+  pass,
+  toneMapping,
+  uniform
 } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
@@ -16,6 +19,7 @@ import {
   AtmosphereContext,
   lensFlare
 } from '@takram/three-atmosphere/webgpu'
+import { dithering } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -57,14 +61,13 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, passNode] = useResource(() => {
+  const [postProcessing, passNode, , , toneMappingNode] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output: diffuseColor,
         normal: normalView
       })
     )
-
     const aerialNode = aerialPerspective(
       context,
       passNode.getTextureNode('output'),
@@ -72,11 +75,21 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('normal')
     )
     const lensFlareNode = lensFlare(convertToTexture(aerialNode))
-
+    const toneMappingNode = toneMapping(
+      AgXToneMapping,
+      uniform(0),
+      lensFlareNode
+    )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = lensFlareNode
+    postProcessing.outputNode = toneMappingNode.add(dithering())
 
-    return [postProcessing, passNode, aerialNode, lensFlareNode]
+    return [
+      postProcessing,
+      passNode,
+      aerialNode,
+      lensFlareNode,
+      toneMappingNode
+    ]
   }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
@@ -96,7 +109,7 @@ const Scene: FC<StoryProps> = () => {
   )
 
   // Tone mapping controls:
-  useToneMappingControls(() => {
+  useToneMappingControls(toneMappingNode, () => {
     postProcessing.needsUpdate = true
   })
 

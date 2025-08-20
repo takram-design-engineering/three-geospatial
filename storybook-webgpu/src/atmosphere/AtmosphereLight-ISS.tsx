@@ -2,7 +2,8 @@ import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import { useState, type FC } from 'react'
-import { convertToTexture, pass } from 'three/tsl'
+import { AgXToneMapping } from 'three'
+import { convertToTexture, pass, toneMapping, uniform } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
   PostProcessing,
@@ -22,6 +23,7 @@ import {
   skyEnvironment
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
+import { dithering } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -74,20 +76,29 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, passNode] = useResource(() => {
+  const [postProcessing, passNode, , , toneMappingNode] = useResource(() => {
     const passNode = pass(scene, camera)
-
     const aerialNode = aerialPerspective(
       context,
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth')
     )
     const lensFlareNode = lensFlare(convertToTexture(aerialNode))
-
+    const toneMappingNode = toneMapping(
+      AgXToneMapping,
+      uniform(0),
+      lensFlareNode
+    )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = lensFlareNode
+    postProcessing.outputNode = toneMappingNode.add(dithering())
 
-    return [postProcessing, passNode, aerialNode, lensFlareNode]
+    return [
+      postProcessing,
+      passNode,
+      aerialNode,
+      lensFlareNode,
+      toneMappingNode
+    ]
   }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
@@ -106,7 +117,7 @@ const Scene: FC<StoryProps> = () => {
   )
 
   // Tone mapping controls:
-  useToneMappingControls(() => {
+  useToneMappingControls(toneMappingNode, () => {
     postProcessing.needsUpdate = true
   })
 
