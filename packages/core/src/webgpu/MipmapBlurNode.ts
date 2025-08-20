@@ -94,7 +94,7 @@ export class MipmapBlurNode extends TempNode {
 
     this._textureNode = outputTexture(this, this.upsampleRTs[0].texture)
 
-    this.updateBeforeType = NodeUpdateType.RENDER
+    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(): TextureNode {

@@ -48,7 +48,7 @@ export class SkyEnvironmentNode extends TempNode {
     })
     this.camera = new CubeCamera(0.1, 1000, this.renderTarget)
 
-    this.updateBeforeType = NodeUpdateType.RENDER
+    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   override updateBefore({ renderer }: NodeFrame): void {

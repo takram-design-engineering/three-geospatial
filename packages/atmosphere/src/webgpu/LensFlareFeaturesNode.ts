@@ -100,7 +100,7 @@ export class LensFlareFeaturesNode extends TempNode {
 
     this._textureNode = outputTexture(this, this.renderTarget.texture)
 
-    this.updateBeforeType = NodeUpdateType.RENDER
+    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(): TextureNode {

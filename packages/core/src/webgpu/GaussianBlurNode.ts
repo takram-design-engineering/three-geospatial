@@ -90,7 +90,7 @@ export class GaussianBlurNode extends TempNode {
 
     this._textureNode = outputTexture(this, this.verticalRT.texture)
 
-    this.updateBeforeType = NodeUpdateType.RENDER
+    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(): TextureNode {
