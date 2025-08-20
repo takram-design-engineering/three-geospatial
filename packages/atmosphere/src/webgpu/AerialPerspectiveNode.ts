@@ -30,6 +30,7 @@ export class AerialPerspectiveNode extends TempNode {
   depthNode: NodeObject | NodeObject<TextureNode>
   normalNode?: NodeObject | NodeObject<TextureNode> | null
   skyNode?: NodeObject | null
+  shadowLengthNode?: NodeObject | null
 
   // Static options:
   correctGeometricError = true
@@ -67,7 +68,7 @@ export class AerialPerspectiveNode extends TempNode {
   override setup(builder: NodeBuilder): Node<'vec4'> {
     builder.getContext().atmosphere = this.atmosphereContext
 
-    const { camera } = this.atmosphereContext
+    const { parameters, camera } = this.atmosphereContext
     const {
       worldToECEFMatrix,
       sunDirectionECEF,
@@ -75,8 +76,7 @@ export class AerialPerspectiveNode extends TempNode {
       cameraPositionUnit
     } = this.atmosphereContext.getNodes()
 
-    const parameters = this.atmosphereContext.parameters.getNodes()
-    const { worldToUnit } = parameters
+    const { worldToUnit } = parameters.getNodes()
 
     const depth = this.depthNode.r.toVar()
 
@@ -137,7 +137,7 @@ export class AerialPerspectiveNode extends TempNode {
       const luminanceTransfer = getSkyLuminanceToPoint(
         cameraPositionUnit,
         positionUnit,
-        0, // TODO: Shadow length
+        this.shadowLengthNode ?? 0,
         sunDirectionECEF
       ).toVar()
       const inscatter = luminanceTransfer.get('luminance')
