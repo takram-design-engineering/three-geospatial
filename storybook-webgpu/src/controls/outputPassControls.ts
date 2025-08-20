@@ -1,7 +1,7 @@
 import type { ArgTypes } from '@storybook/react-vite'
-import type { Camera } from 'three'
+import { useRef } from 'react'
 import { directionToColor } from 'three/tsl'
-import type { PassNode } from 'three/webgpu'
+import type { PassNode, PostProcessing } from 'three/webgpu'
 
 import { depthToColor, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -45,24 +45,35 @@ export const outputPassArgTypes = (
 })
 
 export function useOutputPassControls(
+  postProcessing: PostProcessing,
   passNode: PassNode,
-  camera: Camera,
-  onChange: (outputNode?: Node) => void
+  onChange: (outputNode: Node, outputColorTransform: boolean) => void
 ): void {
+  const ref = useRef({
+    outputNode: postProcessing.outputNode,
+    outputColorTransform: postProcessing.outputColorTransform
+  })
+
   useTransientControl(
     ({ outputDepth, outputNormal }: OutputPassArgs) => ({
       outputDepth,
       outputNormal
     }),
     ({ outputDepth, outputNormal }) => {
-      let pass: Node | undefined = undefined
+      let outputNode = ref.current.outputNode
+      let outputColorTransform = ref.current.outputColorTransform
       // In reverse order:
       if (outputNormal) {
-        pass = directionToColor(passNode.getTextureNode('normal'))
+        outputNode = directionToColor(passNode.getTextureNode('normal'))
+        outputColorTransform = false
       } else if (outputDepth) {
-        pass = depthToColor(passNode.getTextureNode('depth'), camera)
+        outputNode = depthToColor(
+          passNode.getTextureNode('depth'),
+          passNode.camera
+        )
+        outputColorTransform = false
       }
-      onChange(pass)
+      onChange(outputNode, outputColorTransform)
     }
   )
 }

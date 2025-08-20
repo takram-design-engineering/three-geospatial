@@ -67,27 +67,27 @@ const Scene: FC<StoryProps> = ({
 
   // Post-processing:
 
-  const [postProcessing, passNode, aerialNode, lensFlareNode] =
-    useResource(() => {
-      const passNode = pass(scene, camera).setMRT(
-        mrt({
-          output,
-          normal: normalView
-        })
-      )
+  const [postProcessing, passNode, aerialNode] = useResource(() => {
+    const passNode = pass(scene, camera).setMRT(
+      mrt({
+        output,
+        normal: normalView
+      })
+    )
 
-      const aerialNode = aerialPerspective(
-        context,
-        passNode.getTextureNode('output'),
-        passNode.getTextureNode('depth'),
-        passNode.getTextureNode('normal')
-      )
-      const lensFlareNode = lensFlare(convertToTexture(aerialNode))
+    const aerialNode = aerialPerspective(
+      context,
+      passNode.getTextureNode('output'),
+      passNode.getTextureNode('depth'),
+      passNode.getTextureNode('normal')
+    )
+    const lensFlareNode = lensFlare(convertToTexture(aerialNode))
 
-      const postProcessing = new PostProcessing(renderer)
+    const postProcessing = new PostProcessing(renderer)
+    postProcessing.outputNode = lensFlareNode
 
-      return [postProcessing, passNode, aerialNode, lensFlareNode]
-    }, [renderer, scene, camera, context])
+    return [postProcessing, passNode, aerialNode, lensFlareNode]
+  }, [renderer, scene, camera, context])
 
   useGuardedFrame(() => {
     postProcessing.render()
@@ -103,11 +103,15 @@ const Scene: FC<StoryProps> = ({
   )
 
   // Output pass controls:
-  useOutputPassControls(passNode, camera, outputNode => {
-    postProcessing.outputNode = outputNode ?? lensFlareNode
-    postProcessing.outputColorTransform = outputNode == null
-    postProcessing.needsUpdate = true
-  })
+  useOutputPassControls(
+    postProcessing,
+    passNode,
+    (outputNode, outputColorTransform) => {
+      postProcessing.outputNode = outputNode
+      postProcessing.outputColorTransform = outputColorTransform
+      postProcessing.needsUpdate = true
+    }
+  )
 
   // Tone mapping controls:
   useToneMappingControls(() => {

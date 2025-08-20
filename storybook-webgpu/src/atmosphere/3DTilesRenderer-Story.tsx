@@ -64,7 +64,7 @@ const Scene: FC<StoryProps> = ({
 
   // Post-processing:
 
-  const [postProcessing, passNode, , lensFlareNode] = useResource(() => {
+  const [postProcessing, passNode] = useResource(() => {
     const passNode = pass(scene, camera).setMRT(
       mrt({
         output: diffuseColor,
@@ -81,6 +81,7 @@ const Scene: FC<StoryProps> = ({
     const lensFlareNode = lensFlare(convertToTexture(aerialNode))
 
     const postProcessing = new PostProcessing(renderer)
+    postProcessing.outputNode = lensFlareNode
 
     return [postProcessing, passNode, aerialNode, lensFlareNode]
   }, [renderer, camera, scene, context])
@@ -90,11 +91,15 @@ const Scene: FC<StoryProps> = ({
   }, 1)
 
   // Output pass controls:
-  useOutputPassControls(passNode, camera, outputNode => {
-    postProcessing.outputNode = outputNode ?? lensFlareNode
-    postProcessing.outputColorTransform = outputNode == null
-    postProcessing.needsUpdate = true
-  })
+  useOutputPassControls(
+    postProcessing,
+    passNode,
+    (outputNode, outputColorTransform) => {
+      postProcessing.outputNode = outputNode
+      postProcessing.outputColorTransform = outputColorTransform
+      postProcessing.needsUpdate = true
+    }
+  )
 
   // Tone mapping controls:
   useToneMappingControls(() => {
