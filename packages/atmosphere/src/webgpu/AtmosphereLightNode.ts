@@ -37,7 +37,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       return
     }
 
-    const { directNode, indirectNode } = this.light
+    const { direct, indirect } = this.light
 
     const {
       worldToECEFMatrix,
@@ -68,7 +68,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       // provided to the setupDirect().
       builder.getContext().atmosphere = atmosphereContext
       return getSkyIlluminance(positionUnit, normalECEF, sunDirectionECEF).mul(
-        select(indirectNode, 1, 0)
+        select(indirect, 1, 0)
       )
     })()
 
@@ -101,7 +101,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const sunLuminance = solarIrradiance
       .mul(sunTransmittance)
       .mul(sunRadianceToLuminance.mul(luminanceScale))
-      .mul(select(directNode, 1, 0))
+      .mul(select(direct, 1, 0))
 
     // WORKAROUND: As of r178, the lightColor in the DirectLightData must
     // depends on the colorNode of AnalyticLight, otherwise the shadow camera

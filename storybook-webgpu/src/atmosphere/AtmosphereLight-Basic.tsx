@@ -136,8 +136,8 @@ const Scene: FC<StoryProps> = () => {
     ({ directLight, indirectLight, environmentMap }) => {
       const light = lightRef.current
       if (light != null) {
-        light.direct = directLight
-        light.indirect = indirectLight && !environmentMap
+        light.direct.value = directLight
+        light.indirect.value = indirectLight && !environmentMap
       }
       scene.environmentNode = environmentMap ? envNode : null
     }

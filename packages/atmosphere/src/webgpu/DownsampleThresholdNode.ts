@@ -29,12 +29,7 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import {
-  nodeType,
-  outputTexture,
-  referenceTo,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import { outputTexture, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
@@ -62,9 +57,9 @@ export class DownsampleThresholdNode extends TempNode {
   }
 
   inputNode: TextureNode | null
-  @nodeType('float') thresholdLevel: number
-  @nodeType('float') thresholdRange: number
-  resolutionScale: Vector2
+  thresholdLevel = uniform(10)
+  thresholdRange = uniform(1)
+  resolutionScale = new Vector2(0.5, 0.5)
 
   private readonly renderTarget = createRenderTarget('DownsampleThreshold')
   private readonly material = new NodeMaterial()
@@ -76,17 +71,9 @@ export class DownsampleThresholdNode extends TempNode {
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNode: TextureNode
 
-  constructor(
-    inputNode: TextureNode | null,
-    thresholdLevel = 10,
-    thresholdRange = 1,
-    resolutionScale = new Vector2(0.5, 0.5)
-  ) {
+  constructor(inputNode: TextureNode | null) {
     super('vec4')
     this.inputNode = inputNode
-    this.thresholdLevel = thresholdLevel
-    this.thresholdRange = thresholdRange
-    this.resolutionScale = resolutionScale
 
     this._textureNode = outputTexture(this, this.renderTarget.texture)
 
@@ -126,11 +113,8 @@ export class DownsampleThresholdNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode, texelSize } = this
+    const { inputNode, thresholdLevel, thresholdRange, texelSize } = this
     invariant(inputNode != null)
-    const reference = referenceTo<DownsampleThresholdNode>(this)
-    const thresholdLevel = reference('thresholdLevel')
-    const thresholdRange = reference('thresholdRange')
 
     const main = Fn(() => {
       // outer5  --  outer1  --  outer6

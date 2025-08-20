@@ -36,9 +36,7 @@ import invariant from 'tiny-invariant'
 
 import {
   FnLayout,
-  nodeType,
   outputTexture,
-  referenceTo,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
@@ -68,10 +66,10 @@ export class LensFlareFeaturesNode extends TempNode {
   }
 
   inputNode: TextureNode | null
-  @nodeType('float') ghostAmount: number
-  @nodeType('float') haloAmount: number
-  @nodeType('float') chromaticAberration: number
-  resolutionScale: Vector2
+  ghostAmount = uniform(0.001)
+  haloAmount = uniform(0.001)
+  chromaticAberration = uniform(10)
+  resolutionScale = new Vector2(0.5, 0.5)
 
   private readonly renderTarget = createRenderTarget('LensFlareFeatures')
   private readonly material = new NodeMaterial()
@@ -84,19 +82,9 @@ export class LensFlareFeaturesNode extends TempNode {
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNode: TextureNode
 
-  constructor(
-    inputNode: TextureNode | null,
-    ghostAmount = 0.001,
-    haloAmount = 0.001,
-    chromaticAberration = 10,
-    resolutionScale = new Vector2(0.5, 0.5)
-  ) {
+  constructor(inputNode: TextureNode | null) {
     super('vec4')
     this.inputNode = inputNode
-    this.ghostAmount = ghostAmount
-    this.haloAmount = haloAmount
-    this.chromaticAberration = chromaticAberration
-    this.resolutionScale = resolutionScale
 
     this._textureNode = outputTexture(this, this.renderTarget.texture)
 
@@ -137,12 +125,15 @@ export class LensFlareFeaturesNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode, texelSize, aspectRatio } = this
+    const {
+      inputNode,
+      ghostAmount,
+      haloAmount,
+      chromaticAberration,
+      texelSize,
+      aspectRatio
+    } = this
     invariant(inputNode != null)
-    const reference = referenceTo<LensFlareFeaturesNode>(this)
-    const ghostAmount = reference('ghostAmount')
-    const haloAmount = reference('haloAmount')
-    const chromaticAberration = reference('chromaticAberration')
 
     const sampleGhost = FnLayout({
       name: 'sampleGhost',

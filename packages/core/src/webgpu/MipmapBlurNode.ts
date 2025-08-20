@@ -60,7 +60,7 @@ export class MipmapBlurNode extends TempNode {
 
   inputNode: TextureNode | null
   levels: number
-  resolutionScale: Vector2
+  resolutionScale = new Vector2(0.5, 0.5)
 
   private readonly downsampleRTs: RenderTarget[] = []
   private readonly upsampleRTs: RenderTarget[] = []
@@ -75,15 +75,10 @@ export class MipmapBlurNode extends TempNode {
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNode: TextureNode
 
-  constructor(
-    inputNode: TextureNode | null,
-    levels = 8,
-    resolutionScale = new Vector2(0.5, 0.5)
-  ) {
+  constructor(inputNode: TextureNode | null, levels = 8) {
     super('vec4')
     this.inputNode = inputNode
     this.levels = levels
-    this.resolutionScale = resolutionScale
 
     for (let i = 0; i < levels; ++i) {
       this.downsampleRTs[i] = createRenderTarget(`MipmapBlur.Downsample${i}`)

@@ -14,25 +14,24 @@ import {
   select,
   smoothstep,
   sqrt,
+  uniform,
   uv,
   vec3,
   vec4
 } from 'three/tsl'
-import { TempNode, TextureNode, type NodeBuilder } from 'three/webgpu'
+import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 
 import {
   equirectWorld,
   FnVar,
   inverseProjectionMatrix,
   inverseViewMatrix,
-  nodeType,
-  referenceTo,
   type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereContext } from './AtmosphereContext'
-import { AtmosphereParametersNodes } from './AtmosphereParameters'
+import type { AtmosphereParametersNodes } from './AtmosphereParameters'
 import type { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
 
@@ -124,8 +123,8 @@ export class SkyNode extends TempNode {
 
   private readonly atmosphereContext: AtmosphereContext
 
-  @nodeType('float') moonAngularRadius = 0.0045 // ≈ 15.5 arcminutes
-  @nodeType('float') moonIntensity = 1
+  moonAngularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
+  moonIntensity = uniform(1)
   moonColorTexture?: TextureNode | null
   moonNormalTexture?: TextureNode | null
 
@@ -163,11 +162,12 @@ export class SkyNode extends TempNode {
 
     const parameters = this.atmosphereContext.parameters.getNodes()
 
-    const reference = referenceTo<SkyNode>(this)
-    const moonAngularRadius = reference('moonAngularRadius')
-    const moonIntensity = reference('moonIntensity')
-    const moonColorTexture = this.moonColorTexture
-    const moonNormalTexture = this.moonNormalTexture
+    const {
+      moonAngularRadius,
+      moonIntensity,
+      moonColorTexture,
+      moonNormalTexture
+    } = this
 
     // Direction of the camera ray:
     const rayDirectionECEF = FnVar(() => builder => {

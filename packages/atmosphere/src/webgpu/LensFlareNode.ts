@@ -1,12 +1,10 @@
-import { add, nodeObject } from 'three/tsl'
+import { add, nodeObject, uniform } from 'three/tsl'
 import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import {
   GaussianBlurNode,
   MipmapBlurNode,
-  nodeType,
-  referenceTo,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
@@ -15,17 +13,16 @@ import { LensFlareFeaturesNode } from './LensFlareFeaturesNode'
 
 export class LensFlareNode extends TempNode {
   inputNode: TextureNode | null
-  @nodeType('float') intensity: number
+  intensity = uniform(0.005)
 
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
   featuresNode: LensFlareFeaturesNode
   bloomNode: MipmapBlurNode
 
-  constructor(inputNode: TextureNode | null, intensity = 0.005) {
+  constructor(inputNode: TextureNode | null) {
     super('vec4')
     this.inputNode = inputNode
-    this.intensity = intensity
 
     this.thresholdNode = new DownsampleThresholdNode(null)
     this.blurNode = new GaussianBlurNode(null)
@@ -34,7 +31,14 @@ export class LensFlareNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode, thresholdNode, blurNode, featuresNode, bloomNode } = this
+    const {
+      inputNode,
+      intensity,
+      thresholdNode,
+      blurNode,
+      featuresNode,
+      bloomNode
+    } = this
     invariant(inputNode != null)
 
     // input → threshold → blur → features
@@ -45,8 +49,6 @@ export class LensFlareNode extends TempNode {
     // input → threshold → bloom
     bloomNode.inputNode = thresholdNode.getTextureNode()
 
-    const reference = referenceTo<LensFlareNode>(this)
-    const intensity = reference('intensity')
     const bloom = bloomNode.getTextureNode()
     const features = featuresNode.getTextureNode()
     bloom.uvNode = inputNode.uvNode

@@ -1,7 +1,6 @@
 import { Matrix3 } from 'three'
+import { uniform } from 'three/tsl'
 import { DirectionalLight } from 'three/webgpu'
-
-import { referenceNode, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereContext } from './AtmosphereContext'
 
@@ -15,11 +14,8 @@ export class AtmosphereLight extends DirectionalLight {
 
   atmosphereContext?: AtmosphereContext
 
-  direct = true
-  indirect = true
-
-  @referenceNode('float') directNode!: NodeObject
-  @referenceNode('float') indirectNode!: NodeObject
+  direct = uniform(true)
+  indirect = uniform(true)
 
   // Distance to the target position.
   distance: number

@@ -62,7 +62,7 @@ export class GaussianBlurNode extends TempNode {
   inputNode: TextureNode | null
   kernelSize: number
   iterations: number
-  resolutionScale: Vector2
+  resolutionScale = new Vector2(1, 1)
 
   private readonly horizontalRT = createRenderTarget('GaussianBlur.Horizontal')
   private readonly verticalRT = createRenderTarget('GaussianBlur.Vertical')
@@ -76,17 +76,11 @@ export class GaussianBlurNode extends TempNode {
   // https://github.com/mrdoob/three.js/issues/31522
   private readonly _textureNode: TextureNode
 
-  constructor(
-    inputNode: TextureNode | null,
-    kernelSize = 35,
-    iterations = 1,
-    resolutionScale = new Vector2(1, 1)
-  ) {
+  constructor(inputNode: TextureNode | null, kernelSize = 35, iterations = 1) {
     super('vec4')
     this.inputNode = inputNode
     this.kernelSize = kernelSize
     this.iterations = iterations
-    this.resolutionScale = resolutionScale
 
     this._textureNode = outputTexture(this, this.verticalRT.texture)
 
