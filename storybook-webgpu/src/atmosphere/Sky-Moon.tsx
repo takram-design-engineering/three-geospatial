@@ -355,13 +355,13 @@ const Scene: FC<StoryProps> = () => {
   const moonScale = useSpringControl(
     ({ moonScale }: StoryArgs) => moonScale,
     value => {
-      skyNode.moonAngularRadius = moonAngularRadius * value
+      skyNode.moonAngularRadius.value = moonAngularRadius * value
     }
   )
   const moonIntensity = useSpringControl(
     ({ moonIntensity }: StoryArgs) => moonIntensity,
     value => {
-      skyNode.moonIntensity = value
+      skyNode.moonIntensity.value = value
     }
   )
 
