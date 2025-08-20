@@ -432,17 +432,18 @@ const Scene: FC<StoryProps> = () => {
     if (controls == null || state == null) {
       return
     }
-    const position = vector1.setFromMatrixPosition(camera.matrixWorld)
-    const direction = directionFromHOR(state.moonHOR, vector2)
-    matrix.copy(context.worldToECEFMatrix).transpose()
-
     if (northUp) {
+      matrix.copy(context.worldToECEFMatrix).transpose()
       camera.up.set(0, 0, 1).applyMatrix4(matrix)
     } else {
       camera.up.copy(Object3D.DEFAULT_UP)
     }
     if (trackMoon) {
-      controls.target.copy(position.add(direction))
+      const position = vector1.setFromMatrixPosition(camera.matrixWorld)
+      const direction = directionFromHOR(state.moonHOR, vector2)
+      const target = position.add(direction)
+      camera.lookAt(target)
+      controls.target.copy(target)
     }
     controls.update()
   })
