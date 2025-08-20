@@ -69,7 +69,7 @@ export class MipmapBlurNode extends TempNode {
   private readonly mesh = new QuadMesh()
 
   private readonly texelSize = uniform(new Vector2())
-  private readonly previousNode = texture()
+  private readonly previousNode = texture(null)
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522

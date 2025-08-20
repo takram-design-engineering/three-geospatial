@@ -278,7 +278,7 @@ class TransmittanceMaterial extends ComputeMaterial {
 }
 
 class DirectIrradianceMaterial extends ComputeMaterial {
-  transmittanceTexture = texture()
+  transmittanceTexture = texture(null)
 
   override setup(builder: NodeBuilder): void {
     const irradiance = computeDirectIrradianceTexture(
@@ -308,7 +308,7 @@ class DirectIrradianceMaterial extends ComputeMaterial {
 
 class SingleScatteringMaterial extends ComputeMaterial {
   luminanceFromRadiance = uniform(new Matrix3())
-  transmittanceTexture = texture()
+  transmittanceTexture = texture(null)
   layer = uniform(0)
 
   override setup(builder: NodeBuilder): void {
@@ -347,11 +347,11 @@ class SingleScatteringMaterial extends ComputeMaterial {
 }
 
 class ScatteringDensityMaterial extends ComputeMaterial {
-  transmittanceTexture = texture()
-  deltaRayleighScattering = texture3D()
-  deltaMieScattering = texture3D()
-  deltaMultipleScattering = texture3D()
-  deltaIrradiance = texture()
+  transmittanceTexture = texture(null)
+  deltaRayleighScattering = texture3D(null)
+  deltaMieScattering = texture3D(null)
+  deltaMultipleScattering = texture3D(null)
+  deltaIrradiance = texture(null)
   scatteringOrder = uniform(0)
   layer = uniform(0)
 
@@ -397,9 +397,9 @@ class ScatteringDensityMaterial extends ComputeMaterial {
 
 class IndirectIrradianceMaterial extends ComputeMaterial {
   luminanceFromRadiance = uniform(new Matrix3())
-  deltaRayleighScattering = texture3D()
-  deltaMieScattering = texture3D()
-  deltaMultipleScattering = texture3D()
+  deltaRayleighScattering = texture3D(null)
+  deltaMieScattering = texture3D(null)
+  deltaMultipleScattering = texture3D(null)
   scatteringOrder = uniform(0)
 
   override setup(builder: NodeBuilder): void {
@@ -440,8 +440,8 @@ class IndirectIrradianceMaterial extends ComputeMaterial {
 
 class MultipleScatteringMaterial extends ComputeMaterial {
   luminanceFromRadiance = uniform(new Matrix3())
-  transmittanceTexture = texture()
-  deltaScatteringDensity = texture3D()
+  transmittanceTexture = texture(null)
+  deltaScatteringDensity = texture3D(null)
   layer = uniform(0)
 
   override setup(builder: NodeBuilder): void {
