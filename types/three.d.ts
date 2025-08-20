@@ -27,27 +27,11 @@ declare module 'three' {
   }
 }
 
-declare module 'three/tsl' {
-  // Make "value" nullable
-  const texture: (
-    value?: Texture | null,
-    uvNode?: Node | null,
-    levelNode?: Node | number | null,
-    biasNode?: Node | null
-  ) => ShaderNodeObject<TextureNode>
-
-  // Make "value" nullable
-  const texture3D: (
-    value: Texture | null,
-    uvNode?: Node | null,
-    levelNode?: Node | number | null
-  ) => ShaderNodeObject<Texture3DNode>
-}
-
-declare module 'three/webgpu' {
+declare module 'three/src/nodes/Nodes.js' {
   interface Node {
     // Add "self"
-    onUpdate(callback: (this: this, frame: NodeFrame, self: this) => void): this
+    // NOTE: This type is problematic because methods like these (parameter of
+    // "self: this") don't intersect with derived classes.
     onFrameUpdate(
       callback: (this: this, frame: NodeFrame, self: this) => void
     ): this
@@ -60,30 +44,6 @@ declare module 'three/webgpu' {
     onReference(
       callback: (this: this, frame: NodeFrame, self: this) => void
     ): this
-  }
-
-  // Add "camera"
-  interface NodeBuilder {
-    camera?: Camera
-  }
-
-  // Add "colorNode"
-  interface AnalyticLightNode<T extends Light> extends LightingNode {
-    colorNode: Node
-  }
-
-  // Add missing methods
-  interface TextureNode extends UniformNode<Texture> {
-    blur(amountNode: number | Node): ShaderNodeObject<TextureNode>
-    level(levelNode: number | Node): ShaderNodeObject<TextureNode>
-    size(levelNode: number | Node): ShaderNodeObject<TextureNode>
-    bias(biasNode: number | Node): ShaderNodeObject<TextureNode>
-    compare(compareNode: number | Node): ShaderNodeObject<TextureNode>
-    grad(
-      gradeNodeX: number | Node,
-      gradeNodeY: number | Node
-    ): ShaderNodeObject<TextureNode>
-    depth(depthNode: number | Node): ShaderNodeObject<TextureNode>
   }
 }
 
@@ -106,5 +66,49 @@ declare module 'three/src/nodes/TSL.js' {
       n32: number | Node,
       n33: number | Node
     ): ShaderNodeObject<ConstNode<Matrix3>>
+  }
+}
+
+declare module 'three/tsl' {
+  // Make "value" nullable
+  const texture: (
+    value?: Texture | null,
+    uvNode?: Node | null,
+    levelNode?: Node | number | null,
+    biasNode?: Node | null
+  ) => ShaderNodeObject<TextureNode>
+
+  // Make "value" nullable
+  const texture3D: (
+    value: Texture | null,
+    uvNode?: Node | null,
+    levelNode?: Node | number | null
+  ) => ShaderNodeObject<Texture3DNode>
+}
+
+declare module 'three/webgpu' {
+  // Add "camera"
+  interface NodeBuilder {
+    camera?: Camera
+  }
+
+  // Add "colorNode"
+  interface AnalyticLightNode<T extends Light> extends LightingNode {
+    colorNode: Node
+  }
+
+  // Add missing methods
+  interface TextureNode extends UniformNode<Texture> {
+    setUpdateMatrix: (value: boolean) => this
+    blur(amountNode: number | Node): ShaderNodeObject<TextureNode>
+    level(levelNode: number | Node): ShaderNodeObject<TextureNode>
+    size(levelNode: number | Node): ShaderNodeObject<TextureNode>
+    bias(biasNode: number | Node): ShaderNodeObject<TextureNode>
+    compare(compareNode: number | Node): ShaderNodeObject<TextureNode>
+    grad(
+      gradeNodeX: number | Node,
+      gradeNodeY: number | Node
+    ): ShaderNodeObject<TextureNode>
+    depth(depthNode: number | Node): ShaderNodeObject<TextureNode>
   }
 }

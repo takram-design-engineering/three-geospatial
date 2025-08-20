@@ -4,12 +4,6 @@ import { Texture3DNode, type Node, type NodeBuilder } from 'three/webgpu'
 
 import type { NodeObject } from './node'
 
-declare module 'three/webgpu' {
-  interface TextureNode {
-    setUpdateMatrix: (value: boolean) => this
-  }
-}
-
 export class OutputTexture3DNode extends Texture3DNode {
   static override get type(): string {
     return 'OutputTexture3DNode'
