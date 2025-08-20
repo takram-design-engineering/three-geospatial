@@ -8,6 +8,7 @@ import type {
   Node,
   NodeFrame,
   Texture3DNode,
+  TextureNode,
   UniformNode
 } from 'three/webgpu'
 
@@ -16,6 +17,7 @@ export {}
 declare module 'three' {
   interface Camera {
     isPerspectiveCamera?: boolean
+    isOrthographicCamera?: boolean
   }
 
   // Change texture types to Data3DTexture
@@ -26,9 +28,17 @@ declare module 'three' {
 }
 
 declare module 'three/tsl' {
-  // Make "value" optional
+  // Make "value" nullable
+  const texture: (
+    value?: Texture | null,
+    uvNode?: Node | null,
+    levelNode?: Node | number | null,
+    biasNode?: Node | null
+  ) => ShaderNodeObject<TextureNode>
+
+  // Make "value" nullable
   const texture3D: (
-    value?: Texture,
+    value: Texture | null,
     uvNode?: Node | null,
     levelNode?: Node | number | null
   ) => ShaderNodeObject<Texture3DNode>
@@ -37,7 +47,17 @@ declare module 'three/tsl' {
 declare module 'three/webgpu' {
   interface Node {
     // Add "self"
+    onUpdate(callback: (this: this, frame: NodeFrame, self: this) => void): this
+    onFrameUpdate(
+      callback: (this: this, frame: NodeFrame, self: this) => void
+    ): this
     onRenderUpdate(
+      callback: (this: this, frame: NodeFrame, self: this) => void
+    ): this
+    onObjectUpdate(
+      callback: (this: this, frame: NodeFrame, self: this) => void
+    ): this
+    onReference(
       callback: (this: this, frame: NodeFrame, self: this) => void
     ): this
   }

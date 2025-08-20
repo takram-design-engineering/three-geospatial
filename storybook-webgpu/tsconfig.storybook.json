@@ -28,7 +28,6 @@
     "src/**/*.mdx",
     ".storybook/*.js",
     ".storybook/*.ts",
-    "types/**/*.ts",
-    "../packages/*/types/**/*.ts"
+    "types/**/*.ts"
   ]
 }

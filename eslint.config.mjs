@@ -143,7 +143,7 @@ export default defineConfig(
     }
   },
   {
-    files: ['**/eslint.config.mjs', '**/vite.config.ts'],
+    files: ['**/eslint.config.mjs', '**/vite.config.ts', 'types/**/*.d.ts'],
     extends: [tseslint.configs.disableTypeChecked]
   }
 )

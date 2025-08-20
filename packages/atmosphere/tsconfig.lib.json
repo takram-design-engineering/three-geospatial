@@ -25,6 +25,7 @@
     "src/**/*.jsx",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "../../types/**/*.ts",
     "types/**/*.ts"
   ]
 }
