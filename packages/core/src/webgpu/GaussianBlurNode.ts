@@ -34,7 +34,7 @@ declare module 'postprocessing' {
   }
 }
 
-function createRenderTarget(): RenderTarget {
+function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
     type: HalfFloatType,
@@ -46,6 +46,7 @@ function createRenderTarget(): RenderTarget {
   texture.wrapS = ClampToEdgeWrapping
   texture.wrapT = ClampToEdgeWrapping
   texture.generateMipmaps = false
+  texture.name = name
   return renderTarget
 }
 
@@ -63,8 +64,8 @@ export class GaussianBlurNode extends TempNode {
   iterations: number
   resolutionScale: Vector2
 
-  private readonly horizontalRT = createRenderTarget()
-  private readonly verticalRT = createRenderTarget()
+  private readonly horizontalRT = createRenderTarget('GaussianBlur.Horizontal')
+  private readonly verticalRT = createRenderTarget('GaussianBlur.Vertical')
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
 

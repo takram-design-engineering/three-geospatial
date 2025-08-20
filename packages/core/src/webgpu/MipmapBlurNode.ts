@@ -33,7 +33,7 @@ import type { NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { clampToBorder } from './transformations'
 
-function createRenderTarget(): RenderTarget {
+function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
     type: HalfFloatType,
@@ -45,6 +45,7 @@ function createRenderTarget(): RenderTarget {
   texture.wrapS = ClampToEdgeWrapping
   texture.wrapT = ClampToEdgeWrapping
   texture.generateMipmaps = false
+  texture.name = name
   return renderTarget
 }
 
@@ -85,9 +86,9 @@ export class MipmapBlurNode extends TempNode {
     this.resolutionScale = resolutionScale
 
     for (let i = 0; i < levels; ++i) {
-      this.downsampleRTs[i] = createRenderTarget()
+      this.downsampleRTs[i] = createRenderTarget(`MipmapBlur.Downsample${i}`)
       if (i < levels - 1) {
-        this.upsampleRTs[i] = createRenderTarget()
+        this.upsampleRTs[i] = createRenderTarget(`MipmapBlur.Upsample${i}`)
       }
     }
 

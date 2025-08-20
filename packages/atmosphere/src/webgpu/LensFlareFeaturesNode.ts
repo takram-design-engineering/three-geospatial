@@ -42,7 +42,7 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-function createRenderTarget(): RenderTarget {
+function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
     type: HalfFloatType,
@@ -54,6 +54,7 @@ function createRenderTarget(): RenderTarget {
   texture.wrapS = ClampToEdgeWrapping
   texture.wrapT = ClampToEdgeWrapping
   texture.generateMipmaps = false
+  texture.name = name
   return renderTarget
 }
 
@@ -72,7 +73,7 @@ export class LensFlareFeaturesNode extends TempNode {
   @nodeType('float') chromaticAberration: number
   resolutionScale: Vector2
 
-  private readonly renderTarget = createRenderTarget()
+  private readonly renderTarget = createRenderTarget('LensFlareFeatures')
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
 
