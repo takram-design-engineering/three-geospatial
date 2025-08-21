@@ -678,10 +678,14 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ FnLayout({
 
   // The ray segment degenerates when the both camera and point are below the
   // bottom atmosphere boundary.
+  const clippedCamera = select(cameraBelow, intersection, camera)
+  const clippedPoint = select(pointBelow, intersection, point)
   return raySegmentStruct(
-    select(cameraBelow, intersection, camera),
-    select(pointBelow, intersection, point),
-    cameraBelow.and(pointBelow)
+    clippedCamera,
+    clippedPoint,
+    cameraBelow
+      .and(pointBelow)
+      .or(clippedCamera.distance(clippedPoint).lessThan(1e-7))
   )
 })
 
