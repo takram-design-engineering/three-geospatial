@@ -16,6 +16,7 @@ import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
+import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 
@@ -60,6 +61,7 @@ export const Globe: FC<GlobeProps> = ({
       plugin={TileMaterialReplacementPlugin}
       args={[overrideMaterial]}
     />
+    <TilesPlugin plugin={TilesFadePlugin} />
     {children}
     <TilesAttributionOverlay />
   </TilesRenderer>

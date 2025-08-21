@@ -58,6 +58,7 @@ import {
 import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 
 const Scene: FC<StoryProps> = ({
@@ -169,6 +170,7 @@ const Scene: FC<StoryProps> = ({
           plugin={TileMaterialReplacementPlugin}
           args={MeshBasicNodeMaterial}
         />
+        <TilesPlugin plugin={TilesFadePlugin} />
       </TilesRenderer>
     </>
   )
