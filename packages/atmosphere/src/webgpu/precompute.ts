@@ -171,11 +171,7 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
 
         // Distance between the current sample point and the planet center.
         const r = sqrt(
-          add(
-            rayLength.pow2(),
-            mul(2, radius, cosView, rayLength),
-            radius.pow2()
-          )
+          add(rayLength.sq(), mul(2, radius, cosView, rayLength), radius.sq())
         ).toVar()
 
         // Number density at the current sample point (divided by the number
@@ -274,11 +270,11 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   )
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(nodes.topRadius.pow2().sub(nodes.bottomRadius.pow2())).toVar()
+  const H = sqrt(nodes.topRadius.sq().sub(nodes.bottomRadius.sq())).toVar()
 
   // Distance to the horizon, from which we can compute radius.
   const distanceToHorizon = H.mul(radiusUnit).toVar()
-  const radius = sqrt(distanceToHorizon.pow2().add(nodes.bottomRadius.pow2()))
+  const radius = sqrt(distanceToHorizon.sq().add(nodes.bottomRadius.sq()))
 
   // Distance to the top atmosphere boundary for the ray (radius, cosView),
   // and its minimum and maximum values over all cosView - obtained for
@@ -291,9 +287,9 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   const cosView = select(
     distance.equal(0),
     1,
-    H.pow2()
-      .sub(distanceToHorizon.pow2())
-      .sub(distance.pow2())
+    H.sq()
+      .sub(distanceToHorizon.sq())
+      .sub(distance.sq())
       .div(mul(2, radius, distance))
   )
   return transmittanceParamsStruct(radius, cosView)
@@ -356,9 +352,9 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
   const radiusEnd = clampRadius(
     sqrt(
       rayLength
-        .pow2()
+        .sq()
         .add(mul(2, radius, cosView, rayLength))
-        .add(radius.pow2())
+        .add(radius.sq())
     )
   ).toVar()
   const cosSunEnd = clampCosine(
@@ -492,7 +488,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   const nodes = parameters.getNodes()
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(nodes.topRadius.pow2().sub(nodes.bottomRadius.pow2())).toVar()
+  const H = sqrt(nodes.topRadius.sq().sub(nodes.bottomRadius.sq())).toVar()
 
   // Distance to the horizon.
   const distanceToHorizon = H.mul(
@@ -501,7 +497,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
       parameters.scatteringTextureRadiusSize
     )
   ).toVar()
-  const radius = sqrt(distanceToHorizon.pow2().add(nodes.bottomRadius.pow2()))
+  const radius = sqrt(distanceToHorizon.sq().add(nodes.bottomRadius.sq()))
 
   const cosView = float().toVar()
   const viewRayIntersectsGround = bool().toVar()
@@ -529,8 +525,8 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
         -1,
         clampCosine(
           distanceToHorizon
-            .pow2()
-            .add(distance.pow2())
+            .sq()
+            .add(distance.sq())
             .negate()
             .div(mul(2, radius, distance))
         )
@@ -561,9 +557,9 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
         distance.equal(0),
         1,
         clampCosine(
-          H.pow2()
-            .sub(distanceToHorizon.pow2())
-            .sub(distance.pow2())
+          H.sq()
+            .sub(distanceToHorizon.sq())
+            .sub(distance.sq())
             .div(mul(2, radius, distance))
         )
       )
@@ -587,8 +583,8 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     distance.equal(0),
     1,
     clampCosine(
-      H.pow2()
-        .sub(distance.pow2())
+      H.sq()
+        .sub(distance.sq())
         .div(mul(2, nodes.bottomRadius, distance))
     )
   )
@@ -644,10 +640,10 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
       cosViewSun,
       cosView
         .mul(cosSun)
-        .sub(sqrt(cosView.pow2().oneMinus().mul(cosSun.pow2().oneMinus()))),
+        .sub(sqrt(cosView.sq().oneMinus().mul(cosSun.sq().oneMinus()))),
       cosView
         .mul(cosSun)
-        .add(sqrt(cosView.pow2().oneMinus().mul(cosSun.pow2().oneMinus())))
+        .add(sqrt(cosView.sq().oneMinus().mul(cosSun.sq().oneMinus())))
     )
   )
   return scatteringParamsStruct(
@@ -798,14 +794,14 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
   // the cosine of the view-sun angle is cosViewSun. The goal is to simplify
   // computations below.
   const zenithDirection = vec3(0, 0, 1).toConst()
-  const omega = vec3(sqrt(cosView.pow2().oneMinus()), 0, cosView).toVar()
+  const omega = vec3(sqrt(cosView.sq().oneMinus()), 0, cosView).toVar()
   const sunDirectionX = select(
     omega.x.equal(0),
     0,
     cosViewSun.sub(cosView.mul(cosSun)).div(omega.x)
   ).toVar()
   const sunDirectionY = sqrt(
-    max(sunDirectionX.pow2().add(cosSun.pow2()).oneMinus(), 0)
+    max(sunDirectionX.sq().add(cosSun.sq()).oneMinus(), 0)
   )
   const omegaSun = vec3(sunDirectionX, sunDirectionY, cosSun).toVar()
   const SAMPLE_COUNT = 16
@@ -965,9 +961,9 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
     const radiusI = clampRadius(
       sqrt(
         rayLength
-          .pow2()
+          .sq()
           .add(mul(2, radius, cosView, rayLength))
-          .add(radius.pow2())
+          .add(radius.sq())
       )
     )
     const cosViewI = clampCosine(
@@ -1109,7 +1105,7 @@ const computeDirectIrradiance = /*#__PURE__*/ FnLayout({
     select(
       cosSun.greaterThan(alpha),
       cosSun,
-      cosSun.add(alpha).pow2().div(alpha.mul(4))
+      cosSun.add(alpha).sq().div(alpha.mul(4))
     )
   )
 
@@ -1149,7 +1145,7 @@ const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
   const deltaTheta = PI.div(SAMPLE_COUNT).toConst()
 
   const result = vec3(0).toVar()
-  const omegaSun = vec3(sqrt(cosSun.pow2().oneMinus()), 0, cosSun).toVar()
+  const omegaSun = vec3(sqrt(cosSun.sq().oneMinus()), 0, cosSun).toVar()
 
   // @ts-expect-error Missing type
   Loop({ start: 0, end: SAMPLE_COUNT / 2, name: 'j' }, ({ j }) => {

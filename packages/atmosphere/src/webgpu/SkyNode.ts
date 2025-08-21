@@ -73,7 +73,7 @@ const getLunarRadiance = /*#__PURE__*/ FnLayout({
       // (https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html)
       // Relative brightness: 10^{0.4*(m2-m1)} ≈ 0.0000025
       .mul(0.0000025)
-      .div(PI.mul(moonAngularRadius.pow2()))
+      .div(PI.mul(moonAngularRadius.sq()))
       .mul(nodes.sunRadianceToLuminance.mul(nodes.luminanceScale))
   )
 })
@@ -91,7 +91,7 @@ const raySphereIntersectionNormal = /*#__PURE__*/ FnLayout({
   // The vector from the centerDirection to the projection point on the ray.
   const P = centerDirection.sub(rayDirection.mul(cosRay)).negate().toVar()
   // The half chord length along the ray.
-  const s = sqrt(angularRadius.pow2().sub(P.dot(P)).max(0))
+  const s = sqrt(angularRadius.sq().sub(P.dot(P)).max(0))
   return P.sub(rayDirection.mul(s)).div(angularRadius)
 })
 

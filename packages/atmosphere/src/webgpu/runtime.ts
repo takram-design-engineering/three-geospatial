@@ -280,9 +280,7 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
   const distanceToTop = radiusCosView
     .negate()
     .sub(
-      safeSqrt(
-        radiusCosView.pow2().sub(radius.pow2()).add(nodes.topRadius.pow2())
-      )
+      safeSqrt(radiusCosView.sq().sub(radius.sq()).add(nodes.topRadius.sq()))
     )
     .toVar()
 
@@ -342,9 +340,9 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
       const radiusP = clampRadius(
         sqrt(
           shadowLength
-            .pow2()
+            .sq()
             .add(mul(2, radius, cosView, shadowLength))
-            .add(radius.pow2())
+            .add(radius.sq())
         )
       ).toVar()
       const cosViewP = radius
@@ -454,9 +452,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   const distanceToTop = radiusCosView
     .negate()
     .sub(
-      safeSqrt(
-        radiusCosView.pow2().sub(radius.pow2()).add(nodes.topRadius.pow2())
-      )
+      safeSqrt(radiusCosView.sq().sub(radius.sq()).add(nodes.topRadius.sq()))
     )
     .toVar()
 
@@ -480,7 +476,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   // atmosphere texture resolution and finite floating point precision.
   If(not(viewRayIntersectsGround), () => {
     const cosHorizon = safeSqrt(
-      nodes.bottomRadius.pow2().div(radius.pow2()).oneMinus()
+      nodes.bottomRadius.sq().div(radius.sq()).oneMinus()
     )
       .negate()
       .toVar()
@@ -516,9 +512,9 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   const radiusP = clampRadius(
     sqrt(
       distanceToPoint
-        .pow2()
+        .sq()
         .add(mul(2, radius, cosView, distanceToPoint))
-        .add(radius.pow2())
+        .add(radius.sq())
     )
   ).toVar()
   const cosViewP = radius.mul(cosView).add(distanceToPoint).div(radiusP).toVar()
@@ -639,8 +635,8 @@ const raySphereIntersections = /*#__PURE__*/ FnLayout({
   ]
 })(([camera, direction, radius]) => {
   const b = direction.dot(camera).mul(2).toVar()
-  const c = camera.dot(camera).sub(radius.pow2())
-  const discriminant = b.pow2().sub(c.mul(4))
+  const c = camera.dot(camera).sub(radius.sq())
+  const discriminant = b.sq().sub(c.mul(4))
   const Q = sqrt(discriminant).toVar()
   return vec2(b.negate().sub(Q), b.negate().add(Q)).mul(0.5)
 })
@@ -858,7 +854,7 @@ export const getSolarLuminance = /*#__PURE__*/ FnLayout({
   const nodes = parameters.getNodes()
 
   return nodes.solarIrradiance
-    .div(PI.mul(nodes.sunAngularRadius.pow2()))
+    .div(PI.mul(nodes.sunAngularRadius.sq()))
     .mul(nodes.sunRadianceToLuminance.mul(nodes.luminanceScale))
 })
 
