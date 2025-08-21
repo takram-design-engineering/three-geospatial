@@ -1,5 +1,7 @@
 import type { Preview } from '@storybook/react-vite'
 
+import { docs } from './theme'
+
 import './style.css'
 
 const preview: Preview = {
@@ -7,6 +9,9 @@ const preview: Preview = {
     layout: 'fullscreen',
     controls: {
       disableSaveFromUI: true
+    },
+    docs: {
+      theme: docs
     },
     options: {
       storySort: {

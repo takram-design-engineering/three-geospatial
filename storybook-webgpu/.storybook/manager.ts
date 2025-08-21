@@ -1,9 +1,9 @@
 import { addons } from 'storybook/manager-api'
 
-import theme from './theme'
+import { main } from './theme'
 
 addons.setConfig({
-  theme,
+  theme: main,
   initialActive: 'canvas',
   panelPosition: 'right'
 })

@@ -1,10 +1,14 @@
-import { create } from 'storybook/theming'
+import { create, themes } from 'storybook/theming'
 
-const base = create()
-
-export default create({
+export const main = create({
   base: 'dark',
-  brandTitle: '@takram/three-geospatial Experimental WebGPU support',
-  brandUrl: 'https://github.com/takram-design-engineering/three-geospatial/',
-  fontCode: `Consolas, ${base.fontCode}`
+  brandTitle: '@takram/three-geospatial/webgpu',
+  brandUrl: 'https://github.com/takram-design-engineering/three-geospatial/tree/webgpu',
+  fontCode: `Consolas, ${themes.normal.fontCode}`
+})
+
+export const docs = create({
+  base: 'light',
+  fontBase: `Inter, ${themes.normal.fontBase}`,
+  fontCode: `Consolas, ${themes.normal.fontCode}`
 })

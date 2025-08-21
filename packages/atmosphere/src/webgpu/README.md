@@ -15,16 +15,15 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 
 # API
 
-**Nodes**
-
-- [`AtmosphereLUTNode`](#atmospherelutnode)
+- [`AtmosphereContext`](#atmospherecontext)
+- [`AtmosphereLight`](#atmospherelight)
 - [`SkyNode`](#skynode)
 - [`SkyEnvironmentNode`](#skyenvironmentnode)
 - [`AerialPerspectiveNode`](#aerialperspectivenode)
 - [`LensFlareNode`](#lensflarenode)
 
-**Objects**
+**Advanced**
 
 - [`AtmosphereParameters`](#atmosphereparameters)
-- [`AtmosphereContext`](#atmospherecontext)
-- [`AtmosphereLight`](#atmospherelight)
+- [`AtmosphereLUTNode`](#atmospherelutnode)
+- [`AtmosphereLightNode`](#atmospherelightnode)
