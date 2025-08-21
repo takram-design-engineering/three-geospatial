@@ -59,7 +59,7 @@ export class LensFlareNode extends TempNode {
     bloom.uvNode = inputNode.uvNode
     features.uvNode = inputNode.uvNode
 
-    return nodeObject(inputNode).add(add(bloom, features).mul(intensity))
+    return add(bloom, features).mul(intensity)
   }
 
   override dispose(): void {
