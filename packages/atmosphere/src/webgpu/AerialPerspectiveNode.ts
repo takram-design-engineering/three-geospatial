@@ -6,7 +6,6 @@ import {
   cameraFar,
   cameraNear,
   depthToViewZ,
-  FnVar,
   inverseProjectionMatrix,
   inverseViewMatrix,
   projectionMatrix,
@@ -105,7 +104,7 @@ export class AerialPerspectiveNode extends TempNode {
       }
       const positionUnit = positionECEF.mul(worldToUnit).toVar()
 
-      const indirect = FnVar((): Node<'vec3'> => {
+      const indirect = Fn(() => {
         if (this.normalNode == null) {
           throw new Error(
             'The "normalNode" is required when the "light" is set.'
