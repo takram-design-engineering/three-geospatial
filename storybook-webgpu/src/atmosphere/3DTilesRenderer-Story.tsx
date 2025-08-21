@@ -3,7 +3,6 @@ import { GlobeControls } from '3d-tiles-renderer/r3f'
 import type { FC } from 'react'
 import { AgXToneMapping } from 'three'
 import {
-  convertToTexture,
   diffuseColor,
   mrt,
   normalView,
@@ -81,7 +80,7 @@ const Scene: FC<StoryProps> = ({
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('normal')
     )
-    const lensFlareNode = lensFlare(convertToTexture(aerialNode))
+    const lensFlareNode = lensFlare(aerialNode)
     const toneMappingNode = toneMapping(
       AgXToneMapping,
       uniform(0),

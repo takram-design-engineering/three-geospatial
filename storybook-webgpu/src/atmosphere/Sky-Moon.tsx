@@ -41,14 +41,7 @@ import {
   type Group,
   type PerspectiveCamera
 } from 'three'
-import {
-  convertToTexture,
-  div,
-  pass,
-  texture,
-  toneMapping,
-  uniform
-} from 'three/tsl'
+import { div, pass, texture, toneMapping, uniform } from 'three/tsl'
 import {
   LineBasicNodeMaterial,
   LineDashedNodeMaterial,
@@ -304,7 +297,7 @@ const Scene: FC<StoryProps> = () => {
       })
     )
 
-    const lensFlareNode = lensFlare(convertToTexture(skyNode))
+    const lensFlareNode = lensFlare(skyNode)
     const toneMappingNode = toneMapping(
       AgXToneMapping,
       exposureNode,

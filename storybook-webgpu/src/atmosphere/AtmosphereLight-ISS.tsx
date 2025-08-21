@@ -3,7 +3,7 @@ import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import { useState, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { convertToTexture, pass, toneMapping, uniform } from 'three/tsl'
+import { pass, toneMapping, uniform } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
   PostProcessing,
@@ -83,7 +83,7 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth')
     )
-    const lensFlareNode = lensFlare(convertToTexture(aerialNode))
+    const lensFlareNode = lensFlare(aerialNode)
     const toneMappingNode = toneMapping(
       AgXToneMapping,
       uniform(0),

@@ -2,7 +2,7 @@ import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { convertToTexture, toneMapping, uniform } from 'three/tsl'
+import { toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
@@ -51,7 +51,7 @@ const Scene: FC<StoryProps> = () => {
 
   const [postProcessing, skyNode, , toneMappingNode] = useResource(() => {
     const skyNode = sky(context)
-    const lensFlareNode = lensFlare(convertToTexture(skyNode))
+    const lensFlareNode = lensFlare(skyNode)
     const toneMappingNode = toneMapping(
       AgXToneMapping,
       uniform(0),

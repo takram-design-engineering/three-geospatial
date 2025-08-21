@@ -2,7 +2,7 @@ import { OrbitControls, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useRef, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { convertToTexture, pass, toneMapping, uniform } from 'three/tsl'
+import { pass, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -78,7 +78,7 @@ const Scene: FC<StoryProps> = () => {
       passNode.getTextureNode('output'),
       passNode.getTextureNode('depth')
     )
-    const lensFlareNode = lensFlare(convertToTexture(aerialNode))
+    const lensFlareNode = lensFlare(aerialNode)
     const toneMappingNode = toneMapping(
       AgXToneMapping,
       uniform(0),

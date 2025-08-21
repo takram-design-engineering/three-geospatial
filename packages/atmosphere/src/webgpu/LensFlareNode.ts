@@ -1,5 +1,10 @@
-import { add, nodeObject, uniform } from 'three/tsl'
-import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
+import { add, convertToTexture, nodeObject, uniform } from 'three/tsl'
+import {
+  TempNode,
+  type Node,
+  type NodeBuilder,
+  type TextureNode
+} from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import {
@@ -66,6 +71,7 @@ export class LensFlareNode extends TempNode {
   }
 }
 
-export const lensFlare = (
-  ...args: ConstructorParameters<typeof LensFlareNode>
-): NodeObject<LensFlareNode> => nodeObject(new LensFlareNode(...args))
+export const lensFlare = (inputNode: Node | null): NodeObject<LensFlareNode> =>
+  nodeObject(
+    new LensFlareNode(inputNode != null ? convertToTexture(inputNode) : null)
+  )
