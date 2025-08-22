@@ -59,7 +59,7 @@ export class DownsampleThresholdNode extends TempNode {
   inputNode: TextureNode | null
   thresholdLevel = uniform(10)
   thresholdRange = uniform(1)
-  resolutionScale = new Vector2(0.5, 0.5)
+  resolutionScale = 0.5
 
   private readonly renderTarget = createRenderTarget('DownsampleThreshold')
   private readonly material = new NodeMaterial()
@@ -86,8 +86,8 @@ export class DownsampleThresholdNode extends TempNode {
 
   setSize(width: number, height: number): this {
     const { resolutionScale } = this
-    const w = Math.max(Math.round(width * resolutionScale.x), 1)
-    const h = Math.max(Math.round(height * resolutionScale.y), 1)
+    const w = Math.max(Math.round(width * resolutionScale), 1)
+    const h = Math.max(Math.round(height * resolutionScale), 1)
     this.renderTarget.setSize(w, h)
     return this
   }

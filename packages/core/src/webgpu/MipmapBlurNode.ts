@@ -60,7 +60,7 @@ export class MipmapBlurNode extends TempNode {
 
   inputNode: TextureNode | null
   levels: number
-  resolutionScale = new Vector2(0.5, 0.5)
+  resolutionScale = 0.5
 
   private readonly downsampleRTs: RenderTarget[] = []
   private readonly upsampleRTs: RenderTarget[] = []
@@ -98,8 +98,8 @@ export class MipmapBlurNode extends TempNode {
 
   setSize(width: number, height: number): this {
     const { resolutionScale, downsampleRTs, upsampleRTs } = this
-    let w = Math.max(Math.round(width * resolutionScale.x), 1)
-    let h = Math.max(Math.round(height * resolutionScale.y), 1)
+    let w = Math.max(Math.round(width * resolutionScale), 1)
+    let h = Math.max(Math.round(height * resolutionScale), 1)
     for (let i = 0; i < this.levels; ++i) {
       w = Math.max(Math.round(w / 2), 1)
       h = Math.max(Math.round(h / 2), 1)

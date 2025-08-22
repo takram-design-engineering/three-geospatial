@@ -62,7 +62,7 @@ export class GaussianBlurNode extends TempNode {
   inputNode: TextureNode | null
   kernelSize: number
   iterations: number
-  resolutionScale = new Vector2(1, 1)
+  resolutionScale = 0.5
 
   private readonly horizontalRT = createRenderTarget('GaussianBlur.Horizontal')
   private readonly verticalRT = createRenderTarget('GaussianBlur.Vertical')
@@ -93,8 +93,8 @@ export class GaussianBlurNode extends TempNode {
 
   setSize(width: number, height: number): this {
     const { resolutionScale } = this
-    const w = Math.max(Math.round(width * resolutionScale.x), 1)
-    const h = Math.max(Math.round(height * resolutionScale.y), 1)
+    const w = Math.max(Math.round(width * resolutionScale), 1)
+    const h = Math.max(Math.round(height * resolutionScale), 1)
     this.horizontalRT.setSize(w, h)
     this.verticalRT.setSize(w, h)
     return this

@@ -69,7 +69,7 @@ export class LensFlareFeaturesNode extends TempNode {
   ghostAmount = uniform(0.001)
   haloAmount = uniform(0.001)
   chromaticAberration = uniform(10)
-  resolutionScale = new Vector2(0.5, 0.5)
+  resolutionScale = 0.5
 
   private readonly renderTarget = createRenderTarget('LensFlareFeatures')
   private readonly material = new NodeMaterial()
@@ -97,8 +97,8 @@ export class LensFlareFeaturesNode extends TempNode {
 
   setSize(width: number, height: number): this {
     const { resolutionScale } = this
-    const w = Math.max(Math.round(width * resolutionScale.x), 1)
-    const h = Math.max(Math.round(height * resolutionScale.y), 1)
+    const w = Math.max(Math.round(width * resolutionScale), 1)
+    const h = Math.max(Math.round(height * resolutionScale), 1)
     this.renderTarget.setSize(w, h)
     return this
   }
