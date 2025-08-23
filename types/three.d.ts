@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-function-type */
 
-import type { Camera, Data3DTexture, Light, Texture } from 'three'
+import type { Camera, Data3DTexture, Light, Matrix3, Texture } from 'three'
 import type { ShaderNodeObject } from 'three/tsl'
 import type {
+  ConstNode,
   LightingNode,
   Node,
   NodeFrame,
@@ -44,7 +45,7 @@ declare module 'three/src/nodes/Nodes.js' {
 declare module 'three/src/nodes/TSL.js' {
   // Add "get"
   interface NodeElements {
-    get: (node: Node, name: string) => ShaderNodeObject
+    get: (node: Node, name: string) => ShaderNodeObject<Node>
   }
 
   // Alow elements to be numbers

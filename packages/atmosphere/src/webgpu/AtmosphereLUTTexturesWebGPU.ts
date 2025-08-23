@@ -238,7 +238,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       } else {
         textureStore(this.transmittance, textureCoordinate, transmittance)
       }
-    })().compute(width * height, [4, 4, 4])
+    })().compute(width * height, [8, 8, 1])
 
     void renderer.compute(this.transmittanceNode)
   }
@@ -267,7 +267,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       textureStore(this.irradiance, textureCoordinate, vec4(vec3(0), 1))
       textureStore(deltaIrradiance, textureCoordinate, vec4(irradiance, 1))
-    })().compute(width * height, [4, 4, 4])
+    })().compute(width * height, [8, 8, 1])
 
     void renderer.compute(this.directIrradianceNode)
   }
@@ -419,7 +419,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
           .add(irradiance.mul(luminanceFromRadiance))
       )
       textureStore(deltaIrradiance, textureCoordinate, irradiance)
-    })().compute(width * height, [4, 4, 4])
+    })().compute(width * height, [8, 8, 1])
 
     this.scatteringOrder.value = scatteringOrder
     void renderer.compute(this.indirectIrradianceNode)
