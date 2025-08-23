@@ -1,13 +1,14 @@
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
+import type { Renderer } from 'three/webgpu'
 
 import {
   getMoonDirectionECEF,
   getSunDirectionECEF
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContext,
+  atmosphereContext,
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 
@@ -36,9 +37,10 @@ import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 const Scene: FC<StoryProps> = () => {
+  const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
 
-  const context = useResource(() => new AtmosphereContext(), [])
+  const context = useResource(() => atmosphereContext(renderer), [renderer])
   const skyNode = useResource(() => skyBackground(context), [context])
 
   scene.backgroundNode = skyNode

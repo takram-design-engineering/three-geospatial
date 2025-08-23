@@ -10,7 +10,7 @@ import {
   getSunDirectionECEF
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContext,
+  atmosphereContext,
   lensFlare,
   sky
 } from '@takram/three-atmosphere/webgpu'
@@ -44,7 +44,7 @@ const Scene: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContext(), [])
+  const context = useResource(() => atmosphereContext(renderer), [renderer])
   context.camera = camera
 
   // Post-processing:

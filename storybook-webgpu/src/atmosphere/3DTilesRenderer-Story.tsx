@@ -15,7 +15,7 @@ import { PostProcessing, type Renderer } from 'three/webgpu'
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContext,
+  atmosphereContext,
   lensFlare
 } from '@takram/three-atmosphere/webgpu'
 import { dithering } from '@takram/three-geospatial/webgpu'
@@ -62,7 +62,7 @@ const Scene: FC<StoryProps> = ({
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContext(), [])
+  const context = useResource(() => atmosphereContext(renderer), [renderer])
   context.camera = camera
 
   // Post-processing:

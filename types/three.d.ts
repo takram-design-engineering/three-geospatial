@@ -19,12 +19,6 @@ declare module 'three' {
     isPerspectiveCamera?: boolean
     isOrthographicCamera?: boolean
   }
-
-  // Change texture types to Data3DTexture
-  interface RenderTarget3D {
-    texture: Data3DTexture
-    textures: Data3DTexture[]
-  }
 }
 
 declare module 'three/src/nodes/Nodes.js' {

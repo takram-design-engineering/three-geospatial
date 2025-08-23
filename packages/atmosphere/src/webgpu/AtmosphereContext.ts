@@ -1,7 +1,8 @@
 import { Camera, Matrix4, Vector3 } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import { uniform, uniformGroup } from 'three/tsl'
-import { Node, type NodeBuilder } from 'three/webgpu'
+import type Backend from 'three/src/renderers/common/Backend.js'
+import { nodeProxy, uniform, uniformGroup } from 'three/tsl'
+import { Node, type NodeBuilder, type Renderer } from 'three/webgpu'
 
 import { Ellipsoid } from '@takram/three-geospatial'
 
@@ -14,6 +15,11 @@ const groupNode = /*#__PURE__*/ uniformGroup(
 ).onRenderUpdate(() => {
   groupNode.needsUpdate = true
 })
+
+const WEBGPU = 'WEBGPU'
+const WEBGL = 'WEBGL'
+
+type AtmosphereContextScope = typeof WEBGPU | typeof WEBGL
 
 export class AtmosphereContext extends Node {
   parameters: AtmosphereParameters
@@ -36,8 +42,9 @@ export class AtmosphereContext extends Node {
   private nodes?: AtmosphereContextNodes
 
   constructor(
+    scope: AtmosphereContextScope,
     parameters = new AtmosphereParameters(),
-    lutNode = new AtmosphereLUTNode(parameters)
+    lutNode = new AtmosphereLUTNode(scope, parameters)
   ) {
     super(null)
     this.parameters = parameters
@@ -164,3 +171,20 @@ export class AtmosphereContext extends Node {
 export type AtmosphereContextNodes = ReturnType<
   AtmosphereContext['createNodes']
 >
+
+export const atmosphereContextWebGPU = nodeProxy(AtmosphereContext, WEBGPU)
+export const atmosphereContextWebGL = nodeProxy(AtmosphereContext, WEBGL)
+
+export const atmosphereContext = (
+  renderer: Renderer,
+  parameters?: AtmosphereParameters,
+  lutNode?: AtmosphereLUTNode
+): AtmosphereContext => {
+  // The type of Backend cannot be augmented because it is default-exported.
+  const backend = renderer.backend as Backend & {
+    isWebGPUBackend?: boolean
+  }
+  return backend.isWebGPUBackend === true
+    ? atmosphereContextWebGPU(parameters, lutNode)
+    : atmosphereContextWebGL(parameters, lutNode)
+}

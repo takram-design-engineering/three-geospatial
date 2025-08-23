@@ -1,4 +1,5 @@
 import { ScreenQuad } from '@react-three/drei'
+import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
 import { LinearToneMapping } from 'three'
 import {
@@ -12,7 +13,7 @@ import {
   vec2,
   vec4
 } from 'three/tsl'
-import { NodeMaterial } from 'three/webgpu'
+import { NodeMaterial, type Renderer } from 'three/webgpu'
 
 import {
   atmosphereLUT,
@@ -58,7 +59,8 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
   const material = useResource(() => new NodeMaterial(), [])
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
 
-  const lutNode = useResource(() => atmosphereLUT(), [])
+  const renderer = useThree<Renderer>(({ gl }) => gl as any)
+  const lutNode = useResource(() => atmosphereLUT(renderer), [renderer])
   Object.assign(lutNode.parameters, options)
   const textureSize = vec2(lutNode.parameters[`${name}TextureSize`])
   const uv = textureUV(textureSize, zoom)

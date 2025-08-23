@@ -57,7 +57,7 @@ import {
   toAstroTime
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContext,
+  atmosphereContext,
   lensFlare,
   sky
 } from '@takram/three-atmosphere/webgpu'
@@ -273,7 +273,7 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContext(), [])
+  const context = useResource(() => atmosphereContext(renderer), [renderer])
   context.camera = camera
 
   const exposureNode = useResource(() => uniform(1), [])
