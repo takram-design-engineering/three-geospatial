@@ -53,13 +53,12 @@ const sizeScratch = /*#__PURE__*/ new Vector2()
 
 let rendererState: RendererUtils.RendererState
 
-export class MipmapBlurNode extends TempNode {
+export class MipmapBloomNode extends TempNode {
   static override get type(): string {
-    return 'MipmapBlurNode'
+    return 'MipmapBloomNode'
   }
 
   inputNode: TextureNode | null
-  levels: number
   resolutionScale = 0.5
 
   private readonly downsampleRTs: RenderTarget[] = []
@@ -69,7 +68,7 @@ export class MipmapBlurNode extends TempNode {
   private readonly mesh = new QuadMesh()
 
   private readonly texelSize = uniform(new Vector2())
-  private readonly previousNode = texture(null)
+  private readonly downsampleNode = texture(null)
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
@@ -78,7 +77,6 @@ export class MipmapBlurNode extends TempNode {
   constructor(inputNode: TextureNode | null, levels = 8) {
     super('vec4')
     this.inputNode = inputNode
-    this.levels = levels
 
     for (let i = 0; i < levels; ++i) {
       this.downsampleRTs[i] = createRenderTarget(`MipmapBlur.Downsample${i}`)
@@ -97,14 +95,16 @@ export class MipmapBlurNode extends TempNode {
   }
 
   setSize(width: number, height: number): this {
-    const { resolutionScale, downsampleRTs, upsampleRTs } = this
+    const { resolutionScale } = this
     let w = Math.max(Math.round(width * resolutionScale), 1)
     let h = Math.max(Math.round(height * resolutionScale), 1)
-    for (let i = 0; i < this.levels; ++i) {
+
+    const { downsampleRTs, upsampleRTs } = this
+    for (let i = 0; i < downsampleRTs.length; ++i) {
       w = Math.max(Math.round(w / 2), 1)
       h = Math.max(Math.round(h / 2), 1)
       downsampleRTs[i].setSize(w, h)
-      if (i < this.levels - 1) {
+      if (i < upsampleRTs.length) {
         upsampleRTs[i].setSize(w, h)
       }
     }
@@ -123,7 +123,7 @@ export class MipmapBlurNode extends TempNode {
       mesh,
       inputNode,
       texelSize,
-      previousNode
+      downsampleNode
     } = this
     invariant(inputNode != null)
 
@@ -146,7 +146,7 @@ export class MipmapBlurNode extends TempNode {
       const renderTarget = upsampleRTs[i]
       const { width, height } = inputNode.value
       texelSize.value.set(1 / width, 1 / height)
-      previousNode.value = downsampleRTs[i].texture
+      downsampleNode.value = downsampleRTs[i].texture
       renderer.setRenderTarget(renderTarget)
       mesh.render(renderer)
       inputNode.value = renderTarget.texture
@@ -158,7 +158,7 @@ export class MipmapBlurNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode, texelSize, previousNode } = this
+    const { inputNode, texelSize, downsampleNode } = this
     invariant(inputNode != null)
 
     const downsample = Fn(() => {
@@ -256,7 +256,7 @@ export class MipmapBlurNode extends TempNode {
           inputNode.sample(uv8)
         ).mul(0.0625)
       )
-      return mix(previousNode.sample(center), result, 0.85)
+      return mix(downsampleNode.sample(center), result, 0.85)
     })
 
     const { downsampleMaterial, upsampleMaterial } = this
@@ -283,6 +283,6 @@ export class MipmapBlurNode extends TempNode {
   }
 }
 
-export const mipmapBlur = (
-  ...args: ConstructorParameters<typeof MipmapBlurNode>
-): NodeObject<MipmapBlurNode> => nodeObject(new MipmapBlurNode(...args))
+export const mipmapBloom = (
+  ...args: ConstructorParameters<typeof MipmapBloomNode>
+): NodeObject<MipmapBloomNode> => nodeObject(new MipmapBloomNode(...args))

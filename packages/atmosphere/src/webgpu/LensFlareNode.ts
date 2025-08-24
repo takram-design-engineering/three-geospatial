@@ -9,7 +9,7 @@ import invariant from 'tiny-invariant'
 
 import {
   GaussianBlurNode,
-  MipmapBlurNode,
+  MipmapBloomNode,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
@@ -23,7 +23,7 @@ export class LensFlareNode extends TempNode {
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
   featuresNode: LensFlareFeaturesNode
-  bloomNode: MipmapBlurNode
+  bloomNode: MipmapBloomNode
 
   constructor(inputNode: TextureNode | null) {
     super('vec4')
@@ -32,7 +32,7 @@ export class LensFlareNode extends TempNode {
     this.thresholdNode = new DownsampleThresholdNode(null)
     this.blurNode = new GaussianBlurNode(null)
     this.featuresNode = new LensFlareFeaturesNode(null)
-    this.bloomNode = new MipmapBlurNode(null)
+    this.bloomNode = new MipmapBloomNode(null)
   }
 
   override setup(builder: NodeBuilder): unknown {

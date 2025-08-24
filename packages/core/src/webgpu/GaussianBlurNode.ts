@@ -60,9 +60,10 @@ export class GaussianBlurNode extends TempNode {
   }
 
   inputNode: TextureNode | null
-  kernelSize: number
   iterations: number
   resolutionScale = 0.5
+
+  private readonly kernelSize: number
 
   private readonly horizontalRT = createRenderTarget('GaussianBlur.Horizontal')
   private readonly verticalRT = createRenderTarget('GaussianBlur.Vertical')
