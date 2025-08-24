@@ -24,12 +24,11 @@ import {
   aerialPerspective,
   atmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode,
-  lensFlare
+  AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
-import { dithering } from '@takram/three-geospatial/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,

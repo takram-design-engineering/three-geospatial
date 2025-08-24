@@ -34,11 +34,9 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import {
-  FnLayout,
-  outputTexture,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import { FnLayout } from './FnLayout'
+import type { NodeObject } from './node'
+import { outputTexture } from './OutputTextureNode'
 
 function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {

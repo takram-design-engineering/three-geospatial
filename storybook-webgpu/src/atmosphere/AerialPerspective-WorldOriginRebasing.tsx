@@ -15,10 +15,9 @@ import { PostProcessing, type Renderer } from 'three/webgpu'
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  atmosphereContext,
-  lensFlare
+  atmosphereContext
 } from '@takram/three-atmosphere/webgpu'
-import { dithering } from '@takram/three-geospatial/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,

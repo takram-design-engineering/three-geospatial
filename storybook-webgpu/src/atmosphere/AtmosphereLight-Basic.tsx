@@ -11,10 +11,9 @@ import {
   atmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  lensFlare,
   skyEnvironment
 } from '@takram/three-atmosphere/webgpu'
-import { dithering } from '@takram/three-geospatial/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,

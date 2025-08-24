@@ -1,4 +1,4 @@
-import { add, convertToTexture, mix, nodeObject, uniform } from 'three/tsl'
+import { convertToTexture, mix, nodeObject, uniform } from 'three/tsl'
 import {
   TempNode,
   type Node,
@@ -7,18 +7,15 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import {
-  GaussianBlurNode,
-  MipmapBloomNode,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
-
 import { DownsampleThresholdNode } from './DownsampleThresholdNode'
+import { GaussianBlurNode } from './GaussianBlurNode'
 import { LensFlareFeaturesNode } from './LensFlareFeaturesNode'
+import { MipmapBloomNode } from './MipmapBloomNode'
+import type { NodeObject } from './node'
 
 export class LensFlareNode extends TempNode {
   inputNode: TextureNode | null
-  bloomIntensity = uniform(0.1)
+  bloomAmount = uniform(0.1)
 
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
@@ -38,7 +35,7 @@ export class LensFlareNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const {
       inputNode,
-      bloomIntensity,
+      bloomAmount,
       thresholdNode,
       blurNode,
       featuresNode,
@@ -59,7 +56,7 @@ export class LensFlareNode extends TempNode {
     bloom.uvNode = inputNode.uvNode
     features.uvNode = inputNode.uvNode
 
-    return mix(inputNode, bloom, bloomIntensity).add(features)
+    return mix(inputNode, bloom, bloomAmount).add(features)
   }
 
   override dispose(): void {

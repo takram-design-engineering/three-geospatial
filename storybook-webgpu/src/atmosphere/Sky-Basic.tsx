@@ -9,11 +9,8 @@ import {
   getMoonDirectionECEF,
   getSunDirectionECEF
 } from '@takram/three-atmosphere'
-import {
-  atmosphereContext,
-  lensFlare,
-  sky
-} from '@takram/three-atmosphere/webgpu'
+import { atmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
+import { lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,

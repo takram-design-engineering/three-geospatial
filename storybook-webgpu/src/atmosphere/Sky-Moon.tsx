@@ -56,18 +56,14 @@ import {
   getSunDirectionECI,
   toAstroTime
 } from '@takram/three-atmosphere'
-import {
-  atmosphereContext,
-  lensFlare,
-  sky
-} from '@takram/three-atmosphere/webgpu'
+import { atmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
 import {
   assertType,
   degrees,
   Geodetic,
   radians
 } from '@takram/three-geospatial'
-import { dithering } from '@takram/three-geospatial/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
