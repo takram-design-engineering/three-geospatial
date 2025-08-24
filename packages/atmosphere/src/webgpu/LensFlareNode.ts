@@ -1,4 +1,4 @@
-import { add, convertToTexture, nodeObject, uniform } from 'three/tsl'
+import { add, convertToTexture, mix, nodeObject, uniform } from 'three/tsl'
 import {
   TempNode,
   type Node,
@@ -18,7 +18,7 @@ import { LensFlareFeaturesNode } from './LensFlareFeaturesNode'
 
 export class LensFlareNode extends TempNode {
   inputNode: TextureNode | null
-  intensity = uniform(0.005)
+  bloomIntensity = uniform(0.1)
 
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
@@ -38,7 +38,7 @@ export class LensFlareNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const {
       inputNode,
-      intensity,
+      bloomIntensity,
       thresholdNode,
       blurNode,
       featuresNode,
@@ -51,15 +51,15 @@ export class LensFlareNode extends TempNode {
     blurNode.inputNode = thresholdNode.getTextureNode()
     featuresNode.inputNode = blurNode.getTextureNode()
 
-    // input → threshold → bloom
-    bloomNode.inputNode = thresholdNode.getTextureNode()
+    // input → bloom
+    bloomNode.inputNode = inputNode
 
     const bloom = bloomNode.getTextureNode()
     const features = featuresNode.getTextureNode()
     bloom.uvNode = inputNode.uvNode
     features.uvNode = inputNode.uvNode
 
-    return add(bloom, features).mul(intensity)
+    return mix(inputNode, bloom, bloomIntensity).add(features)
   }
 
   override dispose(): void {

@@ -66,8 +66,8 @@ export class LensFlareFeaturesNode extends TempNode {
   }
 
   inputNode: TextureNode | null
-  ghostAmount = uniform(0.001)
-  haloAmount = uniform(0.001)
+  ghostAmount = uniform(1e-5)
+  haloAmount = uniform(1e-5)
   chromaticAberration = uniform(10)
   resolutionScale = 0.5
 

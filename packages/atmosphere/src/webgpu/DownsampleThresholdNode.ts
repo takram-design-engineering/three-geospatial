@@ -57,7 +57,7 @@ export class DownsampleThresholdNode extends TempNode {
   }
 
   inputNode: TextureNode | null
-  thresholdLevel = uniform(10)
+  thresholdLevel = uniform(5)
   thresholdRange = uniform(1)
   resolutionScale = 0.5
 

@@ -301,7 +301,7 @@ const Scene: FC<StoryProps> = () => {
     const toneMappingNode = toneMapping(
       AgXToneMapping,
       exposureNode,
-      skyNode.add(lensFlareNode)
+      lensFlareNode
     )
 
     const postProcessing = new PostProcessing(renderer)
