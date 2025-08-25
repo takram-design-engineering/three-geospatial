@@ -36,14 +36,13 @@ import {
   TempNode,
   Vector2,
   type ComputeNode,
-  type Node,
   type NodeBuilder,
   type NodeFrame,
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { NodeObject } from './node'
+import type { Node, NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -289,8 +288,8 @@ export class LensGlareNode extends TempNode {
       const scale = vec2(normalizedLuminance, 1).mul(
         instance.get('scale'),
         sizeScale,
-        // Make the spike shrink at screen borders:
-        uv.sub(0.5).length().mul(2).oneMinus().mul(0.6).add(0.4)
+        // Make the spike to shrink at screen borders:
+        uv.sub(0.5).length().mul(2).oneMinus().mul(0.5).add(0.5)
       )
       const position = rotation
         .mul(positionGeometry.mul(vec4(scale, 1, 1)))
