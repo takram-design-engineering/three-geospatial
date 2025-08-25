@@ -62,14 +62,6 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
           const renderer = new WebGPURenderer({
             ...(props as any),
             ...otherProps,
-            requiredLimits: {
-              // Require enough bytes for FP32 x 3 attachments to compute the
-              // atmosphere LUTs in the single-float precision.
-              // TODO: Fallback to a non-MRT LUT generation, or in the half-float
-              // precision if it's not supported.
-              maxColorAttachmentBytesPerSample: 48,
-              ...otherProps.requiredLimits
-            },
             forceWebGL
           })
           await renderer.init()
