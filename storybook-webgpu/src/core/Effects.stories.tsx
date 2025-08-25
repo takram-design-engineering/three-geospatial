@@ -1,12 +1,12 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../helpers/createStory'
-import { Story as LensFlareStory } from './Index-LensFlare'
+import { Story as LensFlareStory } from './Effects-LensFlare'
 
-import LensFlareCode from './Index-LensFlare?raw'
+import LensFlareCode from './Effects-LensFlare?raw'
 
 export default {
-  title: 'core',
+  title: 'core/Effects',
   parameters: {
     docs: {
       codePanel: true,

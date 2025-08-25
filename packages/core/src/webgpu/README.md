@@ -1,5 +1,7 @@
 # @takram/three-geospatial/webgpu
 
+[![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
+
 A work-in-progress and experimental WebGPU support for `@takram/three-geospatial`.
 
 ## API changes
@@ -27,3 +29,4 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 - [`KawaseBlurNode`](#kawaseblurnode)
 - [`MipmapBlurNode`](#mipmapblurnode)
 - [`MipmapSurfaceBlurNode`](#mipmapsurfaceblurnode)
+- [`DownsampleThresholdNode`](#downsamplethresholdnode)
