@@ -142,7 +142,6 @@ export abstract class DualFilterNode extends TempNode {
   }
 
   protected abstract setupDownsampleNode(): Node
-
   protected abstract setupUpsampleNode(): Node
 
   override setup(builder: NodeBuilder): unknown {
