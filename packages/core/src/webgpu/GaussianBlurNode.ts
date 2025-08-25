@@ -50,8 +50,6 @@ function createRenderTarget(name: string): RenderTarget {
   return renderTarget
 }
 
-const sizeScratch = /*#__PURE__*/ new Vector2()
-
 let rendererState: RendererUtils.RendererState
 
 export class GaussianBlurNode extends TempNode {
@@ -112,10 +110,9 @@ export class GaussianBlurNode extends TempNode {
 
     const originalTexture = inputNode.value
 
-    const size = renderer.getDrawingBufferSize(sizeScratch)
-    this.setSize(size.width, size.height)
-
     const { width, height } = inputNode.value
+    this.setSize(width, height)
+
     this.texelSize.value.set(1 / width, 1 / height)
 
     for (let i = 0; i < this.iterations; ++i) {
@@ -171,7 +168,6 @@ export class GaussianBlurNode extends TempNode {
     this.horizontalRT.dispose()
     this.verticalRT.dispose()
     this.material.dispose()
-    this.mesh.geometry.dispose()
   }
 }
 
