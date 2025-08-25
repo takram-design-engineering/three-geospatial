@@ -15,32 +15,26 @@ import type { Node } from './node'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-export abstract class SeparableFilterNode extends FilterNode {
-  iterations = 1
-
-  private readonly horizontalRT: RenderTarget
-  private readonly verticalRT: RenderTarget
+export abstract class SingleFilterNode extends FilterNode {
+  private readonly renderTarget: RenderTarget
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
-
   private rendererState!: RendererUtils.RendererState
+
   protected readonly inputTexelSize = uniform(new Vector2())
-  protected readonly direction = uniform(new Vector2())
 
   constructor(inputNode: TextureNode | null) {
     super(inputNode)
 
-    this.horizontalRT = this.createRenderTarget('Horizontal')
-    this.verticalRT = this.createRenderTarget('Vertical')
-    this.setOutputTexture(this.verticalRT.texture)
+    this.renderTarget = this.createRenderTarget()
+    this.setOutputTexture(this.renderTarget.texture)
   }
 
-  setSize(width: number, height: number): this {
+  override setSize(width: number, height: number): this {
     const { resolutionScale } = this
     const w = Math.max(Math.round(width * resolutionScale), 1)
     const h = Math.max(Math.round(height * resolutionScale), 1)
-    this.horizontalRT.setSize(w, h)
-    this.verticalRT.setSize(w, h)
+    this.renderTarget.setSize(w, h)
     return this
   }
 
@@ -49,10 +43,8 @@ export abstract class SeparableFilterNode extends FilterNode {
       return
     }
 
-    const { horizontalRT, verticalRT, mesh, inputNode, direction } = this
+    const { inputNode } = this
     invariant(inputNode != null)
-
-    const originalTexture = inputNode.value
 
     const { width, height } = inputNode.value
     this.setSize(width, height)
@@ -60,21 +52,10 @@ export abstract class SeparableFilterNode extends FilterNode {
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
-    for (let i = 0; i < this.iterations; ++i) {
-      direction.value.set(1, 0)
-      renderer.setRenderTarget(horizontalRT)
-      mesh.render(renderer)
-      inputNode.value = horizontalRT.texture
-
-      direction.value.set(0, 1)
-      renderer.setRenderTarget(verticalRT)
-      mesh.render(renderer)
-      inputNode.value = verticalRT.texture
-    }
+    renderer.setRenderTarget(this.renderTarget)
+    this.mesh.render(renderer)
 
     restoreRendererState(renderer, this.rendererState)
-
-    inputNode.value = originalTexture
   }
 
   protected abstract setupFilterNode(): Node
@@ -91,8 +72,7 @@ export abstract class SeparableFilterNode extends FilterNode {
   }
 
   override dispose(): void {
-    this.horizontalRT.dispose()
-    this.verticalRT.dispose()
+    this.renderTarget.dispose()
     this.material.dispose()
     super.dispose()
   }

@@ -170,8 +170,8 @@ export class AerialPerspectiveNode extends TempNode {
   }
 
   override dispose(): void {
-    super.dispose()
     this.skyNode?.dispose() // TODO: Conditionally depending on the owner.
+    super.dispose()
   }
 }
 

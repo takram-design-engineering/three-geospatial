@@ -252,6 +252,7 @@ export class AtmosphereLUTNode extends TempNode {
         uniform?.dispose()
       }
     }
+    super.dispose()
   }
 }
 

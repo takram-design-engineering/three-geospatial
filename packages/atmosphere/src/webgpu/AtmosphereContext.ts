@@ -150,8 +150,6 @@ export class AtmosphereContext extends Node {
   }
 
   override dispose(): void {
-    super.dispose()
-
     this.parameters.dispose()
     this.lutNode.dispose()
 
@@ -165,6 +163,7 @@ export class AtmosphereContext extends Node {
         node.dispose()
       }
     }
+    super.dispose()
   }
 }
 

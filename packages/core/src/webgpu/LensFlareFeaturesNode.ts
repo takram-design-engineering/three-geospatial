@@ -17,11 +17,11 @@ import {
 import type { NodeFrame } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { FilterNode } from './FilterNode'
 import { FnLayout } from './FnLayout'
 import type { Node, NodeObject } from './node'
+import { SingleFilterNode } from './SingleFilterNode'
 
-export class LensFlareFeaturesNode extends FilterNode {
+export class LensFlareFeaturesNode extends SingleFilterNode {
   static override get type(): string {
     return 'LensFlareFeaturesNode'
   }
@@ -145,7 +145,10 @@ export class LensFlareFeaturesNode extends FilterNode {
       return vec4(color.mul(amount), 1)
     })
 
-    return add(sampleGhosts(uv(), ghostIntensity), sampleHalos(uv(), haloIntensity))
+    return add(
+      sampleGhosts(uv(), ghostIntensity),
+      sampleHalos(uv(), haloIntensity)
+    )
   }
 }
 

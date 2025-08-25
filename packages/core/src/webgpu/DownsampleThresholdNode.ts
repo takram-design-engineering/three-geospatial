@@ -2,11 +2,11 @@ import { luminance, nodeObject, smoothstep, uniform, vec4 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { FilterNode } from './FilterNode'
 import { downsample } from './MipmapBlurNode'
 import type { Node, NodeObject } from './node'
+import { SingleFilterNode } from './SingleFilterNode'
 
-export class DownsampleThresholdNode extends FilterNode {
+export class DownsampleThresholdNode extends SingleFilterNode {
   static override get type(): string {
     return 'DownsampleThresholdNode'
   }

@@ -19,21 +19,14 @@ import {
 import {
   AdditiveBlending,
   CanvasTexture,
-  ClampToEdgeWrapping,
-  HalfFloatType,
-  LinearFilter,
   Mesh,
   MeshBasicNodeMaterial,
-  NodeUpdateType,
   PerspectiveCamera,
   PlaneGeometry,
   RendererUtils,
-  RenderTarget,
-  RGBAFormat,
   Scene,
   SRGBColorSpace,
   StorageBufferAttribute,
-  TempNode,
   Vector2,
   type ComputeNode,
   type NodeBuilder,
@@ -42,26 +35,10 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { FilterNode } from './FilterNode'
 import type { Node, NodeObject } from './node'
-import { outputTexture } from './OutputTextureNode'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
-
-function createRenderTarget(name: string): RenderTarget {
-  const renderTarget = new RenderTarget(1, 1, {
-    depthBuffer: false,
-    type: HalfFloatType,
-    format: RGBAFormat
-  })
-  const texture = renderTarget.texture
-  texture.minFilter = LinearFilter
-  texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
-  texture.generateMipmaps = false
-  texture.name = name
-  return renderTarget
-}
 
 function createSpikeTexture(): CanvasTexture {
   const width = 256
@@ -99,10 +76,8 @@ const instanceStruct = /*#__PURE__*/ struct({
   cos: 'float'
 })
 
-export class LensGlareNode extends TempNode {
-  inputNode: TextureNode | null
+export class LensGlareNode extends FilterNode {
   spikePairCount = 6
-  resolutionScale = 0.5
   wireframe = false
 
   intensity = uniform(1e-5)
@@ -115,7 +90,7 @@ export class LensGlareNode extends TempNode {
   // TODO: Resize the buffer somehow during setSize:
   private readonly instanceBuffer = instancedArray(1000000, instanceStruct)
 
-  private readonly renderTarget = createRenderTarget('LensGlareFeatures')
+  private readonly renderTarget = this.createRenderTarget()
   private readonly material = new MeshBasicNodeMaterial({
     depthTest: false,
     depthWrite: false,
@@ -132,21 +107,12 @@ export class LensGlareNode extends TempNode {
   private readonly geometryRatio = uniform(new Vector2())
   private readonly tileSize = uniform(new Vector2())
 
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNode: TextureNode
-
   constructor(inputNode: TextureNode | null) {
-    super('vec4')
+    super(inputNode)
     this.inputNode = inputNode
+    this.resolutionScale = 0.5
 
-    this._textureNode = outputTexture(this, this.renderTarget.texture)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
-  }
-
-  getTextureNode(): TextureNode {
-    return this._textureNode
+    this.setOutputTexture(this.renderTarget.texture)
   }
 
   setSize(width: number, height: number): this {
@@ -301,8 +267,7 @@ export class LensGlareNode extends TempNode {
     this.material.wireframe = this.wireframe
     this.material.needsUpdate = true
 
-    this._textureNode.uvNode = inputNode.uvNode
-    return this._textureNode
+    return super.setup(builder)
   }
 }
 

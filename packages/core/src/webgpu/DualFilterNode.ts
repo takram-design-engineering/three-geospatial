@@ -1,49 +1,21 @@
-import {
-  ClampToEdgeWrapping,
-  HalfFloatType,
-  LinearFilter,
-  RenderTarget,
-  RGBAFormat,
-  Vector2
-} from 'three'
+import { Vector2, type RenderTarget } from 'three'
 import { texture, uniform } from 'three/tsl'
 import {
   NodeMaterial,
-  NodeUpdateType,
   QuadMesh,
   RendererUtils,
-  TempNode,
   type NodeBuilder,
   type NodeFrame,
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { FilterNode } from './FilterNode'
 import type { Node } from './node'
-import { outputTexture } from './OutputTextureNode'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-function createRenderTarget(name: string): RenderTarget {
-  const renderTarget = new RenderTarget(1, 1, {
-    depthBuffer: false,
-    type: HalfFloatType,
-    format: RGBAFormat
-  })
-  const texture = renderTarget.texture
-  texture.minFilter = LinearFilter
-  texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
-  texture.generateMipmaps = false
-  texture.name = name
-  return renderTarget
-}
-
-export abstract class DualFilterNode extends TempNode {
-  inputNode: TextureNode | null
-  resolutionScale = 1
-
+export abstract class DualFilterNode extends FilterNode {
   private readonly downsampleRTs: RenderTarget[] = []
   private readonly upsampleRTs: RenderTarget[] = []
   private readonly downsampleMaterial = new NodeMaterial()
@@ -54,29 +26,16 @@ export abstract class DualFilterNode extends TempNode {
   protected readonly inputTexelSize = uniform(new Vector2())
   protected readonly downsampleNode = texture(null)
 
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNode: TextureNode
-
   constructor(inputNode: TextureNode | null, levels: number) {
-    super('vec4')
-    this.inputNode = inputNode
+    super(inputNode)
 
-    const name = (this.constructor as typeof DualFilterNode).type
     for (let i = 0; i < levels; ++i) {
-      this.downsampleRTs[i] = createRenderTarget(`${name}.Downsample${i}`)
+      this.downsampleRTs[i] = this.createRenderTarget(`Downsample${i}`)
       if (i < levels - 1) {
-        this.upsampleRTs[i] = createRenderTarget(`${name}.Upsample${i}`)
+        this.upsampleRTs[i] = this.createRenderTarget(`Upsample${i}`)
       }
     }
-
-    this._textureNode = outputTexture(this, this.upsampleRTs[0].texture)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
-  }
-
-  getTextureNode(): TextureNode {
-    return this._textureNode
+    this.setOutputTexture(this.upsampleRTs[0].texture)
   }
 
   setSize(width: number, height: number): this {
@@ -155,12 +114,10 @@ export abstract class DualFilterNode extends TempNode {
     downsampleMaterial.needsUpdate = true
     upsampleMaterial.needsUpdate = true
 
-    this._textureNode.uvNode = inputNode.uvNode
-    return this._textureNode
+    return super.setup(builder)
   }
 
   override dispose(): void {
-    super.dispose()
     for (const downsampleRT of this.downsampleRTs) {
       downsampleRT.dispose()
     }
@@ -169,5 +126,6 @@ export abstract class DualFilterNode extends TempNode {
     }
     this.downsampleMaterial.dispose()
     this.upsampleMaterial.dispose()
+    super.dispose()
   }
 }

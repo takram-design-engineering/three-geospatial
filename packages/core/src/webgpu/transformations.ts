@@ -12,7 +12,6 @@ import {
   reference,
   sin,
   sub,
-  vec2,
   vec3,
   vec4,
   viewZToOrthographicDepth

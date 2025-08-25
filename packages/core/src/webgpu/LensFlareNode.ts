@@ -89,11 +89,11 @@ export class LensFlareNode extends TempNode {
   }
 
   override dispose(): void {
-    super.dispose()
     this.thresholdNode.dispose()
     this.blurNode.dispose()
     this.featuresNode.dispose()
     this.bloomNode.dispose()
+    super.dispose()
   }
 }
 
