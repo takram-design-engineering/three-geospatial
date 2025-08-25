@@ -45,8 +45,7 @@ export const screenToPositionView = /*#__PURE__*/ FnVar(
   ): Node<'vec3'> => {
     const scale = projectionMatrix.element(int(2)).element(int(3))
     const offset = projectionMatrix.element(int(3)).element(int(3))
-    const flippedUV = vec2(uv.x, uv.y.oneMinus())
-    const clip = vec4(vec3(flippedUV, depth).mul(2).sub(1), 1).toVar()
+    const clip = vec4(vec3(uv.flipY(), depth).mul(2).sub(1), 1).toVar()
     const clipW = viewZ.mul(scale).add(offset)
     clip.mulAssign(clipW)
     return inverseProjectionMatrix.mul(clip).xyz

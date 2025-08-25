@@ -282,7 +282,7 @@ export class LensGlareNode extends TempNode {
 
       const positionTile = instance.get('position')
       const uv = positionTile.mul(outputTexelSize).mul(2)
-      const centerPosition = vec2(uv.x, uv.y.oneMinus()).mul(2).sub(1)
+      const centerPosition = uv.flipY().mul(2).sub(1)
 
       const normalizedLuminance = luminance.div(luminanceThreshold).saturate()
       const scale = vec2(normalizedLuminance, 1).mul(

@@ -49,7 +49,7 @@ export const textureUV = FnVar(
         Discard()
       }
     )
-    return vec2(uv.x, uv.y.oneMinus())
+    return uv.flipY()
   }
 )
 
