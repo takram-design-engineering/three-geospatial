@@ -1,4 +1,4 @@
-import { convertToTexture, mix, nodeObject, uniform } from 'three/tsl'
+import { add, convertToTexture, nodeObject, uniform } from 'three/tsl'
 import {
   TempNode,
   type Node,
@@ -10,17 +10,17 @@ import invariant from 'tiny-invariant'
 import { DownsampleThresholdNode } from './DownsampleThresholdNode'
 import { GaussianBlurNode } from './GaussianBlurNode'
 import { LensFlareFeaturesNode } from './LensFlareFeaturesNode'
-import { MipmapBloomNode } from './MipmapBloomNode'
+import { MipmapSurfaceBlurNode } from './MipmapSurfaceBlurNode'
 import type { NodeObject } from './node'
 
 export class LensFlareNode extends TempNode {
   inputNode: TextureNode | null
-  bloomAmount = uniform(0.1)
-
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
   featuresNode: LensFlareFeaturesNode
-  bloomNode: MipmapBloomNode
+  bloomNode: MipmapSurfaceBlurNode
+
+  bloomAmount = uniform(0.05)
 
   constructor(inputNode: TextureNode | null) {
     super('vec4')
@@ -29,34 +29,34 @@ export class LensFlareNode extends TempNode {
     this.thresholdNode = new DownsampleThresholdNode(null)
     this.blurNode = new GaussianBlurNode(null)
     this.featuresNode = new LensFlareFeaturesNode(null)
-    this.bloomNode = new MipmapBloomNode(null)
+    this.bloomNode = new MipmapSurfaceBlurNode(null, 8)
+
+    // Use the full resolution because the thresholdNode already downsamples the
+    // input texture.
+    this.blurNode.resolutionScale = 1
+    this.featuresNode.resolutionScale = 1
+    this.bloomNode.resolutionScale = 1
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const {
-      inputNode,
-      bloomAmount,
-      thresholdNode,
-      blurNode,
-      featuresNode,
-      bloomNode
-    } = this
+    const { inputNode, thresholdNode, blurNode, featuresNode, bloomNode } = this
     invariant(inputNode != null)
+
+    const threshold = thresholdNode.getTextureNode()
+    const blur = blurNode.getTextureNode()
 
     // input → threshold → blur → features
     thresholdNode.inputNode = inputNode
-    blurNode.inputNode = thresholdNode.getTextureNode()
-    featuresNode.inputNode = blurNode.getTextureNode()
+    blurNode.inputNode = threshold
+    featuresNode.inputNode = blur
 
-    // input → bloom
-    bloomNode.inputNode = inputNode
+    // input → threshold → bloom
+    bloomNode.inputNode = threshold
 
-    const bloom = bloomNode.getTextureNode()
-    const features = featuresNode.getTextureNode()
-    bloom.uvNode = inputNode.uvNode
-    features.uvNode = inputNode.uvNode
+    const bloom = nodeObject(bloomNode.getTextureNode())
+    const features = nodeObject(featuresNode.getTextureNode())
 
-    return mix(inputNode, bloom, bloomAmount).add(features)
+    return add(inputNode, bloom.mul(this.bloomAmount)).add(features)
   }
 
   override dispose(): void {

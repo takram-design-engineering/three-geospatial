@@ -8,9 +8,9 @@ import { clampToBorder } from './transformations'
 
 // Implementation of Lena Piquet's bloom filter.
 // Reference: https://www.froyok.fr/blog/2021-12-ue4-custom-bloom
-export class MipmapBloomNode extends DualFilterNode {
+export class MipmapSurfaceBlurNode extends DualFilterNode {
   static override get type(): string {
-    return 'MipmapBloomNode'
+    return 'MipmapSurfaceBlurNode'
   }
 
   blendAmount = uniform(0.85)
@@ -128,5 +128,5 @@ export class MipmapBloomNode extends DualFilterNode {
 }
 
 export const mipmapBloom = (
-  ...args: ConstructorParameters<typeof MipmapBloomNode>
-): NodeObject<MipmapBloomNode> => nodeObject(new MipmapBloomNode(...args))
+  ...args: ConstructorParameters<typeof MipmapSurfaceBlurNode>
+): NodeObject<MipmapSurfaceBlurNode> => nodeObject(new MipmapSurfaceBlurNode(...args))

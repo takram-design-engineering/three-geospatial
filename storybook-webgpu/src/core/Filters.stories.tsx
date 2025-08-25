@@ -4,13 +4,13 @@ import { createStory } from '../helpers/createStory'
 import { Story as DownsampleThresholdStory } from './Filters-DownsampleThreshold'
 import { Story as GaussianBlurStory } from './Filters-GaussianBlur'
 import { Story as KawaseBlurStory } from './Filters-KawaseBlur'
-import { Story as MipmapBloomStory } from './Filters-MipmapBloom'
+import { Story as MipmapSurfaceBlurStory } from './Filters-MipmapSurfaceBlur'
 import { Story as MipmapBlurStory } from './Filters-MipmapBlur'
 
 import DownsampleThresholdCode from './Filters-DownsampleThreshold?raw'
 import GaussianBlurCode from './Filters-GaussianBlur?raw'
 import KawaseBlurCode from './Filters-KawaseBlur?raw'
-import MipmapBloomCode from './Filters-MipmapBloom?raw'
+import MipmapSurfaceBlurCode from './Filters-MipmapSurfaceBlur?raw'
 import MipmapBlurCode from './Filters-MipmapBlur?raw'
 
 export default {
@@ -55,11 +55,11 @@ export const MipmapBlur = createStory(MipmapBlurStory, {
   }
 })
 
-export const MipmapBloom = createStory(MipmapBloomStory, {
+export const MipmapSurfaceBlur = createStory(MipmapSurfaceBlurStory, {
   parameters: {
     docs: {
       source: {
-        code: MipmapBloomCode
+        code: MipmapSurfaceBlurCode
       }
     }
   }
