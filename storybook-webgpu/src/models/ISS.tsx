@@ -1,5 +1,5 @@
 import { useGLTF } from '@react-three/drei'
-import { useEffect, useMemo, type ComponentProps, type FC } from 'react'
+import { useLayoutEffect, useMemo, type ComponentProps, type FC } from 'react'
 import { Matrix3, Vector3, type Matrix4 } from 'three'
 
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
@@ -18,7 +18,7 @@ export const ISS: FC<ISSProps> = ({
   ...props
 }) => {
   const iss = useGLTF('public/iss.glb')
-  useEffect(() => {
+  useLayoutEffect(() => {
     Object.values(iss.meshes).forEach(mesh => {
       mesh.receiveShadow = true
       mesh.castShadow = true

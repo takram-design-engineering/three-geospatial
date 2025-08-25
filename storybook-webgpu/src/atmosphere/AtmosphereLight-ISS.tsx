@@ -1,7 +1,7 @@
 import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
-import { useState, type FC } from 'react'
+import { Suspense, useState, type FC } from 'react'
 import { AgXToneMapping } from 'three'
 import { pass, toneMapping, uniform } from 'three/tsl'
 import {
@@ -164,12 +164,14 @@ const Scene: FC<StoryProps> = () => {
       </atmosphereLight>
       <OrbitControls minDistance={20} maxDistance={1e5} />
       <group rotation-x={-Math.PI / 2}>
-        <ISS
-          worldToECEFMatrix={context.worldToECEFMatrix}
-          sunDirectionECEF={context.sunDirectionECEF}
-          rotation-x={Math.PI / 2}
-          rotation-y={Math.PI / 2}
-        />
+        <Suspense>
+          <ISS
+            worldToECEFMatrix={context.worldToECEFMatrix}
+            sunDirectionECEF={context.sunDirectionECEF}
+            rotation-x={Math.PI / 2}
+            rotation-y={Math.PI / 2}
+          />
+        </Suspense>
       </group>
       <Globe overrideMaterial={MeshLambertNodeMaterial}>
         <TilesPlugin
