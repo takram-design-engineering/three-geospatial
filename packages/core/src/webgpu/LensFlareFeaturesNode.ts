@@ -26,8 +26,8 @@ export class LensFlareFeaturesNode extends FilterNode {
     return 'LensFlareFeaturesNode'
   }
 
-  ghostAmount = uniform(1e-5)
-  haloAmount = uniform(1e-5)
+  ghostIntensity = uniform(1e-5)
+  haloIntensity = uniform(1e-5)
   chromaticAberration = uniform(0.005)
 
   private readonly aspectRatio = uniform(0)
@@ -45,8 +45,8 @@ export class LensFlareFeaturesNode extends FilterNode {
   protected override setupFilterNode(): Node {
     const {
       inputNode,
-      ghostAmount,
-      haloAmount,
+      ghostIntensity,
+      haloIntensity,
       chromaticAberration,
       aspectRatio
     } = this
@@ -145,7 +145,7 @@ export class LensFlareFeaturesNode extends FilterNode {
       return vec4(color.mul(amount), 1)
     })
 
-    return add(sampleGhosts(uv(), ghostAmount), sampleHalos(uv(), haloAmount))
+    return add(sampleGhosts(uv(), ghostIntensity), sampleHalos(uv(), haloIntensity))
   }
 }
 
