@@ -17,8 +17,7 @@ import {
   viewZToOrthographicDepth
 } from 'three/tsl'
 
-import { FnVar } from './FnVar'
-import type { Node, NodeObject } from './node'
+import type { NodeObject } from './node'
 
 export const depthToViewZ = (
   depth: NodeObject<'float'>,
@@ -26,98 +25,89 @@ export const depthToViewZ = (
   cameraFar: NodeObject<'float'>,
   perspectiveDepth = true,
   logarithmicDepth = false
-): Node<'float'> => {
-  return logarithmicDepth
-    ? logarithmicDepthToViewZ(depth, cameraNear, cameraFar)
-    : perspectiveDepth
-      ? perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
-      : orthographicDepthToViewZ(depth, cameraNear, cameraFar)
+): NodeObject<'float'> => {
+  return (
+    logarithmicDepth
+      ? logarithmicDepthToViewZ(depth, cameraNear, cameraFar)
+      : perspectiveDepth
+        ? perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
+        : orthographicDepthToViewZ(depth, cameraNear, cameraFar)
+  ) as NodeObject<'float'>
 }
 
-export const screenToPositionView = /*#__PURE__*/ FnVar(
-  (
-    uv: NodeObject<'vec2'>,
-    depth: NodeObject<'float'>,
-    viewZ: NodeObject<'float'>,
-    projectionMatrix: NodeObject<'mat4'>,
-    inverseProjectionMatrix: NodeObject<'mat4'>
-  ): Node<'vec3'> => {
-    const scale = projectionMatrix.element(int(2)).element(int(3))
-    const offset = projectionMatrix.element(int(3)).element(int(3))
-    const clip = vec4(vec3(uv.flipY(), depth).mul(2).sub(1), 1).toVar()
-    const clipW = viewZ.mul(scale).add(offset)
-    clip.mulAssign(clipW)
-    return inverseProjectionMatrix.mul(clip).xyz
-  }
-)
+export const screenToPositionView = (
+  uv: NodeObject<'vec2'>,
+  depth: NodeObject<'float'>,
+  viewZ: NodeObject<'float'>,
+  projectionMatrix: NodeObject<'mat4'>,
+  inverseProjectionMatrix: NodeObject<'mat4'>
+): NodeObject<'vec3'> => {
+  const scale = projectionMatrix.element(int(2)).element(int(3))
+  const offset = projectionMatrix.element(int(3)).element(int(3))
+  const clip = vec4(vec3(uv.flipY(), depth).mul(2).sub(1), 1).toVar()
+  const ndc = clip.mul(viewZ.mul(scale).add(offset))
+  return inverseProjectionMatrix.mul(ndc).xyz
+}
 
 // A fifth-order polynomial approximation of Turbo color map.
 // See: https://observablehq.com/@mbostock/turbo
-export const turbo = /*#__PURE__*/ FnVar(
-  (x: NodeObject<'float'>): Node<'vec3'> => {
-    const coeffs = [
-      vec3(-150.5666, 4.2109, -88.5066).toConst(),
-      vec3(130.5887, -14.0195, 109.0745).toConst(),
-      vec3(-42.3277, 4.8052, -60.1097).toConst(),
-      vec3(4.5974, 2.1856, 12.5925).toConst(),
-      vec3(0.1357, 0.0914, 0.1067).toConst()
-    ]
-    return coeffs.reduce<NodeObject>(
-      (y, offset) => offset.add(x.mul(y)),
-      vec3(58.1375, 2.7747, 26.8183).toConst()
+export const turbo = (x: NodeObject<'float'>): NodeObject<'vec3'> => {
+  const coeffs = [
+    vec3(-150.5666, 4.2109, -88.5066),
+    vec3(130.5887, -14.0195, 109.0745),
+    vec3(-42.3277, 4.8052, -60.1097),
+    vec3(4.5974, 2.1856, 12.5925),
+    vec3(0.1357, 0.0914, 0.1067)
+  ]
+  return coeffs.reduce<NodeObject>(
+    (y, offset) => offset.add(x.mul(y)),
+    vec3(58.1375, 2.7747, 26.8183)
+  )
+}
+
+export const depthToColor = (
+  depth: NodeObject<'float'>,
+  camera: Camera,
+  near?: number | NodeObject<'float'>,
+  far?: number | NodeObject<'float'>
+): NodeObject<'vec3'> => {
+  const cameraNear = reference('near', 'float', camera)
+  const cameraFar = reference('far', 'float', camera)
+  near = typeof near === 'number' ? float(near) : (near ?? cameraNear)
+  far = typeof far === 'number' ? float(far) : (far ?? cameraFar)
+
+  let orthoDepth: NodeObject<'float'>
+  if (camera.isPerspectiveCamera === true) {
+    const viewZ = perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
+    orthoDepth = viewZToOrthographicDepth(
+      viewZ,
+      near,
+      far
+    ) as NodeObject<'float'>
+  } else {
+    orthoDepth = viewZToOrthographicDepth(
+      depth,
+      near,
+      far
+    ) as NodeObject<'float'>
+  }
+  return turbo(orthoDepth.saturate().oneMinus())
+}
+
+export const equirectWorld = (uv: NodeObject<'vec2'>): NodeObject<'vec3'> => {
+  const lambda = sub(0.5, uv.x).mul(PI2)
+  const phi = sub(uv.y, 0.5).mul(PI)
+  const cosPhi = cos(phi)
+  return vec3(cosPhi.mul(cos(lambda)), sin(phi), cosPhi.mul(sin(lambda)))
+}
+
+export const clampToBorder = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
+  return float(
+    and(
+      uv.x.greaterThanEqual(0),
+      uv.x.lessThanEqual(1),
+      uv.y.greaterThanEqual(0),
+      uv.y.lessThanEqual(1)
     )
-  }
-)
-
-export const depthToColor = /*#__PURE__*/ FnVar(
-  (
-    depth: NodeObject<'float'>,
-    camera: Camera,
-    near?: number | NodeObject<'float'>,
-    far?: number | NodeObject<'float'>
-  ): Node<'vec3'> => {
-    const cameraNear = reference('near', 'float', camera)
-    const cameraFar = reference('far', 'float', camera)
-    near = typeof near === 'number' ? float(near) : (near ?? cameraNear)
-    far = typeof far === 'number' ? float(far) : (far ?? cameraFar)
-
-    let orthoDepth: NodeObject<'float'>
-    if (camera.isPerspectiveCamera === true) {
-      const viewZ = perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
-      orthoDepth = viewZToOrthographicDepth(
-        viewZ,
-        near,
-        far
-      ) as NodeObject<'float'>
-    } else {
-      orthoDepth = viewZToOrthographicDepth(
-        depth,
-        near,
-        far
-      ) as NodeObject<'float'>
-    }
-    return turbo(orthoDepth.saturate().oneMinus())
-  }
-)
-
-export const equirectWorld = /*#__PURE__*/ FnVar(
-  (uv: NodeObject<'vec2'>): Node<'vec3'> => {
-    const lambda = sub(0.5, uv.x).mul(PI2)
-    const phi = sub(uv.y, 0.5).mul(PI)
-    const cosPhi = cos(phi)
-    return vec3(cosPhi.mul(cos(lambda)), sin(phi), cosPhi.mul(sin(lambda)))
-  }
-)
-
-export const clampToBorder = /*#__PURE__*/ FnVar(
-  (uv: NodeObject<'vec2'>): Node<'float'> => {
-    return float(
-      and(
-        uv.x.greaterThanEqual(0),
-        uv.x.lessThanEqual(1),
-        uv.y.greaterThanEqual(0),
-        uv.y.lessThanEqual(1)
-      )
-    )
-  }
-)
+  )
+}
