@@ -38,8 +38,6 @@ function createRenderTarget(name: string): RenderTarget {
   return renderTarget
 }
 
-let rendererState: RendererUtils.RendererState
-
 export abstract class FilterNode extends TempNode {
   inputNode: TextureNode | null
   resolutionScale = 1
@@ -47,6 +45,7 @@ export abstract class FilterNode extends TempNode {
   private readonly renderTarget: RenderTarget
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
+  private rendererState!: RendererUtils.RendererState
 
   protected readonly texelSize = uniform(new Vector2())
 
@@ -82,7 +81,10 @@ export abstract class FilterNode extends TempNode {
     if (renderer == null) {
       return
     }
-    rendererState = RendererUtils.resetRendererState(renderer, rendererState)
+    this.rendererState = RendererUtils.resetRendererState(
+      renderer,
+      this.rendererState
+    )
 
     const { inputNode } = this
     invariant(inputNode != null)
@@ -94,7 +96,7 @@ export abstract class FilterNode extends TempNode {
     renderer.setRenderTarget(this.renderTarget)
     this.mesh.render(renderer)
 
-    RendererUtils.restoreRendererState(renderer, rendererState)
+    RendererUtils.restoreRendererState(renderer, this.rendererState)
   }
 
   protected abstract setupFilterNode(): Node

@@ -38,8 +38,6 @@ function createRenderTarget(name: string): RenderTarget {
   return renderTarget
 }
 
-let rendererState: RendererUtils.RendererState
-
 export abstract class DualFilterNode extends TempNode {
   inputNode: TextureNode | null
   resolutionScale = 1
@@ -49,6 +47,7 @@ export abstract class DualFilterNode extends TempNode {
   private readonly downsampleMaterial = new NodeMaterial()
   private readonly upsampleMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
+  private rendererState!: RendererUtils.RendererState
 
   protected readonly texelSize = uniform(new Vector2())
   protected readonly downsampleNode = texture(null)
@@ -99,7 +98,10 @@ export abstract class DualFilterNode extends TempNode {
     if (renderer == null) {
       return
     }
-    rendererState = RendererUtils.resetRendererState(renderer, rendererState)
+    this.rendererState = RendererUtils.resetRendererState(
+      renderer,
+      this.rendererState
+    )
 
     const {
       downsampleRTs,
@@ -136,7 +138,7 @@ export abstract class DualFilterNode extends TempNode {
       inputNode.value = renderTarget.texture
     }
 
-    RendererUtils.restoreRendererState(renderer, rendererState)
+    RendererUtils.restoreRendererState(renderer, this.rendererState)
 
     inputNode.value = originalTexture
   }

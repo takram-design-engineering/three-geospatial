@@ -38,8 +38,6 @@ function createRenderTarget(name: string): RenderTarget {
   return renderTarget
 }
 
-let rendererState: RendererUtils.RendererState
-
 export abstract class SeparableFilterNode extends TempNode {
   inputNode: TextureNode | null
   iterations = 1
@@ -50,6 +48,7 @@ export abstract class SeparableFilterNode extends TempNode {
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
 
+  private rendererState!: RendererUtils.RendererState
   protected readonly texelSize = uniform(new Vector2())
   protected readonly direction = uniform(new Vector2())
 
@@ -87,7 +86,10 @@ export abstract class SeparableFilterNode extends TempNode {
     if (renderer == null) {
       return
     }
-    rendererState = RendererUtils.resetRendererState(renderer, rendererState)
+    this.rendererState = RendererUtils.resetRendererState(
+      renderer,
+      this.rendererState
+    )
 
     const { horizontalRT, verticalRT, mesh, inputNode, direction } = this
     invariant(inputNode != null)
@@ -111,7 +113,7 @@ export abstract class SeparableFilterNode extends TempNode {
       inputNode.value = verticalRT.texture
     }
 
-    RendererUtils.restoreRendererState(renderer, rendererState)
+    RendererUtils.restoreRendererState(renderer, this.rendererState)
 
     inputNode.value = originalTexture
   }
