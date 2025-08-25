@@ -28,7 +28,7 @@ export class LensFlareFeaturesNode extends FilterNode {
 
   ghostAmount = uniform(1e-5)
   haloAmount = uniform(1e-5)
-  chromaticAberration = uniform(10)
+  chromaticAberration = uniform(0.005)
 
   private readonly aspectRatio = uniform(0)
 
@@ -48,7 +48,6 @@ export class LensFlareFeaturesNode extends FilterNode {
       ghostAmount,
       haloAmount,
       chromaticAberration,
-      texelSize,
       aspectRatio
     } = this
     invariant(inputNode != null)
@@ -118,9 +117,7 @@ export class LensFlareFeaturesNode extends FilterNode {
     })(([uv, radius]) => {
       const scale = vec2(aspectRatio, 1)
       const direction = uv.sub(0.5).mul(scale).normalize().div(scale)
-      const offset = vec3(texelSize.x.mul(chromaticAberration)).mul(
-        vec3(-1, 0, 1)
-      )
+      const offset = vec3(chromaticAberration).mul(vec3(-1, 0, 1))
       const suv = fract(direction.mul(radius).add(uv.oneMinus()))
       const result = vec3(
         inputNode.sample(direction.mul(offset.r).add(suv)).r,
@@ -148,11 +145,7 @@ export class LensFlareFeaturesNode extends FilterNode {
       return vec4(color.mul(amount), 1)
     })
 
-    const uvNode = inputNode.uvNode ?? uv()
-    return add(
-      sampleGhosts(uvNode, ghostAmount),
-      sampleHalos(uvNode, haloAmount)
-    )
+    return add(sampleGhosts(uv(), ghostAmount), sampleHalos(uv(), haloAmount))
   }
 }
 
