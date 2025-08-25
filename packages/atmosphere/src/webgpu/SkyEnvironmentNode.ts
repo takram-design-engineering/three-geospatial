@@ -70,7 +70,6 @@ export class SkyEnvironmentNode extends TempNode {
     this.renderTarget.dispose()
     this.skyNode.dispose() // TODO: Conditionally depending on the owner.
     this.material.dispose()
-    this.mesh.geometry.dispose()
   }
 }
 

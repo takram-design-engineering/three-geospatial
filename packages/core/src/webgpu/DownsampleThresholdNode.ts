@@ -185,7 +185,6 @@ export class DownsampleThresholdNode extends TempNode {
     super.dispose()
     this.renderTarget.dispose()
     this.material.dispose()
-    this.mesh.geometry.dispose()
   }
 }
 
