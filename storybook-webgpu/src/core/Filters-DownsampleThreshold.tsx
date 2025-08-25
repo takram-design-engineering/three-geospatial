@@ -26,7 +26,7 @@ const Scene: FC<StoryProps> = () => {
     return material
   }, [])
 
-  material.fragmentNode = filterNode
+  material.fragmentNode = vec4(filterNode.rgb, 1) // Alpha channel stores luminance
   material.needsUpdate = true
 
   useTransientControl(

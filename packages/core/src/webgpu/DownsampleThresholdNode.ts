@@ -23,13 +23,14 @@ export class DownsampleThresholdNode extends FilterNode {
     const { inputNode, thresholdLevel, thresholdRange, inputTexelSize } = this
     invariant(inputNode != null)
 
-    const result = downsample(inputNode, inputTexelSize)
+    const outputColor = downsample(inputNode, inputTexelSize)
+    const outputLuminance = luminance(outputColor.rgb)
     const scale = smoothstep(
       thresholdLevel,
       thresholdLevel.add(thresholdRange),
-      luminance(result)
+      outputLuminance
     )
-    return vec4(result.rgb.mul(scale), result.a)
+    return vec4(outputColor.rgb, outputLuminance).mul(scale)
   }
 }
 

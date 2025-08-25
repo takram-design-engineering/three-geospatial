@@ -48,7 +48,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
       const innerWeight = 1 / 4 / 2
       const outerWeight = 1 / 9 / 2
 
-      const result = inputNode.sample(center).mul(outerWeight)
+      const output = inputNode.sample(center).mul(outerWeight)
 
       let weight: NodeObject
       weight = vec4(
@@ -58,7 +58,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
         clampToBorder(uv04)
       ).mul(innerWeight)
 
-      result.addAssign(
+      output.addAssign(
         inputNode.sample(uv01).mul(weight.x),
         inputNode.sample(uv02).mul(weight.y),
         inputNode.sample(uv03).mul(weight.z),
@@ -72,7 +72,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
         clampToBorder(uv08)
       ).mul(outerWeight)
 
-      result.addAssign(
+      output.addAssign(
         inputNode.sample(uv05).mul(weight.x),
         inputNode.sample(uv06).mul(weight.y),
         inputNode.sample(uv07).mul(weight.z),
@@ -86,14 +86,14 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
         clampToBorder(uv12)
       ).mul(outerWeight)
 
-      result.addAssign(
+      output.addAssign(
         inputNode.sample(uv09).mul(weight.x),
         inputNode.sample(uv10).mul(weight.y),
         inputNode.sample(uv11).mul(weight.z),
         inputNode.sample(uv12).mul(weight.w)
       )
 
-      return result
+      return output
     })()
   }
 
@@ -112,7 +112,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
     const uv7 = offset.zw.toVertexStage() // -1, -1
     const uv8 = offset.xw.toVertexStage() // 1, -1
 
-    const result = add(
+    const output = add(
       inputNode.sample(center).mul(1 / 4),
       add(
         inputNode.sample(uv1),
@@ -127,7 +127,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
         inputNode.sample(uv8)
       ).mul(1 / 16)
     )
-    return mix(downsampleNode.sample(center), result, this.blendAmount)
+    return mix(downsampleNode.sample(center), output, this.blendAmount)
   }
 }
 

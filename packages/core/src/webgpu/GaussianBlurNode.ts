@@ -40,17 +40,17 @@ export class GaussianBlurNode extends SeparableFilterNode {
       const center = uv()
       const offsetSize = direction.mul(inputTexelSize).toVertexStage()
 
-      const result = inputNode.sample(center).mul(kernel.linearWeights[0])
+      const output = inputNode.sample(center).mul(kernel.linearWeights[0])
       for (let i = 1; i < kernel.linearSteps; ++i) {
         const offset = offsetSize.mul(kernel.linearOffsets[i])
-        result.addAssign(
+        output.addAssign(
           add(
             inputNode.sample(center.add(offset)),
             inputNode.sample(center.sub(offset))
           ).mul(kernel.linearWeights[i])
         )
       }
-      return result
+      return output
     })()
   }
 }
