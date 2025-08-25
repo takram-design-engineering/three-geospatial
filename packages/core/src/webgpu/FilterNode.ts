@@ -22,6 +22,8 @@ import invariant from 'tiny-invariant'
 import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 
+const { resetRendererState, restoreRendererState } = RendererUtils
+
 function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
@@ -47,7 +49,7 @@ export abstract class FilterNode extends TempNode {
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
 
-  protected readonly texelSize = uniform(new Vector2())
+  protected readonly inputTexelSize = uniform(new Vector2())
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
@@ -81,22 +83,20 @@ export abstract class FilterNode extends TempNode {
     if (renderer == null) {
       return
     }
-    this.rendererState = RendererUtils.resetRendererState(
-      renderer,
-      this.rendererState
-    )
 
     const { inputNode } = this
     invariant(inputNode != null)
 
     const { width, height } = inputNode.value
     this.setSize(width, height)
+    this.inputTexelSize.value.set(1 / width, 1 / height)
 
-    this.texelSize.value.set(1 / width, 1 / height)
+    this.rendererState = resetRendererState(renderer, this.rendererState)
+
     renderer.setRenderTarget(this.renderTarget)
     this.mesh.render(renderer)
 
-    RendererUtils.restoreRendererState(renderer, this.rendererState)
+    restoreRendererState(renderer, this.rendererState)
   }
 
   protected abstract setupFilterNode(): Node

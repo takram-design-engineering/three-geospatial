@@ -22,6 +22,8 @@ import invariant from 'tiny-invariant'
 import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 
+const { resetRendererState, restoreRendererState } = RendererUtils
+
 function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
@@ -49,7 +51,7 @@ export abstract class SeparableFilterNode extends TempNode {
   private readonly mesh = new QuadMesh(this.material)
 
   private rendererState!: RendererUtils.RendererState
-  protected readonly texelSize = uniform(new Vector2())
+  protected readonly inputTexelSize = uniform(new Vector2())
   protected readonly direction = uniform(new Vector2())
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
@@ -86,10 +88,6 @@ export abstract class SeparableFilterNode extends TempNode {
     if (renderer == null) {
       return
     }
-    this.rendererState = RendererUtils.resetRendererState(
-      renderer,
-      this.rendererState
-    )
 
     const { horizontalRT, verticalRT, mesh, inputNode, direction } = this
     invariant(inputNode != null)
@@ -98,8 +96,9 @@ export abstract class SeparableFilterNode extends TempNode {
 
     const { width, height } = inputNode.value
     this.setSize(width, height)
+    this.inputTexelSize.value.set(1 / width, 1 / height)
 
-    this.texelSize.value.set(1 / width, 1 / height)
+    this.rendererState = resetRendererState(renderer, this.rendererState)
 
     for (let i = 0; i < this.iterations; ++i) {
       direction.value.set(1, 0)
@@ -113,7 +112,7 @@ export abstract class SeparableFilterNode extends TempNode {
       inputNode.value = verticalRT.texture
     }
 
-    RendererUtils.restoreRendererState(renderer, this.rendererState)
+    restoreRendererState(renderer, this.rendererState)
 
     inputNode.value = originalTexture
   }

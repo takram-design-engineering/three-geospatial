@@ -15,7 +15,7 @@ import { useFilterTextureNode } from './helpers/useFilterTextureNode'
 
 const Scene: FC<StoryProps> = () => {
   const textureNode = useFilterTextureNode()
-  const fragmentNode = useResource(
+  const filterNode = useResource(
     () => downsampleThreshold(textureNode),
     [textureNode]
   )
@@ -26,7 +26,7 @@ const Scene: FC<StoryProps> = () => {
     return material
   }, [])
 
-  material.fragmentNode = fragmentNode
+  material.fragmentNode = filterNode
   material.needsUpdate = true
 
   useTransientControl(
@@ -35,16 +35,16 @@ const Scene: FC<StoryProps> = () => {
       thresholdRange
     }),
     ({ thresholdLevel, thresholdRange }) => {
-      fragmentNode.thresholdLevel.value = thresholdLevel
-      fragmentNode.thresholdRange.value = thresholdRange
+      filterNode.thresholdLevel.value = thresholdLevel
+      filterNode.thresholdRange.value = thresholdRange
     }
   )
 
   useTransientControl(
     ({ resolutionScale }: StoryArgs) => resolutionScale,
     value => {
-      fragmentNode.resolutionScale = value
-      fragmentNode.needsUpdate = true
+      filterNode.resolutionScale = value
+      filterNode.needsUpdate = true
     }
   )
 
@@ -69,7 +69,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  thresholdLevel: 1.5,
+  thresholdLevel: 0.5,
   thresholdRange: 0.1,
   resolutionScale: 0.5,
   ...rendererArgs()
@@ -79,8 +79,8 @@ Story.argTypes = {
   thresholdLevel: {
     control: {
       type: 'range',
-      min: 0.1,
-      max: 2,
+      min: 0,
+      max: 1,
       step: 0.01
     }
   },

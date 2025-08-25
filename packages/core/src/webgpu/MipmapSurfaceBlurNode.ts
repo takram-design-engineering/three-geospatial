@@ -21,13 +21,17 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
   }
 
   protected override setupDownsampleNode(): Node {
-    const { inputNode, texelSize } = this
+    const { inputNode, inputTexelSize } = this
     invariant(inputNode != null)
 
     return Fn(() => {
       const center = uv()
-      const offset1 = vec4(1, 1, -1, -1).mul(texelSize.xyxy).add(center.xyxy)
-      const offset2 = vec4(2, 2, -2, -2).mul(texelSize.xyxy).add(center.xyxy)
+      const offset1 = vec4(1, 1, -1, -1)
+        .mul(inputTexelSize.xyxy)
+        .add(center.xyxy)
+      const offset2 = vec4(2, 2, -2, -2)
+        .mul(inputTexelSize.xyxy)
+        .add(center.xyxy)
       const uv01 = offset1.zy.toVertexStage() // -1, 1
       const uv02 = offset1.xy.toVertexStage() // 1, 1
       const uv03 = offset1.zw.toVertexStage() // -1, -1
@@ -94,11 +98,11 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
   }
 
   protected override setupUpsampleNode(): Node {
-    const { inputNode, texelSize, downsampleNode } = this
+    const { inputNode, inputTexelSize, downsampleNode } = this
     invariant(inputNode != null)
 
     const center = uv()
-    const offset = vec4(1, 1, -1, -1).mul(texelSize.xyxy).add(center.xyxy)
+    const offset = vec4(1, 1, -1, -1).mul(inputTexelSize.xyxy).add(center.xyxy)
     const uv1 = vec2(center.x, offset.y).toVertexStage() // 0, 1
     const uv2 = vec2(offset.z, center.y).toVertexStage() // -1, 0
     const uv3 = vec2(offset.x, center.y).toVertexStage() // 1, 0
@@ -129,4 +133,5 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
 
 export const mipmapBloom = (
   ...args: ConstructorParameters<typeof MipmapSurfaceBlurNode>
-): NodeObject<MipmapSurfaceBlurNode> => nodeObject(new MipmapSurfaceBlurNode(...args))
+): NodeObject<MipmapSurfaceBlurNode> =>
+  nodeObject(new MipmapSurfaceBlurNode(...args))

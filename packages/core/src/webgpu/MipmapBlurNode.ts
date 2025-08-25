@@ -94,12 +94,12 @@ export class MipmapBlurNode extends DualFilterNode {
 
   protected override setupDownsampleNode(): Node {
     invariant(this.inputNode != null)
-    return downsample(this.inputNode, this.texelSize)
+    return downsample(this.inputNode, this.inputTexelSize)
   }
 
   protected override setupUpsampleNode(): Node {
     invariant(this.inputNode != null)
-    return upsample(this.inputNode, this.texelSize)
+    return upsample(this.inputNode, this.inputTexelSize)
   }
 }
 

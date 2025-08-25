@@ -30,7 +30,7 @@ export class GaussianBlurNode extends SeparableFilterNode {
   }
 
   protected setupFilterNode(): Node {
-    const { inputNode, texelSize, direction } = this
+    const { inputNode, inputTexelSize, direction } = this
     invariant(inputNode != null)
 
     // TODO: Remove the dependency to postprocessing.
@@ -38,7 +38,7 @@ export class GaussianBlurNode extends SeparableFilterNode {
 
     return Fn(() => {
       const center = uv()
-      const offsetSize = direction.mul(texelSize).toVertexStage()
+      const offsetSize = direction.mul(inputTexelSize).toVertexStage()
 
       const result = inputNode.sample(center).mul(kernel.linearWeights[0])
       for (let i = 1; i < kernel.linearSteps; ++i) {

@@ -18,7 +18,7 @@ const Scene: FC<StoryProps> = () => {
   const levels = useControl(({ levels }: StoryArgs) => levels)
 
   const textureNode = useFilterTextureNode()
-  const fragmentNode = useResource(
+  const filterNode = useResource(
     () => mipmapBlur(textureNode, levels),
     [textureNode, levels]
   )
@@ -29,14 +29,14 @@ const Scene: FC<StoryProps> = () => {
     return material
   }, [])
 
-  material.fragmentNode = fragmentNode
+  material.fragmentNode = filterNode
   material.needsUpdate = true
 
   useTransientControl(
     ({ resolutionScale }: StoryArgs) => resolutionScale,
     value => {
-      fragmentNode.resolutionScale = value
-      fragmentNode.needsUpdate = true
+      filterNode.resolutionScale = value
+      filterNode.needsUpdate = true
     }
   )
 

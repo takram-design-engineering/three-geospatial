@@ -18,7 +18,7 @@ const Scene: FC<StoryProps> = () => {
   const kernelSize = useControl(({ kernelSize }: StoryArgs) => kernelSize)
 
   const textureNode = useFilterTextureNode()
-  const fragmentNode = useResource(
+  const filterNode = useResource(
     () => gaussianBlur(textureNode, kernelSize),
     [textureNode, kernelSize]
   )
@@ -29,7 +29,7 @@ const Scene: FC<StoryProps> = () => {
     return material
   }, [])
 
-  material.fragmentNode = fragmentNode
+  material.fragmentNode = filterNode
   material.needsUpdate = true
 
   useTransientControl(
@@ -38,9 +38,9 @@ const Scene: FC<StoryProps> = () => {
       resolutionScale
     }),
     ({ iterations, resolutionScale }) => {
-      fragmentNode.iterations = iterations
-      fragmentNode.resolutionScale = resolutionScale
-      fragmentNode.needsUpdate = true
+      filterNode.iterations = iterations
+      filterNode.resolutionScale = resolutionScale
+      filterNode.needsUpdate = true
     }
   )
 

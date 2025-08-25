@@ -16,12 +16,12 @@ export class KawaseBlurNode extends DualFilterNode {
   }
 
   protected override setupDownsampleNode(): Node {
-    const { inputNode, texelSize } = this
+    const { inputNode, inputTexelSize } = this
     invariant(inputNode != null)
 
     const center = uv()
     const offset = vec4(1, 1, -1, -1)
-      .mul(texelSize.xyxy.mul(0.5))
+      .mul(inputTexelSize.xyxy.mul(0.5))
       .add(center.xyxy)
     const uv1 = offset.zy.toVertexStage() // -0.5, 0.5
     const uv2 = offset.xy.toVertexStage() // 0.5, 0.5
@@ -38,12 +38,12 @@ export class KawaseBlurNode extends DualFilterNode {
   }
 
   protected override setupUpsampleNode(): Node {
-    const { inputNode, texelSize } = this
+    const { inputNode, inputTexelSize } = this
     invariant(inputNode != null)
 
     const center = uv()
     const offset = vec4(1, 1, -1, -1)
-      .mul(texelSize.xyxy.mul(0.5))
+      .mul(inputTexelSize.xyxy.mul(0.5))
       .add(center.xyxy)
     const uv1 = offset.zy.toVertexStage() // -0.5, 0.5
     const uv2 = offset.xy.toVertexStage() // 0.5, 0.5

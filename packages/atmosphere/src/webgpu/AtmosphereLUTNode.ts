@@ -34,6 +34,8 @@ import { AtmosphereLUTTexturesWebGL } from './AtmosphereLUTTexturesWebGL'
 import { AtmosphereLUTTexturesWebGPU } from './AtmosphereLUTTexturesWebGPU'
 import { AtmosphereParameters } from './AtmosphereParameters'
 
+const { resetRendererState, restoreRendererState } = RendererUtils
+
 async function timeSlice<T>(iterable: Iterable<T>): Promise<T> {
   const iterator = iterable[Symbol.iterator]()
   return await new Promise<T>((resolve, reject) => {
@@ -56,11 +58,11 @@ async function timeSlice<T>(iterable: Iterable<T>): Promise<T> {
 let rendererState: RendererUtils.RendererState
 
 function run(renderer: Renderer, task: () => void): boolean {
-  rendererState = RendererUtils.resetRendererState(renderer, rendererState)
+  rendererState = resetRendererState(renderer, rendererState)
   renderer.setClearColor(0, 0)
   renderer.autoClear = false
   task()
-  RendererUtils.restoreRendererState(renderer, rendererState)
+  restoreRendererState(renderer, rendererState)
   return true
 }
 

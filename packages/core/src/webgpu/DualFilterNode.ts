@@ -22,6 +22,8 @@ import invariant from 'tiny-invariant'
 import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 
+const { resetRendererState, restoreRendererState } = RendererUtils
+
 function createRenderTarget(name: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
@@ -49,7 +51,7 @@ export abstract class DualFilterNode extends TempNode {
   private readonly mesh = new QuadMesh()
   private rendererState!: RendererUtils.RendererState
 
-  protected readonly texelSize = uniform(new Vector2())
+  protected readonly inputTexelSize = uniform(new Vector2())
   protected readonly downsampleNode = texture(null)
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
@@ -98,17 +100,12 @@ export abstract class DualFilterNode extends TempNode {
     if (renderer == null) {
       return
     }
-    this.rendererState = RendererUtils.resetRendererState(
-      renderer,
-      this.rendererState
-    )
-
     const {
       downsampleRTs,
       upsampleRTs,
       mesh,
       inputNode,
-      texelSize,
+      inputTexelSize,
       downsampleNode
     } = this
     invariant(inputNode != null)
@@ -118,10 +115,12 @@ export abstract class DualFilterNode extends TempNode {
     const { width, height } = inputNode.value
     this.setSize(width, height)
 
+    this.rendererState = resetRendererState(renderer, this.rendererState)
+
     mesh.material = this.downsampleMaterial
     for (const renderTarget of downsampleRTs) {
       const { width, height } = inputNode.value
-      texelSize.value.set(1 / width, 1 / height)
+      inputTexelSize.value.set(1 / width, 1 / height)
       renderer.setRenderTarget(renderTarget)
       mesh.render(renderer)
       inputNode.value = renderTarget.texture
@@ -131,14 +130,14 @@ export abstract class DualFilterNode extends TempNode {
     for (let i = upsampleRTs.length - 1; i >= 0; --i) {
       const renderTarget = upsampleRTs[i]
       const { width, height } = inputNode.value
-      texelSize.value.set(1 / width, 1 / height)
+      inputTexelSize.value.set(1 / width, 1 / height)
       downsampleNode.value = downsampleRTs[i].texture
       renderer.setRenderTarget(renderTarget)
       mesh.render(renderer)
       inputNode.value = renderTarget.texture
     }
 
-    RendererUtils.restoreRendererState(renderer, this.rendererState)
+    restoreRendererState(renderer, this.rendererState)
 
     inputNode.value = originalTexture
   }

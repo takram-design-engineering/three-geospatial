@@ -20,10 +20,10 @@ export class DownsampleThresholdNode extends FilterNode {
   }
 
   protected override setupFilterNode(): Node {
-    const { inputNode, thresholdLevel, thresholdRange, texelSize } = this
+    const { inputNode, thresholdLevel, thresholdRange, inputTexelSize } = this
     invariant(inputNode != null)
 
-    const result = downsample(inputNode, texelSize)
+    const result = downsample(inputNode, inputTexelSize)
     const scale = smoothstep(
       thresholdLevel,
       thresholdLevel.add(thresholdRange),
