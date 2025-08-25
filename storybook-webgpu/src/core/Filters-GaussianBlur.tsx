@@ -18,7 +18,7 @@ const Scene: FC<StoryProps> = () => {
   const kernelSize = useControl(({ kernelSize }: StoryArgs) => kernelSize)
 
   const textureNode = useFilterTextureNode()
-  const blurNode = useResource(
+  const fragmentNode = useResource(
     () => gaussianBlur(textureNode, kernelSize),
     [textureNode, kernelSize]
   )
@@ -29,7 +29,7 @@ const Scene: FC<StoryProps> = () => {
     return material
   }, [])
 
-  material.fragmentNode = blurNode
+  material.fragmentNode = fragmentNode
   material.needsUpdate = true
 
   useTransientControl(
@@ -38,9 +38,9 @@ const Scene: FC<StoryProps> = () => {
       resolutionScale
     }),
     ({ iterations, resolutionScale }) => {
-      blurNode.iterations = iterations
-      blurNode.resolutionScale = resolutionScale
-      blurNode.needsUpdate = true
+      fragmentNode.iterations = iterations
+      fragmentNode.resolutionScale = resolutionScale
+      fragmentNode.needsUpdate = true
     }
   )
 
@@ -93,7 +93,7 @@ Story.argTypes = {
       type: 'range',
       min: 0.1,
       max: 1,
-      step: 0.1
+      step: 0.01
     }
   },
   ...rendererArgTypes()

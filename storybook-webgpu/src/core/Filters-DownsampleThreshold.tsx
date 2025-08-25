@@ -4,23 +4,20 @@ import { positionGeometry, vec4 } from 'three/tsl'
 import { NodeMaterial } from 'three/webgpu'
 
 import { QuadGeometry } from '@takram/three-geospatial'
-import { kawaseBlur } from '@takram/three-geospatial/webgpu'
+import { downsampleThreshold } from '@takram/three-geospatial/webgpu'
 
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import type { StoryFC } from '../helpers/createStory'
-import { useControl } from '../helpers/useControl'
 import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { useFilterTextureNode } from './helpers/useFilterTextureNode'
 
 const Scene: FC<StoryProps> = () => {
-  const levels = useControl(({ levels }: StoryArgs) => levels)
-
   const textureNode = useFilterTextureNode()
   const fragmentNode = useResource(
-    () => kawaseBlur(textureNode, levels),
-    [textureNode, levels]
+    () => downsampleThreshold(textureNode),
+    [textureNode]
   )
 
   const material = useResource(() => {
@@ -31,6 +28,17 @@ const Scene: FC<StoryProps> = () => {
 
   material.fragmentNode = fragmentNode
   material.needsUpdate = true
+
+  useTransientControl(
+    ({ thresholdLevel, thresholdRange }: StoryArgs) => ({
+      thresholdLevel,
+      thresholdRange
+    }),
+    ({ thresholdLevel, thresholdRange }) => {
+      fragmentNode.thresholdLevel.value = thresholdLevel
+      fragmentNode.thresholdRange.value = thresholdRange
+    }
+  )
 
   useTransientControl(
     ({ resolutionScale }: StoryArgs) => resolutionScale,
@@ -49,7 +57,8 @@ const Scene: FC<StoryProps> = () => {
 interface StoryProps {}
 
 interface StoryArgs {
-  levels: number
+  thresholdLevel: number
+  thresholdRange: number
   resolutionScale: number
 }
 
@@ -60,18 +69,27 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  levels: 4,
-  resolutionScale: 1,
+  thresholdLevel: 1.5,
+  thresholdRange: 0.1,
+  resolutionScale: 0.5,
   ...rendererArgs()
 }
 
 Story.argTypes = {
-  levels: {
+  thresholdLevel: {
     control: {
       type: 'range',
-      min: 2,
-      max: 8,
-      step: 1
+      min: 0.1,
+      max: 2,
+      step: 0.01
+    }
+  },
+  thresholdRange: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 1,
+      step: 0.01
     }
   },
   resolutionScale: {

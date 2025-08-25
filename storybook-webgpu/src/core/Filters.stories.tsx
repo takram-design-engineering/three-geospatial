@@ -1,11 +1,13 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../helpers/createStory'
+import { Story as DownsampleThresholdStory } from './Filters-DownsampleThreshold'
 import { Story as GaussianBlurStory } from './Filters-GaussianBlur'
 import { Story as KawaseBlurStory } from './Filters-KawaseBlur'
 import { Story as MipmapBloomStory } from './Filters-MipmapBloom'
 import { Story as MipmapBlurStory } from './Filters-MipmapBlur'
 
+import DownsampleThresholdCode from './Filters-DownsampleThreshold?raw'
 import GaussianBlurCode from './Filters-GaussianBlur?raw'
 import KawaseBlurCode from './Filters-KawaseBlur?raw'
 import MipmapBloomCode from './Filters-MipmapBloom?raw'
@@ -58,6 +60,16 @@ export const MipmapBloom = createStory(MipmapBloomStory, {
     docs: {
       source: {
         code: MipmapBloomCode
+      }
+    }
+  }
+})
+
+export const DownsampleThreshold = createStory(DownsampleThresholdStory, {
+  parameters: {
+    docs: {
+      source: {
+        code: DownsampleThresholdCode
       }
     }
   }
