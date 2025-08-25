@@ -65,6 +65,7 @@ export class LensFlareNode extends TempNode {
     bloomNode.inputNode = threshold
 
     // input → threshold → glare
+    // TODO: Turn off glareNode on WebGLBackend:
     glareNode.inputNode = threshold
 
     const bloom = nodeObject(bloomNode.getTextureNode()).mul(
@@ -73,6 +74,7 @@ export class LensFlareNode extends TempNode {
     const features = featuresNode.getTextureNode()
     const glare = glareNode.getTextureNode()
 
+    // TODO: Add an option to switch to mixing the bloom:
     return Fn(() => {
       const output = nodeObject(inputNode)
 

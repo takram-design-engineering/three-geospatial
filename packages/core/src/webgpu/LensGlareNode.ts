@@ -113,6 +113,7 @@ export class LensGlareNode extends TempNode {
   private computeNode?: ComputeNode
 
   private readonly counterBuffer = new StorageBufferAttribute(1, 1)
+  // TODO: Resize the buffer somehow during setSize:
   private readonly instanceBuffer = instancedArray(1000000, instanceStruct)
 
   private readonly renderTarget = createRenderTarget('LensGlareFeatures')
@@ -263,7 +264,8 @@ export class LensGlareNode extends TempNode {
 
     this.computeNode = this.setupComputeNode()
 
-    const spikeTexture = createSpikeTexture() // TODO
+    // TODO: Add a configurable node:
+    const spikeTexture = createSpikeTexture()
     spikeTexture.colorSpace = SRGBColorSpace
 
     const instance = instanceBuffer.element(instanceIndex)
