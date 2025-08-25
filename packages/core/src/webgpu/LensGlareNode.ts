@@ -107,7 +107,7 @@ export class LensGlareNode extends TempNode {
   wireframe = false
 
   intensity = uniform(1e-5)
-  sizeScale = uniform(new Vector2(1, 0.01))
+  sizeScale = uniform(new Vector2(1.5, 0.01))
   luminanceThreshold = uniform(100)
 
   private computeNode?: ComputeNode
