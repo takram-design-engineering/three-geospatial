@@ -1,12 +1,4 @@
 import {
-  ClampToEdgeWrapping,
-  HalfFloatType,
-  LinearFilter,
-  RenderTarget,
-  RGBAFormat,
-  Vector2
-} from 'three'
-import {
   abs,
   add,
   distance,
@@ -22,107 +14,35 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import {
-  NodeMaterial,
-  NodeUpdateType,
-  QuadMesh,
-  RendererUtils,
-  TempNode,
-  type NodeBuilder,
-  type NodeFrame,
-  type TextureNode
-} from 'three/webgpu'
+import type { NodeFrame } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { FilterNode } from './FilterNode'
 import { FnLayout } from './FnLayout'
-import type { NodeObject } from './node'
-import { outputTexture } from './OutputTextureNode'
+import type { Node, NodeObject } from './node'
 
-function createRenderTarget(name: string): RenderTarget {
-  const renderTarget = new RenderTarget(1, 1, {
-    depthBuffer: false,
-    type: HalfFloatType,
-    format: RGBAFormat
-  })
-  const texture = renderTarget.texture
-  texture.minFilter = LinearFilter
-  texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
-  texture.generateMipmaps = false
-  texture.name = name
-  return renderTarget
-}
-
-const sizeScratch = /*#__PURE__*/ new Vector2()
-
-let rendererState: RendererUtils.RendererState
-
-export class LensFlareFeaturesNode extends TempNode {
+export class LensFlareFeaturesNode extends FilterNode {
   static override get type(): string {
     return 'LensFlareFeaturesNode'
   }
 
-  inputNode: TextureNode | null
   ghostAmount = uniform(1e-5)
   haloAmount = uniform(1e-5)
   chromaticAberration = uniform(10)
-  resolutionScale = 0.5
 
-  private readonly renderTarget = createRenderTarget('LensFlareFeatures')
-  private readonly material = new NodeMaterial()
-  private readonly mesh = new QuadMesh(this.material)
-
-  private readonly texelSize = uniform(new Vector2())
   private readonly aspectRatio = uniform(0)
 
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNode: TextureNode
-
-  constructor(inputNode: TextureNode | null) {
-    super('vec4')
-    this.inputNode = inputNode
-
-    this._textureNode = outputTexture(this, this.renderTarget.texture)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
-  }
-
-  getTextureNode(): TextureNode {
-    return this._textureNode
-  }
-
-  setSize(width: number, height: number): this {
-    const { resolutionScale } = this
-    const w = Math.max(Math.round(width * resolutionScale), 1)
-    const h = Math.max(Math.round(height * resolutionScale), 1)
-    this.renderTarget.setSize(w, h)
-    return this
-  }
-
-  override updateBefore({ renderer }: NodeFrame): void {
-    if (renderer == null) {
-      return
-    }
-    rendererState = RendererUtils.resetRendererState(renderer, rendererState)
-
+  override updateBefore(frame: NodeFrame): void {
     const { inputNode } = this
     invariant(inputNode != null)
 
-    const size = renderer.getDrawingBufferSize(sizeScratch)
-    this.setSize(size.width, size.height)
-
     const { width, height } = inputNode.value
-    this.texelSize.value.set(1 / width, 1 / height)
     this.aspectRatio.value = width / height
-    renderer.setRenderTarget(this.renderTarget)
-    this.mesh.render(renderer)
 
-    RendererUtils.restoreRendererState(renderer, rendererState)
+    super.updateBefore(frame)
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  protected override setupFilterNode(): Node {
     const {
       inputNode,
       ghostAmount,
@@ -228,22 +148,11 @@ export class LensFlareFeaturesNode extends TempNode {
       return vec4(color.mul(amount), 1)
     })
 
-    const { material } = this
-    material.fragmentNode = add(
-      sampleGhosts(uv(), ghostAmount),
-      sampleHalos(uv(), haloAmount)
+    const uvNode = inputNode.uvNode ?? uv()
+    return add(
+      sampleGhosts(uvNode, ghostAmount),
+      sampleHalos(uvNode, haloAmount)
     )
-    material.needsUpdate = true
-
-    this._textureNode.uvNode = inputNode.uvNode
-    return this._textureNode
-  }
-
-  override dispose(): void {
-    super.dispose()
-    this.renderTarget.dispose()
-    this.material.dispose()
-    this.mesh.geometry.dispose()
   }
 }
 
