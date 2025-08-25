@@ -70,7 +70,7 @@ Story.argTypes = {
     control: {
       type: 'range',
       min: 2,
-      max: 16,
+      max: 8,
       step: 1
     }
   },

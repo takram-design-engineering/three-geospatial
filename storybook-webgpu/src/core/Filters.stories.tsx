@@ -2,10 +2,14 @@ import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../helpers/createStory'
 import { Story as GaussianBlurStory } from './Filters-GaussianBlur'
-import { Story as MipmapBloomBlurStory } from './Filters-MipmapBloomBlur'
+import { Story as KawaseBlurStory } from './Filters-KawaseBlur'
+import { Story as MipmapBloomStory } from './Filters-MipmapBloom'
+import { Story as MipmapBlurStory } from './Filters-MipmapBlur'
 
 import GaussianBlurCode from './Filters-GaussianBlur?raw'
-import MipmapBloomBlurCode from './Filters-MipmapBloomBlur?raw'
+import KawaseBlurCode from './Filters-KawaseBlur?raw'
+import MipmapBloomCode from './Filters-MipmapBloom?raw'
+import MipmapBlurCode from './Filters-MipmapBlur?raw'
 
 export default {
   title: 'core/Filters',
@@ -29,11 +33,31 @@ export const GaussianBlur = createStory(GaussianBlurStory, {
   }
 })
 
-export const MipmapBloomBlur = createStory(MipmapBloomBlurStory, {
+export const KawaseBlur = createStory(KawaseBlurStory, {
   parameters: {
     docs: {
       source: {
-        code: MipmapBloomBlurCode
+        code: KawaseBlurCode
+      }
+    }
+  }
+})
+
+export const MipmapBlur = createStory(MipmapBlurStory, {
+  parameters: {
+    docs: {
+      source: {
+        code: MipmapBlurCode
+      }
+    }
+  }
+})
+
+export const MipmapBloom = createStory(MipmapBloomStory, {
+  parameters: {
+    docs: {
+      source: {
+        code: MipmapBloomCode
       }
     }
   }

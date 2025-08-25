@@ -6,7 +6,7 @@ import {
   RGBAFormat,
   Vector2
 } from 'three'
-import { uniform } from 'three/tsl'
+import { texture, uniform } from 'three/tsl'
 import {
   NodeMaterial,
   NodeUpdateType,
@@ -51,6 +51,7 @@ export abstract class DualFilterNode extends TempNode {
   private readonly mesh = new QuadMesh()
 
   protected readonly texelSize = uniform(new Vector2())
+  protected readonly downsampleNode = texture(null)
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
@@ -100,7 +101,14 @@ export abstract class DualFilterNode extends TempNode {
     }
     rendererState = RendererUtils.resetRendererState(renderer, rendererState)
 
-    const { downsampleRTs, upsampleRTs, mesh, inputNode, texelSize } = this
+    const {
+      downsampleRTs,
+      upsampleRTs,
+      mesh,
+      inputNode,
+      texelSize,
+      downsampleNode
+    } = this
     invariant(inputNode != null)
 
     const originalTexture = inputNode.value
@@ -122,6 +130,7 @@ export abstract class DualFilterNode extends TempNode {
       const renderTarget = upsampleRTs[i]
       const { width, height } = inputNode.value
       texelSize.value.set(1 / width, 1 / height)
+      downsampleNode.value = downsampleRTs[i].texture
       renderer.setRenderTarget(renderTarget)
       mesh.render(renderer)
       inputNode.value = renderTarget.texture
