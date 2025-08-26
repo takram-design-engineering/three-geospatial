@@ -1,3 +1,4 @@
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   atomicAdd,
   convertToTexture,
@@ -78,6 +79,7 @@ const instanceStruct = /*#__PURE__*/ struct({
   cos: 'float'
 })
 
+// Based on: https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/
 export class LensGlareNode extends FilterNode {
   spikeNode?: TextureNode | null
   spikePairCount = 6
@@ -116,6 +118,10 @@ export class LensGlareNode extends FilterNode {
     this.setOutputTexture(this.renderTarget.texture)
   }
 
+  override customCacheKey(): number {
+    return hash(this.spikePairCount, +this.wireframe)
+  }
+
   setSize(width: number, height: number): this {
     const { resolutionScale } = this
     const w = Math.max(Math.round(width * resolutionScale), 1)
@@ -125,6 +131,7 @@ export class LensGlareNode extends FilterNode {
     const tileWidth = Math.floor(w / 2)
     const tileHeight = Math.floor(h / 2)
     const bufferCount = tileWidth * tileHeight
+    // TODO: Buffering
     if (this.instanceBuffer.bufferCount < bufferCount) {
       this.instanceBuffer.dispose()
       this.instanceBuffer = instancedArray(bufferCount, instanceStruct)
@@ -167,6 +174,13 @@ export class LensGlareNode extends FilterNode {
     renderer
       .getArrayBufferAsync(counterBuffer)
       .then(arrayBuffer => {
+        // TODO: This is indeed a couple of frames behind, thus the number of
+        // computed instances above and the number of instances to be drawn by
+        // the mesh differ. It is less problematic when the new counter value is
+        // larger than the number of instances, but when it is smaller, garbage
+        // instances will be drawn. This might be mitigated by clearing the
+        // unused region of the instance buffer in the compute shader,
+        // dispatching over all elements in it.
         this.mesh.count = new Uint32Array(arrayBuffer)[0]
       })
       .catch((error: unknown) => {
@@ -244,12 +258,10 @@ export class LensGlareNode extends FilterNode {
     invariant(spikeNode != null)
 
     const instance = instanceBuffer.element(instanceIndex)
-    const color = instance.get('color')
-    const luminance = instance.get('luminance')
 
     this.material.colorNode = this.wireframe
       ? vec4(1)
-      : nodeObject(spikeNode).mul(color.mul(intensity))
+      : nodeObject(spikeNode).mul(instance.get('color').mul(intensity))
 
     this.material.vertexNode = Fn(() => {
       const sin = instance.get('sin')
@@ -258,10 +270,11 @@ export class LensGlareNode extends FilterNode {
 
       const positionTile = instance.get('position')
       const uv = positionTile.mul(outputTexelSize).mul(2)
-      const centerPosition = uv.flipY().mul(2).sub(1)
+      const positionNDC = uv.flipY().mul(2).sub(1)
 
-      const normalizedLuminance = luminance.div(luminanceThreshold).saturate()
-      const scale = vec2(normalizedLuminance, 1).mul(
+      const luminance = instance.get('luminance')
+      const luminanceScale = luminance.div(luminanceThreshold).saturate()
+      const scale = vec2(luminanceScale, 1).mul(
         instance.get('scale'),
         sizeScale,
         // Make the spike to shrink at screen borders:
@@ -270,7 +283,7 @@ export class LensGlareNode extends FilterNode {
       const position = rotation
         .mul(positionGeometry.mul(vec4(scale, 1, 1)))
         .mul(geometryRatio)
-        .add(vec3(centerPosition, 0))
+        .add(vec3(positionNDC, 0))
       return vec4(position, 1)
     })()
 
