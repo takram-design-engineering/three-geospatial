@@ -75,9 +75,9 @@ export const ISS: FC<ISSProps> = ({
     const trussAngle = Math.atan2(z, y)
     const cosTruss = Math.cos(trussAngle)
     const sinTruss = Math.sin(trussAngle)
-    const solarPanelAngle = Math.atan2(x, y * cosTruss + z * sinTruss)
+    const solarPanelAngle = -Math.atan2(x, y * cosTruss + z * sinTruss)
     const sunDirectionXY = vector.set(x, y, 0).normalize()
-    const radiatorAngle = Math.atan2(sunDirectionXY.x, sunDirectionXY.y)
+    const radiatorAngle = -Math.atan2(sunDirectionXY.x, sunDirectionXY.y)
 
     springTrussAngle.set(trussAngle)
     springSolarPanelAngle.set(solarPanelAngle)
