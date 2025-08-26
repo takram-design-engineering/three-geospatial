@@ -18,6 +18,22 @@ This project originally started as a prototype focused on the rendering aspect o
 
 Other packages not listed above are considered “examples” and are not intended for production use.
 
+## Status of WebGPU support
+
+I’m actively working to add support for WebGPU. This involves a complete rewrite of our API because of the transition from shader-chunk-based post-processing to a node-based approach. It already performs much better and supports more flexible features.
+
+→ [Storybook](https://takram-design-engineering.github.io/three-geospatial-webgpu)
+
+Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation. This will not mean dropping support for WebGL, because a WebGL fallback will still be possible, but the new API will be incompatible with the current one.
+
+<!-- prettier-ignore -->
+| Name | Status |
+| -- | -- |
+| [atmosphere](https://github.com/takram-design-engineering/three-geospatial/tree/webgpu/packages/atmosphere/src/webgpu) | Work in progress |
+| clouds | Planned |
+| [core](https://github.com/takram-design-engineering/three-geospatial/tree/webgpu/packages/core/src/webgpu) | Work in progress |
+| effects | To be merged with core |
+
 ## Developing
 
 This repository uses a monorepo setup with [Nx](https://nx.dev). Please refer to its documentation for details of the concept.
