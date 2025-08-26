@@ -1,8 +1,18 @@
 import { useGLTF } from '@react-three/drei'
+import {
+  useMotionValueEvent,
+  useSpring,
+  type SpringOptions
+} from 'motion/react'
 import { useLayoutEffect, useMemo, type ComponentProps, type FC } from 'react'
 import { Matrix3, Vector3, type Matrix4 } from 'three'
 
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
+
+const options: SpringOptions = {
+  mass: 2,
+  damping: 40
+}
 
 const vector = new Vector3()
 const rotation = new Matrix3()
@@ -49,6 +59,10 @@ export const ISS: FC<ISSProps> = ({
     }
   }, [iss.scene])
 
+  const springTrussAngle = useSpring(trusses[0].rotation.x, options)
+  const springSolarPanelAngle = useSpring(solarPanels[0].rotation.z, options)
+  const springRadiatorAngle = useSpring(radiators[0].rotation.z, options)
+
   useGuardedFrame(() => {
     const sunDirectionLocal = vector
       .copy(sunDirectionECEF)
@@ -59,21 +73,30 @@ export const ISS: FC<ISSProps> = ({
 
     const { x, y, z } = sunDirectionLocal
     const trussAngle = Math.atan2(z, y)
-    const solarPanelAngle = Math.atan2(
-      x,
-      y * Math.cos(trussAngle) + z * Math.sin(trussAngle)
-    )
-    for (const truss of trusses) {
-      truss.rotation.x = trussAngle
-    }
-    for (const solarPanel of solarPanels) {
-      solarPanel.rotation.z = -solarPanelAngle
-    }
-
+    const cosTruss = Math.cos(trussAngle)
+    const sinTruss = Math.sin(trussAngle)
+    const solarPanelAngle = Math.atan2(x, y * cosTruss + z * sinTruss)
     const sunDirectionXY = vector.set(x, y, 0).normalize()
     const radiatorAngle = Math.atan2(sunDirectionXY.x, sunDirectionXY.y)
+
+    springTrussAngle.set(trussAngle)
+    springSolarPanelAngle.set(solarPanelAngle)
+    springRadiatorAngle.set(radiatorAngle)
+  })
+
+  useMotionValueEvent(springTrussAngle, 'change', value => {
+    for (const truss of trusses) {
+      truss.rotation.x = value
+    }
+  })
+  useMotionValueEvent(springSolarPanelAngle, 'change', value => {
+    for (const solarPanel of solarPanels) {
+      solarPanel.rotation.z = value
+    }
+  })
+  useMotionValueEvent(springRadiatorAngle, 'change', value => {
     for (const radiator of radiators) {
-      radiator.rotation.z = -radiatorAngle
+      radiator.rotation.z = value
     }
   })
 
