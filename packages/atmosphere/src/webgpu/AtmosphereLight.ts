@@ -1,6 +1,5 @@
-import { Matrix3 } from 'three'
+import { DirectionalLight, Matrix3 } from 'three'
 import { uniform } from 'three/tsl'
-import { DirectionalLight } from 'three/webgpu'
 
 import type { AtmosphereContext } from './AtmosphereContext'
 

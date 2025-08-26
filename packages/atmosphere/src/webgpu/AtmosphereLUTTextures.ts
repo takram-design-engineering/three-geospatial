@@ -1,6 +1,6 @@
-import { Matrix3, Vector3 } from 'three'
+import { Matrix3, Vector3, type Texture } from 'three'
 import { uniform } from 'three/tsl'
-import type { Renderer, Texture } from 'three/webgpu'
+import type { Renderer } from 'three/webgpu'
 
 import type { AnyFloatType } from '@takram/three-geospatial'
 

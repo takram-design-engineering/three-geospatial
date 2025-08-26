@@ -4,14 +4,14 @@ import { createStory } from '../helpers/createStory'
 import { Story as DownsampleThresholdStory } from './Filters-DownsampleThreshold'
 import { Story as GaussianBlurStory } from './Filters-GaussianBlur'
 import { Story as KawaseBlurStory } from './Filters-KawaseBlur'
-import { Story as MipmapSurfaceBlurStory } from './Filters-MipmapSurfaceBlur'
 import { Story as MipmapBlurStory } from './Filters-MipmapBlur'
+import { Story as MipmapSurfaceBlurStory } from './Filters-MipmapSurfaceBlur'
 
 import DownsampleThresholdCode from './Filters-DownsampleThreshold?raw'
 import GaussianBlurCode from './Filters-GaussianBlur?raw'
 import KawaseBlurCode from './Filters-KawaseBlur?raw'
-import MipmapSurfaceBlurCode from './Filters-MipmapSurfaceBlur?raw'
 import MipmapBlurCode from './Filters-MipmapBlur?raw'
+import MipmapSurfaceBlurCode from './Filters-MipmapSurfaceBlur?raw'
 
 export default {
   title: 'core/Filters',

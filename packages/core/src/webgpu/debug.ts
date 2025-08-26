@@ -1,12 +1,6 @@
+import { Camera, Mesh, Scene } from 'three'
 import { positionGeometry, vec4 } from 'three/tsl'
-import {
-  Camera,
-  Mesh,
-  NodeMaterial,
-  Scene,
-  type Node,
-  type Renderer
-} from 'three/webgpu'
+import { NodeMaterial, type Node, type Renderer } from 'three/webgpu'
 
 import { QuadGeometry } from '../QuadGeometry'
 

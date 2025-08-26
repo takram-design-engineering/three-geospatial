@@ -598,7 +598,7 @@ See [`SkyLightProbe`](#skylightprobe) for further details.
 → [Source](/packages/atmosphere/src/r3f/SkyLight.tsx)
 
 ```tsx
-import { useLoader, useThree, useLoader } from '@react-three/fiber'
+import { useLoader, useLoader, useThree } from '@react-three/fiber'
 import {
   DEFAULT_PRECOMPUTED_TEXTURES_URL,
   getSunDirectionECEF,
@@ -641,10 +641,10 @@ See [`SunDirectionalLight`](#directionalsunlight) for further details.
 → [Source](/packages/atmosphere/src/r3f/SunLight.tsx)
 
 ```tsx
-import { useLoader, useThree, useLoader } from '@react-three/fiber'
+import { useLoader, useLoader, useThree } from '@react-three/fiber'
 import {
-  getSunDirectionECEF,
   DEFAULT_PRECOMPUTED_TEXTURES_URL,
+  getSunDirectionECEF,
   PrecomputedTexturesLoader
 } from '@takram/three-atmosphere'
 import { SunLight } from '@takram/three-atmosphere/r3f'
@@ -684,7 +684,7 @@ See [`AerialPerspectiveEffect`](#aerialperspectiveeffect) for further details.
 → [Source](/packages/atmosphere/src/r3f/AerialPerspective.tsx)
 
 ```tsx
-import { useLoader, useThree, useLoader } from '@react-three/fiber'
+import { useLoader, useLoader, useThree } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import {
   DEFAULT_PRECOMPUTED_TEXTURES_URL,
