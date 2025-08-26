@@ -236,7 +236,7 @@ export class LensGlareNode extends FilterNode {
           instance.get('position').assign(positionTile)
           instance.get('scale').assign(i % 2 === 0 ? 1 : 0.5)
 
-          const phi = 2.399963229728653
+          const phi = Math.PI * (3 - Math.sqrt(5))
           const angle = (Math.PI / spikePairCount) * i + phi
           instance.get('sin').assign(Math.sin(angle))
           instance.get('cos').assign(Math.cos(angle))
