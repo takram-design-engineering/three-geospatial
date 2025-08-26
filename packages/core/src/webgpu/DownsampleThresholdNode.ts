@@ -2,7 +2,7 @@ import { luminance, nodeObject, smoothstep, uniform, vec4 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { downsample } from './MipmapBlurNode'
+import { mipmapBlurDownsample } from './MipmapBlurNode'
 import type { Node, NodeObject } from './node'
 import { SingleFilterNode } from './SingleFilterNode'
 
@@ -23,7 +23,7 @@ export class DownsampleThresholdNode extends SingleFilterNode {
     const { inputNode, thresholdLevel, thresholdRange, inputTexelSize } = this
     invariant(inputNode != null)
 
-    const outputColor = downsample(inputNode, inputTexelSize)
+    const outputColor = mipmapBlurDownsample(inputNode, inputTexelSize)
     const outputLuminance = luminance(outputColor.rgb)
     const scale = smoothstep(
       thresholdLevel,

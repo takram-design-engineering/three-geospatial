@@ -5,7 +5,7 @@ import invariant from 'tiny-invariant'
 import { DualFilterNode } from './DualFilterNode'
 import type { Node, NodeObject } from './node'
 
-export const downsample = (
+export const mipmapBlurDownsample = (
   inputNode: TextureNode,
   texelSize: NodeObject<'vec2'> | NodeObject<UniformNode<Vector2>>
 ): NodeObject<'vec4'> => {
@@ -48,7 +48,7 @@ export const downsample = (
   )
 }
 
-export const upsample = (
+export const mipmapBlurUpsample = (
   inputNode: TextureNode,
   texelSize: NodeObject<'vec2'> | NodeObject<UniformNode<Vector2>>
 ): NodeObject<'vec4'> => {
@@ -94,12 +94,12 @@ export class MipmapBlurNode extends DualFilterNode {
 
   protected override setupDownsampleNode(): Node {
     invariant(this.inputNode != null)
-    return downsample(this.inputNode, this.inputTexelSize)
+    return mipmapBlurDownsample(this.inputNode, this.inputTexelSize)
   }
 
   protected override setupUpsampleNode(): Node {
     invariant(this.inputNode != null)
-    return upsample(this.inputNode, this.inputTexelSize)
+    return mipmapBlurUpsample(this.inputNode, this.inputTexelSize)
   }
 }
 
