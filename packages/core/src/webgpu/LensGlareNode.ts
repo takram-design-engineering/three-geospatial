@@ -8,6 +8,7 @@ import {
   mat3,
   nodeObject,
   positionGeometry,
+  Return,
   storage,
   struct,
   texture,
@@ -189,14 +190,18 @@ export class LensGlareNode extends FilterNode {
       counterBuffer.count
     ).toAtomic()
 
-    const id = instanceIndex
-    const columns = tileSize.x
-    const positionTile = vec2(id.mod(columns), id.div(columns))
-    const uv = positionTile.mul(outputTexelSize).mul(2)
-    const inputColor = inputNode.sample(uv)
-    const inputLuminance = inputColor.a // Alpha channel stores luminance
-
     return Fn(() => {
+      const id = instanceIndex
+      const columns = tileSize.x
+      const positionTile = vec2(id.mod(columns), id.div(columns))
+      If(positionTile.greaterThan(tileSize).any(), () => {
+        Return()
+      })
+
+      const uv = positionTile.mul(outputTexelSize).mul(2)
+      const inputColor = inputNode.sample(uv)
+      const inputLuminance = inputColor.a // Alpha channel stores luminance
+
       If(inputLuminance.greaterThan(0.1), () => {
         const countBefore = atomicAdd(counterStorage.element(0), spikePairCount)
         for (let i = 0; i < spikePairCount; ++i) {
@@ -212,7 +217,7 @@ export class LensGlareNode extends FilterNode {
           instance.get('cos').assign(Math.cos(angle))
         }
       })
-    })().compute(1)
+    })().compute(0, [8, 8, 1]) // Set dispatch count later
   }
 
   override setup(builder: NodeBuilder): unknown {
