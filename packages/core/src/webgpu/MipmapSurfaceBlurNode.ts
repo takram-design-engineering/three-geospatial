@@ -131,7 +131,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
   }
 }
 
-export const mipmapBloom = (
+export const mipmapSurfaceBlur = (
   ...args: ConstructorParameters<typeof MipmapSurfaceBlurNode>
 ): NodeObject<MipmapSurfaceBlurNode> =>
   nodeObject(new MipmapSurfaceBlurNode(...args))

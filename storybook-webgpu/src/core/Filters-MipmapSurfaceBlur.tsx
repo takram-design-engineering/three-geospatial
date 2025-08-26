@@ -4,7 +4,7 @@ import { positionGeometry, vec4 } from 'three/tsl'
 import { NodeMaterial } from 'three/webgpu'
 
 import { QuadGeometry } from '@takram/three-geospatial'
-import { mipmapBloom } from '@takram/three-geospatial/webgpu'
+import { mipmapSurfaceBlur } from '@takram/three-geospatial/webgpu'
 
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import type { StoryFC } from '../helpers/createStory'
@@ -19,7 +19,7 @@ const Scene: FC<StoryProps> = () => {
 
   const textureNode = useFilterTextureNode()
   const filterNode = useResource(
-    () => mipmapBloom(textureNode, levels),
+    () => mipmapSurfaceBlur(textureNode, levels),
     [textureNode, levels]
   )
 
