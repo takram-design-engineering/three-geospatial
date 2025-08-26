@@ -79,6 +79,7 @@ const instanceStruct = /*#__PURE__*/ struct({
 })
 
 export class LensGlareNode extends FilterNode {
+  spikeNode?: TextureNode | null
   spikePairCount = 6
   wireframe = false
 
@@ -89,8 +90,7 @@ export class LensGlareNode extends FilterNode {
   private computeNode?: ComputeNode
 
   private readonly counterBuffer = new StorageBufferAttribute(1, 1)
-  // TODO: Resize the buffer somehow during setSize:
-  private readonly instanceBuffer = instancedArray(1000000, instanceStruct)
+  private instanceBuffer = instancedArray(1, instanceStruct)
 
   private readonly renderTarget = this.createRenderTarget()
   private readonly material = new MeshBasicNodeMaterial({
@@ -107,7 +107,6 @@ export class LensGlareNode extends FilterNode {
   private readonly inputTexelSize = uniform(new Vector2())
   private readonly outputTexelSize = uniform(new Vector2())
   private readonly geometryRatio = uniform(new Vector2())
-  private readonly tileSize = uniform(new Vector2(), 'uvec2')
 
   constructor(inputNode: TextureNode | null) {
     super(inputNode)
@@ -122,6 +121,16 @@ export class LensGlareNode extends FilterNode {
     const w = Math.max(Math.round(width * resolutionScale), 1)
     const h = Math.max(Math.round(height * resolutionScale), 1)
     this.renderTarget.setSize(w, h)
+
+    const tileWidth = Math.floor(w / 2)
+    const tileHeight = Math.floor(h / 2)
+    const bufferCount = tileWidth * tileHeight
+    if (this.instanceBuffer.bufferCount < bufferCount) {
+      this.instanceBuffer.dispose()
+      this.instanceBuffer = instancedArray(bufferCount, instanceStruct)
+      this.setupCompute(tileWidth, tileHeight)
+      this.setupMaterial(tileWidth, tileHeight)
+    }
     return this
   }
 
@@ -130,12 +139,14 @@ export class LensGlareNode extends FilterNode {
       return
     }
 
-    const { inputNode, computeNode, counterBuffer, renderTarget } = this
+    const { inputNode } = this
     invariant(inputNode != null)
+    const { width: inputWidth, height: inputHeight } = inputNode.value
+    this.setSize(inputWidth, inputHeight) // Compute node is initialized here.
+
+    const { computeNode, counterBuffer, renderTarget } = this
     invariant(computeNode != null)
 
-    const { width: inputWidth, height: inputHeight } = inputNode.value
-    this.setSize(inputWidth, inputHeight)
     this.inputTexelSize.value.set(1 / inputWidth, 1 / inputHeight)
     const aspectRatio = inputWidth / inputHeight
     if (aspectRatio > 1) {
@@ -147,15 +158,11 @@ export class LensGlareNode extends FilterNode {
     const { width: outputWidth, height: outputHeight } = renderTarget
     this.outputTexelSize.value.set(1 / outputWidth, 1 / outputHeight)
 
-    const tileWidth = Math.floor(outputWidth / 2)
-    const tileHeight = Math.floor(outputHeight / 2)
-    this.tileSize.value.set(tileWidth, tileHeight)
-
     // Reset the counter:
     counterBuffer.array[0] = 0
     counterBuffer.needsUpdate = true
 
-    void renderer.computeAsync(computeNode, tileWidth * tileHeight)
+    void renderer.computeAsync(computeNode)
 
     renderer
       .getArrayBufferAsync(counterBuffer)
@@ -174,14 +181,13 @@ export class LensGlareNode extends FilterNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupComputeNode(): NodeObject<ComputeNode> {
+  private setupCompute(tileWidth: number, tileHeight: number): void {
     const {
       spikePairCount,
       inputNode,
       counterBuffer,
       instanceBuffer,
-      outputTexelSize,
-      tileSize
+      outputTexelSize
     } = this
     invariant(inputNode != null)
 
@@ -191,10 +197,11 @@ export class LensGlareNode extends FilterNode {
       counterBuffer.count
     ).toAtomic()
 
-    return Fn(() => {
+    this.computeNode = Fn(() => {
       const id = instanceIndex
-      const x = id.mod(tileSize.x)
-      const y = id.div(tileSize.x)
+      const x = id.mod(tileWidth)
+      const y = id.div(tileWidth)
+      const tileSize = uvec2(tileWidth, tileHeight)
       If(uvec2(x, y).greaterThanEqual(tileSize).any(), () => {
         Return()
       })
@@ -219,12 +226,13 @@ export class LensGlareNode extends FilterNode {
           instance.get('cos').assign(Math.cos(angle))
         }
       })
-    })().compute(0, [8, 8, 1]) // Set dispatch count later
+    })().compute(tileWidth * tileHeight, [8, 8, 1])
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  private setupMaterial(tileWidth: number, tileHeight: number): void {
     const {
       inputNode,
+      spikeNode,
       instanceBuffer,
       luminanceThreshold,
       intensity,
@@ -233,12 +241,7 @@ export class LensGlareNode extends FilterNode {
       geometryRatio
     } = this
     invariant(inputNode != null)
-
-    this.computeNode = this.setupComputeNode()
-
-    // TODO: Add a configurable node:
-    const spikeTexture = createSpikeTexture()
-    spikeTexture.colorSpace = SRGBColorSpace
+    invariant(spikeNode != null)
 
     const instance = instanceBuffer.element(instanceIndex)
     const color = instance.get('color')
@@ -246,7 +249,7 @@ export class LensGlareNode extends FilterNode {
 
     this.material.colorNode = this.wireframe
       ? vec4(1)
-      : texture(spikeTexture).mul(color.mul(intensity))
+      : nodeObject(spikeNode).mul(color.mul(intensity))
 
     this.material.vertexNode = Fn(() => {
       const sin = instance.get('sin')
@@ -273,7 +276,14 @@ export class LensGlareNode extends FilterNode {
 
     this.material.wireframe = this.wireframe
     this.material.needsUpdate = true
+  }
 
+  override setup(builder: NodeBuilder): unknown {
+    if (this.spikeNode == null) {
+      const spikeTexture = createSpikeTexture()
+      spikeTexture.colorSpace = SRGBColorSpace
+      this.spikeNode = texture(spikeTexture)
+    }
     return super.setup(builder)
   }
 }
