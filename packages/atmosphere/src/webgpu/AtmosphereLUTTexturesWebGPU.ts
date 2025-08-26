@@ -10,12 +10,16 @@ import {
 import {
   exp,
   Fn,
+  If,
   instanceIndex,
   int,
+  Return,
   texture,
   texture3D,
   textureStore,
   uniform,
+  uvec2,
+  uvec3,
   vec2,
   vec3,
   vec4
@@ -220,6 +224,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const id = instanceIndex
       const x = id.mod(width)
       const y = id.div(width)
+      const size = uvec2(width, height)
+      If(uvec2(x, y).greaterThanEqual(size).any(), () => {
+        Return()
+      })
       const textureCoordinate = vec2(x, y)
 
       const transmittance = computeTransmittanceToTopAtmosphereBoundaryTexture(
@@ -254,6 +262,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const id = instanceIndex
       const x = id.mod(width)
       const y = id.div(width)
+      const size = uvec2(width, height)
+      If(uvec2(x, y).greaterThanEqual(size).any(), () => {
+        Return()
+      })
       const textureCoordinate = vec2(x, y)
 
       const irradiance = computeDirectIrradianceTexture(
@@ -289,6 +301,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const x = id.mod(width)
       const y = id.div(width).mod(height)
       const z = id.div(width * height)
+      const size = uvec3(width, height, depth)
+      If(uvec3(x, y, z).greaterThanEqual(size).any(), () => {
+        Return()
+      })
       const textureCoordinate = vec3(x, y, z)
 
       const singleScattering = computeSingleScatteringTexture(
@@ -357,6 +373,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const x = id.mod(width)
       const y = id.div(width).mod(height)
       const z = id.div(width * height)
+      const size = uvec3(width, height, depth)
+      If(uvec3(x, y, z).greaterThanEqual(size).any(), () => {
+        Return()
+      })
       const textureCoordinate = vec3(x, y, z)
 
       const radiance = computeScatteringDensityTexture(
@@ -401,6 +421,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const id = instanceIndex
       const x = id.mod(width)
       const y = id.div(width)
+      const size = uvec2(width, height)
+      If(uvec2(x, y).greaterThanEqual(size).any(), () => {
+        Return()
+      })
       const textureCoordinate = vec2(x, y)
 
       const irradiance = computeIndirectIrradianceTexture(
@@ -461,6 +485,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const x = id.mod(width)
       const y = id.div(width).mod(height)
       const z = id.div(width * height)
+      const size = uvec3(width, height, depth)
+      If(uvec3(x, y, z).greaterThanEqual(size).any(), () => {
+        Return()
+      })
       const textureCoordinate = vec3(x, y, z)
 
       // WORKAROUND: Texture3DNode seems to have an issue with load() with

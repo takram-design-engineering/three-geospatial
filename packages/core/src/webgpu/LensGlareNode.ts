@@ -13,6 +13,7 @@ import {
   struct,
   texture,
   uniform,
+  uvec2,
   vec2,
   vec3,
   vec4
@@ -106,7 +107,7 @@ export class LensGlareNode extends FilterNode {
   private readonly inputTexelSize = uniform(new Vector2())
   private readonly outputTexelSize = uniform(new Vector2())
   private readonly geometryRatio = uniform(new Vector2())
-  private readonly tileSize = uniform(new Vector2())
+  private readonly tileSize = uniform(new Vector2(), 'uvec2')
 
   constructor(inputNode: TextureNode | null) {
     super(inputNode)
@@ -192,11 +193,12 @@ export class LensGlareNode extends FilterNode {
 
     return Fn(() => {
       const id = instanceIndex
-      const columns = tileSize.x
-      const positionTile = vec2(id.mod(columns), id.div(columns))
-      If(positionTile.greaterThan(tileSize).any(), () => {
+      const x = id.mod(tileSize.x)
+      const y = id.div(tileSize.x)
+      If(uvec2(x, y).greaterThanEqual(tileSize).any(), () => {
         Return()
       })
+      const positionTile = vec2(x, y)
 
       const uv = positionTile.mul(outputTexelSize).mul(2)
       const inputColor = inputNode.sample(uv)
