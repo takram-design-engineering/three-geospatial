@@ -69,11 +69,10 @@ export abstract class DualFilterNode extends FilterNode {
     } = this
     invariant(inputNode != null)
 
-    const originalTexture = inputNode.value
-
     const { width, height } = inputNode.value
     this.setSize(width, height)
 
+    const originalTexture = inputNode.value
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
     mesh.material = this.downsampleMaterial
@@ -97,7 +96,6 @@ export abstract class DualFilterNode extends FilterNode {
     }
 
     restoreRendererState(renderer, this.rendererState)
-
     inputNode.value = originalTexture
   }
 
