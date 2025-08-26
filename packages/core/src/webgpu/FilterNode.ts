@@ -1,10 +1,10 @@
 import {
   ClampToEdgeWrapping,
-  HalfFloatType,
   LinearFilter,
   RenderTarget,
   RGBAFormat,
-  type Texture
+  type Texture,
+  type TextureDataType
 } from 'three'
 import {
   NodeUpdateType,
@@ -24,6 +24,8 @@ export abstract class FilterNode extends TempNode {
   // https://github.com/mrdoob/three.js/issues/31522
   private _textureNode?: TextureNode
 
+  private readonly renderTargets: RenderTarget[] = []
+
   constructor(inputNode?: TextureNode | null) {
     super('vec4')
     this.inputNode = inputNode
@@ -36,8 +38,8 @@ export abstract class FilterNode extends TempNode {
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: HalfFloatType,
-      format: RGBAFormat
+      format: RGBAFormat,
+      type: 0 as unknown as TextureDataType // Type is determined during setup()
     })
     const texture = renderTarget.texture
     texture.minFilter = LinearFilter
@@ -46,6 +48,8 @@ export abstract class FilterNode extends TempNode {
     texture.wrapT = ClampToEdgeWrapping
     texture.generateMipmaps = false
     texture.name = name != null ? `${typeName}.${name}` : typeName
+
+    this.renderTargets.push(renderTarget)
     return renderTarget
   }
 
@@ -75,6 +79,20 @@ export abstract class FilterNode extends TempNode {
       'outputNode must be specified by setOutputTexture() before being setting up.'
     )
     outputNode.uvNode = inputNode.uvNode
+
+    // Use the same texture type to the input node if not overwritten.
+    for (const { texture } of this.renderTargets) {
+      if ((texture.type as number) === 0) {
+        texture.type = inputNode.value.type
+      }
+    }
     return outputNode
+  }
+
+  override dispose(): void {
+    for (const renderTarget of this.renderTargets) {
+      renderTarget.dispose()
+    }
+    super.dispose()
   }
 }
