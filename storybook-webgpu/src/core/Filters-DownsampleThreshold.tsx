@@ -71,7 +71,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   thresholdLevel: 0.5,
   thresholdRange: 0.1,
-  resolutionScale: 0.5,
+  resolutionScale: 0.25,
   ...rendererArgs()
 }
 
