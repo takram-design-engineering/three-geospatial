@@ -28,7 +28,7 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
-import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
+import { dither, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -86,7 +86,7 @@ const Scene: FC<StoryProps> = () => {
       lensFlareNode
     )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = toneMappingNode.add(dithering())
+    postProcessing.outputNode = toneMappingNode.add(dither())
 
     return [
       postProcessing,

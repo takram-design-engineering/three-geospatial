@@ -19,7 +19,7 @@ import {
   aerialPerspective,
   atmosphereContext
 } from '@takram/three-atmosphere/webgpu'
-import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
+import { dither, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -90,7 +90,7 @@ const Scene: FC<StoryProps> = ({
         lensFlareNode
       )
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = toneMappingNode.add(dithering())
+      postProcessing.outputNode = toneMappingNode.add(dither())
 
       return [
         postProcessing,

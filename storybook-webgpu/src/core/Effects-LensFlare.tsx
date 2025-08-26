@@ -5,7 +5,7 @@ import { AgXToneMapping } from 'three'
 import { pass, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
-import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
+import { dither, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
@@ -34,7 +34,7 @@ const Scene: FC<StoryProps> = () => {
       lensFlareNode
     )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = toneMappingNode.add(dithering())
+    postProcessing.outputNode = toneMappingNode.add(dither())
 
     return [postProcessing, passNode, lensFlareNode, toneMappingNode]
   }, [renderer, scene, camera])
