@@ -17,14 +17,14 @@ import invariant from 'tiny-invariant'
 import { outputTexture } from './OutputTextureNode'
 
 export abstract class FilterNode extends TempNode {
-  inputNode: TextureNode | null
+  inputNode?: TextureNode | null
   resolutionScale = 1
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
   private _textureNode?: TextureNode
 
-  constructor(inputNode: TextureNode | null) {
+  constructor(inputNode?: TextureNode | null) {
     super('vec4')
     this.inputNode = inputNode
     this.updateBeforeType = NodeUpdateType.FRAME
@@ -50,7 +50,10 @@ export abstract class FilterNode extends TempNode {
   }
 
   getTextureNode(): TextureNode {
-    invariant(this._textureNode != null)
+    invariant(
+      this._textureNode != null,
+      'outputNode must be specified by setOutputTexture() before getTextureNode() is called.'
+    )
     return this._textureNode
   }
 
@@ -63,8 +66,14 @@ export abstract class FilterNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { inputNode, _textureNode: outputNode } = this
-    invariant(inputNode != null)
-    invariant(outputNode != null)
+    invariant(
+      inputNode != null,
+      'inputNode must be specified before being setting up.'
+    )
+    invariant(
+      outputNode != null,
+      'outputNode must be specified by setOutputTexture() before being setting up.'
+    )
     outputNode.uvNode = inputNode.uvNode
     return outputNode
   }

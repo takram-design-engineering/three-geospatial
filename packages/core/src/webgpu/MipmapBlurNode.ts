@@ -87,7 +87,7 @@ export class MipmapBlurNode extends DualFilterNode {
     return 'MipmapBlurNode'
   }
 
-  constructor(inputNode: TextureNode | null, levels = 4) {
+  constructor(inputNode?: TextureNode | null, levels = 4) {
     super(inputNode, levels)
     this.resolutionScale = 0.5
   }

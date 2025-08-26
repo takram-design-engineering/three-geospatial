@@ -23,7 +23,7 @@ export abstract class SingleFilterNode extends FilterNode {
 
   protected readonly inputTexelSize = uniform(new Vector2())
 
-  constructor(inputNode: TextureNode | null) {
+  constructor(inputNode?: TextureNode | null) {
     super(inputNode)
 
     this.renderTarget = this.createRenderTarget()

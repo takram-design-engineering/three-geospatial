@@ -15,7 +15,7 @@ import { MipmapSurfaceBlurNode } from './MipmapSurfaceBlurNode'
 import type { NodeObject } from './node'
 
 export class LensFlareNode extends TempNode {
-  inputNode: TextureNode | null
+  inputNode?: TextureNode | null
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
   featuresNode: LensFlareFeaturesNode
@@ -24,15 +24,15 @@ export class LensFlareNode extends TempNode {
 
   bloomIntensity = uniform(0.05)
 
-  constructor(inputNode: TextureNode | null) {
+  constructor(inputNode?: TextureNode | null) {
     super('vec4')
     this.inputNode = inputNode
 
-    this.thresholdNode = new DownsampleThresholdNode(null)
-    this.blurNode = new GaussianBlurNode(null)
-    this.featuresNode = new LensFlareFeaturesNode(null)
-    this.bloomNode = new MipmapSurfaceBlurNode(null, 8)
-    this.glareNode = new LensGlareNode(null)
+    this.thresholdNode = new DownsampleThresholdNode()
+    this.blurNode = new GaussianBlurNode()
+    this.featuresNode = new LensFlareFeaturesNode()
+    this.bloomNode = new MipmapSurfaceBlurNode(undefined, 8)
+    this.glareNode = new LensGlareNode()
 
     // Use the full resolution because the thresholdNode already downsamples the
     // input texture.

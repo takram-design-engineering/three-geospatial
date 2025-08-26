@@ -26,7 +26,7 @@ export abstract class DualFilterNode extends FilterNode {
   protected readonly inputTexelSize = uniform(new Vector2())
   protected readonly downsampleNode = texture(null)
 
-  constructor(inputNode: TextureNode | null, levels: number) {
+  constructor(inputNode: TextureNode | null | undefined, levels: number) {
     super(inputNode)
 
     for (let i = 0; i < levels; ++i) {

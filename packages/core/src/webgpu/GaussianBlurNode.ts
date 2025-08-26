@@ -24,7 +24,7 @@ export class GaussianBlurNode extends SeparableFilterNode {
 
   private readonly kernelSize: number
 
-  constructor(inputNode: TextureNode | null, kernelSize = 35) {
+  constructor(inputNode?: TextureNode | null, kernelSize = 35) {
     super(inputNode)
     this.kernelSize = kernelSize
   }

@@ -112,7 +112,7 @@ export class LensGlareNode extends FilterNode {
   private readonly outputTexelSize = uniform(new Vector2())
   private readonly geometryRatio = uniform(new Vector2())
 
-  constructor(inputNode: TextureNode | null) {
+  constructor(inputNode?: TextureNode | null) {
     super(inputNode)
     this.inputNode = inputNode
     this.resolutionScale = 0.5

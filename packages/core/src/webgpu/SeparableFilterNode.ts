@@ -27,7 +27,7 @@ export abstract class SeparableFilterNode extends FilterNode {
   protected readonly inputTexelSize = uniform(new Vector2())
   protected readonly direction = uniform(new Vector2())
 
-  constructor(inputNode: TextureNode | null) {
+  constructor(inputNode?: TextureNode | null) {
     super(inputNode)
 
     this.horizontalRT = this.createRenderTarget('Horizontal')

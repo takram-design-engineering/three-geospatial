@@ -15,7 +15,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
 
   blendAmount = uniform(0.85)
 
-  constructor(inputNode: TextureNode | null, levels = 4) {
+  constructor(inputNode?: TextureNode | null, levels = 4) {
     super(inputNode, levels)
     this.resolutionScale = 0.5
   }
