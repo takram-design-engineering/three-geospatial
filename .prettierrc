@@ -10,7 +10,11 @@
   "tabWidth": 2,
   "trailingComma": "none",
   "useTabs": false,
-  "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-glsl"],
+  "plugins": [
+    "@ianvs/prettier-plugin-sort-imports",
+    "prettier-plugin-jsdoc",
+    "prettier-plugin-glsl"
+  ],
   "importOrder": [
     "<THIRD_PARTY_MODULES>",
     "",
