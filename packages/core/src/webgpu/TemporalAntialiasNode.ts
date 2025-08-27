@@ -192,7 +192,6 @@ export class TemporalAntialiasNode extends TempNode {
   private readonly resolveNode = texture(this.resolveRT.texture)
   private readonly historyNode = texture(this.historyRT.texture)
   private readonly originalProjectionMatrix = new Matrix4()
-  private readonly jitterUV = uniform(new Vector2())
   private jitterIndex = 0
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
@@ -270,7 +269,6 @@ export class TemporalAntialiasNode extends TempNode {
     const offset = bayerOffsets[this.jitterIndex]
     const dx = offset.x - 0.5
     const dy = offset.y - 0.5
-    this.jitterUV.value.set(dx / width, dy / height)
     camera.setViewOffset(width, height, dx, dy, width, height)
   }
 
