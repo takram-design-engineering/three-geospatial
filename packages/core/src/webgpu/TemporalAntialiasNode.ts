@@ -45,7 +45,7 @@ import { FnVar } from './FnVar'
 import { highpVelocity } from './HighpVelocityNode'
 import type { Node, NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
-import { sampleCatmullRom } from './sampleCatmullRom'
+import { textureCatmullRom } from './sampleCatmullRom'
 import { isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -348,7 +348,7 @@ export class TemporalAntialiasNode extends TempNode {
       If(prevUV.lessThan(0).any().or(prevUV.greaterThan(1).any()), () => {
         outputColor.assign(currentColor) // Obvious rejection
       }).Else(() => {
-        const historyColor = sampleCatmullRom(this.historyNode, prevUV)
+        const historyColor = textureCatmullRom(this.historyNode, prevUV)
         const clippedColor = varianceClipping(
           inputNode,
           coord,
@@ -372,24 +372,21 @@ export class TemporalAntialiasNode extends TempNode {
     } = this
     invariant(
       inputNode != null,
-      'inputNode must be specified before being setting up.'
+      'inputNode must be specified before being setup.'
     )
     invariant(
       depthNode != null,
-      'depthNode must be specified before being setting up.'
+      'depthNode must be specified before being setup.'
     )
     invariant(
       velocityNode != null,
-      'velocityNode must be specified before being setting up.'
+      'velocityNode must be specified before being setup.'
     )
     invariant(
       outputNode != null,
-      'outputNode must be specified by setOutputTexture() before being setting up.'
+      'outputNode must be specified by setOutputTexture() before being setup.'
     )
-    invariant(
-      camera != null,
-      'Camera must be specified before being setting up.'
-    )
+    invariant(camera != null, 'Camera must be specified before being setup.')
 
     const { context } = (builder.getContext().postProcessing ?? {}) as {
       context?: {

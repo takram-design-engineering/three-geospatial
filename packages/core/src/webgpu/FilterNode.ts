@@ -72,11 +72,11 @@ export abstract class FilterNode extends TempNode {
     const { inputNode, _textureNode: outputNode } = this
     invariant(
       inputNode != null,
-      'inputNode must be specified before being setting up.'
+      'inputNode must be specified before being setup.'
     )
     invariant(
       outputNode != null,
-      'outputNode must be specified by setOutputTexture() before being setting up.'
+      'outputNode must be specified by setOutputTexture() before being setup.'
     )
     outputNode.uvNode = inputNode.uvNode
     return outputNode

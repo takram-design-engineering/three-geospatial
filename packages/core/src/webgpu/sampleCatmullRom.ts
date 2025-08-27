@@ -33,9 +33,9 @@ import type { Node, NodeObject } from './node'
  * SOFTWARE.
  */
 
-export const sampleCatmullRom = /*#__PURE__*/ FnVar(
-  (tex: TextureNode, uv: NodeObject<'vec2'>): Node<'vec4'> => {
-    const texSize = vec2(textureSize(tex, int(0)))
+export const textureCatmullRom = /*#__PURE__*/ FnVar(
+  (textureNode: TextureNode, uv: NodeObject<'vec2'>): Node<'vec4'> => {
+    const texSize = vec2(textureSize(textureNode, int(0)))
 
     // We're going to sample a a 4x4 grid of texels surrounding the target UV
     // coordinate. We'll do this by rounding down the sample location to get the
@@ -69,15 +69,15 @@ export const sampleCatmullRom = /*#__PURE__*/ FnVar(
     const texPos3 = texPos1.add(2).div(texSize)
     const texPos12 = texPos1.add(offset12).div(texSize)
     return add(
-      tex.sample(vec2(texPos0.x, texPos0.y)).mul(w0.x).mul(w0.y),
-      tex.sample(vec2(texPos12.x, texPos0.y)).mul(w12.x).mul(w0.y),
-      tex.sample(vec2(texPos3.x, texPos0.y)).mul(w3.x).mul(w0.y),
-      tex.sample(vec2(texPos0.x, texPos12.y)).mul(w0.x).mul(w12.y),
-      tex.sample(vec2(texPos12.x, texPos12.y)).mul(w12.x).mul(w12.y),
-      tex.sample(vec2(texPos3.x, texPos12.y)).mul(w3.x).mul(w12.y),
-      tex.sample(vec2(texPos0.x, texPos3.y)).mul(w0.x).mul(w3.y),
-      tex.sample(vec2(texPos12.x, texPos3.y)).mul(w12.x).mul(w3.y),
-      tex.sample(vec2(texPos3.x, texPos3.y)).mul(w3.x).mul(w3.y)
+      textureNode.sample(vec2(texPos0.x, texPos0.y)).mul(w0.x).mul(w0.y),
+      textureNode.sample(vec2(texPos12.x, texPos0.y)).mul(w12.x).mul(w0.y),
+      textureNode.sample(vec2(texPos3.x, texPos0.y)).mul(w3.x).mul(w0.y),
+      textureNode.sample(vec2(texPos0.x, texPos12.y)).mul(w0.x).mul(w12.y),
+      textureNode.sample(vec2(texPos12.x, texPos12.y)).mul(w12.x).mul(w12.y),
+      textureNode.sample(vec2(texPos3.x, texPos12.y)).mul(w3.x).mul(w12.y),
+      textureNode.sample(vec2(texPos0.x, texPos3.y)).mul(w0.x).mul(w3.y),
+      textureNode.sample(vec2(texPos12.x, texPos3.y)).mul(w12.x).mul(w3.y),
+      textureNode.sample(vec2(texPos3.x, texPos3.y)).mul(w3.x).mul(w3.y)
     )
   }
 )
