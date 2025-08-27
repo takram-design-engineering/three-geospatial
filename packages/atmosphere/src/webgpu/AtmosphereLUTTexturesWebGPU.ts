@@ -205,7 +205,6 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     return this[name]
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
   override createContext(
     textureType: AnyFloatType,
     parameters: AtmosphereParameters

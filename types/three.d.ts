@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/prefer-function-type */
 
 import type { Camera, Data3DTexture, Light, Matrix3, Texture } from 'three'
+import type InputNode from 'three/src/nodes/core/InputNode.js'
 import type { ShaderNodeObject } from 'three/tsl'
 import type {
   ConstNode,
@@ -12,6 +13,12 @@ import type {
   TextureNode,
   UniformNode
 } from 'three/webgpu'
+
+import type {
+  NodeType,
+  NodeValueType,
+  NodeValueTypeOf
+} from '@takram/three-geospatial/webgpu'
 
 export {}
 
@@ -79,6 +86,17 @@ declare module 'three/tsl' {
     uvNode?: Node | null,
     levelNode?: Node | number | null
   ) => ShaderNodeObject<Texture3DNode>
+
+  // The first argument can be a node type
+  function uniform<T extends NodeType>(
+    arg1: T
+  ): ShaderNodeObject<UniformNode<NodeValueTypeOf<T>>>
+
+  // Change to a function type to overload
+  function uniform<TValue>(
+    arg1: InputNode<TValue> | TValue,
+    arg2?: Node | string
+  ): ShaderNodeObject<UniformNode<TValue>>
 }
 
 declare module 'three/webgpu' {

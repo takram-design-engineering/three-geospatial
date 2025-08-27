@@ -1,9 +1,9 @@
 import { GaussKernel } from 'postprocessing'
 import { add, Fn, nodeObject, uv } from 'three/tsl'
-import type { Node, TextureNode } from 'three/webgpu'
+import type { TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { NodeObject } from './node'
+import type { Node, NodeObject } from './node'
 import { SeparableFilterNode } from './SeparableFilterNode'
 
 declare module 'postprocessing' {
@@ -29,7 +29,7 @@ export class GaussianBlurNode extends SeparableFilterNode {
     this.kernelSize = kernelSize
   }
 
-  protected setupFilterNode(): Node {
+  protected override setupOutputNode(): Node {
     const { inputNode, inputTexelSize, direction } = this
     invariant(inputNode != null)
 

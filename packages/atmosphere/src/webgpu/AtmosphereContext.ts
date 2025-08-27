@@ -73,12 +73,13 @@ export class AtmosphereContext extends Node {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private createNodes() {
-    const worldToECEFMatrix = uniform(new Matrix4().identity())
+    const worldToECEFMatrix = uniform('mat4')
       .setGroup(groupNode)
       .setName('worldToECEFMatrix')
-      .onRenderUpdate((_, { value }) => {
-        value.copy(this.worldToECEFMatrix)
+      .onRenderUpdate((_, self) => {
+        self.value = this.worldToECEFMatrix
       })
+
     const ecefToWorldMatrix = uniform(new Matrix4().identity())
       .setGroup(groupNode)
       .setName('ecefToWorldMatrix')
@@ -86,24 +87,28 @@ export class AtmosphereContext extends Node {
         // The worldToECEFMatrix must be orthogonal.
         value.copy(this.worldToECEFMatrix).transpose()
       })
-    const sunDirectionECEF = uniform(new Vector3())
+
+    const sunDirectionECEF = uniform('vec3')
       .setGroup(groupNode)
       .setName('sunDirectionECEF')
-      .onRenderUpdate((_, { value }) => {
-        value.copy(this.sunDirectionECEF)
+      .onRenderUpdate((_, self) => {
+        self.value = this.sunDirectionECEF
       })
+
     const moonDirectionECEF = uniform(new Vector3())
       .setGroup(groupNode)
       .setName('moonDirectionECEF')
-      .onRenderUpdate((_, { value }) => {
-        value.copy(this.moonDirectionECEF)
+      .onRenderUpdate((_, self) => {
+        self.value = this.moonDirectionECEF
       })
+
     const moonFixedToECEFMatrix = uniform(new Matrix4())
       .setGroup(groupNode)
       .setName('moonFixedToECEFMatrix')
-      .onRenderUpdate((_, { value }) => {
-        value.copy(this.moonFixedToECEFMatrix)
+      .onRenderUpdate((_, self) => {
+        self.value = this.moonFixedToECEFMatrix
       })
+
     const cameraPositionECEF = uniform(new Vector3())
       .setGroup(groupNode)
       .setName('cameraPositionECEF')
@@ -112,6 +117,7 @@ export class AtmosphereContext extends Node {
           .setFromMatrixPosition(this.camera.matrixWorld)
           .applyMatrix4(this.worldToECEFMatrix)
       })
+
     const altitudeCorrectionECEF = uniform(new Vector3())
       .setGroup(groupNode)
       .setName('altitudeCorrectionECEF')

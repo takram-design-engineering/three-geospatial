@@ -1,6 +1,5 @@
 import type { Camera } from 'three'
 import {
-  and,
   cos,
   float,
   int,
@@ -102,12 +101,5 @@ export const equirectWorld = (uv: NodeObject<'vec2'>): NodeObject<'vec3'> => {
 }
 
 export const clampToBorder = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
-  return float(
-    and(
-      uv.x.greaterThanEqual(0),
-      uv.x.lessThanEqual(1),
-      uv.y.greaterThanEqual(0),
-      uv.y.lessThanEqual(1)
-    )
-  )
+  return float(uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()))
 }

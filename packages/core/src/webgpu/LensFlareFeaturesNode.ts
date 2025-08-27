@@ -42,7 +42,7 @@ export class LensFlareFeaturesNode extends SingleFilterNode {
     super.updateBefore(frame)
   }
 
-  protected override setupFilterNode(): Node {
+  protected override setupOutputNode(): Node {
     const {
       inputNode,
       ghostIntensity,

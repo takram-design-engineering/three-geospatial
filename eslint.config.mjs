@@ -139,7 +139,13 @@ export default defineConfig(
       '@typescript-eslint/no-misused-spread': 'off',
 
       // This warns our own codes for backward compatibility.
-      '@typescript-eslint/no-deprecated': 'off'
+      '@typescript-eslint/no-deprecated': 'off',
+
+      // Overridden functions must use class methods.
+      '@typescript-eslint/class-methods-use-this': [
+        'error',
+        { ignoreOverrideMethods: true }
+      ]
     }
   },
   {

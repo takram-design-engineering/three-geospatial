@@ -5,7 +5,6 @@ import { LinearToneMapping } from 'three'
 import {
   Discard,
   If,
-  or,
   positionGeometry,
   screenSize,
   screenUV,
@@ -38,17 +37,9 @@ export const textureUV = FnVar(
   (textureSize: NodeObject<'vec2'>, zoom: NodeObject<'float'>) => {
     const scale = screenSize.div(textureSize).div(zoom).toVar()
     const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toVar()
-    If(
-      or(
-        uv.x.lessThan(0),
-        uv.x.greaterThan(1),
-        uv.y.lessThan(0),
-        uv.y.greaterThan(1)
-      ),
-      () => {
-        Discard()
-      }
-    )
+    If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
+      Discard()
+    })
     return uv.flipY()
   }
 )

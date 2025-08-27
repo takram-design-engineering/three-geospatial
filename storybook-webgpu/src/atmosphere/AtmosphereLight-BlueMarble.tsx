@@ -3,8 +3,11 @@ import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import type { FC } from 'react'
 import { AgXToneMapping, TextureLoader } from 'three'
 import {
+  convertToTexture,
   mix,
+  mrt,
   mul,
+  output,
   pass,
   texture,
   toneMapping,
@@ -28,7 +31,12 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
-import { dither, lensFlare } from '@takram/three-geospatial/webgpu'
+import {
+  dither,
+  highpVelocity,
+  lensFlare,
+  temporalAntialias
+} from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -73,7 +81,12 @@ const Scene: FC<StoryProps> = () => {
   // Post-processing:
 
   const [postProcessing, passNode, , , toneMappingNode] = useResource(() => {
-    const passNode = pass(scene, camera)
+    const passNode = pass(scene, camera, { samples: 0 }).setMRT(
+      mrt({
+        output,
+        velocity: highpVelocity
+      })
+    )
     const aerialNode = aerialPerspective(
       context,
       passNode.getTextureNode('output'),
@@ -85,15 +98,22 @@ const Scene: FC<StoryProps> = () => {
       uniform(0),
       lensFlareNode
     )
+    const taaNode = temporalAntialias(
+      convertToTexture(toneMappingNode),
+      passNode.getTextureNode('depth'),
+      passNode.getTextureNode('velocity'),
+      camera
+    )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = toneMappingNode.add(dither())
+    postProcessing.outputNode = taaNode.add(dither())
 
     return [
       postProcessing,
       passNode,
       aerialNode,
       lensFlareNode,
-      toneMappingNode
+      toneMappingNode,
+      taaNode
     ]
   }, [renderer, scene, camera, context])
 
