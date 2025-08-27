@@ -214,6 +214,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.setOutputTexture(this.resolveRT.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
+    this.updateAfterType = NodeUpdateType.FRAME
   }
 
   protected createRenderTarget(name?: string): RenderTarget {
@@ -255,18 +256,6 @@ export class TemporalAntialiasNode extends TempNode {
     this.resolveRT.setSize(w, h)
     this.historyRT.setSize(w, h)
     return this
-  }
-
-  private swapBuffers(): void {
-    // Swap the render target textures instead of copying:
-    const { resolveRT, historyRT } = this
-    this.resolveRT = historyRT
-    this.historyRT = resolveRT
-    this.resolveNode.value = historyRT.texture
-    this.historyNode.value = resolveRT.texture
-
-    invariant(this._textureNode != null)
-    this._textureNode.value = resolveRT.texture
   }
 
   private setViewOffset(camera: PerspectiveCamera | OrthographicCamera): void {
@@ -320,8 +309,18 @@ export class TemporalAntialiasNode extends TempNode {
     this.mesh.render(renderer)
 
     restoreRendererState(renderer, this.rendererState)
+  }
 
-    this.swapBuffers()
+  override updateAfter(frame: NodeFrame): void {
+    // Swap the render target textures instead of copying:
+    const { resolveRT, historyRT } = this
+    this.resolveRT = historyRT
+    this.historyRT = resolveRT
+    this.resolveNode.value = historyRT.texture
+    this.historyNode.value = resolveRT.texture
+
+    invariant(this._textureNode != null)
+    this._textureNode.value = resolveRT.texture
   }
 
   private setupOutputNode(): Node {
