@@ -3,6 +3,7 @@ import { GlobeControls } from '3d-tiles-renderer/r3f'
 import type { FC } from 'react'
 import { AgXToneMapping } from 'three'
 import {
+  convertToTexture,
   diffuseColor,
   mrt,
   normalView,
@@ -17,7 +18,12 @@ import {
   aerialPerspective,
   atmosphereContext
 } from '@takram/three-atmosphere/webgpu'
-import { dither, lensFlare } from '@takram/three-geospatial/webgpu'
+import {
+  dither,
+  highpVelocity,
+  lensFlare,
+  traa
+} from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -67,10 +73,11 @@ const Scene: FC<StoryProps> = ({
   // Post-processing:
 
   const [postProcessing, passNode, , , toneMappingNode] = useResource(() => {
-    const passNode = pass(scene, camera).setMRT(
+    const passNode = pass(scene, camera, { samples: 0 }).setMRT(
       mrt({
         output: diffuseColor,
-        normal: normalView
+        normal: normalView,
+        velocity: highpVelocity
       })
     )
     const aerialNode = aerialPerspective(
@@ -85,15 +92,22 @@ const Scene: FC<StoryProps> = ({
       uniform(0),
       lensFlareNode
     )
+    const taaNode = traa(
+      convertToTexture(toneMappingNode),
+      passNode.getTextureNode('depth'),
+      passNode.getTextureNode('velocity'),
+      camera
+    )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = toneMappingNode.add(dither())
+    postProcessing.outputNode = taaNode.add(dither())
 
     return [
       postProcessing,
       passNode,
       aerialNode,
       lensFlareNode,
-      toneMappingNode
+      toneMappingNode,
+      taaNode
     ]
   }, [renderer, camera, scene, context])
 

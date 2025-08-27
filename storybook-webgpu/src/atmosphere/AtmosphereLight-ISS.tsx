@@ -3,7 +3,14 @@ import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import { Suspense, useState, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { pass, toneMapping, uniform } from 'three/tsl'
+import {
+  convertToTexture,
+  mrt,
+  output,
+  pass,
+  toneMapping,
+  uniform
+} from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
   PostProcessing,
@@ -22,7 +29,12 @@ import {
   skyEnvironment
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
-import { dither, lensFlare } from '@takram/three-geospatial/webgpu'
+import {
+  dither,
+  highpVelocity,
+  lensFlare,
+  traa
+} from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -76,7 +88,12 @@ const Scene: FC<StoryProps> = () => {
   // Post-processing:
 
   const [postProcessing, passNode, , , toneMappingNode] = useResource(() => {
-    const passNode = pass(scene, camera)
+    const passNode = pass(scene, camera, { samples: 0 }).setMRT(
+      mrt({
+        output,
+        velocity: highpVelocity
+      })
+    )
     const aerialNode = aerialPerspective(
       context,
       passNode.getTextureNode('output'),
@@ -88,15 +105,22 @@ const Scene: FC<StoryProps> = () => {
       uniform(0),
       lensFlareNode
     )
+    const taaNode = traa(
+      convertToTexture(toneMappingNode),
+      passNode.getTextureNode('depth'),
+      passNode.getTextureNode('velocity'),
+      camera
+    )
     const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = toneMappingNode.add(dither())
+    postProcessing.outputNode = taaNode.add(dither())
 
     return [
       postProcessing,
       passNode,
       aerialNode,
       lensFlareNode,
-      toneMappingNode
+      toneMappingNode,
+      taaNode
     ]
   }, [renderer, scene, camera, context])
 
