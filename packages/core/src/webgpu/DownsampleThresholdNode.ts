@@ -19,7 +19,7 @@ export class DownsampleThresholdNode extends SingleFilterNode {
     this.resolutionScale = 0.5
   }
 
-  protected override setupFilterNode(): Node {
+  protected override setupOutputNode(): Node {
     const { inputNode, thresholdLevel, thresholdRange, inputTexelSize } = this
     invariant(inputNode != null)
 
