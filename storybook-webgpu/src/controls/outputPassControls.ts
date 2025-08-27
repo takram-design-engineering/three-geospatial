@@ -1,6 +1,6 @@
 import type { ArgTypes } from '@storybook/react-vite'
 import { useRef } from 'react'
-import { directionToColor } from 'three/tsl'
+import { directionToColor, vec4 } from 'three/tsl'
 import type { PassNode, PostProcessing } from 'three/webgpu'
 
 import { depthToColor, type Node } from '@takram/three-geospatial/webgpu'
@@ -10,6 +10,7 @@ import { useTransientControl } from '../helpers/useTransientControl'
 export interface OutputPassArgs {
   outputDepth: boolean
   outputNormal: boolean
+  outputVelocity: boolean
 }
 
 export const outputPassArgs = (
@@ -17,6 +18,7 @@ export const outputPassArgs = (
 ): OutputPassArgs => ({
   outputDepth: false,
   outputNormal: false,
+  outputVelocity: false,
   ...defaults
 })
 
@@ -24,6 +26,7 @@ export const outputPassArgTypes = (
   options: {
     hasDepth?: boolean
     hasNormal?: boolean
+    hasVelocity?: boolean
   } = {}
 ): ArgTypes<OutputPassArgs> => ({
   outputDepth: {
@@ -41,6 +44,14 @@ export const outputPassArgTypes = (
       disable: options.hasNormal === false
     },
     table: { category: 'output pass' }
+  },
+  outputVelocity: {
+    name: 'velocity',
+    control: {
+      type: 'boolean',
+      disable: options.hasVelocity === false
+    },
+    table: { category: 'output pass' }
   }
 })
 
@@ -55,11 +66,12 @@ export function useOutputPassControls(
   })
 
   useTransientControl(
-    ({ outputDepth, outputNormal }: OutputPassArgs) => ({
+    ({ outputDepth, outputNormal, outputVelocity }: OutputPassArgs) => ({
       outputDepth,
-      outputNormal
+      outputNormal,
+      outputVelocity
     }),
-    ({ outputDepth, outputNormal }) => {
+    ({ outputDepth, outputNormal, outputVelocity }) => {
       let outputNode = ref.current.outputNode
       let outputColorTransform = ref.current.outputColorTransform
       // In reverse order:
@@ -72,6 +84,10 @@ export function useOutputPassControls(
           passNode.camera
         )
         outputColorTransform = false
+      } else if (outputVelocity) {
+        const velocity = passNode.getTextureNode('velocity').xy.mul(10)
+        outputNode = vec4(velocity.add(0.5), 0.5, 1)
+        outputColorTransform = true
       }
       onChange(outputNode, outputColorTransform)
     }
