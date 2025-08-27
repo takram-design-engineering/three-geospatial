@@ -1,18 +1,10 @@
 import { useGLTF } from '@react-three/drei'
-import {
-  useMotionValueEvent,
-  useSpring,
-  type SpringOptions
-} from 'motion/react'
 import { useLayoutEffect, useMemo, type ComponentProps, type FC } from 'react'
 import { Matrix3, Vector3, type Matrix4 } from 'three'
 
-import { useGuardedFrame } from '../helpers/useGuardedFrame'
+import { lerp } from '@takram/three-geospatial'
 
-const options: SpringOptions = {
-  mass: 2,
-  damping: 40
-}
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 
 const vector = new Vector3()
 const rotation = new Matrix3()
@@ -35,14 +27,14 @@ export const ISS: FC<ISSProps> = ({
     })
   }, [iss])
 
-  const { trusses, solarPanels, radiators } = useMemo(() => {
+  const { trusses, panels, radiators } = useMemo(() => {
     const scene = iss.scene
     return {
       trusses: [
         scene.getObjectByName('23_S4_Truss'),
         scene.getObjectByName('20_P4_Truss')
       ].filter(value => value != null),
-      solarPanels: [
+      panels: [
         scene.getObjectByName('23_S4_Truss_01'),
         scene.getObjectByName('23_S4_Truss_02'),
         scene.getObjectByName('32_S6_Truss_01'),
@@ -59,10 +51,6 @@ export const ISS: FC<ISSProps> = ({
     }
   }, [iss.scene])
 
-  const springTrussAngle = useSpring(trusses[0].rotation.x, options)
-  const springSolarPanelAngle = useSpring(solarPanels[0].rotation.z, options)
-  const springRadiatorAngle = useSpring(radiators[0].rotation.z, options)
-
   useGuardedFrame(() => {
     const sunDirectionLocal = vector
       .copy(sunDirectionECEF)
@@ -75,28 +63,26 @@ export const ISS: FC<ISSProps> = ({
     const trussAngle = Math.atan2(z, y)
     const cosTruss = Math.cos(trussAngle)
     const sinTruss = Math.sin(trussAngle)
-    const solarPanelAngle = -Math.atan2(x, y * cosTruss + z * sinTruss)
+    const panelAngle = -Math.atan2(x, y * cosTruss + z * sinTruss)
     const sunDirectionXY = vector.set(x, y, 0).normalize()
     const radiatorAngle = -Math.atan2(sunDirectionXY.x, sunDirectionXY.y)
 
-    springTrussAngle.set(trussAngle)
-    springSolarPanelAngle.set(solarPanelAngle)
-    springRadiatorAngle.set(radiatorAngle)
-  })
-
-  useMotionValueEvent(springTrussAngle, 'change', value => {
+    const alpha = 0.05
+    const trussAngleLerp = lerp(trusses[0].rotation.x, trussAngle, alpha)
+    const panelAngleLerp = lerp(panels[0].rotation.z, panelAngle, alpha)
+    const radiatorAngleLerp = lerp(
+      radiators[0].rotation.z,
+      radiatorAngle,
+      alpha
+    )
     for (const truss of trusses) {
-      truss.rotation.x = value
+      truss.rotation.x = trussAngleLerp
     }
-  })
-  useMotionValueEvent(springSolarPanelAngle, 'change', value => {
-    for (const solarPanel of solarPanels) {
-      solarPanel.rotation.z = value
+    for (const panel of panels) {
+      panel.rotation.z = panelAngleLerp
     }
-  })
-  useMotionValueEvent(springRadiatorAngle, 'change', value => {
     for (const radiator of radiators) {
-      radiator.rotation.z = value
+      radiator.rotation.z = radiatorAngleLerp
     }
   })
 
