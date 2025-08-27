@@ -18,7 +18,7 @@ export class HighpVelocityNode extends TempNode {
   private readonly previousProjectionMatrix = uniform('mat4')
 
   private readonly currentModelViewMatrix = uniform(new Matrix4())
-  private readonly previousModelViewMatrix = uniform(new Matrix4())
+  private readonly previousModelViewMatrix = uniform('mat4')
   private readonly objectModelViewMatrices = new WeakMap<Object3D, Matrix4>()
 
   constructor() {
@@ -46,7 +46,7 @@ export class HighpVelocityNode extends TempNode {
     current.value.copy(camera.projectionMatrix)
   }
 
-  // Executed once per object after rendering:
+  // Executed once per object before rendering:
   override updateBefore({ object, camera }: NodeFrame): void {
     if (object == null || camera == null) {
       return
@@ -61,7 +61,7 @@ export class HighpVelocityNode extends TempNode {
       camera.matrixWorldInverse,
       object.matrixWorld
     )
-    previous.value.copy(matrices.get(object) ?? current.value)
+    previous.value = matrices.get(object) ?? current.value
   }
 
   // Executed once per object after rendering:
