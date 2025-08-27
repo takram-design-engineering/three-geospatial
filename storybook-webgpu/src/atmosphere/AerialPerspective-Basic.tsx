@@ -31,7 +31,7 @@ import {
   dither,
   highpVelocity,
   lensFlare,
-  traa
+  temporalAntialias
 } from '@takram/three-geospatial/webgpu'
 
 import {
@@ -103,7 +103,7 @@ const Scene: FC<StoryProps> = ({
         uniform(0),
         lensFlareNode
       )
-      const taaNode = traa(
+      const taaNode = temporalAntialias(
         convertToTexture(toneMappingNode),
         passNode.getTextureNode('depth'),
         passNode.getTextureNode('velocity'),

@@ -103,7 +103,6 @@ export class HighpVelocityNode extends TempNode {
 
     const currentNDC = currentClip.xy.div(currentClip.w)
     const previousNDC = previousClip.xy.div(previousClip.w)
-
     return sub(currentNDC, previousNDC)
   }
 }
