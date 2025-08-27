@@ -14,10 +14,12 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 - [`FnLayout`](#fnlayout)
 - [`OutputTextureNode`](#outputtexturenode)
 - [`OutputTexture3DNode`](#outputtexture3dnode)
+- [`HighpVelocityNode`](#highpvelocitynode)
 
 **Effects**
 
 - [`LensFlareNode`](#lensflarenode)
+- [`TemporalAntialiasNode`](#temporalantialiasnode)
 
 **Filters**
 
