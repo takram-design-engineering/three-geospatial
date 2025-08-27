@@ -14,6 +14,8 @@ export class HighpVelocityNode extends TempNode {
     return 'HighpVelocityNode'
   }
 
+  projectionMatrix?: Matrix4 | null
+
   private readonly currentProjectionMatrix = uniform(new Matrix4())
   private readonly previousProjectionMatrix = uniform('mat4')
 
@@ -24,6 +26,13 @@ export class HighpVelocityNode extends TempNode {
   constructor() {
     super('vec2')
 
+    // Sequence:
+    // - updateBefore() for the first object
+    // - update() for the current frame
+    // - updateAfter() for the first object
+    // - updateBefore() for the next object
+    // - updateAfter() for the next object
+    // - ...
     this.updateType = NodeUpdateType.FRAME
     this.updateBeforeType = NodeUpdateType.OBJECT
     this.updateAfterType = NodeUpdateType.OBJECT
@@ -38,12 +47,14 @@ export class HighpVelocityNode extends TempNode {
       currentProjectionMatrix: current,
       previousProjectionMatrix: previous
     } = this
+
+    const projectionMatrix = this.projectionMatrix ?? camera.projectionMatrix
     if (previous.value == null) {
-      previous.value = new Matrix4().copy(camera.projectionMatrix)
+      previous.value = new Matrix4().copy(projectionMatrix)
     } else {
       previous.value.copy(current.value)
     }
-    current.value.copy(camera.projectionMatrix)
+    current.value.copy(projectionMatrix)
   }
 
   // Executed once per object before rendering:
