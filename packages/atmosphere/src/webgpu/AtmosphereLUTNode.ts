@@ -1,5 +1,4 @@
 import { FloatType, HalfFloatType, type Texture } from 'three'
-import type Backend from 'three/src/renderers/common/Backend.js'
 import { nodeProxy } from 'three/tsl'
 import {
   NodeUpdateType,
@@ -18,6 +17,7 @@ import {
   type AnyFloatType
 } from '@takram/three-geospatial'
 import {
+  isWebGPU,
   outputTexture,
   outputTexture3D,
   type NodeObject,
@@ -263,11 +263,7 @@ export const atmosphereLUT = (
   renderer: Renderer,
   parameters?: AtmosphereParameters
 ): AtmosphereLUTNode => {
-  // The type of Backend cannot be augmented because it is default-exported.
-  const backend = renderer.backend as Backend & {
-    isWebGPUBackend?: boolean
-  }
-  return backend.isWebGPUBackend === true
+  return isWebGPU(renderer)
     ? atmosphereLUTWebGPU(parameters)
     : atmosphereLUTWebGL(parameters)
 }

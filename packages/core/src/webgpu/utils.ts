@@ -1,9 +1,25 @@
+import type Backend from 'three/src/renderers/common/Backend.js'
 import { uniform } from 'three/tsl'
-import type { UniformGroupNode, UniformNode } from 'three/webgpu'
+import {
+  NodeBuilder,
+  type Renderer,
+  type UniformGroupNode,
+  type UniformNode
+} from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { assertType } from '../assertions'
 import { NODE_TYPES } from './internals'
 import type { NodeObject, NodeType, NodeValueType } from './node'
+
+export function isWebGPU(target: NodeBuilder | Renderer | Backend): boolean {
+  const renderer = target instanceof NodeBuilder ? target.renderer : target
+  const backend = 'backend' in renderer ? renderer.backend : target
+  // WORKAROUND: The type of Backend cannot be augmented because it is
+  // default-exported.
+  assertType<Backend & { isWebGPUBackend?: boolean }>(backend)
+  return backend.isWebGPUBackend === true
+}
 
 type NodeValuePropertyKey<T> = keyof {
   [K in keyof T as K extends string

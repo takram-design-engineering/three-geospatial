@@ -1,10 +1,10 @@
 import { Camera, Matrix4, Vector3 } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import type Backend from 'three/src/renderers/common/Backend.js'
 import { nodeProxy, uniform, uniformGroup } from 'three/tsl'
 import { Node, type NodeBuilder, type Renderer } from 'three/webgpu'
 
 import { Ellipsoid } from '@takram/three-geospatial'
+import { isWebGPU } from '@takram/three-geospatial/webgpu'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import { AtmosphereLUTNode } from './AtmosphereLUTNode'
@@ -185,11 +185,7 @@ export const atmosphereContext = (
   parameters?: AtmosphereParameters,
   lutNode?: AtmosphereLUTNode
 ): AtmosphereContext => {
-  // The type of Backend cannot be augmented because it is default-exported.
-  const backend = renderer.backend as Backend & {
-    isWebGPUBackend?: boolean
-  }
-  return backend.isWebGPUBackend === true
+  return isWebGPU(renderer)
     ? atmosphereContextWebGPU(parameters, lutNode)
     : atmosphereContextWebGL(parameters, lutNode)
 }

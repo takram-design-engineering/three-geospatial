@@ -10,7 +10,6 @@ import {
   type PerspectiveCamera,
   type Texture
 } from 'three'
-import type Backend from 'three/src/renderers/common/Backend.js'
 import {
   float,
   Fn,
@@ -47,6 +46,7 @@ import { highpVelocity } from './HighpVelocityNode'
 import type { Node, NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { sampleCatmullRom } from './sampleCatmullRom'
+import { isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -413,16 +413,12 @@ export class TemporalAntialiasNode extends TempNode {
       }
     }
 
-    // The type of Backend cannot be augmented because it is default-exported.
-    const backend = builder.renderer.backend as Backend & {
-      isWebGPUBackend?: boolean
-    }
-
     // WORKAROUND: WebGLBackend seems to have issue with RTTNode. Disable it on
     // WebGLBackend for now.
     const { material } = this
-    material.fragmentNode =
-      backend.isWebGPUBackend === true ? this.setupOutputNode() : inputNode
+    material.fragmentNode = isWebGPU(builder)
+      ? this.setupOutputNode()
+      : inputNode
     material.needsUpdate = true
 
     outputNode.uvNode = inputNode.uvNode
