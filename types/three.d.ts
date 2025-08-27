@@ -88,12 +88,15 @@ declare module 'three/tsl' {
   ) => ShaderNodeObject<Texture3DNode>
 
   // The first argument can be a node type
-  const uniform: <const T>(
-    arg1: InputNode<T> | T,
-    arg2?: Node | NodeType
-  ) => T extends NodeType
-    ? ShaderNodeObject<UniformNode<NodeValueTypeOf<T>>>
-    : ShaderNodeObject<UniformNode<T>>
+  function uniform<T extends NodeType>(
+    arg1: T
+  ): ShaderNodeObject<UniformNode<NodeValueTypeOf<T>>>
+
+  // Change to a function type to overload
+  function uniform<TValue>(
+    arg1: InputNode<TValue> | TValue,
+    arg2?: Node | string
+  ): ShaderNodeObject<UniformNode<TValue>>
 }
 
 declare module 'three/webgpu' {
