@@ -51,24 +51,25 @@ import { sampleCatmullRom } from './sampleCatmullRom'
 const { resetRendererState, restoreRendererState } = RendererUtils
 
 // prettier-ignore
-export const bayerIndices: readonly number[] = [
+const bayerIndices: readonly number[] = [
   0, 8, 2, 10,
   12, 4, 14, 6,
   3, 11, 1, 9,
   15, 7, 13, 5
 ]
 
-export const bayerOffsets: readonly Vector2[] =
-  /*#__PURE__*/ bayerIndices.reduce<Vector2[]>((result, _, index) => {
-    const offset = new Vector2()
-    for (let i = 0; i < 16; ++i) {
-      if (bayerIndices[i] === index) {
-        offset.set(((i % 4) + 0.5) / 4, (Math.floor(i / 4) + 0.5) / 4)
-        break
-      }
+const bayerOffsets: readonly Vector2[] = /*#__PURE__*/ bayerIndices.reduce<
+  Vector2[]
+>((result, _, index) => {
+  const offset = new Vector2()
+  for (let i = 0; i < 16; ++i) {
+    if (bayerIndices[i] === index) {
+      offset.set(((i % 4) + 0.5) / 4, (Math.floor(i / 4) + 0.5) / 4)
+      break
     }
-    return [...result, offset]
-  }, [])
+  }
+  return [...result, offset]
+}, [])
 
 // Reference: https://github.com/playdeadgames/temporal
 const clipAABB = /*#__PURE__*/ FnLayout({
@@ -271,11 +272,13 @@ export class TemporalAntialiasNode extends TempNode {
   private setViewOffset(camera: PerspectiveCamera | OrthographicCamera): void {
     // Store the unjittered projection matrix:
     camera.updateProjectionMatrix()
+
+    // TODO: Create an option to node target:
     this.originalProjectionMatrix.copy(camera.projectionMatrix)
     highpVelocity.projectionMatrix = this.originalProjectionMatrix
 
     const { width, height } = this.resolveRT // TODO
-    const offset = bayerOffsets[this.jitterIndex % 16]
+    const offset = bayerOffsets[this.jitterIndex]
     const dx = offset.x - 0.5
     const dy = offset.y - 0.5
     this.jitterUV.value.set(dx / width, dy / height)
@@ -285,7 +288,12 @@ export class TemporalAntialiasNode extends TempNode {
   clearViewOffset(camera: PerspectiveCamera | OrthographicCamera): void {
     // Reset the projection matrix modified in setViewOffset():
     camera.clearViewOffset()
+
+    // TODO: Create an option to node target:
     highpVelocity.projectionMatrix = null
+
+    // setViewOffset() can be called multiple times in a frame. Increment the
+    // jitter index here.
     this.jitterIndex = (this.jitterIndex + 1) % bayerOffsets.length
   }
 
@@ -294,7 +302,7 @@ export class TemporalAntialiasNode extends TempNode {
       return
     }
 
-    const { inputNode, resolveRT } = this
+    const { inputNode } = this
     invariant(inputNode != null)
 
     const { width, height } = inputNode.value
@@ -306,14 +314,12 @@ export class TemporalAntialiasNode extends TempNode {
       this.needsPostProcessingSync = false
     }
 
-    const originalTexture = inputNode.value
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
-    renderer.setRenderTarget(resolveRT)
+    renderer.setRenderTarget(this.resolveRT)
     this.mesh.render(renderer)
 
     restoreRendererState(renderer, this.rendererState)
-    inputNode.value = originalTexture
 
     this.swapBuffers()
   }
@@ -336,6 +342,7 @@ export class TemporalAntialiasNode extends TempNode {
       const velocity = velocityNode
         .load(closestCoord)
         // Convert NDC velocity to UV offset:
+        // TODO: Should Y be inverted on WebGPU?
         .xy.mul(vec2(0.5, -0.5))
 
       const outputColor = vec4(0).toVar()
