@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
 import { Canvas, type CanvasProps } from '@react-three/fiber'
 import { atom, useAtomValue } from 'jotai'
-import { Suspense, type FC } from 'react'
+import type { FC } from 'react'
 import type { WebGPURendererParameters } from 'three/src/renderers/webgpu/WebGPURenderer.js'
 import { WebGPURenderer } from 'three/webgpu'
 
@@ -15,7 +15,7 @@ export const availableAtom = atom(
     (await navigator.gpu.requestAdapter()) != null
 )
 
-const MessageContainer = styled('div')`
+const MessageElement = styled('div')`
   position: absolute;
   top: 16px;
   right: 16px;
@@ -30,14 +30,14 @@ const Message: FC<{ forceWebGL: boolean }> = ({ forceWebGL }) => {
   const available = useAtomValue(availableAtom)
   if (!available) {
     return (
-      <MessageContainer>
+      <MessageElement>
         Your browser does not support WebGPU yet. Running under WebGL2 as a
         fallback.
-      </MessageContainer>
+      </MessageElement>
     )
   }
   if (forceWebGL) {
-    return <MessageContainer>Running under WebGL2.</MessageContainer>
+    return <MessageElement>Running under WebGL2.</MessageElement>
   }
   return null
 }
@@ -52,7 +52,10 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
   renderer: { onInit, ...otherProps } = {},
   ...canvasProps
 }) => {
-  const forceWebGL = useControl(({ forceWebGL }: RendererArgs) => forceWebGL)
+  const available = useAtomValue(availableAtom)
+  let forceWebGL = useControl(({ forceWebGL }: RendererArgs) => forceWebGL)
+  forceWebGL ||= !available
+
   return (
     <>
       <Canvas
@@ -74,9 +77,7 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
           return renderer
         }}
       />
-      <Suspense>
-        <Message forceWebGL={forceWebGL} />
-      </Suspense>
+      <Message forceWebGL={forceWebGL} />
     </>
   )
 }
