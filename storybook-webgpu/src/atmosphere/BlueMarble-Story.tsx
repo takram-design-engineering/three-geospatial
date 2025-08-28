@@ -12,7 +12,6 @@ import {
   texture,
   toneMapping,
   uniform,
-  uv,
   vec3
 } from 'three/tsl'
 import {
@@ -174,17 +173,11 @@ const blueMarble = ({
   clouds.anisotropy = 16
   emissive.anisotropy = 16
 
+  const oceanSubClouds = mul(texture(ocean).r, texture(clouds).r.oneMinus())
   return {
-    colorNode: mix(
-      texture(color).sample(uv()).rgb,
-      vec3(cloudAlbedo),
-      texture(clouds).sample(uv()).r
-    ),
-    emissiveNode: texture(emissive).sample(uv()).r.mul(emissiveColor),
-    roughnessNode: mul(
-      texture(ocean).sample(uv()).r,
-      texture(clouds).sample(uv()).r.oneMinus()
-    ).remap(1, 0, oceanRoughness, 1),
+    colorNode: mix(texture(color).rgb, vec3(cloudAlbedo), texture(clouds).r),
+    emissiveNode: texture(emissive).r.mul(emissiveColor),
+    roughnessNode: oceanSubClouds.remap(1, 0, oceanRoughness, 1),
     ior: oceanIOR
   }
 }
