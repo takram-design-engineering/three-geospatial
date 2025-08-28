@@ -1,12 +1,12 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../helpers/createStory'
-import { Story as LensFlareStory } from './Effects-LensFlare'
+import { Story as ISSStory } from './ISS-Story'
 
-import LensFlareCode from './Effects-LensFlare?raw'
+import ISSCode from './ISS-Story?raw'
 
 export default {
-  title: 'core/Effects',
+  title: 'atmosphere/ISS',
   parameters: {
     docs: {
       codePanel: true,
@@ -17,11 +17,11 @@ export default {
   }
 } satisfies Meta
 
-export const LensFlare = createStory(LensFlareStory, {
+export const ISS = createStory(ISSStory, {
   parameters: {
     docs: {
       source: {
-        code: LensFlareCode
+        code: ISSCode
       }
     }
   }
