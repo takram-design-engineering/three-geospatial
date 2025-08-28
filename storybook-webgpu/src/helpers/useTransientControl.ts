@@ -7,7 +7,9 @@ import { StoryContext } from './StoryContext'
 
 export function useTransientControl<TArgs extends Args, const T>(
   selector: (args: TArgs) => T,
-  onChange: (value: T, prevValue?: T) => undefined | (() => void)
+  onChange:
+    | ((value: T, prevValue?: T) => void)
+    | ((value: T, prevValue?: T) => () => void)
 ): void {
   const argsAtom = useContext(StoryContext)
   const store = getDefaultStore()
