@@ -26,6 +26,7 @@ import {
   texture,
   uniform,
   vec2,
+  vec3,
   vec4
 } from 'three/tsl'
 import {
@@ -195,6 +196,9 @@ export class TemporalAntialiasNode extends TempNode {
 
   temporalAlpha = uniform(0.1)
   varianceGamma = uniform(1)
+
+  // Static options:
+  showDisocclusion = false
 
   private resolveRT = this.createRenderTarget('Resolve')
   private historyRT = this.createRenderTarget('History')
@@ -370,7 +374,11 @@ export class TemporalAntialiasNode extends TempNode {
       const prevUV = uv.sub(velocity).toConst()
 
       If(prevUV.lessThan(0).any().or(prevUV.greaterThan(1).any()), () => {
-        outputColor.assign(currentColor) // Obvious rejection
+        // An obvious disocclusion:
+        outputColor.assign(currentColor)
+        if (this.showDisocclusion) {
+          outputColor.assign(vec3(1, 0, 0))
+        }
       }).Else(() => {
         const historyColor = textureCatmullRom(this.historyNode, prevUV)
         const clippedColor = varianceClipping(
