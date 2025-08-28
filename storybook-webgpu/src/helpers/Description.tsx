@@ -68,11 +68,16 @@ export const connectToDescription: Ref<TilesRenderer | null> = tiles => {
   }
 }
 
-const TilesAttribution: FC<{ tiles: TilesRenderer }> = ({ tiles }) => {
-  const [attributions, setAttributions] = useState(() =>
-    tiles.getAttributions()
+export const TilesAttribution: FC = () => {
+  const tiles = useAtomValue(tilesAtom)
+
+  const [attributions, setAttributions] = useState(
+    () => tiles?.getAttributions() ?? []
   )
   useEffect(() => {
+    if (tiles == null) {
+      return
+    }
     let queued = false
     const callback = (): void => {
       if (!queued) {
@@ -92,14 +97,12 @@ const TilesAttribution: FC<{ tiles: TilesRenderer }> = ({ tiles }) => {
   }, [tiles])
 
   return (
-    attributions.length > 0 && (
-      <Attribution>
-        Tiles:{' '}
-        {attributions
-          .filter(({ type }) => type === 'string')
-          .map(({ value }) => value)}
-      </Attribution>
-    )
+    <Attribution>
+      3D tiles:{' '}
+      {attributions
+        .filter(({ type }) => type === 'string')
+        .map(({ value }) => value)}
+    </Attribution>
   )
 }
 
@@ -119,15 +122,8 @@ export const Description: FC<{ children?: ReactNode }> = ({ children }) => {
     }
   }, [target, element])
 
-  const tiles = useAtomValue(tilesAtom)
-
   useLayoutEffect(() => {
-    root.current?.render(
-      <DescriptionElement>
-        {children}
-        {tiles != null && <TilesAttribution tiles={tiles} />}
-      </DescriptionElement>
-    )
+    root.current?.render(<DescriptionElement>{children}</DescriptionElement>)
   })
 
   return null

@@ -216,7 +216,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
         it is just shy of 0.1% of Earth’s radius.
       </p>
       <Attribution>Imagery: NASA</Attribution>
-      <Attribution>Ocean Mask: Solar System Scope</Attribution>
+      <Attribution>Ocean mask: Solar System Scope</Attribution>
     </Description>
   </WebGPUCanvas>
 )

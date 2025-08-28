@@ -62,7 +62,11 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
-import { Attribution, Description } from '../helpers/Description'
+import {
+  Attribution,
+  Description,
+  TilesAttribution
+} from '../helpers/Description'
 import { Globe } from '../helpers/Globe'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
@@ -250,7 +254,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
         shadow camera of the atmosphere light does not suffer from precision
         issues.
       </p>
-      <Attribution>ISS Model: NASA</Attribution>
+      <Attribution>ISS model: NASA</Attribution>
+      <TilesAttribution />
     </Description>
   </WebGPUCanvas>
 )
