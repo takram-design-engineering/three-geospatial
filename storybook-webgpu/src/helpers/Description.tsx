@@ -34,6 +34,7 @@ const DescriptionElement = styled('div')`
   a,
   em {
     color: white;
+    font-family: inherit;
     font-style: normal;
     text-decoration: none;
   }
