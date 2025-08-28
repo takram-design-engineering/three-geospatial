@@ -9,7 +9,8 @@ import {
   useRef,
   useState,
   type FC,
-  type ReactNode
+  type ReactNode,
+  type Ref
 } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 
@@ -59,9 +60,12 @@ export const Attribution = styled('div')`
 
 const tilesAtom = atom<TilesRenderer | null>(null)
 
-export function connectToDescription(tiles: TilesRenderer | null): void {
+export const connectToDescription: Ref<TilesRenderer | null> = tiles => {
   const store = getDefaultStore()
   store.set(tilesAtom, tiles ?? null)
+  return () => {
+    store.set(tilesAtom, null)
+  }
 }
 
 const TilesAttribution: FC<{ tiles: TilesRenderer }> = ({ tiles }) => {
