@@ -37,6 +37,7 @@ import {
   TempNode,
   type NodeBuilder,
   type NodeFrame,
+  type Renderer,
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
@@ -205,7 +206,8 @@ export class TemporalAntialiasNode extends TempNode {
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
-  private needsPostProcessingSync = false
+  private needsClearHistory = false
+  private needsSyncPostProcessing = false
 
   private readonly resolveNode = texture(this.resolveRT.texture)
   private readonly historyNode = texture(this.historyRT.texture)
@@ -267,15 +269,6 @@ export class TemporalAntialiasNode extends TempNode {
     return this
   }
 
-  setSize(width: number, height: number): this {
-    const { resolutionScale } = this
-    const w = Math.max(Math.round(width * resolutionScale), 1)
-    const h = Math.max(Math.round(height * resolutionScale), 1)
-    this.resolveRT.setSize(w, h)
-    this.historyRT.setSize(w, h)
-    return this
-  }
-
   private setProjectionMatrix(value: Matrix4 | null): void {
     const { velocityNodeImmutable: velocity } = this
     if (velocity != null) {
@@ -287,13 +280,36 @@ export class TemporalAntialiasNode extends TempNode {
     }
   }
 
+  setSize(width: number, height: number): this {
+    const { resolutionScale } = this
+    const w = Math.max(Math.round(width * resolutionScale), 1)
+    const h = Math.max(Math.round(height * resolutionScale), 1)
+
+    const { resolveRT, historyRT } = this
+    if (w !== resolveRT.width || h !== resolveRT.height) {
+      this.needsClearHistory = true
+      resolveRT.setSize(w, h)
+      historyRT.setSize(w, h)
+    }
+    return this
+  }
+
+  private clearHistory(renderer: Renderer, inputNode: TextureNode): void {
+    // Bind and clear the history render target to make sure it's initialized
+    // after the resize which triggers a dispose().
+    renderer.setRenderTarget(this.historyRT)
+    void renderer.clear()
+    renderer.copyTextureToTexture(inputNode.value, this.historyRT.texture)
+    this.needsClearHistory = false
+  }
+
   private setViewOffset(camera: PerspectiveCamera | OrthographicCamera): void {
     // Store the unjittered projection matrix:
     camera.updateProjectionMatrix()
     this.originalProjectionMatrix.copy(camera.projectionMatrix)
     this.setProjectionMatrix(this.originalProjectionMatrix)
 
-    const { width, height } = this.resolveRT // TODO
+    const { width, height } = this.resolveRT
     const offset = bayerOffsets[this.jitterIndex]
     const dx = offset.x - 0.5
     const dy = offset.y - 0.5
@@ -336,13 +352,16 @@ export class TemporalAntialiasNode extends TempNode {
     const { width, height } = inputNode.value
     this.setSize(width, height)
 
-    if (this.needsPostProcessingSync) {
+    this.rendererState = resetRendererState(renderer, this.rendererState)
+
+    if (this.needsClearHistory) {
+      this.clearHistory(renderer, inputNode)
+    }
+    if (this.needsSyncPostProcessing) {
       invariant(this.camera != null)
       this.setViewOffset(this.camera)
-      this.needsPostProcessingSync = false
+      this.needsSyncPostProcessing = false
     }
-
-    this.rendererState = resetRendererState(renderer, this.rendererState)
 
     renderer.setRenderTarget(this.resolveRT)
     this.mesh.render(renderer)
@@ -428,7 +447,7 @@ export class TemporalAntialiasNode extends TempNode {
     const { context } = (builder.getContext().postProcessing ??
       {}) as PostProcessingContext
     if (context != null) {
-      this.needsPostProcessingSync = true
+      this.needsSyncPostProcessing = true
 
       const { onBeforePostProcessing, onAfterPostProcessing } = context
       context.onBeforePostProcessing = () => {
