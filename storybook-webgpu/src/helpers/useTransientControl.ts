@@ -7,7 +7,7 @@ import { StoryContext } from './StoryContext'
 
 export function useTransientControl<TArgs extends Args, const T>(
   selector: (args: TArgs) => T,
-  onChange: (value: T, prevValue?: T) => void
+  onChange: (value: T, prevValue?: T) => undefined | (() => void)
 ): void {
   const argsAtom = useContext(StoryContext)
   const store = getDefaultStore()
@@ -24,8 +24,9 @@ export function useTransientControl<TArgs extends Args, const T>(
     return store.sub(argsAtom, () => {
       const value = selectorRef.current(store.get(argsAtom) as TArgs)
       if (!shallowEqual(value, prevValueRef.current)) {
-        onChangeRef.current(value, prevValueRef.current)
+        const result = onChangeRef.current(value, prevValueRef.current)
         prevValueRef.current = value
+        return result
       }
     })
   }, [argsAtom, store])
