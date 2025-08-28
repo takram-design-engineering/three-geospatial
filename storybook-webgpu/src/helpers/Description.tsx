@@ -20,11 +20,16 @@ const DescriptionElement = styled('div')`
   position: absolute;
   bottom: var(--gutter);
   left: var(--gutter);
+  max-width: var(--max-width);
   color: rgba(255, 255, 255, calc(2 / 3));
   font-size: small;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   pointer-events: none;
   user-select: none;
+
+  @media (max-width: var(--max-width)) {
+    max-width: 100%;
+  }
 
   a,
   em {
@@ -34,7 +39,6 @@ const DescriptionElement = styled('div')`
   }
 
   p {
-    max-width: var(--max-width);
     margin: 0;
     margin-bottom: calc(var(--gutter) / 2);
   }
@@ -42,16 +46,14 @@ const DescriptionElement = styled('div')`
   p:last-of-type {
     margin-bottom: var(--gutter);
   }
-
-  @media (max-width: var(--max-paragraph-width)) {
-    p {
-      max-width: 100%;
-    }
-  }
 `
 
 export const Attribution = styled('div')`
+  overflow: visible;
+  width: 0;
   font-size: x-small;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `
 
 const tilesAtom = atom<TilesRenderer | null>(null)
@@ -96,7 +98,7 @@ const TilesAttribution: FC<{ tiles: TilesRenderer }> = ({ tiles }) => {
   )
 }
 
-export const Description: FC<{ children: ReactNode }> = ({ children }) => {
+export const Description: FC<{ children?: ReactNode }> = ({ children }) => {
   const gl = useThree(({ gl }) => gl)
   const target = gl.domElement.parentNode
 

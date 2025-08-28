@@ -457,7 +457,7 @@ const InfoElement = styled('div')`
   max-width: calc(100% - 32px);
   color: rgba(255, 255, 255, calc(2 / 3));
   font-size: small;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.02em;
   pointer-events: none;
   user-select: none;
 
@@ -485,7 +485,7 @@ const Value = styled('span')<{ off?: boolean }>`
     255,
     ${({ off = false }) => (off ? 'calc(2 / 3)' : '1')}
   );
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
 `
 

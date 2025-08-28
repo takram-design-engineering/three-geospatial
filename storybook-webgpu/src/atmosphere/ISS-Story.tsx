@@ -62,6 +62,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { Attribution, Description } from '../helpers/Description'
 import { Globe } from '../helpers/Globe'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
@@ -232,6 +233,25 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     shadows
   >
     <Scene {...props} />
+    <Description>
+      <p>
+        This demonstrates a couple of techniques that @takram/three-atmosphere
+        supports, such as <em>aerial perspective</em>, <em>atmosphere light</em>
+        , <em>world origin rebasing</em>, and <em>environment map</em>.
+      </p>
+      <p>
+        Atmospheric scattering and lighting are correct on both the ISS and the
+        planet, regardless of the materials used on them. The environment map
+        applied to the ISS changes dynamically as its location changes. You can
+        see it by adjusting the height slider.
+      </p>
+      <p>
+        The world origin is located at the center of the ISS model, so that the
+        shadow camera of the atmosphere light does not suffer from precision
+        issues.
+      </p>
+      <Attribution>ISS Model: NASA</Attribution>
+    </Description>
   </WebGPUCanvas>
 )
 

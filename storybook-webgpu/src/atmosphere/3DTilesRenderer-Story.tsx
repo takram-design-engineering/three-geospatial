@@ -45,6 +45,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { Description } from '../helpers/Description'
 import { Globe } from '../helpers/Globe'
 import { useControl } from '../helpers/useControl'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
@@ -167,6 +168,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
     <Scene {...props} />
+    <Description />
   </WebGPUCanvas>
 )
 

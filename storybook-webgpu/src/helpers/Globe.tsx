@@ -5,12 +5,9 @@ import {
   TileCompressionPlugin,
   UpdateOnChangePlugin
 } from '3d-tiles-renderer/plugins'
-import {
-  TilesAttributionOverlay,
-  TilesPlugin,
-  TilesRenderer
-} from '3d-tiles-renderer/r3f'
+import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import type { FC, ReactNode, Ref } from 'react'
+import { mergeRefs } from 'react-merge-refs'
 import { DRACOLoader } from 'three-stdlib'
 import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 
@@ -19,6 +16,7 @@ import { radians } from '@takram/three-geospatial'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
+import { connectToDescription } from './Description'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -37,7 +35,7 @@ export const Globe: FC<GlobeProps> = ({
   children
 }) => (
   <TilesRenderer
-    ref={ref}
+    ref={mergeRefs([ref, connectToDescription])}
     // Reconstruct tiles when API key changes.
     key={apiKey}
     // The root URL sometimes becomes null without specifying the URL.
@@ -63,6 +61,5 @@ export const Globe: FC<GlobeProps> = ({
     />
     <TilesPlugin plugin={TilesFadePlugin} />
     {children}
-    <TilesAttributionOverlay />
   </TilesRenderer>
 )

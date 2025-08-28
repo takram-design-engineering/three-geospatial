@@ -22,7 +22,7 @@ const MessageElement = styled('div')`
   left: 16px;
   color: white;
   font-size: small;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.02em;
   text-align: center;
 `
 
