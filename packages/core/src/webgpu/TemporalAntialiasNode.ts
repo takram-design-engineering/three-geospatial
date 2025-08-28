@@ -233,7 +233,6 @@ export class TemporalAntialiasNode extends TempNode {
     this.setOutputTexture(this.resolveRT.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
-    this.updateAfterType = NodeUpdateType.FRAME
   }
 
   protected createRenderTarget(name?: string): RenderTarget {
@@ -301,7 +300,9 @@ export class TemporalAntialiasNode extends TempNode {
     camera.setViewOffset(width, height, dx, dy, width, height)
   }
 
-  clearViewOffset(camera: PerspectiveCamera | OrthographicCamera): void {
+  private clearViewOffset(
+    camera: PerspectiveCamera | OrthographicCamera
+  ): void {
     // Reset the projection matrix modified in setViewOffset():
     camera.clearViewOffset()
     this.setProjectionMatrix(null)
@@ -309,6 +310,19 @@ export class TemporalAntialiasNode extends TempNode {
     // setViewOffset() can be called multiple times in a frame. Increment the
     // jitter index here.
     this.jitterIndex = (this.jitterIndex + 1) % bayerOffsets.length
+  }
+
+  private swapBuffers(): void {
+    // Swap the render target textures instead of copying:
+    const { resolveRT, historyRT } = this
+    this.resolveRT = historyRT
+    this.historyRT = resolveRT
+    this.resolveNode.value = historyRT.texture
+    this.historyNode.value = resolveRT.texture
+
+    // The output node must point to the current resolve.
+    invariant(this._textureNode != null)
+    this._textureNode.value = resolveRT.texture
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -334,19 +348,10 @@ export class TemporalAntialiasNode extends TempNode {
     this.mesh.render(renderer)
 
     restoreRendererState(renderer, this.rendererState)
-  }
 
-  override updateAfter(frame: NodeFrame): void {
-    // Swap the render target textures instead of copying:
-    const { resolveRT, historyRT } = this
-    this.resolveRT = historyRT
-    this.historyRT = resolveRT
-    this.resolveNode.value = historyRT.texture
-    this.historyNode.value = resolveRT.texture
-
-    // The output node must point to the current resolve.
-    invariant(this._textureNode != null)
-    this._textureNode.value = resolveRT.texture
+    // NOTE: Swapping the buffers in updateAfter() causes the render target
+    // textures to be disposed unexpectedly.
+    this.swapBuffers()
   }
 
   private setupOutputNode(): Node {
