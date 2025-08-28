@@ -6,6 +6,7 @@ import type { WebGPURendererParameters } from 'three/src/renderers/webgpu/WebGPU
 import { WebGPURenderer } from 'three/webgpu'
 
 import type { RendererArgs } from '../controls/rendererControls'
+import { Stats } from './Stats'
 import { useControl } from './useControl'
 
 export const availableAtom = atom(
@@ -50,6 +51,7 @@ export interface WebGPUCanvasProps extends Omit<CanvasProps, 'gl'> {
 
 export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
   renderer: { onInit, ...otherProps } = {},
+  children,
   ...canvasProps
 }) => {
   const available = useAtomValue(availableAtom)
@@ -76,7 +78,10 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
           await onInit?.(renderer)
           return renderer
         }}
-      />
+      >
+        {children}
+        <Stats />
+      </Canvas>
       <Message forceWebGL={forceWebGL} />
     </>
   )
