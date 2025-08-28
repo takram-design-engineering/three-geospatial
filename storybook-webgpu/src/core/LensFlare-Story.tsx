@@ -59,6 +59,14 @@ const Scene: FC<StoryProps> = () => {
     }
   )
 
+  useTransientControl(
+    ({ wireframe }: StoryArgs) => wireframe,
+    wireframe => {
+      lensFlareNode.glareNode.wireframe = wireframe
+      postProcessing.needsUpdate = true
+    }
+  )
+
   useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
@@ -82,6 +90,7 @@ interface StoryArgs extends ToneMappingArgs {
   glareIntensity: number
   ghostIntensity: number
   haloIntensity: number
+  wireframe: boolean
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -95,6 +104,7 @@ Story.args = {
   glareIntensity: 1,
   ghostIntensity: 0.005,
   haloIntensity: 0.005,
+  wireframe: false,
   ...toneMappingArgs({
     toneMappingExposure: 1
   }),
@@ -133,6 +143,11 @@ Story.argTypes = {
       min: 0,
       max: 0.1,
       step: 0.001
+    }
+  },
+  wireframe: {
+    control: {
+      type: 'boolean'
     }
   },
   ...toneMappingArgTypes(),

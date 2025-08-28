@@ -138,7 +138,7 @@ export class LensGlareNode extends FilterNode {
       this.instanceBuffer.dispose()
       this.instanceBuffer = instancedArray(bufferCount, instanceStruct)
       this.setupCompute(tileWidth, tileHeight)
-      this.setupMaterial(tileWidth, tileHeight)
+      this.setupMaterial()
     }
     return this
   }
@@ -245,7 +245,7 @@ export class LensGlareNode extends FilterNode {
     })().compute(tileWidth * tileHeight, [8, 8, 1])
   }
 
-  private setupMaterial(tileWidth: number, tileHeight: number): void {
+  private setupMaterial(): void {
     const {
       inputNode,
       spikeNode,
@@ -299,6 +299,9 @@ export class LensGlareNode extends FilterNode {
       spikeTexture.colorSpace = SRGBColorSpace
       this.spikeNode = texture(spikeTexture)
     }
+
+    this.setupMaterial()
+
     return super.setup(builder)
   }
 }
