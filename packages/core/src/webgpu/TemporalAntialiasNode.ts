@@ -46,7 +46,7 @@ import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import type { Node, NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
-import { textureCatmullRom } from './sampleCatmullRom'
+import { textureCatmullRom } from './sampling'
 import { isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
