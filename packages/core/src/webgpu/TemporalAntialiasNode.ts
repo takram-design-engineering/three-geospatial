@@ -39,16 +39,28 @@ import {
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
+import type { ArraySplice } from 'type-fest'
 
 import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
-import { highpVelocity } from './HighpVelocityNode'
 import type { Node, NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { textureCatmullRom } from './sampleCatmullRom'
 import { isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
+
+interface PostProcessingContext {
+  context?: {
+    onBeforePostProcessing?: () => void
+    onAfterPostProcessing?: () => void
+  }
+}
+
+interface VelocityNodeImmutable {
+  projectionMatrix?: Matrix4 | null
+  setProjectionMatrix?: (value: Matrix4 | null) => unknown
+}
 
 // prettier-ignore
 const bayerIndices: readonly number[] = [
@@ -173,6 +185,8 @@ export class TemporalAntialiasNode extends TempNode {
     return 'TemporalAntialiasNode'
   }
 
+  velocityNodeImmutable: VelocityNodeImmutable
+
   inputNode?: TextureNode | null
   depthNode?: TextureNode | null
   velocityNode?: TextureNode | null
@@ -199,12 +213,14 @@ export class TemporalAntialiasNode extends TempNode {
   private _textureNode?: TextureNode
 
   constructor(
+    velocityNodeImmutable: VelocityNodeImmutable,
     inputNode?: TextureNode | null,
     depthNode?: TextureNode | null,
     velocityNode?: TextureNode | null,
     camera?: PerspectiveCamera | OrthographicCamera | null
   ) {
     super('vec4')
+    this.velocityNodeImmutable = velocityNodeImmutable
     this.inputNode = inputNode
     this.depthNode = depthNode
     this.velocityNode = velocityNode
@@ -257,13 +273,22 @@ export class TemporalAntialiasNode extends TempNode {
     return this
   }
 
+  private setProjectionMatrix(value: Matrix4 | null): void {
+    const { velocityNodeImmutable: velocity } = this
+    if (velocity != null) {
+      if ('setProjectionMatrix' in velocity) {
+        velocity.setProjectionMatrix?.(value)
+      } else {
+        velocity.projectionMatrix = value
+      }
+    }
+  }
+
   private setViewOffset(camera: PerspectiveCamera | OrthographicCamera): void {
     // Store the unjittered projection matrix:
     camera.updateProjectionMatrix()
-
-    // TODO: Create an option to node target:
     this.originalProjectionMatrix.copy(camera.projectionMatrix)
-    highpVelocity.projectionMatrix = this.originalProjectionMatrix
+    this.setProjectionMatrix(this.originalProjectionMatrix)
 
     const { width, height } = this.resolveRT // TODO
     const offset = bayerOffsets[this.jitterIndex]
@@ -275,9 +300,7 @@ export class TemporalAntialiasNode extends TempNode {
   clearViewOffset(camera: PerspectiveCamera | OrthographicCamera): void {
     // Reset the projection matrix modified in setViewOffset():
     camera.clearViewOffset()
-
-    // TODO: Create an option to node target:
-    highpVelocity.projectionMatrix = null
+    this.setProjectionMatrix(null)
 
     // setViewOffset() can be called multiple times in a frame. Increment the
     // jitter index here.
@@ -317,6 +340,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.resolveNode.value = historyRT.texture
     this.historyNode.value = resolveRT.texture
 
+    // The output node must point to the current resolve.
     invariant(this._textureNode != null)
     this._textureNode.value = resolveRT.texture
   }
@@ -388,12 +412,8 @@ export class TemporalAntialiasNode extends TempNode {
     )
     invariant(camera != null, 'Camera must be specified before being setup.')
 
-    const { context } = (builder.getContext().postProcessing ?? {}) as {
-      context?: {
-        onBeforePostProcessing?: () => void
-        onAfterPostProcessing?: () => void
-      }
-    }
+    const { context } = (builder.getContext().postProcessing ??
+      {}) as PostProcessingContext
     if (context != null) {
       this.needsPostProcessingSync = true
 
@@ -428,7 +448,9 @@ export class TemporalAntialiasNode extends TempNode {
   }
 }
 
-export const temporalAntialias = (
-  ...args: ConstructorParameters<typeof TemporalAntialiasNode>
-): NodeObject<TemporalAntialiasNode> =>
-  nodeObject(new TemporalAntialiasNode(...args))
+type Params = ConstructorParameters<typeof TemporalAntialiasNode>
+
+export const temporalAntialias =
+  (velocityNode: VelocityNodeImmutable) =>
+  (...args: ArraySplice<Params, 0, 1>): NodeObject<TemporalAntialiasNode> =>
+    nodeObject(new TemporalAntialiasNode(velocityNode, ...args))

@@ -85,7 +85,7 @@ const Scene: FC<StoryProps> = () => {
       uniform(0),
       lensFlareNode
     )
-    const taaNode = temporalAntialias(
+    const taaNode = temporalAntialias(highpVelocity)(
       convertToTexture(toneMappingNode),
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('velocity'),
