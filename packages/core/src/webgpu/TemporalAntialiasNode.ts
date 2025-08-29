@@ -47,7 +47,6 @@ import { FnVar } from './FnVar'
 import type { Node, NodeObject } from './node'
 import { convertToTexture } from './RenderTargetNode'
 import { textureCatmullRom } from './sampling'
-import { isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -432,12 +431,8 @@ export class TemporalAntialiasNode extends TempNode {
       }
     }
 
-    // WORKAROUND: WebGLBackend seems to have issue with RTTNode. Disable it on
-    // WebGLBackend for now.
     const { material } = this
-    material.fragmentNode = isWebGPU(builder)
-      ? this.setupOutputNode()
-      : inputNode
+    material.fragmentNode = this.setupOutputNode()
     material.needsUpdate = true
 
     textureNode.uvNode = inputNode.uvNode

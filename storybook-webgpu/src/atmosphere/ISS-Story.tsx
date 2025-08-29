@@ -25,6 +25,7 @@ import { radians } from '@takram/three-geospatial'
 import {
   dither,
   highpVelocity,
+  isWebGPU,
   lensFlare,
   temporalAntialias
 } from '@takram/three-geospatial/webgpu'
@@ -103,12 +104,14 @@ const Scene: FC<StoryProps> = () => {
       uniform(0),
       lensFlareNode
     )
-    const taaNode = temporalAntialias(highpVelocity)(
-      toneMappingNode,
-      passNode.getTextureNode('depth'),
-      passNode.getTextureNode('velocity'),
-      camera
-    )
+    const taaNode = isWebGPU(renderer)
+      ? temporalAntialias(highpVelocity)(
+          toneMappingNode,
+          passNode.getTextureNode('depth'),
+          passNode.getTextureNode('velocity'),
+          camera
+        )
+      : toneMappingNode
     const postProcessing = new PostProcessing(renderer)
     postProcessing.outputNode = taaNode.add(dither())
 
