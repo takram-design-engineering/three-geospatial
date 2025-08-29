@@ -3,6 +3,7 @@ import type { ArgTypes } from '@storybook/react-vite'
 export interface RendererArgs {
   showStats: boolean
   forceWebGL: boolean
+  pixelRatio: number
 }
 
 export const rendererArgs = (
@@ -10,6 +11,7 @@ export const rendererArgs = (
 ): RendererArgs => ({
   showStats: false,
   forceWebGL: false,
+  pixelRatio: window.devicePixelRatio,
   ...defaults
 })
 
@@ -24,6 +26,16 @@ export const rendererArgTypes = (): ArgTypes<RendererArgs> => ({
     name: 'force webgl',
     control: {
       type: 'boolean'
+    },
+    table: { category: 'renderer' }
+  },
+  pixelRatio: {
+    name: 'pixel ratio',
+    control: {
+      type: 'range',
+      min: 0.5,
+      max: 2,
+      step: 0.5
     },
     table: { category: 'renderer' }
   }

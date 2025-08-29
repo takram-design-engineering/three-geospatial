@@ -57,7 +57,7 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
   const available = useAtomValue(availableAtom)
   let forceWebGL = useControl(({ forceWebGL }: RendererArgs) => forceWebGL)
   forceWebGL ||= !available
-
+  const pixelRatio = useControl(({ pixelRatio }: RendererArgs) => pixelRatio)
   return (
     <>
       <Canvas
@@ -78,6 +78,7 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
           await onInit?.(renderer)
           return renderer
         }}
+        dpr={pixelRatio}
       >
         {children}
         <Stats />
