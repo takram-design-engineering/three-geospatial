@@ -58,6 +58,7 @@ const cameraDirectionWorld = /*#__PURE__*/ FnVar((camera: Camera) => {
 })
 
 const getLunarRadiance = /*#__PURE__*/ FnLayout({
+  typeOnly: true, // TODO
   name: 'getLunarRadiance',
   type: Luminance3,
   inputs: [{ name: 'moonAngularRadius', type: 'float' }]
@@ -192,14 +193,14 @@ export class SkyNode extends TempNode {
       .toVertexStage()
       .normalize()
 
-    const luminanceTransfer = getSkyLuminance(
-      cameraPositionUnit,
-      rayDirectionECEF,
-      this.shadowLengthNode ?? 0,
-      sunDirectionECEF
-    )
-    const inscatter = luminanceTransfer.get('luminance')
-    const transmittance = luminanceTransfer.get('transmittance')
+      const luminanceTransfer = getSkyLuminance(
+        cameraPositionUnit,
+        rayDirectionECEF,
+        this.shadowLengthNode ?? 0,
+        sunDirectionECEF
+      )
+      const inscatter = luminanceTransfer.get('luminance')
+      const transmittance = luminanceTransfer.get('transmittance')
 
     // WORKAROUND: As of r179, assign() can only be used inside "Fn".
     const luminance = Fn(() => {
@@ -292,7 +293,7 @@ export class SkyNode extends TempNode {
       return luminance
     })()
 
-    return luminance.mul(transmittance).add(inscatter)
+      return luminance.mul(transmittance).add(inscatter)
   }
 }
 
