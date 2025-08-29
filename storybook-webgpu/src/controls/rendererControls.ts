@@ -34,7 +34,7 @@ export const rendererArgTypes = (): ArgTypes<RendererArgs> => ({
     control: {
       type: 'range',
       min: 0.5,
-      max: 2,
+      max: 3.5,
       step: 0.5
     },
     table: { category: 'renderer' }

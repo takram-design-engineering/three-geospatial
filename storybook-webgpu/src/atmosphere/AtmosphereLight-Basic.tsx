@@ -2,14 +2,7 @@ import { OrbitControls, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useRef, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import {
-  convertToTexture,
-  mrt,
-  output,
-  pass,
-  toneMapping,
-  uniform
-} from 'three/tsl'
+import { mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -101,7 +94,7 @@ const Scene: FC<StoryProps> = () => {
       lensFlareNode
     )
     const taaNode = temporalAntialias(highpVelocity)(
-      convertToTexture(toneMappingNode),
+      toneMappingNode,
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('velocity'),
       camera

@@ -3,14 +3,7 @@ import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import { Suspense, useState, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import {
-  convertToTexture,
-  mrt,
-  output,
-  pass,
-  toneMapping,
-  uniform
-} from 'three/tsl'
+import { mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
   PostProcessing,
@@ -111,7 +104,7 @@ const Scene: FC<StoryProps> = () => {
       lensFlareNode
     )
     const taaNode = temporalAntialias(highpVelocity)(
-      convertToTexture(toneMappingNode),
+      toneMappingNode,
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('velocity'),
       camera

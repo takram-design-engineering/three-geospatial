@@ -7,8 +7,7 @@ import {
   RGBAFormat,
   Vector2,
   type OrthographicCamera,
-  type PerspectiveCamera,
-  type Texture
+  type PerspectiveCamera
 } from 'three'
 import {
   float,
@@ -41,12 +40,11 @@ import {
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
-import type { ArraySplice } from 'type-fest'
 
 import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import type { Node, NodeObject } from './node'
-import { outputTexture } from './OutputTextureNode'
+import { convertToTexture } from './RenderTargetNode'
 import { textureCatmullRom } from './sampling'
 import { isWebGPU } from './utils'
 
@@ -189,10 +187,10 @@ export class TemporalAntialiasNode extends TempNode {
 
   velocityNodeImmutable: VelocityNodeImmutable
 
-  inputNode?: TextureNode | null
-  depthNode?: TextureNode | null
-  velocityNode?: TextureNode | null
-  camera?: PerspectiveCamera | OrthographicCamera | null
+  inputNode: TextureNode
+  depthNode: TextureNode
+  velocityNode: TextureNode
+  camera: PerspectiveCamera | OrthographicCamera
   resolutionScale = 1 // TODO
 
   temporalAlpha = uniform(0.1)
@@ -216,14 +214,14 @@ export class TemporalAntialiasNode extends TempNode {
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
-  private _textureNode?: TextureNode
+  private readonly _textureNode: TextureNode
 
   constructor(
     velocityNodeImmutable: VelocityNodeImmutable,
-    inputNode?: TextureNode | null,
-    depthNode?: TextureNode | null,
-    velocityNode?: TextureNode | null,
-    camera?: PerspectiveCamera | OrthographicCamera | null
+    inputNode: TextureNode,
+    depthNode: TextureNode,
+    velocityNode: TextureNode,
+    camera: PerspectiveCamera | OrthographicCamera
   ) {
     super('vec4')
     this.velocityNodeImmutable = velocityNodeImmutable
@@ -232,15 +230,12 @@ export class TemporalAntialiasNode extends TempNode {
     this.velocityNode = velocityNode
     this.camera = camera
 
-    this.setOutputTexture(this.resolveRT.texture)
+    this._textureNode = texture(this.resolveRT.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
-  protected createRenderTarget(name?: string): RenderTarget {
-    let typeName = (this.constructor as typeof TemporalAntialiasNode).type
-    typeName = typeName.endsWith('Node') ? typeName.slice(0, -4) : typeName
-
+  private createRenderTarget(name?: string): RenderTarget {
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
       type: HalfFloatType,
@@ -252,21 +247,11 @@ export class TemporalAntialiasNode extends TempNode {
     texture.wrapS = ClampToEdgeWrapping
     texture.wrapT = ClampToEdgeWrapping
     texture.generateMipmaps = false
+
+    const typeName = (this.constructor as typeof TemporalAntialiasNode).type
     texture.name = name != null ? `${typeName}.${name}` : typeName
+
     return renderTarget
-  }
-
-  getTextureNode(): TextureNode {
-    invariant(
-      this._textureNode != null,
-      'outputNode must be specified by setOutputTexture() before getTextureNode() is called.'
-    )
-    return this._textureNode
-  }
-
-  protected setOutputTexture(value: Texture): this {
-    this._textureNode = outputTexture(this, value)
-    return this
   }
 
   private setProjectionMatrix(value: Matrix4 | null): void {
@@ -419,30 +404,7 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const {
-      inputNode,
-      depthNode,
-      velocityNode,
-      camera,
-      _textureNode: outputNode
-    } = this
-    invariant(
-      inputNode != null,
-      'inputNode must be specified before being setup.'
-    )
-    invariant(
-      depthNode != null,
-      'depthNode must be specified before being setup.'
-    )
-    invariant(
-      velocityNode != null,
-      'velocityNode must be specified before being setup.'
-    )
-    invariant(
-      outputNode != null,
-      'outputNode must be specified by setOutputTexture() before being setup.'
-    )
-    invariant(camera != null, 'Camera must be specified before being setup.')
+    const { inputNode, camera, _textureNode: textureNode } = this
 
     const { context } = (builder.getContext().postProcessing ??
       {}) as PostProcessingContext
@@ -468,8 +430,8 @@ export class TemporalAntialiasNode extends TempNode {
       : inputNode
     material.needsUpdate = true
 
-    outputNode.uvNode = inputNode.uvNode
-    return outputNode
+    textureNode.uvNode = inputNode.uvNode
+    return textureNode
   }
 
   override dispose(): void {
@@ -480,9 +442,20 @@ export class TemporalAntialiasNode extends TempNode {
   }
 }
 
-type Params = ConstructorParameters<typeof TemporalAntialiasNode>
-
 export const temporalAntialias =
-  (velocityNode: VelocityNodeImmutable) =>
-  (...args: ArraySplice<Params, 0, 1>): NodeObject<TemporalAntialiasNode> =>
-    nodeObject(new TemporalAntialiasNode(velocityNode, ...args))
+  (velocityNodeImmutable: VelocityNodeImmutable) =>
+  (
+    inputNode: Node,
+    depthNode: TextureNode,
+    velocityNode: TextureNode,
+    camera: PerspectiveCamera | OrthographicCamera
+  ): NodeObject<TemporalAntialiasNode> =>
+    nodeObject(
+      new TemporalAntialiasNode(
+        velocityNodeImmutable,
+        convertToTexture(inputNode),
+        depthNode,
+        velocityNode,
+        camera
+      )
+    )

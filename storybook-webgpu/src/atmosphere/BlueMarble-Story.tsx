@@ -3,7 +3,6 @@ import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import type { FC } from 'react'
 import { AgXToneMapping, TextureLoader } from 'three'
 import {
-  convertToTexture,
   mix,
   mrt,
   mul,
@@ -99,7 +98,7 @@ const Scene: FC<StoryProps> = () => {
       lensFlareNode
     )
     const taaNode = temporalAntialias(highpVelocity)(
-      convertToTexture(toneMappingNode),
+      toneMappingNode,
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('velocity'),
       camera

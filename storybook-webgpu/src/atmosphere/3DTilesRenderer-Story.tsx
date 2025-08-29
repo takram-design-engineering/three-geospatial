@@ -3,7 +3,6 @@ import { GlobeControls } from '3d-tiles-renderer/r3f'
 import type { FC } from 'react'
 import { AgXToneMapping } from 'three'
 import {
-  convertToTexture,
   diffuseColor,
   mrt,
   normalView,
@@ -94,7 +93,7 @@ const Scene: FC<StoryProps> = ({
       lensFlareNode
     )
     const taaNode = temporalAntialias(highpVelocity)(
-      convertToTexture(toneMappingNode),
+      toneMappingNode,
       passNode.getTextureNode('depth'),
       passNode.getTextureNode('velocity'),
       camera
