@@ -11,7 +11,6 @@ import {
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   atomicAdd,
-  convertToTexture,
   Fn,
   If,
   instancedArray,
@@ -42,6 +41,7 @@ import invariant from 'tiny-invariant'
 
 import { FilterNode } from './FilterNode'
 import type { Node, NodeObject } from './node'
+import { convertToTexture } from './RenderTargetNode'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
