@@ -16,9 +16,9 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 
 - [`AtmosphereContext`](#atmospherecontext)
 - [`AtmosphereLight`](#atmospherelight)
+- [`AerialPerspectiveNode`](#aerialperspectivenode)
 - [`SkyNode`](#skynode)
 - [`SkyEnvironmentNode`](#skyenvironmentnode)
-- [`AerialPerspectiveNode`](#aerialperspectivenode)
 
 **Advanced**
 
@@ -48,7 +48,7 @@ renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
 #### direct
 
 ```ts
-direct: UniformNode<boolean> = true
+direct: UniformNode<boolean> = uniform(true)
 ```
 
 Whether to enable direct sunlight. This must be turned off when you use an environment map that includes direct sunlight.
@@ -56,7 +56,7 @@ Whether to enable direct sunlight. This must be turned off when you use an envir
 #### indirect
 
 ```ts
-indirect: UniformNode<boolean> = true
+indirect: UniformNode<boolean> = uniform(true)
 ```
 
 Whether to enable indirect sunlight. This must be turned off when you use an environment map.
@@ -70,3 +70,72 @@ distance: number = 1
 ```
 
 The distance from `DirectionalLight.target` to the light’s position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
+
+## AerialPerspectiveNode
+
+```ts
+const aerialPerspective = (
+  atmosphereContext: AtmosphereContext,
+  colorNode: Node,
+  depthNode: Node,
+  normalNode?: Node | null
+) => NodeObject<AerialPerspectiveNode>
+```
+
+### Dependencies
+
+#### colorNode
+
+```ts
+colorNode: Node
+```
+
+#### depthNode
+
+```ts
+depthNode: Node
+```
+
+#### normalNode
+
+```ts
+normalNode?: Node | null
+```
+
+#### skyNode
+
+```ts
+skyNode?: Node | null = sky()
+```
+
+#### shadowLengthNode
+
+```ts
+shadowLengthNode?: Node | null
+```
+
+### Static options
+
+#### correctGeometricError
+
+```ts
+correctGeometricError = true
+```
+
+#### lighting
+
+```ts
+lighting = false
+```
+
+#### transmittance
+
+```ts
+transmittance = true
+```
+
+#### inscatter
+
+```ts
+inscatter = true
+```

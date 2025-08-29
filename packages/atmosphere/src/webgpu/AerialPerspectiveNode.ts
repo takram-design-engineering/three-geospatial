@@ -1,6 +1,6 @@
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { Discard, Fn, If, nodeObject, PI, uv, vec3, vec4 } from 'three/tsl'
-import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
+import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
   cameraFar,
@@ -25,11 +25,11 @@ export class AerialPerspectiveNode extends TempNode {
 
   private readonly atmosphereContext: AtmosphereContext
 
-  colorNode: NodeObject | NodeObject<TextureNode>
-  depthNode: NodeObject | NodeObject<TextureNode>
-  normalNode?: NodeObject | NodeObject<TextureNode> | null
-  skyNode?: NodeObject | null
-  shadowLengthNode?: NodeObject | null
+  colorNode: Node
+  depthNode: Node
+  normalNode?: Node | null
+  skyNode?: Node | null
+  shadowLengthNode?: Node | null
 
   // Static options:
   correctGeometricError = true
@@ -39,15 +39,15 @@ export class AerialPerspectiveNode extends TempNode {
 
   constructor(
     atmosphereContext: AtmosphereContext,
-    colorNode: NodeObject | NodeObject<TextureNode>,
-    depthNode: NodeObject | NodeObject<TextureNode>,
-    normalNode?: NodeObject | NodeObject<TextureNode> | null
+    colorNode: Node,
+    depthNode: Node,
+    normalNode?: Node | null
   ) {
     super('vec4')
     this.atmosphereContext = atmosphereContext
     this.colorNode = colorNode
-    this.normalNode = normalNode
     this.depthNode = depthNode
+    this.normalNode = normalNode
     this.skyNode = sky(atmosphereContext)
 
     this.lighting = normalNode != null
@@ -77,7 +77,9 @@ export class AerialPerspectiveNode extends TempNode {
 
     const { worldToUnit } = parameters.getNodes()
 
-    const depth = this.depthNode.r.toVar()
+    const colorNode = nodeObject(this.colorNode)
+    const depthNode = nodeObject(this.depthNode)
+    const depth = depthNode.r.toVar()
 
     const surfaceLuminance = Fn(() => {
       // Position of the surface
@@ -110,8 +112,10 @@ export class AerialPerspectiveNode extends TempNode {
             'The "normalNode" is required when the "light" is set.'
           )
         }
+
         // Normal vector of the surface
-        const normalView = this.normalNode.xyz
+        const normalNode = nodeObject(this.normalNode)
+        const normalView = normalNode.xyz
         const normalWorld = inverseViewMatrix(camera).mul(
           vec4(normalView, 0)
         ).xyz
@@ -129,8 +133,8 @@ export class AerialPerspectiveNode extends TempNode {
       })
 
       const diffuse = this.lighting
-        ? this.colorNode.rgb.mul(indirect())
-        : this.colorNode.rgb
+        ? colorNode.rgb.mul(indirect())
+        : colorNode.rgb
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
