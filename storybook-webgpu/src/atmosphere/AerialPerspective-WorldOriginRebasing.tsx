@@ -65,46 +65,43 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, passNode, , , toneMappingNode] = useResource(() => {
-    const passNode = pass(scene, camera, { samples: 0 }).setMRT(
-      mrt({
-        output: diffuseColor,
-        normal: normalView,
-        velocity: highpVelocity
-      })
-    )
-    const aerialNode = aerialPerspective(
-      context,
-      passNode.getTextureNode('output'),
-      passNode.getTextureNode('depth'),
-      passNode.getTextureNode('normal')
-    )
-    const lensFlareNode = lensFlare(aerialNode)
-    const toneMappingNode = toneMapping(
-      AgXToneMapping,
-      uniform(0),
-      lensFlareNode
-    )
-    const taaNode = isWebGPU(renderer)
-      ? temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          passNode.getTextureNode('depth'),
-          passNode.getTextureNode('velocity'),
-          camera
-        )
-      : toneMappingNode
-    const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = taaNode.add(dither())
+  const [postProcessing, passNode, toneMappingNode] = useResource(
+    manage => {
+      const passNode = pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output: diffuseColor,
+          normal: normalView,
+          velocity: highpVelocity
+        })
+      )
+      const aerialNode = aerialPerspective(
+        context,
+        passNode.getTextureNode('output'),
+        passNode.getTextureNode('depth'),
+        passNode.getTextureNode('normal')
+      )
+      const lensFlareNode = lensFlare(aerialNode)
+      const toneMappingNode = toneMapping(
+        AgXToneMapping,
+        uniform(0),
+        lensFlareNode
+      )
+      const taaNode = isWebGPU(renderer)
+        ? temporalAntialias(highpVelocity)(
+            toneMappingNode,
+            passNode.getTextureNode('depth'),
+            passNode.getTextureNode('velocity'),
+            camera
+          )
+        : toneMappingNode
+      const postProcessing = new PostProcessing(renderer)
+      postProcessing.outputNode = taaNode.add(dither())
 
-    return [
-      postProcessing,
-      passNode,
-      aerialNode,
-      lensFlareNode,
-      toneMappingNode,
-      taaNode
-    ]
-  }, [renderer, scene, camera, context])
+      manage(aerialNode, lensFlareNode, taaNode)
+      return [postProcessing, passNode, toneMappingNode]
+    },
+    [renderer, scene, camera, context]
+  )
 
   useGuardedFrame(() => {
     postProcessing.render()

@@ -46,19 +46,23 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, skyNode, , toneMappingNode] = useResource(() => {
-    const skyNode = sky(context)
-    const lensFlareNode = lensFlare(skyNode)
-    const toneMappingNode = toneMapping(
-      AgXToneMapping,
-      uniform(0),
-      lensFlareNode
-    )
-    const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = toneMappingNode
+  const [postProcessing, skyNode, toneMappingNode] = useResource(
+    manage => {
+      const skyNode = sky(context)
+      const lensFlareNode = lensFlare(skyNode)
+      const toneMappingNode = toneMapping(
+        AgXToneMapping,
+        uniform(0),
+        lensFlareNode
+      )
+      const postProcessing = new PostProcessing(renderer)
+      postProcessing.outputNode = toneMappingNode
 
-    return [postProcessing, skyNode, lensFlareNode, toneMappingNode]
-  }, [renderer, context])
+      manage(lensFlareNode)
+      return [postProcessing, skyNode, toneMappingNode]
+    },
+    [renderer, context]
+  )
 
   useTransientControl(
     ({ showSun, showMoon }: StoryArgs) => ({

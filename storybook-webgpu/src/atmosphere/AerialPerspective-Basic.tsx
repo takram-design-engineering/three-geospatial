@@ -76,8 +76,8 @@ const Scene: FC<StoryProps> = ({
 
   // Post-processing:
 
-  const [postProcessing, passNode, aerialNode, , toneMappingNode] =
-    useResource(() => {
+  const [postProcessing, passNode, aerialNode, toneMappingNode] = useResource(
+    manage => {
       const passNode = pass(scene, camera, { samples: 0 }).setMRT(
         mrt({
           output,
@@ -108,15 +108,11 @@ const Scene: FC<StoryProps> = ({
       const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = taaNode.add(dither())
 
-      return [
-        postProcessing,
-        passNode,
-        aerialNode,
-        lensFlareNode,
-        toneMappingNode,
-        taaNode
-      ]
-    }, [renderer, scene, camera, context])
+      manage(lensFlareNode, taaNode)
+      return [postProcessing, passNode, aerialNode, toneMappingNode]
+    },
+    [renderer, scene, camera, context]
+  )
 
   useGuardedFrame(() => {
     postProcessing.render()

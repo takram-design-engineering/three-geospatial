@@ -276,38 +276,42 @@ const Scene: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, skyNode, , toneMappingNode] = useResource(() => {
-    const passNode = pass(scene, camera)
+  const [postProcessing, skyNode, toneMappingNode] = useResource(
+    manage => {
+      const passNode = pass(scene, camera)
 
-    const skyNode = sky(context)
-    skyNode.moonColorTexture = texture(
-      new TextureLoader().load('public/moon/color_large.webp', texture => {
-        texture.colorSpace = LinearSRGBColorSpace
-        texture.anisotropy = 16
-      })
-    )
-    skyNode.moonNormalTexture = texture(
-      new TextureLoader().load('public/moon/normal_large.webp', texture => {
-        texture.colorSpace = NoColorSpace
-        texture.anisotropy = 16
-      })
-    )
+      const skyNode = sky(context)
+      skyNode.moonColorTexture = texture(
+        new TextureLoader().load('public/moon/color_large.webp', texture => {
+          texture.colorSpace = LinearSRGBColorSpace
+          texture.anisotropy = 16
+        })
+      )
+      skyNode.moonNormalTexture = texture(
+        new TextureLoader().load('public/moon/normal_large.webp', texture => {
+          texture.colorSpace = NoColorSpace
+          texture.anisotropy = 16
+        })
+      )
 
-    const lensFlareNode = lensFlare(skyNode)
-    const toneMappingNode = toneMapping(
-      AgXToneMapping,
-      exposureNode,
-      lensFlareNode
-    )
+      const lensFlareNode = lensFlare(skyNode)
+      const toneMappingNode = toneMapping(
+        AgXToneMapping,
+        exposureNode,
+        lensFlareNode
+      )
 
-    const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = toneMappingNode.rgb
-      .mul(passNode.a.oneMinus())
-      .add(passNode.rgb)
-      .add(dither())
+      const postProcessing = new PostProcessing(renderer)
+      postProcessing.outputNode = toneMappingNode.rgb
+        .mul(passNode.a.oneMinus())
+        .add(passNode.rgb)
+        .add(dither())
 
-    return [postProcessing, skyNode, lensFlareNode, toneMappingNode]
-  }, [renderer, scene, camera, context, exposureNode])
+      manage(lensFlareNode)
+      return [postProcessing, skyNode, toneMappingNode]
+    },
+    [renderer, scene, camera, context, exposureNode]
+  )
 
   useGuardedFrame(() => {
     postProcessing.render()

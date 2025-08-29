@@ -25,19 +25,23 @@ const Scene: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const [postProcessing, , lensFlareNode, toneMappingNode] = useResource(() => {
-    const passNode = pass(scene, camera)
-    const lensFlareNode = lensFlare(passNode.getTextureNode('output'))
-    const toneMappingNode = toneMapping(
-      AgXToneMapping,
-      uniform(0),
-      lensFlareNode
-    )
-    const postProcessing = new PostProcessing(renderer)
-    postProcessing.outputNode = toneMappingNode.add(dither())
+  const [postProcessing, lensFlareNode, toneMappingNode] = useResource(
+    manage => {
+      const passNode = pass(scene, camera)
+      const lensFlareNode = lensFlare(passNode.getTextureNode('output'))
+      const toneMappingNode = toneMapping(
+        AgXToneMapping,
+        uniform(0),
+        lensFlareNode
+      )
+      const postProcessing = new PostProcessing(renderer)
+      postProcessing.outputNode = toneMappingNode.add(dither())
 
-    return [postProcessing, passNode, lensFlareNode, toneMappingNode]
-  }, [renderer, scene, camera])
+      manage(passNode)
+      return [postProcessing, lensFlareNode, toneMappingNode]
+    },
+    [renderer, scene, camera]
+  )
 
   useTransientControl(
     ({
