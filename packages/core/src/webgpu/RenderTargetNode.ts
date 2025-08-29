@@ -56,7 +56,6 @@ export class RenderTargetNode extends TextureNode {
     this.node = node
     this.renderTarget = renderTarget
     this.updateBeforeType = NodeUpdateType.FRAME
-    this.setUpdateMatrix(false)
   }
 
   setSize(width: number, height: number): this {
@@ -93,6 +92,14 @@ export class RenderTargetNode extends TextureNode {
   override dispose(): void {
     this.material.dispose()
     super.dispose()
+  }
+
+  // @ts-expect-error Ignore
+  override clone(): TextureNode {
+    const result = new TextureNode(this.value, this.uvNode, this.levelNode)
+    result.sampler = this.sampler
+    result.referenceNode = this
+    return result
   }
 }
 
