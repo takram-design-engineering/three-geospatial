@@ -110,11 +110,11 @@ export class AtmosphereLUTNode extends TempNode {
   ) {
     super(null)
 
-    this.parameters = parameters
+    this.parameters = parameters.clone()
     this.textures =
       scope === WEBGPU
-        ? new AtmosphereLUTTexturesWebGPU(parameters)
-        : new AtmosphereLUTTexturesWebGL(parameters)
+        ? new AtmosphereLUTTexturesWebGPU(this.parameters)
+        : new AtmosphereLUTTexturesWebGL(this.parameters)
 
     this.updateBeforeType = NodeUpdateType.FRAME
   }
@@ -228,6 +228,10 @@ export class AtmosphereLUTNode extends TempNode {
     this.textureType = isFloatLinearSupported(builder.renderer)
       ? (this.textureType ?? FloatType)
       : HalfFloatType
+
+    // Not a good manner to mutate the parameter here though.
+    this.parameters.transmittancePrecisionLog =
+      this.textureType === HalfFloatType
 
     this.textures.setup(this.textureType)
     return super.setup(builder)
