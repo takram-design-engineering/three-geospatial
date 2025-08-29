@@ -3,9 +3,9 @@ import {
   ClampToEdgeWrapping,
   LinearFilter,
   NoColorSpace,
-  Vector3,
   type Texture,
-  type Vector2
+  type Vector2,
+  type Vector3
 } from 'three'
 import {
   exp,
@@ -179,7 +179,6 @@ class AtmosphereLUTTexturesContextWebGPU extends AtmosphereLUTTexturesContext {
 }
 
 const boxScratch = /*#__PURE__*/ new Box3()
-const vectorScratch = /*#__PURE__*/ new Vector3()
 
 export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
   private readonly transmittance = createStorageTexture('transmittance')
@@ -345,7 +344,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         deltaMieScattering,
         this.singleMieScattering,
         boxScratch.set(
-          vectorScratch.setScalar(0),
+          boxScratch.min.setScalar(0),
           parameters.scatteringTextureSize
         )
       )
@@ -466,7 +465,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       this.scattering,
       scatteringRead,
       boxScratch.set(
-        vectorScratch.setScalar(0),
+        boxScratch.min.setScalar(0),
         parameters.scatteringTextureSize
       )
     )
@@ -474,7 +473,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       this.higherOrderScattering,
       higherOrderScatteringRead,
       boxScratch.set(
-        vectorScratch.setScalar(0),
+        boxScratch.min.setScalar(0),
         parameters.scatteringTextureSize
       )
     )
