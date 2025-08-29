@@ -456,7 +456,7 @@ export const temporalAntialias =
     nodeObject(
       new TemporalAntialiasNode(
         velocityNodeImmutable,
-        convertToTexture(inputNode),
+        convertToTexture(inputNode, 'TemporalAntialias'),
         depthNode,
         velocityNode,
         camera

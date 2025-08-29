@@ -308,5 +308,7 @@ export class LensGlareNode extends FilterNode {
 
 export const lensGlare = (inputNode: Node | null): NodeObject<LensGlareNode> =>
   nodeObject(
-    new LensGlareNode(inputNode != null ? convertToTexture(inputNode) : null)
+    new LensGlareNode(
+      inputNode != null ? convertToTexture(inputNode, 'LensGlare') : null
+    )
   )

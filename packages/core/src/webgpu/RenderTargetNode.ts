@@ -18,7 +18,7 @@ import {
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-function createRenderTarget(): RenderTarget {
+function createRenderTarget(name?: string): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
     type: HalfFloatType,
@@ -30,7 +30,7 @@ function createRenderTarget(): RenderTarget {
   texture.wrapS = ClampToEdgeWrapping
   texture.wrapT = ClampToEdgeWrapping
   texture.generateMipmaps = false
-  texture.name = 'RenderTargetNode'
+  texture.name = name != null ? `RenderTargetNode.${name}` : 'RenderTargetNode'
   return renderTarget
 }
 
@@ -50,8 +50,8 @@ export class RenderTargetNode extends TextureNode {
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
 
-  constructor(node: Node) {
-    const renderTarget = createRenderTarget()
+  constructor(node: Node, name?: string) {
+    const renderTarget = createRenderTarget(name)
     super(renderTarget.texture, uv())
     this.node = node
     this.renderTarget = renderTarget
@@ -101,7 +101,8 @@ export const convertToTexture = (
     isTextureNode?: boolean
     isSampleNode?: boolean
     getTextureNode?: () => TextureNode
-  }
+  },
+  name?: string
 ): TextureNode => {
   if (node.isTextureNode === true || node.isSampleNode === true) {
     return node as TextureNode
@@ -109,5 +110,5 @@ export const convertToTexture = (
   if (node.getTextureNode != null) {
     return node.getTextureNode()
   }
-  return new RenderTargetNode(node)
+  return new RenderTargetNode(node, name)
 }
