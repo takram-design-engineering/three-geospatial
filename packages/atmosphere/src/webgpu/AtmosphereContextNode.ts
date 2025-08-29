@@ -156,7 +156,6 @@ export class AtmosphereContextNode extends Node {
   }
 
   override dispose(): void {
-    this.parameters.dispose()
     this.lutNode.dispose()
 
     const { nodes } = this

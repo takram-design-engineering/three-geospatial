@@ -79,21 +79,6 @@ export class DensityProfileLayer {
   clone(): DensityProfileLayer {
     return new DensityProfileLayer().copy(this)
   }
-
-  dispose(): void {
-    const { nodes } = this
-    if (nodes == null) {
-      return
-    }
-    for (const key in nodes) {
-      if (Object.hasOwn(nodes, key)) {
-        const node = nodes[key as keyof typeof nodes]
-        if (typeof node === 'object' && 'dispose' in node) {
-          node.dispose()
-        }
-      }
-    }
-  }
 }
 
 export type DensityProfileLayerNodes = ReturnType<
@@ -135,11 +120,6 @@ export class DensityProfile {
 
   clone(): DensityProfile {
     return new DensityProfile([this.layers[0].clone(), this.layers[1].clone()])
-  }
-
-  dispose(): void {
-    this.layers[0].dispose()
-    this.layers[1].dispose()
   }
 }
 
@@ -343,25 +323,6 @@ export class AtmosphereParameters {
 
   clone(): AtmosphereParameters {
     return new AtmosphereParameters().copy(this)
-  }
-
-  dispose(): void {
-    this.rayleighDensity.dispose()
-    this.mieDensity.dispose()
-    this.absorptionDensity.dispose()
-
-    const { nodes } = this
-    if (nodes == null) {
-      return
-    }
-    for (const key in nodes) {
-      if (Object.hasOwn(nodes, key)) {
-        const node = nodes[key as keyof typeof nodes]
-        if (typeof node === 'object' && 'dispose' in node) {
-          node.dispose()
-        }
-      }
-    }
   }
 }
 

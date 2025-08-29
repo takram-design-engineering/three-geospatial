@@ -242,16 +242,7 @@ export class AtmosphereLUTNode extends TempNode {
       return
     }
 
-    this.parameters.dispose() // TODO: Conditionally depending on the owner.
     this.textures.dispose()
-
-    const nodes = this._textureNodes
-    for (const key in nodes) {
-      if (Object.hasOwn(nodes, key)) {
-        const uniform = nodes[key as keyof typeof nodes]
-        uniform?.dispose()
-      }
-    }
     super.dispose()
   }
 }
