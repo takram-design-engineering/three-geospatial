@@ -25,11 +25,11 @@ export class AerialPerspectiveNode extends TempNode {
 
   private readonly atmosphereContext: AtmosphereContextNode
 
-  colorNode: Node
-  depthNode: Node
-  normalNode?: Node | null
-  skyNode?: Node | null
-  shadowLengthNode?: Node | null
+  colorNode: Node<'vec3' | 'vec4'>
+  depthNode: Node<'float'>
+  normalNode?: Node<'vec3'> | null
+  skyNode?: Node<'vec3'> | null
+  shadowLengthNode?: Node<'float'> | null
 
   // Static options:
   correctGeometricError = true
@@ -39,9 +39,9 @@ export class AerialPerspectiveNode extends TempNode {
 
   constructor(
     atmosphereContext: AtmosphereContextNode,
-    colorNode: Node,
-    depthNode: Node,
-    normalNode?: Node | null
+    colorNode: Node<'vec3' | 'vec4'>,
+    depthNode: Node<'float'>,
+    normalNode?: Node<'vec3'> | null
   ) {
     super('vec4')
     this.atmosphereContext = atmosphereContext
@@ -55,8 +55,6 @@ export class AerialPerspectiveNode extends TempNode {
 
   override customCacheKey(): number {
     return hash(
-      this.normalNode?.getCacheKey() ?? 0,
-      this.skyNode?.getCacheKey() ?? 0,
       +this.correctGeometricError,
       +this.lighting,
       +this.transmittance,

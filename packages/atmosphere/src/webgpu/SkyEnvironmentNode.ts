@@ -55,7 +55,9 @@ export class SkyEnvironmentNode extends TempNode {
     if (renderer == null) {
       return
     }
-    // TODO: Don't render when the camera doesn't move.
+    // TODO: Don't render when the camera doesn't move. This case just comparing
+    // the camera's world position is sufficient. But we need to detect
+    // the atmosphere LUT is updated.
     this.camera.update(renderer, this.scene)
   }
 

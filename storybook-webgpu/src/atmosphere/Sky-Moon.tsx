@@ -281,13 +281,13 @@ const Scene: FC<StoryProps> = () => {
       const passNode = pass(scene, camera)
 
       const skyNode = sky(context)
-      skyNode.moonColorTexture = texture(
+      skyNode.moonColorNode = texture(
         new TextureLoader().load('public/moon/color_large.webp', texture => {
           texture.colorSpace = LinearSRGBColorSpace
           texture.anisotropy = 16
         })
       )
-      skyNode.moonNormalTexture = texture(
+      skyNode.moonNormalNode = texture(
         new TextureLoader().load('public/moon/normal_large.webp', texture => {
           texture.colorSpace = NoColorSpace
           texture.anisotropy = 16

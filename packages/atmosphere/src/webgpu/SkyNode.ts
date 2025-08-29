@@ -24,9 +24,9 @@ import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 import {
   equirectWorld,
   FnLayout,
-  FnVar,
   inverseProjectionMatrix,
   inverseViewMatrix,
+  type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
@@ -46,7 +46,7 @@ const mat3Columns = /*#__PURE__*/ FnLayout({
   return mat3(c0.x, c0.y, c0.z, c1.x, c1.y, c1.z, c2.x, c2.y, c2.z)
 })
 
-const cameraDirectionWorld = /*#__PURE__*/ FnVar((camera: Camera) => {
+const cameraDirectionWorld = (camera: Camera): NodeObject<'vec3'> => {
   const positionView = inverseProjectionMatrix(camera).mul(
     vec4(positionGeometry, 1)
   ).xyz
@@ -54,7 +54,7 @@ const cameraDirectionWorld = /*#__PURE__*/ FnVar((camera: Camera) => {
     vec4(positionView, 0)
   ).xyz
   return directionWorld
-})
+}
 
 const getLunarRadiance = /*#__PURE__*/ FnLayout({
   typeOnly: true, // TODO
@@ -128,12 +128,12 @@ export class SkyNode extends TempNode {
 
   private readonly atmosphereContext: AtmosphereContextNode
 
-  shadowLengthNode?: NodeObject | null
+  shadowLengthNode?: Node<'float'> | null
+  moonColorNode?: TextureNode | null
+  moonNormalNode?: TextureNode | null
 
   moonAngularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
   moonIntensity = uniform(1)
-  moonColorTexture?: TextureNode | null
-  moonNormalTexture?: TextureNode | null
 
   // Static options:
   showSun = true
@@ -148,15 +148,13 @@ export class SkyNode extends TempNode {
   }
 
   override customCacheKey(): number {
-    return hash(
-      this.moonColorTexture?.getCacheKey() ?? 0,
-      this.moonNormalTexture?.getCacheKey() ?? 0,
-      +this.showSun,
-      +this.showMoon
-    )
+    return hash(+this.showSun, +this.showMoon)
   }
 
   override setup(builder: NodeBuilder): unknown {
+    if (builder.camera == null) {
+      return
+    }
     builder.getContext().atmosphere = this.atmosphereContext
 
     const { parameters, camera } = this.atmosphereContext
@@ -171,25 +169,21 @@ export class SkyNode extends TempNode {
     const { sunAngularRadius } = parameters.getNodes()
 
     // Direction of the camera ray:
-    const rayDirectionECEF = Fn(builder => {
-      let directionWorld
-      switch (this.scope) {
-        case SCREEN:
-          directionWorld = cameraDirectionWorld(camera)
-          break
-        case WORLD:
-          directionWorld =
-            builder.camera != null
-              ? cameraDirectionWorld(builder.camera)
-              : vec3()
-          break
-        case EQUIRECTANGULAR:
-          directionWorld = equirectWorld(uv())
-          break
-      }
-      return worldToECEFMatrix.mul(vec4(directionWorld, 0)).xyz
-    })()
-      .toVertexStage()
+    let directionWorld
+    switch (this.scope) {
+      case SCREEN:
+        directionWorld = cameraDirectionWorld(camera)
+        break
+      case WORLD:
+        directionWorld = cameraDirectionWorld(builder.camera)
+        break
+      case EQUIRECTANGULAR:
+        directionWorld = equirectWorld(uv())
+        break
+    }
+    const rayDirectionECEF = worldToECEFMatrix
+      .mul(vec4(directionWorld, 0))
+      .xyz.toVertexStage()
       .normalize()
 
     const luminanceTransfer = getSkyLuminance(
@@ -201,8 +195,7 @@ export class SkyNode extends TempNode {
     const inscatter = luminanceTransfer.get('luminance')
     const transmittance = luminanceTransfer.get('transmittance')
 
-    // WORKAROUND: As of r179, assign() can only be used inside "Fn".
-    const luminance = Fn(() => {
+    return Fn(() => {
       const luminance = vec3(0).toVar()
 
       // Compute the luminance of the sun:
@@ -244,7 +237,7 @@ export class SkyNode extends TempNode {
             .xyz.toVar()
           const uv = equirectUV(normalMF.xzy) // The equirectUV expects Y-up
 
-          if (this.moonNormalTexture != null) {
+          if (this.moonNormalNode != null) {
             // Apply the normal texture and convert it back to the ECEF space.
             const localX = vec3(1, 0, 0).toConst()
             const localZ = vec3(0, 0, 1).toConst()
@@ -257,7 +250,7 @@ export class SkyNode extends TempNode {
               )
             )
             const bitangent = normalMF.cross(tangent).normalize()
-            const normalTangent = this.moonNormalTexture
+            const normalTangent = this.moonNormalNode
               .sample(uv)
               .xyz.mul(2)
               .sub(1)
@@ -266,7 +259,7 @@ export class SkyNode extends TempNode {
             normalECEF.assign(moonFixedToECEFMatrix.mul(vec4(normalMF, 0)).xyz)
           }
 
-          const color = this.moonColorTexture?.sample(uv).xyz ?? 1
+          const color = this.moonColorNode?.sample(uv).xyz ?? 1
           const diffuse = orenNayarDiffuse(
             sunDirectionECEF,
             rayDirectionECEF.negate(),
@@ -289,10 +282,8 @@ export class SkyNode extends TempNode {
         luminance.addAssign(moonLuminance)
       }
 
-      return luminance
+      return luminance.mul(transmittance).add(inscatter)
     })()
-
-    return luminance.mul(transmittance).add(inscatter)
   }
 }
 

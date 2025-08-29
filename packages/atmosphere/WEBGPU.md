@@ -83,9 +83,9 @@ The distance from `DirectionalLight.target` to the light’s position. Adjust th
 ```ts
 const aerialPerspective = (
   atmosphereContext: AtmosphereContext,
-  colorNode: Node,
-  depthNode: Node,
-  normalNode?: Node | null
+  colorNode: Node<'vec3' | 'vec4'>,
+  depthNode: Node<'float'>,
+  normalNode?: Node<'vec3'> | null
 ) => NodeObject<AerialPerspectiveNode>
 ```
 
@@ -96,31 +96,31 @@ const aerialPerspective = (
 #### colorNode
 
 ```ts
-colorNode: Node
+colorNode: Node<'vec3' | 'vec4'>
 ```
 
 #### depthNode
 
 ```ts
-depthNode: Node
+depthNode: Node<'float'>
 ```
 
 #### normalNode
 
 ```ts
-normalNode?: Node | null
+normalNode?: Node<'vec3'> | null
 ```
 
 #### skyNode
 
 ```ts
-skyNode?: Node | null = sky()
+skyNode?: Node<'vec3'> | null = sky()
 ```
 
 #### shadowLengthNode
 
 ```ts
-shadowLengthNode?: Node | null
+shadowLengthNode?: Node<'float'> | null
 ```
 
 ### Static options
