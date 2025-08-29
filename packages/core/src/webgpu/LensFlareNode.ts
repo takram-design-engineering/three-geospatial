@@ -13,6 +13,7 @@ import { LensFlareFeaturesNode } from './LensFlareFeaturesNode'
 import { LensGlareNode } from './LensGlareNode'
 import { MipmapSurfaceBlurNode } from './MipmapSurfaceBlurNode'
 import type { NodeObject } from './node'
+import { isWebGPU } from './utils'
 
 export class LensFlareNode extends TempNode {
   inputNode?: TextureNode | null
@@ -81,8 +82,10 @@ export class LensFlareNode extends TempNode {
       // Prevent the output from becoming too bright.
       const plusBloom = output.add(bloom).toConst()
       output.assign(select(output.lessThan(plusBloom), plusBloom, output))
-      const plusGlare = output.add(glare).toConst()
-      output.assign(select(output.lessThan(plusGlare), plusGlare, output))
+      if (isWebGPU(builder)) {
+        const plusGlare = output.add(glare).toConst()
+        output.assign(select(output.lessThan(plusGlare), plusGlare, output))
+      }
 
       return output.add(features)
     })()
