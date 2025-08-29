@@ -13,7 +13,7 @@ export function useMotionControl<TArgs extends Args, U>(
   selector: (args: TArgs) => U,
   onChange?: (value: U) => void
 ): MotionValue<U> {
-  const argsAtom = useContext(StoryContext)
+  const { argsAtom } = useContext(StoryContext)
   const store = getDefaultStore()
   const value = selector(store.get(argsAtom) as TArgs)
 

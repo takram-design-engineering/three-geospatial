@@ -75,9 +75,14 @@ export function createStory<Props, TArgs extends Args>(
       }, [])
 
       useSetAtom(argsAtom)(args)
+
+      const context = useMemo(
+        () => ({ argsAtom, updateArgs }),
+        [argsAtom, updateArgs]
+      )
       return (
-        <StoryContext value={argsAtom}>
-          <Component {...props} updateArgs={updateArgs} />
+        <StoryContext value={context}>
+          <Component {...props} />
         </StoryContext>
       )
     },

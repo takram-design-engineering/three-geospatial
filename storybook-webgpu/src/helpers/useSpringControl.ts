@@ -18,7 +18,7 @@ export function useSpringControl<TArgs extends Args>(
   selector: (args: TArgs) => number,
   onChange?: (value: number) => void
 ): MotionValue<number> {
-  const argsAtom = useContext(StoryContext)
+  const { argsAtom } = useContext(StoryContext)
   const store = getDefaultStore()
   const value = selector(store.get(argsAtom) as TArgs)
 
@@ -53,7 +53,7 @@ export function useSpringColorControl<TArgs extends Args>(
   selector: (args: TArgs) => string,
   onChange?: (value: [number, number, number]) => void
 ): MotionValue<string> {
-  const argsAtom = useContext(StoryContext)
+  const { argsAtom } = useContext(StoryContext)
   const store = getDefaultStore()
   const value = selector(store.get(argsAtom) as TArgs)
 

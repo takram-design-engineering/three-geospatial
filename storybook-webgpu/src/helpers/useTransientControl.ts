@@ -11,7 +11,7 @@ export function useTransientControl<TArgs extends Args, const T>(
     | ((value: T, prevValue?: T) => void)
     | ((value: T, prevValue?: T) => () => void)
 ): void {
-  const argsAtom = useContext(StoryContext)
+  const { argsAtom } = useContext(StoryContext)
   const store = getDefaultStore()
   const value = selector(store.get(argsAtom) as TArgs)
   onChange(value) // Initial callback

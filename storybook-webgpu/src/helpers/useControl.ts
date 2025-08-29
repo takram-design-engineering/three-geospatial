@@ -9,7 +9,7 @@ import { StoryContext } from './StoryContext'
 export function useControl<TArgs extends Args, T>(
   selector: (args: TArgs) => T
 ): T {
-  const argsAtom = useContext(StoryContext)
+  const { argsAtom } = useContext(StoryContext)
   const selectorRef = useRef(selector)
   selectorRef.current = selector
   // The selector function must be stable.
