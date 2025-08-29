@@ -101,8 +101,8 @@ export class HighpVelocityNode extends TempNode {
       .mul(this.previousModelViewMatrix)
       .mul(positionPrevious)
 
-    const currentNDC = currentClip.xy.div(currentClip.w)
-    const previousNDC = previousClip.xy.div(previousClip.w)
+    const currentNDC = currentClip.xyz.div(currentClip.w)
+    const previousNDC = previousClip.xyz.div(previousClip.w)
     return sub(currentNDC, previousNDC)
   }
 }

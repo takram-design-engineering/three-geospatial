@@ -10,6 +10,7 @@ import {
   type PerspectiveCamera
 } from 'three'
 import {
+  and,
   float,
   Fn,
   If,
@@ -18,13 +19,14 @@ import {
   mix,
   nodeObject,
   screenCoordinate,
+  screenSize,
   screenUV,
   select,
   sqrt,
+  step,
   struct,
   texture,
   uniform,
-  vec2,
   vec3,
   vec4
 } from 'three/tsl'
@@ -211,8 +213,10 @@ export class TemporalAntialiasNode extends TempNode {
   velocityNode: TextureNode
   camera: PerspectiveCamera | OrthographicCamera
 
-  temporalAlpha = uniform(0.1)
+  temporalAlpha = uniform(0.05)
   varianceGamma = uniform(1)
+  velocityThreshold = uniform(0.1)
+  depthBias = uniform(0.001)
 
   // Static options:
   showDisocclusion = false
@@ -240,7 +244,7 @@ export class TemporalAntialiasNode extends TempNode {
     velocityNode: TextureNode,
     camera: PerspectiveCamera | OrthographicCamera
   ) {
-    super('vec4')
+    super('vec3')
     this.velocityNodeImmutable = velocityNodeImmutable
     this.inputNode = inputNode
     this.depthNode = depthNode
@@ -370,7 +374,7 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   private setupOutputNode(): Node {
-    const { inputNode, depthNode, velocityNode } = this
+    const { inputNode, depthNode, velocityNode, historyNode } = this
 
     // TODO: Add confidence
     return Fn(() => {
@@ -383,21 +387,35 @@ export class TemporalAntialiasNode extends TempNode {
 
       const velocity = velocityNode
         .load(closestCoord)
-        // Convert NDC velocity to UV offset:
+        // Convert NDC velocity to UV and depth offset:
         // TODO: Should Y be inverted on WebGPU?
-        .xy.mul(vec2(0.5, -0.5))
+        .xyz.mul(vec3(0.5, -0.5, 0.5))
+
+      // Discards texels with velocity greater than the threshold:
+      const velocityConfidence = velocity.xy
+        .length()
+        .div(this.velocityThreshold)
+        .oneMinus()
+        .saturate()
+
+      const prevUV = uv.sub(velocity.xy).toConst()
+      // TODO: Add gather() in TextureNode and use it:
+      const prevDepth = historyNode.load(
+        // BUG: Cannot use ivec2:
+        prevUV.mul(screenSize).sub(0.5).floor()
+      ).w
+      const expectedDepth = closestDepth.get('depth').add(velocity.z)
+      const depthConfidence = step(expectedDepth, prevDepth.add(this.depthBias))
+      const confidence = velocityConfidence.mul(depthConfidence)
+
+      const uvWeight = and(
+        prevUV.greaterThanEqual(0).all(),
+        prevUV.lessThanEqual(1).all()
+      ).toFloat()
 
       const outputColor = vec4(0).toVar()
-      const prevUV = uv.sub(velocity).toConst()
-
-      If(prevUV.lessThan(0).any().or(prevUV.greaterThan(1).any()), () => {
-        // An obvious disocclusion:
-        outputColor.assign(currentColor)
-        if (this.showDisocclusion) {
-          outputColor.assign(vec3(1, 0, 0))
-        }
-      }).Else(() => {
-        const historyColor = textureCatmullRom(this.historyNode, prevUV)
+      If(uvWeight.mul(confidence).greaterThan(0), () => {
+        const historyColor = textureCatmullRom(historyNode, prevUV)
         const clippedColor = varianceClipping(
           inputNode,
           coord,
@@ -405,9 +423,15 @@ export class TemporalAntialiasNode extends TempNode {
           historyColor,
           this.varianceGamma
         )
+        // TODO: Use confidence in alpha:
         outputColor.assign(mix(clippedColor, currentColor, this.temporalAlpha))
+      }).Else(() => {
+        outputColor.assign(currentColor)
+        if (this.showDisocclusion) {
+          outputColor.assign(vec3(1, 0, 0))
+        }
       })
-      return outputColor
+      return vec4(outputColor.rgb, depthNode.load(coord).r)
     })()
   }
 
