@@ -30,7 +30,13 @@ Credit: NASA
 
 [NASA Images and Media Usage Guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/)
 
-## moon/color.webp
+## hdri/wooden_lounge_4k.hdr
+
+Source: https://polyhaven.com/a/wooden_lounge
+
+CC0 - Public Domain
+
+## moon/color.webp, moon/color_large.webp
 
 Source: [NASA CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/)
 
@@ -38,7 +44,7 @@ Credit: NASA
 
 [NASA Images and Media Usage Guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/)
 
-## moon/normal.webp
+## moon/normal.webp, moon/normal_large.webp
 
 Source: [NASA CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/)
 
@@ -57,11 +63,5 @@ Credit: NASA
 ## seaside.webp
 
 Source: https://commons.wikimedia.org/wiki/File:Erin_Maturo_2017_(Unsplash).jpg
-
-CC0 - Public Domain
-
-## hdri/wooden_lounge_4k.hdr
-
-Source: https://polyhaven.com/a/wooden_lounge
 
 CC0 - Public Domain
