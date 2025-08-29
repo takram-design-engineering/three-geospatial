@@ -210,7 +210,6 @@ export class TemporalAntialiasNode extends TempNode {
   depthNode: TextureNode
   velocityNode: TextureNode
   camera: PerspectiveCamera | OrthographicCamera
-  resolutionScale = 1 // TODO
 
   temporalAlpha = uniform(0.1)
   varianceGamma = uniform(1)
@@ -284,14 +283,10 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   setSize(width: number, height: number): this {
-    const { resolutionScale } = this
-    const w = Math.max(Math.round(width * resolutionScale), 1)
-    const h = Math.max(Math.round(height * resolutionScale), 1)
-
     const { resolveRT, historyRT } = this
-    if (w !== historyRT.width || h !== historyRT.height) {
-      resolveRT.setSize(w, h)
-      historyRT.setSize(w, h)
+    if (width !== historyRT.width || height !== historyRT.height) {
+      resolveRT.setSize(width, height)
+      historyRT.setSize(width, height)
       this.needsClearHistory = true
     }
     return this
