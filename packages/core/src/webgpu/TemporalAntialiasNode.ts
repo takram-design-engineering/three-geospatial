@@ -197,6 +197,8 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
+// Note on TAA and tone mapping (p.19):
+// https://advances.realtimerendering.com/s2014/epic/TemporalAA.pptx
 export class TemporalAntialiasNode extends TempNode {
   static override get type(): string {
     return 'TemporalAntialiasNode'
@@ -355,15 +357,13 @@ export class TemporalAntialiasNode extends TempNode {
       return
     }
 
-    const { inputNode } = this
-
     const size = renderer.getDrawingBufferSize(sizeScratch)
     this.setSize(size.x, size.y)
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
     if (this.needsClearHistory) {
-      this.clearHistory(renderer, inputNode)
+      this.clearHistory(renderer, this.inputNode)
     }
 
     renderer.setRenderTarget(this.resolveRT)
@@ -371,8 +371,6 @@ export class TemporalAntialiasNode extends TempNode {
 
     restoreRendererState(renderer, this.rendererState)
 
-    // NOTE: Swapping the buffers in updateAfter() causes the render target
-    // textures to be disposed unexpectedly.
     this.swapBuffers()
   }
 
