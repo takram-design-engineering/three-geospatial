@@ -1,4 +1,5 @@
 import {
+  Box2,
   ClampToEdgeWrapping,
   HalfFloatType,
   LinearFilter,
@@ -180,6 +181,9 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
   }
 )
 
+const sizeScratch = /*#__PURE__*/ new Vector2()
+const boxScratch = /*#__PURE__*/ new Box2()
+
 export class TemporalAntialiasNode extends TempNode {
   static override get type(): string {
     return 'TemporalAntialiasNode'
@@ -205,7 +209,6 @@ export class TemporalAntialiasNode extends TempNode {
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
   private needsClearHistory = false
-  private needsSyncPostProcessing = false
 
   private readonly resolveNode = texture(this.resolveRT.texture)
   private readonly historyNode = texture(this.historyRT.texture)
@@ -271,10 +274,10 @@ export class TemporalAntialiasNode extends TempNode {
     const h = Math.max(Math.round(height * resolutionScale), 1)
 
     const { resolveRT, historyRT } = this
-    if (w !== resolveRT.width || h !== resolveRT.height) {
-      this.needsClearHistory = true
+    if (w !== historyRT.width || h !== historyRT.height) {
       resolveRT.setSize(w, h)
       historyRT.setSize(w, h)
+      this.needsClearHistory = true
     }
     return this
   }
@@ -282,30 +285,43 @@ export class TemporalAntialiasNode extends TempNode {
   private clearHistory(renderer: Renderer, inputNode: TextureNode): void {
     // Bind and clear the history render target to make sure it's initialized
     // after the resize which triggers a dispose().
+    renderer.setRenderTarget(this.resolveRT)
+    void renderer.clear()
     renderer.setRenderTarget(this.historyRT)
     void renderer.clear()
-    renderer.copyTextureToTexture(inputNode.value, this.historyRT.texture)
+
+    const { width: srcWidth, height: srcHeight } = inputNode.value
+    const { width: dstWidth, height: dstHeight } = this.historyRT.texture
+    renderer.copyTextureToTexture(
+      inputNode.value,
+      this.historyRT.texture,
+      boxScratch.set(
+        boxScratch.min.setScalar(0),
+        boxScratch.max.set(
+          Math.min(srcWidth, dstWidth),
+          Math.min(srcHeight, dstHeight)
+        )
+      )
+    )
     this.needsClearHistory = false
   }
 
-  private setViewOffset(camera: PerspectiveCamera | OrthographicCamera): void {
+  private setViewOffset(width: number, height: number): void {
     // Store the unjittered projection matrix:
+    const { camera } = this
     camera.updateProjectionMatrix()
     this.originalProjectionMatrix.copy(camera.projectionMatrix)
     this.setProjectionMatrix(this.originalProjectionMatrix)
 
-    const { width, height } = this.resolveRT
     const offset = bayerOffsets[this.jitterIndex]
     const dx = offset.x - 0.5
     const dy = offset.y - 0.5
     camera.setViewOffset(width, height, dx, dy, width, height)
   }
 
-  private clearViewOffset(
-    camera: PerspectiveCamera | OrthographicCamera
-  ): void {
+  private clearViewOffset(): void {
     // Reset the projection matrix modified in setViewOffset():
-    camera.clearViewOffset()
+    this.camera.clearViewOffset()
     this.setProjectionMatrix(null)
 
     // setViewOffset() can be called multiple times in a frame. Increment the
@@ -334,18 +350,13 @@ export class TemporalAntialiasNode extends TempNode {
     const { inputNode } = this
     invariant(inputNode != null)
 
-    const { width, height } = inputNode.value
-    this.setSize(width, height)
+    const size = renderer.getDrawingBufferSize(sizeScratch)
+    this.setSize(size.x, size.y)
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
     if (this.needsClearHistory) {
       this.clearHistory(renderer, inputNode)
-    }
-    if (this.needsSyncPostProcessing) {
-      invariant(this.camera != null)
-      this.setViewOffset(this.camera)
-      this.needsSyncPostProcessing = false
     }
 
     renderer.setRenderTarget(this.resolveRT)
@@ -404,21 +415,20 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode, camera, _textureNode: textureNode } = this
+    const { inputNode, _textureNode: textureNode } = this
 
     const { context } = (builder.getContext().postProcessing ??
       {}) as PostProcessingContext
     if (context != null) {
-      this.needsSyncPostProcessing = true
-
       const { onBeforePostProcessing, onAfterPostProcessing } = context
       context.onBeforePostProcessing = () => {
         onBeforePostProcessing?.()
-        this.setViewOffset(camera)
+        const size = builder.renderer.getDrawingBufferSize(sizeScratch)
+        this.setViewOffset(size.width, size.height)
       }
       context.onAfterPostProcessing = () => {
         onAfterPostProcessing?.()
-        this.clearViewOffset(camera)
+        this.clearViewOffset()
       }
     }
 

@@ -18,8 +18,6 @@ import {
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-const sizeScratch = /*#__PURE__*/ new Vector2()
-
 function createRenderTarget(): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
@@ -35,6 +33,8 @@ function createRenderTarget(): RenderTarget {
   texture.name = 'RenderTargetNode'
   return renderTarget
 }
+
+const sizeScratch = /*#__PURE__*/ new Vector2()
 
 // Similar to RTTNode, which is a bit finicky to handle.
 export class RenderTargetNode extends TextureNode {
