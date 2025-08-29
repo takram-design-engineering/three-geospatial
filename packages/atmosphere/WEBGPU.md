@@ -26,6 +26,13 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 - [`AtmosphereLUTNode`](#atmospherelutnode)
 - [`AtmosphereLightNode`](#atmospherelightnode)
 
+The following terms refer to class fields:
+
+- **Property** : A class field whose changes take effect immediately.
+- **Dependency** : A class field of type `Node` that the subject depends on.
+- **Uniform** : A class field of type `UniformNode`. Changes in its value takes effect immediately.
+- **Static option** : A class field whose changes take effect only after calling `setup()`.
+
 ## AtmosphereLight
 
 Represents direct and indirect sunlight. The lighting is correct at large scale regardless of the materials used on surfaces, unlike `SunDirectionalLight` and `SkyLightProbe` in the previous implementation.
