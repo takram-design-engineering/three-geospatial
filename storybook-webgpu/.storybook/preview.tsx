@@ -33,6 +33,15 @@ const preview: Preview = {
         if (depthA !== depthB) {
           return depthA - depthB // Bring shallow stories first
         }
+        const orderA = +(
+          a.tags.find(tag => tag.startsWith('order:'))?.split(':')[1] ?? 0
+        )
+        const orderB = +(
+          b.tags.find(tag => tag.startsWith('order:'))?.split(':')[1] ?? 0
+        )
+        if (orderA !== orderB) {
+          return orderA - orderB
+        }
         return a.title.localeCompare(b.title, undefined, { numeric: true })
       }
     }
