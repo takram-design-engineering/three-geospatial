@@ -1,7 +1,7 @@
 import { DirectionalLight, Matrix3 } from 'three'
 import { uniform } from 'three/tsl'
 
-import type { AtmosphereContext } from './AtmosphereContext'
+import type { AtmosphereContextNode } from './AtmosphereContextNode'
 
 const rotationScratch = new Matrix3()
 
@@ -11,7 +11,7 @@ const rotationScratch = new Matrix3()
 export class AtmosphereLight extends DirectionalLight {
   override readonly type = 'DirectionalLight'
 
-  atmosphereContext?: AtmosphereContext
+  atmosphereContext?: AtmosphereContextNode
 
   direct = uniform(true)
   indirect = uniform(true)
@@ -19,7 +19,7 @@ export class AtmosphereLight extends DirectionalLight {
   // Distance to the target position.
   distance: number
 
-  constructor(atmosphereContext?: AtmosphereContext, distance = 1) {
+  constructor(atmosphereContext?: AtmosphereContextNode, distance = 1) {
     super()
     this.atmosphereContext = atmosphereContext
     this.distance = distance

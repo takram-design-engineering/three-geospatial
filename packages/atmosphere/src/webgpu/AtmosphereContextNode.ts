@@ -21,7 +21,7 @@ const WEBGL = 'WEBGL'
 
 type AtmosphereContextScope = typeof WEBGPU | typeof WEBGL
 
-export class AtmosphereContext extends Node {
+export class AtmosphereContextNode extends Node {
   parameters: AtmosphereParameters
   lutNode: AtmosphereLUTNode
 
@@ -61,14 +61,14 @@ export class AtmosphereContext extends Node {
     )
   }
 
-  static get(builder: NodeBuilder): AtmosphereContext {
+  static get(builder: NodeBuilder): AtmosphereContextNode {
     const atmosphereContext = builder.getContext().atmosphere
     if (atmosphereContext == null) {
       throw new Error(
         'AtmosphereContext does not found in the builder context.'
       )
     }
-    return atmosphereContext as AtmosphereContext
+    return atmosphereContext as AtmosphereContextNode
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -174,17 +174,17 @@ export class AtmosphereContext extends Node {
 }
 
 export type AtmosphereContextNodes = ReturnType<
-  AtmosphereContext['createNodes']
+  AtmosphereContextNode['createNodes']
 >
 
-export const atmosphereContextWebGPU = nodeProxy(AtmosphereContext, WEBGPU)
-export const atmosphereContextWebGL = nodeProxy(AtmosphereContext, WEBGL)
+export const atmosphereContextWebGPU = nodeProxy(AtmosphereContextNode, WEBGPU)
+export const atmosphereContextWebGL = nodeProxy(AtmosphereContextNode, WEBGL)
 
 export const atmosphereContext = (
   renderer: Renderer,
   parameters?: AtmosphereParameters,
   lutNode?: AtmosphereLUTNode
-): AtmosphereContext => {
+): AtmosphereContextNode => {
   return isWebGPU(renderer)
     ? atmosphereContextWebGPU(parameters, lutNode)
     : atmosphereContextWebGL(parameters, lutNode)

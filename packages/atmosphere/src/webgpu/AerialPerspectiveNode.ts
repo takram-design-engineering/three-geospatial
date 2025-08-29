@@ -14,7 +14,7 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereContext } from './AtmosphereContext'
+import type { AtmosphereContextNode } from './AtmosphereContextNode'
 import { getSkyLuminanceToPoint, getSunAndSkyIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
@@ -23,7 +23,7 @@ export class AerialPerspectiveNode extends TempNode {
     return 'AerialPerspectiveNode'
   }
 
-  private readonly atmosphereContext: AtmosphereContext
+  private readonly atmosphereContext: AtmosphereContextNode
 
   colorNode: Node
   depthNode: Node
@@ -38,7 +38,7 @@ export class AerialPerspectiveNode extends TempNode {
   inscatter = true
 
   constructor(
-    atmosphereContext: AtmosphereContext,
+    atmosphereContext: AtmosphereContextNode,
     colorNode: Node,
     depthNode: Node,
     normalNode?: Node | null

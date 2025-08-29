@@ -31,7 +31,7 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContext } from './AtmosphereContext'
+import { AtmosphereContextNode } from './AtmosphereContextNode'
 import { Luminance3 } from './dimensional'
 import { getSkyLuminance, getSolarLuminance } from './runtime'
 
@@ -63,7 +63,7 @@ const getLunarRadiance = /*#__PURE__*/ FnLayout({
   type: Luminance3,
   inputs: [{ name: 'moonAngularRadius', type: 'float' }]
 })(([moonAngularRadius], builder) => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   return (
@@ -127,7 +127,7 @@ export class SkyNode extends TempNode {
     return 'SkyNode'
   }
 
-  private readonly atmosphereContext: AtmosphereContext
+  private readonly atmosphereContext: AtmosphereContextNode
 
   shadowLengthNode?: NodeObject | null
 
@@ -142,7 +142,7 @@ export class SkyNode extends TempNode {
 
   private readonly scope: SkyNodeScope = SCREEN
 
-  constructor(scope: SkyNodeScope, context: AtmosphereContext) {
+  constructor(scope: SkyNodeScope, context: AtmosphereContextNode) {
     super('vec3')
     this.scope = scope
     this.atmosphereContext = context
@@ -193,14 +193,14 @@ export class SkyNode extends TempNode {
       .toVertexStage()
       .normalize()
 
-      const luminanceTransfer = getSkyLuminance(
-        cameraPositionUnit,
-        rayDirectionECEF,
-        this.shadowLengthNode ?? 0,
-        sunDirectionECEF
-      )
-      const inscatter = luminanceTransfer.get('luminance')
-      const transmittance = luminanceTransfer.get('transmittance')
+    const luminanceTransfer = getSkyLuminance(
+      cameraPositionUnit,
+      rayDirectionECEF,
+      this.shadowLengthNode ?? 0,
+      sunDirectionECEF
+    )
+    const inscatter = luminanceTransfer.get('luminance')
+    const transmittance = luminanceTransfer.get('transmittance')
 
     // WORKAROUND: As of r179, assign() can only be used inside "Fn".
     const luminance = Fn(() => {
@@ -293,7 +293,7 @@ export class SkyNode extends TempNode {
       return luminance
     })()
 
-      return luminance.mul(transmittance).add(inscatter)
+    return luminance.mul(transmittance).add(inscatter)
   }
 }
 

@@ -79,7 +79,7 @@ import {
 
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContext } from './AtmosphereContext'
+import { AtmosphereContextNode } from './AtmosphereContextNode'
 import {
   clampRadius,
   getIrradiance,
@@ -118,7 +118,7 @@ const getExtrapolatedSingleMieScattering = /*#__PURE__*/ FnLayout({
   type: IrradianceSpectrum,
   inputs: [{ name: 'scattering', type: AbstractSpectrum }]
 })(([scattering], builder) => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   // Algebraically this can never be negative, but rounding errors can produce
@@ -171,7 +171,7 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
 
   const coord = getScatteringTextureCoord(
     radius,
@@ -259,7 +259,7 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const context = AtmosphereContext.get(builder)
+  const context = AtmosphereContextNode.get(builder)
   const { parameters } = context
   const nodes = parameters.getNodes()
 
@@ -443,7 +443,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   // Compute the distance to the top atmosphere boundary along the view ray,
@@ -664,7 +664,7 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ FnLayout({
     { name: 'point', type: Position }
   ]
 })(([camera, point], builder) => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const eps = float(0).toConst()
@@ -716,7 +716,7 @@ const getSkyRadianceToPoint = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const radiance = vec3(0).toVar()
@@ -776,7 +776,7 @@ const getSunAndSkyIrradiance = /*#__PURE__*/ FnLayout({
   [transmittanceTexture, irradianceTexture, point, normal, sunDirection],
   builder
 ) => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const radius = point.length().toVar()
@@ -830,7 +830,7 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ FnLayout({
   [transmittanceTexture, irradianceTexture, point, sunDirection],
   builder
 ) => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const radius = point.length().toVar()
@@ -854,7 +854,7 @@ export const getSolarLuminance = /*#__PURE__*/ FnLayout({
   name: 'getSolarLuminance',
   type: Luminance3
 })(builder => {
-  const { parameters } = AtmosphereContext.get(builder)
+  const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   return nodes.solarIrradiance
@@ -881,7 +881,7 @@ export const getSkyLuminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([camera, viewRay, shadowLength, sunDirection], builder) => {
-  const { parameters, lutNode } = AtmosphereContext.get(builder)
+  const { parameters, lutNode } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const radianceTransfer = getSkyRadiance(
@@ -915,7 +915,7 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([camera, point, shadowLength, sunDirection], builder) => {
-  const { parameters, lutNode } = AtmosphereContext.get(builder)
+  const { parameters, lutNode } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const radianceTransfer = getSkyRadianceToPoint(
@@ -956,7 +956,7 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, normal, sunDirection], builder) => {
-  const { parameters, lutNode } = AtmosphereContext.get(builder)
+  const { parameters, lutNode } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const sunSkyIrradiance = getSunAndSkyIrradiance(
@@ -986,7 +986,7 @@ export const getSkyIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, normal, sunDirection], builder) => {
-  const { parameters, lutNode } = AtmosphereContext.get(builder)
+  const { parameters, lutNode } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const sunSkyIrradiance = getSkyIrradiance(
@@ -1010,7 +1010,7 @@ export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, sunDirection], builder) => {
-  const { parameters, lutNode } = AtmosphereContext.get(builder)
+  const { parameters, lutNode } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
   const sunSkyIrradiance = getSunAndSkyScalarIrradiance(
