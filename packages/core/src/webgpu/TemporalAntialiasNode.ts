@@ -68,6 +68,7 @@ const bayerIndices: readonly number[] = [
   15, 7, 13, 5
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const bayerOffsets: readonly Vector2[] = /*#__PURE__*/ bayerIndices.reduce<
   Vector2[]
 >((result, _, index) => {
@@ -80,6 +81,22 @@ const bayerOffsets: readonly Vector2[] = /*#__PURE__*/ bayerIndices.reduce<
   }
   return [...result, offset]
 }, [])
+
+function halton(index: number, base: number): number {
+  let fraction = 1
+  let result = 0
+  while (index > 0) {
+    fraction /= base
+    result += fraction * (index % base)
+    index = Math.floor(index / base)
+  }
+  return result
+}
+
+const haltonOffsets: readonly Vector2[] = /*#__PURE__*/ Array.from(
+  { length: 16 },
+  (_, index) => new Vector2(halton(index + 1, 2), halton(index + 1, 3))
+)
 
 // Reference: https://github.com/playdeadgames/temporal
 const clipAABB = /*#__PURE__*/ FnLayout({
@@ -305,7 +322,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.originalProjectionMatrix.copy(camera.projectionMatrix)
     this.setProjectionMatrix(this.originalProjectionMatrix)
 
-    const offset = bayerOffsets[this.jitterIndex]
+    const offset = haltonOffsets[this.jitterIndex]
     const dx = offset.x - 0.5
     const dy = offset.y - 0.5
     camera.setViewOffset(width, height, dx, dy, width, height)
@@ -318,7 +335,7 @@ export class TemporalAntialiasNode extends TempNode {
 
     // setViewOffset() can be called multiple times in a frame. Increment the
     // jitter index here.
-    this.jitterIndex = (this.jitterIndex + 1) % bayerOffsets.length
+    this.jitterIndex = (this.jitterIndex + 1) % haltonOffsets.length
   }
 
   private swapBuffers(): void {
