@@ -64,7 +64,7 @@ export class AerialPerspectiveNode extends TempNode {
     )
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> {
+  override setup(builder: NodeBuilder): unknown {
     builder.getContext().atmosphere = this.atmosphereContext
 
     const { parameters, camera } = this.atmosphereContext

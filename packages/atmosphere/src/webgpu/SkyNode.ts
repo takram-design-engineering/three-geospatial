@@ -27,7 +27,6 @@ import {
   FnVar,
   inverseProjectionMatrix,
   inverseViewMatrix,
-  type Node,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
@@ -157,7 +156,7 @@ export class SkyNode extends TempNode {
     )
   }
 
-  override setup(builder: NodeBuilder): Node<'vec3'> {
+  override setup(builder: NodeBuilder): unknown {
     builder.getContext().atmosphere = this.atmosphereContext
 
     const { parameters, camera } = this.atmosphereContext

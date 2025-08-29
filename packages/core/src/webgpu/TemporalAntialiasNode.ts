@@ -123,7 +123,7 @@ const varianceClipping = /*#__PURE__*/ FnVar(
     current: NodeObject<'vec4'>,
     history: NodeObject<'vec4'>,
     gamma: NodeObject<'float'>
-  ): Node<'vec4'> => {
+  ): NodeObject<'vec4'> => {
     const moment1 = current.toVar()
     const moment2 = current.pow2().toVar()
 

@@ -89,6 +89,8 @@ const aerialPerspective = (
 ) => NodeObject<AerialPerspectiveNode>
 ```
 
+→ [Source](/packages/atmosphere/src/webgpu/AerialPerspectiveNode.ts)
+
 ### Dependencies
 
 #### colorNode

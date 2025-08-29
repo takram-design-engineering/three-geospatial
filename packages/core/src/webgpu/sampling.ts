@@ -2,7 +2,7 @@ import { add, nodeObject, sub, textureSize, vec2, vec4 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 
 import { FnVar } from './FnVar'
-import type { Node, NodeObject } from './node'
+import type { NodeObject } from './node'
 
 // Reference: https://www.shadertoy.com/view/MtVGWz
 export const textureCatmullRom = /*#__PURE__*/ FnVar(
@@ -10,7 +10,7 @@ export const textureCatmullRom = /*#__PURE__*/ FnVar(
     textureNode: TextureNode,
     uv: NodeObject<'vec2'>,
     sharpness: number | NodeObject<'float'> = 0.4
-  ): Node<'vec4'> => {
+  ): NodeObject<'vec4'> => {
     const size = vec2(textureSize(textureNode).xy)
     const metrics = vec4(size.reciprocal().xy, size.xy)
     const position = metrics.zw.mul(uv)

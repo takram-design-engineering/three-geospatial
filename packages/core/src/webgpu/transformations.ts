@@ -16,10 +16,10 @@ import {
   viewZToOrthographicDepth
 } from 'three/tsl'
 
-import type { Node, NodeObject } from './node'
+import type { NodeObject } from './node'
 
 export const depthToViewZ = (
-  depth: Node<'float'> | NodeObject<'float'>,
+  depth: NodeObject<'float'>,
   cameraNear: NodeObject<'float'>,
   cameraFar: NodeObject<'float'>,
   perspectiveDepth = true,
@@ -36,7 +36,7 @@ export const depthToViewZ = (
 
 export const screenToPositionView = (
   uv: NodeObject<'vec2'>,
-  depth: Node<'float'> | NodeObject<'float'>,
+  depth: NodeObject<'float'>,
   viewZ: NodeObject<'float'>,
   projectionMatrix: NodeObject<'mat4'>,
   inverseProjectionMatrix: NodeObject<'mat4'>
@@ -65,7 +65,7 @@ export const turbo = (x: NodeObject<'float'>): NodeObject<'vec3'> => {
 }
 
 export const depthToColor = (
-  depth: Node<'float'> | NodeObject<'float'>,
+  depth: NodeObject<'float'>,
   camera: Camera,
   near?: number | NodeObject<'float'>,
   far?: number | NodeObject<'float'>
