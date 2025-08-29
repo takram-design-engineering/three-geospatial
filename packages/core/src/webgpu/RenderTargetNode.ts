@@ -1,4 +1,4 @@
-import { uv } from 'three/tsl'
+import { nodeObject, uv } from 'three/tsl'
 import {
   ClampToEdgeWrapping,
   HalfFloatType,
@@ -84,7 +84,9 @@ export class RenderTargetNode extends TextureNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { material } = this
-    material.fragmentNode = this.node
+    // I don't fully understand why, but updates on "node" doesn't propagate
+    // unless giving the builder context.
+    material.fragmentNode = nodeObject(this.node).context(builder.getContext())
     material.needsUpdate = true
     return super.setup(builder)
   }
