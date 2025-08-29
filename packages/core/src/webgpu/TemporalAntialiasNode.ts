@@ -1,5 +1,4 @@
 import {
-  Box2,
   ClampToEdgeWrapping,
   HalfFloatType,
   LinearFilter,
@@ -40,7 +39,6 @@ import {
   type Renderer,
   type TextureNode
 } from 'three/webgpu'
-import invariant from 'tiny-invariant'
 
 import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
@@ -181,7 +179,6 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
 )
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
-const boxScratch = /*#__PURE__*/ new Box2()
 
 export class TemporalAntialiasNode extends TempNode {
   static override get type(): string {
@@ -289,19 +286,15 @@ export class TemporalAntialiasNode extends TempNode {
     renderer.setRenderTarget(this.historyRT)
     void renderer.clear()
 
-    const { width: srcWidth, height: srcHeight } = inputNode.value
-    const { width: dstWidth, height: dstHeight } = this.historyRT.texture
-    renderer.copyTextureToTexture(
-      inputNode.value,
-      this.historyRT.texture,
-      boxScratch.set(
-        boxScratch.min.setScalar(0),
-        boxScratch.max.set(
-          Math.min(srcWidth, dstWidth),
-          Math.min(srcHeight, dstHeight)
-        )
-      )
-    )
+    // Copy the current input to the history with scaling.
+    renderer.setRenderTarget(this.historyRT)
+    const fragmentNode = this.material.fragmentNode
+    this.material.fragmentNode = inputNode
+    this.material.needsUpdate = true
+    this.mesh.render(renderer)
+    this.material.fragmentNode = fragmentNode
+    this.material.needsUpdate = true
+
     this.needsClearHistory = false
   }
 
@@ -337,7 +330,6 @@ export class TemporalAntialiasNode extends TempNode {
     this.historyNode.value = resolveRT.texture
 
     // The output node must point to the current resolve.
-    invariant(this._textureNode != null)
     this._textureNode.value = resolveRT.texture
   }
 
@@ -347,7 +339,6 @@ export class TemporalAntialiasNode extends TempNode {
     }
 
     const { inputNode } = this
-    invariant(inputNode != null)
 
     const size = renderer.getDrawingBufferSize(sizeScratch)
     this.setSize(size.x, size.y)
@@ -370,9 +361,6 @@ export class TemporalAntialiasNode extends TempNode {
 
   private setupOutputNode(): Node {
     const { inputNode, depthNode, velocityNode } = this
-    invariant(inputNode != null)
-    invariant(depthNode != null)
-    invariant(velocityNode != null)
 
     // TODO: Add confidence
     return Fn(() => {
@@ -414,7 +402,7 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode, _textureNode: textureNode } = this
+    const { inputNode } = this
 
     const { context } = (builder.getContext().postProcessing ??
       {}) as PostProcessingContext
@@ -435,8 +423,8 @@ export class TemporalAntialiasNode extends TempNode {
     material.fragmentNode = this.setupOutputNode()
     material.needsUpdate = true
 
-    textureNode.uvNode = inputNode.uvNode
-    return textureNode
+    this._textureNode.uvNode = inputNode.uvNode
+    return this._textureNode
   }
 
   override dispose(): void {
