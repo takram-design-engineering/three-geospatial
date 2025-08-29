@@ -213,10 +213,10 @@ export class TemporalAntialiasNode extends TempNode {
   velocityNode: TextureNode
   camera: PerspectiveCamera | OrthographicCamera
 
-  temporalAlpha = uniform(0.05)
+  temporalAlpha = uniform(0.1)
   varianceGamma = uniform(1)
   velocityThreshold = uniform(0.1)
-  depthBias = uniform(0.001)
+  depthError = uniform(0.001)
 
   // Static options:
   showDisocclusion = false
@@ -405,7 +405,10 @@ export class TemporalAntialiasNode extends TempNode {
         prevUV.mul(screenSize).sub(0.5).floor()
       ).w
       const expectedDepth = closestDepth.get('depth').add(velocity.z)
-      const depthConfidence = step(expectedDepth, prevDepth.add(this.depthBias))
+      const depthConfidence = step(
+        expectedDepth,
+        prevDepth.add(this.depthError)
+      )
       const confidence = velocityConfidence.mul(depthConfidence)
 
       const uvWeight = and(
