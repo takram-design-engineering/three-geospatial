@@ -25,3 +25,48 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 - [`AtmosphereParameters`](#atmosphereparameters)
 - [`AtmosphereLUTNode`](#atmospherelutnode)
 - [`AtmosphereLightNode`](#atmospherelightnode)
+
+## AtmosphereLight
+
+Represents direct and indirect sunlight. The lighting is correct at large scale regardless of the materials used on surfaces, unlike `SunDirectionalLight` and `SkyLightProbe` in the previous implementation.
+
+Add it along with [`AtmosphereLightNode`](#atmospherelightnode) to the renderer’s node library before use:
+
+```ts
+import {
+  AtmosphereLight,
+  AtmosphereLightNode
+} from '@takram/three-atmosphere/webgpu'
+
+renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+```
+
+→ [Source](/packages/atmosphere/src/webgpu/AtmosphereLight.ts)
+
+### Uniforms
+
+#### direct
+
+```ts
+direct: UniformNode<boolean> = true
+```
+
+Whether to enable direct sunlight. This must be turned off when you use an environment map that includes direct sunlight.
+
+#### indirect
+
+```ts
+indirect: UniformNode<boolean> = true
+```
+
+Whether to enable indirect sunlight. This must be turned off when you use an environment map.
+
+### Properties
+
+#### distance
+
+```ts
+distance: number = 1
+```
+
+The distance from `DirectionalLight.target` to the light’s position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
