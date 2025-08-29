@@ -33,9 +33,6 @@ export abstract class FilterNode extends TempNode {
   }
 
   protected createRenderTarget(name?: string): RenderTarget {
-    let typeName = (this.constructor as typeof FilterNode).type
-    typeName = typeName.endsWith('Node') ? typeName.slice(0, -4) : typeName
-
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
       type: HalfFloatType,
@@ -47,6 +44,8 @@ export abstract class FilterNode extends TempNode {
     texture.wrapS = ClampToEdgeWrapping
     texture.wrapT = ClampToEdgeWrapping
     texture.generateMipmaps = false
+
+    const typeName = (this.constructor as typeof FilterNode).type
     texture.name = name != null ? `${typeName}.${name}` : typeName
 
     this.renderTargets.push(renderTarget)
