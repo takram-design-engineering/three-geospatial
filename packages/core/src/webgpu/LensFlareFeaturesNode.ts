@@ -14,7 +14,7 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import type { NodeFrame } from 'three/webgpu'
+import type { NodeBuilder, NodeFrame } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { FnLayout } from './FnLayout'
@@ -42,7 +42,7 @@ export class LensFlareFeaturesNode extends SingleFilterNode {
     super.updateBefore(frame)
   }
 
-  protected override setupOutputNode(): Node {
+  protected override setupOutputNode(builder: NodeBuilder): Node {
     const {
       inputNode,
       ghostIntensity,

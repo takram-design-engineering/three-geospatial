@@ -75,14 +75,14 @@ export abstract class SeparableFilterNode extends FilterNode {
     inputNode.value = originalTexture
   }
 
-  protected abstract setupOutputNode(): Node
+  protected abstract setupOutputNode(builder: NodeBuilder): Node
 
   override setup(builder: NodeBuilder): unknown {
     const { inputNode } = this
     invariant(inputNode != null)
 
     const { material } = this
-    material.fragmentNode = this.setupOutputNode()
+    material.fragmentNode = this.setupOutputNode(builder)
     material.needsUpdate = true
 
     return super.setup(builder)

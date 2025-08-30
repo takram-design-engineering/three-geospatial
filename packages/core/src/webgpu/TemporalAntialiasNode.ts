@@ -377,7 +377,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.swapBuffers()
   }
 
-  private setupOutputNode(): Node {
+  private setupOutputNode(builder: NodeBuilder): Node {
     const { inputNode, depthNode, velocityNode, historyNode } = this
 
     // TODO: Add confidence
@@ -462,7 +462,7 @@ export class TemporalAntialiasNode extends TempNode {
     }
 
     const { material } = this
-    material.fragmentNode = this.setupOutputNode()
+    material.fragmentNode = this.setupOutputNode(builder)
     material.needsUpdate = true
 
     this._textureNode.uvNode = inputNode.uvNode

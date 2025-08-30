@@ -99,16 +99,16 @@ export abstract class DualFilterNode extends FilterNode {
     inputNode.value = originalTexture
   }
 
-  protected abstract setupDownsampleNode(): Node
-  protected abstract setupUpsampleNode(): Node
+  protected abstract setupDownsampleNode(builder: NodeBuilder): Node
+  protected abstract setupUpsampleNode(builder: NodeBuilder): Node
 
   override setup(builder: NodeBuilder): unknown {
     const { inputNode } = this
     invariant(inputNode != null)
 
     const { downsampleMaterial, upsampleMaterial } = this
-    downsampleMaterial.fragmentNode = this.setupDownsampleNode()
-    upsampleMaterial.fragmentNode = this.setupUpsampleNode()
+    downsampleMaterial.fragmentNode = this.setupDownsampleNode(builder)
+    upsampleMaterial.fragmentNode = this.setupUpsampleNode(builder)
     downsampleMaterial.needsUpdate = true
     upsampleMaterial.needsUpdate = true
 

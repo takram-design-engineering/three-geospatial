@@ -1,5 +1,5 @@
 import { add, Fn, mix, nodeObject, uniform, uv, vec2, vec4 } from 'three/tsl'
-import type { TextureNode } from 'three/webgpu'
+import type { NodeBuilder, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { DualFilterNode } from './DualFilterNode'
@@ -20,7 +20,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
     this.resolutionScale = 0.5
   }
 
-  protected override setupDownsampleNode(): Node {
+  protected override setupDownsampleNode(builder: NodeBuilder): Node {
     const { inputNode, inputTexelSize } = this
     invariant(inputNode != null)
 
@@ -97,7 +97,7 @@ export class MipmapSurfaceBlurNode extends DualFilterNode {
     })()
   }
 
-  protected override setupUpsampleNode(): Node {
+  protected override setupUpsampleNode(builder: NodeBuilder): Node {
     const { inputNode, inputTexelSize, downsampleNode } = this
     invariant(inputNode != null)
 

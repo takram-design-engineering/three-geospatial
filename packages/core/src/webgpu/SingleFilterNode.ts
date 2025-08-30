@@ -58,14 +58,14 @@ export abstract class SingleFilterNode extends FilterNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  protected abstract setupOutputNode(): Node
+  protected abstract setupOutputNode(builder: NodeBuilder): Node
 
   override setup(builder: NodeBuilder): unknown {
     const { inputNode } = this
     invariant(inputNode != null)
 
     const { material } = this
-    material.fragmentNode = this.setupOutputNode()
+    material.fragmentNode = this.setupOutputNode(builder)
     material.needsUpdate = true
 
     return super.setup(builder)
