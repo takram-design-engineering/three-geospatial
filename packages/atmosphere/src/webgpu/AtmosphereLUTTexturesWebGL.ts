@@ -1,7 +1,6 @@
 import {
   AddEquation,
   Box3,
-  ClampToEdgeWrapping,
   CustomBlending,
   LinearFilter,
   NoBlending,
@@ -63,8 +62,6 @@ function createRenderTarget(name: string): RenderTarget {
   const texture = renderTarget.texture
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
   texture.generateMipmaps = false
   texture.name = name
@@ -79,9 +76,6 @@ function createRenderTarget3D(name: string): RenderTarget3D {
   const texture = renderTarget.texture as unknown as Data3DTexture
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
-  texture.wrapR = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
   texture.generateMipmaps = false
   texture.name = name

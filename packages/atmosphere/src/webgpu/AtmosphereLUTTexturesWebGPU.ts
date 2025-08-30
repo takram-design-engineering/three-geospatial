@@ -1,6 +1,5 @@
 import {
   Box3,
-  ClampToEdgeWrapping,
   LinearFilter,
   NoColorSpace,
   type Texture,
@@ -57,8 +56,6 @@ export function createStorageTexture(name: string): StorageTexture {
   const texture = new StorageTexture(1, 1)
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
   texture.generateMipmaps = false
   texture.name = name
@@ -69,8 +66,6 @@ export function createStorage3DTexture(name: string): Storage3DTexture {
   const texture = new Storage3DTexture(1, 1, 1)
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
   texture.colorSpace = NoColorSpace
   texture.generateMipmaps = false
   texture.name = name

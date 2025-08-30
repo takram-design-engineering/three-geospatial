@@ -1,5 +1,4 @@
 import {
-  ClampToEdgeWrapping,
   DepthTexture,
   HalfFloatType,
   LinearFilter,
@@ -257,8 +256,6 @@ export class TemporalAntialiasNode extends TempNode {
     const texture = renderTarget.texture
     texture.minFilter = LinearFilter
     texture.magFilter = LinearFilter
-    texture.wrapS = ClampToEdgeWrapping
-    texture.wrapT = ClampToEdgeWrapping
     texture.generateMipmaps = false
 
     const typeName = (this.constructor as typeof TemporalAntialiasNode).type

@@ -1,5 +1,4 @@
 import {
-  ClampToEdgeWrapping,
   HalfFloatType,
   LinearFilter,
   RenderTarget,
@@ -41,8 +40,6 @@ export abstract class FilterNode extends TempNode {
     const texture = renderTarget.texture
     texture.minFilter = LinearFilter
     texture.magFilter = LinearFilter
-    texture.wrapS = ClampToEdgeWrapping
-    texture.wrapT = ClampToEdgeWrapping
     texture.generateMipmaps = false
 
     const typeName = (this.constructor as typeof FilterNode).type

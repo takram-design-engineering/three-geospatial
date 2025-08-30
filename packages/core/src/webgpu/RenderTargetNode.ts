@@ -1,6 +1,5 @@
 import { nodeObject, uv } from 'three/tsl'
 import {
-  ClampToEdgeWrapping,
   HalfFloatType,
   LinearFilter,
   NodeMaterial,
@@ -27,8 +26,6 @@ function createRenderTarget(name?: string): RenderTarget {
   const texture = renderTarget.texture
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
-  texture.wrapS = ClampToEdgeWrapping
-  texture.wrapT = ClampToEdgeWrapping
   texture.generateMipmaps = false
   texture.name = name != null ? `RenderTargetNode.${name}` : 'RenderTargetNode'
   return renderTarget
