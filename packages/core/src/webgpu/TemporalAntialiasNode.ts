@@ -6,8 +6,7 @@ import {
   RenderTarget,
   RGBAFormat,
   Vector2,
-  type OrthographicCamera,
-  type PerspectiveCamera
+  type Camera
 } from 'three'
 import {
   and,
@@ -60,6 +59,29 @@ interface PostProcessingContext {
 interface VelocityNodeImmutable {
   projectionMatrix?: Matrix4 | null
   setProjectionMatrix?: (value: Matrix4 | null) => unknown
+}
+
+interface SupportedCamera extends Camera {
+  updateProjectionMatrix(): void
+  setViewOffset(
+    fullWidth: number,
+    fullHeight: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): void
+  clearViewOffset(): void
+}
+
+function isSupportedCamera(camera: Camera): camera is SupportedCamera {
+  return (
+    camera.isPerspectiveCamera === true ||
+    camera.isOrthographicCamera === true ||
+    ('updateProjectionMatrix' in camera &&
+      'setViewOffset' in camera &&
+      'clearViewOffset' in camera)
+  )
 }
 
 // prettier-ignore
@@ -211,7 +233,18 @@ export class TemporalAntialiasNode extends TempNode {
   inputNode: TextureNode
   depthNode: TextureNode
   velocityNode: TextureNode
-  camera: PerspectiveCamera | OrthographicCamera
+  camera: Camera & {
+    updateProjectionMatrix(): void
+    setViewOffset(
+      fullWidth: number,
+      fullHeight: number,
+      x: number,
+      y: number,
+      width: number,
+      height: number
+    ): void
+    clearViewOffset(): void
+  }
 
   temporalAlpha = uniform(0.1)
   varianceGamma = uniform(1)
@@ -242,13 +275,16 @@ export class TemporalAntialiasNode extends TempNode {
     inputNode: TextureNode,
     depthNode: TextureNode,
     velocityNode: TextureNode,
-    camera: PerspectiveCamera | OrthographicCamera
+    camera: Camera
   ) {
     super('vec3')
     this.velocityNodeImmutable = velocityNodeImmutable
     this.inputNode = inputNode
     this.depthNode = depthNode
     this.velocityNode = velocityNode
+    if (!isSupportedCamera(camera)) {
+      throw new Error('The provided camera is not supported.')
+    }
     this.camera = camera
 
     this._textureNode = texture(this.resolveRT.texture)
@@ -483,7 +519,7 @@ export const temporalAntialias =
     inputNode: Node,
     depthNode: TextureNode,
     velocityNode: TextureNode,
-    camera: PerspectiveCamera | OrthographicCamera
+    camera: Camera
   ): NodeObject<TemporalAntialiasNode> =>
     nodeObject(
       new TemporalAntialiasNode(
