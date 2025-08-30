@@ -275,6 +275,10 @@ export class TemporalAntialiasNode extends TempNode {
     return renderTarget
   }
 
+  getTextureNode(): TextureNode {
+    return this._textureNode
+  }
+
   private setProjectionMatrix(value: Matrix4 | null): void {
     const { velocityNodeImmutable: velocity } = this
     if (velocity != null) {
@@ -404,6 +408,7 @@ export class TemporalAntialiasNode extends TempNode {
         // BUG: Cannot use ivec2:
         prevUV.mul(screenSize).sub(0.5).floor()
       ).w
+      // TODO: Depth is assumed linear. Needs a conversion if not.
       const expectedDepth = closestDepth.get('depth').add(velocity.z)
       const depthConfidence = step(
         expectedDepth,
