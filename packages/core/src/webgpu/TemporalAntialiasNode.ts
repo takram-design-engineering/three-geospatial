@@ -1,5 +1,6 @@
 import {
   ClampToEdgeWrapping,
+  DepthTexture,
   HalfFloatType,
   LinearFilter,
   Matrix4,
@@ -43,18 +44,12 @@ import {
 
 import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
+import { haltonOffsets } from './internals'
 import type { Node, NodeObject } from './node'
 import { convertToTexture } from './RenderTargetNode'
 import { textureCatmullRom } from './sampling'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
-
-interface PostProcessingContext {
-  context?: {
-    onBeforePostProcessing?: () => void
-    onAfterPostProcessing?: () => void
-  }
-}
 
 interface VelocityNodeImmutable {
   projectionMatrix?: Matrix4 | null
@@ -84,43 +79,12 @@ function isSupportedCamera(camera: Camera): camera is SupportedCamera {
   )
 }
 
-// prettier-ignore
-const bayerIndices: readonly number[] = [
-  0, 8, 2, 10,
-  12, 4, 14, 6,
-  3, 11, 1, 9,
-  15, 7, 13, 5
-]
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const bayerOffsets: readonly Vector2[] = /*#__PURE__*/ bayerIndices.reduce<
-  Vector2[]
->((result, _, index) => {
-  const offset = new Vector2()
-  for (let i = 0; i < 16; ++i) {
-    if (bayerIndices[i] === index) {
-      offset.set(((i % 4) + 0.5) / 4, (Math.floor(i / 4) + 0.5) / 4)
-      break
-    }
+interface PostProcessingContext {
+  context?: {
+    onBeforePostProcessing?: () => void
+    onAfterPostProcessing?: () => void
   }
-  return [...result, offset]
-}, [])
-
-function halton(index: number, base: number): number {
-  let fraction = 1
-  let result = 0
-  while (index > 0) {
-    fraction /= base
-    result += fraction * (index % base)
-    index = Math.floor(index / base)
-  }
-  return result
 }
-
-const haltonOffsets: readonly Vector2[] = /*#__PURE__*/ Array.from(
-  { length: 16 },
-  (_, index) => new Vector2(halton(index + 1, 2), halton(index + 1, 3))
-)
 
 // Reference: https://github.com/playdeadgames/temporal
 const clipAABB = /*#__PURE__*/ FnLayout({
@@ -220,6 +184,7 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
 )
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
+const emptyDepthTexture = /*#__PURE__*/ new DepthTexture(1, 1)
 
 // Note on TAA and tone mapping (p.19):
 // https://advances.realtimerendering.com/s2014/epic/TemporalAA.pptx
@@ -233,18 +198,7 @@ export class TemporalAntialiasNode extends TempNode {
   inputNode: TextureNode
   depthNode: TextureNode
   velocityNode: TextureNode
-  camera: Camera & {
-    updateProjectionMatrix(): void
-    setViewOffset(
-      fullWidth: number,
-      fullHeight: number,
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ): void
-    clearViewOffset(): void
-  }
+  camera: SupportedCamera
 
   temporalAlpha = uniform(0.1)
   varianceGamma = uniform(1)
@@ -252,10 +206,11 @@ export class TemporalAntialiasNode extends TempNode {
   depthError = uniform(0.001)
 
   // Static options:
-  showDisocclusion = false
+  debugShowDisocclusion = false
 
   private resolveRT = this.createRenderTarget('Resolve')
   private historyRT = this.createRenderTarget('History')
+  private previousDepthTexture?: DepthTexture
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
@@ -263,6 +218,7 @@ export class TemporalAntialiasNode extends TempNode {
 
   private readonly resolveNode = texture(this.resolveRT.texture)
   private readonly historyNode = texture(this.historyRT.texture)
+  private readonly previousDepthNode = texture(emptyDepthTexture)
   private readonly originalProjectionMatrix = new Matrix4()
   private jitterIndex = 0
 
@@ -379,6 +335,18 @@ export class TemporalAntialiasNode extends TempNode {
     this.jitterIndex = (this.jitterIndex + 1) % haltonOffsets.length
   }
 
+  private copyDepthTexture(renderer: Renderer): void {
+    const current = this.depthNode.value
+    const previous = (this.previousDepthTexture ??=
+      current.clone() as DepthTexture)
+    previous.image.width = current.width
+    previous.image.height = current.height
+    previous.needsUpdate = true
+    renderer.copyTextureToTexture(current, previous)
+
+    this.previousDepthNode.value = previous
+  }
+
   private swapBuffers(): void {
     // Swap the render target textures instead of copying:
     const { resolveRT, historyRT } = this
@@ -410,6 +378,7 @@ export class TemporalAntialiasNode extends TempNode {
 
     restoreRendererState(renderer, this.rendererState)
 
+    this.copyDepthTexture(renderer)
     this.swapBuffers()
   }
 
@@ -440,7 +409,7 @@ export class TemporalAntialiasNode extends TempNode {
 
       const prevUV = uv.sub(velocity.xy).toConst()
       // TODO: Add gather() in TextureNode and use it:
-      const prevDepth = historyNode.load(
+      const prevDepth = this.previousDepthNode.load(
         // BUG: Cannot use ivec2:
         prevUV.mul(screenSize).sub(0.5).floor()
       ).w
@@ -471,11 +440,11 @@ export class TemporalAntialiasNode extends TempNode {
         outputColor.assign(mix(clippedColor, currentColor, this.temporalAlpha))
       }).Else(() => {
         outputColor.assign(currentColor)
-        if (this.showDisocclusion) {
+        if (this.debugShowDisocclusion) {
           outputColor.assign(vec3(1, 0, 0))
         }
       })
-      return vec4(outputColor.rgb, depthNode.load(coord).r)
+      return outputColor
     })()
   }
 
@@ -508,6 +477,7 @@ export class TemporalAntialiasNode extends TempNode {
   override dispose(): void {
     this.resolveRT.dispose()
     this.historyRT.dispose()
+    this.previousDepthTexture?.dispose()
     this.material.dispose()
     super.dispose()
   }
