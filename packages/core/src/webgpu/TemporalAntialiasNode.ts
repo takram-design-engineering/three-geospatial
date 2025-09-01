@@ -18,7 +18,6 @@ import {
   mix,
   nodeObject,
   screenCoordinate,
-  screenSize,
   screenUV,
   select,
   sqrt,
@@ -380,18 +379,16 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   private setupOutputNode(builder: NodeBuilder): Node {
-    const { inputNode, depthNode, velocityNode, historyNode } = this
-
     // TODO: Add confidence
     return Fn(() => {
       const coord = ivec2(screenCoordinate)
       const uv = screenUV
 
-      const currentColor = inputNode.load(coord).toConst()
-      const closestDepth = getClosestDepth(depthNode, coord)
+      const currentColor = this.inputNode.load(coord).toConst()
+      const closestDepth = getClosestDepth(this.depthNode, coord)
       const closestCoord = closestDepth.get('coord')
 
-      const velocity = velocityNode
+      const velocity = this.velocityNode
         .load(closestCoord)
         // Convert NDC velocity to UV and depth offset:
         // TODO: Should Y be inverted on WebGPU?
@@ -408,7 +405,7 @@ export class TemporalAntialiasNode extends TempNode {
       // TODO: Add gather() in TextureNode and use it:
       const prevDepth = this.previousDepthNode.load(
         // BUG: Cannot use ivec2:
-        prevUV.mul(screenSize).sub(0.5).floor()
+        prevUV.mul(this.previousDepthNode.size(0)).sub(0.5).floor()
       ).w
       // TODO: Depth is assumed linear. Needs a conversion if not.
       const expectedDepth = closestDepth.get('depth').add(velocity.z)
@@ -425,9 +422,9 @@ export class TemporalAntialiasNode extends TempNode {
 
       const outputColor = vec4(0).toVar()
       If(uvWeight.mul(confidence).greaterThan(0), () => {
-        const historyColor = textureCatmullRom(historyNode, prevUV)
+        const historyColor = textureCatmullRom(this.historyNode, prevUV)
         const clippedColor = varianceClipping(
-          inputNode,
+          this.inputNode,
           coord,
           currentColor,
           historyColor,
@@ -446,8 +443,6 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode } = this
-
     const { context } = (builder.getContext().postProcessing ??
       {}) as PostProcessingContext
     if (context != null) {
@@ -467,7 +462,7 @@ export class TemporalAntialiasNode extends TempNode {
     material.fragmentNode = this.setupOutputNode(builder)
     material.needsUpdate = true
 
-    this._textureNode.uvNode = inputNode.uvNode
+    this._textureNode.uvNode = this.inputNode.uvNode
     return this._textureNode
   }
 

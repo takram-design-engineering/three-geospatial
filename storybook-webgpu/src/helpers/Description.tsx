@@ -8,8 +8,8 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentProps,
   type FC,
-  type ReactNode,
   type Ref
 } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -106,7 +106,9 @@ export const TilesAttribution: FC = () => {
   )
 }
 
-export const Description: FC<{ children?: ReactNode }> = ({ children }) => {
+export const Description: FC<
+  ComponentProps<typeof DescriptionElement>
+> = props => {
   const gl = useThree(({ gl }) => gl)
   const target = gl.domElement.parentNode
 
@@ -123,7 +125,7 @@ export const Description: FC<{ children?: ReactNode }> = ({ children }) => {
   }, [target, element])
 
   useLayoutEffect(() => {
-    root.current?.render(<DescriptionElement>{children}</DescriptionElement>)
+    root.current?.render(<DescriptionElement {...props} />)
   })
 
   return null
