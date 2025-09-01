@@ -1,9 +1,9 @@
 import styled from '@emotion/styled'
 import { Canvas, type CanvasProps } from '@react-three/fiber'
 import { atom, useAtomValue } from 'jotai'
-import type { FC } from 'react'
+import { useEffect, useRef, type FC } from 'react'
 import type { WebGPURendererParameters } from 'three/src/renderers/webgpu/WebGPURenderer.js'
-import { WebGPURenderer } from 'three/webgpu'
+import { WebGPURenderer, type Renderer } from 'three/webgpu'
 
 import type { RendererArgs } from '../controls/rendererControls'
 import { Stats } from './Stats'
@@ -58,6 +58,17 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
   let forceWebGL = useControl(({ forceWebGL }: RendererArgs) => forceWebGL)
   forceWebGL ||= !available
   const pixelRatio = useControl(({ pixelRatio }: RendererArgs) => pixelRatio)
+
+  const ref = useRef<Renderer>(null)
+  useEffect(() => {
+    return () => {
+      // WORKAROUND: Renderer won't be disposed when used in Storybook.
+      setTimeout(() => {
+        ref.current?.dispose()
+      }, 500)
+    }
+  }, [])
+
   return (
     <>
       <Canvas
@@ -69,6 +80,7 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
             ...otherProps,
             forceWebGL
           })
+          ref.current = renderer
           await renderer.init()
 
           // Require the model-view matrix premultiplied on the CPU side.
