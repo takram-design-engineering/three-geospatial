@@ -1,6 +1,7 @@
 import type { DirectLightData, LightingContext } from 'three/src/nodes/TSL.js'
 import {
   cameraViewMatrix,
+  Fn,
   normalWorld,
   positionWorld,
   select,
@@ -35,7 +36,6 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     if (atmosphereContext == null) {
       return
     }
-    builder.getContext().atmosphere = atmosphereContext
 
     const { direct, indirect } = this.light
 
@@ -63,11 +63,14 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const positionUnit = positionECEF.mul(worldToUnit).toVar()
 
     // Compute the indirect illuminance to store it in the context.
-    const skyIlluminance = getSkyIlluminance(
-      positionUnit,
-      normalECEF,
-      sunDirectionECEF
-    ).mul(select(indirect, 1, 0))
+    const skyIlluminance = Fn(builder => {
+      // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that
+      // provided to the setupDirect().
+      builder.getContext().atmosphere = atmosphereContext
+      return getSkyIlluminance(positionUnit, normalECEF, sunDirectionECEF).mul(
+        select(indirect, 1, 0)
+      )
+    })()
 
     // Yes, it's an indirect but should be fine to update it here.
     const lightingContext = builder.getContext() as CorrectLightingContext
@@ -84,11 +87,16 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     // Compute the direct luminance of the sun.
     const radius = positionUnit.length().toVar()
     const cosSun = positionUnit.dot(sunDirectionECEF).div(radius)
-    const sunTransmittance = getTransmittanceToSun(
-      atmosphereContext.lutNode.getTextureNode('transmittance'),
-      radius,
-      cosSun
-    )
+    const sunTransmittance = Fn(builder => {
+      // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that
+      // provided to the setupDirect().
+      builder.getContext().atmosphere = atmosphereContext
+      return getTransmittanceToSun(
+        atmosphereContext.lutNode.getTextureNode('transmittance'),
+        radius,
+        cosSun
+      )
+    })()
 
     const sunLuminance = solarIrradiance
       .mul(sunTransmittance)
