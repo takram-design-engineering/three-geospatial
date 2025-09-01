@@ -24,3 +24,21 @@ export function debugShader(renderer: Renderer, node: Node): void {
       mesh.geometry.dispose()
     })
 }
+
+export function hookFunction<
+  T,
+  K extends keyof {
+    [K in keyof T as T[K] extends (...args: any[]) => any ? K : never]: unknown
+  },
+  Args extends unknown[] = T[K] extends (...args: any[]) => any
+    ? Parameters<T[K]>
+    : never,
+  Result = T[K] extends (...args: any[]) => any ? ReturnType<T[K]> : never
+>(target: T, name: K, callback: (...args: Args) => void): T {
+  const value = target[name] as (...args: Args) => Result
+  target[name] = ((...args: Args): Result => {
+    callback(...args)
+    return value.apply(target, args)
+  }) as any
+  return target
+}
