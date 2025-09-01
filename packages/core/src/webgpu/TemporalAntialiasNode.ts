@@ -44,6 +44,7 @@ import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import { haltonOffsets } from './internals'
 import type { Node, NodeObject } from './node'
+import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RenderTargetNode'
 import { textureCatmullRom } from './sampling'
 
@@ -232,7 +233,7 @@ export class TemporalAntialiasNode extends TempNode {
     velocityNode: TextureNode,
     camera: Camera
   ) {
-    super('vec3')
+    super('vec4')
     this.velocityNodeImmutable = velocityNodeImmutable
     this.inputNode = inputNode
     this.depthNode = depthNode
@@ -242,7 +243,7 @@ export class TemporalAntialiasNode extends TempNode {
     }
     this.camera = camera
 
-    this._textureNode = texture(this.resolveRT.texture)
+    this._textureNode = outputTexture(this, this.resolveRT.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
   }
