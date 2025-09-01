@@ -28,7 +28,8 @@ const Scene: FC<StoryProps> = () => {
   const [postProcessing, lensFlareNode, toneMappingNode] = useResource(
     manage => {
       const passNode = pass(scene, camera)
-      const lensFlareNode = lensFlare(passNode.getTextureNode('output'))
+      const outputNode = passNode.getTextureNode('output')
+      const lensFlareNode = lensFlare(outputNode)
       const toneMappingNode = toneMapping(
         AgXToneMapping,
         uniform(0),

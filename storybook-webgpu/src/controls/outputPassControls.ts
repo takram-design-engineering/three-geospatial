@@ -76,17 +76,16 @@ export function useOutputPassControls(
       let outputColorTransform = ref.current.outputColorTransform
       // In reverse order:
       if (outputNormal) {
-        outputNode = directionToColor(passNode.getTextureNode('normal'))
+        const normalNode = passNode.getTextureNode('normal')
+        outputNode = directionToColor(normalNode)
         outputColorTransform = false
       } else if (outputDepth) {
-        outputNode = depthToColor(
-          passNode.getTextureNode('depth'),
-          passNode.camera
-        )
+        const depthNode = passNode.getTextureNode('depth')
+        outputNode = depthToColor(depthNode, passNode.camera)
         outputColorTransform = false
       } else if (outputVelocity) {
-        const velocity = passNode.getTextureNode('velocity').xy.mul(10)
-        outputNode = vec4(velocity.add(0.5), 0.5, 1)
+        const velocityNode = passNode.getTextureNode('velocity')
+        outputNode = vec4(velocityNode.xyz.mul(10).add(0.5), 1)
         outputColorTransform = true
       }
       onChange(outputNode, outputColorTransform)

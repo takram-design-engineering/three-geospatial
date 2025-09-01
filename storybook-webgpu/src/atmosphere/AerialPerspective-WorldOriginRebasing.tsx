@@ -74,11 +74,16 @@ const Scene: FC<StoryProps> = () => {
           velocity: highpVelocity
         })
       )
+      const outputNode = passNode.getTextureNode('output')
+      const depthNode = passNode.getTextureNode('depth')
+      const normalNode = passNode.getTextureNode('normal')
+      const velocityNode = passNode.getTextureNode('velocity')
+
       const aerialNode = aerialPerspective(
         context,
-        passNode.getTextureNode('output'),
-        passNode.getTextureNode('depth'),
-        passNode.getTextureNode('normal')
+        outputNode,
+        depthNode,
+        normalNode
       )
       const lensFlareNode = lensFlare(aerialNode)
       const toneMappingNode = toneMapping(
@@ -89,8 +94,8 @@ const Scene: FC<StoryProps> = () => {
       const taaNode = isWebGPU(renderer)
         ? temporalAntialias(highpVelocity)(
             toneMappingNode,
-            passNode.getTextureNode('depth'),
-            passNode.getTextureNode('velocity'),
+            depthNode,
+            velocityNode,
             camera
           )
         : toneMappingNode

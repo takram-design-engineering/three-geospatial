@@ -107,16 +107,20 @@ const Scene: FC<StoryProps> = () => {
           velocity: highpVelocity
         })
       )
+      const outputNode = passNode.getTextureNode('output')
+      const depthNode = passNode.getTextureNode('depth')
+      const velocityNode = passNode.getTextureNode('velocity')
+
       const toneMappingNode = toneMapping(
         AgXToneMapping,
         uniform(0),
-        passNode.getTextureNode('output')
+        outputNode
       )
       const taaNode = isWebGPU(renderer)
         ? temporalAntialias(highpVelocity)(
             toneMappingNode,
-            passNode.getTextureNode('depth'),
-            passNode.getTextureNode('velocity'),
+            depthNode,
+            velocityNode,
             camera
           )
         : toneMappingNode
