@@ -97,10 +97,14 @@ export class HighpVelocityNode extends TempNode {
     const currentClip = this.currentProjectionMatrix
       .mul(this.currentModelViewMatrix)
       .mul(positionLocal)
+      .toVertexStage()
     const previousClip = this.previousProjectionMatrix
       .mul(this.previousModelViewMatrix)
       .mul(positionPrevious)
+      .toVertexStage()
 
+    // Perspective divisions cannot be performed in the vertex shader.
+    // See: http://john-chapman-graphics.blogspot.com/2013/01/per-object-motion-blur.html
     const currentNDC = currentClip.xyz.div(currentClip.w)
     const previousNDC = previousClip.xyz.div(previousClip.w)
 
