@@ -210,6 +210,7 @@ export class TemporalAntialiasNode extends TempNode {
   private historyRT = this.createRenderTarget('History')
   private previousDepthTexture?: DepthTexture
   private readonly material = new NodeMaterial()
+  private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
   private needsClearHistory = false
@@ -298,12 +299,9 @@ export class TemporalAntialiasNode extends TempNode {
 
     // Copy the current input to the history with scaling.
     renderer.setRenderTarget(this.historyRT)
-    const fragmentNode = this.material.fragmentNode
-    this.material.fragmentNode = inputNode
-    this.material.needsUpdate = true
+    this.mesh.material = this.copyMaterial
     this.mesh.render(renderer)
-    this.material.fragmentNode = fragmentNode
-    this.material.needsUpdate = true
+    this.mesh.material = this.material
 
     this.needsClearHistory = false
   }
@@ -379,7 +377,6 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   private setupOutputNode(builder: NodeBuilder): Node {
-    // TODO: Add confidence
     return Fn(() => {
       const coord = ivec2(screenCoordinate)
       const uv = screenUV
@@ -438,6 +435,7 @@ export class TemporalAntialiasNode extends TempNode {
           outputColor.assign(vec3(1, 0, 0))
         }
       })
+
       return outputColor
     })()
   }
@@ -458,9 +456,12 @@ export class TemporalAntialiasNode extends TempNode {
       }
     }
 
-    const { material } = this
+    const { material, copyMaterial } = this
     material.fragmentNode = this.setupOutputNode(builder)
     material.needsUpdate = true
+
+    copyMaterial.fragmentNode = this.inputNode
+    copyMaterial.needsUpdate = true
 
     this._textureNode.uvNode = this.inputNode.uvNode
     return this._textureNode
@@ -471,6 +472,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.historyRT.dispose()
     this.previousDepthTexture?.dispose()
     this.material.dispose()
+    this.copyMaterial.dispose()
     super.dispose()
   }
 }

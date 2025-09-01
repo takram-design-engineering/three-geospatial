@@ -6,7 +6,7 @@ import { Story as NonGeospatialStory } from './NonGeospatial-Story'
 import NonGeospatialCode from './NonGeospatial-Story?raw'
 
 export default {
-  title: 'atmosphere/Non Geospatial',
+  title: 'atmosphere/Non-geospatial',
   parameters: {
     docs: {
       codePanel: true,
@@ -26,3 +26,5 @@ export const NonGeospatial = createStory(NonGeospatialStory, {
     }
   }
 })
+
+NonGeospatial.storyName = 'Non-geospatial'

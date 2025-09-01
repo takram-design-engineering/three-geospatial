@@ -103,6 +103,9 @@ export class HighpVelocityNode extends TempNode {
 
     const currentNDC = currentClip.xyz.div(currentClip.w)
     const previousNDC = previousClip.xyz.div(previousClip.w)
+
+    // Store NDC offsets instead of UV and depth offsets for compatibility with
+    // the VelocityNode in the Three.js addon.
     return sub(currentNDC, previousNDC)
   }
 }
