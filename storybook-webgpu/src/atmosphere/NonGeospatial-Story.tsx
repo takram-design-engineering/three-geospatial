@@ -12,7 +12,6 @@ import { RectAreaLightTexturesLib } from 'three/addons/lights/RectAreaLightTextu
 import {
   cameraViewMatrix,
   mrt,
-  normalView,
   output,
   pass,
   toneMapping,
@@ -105,8 +104,7 @@ const Scene: FC<StoryProps> = () => {
       const passNode = pass(scene, camera, { samples: 0 }).setMRT(
         mrt({
           output,
-          velocity: highpVelocity,
-          normal: normalView
+          velocity: highpVelocity
         })
       )
       const toneMappingNode = toneMapping(
