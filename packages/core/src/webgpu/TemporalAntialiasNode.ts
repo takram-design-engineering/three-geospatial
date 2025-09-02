@@ -40,6 +40,7 @@ import {
   type TextureNode
 } from 'three/webgpu'
 
+import { cameraFar, cameraNear } from './accessors'
 import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import { haltonOffsets } from './internals'
@@ -47,6 +48,7 @@ import type { Node, NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RenderTargetNode'
 import { textureCatmullRom } from './sampling'
+import { logarithmicDepthToPerspectiveDepth } from './transformations'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -377,7 +379,21 @@ export class TemporalAntialiasNode extends TempNode {
     this.swapBuffers()
   }
 
-  private setupOutputNode(builder: NodeBuilder): Node {
+  private setupOutputNode({ renderer }: NodeBuilder): Node {
+    const getPreviousDepth = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
+      const { previousDepthNode: depthNode } = this
+      const depth = depthNode
+        .load(uv.mul(depthNode.size(0)).sub(0.5).floor()) // BUG: Cannot use ivec2
+        .toConst()
+      return renderer.logarithmicDepthBuffer
+        ? logarithmicDepthToPerspectiveDepth(
+            depth,
+            cameraNear(this.camera),
+            cameraFar(this.camera)
+          )
+        : depth
+    }
+
     return Fn(() => {
       const coord = ivec2(screenCoordinate)
       const uv = screenUV
@@ -400,13 +416,19 @@ export class TemporalAntialiasNode extends TempNode {
         .saturate()
 
       const prevUV = uv.sub(velocity.xy).toConst()
+      const prevDepth = getPreviousDepth(prevUV)
+
       // TODO: Add gather() in TextureNode and use it:
-      const prevDepth = this.previousDepthNode.load(
-        // BUG: Cannot use ivec2:
-        prevUV.mul(this.previousDepthNode.size(0)).sub(0.5).floor()
-      ).w
-      // TODO: Depth is assumed linear. Needs a conversion if not.
-      const expectedDepth = closestDepth.get('depth').add(velocity.z)
+      let expectedDepth = closestDepth.get('depth')
+      if (renderer.logarithmicDepthBuffer) {
+        expectedDepth = logarithmicDepthToPerspectiveDepth(
+          expectedDepth,
+          cameraNear(this.camera),
+          cameraFar(this.camera)
+        )
+      }
+
+      expectedDepth = expectedDepth.add(velocity.z)
       const depthConfidence = step(
         expectedDepth,
         prevDepth.add(this.depthError)

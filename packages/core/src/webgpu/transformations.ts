@@ -20,18 +20,27 @@ import type { Node, NodeObject } from './node'
 
 export const depthToViewZ = (
   depth: Node<'float'>,
-  cameraNear: NodeObject<'float'>,
-  cameraFar: NodeObject<'float'>,
+  near: NodeObject<'float'>,
+  far: NodeObject<'float'>,
   perspectiveDepth = true,
   logarithmicDepth = false
 ): NodeObject<'float'> => {
   return (
     logarithmicDepth
-      ? logarithmicDepthToViewZ(depth, cameraNear, cameraFar)
+      ? logarithmicDepthToViewZ(depth, near, far)
       : perspectiveDepth
-        ? perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
-        : orthographicDepthToViewZ(depth, cameraNear, cameraFar)
+        ? perspectiveDepthToViewZ(depth, near, far)
+        : orthographicDepthToViewZ(depth, near, far)
   ) as NodeObject<'float'>
+}
+
+export const logarithmicDepthToPerspectiveDepth = (
+  depth: Node<'float'>,
+  near: NodeObject<'float'>,
+  far: NodeObject<'float'>
+): NodeObject<'float'> => {
+  const viewZ = logarithmicDepthToViewZ(depth, near, far)
+  return far.div(far.sub(near)).add(far.mul(near).div(far.sub(near)).div(viewZ))
 }
 
 export const screenToPositionView = (

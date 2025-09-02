@@ -162,14 +162,15 @@ const Scene: FC<StoryProps> = () => {
     getMoonDirectionECEF(date, context.moonDirectionECEF)
   })
 
+  // Toggles the lights in the model:
   const modelRef = useRef<LittlestTokyoApi>(null)
   useGuardedFrame(() => {
     const { worldToECEFMatrix, sunDirectionECEF } = context
     const sunDirectionWorld = vector
       .copy(sunDirectionECEF)
       .applyMatrix3(rotation.setFromMatrix4(worldToECEFMatrix).transpose())
-    const zenithAngle = sunDirectionWorld.dot(up)
-    modelRef.current?.setLightIntensity(zenithAngle < 0.1 ? 1 : 0)
+    const cosSun = sunDirectionWorld.dot(up)
+    modelRef.current?.setLightIntensity(cosSun < 0.1 ? 1 : 0)
   })
 
   return (

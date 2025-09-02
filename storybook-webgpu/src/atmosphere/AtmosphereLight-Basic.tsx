@@ -141,6 +141,7 @@ const Scene: FC<StoryProps> = () => {
     getSunDirectionECEF(date, context.sunDirectionECEF)
   })
 
+  // Toggles the direct, indirect and environment lighting:
   const envNode = useResource(() => skyEnvironment(context), [context])
   const lightRef = useRef<AtmosphereLight>(null)
   useTransientControl(
