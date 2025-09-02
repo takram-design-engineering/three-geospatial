@@ -1,19 +1,19 @@
-import type { Camera } from 'three'
 import {
   cos,
   float,
   int,
   logarithmicDepthToViewZ,
+  nodeObject,
   orthographicDepthToViewZ,
   perspectiveDepthToViewZ,
   PI,
   PI2,
-  reference,
   sin,
   sub,
   vec3,
   vec4,
-  viewZToOrthographicDepth
+  viewZToLogarithmicDepth,
+  viewZToPerspectiveDepth
 } from 'three/tsl'
 
 import type { Node, NodeObject } from './node'
@@ -40,8 +40,16 @@ export const logarithmicDepthToPerspectiveDepth = (
   far: NodeObject<'float'>
 ): NodeObject<'float'> => {
   const viewZ = logarithmicDepthToViewZ(depth, near, far)
-  // far / (far - near) + ((far * near) / (far - near)) / viewZ
-  return far.div(far.sub(near)).add(far.mul(near).div(far.sub(near)).div(viewZ))
+  return viewZToPerspectiveDepth(viewZ, near, far) as NodeObject<'float'>
+}
+
+export const perspectiveDepthToLogarithmicDepth = (
+  depth: Node<'float'>,
+  near: NodeObject<'float'>,
+  far: NodeObject<'float'>
+): NodeObject<'float'> => {
+  const viewZ = nodeObject(perspectiveDepthToViewZ(depth, near, far))
+  return viewZToLogarithmicDepth(viewZ, near, far) as NodeObject<'float'>
 }
 
 export const screenToPositionView = (
@@ -76,31 +84,19 @@ export const turbo = (x: NodeObject<'float'>): NodeObject<'vec3'> => {
 
 export const depthToColor = (
   depth: Node<'float'>,
-  camera: Camera,
-  near?: number | NodeObject<'float'>,
-  far?: number | NodeObject<'float'>
+  near: NodeObject<'float'>,
+  far: NodeObject<'float'>,
+  perspectiveDepth = true,
+  logarithmicDepth = false
 ): NodeObject<'vec3'> => {
-  const cameraNear = reference('near', 'float', camera)
-  const cameraFar = reference('far', 'float', camera)
-  near = typeof near === 'number' ? float(near) : (near ?? cameraNear)
-  far = typeof far === 'number' ? float(far) : (far ?? cameraFar)
-
-  let orthoDepth: NodeObject<'float'>
-  if (camera.isPerspectiveCamera === true) {
-    const viewZ = perspectiveDepthToViewZ(depth, cameraNear, cameraFar)
-    orthoDepth = viewZToOrthographicDepth(
-      viewZ,
-      near,
-      far
-    ) as NodeObject<'float'>
-  } else {
-    orthoDepth = viewZToOrthographicDepth(
-      depth,
-      near,
-      far
-    ) as NodeObject<'float'>
-  }
-  return turbo(orthoDepth.saturate().oneMinus())
+  const viewZ = depthToViewZ(
+    depth,
+    near,
+    far,
+    perspectiveDepth,
+    logarithmicDepth
+  )
+  return turbo(viewZToLogarithmicDepth(viewZ, near, far) as NodeObject<'float'>)
 }
 
 export const equirectWorld = (uv: NodeObject<'vec2'>): NodeObject<'vec3'> => {

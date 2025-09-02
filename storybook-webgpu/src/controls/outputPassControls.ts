@@ -3,7 +3,12 @@ import { useRef } from 'react'
 import { directionToColor, vec4 } from 'three/tsl'
 import type { PassNode, PostProcessing } from 'three/webgpu'
 
-import { depthToColor, type Node } from '@takram/three-geospatial/webgpu'
+import {
+  cameraFar,
+  cameraNear,
+  depthToColor,
+  type Node
+} from '@takram/three-geospatial/webgpu'
 
 import { useTransientControl } from '../helpers/useTransientControl'
 
@@ -81,7 +86,13 @@ export function useOutputPassControls(
         outputColorTransform = false
       } else if (outputDepth) {
         const depthNode = passNode.getTextureNode('depth')
-        outputNode = depthToColor(depthNode, passNode.camera)
+        outputNode = depthToColor(
+          depthNode,
+          cameraNear(passNode.camera),
+          cameraFar(passNode.camera),
+          passNode.camera.isPerspectiveCamera,
+          postProcessing.renderer.logarithmicDepthBuffer
+        )
         outputColorTransform = false
       } else if (outputVelocity) {
         const velocityNode = passNode.getTextureNode('velocity')
