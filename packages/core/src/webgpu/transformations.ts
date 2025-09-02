@@ -40,6 +40,7 @@ export const logarithmicDepthToPerspectiveDepth = (
   far: NodeObject<'float'>
 ): NodeObject<'float'> => {
   const viewZ = logarithmicDepthToViewZ(depth, near, far)
+  // far / (far - near) + ((far * near) / (far - near)) / viewZ
   return far.div(far.sub(near)).add(far.mul(near).div(far.sub(near)).div(viewZ))
 }
 
@@ -52,7 +53,7 @@ export const screenToPositionView = (
 ): NodeObject<'vec3'> => {
   const scale = projectionMatrix.element(int(2)).element(int(3))
   const offset = projectionMatrix.element(int(3)).element(int(3))
-  const clip = vec4(vec3(uv.flipY(), depth).mul(2).sub(1), 1).toVar()
+  const clip = vec4(vec3(uv.flipY(), depth).mul(2).sub(1), 1)
   const ndc = clip.mul(viewZ.mul(scale).add(offset))
   return inverseProjectionMatrix.mul(ndc).xyz
 }
