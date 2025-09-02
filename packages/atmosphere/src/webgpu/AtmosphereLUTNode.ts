@@ -1,4 +1,4 @@
-import { FloatType, HalfFloatType, type Texture } from 'three'
+import { FloatType, HalfFloatType } from 'three'
 import { nodeProxy } from 'three/tsl'
 import {
   NodeUpdateType,
@@ -119,12 +119,6 @@ export class AtmosphereLUTNode extends TempNode {
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
-  getTexture(
-    name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName
-  ): Texture {
-    return this.textures.get(name)
-  }
-
   getTextureNode(name: AtmosphereLUTTextureName): NodeObject<TextureNode>
   getTextureNode(name: AtmosphereLUTTexture3DName): NodeObject<Texture3DNode>
   getTextureNode(
@@ -137,13 +131,13 @@ export class AtmosphereLUTNode extends TempNode {
     if (textureNames.includes(name as any)) {
       return (this._textureNodes[name] = outputTexture(
         this,
-        this.getTexture(name)
+        this.textures.get(name)
       ))
     }
     if (texture3DNames.includes(name as any)) {
       return (this._textureNodes[name] = outputTexture3D(
         this,
-        this.getTexture(name)
+        this.textures.get(name)
       ))
     }
     throw new Error(`Invalid texture name: ${name}`)
