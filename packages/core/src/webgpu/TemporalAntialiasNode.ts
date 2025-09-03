@@ -216,6 +216,7 @@ export class TemporalAntialiasNode extends TempNode {
   private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
+  private needsSyncPostProcessing = false
   private needsClearHistory = false
 
   private readonly resolveNode = texture(this.resolveRT.texture)
@@ -377,6 +378,11 @@ export class TemporalAntialiasNode extends TempNode {
 
     this.copyDepthTexture(renderer)
     this.swapBuffers()
+
+    // Don't jitter the camera in subsequent render passes if any:
+    if (this.needsSyncPostProcessing) {
+      this.clearViewOffset()
+    }
   }
 
   private setupOutputNode({ renderer }: NodeBuilder): Node {
@@ -467,16 +473,13 @@ export class TemporalAntialiasNode extends TempNode {
     const { context } = (builder.getContext().postProcessing ??
       {}) as PostProcessingContext
     if (context != null) {
-      const { onBeforePostProcessing, onAfterPostProcessing } = context
+      const { onBeforePostProcessing } = context
       context.onBeforePostProcessing = () => {
         onBeforePostProcessing?.()
         const size = builder.renderer.getDrawingBufferSize(sizeScratch)
         this.setViewOffset(size.width, size.height)
       }
-      context.onAfterPostProcessing = () => {
-        onAfterPostProcessing?.()
-        this.clearViewOffset()
-      }
+      this.needsSyncPostProcessing = true
     }
 
     const { material, copyMaterial } = this
