@@ -2,16 +2,15 @@ import type { FadeParams } from '3d-tiles-renderer/src/three/plugins/fade/FadeMa
 import { Discard, Fn, If, output, screenCoordinate, uniform } from 'three/tsl'
 import type { NodeMaterial } from 'three/webgpu'
 
+import { assertType } from '@takram/three-geospatial'
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
 const FADE_PARAMS = Symbol('FADE_PARAMS')
 
-declare module 'three' {
-  interface Material {
-    [FADE_PARAMS]?: FadeParams
-    params?: FadeParams
-    defines?: Record<string, unknown>
-  }
+interface FadeNodeMaterial extends NodeMaterial {
+  [FADE_PARAMS]?: FadeParams
+  params?: FadeParams
+  defines?: Record<string, unknown>
 }
 
 const bayerDither2x2 = FnLayout({
@@ -33,11 +32,15 @@ const bayerDither4x4 = FnLayout({
 })
 
 // Define shared uniforms for fadeIn/fadeOut so that "outputNode" can be cached.
-const fadeIn = uniform(0).onObjectUpdate(
-  ({ material }) => material?.params?.fadeIn.value ?? 0
+const fadeIn = uniform(0).onObjectUpdate(({ material }) =>
+  material != null
+    ? ((material as FadeNodeMaterial)?.params?.fadeIn.value ?? 0)
+    : 0
 )
-const fadeOut = uniform(0).onObjectUpdate(
-  ({ material }) => material?.params?.fadeOut.value ?? 0
+const fadeOut = uniform(0).onObjectUpdate(({ material }) =>
+  material != null
+    ? ((material as FadeNodeMaterial)?.params?.fadeOut.value ?? 0)
+    : 0
 )
 
 const outputNode = Fn(() => {
@@ -55,6 +58,8 @@ const outputNode = Fn(() => {
 })()
 
 export function wrapFadeNodeMaterial(material: NodeMaterial): FadeParams {
+  assertType<FadeNodeMaterial>(material)
+
   if (material[FADE_PARAMS] != null) {
     return material[FADE_PARAMS]
   }
