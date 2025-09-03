@@ -54,7 +54,7 @@ function createPivotMaterial(uniforms: PivotUniforms): Material {
     screenPoint.xy.addAssign(
       offset.mul(size.add(thickness)).mul(screenPoint.w).div(screenSize.x)
     )
-    return screenPoint.debug()
+    return screenPoint
   })()
 
   material.outputNode = Fn(() => {
