@@ -90,8 +90,10 @@ export function useOutputPassControls(
           depthNode,
           cameraNear(passNode.camera),
           cameraFar(passNode.camera),
-          passNode.camera.isPerspectiveCamera,
-          postProcessing.renderer.logarithmicDepthBuffer
+          {
+            perspective: passNode.camera.isPerspectiveCamera,
+            logarithmic: postProcessing.renderer.logarithmicDepthBuffer
+          }
         )
         outputColorTransform = false
       } else if (outputVelocity) {

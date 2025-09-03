@@ -18,17 +18,21 @@ import {
 
 import type { Node, NodeObject } from './node'
 
+export interface DepthOptions {
+  perspective?: boolean
+  logarithmic?: boolean
+}
+
 export const depthToViewZ = (
   depth: Node<'float'>,
   near: NodeObject<'float'>,
   far: NodeObject<'float'>,
-  perspectiveDepth = true,
-  logarithmicDepth = false
+  { perspective = true, logarithmic = false }: DepthOptions = {}
 ): NodeObject<'float'> => {
   return (
-    logarithmicDepth
+    logarithmic
       ? logarithmicDepthToViewZ(depth, near, far)
-      : perspectiveDepth
+      : perspective
         ? perspectiveDepthToViewZ(depth, near, far)
         : orthographicDepthToViewZ(depth, near, far)
   ) as NodeObject<'float'>
@@ -86,16 +90,9 @@ export const depthToColor = (
   depth: Node<'float'>,
   near: NodeObject<'float'>,
   far: NodeObject<'float'>,
-  perspectiveDepth = true,
-  logarithmicDepth = false
+  options?: DepthOptions
 ): NodeObject<'vec3'> => {
-  const viewZ = depthToViewZ(
-    depth,
-    near,
-    far,
-    perspectiveDepth,
-    logarithmicDepth
-  )
+  const viewZ = depthToViewZ(depth, near, far, options)
   return turbo(viewZToLogarithmicDepth(viewZ, near, far) as NodeObject<'float'>)
 }
 

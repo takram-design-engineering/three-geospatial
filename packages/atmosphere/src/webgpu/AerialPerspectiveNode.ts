@@ -81,13 +81,10 @@ export class AerialPerspectiveNode extends TempNode {
 
     const surfaceLuminance = Fn(() => {
       // Position of the surface
-      const viewZ = depthToViewZ(
-        depth,
-        cameraNear(camera),
-        cameraFar(camera),
-        camera.isPerspectiveCamera,
-        builder.renderer.logarithmicDepthBuffer
-      )
+      const viewZ = depthToViewZ(depth, cameraNear(camera), cameraFar(camera), {
+        perspective: camera.isPerspectiveCamera,
+        logarithmic: builder.renderer.logarithmicDepthBuffer
+      })
       const positionView = screenToPositionView(
         uv(),
         depth,
