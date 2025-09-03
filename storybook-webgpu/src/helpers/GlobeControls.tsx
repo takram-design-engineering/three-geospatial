@@ -104,7 +104,7 @@ const initControls =
       }
     >(controls)
 
-    // Replace the pivot mesh:
+    // HACK: Replace the pivot mesh:
     const pivotMesh = Object.assign(controls.pivotMesh, {
       size: uniform(15),
       thickness: uniform(2),
@@ -115,7 +115,7 @@ const initControls =
     pivotMesh.material = createPivotMaterial(pivotMesh)
     pivotMesh.onBeforeRender = () => {}
 
-    // Add a hook to reroute the pivot mesh to another scene:
+    // HACK: Add a hook to reroute the pivot mesh to another scene:
     if (overlayScene != null) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const setScene = controls.setScene
