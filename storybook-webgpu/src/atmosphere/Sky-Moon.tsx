@@ -263,7 +263,7 @@ const MoonOverlay: FC<{ moonScale: MotionValue<number> }> = ({ moonScale }) => {
   )
 }
 
-const Scene: FC<StoryProps> = () => {
+const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   renderer.toneMapping = NoToneMapping
   const scene = useThree(({ scene }) => scene)
@@ -586,7 +586,7 @@ interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <>
     <WebGPUCanvas camera={{ position: [1, -0.3, 0] }}>
-      <Scene {...props} />
+      <Content {...props} />
     </WebGPUCanvas>
     <Info />
   </>

@@ -55,7 +55,7 @@ import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
-const Scene: FC<StoryProps> = () => {
+const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
@@ -155,7 +155,7 @@ interface StoryArgs
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas camera={{ position: [2, 1, 2] }}>
-    <Scene {...props} />
+    <Content {...props} />
   </WebGPUCanvas>
 )
 

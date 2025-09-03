@@ -76,7 +76,7 @@ declare module '@react-three/fiber' {
 
 extend({ AtmosphereLight })
 
-const Scene: FC<StoryProps> = () => {
+const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
@@ -229,7 +229,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     }}
     shadows
   >
-    <Scene {...props} />
+    <Content {...props} />
     <Description>
       <p>
         This demonstrates a couple of techniques that @takram/three-atmosphere

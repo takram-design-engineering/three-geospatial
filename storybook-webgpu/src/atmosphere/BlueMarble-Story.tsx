@@ -70,7 +70,7 @@ declare module '@react-three/fiber' {
 
 extend({ AtmosphereLight })
 
-const Scene: FC<StoryProps> = () => {
+const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
@@ -201,7 +201,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
       far: 1e9
     }}
   >
-    <Scene {...props} />
+    <Content {...props} />
     <Description>
       <p>
         Creating a photorealistic globe is easy with @takram/three-atmosphere.

@@ -14,7 +14,7 @@ import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { useFilterTextureNode } from './helpers/useFilterTextureNode'
 
-const Scene: FC<StoryProps> = () => {
+const Content: FC<StoryProps> = () => {
   const levels = useControl(({ levels }: StoryArgs) => levels)
 
   const textureNode = useFilterTextureNode()
@@ -55,7 +55,7 @@ interface StoryArgs {
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
-    <Scene {...props} />
+    <Content {...props} />
   </WebGPUCanvas>
 )
 

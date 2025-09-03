@@ -66,7 +66,7 @@ declare module '@react-three/fiber' {
 
 extend({ AtmosphereLight })
 
-const Scene: FC<StoryProps> = () => {
+const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
@@ -195,7 +195,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     }}
     camera={{ position: [2, 1, 2] }}
   >
-    <Scene {...props} />
+    <Content {...props} />
   </WebGPUCanvas>
 )
 

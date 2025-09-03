@@ -89,7 +89,7 @@ const vector = new Vector3()
 const rotation = new Matrix3()
 const up = new Vector3(0, 1, 0)
 
-const Scene: FC<StoryProps> = () => {
+const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
@@ -229,7 +229,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     camera={{  fov: 40, position: [5, 3, 9] }}
     shadows
   >
-    <Scene {...props} />
+    <Content {...props} />
     <Description css={{ color: 'gray' }}>
       <Attribution>Model: Littlest Tokyo / Glen Fox</Attribution>
     </Description>

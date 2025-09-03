@@ -20,7 +20,7 @@ import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
-const Scene: FC<StoryProps> = () => {
+const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
@@ -100,7 +100,7 @@ interface StoryArgs extends ToneMappingArgs {
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
-    <Scene {...props} />
+    <Content {...props} />
   </WebGPUCanvas>
 )
 
