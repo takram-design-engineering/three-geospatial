@@ -9,10 +9,10 @@ import {
   RenderTarget,
   RenderTarget3D,
   RGBAFormat,
-  Vector3,
   type Data3DTexture,
   type Texture,
-  type Vector2
+  type Vector2,
+  type Vector3
 } from 'three'
 import {
   exp,
@@ -190,6 +190,8 @@ class AdditiveMaterial extends NodeMaterial {
     this.blending = value ? CustomBlending : NoBlending
   }
 }
+
+const boxScratch = /*#__PURE__*/ new Box3()
 
 export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
   private readonly transmittanceRT = createRenderTarget('transmittance')
@@ -382,10 +384,14 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
     if (!parameters.combinedScatteringTextures) {
       clearRenderTarget(renderer, this.singleMieScatteringRT)
+      // TODO: Incomplete copy
       renderer.copyTextureToTexture(
         deltaMieScatteringRT.texture,
         this.singleMieScatteringRT.texture,
-        new Box3(new Vector3(), parameters.scatteringTextureSize)
+        boxScratch.set(
+          boxScratch.min.setScalar(0),
+          parameters.scatteringTextureSize
+        )
       )
     }
   }
