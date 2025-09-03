@@ -97,7 +97,7 @@ function createSceneProxy(
 
 const initControls =
   (overlayScene?: Scene) =>
-  (controls: GlobeControlsImpl): void => {
+  (controls: GlobeControlsImpl): undefined | (() => void) => {
     assertType<
       GlobeControlsImpl & {
         pivotMesh: Mesh
@@ -110,7 +110,8 @@ const initControls =
       thickness: uniform(2),
       opacity: uniform(0.5)
     })
-    ;(pivotMesh.material as Material).dispose()
+    const originalMaterial = pivotMesh.material as Material
+    originalMaterial.dispose()
     pivotMesh.material = createPivotMaterial(pivotMesh)
     pivotMesh.onBeforeRender = () => {}
 
@@ -123,6 +124,9 @@ const initControls =
           scene = createSceneProxy(scene, overlayScene, [pivotMesh])
         }
         setScene.apply(controls, [scene])
+      }
+      return () => {
+        controls.setScene = setScene
       }
     }
   }
