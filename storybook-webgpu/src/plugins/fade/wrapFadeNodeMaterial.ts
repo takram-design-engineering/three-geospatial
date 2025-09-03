@@ -1,9 +1,10 @@
-import type { FadeParams } from '3d-tiles-renderer/src/three/plugins/fade/FadeMaterialManager.js'
 import { Discard, Fn, If, output, screenCoordinate, uniform } from 'three/tsl'
 import type { NodeMaterial } from 'three/webgpu'
 
 import { assertType } from '@takram/three-geospatial'
 import { FnLayout } from '@takram/three-geospatial/webgpu'
+
+import type { FadeParams } from './FadeMaterialManager'
 
 const FADE_PARAMS = Symbol('FADE_PARAMS')
 

@@ -5,7 +5,15 @@ import { NodeMaterial } from 'three/webgpu'
 
 import { wrapFadeNodeMaterial } from './wrapFadeNodeMaterial'
 
+export interface FadeParams {
+  fadeIn: { value: number }
+  fadeOut: { value: number }
+  fadeTexture: { value: unknown }
+}
+
 export class FadeMaterialManager extends FadeMaterialManagerBase {
+  declare protected _fadeParams: WeakMap<Material, FadeParams>
+
   override prepareMaterial(material: Material): void {
     const fadeParams = this._fadeParams
     if (fadeParams.has(material)) {
