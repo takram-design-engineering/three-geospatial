@@ -1,7 +1,6 @@
 import { useThree } from '@react-three/fiber'
-import { GlobeControls } from '3d-tiles-renderer/r3f'
-import type { FC } from 'react'
-import { AgXToneMapping } from 'three'
+import { useMemo, type FC } from 'react'
+import { AgXToneMapping, Scene } from 'three'
 import {
   diffuseColor,
   mrt,
@@ -47,6 +46,7 @@ import {
 import type { StoryFC } from '../helpers/createStory'
 import { Description, TilesAttribution } from '../helpers/Description'
 import { Globe } from '../helpers/Globe'
+import { GlobeControls } from '../helpers/GlobeControls'
 import { useControl } from '../helpers/useControl'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import {
@@ -56,7 +56,7 @@ import {
 import { useResource } from '../helpers/useResource'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
-const Scene: FC<StoryProps> = ({
+const Content: FC<StoryProps> = ({
   longitude,
   latitude,
   height,
@@ -67,6 +67,7 @@ const Scene: FC<StoryProps> = ({
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
+  const overlayScene = useMemo(() => new Scene(), [])
 
   const context = useResource(() => atmosphereContext(renderer), [renderer])
   context.camera = camera
@@ -107,13 +108,20 @@ const Scene: FC<StoryProps> = ({
             camera
           )
         : toneMappingNode
+
+      const overlayPassNode = pass(overlayScene, camera, {
+        samples: 0,
+        depthBuffer: false
+      })
+      const overlayNode = overlayPassNode.getTextureNode('output')
+
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dither())
+      postProcessing.outputNode = taaNode.add(dither()).add(overlayNode)
 
       manage(aerialNode, lensFlareNode, taaNode)
       return [postProcessing, passNode, toneMappingNode]
     },
-    [renderer, camera, scene, context]
+    [renderer, camera, scene, overlayScene, context]
   )
 
   useGuardedFrame(() => {
@@ -158,7 +166,7 @@ const Scene: FC<StoryProps> = ({
 
   return (
     <Globe apiKey={apiKey}>
-      <GlobeControls enableDamping />
+      <GlobeControls enableDamping overlayScene={overlayScene} />
     </Globe>
   )
 }
@@ -171,7 +179,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
-    <Scene {...props} />
+    <Content {...props} />
     <Description>
       <TilesAttribution />
     </Description>

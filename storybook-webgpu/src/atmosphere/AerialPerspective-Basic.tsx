@@ -1,12 +1,8 @@
 import { useThree } from '@react-three/fiber'
 import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
-import {
-  GlobeControls,
-  TilesPlugin,
-  TilesRenderer
-} from '3d-tiles-renderer/r3f'
-import type { FC } from 'react'
-import { AgXToneMapping } from 'three'
+import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
+import { useMemo, type FC } from 'react'
+import { AgXToneMapping, Scene } from 'three'
 import { mrt, normalView, output, pass, toneMapping, uniform } from 'three/tsl'
 import {
   MeshBasicNodeMaterial,
@@ -47,6 +43,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { GlobeControls } from '../helpers/GlobeControls'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import {
   usePointOfView,
@@ -58,7 +55,7 @@ import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 
-const Scene: FC<StoryProps> = ({
+const Content: FC<StoryProps> = ({
   longitude,
   latitude,
   height,
@@ -69,6 +66,7 @@ const Scene: FC<StoryProps> = ({
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
+  const overlayScene = useMemo(() => new Scene(), [])
 
   const context = useResource(() => atmosphereContext(renderer), [renderer])
   context.camera = camera
@@ -109,13 +107,20 @@ const Scene: FC<StoryProps> = ({
             camera
           )
         : toneMappingNode
+
+      const overlayPassNode = pass(overlayScene, camera, {
+        samples: 0,
+        depthBuffer: false
+      })
+      const overlayNode = overlayPassNode.getTextureNode('output')
+
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dither())
+      postProcessing.outputNode = taaNode.add(dither()).add(overlayNode)
 
       manage(lensFlareNode, taaNode)
       return [postProcessing, passNode, aerialNode, toneMappingNode]
     },
-    [renderer, scene, camera, context]
+    [renderer, scene, camera, overlayScene, context]
   )
 
   useGuardedFrame(() => {
@@ -164,7 +169,7 @@ const Scene: FC<StoryProps> = ({
 
   return (
     <>
-      <GlobeControls enableDamping />
+      <GlobeControls enableDamping overlayScene={overlayScene} />
       <TilesRenderer>
         <TilesPlugin
           plugin={CesiumIonAuthPlugin}
@@ -193,7 +198,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
-    <Scene {...props} />
+    <Content {...props} />
   </WebGPUCanvas>
 )
 
