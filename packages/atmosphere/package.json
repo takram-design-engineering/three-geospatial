@@ -41,6 +41,11 @@
       "import": "./build/shaders/bruneton.js",
       "require": "./build/shaders/bruneton.cjs",
       "types": "./types/shaders/bruneton/index.d.ts"
+    },
+    "./webgpu": {
+      "import": "./build/webgpu.js",
+      "require": "./build/webgpu.cjs",
+      "types": "./types/webgpu.d.ts"
     }
   },
   "main": "./build/index.cjs",

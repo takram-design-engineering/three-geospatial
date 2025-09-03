@@ -47,7 +47,8 @@ export default defineConfig({
       entry: {
         'build/index': 'src/index.ts',
         'build/r3f': 'src/r3f/index.ts',
-        'build/shaders': 'src/shaders/index.ts'
+        'build/shaders': 'src/shaders/index.ts',
+        'build/webgpu': 'src/webgpu/index.ts'
       },
       name: 'core'
     },

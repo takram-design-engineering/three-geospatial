@@ -37,7 +37,7 @@
     "./webgpu": {
       "import": "./build/webgpu.js",
       "require": "./build/webgpu.cjs",
-      "types": "./types/shaders/webgpu.d.ts"
+      "types": "./types/webgpu.d.ts"
     }
   },
   "main": "./build/index.cjs",
