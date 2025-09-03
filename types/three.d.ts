@@ -27,6 +27,10 @@ declare module 'three' {
     isPerspectiveCamera?: boolean
     isOrthographicCamera?: boolean
   }
+
+  interface Material {
+    isNodeMaterial?: boolean
+  }
 }
 
 declare module 'three/src/nodes/Nodes.js' {
