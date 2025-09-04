@@ -1,5 +1,4 @@
 import type { ArgTypes } from '@storybook/react-vite'
-import { useRef } from 'react'
 import { directionToColor, vec4 } from 'three/tsl'
 import type { PassNode, PostProcessing } from 'three/webgpu'
 
