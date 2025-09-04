@@ -1,4 +1,5 @@
 import type { ArgTypes } from '@storybook/react-vite'
+import { useMemo } from 'react'
 import { directionToColor, vec4 } from 'three/tsl'
 import type { PassNode, PostProcessing } from 'three/webgpu'
 
@@ -64,10 +65,13 @@ export function useOutputPassControls(
   passNode: PassNode,
   onChange: (outputNode: Node, outputColorTransform: boolean) => void
 ): void {
-  const ref = useRef({
-    outputNode: postProcessing.outputNode,
-    outputColorTransform: postProcessing.outputColorTransform
-  })
+  const initial = useMemo(
+    () => ({
+      outputNode: postProcessing.outputNode,
+      outputColorTransform: postProcessing.outputColorTransform
+    }),
+    [postProcessing]
+  )
 
   useTransientControl(
     ({ outputDepth, outputNormal, outputVelocity }: OutputPassArgs) => ({
@@ -76,8 +80,9 @@ export function useOutputPassControls(
       outputVelocity
     }),
     ({ outputDepth, outputNormal, outputVelocity }) => {
-      let outputNode = ref.current.outputNode
-      let outputColorTransform = ref.current.outputColorTransform
+      let outputNode = initial.outputNode
+      let outputColorTransform = initial.outputColorTransform
+
       // In reverse order:
       if (outputNormal) {
         const normalNode = passNode.getTextureNode('normal')
@@ -100,6 +105,7 @@ export function useOutputPassControls(
         outputNode = vec4(velocityNode.xyz.mul(10).add(0.5), 1)
         outputColorTransform = true
       }
+
       onChange(outputNode, outputColorTransform)
     }
   )
