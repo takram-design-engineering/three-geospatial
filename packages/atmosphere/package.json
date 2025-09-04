@@ -23,29 +23,29 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./types/index.d.ts",
       "import": "./build/index.js",
-      "require": "./build/index.cjs",
-      "types": "./types/index.d.ts"
+      "require": "./build/index.cjs"
     },
     "./r3f": {
+      "types": "./types/r3f/index.d.ts",
       "import": "./build/r3f.js",
-      "require": "./build/r3f.cjs",
-      "types": "./types/r3f/index.d.ts"
+      "require": "./build/r3f.cjs"
     },
     "./shaders": {
+      "types": "./types/shaders/index.d.ts",
       "import": "./build/shaders.js",
-      "require": "./build/shaders.cjs",
-      "types": "./types/shaders/index.d.ts"
+      "require": "./build/shaders.cjs"
     },
     "./shaders/bruneton": {
+      "types": "./types/shaders/bruneton/index.d.ts",
       "import": "./build/shaders/bruneton.js",
-      "require": "./build/shaders/bruneton.cjs",
-      "types": "./types/shaders/bruneton/index.d.ts"
+      "require": "./build/shaders/bruneton.cjs"
     },
     "./webgpu": {
+      "types": "./types/webgpu.d.ts",
       "import": "./build/webgpu.js",
-      "require": "./build/webgpu.cjs",
-      "types": "./types/webgpu.d.ts"
+      "require": "./build/webgpu.cjs"
     }
   },
   "main": "./build/index.cjs",
