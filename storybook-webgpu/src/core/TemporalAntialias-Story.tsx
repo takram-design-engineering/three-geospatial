@@ -145,7 +145,7 @@ const Content: FC<StoryProps> = () => {
       <ambientLight />
       <OrbitControls autoRotate={autoRotate} />
       <Circle args={[20, 128]} rotation-x={-Math.PI / 2}>
-        <meshStandardNodeMaterial colorNode={checker(uv().mul(100))} />
+        <meshStandardNodeMaterial colorNode={checker(uv().mul(100)).mul(0.5)} />
       </Circle>
 
       {/* Checker */}
