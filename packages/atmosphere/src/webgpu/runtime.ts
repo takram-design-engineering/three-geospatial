@@ -93,7 +93,6 @@ import {
   safeSqrt
 } from './common'
 import {
-  AbstractSpectrum,
   Dimensionless,
   DimensionlessSpectrum,
   Direction,
@@ -115,7 +114,7 @@ const getExtrapolatedSingleMieScattering = /*#__PURE__*/ FnLayout({
   typeOnly: true,
   name: 'getExtrapolatedSingleMieScattering',
   type: IrradianceSpectrum,
-  inputs: [{ name: 'scattering', type: AbstractSpectrum }]
+  inputs: [{ name: 'scattering', type: 'vec4' }]
 })(([scattering], builder) => {
   const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
