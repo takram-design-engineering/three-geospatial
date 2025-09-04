@@ -11,21 +11,18 @@ import {
   Fn,
   fwidth,
   modelViewMatrix,
-  nodeImmutable,
   positionGeometry,
+  screenDPR,
   screenSize,
   smoothstep,
   uniform,
   uv,
   vec4
 } from 'three/tsl'
-import { NodeMaterial, ScreenNode, type UniformNode } from 'three/webgpu'
+import { NodeMaterial, type UniformNode } from 'three/webgpu'
 
 import { assertType } from '@takram/three-geospatial'
 import type { NodeObject } from '@takram/three-geospatial/webgpu'
-
-// BUG: screenDPR is not exported from 'three/tsl'
-const screenDPR = /*#__PURE__*/ nodeImmutable(ScreenNode, 'dpr' as any)
 
 interface PivotUniforms {
   size: NodeObject<UniformNode<number>>
