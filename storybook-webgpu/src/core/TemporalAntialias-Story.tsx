@@ -62,11 +62,12 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const { enabled, showDisocclusion, autoRotate } = useControl(
-    ({ enabled, showDisocclusion, autoRotate }: StoryArgs) => ({
+  const { enabled, showDisocclusion, rotateCamera, rotateObject } = useControl(
+    ({ enabled, showDisocclusion, rotateCamera, rotateObject }: StoryArgs) => ({
       enabled,
       showDisocclusion,
-      autoRotate
+      rotateCamera,
+      rotateObject
     })
   )
 
@@ -134,6 +135,9 @@ const Content: FC<StoryProps> = () => {
   // Rotate the checkered knot:
   const knotRef = useRef<Mesh>(null)
   useGuardedFrame(({ clock }) => {
+    if (!rotateObject) {
+      return
+    }
     const knot = knotRef.current
     if (knot != null) {
       knot.rotation.z = clock.getElapsedTime()
@@ -143,7 +147,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <ambientLight />
-      <OrbitControls autoRotate={autoRotate} />
+      <OrbitControls autoRotate={rotateCamera} />
       <Circle args={[20, 128]} rotation-x={-Math.PI / 2}>
         <meshStandardNodeMaterial colorNode={checker(uv().mul(100)).mul(0.5)} />
       </Circle>
@@ -210,7 +214,8 @@ interface StoryProps {}
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs {
   enabled: boolean
   showDisocclusion: boolean
-  autoRotate: boolean
+  rotateCamera: boolean
+  rotateObject: boolean
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -222,7 +227,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   enabled: true,
   showDisocclusion: false,
-  autoRotate: true,
+  rotateCamera: true,
+  rotateObject: true,
   ...toneMappingArgs({
     toneMapping: NeutralToneMapping,
     toneMappingExposure: 3
@@ -242,7 +248,12 @@ Story.argTypes = {
       type: 'boolean'
     }
   },
-  autoRotate: {
+  rotateCamera: {
+    control: {
+      type: 'boolean'
+    }
+  },
+  rotateObject: {
     control: {
       type: 'boolean'
     }
