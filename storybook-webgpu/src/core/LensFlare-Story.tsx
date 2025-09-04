@@ -76,6 +76,7 @@ const Content: FC<StoryProps> = () => {
     postProcessing.render()
   }, 1)
 
+  // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
     postProcessing.needsUpdate = true
   })

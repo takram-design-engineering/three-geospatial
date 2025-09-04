@@ -1,7 +1,7 @@
 import { Circle, OrbitControls, TorusKnot } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import type { FC } from 'react'
-import { AgXToneMapping, NeutralToneMapping } from 'three'
+import { useRef, type FC } from 'react'
+import { AgXToneMapping, NeutralToneMapping, type Mesh } from 'three'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import {
   checker,
@@ -126,8 +126,18 @@ const Content: FC<StoryProps> = () => {
     }
   )
 
+  // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
     postProcessing.needsUpdate = true
+  })
+
+  // Rotate the checkered knot:
+  const knotRef = useRef<Mesh>(null)
+  useGuardedFrame(({ clock }) => {
+    const knot = knotRef.current
+    if (knot != null) {
+      knot.rotation.z = clock.getElapsedTime()
+    }
   })
 
   return (
@@ -140,12 +150,13 @@ const Content: FC<StoryProps> = () => {
 
       {/* Checker */}
       <TorusKnot
+        ref={knotRef}
         args={[1, 0.3, 256, 64]}
         scale={0.2}
         position={[-0.5, 0.5, 0.5]}
         rotation-x={Math.PI / 2}
       >
-        <meshStandardNodeMaterial colorNode={checker(uv().mul(vec2(50, 5)))} />
+        <meshStandardNodeMaterial colorNode={checker(uv().mul(vec2(40, 4)))} />
       </TorusKnot>
 
       {/* Wireframe */}
