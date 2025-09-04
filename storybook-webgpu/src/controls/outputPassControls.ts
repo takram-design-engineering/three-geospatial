@@ -64,6 +64,11 @@ export function useOutputPassControls(
   passNode: PassNode,
   onChange: (outputNode: Node, outputColorTransform: boolean) => void
 ): void {
+  const ref = useRef({
+    outputNode: postProcessing.outputNode,
+    outputColorTransform: postProcessing.outputColorTransform
+  })
+
   useTransientControl(
     ({ outputDepth, outputNormal, outputVelocity }: OutputPassArgs) => ({
       outputDepth,
@@ -71,8 +76,8 @@ export function useOutputPassControls(
       outputVelocity
     }),
     ({ outputDepth, outputNormal, outputVelocity }) => {
-      let outputNode = postProcessing.outputNode
-      let outputColorTransform = postProcessing.outputColorTransform
+      let outputNode = ref.current.outputNode
+      let outputColorTransform = ref.current.outputColorTransform
       // In reverse order:
       if (outputNormal) {
         const normalNode = passNode.getTextureNode('normal')
