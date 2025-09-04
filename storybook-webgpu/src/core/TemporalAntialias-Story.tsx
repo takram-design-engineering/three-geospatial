@@ -1,7 +1,7 @@
 import { Circle, OrbitControls, TorusKnot } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useRef, type FC } from 'react'
-import { AgXToneMapping, NeutralToneMapping, type Mesh } from 'three'
+import { NeutralToneMapping, type Mesh } from 'three'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import {
   checker,
@@ -87,7 +87,7 @@ const Content: FC<StoryProps> = () => {
 
       const lensFlareNode = manage(lensFlare(colorNode))
       const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
+        toneMapping(NeutralToneMapping, uniform(0), lensFlareNode)
       )
 
       let outputNode: NodeObject<any> = toneMappingNode

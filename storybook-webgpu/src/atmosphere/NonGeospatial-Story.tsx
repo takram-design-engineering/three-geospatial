@@ -1,13 +1,7 @@
 import { OrbitControls, Plane, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useRef, type FC } from 'react'
-import {
-  AgXToneMapping,
-  BackSide,
-  Matrix3,
-  NeutralToneMapping,
-  Vector3
-} from 'three'
+import { BackSide, Matrix3, NeutralToneMapping, Vector3 } from 'three'
 import { RectAreaLightTexturesLib } from 'three/addons/lights/RectAreaLightTexturesLib.js'
 import {
   cameraViewMatrix,
@@ -112,7 +106,7 @@ const Content: FC<StoryProps> = () => {
       const velocityNode = passNode.getTextureNode('velocity')
 
       const toneMappingNode = toneMapping(
-        AgXToneMapping,
+        NeutralToneMapping,
         uniform(0),
         outputNode
       )
@@ -226,7 +220,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
         renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
       }
     }}
-    camera={{  fov: 40, position: [5, 3, 9] }}
+    camera={{ fov: 40, position: [5, 3, 9] }}
     shadows
   >
     <Content {...props} />
