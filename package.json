@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "clean": "nx reset && rimraf --glob dist tmp \"packages/*/vite.config.ts.timestamp-*\""
+    "clean": "pnpm exec rimraf --glob dist tmp **/node_modules/.cache"
   },
   "dependencies": {
     "@petamoriken/float16": "^3.9.2",
