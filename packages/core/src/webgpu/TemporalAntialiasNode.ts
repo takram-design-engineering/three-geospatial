@@ -173,8 +173,8 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
     const coord = ivec2(0)
     for (const offset of neighborOffsets) {
       // TODO: Use offset()
-      const offsetCoord = inputCoord.add(offset).toConst()
-      const neighbor = depthNode.load(offsetCoord).toConst()
+      const offsetCoord = inputCoord.add(offset).toVar()
+      const neighbor = depthNode.load(offsetCoord).toVar()
       If(neighbor.r.lessThan(depth), () => {
         coord.assign(offsetCoord)
         depth.assign(neighbor.r)
@@ -183,6 +183,32 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
     return closetDepthStruct(coord, depth)
   }
 )
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const reinhard = FnLayout({
+  name: 'reinhard',
+  type: 'vec4',
+  inputs: [
+    { name: 'input', type: 'vec4' },
+    { name: 'exposure', type: 'float' }
+  ]
+})(([input, exposure]) => {
+  const color = input.rgb.mul(exposure)
+  return vec4(color.div(color.add(1)).saturate(), input.a)
+})
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const inverseReinhard = FnLayout({
+  name: 'inverseReinhard',
+  type: 'vec4',
+  inputs: [
+    { name: 'input', type: 'vec4' },
+    { name: 'exposure', type: 'float' }
+  ]
+})(([input, exposure]) => {
+  const color = input.rgb
+  return vec4(color.div(exposure.mul(color.oneMinus().max(1e-8))), input.a)
+})
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 const emptyDepthTexture = /*#__PURE__*/ new DepthTexture(1, 1)
@@ -212,9 +238,9 @@ export class TemporalAntialiasNode extends TempNode {
   private resolveRT = this.createRenderTarget('Resolve')
   private historyRT = this.createRenderTarget('History')
   private previousDepthTexture?: DepthTexture
-  private readonly material = new NodeMaterial()
+  private readonly resolveMaterial = new NodeMaterial()
   private readonly copyMaterial = new NodeMaterial()
-  private readonly mesh = new QuadMesh(this.material)
+  private readonly mesh = new QuadMesh()
   private rendererState!: RendererUtils.RendererState
   private needsSyncPostProcessing = false
   private needsClearHistory = false
@@ -305,7 +331,6 @@ export class TemporalAntialiasNode extends TempNode {
     renderer.setRenderTarget(this.historyRT)
     this.mesh.material = this.copyMaterial
     this.mesh.render(renderer)
-    this.mesh.material = this.material
 
     this.needsClearHistory = false
   }
@@ -373,6 +398,7 @@ export class TemporalAntialiasNode extends TempNode {
     }
 
     renderer.setRenderTarget(this.resolveRT)
+    this.mesh.material = this.resolveMaterial
     this.mesh.render(renderer)
 
     restoreRendererState(renderer, this.rendererState)
@@ -386,12 +412,12 @@ export class TemporalAntialiasNode extends TempNode {
     }
   }
 
-  private setupOutputNode({ renderer }: NodeBuilder): Node {
+  private setupResolveNode({ renderer }: NodeBuilder): Node {
     const getPreviousDepth = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
       const { previousDepthNode: depthNode } = this
       const depth = depthNode
         .load(ivec2(uv.mul(depthNode.size(0)).sub(0.5)))
-        .toConst()
+        .toVar()
       return renderer.logarithmicDepthBuffer
         ? logarithmicDepthToPerspectiveDepth(
             depth,
@@ -405,7 +431,7 @@ export class TemporalAntialiasNode extends TempNode {
       const coord = ivec2(screenCoordinate)
       const uv = screenUV
 
-      const currentColor = this.inputNode.load(coord).toConst()
+      const currentColor = this.inputNode.load(coord)
       const closestDepth = getClosestDepth(this.depthNode, coord)
       const closestCoord = closestDepth.get('coord')
 
@@ -422,7 +448,7 @@ export class TemporalAntialiasNode extends TempNode {
         .oneMinus()
         .saturate()
 
-      const prevUV = uv.sub(velocity.xy).toConst()
+      const prevUV = uv.sub(velocity.xy).toVar()
       const prevDepth = getPreviousDepth(prevUV)
 
       // TODO: Add gather() in TextureNode and use it:
@@ -483,9 +509,10 @@ export class TemporalAntialiasNode extends TempNode {
       this.needsSyncPostProcessing = true
     }
 
-    const { material, copyMaterial } = this
-    material.fragmentNode = this.setupOutputNode(builder)
-    material.needsUpdate = true
+    const { resolveMaterial, copyMaterial } = this
+
+    resolveMaterial.fragmentNode = this.setupResolveNode(builder)
+    resolveMaterial.needsUpdate = true
 
     copyMaterial.fragmentNode = this.inputNode
     copyMaterial.needsUpdate = true
@@ -498,7 +525,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.resolveRT.dispose()
     this.historyRT.dispose()
     this.previousDepthTexture?.dispose()
-    this.material.dispose()
+    this.resolveMaterial.dispose()
     this.copyMaterial.dispose()
     super.dispose()
   }

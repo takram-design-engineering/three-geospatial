@@ -81,10 +81,10 @@ export class LensFlareNode extends TempNode {
       const output = nodeObject(inputNode)
 
       // Prevent the output from becoming too bright.
-      const plusBloom = output.add(bloom).toConst()
+      const plusBloom = output.add(bloom).toVar()
       output.assign(select(output.lessThan(plusBloom), plusBloom, output))
       if (isWebGPU(builder)) {
-        const plusGlare = output.add(glare).toConst()
+        const plusGlare = output.add(glare).toVar()
         output.assign(select(output.lessThan(plusGlare), plusGlare, output))
       }
 
