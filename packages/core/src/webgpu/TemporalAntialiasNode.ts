@@ -47,7 +47,7 @@ import { haltonOffsets } from './internals'
 import type { Node, NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RenderTargetNode'
-import { textureCatmullRom } from './sampling'
+import { textureBicubic } from './sampling'
 import { logarithmicDepthToPerspectiveDepth } from './transformations'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -475,7 +475,7 @@ export class TemporalAntialiasNode extends TempNode {
 
       const outputColor = vec4(0).toVar()
       If(uvWeight.mul(confidence).greaterThan(0), () => {
-        const historyColor = textureCatmullRom(this.historyNode, prevUV)
+        const historyColor = textureBicubic(this.historyNode, prevUV)
         const clippedColor = varianceClipping(
           this.inputNode,
           coord,
