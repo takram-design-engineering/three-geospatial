@@ -4,7 +4,6 @@ import type { FC } from 'react'
 import { LinearToneMapping } from 'three'
 import {
   Discard,
-  float,
   floor,
   If,
   ivec2,
@@ -53,7 +52,7 @@ const textureUVW = FnVar(
     If(index.greaterThanEqual(textureSize.z), () => {
       Discard()
     })
-    return vec3(uv.fract(), float(index).add(0.5).div(textureSize.z))
+    return vec3(uv.fract(), index.toFloat().add(0.5).div(textureSize.z))
   }
 )
 

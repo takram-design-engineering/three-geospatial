@@ -185,7 +185,7 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
 )
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const reinhard = FnLayout({
+const reinhard = /*#__PURE__*/ FnLayout({
   name: 'reinhard',
   type: 'vec4',
   inputs: [
@@ -198,7 +198,7 @@ const reinhard = FnLayout({
 })
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const inverseReinhard = FnLayout({
+const inverseReinhard = /*#__PURE__*/ FnLayout({
   name: 'inverseReinhard',
   type: 'vec4',
   inputs: [

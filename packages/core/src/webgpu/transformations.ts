@@ -1,6 +1,5 @@
 import {
   cos,
-  float,
   int,
   logarithmicDepthToViewZ,
   nodeObject,
@@ -104,5 +103,5 @@ export const equirectWorld = (uv: NodeObject<'vec2'>): NodeObject<'vec3'> => {
 }
 
 export const clampToBorder = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
-  return float(uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()))
+  return uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()).toFloat()
 }
