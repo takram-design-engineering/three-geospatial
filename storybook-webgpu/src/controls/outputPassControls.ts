@@ -102,7 +102,7 @@ export function useOutputPassControls(
         outputColorTransform = false
       } else if (outputVelocity) {
         const velocityNode = passNode.getTextureNode('velocity')
-        outputNode = vec4(velocityNode.xyz.mul(10).add(0.5), 1)
+        outputNode = vec4(velocityNode.xyz.mul(20).add(0.5), 1)
         outputColorTransform = true
       }
 
