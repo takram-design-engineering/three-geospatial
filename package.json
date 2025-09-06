@@ -57,6 +57,7 @@
     "@types/three": "0.180.0",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/ui": "^3.2.4",
+    "antd": "^5.27.3",
     "babel-jest": "30.0.5",
     "date-fns": "^4.1.0",
     "esbuild": "^0.19.12",

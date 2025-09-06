@@ -14,6 +14,8 @@ import {
 } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 
+import { Progress } from './Progress'
+
 const DescriptionElement = styled('div')`
   --gutter: 16px;
   --max-width: 600px;
@@ -22,7 +24,7 @@ const DescriptionElement = styled('div')`
   bottom: var(--gutter);
   left: var(--gutter);
   max-width: var(--max-width);
-  color: rgba(255, 255, 255, calc(2 / 3));
+  color: color-mix(in srgb, currentColor 66%, transparent);
   font-size: small;
   letter-spacing: 0.02em;
   pointer-events: none;
@@ -107,8 +109,10 @@ export const TilesAttribution: FC = () => {
 }
 
 export const Description: FC<
-  ComponentProps<typeof DescriptionElement>
-> = props => {
+  ComponentProps<typeof DescriptionElement> & {
+    color?: string
+  }
+> = ({ color = 'white', ...props }) => {
   const gl = useThree(({ gl }) => gl)
   const target = gl.domElement.parentNode
 
@@ -125,7 +129,12 @@ export const Description: FC<
   }, [target, element])
 
   useLayoutEffect(() => {
-    root.current?.render(<DescriptionElement {...props} />)
+    root.current?.render(
+      <div css={{ color }}>
+        <DescriptionElement {...props} />
+        <Progress />
+      </div>
+    )
   })
 
   return null

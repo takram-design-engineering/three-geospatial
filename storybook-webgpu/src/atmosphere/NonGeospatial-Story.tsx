@@ -1,6 +1,6 @@
 import { OrbitControls, Plane, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import { useRef, type FC } from 'react'
+import { Suspense, useRef, type FC } from 'react'
 import { BackSide, Matrix3, NeutralToneMapping, Vector3 } from 'three'
 import { RectAreaLightTexturesLib } from 'three/addons/lights/RectAreaLightTexturesLib.js'
 import {
@@ -200,7 +200,9 @@ const Content: FC<StoryProps> = () => {
           side={BackSide}
         />
       </Sphere>
-      <LittlestTokyo ref={modelRef} scale={0.01} />
+      <Suspense>
+        <LittlestTokyo ref={modelRef} scale={0.01} />
+      </Suspense>
     </>
   )
 }
@@ -224,7 +226,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     shadows
   >
     <Content {...props} />
-    <Description css={{ color: 'gray' }}>
+    <Description color='gray'>
       <Attribution>Model: Littlest Tokyo / Glen Fox</Attribution>
     </Description>
   </WebGPUCanvas>

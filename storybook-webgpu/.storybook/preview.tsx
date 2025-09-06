@@ -1,4 +1,6 @@
 import type { Preview } from '@storybook/react-vite'
+import { ConfigProvider, theme } from 'antd'
+import { themes } from 'storybook/theming'
 
 import { docs } from './theme'
 
@@ -50,7 +52,21 @@ const preview: Preview = {
     backgrounds: {
       value: 'dark'
     }
-  }
+  },
+  decorators: [
+    Story => (
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            fontFamily: `Inter, ${themes.normal.fontBase}`
+          }
+        }}
+      >
+        <Story />
+      </ConfigProvider>
+    )
+  ]
 }
 
 export default preview
