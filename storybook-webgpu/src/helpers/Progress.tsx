@@ -11,7 +11,7 @@ const ProgressContainer = styled(motion.div)`
   width: 100%;
 `
 
-const thickness = 2
+const thickness = 3
 
 export const Progress: FC = () => {
   const progress = useProgress()
