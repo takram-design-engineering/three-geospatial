@@ -84,6 +84,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { Description } from '../helpers/Description'
 import { useCombinedChange } from '../helpers/useCombinedChange'
 import { useControl } from '../helpers/useControl'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
@@ -455,16 +456,6 @@ const Content: FC<StoryProps> = () => {
 }
 
 const InfoElement = styled('div')`
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  max-width: calc(100% - 32px);
-  color: rgba(255, 255, 255, calc(2 / 3));
-  font-size: small;
-  letter-spacing: 0.02em;
-  pointer-events: none;
-  user-select: none;
-
   table {
     margin-top: 8px;
   }
@@ -584,12 +575,12 @@ interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <>
-    <WebGPUCanvas camera={{ position: [1, -0.3, 0] }}>
-      <Content {...props} />
-    </WebGPUCanvas>
-    <Info />
-  </>
+  <WebGPUCanvas camera={{ position: [1, -0.3, 0] }}>
+    <Content {...props} />
+    <Description>
+      <Info />
+    </Description>
+  </WebGPUCanvas>
 )
 
 Story.args = {

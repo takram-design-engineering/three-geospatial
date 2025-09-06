@@ -32,6 +32,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { Description } from '../helpers/Description'
 import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
@@ -92,6 +93,7 @@ interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas camera={{ position: [1, 0, 0] }}>
     <Content {...props} />
+    <Description />
   </WebGPUCanvas>
 )
 

@@ -1,4 +1,4 @@
-import { useMemo, type FC } from 'react'
+import { Suspense, useMemo, type FC } from 'react'
 import { Mesh } from 'three'
 import { positionGeometry, vec4 } from 'three/tsl'
 import { NodeMaterial } from 'three/webgpu'
@@ -8,6 +8,7 @@ import { mipmapSurfaceBlur } from '@takram/three-geospatial/webgpu'
 
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import type { StoryFC } from '../helpers/createStory'
+import { Description } from '../helpers/Description'
 import { useControl } from '../helpers/useControl'
 import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
@@ -55,7 +56,10 @@ interface StoryArgs {
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
-    <Content {...props} />
+    <Suspense>
+      <Content {...props} />
+    </Suspense>
+    <Description />
   </WebGPUCanvas>
 )
 

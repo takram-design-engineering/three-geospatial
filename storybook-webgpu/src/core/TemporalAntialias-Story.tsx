@@ -43,6 +43,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { Description } from '../helpers/Description'
 import { useControl } from '../helpers/useControl'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
@@ -221,6 +222,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs {
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas camera={{ fov: 50, position: [1.5, 1.25, 1.5] }}>
     <Content {...props} />
+    <Description />
   </WebGPUCanvas>
 )
 

@@ -1,6 +1,6 @@
 import { Environment, OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import type { FC } from 'react'
+import { Suspense, type FC } from 'react'
 import { AgXToneMapping } from 'three'
 import { pass, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
@@ -15,6 +15,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
+import { Description } from '../helpers/Description'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
@@ -84,7 +85,9 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <OrbitControls />
-      <Environment files='public/hdri/wooden_lounge_4k.hdr' background />
+      <Suspense>
+        <Environment files='public/hdri/wooden_lounge_4k.hdr' background />
+      </Suspense>
     </>
   )
 }
@@ -102,6 +105,7 @@ interface StoryArgs extends ToneMappingArgs {
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
     <Content {...props} />
+    <Description />
   </WebGPUCanvas>
 )
 
