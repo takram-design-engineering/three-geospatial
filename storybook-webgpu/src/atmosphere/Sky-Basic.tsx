@@ -49,17 +49,14 @@ const Content: FC<StoryProps> = () => {
 
   const [postProcessing, skyNode, toneMappingNode] = useResource(
     manage => {
-      const skyNode = sky(context)
-      const lensFlareNode = lensFlare(skyNode)
-      const toneMappingNode = toneMapping(
-        AgXToneMapping,
-        uniform(0),
-        lensFlareNode
+      const skyNode = manage(sky(context))
+      const lensFlareNode = manage(lensFlare(skyNode))
+      const toneMappingNode = manage(
+        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
       )
       const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = toneMappingNode
 
-      manage(lensFlareNode)
       return [postProcessing, skyNode, toneMappingNode]
     },
     [renderer, context]

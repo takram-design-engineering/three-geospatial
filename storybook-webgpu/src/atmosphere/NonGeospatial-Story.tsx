@@ -94,31 +94,32 @@ const Content: FC<StoryProps> = () => {
 
   const [postProcessing, passNode, toneMappingNode] = useResource(
     manage => {
-      const passNode = pass(scene, camera, { samples: 0 }).setMRT(
-        mrt({
-          output,
-          velocity: highpVelocity
-        })
+      const passNode = manage(
+        pass(scene, camera, { samples: 0 }).setMRT(
+          mrt({
+            output,
+            velocity: highpVelocity
+          })
+        )
       )
       const outputNode = passNode.getTextureNode('output')
       const depthNode = passNode.getTextureNode('depth')
       const velocityNode = passNode.getTextureNode('velocity')
 
-      const toneMappingNode = toneMapping(
-        NeutralToneMapping,
-        uniform(0),
-        outputNode
+      const toneMappingNode = manage(
+        toneMapping(NeutralToneMapping, uniform(0), outputNode)
       )
-      const taaNode = temporalAntialias(highpVelocity)(
-        toneMappingNode,
-        depthNode,
-        velocityNode,
-        camera
+      const taaNode = manage(
+        temporalAntialias(highpVelocity)(
+          toneMappingNode,
+          depthNode,
+          velocityNode,
+          camera
+        )
       )
       const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = taaNode.add(dither())
 
-      manage(taaNode)
       return [postProcessing, passNode, toneMappingNode]
     },
     [renderer, scene, camera]

@@ -75,47 +75,47 @@ const Content: FC<StoryProps> = ({
 
   const [postProcessing, passNode, toneMappingNode] = useResource(
     manage => {
-      const passNode = pass(scene, camera, { samples: 0 }).setMRT(
-        mrt({
-          output: diffuseColor,
-          normal: normalView,
-          velocity: highpVelocity
-        })
+      const passNode = manage(
+        pass(scene, camera, { samples: 0 }).setMRT(
+          mrt({
+            output: diffuseColor,
+            normal: normalView,
+            velocity: highpVelocity
+          })
+        )
       )
       const outputNode = passNode.getTextureNode('output')
       const depthNode = passNode.getTextureNode('depth')
       const normalNode = passNode.getTextureNode('normal')
       const velocityNode = passNode.getTextureNode('velocity')
 
-      const aerialNode = aerialPerspective(
-        context,
-        outputNode.mul(2 / 3),
-        depthNode,
-        normalNode
+      const aerialNode = manage(
+        aerialPerspective(context, outputNode.mul(2 / 3), depthNode, normalNode)
       )
-      const lensFlareNode = lensFlare(aerialNode)
-      const toneMappingNode = toneMapping(
-        AgXToneMapping,
-        uniform(0),
-        lensFlareNode
+      const lensFlareNode = manage(lensFlare(aerialNode))
+      const toneMappingNode = manage(
+        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
       )
-      const taaNode = temporalAntialias(highpVelocity)(
-        toneMappingNode,
-        depthNode,
-        velocityNode,
-        camera
+      const taaNode = manage(
+        temporalAntialias(highpVelocity)(
+          toneMappingNode,
+          depthNode,
+          velocityNode,
+          camera
+        )
       )
 
-      const overlayPassNode = pass(overlayScene, camera, {
-        samples: 0,
-        depthBuffer: false
-      })
+      const overlayPassNode = manage(
+        pass(overlayScene, camera, {
+          samples: 0,
+          depthBuffer: false
+        })
+      )
       const overlayNode = overlayPassNode.getTextureNode('output')
 
       const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = taaNode.add(dither()).add(overlayNode)
 
-      manage(aerialNode, lensFlareNode, taaNode)
       return [postProcessing, passNode, toneMappingNode]
     },
     [renderer, camera, scene, overlayScene, context]

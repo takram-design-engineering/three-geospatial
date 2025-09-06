@@ -105,7 +105,7 @@ const Content: FC<StoryProps> = () => {
         outputNode = taaNode
       }
 
-      const postProcessing = manage(new PostProcessing(renderer))
+      const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = outputNode
 
       return [postProcessing, passNode, toneMappingNode]

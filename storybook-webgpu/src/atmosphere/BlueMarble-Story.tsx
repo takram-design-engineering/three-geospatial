@@ -81,33 +81,36 @@ const Content: FC<StoryProps> = () => {
 
   const [postProcessing, passNode, toneMappingNode] = useResource(
     manage => {
-      const passNode = pass(scene, camera, { samples: 0 }).setMRT(
-        mrt({
-          output,
-          velocity: highpVelocity
-        })
+      const passNode = manage(
+        pass(scene, camera, { samples: 0 }).setMRT(
+          mrt({
+            output,
+            velocity: highpVelocity
+          })
+        )
       )
       const outputNode = passNode.getTextureNode('output')
       const depthNode = passNode.getTextureNode('depth')
       const velocityNode = passNode.getTextureNode('velocity')
 
-      const aerialNode = aerialPerspective(context, outputNode, depthNode)
-      const lensFlareNode = lensFlare(aerialNode)
-      const toneMappingNode = toneMapping(
-        AgXToneMapping,
-        uniform(0),
-        lensFlareNode
+      const aerialNode = manage(
+        aerialPerspective(context, outputNode, depthNode)
       )
-      const taaNode = temporalAntialias(highpVelocity)(
-        toneMappingNode,
-        depthNode,
-        velocityNode,
-        camera
+      const lensFlareNode = manage(lensFlare(aerialNode))
+      const toneMappingNode = manage(
+        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
+      )
+      const taaNode = manage(
+        temporalAntialias(highpVelocity)(
+          toneMappingNode,
+          depthNode,
+          velocityNode,
+          camera
+        )
       )
       const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = taaNode.add(dither())
 
-      manage(aerialNode, lensFlareNode, taaNode)
       return [postProcessing, passNode, toneMappingNode]
     },
     [renderer, scene, camera, context]

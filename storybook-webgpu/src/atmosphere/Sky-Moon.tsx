@@ -279,9 +279,9 @@ const Content: FC<StoryProps> = () => {
 
   const [postProcessing, skyNode, toneMappingNode] = useResource(
     manage => {
-      const passNode = pass(scene, camera)
+      const passNode = manage(pass(scene, camera))
 
-      const skyNode = sky(context)
+      const skyNode = manage(sky(context))
       skyNode.moonColorNode = texture(
         new TextureLoader().load('public/moon/color_large.webp', texture => {
           texture.colorSpace = LinearSRGBColorSpace
@@ -295,11 +295,9 @@ const Content: FC<StoryProps> = () => {
         })
       )
 
-      const lensFlareNode = lensFlare(skyNode)
-      const toneMappingNode = toneMapping(
-        AgXToneMapping,
-        exposureNode,
-        lensFlareNode
+      const lensFlareNode = manage(lensFlare(skyNode))
+      const toneMappingNode = manage(
+        toneMapping(AgXToneMapping, exposureNode, lensFlareNode)
       )
 
       const postProcessing = new PostProcessing(renderer)
@@ -308,7 +306,6 @@ const Content: FC<StoryProps> = () => {
         .add(passNode.rgb)
         .add(dither())
 
-      manage(lensFlareNode)
       return [postProcessing, skyNode, toneMappingNode]
     },
     [renderer, scene, camera, context, exposureNode]
