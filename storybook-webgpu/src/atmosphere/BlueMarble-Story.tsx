@@ -32,7 +32,6 @@ import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
 import {
   dither,
   highpVelocity,
-  isWebGPU,
   lensFlare,
   temporalAntialias
 } from '@takram/three-geospatial/webgpu'
@@ -99,14 +98,12 @@ const Content: FC<StoryProps> = () => {
         uniform(0),
         lensFlareNode
       )
-      const taaNode = isWebGPU(renderer)
-        ? temporalAntialias(highpVelocity)(
-            toneMappingNode,
-            depthNode,
-            velocityNode,
-            camera
-          )
-        : toneMappingNode
+      const taaNode = temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      )
       const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = taaNode.add(dither())
 

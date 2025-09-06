@@ -49,6 +49,7 @@ import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RenderTargetNode'
 import { textureBicubic } from './sampling'
 import { logarithmicDepthToPerspectiveDepth } from './transformations'
+import { isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -403,7 +404,10 @@ export class TemporalAntialiasNode extends TempNode {
 
     restoreRendererState(renderer, this.rendererState)
 
-    this.copyDepthTexture(renderer)
+    // WORKAROUND: copyTextureToTexture throws error in WebGL.
+    if (isWebGPU(renderer)) {
+      this.copyDepthTexture(renderer)
+    }
     this.swapBuffers()
 
     // Don't jitter the camera in subsequent render passes if any:
