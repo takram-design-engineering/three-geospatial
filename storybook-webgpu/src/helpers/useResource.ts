@@ -4,19 +4,23 @@ interface Resource {
   dispose: () => void
 }
 
-type ManageFunction = <R extends readonly Resource[]>(
-  ...resources: R
-) => R['length'] extends 1 ? R[0] : R
+type ManageFunction = <T extends Resource, Rest extends readonly Resource[]>(
+  resource: T,
+  ...resources: Rest
+) => Rest['length'] extends 0 ? T : [T, ...Rest]
 
 export function useResource<T extends Resource | Resource[]>(
   callback: (manage: ManageFunction) => T,
   deps: readonly unknown[]
 ): T {
   const managedResourcesRef = useRef<Resource[]>([])
-  const manage = useCallback((...resources: readonly Resource[]) => {
-    managedResourcesRef.current.push(...resources)
-    return resources.length === 1 ? resources[0] : resources
-  }, []) as ManageFunction
+  const manage = useCallback(
+    (resource: Resource, ...resources: readonly Resource[]) => {
+      managedResourcesRef.current.push(resource, ...resources)
+      return resources.length === 0 ? resource : [resource, ...resources]
+    },
+    []
+  ) as ManageFunction
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const resource = useMemo(() => callback(manage), deps)
