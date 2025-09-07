@@ -101,7 +101,3 @@ export const equirectWorld = (uv: NodeObject<'vec2'>): NodeObject<'vec3'> => {
   const cosPhi = cos(phi)
   return vec3(cosPhi.mul(cos(lambda)), sin(phi), cosPhi.mul(sin(lambda)))
 }
-
-export const clampToBorder = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
-  return uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()).toFloat()
-}

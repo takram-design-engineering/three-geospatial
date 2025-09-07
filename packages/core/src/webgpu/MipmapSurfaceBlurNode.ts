@@ -4,7 +4,10 @@ import invariant from 'tiny-invariant'
 
 import { DualFilterNode } from './DualFilterNode'
 import type { Node, NodeObject } from './node'
-import { clampToBorder } from './transformations'
+
+const clampToBorder = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
+  return uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()).toFloat()
+}
 
 // Implementation of Lena Piquet's bloom filter.
 // Reference: https://www.froyok.fr/blog/2021-12-ue4-custom-bloom

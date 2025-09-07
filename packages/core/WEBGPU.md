@@ -60,7 +60,6 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 - [`turbo`](#turbo)
 - [`depthToColor`](#depthtocolor)
 - [`equirectWorld`](#equirectworld)
-- [`clampToBorder`](#clamptoborder)
 
 The following terms refer to class fields:
 
