@@ -165,7 +165,7 @@ const passNode = pass(scene, camera).setMRT(
     velocity: highpVelocity
   })
 )
-const velocityNode = passNode.getTextureNode()
+const velocityNode = passNode.getTextureNode('velocity')
 const deltaUV = velocityNode.xy
 const deltaDepth = velocityNode.z
 ```

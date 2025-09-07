@@ -81,6 +81,7 @@ import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
+  useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
@@ -90,7 +91,6 @@ import { useControl } from '../helpers/useControl'
 import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { useSpringControl } from '../helpers/useSpringControl'
-import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 
 extend({ LineObject: Line })
@@ -273,8 +273,6 @@ const Content: FC<StoryProps> = () => {
   const context = useResource(() => atmosphereContext(renderer), [renderer])
   context.camera = camera
 
-  const exposureNode = useResource(() => uniform(1), [])
-
   // Post-processing:
 
   const [postProcessing, skyNode, toneMappingNode] = useResource(
@@ -297,7 +295,7 @@ const Content: FC<StoryProps> = () => {
 
       const lensFlareNode = manage(lensFlare(skyNode))
       const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, exposureNode, lensFlareNode)
+        toneMapping(AgXToneMapping, uniform(1), lensFlareNode)
       )
 
       const postProcessing = new PostProcessing(renderer)
@@ -308,31 +306,17 @@ const Content: FC<StoryProps> = () => {
 
       return [postProcessing, skyNode, toneMappingNode]
     },
-    [renderer, scene, camera, context, exposureNode]
+    [renderer, scene, camera, context]
   )
 
   useGuardedFrame(() => {
     postProcessing.render()
   }, 1)
 
-  useSpringControl(
-    ({ toneMappingExposure }: ToneMappingArgs) => toneMappingExposure,
-    value => {
-      exposureNode.value = value
-    }
-  )
-
   // Tone mapping controls:
-  useTransientControl(
-    ({ toneMappingEnabled, toneMapping }: ToneMappingArgs) => [
-      toneMappingEnabled,
-      toneMapping
-    ],
-    ([enabled, value]) => {
-      toneMappingNode.toneMapping = enabled ? value : NoToneMapping
-      postProcessing.needsUpdate = true
-    }
-  )
+  useToneMappingControls(toneMappingNode, () => {
+    postProcessing.needsUpdate = true
+  })
 
   // Location controls:
   const [longitude, latitude, height] = useLocationControls(
