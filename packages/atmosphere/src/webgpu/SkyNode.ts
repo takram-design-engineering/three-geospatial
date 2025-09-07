@@ -22,7 +22,7 @@ import {
 import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 
 import {
-  equirectDirectionWorld,
+  equirectToDirectionWorld,
   FnLayout,
   inverseProjectionMatrix,
   inverseViewMatrix,
@@ -178,7 +178,7 @@ export class SkyNode extends TempNode {
         directionWorld = cameraDirectionWorld(builder.camera)
         break
       case EQUIRECTANGULAR:
-        directionWorld = equirectDirectionWorld(uv())
+        directionWorld = equirectToDirectionWorld(uv())
         break
     }
     const rayDirectionECEF = worldToECEFMatrix

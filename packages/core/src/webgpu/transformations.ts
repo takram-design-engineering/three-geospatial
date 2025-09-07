@@ -95,7 +95,7 @@ export const depthToColor = (
   return turbo(viewZToLogarithmicDepth(viewZ, near, far) as NodeObject<'float'>)
 }
 
-export const equirectDirectionWorld = (
+export const equirectToDirectionWorld = (
   uv: NodeObject<'vec2'>
 ): NodeObject<'vec3'> => {
   const lambda = sub(0.5, uv.x).mul(PI2)
