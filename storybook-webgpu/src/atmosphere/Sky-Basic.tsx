@@ -10,7 +10,7 @@ import {
   getSunDirectionECEF
 } from '@takram/three-atmosphere'
 import { atmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
-import { lensFlare } from '@takram/three-geospatial/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -55,12 +55,16 @@ const Content: FC<StoryProps> = () => {
         toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
       )
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = toneMappingNode
+      postProcessing.outputNode = toneMappingNode.add(dithering)
 
       return [postProcessing, skyNode, toneMappingNode]
     },
     [renderer, context]
   )
+
+  useGuardedFrame(() => {
+    postProcessing.render()
+  }, 1)
 
   useTransientControl(
     ({ showSun, showMoon }: StoryArgs) => ({
@@ -72,10 +76,6 @@ const Content: FC<StoryProps> = () => {
       postProcessing.needsUpdate = true
     }
   )
-
-  useGuardedFrame(() => {
-    postProcessing.render()
-  }, 1)
 
   useTransientControl(
     ({ showGround }: StoryArgs) => ({

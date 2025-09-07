@@ -1,7 +1,8 @@
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
-import type { Renderer } from 'three/webgpu'
+import { pass, toneMapping, uniform } from 'three/tsl'
+import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
   getMoonDirectionECEF,
@@ -11,6 +12,7 @@ import {
   atmosphereContext,
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -33,6 +35,7 @@ import {
 } from '../controls/toneMappingControls'
 import type { StoryFC } from '../helpers/createStory'
 import { Description } from '../helpers/Description'
+import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
@@ -40,11 +43,35 @@ import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
+  const camera = useThree(({ camera }) => camera)
 
   const context = useResource(() => atmosphereContext(renderer), [renderer])
   const skyNode = useResource(() => skyBackground(context), [context])
 
   scene.backgroundNode = skyNode
+
+  // Post-processing:
+
+  const [postProcessing, toneMappingNode] = useResource(
+    manage => {
+      const passNode = manage(pass(scene, camera, { samples: 0 }))
+      const colorNode = passNode.getTextureNode('output')
+      const lensFlareNode = manage(lensFlare(colorNode))
+      const toneMappingNode = manage(
+        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
+      )
+
+      const postProcessing = new PostProcessing(renderer)
+      postProcessing.outputNode = toneMappingNode.add(dithering)
+
+      return [postProcessing, toneMappingNode]
+    },
+    [renderer, scene, camera]
+  )
+
+  useGuardedFrame(() => {
+    postProcessing.render()
+  }, 1)
 
   useTransientControl(
     ({ showSun, showMoon }: StoryArgs) => ({
@@ -68,7 +95,9 @@ const Content: FC<StoryProps> = () => {
   )
 
   // Tone mapping controls:
-  useToneMappingControls()
+  useToneMappingControls(toneMappingNode, () => {
+    postProcessing.needsUpdate = true
+  })
 
   // Location controls:
   useLocationControls(context.worldToECEFMatrix)
