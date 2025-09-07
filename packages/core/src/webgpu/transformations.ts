@@ -37,7 +37,7 @@ export const depthToViewZ = (
   ) as NodeObject<'float'>
 }
 
-export const logarithmicDepthToPerspectiveDepth = (
+export const logarithmicToPerspectiveDepth = (
   depth: Node<'float'>,
   near: NodeObject<'float'>,
   far: NodeObject<'float'>
@@ -46,7 +46,7 @@ export const logarithmicDepthToPerspectiveDepth = (
   return viewZToPerspectiveDepth(viewZ, near, far) as NodeObject<'float'>
 }
 
-export const perspectiveDepthToLogarithmicDepth = (
+export const perspectiveToLogarithmicDepth = (
   depth: Node<'float'>,
   near: NodeObject<'float'>,
   far: NodeObject<'float'>

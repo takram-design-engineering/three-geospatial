@@ -54,8 +54,8 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 **Transformations**
 
 - [`depthToViewZ`](#depthtoviewz)
-- [`logarithmicDepthToPerspectiveDepth`](#logarithmicdepthtoperspectivedepth)
-- [`perspectiveDepthToLogarithmicDepth`](#perspectivedepthtologarithmicdepth)
+- [`logarithmicToPerspectiveDepth`](#logarithmictoperspectivedepth)
+- [`perspectiveToLogarithmicDepth`](#perspectivetologarithmicdepth)
 - [`screenToPositionView`](#screentopositionview)
 - [`turbo`](#turbo)
 - [`depthToColor`](#depthtocolor)

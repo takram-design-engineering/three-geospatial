@@ -48,7 +48,7 @@ import type { Node, NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RenderTargetNode'
 import { textureBicubic } from './sampling'
-import { logarithmicDepthToPerspectiveDepth } from './transformations'
+import { logarithmicToPerspectiveDepth } from './transformations'
 import { isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -418,7 +418,7 @@ export class TemporalAntialiasNode extends TempNode {
         .load(ivec2(uv.mul(depthNode.size(0)).sub(0.5)))
         .toVar()
       return renderer.logarithmicDepthBuffer
-        ? logarithmicDepthToPerspectiveDepth(
+        ? logarithmicToPerspectiveDepth(
             depth,
             cameraNear(this.camera),
             cameraFar(this.camera)
@@ -452,7 +452,7 @@ export class TemporalAntialiasNode extends TempNode {
       // TODO: Add gather() in TextureNode and use it:
       let expectedDepth = closestDepth.get('depth')
       if (renderer.logarithmicDepthBuffer) {
-        expectedDepth = logarithmicDepthToPerspectiveDepth(
+        expectedDepth = logarithmicToPerspectiveDepth(
           expectedDepth,
           cameraNear(this.camera),
           cameraFar(this.camera)
