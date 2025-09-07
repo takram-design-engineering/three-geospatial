@@ -8,6 +8,7 @@ import {
   If,
   mat3,
   max,
+  mix,
   nodeProxy,
   PI,
   positionGeometry,
@@ -109,7 +110,13 @@ const orenNayarDiffuse = /*#__PURE__*/ FnLayout({
   const cosLight = normal.dot(lightDirection).toVar()
   const cosView = normal.dot(viewDirection).toVar()
   const s = lightDirection.dot(viewDirection).sub(cosLight.mul(cosView)).toVar()
-  const t = select(s.greaterThan(0), max(cosLight, cosView), 1)
+  const t = select(
+    s.greaterThan(0),
+    max(cosLight, cosView)
+      // Avoid artifact at the edge:
+      .max(0.1),
+    1
+  )
   const A = (1 / Math.PI) * (1 - 0.5 * (1 / 1.33) + 0.17 * (1 / 1.13))
   const B = (1 / Math.PI) * (0.45 * (1 / 1.09))
   return max(0, cosLight).mul(s.div(t).mul(B).add(A))
@@ -255,7 +262,15 @@ export class SkyNode extends TempNode {
               .xyz.mul(2)
               .sub(1)
             const tangentToLocal = mat3Columns(tangent, bitangent, normalMF)
-            normalMF.assign(tangentToLocal.mul(normalTangent).normalize())
+
+            normalMF.assign(
+              mix(
+                normalMF,
+                tangentToLocal.mul(normalTangent).normalize(),
+                // Avoid artifact at the edge:
+                normalECEF.dot(rayDirectionECEF.negate()).smoothstep(0, 0.3)
+              )
+            )
             normalECEF.assign(moonFixedToECEFMatrix.mul(vec4(normalMF, 0)).xyz)
           }
 
