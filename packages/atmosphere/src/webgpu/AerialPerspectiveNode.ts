@@ -1,5 +1,5 @@
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import { Discard, Fn, If, nodeObject, PI, uv, vec3, vec4 } from 'three/tsl'
+import { Fn, If, nodeObject, PI, uv, vec4 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
@@ -151,21 +151,19 @@ export class AerialPerspectiveNode extends TempNode {
       return output
     })().context(builder.getContext())
 
-    const outLuminance = vec3().toVar()
-
-    If(depth.greaterThanEqual(1 - 1e-8), () => {
-      if (this.skyNode != null) {
-        // Render the sky (the scattering seen from the camera to an infinite
-        // distance) for very far depths.
-        outLuminance.rgb.assign(this.skyNode)
-      } else {
-        Discard()
-      }
-    }).Else(() => {
-      outLuminance.rgb.assign(surfaceLuminance)
-    })
-
-    return vec4(outLuminance, 1)
+    return Fn(() => {
+      const luminance = colorNode.toVar()
+      If(depth.greaterThanEqual(1 - 1e-8), () => {
+        if (this.skyNode != null) {
+          // Render the sky (the scattering seen from the camera to an infinite
+          // distance) for very far depths.
+          luminance.rgb.assign(this.skyNode)
+        }
+      }).Else(() => {
+        luminance.rgb.assign(surfaceLuminance)
+      })
+      return luminance
+    })()
   }
 
   override dispose(): void {
