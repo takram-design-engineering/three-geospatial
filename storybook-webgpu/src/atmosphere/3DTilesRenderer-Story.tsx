@@ -17,7 +17,7 @@ import {
   atmosphereContext
 } from '@takram/three-atmosphere/webgpu'
 import {
-  dither,
+  dithering,
   highpVelocity,
   lensFlare,
   temporalAntialias
@@ -114,7 +114,7 @@ const Content: FC<StoryProps> = ({
       const overlayNode = overlayPassNode.getTextureNode('output')
 
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dither()).add(overlayNode)
+      postProcessing.outputNode = taaNode.add(dithering).add(overlayNode)
 
       return [postProcessing, passNode, toneMappingNode]
     },

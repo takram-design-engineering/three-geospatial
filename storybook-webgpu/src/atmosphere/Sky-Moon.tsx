@@ -63,7 +63,7 @@ import {
   Geodetic,
   radians
 } from '@takram/three-geospatial'
-import { dither, lensFlare } from '@takram/three-geospatial/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   localDateArgs,
@@ -304,7 +304,7 @@ const Content: FC<StoryProps> = () => {
       postProcessing.outputNode = toneMappingNode.rgb
         .mul(passNode.a.oneMinus())
         .add(passNode.rgb)
-        .add(dither())
+        .add(dithering)
 
       return [postProcessing, skyNode, toneMappingNode]
     },

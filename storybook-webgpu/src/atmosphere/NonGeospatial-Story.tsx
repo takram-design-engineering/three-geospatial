@@ -30,7 +30,7 @@ import {
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
 import {
-  dither,
+  dithering,
   highpVelocity,
   temporalAntialias
 } from '@takram/three-geospatial/webgpu'
@@ -118,7 +118,7 @@ const Content: FC<StoryProps> = () => {
         )
       )
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dither())
+      postProcessing.outputNode = taaNode.add(dithering)
 
       return [postProcessing, passNode, toneMappingNode]
     },

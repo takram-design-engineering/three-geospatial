@@ -14,7 +14,7 @@ import {
   skyEnvironment
 } from '@takram/three-atmosphere/webgpu'
 import {
-  dither,
+  dithering,
   highpVelocity,
   lensFlare,
   temporalAntialias
@@ -106,7 +106,7 @@ const Content: FC<StoryProps> = () => {
         )
       )
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dither())
+      postProcessing.outputNode = taaNode.add(dithering)
 
       return [postProcessing, passNode, toneMappingNode]
     },

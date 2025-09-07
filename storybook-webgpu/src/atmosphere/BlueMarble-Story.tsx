@@ -30,7 +30,7 @@ import {
 import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
 import {
-  dither,
+  dithering,
   highpVelocity,
   lensFlare,
   temporalAntialias
@@ -109,7 +109,7 @@ const Content: FC<StoryProps> = () => {
         )
       )
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dither())
+      postProcessing.outputNode = taaNode.add(dithering)
 
       return [postProcessing, passNode, toneMappingNode]
     },

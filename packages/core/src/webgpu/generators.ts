@@ -1,6 +1,7 @@
 import {
   abs,
   equirectUV,
+  Fn,
   fwidth,
   mix,
   rand,
@@ -12,11 +13,11 @@ import {
 
 import type { NodeObject } from './node'
 
-export const dither = (): NodeObject<'vec3'> => {
+export const dithering: NodeObject<'vec3'> = /*#__PURE__*/ Fn(() => {
   const gridPosition = rand(screenCoordinate.xy)
   const ditherShift = vec3(0.25, -0.25, 0.25).div(255).toConst()
   return mix(ditherShift.mul(2), ditherShift.mul(-2), gridPosition)
-}
+}).once()()
 
 export const equirectGrid = (
   direction: NodeObject<'vec3'>,
