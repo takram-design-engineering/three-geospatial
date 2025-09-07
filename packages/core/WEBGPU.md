@@ -32,10 +32,6 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 - [`MipmapSurfaceBlurNode`](#mipmapsurfaceblurnode)
 - [`DownsampleThresholdNode`](#downsamplethresholdnode)
 
-**Generators**
-
-- [`dithering`](#dithering)
-
 **Accessors**
 
 - [`projectionMatrix`](#projectionmatrix)
@@ -45,6 +41,10 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 - [`cameraPositionWorld`](#camerapositionworld)
 - [`cameraNear`](#cameranear)
 - [`cameraFar`](#camerafar)
+
+**Generators**
+
+- [`dithering`](#dithering)
 
 **Sampling**
 
@@ -59,7 +59,7 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 - [`screenToPositionView`](#screentopositionview)
 - [`turbo`](#turbo)
 - [`depthToColor`](#depthtocolor)
-- [`equirectWorld`](#equirectworld)
+- [`equirectDirectionWorld`](#equirectdirectionworld)
 
 The following terms refer to class fields:
 
