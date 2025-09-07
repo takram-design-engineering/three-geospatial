@@ -220,7 +220,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
         renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
       }
     }}
-    camera={{ fov: 40, position: [5, 3, 9] }}
+    camera={{ fov: 50, position: [5, 3, 9] }}
     shadows
   >
     <Content {...props} />
