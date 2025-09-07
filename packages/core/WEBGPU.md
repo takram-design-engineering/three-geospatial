@@ -12,8 +12,7 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 
 - [`FnVar`](#fnvar)
 - [`FnLayout`](#fnlayout)
-- [`OutputTextureNode`](#outputtexturenode)
-- [`OutputTexture3DNode`](#outputtexture3dnode)
+- [`OutputTextureNode`, `OutputTexture3DNode`](#outputtexturenode-outputtexture3dnode)
 - [`HighpVelocityNode`](#highpvelocitynode)
 
 **Effects**
@@ -35,7 +34,7 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 
 ## FnVar
 
-This is a utility function and works identically to `Fn`, except that the parameters of the callback function can be declared as variadic. This improves the colocation of parameters and their types.
+A utility function and works identically to `Fn`, except that the parameters of the callback function can be declared as variadic. This improves the colocation of parameters and their types.
 
 When you return a function, it receives the current `NodeBuilder`.
 
@@ -54,7 +53,7 @@ const fn = Fn<[TextureNode, NodeObject, number | undefined]>(
 
 ## FnLayout
 
-This is a utility function and works identically to `Fn.setLayout`, except it’s declared as a higher-order function on `Fn`. This improves the colocation of parameters and their types.
+A utility function and works identically to `Fn.setLayout`, except it’s declared as a higher-order function on `Fn`. This improves the colocation of parameters and their types.
 
 → [Source](/packages/core/src/webgpu/FnLayout.ts)
 
@@ -83,4 +82,54 @@ const fn = Fn(([a, b, c], builder) => {
     { name: 'c', type: 'float' }
   ]
 })
+```
+
+## OutputTextureNode, OutputTexture3DNode
+
+Texture nodes that depend on the provided `owner`. These nodes are intended to be used for output textures updated by another node.
+
+Having these nodes as a class field results in [an infinite recursion error](https://github.com/mrdoob/three.js/issues/31522) unless the field name follows the naming convention used internally by Three.js.
+
+→ [Source](/packages/core/src/webgpu/OutputTextureNode.ts)
+
+```ts
+class PassNode extends Node {
+  renderTarget = new RenderTarget()
+  _textureNode?: TextureNode
+
+  getTextureNode(): TextureNode {
+    return (this._textureNode ??= outputTexture(
+      this,
+      this.renderTarget.texture
+    ))
+  }
+}
+```
+
+### Constructor
+
+<!-- prettier-ignore -->
+```ts
+outputTexture: (owner: Node, texture: Texture) => NodeObject<OutputTextureNode>
+outputTexture3D: (owner: Node, texture: Texture) => NodeObject<OutputTexture3DNode>
+```
+
+## HighpVelocityNode
+
+A node that outputs geometry velocity in the current camera’s UV and depth. Unlike `VelocityNode` in Three.js’s examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
+
+This is not compatible with `VelocityNode` in Three.js’s examples, which outputs velocity in NDC and lacks depth output.
+
+→ [Source](/packages/core/src/webgpu/HighpVelocityNode.ts)
+
+```ts
+const passNode = pass(scene, camera).setMRT(
+  mrt({
+    output,
+    velocity: highpVelocity
+  })
+)
+const velocityNode = passNode.getTextureNode()
+const deltaUV = velocityNode.xy
+const deltaDepth = velocityNode.z
 ```

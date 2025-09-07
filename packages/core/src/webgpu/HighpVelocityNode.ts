@@ -24,7 +24,7 @@ export class HighpVelocityNode extends TempNode {
   private readonly objectModelViewMatrices = new WeakMap<Object3D, Matrix4>()
 
   constructor() {
-    super('vec2')
+    super('vec3')
 
     // Sequence:
     // - updateBefore() for the first object
