@@ -1,6 +1,6 @@
 import type { Preview } from '@storybook/react-vite'
 import { ConfigProvider, theme } from 'antd'
-import { debounce } from 'lodash'
+import { debounce } from 'lodash-es'
 import { STORY_ARGS_UPDATED } from 'storybook/internal/core-events'
 import { Preview as PreviewClass } from 'storybook/preview-api'
 import { themes } from 'storybook/theming'
