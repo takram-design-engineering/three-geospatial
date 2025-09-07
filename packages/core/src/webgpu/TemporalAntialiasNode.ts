@@ -55,7 +55,6 @@ const { resetRendererState, restoreRendererState } = RendererUtils
 
 interface VelocityNodeImmutable {
   projectionMatrix?: Matrix4 | null
-  setProjectionMatrix?: (value: Matrix4 | null) => unknown
 }
 
 interface SupportedCamera extends Camera {
@@ -221,7 +220,7 @@ export class TemporalAntialiasNode extends TempNode {
     return 'TemporalAntialiasNode'
   }
 
-  velocityNodeImmutable: VelocityNodeImmutable
+  private readonly velocityNodeImmutable: VelocityNodeImmutable
 
   inputNode: TextureNode
   depthNode: TextureNode
@@ -302,11 +301,7 @@ export class TemporalAntialiasNode extends TempNode {
   private setProjectionMatrix(value: Matrix4 | null): void {
     const { velocityNodeImmutable: velocity } = this
     if (velocity != null) {
-      if ('setProjectionMatrix' in velocity) {
-        velocity.setProjectionMatrix?.(value)
-      } else {
-        velocity.projectionMatrix = value
-      }
+      velocity.projectionMatrix = value
     }
   }
 

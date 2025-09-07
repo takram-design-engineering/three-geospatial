@@ -32,6 +32,43 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 - [`MipmapSurfaceBlurNode`](#mipmapsurfaceblurnode)
 - [`DownsampleThresholdNode`](#downsamplethresholdnode)
 
+**Generators**
+
+- [`dither`](#dither)
+
+**Accessors**
+
+- [`projectionMatrix`](#projectionmatrix)
+- [`viewMatrix`](#viewmatrix)
+- [`inverseProjectionMatrix`](#inverseprojectionmatrix)
+- [`inverseViewMatrix`](#inverseviewmatrix)
+- [`cameraPositionWorld`](#camerapositionworld)
+- [`cameraNear`](#cameranear)
+- [`cameraFar`](#camerafar)
+
+**Sampling**
+
+- [`textureBicubic`](#texturebicubic)
+- [`textureCatmullRom`](#texturecatmullrom)
+
+**Transformations**
+
+- [`depthToViewZ`](#depthtoviewz)
+- [`logarithmicDepthToPerspectiveDepth`](#logarithmicdepthtoperspectivedepth)
+- [`perspectiveDepthToLogarithmicDepth`](#perspectivedepthtologarithmicdepth)
+- [`screenToPositionView`](#screentopositionview)
+- [`turbo`](#turbo)
+- [`depthToColor`](#depthtocolor)
+- [`equirectWorld`](#equirectworld)
+- [`clampToBorder`](#clamptoborder)
+
+The following terms refer to class fields:
+
+- **Property** : A class field whose changes take effect immediately.
+- **Dependency** : A class field of type `Node` that the subject depends on.
+- **Uniform** : A class field of type `UniformNode`. Changes in its value takes effect immediately.
+- **Static option** : A class field whose changes take effect only after calling `setup()`.
+
 ## FnVar
 
 A utility function and works identically to `Fn`, except that the parameters of the callback function can be declared as variadic. This improves the colocation of parameters and their types.
@@ -132,4 +169,137 @@ const passNode = pass(scene, camera).setMRT(
 const velocityNode = passNode.getTextureNode()
 const deltaUV = velocityNode.xy
 const deltaDepth = velocityNode.z
+```
+
+### Properties
+
+```ts
+projectionMatrix?: Matrix4 | null
+```
+
+## LensFlareNode
+
+### Constructor
+
+```ts
+lensFlare: (inputNode: Node | null) => NodeObject<LensFlareNode>
+```
+
+### Dependencies
+
+#### inputNode
+
+```ts
+inputNode?: TextureNode | null
+```
+
+#### thresholdNode
+
+```ts
+thresholdNode: DownsampleThresholdNode
+```
+
+#### blurNode
+
+```ts
+blurNode: GaussianBlurNode
+```
+
+#### featuresNode
+
+```ts
+featuresNode: LensFlareFeaturesNode
+```
+
+#### bloomNode
+
+```ts
+bloomNode: MipmapSurfaceBlurNode
+```
+
+#### glareNode
+
+```ts
+glareNode: LensGlareNode
+```
+
+### Uniforms
+
+#### bloomIntensity
+
+```ts
+bloomIntensity = uniform(0.05)
+```
+
+## TemporalAntialiasNode
+
+### Constructor
+
+<!-- prettier-ignore -->
+```ts
+interface VelocityNodeImmutable {
+  projectionMatrix?: Matrix4 | null
+}
+
+temporalAntialias: (velocityNodeImmutable: VelocityNodeImmutable) =>
+  (
+    inputNode: Node,
+    depthNode: TextureNode,
+    velocityNode: TextureNode,
+    camera: Camera
+  ) => NodeObject<TemporalAntialiasNode>
+```
+
+### Dependencies
+
+#### inputNode
+
+```ts
+inputNode: TextureNode
+```
+
+#### depthNode
+
+```ts
+depthNode: TextureNode
+```
+
+#### velocityNode
+
+```ts
+velocityNode: TextureNode
+```
+
+### Properties
+
+#### camera
+
+```ts
+camera: Camera
+```
+
+### Uniforms
+
+#### temporalAlpha
+
+```ts
+temporalAlpha = uniform(0.1)
+```
+
+#### varianceGamma
+
+```ts
+varianceGamma = uniform(1)
+```
+
+#### velocityThreshold
+
+```ts
+velocityThreshold = uniform(0.1)
+```
+
+#### depthError
+
+```ts
+depthError = uniform(0.001)
 ```
