@@ -1,10 +1,39 @@
 import type { Preview } from '@storybook/react-vite'
 import { ConfigProvider, theme } from 'antd'
+import { debounce } from 'lodash'
+import { STORY_ARGS_UPDATED } from 'storybook/internal/core-events'
+import { Preview as PreviewClass } from 'storybook/preview-api'
 import { themes } from 'storybook/theming'
 
 import { docs } from './theme'
 
 import './style.css'
+
+const DEBOUNCED = Symbol('DEBOUNCED')
+
+const debouncedChannelEmit = debounce((channel, event, ...args) => {
+  channel.emit(event, ...args)
+}, 200)
+
+// WORKAROUND: Prevent Storybook from replacing URL too frequently, which has
+// a performance ramification and triggers security errors on Safari.
+const onUpdateArgs = PreviewClass.prototype.onUpdateArgs
+PreviewClass.prototype.onUpdateArgs = async function (...args) {
+  if (this[DEBOUNCED] !== true) {
+    const channel = this.channel
+    this.channel = {
+      emit: (event, ...args) => {
+        if (event === STORY_ARGS_UPDATED) {
+          debouncedChannelEmit(channel, event, ...args)
+        } else {
+          channel.emit(event, ...args)
+        }
+      }
+    }
+    this[DEBOUNCED] = true
+  }
+  await onUpdateArgs.apply(this, args)
+}
 
 const preview: Preview = {
   parameters: {
