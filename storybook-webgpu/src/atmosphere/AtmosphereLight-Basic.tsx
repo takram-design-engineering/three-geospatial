@@ -86,12 +86,12 @@ const Content: FC<StoryProps> = () => {
           })
         )
       )
-      const outputNode = passNode.getTextureNode('output')
+      const colorNode = passNode.getTextureNode('output')
       const depthNode = passNode.getTextureNode('depth')
       const velocityNode = passNode.getTextureNode('velocity')
 
       const aerialNode = manage(
-        aerialPerspective(context, outputNode, depthNode)
+        aerialPerspective(context, colorNode, depthNode)
       )
       const lensFlareNode = manage(lensFlare(aerialNode))
       const toneMappingNode = manage(

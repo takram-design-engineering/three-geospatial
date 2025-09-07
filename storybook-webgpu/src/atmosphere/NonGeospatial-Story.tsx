@@ -102,12 +102,12 @@ const Content: FC<StoryProps> = () => {
           })
         )
       )
-      const outputNode = passNode.getTextureNode('output')
+      const colorNode = passNode.getTextureNode('output')
       const depthNode = passNode.getTextureNode('depth')
       const velocityNode = passNode.getTextureNode('velocity')
 
       const toneMappingNode = manage(
-        toneMapping(NeutralToneMapping, uniform(0), outputNode)
+        toneMapping(NeutralToneMapping, uniform(0), colorNode)
       )
       const taaNode = manage(
         temporalAntialias(highpVelocity)(

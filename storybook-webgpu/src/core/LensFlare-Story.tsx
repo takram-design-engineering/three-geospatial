@@ -29,8 +29,8 @@ const Content: FC<StoryProps> = () => {
   const [postProcessing, lensFlareNode, toneMappingNode] = useResource(
     manage => {
       const passNode = manage(pass(scene, camera))
-      const outputNode = passNode.getTextureNode('output')
-      const lensFlareNode = manage(lensFlare(outputNode))
+      const colorNode = passNode.getTextureNode('output')
+      const lensFlareNode = manage(lensFlare(colorNode))
       const toneMappingNode = manage(
         toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
       )
