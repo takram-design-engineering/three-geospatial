@@ -13,11 +13,11 @@ export class AtmosphereLight extends DirectionalLight {
 
   atmosphereContext?: AtmosphereContextNode
 
-  direct = uniform(true)
-  indirect = uniform(true)
-
   // Distance to the target position.
   distance: number
+
+  direct = uniform(true)
+  indirect = uniform(true)
 
   constructor(atmosphereContext?: AtmosphereContextNode, distance = 1) {
     super()

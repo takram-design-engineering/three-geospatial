@@ -14,7 +14,7 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 
 # API
 
-- [`AtmosphereContext`](#atmospherecontext)
+- [`AtmosphereContextNode`](#atmospherecontextnode)
 - [`AtmosphereLight`](#atmospherelight)
 - [`AerialPerspectiveNode`](#aerialperspectivenode)
 - [`SkyNode`](#skynode)
@@ -28,10 +28,90 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 
 The following terms refer to class fields:
 
-- **Property** : A class field whose changes take effect immediately.
-- **Dependency** : A class field of type `Node` that the subject depends on.
-- **Uniform** : A class field of type `UniformNode`. Changes in its value takes effect immediately.
-- **Static option** : A class field whose changes take effect only after calling `setup()`.
+- **Dependencies** : Class fields of type `Node` that the subject depends on.
+- **Parameters** : Class fields whose changes take effect immediately.
+- **Uniforms** : Class field of type `UniformNode`. Changes in its value takes effect immediately.
+- **Static options** : Class fields whose changes take effect only after calling `setup()`.
+
+## AtmosphereContextNode
+
+→ [Source](/packages/atmosphere/src/webgpu/AtmosphereContextNode.ts)
+
+### Constructor
+
+```ts
+const atmosphereContext: (
+  renderer: Renderer,
+  parameters?: AtmosphereParameters,
+  lutNode?: AtmosphereLUTNode
+) => AtmosphereContextNode
+```
+
+### Dependencies
+
+#### lutNode
+
+```ts
+lutNode: AtmosphereLUTNode
+```
+
+### Parameters
+
+#### worldToECEFMatrix
+
+```ts
+worldToECEFMatrix = new Matrix4().identity()
+```
+
+#### sunDirectionECEF
+
+```ts
+sunDirectionECEF = new Vector3()
+```
+
+#### moonDirectionECEF
+
+```ts
+moonDirectionECEF = new Vector3()
+```
+
+#### moonFixedToECEFMatrix
+
+```ts
+moonFixedToECEFMatrix = new Matrix4().identity()
+```
+
+### Static options
+
+#### camera
+
+```ts
+camera = new Camera()
+```
+
+#### ellipsoid
+
+```ts
+ellipsoid = Ellipsoid.WGS84
+```
+
+#### correctAltitude
+
+```ts
+correctAltitude = true
+```
+
+#### constrainCamera
+
+```ts
+constrainCamera = true
+```
+
+#### showGround
+
+```ts
+showGround = true
+```
 
 ## AtmosphereLight
 
@@ -50,12 +130,33 @@ renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
 
 → [Source](/packages/atmosphere/src/webgpu/AtmosphereLight.ts)
 
+### Constructor
+
+```ts
+interface AtmosphereLight {
+  new: (
+    atmosphereContext?: AtmosphereContextNode,
+    distance?: number
+  ) => AtmosphereLight
+}
+```
+
+### Parameters
+
+#### distance
+
+```ts
+distance = 1
+```
+
+The distance from `DirectionalLight.target` to the light’s position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
+
 ### Uniforms
 
 #### direct
 
 ```ts
-direct: UniformNode<boolean> = uniform(true)
+direct = uniform(true)
 ```
 
 Whether to enable direct sunlight. This must be turned off when you use an environment map that includes direct sunlight.
@@ -63,64 +164,56 @@ Whether to enable direct sunlight. This must be turned off when you use an envir
 #### indirect
 
 ```ts
-indirect: UniformNode<boolean> = uniform(true)
+indirect = uniform(true)
 ```
 
 Whether to enable indirect sunlight. This must be turned off when you use an environment map.
 
-### Properties
-
-#### distance
-
-```ts
-distance: number = 1
-```
-
-The distance from `DirectionalLight.target` to the light’s position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
-
 ## AerialPerspectiveNode
 
+→ [Source](/packages/atmosphere/src/webgpu/AerialPerspectiveNode.ts)
+
+### Constructor
+
 ```ts
-const aerialPerspective = (
+const aerialPerspective: (
   atmosphereContext: AtmosphereContext,
-  colorNode: Node<'vec3' | 'vec4'>,
-  depthNode: Node<'float'>,
-  normalNode?: Node<'vec3'> | null
+  colorNode: Node,
+  depthNode: Node,
+  normalNode?: Node | null
 ) => NodeObject<AerialPerspectiveNode>
 ```
-
-→ [Source](/packages/atmosphere/src/webgpu/AerialPerspectiveNode.ts)
 
 ### Dependencies
 
 #### colorNode
 
 ```ts
-colorNode: Node<'vec3' | 'vec4'>
+colorNode: Node
 ```
 
 #### depthNode
 
 ```ts
-depthNode: Node<'float'>
+depthNode: Node
 ```
 
 #### normalNode
 
 ```ts
-normalNode?: Node<'vec3'> | null
+normalNode?: Node | null
 ```
 
 #### skyNode
 
 ```ts
-skyNode?: Node<'vec3'> | null = sky()
+skyNode?: Node | null = sky()
 ```
 
 #### shadowLengthNode
 
 ```ts
-shadowLengthNode?: Node<'float'> | null
+shadowLengthNode?: Node | null
 ```
 
 ### Static options
@@ -147,4 +240,86 @@ transmittance = true
 
 ```ts
 inscatter = true
+```
+
+## SkyNode
+
+→ [Source](/packages/atmosphere/src/webgpu/SkyNode.ts)
+
+### Constructor
+
+<!-- prettier-ignore -->
+```ts
+const sky: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
+const skyWorld: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
+const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
+```
+
+### Dependencies
+
+#### shadowLengthNode
+
+```ts
+shadowLengthNode?: Node | null
+```
+
+#### moonColorNode
+
+```ts
+moonColorNode?: TextureNode | null
+```
+
+#### moonNormalNode
+
+```ts
+moonNormalNode?: TextureNode | null
+```
+
+### Uniforms
+
+#### moonAngularRadius
+
+```ts
+moonAngularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
+```
+
+#### moonIntensity
+
+```ts
+moonIntensity = uniform(1)
+```
+
+### Static options
+
+#### showSun
+
+```ts
+showSun = true
+```
+
+#### showMoon
+
+```ts
+showMoon = true
+```
+
+## SkyEnvironmentNode
+
+→ [Source](/packages/atmosphere/src/webgpu/SkyEnvironmentNode.ts)
+
+### Constructor
+
+```ts
+const skyEnvironment: (
+  atmosphereContext: AtmosphereContext,
+  size?: number
+) => NodeObject<SkyEnvironmentNode>
+```
+
+### Dependencies
+
+#### skyNode
+
+```ts
+skyNode: SkyNode
 ```

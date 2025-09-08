@@ -133,6 +133,7 @@ export class SkyNode extends TempNode {
     return 'SkyNode'
   }
 
+  private readonly scope: SkyNodeScope = SCREEN
   private readonly atmosphereContext: AtmosphereContextNode
 
   shadowLengthNode?: Node<'float'> | null
@@ -146,12 +147,10 @@ export class SkyNode extends TempNode {
   showSun = true
   showMoon = true
 
-  private readonly scope: SkyNodeScope = SCREEN
-
-  constructor(scope: SkyNodeScope, context: AtmosphereContextNode) {
+  constructor(scope: SkyNodeScope, atmosphereContext: AtmosphereContextNode) {
     super('vec3')
     this.scope = scope
-    this.atmosphereContext = context
+    this.atmosphereContext = atmosphereContext
   }
 
   override customCacheKey(): number {

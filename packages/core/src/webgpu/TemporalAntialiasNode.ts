@@ -8,6 +8,7 @@ import {
   Vector2,
   type Camera
 } from 'three'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   and,
   float,
@@ -275,6 +276,10 @@ export class TemporalAntialiasNode extends TempNode {
     this._textureNode = outputTexture(this, this.resolveRT.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
+  }
+
+  override customCacheKey(): number {
+    return hash(this.camera.id, +this.debugShowDisocclusion)
   }
 
   private createRenderTarget(name?: string): RenderTarget {

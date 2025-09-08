@@ -63,10 +63,10 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 
 The following terms refer to class fields:
 
-- **Property** : A class field whose changes take effect immediately.
-- **Dependency** : A class field of type `Node` that the subject depends on.
-- **Uniform** : A class field of type `UniformNode`. Changes in its value takes effect immediately.
-- **Static option** : A class field whose changes take effect only after calling `setup()`.
+- **Dependencies** : Class fields of type `Node` that the subject depends on.
+- **Parameters** : Class fields whose changes take effect immediately.
+- **Uniforms** : Class field of type `UniformNode`. Changes in its value takes effect immediately.
+- **Static options** : Class fields whose changes take effect only after calling `setup()`.
 
 ## FnVar
 
@@ -146,8 +146,8 @@ class PassNode extends Node {
 
 <!-- prettier-ignore -->
 ```ts
-outputTexture: (owner: Node, texture: Texture) => NodeObject<OutputTextureNode>
-outputTexture3D: (owner: Node, texture: Texture) => NodeObject<OutputTexture3DNode>
+const outputTexture: (owner: Node, texture: Texture) => NodeObject<OutputTextureNode>
+const outputTexture3D: (owner: Node, texture: Texture) => NodeObject<OutputTexture3DNode>
 ```
 
 ## HighpVelocityNode
@@ -170,7 +170,7 @@ const deltaUV = velocityNode.xy
 const deltaDepth = velocityNode.z
 ```
 
-### Properties
+### Parameters
 
 ```ts
 projectionMatrix?: Matrix4 | null
@@ -181,7 +181,7 @@ projectionMatrix?: Matrix4 | null
 ### Constructor
 
 ```ts
-lensFlare: (inputNode: Node | null) => NodeObject<LensFlareNode>
+const lensFlare: (inputNode: Node | null) => NodeObject<LensFlareNode>
 ```
 
 ### Dependencies
@@ -240,7 +240,7 @@ interface VelocityNodeImmutable {
   projectionMatrix?: Matrix4 | null
 }
 
-temporalAntialias: (velocityNodeImmutable: VelocityNodeImmutable) =>
+const temporalAntialias: (velocityNodeImmutable: VelocityNodeImmutable) =>
   (
     inputNode: Node,
     depthNode: TextureNode,
@@ -269,14 +269,6 @@ depthNode: TextureNode
 velocityNode: TextureNode
 ```
 
-### Properties
-
-#### camera
-
-```ts
-camera: Camera
-```
-
 ### Uniforms
 
 #### temporalAlpha
@@ -301,4 +293,12 @@ velocityThreshold = uniform(0.1)
 
 ```ts
 depthError = uniform(0.001)
+```
+
+### Static options
+
+#### camera
+
+```ts
+camera: Camera
 ```

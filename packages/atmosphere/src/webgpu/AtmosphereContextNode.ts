@@ -25,9 +25,6 @@ export class AtmosphereContextNode extends Node {
   parameters: AtmosphereParameters
   lutNode: AtmosphereLUTNode
 
-  camera = new Camera()
-  ellipsoid = Ellipsoid.WGS84
-
   // Parameters exposed as uniform nodes:
   worldToECEFMatrix = new Matrix4().identity()
   sunDirectionECEF = new Vector3()
@@ -35,6 +32,8 @@ export class AtmosphereContextNode extends Node {
   moonFixedToECEFMatrix = new Matrix4().identity()
 
   // Static options:
+  camera = new Camera()
+  ellipsoid = Ellipsoid.WGS84
   correctAltitude = true
   constrainCamera = true
   showGround = true
