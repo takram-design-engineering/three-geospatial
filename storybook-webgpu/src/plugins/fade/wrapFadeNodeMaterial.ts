@@ -1,3 +1,5 @@
+// Ported to TSL from: https://github.com/NASA-AMMOS/3DTilesRendererJS/blob/v0.4.14/src/three/plugins/fade/wrapFadeMaterial.js
+
 import { Discard, Fn, If, output, screenCoordinate, uniform } from 'three/tsl'
 import type { NodeMaterial } from 'three/webgpu'
 

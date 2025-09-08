@@ -13,6 +13,7 @@ import {
 
 import type { NodeObject } from './node'
 
+// Ported to TSL from: https://github.com/mrdoob/three.js/blob/r179/src/renderers/shaders/ShaderChunk/dithering_pars_fragment.glsl.js
 export const dithering: NodeObject<'vec3'> = /*#__PURE__*/ Fn(() => {
   const gridPosition = rand(screenCoordinate.xy)
   const ditherShift = vec3(0.25, -0.25, 0.25).div(255).toConst()
