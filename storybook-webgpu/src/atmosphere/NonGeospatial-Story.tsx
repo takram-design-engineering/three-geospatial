@@ -224,7 +224,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     shadows
   >
     <Content {...props} />
-    <Description color='gray'>
+    <Description color='black'>
       <Attribution>Model: Littlest Tokyo / Glen Fox</Attribution>
     </Description>
   </WebGPUCanvas>
