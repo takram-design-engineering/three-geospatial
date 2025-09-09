@@ -127,5 +127,6 @@ declare module 'three/webgpu' {
       gradeNodeY: number | Node
     ): ShaderNodeObject<TextureNode>
     depth(depthNode: number | Node): ShaderNodeObject<TextureNode>
+    offset(offsetNode: Node): ShaderNodeObject<TextureNode>
   }
 }

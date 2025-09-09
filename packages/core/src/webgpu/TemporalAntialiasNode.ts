@@ -19,6 +19,7 @@ import {
   mix,
   nodeObject,
   screenCoordinate,
+  screenSize,
   screenUV,
   select,
   sqrt,
@@ -228,7 +229,7 @@ export class TemporalAntialiasNode extends TempNode {
   velocityNode: TextureNode
   camera: SupportedCamera
 
-  temporalAlpha = uniform(0.1)
+  temporalAlpha = uniform(0.05)
   varianceGamma = uniform(1)
   velocityThreshold = uniform(0.1)
   depthError = uniform(0.001)
@@ -443,6 +444,7 @@ export class TemporalAntialiasNode extends TempNode {
         .load(closestCoord)
         // TODO: Should Y still be inverted on WebGL?
         .xyz.mul(vec3(1, -1, 1))
+        .toVar()
 
       // Discards texels with velocity greater than the threshold:
       const velocityConfidence = velocity.xy
@@ -486,8 +488,14 @@ export class TemporalAntialiasNode extends TempNode {
           historyColor,
           this.varianceGamma
         )
-        // TODO: Use confidence in alpha:
-        outputColor.assign(mix(clippedColor, currentColor, this.temporalAlpha))
+
+        // Increase the temporal alpha when the velocity is more subpixel,
+        // reducing blurriness under motion.
+        const velocityTexel = velocity.xy.abs().mul(screenSize)
+        const subpixel = max(velocityTexel.x, velocityTexel.y).fract().mul(0.5)
+        const temporalAlpha = mix(this.temporalAlpha, 0.8, subpixel).saturate()
+
+        outputColor.assign(mix(clippedColor, currentColor, temporalAlpha))
       }).Else(() => {
         outputColor.assign(currentColor)
         if (this.debugShowDisocclusion) {
