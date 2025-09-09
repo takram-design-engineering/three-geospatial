@@ -1,10 +1,12 @@
 import { OrbitControls, Plane, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import { Suspense, useRef, type FC } from 'react'
+import { Suspense, useMemo, useRef, type FC } from 'react'
 import { BackSide, Matrix3, NeutralToneMapping, Vector3 } from 'three'
 import { RectAreaLightTexturesLib } from 'three/addons/lights/RectAreaLightTexturesLib.js'
 import {
   cameraViewMatrix,
+  color,
+  mix,
   mrt,
   output,
   pass,
@@ -29,6 +31,7 @@ import {
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
+import { remapClamped } from '@takram/three-geospatial'
 import {
   dithering,
   highpVelocity,
@@ -154,6 +157,12 @@ const Content: FC<StoryProps> = () => {
     getMoonDirectionECEF(date, context.moonDirectionECEF)
   })
 
+  const alphaNode = useMemo(() => uniform(0), [])
+  const colorNode = useMemo(
+    () => mix(color('#bfe3dd'), color('#ffffff'), alphaNode),
+    [alphaNode]
+  )
+
   // Toggles the lights in the model:
   const modelRef = useRef<LittlestTokyoApi>(null)
   useGuardedFrame(() => {
@@ -163,6 +172,7 @@ const Content: FC<StoryProps> = () => {
       .applyMatrix3(rotation.setFromMatrix4(worldToECEFMatrix).transpose())
     const cosSun = sunDirectionWorld.dot(up)
     modelRef.current?.setLightIntensity(cosSun < 0.1 ? 1 : 0)
+    alphaNode.value = remapClamped(cosSun, 0.1, 0)
   })
 
   return (
@@ -189,11 +199,11 @@ const Content: FC<StoryProps> = () => {
         maxPolarAngle={Math.PI / 2}
       />
       <Plane args={[500, 500]} rotation-x={-Math.PI / 2} receiveShadow>
-        <meshLambertNodeMaterial color={'#bfe3dd'} />
+        <meshLambertNodeMaterial colorNode={colorNode} />
       </Plane>
       <Sphere args={[500]}>
         <meshLambertNodeMaterial
-          color={'#bfe3dd'}
+          colorNode={colorNode}
           normalNode={cameraViewMatrix.mul(vec4(vec3(0, 1, 0), 0)).xyz}
           side={BackSide}
         />
