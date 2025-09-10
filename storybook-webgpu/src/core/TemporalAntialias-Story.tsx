@@ -220,7 +220,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs {
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <WebGPUCanvas camera={{ fov: 50, position: [1.5, 1.25, 1.5] }}>
+  <WebGPUCanvas camera={{ fov: 50, position: [2, 1.6, 2] }}>
     <Content {...props} />
     <Description />
   </WebGPUCanvas>

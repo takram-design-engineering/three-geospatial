@@ -457,20 +457,19 @@ export class TemporalAntialiasNode extends TempNode {
       const prevDepth = getPreviousDepth(prevUV)
 
       // TODO: Add gather() in TextureNode and use it:
-      let expectedDepth = closestDepth.get('depth')
-      if (renderer.logarithmicDepthBuffer) {
-        expectedDepth = logarithmicToPerspectiveDepth(
-          expectedDepth,
-          cameraNear(this.camera),
-          cameraFar(this.camera)
-        )
-      }
+      const expectedDepth = renderer.logarithmicDepthBuffer
+        ? logarithmicToPerspectiveDepth(
+            closestDepth.get('depth'),
+            cameraNear(this.camera),
+            cameraFar(this.camera)
+          )
+        : closestDepth.get('depth')
 
-      expectedDepth = expectedDepth.add(velocity.z)
       const depthConfidence = step(
-        expectedDepth,
+        expectedDepth.add(velocity.z),
         prevDepth.add(this.depthError)
       )
+
       const confidence = velocityConfidence.mul(depthConfidence)
 
       const uvWeight = and(
@@ -491,9 +490,16 @@ export class TemporalAntialiasNode extends TempNode {
 
         // Increase the temporal alpha when the velocity is more subpixel,
         // reducing blurriness under motion.
-        const velocityTexel = velocity.xy.abs().mul(screenSize)
-        const subpixel = max(velocityTexel.x, velocityTexel.y).fract().mul(0.5)
-        const temporalAlpha = mix(this.temporalAlpha, 0.8, subpixel).saturate()
+        // Reference: https://github.com/simco50/D3D12_Research/blob/master/Resources/Shaders/PostProcessing/TemporalResolve.hlsl
+        const velocityAbsTexel = velocity.xy.abs().mul(screenSize)
+        const subpixelCorrection = max(velocityAbsTexel.x, velocityAbsTexel.y)
+          .fract()
+          .mul(0.5)
+        const temporalAlpha = mix(
+          this.temporalAlpha,
+          0.8,
+          subpixelCorrection
+        ).saturate()
 
         outputColor.assign(mix(clippedColor, currentColor, temporalAlpha))
       }).Else(() => {
