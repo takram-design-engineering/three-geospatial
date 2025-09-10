@@ -3,7 +3,7 @@ import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { nodeProxy, uniform, uniformGroup } from 'three/tsl'
 import { Node, type NodeBuilder, type Renderer } from 'three/webgpu'
 
-import { Ellipsoid } from '@takram/three-geospatial'
+import { Ellipsoid, Geodetic } from '@takram/three-geospatial'
 import { isWebGPU } from '@takram/three-geospatial/webgpu'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
@@ -20,6 +20,9 @@ const WEBGPU = 'WEBGPU'
 const WEBGL = 'WEBGL'
 
 type AtmosphereContextScope = typeof WEBGPU | typeof WEBGL
+
+const vectorScratch = /*#__PURE__*/ new Vector3()
+const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
 export class AtmosphereContextNode extends Node {
   parameters: AtmosphereParameters
@@ -108,15 +111,6 @@ export class AtmosphereContextNode extends Node {
         self.value = this.moonFixedToECEFMatrix
       })
 
-    const cameraPositionECEF = uniform(new Vector3())
-      .setGroup(groupNode)
-      .setName('cameraPositionECEF')
-      .onRenderUpdate((_, { value }) => {
-        value
-          .setFromMatrixPosition(this.camera.matrixWorld)
-          .applyMatrix4(this.worldToECEFMatrix)
-      })
-
     const altitudeCorrectionECEF = uniform(new Vector3())
       .setGroup(groupNode)
       .setName('altitudeCorrectionECEF')
@@ -131,6 +125,25 @@ export class AtmosphereContextNode extends Node {
         )
       })
 
+    const cameraPositionECEF = uniform(new Vector3())
+      .setGroup(groupNode)
+      .setName('cameraPositionECEF')
+      .onRenderUpdate((_, { value }) => {
+        value
+          .setFromMatrixPosition(this.camera.matrixWorld)
+          .applyMatrix4(this.worldToECEFMatrix)
+      })
+
+    const cameraHeight = uniform(0)
+      .setGroup(groupNode)
+      .setName('cameraHeight')
+      .onRenderUpdate((_, self) => {
+        const positionECEF = vectorScratch
+          .setFromMatrixPosition(this.camera.matrixWorld)
+          .applyMatrix4(this.worldToECEFMatrix)
+        self.value = geodeticScratch.setFromECEF(positionECEF).height
+      })
+
     const { worldToUnit } = this.parameters.getNodes()
     const cameraPositionUnit = (
       this.correctAltitude
@@ -139,13 +152,14 @@ export class AtmosphereContextNode extends Node {
     ).toVar()
 
     return {
-      cameraPositionECEF,
       worldToECEFMatrix,
       ecefToWorldMatrix,
       sunDirectionECEF,
       moonDirectionECEF,
       moonFixedToECEFMatrix,
       altitudeCorrectionECEF,
+      cameraPositionECEF,
+      cameraHeight,
       cameraPositionUnit
     }
   }
