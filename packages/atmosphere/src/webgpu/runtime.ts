@@ -665,13 +665,12 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ FnLayout({
   const { parameters } = AtmosphereContextNode.get(builder)
   const nodes = parameters.getNodes()
 
-  const eps = float(0).toConst()
-  const bottomRadius = nodes.bottomRadius.add(eps).toVar()
-  const cameraBelow = camera.length().lessThan(bottomRadius).toVar()
-  const pointBelow = point.length().lessThan(bottomRadius).toVar()
+  const cameraBelow = camera.length().lessThan(nodes.bottomRadius).toVar()
+  const pointBelow = point.length().lessThan(nodes.bottomRadius).toVar()
 
   const viewRay = point.sub(camera).normalize().toVar()
-  const t = raySphereIntersections(camera, viewRay, bottomRadius)
+  // Intersection can be NaN without max(0) on "t".
+  const t = raySphereIntersections(camera, viewRay, nodes.bottomRadius).max(0)
   const intersection = camera.add(viewRay.mul(select(cameraBelow, t.y, t.x)))
 
   // The ray segment degenerates when the both camera and point are below the
