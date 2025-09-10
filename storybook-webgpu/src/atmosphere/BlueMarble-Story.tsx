@@ -147,7 +147,7 @@ const Content: FC<StoryProps> = () => {
       <atmosphereLight args={[context]} />
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
-        args={[Ellipsoid.WGS84.radii, 512, 256]}
+        args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={useResource(
           () => new MeshPhysicalNodeMaterial(blueMarble()),
           []
