@@ -1,5 +1,15 @@
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import { Fn, If, nodeObject, PI, uv, vec4 } from 'three/tsl'
+import {
+  Fn,
+  If,
+  mix,
+  nodeObject,
+  PI,
+  remapClamp,
+  uv,
+  vec3,
+  vec4
+} from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
@@ -65,11 +75,12 @@ export class AerialPerspectiveNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     builder.getContext().atmosphere = this.atmosphereContext
 
-    const { parameters, camera } = this.atmosphereContext
+    const { parameters, camera, ellipsoid } = this.atmosphereContext
     const {
       worldToECEFMatrix,
       sunDirectionECEF,
       altitudeCorrectionECEF,
+      cameraPositionECEF,
       cameraPositionUnit
     } = this.atmosphereContext.getNodes()
 
@@ -96,9 +107,39 @@ export class AerialPerspectiveNode extends TempNode {
         vec4(positionView, 1)
       ).xyz
       let positionECEF = worldToECEFMatrix.mul(vec4(positionWorld, 1)).xyz
+
       if (this.atmosphereContext.correctAltitude) {
         positionECEF = positionECEF.add(altitudeCorrectionECEF)
       }
+
+      // Changed our strategy on the geometric error correction, because we no
+      // longer have LightingMask to exclude objects in space.
+      const correctionAmount = remapClamp(
+        positionECEF.distance(cameraPositionECEF),
+        336_000, // The distance to the horizon from the highest point on the earth
+        876_000 // The distance to the horizon at the top atmosphere
+      )
+      const sphereNormal = positionECEF
+        .mul(vec3(ellipsoid.reciprocalRadiiSquared()))
+        .normalize()
+
+      const correctPositionError = (positionECEF: NodeObject<'vec3'>): void => {
+        // TODO: The error is pronounced at the edge of the ellipsoid due to the
+        // large difference between the sphere position and the unprojected
+        // position at the current fragment. Calculating the sphere position from
+        // the fragment UV may resolve this.
+        const spherePosition = sphereNormal.mul(parameters.bottomRadius)
+        positionECEF.assign(mix(positionECEF, spherePosition, correctionAmount))
+      }
+
+      const correctNormalError = (normalECEF: NodeObject<'vec3'>): void => {
+        normalECEF.assign(mix(normalECEF, sphereNormal, correctionAmount))
+      }
+
+      if (this.correctGeometricError) {
+        correctPositionError(positionECEF)
+      }
+
       const positionUnit = positionECEF.mul(worldToUnit).toVar()
 
       const indirect = Fn(() => {
@@ -108,7 +149,7 @@ export class AerialPerspectiveNode extends TempNode {
           )
         }
 
-        // Normal vector of the surface
+        // Normal vector of the surface:
         const normalNode = nodeObject(this.normalNode)
         const normalView = normalNode.xyz
         const normalWorld = inverseViewMatrix(camera).mul(
@@ -116,7 +157,11 @@ export class AerialPerspectiveNode extends TempNode {
         ).xyz
         const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
 
-        // Direct and indirect illuminance on the surface
+        if (this.correctGeometricError) {
+          correctNormalError(normalECEF)
+        }
+
+        // Direct and indirect illuminance on the surface:
         const sunSkyIlluminance = getSunAndSkyIlluminance(
           positionUnit,
           normalECEF,
