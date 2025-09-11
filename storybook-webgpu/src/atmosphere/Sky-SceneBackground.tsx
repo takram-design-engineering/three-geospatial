@@ -50,6 +50,9 @@ const Content: FC<StoryProps> = () => {
   context.camera = camera
 
   const skyNode = useResource(() => skyBackground(context), [context])
+  skyNode.moonNode.intensity.value = 10
+  skyNode.starsNode.intensity.value = 10
+
   scene.backgroundNode = skyNode
 
   // Post-processing:
