@@ -114,17 +114,17 @@ export class SkyNode extends TempNode {
     return Fn(() => {
       const luminance = vec3(0).toVar()
 
-      if (this.showStars && this.starsNode != null) {
+      if (this.showStars) {
         luminance.addAssign(this.starsNode)
       }
 
-      if (this.showSun && this.sunNode != null) {
+      if (this.showSun) {
         const sunNode = nodeObject(this.sunNode)
         sunNode.rayDirectionECEF = rayDirectionECEF
         luminance.assign(mix(luminance, sunNode.rgb, sunNode.a))
       }
 
-      if (this.showMoon && this.moonNode != null) {
+      if (this.showMoon) {
         const moonNode = nodeObject(this.moonNode)
         moonNode.rayDirectionECEF = rayDirectionECEF
         luminance.assign(mix(luminance, moonNode.rgb, moonNode.a))
