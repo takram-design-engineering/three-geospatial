@@ -1,6 +1,15 @@
 import type { Camera } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import { Fn, nodeProxy, positionGeometry, uv, vec3, vec4 } from 'three/tsl'
+import {
+  Fn,
+  mix,
+  nodeObject,
+  nodeProxy,
+  positionGeometry,
+  uv,
+  vec3,
+  vec4
+} from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
@@ -14,6 +23,7 @@ import {
 import type { AtmosphereContextNode } from './AtmosphereContextNode'
 import { moon, type MoonNode } from './MoonNode'
 import { getSkyLuminance } from './runtime'
+import { stars, type StarsNode } from './StarsNode'
 import { sun, type SunNode } from './SunNode'
 
 const cameraDirectionWorld = (camera: Camera): NodeObject<'vec3'> => {
@@ -40,13 +50,16 @@ export class SkyNode extends TempNode {
   private readonly scope: SkyNodeScope = SCREEN
   private readonly atmosphereContext: AtmosphereContextNode
 
+  shadowLengthNode?: Node<'float'> | null
+
   sunNode: SunNode
   moonNode: MoonNode
-  shadowLengthNode?: Node<'float'> | null
+  starsNode: StarsNode
 
   // Static options:
   showSun = true
   showMoon = true
+  showStars = true
 
   constructor(scope: SkyNodeScope, atmosphereContext: AtmosphereContextNode) {
     super('vec3')
@@ -54,10 +67,11 @@ export class SkyNode extends TempNode {
     this.atmosphereContext = atmosphereContext
     this.sunNode = sun(atmosphereContext)
     this.moonNode = moon(atmosphereContext)
+    this.starsNode = stars(atmosphereContext)
   }
 
   override customCacheKey(): number {
-    return hash(+this.showSun, +this.showMoon)
+    return hash(+this.showSun, +this.showMoon, +this.showStars)
   }
 
   override setup(builder: NodeBuilder): unknown {
@@ -100,15 +114,17 @@ export class SkyNode extends TempNode {
     return Fn(() => {
       const luminance = vec3(0).toVar()
 
-      // Compute the luminance of the sun:
-      if (this.sunNode != null) {
+      if (this.showStars && this.starsNode != null) {
+        luminance.addAssign(this.starsNode)
+      }
+
+      if (this.showSun && this.sunNode != null) {
         const sunNode = nodeObject(this.sunNode)
         sunNode.rayDirectionECEF = rayDirectionECEF
         luminance.assign(mix(luminance, sunNode.rgb, sunNode.a))
       }
 
-      // Compute the luminance of the moon:
-      if (this.moonNode != null) {
+      if (this.showMoon && this.moonNode != null) {
         const moonNode = nodeObject(this.moonNode)
         moonNode.rayDirectionECEF = rayDirectionECEF
         luminance.assign(mix(luminance, moonNode.rgb, moonNode.a))
