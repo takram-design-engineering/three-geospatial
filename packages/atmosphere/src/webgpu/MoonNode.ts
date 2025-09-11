@@ -119,7 +119,7 @@ export class MoonNode extends TempNode {
   intensity = uniform(1)
 
   constructor(atmosphereContext: AtmosphereContextNode) {
-    super('vec3')
+    super('vec4')
     this.atmosphereContext = atmosphereContext
   }
 
@@ -142,7 +142,7 @@ export class MoonNode extends TempNode {
       const chordLength = chordVector.dot(chordVector)
       const filterWidth = fwidth(chordLength)
 
-      const luminance = vec3(0).toVar()
+      const luminance = vec4(0).toVar()
       If(chordLength.lessThan(chordThreshold), () => {
         const normalECEF = raySphereIntersectionNormal(
           rayDirectionECEF,
@@ -195,11 +195,13 @@ export class MoonNode extends TempNode {
           chordLength
         )
         luminance.assign(
-          getLunarRadiance(this.angularRadius)
-            .mul(this.intensity)
-            .mul(color)
-            .mul(diffuse)
-            .mul(antialias)
+          vec4(
+            getLunarRadiance(this.angularRadius)
+              .mul(this.intensity)
+              .mul(color)
+              .mul(diffuse),
+            antialias
+          )
         )
       })
 

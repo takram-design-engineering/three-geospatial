@@ -102,16 +102,16 @@ export class SkyNode extends TempNode {
 
       // Compute the luminance of the sun:
       if (this.sunNode != null) {
-        const { sunNode } = this
+        const sunNode = nodeObject(this.sunNode)
         sunNode.rayDirectionECEF = rayDirectionECEF
-        luminance.addAssign(sunNode)
+        luminance.assign(mix(luminance, sunNode.rgb, sunNode.a))
       }
 
       // Compute the luminance of the moon:
       if (this.moonNode != null) {
-        const { moonNode } = this
+        const moonNode = nodeObject(this.moonNode)
         moonNode.rayDirectionECEF = rayDirectionECEF
-        luminance.addAssign(moonNode)
+        luminance.assign(mix(luminance, moonNode.rgb, moonNode.a))
       }
 
       return luminance.mul(transmittance).add(inscatter)

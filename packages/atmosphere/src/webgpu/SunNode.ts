@@ -6,7 +6,7 @@ import {
   nodeObject,
   smoothstep,
   uniform,
-  vec3
+  vec4
 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
@@ -28,7 +28,7 @@ export class SunNode extends TempNode {
   intensity = uniform(1)
 
   constructor(atmosphereContext: AtmosphereContextNode) {
-    super('vec3')
+    super('vec4')
     this.atmosphereContext = atmosphereContext
   }
 
@@ -47,14 +47,16 @@ export class SunNode extends TempNode {
       const chordLength = chordVector.dot(chordVector)
       const filterWidth = fwidth(chordLength)
 
-      const luminance = vec3(0).toVar()
+      const luminance = vec4(0).toVar()
       If(chordLength.lessThan(chordThreshold), () => {
         const antialias = smoothstep(
           chordThreshold,
           chordThreshold.sub(filterWidth),
           chordLength
         )
-        luminance.assign(getSolarLuminance().mul(this.intensity).mul(antialias))
+        luminance.assign(
+          vec4(getSolarLuminance().mul(this.intensity), antialias)
+        )
       })
       return luminance
     })()
