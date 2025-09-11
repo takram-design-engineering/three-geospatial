@@ -66,7 +66,7 @@ export class StarsNode extends TempNode {
 
   private readonly atmosphereContext: AtmosphereContextNode
 
-  data: string | ArrayBuffer
+  readonly data: string | ArrayBuffer
   private dataPromise?: Promise<void>
 
   pointSize = uniform(1)
@@ -98,6 +98,10 @@ export class StarsNode extends TempNode {
     this._textureNode = outputTexture(this, this.renderTarget.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
+  }
+
+  getTextureNode(): TextureNode {
+    return this._textureNode
   }
 
   setSize(width: number, height: number): this {
