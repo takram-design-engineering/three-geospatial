@@ -81,7 +81,7 @@ export class SkyNode extends TempNode {
     builder.getContext().atmosphere = this.atmosphereContext
 
     const { camera } = this.atmosphereContext
-    const { worldToECEFMatrix, sunDirectionECEF, cameraPositionUnit } =
+    const { matrixWorldToECEF, sunDirectionECEF, cameraPositionUnit } =
       this.atmosphereContext.getNodes()
 
     // Direction of the camera ray:
@@ -97,7 +97,7 @@ export class SkyNode extends TempNode {
         directionWorld = equirectToDirectionWorld(uv())
         break
     }
-    const rayDirectionECEF = worldToECEFMatrix
+    const rayDirectionECEF = matrixWorldToECEF
       .mul(vec4(directionWorld, 0))
       .xyz.toVertexStage()
       .normalize()

@@ -10,12 +10,12 @@ const vector = new Vector3()
 const rotation = new Matrix3()
 
 interface ISSProps extends ComponentProps<'group'> {
-  worldToECEFMatrix: Matrix4
+  matrixWorldToECEF: Matrix4
   sunDirectionECEF: Vector3
 }
 
 export const ISS: FC<ISSProps> = ({
-  worldToECEFMatrix,
+  matrixWorldToECEF,
   sunDirectionECEF,
   ...props
 }) => {
@@ -54,7 +54,7 @@ export const ISS: FC<ISSProps> = ({
   useGuardedFrame(() => {
     const sunDirectionLocal = vector
       .copy(sunDirectionECEF)
-      .applyMatrix3(rotation.setFromMatrix4(worldToECEFMatrix).transpose())
+      .applyMatrix3(rotation.setFromMatrix4(matrixWorldToECEF).transpose())
       .normalize()
       .applyMatrix3(rotation.setFromMatrix4(iss.scene.matrixWorld).transpose())
       .normalize()

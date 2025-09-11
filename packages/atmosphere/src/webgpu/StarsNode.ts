@@ -162,10 +162,10 @@ export class StarsNode extends TempNode {
     const instanceMagnitude = instancedBufferAttribute(magnitudeBuffer, 'float')
     const instanceColor = instancedBufferAttribute(colorBuffer, 'vec3')
 
-    const { inertialToECEFMatrix, ecefToWorldMatrix } =
+    const { matrixECIToECEF, matrixECEFToWorld } =
       this.atmosphereContext.getNodes()
-    const positionECEF = inertialToECEFMatrix.mul(vec4(instancePosition, 0)).xyz
-    const positionWorld = ecefToWorldMatrix.mul(vec4(positionECEF, 0)).xyz
+    const positionECEF = matrixECIToECEF.mul(vec4(instancePosition, 0)).xyz
+    const positionWorld = matrixECEFToWorld.mul(vec4(positionECEF, 0)).xyz
     material.positionNode = positionWorld
 
     // Magnitude is stored between 0 to 1 within the given range:

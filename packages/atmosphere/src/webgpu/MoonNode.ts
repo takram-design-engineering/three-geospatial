@@ -133,7 +133,7 @@ export class MoonNode extends TempNode {
     const {
       sunDirectionECEF,
       moonDirectionECEF: directionECEF,
-      moonFixedToECEFMatrix: fixedToECEFMatrix
+      matrixMoonFixedToECEF: matrixFixedToECEF
     } = this.atmosphereContext.getNodes()
 
     return Fn(() => {
@@ -149,7 +149,7 @@ export class MoonNode extends TempNode {
           directionECEF,
           this.angularRadius
         ).toVar()
-        const normalMF = fixedToECEFMatrix
+        const normalMF = matrixFixedToECEF
           .transpose()
           .mul(vec4(normalECEF, 0))
           .xyz.toVar()
@@ -179,7 +179,7 @@ export class MoonNode extends TempNode {
               normalECEF.dot(rayDirectionECEF.negate()).smoothstep(0, 0.3)
             )
           )
-          normalECEF.assign(fixedToECEFMatrix.mul(vec4(normalMF, 0)).xyz)
+          normalECEF.assign(matrixFixedToECEF.mul(vec4(normalMF, 0)).xyz)
         }
 
         const color = this.colorNode?.sample(uv).xyz ?? 1

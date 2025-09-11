@@ -135,7 +135,7 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.worldToECEFMatrix)
+  useLocationControls(context.matrixWorldToECEF)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {

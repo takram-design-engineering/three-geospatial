@@ -37,10 +37,10 @@ export class AtmosphereLight extends DirectionalLight {
     if (context == null) {
       return
     }
-    const { ecefToWorldMatrix, sunDirectionECEF } = context.getNodes()
+    const { matrixECEFToWorld, sunDirectionECEF } = context.getNodes()
     this.position
       .copy(sunDirectionECEF.value)
-      .applyMatrix3(rotationScratch.setFromMatrix4(ecefToWorldMatrix.value))
+      .applyMatrix3(rotationScratch.setFromMatrix4(matrixECEFToWorld.value))
       .multiplyScalar(this.distance)
       .add(this.target.position)
 

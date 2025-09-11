@@ -149,7 +149,7 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.worldToECEFMatrix)
+  useLocationControls(context.matrixWorldToECEF)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
@@ -166,10 +166,10 @@ const Content: FC<StoryProps> = () => {
   // Toggles the lights in the model:
   const modelRef = useRef<LittlestTokyoApi>(null)
   useGuardedFrame(() => {
-    const { worldToECEFMatrix, sunDirectionECEF } = context
+    const { matrixWorldToECEF, sunDirectionECEF } = context
     const sunDirectionWorld = vector
       .copy(sunDirectionECEF)
-      .applyMatrix3(rotation.setFromMatrix4(worldToECEFMatrix).transpose())
+      .applyMatrix3(rotation.setFromMatrix4(matrixWorldToECEF).transpose())
     const cosSun = sunDirectionWorld.dot(up)
     modelRef.current?.setLightIntensity(cosSun < 0.1 ? 1 : 0)
     alphaNode.value = remapClamped(cosSun, 0.1, 0)
