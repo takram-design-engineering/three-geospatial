@@ -46,8 +46,9 @@ const Content: FC<StoryProps> = () => {
   const camera = useThree(({ camera }) => camera)
 
   const context = useResource(() => atmosphereContext(renderer), [renderer])
-  const skyNode = useResource(() => skyBackground(context), [context])
+  context.camera = camera
 
+  const skyNode = useResource(() => skyBackground(context), [context])
   scene.backgroundNode = skyNode
 
   // Post-processing:
