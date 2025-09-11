@@ -280,13 +280,13 @@ const Content: FC<StoryProps> = () => {
       const passNode = manage(pass(scene, camera))
 
       const skyNode = manage(sky(context))
-      skyNode.moonColorNode = texture(
+      skyNode.moonNode.colorNode = texture(
         new TextureLoader().load('public/moon/color_large.webp', texture => {
           texture.colorSpace = LinearSRGBColorSpace
           texture.anisotropy = 16
         })
       )
-      skyNode.moonNormalNode = texture(
+      skyNode.moonNode.normalNode = texture(
         new TextureLoader().load('public/moon/normal_large.webp', texture => {
           texture.colorSpace = NoColorSpace
           texture.anisotropy = 16
@@ -330,13 +330,13 @@ const Content: FC<StoryProps> = () => {
   const moonScale = useSpringControl(
     ({ moonScale }: StoryArgs) => moonScale,
     value => {
-      skyNode.moonAngularRadius.value = moonAngularRadius * value
+      skyNode.moonNode.angularRadius.value = moonAngularRadius * value
     }
   )
   const moonIntensity = useSpringControl(
     ({ moonIntensity }: StoryArgs) => moonIntensity,
     value => {
-      skyNode.moonIntensity.value = value
+      skyNode.moonNode.intensity.value = value
     }
   )
 
