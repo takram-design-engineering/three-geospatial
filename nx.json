@@ -17,6 +17,9 @@
     ],
     "sharedGlobals": []
   },
+  "tui": {
+    "enabled": false
+  },
   "plugins": [
     {
       "plugin": "@nx/jest/plugin",
