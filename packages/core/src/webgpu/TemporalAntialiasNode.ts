@@ -476,9 +476,11 @@ export class TemporalAntialiasNode extends TempNode {
         prevUV.greaterThanEqual(0).all(),
         prevUV.lessThanEqual(1).all()
       ).toFloat()
+      // Don't apply TAA on background:
+      const depthWeight = closestDepth.get('depth').notEqual(1).toFloat()
 
       const outputColor = vec4(0).toVar()
-      If(uvWeight.mul(confidence).greaterThan(0), () => {
+      If(uvWeight.mul(depthWeight).mul(confidence).greaterThan(0), () => {
         const historyColor = textureBicubic(this.historyNode, prevUV)
         const clippedColor = varianceClipping(
           this.inputNode,
