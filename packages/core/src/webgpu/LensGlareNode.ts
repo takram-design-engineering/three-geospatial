@@ -4,7 +4,6 @@ import {
   Mesh,
   PerspectiveCamera,
   PlaneGeometry,
-  Scene,
   SRGBColorSpace,
   Vector2
 } from 'three'
@@ -105,7 +104,6 @@ export class LensGlareNode extends FilterNode {
   })
   private readonly mesh = new Mesh(new PlaneGeometry(1, 1), this.material)
   private readonly camera = new PerspectiveCamera()
-  private readonly scene = new Scene().add(this.mesh)
   private rendererState!: RendererUtils.RendererState
 
   private readonly inputTexelSize = uniform(new Vector2())
@@ -192,7 +190,7 @@ export class LensGlareNode extends FilterNode {
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
     renderer.setRenderTarget(renderTarget)
-    void renderer.render(this.scene, this.camera)
+    void renderer.render(this.mesh, this.camera)
 
     restoreRendererState(renderer, this.rendererState)
   }

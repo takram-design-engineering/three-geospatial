@@ -77,7 +77,7 @@ export class AerialPerspectiveNode extends TempNode {
 
     const { parameters, camera, ellipsoid } = this.atmosphereContext
     const {
-      worldToECEFMatrix,
+      matrixWorldToECEF,
       sunDirectionECEF,
       altitudeCorrectionECEF,
       cameraPositionECEF,
@@ -106,7 +106,7 @@ export class AerialPerspectiveNode extends TempNode {
       const positionWorld = inverseViewMatrix(camera).mul(
         vec4(positionView, 1)
       ).xyz
-      let positionECEF = worldToECEFMatrix.mul(vec4(positionWorld, 1)).xyz
+      let positionECEF = matrixWorldToECEF.mul(vec4(positionWorld, 1)).xyz
 
       if (this.atmosphereContext.correctAltitude) {
         positionECEF = positionECEF.add(altitudeCorrectionECEF)
@@ -155,7 +155,7 @@ export class AerialPerspectiveNode extends TempNode {
         const normalWorld = inverseViewMatrix(camera).mul(
           vec4(normalView, 0)
         ).xyz
-        const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
+        const normalECEF = matrixWorldToECEF.mul(vec4(normalWorld, 0)).xyz
 
         if (this.correctGeometricError) {
           correctNormalError(normalECEF)

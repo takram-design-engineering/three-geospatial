@@ -40,8 +40,8 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const { direct, indirect } = this.light
 
     const {
-      worldToECEFMatrix,
-      ecefToWorldMatrix,
+      matrixWorldToECEF,
+      matrixECEFToWorld,
       sunDirectionECEF,
       altitudeCorrectionECEF
     } = atmosphereContext.getNodes()
@@ -55,8 +55,8 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     } = parameters
 
     // Derive the ECEF normal vector and the unit-space position of the vertex.
-    const normalECEF = worldToECEFMatrix.mul(vec4(normalWorld, 0)).xyz
-    let positionECEF = worldToECEFMatrix.mul(vec4(positionWorld, 1)).xyz
+    const normalECEF = matrixWorldToECEF.mul(vec4(normalWorld, 0)).xyz
+    let positionECEF = matrixWorldToECEF.mul(vec4(positionWorld, 1)).xyz
     if (atmosphereContext.correctAltitude) {
       positionECEF = positionECEF.add(altitudeCorrectionECEF)
     }
@@ -77,7 +77,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     lightingContext.irradiance.addAssign(skyIlluminance)
 
     // Derive the view-space sun direction.
-    const sunDirectionWorld = ecefToWorldMatrix.mul(
+    const sunDirectionWorld = matrixECEFToWorld.mul(
       vec4(sunDirectionECEF, 0)
     ).xyz
     const sunDirectionView = cameraViewMatrix.mul(

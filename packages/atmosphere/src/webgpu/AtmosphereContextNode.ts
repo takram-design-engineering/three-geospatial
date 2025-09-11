@@ -29,10 +29,11 @@ export class AtmosphereContextNode extends Node {
   lutNode: AtmosphereLUTNode
 
   // Parameters exposed as uniform nodes:
-  worldToECEFMatrix = new Matrix4().identity()
+  matrixWorldToECEF = new Matrix4().identity()
+  matrixECIToECEF = new Matrix4().identity()
   sunDirectionECEF = new Vector3()
   moonDirectionECEF = new Vector3()
-  moonFixedToECEFMatrix = new Matrix4().identity()
+  matrixMoonFixedToECEF = new Matrix4().identity()
 
   // Static options:
   camera = new Camera()
@@ -75,19 +76,26 @@ export class AtmosphereContextNode extends Node {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private createNodes() {
-    const worldToECEFMatrix = uniform('mat4')
+    const matrixWorldToECEF = uniform('mat4')
       .setGroup(groupNode)
-      .setName('worldToECEFMatrix')
+      .setName('matrixWorldToECEF')
       .onRenderUpdate((_, self) => {
-        self.value = this.worldToECEFMatrix
+        self.value = this.matrixWorldToECEF
       })
 
-    const ecefToWorldMatrix = uniform(new Matrix4().identity())
+    const matrixECEFToWorld = uniform(new Matrix4().identity())
       .setGroup(groupNode)
-      .setName('ecefToWorldMatrix')
+      .setName('matrixECEFToWorld')
       .onRenderUpdate((_, { value }) => {
-        // The worldToECEFMatrix must be orthogonal.
-        value.copy(this.worldToECEFMatrix).transpose()
+        // The matrixWorldToECEF must be orthogonal.
+        value.copy(this.matrixWorldToECEF).transpose()
+      })
+
+    const matrixECIToECEF = uniform(new Matrix4().identity())
+      .setGroup(groupNode)
+      .setName('matrixECIToECEF')
+      .onRenderUpdate((_, self) => {
+        self.value = this.matrixECIToECEF
       })
 
     const sunDirectionECEF = uniform('vec3')
@@ -104,11 +112,11 @@ export class AtmosphereContextNode extends Node {
         self.value = this.moonDirectionECEF
       })
 
-    const moonFixedToECEFMatrix = uniform(new Matrix4())
+    const matrixMoonFixedToECEF = uniform(new Matrix4())
       .setGroup(groupNode)
-      .setName('moonFixedToECEFMatrix')
+      .setName('matrixMoonFixedToECEF')
       .onRenderUpdate((_, self) => {
-        self.value = this.moonFixedToECEFMatrix
+        self.value = this.matrixMoonFixedToECEF
       })
 
     const altitudeCorrectionECEF = uniform(new Vector3())
@@ -118,7 +126,7 @@ export class AtmosphereContextNode extends Node {
         getAltitudeCorrectionOffset(
           value
             .setFromMatrixPosition(this.camera.matrixWorld)
-            .applyMatrix4(this.worldToECEFMatrix),
+            .applyMatrix4(this.matrixWorldToECEF),
           this.parameters.bottomRadius,
           this.ellipsoid,
           value
@@ -131,7 +139,7 @@ export class AtmosphereContextNode extends Node {
       .onRenderUpdate((_, { value }) => {
         value
           .setFromMatrixPosition(this.camera.matrixWorld)
-          .applyMatrix4(this.worldToECEFMatrix)
+          .applyMatrix4(this.matrixWorldToECEF)
       })
 
     const cameraHeight = uniform(0)
@@ -140,7 +148,7 @@ export class AtmosphereContextNode extends Node {
       .onRenderUpdate((_, self) => {
         const positionECEF = vectorScratch
           .setFromMatrixPosition(this.camera.matrixWorld)
-          .applyMatrix4(this.worldToECEFMatrix)
+          .applyMatrix4(this.matrixWorldToECEF)
         self.value = geodeticScratch.setFromECEF(positionECEF).height
       })
 
@@ -152,11 +160,12 @@ export class AtmosphereContextNode extends Node {
     ).toVar()
 
     return {
-      worldToECEFMatrix,
-      ecefToWorldMatrix,
+      matrixWorldToECEF,
+      matrixECEFToWorld,
+      matrixECIToECEF,
       sunDirectionECEF,
       moonDirectionECEF,
-      moonFixedToECEFMatrix,
+      matrixMoonFixedToECEF,
       altitudeCorrectionECEF,
       cameraPositionECEF,
       cameraHeight,

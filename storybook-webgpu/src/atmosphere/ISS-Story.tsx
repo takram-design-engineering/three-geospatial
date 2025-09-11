@@ -146,7 +146,7 @@ const Content: FC<StoryProps> = () => {
   const [reorientationPlugin, setReorientationPlugin] =
     useState<ReorientationPlugin | null>(null)
   useLocationControls(
-    context.worldToECEFMatrix,
+    context.matrixWorldToECEF,
     (longitude, latitude, height) => {
       if (reorientationPlugin != null) {
         reorientationPlugin.lon = radians(longitude)
@@ -188,7 +188,7 @@ const Content: FC<StoryProps> = () => {
       <group rotation-x={-Math.PI / 2}>
         <Suspense>
           <ISS
-            worldToECEFMatrix={context.worldToECEFMatrix}
+            matrixWorldToECEF={context.matrixWorldToECEF}
             sunDirectionECEF={context.sunDirectionECEF}
             rotation-x={Math.PI / 2}
             rotation-y={Math.PI / 2}

@@ -57,10 +57,10 @@ lutNode: AtmosphereLUTNode
 
 ### Parameters
 
-#### worldToECEFMatrix
+#### matrixWorldToECEF
 
 ```ts
-worldToECEFMatrix = new Matrix4().identity()
+matrixWorldToECEF = new Matrix4().identity()
 ```
 
 #### sunDirectionECEF
@@ -75,10 +75,10 @@ sunDirectionECEF = new Vector3()
 moonDirectionECEF = new Vector3()
 ```
 
-#### moonFixedToECEFMatrix
+#### matrixMoonFixedToECEF
 
 ```ts
-moonFixedToECEFMatrix = new Matrix4().identity()
+matrixMoonFixedToECEF = new Matrix4().identity()
 ```
 
 ### Static options

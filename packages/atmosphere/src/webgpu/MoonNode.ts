@@ -119,7 +119,7 @@ export class MoonNode extends TempNode {
   intensity = uniform(1)
 
   constructor(atmosphereContext: AtmosphereContextNode) {
-    super('vec3')
+    super('vec4')
     this.atmosphereContext = atmosphereContext
   }
 
@@ -133,7 +133,7 @@ export class MoonNode extends TempNode {
     const {
       sunDirectionECEF,
       moonDirectionECEF: directionECEF,
-      moonFixedToECEFMatrix: fixedToECEFMatrix
+      matrixMoonFixedToECEF: matrixFixedToECEF
     } = this.atmosphereContext.getNodes()
 
     return Fn(() => {
@@ -142,14 +142,14 @@ export class MoonNode extends TempNode {
       const chordLength = chordVector.dot(chordVector)
       const filterWidth = fwidth(chordLength)
 
-      const luminance = vec3(0).toVar()
+      const luminance = vec4(0).toVar()
       If(chordLength.lessThan(chordThreshold), () => {
         const normalECEF = raySphereIntersectionNormal(
           rayDirectionECEF,
           directionECEF,
           this.angularRadius
         ).toVar()
-        const normalMF = fixedToECEFMatrix
+        const normalMF = matrixFixedToECEF
           .transpose()
           .mul(vec4(normalECEF, 0))
           .xyz.toVar()
@@ -179,7 +179,7 @@ export class MoonNode extends TempNode {
               normalECEF.dot(rayDirectionECEF.negate()).smoothstep(0, 0.3)
             )
           )
-          normalECEF.assign(fixedToECEFMatrix.mul(vec4(normalMF, 0)).xyz)
+          normalECEF.assign(matrixFixedToECEF.mul(vec4(normalMF, 0)).xyz)
         }
 
         const color = this.colorNode?.sample(uv).xyz ?? 1
@@ -195,11 +195,13 @@ export class MoonNode extends TempNode {
           chordLength
         )
         luminance.assign(
-          getLunarRadiance(this.angularRadius)
-            .mul(this.intensity)
-            .mul(color)
-            .mul(diffuse)
-            .mul(antialias)
+          vec4(
+            getLunarRadiance(this.angularRadius)
+              .mul(this.intensity)
+              .mul(color)
+              .mul(diffuse),
+            antialias
+          )
         )
       })
 

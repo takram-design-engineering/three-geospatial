@@ -60,7 +60,7 @@ const geodetic = new Geodetic()
 const position = new Vector3()
 
 export function useLocationControls(
-  worldToECEFMatrix: Matrix4,
+  matrixWorldToECEF: Matrix4,
   onChange?: (longitude: number, latitude: number, height: number) => void
 ): [MotionValue<number>, MotionValue<number>, MotionValue<number>] {
   const longitude = useSpringControl(({ longitude }: LocationArgs) => longitude)
@@ -74,7 +74,7 @@ export function useLocationControls(
         geodetic
           .set(radians(longitude), radians(latitude), height)
           .toECEF(position),
-        worldToECEFMatrix
+        matrixWorldToECEF
       )
       onChange?.(longitude, latitude, height)
     }

@@ -320,7 +320,7 @@ const Content: FC<StoryProps> = () => {
 
   // Location controls:
   const [longitude, latitude, height] = useLocationControls(
-    context.worldToECEFMatrix
+    context.matrixWorldToECEF
   )
 
   // Local date controls (depends on the longitude of the location):
@@ -337,6 +337,7 @@ const Content: FC<StoryProps> = () => {
     ({ moonIntensity }: StoryArgs) => moonIntensity,
     value => {
       skyNode.moonNode.intensity.value = value
+      skyNode.starsNode.intensity.value = value
     }
   )
 
@@ -345,10 +346,10 @@ const Content: FC<StoryProps> = () => {
   useCombinedChange(
     [longitude, latitude, height, date, moonScale, moonIntensity],
     ([longitude, latitude, height, date, moonScale, moonIntensity]) => {
-      const time = toAstroTime(date)
-      const matrixECIToECEF = getECIToECEFRotationMatrix(time)
+      const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
 
-      const { sunDirectionECEF, moonDirectionECEF } = context
+      const time = toAstroTime(date)
+      getECIToECEFRotationMatrix(time, matrixECIToECEF)
       getSunDirectionECI(time, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
       getMoonDirectionECI(
         time,
@@ -356,11 +357,11 @@ const Content: FC<StoryProps> = () => {
         geodetic.set(radians(longitude), radians(latitude), height).toECEF()
       ).applyMatrix4(matrixECIToECEF)
 
-      const { moonFixedToECEFMatrix } = context
+      const { matrixMoonFixedToECEF } = context
       getMoonFixedToECIRotationMatrix(
         time,
-        moonFixedToECEFMatrix
-      ).multiplyMatrices(matrixECIToECEF, moonFixedToECEFMatrix)
+        matrixMoonFixedToECEF
+      ).multiplyMatrices(matrixECIToECEF, matrixMoonFixedToECEF)
 
       try {
         const observer = new Observer(latitude, longitude, height)
@@ -408,7 +409,7 @@ const Content: FC<StoryProps> = () => {
       return
     }
     if (northUp) {
-      matrix.copy(context.worldToECEFMatrix).transpose()
+      matrix.copy(context.matrixWorldToECEF).transpose()
       camera.up.set(0, 0, 1).applyMatrix4(matrix)
     } else {
       camera.up.copy(Object3D.DEFAULT_UP)

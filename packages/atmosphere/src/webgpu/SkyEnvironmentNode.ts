@@ -3,8 +3,7 @@ import {
   WebGLCubeRenderTarget as CubeRenderTarget,
   HalfFloatType,
   Mesh,
-  RGBAFormat,
-  Scene
+  RGBAFormat
 } from 'three'
 import { nodeObject, pmremTexture, positionGeometry, vec4 } from 'three/tsl'
 import {
@@ -32,7 +31,6 @@ export class SkyEnvironmentNode extends TempNode {
   private readonly camera: CubeCamera
   private readonly material = new NodeMaterial()
   private readonly mesh = new Mesh(new QuadGeometry(), this.material)
-  private readonly scene = new Scene().add(this.mesh)
 
   constructor(atmosphereContext: AtmosphereContextNode, size = 64) {
     super('vec3')
@@ -58,7 +56,7 @@ export class SkyEnvironmentNode extends TempNode {
     // TODO: Don't render when the camera doesn't move. This case just comparing
     // the camera's world position is sufficient. But we need to detect
     // the atmosphere LUT is updated.
-    this.camera.update(renderer, this.scene)
+    this.camera.update(renderer, this.mesh)
   }
 
   override setup(builder: NodeBuilder): unknown {
