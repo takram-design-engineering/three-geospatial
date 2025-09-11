@@ -1,4 +1,5 @@
 import {
+  AdditiveBlending,
   HalfFloatType,
   InstancedBufferAttribute,
   LinearFilter,
@@ -12,6 +13,7 @@ import {
   mix,
   nodeObject,
   remapClamp,
+  screenUV,
   uniform,
   vec3,
   vec4
@@ -29,7 +31,12 @@ import {
 import invariant from 'tiny-invariant'
 
 import { ArrayBufferLoader } from '@takram/three-geospatial'
-import { outputTexture, type NodeObject } from '@takram/three-geospatial/webgpu'
+import {
+  cameraFar,
+  cameraNear,
+  outputTexture,
+  type NodeObject
+} from '@takram/three-geospatial/webgpu'
 
 import { DEFAULT_STARS_DATA_URL } from '../constants'
 import type { AtmosphereContextNode } from './AtmosphereContextNode'
@@ -68,7 +75,7 @@ export class StarsNode extends TempNode {
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNode?: TextureNode
+  private readonly _textureNode: TextureNode
 
   private readonly renderTarget: RenderTarget
   private readonly material = new PointsNodeMaterial()
@@ -162,11 +169,15 @@ export class StarsNode extends TempNode {
     const instanceMagnitude = instancedBufferAttribute(magnitudeBuffer, 'float')
     const instanceColor = instancedBufferAttribute(colorBuffer, 'vec3')
 
+    const { camera } = this.atmosphereContext
     const { matrixECIToECEF, matrixECEFToWorld } =
       this.atmosphereContext.getNodes()
-    const positionECEF = matrixECIToECEF.mul(vec4(instancePosition, 0)).xyz
-    const positionWorld = matrixECEFToWorld.mul(vec4(positionECEF, 0)).xyz
-    material.positionNode = positionWorld
+
+    const directionECEF = matrixECIToECEF.mul(vec4(instancePosition, 0)).xyz
+    const directionWorld = matrixECEFToWorld.mul(vec4(directionECEF, 0)).xyz
+    material.positionNode = directionWorld.mul(
+      cameraNear(camera).add(cameraFar(camera)).mul(0.5)
+    )
 
     // Magnitude is stored between 0 to 1 within the given range:
     const magnitude = mix(
@@ -206,8 +217,15 @@ export class StarsNode extends TempNode {
     const { material } = this
     material.sizeNode = this.pointSize
     material.sizeAttenuation = false
+    material.depthTest = false
+    material.depthWrite = false
+    material.transparent = true
+    material.blending = AdditiveBlending
     material.needsUpdate = true
 
+    this.points.frustumCulled = false
+
+    this._textureNode.uvNode = screenUV
     return this._textureNode
   }
 
