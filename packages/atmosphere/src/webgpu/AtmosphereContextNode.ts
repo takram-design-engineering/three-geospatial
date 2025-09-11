@@ -30,6 +30,7 @@ export class AtmosphereContextNode extends Node {
 
   // Parameters exposed as uniform nodes:
   worldToECEFMatrix = new Matrix4().identity()
+  inertialToECEFMatrix = new Matrix4().identity()
   sunDirectionECEF = new Vector3()
   moonDirectionECEF = new Vector3()
   moonFixedToECEFMatrix = new Matrix4().identity()
@@ -88,6 +89,13 @@ export class AtmosphereContextNode extends Node {
       .onRenderUpdate((_, { value }) => {
         // The worldToECEFMatrix must be orthogonal.
         value.copy(this.worldToECEFMatrix).transpose()
+      })
+
+    const inertialToECEFMatrix = uniform(new Matrix4().identity())
+      .setGroup(groupNode)
+      .setName('inertialToWorldMatrix')
+      .onRenderUpdate((_, self) => {
+        self.value = this.inertialToECEFMatrix
       })
 
     const sunDirectionECEF = uniform('vec3')
@@ -154,6 +162,7 @@ export class AtmosphereContextNode extends Node {
     return {
       worldToECEFMatrix,
       ecefToWorldMatrix,
+      inertialToECEFMatrix,
       sunDirectionECEF,
       moonDirectionECEF,
       moonFixedToECEFMatrix,
