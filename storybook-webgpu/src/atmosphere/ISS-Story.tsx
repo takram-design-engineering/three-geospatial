@@ -11,8 +11,9 @@ import {
 } from 'three/webgpu'
 
 import {
-  getMoonDirectionECEF,
-  getSunDirectionECEF
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECI,
+  getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
@@ -159,8 +160,10 @@ const Content: FC<StoryProps> = () => {
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    getSunDirectionECEF(date, context.sunDirectionECEF)
-    getMoonDirectionECEF(date, context.moonDirectionECEF)
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    getECIToECEFRotationMatrix(date, context.matrixECIToECEF)
+    getSunDirectionECI(date, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
+    getMoonDirectionECI(date, moonDirectionECEF).applyMatrix4(matrixECIToECEF)
   })
 
   const envNode = useResource(() => skyEnvironment(context), [context])

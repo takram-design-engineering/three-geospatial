@@ -5,7 +5,11 @@ import { AgXToneMapping } from 'three'
 import { mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
-import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECI,
+  getSunDirectionECI
+} from '@takram/three-atmosphere'
 import {
   aerialPerspective,
   atmosphereContext,
@@ -139,7 +143,10 @@ const Content: FC<StoryProps> = () => {
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    getSunDirectionECEF(date, context.sunDirectionECEF)
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    getECIToECEFRotationMatrix(date, context.matrixECIToECEF)
+    getSunDirectionECI(date, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
+    getMoonDirectionECI(date, moonDirectionECEF).applyMatrix4(matrixECIToECEF)
   })
 
   // Toggles the direct, indirect and environment lighting:
