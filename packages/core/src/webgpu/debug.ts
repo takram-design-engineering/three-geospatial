@@ -4,24 +4,60 @@ import { NodeMaterial, type Node, type Renderer } from 'three/webgpu'
 
 import { QuadGeometry } from '../QuadGeometry'
 
-export function debugShader(renderer: Renderer, node: Node): void {
-  const material = new NodeMaterial()
-  material.vertexNode = vec4(positionGeometry.xy, 0, 1)
-  material.fragmentNode = node
-
-  const mesh = new Mesh(new QuadGeometry(), material)
-
-  renderer.debug
+async function debugShader(
+  renderer: Renderer,
+  mesh: Mesh
+): Promise<
+  Awaited<{
+    fragmentShader: string | null
+    vertexShader: string | null
+  }>
+> {
+  return await renderer.debug
     .getShaderAsync(new Scene(), new Camera(), mesh)
     .then(result => {
-      console.log(result.fragmentShader)
+      return result
     })
     .catch((error: unknown) => {
       console.error(error)
+      return { fragmentShader: null, vertexShader: null }
+    })
+    .finally(() => {
+      mesh.geometry.dispose()
+    })
+}
+
+export function debugFragmentNode(
+  renderer: Renderer,
+  material: NodeMaterial
+): void {
+  const mesh = new Mesh(new QuadGeometry(), material)
+  void debugShader(renderer, mesh).then(result => {
+    console.log(result.fragmentShader)
+  })
+}
+
+export function debugVertexNode(
+  renderer: Renderer,
+  material: NodeMaterial
+): void {
+  const mesh = new Mesh(new QuadGeometry(), material)
+  void debugShader(renderer, mesh).then(result => {
+    console.log(result.vertexShader)
+  })
+}
+
+export function debugNode(renderer: Renderer, node: Node): void {
+  const material = new NodeMaterial()
+  material.vertexNode = vec4(positionGeometry.xy, 0, 1)
+  material.fragmentNode = node
+  const mesh = new Mesh(new QuadGeometry(), material)
+  void debugShader(renderer, mesh)
+    .then(result => {
+      console.log(result.fragmentShader)
     })
     .finally(() => {
       material.dispose()
-      mesh.geometry.dispose()
     })
 }
 
