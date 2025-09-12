@@ -67,6 +67,12 @@ lutNode: AtmosphereLUTNode
 matrixWorldToECEF = new Matrix4().identity()
 ```
 
+#### matrixECIToECEF
+
+```ts
+matrixECIToECEF = new Matrix4().identity()
+```
+
 #### sunDirectionECEF
 
 ```ts
@@ -267,30 +273,22 @@ const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNod
 shadowLengthNode?: Node | null
 ```
 
-#### moonColorNode
+#### sunNode
 
 ```ts
-moonColorNode?: TextureNode | null
+sunNode: SunNode
 ```
 
-#### moonNormalNode
+#### moonNode
 
 ```ts
-moonNormalNode?: TextureNode | null
+moonNode: MoonNode
 ```
 
-### Uniforms
-
-#### moonAngularRadius
+#### starsNode
 
 ```ts
-moonAngularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
-```
-
-#### moonIntensity
-
-```ts
-moonIntensity = uniform(1)
+starsNode: StarsNode
 ```
 
 ### Static options
@@ -305,6 +303,12 @@ showSun = true
 
 ```ts
 showMoon = true
+```
+
+#### showStars
+
+```ts
+showStars = true
 ```
 
 ## SkyEnvironmentNode
