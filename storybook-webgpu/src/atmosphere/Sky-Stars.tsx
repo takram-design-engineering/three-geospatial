@@ -18,10 +18,6 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import {
-  localDateArgTypes,
-  type LocalDateArgs
-} from '../controls/localDateControls'
-import {
   locationArgs,
   locationArgTypes,
   useLocationControls,
@@ -116,7 +112,7 @@ const Content: FC<StoryProps> = () => {
 
 interface StoryProps {}
 
-interface StoryArgs extends ToneMappingArgs, LocationArgs, LocalDateArgs {
+interface StoryArgs extends ToneMappingArgs, LocationArgs {
   showSun: boolean
   showMoon: boolean
   showGround: boolean
@@ -160,7 +156,6 @@ Story.argTypes = {
       type: 'boolean'
     }
   },
-  ...localDateArgTypes(),
   ...locationArgTypes(),
   ...toneMappingArgTypes(),
   ...rendererArgTypes()
