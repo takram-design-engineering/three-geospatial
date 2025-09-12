@@ -11,6 +11,7 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 - `SunDirectionalLight` and `SkyLightProbe` were replaced by `AtmosphereLight` and `AtmosphereLightNode`.
 - `SkyMaterial` was replaced by `SkyNode` (`skyBackground`) that can be used in `Scene.backgroundNode`.
 - `LightingMaskPass` was removed.
+- `StarsMaterial` and `StarsGeometry` were replaced by `StarsNode`.
 
 # API
 
@@ -19,6 +20,9 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 - [`AerialPerspectiveNode`](#aerialperspectivenode)
 - [`SkyNode`](#skynode)
 - [`SkyEnvironmentNode`](#skyenvironmentnode)
+- [`SunNode`](#sunnode)
+- [`MoonNode`](#moonnode)
+- [`StarsNode`](#starsnode)
 
 **Advanced**
 
