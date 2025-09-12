@@ -7,6 +7,7 @@ import {
   max,
   nodeObject,
   Return,
+  screenSize,
   select,
   texture,
   textureStore,
@@ -58,6 +59,17 @@ function createRenderTarget(name: string): RenderTarget {
   return renderTarget
 }
 
+function createStorageTexture(name: string): StorageTexture {
+  const texture = new StorageTexture(1, 1)
+  texture.type = FloatType
+  texture.format = RedFormat
+  texture.minFilter = LinearFilter
+  texture.magFilter = LinearFilter
+  texture.generateMipmaps = false
+  texture.name = `LongExposureNode.${name}`
+  return texture
+}
+
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
 // TODO: Refine and move to core.
@@ -76,6 +88,7 @@ export class LongExposureNode extends TempNode {
 
   private currentRT = createRenderTarget('Current')
   private historyRT = createRenderTarget('History')
+  private timerTexture = createStorageTexture('Timer')
   private readonly resolveMaterial = new NodeMaterial()
   private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
@@ -84,16 +97,13 @@ export class LongExposureNode extends TempNode {
 
   private readonly currentNode = texture(this.currentRT.texture)
   private readonly historyNode = texture(this.historyRT.texture)
+  private readonly timerNode = texture(this.timerTexture)
 
-  private readonly timerTexture = new StorageTexture()
   private computeNode?: ComputeNode
 
   constructor(inputNode: TextureNode) {
     super('vec4')
     this.inputNode = inputNode
-
-    this.timerTexture.type = FloatType
-    this.timerTexture.format = RedFormat
 
     this._textureNode = outputTexture(this, this.currentRT.texture)
 
@@ -105,12 +115,10 @@ export class LongExposureNode extends TempNode {
   }
 
   setSize(width: number, height: number): this {
-    const { currentRT, historyRT, timerTexture } = this
+    const { currentRT, historyRT } = this
     if (width !== historyRT.width || height !== historyRT.height) {
       currentRT.setSize(width, height)
       historyRT.setSize(width, height)
-      timerTexture.image.width = width
-      timerTexture.image.height = height
       this.needsClearHistory = true
     }
     return this
@@ -123,6 +131,16 @@ export class LongExposureNode extends TempNode {
     void renderer.clear()
     renderer.setRenderTarget(this.historyRT)
     void renderer.clear()
+
+    // TODO: Can we clear the contents of storage texture?
+    const { width, height } = this.currentRT
+    const timerTexture = this.timerTexture.clone()
+    timerTexture.image.width = width
+    timerTexture.image.height = height
+    this.timerTexture.dispose()
+    this.timerTexture = timerTexture
+    this.timerNode.value = timerTexture
+    this.computeNode = undefined
 
     this.needsClearHistory = false
   }
@@ -156,10 +174,9 @@ export class LongExposureNode extends TempNode {
 
     this.computeNode ??= Fn(() => {
       const id = instanceIndex
-      const x = id.mod(width)
-      const y = id.div(width)
-      const size = uvec2(width, height)
-      If(uvec2(x, y).greaterThanEqual(size).any(), () => {
+      const x = id.mod(screenSize.x)
+      const y = id.div(screenSize.x)
+      If(uvec2(x, y).greaterThanEqual(screenSize).any(), () => {
         Return()
       })
       const coord = ivec2(x, y)
@@ -168,9 +185,9 @@ export class LongExposureNode extends TempNode {
       If(luminance(input.rgb).greaterThanEqual(luminance(previous.rgb)), () => {
         textureStore(this.timerTexture, coord, time)
       })
-    })().compute(width * height)
+    })().compute(0, [8, 8, 1])
 
-    void renderer.compute(this.computeNode)
+    void renderer.compute(this.computeNode, width * height)
 
     renderer.setRenderTarget(this.currentRT)
     this.mesh.material = this.resolveMaterial
@@ -185,9 +202,8 @@ export class LongExposureNode extends TempNode {
     const { resolveMaterial, copyMaterial } = this
 
     const inputNode = nodeObject(this.inputNode)
-    const timerNode = texture(this.timerTexture)
     resolveMaterial.fragmentNode = select(
-      time.sub(timerNode.x).lessThan(this.shutterSpeed),
+      time.sub(this.timerNode.x).lessThan(this.shutterSpeed),
       max(inputNode, this.historyNode),
       inputNode
     )
