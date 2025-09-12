@@ -367,7 +367,6 @@ export class TemporalAntialiasNode extends TempNode {
 
     previous.image.width = current.width
     previous.image.height = current.height
-    previous.needsUpdate = true
     renderer.copyTextureToTexture(current, previous)
 
     this.previousDepthNode.value = previous
