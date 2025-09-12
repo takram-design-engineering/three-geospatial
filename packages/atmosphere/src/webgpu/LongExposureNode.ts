@@ -1,24 +1,46 @@
-import { max, nodeObject, texture, uniform } from 'three/tsl'
 import {
+  Fn,
+  If,
+  instanceIndex,
+  ivec2,
+  luminance,
+  max,
+  nodeObject,
+  Return,
+  select,
+  texture,
+  textureStore,
+  time,
+  uniform,
+  uvec2
+} from 'three/tsl'
+import {
+  FloatType,
   HalfFloatType,
   LinearFilter,
   NodeMaterial,
   NodeUpdateType,
   QuadMesh,
+  RedFormat,
   RendererUtils,
   RenderTarget,
   RGBAFormat,
+  StorageTexture,
   TempNode,
   Vector2,
+  type ComputeNode,
   type NodeBuilder,
   type NodeFrame,
   type Renderer,
   type TextureNode
 } from 'three/webgpu'
 
-import type { Node, NodeObject } from './node'
-import { outputTexture } from './OutputTextureNode'
-import { convertToTexture } from './RenderTargetNode'
+import {
+  convertToTexture,
+  outputTexture,
+  type Node,
+  type NodeObject
+} from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -32,20 +54,21 @@ function createRenderTarget(name: string): RenderTarget {
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
   texture.generateMipmaps = false
-  texture.name = `AfterImageNode.${name}`
+  texture.name = `LongExposureNode.${name}`
   return renderTarget
 }
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
-export class AfterImageNode extends TempNode {
+// TODO: Refine and move to core.
+export class LongExposureNode extends TempNode {
   static override get type(): string {
-    return 'AfterImageNode'
+    return 'LongExposureNode'
   }
 
   inputNode: TextureNode
 
-  alpha = uniform(0.99)
+  shutterSpeed = uniform(4)
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
@@ -60,11 +83,17 @@ export class AfterImageNode extends TempNode {
   private needsClearHistory = false
 
   private readonly currentNode = texture(this.currentRT.texture)
-  private readonly previousNode = texture(this.historyRT.texture)
+  private readonly historyNode = texture(this.historyRT.texture)
+
+  private readonly timerTexture = new StorageTexture()
+  private computeNode?: ComputeNode
 
   constructor(inputNode: TextureNode) {
     super('vec4')
     this.inputNode = inputNode
+
+    this.timerTexture.type = FloatType
+    this.timerTexture.format = RedFormat
 
     this._textureNode = outputTexture(this, this.currentRT.texture)
 
@@ -76,10 +105,12 @@ export class AfterImageNode extends TempNode {
   }
 
   setSize(width: number, height: number): this {
-    const { currentRT, historyRT } = this
+    const { currentRT, historyRT, timerTexture } = this
     if (width !== historyRT.width || height !== historyRT.height) {
       currentRT.setSize(width, height)
       historyRT.setSize(width, height)
+      timerTexture.image.width = width
+      timerTexture.image.height = height
       this.needsClearHistory = true
     }
     return this
@@ -102,7 +133,7 @@ export class AfterImageNode extends TempNode {
     this.currentRT = historyRT
     this.historyRT = currentRT
     this.currentNode.value = historyRT.texture
-    this.previousNode.value = currentRT.texture
+    this.historyNode.value = currentRT.texture
 
     // The output node must point to the current texture.
     this._textureNode.value = currentRT.texture
@@ -114,13 +145,32 @@ export class AfterImageNode extends TempNode {
     }
 
     const size = renderer.getDrawingBufferSize(sizeScratch)
-    this.setSize(size.x, size.y)
+    const { width, height } = size
+    this.setSize(width, height)
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
     if (this.needsClearHistory) {
       this.clearHistory(renderer)
     }
+
+    this.computeNode ??= Fn(() => {
+      const id = instanceIndex
+      const x = id.mod(width)
+      const y = id.div(width)
+      const size = uvec2(width, height)
+      If(uvec2(x, y).greaterThanEqual(size).any(), () => {
+        Return()
+      })
+      const coord = ivec2(x, y)
+      const input = this.inputNode.load(coord)
+      const previous = this.currentNode.load(coord)
+      If(luminance(input.rgb).greaterThanEqual(luminance(previous.rgb)), () => {
+        textureStore(this.timerTexture, coord, time)
+      })
+    })().compute(width * height)
+
+    void renderer.compute(this.computeNode)
 
     renderer.setRenderTarget(this.currentRT)
     this.mesh.material = this.resolveMaterial
@@ -134,9 +184,12 @@ export class AfterImageNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const { resolveMaterial, copyMaterial } = this
 
-    resolveMaterial.fragmentNode = max(
-      this.inputNode,
-      this.previousNode.mul(this.alpha)
+    const inputNode = nodeObject(this.inputNode)
+    const timerNode = texture(this.timerTexture)
+    resolveMaterial.fragmentNode = select(
+      time.sub(timerNode.x).lessThan(this.shutterSpeed),
+      max(inputNode, this.historyNode),
+      inputNode
     )
     resolveMaterial.needsUpdate = true
 
@@ -150,11 +203,12 @@ export class AfterImageNode extends TempNode {
   override dispose(): void {
     this.currentRT.dispose()
     this.historyRT.dispose()
+    this.timerTexture.dispose()
     this.resolveMaterial.dispose()
     this.copyMaterial.dispose()
     super.dispose()
   }
 }
 
-export const afterImage = (inputNode: Node): NodeObject<AfterImageNode> =>
-  nodeObject(new AfterImageNode(convertToTexture(inputNode)))
+export const longExposure = (inputNode: Node): NodeObject<LongExposureNode> =>
+  nodeObject(new LongExposureNode(convertToTexture(inputNode)))

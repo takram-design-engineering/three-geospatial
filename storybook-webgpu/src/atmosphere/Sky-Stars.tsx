@@ -10,12 +10,13 @@ import {
   getMoonDirectionECI,
   getSunDirectionECI
 } from '@takram/three-atmosphere'
-import { atmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
 import {
-  afterImage,
-  dithering,
-  lensFlare
-} from '@takram/three-geospatial/webgpu'
+  atmosphereContext,
+  longExposure,
+  sky,
+  type StarsNode
+} from '@takram/three-atmosphere/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
   locationArgs,
@@ -52,7 +53,11 @@ const Content: FC<StoryProps> = () => {
       skyNode.moonNode.intensity.value = 10
       skyNode.starsNode.intensity.value = 10
 
-      const lensFlareNode = manage(lensFlare(afterImage(skyNode)))
+      skyNode.starsNode = longExposure(
+        skyNode.starsNode
+      ) as unknown as StarsNode
+
+      const lensFlareNode = manage(lensFlare(skyNode))
       const toneMappingNode = manage(
         toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
       )
