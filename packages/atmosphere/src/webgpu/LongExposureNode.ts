@@ -7,13 +7,13 @@ import {
   max,
   nodeObject,
   Return,
-  screenSize,
   select,
   texture,
   textureStore,
   time,
   uniform,
-  uvec2
+  uvec2,
+  vec2
 } from 'three/tsl'
 import {
   FloatType,
@@ -80,7 +80,7 @@ export class LongExposureNode extends TempNode {
 
   inputNode: TextureNode
 
-  shutterSpeed = uniform(4)
+  shutterSpeed = uniform(4) // In seconds
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
@@ -89,7 +89,7 @@ export class LongExposureNode extends TempNode {
   private currentRT = createRenderTarget('Current')
   private historyRT = createRenderTarget('History')
   private timerTexture = createStorageTexture('Timer')
-  private readonly resolveMaterial = new NodeMaterial()
+  private readonly material = new NodeMaterial()
   private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
   private rendererState!: RendererUtils.RendererState
@@ -174,9 +174,9 @@ export class LongExposureNode extends TempNode {
 
     this.computeNode ??= Fn(() => {
       const id = instanceIndex
-      const x = id.mod(screenSize.x)
-      const y = id.div(screenSize.x)
-      If(uvec2(x, y).greaterThanEqual(screenSize).any(), () => {
+      const x = id.mod(width)
+      const y = id.div(width)
+      If(uvec2(x, y).greaterThanEqual(vec2(width, height)).any(), () => {
         Return()
       })
       const coord = ivec2(x, y)
@@ -185,12 +185,12 @@ export class LongExposureNode extends TempNode {
       If(luminance(input.rgb).greaterThanEqual(luminance(previous.rgb)), () => {
         textureStore(this.timerTexture, coord, time)
       })
-    })().compute(0, [8, 8, 1])
+    })().compute(width * height, [8, 8, 1])
 
-    void renderer.compute(this.computeNode, width * height)
+    void renderer.compute(this.computeNode)
 
     renderer.setRenderTarget(this.currentRT)
-    this.mesh.material = this.resolveMaterial
+    this.mesh.material = this.material
     this.mesh.render(renderer)
 
     restoreRendererState(renderer, this.rendererState)
@@ -199,15 +199,15 @@ export class LongExposureNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { resolveMaterial, copyMaterial } = this
+    const { material, copyMaterial } = this
 
     const inputNode = nodeObject(this.inputNode)
-    resolveMaterial.fragmentNode = select(
+    material.fragmentNode = select(
       time.sub(this.timerNode.x).lessThan(this.shutterSpeed),
       max(inputNode, this.historyNode),
       inputNode
     )
-    resolveMaterial.needsUpdate = true
+    material.needsUpdate = true
 
     copyMaterial.fragmentNode = this.inputNode
     copyMaterial.needsUpdate = true
@@ -220,7 +220,7 @@ export class LongExposureNode extends TempNode {
     this.currentRT.dispose()
     this.historyRT.dispose()
     this.timerTexture.dispose()
-    this.resolveMaterial.dispose()
+    this.material.dispose()
     this.copyMaterial.dispose()
     super.dispose()
   }
