@@ -4,10 +4,12 @@ import { createStory } from '../helpers/createStory'
 import { Story as BasicStory } from './Sky-Basic'
 import { Story as MoonStory } from './Sky-Moon'
 import { Story as SceneBackgroundStory } from './Sky-SceneBackground'
+import { Story as StarsStory } from './Sky-Stars'
 
 import BasicCode from './Sky-Basic?raw'
 import MoonCode from './Sky-Moon?raw'
 import SceneBackgroundCode from './Sky-SceneBackground?raw'
+import StarsCode from './Sky-Stars?raw'
 
 export default {
   title: 'atmosphere/Sky',
@@ -65,6 +67,16 @@ export const MoonSurface = createStory(MoonStory, {
     docs: {
       source: {
         code: MoonCode
+      }
+    }
+  }
+})
+
+export const Stars = createStory(StarsStory, {
+  parameters: {
+    docs: {
+      source: {
+        code: StarsCode
       }
     }
   }

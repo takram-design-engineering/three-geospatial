@@ -1,4 +1,5 @@
 export * from './accessors'
+export * from './AfterImageNode'
 export * from './debug'
 export * from './decorators'
 export * from './DownsampleThresholdNode'
