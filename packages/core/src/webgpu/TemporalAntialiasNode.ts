@@ -321,7 +321,7 @@ export class TemporalAntialiasNode extends TempNode {
     return this
   }
 
-  private clearHistory(renderer: Renderer, inputNode: TextureNode): void {
+  private clearHistory(renderer: Renderer): void {
     // Bind and clear the history render target to make sure it's initialized
     // after the resize which triggers a dispose().
     renderer.setRenderTarget(this.resolveRT)
@@ -395,7 +395,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
     if (this.needsClearHistory) {
-      this.clearHistory(renderer, this.inputNode)
+      this.clearHistory(renderer)
     }
 
     renderer.setRenderTarget(this.resolveRT)
@@ -475,7 +475,8 @@ export class TemporalAntialiasNode extends TempNode {
         prevUV.greaterThanEqual(0).all(),
         prevUV.lessThanEqual(1).all()
       ).toFloat()
-      // Don't apply TAA on background:
+
+      // Don't apply TAA on the background:
       const depthWeight = closestDepth.get('depth').notEqual(1).toFloat()
 
       const outputColor = vec4(0).toVar()
@@ -491,7 +492,7 @@ export class TemporalAntialiasNode extends TempNode {
 
         // Increase the temporal alpha when the velocity is more subpixel,
         // reducing blurriness under motion.
-        // Reference: https://github.com/simco50/D3D12_Research/blob/master/Resources/Shaders/PostProcessing/TemporalResolve.hlsl
+        // Reference: https://github.com/simco50/D3D12_Research/
         const velocityAbsTexel = velocity.xy.abs().mul(screenSize)
         const subpixelCorrection = max(velocityAbsTexel.x, velocityAbsTexel.y)
           .fract()
