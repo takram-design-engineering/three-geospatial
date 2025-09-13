@@ -12,7 +12,6 @@ import {
 } from '@takram/three-atmosphere'
 import {
   atmosphereContext,
-  longExposure,
   sky,
   type StarsNode
 } from '@takram/three-atmosphere/webgpu'
@@ -37,6 +36,7 @@ import { useGuardedFrame } from '../helpers/useGuardedFrame'
 import { useResource } from '../helpers/useResource'
 import { useTransientControl } from '../helpers/useTransientControl'
 import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { longExposure } from '../nodes/LongExposureNode'
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
