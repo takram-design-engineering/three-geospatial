@@ -10,7 +10,7 @@ import {
 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
-import type { Node, NodeObject } from '@takram/three-geospatial/webgpu'
+import type { Node } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereContextNode } from './AtmosphereContextNode'
 import { getSolarLuminance } from './runtime'
@@ -62,7 +62,3 @@ export class SunNode extends TempNode {
     })()
   }
 }
-
-export const sun = (
-  ...args: ConstructorParameters<typeof SunNode>
-): NodeObject<SunNode> => nodeObject(new SunNode(...args))

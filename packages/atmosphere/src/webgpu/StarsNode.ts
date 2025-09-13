@@ -11,7 +11,6 @@ import {
 import {
   instancedBufferAttribute,
   mix,
-  nodeObject,
   remapClamp,
   screenUV,
   uniform,
@@ -34,8 +33,7 @@ import { ArrayBufferLoader } from '@takram/three-geospatial'
 import {
   cameraFar,
   cameraNear,
-  outputTexture,
-  type NodeObject
+  outputTexture
 } from '@takram/three-geospatial/webgpu'
 
 import { DEFAULT_STARS_DATA_URL } from '../constants'
@@ -239,7 +237,3 @@ export class StarsNode extends TempNode {
     super.dispose()
   }
 }
-
-export const stars = (
-  ...args: ConstructorParameters<typeof StarsNode>
-): NodeObject<StarsNode> => nodeObject(new StarsNode(...args))

@@ -21,10 +21,10 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereContextNode } from './AtmosphereContextNode'
-import { moon, type MoonNode } from './MoonNode'
+import { MoonNode } from './MoonNode'
 import { getSkyLuminance } from './runtime'
-import { stars, type StarsNode } from './StarsNode'
-import { sun, type SunNode } from './SunNode'
+import { StarsNode } from './StarsNode'
+import { SunNode } from './SunNode'
 
 const cameraDirectionWorld = (camera: Camera): NodeObject<'vec3'> => {
   const positionView = inverseProjectionMatrix(camera).mul(
@@ -65,9 +65,9 @@ export class SkyNode extends TempNode {
     super('vec3')
     this.scope = scope
     this.atmosphereContext = atmosphereContext
-    this.sunNode = sun(atmosphereContext)
-    this.moonNode = moon(atmosphereContext)
-    this.starsNode = stars(atmosphereContext)
+    this.sunNode = new SunNode(atmosphereContext)
+    this.moonNode = new MoonNode(atmosphereContext)
+    this.starsNode = new StarsNode(atmosphereContext)
   }
 
   override customCacheKey(): number {

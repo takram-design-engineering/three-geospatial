@@ -18,11 +18,7 @@ import {
 } from 'three/tsl'
 import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 
-import {
-  FnLayout,
-  type Node,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
 import { AtmosphereContextNode } from './AtmosphereContextNode'
 import { Luminance3 } from './dimensional'
@@ -209,7 +205,3 @@ export class MoonNode extends TempNode {
     })()
   }
 }
-
-export const moon = (
-  ...args: ConstructorParameters<typeof MoonNode>
-): NodeObject<MoonNode> => nodeObject(new MoonNode(...args))
