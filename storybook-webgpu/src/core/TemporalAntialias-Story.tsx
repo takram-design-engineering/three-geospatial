@@ -63,10 +63,10 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const { enabled, showDisocclusion, rotateCamera, rotateObject } = useControl(
-    ({ enabled, showDisocclusion, rotateCamera, rotateObject }: StoryArgs) => ({
+  const { enabled, showRejection, rotateCamera, rotateObject } = useControl(
+    ({ enabled, showRejection, rotateCamera, rotateObject }: StoryArgs) => ({
       enabled,
-      showDisocclusion,
+      showRejection,
       rotateCamera,
       rotateObject
     })
@@ -101,7 +101,7 @@ const Content: FC<StoryProps> = () => {
             camera
           )
         )
-        taaNode.debugShowDisocclusion = showDisocclusion
+        taaNode.debugShowRejection = showRejection
         outputNode = taaNode
       }
 
@@ -110,7 +110,7 @@ const Content: FC<StoryProps> = () => {
 
       return [postProcessing, passNode, toneMappingNode]
     },
-    [renderer, scene, camera, enabled, showDisocclusion]
+    [renderer, scene, camera, enabled, showRejection]
   )
 
   useGuardedFrame(() => {
@@ -214,7 +214,7 @@ interface StoryProps {}
 
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs {
   enabled: boolean
-  showDisocclusion: boolean
+  showRejection: boolean
   rotateCamera: boolean
   rotateObject: boolean
 }
@@ -228,7 +228,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   enabled: true,
-  showDisocclusion: false,
+  showRejection: false,
   rotateCamera: true,
   rotateObject: true,
   ...toneMappingArgs({
@@ -245,7 +245,7 @@ Story.argTypes = {
       type: 'boolean'
     }
   },
-  showDisocclusion: {
+  showRejection: {
     control: {
       type: 'boolean'
     }

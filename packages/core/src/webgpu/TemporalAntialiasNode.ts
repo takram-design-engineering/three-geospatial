@@ -235,7 +235,7 @@ export class TemporalAntialiasNode extends TempNode {
   depthError = uniform(0.001)
 
   // Static options:
-  debugShowDisocclusion = false
+  debugShowRejection = false
 
   private resolveRT = this.createRenderTarget('Resolve')
   private historyRT = this.createRenderTarget('History')
@@ -280,7 +280,7 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override customCacheKey(): number {
-    return hash(this.camera.id, +this.debugShowDisocclusion)
+    return hash(this.camera.id, +this.debugShowRejection)
   }
 
   private createRenderTarget(name?: string): RenderTarget {
@@ -506,7 +506,7 @@ export class TemporalAntialiasNode extends TempNode {
         outputColor.assign(mix(clippedColor, currentColor, temporalAlpha))
       }).Else(() => {
         outputColor.assign(currentColor)
-        if (this.debugShowDisocclusion) {
+        if (this.debugShowRejection) {
           outputColor.assign(vec3(1, 0, 0))
         }
       })
