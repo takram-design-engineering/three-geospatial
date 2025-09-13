@@ -50,8 +50,6 @@ const Content: FC<StoryProps> = () => {
   const [postProcessing, skyNode, toneMappingNode] = useResource(
     manage => {
       const skyNode = manage(sky(context))
-      skyNode.moonNode.intensity.value = 10
-      skyNode.starsNode.intensity.value = 10
 
       skyNode.starsNode = longExposure(
         skyNode.starsNode
@@ -102,7 +100,7 @@ const Content: FC<StoryProps> = () => {
   // Location controls:
   useLocationControls(context.matrixWorldToECEF)
 
-  const referenceDate = useRef(+new Date('2025-08-01T18:00:00+09:00'))
+  const referenceDate = useRef(+new Date('2025-08-01T18:30:00+09:00'))
   useGuardedFrame(() => {
     referenceDate.current += 10000
     const date = referenceDate.current
@@ -140,7 +138,7 @@ Story.args = {
     height: 300
   }),
   ...toneMappingArgs({
-    toneMappingExposure: 10
+    toneMappingExposure: 100
   }),
   ...rendererArgs()
 }
