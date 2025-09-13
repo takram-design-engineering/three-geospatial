@@ -164,7 +164,7 @@ const neighborOffsets = [
   /*#__PURE__*/ ivec2(1, 1)
 ]
 
-const closetDepthStruct = /*#__PURE__*/ struct({
+const closestDepthStruct = /*#__PURE__*/ struct({
   coord: 'ivec2',
   depth: 'float'
 })
@@ -182,7 +182,7 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
         depth.assign(neighbor.r)
       })
     }
-    return closetDepthStruct(coord, depth)
+    return closestDepthStruct(coord, depth)
   }
 )
 
