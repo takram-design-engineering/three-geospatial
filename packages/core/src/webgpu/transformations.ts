@@ -71,18 +71,19 @@ export const screenToPositionView = (
 
 // A fifth-order polynomial approximation of Turbo color map.
 // See: https://observablehq.com/@mbostock/turbo
+const turboCoeffs = [
+  /*#__PURE__*/ vec3(58.1375, 2.7747, 26.8183),
+  /*#__PURE__*/ vec3(-150.5666, 4.2109, -88.5066),
+  /*#__PURE__*/ vec3(130.5887, -14.0195, 109.0745),
+  /*#__PURE__*/ vec3(-42.3277, 4.8052, -60.1097),
+  /*#__PURE__*/ vec3(4.5974, 2.1856, 12.5925),
+  /*#__PURE__*/ vec3(0.1357, 0.0914, 0.1067)
+]
+
 export const turbo = (x: NodeObject<'float'>): NodeObject<'vec3'> => {
-  const coeffs = [
-    vec3(-150.5666, 4.2109, -88.5066),
-    vec3(130.5887, -14.0195, 109.0745),
-    vec3(-42.3277, 4.8052, -60.1097),
-    vec3(4.5974, 2.1856, 12.5925),
-    vec3(0.1357, 0.0914, 0.1067)
-  ]
-  return coeffs.reduce<NodeObject>(
-    (y, offset) => offset.add(x.mul(y)),
-    vec3(58.1375, 2.7747, 26.8183)
-  )
+  return turboCoeffs
+    .slice(1)
+    .reduce<NodeObject>((y, offset) => offset.add(x.mul(y)), turboCoeffs[0])
 }
 
 export const depthToColor = (
