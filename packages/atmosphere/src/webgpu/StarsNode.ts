@@ -64,7 +64,7 @@ export class StarsNode extends TempNode {
 
   private readonly atmosphereContext: AtmosphereContextNode
 
-  readonly data: string | ArrayBuffer
+  readonly data: string | ArrayBufferLike
   private dataPromise?: Promise<void>
 
   pointSize = uniform(1)
@@ -86,7 +86,7 @@ export class StarsNode extends TempNode {
 
   constructor(
     atmosphereContext: AtmosphereContextNode,
-    data: string | ArrayBuffer = DEFAULT_STARS_DATA_URL
+    data: string | ArrayBufferLike = DEFAULT_STARS_DATA_URL
   ) {
     super('vec3')
     this.atmosphereContext = atmosphereContext
@@ -128,7 +128,7 @@ export class StarsNode extends TempNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private createBuffers(data: ArrayBuffer): void {
+  private createBuffers(data: ArrayBufferLike): void {
     // Byte 0-5: int16 position (x, y, z)
     // Byte 6: uint8 magnitude
     // Byte 7-9: uint8 color (r, g, b)

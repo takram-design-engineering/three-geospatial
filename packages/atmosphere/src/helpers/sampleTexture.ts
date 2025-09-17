@@ -11,7 +11,10 @@ const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
-const float16ArrayCache = /*#__PURE__*/ new WeakMap<ArrayBuffer, Float16Array>()
+const float16ArrayCache = /*#__PURE__*/ new WeakMap<
+  ArrayBufferLike,
+  Float16Array
+>()
 
 function getImageData(texture: Texture): TypedArray | undefined {
   // Image data is stored in the userData in case of normal texture.
