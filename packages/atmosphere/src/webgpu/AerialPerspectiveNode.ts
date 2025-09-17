@@ -35,7 +35,7 @@ export class AerialPerspectiveNode extends TempNode {
 
   private readonly atmosphereContext: AtmosphereContextNode
 
-  colorNode: Node<'vec3' | 'vec4'>
+  colorNode: Node<'vec4'>
   depthNode: Node<'float'>
   normalNode?: Node<'vec3'> | null
   skyNode?: Node<'vec3'> | null
@@ -49,7 +49,7 @@ export class AerialPerspectiveNode extends TempNode {
 
   constructor(
     atmosphereContext: AtmosphereContextNode,
-    colorNode: Node<'vec3' | 'vec4'>,
+    colorNode: Node<'vec4'>,
     depthNode: Node<'float'>,
     normalNode?: Node<'vec3'> | null
   ) {

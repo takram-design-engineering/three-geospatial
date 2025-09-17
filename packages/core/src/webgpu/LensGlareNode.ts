@@ -169,18 +169,14 @@ export class LensGlareNode extends FilterNode {
     counterBuffer.array[0] = 0
     counterBuffer.needsUpdate = true
 
-    void renderer.computeAsync(computeNode)
+    void renderer.compute(computeNode)
 
     renderer
       .getArrayBufferAsync(counterBuffer)
       .then(arrayBuffer => {
         // TODO: This is indeed a couple of frames behind, thus the number of
         // computed instances above and the number of instances to be drawn by
-        // the mesh differ. It is less problematic when the new counter value is
-        // larger than the number of instances, but when it is smaller, garbage
-        // instances will be drawn. This might be mitigated by clearing the
-        // unused region of the instance buffer in the compute shader,
-        // dispatching over all elements in it.
+        // the mesh differ.
         this.mesh.count = new Uint32Array(arrayBuffer)[0]
       })
       .catch((error: unknown) => {
