@@ -146,6 +146,7 @@ const Scene: FC = () => {
   })
   const motionDate = useLocalDateControls({
     longitude,
+    dayOfYear: 150,
     timeOfDay: 17
   })
   const { correctAltitude } = useControls(

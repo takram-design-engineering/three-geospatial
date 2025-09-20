@@ -27,9 +27,7 @@ export interface LittlestTokyoProps extends ComponentProps<'group'> {
 }
 
 export const LittlestTokyo: FC<LittlestTokyoProps> = ({ ref, ...props }) => {
-  const gltf = useGLTF(
-    'https://rawcdn.githack.com/mrdoob/three.js/r175/examples/models/gltf/LittlestTokyo.glb'
-  )
+  const gltf = useGLTF('public/littlest_tokyo.glb')
   const materials = useMemo(
     () =>
       Object.values(gltf.materials)
