@@ -67,29 +67,34 @@ lutNode: AtmosphereLUTNode
 matrixWorldToECEF = new Matrix4().identity()
 ```
 
+The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js’s Y-up coordinate system.
+
+It must be orthogonal and consist only of translation and rotation (no scaling).
+
 #### matrixECIToECEF
 
 ```ts
 matrixECIToECEF = new Matrix4().identity()
 ```
 
-#### sunDirectionECEF
+The rotation matrix for converting ECI to ECEF coordinates. This matrix is used to orient stars as seen from the earth in `StarsNode`.
+
+#### sunDirectionECEF, moonDirectionECEF
 
 ```ts
 sunDirectionECEF = new Vector3()
-```
-
-#### moonDirectionECEF
-
-```ts
 moonDirectionECEF = new Vector3()
 ```
+
+The normalized direction to the sun and moon in ECEF coordinates.
 
 #### matrixMoonFixedToECEF
 
 ```ts
 matrixMoonFixedToECEF = new Matrix4().identity()
 ```
+
+The rotation matrix for converting moon fixed coordinates to ECEF coordinates. This matrix is used to orient the moon’s surface as seen from the earth in `MoonNode`.
 
 ### Static options
 
@@ -99,11 +104,14 @@ matrixMoonFixedToECEF = new Matrix4().identity()
 camera = new Camera()
 ```
 
+The camera used for rendering the scene. This is required because the atmospheric effects are rendered in post-processing stages.
+
 #### ellipsoid
 
 ```ts
 ellipsoid = Ellipsoid.WGS84
 ```
+The ellipsoid model representing the earth.
 
 #### correctAltitude
 
@@ -111,17 +119,25 @@ ellipsoid = Ellipsoid.WGS84
 correctAltitude = true
 ```
 
+Whether to adjust the atmosphere’s inner sphere to osculate (touch and share a tangent with) the ellipsoid.
+
+The atmosphere is approximated as a sphere, with a radius between the ellipsoid’s major and minor axes. The difference can exceed 10,000 meters in the worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
+
 #### constrainCamera
 
 ```ts
 constrainCamera = true
 ```
 
+Whether to constrain the camera above the atmosphere’s inner sphere.
+
 #### showGround
 
 ```ts
 showGround = true
 ```
+
+Disable this option to constrain the camera’s ray above the horizon, effectively hiding the virtual ground.
 
 ## AtmosphereLight
 
