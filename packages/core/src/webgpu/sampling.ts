@@ -1,13 +1,4 @@
-import {
-  add,
-  floor,
-  int,
-  nodeObject,
-  sub,
-  textureSize,
-  vec2,
-  vec4
-} from 'three/tsl'
+import { add, nodeObject, sub, textureSize, vec2, vec4 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 
 import { FnVar } from './FnVar'
@@ -21,10 +12,11 @@ export const textureBicubic = /*#__PURE__*/ FnVar(
     uv: NodeObject<'vec2'>,
     sharpness: number | NodeObject<'float'> = 0.4
   ): NodeObject<'vec4'> => {
-    const size = vec2(textureSize(textureNode).xy)
-    const metrics = vec4(size.reciprocal().xy, size.xy)
-    const position = metrics.zw.mul(uv)
+    const size = vec2(textureSize(textureNode))
+    const texelSize = size.reciprocal()
+    const position = size.mul(uv)
     const centerPosition = position.sub(0.5).floor().add(0.5)
+
     const f = position.sub(centerPosition)
     const f2 = f.mul(f)
     const f3 = f.mul(f2)
@@ -45,18 +37,18 @@ export const textureBicubic = /*#__PURE__*/ FnVar(
     const w3 = c.mul(f3).sub(c.mul(f2))
 
     const w12 = w1.add(w2)
-    const tc12 = metrics.xy.mul(centerPosition.add(w2.div(w12)))
+    const tc12 = texelSize.mul(centerPosition.add(w2.div(w12)))
     const centerColor = textureNode.sample(tc12).rgb
-    const tc0 = metrics.xy.mul(centerPosition.sub(1))
-    const tc3 = metrics.xy.mul(centerPosition.add(2))
-    const color = add(
+    const tc0 = texelSize.mul(centerPosition.sub(1))
+    const tc3 = texelSize.mul(centerPosition.add(2))
+
+    return add(
       vec4(textureNode.sample(vec2(tc12.x, tc0.y)).rgb, 1).mul(w12.x.mul(w0.y)),
       vec4(textureNode.sample(vec2(tc0.x, tc12.y)).rgb, 1).mul(w0.x.mul(w12.y)),
       vec4(centerColor, 1).mul(w12.x.mul(w12.y)),
       vec4(textureNode.sample(vec2(tc3.x, tc12.y)).rgb, 1).mul(w3.x.mul(w12.y)),
       vec4(textureNode.sample(vec2(tc12.x, tc3.y)).rgb, 1).mul(w12.x.mul(w3.y))
     )
-    return vec4(color.rgb.div(color.a), 1)
   }
 )
 
@@ -64,19 +56,15 @@ export const textureBicubic = /*#__PURE__*/ FnVar(
 // Reference: https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
 export const textureCatmullRom = /*#__PURE__*/ FnVar(
   (textureNode: TextureNode, uv: NodeObject<'vec2'>): NodeObject<'vec4'> => {
-    const texSize = vec2(textureSize(textureNode, int(0)))
-
-    // We're going to sample a a 4x4 grid of texels surrounding the target UV
-    // coordinate. We'll do this by rounding down the sample location to get the
-    // exact center of our "starting" texel. The starting texel will be at
-    // location [1, 1] in the grid, where [0, 0] is the top left corner.
-    const samplePos = uv.mul(texSize)
-    const texPos1 = floor(samplePos.sub(0.5)).add(0.5)
+    const size = vec2(textureSize(textureNode))
+    const texelSize = size.reciprocal()
+    const position = uv.mul(size)
+    const centerPosition = position.sub(0.5).floor().add(0.5)
 
     // Compute the fractional offset from our starting texel to our original
     // sample location, which we'll feed into the Catmull-Rom spline function to
     // get our filter weights.
-    const f = samplePos.sub(texPos1)
+    const f = position.sub(centerPosition)
 
     // Compute the Catmull-Rom weights using the fractional offset that we
     // calculated earlier. These equations are pre-expanded based on our
@@ -94,16 +82,19 @@ export const textureCatmullRom = /*#__PURE__*/ FnVar(
     const offset12 = w2.div(w1.add(w2))
 
     // Compute the final UV coordinates we'll use for sampling the texture
-    const texPos0 = texPos1.sub(1).div(texSize)
-    const texPos3 = texPos1.add(2).div(texSize)
-    const texPos12 = texPos1.add(offset12).div(texSize)
+    const texPos0 = centerPosition.sub(1).mul(texelSize)
+    const texPos3 = centerPosition.add(2).mul(texelSize)
+    const texPos12 = centerPosition.add(offset12).mul(texelSize)
+
     return add(
       textureNode.sample(vec2(texPos0.x, texPos0.y)).mul(w0.x).mul(w0.y),
       textureNode.sample(vec2(texPos12.x, texPos0.y)).mul(w12.x).mul(w0.y),
       textureNode.sample(vec2(texPos3.x, texPos0.y)).mul(w3.x).mul(w0.y),
+
       textureNode.sample(vec2(texPos0.x, texPos12.y)).mul(w0.x).mul(w12.y),
       textureNode.sample(vec2(texPos12.x, texPos12.y)).mul(w12.x).mul(w12.y),
       textureNode.sample(vec2(texPos3.x, texPos12.y)).mul(w3.x).mul(w12.y),
+
       textureNode.sample(vec2(texPos0.x, texPos3.y)).mul(w0.x).mul(w3.y),
       textureNode.sample(vec2(texPos12.x, texPos3.y)).mul(w12.x).mul(w3.y),
       textureNode.sample(vec2(texPos3.x, texPos3.y)).mul(w3.x).mul(w3.y)
