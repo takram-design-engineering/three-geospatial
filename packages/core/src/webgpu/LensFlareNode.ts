@@ -1,4 +1,4 @@
-import { Fn, nodeObject, select, uniform } from 'three/tsl'
+import { add, Fn, nodeObject, select, uniform } from 'three/tsl'
 import {
   TempNode,
   type Node,
@@ -9,18 +9,25 @@ import invariant from 'tiny-invariant'
 
 import { DownsampleThresholdNode } from './DownsampleThresholdNode'
 import { GaussianBlurNode } from './GaussianBlurNode'
-import { LensFlareFeaturesNode } from './LensFlareFeaturesNode'
+import { LensGhostNode } from './LensGhostNode'
 import { LensGlareNode } from './LensGlareNode'
+import { LensHaloNode } from './LensHaloNode'
 import { MipmapSurfaceBlurNode } from './MipmapSurfaceBlurNode'
 import type { NodeObject } from './node'
-import { convertToTexture } from './RenderTargetNode'
+import {
+  convertToTexture,
+  rtTexture,
+  type RTTextureNode
+} from './RTTextureNode'
 import { isWebGPU } from './utils'
 
 export class LensFlareNode extends TempNode {
   inputNode?: TextureNode | null
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
-  featuresNode: LensFlareFeaturesNode
+  ghostNode: LensGhostNode
+  haloNode: LensHaloNode
+  featuresNode: RTTextureNode
   bloomNode: MipmapSurfaceBlurNode
   glareNode: LensGlareNode
 
@@ -32,14 +39,20 @@ export class LensFlareNode extends TempNode {
 
     this.thresholdNode = new DownsampleThresholdNode()
     this.blurNode = new GaussianBlurNode()
-    this.featuresNode = new LensFlareFeaturesNode()
-    this.bloomNode = new MipmapSurfaceBlurNode(undefined, 8)
+    this.ghostNode = new LensGhostNode()
+    this.haloNode = new LensHaloNode()
+    this.bloomNode = new MipmapSurfaceBlurNode(null, 8)
     this.glareNode = new LensGlareNode()
+
+    this.featuresNode = rtTexture(
+      add(this.ghostNode, this.haloNode),
+      'LensFlareFeatures'
+    )
+    this.featuresNode.resolutionScale = 0.5
 
     // Use the full resolution because the thresholdNode already downsamples the
     // input texture.
     this.blurNode.resolutionScale = 1
-    this.featuresNode.resolutionScale = 1
     this.bloomNode.resolutionScale = 1
     this.glareNode.resolutionScale = 1
   }
@@ -49,8 +62,10 @@ export class LensFlareNode extends TempNode {
       inputNode,
       thresholdNode,
       blurNode,
-      featuresNode,
+      ghostNode,
+      haloNode,
       bloomNode,
+      featuresNode,
       glareNode
     } = this
     invariant(inputNode != null)
@@ -58,22 +73,22 @@ export class LensFlareNode extends TempNode {
     const threshold = thresholdNode.getTextureNode()
     const blur = blurNode.getTextureNode()
 
-    // input → threshold → blur → features
+    // input → threshold → blur → ghost
+    // input → threshold → blur → halo
     thresholdNode.inputNode = inputNode
     blurNode.inputNode = threshold
-    featuresNode.inputNode = blur
+    ghostNode.inputNode = blur
+    haloNode.inputNode = blur
 
     // input → threshold → bloom
     bloomNode.inputNode = threshold
 
     // input → threshold → glare
-    // TODO: Turn off glareNode on WebGLBackend:
     glareNode.inputNode = threshold
 
     const bloom = nodeObject(bloomNode.getTextureNode()).mul(
       this.bloomIntensity
     )
-    const features = featuresNode.getTextureNode()
     const glare = glareNode.getTextureNode()
 
     // TODO: Add an option to switch to mixing the bloom:
@@ -88,15 +103,18 @@ export class LensFlareNode extends TempNode {
         output.assign(select(output.lessThan(plusGlare), plusGlare, output))
       }
 
-      return output.add(features)
+      return output.add(featuresNode)
     })()
   }
 
   override dispose(): void {
     this.thresholdNode.dispose()
     this.blurNode.dispose()
+    this.ghostNode.dispose()
+    this.haloNode.dispose()
     this.featuresNode.dispose()
     this.bloomNode.dispose()
+    this.glareNode.dispose()
     super.dispose()
   }
 }

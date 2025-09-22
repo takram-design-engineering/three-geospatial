@@ -204,10 +204,16 @@ thresholdNode: DownsampleThresholdNode
 blurNode: GaussianBlurNode
 ```
 
-#### featuresNode
+#### ghostNode
 
 ```ts
-featuresNode: LensFlareFeaturesNode
+ghostNode: LensGhostNode
+```
+
+#### haloNode
+
+```ts
+haloNode: LensHaloNode
 ```
 
 #### bloomNode

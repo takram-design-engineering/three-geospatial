@@ -57,8 +57,8 @@ const Content: FC<StoryProps> = () => {
     ({ bloomIntensity, glareIntensity, ghostIntensity, haloIntensity }) => {
       lensFlareNode.bloomIntensity.value = bloomIntensity
       lensFlareNode.glareNode.intensity.value = glareIntensity * 1e-4
-      lensFlareNode.featuresNode.ghostIntensity.value = ghostIntensity
-      lensFlareNode.featuresNode.haloIntensity.value = haloIntensity
+      lensFlareNode.ghostNode.intensity.value = ghostIntensity
+      lensFlareNode.haloNode.intensity.value = haloIntensity
     }
   )
 

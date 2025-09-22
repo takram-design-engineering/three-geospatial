@@ -40,7 +40,7 @@ import invariant from 'tiny-invariant'
 
 import { FilterNode } from './FilterNode'
 import type { Node, NodeObject } from './node'
-import { convertToTexture } from './RenderTargetNode'
+import { convertToTexture } from './RTTextureNode'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 

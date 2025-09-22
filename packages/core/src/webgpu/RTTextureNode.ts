@@ -15,6 +15,8 @@ import {
   type NodeFrame
 } from 'three/webgpu'
 
+import type { NodeObject } from './node'
+
 const { resetRendererState, restoreRendererState } = RendererUtils
 
 function createRenderTarget(name?: string): RenderTarget {
@@ -27,30 +29,31 @@ function createRenderTarget(name?: string): RenderTarget {
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
   texture.generateMipmaps = false
-  texture.name = name != null ? `RenderTargetNode.${name}` : 'RenderTargetNode'
+  texture.name = name != null ? `RTTextureNode.${name}` : 'RTTextureNode'
   return renderTarget
 }
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
 // Similar to RTTNode, which is a bit finicky to handle.
-export class RenderTargetNode extends TextureNode {
+export class RTTextureNode extends TextureNode {
   static override get type(): string {
-    return 'RenderTargetNode'
+    return 'RTTextureNode'
   }
 
   node: Node
-  resolutionScale = 1
+  resolutionScale: number
 
   private readonly renderTarget: RenderTarget
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
 
-  constructor(node: Node, name?: string) {
+  constructor(node: Node, name?: string, resolutionScale = 1) {
     const renderTarget = createRenderTarget(name)
     super(renderTarget.texture, uv())
     this.node = node
+    this.resolutionScale = resolutionScale
     this.renderTarget = renderTarget
     this.updateBeforeType = NodeUpdateType.FRAME
   }
@@ -102,6 +105,10 @@ export class RenderTargetNode extends TextureNode {
   }
 }
 
+export const rtTexture = (
+  ...args: ConstructorParameters<typeof RTTextureNode>
+): NodeObject<RTTextureNode> => nodeObject(new RTTextureNode(...args))
+
 export const convertToTexture = (
   node: Node & {
     isTextureNode?: boolean
@@ -109,12 +116,14 @@ export const convertToTexture = (
     getTextureNode?: () => TextureNode
   },
   name?: string
-): TextureNode => {
+): NodeObject<TextureNode> => {
+  let textureNode: TextureNode
   if (node.isTextureNode === true || node.isSampleNode === true) {
-    return node as TextureNode
+    textureNode = node as TextureNode
+  } else if (node.getTextureNode != null) {
+    textureNode = node.getTextureNode()
+  } else {
+    textureNode = new RTTextureNode(node, name)
   }
-  if (node.getTextureNode != null) {
-    return node.getTextureNode()
-  }
-  return new RenderTargetNode(node, name)
+  return nodeObject(textureNode)
 }
