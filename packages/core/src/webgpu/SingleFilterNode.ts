@@ -27,7 +27,7 @@ export abstract class SingleFilterNode extends FilterNode {
     super(inputNode)
 
     this.renderTarget = this.createRenderTarget()
-    this.setOutputTexture(this.renderTarget.texture)
+    this.outputTexture = this.renderTarget.texture
   }
 
   override setSize(width: number, height: number): this {

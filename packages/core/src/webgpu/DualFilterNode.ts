@@ -35,7 +35,7 @@ export abstract class DualFilterNode extends FilterNode {
         this.upsampleRTs[i] = this.createRenderTarget(`Upsample${i}`)
       }
     }
-    this.setOutputTexture(this.upsampleRTs[0].texture)
+    this.outputTexture = this.upsampleRTs[0].texture
   }
 
   setSize(width: number, height: number): this {

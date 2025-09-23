@@ -32,7 +32,7 @@ export abstract class SeparableFilterNode extends FilterNode {
 
     this.horizontalRT = this.createRenderTarget('Horizontal')
     this.verticalRT = this.createRenderTarget('Vertical')
-    this.setOutputTexture(this.verticalRT.texture)
+    this.outputTexture = this.verticalRT.texture
   }
 
   setSize(width: number, height: number): this {

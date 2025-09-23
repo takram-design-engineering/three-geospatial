@@ -15,6 +15,8 @@ import invariant from 'tiny-invariant'
 
 import { outputTexture } from './OutputTextureNode'
 
+// Represents a node that applies a shader on the input texture and outputs
+// another texture of the same dimensions regardless of the drawing buffer size.
 export abstract class FilterNode extends TempNode {
   inputNode?: TextureNode | null
   resolutionScale = 1
@@ -52,14 +54,17 @@ export abstract class FilterNode extends TempNode {
   getTextureNode(): TextureNode {
     invariant(
       this._textureNode != null,
-      'outputNode must be specified by setOutputTexture() before getTextureNode() is called.'
+      'outputTexture must be specified before getTextureNode() is called.'
     )
     return this._textureNode
   }
 
-  protected setOutputTexture(value: Texture): this {
-    this._textureNode = outputTexture(this, value)
-    return this
+  protected get outputTexture(): Texture | null {
+    return this._textureNode?.value ?? null
+  }
+
+  protected set outputTexture(value: Texture | null) {
+    this._textureNode = value != null ? outputTexture(this, value) : undefined
   }
 
   abstract setSize(width: number, height: number): this
@@ -72,7 +77,7 @@ export abstract class FilterNode extends TempNode {
     )
     invariant(
       outputNode != null,
-      'outputNode must be specified by setOutputTexture() before being setup.'
+      'outputTexture must be specified before being setup.'
     )
     outputNode.uvNode = inputNode.uvNode
     return outputNode

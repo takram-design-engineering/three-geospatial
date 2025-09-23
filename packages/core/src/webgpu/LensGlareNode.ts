@@ -115,7 +115,7 @@ export class LensGlareNode extends FilterNode {
     this.inputNode = inputNode
     this.resolutionScale = 0.5
 
-    this.setOutputTexture(this.renderTarget.texture)
+    this.outputTexture = this.renderTarget.texture
   }
 
   override customCacheKey(): number {
