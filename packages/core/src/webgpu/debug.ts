@@ -22,9 +22,6 @@ async function debugShader(
       console.error(error)
       return { fragmentShader: null, vertexShader: null }
     })
-    .finally(() => {
-      mesh.geometry.dispose()
-    })
 }
 
 export function debugFragmentNode(
@@ -32,9 +29,13 @@ export function debugFragmentNode(
   material: NodeMaterial
 ): void {
   const mesh = new Mesh(new QuadGeometry(), material)
-  void debugShader(renderer, mesh).then(result => {
-    console.log(result.fragmentShader)
-  })
+  void debugShader(renderer, mesh)
+    .then(result => {
+      console.log(result.fragmentShader)
+    })
+    .finally(() => {
+      mesh.geometry.dispose()
+    })
 }
 
 export function debugVertexNode(
@@ -42,9 +43,13 @@ export function debugVertexNode(
   material: NodeMaterial
 ): void {
   const mesh = new Mesh(new QuadGeometry(), material)
-  void debugShader(renderer, mesh).then(result => {
-    console.log(result.vertexShader)
-  })
+  void debugShader(renderer, mesh)
+    .then(result => {
+      console.log(result.vertexShader)
+    })
+    .finally(() => {
+      mesh.geometry.dispose()
+    })
 }
 
 export function debugNode(renderer: Renderer, node: Node): void {
@@ -58,6 +63,7 @@ export function debugNode(renderer: Renderer, node: Node): void {
     })
     .finally(() => {
       material.dispose()
+      mesh.geometry.dispose()
     })
 }
 

@@ -298,6 +298,13 @@ export class LensGlareNode extends FilterNode {
 
     return super.setup(builder)
   }
+
+  override dispose(): void {
+    this.renderTarget.dispose()
+    this.material.dispose()
+    this.mesh.geometry.dispose()
+    super.dispose()
+  }
 }
 
 export const lensGlare = (inputNode: Node | null): NodeObject<LensGlareNode> =>
