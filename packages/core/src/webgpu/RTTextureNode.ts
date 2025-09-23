@@ -125,7 +125,7 @@ export const convertToTexture = (
   } else {
     textureNode = new RTTextureNode(node)
     if (name != null) {
-      textureNode.name = name
+      textureNode.value.name = name
     }
   }
   return nodeObject(textureNode)
