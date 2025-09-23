@@ -222,6 +222,7 @@ export class LongExposureNode extends TempNode {
     this.timerTexture.dispose()
     this.material.dispose()
     this.copyMaterial.dispose()
+    this.mesh.geometry.dispose()
     super.dispose()
   }
 }

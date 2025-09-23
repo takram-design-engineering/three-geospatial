@@ -124,6 +124,7 @@ export abstract class DualFilterNode extends FilterNode {
     }
     this.downsampleMaterial.dispose()
     this.upsampleMaterial.dispose()
+    this.mesh.geometry.dispose()
     super.dispose()
   }
 }

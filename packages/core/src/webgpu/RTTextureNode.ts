@@ -92,7 +92,9 @@ export class RTTextureNode extends TextureNode {
   }
 
   override dispose(): void {
+    this.renderTarget.dispose()
     this.material.dispose()
+    this.mesh.geometry.dispose()
     super.dispose()
   }
 

@@ -92,6 +92,7 @@ export abstract class SeparableFilterNode extends FilterNode {
     this.horizontalRT.dispose()
     this.verticalRT.dispose()
     this.material.dispose()
+    this.mesh.geometry.dispose()
     super.dispose()
   }
 }

@@ -74,6 +74,7 @@ export abstract class SingleFilterNode extends FilterNode {
   override dispose(): void {
     this.renderTarget.dispose()
     this.material.dispose()
+    this.mesh.geometry.dispose()
     super.dispose()
   }
 }

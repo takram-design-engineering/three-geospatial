@@ -575,6 +575,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     this.scatteringDensityMaterial?.dispose()
     this.indirectIrradianceMaterial?.dispose()
     this.multipleScatteringMaterial?.dispose()
+    this.mesh.geometry.dispose()
     super.dispose()
   }
 }

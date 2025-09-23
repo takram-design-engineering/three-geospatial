@@ -552,6 +552,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.previousDepthTexture?.dispose()
     this.resolveMaterial.dispose()
     this.copyMaterial.dispose()
+    this.mesh.geometry.dispose()
     super.dispose()
   }
 }
