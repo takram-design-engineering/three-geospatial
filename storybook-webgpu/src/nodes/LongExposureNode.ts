@@ -228,4 +228,6 @@ export class LongExposureNode extends TempNode {
 }
 
 export const longExposure = (inputNode: Node): NodeObject<LongExposureNode> =>
-  nodeObject(new LongExposureNode(convertToTexture(inputNode)))
+  nodeObject(
+    new LongExposureNode(convertToTexture(inputNode, 'LongExposureNode.Input'))
+  )

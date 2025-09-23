@@ -27,11 +27,12 @@ export class LensFlareNode extends TempNode {
   blurNode: GaussianBlurNode
   ghostNode: LensGhostNode
   haloNode: LensHaloNode
-  featuresNode: RTTextureNode
   bloomNode: MipmapSurfaceBlurNode
   glareNode: LensGlareNode
 
   bloomIntensity = uniform(0.05)
+
+  featuresNode: RTTextureNode
 
   constructor(inputNode?: TextureNode | null) {
     super('vec4')
@@ -44,10 +45,8 @@ export class LensFlareNode extends TempNode {
     this.bloomNode = new MipmapSurfaceBlurNode(null, 8)
     this.glareNode = new LensGlareNode()
 
-    this.featuresNode = rtTexture(
-      add(this.ghostNode, this.haloNode),
-      'LensFlareFeatures'
-    )
+    this.featuresNode = rtTexture(add(this.ghostNode, this.haloNode))
+    this.featuresNode.name = 'LensFlareNode.Features'
     this.featuresNode.resolutionScale = 0.5
 
     // Use the full resolution because the thresholdNode already downsamples the
@@ -112,9 +111,9 @@ export class LensFlareNode extends TempNode {
     this.blurNode.dispose()
     this.ghostNode.dispose()
     this.haloNode.dispose()
-    this.featuresNode.dispose()
     this.bloomNode.dispose()
     this.glareNode.dispose()
+    this.featuresNode.dispose()
     super.dispose()
   }
 }
@@ -122,6 +121,8 @@ export class LensFlareNode extends TempNode {
 export const lensFlare = (inputNode: Node | null): NodeObject<LensFlareNode> =>
   nodeObject(
     new LensFlareNode(
-      inputNode != null ? convertToTexture(inputNode, 'LensFlare') : null
+      inputNode != null
+        ? convertToTexture(inputNode, 'LensFlareNode.Input')
+        : null
     )
   )

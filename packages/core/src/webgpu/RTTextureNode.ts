@@ -19,7 +19,7 @@ import type { NodeObject } from './node'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-function createRenderTarget(name?: string): RenderTarget {
+function createRenderTarget(): RenderTarget {
   const renderTarget = new RenderTarget(1, 1, {
     depthBuffer: false,
     type: HalfFloatType,
@@ -29,7 +29,6 @@ function createRenderTarget(name?: string): RenderTarget {
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
   texture.generateMipmaps = false
-  texture.name = name != null ? `RTTextureNode.${name}` : 'RTTextureNode'
   return renderTarget
 }
 
@@ -42,18 +41,17 @@ export class RTTextureNode extends TextureNode {
   }
 
   node: Node
-  resolutionScale: number
+  resolutionScale = 1
 
   private readonly renderTarget: RenderTarget
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
   private rendererState!: RendererUtils.RendererState
 
-  constructor(node: Node, name?: string, resolutionScale = 1) {
-    const renderTarget = createRenderTarget(name)
-    super(renderTarget.texture, uv())
+  constructor(node: Node, uvNode?: Node) {
+    const renderTarget = createRenderTarget()
+    super(renderTarget.texture, uvNode != null ? nodeObject(uvNode) : uv())
     this.node = node
-    this.resolutionScale = resolutionScale
     this.renderTarget = renderTarget
     this.updateBeforeType = NodeUpdateType.FRAME
   }
@@ -125,7 +123,10 @@ export const convertToTexture = (
   } else if (node.getTextureNode != null) {
     textureNode = node.getTextureNode()
   } else {
-    textureNode = new RTTextureNode(node, name)
+    textureNode = new RTTextureNode(node)
+    if (name != null) {
+      textureNode.name = name
+    }
   }
   return nodeObject(textureNode)
 }
