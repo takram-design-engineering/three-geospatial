@@ -2,7 +2,7 @@ import { add, Fn, mix, nodeObject, uniform, uv, vec2, vec4 } from 'three/tsl'
 import type { NodeBuilder, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { DualFilterNode } from './DualFilterNode'
+import { DualMipmapFilterNode } from './DualMipmapFilterNode'
 import type { Node, NodeObject } from './node'
 
 const clampToBorder = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
@@ -11,7 +11,7 @@ const clampToBorder = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
 
 // Implementation of Lena Piquet's bloom filter.
 // Reference: https://www.froyok.fr/blog/2021-12-ue4-custom-bloom
-export class MipmapSurfaceBlurNode extends DualFilterNode {
+export class MipmapSurfaceBlurNode extends DualMipmapFilterNode {
   static override get type(): string {
     return 'MipmapSurfaceBlurNode'
   }

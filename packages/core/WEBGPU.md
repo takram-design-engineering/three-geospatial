@@ -25,7 +25,7 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 - [`FilterNode`](#filternode)
 - [`SingleFilterNode`](#singlefilternode)
 - [`SeparableFilterNode`](#separablefilternode)
-- [`DualFilterNode`](#dualfilternode)
+- [`DualMipmapFilterNode`](#dualmipmapfilternode)
 - [`GaussianBlurNode`](#gaussianblurnode)
 - [`KawaseBlurNode`](#kawaseblurnode)
 - [`MipmapBlurNode`](#mipmapblurnode)

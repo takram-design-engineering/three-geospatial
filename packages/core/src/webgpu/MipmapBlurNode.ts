@@ -7,7 +7,7 @@ import type {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { DualFilterNode } from './DualFilterNode'
+import { DualMipmapFilterNode } from './DualMipmapFilterNode'
 import type { Node, NodeObject } from './node'
 
 export const mipmapBlurDownsample = (
@@ -87,7 +87,7 @@ export const mipmapBlurUpsample = (
 
 // Implementation of Sledgehammer Games' temporary-stable bloom blur.
 // See: https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
-export class MipmapBlurNode extends DualFilterNode {
+export class MipmapBlurNode extends DualMipmapFilterNode {
   static override get type(): string {
     return 'MipmapBlurNode'
   }

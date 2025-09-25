@@ -15,7 +15,7 @@ import type { Node } from './node'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-export abstract class DualFilterNode extends FilterNode {
+export abstract class DualMipmapFilterNode extends FilterNode {
   private readonly downsampleRTs: RenderTarget[] = []
   private readonly upsampleRTs: RenderTarget[] = []
   private readonly downsampleMaterial = new NodeMaterial()
