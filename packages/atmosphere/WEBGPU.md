@@ -20,9 +20,6 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 - [`AerialPerspectiveNode`](#aerialperspectivenode)
 - [`SkyNode`](#skynode)
 - [`SkyEnvironmentNode`](#skyenvironmentnode)
-- [`SunNode`](#sunnode)
-- [`MoonNode`](#moonnode)
-- [`StarsNode`](#starsnode)
 
 **Advanced**
 
@@ -111,6 +108,7 @@ The camera used for rendering the scene. This is required because the atmospheri
 ```ts
 ellipsoid = Ellipsoid.WGS84
 ```
+
 The ellipsoid model representing the earth.
 
 #### correctAltitude
@@ -159,11 +157,8 @@ renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
 ### Constructor
 
 ```ts
-interface AtmosphereLight {
-  new: (
-    atmosphereContext?: AtmosphereContextNode,
-    distance?: number
-  ) => AtmosphereLight
+class AtmosphereLight {
+  constructor(atmosphereContext?: AtmosphereContextNode, distance?: number)
 }
 ```
 
@@ -233,7 +228,7 @@ normalNode?: Node | null
 #### skyNode
 
 ```ts
-skyNode?: Node | null = sky()
+skyNode?: Node | null
 ```
 
 #### shadowLengthNode
@@ -274,11 +269,14 @@ inscatter = true
 
 ### Constructor
 
-<!-- prettier-ignore -->
 ```ts
 const sky: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
+
 const skyWorld: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
-const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
+
+const skyBackground: (
+  atmosphereContext: AtmosphereContext
+) => NodeObject<SkyNode>
 ```
 
 ### Dependencies
@@ -305,6 +303,44 @@ moonNode: MoonNode
 
 ```ts
 starsNode: StarsNode
+```
+
+### Uniforms
+
+#### sunNode.angularRadius
+
+```ts
+sunNode.angularRadius = uniform(0.004675) // ≈ 16 arcminutes
+```
+
+#### sunNode.intensity
+
+```ts
+sunNode.intensity = uniform(1)
+```
+
+#### moonNode.angularRadius
+
+```ts
+moonNode.angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
+```
+
+#### moonNode.intensity
+
+```ts
+moonNode.intensity = uniform(1)
+```
+
+#### starsNode.pointSize
+
+```ts
+starsNode.pointSize = uniform(1)
+```
+
+#### starsNode.intensity
+
+```ts
+starsNode.intensity = uniform(1)
 ```
 
 ### Static options

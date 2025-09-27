@@ -12,54 +12,20 @@ A work-in-progress and experimental WebGPU support for `@takram/three-geospatial
 
 - [`FnVar`](#fnvar)
 - [`FnLayout`](#fnlayout)
-- [`OutputTextureNode`, `OutputTexture3DNode`](#outputtexturenode-outputtexture3dnode)
+
+**Nodes**
+
 - [`HighpVelocityNode`](#highpvelocitynode)
-
-**Effects**
-
 - [`LensFlareNode`](#lensflarenode)
 - [`TemporalAntialiasNode`](#temporalantialiasnode)
-
-**Filters**
-
-- [`FilterNode`](#filternode)
-- [`SingleFilterNode`](#singlefilternode)
-- [`SeparableFilterNode`](#separablefilternode)
-- [`DualMipmapFilterNode`](#dualmipmapfilternode)
-- [`GaussianBlurNode`](#gaussianblurnode)
-- [`KawaseBlurNode`](#kawaseblurnode)
-- [`MipmapBlurNode`](#mipmapblurnode)
-- [`MipmapSurfaceBlurNode`](#mipmapsurfaceblurnode)
-- [`DownsampleThresholdNode`](#downsamplethresholdnode)
-
-**Accessors**
-
-- [`projectionMatrix`](#projectionmatrix)
-- [`viewMatrix`](#viewmatrix)
-- [`inverseProjectionMatrix`](#inverseprojectionmatrix)
-- [`inverseViewMatrix`](#inverseviewmatrix)
-- [`cameraPositionWorld`](#camerapositionworld)
-- [`cameraNear`](#cameranear)
-- [`cameraFar`](#camerafar)
 
 **Generators**
 
 - [`dithering`](#dithering)
 
-**Sampling**
-
-- [`textureBicubic`](#texturebicubic)
-- [`textureCatmullRom`](#texturecatmullrom)
-
 **Transformations**
 
-- [`depthToViewZ`](#depthtoviewz)
-- [`logarithmicToPerspectiveDepth`](#logarithmictoperspectivedepth)
-- [`perspectiveToLogarithmicDepth`](#perspectivetologarithmicdepth)
-- [`screenToPositionView`](#screentopositionview)
-- [`turbo`](#turbo)
 - [`depthToColor`](#depthtocolor)
-- [`equirectToDirectionWorld`](#equirectdirectionworld)
 
 The following terms refer to class fields:
 
@@ -118,36 +84,6 @@ const fn = Fn(([a, b, c], builder) => {
     { name: 'c', type: 'float' }
   ]
 })
-```
-
-## OutputTextureNode, OutputTexture3DNode
-
-Texture nodes that depend on the provided `owner`. These nodes are intended to be used for output textures updated by another node.
-
-Having these nodes as a class field results in [an infinite recursion error](https://github.com/mrdoob/three.js/issues/31522) unless the field name follows the naming convention used internally by Three.js.
-
-→ [Source](/packages/core/src/webgpu/OutputTextureNode.ts)
-
-```ts
-class PassNode extends Node {
-  renderTarget = new RenderTarget()
-  _textureNode?: TextureNode
-
-  getTextureNode(): TextureNode {
-    return (this._textureNode ??= outputTexture(
-      this,
-      this.renderTarget.texture
-    ))
-  }
-}
-```
-
-### Constructor
-
-<!-- prettier-ignore -->
-```ts
-const outputTexture: (owner: Node, texture: Texture) => NodeObject<OutputTextureNode>
-const outputTexture3D: (owner: Node, texture: Texture) => NodeObject<OutputTexture3DNode>
 ```
 
 ## HighpVelocityNode
