@@ -4,6 +4,59 @@
 
 A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere`.
 
+## Usage
+
+### Atmospheric lighting
+
+```ts
+import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  atmosphereContext,
+  AtmosphereLight,
+  AtmosphereLightNode
+} from '@takram/three-atmosphere/webgpu'
+
+declare const renderer: WebGPURenderer
+declare const scene: Scene
+declare const date: Date
+
+const context = atmosphereContext(renderer)
+getSunDirectionECEF(date, context.sunDirectionECEF)
+
+// AtmosphereLightNode must be associated with AtmosphereLight in the
+// renderer's node library before use:
+renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+
+const light = new AtmosphereLight(context)
+scene.add(light)
+```
+
+### Aerial perspective
+
+```ts
+import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  aerialPerspective,
+  atmosphereContext
+} from '@takram/three-atmosphere/webgpu'
+import { pass } from 'three/tsl'
+import { PostProcessing } from 'three/webgpu'
+
+declare const camera: Camera
+declare const date: Date
+
+const context = atmosphereContext(renderer)
+context.camera = camera
+getSunDirectionECEF(date, context.sunDirectionECEF)
+
+const passNode = pass(scene, camera, { samples: 0 })
+const colorNode = passNode.getTextureNode('output')
+const depthNode = passNode.getTextureNode('depth')
+
+const postProcessing = new PostProcessing(renderer)
+postProcessing.outputNode = aerialPerspective(context, colorNode, depthNode)
+```
+
 ## API changes
 
 - `PrecomputedTexturesGenerator` was replaced by `AtmosphereLUTNode`.
