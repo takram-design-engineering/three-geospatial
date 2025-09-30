@@ -1,0 +1,15 @@
+html,
+body,
+#storybook-root {
+  width: 100%;
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  &:hover {
+    text-decoration: none;
+  }
+}

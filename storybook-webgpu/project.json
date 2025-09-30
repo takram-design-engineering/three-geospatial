@@ -1,0 +1,20 @@
+{
+  "name": "storybook-webgpu",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "storybook-webgpu/src",
+  "projectType": "application",
+  "tags": ["type:tool"],
+  "// targets": "to see all targets run: nx show project storybook-webgpu --web",
+  "targets": {
+    "build-storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc --noEmit -p tsconfig.storybook.json",
+          "storybook build"
+        ],
+        "cwd": "storybook-webgpu"
+      }
+    }
+  }
+}

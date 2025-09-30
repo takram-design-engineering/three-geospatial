@@ -46,7 +46,7 @@ export class GeometryPass extends RenderPass {
     }
   }
 
-  setSize(width: number, height: number): void {
+  override setSize(width: number, height: number): void {
     this.geometryTexture.image.width = width
     this.geometryTexture.image.height = height
   }

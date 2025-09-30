@@ -31,12 +31,6 @@ import fragmentShader from './shaders/sky.frag?raw'
 import sky from './shaders/sky.glsl?raw'
 import vertexShader from './shaders/sky.vert?raw'
 
-declare module 'three' {
-  interface Camera {
-    isPerspectiveCamera?: boolean
-  }
-}
-
 export interface SkyMaterialParameters
   extends AtmosphereMaterialBaseParameters {
   sun?: boolean

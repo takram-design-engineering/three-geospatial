@@ -128,16 +128,28 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/unified-signatures': 'off',
+      '@typescript-eslint/prefer-for-of': 'off',
+      '@typescript-eslint/class-literal-property-style': 'off',
+
+      // Method signature has a purpose.
+      '@typescript-eslint/method-signature-style': 'off',
 
       // To be determined. Turn this off for now.
       '@typescript-eslint/no-misused-spread': 'off',
 
       // This warns our own codes for backward compatibility.
-      '@typescript-eslint/no-deprecated': 'off'
+      '@typescript-eslint/no-deprecated': 'off',
+
+      // Overridden functions must use class methods.
+      '@typescript-eslint/class-methods-use-this': [
+        'error',
+        { ignoreOverrideMethods: true }
+      ]
     }
   },
   {
-    files: ['**/eslint.config.mjs', '**/vite.config.ts'],
+    files: ['**/eslint.config.mjs', '**/vite.config.ts', 'types/**/*.d.ts'],
     extends: [tseslint.configs.disableTypeChecked]
   }
 )

@@ -34,7 +34,7 @@ export interface BufferGeometryLike {
 
 export function toBufferGeometryLike(
   geometry: BufferGeometry
-): [BufferGeometryLike, ArrayBuffer[]] {
+): [BufferGeometryLike, ArrayBufferLike[]] {
   const { attributes, index, boundingBox, boundingSphere } = geometry
   return [
     { attributes, index, boundingBox, boundingSphere },

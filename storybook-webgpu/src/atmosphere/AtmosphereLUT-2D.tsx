@@ -1,0 +1,111 @@
+import { ScreenQuad } from '@react-three/drei'
+import { useThree } from '@react-three/fiber'
+import type { FC } from 'react'
+import { LinearToneMapping } from 'three'
+import {
+  Discard,
+  If,
+  positionGeometry,
+  screenSize,
+  screenUV,
+  uniform,
+  vec2,
+  vec4
+} from 'three/tsl'
+import { NodeMaterial, type Renderer } from 'three/webgpu'
+
+import {
+  atmosphereLUT,
+  type AtmosphereLUTTextureName,
+  type AtmosphereParameters
+} from '@takram/three-atmosphere/webgpu'
+import { FnVar, type NodeObject } from '@takram/three-geospatial/webgpu'
+
+import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
+import {
+  toneMappingArgs,
+  toneMappingArgTypes,
+  useToneMappingControls,
+  type ToneMappingArgs
+} from '../controls/toneMappingControls'
+import type { StoryFC } from '../helpers/createStory'
+import { Description } from '../helpers/Description'
+import { useResource } from '../helpers/useResource'
+import { useTransientControl } from '../helpers/useTransientControl'
+import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+
+export const textureUV = FnVar(
+  (textureSize: NodeObject<'vec2'>, zoom: NodeObject<'float'>) => {
+    const scale = screenSize.div(textureSize).div(zoom).toVar()
+    const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toVar()
+    If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
+      Discard()
+    })
+    return uv.flipY()
+  }
+)
+
+const Content: FC<StoryProps> = ({ name, ...options }) => {
+  const zoom = uniform(0)
+
+  const material = useResource(() => new NodeMaterial(), [])
+  material.vertexNode = vec4(positionGeometry.xy, 0, 1)
+
+  const renderer = useThree<Renderer>(({ gl }) => gl as any)
+  const lutNode = useResource(() => atmosphereLUT(renderer), [renderer])
+  Object.assign(lutNode.parameters, options)
+  const textureSize = vec2(lutNode.parameters[`${name}TextureSize`])
+  const uv = textureUV(textureSize, zoom)
+
+  material.colorNode = lutNode.getTextureNode(name).sample(uv).rgb
+
+  // Tone mapping controls:
+  useToneMappingControls()
+
+  // Display controls:
+  useTransientControl(
+    ({ zoom }: StoryArgs) => ({ zoom }),
+    value => {
+      zoom.value = value.zoom
+    }
+  )
+
+  return <ScreenQuad material={material} />
+}
+
+interface StoryProps extends Partial<AtmosphereParameters> {
+  name: AtmosphereLUTTextureName
+}
+
+interface StoryArgs extends ToneMappingArgs {
+  zoom: number
+}
+
+export const Story: StoryFC<StoryProps, StoryArgs> = props => (
+  <WebGPUCanvas>
+    <Content {...props} />
+    <Description />
+  </WebGPUCanvas>
+)
+
+Story.args = {
+  ...toneMappingArgs({
+    toneMapping: LinearToneMapping
+  }),
+  ...rendererArgs()
+}
+
+Story.argTypes = {
+  zoom: {
+    control: {
+      type: 'range',
+      min: 1,
+      max: 32,
+      step: 0.1
+    }
+  },
+  ...toneMappingArgTypes(),
+  ...rendererArgTypes()
+}
+
+export default Story

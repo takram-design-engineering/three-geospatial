@@ -1,24 +1,26 @@
+import { applyProps, type ElementProps } from '@react-three/fiber'
 import type { TilesRenderer, TilesRendererEventMap } from '3d-tiles-renderer'
-import { Mesh, type Material } from 'three'
+import { Mesh } from 'three'
 
-export interface TileOverrideMaterialPluginOptions {
-  material?: Material
-}
-
-export class TileOverrideMaterialPlugin {
-  readonly options: TileOverrideMaterialPluginOptions
+export class TileMeshPropsPlugin {
+  readonly props: ElementProps<typeof Mesh>
   tiles?: TilesRenderer
 
-  constructor(options?: TileOverrideMaterialPluginOptions) {
-    this.options = { ...options }
+  constructor(options?: ElementProps<typeof Mesh>) {
+    this.props = { ...options }
   }
 
   private readonly handleTileVisibilityChange = ({
     scene,
     visible
   }: TilesRendererEventMap['tile-visibility-change']): void => {
-    if (visible && scene instanceof Mesh) {
-      scene.material = this.options.material
+    if (visible) {
+      scene.traverse(object => {
+        if (object instanceof Mesh) {
+          // @ts-expect-error This should work.
+          applyProps(object, this.props)
+        }
+      })
     }
   }
 
@@ -27,7 +29,8 @@ export class TileOverrideMaterialPlugin {
     this.tiles = tiles
     tiles.group.traverse(object => {
       if (object instanceof Mesh) {
-        object.material = this.options.material
+        // @ts-expect-error This should work.
+        applyProps(object, this.props)
       }
     })
     tiles.addEventListener(

@@ -5,36 +5,81 @@ import {
   KM_PER_AU,
   Pivot,
   Rotation_EQJ_EQD,
-  SiderealTime
+  RotationAxis,
+  SiderealTime,
+  type RotationMatrix,
+  type Vector
 } from 'astronomy-engine'
-import { Matrix4, Vector3 } from 'three'
+import { Matrix4, Quaternion, Vector3 } from 'three'
+
+import { radians } from '@takram/three-geospatial'
 
 const METER_TO_AU = 0.001 / KM_PER_AU
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
+const vectorScratch1 = /*#__PURE__*/ new Vector3()
+const vectorScratch2 = /*#__PURE__*/ new Vector3()
+const vectorScratch3 = /*#__PURE__*/ new Vector3()
 const matrixScratch1 = /*#__PURE__*/ new Matrix4()
 const matrixScratch2 = /*#__PURE__*/ new Matrix4()
+const quaternionScratch = /*#__PURE__*/ new Quaternion()
 
-// Prefer number to be JS timestamp.
-function makeTime(value: number | Date | AstroTime): AstroTime {
+export function toAstroTime(value: number | Date | AstroTime): AstroTime {
   return value instanceof AstroTime
     ? value
-    : new AstroTime(value instanceof Date ? value : new Date(value))
+    : // Prefer number to be JS timestamp.
+      new AstroTime(value instanceof Date ? value : new Date(value))
+}
+
+export function fromAstroVector(
+  vector: Vector,
+  result = new Vector3()
+): Vector3 {
+  const { x, y, z } = vector
+  return result.set(x, y, z)
+}
+
+export function fromAstroRotationMatrix(
+  matrix: RotationMatrix,
+  result = new Matrix4()
+): Matrix4 {
+  const [row0, row1, row2] = matrix.rot
+  // prettier-ignore
+  return result.set(
+    row0[0], row1[0], row2[0], 0,
+    row0[1], row1[1], row2[1], 0,
+    row0[2], row1[2], row2[2], 0,
+    0, 0, 0, 1
+  )
 }
 
 export function getECIToECEFRotationMatrix(
   date: number | Date | AstroTime,
   result = new Matrix4()
 ): Matrix4 {
-  const time = makeTime(date)
-  const { rot } = Pivot(Rotation_EQJ_EQD(time), 2, -15 * SiderealTime(time))
-  // prettier-ignore
-  return result.set(
-    rot[0][0], rot[1][0], rot[2][0], 0,
-    rot[0][1], rot[1][1], rot[2][1], 0,
-    rot[0][2], rot[1][2], rot[2][2], 0,
-    0, 0, 0, 1
-  )
+  const time = toAstroTime(date)
+  const matrix = Pivot(Rotation_EQJ_EQD(time), 2, -15 * SiderealTime(time))
+  return fromAstroRotationMatrix(matrix, result)
+}
+
+export function getMoonFixedToECIRotationMatrix(
+  date: number | Date | AstroTime,
+  result = new Matrix4()
+): Matrix4 {
+  const time = toAstroTime(date)
+  const axis = RotationAxis(Body.Moon, time)
+  const north = fromAstroVector(axis.north, vectorScratch1)
+
+  // The spin in the AxisInfo is defined as the angle of the prime meridian
+  // measured from the ascending node of the body's equator on the reference
+  // equator to the east.
+  // See: https://link.springer.com/content/pdf/10.1007/s10569-007-9072-y.pdf
+  const spin = radians(axis.spin)
+  const ascendingNode = vectorScratch2.set(0, 0, 1).cross(north).normalize()
+  const primeMeridian = ascendingNode
+    .applyQuaternion(quaternionScratch.setFromAxisAngle(north, spin))
+    .normalize()
+  const east = vectorScratch3.copy(north).cross(primeMeridian).normalize()
+  return result.makeBasis(primeMeridian, east, north)
 }
 
 function getDirectionECI(
@@ -44,8 +89,8 @@ function getDirectionECI(
   observer?: Vector3,
   matrixECIToECEF?: Matrix4
 ): Vector3 {
-  const { x, y, z } = GeoVector(body, time, false)
-  result.set(x, y, z)
+  const vector = GeoVector(body, time, false)
+  fromAstroVector(vector, result)
   if (observer != null) {
     const matrixECEFToECI =
       matrixECIToECEF != null
@@ -53,7 +98,7 @@ function getDirectionECI(
           matrixScratch2.copy(matrixECIToECEF).transpose()
         : getECIToECEFRotationMatrix(time, matrixScratch2).transpose()
     result.sub(
-      vectorScratch
+      vectorScratch1
         .copy(observer)
         .applyMatrix4(matrixECEFToECI)
         .multiplyScalar(METER_TO_AU)
@@ -62,23 +107,12 @@ function getDirectionECI(
   return result.normalize()
 }
 
-function getDirectionECEF(
-  body: Body,
-  time: AstroTime,
-  result: Vector3,
-  observer?: Vector3
-): Vector3 {
-  const matrixECIToECEF = getECIToECEFRotationMatrix(time, matrixScratch1)
-  getDirectionECI(body, time, result, observer, matrixECIToECEF)
-  return result.applyMatrix4(matrixECIToECEF)
-}
-
 export function getSunDirectionECI(
   date: number | Date | AstroTime,
   result = new Vector3(),
   observer?: Vector3
 ): Vector3 {
-  return getDirectionECI(Body.Sun, makeTime(date), result, observer)
+  return getDirectionECI(Body.Sun, toAstroTime(date), result, observer)
 }
 
 export function getMoonDirectionECI(
@@ -86,7 +120,7 @@ export function getMoonDirectionECI(
   result = new Vector3(),
   observer?: Vector3
 ): Vector3 {
-  return getDirectionECI(Body.Moon, makeTime(date), result, observer)
+  return getDirectionECI(Body.Moon, toAstroTime(date), result, observer)
 }
 
 export function getSunDirectionECEF(
@@ -94,7 +128,10 @@ export function getSunDirectionECEF(
   result = new Vector3(),
   observer?: Vector3
 ): Vector3 {
-  return getDirectionECEF(Body.Sun, makeTime(date), result, observer)
+  const time = toAstroTime(date)
+  return getDirectionECI(Body.Sun, time, result, observer).applyMatrix4(
+    getECIToECEFRotationMatrix(time, matrixScratch1)
+  )
 }
 
 export function getMoonDirectionECEF(
@@ -102,5 +139,8 @@ export function getMoonDirectionECEF(
   result = new Vector3(),
   observer?: Vector3
 ): Vector3 {
-  return getDirectionECEF(Body.Moon, makeTime(date), result, observer)
+  const time = toAstroTime(date)
+  return getDirectionECI(Body.Moon, time, result, observer).applyMatrix4(
+    getECIToECEFRotationMatrix(time, matrixScratch1)
+  )
 }

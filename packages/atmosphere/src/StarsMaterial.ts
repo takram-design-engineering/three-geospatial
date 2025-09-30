@@ -27,12 +27,6 @@ import runtime from './shaders/bruneton/runtime.glsl?raw'
 import fragmentShader from './shaders/stars.frag?raw'
 import vertexShader from './shaders/stars.vert?raw'
 
-declare module 'three' {
-  interface Camera {
-    isPerspectiveCamera?: boolean
-  }
-}
-
 export interface StarsMaterialParameters
   extends AtmosphereMaterialBaseParameters {
   pointSize?: number

@@ -22,12 +22,6 @@ import {
 import { AtmosphereContext } from './Atmosphere'
 import { separateProps } from './separateProps'
 
-declare module 'three' {
-  interface Camera {
-    isPerspectiveCamera?: boolean
-  }
-}
-
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
 export interface StarsProps

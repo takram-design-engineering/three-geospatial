@@ -1,0 +1,25 @@
+on:
+  push:
+    branches:
+      - 'webgpu'
+
+permissions:
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.WEBGPU_GITHUB_TOKEN }}
+          script: |
+            await github.request('POST /repos/{owner}/{repo}/dispatches', {
+              owner: 'takram-design-engineering',
+              repo: 'three-geospatial-webgpu',
+              event_type: 'deploy',
+              client_payload: {
+                sha: context.sha,
+                ref: 'webgpu'
+              }
+            })

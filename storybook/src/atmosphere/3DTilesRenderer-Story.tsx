@@ -34,6 +34,7 @@ import {
   useLocalDateControls,
   type LocalDateControlsParams
 } from '../helpers/useLocalDateControls'
+import { usePovControls } from '../helpers/usePovControls'
 import { useToneMappingControls } from '../helpers/useToneMappingControls'
 
 interface SceneProps extends LocalDateControlsParams {
@@ -70,6 +71,8 @@ const Scene: FC<SceneProps> = ({
     },
     { collapsed: true }
   )
+  const camera = useThree(({ camera }) => camera)
+  usePovControls(camera, { collapsed: true })
   const motionDate = useLocalDateControls({ longitude, ...localDate })
   const { correctAltitude, correctGeometricError } = useControls('atmosphere', {
     correctAltitude: true,
@@ -89,7 +92,6 @@ const Scene: FC<SceneProps> = ({
     inscatter: true
   })
 
-  const camera = useThree(({ camera }) => camera)
   useLayoutEffect(() => {
     // Check the camera position to see if we've already moved it to globe surface
     if (camera.position.length() > 10) {

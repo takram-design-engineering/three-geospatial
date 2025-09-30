@@ -22,14 +22,14 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./types/index.d.ts",
       "import": "./build/index.js",
-      "require": "./build/index.cjs",
-      "types": "./types/index.d.ts"
+      "require": "./build/index.cjs"
     },
     "./r3f": {
+      "types": "./types/r3f/index.d.ts",
       "import": "./build/r3f.js",
-      "require": "./build/r3f.cjs",
-      "types": "./types/r3f/index.d.ts"
+      "require": "./build/r3f.cjs"
     }
   },
   "main": "./build/index.cjs",

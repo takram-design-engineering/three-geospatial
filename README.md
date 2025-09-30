@@ -20,9 +20,18 @@ Other packages not listed above are considered “examples” and are not intend
 
 ## Status of WebGPU support
 
-I’m actively working to add support for WebGPU. This involves a complete rewrite of our API because of the transition from shader-chunk-based post-processing to a node-based approach. It already performs much better and supports more flexible features.
+I’m actively working on adding support for WebGPU. This involves a complete rewrite of our API because of the transition from shader-chunk-based post-processing to a node-based approach. It already performs much better and offers greater flexibility.
 
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial-webgpu)
+
+It will feature:
+
+- Much faster generation of the atmosphere LUT
+- Accurate atmospheric lighting at large scale for all materials
+- Geometry-based lens glare
+- Temporal antialiasing
+- The moon’s surface
+- More reliable rendering of stars
 
 Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation. This will not mean dropping support for WebGL, because a WebGL fallback will still be possible, but the new API will be incompatible with the current one.
 

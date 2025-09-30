@@ -1,0 +1,37 @@
+<style>
+  .docblock-argstable-body tr[title] {
+    position: relative;
+    height: 41px;
+  }
+  .docblock-argstable-body tr[title] td:first-of-type {
+    position: absolute;
+    width: 100%;
+  }
+  .docblock-argstable-body tr[title] td:first-of-type button:first-of-type {
+    cursor: default !important;
+  }
+  .docblock-argstable-body tr[title] td:nth-of-type(2) {
+    visibility: hidden;
+  }
+</style>
+
+<script>
+  // WORKAROUND: Prevent Storybook from storing args state in URL.
+  const replaceState = window.history.replaceState
+  window.history.replaceState = (data, unused, url) => {
+    const index = url?.indexOf('?') ?? -1
+    if (index !== -1) {
+      const params = new URLSearchParams(url.slice(index + 1))
+      params.delete('args')
+      const query = decodeURIComponent(params.toString())
+
+      const href = window.location.href
+      const currentQuery = href.slice(href.indexOf('?') + 1)
+      if (query === currentQuery) {
+        return
+      }
+      url = `${url.slice(0, index)}?${query}`
+    }
+    return replaceState.apply(window.history, [data, unused, url])
+  }
+</script>
