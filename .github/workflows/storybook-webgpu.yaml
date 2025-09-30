@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - 'webgpu'
+      - 'main'
 
 permissions:
   contents: read
@@ -20,6 +20,6 @@ jobs:
               event_type: 'deploy',
               client_payload: {
                 sha: context.sha,
-                ref: 'webgpu'
+                ref: 'main'
               }
             })
