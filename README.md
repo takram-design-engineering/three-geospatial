@@ -38,9 +38,9 @@ Once all packages support WebGPU, the current implementation of the shader-chunk
 <!-- prettier-ignore -->
 | Name | Status |
 | -- | -- |
-| [atmosphere](https://github.com/takram-design-engineering/three-geospatial/tree/webgpu/packages/atmosphere/src/webgpu) | Work in progress |
+| [atmosphere](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere/src/webgpu) | Work in progress |
 | clouds | Planned |
-| [core](https://github.com/takram-design-engineering/three-geospatial/tree/webgpu/packages/core/src/webgpu) | Work in progress |
+| [core](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/core/src/webgpu) | Work in progress |
 | effects | To be merged with core |
 
 ## Developing
