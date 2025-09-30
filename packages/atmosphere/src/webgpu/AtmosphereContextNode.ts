@@ -1,4 +1,4 @@
-import { Camera, Matrix4, Vector3 } from 'three'
+import { Matrix4, Vector3, type Camera } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { nodeProxy, uniform, uniformGroup } from 'three/tsl'
 import { Node, type NodeBuilder, type Renderer } from 'three/webgpu'
@@ -36,7 +36,7 @@ export class AtmosphereContextNode extends Node {
   matrixMoonFixedToECEF = new Matrix4().identity()
 
   // Static options:
-  camera = new Camera()
+  camera?: Camera
   ellipsoid = Ellipsoid.WGS84
   correctAltitude = true
   constrainCamera = true
@@ -56,7 +56,7 @@ export class AtmosphereContextNode extends Node {
 
   override customCacheKey(): number {
     return hash(
-      this.camera.id,
+      this.camera?.id ?? -1,
       ...this.ellipsoid.radii,
       +this.correctAltitude,
       +this.constrainCamera,
@@ -122,10 +122,14 @@ export class AtmosphereContextNode extends Node {
     const altitudeCorrectionECEF = uniform(new Vector3())
       .setGroup(groupNode)
       .setName('altitudeCorrectionECEF')
-      .onRenderUpdate((_, { value }) => {
+      .onRenderUpdate((frame, { value }) => {
+        const camera = this.camera ?? frame.camera
+        if (camera == null) {
+          return
+        }
         getAltitudeCorrectionOffset(
           value
-            .setFromMatrixPosition(this.camera.matrixWorld)
+            .setFromMatrixPosition(camera.matrixWorld)
             .applyMatrix4(this.matrixWorldToECEF),
           this.parameters.bottomRadius,
           this.ellipsoid,
@@ -136,18 +140,26 @@ export class AtmosphereContextNode extends Node {
     const cameraPositionECEF = uniform(new Vector3())
       .setGroup(groupNode)
       .setName('cameraPositionECEF')
-      .onRenderUpdate((_, { value }) => {
+      .onRenderUpdate((frame, { value }) => {
+        const camera = this.camera ?? frame.camera
+        if (camera == null) {
+          return
+        }
         value
-          .setFromMatrixPosition(this.camera.matrixWorld)
+          .setFromMatrixPosition(camera.matrixWorld)
           .applyMatrix4(this.matrixWorldToECEF)
       })
 
     const cameraHeight = uniform(0)
       .setGroup(groupNode)
       .setName('cameraHeight')
-      .onRenderUpdate((_, self) => {
+      .onRenderUpdate((frame, self) => {
+        const camera = this.camera ?? frame.camera
+        if (camera == null) {
+          return
+        }
         const positionECEF = vectorScratch
-          .setFromMatrixPosition(this.camera.matrixWorld)
+          .setFromMatrixPosition(camera.matrixWorld)
           .applyMatrix4(this.matrixWorldToECEF)
         self.value = geodeticScratch.setFromECEF(positionECEF).height
       })

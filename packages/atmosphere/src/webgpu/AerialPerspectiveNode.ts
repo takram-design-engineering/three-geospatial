@@ -73,9 +73,14 @@ export class AerialPerspectiveNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
+    const camera = this.atmosphereContext.camera ?? builder.camera
+    if (camera == null) {
+      return
+    }
+
     builder.getContext().atmosphere = this.atmosphereContext
 
-    const { parameters, camera, ellipsoid } = this.atmosphereContext
+    const { parameters, ellipsoid } = this.atmosphereContext
     const {
       matrixWorldToECEF,
       sunDirectionECEF,

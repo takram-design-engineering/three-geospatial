@@ -75,12 +75,13 @@ export class SkyNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    if (builder.camera == null) {
+    const camera = this.atmosphereContext.camera ?? builder.camera
+    if (camera == null) {
       return
     }
+
     builder.getContext().atmosphere = this.atmosphereContext
 
-    const { camera } = this.atmosphereContext
     const { matrixWorldToECEF, sunDirectionECEF, cameraPositionUnit } =
       this.atmosphereContext.getNodes()
 
@@ -91,7 +92,7 @@ export class SkyNode extends TempNode {
         directionWorld = cameraDirectionWorld(camera)
         break
       case WORLD:
-        directionWorld = cameraDirectionWorld(builder.camera)
+        directionWorld = cameraDirectionWorld(camera)
         break
       case EQUIRECTANGULAR:
         directionWorld = equirectToDirectionWorld(uv())

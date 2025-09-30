@@ -107,8 +107,10 @@ export class StarsNode extends TempNode {
     return this
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
-    if (renderer == null) {
+  override updateBefore(frame: NodeFrame): void {
+    const { renderer } = frame
+    const camera = this.atmosphereContext.camera ?? frame.camera
+    if (renderer == null || camera == null) {
       return
     }
 
@@ -119,7 +121,6 @@ export class StarsNode extends TempNode {
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
-    const { camera } = this.atmosphereContext
     this.points.position.copy(camera.position)
 
     renderer.setRenderTarget(this.renderTarget)
@@ -162,6 +163,11 @@ export class StarsNode extends TempNode {
   }
 
   private setupMaterial(builder: NodeBuilder): void {
+    const camera = this.atmosphereContext.camera ?? builder.camera
+    if (camera == null) {
+      return
+    }
+
     const { material, positionBuffer, magnitudeBuffer, colorBuffer } = this
     invariant(positionBuffer != null)
     invariant(magnitudeBuffer != null)
@@ -171,7 +177,6 @@ export class StarsNode extends TempNode {
     const instanceMagnitude = instancedBufferAttribute(magnitudeBuffer, 'float')
     const instanceColor = instancedBufferAttribute(colorBuffer, 'vec3')
 
-    const { camera } = this.atmosphereContext
     const { matrixECIToECEF, matrixECEFToWorld } =
       this.atmosphereContext.getNodes()
 
