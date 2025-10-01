@@ -12,7 +12,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  atmosphereContext,
+  AtmosphereContextNode,
   AtmosphereLight,
   AtmosphereLightNode,
   skyEnvironment
@@ -75,7 +75,7 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => atmosphereContext(renderer), [renderer])
+  const context = useResource(() => new AtmosphereContextNode(), [])
   context.camera = camera
 
   // Post-processing:

@@ -1,5 +1,4 @@
-import { FloatType, HalfFloatType } from 'three'
-import { nodeProxy } from 'three/tsl'
+import { Data3DTexture, FloatType, HalfFloatType, Texture } from 'three'
 import {
   NodeUpdateType,
   RendererUtils,
@@ -19,10 +18,7 @@ import {
 import {
   isWebGPU,
   outputTexture,
-  outputTexture3D,
-  type NodeObject,
-  type OutputTexture3DNode,
-  type OutputTextureNode
+  outputTexture3D
 } from '@takram/three-geospatial/webgpu'
 
 import { requestIdleCallback } from '../helpers/requestIdleCallback'
@@ -66,20 +62,14 @@ function run(renderer: Renderer, task: () => void): boolean {
   return true
 }
 
-const textureNames = ['transmittance', 'irradiance'] as const
-const texture3DNames = [
-  'scattering',
-  'singleMieScattering',
-  'higherOrderScattering'
-] as const
+export type AtmosphereLUTTextureName = 'transmittance' | 'irradiance'
+export type AtmosphereLUTTexture3DName =
+  | 'scattering'
+  | 'singleMieScattering'
+  | 'higherOrderScattering'
 
-export type AtmosphereLUTTextureName = (typeof textureNames)[number]
-export type AtmosphereLUTTexture3DName = (typeof texture3DNames)[number]
-
-const WEBGPU = 'WEBGPU'
-const WEBGL = 'WEBGL'
-
-type AtmosphereLUTNodeScope = typeof WEBGPU | typeof WEBGL
+const emptyTexture = /*#__PURE__*/ new Texture()
+const emptyTexture3D = /*#__PURE__*/ new Data3DTexture()
 
 export class AtmosphereLUTNode extends TempNode {
   static override get type(): string {
@@ -89,58 +79,35 @@ export class AtmosphereLUTNode extends TempNode {
   parameters: AtmosphereParameters
   textureType?: AnyFloatType // TODO
 
-  private readonly textures: AtmosphereLUTTextures
+  private textures?: AtmosphereLUTTextures
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNodes: Partial<
-    Record<
-      AtmosphereLUTTextureName | AtmosphereLUTTexture3DName,
-      NodeObject<OutputTextureNode | OutputTexture3DNode>
-    >
-  > = {}
+  private readonly _textureNodes = {
+    transmittance: outputTexture(this, emptyTexture),
+    irradiance: outputTexture(this, emptyTexture),
+    scattering: outputTexture3D(this, emptyTexture3D),
+    singleMieScattering: outputTexture3D(this, emptyTexture3D),
+    higherOrderScattering: outputTexture3D(this, emptyTexture3D)
+  }
 
   private currentVersion?: number
   private updating = false
   private disposeQueue: (() => void) | undefined
 
-  constructor(
-    scope: AtmosphereLUTNodeScope,
-    parameters = new AtmosphereParameters()
-  ) {
+  constructor(parameters = new AtmosphereParameters()) {
     super(null)
 
     this.parameters = parameters.clone()
-    this.textures =
-      scope === WEBGPU
-        ? new AtmosphereLUTTexturesWebGPU(this.parameters)
-        : new AtmosphereLUTTexturesWebGL(this.parameters)
-
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
-  getTextureNode(name: AtmosphereLUTTextureName): NodeObject<TextureNode>
-  getTextureNode(name: AtmosphereLUTTexture3DName): NodeObject<Texture3DNode>
+  getTextureNode(name: AtmosphereLUTTextureName): TextureNode
+  getTextureNode(name: AtmosphereLUTTexture3DName): Texture3DNode
   getTextureNode(
     name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName
-  ): NodeObject<TextureNode> | NodeObject<Texture3DNode> {
-    const texture = this._textureNodes[name]
-    if (texture != null) {
-      return texture
-    }
-    if (textureNames.includes(name as any)) {
-      return (this._textureNodes[name] = outputTexture(
-        this,
-        this.textures.get(name)
-      ))
-    }
-    if (texture3DNames.includes(name as any)) {
-      return (this._textureNodes[name] = outputTexture3D(
-        this,
-        this.textures.get(name)
-      ))
-    }
-    throw new Error(`Invalid texture name: ${name}`)
+  ): TextureNode | Texture3DNode {
+    return this._textureNodes[name]
   }
 
   private *compute(
@@ -148,6 +115,7 @@ export class AtmosphereLUTNode extends TempNode {
     context: AtmosphereLUTTexturesContext
   ): Iterable<boolean> {
     const { textures } = this
+    invariant(textures != null)
 
     // Compute the transmittance, and store it in transmittanceTexture.
     yield run(renderer, () => {
@@ -191,6 +159,7 @@ export class AtmosphereLUTNode extends TempNode {
 
   async updateTextures(renderer: Renderer): Promise<void> {
     invariant(this.textureType != null)
+    invariant(this.textures != null)
 
     const context = this.textures.createContext(
       this.textureType,
@@ -219,6 +188,29 @@ export class AtmosphereLUTNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
+    if (this.textures == null) {
+      // Lazily initialize the texture generator depending of the renderer:
+      this.textures = isWebGPU(builder)
+        ? new AtmosphereLUTTexturesWebGPU(this.parameters)
+        : new AtmosphereLUTTexturesWebGL(this.parameters)
+
+      // Swap the contents of the texture nodes. The WebGPU one has storage
+      // textures and WebGL one has render target textures, which we cannot
+      // populate until the generator is initialized.
+      const {
+        transmittance,
+        irradiance,
+        scattering,
+        singleMieScattering,
+        higherOrderScattering
+      } = this._textureNodes
+      transmittance.value = this.textures.get('transmittance')
+      irradiance.value = this.textures.get('irradiance')
+      scattering.value = this.textures.get('scattering')
+      singleMieScattering.value = this.textures.get('singleMieScattering')
+      higherOrderScattering.value = this.textures.get('higherOrderScattering')
+    }
+
     this.textureType = isFloatLinearSupported(builder.renderer)
       ? (this.textureType ?? FloatType)
       : HalfFloatType
@@ -240,19 +232,7 @@ export class AtmosphereLUTNode extends TempNode {
       return
     }
 
-    this.textures.dispose()
+    this.textures?.dispose()
     super.dispose()
   }
-}
-
-export const atmosphereLUTWebGPU = nodeProxy(AtmosphereLUTNode, WEBGPU)
-export const atmosphereLUTWebGL = nodeProxy(AtmosphereLUTNode, WEBGL)
-
-export const atmosphereLUT = (
-  renderer: Renderer,
-  parameters?: AtmosphereParameters
-): AtmosphereLUTNode => {
-  return isWebGPU(renderer)
-    ? atmosphereLUTWebGPU(parameters)
-    : atmosphereLUTWebGL(parameters)
 }

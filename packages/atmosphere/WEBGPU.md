@@ -11,7 +11,7 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 ```ts
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
-  atmosphereContext,
+  AtmosphereContextNode,
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
@@ -20,7 +20,7 @@ declare const renderer: WebGPURenderer
 declare const scene: Scene
 declare const date: Date
 
-const context = atmosphereContext(renderer)
+const context = new AtmosphereContextNode()
 getSunDirectionECEF(date, context.sunDirectionECEF)
 
 // AtmosphereLightNode must be associated with AtmosphereLight in the
@@ -37,7 +37,7 @@ scene.add(light)
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  atmosphereContext
+  AtmosphereContextNode
 } from '@takram/three-atmosphere/webgpu'
 import { pass } from 'three/tsl'
 import { PostProcessing } from 'three/webgpu'
@@ -45,7 +45,7 @@ import { PostProcessing } from 'three/webgpu'
 declare const camera: Camera
 declare const date: Date
 
-const context = atmosphereContext(renderer)
+const context = new AtmosphereContextNode()
 context.camera = camera
 getSunDirectionECEF(date, context.sunDirectionECEF)
 
@@ -94,11 +94,9 @@ The following terms refer to class fields:
 ### Constructor
 
 ```ts
-const atmosphereContext: (
-  renderer: Renderer,
-  parameters?: AtmosphereParameters,
-  lutNode?: AtmosphereLUTNode
-) => AtmosphereContextNode
+class AtmosphereContextNode {
+  constructor(parameters?: AtmosphereParameters, lutNode?: AtmosphereLUTNode)
+}
 ```
 
 ### Dependencies

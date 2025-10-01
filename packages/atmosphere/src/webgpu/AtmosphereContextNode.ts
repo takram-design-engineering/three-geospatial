@@ -1,10 +1,9 @@
 import { Matrix4, Vector3, type Camera } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import { nodeProxy, uniform, uniformGroup } from 'three/tsl'
-import { Node, type NodeBuilder, type Renderer } from 'three/webgpu'
+import { uniform, uniformGroup } from 'three/tsl'
+import { Node, type NodeBuilder } from 'three/webgpu'
 
 import { Ellipsoid, Geodetic } from '@takram/three-geospatial'
-import { isWebGPU } from '@takram/three-geospatial/webgpu'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import { AtmosphereLUTNode } from './AtmosphereLUTNode'
@@ -15,11 +14,6 @@ const groupNode = /*#__PURE__*/ uniformGroup(
 ).onRenderUpdate(() => {
   groupNode.needsUpdate = true
 })
-
-const WEBGPU = 'WEBGPU'
-const WEBGL = 'WEBGL'
-
-type AtmosphereContextScope = typeof WEBGPU | typeof WEBGL
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
@@ -45,9 +39,8 @@ export class AtmosphereContextNode extends Node {
   private nodes?: AtmosphereContextNodes
 
   constructor(
-    scope: AtmosphereContextScope,
     parameters = new AtmosphereParameters(),
-    lutNode = new AtmosphereLUTNode(scope, parameters)
+    lutNode = new AtmosphereLUTNode(parameters)
   ) {
     super(null)
     this.parameters = parameters
@@ -209,16 +202,3 @@ export class AtmosphereContextNode extends Node {
 export type AtmosphereContextNodes = ReturnType<
   AtmosphereContextNode['createNodes']
 >
-
-export const atmosphereContextWebGPU = nodeProxy(AtmosphereContextNode, WEBGPU)
-export const atmosphereContextWebGL = nodeProxy(AtmosphereContextNode, WEBGL)
-
-export const atmosphereContext = (
-  renderer: Renderer,
-  parameters?: AtmosphereParameters,
-  lutNode?: AtmosphereLUTNode
-): AtmosphereContextNode => {
-  return isWebGPU(renderer)
-    ? atmosphereContextWebGPU(parameters, lutNode)
-    : atmosphereContextWebGL(parameters, lutNode)
-}

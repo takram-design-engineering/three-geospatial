@@ -10,7 +10,7 @@ import {
   getMoonDirectionECI,
   getSunDirectionECI
 } from '@takram/three-atmosphere'
-import { atmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
+import { AtmosphereContextNode, sky } from '@takram/three-atmosphere/webgpu'
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import {
@@ -43,7 +43,7 @@ const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => atmosphereContext(renderer), [renderer])
+  const context = useResource(() => new AtmosphereContextNode(), [])
   context.camera = camera
 
   // Post-processing:

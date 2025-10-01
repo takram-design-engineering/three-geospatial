@@ -56,7 +56,7 @@ import {
   getSunDirectionECI,
   toAstroTime
 } from '@takram/three-atmosphere'
-import { atmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
+import { AtmosphereContextNode, sky } from '@takram/three-atmosphere/webgpu'
 import {
   assertType,
   degrees,
@@ -270,7 +270,7 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => atmosphereContext(renderer), [renderer])
+  const context = useResource(() => new AtmosphereContextNode(), [])
   context.camera = camera
 
   // Post-processing:

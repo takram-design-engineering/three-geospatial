@@ -16,7 +16,7 @@ import {
   getSunDirectionECEF
 } from '@takram/three-atmosphere'
 import {
-  atmosphereContext,
+  AtmosphereContextNode,
   AtmosphereLight,
   AtmosphereLightNode,
   skyBackground
@@ -58,7 +58,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
-  const context = atmosphereContext(renderer)
+  const context = new AtmosphereContextNode()
 
   // Create a scene with a sky background:
   const scene = new Scene()

@@ -11,7 +11,7 @@ import {
   getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
-  atmosphereContext,
+  AtmosphereContextNode,
   sky,
   type StarsNode
 } from '@takram/three-atmosphere/webgpu'
@@ -42,7 +42,7 @@ const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => atmosphereContext(renderer), [renderer])
+  const context = useResource(() => new AtmosphereContextNode(), [])
   context.camera = camera
 
   // Post-processing:

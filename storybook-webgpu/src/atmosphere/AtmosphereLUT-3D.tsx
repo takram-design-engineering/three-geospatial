@@ -1,5 +1,4 @@
 import { ScreenQuad } from '@react-three/drei'
-import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
 import { LinearToneMapping } from 'three'
 import {
@@ -16,10 +15,10 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import { NodeMaterial, type Renderer } from 'three/webgpu'
+import { NodeMaterial } from 'three/webgpu'
 
 import {
-  atmosphereLUT,
+  AtmosphereLUTNode,
   type AtmosphereLUTTexture3DName,
   type AtmosphereParameters
 } from '@takram/three-atmosphere/webgpu'
@@ -63,8 +62,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
   const material = useResource(() => new NodeMaterial(), [])
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
 
-  const renderer = useThree<Renderer>(({ gl }) => gl as any)
-  const lutNode = useResource(() => atmosphereLUT(renderer), [renderer])
+  const lutNode = useResource(() => new AtmosphereLUTNode(), [])
   Object.assign(lutNode.parameters, options)
   const textureSize = vec3(lutNode.parameters.scatteringTextureSize)
   const uvw = textureUVW(textureSize, zoom)
