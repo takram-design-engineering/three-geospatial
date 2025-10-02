@@ -30,13 +30,7 @@ function createDensityProfileLayerNodes(
   layer: DensityProfileLayer,
   worldToUnit: number
 ): DensityProfileLayerNodes {
-  const {
-    width, // Length
-    expTerm, // Dimensionless
-    expScale, // InverseLength
-    linearTerm, // InverseLength
-    constantTerm // Dimensionless
-  } = layer
+  const { width, expTerm, expScale, linearTerm, constantTerm } = layer
 
   // BUG: Invoking toVar() or toConst() on these nodes breaks shaders.
   return {
