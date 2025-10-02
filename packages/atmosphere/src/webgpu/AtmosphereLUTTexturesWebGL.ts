@@ -31,6 +31,7 @@ import {
   type Renderer,
   type UniformNode
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import type { AnyFloatType } from '@takram/three-geospatial'
 import type { Node } from '@takram/three-geospatial/webgpu'
@@ -135,8 +136,8 @@ class AtmosphereLUTTexturesContextWebGL extends AtmosphereLUTTexturesContext {
   // texture.
   deltaMultipleScatteringRT = this.deltaRayleighScatteringRT
 
-  constructor(textureType: AnyFloatType, parameters: AtmosphereParameters) {
-    super()
+  constructor(parameters: AtmosphereParameters, textureType: AnyFloatType) {
+    super(parameters, textureType)
 
     if (parameters.transmittancePrecisionLog) {
       setupRenderTarget(
@@ -167,12 +168,13 @@ class AtmosphereLUTTexturesContextWebGL extends AtmosphereLUTTexturesContext {
     )
   }
 
-  dispose(): void {
+  override dispose(): void {
     this.opticalDepthRT.dispose()
     this.deltaIrradianceRT.dispose()
     this.deltaRayleighScatteringRT.dispose()
     this.deltaMieScatteringRT.dispose()
     this.deltaScatteringDensityRT.dispose()
+    super.dispose()
   }
 }
 
@@ -220,11 +222,13 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     return this[`${name}RT`].texture
   }
 
-  override createContext(
-    textureType: AnyFloatType,
-    parameters: AtmosphereParameters
-  ): AtmosphereLUTTexturesContextWebGL {
-    return new AtmosphereLUTTexturesContextWebGL(textureType, parameters)
+  override createContext(): AtmosphereLUTTexturesContextWebGL {
+    invariant(this.parameters != null)
+    invariant(this.textureType != null)
+    return new AtmosphereLUTTexturesContextWebGL(
+      this.parameters,
+      this.textureType
+    )
   }
 
   private renderToRenderTarget(
@@ -271,9 +275,9 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
   computeTransmittance(
     renderer: Renderer,
-    { opticalDepthRT }: AtmosphereLUTTexturesContextWebGL
+    context: AtmosphereLUTTexturesContextWebGL
   ): void {
-    const { parameters } = this
+    const { parameters, opticalDepthRT } = context
 
     this.transmittanceMaterial ??= this.createMaterial({
       additive: false,
@@ -281,7 +285,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         const transmittance =
           computeTransmittanceToTopAtmosphereBoundaryTexture(
             screenCoordinate
-          ).context({ atmosphere: { parameters } })
+          ).context({ atmosphere: context })
 
         return parameters.transmittancePrecisionLog
           ? // Compute the optical depth, and store it in opticalDepth. Avoid
@@ -303,9 +307,9 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
   computeDirectIrradiance(
     renderer: Renderer,
-    { deltaIrradianceRT, opticalDepthRT }: AtmosphereLUTTexturesContextWebGL
+    context: AtmosphereLUTTexturesContextWebGL
   ): void {
-    const { parameters } = this
+    const { parameters, deltaIrradianceRT, opticalDepthRT } = context
 
     this.directIrradianceMaterial ??= this.createMaterial({
       additive: true,
@@ -317,7 +321,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
               : this.transmittanceRT.texture
           ),
           screenCoordinate
-        ).context({ atmosphere: { parameters } })
+        ).context({ atmosphere: context })
 
         return mrt({
           deltaIrradiance: vec4(irradiance, 1),
@@ -337,14 +341,15 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
   computeSingleScattering(
     renderer: Renderer,
-    {
+    context: AtmosphereLUTTexturesContextWebGL
+  ): void {
+    const {
+      parameters,
       luminanceFromRadiance,
       deltaRayleighScatteringRT,
       deltaMieScatteringRT,
       opticalDepthRT
-    }: AtmosphereLUTTexturesContextWebGL
-  ): void {
-    const { parameters } = this
+    } = context
 
     this.singleScatteringMaterial ??= this.createMaterial({
       additive: true,
@@ -356,7 +361,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
               : this.transmittanceRT.texture
           ),
           vec3(screenCoordinate, this.layer.add(0.5))
-        ).context({ atmosphere: { parameters } })
+        ).context({ atmosphere: context })
 
         const rayleigh = singleScattering.get('rayleigh')
         const mie = singleScattering.get('mie')
@@ -384,7 +389,6 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
     if (!parameters.combinedScatteringTextures) {
       clearRenderTarget(renderer, this.singleMieScatteringRT)
-      // TODO: Incomplete copy
       renderer.copyTextureToTexture(
         deltaMieScatteringRT.texture,
         this.singleMieScatteringRT.texture,
@@ -398,17 +402,18 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
   computeScatteringDensity(
     renderer: Renderer,
-    {
+    context: AtmosphereLUTTexturesContextWebGL,
+    scatteringOrder: number
+  ): void {
+    const {
+      parameters,
       deltaIrradianceRT,
       deltaRayleighScatteringRT,
       deltaMieScatteringRT,
       deltaScatteringDensityRT,
       deltaMultipleScatteringRT,
       opticalDepthRT
-    }: AtmosphereLUTTexturesContextWebGL,
-    scatteringOrder: number
-  ): void {
-    const { parameters } = this
+    } = context
 
     this.scatteringDensityMaterial ??= this.createMaterial({
       additive: false,
@@ -425,7 +430,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
           texture(deltaIrradianceRT.texture),
           vec3(screenCoordinate, this.layer.add(0.5)),
           int(this.scatteringOrder)
-        ).context({ atmosphere: { parameters } })
+        ).context({ atmosphere: context })
 
         return vec4(radiance, 1)
       })()
@@ -438,16 +443,16 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
   computeIndirectIrradiance(
     renderer: Renderer,
-    {
+    context: AtmosphereLUTTexturesContextWebGL,
+    scatteringOrder: number
+  ): void {
+    const {
       luminanceFromRadiance,
       deltaIrradianceRT,
       deltaRayleighScatteringRT,
       deltaMieScatteringRT,
       deltaMultipleScatteringRT
-    }: AtmosphereLUTTexturesContextWebGL,
-    scatteringOrder: number
-  ): void {
-    const { parameters } = this
+    } = context
 
     this.indirectIrradianceMaterial ??= this.createMaterial({
       additive: true,
@@ -458,7 +463,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
           texture3D(deltaMultipleScatteringRT.texture),
           screenCoordinate,
           int(this.scatteringOrder.sub(1))
-        ).context({ atmosphere: { parameters } })
+        ).context({ atmosphere: context })
 
         return mrt({
           deltaIrradiance: irradiance,
@@ -479,14 +484,15 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
   computeMultipleScattering(
     renderer: Renderer,
-    {
+    context: AtmosphereLUTTexturesContextWebGL
+  ): void {
+    const {
+      parameters,
       luminanceFromRadiance,
       deltaScatteringDensityRT,
       deltaMultipleScatteringRT,
       opticalDepthRT
-    }: AtmosphereLUTTexturesContextWebGL
-  ): void {
-    const { parameters } = this
+    } = context
 
     this.multipleScatteringMaterial ??= this.createMaterial({
       additive: true,
@@ -499,7 +505,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
           ),
           texture3D(deltaScatteringDensityRT.texture),
           vec3(screenCoordinate, this.layer.add(0.5))
-        ).context({ atmosphere: { parameters } })
+        ).context({ atmosphere: context })
 
         const radiance = multipleScattering.get('radiance')
         const cosViewSun = multipleScattering.get('cosViewSun')
@@ -530,8 +536,10 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     ])
   }
 
-  override setup(textureType: AnyFloatType): void {
-    const { parameters } = this
+  override setup(
+    parameters: AtmosphereParameters,
+    textureType: AnyFloatType
+  ): void {
     setupRenderTarget(
       this.transmittanceRT,
       textureType,
@@ -561,6 +569,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         parameters.scatteringTextureSize
       )
     }
+    super.setup(parameters, textureType)
   }
 
   override dispose(): void {

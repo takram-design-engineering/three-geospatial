@@ -83,15 +83,14 @@ export class AerialPerspectiveNode extends TempNode {
 
     builder.getContext().atmosphere = this.atmosphereContext
 
-    const { parameters, ellipsoid } = this.atmosphereContext
     const {
+      ellipsoid,
+      worldToUnit,
       matrixWorldToECEF,
       sunDirectionECEF,
       cameraPositionUnit,
       altitudeCorrectionUnit
-    } = this.atmosphereContext.getNodes()
-
-    const { worldToUnit } = parameters.getNodes()
+    } = this.atmosphereContext
 
     const colorNode = nodeObject(this.colorNode)
     const depthNode = nodeObject(this.depthNode)

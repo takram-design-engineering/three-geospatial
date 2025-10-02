@@ -150,14 +150,18 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF)
+  useLocationControls(context.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
     const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
-    getECIToECEFRotationMatrix(date, context.matrixECIToECEF)
-    getSunDirectionECI(date, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
-    getMoonDirectionECI(date, moonDirectionECEF).applyMatrix4(matrixECIToECEF)
+    getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
+    getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
+    getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
   })
 
   const alphaNode = useMemo(() => uniform(0), [])
@@ -171,8 +175,10 @@ const Content: FC<StoryProps> = () => {
   useGuardedFrame(() => {
     const { matrixWorldToECEF, sunDirectionECEF } = context
     const sunDirectionWorld = vector
-      .copy(sunDirectionECEF)
-      .applyMatrix3(rotation.setFromMatrix4(matrixWorldToECEF).transpose())
+      .copy(sunDirectionECEF.value)
+      .applyMatrix3(
+        rotation.setFromMatrix4(matrixWorldToECEF.value).transpose()
+      )
     const cosSun = sunDirectionWorld.dot(up)
     modelRef.current?.setLightIntensity(cosSun < 0.1 ? 1 : 0)
     alphaNode.value = remapClamped(cosSun, 0.1, 0)

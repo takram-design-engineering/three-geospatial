@@ -33,11 +33,10 @@ export class AtmosphereLight extends DirectionalLight {
   }
 
   private updatePosition(): void {
-    const { atmosphereContext: context } = this
-    if (context == null) {
+    if (this.atmosphereContext == null) {
       return
     }
-    const { matrixECEFToWorld, sunDirectionECEF } = context.getNodes()
+    const { matrixECEFToWorld, sunDirectionECEF } = this.atmosphereContext
     this.position
       .copy(sunDirectionECEF.value)
       .applyMatrix3(rotationScratch.setFromMatrix4(matrixECEFToWorld.value))

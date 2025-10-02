@@ -147,7 +147,7 @@ const Content: FC<StoryProps> = () => {
   const [reorientationPlugin, setReorientationPlugin] =
     useState<ReorientationPlugin | null>(null)
   useLocationControls(
-    context.matrixWorldToECEF,
+    context.matrixWorldToECEF.value,
     (longitude, latitude, height) => {
       if (reorientationPlugin != null) {
         reorientationPlugin.lon = radians(longitude)
@@ -161,9 +161,13 @@ const Content: FC<StoryProps> = () => {
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
     const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
-    getECIToECEFRotationMatrix(date, context.matrixECIToECEF)
-    getSunDirectionECI(date, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
-    getMoonDirectionECI(date, moonDirectionECEF).applyMatrix4(matrixECIToECEF)
+    getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
+    getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
+    getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
   })
 
   const envNode = useResource(() => skyEnvironment(context), [context])
@@ -191,8 +195,8 @@ const Content: FC<StoryProps> = () => {
       <group rotation-x={-Math.PI / 2}>
         <Suspense>
           <ISS
-            matrixWorldToECEF={context.matrixWorldToECEF}
-            sunDirectionECEF={context.sunDirectionECEF}
+            matrixWorldToECEF={context.matrixWorldToECEF.value}
+            sunDirectionECEF={context.sunDirectionECEF.value}
             rotation-x={Math.PI / 2}
             rotation-y={Math.PI / 2}
           />

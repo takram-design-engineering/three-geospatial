@@ -36,16 +36,15 @@ const mat3Columns = /*#__PURE__*/ FnLayout({
 })
 
 const getLunarRadiance = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO
   name: 'getLunarRadiance',
   type: Luminance3,
   inputs: [{ name: 'moonAngularRadius', type: 'float' }]
 })(([moonAngularRadius], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextNode.get(builder)
+  const { solarIrradiance, sunRadianceToLuminance, luminanceScale } = context
 
   return (
-    nodes.solarIrradiance
+    solarIrradiance
       // Visual magnitude of the sun: m1 = -26.74
       // (https://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html)
       // Visual magnitude of the moon: m2 = -12.74
@@ -53,7 +52,7 @@ const getLunarRadiance = /*#__PURE__*/ FnLayout({
       // Relative brightness: 10^{0.4*(m2-m1)} ≈ 0.0000025
       .mul(0.0000025)
       .div(PI.mul(moonAngularRadius.pow2()))
-      .mul(nodes.sunRadianceToLuminance.mul(nodes.luminanceScale))
+      .mul(sunRadianceToLuminance.mul(luminanceScale))
   )
 })
 
@@ -130,7 +129,7 @@ export class MoonNode extends TempNode {
       sunDirectionECEF,
       moonDirectionECEF: directionECEF,
       matrixMoonFixedToECEF: matrixFixedToECEF
-    } = this.atmosphereContext.getNodes()
+    } = this.atmosphereContext
 
     return Fn(() => {
       const chordThreshold = cos(this.angularRadius).oneMinus().mul(2)

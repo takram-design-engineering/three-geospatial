@@ -320,7 +320,7 @@ const Content: FC<StoryProps> = () => {
 
   // Location controls:
   const [longitude, latitude, height] = useLocationControls(
-    context.matrixWorldToECEF
+    context.matrixWorldToECEF.value
   )
 
   // Local date controls (depends on the longitude of the location):
@@ -349,19 +349,21 @@ const Content: FC<StoryProps> = () => {
       const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
 
       const time = toAstroTime(date)
-      getECIToECEFRotationMatrix(time, matrixECIToECEF)
-      getSunDirectionECI(time, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
+      getECIToECEFRotationMatrix(time, matrixECIToECEF.value)
+      getSunDirectionECI(time, sunDirectionECEF.value).applyMatrix4(
+        matrixECIToECEF.value
+      )
       getMoonDirectionECI(
         time,
-        moonDirectionECEF,
+        moonDirectionECEF.value,
         geodetic.set(radians(longitude), radians(latitude), height).toECEF()
-      ).applyMatrix4(matrixECIToECEF)
+      ).applyMatrix4(matrixECIToECEF.value)
 
       const { matrixMoonFixedToECEF } = context
       getMoonFixedToECIRotationMatrix(
         time,
-        matrixMoonFixedToECEF
-      ).multiplyMatrices(matrixECIToECEF, matrixMoonFixedToECEF)
+        matrixMoonFixedToECEF.value
+      ).multiplyMatrices(matrixECIToECEF.value, matrixMoonFixedToECEF.value)
 
       try {
         const observer = new Observer(latitude, longitude, height)
@@ -409,7 +411,7 @@ const Content: FC<StoryProps> = () => {
       return
     }
     if (northUp) {
-      matrix.copy(context.matrixWorldToECEF).transpose()
+      matrix.copy(context.matrixWorldToECEF.value).transpose()
       camera.up.set(0, 0, 1).applyMatrix4(matrix)
     } else {
       camera.up.copy(Object3D.DEFAULT_UP)

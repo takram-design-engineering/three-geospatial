@@ -1,27 +1,13 @@
 import { Vector2, Vector3 } from 'three'
-import { uniformGroup } from 'three/tsl'
 
 import { radians } from '@takram/three-geospatial'
-import { nodeType, referenceTo } from '@takram/three-geospatial/webgpu'
-
-import {
-  Angle,
-  Dimensionless,
-  DimensionlessSpectrum,
-  InverseLength,
-  IrradianceSpectrum,
-  Length,
-  ScatteringSpectrum
-} from './dimensional'
-
-const groupNode = /*#__PURE__*/ uniformGroup('atmosphereParameters')
 
 export class DensityProfileLayer {
-  @nodeType(Length) width: number
-  @nodeType(Dimensionless) expTerm: number
-  @nodeType(InverseLength) expScale: number
-  @nodeType(InverseLength) linearTerm: number
-  @nodeType(Dimensionless) constantTerm: number
+  width: number
+  expTerm: number
+  expScale: number
+  linearTerm: number
+  constantTerm: number
 
   constructor(
     width = 0,
@@ -35,36 +21,6 @@ export class DensityProfileLayer {
     this.expScale = expScale
     this.linearTerm = linearTerm
     this.constantTerm = constantTerm
-  }
-
-  private nodes?: DensityProfileLayerNodes
-
-  getNodes(
-    owner: AtmosphereParameters,
-    prefix: string
-  ): DensityProfileLayerNodes {
-    return (this.nodes ??= this.createNodes(owner, prefix))
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createNodes(owner: AtmosphereParameters, prefix: string) {
-    const reference = referenceTo<DensityProfileLayer>(this, {
-      group: groupNode,
-      withName: true,
-      prefix: `${prefix}_`
-    })
-    return {
-      width: reference('width', value => value * owner.worldToUnit),
-      expTerm: reference('expTerm'),
-      expScale: reference('expScale', value => value / owner.worldToUnit),
-      linearTerm: reference('linearTerm', value => value / owner.worldToUnit),
-      constantTerm: reference('constantTerm')
-    }
-  }
-
-  // eslint-disable-next-line accessor-pairs, @typescript-eslint/class-methods-use-this
-  set needsUpdate(value: boolean) {
-    groupNode.needsUpdate = value
   }
 
   copy(other: DensityProfileLayer): this {
@@ -81,36 +37,11 @@ export class DensityProfileLayer {
   }
 }
 
-export type DensityProfileLayerNodes = ReturnType<
-  DensityProfileLayer['createNodes']
->
-
 export class DensityProfile {
   layers: [DensityProfileLayer, DensityProfileLayer]
 
   constructor(layers: [DensityProfileLayer, DensityProfileLayer]) {
     this.layers = layers
-  }
-
-  private nodes?: DensityProfileNodes
-
-  getNodes(owner: AtmosphereParameters, prefix: string): DensityProfileNodes {
-    return (this.nodes ??= this.createNodes(owner, prefix))
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  createNodes(owner: AtmosphereParameters, prefix: string) {
-    return {
-      layers: [
-        this.layers[0].getNodes(owner, `${prefix}_0`),
-        this.layers[1].getNodes(owner, `${prefix}_1`)
-      ] as const
-    }
-  }
-
-  // eslint-disable-next-line accessor-pairs, @typescript-eslint/class-methods-use-this
-  set needsUpdate(value: boolean) {
-    groupNode.needsUpdate = value
   }
 
   copy(other: DensityProfile): this {
@@ -123,28 +54,21 @@ export class DensityProfile {
   }
 }
 
-export type DensityProfileNodes = ReturnType<DensityProfile['createNodes']>
-
 const luminanceCoefficients = /*#__PURE__*/ new Vector3(0.2126, 0.7152, 0.0722)
 
 export class AtmosphereParameters {
-  @nodeType(Dimensionless)
   worldToUnit = 0.001
 
   // The solar irradiance at the top of the atmosphere.
-  @nodeType(IrradianceSpectrum)
   solarIrradiance = new Vector3(1.474, 1.8504, 1.91198)
 
   // The sun's angular radius.
-  @nodeType(Angle)
   sunAngularRadius = 0.004675
 
   // The distance between the planet center and the bottom of the atmosphere.
-  @nodeType(Length)
   bottomRadius = 6360000
 
   // The distance between the planet center and the top of the atmosphere.
-  @nodeType(Length)
   topRadius = 6420000
 
   // The density profile of air molecules.
@@ -155,7 +79,6 @@ export class AtmosphereParameters {
 
   // The scattering coefficient of air molecules at the altitude where their
   // density is maximum.
-  @nodeType(ScatteringSpectrum)
   rayleighScattering = new Vector3(0.000005802, 0.000013558, 0.0000331)
 
   // The density profile of aerosols.
@@ -166,16 +89,13 @@ export class AtmosphereParameters {
 
   // The scattering coefficient of aerosols at the altitude where their density
   // is maximum.
-  @nodeType(ScatteringSpectrum)
   mieScattering = new Vector3().setScalar(0.000003996)
 
   // The extinction coefficient of aerosols at the altitude where their density
   // is maximum.
-  @nodeType(ScatteringSpectrum)
   mieExtinction = new Vector3().setScalar(0.00000444)
 
   // The anisotropy parameter for the Cornette-Shanks phase function.
-  @nodeType(Dimensionless)
   miePhaseFunctionG = 0.8
 
   // The density profile of air molecules that absorb light (e.g. ozone).
@@ -186,27 +106,19 @@ export class AtmosphereParameters {
 
   // The extinction coefficient of molecules that absorb light (e.g. ozone) at
   // the altitude where their density is maximum.
-  @nodeType(ScatteringSpectrum)
   absorptionExtinction = new Vector3(0.00000065, 0.000001881, 0.000000085)
 
   // The average albedo of the ground.
   // https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
-  @nodeType(DimensionlessSpectrum)
   groundAlbedo = new Vector3().setScalar(0.3)
 
   // The cosine of the maximum sun zenith angle for which atmospheric scattering
   // must be precomputed (for maximum precision, use the smallest Sun zenith
   // angle yielding negligible sky light radiance values.
-  @nodeType(Dimensionless)
   minCosSun = Math.cos(radians(102))
 
-  @nodeType(DimensionlessSpectrum)
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
-
-  @nodeType(DimensionlessSpectrum)
   skyRadianceToLuminance = new Vector3(114974.91644, 71305.954816, 65310.548555)
-
-  @nodeType(Dimensionless)
   luminanceScale = 1 / luminanceCoefficients.dot(this.sunRadianceToLuminance)
 
   // Whether to store the optical depth instead of the transmittance in the
@@ -235,59 +147,6 @@ export class AtmosphereParameters {
     this.scatteringTextureCosViewSize,
     this.scatteringTextureRadiusSize
   )
-
-  private nodes?: AtmosphereParametersNodes
-
-  getNodes(): AtmosphereParametersNodes {
-    return (this.nodes ??= this.createNodes())
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private createNodes() {
-    const reference = referenceTo<AtmosphereParameters>(this, {
-      group: groupNode,
-      withName: true
-    })
-    return {
-      worldToUnit: reference('worldToUnit'),
-      solarIrradiance: reference('solarIrradiance'),
-      sunAngularRadius: reference('sunAngularRadius'),
-      bottomRadius: reference(
-        'bottomRadius',
-        value => value * this.worldToUnit
-      ),
-      topRadius: reference('topRadius', value => value * this.worldToUnit),
-      rayleighDensity: this.rayleighDensity.getNodes(this, 'rayleighDensity'),
-      rayleighScattering: reference('rayleighScattering', value =>
-        value.divideScalar(this.worldToUnit)
-      ),
-      mieDensity: this.mieDensity.getNodes(this, 'mieDensity'),
-      mieScattering: reference('mieScattering', value =>
-        value.divideScalar(this.worldToUnit)
-      ),
-      mieExtinction: reference('mieExtinction', value =>
-        value.divideScalar(this.worldToUnit)
-      ),
-      miePhaseFunctionG: reference('miePhaseFunctionG'),
-      absorptionDensity: this.absorptionDensity.getNodes(
-        this,
-        'absorptionDensity'
-      ),
-      absorptionExtinction: reference('absorptionExtinction', value =>
-        value.divideScalar(this.worldToUnit)
-      ),
-      groundAlbedo: reference('groundAlbedo'),
-      minCosSun: reference('minCosSun'),
-      sunRadianceToLuminance: reference('sunRadianceToLuminance'),
-      skyRadianceToLuminance: reference('skyRadianceToLuminance'),
-      luminanceScale: reference('luminanceScale')
-    }
-  }
-
-  // eslint-disable-next-line accessor-pairs, @typescript-eslint/class-methods-use-this
-  set needsUpdate(value: boolean) {
-    groupNode.needsUpdate = value
-  }
 
   copy(other: AtmosphereParameters): this {
     this.worldToUnit = other.worldToUnit
@@ -325,7 +184,3 @@ export class AtmosphereParameters {
     return new AtmosphereParameters().copy(this)
   }
 }
-
-export type AtmosphereParametersNodes = ReturnType<
-  AtmosphereParameters['createNodes']
->

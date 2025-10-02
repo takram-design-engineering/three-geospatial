@@ -98,16 +98,20 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF)
+  useLocationControls(context.matrixWorldToECEF.value)
 
   const referenceDate = useRef(+new Date('2025-08-01T18:30:00+09:00'))
   useGuardedFrame(() => {
     referenceDate.current += 10000
     const date = referenceDate.current
     const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
-    getECIToECEFRotationMatrix(date, context.matrixECIToECEF)
-    getSunDirectionECI(date, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
-    getMoonDirectionECI(date, moonDirectionECEF).applyMatrix4(matrixECIToECEF)
+    getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
+    getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
+    getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
   })
 
   return <OrbitControls target={[1, 0.8, 0.5]} minDistance={1} />

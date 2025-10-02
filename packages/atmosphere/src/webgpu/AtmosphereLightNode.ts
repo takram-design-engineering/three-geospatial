@@ -40,19 +40,15 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const { direct, indirect } = this.light
 
     const {
+      worldToUnit,
+      solarIrradiance,
+      sunRadianceToLuminance,
+      luminanceScale,
       matrixWorldToECEF,
       matrixECEFToWorld,
       sunDirectionECEF,
       altitudeCorrectionECEF
-    } = atmosphereContext.getNodes()
-
-    const parameters = atmosphereContext.parameters.getNodes()
-    const {
-      worldToUnit,
-      solarIrradiance,
-      sunRadianceToLuminance,
-      luminanceScale
-    } = parameters
+    } = atmosphereContext
 
     // Derive the ECEF normal vector and the unit-space position of the vertex.
     const normalECEF = matrixWorldToECEF.mul(vec4(normalWorld, 0)).xyz

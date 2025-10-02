@@ -79,7 +79,7 @@ import {
 
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContextNode } from './AtmosphereContextNode'
+import { AtmosphereContextBaseNode } from './AtmosphereContextBaseNode'
 import {
   AbstractScatteringTexture,
   AbstractSpectrum,
@@ -114,10 +114,10 @@ export const clampRadius = /*#__PURE__*/ FnLayout({
   type: Length,
   inputs: [{ name: 'radius', type: Length }]
 })(([radius], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextBaseNode.get(builder)
+  const { topRadius, bottomRadius } = context
 
-  return clamp(radius, nodes.bottomRadius, nodes.topRadius)
+  return clamp(radius, bottomRadius, topRadius)
 })
 
 export const safeSqrt = /*#__PURE__*/ FnLayout({
@@ -136,13 +136,13 @@ export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextBaseNode.get(builder)
+  const { topRadius } = context
 
   const discriminant = radius
     .pow2()
     .mul(cosView.pow2().sub(1))
-    .add(nodes.topRadius.pow2())
+    .add(topRadius.pow2())
   return clampDistance(radius.negate().mul(cosView).add(safeSqrt(discriminant)))
 })
 
@@ -154,13 +154,13 @@ export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextBaseNode.get(builder)
+  const { bottomRadius } = context
 
   const discriminant = radius
     .pow2()
     .mul(cosView.pow2().sub(1))
-    .add(nodes.bottomRadius.pow2())
+    .add(bottomRadius.pow2())
   return clampDistance(radius.negate().mul(cosView).sub(safeSqrt(discriminant)))
 })
 
@@ -172,8 +172,8 @@ export const rayIntersectsGround = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextBaseNode.get(builder)
+  const { bottomRadius } = context
 
   return cosView
     .lessThan(0)
@@ -181,7 +181,7 @@ export const rayIntersectsGround = /*#__PURE__*/ FnLayout({
       radius
         .pow2()
         .mul(cosView.pow2().sub(1))
-        .add(nodes.bottomRadius.pow2())
+        .add(bottomRadius.pow2())
         .greaterThanEqual(0)
     )
 })
@@ -207,22 +207,22 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextBaseNode.get(builder)
+  const { parameters, topRadius, bottomRadius } = context
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(nodes.topRadius.pow2().sub(nodes.bottomRadius.pow2())).toVar()
+  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toVar()
 
   // Distance to the horizon for the view.
   const distanceToHorizon = safeSqrt(
-    radius.pow2().sub(nodes.bottomRadius.pow2())
+    radius.pow2().sub(bottomRadius.pow2())
   ).toVar()
 
   // Distance to the top atmosphere boundary for the ray (radius, cosView),
   // and its minimum and maximum values over all cosView - obtained for
   // (radius, 1) and (radius, cosHorizon).
   const distanceToTop = distanceToTopAtmosphereBoundary(radius, cosView)
-  const minDistance = nodes.topRadius.sub(radius).toVar()
+  const minDistance = topRadius.sub(radius).toVar()
   const maxDistance = distanceToHorizon.add(H)
   const cosViewUnit = distanceToTop.remap(minDistance, maxDistance)
   const radiusUnit = distanceToHorizon.div(H)
@@ -240,7 +240,7 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
 })
 
 export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
+  typeOnly: true, // TODO: Fn layout doesn't support texture type
   name: 'getTransmittanceToTopAtmosphereBoundary',
   type: DimensionlessSpectrum,
   inputs: [
@@ -249,7 +249,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([transmittanceTexture, radius, cosView], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
+  const { parameters } = AtmosphereContextBaseNode.get(builder)
 
   const uv = getTransmittanceTextureUV(radius, cosView)
 
@@ -272,7 +272,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
 })
 
 export const getTransmittance = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
+  typeOnly: true, // TODO: Fn layout doesn't support texture type
   name: 'getTransmittance',
   type: DimensionlessSpectrum,
   inputs: [
@@ -341,7 +341,7 @@ export const getTransmittance = /*#__PURE__*/ FnLayout({
 })
 
 export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
+  typeOnly: true, // TODO: Fn layout doesn't support texture type
   name: 'getTransmittanceToSun',
   type: DimensionlessSpectrum,
   inputs: [
@@ -350,10 +350,10 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([transmittanceTexture, radius, cosSun], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextBaseNode.get(builder)
+  const { sunAngularRadius, bottomRadius } = context
 
-  const sinHorizon = nodes.bottomRadius.div(radius).toVar()
+  const sinHorizon = bottomRadius.div(radius).toVar()
   const cosHorizon = sqrt(max(sinHorizon.pow2().oneMinus(), 0)).negate()
   return getTransmittanceToTopAtmosphereBoundary(
     transmittanceTexture,
@@ -361,8 +361,8 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
     cosSun
   ).mul(
     smoothstep(
-      sinHorizon.negate().mul(nodes.sunAngularRadius),
-      sinHorizon.mul(nodes.sunAngularRadius),
+      sinHorizon.negate().mul(sunAngularRadius),
+      sinHorizon.mul(sunAngularRadius),
       cosSun.sub(cosHorizon)
     )
   )
@@ -396,7 +396,6 @@ export const miePhaseFunction = /*#__PURE__*/ FnLayout({
 })
 
 export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // WORKAROUND: Adding a layout on this breaks the reference to uniforms.
   name: 'getScatteringTextureCoord',
   type: 'vec4',
   inputs: [
@@ -410,15 +409,15 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   [radius, cosView, cosSun, cosViewSun, viewRayIntersectsGround],
   builder
 ) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextBaseNode.get(builder)
+  const { parameters, topRadius, bottomRadius, minCosSun } = context
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(nodes.topRadius.pow2().sub(nodes.bottomRadius.pow2())).toVar()
+  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toVar()
 
   // Distance to the horizon for the view.
   const distanceToHorizon = safeSqrt(
-    radius.pow2().sub(nodes.bottomRadius.pow2())
+    radius.pow2().sub(bottomRadius.pow2())
   ).toVar()
 
   const radiusCoord = getTextureCoordFromUnitRange(
@@ -432,7 +431,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   const discriminant = radiusCosView
     .pow2()
     .sub(radius.pow2())
-    .add(nodes.bottomRadius.pow2())
+    .add(bottomRadius.pow2())
     .toVar()
 
   const cosViewCoord = float().toVar()
@@ -441,7 +440,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     // and maximum values over all cosView - obtained for (radius, -1) and
     // (radius, cosHorizon).
     const distance = radiusCosView.negate().sub(safeSqrt(discriminant))
-    const minDistance = radius.sub(nodes.bottomRadius).toVar()
+    const minDistance = radius.sub(bottomRadius).toVar()
     const maxDistance = distanceToHorizon
     cosViewCoord.assign(
       getTextureCoordFromUnitRange(
@@ -462,7 +461,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     const distance = radiusCosView
       .negate()
       .add(safeSqrt(discriminant.add(H.pow2())))
-    const minDistance = nodes.topRadius.sub(radius).toVar()
+    const minDistance = topRadius.sub(radius).toVar()
     const maxDistance = distanceToHorizon.add(H)
     cosViewCoord.assign(
       getTextureCoordFromUnitRange(
@@ -474,11 +473,11 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     )
   })
 
-  const minDistance = nodes.topRadius.sub(nodes.bottomRadius).toVar()
+  const minDistance = topRadius.sub(bottomRadius).toVar()
   const maxDistance = H
-  const d = distanceToTopAtmosphereBoundary(nodes.bottomRadius, cosSun)
+  const d = distanceToTopAtmosphereBoundary(bottomRadius, cosSun)
   const a = d.remap(minDistance, maxDistance).toVar()
-  const D = distanceToTopAtmosphereBoundary(nodes.bottomRadius, nodes.minCosSun)
+  const D = distanceToTopAtmosphereBoundary(bottomRadius, minCosSun)
   const A = D.remap(minDistance, maxDistance)
 
   // An ad-hoc function equal to 0 for cosSun = minCosSun (because then
@@ -495,7 +494,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 })
 
 export const getScattering = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
+  typeOnly: true, // TODO: Fn layout doesn't support texture type
   name: 'getScattering',
   type: AbstractSpectrum,
   inputs: [
@@ -517,7 +516,7 @@ export const getScattering = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
+  const { parameters } = AtmosphereContextBaseNode.get(builder)
 
   const coord = getScatteringTextureCoord(
     radius,
@@ -548,7 +547,6 @@ export const getScattering = /*#__PURE__*/ FnLayout({
 })
 
 export const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // WORKAROUND: Adding a layout on this breaks the reference to uniforms.
   name: 'getIrradianceTextureUV',
   type: 'vec2',
   inputs: [
@@ -556,10 +554,10 @@ export const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
     { name: 'cosSun', type: Dimensionless }
   ]
 })(([radius, cosSun], builder) => {
-  const { parameters } = AtmosphereContextNode.get(builder)
-  const nodes = parameters.getNodes()
+  const context = AtmosphereContextBaseNode.get(builder)
+  const { parameters, topRadius, bottomRadius } = context
 
-  const radiusUnit = radius.remap(nodes.bottomRadius, nodes.topRadius)
+  const radiusUnit = radius.remap(bottomRadius, topRadius)
   const cosSunUnit = cosSun.mul(0.5).add(0.5)
   return vec2(
     getTextureCoordFromUnitRange(
@@ -571,7 +569,7 @@ export const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 })
 
 export const getIrradiance = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: As of r179, there's no way to specify a texture or sampler type.
+  typeOnly: true, // TODO: Fn layout doesn't support texture type
   name: 'getIrradiance',
   type: IrradianceSpectrum,
   inputs: [

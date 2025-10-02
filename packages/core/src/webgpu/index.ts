@@ -1,6 +1,5 @@
 export * from './accessors'
 export * from './debug'
-export * from './decorators'
 export * from './DownsampleThresholdNode'
 export * from './FnLayout'
 export * from './FnVar'

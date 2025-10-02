@@ -29,6 +29,7 @@ import {
   type ComputeNode,
   type Renderer
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import type { AnyFloatType } from '@takram/three-geospatial'
 import type { NodeObject } from '@takram/three-geospatial/webgpu'
@@ -113,8 +114,8 @@ class AtmosphereLUTTexturesContextWebGPU extends AtmosphereLUTTexturesContext {
   // texture.
   deltaMultipleScattering = this.deltaRayleighScattering
 
-  constructor(textureType: AnyFloatType, parameters: AtmosphereParameters) {
-    super()
+  constructor(parameters: AtmosphereParameters, textureType: AnyFloatType) {
+    super(parameters, textureType)
 
     if (parameters.transmittancePrecisionLog) {
       setupStorageTexture(
@@ -161,7 +162,7 @@ class AtmosphereLUTTexturesContextWebGPU extends AtmosphereLUTTexturesContext {
     )
   }
 
-  dispose(): void {
+  override dispose(): void {
     this.opticalDepth.dispose()
     this.deltaIrradiance.dispose()
     this.deltaRayleighScattering.dispose()
@@ -170,6 +171,7 @@ class AtmosphereLUTTexturesContextWebGPU extends AtmosphereLUTTexturesContext {
     this.irradianceRead.dispose()
     this.scatteringRead.dispose()
     this.higherOrderScatteringRead.dispose()
+    super.dispose()
   }
 }
 
@@ -199,18 +201,20 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     return this[name]
   }
 
-  override createContext(
-    textureType: AnyFloatType,
-    parameters: AtmosphereParameters
-  ): AtmosphereLUTTexturesContextWebGPU {
-    return new AtmosphereLUTTexturesContextWebGPU(textureType, parameters)
+  override createContext(): AtmosphereLUTTexturesContextWebGPU {
+    invariant(this.parameters != null)
+    invariant(this.textureType != null)
+    return new AtmosphereLUTTexturesContextWebGPU(
+      this.parameters,
+      this.textureType
+    )
   }
 
   computeTransmittance(
     renderer: Renderer,
-    { opticalDepth }: AtmosphereLUTTexturesContextWebGPU
+    context: AtmosphereLUTTexturesContextWebGPU
   ): void {
-    const { parameters } = this
+    const { parameters, opticalDepth } = context
     const { x: width, y: height } = parameters.transmittanceTextureSize
 
     this.transmittanceNode ??= Fn(() => {
@@ -225,7 +229,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       const transmittance = computeTransmittanceToTopAtmosphereBoundaryTexture(
         textureCoordinate.add(0.5)
-      ).context({ atmosphere: { parameters } })
+      )
 
       if (parameters.transmittancePrecisionLog) {
         // Compute the optical depth, and store it in opticalDepth. Avoid having
@@ -239,16 +243,19 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       } else {
         textureStore(this.transmittance, textureCoordinate, transmittance)
       }
-    })().compute(width * height, [8, 8, 1])
+    })()
+      .context({ atmosphere: context })
+      .compute(width * height, [8, 8, 1])
+      .setName('transmittance')
 
     void renderer.compute(this.transmittanceNode)
   }
 
   computeDirectIrradiance(
     renderer: Renderer,
-    { deltaIrradiance, opticalDepth }: AtmosphereLUTTexturesContextWebGPU
+    context: AtmosphereLUTTexturesContextWebGPU
   ): void {
-    const { parameters } = this
+    const { parameters, deltaIrradiance, opticalDepth } = context
     const { x: width, y: height } = parameters.irradianceTextureSize
 
     this.directIrradianceNode ??= Fn(() => {
@@ -268,25 +275,29 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
             : this.transmittance
         ),
         textureCoordinate.add(0.5)
-      ).context({ atmosphere: { parameters } })
+      )
 
       textureStore(this.irradiance, textureCoordinate, vec4(vec3(0), 1))
       textureStore(deltaIrradiance, textureCoordinate, vec4(irradiance, 1))
-    })().compute(width * height, [8, 8, 1])
+    })()
+      .context({ atmosphere: context })
+      .compute(width * height, [8, 8, 1])
+      .setName('directIrradiance')
 
     void renderer.compute(this.directIrradianceNode)
   }
 
   computeSingleScattering(
     renderer: Renderer,
-    {
+    context: AtmosphereLUTTexturesContextWebGPU
+  ): void {
+    const {
+      parameters,
       luminanceFromRadiance,
       deltaRayleighScattering,
       deltaMieScattering,
       opticalDepth
-    }: AtmosphereLUTTexturesContextWebGPU
-  ): void {
-    const { parameters } = this
+    } = context
     const { x: width, y: height, z: depth } = parameters.scatteringTextureSize
 
     this.singleScatteringNode ??= Fn(() => {
@@ -307,7 +318,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
             : this.transmittance
         ),
         textureCoordinate.add(0.5)
-      ).context({ atmosphere: { parameters } })
+      )
 
       const rayleigh = singleScattering.get('rayleigh')
       const mie = singleScattering.get('mie')
@@ -330,7 +341,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         textureCoordinate,
         vec4(mie.mul(luminanceFromRadiance), 1)
       )
-    })().compute(width * height * depth, [4, 4, 4])
+    })()
+      .context({ atmosphere: context })
+      .compute(width * height * depth, [4, 4, 4])
+      .setName('singleScattering')
 
     void renderer.compute(this.singleScatteringNode)
 
@@ -348,17 +362,18 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
   computeScatteringDensity(
     renderer: Renderer,
-    {
+    context: AtmosphereLUTTexturesContextWebGPU,
+    scatteringOrder: number
+  ): void {
+    const {
+      parameters,
       deltaIrradiance,
       deltaRayleighScattering,
       deltaMieScattering,
       deltaScatteringDensity,
       deltaMultipleScattering,
       opticalDepth
-    }: AtmosphereLUTTexturesContextWebGPU,
-    scatteringOrder: number
-  ): void {
-    const { parameters } = this
+    } = context
     const { x: width, y: height, z: depth } = parameters.scatteringTextureSize
 
     this.scatteringDensityNode ??= Fn(() => {
@@ -384,10 +399,13 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         texture(deltaIrradiance),
         textureCoordinate.add(0.5),
         int(this.scatteringOrder)
-      ).context({ atmosphere: { parameters } })
+      )
 
       textureStore(deltaScatteringDensity, textureCoordinate, radiance)
-    })().compute(width * height * depth, [4, 4, 4])
+    })()
+      .context({ atmosphere: context })
+      .compute(width * height * depth, [4, 4, 4])
+      .setName('scatteringDensity')
 
     this.scatteringOrder.value = scatteringOrder
     void renderer.compute(this.scatteringDensityNode)
@@ -395,17 +413,18 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
   computeIndirectIrradiance(
     renderer: Renderer,
-    {
+    context: AtmosphereLUTTexturesContextWebGPU,
+    scatteringOrder: number
+  ): void {
+    const {
+      parameters,
       luminanceFromRadiance,
       deltaIrradiance,
       deltaRayleighScattering,
       deltaMieScattering,
       deltaMultipleScattering,
       irradianceRead
-    }: AtmosphereLUTTexturesContextWebGPU,
-    scatteringOrder: number
-  ): void {
-    const { parameters } = this
+    } = context
     const { x: width, y: height } = parameters.irradianceTextureSize
 
     // TODO: Use NodeAccess.READ_ONLY, which appears to be not supported yet.
@@ -427,7 +446,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         texture3D(deltaMultipleScattering),
         textureCoordinate.add(0.5),
         int(this.scatteringOrder.sub(1))
-      ).context({ atmosphere: { parameters } })
+      )
 
       textureStore(
         this.irradiance,
@@ -437,7 +456,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
           .add(irradiance.mul(luminanceFromRadiance))
       )
       textureStore(deltaIrradiance, textureCoordinate, irradiance)
-    })().compute(width * height, [8, 8, 1])
+    })()
+      .context({ atmosphere: context })
+      .compute(width * height, [8, 8, 1])
+      .setName('indirectIrradiance')
 
     this.scatteringOrder.value = scatteringOrder
     void renderer.compute(this.indirectIrradianceNode)
@@ -445,16 +467,17 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
   computeMultipleScattering(
     renderer: Renderer,
-    {
+    context: AtmosphereLUTTexturesContextWebGPU
+  ): void {
+    const {
+      parameters,
       luminanceFromRadiance,
       deltaScatteringDensity,
       deltaMultipleScattering,
       opticalDepth,
       scatteringRead,
       higherOrderScatteringRead
-    }: AtmosphereLUTTexturesContextWebGPU
-  ): void {
-    const { parameters } = this
+    } = context
     const { x: width, y: height, z: depth } = parameters.scatteringTextureSize
 
     // TODO: Use NodeAccess.READ_ONLY, which appears to be not supported yet.
@@ -501,7 +524,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         ),
         texture3D(deltaScatteringDensity),
         textureCoordinate.add(0.5)
-      ).context({ atmosphere: { parameters } })
+      )
 
       const radiance = multipleScattering.get('radiance')
       const cosViewSun = multipleScattering.get('cosViewSun')
@@ -528,13 +551,18 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
             .add(vec4(luminance, 1))
         )
       }
-    })().compute(width * height * depth, [4, 4, 4])
+    })()
+      .context({ atmosphere: context })
+      .compute(width * height * depth, [4, 4, 4])
+      .setName('multipleScattering')
 
     void renderer.compute(this.multipleScatteringNode)
   }
 
-  override setup(textureType: AnyFloatType): void {
-    const { parameters } = this
+  override setup(
+    parameters: AtmosphereParameters,
+    textureType: AnyFloatType
+  ): void {
     setupStorageTexture(
       this.transmittance,
       textureType,
@@ -564,6 +592,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         parameters.scatteringTextureSize
       )
     }
+    super.setup(parameters, textureType)
   }
 
   override dispose(): void {

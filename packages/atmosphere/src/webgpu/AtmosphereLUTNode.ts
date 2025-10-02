@@ -1,8 +1,8 @@
 import { Data3DTexture, FloatType, HalfFloatType, Texture } from 'three'
 import {
+  Node,
   NodeUpdateType,
   RendererUtils,
-  TempNode,
   type NodeBuilder,
   type NodeFrame,
   type Renderer,
@@ -71,13 +71,13 @@ export type AtmosphereLUTTexture3DName =
 const emptyTexture = /*#__PURE__*/ new Texture()
 const emptyTexture3D = /*#__PURE__*/ new Data3DTexture()
 
-export class AtmosphereLUTNode extends TempNode {
+export class AtmosphereLUTNode extends Node {
   static override get type(): string {
     return 'AtmosphereLUTNode'
   }
 
   parameters: AtmosphereParameters
-  textureType?: AnyFloatType // TODO
+  textureType?: AnyFloatType
 
   private textures?: AtmosphereLUTTextures
 
@@ -95,10 +95,14 @@ export class AtmosphereLUTNode extends TempNode {
   private updating = false
   private disposeQueue: (() => void) | undefined
 
-  constructor(parameters = new AtmosphereParameters()) {
+  constructor(
+    parameters = new AtmosphereParameters(),
+    textureType?: AnyFloatType
+  ) {
     super(null)
+    this.parameters = parameters
+    this.textureType = textureType
 
-    this.parameters = parameters.clone()
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
@@ -158,13 +162,9 @@ export class AtmosphereLUTNode extends TempNode {
   }
 
   async updateTextures(renderer: Renderer): Promise<void> {
-    invariant(this.textureType != null)
     invariant(this.textures != null)
 
-    const context = this.textures.createContext(
-      this.textureType,
-      this.parameters
-    )
+    const context = this.textures.createContext()
     this.updating = true
     try {
       await timeSlice(this.compute(renderer, context))
@@ -191,8 +191,8 @@ export class AtmosphereLUTNode extends TempNode {
     if (this.textures == null) {
       // Lazily initialize the texture generator depending of the renderer:
       this.textures = isWebGPU(builder)
-        ? new AtmosphereLUTTexturesWebGPU(this.parameters)
-        : new AtmosphereLUTTexturesWebGL(this.parameters)
+        ? new AtmosphereLUTTexturesWebGPU()
+        : new AtmosphereLUTTexturesWebGL()
 
       // Swap the contents of the texture nodes. The WebGPU one has storage
       // textures and WebGL one has render target textures, which we cannot
@@ -211,15 +211,13 @@ export class AtmosphereLUTNode extends TempNode {
       higherOrderScattering.value = this.textures.get('higherOrderScattering')
     }
 
-    this.textureType = isFloatLinearSupported(builder.renderer)
+    const textureType = isFloatLinearSupported(builder.renderer)
       ? (this.textureType ?? FloatType)
       : HalfFloatType
+    const parameters = this.parameters.clone()
+    parameters.transmittancePrecisionLog = textureType === HalfFloatType
+    this.textures.setup(parameters, textureType)
 
-    // Not a good manner to mutate the parameter here though.
-    this.parameters.transmittancePrecisionLog =
-      this.textureType === HalfFloatType
-
-    this.textures.setup(this.textureType)
     return super.setup(builder)
   }
 

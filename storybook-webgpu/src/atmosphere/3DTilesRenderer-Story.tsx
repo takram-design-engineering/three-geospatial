@@ -158,9 +158,13 @@ const Content: FC<StoryProps> = ({
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
     const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
-    getECIToECEFRotationMatrix(date, context.matrixECIToECEF)
-    getSunDirectionECI(date, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
-    getMoonDirectionECI(date, moonDirectionECEF).applyMatrix4(matrixECIToECEF)
+    getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
+    getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
+    getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
   })
 
   // Google Maps API key:

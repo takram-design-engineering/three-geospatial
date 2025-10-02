@@ -82,7 +82,7 @@ export class SkyNode extends TempNode {
       sunDirectionECEF,
       cameraPositionUnit,
       altitudeCorrectionUnit
-    } = this.atmosphereContext.getNodes()
+    } = this.atmosphereContext
 
     // Direction of the camera ray:
     let directionWorld

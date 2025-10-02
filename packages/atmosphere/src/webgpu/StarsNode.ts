@@ -177,8 +177,7 @@ export class StarsNode extends TempNode {
     const instanceMagnitude = instancedBufferAttribute(magnitudeBuffer, 'float')
     const instanceColor = instancedBufferAttribute(colorBuffer, 'vec3')
 
-    const { matrixECIToECEF, matrixECEFToWorld } =
-      this.atmosphereContext.getNodes()
+    const { matrixECIToECEF, matrixECEFToWorld } = this.atmosphereContext
 
     const directionECEF = matrixECIToECEF.mul(vec4(instancePosition, 0)).xyz
     const directionWorld = matrixECEFToWorld.mul(vec4(directionECEF, 0)).xyz

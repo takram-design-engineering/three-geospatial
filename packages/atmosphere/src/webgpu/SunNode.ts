@@ -39,7 +39,7 @@ export class SunNode extends TempNode {
       return
     }
     const rayDirectionECEF = nodeObject(this.rayDirectionECEF)
-    const { sunDirectionECEF } = this.atmosphereContext.getNodes()
+    const { sunDirectionECEF } = this.atmosphereContext
 
     return Fn(() => {
       const chordThreshold = cos(this.angularRadius).oneMinus().mul(2)

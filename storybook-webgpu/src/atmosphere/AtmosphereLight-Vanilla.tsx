@@ -100,9 +100,9 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
     const currentDate = +date + ((clock.getElapsedTime() * 5e6) % 864e5)
-    getECIToECEFRotationMatrix(currentDate, context.matrixECIToECEF)
-    getSunDirectionECEF(currentDate, context.sunDirectionECEF, position)
-    getMoonDirectionECEF(currentDate, context.moonDirectionECEF, position)
+    getECIToECEFRotationMatrix(currentDate, context.matrixECIToECEF.value)
+    getSunDirectionECEF(currentDate, context.sunDirectionECEF.value, position)
+    getMoonDirectionECEF(currentDate, context.moonDirectionECEF.value, position)
 
     controls.update()
     void renderer.render(scene, camera)

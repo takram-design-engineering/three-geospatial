@@ -1,7 +1,5 @@
 import { Vector2 } from 'three'
 
-export const NODE_TYPES = Symbol('NODE_TYPES')
-
 // prettier-ignore
 const bayerIndices: readonly number[] = [
   0, 8, 2, 10,

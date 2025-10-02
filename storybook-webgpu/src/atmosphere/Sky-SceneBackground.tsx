@@ -104,14 +104,18 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF)
+  useLocationControls(context.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
     const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
-    getECIToECEFRotationMatrix(date, context.matrixECIToECEF)
-    getSunDirectionECI(date, sunDirectionECEF).applyMatrix4(matrixECIToECEF)
-    getMoonDirectionECI(date, moonDirectionECEF).applyMatrix4(matrixECIToECEF)
+    getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
+    getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
+    getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
   })
 
   return <OrbitControls target={[0, 0, 0]} minDistance={1} />
