@@ -75,11 +75,6 @@ export class SkyNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const camera = this.atmosphereContext.camera ?? builder.camera
-    if (camera == null) {
-      return
-    }
-
     builder.getContext().atmosphere = this.atmosphereContext
 
     const {
@@ -92,15 +87,25 @@ export class SkyNode extends TempNode {
     // Direction of the camera ray:
     let directionWorld
     switch (this.scope) {
-      case SCREEN:
-        directionWorld = cameraDirectionWorld(camera)
+      case SCREEN: {
+        const camera = this.atmosphereContext.camera ?? builder.camera
+        if (camera != null) {
+          directionWorld = cameraDirectionWorld(camera)
+        }
         break
-      case WORLD:
-        directionWorld = cameraDirectionWorld(camera)
+      }
+      case WORLD: {
+        if (builder.camera != null) {
+          directionWorld = cameraDirectionWorld(builder.camera)
+        }
         break
+      }
       case EQUIRECTANGULAR:
         directionWorld = equirectToDirectionWorld(uv())
         break
+    }
+    if (directionWorld == null) {
+      return
     }
     const rayDirectionECEF = matrixWorldToECEF
       .mul(vec4(directionWorld, 0))
