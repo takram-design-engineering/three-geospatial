@@ -60,9 +60,7 @@ export class AtmosphereContextNode extends Node {
   static get(builder: NodeBuilder): AtmosphereContextNode {
     const atmosphereContext = builder.getContext().atmosphere
     if (atmosphereContext == null) {
-      throw new Error(
-        'AtmosphereContext does not found in the builder context.'
-      )
+      throw new Error('AtmosphereContext was not found in the builder context.')
     }
     return atmosphereContext as AtmosphereContextNode
   }
@@ -112,6 +110,19 @@ export class AtmosphereContextNode extends Node {
         self.value = this.matrixMoonFixedToECEF
       })
 
+    const cameraPositionECEF = uniform(new Vector3())
+      .setGroup(groupNode)
+      .setName('cameraPositionECEF')
+      .onRenderUpdate((frame, { value }) => {
+        const camera = this.camera ?? frame.camera
+        if (camera == null) {
+          return
+        }
+        value
+          .setFromMatrixPosition(camera.matrixWorld)
+          .applyMatrix4(this.matrixWorldToECEF)
+      })
+
     const altitudeCorrectionECEF = uniform(new Vector3())
       .setGroup(groupNode)
       .setName('altitudeCorrectionECEF')
@@ -130,18 +141,11 @@ export class AtmosphereContextNode extends Node {
         )
       })
 
-    const cameraPositionECEF = uniform(new Vector3())
-      .setGroup(groupNode)
-      .setName('cameraPositionECEF')
-      .onRenderUpdate((frame, { value }) => {
-        const camera = this.camera ?? frame.camera
-        if (camera == null) {
-          return
-        }
-        value
-          .setFromMatrixPosition(camera.matrixWorld)
-          .applyMatrix4(this.matrixWorldToECEF)
-      })
+    const { worldToUnit } = this.parameters.getNodes()
+    const cameraPositionUnit = cameraPositionECEF.mul(worldToUnit).toVar()
+    const altitudeCorrectionUnit = altitudeCorrectionECEF
+      .mul(worldToUnit)
+      .toVar()
 
     const cameraHeight = uniform(0)
       .setGroup(groupNode)
@@ -157,13 +161,6 @@ export class AtmosphereContextNode extends Node {
         self.value = geodeticScratch.setFromECEF(positionECEF).height
       })
 
-    const { worldToUnit } = this.parameters.getNodes()
-    const cameraPositionUnit = (
-      this.correctAltitude
-        ? cameraPositionECEF.add(altitudeCorrectionECEF).mul(worldToUnit)
-        : cameraPositionECEF.mul(worldToUnit)
-    ).toVar()
-
     return {
       matrixWorldToECEF,
       matrixECEFToWorld,
@@ -171,10 +168,11 @@ export class AtmosphereContextNode extends Node {
       sunDirectionECEF,
       moonDirectionECEF,
       matrixMoonFixedToECEF,
-      altitudeCorrectionECEF,
       cameraPositionECEF,
-      cameraHeight,
-      cameraPositionUnit
+      altitudeCorrectionECEF,
+      cameraPositionUnit,
+      altitudeCorrectionUnit,
+      cameraHeight
     }
   }
 

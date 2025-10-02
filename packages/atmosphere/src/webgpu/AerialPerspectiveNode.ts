@@ -5,7 +5,9 @@ import {
   mix,
   nodeObject,
   PI,
+  positionGeometry,
   remapClamp,
+  select,
   uv,
   vec3,
   vec4
@@ -19,6 +21,7 @@ import {
   inverseProjectionMatrix,
   inverseViewMatrix,
   projectionMatrix,
+  rayEllipsoidIntersection,
   screenToPositionView,
   type Node,
   type NodeObject
@@ -84,9 +87,8 @@ export class AerialPerspectiveNode extends TempNode {
     const {
       matrixWorldToECEF,
       sunDirectionECEF,
-      altitudeCorrectionECEF,
-      cameraPositionECEF,
-      cameraPositionUnit
+      cameraPositionUnit,
+      altitudeCorrectionUnit
     } = this.atmosphereContext.getNodes()
 
     const { worldToUnit } = parameters.getNodes()
@@ -95,8 +97,7 @@ export class AerialPerspectiveNode extends TempNode {
     const depthNode = nodeObject(this.depthNode)
     const depth = depthNode.r.toVar()
 
-    const surfaceLuminance = Fn(() => {
-      // Position of the surface
+    const getSurfacePositionECEF = (): NodeObject<'vec3'> => {
       const viewZ = depthToViewZ(depth, cameraNear(camera), cameraFar(camera), {
         perspective: camera.isPerspectiveCamera,
         logarithmic: builder.renderer.logarithmicDepthBuffer
@@ -111,43 +112,57 @@ export class AerialPerspectiveNode extends TempNode {
       const positionWorld = inverseViewMatrix(camera).mul(
         vec4(positionView, 1)
       ).xyz
-      let positionECEF = matrixWorldToECEF.mul(vec4(positionWorld, 1)).xyz
+      return matrixWorldToECEF.mul(vec4(positionWorld, 1)).xyz
+    }
 
-      if (this.atmosphereContext.correctAltitude) {
-        positionECEF = positionECEF.add(altitudeCorrectionECEF)
-      }
+    const getRayDirectionECEF = (): NodeObject<'vec3'> => {
+      const positionView = inverseProjectionMatrix(camera).mul(
+        vec4(positionGeometry, 1)
+      ).xyz
+      const directionWorld = inverseViewMatrix(camera).mul(
+        vec4(positionView, 0)
+      ).xyz
+      const directionECEF = matrixWorldToECEF.mul(vec4(directionWorld, 0)).xyz
+      return directionECEF.toVertexStage().normalize()
+    }
+
+    const surfaceLuminance = Fn(() => {
+      const positionUnit = getSurfacePositionECEF().mul(worldToUnit).toVar()
 
       // Changed our strategy on the geometric error correction, because we no
       // longer have LightingMask to exclude objects in space.
-      const correctionAmount = remapClamp(
-        positionECEF.distance(cameraPositionECEF),
-        336_000, // The distance to the horizon from the highest point on the earth
-        876_000 // The distance to the horizon at the top atmosphere
+      const geometryCorrectionAmount = remapClamp(
+        positionUnit.distance(cameraPositionUnit),
+        // The distance to the horizon from the highest point on the earth,
+        worldToUnit.mul(336_000),
+        // The distance to the horizon at the top atmosphere
+        worldToUnit.mul(876_000)
       )
-      const sphereNormal = positionECEF
-        .mul(vec3(ellipsoid.reciprocalRadiiSquared()))
-        .normalize()
 
-      const correctPositionError = (positionECEF: NodeObject<'vec3'>): void => {
-        // TODO: The error is pronounced at the edge of the ellipsoid due to the
-        // large difference between the sphere position and the unprojected
-        // position at the current fragment. Calculating the sphere position from
-        // the fragment UV may resolve this.
-        const spherePosition = sphereNormal.mul(parameters.bottomRadius)
-        positionECEF.assign(mix(positionECEF, spherePosition, correctionAmount))
-      }
-
-      const correctNormalError = (normalECEF: NodeObject<'vec3'>): void => {
-        normalECEF.assign(mix(normalECEF, sphereNormal, correctionAmount))
-      }
+      // Geometry normal can be trivially corrected:
+      const radiiUnit = vec3(ellipsoid.radii).mul(worldToUnit)
+      const normalCorrected = positionUnit.div(radiiUnit.pow2()).normalize()
 
       if (this.correctGeometricError) {
-        correctPositionError(positionECEF)
+        const rayDirectionECEF = getRayDirectionECEF()
+        const intersection = rayEllipsoidIntersection(
+          cameraPositionUnit,
+          rayDirectionECEF,
+          radiiUnit
+        ).x // Near side
+
+        const positionCorrected = select(
+          intersection.greaterThanEqual(0),
+          rayDirectionECEF.mul(intersection).add(cameraPositionUnit),
+          // Fallback to radial projection:
+          normalCorrected.mul(radiiUnit)
+        )
+        positionUnit.assign(
+          mix(positionUnit, positionCorrected, geometryCorrectionAmount)
+        )
       }
 
-      const positionUnit = positionECEF.mul(worldToUnit).toVar()
-
-      const indirect = Fn(() => {
+      const illuminance = Fn(() => {
         if (this.normalNode == null) {
           throw new Error(
             'The "normalNode" is required when the "light" is set.'
@@ -163,28 +178,30 @@ export class AerialPerspectiveNode extends TempNode {
         const normalECEF = matrixWorldToECEF.mul(vec4(normalWorld, 0)).xyz
 
         if (this.correctGeometricError) {
-          correctNormalError(normalECEF)
+          normalECEF.assign(
+            mix(normalECEF, normalCorrected, geometryCorrectionAmount)
+          )
         }
 
         // Direct and indirect illuminance on the surface:
         const sunSkyIlluminance = getSunAndSkyIlluminance(
-          positionUnit,
+          positionUnit.add(altitudeCorrectionUnit),
           normalECEF,
           sunDirectionECEF
         )
         const sunIlluminance = sunSkyIlluminance.get('sunIlluminance')
         const skyIlluminance = sunSkyIlluminance.get('skyIlluminance')
-        return sunIlluminance.add(skyIlluminance).div(PI)
-      })
+        return sunIlluminance.add(skyIlluminance)
+      })()
 
       const diffuse = this.lighting
-        ? colorNode.rgb.mul(indirect())
+        ? colorNode.rgb.mul(illuminance).div(PI) // Lambertian
         : colorNode.rgb
 
       // Scattering between the camera to the surface
       const luminanceTransfer = getSkyLuminanceToPoint(
-        cameraPositionUnit,
-        positionUnit,
+        cameraPositionUnit.add(altitudeCorrectionUnit),
+        positionUnit.add(altitudeCorrectionUnit),
         this.shadowLengthNode ?? 0,
         sunDirectionECEF
       ).toVar()

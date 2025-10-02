@@ -1,83 +1,81 @@
-import { dot, If, property, sqrt, struct } from 'three/tsl'
+import { dot, If, sqrt, struct, vec2, vec4 } from 'three/tsl'
 
 import { FnVar } from './FnVar'
 import type { NodeObject } from './node'
 
-export const raySphereIntersectionsStruct = /*#__PURE__*/ struct(
-  {
-    near: 'vec4',
-    far: 'vec4'
-  },
-  'raySphereIntersections'
+// Reference: https://iquilezles.org/articles/intersectors/
+
+export const raySphereIntersection = /*#__PURE__*/ FnVar(
+  (
+    rayOrigin: NodeObject<'vec3'>,
+    rayDirection: NodeObject<'vec3'>,
+    center: NodeObject<'vec3'>,
+    radius: NodeObject<'float'>
+  ) => {
+    const a = rayOrigin.sub(center)
+    const b = dot(rayDirection, a)
+    const c = dot(a, a).sub(radius.pow2())
+    const discriminant = b.pow2().sub(c).toVar()
+
+    const intersection = vec2(-1)
+    If(discriminant.greaterThanEqual(0), () => {
+      const Q = sqrt(discriminant)
+      intersection.assign(vec2(b.negate().sub(Q), b.negate().add(Q)))
+    })
+    return intersection
+  }
 )
 
-export const raySphereIntersections = /*#__PURE__*/ FnVar(
-  (
-    origin: NodeObject<'vec3'>,
-    direction: NodeObject<'vec3'>,
-    center: NodeObject<'vec3'>,
-    radius: NodeObject // Scalar or vector
-  ) =>
-    builder => {
-      const a = origin.sub(center).toVar()
-      const b = dot(direction, a).mul(2).toVar()
-      const c = dot(a, a).sub(radius.pow2())
-      const discriminant = b.pow2().sub(c.mul(4)).toVar()
-
-      const nodeType = radius.getNodeType(builder)
-      const near = property(nodeType).assign(-1)
-      const far = property(nodeType).assign(-1)
-      If(discriminant.greaterThanEqual(0), () => {
-        const Q = sqrt(discriminant).toVar()
-        near.assign(b.negate().sub(Q).mul(0.5))
-        far.assign(b.negate().add(Q).mul(0.5))
-      })
-      return raySphereIntersectionsStruct(near, far)
-    }
+export const raySpheresIntersectionsStruct = /*#__PURE__*/ struct(
+  { near: 'vec4', far: 'vec4' },
+  'raySpheresIntersections'
 )
 
-export const raySphereNearIntersection = /*#__PURE__*/ FnVar(
+// Derive ray-sphere intersections with multiple radii at once:
+export const raySpheresIntersections = /*#__PURE__*/ FnVar(
   (
-    origin: NodeObject<'vec3'>,
-    direction: NodeObject<'vec3'>,
+    rayOrigin: NodeObject<'vec3'>,
+    rayDirection: NodeObject<'vec3'>,
     center: NodeObject<'vec3'>,
-    radius: NodeObject // Scalar or vector
-  ) =>
-    builder => {
-      const a = origin.sub(center).toVar()
-      const b = dot(direction, a).mul(2).toVar()
-      const c = dot(a, a).sub(radius.pow2())
-      const discriminant = b.pow2().sub(c.mul(4)).toVar()
+    radii: NodeObject // Scalar or vector
+  ) => {
+    const a = rayOrigin.sub(center)
+    const b = dot(rayDirection, a)
+    const c = dot(a, a).sub(radii.pow2())
+    const discriminant = b.pow2().sub(c).toVar()
 
-      const nodeType = radius.getNodeType(builder)
-      const result = property(nodeType).assign(-1)
-      If(discriminant.greaterThanEqual(0), () => {
-        const Q = sqrt(discriminant).toVar()
-        result.assign(b.negate().sub(Q).mul(0.5))
-      })
-      return result
-    }
+    const near = vec4(-1)
+    const far = vec4(-1)
+    If(discriminant.greaterThanEqual(0), () => {
+      const Q = sqrt(discriminant)
+      near.assign(b.negate().sub(Q))
+      far.assign(b.negate().add(Q))
+    })
+    return raySpheresIntersectionsStruct(near, far)
+  }
 )
 
-export const raySphereFarIntersection = /*#__PURE__*/ FnVar(
+export const rayEllipsoidIntersection = /*#__PURE__*/ FnVar(
   (
-    origin: NodeObject<'vec3'>,
-    direction: NodeObject<'vec3'>,
-    center: NodeObject<'vec3'>,
-    radius: NodeObject // Scalar or vector
-  ) =>
-    builder => {
-      const a = origin.sub(center).toVar()
-      const b = dot(direction, a).mul(2).toVar()
-      const c = dot(a, a).sub(radius.pow2())
-      const discriminant = b.pow2().sub(c.mul(4)).toVar()
+    rayOrigin: NodeObject<'vec3'>,
+    rayDirection: NodeObject<'vec3'>,
+    radii: NodeObject<'vec3'>
+  ): NodeObject<'vec2'> => {
+    const ro = rayOrigin.div(radii)
+    const rd = rayDirection.div(radii)
+    const a = rd.dot(rd)
+    const b = ro.dot(rd)
+    const c = ro.dot(ro)
+    const discriminant = b
+      .pow2()
+      .sub(a.mul(c.sub(1)))
+      .toVar()
 
-      const nodeType = radius.getNodeType(builder)
-      const result = property(nodeType).assign(-1)
-      If(discriminant.greaterThanEqual(0), () => {
-        const Q = sqrt(discriminant).toVar()
-        result.assign(b.negate().add(Q).mul(0.5))
-      })
-      return result
-    }
+    const intersections = vec2(-1)
+    If(discriminant.greaterThanEqual(0), () => {
+      const Q = sqrt(discriminant)
+      intersections.assign(vec2(b.negate().sub(Q), b.negate().add(Q)).div(a))
+    })
+    return intersections
+  }
 )
