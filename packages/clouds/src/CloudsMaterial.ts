@@ -273,14 +273,15 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
     // Disable onBeforeRender in AtmosphereMaterialBase because we're rendering
     // into fullscreen quad with another camera for the scene projection.
 
-    const prevLogarithmicDepthBuffer = this.defines.USE_LOGDEPTHBUF != null
+    const prevLogarithmicDepthBuffer =
+      this.defines.USE_LOGARITHMIC_DEPTH_BUFFER != null
     const nextLogarithmicDepthBuffer =
       renderer.capabilities.logarithmicDepthBuffer
     if (nextLogarithmicDepthBuffer !== prevLogarithmicDepthBuffer) {
       if (nextLogarithmicDepthBuffer) {
-        this.defines.USE_LOGDEPTHBUF = '1'
+        this.defines.USE_LOGARITHMIC_DEPTH_BUFFER = '1'
       } else {
-        delete this.defines.USE_LOGDEPTHBUF
+        delete this.defines.USE_LOGARITHMIC_DEPTH_BUFFER
       }
     }
 
