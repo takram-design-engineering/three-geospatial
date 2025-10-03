@@ -13,8 +13,8 @@ import { MeshPhysicalNodeMaterial, WebGPURenderer } from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
-  getMoonDirectionECEF,
-  getSunDirectionECEF
+  getMoonDirectionECI,
+  getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
   AtmosphereContextNode,
@@ -30,7 +30,7 @@ import type { StoryFC } from '../helpers/createStory'
 const date = new Date('2000-06-01T10:00:00Z')
 const longitude = 0 // In degrees
 const latitude = 67 // In degrees
-const height = 1000 // In meters
+const height = 500 // In meters
 
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
@@ -106,9 +106,20 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
     const currentDate = +date + ((clock.getElapsedTime() * 5e6) % 864e5)
-    getECIToECEFRotationMatrix(currentDate, context.matrixECIToECEF.value)
-    getSunDirectionECEF(currentDate, context.sunDirectionECEF.value, position)
-    getMoonDirectionECEF(currentDate, context.moonDirectionECEF.value, position)
+    const matrixECIToECEF = getECIToECEFRotationMatrix(
+      currentDate,
+      context.matrixECIToECEF.value
+    )
+    getSunDirectionECI(
+      currentDate,
+      context.sunDirectionECEF.value,
+      position
+    ).applyMatrix4(matrixECIToECEF)
+    getMoonDirectionECI(
+      currentDate,
+      context.moonDirectionECEF.value,
+      position
+    ).applyMatrix4(matrixECIToECEF)
 
     controls.update()
     void renderer.render(scene, camera)

@@ -1,13 +1,21 @@
 import {
   AgXToneMapping,
   Clock,
+  Group,
   Mesh,
+  NoToneMapping,
   PerspectiveCamera,
   Scene,
-  TorusKnotGeometry
+  TorusGeometry,
+  Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { MeshPhysicalNodeMaterial, WebGPURenderer } from 'three/webgpu'
+import { mrt, output, pass, toneMapping } from 'three/tsl'
+import {
+  MeshLambertNodeMaterial,
+  PostProcessing,
+  WebGPURenderer
+} from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -15,12 +23,19 @@ import {
   getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
+  aerialPerspective,
   AtmosphereContextNode,
   AtmosphereLight,
   AtmosphereLightNode,
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import {
+  dithering,
+  highpVelocity,
+  lensFlare,
+  temporalAntialias
+} from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../helpers/createStory'
 
@@ -32,10 +47,8 @@ const height = 500 // In meters
 
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
-  renderer.samples = 4
-  renderer.toneMapping = AgXToneMapping
-  renderer.toneMappingExposure = 3
-  renderer.shadowMap.enabled = true
+  renderer.highPrecision = true // Required when you work with large coordinates
+  renderer.toneMapping = NoToneMapping // Applied in post-processing
 
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
@@ -50,34 +63,48 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   ).toECEF()
 
   const aspect = window.innerWidth / window.innerHeight
-  const camera = new PerspectiveCamera(50, aspect)
+  const camera = new PerspectiveCamera(90, aspect, 1e3, 1e5)
 
-  // We're going to rebase the world origin to the ECEF coordinates so that we
-  // can keep the camera position near the world origin:
-  camera.position.set(-4, 0, 0) // Heading north
+  // Move the camera at the ECEF coordinates with the up vector pointing towards
+  // the surface normal of the ellipsoid:
+  const east = new Vector3()
+  const north = new Vector3()
+  const up = new Vector3()
+  Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
+  camera.up.copy(up)
+  camera.position
+    .copy(position)
+    .add(north.multiplyScalar(4))
+    .add(east.multiplyScalar(3))
+    .sub(up.multiplyScalar(4))
 
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
   const context = new AtmosphereContextNode()
+  context.camera = camera
 
   // Create a scene with a sky background:
   const scene = new Scene()
   scene.backgroundNode = skyBackground(context)
 
-  // Move and rotate the ellipsoid so that the world origin locates at
-  // the ECEF coordinates, and the scene's orientation aligns with
-  // x: north, y: up, z: east.
-  Ellipsoid.WGS84.getNorthUpEastFrame(position, context.matrixWorldToECEF.value)
+  const group = new Group()
+  scene.add(group)
 
-  // Create a torus knot inside the group:
-  const geometry = new TorusKnotGeometry(0.5, 0.15, 256, 64)
-  const material = new MeshPhysicalNodeMaterial({ roughness: 0 })
+  // Position and orient the object matrix of the group:
+  Ellipsoid.WGS84.getEastNorthUpFrame(position).decompose(
+    group.position,
+    group.quaternion,
+    group.scale
+  )
+
+  // Create a huge ring inside the group:
+  const radius = 5e4
+  const geometry = new TorusGeometry(radius, 100, 256, 64)
+  const material = new MeshLambertNodeMaterial({ color: 0x999999 })
   const mesh = new Mesh(geometry, material)
-  mesh.castShadow = true
-  mesh.receiveShadow = true
-  mesh.rotation.x = Math.PI / 2
-  mesh.rotation.z = Math.PI / 2
-  scene.add(mesh)
+  mesh.scale.z = 20
+  mesh.rotation.y = Math.PI / 2
+  group.add(mesh)
 
   // AtmosphereLightNode must be associated with AtmosphereLight in the
   // renderer's node library before use:
@@ -87,23 +114,41 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // scattering between the camera and scene objects, which is only plausible
   // when the distance is small enough to ignore it.
   const light = new AtmosphereLight(context)
-  light.castShadow = true
-  light.distance = 1
-  light.shadow.camera.top = 1
-  light.shadow.camera.bottom = -1
-  light.shadow.camera.left = -1
-  light.shadow.camera.right = 1
-  light.shadow.camera.near = 0
-  light.shadow.camera.far = 2
-  light.shadow.mapSize.width = 2048
-  light.shadow.mapSize.height = 2048
-  light.shadow.normalBias = 0.01
   scene.add(light)
-  scene.add(light.target)
 
   const controls = new OrbitControls(camera, container)
   controls.enableDamping = true
-  controls.minDistance = 1
+  controls.target.copy(position)
+
+  // Create a post-processing pipeline as follows:
+  // scene pass (color, depth, velocity)
+  //  → aerial perspective
+  //   → lens flare
+  //    → tone mapping
+  //     → temporal antialias
+  //      → dithering
+  const passNode = pass(scene, camera, { samples: 0 }).setMRT(
+    mrt({
+      output,
+      velocity: highpVelocity
+    })
+  )
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
+
+  const aerialNode = aerialPerspective(context, colorNode, depthNode)
+  const lensFlareNode = lensFlare(aerialNode)
+  const toneMappingNode = toneMapping(AgXToneMapping, 3, lensFlareNode)
+  const taaNode = temporalAntialias(highpVelocity)(
+    toneMappingNode,
+    depthNode,
+    velocityNode,
+    camera
+  )
+
+  const postProcessing = new PostProcessing(renderer)
+  postProcessing.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
   const clock = new Clock()
@@ -127,7 +172,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     ).applyMatrix4(matrixECIToECEF)
 
     controls.update()
-    void renderer.render(scene, camera)
+    postProcessing.render()
   })
 
   // Resizing:
@@ -141,6 +186,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Cleanup:
   return () => {
     window.removeEventListener('resize', handleResize)
+    postProcessing.dispose()
     controls.dispose()
     geometry.dispose()
     material.dispose()
