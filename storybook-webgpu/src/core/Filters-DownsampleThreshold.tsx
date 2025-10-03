@@ -6,12 +6,12 @@ import { NodeMaterial } from 'three/webgpu'
 import { QuadGeometry } from '@takram/three-geospatial'
 import { downsampleThreshold } from '@takram/three-geospatial/webgpu'
 
+import type { StoryFC } from '../components/createStory'
+import { Description } from '../components/Description'
+import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
-import type { StoryFC } from '../helpers/createStory'
-import { Description } from '../helpers/Description'
-import { useResource } from '../helpers/useResource'
-import { useTransientControl } from '../helpers/useTransientControl'
-import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { useResource } from '../hooks/useResource'
+import { useTransientControl } from '../hooks/useTransientControl'
 import { useFilterTextureNode } from './helpers/useFilterTextureNode'
 
 const Content: FC<StoryProps> = () => {

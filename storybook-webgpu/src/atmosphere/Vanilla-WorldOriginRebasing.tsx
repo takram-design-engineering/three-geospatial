@@ -23,7 +23,7 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
-import type { StoryFC } from '../helpers/createStory'
+import type { StoryFC } from '../components/createStory'
 
 // Geospatial configurations:
 const date = new Date('2000-06-01T10:00:00Z')

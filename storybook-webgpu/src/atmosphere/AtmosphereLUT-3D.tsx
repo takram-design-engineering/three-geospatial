@@ -24,6 +24,9 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { FnVar, type NodeObject } from '@takram/three-geospatial/webgpu'
 
+import type { StoryFC } from '../components/createStory'
+import { Description } from '../components/Description'
+import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
@@ -31,11 +34,8 @@ import {
   useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
-import type { StoryFC } from '../helpers/createStory'
-import { Description } from '../helpers/Description'
-import { useResource } from '../helpers/useResource'
-import { useTransientControl } from '../helpers/useTransientControl'
-import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { useResource } from '../hooks/useResource'
+import { useTransientControl } from '../hooks/useTransientControl'
 
 const textureUVW = FnVar(
   (textureSize: NodeObject<'vec3'>, zoom: NodeObject<'float'>) => {

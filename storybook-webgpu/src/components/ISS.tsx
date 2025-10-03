@@ -4,7 +4,7 @@ import { Matrix3, Vector3, type Matrix4 } from 'three'
 
 import { lerp } from '@takram/three-geospatial'
 
-import { useGuardedFrame } from '../helpers/useGuardedFrame'
+import { useGuardedFrame } from '../hooks/useGuardedFrame'
 
 const vector = new Vector3()
 const rotation = new Matrix3()

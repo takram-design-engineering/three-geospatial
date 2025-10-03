@@ -13,8 +13,8 @@ import {
 import { UniformNode, type Renderer, type ToneMappingNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { useSpringControl } from '../helpers/useSpringControl'
-import { useTransientControl } from '../helpers/useTransientControl'
+import { useSpringControl } from '../hooks/useSpringControl'
+import { useTransientControl } from '../hooks/useTransientControl'
 
 export interface ToneMappingArgs {
   toneMappingEnabled: boolean

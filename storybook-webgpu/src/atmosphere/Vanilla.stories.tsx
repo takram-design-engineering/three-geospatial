@@ -1,6 +1,6 @@
 import type { Meta } from '@storybook/react-vite'
 
-import { createStory } from '../helpers/createStory'
+import { createStory } from '../components/createStory'
 import { Story as TilesRendererStory } from './Vanilla-3DTilesRenderer'
 import { Story as AerialPerspectiveStory } from './Vanilla-AerialPerspective'
 import { Story as AtmosphereLightStory } from './Vanilla-AtmosphereLight'

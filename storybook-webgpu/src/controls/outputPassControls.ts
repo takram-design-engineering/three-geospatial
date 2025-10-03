@@ -10,7 +10,7 @@ import {
   type Node
 } from '@takram/three-geospatial/webgpu'
 
-import { useTransientControl } from '../helpers/useTransientControl'
+import { useTransientControl } from '../hooks/useTransientControl'
 
 export interface OutputPassArgs {
   outputDepth: boolean

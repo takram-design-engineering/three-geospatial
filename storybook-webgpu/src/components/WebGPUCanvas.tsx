@@ -6,8 +6,8 @@ import type { WebGPURendererParameters } from 'three/src/renderers/webgpu/WebGPU
 import { WebGPURenderer, type Renderer } from 'three/webgpu'
 
 import type { RendererArgs } from '../controls/rendererControls'
+import { useControl } from '../hooks/useControl'
 import { Stats } from './Stats'
-import { useControl } from './useControl'
 
 export const availableAtom = atom(
   async () =>

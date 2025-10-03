@@ -1,9 +1,9 @@
 import type { ArgTypes } from '@storybook/react-vite'
 import { MotionValue, useMotionValueEvent, useTransform } from 'motion/react'
 
-import { useMaybeMotionValue } from '../helpers/useMaybeMotionValue'
-import { useMotionControl } from '../helpers/useMotionControl'
-import { useSpringControl } from '../helpers/useSpringControl'
+import { useMaybeMotionValue } from '../hooks/useMaybeMotionValue'
+import { useMotionControl } from '../hooks/useMotionControl'
+import { useSpringControl } from '../hooks/useSpringControl'
 import type { LocationArgs } from './locationControls'
 
 export interface LocalDateArgs {

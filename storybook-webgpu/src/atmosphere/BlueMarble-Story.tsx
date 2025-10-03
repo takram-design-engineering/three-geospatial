@@ -40,6 +40,9 @@ import {
   temporalAntialias
 } from '@takram/three-geospatial/webgpu'
 
+import type { StoryFC } from '../components/createStory'
+import { Attribution, Description } from '../components/Description'
+import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import {
   localDateArgs,
   localDateArgTypes,
@@ -59,11 +62,8 @@ import {
   useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
-import type { StoryFC } from '../helpers/createStory'
-import { Attribution, Description } from '../helpers/Description'
-import { useGuardedFrame } from '../helpers/useGuardedFrame'
-import { useResource } from '../helpers/useResource'
-import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { useGuardedFrame } from '../hooks/useGuardedFrame'
+import { useResource } from '../hooks/useResource'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {

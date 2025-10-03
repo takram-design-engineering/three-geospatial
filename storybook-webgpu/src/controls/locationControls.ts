@@ -4,8 +4,8 @@ import { Vector3, type Matrix4 } from 'three'
 
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 
-import { useCombinedChange } from '../helpers/useCombinedChange'
-import { useSpringControl } from '../helpers/useSpringControl'
+import { useCombinedChange } from '../hooks/useCombinedChange'
+import { useSpringControl } from '../hooks/useSpringControl'
 
 export interface LocationArgs {
   longitude: number

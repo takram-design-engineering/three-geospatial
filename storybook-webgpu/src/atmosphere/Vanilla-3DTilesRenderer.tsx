@@ -39,7 +39,7 @@ import {
   temporalAntialias
 } from '@takram/three-geospatial/webgpu'
 
-import type { StoryFC } from '../helpers/createStory'
+import type { StoryFC } from '../components/createStory'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'

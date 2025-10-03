@@ -1,6 +1,6 @@
 import type { Meta } from '@storybook/react-vite'
 
-import { createStory } from '../helpers/createStory'
+import { createStory } from '../components/createStory'
 import { Story as BasicStory } from './Sky-Basic'
 import { Story as MoonStory } from './Sky-Moon'
 import { Story as SceneBackgroundStory } from './Sky-SceneBackground'

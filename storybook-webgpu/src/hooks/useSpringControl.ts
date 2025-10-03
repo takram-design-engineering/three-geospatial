@@ -10,8 +10,8 @@ import {
 import { useContext, useEffect, useRef } from 'react'
 import { Color } from 'three'
 
-import { springOptions } from './springOptions'
-import { StoryContext } from './StoryContext'
+import { springOptions } from '../helpers/springOptions'
+import { StoryContext } from '../helpers/StoryContext'
 import { useCombinedChange } from './useCombinedChange'
 
 export function useSpringControl<TArgs extends Args>(

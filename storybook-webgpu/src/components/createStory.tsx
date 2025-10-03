@@ -5,7 +5,7 @@ import { atom, useSetAtom, type SetStateAction } from 'jotai'
 import { memo, useEffect, useMemo, type FC } from 'react'
 import { useArgs } from 'storybook/preview-api'
 
-import { StoryContext } from './StoryContext'
+import { StoryContext } from '../helpers/StoryContext'
 
 export type StoryFC<Props = {}, TArgs = Args> = FC<
   Props & {

@@ -65,6 +65,9 @@ import {
 } from '@takram/three-geospatial'
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
+import type { StoryFC } from '../components/createStory'
+import { Description } from '../components/Description'
+import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import {
   localDateArgs,
   localDateArgTypes,
@@ -84,14 +87,11 @@ import {
   useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
-import type { StoryFC } from '../helpers/createStory'
-import { Description } from '../helpers/Description'
-import { useCombinedChange } from '../helpers/useCombinedChange'
-import { useControl } from '../helpers/useControl'
-import { useGuardedFrame } from '../helpers/useGuardedFrame'
-import { useResource } from '../helpers/useResource'
-import { useSpringControl } from '../helpers/useSpringControl'
-import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { useCombinedChange } from '../hooks/useCombinedChange'
+import { useControl } from '../hooks/useControl'
+import { useGuardedFrame } from '../hooks/useGuardedFrame'
+import { useResource } from '../hooks/useResource'
+import { useSpringControl } from '../hooks/useSpringControl'
 
 extend({ LineObject: Line })
 

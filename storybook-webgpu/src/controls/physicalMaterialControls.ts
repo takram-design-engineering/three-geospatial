@@ -4,11 +4,11 @@ import {
   type MeshPhysicalNodeMaterialParameters
 } from 'three/webgpu'
 
-import { useResource } from '../helpers/useResource'
+import { useResource } from '../hooks/useResource'
 import {
   useSpringColorControl,
   useSpringControl
-} from '../helpers/useSpringControl'
+} from '../hooks/useSpringControl'
 
 export interface PhysicalMaterialArgs {
   color: string

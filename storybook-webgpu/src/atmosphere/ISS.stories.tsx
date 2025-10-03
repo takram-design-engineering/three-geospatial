@@ -1,6 +1,6 @@
 import type { Meta } from '@storybook/react-vite'
 
-import { createStory } from '../helpers/createStory'
+import { createStory } from '../components/createStory'
 import { Story as ISSStory } from './ISS-Story'
 
 import ISSCode from './ISS-Story?raw'

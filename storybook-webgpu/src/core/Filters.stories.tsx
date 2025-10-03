@@ -1,6 +1,6 @@
 import type { Meta } from '@storybook/react-vite'
 
-import { createStory } from '../helpers/createStory'
+import { createStory } from '../components/createStory'
 import { Story as DownsampleThresholdStory } from './Filters-DownsampleThreshold'
 import { Story as GaussianBlurStory } from './Filters-GaussianBlur'
 import { Story as KawaseBlurStory } from './Filters-KawaseBlur'

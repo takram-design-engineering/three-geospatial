@@ -2,8 +2,8 @@ import type { Meta } from '@storybook/react-vite'
 
 import _Basic from './Clouds-Basic'
 import _CustomLayers from './Clouds-CustomLayers'
-import _WorldOriginRebasing from './Clouds-WorldOriginRebasing'
 import _Vanilla from './Clouds-Vanilla'
+import _WorldOriginRebasing from './Clouds-WorldOriginRebasing'
 
 export default {
   title: 'clouds/Clouds',

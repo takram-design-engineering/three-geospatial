@@ -7,7 +7,7 @@ import {
 } from 'motion/react'
 import { useContext, useEffect, useRef } from 'react'
 
-import { StoryContext } from './StoryContext'
+import { StoryContext } from '../helpers/StoryContext'
 
 export function useMotionControl<TArgs extends Args, U>(
   selector: (args: TArgs) => U,

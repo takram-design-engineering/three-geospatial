@@ -3,7 +3,7 @@ import { useEffect, type FC } from 'react'
 import StatsImpl from 'stats-gl'
 
 import type { RendererArgs } from '../controls/rendererControls'
-import { useControl } from './useControl'
+import { useControl } from '../hooks/useControl'
 
 export const Stats: FC = () => {
   const show = useControl(({ showStats }: RendererArgs) => showStats)

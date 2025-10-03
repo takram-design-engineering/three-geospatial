@@ -3,7 +3,7 @@ import { getDefaultStore } from 'jotai'
 import { useContext, useEffect, useRef } from 'react'
 import shallowEqual from 'shallowequal'
 
-import { StoryContext } from './StoryContext'
+import { StoryContext } from '../helpers/StoryContext'
 
 export function useTransientControl<TArgs extends Args, const T>(
   selector: (args: TArgs) => T,

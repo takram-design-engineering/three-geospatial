@@ -7,6 +7,9 @@ import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
+import type { StoryFC } from '../components/createStory'
+import { Description } from '../components/Description'
+import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
@@ -14,12 +17,9 @@ import {
   useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
-import type { StoryFC } from '../helpers/createStory'
-import { Description } from '../helpers/Description'
-import { useGuardedFrame } from '../helpers/useGuardedFrame'
-import { useResource } from '../helpers/useResource'
-import { useTransientControl } from '../helpers/useTransientControl'
-import { WebGPUCanvas } from '../helpers/WebGPUCanvas'
+import { useGuardedFrame } from '../hooks/useGuardedFrame'
+import { useResource } from '../hooks/useResource'
+import { useTransientControl } from '../hooks/useTransientControl'
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)

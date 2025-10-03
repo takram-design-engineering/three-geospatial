@@ -1,6 +1,6 @@
 import type { Meta } from '@storybook/react-vite'
 
-import { createStory } from '../helpers/createStory'
+import { createStory } from '../components/createStory'
 import { Story } from './3DTilesRenderer-Story'
 
 import StoryCode from './3DTilesRenderer-Story?raw'
