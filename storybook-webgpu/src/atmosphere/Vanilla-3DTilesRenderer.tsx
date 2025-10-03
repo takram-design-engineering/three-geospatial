@@ -201,6 +201,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   return () => {
     window.removeEventListener('resize', handleResize)
     postProcessing.dispose()
+    taaNode.dispose()
+    lensFlareNode.dispose()
+    aerialNode.dispose()
+    passNode.dispose()
     controls.dispose()
     tiles.dispose()
     context.dispose()
