@@ -5,7 +5,8 @@ import {
   Mesh,
   PerspectiveCamera,
   Scene,
-  TorusKnotGeometry
+  TorusKnotGeometry,
+  Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { MeshPhysicalNodeMaterial, WebGPURenderer } from 'three/webgpu'
@@ -34,15 +35,16 @@ const height = 1000 // In meters
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
   renderer.samples = 4
-  // "highPrecision" is required when you work with large coordinates:
-  renderer.highPrecision = true
+  renderer.highPrecision = true // Required when you work with large coordinates
   renderer.toneMapping = AgXToneMapping
-  renderer.toneMappingExposure = 4
+  renderer.toneMappingExposure = 3
+
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
   container.appendChild(renderer.domElement)
   await renderer.init()
 
+  // Convert the geographic coordinates to ECEF coordinates in meters:
   const position = new Geodetic(
     radians(longitude),
     radians(latitude),
@@ -50,11 +52,14 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   ).toECEF()
 
   const aspect = window.innerWidth / window.innerHeight
-  const camera = new PerspectiveCamera(75, aspect)
-  // Move the camera at the point configured above with the up vector pointing
-  // towards the surface normal of the ellipsoid.
-  camera.position.copy(position)
-  Ellipsoid.WGS84.getSurfaceNormal(position, camera.up)
+  const camera = new PerspectiveCamera(50, aspect)
+
+  // Move the camera at the ECEF coordinates with the up vector pointing towards
+  // the surface normal of the ellipsoid:
+  const east = new Vector3()
+  const north = new Vector3()
+  Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, camera.up)
+  camera.position.copy(position).sub(north.multiplyScalar(4)) // Heading north
 
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
@@ -66,6 +71,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   const group = new Group()
   scene.add(group)
+
   // Position and orient the object matrix of the group:
   Ellipsoid.WGS84.getEastNorthUpFrame(position).decompose(
     group.position,
@@ -74,8 +80,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   )
 
   // Create a torus knot inside the group:
-  const geometry = new TorusKnotGeometry(1, 0.3, 256, 64)
-  const material = new MeshPhysicalNodeMaterial()
+  const geometry = new TorusKnotGeometry(0.5, 0.15, 256, 64)
+  const material = new MeshPhysicalNodeMaterial({ roughness: 0 })
   const mesh = new Mesh(geometry, material)
   group.add(mesh)
 
@@ -91,7 +97,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   const controls = new OrbitControls(camera, container)
   controls.enableDamping = true
-  controls.minDistance = 5
+  controls.minDistance = 1
   controls.target.copy(position)
 
   // Rendering loop:
