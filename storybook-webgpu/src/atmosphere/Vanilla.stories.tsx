@@ -12,7 +12,7 @@ import AtmosphereLightCode from './Vanilla-AtmosphereLight?raw'
 import WorldOriginRebasingCode from './Vanilla-WorldOriginRebasing?raw'
 
 export default {
-  title: 'atmosphere/Vanilla',
+  title: 'atmosphere/Vanilla Three.js',
   parameters: {
     docs: {
       codePanel: true,
