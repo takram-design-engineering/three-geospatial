@@ -104,6 +104,7 @@ export class AtmosphereContextNode extends AtmosphereContextBaseNode {
 
   override customCacheKey(): number {
     return hash(
+      super.customCacheKey(),
       this.camera?.id ?? -1,
       ...this.ellipsoid.radii,
       +this.correctAltitude,

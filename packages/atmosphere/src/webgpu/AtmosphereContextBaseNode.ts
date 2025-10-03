@@ -133,6 +133,10 @@ export class AtmosphereContextBaseNode extends Node {
     })
   }
 
+  override customCacheKey(): number {
+    return this.parameters.hash()
+  }
+
   static get(builder: NodeBuilder): AtmosphereContextBaseNode {
     const context = builder.getContext().atmosphere
     if (!(context instanceof AtmosphereContextBaseNode)) {
