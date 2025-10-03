@@ -41,7 +41,7 @@ import type { StoryFC } from '../components/createStory'
 // Geospatial configurations:
 const date = new Date('2000-06-01T10:00:00Z')
 const longitude = 0 // In degrees
-const latitude = 67 // In degrees
+const latitude = 55 // In degrees
 const height = 500 // In meters
 
 async function init(container: HTMLDivElement): Promise<() => void> {
