@@ -3,6 +3,7 @@ import {
   Clock,
   Group,
   Mesh,
+  MeshPhysicalMaterial,
   NoToneMapping,
   PerspectiveCamera,
   Scene,
@@ -11,11 +12,7 @@ import {
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { mrt, output, pass, toneMapping } from 'three/tsl'
-import {
-  MeshLambertNodeMaterial,
-  PostProcessing,
-  WebGPURenderer
-} from 'three/webgpu'
+import { PostProcessing, WebGPURenderer } from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -94,11 +91,12 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // Create a huge ring inside the group:
   const radius = 1e5
-  const geometry = new TorusGeometry(radius, 100, 128, 512)
-  const material = new MeshLambertNodeMaterial({ color: 0x999999 })
+  const thickness = 200
+  const geometry = new TorusGeometry(radius, thickness, 128, 512)
+  const material = new MeshPhysicalMaterial({ color: 0x999999, roughness: 0.5 })
   const mesh = new Mesh(geometry, material)
-  mesh.scale.z = 30
-  mesh.position.z = radius - height
+  mesh.scale.z = 10
+  mesh.position.z = radius - height + thickness * 0.5
   mesh.rotation.y = Math.PI / 2
   group.add(mesh)
 
