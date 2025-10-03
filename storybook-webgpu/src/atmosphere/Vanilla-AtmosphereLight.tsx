@@ -35,7 +35,7 @@ const height = 500 // In meters
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
   renderer.samples = 4
-  renderer.highPrecision = true // Required when you work with large coordinates
+  renderer.highPrecision = true // Required when you work in ECEF coordinates
   renderer.toneMapping = AgXToneMapping
   renderer.toneMappingExposure = 3
 
@@ -102,7 +102,12 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // Rendering loop:
   const clock = new Clock()
+  const observer = new Vector3()
   void renderer.setAnimationLoop(() => {
+    controls.update()
+    camera.updateMatrixWorld()
+    observer.setFromMatrixPosition(camera.matrixWorld)
+
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
     const currentDate = +date + ((clock.getElapsedTime() * 5e6) % 864e5)
@@ -113,15 +118,14 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     getSunDirectionECI(
       currentDate,
       context.sunDirectionECEF.value,
-      position
+      observer
     ).applyMatrix4(matrixECIToECEF)
     getMoonDirectionECI(
       currentDate,
       context.moonDirectionECEF.value,
-      position
+      observer
     ).applyMatrix4(matrixECIToECEF)
 
-    controls.update()
     void renderer.render(scene, camera)
   })
 

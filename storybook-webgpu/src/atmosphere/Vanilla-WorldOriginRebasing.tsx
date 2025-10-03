@@ -4,7 +4,8 @@ import {
   Mesh,
   PerspectiveCamera,
   Scene,
-  TorusKnotGeometry
+  TorusKnotGeometry,
+  Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { MeshPhysicalNodeMaterial, WebGPURenderer } from 'three/webgpu'
@@ -107,7 +108,14 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // Rendering loop:
   const clock = new Clock()
+  const observer = new Vector3()
   void renderer.setAnimationLoop(() => {
+    controls.update()
+    camera.updateMatrixWorld()
+    observer
+      .setFromMatrixPosition(camera.matrixWorld)
+      .applyMatrix4(context.matrixWorldToECEF.value)
+
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
     const currentDate = +date + ((clock.getElapsedTime() * 5e6) % 864e5)
@@ -118,15 +126,14 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     getSunDirectionECI(
       currentDate,
       context.sunDirectionECEF.value,
-      position
+      observer
     ).applyMatrix4(matrixECIToECEF)
     getMoonDirectionECI(
       currentDate,
       context.moonDirectionECEF.value,
-      position
+      observer
     ).applyMatrix4(matrixECIToECEF)
 
-    controls.update()
     void renderer.render(scene, camera)
   })
 

@@ -1,15 +1,18 @@
+import { GlobeControls, TilesRenderer } from '3d-tiles-renderer'
+import {
+  GLTFExtensionsPlugin,
+  GoogleCloudAuthPlugin,
+  TileCompressionPlugin,
+  UpdateOnChangePlugin
+} from '3d-tiles-renderer/plugins'
 import {
   AgXToneMapping,
-  Clock,
-  Group,
-  Mesh,
   NoToneMapping,
   PerspectiveCamera,
   Scene,
-  TorusGeometry,
   Vector3
 } from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { mrt, output, pass, toneMapping } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
@@ -28,7 +31,7 @@ import {
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
-import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
   dithering,
   highpVelocity,
@@ -37,45 +40,42 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../helpers/createStory'
+import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
+import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
+import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
+
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 // Geospatial configurations:
-const date = new Date('2000-06-01T10:00:00Z')
-const longitude = 0 // In degrees
-const latitude = 67 // In degrees
-const height = 500 // In meters
+const date = new Date('2025-01-01T09:30:00Z')
+const longitude = -0.1293 // In degrees
+const latitude = 51.4836 // In degrees
+const height = 0 // In meters
+const heading = -94 // In degrees
+const pitch = -7 // In degrees
+const distance = 3231 // In meters
 
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
   renderer.highPrecision = true // Required when you work in ECEF coordinates
   renderer.toneMapping = NoToneMapping // Applied in post-processing
-  renderer.logarithmicDepthBuffer = true
 
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
   container.appendChild(renderer.domElement)
   await renderer.init()
 
-  // Convert the geographic coordinates to ECEF coordinates in meters:
-  const position = new Geodetic(
-    radians(longitude),
-    radians(latitude),
-    height
-  ).toECEF()
-
   const aspect = window.innerWidth / window.innerHeight
-  const camera = new PerspectiveCamera(90, aspect, 10, 1e5)
+  const camera = new PerspectiveCamera(75, aspect)
 
-  // Move the camera at the ECEF coordinates with the up vector pointing towards
-  // the surface normal of the ellipsoid:
-  const east = new Vector3()
-  const north = new Vector3()
-  const up = new Vector3()
-  Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
-  camera.up.copy(up)
-  camera.position
-    .copy(position)
-    .add(north.multiplyScalar(4))
-    .sub(up.multiplyScalar(3))
+  // This is a fancy way to configure the camera position and orientation:
+  new PointOfView(distance, radians(heading), radians(pitch)).decompose(
+    new Geodetic(radians(longitude), radians(latitude), height).toECEF(),
+    camera.position,
+    camera.quaternion,
+    camera.up
+  )
 
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
@@ -85,25 +85,29 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Sky background is not necessary as AerialPerspectiveNode renders it:
   const scene = new Scene()
 
-  const group = new Group()
-  scene.add(group)
-
-  // Position and orient the object matrix of the group:
-  Ellipsoid.WGS84.getEastNorthUpFrame(position).decompose(
-    group.position,
-    group.quaternion,
-    group.scale
+  // Setup 3D tiles renderer:
+  const tiles = new TilesRenderer()
+  tiles.setCamera(camera)
+  tiles.setResolutionFromRenderer(camera, renderer as any)
+  tiles.registerPlugin(
+    new GoogleCloudAuthPlugin({
+      apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
+    })
   )
-
-  // Create a huge ring inside the group:
-  const radius = 5e4
-  const geometry = new TorusGeometry(radius, 100, 128, 512)
-  const material = new MeshLambertNodeMaterial({ color: 0x999999 })
-  const mesh = new Mesh(geometry, material)
-  mesh.scale.z = 20
-  mesh.position.z = radius - height
-  mesh.rotation.y = Math.PI / 2
-  group.add(mesh)
+  tiles.registerPlugin(new GLTFExtensionsPlugin({ dracoLoader }))
+  tiles.registerPlugin(new TileCompressionPlugin())
+  tiles.registerPlugin(new UpdateOnChangePlugin())
+  tiles.registerPlugin(
+    // Manually compute normals because Google Photorealistic Tiles doesn't have
+    // normals in their tiles:
+    new TileCreasedNormalsPlugin({ creaseAngle: radians(30) })
+  )
+  tiles.registerPlugin(
+    // Replace non-node materials in every tile:
+    new TileMaterialReplacementPlugin(MeshLambertNodeMaterial)
+  )
+  tiles.registerPlugin(new TilesFadePlugin())
+  scene.add(tiles.group)
 
   // AtmosphereLightNode must be associated with AtmosphereLight in the
   // renderer's node library before use:
@@ -113,9 +117,16 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const light = new AtmosphereLight(context)
   scene.add(light)
 
-  const controls = new OrbitControls(camera, container)
+  const controls = new GlobeControls(scene, camera, renderer.domElement)
   controls.enableDamping = true
-  controls.target.copy(position)
+
+  // Disable "adjustHeight" until the user first drags because GlobeControls
+  // adjusts the camera height based on very low LOD tiles during the initial
+  // load, causing the camera to jump to the sky when set to a low altitude.
+  controls.adjustHeight = false
+  controls.addEventListener('start', () => {
+    controls.adjustHeight = true
+  })
 
   // Create a post-processing pipeline as follows:
   // scene pass (color, depth, velocity)
@@ -136,7 +147,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   const aerialNode = aerialPerspective(context, colorNode, depthNode)
   const lensFlareNode = lensFlare(aerialNode)
-  const toneMappingNode = toneMapping(AgXToneMapping, 3, lensFlareNode)
+  const toneMappingNode = toneMapping(AgXToneMapping, 5, lensFlareNode)
   const taaNode = temporalAntialias(highpVelocity)(
     toneMappingNode,
     depthNode,
@@ -148,7 +159,6 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   postProcessing.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
-  const clock = new Clock()
   const observer = new Vector3()
   void renderer.setAnimationLoop(() => {
     controls.update()
@@ -157,21 +167,24 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
-    const currentDate = +date + ((clock.getElapsedTime() * 5e6) % 864e5)
     const matrixECIToECEF = getECIToECEFRotationMatrix(
-      currentDate,
+      date,
       context.matrixECIToECEF.value
     )
     getSunDirectionECI(
-      currentDate,
+      date,
       context.sunDirectionECEF.value,
       observer
     ).applyMatrix4(matrixECIToECEF)
     getMoonDirectionECI(
-      currentDate,
+      date,
       context.moonDirectionECEF.value,
       observer
     ).applyMatrix4(matrixECIToECEF)
+
+    tiles.setCamera(camera)
+    tiles.setResolutionFromRenderer(camera, renderer as any)
+    tiles.update()
 
     postProcessing.render()
   })
@@ -189,8 +202,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     window.removeEventListener('resize', handleResize)
     postProcessing.dispose()
     controls.dispose()
-    geometry.dispose()
-    material.dispose()
+    tiles.dispose()
     context.dispose()
     renderer.dispose()
   }
