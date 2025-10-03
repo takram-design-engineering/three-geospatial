@@ -56,7 +56,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   await renderer.init()
 
   // Convert the geographic coordinates to ECEF coordinates in meters:
-  const position = new Geodetic(
+  const positionECEF = new Geodetic(
     radians(longitude),
     radians(latitude),
     height
@@ -70,10 +70,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const east = new Vector3()
   const north = new Vector3()
   const up = new Vector3()
-  Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
+  Ellipsoid.WGS84.getEastNorthUpVectors(positionECEF, east, north, up)
   camera.up.copy(up)
   camera.position
-    .copy(position)
+    .copy(positionECEF)
     .add(north.multiplyScalar(4))
     .sub(up.multiplyScalar(3))
 
@@ -89,7 +89,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   scene.add(group)
 
   // Position and orient the object matrix of the group:
-  Ellipsoid.WGS84.getEastNorthUpFrame(position).decompose(
+  Ellipsoid.WGS84.getEastNorthUpFrame(positionECEF).decompose(
     group.position,
     group.quaternion,
     group.scale
@@ -115,7 +115,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   const controls = new OrbitControls(camera, container)
   controls.enableDamping = true
-  controls.target.copy(position)
+  controls.target.copy(positionECEF)
 
   // Create a post-processing pipeline as follows:
   // scene pass (color, depth, velocity)
@@ -149,11 +149,11 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // Rendering loop:
   const clock = new Clock()
-  const observer = new Vector3()
+  const observerECEF = new Vector3()
   void renderer.setAnimationLoop(() => {
     controls.update()
     camera.updateMatrixWorld()
-    observer.setFromMatrixPosition(camera.matrixWorld)
+    observerECEF.setFromMatrixPosition(camera.matrixWorld)
 
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
@@ -165,12 +165,12 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     getSunDirectionECI(
       currentDate,
       context.sunDirectionECEF.value,
-      observer
+      observerECEF
     ).applyMatrix4(matrixECIToECEF)
     getMoonDirectionECI(
       currentDate,
       context.moonDirectionECEF.value,
-      observer
+      observerECEF
     ).applyMatrix4(matrixECIToECEF)
 
     postProcessing.render()

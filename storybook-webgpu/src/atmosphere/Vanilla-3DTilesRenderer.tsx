@@ -159,11 +159,11 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   postProcessing.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
-  const observer = new Vector3()
+  const observerECEF = new Vector3()
   void renderer.setAnimationLoop(() => {
     controls.update()
     camera.updateMatrixWorld()
-    observer.setFromMatrixPosition(camera.matrixWorld)
+    observerECEF.setFromMatrixPosition(camera.matrixWorld)
 
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
@@ -174,12 +174,12 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     getSunDirectionECI(
       date,
       context.sunDirectionECEF.value,
-      observer
+      observerECEF
     ).applyMatrix4(matrixECIToECEF)
     getMoonDirectionECI(
       date,
       context.moonDirectionECEF.value,
-      observer
+      observerECEF
     ).applyMatrix4(matrixECIToECEF)
 
     tiles.setCamera(camera)

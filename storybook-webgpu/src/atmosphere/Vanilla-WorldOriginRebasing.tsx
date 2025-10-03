@@ -44,7 +44,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   await renderer.init()
 
   // Convert the geographic coordinates to ECEF coordinates in meters:
-  const position = new Geodetic(
+  const positionECEF = new Geodetic(
     radians(longitude),
     radians(latitude),
     height
@@ -68,7 +68,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Move and rotate the ellipsoid so that the world origin locates at
   // the ECEF coordinates, and the scene's orientation aligns with
   // x: north, y: up, z: east.
-  Ellipsoid.WGS84.getNorthUpEastFrame(position, context.matrixWorldToECEF.value)
+  Ellipsoid.WGS84.getNorthUpEastFrame(
+    positionECEF,
+    context.matrixWorldToECEF.value
+  )
 
   // Create a torus knot inside the group:
   const geometry = new TorusKnotGeometry(0.5, 0.15, 256, 64)
@@ -108,11 +111,11 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // Rendering loop:
   const clock = new Clock()
-  const observer = new Vector3()
+  const observerECEF = new Vector3()
   void renderer.setAnimationLoop(() => {
     controls.update()
     camera.updateMatrixWorld()
-    observer
+    observerECEF
       .setFromMatrixPosition(camera.matrixWorld)
       .applyMatrix4(context.matrixWorldToECEF.value)
 
@@ -126,12 +129,12 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     getSunDirectionECI(
       currentDate,
       context.sunDirectionECEF.value,
-      observer
+      observerECEF
     ).applyMatrix4(matrixECIToECEF)
     getMoonDirectionECI(
       currentDate,
       context.moonDirectionECEF.value,
-      observer
+      observerECEF
     ).applyMatrix4(matrixECIToECEF)
 
     void renderer.render(scene, camera)
