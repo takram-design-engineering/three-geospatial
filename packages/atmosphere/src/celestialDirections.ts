@@ -86,12 +86,12 @@ function getDirectionECI(
   body: Body,
   time: AstroTime,
   result: Vector3,
-  observer?: Vector3,
+  observerECEF?: Vector3,
   matrixECIToECEF?: Matrix4
 ): Vector3 {
   const vector = GeoVector(body, time, false)
   fromAstroVector(vector, result)
-  if (observer != null) {
+  if (observerECEF != null) {
     const matrixECEFToECI =
       matrixECIToECEF != null
         ? // matrixScratch1 can be in use by getDirectionECEF()
@@ -99,7 +99,7 @@ function getDirectionECI(
         : getECIToECEFRotationMatrix(time, matrixScratch2).transpose()
     result.sub(
       vectorScratch1
-        .copy(observer)
+        .copy(observerECEF)
         .applyMatrix4(matrixECEFToECI)
         .multiplyScalar(METER_TO_AU)
     )
@@ -110,26 +110,26 @@ function getDirectionECI(
 export function getSunDirectionECI(
   date: number | Date | AstroTime,
   result = new Vector3(),
-  observer?: Vector3
+  observerECEF?: Vector3
 ): Vector3 {
-  return getDirectionECI(Body.Sun, toAstroTime(date), result, observer)
+  return getDirectionECI(Body.Sun, toAstroTime(date), result, observerECEF)
 }
 
 export function getMoonDirectionECI(
   date: number | Date | AstroTime,
   result = new Vector3(),
-  observer?: Vector3
+  observerECEF?: Vector3
 ): Vector3 {
-  return getDirectionECI(Body.Moon, toAstroTime(date), result, observer)
+  return getDirectionECI(Body.Moon, toAstroTime(date), result, observerECEF)
 }
 
 export function getSunDirectionECEF(
   date: number | Date | AstroTime,
   result = new Vector3(),
-  observer?: Vector3
+  observerECEF?: Vector3
 ): Vector3 {
   const time = toAstroTime(date)
-  return getDirectionECI(Body.Sun, time, result, observer).applyMatrix4(
+  return getDirectionECI(Body.Sun, time, result, observerECEF).applyMatrix4(
     getECIToECEFRotationMatrix(time, matrixScratch1)
   )
 }
@@ -137,10 +137,10 @@ export function getSunDirectionECEF(
 export function getMoonDirectionECEF(
   date: number | Date | AstroTime,
   result = new Vector3(),
-  observer?: Vector3
+  observerECEF?: Vector3
 ): Vector3 {
   const time = toAstroTime(date)
-  return getDirectionECI(Body.Moon, time, result, observer).applyMatrix4(
+  return getDirectionECI(Body.Moon, time, result, observerECEF).applyMatrix4(
     getECIToECEFRotationMatrix(time, matrixScratch1)
   )
 }
