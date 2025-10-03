@@ -8,7 +8,7 @@ import {
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import type { FC, ReactNode, Ref } from 'react'
 import { mergeRefs } from 'react-merge-refs'
-import { DRACOLoader } from 'three-stdlib'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
