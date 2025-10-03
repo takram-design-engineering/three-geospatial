@@ -79,11 +79,11 @@ export default defineConfig({
       })),
       // External packages that should not be bundled into your library.
       external: [
-        /^@takram/,
+        /^@takram\//,
         'react',
         'react-dom',
         'react/jsx-runtime',
-        'three',
+        /^three\/?/,
         'postprocessing',
         '@react-three/fiber',
         '@react-three/drei',
