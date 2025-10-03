@@ -83,9 +83,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const context = new AtmosphereContextNode()
   context.camera = camera
 
-  // Create a scene with a sky background:
+  // Sky background is not necessary as AerialPerspectiveNode renders it:
   const scene = new Scene()
-  scene.backgroundNode = skyBackground(context)
 
   const group = new Group()
   scene.add(group)
