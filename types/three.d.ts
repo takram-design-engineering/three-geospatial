@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-function-type */
 
-import type { Camera, Data3DTexture, Light, Matrix3, Texture } from 'three'
+import type { Camera, Light, Matrix3, Texture } from 'three'
 import type InputNode from 'three/src/nodes/core/InputNode.js'
 import type { ShaderNodeObject } from 'three/tsl'
 import type {
@@ -14,11 +14,7 @@ import type {
   UniformNode
 } from 'three/webgpu'
 
-import type {
-  NodeType,
-  NodeValueType,
-  NodeValueTypeOf
-} from '@takram/three-geospatial/webgpu'
+import type { NodeType, NodeValueTypeOf } from '@takram/three-geospatial/webgpu'
 
 export {}
 
