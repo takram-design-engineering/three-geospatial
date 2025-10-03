@@ -43,7 +43,7 @@
       "require": "./build/shaders/bruneton.cjs"
     },
     "./webgpu": {
-      "types": "./types/webgpu.d.ts",
+      "types": "./types/webgpu/index.d.ts",
       "import": "./build/webgpu.js",
       "require": "./build/webgpu.cjs"
     }
