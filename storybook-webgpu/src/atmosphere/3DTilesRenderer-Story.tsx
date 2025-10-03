@@ -112,10 +112,12 @@ const Content: FC<StoryProps> = ({
           depthBuffer: false
         })
       )
-      const overlayNode = overlayPassNode.getTextureNode('output')
 
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dithering).add(overlayNode)
+      postProcessing.outputNode = taaNode
+        .add(dithering)
+        .mul(overlayPassNode.a.oneMinus())
+        .add(overlayPassNode)
 
       return [postProcessing, passNode, toneMappingNode]
     },

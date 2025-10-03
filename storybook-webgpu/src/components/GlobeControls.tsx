@@ -5,92 +5,14 @@ import {
 import type { GlobeControls as GlobeControlsImpl } from '3d-tiles-renderer/three'
 import type { FC, ForwardedRef } from 'react'
 import { mergeRefs } from 'react-merge-refs'
-import type { Material, Mesh, Object3D, Scene } from 'three'
-import {
-  cameraProjectionMatrix,
-  Fn,
-  fwidth,
-  modelViewMatrix,
-  positionGeometry,
-  screenDPR,
-  screenSize,
-  smoothstep,
-  uniform,
-  uv,
-  vec4
-} from 'three/tsl'
-import { NodeMaterial, type UniformNode } from 'three/webgpu'
+import type { Mesh, Scene } from 'three'
 
 import { assertType } from '@takram/three-geospatial'
-import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
-interface PivotUniforms {
-  size: NodeObject<UniformNode<number>>
-  thickness: NodeObject<UniformNode<number>>
-  opacity: NodeObject<UniformNode<number>>
-}
-
-function createPivotMaterial(uniforms: PivotUniforms): Material {
-  const size = uniforms.size.mul(screenDPR)
-  const thickness = uniforms.thickness.mul(screenDPR)
-  const opacity = uniforms.opacity
-
-  const material = new NodeMaterial()
-  material.depthWrite = false
-  material.depthTest = false
-  material.transparent = true
-
-  material.vertexNode = Fn(() => {
-    const aspect = screenSize.x.div(screenSize.y)
-    const offset = uv().mul(2).sub(1)
-    offset.y.mulAssign(aspect)
-
-    const screenPoint = cameraProjectionMatrix
-      .mul(modelViewMatrix)
-      .mul(vec4(positionGeometry, 1))
-    screenPoint.xy.addAssign(
-      offset.mul(size.add(thickness)).mul(screenPoint.w).div(screenSize.x)
-    )
-    return screenPoint
-  })()
-
-  material.outputNode = Fn(() => {
-    const ht = thickness.mul(0.5)
-    const planeDim = size.add(thickness)
-    const offset = planeDim.sub(ht).sub(2).div(planeDim)
-    const texelThickness = ht.div(planeDim)
-    const vec = uv().mul(2).sub(1)
-    const dist = vec.length().sub(offset).abs()
-    const fw = fwidth(dist).mul(0.5)
-    const a = smoothstep(texelThickness.sub(fw), texelThickness.add(fw), dist)
-    return vec4(1, 1, 1, opacity.mul(a.oneMinus()))
-  })()
-
-  return material
-}
-
-function createSceneProxy(
-  scene: Object3D,
-  overlayScene: Object3D,
-  overlayObjects: readonly Object3D[]
-): Object3D {
-  return new Proxy(scene, {
-    get(target, property, receiver) {
-      if (property === 'add') {
-        return (...objects: Object3D[]) => {
-          for (const object of objects) {
-            if (overlayObjects.includes(object)) {
-              overlayScene.add(object)
-            } else {
-              Reflect.get(target, property, receiver)(object)
-            }
-          }
-        }
-      }
-      return Reflect.get(target, property, receiver)
-    }
-  })
-}
+import {
+  createOverlaySceneProxy,
+  modifyPivotMesh
+} from '../helpers/GlobeControls'
 
 const initControls =
   (overlayScene?: Scene) =>
@@ -101,16 +23,7 @@ const initControls =
       }
     >(controls)
 
-    // HACK: Replace the pivot mesh:
-    const pivotMesh = Object.assign(controls.pivotMesh, {
-      size: uniform(15),
-      thickness: uniform(2),
-      opacity: uniform(0.5)
-    })
-    const originalMaterial = pivotMesh.material as Material
-    originalMaterial.dispose()
-    pivotMesh.material = createPivotMaterial(pivotMesh)
-    pivotMesh.onBeforeRender = () => {}
+    modifyPivotMesh(controls.pivotMesh)
 
     // HACK: Add a hook to reroute the pivot mesh to another scene:
     if (overlayScene != null) {
@@ -118,7 +31,9 @@ const initControls =
       const setScene = controls.setScene
       controls.setScene = scene => {
         if (scene != null) {
-          scene = createSceneProxy(scene, overlayScene, [pivotMesh])
+          scene = createOverlaySceneProxy(scene, overlayScene, [
+            controls.pivotMesh
+          ])
         }
         setScene.apply(controls, [scene])
       }

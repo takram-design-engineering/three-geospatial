@@ -1,4 +1,4 @@
-import { GlobeControls, TilesRenderer } from '3d-tiles-renderer'
+import { TilesRenderer } from '3d-tiles-renderer'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
@@ -40,6 +40,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
+import { GlobeControls } from '../helpers/GlobeControls'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
@@ -120,6 +121,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const controls = new GlobeControls(scene, camera, renderer.domElement)
   controls.enableDamping = true
 
+  // Hack to reroute the pivot mesh to another scene:
+  const overlayScene = new Scene()
+  controls.setOverlayScene(overlayScene)
+
   // Disable "adjustHeight" until the user first drags because GlobeControls
   // adjusts the camera height based on very low LOD tiles during the initial
   // load, causing the camera to jump to the sky when set to a low altitude.
@@ -155,8 +160,16 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     camera
   )
 
+  const overlayPassNode = pass(overlayScene, camera, {
+    samples: 0,
+    depthBuffer: false
+  })
+
   const postProcessing = new PostProcessing(renderer)
-  postProcessing.outputNode = taaNode.add(dithering)
+  postProcessing.outputNode = taaNode
+    .add(dithering)
+    .mul(overlayPassNode.a.oneMinus())
+    .add(overlayPassNode)
 
   // Rendering loop:
   const observerECEF = new Vector3()
@@ -201,6 +214,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   return () => {
     window.removeEventListener('resize', handleResize)
     postProcessing.dispose()
+    overlayPassNode.dispose()
     taaNode.dispose()
     lensFlareNode.dispose()
     aerialNode.dispose()
