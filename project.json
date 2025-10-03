@@ -5,7 +5,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --target=lint --parallel=8 --exclude=@three-geospatial/source"
+        "command": "nx run-many --target=lint --parallel=8 --exclude=@three-geospatial/source --outputStyle stream"
       }
     },
     "format-all": {
@@ -17,25 +17,25 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --target=test --args=--passWithNoTests --parallel=8 --exclude=@three-geospatial/source"
+        "command": "nx run-many --target=test --args=--passWithNoTests --parallel=8 --exclude=@three-geospatial/source --outputStyle stream"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --target=build --parallel=8  --exclude=@three-geospatial/source --configuration=production"
+        "command": "nx run-many --target=build --parallel=8  --exclude=@three-geospatial/source --configuration=production --outputStyle stream"
       }
     },
     "build-apps": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --target=build --parallel=8 --projects=tag:type:app --configuration=production"
+        "command": "nx run-many --target=build --parallel=8 --projects=tag:type:app --configuration=production --outputStyle stream"
       }
     },
     "build-libs": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --target=build --parallel=8 --projects=tag:type:lib --configuration=production"
+        "command": "nx run-many --target=build --parallel=8 --projects=tag:type:lib --configuration=production --outputStyle stream"
       }
     },
     "build-storybook": {
