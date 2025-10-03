@@ -63,7 +63,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   ).toECEF()
 
   const aspect = window.innerWidth / window.innerHeight
-  const camera = new PerspectiveCamera(90, aspect, 10, 1e5)
+  const camera = new PerspectiveCamera(90, aspect, 10, 1e6)
 
   // Move the camera at the ECEF coordinates with the up vector pointing towards
   // the surface normal of the ellipsoid:
@@ -72,10 +72,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const up = new Vector3()
   Ellipsoid.WGS84.getEastNorthUpVectors(positionECEF, east, north, up)
   camera.up.copy(up)
-  camera.position
-    .copy(positionECEF)
-    .add(north.multiplyScalar(4))
-    .sub(up.multiplyScalar(3))
+  camera.position.copy(positionECEF).add(north).sub(up.multiplyScalar(0.75))
 
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
@@ -96,11 +93,11 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   )
 
   // Create a huge ring inside the group:
-  const radius = 5e4
+  const radius = 1e5
   const geometry = new TorusGeometry(radius, 100, 128, 512)
   const material = new MeshLambertNodeMaterial({ color: 0x999999 })
   const mesh = new Mesh(geometry, material)
-  mesh.scale.z = 20
+  mesh.scale.z = 30
   mesh.position.z = radius - height
   mesh.rotation.y = Math.PI / 2
   group.add(mesh)
