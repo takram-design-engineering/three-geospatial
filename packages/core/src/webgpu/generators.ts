@@ -4,20 +4,28 @@ import {
   Fn,
   fwidth,
   mix,
-  rand,
   screenCoordinate,
   smoothstep,
+  time,
   vec2,
   vec3
 } from 'three/tsl'
 
 import type { NodeObject } from './node'
 
-// Ported to TSL from: https://github.com/mrdoob/three.js/blob/r179/src/renderers/shaders/ShaderChunk/dithering_pars_fragment.glsl.js
+// Reference: https://advances.realtimerendering.com/s2014/index.html
+export const interleavedGradientNoise = (
+  seed: NodeObject<'vec2'>
+): NodeObject<'float'> => {
+  const magic = vec3(0.06711056, 0.00583715, 52.9829189)
+  return magic.z.mul(seed.dot(magic.xy).fract()).fract()
+}
+
+// Reference (sixth from the bottom): https://www.shadertoy.com/view/MslGR8
 export const dithering: NodeObject<'vec3'> = /*#__PURE__*/ Fn(() => {
-  const gridPosition = rand(screenCoordinate.xy)
-  const ditherShift = vec3(0.25, -0.25, 0.25).div(255).toConst()
-  return mix(ditherShift.mul(2), ditherShift.mul(-2), gridPosition)
+  const seed = vec2(screenCoordinate.xy).add(time.fract().mul(1337))
+  const noise = interleavedGradientNoise(seed)
+  return vec3(noise, noise.oneMinus(), noise).sub(0.5).div(255)
 }).once()()
 
 export const equirectGrid = (
