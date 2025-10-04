@@ -25,35 +25,43 @@ function getCache<T extends {}, U extends {}>(
 
 export const projectionMatrix = (camera: Camera): NodeObject<'mat4'> =>
   getCache(camera, 'projectionMatrix', () =>
-    reference('projectionMatrix', 'mat4', camera)
+    reference('projectionMatrix', 'mat4', camera).setName('projectionMatrix')
   )
 
 export const viewMatrix = (camera: Camera): NodeObject<'mat4'> =>
   getCache(camera, 'viewMatrix', () =>
-    reference('matrixWorldInverse', 'mat4', camera)
+    reference('matrixWorldInverse', 'mat4', camera).setName('viewMatrix')
   )
 
 export const inverseProjectionMatrix = (camera: Camera): NodeObject<'mat4'> =>
   getCache(camera, 'inverseProjectionMatrix', () =>
-    reference('projectionMatrixInverse', 'mat4', camera)
+    reference('projectionMatrixInverse', 'mat4', camera).setName(
+      'inverseProjectionMatrix'
+    )
   )
 
 export const inverseViewMatrix = (camera: Camera): NodeObject<'mat4'> =>
   getCache(camera, 'inverseViewMatrix', () =>
-    reference('matrixWorld', 'mat4', camera)
+    reference('matrixWorld', 'mat4', camera).setName('inverseViewMatrix')
   )
 
 export const cameraPositionWorld = (
   camera: Camera
 ): NodeObject<UniformNode<Vector3>> =>
   getCache(camera, 'cameraPositionWorld', () =>
-    uniform(new Vector3()).onRenderUpdate((_, { value }) => {
-      value.setFromMatrixPosition(camera.matrixWorld)
-    })
+    uniform(new Vector3())
+      .setName('cameraPositionWorld')
+      .onRenderUpdate((_, { value }) => {
+        value.setFromMatrixPosition(camera.matrixWorld)
+      })
   )
 
 export const cameraNear = (camera: Camera): NodeObject<'float'> =>
-  getCache(camera, 'cameraNear', () => reference('near', 'float', camera))
+  getCache(camera, 'cameraNear', () =>
+    reference('near', 'float', camera).setName('cameraNear')
+  )
 
 export const cameraFar = (camera: Camera): NodeObject<'float'> =>
-  getCache(camera, 'cameraFar', () => reference('far', 'float', camera))
+  getCache(camera, 'cameraFar', () =>
+    reference('far', 'float', camera).setName('cameraFar')
+  )
