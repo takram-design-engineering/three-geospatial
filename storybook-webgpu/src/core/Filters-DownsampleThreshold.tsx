@@ -12,7 +12,7 @@ import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
-import { useFilterTextureNode } from './helpers/useFilterTextureNode'
+import { useFilterTextureNode } from './useFilterTextureNode'
 
 const Content: FC<StoryProps> = () => {
   const textureNode = useFilterTextureNode()

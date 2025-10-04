@@ -13,7 +13,7 @@ import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import { useControl } from '../hooks/useControl'
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
-import { useFilterTextureNode } from './helpers/useFilterTextureNode'
+import { useFilterTextureNode } from './useFilterTextureNode'
 
 const Content: FC<StoryProps> = () => {
   const levels = useControl(({ levels }: StoryArgs) => levels)

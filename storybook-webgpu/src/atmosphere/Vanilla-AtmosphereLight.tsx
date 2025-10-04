@@ -90,8 +90,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
 
   // Create the atmospheric light. Note that this story omits the atmospheric
-  // scattering between the camera and scene objects, which is only plausible
-  // when the distance is small enough to ignore it.
+  // scattering, which is only plausible when the distance between the camera
+  // and scene objects is small enough to ignore it.
   const light = new AtmosphereLight(context)
   scene.add(light)
 

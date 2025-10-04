@@ -26,7 +26,7 @@ export interface DensityProfileLayerNodes {
   constantTerm: NodeObject<Dimensionless>
 }
 
-function createDensityProfileLayerNodes(
+function densityProfileLayerNodes(
   layer: DensityProfileLayer,
   worldToUnit: number
 ): DensityProfileLayerNodes {
@@ -46,14 +46,14 @@ export interface DensityProfileNodes {
   layers: [DensityProfileLayerNodes, DensityProfileLayerNodes]
 }
 
-function createDensityProfileNodes(
+function densityProfileNodes(
   profile: DensityProfile,
   worldToUnit: number
 ): DensityProfileNodes {
   return {
     layers: [
-      createDensityProfileLayerNodes(profile.layers[0], worldToUnit),
-      createDensityProfileLayerNodes(profile.layers[1], worldToUnit)
+      densityProfileLayerNodes(profile.layers[0], worldToUnit),
+      densityProfileLayerNodes(profile.layers[1], worldToUnit)
     ]
   }
 }
@@ -110,27 +110,40 @@ export class AtmosphereContextBaseNode extends Node {
     } = parameters
 
     // BUG: Invoking toVar() or toConst() on these nodes breaks shaders.
-    // prettier-ignore
-    Object.assign(this, {
-      worldToUnit: float(worldToUnit),
-      solarIrradiance: vec3(solarIrradiance),
-      sunAngularRadius: float(sunAngularRadius),
-      bottomRadius: float(bottomRadius * worldToUnit),
-      topRadius: float(topRadius * worldToUnit),
-      rayleighDensity: createDensityProfileNodes(rayleighDensity, worldToUnit),
-      rayleighScattering: vec3(rayleighScattering.clone().divideScalar(worldToUnit)),
-      mieDensity: createDensityProfileNodes(mieDensity, worldToUnit),
-      mieScattering: vec3(mieScattering.clone().divideScalar(worldToUnit)),
-      mieExtinction: vec3(mieExtinction.clone().divideScalar(worldToUnit)),
-      miePhaseFunctionG: float(miePhaseFunctionG),
-      absorptionDensity: createDensityProfileNodes(absorptionDensity, worldToUnit),
-      absorptionExtinction: vec3(absorptionExtinction.clone().divideScalar(worldToUnit)),
-      groundAlbedo: vec3(groundAlbedo),
-      minCosSun: float(minCosSun),
-      sunRadianceToLuminance: vec3(sunRadianceToLuminance),
-      skyRadianceToLuminance: vec3(skyRadianceToLuminance),
-      luminanceScale: float(luminanceScale)
-    })
+    this.worldToUnit = float(worldToUnit)
+    this.solarIrradiance = vec3(solarIrradiance)
+    this.sunAngularRadius = float(sunAngularRadius)
+    this.bottomRadius = float(bottomRadius * worldToUnit)
+    this.topRadius = float(topRadius * worldToUnit)
+    this.rayleighDensity = densityProfileNodes(rayleighDensity, worldToUnit)
+    this.rayleighScattering = vec3(
+      rayleighScattering.x / worldToUnit,
+      rayleighScattering.y / worldToUnit,
+      rayleighScattering.z / worldToUnit
+    )
+    this.mieDensity = densityProfileNodes(mieDensity, worldToUnit)
+    this.mieScattering = vec3(
+      mieScattering.x / worldToUnit,
+      mieScattering.y / worldToUnit,
+      mieScattering.z / worldToUnit
+    )
+    this.mieExtinction = vec3(
+      mieExtinction.x / worldToUnit,
+      mieExtinction.y / worldToUnit,
+      mieExtinction.z / worldToUnit
+    )
+    this.miePhaseFunctionG = float(miePhaseFunctionG)
+    this.absorptionDensity = densityProfileNodes(absorptionDensity, worldToUnit)
+    this.absorptionExtinction = vec3(
+      absorptionExtinction.x / worldToUnit,
+      absorptionExtinction.y / worldToUnit,
+      absorptionExtinction.z / worldToUnit
+    )
+    this.groundAlbedo = vec3(groundAlbedo)
+    this.minCosSun = float(minCosSun)
+    this.sunRadianceToLuminance = vec3(sunRadianceToLuminance)
+    this.skyRadianceToLuminance = vec3(skyRadianceToLuminance)
+    this.luminanceScale = float(luminanceScale)
   }
 
   override customCacheKey(): number {

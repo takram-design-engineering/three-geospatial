@@ -18,8 +18,8 @@ import type { TextureNode } from 'three/webgpu'
 
 import { assertType } from '@takram/three-geospatial'
 
-import { springOptions } from '../../helpers/springOptions'
-import { useResource } from '../../hooks/useResource'
+import { springOptions } from '../helpers/springOptions'
+import { useResource } from '../hooks/useResource'
 
 export function useFilterTextureNode(): TextureNode {
   const image = useTexture('public/seaside.webp')
