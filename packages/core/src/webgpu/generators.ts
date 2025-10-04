@@ -16,8 +16,7 @@ import type { NodeObject } from './node'
 export const interleavedGradientNoise = (
   seed: NodeObject<'vec2'>
 ): NodeObject<'float'> => {
-  const magic = vec3(0.06711056, 0.00583715, 52.9829189)
-  return magic.z.mul(seed.dot(magic.xy).fract()).fract()
+  return seed.dot(vec2(0.06711056, 0.00583715)).fract().mul(52.9829189).fract()
 }
 
 // Reference (sixth from the bottom): https://www.shadertoy.com/view/MslGR8
