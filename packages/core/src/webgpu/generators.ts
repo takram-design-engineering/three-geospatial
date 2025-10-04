@@ -3,7 +3,6 @@ import {
   equirectUV,
   Fn,
   fwidth,
-  mix,
   screenCoordinate,
   smoothstep,
   time,

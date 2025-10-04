@@ -4,7 +4,6 @@ import {
   Group,
   Mesh,
   MeshPhysicalMaterial,
-  NoToneMapping,
   PerspectiveCamera,
   Scene,
   TorusGeometry,
@@ -44,7 +43,6 @@ const height = 500 // In meters
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
   renderer.highPrecision = true // Required when you work in ECEF coordinates
-  renderer.toneMapping = NoToneMapping // Applied in post-processing
   renderer.logarithmicDepthBuffer = true
 
   renderer.setPixelRatio(window.devicePixelRatio)

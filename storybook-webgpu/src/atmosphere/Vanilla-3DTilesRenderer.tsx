@@ -5,13 +5,7 @@ import {
   TileCompressionPlugin,
   UpdateOnChangePlugin
 } from '3d-tiles-renderer/plugins'
-import {
-  AgXToneMapping,
-  NoToneMapping,
-  PerspectiveCamera,
-  Scene,
-  Vector3
-} from 'three'
+import { AgXToneMapping, PerspectiveCamera, Scene, Vector3 } from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { mrt, output, pass, toneMapping } from 'three/tsl'
 import {
@@ -60,7 +54,6 @@ const distance = 3231 // In meters
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
   renderer.highPrecision = true // Required when you work in ECEF coordinates
-  renderer.toneMapping = NoToneMapping // Applied in post-processing
 
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)

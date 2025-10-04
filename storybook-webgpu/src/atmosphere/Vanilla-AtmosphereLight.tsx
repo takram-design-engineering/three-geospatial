@@ -9,7 +9,12 @@ import {
   Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { MeshPhysicalNodeMaterial, WebGPURenderer } from 'three/webgpu'
+import { pass, toneMapping } from 'three/tsl'
+import {
+  MeshPhysicalNodeMaterial,
+  PostProcessing,
+  WebGPURenderer
+} from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -23,6 +28,7 @@ import {
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import { dithering } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 
@@ -34,10 +40,7 @@ const height = 500 // In meters
 
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
-  renderer.samples = 4
   renderer.highPrecision = true // Required when you work in ECEF coordinates
-  renderer.toneMapping = AgXToneMapping
-  renderer.toneMappingExposure = 3
 
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
@@ -67,7 +70,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // Create a scene with a sky background:
   const scene = new Scene()
-  scene.backgroundNode = skyBackground(context)
+  scene.backgroundNode = skyBackground(context).add(dithering)
 
   const group = new Group()
   scene.add(group)
@@ -100,6 +103,12 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   controls.minDistance = 1
   controls.target.copy(positionECEF)
 
+  // Post-processing for applying dithering after tone mapping:
+  const passNode = pass(scene, camera, { samples: 4 })
+  const toneMappingNode = toneMapping(AgXToneMapping, 3, passNode)
+  const postProcessing = new PostProcessing(renderer)
+  postProcessing.outputNode = toneMappingNode.add(dithering)
+
   // Rendering loop:
   const clock = new Clock()
   const observerECEF = new Vector3()
@@ -126,7 +135,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
       observerECEF
     ).applyMatrix4(matrixECIToECEF)
 
-    void renderer.render(scene, camera)
+    postProcessing.render()
   })
 
   // Resizing:
@@ -140,6 +149,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Cleanup:
   return () => {
     window.removeEventListener('resize', handleResize)
+    postProcessing.dispose()
+    passNode.dispose()
     controls.dispose()
     geometry.dispose()
     material.dispose()
