@@ -22,6 +22,10 @@ import {
 import { isWebGPU } from './utils'
 
 export class LensFlareNode extends TempNode {
+  static override get type(): string {
+    return 'LensFlareNode'
+  }
+
   inputNode?: TextureNode | null
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
