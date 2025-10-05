@@ -1,4 +1,4 @@
-import { add, Fn, nodeObject, select, uniform } from 'three/tsl'
+import { add, Fn, nodeObject, uniform } from 'three/tsl'
 import {
   TempNode,
   type Node,
@@ -92,16 +92,12 @@ export class LensFlareNode extends TempNode {
 
     // TODO: Add an option to switch to mixing the bloom:
     return Fn(() => {
+      // TODO: Prevent the output from becoming too bright.
       const output = nodeObject(inputNode)
-
-      // Prevent the output from becoming too bright.
-      const plusBloom = output.add(bloom).toVar()
-      output.assign(select(output.lessThan(plusBloom), plusBloom, output))
+      output.addAssign(bloom)
       if (isWebGPU(builder)) {
-        const plusGlare = output.add(glare).toVar()
-        output.assign(select(output.lessThan(plusGlare), plusGlare, output))
+        output.addAssign(glare)
       }
-
       return output.add(featuresNode)
     })()
   }
