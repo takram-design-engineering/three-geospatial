@@ -7,6 +7,7 @@ import Code from './LowEarthOrbit-Story?raw'
 
 export default {
   title: 'atmosphere/Low Earth Orbit',
+  tags: ['order:1'],
   parameters: {
     docs: {
       codePanel: true,

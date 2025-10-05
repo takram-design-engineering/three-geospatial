@@ -7,7 +7,7 @@ import Code from './CruisingAltitude-Story?raw'
 
 export default {
   title: 'atmosphere/Cruising Altitude',
-  tags: ['order:1'],
+  tags: ['order:2'],
   parameters: {
     docs: {
       codePanel: true,

@@ -6,8 +6,8 @@ import { Story } from './3DTilesRenderer-Story'
 import StoryCode from './3DTilesRenderer-Story?raw'
 
 export default {
-  title: 'atmosphere/Ground',
-  tags: ['order:1'],
+  title: 'atmosphere/Cityscape',
+  tags: ['order:3'],
   parameters: {
     docs: {
       codePanel: true,
@@ -18,7 +18,7 @@ export default {
   }
 } satisfies Meta
 
-export const Ground = createStory(Story, {
+export const Cityscape = createStory(Story, {
   props: {
     longitude: -73.9709,
     latitude: 40.7589,

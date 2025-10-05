@@ -7,7 +7,7 @@ import Code from './Space-Story?raw'
 
 export default {
   title: 'atmosphere/Space',
-  tags: ['order:-1'],
+  tags: ['order:0'],
   parameters: {
     docs: {
       codePanel: true,
