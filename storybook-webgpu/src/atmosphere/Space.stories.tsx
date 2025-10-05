@@ -1,12 +1,13 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story as ISSStory } from './ISS-Story'
+import { Story } from './Space-Story'
 
-import ISSCode from './ISS-Story?raw'
+import Code from './Space-Story?raw'
 
 export default {
-  title: 'atmosphere/ISS',
+  title: 'atmosphere/Space',
+  tags: ['order:-1'],
   parameters: {
     docs: {
       codePanel: true,
@@ -17,11 +18,11 @@ export default {
   }
 } satisfies Meta
 
-export const ISS = createStory(ISSStory, {
+export const Space = createStory(Story, {
   parameters: {
     docs: {
       source: {
-        code: ISSCode
+        code: Code
       }
     }
   }

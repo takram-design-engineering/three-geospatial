@@ -1,12 +1,12 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story as BlueMarbleStory } from './BlueMarble-Story'
+import { Story } from './LowEarthOrbit-Story'
 
-import BlueMarbleCode from './BlueMarble-Story?raw'
+import Code from './LowEarthOrbit-Story?raw'
 
 export default {
-  title: 'atmosphere/Blue Marble',
+  title: 'atmosphere/Low Earth Orbit',
   parameters: {
     docs: {
       codePanel: true,
@@ -17,11 +17,11 @@ export default {
   }
 } satisfies Meta
 
-export const BlueMarble = createStory(BlueMarbleStory, {
+export const LowEarthOrbit = createStory(Story, {
   parameters: {
     docs: {
       source: {
-        code: BlueMarbleCode
+        code: Code
       }
     }
   }

@@ -9,7 +9,7 @@ import { useGuardedFrame } from '../hooks/useGuardedFrame'
 const vector = new Vector3()
 const rotation = new Matrix3()
 
-interface ISSProps extends ComponentProps<'group'> {
+export interface ISSProps extends ComponentProps<'group'> {
   matrixWorldToECEF: Matrix4
   sunDirectionECEF: Vector3
 }
@@ -19,16 +19,16 @@ export const ISS: FC<ISSProps> = ({
   sunDirectionECEF,
   ...props
 }) => {
-  const iss = useGLTF('public/iss.glb')
+  const gltf = useGLTF('public/iss.glb')
   useLayoutEffect(() => {
-    Object.values(iss.meshes).forEach(mesh => {
+    Object.values(gltf.meshes).forEach(mesh => {
       mesh.receiveShadow = true
       mesh.castShadow = true
     })
-  }, [iss])
+  }, [gltf])
 
   const { trusses, panels, radiators } = useMemo(() => {
-    const scene = iss.scene
+    const scene = gltf.scene
     return {
       trusses: [
         scene.getObjectByName('23_S4_Truss'),
@@ -49,14 +49,14 @@ export const ISS: FC<ISSProps> = ({
         scene.getObjectByName('17_P1_Truss_02')
       ].filter(value => value != null)
     }
-  }, [iss.scene])
+  }, [gltf.scene])
 
   useGuardedFrame(() => {
     const sunDirectionLocal = vector
       .copy(sunDirectionECEF)
       .applyMatrix3(rotation.setFromMatrix4(matrixWorldToECEF).transpose())
       .normalize()
-      .applyMatrix3(rotation.setFromMatrix4(iss.scene.matrixWorld).transpose())
+      .applyMatrix3(rotation.setFromMatrix4(gltf.scene.matrixWorld).transpose())
       .normalize()
 
     const { x, y, z } = sunDirectionLocal
@@ -86,5 +86,5 @@ export const ISS: FC<ISSProps> = ({
     }
   })
 
-  return <primitive object={iss.scene} {...props} />
+  return <primitive object={gltf.scene} {...props} />
 }
