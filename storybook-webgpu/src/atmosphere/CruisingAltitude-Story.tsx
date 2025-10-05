@@ -223,7 +223,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     }}
     camera={{
       fov: 50,
-      position: [80, 20, -30],
+      position: [70, 15, 40],
       near: 10,
       far: 1e7
     }}

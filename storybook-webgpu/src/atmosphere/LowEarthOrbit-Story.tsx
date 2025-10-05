@@ -230,7 +230,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     }}
     camera={{
       fov: 50,
-      position: [80, 30, 100],
+      position: [80, 80, 100],
       near: 10,
       far: 1e7
     }}
@@ -262,8 +262,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   ...localDateArgs({
-    dayOfYear: 216,
-    timeOfDay: 17
+    dayOfYear: 200,
+    timeOfDay: 6.5
   }),
   ...locationArgs({
     longitude: -110,
