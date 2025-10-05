@@ -232,7 +232,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     <Content {...props} />
     <Description>
       <Attribution>
-        Model: Boeing 787-9 Qantas Centenary by mudkipz321
+        Model: Boeing 787-9 Qantas Centenary / mudkipz321
       </Attribution>
       <TilesAttribution />
     </Description>
