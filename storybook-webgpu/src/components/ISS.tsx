@@ -1,9 +1,9 @@
-import { useGLTF } from '@react-three/drei'
 import { useLayoutEffect, useMemo, type ComponentProps, type FC } from 'react'
 import { Matrix3, Vector3, type Matrix4 } from 'three'
 
 import { lerp } from '@takram/three-geospatial'
 
+import { useGLTF } from '../hooks/useGLTF'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 
 const vector = new Vector3()

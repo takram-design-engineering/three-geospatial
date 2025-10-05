@@ -1,4 +1,4 @@
-import { useGLTF, useTexture } from '@react-three/drei'
+import { useTexture } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import {
   useCallback,
@@ -17,6 +17,8 @@ import {
   SRGBColorSpace,
   type Light
 } from 'three'
+
+import { useGLTF } from '../hooks/useGLTF'
 
 export interface LittlestTokyoApi {
   setLightIntensity: (value: number) => void

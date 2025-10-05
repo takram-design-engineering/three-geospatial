@@ -1,8 +1,9 @@
-import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, type ComponentProps, type FC } from 'react'
 
 import { euclideanModulo } from '@takram/three-geospatial'
+
+import { useGLTF } from '../hooks/useGLTF'
 
 export interface B787Props extends ComponentProps<'group'> {}
 
