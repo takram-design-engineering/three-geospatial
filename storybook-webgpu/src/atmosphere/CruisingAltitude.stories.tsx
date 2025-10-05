@@ -1,12 +1,13 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story } from './Stratosphere-Story'
+import { Story } from './CruisingAltitude-Story'
 
-import Code from './Stratosphere-Story?raw'
+import Code from './CruisingAltitude-Story?raw'
 
 export default {
-  title: 'atmosphere/Stratosphere',
+  title: 'atmosphere/Cruising Altitude',
+  tags: ['order:1'],
   parameters: {
     docs: {
       codePanel: true,
@@ -17,7 +18,7 @@ export default {
   }
 } satisfies Meta
 
-export const Stratosphere = createStory(Story, {
+export const CruisingAltitude = createStory(Story, {
   parameters: {
     docs: {
       source: {
