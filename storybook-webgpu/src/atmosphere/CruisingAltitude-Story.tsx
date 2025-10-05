@@ -251,7 +251,7 @@ Story.args = {
     height: 10660
   }),
   ...toneMappingArgs({
-    toneMappingExposure: 4
+    toneMappingExposure: 3
   }),
   ...outputPassArgs(),
   ...rendererArgs()
