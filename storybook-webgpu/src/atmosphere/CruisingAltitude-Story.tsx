@@ -51,11 +51,6 @@ import {
   type LocalDateArgs
 } from '../controls/localDateControls'
 import {
-  locationArgs,
-  locationArgTypes,
-  type LocationArgs
-} from '../controls/locationControls'
-import {
   outputPassArgs,
   outputPassArgTypes,
   useOutputPassControls,
@@ -167,8 +162,8 @@ const Content: FC<StoryProps> = () => {
     // The radii of curvature of meridian and prime vertical circle:
     // Reference: https://www.gsi.go.jp/common/000258740.pdf
     const a = Ellipsoid.WGS84.maximumRadius
-    const e = Ellipsoid.WGS84.eccentricity
     const e2 = Ellipsoid.WGS84.eccentricitySquared
+    const e = Math.sqrt(e2)
     const W = 1 - e * Math.sin(latitude)
     const M = (a * (1 - e2)) / W ** 3
     const N = a / W
@@ -241,11 +236,7 @@ const Content: FC<StoryProps> = () => {
 
 interface StoryProps {}
 
-interface StoryArgs
-  extends OutputPassArgs,
-    ToneMappingArgs,
-    LocationArgs,
-    LocalDateArgs {}
+interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
@@ -279,11 +270,6 @@ Story.args = {
     dayOfYear: 271,
     timeOfDay: 8.8447
   }),
-  ...locationArgs({
-    longitude: 12.9425,
-    latitude: 47.5529,
-    height: 10660
-  }),
   ...toneMappingArgs({
     toneMappingExposure: 3
   }),
@@ -293,10 +279,6 @@ Story.args = {
 
 Story.argTypes = {
   ...localDateArgTypes(),
-  ...locationArgTypes({
-    minHeight: 3000,
-    maxHeight: 408000
-  }),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes({
     hasNormal: false
