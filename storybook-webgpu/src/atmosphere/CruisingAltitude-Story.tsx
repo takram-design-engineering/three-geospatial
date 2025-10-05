@@ -169,10 +169,11 @@ const Content: FC<StoryProps> = () => {
     const N = a / W
 
     const theta = heading - Math.PI / 2
-    const dx = (speed * Math.sin(theta)) / ((N + height) * Math.cos(latitude))
-    const dy = (speed * Math.cos(theta)) / (M + height)
-    longitude += dx * delta
-    latitude += dy * delta
+    const ddt = speed * delta
+    const dx = (ddt * Math.sin(theta)) / ((N + height) * Math.cos(latitude))
+    const dy = (ddt * Math.cos(theta)) / (M + height)
+    longitude += dx
+    latitude += dy
     Object.assign(stateRef.current, { longitude, latitude })
 
     Ellipsoid.WGS84.getNorthUpEastFrame(

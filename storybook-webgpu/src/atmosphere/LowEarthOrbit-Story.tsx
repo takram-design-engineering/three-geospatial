@@ -192,16 +192,12 @@ const Content: FC<StoryProps> = () => {
         />
       </atmosphereLight>
       <OrbitControls minDistance={20} maxDistance={1e5} />
-      <group rotation-x={-Math.PI / 2}>
-        <Suspense>
-          <ISS
-            matrixWorldToECEF={context.matrixWorldToECEF.value}
-            sunDirectionECEF={context.sunDirectionECEF.value}
-            rotation-x={Math.PI / 2}
-            rotation-y={Math.PI / 2}
-          />
-        </Suspense>
-      </group>
+      <Suspense>
+        <ISS
+          matrixWorldToECEF={context.matrixWorldToECEF.value}
+          sunDirectionECEF={context.sunDirectionECEF.value}
+        />
+      </Suspense>
       <Globe overrideMaterial={MeshLambertNodeMaterial}>
         <TilesPlugin
           ref={setReorientationPlugin}

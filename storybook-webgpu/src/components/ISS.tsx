@@ -86,5 +86,14 @@ export const ISS: FC<ISSProps> = ({
     }
   })
 
-  return <primitive object={gltf.scene} {...props} />
+  return (
+    <group {...props}>
+      <primitive
+        object={gltf.scene}
+        rotation-x={Math.PI / 2}
+        rotation-y={Math.PI / 2}
+        rotation-z={-Math.PI / 2}
+      />
+    </group>
+  )
 }

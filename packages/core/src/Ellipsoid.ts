@@ -10,6 +10,7 @@ const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const vectorScratch2 = /*#__PURE__*/ new Vector3()
 const vectorScratch3 = /*#__PURE__*/ new Vector3()
 
+// TODO: Define by major axis and reciprocal of flattening.
 export class Ellipsoid {
   static readonly WGS84 = /*#__PURE__*/ new Ellipsoid(
     6378137,
@@ -23,12 +24,18 @@ export class Ellipsoid {
     this.radii = new Vector3(x, y, z)
   }
 
+  // TODO: Rename to semiMinorAxis
   get minimumRadius(): number {
     return Math.min(this.radii.x, this.radii.y, this.radii.z)
   }
 
+  // TODO: Rename to semiMajorAxis
   get maximumRadius(): number {
     return Math.max(this.radii.x, this.radii.y, this.radii.z)
+  }
+
+  get flattening(): number {
+    return 1 - this.minimumRadius / this.maximumRadius
   }
 
   get eccentricity(): number {
