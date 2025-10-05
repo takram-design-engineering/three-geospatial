@@ -1,8 +1,13 @@
 import { OrbitControls } from '@react-three/drei'
-import { extend, useThree, type ThreeElement } from '@react-three/fiber'
+import {
+  extend,
+  useFrame,
+  useThree,
+  type ThreeElement
+} from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
-import { Suspense, useState, type FC } from 'react'
-import { AgXToneMapping } from 'three'
+import { Suspense, useRef, useState, type FC } from 'react'
+import { AgXToneMapping, Vector3 } from 'three'
 import { mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
@@ -22,7 +27,7 @@ import {
   AtmosphereLightNode,
   skyEnvironment
 } from '@takram/three-atmosphere/webgpu'
-import { radians } from '@takram/three-geospatial'
+import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
   dithering,
   highpVelocity,
@@ -48,7 +53,6 @@ import {
 import {
   locationArgs,
   locationArgTypes,
-  useLocationControls,
   type LocationArgs
 } from '../controls/locationControls'
 import {
@@ -143,20 +147,50 @@ const Content: FC<StoryProps> = () => {
     postProcessing.needsUpdate = true
   })
 
-  // Location controls:
   const [reorientationPlugin, setReorientationPlugin] =
     useState<ReorientationPlugin | null>(null)
-  useLocationControls(
-    context.matrixWorldToECEF.value,
-    (longitude, latitude, height) => {
-      if (reorientationPlugin != null) {
-        reorientationPlugin.lon = radians(longitude)
-        reorientationPlugin.lat = radians(latitude)
-        reorientationPlugin.height = height
-        reorientationPlugin.update()
-      }
+
+  // https://www.flightaware.com/live/flight/QFA10/history/20250928/1105Z/EGLL/YPPH/tracklog
+  const stateRef = useRef({
+    longitude: radians(12.9425),
+    latitude: radians(47.5529)
+  })
+  const height = 10660
+  const speed = 238 // m/s
+  const heading = radians(130)
+
+  const geodetic = new Geodetic()
+  const position = new Vector3()
+  useFrame((state, delta) => {
+    let { longitude, latitude } = stateRef.current
+
+    // The radii of curvature of meridian and prime vertical circle:
+    // Reference: https://www.gsi.go.jp/common/000258740.pdf
+    const a = Ellipsoid.WGS84.maximumRadius
+    const e = Ellipsoid.WGS84.eccentricity
+    const e2 = Ellipsoid.WGS84.eccentricitySquared
+    const W = 1 - e * Math.sin(latitude)
+    const M = (a * (1 - e2)) / W ** 3
+    const N = a / W
+
+    const theta = heading - Math.PI / 2
+    const dx = (speed * Math.sin(theta)) / ((N + height) * Math.cos(latitude))
+    const dy = (speed * Math.cos(theta)) / (M + height)
+    longitude += dx * delta
+    latitude += dy * delta
+    Object.assign(stateRef.current, { longitude, latitude })
+
+    Ellipsoid.WGS84.getNorthUpEastFrame(
+      geodetic.set(longitude, latitude, height).toECEF(position),
+      context.matrixWorldToECEF.value
+    )
+    if (reorientationPlugin != null) {
+      reorientationPlugin.lon = longitude
+      reorientationPlugin.lat = latitude
+      reorientationPlugin.height = height
+      reorientationPlugin.update()
     }
-  )
+  })
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
@@ -193,7 +227,7 @@ const Content: FC<StoryProps> = () => {
       </atmosphereLight>
       <OrbitControls minDistance={45} maxDistance={1e5} />
       <Suspense>
-        <B787 rotation-y={radians(-130)} />
+        <B787 rotation-y={-heading} />
       </Suspense>
       <Globe overrideMaterial={MeshLambertNodeMaterial}>
         <TilesPlugin

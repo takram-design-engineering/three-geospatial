@@ -31,6 +31,16 @@ export class Ellipsoid {
     return Math.max(this.radii.x, this.radii.y, this.radii.z)
   }
 
+  get eccentricity(): number {
+    return Math.sqrt(this.eccentricitySquared)
+  }
+
+  get eccentricitySquared(): number {
+    const a2 = this.maximumRadius ** 2
+    const b2 = this.minimumRadius ** 2
+    return (a2 - b2) / a2
+  }
+
   reciprocalRadii(result = new Vector3()): Vector3 {
     const { x, y, z } = this.radii
     return result.set(1 / x, 1 / y, 1 / z)
