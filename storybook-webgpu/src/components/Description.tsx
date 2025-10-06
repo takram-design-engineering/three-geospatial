@@ -30,10 +30,6 @@ const DescriptionElement = styled('div')`
   pointer-events: none;
   user-select: none;
 
-  @media (max-width: var(--max-width)) {
-    max-width: 100%;
-  }
-
   a,
   em {
     color: white;
@@ -45,6 +41,10 @@ const DescriptionElement = styled('div')`
   p {
     margin: 0;
     margin-bottom: calc(var(--gutter) / 2);
+
+    @media (max-width: 480px) or (max-height: 640px) {
+      display: none; // TODO: Display toggle
+    }
   }
 
   p:last-of-type {
