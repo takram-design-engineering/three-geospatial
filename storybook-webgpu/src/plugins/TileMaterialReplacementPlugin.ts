@@ -41,6 +41,7 @@ export class TileMaterialReplacementPlugin {
       }
     })
     tiles.addEventListener('load-model', this.handleLoadModel)
+    tiles.addEventListener('dispose-model', this.handleDisposeModel)
   }
 
   private readonly handleLoadModel = ({
@@ -53,8 +54,21 @@ export class TileMaterialReplacementPlugin {
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  private readonly handleDisposeModel = ({
+    scene
+  }: TilesRendererEventMap['dispose-model']): void => {
+    scene.traverse(object => {
+      if (object instanceof Mesh) {
+        object.material.dispose()
+      }
+    })
+  }
+
   // Plugin method
   dispose(): void {
     this.tiles?.removeEventListener('load-model', this.handleLoadModel)
+    // TODO: This leaks the materials already replaced.
+    this.tiles?.removeEventListener('dispose-model', this.handleDisposeModel)
   }
 }
