@@ -55,7 +55,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
   renderer.highPrecision = true // Required when you work in ECEF coordinates
 
-  renderer.setPixelRatio(window.devicePixelRatio)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setSize(window.innerWidth, window.innerHeight)
   container.appendChild(renderer.domElement)
   await renderer.init()

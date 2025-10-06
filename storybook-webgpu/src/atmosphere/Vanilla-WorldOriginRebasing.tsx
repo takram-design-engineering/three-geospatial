@@ -41,7 +41,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
   renderer.shadowMap.enabled = true
 
-  renderer.setPixelRatio(window.devicePixelRatio)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setSize(window.innerWidth, window.innerHeight)
   container.appendChild(renderer.domElement)
   await renderer.init()

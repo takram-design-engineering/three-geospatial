@@ -45,7 +45,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   renderer.highPrecision = true // Required when you work in ECEF coordinates
   renderer.logarithmicDepthBuffer = true
 
-  renderer.setPixelRatio(window.devicePixelRatio)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setSize(window.innerWidth, window.innerHeight)
   container.appendChild(renderer.domElement)
   await renderer.init()

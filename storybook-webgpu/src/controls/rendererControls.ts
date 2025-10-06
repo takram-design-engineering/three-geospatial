@@ -11,7 +11,7 @@ export const rendererArgs = (
 ): RendererArgs => ({
   showStats: false,
   forceWebGL: false,
-  pixelRatio: window.devicePixelRatio,
+  pixelRatio: Math.min(window.devicePixelRatio, 2),
   ...defaults
 })
 
