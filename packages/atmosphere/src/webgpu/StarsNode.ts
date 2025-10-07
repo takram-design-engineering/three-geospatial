@@ -71,9 +71,7 @@ export class StarsNode extends TempNode {
   intensity = uniform(1)
   magnitudeRange = uniform(new Vector2(-2, 8))
 
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNode: TextureNode
+  private readonly textureNode: TextureNode
 
   private readonly renderTarget: RenderTarget
   private readonly material = new PointsNodeMaterial()
@@ -93,13 +91,13 @@ export class StarsNode extends TempNode {
     this.data = data
 
     this.renderTarget = createRenderTarget()
-    this._textureNode = outputTexture(this, this.renderTarget.texture)
+    this.textureNode = outputTexture(this, this.renderTarget.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(): TextureNode {
-    return this._textureNode
+    return this.textureNode
   }
 
   setSize(width: number, height: number): this {
@@ -231,8 +229,8 @@ export class StarsNode extends TempNode {
 
     this.points.frustumCulled = false
 
-    this._textureNode.uvNode = screenUV
-    return this._textureNode
+    this.textureNode.uvNode = screenUV
+    return this.textureNode
   }
 
   override dispose(): void {
