@@ -118,14 +118,6 @@
       "react-dom": "$react-dom",
       "three": "$three"
     },
-    "onlyBuiltDependencies": [
-      "@swc/core",
-      "core-js",
-      "esbuild",
-      "nx",
-      "oxc-resolver",
-      "sharp",
-      "unrs-resolver"
-    ]
+    "onlyBuiltDependencies": []
   }
 }
