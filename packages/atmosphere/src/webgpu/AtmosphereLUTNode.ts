@@ -81,9 +81,7 @@ export class AtmosphereLUTNode extends Node {
 
   private textures?: AtmosphereLUTTextures
 
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNodes = {
+  private readonly textureNodes = {
     transmittance: outputTexture(this, emptyTexture),
     irradiance: outputTexture(this, emptyTexture),
     scattering: outputTexture3D(this, emptyTexture3D),
@@ -111,7 +109,7 @@ export class AtmosphereLUTNode extends Node {
   getTextureNode(
     name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName
   ): TextureNode | Texture3DNode {
-    return this._textureNodes[name]
+    return this.textureNodes[name]
   }
 
   private *compute(
@@ -203,7 +201,7 @@ export class AtmosphereLUTNode extends Node {
         scattering,
         singleMieScattering,
         higherOrderScattering
-      } = this._textureNodes
+      } = this.textureNodes
       transmittance.value = this.textures.get('transmittance')
       irradiance.value = this.textures.get('irradiance')
       scattering.value = this.textures.get('scattering')
