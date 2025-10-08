@@ -74,6 +74,9 @@ export default defineConfig(
       'max-depth': 'off',
       'max-lines': 'off',
       'no-console': 'off',
+      'no-negated-condition': 'off',
+      'no-plusplus': 'off',
+      'no-multi-assign': 'off',
       '@typescript-eslint/init-declarations': 'off',
       '@typescript-eslint/max-lines': 'off',
       '@typescript-eslint/max-params': 'off',
@@ -120,6 +123,8 @@ export default defineConfig(
       '@typescript-eslint/no-explicit-any': 'off',
 
       // Too many false positives.
+      'no-param-reassign': 'off',
+      'no-lonely-if': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
