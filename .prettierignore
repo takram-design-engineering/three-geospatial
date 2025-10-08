@@ -8,4 +8,7 @@
 *.bin
 *.jpg
 *.png
+*.webp
 *.hdr
+*.exr
+*.glb
