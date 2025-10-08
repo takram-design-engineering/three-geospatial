@@ -2,50 +2,6 @@
 // I'm working on storing the dimensions in the types, but most of TSL functions
 // are not generic and don't preserve the types anyways.
 
-export type Length = 'float'
-export type Wavelength = 'float'
-export type Angle = 'float'
-export type SolidAngle = 'float'
-export type Power = 'float'
-export type LuminousPower = 'float'
-
-export type Dimensionless = 'float'
-export type InverseLength = 'float'
-export type Area = 'float'
-export type Volume = 'float'
-export type NumberDensity = 'float'
-export type Irradiance = 'float'
-export type Radiance = 'float'
-export type SpectralPower = 'float'
-export type SpectralIrradiance = 'float'
-export type SpectralRadiance = 'float'
-export type SpectralRadianceDensity = 'float'
-export type ScatteringCoefficient = 'float'
-export type InverseSolidAngle = 'float'
-export type LuminousIntensity = 'float'
-export type Luminance = 'float'
-export type Illuminance = 'float'
-
-export type AbstractSpectrum = 'vec3'
-export type DimensionlessSpectrum = 'vec3'
-export type PowerSpectrum = 'vec3'
-export type IrradianceSpectrum = 'vec3'
-export type RadianceSpectrum = 'vec3'
-export type RadianceDensitySpectrum = 'vec3'
-export type ScatteringSpectrum = 'vec3'
-
-export type Position = 'vec3'
-export type Direction = 'vec3'
-export type Luminance3 = 'vec3'
-export type Illuminance3 = 'vec3'
-
-export type TransmittanceTexture = 'texture'
-export type AbstractScatteringTexture = 'texture3D'
-export type ReducedScatteringTexture = 'texture3D'
-export type ScatteringTexture = 'texture3D'
-export type ScatteringDensityTexture = 'texture3D'
-export type IrradianceTexture = 'texture'
-
 export const Length = 'float'
 export const Wavelength = 'float'
 export const Angle = 'float'
@@ -89,3 +45,47 @@ export const ReducedScatteringTexture = 'texture3D'
 export const ScatteringTexture = 'texture3D'
 export const ScatteringDensityTexture = 'texture3D'
 export const IrradianceTexture = 'texture'
+
+export type Length = typeof Length
+export type Wavelength = typeof Wavelength
+export type Angle = typeof Angle
+export type SolidAngle = typeof SolidAngle
+export type Power = typeof Power
+export type LuminousPower = typeof LuminousPower
+
+export type Dimensionless = typeof Dimensionless
+export type InverseLength = typeof InverseLength
+export type Area = typeof Area
+export type Volume = typeof Volume
+export type NumberDensity = typeof NumberDensity
+export type Irradiance = typeof Irradiance
+export type Radiance = typeof Radiance
+export type SpectralPower = typeof SpectralPower
+export type SpectralIrradiance = typeof SpectralIrradiance
+export type SpectralRadiance = typeof SpectralRadiance
+export type SpectralRadianceDensity = typeof SpectralRadianceDensity
+export type ScatteringCoefficient = typeof ScatteringCoefficient
+export type InverseSolidAngle = typeof InverseSolidAngle
+export type LuminousIntensity = typeof LuminousIntensity
+export type Luminance = typeof Luminance
+export type Illuminance = typeof Illuminance
+
+export type AbstractSpectrum = typeof AbstractSpectrum
+export type DimensionlessSpectrum = typeof DimensionlessSpectrum
+export type PowerSpectrum = typeof PowerSpectrum
+export type IrradianceSpectrum = typeof IrradianceSpectrum
+export type RadianceSpectrum = typeof RadianceSpectrum
+export type RadianceDensitySpectrum = typeof RadianceDensitySpectrum
+export type ScatteringSpectrum = typeof ScatteringSpectrum
+
+export type Position = typeof Position
+export type Direction = typeof Direction
+export type Luminance3 = typeof Luminance3
+export type Illuminance3 = typeof Illuminance3
+
+export type TransmittanceTexture = typeof TransmittanceTexture
+export type AbstractScatteringTexture = typeof AbstractScatteringTexture
+export type ReducedScatteringTexture = typeof ReducedScatteringTexture
+export type ScatteringTexture = typeof ScatteringTexture
+export type ScatteringDensityTexture = typeof ScatteringDensityTexture
+export type IrradianceTexture = typeof IrradianceTexture
