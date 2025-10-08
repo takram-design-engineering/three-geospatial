@@ -16,7 +16,7 @@ import {
 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 
-import { assertType } from '@takram/three-geospatial'
+import { reinterpretType } from '@takram/three-geospatial'
 
 import { springOptions } from '../helpers/springOptions'
 import { useResource } from '../hooks/useResource'
@@ -55,7 +55,7 @@ export function useFilterTextureNode(): TextureNode {
   useEvent(
     'mousemove',
     event => {
-      assertType<MouseEvent>(event)
+      reinterpretType<MouseEvent>(event)
       const x = (event.offsetX - canvas.offsetLeft) / canvas.offsetWidth
       const y = (event.offsetY - canvas.offsetTop) / canvas.offsetHeight
       motionOffsetX.set(x)

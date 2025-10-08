@@ -2,7 +2,7 @@ import type { TilesRenderer, TilesRendererEventMap } from '3d-tiles-renderer'
 import { Mesh, type Texture } from 'three'
 import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 
-import { assertType } from '@takram/three-geospatial'
+import { reinterpretType } from '@takram/three-geospatial'
 
 function replaceMaterials(
   mesh: Mesh,
@@ -15,8 +15,8 @@ function replaceMaterials(
   // eslint-disable-next-line new-cap
   const nodeMaterial = new overrideMaterial()
   if ('map' in material && material.map != null && 'map' in nodeMaterial) {
-    assertType<Texture | null>(material.map)
-    assertType<Texture | null>(nodeMaterial.map)
+    reinterpretType<Texture | null>(material.map)
+    reinterpretType<Texture | null>(nodeMaterial.map)
     nodeMaterial.map = material.map.clone()
   }
   mesh.material = nodeMaterial

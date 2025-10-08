@@ -58,10 +58,10 @@ import {
 } from '@takram/three-atmosphere'
 import { AtmosphereContextNode, sky } from '@takram/three-atmosphere/webgpu'
 import {
-  assertType,
   degrees,
   Geodetic,
-  radians
+  radians,
+  reinterpretType
 } from '@takram/three-geospatial'
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
@@ -129,7 +129,7 @@ const semicircleGeometry = new BufferGeometry().setFromPoints(
 )
 
 const cameraZoom = uniform(1).onRenderUpdate(({ camera }, self) => {
-  assertType<PerspectiveCamera>(camera)
+  reinterpretType<PerspectiveCamera>(camera)
   self.value = camera.zoom
 })
 

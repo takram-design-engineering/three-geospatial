@@ -8,3 +8,5 @@ export type UniformMap<T> = Omit<Map<string, Uniform>, 'get'> & {
 }
 
 export type AnyFloatType = typeof FloatType | typeof HalfFloatType
+
+export function reinterpretType<T>(value: unknown): asserts value is T {}

@@ -3,7 +3,7 @@
 import { Discard, Fn, If, output, screenCoordinate, uniform } from 'three/tsl'
 import type { NodeMaterial } from 'three/webgpu'
 
-import { assertType } from '@takram/three-geospatial'
+import { reinterpretType } from '@takram/three-geospatial'
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
 import type { FadeParams } from './FadeMaterialManager'
@@ -61,7 +61,7 @@ const outputNode = Fn(() => {
 })()
 
 export function wrapFadeNodeMaterial(material: NodeMaterial): FadeParams {
-  assertType<FadeNodeMaterial>(material)
+  reinterpretType<FadeNodeMaterial>(material)
 
   if (material[FADE_PARAMS] != null) {
     return material[FADE_PARAMS]

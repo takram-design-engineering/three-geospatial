@@ -11,7 +11,7 @@ import { mergeRefs } from 'react-merge-refs'
 import { HalfFloatType, type WebGLRenderTarget } from 'three'
 import invariant from 'tiny-invariant'
 
-import { assertType } from '@takram/three-geospatial'
+import { reinterpretType } from '@takram/three-geospatial'
 
 // Provided for half-float normal buffer.
 export const EffectComposer: FC<
@@ -23,7 +23,9 @@ export const EffectComposer: FC<
     invariant(ref.current != null)
     const normalPass = composer?.passes.find(pass => pass instanceof NormalPass)
     invariant(normalPass != null)
-    assertType<NormalPass & { renderTarget: WebGLRenderTarget }>(normalPass)
+    reinterpretType<NormalPass & { renderTarget: WebGLRenderTarget }>(
+      normalPass
+    )
     normalPass.renderTarget.texture.type = HalfFloatType
   }, [])
 

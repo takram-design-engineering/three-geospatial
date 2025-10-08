@@ -7,7 +7,7 @@ import type { FC, ForwardedRef } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import type { Mesh, Scene } from 'three'
 
-import { assertType } from '@takram/three-geospatial'
+import { reinterpretType } from '@takram/three-geospatial'
 
 import {
   createOverlaySceneProxy,
@@ -17,7 +17,7 @@ import {
 const initControls =
   (overlayScene?: Scene) =>
   (controls: GlobeControlsImpl): undefined | (() => void) => {
-    assertType<
+    reinterpretType<
       GlobeControlsImpl & {
         pivotMesh: Mesh
       }

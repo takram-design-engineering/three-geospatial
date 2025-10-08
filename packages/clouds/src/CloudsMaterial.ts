@@ -29,12 +29,12 @@ import {
   runtime
 } from '@takram/three-atmosphere/shaders/bruneton'
 import {
-  assertType,
   define,
   defineExpression,
   defineFloat,
   defineInt,
   Geodetic,
+  reinterpretType,
   resolveIncludes,
   unrollLoops
 } from '@takram/three-geospatial'
@@ -371,7 +371,7 @@ export class CloudsMaterial extends AtmosphereMaterialBase {
         .multiply(inverseViewMatrix)
     }
 
-    assertType<PerspectiveCamera | OrthographicCamera>(camera)
+    reinterpretType<PerspectiveCamera | OrthographicCamera>(camera)
     uniforms.cameraNear.value = camera.near
     uniforms.cameraFar.value = camera.far
 
