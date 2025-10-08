@@ -11,6 +11,13 @@ import './style.css'
 
 const DEBOUNCED = Symbol('DEBOUNCED')
 
+declare module 'storybook/preview-api' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface Preview<TRenderer> {
+    [DEBOUNCED]?: boolean
+  }
+}
+
 const debouncedChannelEmit = debounce((channel, event, ...args) => {
   channel.emit(event, ...args)
 }, 200)
@@ -22,14 +29,14 @@ PreviewClass.prototype.onUpdateArgs = async function (...args) {
   if (this[DEBOUNCED] !== true) {
     const channel = this.channel
     this.channel = {
-      emit: (event, ...args) => {
-        if (event === STORY_ARGS_UPDATED) {
-          debouncedChannelEmit(channel, event, ...args)
+      emit: (eventName: string, ...args: any) => {
+        if (eventName === STORY_ARGS_UPDATED) {
+          debouncedChannelEmit(channel, eventName, ...args)
         } else {
-          channel.emit(event, ...args)
+          channel.emit(eventName, ...args)
         }
       }
-    }
+    } as unknown as typeof this.channel
     this[DEBOUNCED] = true
   }
   await onUpdateArgs.apply(this, args)
@@ -53,6 +60,7 @@ const preview: Preview = {
       //   title: string // e.g. 'package/Category'
       //   tags: string[]
       // }
+      // @ts-expect-error Cannot annotate types here
       storySort: (a, b) => {
         if (a.type !== b.type) {
           return a.type === 'docs' ? -1 : 1 // Bring docs first
@@ -65,10 +73,12 @@ const preview: Preview = {
           return depthA - depthB // Bring shallow stories first
         }
         const orderA = +(
-          a.tags.find(tag => tag.startsWith('order:'))?.split(':')[1] ?? 0
+          // @ts-expect-error Cannot annotate types here
+          (a.tags.find(tag => tag.startsWith('order:'))?.split(':')[1] ?? 0)
         )
         const orderB = +(
-          b.tags.find(tag => tag.startsWith('order:'))?.split(':')[1] ?? 0
+          // @ts-expect-error Cannot annotate types here
+          (b.tags.find(tag => tag.startsWith('order:'))?.split(':')[1] ?? 0)
         )
         if (orderA !== orderB) {
           return orderA - orderB
