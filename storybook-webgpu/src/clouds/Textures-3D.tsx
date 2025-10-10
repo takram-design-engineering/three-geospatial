@@ -1,6 +1,7 @@
 import { ScreenQuad } from '@react-three/drei'
-import type { FC } from 'react'
-import { LinearToneMapping } from 'three'
+import { useThree } from '@react-three/fiber'
+import { useEffect, type FC } from 'react'
+import { LinearSRGBColorSpace, LinearToneMapping, NoToneMapping } from 'three'
 import {
   Discard,
   floor,
@@ -15,13 +16,9 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import { NodeMaterial } from 'three/webgpu'
+import { NodeMaterial, type Renderer } from 'three/webgpu'
 
-import {
-  AtmosphereLUTNode,
-  type AtmosphereLUTTexture3DName,
-  type AtmosphereParameters
-} from '@takram/three-atmosphere/webgpu'
+import type { ProceduralTexture3DNode } from '@takram/three-clouds/webgpu'
 import { FnVar, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -31,7 +28,6 @@ import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
-  useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import { useResource } from '../hooks/useResource'
@@ -56,20 +52,24 @@ const textureUVW = FnVar(
   }
 )
 
-const Content: FC<StoryProps> = ({ name, ...options }) => {
+const Content: FC<StoryProps> = ({ node }) => {
+  const renderer = useThree<Renderer>(({ gl }) => gl as any)
+  renderer.toneMapping = NoToneMapping
+  renderer.outputColorSpace = LinearSRGBColorSpace
+
   const zoom = uniform(0)
 
   const material = useResource(() => new NodeMaterial(), [])
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
 
-  const lutNode = useResource(() => new AtmosphereLUTNode(), [])
-  Object.assign(lutNode.parameters, options)
-  const textureSize = vec3(lutNode.parameters.scatteringTextureSize)
+  const textureNode = node.getTextureNode()
+  const textureSize = vec3(
+    textureNode.value.width,
+    textureNode.value.height,
+    textureNode.value.depth
+  )
   const uvw = textureUVW(textureSize, zoom)
-  material.colorNode = lutNode.getTextureNode(name).sample(uvw).rgb
-
-  // Tone mapping controls:
-  useToneMappingControls()
+  material.colorNode = textureNode.sample(uvw).rgb
 
   // Display controls:
   useTransientControl(
@@ -79,11 +79,17 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
     }
   )
 
+  useEffect(() => {
+    return () => {
+      node.dispose()
+    }
+  }, [node])
+
   return <ScreenQuad material={material} />
 }
 
-interface StoryProps extends Partial<AtmosphereParameters> {
-  name: AtmosphereLUTTexture3DName
+interface StoryProps {
+  node: ProceduralTexture3DNode
 }
 
 interface StoryArgs extends ToneMappingArgs {

@@ -77,6 +77,7 @@ export default defineConfig(
       'no-negated-condition': 'off',
       'no-plusplus': 'off',
       'no-multi-assign': 'off',
+      'max-nested-callbacks': 'off',
       '@typescript-eslint/init-declarations': 'off',
       '@typescript-eslint/max-lines': 'off',
       '@typescript-eslint/max-params': 'off',
