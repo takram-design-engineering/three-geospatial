@@ -18,7 +18,7 @@ export class CloudShapeDetailNode extends ProceduralTexture3DNode {
   ): Node {
     const cellCount = 2
     const noise = vec4(
-      getWorleyNoise(position, cellCount * 1),
+      getWorleyNoise(position, cellCount),
       getWorleyNoise(position, cellCount * 2),
       getWorleyNoise(position, cellCount * 4),
       getWorleyNoise(position, cellCount * 8)

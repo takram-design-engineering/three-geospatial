@@ -44,11 +44,11 @@ const noise = /*#__PURE__*/ FnLayout({
   type: 'float',
   inputs: [{ name: 'x', type: 'vec3' }]
 })(([x]) => {
-  const p = x.floor()
-  const f = x.fract()
+  const p = x.floor().toVar()
+  const f = x.fract().toVar()
 
   f.assign(f.pow2().mul(sub(3, f.mul(2))))
-  const n = p.x.add(p.y.mul(57)).add(p.z.mul(113))
+  const n = p.x.add(p.y.mul(57)).add(p.z.mul(113)).toVar()
   return mix(
     mix(
       mix(hash(n), hash(n.add(1)), f.x),
@@ -72,7 +72,7 @@ export const getWorleyNoise = /*#__PURE__*/ FnLayout({
     { name: 'cellCount', type: 'float' }
   ]
 })(([p, cellCount]) => {
-  const cell = p.mul(cellCount)
+  const cell = p.mul(cellCount).toVar()
   const d = float(1.0e10).toVar()
   // @ts-expect-error Missing type
   Loop({ start: -1, end: 1, condition: '<=', name: 'x' }, ({ x }) => {
@@ -80,8 +80,8 @@ export const getWorleyNoise = /*#__PURE__*/ FnLayout({
     Loop({ start: -1, end: 1, condition: '<=', name: 'y' }, ({ y }) => {
       // @ts-expect-error Missing type
       Loop({ start: -1, end: 1, condition: '<=', name: 'z' }, ({ z }) => {
-        const tp = cell.floor().add(vec3(x, y, z))
-        // BUG: vec4(cellCount) doesn't work:
+        const tp = cell.floor().add(vec3(x, y, z)).toVar()
+        // BUG: vec4(cellCount) doesn't work. WORKAROUND: cellCount.add(0)
         tp.assign(cell.sub(tp).sub(noise(tp.mod(cellCount.add(0)))))
         d.assign(min(d, tp.dot(tp)))
       })

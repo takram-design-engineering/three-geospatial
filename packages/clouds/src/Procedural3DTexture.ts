@@ -79,7 +79,7 @@ export class Procedural3DTextureBase implements Procedural3DTexture {
     // Unfortunately, rendering into 3D target requires as many draw calls as
     // the value of "size".
     for (let layer = 0; layer < this.size; ++layer) {
-      this.material.uniforms.layer.value = layer / this.size
+      this.material.uniforms.layer.value = (layer + 0.5) / this.size
       renderer.setRenderTarget(this.renderTarget, layer)
       renderer.render(this.mesh, this.camera)
     }

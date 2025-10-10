@@ -53,7 +53,7 @@ float getWorleyNoise(const vec3 p, const float cellCount) {
     for (int y = -1; y <= 1; ++y) {
       for (int z = -1; z <= 1; ++z) {
         vec3 tp = floor(cell) + vec3(x, y, z);
-        tp = cell - tp - noise(mod(tp, cellCount / 1.0));
+        tp = cell - tp - noise(mod(tp, cellCount));
         d = min(d, dot(tp, tp));
       }
     }
