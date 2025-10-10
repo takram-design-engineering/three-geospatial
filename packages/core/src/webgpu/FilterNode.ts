@@ -8,6 +8,7 @@ import {
 import {
   NodeUpdateType,
   TempNode,
+  type Node,
   type NodeBuilder,
   type TextureNode
 } from 'three/webgpu'
@@ -48,7 +49,7 @@ export abstract class FilterNode extends TempNode {
     texture.magFilter = LinearFilter
     texture.generateMipmaps = false
 
-    const typeName = (this.constructor as typeof FilterNode).type
+    const typeName = (this.constructor as typeof Node).type
     texture.name = name != null ? `${typeName}.${name}` : typeName
 
     this.renderTargets.push(renderTarget)

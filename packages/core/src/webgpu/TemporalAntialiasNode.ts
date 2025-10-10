@@ -36,6 +36,7 @@ import {
   QuadMesh,
   RendererUtils,
   TempNode,
+  type Node,
   type NodeBuilder,
   type NodeFrame,
   type Renderer,
@@ -46,7 +47,7 @@ import { cameraFar, cameraNear } from './accessors'
 import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import { haltonOffsets } from './internals'
-import type { Node, NodeObject } from './node'
+import type { NodeObject } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RTTextureNode'
 import { textureBicubic } from './sampling'
@@ -294,7 +295,7 @@ export class TemporalAntialiasNode extends TempNode {
     texture.magFilter = LinearFilter
     texture.generateMipmaps = false
 
-    const typeName = (this.constructor as typeof TemporalAntialiasNode).type
+    const typeName = (this.constructor as typeof Node).type
     texture.name = name != null ? `${typeName}.${name}` : typeName
 
     return renderTarget
