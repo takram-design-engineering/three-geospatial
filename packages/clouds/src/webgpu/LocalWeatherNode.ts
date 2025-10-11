@@ -5,7 +5,7 @@ import type { Node, NodeBuilder } from 'three/webgpu'
 import { FnLayout, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import { ProceduralTextureNode } from './ProceduralTextureNode'
-import { perlinNoise, worleyNoise } from './tileableNoise'
+import { stackablePerlinNoise, stackableWorleyNoise } from './stackableNoise'
 
 const worleyFbm = /*#__PURE__*/ FnLayout({
   name: 'worleyFbm',
@@ -24,7 +24,7 @@ const worleyFbm = /*#__PURE__*/ FnLayout({
   const noise = float(0).toVar()
   Loop({ start: 0, end: octaveCount }, () => {
     noise.addAssign(
-      amplitudeVar.mul(worleyNoise(point, frequencyVar).oneMinus())
+      amplitudeVar.mul(stackableWorleyNoise(point, frequencyVar).oneMinus())
     )
     frequencyVar.mulAssign(lacunarity)
     amplitudeVar.mulAssign(gain)
@@ -77,7 +77,7 @@ export class LocalWeatherNode extends ProceduralTextureNode {
 
     // High clouds
     {
-      let perlin = perlinNoise(
+      let perlin = stackablePerlinNoise(
         uv,
         vec3(6.0, 12.0, 1.0), // frequency
         8 // octaveCount
@@ -88,7 +88,7 @@ export class LocalWeatherNode extends ProceduralTextureNode {
 
     // Extra
     {
-      let perlin = perlinNoise(
+      let perlin = stackablePerlinNoise(
         uv.add(vec3(-19.1, 33.4, 47.2)),
         32.0, // frequency
         4 // octaveCount

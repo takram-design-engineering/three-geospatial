@@ -6,7 +6,7 @@ import { FnLayout, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import { CLOUD_SHAPE_TEXTURE_SIZE } from '../constants'
 import { ProceduralTexture3DNode } from './ProceduralTexture3DNode'
-import { perlinNoise, worleyNoise } from './tileableNoise'
+import { stackablePerlinNoise, stackableWorleyNoise } from './stackableNoise'
 
 export const perlinWorley = /*#__PURE__*/ FnLayout({
   name: 'perlinWorley',
@@ -15,13 +15,13 @@ export const perlinWorley = /*#__PURE__*/ FnLayout({
 })(([point]) => {
   const octaveCount = 3
   const frequency = 8
-  const perlin = perlinNoise(point, frequency, octaveCount).saturate()
+  const perlin = stackablePerlinNoise(point, frequency, octaveCount).saturate()
 
   const cellCount = 4
   const noise = vec3(
-    worleyNoise(point, cellCount * 2),
-    worleyNoise(point, cellCount * 8),
-    worleyNoise(point, cellCount * 14)
+    stackableWorleyNoise(point, cellCount * 2),
+    stackableWorleyNoise(point, cellCount * 8),
+    stackableWorleyNoise(point, cellCount * 14)
   ).oneMinus()
   const fbm = noise.dot(vec3(0.625, 0.25, 0.125))
   return perlin.remap(0, 1, fbm, 1)
@@ -34,10 +34,10 @@ export const worleyFbm = /*#__PURE__*/ FnLayout({
 })(([point]) => {
   const cellCount = 4
   const noise = vec4(
-    worleyNoise(point, cellCount * 2),
-    worleyNoise(point, cellCount * 4),
-    worleyNoise(point, cellCount * 8),
-    worleyNoise(point, cellCount * 16)
+    stackableWorleyNoise(point, cellCount * 2),
+    stackableWorleyNoise(point, cellCount * 4),
+    stackableWorleyNoise(point, cellCount * 8),
+    stackableWorleyNoise(point, cellCount * 16)
   ).oneMinus()
   const fbm = vec3(
     noise.xyz.dot(vec3(0.625, 0.25, 0.125)),

@@ -64,8 +64,8 @@ const noise = /*#__PURE__*/ FnLayout({
   )
 })
 
-export const worleyNoise = /*#__PURE__*/ FnLayout({
-  name: 'worleyNoise',
+export const stackableWorleyNoise = /*#__PURE__*/ FnLayout({
+  name: 'stackableWorleyNoise',
   type: 'float',
   inputs: [
     { name: 'p', type: 'vec3' },
@@ -93,8 +93,8 @@ export const worleyNoise = /*#__PURE__*/ FnLayout({
   return d.saturate()
 })
 
-export const perlinNoise = /*#__PURE__*/ FnLayout({
-  name: 'perlinNoise',
+export const stackablePerlinNoise = /*#__PURE__*/ FnLayout({
+  name: 'stackablePerlinNoise',
   type: 'float',
   inputs: [
     { name: 'point', type: 'vec3' },

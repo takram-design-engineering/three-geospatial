@@ -5,7 +5,7 @@ import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
 import { CLOUD_SHAPE_DETAIL_TEXTURE_SIZE } from '../constants'
 import { ProceduralTexture3DNode } from './ProceduralTexture3DNode'
-import { worleyNoise } from './tileableNoise'
+import { stackableWorleyNoise } from './stackableNoise'
 
 export class CloudShapeDetailNode extends ProceduralTexture3DNode {
   override get type(): string {
@@ -22,10 +22,10 @@ export class CloudShapeDetailNode extends ProceduralTexture3DNode {
   ): Node {
     const cellCount = 2
     const noise = vec4(
-      worleyNoise(uvw, cellCount),
-      worleyNoise(uvw, cellCount * 2),
-      worleyNoise(uvw, cellCount * 4),
-      worleyNoise(uvw, cellCount * 8)
+      stackableWorleyNoise(uvw, cellCount),
+      stackableWorleyNoise(uvw, cellCount * 2),
+      stackableWorleyNoise(uvw, cellCount * 4),
+      stackableWorleyNoise(uvw, cellCount * 8)
     ).oneMinus()
     const fbm = vec3(
       noise.xyz.dot(vec3(0.625, 0.25, 0.125)),
