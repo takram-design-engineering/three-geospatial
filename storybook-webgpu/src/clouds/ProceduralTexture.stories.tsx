@@ -3,18 +3,19 @@ import type { Meta } from '@storybook/react-vite'
 import {
   CloudShapeDetailNode,
   CloudShapeNode,
+  LocalWeatherNode,
   TurbulenceNode
 } from '@takram/three-clouds/webgpu'
 
 import { createStory } from '../components/createStory'
-import { Story as Story2D } from './Textures-2D'
-import { Story as Story3D } from './Textures-3D'
+import { Story as Story2D } from './ProceduralTexture-2D'
+import { Story as Story3D } from './ProceduralTexture-3D'
 
-import Code2D from './Textures-2D?raw'
-import Code3D from './Textures-3D?raw'
+import Code2D from './ProceduralTexture-2D?raw'
+import Code3D from './ProceduralTexture-3D?raw'
 
 export default {
-  title: 'clouds/Textures',
+  title: 'clouds/Procedural Texture',
   parameters: {
     docs: {
       codePanel: true,
@@ -25,12 +26,29 @@ export default {
   }
 } satisfies Meta
 
+export const LocalWeather = createStory(Story2D, {
+  props: {
+    node: new LocalWeatherNode()
+  },
+  args: {
+    zoom: 4,
+    toneMappingExposure: 1
+  },
+  parameters: {
+    docs: {
+      source: {
+        code: Code2D
+      }
+    }
+  }
+})
+
 export const Shape = createStory(Story3D, {
   props: {
     node: new CloudShapeNode()
   },
   args: {
-    zoom: 2,
+    zoom: 1.5,
     toneMappingExposure: 1
   },
   parameters: {
@@ -47,7 +65,7 @@ export const ShapeDetail = createStory(Story3D, {
     node: new CloudShapeDetailNode()
   },
   args: {
-    zoom: 2,
+    zoom: 8,
     toneMappingExposure: 1
   },
   parameters: {
@@ -64,7 +82,7 @@ export const Turbulence = createStory(Story2D, {
     node: new TurbulenceNode()
   },
   args: {
-    zoom: 4,
+    zoom: 8,
     toneMappingExposure: 1
   },
   parameters: {

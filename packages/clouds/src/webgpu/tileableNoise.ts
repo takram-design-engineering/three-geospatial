@@ -64,8 +64,8 @@ const noise = /*#__PURE__*/ FnLayout({
   )
 })
 
-export const getWorleyNoise = /*#__PURE__*/ FnLayout({
-  name: 'getWorleyNoise',
+export const worleyNoise = /*#__PURE__*/ FnLayout({
+  name: 'worleyNoise',
   type: 'float',
   inputs: [
     { name: 'p', type: 'vec3' },
@@ -80,7 +80,10 @@ export const getWorleyNoise = /*#__PURE__*/ FnLayout({
     Loop({ start: -1, end: 1, condition: '<=', name: 'y' }, ({ y }) => {
       // @ts-expect-error Missing type
       Loop({ start: -1, end: 1, condition: '<=', name: 'z' }, ({ z }) => {
-        const tp = cell.floor().add(vec3(x, y, z)).toVar()
+        const tp = cell
+          .floor()
+          .add(vec3(x, y, z))
+          .toVar()
         // BUG: vec4(cellCount) doesn't work. WORKAROUND: cellCount.add(0)
         tp.assign(cell.sub(tp).sub(noise(tp.mod(cellCount.add(0)))))
         d.assign(min(d, tp.dot(tp)))
@@ -90,8 +93,8 @@ export const getWorleyNoise = /*#__PURE__*/ FnLayout({
   return d.saturate()
 })
 
-export const getPerlinNoise = /*#__PURE__*/ FnLayout({
-  name: 'getPerlinNoiseVec3',
+export const perlinNoise = /*#__PURE__*/ FnLayout({
+  name: 'perlinNoise',
   type: 'float',
   inputs: [
     { name: 'point', type: 'vec3' },

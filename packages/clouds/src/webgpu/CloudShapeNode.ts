@@ -6,38 +6,38 @@ import { FnLayout, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import { CLOUD_SHAPE_TEXTURE_SIZE } from '../constants'
 import { ProceduralTexture3DNode } from './ProceduralTexture3DNode'
-import { getPerlinNoise, getWorleyNoise } from './tileableNoise'
+import { perlinNoise, worleyNoise } from './tileableNoise'
 
-export const getPerlinWorley = /*#__PURE__*/ FnLayout({
-  name: 'getPerlinWorley',
+export const perlinWorley = /*#__PURE__*/ FnLayout({
+  name: 'perlinWorley',
   type: 'float',
   inputs: [{ name: 'point', type: 'vec3' }]
 })(([point]) => {
   const octaveCount = 3
   const frequency = 8
-  const perlin = getPerlinNoise(point, frequency, octaveCount).saturate()
+  const perlin = perlinNoise(point, frequency, octaveCount).saturate()
 
   const cellCount = 4
   const noise = vec3(
-    getWorleyNoise(point, cellCount * 2),
-    getWorleyNoise(point, cellCount * 8),
-    getWorleyNoise(point, cellCount * 14)
+    worleyNoise(point, cellCount * 2),
+    worleyNoise(point, cellCount * 8),
+    worleyNoise(point, cellCount * 14)
   ).oneMinus()
   const fbm = noise.dot(vec3(0.625, 0.25, 0.125))
   return perlin.remap(0, 1, fbm, 1)
 })
 
-export const getWorleyFbm = /*#__PURE__*/ FnLayout({
-  name: 'getWorleyFbm',
+export const worleyFbm = /*#__PURE__*/ FnLayout({
+  name: 'worleyFbm',
   type: 'float',
   inputs: [{ name: 'point', type: 'vec3' }]
 })(([point]) => {
   const cellCount = 4
   const noise = vec4(
-    getWorleyNoise(point, cellCount * 2),
-    getWorleyNoise(point, cellCount * 4),
-    getWorleyNoise(point, cellCount * 8),
-    getWorleyNoise(point, cellCount * 16)
+    worleyNoise(point, cellCount * 2),
+    worleyNoise(point, cellCount * 4),
+    worleyNoise(point, cellCount * 8),
+    worleyNoise(point, cellCount * 16)
   ).oneMinus()
   const fbm = vec3(
     noise.xyz.dot(vec3(0.625, 0.25, 0.125)),
@@ -57,11 +57,9 @@ export class CloudShapeNode extends ProceduralTexture3DNode {
   }
 
   protected override setupOutputNode(
-    position: NodeObject<'vec3'>,
+    uvw: NodeObject<'vec3'>,
     builder: NodeBuilder
   ): Node {
-    const perlinWorley = getPerlinWorley(position)
-    const worleyFbm = getWorleyFbm(position)
-    return perlinWorley.remap(worleyFbm.sub(1), 1)
+    return perlinWorley(uvw).remap(worleyFbm(uvw).sub(1), 1)
   }
 }

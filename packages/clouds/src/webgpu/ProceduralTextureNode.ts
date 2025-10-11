@@ -69,7 +69,7 @@ export abstract class ProceduralTextureNode extends TempNode {
   }
 
   protected abstract setupOutputNode(
-    position: NodeObject<'vec2'>,
+    uv: NodeObject<'vec2'>,
     builder: NodeBuilder
   ): Node
 
@@ -85,12 +85,12 @@ export abstract class ProceduralTextureNode extends TempNode {
         Return()
       })
       const textureCoordinate = vec2(x, y)
-      const position = textureCoordinate.add(0.5).div(vec2(width, height))
+      const uv = textureCoordinate.add(0.5).div(vec2(width, height))
 
       textureStore(
         this.texture,
         textureCoordinate,
-        this.setupOutputNode(position, builder)
+        this.setupOutputNode(uv, builder)
       )
     })().compute(width * height, [8, 8, 1])
 
