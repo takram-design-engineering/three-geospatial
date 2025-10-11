@@ -8,6 +8,10 @@ import { ProceduralTexture3DNode } from './ProceduralTexture3DNode'
 import { getWorleyNoise } from './tileableNoise'
 
 export class CloudShapeDetailNode extends ProceduralTexture3DNode {
+  override get type(): string {
+    return 'CloudShapeDetailNode'
+  }
+
   constructor(size = new Vector3().setScalar(CLOUD_SHAPE_DETAIL_TEXTURE_SIZE)) {
     super(size)
   }

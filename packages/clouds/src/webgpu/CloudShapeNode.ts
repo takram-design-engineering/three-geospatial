@@ -48,6 +48,10 @@ export const getWorleyFbm = /*#__PURE__*/ FnLayout({
 })
 
 export class CloudShapeNode extends ProceduralTexture3DNode {
+  override get type(): string {
+    return 'CloudShapeNode'
+  }
+
   constructor(size = new Vector3().setScalar(CLOUD_SHAPE_TEXTURE_SIZE)) {
     super(size)
   }
