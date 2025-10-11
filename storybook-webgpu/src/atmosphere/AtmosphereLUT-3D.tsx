@@ -19,9 +19,10 @@ import { NodeMaterial } from 'three/webgpu'
 
 import {
   AtmosphereLUTNode,
-  type AtmosphereLUTTexture3DName,
-  type AtmosphereParameters
+  AtmosphereParameters,
+  type AtmosphereLUTTexture3DName
 } from '@takram/three-atmosphere/webgpu'
+import { radians } from '@takram/three-geospatial'
 import { FnVar, type NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -62,7 +63,12 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
   const material = useResource(() => new NodeMaterial(), [])
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
 
-  const lutNode = useResource(() => new AtmosphereLUTNode(), [])
+  const lutNode = useResource(() => {
+    const parameters = new AtmosphereParameters()
+    parameters.groundAlbedo.setScalar(0.1)
+    parameters.minCosSun = Math.cos(radians(120))
+    return new AtmosphereLUTNode(parameters)
+  }, [])
   Object.assign(lutNode.parameters, options)
   const textureSize = vec3(lutNode.parameters.scatteringTextureSize)
   const uvw = textureUVW(textureSize, zoom)
