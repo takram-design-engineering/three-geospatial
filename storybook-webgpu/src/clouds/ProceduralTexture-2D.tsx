@@ -1,7 +1,7 @@
 import { ScreenQuad } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { useEffect, type FC } from 'react'
-import { LinearSRGBColorSpace, LinearToneMapping, NoToneMapping } from 'three'
+import { LinearSRGBColorSpace, NoToneMapping } from 'three'
 import {
   Discard,
   float,
@@ -23,12 +23,6 @@ import type { StoryFC } from '../components/createStory'
 import { Description } from '../components/Description'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
-import {
-  toneMappingArgs,
-  toneMappingArgTypes,
-  useToneMappingControls,
-  type ToneMappingArgs
-} from '../controls/toneMappingControls'
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
 
@@ -76,9 +70,6 @@ const Content: FC<StoryProps> = ({ node }) => {
     return color
   })()
 
-  // Tone mapping controls:
-  useToneMappingControls()
-
   // Display controls:
   useTransientControl(
     ({ zoom }: StoryArgs) => ({ zoom }),
@@ -100,7 +91,7 @@ interface StoryProps {
   node: ProceduralTextureNode
 }
 
-interface StoryArgs extends ToneMappingArgs {
+interface StoryArgs {
   zoom: number
 }
 
@@ -112,9 +103,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  ...toneMappingArgs({
-    toneMapping: LinearToneMapping
-  }),
+  zoom: 1,
   ...rendererArgs()
 }
 
@@ -127,7 +116,6 @@ Story.argTypes = {
       step: 0.1
     }
   },
-  ...toneMappingArgTypes(),
   ...rendererArgTypes()
 }
 

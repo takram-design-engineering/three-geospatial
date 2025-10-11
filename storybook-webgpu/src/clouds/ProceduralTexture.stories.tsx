@@ -31,8 +31,7 @@ export const LocalWeather = createStory(Story2D, {
     node: new LocalWeatherNode()
   },
   args: {
-    zoom: 4,
-    toneMappingExposure: 1
+    zoom: 4
   },
   parameters: {
     docs: {
@@ -48,8 +47,7 @@ export const Shape = createStory(Story3D, {
     node: new CloudShapeNode()
   },
   args: {
-    zoom: 1.5,
-    toneMappingExposure: 1
+    zoom: 1
   },
   parameters: {
     docs: {
@@ -65,8 +63,7 @@ export const ShapeDetail = createStory(Story3D, {
     node: new CloudShapeDetailNode()
   },
   args: {
-    zoom: 8,
-    toneMappingExposure: 1
+    zoom: 4
   },
   parameters: {
     docs: {
@@ -82,8 +79,7 @@ export const Turbulence = createStory(Story2D, {
     node: new TurbulenceNode()
   },
   args: {
-    zoom: 8,
-    toneMappingExposure: 1
+    zoom: 4
   },
   parameters: {
     docs: {
