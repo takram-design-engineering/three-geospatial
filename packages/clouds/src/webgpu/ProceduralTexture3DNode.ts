@@ -17,7 +17,6 @@ import {
 import {
   Storage3DTexture,
   TempNode,
-  type ComputeNode,
   type Node,
   type NodeBuilder,
   type TextureNode
@@ -33,8 +32,7 @@ export abstract class ProceduralTexture3DNode extends TempNode {
     return 'ProceduralTexture3DNode'
   }
 
-  texture = this.createStorage3DTexture()
-  computeNode?: ComputeNode
+  readonly texture = this.createStorage3DTexture()
 
   // WORKAROUND: The leading underscore avoids infinite recursion.
   // https://github.com/mrdoob/three.js/issues/31522
@@ -80,7 +78,7 @@ export abstract class ProceduralTexture3DNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const { width, height, depth } = this.texture
 
-    this.computeNode ??= Fn(() => {
+    const computeNode = Fn(() => {
       const id = instanceIndex
       const x = id.mod(width)
       const y = id.div(width).mod(height)
@@ -99,7 +97,7 @@ export abstract class ProceduralTexture3DNode extends TempNode {
       )
     })().compute(width * height * depth, [4, 4, 4])
 
-    void builder.renderer.compute(this.computeNode)
+    void builder.renderer.compute(computeNode)
 
     return super.setup(builder)
   }
