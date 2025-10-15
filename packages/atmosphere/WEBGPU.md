@@ -101,9 +101,12 @@ World origin rebasing is a common technique for large coordinates like ECEF. Ins
 This appears to be required for the shadows to work correctly with `WebGPURenderer`.
 
 ```ts
-declare const longitude // In degrees
-declare const latitude // In degrees
-declare const height // In meters
+import { AtmosphereContextNode } from '@takram/three-atmosphere/webgpu'
+import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+
+declare const longitude: number // In degrees
+declare const latitude: number // In degrees
+declare const height: number // In meters
 
 const context = new AtmosphereContextNode()
 
