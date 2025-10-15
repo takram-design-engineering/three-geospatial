@@ -8,7 +8,7 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 
 ### Atmospheric lighting
 
-`AtmosphereLight` replaces `SunLight` and `SkyLight`, providing physically correct lighting for large-scale scenes and maintaining compatibility with built-in Three.js materials and shadows.
+[`AtmosphereLight`](#atmospherelight) replaces `SunLight` and `SkyLight`, providing physically correct lighting for large-scale scenes and maintaining compatibility with built-in Three.js materials and shadows.
 
 ```ts
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -35,7 +35,7 @@ scene.add(light)
 
 ### Aerial perspective
 
-`AerialPerspectiveNode` is a post-processing node that renders atmospheric transparency and inscattered light. It takes a color (beauty) buffer and a depth buffer, and also renders the sky for texels whose depth value is 1.
+[`AerialPerspectiveNode`](#aerialperspectivenode) is a post-processing node that renders atmospheric transparency and inscattered light. It takes a color (beauty) buffer and a depth buffer, and also renders the sky for texels whose depth value is 1.
 
 ```ts
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -63,7 +63,7 @@ postProcessing.outputNode = aerialPerspective(context, colorNode, depthNode)
 
 ### Sky
 
-`SkyNode` replaces `SkyMaterial` and is also aggregated in `AerialPerspectiveNode`. Despite its name, it renders the atmospheric transparency and inscattered light at infinite distance (or clamped to a virtual ground at the ellipsoidal surface), along with the sun, moon and stars.
+[`SkyNode`](#skynode) replaces `SkyMaterial` and is also aggregated in `AerialPerspectiveNode`. Despite its name, it renders the atmospheric transparency and inscattered light at infinite distance (or clamped to a virtual ground at the ellipsoidal surface), along with the sun, moon and stars.
 
 ```ts
 import {
@@ -172,12 +172,12 @@ class AtmosphereContextNode {
 lutNode: AtmosphereLUTNode
 ```
 
-### Parameters
+### Uniforms
 
 #### matrixWorldToECEF
 
 ```ts
-matrixWorldToECEF = new Matrix4().identity()
+matrixWorldToECEF = uniform(new Matrix4())
 ```
 
 The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js’s Y-up coordinate system.
@@ -187,7 +187,7 @@ It must be orthogonal and consist only of translation and rotation (no scaling).
 #### matrixECIToECEF
 
 ```ts
-matrixECIToECEF = new Matrix4().identity()
+matrixECIToECEF = uniform(new Matrix4())
 ```
 
 The rotation matrix for converting ECI to ECEF coordinates. This matrix is used to orient stars as seen from the earth in `StarsNode`.
@@ -195,8 +195,8 @@ The rotation matrix for converting ECI to ECEF coordinates. This matrix is used 
 #### sunDirectionECEF, moonDirectionECEF
 
 ```ts
-sunDirectionECEF = new Vector3()
-moonDirectionECEF = new Vector3()
+sunDirectionECEF = uniform(new Vector3())
+moonDirectionECEF = uniform(new Vector3())
 ```
 
 The normalized direction to the sun and moon in ECEF coordinates.
@@ -204,7 +204,7 @@ The normalized direction to the sun and moon in ECEF coordinates.
 #### matrixMoonFixedToECEF
 
 ```ts
-matrixMoonFixedToECEF = new Matrix4().identity()
+matrixMoonFixedToECEF = uniform(new Matrix4())
 ```
 
 The rotation matrix for converting moon fixed coordinates to ECEF coordinates. This matrix is used to orient the moon’s surface as seen from the earth in `MoonNode`.
