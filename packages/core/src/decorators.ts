@@ -76,7 +76,7 @@ export function defineInt(
         enumerable: true,
         get(this: Extract<T, Material>): number {
           const value = this.defines?.[name]
-          return value != null ? parseInt(value) : 0
+          return value != null ? parseInt(value, 10) : 0
         },
         set(this: Extract<T, Material>, value: number) {
           const prevValue = this[propertyKey]
@@ -92,7 +92,7 @@ export function defineInt(
         enumerable: true,
         get(this: Extract<T, EffectLike>): number {
           const value = this.defines.get(name)
-          return value != null ? parseInt(value) : 0
+          return value != null ? parseInt(value, 10) : 0
         },
         set(this: Extract<T, EffectLike>, value: number) {
           const prevValue = this[propertyKey]
