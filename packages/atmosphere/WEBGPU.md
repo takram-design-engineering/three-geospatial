@@ -8,6 +8,8 @@ A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere
 
 ### Atmospheric lighting
 
+`AtmosphereLight` replaces `SunLight` and `SkyLight`, providing physically correct lighting for large-scale scenes and maintaining compatibility with built-in Three.js materials and shadows.
+
 ```ts
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
@@ -21,7 +23,7 @@ declare const scene: Scene
 declare const date: Date
 
 const context = new AtmosphereContextNode()
-getSunDirectionECEF(date, context.sunDirectionECEF)
+getSunDirectionECEF(date, context.sunDirectionECEF.value)
 
 // AtmosphereLightNode must be associated with AtmosphereLight in the
 // renderer's node library before use:
@@ -32,6 +34,8 @@ scene.add(light)
 ```
 
 ### Aerial perspective
+
+`AerialPerspectiveNode` is a post-processing node that renders atmospheric transparency and inscattered light. It takes a color (beauty) buffer and a depth buffer, and also renders the sky for texels whose depth value is 1.
 
 ```ts
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -47,7 +51,7 @@ declare const date: Date
 
 const context = new AtmosphereContextNode()
 context.camera = camera
-getSunDirectionECEF(date, context.sunDirectionECEF)
+getSunDirectionECEF(date, context.sunDirectionECEF.value)
 
 const passNode = pass(scene, camera, { samples: 0 })
 const colorNode = passNode.getTextureNode('output')
@@ -55,6 +59,67 @@ const depthNode = passNode.getTextureNode('depth')
 
 const postProcessing = new PostProcessing(renderer)
 postProcessing.outputNode = aerialPerspective(context, colorNode, depthNode)
+```
+
+### Sky
+
+`SkyNode` replaces `SkyMaterial` and is also aggregated in `AerialPerspectiveNode`. Despite its name, it renders the atmospheric transparency and inscattered light at infinite distance (or clamped to a virtual ground at the ellipsoidal surface), along with the sun, moon and stars.
+
+```ts
+import {
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECI,
+  getSunDirectionECI
+} from '@takram/three-atmosphere'
+import {
+  AtmosphereContextNode,
+  skyBackground
+} from '@takram/three-atmosphere/webgpu'
+import { Scene } from 'three'
+
+declare const date: Date
+
+const context = new AtmosphereContextNode()
+
+const scene = new Scene()
+scene.backgroundNode = skyBackground(context)
+
+// Update the following uniforms in the context:
+//   - matrixECIToECEF: For the stars
+//   - sunDirectionECEF: For the sun
+//   - moonDirectionECEF: For the moon
+const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+const matrix = getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
+getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(matrix)
+getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(matrix)
+```
+
+### World origin rebasing
+
+World origin rebasing is a common technique for large coordinates like ECEF. Instead of moving the camera, it moves and rotate the world coordinates to reduces loss of floating-point precision.
+
+This appears to be required for the shadows to work correctly with `WebGPURenderer`.
+
+```ts
+declare const longitude // In degrees
+declare const latitude // In degrees
+declare const height // In meters
+
+const context = new AtmosphereContextNode()
+
+// Convert the geographic coordinates to ECEF coordinates in meters:
+const positionECEF = new Geodetic(
+  radians(longitude),
+  radians(latitude),
+  height
+).toECEF()
+
+// Update the matrixWorldToECEF uniform in the context so that the scene's
+// orientation aligns with x: north, y: up, z: east.
+Ellipsoid.WGS84.getNorthUpEastFrame(
+  positionECEF,
+  context.matrixWorldToECEF.value
+)
 ```
 
 ## API changes
