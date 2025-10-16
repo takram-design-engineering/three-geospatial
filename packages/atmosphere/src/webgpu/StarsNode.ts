@@ -193,7 +193,7 @@ export class StarsNode extends TempNode {
     )
     const brightness = vec3(10).pow(
       vec3(this.magnitudeRange, magnitude)
-        .div(100 ** (1 / 5))
+        .mul(1 / 100 ** (1 / 5))
         .negate()
     )
     material.colorNode = instanceColor

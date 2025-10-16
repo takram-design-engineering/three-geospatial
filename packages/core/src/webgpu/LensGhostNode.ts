@@ -38,7 +38,7 @@ export class LensGhostNode extends TempNode {
       // Falloff at the perimeter:
       const d = sub(0.5, suv)
         .length()
-        .div(Math.SQRT2 / 4)
+        .mul(1 / (Math.SQRT2 / 4))
         .saturate()
       result.mulAssign(d.oneMinus().pow(3))
       return result

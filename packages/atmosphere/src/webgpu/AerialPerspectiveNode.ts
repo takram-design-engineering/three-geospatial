@@ -4,7 +4,6 @@ import {
   If,
   mix,
   nodeObject,
-  PI,
   positionGeometry,
   remapClamp,
   select,
@@ -194,10 +193,10 @@ export class AerialPerspectiveNode extends TempNode {
       })()
 
       const diffuse = this.lighting
-        ? colorNode.rgb.mul(illuminance).div(PI) // Lambertian
+        ? colorNode.rgb.mul(illuminance).mul(1 / Math.PI) // Lambertian
         : colorNode.rgb
 
-      // Scattering between the camera to the surface
+      // Scattering between the camera to the surface:
       const luminanceTransfer = getSkyLuminanceToPoint(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         positionUnit.add(altitudeCorrectionUnit),
