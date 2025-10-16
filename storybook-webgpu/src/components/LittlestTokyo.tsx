@@ -43,12 +43,12 @@ export const LittlestTokyo: FC<LittlestTokyoProps> = ({ ref, ...props }) => {
   })
 
   const userData: {
-    init?: boolean
+    initialized?: boolean
     offset?: number[]
   } = gltf.userData
 
-  if (userData.init !== true) {
-    userData.init = true
+  if (userData.initialized !== true) {
+    userData.initialized = true
     Object.values(gltf.meshes).forEach(mesh => {
       mesh.receiveShadow = true
       mesh.castShadow = true
