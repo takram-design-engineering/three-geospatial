@@ -388,14 +388,11 @@ inscatter = true
 
 ### Constructor
 
+<!-- prettier-ignore -->
 ```ts
 const sky: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
-
 const skyWorld: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
-
-const skyBackground: (
-  atmosphereContext: AtmosphereContext
-) => NodeObject<SkyNode>
+const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
 ```
 
 ### Dependencies
@@ -502,3 +499,179 @@ const skyEnvironment: (
 ```ts
 skyNode: SkyNode
 ```
+
+## AtmosphereParameters
+
+### Static options
+
+#### worldToUnit
+
+```ts
+worldToUnit = 0.001
+```
+
+A unit-less scaling factor for convert meters to the internal length unit (defaults to km) to reduce loss of floating-point precision during internal calculation.
+
+#### solarIrradiance
+
+```ts
+solarIrradiance = new Vector3(1.474, 1.8504, 1.91198)
+```
+
+The solar irradiance (W･m<sup>-2</sup>･nm<sup>-1</sup>) at the top of the atmosphere.
+
+Note that this and other spectral parameters are simplified to only 3 wavelengths: 680 nm, 550 nm, and 440 nm.
+
+#### sunAngularRadius
+
+```ts
+sunAngularRadius = 0.004675
+```
+
+The sun's angular radius, in radians.
+
+#### bottomRadius
+
+```ts
+bottomRadius = 6360000
+```
+
+The distance between the planet center and the bottom of the atmosphere, in meters.
+
+#### topRadius
+
+```ts
+topRadius = 6420000
+```
+
+The distance between the planet center and the top of the atmosphere, in meters.
+
+#### rayleighDensity
+
+```ts
+rayleighDensity = new DensityProfile([
+  new DensityProfileLayer(),
+  new DensityProfileLayer(0, 1, -1 / 8000)
+])
+```
+
+The density profile of air molecules.
+
+#### rayleighScattering
+
+```ts
+rayleighScattering = new Vector3(0.000005802, 0.000013558, 0.0000331)
+```
+
+The scattering coefficient (m<sup>-1</sup>) of air molecules at the altitude where their density is maximum.
+
+#### mieDensity
+
+```ts
+mieDensity = new DensityProfile([
+  new DensityProfileLayer(),
+  new DensityProfileLayer(0, 1, -1 / 1200)
+])
+```
+
+The density profile of aerosols.
+
+#### mieScattering
+
+```ts
+mieScattering = new Vector3().setScalar(0.000003996)
+```
+
+The scattering coefficient (m<sup>-1</sup>) of aerosols at the altitude where their density is maximum.
+
+#### mieExtinction
+
+```ts
+mieExtinction = new Vector3().setScalar(0.00000444)
+```
+
+The extinction coefficient (m<sup>-1</sup>) of aerosols at the altitude where their density is maximum.
+
+#### miePhaseFunctionG
+
+```ts
+miePhaseFunctionG = 0.8
+```
+
+The anisotropy parameter for the Cornette-Shanks phase function.
+
+#### absorptionDensity
+
+```ts
+absorptionDensity = new DensityProfile([
+  new DensityProfileLayer(25000, 0, 0, 1 / 15000, -2 / 3),
+  new DensityProfileLayer(0, 0, 0, -1 / 15000, 8 / 3)
+])
+```
+
+The density profile of air molecules that absorb light (e.g. ozone).
+
+#### absorptionExtinction
+
+```ts
+absorptionExtinction = new Vector3(0.00000065, 0.000001881, 0.000000085)
+```
+
+The extinction coefficient (m<sup>-1</sup>) of molecules that absorb light (e.g. ozone) at the altitude where their density is maximum.
+
+#### groundAlbedo
+
+```ts
+groundAlbedo = new Vector3().setScalar(0.3)
+```
+
+The average albedo of the ground.
+
+#### minCosSun
+
+```ts
+minCosSun = Math.cos(radians(102))
+```
+
+The cosine of the maximum sun zenith angle for which atmospheric scattering must be precomputed (for maximum precision, use the smallest sun zenith angle yielding negligible sky light radiance values).
+
+#### sunRadianceToLuminance, skyRadianceToLuminance
+
+```ts
+sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
+skyRadianceToLuminance = new Vector3(114974.91644, 71305.954816, 65310.548555)
+```
+
+The precomputed coefficients (lm･W<sup>-1</sup>) to approximate the conversion from RGB spectral radiance (W･m<sup>-2</sup>･nm<sup>-1</sup>) to luminance (cd･m<sup>-2</sup>).
+
+#### luminanceScale
+
+```ts
+luminanceScale = 1 / luminanceCoefficients.dot(sunRadianceToLuminance)
+```
+
+A unit-less scaling factor to bring true luminance values into a numerically stable range. This helps prevent noticeable precision loss in half-float buffers.
+
+#### transmittancePrecisionLog
+
+```ts
+transmittancePrecisionLog = false
+```
+
+Whether to store the optical depth instead of the transmittance in the transmittance textures. Linear filtering on logarithmic numbers yields non-linear interpolations so that sampling will be performed manually, thus this should be enabled only in the precomputation stage.
+
+#### combinedScatteringTextures
+
+```ts
+combinedScatteringTextures = true
+```
+
+Whether to store the single Mie scattering in the alpha channel of the scattering texture, reducing the memory footprint on the GPU.
+
+#### higherOrderScatteringTexture
+
+```ts
+higherOrderScatteringTexture = true
+```
+
+Whether to generate and use a separate texture for higher-order scattering (n >= 2) for a better approximation of the multi-scattering occlusion.

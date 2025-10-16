@@ -128,8 +128,8 @@ export class AtmosphereParameters {
   groundAlbedo = new Vector3().setScalar(0.3)
 
   // The cosine of the maximum sun zenith angle for which atmospheric scattering
-  // must be precomputed (for maximum precision, use the smallest Sun zenith
-  // angle yielding negligible sky light radiance values.
+  // must be precomputed (for maximum precision, use the smallest sun zenith
+  // angle yielding negligible sky light radiance values).
   minCosSun = Math.cos(radians(102))
 
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
