@@ -9,7 +9,7 @@ const rotationScratch = new Matrix3()
 // exported but their types only, so we extend DirectionalLight to create an
 // instance of LightShadow.
 export class AtmosphereLight extends DirectionalLight {
-  override readonly type = 'DirectionalLight'
+  override readonly type = 'AtmosphereLight'
 
   atmosphereContext?: AtmosphereContextNode
 
