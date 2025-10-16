@@ -11,6 +11,7 @@ import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   atomicAdd,
   Fn,
+  globalId,
   If,
   instancedArray,
   instanceIndex,
@@ -208,16 +209,12 @@ export class LensGlareNode extends FilterNode {
     ).toAtomic()
 
     this.computeNode = Fn(() => {
-      const id = instanceIndex
-      const x = id.mod(tileWidth)
-      const y = id.div(tileWidth)
       const tileSize = uvec2(tileWidth, tileHeight)
-      If(uvec2(x, y).greaterThanEqual(tileSize).any(), () => {
+      If(globalId.xy.greaterThanEqual(tileSize).any(), () => {
         Return()
       })
-      const positionTile = vec2(x, y)
 
-      const uv = positionTile.mul(outputTexelSize).mul(2)
+      const uv = vec2(globalId.xy).mul(outputTexelSize).mul(2)
       const inputColor = inputNode.sample(uv)
       const inputLuminance = inputColor.a // Alpha channel stores luminance
 
@@ -227,7 +224,7 @@ export class LensGlareNode extends FilterNode {
           const instance = instanceBuffer.element(countBefore.add(i))
           instance.get('color').assign(inputColor.rgb)
           instance.get('luminance').assign(inputLuminance)
-          instance.get('position').assign(positionTile)
+          instance.get('position').assign(globalId.xy)
           instance.get('scale').assign(i % 2 === 0 ? 1 : 0.5)
 
           const phi = Math.PI * (3 - Math.sqrt(5))
@@ -236,7 +233,11 @@ export class LensGlareNode extends FilterNode {
           instance.get('cos').assign(Math.cos(angle))
         }
       })
-    })().compute(tileWidth * tileHeight, [8, 8, 1])
+    })().compute(
+      // @ts-expect-error "count" can be dimensional
+      [Math.ceil(tileWidth / 8), Math.ceil(tileHeight / 8), 1],
+      [8, 8, 1]
+    )
   }
 
   private setupMaterial(): void {

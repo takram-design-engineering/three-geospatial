@@ -1,8 +1,7 @@
 import {
   Fn,
+  globalId,
   If,
-  instanceIndex,
-  ivec2,
   luminance,
   max,
   nodeObject,
@@ -12,8 +11,7 @@ import {
   textureStore,
   time,
   uniform,
-  uvec2,
-  vec2
+  uvec2
 } from 'three/tsl'
 import {
   FloatType,
@@ -173,19 +171,20 @@ export class LongExposureNode extends TempNode {
     }
 
     this.computeNode ??= Fn(() => {
-      const id = instanceIndex
-      const x = id.mod(width)
-      const y = id.div(width)
-      If(uvec2(x, y).greaterThanEqual(vec2(width, height)).any(), () => {
+      const size = uvec2(width, height)
+      If(globalId.xy.greaterThanEqual(size).any(), () => {
         Return()
       })
-      const coord = ivec2(x, y)
-      const input = this.inputNode.load(coord)
-      const previous = this.currentNode.load(coord)
+      const input = this.inputNode.load(globalId.xy)
+      const previous = this.currentNode.load(globalId.xy)
       If(luminance(input.rgb).greaterThanEqual(luminance(previous.rgb)), () => {
-        textureStore(this.timerTexture, coord, time)
+        textureStore(this.timerTexture, globalId.xy, time)
       })
-    })().compute(width * height, [8, 8, 1])
+    })().compute(
+      // @ts-expect-error "count" can be dimensional
+      [Math.ceil(width / 8), Math.ceil(height / 8), 1],
+      [8, 8, 1]
+    )
 
     void renderer.compute(this.computeNode)
 

@@ -9,8 +9,8 @@ import {
 import {
   exp,
   Fn,
+  globalId,
   If,
-  instanceIndex,
   int,
   Return,
   texture,
@@ -218,17 +218,13 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     const { x: width, y: height } = parameters.transmittanceTextureSize
 
     this.transmittanceNode ??= Fn(() => {
-      const id = instanceIndex
-      const x = id.mod(width)
-      const y = id.div(width)
       const size = uvec2(width, height)
-      If(uvec2(x, y).greaterThanEqual(size).any(), () => {
+      If(globalId.xy.greaterThanEqual(size).any(), () => {
         Return()
       })
-      const textureCoordinate = vec2(x, y)
 
       const transmittance = computeTransmittanceToTopAtmosphereBoundaryTexture(
-        textureCoordinate.add(0.5)
+        vec2(globalId.xy).add(0.5)
       )
 
       if (parameters.transmittancePrecisionLog) {
@@ -236,16 +232,20 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         // tiny transmittance values underflow to 0 due to half-float precision.
         textureStore(
           this.transmittance,
-          textureCoordinate,
+          globalId.xy,
           exp(transmittance.negate())
         )
-        textureStore(opticalDepth, textureCoordinate, transmittance)
+        textureStore(opticalDepth, globalId.xy, transmittance)
       } else {
-        textureStore(this.transmittance, textureCoordinate, transmittance)
+        textureStore(this.transmittance, globalId.xy, transmittance)
       }
     })()
       .context({ atmosphere: context })
-      .compute(width * height, [8, 8, 1])
+      .compute(
+        // @ts-expect-error "count" can be dimensional
+        [Math.ceil(width / 8), Math.ceil(height / 8), 1],
+        [8, 8, 1]
+      )
       .setName('transmittance')
 
     void renderer.compute(this.transmittanceNode)
@@ -259,14 +259,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     const { x: width, y: height } = parameters.irradianceTextureSize
 
     this.directIrradianceNode ??= Fn(() => {
-      const id = instanceIndex
-      const x = id.mod(width)
-      const y = id.div(width)
       const size = uvec2(width, height)
-      If(uvec2(x, y).greaterThanEqual(size).any(), () => {
+      If(globalId.xy.greaterThanEqual(size).any(), () => {
         Return()
       })
-      const textureCoordinate = vec2(x, y)
 
       const irradiance = computeDirectIrradianceTexture(
         texture(
@@ -274,14 +270,18 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
             ? opticalDepth
             : this.transmittance
         ),
-        textureCoordinate.add(0.5)
+        vec2(globalId.xy).add(0.5)
       )
 
-      textureStore(this.irradiance, textureCoordinate, vec4(vec3(0), 1))
-      textureStore(deltaIrradiance, textureCoordinate, vec4(irradiance, 1))
+      textureStore(this.irradiance, globalId.xy, vec4(vec3(0), 1))
+      textureStore(deltaIrradiance, globalId.xy, vec4(irradiance, 1))
     })()
       .context({ atmosphere: context })
-      .compute(width * height, [8, 8, 1])
+      .compute(
+        // @ts-expect-error "count" can be dimensional
+        [Math.ceil(width / 8), Math.ceil(height / 8), 1],
+        [8, 8, 1]
+      )
       .setName('directIrradiance')
 
     void renderer.compute(this.directIrradianceNode)
@@ -301,15 +301,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     const { x: width, y: height, z: depth } = parameters.scatteringTextureSize
 
     this.singleScatteringNode ??= Fn(() => {
-      const id = instanceIndex
-      const x = id.mod(width)
-      const y = id.div(width).mod(height)
-      const z = id.div(width * height)
       const size = uvec3(width, height, depth)
-      If(uvec3(x, y, z).greaterThanEqual(size).any(), () => {
+      If(globalId.greaterThanEqual(size).any(), () => {
         Return()
       })
-      const textureCoordinate = vec3(x, y, z)
 
       const singleScattering = computeSingleScatteringTexture(
         texture(
@@ -317,7 +312,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
             ? opticalDepth
             : this.transmittance
         ),
-        textureCoordinate.add(0.5)
+        vec3(globalId).add(0.5)
       )
 
       const rayleigh = singleScattering.get('rayleigh')
@@ -325,25 +320,25 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       textureStore(
         this.scattering,
-        textureCoordinate,
+        globalId,
         vec4(
           rayleigh.mul(luminanceFromRadiance),
           mie.mul(luminanceFromRadiance).r
         )
       )
-      textureStore(
-        deltaRayleighScattering,
-        textureCoordinate,
-        vec4(rayleigh, 1)
-      )
+      textureStore(deltaRayleighScattering, globalId, vec4(rayleigh, 1))
       textureStore(
         deltaMieScattering,
-        textureCoordinate,
+        globalId,
         vec4(mie.mul(luminanceFromRadiance), 1)
       )
     })()
       .context({ atmosphere: context })
-      .compute(width * height * depth, [4, 4, 4])
+      .compute(
+        // @ts-expect-error "count" can be dimensional
+        [Math.ceil(width / 4), Math.ceil(height / 4), Math.ceil(depth / 4)],
+        [4, 4, 4]
+      )
       .setName('singleScattering')
 
     void renderer.compute(this.singleScatteringNode)
@@ -377,15 +372,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     const { x: width, y: height, z: depth } = parameters.scatteringTextureSize
 
     this.scatteringDensityNode ??= Fn(() => {
-      const id = instanceIndex
-      const x = id.mod(width)
-      const y = id.div(width).mod(height)
-      const z = id.div(width * height)
       const size = uvec3(width, height, depth)
-      If(uvec3(x, y, z).greaterThanEqual(size).any(), () => {
+      If(globalId.greaterThanEqual(size).any(), () => {
         Return()
       })
-      const textureCoordinate = vec3(x, y, z)
 
       const radiance = computeScatteringDensityTexture(
         texture(
@@ -397,14 +387,18 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         texture3D(deltaMieScattering),
         texture3D(deltaMultipleScattering),
         texture(deltaIrradiance),
-        textureCoordinate.add(0.5),
+        vec3(globalId).add(0.5),
         int(this.scatteringOrder)
       )
 
-      textureStore(deltaScatteringDensity, textureCoordinate, radiance)
+      textureStore(deltaScatteringDensity, globalId, radiance)
     })()
       .context({ atmosphere: context })
-      .compute(width * height * depth, [4, 4, 4])
+      .compute(
+        // @ts-expect-error "count" can be dimensional
+        [Math.ceil(width / 4), Math.ceil(height / 4), Math.ceil(depth / 4)],
+        [4, 4, 4]
+      )
       .setName('scatteringDensity')
 
     this.scatteringOrder.value = scatteringOrder
@@ -431,34 +425,34 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     renderer.copyTextureToTexture(this.irradiance, irradianceRead)
 
     this.indirectIrradianceNode ??= Fn(() => {
-      const id = instanceIndex
-      const x = id.mod(width)
-      const y = id.div(width)
       const size = uvec2(width, height)
-      If(uvec2(x, y).greaterThanEqual(size).any(), () => {
+      If(globalId.xy.greaterThanEqual(size).any(), () => {
         Return()
       })
-      const textureCoordinate = vec2(x, y)
 
       const irradiance = computeIndirectIrradianceTexture(
         texture3D(deltaRayleighScattering),
         texture3D(deltaMieScattering),
         texture3D(deltaMultipleScattering),
-        textureCoordinate.add(0.5),
+        vec2(globalId.xy).add(0.5),
         int(this.scatteringOrder.sub(1))
       )
 
       textureStore(
         this.irradiance,
-        textureCoordinate,
+        globalId.xy,
         texture(irradianceRead)
-          .load(textureCoordinate)
+          .load(globalId.xy)
           .add(irradiance.mul(luminanceFromRadiance))
       )
-      textureStore(deltaIrradiance, textureCoordinate, irradiance)
+      textureStore(deltaIrradiance, globalId.xy, irradiance)
     })()
       .context({ atmosphere: context })
-      .compute(width * height, [8, 8, 1])
+      .compute(
+        // @ts-expect-error "count" can be dimensional
+        [Math.ceil(width / 8), Math.ceil(height / 8), 1],
+        [8, 8, 1]
+      )
       .setName('indirectIrradiance')
 
     this.scatteringOrder.value = scatteringOrder
@@ -500,19 +494,14 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     )
 
     this.multipleScatteringNode ??= Fn(() => {
-      const id = instanceIndex
-      const x = id.mod(width)
-      const y = id.div(width).mod(height)
-      const z = id.div(width * height)
       const size = uvec3(width, height, depth)
-      If(uvec3(x, y, z).greaterThanEqual(size).any(), () => {
+      If(globalId.greaterThanEqual(size).any(), () => {
         Return()
       })
-      const textureCoordinate = vec3(x, y, z)
 
       // WORKAROUND: Texture3DNode seems to have an issue with load() with
       // ivec3() coordinates.
-      const textureUV = textureCoordinate
+      const textureUV = vec3(globalId)
         .add(0.5)
         .div(vec3(width, height, depth))
 
@@ -523,7 +512,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
             : this.transmittance
         ),
         texture3D(deltaScatteringDensity),
-        textureCoordinate.add(0.5)
+        vec3(globalId).add(0.5)
       )
 
       const radiance = multipleScattering.get('radiance')
@@ -534,18 +523,14 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       textureStore(
         this.scattering,
-        textureCoordinate,
+        globalId,
         texture3D(scatteringRead).sample(textureUV).add(vec4(luminance, 0))
       )
-      textureStore(
-        deltaMultipleScattering,
-        textureCoordinate,
-        vec4(radiance, 1)
-      )
+      textureStore(deltaMultipleScattering, globalId, vec4(radiance, 1))
       if (parameters.higherOrderScatteringTexture) {
         textureStore(
           this.higherOrderScattering,
-          textureCoordinate,
+          globalId,
           texture3D(higherOrderScatteringRead)
             .sample(textureUV)
             .add(vec4(luminance, 1))
@@ -553,7 +538,11 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       }
     })()
       .context({ atmosphere: context })
-      .compute(width * height * depth, [4, 4, 4])
+      .compute(
+        // @ts-expect-error "count" can be dimensional
+        [Math.ceil(width / 4), Math.ceil(height / 4), Math.ceil(depth / 4)],
+        [4, 4, 4]
+      )
       .setName('multipleScattering')
 
     void renderer.compute(this.multipleScatteringNode)
