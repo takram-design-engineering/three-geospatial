@@ -54,7 +54,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
   const lutNode = useResource(() => {
     const parameters = new AtmosphereParameters()
     parameters.groundAlbedo.setScalar(0.1)
-    parameters.minCosSun = radians(120)
+    parameters.minCosSun = Math.cos(radians(120))
     return new AtmosphereLUTNode(parameters)
   }, [])
   Object.assign(lutNode.parameters, options)
