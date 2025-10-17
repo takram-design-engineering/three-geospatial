@@ -155,13 +155,13 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
       const context = AtmosphereContextBaseNode.get(builder)
       const { bottomRadius } = context
 
-      const SAMPLE_COUNT = 500
+      const sampleCount = 500
       const stepSize = distanceToTopAtmosphereBoundary(radius, cosView)
-        .div(SAMPLE_COUNT)
+        .div(sampleCount)
         .toVar()
 
       const opticalDepth = float(0).toVar()
-      Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
+      Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
         const rayLength = float(i).mul(stepSize).toVar()
 
         // Distance between the current sample point and the planet center.
@@ -179,7 +179,7 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
         const y = getProfileDensity(profile, r.sub(bottomRadius))
 
         // Sample weight from the trapezoidal rule.
-        const weight = select(equal(i, 0).or(equal(i, SAMPLE_COUNT)), 0.5, 1)
+        const weight = select(equal(i, 0).or(equal(i, sampleCount)), 0.5, 1)
         opticalDepth.addAssign(y.mul(weight).mul(stepSize))
       })
 
@@ -424,18 +424,18 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
   const context = AtmosphereContextBaseNode.get(builder)
   const { solarIrradiance, rayleighScattering, mieScattering } = context
 
-  const SAMPLE_COUNT = 50
+  const sampleCount = 50
   const stepSize = distanceToNearestAtmosphereBoundary(
     radius,
     cosView,
     viewRayIntersectsGround
   )
-    .div(SAMPLE_COUNT)
+    .div(sampleCount)
     .toVar()
 
   const rayleighSum = vec3(0).toVar()
   const mieSum = vec3(0).toVar()
-  Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
+  Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
     const rayLength = float(i).mul(stepSize).toVar()
 
     // The Rayleigh and Mie single scattering at the current sample point.
@@ -452,7 +452,7 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
     const deltaMie = deltaRayleighMie.get('mie')
 
     // Sample weight from the trapezoidal rule.
-    const weight = select(equal(i, 0).or(equal(i, SAMPLE_COUNT)), 0.5, 1)
+    const weight = select(equal(i, 0).or(equal(i, sampleCount)), 0.5, 1)
     rayleighSum.addAssign(deltaRayleigh.mul(weight))
     mieSum.addAssign(deltaMie.mul(weight))
   })
@@ -618,7 +618,7 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
     parameters.scatteringTextureCosSunSize,
     parameters.scatteringTextureCosViewSize,
     parameters.scatteringTextureRadiusSize
-  ).toConst()
+  )
   const coord = vec4(
     fragCoordCosViewSun,
     fragCoordCosSun,
@@ -800,7 +800,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
   // angle is cosView, the cosine of the sun-zenith angle is cosSun, and
   // the cosine of the view-sun angle is cosViewSun. The goal is to simplify
   // computations below.
-  const zenithDirection = vec3(0, 0, 1).toConst()
+  const zenithDirection = vec3(0, 0, 1)
   const omega = vec3(sqrt(cosView.pow2().oneMinus()), 0, cosView).toVar()
   const sunDirectionX = select(
     omega.x.equal(0),
@@ -811,14 +811,14 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
     max(sunDirectionX.pow2().add(cosSun.pow2()).oneMinus(), 0)
   )
   const omegaSun = vec3(sunDirectionX, sunDirectionY, cosSun).toVar()
-  const SAMPLE_COUNT = 16
-  const deltaPhi = PI.div(SAMPLE_COUNT).toConst()
-  const deltaTheta = PI.div(SAMPLE_COUNT).toConst()
+  const sampleCount = 16
+  const deltaPhi = Math.PI / sampleCount
+  const deltaTheta = Math.PI / sampleCount
   const radiance = vec3(0).toVar()
 
   // Nested loops for the integral over all the incident directions omegaI.
   // @ts-expect-error Missing type
-  Loop({ start: 0, end: SAMPLE_COUNT, name: 'l' }, ({ l }) => {
+  Loop({ start: 0, end: sampleCount, name: 'l' }, ({ l }) => {
     const theta = float(l).add(0.5).mul(deltaTheta).toVar()
     const cosTheta = cos(theta).toVar()
     const sinTheta = sin(theta).toVar()
@@ -849,14 +849,14 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
     })
 
     // @ts-expect-error Missing type
-    Loop({ start: 0, end: mul(SAMPLE_COUNT, 2), name: 'm' }, ({ m }) => {
+    Loop({ start: 0, end: mul(sampleCount, 2), name: 'm' }, ({ m }) => {
       const phi = float(m).add(0.5).mul(deltaPhi).toVar()
       const omegaI = vec3(
         cos(phi).mul(sinTheta),
         sin(phi).mul(sinTheta),
         cosTheta
       ).toVar()
-      const deltaOmegaI = deltaTheta.mul(deltaPhi).mul(sin(theta)).toVar()
+      const deltaOmegaI = sin(theta).mul(deltaTheta).mul(deltaPhi).toVar()
 
       // The radiance arriving from direction omegaI after n-1 bounces is the
       // sum of a term given by the precomputed scattering texture for the
@@ -950,17 +950,17 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
   cosViewSun,
   viewRayIntersectsGround
 ]) => {
-  const SAMPLE_COUNT = 50
+  const sampleCount = 50
   const stepSize = distanceToNearestAtmosphereBoundary(
     radius,
     cosView,
     viewRayIntersectsGround
   )
-    .div(SAMPLE_COUNT)
+    .div(sampleCount)
     .toVar()
 
   const radianceSum = vec3(0).toVar()
-  Loop({ start: 0, end: SAMPLE_COUNT, condition: '<=' }, ({ i }) => {
+  Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
     const rayLength = float(i).mul(stepSize).toVar()
 
     // The radius, cosView and cosSun parameters at the current integration
@@ -1001,7 +1001,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
       .mul(stepSize)
 
     // Sample weight from the trapezoidal rule.
-    const weight = select(equal(i, 0).or(equal(i, SAMPLE_COUNT)), 0.5, 1)
+    const weight = select(equal(i, 0).or(equal(i, sampleCount)), 0.5, 1)
     radianceSum.addAssign(radiance.mul(weight))
   })
 
@@ -1146,25 +1146,25 @@ const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
   cosSun,
   scatteringOrder
 ]) => {
-  const SAMPLE_COUNT = 32
-  const deltaPhi = PI.div(SAMPLE_COUNT).toConst()
-  const deltaTheta = PI.div(SAMPLE_COUNT).toConst()
+  const sampleCount = 32
+  const deltaPhi = Math.PI / sampleCount
+  const deltaTheta = Math.PI / sampleCount
 
   const result = vec3(0).toVar()
   const omegaSun = vec3(sqrt(cosSun.pow2().oneMinus()), 0, cosSun).toVar()
 
   // @ts-expect-error Missing type
-  Loop({ start: 0, end: SAMPLE_COUNT / 2, name: 'j' }, ({ j }) => {
+  Loop({ start: 0, end: sampleCount / 2, name: 'j' }, ({ j }) => {
     const theta = float(j).add(0.5).mul(deltaTheta).toVar()
 
-    Loop({ start: 0, end: SAMPLE_COUNT * 2 }, ({ i }) => {
+    Loop({ start: 0, end: sampleCount * 2 }, ({ i }) => {
       const phi = float(i).add(0.5).mul(deltaPhi).toVar()
       const omega = vec3(
         cos(phi).mul(sin(theta)),
         sin(phi).mul(sin(theta)),
         cos(theta)
       ).toVar()
-      const deltaOmega = deltaTheta.mul(deltaPhi).mul(sin(theta))
+      const deltaOmega = sin(theta).mul(deltaTheta * deltaPhi)
       const cosViewSun = omega.dot(omegaSun)
       result.addAssign(
         getScatteringForOrder(
