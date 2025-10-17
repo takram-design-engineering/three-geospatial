@@ -26,8 +26,6 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     return 'AtmosphereLightNode'
   }
 
-  private originalColorNode?: Node
-
   override setupDirect(builder: NodeBuilder): DirectLightData | undefined {
     if (this.light == null) {
       return
@@ -99,15 +97,9 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       .mul(sunRadianceToLuminance.mul(luminanceScale))
       .mul(select(direct, 1, 0))
 
-    // WORKAROUND: As of r178, the lightColor in the DirectLightData must
-    // depends on the colorNode of AnalyticLight, otherwise the shadow camera
-    // doesn't follow the direction of the light.
-    this.originalColorNode ??= this.colorNode
-    this.colorNode = sunLuminance.mul(this.originalColorNode)
-
     return {
       lightDirection: sunDirectionView,
-      lightColor: this.colorNode
+      lightColor: sunLuminance.mul(this.colorNode)
     }
   }
 }
