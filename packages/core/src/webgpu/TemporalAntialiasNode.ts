@@ -447,8 +447,7 @@ export class TemporalAntialiasNode extends TempNode {
 
       const velocity = this.velocityNode
         .load(closestCoord)
-        // TODO: Should Y still be inverted on WebGL?
-        .xyz.mul(vec3(1, -1, 1))
+        .xyz.mul(vec3(0.5, -0.5, 0.5)) // Velocity is in NDC offset
         .toVar()
 
       // Discards texels with velocity greater than the threshold:

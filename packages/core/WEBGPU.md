@@ -90,8 +90,6 @@ const fn = Fn(([a, b, c], builder) => {
 
 A node that outputs geometry velocity in the current camera’s UV and depth. Unlike `VelocityNode` in Three.js’s examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
 
-This is not compatible with `VelocityNode` in Three.js’s examples, which outputs velocity in NDC and lacks depth output.
-
 → [Source](/packages/core/src/webgpu/HighpVelocityNode.ts)
 
 ```ts
@@ -102,8 +100,8 @@ const passNode = pass(scene, camera).setMRT(
   })
 )
 const velocityNode = passNode.getTextureNode('velocity')
-const deltaUV = velocityNode.xy
-const deltaDepth = velocityNode.z
+const deltaUV = velocityNode.xy.mul(0.5)
+const deltaDepth = velocityNode.z.mul(0.5)
 ```
 
 ### Parameters
