@@ -10,117 +10,81 @@ import {
   type Material,
   type Scene
 } from 'three'
-import {
-  Fn,
-  globalId,
-  If,
-  instanceIndex,
-  luminance,
-  Return,
-  storage,
-  uniform,
-  vec2,
-  vec3,
-  vertexIndex
-} from 'three/tsl'
+import { instanceIndex, luminance, vec2, vec3, vertexIndex } from 'three/tsl'
 import {
   LineBasicNodeMaterial,
-  StorageBufferAttribute,
-  type ComputeNode,
   type NodeMaterial,
-  type Renderer,
-  type TextureNode
+  type Renderer
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
-import { reinterpretType } from '@takram/three-geospatial'
-import { hsv2rgb, rgb2hsv } from '@takram/three-geospatial/webgpu'
+import {
+  hsv2rgb,
+  rgb2hsv,
+  type NodeObject
+} from '@takram/three-geospatial/webgpu'
+
+import type { VideoAnalysis } from './VideoAnalysis'
+
+export type VideoWaveformMode = 'luma' | 'red' | 'green' | 'blue'
 
 export class VideoWaveform extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
-  _inputNode: TextureNode | null = null
+  source?: VideoAnalysis | null
+  mode: VideoWaveformMode
 
-  private computeNode?: ComputeNode
-  private readonly positionBuffer = storage(
-    new StorageBufferAttribute(0, 0),
-    'vec3'
-  )
-  private readonly colorBuffer = storage(
-    new StorageBufferAttribute(0, 0),
-    'vec3'
-  )
-  private readonly lineCount = uniform(new Vector2(), 'uvec2')
+  private prevMode?: VideoWaveformMode
+  private readonly prevSize = new Vector2()
 
-  constructor(
-    inputNode?: TextureNode | null,
-    horizontalCount = 256,
-    verticalCount = 256
-  ) {
+  constructor(source?: VideoAnalysis | null, mode: VideoWaveformMode = 'luma') {
     super()
-    this.inputNode = inputNode ?? null
+    this.source = source
+    this.mode = mode
 
     this.geometry = new InstancedBufferGeometry()
+    this.geometry.setAttribute(
+      'position',
+      new BufferAttribute(new Float32Array(3), 3)
+    )
+
     this.material = new LineBasicNodeMaterial()
     this.material.transparent = true
     this.material.opacity = 0.05
     this.material.blending = AdditiveBlending
-
-    const index = instanceIndex.mul(this.lineCount.x).add(vertexIndex)
-    this.material.positionNode = this.positionBuffer.element(index)
-    this.material.colorNode = this.colorBuffer.element(index).toVertexStage()
-
-    this.setLineCount(horizontalCount, verticalCount)
   }
 
-  get inputNode(): TextureNode | null {
-    return this._inputNode
-  }
+  private updateMaterial(): void {
+    invariant(this.source != null)
+    const { colorBuffer, uvBuffer, size } = this.source
+    const index = instanceIndex.mul(size.x).add(vertexIndex)
+    const inputColor = colorBuffer.element(index)
+    const inputUV = uvBuffer.element(index)
 
-  set inputNode(value: TextureNode | null) {
-    this._inputNode = value
-    this.setupComputeNode()
-  }
-
-  private setupComputeNode(): void {
-    const { inputNode, lineCount } = this
-    if (inputNode == null) {
-      this.computeNode = undefined
-      return
+    let color: NodeObject<'vec3'>
+    let y: NodeObject<'float'>
+    switch (this.mode) {
+      case 'luma':
+        color = hsv2rgb(vec3(rgb2hsv(inputColor).xy, 1))
+        y = luminance(inputColor)
+        break
+      case 'red':
+        color = vec3(1, 0.5, 0.5)
+        y = inputColor.r
+        break
+      case 'green':
+        color = vec3(0.5, 1, 0.5)
+        y = inputColor.g
+        break
+      case 'blue':
+        color = vec3(0.5, 0.5, 1)
+        y = inputColor.b
+        break
     }
 
-    this.computeNode = Fn(() => {
-      If(globalId.xy.greaterThanEqual(lineCount).any(), () => {
-        Return()
-      })
-
-      const index = globalId.y.mul(lineCount.x).add(globalId.x)
-      const uv = vec2(globalId.xy).add(0.5).div(vec2(lineCount))
-      const color = inputNode.sample(uv).rgb
-
-      this.colorBuffer
-        .element(index)
-        .assign(hsv2rgb(vec3(rgb2hsv(color).xy, 1)))
-      this.positionBuffer
-        .element(index)
-        .assign(vec3(vec2(uv.x, luminance(color)).sub(0.5), 0))
-    })().compute(0)
-  }
-
-  setLineCount(horizontal: number, vertical: number): this {
-    const bufferCount = horizontal * vertical * 3
-    this.positionBuffer.value = new StorageBufferAttribute(bufferCount, 3)
-    this.colorBuffer.value = new StorageBufferAttribute(bufferCount, 3)
-    this.lineCount.value.set(horizontal, vertical)
-
-    // TODO: Buffering with setDrawRange
-    this.geometry.setAttribute(
-      'position',
-      new BufferAttribute(new Float32Array(horizontal * 3), 3)
-    )
-    this.geometry.instanceCount = vertical
-    this.count = vertical
-    return this
+    this.material.positionNode = vec3(vec2(inputUV.x, y).sub(0.5))
+    this.material.colorNode = color.toVertexStage()
   }
 
   override onBeforeRender(
@@ -131,12 +95,25 @@ export class VideoWaveform extends Line {
     material: Material,
     group: Group
   ): void {
-    if (this.computeNode == null) {
+    if (this.source == null) {
       return
     }
-    reinterpretType<Renderer>(renderer)
-    const lineCount = this.lineCount.value
-    void renderer.compute(this.computeNode, [lineCount.x, lineCount.y])
+    this.source.update(renderer as Renderer)
+
+    if (this.mode !== this.prevMode) {
+      this.prevMode = this.mode
+      this.updateMaterial()
+    }
+
+    const size = this.source.size.value
+    if (!size.equals(this.prevSize)) {
+      this.prevSize.copy(size)
+      this.geometry.setAttribute(
+        'position',
+        new BufferAttribute(new Float32Array(size.x * 3), 3)
+      )
+      this.geometry.instanceCount = size.y
+    }
   }
 
   dispose(): void {
