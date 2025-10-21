@@ -32,6 +32,7 @@ import {
   MeshBasicNodeMaterial,
   RendererUtils,
   StorageBufferAttribute,
+  StorageInstancedBufferAttribute,
   type ComputeNode,
   type NodeBuilder,
   type NodeFrame,
@@ -94,7 +95,7 @@ export class LensGlareNode extends FilterNode {
   private computeNode?: ComputeNode
 
   private readonly counterBuffer = new StorageBufferAttribute(1, 1)
-  private instanceBuffer = instancedArray(1, instanceStruct)
+  private readonly instanceBuffer = instancedArray(1, instanceStruct)
 
   private readonly renderTarget = this.createRenderTarget()
   private readonly material = new MeshBasicNodeMaterial({
@@ -132,11 +133,15 @@ export class LensGlareNode extends FilterNode {
     const tileWidth = Math.floor(w / 2)
     const tileHeight = Math.floor(h / 2)
     const bufferCount = tileWidth * tileHeight
+    const { instanceBuffer } = this
     // TODO: Buffering
-    if (this.instanceBuffer.bufferCount < bufferCount) {
-      this.instanceBuffer.dispose()
-      this.instanceBuffer = instancedArray(bufferCount, instanceStruct)
-      this.setupCompute(tileWidth, tileHeight)
+    if (instanceBuffer.bufferCount < bufferCount) {
+      instanceBuffer.value = new StorageInstancedBufferAttribute(
+        bufferCount,
+        instanceBuffer.value.itemSize
+      )
+      instanceBuffer.bufferCount = bufferCount
+      this.setupComputeNode(tileWidth, tileHeight)
       this.setupMaterial()
     }
     return this
@@ -192,7 +197,7 @@ export class LensGlareNode extends FilterNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupCompute(tileWidth: number, tileHeight: number): void {
+  private setupComputeNode(tileWidth: number, tileHeight: number): void {
     const {
       spikePairCount,
       inputNode,
