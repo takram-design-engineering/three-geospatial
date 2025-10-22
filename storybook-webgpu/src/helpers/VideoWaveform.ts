@@ -46,18 +46,19 @@ export class VideoWaveform extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
-  source?: VideoAnalysis | null
+  source: VideoAnalysis | null
   mode: VideoWaveformMode
 
   gain = uniform(5)
 
+  private prevSource: VideoAnalysis | null = null
   private prevMode?: VideoWaveformMode
   private prevComponents?: number
   private readonly prevSize = new Vector2()
 
   constructor(source?: VideoAnalysis | null, mode: VideoWaveformMode = 'luma') {
     super()
-    this.source = source
+    this.source = source ?? null
     this.mode = mode
 
     this.geometry = new InstancedBufferGeometry()
@@ -67,8 +68,6 @@ export class VideoWaveform extends Line {
     )
 
     this.material = new LineBasicNodeMaterial()
-    this.material.transparent = true
-    this.material.opacity = 1
     this.material.blending = AdditiveBlending
   }
 
@@ -132,6 +131,7 @@ export class VideoWaveform extends Line {
 
     this.material.positionNode = vec3(vec2(uv.x, y).sub(0.5))
     this.material.colorNode = color.div(size.y).mul(this.gain).toVertexStage()
+    this.material.needsUpdate = true
   }
 
   override onBeforeRender(renderer: unknown): void {
@@ -140,7 +140,8 @@ export class VideoWaveform extends Line {
     }
     this.source.update(renderer as Renderer)
 
-    if (this.mode !== this.prevMode) {
+    if (this.source !== this.prevSource || this.mode !== this.prevMode) {
+      this.prevSource = this.source
       this.prevMode = this.mode
       this.updateMaterial()
     }
