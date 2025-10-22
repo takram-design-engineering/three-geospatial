@@ -57,7 +57,8 @@ export class VideoAnalysis {
       })
       const index = globalId.y.mul(this.size.x).add(globalId.x)
       const uv = vec2(globalId.xy).add(0.5).div(vec2(this.size))
-      this.colorBuffer.element(index).assign(inputNode.sample(uv).rgb)
+      const color = inputNode.sample(uv).rgb
+      this.colorBuffer.element(index).assign(color)
       this.uvBuffer.element(index).assign(uv)
     })().compute(0)
   }
