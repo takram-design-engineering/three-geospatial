@@ -23,6 +23,7 @@ import invariant from 'tiny-invariant'
 
 import {
   hsv2rgb,
+  linearToRec709,
   rgb2hsv,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
@@ -46,7 +47,7 @@ export class VideoWaveform extends Line {
   source?: VideoAnalysis | null
   mode: VideoWaveformMode
 
-  gain = uniform(10)
+  gain = uniform(5)
 
   private prevMode?: VideoWaveformMode
   private prevComponents?: number
@@ -73,8 +74,9 @@ export class VideoWaveform extends Line {
     invariant(this.source != null)
     const { colorBuffer, uvBuffer, size } = this.source
     const index = instanceIndex.mod(size.y).mul(size.x).add(vertexIndex)
-    const channel = instanceIndex.div(size.y).toVar()
+    const channel = instanceIndex.div(size.y)
     const input = colorBuffer.element(index)
+    const rec709 = linearToRec709(input)
     const uv = uvBuffer.element(index)
 
     let color: NodeObject<'vec3'>
@@ -82,19 +84,19 @@ export class VideoWaveform extends Line {
     switch (this.mode) {
       case 'luma':
         color = hsv2rgb(vec3(rgb2hsv(input).xy, 1))
-        y = luminance(input)
+        y = luminance(rec709)
         break
       case 'red':
         color = vec3(1, 0.25, 0.25)
-        y = input.r
+        y = rec709.r
         break
       case 'green':
         color = vec3(0.25, 1, 0.25)
-        y = input.g
+        y = rec709.g
         break
       case 'blue':
         color = vec3(0.25, 0.25, 1)
-        y = input.b
+        y = rec709.b
         break
       case 'rgb':
         color = select(
@@ -108,11 +110,11 @@ export class VideoWaveform extends Line {
         )
         y = select(
           channel.equal(0),
-          input.r,
+          rec709.r,
           select(
             channel.equal(1),
-            input.g,
-            select(channel.equal(2), input.b, 0)
+            rec709.g,
+            select(channel.equal(2), rec709.b, 0)
           )
         )
         break
