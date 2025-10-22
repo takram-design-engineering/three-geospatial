@@ -7,7 +7,6 @@ import {
 } from 'three'
 import {
   instanceIndex,
-  luminance,
   select,
   uniform,
   vec2,
@@ -23,6 +22,7 @@ import invariant from 'tiny-invariant'
 
 import {
   hsv2rgb,
+  linearToRec709YCbCr,
   linearToSRGB,
   rgb2hsv,
   type NodeObject
@@ -32,6 +32,8 @@ import type { VideoAnalysis } from './VideoAnalysis'
 
 const modes = {
   luma: { components: 1 },
+  cb: { components: 1 },
+  cr: { components: 1 },
   red: { components: 1 },
   green: { components: 1 },
   blue: { components: 1 },
@@ -75,28 +77,36 @@ export class VideoWaveform extends Line {
     const { colorBuffer, uvBuffer, size } = this.source
     const index = instanceIndex.mod(size.y).mul(size.x).add(vertexIndex)
     const channel = instanceIndex.div(size.y)
-    const inputColor = colorBuffer.element(index)
-    const outputColor = linearToSRGB(inputColor) // TODO
+    const linearColor = colorBuffer.element(index)
+    const nonlinearColor = linearToSRGB(linearColor) // TODO
     const uv = uvBuffer.element(index)
 
     let color: NodeObject<'vec3'>
     let y: NodeObject<'float'>
     switch (this.mode) {
       case 'luma':
-        color = hsv2rgb(vec3(rgb2hsv(inputColor).xy, 1))
-        y = luminance(outputColor)
+        color = hsv2rgb(vec3(rgb2hsv(linearColor).xy, 1))
+        y = linearToRec709YCbCr(linearColor).x
+        break
+      case 'cb':
+        color = vec3(1, 1, 0.25)
+        y = linearToRec709YCbCr(linearColor).y.add(0.5)
+        break
+      case 'cr':
+        color = vec3(1, 0.25, 1)
+        y = linearToRec709YCbCr(linearColor).z.add(0.5)
         break
       case 'red':
         color = vec3(1, 0.25, 0.25)
-        y = outputColor.r
+        y = nonlinearColor.r
         break
       case 'green':
         color = vec3(0.25, 1, 0.25)
-        y = outputColor.g
+        y = nonlinearColor.g
         break
       case 'blue':
         color = vec3(0.25, 0.25, 1)
-        y = outputColor.b
+        y = nonlinearColor.b
         break
       case 'rgb':
         color = select(
@@ -110,11 +120,11 @@ export class VideoWaveform extends Line {
         )
         y = select(
           channel.equal(0),
-          outputColor.r,
+          nonlinearColor.r,
           select(
             channel.equal(1),
-            outputColor.g,
-            select(channel.equal(2), outputColor.b, 0)
+            nonlinearColor.g,
+            select(channel.equal(2), nonlinearColor.b, 0)
           )
         )
         break
