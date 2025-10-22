@@ -54,9 +54,95 @@ function yCbCr10bit(y: number, cb: number, cr: number): NodeObject<'vec3'> {
   )
 }
 
-// Based on: https://pub.smpte.org/latest/rp219/Rp219-2002.pdf
+// Based on: https://pub.smpte.org/pub/eg1/eg0001-1990_stable2004.pdf
 export const colorBars = /*#__PURE__*/ FnLayout({
   name: 'colorBars',
+  type: 'vec3',
+  inputs: [{ name: 'uv', type: 'vec2' }]
+})(([uv]) => {
+  const b = 1 / 7
+
+  const output = vec3().toVar()
+  If(uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()), () => {
+    If(uv.y.lessThan(2 / 3), () => {
+      If(uv.x.lessThan(b), () => {
+        output.assign(yCbCr10bit(721, 512, 512)) // Gray
+      })
+        .ElseIf(uv.x.lessThan(b * 2), () => {
+          output.assign(yCbCr10bit(674, 176, 543)) // Yellow
+        })
+        .ElseIf(uv.x.lessThan(b * 3), () => {
+          output.assign(yCbCr10bit(581, 589, 176)) // Cyan
+        })
+        .ElseIf(uv.x.lessThan(b * 4), () => {
+          output.assign(yCbCr10bit(534, 253, 207)) // Green
+        })
+        .ElseIf(uv.x.lessThan(b * 5), () => {
+          output.assign(yCbCr10bit(251, 771, 817)) // Magenta
+        })
+        .ElseIf(uv.x.lessThan(b * 6), () => {
+          output.assign(yCbCr10bit(204, 435, 848)) // Red
+        })
+        .Else(() => {
+          output.assign(yCbCr10bit(111, 848, 481)) // Blue
+        })
+    })
+      .ElseIf(uv.y.lessThan(9 / 12), () => {
+        If(uv.x.lessThan(b), () => {
+          output.assign(yCbCr10bit(111, 848, 481)) // Blue
+        })
+          .ElseIf(uv.x.lessThan(b * 2), () => {
+            output.assign(yCbCr10bit(64, 512, 512)) // Black
+          })
+          .ElseIf(uv.x.lessThan(b * 3), () => {
+            output.assign(yCbCr10bit(251, 771, 817)) // Magenta
+          })
+          .ElseIf(uv.x.lessThan(b * 4), () => {
+            output.assign(yCbCr10bit(64, 512, 512)) // Black
+          })
+          .ElseIf(uv.x.lessThan(b * 5), () => {
+            output.assign(yCbCr10bit(581, 589, 176)) // Cyan
+          })
+          .ElseIf(uv.x.lessThan(b * 6), () => {
+            output.assign(yCbCr10bit(64, 512, 512)) // Black
+          })
+          .Else(() => {
+            output.assign(yCbCr10bit(721, 512, 512)) // Gray
+          })
+      })
+      .Else(() => {
+        If(uv.x.lessThan(b * (5 / 4)), () => {
+          output.assign(yCbCr10bit(244, 612, 395)) // -I
+        })
+          .ElseIf(uv.x.lessThan(b * (5 / 4) * 2), () => {
+            output.assign(yCbCr10bit(940, 512, 512)) // White
+          })
+          .ElseIf(uv.x.lessThan(b * (5 / 4) * 3), () => {
+            output.assign(yCbCr10bit(141, 697, 606)) // +Q
+          })
+          .ElseIf(uv.x.lessThan(b * (5 / 4) * 4), () => {
+            output.assign(yCbCr10bit(64, 512, 512)) // Black
+          })
+          .ElseIf(uv.x.lessThan(b * (5 / 4) * 6), () => {
+            output.assign(yCbCr10bit(29, 512, 512)) // -4% Black
+          })
+          .ElseIf(uv.x.lessThan(b * (5 / 4) * 6), () => {
+            output.assign(yCbCr10bit(64, 512, 512)) // Black
+          })
+          .ElseIf(uv.x.lessThan(b * (5 / 4) * 6), () => {
+            output.assign(yCbCr10bit(99, 512, 512)) // 4% Black
+          })
+          .Else(() => {
+            output.assign(yCbCr10bit(64, 512, 512)) // Black
+          })
+      })
+  })
+  return output
+})
+
+// Based on: https://pub.smpte.org/latest/rp219/Rp219-2002.pdf
+export const colorBarsHD = /*#__PURE__*/ FnLayout({
+  name: 'colorBarsHD',
   type: 'vec3',
   inputs: [{ name: 'uv', type: 'vec2' }]
 })(([uv]) => {
