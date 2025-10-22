@@ -25,7 +25,7 @@ export class VideoAnalysis {
   private computeNode?: ComputeNode
   private prevFrame = -1
 
-  constructor(inputNode?: TextureNode | null, width = 256, height = 256) {
+  constructor(inputNode?: TextureNode | null, width = 960, height = 540) {
     this.inputNode = inputNode ?? null
     this.setSize(width, height)
   }
