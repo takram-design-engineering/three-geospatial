@@ -106,6 +106,10 @@ export const hsl2rgb = /*#__PURE__*/ FnLayout({
   return rgb.sub(0.5).mul(c).add(hsl.z)
 })
 
+// See: https://en.wikipedia.org/wiki/Rec._709
+// Note that we assume a linear workflow (as in Three.js) and sRGB color
+// primaries, which are equivalent to Rec. 709.
+
 const linearToRec709_float = /*#__PURE__*/ FnLayout({
   name: 'linearToRec709_float',
   type: 'float',
@@ -118,7 +122,7 @@ const linearToRec709_float = /*#__PURE__*/ FnLayout({
   )
 })
 
-export const linearToRec709_vec3 = /*#__PURE__*/ FnLayout({
+const linearToRec709_vec3 = /*#__PURE__*/ FnLayout({
   name: 'linearToRec709_vec3',
   type: 'vec3',
   inputs: [{ name: 'color', type: 'vec3' }]
@@ -148,7 +152,7 @@ const rec709ToLinear_float = /*#__PURE__*/ FnLayout({
   )
 })
 
-export const rec709ToLinear_vec3 = /*#__PURE__*/ FnLayout({
+const rec709ToLinear_vec3 = /*#__PURE__*/ FnLayout({
   name: 'rec709ToLinear_vec3',
   type: 'vec3',
   inputs: [{ name: 'color', type: 'vec3' }]
