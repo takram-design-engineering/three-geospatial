@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
 import { Canvas, type CanvasProps } from '@react-three/fiber'
 import { atom, useAtomValue } from 'jotai'
-import { useEffect, useRef, type FC } from 'react'
+import { useEffect, useRef, type FC, type Ref } from 'react'
 import type { WebGPURendererParameters } from 'three/src/renderers/webgpu/WebGPURenderer.js'
 import { WebGPURenderer, type Renderer } from 'three/webgpu'
 
@@ -47,10 +47,12 @@ export interface WebGPUCanvasProps extends Omit<CanvasProps, 'gl'> {
   renderer?: WebGPURendererParameters & {
     onInit?: (renderer: WebGPURenderer) => void | Promise<void>
   }
+  rendererRef?: Ref<WebGPURenderer>
 }
 
 export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
   renderer: { onInit, ...otherProps } = {},
+  rendererRef,
   children,
   ...canvasProps
 }) => {
@@ -68,6 +70,16 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
       }, 500)
     }
   }, [])
+
+  useEffect(() => {
+    return () => {
+      if (typeof rendererRef === 'function') {
+        rendererRef(null)
+      } else if (rendererRef != null) {
+        rendererRef.current = null
+      }
+    }
+  }, [rendererRef])
 
   return (
     <>
@@ -88,6 +100,13 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
           renderer.highPrecision = true
 
           await onInit?.(renderer)
+
+          if (typeof rendererRef === 'function') {
+            rendererRef(renderer)
+          } else if (rendererRef != null) {
+            rendererRef.current = renderer
+          }
+
           return renderer
         }}
         dpr={pixelRatio}
