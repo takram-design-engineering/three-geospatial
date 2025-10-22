@@ -89,6 +89,7 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
         gl={async props => {
           const renderer = new WebGPURenderer({
             ...(props as any),
+            antialias: false,
             ...otherProps,
             forceWebGL
           })
