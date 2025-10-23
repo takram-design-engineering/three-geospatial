@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-function-type */
 
-import type { Camera, Light, Matrix3, Texture } from 'three'
+import type {
+  Camera,
+  EventDispatcher,
+  Light,
+  Matrix3,
+  Texture,
+  Vector4
+} from 'three'
 import type InputNode from 'three/src/nodes/core/InputNode.js'
 import type { ShaderNodeObject } from 'three/tsl'
 import type {
@@ -105,6 +112,11 @@ declare module 'three/tsl' {
     arg1: InputNode<TValue> | TValue,
     arg2?: Node | string
   ): ShaderNodeObject<UniformNode<TValue>>
+
+  // "functionNodes" can be ShaderNodeObject
+  const overloadingFn: (
+    functionNodes: Array<Node, ShaderNodeObject>
+  ) => (...params: Node[]) => ShaderNodeObject<FunctionOverloadingNode>
 }
 
 declare module 'three/webgpu' {
@@ -132,5 +144,19 @@ declare module 'three/webgpu' {
     ): ShaderNodeObject<TextureNode>
     depth(depthNode: number | Node): ShaderNodeObject<TextureNode>
     offset(offsetNode: Node): ShaderNodeObject<TextureNode>
+  }
+
+  // Added
+  class CanvasTarget {
+    domElement: HTMLCanvasElement
+    constructor(domElement: HTMLCanvasElement)
+    setPixelRatio(value: number): void
+    setSize(width: number, height: number): void
+    dispose(): void
+  }
+
+  interface Renderer {
+    setCanvasTarget(canvasTarget: CanvasTarget): void
+    getCanvasTarget(): CanvasTarget
   }
 }
