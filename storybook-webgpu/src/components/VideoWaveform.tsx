@@ -29,6 +29,7 @@ const scale = 1.1
 const Root = /*#__PURE__*/ styled.div`
   width: 480px;
   height: 360px;
+  min-width: 240px;
 `
 
 const Content = /*#__PURE__*/ styled.div`
@@ -121,20 +122,6 @@ export const VideoWaveform: FC<VideoWaveformProps> = ({
   }, [])
 
   canvasTarget?.setPixelRatio(pixelRatio)
-
-  useEffect(() => {
-    if (canvasTarget == null) {
-      return
-    }
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      canvasTarget.setSize(width, height)
-    })
-    observer.observe(canvasTarget.domElement)
-    return () => {
-      observer.disconnect()
-    }
-  }, [canvasTarget])
 
   useEffect(() => {
     return () => {
