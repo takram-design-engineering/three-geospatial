@@ -1,0 +1,12 @@
+{
+  "name": "color-grading",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/color-grading/src",
+  "projectType": "library",
+  "tags": ["type:lib"],
+  "targets": {
+    "build": {
+      "dependsOn": ["typecheck"]
+    }
+  }
+}

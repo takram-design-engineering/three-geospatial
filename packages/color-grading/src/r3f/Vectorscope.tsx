@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentPropsWithRef,
   type FC
 } from 'react'
 import {
@@ -18,8 +19,8 @@ import invariant from 'tiny-invariant'
 
 import { radians, remap } from '@takram/three-geospatial'
 
-import { Vectorscope as VectorscopeImpl } from '../helpers/Vectorscope'
-import type { VideoSource } from '../helpers/VideoSource'
+import { Vectorscope as VectorscopeImpl } from '../Vectorscope'
+import type { VideoSource } from '../VideoSource'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -150,9 +151,11 @@ const Grid = /*#__PURE__*/ memo(() => (
   </Svg>
 ))
 
+Grid.displayName = 'Grid'
+
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
-export interface VectorscopeProps {
+export interface VectorscopeProps extends ComponentPropsWithRef<'div'> {
   source?: VideoSource
   gain?: number
   pixelRatio?: number
@@ -161,7 +164,8 @@ export interface VectorscopeProps {
 export const Vectorscope: FC<VectorscopeProps> = ({
   source,
   gain,
-  pixelRatio = window.devicePixelRatio
+  pixelRatio = window.devicePixelRatio,
+  ...props
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [canvasTarget, setCanvasTarget] = useState<CanvasTarget>()
@@ -255,7 +259,7 @@ export const Vectorscope: FC<VectorscopeProps> = ({
   }, [source, canvasTarget, vectorscope])
 
   return (
-    <Root>
+    <Root {...props}>
       <Content ref={contentRef}>
         <Grid />
         <Canvas ref={canvasRef} />

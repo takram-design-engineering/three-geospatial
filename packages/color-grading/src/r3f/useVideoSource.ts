@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import type { Node, Renderer } from 'three/webgpu'
 
-import { VideoSource } from '../helpers/VideoSource'
+import { VideoSource } from '../VideoSource'
 
 export interface UseVideoAnalysisParams {
   renderer?: Renderer | null
