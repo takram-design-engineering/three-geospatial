@@ -18,18 +18,20 @@ import invariant from 'tiny-invariant'
 
 import type { VideoSource } from '../helpers/VideoSource'
 import {
-  VideoWaveform as VideoWaveformImpl,
-  type VideoWaveformMode as VideoWaveformModeBase
-} from '../helpers/VideoWaveform'
+  Waveform as WaveformImpl,
+  type WaveformMode as WaveformModeBase
+} from '../helpers/Waveform'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
-
-const scale = 1.1
 
 const Root = /*#__PURE__*/ styled.div`
   width: 480px;
   height: 360px;
   min-width: 240px;
+  // BUG: CanvasTarget throws error when resized.
+  flex-grow: 0;
+  flex-shrink: 0;
+  user-select: none;
 `
 
 const Content = /*#__PURE__*/ styled.div`
@@ -45,10 +47,9 @@ const Content = /*#__PURE__*/ styled.div`
 
 const Canvas = /*#__PURE__*/ styled.canvas`
   width: 100%;
-  height: ${scale * 100}%;
+  height: 100%;
   image-rendering: pixelated;
   mix-blend-mode: screen;
-  transform: translate(0, calc(${(scale - 1) * -50}% * 1 / ${scale}));
 `
 
 const Svg = /*#__PURE__*/ styled.svg`
@@ -68,7 +69,7 @@ const Grid = /*#__PURE__*/ memo(() => (
       const y = 100 - value
       return (
         <Fragment key={value}>
-          <line y1={`${y}%`} y2={`${y}%`} x1='0%' x2='100%' stroke='#333' />
+          <line x1='0%' x2='100%' y1={`${y}%`} y2={`${y}%`} stroke='#333' />
           <text
             x={-5}
             y={`${y}%`}
@@ -86,19 +87,16 @@ const Grid = /*#__PURE__*/ memo(() => (
 
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
-export type VideoWaveformMode =
-  | VideoWaveformModeBase
-  | 'rgb-parade'
-  | 'ycbcr-parade'
+export type WaveformMode = WaveformModeBase | 'rgb-parade' | 'ycbcr-parade'
 
-export interface VideoWaveformProps {
+export interface WaveformProps {
   source?: VideoSource
-  mode?: VideoWaveformMode
+  mode?: WaveformMode
   gain?: number
   pixelRatio?: number
 }
 
-export const VideoWaveform: FC<VideoWaveformProps> = ({
+export const Waveform: FC<WaveformProps> = ({
   source,
   mode,
   gain,
@@ -123,6 +121,24 @@ export const VideoWaveform: FC<VideoWaveformProps> = ({
 
   canvasTarget?.setPixelRatio(pixelRatio)
 
+  // BUG: CanvasTarget throws error when resized.
+  const contentRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const content = contentRef.current
+    invariant(content != null)
+    if (canvasTarget == null) {
+      return
+    }
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      canvasTarget.setSize(width, height)
+    })
+    observer.observe(content)
+    return () => {
+      observer.disconnect()
+    }
+  }, [canvasTarget])
+
   useEffect(() => {
     return () => {
       canvasTarget?.dispose()
@@ -131,16 +147,11 @@ export const VideoWaveform: FC<VideoWaveformProps> = ({
 
   const parade = mode === 'rgb-parade' || mode === 'ycbcr-parade'
   const waveforms = useMemo(
-    () => [
-      new VideoWaveformImpl(),
-      new VideoWaveformImpl(),
-      new VideoWaveformImpl()
-    ],
+    () => [new WaveformImpl(), new WaveformImpl(), new WaveformImpl()],
     []
   )
 
   for (const waveform of waveforms) {
-    waveform.scale.y = 1 / scale
     waveform.source = source?.analysis ?? null
     if (gain != null) {
       waveform.gain.value = gain
@@ -214,7 +225,7 @@ export const VideoWaveform: FC<VideoWaveformProps> = ({
 
   return (
     <Root>
-      <Content>
+      <Content ref={contentRef}>
         <Grid />
         <Canvas ref={canvasRef} />
       </Content>
