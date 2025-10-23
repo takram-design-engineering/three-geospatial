@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentPropsWithRef,
   type FC
 } from 'react'
 import {
@@ -16,11 +17,11 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { VideoSource } from '../helpers/VideoSource'
+import type { VideoSource } from '../VideoSource'
 import {
   Waveform as WaveformImpl,
   type WaveformMode as WaveformModeBase
-} from '../helpers/Waveform'
+} from '../Waveform'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -85,11 +86,13 @@ const Grid = /*#__PURE__*/ memo(() => (
   </Svg>
 ))
 
+Grid.displayName = 'Grid'
+
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export type WaveformMode = WaveformModeBase | 'rgb-parade' | 'ycbcr-parade'
 
-export interface WaveformProps {
+export interface WaveformProps extends ComponentPropsWithRef<'div'> {
   source?: VideoSource
   mode?: WaveformMode
   gain?: number
@@ -100,7 +103,8 @@ export const Waveform: FC<WaveformProps> = ({
   source,
   mode,
   gain,
-  pixelRatio = window.devicePixelRatio
+  pixelRatio = window.devicePixelRatio,
+  ...props
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [canvasTarget, setCanvasTarget] = useState<CanvasTarget>()
@@ -224,7 +228,7 @@ export const Waveform: FC<WaveformProps> = ({
   }, [source, canvasTarget, scene])
 
   return (
-    <Root>
+    <Root {...props}>
       <Content ref={contentRef}>
         <Grid />
         <Canvas ref={canvasRef} />

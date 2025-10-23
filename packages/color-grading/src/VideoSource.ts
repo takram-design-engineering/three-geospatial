@@ -9,7 +9,7 @@ import {
 
 import { convertToTexture } from '@takram/three-geospatial/webgpu'
 
-import { VideoAnalysis } from '../helpers/VideoAnalysis'
+import { VideoAnalysis } from './VideoAnalysis'
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
