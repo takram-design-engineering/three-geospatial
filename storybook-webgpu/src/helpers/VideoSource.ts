@@ -11,7 +11,7 @@ import { convertToTexture } from '@takram/three-geospatial/webgpu'
 
 import { VideoAnalysis } from '../helpers/VideoAnalysis'
 
-const sizeScratch = new Vector2()
+const sizeScratch = /*#__PURE__*/ new Vector2()
 
 export class VideoSource {
   renderer: Renderer | null
