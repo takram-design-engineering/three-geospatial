@@ -84,3 +84,8 @@ export function hookFunction<
   }) as any
   return target
 }
+
+export function overwriteNodeType<T extends Node>(node: T, type: string): T {
+  node.getNodeType = () => type
+  return node
+}
