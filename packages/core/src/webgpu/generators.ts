@@ -196,7 +196,7 @@ export const colorBarsHD = /*#__PURE__*/ FnLayout({
       })
       .ElseIf(uv.y.lessThan(9 / 12), () => {
         If(uv.x.lessThan(d), () => {
-          output.assign(yCbCr10bit(877, 64, 533)) // 100% Yellow
+          output.assign(yCbCr10bit(877, 64, 553)) // 100% Yellow
         })
           .ElseIf(uv.x.lessThan(d + c), () => {
             output.assign(yCbCr10bit(141, 697, 606)) // +Q Signal
