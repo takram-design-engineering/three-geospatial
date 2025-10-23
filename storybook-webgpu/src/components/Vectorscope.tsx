@@ -27,6 +27,7 @@ const Root = /*#__PURE__*/ styled.div`
   position: relative;
   width: 360px;
   height: 360px;
+  aspect-ratio: 1;
 `
 
 const Content = /*#__PURE__*/ styled.div`
@@ -176,20 +177,6 @@ export const Vectorscope: FC<VectorscopeProps> = ({
   }, [])
 
   canvasTarget?.setPixelRatio(pixelRatio)
-
-  useEffect(() => {
-    if (canvasTarget == null) {
-      return
-    }
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      canvasTarget.setSize(width, height)
-    })
-    observer.observe(canvasTarget.domElement)
-    return () => {
-      observer.disconnect()
-    }
-  }, [canvasTarget])
 
   useEffect(() => {
     return () => {
