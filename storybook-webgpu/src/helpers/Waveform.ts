@@ -7,6 +7,7 @@ import {
 } from 'three'
 import {
   instanceIndex,
+  screenSize,
   select,
   uniform,
   vec2,
@@ -22,8 +23,8 @@ import invariant from 'tiny-invariant'
 
 import {
   hsv2rgb,
+  linearToRec709,
   linearToRec709YCbCr,
-  linearToSRGB,
   rgb2hsv,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
@@ -40,23 +41,23 @@ const modes = {
   rgb: { components: 3 }
 } satisfies Record<string, { components: number }>
 
-export type VideoWaveformMode = keyof typeof modes
+export type WaveformMode = keyof typeof modes
 
-export class VideoWaveform extends Line {
+export class Waveform extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
   source: VideoAnalysis | null
-  mode: VideoWaveformMode
+  mode: WaveformMode
 
   gain = uniform(5)
 
   private prevSource: VideoAnalysis | null = null
-  private prevMode?: VideoWaveformMode
+  private prevMode?: WaveformMode
   private prevComponents?: number
   private readonly prevSize = new Vector2()
 
-  constructor(source?: VideoAnalysis | null, mode: VideoWaveformMode = 'luma') {
+  constructor(source?: VideoAnalysis | null, mode: WaveformMode = 'luma') {
     super()
     this.source = source ?? null
     this.mode = mode
@@ -77,7 +78,7 @@ export class VideoWaveform extends Line {
     const index = instanceIndex.mod(size.y).mul(size.x).add(vertexIndex)
     const channel = instanceIndex.div(size.y)
     const linearColor = colorBuffer.element(index)
-    const nonlinearColor = linearToSRGB(linearColor) // TODO
+    const nonlinearColor = linearToRec709(linearColor)
     const uv = uvBuffer.element(index)
 
     let color: NodeObject<'vec3'>
@@ -129,7 +130,8 @@ export class VideoWaveform extends Line {
         break
     }
 
-    this.material.positionNode = vec3(vec2(uv.x, y).sub(0.5))
+    const scaleY = screenSize.y.reciprocal().oneMinus()
+    this.material.positionNode = vec3(vec2(uv.x, y.mul(scaleY)).sub(0.5))
     this.material.colorNode = color.div(size.y).mul(this.gain).toVertexStage()
     this.material.needsUpdate = true
   }
