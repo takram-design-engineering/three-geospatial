@@ -54,7 +54,7 @@ function yCbCr10bit(y: number, cb: number, cr: number): NodeObject<'vec3'> {
   )
 }
 
-// Based on: https://pub.smpte.org/pub/eg1/eg0001-1990_stable2004.pdf
+// Conforms to: https://pub.smpte.org/pub/eg1/eg0001-1990_stable2004.pdf
 export const colorBars = /*#__PURE__*/ FnLayout({
   name: 'colorBars',
   type: 'vec3',
@@ -120,16 +120,16 @@ export const colorBars = /*#__PURE__*/ FnLayout({
           .ElseIf(uv.x.lessThan(b * (5 / 4) * 3), () => {
             output.assign(yCbCr10bit(141, 697, 606)) // +Q
           })
-          .ElseIf(uv.x.lessThan(b * (5 / 4) * 4), () => {
+          .ElseIf(uv.x.lessThan(b * 5), () => {
             output.assign(yCbCr10bit(64, 512, 512)) // Black
           })
-          .ElseIf(uv.x.lessThan(b * (5 / 4) * 6), () => {
+          .ElseIf(uv.x.lessThan(b * (5 + 1 / 3)), () => {
             output.assign(yCbCr10bit(29, 512, 512)) // -4% Black
           })
-          .ElseIf(uv.x.lessThan(b * (5 / 4) * 6), () => {
+          .ElseIf(uv.x.lessThan(b * (5 + 2 / 3)), () => {
             output.assign(yCbCr10bit(64, 512, 512)) // Black
           })
-          .ElseIf(uv.x.lessThan(b * (5 / 4) * 6), () => {
+          .ElseIf(uv.x.lessThan(b * 6), () => {
             output.assign(yCbCr10bit(99, 512, 512)) // 4% Black
           })
           .Else(() => {
@@ -140,7 +140,7 @@ export const colorBars = /*#__PURE__*/ FnLayout({
   return output
 })
 
-// Based on: https://pub.smpte.org/latest/rp219/Rp219-2002.pdf
+// Conforms to: https://pub.smpte.org/latest/rp219/Rp219-2002.pdf
 export const colorBarsHD = /*#__PURE__*/ FnLayout({
   name: 'colorBarsHD',
   type: 'vec3',
@@ -224,7 +224,7 @@ export const colorBarsHD = /*#__PURE__*/ FnLayout({
             output.assign(yCbCr10bit(64, 512, 512)) // 0% Black
           })
           .ElseIf(uv.x.lessThan(d + c * (3.5 + 5 / 6 + 1 / 3)), () => {
-            output.assign(yCbCr10bit(46, 512, 512)) // -2% Black (TODO)
+            output.assign(yCbCr10bit(46, 512, 512)) // -2% Black
           })
           .ElseIf(uv.x.lessThan(d + c * 5), () => {
             output.assign(yCbCr10bit(64, 512, 512)) // 0% Black
