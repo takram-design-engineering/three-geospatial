@@ -19,20 +19,21 @@ import {
   rgb2hsv
 } from '@takram/three-geospatial/webgpu'
 
-import type { VideoAnalysis } from './VideoAnalysis'
+import type { RasterTransform } from './RasterTransform'
 
 export class Vectorscope extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
-  source: VideoAnalysis | null
+  source: RasterTransform | null
 
   gain = uniform(5)
 
-  private prevSource: VideoAnalysis | null = null
+  private prevSource?: RasterTransform
+  private prevVersion?: number
   private readonly prevSize = new Vector2()
 
-  constructor(source?: VideoAnalysis | null) {
+  constructor(source?: RasterTransform | null) {
     super()
     this.source = source ?? null
 
@@ -64,10 +65,14 @@ export class Vectorscope extends Line {
     if (this.source == null) {
       return
     }
-    this.source.update(renderer as Renderer)
+    this.source.compute(renderer as Renderer)
 
-    if (this.source !== this.prevSource) {
+    if (
+      this.source !== this.prevSource ||
+      this.source.version !== this.prevVersion
+    ) {
       this.prevSource = this.source
+      this.prevVersion = this.source.version
       this.updateMaterial()
     }
 

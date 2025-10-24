@@ -156,7 +156,7 @@ export const Waveform: FC<WaveformProps> = ({
   )
 
   for (const waveform of waveforms) {
-    waveform.source = source?.analysis ?? null
+    waveform.source = source?.rasterTransform ?? null
     if (gain != null) {
       waveform.gain.value = gain
     }

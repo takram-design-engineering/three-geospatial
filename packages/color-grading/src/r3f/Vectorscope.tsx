@@ -213,7 +213,7 @@ export const Vectorscope: FC<VectorscopeProps> = ({
   const vectorscope = useMemo(() => new VectorscopeImpl(), [])
 
   vectorscope.scale.setScalar(0.75)
-  vectorscope.source = source?.analysis ?? null
+  vectorscope.source = source?.rasterTransform ?? null
   if (gain != null) {
     vectorscope.gain.value = gain
   }
