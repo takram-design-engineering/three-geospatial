@@ -29,7 +29,7 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-import type { VideoAnalysis } from './VideoAnalysis'
+import type { RasterTransform } from './RasterTransform'
 
 const modes = {
   luma: { components: 1 },
@@ -47,17 +47,18 @@ export class Waveform extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
-  source: VideoAnalysis | null
+  source: RasterTransform | null
   mode: WaveformMode
 
   gain = uniform(5)
 
-  private prevSource: VideoAnalysis | null = null
+  private prevSource?: RasterTransform
+  private prevVersion?: number
   private prevMode?: WaveformMode
   private prevComponents?: number
   private readonly prevSize = new Vector2()
 
-  constructor(source?: VideoAnalysis | null, mode: WaveformMode = 'luma') {
+  constructor(source?: RasterTransform | null, mode: WaveformMode = 'luma') {
     super()
     this.source = source ?? null
     this.mode = mode
@@ -140,10 +141,15 @@ export class Waveform extends Line {
     if (this.source == null) {
       return
     }
-    this.source.update(renderer as Renderer)
+    this.source.compute(renderer as Renderer)
 
-    if (this.source !== this.prevSource || this.mode !== this.prevMode) {
+    if (
+      this.source !== this.prevSource ||
+      this.source.version !== this.prevVersion ||
+      this.mode !== this.prevMode
+    ) {
       this.prevSource = this.source
+      this.prevVersion = this.source.version
       this.prevMode = this.mode
       this.updateMaterial()
     }
