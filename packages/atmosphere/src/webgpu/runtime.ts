@@ -192,8 +192,8 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
     coord.w
   ).toVar()
 
-  const scattering = vec3().toVar()
-  const singleMieScattering = vec3().toVar()
+  const scattering = vec3(0).toVar()
+  const singleMieScattering = vec3(0).toVar()
   if (parameters.combinedScatteringTextures) {
     const combinedScattering = add(
       scatteringTexture.sample(coord0).mul(lerp.oneMinus()),
@@ -314,8 +314,8 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
       )
     )
 
-    const scattering = vec3().toVar()
-    const singleMieScattering = vec3().toVar()
+    const scattering = vec3(0).toVar()
+    const singleMieScattering = vec3(0).toVar()
 
     If(shadowLength.equal(0), () => {
       const combinedScattering = getCombinedScattering(

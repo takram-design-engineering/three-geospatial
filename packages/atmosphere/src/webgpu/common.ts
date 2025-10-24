@@ -301,7 +301,7 @@ export const getTransmittance = /*#__PURE__*/ FnLayout({
     radius.mul(cosView).add(rayLength).div(radiusEnd)
   ).toVar()
 
-  const transmittance = vec3().toVar()
+  const transmittance = vec3(0).toVar()
   If(viewRayIntersectsGround, () => {
     transmittance.assign(
       min(
