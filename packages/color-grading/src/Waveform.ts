@@ -6,9 +6,9 @@ import {
   Vector2
 } from 'three'
 import {
+  Fn,
   instanceIndex,
   screenSize,
-  select,
   uniform,
   vec2,
   vec3,
@@ -110,24 +110,12 @@ export class Waveform extends Line {
         y = nonlinearColor.b
         break
       case 'rgb':
-        color = select(
-          channel.equal(0),
-          vec3(1, 0.25, 0.25),
-          select(
-            channel.equal(1),
-            vec3(0.25, 1, 0.25),
-            select(channel.equal(2), vec3(0.25, 0.25, 1), 0)
-          )
-        )
-        y = select(
-          channel.equal(0),
-          nonlinearColor.r,
-          select(
-            channel.equal(1),
-            nonlinearColor.g,
-            select(channel.equal(2), nonlinearColor.b, 0)
-          )
-        )
+        color = Fn(() => {
+          const color = vec3(0.25).toVar()
+          color.element(channel).assign(1)
+          return color
+        })()
+        y = nonlinearColor.element(channel)
         break
     }
 

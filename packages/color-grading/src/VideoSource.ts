@@ -9,14 +9,16 @@ import {
 
 import { convertToTexture } from '@takram/three-geospatial/webgpu'
 
-import { VideoAnalysis } from './VideoAnalysis'
+import { HistogramTransform } from './HistogramTransform'
+import { RasterTransform } from './RasterTransform'
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
 export class VideoSource {
   renderer: Renderer | null
 
-  readonly analysis = new VideoAnalysis()
+  readonly rasterTransform = new RasterTransform()
+  readonly histogramTransform = new HistogramTransform()
 
   private inputNode: Node | null
   private textureNode!: TextureNode
@@ -44,7 +46,8 @@ export class VideoSource {
     } else {
       this.textureNode = texture(this.framebufferTexture)
     }
-    this.analysis.inputNode = this.textureNode
+    this.rasterTransform.inputNode = this.textureNode
+    this.histogramTransform.inputNode = this.textureNode
   }
 
   setInputNode(value: Node | null): void {
