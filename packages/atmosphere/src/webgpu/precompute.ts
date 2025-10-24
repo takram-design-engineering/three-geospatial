@@ -715,7 +715,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
   const context = AtmosphereContextBaseNode.get(builder)
   const { miePhaseFunctionG } = context
 
-  const result = vec3().toVar()
+  const result = vec3(0).toVar()
   If(scatteringOrder.equal(1), () => {
     const rayleigh = getScattering(
       singleRayleighScatteringTexture,

@@ -62,7 +62,7 @@ export const colorBars = /*#__PURE__*/ FnLayout({
 })(([uv]) => {
   const b = 1 / 7
 
-  const output = vec3().toVar()
+  const output = vec3(0).toVar()
   If(uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()), () => {
     If(uv.y.lessThan(2 / 3), () => {
       If(uv.x.lessThan(b), () => {
@@ -149,7 +149,7 @@ export const colorBarsHD = /*#__PURE__*/ FnLayout({
   const d = 1 / 8
   const c = 3 / 4 / 7
 
-  const output = vec3().toVar()
+  const output = vec3(0).toVar()
   If(uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()), () => {
     If(uv.y.lessThan(7 / 12), () => {
       If(uv.x.lessThan(d), () => {
