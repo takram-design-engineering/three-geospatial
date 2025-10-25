@@ -30,15 +30,60 @@ import {
 import { linearToRec709, linearToRec709YCbCr } from './colors'
 import type { RasterTransform } from './RasterTransform'
 
+interface Mode {
+  components: number
+  color: (
+    color: NodeObject<'vec3'>,
+    channel: NodeObject<'uint'>
+  ) => NodeObject<'vec3'>
+  y: (
+    color: NodeObject<'vec3'>,
+    channel: NodeObject<'uint'>
+  ) => NodeObject<'float'>
+}
+
 const modes = {
-  luma: { components: 1 },
-  cb: { components: 1 },
-  cr: { components: 1 },
-  red: { components: 1 },
-  green: { components: 1 },
-  blue: { components: 1 },
-  rgb: { components: 3 }
-} satisfies Record<string, { components: number }>
+  luma: {
+    components: 1,
+    color: color => hsv2rgb(vec3(rgb2hsv(color).xy, 1)),
+    y: color => linearToRec709YCbCr(color).x
+  },
+  cb: {
+    components: 1,
+    color: () => vec3(1, 1, 0.25),
+    y: color => linearToRec709YCbCr(color).y.add(0.5)
+  },
+  cr: {
+    components: 1,
+    color: () => vec3(1, 0.25, 1),
+    y: color => linearToRec709YCbCr(color).z.add(0.5)
+  },
+  red: {
+    components: 1,
+    color: () => vec3(1, 0.25, 0.25),
+    y: color => linearToRec709(color).r
+  },
+  green: {
+    components: 1,
+    color: () => vec3(0.25, 1, 0.25),
+    y: color => linearToRec709(color).g
+  },
+  blue: {
+    components: 1,
+    color: () => vec3(0.25, 0.25, 1),
+    y: color => linearToRec709(color).b
+  },
+  rgb: {
+    components: 3,
+    color: (_, channel) =>
+      Fn(() => {
+        const color = vec3(0.25).toVar()
+        color.element(channel).assign(1)
+        return color
+      })(),
+    y: (color, channel) => linearToRec709(color).element(channel)
+  }
+} satisfies Record<string, Mode>
 
 export type WaveformMode = keyof typeof modes
 
@@ -78,45 +123,11 @@ export class WaveformLine extends Line {
     const index = instanceIndex.mod(size.y).mul(size.x).add(vertexIndex)
     const channel = instanceIndex.div(size.y)
     const linearColor = colorBuffer.element(index)
-    const nonlinearColor = linearToRec709(linearColor)
     const uv = uvBuffer.element(index)
 
-    let color: NodeObject<'vec3'>
-    let y: NodeObject<'float'>
-    switch (this.mode) {
-      case 'luma':
-        color = hsv2rgb(vec3(rgb2hsv(linearColor).xy, 1))
-        y = linearToRec709YCbCr(linearColor).x
-        break
-      case 'cb':
-        color = vec3(1, 1, 0.25)
-        y = linearToRec709YCbCr(linearColor).y.add(0.5)
-        break
-      case 'cr':
-        color = vec3(1, 0.25, 1)
-        y = linearToRec709YCbCr(linearColor).z.add(0.5)
-        break
-      case 'red':
-        color = vec3(1, 0.25, 0.25)
-        y = nonlinearColor.r
-        break
-      case 'green':
-        color = vec3(0.25, 1, 0.25)
-        y = nonlinearColor.g
-        break
-      case 'blue':
-        color = vec3(0.25, 0.25, 1)
-        y = nonlinearColor.b
-        break
-      case 'rgb':
-        color = Fn(() => {
-          const color = vec3(0.25).toVar()
-          color.element(channel).assign(1)
-          return color
-        })()
-        y = nonlinearColor.element(channel)
-        break
-    }
+    const mode = modes[this.mode]
+    const color = mode.color(linearColor, channel)
+    const y = mode.y(linearColor, channel)
 
     const scaleY = screenSize.y.reciprocal().oneMinus()
     this.material.positionNode = vec3(vec2(uv.x, y.mul(scaleY)).sub(0.5))
