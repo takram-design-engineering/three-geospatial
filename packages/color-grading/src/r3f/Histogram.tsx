@@ -9,7 +9,8 @@ import {
   type ComponentPropsWithRef,
   type FC
 } from 'react'
-import { CanvasTarget, OrthographicCamera, RendererUtils } from 'three/webgpu'
+import { OrthographicCamera } from 'three'
+import { CanvasTarget, RendererUtils } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { HistogramMesh } from '../HistogramMesh'

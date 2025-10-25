@@ -9,12 +9,8 @@ import {
   type ComponentPropsWithRef,
   type FC
 } from 'react'
-import {
-  CanvasTarget,
-  OrthographicCamera,
-  RendererUtils,
-  Vector3
-} from 'three/webgpu'
+import { OrthographicCamera, Vector3 } from 'three'
+import { CanvasTarget, RendererUtils } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { radians, remap } from '@takram/three-geospatial'

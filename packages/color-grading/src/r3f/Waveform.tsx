@@ -9,12 +9,8 @@ import {
   type ComponentPropsWithRef,
   type FC
 } from 'react'
-import {
-  CanvasTarget,
-  OrthographicCamera,
-  RendererUtils,
-  Scene
-} from 'three/webgpu'
+import { OrthographicCamera, Scene } from 'three'
+import { CanvasTarget, RendererUtils } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import type { VideoSource } from '../VideoSource'

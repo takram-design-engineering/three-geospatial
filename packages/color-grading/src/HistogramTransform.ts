@@ -1,3 +1,4 @@
+import { Vector2 } from 'three'
 import {
   add,
   atomicAdd,
@@ -21,12 +22,7 @@ import {
   workgroupBarrier,
   workgroupId
 } from 'three/tsl'
-import {
-  Vector2,
-  type ComputeNode,
-  type Renderer,
-  type TextureNode
-} from 'three/webgpu'
+import type { ComputeNode, Renderer, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { linearToRec709 } from '@takram/three-geospatial/webgpu'

@@ -1,11 +1,6 @@
+import { FramebufferTexture, Vector2 } from 'three'
 import { texture } from 'three/tsl'
-import {
-  FramebufferTexture,
-  Vector2,
-  type Node,
-  type Renderer,
-  type TextureNode
-} from 'three/webgpu'
+import type { Node, Renderer, TextureNode } from 'three/webgpu'
 
 import { convertToTexture } from '@takram/three-geospatial/webgpu'
 
