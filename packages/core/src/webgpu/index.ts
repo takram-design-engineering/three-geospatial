@@ -1,5 +1,5 @@
 export * from './accessors'
-export * from './color'
+export * from './colors'
 export * from './debug'
 export * from './DownsampleThresholdNode'
 export * from './FnLayout'

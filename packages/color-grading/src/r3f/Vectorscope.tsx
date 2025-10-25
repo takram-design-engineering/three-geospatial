@@ -74,7 +74,7 @@ const colors = {
   B: /*#__PURE__*/ normalize(new Vector3(127, 960, 471))
 }
 
-const dPhi = (Math.PI / 360) * 5
+const dPhi = 2.5 * (Math.PI / 180)
 const dG = 0.025
 const skinToneAngle = 123
 

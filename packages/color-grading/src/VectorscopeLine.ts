@@ -13,12 +13,9 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import {
-  hsv2rgb,
-  linearToRec709YCbCr,
-  rgb2hsv
-} from '@takram/three-geospatial/webgpu'
+import { hsv2rgb, rgb2hsv } from '@takram/three-geospatial/webgpu'
 
+import { linearToRec709YCbCr } from './colors'
 import type { RasterTransform } from './RasterTransform'
 
 export class VectorscopeLine extends Line {
