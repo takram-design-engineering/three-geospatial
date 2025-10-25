@@ -19,7 +19,7 @@ import invariant from 'tiny-invariant'
 
 import { radians, remap } from '@takram/three-geospatial'
 
-import { Vectorscope as VectorscopeImpl } from '../Vectorscope'
+import { VectorscopeLine } from '../VectorscopeLine'
 import type { VideoSource } from '../VideoSource'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -210,7 +210,7 @@ export const Vectorscope: FC<VectorscopeProps> = ({
     }
   }, [canvasTarget])
 
-  const vectorscope = useMemo(() => new VectorscopeImpl(), [])
+  const vectorscope = useMemo(() => new VectorscopeLine(), [])
 
   vectorscope.scale.setScalar(0.75)
   vectorscope.source = source?.rasterTransform ?? null

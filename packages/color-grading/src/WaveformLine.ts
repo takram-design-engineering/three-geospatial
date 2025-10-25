@@ -43,7 +43,7 @@ const modes = {
 
 export type WaveformMode = keyof typeof modes
 
-export class Waveform extends Line {
+export class WaveformLine extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 

@@ -1,4 +1,4 @@
-export * from './Histogram'
-export * from './Vectorscope'
+export * from './HistogramMesh'
+export * from './VectorscopeLine'
 export * from './VideoSource'
-export * from './Waveform'
+export * from './WaveformLine'
