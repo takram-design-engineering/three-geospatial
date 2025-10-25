@@ -116,19 +116,19 @@ export class MipmapSurfaceBlurNode extends DualMipmapFilterNode {
     const uv8 = offset.xw.toVertexStage() // 1, -1
 
     const output = add(
-      inputNode.sample(center).mul(1 / 4),
+      inputNode.sample(center).div(4),
       add(
         inputNode.sample(uv1),
         inputNode.sample(uv2),
         inputNode.sample(uv3),
         inputNode.sample(uv4)
-      ).mul(1 / 8),
+      ).div(8),
       add(
         inputNode.sample(uv5),
         inputNode.sample(uv6),
         inputNode.sample(uv7),
         inputNode.sample(uv8)
-      ).mul(1 / 16)
+      ).div(16)
     )
     return mix(downsampleNode.sample(center), output, this.blendAmount)
   }

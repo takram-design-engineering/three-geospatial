@@ -34,7 +34,7 @@ export class KawaseBlurNode extends DualMipmapFilterNode {
       inputNode.sample(uv2),
       inputNode.sample(uv3),
       inputNode.sample(uv4)
-    ).mul(1 / 8)
+    ).div(8)
   }
 
   protected override setupUpsampleNode(builder: NodeBuilder): Node {
@@ -60,13 +60,13 @@ export class KawaseBlurNode extends DualMipmapFilterNode {
         inputNode.sample(uv2),
         inputNode.sample(uv3),
         inputNode.sample(uv4)
-      ).mul(1 / 12),
+      ).div(12),
       add(
         inputNode.sample(uv5),
         inputNode.sample(uv6),
         inputNode.sample(uv7),
         inputNode.sample(uv8)
-      ).mul(1 / 6)
+      ).div(6)
     )
   }
 }

@@ -108,10 +108,10 @@ const modes: Record<WaveformMode, Mode> = {
       Fn(() => {
         const result = vec3(0.25).toVar()
         result.element(channel).assign(1)
-        return result.mul(1 / 3)
+        return result.div(3)
       })(),
     y: (color, channel) => linearToRec709(color).element(channel),
-    x: (x, channel) => x.div(3).add(float(channel).mul(1 / 3))
+    x: (x, channel) => x.div(3).add(float(channel).div(3))
   },
   'ycbcr-parade': {
     components: 3,
@@ -123,14 +123,14 @@ const modes: Record<WaveformMode, Mode> = {
         }).Else(() => {
           result.element(uint(3).sub(channel)).assign(0.25)
         })
-        return result.mul(1 / 3)
+        return result.div(3)
       })(),
     y: (color, channel) =>
       Fn(() => {
         const y = linearToRec709YCbCr(color).element(channel)
         return select(channel.equal(0), y, y.add(0.5))
       })(),
-    x: (x, channel) => x.div(3).add(float(channel).mul(1 / 3))
+    x: (x, channel) => x.div(3).add(float(channel).div(3))
   }
 }
 
