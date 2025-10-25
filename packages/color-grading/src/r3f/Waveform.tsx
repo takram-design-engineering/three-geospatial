@@ -19,9 +19,9 @@ import invariant from 'tiny-invariant'
 
 import type { VideoSource } from '../VideoSource'
 import {
-  Waveform as WaveformImpl,
+  WaveformLine,
   type WaveformMode as WaveformModeBase
-} from '../Waveform'
+} from '../WaveformLine'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -151,7 +151,7 @@ export const Waveform: FC<WaveformProps> = ({
 
   const parade = mode === 'rgb-parade' || mode === 'ycbcr-parade'
   const waveforms = useMemo(
-    () => [new WaveformImpl(), new WaveformImpl(), new WaveformImpl()],
+    () => [new WaveformLine(), new WaveformLine(), new WaveformLine()],
     []
   )
 

@@ -21,7 +21,7 @@ import {
 
 import type { RasterTransform } from './RasterTransform'
 
-export class Vectorscope extends Line {
+export class VectorscopeLine extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 

@@ -12,7 +12,7 @@ import {
 import { CanvasTarget, OrthographicCamera, RendererUtils } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { Histogram as HistogramImpl } from '../Histogram'
+import { HistogramMesh } from '../HistogramMesh'
 import type { VideoSource } from '../VideoSource'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -131,7 +131,7 @@ export const Histogram: FC<HistogramProps> = ({
     }
   }, [canvasTarget])
 
-  const vectorscope = useMemo(() => new HistogramImpl(), [])
+  const vectorscope = useMemo(() => new HistogramMesh(), [])
 
   vectorscope.source = source?.histogramTransform ?? null
   if (gain != null) {

@@ -27,7 +27,7 @@ import type { HistogramTransform } from './HistogramTransform'
 
 const SIZE = 256
 
-export class Histogram extends Mesh {
+export class HistogramMesh extends Mesh {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
