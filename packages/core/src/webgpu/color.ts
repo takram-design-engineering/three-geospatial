@@ -139,7 +139,7 @@ export const linearToSRGB = /*#__PURE__*/ overloadingFn([
 
 // See: https://en.wikipedia.org/wiki/Rec._709
 // Note that we assume a linear workflow (as in Three.js) and sRGB color
-// primaries, which are equivalent to Rec. 709.
+// primaries, which are equivalent to Rec.709.
 
 const linearToRec709_float = /*#__PURE__*/ FnLayout({
   name: 'linearToRec709_float',
@@ -223,7 +223,7 @@ const REC709_RGB_TO_YCBCR = /*#__PURE__*/ mat3(
 // prettier-ignore
 const REC709_YCBCR_TO_RGB = /*#__PURE__*/ mat3(
   1, 0, Crw,
-  1, -Yz * Cbw / Yy,  -Yx * Crw / Yy,
+  1, -Yz * Cbw / Yy, -Yx * Crw / Yy,
   1, Cbw, 0
 )
 
