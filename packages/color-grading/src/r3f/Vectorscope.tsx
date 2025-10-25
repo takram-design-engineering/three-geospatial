@@ -25,9 +25,6 @@ const Root = /*#__PURE__*/ styled.div`
   width: 360px;
   height: 360px;
   aspect-ratio: 1;
-  // BUG: CanvasTarget throws error when resized.
-  flex-grow: 0;
-  flex-shrink: 0;
   user-select: none;
 `
 
@@ -182,23 +179,19 @@ export const Vectorscope: FC<VectorscopeProps> = ({
 
   canvasTarget?.setPixelRatio(pixelRatio)
 
-  // BUG: CanvasTarget throws error when resized.
   const contentRef = useRef<HTMLDivElement>(null)
+  const sizeRef = useRef<{ width?: number; height?: number }>({})
   useEffect(() => {
     const content = contentRef.current
     invariant(content != null)
-    if (canvasTarget == null) {
-      return
-    }
     const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      canvasTarget.setSize(width, height)
+      sizeRef.current = entry.contentRect
     })
     observer.observe(content)
     return () => {
       observer.disconnect()
     }
-  }, [canvasTarget])
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -240,6 +233,13 @@ export const Vectorscope: FC<VectorscopeProps> = ({
 
         const prevCanvasTarget = renderer.getCanvasTarget()
         renderer.setCanvasTarget(canvasTarget)
+
+        // Canvas target must be resize when it is activated in the renderer.
+        const { width, height } = sizeRef.current
+        if (width != null && height != null) {
+          canvasTarget.setSize(width, height)
+        }
+
         void renderer.render(vectorscope, camera)
         renderer.setCanvasTarget(prevCanvasTarget)
 

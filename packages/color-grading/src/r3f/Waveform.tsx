@@ -25,9 +25,6 @@ const Root = /*#__PURE__*/ styled.div`
   width: 480px;
   height: 360px;
   min-width: 240px;
-  // BUG: CanvasTarget throws error when resized.
-  flex-grow: 0;
-  flex-shrink: 0;
   user-select: none;
 `
 
@@ -139,23 +136,19 @@ export const Waveform: FC<WaveformProps> = ({
 
   canvasTarget?.setPixelRatio(pixelRatio)
 
-  // BUG: CanvasTarget throws error when resized.
   const contentRef = useRef<HTMLDivElement>(null)
+  const sizeRef = useRef<{ width?: number; height?: number }>({})
   useEffect(() => {
     const content = contentRef.current
     invariant(content != null)
-    if (canvasTarget == null) {
-      return
-    }
     const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      canvasTarget.setSize(width, height)
+      sizeRef.current = entry.contentRect
     })
     observer.observe(content)
     return () => {
       observer.disconnect()
     }
-  }, [canvasTarget])
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -227,6 +220,13 @@ export const Waveform: FC<WaveformProps> = ({
 
         const prevCanvasTarget = renderer.getCanvasTarget()
         renderer.setCanvasTarget(canvasTarget)
+
+        // Canvas target must be resize when it is activated in the renderer.
+        const { width, height } = sizeRef.current
+        if (width != null && height != null) {
+          canvasTarget.setSize(width, height)
+        }
+
         void renderer.render(scene, camera)
         renderer.setCanvasTarget(prevCanvasTarget)
 
