@@ -1,3 +1,5 @@
+export * from './colors'
+export * from './generators'
 export * from './HistogramMesh'
 export * from './VectorscopeLine'
 export * from './VideoSource'

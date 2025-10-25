@@ -8,7 +8,6 @@ import {
   If,
   localId,
   Loop,
-  luminance,
   max,
   numWorkgroups,
   textureSize,
@@ -25,7 +24,7 @@ import {
 import type { ComputeNode, Renderer, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { linearToRec709 } from '@takram/three-geospatial/webgpu'
+import { linearToRec709, luminanceRec709 } from './colors'
 
 const WIDTH = 256
 const HEIGHT = 1
@@ -75,7 +74,7 @@ export class HistogramTransform {
 
         const color = inputNode.load(inputPosition).toVar()
         color.assign(linearToRec709(color))
-        color.w = luminance(color.rgb)
+        color.w = luminanceRec709(color.rgb)
 
         for (let i = 0; i < 4; ++i) {
           const channel = uint(i)

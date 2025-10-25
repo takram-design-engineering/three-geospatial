@@ -23,12 +23,11 @@ import invariant from 'tiny-invariant'
 
 import {
   hsv2rgb,
-  linearToRec709,
-  linearToRec709YCbCr,
   rgb2hsv,
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
+import { linearToRec709, linearToRec709YCbCr } from './colors'
 import type { RasterTransform } from './RasterTransform'
 
 const modes = {
