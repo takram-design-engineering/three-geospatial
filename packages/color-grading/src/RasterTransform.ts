@@ -4,6 +4,7 @@ import {
   globalId,
   If,
   Return,
+  textureSize,
   uniform,
   vec2
 } from 'three/tsl'
@@ -47,9 +48,12 @@ export class RasterTransform {
       If(globalId.xy.greaterThanEqual(size).any(), () => {
         Return()
       })
-      const index = globalId.y.mul(size.x).add(globalId.x)
       const uv = vec2(globalId.xy).add(0.5).div(vec2(size))
-      const color = inputNode.sample(uv).rgb
+      const inputSize = textureSize(inputNode)
+      const inputPosition = uv.mul(inputSize).min(inputSize)
+
+      const color = inputNode.load(inputPosition).rgb
+      const index = globalId.y.mul(size.x).add(globalId.x)
       colorBuffer.element(index).assign(color)
       uvBuffer.element(index).assign(uv)
     })().compute(0))
