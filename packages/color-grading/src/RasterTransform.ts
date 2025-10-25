@@ -1,3 +1,4 @@
+import { Vector2 } from 'three'
 import {
   attributeArray,
   Fn,
@@ -8,12 +9,7 @@ import {
   uniform,
   vec2
 } from 'three/tsl'
-import {
-  Vector2,
-  type ComputeNode,
-  type Renderer,
-  type TextureNode
-} from 'three/webgpu'
+import type { ComputeNode, Renderer, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 export class RasterTransform {
