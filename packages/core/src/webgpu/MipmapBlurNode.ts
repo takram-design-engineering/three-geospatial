@@ -37,19 +37,19 @@ export const mipmapBlurDownsample = (
       inputNode.sample(uv02),
       inputNode.sample(uv03),
       inputNode.sample(uv04)
-    ).mul(1 / 8),
+    ).div(8),
     add(
       inputNode.sample(uv05),
       inputNode.sample(uv06),
       inputNode.sample(uv07),
       inputNode.sample(uv08)
-    ).mul(1 / 16),
+    ).div(16),
     add(
       inputNode.sample(uv09),
       inputNode.sample(uv10),
       inputNode.sample(uv11),
       inputNode.sample(uv12)
-    ).mul(1 / 32)
+    ).div(32)
   )
 }
 
@@ -75,13 +75,13 @@ export const mipmapBlurUpsample = (
       inputNode.sample(uv2),
       inputNode.sample(uv3),
       inputNode.sample(uv4)
-    ).mul(0.125),
+    ).div(8),
     add(
       inputNode.sample(uv5),
       inputNode.sample(uv6),
       inputNode.sample(uv7),
       inputNode.sample(uv8)
-    ).mul(0.0625)
+    ).div(16)
   )
 }
 
