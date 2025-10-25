@@ -86,13 +86,6 @@ const Grid = /*#__PURE__*/ memo(() => (
     <circle cx='50%' cy='50%' r='12.5%' fill='none' stroke='#333' />
     <line x1='0%' y1='50%' x2='100%' y2='50%' stroke='#333' />
     <line x1='50%' y1='0%' x2='50%' y2='100%' stroke='#333' />
-    <line
-      x1='50%'
-      y1='50%'
-      x2={`${50 + Math.cos(radians(skinToneAngle)) * 50}%`}
-      y2={`${50 - Math.sin(radians(skinToneAngle)) * 50}%`}
-      stroke='#666'
-    />
     {Object.entries(colors).map(([label, color]) => {
       const phi = Math.atan2(color.z, color.y)
       const g = Math.hypot(color.y, color.z)
@@ -144,6 +137,13 @@ const Grid = /*#__PURE__*/ memo(() => (
         </Fragment>
       )
     })}
+    <line
+      x1='50%'
+      y1='50%'
+      x2={`${50 + Math.cos(radians(skinToneAngle)) * 50}%`}
+      y2={`${50 - Math.sin(radians(skinToneAngle)) * 50}%`}
+      stroke='#666'
+    />
   </Svg>
 ))
 
