@@ -11,7 +11,6 @@ import {
 } from 'react'
 import { OrthographicCamera, Vector3 } from 'three'
 import { CanvasTarget, RendererUtils } from 'three/webgpu'
-import invariant from 'tiny-invariant'
 
 import { radians, remap } from '@takram/three-geospatial'
 
@@ -21,20 +20,22 @@ import type { VideoSource } from '../VideoSource'
 const { resetRendererState, restoreRendererState } = RendererUtils
 
 const Root = /*#__PURE__*/ styled.div`
+  overflow: hidden;
   position: relative;
-  width: 360px;
-  height: 360px;
-  aspect-ratio: 1;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 200px;
+  min-height: 200px;
+  padding: 15px;
+  background-color: black;
   user-select: none;
 `
 
 const Content = /*#__PURE__*/ styled.div`
-  --insets: 15px;
-
+  overflow: hidden;
   position: relative;
-  width: calc(100% - var(--insets) * 2);
-  height: calc(100% - var(--insets) * 2);
-  margin: var(--insets);
+  height: 100%;
+  aspect-ratio: 1;
 `
 
 const Canvas = /*#__PURE__*/ styled.canvas`
@@ -167,7 +168,9 @@ export const Vectorscope: FC<VectorscopeProps> = ({
   // its size every time fast refresh occurs. This way prevents it.
   useEffect(() => {
     const canvas = canvasRef.current
-    invariant(canvas != null)
+    if (canvas == null) {
+      return
+    }
     setCanvasTarget(canvasTarget => {
       if (canvasTarget == null) {
         return new CanvasTarget(canvas)
@@ -183,7 +186,9 @@ export const Vectorscope: FC<VectorscopeProps> = ({
   const sizeRef = useRef<{ width?: number; height?: number }>({})
   useEffect(() => {
     const content = contentRef.current
-    invariant(content != null)
+    if (content == null) {
+      return
+    }
     const observer = new ResizeObserver(([entry]) => {
       sizeRef.current = entry.contentRect
     })

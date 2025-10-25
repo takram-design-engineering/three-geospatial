@@ -11,7 +11,6 @@ import {
 } from 'react'
 import { OrthographicCamera } from 'three'
 import { CanvasTarget, RendererUtils } from 'three/webgpu'
-import invariant from 'tiny-invariant'
 
 import { HistogramMesh } from '../HistogramMesh'
 import type { VideoSource } from '../VideoSource'
@@ -19,21 +18,21 @@ import type { VideoSource } from '../VideoSource'
 const { resetRendererState, restoreRendererState } = RendererUtils
 
 const Root = /*#__PURE__*/ styled.div`
-  width: 480px;
-  height: 360px;
-  min-width: 240px;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 200px;
+  min-height: 200px;
+  padding: 20px;
+  padding-left: 30px;
+  background-color: black;
   user-select: none;
 `
 
 const Content = /*#__PURE__*/ styled.div`
-  --insets: 30px;
-  --insets-left: 50px;
-
   position: relative;
-  width: calc(100% - var(--insets) - var(--insets-left));
-  height: calc(100% - var(--insets) * 2);
-  margin: var(--insets);
-  margin-left: var(--insets-left);
+  height: 100%;
 `
 
 const Canvas = /*#__PURE__*/ styled.canvas`
@@ -93,7 +92,9 @@ export const Histogram: FC<HistogramProps> = ({
   // its size every time fast refresh occurs. This way prevents it.
   useEffect(() => {
     const canvas = canvasRef.current
-    invariant(canvas != null)
+    if (canvas == null) {
+      return
+    }
     setCanvasTarget(canvasTarget => {
       if (canvasTarget == null) {
         return new CanvasTarget(canvas)
@@ -109,7 +110,9 @@ export const Histogram: FC<HistogramProps> = ({
   const sizeRef = useRef<{ width?: number; height?: number }>({})
   useEffect(() => {
     const content = contentRef.current
-    invariant(content != null)
+    if (content == null) {
+      return
+    }
     const observer = new ResizeObserver(([entry]) => {
       sizeRef.current = entry.contentRect
     })
