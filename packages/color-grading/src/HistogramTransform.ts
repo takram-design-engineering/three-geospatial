@@ -10,10 +10,12 @@ import {
   luminance,
   max,
   numWorkgroups,
+  textureSize,
   uint,
   uniform,
   uvec2,
   uvec4,
+  vec2,
   vec4,
   workgroupArray,
   workgroupBarrier,
@@ -71,7 +73,11 @@ export class HistogramTransform {
       const position = workgroupId.xy.mul(uvec2(WIDTH, HEIGHT)).add(localId.xy)
 
       If(position.lessThan(size).all(), () => {
-        const color = inputNode.load(position).toVar()
+        const uv = vec2(position).add(0.5).div(vec2(size))
+        const inputSize = textureSize(inputNode)
+        const inputPosition = uv.mul(inputSize).min(inputSize)
+
+        const color = inputNode.load(inputPosition).toVar()
         color.assign(linearToRec709(color))
         color.w = luminance(color.rgb)
 
