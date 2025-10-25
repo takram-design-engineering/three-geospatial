@@ -59,6 +59,8 @@ const Svg = /*#__PURE__*/ styled.svg`
   font-size: 10px;
 `
 
+const skinToneValue = 60
+
 const Grid = /*#__PURE__*/ memo(() => (
   <Svg>
     <rect x={0} y={0} width='100%' height='100%' fill='black' stroke='#333' />
@@ -79,6 +81,22 @@ const Grid = /*#__PURE__*/ memo(() => (
         </Fragment>
       )
     })}
+    <line
+      x1='0%'
+      x2='100%'
+      y1={`${100 - skinToneValue}%`}
+      y2={`${100 - skinToneValue}%`}
+      stroke='#666'
+    />
+    <text
+      x={-5}
+      y={`${100 - skinToneValue}%`}
+      fill='#ccc'
+      textAnchor='end'
+      dominantBaseline='middle'
+    >
+      {skinToneValue}
+    </text>
   </Svg>
 ))
 
