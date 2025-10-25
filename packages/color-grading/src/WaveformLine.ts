@@ -6,9 +6,13 @@ import {
   Vector2
 } from 'three'
 import {
+  float,
   Fn,
+  If,
   instanceIndex,
   screenSize,
+  select,
+  uint,
   uniform,
   vec2,
   vec3,
@@ -30,6 +34,17 @@ import {
 import { linearToRec709, linearToRec709YCbCr } from './colors'
 import type { RasterTransform } from './RasterTransform'
 
+export type WaveformMode =
+  | 'luma'
+  | 'cb'
+  | 'cr'
+  | 'red'
+  | 'green'
+  | 'blue'
+  | 'rgb'
+  | 'rgb-parade'
+  | 'ycbcr-parade'
+
 interface Mode {
   components: number
   color: (
@@ -40,9 +55,13 @@ interface Mode {
     color: NodeObject<'vec3'>,
     channel: NodeObject<'uint'>
   ) => NodeObject<'float'>
+  x?: (
+    x: NodeObject<'float'>,
+    channel: NodeObject<'uint'>
+  ) => NodeObject<'float'>
 }
 
-const modes = {
+const modes: Record<WaveformMode, Mode> = {
   luma: {
     components: 1,
     color: color => hsv2rgb(vec3(rgb2hsv(color).xy, 1)),
@@ -77,15 +96,43 @@ const modes = {
     components: 3,
     color: (_, channel) =>
       Fn(() => {
-        const color = vec3(0.25).toVar()
-        color.element(channel).assign(1)
-        return color
+        const result = vec3(0.25).toVar()
+        result.element(channel).assign(1)
+        return result
       })(),
     y: (color, channel) => linearToRec709(color).element(channel)
+  },
+  'rgb-parade': {
+    components: 3,
+    color: (_, channel) =>
+      Fn(() => {
+        const result = vec3(0.25).toVar()
+        result.element(channel).assign(1)
+        return result.mul(1 / 3)
+      })(),
+    y: (color, channel) => linearToRec709(color).element(channel),
+    x: (x, channel) => x.div(3).add(float(channel).mul(1 / 3))
+  },
+  'ycbcr-parade': {
+    components: 3,
+    color: (color, channel) =>
+      Fn(() => {
+        const result = vec3(1).toVar()
+        If(channel.equal(0), () => {
+          result.assign(hsv2rgb(vec3(rgb2hsv(color).xy, 1)))
+        }).Else(() => {
+          result.element(uint(3).sub(channel)).assign(0.25)
+        })
+        return result.mul(1 / 3)
+      })(),
+    y: (color, channel) =>
+      Fn(() => {
+        const y = linearToRec709YCbCr(color).element(channel)
+        return select(channel.equal(0), y, y.add(0.5))
+      })(),
+    x: (x, channel) => x.div(3).add(float(channel).mul(1 / 3))
   }
-} satisfies Record<string, Mode>
-
-export type WaveformMode = keyof typeof modes
+}
 
 export class WaveformLine extends Line {
   declare geometry: InstancedBufferGeometry
@@ -122,15 +169,16 @@ export class WaveformLine extends Line {
     const { colorBuffer, uvBuffer, size } = this.source
     const index = instanceIndex.mod(size.y).mul(size.x).add(vertexIndex)
     const channel = instanceIndex.div(size.y)
-    const linearColor = colorBuffer.element(index)
+    const inputColor = colorBuffer.element(index)
     const uv = uvBuffer.element(index)
 
     const mode = modes[this.mode]
-    const color = mode.color(linearColor, channel)
-    const y = mode.y(linearColor, channel)
+    const color = mode.color(inputColor, channel)
+    const x = mode.x?.(uv.x, channel) ?? uv.x
+    const y = mode.y(inputColor, channel)
 
     const scaleY = screenSize.y.reciprocal().oneMinus()
-    this.material.positionNode = vec3(vec2(uv.x, y.mul(scaleY)).sub(0.5))
+    this.material.positionNode = vec3(vec2(x, y.mul(scaleY)).sub(0.5))
     this.material.colorNode = color.div(size.y).mul(this.gain).toVertexStage()
     this.material.needsUpdate = true
   }

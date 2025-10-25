@@ -9,14 +9,11 @@ import {
   type ComponentPropsWithRef,
   type FC
 } from 'react'
-import { OrthographicCamera, Scene } from 'three'
+import { OrthographicCamera } from 'three'
 import { CanvasTarget, RendererUtils } from 'three/webgpu'
 
 import type { VideoSource } from '../VideoSource'
-import {
-  WaveformLine,
-  type WaveformMode as WaveformModeBase
-} from '../WaveformLine'
+import { WaveformLine, type WaveformMode } from '../WaveformLine'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -100,8 +97,6 @@ Grid.displayName = 'Grid'
 
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
-export type WaveformMode = WaveformModeBase | 'rgb-parade' | 'ycbcr-parade'
-
 export interface WaveformProps extends ComponentPropsWithRef<'div'> {
   source?: VideoSource
   mode?: WaveformMode
@@ -159,49 +154,21 @@ export const Waveform: FC<WaveformProps> = ({
     }
   }, [canvasTarget])
 
-  const parade = mode === 'rgb-parade' || mode === 'ycbcr-parade'
-  const waveforms = useMemo(
-    () => [new WaveformLine(), new WaveformLine(), new WaveformLine()],
-    []
-  )
+  const waveform = useMemo(() => new WaveformLine(), [])
 
-  for (const waveform of waveforms) {
-    waveform.source = source?.rasterTransform ?? null
-    if (gain != null) {
-      waveform.gain.value = gain
-    }
+  waveform.source = source?.rasterTransform ?? null
+  if (gain != null) {
+    waveform.gain.value = gain
   }
-  if (mode === 'rgb-parade') {
-    waveforms[0].mode = 'red'
-    waveforms[1].mode = 'green'
-    waveforms[2].mode = 'blue'
-  } else if (mode === 'ycbcr-parade') {
-    waveforms[0].mode = 'luma'
-    waveforms[1].mode = 'cb'
-    waveforms[2].mode = 'cr'
-  } else if (mode != null) {
-    waveforms[0].mode = mode
+  if (mode != null) {
+    waveform.mode = mode
   }
 
   useEffect(() => {
     return () => {
-      for (const waveform of waveforms) {
-        waveform.dispose()
-      }
+      waveform.dispose()
     }
-  }, [waveforms])
-
-  const scene = useMemo(() => new Scene(), [])
-  useEffect(() => {
-    if (parade) {
-      scene.add(...waveforms)
-    } else {
-      scene.add(waveforms[0])
-    }
-    return () => {
-      scene.remove(...waveforms)
-    }
-  }, [parade, waveforms, scene])
+  }, [waveform])
 
   useEffect(() => {
     if (canvasTarget == null) {
@@ -230,7 +197,7 @@ export const Waveform: FC<WaveformProps> = ({
           canvasTarget.setSize(width, height)
         }
 
-        void renderer.render(scene, camera)
+        void renderer.render(waveform, camera)
         renderer.setCanvasTarget(prevCanvasTarget)
 
         restoreRendererState(renderer, rendererState)
@@ -242,7 +209,7 @@ export const Waveform: FC<WaveformProps> = ({
     return () => {
       stopped = true
     }
-  }, [source, canvasTarget, scene])
+  }, [source, canvasTarget, waveform])
 
   return (
     <Root {...props}>
