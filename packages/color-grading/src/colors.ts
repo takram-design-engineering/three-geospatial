@@ -13,6 +13,12 @@ import {
 
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
+import {
+  REC709_LUMA_COEFFICIENTS,
+  REC709_RGB_TO_YCBCR,
+  REC709_YCBCR_TO_RGB
+} from './Rec709'
+
 // See: https://en.wikipedia.org/wiki/Rec._709
 // Note that we assume a linear workflow (as in Three.js) and sRGB color
 // primaries, which are equivalent to Rec.709.
@@ -77,38 +83,18 @@ export const rec709ToLinear = /*#__PURE__*/ overloadingFn([
   rec709ToLinear_float
 ])
 
-const Yx = 0.2126
-const Yy = 0.7152
-const Yz = 0.0722
-const Cbx = -0.2126
-const Cby = -0.7152
-const Cbz = 0.9278
-const Cbw = 1.8556
-const Crx = 0.7874
-const Cry = -0.7152
-const Crz = -0.0722
-const Crw = 1.5748
-
-// prettier-ignore
-const REC709_RGB_TO_YCBCR = /*#__PURE__*/ mat3(
-  Yx, Yy, Yz,
-  Cbx / Cbw, Cby / Cbw, Cbz / Cbw,
-  Crx / Crw, Cry / Crw, Crz / Crw
-)
-
-// prettier-ignore
-const REC709_YCBCR_TO_RGB = /*#__PURE__*/ mat3(
-  1, 0, Crw,
-  1, -Yz * Cbw / Yy, -Yx * Crw / Yy,
-  1, Cbw, 0
-)
+export const luminanceRec709 = /*#__PURE__*/ FnLayout({
+  name: 'luminanceRec709',
+  type: 'float',
+  inputs: [{ name: 'color', type: 'vec3' }]
+})(([color]) => color.dot(vec3(REC709_LUMA_COEFFICIENTS)))
 
 export const linearToRec709YCbCr = /*#__PURE__*/ FnLayout({
   name: 'linearToRec709YCbCr',
   type: 'vec3',
   inputs: [{ name: 'color', type: 'vec3' }]
 })(([color]) => {
-  return REC709_RGB_TO_YCBCR.mul(linearToRec709(color))
+  return mat3(REC709_RGB_TO_YCBCR).mul(linearToRec709(color))
 })
 
 export const rec709YCbCrToLinear = /*#__PURE__*/ FnLayout({
@@ -116,11 +102,5 @@ export const rec709YCbCrToLinear = /*#__PURE__*/ FnLayout({
   type: 'vec3',
   inputs: [{ name: 'color', type: 'vec3' }]
 })(([color]) => {
-  return rec709ToLinear(REC709_YCBCR_TO_RGB.mul(color))
+  return rec709ToLinear(mat3(REC709_YCBCR_TO_RGB).mul(color))
 })
-
-export const luminanceRec709 = /*#__PURE__*/ FnLayout({
-  name: 'luminanceRec709',
-  type: 'float',
-  inputs: [{ name: 'color', type: 'vec3' }]
-})(([color]) => color.dot(vec3(Yx, Yy, Yz)))
