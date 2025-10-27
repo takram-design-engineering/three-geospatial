@@ -9,12 +9,12 @@ import {
   type ComponentPropsWithRef,
   type FC
 } from 'react'
-import { OrthographicCamera } from 'three'
+import { Color, OrthographicCamera } from 'three'
 import { CanvasTarget, RendererUtils } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
-import { normalizeYCbCr, Rec709Format } from '../Rec709'
+import { normalizeYCbCr, Rec709, Rec709Format } from '../Rec709'
 import { VectorscopeLine } from '../VectorscopeLine'
 import type { VideoSource } from '../VideoSource'
 
@@ -47,13 +47,42 @@ const Canvas = /*#__PURE__*/ styled.canvas`
 `
 
 const Svg = /*#__PURE__*/ styled.svg`
+  --stroke-width: 6px;
+
   overflow: visible;
+  position: absolute;
+  top: calc(var(--stroke-width) / 2);
+  left: calc(var(--stroke-width) / 2);
+  width: calc(100% - var(--stroke-width));
+  height: calc(100% - var(--stroke-width));
+  font-size: 10px;
+`
+
+const chromaGradient = (): string => {
+  const values = Array.from({ length: 16 }).map((_, index, { length }) => {
+    const r = 2 * Math.PI * (0.25 - index / length)
+    return new Color(
+      ...Rec709.fromYCbCr(
+        0.1,
+        Math.cos(r) * 0.5,
+        Math.sin(r) * 0.5
+      ).toLinearSRGB()
+    ).convertLinearToSRGB()
+  })
+  values.push(values[0])
+  return values
+    .map(({ r, g, b }) => `rgba(${r * 255} ${g * 255} ${b * 255} / 1)`)
+    .join(',')
+}
+
+const Gradient = /*#__PURE__*/ styled.div`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  font-size: 10px;
+  background: conic-gradient(${chromaGradient()});
+  border-radius: 50%;
 `
 
 const colors = {
@@ -71,7 +100,7 @@ const skinToneAngle = 123
 
 const Grid = /*#__PURE__*/ memo(() => (
   <Svg>
-    <circle cx='50%' cy='50%' r='50%' fill='black' stroke='#333' />
+    <circle cx='50%' cy='50%' r='50%' fill='black' stroke='none' />
     <circle cx='50%' cy='50%' r='37.5%' fill='none' stroke='#333' />
     <circle cx='50%' cy='50%' r='25%' fill='none' stroke='#333' />
     <circle cx='50%' cy='50%' r='12.5%' fill='none' stroke='#333' />
@@ -255,6 +284,7 @@ export const Vectorscope: FC<VectorscopeProps> = ({
   return (
     <Root {...props}>
       <Content ref={contentRef}>
+        <Gradient />
         <Grid />
         <Canvas ref={canvasRef} />
       </Content>
