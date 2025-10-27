@@ -36,6 +36,9 @@ const Content = /*#__PURE__*/ styled.div`
 `
 
 const Canvas = /*#__PURE__*/ styled.canvas`
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   image-rendering: pixelated;

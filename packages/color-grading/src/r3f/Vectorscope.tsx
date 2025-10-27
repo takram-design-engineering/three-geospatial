@@ -39,22 +39,24 @@ const Content = /*#__PURE__*/ styled.div`
   aspect-ratio: 1;
 `
 
+const strokeWidth = 6
+
 const Canvas = /*#__PURE__*/ styled.canvas`
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: ${strokeWidth / 2}px;
+  left: ${strokeWidth / 2}px;
+  width: ${`calc(100% - ${strokeWidth}px)`};
+  height: ${`calc(100% - ${strokeWidth}px)`};
   image-rendering: pixelated;
   mix-blend-mode: screen;
 `
 
 const Svg = /*#__PURE__*/ styled.svg`
-  --stroke-width: 6px;
-
-  overflow: visible;
   position: absolute;
-  top: calc(var(--stroke-width) / 2);
-  left: calc(var(--stroke-width) / 2);
-  width: calc(100% - var(--stroke-width));
-  height: calc(100% - var(--stroke-width));
+  top: ${strokeWidth / 2}px;
+  left: ${strokeWidth / 2}px;
+  width: ${`calc(100% - ${strokeWidth}px)`};
+  height: ${`calc(100% - ${strokeWidth}px)`};
   font-size: 10px;
 `
 
@@ -108,41 +110,47 @@ const Grid = /*#__PURE__*/ memo(() => (
     <line x1='50%' y1='0%' x2='50%' y2='100%' stroke='#333' />
     {Object.entries(colors).map(([label, [y, cb, cr]]) => {
       const phi = Math.atan2(cr, cb)
-      const g = Math.hypot(cb, cr)
       const cos1 = Math.cos(phi + dPhi)
       const sin1 = Math.sin(phi + dPhi)
       const cos2 = Math.cos(phi - dPhi)
       const sin2 = Math.sin(phi - dPhi)
+      const g = Math.hypot(cb, cr)
       const g1 = g + dG
       const g2 = g - dG
+      const points = [
+        { x: `${50 + cos1 * g1 * 75}%`, y: `${50 - sin1 * g1 * 75}%` },
+        { x: `${50 + cos1 * g2 * 75}%`, y: `${50 - sin1 * g2 * 75}%` },
+        { x: `${50 + cos2 * g2 * 75}%`, y: `${50 - sin2 * g2 * 75}%` },
+        { x: `${50 + cos2 * g1 * 75}%`, y: `${50 - sin2 * g1 * 75}%` }
+      ]
       return (
         <Fragment key={label}>
           <line
-            x1={`${50 + cos1 * g1 * 75}%`}
-            y1={`${50 - sin1 * g1 * 75}%`}
-            x2={`${50 + cos1 * g2 * 75}%`}
-            y2={`${50 - sin1 * g2 * 75}%`}
+            x1={points[0].x}
+            y1={points[0].y}
+            x2={points[1].x}
+            y2={points[1].y}
             stroke='#666'
           />
           <line
-            x1={`${50 + cos1 * g2 * 75}%`}
-            y1={`${50 - sin1 * g2 * 75}%`}
-            x2={`${50 + cos2 * g2 * 75}%`}
-            y2={`${50 - sin2 * g2 * 75}%`}
+            x1={points[1].x}
+            y1={points[1].y}
+            x2={points[2].x}
+            y2={points[2].y}
             stroke='#666'
           />
           <line
-            x1={`${50 + cos2 * g2 * 75}%`}
-            y1={`${50 - sin2 * g2 * 75}%`}
-            x2={`${50 + cos2 * g1 * 75}%`}
-            y2={`${50 - sin2 * g1 * 75}%`}
+            x1={points[2].x}
+            y1={points[2].y}
+            x2={points[3].x}
+            y2={points[3].y}
             stroke='#666'
           />
           <line
-            x1={`${50 + cos2 * g1 * 75}%`}
-            y1={`${50 - sin2 * g1 * 75}%`}
-            x2={`${50 + cos1 * g1 * 75}%`}
-            y2={`${50 - sin1 * g1 * 75}%`}
+            x1={points[3].x}
+            y1={points[3].y}
+            x2={points[0].x}
+            y2={points[0].y}
             stroke='#666'
           />
           <text
@@ -212,7 +220,11 @@ export const Vectorscope: FC<VectorscopeProps> = ({
       return
     }
     const observer = new ResizeObserver(([entry]) => {
-      sizeRef.current = entry.contentRect
+      const { width, height } = entry.contentRect
+      sizeRef.current = {
+        width: width - strokeWidth,
+        height: height - strokeWidth
+      }
     })
     observer.observe(content)
     return () => {
