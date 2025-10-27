@@ -27,7 +27,7 @@ const Root = /*#__PURE__*/ styled.div`
   height: 100%;
   min-width: 200px;
   min-height: 200px;
-  padding: 15px;
+  padding: 10px;
   background-color: black;
   user-select: none;
 `
