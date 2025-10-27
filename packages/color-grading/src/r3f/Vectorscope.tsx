@@ -9,11 +9,12 @@ import {
   type ComponentPropsWithRef,
   type FC
 } from 'react'
-import { OrthographicCamera, Vector3 } from 'three'
+import { OrthographicCamera } from 'three'
 import { CanvasTarget, RendererUtils } from 'three/webgpu'
 
-import { radians, remap } from '@takram/three-geospatial'
+import { radians } from '@takram/three-geospatial'
 
+import { normalizeYCbCr, Rec709Format } from '../Rec709'
 import { VectorscopeLine } from '../VectorscopeLine'
 import type { VideoSource } from '../VideoSource'
 
@@ -55,21 +56,13 @@ const Svg = /*#__PURE__*/ styled.svg`
   font-size: 10px;
 `
 
-function normalize(ycbcr: Vector3): Vector3 {
-  return ycbcr.set(
-    remap(ycbcr.x, 64, 940, 0, 1),
-    remap(ycbcr.y, 64, 960, -0.5, 0.5),
-    remap(ycbcr.z, 64, 960, -0.5, 0.5)
-  )
-}
-
 const colors = {
-  YL: /*#__PURE__*/ normalize(new Vector3(877, 64, 553)),
-  CY: /*#__PURE__*/ normalize(new Vector3(754, 615, 64)),
-  G: /*#__PURE__*/ normalize(new Vector3(691, 167, 105)),
-  MG: /*#__PURE__*/ normalize(new Vector3(313, 857, 919)),
-  R: /*#__PURE__*/ normalize(new Vector3(250, 409, 960)),
-  B: /*#__PURE__*/ normalize(new Vector3(127, 960, 471))
+  YL: /*#__PURE__*/ normalizeYCbCr(877, 64, 553, Rec709Format.STUDIO_10BIT),
+  CY: /*#__PURE__*/ normalizeYCbCr(754, 615, 64, Rec709Format.STUDIO_10BIT),
+  G: /*#__PURE__*/ normalizeYCbCr(691, 167, 105, Rec709Format.STUDIO_10BIT),
+  MG: /*#__PURE__*/ normalizeYCbCr(313, 857, 919, Rec709Format.STUDIO_10BIT),
+  R: /*#__PURE__*/ normalizeYCbCr(250, 409, 960, Rec709Format.STUDIO_10BIT),
+  B: /*#__PURE__*/ normalizeYCbCr(127, 960, 471, Rec709Format.STUDIO_10BIT)
 }
 
 const dPhi = 2.5 * (Math.PI / 180)
@@ -84,9 +77,9 @@ const Grid = /*#__PURE__*/ memo(() => (
     <circle cx='50%' cy='50%' r='12.5%' fill='none' stroke='#333' />
     <line x1='0%' y1='50%' x2='100%' y2='50%' stroke='#333' />
     <line x1='50%' y1='0%' x2='50%' y2='100%' stroke='#333' />
-    {Object.entries(colors).map(([label, color]) => {
-      const phi = Math.atan2(color.z, color.y)
-      const g = Math.hypot(color.y, color.z)
+    {Object.entries(colors).map(([label, [y, cb, cr]]) => {
+      const phi = Math.atan2(cr, cb)
+      const g = Math.hypot(cb, cr)
       const cos1 = Math.cos(phi + dPhi)
       const sin1 = Math.sin(phi + dPhi)
       const cos2 = Math.cos(phi - dPhi)
