@@ -3,14 +3,15 @@ import type { FC } from 'react'
 import { pass, uv } from 'three/tsl'
 import { NodeMaterial, PostProcessing, type Renderer } from 'three/webgpu'
 
-import type { VideoSource } from '@takram/three-color-grading'
-import { useVideoSource } from '@takram/three-color-grading/r3f'
+import {
+  colorBars,
+  colorBarsHD,
+  type VideoSource
+} from '@takram/three-color-grading'
+import { useVideoSource, VideoScopes } from '@takram/three-color-grading/r3f'
 import { QuadGeometry } from '@takram/three-geospatial'
-import { colorBars, colorBarsHD } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
-import { LumetriScopes } from '../components/LumetriScopes'
-import { Stack } from '../components/Stack'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import { useControl } from '../hooks/useControl'
@@ -62,16 +63,21 @@ interface StoryArgs {
 export const Story: StoryFC<StoryProps, StoryArgs> = props => {
   const source = useVideoSource()
   return (
-    <Stack>
+    <VideoScopes source={source}>
       <WebGPUCanvas
         rendererRef={source.setRenderer}
-        camera={{ left: -1, right: 1, top: 1, bottom: -1, position: [0, 0, 1] }}
+        camera={{
+          left: -1,
+          right: 1,
+          top: 1,
+          bottom: -1,
+          position: [0, 0, 1]
+        }}
         orthographic
       >
         <Content {...props} source={source} />
       </WebGPUCanvas>
-      <LumetriScopes source={source} />
-    </Stack>
+    </VideoScopes>
   )
 }
 
