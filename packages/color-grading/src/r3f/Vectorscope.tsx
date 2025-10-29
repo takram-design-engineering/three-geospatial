@@ -1,24 +1,24 @@
 import styled from '@emotion/styled'
+import { useFrame } from '@react-three/fiber'
 import {
   Fragment,
   memo,
   useEffect,
   useMemo,
   useRef,
-  useState,
   type ComponentPropsWithRef,
   type FC
 } from 'react'
 import { Color, OrthographicCamera } from 'three'
-import { CanvasTarget, RendererUtils } from 'three/webgpu'
+import type { Renderer } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
 import { normalizeYCbCr, Rec709, Rec709Format } from '../Rec709'
 import { VectorscopeLine } from '../VectorscopeLine'
 import type { VideoSource } from '../VideoSource'
-
-const { resetRendererState, restoreRendererState } = RendererUtils
+import { useCanvasTarget } from './useCanvasTarget'
+import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
   overflow: hidden;
@@ -180,63 +180,24 @@ Grid.displayName = 'Grid'
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface VectorscopeProps extends ComponentPropsWithRef<'div'> {
-  source?: VideoSource
+  source?: VideoSource | null
   gain?: number
   pixelRatio?: number
 }
 
-export const Vectorscope: FC<VectorscopeProps> = ({
+const VectorscopeImpl: FC<VectorscopeProps & WithTunnelsProps> = ({
+  tunnels,
   source,
   gain,
   pixelRatio = window.devicePixelRatio,
   ...props
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [canvasTarget, setCanvasTarget] = useState<CanvasTarget>()
-
-  // BUG: Disposed CanvasTarget still tries to resize the canvas and doubling
-  // its size every time fast refresh occurs. This way prevents it.
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (canvas == null) {
-      return
-    }
-    setCanvasTarget(canvasTarget => {
-      if (canvasTarget == null) {
-        return new CanvasTarget(canvas)
-      }
-      canvasTarget.domElement = canvas
-      return canvasTarget
-    })
-  }, [])
-
-  canvasTarget?.setPixelRatio(pixelRatio)
-
   const contentRef = useRef<HTMLDivElement>(null)
-  const sizeRef = useRef<{ width?: number; height?: number }>({})
-  useEffect(() => {
-    const content = contentRef.current
-    if (content == null) {
-      return
-    }
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      sizeRef.current = {
-        width: width - strokeWidth,
-        height: height - strokeWidth
-      }
-    })
-    observer.observe(content)
-    return () => {
-      observer.disconnect()
-    }
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      canvasTarget?.dispose()
-    }
-  }, [canvasTarget])
+  const [canvasTarget, setCanvas] = useCanvasTarget(
+    contentRef.current,
+    (width, height) => [width - strokeWidth, height - strokeWidth]
+  )
+  canvasTarget?.setPixelRatio(pixelRatio)
 
   const vectorscope = useMemo(() => new VectorscopeLine(), [])
 
@@ -252,54 +213,31 @@ export const Vectorscope: FC<VectorscopeProps> = ({
     }
   }, [vectorscope])
 
-  useEffect(() => {
-    if (canvasTarget == null) {
+  useFrame(({ gl }) => {
+    if (canvasTarget == null || source == null) {
       return
     }
 
-    let rendererState: RendererUtils.RendererState
-    let stopped = false
+    source.update()
 
-    const callback = (): void => {
-      if (stopped) {
-        return
-      }
-      if (source?.renderer != null) {
-        source.update()
-
-        const renderer = source.renderer
-        rendererState = resetRendererState(renderer, rendererState)
-
-        const prevCanvasTarget = renderer.getCanvasTarget()
-        renderer.setCanvasTarget(canvasTarget)
-
-        // Canvas target must be resize when it is activated in the renderer.
-        const { width, height } = sizeRef.current
-        if (width != null && height != null) {
-          canvasTarget.setSize(width, height)
-        }
-
-        void renderer.render(vectorscope, camera)
-        renderer.setCanvasTarget(prevCanvasTarget)
-
-        restoreRendererState(renderer, rendererState)
-      }
-      requestAnimationFrame(callback)
-    }
-    requestAnimationFrame(callback)
-
-    return () => {
-      stopped = true
-    }
-  }, [source, canvasTarget, vectorscope])
+    const renderer = gl as unknown as Renderer
+    const prevTarget = renderer.getCanvasTarget()
+    renderer.setCanvasTarget(canvasTarget)
+    void renderer.render(vectorscope, camera)
+    renderer.setCanvasTarget(prevTarget)
+  })
 
   return (
-    <Root {...props}>
-      <Content ref={contentRef}>
-        <Gradient />
-        <Grid />
-        <Canvas ref={canvasRef} />
-      </Content>
-    </Root>
+    <tunnels.HTML>
+      <Root {...props}>
+        <Content ref={contentRef}>
+          <Gradient />
+          <Grid />
+          <Canvas ref={setCanvas} />
+        </Content>
+      </Root>
+    </tunnels.HTML>
   )
 }
+
+export const Vectorscope = withTunnels(VectorscopeImpl)

@@ -3,12 +3,8 @@ import type { FC } from 'react'
 import { pass, uv } from 'three/tsl'
 import { NodeMaterial, PostProcessing, type Renderer } from 'three/webgpu'
 
-import {
-  colorBars,
-  colorBarsHD,
-  type VideoSource
-} from '@takram/three-color-grading'
-import { useVideoSource, VideoScopes } from '@takram/three-color-grading/r3f'
+import { colorBars, colorBarsHD } from '@takram/three-color-grading'
+import { VideoScopes, VideoSource } from '@takram/three-color-grading/r3f'
 import { QuadGeometry } from '@takram/three-geospatial'
 
 import type { StoryFC } from '../components/createStory'
@@ -18,26 +14,19 @@ import { useControl } from '../hooks/useControl'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { useResource } from '../hooks/useResource'
 
-const Content: FC<
-  StoryProps & {
-    source: VideoSource
-  }
-> = ({ source }) => {
+const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const postProcessing = useResource(
+  const [postProcessing, passNode] = useResource(
     manage => {
       const passNode = manage(pass(scene, camera, { samples: 0 }))
       const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = passNode
-
-      source?.setInputNode(passNode)
-
-      return postProcessing
+      return [postProcessing, passNode]
     },
-    [renderer, camera, scene, source]
+    [renderer, camera, scene]
   )
 
   useGuardedFrame(() => {
@@ -51,7 +40,12 @@ const Content: FC<
   material.colorNode = type === 'hd' ? colorBarsHD(uv()) : colorBars(uv())
   material.needsUpdate = true
 
-  return <mesh geometry={geometry} material={material} />
+  return (
+    <>
+      <mesh geometry={geometry} material={material} />
+      <VideoSource inputNode={passNode} />
+    </>
+  )
 }
 
 interface StoryProps {}
@@ -60,26 +54,22 @@ interface StoryArgs {
   type: 'sd' | 'hd'
 }
 
-export const Story: StoryFC<StoryProps, StoryArgs> = props => {
-  const source = useVideoSource()
-  return (
-    <VideoScopes source={source}>
-      <WebGPUCanvas
-        rendererRef={source.setRenderer}
-        camera={{
-          left: -1,
-          right: 1,
-          top: 1,
-          bottom: -1,
-          position: [0, 0, 1]
-        }}
-        orthographic
-      >
-        <Content {...props} source={source} />
-      </WebGPUCanvas>
-    </VideoScopes>
-  )
-}
+export const Story: StoryFC<StoryProps, StoryArgs> = props => (
+  <VideoScopes>
+    <WebGPUCanvas
+      camera={{
+        left: -1,
+        right: 1,
+        top: 1,
+        bottom: -1,
+        position: [0, 0, 1]
+      }}
+      orthographic
+    >
+      <Content {...props} />
+    </WebGPUCanvas>
+  </VideoScopes>
+)
 
 Story.args = {
   type: 'hd',

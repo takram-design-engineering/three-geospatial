@@ -1,27 +1,10 @@
-import { useEffect, useMemo } from 'react'
-import type { Node, Renderer } from 'three/webgpu'
+import { useAtomValue } from 'jotai'
+import { useContext } from 'react'
 
-import { VideoSource } from '../VideoSource'
+import type { VideoSource } from '../VideoSource'
+import { VideoContext } from './VideoSource'
 
-export interface UseVideoAnalysisParams {
-  renderer?: Renderer | null
-  inputNode?: Node | null
-}
-
-export function useVideoSource({
-  renderer,
-  inputNode
-}: UseVideoAnalysisParams = {}): VideoSource {
-  const source = useMemo(
-    () => new VideoSource(renderer, inputNode),
-    [renderer, inputNode]
-  )
-
-  useEffect(() => {
-    return () => {
-      source.dispose()
-    }
-  }, [source])
-
-  return source
+export function useVideoSource(): VideoSource | null {
+  const { sourceAtom } = useContext(VideoContext)
+  return useAtomValue(sourceAtom)
 }
