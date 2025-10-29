@@ -3,7 +3,7 @@ import type { FC } from 'react'
 import { pass, uv } from 'three/tsl'
 import { NodeMaterial, PostProcessing, type Renderer } from 'three/webgpu'
 
-import { colorBars, colorBarsHD } from '@takram/three-color-grading'
+import { colorBarsHD, colorBarsSD } from '@takram/three-color-grading'
 import { VideoScopes, VideoSource } from '@takram/three-color-grading/r3f'
 import { QuadGeometry } from '@takram/three-geospatial'
 
@@ -37,7 +37,7 @@ const Content: FC<StoryProps> = () => {
   const material = useResource(() => new NodeMaterial(), [])
 
   const type = useControl(({ type }: StoryArgs) => type)
-  material.colorNode = type === 'hd' ? colorBarsHD(uv()) : colorBars(uv())
+  material.colorNode = type === 'hd' ? colorBarsHD(uv()) : colorBarsSD(uv())
   material.needsUpdate = true
 
   return (

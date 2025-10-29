@@ -16,8 +16,8 @@ function yCbCr10(y: number, cb: number, cr: number): NodeObject<'vec3'> {
 }
 
 // Conforms to: https://pub.smpte.org/pub/eg1/eg0001-1990_stable2004.pdf
-export const colorBars = /*#__PURE__*/ FnLayout({
-  name: 'colorBars',
+export const colorBarsSD = /*#__PURE__*/ FnLayout({
+  name: 'colorBarsSD',
   type: 'vec3',
   inputs: [{ name: 'uv', type: 'vec2' }]
 })(([uv]) => {
