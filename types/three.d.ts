@@ -71,6 +71,14 @@ declare module 'three/src/nodes/TSL.js' {
   }
 }
 
+declare module 'three/src/renderers/common/RendererUtils.js' {
+  // "state" can be optional
+  function resetRendererState(
+    renderer: Renderer,
+    state?: RendererState
+  ): RendererState
+}
+
 declare module 'three/tsl' {
   // Make "value" nullable
   const texture: (
