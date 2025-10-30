@@ -105,7 +105,7 @@ export class LensGlareNode extends FilterNode {
   })
   private readonly mesh = new Mesh(new PlaneGeometry(1, 1), this.material)
   private readonly camera = new PerspectiveCamera()
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
 
   private readonly inputTexelSize = uniform(new Vector2())
   private readonly outputTexelSize = uniform(new Vector2())

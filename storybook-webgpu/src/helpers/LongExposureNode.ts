@@ -88,7 +88,7 @@ export class LongExposureNode extends TempNode {
   private readonly material = new NodeMaterial()
   private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
   private needsClearHistory = false
 
   private readonly currentNode = texture(this.currentRT.texture)

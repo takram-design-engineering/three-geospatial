@@ -46,7 +46,7 @@ export class RTTextureNode extends TextureNode {
   private readonly renderTarget: RenderTarget
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
 
   constructor(node: Node, uvNode?: Node) {
     const renderTarget = createRenderTarget()

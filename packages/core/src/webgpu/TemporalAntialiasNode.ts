@@ -243,7 +243,7 @@ export class TemporalAntialiasNode extends TempNode {
   private readonly resolveMaterial = new NodeMaterial()
   private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
   private needsSyncPostProcessing = false
   private needsClearHistory = false
 

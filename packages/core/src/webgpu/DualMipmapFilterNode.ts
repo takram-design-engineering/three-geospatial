@@ -21,7 +21,7 @@ export abstract class DualMipmapFilterNode extends FilterNode {
   private readonly downsampleMaterial = new NodeMaterial()
   private readonly upsampleMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
 
   protected readonly inputTexelSize = uniform(new Vector2())
   protected readonly downsampleNode = texture(null)
