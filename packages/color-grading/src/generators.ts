@@ -1,16 +1,16 @@
-import { If, remap, vec3 } from 'three/tsl'
+import { If, remap as remapTSL, vec3 } from 'three/tsl'
 
-import { remap as remapNumber } from '@takram/three-geospatial'
+import { remap } from '@takram/three-geospatial'
 import { FnLayout, type NodeObject } from '@takram/three-geospatial/webgpu'
 
-import { rec709YCbCrToLinear } from './colors'
+import { yCbCrToLinear } from './colors'
 
 function yCbCr10(y: number, cb: number, cr: number): NodeObject<'vec3'> {
-  return rec709YCbCrToLinear(
+  return yCbCrToLinear(
     vec3(
-      remapNumber(y, 64, 940, 0, 1),
-      remapNumber(cb, 64, 960, -0.5, 0.5),
-      remapNumber(cr, 64, 960, -0.5, 0.5)
+      remap(y, 64, 940, 0, 1),
+      remap(cb, 64, 960, -0.5, 0.5),
+      remap(cr, 64, 960, -0.5, 0.5)
     )
   )
 }
@@ -164,8 +164,8 @@ export const colorBarsHD = /*#__PURE__*/ FnLayout({
           })
           .ElseIf(uv.x.lessThan(d + c * 7), () => {
             // Y-Ramp
-            const y = remap(uv.x, d + c, d + c * 7, 0, 1)
-            output.assign(rec709YCbCrToLinear(vec3(y, 0, 0)))
+            const y = remapTSL(uv.x, d + c, d + c * 7, 0, 1)
+            output.assign(yCbCrToLinear(vec3(y, 0, 0)))
           })
           .Else(() => {
             output.assign(yCbCr10(250, 409, 960)) // 100% Red

@@ -15,7 +15,7 @@ import invariant from 'tiny-invariant'
 
 import { hsv2rgb, rgb2hsv } from '@takram/three-geospatial/webgpu'
 
-import { linearToRec709YCbCr } from './colors'
+import { linearToYCbCr } from './colors'
 import type { RasterTransform } from './RasterTransform'
 
 export class VectorscopeLine extends Line {
@@ -51,7 +51,7 @@ export class VectorscopeLine extends Line {
     const linearColor = colorBuffer.element(index)
 
     const color = hsv2rgb(vec3(rgb2hsv(linearColor).xy, 1))
-    const ycbcr = linearToRec709YCbCr(linearColor)
+    const ycbcr = linearToYCbCr(linearColor)
 
     this.material.positionNode = vec3(ycbcr.yz, 0)
     this.material.colorNode = color.div(size.y).mul(this.gain).toVertexStage()
