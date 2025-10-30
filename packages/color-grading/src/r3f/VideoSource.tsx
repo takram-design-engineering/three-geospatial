@@ -1,15 +1,10 @@
 import { useThree } from '@react-three/fiber'
-import { atom, useSetAtom } from 'jotai'
-import { createContext, useContext, useLayoutEffect, type FC } from 'react'
+import { useSetAtom } from 'jotai'
+import { useContext, useLayoutEffect, type FC } from 'react'
 import type { Node, Renderer } from 'three/webgpu'
-import tunnel from 'tunnel-rat'
 
 import { VideoSource as VideoSourceImpl } from '../VideoSource'
-
-export const VideoContext = createContext({
-  r3f: tunnel(),
-  sourceAtom: atom<VideoSourceImpl | null>(null)
-})
+import { VideoContext } from './VideoContext'
 
 export interface VideoSourceProps {
   inputNode?: Node

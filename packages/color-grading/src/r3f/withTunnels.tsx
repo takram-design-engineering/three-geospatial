@@ -6,7 +6,7 @@ import {
 } from 'react'
 import tunnel from 'tunnel-rat'
 
-import { VideoContext } from './VideoSource'
+import { VideoContext } from './VideoContext'
 
 type In = ReturnType<typeof tunnel>['In']
 
