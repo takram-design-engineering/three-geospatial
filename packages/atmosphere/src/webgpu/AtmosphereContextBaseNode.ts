@@ -65,24 +65,24 @@ export class AtmosphereContextBaseNode extends Node {
 
   readonly parameters: AtmosphereParameters
 
-  worldToUnit!: NodeObject<Dimensionless>
-  solarIrradiance!: NodeObject<IrradianceSpectrum>
-  sunAngularRadius!: NodeObject<Angle>
-  bottomRadius!: NodeObject<Length>
-  topRadius!: NodeObject<Length>
-  rayleighDensity!: DensityProfileNodes
-  rayleighScattering!: NodeObject<ScatteringSpectrum>
-  mieDensity!: DensityProfileNodes
-  mieScattering!: NodeObject<ScatteringSpectrum>
-  mieExtinction!: NodeObject<ScatteringSpectrum>
-  miePhaseFunctionG!: NodeObject<Dimensionless>
-  absorptionDensity!: DensityProfileNodes
-  absorptionExtinction!: NodeObject<ScatteringSpectrum>
-  groundAlbedo!: NodeObject<DimensionlessSpectrum>
-  minCosSun!: NodeObject<Dimensionless>
-  sunRadianceToLuminance!: NodeObject<DimensionlessSpectrum>
-  skyRadianceToLuminance!: NodeObject<DimensionlessSpectrum>
-  luminanceScale!: NodeObject<Dimensionless>
+  worldToUnit: NodeObject<Dimensionless>
+  solarIrradiance: NodeObject<IrradianceSpectrum>
+  sunAngularRadius: NodeObject<Angle>
+  bottomRadius: NodeObject<Length>
+  topRadius: NodeObject<Length>
+  rayleighDensity: DensityProfileNodes
+  rayleighScattering: NodeObject<ScatteringSpectrum>
+  mieDensity: DensityProfileNodes
+  mieScattering: NodeObject<ScatteringSpectrum>
+  mieExtinction: NodeObject<ScatteringSpectrum>
+  miePhaseFunctionG: NodeObject<Dimensionless>
+  absorptionDensity: DensityProfileNodes
+  absorptionExtinction: NodeObject<ScatteringSpectrum>
+  groundAlbedo: NodeObject<DimensionlessSpectrum>
+  minCosSun: NodeObject<Dimensionless>
+  sunRadianceToLuminance: NodeObject<DimensionlessSpectrum>
+  skyRadianceToLuminance: NodeObject<DimensionlessSpectrum>
+  luminanceScale: NodeObject<Dimensionless>
 
   constructor(parameters = new AtmosphereParameters()) {
     super(null)

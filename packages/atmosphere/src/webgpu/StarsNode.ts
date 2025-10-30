@@ -76,7 +76,7 @@ export class StarsNode extends TempNode {
   private readonly renderTarget: RenderTarget
   private readonly material = new PointsNodeMaterial()
   private readonly points = new Sprite(this.material)
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
 
   private positionBuffer?: BufferAttribute
   private magnitudeBuffer?: BufferAttribute
