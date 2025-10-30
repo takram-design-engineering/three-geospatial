@@ -31,7 +31,7 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-import { linearToRec709, linearToRec709YCbCr } from './colors'
+import { linearToRec709, linearToYCbCr } from './colors'
 import type { RasterTransform } from './RasterTransform'
 
 export type WaveformMode =
@@ -65,17 +65,17 @@ const modes: Record<WaveformMode, Mode> = {
   luma: {
     components: 1,
     color: color => hsv2rgb(vec3(rgb2hsv(color).xy, 1)),
-    y: color => linearToRec709YCbCr(color).x
+    y: color => linearToYCbCr(color).x
   },
   cb: {
     components: 1,
     color: () => vec3(1, 1, 0.25),
-    y: color => linearToRec709YCbCr(color).y.add(0.5)
+    y: color => linearToYCbCr(color).y.add(0.5)
   },
   cr: {
     components: 1,
     color: () => vec3(1, 0.25, 1),
-    y: color => linearToRec709YCbCr(color).z.add(0.5)
+    y: color => linearToYCbCr(color).z.add(0.5)
   },
   red: {
     components: 1,
@@ -127,7 +127,7 @@ const modes: Record<WaveformMode, Mode> = {
       })(),
     y: (color, channel) =>
       Fn(() => {
-        const y = linearToRec709YCbCr(color).element(channel)
+        const y = linearToYCbCr(color).element(channel)
         return select(channel.equal(0), y, y.add(0.5))
       })(),
     x: (x, channel) => x.div(3).add(float(channel).div(3))

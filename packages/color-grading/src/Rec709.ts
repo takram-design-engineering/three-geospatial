@@ -17,14 +17,14 @@ const Crw = 1.5748
 export const REC709_LUMA_COEFFICIENTS = /*#__PURE__*/ new Vector3(Yx, Yy, Yz)
 
 // prettier-ignore
-export const REC709_RGB_TO_YCBCR = /*#__PURE__*/ new Matrix3(
+export const REC709_TO_YCBCR = /*#__PURE__*/ new Matrix3(
   Yx, Yy, Yz,
   Cbx / Cbw, Cby / Cbw, Cbz / Cbw,
   Crx / Crw, Cry / Crw, Crz / Crw
 )
 
 // prettier-ignore
-export const REC709_YCBCR_TO_RGB = /*#__PURE__*/ new Matrix3(
+export const YCBCR_TO_REC709 = /*#__PURE__*/ new Matrix3(
   1, 0, Crw,
   1, -Yz * Cbw / Yy, -Yx * Crw / Yy,
   1, Cbw, 0
@@ -163,7 +163,7 @@ export class Rec709 {
   ): Rec709 {
     const vector = vectorScratch
       .set(...normalizeYCbCr(y, cb, cr, format))
-      .applyMatrix3(REC709_YCBCR_TO_RGB)
+      .applyMatrix3(YCBCR_TO_REC709)
     return result.set(vector.x, vector.y, vector.z)
   }
 
@@ -172,7 +172,7 @@ export class Rec709 {
   }
 
   toYCbCr(result = new Vector3()): Vector3 {
-    return result.set(this.r, this.g, this.b).applyMatrix3(REC709_RGB_TO_YCBCR)
+    return result.set(this.r, this.g, this.b).applyMatrix3(REC709_TO_YCBCR)
   }
 
   fromArray(array: readonly number[], offset = 0): this {

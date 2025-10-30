@@ -15,8 +15,8 @@ import { FnLayout } from '@takram/three-geospatial/webgpu'
 
 import {
   REC709_LUMA_COEFFICIENTS,
-  REC709_RGB_TO_YCBCR,
-  REC709_YCBCR_TO_RGB
+  REC709_TO_YCBCR,
+  YCBCR_TO_REC709
 } from './Rec709'
 
 // See: https://en.wikipedia.org/wiki/Rec._709
@@ -89,18 +89,18 @@ export const luminanceRec709 = /*#__PURE__*/ FnLayout({
   inputs: [{ name: 'color', type: 'vec3' }]
 })(([color]) => color.dot(vec3(REC709_LUMA_COEFFICIENTS)))
 
-export const linearToRec709YCbCr = /*#__PURE__*/ FnLayout({
-  name: 'linearToRec709YCbCr',
+export const linearToYCbCr = /*#__PURE__*/ FnLayout({
+  name: 'linearToYCbCr',
   type: 'vec3',
   inputs: [{ name: 'color', type: 'vec3' }]
 })(([color]) => {
-  return mat3(REC709_RGB_TO_YCBCR).mul(linearToRec709(color))
+  return mat3(REC709_TO_YCBCR).mul(linearToRec709(color))
 })
 
-export const rec709YCbCrToLinear = /*#__PURE__*/ FnLayout({
-  name: 'rec709YCbCrToLinear',
+export const yCbCrToLinear = /*#__PURE__*/ FnLayout({
+  name: 'yCbCrToLinearF',
   type: 'vec3',
   inputs: [{ name: 'color', type: 'vec3' }]
 })(([color]) => {
-  return rec709ToLinear(mat3(REC709_YCBCR_TO_RGB).mul(color))
+  return rec709ToLinear(mat3(YCBCR_TO_REC709).mul(color))
 })
