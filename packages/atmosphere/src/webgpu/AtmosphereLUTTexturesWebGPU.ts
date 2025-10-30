@@ -499,12 +499,6 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         Return()
       })
 
-      // WORKAROUND: Texture3DNode seems to have an issue with load() with
-      // ivec3() coordinates.
-      const textureUV = vec3(globalId)
-        .add(0.5)
-        .div(vec3(width, height, depth))
-
       const multipleScattering = computeMultipleScatteringTexture(
         texture(
           parameters.transmittancePrecisionLog
@@ -524,7 +518,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       textureStore(
         this.scattering,
         globalId,
-        texture3D(scatteringRead).sample(textureUV).add(vec4(luminance, 0))
+        texture3D(scatteringRead).load(globalId).add(vec4(luminance, 0))
       )
       textureStore(deltaMultipleScattering, globalId, vec4(radiance, 1))
       if (parameters.higherOrderScatteringTexture) {
@@ -532,7 +526,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
           this.higherOrderScattering,
           globalId,
           texture3D(higherOrderScatteringRead)
-            .sample(textureUV)
+            .load(globalId)
             .add(vec4(luminance, 1))
         )
       }

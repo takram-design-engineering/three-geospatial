@@ -22,7 +22,7 @@ export abstract class SeparableFilterNode extends FilterNode {
   private readonly verticalRT: RenderTarget
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
 
   protected readonly inputTexelSize = uniform(new Vector2())
   protected readonly direction = uniform(new Vector2())

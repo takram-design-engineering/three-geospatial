@@ -80,9 +80,7 @@ export class LongExposureNode extends TempNode {
 
   shutterSpeed = uniform(4) // In seconds
 
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNode: TextureNode
+  private readonly textureNode: TextureNode
 
   private currentRT = createRenderTarget('Current')
   private historyRT = createRenderTarget('History')
@@ -90,7 +88,7 @@ export class LongExposureNode extends TempNode {
   private readonly material = new NodeMaterial()
   private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
   private needsClearHistory = false
 
   private readonly currentNode = texture(this.currentRT.texture)
@@ -103,13 +101,13 @@ export class LongExposureNode extends TempNode {
     super('vec4')
     this.inputNode = inputNode
 
-    this._textureNode = outputTexture(this, this.currentRT.texture)
+    this.textureNode = outputTexture(this, this.currentRT.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(): TextureNode {
-    return this._textureNode
+    return this.textureNode
   }
 
   setSize(width: number, height: number): this {
@@ -152,7 +150,7 @@ export class LongExposureNode extends TempNode {
     this.historyNode.value = currentRT.texture
 
     // The output node must point to the current texture.
-    this._textureNode.value = currentRT.texture
+    this.textureNode.value = currentRT.texture
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -211,8 +209,8 @@ export class LongExposureNode extends TempNode {
     copyMaterial.fragmentNode = this.inputNode
     copyMaterial.needsUpdate = true
 
-    this._textureNode.uvNode = this.inputNode.uvNode
-    return this._textureNode
+    this.textureNode.uvNode = this.inputNode.uvNode
+    return this.textureNode
   }
 
   override dispose(): void {
