@@ -19,7 +19,7 @@ export abstract class SingleFilterNode extends FilterNode {
   private readonly renderTarget: RenderTarget
   private readonly material = new NodeMaterial()
   private readonly mesh = new QuadMesh(this.material)
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
 
   protected readonly inputTexelSize = uniform(new Vector2())
 

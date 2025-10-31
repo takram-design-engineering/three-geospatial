@@ -10,8 +10,8 @@ import { convertBVIndexToLinearSRGBChromaticity } from '@takram/three-atmosphere
 import { closeTo, inverseLerp, lerp, radians } from '@takram/three-geospatial'
 
 function readRightAscension(input: string): number | undefined {
-  const hours = parseInt(input.slice(75, 77))
-  const minutes = parseInt(input.slice(77, 79))
+  const hours = parseInt(input.slice(75, 77), 10)
+  const minutes = parseInt(input.slice(77, 79), 10)
   const seconds = parseFloat(input.slice(79, 83))
   return !isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)
     ? hours * 15 + minutes / 4 + seconds / 240
@@ -19,9 +19,9 @@ function readRightAscension(input: string): number | undefined {
 }
 
 function readDeclination(input: string): number | undefined {
-  const degrees = parseInt(input.slice(83, 86))
-  const minutes = parseInt(input.slice(86, 88))
-  const seconds = parseInt(input.slice(88, 90))
+  const degrees = parseInt(input.slice(83, 86), 10)
+  const minutes = parseInt(input.slice(86, 88), 10)
+  const seconds = parseInt(input.slice(88, 90), 10)
   return !isNaN(degrees) && !isNaN(minutes) && !isNaN(seconds)
     ? Math.sign(degrees) * Math.abs(degrees) + minutes / 60 + seconds / 3600
     : undefined

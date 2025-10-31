@@ -59,7 +59,6 @@
 import {
   add,
   bool,
-  float,
   floor,
   If,
   max,
@@ -91,7 +90,7 @@ import {
   miePhaseFunction,
   rayIntersectsGround,
   rayleighPhaseFunction,
-  safeSqrt
+  sqrtSafe
 } from './common'
 import {
   Dimensionless,
@@ -276,7 +275,7 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
   const distanceToTop = radiusCosView
     .negate()
     .sub(
-      safeSqrt(radiusCosView.pow2().sub(radius.pow2()).add(topRadius.pow2()))
+      sqrtSafe(radiusCosView.pow2().sub(radius.pow2()).add(topRadius.pow2()))
     )
     .toVar()
 
@@ -448,7 +447,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   const distanceToTop = radiusCosView
     .negate()
     .sub(
-      safeSqrt(radiusCosView.pow2().sub(radius.pow2()).add(topRadius.pow2()))
+      sqrtSafe(radiusCosView.pow2().sub(radius.pow2()).add(topRadius.pow2()))
     )
     .toVar()
 
@@ -471,12 +470,12 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   // Hack to avoid rendering artifacts near the horizon, due to finite
   // atmosphere texture resolution and finite floating point precision.
   If(not(viewRayIntersectsGround), () => {
-    const cosHorizon = safeSqrt(
+    const cosHorizon = sqrtSafe(
       bottomRadius.pow2().div(radius.pow2()).oneMinus()
     )
       .negate()
       .toVar()
-    const eps = float(0.004).toConst()
+    const eps = 0.004
     cosView.assign(max(cosView, cosHorizon.add(eps)))
   })
 

@@ -14,7 +14,7 @@ import type { AtmosphereParameters } from './AtmosphereParameters'
 export abstract class AtmosphereLUTTexturesContext extends AtmosphereContextBaseNode {
   textureType: AnyFloatType
   lambdas = uniform(new Vector3(680, 550, 440))
-  luminanceFromRadiance = uniform(new Matrix3().identity())
+  luminanceFromRadiance = uniform(new Matrix3())
 
   constructor(parameters: AtmosphereParameters, textureType: AnyFloatType) {
     super(parameters)

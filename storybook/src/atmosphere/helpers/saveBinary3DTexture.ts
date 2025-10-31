@@ -72,9 +72,7 @@ export function saveBinary3DTexture(
   renderer.setRenderTarget(null)
 
   const blob = new Blob([
-    type === HalfFloatType
-      ? (new Float16Array(array).buffer as ArrayBuffer)
-      : array.buffer
+    type === HalfFloatType ? new Float16Array(array).buffer : array.buffer
   ])
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)

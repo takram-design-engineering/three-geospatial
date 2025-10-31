@@ -26,10 +26,7 @@ export abstract class FilterNode extends TempNode {
   inputNode?: TextureNode | null
   resolutionScale = 1
 
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private _textureNode?: TextureNode
-
+  private textureNode?: TextureNode
   private readonly renderTargets: RenderTarget[] = []
 
   constructor(inputNode?: TextureNode | null) {
@@ -58,24 +55,24 @@ export abstract class FilterNode extends TempNode {
 
   getTextureNode(): TextureNode {
     invariant(
-      this._textureNode != null,
+      this.textureNode != null,
       'outputTexture must be specified before getTextureNode() is called.'
     )
-    return this._textureNode
+    return this.textureNode
   }
 
   protected get outputTexture(): Texture | null {
-    return this._textureNode?.value ?? null
+    return this.textureNode?.value ?? null
   }
 
   protected set outputTexture(value: Texture | null) {
-    this._textureNode = value != null ? outputTexture(this, value) : undefined
+    this.textureNode = value != null ? outputTexture(this, value) : undefined
   }
 
   abstract setSize(width: number, height: number): this
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode, _textureNode: outputNode } = this
+    const { inputNode, textureNode: outputNode } = this
     invariant(
       inputNode != null,
       'inputNode must be specified before being setup.'

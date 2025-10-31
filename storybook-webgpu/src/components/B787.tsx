@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useLayoutEffect, useMemo, type ComponentProps, type FC } from 'react'
+import { useMemo, type ComponentProps, type FC } from 'react'
 
 import { euclideanModulo } from '@takram/three-geospatial'
 
@@ -9,12 +9,18 @@ export interface B787Props extends ComponentProps<'group'> {}
 
 export const B787: FC<B787Props> = props => {
   const gltf = useGLTF('public/b787.glb')
-  useLayoutEffect(() => {
+
+  const userData: {
+    initialized?: boolean
+  } = gltf.userData
+
+  if (userData.initialized !== true) {
+    userData.initialized = true
     Object.values(gltf.meshes).forEach(mesh => {
       mesh.receiveShadow = true
       mesh.castShadow = true
     })
-  }, [gltf])
+  }
 
   const { engines } = useMemo(() => {
     const scene = gltf.scene

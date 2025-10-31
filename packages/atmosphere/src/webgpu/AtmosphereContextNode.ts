@@ -20,17 +20,15 @@ export class AtmosphereContextNode extends AtmosphereContextBaseNode {
 
   lutNode: AtmosphereLUTNode
 
-  matrixWorldToECEF = uniform(new Matrix4().identity()).setName(
-    'matrixWorldToECEF'
-  )
-  matrixECIToECEF = uniform(new Matrix4().identity()).setName('matrixECIToECEF')
+  matrixWorldToECEF = uniform(new Matrix4()).setName('matrixWorldToECEF')
+  matrixECIToECEF = uniform(new Matrix4()).setName('matrixECIToECEF')
   sunDirectionECEF = uniform(new Vector3()).setName('sunDirectionECEF')
   moonDirectionECEF = uniform(new Vector3()).setName('moonDirectionECEF')
-  matrixMoonFixedToECEF = uniform(new Matrix4().identity()).setName(
+  matrixMoonFixedToECEF = uniform(new Matrix4()).setName(
     'matrixMoonFixedToECEF'
   )
 
-  matrixECEFToWorld = uniform(new Matrix4().identity())
+  matrixECEFToWorld = uniform(new Matrix4())
     .setName('matrixECEFToWorld')
     .onRenderUpdate((_, { value }) => {
       // The matrixWorldToECEF must be orthogonal.

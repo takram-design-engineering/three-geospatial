@@ -152,8 +152,8 @@ export class MoonNode extends TempNode {
 
         if (this.normalNode != null) {
           // Apply the normal texture and convert it back to the ECEF space.
-          const localX = vec3(1, 0, 0).toConst()
-          const localZ = vec3(0, 0, 1).toConst()
+          const localX = vec3(1, 0, 0)
+          const localZ = vec3(0, 0, 1)
           const tangent = localZ.cross(normalMF).toVar()
           tangent.assign(
             select(

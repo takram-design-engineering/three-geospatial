@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, type ComponentProps, type FC } from 'react'
+import { useMemo, type ComponentProps, type FC } from 'react'
 import { Matrix3, Vector3, type Matrix4 } from 'three'
 
 import { lerp } from '@takram/three-geospatial'
@@ -20,12 +20,18 @@ export const ISS: FC<ISSProps> = ({
   ...props
 }) => {
   const gltf = useGLTF('public/iss.glb')
-  useLayoutEffect(() => {
+
+  const userData: {
+    initialized?: boolean
+  } = gltf.userData
+
+  if (userData.initialized !== true) {
+    userData.initialized = true
     Object.values(gltf.meshes).forEach(mesh => {
       mesh.receiveShadow = true
       mesh.castShadow = true
     })
-  }, [gltf])
+  }
 
   const { trusses, panels, radiators } = useMemo(() => {
     const scene = gltf.scene

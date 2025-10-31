@@ -137,7 +137,6 @@ const varianceClipping = /*#__PURE__*/ FnVar(
     const moment2 = current.pow2().toVar()
 
     for (const offset of varianceOffsets) {
-      // TODO: Use offset()
       const neighbor = inputNode.load(coord.add(offset))
       moment1.addAssign(neighbor)
       moment2.addAssign(neighbor.pow2())
@@ -175,7 +174,6 @@ const getClosestDepth = /*#__PURE__*/ FnVar(
     const depth = float(1)
     const coord = ivec2(0)
     for (const offset of neighborOffsets) {
-      // TODO: Use offset()
       const offsetCoord = inputCoord.add(offset).toVar()
       const neighbor = depthNode.load(offsetCoord).toVar()
       If(neighbor.r.lessThan(depth), () => {
@@ -238,13 +236,15 @@ export class TemporalAntialiasNode extends TempNode {
   // Static options:
   debugShowRejection = false
 
+  private readonly textureNode: TextureNode
+
   private resolveRT = this.createRenderTarget('Resolve')
   private historyRT = this.createRenderTarget('History')
   private previousDepthTexture?: DepthTexture
   private readonly resolveMaterial = new NodeMaterial()
   private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
-  private rendererState!: RendererUtils.RendererState
+  private rendererState?: RendererUtils.RendererState
   private needsSyncPostProcessing = false
   private needsClearHistory = false
 
@@ -253,10 +253,6 @@ export class TemporalAntialiasNode extends TempNode {
   private readonly previousDepthNode = texture(emptyDepthTexture)
   private readonly originalProjectionMatrix = new Matrix4()
   private jitterIndex = 0
-
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNode: TextureNode
 
   constructor(
     velocityNodeImmutable: VelocityNodeImmutable,
@@ -275,7 +271,7 @@ export class TemporalAntialiasNode extends TempNode {
     }
     this.camera = camera
 
-    this._textureNode = outputTexture(this, this.resolveRT.texture)
+    this.textureNode = outputTexture(this, this.resolveRT.texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
   }
@@ -302,7 +298,7 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   getTextureNode(): TextureNode {
-    return this._textureNode
+    return this.textureNode
   }
 
   private setProjectionMatrix(value: Matrix4 | null): void {
@@ -388,7 +384,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.historyNode.value = resolveRT.texture
 
     // The output node must point to the current resolve.
-    this._textureNode.value = resolveRT.texture
+    this.textureNode.value = resolveRT.texture
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -448,8 +444,7 @@ export class TemporalAntialiasNode extends TempNode {
 
       const velocity = this.velocityNode
         .load(closestCoord)
-        // TODO: Should Y still be inverted on WebGL?
-        .xyz.mul(vec3(1, -1, 1))
+        .xyz.mul(vec3(0.5, -0.5, 0.5)) // Velocity is in NDC offset
         .toVar()
 
       // Discards texels with velocity greater than the threshold:
@@ -543,8 +538,8 @@ export class TemporalAntialiasNode extends TempNode {
     copyMaterial.fragmentNode = this.inputNode
     copyMaterial.needsUpdate = true
 
-    this._textureNode.uvNode = this.inputNode.uvNode
-    return this._textureNode
+    this.textureNode.uvNode = this.inputNode.uvNode
+    return this.textureNode
   }
 
   override dispose(): void {
