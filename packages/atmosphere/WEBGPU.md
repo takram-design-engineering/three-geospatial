@@ -26,6 +26,17 @@ Please note the peer dependencies differ from the required versions to maintain 
 "three": ">=0.181.0"
 ```
 
+## Examples
+
+<p align="center">
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-space--space"><img width="32%" src="./docs/space.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-low-earth-orbit--low-earth-orbit"><img width="32%" src="./docs/low-earth-orbit.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-cruising-altitude--cruising-altitude"><img width="32%" src="./docs/cruising-altitude.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-cityscape--cityscape"><img width="32%" src="./docs/cityscape.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-non-geospatial--non-geospatial"><img width="32%" src="./docs/non-geospatial.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-sky--moon-surface"><img width="32%" src="./docs/moon-surface.webp" /></a>
+</p>
+
 ## Usage
 
 ### Atmospheric lighting
