@@ -459,17 +459,23 @@ TODO
 sunNode: SunNode
 ```
 
+A node representing the sun.
+
 #### moonNode
 
 ```ts
 moonNode: MoonNode
 ```
 
+A node representing the moon.
+
 #### starsNode
 
 ```ts
 starsNode: StarsNode
 ```
+
+A node representing stars.
 
 ### Uniforms
 
@@ -479,11 +485,15 @@ starsNode: StarsNode
 sunNode.angularRadius = uniform(0.004675) // ≈ 16 arcminutes
 ```
 
+The angular radius of the sun, in radians.
+
 #### sunNode.intensity
 
 ```ts
 sunNode.intensity = uniform(1)
 ```
+
+A scaling factor to adjust the brightness of the sun.
 
 #### moonNode.angularRadius
 
@@ -491,11 +501,15 @@ sunNode.intensity = uniform(1)
 moonNode.angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
 ```
 
+The angular radius of the moon, in radians.
+
 #### moonNode.intensity
 
 ```ts
 moonNode.intensity = uniform(1)
 ```
+
+A scaling factor to adjust the brightness of the sun.
 
 #### starsNode.pointSize
 
@@ -503,11 +517,15 @@ moonNode.intensity = uniform(1)
 starsNode.pointSize = uniform(1)
 ```
 
+The apparent size of the stars, in pixels.
+
 #### starsNode.intensity
 
 ```ts
 starsNode.intensity = uniform(1)
 ```
+
+A scaling factor to adjust the brightness of the stars.
 
 ### Static options
 
@@ -517,17 +535,23 @@ starsNode.intensity = uniform(1)
 showSun = true
 ```
 
+Whether to display the sun.
+
 #### showMoon
 
 ```ts
 showMoon = true
 ```
 
+Whether to display the moon.
+
 #### showStars
 
 ```ts
 showStars = true
 ```
+
+Whether to display the stars.
 
 ## SkyEnvironmentNode
 
@@ -549,6 +573,8 @@ const skyEnvironment: (
 ```ts
 skyNode: SkyNode
 ```
+
+A node representing the radiance of celestial sources and atmospheric scattering seen from the camera.
 
 ## AtmosphereParameters
 
