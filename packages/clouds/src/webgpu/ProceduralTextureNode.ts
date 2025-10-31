@@ -31,13 +31,11 @@ export abstract class ProceduralTextureNode extends TempNode {
 
   readonly texture = this.createStorageTexture()
 
-  // WORKAROUND: The leading underscore avoids infinite recursion.
-  // https://github.com/mrdoob/three.js/issues/31522
-  private readonly _textureNode: TextureNode
+  private readonly textureNode: TextureNode
 
   constructor(size = new Vector2(1)) {
     super(null)
-    this._textureNode = outputTexture(this, this.texture)
+    this.textureNode = outputTexture(this, this.texture)
     this.setSize(size.x, size.y)
   }
 
@@ -58,7 +56,7 @@ export abstract class ProceduralTextureNode extends TempNode {
   }
 
   getTextureNode(): TextureNode {
-    return this._textureNode
+    return this.textureNode
   }
 
   setSize(width: number, height: number): this {
