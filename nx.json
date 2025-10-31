@@ -22,12 +22,6 @@
   },
   "plugins": [
     {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
-      }
-    },
-    {
       "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"
@@ -39,9 +33,12 @@
         "buildTargetName": "build",
         "testTargetName": "test",
         "serveTargetName": "serve",
+        "devTargetName": "dev",
         "previewTargetName": "preview",
         "serveStaticTargetName": "serve-static",
-        "typecheckTargetName": "typecheck"
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     },
     {
@@ -65,13 +62,6 @@
       }
     }
   ],
-  "generators": {
-    "@nx/react": {
-      "library": {
-        "unitTestRunner": "jest"
-      }
-    }
-  },
   "targetDefaults": {
     "@nx/vite:build": {
       "cache": true,
