@@ -20,6 +20,7 @@ export default defineConfig(
   ),
   {
     ignores: [
+      '**/.nx',
       '**/dist',
       '**/vite.config.*.timestamp*',
       '**/vitest.config.*.timestamp*'
