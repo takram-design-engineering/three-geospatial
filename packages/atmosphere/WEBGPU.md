@@ -2,7 +2,29 @@
 
 [![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
 
-A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere`.
+A work-in-progress WebGPU support for `@takram/three-atmosphere`.
+
+Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation.
+
+## Installation
+
+```sh
+npm install @takram/three-atmosphere
+pnpm add @takram/three-atmosphere
+yarn add @takram/three-atmosphere
+```
+
+Peer dependencies include `three`, as well as `@react-three/fiber` when using R3F.
+
+```
+three @react-three/fiber
+```
+
+Please note the peer dependencies differ from the required versions to maintain compatibility with the WebGL codebase. When using `@takram/three-atmosphere/webgpu`, apply the following rules.
+
+```
+"three": ">=0.181.0"
+```
 
 ## Usage
 
@@ -183,7 +205,7 @@ lutNode: AtmosphereLUTNode
 matrixWorldToECEF = uniform(new Matrix4())
 ```
 
-The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js’s Y-up coordinate system.
+The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js's Y-up coordinate system.
 
 It must be orthogonal and consist only of translation and rotation (no scaling).
 
@@ -210,7 +232,7 @@ The normalized direction to the sun and moon in ECEF coordinates.
 matrixMoonFixedToECEF = uniform(new Matrix4())
 ```
 
-The rotation matrix for converting moon fixed coordinates to ECEF coordinates. This matrix is used to orient the moon’s surface as seen from the earth in `MoonNode`.
+The rotation matrix for converting moon fixed coordinates to ECEF coordinates. This matrix is used to orient the moon's surface as seen from the earth in `MoonNode`.
 
 ### Static options
 
@@ -236,9 +258,9 @@ The ellipsoid model representing the earth.
 correctAltitude = true
 ```
 
-Whether to adjust the atmosphere’s inner sphere to osculate (touch and share a tangent with) the ellipsoid.
+Whether to adjust the atmosphere's inner sphere to osculate (touch and share a tangent with) the ellipsoid.
 
-The atmosphere is approximated as a sphere, with a radius between the ellipsoid’s major and minor axes. The difference can exceed 10,000 meters in the worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
+The atmosphere is approximated as a sphere, with a radius between the ellipsoid's major and minor axes. The difference can exceed 10,000 meters in the worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
 
 #### constrainCamera
 
@@ -246,7 +268,7 @@ The atmosphere is approximated as a sphere, with a radius between the ellipsoid�
 constrainCamera = true
 ```
 
-Whether to constrain the camera above the atmosphere’s inner sphere.
+Whether to constrain the camera above the atmosphere's inner sphere.
 
 #### showGround
 
@@ -254,13 +276,13 @@ Whether to constrain the camera above the atmosphere’s inner sphere.
 showGround = true
 ```
 
-Disable this option to constrain the camera’s ray above the horizon, effectively hiding the virtual ground.
+Disable this option to constrain the camera's ray above the horizon, effectively hiding the virtual ground.
 
 ## AtmosphereLight
 
 Represents direct and indirect sunlight. The lighting is correct at large scale regardless of the materials used on surfaces, unlike `SunDirectionalLight` and `SkyLightProbe` in the previous implementation.
 
-Add it along with [`AtmosphereLightNode`](#atmospherelightnode) to the renderer’s node library before use:
+Add it along with [`AtmosphereLightNode`](#atmospherelightnode) to the renderer's node library before use:
 
 ```ts
 import {
@@ -289,7 +311,7 @@ class AtmosphereLight {
 distance = 1
 ```
 
-The distance from `DirectionalLight.target` to the light’s position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
+The distance from `DirectionalLight.target` to the light's position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
 
 ### Uniforms
 
@@ -332,11 +354,15 @@ const aerialPerspective: (
 colorNode: Node
 ```
 
+A node representing the scene pass or diffuse color.
+
 #### depthNode
 
 ```ts
 depthNode: Node
 ```
+
+A node representing the scene's depth.
 
 #### normalNode
 
@@ -344,17 +370,23 @@ depthNode: Node
 normalNode?: Node | null
 ```
 
+A node representing the scene's normal. It is only used for post-process lighting and is not required when `lighting` is disabled.
+
 #### skyNode
 
 ```ts
 skyNode?: Node | null
 ```
 
+A node representing the radiance of celestial sources and atmospheric scattering seen from the camera at the far depth (where the depth value equals 1)
+
 #### shadowLengthNode
 
 ```ts
 shadowLengthNode?: Node | null
 ```
+
+TODO
 
 ### Static options
 
@@ -364,23 +396,28 @@ shadowLengthNode?: Node | null
 correctGeometricError = true
 ```
 
+This option corrects lighting artifacts caused by geometric errors in surface tiles.
+
+When `lighting` is enabled, the surface normals are gradually morphed to a true sphere. Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
+
 #### lighting
 
 ```ts
 lighting = false
 ```
 
-#### transmittance
+Whether to apply direct and indirect irradiance as post-process lighting. This option requires `normalNode` to be set when enabled.
+
+#### transmittance, inscatter
 
 ```ts
 transmittance = true
-```
-
-#### inscatter
-
-```ts
 inscatter = true
 ```
+
+Whether to account for the atmospheric transmittance and inscattered light.
+
+Enabling one without the other is physically incorrect and should only be done for debugging.
 
 ## SkyNode
 
@@ -402,6 +439,8 @@ const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNod
 ```ts
 shadowLengthNode?: Node | null
 ```
+
+TODO
 
 #### sunNode
 

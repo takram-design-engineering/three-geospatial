@@ -145,7 +145,7 @@ Compatibility release to continue support for React 18 and R3F v8.
 
 ### Fixed
 
-- `SkyMaterial`: Fixed changes to `groundAlbedo` didn’t trigger shader recompilation.
+- `SkyMaterial`: Fixed changes to `groundAlbedo` didn't trigger shader recompilation.
 - `Atmosphere`: STBN texture is now loaded only when necessary.
 - Removed dependency on `jotai`.
 - Fixed type error related to `Event`.
@@ -167,7 +167,7 @@ Compatibility release to continue support for React 18 and R3F v8.
 
 ### Changed
 
-- Switched to Vite’s native raw loading function for importing GLSL shaders.
+- Switched to Vite's native raw loading function for importing GLSL shaders.
 - Separated shader code exports in `@takram/three-atmosphere/shaders`.
 - Removed unused shader codes in atmosphere functions.
 - Updated dependencies.
@@ -225,8 +225,8 @@ Compatibility release to continue support for React 18 and R3F v8.
 
 ### Changed
 
-- Made `AerialPerspectiveEffect`’s camera parameter optional, [#18](https://github.com/takram-design-engineering/three-geospatial/pull/18).
-- Changed `Stars` so it doesn’t render until the data is loaded, [#16](https://github.com/takram-design-engineering/three-geospatial/pull/16).
+- Made `AerialPerspectiveEffect`'s camera parameter optional, [#18](https://github.com/takram-design-engineering/three-geospatial/pull/18).
+- Changed `Stars` so it doesn't render until the data is loaded, [#16](https://github.com/takram-design-engineering/three-geospatial/pull/16).
 
 ## [0.1.0] - 2024-12-06
 

@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@takram/three-atmosphere.svg?style=flat-square)](https://www.npmjs.com/package/@takram/three-atmosphere) [![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-atmosphere--basic)
 
-A Three.js and R3F (React Three Fiber) implementation of Eric Bruneton’s [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/).
+A Three.js and R3F (React Three Fiber) implementation of Eric Bruneton's [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/).
 
 This library is part of a project to prototype the rendering aspect of a Web GIS engine. For more details on the background and current status of this project, please refer to the [main README](/README.md).
 
@@ -245,7 +245,7 @@ function render(): void {
 
 - Volumetric light shaft is not implemented as it requires ray tracing or an additional depth pass from the sun. You may notice scattered light is not occluded by scene objects.
 
-- Although you can generate custom precomputed textures, the implementation is effectively limited to Earth’s atmosphere. For rendering atmospheres of other planets, consider implementing Sébastien Hillaire’s [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf).
+- Although you can generate custom precomputed textures, the implementation is effectively limited to Earth's atmosphere. For rendering atmospheres of other planets, consider implementing Sébastien Hillaire's [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf).
 
 - Currently developed using GLSL. It does not use node-based TSL yet, and WebGPU is not supported, but both are planned.
 
@@ -261,13 +261,13 @@ The _light-source lighting_ approximates the post-process lighting by taking the
 
 It offers other BRDFs using built-in materials such as [`MeshPhysicalMaterial`](https://threejs.org/docs/#api/en/materials/MeshPhysicalMaterial). Such materials are lit materials, and their outgoing radiance (lit by light sources) is stored in the render buffer (completely black if there are no light sources), so they cannot be considered surface albedo.
 
-Fortunately, since `MeshBasicMaterial` is always unlit regardless of light sources, we can store both albedo and lit surface radiance information in a single render buffer. This will produce the correct results if we enable `sunLight` and `skyLight` only for albedo pixels. That’s the purpose of [`LightingMaskPass`](#lightingmaskpass).
+Fortunately, since `MeshBasicMaterial` is always unlit regardless of light sources, we can store both albedo and lit surface radiance information in a single render buffer. This will produce the correct results if we enable `sunLight` and `skyLight` only for albedo pixels. That's the purpose of [`LightingMaskPass`](#lightingmaskpass).
 
 Rules of thumb:
 
 - Use `MeshBasicMaterial` under _post-process lighting_.
 - Any materials can be used under _light-source lighting_.
-- Don’t enable `sunLight` or `skyLight` on `AerialPerspectiveEffect` when using `SunDirectionalLight` and `SkyLightProbe`, unless correctly masked using `LightingMaskPass`.
+- Don't enable `sunLight` or `skyLight` on `AerialPerspectiveEffect` when using `SunDirectionalLight` and `SkyLightProbe`, unless correctly masked using `LightingMaskPass`.
 
 # API
 
@@ -324,7 +324,7 @@ interface PrecomputedTextures {
 
 #### transmittanceTexture
 
-A 2D LUT texture that contains the transmittance between an arbitrary point in the atmosphere and the atmosphere’s top boundary. The LUT is parameterized by view height and the angle between view direction and zenith.
+A 2D LUT texture that contains the transmittance between an arbitrary point in the atmosphere and the atmosphere's top boundary. The LUT is parameterized by view height and the angle between view direction and zenith.
 
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial/?path=/story/atmosphere-building-blocks--transmittance)
 
@@ -358,7 +358,7 @@ This texture is not required unless you have shadow length information, or you u
 
 ## Atmosphere
 
-Provides and synchronizes props of atmosphere components. It’s the recommended way to configure components unless you need finer control over properties of individual components.
+Provides and synchronizes props of atmosphere components. It's the recommended way to configure components unless you need finer control over properties of individual components.
 
 → [Source](/packages/atmosphere/src/r3f/Atmosphere.tsx)
 
@@ -426,9 +426,9 @@ The ellipsoid model representing Earth.
 correctAltitude: boolean = true
 ```
 
-Whether to adjust the atmosphere’s inner sphere to osculate (touch and share a tangent with) the ellipsoid.
+Whether to adjust the atmosphere's inner sphere to osculate (touch and share a tangent with) the ellipsoid.
 
-The atmosphere is approximated as a sphere, with a radius between the ellipsoid’s major and minor axes. The difference can exceed 10,000 meters in worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
+The atmosphere is approximated as a sphere, with a radius between the ellipsoid's major and minor axes. The difference can exceed 10,000 meters in worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
 
 An example at an altitude of 2,000 meters and a latitude of 35°:
 
@@ -476,7 +476,7 @@ The default value is an identity matrix.
 worldToECEFMatrix: Matrix4
 ```
 
-The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js’s Y-up coordinate system.
+The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js's Y-up coordinate system.
 
 The default value is an identity matrix, and it must be orthogonal and consist only of translation and rotation (no scaling).
 
@@ -816,7 +816,7 @@ sunAngularRadius: number = 0.004675
 
 The angular radius of the sun, in radians.
 
-Increase this value if the sun flickers in a low-resolution environment map. Modifying this value does not affect the sky’s total radiance unless the sun is partially visible.
+Increase this value if the sun flickers in a low-resolution environment map. Modifying this value does not affect the sky's total radiance unless the sun is partially visible.
 
 <!-- prettier-ignore -->
 | `sunAngularRadius = 0.004675` | `sunAngularRadius = 0.1` |
@@ -827,7 +827,7 @@ Increase this value if the sun flickers in a low-resolution environment map. Mod
 
 A material for displaying the sky. Apply this to a screen quad.
 
-Despite its name, this material renders the atmosphere itself, along with the sun and moon. When viewed from within the atmosphere, it appears as the sky. From space, it represents Earth’s atmosphere with a flat ground.
+Despite its name, this material renders the atmosphere itself, along with the sun and moon. When viewed from within the atmosphere, it appears as the sky. From space, it represents Earth's atmosphere with a flat ground.
 
 → [Source](/packages/atmosphere/src/SkyMaterial.ts)
 
@@ -1005,7 +1005,7 @@ See [sunDirection](#sundirection).
 
 A directional light representing the sun.
 
-It calculates the sun’s radiance by sampling the precomputed transmittance texture on the CPU.
+It calculates the sun's radiance by sampling the precomputed transmittance texture on the CPU.
 
 → [Source](/packages/atmosphere/src/SunDirectionalLight.ts)
 
@@ -1077,7 +1077,7 @@ The distance from the target. Adjust this value if shadows are enabled for the l
 
 A post-processing effect that renders atmospheric transparency and inscattered light. It can optionally render sun and sky irradiance as post-process lighting.
 
-This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
+This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)'s `EffectComposer` and is not compatible with the one in Three.js examples.
 
 → [Source](/packages/atmosphere/src/AerialPerspectiveEffect.ts)
 
@@ -1105,7 +1105,7 @@ composer.addPass(
 
 ### Parameters
 
-Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)’s [`Effect`](https://pmndrs.github.io/postprocessing/public/docs/class/src/effects/Effect.js~Effect.html).
+Extends [`postprocessing`](https://github.com/pmndrs/postprocessing)'s [`Effect`](https://pmndrs.github.io/postprocessing/public/docs/class/src/effects/Effect.js~Effect.html).
 
 #### normalBuffer
 
@@ -1115,7 +1115,7 @@ normalBuffer: Texture | null = null
 
 The normal buffer used for post-process lighting. It is not required if both `sunLight` and `skyLight` are disabled.
 
-`EffectComposer`’s default normal buffer lacks sufficient precision, causing banding in shaded areas. Using a floating-point normal buffer resolves this issue.
+`EffectComposer`'s default normal buffer lacks sufficient precision, causing banding in shaded areas. Using a floating-point normal buffer resolves this issue.
 
 #### octEncodedNormal
 
@@ -1175,7 +1175,7 @@ See [correctAltitude](#correctaltitude)
 correctGeometricError: boolean = true
 ```
 
-These options corrects lighting artifacts caused by geometric errors in surface tiles. The Earth’s surface normals are gradually morphed to a true sphere.
+This option corrects lighting artifacts caused by geometric errors in surface tiles. The Earth's surface normals are gradually morphed to a true sphere.
 
 Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
 
@@ -1201,7 +1201,7 @@ skyLight: boolean = false
 
 Whether to apply sun and sky irradiance as post-process lighting.
 
-Enabling one without the other is physically incorrect and should only be done for demonstration purposes.
+Enabling one without the other is physically incorrect and should only be done for debugging.
 
 #### transmittance, inscatter
 
@@ -1385,7 +1385,7 @@ async update(): Promise<PrecomputedTextures>
 
 Performs the precomputation and updates the `textures` property.
 
-This is an async function that performs precomputation incrementally over multiple frames so that you can render a meaningful result earlier. It doesn’t need to be awaited because the textures in the `textures` property are allocated when the instance is created.
+This is an async function that performs precomputation incrementally over multiple frames so that you can render a meaningful result earlier. It doesn't need to be awaited because the textures in the `textures` property are allocated when the instance is created.
 
 #### dispose
 
@@ -1395,7 +1395,7 @@ dispose(options?: { textures: boolean = true }): void
 
 Frees the GPU-related resources allocated by this instance, as usual.
 
-Setting the optional `textures` flag to `false` doesn’t deallocate the precomputed textures, effectively transferring their ownership to the caller.
+Setting the optional `textures` flag to `false` doesn't deallocate the precomputed textures, effectively transferring their ownership to the caller.
 
 ### Recipes
 
