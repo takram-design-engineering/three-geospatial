@@ -24,7 +24,7 @@ CC Attribution 4.0
 
 ## blue_marble/emissive.webp
 
-Source: [NASA Earth Observatory’s Earth Night Light](https://earthobservatory.nasa.gov/features/NightLights)
+Source: [NASA Earth Observatory's Earth Night Light](https://earthobservatory.nasa.gov/features/NightLights)
 
 Credit: NASA
 

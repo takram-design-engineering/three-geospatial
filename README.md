@@ -4,7 +4,7 @@ A monorepo of libraries for enhancing geospatial rendering in Three.js.
 
 This project takes a modular approach, allowing users to selectively use only the parts they need, rather than aiming to provide a comprehensive solution. It is designed to work in combination with existing, excellent libraries such as `3d-tiles-renderer`, `astronomy-engine`, and of course, Three.js and R3F (React Three Fiber).
 
-This project originally started as a prototype focused on the rendering aspect of a Web GIS engine developed by Eukarya. It was part of Takram’s client work, commissioned by Eukarya under the SBIR (Small/Startup Business Innovation Research) program led by the Cabinet Office of Japan. Our contribution to the project concluded in March 2025.
+This project originally started as a prototype focused on the rendering aspect of a Web GIS engine developed by Eukarya. It was part of Takram's client work, commissioned by Eukarya under the SBIR (Small/Startup Business Innovation Research) program led by the Cabinet Office of Japan. Our contribution to the project concluded in March 2025.
 
 ## Packages
 
@@ -20,7 +20,7 @@ Other packages not listed above are considered “examples” and are not intend
 
 ## Status of WebGPU support
 
-I’m actively working on adding support for WebGPU. This involves a complete rewrite of our API because of the transition from shader-chunk-based post-processing to a node-based approach. It already performs much better and offers greater flexibility.
+I'm actively working on adding support for WebGPU. This involves a complete rewrite of our API because of the transition from shader-chunk-based post-processing to a node-based approach. It already performs much better and offers greater flexibility.
 
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial-webgpu)
 
@@ -30,7 +30,7 @@ It will feature:
 - Accurate atmospheric lighting at large scale for all materials
 - Geometry-based lens glare
 - Temporal antialiasing
-- The moon’s surface
+- The moon's surface
 - More reliable rendering of stars
 
 Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation. This will not mean dropping support for WebGL, because a WebGL fallback will still be possible, but the new API will be incompatible with the current one.
@@ -38,9 +38,9 @@ Once all packages support WebGPU, the current implementation of the shader-chunk
 <!-- prettier-ignore -->
 | Name | Status |
 | -- | -- |
-| [atmosphere](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere/src/webgpu) | Work in progress |
-| clouds | Planned |
-| [core](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/core/src/webgpu) | Work in progress |
+| [atmosphere](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/atmosphere/src/webgpu) | Done |
+| clouds | Work in progress |
+| [core](https://github.com/takram-design-engineering/three-geospatial/tree/main/packages/core/src/webgpu) | Done |
 | effects | To be merged with core |
 
 ## Developing
@@ -130,7 +130,7 @@ Try adding it to `optimizeDeps.exclude`.
 
 or even `R3F: Hooks can only be used within the Canvas component!` error in the browser.
 
-If the Storybook build succeeded on the commit you’re currently on in the Github Actions, the problem is likely not in the source or Storybook configuration. I haven’t found a reliable way to prevent this problem or recover from it reliably.
+If the Storybook build succeeded on the commit you're currently on in the Github Actions, the problem is likely not in the source or Storybook configuration. I haven't found a reliable way to prevent this problem or recover from it reliably.
 
 In most cases, removing the Storybook cache, resetting NX, restarting Storybook, and opening the Storybook in a _new browser window_ will recover from it:
 

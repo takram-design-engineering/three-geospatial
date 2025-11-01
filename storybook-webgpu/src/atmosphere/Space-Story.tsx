@@ -216,14 +216,14 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     <Description>
       <p>
         Creating a photorealistic globe is easy with @takram/three-atmosphere.
-        This just renders a sphere with the 3 layers of textures from NASA’s
+        This just renders a sphere with the 3 layers of textures from NASA's
         Blue Marble Collection and a few parameter adjustments to the physical
         material. Atmospheric scattering is rendered using{' '}
         <em>AerialPerspectiveNode</em> in the post-processing stage.
       </p>
       <p>
         Note that the atmosphere is thinner than you may expect, but in reality,
-        it is just shy of 0.1% of Earth’s radius.
+        it is just shy of 0.1% of Earth's radius.
       </p>
       <Attribution>Imagery: NASA</Attribution>
       <Attribution>Ocean mask: Solar System Scope</Attribution>
