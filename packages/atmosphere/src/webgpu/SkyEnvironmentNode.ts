@@ -18,7 +18,7 @@ import { QuadGeometry } from '@takram/three-geospatial'
 import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereContextNode } from './AtmosphereContextNode'
-import { skyWorld, type SkyNode } from './SkyNode'
+import { sky, type SkyNode } from './SkyNode'
 
 export class SkyEnvironmentNode extends TempNode {
   static override get type(): string {
@@ -35,9 +35,10 @@ export class SkyEnvironmentNode extends TempNode {
   constructor(atmosphereContext: AtmosphereContextNode, size = 64) {
     super('vec3')
 
-    this.skyNode = skyWorld(atmosphereContext)
+    this.skyNode = sky(atmosphereContext)
     this.skyNode.showSun = false
     this.skyNode.showMoon = false
+    this.skyNode.useContextCamera = false
 
     this.renderTarget = new CubeRenderTarget(size, {
       depthBuffer: false,

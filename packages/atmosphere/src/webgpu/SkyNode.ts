@@ -36,18 +36,17 @@ const cameraDirectionWorld = (camera: Camera): NodeObject<'vec3'> => {
   return directionWorld
 }
 
-const SCREEN = 'SCREEN'
-const WORLD = 'WORLD'
+const CAMERA = 'CAMERA'
 const EQUIRECTANGULAR = 'EQUIRECTANGULAR'
 
-type SkyNodeScope = typeof SCREEN | typeof WORLD | typeof EQUIRECTANGULAR
+type SkyNodeScope = typeof CAMERA | typeof EQUIRECTANGULAR
 
 export class SkyNode extends TempNode {
   static override get type(): string {
     return 'SkyNode'
   }
 
-  private readonly scope: SkyNodeScope = SCREEN
+  private readonly scope: SkyNodeScope = CAMERA
   private readonly atmosphereContext: AtmosphereContextNode
 
   shadowLengthNode?: Node<'float'> | null
@@ -60,6 +59,7 @@ export class SkyNode extends TempNode {
   showSun = true
   showMoon = true
   showStars = true
+  useContextCamera = true
 
   constructor(scope: SkyNodeScope, atmosphereContext: AtmosphereContextNode) {
     super('vec3')
@@ -71,7 +71,12 @@ export class SkyNode extends TempNode {
   }
 
   override customCacheKey(): number {
-    return hash(+this.showSun, +this.showMoon, +this.showStars)
+    return hash(
+      +this.showSun,
+      +this.showMoon,
+      +this.showStars,
+      +this.useContextCamera
+    )
   }
 
   override setup(builder: NodeBuilder): unknown {
@@ -87,17 +92,12 @@ export class SkyNode extends TempNode {
     // Direction of the camera ray:
     let directionWorld
     switch (this.scope) {
-      case SCREEN: {
-        const camera = this.atmosphereContext.camera ?? builder.camera
-        if (camera != null) {
-          directionWorld = cameraDirectionWorld(camera)
-        }
-        break
-      }
-      case WORLD: {
-        if (builder.camera != null) {
-          directionWorld = cameraDirectionWorld(builder.camera)
-        }
+      case CAMERA: {
+        const camera = this.useContextCamera
+          ? this.atmosphereContext.camera
+          : builder.camera
+        directionWorld =
+          camera != null ? cameraDirectionWorld(camera) : undefined
         break
       }
       case EQUIRECTANGULAR:
@@ -145,6 +145,5 @@ export class SkyNode extends TempNode {
   }
 }
 
-export const sky = nodeProxy(SkyNode, SCREEN)
-export const skyWorld = nodeProxy(SkyNode, WORLD)
+export const sky = nodeProxy(SkyNode, CAMERA)
 export const skyBackground = nodeProxy(SkyNode, EQUIRECTANGULAR)
