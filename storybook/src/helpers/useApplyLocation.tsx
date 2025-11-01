@@ -1,7 +1,7 @@
+import type { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useRef, type ComponentRef, type RefObject } from 'react'
 import { Quaternion, Vector3, type Camera } from 'three'
-import type { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 import {
   Ellipsoid,
@@ -18,7 +18,7 @@ const rotation = new Quaternion()
 
 function applyLocation(
   camera: Camera,
-  controls: OrbitControls,
+  controls: ComponentRef<typeof OrbitControls>,
   { longitude, latitude, height }: GeodeticLike
 ): void {
   geodetic.set(radians(longitude), radians(latitude), height)
@@ -33,13 +33,15 @@ function applyLocation(
   controls.target.copy(position)
 }
 
-export type UseApplyLocationResult = RefObject<OrbitControls | null>
+export type UseApplyLocationResult = RefObject<ComponentRef<
+  typeof OrbitControls
+> | null>
 
 export function useApplyLocation(
   { longitude, latitude, height }: GeodeticLike,
   callback?: (position: Vector3) => void
 ): UseApplyLocationResult {
-  const ref = useRef<OrbitControls>(null)
+  const ref = useRef<ComponentRef<typeof OrbitControls>>(null)
   const camera = useThree(({ camera }) => camera)
   const callbackRef = useRef(callback)
   callbackRef.current = callback
