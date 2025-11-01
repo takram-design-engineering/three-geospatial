@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.15.0] - 2025-11-01
+
+### Added
+
+- Added initial support for WebGPU / TSL. See [WEBGPU.md](https://github.com/takram-design-engineering/three-geospatial/blob/main/packages/atmosphere/WEBGPU.md) for details.
+
+### Changed
+
+- Removed module augmentation from type definitions.
+- Updated dependencies.
+
+### Fixed
+
+- Fixed `USE_LOGARITHMIC_DEPTH_BUFFER` was not respected.
+
 ## [0.14.0] - 2025-08-19
 
 ### Added
