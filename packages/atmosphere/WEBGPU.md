@@ -190,6 +190,8 @@ The following terms refer to class fields:
 
 ## AtmosphereContextNode
 
+This node aggregates the LUT, uniforms and static options that are shared across all atmospheric nodes. A single instance should be created and passed to all atmospheric nodes to ensure consistent rendering.
+
 → [Source](/packages/atmosphere/src/webgpu/AtmosphereContextNode.ts)
 
 ### Constructor
@@ -344,6 +346,8 @@ Whether to enable indirect sunlight. This must be turned off when you use an env
 
 ## AerialPerspectiveNode
 
+A post-processing node that renders atmospheric transparency and inscattered light. It can optionally apply post-process lighting.
+
 → [Source](/packages/atmosphere/src/webgpu/AerialPerspectiveNode.ts)
 
 ### Constructor
@@ -432,6 +436,23 @@ Enabling one without the other is physically incorrect and should only be done f
 
 ## SkyNode
 
+A node for rendering the sky. It provides 2 constructor functions for different types of view direction mapping.
+
+- `sky`: Uses the camera's view direction. Used in post-processing.
+- `skyBackground`: Interprets the material's UV as equirectangular. Used when assigning the scene's background.
+
+```ts
+import {
+  AtmosphereContextNode,
+  skyBackground
+} from '@takram/three-atmosphere/webgpu'
+import { Scene } from 'three'
+
+const context = new AtmosphereContextNode()
+const scene = new Scene()
+scene.backgroundNode = skyBackground(context)
+```
+
 → [Source](/packages/atmosphere/src/webgpu/SkyNode.ts)
 
 ### Constructor
@@ -439,7 +460,6 @@ Enabling one without the other is physically incorrect and should only be done f
 <!-- prettier-ignore -->
 ```ts
 const sky: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
-const skyWorld: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
 const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
 ```
 
@@ -555,6 +575,20 @@ Whether to display the stars.
 
 ## SkyEnvironmentNode
 
+Generates a PMREM texture node for the sky.
+
+```ts
+import {
+  AtmosphereContextNode,
+  skyEnvironment
+} from '@takram/three-atmosphere/webgpu'
+import { Scene } from 'three'
+
+const context = new AtmosphereContextNode()
+const scene = new Scene()
+scene.environmentNode = skyEnvironment(context)
+```
+
 → [Source](/packages/atmosphere/src/webgpu/SkyEnvironmentNode.ts)
 
 ### Constructor
@@ -577,6 +611,18 @@ skyNode: SkyNode
 A node representing the radiance of celestial sources and atmospheric scattering seen from the camera.
 
 ## AtmosphereParameters
+
+A class that encapsulates the parameters and static options for the atmospheric model based on [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/).
+
+```ts
+import {
+  AtmosphereContextNode,
+  AtmosphereParameters
+} from '@takram/three-atmosphere/webgpu'
+
+const parameters = new AtmosphereParameters()
+const context = new AtmosphereContextNode(parameters)
+```
 
 ### Static options
 
