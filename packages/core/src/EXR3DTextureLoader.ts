@@ -1,5 +1,5 @@
 import { Data3DTexture, Loader, type LoadingManager } from 'three'
-import { EXRLoader } from 'three-stdlib'
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js'
 
 export interface EXR3DTextureLoaderOptions {
   width?: number
