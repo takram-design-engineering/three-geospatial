@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3] - 2025-11-01
+
+### Fixed
+
+- Removed `three-stdlib` from dependencies to fix compatibility with importmaps.
+- Reverted the TS target to `es2017` to fix incorrect code generation.
+
 ## [0.4.2] - 2025-11-01
 
 ### Changed
