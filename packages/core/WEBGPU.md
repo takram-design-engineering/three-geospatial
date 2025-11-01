@@ -1,6 +1,6 @@
 # @takram/three-geospatial/webgpu
 
-[![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
+[![npm version](https://img.shields.io/npm/v/@takram/three-geospatial.svg?style=flat-square)](https://www.npmjs.com/package/@takram/three-geospatial) [![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
 
 A work-in-progress WebGPU support for `@takram/three-geospatial`.
 
