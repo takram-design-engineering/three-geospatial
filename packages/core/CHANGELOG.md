@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.0] - 2025-11-01
+
+### Added
+
+- Added initial support for WebGPU / TSL. See [WEBGPU.md](https://github.com/takram-design-engineering/three-geospatial/blob/main/packages/core/WEBGPU.md) for details.
+- Added `getMoonFixedToECIRotationMatrix`.
+- `Ellipsoid`: Added `flattening`, `eccentricity`.
+
+### Changed
+
+- Removed module augmentation from type definitions.
+- Updated dependencies.
+
+### Fixed
+
+- Addressed usage of `requestIdleCallback` in SSR environment.
+
 ## [0.4.0] - 2025-08-19
 
 ### Added

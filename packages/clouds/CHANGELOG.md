@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1] - 2025-11-01
+
+### Changed
+
+- Removed module augmentation from type definitions.
+- Updated dependencies.
+
 ## [0.5.0] - 2025-08-19
 
 ### Changed
