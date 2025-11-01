@@ -261,9 +261,6 @@ importers:
       three:
         specifier: 0.181.0
         version: 0.181.0
-      three-stdlib:
-        specifier: 2.36.0
-        version: 2.36.0(three@0.181.0)
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(@swc/core@1.13.21(@swc/helpers@0.5.17))(@types/node@22.18.13)(typescript@5.9.2)
