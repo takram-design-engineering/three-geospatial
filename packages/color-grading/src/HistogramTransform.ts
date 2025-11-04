@@ -21,10 +21,14 @@ import {
   workgroupBarrier,
   workgroupId
 } from 'three/tsl'
-import type { ComputeNode, Renderer, TextureNode } from 'three/webgpu'
+import type { ComputeNode, Node, Renderer, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { resizeStorageBuffer } from '@takram/three-geospatial/webgpu'
+import {
+  OnBeforeFrame,
+  resizeStorageBuffer,
+  type NodeObject
+} from '@takram/three-geospatial/webgpu'
 
 import { linearToRec709, luminanceRec709 } from './colors'
 
@@ -36,11 +40,13 @@ const SIZE = WIDTH * HEIGHT
 export class HistogramTransform {
   inputNode: TextureNode | null = null
 
-  countBuffer = attributeArray(0, 'uvec4')
-  readonly limitsBuffer = attributeArray(1, 'uvec4')
   readonly size = uniform(new Vector2(), 'uvec2')
 
-  version = 0
+  private readonly countBuffer = attributeArray(0, 'uvec4')
+  private readonly limitBuffer = attributeArray(1, 'uvec4')
+
+  readonly counts = this.triggerCompute(this.countBuffer)
+  readonly limits = this.triggerCompute(this.limitBuffer)
 
   private prevFrame = -1
   private mapNode?: ComputeNode
@@ -55,11 +61,15 @@ export class HistogramTransform {
     this.size.value.set(width, height)
   }
 
-  // eslint-disable-next-line accessor-pairs
-  set needsUpdate(value: boolean) {
-    if (value) {
-      ++this.version
-    }
+  private triggerCompute<T extends Node>(node: T): NodeObject {
+    return Fn(() => {
+      OnBeforeFrame(({ renderer }) => {
+        if (renderer != null) {
+          this.compute(renderer)
+        }
+      })
+      return node
+    })()
   }
 
   private setupMapNode(): ComputeNode {
@@ -105,7 +115,7 @@ export class HistogramTransform {
   }
 
   private setupReduceNode(): ComputeNode {
-    const { inputNode, countBuffer, limitsBuffer } = this
+    const { inputNode, countBuffer, limitBuffer } = this
     invariant(inputNode != null)
 
     return (this.reduceNode ??= Fn(() => {
@@ -128,13 +138,13 @@ export class HistogramTransform {
           Loop({ start: 0, end: SIZE, condition: '<' }, ({ i }) => {
             maxValue.assign(max(maxValue, countBuffer.element(i)))
           })
-          limitsBuffer.element(0).assign(maxValue)
+          limitBuffer.element(0).assign(maxValue)
         })
       })
     })().compute(0, [SIZE]))
   }
 
-  compute(renderer: Renderer): void {
+  private compute(renderer: Renderer): void {
     if (
       renderer == null ||
       this.inputNode == null ||
@@ -156,7 +166,7 @@ export class HistogramTransform {
     void renderer.compute(mapNode, [dispatchWidth, dispatchHeight])
 
     // Clear the contents:
-    this.limitsBuffer.value.needsUpdate = true
+    this.limitBuffer.value.needsUpdate = true
 
     // Reduce the count buffer in place:
     const reduceNode = this.setupReduceNode()

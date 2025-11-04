@@ -18,11 +18,7 @@ import {
   vec3,
   vertexIndex
 } from 'three/tsl'
-import {
-  LineBasicNodeMaterial,
-  type NodeMaterial,
-  type Renderer
-} from 'three/webgpu'
+import { LineBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import {
@@ -144,7 +140,6 @@ export class WaveformLine extends Line {
   gain = uniform(5)
 
   private prevSource?: RasterTransform
-  private prevVersion?: number
   private prevMode?: WaveformMode
   private prevComponents?: number
   private readonly prevSize = new Vector2()
@@ -166,11 +161,11 @@ export class WaveformLine extends Line {
 
   private updateMaterial(): void {
     invariant(this.source != null)
-    const { colorBuffer, uvBuffer, size } = this.source
+    const { colors, uvs, size } = this.source
     const index = instanceIndex.mod(size.y).mul(size.x).add(vertexIndex)
     const channel = instanceIndex.div(size.y)
-    const inputColor = colorBuffer.element(index)
-    const uv = uvBuffer.element(index)
+    const inputColor = colors.element(index)
+    const uv = uvs.element(index)
 
     const mode = modes[this.mode]
     const color = mode.color(inputColor, channel)
@@ -183,19 +178,13 @@ export class WaveformLine extends Line {
     this.material.needsUpdate = true
   }
 
-  override onBeforeRender(renderer: unknown): void {
+  override onBeforeRender(): void {
     if (this.source == null) {
       return
     }
-    this.source.compute(renderer as Renderer)
 
-    if (
-      this.source !== this.prevSource ||
-      this.source.version !== this.prevVersion ||
-      this.mode !== this.prevMode
-    ) {
+    if (this.source !== this.prevSource || this.mode !== this.prevMode) {
       this.prevSource = this.source
-      this.prevVersion = this.source.version
       this.prevMode = this.mode
       this.updateMaterial()
     }

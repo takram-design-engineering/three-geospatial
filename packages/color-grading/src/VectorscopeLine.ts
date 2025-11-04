@@ -6,11 +6,7 @@ import {
   Vector2
 } from 'three'
 import { instanceIndex, uniform, vec3, vertexIndex } from 'three/tsl'
-import {
-  LineBasicNodeMaterial,
-  type NodeMaterial,
-  type Renderer
-} from 'three/webgpu'
+import { LineBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { hsv2rgb, rgb2hsv } from '@takram/three-geospatial/webgpu'
@@ -27,7 +23,6 @@ export class VectorscopeLine extends Line {
   gain = uniform(5)
 
   private prevSource?: RasterTransform
-  private prevVersion?: number
   private readonly prevSize = new Vector2()
 
   constructor(source?: RasterTransform | null) {
@@ -46,9 +41,9 @@ export class VectorscopeLine extends Line {
 
   private updateMaterial(): void {
     invariant(this.source != null)
-    const { colorBuffer, size } = this.source
+    const { colors, size } = this.source
     const index = instanceIndex.mod(size.y).mul(size.x).add(vertexIndex)
-    const linearColor = colorBuffer.element(index)
+    const linearColor = colors.element(index)
 
     const color = hsv2rgb(vec3(rgb2hsv(linearColor).xy, 1))
     const ycbcr = linearToYCbCr(linearColor)
@@ -58,18 +53,13 @@ export class VectorscopeLine extends Line {
     this.material.needsUpdate = true
   }
 
-  override onBeforeRender(renderer: unknown): void {
+  override onBeforeRender(): void {
     if (this.source == null) {
       return
     }
-    this.source.compute(renderer as Renderer)
 
-    if (
-      this.source !== this.prevSource ||
-      this.source.version !== this.prevVersion
-    ) {
+    if (this.source !== this.prevSource) {
       this.prevSource = this.source
-      this.prevVersion = this.source.version
       this.updateMaterial()
     }
 

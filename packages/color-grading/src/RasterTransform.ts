@@ -9,19 +9,25 @@ import {
   uniform,
   vec2
 } from 'three/tsl'
-import type { ComputeNode, Renderer, TextureNode } from 'three/webgpu'
+import type { ComputeNode, Node, Renderer, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { resizeStorageBuffer } from '@takram/three-geospatial/webgpu'
+import {
+  OnBeforeFrame,
+  resizeStorageBuffer,
+  type NodeObject
+} from '@takram/three-geospatial/webgpu'
 
 export class RasterTransform {
   inputNode: TextureNode | null = null
 
-  colorBuffer = attributeArray(0, 'vec3')
-  uvBuffer = attributeArray(0, 'vec2')
-  readonly size = uniform(new Vector2(), 'uvec2')
+  size = uniform(new Vector2(), 'uvec2')
 
-  version = 0
+  private readonly colorBuffer = attributeArray(0, 'vec3')
+  private readonly uvBuffer = attributeArray(0, 'vec2')
+
+  readonly colors = this.triggerCompute(this.colorBuffer)
+  readonly uvs = this.triggerCompute(this.uvBuffer)
 
   private prevFrame = -1
   private computeNode?: ComputeNode
@@ -31,11 +37,15 @@ export class RasterTransform {
     this.size.value.set(width, height)
   }
 
-  // eslint-disable-next-line accessor-pairs
-  set needsUpdate(value: boolean) {
-    if (value) {
-      ++this.version
-    }
+  private triggerCompute<T extends Node>(node: T): NodeObject {
+    return Fn(() => {
+      OnBeforeFrame(({ renderer }) => {
+        if (renderer != null) {
+          this.compute(renderer)
+        }
+      })
+      return node
+    })()
   }
 
   private setupComputeNode(): ComputeNode {
@@ -57,7 +67,7 @@ export class RasterTransform {
     })().compute(0))
   }
 
-  compute(renderer: Renderer): void {
+  private compute(renderer: Renderer): void {
     if (
       renderer == null ||
       this.inputNode == null ||

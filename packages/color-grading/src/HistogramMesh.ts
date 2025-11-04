@@ -9,6 +9,7 @@ import {
   float,
   Fn,
   instanceIndex,
+  int,
   max,
   mix,
   screenSize,
@@ -16,11 +17,7 @@ import {
   vec3,
   vertexIndex
 } from 'three/tsl'
-import {
-  MeshBasicNodeMaterial,
-  type NodeMaterial,
-  type Renderer
-} from 'three/webgpu'
+import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import type { HistogramTransform } from './HistogramTransform'
@@ -36,7 +33,6 @@ export class HistogramMesh extends Mesh {
   gain = uniform(5)
 
   private prevSource?: HistogramTransform
-  private prevVersion?: number
   private readonly prevSize = new Vector2()
 
   constructor(source?: HistogramTransform | null) {
@@ -71,19 +67,19 @@ export class HistogramMesh extends Mesh {
 
   private updateMaterial(): void {
     invariant(this.source != null)
-    const { countBuffer, limitsBuffer } = this.source
+    const { counts, limits } = this.source
     const channel = instanceIndex
 
-    const m = limitsBuffer.element(0)
-    const mm = max(m.x, m.y, m.z, m.w)
+    const limitRGBY = limits.element(int(0))
+    const limit = max(limitRGBY.x, limitRGBY.y, limitRGBY.z, limitRGBY.w)
 
     const index = vertexIndex.div(2)
     const side = float(vertexIndex.mod(2))
     const x = float(index)
       .div(SIZE - 1)
       .sub(0.5)
-    const top = float(countBuffer.element(index).element(channel))
-      .div(mm)
+    const top = float(counts.element(index).element(channel))
+      .div(limit)
       .sub(0.5)
     const bottom = float(-0.5)
     const y = mix(top, bottom, side)
@@ -101,18 +97,13 @@ export class HistogramMesh extends Mesh {
     this.material.needsUpdate = true
   }
 
-  override onBeforeRender(renderer: unknown): void {
+  override onBeforeRender(): void {
     if (this.source == null) {
       return
     }
-    this.source.compute(renderer as Renderer)
 
-    if (
-      this.source !== this.prevSource ||
-      this.source.version !== this.prevVersion
-    ) {
+    if (this.source !== this.prevSource) {
       this.prevSource = this.source
-      this.prevVersion = this.source.version
       this.updateMaterial()
     }
 
