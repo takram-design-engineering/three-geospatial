@@ -15,6 +15,7 @@ import type { Renderer } from 'three/webgpu'
 import type { VideoSource } from '../VideoSource'
 import { WaveformLine, type WaveformMode } from '../WaveformLine'
 import { useCanvasTarget } from './useCanvasTarget'
+import { useVideoSource } from './useVideoSource'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
@@ -109,7 +110,7 @@ export interface WaveformProps extends ComponentPropsWithRef<'div'> {
 
 const WaveformImpl: FC<WaveformProps & WithTunnelsProps> = ({
   tunnels,
-  source,
+  source: sourceProp,
   mode,
   gain,
   pixelRatio = window.devicePixelRatio,
@@ -121,6 +122,7 @@ const WaveformImpl: FC<WaveformProps & WithTunnelsProps> = ({
 
   const waveform = useMemo(() => new WaveformLine(), [])
 
+  const source = useVideoSource() ?? sourceProp
   waveform.source = source?.rasterTransform ?? null
   if (gain != null) {
     waveform.gain.value = gain

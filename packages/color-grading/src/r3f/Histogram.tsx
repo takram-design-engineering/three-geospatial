@@ -15,6 +15,7 @@ import type { Renderer } from 'three/webgpu'
 import { HistogramMesh } from '../HistogramMesh'
 import type { VideoSource } from '../VideoSource'
 import { useCanvasTarget } from './useCanvasTarget'
+import { useVideoSource } from './useVideoSource'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
@@ -84,7 +85,7 @@ export interface HistogramProps extends ComponentPropsWithRef<'div'> {
 
 export const HistogramImpl: FC<HistogramProps & WithTunnelsProps> = ({
   tunnels,
-  source,
+  source: sourceProp,
   gain,
   pixelRatio = window.devicePixelRatio,
   ...props
@@ -95,6 +96,7 @@ export const HistogramImpl: FC<HistogramProps & WithTunnelsProps> = ({
 
   const histogram = useMemo(() => new HistogramMesh(), [])
 
+  const source = useVideoSource() ?? sourceProp
   histogram.source = source?.histogramTransform ?? null
   if (gain != null) {
     histogram.gain.value = gain

@@ -18,6 +18,7 @@ import { normalizeYCbCr, Rec709, Rec709Format } from '../Rec709'
 import { VectorscopeLine } from '../VectorscopeLine'
 import type { VideoSource } from '../VideoSource'
 import { useCanvasTarget } from './useCanvasTarget'
+import { useVideoSource } from './useVideoSource'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
@@ -187,7 +188,7 @@ export interface VectorscopeProps extends ComponentPropsWithRef<'div'> {
 
 const VectorscopeImpl: FC<VectorscopeProps & WithTunnelsProps> = ({
   tunnels,
-  source,
+  source: sourceProp,
   gain,
   pixelRatio = window.devicePixelRatio,
   ...props
@@ -201,11 +202,14 @@ const VectorscopeImpl: FC<VectorscopeProps & WithTunnelsProps> = ({
 
   const vectorscope = useMemo(() => new VectorscopeLine(), [])
 
-  vectorscope.scale.setScalar(0.75)
+  const source = useVideoSource() ?? sourceProp
   vectorscope.source = source?.rasterTransform ?? null
   if (gain != null) {
     vectorscope.gain.value = gain
   }
+
+  // TODO: Add prop
+  vectorscope.scale.setScalar(0.75)
 
   useEffect(() => {
     return () => {

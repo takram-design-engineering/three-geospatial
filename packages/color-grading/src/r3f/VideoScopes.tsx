@@ -9,6 +9,7 @@ import {
   type ReactNode
 } from 'react'
 
+import type { VideoSource } from '../VideoSource'
 import { Histogram } from './Histogram'
 import { useVideoSource } from './useVideoSource'
 import { Vectorscope } from './Vectorscope'
@@ -30,10 +31,15 @@ const Grid = /*#__PURE__*/ styled.div`
 
 export interface VideoScopesProps
   extends ComponentPropsWithRef<typeof Splitter> {
+  source?: VideoSource | null
   children?: ReactNode
 }
 
-export const VideoScopes: FC<VideoScopesProps> = ({ children, ...props }) => {
+export const VideoScopes: FC<VideoScopesProps> = ({
+  source: sourceProp,
+  children,
+  ...props
+}) => {
   const [sizes, setSizes] = useState<number[]>([])
 
   const onResizeRef = useRef(props.onResize)
@@ -43,8 +49,7 @@ export const VideoScopes: FC<VideoScopesProps> = ({ children, ...props }) => {
     onResizeRef.current?.(sizes)
   }, [])
 
-  const source = useVideoSource()
-
+  const source = useVideoSource() ?? sourceProp
   return (
     <Splitter layout='vertical' {...props} onResize={handleResize}>
       <Splitter.Panel size={sizes[0]}>{children}</Splitter.Panel>

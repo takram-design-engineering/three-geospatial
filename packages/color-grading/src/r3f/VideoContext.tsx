@@ -21,7 +21,5 @@ export const VideoBoundary: FC<VideoBoundaryProps> = ({ children }) => {
     }),
     []
   )
-  return (
-    <VideoContext.Provider value={context}>{children}</VideoContext.Provider>
-  )
+  return <VideoContext value={context}>{children}</VideoContext>
 }
