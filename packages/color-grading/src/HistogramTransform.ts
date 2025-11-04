@@ -24,6 +24,8 @@ import {
 import type { ComputeNode, Renderer, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { resizeStorageBuffer } from '@takram/three-geospatial/webgpu'
+
 import { linearToRec709, luminanceRec709 } from './colors'
 
 const WIDTH = 256
@@ -148,13 +150,7 @@ export class HistogramTransform {
     const dispatchHeight = Math.ceil(height / HEIGHT)
     const dispatchSize = dispatchWidth * dispatchHeight
 
-    const bufferCount = dispatchSize * SIZE
-    if (this.countBuffer.bufferCount !== bufferCount) {
-      this.countBuffer = attributeArray(bufferCount, 'uvec4')
-      this.mapNode = undefined
-      this.reduceNode = undefined
-      this.needsUpdate = true
-    }
+    resizeStorageBuffer(this.countBuffer, dispatchSize * SIZE)
 
     const mapNode = this.setupMapNode()
     void renderer.compute(mapNode, [dispatchWidth, dispatchHeight])

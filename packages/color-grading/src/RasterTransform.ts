@@ -12,6 +12,8 @@ import {
 import type { ComputeNode, Renderer, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { resizeStorageBuffer } from '@takram/three-geospatial/webgpu'
+
 export class RasterTransform {
   inputNode: TextureNode | null = null
 
@@ -68,12 +70,8 @@ export class RasterTransform {
     const { width, height } = this.size.value
 
     const bufferCount = width * height
-    if (this.colorBuffer.bufferCount !== bufferCount) {
-      this.colorBuffer = attributeArray(bufferCount, 'vec3')
-      this.uvBuffer = attributeArray(bufferCount, 'vec2')
-      this.computeNode = undefined
-      this.needsUpdate = true
-    }
+    resizeStorageBuffer(this.colorBuffer, bufferCount)
+    resizeStorageBuffer(this.uvBuffer, bufferCount)
 
     const computeNode = this.setupComputeNode()
     void renderer.compute(computeNode, [width, height])
