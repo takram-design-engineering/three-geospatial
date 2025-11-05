@@ -12,17 +12,6 @@ import type { NodeType, NodeValueTypeOf } from '@takram/three-geospatial/webgpu'
 
 export {}
 
-declare module 'three' {
-  interface Camera {
-    isPerspectiveCamera?: boolean
-    isOrthographicCamera?: boolean
-  }
-
-  interface Material {
-    isNodeMaterial?: boolean
-  }
-}
-
 declare module 'three/tsl' {
   // The first argument can be a node type
   const uniform: <T>(
@@ -37,11 +26,6 @@ declare module 'three/tsl' {
 }
 
 declare module 'three/webgpu' {
-  // Add "camera"
-  interface NodeBuilder {
-    camera?: Camera
-  }
-
   interface Node {
     // Add "self"
     // NOTE: This type is problematic because methods like these (parameter of
@@ -59,31 +43,18 @@ declare module 'three/webgpu' {
       callback: (this: this, frame: NodeFrame, self: this) => void
     ): this
   }
+}
 
-  interface TextureNode {
-    // Add missing methods
-    setUpdateMatrix: (value: boolean) => this
-    offset(offsetNode: Node): TextureNode
-
-    // Allow number type
-    blur(amountNode: number | Node): TextureNode
-    level(levelNode: number | Node): TextureNode
-    size(levelNode: number | Node): TextureNode
-    bias(biasNode: number | Node): TextureNode
-    compare(compareNode: number | Node): TextureNode
-    grad(gradeNodeX: number | Node, gradeNodeY: number | Node): TextureNode
-    depth(depthNode: number | Node): TextureNode
+declare module 'three/src/cameras/Camera.js' {
+  interface Camera {
+    isPerspectiveCamera?: boolean
+    isOrthographicCamera?: boolean
   }
+}
 
-  // Add missing methods
-  interface ToneMappingNode {
-    getToneMapping: () => ToneMapping
-    setToneMapping: (value: ToneMapping) => this
-  }
-
-  // Add "colorNode"
-  interface AnalyticLightNode {
-    colorNode: Node
+declare module 'three/src/materials/Material.js' {
+  interface Material {
+    isNodeMaterial?: boolean
   }
 }
 
@@ -98,5 +69,45 @@ declare module 'three/src/renderers/common/RendererUtils.js' {
 declare module 'three/src/renderers/common/Backend.js' {
   export default interface Backend {
     isWebGPUBackend?: boolean
+  }
+}
+
+declare module 'three/src/nodes/core/NodeBuilder.js' {
+  // Add "camera"
+  export default interface NodeBuilder {
+    camera?: Camera
+  }
+}
+
+declare module 'three/src/nodes/accessors/TextureNode.js' {
+  // Add missing methods
+  export default interface TextureNode {
+    // Add missing methods
+    setUpdateMatrix: (value: boolean) => this
+    offset(offsetNode: Node): TextureNode
+
+    // Allow number type
+    blur(amountNode: number | Node): TextureNode
+    level(levelNode: number | Node): TextureNode
+    size(levelNode: number | Node): TextureNode
+    bias(biasNode: number | Node): TextureNode
+    compare(compareNode: number | Node): TextureNode
+    grad(gradeNodeX: number | Node, gradeNodeY: number | Node): TextureNode
+    depth(depthNode: number | Node): TextureNode
+  }
+}
+
+declare module 'three/src/nodes/lighting/AnalyticLightNode.js' {
+  // Add "colorNode"
+  export default interface AnalyticLightNode {
+    colorNode: Node
+  }
+}
+
+declare module 'three/src/nodes/display/ToneMappingNode.js' {
+  // Add missing methods
+  export default interface ToneMappingNode {
+    getToneMapping: () => ToneMapping
+    setToneMapping: (value: ToneMapping) => this
   }
 }
