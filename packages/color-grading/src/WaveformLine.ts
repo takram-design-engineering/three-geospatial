@@ -28,7 +28,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import { linearToRec709, linearToYCbCr } from './colors'
-import type { RasterTransform } from './RasterTransform'
+import type { RasterSource } from './RasterSource'
 
 export type WaveformMode =
   | 'luma'
@@ -134,17 +134,17 @@ export class WaveformLine extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
-  source: RasterTransform | null
+  source: RasterSource | null
   mode: WaveformMode
 
   gain = uniform(5)
 
-  private prevSource?: RasterTransform
+  private prevSource?: RasterSource
   private prevMode?: WaveformMode
   private prevComponents?: number
   private readonly prevSize = new Vector2()
 
-  constructor(source?: RasterTransform | null, mode: WaveformMode = 'luma') {
+  constructor(source?: RasterSource | null, mode: WaveformMode = 'luma') {
     super()
     this.source = source ?? null
     this.mode = mode

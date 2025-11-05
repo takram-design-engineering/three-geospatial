@@ -6,6 +6,7 @@ import { NodeMaterial, PostProcessing, type Renderer } from 'three/webgpu'
 import { colorBarsHD, colorBarsSD } from '@takram/three-color-grading'
 import { VideoScopes, VideoSource } from '@takram/three-color-grading/r3f'
 import { QuadGeometry } from '@takram/three-geospatial'
+import { convertToTexture } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
@@ -43,7 +44,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <mesh geometry={geometry} material={material} />
-      <VideoSource inputNode={passNode} />
+      <VideoSource inputNode={convertToTexture(passNode)} />
     </>
   )
 }

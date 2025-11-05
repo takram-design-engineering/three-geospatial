@@ -20,7 +20,7 @@ import {
 import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { HistogramTransform } from './HistogramTransform'
+import type { HistogramSource } from './HistogramSource'
 
 const SIZE = 256
 
@@ -28,14 +28,14 @@ export class HistogramMesh extends Mesh {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
-  source: HistogramTransform | null
+  source: HistogramSource | null
 
   gain = uniform(5)
 
-  private prevSource?: HistogramTransform
+  private prevSource?: HistogramSource
   private readonly prevSize = new Vector2()
 
-  constructor(source?: HistogramTransform | null) {
+  constructor(source?: HistogramSource | null) {
     super()
     this.source = source ?? null
 

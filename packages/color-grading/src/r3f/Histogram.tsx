@@ -1,21 +1,22 @@
 import styled from '@emotion/styled'
 import { useFrame } from '@react-three/fiber'
+import { useAtomValue } from 'jotai'
 import {
   Fragment,
   memo,
+  use,
   useEffect,
   useMemo,
   useRef,
-  type ComponentPropsWithRef,
-  type FC
+  type ComponentPropsWithRef
 } from 'react'
 import { OrthographicCamera } from 'three'
 import type { Renderer } from 'three/webgpu'
 
 import { HistogramMesh } from '../HistogramMesh'
-import type { VideoSource } from '../VideoSource'
+import type { HistogramSource } from '../HistogramSource'
 import { useCanvasTarget } from './useCanvasTarget'
-import { useVideoSource } from './useVideoSource'
+import { VideoContext } from './VideoContext'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
@@ -78,60 +79,58 @@ Grid.displayName = 'Grid'
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface HistogramProps extends ComponentPropsWithRef<'div'> {
-  source?: VideoSource | null
+  source?: HistogramSource | null
   gain?: number
   pixelRatio?: number
 }
 
-export const HistogramImpl: FC<HistogramProps & WithTunnelsProps> = ({
-  tunnels,
-  source: sourceProp,
-  gain,
-  pixelRatio = window.devicePixelRatio,
-  ...props
-}) => {
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [canvasTarget, setCanvas] = useCanvasTarget(contentRef.current)
-  canvasTarget?.setPixelRatio(pixelRatio)
+export const Histogram = withTunnels<HistogramProps & WithTunnelsProps>(
+  ({
+    tunnels,
+    source: sourceProp,
+    gain,
+    pixelRatio = window.devicePixelRatio,
+    ...props
+  }) => {
+    const contentRef = useRef<HTMLDivElement>(null)
+    const [canvasTarget, setCanvas] = useCanvasTarget(contentRef.current)
+    canvasTarget?.setPixelRatio(pixelRatio)
 
-  const histogram = useMemo(() => new HistogramMesh(), [])
+    const histogram = useMemo(() => new HistogramMesh(), [])
 
-  const source = useVideoSource() ?? sourceProp
-  histogram.source = source?.histogramTransform ?? null
-  if (gain != null) {
-    histogram.gain.value = gain
+    const source = useAtomValue(use(VideoContext).histogramAtom)
+    histogram.source = source ?? sourceProp ?? null
+    if (gain != null) {
+      histogram.gain.value = gain
+    }
+
+    useEffect(() => {
+      return () => {
+        histogram.dispose()
+      }
+    }, [histogram])
+
+    useFrame(({ gl }) => {
+      if (canvasTarget == null || sourceProp == null) {
+        return
+      }
+
+      const renderer = gl as unknown as Renderer
+      const prevTarget = renderer.getCanvasTarget()
+      renderer.setCanvasTarget(canvasTarget)
+      void renderer.render(histogram, camera)
+      renderer.setCanvasTarget(prevTarget)
+    })
+
+    return (
+      <tunnels.HTML>
+        <Root {...props}>
+          <Content ref={contentRef}>
+            <Grid />
+            <Canvas ref={setCanvas} />
+          </Content>
+        </Root>
+      </tunnels.HTML>
+    )
   }
-
-  useEffect(() => {
-    return () => {
-      histogram.dispose()
-    }
-  }, [histogram])
-
-  useFrame(({ gl }) => {
-    if (canvasTarget == null || source == null) {
-      return
-    }
-
-    source.update()
-
-    const renderer = gl as unknown as Renderer
-    const prevTarget = renderer.getCanvasTarget()
-    renderer.setCanvasTarget(canvasTarget)
-    void renderer.render(histogram, camera)
-    renderer.setCanvasTarget(prevTarget)
-  })
-
-  return (
-    <tunnels.HTML>
-      <Root {...props}>
-        <Content ref={contentRef}>
-          <Grid />
-          <Canvas ref={setCanvas} />
-        </Content>
-      </Root>
-    </tunnels.HTML>
-  )
-}
-
-export const Histogram = withTunnels(HistogramImpl)
+)

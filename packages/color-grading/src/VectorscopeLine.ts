@@ -12,20 +12,20 @@ import invariant from 'tiny-invariant'
 import { hsv2rgb, rgb2hsv } from '@takram/three-geospatial/webgpu'
 
 import { linearToYCbCr } from './colors'
-import type { RasterTransform } from './RasterTransform'
+import type { RasterSource } from './RasterSource'
 
 export class VectorscopeLine extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
-  source: RasterTransform | null
+  source: RasterSource | null
 
   gain = uniform(5)
 
-  private prevSource?: RasterTransform
+  private prevSource?: RasterSource
   private readonly prevSize = new Vector2()
 
-  constructor(source?: RasterTransform | null) {
+  constructor(source?: RasterSource | null) {
     super()
     this.source = source ?? null
 

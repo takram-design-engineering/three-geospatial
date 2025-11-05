@@ -18,7 +18,7 @@ import {
   type NodeObject
 } from '@takram/three-geospatial/webgpu'
 
-export class RasterTransform {
+export class RasterSource {
   inputNode: TextureNode | null = null
 
   size = uniform(new Vector2(), 'uvec2')
@@ -26,8 +26,8 @@ export class RasterTransform {
   private readonly colorBuffer = attributeArray(0, 'vec3')
   private readonly uvBuffer = attributeArray(0, 'vec2')
 
-  readonly colors = this.triggerCompute(this.colorBuffer)
-  readonly uvs = this.triggerCompute(this.uvBuffer)
+  readonly colors = this.computeBeforeFrame(this.colorBuffer)
+  readonly uvs = this.computeBeforeFrame(this.uvBuffer)
 
   private prevFrame = -1
   private computeNode?: ComputeNode
@@ -37,10 +37,11 @@ export class RasterTransform {
     this.size.value.set(width, height)
   }
 
-  private triggerCompute<T extends Node>(node: T): NodeObject {
+  private computeBeforeFrame<T extends Node>(node: T): NodeObject {
     return Fn(() => {
       OnBeforeFrame(({ renderer }) => {
-        if (renderer != null) {
+        if (renderer != null && this.prevFrame !== renderer.info.frame) {
+          this.prevFrame = renderer.info.frame
           this.compute(renderer)
         }
       })
@@ -68,15 +69,9 @@ export class RasterTransform {
   }
 
   private compute(renderer: Renderer): void {
-    if (
-      renderer == null ||
-      this.inputNode == null ||
-      this.prevFrame === renderer.info.frame
-    ) {
+    if (this.inputNode == null) {
       return
     }
-    this.prevFrame = renderer.info.frame
-
     const { width, height } = this.size.value
 
     const bufferCount = width * height

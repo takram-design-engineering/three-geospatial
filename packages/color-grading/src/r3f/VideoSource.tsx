@@ -1,23 +1,24 @@
-import { useThree } from '@react-three/fiber'
 import { useSetAtom } from 'jotai'
 import { useContext, useLayoutEffect, type FC } from 'react'
-import type { Node, Renderer } from 'three/webgpu'
+import type { TextureNode } from 'three/webgpu'
 
-import { VideoSource as VideoSourceImpl } from '../VideoSource'
+import { HistogramSource } from '../HistogramSource'
+import { RasterSource } from '../RasterSource'
 import { VideoContext } from './VideoContext'
 
 export interface VideoSourceProps {
-  inputNode?: Node
+  inputNode?: TextureNode
 }
 
 export const VideoSource: FC<VideoSourceProps> = ({ inputNode }) => {
   const context = useContext(VideoContext)
 
-  const renderer = useThree<Renderer>(({ gl }) => gl as any)
-  const setSource = useSetAtom(context.sourceAtom)
+  const setRaster = useSetAtom(context.rasterAtom)
+  const setHistogram = useSetAtom(context.histogramAtom)
   useLayoutEffect(() => {
-    setSource(new VideoSourceImpl(renderer, inputNode))
-  }, [renderer, inputNode, setSource])
+    setRaster(new RasterSource(inputNode))
+    setHistogram(new HistogramSource(inputNode))
+  }, [inputNode, setRaster, setHistogram])
 
   return <context.r3f.Out />
 }

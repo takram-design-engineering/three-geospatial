@@ -1,6 +1,8 @@
 import styled from '@emotion/styled'
 import { Splitter } from 'antd'
+import { useAtomValue } from 'jotai'
 import {
+  use,
   useCallback,
   useRef,
   useState,
@@ -9,10 +11,11 @@ import {
   type ReactNode
 } from 'react'
 
-import type { VideoSource } from '../VideoSource'
+import type { HistogramSource } from '../HistogramSource'
+import type { RasterSource } from '../RasterSource'
 import { Histogram } from './Histogram'
-import { useVideoSource } from './useVideoSource'
 import { Vectorscope } from './Vectorscope'
+import { VideoContext } from './VideoContext'
 import { Waveform } from './Waveform'
 
 const Container = /*#__PURE__*/ styled.div`
@@ -31,12 +34,14 @@ const Grid = /*#__PURE__*/ styled.div`
 
 export interface VideoScopesProps
   extends ComponentPropsWithRef<typeof Splitter> {
-  source?: VideoSource | null
+  raster?: RasterSource | null
+  histogram?: HistogramSource | null
   children?: ReactNode
 }
 
 export const VideoScopes: FC<VideoScopesProps> = ({
-  source: sourceProp,
+  raster: rasterProp,
+  histogram: histogramProp,
   children,
   ...props
 }) => {
@@ -49,7 +54,9 @@ export const VideoScopes: FC<VideoScopesProps> = ({
     onResizeRef.current?.(sizes)
   }, [])
 
-  const source = useVideoSource() ?? sourceProp
+  const context = use(VideoContext)
+  const raster = useAtomValue(context.rasterAtom) ?? rasterProp
+  const histogram = useAtomValue(context.histogramAtom) ?? histogramProp
   return (
     <Splitter layout='vertical' {...props} onResize={handleResize}>
       <Splitter.Panel size={sizes[0]}>{children}</Splitter.Panel>
@@ -63,10 +70,10 @@ export const VideoScopes: FC<VideoScopesProps> = ({
         {(sizes[1] == null || sizes[1] > 0) && (
           <Container>
             <Grid>
-              <Waveform source={source} mode='luma' />
-              <Waveform source={source} mode='rgb-parade' />
-              <Vectorscope source={source} />
-              <Histogram source={source} />
+              <Waveform source={raster} mode='luma' />
+              <Waveform source={raster} mode='rgb-parade' />
+              <Vectorscope source={raster} />
+              <Histogram source={histogram} />
             </Grid>
           </Container>
         )}

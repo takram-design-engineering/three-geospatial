@@ -1,24 +1,25 @@
 import styled from '@emotion/styled'
 import { useFrame } from '@react-three/fiber'
+import { useAtomValue } from 'jotai'
 import {
   Fragment,
   memo,
+  use,
   useEffect,
   useMemo,
   useRef,
-  type ComponentPropsWithRef,
-  type FC
+  type ComponentPropsWithRef
 } from 'react'
 import { Color, OrthographicCamera } from 'three'
 import type { Renderer } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
+import type { RasterSource } from '../RasterSource'
 import { normalizeYCbCr, Rec709, Rec709Format } from '../Rec709'
 import { VectorscopeLine } from '../VectorscopeLine'
-import type { VideoSource } from '../VideoSource'
 import { useCanvasTarget } from './useCanvasTarget'
-import { useVideoSource } from './useVideoSource'
+import { VideoContext } from './VideoContext'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
@@ -181,67 +182,65 @@ Grid.displayName = 'Grid'
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface VectorscopeProps extends ComponentPropsWithRef<'div'> {
-  source?: VideoSource | null
+  source?: RasterSource | null
   gain?: number
   pixelRatio?: number
 }
 
-const VectorscopeImpl: FC<VectorscopeProps & WithTunnelsProps> = ({
-  tunnels,
-  source: sourceProp,
-  gain,
-  pixelRatio = window.devicePixelRatio,
-  ...props
-}) => {
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [canvasTarget, setCanvas] = useCanvasTarget(
-    contentRef.current,
-    (width, height) => [width - strokeWidth, height - strokeWidth]
-  )
-  canvasTarget?.setPixelRatio(pixelRatio)
+export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
+  ({
+    tunnels,
+    source: sourceProp,
+    gain,
+    pixelRatio = window.devicePixelRatio,
+    ...props
+  }) => {
+    const contentRef = useRef<HTMLDivElement>(null)
+    const [canvasTarget, setCanvas] = useCanvasTarget(
+      contentRef.current,
+      (width, height) => [width - strokeWidth, height - strokeWidth]
+    )
+    canvasTarget?.setPixelRatio(pixelRatio)
 
-  const vectorscope = useMemo(() => new VectorscopeLine(), [])
+    const vectorscope = useMemo(() => new VectorscopeLine(), [])
 
-  const source = useVideoSource() ?? sourceProp
-  vectorscope.source = source?.rasterTransform ?? null
-  if (gain != null) {
-    vectorscope.gain.value = gain
+    const source = useAtomValue(use(VideoContext).rasterAtom)
+    vectorscope.source = source ?? sourceProp ?? null
+    if (gain != null) {
+      vectorscope.gain.value = gain
+    }
+
+    // TODO: Add prop
+    vectorscope.scale.setScalar(0.75)
+
+    useEffect(() => {
+      return () => {
+        vectorscope.dispose()
+      }
+    }, [vectorscope])
+
+    useFrame(({ gl }) => {
+      if (canvasTarget == null || sourceProp == null) {
+        return
+      }
+
+      const renderer = gl as unknown as Renderer
+      const prevTarget = renderer.getCanvasTarget()
+      renderer.setCanvasTarget(canvasTarget)
+      void renderer.render(vectorscope, camera)
+      renderer.setCanvasTarget(prevTarget)
+    })
+
+    return (
+      <tunnels.HTML>
+        <Root {...props}>
+          <Content ref={contentRef}>
+            <Gradient />
+            <Grid />
+            <Canvas ref={setCanvas} />
+          </Content>
+        </Root>
+      </tunnels.HTML>
+    )
   }
-
-  // TODO: Add prop
-  vectorscope.scale.setScalar(0.75)
-
-  useEffect(() => {
-    return () => {
-      vectorscope.dispose()
-    }
-  }, [vectorscope])
-
-  useFrame(({ gl }) => {
-    if (canvasTarget == null || source == null) {
-      return
-    }
-
-    source.update()
-
-    const renderer = gl as unknown as Renderer
-    const prevTarget = renderer.getCanvasTarget()
-    renderer.setCanvasTarget(canvasTarget)
-    void renderer.render(vectorscope, camera)
-    renderer.setCanvasTarget(prevTarget)
-  })
-
-  return (
-    <tunnels.HTML>
-      <Root {...props}>
-        <Content ref={contentRef}>
-          <Gradient />
-          <Grid />
-          <Canvas ref={setCanvas} />
-        </Content>
-      </Root>
-    </tunnels.HTML>
-  )
-}
-
-export const Vectorscope = withTunnels(VectorscopeImpl)
+)

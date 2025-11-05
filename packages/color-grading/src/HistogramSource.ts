@@ -37,7 +37,7 @@ const HEIGHT = 1
 const SIZE = WIDTH * HEIGHT
 
 // Based on: https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html
-export class HistogramTransform {
+export class HistogramSource {
   inputNode: TextureNode | null = null
 
   readonly size = uniform(new Vector2(), 'uvec2')
@@ -45,8 +45,8 @@ export class HistogramTransform {
   private readonly countBuffer = attributeArray(0, 'uvec4')
   private readonly limitBuffer = attributeArray(1, 'uvec4')
 
-  readonly counts = this.triggerCompute(this.countBuffer)
-  readonly limits = this.triggerCompute(this.limitBuffer)
+  readonly counts = this.computeBeforeFrame(this.countBuffer)
+  readonly limits = this.computeBeforeFrame(this.limitBuffer)
 
   private prevFrame = -1
   private mapNode?: ComputeNode
@@ -61,10 +61,11 @@ export class HistogramTransform {
     this.size.value.set(width, height)
   }
 
-  private triggerCompute<T extends Node>(node: T): NodeObject {
+  private computeBeforeFrame<T extends Node>(node: T): NodeObject {
     return Fn(() => {
       OnBeforeFrame(({ renderer }) => {
-        if (renderer != null) {
+        if (renderer != null && this.prevFrame !== renderer.info.frame) {
+          this.prevFrame = renderer.info.frame
           this.compute(renderer)
         }
       })
@@ -145,15 +146,9 @@ export class HistogramTransform {
   }
 
   private compute(renderer: Renderer): void {
-    if (
-      renderer == null ||
-      this.inputNode == null ||
-      this.prevFrame === renderer.info.frame
-    ) {
+    if (this.inputNode == null) {
       return
     }
-    this.prevFrame = renderer.info.frame
-
     const { width, height } = this.size.value
 
     const dispatchWidth = Math.ceil(width / WIDTH)

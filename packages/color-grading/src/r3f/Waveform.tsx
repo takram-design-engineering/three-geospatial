@@ -1,21 +1,22 @@
 import styled from '@emotion/styled'
 import { useFrame } from '@react-three/fiber'
+import { useAtomValue } from 'jotai'
 import {
   Fragment,
   memo,
+  use,
   useEffect,
   useMemo,
   useRef,
-  type ComponentPropsWithRef,
-  type FC
+  type ComponentPropsWithRef
 } from 'react'
 import { OrthographicCamera } from 'three'
 import type { Renderer } from 'three/webgpu'
 
-import type { VideoSource } from '../VideoSource'
+import type { RasterSource } from '../RasterSource'
 import { WaveformLine, type WaveformMode } from '../WaveformLine'
 import { useCanvasTarget } from './useCanvasTarget'
-import { useVideoSource } from './useVideoSource'
+import { VideoContext } from './VideoContext'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
@@ -102,65 +103,63 @@ Grid.displayName = 'Grid'
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface WaveformProps extends ComponentPropsWithRef<'div'> {
-  source?: VideoSource | null
+  source?: RasterSource | null
   mode?: WaveformMode
   gain?: number
   pixelRatio?: number
 }
 
-const WaveformImpl: FC<WaveformProps & WithTunnelsProps> = ({
-  tunnels,
-  source: sourceProp,
-  mode,
-  gain,
-  pixelRatio = window.devicePixelRatio,
-  ...props
-}) => {
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [canvasTarget, setCanvas] = useCanvasTarget(contentRef.current)
-  canvasTarget?.setPixelRatio(pixelRatio)
+export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
+  ({
+    tunnels,
+    source: sourceProp,
+    mode,
+    gain,
+    pixelRatio = window.devicePixelRatio,
+    ...props
+  }) => {
+    const contentRef = useRef<HTMLDivElement>(null)
+    const [canvasTarget, setCanvas] = useCanvasTarget(contentRef.current)
+    canvasTarget?.setPixelRatio(pixelRatio)
 
-  const waveform = useMemo(() => new WaveformLine(), [])
+    const waveform = useMemo(() => new WaveformLine(), [])
 
-  const source = useVideoSource() ?? sourceProp
-  waveform.source = source?.rasterTransform ?? null
-  if (gain != null) {
-    waveform.gain.value = gain
-  }
-  if (mode != null) {
-    waveform.mode = mode
-  }
-
-  useEffect(() => {
-    return () => {
-      waveform.dispose()
+    const source = useAtomValue(use(VideoContext).rasterAtom)
+    waveform.source = source ?? sourceProp ?? null
+    if (gain != null) {
+      waveform.gain.value = gain
     }
-  }, [waveform])
-
-  useFrame(({ gl }) => {
-    if (canvasTarget == null || source == null) {
-      return
+    if (mode != null) {
+      waveform.mode = mode
     }
 
-    source.update()
+    useEffect(() => {
+      return () => {
+        waveform.dispose()
+      }
+    }, [waveform])
 
-    const renderer = gl as unknown as Renderer
-    const prevTarget = renderer.getCanvasTarget()
-    renderer.setCanvasTarget(canvasTarget)
-    void renderer.render(waveform, camera)
-    renderer.setCanvasTarget(prevTarget)
-  })
+    useFrame(({ gl }) => {
+      if (canvasTarget == null || sourceProp == null) {
+        return
+      }
 
-  return (
-    <tunnels.HTML>
-      <Root {...props}>
-        <Content ref={contentRef}>
-          <Grid />
-          <Canvas ref={setCanvas} />
-        </Content>
-      </Root>
-    </tunnels.HTML>
-  )
-}
+      const renderer = gl as unknown as Renderer
+      const prevTarget = renderer.getCanvasTarget()
+      renderer.setCanvasTarget(canvasTarget)
+      void renderer.render(waveform, camera)
+      renderer.setCanvasTarget(prevTarget)
+    })
 
-export const Waveform = withTunnels(WaveformImpl)
+    return (
+      <tunnels.HTML>
+        <Root {...props}>
+          <Content ref={contentRef}>
+            <Grid />
+            <Canvas ref={setCanvas} />
+          </Content>
+        </Root>
+      </tunnels.HTML>
+    )
+  }
+)
