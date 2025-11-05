@@ -56,7 +56,7 @@ export class HistogramSource {
   private readonly workgroupBuffer = workgroupArray('atomic<u32>', SIZE * 4)
   private readonly reduceStride = uniform(0, 'uint')
 
-  constructor(inputNode?: TextureNode | null, width = 960, height = 540) {
+  constructor(inputNode?: TextureNode | null, width = 480, height = 270) {
     this.inputNode = inputNode ?? null
     this.size.value.set(width, height)
   }

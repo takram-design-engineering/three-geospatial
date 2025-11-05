@@ -32,7 +32,7 @@ export class RasterSource {
   private prevFrame = -1
   private computeNode?: ComputeNode
 
-  constructor(inputNode?: TextureNode | null, width = 960, height = 540) {
+  constructor(inputNode?: TextureNode | null, width = 480, height = 270) {
     this.inputNode = inputNode ?? null
     this.size.value.set(width, height)
   }
