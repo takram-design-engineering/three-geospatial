@@ -197,9 +197,10 @@ This node aggregates the LUT, uniforms and static options that are shared across
 ### Constructor
 
 ```ts
-class AtmosphereContextNode {
-  constructor(parameters?: AtmosphereParameters, lutNode?: AtmosphereLUTNode)
-}
+new AtmosphereContextNode(
+  parameters?: AtmosphereParameters,
+  lutNode?: AtmosphereLUTNode
+)
 ```
 
 ### Dependencies
@@ -311,9 +312,10 @@ renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
 ### Constructor
 
 ```ts
-class AtmosphereLight {
-  constructor(atmosphereContext?: AtmosphereContextNode, distance?: number)
-}
+new AtmosphereLight(
+  atmosphereContext?: AtmosphereContextNode,
+  distance?: number
+)
 ```
 
 ### Parameters
@@ -457,7 +459,6 @@ scene.backgroundNode = skyBackground(context)
 
 ### Constructor
 
-<!-- prettier-ignore -->
 ```ts
 const sky: (atmosphereContext: AtmosphereContext) => SkyNode
 const skyBackground: (atmosphereContext: AtmosphereContext) => SkyNode
