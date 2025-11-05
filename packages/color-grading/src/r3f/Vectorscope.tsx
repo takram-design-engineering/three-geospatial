@@ -193,7 +193,7 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
     tunnels,
     source: sourceProp,
     gain = 5,
-    scaled = false,
+    scaled = true,
     pixelRatio = window.devicePixelRatio,
     ...props
   }) => {
