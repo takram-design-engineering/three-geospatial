@@ -16,7 +16,6 @@ import {
   instancedArray,
   instanceIndex,
   mat3,
-  nodeObject,
   positionGeometry,
   Return,
   storage,
@@ -41,7 +40,7 @@ import {
 import invariant from 'tiny-invariant'
 
 import { FilterNode } from './FilterNode'
-import type { Node, NodeObject } from './node'
+import type { Node } from './node'
 import { convertToTexture } from './RTTextureNode'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -192,7 +191,7 @@ export class LensGlareNode extends FilterNode {
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
     renderer.setRenderTarget(renderTarget)
-    void renderer.render(this.mesh, this.camera)
+    renderer.render(this.mesh, this.camera)
 
     restoreRendererState(renderer, this.rendererState)
   }
@@ -263,7 +262,7 @@ export class LensGlareNode extends FilterNode {
 
     this.material.colorNode = this.wireframe
       ? vec4(1)
-      : nodeObject(spikeNode).mul(instance.get('color').mul(intensity))
+      : spikeNode.mul(instance.get('color').mul(intensity))
 
     this.material.vertexNode = Fn(() => {
       const sin = instance.get('sin')
@@ -313,11 +312,9 @@ export class LensGlareNode extends FilterNode {
   }
 }
 
-export const lensGlare = (inputNode: Node | null): NodeObject<LensGlareNode> =>
-  nodeObject(
-    new LensGlareNode(
-      inputNode != null
-        ? convertToTexture(inputNode, 'LensGlareNode.Input')
-        : null
-    )
+export const lensGlare = (inputNode: Node | null): LensGlareNode =>
+  new LensGlareNode(
+    inputNode != null
+      ? convertToTexture(inputNode, 'LensGlareNode.Input')
+      : null
   )

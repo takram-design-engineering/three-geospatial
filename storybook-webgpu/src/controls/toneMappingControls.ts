@@ -114,7 +114,7 @@ function usePostProcessingToneMappingControls(
       toneMapping
     ],
     ([enabled, value]) => {
-      toneMappingNode.toneMapping = enabled ? value : NoToneMapping
+      toneMappingNode.setToneMapping(enabled ? value : NoToneMapping)
       onChange?.(value)
     }
   )

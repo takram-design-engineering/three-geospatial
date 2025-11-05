@@ -23,7 +23,7 @@ import {
   type AtmosphereLUTTexture3DName
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
-import { FnVar, type NodeObject } from '@takram/three-geospatial/webgpu'
+import { FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 import { Description } from '../components/Description'
@@ -38,24 +38,22 @@ import {
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
 
-const textureUVW = FnVar(
-  (textureSize: NodeObject<'vec3'>, zoom: NodeObject<'float'>) => {
-    const uv = vec2(screenUV.x, screenUV.y)
-      .mul(screenSize)
-      .div(textureSize.xy)
-      .div(zoom)
-    const xy = ivec2(uv)
-    const columns = max(floor(screenSize.x.div(textureSize.x.mul(zoom))), 1)
-    If(xy.x.greaterThanEqual(columns), () => {
-      Discard()
-    })
-    const index = xy.y.mul(columns).add(xy.x.mod(columns))
-    If(index.greaterThanEqual(textureSize.z), () => {
-      Discard()
-    })
-    return vec3(uv.fract(), index.toFloat().add(0.5).div(textureSize.z))
-  }
-)
+const textureUVW = FnVar((textureSize: Node<'vec3'>, zoom: Node<'float'>) => {
+  const uv = vec2(screenUV.x, screenUV.y)
+    .mul(screenSize)
+    .div(textureSize.xy)
+    .div(zoom)
+  const xy = ivec2(uv)
+  const columns = max(floor(screenSize.x.div(textureSize.x.mul(zoom))), 1)
+  If(xy.x.greaterThanEqual(columns), () => {
+    Discard()
+  })
+  const index = xy.y.mul(columns).add(xy.x.mod(columns))
+  If(index.greaterThanEqual(textureSize.z), () => {
+    Discard()
+  })
+  return vec3(uv.fract(), index.toFloat().add(0.5).div(textureSize.z))
+})
 
 const Content: FC<StoryProps> = ({ name, ...options }) => {
   const zoom = uniform(0)

@@ -1,8 +1,8 @@
-import { add, Fn, nodeObject, uv } from 'three/tsl'
+import { add, Fn, uv } from 'three/tsl'
 import type { NodeBuilder, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { Node, NodeObject } from './node'
+import type { Node } from './node'
 import { SeparableFilterNode } from './SeparableFilterNode'
 
 // Reference: https://github.com/pmndrs/postprocessing/blob/v6.37.8/src/core/GaussKernel.js
@@ -126,4 +126,4 @@ export class GaussianBlurNode extends SeparableFilterNode {
 
 export const gaussianBlur = (
   ...args: ConstructorParameters<typeof GaussianBlurNode>
-): NodeObject<GaussianBlurNode> => nodeObject(new GaussianBlurNode(...args))
+): GaussianBlurNode => new GaussianBlurNode(...args)

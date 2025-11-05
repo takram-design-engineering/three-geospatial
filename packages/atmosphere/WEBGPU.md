@@ -358,7 +358,7 @@ const aerialPerspective: (
   colorNode: Node,
   depthNode: Node,
   normalNode?: Node | null
-) => NodeObject<AerialPerspectiveNode>
+) => AerialPerspectiveNode
 ```
 
 ### Dependencies
@@ -459,8 +459,8 @@ scene.backgroundNode = skyBackground(context)
 
 <!-- prettier-ignore -->
 ```ts
-const sky: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
-const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
+const sky: (atmosphereContext: AtmosphereContext) => SkyNode
+const skyBackground: (atmosphereContext: AtmosphereContext) => SkyNode
 ```
 
 ### Dependencies
@@ -597,7 +597,7 @@ scene.environmentNode = skyEnvironment(context)
 const skyEnvironment: (
   atmosphereContext: AtmosphereContext,
   size?: number
-) => NodeObject<SkyEnvironmentNode>
+) => SkyEnvironmentNode
 ```
 
 ### Dependencies

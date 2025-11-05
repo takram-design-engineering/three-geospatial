@@ -15,12 +15,10 @@ import {
 } from 'three/tsl'
 import { NodeMaterial, type UniformNode } from 'three/webgpu'
 
-import type { NodeObject } from '@takram/three-geospatial/webgpu'
-
 interface PivotUniforms {
-  size: NodeObject<UniformNode<number>>
-  thickness: NodeObject<UniformNode<number>>
-  opacity: NodeObject<UniformNode<number>>
+  size: UniformNode<number>
+  thickness: UniformNode<number>
+  opacity: UniformNode<number>
 }
 
 // Ported from: https://github.com/NASA-AMMOS/3DTilesRendererJS/blob/v0.4.17/src/three/renderer/controls/PivotPointMesh.js

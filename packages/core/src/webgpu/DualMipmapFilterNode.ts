@@ -24,7 +24,7 @@ export abstract class DualMipmapFilterNode extends FilterNode {
   private rendererState?: RendererUtils.RendererState
 
   protected readonly inputTexelSize = uniform(new Vector2())
-  protected readonly downsampleNode = texture(null)
+  protected readonly downsampleNode = texture()
 
   constructor(inputNode: TextureNode | null | undefined, levels: number) {
     super(inputNode)

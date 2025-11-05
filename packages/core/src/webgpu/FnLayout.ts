@@ -7,7 +7,7 @@ import type {
 import { Fn } from 'three/tsl'
 import type { NodeBuilder, Texture3DNode, TextureNode } from 'three/webgpu'
 
-import type { NodeObject, NodeType } from './node'
+import type { Node, NodeType } from './node'
 
 // Note that "texture" and "texture3D" are just placeholders until TSL supports
 // texture types.
@@ -29,13 +29,13 @@ export interface FnLayout<
 }
 
 type InferNodeObject<T extends FnLayoutType> = T extends NodeType
-  ? NodeObject<T>
+  ? Node<T>
   : T extends Struct
     ? ReturnType<T>
     : T extends 'texture'
-      ? NodeObject<TextureNode>
+      ? TextureNode
       : T extends 'texture3D'
-        ? NodeObject<Texture3DNode>
+        ? Texture3DNode
         : never
 
 type InferNodeObjects<Inputs extends readonly FnLayoutInput[]> = {
@@ -51,7 +51,7 @@ export type FnLayoutResult<
 > = (
   callback: (
     ...args: [] extends Nodes ? [NodeBuilder] : [Nodes, NodeBuilder]
-  ) => InferNodeObject<T> | NodeObject<ShaderCallNodeInternal>
+  ) => InferNodeObject<T> | ShaderCallNodeInternal
 ) => ShaderNodeFn<ProxiedTuple<Nodes>>
 
 function transformType(type: FnLayoutType): string {

@@ -1,4 +1,4 @@
-import { add, nodeObject, uv, vec2, vec4 } from 'three/tsl'
+import { add, uv, vec2, vec4 } from 'three/tsl'
 import type {
   NodeBuilder,
   TextureNode,
@@ -8,12 +8,12 @@ import type {
 import invariant from 'tiny-invariant'
 
 import { DualMipmapFilterNode } from './DualMipmapFilterNode'
-import type { Node, NodeObject } from './node'
+import type { Node } from './node'
 
 export const mipmapBlurDownsample = (
   inputNode: TextureNode,
-  texelSize: NodeObject<'vec2'> | NodeObject<UniformNode<Vector2>>
-): NodeObject<'vec4'> => {
+  texelSize: Node<'vec2'> | UniformNode<Vector2>
+): Node<'vec4'> => {
   const center = uv()
   const offset1 = vec4(1, 1, -1, -1).mul(texelSize.xyxy).add(center.xyxy)
   const offset2 = vec4(2, 2, -2, -2).mul(texelSize.xyxy).add(center.xyxy)
@@ -55,8 +55,8 @@ export const mipmapBlurDownsample = (
 
 export const mipmapBlurUpsample = (
   inputNode: TextureNode,
-  texelSize: NodeObject<'vec2'> | NodeObject<UniformNode<Vector2>>
-): NodeObject<'vec4'> => {
+  texelSize: Node<'vec2'> | UniformNode<Vector2>
+): Node<'vec4'> => {
   const center = uv()
   const offset = vec4(1, 1, -1, -1).mul(texelSize.xyxy).add(center.xyxy)
   const uv1 = vec2(center.x, offset.y).toVertexStage() // 0, 1
@@ -110,4 +110,4 @@ export class MipmapBlurNode extends DualMipmapFilterNode {
 
 export const mipmapBlur = (
   ...args: ConstructorParameters<typeof MipmapBlurNode>
-): NodeObject<MipmapBlurNode> => nodeObject(new MipmapBlurNode(...args))
+): MipmapBlurNode => new MipmapBlurNode(...args)

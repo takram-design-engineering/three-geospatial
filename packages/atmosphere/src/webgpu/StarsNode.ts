@@ -122,7 +122,7 @@ export class StarsNode extends TempNode {
     this.points.position.copy(camera.position)
 
     renderer.setRenderTarget(this.renderTarget)
-    void renderer.render(this.points, camera)
+    renderer.render(this.points, camera)
 
     restoreRendererState(renderer, this.rendererState)
   }
