@@ -1,11 +1,11 @@
 import { If, remap as remapTSL, vec3 } from 'three/tsl'
 
 import { remap } from '@takram/three-geospatial'
-import { FnLayout, type NodeObject } from '@takram/three-geospatial/webgpu'
+import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
 import { yCbCrToLinear } from './colors'
 
-function yCbCr10(y: number, cb: number, cr: number): NodeObject<'vec3'> {
+function yCbCr10(y: number, cb: number, cr: number): Node<'vec3'> {
   return yCbCrToLinear(
     vec3(
       remap(y, 64, 940, 0, 1),

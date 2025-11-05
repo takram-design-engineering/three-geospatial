@@ -30,7 +30,7 @@ declare module 'three/tsl' {
     type?: Node | string
   ) => T extends NodeType ? UniformNode<NodeValueTypeOf<T>> : UniformNode<T>
 
-  // "functionNodes" can be ShaderNodeObject
+  // "functionNodes" can be ShaderNodeFn
   const overloadingFn: (
     functionNodes: Array<Node, ShaderNodeFn>
   ) => (...params: Node[]) => FunctionOverloadingNode
@@ -63,6 +63,7 @@ declare module 'three/webgpu' {
   interface TextureNode {
     // Add missing methods
     setUpdateMatrix: (value: boolean) => this
+    offset(offsetNode: Node): TextureNode
 
     // Allow number type
     blur(amountNode: number | Node): TextureNode
@@ -72,7 +73,6 @@ declare module 'three/webgpu' {
     compare(compareNode: number | Node): TextureNode
     grad(gradeNodeX: number | Node, gradeNodeY: number | Node): TextureNode
     depth(depthNode: number | Node): TextureNode
-    offset(offsetNode: Node): TextureNode
   }
 
   // Add missing methods

@@ -21,11 +21,7 @@ import {
 import { LineBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import {
-  hsv2rgb,
-  rgb2hsv,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import { hsv2rgb, rgb2hsv, type Node } from '@takram/three-geospatial/webgpu'
 
 import { linearToRec709, linearToYCbCr } from './colors'
 import type { RasterSource } from './RasterSource'
@@ -43,18 +39,9 @@ export type WaveformMode =
 
 interface Mode {
   components: number
-  color: (
-    color: NodeObject<'vec3'>,
-    channel: NodeObject<'uint'>
-  ) => NodeObject<'vec3'>
-  y: (
-    color: NodeObject<'vec3'>,
-    channel: NodeObject<'uint'>
-  ) => NodeObject<'float'>
-  x?: (
-    x: NodeObject<'float'>,
-    channel: NodeObject<'uint'>
-  ) => NodeObject<'float'>
+  color: (color: Node<'vec3'>, channel: Node<'uint'>) => Node<'vec3'>
+  y: (color: Node<'vec3'>, channel: Node<'uint'>) => Node<'float'>
+  x?: (x: Node<'float'>, channel: Node<'uint'>) => Node<'float'>
 }
 
 const modes: Record<WaveformMode, Mode> = {

@@ -20,15 +20,24 @@ importers:
       '@petamoriken/float16':
         specifier: ^3.9.3
         version: 3.9.3
+      antd:
+        specifier: ^5.27.6
+        version: 5.27.6(date-fns@4.1.0)(luxon@3.7.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       astronomy-engine:
         specifier: ^2.1.19
         version: 2.1.19
+      jotai:
+        specifier: ^2.15.0
+        version: 2.15.0(@babel/core@7.28.5)(@babel/template@7.27.2)(@types/react@19.0.0)(react@19.0.0)
       react-merge-refs:
         specifier: ^3.0.2
         version: 3.0.2(react@19.0.0)
       tiny-invariant:
         specifier: ^1.3.3
         version: 1.3.3
+      tunnel-rat:
+        specifier: ^0.1.2
+        version: 0.1.2(@types/react@19.0.0)(react@19.0.0)
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
@@ -159,9 +168,6 @@ importers:
       '@vitest/ui':
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4)
-      antd:
-        specifier: ^5.27.6
-        version: 5.27.6(date-fns@4.1.0)(luxon@3.7.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -195,9 +201,6 @@ importers:
       jiti:
         specifier: 2.4.2
         version: 2.4.2
-      jotai:
-        specifier: ^2.15.0
-        version: 2.15.0(@babel/core@7.28.5)(@babel/template@7.27.2)(@types/react@19.0.0)(react@19.0.0)
       jsdom:
         specifier: ~22.1.0
         version: 22.1.0
@@ -267,9 +270,6 @@ importers:
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-      tunnel-rat:
-        specifier: ^0.1.2
-        version: 0.1.2(@types/react@19.0.0)(react@19.0.0)
       typescript:
         specifier: 5.9.2
         version: 5.9.2

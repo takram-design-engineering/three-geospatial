@@ -1,9 +1,4 @@
-import {
-  useContext,
-  useMemo,
-  type ComponentProps,
-  type ComponentType
-} from 'react'
+import { useContext, useMemo, type ComponentType } from 'react'
 import tunnel from 'tunnel-rat'
 
 import { VideoContext } from './VideoContext'
@@ -28,7 +23,7 @@ export function withTunnels<P extends WithTunnelsProps>(
       <>
         <r3f.In>
           <Component
-            {...(props as ComponentProps<typeof Component>)}
+            {...(props as any)} // TODO
             tunnels={tunnels}
           />
         </r3f.In>

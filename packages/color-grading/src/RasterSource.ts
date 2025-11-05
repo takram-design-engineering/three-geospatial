@@ -14,8 +14,7 @@ import invariant from 'tiny-invariant'
 
 import {
   OnBeforeFrame,
-  resizeStorageBuffer,
-  type NodeObject
+  resizeStorageBuffer
 } from '@takram/three-geospatial/webgpu'
 
 export class RasterSource {
@@ -37,7 +36,7 @@ export class RasterSource {
     this.size.value.set(width, height)
   }
 
-  private computeBeforeFrame<T extends Node>(node: T): NodeObject {
+  private computeBeforeFrame<T extends Node>(node: T): Node {
     return Fn(() => {
       OnBeforeFrame(({ renderer }) => {
         if (renderer != null && this.prevFrame !== renderer.info.frame) {

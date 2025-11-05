@@ -225,7 +225,7 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
       const renderer = gl as unknown as Renderer
       const prevTarget = renderer.getCanvasTarget()
       renderer.setCanvasTarget(canvasTarget)
-      void renderer.render(vectorscope, camera)
+      renderer.render(vectorscope, camera)
       renderer.setCanvasTarget(prevTarget)
     })
 

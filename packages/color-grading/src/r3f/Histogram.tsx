@@ -116,7 +116,7 @@ export const Histogram = withTunnels<HistogramProps & WithTunnelsProps>(
       const renderer = gl as unknown as Renderer
       const prevTarget = renderer.getCanvasTarget()
       renderer.setCanvasTarget(canvasTarget)
-      void renderer.render(histogram, camera)
+      renderer.render(histogram, camera)
       renderer.setCanvasTarget(prevTarget)
     })
 

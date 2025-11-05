@@ -143,7 +143,7 @@ export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
       const renderer = gl as unknown as Renderer
       const prevTarget = renderer.getCanvasTarget()
       renderer.setCanvasTarget(canvasTarget)
-      void renderer.render(waveform, camera)
+      renderer.render(waveform, camera)
       renderer.setCanvasTarget(prevTarget)
     })
 
