@@ -88,7 +88,7 @@ export const Histogram = withTunnels<HistogramProps & WithTunnelsProps>(
   ({
     tunnels,
     source: sourceProp,
-    gain,
+    gain = 5,
     pixelRatio = window.devicePixelRatio,
     ...props
   }) => {
@@ -100,9 +100,7 @@ export const Histogram = withTunnels<HistogramProps & WithTunnelsProps>(
 
     const source = useAtomValue(use(VideoContext).histogramAtom)
     histogram.source = source ?? sourceProp ?? null
-    if (gain != null) {
-      histogram.gain.value = gain
-    }
+    histogram.gain.value = gain
 
     useEffect(() => {
       return () => {

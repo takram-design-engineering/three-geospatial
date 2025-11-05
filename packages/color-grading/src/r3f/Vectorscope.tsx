@@ -184,6 +184,7 @@ const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 export interface VectorscopeProps extends ComponentPropsWithRef<'div'> {
   source?: RasterSource | null
   gain?: number
+  scaled?: boolean
   pixelRatio?: number
 }
 
@@ -191,7 +192,8 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
   ({
     tunnels,
     source: sourceProp,
-    gain,
+    gain = 5,
+    scaled = false,
     pixelRatio = window.devicePixelRatio,
     ...props
   }) => {
@@ -206,12 +208,8 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
 
     const source = useAtomValue(use(VideoContext).rasterAtom)
     vectorscope.source = source ?? sourceProp ?? null
-    if (gain != null) {
-      vectorscope.gain.value = gain
-    }
-
-    // TODO: Add prop
-    vectorscope.scale.setScalar(0.75)
+    vectorscope.gain.value = gain
+    vectorscope.scale.setScalar(scaled ? 1 : 0.75)
 
     useEffect(() => {
       return () => {

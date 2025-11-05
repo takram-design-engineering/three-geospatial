@@ -113,8 +113,8 @@ export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
   ({
     tunnels,
     source: sourceProp,
-    mode,
-    gain,
+    mode = 'luma',
+    gain = 5,
     pixelRatio = window.devicePixelRatio,
     ...props
   }) => {
@@ -126,12 +126,8 @@ export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
 
     const source = useAtomValue(use(VideoContext).rasterAtom)
     waveform.source = source ?? sourceProp ?? null
-    if (gain != null) {
-      waveform.gain.value = gain
-    }
-    if (mode != null) {
-      waveform.mode = mode
-    }
+    waveform.mode = mode
+    waveform.gain.value = gain
 
     useEffect(() => {
       return () => {
