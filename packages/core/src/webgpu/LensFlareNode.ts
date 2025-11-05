@@ -1,10 +1,5 @@
-import { add, Fn, nodeObject, uniform } from 'three/tsl'
-import {
-  TempNode,
-  type Node,
-  type NodeBuilder,
-  type TextureNode
-} from 'three/webgpu'
+import { add, Fn, uniform } from 'three/tsl'
+import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { DownsampleThresholdNode } from './DownsampleThresholdNode'
@@ -13,7 +8,7 @@ import { LensGhostNode } from './LensGhostNode'
 import { LensGlareNode } from './LensGlareNode'
 import { LensHaloNode } from './LensHaloNode'
 import { MipmapSurfaceBlurNode } from './MipmapSurfaceBlurNode'
-import type { NodeObject } from './node'
+import type { Node } from './node'
 import {
   convertToTexture,
   rtTexture,
@@ -89,15 +84,13 @@ export class LensFlareNode extends TempNode {
     // input → threshold → glare
     glareNode.inputNode = threshold
 
-    const bloom = nodeObject(bloomNode.getTextureNode()).mul(
-      this.bloomIntensity
-    )
+    const bloom = bloomNode.getTextureNode().mul(this.bloomIntensity)
     const glare = glareNode.getTextureNode()
 
     // TODO: Add an option to switch to mixing the bloom:
     return Fn(() => {
       // TODO: Prevent the output from becoming too bright.
-      const output = nodeObject(inputNode)
+      const output = inputNode
       output.addAssign(bloom)
       if (isWebGPU(builder)) {
         output.addAssign(glare)
@@ -118,11 +111,9 @@ export class LensFlareNode extends TempNode {
   }
 }
 
-export const lensFlare = (inputNode: Node | null): NodeObject<LensFlareNode> =>
-  nodeObject(
-    new LensFlareNode(
-      inputNode != null
-        ? convertToTexture(inputNode, 'LensFlareNode.Input')
-        : null
-    )
+export const lensFlare = (inputNode: Node | null): LensFlareNode =>
+  new LensFlareNode(
+    inputNode != null
+      ? convertToTexture(inputNode, 'LensFlareNode.Input')
+      : null
   )

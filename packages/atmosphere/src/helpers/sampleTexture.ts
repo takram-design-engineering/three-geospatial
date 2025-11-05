@@ -1,9 +1,16 @@
-import { HalfFloatType, Vector3, type Texture, type Vector2 } from 'three'
+import {
+  HalfFloatType,
+  Vector3,
+  type DataTextureImageData,
+  type Texture,
+  type Vector2
+} from 'three'
 
 import {
   clamp,
   Float16Array,
   isTypedArray,
+  reinterpretType,
   type TypedArray
 } from '@takram/three-geospatial'
 
@@ -19,6 +26,7 @@ const float16ArrayCache = /*#__PURE__*/ new WeakMap<
 function getImageData(texture: Texture): TypedArray | undefined {
   // Image data is stored in the userData in case of normal texture.
   // See PrecomputedTexturesGenerator.
+  reinterpretType<DataTextureImageData>(texture.image)
   let data: TypedArray | undefined = isTypedArray(texture.image.data)
     ? texture.image.data
     : isTypedArray(texture.userData.imageData)
@@ -56,6 +64,7 @@ export function sampleTexture(
   if (data == null) {
     return result.setScalar(0)
   }
+  reinterpretType<DataTextureImageData>(texture.image)
   const { width, height } = texture.image
   const x = clamp(uv.x, 0, 1) * (width - 1)
   const y = clamp(uv.y, 0, 1) * (height - 1)

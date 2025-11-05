@@ -3,7 +3,6 @@ import {
   Fn,
   If,
   mix,
-  nodeObject,
   positionGeometry,
   remapClamp,
   select,
@@ -22,8 +21,7 @@ import {
   projectionMatrix,
   rayEllipsoidIntersection,
   screenToPositionView,
-  type Node,
-  type NodeObject
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereContextNode } from './AtmosphereContextNode'
@@ -91,11 +89,10 @@ export class AerialPerspectiveNode extends TempNode {
       altitudeCorrectionUnit
     } = this.atmosphereContext
 
-    const colorNode = nodeObject(this.colorNode)
-    const depthNode = nodeObject(this.depthNode)
+    const { colorNode, depthNode, normalNode } = this
     const depth = depthNode.r.toVar()
 
-    const getSurfacePositionECEF = (): NodeObject<'vec3'> => {
+    const getSurfacePositionECEF = (): Node<'vec3'> => {
       const viewZ = depthToViewZ(depth, cameraNear(camera), cameraFar(camera), {
         perspective: camera.isPerspectiveCamera,
         logarithmic: builder.renderer.logarithmicDepthBuffer
@@ -113,7 +110,7 @@ export class AerialPerspectiveNode extends TempNode {
       return matrixWorldToECEF.mul(vec4(positionWorld, 1)).xyz
     }
 
-    const getRayDirectionECEF = (): NodeObject<'vec3'> => {
+    const getRayDirectionECEF = (): Node<'vec3'> => {
       const positionView = inverseProjectionMatrix(camera).mul(
         vec4(positionGeometry, 1)
       ).xyz
@@ -161,14 +158,13 @@ export class AerialPerspectiveNode extends TempNode {
       }
 
       const illuminance = Fn(() => {
-        if (this.normalNode == null) {
+        if (normalNode == null) {
           throw new Error(
             'The "normalNode" is required when the "light" is set.'
           )
         }
 
         // Normal vector of the surface:
-        const normalNode = nodeObject(this.normalNode)
         const normalView = normalNode.xyz
         const normalWorld = inverseViewMatrix(camera).mul(
           vec4(normalView, 0)
@@ -239,5 +235,4 @@ export class AerialPerspectiveNode extends TempNode {
 
 export const aerialPerspective = (
   ...args: ConstructorParameters<typeof AerialPerspectiveNode>
-): NodeObject<AerialPerspectiveNode> =>
-  nodeObject(new AerialPerspectiveNode(...args))
+): AerialPerspectiveNode => new AerialPerspectiveNode(...args)
