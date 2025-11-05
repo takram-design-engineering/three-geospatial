@@ -166,10 +166,11 @@ export class WaveformLine extends Line {
     const channel = instanceIndex.div(size.y)
     const inputColor = colors.element(index)
     const uv = uvs.element(index)
+    const position = uv.mul(size).sub(1).div(size.sub(2))
 
     const mode = modes[this.mode]
     const color = mode.color(inputColor, channel)
-    const x = mode.x?.(uv.x, channel) ?? uv.x
+    const x = mode.x?.(position.x, channel) ?? position.x
     const y = mode.y(inputColor, channel)
 
     const scaleY = screenSize.y.reciprocal().oneMinus()

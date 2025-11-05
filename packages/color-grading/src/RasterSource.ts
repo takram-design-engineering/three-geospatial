@@ -59,7 +59,7 @@ export class RasterSource {
       })
       const uv = vec2(globalId.xy).add(0.5).div(vec2(size))
       const inputSize = textureSize(inputNode)
-      const inputPosition = uv.mul(inputSize).min(inputSize)
+      const inputPosition = uv.mul(inputSize)
 
       const color = inputNode.load(inputPosition).rgb
       const index = globalId.y.mul(size.x).add(globalId.x)

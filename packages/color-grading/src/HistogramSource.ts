@@ -83,7 +83,7 @@ export class HistogramSource {
       If(position.lessThan(size).all(), () => {
         const uv = vec2(position).add(0.5).div(vec2(size))
         const inputSize = textureSize(inputNode)
-        const inputPosition = uv.mul(inputSize).min(inputSize)
+        const inputPosition = uv.mul(inputSize)
 
         const color = inputNode.load(inputPosition).toVar()
         color.assign(linearToRec709(color))
