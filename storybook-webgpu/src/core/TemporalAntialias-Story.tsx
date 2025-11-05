@@ -26,7 +26,7 @@ import {
   highpVelocity,
   lensFlare,
   temporalAntialias,
-  type NodeObject
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -91,7 +91,7 @@ const Content: FC<StoryProps> = () => {
         toneMapping(NeutralToneMapping, uniform(0), lensFlareNode)
       )
 
-      let outputNode: NodeObject<any> = toneMappingNode
+      let outputNode: Node = toneMappingNode
       if (enabled) {
         const taaNode = manage(
           temporalAntialias(highpVelocity)(

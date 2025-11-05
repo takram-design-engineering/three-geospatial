@@ -112,7 +112,7 @@ export class AtmosphereLUTNode extends Node {
     return this.textureNodes[name]
   }
 
-  private *compute(
+  private *performCompute(
     renderer: Renderer,
     context: AtmosphereLUTTexturesContext
   ): Iterable<boolean> {
@@ -165,7 +165,7 @@ export class AtmosphereLUTNode extends Node {
     const context = this.textures.createContext()
     this.updating = true
     try {
-      await timeSlice(this.compute(renderer, context))
+      await timeSlice(this.performCompute(renderer, context))
     } finally {
       this.updating = false
       context.dispose()

@@ -5,7 +5,7 @@ import {
   Mesh,
   RGBAFormat
 } from 'three'
-import { nodeObject, pmremTexture, positionGeometry, vec4 } from 'three/tsl'
+import { pmremTexture, positionGeometry, vec4 } from 'three/tsl'
 import {
   NodeMaterial,
   NodeUpdateType,
@@ -15,7 +15,6 @@ import {
 } from 'three/webgpu'
 
 import { QuadGeometry } from '@takram/three-geospatial'
-import type { NodeObject } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereContextNode } from './AtmosphereContextNode'
 import { sky, type SkyNode } from './SkyNode'
@@ -77,4 +76,4 @@ export class SkyEnvironmentNode extends TempNode {
 
 export const skyEnvironment = (
   ...args: ConstructorParameters<typeof SkyEnvironmentNode>
-): NodeObject<SkyEnvironmentNode> => nodeObject(new SkyEnvironmentNode(...args))
+): SkyEnvironmentNode => new SkyEnvironmentNode(...args)

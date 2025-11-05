@@ -2,16 +2,16 @@ import { add, nodeObject, sub, textureSize, vec2, vec4 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 
 import { FnVar } from './FnVar'
-import type { NodeObject } from './node'
+import type { Node } from './node'
 
 // 5-taps version of bicubic sampling.
 // Reference: https://www.shadertoy.com/view/MtVGWz
 export const textureBicubic = /*#__PURE__*/ FnVar(
   (
     textureNode: TextureNode,
-    uv: NodeObject<'vec2'>,
-    sharpness: number | NodeObject<'float'> = 0.4
-  ): NodeObject<'vec4'> => {
+    uv: Node<'vec2'>,
+    sharpness: number | Node<'float'> = 0.4
+  ): Node<'vec4'> => {
     const size = vec2(textureSize(textureNode))
     const texelSize = size.reciprocal()
     const position = size.mul(uv)
@@ -55,7 +55,7 @@ export const textureBicubic = /*#__PURE__*/ FnVar(
 // 9-taps version of Catmull-Rom sampling.
 // Reference: https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
 export const textureCatmullRom = /*#__PURE__*/ FnVar(
-  (textureNode: TextureNode, uv: NodeObject<'vec2'>): NodeObject<'vec4'> => {
+  (textureNode: TextureNode, uv: Node<'vec2'>): Node<'vec4'> => {
     const size = vec2(textureSize(textureNode))
     const texelSize = size.reciprocal()
     const position = uv.mul(size)

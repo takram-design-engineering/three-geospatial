@@ -65,12 +65,12 @@ When you return a function, it receives the current `NodeBuilder`.
 → [Source](/packages/core/src/webgpu/FnVar.ts)
 
 ```ts
-const fn = FnVar((a: TextureNode, b: NodeObject, c?: number) => {})
-const fn = FnVar((a: TextureNode, b: NodeObject, c?: number) => builder => {})
+const fn = FnVar((a: TextureNode, b: Node, c?: number) => {})
+const fn = FnVar((a: TextureNode, b: Node, c?: number) => builder => {})
 
 // Compared to:
-const fn = Fn<[TextureNode, NodeObject, number | undefined]>(([a, b, c]) => {})
-const fn = Fn<[TextureNode, NodeObject, number | undefined]>(
+const fn = Fn<[TextureNode, Node, number | undefined]>(([a, b, c]) => {})
+const fn = Fn<[TextureNode, Node, number | undefined]>(
   ([a, b, c], builder) => {}
 )
 ```
@@ -137,7 +137,7 @@ projectionMatrix?: Matrix4 | null
 ### Constructor
 
 ```ts
-const lensFlare: (inputNode: Node | null) => NodeObject<LensFlareNode>
+const lensFlare: (inputNode: Node | null) => LensFlareNode
 ```
 
 ### Dependencies
@@ -208,7 +208,7 @@ const temporalAntialias: (velocityNodeImmutable: VelocityNodeImmutable) =>
     depthNode: TextureNode,
     velocityNode: TextureNode,
     camera: Camera
-  ) => NodeObject<TemporalAntialiasNode>
+  ) => TemporalAntialiasNode
 ```
 
 ### Dependencies

@@ -1,7 +1,7 @@
 import { float, vec3 } from 'three/tsl'
-import { Node, type NodeBuilder } from 'three/webgpu'
+import type { NodeBuilder } from 'three/webgpu'
 
-import type { NodeObject } from '@takram/three-geospatial/webgpu'
+import { Node } from '@takram/three-geospatial/webgpu'
 
 import {
   AtmosphereParameters,
@@ -19,11 +19,11 @@ import type {
 } from './dimensional'
 
 export interface DensityProfileLayerNodes {
-  width: NodeObject<Length>
-  expTerm: NodeObject<Dimensionless>
-  expScale: NodeObject<InverseLength>
-  linearTerm: NodeObject<InverseLength>
-  constantTerm: NodeObject<Dimensionless>
+  width: Node<Length>
+  expTerm: Node<Dimensionless>
+  expScale: Node<InverseLength>
+  linearTerm: Node<InverseLength>
+  constantTerm: Node<Dimensionless>
 }
 
 function densityProfileLayerNodes(
@@ -65,24 +65,24 @@ export class AtmosphereContextBaseNode extends Node {
 
   readonly parameters: AtmosphereParameters
 
-  worldToUnit: NodeObject<Dimensionless>
-  solarIrradiance: NodeObject<IrradianceSpectrum>
-  sunAngularRadius: NodeObject<Angle>
-  bottomRadius: NodeObject<Length>
-  topRadius: NodeObject<Length>
+  worldToUnit: Node<Dimensionless>
+  solarIrradiance: Node<IrradianceSpectrum>
+  sunAngularRadius: Node<Angle>
+  bottomRadius: Node<Length>
+  topRadius: Node<Length>
   rayleighDensity: DensityProfileNodes
-  rayleighScattering: NodeObject<ScatteringSpectrum>
+  rayleighScattering: Node<ScatteringSpectrum>
   mieDensity: DensityProfileNodes
-  mieScattering: NodeObject<ScatteringSpectrum>
-  mieExtinction: NodeObject<ScatteringSpectrum>
-  miePhaseFunctionG: NodeObject<Dimensionless>
+  mieScattering: Node<ScatteringSpectrum>
+  mieExtinction: Node<ScatteringSpectrum>
+  miePhaseFunctionG: Node<Dimensionless>
   absorptionDensity: DensityProfileNodes
-  absorptionExtinction: NodeObject<ScatteringSpectrum>
-  groundAlbedo: NodeObject<DimensionlessSpectrum>
-  minCosSun: NodeObject<Dimensionless>
-  sunRadianceToLuminance: NodeObject<DimensionlessSpectrum>
-  skyRadianceToLuminance: NodeObject<DimensionlessSpectrum>
-  luminanceScale: NodeObject<Dimensionless>
+  absorptionExtinction: Node<ScatteringSpectrum>
+  groundAlbedo: Node<DimensionlessSpectrum>
+  minCosSun: Node<Dimensionless>
+  sunRadianceToLuminance: Node<DimensionlessSpectrum>
+  skyRadianceToLuminance: Node<DimensionlessSpectrum>
+  luminanceScale: Node<Dimensionless>
 
   constructor(parameters = new AtmosphereParameters()) {
     super(null)

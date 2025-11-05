@@ -1,5 +1,4 @@
 import { Matrix4, type Object3D } from 'three'
-import type { NodeFrame } from 'three/src/Three.WebGPU.js'
 import {
   nodeImmutable,
   positionLocal,
@@ -7,7 +6,12 @@ import {
   sub,
   uniform
 } from 'three/tsl'
-import { NodeUpdateType, TempNode, type NodeBuilder } from 'three/webgpu'
+import {
+  NodeUpdateType,
+  TempNode,
+  type NodeBuilder,
+  type NodeFrame
+} from 'three/webgpu'
 
 export class HighpVelocityNode extends TempNode {
   static override get type(): string {
@@ -17,10 +21,10 @@ export class HighpVelocityNode extends TempNode {
   projectionMatrix?: Matrix4 | null
 
   private readonly currentProjectionMatrix = uniform(new Matrix4())
-  private readonly previousProjectionMatrix = uniform('mat4')
+  private readonly previousProjectionMatrix = uniform('mat4' as const)
 
   private readonly currentModelViewMatrix = uniform(new Matrix4())
-  private readonly previousModelViewMatrix = uniform('mat4')
+  private readonly previousModelViewMatrix = uniform('mat4' as const)
   private readonly objectModelViewMatrices = new WeakMap<Object3D, Matrix4>()
 
   constructor() {

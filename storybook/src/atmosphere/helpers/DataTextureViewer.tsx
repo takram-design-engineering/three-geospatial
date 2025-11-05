@@ -10,11 +10,12 @@ import {
   ShaderMaterial,
   Uniform,
   Vector2,
+  type DataTextureImageData,
   type Texture
 } from 'three'
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js'
 
-import type { AnyFloatType } from '@takram/three-geospatial'
+import { reinterpretType, type AnyFloatType } from '@takram/three-geospatial'
 
 import { useControls } from '../../helpers/useControls'
 import { saveBinaryTexture } from './saveBinaryTexture'
@@ -33,25 +34,24 @@ export const DataTextureViewer: FC<{
   zoom: defaultZoom = 1,
   valueScale: defaultValueScale = 1
 }) => {
-  const material = useMemo(
-    () =>
-      new ShaderMaterial({
-        glslVersion: GLSL3,
-        vertexShader,
-        fragmentShader,
-        uniforms: {
-          resolution: new Uniform(new Vector2()),
-          size: new Uniform(
-            new Vector2(texture.image.width, texture.image.height)
-          ),
-          zoom: new Uniform(0),
-          inputTexture: new Uniform(texture),
-          gammaCorrect: new Uniform(false),
-          valueScale: new Uniform(0)
-        }
-      }),
-    [texture]
-  )
+  const material = useMemo(() => {
+    reinterpretType<DataTextureImageData>(texture.image)
+    return new ShaderMaterial({
+      glslVersion: GLSL3,
+      vertexShader,
+      fragmentShader,
+      uniforms: {
+        resolution: new Uniform(new Vector2()),
+        size: new Uniform(
+          new Vector2(texture.image.width, texture.image.height)
+        ),
+        zoom: new Uniform(0),
+        inputTexture: new Uniform(texture),
+        gammaCorrect: new Uniform(false),
+        valueScale: new Uniform(0)
+      }
+    })
+  }, [texture])
 
   const renderer = useThree(({ gl }) => gl)
 

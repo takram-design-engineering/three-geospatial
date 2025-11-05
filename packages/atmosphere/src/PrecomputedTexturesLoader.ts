@@ -5,6 +5,7 @@ import {
   HalfFloatType,
   LinearFilter,
   Loader,
+  type DataTextureImageData,
   type LoadingManager,
   type Texture,
   type WebGLRenderer
@@ -18,6 +19,7 @@ import {
   Float16Array,
   isFloatLinearSupported,
   parseFloat16Array,
+  reinterpretType,
   type AnyFloatType
 } from '@takram/three-geospatial'
 
@@ -127,9 +129,12 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
           // EXR and binary data are parsed to Uint16Array, which must be
           // converted to Float32Array when FloatType is used.
           if (this.type === FloatType) {
-            texture.image.data = new Float32Array(
-              new Float16Array(texture.image.data.buffer)
-            )
+            reinterpretType<DataTextureImageData>(texture.image)
+            if (texture.image.data != null) {
+              texture.image.data = new Float32Array(
+                new Float16Array(texture.image.data?.buffer)
+              )
+            }
           }
           texture.minFilter = LinearFilter
           texture.magFilter = LinearFilter

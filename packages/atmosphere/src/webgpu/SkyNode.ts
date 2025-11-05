@@ -1,23 +1,13 @@
 import type { Camera } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import {
-  Fn,
-  mix,
-  nodeObject,
-  nodeProxy,
-  positionGeometry,
-  uv,
-  vec3,
-  vec4
-} from 'three/tsl'
+import { Fn, mix, nodeProxy, positionGeometry, uv, vec3, vec4 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
   equirectToDirectionWorld,
   inverseProjectionMatrix,
   inverseViewMatrix,
-  type Node,
-  type NodeObject
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 import type { AtmosphereContextNode } from './AtmosphereContextNode'
@@ -26,7 +16,7 @@ import { getSkyLuminance } from './runtime'
 import { StarsNode } from './StarsNode'
 import { SunNode } from './SunNode'
 
-const cameraDirectionWorld = (camera: Camera): NodeObject<'vec3'> => {
+const cameraDirectionWorld = (camera: Camera): Node<'vec3'> => {
   const positionView = inverseProjectionMatrix(camera).mul(
     vec4(positionGeometry, 1)
   ).xyz
@@ -129,13 +119,13 @@ export class SkyNode extends TempNode {
       }
 
       if (this.showSun) {
-        const sunNode = nodeObject(this.sunNode)
+        const { sunNode } = this
         sunNode.rayDirectionECEF = rayDirectionECEF
         luminance.assign(mix(luminance, sunNode.rgb, sunNode.a))
       }
 
       if (this.showMoon) {
-        const moonNode = nodeObject(this.moonNode)
+        const { moonNode } = this
         moonNode.rayDirectionECEF = rayDirectionECEF
         luminance.assign(mix(luminance, moonNode.rgb, moonNode.a))
       }
