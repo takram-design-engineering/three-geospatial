@@ -83,7 +83,10 @@ export default defineConfig({
         'react',
         'react-dom',
         'react/jsx-runtime',
-        /^three\/?/,
+        'three',
+        'three/webgpu',
+        'three/tsl',
+        /^three\/addons\//,
         '@react-three/fiber',
         '@react-three/drei'
       ]

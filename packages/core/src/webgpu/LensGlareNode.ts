@@ -7,7 +7,6 @@ import {
   SRGBColorSpace,
   Vector2
 } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   atomicAdd,
   Fn,
@@ -42,6 +41,7 @@ import invariant from 'tiny-invariant'
 import { FilterNode } from './FilterNode'
 import type { Node } from './node'
 import { convertToTexture } from './RTTextureNode'
+import { hash } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -120,7 +120,7 @@ export class LensGlareNode extends FilterNode {
   }
 
   override customCacheKey(): number {
-    return hash(this.spikePairCount, +this.wireframe)
+    return hash(this.spikePairCount, this.wireframe)
   }
 
   setSize(width: number, height: number): this {

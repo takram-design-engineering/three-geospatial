@@ -1,3 +1,4 @@
+import { hashArray, hashString } from 'three/src/nodes/core/NodeUtils.js'
 import { OnObjectUpdate } from 'three/tsl'
 import {
   NodeBuilder,
@@ -50,4 +51,18 @@ export function resizeStorageBuffer(
     attribute.count = count
     bufferNode.bufferCount = count
   }
+}
+
+export function hash(...params: Array<number | boolean | string>): number {
+  return hashArray(
+    params.map(value =>
+      typeof value === 'number'
+        ? value
+        : typeof value === 'boolean'
+          ? +value
+          : typeof value === 'string'
+            ? hashString(value)
+            : value
+    )
+  )
 }

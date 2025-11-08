@@ -1,4 +1,3 @@
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   Fn,
   If,
@@ -17,6 +16,7 @@ import {
   cameraFar,
   cameraNear,
   depthToViewZ,
+  hash,
   inverseProjectionMatrix,
   inverseViewMatrix,
   projectionMatrix,
@@ -66,10 +66,10 @@ export class AerialPerspectiveNode extends TempNode {
 
   override customCacheKey(): number {
     return hash(
-      +this.correctGeometricError,
-      +this.lighting,
-      +this.transmittance,
-      +this.inscatter
+      this.correctGeometricError,
+      this.lighting,
+      this.transmittance,
+      this.inscatter
     )
   }
 

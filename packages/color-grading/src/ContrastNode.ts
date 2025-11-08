@@ -1,8 +1,7 @@
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { nodeObject, vec4 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
-import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
+import { FnLayout, hash, type Node } from '@takram/three-geospatial/webgpu'
 
 import { linearToLogC, logCToLinear } from './colors'
 
@@ -33,7 +32,7 @@ export class ContrastNode extends TempNode {
   }
 
   override customCacheKey(): number {
-    return hash(+this.inputLogC)
+    return hash(this.inputLogC)
   }
 
   override setup(builder: NodeBuilder): unknown {

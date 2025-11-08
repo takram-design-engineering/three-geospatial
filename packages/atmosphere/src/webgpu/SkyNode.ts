@@ -1,10 +1,10 @@
 import type { Camera } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { Fn, mix, nodeProxy, positionGeometry, uv, vec3, vec4 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
   equirectToDirectionWorld,
+  hash,
   inverseProjectionMatrix,
   inverseViewMatrix,
   type Node
@@ -62,10 +62,10 @@ export class SkyNode extends TempNode {
 
   override customCacheKey(): number {
     return hash(
-      +this.showSun,
-      +this.showMoon,
-      +this.showStars,
-      +this.useContextCamera
+      this.showSun,
+      this.showMoon,
+      this.showStars,
+      this.useContextCamera
     )
   }
 

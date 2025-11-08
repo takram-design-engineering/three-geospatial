@@ -1,7 +1,7 @@
 import { Vector2, Vector3 } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 
 import { radians } from '@takram/three-geospatial'
+import { hash } from '@takram/three-geospatial/webgpu'
 
 export class DensityProfileLayer {
   width: number

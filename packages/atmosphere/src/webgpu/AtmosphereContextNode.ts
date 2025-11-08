@@ -1,9 +1,9 @@
 import { Matrix4, Vector3, type Camera } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { uniform } from 'three/tsl'
 import type { NodeBuilder } from 'three/webgpu'
 
 import { Ellipsoid, Geodetic } from '@takram/three-geospatial'
+import { hash } from '@takram/three-geospatial/webgpu'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
 import { AtmosphereContextBaseNode } from './AtmosphereContextBaseNode'
@@ -105,9 +105,9 @@ export class AtmosphereContextNode extends AtmosphereContextBaseNode {
       super.customCacheKey(),
       this.camera?.id ?? -1,
       ...this.ellipsoid.radii,
-      +this.correctAltitude,
-      +this.constrainCamera,
-      +this.showGround
+      this.correctAltitude,
+      this.constrainCamera,
+      this.showGround
     )
   }
 

@@ -8,7 +8,6 @@ import {
   Vector2,
   type Camera
 } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   and,
   float,
@@ -51,7 +50,7 @@ import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RTTextureNode'
 import { textureBicubic } from './sampling'
 import { logarithmicToPerspectiveDepth } from './transformations'
-import { isWebGPU } from './utils'
+import { hash, isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -276,7 +275,7 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override customCacheKey(): number {
-    return hash(this.camera.id, +this.debugShowRejection)
+    return hash(this.camera.id, this.debugShowRejection)
   }
 
   private createRenderTarget(name?: string): RenderTarget {
