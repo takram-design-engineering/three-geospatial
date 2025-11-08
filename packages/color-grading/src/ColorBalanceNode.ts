@@ -88,7 +88,7 @@ export class ColorBalanceNode extends TempNode {
     return vec4(
       colorBalanceFn(this.inputNode.rgb, this.lmsCoeffs),
       this.inputNode.a
-    ).debug()
+    )
   }
 }
 
