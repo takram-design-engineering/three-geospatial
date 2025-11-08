@@ -51,8 +51,9 @@ const linearToRec709_vec3 = /*#__PURE__*/ FnLayout({
 })
 
 export const linearToRec709 = /*#__PURE__*/ overloadingFn([
-  linearToRec709_float,
-  linearToRec709_vec3
+  // BUG: The returned type is order-dependent.
+  linearToRec709_vec3,
+  linearToRec709_float
 ])
 
 const rec709ToLinear_float = /*#__PURE__*/ FnLayout({
@@ -80,8 +81,9 @@ const rec709ToLinear_vec3 = /*#__PURE__*/ FnLayout({
 })
 
 export const rec709ToLinear = /*#__PURE__*/ overloadingFn([
-  rec709ToLinear_float,
-  rec709ToLinear_vec3
+  // BUG: The returned type is order-dependent.
+  rec709ToLinear_vec3,
+  rec709ToLinear_float
 ])
 
 export const luminanceRec709 = /*#__PURE__*/ FnLayout({
@@ -167,8 +169,9 @@ const linearToLogC_vec3 = /*#__PURE__*/ FnLayout({
 })
 
 export const linearToLogC = /*#__PURE__*/ overloadingFn([
-  linearToLogC_float,
-  linearToLogC_vec3
+  // BUG: The returned type is order-dependent.
+  linearToLogC_vec3,
+  linearToLogC_float
 ])
 
 const logCToLinear_float = /*#__PURE__*/ FnLayout({
@@ -196,6 +199,7 @@ const logCToLinear_vec3 = /*#__PURE__*/ FnLayout({
 })
 
 export const logCToLinear = /*#__PURE__*/ overloadingFn([
-  logCToLinear_float,
-  logCToLinear_vec3
+  // BUG: The returned type is order-dependent.
+  logCToLinear_vec3,
+  logCToLinear_float
 ])
