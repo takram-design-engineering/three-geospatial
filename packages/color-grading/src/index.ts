@@ -1,5 +1,6 @@
 export * from './ChannelMixerNode'
 export * from './ColorBalanceNode'
+export * from './ColorGradingNode'
 export * from './colors'
 export * from './ContrastNode'
 export * from './generators'
