@@ -1,4 +1,9 @@
-import { LinearFilter, NoColorSpace, Vector3 } from 'three'
+import {
+  HalfFloatType,
+  LinearFilter,
+  LinearSRGBColorSpace,
+  Vector3
+} from 'three'
 import {
   Fn,
   globalId,
@@ -24,6 +29,7 @@ import type { Node } from '@takram/three-geospatial/webgpu'
 
 import { channelMixer } from './ChannelMixerNode'
 import { colorBalance } from './ColorBalanceNode'
+import { linearToRec709, rec709ToLinear } from './colors'
 import { contrast } from './ContrastNode'
 import { liftGammaGain } from './LiftGammaGainNode'
 import { saturation } from './SaturationNode'
@@ -32,9 +38,10 @@ import { vibrance } from './VibranceNode'
 
 function createStorage3DTexture(size: number): Storage3DTexture {
   const texture = new Storage3DTexture(size, size, size)
+  texture.type = HalfFloatType
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
-  texture.colorSpace = NoColorSpace
+  texture.colorSpace = LinearSRGBColorSpace
   texture.generateMipmaps = false
   return texture
 }
@@ -43,28 +50,18 @@ export class ColorGradingNode extends TempNode {
   inputNode: Node
   readonly size: number
 
-  temperature = 0
-  tint = 0
+  colorBalanceNode = colorBalance()
+  shadowsMidtonesHighlightsNode = shadowsMidtonesHighlights()
+  liftGammaGainNode = liftGammaGain()
 
   channelMixerR = new Vector3(1, 0, 0)
   channelMixerG = new Vector3(0, 1, 0)
   channelMixerB = new Vector3(0, 0, 1)
 
-  shadows = new Vector3().setScalar(1)
-  midtones = new Vector3().setScalar(1)
-  highlights = new Vector3().setScalar(1)
-
-  lift = new Vector3().setScalar(0)
-  gamma = new Vector3().setScalar(0)
-  gain = new Vector3().setScalar(0)
-
   contrast = 1
   vibrance = 1
   saturation = 1
 
-  private readonly colorBalance = colorBalance()
-  private readonly shadowsMidtonesHighlights = shadowsMidtonesHighlights()
-  private readonly liftGammaGain = liftGammaGain()
   private readonly uniforms = {
     channelMixerR: uniform('vec3' as const),
     channelMixerG: uniform('vec3' as const),
@@ -94,13 +91,6 @@ export class ColorGradingNode extends TempNode {
     this.uniforms.channelMixerR.value.copy(this.channelMixerR)
     this.uniforms.channelMixerG.value.copy(this.channelMixerG)
     this.uniforms.channelMixerB.value.copy(this.channelMixerB)
-    this.colorBalance.setParams(this.temperature, this.tint)
-    this.shadowsMidtonesHighlights.setShadows(this.shadows)
-    this.shadowsMidtonesHighlights.setMidtones(this.midtones)
-    this.shadowsMidtonesHighlights.setHighlights(this.highlights)
-    this.liftGammaGain.setLift(this.lift)
-    this.liftGammaGain.setGamma(this.gamma)
-    this.liftGammaGain.setGain(this.gain)
     this.uniforms.contrast.value = this.contrast
     this.uniforms.vibrance.value = this.vibrance
     this.uniforms.saturation.value = this.saturation
@@ -117,29 +107,32 @@ export class ColorGradingNode extends TempNode {
         Return()
       })
 
-      let node: Node = vec3(globalId).add(0.5).div(size)
-      node = this.colorBalance.setInputNode(node)
+      let node: Node = vec3(globalId).div(size.sub(1))
+      node = this.colorBalanceNode.setInputNode(node)
       node = channelMixer(
         node,
         this.uniforms.channelMixerR,
         this.uniforms.channelMixerG,
         this.uniforms.channelMixerB
       )
-      node = this.shadowsMidtonesHighlights.setInputNode(node)
-      node = this.liftGammaGain.setInputNode(node)
+      node = this.shadowsMidtonesHighlightsNode.setInputNode(node)
+      node = this.liftGammaGainNode.setInputNode(node)
       node = contrast(node, this.uniforms.contrast)
       node = vibrance(node, this.uniforms.vibrance)
       node = saturation(node, this.uniforms.saturation)
 
-      textureStore(this.lutTexture, globalId, node.saturate())
+      textureStore(this.lutTexture, globalId, rec709ToLinear(node.saturate()))
     })().compute(
       // @ts-expect-error "count" can be dimensional
       [dispatchSize, dispatchSize, dispatchSize],
       [4, 4, 4]
     )
 
+    const size = vec3(this.size)
     return vec4(
-      texture3D(this.lutTexture).sample(this.inputNode.rgb).rgb,
+      texture3D(this.lutTexture).sample(
+        linearToRec709(this.inputNode.rgb).mul(size.sub(1)).add(0.5).div(size)
+      ).rgb,
       this.inputNode.a
     )
   }

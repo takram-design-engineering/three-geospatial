@@ -3,12 +3,21 @@ import type { FC } from 'react'
 import { pass, uv } from 'three/tsl'
 import { NodeMaterial, PostProcessing, type Renderer } from 'three/webgpu'
 
-import { colorBarsHD, colorBarsSD } from '@takram/three-color-grading'
-import { VideoScopes, VideoSource } from '@takram/three-color-grading/r3f'
+import {
+  colorBarsHD,
+  colorBarsSD,
+  colorGrading
+} from '@takram/three-color-grading'
+import {
+  ColorGradingControls,
+  VideoScopes,
+  VideoSource
+} from '@takram/three-color-grading/r3f'
 import { QuadGeometry } from '@takram/three-geospatial'
 import { convertToTexture } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
+import { Split, SplitPanel } from '../components/Split'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import { useControl } from '../hooks/useControl'
@@ -20,12 +29,14 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const [postProcessing, passNode] = useResource(
+  const [postProcessing, colorGradingNode, videoNode] = useResource(
     manage => {
       const passNode = manage(pass(scene, camera, { samples: 0 }))
+      const colorGradingNode = manage(colorGrading(passNode))
+      const videoNode = manage(convertToTexture(colorGradingNode))
       const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = passNode
-      return [postProcessing, passNode]
+      postProcessing.outputNode = videoNode
+      return [postProcessing, colorGradingNode, videoNode]
     },
     [renderer, camera, scene]
   )
@@ -44,7 +55,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <mesh geometry={geometry} material={material} />
-      <VideoSource inputNode={convertToTexture(passNode)} />
+      <VideoSource inputNode={videoNode} colorGradingNode={colorGradingNode} />
     </>
   )
 }
@@ -56,20 +67,28 @@ interface StoryArgs {
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <VideoScopes>
-    <WebGPUCanvas
-      camera={{
-        left: -1,
-        right: 1,
-        top: 1,
-        bottom: -1,
-        position: [0, 0, 1]
-      }}
-      orthographic
-    >
-      <Content {...props} />
-    </WebGPUCanvas>
-  </VideoScopes>
+  <Split>
+    <SplitPanel>
+      <WebGPUCanvas
+        camera={{
+          left: -1,
+          right: 1,
+          top: 1,
+          bottom: -1,
+          position: [0, 0, 1]
+        }}
+        orthographic
+      >
+        <Content {...props} />
+      </WebGPUCanvas>
+    </SplitPanel>
+    <SplitPanel>
+      <ColorGradingControls />
+    </SplitPanel>
+    <SplitPanel>
+      <VideoScopes />
+    </SplitPanel>
+  </Split>
 )
 
 Story.args = {

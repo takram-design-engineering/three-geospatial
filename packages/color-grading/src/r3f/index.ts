@@ -1,3 +1,5 @@
+export * from './ColorGradingControls'
+export * from './ShadowsMidtonesHighlights'
 export * from './Histogram'
 export * from './Vectorscope'
 export * from './VideoContext'

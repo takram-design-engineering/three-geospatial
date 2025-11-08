@@ -55,10 +55,10 @@ export class ShadowsMidtonesHighlightsNode extends TempNode {
 
   private setParam(
     uniform: UniformNode<Vector3>,
-    value: Vector3 | Color,
+    color: Vector3 | Color,
     offset = 0
   ): this {
-    const linear = convertSRGBToLinear(value, vectorScratch)
+    const linear = convertSRGBToLinear(color, vectorScratch)
     const weight = offset * (Math.sign(offset) < 0 ? 1 : 4)
     uniform.value.set(
       Math.max(linear.x + weight, 0),
@@ -68,16 +68,16 @@ export class ShadowsMidtonesHighlightsNode extends TempNode {
     return this
   }
 
-  setShadows(value: Vector3 | Color, offset?: number): this {
-    return this.setParam(this.shadows, value, offset)
+  setShadows(color: Vector3 | Color, offset?: number): this {
+    return this.setParam(this.shadows, color, offset)
   }
 
-  setMidtones(value: Vector3 | Color, offset?: number): this {
-    return this.setParam(this.midtones, value, offset)
+  setMidtones(color: Vector3 | Color, offset?: number): this {
+    return this.setParam(this.midtones, color, offset)
   }
 
-  setHighlights(value: Vector3 | Color, offset?: number): this {
-    return this.setParam(this.highlights, value, offset)
+  setHighlights(color: Vector3 | Color, offset?: number): this {
+    return this.setParam(this.highlights, color, offset)
   }
 
   override setup(builder: NodeBuilder): unknown {

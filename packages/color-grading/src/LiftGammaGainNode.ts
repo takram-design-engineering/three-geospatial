@@ -1,5 +1,5 @@
 import { Vector3, type Color } from 'three'
-import { uniform, vec4 } from 'three/tsl'
+import { select, uniform, vec3, vec4 } from 'three/tsl'
 import { TempNode, type Node, type NodeBuilder } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
@@ -10,26 +10,31 @@ import { REC709_LUMA_COEFFICIENTS } from './Rec709'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
-const liftGammaGainFn = /*#__PURE__*/ FnLayout({
-  name: 'lightGammaGain',
+const colorDecisionListFn = /*#__PURE__*/ FnLayout({
+  name: 'colorDecisionList',
   type: 'vec3',
   inputs: [
     { name: 'input', type: 'vec3' },
-    { name: 'lift', type: 'vec3' }, // offset
-    { name: 'gamma', type: 'vec3' }, // power
-    { name: 'gain', type: 'vec3' } // slope
+    { name: 'slope', type: 'vec3' },
+    { name: 'offset', type: 'vec3' },
+    { name: 'power', type: 'vec3' }
   ]
-})(([input, lift, gamma, gain]) => {
-  const color = input.mul(gain).add(lift)
-  return color.abs().pow(gamma).mul(color.sign())
+})(([input, slope, offset, power]) => {
+  const v = input.mul(slope).add(offset)
+  const p = v.pow(power)
+  return vec3(
+    select(v.r.lessThanEqual(0), v.r, p.r),
+    select(v.g.lessThanEqual(0), v.g, p.g),
+    select(v.b.lessThanEqual(0), v.b, p.b)
+  )
 })
 
 export class LiftGammaGainNode extends TempNode {
   inputNode?: Node | null
 
-  lift = uniform(new Vector3())
-  gamma = uniform(new Vector3().setScalar(1))
-  gain = uniform(new Vector3().setScalar(1))
+  slope = uniform(new Vector3().setScalar(1))
+  offset = uniform(new Vector3())
+  power = uniform(new Vector3().setScalar(1))
 
   constructor(inputNode?: Node | null) {
     super('vec4')
@@ -44,11 +49,11 @@ export class LiftGammaGainNode extends TempNode {
   // LGG to ASC CDL conversion taken from: https://github.com/Unity-Technologies/Graphics/blob/v10.10.2/com.unity.render-pipelines.core/Runtime/Utilities/ColorUtils.cs#L135
   // There's no consensus about the algorithm for LGG.
 
-  setLift(value: Vector3 | Color, offset = 0): this {
-    const linear = convertSRGBToLinear(value, vectorScratch)
+  setLift(color: Vector3 | Color, offset = 0): this {
+    const linear = convertSRGBToLinear(color, vectorScratch)
     linear.multiplyScalar(0.15)
     const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
-    this.lift.value.set(
+    this.offset.value.set(
       linear.x - luma + offset,
       linear.y - luma + offset,
       linear.z - luma + offset
@@ -56,23 +61,23 @@ export class LiftGammaGainNode extends TempNode {
     return this
   }
 
-  setGamma(value: Vector3 | Color, offset = 0): this {
-    const linear = convertSRGBToLinear(value, vectorScratch)
+  setGamma(color: Vector3 | Color, offset = 0): this {
+    const linear = convertSRGBToLinear(color, vectorScratch)
     linear.multiplyScalar(0.8)
     const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
-    this.gamma.value.set(
-      1 / Math.max(linear.x - luma + (offset + 1), 1e-3),
-      1 / Math.max(linear.y - luma + (offset + 1), 1e-3),
-      1 / Math.max(linear.z - luma + (offset + 1), 1e-3)
+    this.power.value.set(
+      1 / Math.max(linear.x - luma + (offset + 1), 1e-7),
+      1 / Math.max(linear.y - luma + (offset + 1), 1e-7),
+      1 / Math.max(linear.z - luma + (offset + 1), 1e-7)
     )
     return this
   }
 
-  setGain(value: Vector3 | Color, offset = 0): this {
-    const linear = convertSRGBToLinear(value, vectorScratch)
+  setGain(color: Vector3 | Color, offset = 0): this {
+    const linear = convertSRGBToLinear(color, vectorScratch)
     linear.multiplyScalar(0.8)
     const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
-    this.gain.value.set(
+    this.slope.value.set(
       linear.x - luma + (offset + 1),
       linear.y - luma + (offset + 1),
       linear.z - luma + (offset + 1)
@@ -85,7 +90,7 @@ export class LiftGammaGainNode extends TempNode {
     invariant(inputNode != null)
 
     return vec4(
-      liftGammaGainFn(inputNode.rgb, this.lift, this.gamma, this.gain),
+      colorDecisionListFn(inputNode.rgb, this.slope, this.offset, this.power),
       inputNode.a
     )
   }

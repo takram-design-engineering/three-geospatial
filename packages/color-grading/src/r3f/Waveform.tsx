@@ -26,8 +26,8 @@ const Root = /*#__PURE__*/ styled.div`
   height: 100%;
   min-width: 200px;
   min-height: 200px;
-  padding: 20px;
-  padding-left: 30px;
+  padding: 16px;
+  padding-left: 32px;
   background-color: black;
   user-select: none;
 `
@@ -55,6 +55,7 @@ const Svg = /*#__PURE__*/ styled.svg`
   width: 100%;
   height: 100%;
   font-size: 10px;
+  font-variant-numeric: tabular-nums;
 `
 
 const skinToneValue = 60

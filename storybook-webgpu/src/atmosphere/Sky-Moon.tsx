@@ -457,7 +457,9 @@ const InfoElement = styled('div')`
   }
 `
 
-const Value = styled('span')<{ off?: boolean }>`
+const Value = styled('span', {
+  shouldForwardProp: prop => prop !== 'off'
+})<{ off?: boolean }>`
   color: rgba(
     255,
     255,

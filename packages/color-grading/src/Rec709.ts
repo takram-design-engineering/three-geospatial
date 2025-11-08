@@ -2,6 +2,8 @@ import { Matrix3, Vector3 } from 'three'
 
 import { remap } from '@takram/three-geospatial'
 
+import type { ColorTuple } from './types'
+
 const Yx = 0.2126
 const Yy = 0.7152
 const Yz = 0.0722
@@ -63,7 +65,7 @@ export function normalizeRec709(
   g: number,
   b: number,
   format = Rec709Format.NORMALIZED
-): [number, number, number] {
+): ColorTuple {
   switch (format) {
     case Rec709Format.STUDIO_8BIT:
       return [
@@ -87,7 +89,7 @@ export function normalizeYCbCr(
   cb: number,
   cr: number,
   format = Rec709Format.NORMALIZED
-): [number, number, number] {
+): ColorTuple {
   switch (format) {
     case Rec709Format.STUDIO_8BIT:
       return [

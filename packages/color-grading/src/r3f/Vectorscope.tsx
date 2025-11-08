@@ -10,14 +10,15 @@ import {
   useRef,
   type ComponentPropsWithRef
 } from 'react'
-import { Color, OrthographicCamera } from 'three'
+import { OrthographicCamera } from 'three'
 import type { Renderer } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
 import type { RasterSource } from '../RasterSource'
-import { normalizeYCbCr, Rec709, Rec709Format } from '../Rec709'
+import { normalizeYCbCr, Rec709Format } from '../Rec709'
 import { VectorscopeLine } from '../VectorscopeLine'
+import { chromaGradient } from './utils'
 import { useCanvasTarget } from './useCanvasTarget'
 import { VideoContext } from './VideoContext'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
@@ -29,7 +30,7 @@ const Root = /*#__PURE__*/ styled.div`
   height: 100%;
   min-width: 200px;
   min-height: 200px;
-  padding: 10px;
+  padding: 16px;
   background-color: black;
   user-select: none;
 `
@@ -61,23 +62,6 @@ const Svg = /*#__PURE__*/ styled.svg`
   height: ${`calc(100% - ${strokeWidth}px)`};
   font-size: 10px;
 `
-
-const chromaGradient = (): string => {
-  const values = Array.from({ length: 16 }).map((_, index, { length }) => {
-    const r = 2 * Math.PI * (0.25 - index / length)
-    return new Color(
-      ...Rec709.fromYCbCr(
-        0.1,
-        Math.cos(r) * 0.5,
-        Math.sin(r) * 0.5
-      ).toLinearSRGB()
-    ).convertLinearToSRGB()
-  })
-  values.push(values[0])
-  return values
-    .map(({ r, g, b }) => `rgba(${r * 255} ${g * 255} ${b * 255} / 1)`)
-    .join(',')
-}
 
 const Gradient = /*#__PURE__*/ styled.div`
   position: absolute;

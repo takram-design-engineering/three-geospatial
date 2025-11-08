@@ -1,12 +1,12 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story } from './ColorBars'
+import { Story } from './Gradient'
 
-import Code from './ColorBars?raw'
+import Code from './Gradient?raw'
 
 export default {
-  title: 'color grading/Color Bars',
+  title: 'color grading/Gradient',
   parameters: {
     docs: {
       codePanel: true,
@@ -17,7 +17,7 @@ export default {
   }
 } satisfies Meta
 
-export const ColorBars = createStory(Story, {
+export const Gradient = createStory(Story, {
   parameters: {
     docs: {
       source: {

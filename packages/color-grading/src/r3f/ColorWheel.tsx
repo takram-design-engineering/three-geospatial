@@ -1,0 +1,241 @@
+import styled from '@emotion/styled'
+import {
+  useCallback,
+  useId,
+  useRef,
+  type ChangeEvent,
+  type FC,
+  type MouseEvent as ReactMouseEvent
+} from 'react'
+
+import {
+  clamp,
+  degrees,
+  euclideanModulo,
+  radians
+} from '@takram/three-geospatial'
+
+import type { ColorTuple } from '../types'
+import { chromaGradient, hsl2rgb, rgb2hsl } from './utils'
+import { IconButton, Input, Label, ResetIcon, Slider } from './ui'
+
+const Root = /*#__PURE__*/ styled.div`
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  row-gap: 8px;
+  align-self: center;
+  justify-items: center;
+`
+
+const Head = /*#__PURE__*/ styled.div`
+  display: grid;
+  grid-template-columns: 16px auto 16px;
+  grid-template-areas: 'top-left name top-right';
+  justify-items: center;
+  width: 100%;
+  height: 16px;
+`
+
+const Name = /*#__PURE__*/ styled(Label)`
+  grid-area: name;
+`
+
+const TopRight = /*#__PURE__*/ styled.div`
+  grid-area: top-right;
+`
+
+const Wheel = /*#__PURE__*/ styled.div`
+  position: relative;
+  user-select: none;
+  margin: 8px;
+`
+
+const Gradient = /*#__PURE__*/ styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(${chromaGradient()});
+  border-radius: 50%;
+`
+
+const strokeWidth = 6
+
+const TrackingArea = /*#__PURE__*/ styled.div`
+  position: absolute;
+  top: ${strokeWidth / 2}px;
+  left: ${strokeWidth / 2}px;
+  width: calc(100% - ${strokeWidth}px);
+  height: calc(100% - ${strokeWidth}px);
+  background: radial-gradient(
+    #333 0%,
+    color-mix(in srgb, #111 75%, transparent) 100%
+  );
+  border-radius: 50%;
+`
+
+const Svg = /*#__PURE__*/ styled.svg`
+  overflow: visible;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+`
+
+const ValueGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  column-gap: 4px;
+  row-gap: 2px;
+`
+
+const ValueLabel = styled(Label)`
+  color: #999;
+  font-size: 10px;
+  text-align: center;
+`
+
+export type ColorChangeHandler = (color: ColorTuple) => void
+
+export interface WheelControlProps {
+  color: ColorTuple
+  size: number
+  onColorChange?: ColorChangeHandler
+}
+
+const WheelControl: FC<WheelControlProps> = ({
+  color,
+  size,
+  onColorChange
+}) => {
+  const [hue, saturation] = rgb2hsl(color)
+  const theta = radians(-(hue + 90))
+  const x = Math.cos(theta) * saturation
+  const y = Math.sin(theta) * saturation
+
+  const initialRef = useRef({ x, y })
+  initialRef.current = { x, y }
+
+  const handleMouseDown = useCallback(
+    (event: ReactMouseEvent) => {
+      const { clientX: downX, clientY: downY } = event
+      const { x: initialX, y: initialY } = initialRef.current
+
+      const handleMouseMove = (event: MouseEvent): void => {
+        const offsetX = (event.clientX - downX) / size
+        const offsetY = (event.clientY - downY) / size
+        const x = initialX + offsetX * 0.5
+        const y = initialY + offsetY * 0.5
+        const hue = euclideanModulo(-(degrees(Math.atan2(y, x)) + 90), 360)
+        const saturation = clamp(Math.hypot(x, y), 0, 1)
+        onColorChange?.(hsl2rgb([hue, saturation, 0.5]))
+      }
+
+      const handleMouseUp = (): void => {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseup', handleMouseUp)
+        window.removeEventListener('contextmenu', preventDefault)
+      }
+
+      const preventDefault = (event: MouseEvent): void => {
+        event.preventDefault()
+      }
+
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      window.addEventListener('contextmenu', preventDefault)
+    },
+    [size, onColorChange]
+  )
+
+  return (
+    <Wheel style={{ width: size, height: size }}>
+      <Gradient />
+      <TrackingArea onMouseDown={handleMouseDown}>
+        <Svg>
+          <line
+            x1='0%'
+            y1='50%'
+            x2='100%'
+            y2='50%'
+            stroke='#fff'
+            strokeOpacity={0.1}
+          />
+          <line
+            x1='50%'
+            y1='0%'
+            x2='50%'
+            y2='100%'
+            stroke='#fff'
+            strokeOpacity={0.1}
+          />
+          <circle
+            cx={`${x * 50 + 50}%`}
+            cy={`${y * 50 + 50}%`}
+            r={5}
+            fill='none'
+            stroke='#fff'
+          />
+        </Svg>
+      </TrackingArea>
+    </Wheel>
+  )
+}
+
+export type OffsetChangeHandler = (value: number) => void
+
+export interface ColorWheelProps extends Partial<WheelControlProps> {
+  name?: string
+  offset?: number
+  onOffsetChange?: OffsetChangeHandler
+  onReset?: () => void
+}
+
+export const ColorWheel: FC<ColorWheelProps> = ({
+  name,
+  size = 120,
+  color = [0, 0, 0],
+  offset = 0,
+  onColorChange,
+  onOffsetChange,
+  onReset
+}) => {
+  const handleSliderChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onOffsetChange?.(+event.target.value)
+    },
+    [onOffsetChange]
+  )
+
+  const id = useId()
+  return (
+    <Root>
+      <Head>
+        {name != null && <Name>{name}</Name>}
+        <TopRight>
+          <IconButton onClick={onReset}>
+            <ResetIcon />
+          </IconButton>
+        </TopRight>
+      </Head>
+      <WheelControl color={color} size={size} onColorChange={onColorChange} />
+      <Slider
+        type='range'
+        min={-1}
+        max={1}
+        step={0.01}
+        value={offset}
+        onChange={handleSliderChange}
+      />
+      <ValueGrid>
+        <Input type='text' id={`${id}-y`} value={offset.toFixed(2)} />
+        <Input type='text' id={`${id}-r`} value={color[0].toFixed(2)} />
+        <Input type='text' id={`${id}-g`} value={color[1].toFixed(2)} />
+        <Input type='text' id={`${id}-b`} value={color[2].toFixed(2)} />
+        <ValueLabel htmlFor={`${id}-y`}>Y</ValueLabel>
+        <ValueLabel htmlFor={`${id}-r`}>R</ValueLabel>
+        <ValueLabel htmlFor={`${id}-g`}>G</ValueLabel>
+        <ValueLabel htmlFor={`${id}-b`}>B</ValueLabel>
+      </ValueGrid>
+    </Root>
+  )
+}
