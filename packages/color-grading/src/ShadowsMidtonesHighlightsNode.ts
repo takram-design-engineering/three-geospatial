@@ -6,6 +6,7 @@ import {
   type NodeBuilder,
   type UniformNode
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
@@ -36,15 +37,20 @@ const shadowsMidtonesHighlightsFn = /*#__PURE__*/ FnLayout({
 })
 
 export class ShadowsMidtonesHighlightsNode extends TempNode {
-  inputNode: Node
+  inputNode?: Node | null
 
   shadows = uniform(new Vector3().setScalar(1))
   midtones = uniform(new Vector3().setScalar(1))
   highlights = uniform(new Vector3().setScalar(1))
 
-  constructor(inputNode: Node) {
+  constructor(inputNode?: Node | null) {
     super('vec4')
     this.inputNode = inputNode
+  }
+
+  setInputNode(value: Node | null): this {
+    this.inputNode = value
+    return this
   }
 
   private setParam(
@@ -75,14 +81,17 @@ export class ShadowsMidtonesHighlightsNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
+    const { inputNode } = this
+    invariant(inputNode != null)
+
     return vec4(
       shadowsMidtonesHighlightsFn(
-        this.inputNode.rgb,
+        inputNode.rgb,
         this.shadows,
         this.midtones,
         this.highlights
       ),
-      this.inputNode.a
+      inputNode.a
     )
   }
 }

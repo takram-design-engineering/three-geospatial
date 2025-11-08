@@ -1,6 +1,7 @@
 import { Vector3, type Color } from 'three'
 import { uniform, vec4 } from 'three/tsl'
 import { TempNode, type Node, type NodeBuilder } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
@@ -24,15 +25,20 @@ const liftGammaGainFn = /*#__PURE__*/ FnLayout({
 })
 
 export class LiftGammaGainNode extends TempNode {
-  inputNode: Node
+  inputNode?: Node | null
 
   lift = uniform(new Vector3())
   gamma = uniform(new Vector3().setScalar(1))
   gain = uniform(new Vector3().setScalar(1))
 
-  constructor(inputNode: Node) {
+  constructor(inputNode?: Node | null) {
     super('vec4')
     this.inputNode = inputNode
+  }
+
+  setInputNode(value: Node | null): this {
+    this.inputNode = value
+    return this
   }
 
   // LGG to ASC CDL conversion taken from: https://github.com/Unity-Technologies/Graphics/blob/v10.10.2/com.unity.render-pipelines.core/Runtime/Utilities/ColorUtils.cs#L135
@@ -40,41 +46,47 @@ export class LiftGammaGainNode extends TempNode {
 
   setLift(value: Vector3 | Color, offset = 0): this {
     const linear = convertSRGBToLinear(value, vectorScratch)
+    linear.multiplyScalar(0.15)
     const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
     this.lift.value.set(
-      linear.x * 0.15 - luma + offset,
-      linear.y * 0.15 - luma + offset,
-      linear.z * 0.15 - luma + offset
+      linear.x - luma + offset,
+      linear.y - luma + offset,
+      linear.z - luma + offset
     )
     return this
   }
 
   setGamma(value: Vector3 | Color, offset = 0): this {
     const linear = convertSRGBToLinear(value, vectorScratch)
+    linear.multiplyScalar(0.8)
     const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
     this.gamma.value.set(
-      1 / Math.max(linear.x * 0.8 - luma + (offset + 1), 1e-3),
-      1 / Math.max(linear.y * 0.8 - luma + (offset + 1), 1e-3),
-      1 / Math.max(linear.z * 0.8 - luma + (offset + 1), 1e-3)
+      1 / Math.max(linear.x - luma + (offset + 1), 1e-3),
+      1 / Math.max(linear.y - luma + (offset + 1), 1e-3),
+      1 / Math.max(linear.z - luma + (offset + 1), 1e-3)
     )
     return this
   }
 
   setGain(value: Vector3 | Color, offset = 0): this {
     const linear = convertSRGBToLinear(value, vectorScratch)
+    linear.multiplyScalar(0.8)
     const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
     this.gain.value.set(
-      linear.x * 0.8 - luma + (offset + 1),
-      linear.y * 0.8 - luma + (offset + 1),
-      linear.z * 0.8 - luma + (offset + 1)
+      linear.x - luma + (offset + 1),
+      linear.y - luma + (offset + 1),
+      linear.z - luma + (offset + 1)
     )
     return this
   }
 
   override setup(builder: NodeBuilder): unknown {
+    const { inputNode } = this
+    invariant(inputNode != null)
+
     return vec4(
-      liftGammaGainFn(this.inputNode.rgb, this.lift, this.gamma, this.gain),
-      this.inputNode.a
+      liftGammaGainFn(inputNode.rgb, this.lift, this.gamma, this.gain),
+      inputNode.a
     )
   }
 }

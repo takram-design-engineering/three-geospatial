@@ -1,6 +1,7 @@
 import { Matrix3, Vector3 } from 'three'
 import { mat3, uniform, vec4 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -62,13 +63,18 @@ const colorBalanceFn = /*#__PURE__*/ FnLayout({
 })
 
 export class ColorBalanceNode extends TempNode {
-  inputNode: Node
+  inputNode?: Node | null
 
   lmsCoeffs = uniform(new Vector3().setScalar(1))
 
-  constructor(inputNode: Node) {
+  constructor(inputNode?: Node | null) {
     super('vec4')
     this.inputNode = inputNode
+  }
+
+  setInputNode(value: Node | null): this {
+    this.inputNode = value
+    return this
   }
 
   setParams(temperature: number, tint: number): this {
@@ -85,10 +91,10 @@ export class ColorBalanceNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    return vec4(
-      colorBalanceFn(this.inputNode.rgb, this.lmsCoeffs),
-      this.inputNode.a
-    )
+    const { inputNode } = this
+    invariant(inputNode != null)
+
+    return vec4(colorBalanceFn(inputNode.rgb, this.lmsCoeffs), inputNode.a)
   }
 }
 
