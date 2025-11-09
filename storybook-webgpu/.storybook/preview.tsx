@@ -87,11 +87,6 @@ const preview: Preview = {
       }
     }
   },
-  initialGlobals: {
-    backgrounds: {
-      value: 'dark'
-    }
-  },
   decorators: [
     Story => (
       <ConfigProvider

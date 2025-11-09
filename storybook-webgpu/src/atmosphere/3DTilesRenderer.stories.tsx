@@ -7,6 +7,9 @@ import Code from './3DTilesRenderer-Story?raw'
 
 export default {
   title: 'atmosphere/3D Tiles Renderer Integration',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

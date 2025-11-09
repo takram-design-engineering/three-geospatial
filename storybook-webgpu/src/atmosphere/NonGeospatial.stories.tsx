@@ -8,6 +8,9 @@ import NonGeospatialCode from './NonGeospatial-Story?raw'
 export default {
   title: 'atmosphere/Non-geospatial',
   tags: ['order:4'],
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

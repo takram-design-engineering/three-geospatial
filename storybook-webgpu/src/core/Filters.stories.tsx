@@ -15,6 +15,9 @@ import MipmapSurfaceBlurCode from './Filters-MipmapSurfaceBlur?raw'
 
 export default {
   title: 'core/Filters',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

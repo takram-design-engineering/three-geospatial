@@ -8,6 +8,9 @@ import Code from './Space-Story?raw'
 export default {
   title: 'atmosphere/Space',
   tags: ['order:0'],
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

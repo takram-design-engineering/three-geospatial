@@ -8,6 +8,9 @@ import Code from './CruisingAltitude-Story?raw'
 export default {
   title: 'atmosphere/Cruising Altitude',
   tags: ['order:2'],
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

@@ -7,6 +7,9 @@ import Code from './ColorBars?raw'
 
 export default {
   title: 'color grading/Color Bars',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

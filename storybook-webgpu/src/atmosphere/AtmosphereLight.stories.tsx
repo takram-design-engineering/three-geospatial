@@ -7,6 +7,9 @@ import BasicCode from './AtmosphereLight-Basic?raw'
 
 export default {
   title: 'atmosphere/Atmosphere Light',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

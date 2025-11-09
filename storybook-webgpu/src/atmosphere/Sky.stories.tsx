@@ -13,6 +13,9 @@ import StarsCode from './Sky-Stars?raw'
 
 export default {
   title: 'atmosphere/Sky',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

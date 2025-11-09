@@ -7,6 +7,9 @@ import Code from './Gradient?raw'
 
 export default {
   title: 'color grading/Gradient',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

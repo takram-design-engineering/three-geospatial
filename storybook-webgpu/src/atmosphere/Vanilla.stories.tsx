@@ -13,6 +13,9 @@ import WorldOriginRebasingCode from './Vanilla-WorldOriginRebasing?raw'
 
 export default {
   title: 'atmosphere/Vanilla Three.js',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

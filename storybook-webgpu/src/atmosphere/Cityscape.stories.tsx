@@ -8,6 +8,9 @@ import StoryCode from './3DTilesRenderer-Story?raw'
 export default {
   title: 'atmosphere/Cityscape',
   tags: ['order:3'],
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

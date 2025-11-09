@@ -7,6 +7,9 @@ import LensFlareCode from './LensFlare-Story?raw'
 
 export default {
   title: 'core/Lens Flare',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

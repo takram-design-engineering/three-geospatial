@@ -9,6 +9,9 @@ import WorldOriginRebasingCode from './AerialPerspective-WorldOriginRebasing?raw
 
 export default {
   title: 'atmosphere/Aerial Perspective',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

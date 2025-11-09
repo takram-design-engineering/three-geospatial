@@ -9,6 +9,9 @@ import Code3D from './AtmosphereLUT-3D?raw'
 
 export default {
   title: 'atmosphere/Atmosphere LUT',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,

@@ -7,6 +7,9 @@ import TemporalAntialiasCode from './TemporalAntialias-Story?raw'
 
 export default {
   title: 'core/Temporal Antialias',
+  globals: {
+    backgrounds: { value: 'dark' }
+  },
   parameters: {
     docs: {
       codePanel: true,
