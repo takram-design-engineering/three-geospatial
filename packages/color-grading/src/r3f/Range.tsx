@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useId,
   useLayoutEffect,
   useRef,
   type ChangeEvent,
@@ -7,9 +8,10 @@ import {
   type KeyboardEvent
 } from 'react'
 
-import { IconButton, Input, Label, ResetIcon, Slider } from './ui'
+import { Reset } from './icons'
+import { IconButton, InputLabel, RangeInput, TextInput } from './ui'
 
-export interface RangeProps {
+export interface InputRangeProps {
   name: string
   value: number
   min?: number
@@ -19,7 +21,7 @@ export interface RangeProps {
   onReset?: () => void
 }
 
-export const Range: FC<RangeProps> = ({
+export const InputRange: FC<InputRangeProps> = ({
   name,
   value,
   min = 0,
@@ -73,25 +75,25 @@ export const Range: FC<RangeProps> = ({
     [handle]
   )
 
+  const id = useId()
   return (
     <>
-      <Label>{name}</Label>
-      <Input
+      <InputLabel htmlFor={id}>{name}</InputLabel>
+      <TextInput
         ref={inputRef}
-        type='text'
+        id={id}
         onKeyDown={handleKeyDown}
         onBlur={handleChange}
       />
-      <Slider
+      <RangeInput
         ref={sliderRef}
-        type='range'
         min={min}
         max={max}
         step={step}
         onChange={handleChange}
       />
       <IconButton onClick={onReset}>
-        <ResetIcon />
+        <Reset />
       </IconButton>
     </>
   )

@@ -12,7 +12,8 @@ import { Color } from 'three'
 
 import { Rec709 } from '../Rec709'
 import type { ColorTuple } from '../types'
-import { IconButton, Input, Label, ResetIcon, Slider } from './ui'
+import { Reset } from './icons'
+import { IconButton, InputLabel, RangeInput, TextInput } from './ui'
 import { chromaGradient } from './utils'
 
 function preventDefault(event: MouseEvent): void {
@@ -37,7 +38,7 @@ const Head = /*#__PURE__*/ styled.div`
   height: 16px;
 `
 
-const Name = /*#__PURE__*/ styled(Label)`
+const Name = /*#__PURE__*/ styled(InputLabel)`
   grid-area: name;
 `
 
@@ -88,7 +89,7 @@ const ValueGrid = /*#__PURE__*/ styled.div`
   row-gap: 2px;
 `
 
-const ValueLabel = /*#__PURE__*/ styled(Label)`
+const ValueLabel = /*#__PURE__*/ styled(InputLabel)`
   color: #999;
   font-size: 10px;
   text-align: center;
@@ -217,13 +218,12 @@ export const ColorWheel: FC<ColorWheelProps> = ({
         {name != null && <Name>{name}</Name>}
         <TopRight>
           <IconButton onClick={onReset}>
-            <ResetIcon />
+            <Reset />
           </IconButton>
         </TopRight>
       </Head>
       <ColorControl color={color} size={size} onChange={onColorChange} />
-      <Slider
-        type='range'
+      <RangeInput
         min={-1}
         max={1}
         step={0.01}
@@ -231,15 +231,14 @@ export const ColorWheel: FC<ColorWheelProps> = ({
         onChange={handleOffsetChange}
       />
       <ValueGrid>
-        <Input
-          type='text'
+        <TextInput
           id={`${id}-y`}
           value={offset.toFixed(2)}
           onChange={handleOffsetChange}
         />
-        <Input type='text' id={`${id}-r`} value={color[0].toFixed(2)} />
-        <Input type='text' id={`${id}-g`} value={color[1].toFixed(2)} />
-        <Input type='text' id={`${id}-b`} value={color[2].toFixed(2)} />
+        <TextInput id={`${id}-r`} value={color[0].toFixed(2)} />
+        <TextInput id={`${id}-g`} value={color[1].toFixed(2)} />
+        <TextInput id={`${id}-b`} value={color[2].toFixed(2)} />
         <ValueLabel htmlFor={`${id}-y`}>Y</ValueLabel>
         <ValueLabel htmlFor={`${id}-r`}>R</ValueLabel>
         <ValueLabel htmlFor={`${id}-g`}>G</ValueLabel>
