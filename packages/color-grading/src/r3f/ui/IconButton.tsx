@@ -7,10 +7,9 @@ export const IconButton = /*#__PURE__*/ styled.button`
   border: none;
   color: #666;
   background-color: transparent;
-  cursor: pointer;
 
   &:hover,
-  &:focus {
+  &:focus-visible {
     outline: none;
     color: #ccc;
   }

@@ -14,7 +14,7 @@ const Root = /*#__PURE__*/ styled.input`
   font-variant-numeric: tabular-nums;
   text-align: center;
 
-  &:focus-within {
+  &:focus-visible {
     outline: solid 1px #666;
     border: solid 1px #666;
   }

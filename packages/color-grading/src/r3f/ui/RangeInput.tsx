@@ -9,10 +9,6 @@ const Root = styled.input`
   margin: 0;
   background: none;
 
-  &:focus {
-    outline: none;
-  }
-
   &::-webkit-slider-runnable-track {
     height: 8px;
     margin: 0 -1px;
@@ -28,6 +24,16 @@ const Root = styled.input`
     margin-top: -3px;
     border-radius: 4px;
     background-color: #999;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+  }
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+
+    &::-webkit-slider-thumb {
+      background-color: #ccc;
+    }
   }
 `
 
