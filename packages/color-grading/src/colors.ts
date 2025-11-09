@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 /* cspell:words LogC */
 
 import {
@@ -6,10 +5,11 @@ import {
   div,
   log,
   mat3,
+  mix,
   mul,
-  overloadingFn,
   pow,
-  select,
+  sRGBTransferEOTF,
+  sRGBTransferOETF,
   vec3
 } from 'three/tsl'
 import { Matrix3, type Node } from 'three/webgpu'
@@ -22,69 +22,37 @@ import {
   YCBCR_TO_REC709
 } from './Rec709'
 
+// Aliases of OETF and EOTF, whose names are very confusing to me.
+export const linearToSRGB = sRGBTransferOETF
+export const sRGBToLinear = sRGBTransferEOTF
+
 // See: https://en.wikipedia.org/wiki/Rec._709
 // Note that we assume a linear workflow (as in Three.js) and sRGB color
 // primaries, which are equivalent to Rec.709.
 
-const linearToRec709_float = /*#__PURE__*/ FnLayout({
-  name: 'linearToRec709_float',
-  type: 'float',
-  inputs: [{ name: 'value', type: 'float' }]
+export const linearToRec709 = /*#__PURE__*/ FnLayout({
+  name: 'linearToRec709',
+  type: 'vec3',
+  inputs: [{ name: 'value', type: 'vec3' }]
 })(([value]) => {
-  return select(
-    value.lessThan(0.018),
+  return mix(
+    mul(1.099, pow(value, 0.45)).sub(0.099),
     mul(4.5, value),
-    mul(1.099, pow(value, 0.45)).sub(0.099)
+    value.lessThan(0.018)
   )
 })
 
-const linearToRec709_vec3 = /*#__PURE__*/ FnLayout({
-  name: 'linearToRec709_vec3',
+export const rec709ToLinear = /*#__PURE__*/ FnLayout({
+  name: 'rec709ToLinear',
   type: 'vec3',
-  inputs: [{ name: 'color', type: 'vec3' }]
-})(([color]) => {
-  return vec3(
-    linearToRec709_float(color.r),
-    linearToRec709_float(color.g),
-    linearToRec709_float(color.b)
-  )
-})
-
-export const linearToRec709 = /*#__PURE__*/ overloadingFn([
-  // BUG: The returned type is order-dependent.
-  linearToRec709_vec3,
-  linearToRec709_float
-])
-
-const rec709ToLinear_float = /*#__PURE__*/ FnLayout({
-  name: 'rec709ToLinear_float',
-  type: 'float',
-  inputs: [{ name: 'value', type: 'float' }]
+  inputs: [{ name: 'value', type: 'vec3' }]
 })(([value]) => {
-  return select(
-    value.lessThan(0.081),
+  return mix(
+    pow(add(value, 0.099).div(1.099), 1 / 0.45),
     div(value, 4.5),
-    pow(add(value, 0.099).div(1.099), 1 / 0.45)
+    value.lessThan(0.081)
   )
 })
-
-const rec709ToLinear_vec3 = /*#__PURE__*/ FnLayout({
-  name: 'rec709ToLinear_vec3',
-  type: 'vec3',
-  inputs: [{ name: 'color', type: 'vec3' }]
-})(([color]) => {
-  return vec3(
-    rec709ToLinear_float(color.r),
-    rec709ToLinear_float(color.g),
-    rec709ToLinear_float(color.b)
-  )
-})
-
-export const rec709ToLinear = /*#__PURE__*/ overloadingFn([
-  // BUG: The returned type is order-dependent.
-  rec709ToLinear_vec3,
-  rec709ToLinear_float
-])
 
 export const luminanceRec709 = /*#__PURE__*/ FnLayout({
   name: 'luminanceRec709',
@@ -144,62 +112,26 @@ const LOGC_F = 0.092814
 
 const log10 = (value: Node): Node => log(value).mul(1 / Math.log(10))
 
-const linearToLogC_float = /*#__PURE__*/ FnLayout({
-  name: 'linearToLogC_float',
-  type: 'float',
-  inputs: [{ name: 'value', type: 'float' }]
+export const linearToLogC = /*#__PURE__*/ FnLayout({
+  name: 'linearToLogC',
+  type: 'vec3',
+  inputs: [{ name: 'value', type: 'vec3' }]
 })(([value]) => {
-  return select(
-    value.greaterThan(LOGC_CUT),
+  return mix(
+    value.mul(LOGC_E).add(LOGC_F),
     log10(value.mul(LOGC_A).add(LOGC_B).max(0)).mul(LOGC_C).add(LOGC_D),
-    value.mul(LOGC_E).add(LOGC_F)
+    value.greaterThan(LOGC_CUT)
   )
 })
 
-const linearToLogC_vec3 = /*#__PURE__*/ FnLayout({
-  name: 'linearToLogC_vec3',
+export const logCToLinear = /*#__PURE__*/ FnLayout({
+  name: 'logCToLinear',
   type: 'vec3',
-  inputs: [{ name: 'color', type: 'vec3' }]
-})(([color]) => {
-  return vec3(
-    linearToLogC_float(color.r),
-    linearToLogC_float(color.g),
-    linearToLogC_float(color.b)
-  )
-})
-
-export const linearToLogC = /*#__PURE__*/ overloadingFn([
-  // BUG: The returned type is order-dependent.
-  linearToLogC_vec3,
-  linearToLogC_float
-])
-
-const logCToLinear_float = /*#__PURE__*/ FnLayout({
-  name: 'logCToLinear_float',
-  type: 'float',
-  inputs: [{ name: 'value', type: 'float' }]
+  inputs: [{ name: 'value', type: 'vec3' }]
 })(([value]) => {
-  return select(
-    value.greaterThan(LOGC_E * LOGC_CUT + LOGC_F),
+  return mix(
+    value.sub(LOGC_F).div(LOGC_E),
     pow(10, value.sub(LOGC_D).div(LOGC_C)).sub(LOGC_B).div(LOGC_A),
-    value.sub(LOGC_F).div(LOGC_E)
+    value.greaterThan(LOGC_E * LOGC_CUT + LOGC_F)
   )
 })
-
-const logCToLinear_vec3 = /*#__PURE__*/ FnLayout({
-  name: 'logCToLinear_vec3',
-  type: 'vec3',
-  inputs: [{ name: 'color', type: 'vec3' }]
-})(([color]) => {
-  return vec3(
-    logCToLinear_float(color.r),
-    logCToLinear_float(color.g),
-    logCToLinear_float(color.b)
-  )
-})
-
-export const logCToLinear = /*#__PURE__*/ overloadingFn([
-  // BUG: The returned type is order-dependent.
-  logCToLinear_vec3,
-  logCToLinear_float
-])

@@ -32,11 +32,11 @@ export const YCBCR_TO_REC709 = /*#__PURE__*/ new Matrix3(
   1, Cbw, 0
 )
 
-const OETF = (value: number): number => {
+const linearToRec709 = (value: number): number => {
   return value < 0.018 ? 4.5 * value : 1.099 * value ** 0.45 - 0.099
 }
 
-const EOTF = (value: number): number => {
+const rec709ToLinear = (value: number): number => {
   return value < 0.081 ? value / 4.5 : ((value + 0.099) / 1.099) ** (1 / 0.45)
 }
 
@@ -118,9 +118,9 @@ export class Rec709 {
   }
 
   setLinear(r: number, g: number, b: number): this {
-    this.r = OETF(r)
-    this.g = OETF(g)
-    this.b = OETF(b)
+    this.r = linearToRec709(r)
+    this.g = linearToRec709(g)
+    this.b = linearToRec709(b)
     return this
   }
 
@@ -163,7 +163,11 @@ export class Rec709 {
   }
 
   toLinear(): ColorTuple {
-    return [EOTF(this.r), EOTF(this.g), EOTF(this.b)]
+    return [
+      rec709ToLinear(this.r),
+      rec709ToLinear(this.g),
+      rec709ToLinear(this.b)
+    ]
   }
 
   toSRGB(): ColorTuple {
