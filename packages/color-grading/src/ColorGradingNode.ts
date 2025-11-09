@@ -136,6 +136,11 @@ export class ColorGradingNode extends TempNode {
       this.inputNode.a
     )
   }
+
+  override dispose(): void {
+    this.lutTexture.dispose()
+    super.dispose()
+  }
 }
 
 export const colorGrading = (
