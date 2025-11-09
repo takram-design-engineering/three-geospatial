@@ -66,9 +66,9 @@ export class LiftGammaGainNode extends TempNode {
     linear.multiplyScalar(0.8)
     const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
     this.power.value.set(
-      1 / Math.max(linear.x - luma + (offset + 1), 1e-7),
-      1 / Math.max(linear.y - luma + (offset + 1), 1e-7),
-      1 / Math.max(linear.z - luma + (offset + 1), 1e-7)
+      1 / Math.max(linear.x - luma + (offset + 1), 1e-5),
+      1 / Math.max(linear.y - luma + (offset + 1), 1e-5),
+      1 / Math.max(linear.z - luma + (offset + 1), 1e-5)
     )
     return this
   }
