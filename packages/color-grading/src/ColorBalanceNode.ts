@@ -54,26 +54,26 @@ const colorBalanceFn = /*#__PURE__*/ FnLayout({
   name: 'colorBalance',
   type: 'vec3',
   inputs: [
-    { name: 'colorLinear', type: 'vec3' },
+    { name: 'color', type: 'vec3' },
     { name: 'lmsCoeffs', type: 'vec3' }
   ]
-})(([colorLinear, lmsCoeffs]) => {
-  const lms = mat3(LINEAR_TO_LMS).mul(colorLinear)
+})(([color, lmsCoeffs]) => {
+  const lms = mat3(LINEAR_TO_LMS).mul(color)
   return mat3(LMS_TO_LINEAR).mul(lms.mul(lmsCoeffs))
 })
 
 export class ColorBalanceNode extends TempNode {
-  colorLinear?: Node | null
+  inputNode?: Node | null
 
   lmsCoeffs = uniform(new Vector3().setScalar(1))
 
-  constructor(colorLinear?: Node | null) {
+  constructor(inputNode?: Node | null) {
     super('vec4')
-    this.colorLinear = colorLinear
+    this.inputNode = inputNode
   }
 
-  setColorLinear(value: Node | null): this {
-    this.colorLinear = value
+  setInputNode(value: Node | null): this {
+    this.inputNode = value
     return this
   }
 
@@ -91,10 +91,10 @@ export class ColorBalanceNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { colorLinear } = this
-    invariant(colorLinear != null)
+    const { inputNode } = this
+    invariant(inputNode != null)
 
-    return vec4(colorBalanceFn(colorLinear.rgb, this.lmsCoeffs), colorLinear.a)
+    return vec4(colorBalanceFn(inputNode.rgb, this.lmsCoeffs), inputNode.a)
   }
 }
 

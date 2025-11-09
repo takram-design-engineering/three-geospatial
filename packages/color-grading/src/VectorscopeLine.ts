@@ -43,13 +43,16 @@ export class VectorscopeLine extends Line {
     invariant(this.source != null)
     const { colors, size } = this.source
     const index = instanceIndex.mod(size.y).mul(size.x).add(vertexIndex)
-    const linearColor = colors.element(index)
+    const color = colors.element(index)
 
-    const color = hsv2rgb(vec3(rgb2hsv(linearColor).xy, 1))
-    const ycbcr = linearToYCbCr(linearColor)
+    const liftedColor = hsv2rgb(vec3(rgb2hsv(color).xy, 1))
+    const ycbcr = linearToYCbCr(color)
 
     this.material.positionNode = vec3(ycbcr.yz, 0)
-    this.material.colorNode = color.div(size.y).mul(this.gain).toVertexStage()
+    this.material.colorNode = liftedColor
+      .div(size.y)
+      .mul(this.gain)
+      .toVertexStage()
     this.material.needsUpdate = true
   }
 

@@ -15,13 +15,13 @@ const colorDecisionList = /*#__PURE__*/ FnLayout({
   name: 'colorDecisionList',
   type: 'vec3',
   inputs: [
-    { name: 'input', type: 'vec3' },
+    { name: 'color', type: 'vec3' },
     { name: 'slope', type: 'vec3' },
     { name: 'offset', type: 'vec3' },
     { name: 'power', type: 'vec3' }
   ]
-})(([input, slope, offset, power]) => {
-  const v = input.mul(slope).add(offset)
+})(([color, slope, offset, power]) => {
+  const v = color.mul(slope).add(offset)
   const p = v.pow(power)
   return vec3(
     select(v.r.lessThanEqual(0), v.r, p.r),
@@ -31,19 +31,19 @@ const colorDecisionList = /*#__PURE__*/ FnLayout({
 })
 
 export class LiftGammaGainNode extends TempNode {
-  colorLinear?: Node | null
+  inputNode?: Node | null
 
   slope = uniform(new Vector3().setScalar(1))
   offset = uniform(new Vector3())
   power = uniform(new Vector3().setScalar(1))
 
-  constructor(colorLinear?: Node | null) {
+  constructor(inputNode?: Node | null) {
     super('vec4')
-    this.colorLinear = colorLinear
+    this.inputNode = inputNode
   }
 
-  setColorLinear(value: Node | null): this {
-    this.colorLinear = value
+  setInputNode(value: Node | null): this {
+    this.inputNode = value
     return this
   }
 
@@ -51,48 +51,48 @@ export class LiftGammaGainNode extends TempNode {
   // There's no consensus about the algorithm for LGG.
 
   setLift(colorSRGB: ColorTuple, offset = 0): this {
-    const colorLinear = convertSRGBToLinear(colorSRGB, vectorScratch)
-    colorLinear.multiplyScalar(0.15)
-    const luma = colorLinear.dot(REC709_LUMA_COEFFICIENTS)
+    const color = convertSRGBToLinear(colorSRGB, vectorScratch)
+    color.multiplyScalar(0.15)
+    const luma = color.dot(REC709_LUMA_COEFFICIENTS)
     this.offset.value.set(
-      colorLinear.x - luma + offset,
-      colorLinear.y - luma + offset,
-      colorLinear.z - luma + offset
+      color.x - luma + offset,
+      color.y - luma + offset,
+      color.z - luma + offset
     )
     return this
   }
 
   setGamma(colorSRGB: ColorTuple, offset = 0): this {
-    const colorLinear = convertSRGBToLinear(colorSRGB, vectorScratch)
-    colorLinear.multiplyScalar(0.8)
-    const luma = colorLinear.dot(REC709_LUMA_COEFFICIENTS)
+    const color = convertSRGBToLinear(colorSRGB, vectorScratch)
+    color.multiplyScalar(0.8)
+    const luma = color.dot(REC709_LUMA_COEFFICIENTS)
     this.power.value.set(
-      1 / Math.max(colorLinear.x - luma + (offset + 1), 1e-5),
-      1 / Math.max(colorLinear.y - luma + (offset + 1), 1e-5),
-      1 / Math.max(colorLinear.z - luma + (offset + 1), 1e-5)
+      1 / Math.max(color.x - luma + (offset + 1), 1e-5),
+      1 / Math.max(color.y - luma + (offset + 1), 1e-5),
+      1 / Math.max(color.z - luma + (offset + 1), 1e-5)
     )
     return this
   }
 
   setGain(colorSRGB: ColorTuple, offset = 0): this {
-    const colorLinear = convertSRGBToLinear(colorSRGB, vectorScratch)
-    colorLinear.multiplyScalar(0.8)
-    const luma = colorLinear.dot(REC709_LUMA_COEFFICIENTS)
+    const color = convertSRGBToLinear(colorSRGB, vectorScratch)
+    color.multiplyScalar(0.8)
+    const luma = color.dot(REC709_LUMA_COEFFICIENTS)
     this.slope.value.set(
-      colorLinear.x - luma + (offset + 1),
-      colorLinear.y - luma + (offset + 1),
-      colorLinear.z - luma + (offset + 1)
+      color.x - luma + (offset + 1),
+      color.y - luma + (offset + 1),
+      color.z - luma + (offset + 1)
     )
     return this
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { colorLinear } = this
-    invariant(colorLinear != null)
+    const { inputNode } = this
+    invariant(inputNode != null)
 
     return vec4(
-      colorDecisionList(colorLinear.rgb, this.slope, this.offset, this.power),
-      colorLinear.a
+      colorDecisionList(inputNode.rgb, this.slope, this.offset, this.power),
+      inputNode.a
     )
   }
 }

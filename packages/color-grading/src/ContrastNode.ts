@@ -12,31 +12,28 @@ const contrastFn = /*#__PURE__*/ FnLayout({
   name: 'contrast',
   type: 'vec3',
   inputs: [
-    { name: 'colorLinear', type: 'vec3' },
+    { name: 'color', type: 'vec3' },
     { name: 'contrast', type: 'float' }
   ]
-})(([colorLinear, contrast]) => {
-  return colorLinear
-    .sub(ACEScc_MIDDLE_GRAY)
-    .mul(contrast)
-    .add(ACEScc_MIDDLE_GRAY)
+})(([color, contrast]) => {
+  return color.sub(ACEScc_MIDDLE_GRAY).mul(contrast).add(ACEScc_MIDDLE_GRAY)
 })
 
 export class ContrastNode extends TempNode {
-  colorLinear: Node
+  inputNode: Node
   contrast: Node<'float'>
 
   constructor(color: Node, contrast: number | Node<'float'>) {
     super('vec4')
-    this.colorLinear = color
+    this.inputNode = color
     this.contrast = nodeObject(contrast)
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const colorLogC = linearToLogC(this.colorLinear.rgb)
+    const colorLogC = linearToLogC(this.inputNode.rgb)
     return vec4(
       logCToLinear(contrastFn(colorLogC, this.contrast)),
-      this.colorLinear.a
+      this.inputNode.a
     )
   }
 }

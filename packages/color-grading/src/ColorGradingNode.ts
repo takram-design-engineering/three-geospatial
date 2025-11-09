@@ -45,13 +45,21 @@ function createStorage3DTexture(size: number): Storage3DTexture {
   return texture
 }
 
+export const enum ColorGradingMode {
+  HDR = 'HDR',
+  LDR = 'LDR'
+}
+
 export class ColorGradingNode extends TempNode {
-  colorLinear: Node
+  inputNode: Node
+  mode = ColorGradingMode.LDR
   readonly lutSize: number
 
   colorBalanceNode = colorBalance()
   shadowsMidtonesHighlightsNode = shadowsMidtonesHighlights()
   liftGammaGainNode = liftGammaGain()
+
+  toneMappingNode?: Node
 
   channelMixerR = new Vector3(1, 0, 0)
   channelMixerG = new Vector3(0, 1, 0)
@@ -73,9 +81,9 @@ export class ColorGradingNode extends TempNode {
   private computeNode?: ComputeNode
   private readonly lutTexture: Storage3DTexture
 
-  constructor(colorLinear: Node, lutSize = 64) {
+  constructor(inputNode: Node, lutSize = 64) {
     super('vec4')
-    this.colorLinear = colorLinear
+    this.inputNode = inputNode
     this.lutSize = lutSize
     this.lutTexture = createStorage3DTexture(lutSize)
 
@@ -107,15 +115,15 @@ export class ColorGradingNode extends TempNode {
       })
 
       let node: Node = vec3(globalId).div(size.sub(1))
-      node = this.colorBalanceNode.setColorLinear(node)
+      node = this.colorBalanceNode.setInputNode(node)
       node = channelMixer(
         node,
         this.uniforms.channelMixerR,
         this.uniforms.channelMixerG,
         this.uniforms.channelMixerB
       )
-      node = this.shadowsMidtonesHighlightsNode.setColorLinear(node)
-      node = this.liftGammaGainNode.setColorLinear(node)
+      node = this.shadowsMidtonesHighlightsNode.setInputNode(node)
+      node = this.liftGammaGainNode.setInputNode(node)
       node = contrast(node, this.uniforms.contrast)
       node = vibrance(node, this.uniforms.vibrance)
       node = saturation(node, this.uniforms.saturation)
@@ -130,9 +138,9 @@ export class ColorGradingNode extends TempNode {
     const size = vec3(this.lutSize)
     return vec4(
       texture3D(this.lutTexture).sample(
-        this.colorLinear.rgb.mul(size.sub(1)).add(0.5).div(size)
+        this.inputNode.rgb.mul(size.sub(1)).add(0.5).div(size)
       ).rgb,
-      this.colorLinear.a
+      this.inputNode.a
     )
   }
 
