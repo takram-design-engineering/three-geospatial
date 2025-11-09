@@ -32,26 +32,12 @@ export const YCBCR_TO_REC709 = /*#__PURE__*/ new Matrix3(
   1, Cbw, 0
 )
 
-function nonlinearize(value: number): number {
+const OETF = (value: number): number => {
   return value < 0.018 ? 4.5 * value : 1.099 * value ** 0.45 - 0.099
 }
 
-function nonlinearizeVector(value: Vector3): Vector3 {
-  value.x = nonlinearize(value.x)
-  value.y = nonlinearize(value.y)
-  value.z = nonlinearize(value.z)
-  return value
-}
-
-function linearize(value: number): number {
+const EOTF = (value: number): number => {
   return value < 0.081 ? value / 4.5 : ((value + 0.099) / 1.099) ** (1 / 0.45)
-}
-
-function linearizeVector(value: Vector3): Vector3 {
-  value.x = linearize(value.x)
-  value.y = linearize(value.y)
-  value.z = linearize(value.z)
-  return value
 }
 
 export const enum Rec709Format {
@@ -118,17 +104,41 @@ const vectorScratch = /*#__PURE__*/ new Vector3()
 const colorScratch = /*#__PURE__*/ new Color()
 
 export class Rec709 {
-  r: number
-  g: number
-  b: number
+  r = 0
+  g = 0
+  b = 0
 
   constructor(r = 0, g = 0, b = 0, format?: Rec709Format) {
-    ;[this.r, this.g, this.b] = normalizeRec709(r, g, b, format)
+    this.set(r, g, b, format)
   }
 
   set(r: number, g: number, b: number, format?: Rec709Format): this {
     ;[this.r, this.g, this.b] = normalizeRec709(r, g, b, format)
     return this
+  }
+
+  setLinear(r: number, g: number, b: number): this {
+    this.r = OETF(r)
+    this.g = OETF(g)
+    this.b = OETF(b)
+    return this
+  }
+
+  setSRGB(r: number, g: number, b: number): this {
+    const linear = colorScratch.set(r, g, b).convertSRGBToLinear()
+    return this.setLinear(linear.r, linear.g, linear.b)
+  }
+
+  setYCbCr(y: number, cb: number, cr: number, format?: Rec709Format): this {
+    const [r, g, b] = vectorScratch
+      .set(...normalizeYCbCr(y, cb, cr, format))
+      .applyMatrix3(YCBCR_TO_REC709)
+    return this.set(r, g, b)
+  }
+
+  setColor(color: Color): this {
+    const { r, g, b } = colorScratch.copy(color).convertSRGBToLinear()
+    return this.setLinear(r, g, b)
   }
 
   clone(): Rec709 {
@@ -152,45 +162,26 @@ export class Rec709 {
       .dot(REC709_LUMA_COEFFICIENTS)
   }
 
-  static fromLinearSRGB(value: Vector3, result = new Rec709()): Rec709 {
-    const color = nonlinearizeVector(vectorScratch.copy(value))
-    return result.set(color.x, color.y, color.z)
+  toLinear(): ColorTuple {
+    return [EOTF(this.r), EOTF(this.g), EOTF(this.b)]
   }
 
-  static fromColor(value: Color, result = new Rec709()): Rec709 {
-    return this.fromLinearSRGB(
-      vectorScratch.setFromColor(
-        colorScratch.copy(value).convertSRGBToLinear()
-      ),
-      result
-    )
+  toSRGB(): ColorTuple {
+    const { r, g, b } = colorScratch
+      .set(...this.toLinear())
+      .convertLinearToSRGB()
+    return [r, g, b]
   }
 
-  static fromYCbCr(
-    y: number,
-    cb: number,
-    cr: number,
-    format?: Rec709Format,
-    result = new Rec709()
-  ): Rec709 {
-    const color = vectorScratch
-      .set(...normalizeYCbCr(y, cb, cr, format))
-      .applyMatrix3(YCBCR_TO_REC709)
-    return result.set(color.x, color.y, color.z)
-  }
-
-  toLinearSRGB(result = new Vector3()): Vector3 {
-    return linearizeVector(result.set(this.r, this.g, this.b))
+  toYCbCr(): ColorTuple {
+    const [y, cb, cr] = vectorScratch
+      .set(this.r, this.g, this.b)
+      .applyMatrix3(REC709_TO_YCBCR)
+    return [y, cb, cr]
   }
 
   toColor(result = new Color()): Color {
-    return result
-      .setFromVector3(this.toLinearSRGB(vectorScratch))
-      .convertLinearToSRGB()
-  }
-
-  toYCbCr(result = new Vector3()): Vector3 {
-    return result.set(this.r, this.g, this.b).applyMatrix3(REC709_TO_YCBCR)
+    return result.set(...this.toSRGB())
   }
 
   fromArray(array: readonly number[], offset = 0): this {

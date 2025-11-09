@@ -8,7 +8,6 @@ import {
   type FC,
   type MouseEvent as ReactMouseEvent
 } from 'react'
-import { Color } from 'three'
 
 import { Rec709 } from '../Rec709'
 import type { ColorTuple } from '../types'
@@ -95,12 +94,14 @@ const ValueLabel = /*#__PURE__*/ styled(InputLabel)`
   text-align: center;
 `
 
+const rec709Scratch = /*#__PURE__*/ new Rec709()
+
 const ColorControl: FC<{
   size: number
   color: ColorTuple
   onChange?: (color: ColorTuple) => void
 }> = ({ size, color, onChange }) => {
-  const { y: cb, z: cr } = Rec709.fromColor(new Color(...color)).toYCbCr()
+  const [, cb, cr] = rec709Scratch.setSRGB(...color).toYCbCr()
 
   const stateRef = useRef({ cb, cr })
   Object.assign(stateRef.current, { cb, cr })
@@ -121,7 +122,7 @@ const ColorControl: FC<{
         const cr1 = (y0 - y1) / size
         const cb = cb0 + cb1 * sensitivity
         const cr = cr0 + cr1 * sensitivity
-        const color = Rec709.fromYCbCr(0, cb, cr).toColor()
+        const color = rec709Scratch.setYCbCr(0, cb, cr).toColor()
         onChangeRef.current?.([color.r, color.g, color.b])
       }
 
