@@ -1,5 +1,7 @@
+export * from './Adjustments'
 export * from './ColorGrading'
 export * from './Histogram'
+export * from './LiftGammaGain'
 export * from './ShadowsMidtonesHighlights'
 export * from './Vectorscope'
 export * from './VideoContext'

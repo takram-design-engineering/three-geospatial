@@ -18,7 +18,7 @@ const Root = /*#__PURE__*/ styled.div`
 `
 
 export interface VideoScopesProps
-  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+  extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
   raster?: RasterSource | null
   histogram?: HistogramSource | null
 }

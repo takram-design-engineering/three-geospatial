@@ -18,8 +18,8 @@ import { radians } from '@takram/three-geospatial'
 import type { RasterSource } from '../RasterSource'
 import { normalizeYCbCr, Rec709Format } from '../Rec709'
 import { VectorscopeLine } from '../VectorscopeLine'
-import { chromaGradient } from './utils'
 import { useCanvasTarget } from './useCanvasTarget'
+import { chromaGradient } from './utils'
 import { VideoContext } from './VideoContext'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
@@ -165,7 +165,7 @@ Grid.displayName = 'Grid'
 
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
-export interface VectorscopeProps extends ComponentPropsWithRef<'div'> {
+export interface VectorscopeProps extends ComponentPropsWithRef<typeof Root> {
   source?: RasterSource | null
   gain?: number
   scaled?: boolean

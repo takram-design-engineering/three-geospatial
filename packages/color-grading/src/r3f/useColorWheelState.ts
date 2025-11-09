@@ -2,11 +2,18 @@ import { useCallback, useRef, useState } from 'react'
 import { Vector3 } from 'three'
 
 import type { ColorTuple } from '../types'
-import type { ColorWheelProps } from './ColorWheel'
+
+export interface ColorWheelState {
+  color: ColorTuple
+  offset: number
+  onColorChange: (color: ColorTuple) => void
+  onOffsetChange: (offset: number) => void
+  onReset: () => void
+}
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
-export function useWheelProps<
+export function useColorWheelState<
   N extends Record<K, (color: Vector3, offset?: number) => N>,
   K extends keyof N
 >(
@@ -14,7 +21,7 @@ export function useWheelProps<
   setter: K,
   initialColor: ColorTuple = [0, 0, 0],
   initialOffset = 0
-): Partial<ColorWheelProps> {
+): ColorWheelState {
   const [color, setColor] = useState<ColorTuple>(initialColor)
   const [offset, setOffset] = useState(initialOffset)
 

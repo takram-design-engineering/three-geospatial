@@ -1,11 +1,22 @@
-import { useCallback, useRef, useState, type ChangeEvent } from 'react'
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MouseEvent
+} from 'react'
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function useSliderProps<N, K extends keyof N>(
+export interface RangeState {
+  value: number
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onReset: (event: MouseEvent<HTMLButtonElement>) => void
+}
+
+export function useRangeState<N, K extends keyof N>(
   node: Record<K, number>,
   setter: K,
   initialValue = 0
-) {
+): RangeState {
   const [value, setValue] = useState(initialValue)
 
   const offsetRef = useRef(value)

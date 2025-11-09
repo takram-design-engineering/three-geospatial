@@ -103,7 +103,7 @@ Grid.displayName = 'Grid'
 
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
-export interface WaveformProps extends ComponentPropsWithRef<'div'> {
+export interface WaveformProps extends ComponentPropsWithRef<typeof Root> {
   source?: RasterSource | null
   mode?: WaveformMode
   gain?: number

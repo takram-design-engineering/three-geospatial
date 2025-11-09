@@ -177,7 +177,7 @@ const ColorControl: FC<{
 }
 
 export interface ColorWheelProps
-  extends Omit<ComponentPropsWithRef<'div'>, 'color'> {
+  extends Omit<ComponentPropsWithRef<typeof Root>, 'color'> {
   name?: string
   size?: number
   color?: ColorTuple

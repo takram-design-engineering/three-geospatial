@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai'
 import { use, type ComponentPropsWithRef, type FC } from 'react'
 
 import type { ColorGradingNode } from '../ColorGradingNode'
-import { GlobalControls } from './GlobalControls'
+import { Adjustments } from './Adjustments'
 import { LiftGammaGain } from './LiftGammaGain'
 import { ShadowsMidtonesHighlights } from './ShadowsMidtonesHighlights'
 import { VideoContext } from './VideoContext'
@@ -17,7 +17,7 @@ const Root = /*#__PURE__*/ styled.div`
 `
 
 export interface ColorGradingProps
-  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+  extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
   node?: ColorGradingNode | null
 }
 
@@ -28,7 +28,7 @@ export const ColorGrading: FC<ColorGradingProps> = ({ node, ...props }) => {
     <Root {...props}>
       {colorGradingNode != null && (
         <>
-          <GlobalControls />
+          <Adjustments node={colorGradingNode} />
           <LiftGammaGain node={colorGradingNode.liftGammaGainNode} />
           <ShadowsMidtonesHighlights
             node={colorGradingNode.shadowsMidtonesHighlightsNode}
