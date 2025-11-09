@@ -5,7 +5,7 @@ import { NodeMaterial, PostProcessing, type Renderer } from 'three/webgpu'
 
 import { colorGrading, rec709ToLinear } from '@takram/three-color-grading'
 import {
-  ColorGradingControls,
+  ColorGrading,
   VideoScopes,
   VideoSource
 } from '@takram/three-color-grading/r3f'
@@ -90,7 +90,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
       </WebGPUCanvas>
     </SplitPanel>
     <SplitPanel>
-      <ColorGradingControls />
+      <ColorGrading />
     </SplitPanel>
     <SplitPanel>
       <VideoScopes />

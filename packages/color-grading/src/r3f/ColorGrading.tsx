@@ -16,15 +16,12 @@ const Root = /*#__PURE__*/ styled.div`
   column-gap: 1px;
 `
 
-export interface ColorGradingControlsProps
+export interface ColorGradingProps
   extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   node?: ColorGradingNode | null
 }
 
-export const ColorGradingControls: FC<ColorGradingControlsProps> = ({
-  node,
-  ...props
-}) => {
+export const ColorGrading: FC<ColorGradingProps> = ({ node, ...props }) => {
   const { colorGradingNodeAtom } = use(VideoContext)
   const colorGradingNode = useAtomValue(colorGradingNodeAtom) ?? node
   return (

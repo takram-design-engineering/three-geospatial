@@ -48,7 +48,7 @@ function createStorage3DTexture(size: number): Storage3DTexture {
 
 export class ColorGradingNode extends TempNode {
   inputNode: Node
-  readonly size: number
+  readonly lutSize: number
 
   colorBalanceNode = colorBalance()
   shadowsMidtonesHighlightsNode = shadowsMidtonesHighlights()
@@ -74,11 +74,11 @@ export class ColorGradingNode extends TempNode {
   private computeNode?: ComputeNode
   private readonly lutTexture: Storage3DTexture
 
-  constructor(inputNode: Node, size = 32) {
+  constructor(inputNode: Node, lutSize = 32) {
     super('vec4')
     this.inputNode = inputNode
-    this.size = size
-    this.lutTexture = createStorage3DTexture(size)
+    this.lutSize = lutSize
+    this.lutTexture = createStorage3DTexture(lutSize)
 
     this.updateBeforeType = NodeUpdateType.RENDER
   }
@@ -99,10 +99,10 @@ export class ColorGradingNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const dispatchSize = Math.ceil(this.size / 4)
+    const dispatchSize = Math.ceil(this.lutSize / 4)
 
     this.computeNode = Fn(() => {
-      const size = uvec3(this.size)
+      const size = uvec3(this.lutSize)
       If(globalId.greaterThanEqual(size).any(), () => {
         Return()
       })
@@ -128,7 +128,7 @@ export class ColorGradingNode extends TempNode {
       [4, 4, 4]
     )
 
-    const size = vec3(this.size)
+    const size = vec3(this.lutSize)
     return vec4(
       texture3D(this.lutTexture).sample(
         linearToRec709(this.inputNode.rgb).mul(size.sub(1)).add(0.5).div(size)

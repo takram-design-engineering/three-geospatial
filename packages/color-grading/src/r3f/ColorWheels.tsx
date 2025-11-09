@@ -5,7 +5,7 @@ export const ColorWheels = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr;
-  grid-column-gap: 32px;
+  grid-column-gap: 16px;
   padding: 8px 16px;
   background-color: #222;
 `
