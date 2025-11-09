@@ -10,7 +10,7 @@ import { REC709_LUMA_COEFFICIENTS } from './Rec709'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
-const colorDecisionListFn = /*#__PURE__*/ FnLayout({
+const colorDecisionList = /*#__PURE__*/ FnLayout({
   name: 'colorDecisionList',
   type: 'vec3',
   inputs: [
@@ -90,7 +90,7 @@ export class LiftGammaGainNode extends TempNode {
     invariant(inputNode != null)
 
     return vec4(
-      colorDecisionListFn(inputNode.rgb, this.slope, this.offset, this.power),
+      colorDecisionList(inputNode.rgb, this.slope, this.offset, this.power),
       inputNode.a
     )
   }

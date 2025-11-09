@@ -1,15 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-
-import {
-  min,
-  mul,
-  overloadingFn,
-  pow,
-  select,
-  sub,
-  vec3,
-  vec4
-} from 'three/tsl'
+import { min, mul, select, sub, vec3, vec4 } from 'three/tsl'
 
 import { FnLayout } from './FnLayout'
 
@@ -103,33 +92,3 @@ export const hsl2rgb = /*#__PURE__*/ FnLayout({
   const c = mul(2, hsl.z).sub(1).abs().oneMinus().mul(hsl.y)
   return rgb.sub(0.5).mul(c).add(hsl.z)
 })
-
-const linearToSRGB_float = /*#__PURE__*/ FnLayout({
-  name: 'linearToSRGB_float',
-  type: 'float',
-  inputs: [{ name: 'value', type: 'float' }]
-})(([value]) => {
-  return select(
-    value.lessThan(0.0031308),
-    mul(12.92, value),
-    mul(1.055, pow(value, 0.41666)).sub(0.055)
-  )
-})
-
-const linearToSRGB_vec3 = /*#__PURE__*/ FnLayout({
-  name: 'linearToSRGB_vec3',
-  type: 'vec3',
-  inputs: [{ name: 'color', type: 'vec3' }]
-})(([color]) => {
-  return vec3(
-    linearToSRGB_float(color.r),
-    linearToSRGB_float(color.g),
-    linearToSRGB_float(color.b)
-  )
-})
-
-export const linearToSRGB = /*#__PURE__*/ overloadingFn([
-  // BUG: The returned type is order-dependent.
-  linearToSRGB_vec3,
-  linearToSRGB_float
-])
