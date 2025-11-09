@@ -55,12 +55,10 @@ export function hsv2rgb(value: ColorTuple): ColorTuple {
 export const chromaGradient = (): string => {
   const values = Array.from({ length: 16 }).map((_, index, { length }) => {
     const r = 2 * Math.PI * (0.25 - index / length)
-    const color = Rec709.fromYCbCr(
-      0.5,
-      Math.cos(r) * 0.5,
-      Math.sin(r) * 0.5
-    ).toArray()
-    const hsv = rgb2hsv(color as ColorTuple)
+    const cb = Math.cos(r) * 0.5
+    const cr = Math.sin(r) * 0.5
+    const color = Rec709.fromYCbCr(1, cb, cr).toColor()
+    const hsv = rgb2hsv(color.toArray() as ColorTuple)
     const rgb = hsv2rgb([hsv[0], 1, 1])
     return rgb
   })

@@ -1,4 +1,4 @@
-import { Matrix3, Vector3 } from 'three'
+import { Color, Matrix3, Vector3 } from 'three'
 
 import { remap } from '@takram/three-geospatial'
 
@@ -115,6 +115,7 @@ export interface Rec709Like {
 }
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
+const colorScratch = /*#__PURE__*/ new Color()
 
 export class Rec709 {
   r: number
@@ -152,8 +153,17 @@ export class Rec709 {
   }
 
   static fromLinearSRGB(value: Vector3, result = new Rec709()): Rec709 {
-    const vector = nonlinearizeVector(vectorScratch.copy(value))
-    return result.set(vector.x, vector.y, vector.z)
+    const color = nonlinearizeVector(vectorScratch.copy(value))
+    return result.set(color.x, color.y, color.z)
+  }
+
+  static fromColor(value: Color, result = new Rec709()): Rec709 {
+    return this.fromLinearSRGB(
+      vectorScratch.setFromColor(
+        colorScratch.copy(value).convertSRGBToLinear()
+      ),
+      result
+    )
   }
 
   static fromYCbCr(
@@ -163,14 +173,20 @@ export class Rec709 {
     format?: Rec709Format,
     result = new Rec709()
   ): Rec709 {
-    const vector = vectorScratch
+    const color = vectorScratch
       .set(...normalizeYCbCr(y, cb, cr, format))
       .applyMatrix3(YCBCR_TO_REC709)
-    return result.set(vector.x, vector.y, vector.z)
+    return result.set(color.x, color.y, color.z)
   }
 
   toLinearSRGB(result = new Vector3()): Vector3 {
     return linearizeVector(result.set(this.r, this.g, this.b))
+  }
+
+  toColor(result = new Color()): Color {
+    return result
+      .setFromVector3(this.toLinearSRGB(vectorScratch))
+      .convertLinearToSRGB()
   }
 
   toYCbCr(result = new Vector3()): Vector3 {

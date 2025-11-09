@@ -11,8 +11,8 @@ export interface LiftGammaGainProps extends ColorWheelsProps {
 
 export const LiftGammaGain: FC<LiftGammaGainProps> = ({ node, ...props }) => (
   <ColorWheels {...props}>
-    <ColorWheel name='Lift' {...useWheelProps(node, 'setLift')} />
-    <ColorWheel name='Gamma' {...useWheelProps(node, 'setGamma')} />
-    <ColorWheel name='Gain' {...useWheelProps(node, 'setGain')} />
+    <ColorWheel name='Lift' {...useWheelProps(node, 'setLift', [0, 0, 0])} />
+    <ColorWheel name='Gamma' {...useWheelProps(node, 'setGamma', [0, 0, 0])} />
+    <ColorWheel name='Gain' {...useWheelProps(node, 'setGain', [0, 0, 0])} />
   </ColorWheels>
 )

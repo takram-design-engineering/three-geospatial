@@ -2,11 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { Vector3 } from 'three'
 
 import type { ColorTuple } from '../types'
-import type {
-  ColorChangeHandler,
-  ColorWheelProps,
-  OffsetChangeHandler
-} from './ColorWheel'
+import type { ColorWheelProps } from './ColorWheel'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
@@ -25,8 +21,8 @@ export function useWheelProps<
   const offsetRef = useRef(offset)
   offsetRef.current = offset
 
-  const handleColorChange = useCallback<ColorChangeHandler>(
-    color => {
+  const handleColorChange = useCallback(
+    (color: ColorTuple) => {
       node[setter](vectorScratch.set(...color), offsetRef.current)
       setColor(color)
     },
@@ -36,8 +32,8 @@ export function useWheelProps<
   const colorRef = useRef(color)
   colorRef.current = color
 
-  const handleOffsetChange = useCallback<OffsetChangeHandler>(
-    offset => {
+  const handleOffsetChange = useCallback(
+    (offset: number) => {
       node[setter](vectorScratch.set(...colorRef.current), offset)
       setOffset(offset)
     },

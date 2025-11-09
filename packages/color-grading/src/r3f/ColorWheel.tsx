@@ -4,20 +4,20 @@ import {
   useId,
   useRef,
   type ChangeEvent,
+  type ComponentPropsWithRef,
   type FC,
   type MouseEvent as ReactMouseEvent
 } from 'react'
+import { Color } from 'three'
 
-import {
-  clamp,
-  degrees,
-  euclideanModulo,
-  radians
-} from '@takram/three-geospatial'
-
+import { Rec709 } from '../Rec709'
 import type { ColorTuple } from '../types'
-import { chromaGradient, hsl2rgb, rgb2hsl } from './utils'
 import { IconButton, Input, Label, ResetIcon, Slider } from './ui'
+import { chromaGradient } from './utils'
+
+function preventDefault(event: MouseEvent): void {
+  event.preventDefault()
+}
 
 const Root = /*#__PURE__*/ styled.div`
   position: relative;
@@ -81,53 +81,44 @@ const Svg = /*#__PURE__*/ styled.svg`
   height: 100%;
 `
 
-const ValueGrid = styled.div`
+const ValueGrid = /*#__PURE__*/ styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   column-gap: 4px;
   row-gap: 2px;
 `
 
-const ValueLabel = styled(Label)`
+const ValueLabel = /*#__PURE__*/ styled(Label)`
   color: #999;
   font-size: 10px;
   text-align: center;
 `
 
-export type ColorChangeHandler = (color: ColorTuple) => void
-
-export interface WheelControlProps {
-  color: ColorTuple
+const ColorControl: FC<{
   size: number
-  onColorChange?: ColorChangeHandler
-}
+  color: ColorTuple
+  onChange?: (color: ColorTuple) => void
+}> = ({ size, color, onChange }) => {
+  const { y: cb, z: cr } = Rec709.fromColor(new Color(...color)).toYCbCr()
 
-const WheelControl: FC<WheelControlProps> = ({
-  color,
-  size,
-  onColorChange
-}) => {
-  const [hue, saturation] = rgb2hsl(color)
-  const theta = radians(-(hue + 90))
-  const x = Math.cos(theta) * saturation
-  const y = Math.sin(theta) * saturation
-
-  const initialRef = useRef({ x, y })
-  initialRef.current = { x, y }
+  const stateRef = useRef({ cb, cr })
+  stateRef.current = { cb, cr }
 
   const handleMouseDown = useCallback(
     (event: ReactMouseEvent) => {
-      const { clientX: downX, clientY: downY } = event
-      const { x: initialX, y: initialY } = initialRef.current
+      const { clientX: x0, clientY: y0 } = event
+      const { cb: cb0, cr: cr0 } = stateRef.current
+
+      const sensitivity = 0.25
 
       const handleMouseMove = (event: MouseEvent): void => {
-        const offsetX = (event.clientX - downX) / size
-        const offsetY = (event.clientY - downY) / size
-        const x = initialX + offsetX * 0.5
-        const y = initialY + offsetY * 0.5
-        const hue = euclideanModulo(-(degrees(Math.atan2(y, x)) + 90), 360)
-        const saturation = clamp(Math.hypot(x, y), 0, 1)
-        onColorChange?.(hsl2rgb([hue, saturation, 0.5]))
+        const { clientX: x1, clientY: y1 } = event
+        const cb1 = (x1 - x0) / size
+        const cr1 = (y0 - y1) / size
+        const cb = cb0 + cb1 * sensitivity
+        const cr = cr0 + cr1 * sensitivity
+        const color = Rec709.fromYCbCr(0, cb, cr).toColor()
+        onChange?.([color.r, color.g, color.b])
       }
 
       const handleMouseUp = (): void => {
@@ -136,16 +127,20 @@ const WheelControl: FC<WheelControlProps> = ({
         window.removeEventListener('contextmenu', preventDefault)
       }
 
-      const preventDefault = (event: MouseEvent): void => {
-        event.preventDefault()
-      }
-
       window.addEventListener('mousemove', handleMouseMove)
       window.addEventListener('mouseup', handleMouseUp)
       window.addEventListener('contextmenu', preventDefault)
     },
-    [size, onColorChange]
+    [size, onChange]
   )
+
+  let x = cb
+  let y = -cr
+  const length = Math.hypot(x, y)
+  if (length > 0.5) {
+    x = (x / length) * 0.5
+    y = (y / length) * 0.5
+  }
 
   return (
     <Wheel style={{ width: size, height: size }}>
@@ -169,8 +164,8 @@ const WheelControl: FC<WheelControlProps> = ({
             strokeOpacity={0.1}
           />
           <circle
-            cx={`${x * 50 + 50}%`}
-            cy={`${y * 50 + 50}%`}
+            cx={`${x * 100 + 50}%`}
+            cy={`${y * 100 + 50}%`}
             r={5}
             fill='none'
             stroke='#fff'
@@ -181,12 +176,14 @@ const WheelControl: FC<WheelControlProps> = ({
   )
 }
 
-export type OffsetChangeHandler = (value: number) => void
-
-export interface ColorWheelProps extends Partial<WheelControlProps> {
+export interface ColorWheelProps
+  extends Omit<ComponentPropsWithRef<'div'>, 'color'> {
   name?: string
+  size?: number
+  color?: ColorTuple
   offset?: number
-  onOffsetChange?: OffsetChangeHandler
+  onColorChange?: (color: ColorTuple) => void
+  onOffsetChange?: (value: number) => void
   onReset?: () => void
 }
 
@@ -197,7 +194,8 @@ export const ColorWheel: FC<ColorWheelProps> = ({
   offset = 0,
   onColorChange,
   onOffsetChange,
-  onReset
+  onReset,
+  ...props
 }) => {
   const handleSliderChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -208,7 +206,7 @@ export const ColorWheel: FC<ColorWheelProps> = ({
 
   const id = useId()
   return (
-    <Root>
+    <Root {...props}>
       <Head>
         {name != null && <Name>{name}</Name>}
         <TopRight>
@@ -217,7 +215,7 @@ export const ColorWheel: FC<ColorWheelProps> = ({
           </IconButton>
         </TopRight>
       </Head>
-      <WheelControl color={color} size={size} onColorChange={onColorChange} />
+      <ColorControl color={color} size={size} onChange={onColorChange} />
       <Slider
         type='range'
         min={-1}
