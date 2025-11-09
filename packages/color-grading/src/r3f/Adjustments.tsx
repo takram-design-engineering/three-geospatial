@@ -8,9 +8,9 @@ import { useRangeState } from './useRangeState'
 
 const Root = /*#__PURE__*/ styled.div`
   display: grid;
-  grid-template-columns: auto 40px 1fr auto;
+  grid-template-columns: min-content 40px 1fr min-content;
   align-items: center;
-  align-content: start;
+  align-content: center;
   column-gap: 8px;
   row-gap: 16px;
   padding: 8px 16px;

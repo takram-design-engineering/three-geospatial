@@ -23,7 +23,6 @@ const Root = /*#__PURE__*/ styled.div`
   overflow: hidden;
   position: relative;
   box-sizing: border-box;
-  height: 100%;
   min-width: 200px;
   min-height: 200px;
   padding: 16px;

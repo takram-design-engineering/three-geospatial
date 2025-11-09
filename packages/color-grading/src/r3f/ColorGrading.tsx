@@ -11,7 +11,7 @@ import { VideoContext } from './VideoContext'
 const Root = /*#__PURE__*/ styled.div`
   height: 100%;
   display: grid;
-  grid-template-columns: auto 1fr 1fr;
+  grid-template-columns: 1fr repeat(2, 2fr);
   row-gap: 1px;
   column-gap: 1px;
 `
