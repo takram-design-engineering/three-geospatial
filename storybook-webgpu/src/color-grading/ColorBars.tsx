@@ -1,7 +1,12 @@
 import { useThree } from '@react-three/fiber'
 import type { FC } from 'react'
 import { pass, uv } from 'three/tsl'
-import { NodeMaterial, PostProcessing, type Renderer } from 'three/webgpu'
+import {
+  NodeMaterial,
+  NoToneMapping,
+  PostProcessing,
+  type Renderer
+} from 'three/webgpu'
 
 import {
   colorBarsHD,
@@ -26,6 +31,8 @@ import { useResource } from '../hooks/useResource'
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
+  renderer.toneMapping = NoToneMapping
+
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
