@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from 'react'
-import { Vector3 } from 'three'
 
 import type { ColorTuple } from '../types'
 
@@ -11,10 +10,8 @@ export interface ColorWheelState {
   onReset: () => void
 }
 
-const vectorScratch = /*#__PURE__*/ new Vector3()
-
 export function useColorWheelState<
-  N extends Record<K, (color: Vector3, offset?: number) => N>,
+  N extends Record<K, (color: ColorTuple, offset?: number) => N>,
   K extends keyof N
 >(
   node: N,
@@ -30,7 +27,7 @@ export function useColorWheelState<
 
   const handleColorChange = useCallback(
     (color: ColorTuple) => {
-      node[setter](vectorScratch.set(...color), offsetRef.current)
+      node[setter](color, offsetRef.current)
       setColor(color)
     },
     [node, setter]
@@ -41,7 +38,7 @@ export function useColorWheelState<
 
   const handleOffsetChange = useCallback(
     (offset: number) => {
-      node[setter](vectorScratch.set(...colorRef.current), offset)
+      node[setter](colorRef.current, offset)
       setOffset(offset)
     },
     [node, setter]
@@ -53,10 +50,7 @@ export function useColorWheelState<
   initialOffsetRef.current = initialOffset
 
   const handleReset = useCallback(() => {
-    node[setter](
-      vectorScratch.set(...initialColorRef.current),
-      initialOffsetRef.current
-    )
+    node[setter](initialColorRef.current, initialOffsetRef.current)
     setColor(initialColorRef.current)
     setOffset(initialOffsetRef.current)
   }, [node, setter])

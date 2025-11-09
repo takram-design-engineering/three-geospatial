@@ -8,26 +8,26 @@ const vibranceFn = /*#__PURE__*/ FnLayout({
   name: 'vibrance',
   type: 'vec3',
   inputs: [
-    { name: 'input', type: 'vec3' },
+    { name: 'colorLinear', type: 'vec3' },
     { name: 'vibrance', type: 'float' }
   ]
-})(([input, vibrance]) => {
-  const r = input.r.sub(max(input.g, input.b))
+})(([colorLinear, vibrance]) => {
+  const r = colorLinear.r.sub(max(colorLinear.g, colorLinear.b))
   const s = vibrance
     .sub(1)
     .div(exp(r.mul(-3)).add(1))
     .add(1)
-  const l = s.oneMinus().mul(vec3(REC709_LUMA_COEFFICIENTS))
+  const luma = s.oneMinus().mul(vec3(REC709_LUMA_COEFFICIENTS))
   return vec3(
-    input.dot(l.add(vec3(s, 0, 0))),
-    input.dot(l.add(vec3(0, s, 0))),
-    input.dot(l.add(vec3(0, 0, s)))
+    colorLinear.dot(luma.add(vec3(s, 0, 0))),
+    colorLinear.dot(luma.add(vec3(0, s, 0))),
+    colorLinear.dot(luma.add(vec3(0, 0, s)))
   )
 })
 
 export const vibrance = (
-  inputNode: Node,
+  colorLinear: Node,
   vibrance: number | Node<'float'>
 ): Node => {
-  return vec4(vibranceFn(inputNode.rgb, nodeObject(vibrance)), inputNode.a)
+  return vec4(vibranceFn(colorLinear.rgb, nodeObject(vibrance)), colorLinear.a)
 }

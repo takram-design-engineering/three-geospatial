@@ -1,12 +1,13 @@
-import { Vector3, type Color } from 'three'
+import { Vector3 } from 'three'
 import { select, uniform, vec3, vec4 } from 'three/tsl'
 import { TempNode, type Node, type NodeBuilder } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
-import { convertSRGBToLinear } from './internals'
 import { REC709_LUMA_COEFFICIENTS } from './Rec709'
+import type { ColorTuple } from './types'
+import { convertSRGBToLinear } from './utils'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 
@@ -30,68 +31,68 @@ const colorDecisionList = /*#__PURE__*/ FnLayout({
 })
 
 export class LiftGammaGainNode extends TempNode {
-  inputNode?: Node | null
+  colorLinear?: Node | null
 
   slope = uniform(new Vector3().setScalar(1))
   offset = uniform(new Vector3())
   power = uniform(new Vector3().setScalar(1))
 
-  constructor(inputNode?: Node | null) {
+  constructor(colorLinear?: Node | null) {
     super('vec4')
-    this.inputNode = inputNode
+    this.colorLinear = colorLinear
   }
 
-  setInputNode(value: Node | null): this {
-    this.inputNode = value
+  setColorLinear(value: Node | null): this {
+    this.colorLinear = value
     return this
   }
 
   // LGG to ASC CDL conversion taken from: https://github.com/Unity-Technologies/Graphics/blob/v10.10.2/com.unity.render-pipelines.core/Runtime/Utilities/ColorUtils.cs#L135
   // There's no consensus about the algorithm for LGG.
 
-  setLift(color: Vector3 | Color, offset = 0): this {
-    const linear = convertSRGBToLinear(color, vectorScratch)
-    linear.multiplyScalar(0.15)
-    const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
+  setLift(colorSRGB: ColorTuple, offset = 0): this {
+    const colorLinear = convertSRGBToLinear(colorSRGB, vectorScratch)
+    colorLinear.multiplyScalar(0.15)
+    const luma = colorLinear.dot(REC709_LUMA_COEFFICIENTS)
     this.offset.value.set(
-      linear.x - luma + offset,
-      linear.y - luma + offset,
-      linear.z - luma + offset
+      colorLinear.x - luma + offset,
+      colorLinear.y - luma + offset,
+      colorLinear.z - luma + offset
     )
     return this
   }
 
-  setGamma(color: Vector3 | Color, offset = 0): this {
-    const linear = convertSRGBToLinear(color, vectorScratch)
-    linear.multiplyScalar(0.8)
-    const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
+  setGamma(colorSRGB: ColorTuple, offset = 0): this {
+    const colorLinear = convertSRGBToLinear(colorSRGB, vectorScratch)
+    colorLinear.multiplyScalar(0.8)
+    const luma = colorLinear.dot(REC709_LUMA_COEFFICIENTS)
     this.power.value.set(
-      1 / Math.max(linear.x - luma + (offset + 1), 1e-5),
-      1 / Math.max(linear.y - luma + (offset + 1), 1e-5),
-      1 / Math.max(linear.z - luma + (offset + 1), 1e-5)
+      1 / Math.max(colorLinear.x - luma + (offset + 1), 1e-5),
+      1 / Math.max(colorLinear.y - luma + (offset + 1), 1e-5),
+      1 / Math.max(colorLinear.z - luma + (offset + 1), 1e-5)
     )
     return this
   }
 
-  setGain(color: Vector3 | Color, offset = 0): this {
-    const linear = convertSRGBToLinear(color, vectorScratch)
-    linear.multiplyScalar(0.8)
-    const luma = linear.dot(REC709_LUMA_COEFFICIENTS)
+  setGain(colorSRGB: ColorTuple, offset = 0): this {
+    const colorLinear = convertSRGBToLinear(colorSRGB, vectorScratch)
+    colorLinear.multiplyScalar(0.8)
+    const luma = colorLinear.dot(REC709_LUMA_COEFFICIENTS)
     this.slope.value.set(
-      linear.x - luma + (offset + 1),
-      linear.y - luma + (offset + 1),
-      linear.z - luma + (offset + 1)
+      colorLinear.x - luma + (offset + 1),
+      colorLinear.y - luma + (offset + 1),
+      colorLinear.z - luma + (offset + 1)
     )
     return this
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { inputNode } = this
-    invariant(inputNode != null)
+    const { colorLinear } = this
+    invariant(colorLinear != null)
 
     return vec4(
-      colorDecisionList(inputNode.rgb, this.slope, this.offset, this.power),
-      inputNode.a
+      colorDecisionList(colorLinear.rgb, this.slope, this.offset, this.power),
+      colorLinear.a
     )
   }
 }

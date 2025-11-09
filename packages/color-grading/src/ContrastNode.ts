@@ -1,7 +1,7 @@
 import { nodeObject, vec4 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
-import { FnLayout, hash, type Node } from '@takram/three-geospatial/webgpu'
+import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
 import { linearToLogC, logCToLinear } from './colors'
 
@@ -12,37 +12,31 @@ const contrastFn = /*#__PURE__*/ FnLayout({
   name: 'contrast',
   type: 'vec3',
   inputs: [
-    { name: 'input', type: 'vec3' },
+    { name: 'colorLinear', type: 'vec3' },
     { name: 'contrast', type: 'float' }
   ]
-})(([input, contrast]) => {
-  return input.sub(ACEScc_MIDDLE_GRAY).mul(contrast).add(ACEScc_MIDDLE_GRAY)
+})(([colorLinear, contrast]) => {
+  return colorLinear
+    .sub(ACEScc_MIDDLE_GRAY)
+    .mul(contrast)
+    .add(ACEScc_MIDDLE_GRAY)
 })
 
 export class ContrastNode extends TempNode {
-  inputNode: Node
+  colorLinear: Node
   contrast: Node<'float'>
 
-  inputLogC = false
-
-  constructor(inputNode: Node, contrast: number | Node<'float'>) {
+  constructor(color: Node, contrast: number | Node<'float'>) {
     super('vec4')
-    this.inputNode = inputNode
+    this.colorLinear = color
     this.contrast = nodeObject(contrast)
   }
 
-  override customCacheKey(): number {
-    return hash(this.inputLogC)
-  }
-
   override setup(builder: NodeBuilder): unknown {
-    const inputColor = this.inputLogC
-      ? this.inputNode.rgb
-      : linearToLogC(this.inputNode.rgb)
-    const output = contrastFn(inputColor, this.contrast)
+    const colorLogC = linearToLogC(this.colorLinear.rgb)
     return vec4(
-      this.inputLogC ? output : logCToLinear(output),
-      this.inputNode.a
+      logCToLinear(contrastFn(colorLogC, this.contrast)),
+      this.colorLinear.a
     )
   }
 }

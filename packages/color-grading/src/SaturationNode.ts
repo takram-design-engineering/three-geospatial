@@ -8,17 +8,20 @@ const saturationFn = /*#__PURE__*/ FnLayout({
   name: 'saturation',
   type: 'vec3',
   inputs: [
-    { name: 'input', type: 'vec3' },
+    { name: 'colorLinear', type: 'vec3' },
     { name: 'vibrance', type: 'float' }
   ]
-})(([input, saturation]) => {
-  const y = input.dot(vec3(REC709_LUMA_COEFFICIENTS))
-  return y.add(saturation.mul(input.sub(y)))
+})(([colorLinear, saturation]) => {
+  const luma = colorLinear.dot(vec3(REC709_LUMA_COEFFICIENTS))
+  return luma.add(saturation.mul(colorLinear.sub(luma)))
 })
 
 export const saturation = (
-  inputNode: Node,
+  colorLinear: Node,
   saturation: number | Node<'float'>
 ): Node => {
-  return vec4(saturationFn(inputNode.rgb, nodeObject(saturation)), inputNode.a)
+  return vec4(
+    saturationFn(colorLinear.rgb, nodeObject(saturation)),
+    colorLinear.a
+  )
 }

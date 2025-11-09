@@ -29,7 +29,6 @@ import type { Node } from '@takram/three-geospatial/webgpu'
 
 import { channelMixer } from './ChannelMixerNode'
 import { colorBalance } from './ColorBalanceNode'
-import { linearToRec709, rec709ToLinear } from './colors'
 import { contrast } from './ContrastNode'
 import { liftGammaGain } from './LiftGammaGainNode'
 import { saturation } from './SaturationNode'
@@ -47,7 +46,7 @@ function createStorage3DTexture(size: number): Storage3DTexture {
 }
 
 export class ColorGradingNode extends TempNode {
-  inputNode: Node
+  colorLinear: Node
   readonly lutSize: number
 
   colorBalanceNode = colorBalance()
@@ -74,9 +73,9 @@ export class ColorGradingNode extends TempNode {
   private computeNode?: ComputeNode
   private readonly lutTexture: Storage3DTexture
 
-  constructor(inputNode: Node, lutSize = 32) {
+  constructor(colorLinear: Node, lutSize = 64) {
     super('vec4')
-    this.inputNode = inputNode
+    this.colorLinear = colorLinear
     this.lutSize = lutSize
     this.lutTexture = createStorage3DTexture(lutSize)
 
@@ -108,20 +107,20 @@ export class ColorGradingNode extends TempNode {
       })
 
       let node: Node = vec3(globalId).div(size.sub(1))
-      node = this.colorBalanceNode.setInputNode(node)
+      node = this.colorBalanceNode.setColorLinear(node)
       node = channelMixer(
         node,
         this.uniforms.channelMixerR,
         this.uniforms.channelMixerG,
         this.uniforms.channelMixerB
       )
-      node = this.shadowsMidtonesHighlightsNode.setInputNode(node)
-      node = this.liftGammaGainNode.setInputNode(node)
+      node = this.shadowsMidtonesHighlightsNode.setColorLinear(node)
+      node = this.liftGammaGainNode.setColorLinear(node)
       node = contrast(node, this.uniforms.contrast)
       node = vibrance(node, this.uniforms.vibrance)
       node = saturation(node, this.uniforms.saturation)
 
-      textureStore(this.lutTexture, globalId, rec709ToLinear(node.saturate()))
+      textureStore(this.lutTexture, globalId, node.saturate())
     })().compute(
       // @ts-expect-error "count" can be dimensional
       [dispatchSize, dispatchSize, dispatchSize],
@@ -131,9 +130,9 @@ export class ColorGradingNode extends TempNode {
     const size = vec3(this.lutSize)
     return vec4(
       texture3D(this.lutTexture).sample(
-        linearToRec709(this.inputNode.rgb).mul(size.sub(1)).add(0.5).div(size)
+        this.colorLinear.rgb.mul(size.sub(1)).add(0.5).div(size)
       ).rgb,
-      this.inputNode.a
+      this.colorLinear.a
     )
   }
 
