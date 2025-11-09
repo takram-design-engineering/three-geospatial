@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import type { ColorBalanceNode } from '../ColorBalanceNode'
 import type { RangeState } from './useRangeState'
@@ -22,8 +22,7 @@ export function useColorBalanceState(
   tintRef.current = tint
 
   const handleTemperatureChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const value = +event.target.value
+    (value: number) => {
       node.setParams(value, tintRef.current)
       setTemperature(value)
     },
@@ -31,8 +30,7 @@ export function useColorBalanceState(
   )
 
   const handleTintChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const value = +event.target.value
+    (value: number) => {
       node.setParams(temperatureRef.current, value)
       setTint(value)
     },

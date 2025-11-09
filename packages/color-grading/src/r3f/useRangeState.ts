@@ -1,15 +1,9 @@
-import {
-  useCallback,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type MouseEvent
-} from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 export interface RangeState {
   value: number
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void
-  onReset: (event: MouseEvent<HTMLButtonElement>) => void
+  onChange: (value: number) => void
+  onReset: () => void
 }
 
 export function useRangeState<N, K extends keyof N>(
@@ -23,8 +17,7 @@ export function useRangeState<N, K extends keyof N>(
   offsetRef.current = value
 
   const handleChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const value = +event.target.value
+    (value: number) => {
       node[setter] = value
       setValue(value)
     },

@@ -1,4 +1,11 @@
-import type { ChangeEvent, FC, MouseEvent } from 'react'
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  type ChangeEvent,
+  type FC,
+  type KeyboardEvent
+} from 'react'
 
 import { IconButton, Input, Label, ResetIcon, Slider } from './ui'
 
@@ -8,8 +15,8 @@ export interface RangeProps {
   min?: number
   max?: number
   step?: number
-  onChange?: (event: ChangeEvent<HTMLInputElement>) => void
-  onReset?: (event: MouseEvent<HTMLButtonElement>) => void
+  onChange?: (value: number) => void
+  onReset?: () => void
 }
 
 export const Range: FC<RangeProps> = ({
@@ -20,20 +27,72 @@ export const Range: FC<RangeProps> = ({
   step = 0.01,
   onChange,
   onReset
-}) => (
-  <>
-    <Label>{name}</Label>
-    <Input type='text' value={value.toFixed(2)} onChange={onChange} />
-    <Slider
-      type='range'
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onChange={onChange}
-    />
-    <IconButton onClick={onReset}>
-      <ResetIcon />
-    </IconButton>
-  </>
-)
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const sliderRef = useRef<HTMLInputElement>(null)
+
+  useLayoutEffect(() => {
+    const input = inputRef.current
+    if (input != null) {
+      input.value = value.toFixed(2)
+    }
+    const slider = sliderRef.current
+    if (slider != null) {
+      slider.value = value.toFixed(2)
+    }
+  }, [value])
+
+  const valueRef = useRef(value)
+  valueRef.current = value
+
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+
+  const handle = useCallback((target: HTMLInputElement) => {
+    const value = parseFloat(target.value)
+    if (!isNaN(value)) {
+      onChangeRef.current?.(value)
+    } else {
+      target.value = valueRef.current.toFixed(2)
+    }
+  }, [])
+
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      handle(event.currentTarget)
+    },
+    [handle]
+  )
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Enter') {
+        handle(event.currentTarget)
+      }
+    },
+    [handle]
+  )
+
+  return (
+    <>
+      <Label>{name}</Label>
+      <Input
+        ref={inputRef}
+        type='text'
+        onKeyDown={handleKeyDown}
+        onBlur={handleChange}
+      />
+      <Slider
+        ref={sliderRef}
+        type='range'
+        min={min}
+        max={max}
+        step={step}
+        onChange={handleChange}
+      />
+      <IconButton onClick={onReset}>
+        <ResetIcon />
+      </IconButton>
+    </>
+  )
+}

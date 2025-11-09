@@ -102,7 +102,10 @@ const ColorControl: FC<{
   const { y: cb, z: cr } = Rec709.fromColor(new Color(...color)).toYCbCr()
 
   const stateRef = useRef({ cb, cr })
-  stateRef.current = { cb, cr }
+  Object.assign(stateRef.current, { cb, cr })
+
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
 
   const handleMouseDown = useCallback(
     (event: ReactMouseEvent) => {
@@ -118,7 +121,7 @@ const ColorControl: FC<{
         const cb = cb0 + cb1 * sensitivity
         const cr = cr0 + cr1 * sensitivity
         const color = Rec709.fromYCbCr(0, cb, cr).toColor()
-        onChange?.([color.r, color.g, color.b])
+        onChangeRef.current?.([color.r, color.g, color.b])
       }
 
       const handleMouseUp = (): void => {
@@ -131,7 +134,7 @@ const ColorControl: FC<{
       window.addEventListener('mouseup', handleMouseUp)
       window.addEventListener('contextmenu', preventDefault)
     },
-    [size, onChange]
+    [size]
   )
 
   let x = cb
@@ -197,11 +200,14 @@ export const ColorWheel: FC<ColorWheelProps> = ({
   onReset,
   ...props
 }) => {
-  const handleSliderChange = useCallback(
+  const onOffsetChangeRef = useRef(onOffsetChange)
+  onOffsetChangeRef.current = onOffsetChange
+
+  const handleOffsetChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      onOffsetChange?.(+event.target.value)
+      onOffsetChangeRef.current?.(+event.currentTarget.value)
     },
-    [onOffsetChange]
+    []
   )
 
   const id = useId()
@@ -222,10 +228,15 @@ export const ColorWheel: FC<ColorWheelProps> = ({
         max={1}
         step={0.01}
         value={offset}
-        onChange={handleSliderChange}
+        onChange={handleOffsetChange}
       />
       <ValueGrid>
-        <Input type='text' id={`${id}-y`} value={offset.toFixed(2)} />
+        <Input
+          type='text'
+          id={`${id}-y`}
+          value={offset.toFixed(2)}
+          onChange={handleOffsetChange}
+        />
         <Input type='text' id={`${id}-r`} value={color[0].toFixed(2)} />
         <Input type='text' id={`${id}-g`} value={color[1].toFixed(2)} />
         <Input type='text' id={`${id}-b`} value={color[2].toFixed(2)} />

@@ -7,7 +7,6 @@ import { useColorBalanceState } from './useColorBalanceState'
 import { useRangeState } from './useRangeState'
 
 const Root = /*#__PURE__*/ styled.div`
-  height: 100%;
   display: grid;
   grid-template-columns: auto 40px 1fr auto;
   align-items: center;
