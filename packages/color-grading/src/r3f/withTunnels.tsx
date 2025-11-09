@@ -18,7 +18,13 @@ export function withTunnels<P extends WithTunnelsProps>(
   const WithTunnels: ComponentType<Omit<P, keyof WithTunnelsProps>> = props => {
     const html = useMemo(() => tunnel(), [])
     const { r3f } = useContext(VideoContext)
-    const tunnels = useMemo(() => ({ HTML: html.In, R3F: r3f.In }), [html, r3f])
+    const tunnels = useMemo(
+      () => ({
+        HTML: html.In,
+        R3F: r3f.In
+      }),
+      [html, r3f]
+    )
     return (
       <>
         <r3f.In>
