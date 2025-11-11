@@ -8,15 +8,17 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 
+const packageName = 'core'
+
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/packages/core',
+  cacheDir: `../../node_modules/.vite/packages/${packageName}`,
   plugins: [
     react(),
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['src/**/*', '*.md']),
     dts({
-      outDir: '../../dist/packages/core/types',
+      outDir: `../../dist/packages/${packageName}/types`,
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
       pathsToAliases: false,
@@ -36,7 +38,7 @@ export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
-    outDir: '../../dist/packages/core',
+    outDir: `../../dist/packages/${packageName}`,
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -50,7 +52,7 @@ export default defineConfig({
         'build/shaders': 'src/shaders/index.ts',
         'build/webgpu': 'src/webgpu/index.ts'
       },
-      name: 'core'
+      name: packageName
     },
     sourcemap: true,
     rollupOptions: {
@@ -77,7 +79,7 @@ export default defineConfig({
         sourcemapPathTransform: relativeSourcePath =>
           relativeSourcePath
             .replace('../../../../node_modules', '../node_modules')
-            .replace('../../../../packages/core/src', '../src')
+            .replace(`../../../../packages/${packageName}/src`, '../src')
       })),
       // External packages that should not be bundled into your library.
       external: [
@@ -97,7 +99,7 @@ export default defineConfig({
     }
   },
   test: {
-    name: 'core',
+    name: packageName,
     watch: false,
     globals: true,
     environment: 'jsdom',

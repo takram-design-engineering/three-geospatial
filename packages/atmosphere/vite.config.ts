@@ -8,15 +8,17 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 
+const packageName = 'atmosphere'
+
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/packages/atmosphere',
+  cacheDir: `../../node_modules/.vite/packages/${packageName}`,
   plugins: [
     react(),
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['assets/**/*', 'src/**/*', '*.md']),
     dts({
-      outDir: '../../dist/packages/atmosphere/types',
+      outDir: `../../dist/packages/${packageName}/types`,
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
       pathsToAliases: false,
@@ -36,7 +38,7 @@ export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
-    outDir: '../../dist/packages/atmosphere',
+    outDir: `../../dist/packages/${packageName}`,
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -51,7 +53,7 @@ export default defineConfig({
         'build/shaders/bruneton': 'src/shaders/bruneton/index.ts',
         'build/webgpu': 'src/webgpu/index.ts'
       },
-      name: 'atmosphere'
+      name: packageName
     },
     sourcemap: true,
     rollupOptions: {
@@ -78,7 +80,7 @@ export default defineConfig({
         sourcemapPathTransform: relativeSourcePath =>
           relativeSourcePath
             .replace('../../../../node_modules', '../node_modules')
-            .replace('../../../../packages/atmosphere/src', '../src')
+            .replace(`../../../../packages/${packageName}/src`, '../src')
       })),
       // External packages that should not be bundled into your library.
       external: [
@@ -98,7 +100,7 @@ export default defineConfig({
     }
   },
   test: {
-    name: 'atmosphere',
+    name: packageName,
     watch: false,
     globals: true,
     environment: 'jsdom',
