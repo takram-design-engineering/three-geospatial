@@ -48,7 +48,6 @@ import { haltonOffsets } from './internals'
 import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RTTextureNode'
-import { textureBicubic } from './sampling'
 import { logarithmicToPerspectiveDepth } from './transformations'
 import { hash, isWebGPU } from './utils'
 
@@ -481,7 +480,7 @@ export class TemporalAntialiasNode extends TempNode {
 
       const outputColor = vec4(0).toVar()
       If(uvWeight.mul(depthWeight).mul(confidence).greaterThan(0), () => {
-        const historyColor = textureBicubic(this.historyNode, prevUV)
+        const historyColor = texture(this.historyNode, prevUV)
         const clippedColor = varianceClipping(
           this.inputNode,
           coord,
