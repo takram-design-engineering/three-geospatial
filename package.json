@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@petamoriken/float16": "^3.9.3",
-    "antd": "^5.27.6",
     "astronomy-engine": "^2.1.19",
     "jotai": "^2.15.0",
     "react-merge-refs": "^3.0.2",
@@ -59,6 +58,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
+    "antd": "^5.27.6",
     "date-fns": "^4.1.0",
     "esbuild": "^0.19.12",
     "eslint": "^9.38.0",

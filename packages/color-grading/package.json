@@ -61,7 +61,6 @@
     }
   },
   "optionalDependencies": {
-    "antd": "^5.27.6",
     "jotai": "^2.15.0",
     "tunnel-rat": "^0.1.2"
   },

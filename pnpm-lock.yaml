@@ -20,9 +20,6 @@ importers:
       '@petamoriken/float16':
         specifier: ^3.9.3
         version: 3.9.3
-      antd:
-        specifier: ^5.27.6
-        version: 5.27.6(date-fns@4.1.0)(luxon@3.7.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       astronomy-engine:
         specifier: ^2.1.19
         version: 2.1.19
@@ -168,6 +165,9 @@ importers:
       '@vitest/ui':
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4)
+      antd:
+        specifier: ^5.27.6
+        version: 5.27.6(date-fns@4.1.0)(luxon@3.7.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
