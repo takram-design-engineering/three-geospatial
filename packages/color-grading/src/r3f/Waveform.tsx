@@ -17,13 +17,13 @@ import type { RasterSource } from '../RasterSource'
 import { WaveformLine, type WaveformMode } from '../WaveformLine'
 import { useCanvasTarget } from './useCanvasTarget'
 import { VideoContext } from './VideoContext'
+import { VideoScope } from './VideoScope'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
   display: grid;
   padding: 16px;
   padding-left: 32px;
-  background-color: black;
   user-select: none;
 `
 
@@ -146,12 +146,14 @@ export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
 
     return (
       <tunnels.HTML>
-        <Root {...props}>
-          <Content ref={contentRef}>
-            <Grid />
-            <Canvas ref={setCanvas} />
-          </Content>
-        </Root>
+        <VideoScope name='Waveform'>
+          <Root {...props}>
+            <Content ref={contentRef}>
+              <Grid />
+              <Canvas ref={setCanvas} />
+            </Content>
+          </Root>
+        </VideoScope>
       </tunnels.HTML>
     )
   }

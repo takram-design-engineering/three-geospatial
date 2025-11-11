@@ -17,13 +17,13 @@ import { HistogramMesh } from '../HistogramMesh'
 import type { HistogramSource } from '../HistogramSource'
 import { useCanvasTarget } from './useCanvasTarget'
 import { VideoContext } from './VideoContext'
+import { VideoScope } from './VideoScope'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
   display: grid;
   padding: 16px;
   padding-top: 24px;
-  background-color: black;
   user-select: none;
 `
 
@@ -119,12 +119,14 @@ export const Histogram = withTunnels<HistogramProps & WithTunnelsProps>(
 
     return (
       <tunnels.HTML>
-        <Root {...props}>
-          <Content ref={contentRef}>
-            <Grid />
-            <Canvas ref={setCanvas} />
-          </Content>
-        </Root>
+        <VideoScope name='Histogram'>
+          <Root {...props}>
+            <Content ref={contentRef}>
+              <Grid />
+              <Canvas ref={setCanvas} />
+            </Content>
+          </Root>
+        </VideoScope>
       </tunnels.HTML>
     )
   }

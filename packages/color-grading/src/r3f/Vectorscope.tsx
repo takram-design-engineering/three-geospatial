@@ -21,13 +21,14 @@ import { VectorscopeLine } from '../VectorscopeLine'
 import { useCanvasTarget } from './useCanvasTarget'
 import { chromaGradient } from './utils'
 import { VideoContext } from './VideoContext'
+import { VideoScope } from './VideoScope'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
   display: grid;
   justify-items: center;
   padding: 16px;
-  background-color: black;
+  padding-top: 8px;
   user-select: none;
 `
 
@@ -211,13 +212,15 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
 
     return (
       <tunnels.HTML>
-        <Root {...props}>
-          <Content ref={contentRef}>
-            <Gradient />
-            <Grid />
-            <Canvas ref={setCanvas} />
-          </Content>
-        </Root>
+        <VideoScope name='Vectorscope'>
+          <Root {...props}>
+            <Content ref={contentRef}>
+              <Gradient />
+              <Grid />
+              <Canvas ref={setCanvas} />
+            </Content>
+          </Root>
+        </VideoScope>
       </tunnels.HTML>
     )
   }
