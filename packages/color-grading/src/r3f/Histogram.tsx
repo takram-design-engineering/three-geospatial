@@ -75,7 +75,8 @@ Grid.displayName = 'Grid'
 
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
-export interface HistogramProps extends ComponentPropsWithRef<typeof Root> {
+export interface HistogramProps
+  extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
   source?: HistogramSource | null
   gain?: number
   pixelRatio?: number

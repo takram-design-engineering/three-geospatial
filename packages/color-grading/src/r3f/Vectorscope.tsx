@@ -162,7 +162,8 @@ Grid.displayName = 'Grid'
 
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
-export interface VectorscopeProps extends ComponentPropsWithRef<typeof Root> {
+export interface VectorscopeProps
+  extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
   source?: RasterSource | null
   gain?: number
   scaled?: boolean
