@@ -102,7 +102,7 @@ const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 export interface WaveformProps
   extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
   source?: RasterSource | null
-  mode?: WaveformMode
+  mode?: WaveformMode | `${WaveformMode}`
   gain?: number
   pixelRatio?: number
 }
@@ -124,7 +124,7 @@ export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
 
     const source = useAtomValue(use(VideoContext).rasterAtom)
     waveform.source = source ?? sourceProp ?? null
-    waveform.mode = mode
+    waveform.mode = mode as WaveformMode
     waveform.gain.value = gain
 
     useEffect(() => {

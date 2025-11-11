@@ -46,8 +46,8 @@ function createStorage3DTexture(size: number): Storage3DTexture {
 }
 
 export const enum ColorGradingMode {
-  HDR = 'HDR',
-  LDR = 'LDR'
+  HDR = 'hdr',
+  LDR = 'ldr'
 }
 
 export class ColorGradingNode extends TempNode {

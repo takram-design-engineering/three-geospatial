@@ -41,9 +41,9 @@ const rec709ToLinear = (value: number): number => {
 }
 
 export const enum Rec709Format {
-  NORMALIZED = 'NORMALIZED',
-  STUDIO_8BIT = 'STUDIO_8BIT',
-  STUDIO_10BIT = 'STUDIO_10BIT'
+  NORMALIZED = 'normalized',
+  STUDIO_8BIT = 'studio-8bit',
+  STUDIO_10BIT = 'studio-10bit'
 }
 
 export function normalizeRec709(

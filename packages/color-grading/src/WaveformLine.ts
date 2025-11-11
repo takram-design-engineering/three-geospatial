@@ -26,56 +26,58 @@ import { hsv2rgb, rgb2hsv, type Node } from '@takram/three-geospatial/webgpu'
 import { linearToRec709, linearToYCbCr } from './colors'
 import type { RasterSource } from './RasterSource'
 
-export type WaveformMode =
-  | 'luma'
-  | 'cb'
-  | 'cr'
-  | 'red'
-  | 'green'
-  | 'blue'
-  | 'rgb'
-  | 'rgb-parade'
-  | 'ycbcr-parade'
-
-interface Mode {
-  components: number
-  color: (color: Node<'vec3'>, channel: Node<'uint'>) => Node<'vec3'>
-  y: (color: Node<'vec3'>, channel: Node<'uint'>) => Node<'float'>
-  x?: (x: Node<'float'>, channel: Node<'uint'>) => Node<'float'>
+export const enum WaveformMode {
+  LUMA = 'luma',
+  CB = 'cb',
+  CR = 'cr',
+  RED = 'red',
+  GREEN = 'green',
+  BLUE = 'blue',
+  RGB = 'rgb',
+  RGB_PARADE = 'rgb-parade',
+  YCBCR_PARADE = 'ycbcr-parade'
 }
 
-const modes: Record<WaveformMode, Mode> = {
-  luma: {
+const modes: Record<
+  WaveformMode,
+  {
+    components: number
+    color: (color: Node<'vec3'>, channel: Node<'uint'>) => Node<'vec3'>
+    y: (color: Node<'vec3'>, channel: Node<'uint'>) => Node<'float'>
+    x?: (x: Node<'float'>, channel: Node<'uint'>) => Node<'float'>
+  }
+> = {
+  [WaveformMode.LUMA]: {
     components: 1,
     color: color => hsv2rgb(vec3(rgb2hsv(color).xy, 1)),
     y: color => linearToYCbCr(color).x
   },
-  cb: {
+  [WaveformMode.CB]: {
     components: 1,
     color: () => vec3(1, 1, 0.25),
     y: color => linearToYCbCr(color).y.add(0.5)
   },
-  cr: {
+  [WaveformMode.CR]: {
     components: 1,
     color: () => vec3(1, 0.25, 1),
     y: color => linearToYCbCr(color).z.add(0.5)
   },
-  red: {
+  [WaveformMode.RED]: {
     components: 1,
     color: () => vec3(1, 0.25, 0.25),
     y: color => linearToRec709(color).r
   },
-  green: {
+  [WaveformMode.GREEN]: {
     components: 1,
     color: () => vec3(0.25, 1, 0.25),
     y: color => linearToRec709(color).g
   },
-  blue: {
+  [WaveformMode.BLUE]: {
     components: 1,
     color: () => vec3(0.25, 0.25, 1),
     y: color => linearToRec709(color).b
   },
-  rgb: {
+  [WaveformMode.RGB]: {
     components: 3,
     color: (_, channel) =>
       Fn(() => {
@@ -85,7 +87,7 @@ const modes: Record<WaveformMode, Mode> = {
       })(),
     y: (color, channel) => linearToRec709(color).element(channel)
   },
-  'rgb-parade': {
+  [WaveformMode.RGB_PARADE]: {
     components: 3,
     color: (_, channel) =>
       Fn(() => {
@@ -96,7 +98,7 @@ const modes: Record<WaveformMode, Mode> = {
     y: (color, channel) => linearToRec709(color).element(channel),
     x: (x, channel) => x.div(3).add(float(channel).div(3))
   },
-  'ycbcr-parade': {
+  [WaveformMode.YCBCR_PARADE]: {
     components: 3,
     color: (color, channel) =>
       Fn(() => {
@@ -131,7 +133,7 @@ export class WaveformLine extends Line {
   private prevComponents?: number
   private readonly prevSize = new Vector2()
 
-  constructor(source?: RasterSource | null, mode: WaveformMode = 'luma') {
+  constructor(source?: RasterSource | null, mode = WaveformMode.LUMA) {
     super()
     this.source = source ?? null
     this.mode = mode
