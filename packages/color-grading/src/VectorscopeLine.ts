@@ -14,20 +14,28 @@ import { hsv2rgb, rgb2hsv } from '@takram/three-geospatial/webgpu'
 import { linearToYCbCr } from './colors'
 import type { RasterSource } from './RasterSource'
 
+export const enum VectorscopeMode {
+  NORMAL = 'normal',
+  SCALED = 'scaled'
+}
+
 export class VectorscopeLine extends Line {
   declare geometry: InstancedBufferGeometry
   declare material: NodeMaterial
 
   source: RasterSource | null
+  mode: VectorscopeMode
 
   gain = uniform(5)
 
   private prevSource?: RasterSource
+  private prevMode?: VectorscopeMode
   private readonly prevSize = new Vector2()
 
-  constructor(source?: RasterSource | null) {
+  constructor(source?: RasterSource | null, mode = VectorscopeMode.NORMAL) {
     super()
     this.source = source ?? null
+    this.mode = mode
 
     this.geometry = new InstancedBufferGeometry()
     this.geometry.setAttribute(
@@ -48,7 +56,10 @@ export class VectorscopeLine extends Line {
     const liftedColor = hsv2rgb(vec3(rgb2hsv(color).xy, 1))
     const ycbcr = linearToYCbCr(color)
 
-    this.material.positionNode = vec3(ycbcr.yz, 0)
+    this.material.positionNode =
+      this.mode === VectorscopeMode.SCALED
+        ? vec3(ycbcr.yz, 0).mul(4 / 3)
+        : vec3(ycbcr.yz, 0)
     this.material.colorNode = liftedColor
       .div(size.y)
       .mul(this.gain)
@@ -61,8 +72,9 @@ export class VectorscopeLine extends Line {
       return
     }
 
-    if (this.source !== this.prevSource) {
+    if (this.source !== this.prevSource || this.mode !== this.prevMode) {
       this.prevSource = this.source
+      this.prevMode = this.mode
       this.updateMaterial()
     }
 

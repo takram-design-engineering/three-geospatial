@@ -57,12 +57,17 @@ const Svg = /*#__PURE__*/ styled.svg`
 const Grid = /*#__PURE__*/ memo(() => (
   <Svg>
     <rect x={0} y={0} width='100%' height='100%' fill='black' stroke='#333' />
-    {[0, 25, 50, 75, 100].map(value => {
+    {[0, 25, 50, 75, 100].map((value, index, { length }) => {
       const x = value
       return (
         <Fragment key={value}>
           <line x1={`${x}%`} x2={`${x}%`} y1='0%' y2='100%' stroke='#333' />
-          <text x={`${x}%`} y={-5} fill='#999' textAnchor='middle'>
+          <text
+            x={`${x}%`}
+            y={-5}
+            fill='#999'
+            textAnchor={index < length - 1 ? 'middle' : 'end'}
+          >
             {value}
           </text>
         </Fragment>

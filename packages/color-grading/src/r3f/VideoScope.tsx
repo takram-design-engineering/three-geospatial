@@ -8,7 +8,7 @@ const Root = /*#__PURE__*/ styled.div`
   background-color: black;
 `
 
-const Name = /*#__PURE__*/ styled.div`
+const Head = /*#__PURE__*/ styled.div`
   margin: 8px;
   margin-bottom: 0;
   color: #ccc;
@@ -17,17 +17,27 @@ const Name = /*#__PURE__*/ styled.div`
   letter-spacing: 0.03em;
 `
 
+const Mode = /*#__PURE__*/ styled.span`
+  color: #666;
+  margin-left: 0.5em;
+`
+
 export interface VideoScopeProps extends ComponentPropsWithRef<typeof Root> {
   name: string
+  mode?: string
 }
 
 export const VideoScope: FC<VideoScopeProps> = ({
   name,
+  mode,
   children,
   ...props
 }) => (
   <Root {...props}>
-    <Name>{name}</Name>
+    <Head>
+      {name}
+      {mode != null && <Mode>{mode}</Mode>}
+    </Head>
     {children}
   </Root>
 )

@@ -17,7 +17,7 @@ import { radians } from '@takram/three-geospatial'
 
 import type { RasterSource } from '../RasterSource'
 import { normalizeYCbCr, Rec709Format } from '../Rec709'
-import { VectorscopeLine } from '../VectorscopeLine'
+import { VectorscopeLine, VectorscopeMode } from '../VectorscopeLine'
 import { useCanvasTarget } from './useCanvasTarget'
 import { chromaGradient } from './utils'
 import { VideoContext } from './VideoContext'
@@ -160,13 +160,18 @@ const Grid = /*#__PURE__*/ memo(() => (
 
 Grid.displayName = 'Grid'
 
+const modeNames: Record<VectorscopeMode, string> = {
+  [VectorscopeMode.NORMAL]: 'Normal',
+  [VectorscopeMode.SCALED]: 'Scaled'
+}
+
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface VectorscopeProps
   extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
   source?: RasterSource | null
+  mode?: VectorscopeMode | `${VectorscopeMode}`
   gain?: number
-  scaled?: boolean
   pixelRatio?: number
 }
 
@@ -174,8 +179,8 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
   ({
     tunnels,
     source: sourceProp,
+    mode = VectorscopeMode.SCALED,
     gain = 5,
-    scaled = true,
     pixelRatio = window.devicePixelRatio,
     ...props
   }) => {
@@ -186,12 +191,16 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
     )
     canvasTarget?.setPixelRatio(pixelRatio)
 
-    const vectorscope = useMemo(() => new VectorscopeLine(), [])
+    const vectorscope = useMemo(() => {
+      const vectorscope = new VectorscopeLine()
+      vectorscope.scale.setScalar(0.75)
+      return vectorscope
+    }, [])
 
     const source = useAtomValue(use(VideoContext).rasterAtom)
     vectorscope.source = source ?? sourceProp ?? null
+    vectorscope.mode = mode as VectorscopeMode
     vectorscope.gain.value = gain
-    vectorscope.scale.setScalar(scaled ? 1 : 0.75)
 
     useEffect(() => {
       return () => {
@@ -213,7 +222,7 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
 
     return (
       <tunnels.HTML>
-        <VideoScope name='Vectorscope'>
+        <VideoScope name='Vectorscope' mode={modeNames[mode]}>
           <Root {...props}>
             <Content ref={contentRef}>
               <Gradient />

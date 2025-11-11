@@ -14,6 +14,7 @@ const Root = /*#__PURE__*/ styled.div`
   grid-template-columns: 1fr repeat(2, 2fr);
   row-gap: 1px;
   column-gap: 1px;
+  background-color: #333;
 `
 
 export interface ColorGradingProps

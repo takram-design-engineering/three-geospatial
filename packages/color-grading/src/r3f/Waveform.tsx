@@ -14,7 +14,7 @@ import { OrthographicCamera } from 'three'
 import type { Renderer } from 'three/webgpu'
 
 import type { RasterSource } from '../RasterSource'
-import { WaveformLine, type WaveformMode } from '../WaveformLine'
+import { WaveformLine, WaveformMode } from '../WaveformLine'
 import { useCanvasTarget } from './useCanvasTarget'
 import { VideoContext } from './VideoContext'
 import { VideoScope } from './VideoScope'
@@ -97,6 +97,18 @@ const Grid = /*#__PURE__*/ memo(() => (
 
 Grid.displayName = 'Grid'
 
+const modeNames: Record<WaveformMode, string> = {
+  [WaveformMode.LUMA]: 'Luma',
+  [WaveformMode.CB]: 'Cb',
+  [WaveformMode.CR]: 'Cr',
+  [WaveformMode.RED]: 'Red',
+  [WaveformMode.GREEN]: 'Green',
+  [WaveformMode.BLUE]: 'Blue',
+  [WaveformMode.RGB]: 'RGB',
+  [WaveformMode.RGB_PARADE]: 'RGB Parade',
+  [WaveformMode.YCBCR_PARADE]: 'YCbCr Parade'
+}
+
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface WaveformProps
@@ -111,7 +123,7 @@ export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
   ({
     tunnels,
     source: sourceProp,
-    mode = 'luma',
+    mode = WaveformMode.LUMA,
     gain = 5,
     pixelRatio = window.devicePixelRatio,
     ...props
@@ -147,7 +159,7 @@ export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
 
     return (
       <tunnels.HTML>
-        <VideoScope name='Waveform'>
+        <VideoScope name='Waveform' mode={modeNames[mode]}>
           <Root {...props}>
             <Content ref={contentRef}>
               <Grid />
