@@ -24,22 +24,18 @@ import { VideoContext } from './VideoContext'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
-  overflow: hidden;
-  position: relative;
-  box-sizing: border-box;
-  min-width: 200px;
-  min-height: 200px;
+  display: grid;
+  justify-items: center;
   padding: 16px;
   background-color: black;
   user-select: none;
 `
 
 const Content = /*#__PURE__*/ styled.div`
-  overflow: hidden;
   position: relative;
-  height: 100%;
-  margin: auto;
   aspect-ratio: 1;
+  min-height: 100px;
+  max-height: 100%;
 `
 
 const strokeWidth = 6

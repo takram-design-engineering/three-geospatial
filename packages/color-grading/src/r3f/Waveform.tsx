@@ -20,11 +20,7 @@ import { VideoContext } from './VideoContext'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
 const Root = /*#__PURE__*/ styled.div`
-  overflow: hidden;
-  position: relative;
-  box-sizing: border-box;
-  min-width: 200px;
-  min-height: 200px;
+  display: grid;
   padding: 16px;
   padding-left: 32px;
   background-color: black;
@@ -33,7 +29,8 @@ const Root = /*#__PURE__*/ styled.div`
 
 const Content = /*#__PURE__*/ styled.div`
   position: relative;
-  height: 100%;
+  min-width: 200px;
+  min-height: 100px;
 `
 
 const Canvas = /*#__PURE__*/ styled.canvas`

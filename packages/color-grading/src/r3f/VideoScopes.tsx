@@ -12,7 +12,7 @@ import { Waveform } from './Waveform'
 const Root = /*#__PURE__*/ styled.div`
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr min-content 1fr;
+  grid-template-columns: repeat(4, 1fr);
   row-gap: 1px;
   column-gap: 1px;
 `
