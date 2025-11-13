@@ -37,7 +37,8 @@
     "build",
     "src",
     "types",
-    "package.json"
+    "package.json",
+    "styles.css"
   ],
   "dependencies": {
     "@takram/three-geospatial": "0.5.1",

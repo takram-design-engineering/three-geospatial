@@ -52,7 +52,8 @@ export default defineConfig({
         'build/index': 'src/index.ts',
         'build/r3f': 'src/r3f/index.ts'
       },
-      name: packageName
+      name: packageName,
+      cssFileName: 'styles'
     },
     sourcemap: true,
     rollupOptions: {
