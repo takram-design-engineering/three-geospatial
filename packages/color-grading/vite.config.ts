@@ -4,6 +4,7 @@ import * as path from 'node:path'
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import replace from '@rollup/plugin-replace'
+import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
@@ -27,7 +28,8 @@ export default defineConfig({
           console.warn(diagnostic)
         })
       }
-    })
+    }),
+    vanillaExtractPlugin()
   ],
 
   // Uncomment this if you are using workers.

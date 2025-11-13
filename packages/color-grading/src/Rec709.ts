@@ -1,8 +1,10 @@
-import { Color, Matrix3, Vector3 } from 'three'
-
-import { remap } from '@takram/three-geospatial'
+import { Color, MathUtils, Matrix3, Vector3 } from 'three'
 
 import type { ColorTuple } from './types'
+
+// This file cannot import other internal packages so far because it's used in
+// vanilla-extract files.
+const { mapLinear: remap } = MathUtils
 
 const Yx = 0.2126
 const Yy = 0.7152

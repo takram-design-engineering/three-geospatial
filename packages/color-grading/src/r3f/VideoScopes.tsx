@@ -1,4 +1,3 @@
-import styled from '@emotion/styled'
 import { useAtomValue } from 'jotai'
 import { use, type ComponentPropsWithRef, type FC } from 'react'
 
@@ -9,17 +8,10 @@ import { Vectorscope } from './Vectorscope'
 import { VideoContext } from './VideoContext'
 import { Waveform } from './Waveform'
 
-const Root = /*#__PURE__*/ styled.div`
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  row-gap: 1px;
-  column-gap: 1px;
-  background-color: #333;
-`
+import * as styles from './VideoScopes.css'
 
 export interface VideoScopesProps
-  extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
+  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   raster?: RasterSource | null
   histogram?: HistogramSource | null
 }
@@ -33,11 +25,11 @@ export const VideoScopes: FC<VideoScopesProps> = ({
   const raster = useAtomValue(rasterAtom) ?? rasterProp
   const histogram = useAtomValue(histogramAtom) ?? histogramProp
   return (
-    <Root {...props}>
+    <div className={styles.root} {...props}>
       <Waveform source={raster} mode='luma' />
       <Waveform source={raster} mode='rgb-parade' />
       <Vectorscope source={raster} />
       <Histogram source={histogram} />
-    </Root>
+    </div>
   )
 }

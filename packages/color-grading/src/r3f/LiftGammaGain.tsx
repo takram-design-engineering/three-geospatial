@@ -1,11 +1,11 @@
-import type { FC } from 'react'
+import type { ComponentPropsWithRef, FC } from 'react'
 
 import type { LiftGammaGainNode } from '../LiftGammaGainNode'
 import { ColorWheel } from './ColorWheel'
-import { ColorWheels, type ColorWheelsProps } from './ColorWheels'
+import { ColorWheels } from './ColorWheels'
 import { useColorWheelState } from './useColorWheelState'
 
-export interface LiftGammaGainProps extends ColorWheelsProps {
+export interface LiftGammaGainProps extends ComponentPropsWithRef<'div'> {
   node: LiftGammaGainNode
 }
 

@@ -1,4 +1,3 @@
-import styled from '@emotion/styled'
 import type { ComponentPropsWithRef, FC } from 'react'
 
 import type { ColorGradingNode } from '../ColorGradingNode'
@@ -6,19 +5,10 @@ import { InputRange } from './Range'
 import { useColorBalanceState } from './useColorBalanceState'
 import { useRangeState } from './useRangeState'
 
-const Root = /*#__PURE__*/ styled.div`
-  display: grid;
-  grid-template-columns: min-content 40px 1fr min-content;
-  align-items: center;
-  align-content: center;
-  column-gap: 8px;
-  row-gap: 16px;
-  padding: 8px 16px;
-  background-color: #222;
-`
+import * as styles from './Adjustments.css'
 
 export interface AdjustmentsProps
-  extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
+  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   node: ColorGradingNode
 }
 
@@ -29,12 +19,12 @@ export const Adjustments: FC<AdjustmentsProps> = ({ node, ...props }) => {
   const vibrance = useRangeState(node, 'vibrance', 1)
 
   return (
-    <Root {...props}>
+    <div className={styles.root} {...props}>
       <InputRange name='Temperature' min={-1} max={1} {...temperature} />
       <InputRange name='Tint' min={-1} max={1} {...tint} />
       <InputRange name='Contrast' min={0} max={2} {...contrast} />
       <InputRange name='Saturation' min={0} max={2} {...saturation} />
       <InputRange name='Vibrance' min={0} max={2} {...vibrance} />
-    </Root>
+    </div>
   )
 }

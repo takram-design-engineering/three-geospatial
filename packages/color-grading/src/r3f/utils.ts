@@ -1,5 +1,33 @@
+import {
+  createElement,
+  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
+  type FC,
+  type HTMLElementType
+} from 'react'
+
 import { Rec709 } from '../Rec709'
 import type { ColorTuple } from '../types'
+
+export function styled<T extends HTMLElementType>(
+  tag: T,
+  option?: string | ComponentPropsWithoutRef<T>
+): FC<ComponentPropsWithRef<T>> {
+  return ({ children, ...props }) =>
+    createElement(
+      tag,
+      {
+        ...(typeof option !== 'string' && option),
+        ...props,
+        ...(typeof option === 'string'
+          ? props.className != null
+            ? { className: `${option} ${props.className}` }
+            : { className: option }
+          : undefined)
+      },
+      children
+    )
+}
 
 // Reference: https://gist.github.com/mjackson/5311256
 export function rgb2hsv(value: ColorTuple): ColorTuple {

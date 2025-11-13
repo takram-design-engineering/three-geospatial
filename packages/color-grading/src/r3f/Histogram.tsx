@@ -1,4 +1,3 @@
-import styled from '@emotion/styled'
 import { useFrame } from '@react-three/fiber'
 import { useAtomValue } from 'jotai'
 import {
@@ -20,42 +19,10 @@ import { VideoContext } from './VideoContext'
 import { VideoScope } from './VideoScope'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
-const Root = /*#__PURE__*/ styled.div`
-  display: grid;
-  padding: 16px;
-  padding-top: 24px;
-  user-select: none;
-`
-
-const Content = /*#__PURE__*/ styled.div`
-  position: relative;
-  min-width: 200px;
-  min-height: 100px;
-`
-
-const Canvas = /*#__PURE__*/ styled.canvas`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
-  mix-blend-mode: screen;
-`
-
-const Svg = /*#__PURE__*/ styled.svg`
-  overflow: visible;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
-`
+import * as styles from './Histogram.css'
 
 const Grid = /*#__PURE__*/ memo(() => (
-  <Svg>
+  <svg className={styles.svg}>
     <rect x={0} y={0} width='100%' height='100%' fill='black' stroke='#333' />
     {[0, 25, 50, 75, 100].map((value, index, { length }) => {
       const x = value
@@ -73,7 +40,7 @@ const Grid = /*#__PURE__*/ memo(() => (
         </Fragment>
       )
     })}
-  </Svg>
+  </svg>
 ))
 
 Grid.displayName = 'Grid'
@@ -81,7 +48,7 @@ Grid.displayName = 'Grid'
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface HistogramProps
-  extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
+  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   source?: HistogramSource | null
   gain?: number
   pixelRatio?: number
@@ -126,12 +93,12 @@ export const Histogram = withTunnels<HistogramProps & WithTunnelsProps>(
     return (
       <tunnels.HTML>
         <VideoScope name='Histogram'>
-          <Root {...props}>
-            <Content ref={contentRef}>
+          <div className={styles.root} {...props}>
+            <div className={styles.content} ref={contentRef}>
               <Grid />
-              <Canvas ref={setCanvas} />
-            </Content>
-          </Root>
+              <canvas className={styles.canvas} ref={setCanvas} />
+            </div>
+          </div>
         </VideoScope>
       </tunnels.HTML>
     )

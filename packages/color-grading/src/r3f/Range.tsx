@@ -8,8 +8,8 @@ import {
   type KeyboardEvent
 } from 'react'
 
+import { IconButton, InputLabel, RangeInput, TextInput } from './elements'
 import { Reset } from './icons'
-import { IconButton, InputLabel, RangeInput, TextInput } from './ui'
 
 export interface InputRangeProps {
   name: string

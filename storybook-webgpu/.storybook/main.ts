@@ -2,6 +2,7 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import type { StorybookConfig } from '@storybook/react-vite'
+import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin'
 import react from '@vitejs/plugin-react'
 import { mergeConfig } from 'vite'
 
@@ -23,7 +24,7 @@ const config: StorybookConfig = {
 
   viteFinal: config =>
     mergeConfig(config, {
-      plugins: [react(), nxViteTsPaths()],
+      plugins: [react(), nxViteTsPaths(), vanillaExtractPlugin()],
       worker: {
         plugins: () => [nxViteTsPaths()]
       },

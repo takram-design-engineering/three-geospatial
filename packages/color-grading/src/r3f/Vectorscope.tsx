@@ -1,4 +1,3 @@
-import styled from '@emotion/styled'
 import { useFrame } from '@react-three/fiber'
 import { useAtomValue } from 'jotai'
 import {
@@ -19,56 +18,11 @@ import type { RasterSource } from '../RasterSource'
 import { normalizeYCbCr, Rec709Format } from '../Rec709'
 import { VectorscopeLine, VectorscopeMode } from '../VectorscopeLine'
 import { useCanvasTarget } from './useCanvasTarget'
-import { chromaGradient } from './utils'
 import { VideoContext } from './VideoContext'
 import { VideoScope } from './VideoScope'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
 
-const Root = /*#__PURE__*/ styled.div`
-  display: grid;
-  justify-items: center;
-  padding: 16px;
-  padding-top: 8px;
-  user-select: none;
-`
-
-const Content = /*#__PURE__*/ styled.div`
-  position: relative;
-  aspect-ratio: 1;
-  min-height: 100px;
-  max-height: 100%;
-`
-
-const strokeWidth = 6
-
-const Canvas = /*#__PURE__*/ styled.canvas`
-  position: absolute;
-  top: ${strokeWidth / 2}px;
-  left: ${strokeWidth / 2}px;
-  width: ${`calc(100% - ${strokeWidth}px)`};
-  height: ${`calc(100% - ${strokeWidth}px)`};
-  image-rendering: pixelated;
-  mix-blend-mode: screen;
-`
-
-const Svg = /*#__PURE__*/ styled.svg`
-  position: absolute;
-  top: ${strokeWidth / 2}px;
-  left: ${strokeWidth / 2}px;
-  width: ${`calc(100% - ${strokeWidth}px)`};
-  height: ${`calc(100% - ${strokeWidth}px)`};
-  font-size: 10px;
-`
-
-const Gradient = /*#__PURE__*/ styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: conic-gradient(${chromaGradient()});
-  border-radius: 50%;
-`
+import * as styles from './Vectorscope.css'
 
 const colors = {
   YL: /*#__PURE__*/ normalizeYCbCr(877, 64, 553, Rec709Format.STUDIO_10BIT),
@@ -84,7 +38,7 @@ const dG = 0.025
 const skinToneAngle = 123
 
 const Grid = /*#__PURE__*/ memo(() => (
-  <Svg>
+  <svg className={styles.svg}>
     <circle cx='50%' cy='50%' r='50%' fill='black' stroke='none' />
     <circle cx='50%' cy='50%' r='37.5%' fill='none' stroke='#333' />
     <circle cx='50%' cy='50%' r='25%' fill='none' stroke='#333' />
@@ -155,7 +109,7 @@ const Grid = /*#__PURE__*/ memo(() => (
       y2={`${50 - Math.sin(radians(skinToneAngle)) * 50}%`}
       stroke='#666'
     />
-  </Svg>
+  </svg>
 ))
 
 Grid.displayName = 'Grid'
@@ -168,7 +122,7 @@ const modeNames: Record<VectorscopeMode, string> = {
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface VectorscopeProps
-  extends Omit<ComponentPropsWithRef<typeof Root>, 'children'> {
+  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   source?: RasterSource | null
   mode?: VectorscopeMode | `${VectorscopeMode}`
   gain?: number
@@ -187,7 +141,10 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
     const contentRef = useRef<HTMLDivElement>(null)
     const [canvasTarget, setCanvas] = useCanvasTarget(
       contentRef.current,
-      (width, height) => [width - strokeWidth, height - strokeWidth]
+      (width, height) => [
+        width - styles.strokeWidth,
+        height - styles.strokeWidth
+      ]
     )
     canvasTarget?.setPixelRatio(pixelRatio)
 
@@ -223,13 +180,13 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
     return (
       <tunnels.HTML>
         <VideoScope name='Vectorscope' mode={modeNames[mode]}>
-          <Root {...props}>
-            <Content ref={contentRef}>
-              <Gradient />
+          <div className={styles.root} {...props}>
+            <div className={styles.content} ref={contentRef}>
+              <div className={styles.gradient} />
               <Grid />
-              <Canvas ref={setCanvas} />
-            </Content>
-          </Root>
+              <canvas className={styles.canvas} ref={setCanvas} />
+            </div>
+          </div>
         </VideoScope>
       </tunnels.HTML>
     )

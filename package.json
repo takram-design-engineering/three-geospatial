@@ -55,6 +55,8 @@
     "@types/shallowequal": "^1.1.5",
     "@types/string-template": "^1.0.7",
     "@types/three": "0.181.0",
+    "@vanilla-extract/css": "^1.17.4",
+    "@vanilla-extract/vite-plugin": "^5.1.1",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
