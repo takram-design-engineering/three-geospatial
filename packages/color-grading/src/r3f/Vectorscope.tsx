@@ -122,7 +122,7 @@ const modeNames: Record<VectorscopeMode, string> = {
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface VectorscopeProps
-  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+  extends Omit<Partial<ComponentPropsWithRef<typeof VideoScope>>, 'children'> {
   source?: RasterSource | null
   mode?: VectorscopeMode | `${VectorscopeMode}`
   gain?: number
@@ -179,8 +179,8 @@ export const Vectorscope = withTunnels<VectorscopeProps & WithTunnelsProps>(
 
     return (
       <tunnels.HTML>
-        <VideoScope name='Vectorscope' mode={modeNames[mode]}>
-          <div className={styles.root} {...props}>
+        <VideoScope {...props} name='Vectorscope' mode={modeNames[mode]}>
+          <div className={styles.root}>
             <div className={styles.content} ref={contentRef}>
               <div className={styles.gradient} />
               <Grid />

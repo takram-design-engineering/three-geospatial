@@ -4,6 +4,7 @@ import type { ColorGradingNode } from '../ColorGradingNode'
 import { InputRange } from './Range'
 import { useColorBalanceState } from './useColorBalanceState'
 import { useRangeState } from './useRangeState'
+import { styledProps } from './utils'
 
 import * as styles from './Adjustments.css'
 
@@ -19,7 +20,7 @@ export const Adjustments: FC<AdjustmentsProps> = ({ node, ...props }) => {
   const vibrance = useRangeState(node, 'vibrance', 1)
 
   return (
-    <div className={styles.root} {...props}>
+    <div {...styledProps(styles.root, props)}>
       <InputRange name='Temperature' min={-1} max={1} {...temperature} />
       <InputRange name='Tint' min={-1} max={1} {...tint} />
       <InputRange name='Contrast' min={0} max={2} {...contrast} />

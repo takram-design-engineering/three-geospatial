@@ -1,5 +1,7 @@
 import type { ComponentPropsWithRef, FC } from 'react'
 
+import { styledProps } from './utils'
+
 import * as styles from './VideoScope.css'
 
 export interface VideoScopeProps extends ComponentPropsWithRef<'div'> {
@@ -13,7 +15,7 @@ export const VideoScope: FC<VideoScopeProps> = ({
   children,
   ...props
 }) => (
-  <div className={styles.root} {...props}>
+  <div {...styledProps(styles.root, props)}>
     <div className={styles.head}>
       {name}
       {mode != null && <span className={styles.mode}>{mode}</span>}

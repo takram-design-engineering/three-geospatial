@@ -5,7 +5,8 @@ import { ColorWheel } from './ColorWheel'
 import { ColorWheels } from './ColorWheels'
 import { useColorWheelState } from './useColorWheelState'
 
-export interface LiftGammaGainProps extends ComponentPropsWithRef<'div'> {
+export interface LiftGammaGainProps
+  extends ComponentPropsWithRef<typeof ColorWheels> {
   node: LiftGammaGainNode
 }
 

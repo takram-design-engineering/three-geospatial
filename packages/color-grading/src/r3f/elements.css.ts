@@ -14,6 +14,7 @@ export const iconButton = /*#__PURE__*/ style({
   border: 'none',
   color: '#666',
   backgroundColor: 'transparent',
+  lineHeight: 0,
   selectors: {
     '&:hover, &:focus-visible': {
       outline: 'none',

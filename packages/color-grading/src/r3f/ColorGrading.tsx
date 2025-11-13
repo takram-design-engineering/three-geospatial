@@ -5,6 +5,7 @@ import type { ColorGradingNode } from '../ColorGradingNode'
 import { Adjustments } from './Adjustments'
 import { LiftGammaGain } from './LiftGammaGain'
 import { ShadowsMidtonesHighlights } from './ShadowsMidtonesHighlights'
+import { styledProps } from './utils'
 import { VideoContext } from './VideoContext'
 
 import * as styles from './ColorGrading.css'
@@ -18,14 +19,14 @@ export const ColorGrading: FC<ColorGradingProps> = ({ node, ...props }) => {
   const { colorGradingNodeAtom } = use(VideoContext)
   const colorGradingNode = useAtomValue(colorGradingNodeAtom) ?? node
   return (
-    <div className={styles.root} {...props}>
+    <div {...styledProps(styles.root, props)}>
       {colorGradingNode != null && (
         <>
           <Adjustments node={colorGradingNode} />
-          <LiftGammaGain node={colorGradingNode.liftGammaGainNode} />
-          <ShadowsMidtonesHighlights
-            node={colorGradingNode.shadowsMidtonesHighlightsNode}
-          />
+            <LiftGammaGain node={colorGradingNode.liftGammaGainNode} />
+            <ShadowsMidtonesHighlights
+              node={colorGradingNode.shadowsMidtonesHighlightsNode}
+            />
         </>
       )}
     </div>

@@ -15,6 +15,7 @@ import type { Renderer } from 'three/webgpu'
 import { HistogramMesh } from '../HistogramMesh'
 import type { HistogramSource } from '../HistogramSource'
 import { useCanvasTarget } from './useCanvasTarget'
+import { styledProps } from './utils'
 import { VideoContext } from './VideoContext'
 import { VideoScope } from './VideoScope'
 import { withTunnels, type WithTunnelsProps } from './withTunnels'
@@ -48,7 +49,7 @@ Grid.displayName = 'Grid'
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface HistogramProps
-  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+  extends Omit<Partial<ComponentPropsWithRef<typeof VideoScope>>, 'children'> {
   source?: HistogramSource | null
   gain?: number
   pixelRatio?: number
@@ -92,8 +93,8 @@ export const Histogram = withTunnels<HistogramProps & WithTunnelsProps>(
 
     return (
       <tunnels.HTML>
-        <VideoScope name='Histogram'>
-          <div className={styles.root} {...props}>
+        <VideoScope {...props} name='Histogram'>
+          <div {...styledProps(styles.root, props)}>
             <div className={styles.content} ref={contentRef}>
               <Grid />
               <canvas className={styles.canvas} ref={setCanvas} />

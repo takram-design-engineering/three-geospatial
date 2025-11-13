@@ -29,6 +29,18 @@ export function styled<T extends HTMLElementType>(
     )
 }
 
+export function styledProps<P extends ComponentPropsWithRef<HTMLElementType>>(
+  className: string,
+  props: P
+): P & { className: string } {
+  return {
+    ...props,
+    ...(props.className != null
+      ? { className: `${className} ${props.className}` }
+      : { className })
+  }
+}
+
 // Reference: https://gist.github.com/mjackson/5311256
 export function rgb2hsv(value: ColorTuple): ColorTuple {
   const [r, g, b] = value

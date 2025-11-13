@@ -79,7 +79,7 @@ const modeNames: Record<WaveformMode, string> = {
 const camera = /*#__PURE__*/ new OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1)
 
 export interface WaveformProps
-  extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+  extends Omit<Partial<ComponentPropsWithRef<typeof VideoScope>>, 'children'> {
   source?: RasterSource | null
   mode?: WaveformMode | `${WaveformMode}`
   gain?: number
@@ -126,8 +126,8 @@ export const Waveform = withTunnels<WaveformProps & WithTunnelsProps>(
 
     return (
       <tunnels.HTML>
-        <VideoScope name='Waveform' mode={modeNames[mode]}>
-          <div className={styles.root} {...props}>
+        <VideoScope {...props} name='Waveform' mode={modeNames[mode]}>
+          <div className={styles.root}>
             <div className={styles.content} ref={contentRef}>
               <Grid />
               <canvas className={styles.canvas} ref={setCanvas} />

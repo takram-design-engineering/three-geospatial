@@ -4,6 +4,7 @@ import { use, type ComponentPropsWithRef, type FC } from 'react'
 import type { HistogramSource } from '../HistogramSource'
 import type { RasterSource } from '../RasterSource'
 import { Histogram } from './Histogram'
+import { styledProps } from './utils'
 import { Vectorscope } from './Vectorscope'
 import { VideoContext } from './VideoContext'
 import { Waveform } from './Waveform'
@@ -25,7 +26,7 @@ export const VideoScopes: FC<VideoScopesProps> = ({
   const raster = useAtomValue(rasterAtom) ?? rasterProp
   const histogram = useAtomValue(histogramAtom) ?? histogramProp
   return (
-    <div className={styles.root} {...props}>
+    <div {...styledProps(styles.root, props)}>
       <Waveform source={raster} mode='luma' />
       <Waveform source={raster} mode='rgb-parade' />
       <Vectorscope source={raster} />

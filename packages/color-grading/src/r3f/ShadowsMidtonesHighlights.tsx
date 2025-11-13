@@ -2,12 +2,11 @@ import type { ComponentPropsWithRef, FC } from 'react'
 
 import type { ShadowsMidtonesHighlightsNode } from '../ShadowsMidtonesHighlightsNode'
 import { ColorWheel } from './ColorWheel'
+import { ColorWheels } from './ColorWheels'
 import { useColorWheelState } from './useColorWheelState'
 
-import * as styles from './ColorWheels.css'
-
 export interface ShadowsMidtonesHighlightsProps
-  extends ComponentPropsWithRef<'div'> {
+  extends ComponentPropsWithRef<typeof ColorWheels> {
   node: ShadowsMidtonesHighlightsNode
 }
 
@@ -20,10 +19,10 @@ export const ShadowsMidtonesHighlights: FC<ShadowsMidtonesHighlightsProps> = ({
   const highlights = useColorWheelState(node, 'setHighlights', [1, 1, 1])
 
   return (
-    <div className={styles.root} {...props}>
+    <ColorWheels {...props}>
       <ColorWheel name='Shadows' {...shadows} />
       <ColorWheel name='Midtones' {...midtones} />
       <ColorWheel name='Highlights' {...highlights} />
-    </div>
+    </ColorWheels>
   )
 }

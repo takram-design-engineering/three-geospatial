@@ -12,6 +12,7 @@ import { Rec709 } from '../Rec709'
 import type { ColorTuple } from '../types'
 import { IconButton, RangeInput, TextInput } from './elements'
 import { Reset } from './icons'
+import { styledProps } from './utils'
 
 import * as styles from './ColorWheel.css'
 
@@ -139,7 +140,7 @@ export const ColorWheel: FC<ColorWheelProps> = ({
 
   const id = useId()
   return (
-    <div className={styles.root} {...props}>
+    <div {...styledProps(styles.root, props)}>
       <div className={styles.head}>
         {name != null && <div className={styles.name}>{name}</div>}
         <div className={styles.topRight}>
