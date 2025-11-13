@@ -7,7 +7,7 @@ import { useColorWheelState } from './useColorWheelState'
 
 export interface ShadowsMidtonesHighlightsProps
   extends ComponentPropsWithRef<typeof ColorWheels> {
-  node: ShadowsMidtonesHighlightsNode
+  node?: ShadowsMidtonesHighlightsNode | null
 }
 
 export const ShadowsMidtonesHighlights: FC<ShadowsMidtonesHighlightsProps> = ({

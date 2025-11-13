@@ -33,8 +33,6 @@ export const Split: FC<SplitProps> = ({ children, ...props }) => {
           cloneElement(child, {
             size: sizes[index],
             ...(index > 0 && {
-              min: 200,
-              defaultSize: 250,
               collapsible: true
             })
           })

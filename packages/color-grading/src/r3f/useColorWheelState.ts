@@ -5,8 +5,8 @@ import type { ColorTuple } from '../types'
 export interface ColorWheelState {
   color: ColorTuple
   offset: number
-  onColorChange: (color: ColorTuple) => void
-  onOffsetChange: (offset: number) => void
+  onColorChange: (event: { value: ColorTuple }) => void
+  onOffsetChange: (event: { value: number }) => void
   onReset: () => void
 }
 
@@ -14,7 +14,7 @@ export function useColorWheelState<
   N extends Record<K, (color: ColorTuple, offset?: number) => N>,
   K extends keyof N
 >(
-  node: N,
+  node: N | null | undefined,
   setter: K,
   initialColor: ColorTuple = [0, 0, 0],
   initialOffset = 0
@@ -26,9 +26,9 @@ export function useColorWheelState<
   offsetRef.current = offset
 
   const handleColorChange = useCallback(
-    (color: ColorTuple) => {
-      node[setter](color, offsetRef.current)
-      setColor(color)
+    ({ value }: { value: ColorTuple }) => {
+      node?.[setter](value, offsetRef.current)
+      setColor(value)
     },
     [node, setter]
   )
@@ -37,9 +37,9 @@ export function useColorWheelState<
   colorRef.current = color
 
   const handleOffsetChange = useCallback(
-    (offset: number) => {
-      node[setter](colorRef.current, offset)
-      setOffset(offset)
+    ({ value }: { value: number }) => {
+      node?.[setter](colorRef.current, value)
+      setOffset(value)
     },
     [node, setter]
   )
@@ -50,7 +50,7 @@ export function useColorWheelState<
   initialOffsetRef.current = initialOffset
 
   const handleReset = useCallback(() => {
-    node[setter](initialColorRef.current, initialOffsetRef.current)
+    node?.[setter](initialColorRef.current, initialOffsetRef.current)
     setColor(initialColorRef.current)
     setOffset(initialOffsetRef.current)
   }, [node, setter])

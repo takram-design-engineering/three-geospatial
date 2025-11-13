@@ -9,7 +9,7 @@ export interface ColorBalanceState {
 }
 
 export function useColorBalanceState(
-  node: ColorBalanceNode,
+  node: ColorBalanceNode | null | undefined,
   initialTemperature = 0,
   initialTint = 0
 ): ColorBalanceState {
@@ -22,16 +22,16 @@ export function useColorBalanceState(
   tintRef.current = tint
 
   const handleTemperatureChange = useCallback(
-    (value: number) => {
-      node.setParams(value, tintRef.current)
+    ({ value }: { value: number }) => {
+      node?.setParams(value, tintRef.current)
       setTemperature(value)
     },
     [node]
   )
 
   const handleTintChange = useCallback(
-    (value: number) => {
-      node.setParams(temperatureRef.current, value)
+    ({ value }: { value: number }) => {
+      node?.setParams(temperatureRef.current, value)
       setTint(value)
     },
     [node]
@@ -43,12 +43,12 @@ export function useColorBalanceState(
   initialTintRef.current = initialTint
 
   const handleTemperatureReset = useCallback(() => {
-    node.setParams(initialTemperatureRef.current, tintRef.current)
+    node?.setParams(initialTemperatureRef.current, tintRef.current)
     setTemperature(initialTemperatureRef.current)
   }, [node])
 
   const handleTintReset = useCallback(() => {
-    node.setParams(temperatureRef.current, initialTintRef.current)
+    node?.setParams(temperatureRef.current, initialTintRef.current)
     setTint(initialTintRef.current)
   }, [node])
 

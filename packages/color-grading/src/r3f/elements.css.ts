@@ -36,7 +36,7 @@ export const rangeInput = /*#__PURE__*/ style({
       margin: '0 -1px',
       border: 'solid 1px #333',
       borderRadius: '4px',
-      backgroundColor: '#111'
+      backgroundColor: 'black'
     },
     '&::-webkit-slider-thumb': {
       appearance: 'none',
@@ -59,12 +59,12 @@ export const rangeInput = /*#__PURE__*/ style({
 export const textInput = /*#__PURE__*/ style({
   boxSizing: 'border-box',
   height: '24px',
-  minWidth: '36px',
+  minWidth: '40px',
   outline: 'solid 1px #333',
   border: 'none',
   borderRadius: '4px',
   color: '#ccc',
-  backgroundColor: '#111',
+  backgroundColor: 'black',
   fontSize: '11px',
   fontVariantNumeric: 'tabular-nums',
   textAlign: 'center',

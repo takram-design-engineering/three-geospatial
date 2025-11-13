@@ -1,4 +1,3 @@
-export * from './Adjustments'
 export * from './ColorGrading'
 export * from './Histogram'
 export * from './LiftGammaGain'

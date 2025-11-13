@@ -2,7 +2,7 @@ import { style } from '@vanilla-extract/css'
 
 import { chromaGradient } from './utils'
 
-import { inputLabel } from './elements.css'
+import { inputLabel as inputLabelBase } from './elements.css'
 
 export const strokeWidth = 6
 
@@ -25,7 +25,7 @@ export const head = /*#__PURE__*/ style({
 })
 
 export const name = /*#__PURE__*/ style([
-  inputLabel,
+  inputLabelBase,
   {
     gridArea: 'name'
   }
@@ -49,7 +49,7 @@ export const gradient = /*#__PURE__*/ style({
   borderRadius: '50%'
 })
 
-export const trackingArea = /*#__PURE__*/ style({
+export const trackball = /*#__PURE__*/ style({
   position: 'absolute',
   top: `${strokeWidth / 2}px`,
   left: `${strokeWidth / 2}px`,
@@ -67,15 +67,15 @@ export const svg = /*#__PURE__*/ style({
   height: '100%'
 })
 
-export const valueGrid = /*#__PURE__*/ style({
+export const values = /*#__PURE__*/ style({
   display: 'grid',
-  gridTemplateColumns: '1fr 1fr 1fr 1fr',
+  gridTemplateColumns: 'repeat(4, 1fr)',
   columnGap: '4px',
   rowGap: '2px'
 })
 
-export const valueLabel = /*#__PURE__*/ style([
-  inputLabel,
+export const inputLabel = /*#__PURE__*/ style([
+  inputLabelBase,
   {
     color: '#999',
     fontSize: '10px',

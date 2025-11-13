@@ -2,12 +2,12 @@ import { useCallback, useRef, useState } from 'react'
 
 export interface RangeState {
   value: number
-  onChange: (value: number) => void
+  onChange: (event: { value: number }) => void
   onReset: () => void
 }
 
 export function useRangeState<N, K extends keyof N>(
-  node: Record<K, number>,
+  node: Record<K, number> | null | undefined,
   setter: K,
   initialValue = 0
 ): RangeState {
@@ -17,8 +17,10 @@ export function useRangeState<N, K extends keyof N>(
   offsetRef.current = value
 
   const handleChange = useCallback(
-    (value: number) => {
-      node[setter] = value
+    ({ value }: { value: number }) => {
+      if (node != null) {
+        node[setter] = value
+      }
       setValue(value)
     },
     [node, setter]
@@ -28,7 +30,9 @@ export function useRangeState<N, K extends keyof N>(
   initialValueRef.current = initialValue
 
   const handleReset = useCallback(() => {
-    node[setter] = initialValueRef.current
+    if (node != null) {
+      node[setter] = initialValueRef.current
+    }
     setValue(initialValueRef.current)
   }, [node, setter])
 

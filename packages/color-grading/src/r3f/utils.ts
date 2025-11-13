@@ -11,19 +11,18 @@ import type { ColorTuple } from '../types'
 
 export function styled<T extends HTMLElementType>(
   tag: T,
-  option?: string | ComponentPropsWithoutRef<T>
+  className: string,
+  defaultProps?: ComponentPropsWithoutRef<T>
 ): FC<ComponentPropsWithRef<T>> {
   return ({ children, ...props }) =>
     createElement(
       tag,
       {
-        ...(typeof option !== 'string' && option),
+        ...defaultProps,
         ...props,
-        ...(typeof option === 'string'
-          ? props.className != null
-            ? { className: `${option} ${props.className}` }
-            : { className: option }
-          : undefined)
+        ...(props.className != null
+          ? { className: `${className} ${props.className}` }
+          : { className })
       },
       children
     )

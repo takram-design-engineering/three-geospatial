@@ -7,7 +7,7 @@ import { useColorWheelState } from './useColorWheelState'
 
 export interface LiftGammaGainProps
   extends ComponentPropsWithRef<typeof ColorWheels> {
-  node: LiftGammaGainNode
+  node?: LiftGammaGainNode | null
 }
 
 export const LiftGammaGain: FC<LiftGammaGainProps> = ({ node, ...props }) => {

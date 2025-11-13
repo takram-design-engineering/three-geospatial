@@ -89,10 +89,10 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
         <Content {...props} />
       </WebGPUCanvas>
     </SplitPanel>
-    <SplitPanel>
+    <SplitPanel defaultSize={300}>
       <ColorGrading />
     </SplitPanel>
-    <SplitPanel>
+    <SplitPanel defaultSize={250}>
       <VideoScopes />
     </SplitPanel>
   </Split>
