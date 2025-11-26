@@ -27,10 +27,16 @@ import {
   temporalAntialias
 } from '@takram/three-geospatial/webgpu'
 
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
+import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
+import { MeshBasicNodeMaterial } from 'three/webgpu'
+
 import type { StoryFC } from '../components/createStory'
 import { Description, TilesAttribution } from '../components/Description'
 import { Globe } from '../components/Globe'
 import { GlobeControls } from '../components/GlobeControls'
+import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
+import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import {
   localDateArgs,
@@ -166,16 +172,50 @@ const Content: FC<StoryProps> = ({
     )
   })
 
-  // Google Maps API key:
-  const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
+  // Google Maps API key (with fallback to Cesium Ion):
+  const googleMapsApiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
     googleMapsApiKey !== '' ? googleMapsApiKey : undefined
   )
+  const cesiumToken = 
+    import.meta.env.STORYBOOK_ION_API_TOKEN ?? 
+    import.meta.env.VITE_CESIUM_ION_TOKEN ?? 
+    ''
 
-  return (
-    <Globe apiKey={apiKey}>
-      <GlobeControls enableDamping overlayScene={overlayScene} />
-    </Globe>
-  )
+  // Use Google Cloud tiles if API key is provided, otherwise fallback to Cesium Ion
+  if (googleMapsApiKey !== undefined && googleMapsApiKey !== '') {
+    return (
+      <Globe apiKey={googleMapsApiKey}>
+        <GlobeControls enableDamping overlayScene={overlayScene} />
+      </Globe>
+    )
+  }
+
+  // Fallback to Cesium Ion (Japan Regional Terrain includes Mount Fuji area)
+  if (cesiumToken !== undefined && cesiumToken !== '') {
+    return (
+      <>
+        <GlobeControls enableDamping overlayScene={overlayScene} />
+        <TilesRenderer>
+          <TilesPlugin
+            plugin={CesiumIonAuthPlugin}
+            args={{
+              apiToken: cesiumToken,
+              assetId: 2767062, // Japan Regional Terrain
+              autoRefreshToken: true
+            }}
+          />
+          <TilesPlugin
+            plugin={TileMaterialReplacementPlugin}
+            args={MeshBasicNodeMaterial}
+          />
+          <TilesPlugin plugin={TilesFadePlugin} />
+        </TilesRenderer>
+      </>
+    )
+  }
+
+  // No tiles available
+  return <GlobeControls enableDamping overlayScene={overlayScene} />
 }
 
 interface StoryProps extends PointOfViewProps {}

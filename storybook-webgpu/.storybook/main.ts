@@ -1,11 +1,14 @@
 import { createRequire } from 'node:module'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import type { StorybookConfig } from '@storybook/react-vite'
 import react from '@vitejs/plugin-react'
 import { mergeConfig } from 'vite'
 
 const require = createRequire(import.meta.url)
+const currentDir = dirname(fileURLToPath(import.meta.url))
+const repoRoot = resolve(currentDir, '..', '..')
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
@@ -24,6 +27,7 @@ const config: StorybookConfig = {
   viteFinal: config =>
     mergeConfig(config, {
       plugins: [react(), nxViteTsPaths()],
+      envDir: repoRoot,
       worker: {
         plugins: () => [nxViteTsPaths()]
       },
