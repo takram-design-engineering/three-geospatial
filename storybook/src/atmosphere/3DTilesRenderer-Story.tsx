@@ -5,7 +5,7 @@ import {
   EffectMaterial,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
+import { Fragment, useLayoutEffect, useRef, type FC, use } from 'react'
 
 import {
   AerialPerspective,
@@ -83,13 +83,22 @@ const Scene: FC<SceneProps> = ({
     sun,
     sky,
     transmittance,
-    inscatter
+    inscatter,
+    useNormals,
+    albedoScale
   } = useControls('aerial perspective', {
     enable: true,
     sun: true,
     sky: true,
     transmittance: true,
-    inscatter: true
+    inscatter: true,
+    useNormals: true,
+    albedoScale: {
+      value: 0.6,
+      min: 0.1,
+      max: 1,
+      step: 0.05
+    }
   })
 
   useLayoutEffect(() => {
@@ -154,7 +163,8 @@ const Scene: FC<SceneProps> = ({
               transmittance={transmittance}
               inscatter={inscatter}
               correctGeometricError={correctGeometricError}
-              albedoScale={2 / Math.PI}
+              albedoScale={albedoScale}
+              useNormals={useNormals}
             />
           )}
           {lensFlare && <LensFlare />}

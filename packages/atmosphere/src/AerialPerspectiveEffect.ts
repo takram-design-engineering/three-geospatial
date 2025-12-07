@@ -72,6 +72,7 @@ export interface AerialPerspectiveEffectOptions {
   normalBuffer?: Texture | null
   octEncodedNormal?: boolean
   reconstructNormal?: boolean
+  useNormals?: boolean
 
   // Precomputed textures
   irradianceTexture?: Texture | null
@@ -157,6 +158,7 @@ export const aerialPerspectiveEffectOptionsDefaults = {
   blendFunction: BlendFunction.NORMAL,
   octEncodedNormal: false,
   reconstructNormal: false,
+  useNormals: true,
   ellipsoid: Ellipsoid.WGS84,
   correctAltitude: true,
   correctGeometricError: true,
@@ -194,6 +196,7 @@ export class AerialPerspectiveEffect extends Effect {
       normalBuffer = null,
       octEncodedNormal,
       reconstructNormal,
+      useNormals,
       irradianceTexture = null,
       scatteringTexture = null,
       transmittanceTexture = null,
@@ -311,6 +314,7 @@ export class AerialPerspectiveEffect extends Effect {
 
     this.octEncodedNormal = octEncodedNormal
     this.reconstructNormal = reconstructNormal
+    this.useNormals = useNormals
     this.singleMieScatteringTexture = singleMieScatteringTexture
     this.higherOrderScatteringTexture = higherOrderScatteringTexture
     this.ellipsoid = ellipsoid
@@ -523,6 +527,9 @@ export class AerialPerspectiveEffect extends Effect {
 
   @define('RECONSTRUCT_NORMAL')
   reconstructNormal: boolean
+
+  @define('USE_NORMALS')
+  useNormals: boolean
 
   get irradianceTexture(): Texture | null {
     return this.uniforms.get('irradiance_texture').value
