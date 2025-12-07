@@ -318,20 +318,25 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     projectionMatrix,
     inverseProjectionMatrix
   );
+  vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
+  vec3 positionECEF = (worldToECEFMatrix * vec4(worldPosition, 1.0)).xyz;
+  positionECEF = positionECEF * METER_TO_LENGTH_UNIT + vGeometryAltitudeCorrection;
+
   vec3 viewNormal;
   #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);
   vec3 dy = dFdy(viewPosition);
   viewNormal = normalize(cross(dx, dy));
-  #else // RECONSTRUCT_NORMAL
+  #elif defined(USE_NORMALS)
   viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
-  vec3 worldPosition = (inverseViewMatrix * vec4(viewPosition, 1.0)).xyz;
+  #if defined(RECONSTRUCT_NORMAL) || defined(USE_NORMALS)
   vec3 worldNormal = (inverseViewMatrix * vec4(viewNormal, 0.0)).xyz;
-  vec3 positionECEF = (worldToECEFMatrix * vec4(worldPosition, 1.0)).xyz;
-  positionECEF = positionECEF * METER_TO_LENGTH_UNIT + vGeometryAltitudeCorrection;
   vec3 normalECEF = (worldToECEFMatrix * vec4(worldNormal, 0.0)).xyz;
+  #else
+  vec3 normalECEF = normalize(positionECEF);
+  #endif
 
   #ifdef CORRECT_GEOMETRIC_ERROR
   correctGeometricError(positionECEF, normalECEF);

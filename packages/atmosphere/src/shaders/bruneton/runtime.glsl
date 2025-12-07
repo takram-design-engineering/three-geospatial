@@ -379,22 +379,15 @@ IrradianceSpectrum GetSunAndSkyIrradiance(
   Length r = length(point);
   Number mu_s = dot(point, sun_direction) / r;
 
-  float indirect_irradiance_factor = 1.0;
-  float direct_irradiance_factor = 1.0;
-  #ifdef USE_NORMALS
-  indirect_irradiance_factor = dot(normal, point) / r;
-  direct_irradiance_factor = dot(normal, sun_direction);
-  #endif
-
   // Indirect irradiance (approximated if the surface is not horizontal).
   sky_irradiance = GetIrradiance(atmosphere, irradiance_texture, r, mu_s) *
-      (1.0 + indirect_irradiance_factor) * 0.5;
+      (1.0 + dot(normal, point) / r) * 0.5;
 
   // Direct irradiance.
   return atmosphere.solar_irradiance *
       GetTransmittanceToSun(
           atmosphere, transmittance_texture, r, mu_s) *
-      max(direct_irradiance_factor, 0.0);
+      max(dot(normal, sun_direction), 0.0);
 }
 
 // @shotamatsuda: Added for the clouds.
