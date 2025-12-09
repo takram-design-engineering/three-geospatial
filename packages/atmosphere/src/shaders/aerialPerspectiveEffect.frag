@@ -327,11 +327,11 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 dx = dFdx(viewPosition);
   vec3 dy = dFdy(viewPosition);
   viewNormal = normalize(cross(dx, dy));
-  #elif defined(USE_NORMALS)
+  #elif defined(HAS_NORMALS)
   viewNormal = readNormal(uv);
   #endif // RECONSTRUCT_NORMAL
 
-  #if defined(RECONSTRUCT_NORMAL) || defined(USE_NORMALS)
+  #if defined(RECONSTRUCT_NORMAL) || defined(HAS_NORMALS)
   vec3 worldNormal = (inverseViewMatrix * vec4(viewNormal, 0.0)).xyz;
   vec3 normalECEF = (worldToECEFMatrix * vec4(worldNormal, 0.0)).xyz;
   #else

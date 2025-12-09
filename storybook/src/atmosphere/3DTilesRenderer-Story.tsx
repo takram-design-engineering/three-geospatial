@@ -84,7 +84,7 @@ const Scene: FC<SceneProps> = ({
     sky,
     transmittance,
     inscatter,
-    useNormals,
+    enableNormals,
     albedoScale
   } = useControls('aerial perspective', {
     enable: true,
@@ -92,7 +92,7 @@ const Scene: FC<SceneProps> = ({
     sky: true,
     transmittance: true,
     inscatter: true,
-    useNormals: true,
+    enableNormals: true,
     albedoScale: {
       value: 0.6,
       min: 0.1,
@@ -157,15 +157,29 @@ const Scene: FC<SceneProps> = ({
           ])}
         >
           {enabled && !normal && !depth && (
-            <AerialPerspective
-              sunLight={sun}
-              skyLight={sky}
-              transmittance={transmittance}
-              inscatter={inscatter}
-              correctGeometricError={correctGeometricError}
-              albedoScale={albedoScale}
-              useNormals={useNormals}
-            />
+            <>
+              {enableNormals && (
+                <AerialPerspective
+                  sunLight={sun}
+                  skyLight={sky}
+                  transmittance={transmittance}
+                  inscatter={inscatter}
+                  correctGeometricError={correctGeometricError}
+                  albedoScale={albedoScale}
+                />
+              )}
+              {!enableNormals && (
+                <AerialPerspective
+                  sunLight={sun}
+                  skyLight={sky}
+                  transmittance={transmittance}
+                  inscatter={inscatter}
+                  correctGeometricError={correctGeometricError}
+                  albedoScale={albedoScale}
+                  normalBuffer={null}
+                />
+              )}
+            </>
           )}
           {lensFlare && <LensFlare />}
           {depth && <Depth useTurbo />}
