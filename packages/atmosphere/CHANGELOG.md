@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `AerialPerspectiveEffect`: Improved post-process lighting when normal buffer is disabled, [97](https://github.com/takram-design-engineering/three-geospatial/pull/97).
+
 ## [0.15.1] - 2025-11-01
 
 ### Fixed
