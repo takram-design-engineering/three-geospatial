@@ -5,7 +5,7 @@ import {
   EffectMaterial,
   type EffectComposer as EffectComposerImpl
 } from 'postprocessing'
-import { Fragment, useLayoutEffect, useRef, type FC, use } from 'react'
+import { Fragment, useLayoutEffect, useRef, type FC } from 'react'
 
 import {
   AerialPerspective,
@@ -84,7 +84,7 @@ const Scene: FC<SceneProps> = ({
     sky,
     transmittance,
     inscatter,
-    enableNormals,
+    normals,
     albedoScale
   } = useControls('aerial perspective', {
     enable: true,
@@ -92,7 +92,7 @@ const Scene: FC<SceneProps> = ({
     sky: true,
     transmittance: true,
     inscatter: true,
-    enableNormals: true,
+    normals: true,
     albedoScale: {
       value: 0.6,
       min: 0.1,
@@ -140,7 +140,11 @@ const Scene: FC<SceneProps> = ({
       <Globe>
         <GlobeControls enableDamping />
       </Globe>
-      <EffectComposer ref={composerRef} multisampling={0}>
+      <EffectComposer
+        ref={composerRef}
+        multisampling={0}
+        enableNormalPass={normals}
+      >
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
           key={JSON.stringify([
@@ -157,29 +161,14 @@ const Scene: FC<SceneProps> = ({
           ])}
         >
           {enabled && !normal && !depth && (
-            <>
-              {enableNormals && (
-                <AerialPerspective
-                  sunLight={sun}
-                  skyLight={sky}
-                  transmittance={transmittance}
-                  inscatter={inscatter}
-                  correctGeometricError={correctGeometricError}
-                  albedoScale={albedoScale}
-                />
-              )}
-              {!enableNormals && (
-                <AerialPerspective
-                  sunLight={sun}
-                  skyLight={sky}
-                  transmittance={transmittance}
-                  inscatter={inscatter}
-                  correctGeometricError={correctGeometricError}
-                  albedoScale={albedoScale}
-                  normalBuffer={null}
-                />
-              )}
-            </>
+            <AerialPerspective
+              sunLight={sun}
+              skyLight={sky}
+              transmittance={transmittance}
+              inscatter={inscatter}
+              correctGeometricError={correctGeometricError}
+              albedoScale={albedoScale}
+            />
           )}
           {lensFlare && <LensFlare />}
           {depth && <Depth useTurbo />}

@@ -16,7 +16,7 @@ import { reinterpretType } from '@takram/three-geospatial'
 // Provided for half-float normal buffer.
 export const EffectComposer: FC<
   EffectComposerProps & RefAttributes<EffectComposerImpl>
-> = ({ ref: forwardedRef, ...props }) => {
+> = ({ ref: forwardedRef, enableNormalPass = true, ...props }) => {
   const ref = useRef<EffectComposerImpl>(null)
   useLayoutEffect(() => {
     const composer = ref.current
@@ -33,7 +33,7 @@ export const EffectComposer: FC<
     <WrappedEffectComposer
       ref={mergeRefs([ref, forwardedRef])}
       {...props}
-      enableNormalPass
+      enableNormalPass={enableNormalPass}
     />
   )
 }
