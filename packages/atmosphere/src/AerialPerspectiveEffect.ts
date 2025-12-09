@@ -516,6 +516,7 @@ export class AerialPerspectiveEffect extends Effect {
 
   set normalBuffer(value: Texture | null) {
     this.uniforms.get('normalBuffer').value = value
+    this.hasNormals = value != null
   }
 
   @define('OCT_ENCODED_NORMAL')
@@ -523,6 +524,9 @@ export class AerialPerspectiveEffect extends Effect {
 
   @define('RECONSTRUCT_NORMAL')
   reconstructNormal: boolean
+
+  @define('HAS_NORMALS')
+  hasNormals = false
 
   get irradianceTexture(): Texture | null {
     return this.uniforms.get('irradiance_texture').value
