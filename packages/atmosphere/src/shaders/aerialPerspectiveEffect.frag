@@ -329,14 +329,14 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   viewNormal = normalize(cross(dx, dy));
   #elif defined(HAS_NORMALS)
   viewNormal = readNormal(uv);
-  #endif // RECONSTRUCT_NORMAL
+  #endif // defined(HAS_NORMALS)
 
   #if defined(RECONSTRUCT_NORMAL) || defined(HAS_NORMALS)
   vec3 worldNormal = (inverseViewMatrix * vec4(viewNormal, 0.0)).xyz;
   vec3 normalECEF = (worldToECEFMatrix * vec4(worldNormal, 0.0)).xyz;
-  #else
+  #else // defined(RECONSTRUCT_NORMAL) || defined(HAS_NORMALS)
   vec3 normalECEF = normalize(positionECEF);
-  #endif
+  #endif // defined(RECONSTRUCT_NORMAL) || defined(HAS_NORMALS)
 
   #ifdef CORRECT_GEOMETRIC_ERROR
   correctGeometricError(positionECEF, normalECEF);
