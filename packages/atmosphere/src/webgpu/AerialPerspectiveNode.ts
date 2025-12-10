@@ -158,23 +158,22 @@ export class AerialPerspectiveNode extends TempNode {
       }
 
       const illuminance = Fn(() => {
-        if (normalNode == null) {
-          throw new Error(
-            'The "normalNode" is required when the "light" is set.'
-          )
-        }
-
         // Normal vector of the surface:
-        const normalView = normalNode.xyz
-        const normalWorld = inverseViewMatrix(camera).mul(
-          vec4(normalView, 0)
-        ).xyz
-        const normalECEF = matrixWorldToECEF.mul(vec4(normalWorld, 0)).xyz
+        let normalECEF
+        if (normalNode != null) {
+          const normalView = normalNode.xyz
+          const normalWorld = inverseViewMatrix(camera).mul(
+            vec4(normalView, 0)
+          ).xyz
+          normalECEF = matrixWorldToECEF.mul(vec4(normalWorld, 0)).xyz
 
-        if (this.correctGeometricError) {
-          normalECEF.assign(
-            mix(normalECEF, normalCorrected, geometryCorrectionAmount)
-          )
+          if (this.correctGeometricError) {
+            normalECEF.assign(
+              mix(normalECEF, normalCorrected, geometryCorrectionAmount)
+            )
+          }
+        } else {
+          normalECEF = positionUnit.normalize()
         }
 
         // Direct and indirect illuminance on the surface:
