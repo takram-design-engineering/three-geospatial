@@ -132,6 +132,7 @@ export const EffectComposer: FC<
         if (child instanceof Effect) {
           const effects: Effect[] = [child]
           if (!isConvolution(child)) {
+            // eslint-disable-next-line no-useless-assignment
             let next: unknown = null
             while ((next = children[i + 1]?.object) instanceof Effect) {
               if (isConvolution(next)) {

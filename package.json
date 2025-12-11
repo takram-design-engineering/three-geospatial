@@ -60,7 +60,7 @@
     "date-fns": "^4.1.0",
     "esbuild": "^0.19.12",
     "eslint": "^9.39.1",
-    "eslint-config-love": "133.0.0",
+    "eslint-config-love": "137.0.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-jsx-a11y": "6.10.2",

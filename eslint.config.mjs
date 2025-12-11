@@ -78,11 +78,15 @@ export default defineConfig(
       'no-negated-condition': 'off',
       'no-plusplus': 'off',
       'no-multi-assign': 'off',
+      'prefer-named-capture-group': 'off',
+      'no-await-in-loop': 'off',
       '@typescript-eslint/init-declarations': 'off',
       '@typescript-eslint/max-lines': 'off',
       '@typescript-eslint/max-params': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/prefer-destructuring': 'off',
+
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
 
       // Only if the rulesets are error prone.
       'eslint-comments/require-description': 'off',
