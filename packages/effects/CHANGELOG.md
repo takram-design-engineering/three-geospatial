@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Migrated types to `@types/three@0.181.0`.
+- Updated dependencies.
+
 ## [0.4.3] - 2025-11-01
 
 ### Fixed

@@ -4,7 +4,9 @@
 
 ### Changed
 
-- `AerialPerspectiveEffect`: Improved post-process lighting when normal buffer is disabled, [97](https://github.com/takram-design-engineering/three-geospatial/pull/97).
+- Migrated types to `@types/three@0.181.0`
+- `AerialPerspectiveEffect`, `AerialPerspectiveNode`: Improved post-process lighting when normal buffer is disabled, [97](https://github.com/takram-design-engineering/three-geospatial/pull/97).
+- Updated dependencies.
 
 ## [0.15.1] - 2025-11-01
 
