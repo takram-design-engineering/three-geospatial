@@ -546,7 +546,7 @@ function useCloudLayersControls(
 }
 
 function setBooleanDefine(
-  material: Material & { defines: Record<string, string> },
+  material: Material & { defines: Record<string, unknown> },
   key: string,
   value: boolean
 ): void {
