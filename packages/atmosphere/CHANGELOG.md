@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Updated dependencies.
+
 ## [0.16.0] - 2025-12-24
 
 ### Changed
