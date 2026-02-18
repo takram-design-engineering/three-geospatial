@@ -3,12 +3,12 @@ import { Material } from 'three'
 import { clamp } from './math'
 
 interface MaterialLike {
-  defines?: Record<string, string>
+  defines?: Record<string, unknown>
   set needsUpdate(value: boolean)
 }
 
 interface EffectLike {
-  defines: Map<string, string>
+  defines: Map<string, unknown>
 }
 
 export function define(name: string) {
@@ -60,6 +60,16 @@ export interface DefineIntDecoratorOptions {
   max?: number
 }
 
+function coerceInt(value: unknown): number {
+  return typeof value === 'number'
+    ? Math.floor(value)
+    : typeof value === 'string'
+      ? parseInt(value, 10)
+      : typeof value === 'boolean'
+        ? +value
+        : 0
+}
+
 export function defineInt(
   name: string,
   {
@@ -76,7 +86,7 @@ export function defineInt(
         enumerable: true,
         get(this: Extract<T, Material>): number {
           const value = this.defines?.[name]
-          return value != null ? parseInt(value, 10) : 0
+          return value != null ? coerceInt(value) : 0
         },
         set(this: Extract<T, Material>, value: number) {
           const prevValue = this[propertyKey]
@@ -92,7 +102,7 @@ export function defineInt(
         enumerable: true,
         get(this: Extract<T, EffectLike>): number {
           const value = this.defines.get(name)
-          return value != null ? parseInt(value, 10) : 0
+          return value != null ? coerceInt(value) : 0
         },
         set(this: Extract<T, EffectLike>, value: number) {
           const prevValue = this[propertyKey]
@@ -112,6 +122,16 @@ export interface DefineFloatDecoratorOptions {
   precision?: number
 }
 
+function coerceFloat(value: unknown): number {
+  return typeof value === 'number'
+    ? value
+    : typeof value === 'string'
+      ? parseFloat(value)
+      : typeof value === 'boolean'
+        ? +value
+        : 0
+}
+
 export function defineFloat(
   name: string,
   {
@@ -129,7 +149,7 @@ export function defineFloat(
         enumerable: true,
         get(this: Extract<T, Material>): number {
           const value = this.defines?.[name]
-          return value != null ? parseFloat(value) : 0
+          return value != null ? coerceFloat(value) : 0
         },
         set(this: Extract<T, Material>, value: number) {
           const prevValue = this[propertyKey]
@@ -145,7 +165,7 @@ export function defineFloat(
         enumerable: true,
         get(this: Extract<T, EffectLike>): number {
           const value = this.defines.get(name)
-          return value != null ? parseFloat(value) : 0
+          return value != null ? coerceFloat(value) : 0
         },
         set(this: Extract<T, EffectLike>, value: number) {
           const prevValue = this[propertyKey]
@@ -174,8 +194,8 @@ export function defineExpression(
     if (target instanceof Material) {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, Material>): string {
-          return this.defines?.[name] ?? ''
+        get(this: Extract<T, Material>): unknown {
+          return this.defines?.[name]
         },
         set(this: Extract<T, Material>, value: string) {
           if (value !== this[propertyKey]) {
@@ -192,8 +212,8 @@ export function defineExpression(
     } else {
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get(this: Extract<T, EffectLike>): string {
-          return this.defines.get(name) ?? ''
+        get(this: Extract<T, EffectLike>): unknown {
+          return this.defines.get(name)
         },
         set(this: Extract<T, EffectLike>, value: string) {
           if (value !== this[propertyKey]) {
