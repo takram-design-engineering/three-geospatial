@@ -77,7 +77,7 @@
     "minimist": "^1.2.8",
     "motion": "^12.34.2",
     "nx": "22.5.1",
-    "postprocessing": "6.37.8",
+    "postprocessing": "6.38.2",
     "prettier": "^3.8.1",
     "prettier-plugin-glsl": "^0.2.4",
     "prettier-plugin-jsdoc": "^1.8.0",

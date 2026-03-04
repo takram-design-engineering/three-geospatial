@@ -8,7 +8,7 @@ overrides:
   '@react-three/drei': 10.7.7
   '@react-three/fiber': 9.3.0
   '@react-three/postprocessing': 3.0.4
-  postprocessing: 6.37.8
+  postprocessing: 6.38.2
   react: 19.0.0
   react-dom: 19.0.0
   three: 0.182.0
@@ -223,8 +223,8 @@ importers:
         specifier: 22.5.1
         version: 22.5.1(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18))
       postprocessing:
-        specifier: 6.37.8
-        version: 6.37.8(three@0.182.0)
+        specifier: 6.38.2
+        version: 6.38.2(three@0.182.0)
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -6840,7 +6840,7 @@ packages:
   n8ao@1.10.1:
     resolution: {integrity: sha512-hhI1pC+BfOZBV1KMwynBrVlIm8wqLxj/abAWhF2nZ0qQKyzTSQa1QtLVS2veRiuoBQXojxobcnp0oe+PUoxf/w==}
     peerDependencies:
-      postprocessing: 6.37.8
+      postprocessing: 6.38.2
       three: 0.182.0
 
   nano-css@5.6.2:
@@ -7222,8 +7222,8 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postprocessing@6.37.8:
-    resolution: {integrity: sha512-qTFUKS51z/fuw2U+irz4/TiKJ/0oI70cNtvQG1WxlPKvBdJUfS1CcFswJd5ATY3slotWfvkDDZAsj1X0fU8BOQ==}
+  postprocessing@6.38.2:
+    resolution: {integrity: sha512-7DwuT7Tkst41ZjSj287g7C9c5/D3Xx5rMgBosg0dadbUPoZD2HNzkadKPol1d2PJAoI9f+Jeh1/v9YfLzpFGVw==}
     peerDependencies:
       three: 0.182.0
 
@@ -11917,8 +11917,8 @@ snapshots:
     dependencies:
       '@react-three/fiber': 9.3.0(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.182.0)
       maath: 0.6.0(@types/three@0.182.0)(three@0.182.0)
-      n8ao: 1.10.1(postprocessing@6.37.8(three@0.182.0))(three@0.182.0)
-      postprocessing: 6.37.8(three@0.182.0)
+      n8ao: 1.10.1(postprocessing@6.38.2(three@0.182.0))(three@0.182.0)
+      postprocessing: 6.38.2(three@0.182.0)
       react: 19.0.0
       three: 0.182.0
     transitivePeerDependencies:
@@ -16808,9 +16808,9 @@ snapshots:
 
   muggle-string@0.4.1: {}
 
-  n8ao@1.10.1(postprocessing@6.37.8(three@0.182.0))(three@0.182.0):
+  n8ao@1.10.1(postprocessing@6.38.2(three@0.182.0))(three@0.182.0):
     dependencies:
-      postprocessing: 6.37.8(three@0.182.0)
+      postprocessing: 6.38.2(three@0.182.0)
       three: 0.182.0
 
   nano-css@5.6.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
@@ -17261,7 +17261,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postprocessing@6.37.8(three@0.182.0):
+  postprocessing@6.38.2(three@0.182.0):
     dependencies:
       three: 0.182.0
 
