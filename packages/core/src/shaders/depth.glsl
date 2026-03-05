@@ -1,5 +1,13 @@
 // cSpell:words logdepthbuf
 
+float readRawDepth(const vec2 uv) {
+  #if DEPTH_PACKING == 3201
+  return unpackRGBAToDepth(texture(depthBuffer, uv));
+  #else // DEPTH_PACKING == 3201
+  return texture(depthBuffer, uv).r;
+  #endif // DEPTH_PACKING == 3201
+}
+
 float reverseLogDepth(const float depth, const float near, const float far) {
   #if defined(USE_LOGDEPTHBUF) || defined(USE_LOGARITHMIC_DEPTH_BUFFER)
   float d = pow(2.0, depth * log2(far + 1.0)) - 1.0;

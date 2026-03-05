@@ -98,14 +98,6 @@ layout(location = 1) out vec3 outputDepthVelocity;
 layout(location = 2) out float outputShadowLength;
 #endif // SHADOW_LENGTH
 
-float readDepth(const vec2 uv) {
-  #if DEPTH_PACKING == 3201
-  return unpackRGBAToDepth(texture(depthBuffer, uv));
-  #else // DEPTH_PACKING == 3201
-  return texture(depthBuffer, uv).r;
-  #endif // DEPTH_PACKING == 3201
-}
-
 float getViewZ(const float depth) {
   #ifdef PERSPECTIVE_CAMERA
   return perspectiveDepthToViewZ(depth, cameraNear, cameraFar);
@@ -818,7 +810,7 @@ vec2 getHazeRayNearFar(const IntersectionResult intersections) {
 #endif // HAZE
 
 float getRayDistanceToScene(const vec3 rayDirection, out float viewZ) {
-  float depth = readDepth(vUv * targetUvScale + temporalJitter);
+  float depth = readRawDepth(vUv * targetUvScale + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     viewZ = getViewZ(depth);
