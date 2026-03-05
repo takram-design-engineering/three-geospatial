@@ -810,7 +810,7 @@ vec2 getHazeRayNearFar(const IntersectionResult intersections) {
 #endif // HAZE
 
 float getRayDistanceToScene(const vec3 rayDirection, out float viewZ) {
-  float depth = readRawDepth(vUv * targetUvScale + temporalJitter);
+  float depth = readRawDepth(depthBuffer, vUv * targetUvScale + temporalJitter);
   if (depth < 1.0 - 1e-7) {
     depth = reverseLogDepth(depth, cameraNear, cameraFar);
     viewZ = getViewZ(depth);

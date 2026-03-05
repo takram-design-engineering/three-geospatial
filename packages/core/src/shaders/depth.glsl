@@ -1,6 +1,6 @@
 // cSpell:words logdepthbuf
 
-float readRawDepth(const vec2 uv) {
+float readRawDepth(const sampler2D depthBuffer, const vec2 uv) {
   #if DEPTH_PACKING == 3201
   return unpackRGBAToDepth(texture(depthBuffer, uv));
   #else // DEPTH_PACKING == 3201

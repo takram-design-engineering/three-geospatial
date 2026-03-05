@@ -285,7 +285,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   }
   #endif // HAS_OVERLAY
 
-  float depth = readRawDepth(uv);
+  float depth = readRawDepth(depthBuffer, uv);
   if (depth >= 1.0 - 1e-8) {
     #ifdef SKY
     vec3 rayDirection = normalize(vRayDirection);
