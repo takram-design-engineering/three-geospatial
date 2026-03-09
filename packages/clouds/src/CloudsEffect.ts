@@ -119,11 +119,13 @@ const shadowMapsParameterKeys = [
 ] as const satisfies Array<keyof CascadedShadowMaps>
 
 interface CloudsShorthand
-  extends UniformShorthand<CloudsMaterial, (typeof cloudsUniformKeys)[number]>,
+  extends
+    UniformShorthand<CloudsMaterial, (typeof cloudsUniformKeys)[number]>,
     PropertyShorthand<[CloudsMaterial, typeof cloudsMaterialParameterKeys]> {}
 
 interface ShadowShorthand
-  extends UniformShorthand<ShadowMaterial, (typeof shadowUniformKeys)[number]>,
+  extends
+    UniformShorthand<ShadowMaterial, (typeof shadowUniformKeys)[number]>,
     PropertyShorthand<
       [
         ShadowMaterial,

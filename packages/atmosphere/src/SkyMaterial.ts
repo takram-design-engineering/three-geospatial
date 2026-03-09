@@ -31,8 +31,7 @@ import fragmentShader from './shaders/sky.frag?raw'
 import sky from './shaders/sky.glsl?raw'
 import vertexShader from './shaders/sky.vert?raw'
 
-export interface SkyMaterialParameters
-  extends AtmosphereMaterialBaseParameters {
+export interface SkyMaterialParameters extends AtmosphereMaterialBaseParameters {
   sun?: boolean
   moon?: boolean
   moonDirection?: Vector3

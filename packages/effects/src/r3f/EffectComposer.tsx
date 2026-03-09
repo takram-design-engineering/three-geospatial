@@ -31,8 +31,9 @@ import { GeometryPass } from '../GeometryPass'
 
 type InferContextValue<T> = T extends Context<infer U> ? U : never
 
-export interface EffectComposerContextValue
-  extends InferContextValue<typeof EffectComposerContext> {
+export interface EffectComposerContextValue extends InferContextValue<
+  typeof EffectComposerContext
+> {
   geometryPass?: GeometryPass
 }
 

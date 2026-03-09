@@ -25,8 +25,7 @@ import { separateProps } from './separateProps'
 export type StarsImpl = Points<StarsGeometry, StarsMaterial>
 
 export interface StarsProps
-  extends ElementProps<typeof Points>,
-    AtmosphereMaterialProps {
+  extends ElementProps<typeof Points>, AtmosphereMaterialProps {
   data?: ArrayBuffer | string
   pointSize?: number
   intensity?: number

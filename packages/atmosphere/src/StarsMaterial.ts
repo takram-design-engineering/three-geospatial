@@ -27,8 +27,7 @@ import runtime from './shaders/bruneton/runtime.glsl?raw'
 import fragmentShader from './shaders/stars.frag?raw'
 import vertexShader from './shaders/stars.vert?raw'
 
-export interface StarsMaterialParameters
-  extends AtmosphereMaterialBaseParameters {
+export interface StarsMaterialParameters extends AtmosphereMaterialBaseParameters {
   pointSize?: number
   intensity?: number
   background?: boolean

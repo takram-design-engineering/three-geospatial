@@ -188,7 +188,8 @@ const Content: FC<StoryProps> = () => {
 interface StoryProps {}
 
 interface StoryArgs
-  extends OutputPassArgs,
+  extends
+    OutputPassArgs,
     ToneMappingArgs,
     LocationArgs,
     LocalDateArgs,

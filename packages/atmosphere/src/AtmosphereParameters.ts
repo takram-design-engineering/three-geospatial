@@ -25,8 +25,9 @@ const paramKeys = [
   'sunRadianceToLuminance'
 ] as const
 
-export interface AtmosphereParametersOptions
-  extends Partial<Pick<AtmosphereParameters, (typeof paramKeys)[number]>> {}
+export interface AtmosphereParametersOptions extends Partial<
+  Pick<AtmosphereParameters, (typeof paramKeys)[number]>
+> {}
 
 function applyOptions(
   target: AtmosphereParameters,

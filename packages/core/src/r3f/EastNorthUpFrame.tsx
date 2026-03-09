@@ -27,7 +27,8 @@ class EastNorthUpFrameGroup extends Group {
 }
 
 export interface EastNorthUpFrameProps
-  extends ElementProps<typeof EastNorthUpFrameGroup, EastNorthUpFrameGroup>,
+  extends
+    ElementProps<typeof EastNorthUpFrameGroup, EastNorthUpFrameGroup>,
     SetOptional<GeodeticLike, 'height'> {
   ellipsoid?: Ellipsoid
   children?: ReactNode

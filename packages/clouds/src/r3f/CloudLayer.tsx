@@ -17,8 +17,7 @@ import { CloudLayers } from '../CloudLayers'
 import { CloudLayersContext } from './CloudLayers'
 
 export interface CloudLayerProps
-  extends CloudLayerLike,
-    ExpandNestedProps<CloudLayerLike, 'densityProfile'> {
+  extends CloudLayerLike, ExpandNestedProps<CloudLayerLike, 'densityProfile'> {
   ref?: Ref<CloudLayerImpl>
   index?: number
 }

@@ -71,23 +71,22 @@ declare module '3d-tiles-renderer/r3f' {
   }
 
   export interface EnvironmentControlsProps
-    extends ControlsBaseComponentProps,
-      Partial<EnvironmentControlsImpl> {}
+    extends ControlsBaseComponentProps, Partial<EnvironmentControlsImpl> {}
 
   export const EnvironmentControls: FC<
     EnvironmentControlsProps & RefAttributes<EnvironmentControlsImpl>
   >
 
   export interface GlobeControlsProps
-    extends ControlsBaseComponentProps,
-      Partial<GlobeControlsImpl> {}
+    extends ControlsBaseComponentProps, Partial<GlobeControlsImpl> {}
 
   export const GlobeControls: FC<
     GlobeControlsProps & RefAttributes<GlobeControlsImpl>
   >
 
-  export interface CameraTransitionProps
-    extends Partial<InstanceType<CameraTransitionManager>> {
+  export interface CameraTransitionProps extends Partial<
+    InstanceType<CameraTransitionManager>
+  > {
     mode?: CameraTransitionMode
     perspectiveCamera?: PerspectiveCamera
     orthographicCamera?: OrthographicCamera

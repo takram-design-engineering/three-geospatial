@@ -20,8 +20,7 @@ declare module '@react-three/fiber' {
   }
 }
 
-export interface SkyLightProps
-  extends ComponentPropsWithoutRef<'skyLightProbe'> {
+export interface SkyLightProps extends ComponentPropsWithoutRef<'skyLightProbe'> {
   ref?: Ref<SkyLightProbe>
 }
 

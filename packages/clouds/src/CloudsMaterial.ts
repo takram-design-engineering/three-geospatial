@@ -73,9 +73,7 @@ export interface CloudsMaterialParameters {
 }
 
 export interface CloudsMaterialUniforms
-  extends CloudParameterUniforms,
-    CloudLayerUniforms,
-    AtmosphereUniforms {
+  extends CloudParameterUniforms, CloudLayerUniforms, AtmosphereUniforms {
   depthBuffer: Uniform<Texture | null>
   viewMatrix: Uniform<Matrix4>
   inverseProjectionMatrix: Uniform<Matrix4>

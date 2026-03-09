@@ -10,8 +10,7 @@ import {
 import fragmentShader from './shaders/downsampleThreshold.frag?raw'
 import vertexShader from './shaders/downsampleThreshold.vert?raw'
 
-export interface DownsampleThresholdMaterialParameters
-  extends ShaderMaterialParameters {
+export interface DownsampleThresholdMaterialParameters extends ShaderMaterialParameters {
   inputBuffer?: Texture | null
   thresholdLevel?: number
   thresholdRange?: number

@@ -21,6 +21,7 @@ export const EffectComposer: FC<
   useLayoutEffect(() => {
     const composer = ref.current
     invariant(ref.current != null)
+    console.log(composer?.passes)
     const normalPass = composer?.passes.find(pass => pass instanceof NormalPass)
     invariant(normalPass != null)
     reinterpretType<NormalPass & { renderTarget: WebGLRenderTarget }>(

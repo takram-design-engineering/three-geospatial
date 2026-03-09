@@ -18,8 +18,10 @@ declare module '@react-three/fiber' {
   }
 }
 
-export interface LightingMaskProps
-  extends Omit<ComponentPropsWithoutRef<'lightingMaskPass'>, 'args'> {
+export interface LightingMaskProps extends Omit<
+  ComponentPropsWithoutRef<'lightingMaskPass'>,
+  'args'
+> {
   ref?: Ref<LightingMaskPass>
 }
 
