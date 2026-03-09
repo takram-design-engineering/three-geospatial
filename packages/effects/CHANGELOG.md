@@ -2,12 +2,15 @@
 
 ## Unreleased
 
-- Fixed logarithmic depth when used with `postprocessing >= 6.38.0`.
-
 ### Changed
 
 - Updated the peer dependency for `postprocessing` to `>= 6.38.0`.
 - Updated dependencies.
+
+### Fixed
+
+- Fixed logarithmic depth when used with `postprocessing >= 6.38.0`.
+- Fixed type errors in decorators when used with `postprocessing >= 6.38.0`.
 
 ## [0.5.0] - 2025-12-24
 

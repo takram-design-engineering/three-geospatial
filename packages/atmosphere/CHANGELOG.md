@@ -2,12 +2,20 @@
 
 ## Unreleased
 
-- Fixed logarithmic depth when used with `postprocessing >= 6.38.0`.
-
 ### Changed
 
 - Updated the peer dependency for `postprocessing` to `>= 6.38.0`.
+- `PrecomputedTexturesLoader`: Removed deprecated `setTypeFromRenderer()`.
+- Removed deprecated `sunIrradiance` and `skyIrradiance` options.
+- Removed deprecated `IrradianceMask`.
+- `AerialPerspectiveEffect`: Removed deprecated `irradianceScale` option.
+- `StarsMaterial`: Removed deprecated `radianceScale` option.
+- Removed deprecated `useAtmosphereTextureProps` hook.
 - Updated dependencies.
+
+### Fixed
+
+- Fixed logarithmic depth when used with `postprocessing >= 6.38.0`.
 
 ## [0.16.0] - 2025-12-24
 
