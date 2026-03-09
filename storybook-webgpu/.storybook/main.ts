@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import type { StorybookConfig } from '@storybook/react-vite'
 import react from '@vitejs/plugin-react'
-import { mergeConfig } from 'vite'
+import { mergeConfig, type UserConfig } from 'vite'
 
 const require = createRequire(import.meta.url)
 
@@ -28,9 +28,13 @@ const config: StorybookConfig = {
         plugins: () => [nxViteTsPaths()]
       },
       build: {
+        commonjsOptions: {
+          // Ignore built-in modules used by workerpool.
+          ignore: ['os', 'child_process', 'worker_threads']
+        },
         sourcemap: process.env.NODE_ENV !== 'production'
       }
-    })
+    } satisfies UserConfig)
 }
 
 export default config
