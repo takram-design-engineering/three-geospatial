@@ -29,8 +29,6 @@ export interface StarsProps
     AtmosphereMaterialProps {
   data?: ArrayBuffer | string
   pointSize?: number
-  /** @deprecated Use intensity instead. */
-  radianceScale?: number
   intensity?: number
   background?: boolean
 }
@@ -45,7 +43,7 @@ export const Stars: FC<StarsProps> = ({
 
   const [
     atmosphereParameters,
-    { pointSize, radianceScale, intensity, background, ...others }
+    { pointSize, intensity, background, ...others }
   ] = separateProps({
     ...starsMaterialParametersDefaults,
     ...contextProps,
@@ -111,7 +109,6 @@ export const Stars: FC<StarsProps> = ({
         object={material}
         {...atmosphereParameters}
         pointSize={pointSize}
-        radianceScale={radianceScale}
         intensity={intensity}
         background={background}
         depthTest={true}

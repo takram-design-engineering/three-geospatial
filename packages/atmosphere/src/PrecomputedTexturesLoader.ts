@@ -101,11 +101,6 @@ export class PrecomputedTexturesLoader extends Loader<PrecomputedTextures> {
     return this
   }
 
-  /** @deprecated Use setType(renderer) instead. */
-  setTypeFromRenderer(renderer: WebGLRenderer): this {
-    return this.setType(renderer)
-  }
-
   override load(
     url: string,
     onLoad?: (data: PrecomputedTextures) => void,
