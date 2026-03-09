@@ -6,6 +6,8 @@ A Three.js and R3F (React Three Fiber) implementation of Eric Bruneton's [Precom
 
 This library is part of a project to prototype the rendering aspect of a Web GIS engine. For more details on the background and current status of this project, please refer to the [main README](/README.md).
 
+**For WebGPU / TSL usage, see [the separate documentation](WEBGPU.md)**
+
 ## Installation
 
 ```sh
