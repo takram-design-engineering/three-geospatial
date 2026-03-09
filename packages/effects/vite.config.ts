@@ -1,4 +1,4 @@
-/// <reference types='vitest' />
+/// <reference types='vitest/config' />
 
 import * as path from 'node:path'
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
