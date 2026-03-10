@@ -1,13 +1,13 @@
 import { Vector2 } from 'three'
 import { int, vec3 } from 'three/tsl'
-import type { Node, NodeBuilder } from 'three/webgpu'
+import type { NodeBuilder } from 'three/webgpu'
 
-import { FnLayout, type NodeObject } from '@takram/three-geospatial/webgpu'
+import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
 import { ProceduralTextureNode } from './ProceduralTextureNode'
 import { stackablePerlinNoise } from './stackableNoise'
 
-const perlin = (point: NodeObject<'vec3'>): NodeObject<'float'> => {
+const perlin = (point: Node<'vec3'>): Node<'float'> => {
   return stackablePerlinNoise(point, vec3(12), int(3))
 }
 
@@ -58,7 +58,7 @@ export class TurbulenceNode extends ProceduralTextureNode {
   }
 
   protected override setupOutputNode(
-    uv: NodeObject<'vec2'>,
+    uv: Node<'vec2'>,
     builder: NodeBuilder
   ): Node {
     return curl(vec3(uv, 0)).mul(0.5).add(0.5)

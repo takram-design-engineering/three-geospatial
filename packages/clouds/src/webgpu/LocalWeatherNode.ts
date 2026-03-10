@@ -1,8 +1,8 @@
 import { Vector2 } from 'three'
 import { float, Loop, smoothstep, vec3, vec4 } from 'three/tsl'
-import type { Node, NodeBuilder } from 'three/webgpu'
+import type { NodeBuilder } from 'three/webgpu'
 
-import { FnLayout, type NodeObject } from '@takram/three-geospatial/webgpu'
+import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
 import { ProceduralTextureNode } from './ProceduralTextureNode'
 import { stackablePerlinNoise, stackableWorleyNoise } from './stackableNoise'
@@ -42,7 +42,7 @@ export class LocalWeatherNode extends ProceduralTextureNode {
   }
 
   protected override setupOutputNode(
-    uv: NodeObject<'vec2'>,
+    uv: Node<'vec2'>,
     builder: NodeBuilder
   ): Node {
     const output = vec4().toVar()

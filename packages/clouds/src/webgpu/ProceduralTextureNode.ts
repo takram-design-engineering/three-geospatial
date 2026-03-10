@@ -17,12 +17,11 @@ import {
 import {
   StorageTexture,
   TempNode,
-  type Node,
   type NodeBuilder,
   type TextureNode
 } from 'three/webgpu'
 
-import { outputTexture, type NodeObject } from '@takram/three-geospatial/webgpu'
+import { outputTexture, type Node } from '@takram/three-geospatial/webgpu'
 
 export abstract class ProceduralTextureNode extends TempNode {
   static override get type(): string {
@@ -65,7 +64,7 @@ export abstract class ProceduralTextureNode extends TempNode {
   }
 
   protected abstract setupOutputNode(
-    uv: NodeObject<'vec2'>,
+    uv: Node<'vec2'>,
     builder: NodeBuilder
   ): Node
 

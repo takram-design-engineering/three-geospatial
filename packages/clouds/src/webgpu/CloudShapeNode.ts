@@ -1,8 +1,8 @@
 import { Vector3 } from 'three'
 import { vec2, vec3, vec4 } from 'three/tsl'
-import type { Node, NodeBuilder } from 'three/webgpu'
+import type { NodeBuilder } from 'three/webgpu'
 
-import { FnLayout, type NodeObject } from '@takram/three-geospatial/webgpu'
+import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
 import { CLOUD_SHAPE_TEXTURE_SIZE } from '../constants'
 import { ProceduralTexture3DNode } from './ProceduralTexture3DNode'
@@ -57,7 +57,7 @@ export class CloudShapeNode extends ProceduralTexture3DNode {
   }
 
   protected override setupOutputNode(
-    uvw: NodeObject<'vec3'>,
+    uvw: Node<'vec3'>,
     builder: NodeBuilder
   ): Node {
     return perlinWorley(uvw).remap(worleyFbm(uvw).sub(1), 1)

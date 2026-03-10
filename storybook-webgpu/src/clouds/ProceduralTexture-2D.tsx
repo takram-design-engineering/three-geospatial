@@ -17,7 +17,7 @@ import {
 import { NodeMaterial, type Renderer } from 'three/webgpu'
 
 import type { ProceduralTextureNode } from '@takram/three-clouds/webgpu'
-import { FnVar, type NodeObject } from '@takram/three-geospatial/webgpu'
+import { FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 import { Description } from '../components/Description'
@@ -27,7 +27,7 @@ import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
 
 export const textureUV = FnVar(
-  (textureSize: NodeObject<'vec2'>, zoom: NodeObject<'float'>) => {
+  (textureSize: Node<'vec2'>, zoom: Node<'float'>) => {
     const scale = screenSize.div(textureSize).div(zoom).toVar()
     const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toVar()
     If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
