@@ -12,7 +12,7 @@ function loopReplacer(
   let string = ''
   for (let i = parseInt(start, 10); i < parseInt(end, 10); ++i) {
     string += snippet
-      .replace(/\[\s*i\s*\]/g, '[' + i + ']')
+      .replace(/\[\s*i\s*\]/g, `[${i}]`)
       .replace(/UNROLLED_LOOP_INDEX/g, `${i}`)
   }
   return string
