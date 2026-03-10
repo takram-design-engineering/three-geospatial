@@ -21,7 +21,7 @@ import {
   Vector3,
   WebGLRenderer
 } from 'three'
-import { OrbitControls } from 'three-stdlib'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 import {
   AerialPerspectiveEffect,

@@ -17,7 +17,6 @@ import {
   ivec2,
   max,
   mix,
-  nodeObject,
   screenCoordinate,
   screenSize,
   screenUV,
@@ -26,6 +25,7 @@ import {
   step,
   struct,
   texture,
+  textureSize,
   uniform,
   vec3,
   vec4
@@ -36,7 +36,6 @@ import {
   QuadMesh,
   RendererUtils,
   TempNode,
-  type Node,
   type NodeBuilder,
   type NodeFrame,
   type Renderer,
@@ -47,10 +46,9 @@ import { cameraFar, cameraNear } from './accessors'
 import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import { haltonOffsets } from './internals'
-import type { NodeObject } from './node'
+import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { convertToTexture } from './RTTextureNode'
-import { textureBicubic } from './sampling'
 import { logarithmicToPerspectiveDepth } from './transformations'
 import { isWebGPU } from './utils'
 
@@ -128,11 +126,11 @@ const varianceOffsets = [
 const varianceClipping = /*#__PURE__*/ FnVar(
   (
     inputNode: TextureNode,
-    coord: NodeObject<'ivec2'>,
-    current: NodeObject<'vec4'>,
-    history: NodeObject<'vec4'>,
-    gamma: NodeObject<'float'>
-  ): NodeObject<'vec4'> => {
+    coord: Node<'ivec2'>,
+    current: Node<'vec4'>,
+    history: Node<'vec4'>,
+    gamma: Node<'float'>
+  ): Node<'vec4'> => {
     const moment1 = current.toVar()
     const moment2 = current.pow2().toVar()
 
@@ -170,7 +168,7 @@ const closestDepthStruct = /*#__PURE__*/ struct({
 })
 
 const getClosestDepth = /*#__PURE__*/ FnVar(
-  (depthNode: TextureNode, inputCoord: NodeObject<'ivec2'>) => {
+  (depthNode: TextureNode, inputCoord: Node<'ivec2'>) => {
     const depth = float(1)
     const coord = ivec2(0)
     for (const offset of neighborOffsets) {
@@ -322,9 +320,9 @@ export class TemporalAntialiasNode extends TempNode {
     // Bind and clear the history render target to make sure it's initialized
     // after the resize which triggers a dispose().
     renderer.setRenderTarget(this.resolveRT)
-    void renderer.clear()
+    renderer.clear()
     renderer.setRenderTarget(this.historyRT)
-    void renderer.clear()
+    renderer.clear()
 
     // Copy the current input to the history with scaling.
     renderer.setRenderTarget(this.historyRT)
@@ -420,10 +418,10 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   private setupResolveNode({ renderer }: NodeBuilder): Node {
-    const getPreviousDepth = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
+    const getPreviousDepth = (uv: Node<'vec2'>): Node<'float'> => {
       const { previousDepthNode: depthNode } = this
       const depth = depthNode
-        .load(ivec2(uv.mul(depthNode.size(0)).sub(0.5)))
+        .load(ivec2(uv.mul(textureSize(depthNode)).sub(0.5)))
         .toVar()
       return renderer.logarithmicDepthBuffer
         ? logarithmicToPerspectiveDepth(
@@ -483,7 +481,7 @@ export class TemporalAntialiasNode extends TempNode {
 
       const outputColor = vec4(0).toVar()
       If(uvWeight.mul(depthWeight).mul(confidence).greaterThan(0), () => {
-        const historyColor = textureBicubic(this.historyNode, prevUV)
+        const historyColor = texture(this.historyNode, prevUV)
         const clippedColor = varianceClipping(
           this.inputNode,
           coord,
@@ -560,13 +558,11 @@ export const temporalAntialias =
     depthNode: TextureNode,
     velocityNode: TextureNode,
     camera: Camera
-  ): NodeObject<TemporalAntialiasNode> =>
-    nodeObject(
-      new TemporalAntialiasNode(
-        velocityNodeImmutable,
-        convertToTexture(inputNode, 'TemporalAntialiasNode.Input'),
-        depthNode,
-        velocityNode,
-        camera
-      )
+  ): TemporalAntialiasNode =>
+    new TemporalAntialiasNode(
+      velocityNodeImmutable,
+      convertToTexture(inputNode, 'TemporalAntialiasNode.Input'),
+      depthNode,
+      velocityNode,
+      camera
     )

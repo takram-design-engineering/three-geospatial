@@ -2,12 +2,15 @@ import { RenderPass } from 'postprocessing'
 import {
   HalfFloatType,
   type Camera,
+  type DataTextureImageData,
   type Material,
   type Scene,
   type Texture,
   type WebGLRenderer,
   type WebGLRenderTarget
 } from 'three'
+
+import { reinterpretType } from '@takram/three-geospatial'
 
 import { setupMaterialsForGeometryPass } from './setupMaterialsForGeometryPass'
 
@@ -47,6 +50,7 @@ export class GeometryPass extends RenderPass {
   }
 
   override setSize(width: number, height: number): void {
+    reinterpretType<DataTextureImageData>(this.geometryTexture.image)
     this.geometryTexture.image.width = width
     this.geometryTexture.image.height = height
   }

@@ -113,11 +113,11 @@ function clearRenderTarget(
     if (renderTarget instanceof RenderTarget3D) {
       for (let i = 0; i < renderTarget.depth; ++i) {
         renderer.setRenderTarget(renderTarget, i)
-        void renderer.clearColor()
+        renderer.clearColor()
       }
     } else {
       renderer.setRenderTarget(renderTarget)
-      void renderer.clearColor()
+      renderer.clearColor()
     }
   }
 }

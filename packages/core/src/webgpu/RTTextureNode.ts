@@ -1,4 +1,4 @@
-import { nodeObject, uv } from 'three/tsl'
+import { uv } from 'three/tsl'
 import {
   HalfFloatType,
   LinearFilter,
@@ -14,8 +14,6 @@ import {
   type NodeBuilder,
   type NodeFrame
 } from 'three/webgpu'
-
-import type { NodeObject } from './node'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -50,7 +48,7 @@ export class RTTextureNode extends TextureNode {
 
   constructor(node: Node, uvNode?: Node) {
     const renderTarget = createRenderTarget()
-    super(renderTarget.texture, uvNode != null ? nodeObject(uvNode) : uv())
+    super(renderTarget.texture, uvNode ?? uv())
     this.node = node
     this.renderTarget = renderTarget
     this.updateBeforeType = NodeUpdateType.FRAME
@@ -84,7 +82,7 @@ export class RTTextureNode extends TextureNode {
     const { material } = this
     // I don't fully understand why, but updates on "node" doesn't propagate
     // unless giving the builder context.
-    material.fragmentNode = nodeObject(this.node).context(builder.getContext())
+    material.fragmentNode = this.node.context(builder.getContext())
     material.needsUpdate = true
     return super.setup(builder)
   }
@@ -107,7 +105,7 @@ export class RTTextureNode extends TextureNode {
 
 export const rtTexture = (
   ...args: ConstructorParameters<typeof RTTextureNode>
-): NodeObject<RTTextureNode> => nodeObject(new RTTextureNode(...args))
+): RTTextureNode => new RTTextureNode(...args)
 
 export const convertToTexture = (
   node: Node & {
@@ -116,7 +114,7 @@ export const convertToTexture = (
     getTextureNode?: () => TextureNode
   },
   name?: string
-): NodeObject<TextureNode> => {
+): TextureNode => {
   let textureNode: TextureNode
   if (node.isTextureNode === true || node.isSampleNode === true) {
     textureNode = node as TextureNode
@@ -128,5 +126,5 @@ export const convertToTexture = (
       textureNode.value.name = name
     }
   }
-  return nodeObject(textureNode)
+  return textureNode
 }

@@ -31,8 +31,9 @@ import { GeometryPass } from '../GeometryPass'
 
 type InferContextValue<T> = T extends Context<infer U> ? U : never
 
-export interface EffectComposerContextValue
-  extends InferContextValue<typeof EffectComposerContext> {
+export interface EffectComposerContextValue extends InferContextValue<
+  typeof EffectComposerContext
+> {
   geometryPass?: GeometryPass
 }
 
@@ -132,6 +133,7 @@ export const EffectComposer: FC<
         if (child instanceof Effect) {
           const effects: Effect[] = [child]
           if (!isConvolution(child)) {
+            // eslint-disable-next-line no-useless-assignment
             let next: unknown = null
             while ((next = children[i + 1]?.object) instanceof Effect) {
               if (isConvolution(next)) {

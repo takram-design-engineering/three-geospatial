@@ -83,13 +83,22 @@ const Scene: FC<SceneProps> = ({
     sun,
     sky,
     transmittance,
-    inscatter
+    inscatter,
+    normals,
+    albedoScale
   } = useControls('aerial perspective', {
     enable: true,
     sun: true,
     sky: true,
     transmittance: true,
-    inscatter: true
+    inscatter: true,
+    normals: true,
+    albedoScale: {
+      value: 0.6,
+      min: 0.1,
+      max: 1,
+      step: 0.05
+    }
   })
 
   useLayoutEffect(() => {
@@ -131,7 +140,11 @@ const Scene: FC<SceneProps> = ({
       <Globe>
         <GlobeControls enableDamping />
       </Globe>
-      <EffectComposer ref={composerRef} multisampling={0}>
+      <EffectComposer
+        ref={composerRef}
+        multisampling={0}
+        enableNormalPass={normals}
+      >
         <Fragment
           // Effects are order-dependant; we need to reconstruct the nodes.
           key={JSON.stringify([
@@ -154,7 +167,7 @@ const Scene: FC<SceneProps> = ({
               transmittance={transmittance}
               inscatter={inscatter}
               correctGeometricError={correctGeometricError}
-              albedoScale={2 / Math.PI}
+              albedoScale={albedoScale}
             />
           )}
           {lensFlare && <LensFlare />}

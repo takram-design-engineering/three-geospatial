@@ -27,11 +27,8 @@ import runtime from './shaders/bruneton/runtime.glsl?raw'
 import fragmentShader from './shaders/stars.frag?raw'
 import vertexShader from './shaders/stars.vert?raw'
 
-export interface StarsMaterialParameters
-  extends AtmosphereMaterialBaseParameters {
+export interface StarsMaterialParameters extends AtmosphereMaterialBaseParameters {
   pointSize?: number
-  /** @deprecated Use intensity instead. */
-  radianceScale?: number
   intensity?: number
   background?: boolean
   ground?: boolean
@@ -63,14 +60,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
   pointSize: number
 
   constructor(params?: StarsMaterialParameters) {
-    const {
-      pointSize,
-      radianceScale,
-      intensity,
-      background,
-      ground,
-      ...others
-    } = {
+    const { pointSize, intensity, background, ground, ...others } = {
       ...starsMaterialParametersDefaults,
       ...params
     }
@@ -95,7 +85,7 @@ export class StarsMaterial extends AtmosphereMaterialBase {
         cameraFar: new Uniform(0),
         pointSize: new Uniform(0),
         magnitudeRange: new Uniform(new Vector2(-2, 8)),
-        intensity: new Uniform(radianceScale ?? intensity),
+        intensity: new Uniform(intensity),
         ...others.uniforms
       } satisfies StarsMaterialUniforms,
       defines: {
@@ -137,16 +127,6 @@ export class StarsMaterial extends AtmosphereMaterialBase {
 
   get magnitudeRange(): Vector2 {
     return this.uniforms.magnitudeRange.value
-  }
-
-  /** @deprecated Use intensity instead. */
-  get radianceScale(): number {
-    return this.intensity
-  }
-
-  /** @deprecated Use intensity instead. */
-  set radianceScale(value: number) {
-    this.intensity = value
   }
 
   get intensity(): number {

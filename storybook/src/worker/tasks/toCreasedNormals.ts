@@ -1,7 +1,5 @@
-/* eslint-env worker */
-
 import { Vector3 } from 'three'
-import { toCreasedNormals as toCreasedNormalsImpl } from 'three-stdlib'
+import { toCreasedNormals as toCreasedNormalsImpl } from 'three/addons/utils/BufferGeometryUtils.js'
 
 import {
   fromBufferGeometryLike,

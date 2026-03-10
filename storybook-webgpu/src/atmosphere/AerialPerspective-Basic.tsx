@@ -1,5 +1,4 @@
 import { useThree } from '@react-three/fiber'
-import { CesiumIonAuthPlugin } from '3d-tiles-renderer/plugins'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { useMemo, type FC } from 'react'
 import { AgXToneMapping, Scene } from 'three'
@@ -53,6 +52,7 @@ import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { usePointOfView, type PointOfViewProps } from '../hooks/usePointOfView'
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
+import { CesiumIonTerrainPlugin } from '../plugins/CesiumIonTerrainPlugin'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 
@@ -180,7 +180,7 @@ const Content: FC<StoryProps> = ({
       <GlobeControls enableDamping overlayScene={overlayScene} />
       <TilesRenderer>
         <TilesPlugin
-          plugin={CesiumIonAuthPlugin}
+          plugin={CesiumIonTerrainPlugin}
           args={{
             apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
             assetId: 2767062, // Japan Regional Terrain

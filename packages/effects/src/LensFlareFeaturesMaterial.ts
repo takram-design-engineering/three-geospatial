@@ -10,8 +10,7 @@ import {
 import fragmentShader from './shaders/lensFlareFeatures.frag?raw'
 import vertexShader from './shaders/lensFlareFeatures.vert?raw'
 
-export interface LensFlareFeaturesMaterialParameters
-  extends ShaderMaterialParameters {
+export interface LensFlareFeaturesMaterialParameters extends ShaderMaterialParameters {
   inputBuffer?: Texture | null
   lensColorTexture?: Texture | null
   ghostAmount?: number

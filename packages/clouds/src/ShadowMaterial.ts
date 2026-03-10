@@ -37,9 +37,7 @@ export interface ShadowMaterialParameters {
 }
 
 export interface ShadowMaterialUniforms
-  extends CloudParameterUniforms,
-    CloudLayerUniforms,
-    AtmosphereUniforms {
+  extends CloudParameterUniforms, CloudLayerUniforms, AtmosphereUniforms {
   [key: string]: Uniform<unknown>
   inverseShadowMatrices: Uniform<Matrix4[]>
   reprojectionMatrices: Uniform<Matrix4[]>

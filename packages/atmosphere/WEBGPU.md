@@ -1,8 +1,41 @@
 # @takram/three-atmosphere/webgpu
 
-[![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
+[![npm version](https://img.shields.io/npm/v/@takram/three-atmosphere.svg?style=flat-square)](https://www.npmjs.com/package/@takram/three-atmosphere) [![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
 
-A work-in-progress and experimental WebGPU support for `@takram/three-atmosphere`.
+A work-in-progress WebGPU support for `@takram/three-atmosphere`.
+
+Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation.
+
+## Installation
+
+```sh
+npm install @takram/three-atmosphere
+pnpm add @takram/three-atmosphere
+yarn add @takram/three-atmosphere
+```
+
+Peer dependencies include `three`, as well as `@react-three/fiber` when using R3F.
+
+```
+three @react-three/fiber
+```
+
+Please note the peer dependencies differ from the required versions to maintain compatibility with the WebGL codebase. When using `@takram/three-atmosphere/webgpu`, apply the following rules.
+
+```
+"three": ">=0.181.0"
+```
+
+## Examples
+
+<p align="center">
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-space--space"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/space.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-low-earth-orbit--low-earth-orbit"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/low-earth-orbit.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-cruising-altitude--cruising-altitude"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/cruising-altitude.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-cityscape--cityscape"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/cityscape.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-non-geospatial--non-geospatial"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/non-geospatial.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-sky--moon-surface"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/moon-surface.webp" /></a>
+</p>
 
 ## Usage
 
@@ -157,6 +190,8 @@ The following terms refer to class fields:
 
 ## AtmosphereContextNode
 
+This node aggregates the LUT, uniforms and static options that are shared across all atmospheric nodes. A single instance should be created and passed to all atmospheric nodes to ensure consistent rendering.
+
 → [Source](/packages/atmosphere/src/webgpu/AtmosphereContextNode.ts)
 
 ### Constructor
@@ -183,7 +218,7 @@ lutNode: AtmosphereLUTNode
 matrixWorldToECEF = uniform(new Matrix4())
 ```
 
-The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js’s Y-up coordinate system.
+The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js's Y-up coordinate system.
 
 It must be orthogonal and consist only of translation and rotation (no scaling).
 
@@ -210,7 +245,7 @@ The normalized direction to the sun and moon in ECEF coordinates.
 matrixMoonFixedToECEF = uniform(new Matrix4())
 ```
 
-The rotation matrix for converting moon fixed coordinates to ECEF coordinates. This matrix is used to orient the moon’s surface as seen from the earth in `MoonNode`.
+The rotation matrix for converting moon fixed coordinates to ECEF coordinates. This matrix is used to orient the moon's surface as seen from the earth in `MoonNode`.
 
 ### Static options
 
@@ -236,9 +271,9 @@ The ellipsoid model representing the earth.
 correctAltitude = true
 ```
 
-Whether to adjust the atmosphere’s inner sphere to osculate (touch and share a tangent with) the ellipsoid.
+Whether to adjust the atmosphere's inner sphere to osculate (touch and share a tangent with) the ellipsoid.
 
-The atmosphere is approximated as a sphere, with a radius between the ellipsoid’s major and minor axes. The difference can exceed 10,000 meters in the worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
+The atmosphere is approximated as a sphere, with a radius between the ellipsoid's major and minor axes. The difference can exceed 10,000 meters in the worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
 
 #### constrainCamera
 
@@ -246,7 +281,7 @@ The atmosphere is approximated as a sphere, with a radius between the ellipsoid�
 constrainCamera = true
 ```
 
-Whether to constrain the camera above the atmosphere’s inner sphere.
+Whether to constrain the camera above the atmosphere's inner sphere.
 
 #### showGround
 
@@ -254,13 +289,13 @@ Whether to constrain the camera above the atmosphere’s inner sphere.
 showGround = true
 ```
 
-Disable this option to constrain the camera’s ray above the horizon, effectively hiding the virtual ground.
+Disable this option to constrain the camera's ray above the horizon, effectively hiding the virtual ground.
 
 ## AtmosphereLight
 
 Represents direct and indirect sunlight. The lighting is correct at large scale regardless of the materials used on surfaces, unlike `SunDirectionalLight` and `SkyLightProbe` in the previous implementation.
 
-Add it along with [`AtmosphereLightNode`](#atmospherelightnode) to the renderer’s node library before use:
+Add it along with [`AtmosphereLightNode`](#atmospherelightnode) to the renderer's node library before use:
 
 ```ts
 import {
@@ -289,7 +324,7 @@ class AtmosphereLight {
 distance = 1
 ```
 
-The distance from `DirectionalLight.target` to the light’s position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
+The distance from `DirectionalLight.target` to the light's position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
 
 ### Uniforms
 
@@ -311,6 +346,8 @@ Whether to enable indirect sunlight. This must be turned off when you use an env
 
 ## AerialPerspectiveNode
 
+A post-processing node that renders atmospheric transparency and inscattered light. It can optionally apply post-process lighting.
+
 → [Source](/packages/atmosphere/src/webgpu/AerialPerspectiveNode.ts)
 
 ### Constructor
@@ -321,7 +358,7 @@ const aerialPerspective: (
   colorNode: Node,
   depthNode: Node,
   normalNode?: Node | null
-) => NodeObject<AerialPerspectiveNode>
+) => AerialPerspectiveNode
 ```
 
 ### Dependencies
@@ -332,11 +369,15 @@ const aerialPerspective: (
 colorNode: Node
 ```
 
+A node representing the scene pass or diffuse color.
+
 #### depthNode
 
 ```ts
 depthNode: Node
 ```
+
+A node representing the scene's depth.
 
 #### normalNode
 
@@ -344,17 +385,23 @@ depthNode: Node
 normalNode?: Node | null
 ```
 
+A node representing the scene's normal. It is only used for post-process lighting and is not required when `lighting` is disabled.
+
 #### skyNode
 
 ```ts
 skyNode?: Node | null
 ```
 
+A node representing the radiance of celestial sources and atmospheric scattering seen from the camera at the far depth (where the depth value equals 1)
+
 #### shadowLengthNode
 
 ```ts
 shadowLengthNode?: Node | null
 ```
+
+TODO
 
 ### Static options
 
@@ -364,25 +411,47 @@ shadowLengthNode?: Node | null
 correctGeometricError = true
 ```
 
+This option corrects lighting artifacts caused by geometric errors in surface tiles.
+
+When `lighting` is enabled, the surface normals are gradually morphed to a true sphere. Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
+
 #### lighting
 
 ```ts
 lighting = false
 ```
 
-#### transmittance
+Whether to apply direct and indirect irradiance as post-process lighting. This option requires `normalNode` to be set when enabled.
+
+#### transmittance, inscatter
 
 ```ts
 transmittance = true
-```
-
-#### inscatter
-
-```ts
 inscatter = true
 ```
 
+Whether to account for the atmospheric transmittance and inscattered light.
+
+Enabling one without the other is physically incorrect and should only be done for debugging.
+
 ## SkyNode
+
+A node for rendering the sky. It provides 2 constructor functions for different types of view direction mapping.
+
+- `sky`: Uses the camera's view direction. Used in post-processing.
+- `skyBackground`: Interprets the material's UV as equirectangular. Used when assigning the scene's background.
+
+```ts
+import {
+  AtmosphereContextNode,
+  skyBackground
+} from '@takram/three-atmosphere/webgpu'
+import { Scene } from 'three'
+
+const context = new AtmosphereContextNode()
+const scene = new Scene()
+scene.backgroundNode = skyBackground(context)
+```
 
 → [Source](/packages/atmosphere/src/webgpu/SkyNode.ts)
 
@@ -390,9 +459,8 @@ inscatter = true
 
 <!-- prettier-ignore -->
 ```ts
-const sky: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
-const skyWorld: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
-const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNode>
+const sky: (atmosphereContext: AtmosphereContext) => SkyNode
+const skyBackground: (atmosphereContext: AtmosphereContext) => SkyNode
 ```
 
 ### Dependencies
@@ -403,11 +471,15 @@ const skyBackground: (atmosphereContext: AtmosphereContext) => NodeObject<SkyNod
 shadowLengthNode?: Node | null
 ```
 
+TODO
+
 #### sunNode
 
 ```ts
 sunNode: SunNode
 ```
+
+A node representing the sun.
 
 #### moonNode
 
@@ -415,11 +487,15 @@ sunNode: SunNode
 moonNode: MoonNode
 ```
 
+A node representing the moon.
+
 #### starsNode
 
 ```ts
 starsNode: StarsNode
 ```
+
+A node representing stars.
 
 ### Uniforms
 
@@ -429,11 +505,15 @@ starsNode: StarsNode
 sunNode.angularRadius = uniform(0.004675) // ≈ 16 arcminutes
 ```
 
+The angular radius of the sun, in radians.
+
 #### sunNode.intensity
 
 ```ts
 sunNode.intensity = uniform(1)
 ```
+
+A scaling factor to adjust the brightness of the sun.
 
 #### moonNode.angularRadius
 
@@ -441,11 +521,15 @@ sunNode.intensity = uniform(1)
 moonNode.angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
 ```
 
+The angular radius of the moon, in radians.
+
 #### moonNode.intensity
 
 ```ts
 moonNode.intensity = uniform(1)
 ```
+
+A scaling factor to adjust the brightness of the sun.
 
 #### starsNode.pointSize
 
@@ -453,11 +537,15 @@ moonNode.intensity = uniform(1)
 starsNode.pointSize = uniform(1)
 ```
 
+The apparent size of the stars, in pixels.
+
 #### starsNode.intensity
 
 ```ts
 starsNode.intensity = uniform(1)
 ```
+
+A scaling factor to adjust the brightness of the stars.
 
 ### Static options
 
@@ -467,11 +555,15 @@ starsNode.intensity = uniform(1)
 showSun = true
 ```
 
+Whether to display the sun.
+
 #### showMoon
 
 ```ts
 showMoon = true
 ```
+
+Whether to display the moon.
 
 #### showStars
 
@@ -479,7 +571,23 @@ showMoon = true
 showStars = true
 ```
 
+Whether to display the stars.
+
 ## SkyEnvironmentNode
+
+Generates a PMREM texture node for the sky.
+
+```ts
+import {
+  AtmosphereContextNode,
+  skyEnvironment
+} from '@takram/three-atmosphere/webgpu'
+import { Scene } from 'three'
+
+const context = new AtmosphereContextNode()
+const scene = new Scene()
+scene.environmentNode = skyEnvironment(context)
+```
 
 → [Source](/packages/atmosphere/src/webgpu/SkyEnvironmentNode.ts)
 
@@ -489,7 +597,7 @@ showStars = true
 const skyEnvironment: (
   atmosphereContext: AtmosphereContext,
   size?: number
-) => NodeObject<SkyEnvironmentNode>
+) => SkyEnvironmentNode
 ```
 
 ### Dependencies
@@ -500,7 +608,21 @@ const skyEnvironment: (
 skyNode: SkyNode
 ```
 
+A node representing the radiance of celestial sources and atmospheric scattering seen from the camera.
+
 ## AtmosphereParameters
+
+A class that encapsulates the parameters and static options for the atmospheric model based on [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/).
+
+```ts
+import {
+  AtmosphereContextNode,
+  AtmosphereParameters
+} from '@takram/three-atmosphere/webgpu'
+
+const parameters = new AtmosphereParameters()
+const context = new AtmosphereContextNode(parameters)
+```
 
 ### Static options
 

@@ -2,6 +2,8 @@ import {
   Box3,
   LinearFilter,
   NoColorSpace,
+  type Data3DTextureImageData,
+  type DataTextureImageData,
   type Texture,
   type Vector2,
   type Vector3
@@ -31,8 +33,7 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { AnyFloatType } from '@takram/three-geospatial'
-import type { NodeObject } from '@takram/three-geospatial/webgpu'
+import { reinterpretType, type AnyFloatType } from '@takram/three-geospatial'
 
 import type {
   AtmosphereLUTTexture3DName,
@@ -79,6 +80,7 @@ export function setupStorageTexture(
   size: Vector2
 ): void {
   texture.type = textureType
+  reinterpretType<DataTextureImageData>(texture.image)
   texture.image.width = size.x
   texture.image.height = size.y
 }
@@ -89,6 +91,7 @@ export function setupStorage3DTexture(
   size: Vector3
 ): void {
   texture.type = textureType
+  reinterpretType<Data3DTextureImageData>(texture.image)
   texture.image.width = size.x
   texture.image.height = size.y
   texture.image.depth = size.z
@@ -188,12 +191,12 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     'higherOrderScattering'
   )
 
-  private transmittanceNode?: NodeObject<ComputeNode>
-  private directIrradianceNode?: NodeObject<ComputeNode>
-  private singleScatteringNode?: NodeObject<ComputeNode>
-  private scatteringDensityNode?: NodeObject<ComputeNode>
-  private indirectIrradianceNode?: NodeObject<ComputeNode>
-  private multipleScatteringNode?: NodeObject<ComputeNode>
+  private transmittanceNode?: ComputeNode
+  private directIrradianceNode?: ComputeNode
+  private singleScatteringNode?: ComputeNode
+  private scatteringDensityNode?: ComputeNode
+  private indirectIrradianceNode?: ComputeNode
+  private multipleScatteringNode?: ComputeNode
 
   private readonly scatteringOrder = uniform(0)
 

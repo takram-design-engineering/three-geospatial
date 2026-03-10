@@ -14,7 +14,7 @@ import {
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useEffect, useState, type FC, type ReactNode, type Ref } from 'react'
 import { mergeRefs } from 'react-merge-refs'
-import { DRACOLoader } from 'three-stdlib'
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 
 import { radians } from '@takram/three-geospatial'
 

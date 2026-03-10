@@ -14,8 +14,10 @@ declare module '@react-three/fiber' {
   }
 }
 
-export interface EllipsoidMeshProps
-  extends Omit<ElementProps<typeof Mesh>, 'args'> {
+export interface EllipsoidMeshProps extends Omit<
+  ElementProps<typeof Mesh>,
+  'args'
+> {
   args?: ConstructorParameters<typeof EllipsoidGeometry>
 }
 

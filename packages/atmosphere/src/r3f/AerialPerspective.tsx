@@ -31,11 +31,10 @@ function useLoadSTBNTexture(
   return (typeof input === 'string' ? loadedTexture : input) ?? null
 }
 
-export interface AerialPerspectiveProps
-  extends Omit<
-    ElementProps<typeof AerialPerspectiveEffect, AerialPerspectiveEffect>,
-    'stbnTexture'
-  > {
+export interface AerialPerspectiveProps extends Omit<
+  ElementProps<typeof AerialPerspectiveEffect, AerialPerspectiveEffect>,
+  'stbnTexture'
+> {
   stbnTexture?: Data3DTexture | string
 }
 

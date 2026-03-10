@@ -22,8 +22,10 @@ declare module '@react-three/fiber' {
   }
 }
 
-export interface SunLightProps
-  extends Omit<ComponentPropsWithoutRef<'sunDirectionalLight'>, 'target'> {
+export interface SunLightProps extends Omit<
+  ComponentPropsWithoutRef<'sunDirectionalLight'>,
+  'target'
+> {
   ref?: Ref<SunDirectionalLight>
 }
 

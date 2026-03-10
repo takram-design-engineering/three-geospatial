@@ -68,8 +68,7 @@ export interface AtmosphereMaterialProps {
 }
 
 export interface AtmosphereMaterialBaseParameters
-  extends Partial<ShaderMaterialParameters>,
-    AtmosphereMaterialProps {}
+  extends Partial<ShaderMaterialParameters>, AtmosphereMaterialProps {}
 
 export const atmosphereMaterialParametersBaseDefaults = {
   ellipsoid: Ellipsoid.WGS84,

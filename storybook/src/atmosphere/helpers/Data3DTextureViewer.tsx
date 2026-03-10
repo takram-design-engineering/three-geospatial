@@ -12,7 +12,7 @@ import {
   Vector2,
   Vector3
 } from 'three'
-import { EXRLoader } from 'three-stdlib'
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js'
 
 import type { AnyFloatType } from '@takram/three-geospatial'
 

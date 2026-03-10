@@ -7,7 +7,6 @@ import {
   mat3,
   max,
   mix,
-  nodeObject,
   PI,
   select,
   smoothstep,
@@ -121,10 +120,10 @@ export class MoonNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     builder.getContext().atmosphere = this.atmosphereContext
 
-    if (this.rayDirectionECEF == null) {
+    const { rayDirectionECEF } = this
+    if (rayDirectionECEF == null) {
       return
     }
-    const rayDirectionECEF = nodeObject(this.rayDirectionECEF)
     const {
       sunDirectionECEF,
       moonDirectionECEF: directionECEF,

@@ -27,10 +27,9 @@ import {
   uvec4,
   vec2,
   vec3,
-  vec4,
-  type ShaderNodeObject
+  vec4
 } from 'three/tsl'
-import type { Node as N } from 'three/webgpu'
+import { Node as N } from 'three/webgpu'
 
 // prettier-ignore
 const nodes = {
@@ -91,9 +90,7 @@ export type Node<
   T extends NodeType = NodeType
 > = N
 
-export type NodeObject<T extends NodeType | N = N> = ShaderNodeObject<
-  T extends NodeType ? Node<T> : T
->
+export const Node = N
 
 export function node<T extends NodeType>(type: T): (typeof nodes)[T] {
   return nodes[type]

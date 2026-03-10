@@ -161,6 +161,3 @@ export class LightingMaskPass extends Pass {
     this.depthMaskMaterial.uniforms.inverted.value = value
   }
 }
-
-/** @deprecated Use LightingMaskPass instead. */
-export const IrradianceMaskPass = LightingMaskPass

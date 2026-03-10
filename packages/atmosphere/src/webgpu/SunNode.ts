@@ -1,13 +1,4 @@
-import {
-  cos,
-  Fn,
-  fwidth,
-  If,
-  nodeObject,
-  smoothstep,
-  uniform,
-  vec4
-} from 'three/tsl'
+import { cos, Fn, fwidth, If, smoothstep, uniform, vec4 } from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import type { Node } from '@takram/three-geospatial/webgpu'
@@ -35,10 +26,10 @@ export class SunNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     builder.getContext().atmosphere = this.atmosphereContext
 
-    if (this.rayDirectionECEF == null) {
+    const { rayDirectionECEF } = this
+    if (rayDirectionECEF == null) {
       return
     }
-    const rayDirectionECEF = nodeObject(this.rayDirectionECEF)
     const { sunDirectionECEF } = this.atmosphereContext
 
     return Fn(() => {

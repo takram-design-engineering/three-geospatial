@@ -87,16 +87,10 @@ export interface AerialPerspectiveEffectOptions {
   sunDirection?: Vector3
 
   // Rendering options
-  /** @deprecated Use sunLight instead. */
-  sunIrradiance?: boolean
   sunLight?: boolean
-  /** @deprecated Use skyLight instead. */
-  skyIrradiance?: boolean
   skyLight?: boolean
   transmittance?: boolean
   inscatter?: boolean
-  /** @deprecated Use albedoScale instead. */
-  irradianceScale?: number
   albedoScale?: number
   sky?: boolean
   sun?: boolean
@@ -203,13 +197,10 @@ export class AerialPerspectiveEffect extends Effect {
       correctAltitude,
       correctGeometricError,
       sunDirection,
-      sunIrradiance,
       sunLight,
-      skyIrradiance,
       skyLight,
       transmittance,
       inscatter,
-      irradianceScale,
       albedoScale,
       sky,
       sun,
@@ -261,7 +252,7 @@ export class AerialPerspectiveEffect extends Effect {
             altitudeCorrection: new Uniform(new Vector3()),
             geometricErrorCorrectionAmount: new Uniform(0),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
-            albedoScale: new Uniform(irradianceScale ?? albedoScale),
+            albedoScale: new Uniform( albedoScale),
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
             lunarRadianceScale: new Uniform(lunarRadianceScale),
@@ -316,8 +307,8 @@ export class AerialPerspectiveEffect extends Effect {
     this.ellipsoid = ellipsoid
     this.correctAltitude = correctAltitude
     this.correctGeometricError = correctGeometricError
-    this.sunLight = sunIrradiance ?? sunLight
-    this.skyLight = skyIrradiance ?? skyLight
+    this.sunLight = sunLight
+    this.skyLight = skyLight
     this.transmittance = transmittance
     this.inscatter = inscatter
     this.sky = sky
@@ -516,6 +507,7 @@ export class AerialPerspectiveEffect extends Effect {
 
   set normalBuffer(value: Texture | null) {
     this.uniforms.get('normalBuffer').value = value
+    this.hasNormals = value != null
   }
 
   @define('OCT_ENCODED_NORMAL')
@@ -523,6 +515,9 @@ export class AerialPerspectiveEffect extends Effect {
 
   @define('RECONSTRUCT_NORMAL')
   reconstructNormal: boolean
+
+  @define('HAS_NORMALS')
+  hasNormals = false
 
   get irradianceTexture(): Texture | null {
     return this.uniforms.get('irradiance_texture').value
@@ -594,28 +589,8 @@ export class AerialPerspectiveEffect extends Effect {
     return this.uniforms.get('sunDirection').value
   }
 
-  /** @deprecated Use sunLight instead. */
-  get sunIrradiance(): boolean {
-    return this.sunLight
-  }
-
-  /** @deprecated Use sunLight instead. */
-  set sunIrradiance(value: boolean) {
-    this.sunLight = value
-  }
-
   @define('SUN_LIGHT')
   sunLight: boolean
-
-  /** @deprecated Use skyLight instead. */
-  get skyIrradiance(): boolean {
-    return this.skyLight
-  }
-
-  /** @deprecated Use skyLight instead. */
-  set skyIrradiance(value: boolean) {
-    this.skyLight = value
-  }
 
   @define('SKY_LIGHT')
   skyLight: boolean
@@ -625,16 +600,6 @@ export class AerialPerspectiveEffect extends Effect {
 
   @define('INSCATTER')
   inscatter: boolean
-
-  /** @deprecated Use albedoScale instead. */
-  get irradianceScale(): number {
-    return this.albedoScale
-  }
-
-  /** @deprecated Use albedoScale instead. */
-  set irradianceScale(value: number) {
-    this.albedoScale = value
-  }
 
   get albedoScale(): number {
     return this.uniforms.get('albedoScale').value

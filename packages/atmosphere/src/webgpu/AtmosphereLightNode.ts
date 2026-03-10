@@ -9,17 +9,9 @@ import {
 } from 'three/tsl'
 import { AnalyticLightNode, type NodeBuilder } from 'three/webgpu'
 
-import type { Node, NodeObject } from '@takram/three-geospatial/webgpu'
-
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
 import { getSkyIlluminance } from './runtime'
-
-type CorrectLightingContext = {
-  [K in keyof LightingContext]: LightingContext[K] extends Node
-    ? NodeObject<LightingContext[K]>
-    : LightingContext[K]
-}
 
 export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
   static override get type(): string {
@@ -67,7 +59,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     })()
 
     // Yes, it's an indirect but should be fine to update it here.
-    const lightingContext = builder.getContext() as CorrectLightingContext
+    const lightingContext = builder.getContext() as unknown as LightingContext
     lightingContext.irradiance.addAssign(skyIlluminance)
 
     // Derive the view-space sun direction.

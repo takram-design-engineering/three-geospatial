@@ -1,7 +1,6 @@
-export interface DensityProfileLike
-  extends Partial<
-    Pick<DensityProfile, 'expTerm' | 'exponent' | 'linearTerm' | 'constantTerm'>
-  > {}
+export interface DensityProfileLike extends Partial<
+  Pick<DensityProfile, 'expTerm' | 'exponent' | 'linearTerm' | 'constantTerm'>
+> {}
 
 export class DensityProfile {
   constructor(

@@ -2,7 +2,7 @@ import { Vector3, type Camera } from 'three'
 import { reference, uniform } from 'three/tsl'
 import type { UniformNode } from 'three/webgpu'
 
-import type { NodeObject } from './node'
+import type { Node } from './node'
 
 let caches: WeakMap<{}, Record<string, {}>> | undefined
 
@@ -23,31 +23,29 @@ function getCache<T extends {}, U extends {}>(
   return (cache[name] ??= callback()) as U
 }
 
-export const projectionMatrix = (camera: Camera): NodeObject<'mat4'> =>
+export const projectionMatrix = (camera: Camera): Node<'mat4'> =>
   getCache(camera, 'projectionMatrix', () =>
     reference('projectionMatrix', 'mat4', camera).setName('projectionMatrix')
   )
 
-export const viewMatrix = (camera: Camera): NodeObject<'mat4'> =>
+export const viewMatrix = (camera: Camera): Node<'mat4'> =>
   getCache(camera, 'viewMatrix', () =>
     reference('matrixWorldInverse', 'mat4', camera).setName('viewMatrix')
   )
 
-export const inverseProjectionMatrix = (camera: Camera): NodeObject<'mat4'> =>
+export const inverseProjectionMatrix = (camera: Camera): Node<'mat4'> =>
   getCache(camera, 'inverseProjectionMatrix', () =>
     reference('projectionMatrixInverse', 'mat4', camera).setName(
       'inverseProjectionMatrix'
     )
   )
 
-export const inverseViewMatrix = (camera: Camera): NodeObject<'mat4'> =>
+export const inverseViewMatrix = (camera: Camera): Node<'mat4'> =>
   getCache(camera, 'inverseViewMatrix', () =>
     reference('matrixWorld', 'mat4', camera).setName('inverseViewMatrix')
   )
 
-export const cameraPositionWorld = (
-  camera: Camera
-): NodeObject<UniformNode<Vector3>> =>
+export const cameraPositionWorld = (camera: Camera): UniformNode<Vector3> =>
   getCache(camera, 'cameraPositionWorld', () =>
     uniform(new Vector3())
       .setName('cameraPositionWorld')
@@ -56,12 +54,12 @@ export const cameraPositionWorld = (
       })
   )
 
-export const cameraNear = (camera: Camera): NodeObject<'float'> =>
+export const cameraNear = (camera: Camera): Node<'float'> =>
   getCache(camera, 'cameraNear', () =>
     reference('near', 'float', camera).setName('cameraNear')
   )
 
-export const cameraFar = (camera: Camera): NodeObject<'float'> =>
+export const cameraFar = (camera: Camera): Node<'float'> =>
   getCache(camera, 'cameraFar', () =>
     reference('far', 'float', camera).setName('cameraFar')
   )

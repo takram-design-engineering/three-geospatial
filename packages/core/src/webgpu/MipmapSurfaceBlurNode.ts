@@ -1,11 +1,11 @@
-import { add, Fn, mix, nodeObject, uniform, uv, vec2, vec4 } from 'three/tsl'
+import { add, Fn, mix, uniform, uv, vec2, vec4 } from 'three/tsl'
 import type { NodeBuilder, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { DualMipmapFilterNode } from './DualMipmapFilterNode'
-import type { Node, NodeObject } from './node'
+import type { Node } from './node'
 
-const clampToBorder = (uv: NodeObject<'vec2'>): NodeObject<'float'> => {
+const clampToBorder = (uv: Node<'vec2'>): Node<'float'> => {
   return uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()).toFloat()
 }
 
@@ -53,7 +53,7 @@ export class MipmapSurfaceBlurNode extends DualMipmapFilterNode {
 
       const output = inputNode.sample(center).mul(outerWeight)
 
-      let weight: NodeObject
+      let weight: Node
       weight = vec4(
         clampToBorder(uv01),
         clampToBorder(uv02),
@@ -136,5 +136,4 @@ export class MipmapSurfaceBlurNode extends DualMipmapFilterNode {
 
 export const mipmapSurfaceBlur = (
   ...args: ConstructorParameters<typeof MipmapSurfaceBlurNode>
-): NodeObject<MipmapSurfaceBlurNode> =>
-  nodeObject(new MipmapSurfaceBlurNode(...args))
+): MipmapSurfaceBlurNode => new MipmapSurfaceBlurNode(...args)

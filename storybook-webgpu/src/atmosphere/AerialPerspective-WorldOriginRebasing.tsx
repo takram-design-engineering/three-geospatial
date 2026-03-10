@@ -155,10 +155,7 @@ const Content: FC<StoryProps> = () => {
 interface StoryProps {}
 
 interface StoryArgs
-  extends OutputPassArgs,
-    ToneMappingArgs,
-    LocationArgs,
-    LocalDateArgs {}
+  extends OutputPassArgs, ToneMappingArgs, LocationArgs, LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas camera={{ position: [2, 1, 2] }}>

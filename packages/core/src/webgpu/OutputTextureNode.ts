@@ -1,8 +1,5 @@
 import type { Texture } from 'three'
-import { nodeObject } from 'three/tsl'
 import { TextureNode, type Node, type NodeBuilder } from 'three/webgpu'
-
-import type { NodeObject } from './node'
 
 export class OutputTextureNode extends TextureNode {
   static override get type(): string {
@@ -30,4 +27,4 @@ export class OutputTextureNode extends TextureNode {
 
 export const outputTexture = (
   ...args: ConstructorParameters<typeof OutputTextureNode>
-): NodeObject<OutputTextureNode> => nodeObject(new OutputTextureNode(...args))
+): OutputTextureNode => new OutputTextureNode(...args)

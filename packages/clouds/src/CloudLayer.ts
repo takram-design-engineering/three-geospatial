@@ -14,10 +14,9 @@ const paramKeys = [
   'densityProfile'
 ] as const
 
-export interface CloudLayerLike
-  extends Partial<
-    Pick<CloudLayer, Exclude<(typeof paramKeys)[number], 'densityProfile'>>
-  > {
+export interface CloudLayerLike extends Partial<
+  Pick<CloudLayer, Exclude<(typeof paramKeys)[number], 'densityProfile'>>
+> {
   densityProfile?: DensityProfileLike
 }
 

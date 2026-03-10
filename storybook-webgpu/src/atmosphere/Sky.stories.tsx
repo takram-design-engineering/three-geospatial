@@ -60,6 +60,7 @@ export const MoonSurface = createStory(MoonStory, {
     trackMoon: true,
     dayOfYear: 65,
     timeOfDay: 16.5,
+    year: 2025,
     longitude: 139.7528,
     latitude: 35.6852
   },

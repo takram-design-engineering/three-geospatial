@@ -1,9 +1,9 @@
-import { luminance, nodeObject, smoothstep, uniform, vec4 } from 'three/tsl'
+import { luminance, smoothstep, uniform, vec4 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { mipmapBlurDownsample } from './MipmapBlurNode'
-import type { Node, NodeObject } from './node'
+import type { Node } from './node'
 import { SingleFilterNode } from './SingleFilterNode'
 
 export class DownsampleThresholdNode extends SingleFilterNode {
@@ -36,5 +36,4 @@ export class DownsampleThresholdNode extends SingleFilterNode {
 
 export const downsampleThreshold = (
   ...args: ConstructorParameters<typeof DownsampleThresholdNode>
-): NodeObject<DownsampleThresholdNode> =>
-  nodeObject(new DownsampleThresholdNode(...args))
+): DownsampleThresholdNode => new DownsampleThresholdNode(...args)

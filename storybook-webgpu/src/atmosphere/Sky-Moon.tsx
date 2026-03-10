@@ -489,7 +489,7 @@ const Info: FC = () => {
 
   return (
     <InfoElement>
-      The moon’s apparent size is <Value>{moonScale.toFixed(1)}</Value> times
+      The moon's apparent size is <Value>{moonScale.toFixed(1)}</Value> times
       its actual size, and its luminance is{' '}
       <Value>{moonIntensity.toFixed(1)}</Value> times its actual luminance.
       <table>

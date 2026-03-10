@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.7.0] - 2026-03-09
+
+### Changed
+
+- Updated the peer dependency for `postprocessing` to `>= 6.38.0`.
+- `CloudsEffect`: Removed deprecated `skyIrradianceScale`, `groundIrradianceScale` and `accurateSunSkyIrradiance` options.
+- Updated dependencies.
+
+### Fixed
+
+- Fixed logarithmic depth when used with `postprocessing >= 6.38.0`.
+
+## [0.6.0] - 2025-12-24
+
+### Changed
+
+- Migrated types to `@types/three@0.181.0`.
+- Updated dependencies.
+
+## [0.5.2] - 2025-11-01
+
+### Fixed
+
+- Removed `three-stdlib` from dependencies to fix compatibility with importmaps.
+- Reverted the TS target to `es2017` to fix incorrect code generation.
+
+## [0.5.1] - 2025-11-01
+
+### Changed
+
+- Removed module augmentation from type definitions.
+- Updated dependencies.
+
 ## [0.5.0] - 2025-08-19
 
 ### Changed

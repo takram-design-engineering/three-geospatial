@@ -199,7 +199,7 @@ This illustrates that greater total cloud layer height increases computational c
 
 - A large portion of weather sampling is wasted simply checking whether it is outside the cloud shell. However, since we already know the front depth and sample count at the texel from the reprojected previous frame, using this information to better estimate the ray marching range would make it much more efficient.
 
-- Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera’s depth onto the sun’s view.
+- Compute light shafts of the scene objects (possibly in the [atmosphere package](../atmosphere)). Implementing this would require an additional depth pass to render the scene as seen from the sun, which is too expensive unless shadow map is already in use. It may provide a partial solution to project the main camera's depth onto the sun's view.
 
 ### Planned features
 
@@ -477,7 +477,7 @@ Specifies whether this cloud layer should be included in BSM.
 
 A post-processing effect that renders volumetric clouds. Although it is an effect and can render as a standalone, it is primarily intended to render clouds into buffers and then composited in `AerialPerspectiveEffect`.
 
-This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)’s `EffectComposer` and is not compatible with the one in Three.js examples.
+This is for use with the [`postprocessing`](https://github.com/pmndrs/postprocessing)'s `EffectComposer` and is not compatible with the one in Three.js examples.
 
 → [Source](/packages/clouds/src/CloudsEffect.ts)
 
@@ -489,7 +489,7 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 
 - **Shadow**
 
-  Performs ray marching in the sun’s orthographic projection and outputs the necessary values for computing the optical depth of the clouds (BSM) during the main camera’s ray marching.
+  Performs ray marching in the sun's orthographic projection and outputs the necessary values for computing the optical depth of the clouds (BSM) during the main camera's ray marching.
 
   → [Shader](/packages/clouds/src/shaders/shadow.frag)
 
@@ -521,7 +521,7 @@ Nothing novel here, just a combination of existing techniques. See the [referenc
 
 ### Parameters
 
-The number of parameters might seem overwhelming at first, but they provide fine control as needed. To get started, try adjusting [`qualityPreset`](#qualitypreset), [`coverage`](#coverage), cloud layer’s [`altitude`](#altitude), and [`height`](#height) to suit your needs. You can also experiment with the parameters in the [Basic story](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic).
+The number of parameters might seem overwhelming at first, but they provide fine control as needed. To get started, try adjusting [`qualityPreset`](#qualitypreset), [`coverage`](#coverage), cloud layer's [`altitude`](#altitude), and [`height`](#height) to suit your needs. You can also experiment with the parameters in the [Basic story](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-clouds--basic).
 
 - [Rendering](#rendering)
 - [Cloud layers](#cloud-layers)
@@ -796,7 +796,7 @@ The resolution of each cascade in the shadow map.
 maxFar: number | null = null
 ```
 
-The maximum far plane distance for rendering shadows within the main camera’s frustum. This limits the main camera’s frustum: shadows beyond this distance are not rendered, and setting a value larger than the main camera’s far plane has no effect.
+The maximum far plane distance for rendering shadows within the main camera's frustum. This limits the main camera's frustum: shadows beyond this distance are not rendered, and setting a value larger than the main camera's far plane has no effect.
 
 #### shadow.farScale
 
@@ -804,7 +804,7 @@ The maximum far plane distance for rendering shadows within the main camera’s 
 farScale: number = 1
 ```
 
-A scale factor for the main camera’s far plane. This is useful when the far plane extends to a point like the horizon occlusion point, even though shadows do not need to be rendered that far. The resulting value is also limited by `shadow.maxFar`.
+A scale factor for the main camera's far plane. This is useful when the far plane extends to a point like the horizon occlusion point, even though shadows do not need to be rendered that far. The resulting value is also limited by `shadow.maxFar`.
 
 #### shadow.splitMode, shadow.splitLambda
 
@@ -813,7 +813,7 @@ splitMode: 'uniform' | 'logarithmic' | 'practical' = 'practical'
 splitLambda: number = 0.6
 ```
 
-Controls [how the main camera’s frustum is split](https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus). `splitLambda` is only applicable when `splitMode` is set to `practical`.
+Controls [how the main camera's frustum is split](https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus). `splitLambda` is only applicable when `splitMode` is set to `practical`.
 
 ### Advanced clouds parameters
 
@@ -839,7 +839,7 @@ Whether to sample sun and sky irradiance at every sample point during ray marchi
 accuratePhaseFunction: boolean = false
 ```
 
-Whether to use a [numerically-fitted Mie phase function](https://research.nvidia.com/labs/rtr/approximate-mie/) for large particles (d = 10 μm) instead of the dual-lobe Henyey-Greenstein phase function. However, it won’t be plausible without a more precise computation of multiple scattering.
+Whether to use a [numerically-fitted Mie phase function](https://research.nvidia.com/labs/rtr/approximate-mie/) for large particles (d = 10 μm) instead of the dual-lobe Henyey-Greenstein phase function. However, it won't be plausible without a more precise computation of multiple scattering.
 
 #### clouds.maxIterationCount
 

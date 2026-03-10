@@ -2,7 +2,6 @@ import {
   cos,
   int,
   logarithmicDepthToViewZ,
-  nodeObject,
   orthographicDepthToViewZ,
   perspectiveDepthToViewZ,
   PI,
@@ -15,7 +14,7 @@ import {
   viewZToPerspectiveDepth
 } from 'three/tsl'
 
-import type { Node, NodeObject } from './node'
+import type { Node } from './node'
 
 export interface DepthOptions {
   perspective?: boolean
@@ -24,44 +23,42 @@ export interface DepthOptions {
 
 export const depthToViewZ = (
   depth: Node<'float'>,
-  near: NodeObject<'float'>,
-  far: NodeObject<'float'>,
+  near: Node<'float'>,
+  far: Node<'float'>,
   { perspective = true, logarithmic = false }: DepthOptions = {}
-): NodeObject<'float'> => {
-  return (
-    logarithmic
-      ? logarithmicDepthToViewZ(depth, near, far)
-      : perspective
-        ? perspectiveDepthToViewZ(depth, near, far)
-        : orthographicDepthToViewZ(depth, near, far)
-  ) as NodeObject<'float'>
+): Node<'float'> => {
+  return logarithmic
+    ? logarithmicDepthToViewZ(depth, near, far)
+    : perspective
+      ? perspectiveDepthToViewZ(depth, near, far)
+      : orthographicDepthToViewZ(depth, near, far)
 }
 
 export const logarithmicToPerspectiveDepth = (
   depth: Node<'float'>,
-  near: NodeObject<'float'>,
-  far: NodeObject<'float'>
-): NodeObject<'float'> => {
+  near: Node<'float'>,
+  far: Node<'float'>
+): Node<'float'> => {
   const viewZ = logarithmicDepthToViewZ(depth, near, far)
-  return viewZToPerspectiveDepth(viewZ, near, far) as NodeObject<'float'>
+  return viewZToPerspectiveDepth(viewZ, near, far)
 }
 
 export const perspectiveToLogarithmicDepth = (
   depth: Node<'float'>,
-  near: NodeObject<'float'>,
-  far: NodeObject<'float'>
-): NodeObject<'float'> => {
-  const viewZ = nodeObject(perspectiveDepthToViewZ(depth, near, far))
-  return viewZToLogarithmicDepth(viewZ, near, far) as NodeObject<'float'>
+  near: Node<'float'>,
+  far: Node<'float'>
+): Node<'float'> => {
+  const viewZ = perspectiveDepthToViewZ(depth, near, far)
+  return viewZToLogarithmicDepth(viewZ, near, far)
 }
 
 export const screenToPositionView = (
-  uv: NodeObject<'vec2'>,
+  uv: Node<'vec2'>,
   depth: Node<'float'>,
-  viewZ: NodeObject<'float'>,
-  projectionMatrix: NodeObject<'mat4'>,
-  inverseProjectionMatrix: NodeObject<'mat4'>
-): NodeObject<'vec3'> => {
+  viewZ: Node<'float'>,
+  projectionMatrix: Node<'mat4'>,
+  inverseProjectionMatrix: Node<'mat4'>
+): Node<'vec3'> => {
   const scale = projectionMatrix.element(int(2)).element(int(3))
   const offset = projectionMatrix.element(int(3)).element(int(3))
   const clip = vec4(vec3(uv.flipY(), depth).mul(2).sub(1), 1)
@@ -80,25 +77,23 @@ const turboCoeffs = [
   /*#__PURE__*/ vec3(0.1357, 0.0914, 0.1067)
 ]
 
-export const turbo = (x: NodeObject<'float'>): NodeObject<'vec3'> => {
+export const turbo = (x: Node<'float'>): Node<'vec3'> => {
   return turboCoeffs
     .slice(1)
-    .reduce<NodeObject>((y, offset) => offset.add(x.mul(y)), turboCoeffs[0])
+    .reduce<Node>((y, offset) => offset.add(x.mul(y)), turboCoeffs[0])
 }
 
 export const depthToColor = (
   depth: Node<'float'>,
-  near: NodeObject<'float'>,
-  far: NodeObject<'float'>,
+  near: Node<'float'>,
+  far: Node<'float'>,
   options?: DepthOptions
-): NodeObject<'vec3'> => {
+): Node<'vec3'> => {
   const viewZ = depthToViewZ(depth, near, far, options)
-  return turbo(viewZToLogarithmicDepth(viewZ, near, far) as NodeObject<'float'>)
+  return turbo(viewZToLogarithmicDepth(viewZ, near, far))
 }
 
-export const equirectToDirectionWorld = (
-  uv: NodeObject<'vec2'>
-): NodeObject<'vec3'> => {
+export const equirectToDirectionWorld = (uv: Node<'vec2'>): Node<'vec3'> => {
   const lambda = sub(0.5, uv.x).mul(PI2)
   const phi = sub(uv.y, 0.5).mul(PI)
   const cosPhi = cos(phi)

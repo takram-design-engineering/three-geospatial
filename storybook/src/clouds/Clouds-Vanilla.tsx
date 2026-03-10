@@ -27,7 +27,7 @@ import {
   WebGLRenderer,
   type Texture
 } from 'three'
-import { OrbitControls } from 'three-stdlib'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 import {
   AerialPerspectiveEffect,

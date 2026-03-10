@@ -1,16 +1,16 @@
 import { dot, If, sqrt, struct, vec2, vec4 } from 'three/tsl'
 
 import { FnVar } from './FnVar'
-import type { NodeObject } from './node'
+import type { Node } from './node'
 
 // Reference: https://iquilezles.org/articles/intersectors/
 
 export const raySphereIntersection = /*#__PURE__*/ FnVar(
   (
-    rayOrigin: NodeObject<'vec3'>,
-    rayDirection: NodeObject<'vec3'>,
-    center: NodeObject<'vec3'>,
-    radius: NodeObject<'float'>
+    rayOrigin: Node<'vec3'>,
+    rayDirection: Node<'vec3'>,
+    center: Node<'vec3'>,
+    radius: Node<'float'>
   ) => {
     const a = rayOrigin.sub(center)
     const b = dot(rayDirection, a)
@@ -34,10 +34,10 @@ export const raySpheresIntersectionsStruct = /*#__PURE__*/ struct(
 // Derive ray-sphere intersections with multiple radii at once:
 export const raySpheresIntersections = /*#__PURE__*/ FnVar(
   (
-    rayOrigin: NodeObject<'vec3'>,
-    rayDirection: NodeObject<'vec3'>,
-    center: NodeObject<'vec3'>,
-    radii: NodeObject // Scalar or vector
+    rayOrigin: Node<'vec3'>,
+    rayDirection: Node<'vec3'>,
+    center: Node<'vec3'>,
+    radii: Node // Scalar or vector
   ) => {
     const a = rayOrigin.sub(center)
     const b = dot(rayDirection, a)
@@ -57,10 +57,10 @@ export const raySpheresIntersections = /*#__PURE__*/ FnVar(
 
 export const rayEllipsoidIntersection = /*#__PURE__*/ FnVar(
   (
-    rayOrigin: NodeObject<'vec3'>,
-    rayDirection: NodeObject<'vec3'>,
-    radii: NodeObject<'vec3'>
-  ): NodeObject<'vec2'> => {
+    rayOrigin: Node<'vec3'>,
+    rayDirection: Node<'vec3'>,
+    radii: Node<'vec3'>
+  ): Node<'vec2'> => {
     const ro = rayOrigin.div(radii)
     const rd = rayDirection.div(radii)
     const a = rd.dot(rd)

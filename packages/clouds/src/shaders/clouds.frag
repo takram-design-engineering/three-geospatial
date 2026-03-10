@@ -5,7 +5,6 @@ precision highp sampler2DArray;
 #include <common>
 #include <packing>
 
-#include "core/depth"
 #include "core/math"
 #include "core/turbo"
 #include "core/generators"
@@ -820,7 +819,6 @@ vec2 getHazeRayNearFar(const IntersectionResult intersections) {
 float getRayDistanceToScene(const vec3 rayDirection, out float viewZ) {
   float depth = readDepth(vUv * targetUvScale + temporalJitter);
   if (depth < 1.0 - 1e-7) {
-    depth = reverseLogDepth(depth, cameraNear, cameraFar);
     viewZ = getViewZ(depth);
     return -viewZ / dot(rayDirection, vCameraDirection);
   }

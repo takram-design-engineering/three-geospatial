@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.17.0] - 2026-03-09
+
+### Changed
+
+- Updated the peer dependency for `postprocessing` to `>= 6.38.0`.
+- `PrecomputedTexturesLoader`: Removed deprecated `setTypeFromRenderer()`.
+- Removed deprecated `sunIrradiance` and `skyIrradiance` options.
+- Removed deprecated `IrradianceMask`.
+- `AerialPerspectiveEffect`: Removed deprecated `irradianceScale` option.
+- `StarsMaterial`: Removed deprecated `radianceScale` option.
+- Removed deprecated `useAtmosphereTextureProps` hook.
+- Updated dependencies.
+
+### Fixed
+
+- Fixed logarithmic depth when used with `postprocessing >= 6.38.0`.
+
+## [0.16.0] - 2025-12-24
+
+### Changed
+
+- Migrated types to `@types/three@0.181.0`
+- `AerialPerspectiveEffect`, `AerialPerspectiveNode`: Improved post-process lighting when normal buffer is disabled, [97](https://github.com/takram-design-engineering/three-geospatial/pull/97).
+- Updated dependencies.
+
+## [0.15.1] - 2025-11-01
+
+### Fixed
+
+- Removed `three-stdlib` from dependencies to fix compatibility with importmaps.
+- Reverted the TS target to `es2017` to fix incorrect code generation.
+
+## [0.15.0] - 2025-11-01
+
+### Added
+
+- Added initial support for WebGPU / TSL. See [WEBGPU.md](https://github.com/takram-design-engineering/three-geospatial/blob/main/packages/atmosphere/WEBGPU.md) for details.
+
+### Changed
+
+- Removed module augmentation from type definitions.
+- Updated dependencies.
+
+### Fixed
+
+- Fixed `USE_LOGARITHMIC_DEPTH_BUFFER` was not respected.
+
 ## [0.14.0] - 2025-08-19
 
 ### Added
@@ -145,7 +192,7 @@ Compatibility release to continue support for React 18 and R3F v8.
 
 ### Fixed
 
-- `SkyMaterial`: Fixed changes to `groundAlbedo` didn’t trigger shader recompilation.
+- `SkyMaterial`: Fixed changes to `groundAlbedo` didn't trigger shader recompilation.
 - `Atmosphere`: STBN texture is now loaded only when necessary.
 - Removed dependency on `jotai`.
 - Fixed type error related to `Event`.
@@ -167,7 +214,7 @@ Compatibility release to continue support for React 18 and R3F v8.
 
 ### Changed
 
-- Switched to Vite’s native raw loading function for importing GLSL shaders.
+- Switched to Vite's native raw loading function for importing GLSL shaders.
 - Separated shader code exports in `@takram/three-atmosphere/shaders`.
 - Removed unused shader codes in atmosphere functions.
 - Updated dependencies.
@@ -225,8 +272,8 @@ Compatibility release to continue support for React 18 and R3F v8.
 
 ### Changed
 
-- Made `AerialPerspectiveEffect`’s camera parameter optional, [#18](https://github.com/takram-design-engineering/three-geospatial/pull/18).
-- Changed `Stars` so it doesn’t render until the data is loaded, [#16](https://github.com/takram-design-engineering/three-geospatial/pull/16).
+- Made `AerialPerspectiveEffect`'s camera parameter optional, [#18](https://github.com/takram-design-engineering/three-geospatial/pull/18).
+- Changed `Stars` so it doesn't render until the data is loaded, [#16](https://github.com/takram-design-engineering/three-geospatial/pull/16).
 
 ## [0.1.0] - 2024-12-06
 

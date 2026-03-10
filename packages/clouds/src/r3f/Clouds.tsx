@@ -117,20 +117,19 @@ function useLoadSTBNTexture(
   return (typeof input === 'string' ? loadedTexture : input) ?? null
 }
 
-export interface CloudsProps
-  extends Omit<
-    ElementProps<
-      typeof CloudsEffect,
-      CloudsEffect &
-        ExpandNestedProps<CloudsEffect, 'clouds'> &
-        ExpandNestedProps<CloudsEffect, 'shadow'>
-    >,
-    | 'localWeatherTexture'
-    | 'shapeTexture'
-    | 'shapeDetailTexture'
-    | 'turbulenceTexture'
-    | 'stbnTexture'
-  > {
+export interface CloudsProps extends Omit<
+  ElementProps<
+    typeof CloudsEffect,
+    CloudsEffect &
+      ExpandNestedProps<CloudsEffect, 'clouds'> &
+      ExpandNestedProps<CloudsEffect, 'shadow'>
+  >,
+  | 'localWeatherTexture'
+  | 'shapeTexture'
+  | 'shapeDetailTexture'
+  | 'turbulenceTexture'
+  | 'stbnTexture'
+> {
   disableDefaultLayers?: boolean
   localWeatherTexture?: Texture | ProceduralTexture | string
   shapeTexture?: Data3DTexture | Procedural3DTexture | string

@@ -80,11 +80,7 @@ import {
   vec4
 } from 'three/tsl'
 
-import {
-  FnLayout,
-  FnVar,
-  type NodeObject
-} from '@takram/three-geospatial/webgpu'
+import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 import {
   AtmosphereContextBaseNode,
@@ -122,8 +118,8 @@ import {
 const getLayerDensity = /*#__PURE__*/ FnVar(
   (
     layer: DensityProfileLayerNodes,
-    altitude: NodeObject<Length>
-  ): NodeObject<Dimensionless> => {
+    altitude: Node<Length>
+  ): Node<Dimensionless> => {
     return layer.expTerm
       .mul(exp(layer.expScale.mul(altitude)))
       .add(layer.linearTerm.mul(altitude))
@@ -135,8 +131,8 @@ const getLayerDensity = /*#__PURE__*/ FnVar(
 const getProfileDensity = /*#__PURE__*/ FnVar(
   (
     profile: DensityProfileNodes,
-    altitude: NodeObject<Length>
-  ): NodeObject<Dimensionless> => {
+    altitude: Node<Length>
+  ): Node<Dimensionless> => {
     return select(
       altitude.lessThan(profile.layers[0].width),
       getLayerDensity(profile.layers[0], altitude),
@@ -148,10 +144,10 @@ const getProfileDensity = /*#__PURE__*/ FnVar(
 const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
   (
     profile: DensityProfileNodes,
-    radius: NodeObject<Length>,
-    cosView: NodeObject<Dimensionless>
+    radius: Node<Length>,
+    cosView: Node<Dimensionless>
   ) =>
-    (builder): NodeObject<Length> => {
+    (builder): Node<Length> => {
       const context = AtmosphereContextBaseNode.get(builder)
       const { bottomRadius } = context
 
@@ -817,7 +813,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
   const radiance = vec3(0).toVar()
 
   // Nested loops for the integral over all the incident directions omegaI.
-  // @ts-expect-error Missing type
+  // @ts-expect-error Missing type on custom name
   Loop({ start: 0, end: sampleCount, name: 'l' }, ({ l }) => {
     const theta = float(l).add(0.5).mul(deltaTheta).toVar()
     const cosTheta = cos(theta).toVar()
@@ -848,7 +844,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
       groundAlbedo.assign(context.groundAlbedo)
     })
 
-    // @ts-expect-error Missing type
+    // @ts-expect-error Missing type on custom name
     Loop({ start: 0, end: mul(sampleCount, 2), name: 'm' }, ({ m }) => {
       const phi = float(m).add(0.5).mul(deltaPhi).toVar()
       const omegaI = vec3(
@@ -1153,7 +1149,7 @@ const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
   const result = vec3(0).toVar()
   const omegaSun = vec3(sqrt(cosSun.pow2().oneMinus()), 0, cosSun).toVar()
 
-  // @ts-expect-error Missing type
+  // @ts-expect-error Missing type on custom name
   Loop({ start: 0, end: sampleCount / 2, name: 'j' }, ({ j }) => {
     const theta = float(j).add(0.5).mul(deltaTheta).toVar()
 

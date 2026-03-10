@@ -1,8 +1,30 @@
 # @takram/three-geospatial/webgpu
 
-[![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
+[![npm version](https://img.shields.io/npm/v/@takram/three-geospatial.svg?style=flat-square)](https://www.npmjs.com/package/@takram/three-geospatial) [![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
 
-A work-in-progress and experimental WebGPU support for `@takram/three-geospatial`.
+A work-in-progress WebGPU support for `@takram/three-geospatial`.
+
+Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation.
+
+## Installation
+
+```sh
+npm install @takram/three-geospatial
+pnpm add @takram/three-geospatial
+yarn add @takram/three-geospatial
+```
+
+Peer dependencies include `three`, as well as `@react-three/fiber` when using R3F.
+
+```
+three @react-three/fiber
+```
+
+Please note the peer dependencies differ from the required versions to maintain compatibility with the WebGL codebase. When using `@takram/three-geospatial/webgpu`, apply the following rules.
+
+```
+"three": ">=0.181.0"
+```
 
 ## API changes
 
@@ -43,19 +65,19 @@ When you return a function, it receives the current `NodeBuilder`.
 → [Source](/packages/core/src/webgpu/FnVar.ts)
 
 ```ts
-const fn = FnVar((a: TextureNode, b: NodeObject, c?: number) => {})
-const fn = FnVar((a: TextureNode, b: NodeObject, c?: number) => builder => {})
+const fn = FnVar((a: TextureNode, b: Node, c?: number) => {})
+const fn = FnVar((a: TextureNode, b: Node, c?: number) => builder => {})
 
 // Compared to:
-const fn = Fn<[TextureNode, NodeObject, number | undefined]>(([a, b, c]) => {})
-const fn = Fn<[TextureNode, NodeObject, number | undefined]>(
+const fn = Fn<[TextureNode, Node, number | undefined]>(([a, b, c]) => {})
+const fn = Fn<[TextureNode, Node, number | undefined]>(
   ([a, b, c], builder) => {}
 )
 ```
 
 ## FnLayout
 
-A utility function and works identically to `Fn.setLayout`, except it’s declared as a higher-order function on `Fn`. This improves the colocation of parameters and their types.
+A utility function and works identically to `Fn.setLayout`, except it's declared as a higher-order function on `Fn`. This improves the colocation of parameters and their types.
 
 → [Source](/packages/core/src/webgpu/FnLayout.ts)
 
@@ -88,7 +110,7 @@ const fn = Fn(([a, b, c], builder) => {
 
 ## HighpVelocityNode
 
-A node that outputs geometry velocity in the current camera’s UV and depth. Unlike `VelocityNode` in Three.js’s examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
+A node that outputs geometry velocity in the current camera's UV and depth. Unlike `VelocityNode` in Three.js's examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
 
 → [Source](/packages/core/src/webgpu/HighpVelocityNode.ts)
 
@@ -115,7 +137,7 @@ projectionMatrix?: Matrix4 | null
 ### Constructor
 
 ```ts
-const lensFlare: (inputNode: Node | null) => NodeObject<LensFlareNode>
+const lensFlare: (inputNode: Node | null) => LensFlareNode
 ```
 
 ### Dependencies
@@ -186,7 +208,7 @@ const temporalAntialias: (velocityNodeImmutable: VelocityNodeImmutable) =>
     depthNode: TextureNode,
     velocityNode: TextureNode,
     camera: Camera
-  ) => NodeObject<TemporalAntialiasNode>
+  ) => TemporalAntialiasNode
 ```
 
 ### Dependencies

@@ -4,7 +4,6 @@ import {
   If,
   luminance,
   max,
-  nodeObject,
   Return,
   select,
   texture,
@@ -28,17 +27,18 @@ import {
   TempNode,
   Vector2,
   type ComputeNode,
+  type DataTextureImageData,
   type NodeBuilder,
   type NodeFrame,
   type Renderer,
   type TextureNode
 } from 'three/webgpu'
 
+import { reinterpretType } from '@takram/three-geospatial'
 import {
   convertToTexture,
   outputTexture,
-  type Node,
-  type NodeObject
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -124,13 +124,14 @@ export class LongExposureNode extends TempNode {
     // Bind and clear the history render target to make sure it's initialized
     // after the resize which triggers a dispose().
     renderer.setRenderTarget(this.currentRT)
-    void renderer.clear()
+    renderer.clear()
     renderer.setRenderTarget(this.historyRT)
-    void renderer.clear()
+    renderer.clear()
 
     // TODO: Can we clear the contents of storage texture?
     const { width, height } = this.currentRT
     const timerTexture = this.timerTexture.clone()
+    reinterpretType<DataTextureImageData>(timerTexture.image)
     timerTexture.image.width = width
     timerTexture.image.height = height
     this.timerTexture.dispose()
@@ -198,11 +199,10 @@ export class LongExposureNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const { material, copyMaterial } = this
 
-    const inputNode = nodeObject(this.inputNode)
     material.fragmentNode = select(
       time.sub(this.timerNode.x).lessThan(this.shutterSpeed),
-      max(inputNode, this.historyNode),
-      inputNode
+      max(this.inputNode, this.historyNode),
+      this.inputNode
     )
     material.needsUpdate = true
 
@@ -224,7 +224,5 @@ export class LongExposureNode extends TempNode {
   }
 }
 
-export const longExposure = (inputNode: Node): NodeObject<LongExposureNode> =>
-  nodeObject(
-    new LongExposureNode(convertToTexture(inputNode, 'LongExposureNode.Input'))
-  )
+export const longExposure = (inputNode: Node): LongExposureNode =>
+  new LongExposureNode(convertToTexture(inputNode, 'LongExposureNode.Input'))
