@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.1] - 2026-03-10
+
+### Fixed
+
+- Fixed clouds not appearing when logarithmic depth is used, [#102](https://github.com/takram-design-engineering/three-geospatial/pull/102).
+
 ## [0.7.0] - 2026-03-09
 
 ### Changed
