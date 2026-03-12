@@ -110,14 +110,6 @@ nx storybook
 nx storybook --port 8080
 ```
 
-Some stories use Cesium Ion assets. To display them correctly, search for the following assets in the [Asset Depot](https://ion.cesium.com/assetdepot/) and add them to your [My Assets](https://ion.cesium.com/assets/):
-
-<!-- prettier-ignore -->
-| Name | Asset ID |
-| -- | -- |
-| Cesium World Terrain | `1` (likely exists by default) |
-| Japan Regional Terrain | `2767062` |
-
 ### Note on Storybook errors
 
 You may occasionally encounter the following errors, especially when switching branches:
