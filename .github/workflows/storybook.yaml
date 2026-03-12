@@ -30,7 +30,6 @@ jobs:
           pnpm install --frozen-lockfile
           npx nx build-storybook
         env:
-          STORYBOOK_ION_API_TOKEN: ${{secrets.STORYBOOK_ION_API_TOKEN}}
           STORYBOOK_GOOGLE_MAP_API_KEY: ${{secrets.STORYBOOK_GOOGLE_MAP_API_KEY}}
 
       - uses: actions/upload-pages-artifact@v3

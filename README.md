@@ -89,7 +89,6 @@ Create a `.env` file in the root directory with the following variables:
 | Name | Description |
 | -- | -- |
 | `STORYBOOK_GOOGLE_MAP_API_KEY` | [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
-| `STORYBOOK_ION_API_TOKEN` | [Cesium Ion API access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/) |
 
 ### Formatting and linting
 
