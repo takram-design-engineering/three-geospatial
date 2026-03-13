@@ -145,6 +145,7 @@ async function readRenderTargetPixels(
     renderTarget.height,
     imageData
   )
+  // eslint-disable-next-line require-atomic-updates
   texture.userData.imageData = imageData
 }
 

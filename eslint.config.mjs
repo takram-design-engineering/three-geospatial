@@ -81,6 +81,7 @@ export default defineConfig(
       'max-nested-callbacks': 'off',
       'prefer-named-capture-group': 'off',
       'no-await-in-loop': 'off',
+      'require-unicode-regexp': 'off',
       '@typescript-eslint/init-declarations': 'off',
       '@typescript-eslint/max-lines': 'off',
       '@typescript-eslint/max-params': 'off',
@@ -92,6 +93,8 @@ export default defineConfig(
       // Only if the rulesets are error prone.
       'eslint-comments/require-description': 'off',
       'eslint-comments/no-unlimited-disable': 'off',
+      '@eslint-community/eslint-comments/require-description': 'off',
+      '@eslint-community/eslint-comments/no-unlimited-disable': 'off',
 
       // Mostly agree but it makes hook cleanup functions hard to distinguish.
       'arrow-body-style': 'off',
@@ -142,6 +145,8 @@ export default defineConfig(
       '@typescript-eslint/unified-signatures': 'off',
       '@typescript-eslint/prefer-for-of': 'off',
       '@typescript-eslint/class-literal-property-style': 'off',
+      '@typescript-eslint/strict-void-return': 'off',
+      '@typescript-eslint/no-unused-private-class-members': 'off',
 
       // Method signature has a purpose.
       '@typescript-eslint/method-signature-style': 'off',

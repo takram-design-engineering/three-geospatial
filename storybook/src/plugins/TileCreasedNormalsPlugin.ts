@@ -42,6 +42,7 @@ export class TileCreasedNormalsPlugin {
     })
     await Promise.all(
       meshes.map(async mesh => {
+        // eslint-disable-next-line require-atomic-updates
         mesh.geometry = await toCreasedNormalsAsync(
           mesh.geometry,
           this.options.creaseAngle
