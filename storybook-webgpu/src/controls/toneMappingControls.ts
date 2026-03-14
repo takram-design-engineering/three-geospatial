@@ -13,6 +13,8 @@ import {
 import { UniformNode, type Renderer, type ToneMappingNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { reinterpretType } from '@takram/three-geospatial'
+
 import { useSpringControl } from '../hooks/useSpringControl'
 import { useTransientControl } from '../hooks/useTransientControl'
 
@@ -114,6 +116,14 @@ function usePostProcessingToneMappingControls(
       toneMapping
     ],
     ([enabled, value]) => {
+      // WORKAROUND: ToneMappingNode should have these methods. Adding these in
+      // the module augmentation breaks VSCode's auto completion.
+      reinterpretType<
+        ToneMappingNode & {
+          getToneMapping: () => ToneMapping
+          setToneMapping: (value: ToneMapping) => void
+        }
+      >(toneMappingNode)
       toneMappingNode.setToneMapping(enabled ? value : NoToneMapping)
       onChange?.(value)
     }

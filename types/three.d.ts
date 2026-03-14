@@ -1,4 +1,4 @@
-import type { Camera, ToneMapping } from 'three'
+import type { Camera } from 'three'
 import type { Node, NodeFrame, Renderer, UniformNode } from 'three/webgpu'
 
 import type { NodeType, NodeValueTypeOf } from '@takram/three-geospatial/webgpu'
@@ -61,12 +61,6 @@ declare module 'three/webgpu' {
     grad(gradeNodeX: number | Node, gradeNodeY: number | Node): TextureNode
     depth(depthNode: number | Node): TextureNode
     offset(offsetNode: Node): TextureNode
-  }
-
-  // Add missing methods
-  interface ToneMappingNode {
-    getToneMapping: () => ToneMapping
-    setToneMapping: (value: ToneMapping) => this
   }
 
   // Add "colorNode"
