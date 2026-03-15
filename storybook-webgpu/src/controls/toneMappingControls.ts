@@ -116,11 +116,10 @@ function usePostProcessingToneMappingControls(
       toneMapping
     ],
     ([enabled, value]) => {
-      // WORKAROUND: ToneMappingNode should have these methods. Adding these in
-      // the module augmentation breaks VSCode's auto completion.
+      // WORKAROUND: Missing method as of r182. Adding these in the module
+      // augmentation breaks VSCode's auto completion.
       reinterpretType<
         ToneMappingNode & {
-          getToneMapping: () => ToneMapping
           setToneMapping: (value: ToneMapping) => void
         }
       >(toneMappingNode)

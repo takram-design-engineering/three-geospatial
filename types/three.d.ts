@@ -48,21 +48,6 @@ declare module 'three/webgpu' {
     ): this
   }
 
-  interface TextureNode {
-    // Add missing methods
-    setUpdateMatrix: (value: boolean) => this
-
-    // Allow number type
-    blur(amountNode: number | Node): TextureNode
-    level(levelNode: number | Node): TextureNode
-    size(levelNode: number | Node): TextureNode
-    bias(biasNode: number | Node): TextureNode
-    compare(compareNode: number | Node): TextureNode
-    grad(gradeNodeX: number | Node, gradeNodeY: number | Node): TextureNode
-    depth(depthNode: number | Node): TextureNode
-    offset(offsetNode: Node): TextureNode
-  }
-
   // Add "colorNode"
   interface AnalyticLightNode {
     colorNode: Node
