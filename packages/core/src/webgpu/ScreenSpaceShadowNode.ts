@@ -42,7 +42,7 @@ import invariant from 'tiny-invariant'
 import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 
-// Wavefront size of the compute shader running this code.
+// Workgroup size of the compute shader running this code.
 const GROUP_SIZE = 64
 
 // Number of shadow samples per-pixel.
@@ -105,11 +105,11 @@ export class ScreenSpaceShadowNode extends TempNode {
   bilinearThreshold = uniform(0.02)
 
   // Depth Buffer Value for the far clip plane, as determined by renderer
-  // projection matrix setup (typically 0).
+  // projection matrix setup (typically 1).
   farDepth = uniform(1)
 
   // Depth Buffer Value for the near clip plane, as determined by renderer
-  // projection matrix setup (typically 1).
+  // projection matrix setup (typically 0).
   nearDepth = uniform(0)
 
   // xy: Screen coordinate
@@ -240,7 +240,7 @@ export class ScreenSpaceShadowNode extends TempNode {
     // Process 4 quadrants around the light center.
     // They each form a rectangle with one corner on the light XY coordinate.
     // If the rectangle isn't square, it will need breaking in two on the larger
-    // axis 0 = bottom left, 1 = bottom right, 2 = top left, 2 = top right.
+    // axis 0 = bottom left, 1 = bottom right, 2 = top left, 3 = top right.
     let dispatchCount = 0
     for (let q = 0; q < 4; ++q) {
       // Quads 0 and 3 needs to be +1 vertically, 1 and 2 need to be +1
@@ -327,7 +327,7 @@ export class ScreenSpaceShadowNode extends TempNode {
       }
     }
 
-    // Scale the shader values by the wave count, the shader expects this.
+    // Scale the shader values by the workgroup size, the shader expects this.
     for (let i = 0; i < dispatchCount; ++i) {
       const dispatch = this.dispatches[i]
       dispatch.offset.x *= GROUP_SIZE
@@ -351,10 +351,10 @@ export class ScreenSpaceShadowNode extends TempNode {
       workgroupDepthData
     } = this
 
-    // Gets the start pixel coordinates for the pixels in the wavefront.
+    // Gets the start pixel coordinates for the pixels in the workgroup.
     // Also returns the delta to get to the next pixel after GROUP_SIZE pixels
     // along the ray.
-    const getWavefrontExtents = (): {
+    const getWorkgroupExtents = (): {
       pixelXY: Node<'vec2'>
       pixelDistance: Node<'float'>
       xyDelta: Node<'vec2'>
@@ -381,7 +381,7 @@ export class ScreenSpaceShadowNode extends TempNode {
         horizontal.select(0, signXY.x.negate())
       )
 
-      // Apply wave offset
+      // Apply workgroup offset along the axis
       const xyF = vec2(axis.mul(workgroupId.x).add(xy)).toConst()
 
       // For interpolation to the light center, we only really care about the
@@ -432,7 +432,7 @@ export class ScreenSpaceShadowNode extends TempNode {
 
     this.computeNode = Fn(() => {
       const { pixelXY, xyDelta, pixelDistance, xAxisMajor } =
-        getWavefrontExtents()
+        getWorkgroupExtents()
 
       const direction = lightCoordinate.w.negate()
       const zSign = nearDepth.greaterThan(farDepth).select(-1, 1).toConst()
@@ -479,8 +479,8 @@ export class ScreenSpaceShadowNode extends TempNode {
           depthThicknessScale.mul(bilinearThreshold)
         )
 
-        // Any sample in this wavefront is possibly interpolated towards the
-        // bilinear sample. So use should use a shadowing depth that is further
+        // Any sample in this workgroup is possibly interpolated towards the
+        // bilinear sample. So we should use a shadowing depth that is further
         // away, based on the difference between the two samples.
         const shadowDepth = depthCenter.add(
           abs(depthCenter.sub(depthNeighbor)).mul(zSign)
@@ -514,7 +514,7 @@ export class ScreenSpaceShadowNode extends TempNode {
             .toConst()
         }
 
-        // Store the depth values in group shared.
+        // Store the depth values in workgroup shared memory.
         workgroupDepthData
           .element(invocationLocalIndex.add(GROUP_SIZE * i))
           .assign(storedDepth)
@@ -530,7 +530,7 @@ export class ScreenSpaceShadowNode extends TempNode {
         pixelXY.addAssign(xyDelta.mul(direction))
       }
 
-      // Sync workgroups now workgroupDepthData is written.
+      // Sync threads within the workgroup now workgroupDepthData is written.
       workgroupBarrier()
 
       // Perspective correct the depth.
@@ -541,8 +541,8 @@ export class ScreenSpaceShadowNode extends TempNode {
 
       // This is the inverse of how large the shadowing window is for the
       // projected sample data.
-      // All values in the LDS sample list are scaled by 1.0 / sample_distance,
-      // such that all light directions become parallel.
+      // All values in the workgroup shared memory are scaled by
+      // 1.0 / sample_distance, such that all light directions become parallel.
       // The multiply by sample_distance[0] here is to compensate for the
       // projection divide in the data.
       // The 1.0 / SurfaceThickness is to adjust user selected thickness. So a
