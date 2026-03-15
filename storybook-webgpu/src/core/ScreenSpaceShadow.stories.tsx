@@ -1,12 +1,12 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story } from './TemporalAntialias-Story'
+import { Story } from './ScreenSpaceShadow-Story'
 
-import Code from './TemporalAntialias-Story?raw'
+import Code from './ScreenSpaceShadow-Story?raw'
 
 export default {
-  title: 'core/Temporal Antialias',
+  title: 'core/Screen Space Shadow',
   parameters: {
     docs: {
       codePanel: true,
@@ -17,7 +17,7 @@ export default {
   }
 } satisfies Meta
 
-export const TemporalAntialias = createStory(Story, {
+export const ScreenSpaceShadow = createStory(Story, {
   parameters: {
     docs: {
       source: {
