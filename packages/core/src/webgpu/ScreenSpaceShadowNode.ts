@@ -153,7 +153,7 @@ export class ScreenSpaceShadowNode extends TempNode {
     this.outputTexture = texture
     this.textureNode = outputTexture(this, texture)
 
-    this.updateBeforeType = NodeUpdateType.RENDER
+    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(): TextureNode {
