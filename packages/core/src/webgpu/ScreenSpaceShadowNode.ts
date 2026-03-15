@@ -18,8 +18,6 @@ import {
   ivec2,
   min,
   mix,
-  select,
-  textureLoad,
   textureStore,
   uniform,
   vec2,
@@ -351,8 +349,6 @@ export class ScreenSpaceShadowNode extends TempNode {
       workgroupDepthData
     } = this
 
-    const depthTexture = depthNode.value
-
     // Gets the start pixel coordinates for the pixels in the wavefront.
     // Also returns the delta to get to the next pixel after GROUP_SIZE pixels
     // along the ray.
@@ -365,18 +361,18 @@ export class ScreenSpaceShadowNode extends TempNode {
       const xy = ivec2(workgroupId.yz)
         .mul(GROUP_SIZE)
         .add(dispatchOffset)
-        .toVar()
+        .toConst()
 
       // Integer light position / fractional component
-      const lightXY = lightCoordinate.xy.floor().add(0.5).toVar()
-      const lightXYFraction = lightCoordinate.xy.sub(lightXY).toVar()
+      const lightXY = lightCoordinate.xy.floor().add(0.5).toConst()
+      const lightXYFraction = lightCoordinate.xy.sub(lightXY).toConst()
       const reverseDirection = lightCoordinate.w.greaterThan(0)
 
-      const signXY = ivec2(xy.sign()).toVar()
+      const signXY = ivec2(xy.sign()).toConst()
 
       const horizontal = abs(xy.x.add(signXY.y))
         .lessThan(abs(xy.y.sub(signXY.x)))
-        .toVar()
+        .toConst()
 
       const axis = ivec2(
         horizontal.select(signXY.y, 0),
@@ -384,14 +380,14 @@ export class ScreenSpaceShadowNode extends TempNode {
       )
 
       // Apply wave offset
-      const xyF = vec2(axis.mul(workgroupId.x).add(xy)).toVar()
+      const xyF = vec2(axis.mul(workgroupId.x).add(xy)).toConst()
 
       // For interpolation to the light center, we only really care about the
       // larger of the two axis.
-      const xAxisMajor = abs(xyF.x).greaterThan(abs(xyF.y)).toVar()
-      const majorAxis = xAxisMajor.select(xyF.x, xyF.y).toVar()
+      const xAxisMajor = abs(xyF.x).greaterThan(abs(xyF.y)).toConst()
+      const majorAxis = xAxisMajor.select(xyF.x, xyF.y).toConst()
 
-      const majorAxisStart = majorAxis.abs().toVar()
+      const majorAxisStart = majorAxis.abs().toConst()
       const majorAxisEnd = majorAxisStart.sub(GROUP_SIZE)
 
       const maLightFrac = xAxisMajor
@@ -402,7 +398,7 @@ export class ScreenSpaceShadowNode extends TempNode {
       )
 
       // Back in to screen direction.
-      const startXY = xyF.add(lightXY).toVar()
+      const startXY = xyF.add(lightXY).toConst()
 
       // For the very inner most ring, we need to interpolate to a pixel
       // centered UV, so the UV->pixel rounding doesn't skip output pixels.
@@ -410,10 +406,10 @@ export class ScreenSpaceShadowNode extends TempNode {
         lightCoordinate.xy,
         startXY,
         majorAxisEnd.add(maLightFrac).div(majorAxisStart.add(maLightFrac))
-      ).toVar()
+      ).toConst()
 
       // The major axis should be a round number.
-      const xyDelta = startXY.sub(endXY).toVar()
+      const xyDelta = startXY.sub(endXY).toConst()
 
       // Inverse the read order when reverse direction is true.
       const threadStep = float(
@@ -421,13 +417,13 @@ export class ScreenSpaceShadowNode extends TempNode {
           invocationLocalIndex,
           invocationLocalIndex.bitXor(GROUP_SIZE - 1)
         )
-      ).toVar()
+      ).toConst()
 
       const pixelXY = mix(startXY, endXY, threadStep.div(GROUP_SIZE)).toVar()
       const pixelDistance = majorAxisStart
         .sub(threadStep)
         .add(maLightFrac)
-        .toVar()
+        .toConst()
 
       return { pixelXY, pixelDistance, xyDelta, xAxisMajor }
     }
@@ -437,7 +433,7 @@ export class ScreenSpaceShadowNode extends TempNode {
         getWavefrontExtents()
 
       const direction = lightCoordinate.w.negate()
-      const zSign = nearDepth.greaterThan(farDepth).select(-1, 1)
+      const zSign = nearDepth.greaterThan(farDepth).select(-1, 1).toConst()
 
       // Must save pixelXY here before modifying it.
       const writeXY = ivec2(pixelXY.floor()).toConst()
@@ -450,25 +446,29 @@ export class ScreenSpaceShadowNode extends TempNode {
         // We sample depth twice per pixel per sample, and interpolate with an
         // edge detect filter. Interpolation should only occur on the minor axis
         // of the ray - major axis coordinates should be at pixel centers.
-        const readXY = ivec2(pixelXY.floor())
+        const readXY = ivec2(pixelXY.floor()).toConst()
         const minorAxis = xAxisMajor.select(pixelXY.y, pixelXY.x)
 
-        const bias = select(minorAxis.fract().sub(0.5).greaterThan(0), 1, -1)
+        const bias = minorAxis
+          .fract()
+          .sub(0.5)
+          .greaterThan(0)
+          .select(1, -1)
+          .toConst()
         const bilinearOffset = ivec2(
           xAxisMajor.select(0, bias),
           xAxisMajor.select(bias, 0)
         )
 
-        const depthCenter = textureLoad(depthTexture, readXY).toVar()
-        const depthNeighbor = textureLoad(
-          depthTexture,
-          readXY.add(bilinearOffset)
-        ).toVar()
+        const depthCenter = depthNode.load(readXY).toConst()
+        const depthNeighbor = depthNode
+          .load(readXY.add(bilinearOffset))
+          .toConst()
 
         // Depth thresholds (bilinear/shadow thickness) are based on a
         // fractional ratio of the difference between sampled depth and the far
         // clip depth.
-        const depthThicknessScale = farDepth.sub(depthCenter).abs()
+        const depthThicknessScale = farDepth.sub(depthCenter).abs().toConst()
 
         // If depth variance is more than a specific threshold, then just use
         // point filtering.
@@ -490,19 +490,26 @@ export class ScreenSpaceShadowNode extends TempNode {
         const sampleDistance =
           i === 0
             ? pixelDistance
-            : direction.mul(GROUP_SIZE * i).add(pixelDistance)
+            : direction
+                .mul(GROUP_SIZE * i)
+                .add(pixelDistance)
+                .toConst()
 
         // Perspective correct the shadowing depth, in this space, all light
         // rays are parallel.
         let storedDepth: Node = shadowingDepth
           .sub(lightCoordinate.z)
           .div(sampleDistance)
+          .toConst()
 
         if (i > 0) {
           // For pixels within sampling distance of the light, it is possible
           // that sampling will overshoot the light coordinate for extended
           // reads. We want to ignore these samples.
-          storedDepth = sampleDistance.greaterThan(0).select(storedDepth, 1e10)
+          storedDepth = sampleDistance
+            .greaterThan(0)
+            .select(storedDepth, 1e10)
+            .toConst()
         }
 
         // Store the depth values in group shared.
@@ -551,13 +558,13 @@ export class ScreenSpaceShadowNode extends TempNode {
         .min(surfaceThickness.reciprocal())
         .mul(sampleDistance0)
         .div(depthThicknessScale0)
-        .toVar()
+        .toConst()
 
       startDepth.assign(startDepth.mul(depthScale).sub(zSign))
 
       // Start by reading the next value.
-      const sampleIndex = invocationLocalIndex.add(1)
-      const hardShadow = float(1).toVar('hardShadow')
+      const sampleIndex = invocationLocalIndex.add(1).toConst()
+      const hardShadow = float(1).toVar()
 
       // The first number of hard shadow samples, a single pixel can produce a
       // full shadow:
@@ -586,7 +593,7 @@ export class ScreenSpaceShadowNode extends TempNode {
         // Do the same as the hard_shadow code above, but this will accumulate
         // to 4 separate values. By using 4 values, the average shadow can be
         // taken, which can help soften single-pixel shadows.
-        const channel = int(i & 3)
+        const channel = int(i & 3).toConst()
         shadowValue
           .element(channel)
           .assign(shadowValue.element(channel).min(depthDelta))
@@ -604,7 +611,7 @@ export class ScreenSpaceShadowNode extends TempNode {
             (FADE_OUT_SAMPLES + 1)) *
           0.75
 
-        const channel = int(i & 3)
+        const channel = int(i & 3).toConst()
         shadowValue
           .element(channel)
           .assign(shadowValue.element(channel).min(depthDelta.add(fadeOut)))
@@ -614,7 +621,7 @@ export class ScreenSpaceShadowNode extends TempNode {
       // A value of 0 indicates a sample was exactly matched to the reference
       // depth (and the result is fully shadowed). We want some boost to this
       // range, so samples don't have to exactly match to produce a full shadow.
-      const contrastOffset = shadowContrast.oneMinus()
+      const contrastOffset = shadowContrast.oneMinus().toConst()
       hardShadow.assign(
         hardShadow.mul(shadowContrast).add(contrastOffset).saturate()
       )
