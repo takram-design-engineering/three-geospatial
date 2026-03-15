@@ -2,6 +2,7 @@ import { OrbitControls, Plane } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Suspense, useEffect, useLayoutEffect, useMemo, type FC } from 'react'
 import { DirectionalLight, Mesh } from 'three'
+import { sss } from 'three/addons/tsl/display/SSSNode.js'
 import { traa } from 'three/addons/tsl/display/TRAANode.js'
 import {
   builtinShadowContext,
@@ -101,23 +102,28 @@ const Content: FC<StoryProps> = () => {
     [renderer, scene, camera]
   )
 
-  const { enabled } = useControl(({ enabled }: StoryArgs) => ({ enabled }))
+  const { enabled, useAddon } = useControl(
+    ({ enabled, useAddon }: StoryArgs) => ({ enabled, useAddon })
+  )
 
   useLayoutEffect(() => {
     if (!enabled) {
       return
     }
     const depthNode = prePassNode.getTextureNode('depth')
-    const sssNode = screenSpaceShadow(depthNode, camera, light)
-    const sssSample = sssNode.getTextureNode().sample(screenUV)
+    const sssNode = useAddon
+      ? sss(depthNode, camera, light)
+      : screenSpaceShadow(depthNode, camera, light)
+    const sssSample = sssNode.getTextureNode().sample(screenUV).r
     const sssContext = builtinShadowContext(sssSample, light)
     passNode.contextNode = sssContext
+    passNode.needsUpdate = true
 
     return () => {
       sssNode.dispose()
       passNode.contextNode = null
     }
-  }, [camera, light, prePassNode, passNode, enabled])
+  }, [camera, light, prePassNode, passNode, enabled, useAddon])
 
   useFrame(() => {
     postProcessing.render()
@@ -160,6 +166,7 @@ interface StoryProps {}
 
 interface StoryArgs extends OutputPassArgs {
   enabled: boolean
+  useAddon: boolean
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -173,12 +180,18 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   enabled: true,
+  useAddon: false,
   ...outputPassArgs(),
   ...rendererArgs()
 }
 
 Story.argTypes = {
   enabled: {
+    control: {
+      type: 'boolean'
+    }
+  },
+  useAddon: {
     control: {
       type: 'boolean'
     }
