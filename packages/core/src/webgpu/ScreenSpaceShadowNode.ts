@@ -1,3 +1,5 @@
+// Based on Bend Studio's technique: https://www.bendstudio.com/blog/inside-bend-screen-space-shadows/
+
 import {
   LinearFilter,
   Matrix4,
