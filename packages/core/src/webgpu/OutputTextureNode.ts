@@ -1,6 +1,8 @@
 import type { Texture } from 'three'
 import { TextureNode, type Node, type NodeBuilder } from 'three/webgpu'
 
+import { reinterpretType } from '../types'
+
 export class OutputTextureNode extends TextureNode {
   static override get type(): string {
     return 'OutputTextureNode'
@@ -11,6 +13,14 @@ export class OutputTextureNode extends TextureNode {
   constructor(owner: Node, texture: Texture) {
     super(texture)
     this.owner = owner
+
+    // WORKAROUND: Missing method as of r182. Adding these in the module
+    // augmentation breaks VSCode's auto completion.
+    reinterpretType<
+      typeof this & {
+        setUpdateMatrix: (value: boolean) => void
+      }
+    >(this)
     this.setUpdateMatrix(false)
   }
 

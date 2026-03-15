@@ -1,9 +1,9 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story as LensFlareStory } from './LensFlare-Story'
+import { Story } from './LensFlare-Story'
 
-import LensFlareCode from './LensFlare-Story?raw'
+import Code from './LensFlare-Story?raw'
 
 export default {
   title: 'core/Lens Flare',
@@ -17,11 +17,11 @@ export default {
   }
 } satisfies Meta
 
-export const LensFlare = createStory(LensFlareStory, {
+export const LensFlare = createStory(Story, {
   parameters: {
     docs: {
       source: {
-        code: LensFlareCode
+        code: Code
       }
     }
   }
