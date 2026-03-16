@@ -40,8 +40,10 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { cameraFar, cameraNear } from './accessors'
 import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
+import { logarithmicToPerspectiveDepth } from './transformations'
 
 // Workgroup size of the compute shader running this code.
 const GROUP_SIZE = 64
@@ -347,9 +349,10 @@ export class ScreenSpaceShadowNode extends TempNode {
   }
 
   // See bend_sss_gpu.h
-  private setupCompute(): void {
+  private setupCompute(builder: NodeBuilder): void {
     const {
       depthNode,
+      camera,
       sampleCount,
       hardShadowSamples,
       fadeOutSamples,
@@ -363,6 +366,10 @@ export class ScreenSpaceShadowNode extends TempNode {
       lightCoordinate,
       dispatchOffset
     } = this
+
+    if (camera == null) {
+      return
+    }
 
     // Number of bilinear sample reads performed per-thread.
     const readCount = Math.floor(sampleCount / GROUP_SIZE) + 2
@@ -447,6 +454,18 @@ export class ScreenSpaceShadowNode extends TempNode {
       return { pixelXY, pixelDistance, xyDelta, xAxisMajor }
     }
 
+    const loadDepth = (coord: Node<'ivec2'>): Node<'float'> => {
+      const depth = depthNode.load(coord).toConst()
+      if (builder.renderer.logarithmicDepthBuffer) {
+        return logarithmicToPerspectiveDepth(
+          depth,
+          cameraNear(camera),
+          cameraFar(camera)
+        )
+      }
+      return depth
+    }
+
     this.computeNode = Fn(() => {
       const { pixelXY, xyDelta, pixelDistance, xAxisMajor } =
         getWorkgroupExtents()
@@ -479,10 +498,8 @@ export class ScreenSpaceShadowNode extends TempNode {
           xAxisMajor.select(bias, 0)
         )
 
-        const depthCenter = depthNode.load(readXY).toConst()
-        const depthNeighbor = depthNode
-          .load(readXY.add(bilinearOffset))
-          .toConst()
+        const depthCenter = loadDepth(readXY).toConst()
+        const depthNeighbor = loadDepth(readXY.add(bilinearOffset)).toConst()
 
         // Depth thresholds (bilinear/shadow thickness) are based on a
         // fractional ratio of the difference between sampled depth and the far
@@ -663,7 +680,7 @@ export class ScreenSpaceShadowNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    this.setupCompute()
+    this.setupCompute(builder)
     return this.textureNode
   }
 
