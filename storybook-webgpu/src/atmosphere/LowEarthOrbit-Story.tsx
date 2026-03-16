@@ -81,8 +81,8 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  atmosphereContext.camera = camera
 
   // Post-processing:
 
@@ -101,7 +101,7 @@ const Content: FC<StoryProps> = () => {
       const velocityNode = passNode.getTextureNode('velocity')
 
       const aerialNode = manage(
-        aerialPerspective(context, colorNode, depthNode)
+        aerialPerspective(atmosphereContext, colorNode, depthNode)
       )
       const lensFlareNode = manage(lensFlare(aerialNode))
       const toneMappingNode = manage(
@@ -120,7 +120,7 @@ const Content: FC<StoryProps> = () => {
 
       return [postProcessing, passNode, toneMappingNode]
     },
-    [renderer, scene, camera, context]
+    [renderer, scene, camera, atmosphereContext]
   )
 
   useGuardedFrame(() => {
@@ -147,7 +147,7 @@ const Content: FC<StoryProps> = () => {
   const [reorientationPlugin, setReorientationPlugin] =
     useState<ReorientationPlugin | null>(null)
   useLocationControls(
-    context.matrixWorldToECEF.value,
+    atmosphereContext.matrixWorldToECEF.value,
     (longitude, latitude, height) => {
       if (reorientationPlugin != null) {
         reorientationPlugin.lon = radians(longitude)
@@ -160,7 +160,8 @@ const Content: FC<StoryProps> = () => {
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -170,13 +171,16 @@ const Content: FC<StoryProps> = () => {
     )
   })
 
-  const envNode = useResource(() => skyEnvironment(context), [context])
+  const envNode = useResource(
+    () => skyEnvironment(atmosphereContext),
+    [atmosphereContext]
+  )
   scene.environmentNode = envNode
 
   return (
     <>
       <atmosphereLight
-        args={[context, 80]}
+        args={[atmosphereContext, 80]}
         castShadow
         shadow-normalBias={0.1}
         shadow-mapSize={[2048, 2048]}
@@ -194,8 +198,8 @@ const Content: FC<StoryProps> = () => {
       <OrbitControls minDistance={20} maxDistance={1e5} />
       <Suspense>
         <ISS
-          matrixWorldToECEF={context.matrixWorldToECEF.value}
-          sunDirectionECEF={context.sunDirectionECEF.value}
+          matrixWorldToECEF={atmosphereContext.matrixWorldToECEF.value}
+          sunDirectionECEF={atmosphereContext.sunDirectionECEF.value}
         />
       </Suspense>
       <Globe overrideMaterial={MeshLambertNodeMaterial}>

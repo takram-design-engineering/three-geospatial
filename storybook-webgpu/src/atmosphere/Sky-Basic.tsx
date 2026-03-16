@@ -43,14 +43,14 @@ const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  atmosphereContext.camera = camera
 
   // Post-processing:
 
   const [postProcessing, skyNode, toneMappingNode] = useResource(
     manage => {
-      const skyNode = manage(sky(context))
+      const skyNode = manage(sky(atmosphereContext))
       skyNode.moonNode.intensity.value = 10
       skyNode.starsNode.intensity.value = 10
 
@@ -63,7 +63,7 @@ const Content: FC<StoryProps> = () => {
 
       return [postProcessing, skyNode, toneMappingNode]
     },
-    [renderer, context]
+    [renderer, atmosphereContext]
   )
 
   useGuardedFrame(() => {
@@ -86,7 +86,7 @@ const Content: FC<StoryProps> = () => {
       showGround
     }),
     ({ showGround }) => {
-      context.showGround = showGround
+      atmosphereContext.showGround = showGround
       postProcessing.needsUpdate = true
     }
   )
@@ -97,11 +97,12 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF.value)
+  useLocationControls(atmosphereContext.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value

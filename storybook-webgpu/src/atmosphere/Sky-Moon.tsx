@@ -270,8 +270,8 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  atmosphereContext.camera = camera
 
   // Post-processing:
 
@@ -279,7 +279,7 @@ const Content: FC<StoryProps> = () => {
     manage => {
       const passNode = manage(pass(scene, camera))
 
-      const skyNode = manage(sky(context))
+      const skyNode = manage(sky(atmosphereContext))
       skyNode.moonNode.colorNode = texture(
         new TextureLoader().load('public/moon/color_large.webp', texture => {
           texture.colorSpace = LinearSRGBColorSpace
@@ -306,7 +306,7 @@ const Content: FC<StoryProps> = () => {
 
       return [postProcessing, skyNode, toneMappingNode]
     },
-    [renderer, scene, camera, context]
+    [renderer, scene, camera, atmosphereContext]
   )
 
   useGuardedFrame(() => {
@@ -320,7 +320,7 @@ const Content: FC<StoryProps> = () => {
 
   // Location controls:
   const [longitude, latitude, height] = useLocationControls(
-    context.matrixWorldToECEF.value
+    atmosphereContext.matrixWorldToECEF.value
   )
 
   // Local date controls (depends on the longitude of the location):
@@ -346,7 +346,8 @@ const Content: FC<StoryProps> = () => {
   useCombinedChange(
     [longitude, latitude, height, date, moonScale, moonIntensity],
     ([longitude, latitude, height, date, moonScale, moonIntensity]) => {
-      const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+      const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+        atmosphereContext
 
       const time = toAstroTime(date)
       getECIToECEFRotationMatrix(time, matrixECIToECEF.value)
@@ -359,7 +360,7 @@ const Content: FC<StoryProps> = () => {
         geodetic.set(radians(longitude), radians(latitude), height).toECEF()
       ).applyMatrix4(matrixECIToECEF.value)
 
-      const { matrixMoonFixedToECEF } = context
+      const { matrixMoonFixedToECEF } = atmosphereContext
       getMoonFixedToECIRotationMatrix(
         time,
         matrixMoonFixedToECEF.value
@@ -411,7 +412,7 @@ const Content: FC<StoryProps> = () => {
       return
     }
     if (northUp) {
-      matrix.copy(context.matrixWorldToECEF.value).transpose()
+      matrix.copy(atmosphereContext.matrixWorldToECEF.value).transpose()
       camera.up.set(0, 0, 1).applyMatrix4(matrix)
     } else {
       camera.up.copy(Object3D.DEFAULT_UP)

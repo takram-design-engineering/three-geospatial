@@ -78,8 +78,8 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  atmosphereContext.camera = camera
 
   // Post-processing:
 
@@ -98,7 +98,7 @@ const Content: FC<StoryProps> = () => {
       const velocityNode = passNode.getTextureNode('velocity')
 
       const aerialNode = manage(
-        aerialPerspective(context, colorNode, depthNode)
+        aerialPerspective(atmosphereContext, colorNode, depthNode)
       )
       const lensFlareNode = manage(lensFlare(aerialNode))
       const toneMappingNode = manage(
@@ -117,7 +117,7 @@ const Content: FC<StoryProps> = () => {
 
       return [postProcessing, passNode, toneMappingNode]
     },
-    [renderer, scene, camera, context]
+    [renderer, scene, camera, atmosphereContext]
   )
 
   useGuardedFrame(() => {
@@ -143,7 +143,8 @@ const Content: FC<StoryProps> = () => {
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -155,7 +156,7 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight args={[context]} />
+      <atmosphereLight args={[atmosphereContext]} />
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}

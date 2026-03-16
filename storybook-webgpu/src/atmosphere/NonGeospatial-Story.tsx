@@ -94,8 +94,8 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  atmosphereContext.camera = camera
 
   // Post-processing:
 
@@ -153,11 +153,12 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF.value)
+  useLocationControls(atmosphereContext.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -176,7 +177,7 @@ const Content: FC<StoryProps> = () => {
   // Toggles the lights in the model:
   const modelRef = useRef<LittlestTokyoApi>(null)
   useGuardedFrame(() => {
-    const { matrixWorldToECEF, sunDirectionECEF } = context
+    const { matrixWorldToECEF, sunDirectionECEF } = atmosphereContext
     const sunDirectionWorld = vector
       .copy(sunDirectionECEF.value)
       .applyMatrix3(
@@ -190,7 +191,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight
-        args={[context, 5]}
+        args={[atmosphereContext, 5]}
         castShadow
         shadow-normalBias={0.1}
         shadow-mapSize={[2048, 2048]}

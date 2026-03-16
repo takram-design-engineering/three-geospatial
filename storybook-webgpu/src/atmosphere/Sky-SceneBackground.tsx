@@ -46,10 +46,13 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  atmosphereContext.camera = camera
 
-  const skyNode = useResource(() => skyBackground(context), [context])
+  const skyNode = useResource(
+    () => skyBackground(atmosphereContext),
+    [atmosphereContext]
+  )
   skyNode.moonNode.intensity.value = 10
   skyNode.starsNode.intensity.value = 10
 
@@ -93,7 +96,7 @@ const Content: FC<StoryProps> = () => {
       showGround
     }),
     ({ showGround }) => {
-      context.showGround = showGround
+      atmosphereContext.showGround = showGround
       skyNode.needsUpdate = true
     }
   )
@@ -104,11 +107,12 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF.value)
+  useLocationControls(atmosphereContext.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value

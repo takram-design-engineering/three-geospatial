@@ -64,8 +64,8 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  atmosphereContext.camera = camera
 
   // Post-processing:
 
@@ -86,7 +86,7 @@ const Content: FC<StoryProps> = () => {
       const velocityNode = passNode.getTextureNode('velocity')
 
       const aerialNode = manage(
-        aerialPerspective(context, colorNode, depthNode, normalNode)
+        aerialPerspective(atmosphereContext, colorNode, depthNode, normalNode)
       )
       const lensFlareNode = manage(lensFlare(aerialNode))
       const toneMappingNode = manage(
@@ -105,7 +105,7 @@ const Content: FC<StoryProps> = () => {
 
       return [postProcessing, passNode, toneMappingNode]
     },
-    [renderer, scene, camera, context]
+    [renderer, scene, camera, atmosphereContext]
   )
 
   useGuardedFrame(() => {
@@ -130,11 +130,12 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF.value)
+  useLocationControls(atmosphereContext.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value

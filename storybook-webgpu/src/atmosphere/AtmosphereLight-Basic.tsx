@@ -75,8 +75,8 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  atmosphereContext.camera = camera
 
   // Post-processing:
 
@@ -95,7 +95,7 @@ const Content: FC<StoryProps> = () => {
       const velocityNode = passNode.getTextureNode('velocity')
 
       const aerialNode = manage(
-        aerialPerspective(context, colorNode, depthNode)
+        aerialPerspective(atmosphereContext, colorNode, depthNode)
       )
       const lensFlareNode = manage(lensFlare(aerialNode))
       const toneMappingNode = manage(
@@ -114,7 +114,7 @@ const Content: FC<StoryProps> = () => {
 
       return [postProcessing, passNode, toneMappingNode]
     },
-    [renderer, scene, camera, context]
+    [renderer, scene, camera, atmosphereContext]
   )
 
   useGuardedFrame(() => {
@@ -139,11 +139,12 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF.value)
+  useLocationControls(atmosphereContext.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -154,7 +155,10 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Toggles the direct, indirect and environment lighting:
-  const envNode = useResource(() => skyEnvironment(context), [context])
+  const envNode = useResource(
+    () => skyEnvironment(atmosphereContext),
+    [atmosphereContext]
+  )
   const lightRef = useRef<AtmosphereLight>(null)
   useTransientControl(
     ({ directLight, indirectLight, environmentMap }: StoryArgs) => ({
@@ -174,7 +178,7 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight ref={lightRef} args={[context]} />
+      <atmosphereLight ref={lightRef} args={[atmosphereContext]} />
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere
         args={[0.5, 128, 128]}
