@@ -8,6 +8,7 @@ import { builtinShadowContext, mrt, pass, screenUV, velocity } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
+  dithering,
   screenSpaceShadow,
   ScreenSpaceShadowNode
 } from '@takram/three-geospatial/webgpu'
@@ -111,14 +112,9 @@ const Content: FC<StoryProps> = () => {
   )
 
   const postProcessing = useResource(
-    () => new PostProcessing(renderer),
-    [renderer]
+    () => new PostProcessing(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
-
-  useLayoutEffect(() => {
-    postProcessing.outputNode = taaNode
-    postProcessing.needsUpdate = true
-  }, [postProcessing, taaNode])
 
   useFrame(() => {
     postProcessing.render()
