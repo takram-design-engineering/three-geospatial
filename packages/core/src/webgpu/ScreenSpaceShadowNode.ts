@@ -103,19 +103,19 @@ export class ScreenSpaceShadowNode extends TempNode {
   shadowContrast = uniform(4)
 
   // Shadow intensity. Must be in the range [0, 1].
-  shadowIntensity = uniform(0.5)
+  shadowIntensity = uniform(1)
 
   // Percentage threshold for determining if the difference between two depth
   // values represents an edge, and should not perform interpolation.
   bilinearThreshold = uniform(0.02)
 
-  // Depth Buffer Value for the far clip plane, as determined by renderer
-  // projection matrix setup (typically 1).
-  farDepth = uniform(1)
-
   // Depth Buffer Value for the near clip plane, as determined by renderer
   // projection matrix setup (typically 0).
   nearDepth = uniform(0)
+
+  // Depth Buffer Value for the far clip plane, as determined by renderer
+  // projection matrix setup (typically 1).
+  farDepth = uniform(1)
 
   // xy: Screen coordinate
   // z: Normalized Z
