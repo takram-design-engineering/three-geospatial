@@ -10,6 +10,7 @@ import {
   type Camera,
   type DirectionalLight
 } from 'three'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   abs,
   float,
@@ -45,23 +46,6 @@ import { outputTexture } from './OutputTextureNode'
 // Workgroup size of the compute shader running this code.
 const GROUP_SIZE = 64
 
-// Number of shadow samples per-pixel.
-// Determines overall cost, as this value controls the length of the shadow
-// (in pixels). The number of texture-reads performed per-thread will be
-// (SAMPLE_COUNT / GROUP_SIZE + 2) * 2.
-const SAMPLE_COUNT = 60
-
-// Number of bilinear sample reads performed per-thread.
-const READ_COUNT = Math.floor(SAMPLE_COUNT / GROUP_SIZE) + 2
-
-// Number of initial shadow samples that will produce a hard shadow, and not
-// perform sample-averaging. This trades aliasing for grounding pixels very
-// close to the shadow caster.
-const HARD_SHADOW_SAMPLES = 4
-
-// Number of samples that will fade out at the end of the shadow.
-const FADE_OUT_SAMPLES = 8
-
 function toDispatchIndex(value: number): number {
   return Math.floor(Math.max(0, value) / GROUP_SIZE)
 }
@@ -84,9 +68,27 @@ const sizeScratch = /*#__PURE__*/ new Vector2()
 const matrixScratch = /*#__PURE__*/ new Matrix4()
 
 export class ScreenSpaceShadowNode extends TempNode {
+  override get type(): string {
+    return 'ScreenSpaceShadowNode'
+  }
+
   depthNode: TextureNode
   camera?: Camera | null
   mainLight?: DirectionalLight | null
+
+  // Number of shadow samples per-pixel.
+  // Determines overall cost, as this value controls the length of the shadow
+  // (in pixels). The number of texture-reads performed per-thread will be
+  // (sampleCount / GROUP_SIZE + 2) * 2.
+  sampleCount = 60
+
+  // Number of initial shadow samples that will produce a hard shadow, and not
+  // perform sample-averaging. This trades aliasing for grounding pixels very
+  // close to the shadow caster.
+  hardShadowSamples = 4
+
+  // Number of samples that will fade out at the end of the shadow.
+  fadeOutSamples = 8
 
   readonly outputTexture: StorageTexture
   private readonly textureNode: TextureNode
@@ -94,11 +96,14 @@ export class ScreenSpaceShadowNode extends TempNode {
   // The assumed thickness of each pixel for shadow-casting, measured as a
   // percentage of the difference in non-linear depth between the sample and
   // FarDepthValue.
-  surfaceThickness = uniform(0.005)
+  thickness = uniform(0.005)
 
   // A contrast boost is applied to the transition in/out of shadow.
   // Values >= 1 are valid.
   shadowContrast = uniform(4)
+
+  // Shadow intensity. Must be in the range [0, 1].
+  shadowIntensity = uniform(0.5)
 
   // Percentage threshold for determining if the difference between two depth
   // values represents an edge, and should not perform interpolation.
@@ -126,11 +131,6 @@ export class ScreenSpaceShadowNode extends TempNode {
   )
   private dispatchCount = 0
 
-  private readonly workgroupDepthData = workgroupArray(
-    'float',
-    READ_COUNT * GROUP_SIZE
-  )
-
   private computeNode?: ComputeNode
 
   constructor(
@@ -154,6 +154,16 @@ export class ScreenSpaceShadowNode extends TempNode {
     this.textureNode = outputTexture(this, texture)
 
     this.updateBeforeType = NodeUpdateType.FRAME
+  }
+
+  override customCacheKey(): number {
+    return hash(
+      this.camera?.id ?? -1,
+      this.mainLight?.id ?? -1,
+      this.sampleCount,
+      this.hardShadowSamples,
+      this.fadeOutSamples
+    )
   }
 
   getTextureNode(): TextureNode {
@@ -340,16 +350,23 @@ export class ScreenSpaceShadowNode extends TempNode {
   private setupCompute(): void {
     const {
       depthNode,
+      sampleCount,
+      hardShadowSamples,
+      fadeOutSamples,
       outputTexture,
-      surfaceThickness,
+      thickness,
       shadowContrast,
+      shadowIntensity,
       bilinearThreshold,
       farDepth,
       nearDepth,
       lightCoordinate,
-      dispatchOffset,
-      workgroupDepthData
+      dispatchOffset
     } = this
+
+    // Number of bilinear sample reads performed per-thread.
+    const readCount = Math.floor(sampleCount / GROUP_SIZE) + 2
+    const workgroupBuffer = workgroupArray('float', readCount * GROUP_SIZE)
 
     // Gets the start pixel coordinates for the pixels in the workgroup.
     // Also returns the delta to get to the next pixel after GROUP_SIZE pixels
@@ -444,7 +461,7 @@ export class ScreenSpaceShadowNode extends TempNode {
       let depthThicknessScale0!: Node<'float'>
       let sampleDistance0!: Node<'float'>
 
-      for (let i = 0; i < READ_COUNT; ++i) {
+      for (let i = 0; i < readCount; ++i) {
         // We sample depth twice per pixel per sample, and interpolate with an
         // edge detect filter. Interpolation should only occur on the minor axis
         // of the ray - major axis coordinates should be at pixel centers.
@@ -515,7 +532,7 @@ export class ScreenSpaceShadowNode extends TempNode {
         }
 
         // Store the depth values in workgroup shared memory.
-        workgroupDepthData
+        workgroupBuffer
           .element(invocationLocalIndex.add(GROUP_SIZE * i))
           .assign(storedDepth)
 
@@ -557,7 +574,7 @@ export class ScreenSpaceShadowNode extends TempNode {
       // shadowed.
       const depthScale = sampleDistance0
         .add(direction)
-        .min(surfaceThickness.reciprocal())
+        .min(thickness.reciprocal())
         .mul(sampleDistance0)
         .div(depthThicknessScale0)
         .toConst()
@@ -570,9 +587,9 @@ export class ScreenSpaceShadowNode extends TempNode {
 
       // The first number of hard shadow samples, a single pixel can produce a
       // full shadow:
-      for (let i = 0; i < HARD_SHADOW_SAMPLES; ++i) {
+      for (let i = 0; i < hardShadowSamples; ++i) {
         const depthDelta = startDepth
-          .sub(workgroupDepthData.element(sampleIndex.add(i)).mul(depthScale))
+          .sub(workgroupBuffer.element(sampleIndex.add(i)).mul(depthScale))
           .abs()
 
         // We want to find the distance of the sample that is closest to the
@@ -583,13 +600,9 @@ export class ScreenSpaceShadowNode extends TempNode {
       const shadowValue = vec4(1).toVar()
 
       // The main shadow samples, averaged in to a set of 4 shadow values:
-      for (
-        let i = HARD_SHADOW_SAMPLES;
-        i < SAMPLE_COUNT - FADE_OUT_SAMPLES;
-        ++i
-      ) {
+      for (let i = hardShadowSamples; i < sampleCount - fadeOutSamples; ++i) {
         const depthDelta = startDepth
-          .sub(workgroupDepthData.element(sampleIndex.add(i)).mul(depthScale))
+          .sub(workgroupBuffer.element(sampleIndex.add(i)).mul(depthScale))
           .abs()
 
         // Do the same as the hard_shadow code above, but this will accumulate
@@ -602,15 +615,14 @@ export class ScreenSpaceShadowNode extends TempNode {
       }
 
       // Final fade out samples:
-      for (let i = SAMPLE_COUNT - FADE_OUT_SAMPLES; i < SAMPLE_COUNT; ++i) {
+      for (let i = sampleCount - fadeOutSamples; i < sampleCount; ++i) {
         const depthDelta = startDepth
-          .sub(workgroupDepthData.element(sampleIndex.add(i)).mul(depthScale))
+          .sub(workgroupBuffer.element(sampleIndex.add(i)).mul(depthScale))
           .abs()
 
         // Add the fade value to these samples.
         const fadeOut =
-          ((i + 1 - (SAMPLE_COUNT - FADE_OUT_SAMPLES)) /
-            (FADE_OUT_SAMPLES + 1)) *
+          ((i + 1 - (sampleCount - fadeOutSamples)) / (fadeOutSamples + 1)) *
           0.75
 
         const channel = int(i & 3).toConst()
@@ -643,7 +655,7 @@ export class ScreenSpaceShadowNode extends TempNode {
 
       // Asking the GPU to write scattered single-byte pixels isn't great,
       // But thankfully the latency is hidden by all the work we're doing...
-      textureStore(outputTexture, writeXY, result)
+      textureStore(outputTexture, writeXY, mix(1, result, shadowIntensity))
     })().compute(
       0, // Determine this later
       [GROUP_SIZE, 1, 1]

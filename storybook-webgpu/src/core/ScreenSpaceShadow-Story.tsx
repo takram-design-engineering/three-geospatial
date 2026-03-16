@@ -7,21 +7,19 @@ import { traa } from 'three/addons/tsl/display/TRAANode.js'
 import { builtinShadowContext, mrt, pass, screenUV, velocity } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
-import { screenSpaceShadow } from '@takram/three-geospatial/webgpu'
+import {
+  screenSpaceShadow,
+  ScreenSpaceShadowNode
+} from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 import { Description } from '../components/Description'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
-import {
-  outputPassArgs,
-  outputPassArgTypes,
-  useOutputPassControls,
-  type OutputPassArgs
-} from '../controls/outputPassControls'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
 import { useControl } from '../hooks/useControl'
 import { useGLTF } from '../hooks/useGLTF'
 import { useResource } from '../hooks/useResource'
+import { useTransientControl } from '../hooks/useTransientControl'
 
 const Model: FC = () => {
   const gltf = useGLTF('public/nemetona.glb')
@@ -70,7 +68,11 @@ const Content: FC<StoryProps> = () => {
     }
   }, [light])
 
-  const [postProcessing, prePassNode, passNode] = useResource(
+  const { enabled, useAddon } = useControl(
+    ({ enabled, useAddon }: StoryArgs) => ({ enabled, useAddon })
+  )
+
+  const [postProcessing, passNode, sssNode] = useResource(
     manage => {
       const prePassNode = manage(
         pass(scene, camera, { samples: 0 }).setMRT(
@@ -79,56 +81,64 @@ const Content: FC<StoryProps> = () => {
           })
         )
       )
-      const passNode = manage(pass(scene, camera, { samples: 0 }))
-
       const depthNode = prePassNode.getTextureNode('depth')
       const velocityNode = prePassNode.getTextureNode('output')
+
+      const sssNode = useAddon
+        ? sss(depthNode, camera, light)
+        : screenSpaceShadow(depthNode, camera, light)
+      const sssSample = sssNode.getTextureNode().sample(screenUV).r
+      const sssContext = builtinShadowContext(sssSample, light)
+
+      const passNode = pass(scene, camera, { samples: 0 })
+      if (enabled) {
+        passNode.contextNode = sssContext
+      }
 
       const taaNode = manage(traa(passNode, depthNode, velocityNode, camera))
 
       const postProcessing = new PostProcessing(renderer)
       postProcessing.outputNode = taaNode
 
-      return [postProcessing, prePassNode, passNode]
+      return [postProcessing, passNode, sssNode]
     },
-    [renderer, scene, camera]
+    [renderer, scene, camera, light, enabled, useAddon]
   )
-
-  const { enabled, useAddon } = useControl(
-    ({ enabled, useAddon }: StoryArgs) => ({ enabled, useAddon })
-  )
-
-  useLayoutEffect(() => {
-    if (!enabled) {
-      return
-    }
-    const depthNode = prePassNode.getTextureNode('depth')
-    const sssNode = useAddon
-      ? sss(depthNode, camera, light)
-      : screenSpaceShadow(depthNode, camera, light)
-    const sssSample = sssNode.getTextureNode().sample(screenUV).r
-    const sssContext = builtinShadowContext(sssSample, light)
-    passNode.contextNode = sssContext
-    passNode.needsUpdate = true
-
-    return () => {
-      sssNode.dispose()
-      passNode.contextNode = null
-    }
-  }, [camera, light, prePassNode, passNode, enabled, useAddon])
 
   useFrame(() => {
     postProcessing.render()
   }, 1)
 
-  // Output pass controls:
-  useOutputPassControls(
-    postProcessing,
-    passNode,
-    (outputNode, outputColorTransform) => {
-      postProcessing.outputNode = outputNode
-      postProcessing.outputColorTransform = outputColorTransform
-      postProcessing.needsUpdate = true
+  useTransientControl(
+    ({ thickness, shadowContrast, shadowIntensity }: StoryArgs) => ({
+      thickness,
+      shadowContrast,
+      shadowIntensity
+    }),
+    ({ thickness, shadowContrast, shadowIntensity }) => {
+      if (sssNode instanceof ScreenSpaceShadowNode) {
+        sssNode.thickness.value = thickness
+        sssNode.shadowContrast.value = shadowContrast
+        sssNode.shadowIntensity.value = shadowIntensity
+      }
+    }
+  )
+
+  useTransientControl(
+    ({ sampleCount, hardShadowSamples, fadeOutSamples }: StoryArgs) => ({
+      sampleCount,
+      hardShadowSamples,
+      fadeOutSamples
+    }),
+    ({ sampleCount, hardShadowSamples, fadeOutSamples }) => {
+      if (sssNode instanceof ScreenSpaceShadowNode) {
+        sssNode.sampleCount = sampleCount
+        sssNode.hardShadowSamples = hardShadowSamples
+        sssNode.fadeOutSamples = fadeOutSamples
+
+        // SSSNode lives inside passNode, not in postProcessing.
+        passNode.needsUpdate = true
+      }
     }
   )
 
@@ -156,9 +166,15 @@ const Content: FC<StoryProps> = () => {
 
 interface StoryProps {}
 
-interface StoryArgs extends OutputPassArgs {
+interface StoryArgs {
   enabled: boolean
   useAddon: boolean
+  thickness: number
+  shadowContrast: number
+  shadowIntensity: number
+  sampleCount: number
+  hardShadowSamples: number
+  fadeOutSamples: number
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -173,7 +189,12 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   enabled: true,
   useAddon: false,
-  ...outputPassArgs(),
+  thickness: 0.005,
+  shadowContrast: 4,
+  shadowIntensity: 1,
+  sampleCount: 60,
+  hardShadowSamples: 4,
+  fadeOutSamples: 8,
   ...rendererArgs()
 }
 
@@ -188,7 +209,51 @@ Story.argTypes = {
       type: 'boolean'
     }
   },
-  ...outputPassArgTypes({ hasNormal: false }),
+  thickness: {
+    control: {
+      type: 'range',
+      min: 0.001,
+      max: 0.01,
+      step: 0.0001
+    }
+  },
+  shadowContrast: {
+    control: {
+      type: 'range',
+      min: 1,
+      max: 4,
+      step: 0.1
+    }
+  },
+  shadowIntensity: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 1,
+      step: 0.01
+    }
+  },
+  sampleCount: {
+    control: {
+      type: 'range',
+      min: 1,
+      max: 120
+    }
+  },
+  hardShadowSamples: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 8
+    }
+  },
+  fadeOutSamples: {
+    control: {
+      type: 'range',
+      min: 0,
+      max: 16
+    }
+  },
   ...rendererArgTypes()
 }
 
