@@ -156,6 +156,13 @@ const Content: FC<StoryProps> = () => {
     })
   )
 
+  const envMap = useResource(() => {
+    const generator = new PMREMGenerator(renderer)
+    const texture = generator.fromScene(new RoomEnvironment(), 0.04).texture
+    generator.dispose()
+    return texture
+  }, [renderer])
+
   return (
     <>
       <ambientLight />
@@ -207,14 +214,7 @@ const Content: FC<StoryProps> = () => {
           roughness={0.25}
           opacity={0.1}
           transparent
-          envMap={useResource(
-            manage =>
-              manage(new PMREMGenerator(renderer)).fromScene(
-                new RoomEnvironment(),
-                0.04
-              ).texture,
-            [renderer]
-          )}
+          envMap={envMap}
         />
       </TorusKnot>
     </>

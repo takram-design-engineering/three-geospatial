@@ -86,41 +86,47 @@ const Content: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const velocityNode = passNode.getTextureNode('velocity')
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          velocity: highpVelocity
+        })
+      ),
+    [scene, camera]
+  )
 
-      const aerialNode = manage(
-        aerialPerspective(atmosphereContext, colorNode, depthNode)
-      )
-      const lensFlareNode = manage(lensFlare(aerialNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dithering)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, scene, camera, atmosphereContext]
+  const aerialNode = useResource(
+    () => aerialPerspective(atmosphereContext, colorNode, depthNode),
+    [atmosphereContext, colorNode, depthNode]
+  )
+
+  const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useGuardedFrame(() => {

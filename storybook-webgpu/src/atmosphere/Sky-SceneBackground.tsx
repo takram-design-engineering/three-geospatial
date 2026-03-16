@@ -49,31 +49,32 @@ const Content: FC<StoryProps> = () => {
   const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
   atmosphereContext.camera = camera
 
-  const skyNode = useResource(
-    () => skyBackground(atmosphereContext),
-    [atmosphereContext]
-  )
-  skyNode.moonNode.intensity.value = 10
-  skyNode.starsNode.intensity.value = 10
+  const skyNode = useResource(() => {
+    const skyNode = skyBackground(atmosphereContext)
+    skyNode.moonNode.intensity.value = 10
+    skyNode.starsNode.intensity.value = 10
+    return skyNode
+  }, [atmosphereContext])
 
   scene.backgroundNode = skyNode
 
   // Post-processing:
 
-  const [postProcessing, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(pass(scene, camera, { samples: 0 }))
-      const lensFlareNode = manage(lensFlare(passNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
+  const passNode = useResource(
+    () => pass(scene, camera, { samples: 0 }),
+    [scene, camera]
+  )
 
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = toneMappingNode.add(dithering)
+  const lensFlareNode = useResource(() => lensFlare(passNode), [passNode])
 
-      return [postProcessing, toneMappingNode]
-    },
-    [renderer, scene, camera]
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, toneMappingNode.add(dithering)),
+    [renderer, toneMappingNode]
   )
 
   useGuardedFrame(() => {

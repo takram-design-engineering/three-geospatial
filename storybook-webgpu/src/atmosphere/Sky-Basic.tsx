@@ -48,22 +48,23 @@ const Content: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, skyNode, toneMappingNode] = useResource(
-    manage => {
-      const skyNode = manage(sky(atmosphereContext))
-      skyNode.moonNode.intensity.value = 10
-      skyNode.starsNode.intensity.value = 10
+  const skyNode = useResource(() => {
+    const skyNode = sky(atmosphereContext)
+    skyNode.moonNode.intensity.value = 10
+    skyNode.starsNode.intensity.value = 10
+    return skyNode
+  }, [atmosphereContext])
 
-      const lensFlareNode = manage(lensFlare(skyNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = toneMappingNode.add(dithering)
+  const lensFlareNode = useResource(() => lensFlare(skyNode), [skyNode])
 
-      return [postProcessing, skyNode, toneMappingNode]
-    },
-    [renderer, atmosphereContext]
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, toneMappingNode.add(dithering)),
+    [renderer, toneMappingNode]
   )
 
   useGuardedFrame(() => {

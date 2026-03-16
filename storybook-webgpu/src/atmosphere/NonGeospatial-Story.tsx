@@ -99,37 +99,40 @@ const Content: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const velocityNode = passNode.getTextureNode('velocity')
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          velocity: highpVelocity
+        })
+      ),
+    [scene, camera]
+  )
 
-      const toneMappingNode = manage(
-        toneMapping(NeutralToneMapping, uniform(0), colorNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dithering)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, scene, camera]
+  const toneMappingNode = useResource(
+    () => toneMapping(NeutralToneMapping, uniform(0), colorNode),
+    [colorNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useGuardedFrame(() => {
@@ -169,7 +172,7 @@ const Content: FC<StoryProps> = () => {
   })
 
   const alphaNode = useMemo(() => uniform(0), [])
-  const colorNode = useMemo(
+  const backgroundColorNode = useMemo(
     () => mix(color('#bfe3dd'), color('#ffffff'), alphaNode),
     [alphaNode]
   )
@@ -212,11 +215,11 @@ const Content: FC<StoryProps> = () => {
         maxPolarAngle={Math.PI / 2}
       />
       <Plane args={[500, 500]} rotation-x={-Math.PI / 2} receiveShadow>
-        <meshLambertNodeMaterial colorNode={colorNode} />
+        <meshLambertNodeMaterial colorNode={backgroundColorNode} />
       </Plane>
       <Sphere args={[500]}>
         <meshLambertNodeMaterial
-          colorNode={colorNode}
+          colorNode={backgroundColorNode}
           normalNode={cameraViewMatrix.mul(vec4(vec3(0, 1, 0), 0)).xyz}
           side={BackSide}
         />

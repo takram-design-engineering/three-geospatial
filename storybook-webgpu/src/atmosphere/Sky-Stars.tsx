@@ -47,24 +47,22 @@ const Content: FC<StoryProps> = () => {
 
   // Post-processing:
 
-  const [postProcessing, skyNode, toneMappingNode] = useResource(
-    manage => {
-      const skyNode = manage(sky(atmosphereContext))
+  const skyNode = useResource(() => {
+    const skyNode = sky(atmosphereContext)
+    skyNode.starsNode = longExposure(skyNode.starsNode) as unknown as StarsNode
+    return skyNode
+  }, [atmosphereContext])
 
-      skyNode.starsNode = longExposure(
-        skyNode.starsNode
-      ) as unknown as StarsNode
+  const lensFlareNode = useResource(() => lensFlare(skyNode), [skyNode])
 
-      const lensFlareNode = manage(lensFlare(skyNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = toneMappingNode.add(dithering)
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
 
-      return [postProcessing, skyNode, toneMappingNode]
-    },
-    [renderer, atmosphereContext]
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, toneMappingNode.add(dithering)),
+    [renderer, toneMappingNode]
   )
 
   useGuardedFrame(() => {
