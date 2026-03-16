@@ -4,14 +4,7 @@ import { Suspense, useEffect, useLayoutEffect, useMemo, type FC } from 'react'
 import { DirectionalLight, Mesh } from 'three'
 import { sss } from 'three/addons/tsl/display/SSSNode.js'
 import { traa } from 'three/addons/tsl/display/TRAANode.js'
-import {
-  builtinShadowContext,
-  mrt,
-  output,
-  pass,
-  screenUV,
-  velocity
-} from 'three/tsl'
+import { builtinShadowContext, mrt, pass, screenUV, velocity } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import { screenSpaceShadow } from '@takram/three-geospatial/webgpu'
@@ -79,18 +72,17 @@ const Content: FC<StoryProps> = () => {
 
   const [postProcessing, prePassNode, passNode] = useResource(
     manage => {
-      const prePassNode = manage(pass(scene, camera, { samples: 0 }))
-      const passNode = manage(
+      const prePassNode = manage(
         pass(scene, camera, { samples: 0 }).setMRT(
           mrt({
-            output,
-            velocity
+            output: velocity
           })
         )
       )
+      const passNode = manage(pass(scene, camera, { samples: 0 }))
 
       const depthNode = prePassNode.getTextureNode('depth')
-      const velocityNode = passNode.getTextureNode('velocity')
+      const velocityNode = prePassNode.getTextureNode('output')
 
       const taaNode = manage(traa(passNode, depthNode, velocityNode, camera))
 

@@ -651,10 +651,6 @@ export class ScreenSpaceShadowNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    // Needs to build depthNode first because this is based on compute shaders
-    // and is not in the node graph.
-    this.depthNode.build(builder)
-
     this.setupCompute()
     return this.textureNode
   }
