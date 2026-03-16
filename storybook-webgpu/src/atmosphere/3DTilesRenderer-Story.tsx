@@ -74,59 +74,71 @@ const Content: FC<StoryProps> = ({
 
   // Post-processing:
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output: diffuseColor,
-            normal: normalView,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const normalNode = passNode.getTextureNode('normal')
-      const velocityNode = passNode.getTextureNode('velocity')
-
-      const aerialNode = manage(
-        aerialPerspective(
-          atmosphereContext,
-          colorNode.mul(2 / 3),
-          depthNode,
-          normalNode
-        )
-      )
-      const lensFlareNode = manage(lensFlare(aerialNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-
-      const overlayPassNode = manage(
-        pass(overlayScene, camera, {
-          samples: 0,
-          depthBuffer: false
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output: diffuseColor,
+          normal: normalView,
+          velocity: highpVelocity
         })
-      )
+      ),
+    [scene, camera]
+  )
 
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode
-        .add(dithering)
-        .mul(overlayPassNode.a.oneMinus())
-        .add(overlayPassNode)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const normalNode = passNode.getTextureNode('normal')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, camera, scene, overlayScene, atmosphereContext]
+  const aerialNode = useResource(
+    () =>
+      aerialPerspective(
+        atmosphereContext,
+        colorNode.mul(2 / 3),
+        depthNode,
+        normalNode
+      ),
+    [atmosphereContext, colorNode, depthNode, normalNode]
+  )
+
+  const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const overlayPassNode = useResource(
+    () =>
+      pass(overlayScene, camera, {
+        samples: 0,
+        depthBuffer: false
+      }),
+    [camera, overlayScene]
+  )
+
+  const postProcessing = useResource(
+    () =>
+      new PostProcessing(
+        renderer,
+        taaNode
+          .add(dithering)
+          .mul(overlayPassNode.a.oneMinus())
+          .add(overlayPassNode)
+      ),
+    [renderer, taaNode, overlayPassNode]
   )
 
   useGuardedFrame(() => {
