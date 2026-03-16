@@ -1,6 +1,6 @@
 import { OrbitControls, Plane } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Suspense, useEffect, useLayoutEffect, useMemo, type FC } from 'react'
+import { Suspense, useLayoutEffect, type FC } from 'react'
 import { DirectionalLight, Mesh } from 'three'
 import { sss } from 'three/addons/tsl/display/SSSNode.js'
 import { traa } from 'three/addons/tsl/display/TRAANode.js'
@@ -46,7 +46,7 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const light = useMemo(() => {
+  const light = useResource(() => {
     const light = new DirectionalLight(0xffffff, 3)
     light.position.set(-3, 10, -10)
     light.castShadow = true
@@ -62,48 +62,63 @@ const Content: FC<StoryProps> = () => {
     return light
   }, [])
 
-  useEffect(() => {
-    return () => {
-      light.dispose()
-    }
-  }, [light])
-
   const { enabled, useAddon } = useControl(
     ({ enabled, useAddon }: StoryArgs) => ({ enabled, useAddon })
   )
 
-  const [postProcessing, passNode, sssNode] = useResource(
-    manage => {
-      const prePassNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output: velocity
-          })
-        )
-      )
-      const depthNode = prePassNode.getTextureNode('depth')
-      const velocityNode = prePassNode.getTextureNode('output')
+  const prePassNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output: velocity
+        })
+      ),
+    [scene, camera]
+  )
 
-      const sssNode = useAddon
-        ? sss(depthNode, camera, light)
-        : screenSpaceShadow(depthNode, camera, light)
+  const sssNode = useResource(() => {
+    const depthNode = prePassNode.getTextureNode('depth')
+    return useAddon
+      ? sss(depthNode, camera, light)
+      : screenSpaceShadow(depthNode, camera, light)
+  }, [camera, light, prePassNode, useAddon])
+
+  const passNode = useResource(
+    () => pass(scene, camera, { samples: 0 }),
+    [scene, camera]
+  )
+
+  useLayoutEffect(() => {
+    if (enabled) {
       const sssSample = sssNode.getTextureNode().sample(screenUV).r
       const sssContext = builtinShadowContext(sssSample, light)
+      passNode.contextNode = sssContext
+    } else {
+      passNode.contextNode = null
+    }
+    passNode.needsUpdate = true
+  }, [light, passNode, sssNode, enabled])
 
-      const passNode = pass(scene, camera, { samples: 0 })
-      if (enabled) {
-        passNode.contextNode = sssContext
-      }
-
-      const taaNode = manage(traa(passNode, depthNode, velocityNode, camera))
-
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode
-
-      return [postProcessing, passNode, sssNode]
-    },
-    [renderer, scene, camera, light, enabled, useAddon]
+  const taaNode = useResource(
+    () =>
+      traa(
+        passNode,
+        prePassNode.getTextureNode('depth'),
+        prePassNode.getTextureNode('output'),
+        camera
+      ),
+    [camera, prePassNode, passNode]
   )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer),
+    [renderer]
+  )
+
+  useLayoutEffect(() => {
+    postProcessing.outputNode = taaNode
+    postProcessing.needsUpdate = true
+  }, [postProcessing, taaNode])
 
   useFrame(() => {
     postProcessing.render()
