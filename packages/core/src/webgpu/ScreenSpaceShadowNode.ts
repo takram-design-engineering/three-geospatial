@@ -13,6 +13,7 @@ import {
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   abs,
+  and,
   float,
   Fn,
   greaterThan,
@@ -21,6 +22,7 @@ import {
   ivec2,
   min,
   mix,
+  textureSize,
   textureStore,
   uniform,
   vec2,
@@ -455,15 +457,23 @@ export class ScreenSpaceShadowNode extends TempNode {
     }
 
     const loadDepth = (coord: Node<'ivec2'>): Node<'float'> => {
-      const depth = depthNode.load(coord).toConst()
+      const depth = depthNode.load(coord).toVar()
       if (builder.renderer.logarithmicDepthBuffer) {
-        return logarithmicToPerspectiveDepth(
-          depth,
-          cameraNear(camera),
-          cameraFar(camera)
+        depth.assign(
+          logarithmicToPerspectiveDepth(
+            depth,
+            cameraNear(camera),
+            cameraFar(camera)
+          )
         )
       }
-      return depth
+
+      // Emulate a point sampler in bend_sss_gpu.h, with Wrap Mode set to
+      // Clamp-To-Border-Color, and Border Color set to farDepth.
+      return and(
+        coord.greaterThanEqual(0).all(),
+        coord.lessThan(textureSize(depthNode)).all()
+      ).select(depth, farDepth)
     }
 
     this.computeNode = Fn(() => {
