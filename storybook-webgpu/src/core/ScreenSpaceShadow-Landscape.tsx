@@ -8,11 +8,10 @@ import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { Suspense, useLayoutEffect, useMemo, type FC } from 'react'
 import { DirectionalLight, Scene } from 'three'
 import { CSMShadowNode } from 'three/addons/csm/CSMShadowNode.js'
-import { traa } from 'three/addons/tsl/display/TRAANode.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js'
-import { builtinShadowContext, mrt, pass, screenUV, velocity } from 'three/tsl'
+import { builtinShadowContext, mrt, pass, screenUV } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
   PostProcessing,
@@ -22,8 +21,10 @@ import {
 import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
   dithering,
+  highpVelocity,
   screenSpaceShadow,
-  ScreenSpaceShadowNode
+  ScreenSpaceShadowNode,
+  temporalAntialias
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -85,7 +86,7 @@ const Content: FC<StoryProps> = () => {
     () =>
       pass(scene, camera, { samples: 0 }).setMRT(
         mrt({
-          output: velocity
+          output: highpVelocity
         })
       ),
     [scene, camera]
@@ -114,7 +115,7 @@ const Content: FC<StoryProps> = () => {
 
   const taaNode = useResource(
     () =>
-      traa(
+      temporalAntialias(highpVelocity)(
         passNode,
         prePassNode.getTextureNode('depth'),
         prePassNode.getTextureNode('output'),
