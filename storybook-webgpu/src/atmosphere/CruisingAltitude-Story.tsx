@@ -243,7 +243,7 @@ const Content: FC<StoryProps> = () => {
       <Suspense>
         <B787 ref={modelRef} />
       </Suspense>
-      <Globe overrideMaterial={MeshLambertNodeMaterial}>
+      <Globe materialHandler={() => new MeshLambertNodeMaterial()}>
         <TilesPlugin
           ref={setReorientationPlugin}
           plugin={ReorientationPlugin}

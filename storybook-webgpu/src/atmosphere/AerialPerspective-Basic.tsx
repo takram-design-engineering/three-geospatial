@@ -203,7 +203,7 @@ const Content: FC<StoryProps> = ({
         />
         <TilesPlugin
           plugin={TileMaterialReplacementPlugin}
-          args={MeshBasicNodeMaterial}
+          args={() => new MeshBasicNodeMaterial()}
         />
         <TilesPlugin plugin={TilesFadePlugin} />
       </TilesRenderer>

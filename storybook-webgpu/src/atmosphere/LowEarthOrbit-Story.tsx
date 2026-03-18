@@ -208,7 +208,7 @@ const Content: FC<StoryProps> = () => {
           sunDirectionECEF={atmosphereContext.sunDirectionECEF.value}
         />
       </Suspense>
-      <Globe overrideMaterial={MeshLambertNodeMaterial}>
+      <Globe materialHandler={() => new MeshLambertNodeMaterial()}>
         <TilesPlugin
           ref={setReorientationPlugin}
           plugin={ReorientationPlugin}

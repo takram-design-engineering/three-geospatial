@@ -8,8 +8,9 @@ import {
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import type { FC, ReactNode, Ref } from 'react'
 import { mergeRefs } from 'react-merge-refs'
+import type { Material } from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
-import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
+import { MeshBasicNodeMaterial } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
@@ -24,14 +25,14 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 export interface GlobeProps {
   ref?: Ref<TilesRendererImpl>
   apiKey?: string
-  overrideMaterial?: typeof NodeMaterial
+  materialHandler?: () => Material
   children?: ReactNode
 }
 
 export const Globe: FC<GlobeProps> = ({
   ref,
   apiKey = import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
-  overrideMaterial = MeshBasicNodeMaterial,
+  materialHandler = MeshBasicNodeMaterial,
   children
 }) => (
   <TilesRenderer
@@ -57,7 +58,7 @@ export const Globe: FC<GlobeProps> = ({
     />
     <TilesPlugin
       plugin={TileMaterialReplacementPlugin}
-      args={[overrideMaterial]}
+      args={materialHandler}
     />
     <TilesPlugin plugin={TilesFadePlugin} />
     {children}
