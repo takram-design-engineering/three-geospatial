@@ -1,9 +1,11 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story } from './ScreenSpaceShadow-Story'
+import { Story as LandscapeStory } from './ScreenSpaceShadow-Landscape'
+import { Story as NemetonaStory } from './ScreenSpaceShadow-Nemetona'
 
-import Code from './ScreenSpaceShadow-Story?raw'
+import LandscapeCode from './ScreenSpaceShadow-Landscape?raw'
+import NemetonaCode from './ScreenSpaceShadow-Nemetona?raw'
 
 export default {
   title: 'core/Screen Space Shadow',
@@ -17,11 +19,21 @@ export default {
   }
 } satisfies Meta
 
-export const ScreenSpaceShadow = createStory(Story, {
+export const Nemetona = createStory(NemetonaStory, {
   parameters: {
     docs: {
       source: {
-        code: Code
+        code: NemetonaCode
+      }
+    }
+  }
+})
+
+export const Landscape = createStory(LandscapeStory, {
+  parameters: {
+    docs: {
+      source: {
+        code: LandscapeCode
       }
     }
   }
