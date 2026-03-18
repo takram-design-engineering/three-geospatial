@@ -1,8 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import {
   GLTFCesiumRTCExtension,
-  GLTFExtensionsPlugin,
-  TilesFadePlugin
+  GLTFExtensionsPlugin
 } from '3d-tiles-renderer/plugins'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { Suspense, useLayoutEffect, useMemo, type FC } from 'react'
@@ -37,6 +36,7 @@ import { useControl } from '../hooks/useControl'
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
 import { CesiumIonTerrainPlugin } from '../plugins/CesiumIonTerrainPlugin'
+import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
 
