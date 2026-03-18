@@ -10,7 +10,6 @@ import type { FC, ReactNode, Ref } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import type { Material } from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
-import { MeshBasicNodeMaterial } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
@@ -32,7 +31,7 @@ export interface GlobeProps {
 export const Globe: FC<GlobeProps> = ({
   ref,
   apiKey = import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
-  materialHandler = MeshBasicNodeMaterial,
+  materialHandler,
   children
 }) => (
   <TilesRenderer
