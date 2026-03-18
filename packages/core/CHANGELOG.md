@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added `ScreenSpaceShadowNode`.
+
 ## [0.7.0] - 2026-03-09
 
 ### Changed
