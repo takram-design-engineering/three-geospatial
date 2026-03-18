@@ -77,8 +77,8 @@ export class ScreenSpaceShadowNode extends TempNode {
   }
 
   depthNode: TextureNode
-  camera?: Camera | null
-  mainLight?: DirectionalLight | null
+  camera: Camera
+  mainLight: DirectionalLight
 
   // Number of shadow samples per-pixel.
   // Determines overall cost, as this value controls the length of the shadow
@@ -139,8 +139,8 @@ export class ScreenSpaceShadowNode extends TempNode {
 
   constructor(
     depthNode: TextureNode,
-    camera?: Camera | null,
-    mainLight?: DirectionalLight | null
+    camera: Camera,
+    mainLight: DirectionalLight
   ) {
     super('float')
     this.depthNode = depthNode
@@ -185,13 +185,14 @@ export class ScreenSpaceShadowNode extends TempNode {
 
   override updateBefore(frame: NodeFrame): void {
     const { renderer } = frame
-    const { camera, mainLight } = this
-    if (renderer == null || camera == null || mainLight == null) {
+    if (renderer == null) {
       return
     }
 
     const size = renderer.getDrawingBufferSize(sizeScratch)
     this.setSize(size.width, size.height)
+
+    const { camera, mainLight } = this
 
     // Compute light projection and update dispatch list.
     const viewProjection = matrixScratch.multiplyMatrices(
@@ -368,10 +369,6 @@ export class ScreenSpaceShadowNode extends TempNode {
       lightCoordinate,
       dispatchOffset
     } = this
-
-    if (camera == null) {
-      return
-    }
 
     // Number of bilinear sample reads performed per-thread.
     const readCount = Math.floor(sampleCount / GROUP_SIZE) + 2
