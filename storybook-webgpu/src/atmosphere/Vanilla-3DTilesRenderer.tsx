@@ -98,7 +98,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   )
   tiles.registerPlugin(
     // Replace non-node materials in every tile:
-    new TileMaterialReplacementPlugin(MeshLambertNodeMaterial)
+    new TileMaterialReplacementPlugin(() => new MeshLambertNodeMaterial())
   )
   tiles.registerPlugin(new TilesFadePlugin())
   scene.add(tiles.group)
