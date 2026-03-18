@@ -29,6 +29,7 @@ import type { StoryFC } from '../components/createStory'
 import { Description } from '../components/Description'
 import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
+import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
 import {
   localDateArgs,
   localDateArgTypes,
@@ -195,12 +196,8 @@ const Content: FC<StoryProps> = ({
         <TilesPlugin
           plugin={CesiumIonTerrainPlugin}
           args={{
-            // PLATEAU Terrain data set:
-            // https://github.com/Project-PLATEAU/plateau-streaming-tutorial/blob/main/terrain/plateau-terrain-streaming.md
-            // This API token is not a secret.
-            apiToken:
-              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiODVhMmQ5OS1hOWZjLTQ3YmYtODlmNi1lNWUwY2MwOGUxYTMiLCJpZCI6MTQ5ODk3LCJpYXQiOjE2ODc5MzQ3NDN9.OG0mc3i7ZxGwHQjlMv3TRjiOvKWpzxglxmJRaUIykTY',
-            assetId: 3258112,
+            apiToken: PLATEAU_TERRAIN_API_TOKEN,
+            assetId: 3258112, // PLATEAU terrain dataset
             autoRefreshToken: true
           }}
         />

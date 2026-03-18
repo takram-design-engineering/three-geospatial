@@ -38,6 +38,7 @@ import {
 } from '@takram/three-geospatial-effects/r3f'
 import { EastNorthUpFrame, EllipsoidMesh } from '@takram/three-geospatial/r3f'
 
+import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
 import { EffectComposer } from '../helpers/EffectComposer'
 import { Stats } from '../helpers/Stats'
 import { useControls } from '../helpers/useControls'
@@ -136,12 +137,8 @@ const Scene: FC = () => {
         <TilesPlugin
           plugin={CesiumIonTerrainPlugin}
           args={{
-            // PLATEAU Terrain data set:
-            // https://github.com/Project-PLATEAU/plateau-streaming-tutorial/blob/main/terrain/plateau-terrain-streaming.md
-            // This API token is not a secret.
-            apiToken:
-              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiODVhMmQ5OS1hOWZjLTQ3YmYtODlmNi1lNWUwY2MwOGUxYTMiLCJpZCI6MTQ5ODk3LCJpYXQiOjE2ODc5MzQ3NDN9.OG0mc3i7ZxGwHQjlMv3TRjiOvKWpzxglxmJRaUIykTY',
-            assetId: 3258112,
+            apiToken: PLATEAU_TERRAIN_API_TOKEN,
+            assetId: 3258112, // PLATEAU terrain dataset
             autoRefreshToken: true
           }}
         />
