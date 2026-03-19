@@ -6,6 +6,10 @@
 
 - Added `ScreenSpaceShadowNode`.
 
+### Fixed
+
+- `TemporalAntialiasNode`: Fixed ghosting when resizing canvas.
+
 ## [0.7.0] - 2026-03-09
 
 ### Changed
