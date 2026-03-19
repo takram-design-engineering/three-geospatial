@@ -240,7 +240,6 @@ export class TemporalAntialiasNode extends TempNode {
   private historyRT = this.createRenderTarget('History')
   private previousDepthTexture?: DepthTexture
   private readonly resolveMaterial = new NodeMaterial()
-  private readonly copyMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
   private rendererState?: RendererUtils.RendererState
   private needsSyncPostProcessing = false
@@ -323,11 +322,6 @@ export class TemporalAntialiasNode extends TempNode {
     renderer.clear()
     renderer.setRenderTarget(this.historyRT)
     renderer.clear()
-
-    // Copy the current input to the history with scaling.
-    renderer.setRenderTarget(this.historyRT)
-    this.mesh.material = this.copyMaterial
-    this.mesh.render(renderer)
 
     this.needsClearHistory = false
   }
@@ -528,13 +522,10 @@ export class TemporalAntialiasNode extends TempNode {
       this.needsSyncPostProcessing = true
     }
 
-    const { resolveMaterial, copyMaterial } = this
+    const { resolveMaterial } = this
 
     resolveMaterial.fragmentNode = this.setupResolveNode(builder)
     resolveMaterial.needsUpdate = true
-
-    copyMaterial.fragmentNode = this.inputNode
-    copyMaterial.needsUpdate = true
 
     this.textureNode.uvNode = this.inputNode.uvNode
     return this.textureNode
@@ -545,7 +536,6 @@ export class TemporalAntialiasNode extends TempNode {
     this.historyRT.dispose()
     this.previousDepthTexture?.dispose()
     this.resolveMaterial.dispose()
-    this.copyMaterial.dispose()
     this.mesh.geometry.dispose()
     super.dispose()
   }
