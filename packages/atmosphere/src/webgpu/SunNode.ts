@@ -3,7 +3,7 @@ import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import type { Node } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereContextNode } from './AtmosphereContextNode'
+import { AtmosphereContextNode } from './AtmosphereContextNode'
 import { getSolarLuminance } from './runtime'
 
 export class SunNode extends TempNode {
@@ -11,26 +11,23 @@ export class SunNode extends TempNode {
     return 'SunNode'
   }
 
-  private readonly atmosphereContext: AtmosphereContextNode
-
   rayDirectionECEF?: Node
 
   angularRadius = uniform(0.004675) // ≈ 16 arcminutes
   intensity = uniform(1)
 
-  constructor(atmosphereContext: AtmosphereContextNode) {
+  constructor() {
     super('vec4')
-    this.atmosphereContext = atmosphereContext
   }
 
   override setup(builder: NodeBuilder): unknown {
-    builder.getContext().atmosphere = this.atmosphereContext
+    const atmosphereContext = AtmosphereContextNode.get(builder)
 
     const { rayDirectionECEF } = this
     if (rayDirectionECEF == null) {
       return
     }
-    const { sunDirectionECEF } = this.atmosphereContext
+    const { sunDirectionECEF } = atmosphereContext
 
     return Fn(() => {
       const chordThreshold = cos(this.angularRadius).oneMinus().mul(2)

@@ -10,7 +10,7 @@ import {
   type Node
 } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereContextNode } from './AtmosphereContextNode'
+import { AtmosphereContextNode } from './AtmosphereContextNode'
 import { MoonNode } from './MoonNode'
 import { getSkyLuminance } from './runtime'
 import { StarsNode } from './StarsNode'
@@ -37,7 +37,6 @@ export class SkyNode extends TempNode {
   }
 
   private readonly scope: SkyNodeScope = CAMERA
-  private readonly atmosphereContext: AtmosphereContextNode
 
   shadowLengthNode?: Node<'float'> | null
 
@@ -51,13 +50,12 @@ export class SkyNode extends TempNode {
   showStars = true
   useContextCamera = true
 
-  constructor(scope: SkyNodeScope, atmosphereContext: AtmosphereContextNode) {
+  constructor(scope: SkyNodeScope) {
     super('vec3')
     this.scope = scope
-    this.atmosphereContext = atmosphereContext
-    this.sunNode = new SunNode(atmosphereContext)
-    this.moonNode = new MoonNode(atmosphereContext)
-    this.starsNode = new StarsNode(atmosphereContext)
+    this.sunNode = new SunNode()
+    this.moonNode = new MoonNode()
+    this.starsNode = new StarsNode()
   }
 
   override customCacheKey(): number {
@@ -70,21 +68,21 @@ export class SkyNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    builder.getContext().atmosphere = this.atmosphereContext
+    const atmosphereContext = AtmosphereContextNode.get(builder)
 
     const {
       matrixWorldToECEF,
       sunDirectionECEF,
       cameraPositionUnit,
       altitudeCorrectionUnit
-    } = this.atmosphereContext
+    } = atmosphereContext
 
     // Direction of the camera ray:
     let directionWorld
     switch (this.scope) {
       case CAMERA: {
         const camera = this.useContextCamera
-          ? this.atmosphereContext.camera
+          ? atmosphereContext.camera
           : builder.camera
         directionWorld =
           camera != null ? cameraDirectionWorld(camera) : undefined

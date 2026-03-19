@@ -82,7 +82,7 @@ export class RTTextureNode extends TextureNode {
     const { material } = this
     // I don't fully understand why, but updates on "node" doesn't propagate
     // unless giving the builder context.
-    material.fragmentNode = this.node.context(builder.getContext())
+    material.fragmentNode = this.node.context(builder.context)
     material.needsUpdate = true
     return super.setup(builder)
   }

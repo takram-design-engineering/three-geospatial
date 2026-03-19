@@ -6,7 +6,8 @@ import {
   RGBAFormat,
   Sprite,
   Vector2,
-  type BufferAttribute
+  type BufferAttribute,
+  type Camera
 } from 'three'
 import {
   instancedBufferAttribute,
@@ -37,7 +38,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import { DEFAULT_STARS_DATA_URL } from '../constants'
-import type { AtmosphereContextNode } from './AtmosphereContextNode'
+import { AtmosphereContextNode } from './AtmosphereContextNode'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -62,8 +63,6 @@ export class StarsNode extends TempNode {
     return 'StarsNode'
   }
 
-  private readonly atmosphereContext: AtmosphereContextNode
-
   readonly data: string | ArrayBufferLike
   private dataPromise?: Promise<void>
 
@@ -76,18 +75,15 @@ export class StarsNode extends TempNode {
   private readonly renderTarget: RenderTarget
   private readonly material = new PointsNodeMaterial()
   private readonly points = new Sprite(this.material)
+  private camera?: Camera
   private rendererState?: RendererUtils.RendererState
 
   private positionBuffer?: BufferAttribute
   private magnitudeBuffer?: BufferAttribute
   private colorBuffer?: BufferAttribute
 
-  constructor(
-    atmosphereContext: AtmosphereContextNode,
-    data: string | ArrayBufferLike = DEFAULT_STARS_DATA_URL
-  ) {
+  constructor(data: string | ArrayBufferLike = DEFAULT_STARS_DATA_URL) {
     super('vec3')
-    this.atmosphereContext = atmosphereContext
     this.data = data
 
     this.renderTarget = createRenderTarget()
@@ -107,7 +103,7 @@ export class StarsNode extends TempNode {
 
   override updateBefore(frame: NodeFrame): void {
     const { renderer } = frame
-    const camera = this.atmosphereContext.camera ?? frame.camera
+    const camera = this.camera ?? frame.camera
     if (renderer == null || camera == null) {
       return
     }
@@ -161,7 +157,8 @@ export class StarsNode extends TempNode {
   }
 
   private setupMaterial(builder: NodeBuilder): void {
-    const camera = this.atmosphereContext.camera ?? builder.camera
+    const atmosphereContext = AtmosphereContextNode.get(builder)
+    const camera = atmosphereContext.camera ?? builder.camera
     if (camera == null) {
       return
     }
@@ -175,7 +172,7 @@ export class StarsNode extends TempNode {
     const instanceMagnitude = instancedBufferAttribute(magnitudeBuffer, 'float')
     const instanceColor = instancedBufferAttribute(colorBuffer, 'vec3')
 
-    const { matrixECIToECEF, matrixECEFToWorld } = this.atmosphereContext
+    const { matrixECIToECEF, matrixECEFToWorld } = atmosphereContext
 
     const directionECEF = matrixECIToECEF.mul(vec4(instancePosition, 0)).xyz
     const directionWorld = matrixECEFToWorld.mul(vec4(directionECEF, 0)).xyz
@@ -228,6 +225,9 @@ export class StarsNode extends TempNode {
     material.needsUpdate = true
 
     this.points.frustumCulled = false
+
+    const atmosphereContext = AtmosphereContextNode.get(builder)
+    this.camera = atmosphereContext.camera
 
     this.textureNode.uvNode = screenUV
     return this.textureNode

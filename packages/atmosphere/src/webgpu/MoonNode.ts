@@ -103,8 +103,6 @@ export class MoonNode extends TempNode {
     return 'MoonNode'
   }
 
-  private readonly atmosphereContext: AtmosphereContextNode
-
   rayDirectionECEF?: Node
   colorNode?: TextureNode | null
   normalNode?: TextureNode | null
@@ -112,13 +110,12 @@ export class MoonNode extends TempNode {
   angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
   intensity = uniform(1)
 
-  constructor(atmosphereContext: AtmosphereContextNode) {
+  constructor() {
     super('vec4')
-    this.atmosphereContext = atmosphereContext
   }
 
   override setup(builder: NodeBuilder): unknown {
-    builder.getContext().atmosphere = this.atmosphereContext
+    const atmosphereContext = AtmosphereContextNode.get(builder)
 
     const { rayDirectionECEF } = this
     if (rayDirectionECEF == null) {
@@ -128,7 +125,7 @@ export class MoonNode extends TempNode {
       sunDirectionECEF,
       moonDirectionECEF: directionECEF,
       matrixMoonFixedToECEF: matrixFixedToECEF
-    } = this.atmosphereContext
+    } = atmosphereContext
 
     return Fn(() => {
       const chordThreshold = cos(this.angularRadius).oneMinus().mul(2)

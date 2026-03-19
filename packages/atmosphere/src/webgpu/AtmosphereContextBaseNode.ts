@@ -151,10 +151,13 @@ export class AtmosphereContextBaseNode extends Node {
   }
 
   static get(builder: NodeBuilder): AtmosphereContextBaseNode {
-    const context = builder.getContext().atmosphere
+    if (typeof builder.context.getAtmosphere !== 'function') {
+      throw new Error('getAtmosphere() was not found in the builder context.')
+    }
+    const context = builder.context.getAtmosphere()
     if (!(context instanceof AtmosphereContextBaseNode)) {
       throw new Error(
-        'AtmosphereContextBaseNode was not found in the builder context.'
+        'getAtmosphere() must return an instanceof AtmosphereContextBaseNode.'
       )
     }
     return context

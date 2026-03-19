@@ -1,3 +1,4 @@
+import { Matrix3 } from 'three'
 import type { DirectLightData, LightingContext } from 'three/src/nodes/TSL.js'
 import {
   cameraViewMatrix,
@@ -7,27 +8,56 @@ import {
   select,
   vec4
 } from 'three/tsl'
-import { AnalyticLightNode, type NodeBuilder } from 'three/webgpu'
+import {
+  AnalyticLightNode,
+  NodeUpdateType,
+  type NodeBuilder,
+  type NodeFrame
+} from 'three/webgpu'
 
+import { AtmosphereContextNode } from './AtmosphereContextNode'
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
 import { getSkyIlluminance } from './runtime'
+
+const rotationScratch = /*#__PURE__*/ new Matrix3()
 
 export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
   static override get type(): string {
     return 'AtmosphereLightNode'
   }
 
-  override setupDirect(builder: NodeBuilder): DirectLightData | undefined {
-    if (this.light == null) {
-      return
-    }
-    const { atmosphereContext } = this.light
-    if (atmosphereContext == null) {
-      return
-    }
+  private atmosphereContext?: AtmosphereContextNode
 
-    const { direct, indirect } = this.light
+  constructor(light: AtmosphereLight | null) {
+    super(light)
+    this.updateBeforeType = NodeUpdateType.FRAME
+  }
+
+  override updateBefore(frame: NodeFrame): void {
+    const { light, atmosphereContext } = this
+    if (light == null || atmosphereContext == null) {
+      return
+    }
+    const { matrixECEFToWorld, sunDirectionECEF } = atmosphereContext
+    light.position
+      .copy(sunDirectionECEF.value)
+      .applyMatrix3(rotationScratch.setFromMatrix4(matrixECEFToWorld.value))
+      .multiplyScalar(light.distance)
+      .add(light.target.position)
+  }
+
+  override setup(builder: NodeBuilder): unknown {
+    this.atmosphereContext = AtmosphereContextNode.get(builder)
+    return super.setup(builder)
+  }
+
+  override setupDirect(builder: NodeBuilder): DirectLightData | undefined {
+    const { light, atmosphereContext } = this
+    if (light == null || atmosphereContext == null) {
+      return
+    }
+    const { direct, indirect } = light
 
     const {
       worldToUnit,
@@ -52,14 +82,13 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const skyIlluminance = Fn(builder => {
       // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that
       // provided to the setupDirect().
-      builder.getContext().atmosphere = atmosphereContext
       return getSkyIlluminance(positionUnit, normalECEF, sunDirectionECEF).mul(
         select(indirect, 1, 0)
       )
     })()
 
     // Yes, it's an indirect but should be fine to update it here.
-    const lightingContext = builder.getContext() as unknown as LightingContext
+    const lightingContext = builder.context as unknown as LightingContext
     lightingContext.irradiance.addAssign(skyIlluminance)
 
     // Derive the view-space sun direction.
@@ -76,7 +105,6 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const sunTransmittance = Fn(builder => {
       // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that
       // provided to the setupDirect().
-      builder.getContext().atmosphere = atmosphereContext
       return getTransmittanceToSun(
         atmosphereContext.lutNode.getTextureNode('transmittance'),
         radius,

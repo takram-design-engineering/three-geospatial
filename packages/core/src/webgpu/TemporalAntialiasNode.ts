@@ -510,7 +510,7 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { context } = (builder.getContext().postProcessing ??
+    const { context } = (builder.context.postProcessing ??
       {}) as PostProcessingContext
     if (context != null) {
       const { onBeforePostProcessing } = context
