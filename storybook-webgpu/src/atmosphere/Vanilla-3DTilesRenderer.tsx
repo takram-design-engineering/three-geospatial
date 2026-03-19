@@ -6,7 +6,7 @@ import {
   UpdateOnChangePlugin
 } from '3d-tiles-renderer/plugins'
 import { AgXToneMapping, PerspectiveCamera, Scene, Vector3 } from 'three'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { mrt, output, pass, toneMapping } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,

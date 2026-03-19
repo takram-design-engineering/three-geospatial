@@ -7,9 +7,9 @@ import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { Suspense, useLayoutEffect, useMemo, type FC } from 'react'
 import { DirectionalLight, Scene } from 'three'
 import { CSMShadowNode } from 'three/addons/csm/CSMShadowNode.js'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js'
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js'
 import { builtinShadowContext, mrt, pass, screenUV } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,

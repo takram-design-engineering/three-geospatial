@@ -9,7 +9,7 @@ import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import type { FC, ReactNode, Ref } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import type { Material } from 'three'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 
 import { radians } from '@takram/three-geospatial'
 
