@@ -1,8 +1,8 @@
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import { useRef, type FC } from 'react'
+import { useLayoutEffect, useRef, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { toneMapping, uniform } from 'three/tsl'
+import { context, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
@@ -11,7 +11,7 @@ import {
   getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContextNode,
+  AtmosphereContext,
   sky,
   type StarsNode
 } from '@takram/three-atmosphere/webgpu'
@@ -42,16 +42,22 @@ const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
   const skyNode = useResource(() => {
-    const skyNode = sky(atmosphereContext)
+    const skyNode = sky()
     skyNode.starsNode = longExposure(skyNode.starsNode) as unknown as StarsNode
     return skyNode
-  }, [atmosphereContext])
+  }, [])
 
   const lensFlareNode = useResource(() => lensFlare(skyNode), [skyNode])
 

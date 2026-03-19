@@ -1,8 +1,16 @@
 import { useThree } from '@react-three/fiber'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
-import { useMemo, type FC } from 'react'
+import { useLayoutEffect, useMemo, type FC } from 'react'
 import { AgXToneMapping, Scene } from 'three'
-import { mrt, normalView, output, pass, toneMapping, uniform } from 'three/tsl'
+import {
+  context,
+  mrt,
+  normalView,
+  output,
+  pass,
+  toneMapping,
+  uniform
+} from 'three/tsl'
 import {
   MeshBasicNodeMaterial,
   PostProcessing,
@@ -16,7 +24,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode
+  AtmosphereContext
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -70,8 +78,14 @@ const Content: FC<StoryProps> = ({
   const camera = useThree(({ camera }) => camera)
   const overlayScene = useMemo(() => new Scene(), [])
 
-  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
@@ -93,9 +107,8 @@ const Content: FC<StoryProps> = ({
   const velocityNode = passNode.getTextureNode('velocity')
 
   const aerialNode = useResource(
-    () =>
-      aerialPerspective(atmosphereContext, colorNode, depthNode, normalNode),
-    [atmosphereContext, colorNode, depthNode, normalNode]
+    () => aerialPerspective(colorNode, depthNode, normalNode),
+    [colorNode, depthNode, normalNode]
   )
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])

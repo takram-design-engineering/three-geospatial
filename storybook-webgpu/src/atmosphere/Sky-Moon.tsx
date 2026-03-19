@@ -20,6 +20,7 @@ import { useMotionValueEvent, type MotionValue } from 'motion/react'
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   type ComponentRef,
@@ -41,7 +42,7 @@ import {
   type Group,
   type PerspectiveCamera
 } from 'three'
-import { div, pass, texture, toneMapping, uniform } from 'three/tsl'
+import { context, div, pass, texture, toneMapping, uniform } from 'three/tsl'
 import {
   LineBasicNodeMaterial,
   LineDashedNodeMaterial,
@@ -56,7 +57,7 @@ import {
   getSunDirectionECI,
   toAstroTime
 } from '@takram/three-atmosphere'
-import { AtmosphereContextNode, sky } from '@takram/three-atmosphere/webgpu'
+import { AtmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
 import {
   degrees,
   Geodetic,
@@ -270,15 +271,21 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
   const passNode = useResource(() => pass(scene, camera), [scene, camera])
 
   const skyNode = useResource(() => {
-    const skyNode = sky(atmosphereContext)
+    const skyNode = sky()
     skyNode.moonNode.colorNode = texture(
       new TextureLoader().load('public/moon/color_large.webp', texture => {
         texture.colorSpace = LinearSRGBColorSpace
@@ -292,7 +299,7 @@ const Content: FC<StoryProps> = () => {
       })
     )
     return skyNode
-  }, [atmosphereContext])
+  }, [])
 
   const lensFlareNode = useResource(() => lensFlare(skyNode), [skyNode])
 

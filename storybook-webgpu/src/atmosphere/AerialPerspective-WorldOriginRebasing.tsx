@@ -1,8 +1,9 @@
 import { OrbitControls, Sphere } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import type { FC } from 'react'
+import { useLayoutEffect, type FC } from 'react'
 import { AgXToneMapping } from 'three'
 import {
+  context,
   diffuseColor,
   mrt,
   normalView,
@@ -19,7 +20,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode
+  AtmosphereContext
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -64,8 +65,14 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
@@ -87,9 +94,8 @@ const Content: FC<StoryProps> = () => {
   const velocityNode = passNode.getTextureNode('velocity')
 
   const aerialNode = useResource(
-    () =>
-      aerialPerspective(atmosphereContext, colorNode, depthNode, normalNode),
-    [atmosphereContext, colorNode, depthNode, normalNode]
+    () => aerialPerspective(colorNode, depthNode, normalNode),
+    [colorNode, depthNode, normalNode]
   )
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])

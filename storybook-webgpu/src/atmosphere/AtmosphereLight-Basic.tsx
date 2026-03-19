@@ -1,8 +1,8 @@
 import { OrbitControls, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import { useRef, type FC } from 'react'
+import { useLayoutEffect, useRef, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { mrt, output, pass, toneMapping, uniform } from 'three/tsl'
+import { context, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
@@ -12,7 +12,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
   skyEnvironment
@@ -75,8 +75,14 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
@@ -96,8 +102,8 @@ const Content: FC<StoryProps> = () => {
   const velocityNode = passNode.getTextureNode('velocity')
 
   const aerialNode = useResource(
-    () => aerialPerspective(atmosphereContext, colorNode, depthNode),
-    [atmosphereContext, colorNode, depthNode]
+    () => aerialPerspective(colorNode, depthNode),
+    [colorNode, depthNode]
   )
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
@@ -161,10 +167,7 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Toggles the direct, indirect and environment lighting:
-  const envNode = useResource(
-    () => skyEnvironment(atmosphereContext),
-    [atmosphereContext]
-  )
+  const envNode = useResource(() => skyEnvironment(), [])
   const lightRef = useRef<AtmosphereLight>(null)
   useTransientControl(
     ({ directLight, indirectLight, environmentMap }: StoryArgs) => ({
@@ -184,7 +187,7 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight ref={lightRef} args={[atmosphereContext]} />
+      <atmosphereLight ref={lightRef} />
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere
         args={[0.5, 128, 128]}
