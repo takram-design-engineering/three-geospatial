@@ -77,8 +77,8 @@ import {
 
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContextBaseNode } from './AtmosphereContextBaseNode'
-import { AtmosphereContextNode } from './AtmosphereContextNode'
+import { AtmosphereContext } from './AtmosphereContext'
+import { AtmosphereContextBase } from './AtmosphereContextBase'
 import {
   clampRadius,
   getIrradiance,
@@ -115,7 +115,7 @@ const getExtrapolatedSingleMieScattering = /*#__PURE__*/ FnLayout({
   type: IrradianceSpectrum,
   inputs: [{ name: 'scattering', type: 'vec4' }]
 })(([scattering], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { rayleighScattering, mieScattering } = context
 
   // Algebraically this can never be negative, but rounding errors can produce
@@ -167,7 +167,7 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { parameters } = AtmosphereContextBaseNode.get(builder)
+  const { parameters } = AtmosphereContextBase.get(builder)
 
   const coord = getScatteringTextureCoord(
     radius,
@@ -255,7 +255,7 @@ const getSkyRadiance = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const context = AtmosphereContextNode.get(builder)
+  const context = AtmosphereContext.get(builder)
   const { parameters, topRadius, bottomRadius, miePhaseFunctionG } = context
 
   // Clamp the viewer at the bottom atmosphere boundary for rendering points
@@ -436,7 +436,7 @@ const getSkyRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { parameters, topRadius, bottomRadius, miePhaseFunctionG } = context
 
   // Compute the distance to the top atmosphere boundary along the view ray,
@@ -651,7 +651,7 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ FnLayout({
     { name: 'point', type: Position }
   ]
 })(([camera, point], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { bottomRadius } = context
 
   const cameraBelow = camera.length().lessThan(bottomRadius).toVar()
@@ -702,7 +702,7 @@ const getSkyRadianceToPoint = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { topRadius } = context
 
   const radiance = vec3(0).toVar()
@@ -762,7 +762,7 @@ const getSunAndSkyIrradiance = /*#__PURE__*/ FnLayout({
   [transmittanceTexture, irradianceTexture, point, normal, sunDirection],
   builder
 ) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { solarIrradiance } = context
 
   const radius = point.length().toVar()
@@ -816,7 +816,7 @@ const getSunAndSkyScalarIrradiance = /*#__PURE__*/ FnLayout({
   [transmittanceTexture, irradianceTexture, point, sunDirection],
   builder
 ) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { solarIrradiance } = context
 
   const radius = point.length().toVar()
@@ -841,7 +841,7 @@ export const getSolarLuminance = /*#__PURE__*/ FnLayout({
 })(
   // @ts-expect-error TODO
   (_, builder) => {
-    const context = AtmosphereContextBaseNode.get(builder)
+    const context = AtmosphereContextBase.get(builder)
     const {
       solarIrradiance,
       sunAngularRadius,
@@ -874,7 +874,7 @@ export const getSkyLuminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([camera, viewRay, shadowLength, sunDirection], builder) => {
-  const context = AtmosphereContextNode.get(builder)
+  const context = AtmosphereContext.get(builder)
   const { lutNode, skyRadianceToLuminance, luminanceScale } = context
 
   const radianceTransfer = getSkyRadiance(
@@ -908,7 +908,7 @@ export const getSkyLuminanceToPoint = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([camera, point, shadowLength, sunDirection], builder) => {
-  const context = AtmosphereContextNode.get(builder)
+  const context = AtmosphereContext.get(builder)
   const { lutNode, skyRadianceToLuminance, luminanceScale } = context
 
   const radianceTransfer = getSkyRadianceToPoint(
@@ -949,7 +949,7 @@ export const getSunAndSkyIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, normal, sunDirection], builder) => {
-  const context = AtmosphereContextNode.get(builder)
+  const context = AtmosphereContext.get(builder)
   const {
     lutNode,
     sunRadianceToLuminance,
@@ -984,7 +984,7 @@ export const getSkyIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, normal, sunDirection], builder) => {
-  const context = AtmosphereContextNode.get(builder)
+  const context = AtmosphereContext.get(builder)
   const { lutNode, skyRadianceToLuminance, luminanceScale } = context
 
   const sunSkyIrradiance = getSkyIrradiance(
@@ -1006,7 +1006,7 @@ export const getSunAndSkyScalarIlluminance = /*#__PURE__*/ FnLayout({
     { name: 'sunDirection', type: Direction }
   ]
 })(([point, sunDirection], builder) => {
-  const context = AtmosphereContextNode.get(builder)
+  const context = AtmosphereContext.get(builder)
   const {
     lutNode,
     sunRadianceToLuminance,

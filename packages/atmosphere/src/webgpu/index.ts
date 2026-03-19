@@ -1,5 +1,5 @@
 export * from './AerialPerspectiveNode'
-export * from './AtmosphereContextNode'
+export * from './AtmosphereContext'
 export * from './AtmosphereLight'
 export * from './AtmosphereLightNode'
 export * from './AtmosphereLUTNode'

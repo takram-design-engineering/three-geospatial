@@ -4,14 +4,14 @@ import type { Renderer } from 'three/webgpu'
 
 import type { AnyFloatType } from '@takram/three-geospatial'
 
-import { AtmosphereContextBaseNode } from './AtmosphereContextBaseNode'
+import { AtmosphereContextBase } from './AtmosphereContextBase'
 import type {
   AtmosphereLUTTexture3DName,
   AtmosphereLUTTextureName
 } from './AtmosphereLUTNode'
 import type { AtmosphereParameters } from './AtmosphereParameters'
 
-export abstract class AtmosphereLUTTexturesContext extends AtmosphereContextBaseNode {
+export abstract class AtmosphereLUTTexturesContext extends AtmosphereContextBase {
   textureType: AnyFloatType
   lambdas = uniform(new Vector3(680, 550, 440))
   luminanceFromRadiance = uniform(new Matrix3())

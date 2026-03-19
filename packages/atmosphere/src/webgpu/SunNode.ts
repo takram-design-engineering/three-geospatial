@@ -3,7 +3,7 @@ import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import type { Node } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContextNode } from './AtmosphereContextNode'
+import { AtmosphereContext } from './AtmosphereContext'
 import { getSolarLuminance } from './runtime'
 
 export class SunNode extends TempNode {
@@ -21,7 +21,7 @@ export class SunNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const atmosphereContext = AtmosphereContextNode.get(builder)
+    const atmosphereContext = AtmosphereContext.get(builder)
 
     const { rayDirectionECEF } = this
     if (rayDirectionECEF == null) {

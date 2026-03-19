@@ -1,23 +1,18 @@
 import { Matrix4, Vector3, type Camera } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { uniform } from 'three/tsl'
 import type { NodeBuilder } from 'three/webgpu'
 
 import { Ellipsoid, Geodetic } from '@takram/three-geospatial'
 
 import { getAltitudeCorrectionOffset } from '../getAltitudeCorrectionOffset'
-import { AtmosphereContextBaseNode } from './AtmosphereContextBaseNode'
+import { AtmosphereContextBase } from './AtmosphereContextBase'
 import { AtmosphereLUTNode } from './AtmosphereLUTNode'
 import { AtmosphereParameters } from './AtmosphereParameters'
 
 const vectorScratch = /*#__PURE__*/ new Vector3()
 const geodeticScratch = /*#__PURE__*/ new Geodetic()
 
-export class AtmosphereContextNode extends AtmosphereContextBaseNode {
-  static override get type(): string {
-    return 'AtmosphereContextNode'
-  }
-
+export class AtmosphereContext extends AtmosphereContextBase {
   lutNode: AtmosphereLUTNode
 
   matrixWorldToECEF = uniform(new Matrix4()).setName('matrixWorldToECEF')
@@ -100,25 +95,14 @@ export class AtmosphereContextNode extends AtmosphereContextBaseNode {
     this.lutNode = lutNode
   }
 
-  override customCacheKey(): number {
-    return hash(
-      super.customCacheKey(),
-      this.camera?.id ?? -1,
-      ...this.ellipsoid.radii,
-      +this.correctAltitude,
-      +this.constrainCamera,
-      +this.showGround
-    )
-  }
-
-  static override get(builder: NodeBuilder): AtmosphereContextNode {
+  static override get(builder: NodeBuilder): AtmosphereContext {
     if (typeof builder.context.getAtmosphere !== 'function') {
       throw new Error('getAtmosphere() was not found in the builder context.')
     }
     const context = builder.context.getAtmosphere()
-    if (!(context instanceof AtmosphereContextNode)) {
+    if (!(context instanceof AtmosphereContext)) {
       throw new Error(
-        'getAtmosphere() must return an instanceof AtmosphereContextNode.'
+        'getAtmosphere() must return an instanceof AtmosphereContext.'
       )
     }
     return context

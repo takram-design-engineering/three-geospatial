@@ -79,7 +79,7 @@ import {
 
 import { FnLayout } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContextBaseNode } from './AtmosphereContextBaseNode'
+import { AtmosphereContextBase } from './AtmosphereContextBase'
 import {
   AbstractScatteringTexture,
   AbstractSpectrum,
@@ -114,7 +114,7 @@ export const clampRadius = /*#__PURE__*/ FnLayout({
   type: Length,
   inputs: [{ name: 'radius', type: Length }]
 })(([radius], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { topRadius, bottomRadius } = context
 
   return clamp(radius, bottomRadius, topRadius)
@@ -136,7 +136,7 @@ export const distanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { topRadius } = context
 
   const discriminant = radius
@@ -154,7 +154,7 @@ export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { bottomRadius } = context
 
   const discriminant = radius
@@ -172,7 +172,7 @@ export const rayIntersectsGround = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { bottomRadius } = context
 
   return cosView
@@ -207,7 +207,7 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([radius, cosView], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { parameters, topRadius, bottomRadius } = context
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -249,7 +249,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([transmittanceTexture, radius, cosView], builder) => {
-  const { parameters } = AtmosphereContextBaseNode.get(builder)
+  const { parameters } = AtmosphereContextBase.get(builder)
 
   const uv = getTransmittanceTextureUV(radius, cosView)
 
@@ -350,7 +350,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless }
   ]
 })(([transmittanceTexture, radius, cosSun], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { sunAngularRadius, bottomRadius } = context
 
   const sinHorizon = bottomRadius.div(radius).toVar()
@@ -409,7 +409,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   [radius, cosView, cosSun, cosViewSun, viewRayIntersectsGround],
   builder
 ) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { parameters, topRadius, bottomRadius, minCosSun } = context
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -516,7 +516,7 @@ export const getScattering = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const { parameters } = AtmosphereContextBaseNode.get(builder)
+  const { parameters } = AtmosphereContextBase.get(builder)
 
   const coord = getScatteringTextureCoord(
     radius,
@@ -554,7 +554,7 @@ export const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
     { name: 'cosSun', type: Dimensionless }
   ]
 })(([radius, cosSun], builder) => {
-  const context = AtmosphereContextBaseNode.get(builder)
+  const context = AtmosphereContextBase.get(builder)
   const { parameters, topRadius, bottomRadius } = context
 
   const radiusUnit = radius.remap(bottomRadius, topRadius)

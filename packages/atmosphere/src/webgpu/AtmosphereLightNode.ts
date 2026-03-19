@@ -15,7 +15,7 @@ import {
   type NodeFrame
 } from 'three/webgpu'
 
-import { AtmosphereContextNode } from './AtmosphereContextNode'
+import { AtmosphereContext } from './AtmosphereContext'
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
 import { getSkyIlluminance } from './runtime'
@@ -27,7 +27,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     return 'AtmosphereLightNode'
   }
 
-  private atmosphereContext?: AtmosphereContextNode
+  private atmosphereContext?: AtmosphereContext
 
   constructor(light: AtmosphereLight | null) {
     super(light)
@@ -48,7 +48,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    this.atmosphereContext = AtmosphereContextNode.get(builder)
+    this.atmosphereContext = AtmosphereContext.get(builder)
     return super.setup(builder)
   }
 
