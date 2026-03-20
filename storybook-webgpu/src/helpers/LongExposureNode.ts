@@ -1,4 +1,5 @@
 import {
+  convertToTexture,
   Fn,
   globalId,
   If,
@@ -35,11 +36,7 @@ import {
 } from 'three/webgpu'
 
 import { reinterpretType } from '@takram/three-geospatial'
-import {
-  convertToTexture,
-  outputTexture,
-  type Node
-} from '@takram/three-geospatial/webgpu'
+import { outputTexture, type Node } from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -225,4 +222,4 @@ export class LongExposureNode extends TempNode {
 }
 
 export const longExposure = (inputNode: Node): LongExposureNode =>
-  new LongExposureNode(convertToTexture(inputNode, 'LongExposureNode.Input'))
+  new LongExposureNode(convertToTexture(inputNode))

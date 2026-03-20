@@ -46,23 +46,29 @@ Please note the peer dependencies differ from the required versions to maintain 
 ```ts
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
+import { context } from 'three/tsl'
 
 declare const renderer: WebGPURenderer
 declare const scene: Scene
 declare const date: Date
 
-const context = new AtmosphereContextNode()
-getSunDirectionECEF(date, context.sunDirectionECEF.value)
+const atmosphereContext = new AtmosphereContext()
+renderer.contextNode = context({
+  ...renderer.contextNode.value,
+  getAtmosphere: () => atmosphereContext
+})
+
+getSunDirectionECEF(date, atmosphereContext.sunDirectionECEF.value)
 
 // AtmosphereLightNode must be associated with AtmosphereLight in the
 // renderer's node library before use:
 renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
 
-const light = new AtmosphereLight(context)
+const light = new AtmosphereLight()
 scene.add(light)
 ```
 
@@ -74,24 +80,29 @@ scene.add(light)
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode
+  AtmosphereContext
 } from '@takram/three-atmosphere/webgpu'
-import { pass } from 'three/tsl'
+import { context, pass } from 'three/tsl'
 import { PostProcessing } from 'three/webgpu'
 
 declare const camera: Camera
 declare const date: Date
 
-const context = new AtmosphereContextNode()
-context.camera = camera
-getSunDirectionECEF(date, context.sunDirectionECEF.value)
+const atmosphereContext = new AtmosphereContext()
+atmosphereContext.camera = camera
+renderer.contextNode = context({
+  ...renderer.contextNode.value,
+  getAtmosphere: () => atmosphereContext
+})
+
+getSunDirectionECEF(date, atmosphereContext.sunDirectionECEF.value)
 
 const passNode = pass(scene, camera, { samples: 0 })
 const colorNode = passNode.getTextureNode('output')
 const depthNode = passNode.getTextureNode('depth')
 
 const postProcessing = new PostProcessing(renderer)
-postProcessing.outputNode = aerialPerspective(context, colorNode, depthNode)
+postProcessing.outputNode = aerialPerspective(colorNode, depthNode)
 ```
 
 ### Sky
@@ -105,23 +116,29 @@ import {
   getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContextNode,
+  AtmosphereContext,
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { Scene } from 'three'
+import { context } from 'three/tsl'
 
 declare const date: Date
 
-const context = new AtmosphereContextNode()
+const atmosphereContext = new AtmosphereContext()
+renderer.contextNode = context({
+  ...renderer.contextNode.value,
+  getAtmosphere: () => atmosphereContext
+})
 
 const scene = new Scene()
-scene.backgroundNode = skyBackground(context)
+scene.backgroundNode = skyBackground()
 
 // Update the following uniforms in the context:
 //   - matrixECIToECEF: For the stars
 //   - sunDirectionECEF: For the sun
 //   - moonDirectionECEF: For the moon
-const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+  atmosphereContext
 const matrix = getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
 getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(matrix)
 getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(matrix)
@@ -134,14 +151,19 @@ World origin rebasing is a common technique for large coordinates like ECEF. Ins
 This appears to be required for the shadows to work correctly with `WebGPURenderer`.
 
 ```ts
-import { AtmosphereContextNode } from '@takram/three-atmosphere/webgpu'
+import { AtmosphereContext } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import { context } from 'three/tsl'
 
 declare const longitude: number // In degrees
 declare const latitude: number // In degrees
 declare const height: number // In meters
 
-const context = new AtmosphereContextNode()
+const atmosphereContext = new AtmosphereContext()
+renderer.contextNode = context({
+  ...renderer.contextNode.value,
+  getAtmosphere: () => atmosphereContext
+})
 
 // Convert the geographic coordinates to ECEF coordinates in meters:
 const positionECEF = new Geodetic(
@@ -154,7 +176,7 @@ const positionECEF = new Geodetic(
 // orientation aligns with x: north, y: up, z: east.
 Ellipsoid.WGS84.getNorthUpEastFrame(
   positionECEF,
-  context.matrixWorldToECEF.value
+  atmosphereContext.matrixWorldToECEF.value
 )
 ```
 
@@ -169,7 +191,7 @@ Ellipsoid.WGS84.getNorthUpEastFrame(
 
 # API
 
-- [`AtmosphereContextNode`](#atmospherecontextnode)
+- [`AtmosphereContext`](#atmospherecontext)
 - [`AtmosphereLight`](#atmospherelight)
 - [`AerialPerspectiveNode`](#aerialperspectivenode)
 - [`SkyNode`](#skynode)
@@ -188,16 +210,16 @@ The following terms refer to class fields:
 - **Uniforms** : Class field of type `UniformNode`. Changes in its value takes effect immediately.
 - **Static options** : Class fields whose changes take effect only after calling `setup()`.
 
-## AtmosphereContextNode
+## AtmosphereContext
 
-This node aggregates the LUT, uniforms and static options that are shared across all atmospheric nodes. A single instance should be created and passed to all atmospheric nodes to ensure consistent rendering.
+This instance aggregates the LUT, uniforms and static options that are shared across all atmospheric nodes. A single instance should be added to renderer's context to ensure consistent rendering.
 
-→ [Source](/packages/atmosphere/src/webgpu/AtmosphereContextNode.ts)
+→ [Source](/packages/atmosphere/src/webgpu/AtmosphereContext.ts)
 
 ### Constructor
 
 ```ts
-class AtmosphereContextNode {
+class AtmosphereContext {
   constructor(parameters?: AtmosphereParameters, lutNode?: AtmosphereLUTNode)
 }
 ```
@@ -312,7 +334,7 @@ renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
 
 ```ts
 class AtmosphereLight {
-  constructor(atmosphereContext?: AtmosphereContextNode, distance?: number)
+  constructor(distance?: number)
 }
 ```
 
@@ -354,7 +376,6 @@ A post-processing node that renders atmospheric transparency and inscattered lig
 
 ```ts
 const aerialPerspective: (
-  atmosphereContext: AtmosphereContext,
   colorNode: Node,
   depthNode: Node,
   normalNode?: Node | null
@@ -442,15 +463,11 @@ A node for rendering the sky. It provides 2 constructor functions for different 
 - `skyBackground`: Interprets the material's UV as equirectangular. Used when assigning the scene's background.
 
 ```ts
-import {
-  AtmosphereContextNode,
-  skyBackground
-} from '@takram/three-atmosphere/webgpu'
+import { skyBackground } from '@takram/three-atmosphere/webgpu'
 import { Scene } from 'three'
 
-const context = new AtmosphereContextNode()
 const scene = new Scene()
-scene.backgroundNode = skyBackground(context)
+scene.backgroundNode = skyBackground()
 ```
 
 → [Source](/packages/atmosphere/src/webgpu/SkyNode.ts)
@@ -459,8 +476,8 @@ scene.backgroundNode = skyBackground(context)
 
 <!-- prettier-ignore -->
 ```ts
-const sky: (atmosphereContext: AtmosphereContext) => SkyNode
-const skyBackground: (atmosphereContext: AtmosphereContext) => SkyNode
+const sky: () => SkyNode
+const skyBackground: () => SkyNode
 ```
 
 ### Dependencies
@@ -578,15 +595,11 @@ Whether to display the stars.
 Generates a PMREM texture node for the sky.
 
 ```ts
-import {
-  AtmosphereContextNode,
-  skyEnvironment
-} from '@takram/three-atmosphere/webgpu'
+import { skyEnvironment } from '@takram/three-atmosphere/webgpu'
 import { Scene } from 'three'
 
-const context = new AtmosphereContextNode()
 const scene = new Scene()
-scene.environmentNode = skyEnvironment(context)
+scene.environmentNode = skyEnvironment()
 ```
 
 → [Source](/packages/atmosphere/src/webgpu/SkyEnvironmentNode.ts)
@@ -594,10 +607,7 @@ scene.environmentNode = skyEnvironment(context)
 ### Constructor
 
 ```ts
-const skyEnvironment: (
-  atmosphereContext: AtmosphereContext,
-  size?: number
-) => SkyEnvironmentNode
+const skyEnvironment: (size?: number) => SkyEnvironmentNode
 ```
 
 ### Dependencies
@@ -616,12 +626,12 @@ A class that encapsulates the parameters and static options for the atmospheric 
 
 ```ts
 import {
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereParameters
 } from '@takram/three-atmosphere/webgpu'
 
 const parameters = new AtmosphereParameters()
-const context = new AtmosphereContextNode(parameters)
+const atmosphereContext = new AtmosphereContext(parameters)
 ```
 
 ### Static options

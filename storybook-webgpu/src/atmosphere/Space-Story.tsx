@@ -1,8 +1,9 @@
 import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import type { FC } from 'react'
+import { useLayoutEffect, type FC } from 'react'
 import { AgXToneMapping, TextureLoader } from 'three'
 import {
+  context,
   mix,
   mrt,
   mul,
@@ -27,7 +28,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
@@ -78,8 +79,15 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
@@ -99,8 +107,8 @@ const Content: FC<StoryProps> = () => {
   const velocityNode = passNode.getTextureNode('velocity')
 
   const aerialNode = useResource(
-    () => aerialPerspective(atmosphereContext, colorNode, depthNode),
-    [atmosphereContext, colorNode, depthNode]
+    () => aerialPerspective(colorNode, depthNode),
+    [colorNode, depthNode]
   )
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
@@ -162,7 +170,7 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight args={[atmosphereContext]} />
+      <atmosphereLight />
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}

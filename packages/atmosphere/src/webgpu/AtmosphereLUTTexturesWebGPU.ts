@@ -243,7 +243,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         textureStore(this.transmittance, globalId.xy, transmittance)
       }
     })()
-      .context({ atmosphere: context })
+      .context({ getAtmosphere: () => context })
       .compute(
         // @ts-expect-error "count" can be dimensional
         [Math.ceil(width / 8), Math.ceil(height / 8), 1],
@@ -279,7 +279,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       textureStore(this.irradiance, globalId.xy, vec4(vec3(0), 1))
       textureStore(deltaIrradiance, globalId.xy, vec4(irradiance, 1))
     })()
-      .context({ atmosphere: context })
+      .context({ getAtmosphere: () => context })
       .compute(
         // @ts-expect-error "count" can be dimensional
         [Math.ceil(width / 8), Math.ceil(height / 8), 1],
@@ -336,7 +336,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         vec4(mie.mul(luminanceFromRadiance), 1)
       )
     })()
-      .context({ atmosphere: context })
+      .context({ getAtmosphere: () => context })
       .compute(
         // @ts-expect-error "count" can be dimensional
         [Math.ceil(width / 4), Math.ceil(height / 4), Math.ceil(depth / 4)],
@@ -396,7 +396,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       textureStore(deltaScatteringDensity, globalId, radiance)
     })()
-      .context({ atmosphere: context })
+      .context({ getAtmosphere: () => context })
       .compute(
         // @ts-expect-error "count" can be dimensional
         [Math.ceil(width / 4), Math.ceil(height / 4), Math.ceil(depth / 4)],
@@ -450,7 +450,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       )
       textureStore(deltaIrradiance, globalId.xy, irradiance)
     })()
-      .context({ atmosphere: context })
+      .context({ getAtmosphere: () => context })
       .compute(
         // @ts-expect-error "count" can be dimensional
         [Math.ceil(width / 8), Math.ceil(height / 8), 1],
@@ -534,7 +534,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         )
       }
     })()
-      .context({ atmosphere: context })
+      .context({ getAtmosphere: () => context })
       .compute(
         // @ts-expect-error "count" can be dimensional
         [Math.ceil(width / 4), Math.ceil(height / 4), Math.ceil(depth / 4)],

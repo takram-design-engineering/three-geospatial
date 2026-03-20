@@ -1,11 +1,12 @@
 import { OrbitControls, Plane, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import { Suspense, useMemo, useRef, type FC } from 'react'
+import { Suspense, useLayoutEffect, useMemo, useRef, type FC } from 'react'
 import { BackSide, Matrix3, NeutralToneMapping, Vector3 } from 'three'
 import { RectAreaLightTexturesLib } from 'three/addons/lights/RectAreaLightTexturesLib.js'
 import {
   cameraViewMatrix,
   color,
+  context,
   mix,
   mrt,
   output,
@@ -28,7 +29,7 @@ import {
   getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
@@ -94,8 +95,15 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
@@ -194,7 +202,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight
-        args={[atmosphereContext, 5]}
+        args={[5]}
         castShadow
         shadow-normalBias={0.1}
         shadow-mapSize={[2048, 2048]}

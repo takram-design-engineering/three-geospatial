@@ -16,7 +16,6 @@ import {
 
 import { QuadGeometry } from '@takram/three-geospatial'
 
-import type { AtmosphereContextNode } from './AtmosphereContextNode'
 import { sky, type SkyNode } from './SkyNode'
 
 export class SkyEnvironmentNode extends TempNode {
@@ -31,10 +30,10 @@ export class SkyEnvironmentNode extends TempNode {
   private readonly material = new NodeMaterial()
   private readonly mesh = new Mesh(new QuadGeometry(), this.material)
 
-  constructor(atmosphereContext: AtmosphereContextNode, size = 64) {
+  constructor(size = 64) {
     super('vec3')
 
-    this.skyNode = sky(atmosphereContext)
+    this.skyNode = sky()
     this.skyNode.showSun = false
     this.skyNode.showMoon = false
     this.skyNode.useContextCamera = false

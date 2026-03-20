@@ -11,6 +11,7 @@ import {
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   and,
+  convertToTexture,
   float,
   Fn,
   If,
@@ -48,7 +49,6 @@ import { FnVar } from './FnVar'
 import { haltonOffsets } from './internals'
 import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
-import { convertToTexture } from './RTTextureNode'
 import { logarithmicToPerspectiveDepth } from './transformations'
 import { isWebGPU } from './utils'
 
@@ -510,7 +510,7 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { context } = (builder.getContext().postProcessing ??
+    const { context } = (builder.context.postProcessing ??
       {}) as PostProcessingContext
     if (context != null) {
       const { onBeforePostProcessing } = context
@@ -551,7 +551,7 @@ export const temporalAntialias =
   ): TemporalAntialiasNode =>
     new TemporalAntialiasNode(
       velocityNodeImmutable,
-      convertToTexture(inputNode, 'TemporalAntialiasNode.Input'),
+      convertToTexture(inputNode),
       depthNode,
       velocityNode,
       camera

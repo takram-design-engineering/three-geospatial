@@ -1,7 +1,7 @@
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import type { FC } from 'react'
-import { pass, toneMapping, uniform } from 'three/tsl'
+import { useLayoutEffect, type FC } from 'react'
+import { context, pass, toneMapping, uniform } from 'three/tsl'
 import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
@@ -10,7 +10,7 @@ import {
   getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContextNode,
+  AtmosphereContext,
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
@@ -46,15 +46,22 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const atmosphereContext = useResource(() => new AtmosphereContextNode(), [])
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
 
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
+
   const skyNode = useResource(() => {
-    const skyNode = skyBackground(atmosphereContext)
+    const skyNode = skyBackground()
     skyNode.moonNode.intensity.value = 10
     skyNode.starsNode.intensity.value = 10
     return skyNode
-  }, [atmosphereContext])
+  }, [])
 
   scene.backgroundNode = skyNode
 

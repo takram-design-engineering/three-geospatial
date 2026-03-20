@@ -1,5 +1,47 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- BREAKING: `AtmosphereContextNode` was renamed to `AtmosphereContext`.
+- BREAKING: Nodes and objects no longer take `atmosphereContext` as a constructor parameter. Use `renderer.contextNode` instead.
+
+  Before:
+
+  ```ts
+  import {
+    aerialPerspective,
+    AtmosphereContextNode,
+    AtmosphereLight
+  } from '@takram/three-atmosphere/webgpu'
+
+  const atmosphereContext = new AtmosphereContextNode()
+
+  const node = aerialPerspective(atmosphereContext, colorNode, depthNode)
+  const light = new AtmosphereLight(atmosphereContext)
+  ```
+
+  After:
+
+  ```ts
+  import {
+    aerialPerspective,
+    AtmosphereContext,
+    AtmosphereLight
+  } from '@takram/three-atmosphere/webgpu'
+  import { context } from 'three/tsl'
+
+  const atmosphereContext = new AtmosphereContext()
+  renderer.contextNode = context({
+    ...renderer.contextNode.value, // Merge with the existing context values
+    getAtmosphere: () => atmosphereContext
+  })
+
+  const node = aerialPerspective(colorNode, depthNode)
+  const light = new AtmosphereLight()
+  ```
+
 ## [0.17.0] - 2026-03-09
 
 ### Changed
