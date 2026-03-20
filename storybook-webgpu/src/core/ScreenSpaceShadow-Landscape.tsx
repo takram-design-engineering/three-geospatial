@@ -34,6 +34,7 @@ import {
 import type { StoryFC } from '../components/createStory'
 import { Description } from '../components/Description'
 import { GlobeControls } from '../components/GlobeControls'
+import { SharedTilesRenderer } from '../components/SharedTilesRenderer'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
@@ -250,38 +251,40 @@ const Content: FC<StoryProps> = () => {
           <TilesPlugin plugin={TilesFadePlugin} />
         </TilesRenderer>
       </primitive>
-      {[
-        '8e/7f78b4-ea0e-49e4-bab6-54b30d4aa4e8/13101_chiyoda-ku_pref_2023_citygml_2_op_bldg_3dtiles_13101_chiyoda-ku_lod1',
-        '88/4d2bdc-741f-49ca-9c1e-ed5e8dbf6dfb/13102_chuo-ku_pref_2023_citygml_2_op_bldg_3dtiles_13102_chuo-ku_lod1',
-        '1c/d53c9f-a0ac-402c-ab42-c4cc484e0a73/13103_minato-ku_pref_2023_citygml_2_op_bldg_3dtiles_13103_minato-ku_lod1',
-        '4e/7533a5-7c1d-467f-9a44-368266ba80ba/13104_shinjuku-ku_pref_2023_citygml_2_op_bldg_3dtiles_13104_shinjuku-ku_lod1',
-        'b0/bfce70-5d10-4a70-a313-4dd6311352a9/13113_shibuya-ku_pref_2023_citygml_2_op_bldg_3dtiles_13113_shibuya-ku_lod1',
-        '6f/e8f513-57fe-4510-8d8a-43783f7d482e/13105_bunkyo-ku_pref_2023_citygml_2_op_bldg_3dtiles_13105_bunkyo-ku_lod1',
-        '6b/a3ca89-1a1b-472f-b013-edc7758e24f8/13106_taito-ku_city_2024_citygml_1_op_bldg_3dtiles_13106_taito-ku_lod1'
-      ].map(path => (
-        <TilesRenderer
-          key={path}
-          url={`https://assets.cms.plateau.reearth.io/assets/${path}/tileset.json`}
-        >
-          <TilesPlugin
-            plugin={GLTFExtensionsPlugin}
-            dracoLoader={dracoLoader}
-            ktxLoader={ktx2loader}
-            rtc
-          />
-          <TilesPlugin
-            plugin={TileMaterialReplacementPlugin}
-            args={() => new MeshLambertNodeMaterial({ color: 0xcccccc })}
-          />
-          <TilesPlugin
-            plugin={TileMeshPropsPlugin}
-            args={{
-              receiveShadow: true,
-              castShadow: true
-            }}
-          />
-        </TilesRenderer>
-      ))}
+      <TilesRenderer>
+        {[
+          '8e/7f78b4-ea0e-49e4-bab6-54b30d4aa4e8/13101_chiyoda-ku_pref_2023_citygml_2_op_bldg_3dtiles_13101_chiyoda-ku_lod1',
+          '88/4d2bdc-741f-49ca-9c1e-ed5e8dbf6dfb/13102_chuo-ku_pref_2023_citygml_2_op_bldg_3dtiles_13102_chuo-ku_lod1',
+          '1c/d53c9f-a0ac-402c-ab42-c4cc484e0a73/13103_minato-ku_pref_2023_citygml_2_op_bldg_3dtiles_13103_minato-ku_lod1',
+          '4e/7533a5-7c1d-467f-9a44-368266ba80ba/13104_shinjuku-ku_pref_2023_citygml_2_op_bldg_3dtiles_13104_shinjuku-ku_lod1',
+          'b0/bfce70-5d10-4a70-a313-4dd6311352a9/13113_shibuya-ku_pref_2023_citygml_2_op_bldg_3dtiles_13113_shibuya-ku_lod1',
+          '6f/e8f513-57fe-4510-8d8a-43783f7d482e/13105_bunkyo-ku_pref_2023_citygml_2_op_bldg_3dtiles_13105_bunkyo-ku_lod1',
+          '6b/a3ca89-1a1b-472f-b013-edc7758e24f8/13106_taito-ku_city_2024_citygml_1_op_bldg_3dtiles_13106_taito-ku_lod1'
+        ].map(path => (
+          <SharedTilesRenderer
+            key={path}
+            url={`https://assets.cms.plateau.reearth.io/assets/${path}/tileset.json`}
+          >
+            <TilesPlugin
+              plugin={GLTFExtensionsPlugin}
+              dracoLoader={dracoLoader}
+              ktxLoader={ktx2loader}
+              rtc
+            />
+            <TilesPlugin
+              plugin={TileMaterialReplacementPlugin}
+              args={() => new MeshLambertNodeMaterial({ color: 0xcccccc })}
+            />
+            <TilesPlugin
+              plugin={TileMeshPropsPlugin}
+              args={{
+                receiveShadow: true,
+                castShadow: true
+              }}
+            />
+          </SharedTilesRenderer>
+        ))}
+      </TilesRenderer>
     </>
   )
 }
