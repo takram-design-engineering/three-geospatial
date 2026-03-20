@@ -95,21 +95,21 @@ export class AtmosphereContext extends AtmosphereContextBase {
     this.lutNode = lutNode
   }
 
-  static override get(builder: NodeBuilder): AtmosphereContext {
-    if (typeof builder.context.getAtmosphere !== 'function') {
-      throw new Error('getAtmosphere() was not found in the builder context.')
-    }
-    const context = builder.context.getAtmosphere()
-    if (!(context instanceof AtmosphereContext)) {
-      throw new Error(
-        'getAtmosphere() must return an instanceof AtmosphereContext.'
-      )
-    }
-    return context
-  }
-
   override dispose(): void {
     this.lutNode.dispose()
     super.dispose()
   }
+}
+
+export function getAtmosphereContext(builder: NodeBuilder): AtmosphereContext {
+  if (typeof builder.context.getAtmosphere !== 'function') {
+    throw new Error('getAtmosphere() was not found in the builder context.')
+  }
+  const context = builder.context.getAtmosphere()
+  if (!(context instanceof AtmosphereContext)) {
+    throw new Error(
+      'getAtmosphere() must return an instanceof AtmosphereContext.'
+    )
+  }
+  return context
 }

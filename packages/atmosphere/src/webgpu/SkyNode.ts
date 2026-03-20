@@ -10,7 +10,7 @@ import {
   type Node
 } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContext } from './AtmosphereContext'
+import { getAtmosphereContext } from './AtmosphereContext'
 import { MoonNode } from './MoonNode'
 import { getSkyLuminance } from './runtime'
 import { StarsNode } from './StarsNode'
@@ -68,7 +68,7 @@ export class SkyNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const atmosphereContext = AtmosphereContext.get(builder)
+    const atmosphereContext = getAtmosphereContext(builder)
 
     const {
       matrixWorldToECEF,

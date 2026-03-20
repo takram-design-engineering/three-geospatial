@@ -19,7 +19,7 @@ import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 
 import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContext } from './AtmosphereContext'
+import { getAtmosphereContext } from './AtmosphereContext'
 import { Luminance3 } from './dimensional'
 
 const mat3Columns = /*#__PURE__*/ FnLayout({
@@ -39,7 +39,7 @@ const getLunarRadiance = /*#__PURE__*/ FnLayout({
   type: Luminance3,
   inputs: [{ name: 'moonAngularRadius', type: 'float' }]
 })(([moonAngularRadius], builder) => {
-  const context = AtmosphereContext.get(builder)
+  const context = getAtmosphereContext(builder)
   const { solarIrradiance, sunRadianceToLuminance, luminanceScale } = context
 
   return (
@@ -115,7 +115,7 @@ export class MoonNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const atmosphereContext = AtmosphereContext.get(builder)
+    const atmosphereContext = getAtmosphereContext(builder)
 
     const { rayDirectionECEF } = this
     if (rayDirectionECEF == null) {

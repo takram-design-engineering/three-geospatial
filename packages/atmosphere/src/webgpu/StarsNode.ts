@@ -38,7 +38,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import { DEFAULT_STARS_DATA_URL } from '../constants'
-import { AtmosphereContext } from './AtmosphereContext'
+import { getAtmosphereContext } from './AtmosphereContext'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -157,7 +157,7 @@ export class StarsNode extends TempNode {
   }
 
   private setupMaterial(builder: NodeBuilder): void {
-    const atmosphereContext = AtmosphereContext.get(builder)
+    const atmosphereContext = getAtmosphereContext(builder)
     const camera = atmosphereContext.camera ?? builder.camera
     if (camera == null) {
       return
@@ -226,7 +226,7 @@ export class StarsNode extends TempNode {
 
     this.points.frustumCulled = false
 
-    const atmosphereContext = AtmosphereContext.get(builder)
+    const atmosphereContext = getAtmosphereContext(builder)
     this.camera = atmosphereContext.camera
 
     this.textureNode.uvNode = screenUV

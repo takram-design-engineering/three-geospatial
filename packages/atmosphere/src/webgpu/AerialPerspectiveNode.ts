@@ -24,7 +24,7 @@ import {
   type Node
 } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContext } from './AtmosphereContext'
+import { getAtmosphereContext } from './AtmosphereContext'
 import { getSkyLuminanceToPoint, getSunAndSkyIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
@@ -69,7 +69,7 @@ export class AerialPerspectiveNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const atmosphereContext = AtmosphereContext.get(builder)
+    const atmosphereContext = getAtmosphereContext(builder)
 
     const camera = atmosphereContext.camera ?? builder.camera
     if (camera == null) {

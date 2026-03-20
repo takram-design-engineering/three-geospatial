@@ -141,19 +141,21 @@ export class AtmosphereContextBase {
     this.luminanceScale = float(luminanceScale)
   }
 
-  static get(builder: NodeBuilder): AtmosphereContextBase {
-    if (typeof builder.context.getAtmosphere !== 'function') {
-      throw new Error('getAtmosphere() was not found in the builder context.')
-    }
-    const context = builder.context.getAtmosphere()
-    if (!(context instanceof AtmosphereContextBase)) {
-      throw new Error(
-        'getAtmosphere() must return an instanceof AtmosphereContextBase.'
-      )
-    }
-    return context
-  }
-
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this
   dispose(): void {}
+}
+
+export function getAtmosphereContextBase(
+  builder: NodeBuilder
+): AtmosphereContextBase {
+  if (typeof builder.context.getAtmosphere !== 'function') {
+    throw new Error('getAtmosphere() was not found in the builder context.')
+  }
+  const context = builder.context.getAtmosphere()
+  if (!(context instanceof AtmosphereContextBase)) {
+    throw new Error(
+      'getAtmosphere() must return an instanceof AtmosphereContextBase.'
+    )
+  }
+  return context
 }
