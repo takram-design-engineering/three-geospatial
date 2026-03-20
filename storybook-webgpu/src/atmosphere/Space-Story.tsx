@@ -115,14 +115,15 @@ const blueMarble = ({
     sunDirection.dot(north).mul(cloudShadowOffset)
   )
 
-  const clouds = texture(cloudsTexture).r
+  const clouds = texture(cloudsTexture).r.toConst()
   const shadow = texture(cloudsTexture, uv().add(uvOffset)).r
   const color = texture(colorTexture).rgb
   const ocean = texture(oceanTexture).r
+  const oceanSubClouds = ocean.mul(clouds.oneMinus())
   return {
     colorNode: mix(color, vec3(cloudAlbedo), clouds),
     emissiveNode: texture(emissiveTexture).r.mul(emissiveColor),
-    roughnessNode: ocean.remap(1, 0, oceanRoughness, 1),
+    roughnessNode: oceanSubClouds.remap(1, 0, oceanRoughness, 1),
     ior: oceanIOR,
     receivedShadowNode: () => shadow.sub(clouds).saturate().oneMinus()
   }
