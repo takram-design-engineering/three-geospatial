@@ -6,12 +6,14 @@ import {
   context,
   mix,
   mrt,
-  mul,
+  normalWorld,
   output,
   pass,
   texture,
   toneMapping,
   uniform,
+  uv,
+  vec2,
   vec3
 } from 'three/tsl'
 import {
@@ -38,7 +40,8 @@ import {
   dithering,
   highpVelocity,
   lensFlare,
-  temporalAntialias
+  temporalAntialias,
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -73,6 +76,56 @@ declare module '@react-three/fiber' {
 }
 
 extend({ AtmosphereLight })
+
+interface BlueMarbleParams {
+  sunDirection: Node<'float'>
+  cloudAlbedo?: number
+  cloudShadowOffset?: number // In UV
+  oceanRoughness?: number
+  oceanIOR?: number
+  emissiveColor?: Node<'vec3'>
+}
+
+const blueMarble = ({
+  sunDirection,
+  cloudAlbedo = 0.95,
+  cloudShadowOffset = 0.001,
+  oceanRoughness = 0.4,
+  oceanIOR = 1.33,
+  emissiveColor = vec3(1, 0.6, 0.5).mul(0.002)
+}: BlueMarbleParams): MeshPhysicalNodeMaterialParameters => {
+  const colorTexture = new TextureLoader().load('public/blue_marble/color.webp')
+  const oceanTexture = new TextureLoader().load('public/blue_marble/ocean.webp')
+  const cloudsTexture = new TextureLoader().load(
+    'public/blue_marble/clouds.webp'
+  )
+  const emissiveTexture = new TextureLoader().load(
+    'public/blue_marble/emissive.webp'
+  )
+  colorTexture.anisotropy = 16
+  oceanTexture.anisotropy = 16
+  cloudsTexture.anisotropy = 16
+  emissiveTexture.anisotropy = 16
+
+  // Project the sunlight onto the sphere (normal tangent).
+  const east = vec3(0, 0, 1).cross(normalWorld).normalize().toConst()
+  const north = normalWorld.cross(east).normalize()
+  const uvOffset = vec2(
+    sunDirection.dot(east).mul(cloudShadowOffset),
+    sunDirection.dot(north).mul(cloudShadowOffset)
+  )
+
+  const clouds = texture(cloudsTexture).r
+  const shadow = texture(cloudsTexture, uv().add(uvOffset)).r
+  const color = texture(colorTexture).rgb.mul(shadow.oneMinus())
+  const ocean = texture(oceanTexture).r.mul(clouds.oneMinus())
+  return {
+    colorNode: mix(color, vec3(cloudAlbedo), clouds),
+    emissiveNode: texture(emissiveTexture).r.mul(emissiveColor),
+    roughnessNode: ocean.remap(1, 0, oceanRoughness, 1),
+    ior: oceanIOR
+  }
+}
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
@@ -168,43 +221,24 @@ const Content: FC<StoryProps> = () => {
     )
   })
 
+  const material = useResource(
+    () =>
+      new MeshPhysicalNodeMaterial(
+        blueMarble({ sunDirection: atmosphereContext.sunDirectionECEF })
+      ),
+    [atmosphereContext.sunDirectionECEF]
+  )
+
   return (
     <>
       <atmosphereLight />
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
-        material={useResource(
-          () => new MeshPhysicalNodeMaterial(blueMarble()),
-          []
-        )}
+        material={material}
       />
     </>
   )
-}
-
-const blueMarble = ({
-  cloudAlbedo = 0.95,
-  oceanRoughness = 0.4,
-  oceanIOR = 1.33,
-  emissiveColor = vec3(1, 0.6, 0.5).mul(0.002)
-} = {}): MeshPhysicalNodeMaterialParameters => {
-  const color = new TextureLoader().load('public/blue_marble/color.webp')
-  const ocean = new TextureLoader().load('public/blue_marble/ocean.webp')
-  const clouds = new TextureLoader().load('public/blue_marble/clouds.webp')
-  const emissive = new TextureLoader().load('public/blue_marble/emissive.webp')
-  color.anisotropy = 16
-  ocean.anisotropy = 16
-  clouds.anisotropy = 16
-  emissive.anisotropy = 16
-
-  const oceanSubClouds = mul(texture(ocean).r, texture(clouds).r.oneMinus())
-  return {
-    colorNode: mix(texture(color).rgb, vec3(cloudAlbedo), texture(clouds).r),
-    emissiveNode: texture(emissive).r.mul(emissiveColor),
-    roughnessNode: oceanSubClouds.remap(1, 0, oceanRoughness, 1),
-    ior: oceanIOR
-  }
 }
 
 interface StoryProps {}

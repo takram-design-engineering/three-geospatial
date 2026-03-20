@@ -254,7 +254,7 @@ const Content: FC<StoryProps> = () => {
       <TilesRenderer>
         {[
           // These might look we're using datasets without permission, but they
-          // are official endpoints provided by the Japanese government (MLIT).
+          // are official endpoints for public use provided by the MLIT.
           // https://github.com/Project-PLATEAU/plateau-streaming-tutorial/blob/main/3d-tiles/plateau-3dtiles-streaming.md
           '8e/7f78b4-ea0e-49e4-bab6-54b30d4aa4e8/13101_chiyoda-ku_pref_2023_citygml_2_op_bldg_3dtiles_13101_chiyoda-ku_lod1',
           '88/4d2bdc-741f-49ca-9c1e-ed5e8dbf6dfb/13102_chuo-ku_pref_2023_citygml_2_op_bldg_3dtiles_13102_chuo-ku_lod1',
