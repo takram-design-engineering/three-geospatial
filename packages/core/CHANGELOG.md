@@ -6,6 +6,10 @@
 
 - Added `ScreenSpaceShadowNode`.
 
+### Changed
+
+- BREAKING: Removed `RTTTextureNode` and `convertToTexture`. Use `RTTNode` and `convertToTexture` in `three/tsl` instead.
+
 ### Fixed
 
 - `TemporalAntialiasNode`: Fixed ghosting when resizing canvas.
