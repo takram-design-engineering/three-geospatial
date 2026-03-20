@@ -5,7 +5,7 @@ import {
 } from '3d-tiles-renderer/plugins'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { Suspense, useLayoutEffect, useMemo, type FC } from 'react'
-import { DirectionalLight, Scene } from 'three'
+import { DirectionalLight, Scene, Vector3 } from 'three'
 import { CSMShadowNode } from 'three/addons/csm/CSMShadowNode.js'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
@@ -17,7 +17,12 @@ import {
   type Renderer
 } from 'three/webgpu'
 
-import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
+import {
+  Ellipsoid,
+  Geodetic,
+  PointOfView,
+  radians
+} from '@takram/three-geospatial'
 import {
   dithering,
   highpVelocity,
@@ -32,8 +37,10 @@ import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
+import { useCombinedChange } from '../hooks/useCombinedChange'
 import { useControl } from '../hooks/useControl'
 import { useResource } from '../hooks/useResource'
+import { useSpringControl } from '../hooks/useSpringControl'
 import { useTransientControl } from '../hooks/useTransientControl'
 import { CesiumIonTerrainPlugin } from '../plugins/CesiumIonTerrainPlugin'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
@@ -48,6 +55,11 @@ const ktx2loader = new KTX2Loader()
 
 const geodetic = new Geodetic(radians(139.7528), radians(35.6852), 0)
 const position = geodetic.toECEF()
+
+const east = new Vector3()
+const north = new Vector3()
+const up = new Vector3()
+Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
@@ -79,6 +91,23 @@ const Content: FC<StoryProps> = () => {
 
     return light
   }, [])
+
+  const lightAzimuth = useSpringControl(
+    ({ lightAzimuth }: StoryArgs) => lightAzimuth
+  )
+  const lightAltitude = useSpringControl(
+    ({ lightAltitude }: StoryArgs) => lightAltitude
+  )
+  useCombinedChange([lightAzimuth, lightAltitude], ([azimuth, altitude]) => {
+    const theta = radians(azimuth)
+    const phi = radians(altitude)
+    light.position
+      .copy(north)
+      .multiplyScalar(Math.cos(theta))
+      .addScaledVector(east, Math.sin(theta))
+      .multiplyScalar(Math.cos(phi))
+      .addScaledVector(up, Math.sin(phi))
+  })
 
   const { enabled } = useControl(({ enabled }: StoryArgs) => ({ enabled }))
 
@@ -267,6 +296,8 @@ interface StoryArgs {
   sampleCount: number
   hardShadowSamples: number
   fadeOutSamples: number
+  lightAzimuth: number
+  lightAltitude: number
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -286,6 +317,8 @@ Story.args = {
   sampleCount: 60,
   hardShadowSamples: 4,
   fadeOutSamples: 8,
+  lightAzimuth: -105,
+  lightAltitude: 20,
   ...rendererArgs()
 }
 
@@ -339,6 +372,26 @@ Story.argTypes = {
       min: 0,
       max: 16
     }
+  },
+  lightAzimuth: {
+    name: 'azimuth',
+    control: {
+      type: 'range',
+      min: -180,
+      max: 180,
+      step: 0.1
+    },
+    table: { category: 'light' }
+  },
+  lightAltitude: {
+    name: 'altitude',
+    control: {
+      type: 'range',
+      min: 0,
+      max: 90,
+      step: 0.1
+    },
+    table: { category: 'light' }
   },
   ...rendererArgTypes()
 }
