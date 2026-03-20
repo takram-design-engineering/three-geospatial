@@ -8,6 +8,7 @@
 
 ### Changed
 
+- WebGPU entry point (`@takram/three-geospatial/webgpu`) requires `three >= 0.182.0`.
 - BREAKING: Removed `RTTTextureNode` and `convertToTexture`. Use `RTTNode` and `convertToTexture` in `three/tsl` instead.
 
 ### Fixed

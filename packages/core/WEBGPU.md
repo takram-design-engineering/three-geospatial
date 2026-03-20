@@ -23,7 +23,7 @@ three @react-three/fiber
 Please note the peer dependencies differ from the required versions to maintain compatibility with the WebGL codebase. When using `@takram/three-geospatial/webgpu`, apply the following rules.
 
 ```
-"three": ">=0.181.0"
+"three": ">=0.182.0"
 ```
 
 ## API changes

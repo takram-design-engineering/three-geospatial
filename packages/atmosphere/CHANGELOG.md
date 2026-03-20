@@ -4,6 +4,7 @@
 
 ### Changed
 
+- WebGPU entry point (`@takram/three-atmosphere/webgpu`) requires `three >= 0.182.0`.
 - BREAKING: `AtmosphereContextNode` was renamed to `AtmosphereContext`.
 - BREAKING: Nodes and objects no longer take `atmosphereContext` as a constructor parameter. Use `renderer.contextNode` instead.
 
