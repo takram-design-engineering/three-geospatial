@@ -36,7 +36,6 @@ declare module 'three/webgpu' {
     contextNode: ContextNode
   }
 
-  // Add "camera"
   interface NodeBuilder {
     camera?: Camera
     context: NodeBuilderContext
