@@ -89,7 +89,7 @@ interface BlueMarbleParams {
 const blueMarble = ({
   sunDirection,
   cloudAlbedo = 0.95,
-  cloudShadowOffset = 0.001,
+  cloudShadowOffset = 0.00075,
   oceanRoughness = 0.4,
   oceanIOR = 1.33,
   emissiveColor = vec3(1, 0.6, 0.5).mul(0.002)
@@ -117,13 +117,14 @@ const blueMarble = ({
 
   const clouds = texture(cloudsTexture).r
   const shadow = texture(cloudsTexture, uv().add(uvOffset)).r
-  const color = texture(colorTexture).rgb.mul(shadow.oneMinus())
-  const ocean = texture(oceanTexture).r.mul(clouds.oneMinus())
+  const color = texture(colorTexture).rgb
+  const ocean = texture(oceanTexture).r
   return {
     colorNode: mix(color, vec3(cloudAlbedo), clouds),
     emissiveNode: texture(emissiveTexture).r.mul(emissiveColor),
     roughnessNode: ocean.remap(1, 0, oceanRoughness, 1),
-    ior: oceanIOR
+    ior: oceanIOR,
+    receivedShadowNode: () => shadow.sub(clouds).saturate().oneMinus()
   }
 }
 
@@ -231,11 +232,12 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight />
+      <atmosphereLight castShadow />
       <OrbitControls minDistance={1.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={material}
+        receiveShadow
       />
     </>
   )
@@ -247,6 +249,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
+    shadows
     renderer={{
       logarithmicDepthBuffer: true,
       onInit: renderer => {
