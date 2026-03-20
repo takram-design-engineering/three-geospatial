@@ -807,3 +807,7 @@ higherOrderScatteringTexture = true
 ```
 
 Whether to generate and use a separate texture for higher-order scattering (n >= 2) for a better approximation of the multi-scattering occlusion.
+
+# License
+
+[MIT](LICENSE), except where indicated otherwise.

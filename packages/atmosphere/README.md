@@ -1623,4 +1623,4 @@ In alphabetical order
 
 # License
 
-[MIT](LICENSE)
+[MIT](LICENSE), except where indicated otherwise.

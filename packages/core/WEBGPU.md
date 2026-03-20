@@ -355,3 +355,7 @@ hardShadowSamples = 4
 ```ts
 fadeOutSamples = 8
 ```
+
+# License
+
+[MIT](LICENSE), except where indicated otherwise.

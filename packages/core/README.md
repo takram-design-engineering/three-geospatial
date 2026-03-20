@@ -20,4 +20,4 @@ yarn add @takram/three-geospatial
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE), except where indicated otherwise.
