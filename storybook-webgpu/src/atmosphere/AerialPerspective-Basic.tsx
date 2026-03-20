@@ -83,6 +83,7 @@ const Content: FC<StoryProps> = ({
 
   useLayoutEffect(() => {
     renderer.contextNode = context({
+      ...renderer.contextNode.value,
       getAtmosphere: () => atmosphereContext
     })
   }, [renderer, atmosphereContext])

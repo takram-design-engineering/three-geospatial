@@ -1,5 +1,3 @@
-/* eslint-disable require-atomic-updates */
-
 import {
   AgXToneMapping,
   Clock,
@@ -75,7 +73,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // multiple nodes:
   const atmosphereContext = new AtmosphereContext()
   atmosphereContext.camera = camera
-  renderer.contextNode = context({ getAtmosphere: () => atmosphereContext })
+  renderer.contextNode = context({
+    ...renderer.contextNode.value,
+    getAtmosphere: () => atmosphereContext
+  })
 
   // Sky background is not necessary as AerialPerspectiveNode renders it:
   const scene = new Scene()

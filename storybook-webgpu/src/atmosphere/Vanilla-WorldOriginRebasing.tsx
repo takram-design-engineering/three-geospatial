@@ -1,5 +1,3 @@
-/* eslint-disable require-atomic-updates */
-
 import {
   AgXToneMapping,
   Clock,
@@ -65,7 +63,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
   const atmosphereContext = new AtmosphereContext()
-  renderer.contextNode = context({ getAtmosphere: () => atmosphereContext })
+  renderer.contextNode = context({
+    ...renderer.contextNode.value,
+    getAtmosphere: () => atmosphereContext
+  })
 
   // Create a scene with a sky background:
   const scene = new Scene()
