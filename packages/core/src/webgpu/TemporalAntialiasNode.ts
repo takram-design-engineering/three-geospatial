@@ -99,12 +99,12 @@ const clipAABB = /*#__PURE__*/ FnLayout({
     { name: 'maxColor', type: 'vec4' }
   ]
 })(([current, history, minColor, maxColor]) => {
-  const pClip = maxColor.rgb.add(minColor.rgb).mul(0.5)
+  const pClip = maxColor.rgb.add(minColor.rgb).mul(0.5).toConst()
   const eClip = maxColor.rgb.sub(minColor.rgb).mul(0.5).add(1e-7)
-  const vClip = history.sub(vec4(pClip, current.a))
+  const vClip = history.sub(vec4(pClip, current.a)).toConst()
   const vUnit = vClip.xyz.div(eClip)
-  const absUnit = vUnit.abs()
-  const maxUnit = max(absUnit.x, absUnit.y, absUnit.z)
+  const absUnit = vUnit.abs().toConst()
+  const maxUnit = max(absUnit.x, absUnit.y, absUnit.z).toConst()
   return select(
     maxUnit.greaterThan(1),
     vec4(pClip, current.a).add(vClip.div(maxUnit)),
@@ -135,16 +135,18 @@ const varianceClipping = /*#__PURE__*/ FnVar(
     const moment2 = current.pow2().toVar()
 
     for (const offset of varianceOffsets) {
-      const neighbor = inputNode.load(coord.add(offset))
+      const neighbor = inputNode.load(coord.add(offset)).toConst()
       moment1.addAssign(neighbor)
       moment2.addAssign(neighbor.pow2())
     }
 
-    const N = float(varianceOffsets.length + 1)
-    const mean = moment1.div(N)
-    const variance = sqrt(moment2.div(N).sub(mean.pow2()).max(0)).mul(gamma)
-    const minColor = mean.sub(variance)
-    const maxColor = mean.add(variance)
+    const N = varianceOffsets.length + 1
+    const mean = moment1.div(N).toConst()
+    const variance = sqrt(moment2.div(N).sub(mean.pow2()).max(0))
+      .mul(gamma)
+      .toConst()
+    const minColor = mean.sub(variance).toConst()
+    const maxColor = mean.add(variance).toConst()
 
     return clipAABB(mean.clamp(minColor, maxColor), history, minColor, maxColor)
   }
@@ -162,24 +164,24 @@ const neighborOffsets = [
   /*#__PURE__*/ ivec2(1, 1)
 ]
 
-const closestDepthStruct = /*#__PURE__*/ struct({
-  coord: 'ivec2',
-  depth: 'float'
+const currentDepthStruct = /*#__PURE__*/ struct({
+  closestCoord: 'ivec2',
+  closestDepth: 'float'
 })
 
-const getClosestDepth = /*#__PURE__*/ FnVar(
+const getCurrentDepth = /*#__PURE__*/ FnVar(
   (depthNode: TextureNode, inputCoord: Node<'ivec2'>) => {
-    const depth = float(1)
-    const coord = ivec2(0)
+    const closestCoord = ivec2(0).toVar()
+    const closestDepth = float(1).toVar()
     for (const offset of neighborOffsets) {
-      const offsetCoord = inputCoord.add(offset).toVar()
-      const neighbor = depthNode.load(offsetCoord).toVar()
-      If(neighbor.r.lessThan(depth), () => {
-        coord.assign(offsetCoord)
-        depth.assign(neighbor.r)
+      const neighbor = inputCoord.add(offset).toConst()
+      const depth = depthNode.load(neighbor).r.toConst()
+      If(depth.lessThan(closestDepth), () => {
+        closestCoord.assign(neighbor)
+        closestDepth.assign(depth)
       })
     }
-    return closestDepthStruct(coord, depth)
+    return currentDepthStruct(closestCoord, closestDepth)
   }
 )
 
@@ -416,7 +418,7 @@ export class TemporalAntialiasNode extends TempNode {
       const { previousDepthNode: depthNode } = this
       const depth = depthNode
         .load(ivec2(uv.mul(textureSize(depthNode)).sub(0.5)))
-        .toVar()
+        .toConst()
       return renderer.logarithmicDepthBuffer
         ? logarithmicToPerspectiveDepth(
             depth,
@@ -430,14 +432,14 @@ export class TemporalAntialiasNode extends TempNode {
       const coord = ivec2(screenCoordinate)
       const uv = screenUV
 
-      const currentColor = this.inputNode.load(coord)
-      const closestDepth = getClosestDepth(this.depthNode, coord)
-      const closestCoord = closestDepth.get('coord')
+      const currentDepth = getCurrentDepth(this.depthNode, coord).toConst()
+      const closestCoord = currentDepth.get('closestCoord')
+      const closestDepth = currentDepth.get('closestDepth')
 
       const velocity = this.velocityNode
         .load(closestCoord)
         .xyz.mul(vec3(0.5, -0.5, 0.5)) // Velocity is in NDC offset
-        .toVar()
+        .toConst()
 
       // Discards texels with velocity greater than the threshold:
       const velocityConfidence = velocity.xy
@@ -446,17 +448,17 @@ export class TemporalAntialiasNode extends TempNode {
         .oneMinus()
         .saturate()
 
-      const prevUV = uv.sub(velocity.xy).toVar()
+      const prevUV = uv.sub(velocity.xy).toConst()
       const prevDepth = getPreviousDepth(prevUV)
 
       // TODO: Add gather() in TextureNode and use it:
       const expectedDepth = renderer.logarithmicDepthBuffer
         ? logarithmicToPerspectiveDepth(
-            closestDepth.get('depth'),
+            closestDepth,
             cameraNear(this.camera),
             cameraFar(this.camera)
           )
-        : closestDepth.get('depth')
+        : closestDepth
 
       const depthConfidence = step(
         expectedDepth.add(velocity.z),
@@ -471,15 +473,15 @@ export class TemporalAntialiasNode extends TempNode {
       ).toFloat()
 
       // Don't apply TAA on the background:
-      const depthWeight = closestDepth.get('depth').notEqual(1).toFloat()
+      const depthWeight = closestDepth.notEqual(1).toFloat()
 
-      const outputColor = vec4(0).toVar()
+      const outputColor = this.inputNode.load(coord).toVar()
       If(uvWeight.mul(depthWeight).mul(confidence).greaterThan(0), () => {
         const historyColor = texture(this.historyNode, prevUV)
         const clippedColor = varianceClipping(
           this.inputNode,
           coord,
-          currentColor,
+          outputColor,
           historyColor,
           this.varianceGamma
         )
@@ -487,7 +489,7 @@ export class TemporalAntialiasNode extends TempNode {
         // Increase the temporal alpha when the velocity is more subpixel,
         // reducing blurriness under motion.
         // Reference: https://github.com/simco50/D3D12_Research/
-        const velocityAbsTexel = velocity.xy.abs().mul(screenSize)
+        const velocityAbsTexel = velocity.xy.abs().mul(screenSize).toConst()
         const subpixelCorrection = max(velocityAbsTexel.x, velocityAbsTexel.y)
           .fract()
           .mul(0.5)
@@ -497,9 +499,8 @@ export class TemporalAntialiasNode extends TempNode {
           subpixelCorrection
         ).saturate()
 
-        outputColor.assign(mix(clippedColor, currentColor, temporalAlpha))
+        outputColor.assign(mix(clippedColor, outputColor, temporalAlpha))
       }).Else(() => {
-        outputColor.assign(currentColor)
         if (this.debugShowRejection) {
           outputColor.assign(vec3(1, 0, 0))
         }
