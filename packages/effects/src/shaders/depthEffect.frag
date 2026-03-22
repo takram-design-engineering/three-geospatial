@@ -5,7 +5,7 @@ uniform float near;
 uniform float far;
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
-  float depth = readDepth(uv);
+  float depth = readDepthValue(depthBuffer, uv);
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
   depth = linearizeDepth(depth, near, far) / far;
 

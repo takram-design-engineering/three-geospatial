@@ -8,7 +8,7 @@ uniform mat4 projectionMatrix;
 uniform mat4 inverseProjectionMatrix;
 
 vec3 reconstructNormal(const vec2 uv) {
-  float depth = readDepth(uv);
+  float depth = readDepthValue(depthBuffer, uv);
   depth = reverseLogDepth(depth, cameraNear, cameraFar);
   vec3 position = screenToView(
     uv,
