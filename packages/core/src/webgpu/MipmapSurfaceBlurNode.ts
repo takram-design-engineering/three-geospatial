@@ -32,21 +32,23 @@ export class MipmapSurfaceBlurNode extends DualMipmapFilterNode {
       const offset1 = vec4(1, 1, -1, -1)
         .mul(inputTexelSize.xyxy)
         .add(center.xyxy)
+        .toVertexStage()
       const offset2 = vec4(2, 2, -2, -2)
         .mul(inputTexelSize.xyxy)
         .add(center.xyxy)
-      const uv01 = offset1.zy.toVertexStage() // -1, 1
-      const uv02 = offset1.xy.toVertexStage() // 1, 1
-      const uv03 = offset1.zw.toVertexStage() // -1, -1
-      const uv04 = offset1.xw.toVertexStage() // 1, -1
-      const uv05 = offset2.zy.toVertexStage() // -2, 2
-      const uv06 = offset2.xy.toVertexStage() // 2, 2
-      const uv07 = offset2.zw.toVertexStage() // -2, -2
-      const uv08 = offset2.xw.toVertexStage() // 2, -2
-      const uv09 = vec2(center.x, offset2.y).toVertexStage() // 0, 2
-      const uv10 = vec2(offset2.z, center.y).toVertexStage() // -2, 0
-      const uv11 = vec2(offset2.x, center.y).toVertexStage() // 2, 0
-      const uv12 = vec2(center.x, offset2.w).toVertexStage() // 0, -2
+        .toVertexStage()
+      const uv01 = offset1.zy // -1, 1
+      const uv02 = offset1.xy // 1, 1
+      const uv03 = offset1.zw // -1, -1
+      const uv04 = offset1.xw // 1, -1
+      const uv05 = offset2.zy // -2, 2
+      const uv06 = offset2.xy // 2, 2
+      const uv07 = offset2.zw // -2, -2
+      const uv08 = offset2.xw // 2, -2
+      const uv09 = vec2(center.x, offset2.y) // 0, 2
+      const uv10 = vec2(offset2.z, center.y) // -2, 0
+      const uv11 = vec2(offset2.x, center.y) // 2, 0
+      const uv12 = vec2(center.x, offset2.w) // 0, -2
 
       const innerWeight = 1 / 4 / 2
       const outerWeight = 1 / 9 / 2
@@ -105,15 +107,18 @@ export class MipmapSurfaceBlurNode extends DualMipmapFilterNode {
     invariant(inputNode != null)
 
     const center = uv()
-    const offset = vec4(1, 1, -1, -1).mul(inputTexelSize.xyxy).add(center.xyxy)
-    const uv1 = vec2(center.x, offset.y).toVertexStage() // 0, 1
-    const uv2 = vec2(offset.z, center.y).toVertexStage() // -1, 0
-    const uv3 = vec2(offset.x, center.y).toVertexStage() // 1, 0
-    const uv4 = vec2(center.x, offset.w).toVertexStage() // 0, -1
-    const uv5 = offset.zy.toVertexStage() // -1, 1
-    const uv6 = offset.xy.toVertexStage() // 1, 1
-    const uv7 = offset.zw.toVertexStage() // -1, -1
-    const uv8 = offset.xw.toVertexStage() // 1, -1
+    const offset = vec4(1, 1, -1, -1)
+      .mul(inputTexelSize.xyxy)
+      .add(center.xyxy)
+      .toVertexStage()
+    const uv1 = vec2(center.x, offset.y) // 0, 1
+    const uv2 = vec2(offset.z, center.y) // -1, 0
+    const uv3 = vec2(offset.x, center.y) // 1, 0
+    const uv4 = vec2(center.x, offset.w) // 0, -1
+    const uv5 = offset.zy // -1, 1
+    const uv6 = offset.xy // 1, 1
+    const uv7 = offset.zw // -1, -1
+    const uv8 = offset.xw // 1, -1
 
     const output = add(
       inputNode.sample(center).mul(1 / 4),
