@@ -43,6 +43,12 @@
   const light = new AtmosphereLight()
   ```
 
+## [0.17.1] - 2026-03-23
+
+### Fixed
+
+- Fixed depth test when logarithmic depth is used with `postprocessing >= 6.38.0`, [#100](https://github.com/takram-design-engineering/three-geospatial/issues/100).
+
 ## [0.17.0] - 2026-03-09
 
 ### Changed

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1] - 2026-03-23
+
+### Fixed
+
+- Fixed depth test when logarithmic depth is used with `postprocessing >= 6.38.0`, [#100](https://github.com/takram-design-engineering/three-geospatial/issues/100).
+- Fixed convolution filters not being compiled with `three@0.183.0`.
+
 ## [0.6.0] - 2026-03-09
 
 ### Changed

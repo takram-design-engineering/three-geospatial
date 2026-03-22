@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.2] - 2026-03-23
+
+### Fixed
+
+- Fixed depth test when logarithmic depth is used with `postprocessing >= 6.38.0`, [#100](https://github.com/takram-design-engineering/three-geospatial/issues/100).
+
 ## [0.7.1] - 2026-03-10
 
 ### Fixed
