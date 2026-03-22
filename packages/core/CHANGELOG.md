@@ -14,6 +14,7 @@
 ### Fixed
 
 - `TemporalAntialiasNode`: Fixed ghosting when resizing canvas.
+- Fixed convolution filters not being compiled with `three@0.183.0`.
 
 ## [0.7.0] - 2026-03-09
 
