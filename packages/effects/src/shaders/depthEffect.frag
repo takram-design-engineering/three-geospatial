@@ -6,6 +6,7 @@ uniform float far;
 
 void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   float depth = readDepth(uv);
+  depth = reverseLogDepth(depth, cameraNear, cameraFar);
   depth = linearizeDepth(depth, near, far) / far;
 
   #ifdef USE_TURBO

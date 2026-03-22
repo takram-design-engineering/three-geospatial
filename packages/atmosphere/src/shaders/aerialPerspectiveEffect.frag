@@ -1,5 +1,6 @@
 precision highp sampler2DArray;
 
+#include "core/depth"
 #include "core/math"
 #include "core/packing"
 #include "core/transform"
@@ -307,6 +308,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     #endif // HAS_OVERLAY
     return;
   }
+  depth = reverseLogDepth(depth, cameraNear, cameraFar);
 
   // Reconstruct position and normal in world space.
   vec3 viewPosition = screenToView(

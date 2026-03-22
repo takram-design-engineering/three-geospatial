@@ -1,3 +1,4 @@
+#include "core/depth"
 #include "core/packing"
 #include "core/transform"
 
@@ -8,6 +9,7 @@ uniform mat4 inverseProjectionMatrix;
 
 vec3 reconstructNormal(const vec2 uv) {
   float depth = readDepth(uv);
+  depth = reverseLogDepth(depth, cameraNear, cameraFar);
   vec3 position = screenToView(
     uv,
     depth,
