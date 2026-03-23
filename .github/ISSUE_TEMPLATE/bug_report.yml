@@ -1,0 +1,61 @@
+# Base on Three.js's template: https://github.com/mrdoob/three.js/blob/dev/.github/ISSUE_TEMPLATE/bug_report.yml
+
+name: Bug Report
+description: File a reproducible bug or regression.
+labels: ['bug']
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: How do you trigger this bug? Please walk us through it step by step.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code
+      value: |
+        ```ts
+        // code goes here
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem (drag and drop the image).
+    validations:
+      required: false
+
+  - type: input
+    id: library_version
+    attributes:
+      label: Library and version
+      description: e.g. atmosphere@0.1.0, clouds@0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: three_version
+    attributes:
+      label: Three.js version
+      placeholder: r
+    validations:
+      required: true
