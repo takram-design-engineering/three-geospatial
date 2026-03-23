@@ -808,6 +808,17 @@ higherOrderScatteringTexture = true
 
 Whether to generate and use a separate texture for higher-order scattering (n >= 2) for a better approximation of the multi-scattering occlusion.
 
+# Acknowledgement
+
+- [Bruneton's paper](https://inria.hal.science/inria-00288758/en) and [his reference implementation](https://github.com/ebruneton/precomputed_atmospheric_scattering).
+- [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html) for the celestial dataset.
+
+Additional context and related work:
+
+- [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf)
+- [Outdoor Light Scattering Sample Update](https://www.intel.com/content/dam/develop/external/us/en/documents/outdoor-light-scattering-update.pdf)
+- [Physically Based Real-Time Rendering of Atmospheres using Mie Theory](https://diglib.eg.org/items/1fb6b85a-b3f8-4817-975f-f65634020f03)
+
 # License
 
 [MIT](LICENSE), except where indicated otherwise.

@@ -356,6 +356,14 @@ hardShadowSamples = 4
 fadeOutSamples = 8
 ```
 
+# Acknowledgement
+
+- Poimandres' [postprocessing](https://github.com/pmndrs/postprocessing) as a reference for convolution filters.
+- Intel's [reference TAA implementation](https://github.com/GameTechDev/TAA).
+- Simon Coenen's [TAA implementation](https://github.com/simco50/D3D12_Research/) for subpixel correction.
+- Bend Studio's [screen-space shadows technique](https://www.bendstudio.com/blog/inside-bend-screen-space-shadows/).
+- Léna Piquet's [detailed walkthrough of UE4's lens flare effect](https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/).
+
 # License
 
 [MIT](LICENSE), except where indicated otherwise.
