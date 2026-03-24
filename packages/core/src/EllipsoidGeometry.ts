@@ -59,7 +59,7 @@ export class EllipsoidGeometry extends BufferGeometry {
         ++x, vertexIndex += 3, uvIndex += 2, ++rowIndex
       ) {
         const u = x / longitudeSegments
-        const theta = u * Math.PI * 2
+        const theta = (u - 0.5) * Math.PI * 2
         vertex.x = radii.x * Math.cos(theta) * Math.sin(phi)
         vertex.y = radii.y * Math.sin(theta) * Math.sin(phi)
         vertex.z = radii.z * Math.cos(phi)
