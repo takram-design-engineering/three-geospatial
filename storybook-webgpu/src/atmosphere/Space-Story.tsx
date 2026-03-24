@@ -111,6 +111,7 @@ const blueMarble = ({
   // Project the sunlight onto the sphere (normal tangent).
   const east = vec3(0, 0, 1).cross(normalWorld).normalize().toConst()
   const north = normalWorld.cross(east).normalize()
+  // uvOffset has no physical ground. It's just an effect.
   const uvOffset = vec2(
     sunDirection.dot(east).mul(cloudShadowOffset),
     sunDirection.dot(north).mul(cloudShadowOffset)
@@ -121,10 +122,17 @@ const blueMarble = ({
   const color = texture(colorTexture).rgb
   const ocean = texture(oceanTexture).r
   return {
+    // The albedo of clouds is very close to 1 and diffuse, so just use the
+    // coverage as an overlay.
     colorNode: mix(color, vec3(cloudAlbedo), clouds),
+    // emissiveColor and its intensity is also just an effect.
     emissiveNode: texture(emissiveTexture).r.mul(emissiveColor),
+    // In a macroscopic view, ocean's reflectivity should be approximated by
+    // roughness.
     roughnessNode: ocean.mul(clouds.oneMinus()).remap(1, 0, oceanRoughness, 1),
     ior: oceanIOR,
+    // Although it's ideal that the clouds is blended over the shadows, this
+    // should be sufficient given that the shadows are very subtle.
     receivedShadowNode: () => shadow.sub(clouds).saturate().oneMinus()
   }
 }
@@ -259,7 +267,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     }}
     camera={{
       fov: 30,
-      position: [3.58e7, 0, 0, ],
+      position: [3.58e7, 0, 0],
       up: [0, 0, 1],
       near: 1e4,
       far: 1e9
