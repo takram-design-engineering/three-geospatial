@@ -10,7 +10,7 @@
 
 - WebGPU entry point (`@takram/three-geospatial/webgpu`) requires `three >= 0.182.0`.
 - BREAKING: Removed `RTTTextureNode` and `convertToTexture`. Use `RTTNode` and `convertToTexture` in `three/tsl` instead.
-- BREAKING: Changed the UV of `EllipsoidGeometry` to make (0, 0) coincide with the prime meridian without rotation. You might need to change the rotation of the mesh.
+- BREAKING: Changed the UV of `EllipsoidGeometry` to make (0, 0.5) coincide with the prime meridian without rotation. You might need to change the rotation of the mesh.
 
 ### Fixed
 
