@@ -211,7 +211,7 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Local date controls (depends on the longitude of the location):
-  useLocalDateControls(date => {
+  useLocalDateControls(0, date => {
     const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
       atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
@@ -234,7 +234,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight castShadow />
-      <OrbitControls minDistance={1.2e7} enablePan={false} />
+      <OrbitControls minDistance={2.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={material}
@@ -258,8 +258,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
       }
     }}
     camera={{
-      fov: 60,
-      position: [-2e7, 0, 0],
+      fov: 30,
+      position: [3.58e7, 0, 0, ],
       up: [0, 0, 1],
       near: 1e4,
       far: 1e9
@@ -286,8 +286,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   ...localDateArgs({
-    dayOfYear: 180,
-    timeOfDay: 4
+    dayOfYear: 190,
+    timeOfDay: 15
   }),
   ...toneMappingArgs({
     toneMappingExposure: 2
