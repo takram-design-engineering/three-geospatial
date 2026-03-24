@@ -1,7 +1,7 @@
 import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useLayoutEffect, type FC } from 'react'
-import { AgXToneMapping, TextureLoader } from 'three'
+import { AgXToneMapping, SRGBColorSpace, TextureLoader } from 'three'
 import {
   context,
   mix,
@@ -102,6 +102,7 @@ const blueMarble = ({
   const emissiveTexture = new TextureLoader().load(
     'public/blue_marble/emissive.webp'
   )
+  colorTexture.colorSpace = SRGBColorSpace
   colorTexture.anisotropy = 16
   oceanTexture.anisotropy = 16
   cloudsTexture.anisotropy = 16
@@ -119,11 +120,10 @@ const blueMarble = ({
   const shadow = texture(cloudsTexture, uv().add(uvOffset)).r
   const color = texture(colorTexture).rgb
   const ocean = texture(oceanTexture).r
-  const oceanSubClouds = ocean.mul(clouds.oneMinus())
   return {
     colorNode: mix(color, vec3(cloudAlbedo), clouds),
     emissiveNode: texture(emissiveTexture).r.mul(emissiveColor),
-    roughnessNode: oceanSubClouds.remap(1, 0, oceanRoughness, 1),
+    roughnessNode: ocean.mul(clouds.oneMinus()).remap(1, 0, oceanRoughness, 1),
     ior: oceanIOR,
     receivedShadowNode: () => shadow.sub(clouds).saturate().oneMinus()
   }
