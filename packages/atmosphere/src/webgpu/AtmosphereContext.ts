@@ -101,6 +101,9 @@ export class AtmosphereContext extends AtmosphereContextBase {
   }
 }
 
+/** @deprecated Use AtmosphereContext instead. */
+export const AtmosphereContextNode = AtmosphereContext
+
 export function getAtmosphereContext(builder: NodeBuilder): AtmosphereContext {
   if (typeof builder.context.getAtmosphere !== 'function') {
     throw new Error('getAtmosphere() was not found in the builder context.')

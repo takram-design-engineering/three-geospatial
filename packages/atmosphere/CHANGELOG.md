@@ -5,7 +5,6 @@
 ### Changed
 
 - WebGPU entry point (`@takram/three-atmosphere/webgpu`) requires `three >= 0.182.0`.
-- BREAKING: `AtmosphereContextNode` was renamed to `AtmosphereContext`.
 - BREAKING: Nodes and objects no longer take `atmosphereContext` as a constructor parameter. Use `renderer.contextNode` instead.
 
   Before:
@@ -33,16 +32,23 @@
   } from '@takram/three-atmosphere/webgpu'
   import { context } from 'three/tsl'
 
+  // AtmosphereContextNode is replaced by AtmosphereContext:
   const atmosphereContext = new AtmosphereContext()
+
+  // Instead of passing the atmosphere context in the parameter of classes and
+  // functions, create `getAtmosphere: () => AtmosphereContext` in the
+  // renderer's global context:
   renderer.contextNode = context({
     ...renderer.contextNode.value, // Merge with the existing context values
     getAtmosphere: () => atmosphereContext
   })
 
+  // The atmosphere context parameter must then be omitted:
   const node = aerialPerspective(colorNode, depthNode)
   const light = new AtmosphereLight()
   ```
 
+- Deprecated `AtmosphereContextNode` and renamed it to `AtmosphereContext`.
 - Changed default values for `depthTest` and `depthWrite` in `SkyMaterial` and `StarsMaterial`.
 - Deprecated `SKY_RENDER_ORDER`, which is no longer used.
 
