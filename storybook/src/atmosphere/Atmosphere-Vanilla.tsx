@@ -86,28 +86,6 @@ async function init(container: HTMLDivElement): Promise<void> {
   clock = new Clock()
   scene = new Scene()
 
-  // SkyMaterial disables projection. Provide a plane that covers clip space.
-  skyMaterial = new SkyMaterial()
-  const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
-  sky.frustumCulled = false
-  scene.add(sky)
-
-  starsMaterial = new StarsMaterial()
-  starsMaterial.intensity = 10
-  stars = new Points(
-    new StarsGeometry(
-      await new ArrayBufferLoader().loadAsync('atmosphere/stars.bin')
-    ),
-    starsMaterial
-  )
-  stars.frustumCulled = false
-  scene.add(stars)
-
-  // SkyLightProbe computes sky irradiance of its position.
-  skyLight = new SkyLightProbe()
-  skyLight.position.copy(position)
-  scene.add(skyLight)
-
   // SunDirectionalLight computes sunlight transmittance to its target position.
   sunLight = new SunDirectionalLight({ distance: 300 })
   sunLight.target.position.copy(position)
@@ -145,6 +123,31 @@ async function init(container: HTMLDivElement): Promise<void> {
   torusKnot.castShadow = true
   torusKnot.receiveShadow = true
   group.add(torusKnot)
+
+  // StarsMaterial must be applied to a Points instance.
+  starsMaterial = new StarsMaterial()
+  starsMaterial.intensity = 10
+  stars = new Points(
+    new StarsGeometry(
+      await new ArrayBufferLoader().loadAsync('atmosphere/stars.bin')
+    ),
+    starsMaterial
+  )
+  stars.frustumCulled = false
+  scene.add(stars)
+
+  // SkyMaterial disables projection. Provide a plane that covers clip space.
+  // Note that it's more efficient to draw the sky last so that it can reduce
+  // overdraws.
+  skyMaterial = new SkyMaterial()
+  const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
+  sky.frustumCulled = false
+  scene.add(sky)
+
+  // SkyLightProbe computes sky irradiance of its position.
+  skyLight = new SkyLightProbe()
+  skyLight.position.copy(position)
+  scene.add(skyLight)
 
   // Demonstrates light-source lighting here. For post-process lighting, set
   // sunLight and skyLight to true, remove SkyLightProbe and
@@ -187,7 +190,7 @@ async function init(container: HTMLDivElement): Promise<void> {
 
   const { textures } = generator
   Object.assign(skyMaterial, textures)
-  sunLight.transmittanceTexture = textures.transmittanceTexture
+  sunLight.transmittanceTexture = textures.transmittanceTexture // eslint-disable-line require-atomic-updates
   skyLight.irradianceTexture = textures.irradianceTexture
   Object.assign(starsMaterial, textures)
   Object.assign(aerialPerspective, textures)
