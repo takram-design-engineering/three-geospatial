@@ -43,6 +43,13 @@
   const light = new AtmosphereLight()
   ```
 
+- Changed default values for `depthTest` and `depthWrite` in `SkyMaterial` and `StarsMaterial`.
+- Deprecated `SKY_RENDER_ORDER`, which is no longer used.
+
+### Fixed
+
+- Fixed `StarsMaterial` not fully appearing over post-processing sky, [#28](https://github.com/takram-design-engineering/three-geospatial/issues/28).
+
 ## [0.17.1] - 2026-03-23
 
 ### Fixed
