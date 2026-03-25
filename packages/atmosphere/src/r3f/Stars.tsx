@@ -109,7 +109,6 @@ export const Stars: FC<StarsProps> = ({
         pointSize={pointSize}
         intensity={intensity}
         background={background}
-        depthTest={true}
       />
     </points>
   )
