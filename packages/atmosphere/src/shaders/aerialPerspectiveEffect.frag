@@ -353,7 +353,16 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 radiance;
   #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
-  radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
+  // WORKAROUND: When both post-process lighting and sky options are enabled, we
+  // cannot distinguish stars from other objects unless depthWrite is disabled
+  // for the stars. By observing the normals of points, texels on the stars have
+  // view normals with a length greater than 1.5. We use this to disable
+  // irradiance, which is irrelevant for them.
+  if (length(viewNormal) < 1.5) {
+    radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
+  } else {
+    radiance = inputColor.rgb;
+  }
   #ifdef HAS_LIGHTING_MASK
   float lightingMask = texture(lightingMaskBuffer, uv).LIGHTING_MASK_CHANNEL_;
   radiance = mix(inputColor.rgb, radiance, lightingMask);
