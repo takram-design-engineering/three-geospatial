@@ -19,6 +19,7 @@ export const TRANSMITTANCE_TEXTURE_WIDTH = 256
 export const TRANSMITTANCE_TEXTURE_HEIGHT = 64
 
 export const METER_TO_LENGTH_UNIT = 1 / 1000
+/** @deprecated The render order of the sky shouldn't matter. */
 export const SKY_RENDER_ORDER = 100
 
 // Reference: https://en.wikipedia.org/wiki/SRGB

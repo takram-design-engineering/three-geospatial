@@ -13,7 +13,7 @@ import type { Points } from 'three'
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
 import type { AtmosphereMaterialProps } from '../AtmosphereMaterialBase'
-import { DEFAULT_STARS_DATA_URL, SKY_RENDER_ORDER } from '../constants'
+import { DEFAULT_STARS_DATA_URL } from '../constants'
 import { StarsGeometry } from '../StarsGeometry'
 import {
   StarsMaterial,
@@ -100,7 +100,6 @@ export const Stars: FC<StarsProps> = ({
     <points
       ref={mergeRefs([ref, forwardedRef])}
       frustumCulled={false}
-      renderOrder={SKY_RENDER_ORDER + 1}
       {...others}
     >
       <primitive object={geometry} />
@@ -111,7 +110,6 @@ export const Stars: FC<StarsProps> = ({
         intensity={intensity}
         background={background}
         depthTest={true}
-        depthWrite={false}
       />
     </points>
   )
