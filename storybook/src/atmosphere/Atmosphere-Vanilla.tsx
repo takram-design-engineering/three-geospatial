@@ -10,29 +10,40 @@ import {
   Clock,
   Group,
   HalfFloatType,
+  Matrix4,
   Mesh,
   MeshPhysicalMaterial,
   NoToneMapping,
   PCFSoftShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
+  Points,
   Scene,
   TorusKnotGeometry,
   Vector3,
-  WebGLRenderer
+  WebGLRenderer,
+  type Object3D
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 import {
   AerialPerspectiveEffect,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECI,
+  getSunDirectionECI,
   PrecomputedTexturesGenerator,
   SkyLightProbe,
   SkyMaterial,
+  StarsGeometry,
+  StarsMaterial,
   SunDirectionalLight
 } from '@takram/three-atmosphere'
-import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import {
+  ArrayBufferLoader,
+  Ellipsoid,
+  Geodetic,
+  radians
+} from '@takram/three-geospatial'
 import {
   DitheringEffect,
   LensFlareEffect
@@ -44,11 +55,14 @@ let controls: OrbitControls
 let clock: Clock
 let scene: Scene
 let skyMaterial: SkyMaterial
+let starsMaterial: StarsMaterial
+let stars: Object3D
 let skyLight: SkyLightProbe
 let sunLight: SunDirectionalLight
 let aerialPerspective: AerialPerspectiveEffect
 let composer: EffectComposer
 
+const inertialToECEFMatrix = new Matrix4()
 const sunDirection = new Vector3()
 const moonDirection = new Vector3()
 
@@ -58,7 +72,7 @@ const geodetic = new Geodetic(0, radians(67), 1000)
 const position = geodetic.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
-function init(container: HTMLDivElement): void {
+async function init(container: HTMLDivElement): Promise<void> {
   const aspect = window.innerWidth / window.innerHeight
   camera = new PerspectiveCamera(75, aspect, 10, 1e6)
   camera.position.copy(position)
@@ -77,6 +91,17 @@ function init(container: HTMLDivElement): void {
   const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
   sky.frustumCulled = false
   scene.add(sky)
+
+  starsMaterial = new StarsMaterial()
+  starsMaterial.intensity = 10
+  stars = new Points(
+    new StarsGeometry(
+      await new ArrayBufferLoader().loadAsync('atmosphere/stars.bin')
+    ),
+    starsMaterial
+  )
+  stars.frustumCulled = false
+  scene.add(stars)
 
   // SkyLightProbe computes sky irradiance of its position.
   skyLight = new SkyLightProbe()
@@ -164,6 +189,7 @@ function init(container: HTMLDivElement): void {
   Object.assign(skyMaterial, textures)
   sunLight.transmittanceTexture = textures.transmittanceTexture
   skyLight.irradianceTexture = textures.irradianceTexture
+  Object.assign(starsMaterial, textures)
   Object.assign(aerialPerspective, textures)
 
   container.appendChild(renderer.domElement)
@@ -179,14 +205,24 @@ function onWindowResize(): void {
 
 function render(): void {
   const date = +referenceDate + ((clock.getElapsedTime() * 5e6) % 864e5)
-  getSunDirectionECEF(date, sunDirection)
-  getMoonDirectionECEF(date, moonDirection)
 
+  // Apply the sun and moon directions.
+  getECIToECEFRotationMatrix(date, inertialToECEFMatrix)
+  // We use getSunDirectionECI and getMoonDirectionECI here because we have
+  // inertialToECEFMatrix. You might use getSunDirectionECEF and
+  // getMoonDirectionECEF when inertialToECEFMatrix is not needed.
+  getSunDirectionECI(date, sunDirection).applyMatrix4(inertialToECEFMatrix)
+  getMoonDirectionECI(date, moonDirection).applyMatrix4(inertialToECEFMatrix)
   skyMaterial.sunDirection.copy(sunDirection)
   skyMaterial.moonDirection.copy(moonDirection)
+  starsMaterial.sunDirection.copy(sunDirection)
   sunLight.sunDirection.copy(sunDirection)
   skyLight.sunDirection.copy(sunDirection)
   aerialPerspective.sunDirection.copy(sunDirection)
+
+  // Apply the conversion from the inertial reference frame of date to ECEF.
+  // This enables the rotation of the stars.
+  stars.setRotationFromMatrix(inertialToECEFMatrix)
 
   sunLight.update()
   skyLight.update()
@@ -198,7 +234,7 @@ const Story: StoryFn = () => (
   <div
     ref={ref => {
       if (ref != null) {
-        init(ref)
+        void init(ref)
       }
     }}
   />
