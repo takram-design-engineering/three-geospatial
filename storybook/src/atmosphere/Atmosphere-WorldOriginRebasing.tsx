@@ -158,7 +158,7 @@ const Story: StoryFn = () => (
   <>
     <Canvas
       gl={{ depth: false }}
-      camera={{ position: [5, 2, 8], fov: 40 }}
+      camera={{ fov: 50, position: [5, 3, 9] }}
       shadows
     >
       <Stats />
