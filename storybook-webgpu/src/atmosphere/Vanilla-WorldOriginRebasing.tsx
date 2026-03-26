@@ -8,7 +8,8 @@ import {
   Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { context, pass, toneMapping } from 'three/tsl'
+import { traa } from 'three/examples/jsm/tsl/display/TRAANode.js'
+import { context, mrt, output, pass, toneMapping, velocity } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
   PostProcessing,
@@ -108,6 +109,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   light.shadow.camera.far = 2
   light.shadow.mapSize.width = 2048
   light.shadow.mapSize.height = 2048
+  light.shadow.radius = 8
   light.shadow.normalBias = 0.01
   scene.add(light)
   scene.add(light.target)
@@ -116,11 +118,20 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   controls.enableDamping = true
   controls.minDistance = 1
 
-  // Post-processing for applying dithering after tone mapping:
-  const passNode = pass(scene, camera, { samples: 4 })
-  const toneMappingNode = toneMapping(AgXToneMapping, 3, passNode)
+  // Post-processing:
+  const passNode = pass(scene, camera, { samples: 0 }).setMRT(
+    mrt({
+      output,
+      velocity
+    })
+  )
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
+  const toneMappingNode = toneMapping(AgXToneMapping, 3, colorNode)
+  const taaNode = traa(toneMappingNode, depthNode, velocityNode, camera)
   const postProcessing = new PostProcessing(renderer)
-  postProcessing.outputNode = toneMappingNode.add(dithering)
+  postProcessing.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
   const clock = new Clock()
