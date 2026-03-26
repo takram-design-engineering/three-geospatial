@@ -150,7 +150,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const aerialNode = aerialPerspective(colorNode, depthNode)
   const lensFlareNode = lensFlare(aerialNode)
   const toneMappingNode = toneMapping(AgXToneMapping, 5, lensFlareNode)
-  const taaNode = temporalAntialias(highpVelocity)(
+  const taaNode = temporalAntialias(
     toneMappingNode,
     depthNode,
     velocityNode,

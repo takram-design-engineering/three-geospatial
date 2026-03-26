@@ -42,6 +42,11 @@ export class HighpVelocityNode extends TempNode {
     this.updateAfterType = NodeUpdateType.OBJECT
   }
 
+  setProjectionMatrix(value: Matrix4 | null): this {
+    this.projectionMatrix = value
+    return this
+  }
+
   // Executed once per frame:
   override update({ camera }: NodeFrame): void {
     if (camera == null) {

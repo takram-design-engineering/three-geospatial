@@ -124,7 +124,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const velocityNode = passNode.getTextureNode('velocity')
   const lensFlareNode = lensFlare(colorNode)
   const toneMappingNode = toneMapping(AgXToneMapping, 3, lensFlareNode)
-  const taaNode = temporalAntialias(highpVelocity)(
+  const taaNode = temporalAntialias(
     toneMappingNode,
     depthNode,
     velocityNode,

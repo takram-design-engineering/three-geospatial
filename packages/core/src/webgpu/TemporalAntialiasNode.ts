@@ -46,6 +46,7 @@ import {
 import { cameraFar, cameraNear } from './accessors'
 import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
+import { highpVelocity } from './HighpVelocityNode'
 import { haltonOffsets } from './internals'
 import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
@@ -53,10 +54,6 @@ import { logarithmicToPerspectiveDepth } from './transformations'
 import { isWebGPU } from './utils'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
-
-interface VelocityNodeImmutable {
-  projectionMatrix?: Matrix4 | null
-}
 
 interface SupportedCamera extends Camera {
   updateProjectionMatrix(): void
@@ -221,8 +218,6 @@ export class TemporalAntialiasNode extends TempNode {
     return 'TemporalAntialiasNode'
   }
 
-  private readonly velocityNodeImmutable: VelocityNodeImmutable
-
   inputNode: TextureNode
   depthNode: TextureNode
   velocityNode: TextureNode
@@ -254,14 +249,12 @@ export class TemporalAntialiasNode extends TempNode {
   private jitterIndex = 0
 
   constructor(
-    velocityNodeImmutable: VelocityNodeImmutable,
     inputNode: TextureNode,
     depthNode: TextureNode,
     velocityNode: TextureNode,
     camera: Camera
   ) {
     super('vec4')
-    this.velocityNodeImmutable = velocityNodeImmutable
     this.inputNode = inputNode
     this.depthNode = depthNode
     this.velocityNode = velocityNode
@@ -300,13 +293,6 @@ export class TemporalAntialiasNode extends TempNode {
     return this.textureNode
   }
 
-  private setProjectionMatrix(value: Matrix4 | null): void {
-    const { velocityNodeImmutable: velocity } = this
-    if (velocity != null) {
-      velocity.projectionMatrix = value
-    }
-  }
-
   setSize(width: number, height: number): this {
     const { resolveRT, historyRT } = this
     if (width !== historyRT.width || height !== historyRT.height) {
@@ -333,7 +319,7 @@ export class TemporalAntialiasNode extends TempNode {
     const { camera } = this
     camera.updateProjectionMatrix()
     this.originalProjectionMatrix.copy(camera.projectionMatrix)
-    this.setProjectionMatrix(this.originalProjectionMatrix)
+    highpVelocity.setProjectionMatrix(this.originalProjectionMatrix)
 
     const offset = haltonOffsets[this.jitterIndex]
     const dx = offset.x - 0.5
@@ -344,7 +330,7 @@ export class TemporalAntialiasNode extends TempNode {
   private clearViewOffset(): void {
     // Reset the projection matrix modified in setViewOffset():
     this.camera.clearViewOffset()
-    this.setProjectionMatrix(null)
+    highpVelocity.setProjectionMatrix(null)
 
     // setViewOffset() can be called multiple times in a frame. Increment the
     // jitter index here.
@@ -542,18 +528,15 @@ export class TemporalAntialiasNode extends TempNode {
   }
 }
 
-export const temporalAntialias =
-  (velocityNodeImmutable: VelocityNodeImmutable) =>
-  (
-    inputNode: Node,
-    depthNode: TextureNode,
-    velocityNode: TextureNode,
-    camera: Camera
-  ): TemporalAntialiasNode =>
-    new TemporalAntialiasNode(
-      velocityNodeImmutable,
-      convertToTexture(inputNode),
-      depthNode,
-      velocityNode,
-      camera
-    )
+export const temporalAntialias = (
+  inputNode: Node,
+  depthNode: TextureNode,
+  velocityNode: TextureNode,
+  camera: Camera
+): TemporalAntialiasNode =>
+  new TemporalAntialiasNode(
+    convertToTexture(inputNode),
+    depthNode,
+    velocityNode,
+    camera
+  )

@@ -145,7 +145,7 @@ const Content: FC<StoryProps> = () => {
 
   const taaNode = useResource(
     () =>
-      temporalAntialias(highpVelocity)(
+      temporalAntialias(
         passNode,
         prePassNode.getTextureNode('depth'),
         prePassNode.getTextureNode('output'),
