@@ -38,8 +38,7 @@
   // Instead of passing the atmosphere context in the parameter of classes and
   // functions, create `getAtmosphere: () => AtmosphereContext` in the
   // renderer's global context:
-  renderer.contextNode = context({
-    ...renderer.contextNode.value, // Merge with the existing context values
+  renderer.contextNode = context(renderer.contextNode, {
     getAtmosphere: () => atmosphereContext
   })
 

@@ -57,8 +57,7 @@ declare const scene: Scene
 declare const date: Date
 
 const atmosphereContext = new AtmosphereContext()
-renderer.contextNode = context({
-  ...renderer.contextNode.value,
+renderer.contextNode = context(renderer.contextNode, {
   getAtmosphere: () => atmosphereContext
 })
 
@@ -90,8 +89,7 @@ declare const date: Date
 
 const atmosphereContext = new AtmosphereContext()
 atmosphereContext.camera = camera
-renderer.contextNode = context({
-  ...renderer.contextNode.value,
+renderer.contextNode = context(renderer.contextNode, {
   getAtmosphere: () => atmosphereContext
 })
 
@@ -125,8 +123,7 @@ import { context } from 'three/tsl'
 declare const date: Date
 
 const atmosphereContext = new AtmosphereContext()
-renderer.contextNode = context({
-  ...renderer.contextNode.value,
+renderer.contextNode = context(renderer.contextNode, {
   getAtmosphere: () => atmosphereContext
 })
 
@@ -160,8 +157,7 @@ declare const latitude: number // In degrees
 declare const height: number // In meters
 
 const atmosphereContext = new AtmosphereContext()
-renderer.contextNode = context({
-  ...renderer.contextNode.value,
+renderer.contextNode = context(renderer.contextNode, {
   getAtmosphere: () => atmosphereContext
 })
 
