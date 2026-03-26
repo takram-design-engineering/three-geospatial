@@ -9,7 +9,7 @@ import {
   Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { context, pass, toneMapping } from 'three/tsl'
+import { context, mrt, output, pass, toneMapping } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
   PostProcessing,
@@ -28,7 +28,12 @@ import {
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
-import { dithering } from '@takram/three-geospatial/webgpu'
+import {
+  dithering,
+  highpVelocity,
+  lensFlare,
+  temporalAntialias
+} from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 
@@ -107,11 +112,26 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   controls.minDistance = 1
   controls.target.copy(positionECEF)
 
-  // Post-processing for applying dithering after tone mapping:
-  const passNode = pass(scene, camera, { samples: 4 })
-  const toneMappingNode = toneMapping(AgXToneMapping, 3, passNode)
+  // Post-processing:
+  const passNode = pass(scene, camera, { samples: 0 }).setMRT(
+    mrt({
+      output,
+      velocity: highpVelocity
+    })
+  )
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
+  const lensFlareNode = lensFlare(colorNode)
+  const toneMappingNode = toneMapping(AgXToneMapping, 3, lensFlareNode)
+  const taaNode = temporalAntialias(highpVelocity)(
+    toneMappingNode,
+    depthNode,
+    velocityNode,
+    camera
+  )
   const postProcessing = new PostProcessing(renderer)
-  postProcessing.outputNode = toneMappingNode.add(dithering)
+  postProcessing.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
   const timer = new Timer()

@@ -28,7 +28,7 @@ import {
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
-import { dithering } from '@takram/three-geospatial/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 
@@ -128,7 +128,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const colorNode = passNode.getTextureNode('output')
   const depthNode = passNode.getTextureNode('depth')
   const velocityNode = passNode.getTextureNode('velocity')
-  const toneMappingNode = toneMapping(AgXToneMapping, 3, colorNode)
+  const lensFlareNode = lensFlare(colorNode)
+  const toneMappingNode = toneMapping(AgXToneMapping, 3, lensFlareNode)
   const taaNode = traa(toneMappingNode, depthNode, velocityNode, camera)
   const postProcessing = new PostProcessing(renderer)
   postProcessing.outputNode = taaNode.add(dithering)
