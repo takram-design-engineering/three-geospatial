@@ -285,7 +285,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         const transmittance =
           computeTransmittanceToTopAtmosphereBoundaryTexture(
             screenCoordinate
-          ).context({ atmosphere: context })
+          ).context({ getAtmosphere: () => context })
 
         return parameters.transmittancePrecisionLog
           ? // Compute the optical depth, and store it in opticalDepth. Avoid
@@ -321,7 +321,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
               : this.transmittanceRT.texture
           ),
           screenCoordinate
-        ).context({ atmosphere: context })
+        ).context({ getAtmosphere: () => context })
 
         return mrt({
           deltaIrradiance: vec4(irradiance, 1),
@@ -361,7 +361,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
               : this.transmittanceRT.texture
           ),
           vec3(screenCoordinate, this.layer.add(0.5))
-        ).context({ atmosphere: context })
+        ).context({ getAtmosphere: () => context })
 
         const rayleigh = singleScattering.get('rayleigh')
         const mie = singleScattering.get('mie')
@@ -430,7 +430,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
           texture(deltaIrradianceRT.texture),
           vec3(screenCoordinate, this.layer.add(0.5)),
           int(this.scatteringOrder)
-        ).context({ atmosphere: context })
+        ).context({ getAtmosphere: () => context })
 
         return vec4(radiance, 1)
       })()
@@ -463,7 +463,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
           texture3D(deltaMultipleScatteringRT.texture),
           screenCoordinate,
           int(this.scatteringOrder.sub(1))
-        ).context({ atmosphere: context })
+        ).context({ getAtmosphere: () => context })
 
         return mrt({
           deltaIrradiance: irradiance,
@@ -505,7 +505,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
           ),
           texture3D(deltaScatteringDensityRT.texture),
           vec3(screenCoordinate, this.layer.add(0.5))
-        ).context({ atmosphere: context })
+        ).context({ getAtmosphere: () => context })
 
         const radiance = multipleScattering.get('radiance')
         const cosViewSun = multipleScattering.get('cosViewSun')

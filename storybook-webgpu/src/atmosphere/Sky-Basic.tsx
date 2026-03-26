@@ -1,8 +1,8 @@
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import type { FC } from 'react'
+import { useLayoutEffect, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { toneMapping, uniform } from 'three/tsl'
+import { context, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
@@ -10,7 +10,7 @@ import {
   getMoonDirectionECI,
   getSunDirectionECI
 } from '@takram/three-atmosphere'
-import { AtmosphereContextNode, sky } from '@takram/three-atmosphere/webgpu'
+import { AtmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -43,27 +43,35 @@ const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
-  const [postProcessing, skyNode, toneMappingNode] = useResource(
-    manage => {
-      const skyNode = manage(sky(context))
-      skyNode.moonNode.intensity.value = 10
-      skyNode.starsNode.intensity.value = 10
+  const skyNode = useResource(() => {
+    const skyNode = sky()
+    skyNode.moonNode.intensity.value = 10
+    skyNode.starsNode.intensity.value = 10
+    return skyNode
+  }, [])
 
-      const lensFlareNode = manage(lensFlare(skyNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = toneMappingNode.add(dithering)
+  const lensFlareNode = useResource(() => lensFlare(skyNode), [skyNode])
 
-      return [postProcessing, skyNode, toneMappingNode]
-    },
-    [renderer, context]
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, toneMappingNode.add(dithering)),
+    [renderer, toneMappingNode]
   )
 
   useGuardedFrame(() => {
@@ -86,7 +94,7 @@ const Content: FC<StoryProps> = () => {
       showGround
     }),
     ({ showGround }) => {
-      context.showGround = showGround
+      atmosphereContext.showGround = showGround
       postProcessing.needsUpdate = true
     }
   )
@@ -97,11 +105,12 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF.value)
+  useLocationControls(atmosphereContext.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value

@@ -1,8 +1,8 @@
 import { OrbitControls, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import { useRef, type FC } from 'react'
+import { useLayoutEffect, useRef, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { mrt, output, pass, toneMapping, uniform } from 'three/tsl'
+import { context, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
@@ -12,7 +12,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
   skyEnvironment
@@ -75,46 +75,59 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const velocityNode = passNode.getTextureNode('velocity')
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          velocity: highpVelocity
+        })
+      ),
+    [scene, camera]
+  )
 
-      const aerialNode = manage(
-        aerialPerspective(context, colorNode, depthNode)
-      )
-      const lensFlareNode = manage(lensFlare(aerialNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dithering)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, scene, camera, context]
+  const aerialNode = useResource(
+    () => aerialPerspective(colorNode, depthNode),
+    [colorNode, depthNode]
+  )
+
+  const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useGuardedFrame(() => {
@@ -139,11 +152,12 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF.value)
+  useLocationControls(atmosphereContext.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -154,7 +168,7 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Toggles the direct, indirect and environment lighting:
-  const envNode = useResource(() => skyEnvironment(context), [context])
+  const envNode = useResource(() => skyEnvironment(), [])
   const lightRef = useRef<AtmosphereLight>(null)
   useTransientControl(
     ({ directLight, indirectLight, environmentMap }: StoryArgs) => ({
@@ -174,7 +188,7 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
-      <atmosphereLight ref={lightRef} args={[context]} />
+      <atmosphereLight ref={lightRef} />
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere
         args={[0.5, 128, 128]}

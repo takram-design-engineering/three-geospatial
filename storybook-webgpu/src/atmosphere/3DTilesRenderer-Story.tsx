@@ -1,7 +1,8 @@
 import { useThree } from '@react-three/fiber'
-import { useMemo, type FC } from 'react'
+import { useLayoutEffect, useMemo, type FC } from 'react'
 import { AgXToneMapping, Scene } from 'three'
 import {
+  context,
   diffuseColor,
   mrt,
   normalView,
@@ -18,7 +19,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode
+  AtmosphereContext
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -69,59 +70,77 @@ const Content: FC<StoryProps> = ({
   const camera = useThree(({ camera }) => camera)
   const overlayScene = useMemo(() => new Scene(), [])
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output: diffuseColor,
-            normal: normalView,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const normalNode = passNode.getTextureNode('normal')
-      const velocityNode = passNode.getTextureNode('velocity')
-
-      const aerialNode = manage(
-        aerialPerspective(context, colorNode.mul(2 / 3), depthNode, normalNode)
-      )
-      const lensFlareNode = manage(lensFlare(aerialNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-
-      const overlayPassNode = manage(
-        pass(overlayScene, camera, {
-          samples: 0,
-          depthBuffer: false
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output: diffuseColor,
+          normal: normalView,
+          velocity: highpVelocity
         })
-      )
+      ),
+    [scene, camera]
+  )
 
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode
-        .add(dithering)
-        .mul(overlayPassNode.a.oneMinus())
-        .add(overlayPassNode)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const normalNode = passNode.getTextureNode('normal')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, camera, scene, overlayScene, context]
+  const aerialNode = useResource(
+    () => aerialPerspective(colorNode.mul(2 / 3), depthNode, normalNode),
+    [colorNode, depthNode, normalNode]
+  )
+
+  const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const overlayPassNode = useResource(
+    () =>
+      pass(overlayScene, camera, {
+        samples: 0,
+        depthBuffer: false
+      }),
+    [camera, overlayScene]
+  )
+
+  const postProcessing = useResource(
+    () =>
+      new PostProcessing(
+        renderer,
+        taaNode
+          .add(dithering)
+          .mul(overlayPassNode.a.oneMinus())
+          .add(overlayPassNode)
+      ),
+    [renderer, taaNode, overlayPassNode]
   )
 
   useGuardedFrame(() => {
@@ -156,7 +175,8 @@ const Content: FC<StoryProps> = ({
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value

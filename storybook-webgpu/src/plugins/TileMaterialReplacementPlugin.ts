@@ -1,35 +1,39 @@
 import type { TilesRenderer, TilesRendererEventMap } from '3d-tiles-renderer'
-import { Mesh, type Texture } from 'three'
-import { MeshBasicNodeMaterial, type NodeMaterial } from 'three/webgpu'
+import { Mesh, type Material, type Texture } from 'three'
+import { MeshBasicNodeMaterial } from 'three/webgpu'
 
 import { reinterpretType } from '@takram/three-geospatial'
 
-function replaceMaterials(
-  mesh: Mesh,
-  overrideMaterial: typeof NodeMaterial
-): void {
-  const material = mesh.material
-  if (Array.isArray(material)) {
+function replaceMaterials(mesh: Mesh, materialHandler: () => Material): void {
+  const prevMaterial = mesh.material
+  if (Array.isArray(prevMaterial)) {
     throw new Error('Multiple materials are not supported yet.')
   }
-  // eslint-disable-next-line new-cap
-  const nodeMaterial = new overrideMaterial()
-  if ('map' in material && material.map != null && 'map' in nodeMaterial) {
-    reinterpretType<Texture | null>(material.map)
-    reinterpretType<Texture | null>(nodeMaterial.map)
-    nodeMaterial.map = material.map.clone()
+
+  const nextMaterial = materialHandler()
+  if (
+    'map' in prevMaterial &&
+    prevMaterial.map != null &&
+    'map' in nextMaterial
+  ) {
+    reinterpretType<Texture | null>(prevMaterial.map)
+    reinterpretType<Texture | null>(nextMaterial.map)
+    nextMaterial.map = prevMaterial.map.clone()
   }
-  mesh.material = nodeMaterial
-  material.dispose()
+
+  mesh.material = nextMaterial
+  prevMaterial.dispose()
 }
+
+const defaultMaterial = (): Material => new MeshBasicNodeMaterial()
 
 export class TileMaterialReplacementPlugin {
   tiles?: TilesRenderer
 
-  private readonly overrideMaterial: typeof NodeMaterial
+  private readonly materialHandler: () => Material
 
-  constructor(Material: typeof NodeMaterial = MeshBasicNodeMaterial) {
-    this.overrideMaterial = Material
+  constructor(materialHandler: () => Material = defaultMaterial) {
+    this.materialHandler = materialHandler
   }
 
   // Plugin method
@@ -37,7 +41,7 @@ export class TileMaterialReplacementPlugin {
     this.tiles = tiles
     tiles.group.traverse(object => {
       if (object instanceof Mesh) {
-        replaceMaterials(object, this.overrideMaterial)
+        replaceMaterials(object, this.materialHandler)
       }
     })
     tiles.addEventListener('load-model', this.handleLoadModel)
@@ -49,7 +53,7 @@ export class TileMaterialReplacementPlugin {
   }: TilesRendererEventMap['load-model']): void => {
     scene.traverse(object => {
       if (object instanceof Mesh) {
-        replaceMaterials(object, this.overrideMaterial)
+        replaceMaterials(object, this.materialHandler)
       }
     })
   }

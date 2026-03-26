@@ -1,5 +1,6 @@
 precision highp sampler2DArray;
 
+#include "core/depth"
 #include "core/math"
 #include "core/packing"
 #include "core/transform"
@@ -74,11 +75,13 @@ varying vec3 vRayDirection;
 varying vec3 vGeometryAltitudeCorrection;
 varying vec3 vEllipsoidRadiiSquared;
 
-vec3 readNormal(const vec2 uv) {
+vec3 readNormal(const vec2 uv, out bool degenerate) {
+  vec3 normal = texture(normalBuffer, uv).xyz;
+  degenerate = normal == vec3(0.0);
   #ifdef OCT_ENCODED_NORMAL
-  return unpackVec2ToNormal(texture(normalBuffer, uv).xy);
+  return unpackVec2ToNormal(normal.xy);
   #else // OCT_ENCODED_NORMAL
-  return 2.0 * texture(normalBuffer, uv).xyz - 1.0;
+  return 2.0 * normal - 1.0;
   #endif // OCT_ENCODED_NORMAL
 }
 
@@ -284,7 +287,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   }
   #endif // HAS_OVERLAY
 
-  float depth = readDepth(uv);
+  float depth = readDepthValue(depthBuffer, uv);
   if (depth >= 1.0 - 1e-8) {
     #ifdef SKY
     vec3 rayDirection = normalize(vRayDirection);
@@ -307,6 +310,7 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
     #endif // HAS_OVERLAY
     return;
   }
+  depth = reverseLogDepth(depth, cameraNear, cameraFar);
 
   // Reconstruct position and normal in world space.
   vec3 viewPosition = screenToView(
@@ -321,12 +325,13 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   positionECEF = positionECEF * METER_TO_LENGTH_UNIT + vGeometryAltitudeCorrection;
 
   vec3 viewNormal;
+  bool degenerateNormal = false;
   #ifdef RECONSTRUCT_NORMAL
   vec3 dx = dFdx(viewPosition);
   vec3 dy = dFdy(viewPosition);
   viewNormal = normalize(cross(dx, dy));
   #elif defined(HAS_NORMALS)
-  viewNormal = readNormal(uv);
+  viewNormal = readNormal(uv, degenerateNormal);
   #endif // defined(HAS_NORMALS)
 
   #if defined(RECONSTRUCT_NORMAL) || defined(HAS_NORMALS)
@@ -351,7 +356,14 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
 
   vec3 radiance;
   #if defined(SUN_LIGHT) || defined(SKY_LIGHT)
-  radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
+  // WORKAROUND: When both post-process lighting and sky options are enabled,
+  // stars have degenerate normals. We use this to disable irradiance, which is
+  // irrelevant for them.
+  if (!degenerateNormal) {
+    radiance = getSunSkyIrradiance(positionECEF, normalECEF, inputColor.rgb, sunTransmittance);
+  } else {
+    radiance = inputColor.rgb;
+  }
   #ifdef HAS_LIGHTING_MASK
   float lightingMask = texture(lightingMaskBuffer, uv).LIGHTING_MASK_CHANNEL_;
   radiance = mix(inputColor.rgb, radiance, lightingMask);

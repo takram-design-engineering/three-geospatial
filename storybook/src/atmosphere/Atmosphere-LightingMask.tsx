@@ -293,7 +293,12 @@ const Story: StoryFn = () => {
           depth: false,
           logarithmicDepthBuffer: true
         }}
-        camera={{ position: [80, 30, 100], near: 10, far: 1e7, fov: 40 }}
+        camera={{
+          fov: 50,
+          position: [80, 80, 100],
+          near: 10,
+          far: 1e7
+        }}
         shadows
       >
         <Stats />

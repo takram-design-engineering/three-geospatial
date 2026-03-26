@@ -87,6 +87,7 @@ export default defineConfig(
       '@typescript-eslint/max-params': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/prefer-destructuring': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
 
       eqeqeq: ['error', 'always', { null: 'ignore' }],
 

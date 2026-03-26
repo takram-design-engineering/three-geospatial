@@ -23,6 +23,9 @@ THE SOFTWARE.
 ---
 
 - [`src/shaders/bruneton`](src/shaders/bruneton)
+- [`src/webgpu/common.ts`](src/shaders/common.ts)
+- [`src/webgpu/precompute.ts`](src/shaders/precompute.ts)
+- [`src/webgpu/runtime.ts`](src/shaders/runtime.ts)
 
 Copyright (c) 2017 Eric Bruneton
 All rights reserved.

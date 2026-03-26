@@ -23,10 +23,11 @@ export class KawaseBlurNode extends DualMipmapFilterNode {
     const offset = vec4(1, 1, -1, -1)
       .mul(inputTexelSize.xyxy.mul(0.5))
       .add(center.xyxy)
-    const uv1 = offset.zy.toVertexStage() // -0.5, 0.5
-    const uv2 = offset.xy.toVertexStage() // 0.5, 0.5
-    const uv3 = offset.xw.toVertexStage() // 0.5, -0.5
-    const uv4 = offset.zw.toVertexStage() // -0.5, -0.5
+      .toVertexStage()
+    const uv1 = offset.zy // -0.5, 0.5
+    const uv2 = offset.xy // 0.5, 0.5
+    const uv3 = offset.xw // 0.5, -0.5
+    const uv4 = offset.zw // -0.5, -0.5
 
     return add(
       inputNode.sample(center).mul(4),
@@ -45,14 +46,15 @@ export class KawaseBlurNode extends DualMipmapFilterNode {
     const offset = vec4(1, 1, -1, -1)
       .mul(inputTexelSize.xyxy.mul(0.5))
       .add(center.xyxy)
-    const uv1 = offset.zy.toVertexStage() // -0.5, 0.5
-    const uv2 = offset.xy.toVertexStage() // 0.5, 0.5
-    const uv3 = offset.xw.toVertexStage() // 0.5, -0.5
-    const uv4 = offset.zw.toVertexStage() // -0.5, -0.5
-    const uv5 = vec2(offset.z, center.y).toVertexStage() // -0.5, 0
-    const uv6 = vec2(offset.x, center.y).toVertexStage() // 0.5, 0
-    const uv7 = vec2(center.x, offset.y).toVertexStage() // 0, 0.5
-    const uv8 = vec2(center.x, offset.w).toVertexStage() // 0, -0.5
+      .toVertexStage()
+    const uv1 = offset.zy // -0.5, 0.5
+    const uv2 = offset.xy // 0.5, 0.5
+    const uv3 = offset.xw // 0.5, -0.5
+    const uv4 = offset.zw // -0.5, -0.5
+    const uv5 = vec2(offset.z, center.y) // -0.5, 0
+    const uv6 = vec2(offset.x, center.y) // 0.5, 0
+    const uv7 = vec2(center.x, offset.y) // 0, 0.5
+    const uv8 = vec2(center.x, offset.w) // 0, -0.5
 
     return add(
       add(

@@ -1,0 +1,48 @@
+name: Question
+description: Ask a question or start a discussion about the library.
+labels: ['question']
+
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: A clear and concise description of your question.
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code
+      description: If applicable, add code to help explain your question.
+      value: |
+        ```ts
+        // code goes here
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your question (drag and drop the image).
+    validations:
+      required: false
+
+  - type: input
+    id: library_version
+    attributes:
+      label: Library and version
+      description: e.g. atmosphere@0.1.0, clouds@0.1.0
+    validations:
+      required: false
+
+  - type: input
+    id: three_version
+    attributes:
+      label: Three.js version
+      placeholder: r
+    validations:
+      required: false

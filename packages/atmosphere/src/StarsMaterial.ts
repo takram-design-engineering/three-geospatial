@@ -90,7 +90,9 @@ export class StarsMaterial extends AtmosphereMaterialBase {
       } satisfies StarsMaterialUniforms,
       defines: {
         PERSPECTIVE_CAMERA: '1'
-      }
+      },
+      depthWrite: true,
+      depthTest: true
     })
     this.pointSize = pointSize
     this.background = background

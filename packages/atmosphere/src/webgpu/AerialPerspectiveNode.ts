@@ -24,7 +24,7 @@ import {
   type Node
 } from '@takram/three-geospatial/webgpu'
 
-import type { AtmosphereContextNode } from './AtmosphereContextNode'
+import { getAtmosphereContext } from './AtmosphereContext'
 import { getSkyLuminanceToPoint, getSunAndSkyIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
@@ -32,8 +32,6 @@ export class AerialPerspectiveNode extends TempNode {
   static override get type(): string {
     return 'AerialPerspectiveNode'
   }
-
-  private readonly atmosphereContext: AtmosphereContextNode
 
   colorNode: Node<'vec4'>
   depthNode: Node<'float'>
@@ -48,17 +46,15 @@ export class AerialPerspectiveNode extends TempNode {
   inscatter = true
 
   constructor(
-    atmosphereContext: AtmosphereContextNode,
     colorNode: Node<'vec4'>,
     depthNode: Node<'float'>,
     normalNode?: Node<'vec3'> | null
   ) {
     super('vec4')
-    this.atmosphereContext = atmosphereContext
     this.colorNode = colorNode
     this.depthNode = depthNode
     this.normalNode = normalNode
-    this.skyNode = sky(atmosphereContext)
+    this.skyNode = sky()
 
     this.lighting = normalNode != null
   }
@@ -73,12 +69,12 @@ export class AerialPerspectiveNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const camera = this.atmosphereContext.camera ?? builder.camera
+    const atmosphereContext = getAtmosphereContext(builder)
+
+    const camera = atmosphereContext.camera ?? builder.camera
     if (camera == null) {
       return
     }
-
-    builder.getContext().atmosphere = this.atmosphereContext
 
     const {
       ellipsoid,
@@ -87,7 +83,7 @@ export class AerialPerspectiveNode extends TempNode {
       sunDirectionECEF,
       cameraPositionUnit,
       altitudeCorrectionUnit
-    } = this.atmosphereContext
+    } = atmosphereContext
 
     const { colorNode, depthNode, normalNode } = this
     const depth = depthNode.r.toVar()
@@ -209,7 +205,7 @@ export class AerialPerspectiveNode extends TempNode {
         output = output.add(inscatter)
       }
       return output
-    })().context(builder.getContext())
+    })()
 
     return Fn(() => {
       const luminance = colorNode.toVar()

@@ -1,8 +1,16 @@
 import { useThree } from '@react-three/fiber'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
-import { useMemo, type FC } from 'react'
+import { useLayoutEffect, useMemo, type FC } from 'react'
 import { AgXToneMapping, Scene } from 'three'
-import { mrt, normalView, output, pass, toneMapping, uniform } from 'three/tsl'
+import {
+  context,
+  mrt,
+  normalView,
+  output,
+  pass,
+  toneMapping,
+  uniform
+} from 'three/tsl'
 import {
   MeshBasicNodeMaterial,
   PostProcessing,
@@ -16,7 +24,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode
+  AtmosphereContext
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -29,6 +37,7 @@ import type { StoryFC } from '../components/createStory'
 import { Description } from '../components/Description'
 import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
+import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
 import {
   localDateArgs,
   localDateArgTypes,
@@ -69,59 +78,77 @@ const Content: FC<StoryProps> = ({
   const camera = useThree(({ camera }) => camera)
   const overlayScene = useMemo(() => new Scene(), [])
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
-  const [postProcessing, passNode, aerialNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output,
-            normal: normalView,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const normalNode = passNode.getTextureNode('normal')
-      const velocityNode = passNode.getTextureNode('velocity')
-
-      const aerialNode = manage(
-        aerialPerspective(context, colorNode, depthNode, normalNode)
-      )
-      const lensFlareNode = manage(lensFlare(aerialNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-
-      const overlayPassNode = manage(
-        pass(overlayScene, camera, {
-          samples: 0,
-          depthBuffer: false
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          normal: normalView,
+          velocity: highpVelocity
         })
-      )
+      ),
+    [scene, camera]
+  )
 
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode
-        .add(dithering)
-        .mul(overlayPassNode.a.oneMinus())
-        .add(overlayPassNode)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const normalNode = passNode.getTextureNode('normal')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, aerialNode, toneMappingNode]
-    },
-    [renderer, scene, camera, overlayScene, context]
+  const aerialNode = useResource(
+    () => aerialPerspective(colorNode, depthNode, normalNode),
+    [colorNode, depthNode, normalNode]
+  )
+
+  const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const overlayPassNode = useResource(
+    () =>
+      pass(overlayScene, camera, {
+        samples: 0,
+        depthBuffer: false
+      }),
+    [camera, overlayScene]
+  )
+
+  const postProcessing = useResource(
+    () =>
+      new PostProcessing(
+        renderer,
+        taaNode
+          .add(dithering)
+          .mul(overlayPassNode.a.oneMinus())
+          .add(overlayPassNode)
+      ),
+    [renderer, taaNode, overlayPassNode]
   )
 
   useGuardedFrame(() => {
@@ -165,7 +192,8 @@ const Content: FC<StoryProps> = ({
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(longitude, date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -182,18 +210,14 @@ const Content: FC<StoryProps> = ({
         <TilesPlugin
           plugin={CesiumIonTerrainPlugin}
           args={{
-            // PLATEAU Terrain data set:
-            // https://github.com/Project-PLATEAU/plateau-streaming-tutorial/blob/main/terrain/plateau-terrain-streaming.md
-            // This API token is not a secret.
-            apiToken:
-              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiODVhMmQ5OS1hOWZjLTQ3YmYtODlmNi1lNWUwY2MwOGUxYTMiLCJpZCI6MTQ5ODk3LCJpYXQiOjE2ODc5MzQ3NDN9.OG0mc3i7ZxGwHQjlMv3TRjiOvKWpzxglxmJRaUIykTY',
-            assetId: 3258112,
+            apiToken: PLATEAU_TERRAIN_API_TOKEN,
+            assetId: 3258112, // PLATEAU terrain dataset
             autoRefreshToken: true
           }}
         />
         <TilesPlugin
           plugin={TileMaterialReplacementPlugin}
-          args={MeshBasicNodeMaterial}
+          args={() => new MeshBasicNodeMaterial()}
         />
         <TilesPlugin plugin={TilesFadePlugin} />
       </TilesRenderer>

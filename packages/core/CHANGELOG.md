@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added `ScreenSpaceShadowNode`.
+
+### Changed
+
+- WebGPU entry point (`@takram/three-geospatial/webgpu`) requires `three >= 0.182.0`.
+- BREAKING: Removed `RTTTextureNode` and `convertToTexture`. Use `RTTNode` and `convertToTexture` in `three/tsl` instead.
+- BREAKING: Changed the UV of `EllipsoidGeometry` to make (0, 0.5) coincide with the prime meridian without rotation. You might need to change the rotation of the mesh.
+
+### Fixed
+
+- `TemporalAntialiasNode`: Fixed ghosting when resizing canvas.
+
+## [0.7.1] - 2026-03-23
+
+### Fixed
+
+- Fixed depth test when logarithmic depth is used with `postprocessing >= 6.38.0`, [#100](https://github.com/takram-design-engineering/three-geospatial/issues/100).
+- Fixed convolution filters not being compiled with `three@0.183.0`.
+
 ## [0.7.0] - 2026-03-09
 
 ### Changed

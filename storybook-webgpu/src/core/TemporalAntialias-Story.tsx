@@ -25,8 +25,7 @@ import {
 import {
   highpVelocity,
   lensFlare,
-  temporalAntialias,
-  type Node
+  temporalAntialias
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -48,6 +47,7 @@ import {
 import { useControl } from '../hooks/useControl'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { useResource } from '../hooks/useResource'
+import { useTransientControl } from '../hooks/useTransientControl'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
@@ -63,54 +63,58 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const { enabled, showRejection, rotateCamera, rotateObject } = useControl(
-    ({ enabled, showRejection, rotateCamera, rotateObject }: StoryArgs) => ({
-      enabled,
-      showRejection,
-      rotateCamera,
-      rotateObject
-    })
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          velocity: highpVelocity
+        })
+      ),
+    [scene, camera]
   )
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const velocityNode = passNode.getTextureNode('velocity')
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      const lensFlareNode = manage(lensFlare(colorNode))
-      const toneMappingNode = manage(
-        toneMapping(NeutralToneMapping, uniform(0), lensFlareNode)
-      )
+  const lensFlareNode = useResource(() => lensFlare(colorNode), [colorNode])
 
-      let outputNode: Node = toneMappingNode
-      if (enabled) {
-        const taaNode = manage(
-          temporalAntialias(highpVelocity)(
-            toneMappingNode,
-            depthNode,
-            velocityNode,
-            camera
-          )
-        )
-        taaNode.debugShowRejection = showRejection
-        outputNode = taaNode
-      }
+  const toneMappingNode = useResource(
+    () => toneMapping(NeutralToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
 
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = outputNode
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, scene, camera, enabled, showRejection]
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer),
+    [renderer]
+  )
+
+  useTransientControl(
+    ({ enabled }: StoryArgs) => enabled,
+    enabled => {
+      postProcessing.outputNode = enabled ? taaNode : toneMappingNode
+      postProcessing.needsUpdate = true
+    }
+  )
+
+  useTransientControl(
+    ({ showRejection }: StoryArgs) => showRejection,
+    showRejection => {
+      taaNode.debugShowRejection = showRejection
+      postProcessing.needsUpdate = true
+    }
   )
 
   useGuardedFrame(() => {
@@ -144,6 +148,20 @@ const Content: FC<StoryProps> = () => {
       knot.rotation.z = clock.getElapsedTime()
     }
   })
+
+  const { rotateCamera, rotateObject } = useControl(
+    ({ rotateCamera, rotateObject }: StoryArgs) => ({
+      rotateCamera,
+      rotateObject
+    })
+  )
+
+  const envMap = useResource(() => {
+    const generator = new PMREMGenerator(renderer)
+    const texture = generator.fromScene(new RoomEnvironment(), 0.04).texture
+    generator.dispose()
+    return texture
+  }, [renderer])
 
   return (
     <>
@@ -196,14 +214,7 @@ const Content: FC<StoryProps> = () => {
           roughness={0.25}
           opacity={0.1}
           transparent
-          envMap={useResource(
-            manage =>
-              manage(new PMREMGenerator(renderer)).fromScene(
-                new RoomEnvironment(),
-                0.04
-              ).texture,
-            [renderer]
-          )}
+          envMap={envMap}
         />
       </TorusKnot>
     </>

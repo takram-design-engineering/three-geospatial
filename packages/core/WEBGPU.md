@@ -23,7 +23,7 @@ three @react-three/fiber
 Please note the peer dependencies differ from the required versions to maintain compatibility with the WebGL codebase. When using `@takram/three-geospatial/webgpu`, apply the following rules.
 
 ```
-"three": ">=0.181.0"
+"three": ">=0.182.0"
 ```
 
 ## API changes
@@ -40,6 +40,7 @@ Please note the peer dependencies differ from the required versions to maintain 
 - [`HighpVelocityNode`](#highpvelocitynode)
 - [`LensFlareNode`](#lensflarenode)
 - [`TemporalAntialiasNode`](#temporalantialiasnode)
+- [`ScreenSpaceShadowNode`](#screenspaceshadownode)
 
 **Generators**
 
@@ -196,19 +197,19 @@ bloomIntensity = uniform(0.05)
 
 ### Constructor
 
-<!-- prettier-ignore -->
 ```ts
 interface VelocityNodeImmutable {
   projectionMatrix?: Matrix4 | null
 }
 
-const temporalAntialias: (velocityNodeImmutable: VelocityNodeImmutable) =>
-  (
-    inputNode: Node,
-    depthNode: TextureNode,
-    velocityNode: TextureNode,
-    camera: Camera
-  ) => TemporalAntialiasNode
+const temporalAntialias: (
+  velocityNodeImmutable: VelocityNodeImmutable
+) => (
+  inputNode: Node,
+  depthNode: TextureNode,
+  velocityNode: TextureNode,
+  camera: Camera
+) => TemporalAntialiasNode
 ```
 
 ### Dependencies
@@ -264,3 +265,105 @@ depthError = uniform(0.001)
 ```ts
 camera: Camera
 ```
+
+## ScreenSpaceShadowNode
+
+### Constructor
+
+```ts
+const screenSpaceShadowNode: (
+  depthNode: TextureNode,
+  camera?: Camera | null,
+  mainLight?: DirectionalLight | null
+) => ScreenSpaceShadowNode
+```
+
+### Dependencies
+
+#### depthNode
+
+```ts
+depthNode: TextureNode
+```
+
+### Uniforms
+
+#### thickness
+
+```ts
+thickness = uniform(0.005)
+```
+
+#### shadowContrast
+
+```ts
+shadowContrast = uniform(4)
+```
+
+#### shadowIntensity
+
+```ts
+shadowIntensity = uniform(1)
+```
+
+#### bilinearThreshold
+
+```ts
+bilinearThreshold = uniform(0.02)
+```
+
+#### nearDepth
+
+```ts
+nearDepth = uniform(0)
+```
+
+#### farDepth
+
+```ts
+farDepth = uniform(1)
+```
+
+### Static options
+
+#### camera
+
+```ts
+camera: Camera
+```
+
+#### mainLight
+
+```ts
+mainLight: DirectionalLight
+```
+
+#### sampleCount
+
+```ts
+sampleCount = 60
+```
+
+#### hardShadowSamples
+
+```ts
+hardShadowSamples = 4
+```
+
+#### fadeOutSamples
+
+```ts
+fadeOutSamples = 8
+```
+
+# Acknowledgement
+
+- Poimandres' [postprocessing](https://github.com/pmndrs/postprocessing) as a reference for convolution filters.
+- Intel's [reference TAA implementation](https://github.com/GameTechDev/TAA).
+- Simon Coenen's [TAA implementation](https://github.com/simco50/D3D12_Research/) for subpixel correction.
+- Bend Studio's [screen-space shadows technique](https://www.bendstudio.com/blog/inside-bend-screen-space-shadows/).
+- Léna Piquet's [detailed walkthrough of UE4's lens flare effect](https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/).
+
+# License
+
+[MIT](LICENSE), except where indicated otherwise.

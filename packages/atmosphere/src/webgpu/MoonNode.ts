@@ -19,7 +19,7 @@ import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 
 import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
-import { AtmosphereContextNode } from './AtmosphereContextNode'
+import { getAtmosphereContext } from './AtmosphereContext'
 import { Luminance3 } from './dimensional'
 
 const mat3Columns = /*#__PURE__*/ FnLayout({
@@ -39,7 +39,7 @@ const getLunarRadiance = /*#__PURE__*/ FnLayout({
   type: Luminance3,
   inputs: [{ name: 'moonAngularRadius', type: 'float' }]
 })(([moonAngularRadius], builder) => {
-  const context = AtmosphereContextNode.get(builder)
+  const context = getAtmosphereContext(builder)
   const { solarIrradiance, sunRadianceToLuminance, luminanceScale } = context
 
   return (
@@ -103,8 +103,6 @@ export class MoonNode extends TempNode {
     return 'MoonNode'
   }
 
-  private readonly atmosphereContext: AtmosphereContextNode
-
   rayDirectionECEF?: Node
   colorNode?: TextureNode | null
   normalNode?: TextureNode | null
@@ -112,13 +110,12 @@ export class MoonNode extends TempNode {
   angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
   intensity = uniform(1)
 
-  constructor(atmosphereContext: AtmosphereContextNode) {
+  constructor() {
     super('vec4')
-    this.atmosphereContext = atmosphereContext
   }
 
   override setup(builder: NodeBuilder): unknown {
-    builder.getContext().atmosphere = this.atmosphereContext
+    const atmosphereContext = getAtmosphereContext(builder)
 
     const { rayDirectionECEF } = this
     if (rayDirectionECEF == null) {
@@ -128,7 +125,7 @@ export class MoonNode extends TempNode {
       sunDirectionECEF,
       moonDirectionECEF: directionECEF,
       matrixMoonFixedToECEF: matrixFixedToECEF
-    } = this.atmosphereContext
+    } = atmosphereContext
 
     return Fn(() => {
       const chordThreshold = cos(this.angularRadius).oneMinus().mul(2)

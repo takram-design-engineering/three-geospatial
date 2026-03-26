@@ -10,29 +10,40 @@ import {
   Clock,
   Group,
   HalfFloatType,
+  Matrix4,
   Mesh,
   MeshPhysicalMaterial,
   NoToneMapping,
   PCFSoftShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
+  Points,
   Scene,
   TorusKnotGeometry,
   Vector3,
-  WebGLRenderer
+  WebGLRenderer,
+  type Object3D
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 import {
   AerialPerspectiveEffect,
-  getMoonDirectionECEF,
-  getSunDirectionECEF,
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECI,
+  getSunDirectionECI,
   PrecomputedTexturesGenerator,
   SkyLightProbe,
   SkyMaterial,
+  StarsGeometry,
+  StarsMaterial,
   SunDirectionalLight
 } from '@takram/three-atmosphere'
-import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
+import {
+  ArrayBufferLoader,
+  Ellipsoid,
+  Geodetic,
+  radians
+} from '@takram/three-geospatial'
 import {
   DitheringEffect,
   LensFlareEffect
@@ -44,11 +55,14 @@ let controls: OrbitControls
 let clock: Clock
 let scene: Scene
 let skyMaterial: SkyMaterial
+let starsMaterial: StarsMaterial
+let stars: Object3D
 let skyLight: SkyLightProbe
 let sunLight: SunDirectionalLight
 let aerialPerspective: AerialPerspectiveEffect
 let composer: EffectComposer
 
+const inertialToECEFMatrix = new Matrix4()
 const sunDirection = new Vector3()
 const moonDirection = new Vector3()
 
@@ -58,7 +72,7 @@ const geodetic = new Geodetic(0, radians(67), 1000)
 const position = geodetic.toECEF()
 const up = Ellipsoid.WGS84.getSurfaceNormal(position)
 
-function init(container: HTMLDivElement): void {
+async function init(container: HTMLDivElement): Promise<void> {
   const aspect = window.innerWidth / window.innerHeight
   camera = new PerspectiveCamera(75, aspect, 10, 1e6)
   camera.position.copy(position)
@@ -71,17 +85,6 @@ function init(container: HTMLDivElement): void {
 
   clock = new Clock()
   scene = new Scene()
-
-  // SkyMaterial disables projection. Provide a plane that covers clip space.
-  skyMaterial = new SkyMaterial()
-  const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
-  sky.frustumCulled = false
-  scene.add(sky)
-
-  // SkyLightProbe computes sky irradiance of its position.
-  skyLight = new SkyLightProbe()
-  skyLight.position.copy(position)
-  scene.add(skyLight)
 
   // SunDirectionalLight computes sunlight transmittance to its target position.
   sunLight = new SunDirectionalLight({ distance: 300 })
@@ -120,6 +123,31 @@ function init(container: HTMLDivElement): void {
   torusKnot.castShadow = true
   torusKnot.receiveShadow = true
   group.add(torusKnot)
+
+  // StarsMaterial must be applied to a Points instance.
+  starsMaterial = new StarsMaterial()
+  starsMaterial.intensity = 10
+  stars = new Points(
+    new StarsGeometry(
+      await new ArrayBufferLoader().loadAsync('atmosphere/stars.bin')
+    ),
+    starsMaterial
+  )
+  stars.frustumCulled = false
+  scene.add(stars)
+
+  // SkyMaterial disables projection. Provide a plane that covers clip space.
+  // Note that it's more efficient to draw the sky last so that it can reduce
+  // overdraws.
+  skyMaterial = new SkyMaterial()
+  const sky = new Mesh(new PlaneGeometry(2, 2), skyMaterial)
+  sky.frustumCulled = false
+  scene.add(sky)
+
+  // SkyLightProbe computes sky irradiance of its position.
+  skyLight = new SkyLightProbe()
+  skyLight.position.copy(position)
+  scene.add(skyLight)
 
   // Demonstrates light-source lighting here. For post-process lighting, set
   // sunLight and skyLight to true, remove SkyLightProbe and
@@ -162,8 +190,9 @@ function init(container: HTMLDivElement): void {
 
   const { textures } = generator
   Object.assign(skyMaterial, textures)
-  sunLight.transmittanceTexture = textures.transmittanceTexture
+  sunLight.transmittanceTexture = textures.transmittanceTexture // eslint-disable-line require-atomic-updates
   skyLight.irradianceTexture = textures.irradianceTexture
+  Object.assign(starsMaterial, textures)
   Object.assign(aerialPerspective, textures)
 
   container.appendChild(renderer.domElement)
@@ -179,14 +208,24 @@ function onWindowResize(): void {
 
 function render(): void {
   const date = +referenceDate + ((clock.getElapsedTime() * 5e6) % 864e5)
-  getSunDirectionECEF(date, sunDirection)
-  getMoonDirectionECEF(date, moonDirection)
 
+  // Apply the sun and moon directions.
+  getECIToECEFRotationMatrix(date, inertialToECEFMatrix)
+  // We use getSunDirectionECI and getMoonDirectionECI here because we have
+  // inertialToECEFMatrix. You might use getSunDirectionECEF and
+  // getMoonDirectionECEF when inertialToECEFMatrix is not needed.
+  getSunDirectionECI(date, sunDirection).applyMatrix4(inertialToECEFMatrix)
+  getMoonDirectionECI(date, moonDirection).applyMatrix4(inertialToECEFMatrix)
   skyMaterial.sunDirection.copy(sunDirection)
   skyMaterial.moonDirection.copy(moonDirection)
+  starsMaterial.sunDirection.copy(sunDirection)
   sunLight.sunDirection.copy(sunDirection)
   skyLight.sunDirection.copy(sunDirection)
   aerialPerspective.sunDirection.copy(sunDirection)
+
+  // Apply the conversion from the inertial reference frame of date to ECEF.
+  // This enables the rotation of the stars.
+  stars.setRotationFromMatrix(inertialToECEFMatrix)
 
   sunLight.update()
   skyLight.update()
@@ -198,7 +237,7 @@ const Story: StoryFn = () => (
   <div
     ref={ref => {
       if (ref != null) {
-        init(ref)
+        void init(ref)
       }
     }}
   />

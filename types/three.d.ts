@@ -1,5 +1,12 @@
-import type { Camera, ToneMapping } from 'three'
-import type { Node, NodeFrame, Renderer, UniformNode } from 'three/webgpu'
+import type { Camera } from 'three'
+import type {
+  ContextNode,
+  Node,
+  NodeBuilderContext,
+  NodeFrame,
+  Renderer,
+  UniformNode
+} from 'three/webgpu'
 
 import type { NodeType, NodeValueTypeOf } from '@takram/three-geospatial/webgpu'
 
@@ -25,9 +32,13 @@ declare module 'three/tsl' {
 }
 
 declare module 'three/webgpu' {
-  // Add "camera"
+  interface Renderer {
+    contextNode: ContextNode
+  }
+
   interface NodeBuilder {
     camera?: Camera
+    context: NodeBuilderContext
   }
 
   interface Node {
@@ -46,27 +57,6 @@ declare module 'three/webgpu' {
     onReference(
       callback: (this: this, frame: NodeFrame, self: this) => void
     ): this
-  }
-
-  interface TextureNode {
-    // Add missing methods
-    setUpdateMatrix: (value: boolean) => this
-
-    // Allow number type
-    blur(amountNode: number | Node): TextureNode
-    level(levelNode: number | Node): TextureNode
-    size(levelNode: number | Node): TextureNode
-    bias(biasNode: number | Node): TextureNode
-    compare(compareNode: number | Node): TextureNode
-    grad(gradeNodeX: number | Node, gradeNodeY: number | Node): TextureNode
-    depth(depthNode: number | Node): TextureNode
-    offset(offsetNode: Node): TextureNode
-  }
-
-  // Add missing methods
-  interface ToneMappingNode {
-    getToneMapping: () => ToneMapping
-    setToneMapping: (value: ToneMapping) => this
   }
 
   // Add "colorNode"

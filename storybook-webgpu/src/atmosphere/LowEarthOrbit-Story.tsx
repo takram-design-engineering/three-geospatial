@@ -1,9 +1,9 @@
 import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
-import { Suspense, useState, type FC } from 'react'
+import { Suspense, useLayoutEffect, useState, type FC } from 'react'
 import { AgXToneMapping } from 'three'
-import { mrt, output, pass, toneMapping, uniform } from 'three/tsl'
+import { context, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
   PostProcessing,
@@ -17,7 +17,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
   skyEnvironment
@@ -81,46 +81,59 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const velocityNode = passNode.getTextureNode('velocity')
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          velocity: highpVelocity
+        })
+      ),
+    [scene, camera]
+  )
 
-      const aerialNode = manage(
-        aerialPerspective(context, colorNode, depthNode)
-      )
-      const lensFlareNode = manage(lensFlare(aerialNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dithering)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, scene, camera, context]
+  const aerialNode = useResource(
+    () => aerialPerspective(colorNode, depthNode),
+    [colorNode, depthNode]
+  )
+
+  const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useGuardedFrame(() => {
@@ -147,7 +160,7 @@ const Content: FC<StoryProps> = () => {
   const [reorientationPlugin, setReorientationPlugin] =
     useState<ReorientationPlugin | null>(null)
   useLocationControls(
-    context.matrixWorldToECEF.value,
+    atmosphereContext.matrixWorldToECEF.value,
     (longitude, latitude, height) => {
       if (reorientationPlugin != null) {
         reorientationPlugin.lon = radians(longitude)
@@ -160,7 +173,8 @@ const Content: FC<StoryProps> = () => {
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -170,13 +184,13 @@ const Content: FC<StoryProps> = () => {
     )
   })
 
-  const envNode = useResource(() => skyEnvironment(context), [context])
+  const envNode = useResource(() => skyEnvironment(), [])
   scene.environmentNode = envNode
 
   return (
     <>
       <atmosphereLight
-        args={[context, 80]}
+        args={[80]}
         castShadow
         shadow-normalBias={0.1}
         shadow-mapSize={[2048, 2048]}
@@ -194,11 +208,11 @@ const Content: FC<StoryProps> = () => {
       <OrbitControls minDistance={20} maxDistance={1e5} />
       <Suspense>
         <ISS
-          matrixWorldToECEF={context.matrixWorldToECEF.value}
-          sunDirectionECEF={context.sunDirectionECEF.value}
+          matrixWorldToECEF={atmosphereContext.matrixWorldToECEF.value}
+          sunDirectionECEF={atmosphereContext.sunDirectionECEF.value}
         />
       </Suspense>
-      <Globe overrideMaterial={MeshLambertNodeMaterial}>
+      <Globe materialHandler={() => new MeshLambertNodeMaterial()}>
         <TilesPlugin
           ref={setReorientationPlugin}
           plugin={ReorientationPlugin}

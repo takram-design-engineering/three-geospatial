@@ -1,5 +1,67 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- WebGPU entry point (`@takram/three-atmosphere/webgpu`) requires `three >= 0.182.0`.
+- BREAKING: Nodes and objects no longer take `atmosphereContext` as a constructor parameter. Use `renderer.contextNode` instead.
+
+  Before:
+
+  ```ts
+  import {
+    aerialPerspective,
+    AtmosphereContextNode,
+    AtmosphereLight
+  } from '@takram/three-atmosphere/webgpu'
+
+  const atmosphereContext = new AtmosphereContextNode()
+
+  const node = aerialPerspective(atmosphereContext, colorNode, depthNode)
+  const light = new AtmosphereLight(atmosphereContext)
+  ```
+
+  After:
+
+  ```ts
+  import {
+    aerialPerspective,
+    AtmosphereContext,
+    AtmosphereLight
+  } from '@takram/three-atmosphere/webgpu'
+  import { context } from 'three/tsl'
+
+  // AtmosphereContextNode is replaced by AtmosphereContext:
+  const atmosphereContext = new AtmosphereContext()
+
+  // Instead of passing the atmosphere context in the parameter of classes and
+  // functions, create `getAtmosphere: () => AtmosphereContext` in the
+  // renderer's global context:
+  renderer.contextNode = context({
+    ...renderer.contextNode.value, // Merge with the existing context values
+    getAtmosphere: () => atmosphereContext
+  })
+
+  // The atmosphere context parameter must then be omitted:
+  const node = aerialPerspective(colorNode, depthNode)
+  const light = new AtmosphereLight()
+  ```
+
+- Deprecated `AtmosphereContextNode` and renamed it to `AtmosphereContext`.
+- Changed default values for `depthTest` and `depthWrite` in `SkyMaterial` and `StarsMaterial`.
+- Deprecated `SKY_RENDER_ORDER`, which is no longer used.
+
+### Fixed
+
+- Fixed `StarsMaterial` not fully appearing over post-processing sky, [#28](https://github.com/takram-design-engineering/three-geospatial/issues/28).
+
+## [0.17.1] - 2026-03-23
+
+### Fixed
+
+- Fixed depth test when logarithmic depth is used with `postprocessing >= 6.38.0`, [#100](https://github.com/takram-design-engineering/three-geospatial/issues/100).
+
 ## [0.17.0] - 2026-03-09
 
 ### Changed

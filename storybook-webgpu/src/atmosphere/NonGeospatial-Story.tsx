@@ -1,11 +1,12 @@
 import { OrbitControls, Plane, Sphere } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import { Suspense, useMemo, useRef, type FC } from 'react'
+import { Suspense, useLayoutEffect, useMemo, useRef, type FC } from 'react'
 import { BackSide, Matrix3, NeutralToneMapping, Vector3 } from 'three'
 import { RectAreaLightTexturesLib } from 'three/addons/lights/RectAreaLightTexturesLib.js'
 import {
   cameraViewMatrix,
   color,
+  context,
   mix,
   mrt,
   output,
@@ -28,7 +29,7 @@ import {
   getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
@@ -94,42 +95,52 @@ const Content: FC<StoryProps> = () => {
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const velocityNode = passNode.getTextureNode('velocity')
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          velocity: highpVelocity
+        })
+      ),
+    [scene, camera]
+  )
 
-      const toneMappingNode = manage(
-        toneMapping(NeutralToneMapping, uniform(0), colorNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dithering)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, scene, camera]
+  const toneMappingNode = useResource(
+    () => toneMapping(NeutralToneMapping, uniform(0), colorNode),
+    [colorNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useGuardedFrame(() => {
@@ -153,11 +164,12 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Location controls:
-  useLocationControls(context.matrixWorldToECEF.value)
+  useLocationControls(atmosphereContext.matrixWorldToECEF.value)
 
   // Local date controls (depends on the longitude of the location):
   useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -168,7 +180,7 @@ const Content: FC<StoryProps> = () => {
   })
 
   const alphaNode = useMemo(() => uniform(0), [])
-  const colorNode = useMemo(
+  const backgroundColorNode = useMemo(
     () => mix(color('#bfe3dd'), color('#ffffff'), alphaNode),
     [alphaNode]
   )
@@ -176,7 +188,7 @@ const Content: FC<StoryProps> = () => {
   // Toggles the lights in the model:
   const modelRef = useRef<LittlestTokyoApi>(null)
   useGuardedFrame(() => {
-    const { matrixWorldToECEF, sunDirectionECEF } = context
+    const { matrixWorldToECEF, sunDirectionECEF } = atmosphereContext
     const sunDirectionWorld = vector
       .copy(sunDirectionECEF.value)
       .applyMatrix3(
@@ -190,7 +202,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight
-        args={[context, 5]}
+        args={[5]}
         castShadow
         shadow-normalBias={0.1}
         shadow-mapSize={[2048, 2048]}
@@ -211,11 +223,11 @@ const Content: FC<StoryProps> = () => {
         maxPolarAngle={Math.PI / 2}
       />
       <Plane args={[500, 500]} rotation-x={-Math.PI / 2} receiveShadow>
-        <meshLambertNodeMaterial colorNode={colorNode} />
+        <meshLambertNodeMaterial colorNode={backgroundColorNode} />
       </Plane>
       <Sphere args={[500]}>
         <meshLambertNodeMaterial
-          colorNode={colorNode}
+          colorNode={backgroundColorNode}
           normalNode={cameraViewMatrix.mul(vec4(vec3(0, 1, 0), 0)).xyz}
           side={BackSide}
         />

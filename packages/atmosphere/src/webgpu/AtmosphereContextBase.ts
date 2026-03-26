@@ -1,7 +1,7 @@
 import { float, vec3 } from 'three/tsl'
 import type { NodeBuilder } from 'three/webgpu'
 
-import { Node } from '@takram/three-geospatial/webgpu'
+import type { Node } from '@takram/three-geospatial/webgpu'
 
 import {
   AtmosphereParameters,
@@ -58,11 +58,7 @@ function densityProfileNodes(
   }
 }
 
-export class AtmosphereContextBaseNode extends Node {
-  static override get type(): string {
-    return 'AtmosphereContextBaseNode'
-  }
-
+export class AtmosphereContextBase {
   readonly parameters: AtmosphereParameters
 
   worldToUnit: Node<Dimensionless>
@@ -85,7 +81,6 @@ export class AtmosphereContextBaseNode extends Node {
   luminanceScale: Node<Dimensionless>
 
   constructor(parameters = new AtmosphereParameters()) {
-    super(null)
     this.parameters = parameters
 
     const {
@@ -146,17 +141,21 @@ export class AtmosphereContextBaseNode extends Node {
     this.luminanceScale = float(luminanceScale)
   }
 
-  override customCacheKey(): number {
-    return this.parameters.hash()
-  }
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  dispose(): void {}
+}
 
-  static get(builder: NodeBuilder): AtmosphereContextBaseNode {
-    const context = builder.getContext().atmosphere
-    if (!(context instanceof AtmosphereContextBaseNode)) {
-      throw new Error(
-        'AtmosphereContextBaseNode was not found in the builder context.'
-      )
-    }
-    return context
+export function getAtmosphereContextBase(
+  builder: NodeBuilder
+): AtmosphereContextBase {
+  if (typeof builder.context.getAtmosphere !== 'function') {
+    throw new Error('getAtmosphere() was not found in the builder context.')
   }
+  const context = builder.context.getAtmosphere()
+  if (!(context instanceof AtmosphereContextBase)) {
+    throw new Error(
+      'getAtmosphere() must return an instanceof AtmosphereContextBase.'
+    )
+  }
+  return context
 }

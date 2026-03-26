@@ -1,16 +1,19 @@
 import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import type { FC } from 'react'
-import { AgXToneMapping, TextureLoader } from 'three'
+import { useLayoutEffect, type FC } from 'react'
+import { AgXToneMapping, SRGBColorSpace, TextureLoader } from 'three'
 import {
+  context,
   mix,
   mrt,
-  mul,
+  normalWorld,
   output,
   pass,
   texture,
   toneMapping,
   uniform,
+  uv,
+  vec2,
   vec3
 } from 'three/tsl'
 import {
@@ -27,7 +30,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
@@ -37,7 +40,8 @@ import {
   dithering,
   highpVelocity,
   lensFlare,
-  temporalAntialias
+  temporalAntialias,
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -73,51 +77,124 @@ declare module '@react-three/fiber' {
 
 extend({ AtmosphereLight })
 
+interface BlueMarbleParams {
+  sunDirection: Node<'float'>
+  cloudAlbedo?: number
+  cloudShadowOffset?: number // In UV
+  oceanRoughness?: number
+  oceanIOR?: number
+  emissiveColor?: Node<'vec3'>
+}
+
+const blueMarble = ({
+  sunDirection,
+  cloudAlbedo = 0.95,
+  cloudShadowOffset = 0.00075,
+  oceanRoughness = 0.4,
+  oceanIOR = 1.33,
+  emissiveColor = vec3(1, 0.6, 0.5).mul(0.002)
+}: BlueMarbleParams): MeshPhysicalNodeMaterialParameters => {
+  const colorTexture = new TextureLoader().load('public/blue_marble/color.webp')
+  const oceanTexture = new TextureLoader().load('public/blue_marble/ocean.webp')
+  const cloudsTexture = new TextureLoader().load(
+    'public/blue_marble/clouds.webp'
+  )
+  const emissiveTexture = new TextureLoader().load(
+    'public/blue_marble/emissive.webp'
+  )
+  colorTexture.colorSpace = SRGBColorSpace
+  colorTexture.anisotropy = 16
+  oceanTexture.anisotropy = 16
+  cloudsTexture.anisotropy = 16
+  emissiveTexture.anisotropy = 16
+
+  // Project the sunlight onto the sphere (normal tangent).
+  const east = vec3(0, 0, 1).cross(normalWorld).normalize().toConst()
+  const north = normalWorld.cross(east).normalize()
+  // uvOffset has no physical ground. It's just an effect.
+  const uvOffset = vec2(
+    sunDirection.dot(east).mul(cloudShadowOffset),
+    sunDirection.dot(north).mul(cloudShadowOffset)
+  )
+
+  const clouds = texture(cloudsTexture).r.toConst()
+  const shadow = texture(cloudsTexture, uv().add(uvOffset)).r
+  const color = texture(colorTexture).rgb
+  const ocean = texture(oceanTexture).r
+  return {
+    // The albedo of clouds is very close to 1 and diffuse, so just use the
+    // coverage as an overlay.
+    colorNode: mix(color, vec3(cloudAlbedo), clouds),
+    // emissiveColor and its intensity is also just an effect.
+    emissiveNode: texture(emissiveTexture).r.mul(emissiveColor),
+    // In a macroscopic view, ocean's reflectivity should be approximated by
+    // roughness.
+    roughnessNode: ocean.mul(clouds.oneMinus()).remap(1, 0, oceanRoughness, 1),
+    ior: oceanIOR,
+    // Although it's ideal that the clouds is blended over the shadows, this
+    // should be sufficient given that the shadows are very subtle.
+    receivedShadowNode: () => shadow.sub(clouds).saturate().oneMinus()
+  }
+}
+
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const context = useResource(() => new AtmosphereContextNode(), [])
-  context.camera = camera
+  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
 
   // Post-processing:
 
-  const [postProcessing, passNode, toneMappingNode] = useResource(
-    manage => {
-      const passNode = manage(
-        pass(scene, camera, { samples: 0 }).setMRT(
-          mrt({
-            output,
-            velocity: highpVelocity
-          })
-        )
-      )
-      const colorNode = passNode.getTextureNode('output')
-      const depthNode = passNode.getTextureNode('depth')
-      const velocityNode = passNode.getTextureNode('velocity')
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          velocity: highpVelocity
+        })
+      ),
+    [scene, camera]
+  )
 
-      const aerialNode = manage(
-        aerialPerspective(context, colorNode, depthNode)
-      )
-      const lensFlareNode = manage(lensFlare(aerialNode))
-      const toneMappingNode = manage(
-        toneMapping(AgXToneMapping, uniform(0), lensFlareNode)
-      )
-      const taaNode = manage(
-        temporalAntialias(highpVelocity)(
-          toneMappingNode,
-          depthNode,
-          velocityNode,
-          camera
-        )
-      )
-      const postProcessing = new PostProcessing(renderer)
-      postProcessing.outputNode = taaNode.add(dithering)
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
 
-      return [postProcessing, passNode, toneMappingNode]
-    },
-    [renderer, scene, camera, context]
+  const aerialNode = useResource(
+    () => aerialPerspective(colorNode, depthNode),
+    [colorNode, depthNode]
+  )
+
+  const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const taaNode = useResource(
+    () =>
+      temporalAntialias(highpVelocity)(
+        toneMappingNode,
+        depthNode,
+        velocityNode,
+        camera
+      ),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const postProcessing = useResource(
+    () => new PostProcessing(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useGuardedFrame(() => {
@@ -142,8 +219,9 @@ const Content: FC<StoryProps> = () => {
   })
 
   // Local date controls (depends on the longitude of the location):
-  useLocalDateControls(date => {
-    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = context
+  useLocalDateControls(0, date => {
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
     getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
     getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
       matrixECIToECEF.value
@@ -153,43 +231,25 @@ const Content: FC<StoryProps> = () => {
     )
   })
 
+  const material = useResource(
+    () =>
+      new MeshPhysicalNodeMaterial(
+        blueMarble({ sunDirection: atmosphereContext.sunDirectionECEF })
+      ),
+    [atmosphereContext.sunDirectionECEF]
+  )
+
   return (
     <>
-      <atmosphereLight args={[context]} />
-      <OrbitControls minDistance={1.2e7} enablePan={false} />
+      <atmosphereLight castShadow />
+      <OrbitControls minDistance={2.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
-        material={useResource(
-          () => new MeshPhysicalNodeMaterial(blueMarble()),
-          []
-        )}
+        material={material}
+        receiveShadow
       />
     </>
   )
-}
-
-const blueMarble = ({
-  cloudAlbedo = 0.95,
-  oceanRoughness = 0.4,
-  oceanIOR = 1.33,
-  emissiveColor = vec3(1, 0.6, 0.5).mul(0.002)
-} = {}): MeshPhysicalNodeMaterialParameters => {
-  const color = new TextureLoader().load('public/blue_marble/color.webp')
-  const ocean = new TextureLoader().load('public/blue_marble/ocean.webp')
-  const clouds = new TextureLoader().load('public/blue_marble/clouds.webp')
-  const emissive = new TextureLoader().load('public/blue_marble/emissive.webp')
-  color.anisotropy = 16
-  ocean.anisotropy = 16
-  clouds.anisotropy = 16
-  emissive.anisotropy = 16
-
-  const oceanSubClouds = mul(texture(ocean).r, texture(clouds).r.oneMinus())
-  return {
-    colorNode: mix(texture(color).rgb, vec3(cloudAlbedo), texture(clouds).r),
-    emissiveNode: texture(emissive).r.mul(emissiveColor),
-    roughnessNode: oceanSubClouds.remap(1, 0, oceanRoughness, 1),
-    ior: oceanIOR
-  }
 }
 
 interface StoryProps {}
@@ -198,6 +258,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
+    shadows
     renderer={{
       logarithmicDepthBuffer: true,
       onInit: renderer => {
@@ -205,8 +266,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
       }
     }}
     camera={{
-      fov: 60,
-      position: [-2e7, 0, 0],
+      fov: 30,
+      position: [3.58e7, 0, 0],
       up: [0, 0, 1],
       near: 1e4,
       far: 1e9
@@ -233,8 +294,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   ...localDateArgs({
-    dayOfYear: 180,
-    timeOfDay: 4
+    dayOfYear: 190,
+    timeOfDay: 15
   }),
   ...toneMappingArgs({
     toneMappingExposure: 2

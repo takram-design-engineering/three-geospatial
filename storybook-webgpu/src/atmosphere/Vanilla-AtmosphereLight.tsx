@@ -9,7 +9,7 @@ import {
   Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { pass, toneMapping } from 'three/tsl'
+import { context, pass, toneMapping } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
   PostProcessing,
@@ -22,7 +22,7 @@ import {
   getSunDirectionECI
 } from '@takram/three-atmosphere'
 import {
-  AtmosphereContextNode,
+  AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
   skyBackground
@@ -66,11 +66,15 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
-  const context = new AtmosphereContextNode()
+  const atmosphereContext = new AtmosphereContext()
+  renderer.contextNode = context({
+    ...renderer.contextNode.value,
+    getAtmosphere: () => atmosphereContext
+  })
 
   // Create a scene with a sky background:
   const scene = new Scene()
-  scene.backgroundNode = skyBackground(context).add(dithering)
+  scene.backgroundNode = skyBackground().add(dithering)
 
   const group = new Group()
   scene.add(group)
@@ -95,7 +99,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Create the atmospheric light. Note that this story omits the atmospheric
   // scattering, which is only plausible when the distance between the camera
   // and scene objects is small enough to ignore it.
-  const light = new AtmosphereLight(context)
+  const light = new AtmosphereLight()
   scene.add(light)
 
   const controls = new OrbitControls(camera, container)
@@ -122,16 +126,16 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     const currentDate = +date + ((clock.getElapsedTime() * 5e6) % 864e5)
     const matrixECIToECEF = getECIToECEFRotationMatrix(
       currentDate,
-      context.matrixECIToECEF.value
+      atmosphereContext.matrixECIToECEF.value
     )
     getSunDirectionECI(
       currentDate,
-      context.sunDirectionECEF.value,
+      atmosphereContext.sunDirectionECEF.value,
       observerECEF
     ).applyMatrix4(matrixECIToECEF)
     getMoonDirectionECI(
       currentDate,
-      context.moonDirectionECEF.value,
+      atmosphereContext.moonDirectionECEF.value,
       observerECEF
     ).applyMatrix4(matrixECIToECEF)
 
@@ -154,7 +158,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     controls.dispose()
     geometry.dispose()
     material.dispose()
-    context.dispose()
+    atmosphereContext.dispose()
     renderer.dispose()
   }
 }
