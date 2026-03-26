@@ -99,7 +99,8 @@ const Content: FC<StoryProps> = () => {
   atmosphereContext.camera = camera
 
   useLayoutEffect(() => {
-    renderer.contextNode = context(renderer.contextNode, {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
       getAtmosphere: () => atmosphereContext
     })
   }, [renderer, atmosphereContext])

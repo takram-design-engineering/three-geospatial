@@ -73,7 +73,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // multiple nodes:
   const atmosphereContext = new AtmosphereContext()
   atmosphereContext.camera = camera
-  renderer.contextNode = context(renderer.contextNode, {
+  renderer.contextNode = context({
+    ...renderer.contextNode.value,
     getAtmosphere: () => atmosphereContext
   })
 
