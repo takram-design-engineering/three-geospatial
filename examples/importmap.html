@@ -38,7 +38,6 @@ For more complete examples, see the Storybook.
         ToneMappingMode
       } from 'postprocessing'
       import {
-        Clock,
         Group,
         HalfFloatType,
         Mesh,
@@ -48,6 +47,7 @@ For more complete examples, see the Storybook.
         PerspectiveCamera,
         PlaneGeometry,
         Scene,
+        Timer,
         TorusKnotGeometry,
         Vector3,
         WebGLRenderer
@@ -72,7 +72,7 @@ For more complete examples, see the Storybook.
       let renderer
       let camera
       let controls
-      let clock
+      let timer
       let scene
       let skyMaterial
       let skyLight
@@ -102,7 +102,7 @@ For more complete examples, see the Storybook.
         controls.minDistance = 1e3
         controls.target.copy(position)
 
-        clock = new Clock()
+        timer = new Timer()
         scene = new Scene()
 
         // SkyMaterial disables projection. Provide a plane that covers clip space.
@@ -210,8 +210,9 @@ For more complete examples, see the Storybook.
         renderer.setSize(window.innerWidth, window.innerHeight)
       }
 
-      function render() {
-        const date = +referenceDate + ((clock.getElapsedTime() * 5e6) % 864e5)
+      function render(time) {
+        timer.update(time)
+        const date = +referenceDate + ((timer.getElapsed() * 5e6) % 864e5)
         getSunDirectionECEF(date, sunDirection)
         getMoonDirectionECEF(date, moonDirection)
 

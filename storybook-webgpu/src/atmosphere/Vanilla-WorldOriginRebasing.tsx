@@ -1,9 +1,9 @@
 import {
   AgXToneMapping,
-  Clock,
   Mesh,
   PerspectiveCamera,
   Scene,
+  Timer,
   TorusKnotGeometry,
   Vector3
 } from 'three'
@@ -134,9 +134,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   postProcessing.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
-  const clock = new Clock()
+  const timer = new Timer()
   const observerECEF = new Vector3()
-  void renderer.setAnimationLoop(() => {
+  void renderer.setAnimationLoop(time => {
+    timer.update(time)
     controls.update()
     camera.updateMatrixWorld()
     observerECEF
@@ -145,7 +146,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
-    const currentDate = +date + ((clock.getElapsedTime() * 5e6) % 864e5)
+    const currentDate = +date + ((timer.getElapsed() * 5e6) % 864e5)
     const matrixECIToECEF = getECIToECEFRotationMatrix(
       currentDate,
       atmosphereContext.matrixECIToECEF.value
