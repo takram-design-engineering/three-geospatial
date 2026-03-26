@@ -7,6 +7,7 @@ import type {
   Renderer,
   UniformNode
 } from 'three/webgpu'
+import type { LiteralToPrimitive, Primitive } from 'type-fest'
 
 import type { NodeType, NodeValueTypeOf } from '@takram/three-geospatial/webgpu'
 
@@ -25,10 +26,13 @@ declare module 'three' {
 
 declare module 'three/tsl' {
   // The first argument can be a node type
-  const uniform: <T>(
+  const uniform: <
+    const T,
+    U = T extends string ? T : T extends Primitive ? LiteralToPrimitive<T> : T
+  >(
     value: T,
     type?: Node | string
-  ) => T extends NodeType ? UniformNode<NodeValueTypeOf<T>> : UniformNode<T>
+  ) => U extends NodeType ? UniformNode<NodeValueTypeOf<U>> : UniformNode<U>
 }
 
 declare module 'three/webgpu' {
