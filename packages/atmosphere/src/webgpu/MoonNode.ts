@@ -9,7 +9,6 @@ import {
   max,
   mix,
   PI,
-  select,
   smoothstep,
   sqrt,
   uniform,
@@ -52,9 +51,9 @@ const raySphereIntersectionNormal = /*#__PURE__*/ FnLayout({
     { name: 'angularRadius', type: 'float' }
   ]
 })(([rayDirection, centerDirection, angularRadius]) => {
-  const cosRay = centerDirection.dot(rayDirection).toVar()
+  const cosRay = centerDirection.dot(rayDirection)
   // The vector from the centerDirection to the projection point on the ray.
-  const P = centerDirection.sub(rayDirection.mul(cosRay)).negate().toVar()
+  const P = centerDirection.sub(rayDirection.mul(cosRay)).negate().toConst()
   // The half chord length along the ray.
   const s = sqrt(angularRadius.pow2().sub(P.dot(P)).max(0))
   return P.sub(rayDirection.mul(s)).div(angularRadius)
@@ -71,13 +70,17 @@ const orenNayarDiffuse = /*#__PURE__*/ FnLayout({
     { name: 'normal', type: 'vec3' }
   ]
 })(([lightDirection, viewDirection, normal]) => {
-  const cosLight = normal.dot(lightDirection).toVar()
-  const cosView = normal.dot(viewDirection).toVar()
-  const s = lightDirection.dot(viewDirection).sub(cosLight.mul(cosView)).toVar()
-  const t = select(s.greaterThan(0), max(cosLight, cosView), 1)
+  const cosLight = normal.dot(lightDirection).toConst()
+  const cosView = normal.dot(viewDirection).toConst()
+  const s = lightDirection
+    .dot(viewDirection)
+    .sub(cosLight.mul(cosView))
+    .toConst()
+  // Avoid artifact at the edge:
+  const t = mix(1, max(cosLight, cosView).max(0.1), s.smoothstep(0, 0.1))
   const A = (1 / Math.PI) * (1 - 0.5 * (1 / 1.33) + 0.17 * (1 / 1.13))
   const B = (1 / Math.PI) * (0.45 * (1 / 1.09))
-  return max(0, cosLight).mul(s.div(t).mul(B).add(A))
+  return cosLight.max(0).mul(s.div(t).mul(B).add(A))
 })
 
 export class MoonNode extends TempNode {
