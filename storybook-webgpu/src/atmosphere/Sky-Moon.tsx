@@ -293,11 +293,14 @@ const Content: FC<StoryProps> = () => {
         texture.anisotropy = 16
       })
     )
-    skyNode.moonNode.normalNode = texture(
-      new TextureLoader().load('public/moon/normal_large.webp', texture => {
-        texture.colorSpace = NoColorSpace
-        texture.anisotropy = 16
-      })
+    skyNode.moonNode.displacementNode = texture(
+      new TextureLoader().load(
+        'public/moon/displacement_large.webp',
+        texture => {
+          texture.colorSpace = NoColorSpace
+          texture.generateMipmaps = false
+        }
+      )
     )
     return skyNode
   }, [])
