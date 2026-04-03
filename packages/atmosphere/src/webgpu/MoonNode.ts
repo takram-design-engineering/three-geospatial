@@ -22,18 +22,6 @@ import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 import { getAtmosphereContext } from './AtmosphereContext'
 import { Luminance3 } from './dimensional'
 
-const mat3Columns = /*#__PURE__*/ FnLayout({
-  name: 'mat3Columns',
-  type: 'mat3',
-  inputs: [
-    { name: 'c0', type: 'vec3' },
-    { name: 'c1', type: 'vec3' },
-    { name: 'c2', type: 'vec3' }
-  ]
-})(([c0, c1, c2]) => {
-  return mat3(c0.x, c0.y, c0.z, c1.x, c1.y, c1.z, c2.x, c2.y, c2.z)
-})
-
 const getLunarRadiance = /*#__PURE__*/ FnLayout({
   name: 'getLunarRadiance',
   type: Luminance3,
@@ -160,7 +148,7 @@ export class MoonNode extends TempNode {
           )
           const bitangent = normalMF.cross(tangent).normalize()
           const normalTangent = this.normalNode.sample(uv).xyz.mul(2).sub(1)
-          const tangentToLocal = mat3Columns(tangent, bitangent, normalMF)
+          const tangentToLocal = mat3(tangent, bitangent, normalMF)
 
           normalMF.assign(
             mix(
