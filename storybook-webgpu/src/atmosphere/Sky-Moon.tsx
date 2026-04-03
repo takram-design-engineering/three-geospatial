@@ -31,12 +31,12 @@ import {
   AgXToneMapping,
   BufferGeometry,
   Line,
-  LinearSRGBColorSpace,
   Matrix4,
   NoColorSpace,
   NoToneMapping,
   Object3D,
   Shape,
+  SRGBColorSpace,
   TextureLoader,
   Vector3,
   type Group,
@@ -289,7 +289,7 @@ const Content: FC<StoryProps> = () => {
     const skyNode = sky()
     skyNode.moonNode.colorNode = texture(
       new TextureLoader().load('public/moon/color_large.webp', texture => {
-        texture.colorSpace = LinearSRGBColorSpace
+        texture.colorSpace = SRGBColorSpace
         texture.anisotropy = 16
       })
     )
