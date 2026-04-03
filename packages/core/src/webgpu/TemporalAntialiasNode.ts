@@ -19,7 +19,6 @@ import {
   max,
   mix,
   screenCoordinate,
-  screenSize,
   screenUV,
   select,
   sqrt,
@@ -179,6 +178,15 @@ const getCurrentDepth = /*#__PURE__*/ FnVar(
       })
     }
     return currentDepthStruct(closestCoord, closestDepth)
+  }
+)
+
+const subpixelCorrection = FnVar(
+  (velocityUV: Node<'vec2'>, textureSize: Node<'ivec2'>): Node<'float'> => {
+    const velocityTexel = velocityUV.mul(textureSize)
+    const phase = velocityTexel.fract().abs()
+    const weight = max(phase, phase.oneMinus())
+    return weight.x.mul(weight.y).oneMinus().div(0.75)
   }
 )
 
@@ -422,19 +430,19 @@ export class TemporalAntialiasNode extends TempNode {
       const closestCoord = currentDepth.get('closestCoord')
       const closestDepth = currentDepth.get('closestDepth')
 
-      const velocity = this.velocityNode
+      const velocityUVW = this.velocityNode
         .load(closestCoord)
         .xyz.mul(vec3(0.5, -0.5, 0.5)) // Velocity is in NDC offset
         .toConst()
 
       // Discards texels with velocity greater than the threshold:
-      const velocityConfidence = velocity.xy
+      const velocityConfidence = velocityUVW.xy
         .length()
         .div(this.velocityThreshold)
         .oneMinus()
         .saturate()
 
-      const prevUV = uv.sub(velocity.xy).toConst()
+      const prevUV = uv.sub(velocityUVW.xy).toConst()
       const prevDepth = getPreviousDepth(prevUV)
 
       // TODO: Add gather() in TextureNode and use it:
@@ -447,7 +455,7 @@ export class TemporalAntialiasNode extends TempNode {
         : closestDepth
 
       const depthConfidence = step(
-        expectedDepth.add(velocity.z),
+        expectedDepth.add(velocityUVW.z),
         prevDepth.add(this.depthError)
       )
 
@@ -475,14 +483,10 @@ export class TemporalAntialiasNode extends TempNode {
         // Increase the temporal alpha when the velocity is more subpixel,
         // reducing blurriness under motion.
         // Reference: https://github.com/simco50/D3D12_Research/
-        const velocityAbsTexel = velocity.xy.abs().mul(screenSize).toConst()
-        const subpixelCorrection = max(velocityAbsTexel.x, velocityAbsTexel.y)
-          .fract()
-          .mul(0.5)
         const temporalAlpha = mix(
           this.temporalAlpha,
           0.8,
-          subpixelCorrection
+          subpixelCorrection(velocityUVW.xy, textureSize(this.inputNode))
         ).saturate()
 
         outputColor.assign(mix(clippedColor, outputColor, temporalAlpha))
