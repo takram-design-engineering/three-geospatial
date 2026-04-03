@@ -51,6 +51,7 @@
 - Deprecated `AtmosphereContextNode` and renamed it to `AtmosphereContext`.
 - Changed default values for `depthTest` and `depthWrite` in `SkyMaterial` and `StarsMaterial`.
 - Deprecated `SKY_RENDER_ORDER`, which is no longer used.
+- BREAKING: Replaced `MoonNode.normalNode` with `MoonNode.displacementNode`.
 
 ### Fixed
 
