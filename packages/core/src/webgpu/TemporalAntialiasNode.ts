@@ -528,15 +528,59 @@ export class TemporalAntialiasNode extends TempNode {
   }
 }
 
-export const temporalAntialias = (
+/**
+ * @deprecated Function signature has been changed. Use
+ *   temporalAntialias(inputNode, depthNode, velocityNode, camera)
+ */
+export function temporalAntialias(
+  velocityNodeImmutable: unknown
+): (
   inputNode: Node,
   depthNode: TextureNode,
   velocityNode: TextureNode,
   camera: Camera
-): TemporalAntialiasNode =>
-  new TemporalAntialiasNode(
+) => TemporalAntialiasNode
+
+export function temporalAntialias(
+  inputNode: Node,
+  depthNode: TextureNode,
+  velocityNode: TextureNode,
+  camera: Camera
+): TemporalAntialiasNode
+
+export function temporalAntialias(...args: any[]): any {
+  if (args.length === 1) {
+    return (
+      inputNode: Node,
+      depthNode: TextureNode,
+      velocityNode: TextureNode,
+      camera: Camera
+    ): TemporalAntialiasNode =>
+      new TemporalAntialiasNode(
+        convertToTexture(inputNode),
+        depthNode,
+        velocityNode,
+        camera
+      )
+  }
+  const [inputNode, depthNode, velocityNode, camera] = args
+  return new TemporalAntialiasNode(
     convertToTexture(inputNode),
     depthNode,
     velocityNode,
     camera
   )
+}
+
+// export const temporalAntialias = (
+//   inputNode: Node,
+//   depthNode: TextureNode,
+//   velocityNode: TextureNode,
+//   camera: Camera
+// ): TemporalAntialiasNode =>
+//   new TemporalAntialiasNode(
+//     convertToTexture(inputNode),
+//     depthNode,
+//     velocityNode,
+//     camera
+//   )

@@ -127,12 +127,6 @@ const deltaUV = velocityNode.xy.mul(0.5)
 const deltaDepth = velocityNode.z.mul(0.5)
 ```
 
-### Parameters
-
-```ts
-projectionMatrix?: Matrix4 | null
-```
-
 ## LensFlareNode
 
 ### Constructor
@@ -198,13 +192,7 @@ bloomIntensity = uniform(0.05)
 ### Constructor
 
 ```ts
-interface VelocityNodeImmutable {
-  projectionMatrix?: Matrix4 | null
-}
-
-const temporalAntialias: (
-  velocityNodeImmutable: VelocityNodeImmutable
-) => (
+const temporalAntialias = (
   inputNode: Node,
   depthNode: TextureNode,
   velocityNode: TextureNode,
