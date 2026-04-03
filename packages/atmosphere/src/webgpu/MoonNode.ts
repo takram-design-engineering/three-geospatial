@@ -1,10 +1,11 @@
 import {
   cos,
+  dFdx,
+  dFdy,
   equirectUV,
   Fn,
   fwidth,
   If,
-  mat3,
   max,
   mix,
   PI,
@@ -12,7 +13,6 @@ import {
   smoothstep,
   sqrt,
   uniform,
-  vec3,
   vec4
 } from 'three/tsl'
 import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
@@ -74,13 +74,7 @@ const orenNayarDiffuse = /*#__PURE__*/ FnLayout({
   const cosLight = normal.dot(lightDirection).toVar()
   const cosView = normal.dot(viewDirection).toVar()
   const s = lightDirection.dot(viewDirection).sub(cosLight.mul(cosView)).toVar()
-  const t = select(
-    s.greaterThan(0),
-    max(cosLight, cosView)
-      // Avoid artifact at the edge:
-      .max(0.1),
-    1
-  )
+  const t = select(s.greaterThan(0), max(cosLight, cosView), 1)
   const A = (1 / Math.PI) * (1 - 0.5 * (1 / 1.33) + 0.17 * (1 / 1.13))
   const B = (1 / Math.PI) * (0.45 * (1 / 1.09))
   return max(0, cosLight).mul(s.div(t).mul(B).add(A))
@@ -93,10 +87,14 @@ export class MoonNode extends TempNode {
 
   rayDirectionECEF?: Node
   colorNode?: TextureNode | null
-  normalNode?: TextureNode | null
+  displacementNode?: TextureNode | null
 
   angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
   intensity = uniform(1)
+
+  // For NASA Moon Kit unsigned 16 bit half-meter images:
+  // https://svs.gsfc.nasa.gov/4720/
+  displacementScale = uniform((0xffff * 0.5) / 1727400)
 
   constructor() {
     super('vec4')
@@ -134,28 +132,39 @@ export class MoonNode extends TempNode {
           .xyz.toVar()
         const uv = equirectUV(normalMF.xzy) // The equirectUV expects Y-up
 
-        if (this.normalNode != null) {
-          // Apply the normal texture and convert it back to the ECEF space.
-          const localX = vec3(1, 0, 0)
-          const localZ = vec3(0, 0, 1)
-          const tangent = localZ.cross(normalMF).toVar()
-          tangent.assign(
-            select(
-              tangent.dot(tangent).lessThan(1e-7),
-              localX.cross(normalMF).normalize(),
-              tangent.normalize()
-            )
-          )
-          const bitangent = normalMF.cross(tangent).normalize()
-          const normalTangent = this.normalNode.sample(uv).xyz.mul(2).sub(1)
-          const tangentToLocal = mat3(tangent, bitangent, normalMF)
+        if (this.displacementNode != null) {
+          // Differential in a branch is unstable, but it's fine in practice
+          // because the edges are masked.
+          const uvdx = dFdx(uv).toConst()
+          const uvdy = dFdy(uv).toConst()
+          const hx1 = this.displacementNode.sample(uv.add(uvdx)).x
+          const hx2 = this.displacementNode.sample(uv.sub(uvdx)).x
+          const hy1 = this.displacementNode.sample(uv.add(uvdy)).x
+          const hy2 = this.displacementNode.sample(uv.sub(uvdy)).x
+          const hdx = hx1.sub(hx2).mul(0.5)
+          const hdy = hy1.sub(hy2).mul(0.5)
+
+          // Cotangent frame: compute surface gradient from screen-space
+          // derivatives of the surface position.
+          const ndx = dFdx(normalMF).toConst()
+          const ndy = dFdy(normalMF).toConst()
+          const r1 = ndy.cross(normalMF).toConst()
+          const r2 = normalMF.cross(ndx).toConst()
+          const det = ndx.dot(r1).toConst()
+
+          // Perturbed normal in moon-fixed frame:
+          const grad = r1.mul(hdx).add(r2.mul(hdy)).mul(det.sign())
+          const perturbedNormalMF = normalMF
+            .mul(det.abs())
+            .sub(grad.mul(this.displacementScale))
+            .normalize()
 
           normalMF.assign(
             mix(
               normalMF,
-              tangentToLocal.mul(normalTangent).normalize(),
+              perturbedNormalMF,
               // Avoid artifact at the edge:
-              normalECEF.dot(rayDirectionECEF.negate()).smoothstep(0, 0.3)
+              normalECEF.dot(rayDirectionECEF.negate())
             )
           )
           normalECEF.assign(matrixFixedToECEF.mul(vec4(normalMF, 0)).xyz)
