@@ -110,14 +110,14 @@ const clipAABB = /*#__PURE__*/ FnLayout({
 })
 
 const varianceOffsets = [
-  /*#__PURE__*/ ivec2(-1, -1),
-  /*#__PURE__*/ ivec2(-1, 1),
-  /*#__PURE__*/ ivec2(1, -1),
-  /*#__PURE__*/ ivec2(1, 1),
-  /*#__PURE__*/ ivec2(1, 0),
-  /*#__PURE__*/ ivec2(0, -1),
-  /*#__PURE__*/ ivec2(0, 1),
-  /*#__PURE__*/ ivec2(-1, 0)
+  [-1, -1],
+  [-1, 1],
+  [1, -1],
+  [1, 1],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+  [-1, 0]
 ]
 
 const varianceClipping = /*#__PURE__*/ FnVar(
@@ -131,8 +131,8 @@ const varianceClipping = /*#__PURE__*/ FnVar(
     const moment1 = current.toVar()
     const moment2 = current.pow2().toVar()
 
-    for (const offset of varianceOffsets) {
-      const neighbor = inputNode.load(coord.add(offset)).toConst()
+    for (const [x, y] of varianceOffsets) {
+      const neighbor = inputNode.load(coord.add(ivec2(x, y))).toConst()
       moment1.addAssign(neighbor)
       moment2.addAssign(neighbor.pow2())
     }
@@ -150,15 +150,15 @@ const varianceClipping = /*#__PURE__*/ FnVar(
 )
 
 const neighborOffsets = [
-  /*#__PURE__*/ ivec2(-1, -1),
-  /*#__PURE__*/ ivec2(-1, 0),
-  /*#__PURE__*/ ivec2(-1, 1),
-  /*#__PURE__*/ ivec2(0, -1),
-  /*#__PURE__*/ ivec2(0, 0),
-  /*#__PURE__*/ ivec2(0, 1),
-  /*#__PURE__*/ ivec2(1, -1),
-  /*#__PURE__*/ ivec2(1, 0),
-  /*#__PURE__*/ ivec2(1, 1)
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 0],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1]
 ]
 
 const currentDepthStruct = /*#__PURE__*/ struct({
@@ -170,8 +170,8 @@ const getCurrentDepth = /*#__PURE__*/ FnVar(
   (depthNode: TextureNode, inputCoord: Node<'ivec2'>) => {
     const closestCoord = ivec2(0).toVar()
     const closestDepth = float(1).toVar()
-    for (const offset of neighborOffsets) {
-      const neighbor = inputCoord.add(offset).toConst()
+    for (const [x, y] of neighborOffsets) {
+      const neighbor = inputCoord.add(ivec2(x, y)).toConst()
       const depth = depthNode.load(neighbor).r.toConst()
       If(depth.lessThan(closestDepth), () => {
         closestCoord.assign(neighbor)
@@ -283,7 +283,7 @@ export class TemporalAntialiasNode extends TempNode {
     texture.magFilter = LinearFilter
     texture.generateMipmaps = false
 
-    const typeName = (this.constructor as typeof TemporalAntialiasNode).type
+    const typeName = (this.constructor as typeof Node).type
     texture.name = name != null ? `${typeName}.${name}` : typeName
 
     return renderTarget
