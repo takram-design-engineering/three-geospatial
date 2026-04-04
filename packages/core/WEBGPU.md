@@ -123,11 +123,20 @@ const passNode = pass(scene, camera).setMRT(
   })
 )
 const velocityNode = passNode.getTextureNode('velocity')
-const deltaUV = velocityNode.xy.mul(0.5)
-const deltaDepth = velocityNode.z.mul(0.5)
 ```
 
 ## LensFlareNode
+
+A post-processing node that simulates lens flare artifacts. The effect consists of the following visual components:
+
+- **Ghosts** : Colored reflections aligned along a line from the screen center through bright areas
+- **Halos** : Thin rings with chromatic aberration
+- **Bloom** : Soft glow around bright areas
+- **Glare** : Directional spike radiating from bright areas, WebGPU only.
+
+The implementation is based on Léna Piquet's [detailed walkthrough of UE4's lens flare effect](https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/).
+
+> [Source](/packages/core/src/webgpu/LensFlareNode.ts)
 
 ### Constructor
 
@@ -143,11 +152,15 @@ const lensFlare: (inputNode: Node | null) => LensFlareNode
 inputNode?: TextureNode | null
 ```
 
+The node to which the effect is applied.
+
 #### thresholdNode
 
 ```ts
 thresholdNode: DownsampleThresholdNode
 ```
+
+The node that extracts bright areas from `inputNode`.
 
 #### blurNode
 
@@ -155,11 +168,15 @@ thresholdNode: DownsampleThresholdNode
 blurNode: GaussianBlurNode
 ```
 
+The node to blur the bright areas extracted by `thresholdNode` before they are used by `ghostNode` and `haloNode`.
+
 #### ghostNode
 
 ```ts
 ghostNode: LensGhostNode
 ```
+
+The node that renders ghosts.
 
 #### haloNode
 
@@ -167,17 +184,23 @@ ghostNode: LensGhostNode
 haloNode: LensHaloNode
 ```
 
+The node that renders halos.
+
 #### bloomNode
 
 ```ts
 bloomNode: MipmapSurfaceBlurNode
 ```
 
+The node that applies bloom to the result of `thresholdNode`
+
 #### glareNode
 
 ```ts
 glareNode: LensGlareNode
 ```
+
+The node that applies glare to the result of `thresholdNode`
 
 ### Uniforms
 
@@ -186,6 +209,8 @@ glareNode: LensGlareNode
 ```ts
 bloomIntensity = uniform(0.05)
 ```
+
+A scaling factor that controls the intensity of the bloom.
 
 ## TemporalAntialiasNode
 
@@ -207,6 +232,8 @@ const temporalAntialias = (
 ```ts
 inputNode: TextureNode
 ```
+
+The node to which the effect is applied.
 
 #### depthNode
 
