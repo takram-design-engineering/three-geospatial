@@ -136,7 +136,7 @@ A post-processing node that simulates lens flare artifacts. The effect consists 
 
 The implementation is based on Léna Piquet's [detailed walkthrough of UE4's lens flare effect](https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/).
 
-> [Source](/packages/core/src/webgpu/LensFlareNode.ts)
+→ [Source](/packages/core/src/webgpu/LensFlareNode.ts)
 
 ```ts
 const passNode = pass(scene, camera)
@@ -223,7 +223,7 @@ A post-processing node that applies antialiasing by accumulating jittered sample
 
 The key difference from `TRAANode` in Three.js examples is that it synchronizes the unjittered projection matrix with `HighpVelocityNode` instead of `VelocityNode`. The technique used in this node has already been merged upstream.
 
-> [Source](/packages/core/src/webgpu/TemporalAntialiasNode.ts)
+→ [Source](/packages/core/src/webgpu/TemporalAntialiasNode.ts)
 
 ```ts
 const passNode = pass(scene, camera).setMRT(
@@ -339,7 +339,7 @@ Unlike `SSSNode` in Three.js examples, this node uses a compute shader with work
 
 The implementation is based on [Bend Studio's technique](https://www.bendstudio.com/blog/inside-bend-screen-space-shadows/).
 
-> [Source](/packages/core/src/webgpu/ScreenSpaceShadowNode.ts)
+→ [Source](/packages/core/src/webgpu/ScreenSpaceShadowNode.ts)
 
 ```ts
 declare const light: DirectionalLight
