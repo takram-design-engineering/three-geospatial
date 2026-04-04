@@ -26,9 +26,11 @@ Please note the peer dependencies differ from the required versions to maintain 
 "three": ">=0.182.0"
 ```
 
-## API changes
+## Changes from the WebGL API
 
-- `LensFlareEffect` was moved from `effects` to here and replaced by `LensFlareNode`.
+- `LensFlareEffect`: moved from effects and replaced by `LensFlareNode`
+- `DitheringEffect`: moved from effects and replaced by `dithering`
+- Turbo coloring in `DepthEffect`: moved from effects and replaced by `depthToColor`
 
 # API
 

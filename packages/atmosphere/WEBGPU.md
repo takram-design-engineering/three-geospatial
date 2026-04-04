@@ -180,7 +180,7 @@ Ellipsoid.WGS84.getNorthUpEastFrame(
 )
 ```
 
-## API changes
+## Changes from the WebGL API
 
 - `PrecomputedTexturesGenerator` was replaced by `AtmosphereLUTNode`.
 - `AerialPerspectiveEffect` was replaced by `AerialPerspectiveNode`.
