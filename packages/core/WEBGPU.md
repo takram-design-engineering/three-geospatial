@@ -315,13 +315,21 @@ When enabled, rejected pixels are displayed in red.
 
 ## ScreenSpaceShadowNode
 
+A post-processing node that applies screen-space shadows.
+
+Unlike `SSSNode` in Three.js examples, this node uses a compute shader with workgroup shared memory, allowing for longer and softer shadows at a lower cost per pixel.
+
+The implementation is based on [Bend Studio's technique](https://www.bendstudio.com/blog/inside-bend-screen-space-shadows/).
+
+> [Source](/packages/core/src/webgpu/ScreenSpaceShadowNode.ts)
+
 ### Constructor
 
 ```ts
-const screenSpaceShadowNode: (
+const screenSpaceShadow: (
   depthNode: TextureNode,
-  camera?: Camera | null,
-  mainLight?: DirectionalLight | null
+  camera: Camera,
+  mainLight: DirectionalLight
 ) => ScreenSpaceShadowNode
 ```
 
@@ -333,6 +341,8 @@ const screenSpaceShadowNode: (
 depthNode: TextureNode
 ```
 
+The depth node for ray-marching.
+
 ### Uniforms
 
 #### thickness
@@ -341,11 +351,15 @@ depthNode: TextureNode
 thickness = uniform(0.005)
 ```
 
+The assumed pixel thickness for shadow-casting, as a fraction of the depth range to the far clip plane.
+
 #### shadowContrast
 
 ```ts
 shadowContrast = uniform(4)
 ```
+
+A contrast boost for the shadow transition. Must be >= 1.
 
 #### shadowIntensity
 
@@ -353,11 +367,15 @@ shadowContrast = uniform(4)
 shadowIntensity = uniform(1)
 ```
 
+The overall shadow intensity in the range [0, 1].
+
 #### bilinearThreshold
 
 ```ts
 bilinearThreshold = uniform(0.02)
 ```
+
+The depth difference threshold for edge detection. When exceeded, point filtering is used instead of bilinear interpolation.
 
 #### nearDepth
 
@@ -365,11 +383,15 @@ bilinearThreshold = uniform(0.02)
 nearDepth = uniform(0)
 ```
 
+The depth value for the near clip plane.
+
 #### farDepth
 
 ```ts
 farDepth = uniform(1)
 ```
+
+The depth value for the far clip plane.
 
 ### Static options
 
@@ -379,11 +401,15 @@ farDepth = uniform(1)
 camera: Camera
 ```
 
+The camera used for rendering the scene.
+
 #### mainLight
 
 ```ts
 mainLight: DirectionalLight
 ```
+
+The directional light from which shadows are cast.
 
 #### sampleCount
 
@@ -391,17 +417,23 @@ mainLight: DirectionalLight
 sampleCount = 60
 ```
 
+The number of shadow samples per pixel. Controls the maximum shadow length in pixels.
+
 #### hardShadowSamples
 
 ```ts
 hardShadowSamples = 4
 ```
 
+The number of initial samples that produce a hard shadow without averaging, grounding pixels close to the shadow caster.
+
 #### fadeOutSamples
 
 ```ts
 fadeOutSamples = 8
 ```
+
+The number of samples at the end of the ray that fade the shadow out.
 
 # Acknowledgement
 

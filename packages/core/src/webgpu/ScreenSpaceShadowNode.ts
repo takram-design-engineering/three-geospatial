@@ -96,45 +96,18 @@ export class ScreenSpaceShadowNode extends TempNode {
   camera: Camera
   mainLight: DirectionalLight
 
-  // Number of shadow samples per-pixel.
-  // Determines overall cost, as this value controls the length of the shadow
-  // (in pixels). The number of texture-reads performed per-thread will be
-  // (sampleCount / GROUP_SIZE + 2) * 2.
   sampleCount = 60
-
-  // Number of initial shadow samples that will produce a hard shadow, and not
-  // perform sample-averaging. This trades aliasing for grounding pixels very
-  // close to the shadow caster.
   hardShadowSamples = 4
-
-  // Number of samples that will fade out at the end of the shadow.
   fadeOutSamples = 8
 
   readonly outputTexture: StorageTexture
   private readonly textureNode: TextureNode
 
-  // The assumed thickness of each pixel for shadow-casting, measured as a
-  // percentage of the difference in non-linear depth between the sample and
-  // FarDepthValue.
   thickness = uniform(0.005)
-
-  // A contrast boost is applied to the transition in/out of shadow.
-  // Values >= 1 are valid.
   shadowContrast = uniform(4)
-
-  // Shadow intensity. Must be in the range [0, 1].
   shadowIntensity = uniform(1)
-
-  // Percentage threshold for determining if the difference between two depth
-  // values represents an edge, and should not perform interpolation.
   bilinearThreshold = uniform(0.02)
-
-  // Depth Buffer Value for the near clip plane, as determined by renderer
-  // projection matrix setup (typically 0).
   nearDepth = uniform(0)
-
-  // Depth Buffer Value for the far clip plane, as determined by renderer
-  // projection matrix setup (typically 1).
   farDepth = uniform(1)
 
   // xy: Screen coordinate
