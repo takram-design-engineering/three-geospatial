@@ -211,18 +211,18 @@ export const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   const { parameters, topRadius, bottomRadius } = context
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toVar()
+  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toConst()
 
   // Distance to the horizon for the view.
   const distanceToHorizon = sqrtSafe(
     radius.pow2().sub(bottomRadius.pow2())
-  ).toVar()
+  ).toConst()
 
   // Distance to the top atmosphere boundary for the ray (radius, cosView),
   // and its minimum and maximum values over all cosView - obtained for
   // (radius, 1) and (radius, cosHorizon).
   const distanceToTop = distanceToTopAtmosphereBoundary(radius, cosView)
-  const minDistance = topRadius.sub(radius).toVar()
+  const minDistance = topRadius.sub(radius).toConst()
   const maxDistance = distanceToHorizon.add(H)
   const cosViewUnit = distanceToTop.remap(minDistance, maxDistance)
   const radiusUnit = distanceToHorizon.div(H)
@@ -258,9 +258,9 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
   if (parameters.transmittancePrecisionLog) {
     const size = vec2(parameters.transmittanceTextureSize)
     const texelSize = vec3(size.reciprocal(), 0).toConst()
-    const coord = uv.mul(size).sub(0.5).toVar()
-    const i = floor(coord).add(0.5).mul(texelSize.xy).toVar()
-    const f = fract(coord).toVar()
+    const coord = uv.mul(size).sub(0.5).toConst()
+    const i = floor(coord).add(0.5).mul(texelSize.xy).toConst()
+    const f = fract(coord).toConst()
     const t1 = exp(transmittanceTexture.sample(i).negate())
     const t2 = exp(transmittanceTexture.sample(i.add(texelSize.xz)).negate())
     const t3 = exp(transmittanceTexture.sample(i.add(texelSize.zy)).negate())
@@ -296,12 +296,12 @@ export const getTransmittance = /*#__PURE__*/ FnLayout({
         .add(mul(2, radius, cosView, rayLength))
         .add(radius.pow2())
     )
-  ).toVar()
+  ).toConst()
   const cosViewEnd = clampCosine(
     radius.mul(cosView).add(rayLength).div(radiusEnd)
-  ).toVar()
+  ).toConst()
 
-  const transmittance = vec3().toVar()
+  const transmittance = vec3(0).toVar()
   If(viewRayIntersectsGround, () => {
     transmittance.assign(
       min(
@@ -353,7 +353,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
   const context = getAtmosphereContextBase(builder)
   const { sunAngularRadius, bottomRadius } = context
 
-  const sinHorizon = bottomRadius.div(radius).toVar()
+  const sinHorizon = bottomRadius.div(radius).toConst()
   const cosHorizon = sqrt(max(sinHorizon.pow2().oneMinus(), 0)).negate()
   return getTransmittanceToTopAtmosphereBoundary(
     transmittanceTexture,
@@ -413,12 +413,12 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   const { parameters, topRadius, bottomRadius, minCosSun } = context
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toVar()
+  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toConst()
 
   // Distance to the horizon for the view.
   const distanceToHorizon = sqrtSafe(
     radius.pow2().sub(bottomRadius.pow2())
-  ).toVar()
+  ).toConst()
 
   const radiusCoord = getTextureCoordFromUnitRange(
     distanceToHorizon.div(H),
@@ -427,20 +427,20 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 
   // Discriminant of the quadratic equation for the intersections of the ray
   // (radius, cosView) with the ground (see rayIntersectsGround).
-  const radiusCosView = radius.mul(cosView).toVar()
+  const radiusCosView = radius.mul(cosView).toConst()
   const discriminant = radiusCosView
     .pow2()
     .sub(radius.pow2())
     .add(bottomRadius.pow2())
-    .toVar()
+    .toConst()
 
-  const cosViewCoord = float().toVar()
+  const cosViewCoord = float(0).toVar()
   If(viewRayIntersectsGround, () => {
     // Distance to the ground for the ray (radius, cosView), and its minimum
     // and maximum values over all cosView - obtained for (radius, -1) and
     // (radius, cosHorizon).
     const distance = radiusCosView.negate().sub(sqrtSafe(discriminant))
-    const minDistance = radius.sub(bottomRadius).toVar()
+    const minDistance = radius.sub(bottomRadius).toConst()
     const maxDistance = distanceToHorizon
     cosViewCoord.assign(
       getTextureCoordFromUnitRange(
@@ -461,7 +461,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     const distance = radiusCosView
       .negate()
       .add(sqrtSafe(discriminant.add(H.pow2())))
-    const minDistance = topRadius.sub(radius).toVar()
+    const minDistance = topRadius.sub(radius).toConst()
     const maxDistance = distanceToHorizon.add(H)
     cosViewCoord.assign(
       getTextureCoordFromUnitRange(
@@ -473,10 +473,10 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     )
   })
 
-  const minDistance = topRadius.sub(bottomRadius).toVar()
+  const minDistance = topRadius.sub(bottomRadius).toConst()
   const maxDistance = H
   const d = distanceToTopAtmosphereBoundary(bottomRadius, cosSun)
-  const a = d.remap(minDistance, maxDistance).toVar()
+  const a = d.remap(minDistance, maxDistance).toConst()
   const D = distanceToTopAtmosphereBoundary(bottomRadius, minCosSun)
   const A = D.remap(minDistance, maxDistance)
 
@@ -524,12 +524,12 @@ export const getScattering = /*#__PURE__*/ FnLayout({
     cosSun,
     cosViewSun,
     viewRayIntersectsGround
-  ).toVar()
+  ).toConst()
   const texCoordX = coord.x
     .mul(parameters.scatteringTextureCosViewSunSize - 1)
-    .toVar()
-  const texX = floor(texCoordX).toVar()
-  const lerp = texCoordX.sub(texX).toVar()
+    .toConst()
+  const texX = floor(texCoordX).toConst()
+  const lerp = texCoordX.sub(texX).toConst()
   const coord0 = vec3(
     texX.add(coord.y).div(parameters.scatteringTextureCosViewSunSize),
     coord.z,

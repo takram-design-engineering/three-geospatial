@@ -74,13 +74,12 @@ export class AtmosphereContext extends AtmosphereContextBase {
 
   cameraPositionUnit = this.cameraPositionECEF
     .mul(this.worldToUnit)
-    .toVar('cameraPositionUnit')
+    .toConst('cameraPositionUnit')
 
   altitudeCorrectionUnit = this.altitudeCorrectionECEF
     .mul(this.worldToUnit)
-    .toVar('altitudeCorrectionUnit')
+    .toConst('altitudeCorrectionUnit')
 
-  // Static options:
   camera?: Camera
   ellipsoid = Ellipsoid.WGS84
   correctAltitude = true

@@ -36,8 +36,8 @@ import { useTransientControl } from '../hooks/useTransientControl'
 
 export const textureUV = FnVar(
   (textureSize: Node<'vec2'>, zoom: Node<'float'>) => {
-    const scale = screenSize.div(textureSize).div(zoom).toVar()
-    const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toVar()
+    const scale = screenSize.div(textureSize).div(zoom).toConst()
+    const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toConst()
     If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
       Discard()
     })

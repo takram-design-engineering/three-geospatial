@@ -79,7 +79,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     if (atmosphereContext.correctAltitude) {
       positionECEF = positionECEF.add(altitudeCorrectionECEF)
     }
-    const positionUnit = positionECEF.mul(worldToUnit).toVar()
+    const positionUnit = positionECEF.mul(worldToUnit).toConst()
 
     // Compute the indirect illuminance to store it in the context.
     const skyIlluminance = Fn(builder => {
@@ -103,7 +103,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     ).xyz
 
     // Compute the direct luminance of the sun.
-    const radius = positionUnit.length().toVar()
+    const radius = positionUnit.length().toConst()
     const cosSun = positionUnit.dot(sunDirectionECEF).div(radius)
     const sunTransmittance = Fn(builder => {
       // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that

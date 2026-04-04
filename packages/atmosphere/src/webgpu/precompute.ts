@@ -154,11 +154,11 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
       const sampleCount = 500
       const stepSize = distanceToTopAtmosphereBoundary(radius, cosView)
         .div(sampleCount)
-        .toVar()
+        .toConst()
 
       const opticalDepth = float(0).toVar()
       Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
-        const rayLength = float(i).mul(stepSize).toVar()
+        const rayLength = float(i).mul(stepSize).toConst()
 
         // Distance between the current sample point and the planet center.
         const r = sqrt(
@@ -167,7 +167,7 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
             mul(2, radius, cosView, rayLength),
             radius.pow2()
           )
-        ).toVar()
+        ).toConst()
 
         // Number density at the current sample point (divided by the number
         // density at the bottom of the atmosphere, yielding a dimensionless
@@ -220,7 +220,7 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
         cosView
       )
     )
-  ).toVar()
+  ).toConst()
   if (parameters.transmittancePrecisionLog) {
     return opticalDepth
   } else {
@@ -267,20 +267,20 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   )
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toVar()
+  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toConst()
 
   // Distance to the horizon, from which we can compute radius.
-  const distanceToHorizon = H.mul(radiusUnit).toVar()
+  const distanceToHorizon = H.mul(radiusUnit).toConst()
   const radius = sqrt(distanceToHorizon.pow2().add(bottomRadius.pow2()))
 
   // Distance to the top atmosphere boundary for the ray (radius, cosView),
   // and its minimum and maximum values over all cosView - obtained for
   // (radius, 1) and (radius, cosHorizon) - from which we can recover cosView.
-  const minDistance = topRadius.sub(radius).toVar()
+  const minDistance = topRadius.sub(radius).toConst()
   const maxDistance = distanceToHorizon.add(H)
   const distance = minDistance
     .add(cosViewUnit.mul(maxDistance.sub(minDistance)))
-    .toVar()
+    .toConst()
   const cosView = select(
     distance.equal(0),
     1,
@@ -303,7 +303,7 @@ export const computeTransmittanceToTopAtmosphereBoundaryTexture =
 
     const transmittanceParams = getParamsFromTransmittanceTextureUV(
       fragCoord.div(vec2(parameters.transmittanceTextureSize))
-    ).toVar()
+    ).toConst()
     return computeTransmittanceToTopAtmosphereBoundary(
       transmittanceParams.get('radius'),
       transmittanceParams.get('cosView')
@@ -353,7 +353,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
         .add(mul(2, radius, cosView, rayLength))
         .add(radius.pow2())
     )
-  ).toVar()
+  ).toConst()
   const cosSunEnd = clampCosine(
     radius.mul(cosSun).add(rayLength.mul(cosViewSun)).div(radiusEnd)
   )
@@ -365,7 +365,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
     viewRayIntersectsGround
   )
     .mul(getTransmittanceToSun(transmittanceTexture, radiusEnd, cosSunEnd))
-    .toVar()
+    .toConst()
 
   const rayleigh = transmittance.mul(
     getProfileDensity(rayleighDensity, radiusEnd.sub(bottomRadius))
@@ -385,7 +385,7 @@ const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })(([radius, cosView, viewRayIntersectsGround]) => {
-  const result = float().toVar()
+  const result = float(0).toVar()
   If(viewRayIntersectsGround, () => {
     result.assign(distanceToBottomAtmosphereBoundary(radius, cosView))
   }).Else(() => {
@@ -427,12 +427,12 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
     viewRayIntersectsGround
   )
     .div(sampleCount)
-    .toVar()
+    .toConst()
 
   const rayleighSum = vec3(0).toVar()
   const mieSum = vec3(0).toVar()
   Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
-    const rayLength = float(i).mul(stepSize).toVar()
+    const rayLength = float(i).mul(stepSize).toConst()
 
     // The Rayleigh and Mie single scattering at the current sample point.
     const deltaRayleighMie = computeSingleScatteringIntegrand(
@@ -443,7 +443,7 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
       cosViewSun,
       rayLength,
       viewRayIntersectsGround
-    ).toVar()
+    ).toConst()
     const deltaRayleigh = deltaRayleighMie.get('rayleigh')
     const deltaMie = deltaRayleighMie.get('mie')
 
@@ -484,7 +484,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   const { parameters, bottomRadius, topRadius, minCosSun } = context
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
-  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toVar()
+  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toConst()
 
   // Distance to the horizon.
   const distanceToHorizon = H.mul(
@@ -492,16 +492,16 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
       coord.w,
       parameters.scatteringTextureRadiusSize
     )
-  ).toVar()
+  ).toConst()
   const radius = sqrt(distanceToHorizon.pow2().add(bottomRadius.pow2()))
 
-  const cosView = float().toVar()
+  const cosView = float(0).toVar()
   const viewRayIntersectsGround = bool().toVar()
   If(coord.z.lessThan(0.5), () => {
     // Distance to the ground for the ray (radius, cosView), and its minimum
     // and maximum values over all cosView - obtained for (radius, -1) and
     // (radius, cosHorizon) - from which we can recover cosView.
-    const minDistance = radius.sub(bottomRadius).toVar()
+    const minDistance = radius.sub(bottomRadius).toConst()
     const maxDistance = distanceToHorizon
     const distance = minDistance
       .add(
@@ -514,7 +514,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
             )
           )
       )
-      .toVar()
+      .toConst()
     cosView.assign(
       select(
         distance.equal(0),
@@ -534,7 +534,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     // and its minimum and maximum values over all cosView - obtained for
     // (radius, 1) and (radius, cosHorizon) - from which we can recover
     // cosView.
-    const minDistance = topRadius.sub(radius).toVar()
+    const minDistance = topRadius.sub(radius).toConst()
     const maxDistance = distanceToHorizon.add(H)
     const distance = minDistance
       .add(
@@ -547,7 +547,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
             )
           )
       )
-      .toVar()
+      .toConst()
     cosView.assign(
       select(
         distance.equal(0),
@@ -566,15 +566,15 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   const cosSunUnit = getUnitRangeFromTextureCoord(
     coord.y,
     parameters.scatteringTextureCosSunSize
-  ).toVar()
-  const minDistance = topRadius.sub(bottomRadius).toVar()
+  ).toConst()
+  const minDistance = topRadius.sub(bottomRadius).toConst()
   const maxDistance = H
   const D = distanceToTopAtmosphereBoundary(bottomRadius, minCosSun)
-  const A = D.remap(minDistance, maxDistance).toVar()
+  const A = D.remap(minDistance, maxDistance).toConst()
   const a = A.sub(cosSunUnit.mul(A)).div(cosSunUnit.mul(A).add(1))
   const distance = minDistance
     .add(min(a, A).mul(maxDistance.sub(minDistance)))
-    .toVar()
+    .toConst()
   const cosSun = select(
     distance.equal(0),
     1,
@@ -621,25 +621,24 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
     fragCoord.y,
     fragCoord.z
   ).div(size)
-  const scatteringParams = getParamsFromScatteringTextureCoord(coord).toVar()
+  const scatteringParams = getParamsFromScatteringTextureCoord(coord).toConst()
   const radius = scatteringParams.get('radius')
   const cosView = scatteringParams.get('cosView')
   const cosSun = scatteringParams.get('cosSun')
-  const cosViewSun = scatteringParams.get('cosViewSun')
+  const cosViewSun = scatteringParams.get('cosViewSun').toVar()
   const viewRayIntersectsGround = scatteringParams.get(
     'viewRayIntersectsGround'
   )
 
   // Clamp cosViewSun to its valid range of values, given cosView and cosSun.
+  const sideRange = sqrt(
+    cosView.pow2().oneMinus().mul(cosSun.pow2().oneMinus())
+  ).toConst()
   cosViewSun.assign(
     clamp(
       cosViewSun,
-      cosView
-        .mul(cosSun)
-        .sub(sqrt(cosView.pow2().oneMinus().mul(cosSun.pow2().oneMinus()))),
-      cosView
-        .mul(cosSun)
-        .add(sqrt(cosView.pow2().oneMinus().mul(cosSun.pow2().oneMinus())))
+      cosView.mul(cosSun).sub(sideRange),
+      cosView.mul(cosSun).add(sideRange)
     )
   )
   return scatteringParamsStruct(
@@ -661,7 +660,7 @@ export const computeSingleScatteringTexture = /*#__PURE__*/ FnLayout({
   ]
 })(([transmittanceTexture, fragCoord]) => {
   const scatteringParams =
-    getParamsFromScatteringTextureFragCoord(fragCoord).toVar()
+    getParamsFromScatteringTextureFragCoord(fragCoord).toConst()
   const radius = scatteringParams.get('radius')
   const cosView = scatteringParams.get('cosView')
   const cosSun = scatteringParams.get('cosSun')
@@ -711,7 +710,7 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
   const context = getAtmosphereContextBase(builder)
   const { miePhaseFunctionG } = context
 
-  const result = vec3().toVar()
+  const result = vec3(0).toVar()
   If(scatteringOrder.equal(1), () => {
     const rayleigh = getScattering(
       singleRayleighScatteringTexture,
@@ -797,16 +796,16 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
   // the cosine of the view-sun angle is cosViewSun. The goal is to simplify
   // computations below.
   const zenithDirection = vec3(0, 0, 1)
-  const omega = vec3(sqrt(cosView.pow2().oneMinus()), 0, cosView).toVar()
+  const omega = vec3(sqrt(cosView.pow2().oneMinus()), 0, cosView).toConst()
   const sunDirectionX = select(
     omega.x.equal(0),
     0,
     cosViewSun.sub(cosView.mul(cosSun)).div(omega.x)
-  ).toVar()
+  ).toConst()
   const sunDirectionY = sqrt(
     max(sunDirectionX.pow2().add(cosSun.pow2()).oneMinus(), 0)
   )
-  const omegaSun = vec3(sunDirectionX, sunDirectionY, cosSun).toVar()
+  const omegaSun = vec3(sunDirectionX, sunDirectionY, cosSun).toConst()
   const sampleCount = 16
   const deltaPhi = Math.PI / sampleCount
   const deltaTheta = Math.PI / sampleCount
@@ -815,13 +814,13 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
   // Nested loops for the integral over all the incident directions omegaI.
   // @ts-expect-error Missing type on custom name
   Loop({ start: 0, end: sampleCount, name: 'l' }, ({ l }) => {
-    const theta = float(l).add(0.5).mul(deltaTheta).toVar()
-    const cosTheta = cos(theta).toVar()
-    const sinTheta = sin(theta).toVar()
+    const theta = float(l).add(0.5).mul(deltaTheta).toConst()
+    const cosTheta = cos(theta).toConst()
+    const sinTheta = sin(theta).toConst()
     const omegaRayIntersectsGround = rayIntersectsGround(
       radius,
       cosTheta
-    ).toVar()
+    ).toConst()
 
     // The distance and transmittance to the ground only depend on theta, so
     // we can compute them in the outer loop for efficiency.
@@ -846,13 +845,13 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
 
     // @ts-expect-error Missing type on custom name
     Loop({ start: 0, end: mul(sampleCount, 2), name: 'm' }, ({ m }) => {
-      const phi = float(m).add(0.5).mul(deltaPhi).toVar()
+      const phi = float(m).add(0.5).mul(deltaPhi).toConst()
       const omegaI = vec3(
         cos(phi).mul(sinTheta),
         sin(phi).mul(sinTheta),
         cosTheta
-      ).toVar()
-      const deltaOmegaI = sin(theta).mul(deltaTheta).mul(deltaPhi).toVar()
+      ).toConst()
+      const deltaOmegaI = sin(theta).mul(deltaTheta).mul(deltaPhi).toConst()
 
       // The radiance arriving from direction omegaI after n-1 bounces is the
       // sum of a term given by the precomputed scattering texture for the
@@ -892,7 +891,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
       // scattering coefficient, and the phase function for directions omega
       // and omegaI (all this summed over all particle types, i.e. Rayleigh
       // and Mie).
-      const cosViewSun2 = omega.dot(omegaI).toVar()
+      const cosViewSun2 = omega.dot(omegaI).toConst()
       const rayleighDensityValue = getProfileDensity(
         rayleighDensity,
         radius.sub(bottomRadius)
@@ -953,11 +952,11 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
     viewRayIntersectsGround
   )
     .div(sampleCount)
-    .toVar()
+    .toConst()
 
   const radianceSum = vec3(0).toVar()
   Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
-    const rayLength = float(i).mul(stepSize).toVar()
+    const rayLength = float(i).mul(stepSize).toConst()
 
     // The radius, cosView and cosSun parameters at the current integration
     // point (see the single scattering section for a detailed explanation).
@@ -1027,7 +1026,7 @@ export const computeScatteringDensityTexture = /*#__PURE__*/ FnLayout({
   scatteringOrder
 ]) => {
   const scatteringParams =
-    getParamsFromScatteringTextureFragCoord(fragCoord).toVar()
+    getParamsFromScatteringTextureFragCoord(fragCoord).toConst()
   const radius = scatteringParams.get('radius')
   const cosView = scatteringParams.get('cosView')
   const cosSun = scatteringParams.get('cosSun')
@@ -1065,7 +1064,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnLayout({
   ]
 })(([transmittanceTexture, scatteringDensityTexture, fragCoord]) => {
   const scatteringParams =
-    getParamsFromScatteringTextureFragCoord(fragCoord).toVar()
+    getParamsFromScatteringTextureFragCoord(fragCoord).toConst()
   const radius = scatteringParams.get('radius')
   const cosView = scatteringParams.get('cosView')
   const cosSun = scatteringParams.get('cosSun')
@@ -1147,19 +1146,19 @@ const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
   const deltaTheta = Math.PI / sampleCount
 
   const result = vec3(0).toVar()
-  const omegaSun = vec3(sqrt(cosSun.pow2().oneMinus()), 0, cosSun).toVar()
+  const omegaSun = vec3(sqrt(cosSun.pow2().oneMinus()), 0, cosSun).toConst()
 
   // @ts-expect-error Missing type on custom name
   Loop({ start: 0, end: sampleCount / 2, name: 'j' }, ({ j }) => {
-    const theta = float(j).add(0.5).mul(deltaTheta).toVar()
+    const theta = float(j).add(0.5).mul(deltaTheta).toConst()
 
     Loop({ start: 0, end: sampleCount * 2 }, ({ i }) => {
-      const phi = float(i).add(0.5).mul(deltaPhi).toVar()
+      const phi = float(i).add(0.5).mul(deltaPhi).toConst()
       const omega = vec3(
         cos(phi).mul(sin(theta)),
         sin(phi).mul(sin(theta)),
         cos(theta)
-      ).toVar()
+      ).toConst()
       const deltaOmega = sin(theta).mul(deltaTheta * deltaPhi)
       const cosViewSun = omega.dot(omegaSun)
       result.addAssign(
@@ -1226,7 +1225,7 @@ export const computeDirectIrradianceTexture = /*#__PURE__*/ FnLayout({
 
   const irradianceParams = getParamsFromIrradianceTextureUV(
     fragCoord.div(vec2(parameters.irradianceTextureSize))
-  ).toVar()
+  ).toConst()
   const radius = irradianceParams.get('radius')
   const cosSun = irradianceParams.get('cosSun')
   return computeDirectIrradiance(transmittanceTexture, radius, cosSun)
@@ -1257,7 +1256,7 @@ export const computeIndirectIrradianceTexture = /*#__PURE__*/ FnLayout({
 
   const irradianceParams = getParamsFromIrradianceTextureUV(
     fragCoord.div(vec2(parameters.irradianceTextureSize))
-  ).toVar()
+  ).toConst()
   const radius = irradianceParams.get('radius')
   const cosSun = irradianceParams.get('cosSun')
   return computeIndirectIrradiance(

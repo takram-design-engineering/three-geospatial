@@ -39,7 +39,6 @@ export class AerialPerspectiveNode extends TempNode {
   skyNode?: Node<'vec3'> | null
   shadowLengthNode?: Node<'float'> | null
 
-  // Static options:
   correctGeometricError = true
   lighting = false
   transmittance = true
@@ -86,7 +85,7 @@ export class AerialPerspectiveNode extends TempNode {
     } = atmosphereContext
 
     const { colorNode, depthNode, normalNode } = this
-    const depth = depthNode.r.toVar()
+    const depth = depthNode.r.toConst()
 
     const getSurfacePositionECEF = (): Node<'vec3'> => {
       const viewZ = depthToViewZ(depth, cameraNear(camera), cameraFar(camera), {
@@ -193,7 +192,7 @@ export class AerialPerspectiveNode extends TempNode {
         positionUnit.add(altitudeCorrectionUnit),
         this.shadowLengthNode ?? 0,
         sunDirectionECEF
-      ).toVar()
+      ).toConst()
       const inscatter = luminanceTransfer.get('luminance')
       const transmittance = luminanceTransfer.get('transmittance')
 

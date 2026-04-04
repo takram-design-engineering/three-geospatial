@@ -44,7 +44,6 @@ export class SkyNode extends TempNode {
   moonNode: MoonNode
   starsNode: StarsNode
 
-  // Static options:
   showSun = true
   showMoon = true
   showStars = true

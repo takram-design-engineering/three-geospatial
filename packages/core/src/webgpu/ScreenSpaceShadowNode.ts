@@ -656,7 +656,7 @@ export class ScreenSpaceShadowNode extends TempNode {
         shadowValue.mul(shadowContrast).add(contrastOffset).saturate()
       )
 
-      const result = float().toVar()
+      const result = float(0).toVar()
 
       // Take the average of 4 samples, this is useful to reduce aliasing noise
       // in the source depth, especially with long shadows.

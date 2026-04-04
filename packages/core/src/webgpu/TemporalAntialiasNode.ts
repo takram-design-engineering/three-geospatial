@@ -236,7 +236,6 @@ export class TemporalAntialiasNode extends TempNode {
   velocityThreshold = uniform(0.1)
   depthError = uniform(0.001)
 
-  // Static options:
   debugShowRejection = false
 
   private readonly textureNode: TextureNode

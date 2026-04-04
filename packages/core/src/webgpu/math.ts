@@ -15,7 +15,7 @@ export const raySphereIntersection = /*#__PURE__*/ FnVar(
     const a = rayOrigin.sub(center)
     const b = dot(rayDirection, a)
     const c = dot(a, a).sub(radius.pow2())
-    const discriminant = b.pow2().sub(c).toVar()
+    const discriminant = b.pow2().sub(c).toConst()
 
     const intersection = vec2(-1)
     If(discriminant.greaterThanEqual(0), () => {
@@ -42,7 +42,7 @@ export const raySpheresIntersections = /*#__PURE__*/ FnVar(
     const a = rayOrigin.sub(center)
     const b = dot(rayDirection, a)
     const c = dot(a, a).sub(radii.pow2())
-    const discriminant = b.pow2().sub(c).toVar()
+    const discriminant = b.pow2().sub(c).toConst()
 
     const near = vec4(-1)
     const far = vec4(-1)
@@ -69,7 +69,7 @@ export const rayEllipsoidIntersection = /*#__PURE__*/ FnVar(
     const discriminant = b
       .pow2()
       .sub(a.mul(c.sub(1)))
-      .toVar()
+      .toConst()
 
     const intersections = vec2(-1)
     If(discriminant.greaterThanEqual(0), () => {
