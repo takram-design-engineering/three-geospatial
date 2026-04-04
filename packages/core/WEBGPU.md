@@ -111,7 +111,7 @@ const fn = Fn(([a, b, c], builder) => {
 
 ## HighpVelocityNode
 
-A node that outputs geometry velocity in the current camera's UV and depth. Unlike `VelocityNode` in Three.js's examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
+A node that outputs geometry velocity in the current camera's UV and depth. Unlike `VelocityNode` in Three.js examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
 
 → [Source](/packages/core/src/webgpu/HighpVelocityNode.ts)
 
@@ -214,6 +214,12 @@ A scaling factor that controls the intensity of the bloom.
 
 ## TemporalAntialiasNode
 
+A post-processing node that applies antialiasing by accumulating jittered samples across frames.
+
+The key difference from `TRAANode` in Three.js examples is that it synchronizes the unjittered projection matrix with `HighpVelocityNode` instead of `VelocityNode`. The technique used in this node has already been merged upstream.
+
+> [Source](/packages/core/src/webgpu/TemporalAntialiasNode.ts)
+
 ### Constructor
 
 ```ts
@@ -241,19 +247,27 @@ The node to which the effect is applied.
 depthNode: TextureNode
 ```
 
+The depth node for the current frame.
+
 #### velocityNode
 
 ```ts
 velocityNode: TextureNode
 ```
 
+The node that stores motion vectors in NDC, provided by `HighpVelocityNode`.
+
 ### Uniforms
 
 #### temporalAlpha
 
 ```ts
-temporalAlpha = uniform(0.1)
+temporalAlpha = uniform(0.05)
 ```
+
+The blending factor between the current frame and the reprojected history.
+
+Lower values produce smoother results but increase ghosting.
 
 #### varianceGamma
 
@@ -261,17 +275,25 @@ temporalAlpha = uniform(0.1)
 varianceGamma = uniform(1)
 ```
 
+Controls the size of the variance clipping.
+
+Larger values allow more history to pass through, reducing flickering but increasing ghosting.
+
 #### velocityThreshold
 
 ```ts
 velocityThreshold = uniform(0.1)
 ```
 
+The velocity magnitude (in UV space) above which history samples are fully rejected.
+
 #### depthError
 
 ```ts
 depthError = uniform(0.001)
 ```
+
+The tolerance for the depth comparison between the reprojected depth and the previous frame's depth.
 
 ### Static options
 
@@ -280,6 +302,16 @@ depthError = uniform(0.001)
 ```ts
 camera: Camera
 ```
+
+The camera used for rendering the scene. This is required because the effect is rendered in a post-processing stage.
+
+#### debugShowRejection
+
+```ts
+debugShowRejection = false
+```
+
+When enabled, rejected pixels are displayed in red.
 
 ## ScreenSpaceShadowNode
 
