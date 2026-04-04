@@ -138,6 +138,11 @@ The implementation is based on Léna Piquet's [detailed walkthrough of UE4's len
 
 > [Source](/packages/core/src/webgpu/LensFlareNode.ts)
 
+```ts
+const passNode = pass(scene, camera)
+const lensFlareNode = lensFlare(passNode)
+```
+
 ### Constructor
 
 ```ts
@@ -219,6 +224,19 @@ A post-processing node that applies antialiasing by accumulating jittered sample
 The key difference from `TRAANode` in Three.js examples is that it synchronizes the unjittered projection matrix with `HighpVelocityNode` instead of `VelocityNode`. The technique used in this node has already been merged upstream.
 
 > [Source](/packages/core/src/webgpu/TemporalAntialiasNode.ts)
+
+```ts
+const passNode = pass(scene, camera).setMRT(
+  mrt({
+    output,
+    velocity: highpVelocity
+  })
+)
+const colorNode = passNode.getTextureNode('output')
+const depthNode = passNode.getTextureNode('depth')
+const velocityNode = passNode.getTextureNode('velocity')
+const taaNode = temporalAntialias(colorNode, depthNode, velocityNode, camera)
+```
 
 ### Constructor
 
@@ -315,13 +333,30 @@ When enabled, rejected pixels are displayed in red.
 
 ## ScreenSpaceShadowNode
 
-A post-processing node that applies screen-space shadows.
+A post-processing node that applies screen-space shadows (SSS).
 
 Unlike `SSSNode` in Three.js examples, this node uses a compute shader with workgroup shared memory, allowing for longer and softer shadows at a lower cost per pixel.
 
 The implementation is based on [Bend Studio's technique](https://www.bendstudio.com/blog/inside-bend-screen-space-shadows/).
 
 > [Source](/packages/core/src/webgpu/ScreenSpaceShadowNode.ts)
+
+```ts
+declare const light: DirectionalLight
+light.castShadow = true
+
+// To render shadows correctly, a separate depth pass is required before the
+// main pass. In this case, discard color output to keep the pre-pass cheap.
+const prePassNode = pass(scene, camera).setMRT(mrt({ output: vec4(0) }))
+const depthNode = prePassNode.getTextureNode('depth')
+const sssNode = screenSpaceShadow(depthNode, camera, light)
+
+// Setup the main pass with a custom shadow context using the SSS result:
+const passNode = pass(scene, camera)
+const sssSample = sssNode.getTextureNode().sample(screenUV).r
+const sssContext = builtinShadowContext(sssSample, light)
+passNode.contextNode = sssContext
+```
 
 ### Constructor
 
