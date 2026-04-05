@@ -30,6 +30,10 @@ const DescriptionElement = styled('div')`
   pointer-events: none;
   user-select: none;
 
+  a {
+    pointer-events: auto;
+  }
+
   a,
   em {
     color: white;

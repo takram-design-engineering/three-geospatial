@@ -33,7 +33,12 @@ export const toneMappingArgs = (
   ...defaults
 })
 
-export const toneMappingArgTypes = (): ArgTypes<ToneMappingArgs> => ({
+export const toneMappingArgTypes = (
+  options: {
+    min?: number
+    max?: number
+  } = {}
+): ArgTypes<ToneMappingArgs> => ({
   toneMappingEnabled: {
     name: 'enabled',
     control: {
@@ -68,8 +73,8 @@ export const toneMappingArgTypes = (): ArgTypes<ToneMappingArgs> => ({
     name: 'exposure',
     control: {
       type: 'range',
-      min: 0.1,
-      max: 100,
+      min: options.min ?? 0.1,
+      max: options.max ?? 100,
       step: 0.1
     },
     table: { category: 'tone mapping' }

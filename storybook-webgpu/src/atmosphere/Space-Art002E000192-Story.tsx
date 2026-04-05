@@ -1,25 +1,27 @@
 import { OrbitControls } from '@react-three/drei'
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
-import { useLayoutEffect, type FC } from 'react'
-import { AgXToneMapping, SRGBColorSpace, TextureLoader } from 'three'
+import { useLayoutEffect, useMemo, type FC } from 'react'
+import { AgXToneMapping, Vector3 } from 'three'
 import {
   context,
+  Fn,
+  luminance,
   mix,
   mrt,
-  normalWorld,
+  mx_noise_float,
   output,
   pass,
-  texture,
+  screenCoordinate,
+  smoothstep,
+  time,
   toneMapping,
   uniform,
-  uv,
-  vec2,
   vec3
 } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
   PostProcessing,
-  type MeshPhysicalNodeMaterialParameters,
+  type Node,
   type Renderer
 } from 'three/webgpu'
 
@@ -32,16 +34,17 @@ import {
   aerialPerspective,
   AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode
+  AtmosphereLightNode,
+  AtmosphereParameters,
+  type SkyNode
 } from '@takram/three-atmosphere/webgpu'
-import { Ellipsoid } from '@takram/three-geospatial'
+import { Ellipsoid, radians, remap } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
 import {
   dithering,
   highpVelocity,
   lensFlare,
-  temporalAntialias,
-  type Node
+  temporalAntialias
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -68,6 +71,8 @@ import {
 } from '../controls/toneMappingControls'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { useResource } from '../hooks/useResource'
+import { useSpringControl } from '../hooks/useSpringControl'
+import { blueMarble } from './Space-Story'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
@@ -77,72 +82,38 @@ declare module '@react-three/fiber' {
 
 extend({ AtmosphereLight })
 
-interface BlueMarbleParams {
-  sunDirection: Node<'float'>
-  cloudAlbedo?: number
-  cloudShadowOffset?: number // In UV
-  oceanRoughness?: number
-  oceanIOR?: number
-  emissiveColor?: Node<'vec3'>
-}
+// Film grain based on: https://github.com/mattdesl/glsl-film-grain/
+const filmGrain = Fn(() => {
+  const coord = screenCoordinate.mul(0.5).toConst()
+  const offset = mx_noise_float(vec3(coord.div(2.5), time))
+  const n1 = mx_noise_float(vec3(coord, offset))
+  return n1.mul(0.5).add(0.5)
+})
 
-export const blueMarble = ({
-  sunDirection,
-  cloudAlbedo = 0.95,
-  cloudShadowOffset = 0.00075,
-  oceanRoughness = 0.4,
-  oceanIOR = 1.33,
-  emissiveColor = vec3(1, 0.6, 0.5).mul(0.002)
-}: BlueMarbleParams): MeshPhysicalNodeMaterialParameters => {
-  const colorTexture = new TextureLoader().load('public/blue_marble/color.webp')
-  const oceanTexture = new TextureLoader().load('public/blue_marble/ocean.webp')
-  const cloudsTexture = new TextureLoader().load(
-    'public/blue_marble/clouds.webp'
-  )
-  const emissiveTexture = new TextureLoader().load(
-    'public/blue_marble/emissive.webp'
-  )
-  colorTexture.colorSpace = SRGBColorSpace
-  colorTexture.anisotropy = 16
-  oceanTexture.anisotropy = 16
-  cloudsTexture.anisotropy = 16
-  emissiveTexture.anisotropy = 16
+const blendSoftLight = Fn(([base, blend]: [Node, Node]) =>
+  base.mul(base).mul(blend.mul(2).oneMinus()).add(base.mul(blend).mul(2))
+)
 
-  // Project the sunlight onto the sphere (normal tangent).
-  const east = vec3(0, 0, 1).cross(normalWorld).normalize().toConst()
-  const north = normalWorld.cross(east).normalize()
-  // uvOffset has no physical ground. It's just an effect.
-  const uvOffset = vec2(
-    sunDirection.dot(east).mul(cloudShadowOffset),
-    sunDirection.dot(north).mul(cloudShadowOffset)
-  )
-
-  const clouds = texture(cloudsTexture).r.toConst()
-  const shadow = texture(cloudsTexture, uv().add(uvOffset)).r
-  const color = texture(colorTexture).rgb
-  const ocean = texture(oceanTexture).r
-  return {
-    // The albedo of clouds is very close to 1 and diffuse, so just use the
-    // coverage as an overlay.
-    colorNode: mix(color, vec3(cloudAlbedo), clouds),
-    // emissiveColor and its intensity is also just an effect.
-    emissiveNode: texture(emissiveTexture).r.mul(emissiveColor),
-    // In a macroscopic view, ocean's reflectivity should be approximated by
-    // roughness.
-    roughnessNode: ocean.mul(clouds.oneMinus()).remap(1, 0, oceanRoughness, 1),
-    ior: oceanIOR,
-    // Although it's ideal that the clouds is blended over the shadows, this
-    // should be sufficient given that the shadows are very subtle.
-    receivedShadowNode: () => shadow.sub(clouds).saturate().oneMinus()
-  }
-}
+const blendFilmGrain = Fn(([base, grain]: [Node, Node]) => {
+  const luma = luminance(base.rgb)
+  const blended = blendSoftLight(base.rgb, grain)
+  const response = smoothstep(0.05, 0.5, luma)
+  return mix(blended, luma, response.pow2())
+})
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
-  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  const atmosphereContext = useResource(() => {
+    const parameters = new AtmosphereParameters()
+    // Need more precise scattering at smaller sun zenith angles.
+    parameters.minCosSun = Math.cos(radians(120))
+    // Note that this increases the size of the scattering 3D texture by 8 times.
+    parameters.scatteringTextureCosViewSunSize = 64
+    return new AtmosphereContext(parameters)
+  }, [])
   atmosphereContext.camera = camera
 
   useLayoutEffect(() => {
@@ -173,8 +144,15 @@ const Content: FC<StoryProps> = () => {
     () => aerialPerspective(colorNode, depthNode),
     [colorNode, depthNode]
   )
+  aerialNode.moonScattering = true
+  const skyNode = aerialNode.skyNode! as SkyNode
+  skyNode.starsNode.intensity.value = 0.005 // TODO: Find physically-correct value
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+  // Apply bloom on everything:
+  lensFlareNode.thresholdNode.thresholdLevel.value = 0
+  lensFlareNode.thresholdNode.thresholdRange.value = 0
+  lensFlareNode.bloomIntensity.value = 0.3
 
   const toneMappingNode = useResource(
     () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
@@ -186,9 +164,28 @@ const Content: FC<StoryProps> = () => {
     [camera, depthNode, velocityNode, toneMappingNode]
   )
 
+  const filmGrainAlpha = useMemo(() => uniform(1), [])
+  useSpringControl(
+    ({ toneMappingExposure: exposure }: StoryArgs) => exposure,
+    exposure => {
+      filmGrainAlpha.value = remap(
+        Math.log(exposure),
+        Math.log(2),
+        Math.log(1e5)
+      )
+    }
+  )
+
   const postProcessing = useResource(
-    () => new PostProcessing(renderer, taaNode.add(dithering)),
-    [renderer, taaNode]
+    () =>
+      new PostProcessing(
+        renderer,
+        blendFilmGrain(
+          taaNode.add(dithering),
+          mix(0.5, filmGrain(), filmGrainAlpha)
+        )
+      ),
+    [renderer, taaNode, filmGrainAlpha]
   )
 
   useGuardedFrame(() => {
@@ -228,7 +225,10 @@ const Content: FC<StoryProps> = () => {
   const material = useResource(
     () =>
       new MeshPhysicalNodeMaterial(
-        blueMarble({ sunDirection: atmosphereContext.sunDirectionECEF })
+        blueMarble({
+          sunDirection: atmosphereContext.sunDirectionECEF,
+          emissiveColor: vec3(1, 0.6, 0.5).mul(0.000005)
+        })
       ),
     [atmosphereContext.sunDirectionECEF]
   )
@@ -236,7 +236,8 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight castShadow />
-      <OrbitControls minDistance={2.2e7} enablePan={false} />
+      <atmosphereLight body='moon' />
+      <OrbitControls enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
         material={material}
@@ -260,9 +261,12 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
       }
     }}
     camera={{
-      fov: 30,
-      position: [3.58e7, 0, 0],
-      up: [0, 0, 1],
+      fov: 57.2,
+      position: new Vector3(1, -0.295, -0.03)
+        .normalize()
+        .multiplyScalar(1.63e7)
+        .toArray(),
+      up: new Vector3(0, 0.71, -1).normalize().toArray(),
       near: 1e4,
       far: 1e9
     }}
@@ -270,15 +274,24 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
     <Content {...props} />
     <Description>
       <p>
-        Creating a photorealistic globe is easy with @takram/three-atmosphere.
-        This just renders a sphere with the 3 layers of textures from NASA's
-        Blue Marble Collection and a few parameter adjustments to the physical
-        material. Atmospheric scattering is rendered using{' '}
-        <em>AerialPerspectiveNode</em> in the post-processing stage.
+        This scene replicates a{' '}
+        <a
+          href='https://images.nasa.gov/details/art002e000192'
+          target='_blank'
+          rel='noreferrer'
+        >
+          photo (art002e000192)
+        </a>
+        , taken by a NASA astronaut during the Artemis II mission on April 3,
+        2026 at 00:27:39 UTC. It was just past the full moon, resulting in a
+        particularly clear image. This scene accounts for the direct light and
+        atmospheric scattering of moonlight.
       </p>
       <p>
-        Note that the atmosphere is thinner than you may expect, but in reality,
-        it is just shy of 0.1% of Earth's radius.
+        Simulating ionospheric phenomena and the scattering of ground light
+        within the atmosphere in real time is very difficult, so they are not
+        included in this scene. Still, considering only moonlight produces a
+        somewhat plausible result.
       </p>
       <Attribution>Imagery: NASA</Attribution>
       <Attribution>Ocean mask: Solar System Scope</Attribution>
@@ -288,11 +301,12 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   ...localDateArgs({
-    dayOfYear: 190,
-    timeOfDay: 15
+    year: 2026,
+    dayOfYear: 93,
+    timeOfDay: 0.46
   }),
   ...toneMappingArgs({
-    toneMappingExposure: 2
+    toneMappingExposure: 1e5
   }),
   ...outputPassArgs(),
   ...rendererArgs()
@@ -300,7 +314,10 @@ Story.args = {
 
 Story.argTypes = {
   ...localDateArgTypes(),
-  ...toneMappingArgTypes(),
+  ...toneMappingArgTypes({
+    min: 2,
+    max: 1e5
+  }),
   ...outputPassArgTypes({
     hasNormal: false
   }),
