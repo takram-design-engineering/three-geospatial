@@ -1,20 +1,20 @@
 import { DirectionalLight } from 'three'
 import { uniform } from 'three/tsl'
 
-// WORKAROUND: As of r178, LightShadow and DirectionalLightShadow are not
-// exported but their types only, so we extend DirectionalLight to create an
-// instance of LightShadow.
+export type AtmosphereLightBody = 'sun' | 'moon'
+
 export class AtmosphereLight extends DirectionalLight {
   override readonly type = 'AtmosphereLight'
 
-  // Distance to the target position.
-  distance: number
+  distance: number // Distance to the target position.
+  body: AtmosphereLightBody
 
   direct = uniform(true)
   indirect = uniform(true)
 
-  constructor(distance = 1) {
+  constructor(distance = 1, body: AtmosphereLightBody = 'sun') {
     super()
     this.distance = distance
+    this.body = body
   }
 }

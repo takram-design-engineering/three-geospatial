@@ -35,8 +35,8 @@ const getLunarRadiance = /*#__PURE__*/ FnLayout({
       // (https://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html)
       // Visual magnitude of the moon: m2 = -12.74
       // (https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html)
-      // Relative brightness: 10^{0.4*(m2-m1)} ≈ 0.0000025
-      .mul(0.0000025)
+      // Relative brightness: 10^{0.4*(m2-m1)} ≈ 2.5e-6
+      .mul(2.5e-6)
       .div(PI.mul(moonAngularRadius.pow2()))
       .mul(sunRadianceToLuminance.mul(luminanceScale))
   )

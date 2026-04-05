@@ -2,10 +2,10 @@ import { Matrix3 } from 'three'
 import type { DirectLightData, LightingContext } from 'three/src/nodes/TSL.js'
 import {
   cameraViewMatrix,
-  Fn,
   normalWorld,
   positionWorld,
   select,
+  uniform,
   vec4
 } from 'three/tsl'
 import {
@@ -32,6 +32,9 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
 
   private atmosphereContext?: AtmosphereContext
 
+  private readonly intensityNode = uniform(1)
+  private readonly directionECEFNode = uniform('vec3')
+
   constructor(light: AtmosphereLight | null) {
     super(light)
     this.updateBeforeType = NodeUpdateType.FRAME
@@ -42,12 +45,35 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     if (light == null || atmosphereContext == null) {
       return
     }
-    const { matrixECEFToWorld, sunDirectionECEF } = atmosphereContext
+    const { matrixECEFToWorld } = atmosphereContext
     light.position
-      .copy(sunDirectionECEF.value)
+      .copy(this.directionECEFNode.value)
       .applyMatrix3(rotationScratch.setFromMatrix4(matrixECEFToWorld.value))
       .multiplyScalar(light.distance)
       .add(light.target.position)
+  }
+
+  override update(frame: NodeFrame): void {
+    super.update(frame)
+
+    const { light, atmosphereContext } = this
+    if (light == null || atmosphereContext == null) {
+      return
+    }
+    switch (light.body) {
+      case 'sun':
+        this.intensityNode.value = light.intensity
+        this.directionECEFNode.value.copy(
+          atmosphereContext.sunDirectionECEF.value
+        )
+        break
+      case 'moon':
+        this.intensityNode.value = light.intensity * 2.5e-6 // TODO: Consider moon phase
+        this.directionECEFNode.value.copy(
+          atmosphereContext.moonDirectionECEF.value
+        )
+        break
+    }
   }
 
   override setup(builder: NodeBuilder): unknown {
@@ -60,8 +86,9 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     if (light == null || atmosphereContext == null) {
       return
     }
-    const { direct, indirect } = light
 
+    const { intensityNode: intensity, directionECEFNode: directionECEF } = this
+    const { direct, indirect } = light
     const {
       worldToUnit,
       solarIrradiance,
@@ -69,7 +96,6 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       luminanceScale,
       matrixWorldToECEF,
       matrixECEFToWorld,
-      sunDirectionECEF,
       altitudeCorrectionECEF
     } = atmosphereContext
 
@@ -82,42 +108,35 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const positionUnit = positionECEF.mul(worldToUnit).toConst()
 
     // Compute the indirect illuminance to store it in the context.
-    const skyIlluminance = Fn(builder => {
-      // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that
-      // provided to the setupDirect().
-      return getSkyIlluminance(positionUnit, normalECEF, sunDirectionECEF).mul(
-        select(indirect, 1, 0)
-      )
-    })()
+    const skyIlluminance = getSkyIlluminance(
+      positionUnit,
+      normalECEF,
+      directionECEF
+    ).mul(select(indirect, 1, 0))
 
     // Yes, it's an indirect but should be fine to update it here.
     const lightingContext = builder.context as unknown as LightingContext
-    lightingContext.irradiance.addAssign(skyIlluminance)
+    lightingContext.irradiance.addAssign(skyIlluminance.mul(intensity))
 
     // Derive the view-space sun direction.
-    const sunDirectionWorld = matrixECEFToWorld.mul(
-      vec4(sunDirectionECEF, 0)
-    ).xyz
+    const sunDirectionWorld = matrixECEFToWorld.mul(vec4(directionECEF, 0)).xyz
     const sunDirectionView = cameraViewMatrix.mul(
       vec4(sunDirectionWorld, 0)
     ).xyz
 
     // Compute the direct luminance of the sun.
     const radius = positionUnit.length().toConst()
-    const cosSun = positionUnit.dot(sunDirectionECEF).div(radius)
-    const sunTransmittance = Fn(builder => {
-      // WORKAROUND: The builder in MeshBasicNodeMaterial is different from that
-      // provided to the setupDirect().
-      return getTransmittanceToSun(
-        atmosphereContext.lutNode.getTextureNode('transmittance'),
-        radius,
-        cosSun
-      )
-    })()
+    const cosSun = positionUnit.dot(directionECEF).div(radius)
+    const sunTransmittance = getTransmittanceToSun(
+      atmosphereContext.lutNode.getTextureNode('transmittance'),
+      radius,
+      cosSun
+    )
 
     const sunLuminance = solarIrradiance
       .mul(sunTransmittance)
       .mul(sunRadianceToLuminance.mul(luminanceScale))
+      .mul(intensity)
       .mul(select(direct, 1, 0))
 
     return {
