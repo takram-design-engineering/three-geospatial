@@ -26,7 +26,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from './AtmosphereContext'
-import { getSkyLuminanceToPoint, getSunAndSkyIlluminance } from './runtime'
+import { getIndirectLuminanceToPoint, getSplitIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
 export class AerialPerspectiveNode extends TempNode {
@@ -176,25 +176,25 @@ export class AerialPerspectiveNode extends TempNode {
         }
 
         // Direct and indirect illuminance on the surface:
-        const sunIlluminance = getSunAndSkyIlluminance(
+        const solarIlluminance = getSplitIlluminance(
           positionUnit.add(altitudeCorrectionUnit),
           normalECEF,
           sunDirectionECEF
         )
         let illuminance = add(
-          sunIlluminance.get('sunIlluminance'),
-          sunIlluminance.get('skyIlluminance')
+          solarIlluminance.get('direct'),
+          solarIlluminance.get('indirect')
         )
         if (this.moonScattering) {
-          const moonIlluminance = getSunAndSkyIlluminance(
+          const lunarIlluminance = getSplitIlluminance(
             positionUnit.add(altitudeCorrectionUnit),
             normalECEF,
             moonDirectionECEF
           )
           illuminance = add(
             illuminance,
-            moonIlluminance.get('sunIlluminance'),
-            moonIlluminance.get('skyIlluminance')
+            lunarIlluminance.get('direct'),
+            lunarIlluminance.get('indirect')
           )
         }
         return illuminance
@@ -205,17 +205,17 @@ export class AerialPerspectiveNode extends TempNode {
         : colorNode.rgb
 
       // Scattering between the camera to the surface:
-      const sunLuminanceTransfer = getSkyLuminanceToPoint(
+      const solarLuminanceTransfer = getIndirectLuminanceToPoint(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         positionUnit.add(altitudeCorrectionUnit),
         this.shadowLengthNode ?? 0,
         sunDirectionECEF
       ).toConst()
-      const transmittance = sunLuminanceTransfer.get('transmittance')
-      let inscatter = sunLuminanceTransfer.get('luminance')
+      const transmittance = solarLuminanceTransfer.get('transmittance')
+      let inscatter = solarLuminanceTransfer.get('luminance')
 
       if (this.moonScattering) {
-        const moonLuminanceTransfer = getSkyLuminanceToPoint(
+        const lunarLuminanceTransfer = getIndirectLuminanceToPoint(
           cameraPositionUnit.add(altitudeCorrectionUnit),
           positionUnit.add(altitudeCorrectionUnit),
           this.shadowLengthNode ?? 0,
@@ -224,7 +224,7 @@ export class AerialPerspectiveNode extends TempNode {
 
         // TODO: Consider moon phase
         inscatter = inscatter.add(
-          moonLuminanceTransfer.get('luminance').mul(2.5e-6)
+          lunarLuminanceTransfer.get('luminance').mul(2.5e-6)
         )
       }
 

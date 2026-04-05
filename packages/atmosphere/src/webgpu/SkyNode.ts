@@ -12,7 +12,7 @@ import {
 
 import { getAtmosphereContext } from './AtmosphereContext'
 import { MoonNode } from './MoonNode'
-import { getSkyLuminance } from './runtime'
+import { getIndirectLuminance } from './runtime'
 import { StarsNode } from './StarsNode'
 import { SunNode } from './SunNode'
 
@@ -102,17 +102,17 @@ export class SkyNode extends TempNode {
       .xyz.toVertexStage()
       .normalize()
 
-    const sunLuminanceTransfer = getSkyLuminance(
+    const solarLuminanceTransfer = getIndirectLuminance(
       cameraPositionUnit.add(altitudeCorrectionUnit),
       rayDirectionECEF,
       this.shadowLengthNode ?? 0,
       sunDirectionECEF
     ).toConst()
-    const transmittance = sunLuminanceTransfer.get('transmittance')
-    let inscatter = sunLuminanceTransfer.get('luminance')
+    const transmittance = solarLuminanceTransfer.get('transmittance')
+    let inscatter = solarLuminanceTransfer.get('luminance')
 
     if (this.moonScattering) {
-      const moonLuminanceTransfer = getSkyLuminance(
+      const lunarLuminanceTransfer = getIndirectLuminance(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         rayDirectionECEF,
         this.shadowLengthNode ?? 0,
@@ -121,7 +121,7 @@ export class SkyNode extends TempNode {
 
       // TODO: Consider moon phase
       inscatter = inscatter.add(
-        moonLuminanceTransfer.get('luminance').mul(2.5e-6)
+        lunarLuminanceTransfer.get('luminance').mul(2.5e-6)
       )
     }
 

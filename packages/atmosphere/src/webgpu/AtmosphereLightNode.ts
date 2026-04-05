@@ -21,7 +21,7 @@ import {
 } from './AtmosphereContext'
 import type { AtmosphereLight } from './AtmosphereLight'
 import { getTransmittanceToSun } from './common'
-import { getSkyIlluminance } from './runtime'
+import { getIndirectIlluminance } from './runtime'
 
 const rotationScratch = /*#__PURE__*/ new Matrix3()
 
@@ -104,7 +104,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     const positionUnit = positionECEF.mul(worldToUnit).toConst()
 
     // Compute the indirect illuminance to store it in the context.
-    const skyIlluminance = getSkyIlluminance(
+    const indirectIlluminance = getIndirectIlluminance(
       positionUnit,
       normalECEF,
       directionECEF
@@ -112,32 +112,32 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
 
     // Yes, it's an indirect but should be fine to update it here.
     const lightingContext = builder.context as unknown as LightingContext
-    lightingContext.irradiance.addAssign(skyIlluminance.mul(intensity))
+    lightingContext.irradiance.addAssign(indirectIlluminance.mul(intensity))
 
-    // Derive the view-space sun direction.
-    const sunDirectionWorld = matrixECEFToWorld.mul(vec4(directionECEF, 0)).xyz
-    const sunDirectionView = cameraViewMatrix.mul(
-      vec4(sunDirectionWorld, 0)
-    ).xyz
+    // Derive the view-space light direction.
+    const directionWorld = matrixECEFToWorld.mul(vec4(directionECEF, 0)).xyz
+    const directionView = cameraViewMatrix.mul(vec4(directionWorld, 0)).xyz
 
-    // Compute the direct luminance of the sun.
+    // Compute the direct luminance of the light.
+    // Fortunately, the apparent sizes of the sun and moon are close, we use
+    // the result of getTransmittanceToSun for the moon as well.
     const radius = positionUnit.length().toConst()
-    const cosSun = positionUnit.dot(directionECEF).div(radius)
-    const sunTransmittance = getTransmittanceToSun(
+    const cosLight = positionUnit.dot(directionECEF).div(radius)
+    const transmittance = getTransmittanceToSun(
       atmosphereContext.lutNode.getTextureNode('transmittance'),
       radius,
-      cosSun
+      cosLight
     )
 
-    const sunLuminance = solarIrradiance
-      .mul(sunTransmittance)
+    const directLuminance = solarIrradiance
+      .mul(transmittance)
       .mul(sunRadianceToLuminance.mul(luminanceScale))
       .mul(intensity)
       .mul(select(direct, 1, 0))
 
     return {
-      lightDirection: sunDirectionView,
-      lightColor: sunLuminance.mul(this.colorNode)
+      lightDirection: directionView,
+      lightColor: directLuminance.mul(this.colorNode)
     }
   }
 }
