@@ -1,5 +1,4 @@
 import { Vector2, Vector3 } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 
 import { radians } from '@takram/three-geospatial'
 
@@ -33,16 +32,6 @@ export class DensityProfileLayer {
     return this
   }
 
-  hash(): number {
-    return hash(
-      this.width,
-      this.expTerm,
-      this.expScale,
-      this.linearTerm,
-      this.constantTerm
-    )
-  }
-
   clone(): DensityProfileLayer {
     return new DensityProfileLayer().copy(this)
   }
@@ -58,10 +47,6 @@ export class DensityProfile {
   copy(other: DensityProfile): this {
     this.layers = [other.layers[0].clone(), other.layers[1].clone()]
     return this
-  }
-
-  hash(): number {
-    return hash(this.layers[0].hash(), this.layers[1].hash())
   }
 
   clone(): DensityProfile {
@@ -157,11 +142,11 @@ export class AtmosphereParameters {
   scatteringTextureCosViewSize = 128
   scatteringTextureCosSunSize = 32
   scatteringTextureCosViewSunSize = 8
-  scatteringTextureSize = new Vector3(
-    this.scatteringTextureCosViewSunSize * this.scatteringTextureCosSunSize,
-    this.scatteringTextureCosViewSize,
-    this.scatteringTextureRadiusSize
-  )
+  scatteringTextureSize = new Vector3()
+
+  constructor() {
+    this.update()
+  }
 
   copy(other: AtmosphereParameters): this {
     this.worldToUnit = other.worldToUnit
@@ -195,37 +180,13 @@ export class AtmosphereParameters {
     return this
   }
 
-  hash(): number {
-    return hash(
-      this.worldToUnit,
-      ...this.solarIrradiance,
-      this.sunAngularRadius,
-      this.bottomRadius,
-      this.topRadius,
-      this.rayleighDensity.hash(),
-      ...this.rayleighScattering,
-      this.mieDensity.hash(),
-      ...this.mieScattering,
-      ...this.mieExtinction,
-      this.miePhaseFunctionG,
-      this.absorptionDensity.hash(),
-      ...this.absorptionExtinction,
-      ...this.groundAlbedo,
-      this.minCosSun,
-      ...this.sunRadianceToLuminance,
-      ...this.skyRadianceToLuminance,
-      this.luminanceScale,
-      +this.transmittancePrecisionLog,
-      +this.combinedScatteringTextures,
-      +this.higherOrderScatteringTexture,
-      ...this.transmittanceTextureSize,
-      ...this.irradianceTextureSize,
-      this.scatteringTextureRadiusSize,
+  update(): this {
+    this.scatteringTextureSize.set(
+      this.scatteringTextureCosViewSunSize * this.scatteringTextureCosSunSize,
       this.scatteringTextureCosViewSize,
-      this.scatteringTextureCosSunSize,
-      this.scatteringTextureCosViewSunSize,
-      ...this.scatteringTextureSize
+      this.scatteringTextureRadiusSize
     )
+    return this
   }
 
   clone(): AtmosphereParameters {
