@@ -26,5 +26,13 @@ export default defineConfig(
         { additionalHooks: 'useResource' }
       ]
     }
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false
+      }
+    }
   }
 )

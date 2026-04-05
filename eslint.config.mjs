@@ -19,6 +19,17 @@ export default defineConfig(
     })
   ),
   {
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['**/*.js', '**/*.cjs', '**/*.mjs'],
+          defaultProject: true
+        },
+        tsconfigRootDir: import.meta.dirname
+      }
+    }
+  },
+  {
     ignores: [
       '**/.nx',
       '**/dist',
@@ -27,7 +38,7 @@ export default defineConfig(
     ]
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.mjs'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -135,6 +146,7 @@ export default defineConfig(
       'no-param-reassign': 'off',
       'no-lonely-if': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unnecessary-type-arguments': 'off',
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
