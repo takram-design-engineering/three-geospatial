@@ -47,6 +47,7 @@ export class SkyNode extends TempNode {
   showSun = true
   showMoon = true
   showStars = true
+  moonScattering = true
   useContextCamera = true
 
   constructor(scope: SkyNodeScope) {
@@ -62,6 +63,7 @@ export class SkyNode extends TempNode {
       +this.showSun,
       +this.showMoon,
       +this.showStars,
+      +this.moonScattering,
       +this.useContextCamera
     )
   }
@@ -72,6 +74,7 @@ export class SkyNode extends TempNode {
     const {
       matrixWorldToECEF,
       sunDirectionECEF,
+      moonDirectionECEF,
       cameraPositionUnit,
       altitudeCorrectionUnit
     } = atmosphereContext
@@ -99,14 +102,28 @@ export class SkyNode extends TempNode {
       .xyz.toVertexStage()
       .normalize()
 
-    const luminanceTransfer = getSkyLuminance(
+    const sunLuminanceTransfer = getSkyLuminance(
       cameraPositionUnit.add(altitudeCorrectionUnit),
       rayDirectionECEF,
       this.shadowLengthNode ?? 0,
       sunDirectionECEF
-    )
-    const inscatter = luminanceTransfer.get('luminance')
-    const transmittance = luminanceTransfer.get('transmittance')
+    ).toConst()
+    const transmittance = sunLuminanceTransfer.get('transmittance')
+    let inscatter = sunLuminanceTransfer.get('luminance')
+
+    if (this.moonScattering) {
+      const moonLuminanceTransfer = getSkyLuminance(
+        cameraPositionUnit.add(altitudeCorrectionUnit),
+        rayDirectionECEF,
+        this.shadowLengthNode ?? 0,
+        moonDirectionECEF
+      )
+
+      // TODO: Consider moon phase
+      inscatter = inscatter.add(
+        moonLuminanceTransfer.get('luminance').mul(2.5e-6)
+      )
+    }
 
     return Fn(() => {
       const luminance = vec3(0).toVar()

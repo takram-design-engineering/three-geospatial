@@ -32,8 +32,8 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
 
   private atmosphereContext?: AtmosphereContext
 
-  private readonly intensityNode = uniform(1)
-  private readonly directionECEFNode = uniform('vec3')
+  private readonly intensity = uniform(1)
+  private readonly directionECEF = uniform('vec3')
 
   constructor(light: AtmosphereLight | null) {
     super(light)
@@ -47,7 +47,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     }
     const { matrixECEFToWorld } = atmosphereContext
     light.position
-      .copy(this.directionECEFNode.value)
+      .copy(this.directionECEF.value)
       .applyMatrix3(rotationScratch.setFromMatrix4(matrixECEFToWorld.value))
       .multiplyScalar(light.distance)
       .add(light.target.position)
@@ -62,16 +62,12 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     }
     switch (light.body) {
       case 'sun':
-        this.intensityNode.value = light.intensity
-        this.directionECEFNode.value.copy(
-          atmosphereContext.sunDirectionECEF.value
-        )
+        this.intensity.value = light.intensity
+        this.directionECEF.value.copy(atmosphereContext.sunDirectionECEF.value)
         break
       case 'moon':
-        this.intensityNode.value = light.intensity * 2.5e-6 // TODO: Consider moon phase
-        this.directionECEFNode.value.copy(
-          atmosphereContext.moonDirectionECEF.value
-        )
+        this.intensity.value = light.intensity * 2.5e-6 // TODO: Consider moon phase
+        this.directionECEF.value.copy(atmosphereContext.moonDirectionECEF.value)
         break
     }
   }
@@ -87,7 +83,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       return
     }
 
-    const { intensityNode: intensity, directionECEFNode: directionECEF } = this
+    const { intensity, directionECEF } = this
     const { direct, indirect } = light
     const {
       worldToUnit,
