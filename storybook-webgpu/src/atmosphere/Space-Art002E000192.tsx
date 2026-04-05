@@ -110,8 +110,6 @@ const Content: FC<StoryProps> = () => {
     const parameters = new AtmosphereParameters()
     // Need more precise scattering at smaller sun zenith angles.
     parameters.minCosSun = Math.cos(radians(120))
-    // Note that this increases the size of the scattering 3D texture by 8 times.
-    parameters.scatteringTextureCosViewSunSize = 64
     return new AtmosphereContext(parameters)
   }, [])
   atmosphereContext.camera = camera
@@ -146,7 +144,7 @@ const Content: FC<StoryProps> = () => {
   )
   aerialNode.moonScattering = true
   const skyNode = aerialNode.skyNode! as SkyNode
-  skyNode.starsNode.intensity.value = 0.005 // TODO: Find physically-correct value
+  skyNode.starsNode.intensity.value = 0.001 // TODO: Find physically-correct value
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
   // Apply bloom on everything:
