@@ -47,7 +47,7 @@ export class SkyNode extends TempNode {
   showSun = true
   showMoon = true
   showStars = true
-  moonScattering = true
+  moonScattering = false
   useContextCamera = true
 
   constructor(scope: SkyNodeScope) {

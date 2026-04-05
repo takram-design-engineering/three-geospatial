@@ -44,7 +44,7 @@ export class AerialPerspectiveNode extends TempNode {
   lighting = false
   transmittance = true
   inscatter = true
-  moonScattering = true
+  moonScattering = false
 
   constructor(
     colorNode: Node<'vec4'>,
