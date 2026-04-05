@@ -36,6 +36,7 @@ export class SkyEnvironmentNode extends TempNode {
     this.skyNode = sky()
     this.skyNode.showSun = false
     this.skyNode.showMoon = false
+    this.skyNode.showStars = false
     this.skyNode.useContextCamera = false
 
     this.renderTarget = new CubeRenderTarget(size, {
