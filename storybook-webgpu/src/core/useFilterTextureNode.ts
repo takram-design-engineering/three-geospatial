@@ -2,7 +2,7 @@ import { useTexture } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { useMotionValueEvent, useSpring } from 'motion/react'
 import { useEvent } from 'react-use'
-import { SRGBColorSpace, Vector2 } from 'three'
+import { SRGBColorSpace } from 'three'
 import {
   float,
   rtt,
@@ -35,7 +35,7 @@ export function useFilterTextureNode(): TextureNode {
       vec2(1, imageAspect.div(screenAspect))
     )
 
-    const offset = uniform(new Vector2())
+    const offset = uniform('vec2')
     const offsetAmount = 0.05
 
     const textureNode = texture(image)

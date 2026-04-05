@@ -1,4 +1,4 @@
-import { Vector3, type Camera } from 'three'
+import type { Camera, Vector3 } from 'three'
 import { reference, uniform } from 'three/tsl'
 import type { UniformNode } from 'three/webgpu'
 
@@ -47,7 +47,7 @@ export const inverseViewMatrix = (camera: Camera): Node<'mat4'> =>
 
 export const cameraPositionWorld = (camera: Camera): UniformNode<Vector3> =>
   getCache(camera, 'cameraPositionWorld', () =>
-    uniform(new Vector3())
+    uniform('vec3')
       .setName('cameraPositionWorld')
       .onRenderUpdate((_, { value }) => {
         value.setFromMatrixPosition(camera.matrixWorld)

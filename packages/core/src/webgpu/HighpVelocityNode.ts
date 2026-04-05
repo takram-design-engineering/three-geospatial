@@ -20,10 +20,10 @@ export class HighpVelocityNode extends TempNode {
 
   projectionMatrix?: Matrix4 | null
 
-  private readonly currentProjectionMatrix = uniform(new Matrix4())
+  private readonly currentProjectionMatrix = uniform('mat4')
   private readonly previousProjectionMatrix = uniform('mat4')
 
-  private readonly currentModelViewMatrix = uniform(new Matrix4())
+  private readonly currentModelViewMatrix = uniform('mat4')
   private readonly previousModelViewMatrix = uniform('mat4')
   private readonly objectModelViewMatrices = new WeakMap<Object3D, Matrix4>()
 
