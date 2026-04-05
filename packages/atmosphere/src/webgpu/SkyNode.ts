@@ -12,7 +12,7 @@ import {
 
 import { getAtmosphereContext } from './AtmosphereContext'
 import { MoonNode } from './MoonNode'
-import { getSkyLuminance } from './runtime'
+import { getIndirectLuminance } from './runtime'
 import { StarsNode } from './StarsNode'
 import { SunNode } from './SunNode'
 
@@ -47,6 +47,7 @@ export class SkyNode extends TempNode {
   showSun = true
   showMoon = true
   showStars = true
+  moonScattering = false
   useContextCamera = true
 
   constructor(scope: SkyNodeScope) {
@@ -62,6 +63,7 @@ export class SkyNode extends TempNode {
       +this.showSun,
       +this.showMoon,
       +this.showStars,
+      +this.moonScattering,
       +this.useContextCamera
     )
   }
@@ -72,6 +74,7 @@ export class SkyNode extends TempNode {
     const {
       matrixWorldToECEF,
       sunDirectionECEF,
+      moonDirectionECEF,
       cameraPositionUnit,
       altitudeCorrectionUnit
     } = atmosphereContext
@@ -99,14 +102,28 @@ export class SkyNode extends TempNode {
       .xyz.toVertexStage()
       .normalize()
 
-    const luminanceTransfer = getSkyLuminance(
+    const solarLuminanceTransfer = getIndirectLuminance(
       cameraPositionUnit.add(altitudeCorrectionUnit),
       rayDirectionECEF,
       this.shadowLengthNode ?? 0,
       sunDirectionECEF
-    )
-    const inscatter = luminanceTransfer.get('luminance')
-    const transmittance = luminanceTransfer.get('transmittance')
+    ).toConst()
+    const transmittance = solarLuminanceTransfer.get('transmittance')
+    let inscatter = solarLuminanceTransfer.get('luminance')
+
+    if (this.moonScattering) {
+      const lunarLuminanceTransfer = getIndirectLuminance(
+        cameraPositionUnit.add(altitudeCorrectionUnit),
+        rayDirectionECEF,
+        this.shadowLengthNode ?? 0,
+        moonDirectionECEF
+      )
+
+      // TODO: Consider moon phase
+      inscatter = inscatter.add(
+        lunarLuminanceTransfer.get('luminance').mul(2.5e-6)
+      )
+    }
 
     return Fn(() => {
       const luminance = vec3(0).toVar()

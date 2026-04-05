@@ -113,8 +113,8 @@ export class ScreenSpaceShadowNode extends TempNode {
   // xy: Screen coordinate
   // z: Normalized Z
   // w: Direction sign
-  private readonly lightCoordinate = uniform(new Vector4())
-  private readonly dispatchOffset = uniform(new Vector2(), 'ivec2')
+  private readonly lightCoordinate = uniform('vec4')
+  private readonly dispatchOffset = uniform('ivec2')
   private readonly dispatchIndex = uniform(0)
 
   private readonly dispatches: readonly Dispatch[] = Array.from(

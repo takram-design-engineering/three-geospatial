@@ -1,4 +1,4 @@
-import { Vector2, type RenderTarget } from 'three'
+import type { RenderTarget } from 'three'
 import { texture, uniform } from 'three/tsl'
 import {
   NodeMaterial,
@@ -23,7 +23,7 @@ export abstract class DualMipmapFilterNode extends FilterNode {
   private readonly mesh = new QuadMesh()
   private rendererState?: RendererUtils.RendererState
 
-  protected readonly inputTexelSize = uniform(new Vector2())
+  protected readonly inputTexelSize = uniform('vec2')
   protected readonly downsampleNode = texture()
 
   constructor(inputNode: TextureNode | null | undefined, levels: number) {
