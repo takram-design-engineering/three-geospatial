@@ -654,7 +654,6 @@ const raySegmentStruct = /*#__PURE__*/ struct(
 
 // Clip the view ray at the bottom atmosphere boundary.
 const clipRayAtBottomAtmosphere = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // BUG: Fails with the struct return type in WebGL
   name: 'clipRayAtBottomAtmosphere',
   type: raySegmentStruct,
   inputs: [

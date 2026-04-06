@@ -249,7 +249,6 @@ const transmittanceParamsStruct = /*#__PURE__*/ struct(
 )
 
 const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // BUG: Fails with the struct return type in WebGL
   name: 'getParamsFromTransmittanceTextureUV',
   type: transmittanceParamsStruct,
   inputs: [{ name: 'uv', type: 'vec2' }]
@@ -475,7 +474,6 @@ const scatteringParamsStruct = /*#__PURE__*/ struct(
 )
 
 const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // BUG: Fails with the struct return type in WebGL
   name: 'getParamsFromScatteringTextureCoord',
   type: scatteringParamsStruct,
   inputs: [{ name: 'coord', type: 'vec4' }]
@@ -596,7 +594,6 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 })
 
 const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // BUG: Fails with the struct return type in WebGL
   name: 'getParamsFromScatteringTextureFragCoord',
   type: scatteringParamsStruct,
   inputs: [{ name: 'fragCoord', type: 'vec3' }]
@@ -1191,7 +1188,6 @@ const irradianceParamsStruct = /*#__PURE__*/ struct(
 )
 
 const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // BUG: Fails with the struct return type in WebGL
   name: 'getParamsFromIrradianceTextureUV',
   type: irradianceParamsStruct,
   inputs: [{ name: 'uv', type: 'vec2' }]
