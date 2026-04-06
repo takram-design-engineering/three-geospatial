@@ -18,46 +18,45 @@
     "noImplicitOverride": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "@takram/three-atmosphere": [
-        "packages/atmosphere/src/index.ts"
+        "./packages/atmosphere/src/index.ts"
       ],
       "@takram/three-atmosphere/r3f": [
-        "packages/atmosphere/src/r3f/index.ts"
+        "./packages/atmosphere/src/r3f/index.ts"
       ],
       "@takram/three-atmosphere/shaders": [
-        "packages/atmosphere/src/shaders/index.ts"
+        "./packages/atmosphere/src/shaders/index.ts"
       ],
       "@takram/three-atmosphere/shaders/bruneton": [
-        "packages/atmosphere/src/shaders/bruneton/index.ts"
+        "./packages/atmosphere/src/shaders/bruneton/index.ts"
       ],
       "@takram/three-atmosphere/webgpu": [
-        "packages/atmosphere/src/webgpu/index.ts"
+        "./packages/atmosphere/src/webgpu/index.ts"
       ],
       "@takram/three-clouds": [
-        "packages/clouds/src/index.ts"
+        "./packages/clouds/src/index.ts"
       ],
       "@takram/three-clouds/r3f": [
-        "packages/clouds/src/r3f/index.ts"
+        "./packages/clouds/src/r3f/index.ts"
       ],
       "@takram/three-geospatial": [
-        "packages/core/src/index.ts"
+        "./packages/core/src/index.ts"
       ],
       "@takram/three-geospatial-effects": [
-        "packages/effects/src/index.ts"
+        "./packages/effects/src/index.ts"
       ],
       "@takram/three-geospatial-effects/r3f": [
-        "packages/effects/src/r3f/index.ts"
+        "./packages/effects/src/r3f/index.ts"
       ],
       "@takram/three-geospatial/r3f": [
-        "packages/core/src/r3f/index.ts"
+        "./packages/core/src/r3f/index.ts"
       ],
       "@takram/three-geospatial/shaders": [
-        "packages/core/src/shaders/index.ts"
+        "./packages/core/src/shaders/index.ts"
       ],
       "@takram/three-geospatial/webgpu": [
-        "packages/core/src/webgpu/index.ts"
+        "./packages/core/src/webgpu/index.ts"
       ]
     }
   },
