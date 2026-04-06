@@ -589,6 +589,12 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     this.scattering.dispose()
     this.singleMieScattering.dispose()
     this.higherOrderScattering.dispose()
+    this.transmittanceNode?.dispose()
+    this.directIrradianceNode?.dispose()
+    this.singleScatteringNode?.dispose()
+    this.scatteringDensityNode?.dispose()
+    this.indirectIrradianceNode?.dispose()
+    this.multipleScatteringNode?.dispose()
     super.dispose()
   }
 }
