@@ -77,8 +77,15 @@ function isSupportedCamera(camera: Camera): camera is SupportedCamera {
   )
 }
 
+interface RenderPipelineContext {
+  context: {
+    onBeforeRenderPipeline?: () => void
+    onAfterRenderPipeline?: () => void
+  }
+}
+
 interface PostProcessingContext {
-  context?: {
+  context: {
     onBeforePostProcessing?: () => void
     onAfterPostProcessing?: () => void
   }
@@ -246,7 +253,7 @@ export class TemporalAntialiasNode extends TempNode {
   private readonly resolveMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
   private rendererState?: RendererUtils.RendererState
-  private needsSyncPostProcessing = false
+  private needsSyncRenderPipeline = false
   private needsClearHistory = false
 
   private readonly resolveNode = texture(this.resolveRT.texture)
@@ -401,7 +408,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.swapBuffers()
 
     // Don't jitter the camera in subsequent render passes if any:
-    if (this.needsSyncPostProcessing) {
+    if (this.needsSyncRenderPipeline) {
       this.clearViewOffset()
     }
   }
@@ -500,16 +507,24 @@ export class TemporalAntialiasNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const { context } = (builder.context.postProcessing ??
-      {}) as PostProcessingContext
-    if (context != null) {
-      const { onBeforePostProcessing } = context
-      context.onBeforePostProcessing = () => {
-        onBeforePostProcessing?.()
-        const size = builder.renderer.getDrawingBufferSize(sizeScratch)
-        this.setViewOffset(size.width, size.height)
-      }
-      this.needsSyncPostProcessing = true
+    // We have to take care of the renaming of PostProcessing to RenderPipeline
+    // in r183, as well as changes to property fields in the context.
+    // TODO:
+    const onBeforeRenderPipeline = (): void => {
+      const size = builder.renderer.getDrawingBufferSize(sizeScratch)
+      this.setViewOffset(size.width, size.height)
+    }
+    if (builder.context.renderPipeline != null) {
+      const { context } = builder.context
+        .renderPipeline as RenderPipelineContext
+      context.onBeforeRenderPipeline = onBeforeRenderPipeline
+      this.needsSyncRenderPipeline = true
+    }
+    if (builder.context.postProcessing != null) {
+      const { context } = builder.context
+        .postProcessing as PostProcessingContext
+      context.onBeforePostProcessing = onBeforeRenderPipeline
+      this.needsSyncRenderPipeline = true
     }
 
     const { resolveMaterial } = this
