@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added support for moonlight and scattering in low light setup.
+
+### Changed
+
+- `AtmosphereParameters`: Deprecated and renamed `minCosSun` to `minCosLight`.
+
+### Fixed
+
+- Fixed errors when `higherOrderScatteringTexture` is disabled.
+
 ## [0.18.0] - 2026-04-05
 
 ### Changed

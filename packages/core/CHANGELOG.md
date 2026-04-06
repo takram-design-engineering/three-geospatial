@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `TemporalAntialiasNode`: Fixed incompatibility with `three@r183`.
+
 ## [0.8.0] - 2026-04-05
 
 ### Added
