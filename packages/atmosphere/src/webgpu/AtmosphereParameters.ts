@@ -115,7 +115,7 @@ export class AtmosphereParameters {
   // The cosine of the maximum sun zenith angle for which atmospheric scattering
   // must be precomputed (for maximum precision, use the smallest sun zenith
   // angle yielding negligible sky light radiance values).
-  minCosSun = Math.cos(radians(120)) // TODO
+  minCosLight = Math.cos(radians(120)) // TODO
 
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
   skyRadianceToLuminance = new Vector3(114974.91644, 71305.954816, 65310.548555)
@@ -140,8 +140,8 @@ export class AtmosphereParameters {
   irradianceTextureSize = new Vector2(64, 16)
   scatteringTextureRadiusSize = 32
   scatteringTextureCosViewSize = 128
-  scatteringTextureCosSunSize = 32
-  scatteringTextureCosViewSunSize = 8
+  scatteringTextureCosLightSize = 32
+  scatteringTextureCosViewLightSize = 8
   scatteringTextureSize = new Vector3()
 
   constructor() {
@@ -163,7 +163,7 @@ export class AtmosphereParameters {
     this.absorptionDensity.copy(other.absorptionDensity)
     this.absorptionExtinction.copy(other.absorptionExtinction)
     this.groundAlbedo.copy(other.groundAlbedo)
-    this.minCosSun = other.minCosSun
+    this.minCosLight = other.minCosLight
     this.sunRadianceToLuminance.copy(other.sunRadianceToLuminance)
     this.skyRadianceToLuminance.copy(other.skyRadianceToLuminance)
     this.luminanceScale = other.luminanceScale
@@ -174,15 +174,17 @@ export class AtmosphereParameters {
     this.irradianceTextureSize.copy(other.irradianceTextureSize)
     this.scatteringTextureRadiusSize = other.scatteringTextureRadiusSize
     this.scatteringTextureCosViewSize = other.scatteringTextureCosViewSize
-    this.scatteringTextureCosSunSize = other.scatteringTextureCosSunSize
-    this.scatteringTextureCosViewSunSize = other.scatteringTextureCosViewSunSize
+    this.scatteringTextureCosLightSize = other.scatteringTextureCosLightSize
+    this.scatteringTextureCosViewLightSize =
+      other.scatteringTextureCosViewLightSize
     this.scatteringTextureSize.copy(other.scatteringTextureSize)
     return this
   }
 
   update(): this {
     this.scatteringTextureSize.set(
-      this.scatteringTextureCosViewSunSize * this.scatteringTextureCosSunSize,
+      this.scatteringTextureCosViewLightSize *
+        this.scatteringTextureCosLightSize,
       this.scatteringTextureCosViewSize,
       this.scatteringTextureRadiusSize
     )
@@ -191,5 +193,35 @@ export class AtmosphereParameters {
 
   clone(): AtmosphereParameters {
     return new AtmosphereParameters().copy(this)
+  }
+
+  /** @deprecated Use minCosLight */
+  get minCosSun(): number {
+    return this.minCosLight
+  }
+
+  /** @deprecated Use minCosLight */
+  set minCosSun(value: number) {
+    this.minCosLight = value
+  }
+
+  /** @deprecated Use scatteringTextureCosLightSize */
+  get scatteringTextureCosSunSize(): number {
+    return this.scatteringTextureCosLightSize
+  }
+
+  /** @deprecated Use scatteringTextureCosLightSize */
+  set scatteringTextureCosSunSize(value: number) {
+    this.scatteringTextureCosLightSize = value
+  }
+
+  /** @deprecated Use scatteringTextureCosViewLightSize */
+  get scatteringTextureCosViewSunSize(): number {
+    return this.scatteringTextureCosViewLightSize
+  }
+
+  /** @deprecated Use scatteringTextureCosViewLightSize */
+  set scatteringTextureCosViewSunSize(value: number) {
+    this.scatteringTextureCosViewLightSize = value
   }
 }

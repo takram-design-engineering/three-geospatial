@@ -109,7 +109,7 @@ const Content: FC<StoryProps> = () => {
   const atmosphereContext = useResource(() => {
     const parameters = new AtmosphereParameters()
     // Need more precise scattering at larger sun zenith angles.
-    parameters.minCosSun = Math.cos(radians(120))
+    parameters.minCosLight = Math.cos(radians(120))
     return new AtmosphereContext(parameters)
   }, [])
   atmosphereContext.camera = camera

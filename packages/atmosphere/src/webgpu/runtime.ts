@@ -151,8 +151,8 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
     { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless },
-    { name: 'cosSun', type: Dimensionless },
-    { name: 'cosViewSun', type: Dimensionless },
+    { name: 'cosLight', type: Dimensionless },
+    { name: 'cosViewLight', type: Dimensionless },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
@@ -161,8 +161,8 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
     singleMieScatteringTexture,
     radius,
     cosView,
-    cosSun,
-    cosViewSun,
+    cosLight,
+    cosViewLight,
     viewRayIntersectsGround
   ],
   builder
@@ -172,22 +172,22 @@ const getCombinedScattering = /*#__PURE__*/ FnLayout({
   const coord = getScatteringTextureCoord(
     radius,
     cosView,
-    cosSun,
-    cosViewSun,
+    cosLight,
+    cosViewLight,
     viewRayIntersectsGround
   ).toConst()
   const texCoordX = coord.x
-    .mul(parameters.scatteringTextureCosViewSunSize - 1)
+    .mul(parameters.scatteringTextureCosViewLightSize - 1)
     .toConst()
   const texX = floor(texCoordX).toConst()
   const lerp = texCoordX.sub(texX).toConst()
   const coord0 = vec3(
-    texX.add(coord.y).div(parameters.scatteringTextureCosViewSunSize),
+    texX.add(coord.y).div(parameters.scatteringTextureCosViewLightSize),
     coord.z,
     coord.w
   ).toConst()
   const coord1 = vec3(
-    texX.add(1).add(coord.y).div(parameters.scatteringTextureCosViewSunSize),
+    texX.add(1).add(coord.y).div(parameters.scatteringTextureCosViewLightSize),
     coord.z,
     coord.w
   ).toConst()
@@ -294,8 +294,8 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
   If(radius.lessThanEqual(topRadius), () => {
     // Compute the scattering parameters needed for the texture lookups.
     const cosView = radiusCosView.div(radius).toConst()
-    const cosSun = movedCamera.dot(lightDirection).div(radius).toConst()
-    const cosViewSun = viewRay.dot(lightDirection).toConst()
+    const cosLight = movedCamera.dot(lightDirection).div(radius).toConst()
+    const cosViewLight = viewRay.dot(lightDirection).toConst()
 
     const viewRayIntersectsGround = rayIntersectsGround(
       radius,
@@ -326,8 +326,8 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
         singleMieScatteringTexture,
         radius,
         cosView,
-        cosSun,
-        cosViewSun,
+        cosLight,
+        cosViewLight,
         scatteringRayIntersectsGround
       ).toConst()
       scattering.assign(combinedScattering.get('scattering'))
@@ -348,9 +348,9 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
         .add(shadowLength)
         .div(radiusP)
         .toConst()
-      const cosSunP = radius
-        .mul(cosSun)
-        .add(shadowLength.mul(cosViewSun))
+      const cosLightP = radius
+        .mul(cosLight)
+        .add(shadowLength.mul(cosViewLight))
         .div(radiusP)
         .toConst()
 
@@ -359,8 +359,8 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
         singleMieScatteringTexture,
         radiusP,
         cosViewP,
-        cosSunP,
-        cosViewSun,
+        cosLightP,
+        cosViewLight,
         scatteringRayIntersectsGround
       ).toConst()
       scattering.assign(combinedScattering.get('scattering'))
@@ -380,8 +380,8 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
           higherOrderScatteringTexture,
           radiusP,
           cosViewP,
-          cosSunP,
-          cosViewSun,
+          cosLightP,
+          cosViewLight,
           scatteringRayIntersectsGround
         ).toConst()
         scattering.assign(
@@ -400,10 +400,10 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
     // scattering, applying their phase functions.
     radiance.assign(
       scattering
-        .mul(rayleighPhaseFunction(cosViewSun))
+        .mul(rayleighPhaseFunction(cosViewLight))
         .add(
           singleMieScattering.mul(
-            miePhaseFunction(miePhaseFunctionG, cosViewSun)
+            miePhaseFunction(miePhaseFunctionG, cosViewLight)
           )
         )
     )
@@ -465,8 +465,8 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
 
   // Compute the scattering parameters for the first texture lookup.
   const cosView = radiusCosView.div(radius).toVar()
-  const cosSun = movedCamera.dot(lightDirection).div(radius).toConst()
-  const cosViewSun = viewRay.dot(lightDirection).toConst()
+  const cosLight = movedCamera.dot(lightDirection).div(radius).toConst()
+  const cosViewLight = viewRay.dot(lightDirection).toConst()
   const distanceToPoint = movedCamera.distance(point).toVar()
   const viewRayIntersectsGround = rayIntersectsGround(radius, cosView).toConst()
 
@@ -495,8 +495,8 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
     singleMieScatteringTexture,
     radius,
     cosView,
-    cosSun,
-    cosViewSun,
+    cosLight,
+    cosViewLight,
     viewRayIntersectsGround
   ).toConst()
   const scattering = combinedScattering.get('scattering').toVar()
@@ -522,9 +522,9 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
     .add(distanceToPoint)
     .div(radiusP)
     .toConst()
-  const cosSunP = radius
-    .mul(cosSun)
-    .add(distanceToPoint.mul(cosViewSun))
+  const cosLightP = radius
+    .mul(cosLight)
+    .add(distanceToPoint.mul(cosViewLight))
     .div(radiusP)
     .toConst()
   const combinedScatteringP = getCombinedScattering(
@@ -532,8 +532,8 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
     singleMieScatteringTexture,
     radiusP,
     cosViewP,
-    cosSunP,
-    cosViewSun,
+    cosLightP,
+    cosViewLight,
     viewRayIntersectsGround
   ).toConst()
   const scatteringP = combinedScatteringP.get('scattering')
@@ -558,8 +558,8 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
       higherOrderScatteringTexture,
       radius,
       cosView,
-      cosSun,
-      cosViewSun,
+      cosLight,
+      cosViewLight,
       viewRayIntersectsGround
     ).toConst()
     const singleScattering = scattering.sub(higherOrderScattering).toConst()
@@ -567,8 +567,8 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
       higherOrderScatteringTexture,
       radiusP,
       cosViewP,
-      cosSunP,
-      cosViewSun,
+      cosLightP,
+      cosViewLight,
       viewRayIntersectsGround
     ).toConst()
     const singleScatteringP = scatteringP.sub(higherOrderScatteringP)
@@ -596,16 +596,18 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
 
   // Hack to avoid rendering artifacts when the light is below the horizon.
   singleMieScattering.assign(
-    singleMieScattering.mul(smoothstep(0, 0.01, cosSun))
+    singleMieScattering.mul(smoothstep(0, 0.01, cosLight))
   )
 
   // Finally combine the multiple Rayleigh scattering and the single Mie
   // scattering, applying their phase functions.
   scattering.assign(
     scattering
-      .mul(rayleighPhaseFunction(cosViewSun))
+      .mul(rayleighPhaseFunction(cosViewLight))
       .add(
-        singleMieScattering.mul(miePhaseFunction(miePhaseFunctionG, cosViewSun))
+        singleMieScattering.mul(
+          miePhaseFunction(miePhaseFunctionG, cosViewLight)
+        )
       )
   )
   return radianceTransferStruct(scattering, transmittance)
@@ -775,10 +777,10 @@ const getSplitIrradiance = /*#__PURE__*/ FnLayout({
   const { solarIrradiance } = context
 
   const radius = point.length().toConst()
-  const cosSun = point.dot(sunDirection).div(radius).toConst()
+  const cosLight = point.dot(sunDirection).div(radius).toConst()
 
   const directIrradiance = solarIrradiance.mul(
-    getTransmittanceToSun(transmittanceTexture, radius, cosSun),
+    getTransmittanceToSun(transmittanceTexture, radius, cosLight),
     normal.dot(sunDirection).max(0)
   )
 
@@ -786,7 +788,7 @@ const getSplitIrradiance = /*#__PURE__*/ FnLayout({
   const indirectIrradiance = getIrradiance(
     irradianceTexture,
     radius,
-    cosSun
+    cosLight
   ).mul(normal.dot(point).div(radius).add(1).mul(0.5))
 
   return splitIrradianceStruct(directIrradiance, indirectIrradiance)
@@ -804,10 +806,10 @@ const getIndirectIrradiance = /*#__PURE__*/ FnLayout({
   ]
 })(([irradianceTexture, point, normal, sunDirection]) => {
   const radius = point.length().toConst()
-  const cosSun = point.dot(sunDirection).div(radius).toConst()
+  const cosLight = point.dot(sunDirection).div(radius).toConst()
 
   // Approximated if the surface is not horizontal.
-  return getIrradiance(irradianceTexture, radius, cosSun).mul(
+  return getIrradiance(irradianceTexture, radius, cosLight).mul(
     normal.dot(point).div(radius).add(1).mul(0.5)
   )
 })
@@ -830,18 +832,18 @@ const getSplitScalarIrradiance = /*#__PURE__*/ FnLayout({
   const { solarIrradiance } = context
 
   const radius = point.length().toConst()
-  const cosSun = point.dot(sunDirection).div(radius).toConst()
+  const cosLight = point.dot(sunDirection).div(radius).toConst()
 
   // Omit the cosine term.
   const directIrradiance = solarIrradiance.mul(
-    getTransmittanceToSun(transmittanceTexture, radius, cosSun)
+    getTransmittanceToSun(transmittanceTexture, radius, cosLight)
   )
 
   // Integral over sphere yields 2π.
   const indirectIrradiance = getIrradiance(
     irradianceTexture,
     radius,
-    cosSun
+    cosLight
   ).mul(PI2)
 
   return splitIrradianceStruct(directIrradiance, indirectIrradiance)

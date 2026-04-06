@@ -349,7 +349,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless }
   ]
-})(([transmittanceTexture, radius, cosSun], builder) => {
+})(([transmittanceTexture, radius, cosLight], builder) => {
   const context = getAtmosphereContextBase(builder)
   const { sunAngularRadius, bottomRadius } = context
 
@@ -358,12 +358,12 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
   return getTransmittanceToTopAtmosphereBoundary(
     transmittanceTexture,
     radius,
-    cosSun
+    cosLight
   ).mul(
     smoothstep(
       sinHorizon.negate().mul(sunAngularRadius),
       sinHorizon.mul(sunAngularRadius),
-      cosSun.sub(cosHorizon)
+      cosLight.sub(cosHorizon)
     )
   )
 })
@@ -373,10 +373,10 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnLayout({
 export const rayleighPhaseFunction = /*#__PURE__*/ FnLayout({
   name: 'rayleighPhaseFunction',
   type: InverseSolidAngle,
-  inputs: [{ name: 'cosViewSun', type: Dimensionless }]
-})(([cosViewSun]) => {
+  inputs: [{ name: 'cosViewLight', type: Dimensionless }]
+})(([cosViewLight]) => {
   const k = div(3, mul(16, PI))
-  return k.mul(cosViewSun.pow2().add(1))
+  return k.mul(cosViewLight.pow2().add(1))
 })
 
 // Cornette-Shanks phase function:
@@ -386,13 +386,13 @@ export const miePhaseFunction = /*#__PURE__*/ FnLayout({
   type: InverseSolidAngle,
   inputs: [
     { name: 'g', type: Dimensionless },
-    { name: 'cosViewSun', type: Dimensionless }
+    { name: 'cosViewLight', type: Dimensionless }
   ]
-})(([g, cosViewSun]) => {
+})(([g, cosViewLight]) => {
   const k = div(3, PI.mul(8)).mul(g.pow2().oneMinus()).div(g.pow2().add(2))
   return k
-    .mul(cosViewSun.pow2().add(1))
-    .div(g.pow2().sub(g.mul(2).mul(cosViewSun)).add(1).pow(1.5))
+    .mul(cosViewLight.pow2().add(1))
+    .div(g.pow2().sub(g.mul(2).mul(cosViewLight)).add(1).pow(1.5))
 })
 
 export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
@@ -401,16 +401,16 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   inputs: [
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless },
-    { name: 'cosSun', type: Dimensionless },
-    { name: 'cosViewSun', type: Dimensionless },
+    { name: 'cosLight', type: Dimensionless },
+    { name: 'cosViewLight', type: Dimensionless },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
-  [radius, cosView, cosSun, cosViewSun, viewRayIntersectsGround],
+  [radius, cosView, cosLight, cosViewLight, viewRayIntersectsGround],
   builder
 ) => {
   const context = getAtmosphereContextBase(builder)
-  const { parameters, topRadius, bottomRadius, minCosSun } = context
+  const { parameters, topRadius, bottomRadius, minCosLight } = context
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
   const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toConst()
@@ -475,22 +475,22 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 
   const minDistance = topRadius.sub(bottomRadius).toConst()
   const maxDistance = H
-  const d = distanceToTopAtmosphereBoundary(bottomRadius, cosSun)
+  const d = distanceToTopAtmosphereBoundary(bottomRadius, cosLight)
   const a = d.remap(minDistance, maxDistance).toConst()
-  const D = distanceToTopAtmosphereBoundary(bottomRadius, minCosSun)
+  const D = distanceToTopAtmosphereBoundary(bottomRadius, minCosLight)
   const A = D.remap(minDistance, maxDistance)
 
-  // An ad-hoc function equal to 0 for cosSun = minCosSun (because then
-  // d = D and thus a = A), equal to 1 for cosSun = 1 (because then d =
-  // minDistance and thus a = 0), and with a large slope around cosSun = 0, to
+  // An ad-hoc function equal to 0 for cosLight = minCosLight (because then
+  // d = D and thus a = A), equal to 1 for cosLight = 1 (because then d =
+  // minDistance and thus a = 0), and with a large slope around cosLight = 0, to
   // get more texture samples near the horizon.
-  const cosSunCoord = getTextureCoordFromUnitRange(
+  const cosLightCoord = getTextureCoordFromUnitRange(
     max(a.div(A).oneMinus(), 0).div(a.add(1)),
-    parameters.scatteringTextureCosSunSize
+    parameters.scatteringTextureCosLightSize
   )
-  const cosViewSunCoord = cosViewSun.add(1).mul(0.5)
+  const cosViewLightCoord = cosViewLight.add(1).mul(0.5)
 
-  return vec4(cosViewSunCoord, cosSunCoord, cosViewCoord, radiusCoord)
+  return vec4(cosViewLightCoord, cosLightCoord, cosViewCoord, radiusCoord)
 })
 
 export const getScattering = /*#__PURE__*/ FnLayout({
@@ -501,8 +501,8 @@ export const getScattering = /*#__PURE__*/ FnLayout({
     { name: 'scatteringTexture', type: AbstractScatteringTexture },
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless },
-    { name: 'cosSun', type: Dimensionless },
-    { name: 'cosViewSun', type: Dimensionless },
+    { name: 'cosLight', type: Dimensionless },
+    { name: 'cosViewLight', type: Dimensionless },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })((
@@ -510,8 +510,8 @@ export const getScattering = /*#__PURE__*/ FnLayout({
     scatteringTexture,
     radius,
     cosView,
-    cosSun,
-    cosViewSun,
+    cosLight,
+    cosViewLight,
     viewRayIntersectsGround
   ],
   builder
@@ -521,22 +521,22 @@ export const getScattering = /*#__PURE__*/ FnLayout({
   const coord = getScatteringTextureCoord(
     radius,
     cosView,
-    cosSun,
-    cosViewSun,
+    cosLight,
+    cosViewLight,
     viewRayIntersectsGround
   ).toConst()
   const texCoordX = coord.x
-    .mul(parameters.scatteringTextureCosViewSunSize - 1)
+    .mul(parameters.scatteringTextureCosViewLightSize - 1)
     .toConst()
   const texX = floor(texCoordX).toConst()
   const lerp = texCoordX.sub(texX).toConst()
   const coord0 = vec3(
-    texX.add(coord.y).div(parameters.scatteringTextureCosViewSunSize),
+    texX.add(coord.y).div(parameters.scatteringTextureCosViewLightSize),
     coord.z,
     coord.w
   )
   const coord1 = vec3(
-    texX.add(1).add(coord.y).div(parameters.scatteringTextureCosViewSunSize),
+    texX.add(1).add(coord.y).div(parameters.scatteringTextureCosViewLightSize),
     coord.z,
     coord.w
   )
@@ -551,17 +551,17 @@ export const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
   type: 'vec2',
   inputs: [
     { name: 'radius', type: Length },
-    { name: 'cosSun', type: Dimensionless }
+    { name: 'cosLight', type: Dimensionless }
   ]
-})(([radius, cosSun], builder) => {
+})(([radius, cosLight], builder) => {
   const context = getAtmosphereContextBase(builder)
   const { parameters, topRadius, bottomRadius } = context
 
   const radiusUnit = radius.remap(bottomRadius, topRadius)
-  const cosSunUnit = cosSun.mul(0.5).add(0.5)
+  const cosLightUnit = cosLight.mul(0.5).add(0.5)
   return vec2(
     getTextureCoordFromUnitRange(
-      cosSunUnit,
+      cosLightUnit,
       parameters.irradianceTextureSize.x
     ),
     getTextureCoordFromUnitRange(radiusUnit, parameters.irradianceTextureSize.y)
@@ -575,9 +575,9 @@ export const getIrradiance = /*#__PURE__*/ FnLayout({
   inputs: [
     { name: 'irradianceTexture', type: IrradianceTexture },
     { name: 'radius', type: Length },
-    { name: 'cosSun', type: Dimensionless }
+    { name: 'cosLight', type: Dimensionless }
   ]
-})(([irradianceTexture, radius, cosSun]) => {
-  const uv = getIrradianceTextureUV(radius, cosSun)
+})(([irradianceTexture, radius, cosLight]) => {
+  const uv = getIrradianceTextureUV(radius, cosLight)
   return irradianceTexture.sample(uv).rgb
 })

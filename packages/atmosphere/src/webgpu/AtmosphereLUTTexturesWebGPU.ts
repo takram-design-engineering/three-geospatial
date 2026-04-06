@@ -513,10 +513,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       )
 
       const radiance = multipleScattering.get('radiance')
-      const cosViewSun = multipleScattering.get('cosViewSun')
+      const cosViewLight = multipleScattering.get('cosViewLight')
       const luminance = radiance
         .mul(luminanceFromRadiance)
-        .div(rayleighPhaseFunction(cosViewSun))
+        .div(rayleighPhaseFunction(cosViewLight))
 
       textureStore(
         this.scattering,

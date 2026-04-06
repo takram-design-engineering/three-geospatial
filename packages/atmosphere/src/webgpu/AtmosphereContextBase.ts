@@ -75,7 +75,7 @@ export class AtmosphereContextBase {
   absorptionDensity: DensityProfileNodes
   absorptionExtinction: Node<ScatteringSpectrum>
   groundAlbedo: Node<DimensionlessSpectrum>
-  minCosSun: Node<Dimensionless>
+  minCosLight: Node<Dimensionless>
   sunRadianceToLuminance: Node<DimensionlessSpectrum>
   skyRadianceToLuminance: Node<DimensionlessSpectrum>
   luminanceScale: Node<Dimensionless>
@@ -98,7 +98,7 @@ export class AtmosphereContextBase {
       absorptionDensity,
       absorptionExtinction,
       groundAlbedo,
-      minCosSun,
+      minCosLight,
       sunRadianceToLuminance,
       skyRadianceToLuminance,
       luminanceScale
@@ -135,7 +135,7 @@ export class AtmosphereContextBase {
       absorptionExtinction.z / worldToUnit
     )
     this.groundAlbedo = vec3(groundAlbedo)
-    this.minCosSun = float(minCosSun)
+    this.minCosLight = float(minCosLight)
     this.sunRadianceToLuminance = vec3(sunRadianceToLuminance)
     this.skyRadianceToLuminance = vec3(skyRadianceToLuminance)
     this.luminanceScale = float(luminanceScale)

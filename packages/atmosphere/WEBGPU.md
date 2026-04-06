@@ -759,10 +759,10 @@ groundAlbedo = new Vector3().setScalar(0.3)
 
 The average albedo of the ground.
 
-#### minCosSun
+#### minCosLight
 
 ```ts
-minCosSun = Math.cos(radians(102))
+minCosLight = Math.cos(radians(102))
 ```
 
 The cosine of the maximum sun zenith angle for which atmospheric scattering must be precomputed (for maximum precision, use the smallest sun zenith angle yielding negligible sky light radiance values).
