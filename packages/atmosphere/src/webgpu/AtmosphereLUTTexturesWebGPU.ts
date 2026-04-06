@@ -487,14 +487,16 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       )
     )
     // TODO: Use NodeAccess.READ_ONLY, which appears to be not supported yet.
-    renderer.copyTextureToTexture(
-      this.higherOrderScattering,
-      higherOrderScatteringRead,
-      boxScratch.set(
-        boxScratch.min.setScalar(0),
-        parameters.scatteringTextureSize
+    if (parameters.higherOrderScatteringTexture) {
+      renderer.copyTextureToTexture(
+        this.higherOrderScattering,
+        higherOrderScatteringRead,
+        boxScratch.set(
+          boxScratch.min.setScalar(0),
+          parameters.scatteringTextureSize
+        )
       )
-    )
+    }
 
     this.multipleScatteringNode ??= Fn(() => {
       const size = uvec3(width, height, depth)
