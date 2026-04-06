@@ -213,8 +213,8 @@ export class AtmosphereLUTNode extends Node {
       ? (this.textureType ?? FloatType)
       : HalfFloatType
     const parameters = this.parameters.clone()
-    parameters.update()
     parameters.transmittancePrecisionLog = textureType === HalfFloatType
+    parameters.update()
     this.textures.setup(parameters, textureType)
 
     return super.setup(builder)
@@ -230,6 +230,7 @@ export class AtmosphereLUTNode extends Node {
     }
 
     this.textures?.dispose()
+    this.textures = undefined
     super.dispose()
   }
 }
