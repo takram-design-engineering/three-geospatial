@@ -13,6 +13,7 @@
 ### Fixed
 
 - Fixed errors when `higherOrderScatteringTexture` is disabled.
+- Fixed changes in `AtmosphereParameters` not being applied when used by another renderer.
 
 ## [0.18.0] - 2026-04-05
 

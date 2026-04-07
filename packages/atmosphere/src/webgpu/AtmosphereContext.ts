@@ -71,11 +71,11 @@ export class AtmosphereContext extends AtmosphereContextBase {
     })
 
   cameraPositionUnit = this.cameraPositionECEF
-    .mul(this.worldToUnit)
+    .mul(this.parametersNode.worldToUnit)
     .toConst('cameraPositionUnit')
 
   altitudeCorrectionUnit = this.altitudeCorrectionECEF
-    .mul(this.worldToUnit)
+    .mul(this.parametersNode.worldToUnit)
     .toConst('altitudeCorrectionUnit')
 
   camera?: Camera

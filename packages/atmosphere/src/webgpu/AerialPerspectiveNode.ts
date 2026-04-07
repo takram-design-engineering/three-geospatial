@@ -78,9 +78,9 @@ export class AerialPerspectiveNode extends TempNode {
       return
     }
 
+    const { worldToUnit } = atmosphereContext.parametersNode
     const {
       ellipsoid,
-      worldToUnit,
       matrixWorldToECEF,
       sunDirectionECEF,
       moonDirectionECEF,

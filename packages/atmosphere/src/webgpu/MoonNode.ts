@@ -19,15 +19,22 @@ import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from './AtmosphereContext'
+import {
+  atmosphereParametersStruct,
+  makeDestructible
+} from './AtmosphereContextBase'
 import { Luminance3 } from './dimensional'
 
 const getLunarRadiance = /*#__PURE__*/ FnLayout({
   name: 'getLunarRadiance',
   type: Luminance3,
-  inputs: [{ name: 'moonAngularRadius', type: 'float' }]
-})(([moonAngularRadius], builder) => {
-  const context = getAtmosphereContext(builder)
-  const { solarIrradiance, sunRadianceToLuminance, luminanceScale } = context
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'moonAngularRadius', type: 'float' }
+  ]
+})(([parameters, moonAngularRadius]) => {
+  const { solarIrradiance, sunRadianceToLuminance, luminanceScale } =
+    makeDestructible(parameters)
 
   return (
     solarIrradiance
@@ -187,7 +194,10 @@ export class MoonNode extends TempNode {
         )
         luminance.assign(
           vec4(
-            getLunarRadiance(this.angularRadius)
+            getLunarRadiance(
+              atmosphereContext.parametersNode,
+              this.angularRadius
+            )
               .mul(this.intensity)
               .mul(color)
               .mul(diffuse),
