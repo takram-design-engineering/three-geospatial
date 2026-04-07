@@ -204,7 +204,7 @@ export class AtmosphereContextBase {
         scatteringTextureCosViewLightSize: uint(
           scatteringTextureCosViewLightSize
         )
-      }).toConst()
+      }).toConst('atmosphereParameters')
     )
   }
 
