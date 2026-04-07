@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- `TemporalAntialiasNode`: Fixed incompatibility with `three@r183`.
+- `TemporalAntialiasNode`: Fixed incompatibility with `three >= 0.183.0`.
 
 ## [0.8.0] - 2026-04-05
 

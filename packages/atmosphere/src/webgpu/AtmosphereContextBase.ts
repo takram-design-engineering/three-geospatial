@@ -1,14 +1,15 @@
-import { float, vec3 } from 'three/tsl'
-import type { NodeBuilder } from 'three/webgpu'
+import { float, ivec2, struct, uint, vec3 } from 'three/tsl'
+import type { NodeBuilder, StructNode } from 'three/webgpu'
 
-import type { Node } from '@takram/three-geospatial/webgpu'
+import { reinterpretType } from '@takram/three-geospatial'
+import type { Node, NodeType } from '@takram/three-geospatial/webgpu'
 
-import {
-  AtmosphereParameters,
-  type DensityProfile,
-  type DensityProfileLayer
-} from './AtmosphereParameters'
 import type {
+  AtmosphereParameters,
+  DensityProfile,
+  DensityProfileLayer
+} from './AtmosphereParameters'
+import {
   Angle,
   Dimensionless,
   DimensionlessSpectrum,
@@ -18,69 +19,117 @@ import type {
   ScatteringSpectrum
 } from './dimensional'
 
-export interface DensityProfileLayerNodes {
-  width: Node<Length>
-  expTerm: Node<Dimensionless>
-  expScale: Node<InverseLength>
-  linearTerm: Node<InverseLength>
-  constantTerm: Node<Dimensionless>
+export const densityProfileLayerStruct = /*#__PURE__*/ struct(
+  {
+    width: Length,
+    expTerm: Dimensionless,
+    expScale: InverseLength,
+    linearTerm: InverseLength,
+    constantTerm: Dimensionless
+  },
+  'densityProfileLayer'
+)
+
+export const densityProfileStruct = /*#__PURE__*/ struct(
+  {
+    layer0: densityProfileLayerStruct.layout.name!,
+    layer1: densityProfileLayerStruct.layout.name!
+  },
+  'densityProfile'
+)
+
+const atmosphereParametersLayout = {
+  worldToUnit: Dimensionless,
+  solarIrradiance: IrradianceSpectrum,
+  sunAngularRadius: Angle,
+  bottomRadius: Length,
+  topRadius: Length,
+  rayleighDensity: densityProfileStruct.layout.name!,
+  rayleighScattering: ScatteringSpectrum,
+  mieDensity: densityProfileStruct.layout.name!,
+  mieScattering: ScatteringSpectrum,
+  mieExtinction: ScatteringSpectrum,
+  miePhaseFunctionG: Dimensionless,
+  absorptionDensity: densityProfileStruct.layout.name!,
+  absorptionExtinction: ScatteringSpectrum,
+  groundAlbedo: DimensionlessSpectrum,
+  minCosLight: Dimensionless,
+  sunRadianceToLuminance: DimensionlessSpectrum,
+  skyRadianceToLuminance: DimensionlessSpectrum,
+  luminanceScale: Dimensionless,
+  transmittanceTextureSize: 'uvec2',
+  irradianceTextureSize: 'uvec2',
+  scatteringTextureRadiusSize: 'uint',
+  scatteringTextureCosViewSize: 'uint',
+  scatteringTextureCosLightSize: 'uint',
+  scatteringTextureCosViewLightSize: 'uint'
 }
 
-function densityProfileLayerNodes(
+export const atmosphereParametersStruct = /*#__PURE__*/ struct(
+  atmosphereParametersLayout,
+  'atmosphereParameters'
+)
+
+function densityProfileLayer(
   layer: DensityProfileLayer,
   worldToUnit: number
-): DensityProfileLayerNodes {
+): StructNode {
   const { width, expTerm, expScale, linearTerm, constantTerm } = layer
-
-  // BUG: Invoking toVar() or toConst() on these nodes breaks shaders.
-  return {
+  return densityProfileLayerStruct({
+    // @ts-expect-error Object-style parameter is supported
     width: float(width * worldToUnit),
     expTerm: float(expTerm),
     expScale: float(expScale / worldToUnit),
     linearTerm: float(linearTerm / worldToUnit),
     constantTerm: float(constantTerm)
-  }
+  })
 }
 
-export interface DensityProfileNodes {
-  layers: [DensityProfileLayerNodes, DensityProfileLayerNodes]
-}
-
-function densityProfileNodes(
+function densityProfile(
   profile: DensityProfile,
   worldToUnit: number
-): DensityProfileNodes {
-  return {
-    layers: [
-      densityProfileLayerNodes(profile.layers[0], worldToUnit),
-      densityProfileLayerNodes(profile.layers[1], worldToUnit)
-    ]
+): StructNode {
+  return densityProfileStruct({
+    // @ts-expect-error Object-style parameter is supported
+    layer0: densityProfileLayer(profile.layers[0], worldToUnit),
+    layer1: densityProfileLayer(profile.layers[1], worldToUnit)
+  })
+}
+
+type AtmosphereParametersFields = {
+  [K in keyof typeof atmosphereParametersLayout]: (typeof atmosphereParametersLayout)[K] extends NodeType
+    ? Node<(typeof atmosphereParametersLayout)[K]>
+    : Node
+}
+
+const DESTRUCTIBLE = Symbol('DESTRUCTIBLE')
+
+export function makeDestructible(
+  node: Node
+): Node & AtmosphereParametersFields {
+  reinterpretType<
+    StructNode &
+      AtmosphereParametersFields & {
+        [DESTRUCTIBLE]?: boolean
+      }
+  >(node)
+  if (node[DESTRUCTIBLE] === true) {
+    return node
   }
+  for (const key in atmosphereParametersLayout) {
+    if (Object.hasOwn(atmosphereParametersLayout, key)) {
+      node[key as keyof typeof atmosphereParametersLayout] = node.get(key)
+    }
+  }
+  node[DESTRUCTIBLE] = true
+  return node
 }
 
 export class AtmosphereContextBase {
   readonly parameters: AtmosphereParameters
+  readonly parametersNode: Node & AtmosphereParametersFields
 
-  worldToUnit: Node<Dimensionless>
-  solarIrradiance: Node<IrradianceSpectrum>
-  sunAngularRadius: Node<Angle>
-  bottomRadius: Node<Length>
-  topRadius: Node<Length>
-  rayleighDensity: DensityProfileNodes
-  rayleighScattering: Node<ScatteringSpectrum>
-  mieDensity: DensityProfileNodes
-  mieScattering: Node<ScatteringSpectrum>
-  mieExtinction: Node<ScatteringSpectrum>
-  miePhaseFunctionG: Node<Dimensionless>
-  absorptionDensity: DensityProfileNodes
-  absorptionExtinction: Node<ScatteringSpectrum>
-  groundAlbedo: Node<DimensionlessSpectrum>
-  minCosLight: Node<Dimensionless>
-  sunRadianceToLuminance: Node<DimensionlessSpectrum>
-  skyRadianceToLuminance: Node<DimensionlessSpectrum>
-  luminanceScale: Node<Dimensionless>
-
-  constructor(parameters = new AtmosphereParameters()) {
+  constructor(parameters: AtmosphereParameters) {
     this.parameters = parameters
 
     const {
@@ -101,44 +150,62 @@ export class AtmosphereContextBase {
       minCosLight,
       sunRadianceToLuminance,
       skyRadianceToLuminance,
-      luminanceScale
+      luminanceScale,
+      transmittanceTextureSize,
+      irradianceTextureSize,
+      scatteringTextureRadiusSize,
+      scatteringTextureCosViewSize,
+      scatteringTextureCosLightSize,
+      scatteringTextureCosViewLightSize
     } = parameters
 
-    // BUG: Invoking toVar() or toConst() on these nodes breaks shaders.
-    this.worldToUnit = float(worldToUnit)
-    this.solarIrradiance = vec3(solarIrradiance)
-    this.sunAngularRadius = float(sunAngularRadius)
-    this.bottomRadius = float(bottomRadius * worldToUnit)
-    this.topRadius = float(topRadius * worldToUnit)
-    this.rayleighDensity = densityProfileNodes(rayleighDensity, worldToUnit)
-    this.rayleighScattering = vec3(
-      rayleighScattering.x / worldToUnit,
-      rayleighScattering.y / worldToUnit,
-      rayleighScattering.z / worldToUnit
+    this.parametersNode = makeDestructible(
+      atmosphereParametersStruct({
+        // @ts-expect-error Object-style parameter is supported
+        worldToUnit: float(worldToUnit),
+        solarIrradiance: vec3(solarIrradiance),
+        sunAngularRadius: float(sunAngularRadius),
+        bottomRadius: float(bottomRadius * worldToUnit),
+        topRadius: float(topRadius * worldToUnit),
+        rayleighDensity: densityProfile(rayleighDensity, worldToUnit),
+        rayleighScattering: vec3(
+          rayleighScattering.x / worldToUnit,
+          rayleighScattering.y / worldToUnit,
+          rayleighScattering.z / worldToUnit
+        ),
+        mieDensity: densityProfile(mieDensity, worldToUnit),
+        mieScattering: vec3(
+          mieScattering.x / worldToUnit,
+          mieScattering.y / worldToUnit,
+          mieScattering.z / worldToUnit
+        ),
+        mieExtinction: vec3(
+          mieExtinction.x / worldToUnit,
+          mieExtinction.y / worldToUnit,
+          mieExtinction.z / worldToUnit
+        ),
+        miePhaseFunctionG: float(miePhaseFunctionG),
+        absorptionDensity: densityProfile(absorptionDensity, worldToUnit),
+        absorptionExtinction: vec3(
+          absorptionExtinction.x / worldToUnit,
+          absorptionExtinction.y / worldToUnit,
+          absorptionExtinction.z / worldToUnit
+        ),
+        groundAlbedo: vec3(groundAlbedo),
+        minCosLight: float(minCosLight),
+        sunRadianceToLuminance: vec3(sunRadianceToLuminance),
+        skyRadianceToLuminance: vec3(skyRadianceToLuminance),
+        luminanceScale: float(luminanceScale),
+        transmittanceTextureSize: ivec2(transmittanceTextureSize),
+        irradianceTextureSize: ivec2(irradianceTextureSize),
+        scatteringTextureRadiusSize: uint(scatteringTextureRadiusSize),
+        scatteringTextureCosViewSize: uint(scatteringTextureCosViewSize),
+        scatteringTextureCosLightSize: uint(scatteringTextureCosLightSize),
+        scatteringTextureCosViewLightSize: uint(
+          scatteringTextureCosViewLightSize
+        )
+      }).toConst()
     )
-    this.mieDensity = densityProfileNodes(mieDensity, worldToUnit)
-    this.mieScattering = vec3(
-      mieScattering.x / worldToUnit,
-      mieScattering.y / worldToUnit,
-      mieScattering.z / worldToUnit
-    )
-    this.mieExtinction = vec3(
-      mieExtinction.x / worldToUnit,
-      mieExtinction.y / worldToUnit,
-      mieExtinction.z / worldToUnit
-    )
-    this.miePhaseFunctionG = float(miePhaseFunctionG)
-    this.absorptionDensity = densityProfileNodes(absorptionDensity, worldToUnit)
-    this.absorptionExtinction = vec3(
-      absorptionExtinction.x / worldToUnit,
-      absorptionExtinction.y / worldToUnit,
-      absorptionExtinction.z / worldToUnit
-    )
-    this.groundAlbedo = vec3(groundAlbedo)
-    this.minCosLight = float(minCosLight)
-    this.sunRadianceToLuminance = vec3(sunRadianceToLuminance)
-    this.skyRadianceToLuminance = vec3(skyRadianceToLuminance)
-    this.luminanceScale = float(luminanceScale)
   }
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this

@@ -75,17 +75,19 @@ import {
   sin,
   sqrt,
   struct,
-  vec2,
   vec3,
   vec4
 } from 'three/tsl'
+import type { Texture3DNode, TextureNode } from 'three/webgpu'
 
 import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 import {
+  atmosphereParametersStruct,
+  densityProfileLayerStruct,
+  densityProfileStruct,
   getAtmosphereContextBase,
-  type DensityProfileLayerNodes,
-  type DensityProfileNodes
+  makeDestructible
 } from './AtmosphereContextBase'
 import {
   clampCosine,
@@ -115,117 +117,129 @@ import {
   TransmittanceTexture
 } from './dimensional'
 
-const getLayerDensity = /*#__PURE__*/ FnVar(
-  (
-    layer: DensityProfileLayerNodes,
-    altitude: Node<Length>
-  ): Node<Dimensionless> => {
-    return layer.expTerm
-      .mul(exp(layer.expScale.mul(altitude)))
-      .add(layer.linearTerm.mul(altitude))
-      .add(layer.constantTerm)
-      .saturate()
-  }
-)
+const getLayerDensity = /*#__PURE__*/ FnLayout({
+  name: 'getLayerDensity',
+  type: Dimensionless,
+  inputs: [
+    { name: 'layer', type: densityProfileLayerStruct },
+    { name: 'altitude', type: Length }
+  ]
+})(([layer, altitude]) => {
+  const expTerm = layer.get('expTerm')
+  const expScale = layer.get('expScale')
+  const linearTerm = layer.get('linearTerm')
+  const constantTerm = layer.get('constantTerm')
+  return expTerm
+    .mul(exp(expScale.mul(altitude)))
+    .add(linearTerm.mul(altitude))
+    .add(constantTerm)
+    .saturate()
+})
 
-const getProfileDensity = /*#__PURE__*/ FnVar(
-  (
-    profile: DensityProfileNodes,
-    altitude: Node<Length>
-  ): Node<Dimensionless> => {
-    return select(
-      altitude.lessThan(profile.layers[0].width),
-      getLayerDensity(profile.layers[0], altitude),
-      getLayerDensity(profile.layers[1], altitude)
-    )
-  }
-)
+const getProfileDensity = /*#__PURE__*/ FnLayout({
+  name: 'getProfileDensity',
+  type: Dimensionless,
+  inputs: [
+    { name: 'layer', type: densityProfileStruct },
+    { name: 'altitude', type: Length }
+  ]
+})(([profile, altitude]) => {
+  return select(
+    altitude.lessThan(profile.get('layer0').get('width')),
+    getLayerDensity(profile.get('layer0'), altitude),
+    getLayerDensity(profile.get('layer1'), altitude)
+  )
+})
 
-const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
-  (
-    profile: DensityProfileNodes,
-    radius: Node<Length>,
-    cosView: Node<Dimensionless>
-  ) =>
-    (builder): Node<Length> => {
-      const context = getAtmosphereContextBase(builder)
-      const { bottomRadius } = context
+const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
+  name: 'computeOpticalDepthToTopAtmosphereBoundary',
+  type: Length,
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'profile', type: densityProfileStruct },
+    { name: 'radius', type: Length },
+    { name: 'cosView', type: Dimensionless }
+  ]
+})(([parameters, profile, radius, cosView]) => {
+  const { bottomRadius } = makeDestructible(parameters)
 
-      const sampleCount = 500
-      const stepSize = distanceToTopAtmosphereBoundary(radius, cosView)
-        .div(sampleCount)
-        .toConst()
+  const sampleCount = 500
+  const stepSize = distanceToTopAtmosphereBoundary(parameters, radius, cosView)
+    .div(sampleCount)
+    .toConst()
 
-      const opticalDepth = float(0).toVar()
-      Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
-        const rayLength = float(i).mul(stepSize).toConst()
+  const opticalDepth = float(0).toVar()
+  Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
+    const rayLength = float(i).mul(stepSize).toConst()
 
-        // Distance between the current sample point and the planet center.
-        const r = sqrt(
-          add(
-            rayLength.pow2(),
-            mul(2, radius, cosView, rayLength),
-            radius.pow2()
-          )
-        ).toConst()
+    // Distance between the current sample point and the planet center.
+    const r = sqrt(
+      add(rayLength.pow2(), mul(2, radius, cosView, rayLength), radius.pow2())
+    ).toConst()
 
-        // Number density at the current sample point (divided by the number
-        // density at the bottom of the atmosphere, yielding a dimensionless
-        // number).
-        const y = getProfileDensity(profile, r.sub(bottomRadius))
+    // Number density at the current sample point (divided by the number
+    // density at the bottom of the atmosphere, yielding a dimensionless
+    // number).
+    const y = getProfileDensity(profile, r.sub(bottomRadius))
 
-        // Sample weight from the trapezoidal rule.
-        const weight = select(equal(i, 0).or(equal(i, sampleCount)), 0.5, 1)
-        opticalDepth.addAssign(y.mul(weight).mul(stepSize))
-      })
+    // Sample weight from the trapezoidal rule.
+    const weight = select(equal(i, 0).or(equal(i, sampleCount)), 0.5, 1)
+    opticalDepth.addAssign(y.mul(weight).mul(stepSize))
+  })
 
-      return opticalDepth
-    }
-)
+  return opticalDepth
+})
 
 const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
   name: 'computeTransmittanceToTopAtmosphereBoundary',
   type: DimensionlessSpectrum,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'radius', type: Length },
-    { name: 'cosView', type: Dimensionless }
+    { name: 'cosView', type: Dimensionless },
+    { name: 'transmittancePrecisionLog', type: 'bool' }
   ]
-})(([radius, cosView], builder) => {
-  const context = getAtmosphereContextBase(builder)
+})(([parameters, radius, cosView, transmittancePrecisionLog]) => {
   const {
-    parameters,
     rayleighDensity,
     rayleighScattering,
     mieDensity,
     mieExtinction,
     absorptionDensity,
     absorptionExtinction
-  } = context
+  } = makeDestructible(parameters)
 
   const opticalDepth = add(
     rayleighScattering.mul(
       computeOpticalDepthToTopAtmosphereBoundary(
+        parameters,
         rayleighDensity,
         radius,
         cosView
       )
     ),
     mieExtinction.mul(
-      computeOpticalDepthToTopAtmosphereBoundary(mieDensity, radius, cosView)
+      computeOpticalDepthToTopAtmosphereBoundary(
+        parameters,
+        mieDensity,
+        radius,
+        cosView
+      )
     ),
     absorptionExtinction.mul(
       computeOpticalDepthToTopAtmosphereBoundary(
+        parameters,
         absorptionDensity,
         radius,
         cosView
       )
     )
   ).toConst()
-  if (parameters.transmittancePrecisionLog) {
-    return opticalDepth
-  } else {
-    return exp(opticalDepth.negate())
-  }
+
+  return transmittancePrecisionLog.select(
+    opticalDepth,
+    exp(opticalDepth.negate())
+  )
 })
 
 const getUnitRangeFromTextureCoord = /*#__PURE__*/ FnLayout({
@@ -249,20 +263,26 @@ const transmittanceParamsStruct = /*#__PURE__*/ struct(
 )
 
 const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
+  // BUG: Cannot access vector component inside struct in layout function
+  // https://github.com/mrdoob/three.js/issues/33345
+  typeOnly: true,
   name: 'getParamsFromTransmittanceTextureUV',
   type: transmittanceParamsStruct,
-  inputs: [{ name: 'uv', type: 'vec2' }]
-})(([uv], builder) => {
-  const context = getAtmosphereContextBase(builder)
-  const { parameters, topRadius, bottomRadius } = context
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'uv', type: 'vec2' }
+  ]
+})(([parameters, uv]) => {
+  const { topRadius, bottomRadius, transmittanceTextureSize } =
+    makeDestructible(parameters)
 
   const cosViewUnit = getUnitRangeFromTextureCoord(
     uv.x,
-    parameters.transmittanceTextureSize.x
+    transmittanceTextureSize.x
   )
   const radiusUnit = getUnitRangeFromTextureCoord(
     uv.y,
-    parameters.transmittanceTextureSize.y
+    transmittanceTextureSize.y
   )
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
@@ -292,22 +312,24 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
 })
 
 export const computeTransmittanceToTopAtmosphereBoundaryTexture =
-  /*#__PURE__*/ FnLayout({
-    typeOnly: true, // BUG: Fails with undefined struct type in WebGL
-    name: 'computeTransmittanceToTopAtmosphereBoundaryTexture',
-    type: DimensionlessSpectrum,
-    inputs: [{ name: 'fragCoord', type: 'vec2' }]
-  })(([fragCoord], builder) => {
-    const { parameters } = getAtmosphereContextBase(builder)
+  /*#__PURE__*/ FnVar(
+    (fragCoord: Node<'vec2'>) =>
+      (builder): Node<DimensionlessSpectrum> => {
+        const context = getAtmosphereContextBase(builder)
+        const { transmittanceTextureSize } = context.parametersNode
 
-    const transmittanceParams = getParamsFromTransmittanceTextureUV(
-      fragCoord.div(vec2(parameters.transmittanceTextureSize))
-    ).toConst()
-    return computeTransmittanceToTopAtmosphereBoundary(
-      transmittanceParams.get('radius'),
-      transmittanceParams.get('cosView')
-    )
-  })
+        const transmittanceParams = getParamsFromTransmittanceTextureUV(
+          context.parametersNode,
+          fragCoord.div(transmittanceTextureSize)
+        ).toConst()
+        return computeTransmittanceToTopAtmosphereBoundary(
+          context.parametersNode,
+          transmittanceParams.get('radius'),
+          transmittanceParams.get('cosView'),
+          bool(context.parameters.transmittancePrecisionLog)
+        )
+      }
+  )
 
 const singleScatteringStruct = /*#__PURE__*/ struct(
   {
@@ -318,10 +340,12 @@ const singleScatteringStruct = /*#__PURE__*/ struct(
 )
 
 const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
+  // TODO: Fn layout doesn't support texture type
+  typeOnly: true,
   name: 'computeSingleScatteringIntegrand',
   type: singleScatteringStruct,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless },
@@ -330,22 +354,21 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
     { name: 'rayLength', type: Length },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
-})((
-  [
-    transmittanceTexture,
-    radius,
-    cosView,
-    cosLight,
-    cosViewLight,
-    rayLength,
-    viewRayIntersectsGround
-  ],
-  builder
-) => {
-  const context = getAtmosphereContextBase(builder)
-  const { bottomRadius, rayleighDensity, mieDensity } = context
+})(([
+  parameters,
+  transmittanceTexture,
+  radius,
+  cosView,
+  cosLight,
+  cosViewLight,
+  rayLength,
+  viewRayIntersectsGround
+]) => {
+  const { bottomRadius, rayleighDensity, mieDensity } =
+    makeDestructible(parameters)
 
   const radiusEnd = clampRadius(
+    parameters,
     sqrt(
       rayLength
         .pow2()
@@ -379,25 +402,30 @@ const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ FnLayout({
   name: 'distanceToNearestAtmosphereBoundary',
   type: Length,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
-})(([radius, cosView, viewRayIntersectsGround]) => {
+})(([parameters, radius, cosView, viewRayIntersectsGround]) => {
   const result = float(0).toVar()
   If(viewRayIntersectsGround, () => {
-    result.assign(distanceToBottomAtmosphereBoundary(radius, cosView))
+    result.assign(
+      distanceToBottomAtmosphereBoundary(parameters, radius, cosView)
+    )
   }).Else(() => {
-    result.assign(distanceToTopAtmosphereBoundary(radius, cosView))
+    result.assign(distanceToTopAtmosphereBoundary(parameters, radius, cosView))
   })
   return result
 })
 
 const computeSingleScattering = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
+  // TODO: Fn layout doesn't support texture type
+  typeOnly: true,
   name: 'computeSingleScattering',
   type: singleScatteringStruct,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless },
@@ -405,22 +433,21 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
     { name: 'cosViewLight', type: Dimensionless },
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
-})((
-  [
-    transmittanceTexture,
-    radius,
-    cosView,
-    cosLight,
-    cosViewLight,
-    viewRayIntersectsGround
-  ],
-  builder
-) => {
-  const context = getAtmosphereContextBase(builder)
-  const { solarIrradiance, rayleighScattering, mieScattering } = context
+})(([
+  parameters,
+  transmittanceTexture,
+  radius,
+  cosView,
+  cosLight,
+  cosViewLight,
+  viewRayIntersectsGround
+]) => {
+  const { solarIrradiance, rayleighScattering, mieScattering } =
+    makeDestructible(parameters)
 
   const sampleCount = 50
   const stepSize = distanceToNearestAtmosphereBoundary(
+    parameters,
     radius,
     cosView,
     viewRayIntersectsGround
@@ -435,6 +462,7 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
 
     // The Rayleigh and Mie single scattering at the current sample point.
     const deltaRayleighMie = computeSingleScatteringIntegrand(
+      parameters,
       transmittanceTexture,
       radius,
       cosView,
@@ -474,22 +502,31 @@ const scatteringParamsStruct = /*#__PURE__*/ struct(
 )
 
 const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
+  // BUG: Cannot access vector component inside struct in layout function
+  // https://github.com/mrdoob/three.js/issues/33345
+  typeOnly: true,
   name: 'getParamsFromScatteringTextureCoord',
   type: scatteringParamsStruct,
-  inputs: [{ name: 'coord', type: 'vec4' }]
-})(([coord], builder) => {
-  const context = getAtmosphereContextBase(builder)
-  const { parameters, bottomRadius, topRadius, minCosLight } = context
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'coord', type: 'vec4' }
+  ]
+})(([parameters, coord]) => {
+  const {
+    bottomRadius,
+    topRadius,
+    minCosLight,
+    scatteringTextureRadiusSize,
+    scatteringTextureCosViewSize,
+    scatteringTextureCosLightSize
+  } = makeDestructible(parameters)
 
   // Distance to top atmosphere boundary for a horizontal ray at ground level.
   const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toConst()
 
   // Distance to the horizon.
   const distanceToHorizon = H.mul(
-    getUnitRangeFromTextureCoord(
-      coord.w,
-      parameters.scatteringTextureRadiusSize
-    )
+    getUnitRangeFromTextureCoord(coord.w, scatteringTextureRadiusSize)
   ).toConst()
   const radius = sqrt(distanceToHorizon.pow2().add(bottomRadius.pow2()))
 
@@ -508,7 +545,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
           .mul(
             getUnitRangeFromTextureCoord(
               coord.z.mul(2).oneMinus(),
-              parameters.scatteringTextureCosViewSize / 2
+              scatteringTextureCosViewSize.div(2)
             )
           )
       )
@@ -541,7 +578,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
           .mul(
             getUnitRangeFromTextureCoord(
               coord.z.mul(2).sub(1),
-              parameters.scatteringTextureCosViewSize / 2
+              scatteringTextureCosViewSize.div(2)
             )
           )
       )
@@ -563,11 +600,15 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 
   const cosLightUnit = getUnitRangeFromTextureCoord(
     coord.y,
-    parameters.scatteringTextureCosLightSize
+    scatteringTextureCosLightSize
   ).toConst()
   const minDistance = topRadius.sub(bottomRadius).toConst()
   const maxDistance = H
-  const D = distanceToTopAtmosphereBoundary(bottomRadius, minCosLight)
+  const D = distanceToTopAtmosphereBoundary(
+    parameters,
+    bottomRadius,
+    minCosLight
+  )
   const A = D.remap(minDistance, maxDistance).toConst()
   const a = A.sub(cosLightUnit.mul(A)).div(cosLightUnit.mul(A).add(1))
   const distance = minDistance
@@ -594,23 +635,32 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 })
 
 const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
+  // BUG: Cannot access vector component inside struct in layout function
+  // https://github.com/mrdoob/three.js/issues/33345
+  typeOnly: true,
   name: 'getParamsFromScatteringTextureFragCoord',
   type: scatteringParamsStruct,
-  inputs: [{ name: 'fragCoord', type: 'vec3' }]
-})(([fragCoord], builder) => {
-  const { parameters } = getAtmosphereContextBase(builder)
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'fragCoord', type: 'vec3' }
+  ]
+})(([parameters, fragCoord]) => {
+  const {
+    scatteringTextureRadiusSize,
+    scatteringTextureCosViewSize,
+    scatteringTextureCosLightSize,
+    scatteringTextureCosViewLightSize
+  } = makeDestructible(parameters)
 
   const fragCoordCosViewLight = floor(
-    fragCoord.x.div(parameters.scatteringTextureCosLightSize)
+    fragCoord.x.div(scatteringTextureCosLightSize)
   )
-  const fragCoordCosLight = fragCoord.x.mod(
-    parameters.scatteringTextureCosLightSize
-  )
+  const fragCoordCosLight = fragCoord.x.mod(scatteringTextureCosLightSize)
   const size = vec4(
-    parameters.scatteringTextureCosViewLightSize - 1,
-    parameters.scatteringTextureCosLightSize,
-    parameters.scatteringTextureCosViewSize,
-    parameters.scatteringTextureRadiusSize
+    scatteringTextureCosViewLightSize.sub(1),
+    scatteringTextureCosLightSize,
+    scatteringTextureCosViewSize,
+    scatteringTextureRadiusSize
   )
   const coord = vec4(
     fragCoordCosViewLight,
@@ -618,7 +668,10 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
     fragCoord.y,
     fragCoord.z
   ).div(size)
-  const scatteringParams = getParamsFromScatteringTextureCoord(coord).toConst()
+  const scatteringParams = getParamsFromScatteringTextureCoord(
+    parameters,
+    coord
+  ).toConst()
   const radius = scatteringParams.get('radius')
   const cosView = scatteringParams.get('cosView')
   const cosLight = scatteringParams.get('cosLight')
@@ -647,39 +700,40 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
   )
 })
 
-export const computeSingleScatteringTexture = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
-  name: 'computeSingleScatteringTexture',
-  type: singleScatteringStruct,
-  inputs: [
-    { name: 'transmittanceTexture', type: TransmittanceTexture },
-    { name: 'fragCoord', type: 'vec3' }
-  ]
-})(([transmittanceTexture, fragCoord]) => {
-  const scatteringParams =
-    getParamsFromScatteringTextureFragCoord(fragCoord).toConst()
-  const radius = scatteringParams.get('radius')
-  const cosView = scatteringParams.get('cosView')
-  const cosLight = scatteringParams.get('cosLight')
-  const cosViewLight = scatteringParams.get('cosViewLight')
-  const viewRayIntersectsGround = scatteringParams.get(
-    'viewRayIntersectsGround'
-  )
-  return computeSingleScattering(
-    transmittanceTexture,
-    radius,
-    cosView,
-    cosLight,
-    cosViewLight,
-    viewRayIntersectsGround
-  )
-})
+export const computeSingleScatteringTexture = /*#__PURE__*/ FnVar(
+  (transmittanceTexture: TextureNode, fragCoord: Node<'vec3'>) => builder => {
+    const context = getAtmosphereContextBase(builder)
+
+    const scatteringParams = getParamsFromScatteringTextureFragCoord(
+      context.parametersNode,
+      fragCoord
+    ).toConst()
+    const radius = scatteringParams.get('radius')
+    const cosView = scatteringParams.get('cosView')
+    const cosLight = scatteringParams.get('cosLight')
+    const cosViewLight = scatteringParams.get('cosViewLight')
+    const viewRayIntersectsGround = scatteringParams.get(
+      'viewRayIntersectsGround'
+    )
+    return computeSingleScattering(
+      context.parametersNode,
+      transmittanceTexture,
+      radius,
+      cosView,
+      cosLight,
+      cosViewLight,
+      viewRayIntersectsGround
+    )
+  }
+)
 
 const getScatteringForOrder = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
+  // TODO: Fn layout doesn't support texture type
+  typeOnly: true,
   name: 'getScatteringForOrder',
   type: RadianceSpectrum,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'singleRayleighScatteringTexture', type: ReducedScatteringTexture },
     { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
     { name: 'multipleScatteringTexture', type: ScatteringTexture },
@@ -690,22 +744,19 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
     { name: 'viewRayIntersectsGround', type: 'bool' },
     { name: 'scatteringOrder', type: 'int' }
   ]
-})((
-  [
-    singleRayleighScatteringTexture,
-    singleMieScatteringTexture,
-    multipleScatteringTexture,
-    radius,
-    cosView,
-    cosLight,
-    cosViewLight,
-    viewRayIntersectsGround,
-    scatteringOrder
-  ],
-  builder
-) => {
-  const context = getAtmosphereContextBase(builder)
-  const { miePhaseFunctionG } = context
+})(([
+  parameters,
+  singleRayleighScatteringTexture,
+  singleMieScatteringTexture,
+  multipleScatteringTexture,
+  radius,
+  cosView,
+  cosLight,
+  cosViewLight,
+  viewRayIntersectsGround,
+  scatteringOrder
+]) => {
+  const { miePhaseFunctionG } = makeDestructible(parameters)
 
   const result = vec3(0).toVar()
   If(scatteringOrder.equal(1), () => {
@@ -747,10 +798,12 @@ const getScatteringForOrder = /*#__PURE__*/ FnLayout({
 })
 
 const computeScatteringDensity = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
+  // TODO: Fn layout doesn't support texture type
+  typeOnly: true,
   name: 'computeScatteringDensity',
   type: RadianceDensitySpectrum,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'singleRayleighScatteringTexture', type: ReducedScatteringTexture },
     { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
@@ -762,30 +815,28 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
     { name: 'cosViewLight', type: Dimensionless },
     { name: 'scatteringOrder', type: 'int' }
   ]
-})((
-  [
-    transmittanceTexture,
-    singleRayleighScatteringTexture,
-    singleMieScatteringTexture,
-    multipleScatteringTexture,
-    irradianceTexture,
-    radius,
-    cosView,
-    cosLight,
-    cosViewLight,
-    scatteringOrder
-  ],
-  builder
-) => {
-  const context = getAtmosphereContextBase(builder)
+})(([
+  parameters,
+  transmittanceTexture,
+  singleRayleighScatteringTexture,
+  singleMieScatteringTexture,
+  multipleScatteringTexture,
+  irradianceTexture,
+  radius,
+  cosView,
+  cosLight,
+  cosViewLight,
+  scatteringOrder
+]) => {
   const {
     bottomRadius,
     rayleighDensity,
     rayleighScattering,
     mieDensity,
     mieScattering,
-    miePhaseFunctionG
-  } = context
+    miePhaseFunctionG,
+    groundAlbedo
+  } = makeDestructible(parameters)
 
   // Compute unit direction vectors for the zenith, the view direction omega
   // and the sun direction omegaSun, such that the cosine of the view-zenith
@@ -815,6 +866,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
     const cosTheta = cos(theta).toConst()
     const sinTheta = sin(theta).toConst()
     const omegaRayIntersectsGround = rayIntersectsGround(
+      parameters,
       radius,
       cosTheta
     ).toConst()
@@ -823,10 +875,10 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
     // we can compute them in the outer loop for efficiency.
     const distanceToGround = float(0).toVar()
     const transmittanceToGround = vec3(0).toVar()
-    const groundAlbedo = vec3(0).toVar()
+    const rayGroundAlbedo = vec3(0).toVar()
     If(omegaRayIntersectsGround, () => {
       distanceToGround.assign(
-        distanceToBottomAtmosphereBoundary(radius, cosTheta)
+        distanceToBottomAtmosphereBoundary(parameters, radius, cosTheta)
       )
       transmittanceToGround.assign(
         getTransmittance(
@@ -837,7 +889,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
           bool(true)
         )
       )
-      groundAlbedo.assign(context.groundAlbedo)
+      rayGroundAlbedo.assign(groundAlbedo)
     })
 
     // @ts-expect-error Missing type on custom name
@@ -855,6 +907,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
       // (n-1)-th order:
       const cosViewLight1 = omegaSun.dot(omegaI)
       const incidentRadiance = getScatteringForOrder(
+        parameters,
         singleRayleighScatteringTexture,
         singleMieScatteringTexture,
         multipleScatteringTexture,
@@ -880,7 +933,7 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
         groundNormal.dot(omegaSun)
       )
       incidentRadiance.addAssign(
-        transmittanceToGround.mul(groundAlbedo).div(PI).mul(groundIrradiance)
+        transmittanceToGround.mul(rayGroundAlbedo).div(PI).mul(groundIrradiance)
       )
 
       // The radiance finally scattered from direction omegaI towards
@@ -921,10 +974,12 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
 })
 
 const computeMultipleScattering = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
+  // TODO: Fn layout doesn't support texture type
+  typeOnly: true,
   name: 'computeMultipleScattering',
   type: RadianceSpectrum,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'scatteringDensityTexture', type: ScatteringDensityTexture },
     { name: 'radius', type: Length },
@@ -934,6 +989,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
     { name: 'viewRayIntersectsGround', type: 'bool' }
   ]
 })(([
+  parameters,
   transmittanceTexture,
   scatteringDensityTexture,
   radius,
@@ -944,6 +1000,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
 ]) => {
   const sampleCount = 50
   const stepSize = distanceToNearestAtmosphereBoundary(
+    parameters,
     radius,
     cosView,
     viewRayIntersectsGround
@@ -958,6 +1015,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
     // The radius, cosView and cosLight parameters at the current integration
     // point (see the single scattering section for a detailed explanation).
     const radiusI = clampRadius(
+      parameters,
       sqrt(
         rayLength
           .pow2()
@@ -1000,47 +1058,42 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
   return radianceSum
 })
 
-export const computeScatteringDensityTexture = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
-  name: 'computeScatteringDensityTexture',
-  type: RadianceDensitySpectrum,
-  inputs: [
-    { name: 'transmittanceTexture', type: TransmittanceTexture },
-    { name: 'singleRayleighScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'multipleScatteringTexture', type: ScatteringTexture },
-    { name: 'irradianceTexture', type: IrradianceTexture },
-    { name: 'fragCoord', type: 'vec3' },
-    { name: 'scatteringOrder', type: 'int' }
-  ]
-})(([
-  transmittanceTexture,
-  singleRayleighScatteringTexture,
-  singleMieScatteringTexture,
-  multipleScatteringTexture,
-  irradianceTexture,
-  fragCoord,
-  scatteringOrder
-]) => {
-  const scatteringParams =
-    getParamsFromScatteringTextureFragCoord(fragCoord).toConst()
-  const radius = scatteringParams.get('radius')
-  const cosView = scatteringParams.get('cosView')
-  const cosLight = scatteringParams.get('cosLight')
-  const cosViewLight = scatteringParams.get('cosViewLight')
-  return computeScatteringDensity(
-    transmittanceTexture,
-    singleRayleighScatteringTexture,
-    singleMieScatteringTexture,
-    multipleScatteringTexture,
-    irradianceTexture,
-    radius,
-    cosView,
-    cosLight,
-    cosViewLight,
-    scatteringOrder
-  )
-})
+export const computeScatteringDensityTexture = /*#__PURE__*/ FnVar(
+  (
+    transmittanceTexture: TextureNode,
+    singleRayleighScatteringTexture: Texture3DNode,
+    singleMieScatteringTexture: Texture3DNode,
+    multipleScatteringTexture: Texture3DNode,
+    irradianceTexture: TextureNode,
+    fragCoord: Node<'vec3'>,
+    scatteringOrder: Node<'int'>
+  ) =>
+    (builder): Node<RadianceDensitySpectrum> => {
+      const context = getAtmosphereContextBase(builder)
+
+      const scatteringParams = getParamsFromScatteringTextureFragCoord(
+        context.parametersNode,
+        fragCoord
+      ).toConst()
+      const radius = scatteringParams.get('radius')
+      const cosView = scatteringParams.get('cosView')
+      const cosLight = scatteringParams.get('cosLight')
+      const cosViewLight = scatteringParams.get('cosViewLight')
+      return computeScatteringDensity(
+        context.parametersNode,
+        transmittanceTexture,
+        singleRayleighScatteringTexture,
+        singleMieScatteringTexture,
+        multipleScatteringTexture,
+        irradianceTexture,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        scatteringOrder
+      )
+    }
+)
 
 const multipleScatteringStruct = /*#__PURE__*/ struct(
   {
@@ -1050,49 +1103,53 @@ const multipleScatteringStruct = /*#__PURE__*/ struct(
   'multipleScattering'
 )
 
-export const computeMultipleScatteringTexture = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
-  name: 'computeMultipleScatteringTexture',
-  type: multipleScatteringStruct,
-  inputs: [
-    { name: 'transmittanceTexture', type: TransmittanceTexture },
-    { name: 'scatteringDensityTexture', type: ScatteringDensityTexture },
-    { name: 'fragCoord', type: 'vec3' }
-  ]
-})(([transmittanceTexture, scatteringDensityTexture, fragCoord]) => {
-  const scatteringParams =
-    getParamsFromScatteringTextureFragCoord(fragCoord).toConst()
-  const radius = scatteringParams.get('radius')
-  const cosView = scatteringParams.get('cosView')
-  const cosLight = scatteringParams.get('cosLight')
-  const cosViewLight = scatteringParams.get('cosViewLight')
-  const viewRayIntersectsGround = scatteringParams.get(
-    'viewRayIntersectsGround'
-  )
-  const radiance = computeMultipleScattering(
-    transmittanceTexture,
-    scatteringDensityTexture,
-    radius,
-    cosView,
-    cosLight,
-    cosViewLight,
-    viewRayIntersectsGround
-  )
-  return multipleScatteringStruct(radiance, cosViewLight)
-})
+export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
+  (
+    transmittanceTexture: TextureNode,
+    scatteringDensityTexture: Texture3DNode,
+    fragCoord: Node<'vec3'>
+  ) =>
+    builder => {
+      const context = getAtmosphereContextBase(builder)
+
+      const scatteringParams = getParamsFromScatteringTextureFragCoord(
+        context.parametersNode,
+        fragCoord
+      ).toConst()
+      const radius = scatteringParams.get('radius')
+      const cosView = scatteringParams.get('cosView')
+      const cosLight = scatteringParams.get('cosLight')
+      const cosViewLight = scatteringParams.get('cosViewLight')
+      const viewRayIntersectsGround = scatteringParams.get(
+        'viewRayIntersectsGround'
+      )
+      const radiance = computeMultipleScattering(
+        context.parametersNode,
+        transmittanceTexture,
+        scatteringDensityTexture,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        viewRayIntersectsGround
+      )
+      return multipleScatteringStruct(radiance, cosViewLight)
+    }
+)
 
 const computeDirectIrradiance = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
+  // TODO: Fn layout doesn't support texture type
+  typeOnly: true,
   name: 'computeDirectIrradiance',
   type: IrradianceSpectrum,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'radius', type: Length },
     { name: 'cosLight', type: Dimensionless }
   ]
-})(([transmittanceTexture, radius, cosLight], builder) => {
-  const context = getAtmosphereContextBase(builder)
-  const { solarIrradiance, sunAngularRadius } = context
+})(([parameters, transmittanceTexture, radius, cosLight]) => {
+  const { solarIrradiance, sunAngularRadius } = makeDestructible(parameters)
 
   // Approximate average of the cosine factor cosLight over the visible fraction
   // of the Sun disc.
@@ -1119,10 +1176,12 @@ const computeDirectIrradiance = /*#__PURE__*/ FnLayout({
 })
 
 const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
+  // TODO: Fn layout doesn't support texture type
+  typeOnly: true,
   name: 'computeIndirectIrradiance',
   type: IrradianceSpectrum,
   inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'singleRayleighScatteringTexture', type: ReducedScatteringTexture },
     { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
     { name: 'multipleScatteringTexture', type: ScatteringTexture },
@@ -1131,6 +1190,7 @@ const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
     { name: 'scatteringOrder', type: 'int' }
   ]
 })(([
+  parameters,
   singleRayleighScatteringTexture,
   singleMieScatteringTexture,
   multipleScatteringTexture,
@@ -1160,6 +1220,7 @@ const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
       const cosViewLight = omega.dot(omegaSun)
       result.addAssign(
         getScatteringForOrder(
+          parameters,
           singleRayleighScatteringTexture,
           singleMieScatteringTexture,
           multipleScatteringTexture,
@@ -1188,79 +1249,76 @@ const irradianceParamsStruct = /*#__PURE__*/ struct(
 )
 
 const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
+  // BUG: Cannot access vector component inside struct in layout function
+  // https://github.com/mrdoob/three.js/issues/33345
+  typeOnly: true,
   name: 'getParamsFromIrradianceTextureUV',
   type: irradianceParamsStruct,
-  inputs: [{ name: 'uv', type: 'vec2' }]
-})(([uv], builder) => {
-  const context = getAtmosphereContextBase(builder)
-  const { parameters, topRadius, bottomRadius } = context
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'uv', type: 'vec2' }
+  ]
+})(([parameters, uv]) => {
+  const { topRadius, bottomRadius, irradianceTextureSize } =
+    makeDestructible(parameters)
 
   const cosLightUnit = getUnitRangeFromTextureCoord(
     uv.x,
-    parameters.irradianceTextureSize.x
+    irradianceTextureSize.x
   )
-  const radiusUnit = getUnitRangeFromTextureCoord(
-    uv.y,
-    parameters.irradianceTextureSize.y
-  )
+  const radiusUnit = getUnitRangeFromTextureCoord(uv.y, irradianceTextureSize.y)
   const radius = bottomRadius.add(radiusUnit.mul(topRadius.sub(bottomRadius)))
   const cosLight = clampCosine(cosLightUnit.mul(2).sub(1))
   return irradianceParamsStruct(radius, cosLight)
 })
 
-export const computeDirectIrradianceTexture = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
-  name: 'computeDirectIrradianceTexture',
-  type: IrradianceSpectrum,
-  inputs: [
-    { name: 'transmittanceTexture', type: TransmittanceTexture },
-    { name: 'fragCoord', type: 'vec2' }
-  ]
-})(([transmittanceTexture, fragCoord], builder) => {
-  const { parameters } = getAtmosphereContextBase(builder)
+export const computeDirectIrradianceTexture = /*#__PURE__*/ FnVar(
+  (transmittanceTexture: TextureNode, fragCoord: Node<'vec2'>) =>
+    (builder): Node<IrradianceSpectrum> => {
+      const context = getAtmosphereContextBase(builder)
+      const { irradianceTextureSize } = context.parametersNode
 
-  const irradianceParams = getParamsFromIrradianceTextureUV(
-    fragCoord.div(vec2(parameters.irradianceTextureSize))
-  ).toConst()
-  const radius = irradianceParams.get('radius')
-  const cosLight = irradianceParams.get('cosLight')
-  return computeDirectIrradiance(transmittanceTexture, radius, cosLight)
-})
+      const irradianceParams = getParamsFromIrradianceTextureUV(
+        context.parametersNode,
+        fragCoord.div(irradianceTextureSize)
+      ).toConst()
+      const radius = irradianceParams.get('radius')
+      const cosLight = irradianceParams.get('cosLight')
+      return computeDirectIrradiance(
+        context.parametersNode,
+        transmittanceTexture,
+        radius,
+        cosLight
+      )
+    }
+)
 
-export const computeIndirectIrradianceTexture = /*#__PURE__*/ FnLayout({
-  typeOnly: true, // TODO: Fn layout doesn't support texture type
-  name: 'computeIndirectIrradianceTexture',
-  type: IrradianceSpectrum,
-  inputs: [
-    { name: 'singleRayleighScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'multipleScatteringTexture', type: ScatteringTexture },
-    { name: 'fragCoord', type: 'vec2' },
-    { name: 'scatteringOrder', type: 'int' }
-  ]
-})((
-  [
-    singleRayleighScatteringTexture,
-    singleMieScatteringTexture,
-    multipleScatteringTexture,
-    fragCoord,
-    scatteringOrder
-  ],
-  builder
-) => {
-  const { parameters } = getAtmosphereContextBase(builder)
+export const computeIndirectIrradianceTexture = /*#__PURE__*/ FnVar(
+  (
+    singleRayleighScatteringTexture: Texture3DNode,
+    singleMieScatteringTexture: Texture3DNode,
+    multipleScatteringTexture: Texture3DNode,
+    fragCoord: Node<'vec2'>,
+    scatteringOrder: Node<'int'>
+  ) =>
+    builder => {
+      const context = getAtmosphereContextBase(builder)
+      const { irradianceTextureSize } = context.parametersNode
 
-  const irradianceParams = getParamsFromIrradianceTextureUV(
-    fragCoord.div(vec2(parameters.irradianceTextureSize))
-  ).toConst()
-  const radius = irradianceParams.get('radius')
-  const cosLight = irradianceParams.get('cosLight')
-  return computeIndirectIrradiance(
-    singleRayleighScatteringTexture,
-    singleMieScatteringTexture,
-    multipleScatteringTexture,
-    radius,
-    cosLight,
-    scatteringOrder
-  )
-})
+      const irradianceParams = getParamsFromIrradianceTextureUV(
+        context.parametersNode,
+        fragCoord.div(irradianceTextureSize)
+      ).toConst()
+      const radius = irradianceParams.get('radius')
+      const cosLight = irradianceParams.get('cosLight')
+      return computeIndirectIrradiance(
+        context.parametersNode,
+        singleRayleighScatteringTexture,
+        singleMieScatteringTexture,
+        multipleScatteringTexture,
+        radius,
+        cosLight,
+        scatteringOrder
+      )
+    }
+)
