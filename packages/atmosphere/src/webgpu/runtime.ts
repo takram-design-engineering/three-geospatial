@@ -66,7 +66,6 @@ import {
   not,
   PI,
   PI2,
-  select,
   smoothstep,
   sqrt,
   struct,
@@ -322,9 +321,8 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
       : bool(false)
 
     transmittance.assign(
-      select(
-        viewRayIntersectsGround,
-        vec3(0),
+      viewRayIntersectsGround.select(
+        0,
         getTransmittanceToTopAtmosphereBoundary(
           transmittanceTexture,
           radius,
@@ -701,12 +699,12 @@ const clipRayAtBottomAtmosphere = /*#__PURE__*/ FnLayout({
   const viewRay = point.sub(camera).normalize().toConst()
   // Intersection can be NaN without max(0) on "t".
   const t = raySphereIntersections(camera, viewRay, bottomRadius).max(0)
-  const intersection = camera.add(viewRay.mul(select(cameraBelow, t.y, t.x)))
+  const intersection = camera.add(viewRay.mul(cameraBelow.select(t.y, t.x)))
 
   // The ray segment degenerates when the both camera and point are below the
   // bottom atmosphere boundary.
-  const clippedCamera = select(cameraBelow, intersection, camera)
-  const clippedPoint = select(pointBelow, intersection, point)
+  const clippedCamera = cameraBelow.select(intersection, camera)
+  const clippedPoint = pointBelow.select(intersection, point)
   return raySegmentStruct(
     clippedCamera,
     clippedPoint,

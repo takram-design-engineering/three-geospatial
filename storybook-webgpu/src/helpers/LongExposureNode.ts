@@ -6,7 +6,6 @@ import {
   luminance,
   max,
   Return,
-  select,
   texture,
   textureStore,
   time,
@@ -196,11 +195,10 @@ export class LongExposureNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const { material, copyMaterial } = this
 
-    material.fragmentNode = select(
-      time.sub(this.timerNode.x).lessThan(this.shutterSpeed),
-      max(this.inputNode, this.historyNode),
-      this.inputNode
-    )
+    material.fragmentNode = time
+      .sub(this.timerNode.x)
+      .lessThan(this.shutterSpeed)
+      .select(max(this.inputNode, this.historyNode), this.inputNode)
     material.needsUpdate = true
 
     copyMaterial.fragmentNode = this.inputNode

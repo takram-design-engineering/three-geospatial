@@ -4,7 +4,6 @@ import {
   cameraViewMatrix,
   normalWorld,
   positionWorld,
-  select,
   uniform,
   vec4
 } from 'three/tsl'
@@ -107,7 +106,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       positionUnit,
       normalECEF,
       directionECEF
-    ).mul(select(indirect, 1, 0))
+    ).mul(indirect.select(1, 0))
 
     // Yes, it's an indirect but should be fine to update it here.
     const lightingContext = builder.context as unknown as LightingContext
@@ -132,7 +131,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       .mul(transmittance)
       .mul(sunRadianceToLuminance.mul(luminanceScale))
       .mul(intensity)
-      .mul(select(direct, 1, 0))
+      .mul(direct.select(1, 0))
 
     return {
       lightDirection: directionView,

@@ -20,7 +20,6 @@ import {
   mix,
   screenCoordinate,
   screenUV,
-  select,
   sqrt,
   step,
   struct,
@@ -108,11 +107,9 @@ const clipAABB = /*#__PURE__*/ FnLayout({
   const vUnit = vClip.xyz.div(eClip)
   const absUnit = vUnit.abs().toConst()
   const maxUnit = max(absUnit.x, absUnit.y, absUnit.z).toConst()
-  return select(
-    maxUnit.greaterThan(1),
-    vec4(pClip, current.a).add(vClip.div(maxUnit)),
-    history
-  )
+  return maxUnit
+    .greaterThan(1)
+    .select(vec4(pClip, current.a).add(vClip.div(maxUnit)), history)
 })
 
 const varianceOffsets = [

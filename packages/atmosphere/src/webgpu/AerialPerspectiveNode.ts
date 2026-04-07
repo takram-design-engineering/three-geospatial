@@ -6,7 +6,6 @@ import {
   mix,
   positionGeometry,
   remapClamp,
-  select,
   uv,
   vec3,
   vec4
@@ -145,8 +144,7 @@ export class AerialPerspectiveNode extends TempNode {
           radiiUnit
         ).x // Near side
 
-        const positionCorrected = select(
-          intersection.greaterThanEqual(0),
+        const positionCorrected = intersection.greaterThanEqual(0).select(
           rayDirectionECEF.mul(intersection).add(cameraPositionUnit),
           // Fallback to radial projection:
           normalCorrected.mul(radiiUnit)

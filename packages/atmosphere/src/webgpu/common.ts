@@ -69,7 +69,6 @@ import {
   mix,
   mul,
   PI,
-  select,
   smoothstep,
   sqrt,
   vec2,
@@ -456,11 +455,9 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     const maxDistance = distanceToHorizon
     cosViewCoord.assign(
       getTextureCoordFromUnitRange(
-        select(
-          maxDistance.equal(minDistance),
-          0,
-          distance.remap(minDistance, maxDistance)
-        ),
+        maxDistance
+          .equal(minDistance)
+          .select(0, distance.remap(minDistance, maxDistance)),
         scatteringTextureCosViewSize.div(2)
       )
         .oneMinus()

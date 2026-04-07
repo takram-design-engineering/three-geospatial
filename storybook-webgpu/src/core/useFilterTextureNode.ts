@@ -8,7 +8,6 @@ import {
   rtt,
   screenSize,
   screenUV,
-  select,
   texture,
   uniform,
   uv,
@@ -29,11 +28,12 @@ export function useFilterTextureNode(): TextureNode {
   const [textureNode, offset] = useResource(() => {
     const imageAspect = float(image.width / image.height)
     const screenAspect = screenSize.x.div(screenSize.y)
-    const scale = select(
-      imageAspect.greaterThan(screenAspect),
-      vec2(screenAspect.div(imageAspect), 1),
-      vec2(1, imageAspect.div(screenAspect))
-    )
+    const scale = imageAspect
+      .greaterThan(screenAspect)
+      .select(
+        vec2(screenAspect.div(imageAspect), 1),
+        vec2(1, imageAspect.div(screenAspect))
+      )
 
     const offset = uniform('vec2')
     const offsetAmount = 0.05

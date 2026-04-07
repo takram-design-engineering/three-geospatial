@@ -70,8 +70,8 @@ import {
   max,
   min,
   mul,
+  or,
   PI,
-  select,
   sin,
   sqrt,
   struct,
@@ -144,11 +144,12 @@ const getProfileDensity = /*#__PURE__*/ FnLayout({
     { name: 'altitude', type: Length }
   ]
 })(([profile, altitude]) => {
-  return select(
-    altitude.lessThan(profile.get('layer0').get('width')),
-    getLayerDensity(profile.get('layer0'), altitude),
-    getLayerDensity(profile.get('layer1'), altitude)
-  )
+  return altitude
+    .lessThan(profile.get('layer0').get('width'))
+    .select(
+      getLayerDensity(profile.get('layer0'), altitude),
+      getLayerDensity(profile.get('layer1'), altitude)
+    )
 })
 
 const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
@@ -183,7 +184,7 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     const y = getProfileDensity(profile, r.sub(bottomRadius))
 
     // Sample weight from the trapezoidal rule.
-    const weight = select(equal(i, 0).or(equal(i, sampleCount)), 0.5, 1)
+    const weight = or(equal(i, 0), equal(i, sampleCount)).select(0.5, 1)
     opticalDepth.addAssign(y.mul(weight).mul(stepSize))
   })
 
@@ -300,8 +301,7 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   const distance = minDistance
     .add(cosViewUnit.mul(maxDistance.sub(minDistance)))
     .toConst()
-  const cosView = select(
-    distance.equal(0),
+  const cosView = distance.equal(0).select(
     1,
     H.pow2()
       .sub(distanceToHorizon.pow2())
@@ -475,7 +475,7 @@ const computeSingleScattering = /*#__PURE__*/ FnLayout({
     const deltaMie = deltaRayleighMie.get('mie')
 
     // Sample weight from the trapezoidal rule.
-    const weight = select(equal(i, 0).or(equal(i, sampleCount)), 0.5, 1)
+    const weight = or(equal(i, 0), equal(i, sampleCount)).select(0.5, 1)
     rayleighSum.addAssign(deltaRayleigh.mul(weight))
     mieSum.addAssign(deltaMie.mul(weight))
   })
@@ -551,8 +551,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
       )
       .toConst()
     cosView.assign(
-      select(
-        distance.equal(0),
+      distance.equal(0).select(
         -1,
         clampCosine(
           distanceToHorizon
@@ -584,8 +583,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
       )
       .toConst()
     cosView.assign(
-      select(
-        distance.equal(0),
+      distance.equal(0).select(
         1,
         clampCosine(
           H.pow2()
@@ -614,8 +612,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   const distance = minDistance
     .add(min(a, A).mul(maxDistance.sub(minDistance)))
     .toConst()
-  const cosLight = select(
-    distance.equal(0),
+  const cosLight = distance.equal(0).select(
     1,
     clampCosine(
       H.pow2()
@@ -845,11 +842,10 @@ const computeScatteringDensity = /*#__PURE__*/ FnLayout({
   // computations below.
   const zenithDirection = vec3(0, 0, 1)
   const omega = vec3(sqrt(cosView.pow2().oneMinus()), 0, cosView).toConst()
-  const sunDirectionX = select(
-    omega.x.equal(0),
-    0,
-    cosViewLight.sub(cosView.mul(cosLight)).div(omega.x)
-  ).toConst()
+  const sunDirectionX = omega.x
+    .equal(0)
+    .select(0, cosViewLight.sub(cosView.mul(cosLight)).div(omega.x))
+    .toConst()
   const sunDirectionY = sqrt(
     max(sunDirectionX.pow2().add(cosLight.pow2()).oneMinus(), 0)
   )
@@ -1051,7 +1047,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
       .mul(stepSize)
 
     // Sample weight from the trapezoidal rule.
-    const weight = select(equal(i, 0).or(equal(i, sampleCount)), 0.5, 1)
+    const weight = or(equal(i, 0), equal(i, sampleCount)).select(0.5, 1)
     radianceSum.addAssign(radiance.mul(weight))
   })
 
@@ -1154,15 +1150,14 @@ const computeDirectIrradiance = /*#__PURE__*/ FnLayout({
   // Approximate average of the cosine factor cosLight over the visible fraction
   // of the Sun disc.
   const alpha = sunAngularRadius
-  const averageCosineFactor = select(
-    cosLight.lessThan(alpha.negate()),
-    0,
-    select(
-      cosLight.greaterThan(alpha),
-      cosLight,
-      cosLight.add(alpha).pow2().div(alpha.mul(4))
+  const averageCosineFactor = cosLight
+    .lessThan(alpha.negate())
+    .select(
+      0,
+      cosLight
+        .greaterThan(alpha)
+        .select(cosLight, cosLight.add(alpha).pow2().div(alpha.mul(4)))
     )
-  )
 
   return solarIrradiance
     .mul(
