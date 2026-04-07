@@ -12,6 +12,7 @@ import {
   smoothstep,
   sqrt,
   uniform,
+  vec3,
   vec4
 } from 'three/tsl'
 import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
@@ -129,24 +130,32 @@ export class MoonNode extends TempNode {
       const chordLength = chordVector.dot(chordVector)
       const filterWidth = fwidth(chordLength)
 
+      const uv = vec3().toVar()
+      const normalECEF = vec3().toVar()
+      const normalMF = vec3().toVar()
+
+      If(chordLength.lessThan(chordThreshold), () => {
+        normalECEF.assign(
+          raySphereIntersectionNormal(
+            rayDirectionECEF,
+            directionECEF,
+            this.angularRadius
+          )
+        )
+        normalMF.assign(
+          matrixFixedToECEF.transpose().mul(vec4(normalECEF, 0)).xyz
+        )
+        uv.assign(equirectUV(normalMF.xzy)) // The equirectUV expects Y-up
+      })
+
+      const uvdx = dFdx(uv).toConst()
+      const uvdy = dFdy(uv).toConst()
+      const ndx = dFdx(normalMF).toConst()
+      const ndy = dFdy(normalMF).toConst()
+
       const luminance = vec4(0).toVar()
       If(chordLength.lessThan(chordThreshold), () => {
-        const normalECEF = raySphereIntersectionNormal(
-          rayDirectionECEF,
-          directionECEF,
-          this.angularRadius
-        ).toVar()
-        const normalMF = matrixFixedToECEF
-          .transpose()
-          .mul(vec4(normalECEF, 0))
-          .xyz.toVar()
-        const uv = equirectUV(normalMF.xzy) // The equirectUV expects Y-up
-
         if (this.displacementNode != null) {
-          // Differential in a branch is unstable, but it's fine in practice
-          // because the edges are masked.
-          const uvdx = dFdx(uv).toConst()
-          const uvdy = dFdy(uv).toConst()
           const hx1 = this.displacementNode.sample(uv.add(uvdx)).x
           const hx2 = this.displacementNode.sample(uv.sub(uvdx)).x
           const hy1 = this.displacementNode.sample(uv.add(uvdy)).x
@@ -156,8 +165,6 @@ export class MoonNode extends TempNode {
 
           // Cotangent frame: compute surface gradient from screen-space
           // derivatives of the surface position.
-          const ndx = dFdx(normalMF).toConst()
-          const ndy = dFdy(normalMF).toConst()
           const r1 = ndy.cross(normalMF).toConst()
           const r2 = normalMF.cross(ndx).toConst()
           const det = ndx.dot(r1).toConst()
