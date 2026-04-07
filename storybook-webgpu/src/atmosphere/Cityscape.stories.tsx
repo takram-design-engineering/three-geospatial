@@ -1,9 +1,9 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story } from './3DTilesRenderer-Story'
+import { Story } from './3DTilesRenderer-PostProcessLighting'
 
-import StoryCode from './3DTilesRenderer-Story?raw'
+import StoryCode from './3DTilesRenderer-PostProcessLighting?raw'
 
 export default {
   title: 'atmosphere/Cityscape',
