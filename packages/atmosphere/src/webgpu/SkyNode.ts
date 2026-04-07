@@ -97,35 +97,37 @@ export class SkyNode extends TempNode {
     if (directionWorld == null) {
       return
     }
-    const rayDirectionECEF = matrixWorldToECEF
-      .mul(vec4(directionWorld, 0))
-      .xyz.toVertexStage()
-      .normalize()
 
-    const solarLuminanceTransfer = getIndirectLuminance(
-      cameraPositionUnit.add(altitudeCorrectionUnit),
-      rayDirectionECEF,
-      this.shadowLengthNode ?? 0,
-      sunDirectionECEF
-    ).toConst()
-    const transmittance = solarLuminanceTransfer.get('transmittance')
-    let inscatter = solarLuminanceTransfer.get('luminance')
+    return Fn(() => {
+      const rayDirectionECEF = matrixWorldToECEF
+        .mul(vec4(directionWorld, 0))
+        .xyz.toVertexStage()
+        .normalize()
+        .toConst()
 
-    if (this.moonScattering) {
-      const lunarLuminanceTransfer = getIndirectLuminance(
+      const solarLuminanceTransfer = getIndirectLuminance(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         rayDirectionECEF,
         this.shadowLengthNode ?? 0,
-        moonDirectionECEF
-      )
+        sunDirectionECEF
+      ).toConst()
+      const transmittance = solarLuminanceTransfer.get('transmittance')
+      let inscatter = solarLuminanceTransfer.get('luminance')
 
-      // TODO: Consider moon phase
-      inscatter = inscatter.add(
-        lunarLuminanceTransfer.get('luminance').mul(2.5e-6)
-      )
-    }
+      if (this.moonScattering) {
+        const lunarLuminanceTransfer = getIndirectLuminance(
+          cameraPositionUnit.add(altitudeCorrectionUnit),
+          rayDirectionECEF,
+          this.shadowLengthNode ?? 0,
+          moonDirectionECEF
+        )
 
-    return Fn(() => {
+        // TODO: Consider moon phase
+        inscatter = inscatter.add(
+          lunarLuminanceTransfer.get('luminance').mul(2.5e-6)
+        )
+      }
+
       const luminance = vec3(0).toVar()
 
       if (this.showStars) {
