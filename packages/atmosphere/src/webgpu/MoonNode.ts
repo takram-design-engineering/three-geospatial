@@ -12,6 +12,7 @@ import {
   smoothstep,
   sqrt,
   uniform,
+  vec2,
   vec3,
   vec4
 } from 'three/tsl'
@@ -130,7 +131,7 @@ export class MoonNode extends TempNode {
       const chordLength = chordVector.dot(chordVector)
       const filterWidth = fwidth(chordLength)
 
-      const uv = vec3().toVar()
+      const uv = vec2().toVar()
       const normalECEF = vec3().toVar()
       const normalMF = vec3().toVar()
 
