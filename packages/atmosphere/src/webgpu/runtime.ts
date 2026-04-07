@@ -142,7 +142,7 @@ const combinedScatteringStruct = /*#__PURE__*/ struct(
     scattering: IrradianceSpectrum,
     singleMieScattering: IrradianceSpectrum
   },
-  'combinedScattering'
+  'CombinedScattering'
 )
 
 const getCombinedScattering = /*#__PURE__*/ FnLayout({
@@ -236,7 +236,7 @@ const radianceTransferStruct = /*#__PURE__*/ struct(
     radiance: RadianceSpectrum,
     transmittance: DimensionlessSpectrum
   },
-  'radianceTransfer'
+  'RadianceTransfer'
 )
 
 const getIndirectRadiance = /*#__PURE__*/ FnLayout({
@@ -680,7 +680,7 @@ const raySegmentStruct = /*#__PURE__*/ struct(
     point: Position,
     degenerate: 'bool'
   },
-  'raySegment'
+  'RaySegment'
 )
 
 // Clip the view ray at the bottom atmosphere boundary.
@@ -789,7 +789,7 @@ const splitIrradianceStruct = /*#__PURE__*/ struct(
     direct: IrradianceSpectrum,
     indirect: IrradianceSpectrum
   },
-  'splitIrradiance'
+  'SplitIrradiance'
 )
 
 const getSplitIrradiance = /*#__PURE__*/ FnLayout({
@@ -915,7 +915,7 @@ const luminanceTransferStruct = /*#__PURE__*/ struct(
     luminance: Luminance3,
     transmittance: DimensionlessSpectrum
   },
-  'luminanceTransfer'
+  'LuminanceTransfer'
 )
 
 export const getIndirectLuminance = /*#__PURE__*/ FnVar(
@@ -991,7 +991,7 @@ const splitIlluminanceStruct = /*#__PURE__*/ struct(
     direct: Illuminance3,
     indirect: Illuminance3
   },
-  'splitIlluminanceStruct'
+  'SplitIlluminance'
 )
 
 export const getSplitIlluminance = /*#__PURE__*/ FnVar(

@@ -259,7 +259,7 @@ const transmittanceParamsStruct = /*#__PURE__*/ struct(
     radius: Length,
     cosView: Dimensionless
   },
-  'transmittanceParams'
+  'TransmittanceParams'
 )
 
 const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
@@ -336,7 +336,7 @@ const singleScatteringStruct = /*#__PURE__*/ struct(
     rayleigh: DimensionlessSpectrum,
     mie: DimensionlessSpectrum
   },
-  'singleScattering'
+  'SingleScattering'
 )
 
 const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
@@ -498,7 +498,7 @@ const scatteringParamsStruct = /*#__PURE__*/ struct(
     cosViewLight: Dimensionless,
     viewRayIntersectsGround: 'bool'
   },
-  'scatteringParams'
+  'ScatteringParams'
 )
 
 const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
@@ -1100,7 +1100,7 @@ const multipleScatteringStruct = /*#__PURE__*/ struct(
     radiance: RadianceSpectrum,
     cosViewLight: Dimensionless
   },
-  'multipleScattering'
+  'MultipleScattering'
 )
 
 export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
@@ -1245,7 +1245,7 @@ const irradianceParamsStruct = /*#__PURE__*/ struct(
     radius: Length,
     cosLight: Dimensionless
   },
-  'irradianceParams'
+  'IrradianceParams'
 )
 
 const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({

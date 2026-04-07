@@ -26,10 +26,10 @@ export const raySphereIntersection = /*#__PURE__*/ FnVar(
   }
 )
 
-export const raySpheresIntersectionsStruct = /*#__PURE__*/ struct(
-  { near: 'vec4', far: 'vec4' },
-  'raySpheresIntersections'
-)
+export const raySpheresIntersectionsStruct = /*#__PURE__*/ struct({
+  near: 'vec4',
+  far: 'vec4'
+})
 
 // Derive ray-sphere intersections with multiple radii at once:
 export const raySpheresIntersections = /*#__PURE__*/ FnVar(

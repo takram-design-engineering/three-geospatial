@@ -27,7 +27,7 @@ export const densityProfileLayerStruct = /*#__PURE__*/ struct(
     linearTerm: InverseLength,
     constantTerm: Dimensionless
   },
-  'densityProfileLayer'
+  'DensityProfileLayer'
 )
 
 export const densityProfileStruct = /*#__PURE__*/ struct(
@@ -35,7 +35,7 @@ export const densityProfileStruct = /*#__PURE__*/ struct(
     layer0: densityProfileLayerStruct.layout.name!,
     layer1: densityProfileLayerStruct.layout.name!
   },
-  'densityProfile'
+  'DensityProfile'
 )
 
 const atmosphereParametersLayout = {
@@ -67,7 +67,7 @@ const atmosphereParametersLayout = {
 
 export const atmosphereParametersStruct = /*#__PURE__*/ struct(
   atmosphereParametersLayout,
-  'atmosphereParameters'
+  'AtmosphereParameters'
 )
 
 function densityProfileLayer(
