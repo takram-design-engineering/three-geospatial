@@ -9,6 +9,7 @@
 ### Changed
 
 - `AtmosphereParameters`: Deprecated and renamed `minCosSun` to `minCosLight`.
+- `SkyEnvironmentNode`: Optimized the PMREM texture generation.
 
 ### Fixed
 
