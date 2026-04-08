@@ -3,7 +3,8 @@ import {
   WebGLCubeRenderTarget as CubeRenderTarget,
   HalfFloatType,
   Mesh,
-  RGBAFormat
+  RGBAFormat,
+  Vector3
 } from 'three'
 import { pmremTexture, positionGeometry, vec4 } from 'three/tsl'
 import {
@@ -14,8 +15,10 @@ import {
   type NodeFrame
 } from 'three/webgpu'
 
-import { QuadGeometry } from '@takram/three-geospatial'
+import { QuadGeometry, radians } from '@takram/three-geospatial'
+import { OnBeforeFrameUpdate } from '@takram/three-geospatial/webgpu'
 
+import { getAtmosphereContext } from './AtmosphereContext'
 import { sky, type SkyNode } from './SkyNode'
 
 export class SkyEnvironmentNode extends TempNode {
@@ -25,10 +28,16 @@ export class SkyEnvironmentNode extends TempNode {
 
   skyNode: SkyNode
 
+  distanceThreshold = 100
+  angularThreshold = radians(0.1)
+
   private readonly renderTarget: CubeRenderTarget
-  private readonly camera: CubeCamera
+  private readonly cubeCamera: CubeCamera
   private readonly material = new NodeMaterial()
   private readonly mesh = new Mesh(new QuadGeometry(), this.material)
+
+  private currentVersion?: number
+  private removeLUTUpdateListener?: () => void
 
   constructor(size = 64) {
     super('vec3')
@@ -44,28 +53,81 @@ export class SkyEnvironmentNode extends TempNode {
       type: HalfFloatType,
       format: RGBAFormat
     })
-    this.camera = new CubeCamera(0.1, 1000, this.renderTarget)
+    this.cubeCamera = new CubeCamera(0.1, 1000, this.renderTarget)
 
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
-    if (renderer == null) {
+    if (renderer == null || this.version === this.currentVersion) {
       return
     }
-    // TODO: Don't render when the camera doesn't move. This case just comparing
-    // the camera's world position is sufficient. But we need to detect
-    // the atmosphere LUT is updated.
-    this.camera.update(renderer, this.mesh)
+    this.currentVersion = this.version
+    this.cubeCamera.update(renderer, this.mesh)
   }
 
   override setup(builder: NodeBuilder): unknown {
+    const context = getAtmosphereContext(builder)
+
+    const { camera } = context
+    if (camera != null) {
+      const nextPosition = new Vector3()
+      const prevPosition = new Vector3()
+      OnBeforeFrameUpdate(() => {
+        nextPosition
+          .copy(camera.position)
+          .divideScalar(this.distanceThreshold)
+          .round()
+        if (!prevPosition.equals(nextPosition)) {
+          prevPosition.copy(nextPosition)
+          this.needsUpdate = true
+        }
+      })
+    }
+
+    const sunDirection = context.sunDirectionECEF.value.clone()
+    OnBeforeFrameUpdate(() => {
+      const { value } = context.sunDirectionECEF
+      if (sunDirection.angleTo(value) > this.angularThreshold) {
+        sunDirection.copy(value)
+        this.needsUpdate = true
+      }
+    })
+
+    const moonDirection = context.moonDirectionECEF.value.clone()
+    OnBeforeFrameUpdate(() => {
+      const { value } = context.moonDirectionECEF
+      if (moonDirection.angleTo(value) > this.angularThreshold) {
+        moonDirection.copy(value)
+        this.needsUpdate = true
+      }
+    })
+
+    const handleLUTUpdate = (): void => {
+      this.needsUpdate = true
+    }
+    context.lutNode.addEventListener(
+      // @ts-expect-error Cannot specify the events map
+      'update',
+      handleLUTUpdate
+    )
+    this.removeLUTUpdateListener?.()
+    this.removeLUTUpdateListener = () => {
+      context.lutNode.removeEventListener(
+        // @ts-expect-error Cannot specify the events map
+        'update',
+        handleLUTUpdate
+      )
+    }
+
     this.material.vertexNode = vec4(positionGeometry.xy, 0, 1)
     this.material.fragmentNode = this.skyNode
     return pmremTexture(this.renderTarget.texture)
   }
 
   override dispose(): void {
+    this.removeLUTUpdateListener?.()
+
     this.renderTarget.dispose()
     this.skyNode.dispose() // TODO: Conditionally depending on the owner.
     this.material.dispose()
