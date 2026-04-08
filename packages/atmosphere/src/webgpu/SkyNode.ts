@@ -16,7 +16,7 @@ import { getIndirectLuminance } from './runtime'
 import { StarsNode } from './StarsNode'
 import { SunNode } from './SunNode'
 
-const cameraDirectionWorld = (camera: Camera): Node<'vec3'> => {
+const cameraDirectionWorld = (camera?: Camera | null): Node<'vec3'> => {
   const positionView = inverseProjectionMatrix(camera).mul(
     vec4(positionGeometry, 1)
   ).xyz
@@ -83,11 +83,9 @@ export class SkyNode extends TempNode {
     let directionWorld
     switch (this.scope) {
       case CAMERA: {
-        const camera = this.useContextCamera
-          ? atmosphereContext.camera
-          : builder.camera
-        directionWorld =
-          camera != null ? cameraDirectionWorld(camera) : undefined
+        directionWorld = cameraDirectionWorld(
+          this.useContextCamera ? atmosphereContext.camera : null
+        )
         break
       }
       case EQUIRECTANGULAR:

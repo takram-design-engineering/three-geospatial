@@ -1,5 +1,15 @@
 import type { Camera, Vector3 } from 'three'
-import { reference, uniform } from 'three/tsl'
+import {
+  cameraFar as cameraFarTSL,
+  cameraNear as cameraNearTSL,
+  cameraPosition,
+  cameraProjectionMatrix,
+  cameraProjectionMatrixInverse,
+  cameraViewMatrix,
+  cameraWorldMatrix,
+  reference,
+  uniform
+} from 'three/tsl'
 import type { UniformNode } from 'three/webgpu'
 
 import type { Node } from './node'
@@ -23,43 +33,63 @@ function getCache<T extends {}, U extends {}>(
   return (cache[name] ??= callback()) as U
 }
 
-export const projectionMatrix = (camera: Camera): Node<'mat4'> =>
-  getCache(camera, 'projectionMatrix', () =>
-    reference('projectionMatrix', 'mat4', camera).setName('projectionMatrix')
-  )
+export const projectionMatrix = (camera?: Camera | null): Node<'mat4'> =>
+  camera != null
+    ? getCache(camera, 'projectionMatrix', () =>
+        reference('projectionMatrix', 'mat4', camera).setName(
+          'projectionMatrix'
+        )
+      )
+    : cameraProjectionMatrix
 
-export const viewMatrix = (camera: Camera): Node<'mat4'> =>
-  getCache(camera, 'viewMatrix', () =>
-    reference('matrixWorldInverse', 'mat4', camera).setName('viewMatrix')
-  )
+export const viewMatrix = (camera?: Camera | null): Node<'mat4'> =>
+  camera != null
+    ? getCache(camera, 'viewMatrix', () =>
+        reference('matrixWorldInverse', 'mat4', camera).setName('viewMatrix')
+      )
+    : cameraViewMatrix
 
-export const inverseProjectionMatrix = (camera: Camera): Node<'mat4'> =>
-  getCache(camera, 'inverseProjectionMatrix', () =>
-    reference('projectionMatrixInverse', 'mat4', camera).setName(
-      'inverseProjectionMatrix'
-    )
-  )
+export const inverseProjectionMatrix = (
+  camera?: Camera | null
+): Node<'mat4'> =>
+  camera != null
+    ? getCache(camera, 'inverseProjectionMatrix', () =>
+        reference('projectionMatrixInverse', 'mat4', camera).setName(
+          'inverseProjectionMatrix'
+        )
+      )
+    : cameraProjectionMatrixInverse
 
-export const inverseViewMatrix = (camera: Camera): Node<'mat4'> =>
-  getCache(camera, 'inverseViewMatrix', () =>
-    reference('matrixWorld', 'mat4', camera).setName('inverseViewMatrix')
-  )
+export const inverseViewMatrix = (camera?: Camera | null): Node<'mat4'> =>
+  camera != null
+    ? getCache(camera, 'inverseViewMatrix', () =>
+        reference('matrixWorld', 'mat4', camera).setName('inverseViewMatrix')
+      )
+    : cameraWorldMatrix // TODO: Not always
 
-export const cameraPositionWorld = (camera: Camera): UniformNode<Vector3> =>
-  getCache(camera, 'cameraPositionWorld', () =>
-    uniform('vec3')
-      .setName('cameraPositionWorld')
-      .onRenderUpdate((_, { value }) => {
-        value.setFromMatrixPosition(camera.matrixWorld)
-      })
-  )
+export const cameraPositionWorld = (
+  camera?: Camera | null
+): UniformNode<Vector3> =>
+  camera != null
+    ? getCache(camera, 'cameraPositionWorld', () =>
+        uniform('vec3')
+          .setName('cameraPositionWorld')
+          .onRenderUpdate((_, { value }) => {
+            value.setFromMatrixPosition(camera.matrixWorld)
+          })
+      )
+    : cameraPosition
 
-export const cameraNear = (camera: Camera): Node<'float'> =>
-  getCache(camera, 'cameraNear', () =>
-    reference('near', 'float', camera).setName('cameraNear')
-  )
+export const cameraNear = (camera?: Camera | null): Node<'float'> =>
+  camera != null
+    ? getCache(camera, 'cameraNear', () =>
+        reference('near', 'float', camera).setName('cameraNear')
+      )
+    : cameraNearTSL
 
-export const cameraFar = (camera: Camera): Node<'float'> =>
-  getCache(camera, 'cameraFar', () =>
-    reference('far', 'float', camera).setName('cameraFar')
-  )
+export const cameraFar = (camera?: Camera | null): Node<'float'> =>
+  camera != null
+    ? getCache(camera, 'cameraFar', () =>
+        reference('far', 'float', camera).setName('cameraFar')
+      )
+    : cameraFarTSL
