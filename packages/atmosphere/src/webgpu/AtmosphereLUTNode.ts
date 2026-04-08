@@ -71,6 +71,9 @@ export type AtmosphereLUTTexture3DName =
 const emptyTexture = /*#__PURE__*/ new Texture()
 const emptyTexture3D = /*#__PURE__*/ new Data3DTexture()
 
+// Dispatched when a texture node is updated.
+const updateEvent = { type: 'update' as const }
+
 export class AtmosphereLUTNode extends Node {
   static override get type(): string {
     return 'AtmosphereLUTNode'
@@ -122,6 +125,12 @@ export class AtmosphereLUTNode extends Node {
     // Compute the transmittance, and store it in transmittanceTexture.
     yield run(renderer, () => {
       textures.computeTransmittance(renderer, context)
+
+      // For transmittance texture:
+      this.dispatchEvent(
+        // @ts-expect-error Cannot specify the events map
+        updateEvent
+      )
     })
 
     // Compute the direct irradiance, store it in deltaIrradiance and,
@@ -130,6 +139,12 @@ export class AtmosphereLUTNode extends Node {
     // irradianceTexture, but only the irradiance from the sky).
     yield run(renderer, () => {
       textures.computeDirectIrradiance(renderer, context)
+
+      // For irradiance texture:
+      this.dispatchEvent(
+        // @ts-expect-error Cannot specify the events map
+        updateEvent
+      )
     })
 
     // Compute the rayleigh and mie single scattering, store them in
@@ -138,6 +153,12 @@ export class AtmosphereLUTNode extends Node {
     // mieScatteringTexture.
     yield run(renderer, () => {
       textures.computeSingleScattering(renderer, context)
+
+      // For scattering texture:
+      this.dispatchEvent(
+        // @ts-expect-error Cannot specify the events map
+        updateEvent
+      )
     })
 
     // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
@@ -156,6 +177,12 @@ export class AtmosphereLUTNode extends Node {
       yield run(renderer, () => {
         textures.computeMultipleScattering(renderer, context)
       })
+
+      // For irradiance and scattering textures:
+      this.dispatchEvent(
+        // @ts-expect-error Cannot specify the events map
+        updateEvent
+      )
     }
   }
 
