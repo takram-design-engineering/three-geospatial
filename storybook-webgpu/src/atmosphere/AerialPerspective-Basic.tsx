@@ -4,9 +4,9 @@ import { useLayoutEffect, useMemo, type FC } from 'react'
 import { AgXToneMapping, Scene } from 'three'
 import {
   context,
+  diffuseColor,
   mrt,
   normalView,
-  output,
   pass,
   toneMapping,
   uniform
@@ -94,7 +94,7 @@ const Content: FC<StoryProps> = ({
     () =>
       pass(scene, camera, { samples: 0 }).setMRT(
         mrt({
-          output,
+          output: diffuseColor,
           normal: normalView,
           velocity: highpVelocity
         })
