@@ -78,7 +78,7 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import type { Texture3DNode, TextureNode } from 'three/webgpu'
+import { Vector3, type Texture3DNode, type TextureNode } from 'three/webgpu'
 
 import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -1232,7 +1232,13 @@ const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
     })
   })
 
-  return result
+  // Add a baseline indirect irradiance for moonless night sky.
+  // The green-dominant ratio is roughly based on observational data
+  // (https://solarwww.mtk.nao.ac.jp/mitaka_solar/airglow-wdc/Japan/3colors/minute/Readme.txt).
+  // 1e-8 W/m^2/nm is roughly based on 2 nW/m^2/sr/nm on P.2 of
+  // https://www.sciencedirect.com/science/article/pii/S0022407319309653,
+  // though it is set slightly brighter.
+  return result.add(vec3(new Vector3(0.6, 1, 0.5).multiplyScalar(1e-8)))
 })
 
 const irradianceParamsStruct = /*#__PURE__*/ struct(
