@@ -269,5 +269,3 @@ Story.argTypes = {
   ...outputPassArgTypes({ hasNormal: false }),
   ...rendererArgTypes()
 }
-
-export default Story

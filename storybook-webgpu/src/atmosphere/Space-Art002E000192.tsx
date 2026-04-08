@@ -321,5 +321,3 @@ Story.argTypes = {
   }),
   ...rendererArgTypes()
 }
-
-export default Story

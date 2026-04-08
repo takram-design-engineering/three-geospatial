@@ -111,5 +111,3 @@ Story.argTypes = {
   ...toneMappingArgTypes(),
   ...rendererArgTypes()
 }
-
-export default Story

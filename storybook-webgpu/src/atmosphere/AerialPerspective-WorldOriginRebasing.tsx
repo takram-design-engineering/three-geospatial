@@ -197,5 +197,3 @@ Story.argTypes = {
   ...outputPassArgTypes(),
   ...rendererArgTypes()
 }
-
-export default Story
