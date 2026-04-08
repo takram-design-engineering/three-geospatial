@@ -74,6 +74,8 @@ export class SkyEnvironmentNode extends TempNode {
       const nextPosition = new Vector3()
       const prevPosition = new Vector3()
       OnBeforeFrameUpdate(() => {
+        // TODO: Ideally, this should be compared against the parameterization
+        // values of the LUT. (i.e. radius, angle between view and sun, etc.)
         nextPosition
           .copy(camera.position)
           .divideScalar(this.distanceThreshold)
