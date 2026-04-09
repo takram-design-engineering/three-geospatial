@@ -1,4 +1,5 @@
 import { TilesRenderer } from '3d-tiles-renderer'
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
@@ -88,9 +89,14 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   tiles.setCamera(camera)
   tiles.setResolutionFromRenderer(camera, renderer as any)
   tiles.registerPlugin(
-    new GoogleCloudAuthPlugin({
-      apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
-    })
+    (import.meta.env.STORYBOOK_ION_API_TOKEN ?? '') !== ''
+      ? new CesiumIonAuthPlugin({
+          apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+          assetId: '2275207' // Google Photorealistic Tiles
+        })
+      : new GoogleCloudAuthPlugin({
+          apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
+        })
   )
   tiles.registerPlugin(new GLTFExtensionsPlugin({ dracoLoader }))
   tiles.registerPlugin(new TileCompressionPlugin())

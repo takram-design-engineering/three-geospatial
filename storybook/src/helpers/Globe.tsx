@@ -1,4 +1,5 @@
 import type { TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
@@ -55,16 +56,25 @@ export const Globe: FC<GlobeProps> = ({ ref, children }) => {
       ref={mergeRefs([ref, setTiles])}
       // Reconstruct tiles when API key changes.
       key={apiKey}
-      // The root URL sometimes becomes null without specifying the URL.
-      url={`https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiKey}`}
     >
-      <TilesPlugin
-        plugin={GoogleCloudAuthPlugin}
-        args={{
-          apiToken: apiKey,
-          autoRefreshToken: true
-        }}
-      />
+      {(import.meta.env.STORYBOOK_ION_API_TOKEN ?? '') !== '' ? (
+        <TilesPlugin
+          plugin={CesiumIonAuthPlugin}
+          args={{
+            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+            assetId: '2275207', // Google Photorealistic Tiles
+            autoRefreshToken: true
+          }}
+        />
+      ) : (
+        <TilesPlugin
+          plugin={GoogleCloudAuthPlugin}
+          args={{
+            apiToken: apiKey,
+            autoRefreshToken: true
+          }}
+        />
+      )}
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
       <TilesPlugin plugin={UpdateOnChangePlugin} />

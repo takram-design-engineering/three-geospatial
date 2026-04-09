@@ -1,4 +1,5 @@
 import type { TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
@@ -33,33 +34,44 @@ export const Globe: FC<GlobeProps> = ({
   apiKey = import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
   materialHandler,
   children
-}) => (
-  <TilesRenderer
-    ref={mergeRefs([ref, connectToDescription])}
-    // Reconstruct tiles when API key changes.
-    key={apiKey}
-    // The root URL sometimes becomes null without specifying the URL.
-    url={`https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiKey}`}
-  >
-    <TilesPlugin
-      plugin={GoogleCloudAuthPlugin}
-      args={{
-        apiToken: apiKey,
-        autoRefreshToken: true
-      }}
-    />
-    <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
-    <TilesPlugin plugin={TileCompressionPlugin} />
-    <TilesPlugin plugin={UpdateOnChangePlugin} />
-    <TilesPlugin
-      plugin={TileCreasedNormalsPlugin}
-      args={{ creaseAngle: radians(30) }}
-    />
-    <TilesPlugin
-      plugin={TileMaterialReplacementPlugin}
-      args={materialHandler}
-    />
-    <TilesPlugin plugin={TilesFadePlugin} />
-    {children}
-  </TilesRenderer>
-)
+}) => {
+  return (
+    <TilesRenderer
+      ref={mergeRefs([ref, connectToDescription])}
+      // Reconstruct tiles when API key changes.
+      key={apiKey}
+    >
+      {(import.meta.env.STORYBOOK_ION_API_TOKEN ?? '') !== '' ? (
+        <TilesPlugin
+          plugin={CesiumIonAuthPlugin}
+          args={{
+            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+            assetId: '2275207', // Google Photorealistic Tiles
+            autoRefreshToken: true
+          }}
+        />
+      ) : (
+        <TilesPlugin
+          plugin={GoogleCloudAuthPlugin}
+          args={{
+            apiToken: apiKey,
+            autoRefreshToken: true
+          }}
+        />
+      )}
+      <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
+      <TilesPlugin plugin={TileCompressionPlugin} />
+      <TilesPlugin plugin={UpdateOnChangePlugin} />
+      <TilesPlugin
+        plugin={TileCreasedNormalsPlugin}
+        args={{ creaseAngle: radians(30) }}
+      />
+      <TilesPlugin
+        plugin={TileMaterialReplacementPlugin}
+        args={materialHandler}
+      />
+      <TilesPlugin plugin={TilesFadePlugin} />
+      {children}
+    </TilesRenderer>
+  )
+}
