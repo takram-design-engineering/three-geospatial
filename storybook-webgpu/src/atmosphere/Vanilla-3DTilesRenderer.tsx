@@ -85,22 +85,18 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const scene = new Scene()
 
   // Setup 3D tiles renderer:
-  const cesiumIonToken = import.meta.env.STORYBOOK_CESIUM_ION_TOKEN ?? ''
-  const googleMapsApiKey = import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY ?? ''
-  const assetId = import.meta.env.STORYBOOK_CESIUM_ION_ASSET_ID ?? '2275207'
-  const useCesiumIon = cesiumIonToken !== '' || googleMapsApiKey === ''
-  const apiToken = useCesiumIon ? cesiumIonToken : googleMapsApiKey
-  const tiles = new TilesRenderer(
-    useCesiumIon
-      ? undefined
-      : `https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiToken}`
-  )
+  const tiles = new TilesRenderer()
   tiles.setCamera(camera)
   tiles.setResolutionFromRenderer(camera, renderer as any)
   tiles.registerPlugin(
-    useCesiumIon
-      ? new CesiumIonAuthPlugin({ apiToken, assetId, autoRefreshToken: true })
-      : new GoogleCloudAuthPlugin({ apiToken })
+    (import.meta.env.STORYBOOK_ION_API_TOKEN ?? '') !== ''
+      ? new CesiumIonAuthPlugin({
+          apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+          assetId: '2275207' // Google Photorealistic Tiles
+        })
+      : new GoogleCloudAuthPlugin({
+          apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
+        })
   )
   tiles.registerPlugin(new GLTFExtensionsPlugin({ dracoLoader }))
   tiles.registerPlugin(new TileCompressionPlugin())

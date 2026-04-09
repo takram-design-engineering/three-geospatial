@@ -180,12 +180,13 @@ const Content: FC<StoryProps> = ({
     )
   })
 
-  const googleMapsApiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
+  // Google Maps API key:
+  const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
     googleMapsApiKey !== '' ? googleMapsApiKey : undefined
   )
 
   return (
-    <Globe googleMapsApiKey={googleMapsApiKey}>
+    <Globe apiKey={apiKey}>
       <GlobeControls enableDamping overlayScene={overlayScene} />
     </Globe>
   )

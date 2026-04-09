@@ -184,7 +184,8 @@ const Content: FC<StoryProps> = ({
     )
   })
 
-  const googleMapsApiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
+  // Google Maps API key:
+  const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
     googleMapsApiKey !== '' ? googleMapsApiKey : undefined
   )
 
@@ -192,7 +193,7 @@ const Content: FC<StoryProps> = ({
     <>
       <atmosphereLight />
       <Globe
-        googleMapsApiKey={googleMapsApiKey}
+        apiKey={apiKey}
         materialHandler={() => new MeshLambertNodeMaterial()}
       >
         <GlobeControls enableDamping overlayScene={overlayScene} />

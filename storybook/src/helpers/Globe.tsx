@@ -20,11 +20,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { radians } from '@takram/three-geospatial'
 
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
-import {
-  cesiumIonTokenAtom,
-  googleMapsApiKeyAtom,
-  needsApiKeyAtom
-} from './states'
+import { googleMapsApiKeyAtom, needsApiKeyAtom } from './states'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -34,14 +30,11 @@ export interface GlobeProps {
   children?: ReactNode
 }
 export const Globe: FC<GlobeProps> = ({ ref, children }) => {
-  const cesiumIonToken = useAtomValue(cesiumIonTokenAtom) || import.meta.env.STORYBOOK_CESIUM_ION_TOKEN || ''
-  const googleMapsApiKey = useAtomValue(googleMapsApiKeyAtom) || import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY || ''
-  const assetId = import.meta.env.STORYBOOK_CESIUM_ION_ASSET_ID ?? '2275207'
-  const useCesiumIon = cesiumIonToken !== '' || googleMapsApiKey === ''
-  const apiToken = useCesiumIon ? cesiumIonToken : googleMapsApiKey
-  const url = useCesiumIon
-    ? undefined
-    : `https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiToken}`
+  const inputApiKey = useAtomValue(googleMapsApiKeyAtom)
+  const apiKey =
+    inputApiKey !== ''
+      ? inputApiKey
+      : import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
 
   const [tiles, setTiles] = useState<TilesRendererImpl | null>(null)
   const setNeedsApiKey = useSetAtom(needsApiKeyAtom)
@@ -61,18 +54,27 @@ export const Globe: FC<GlobeProps> = ({ ref, children }) => {
   return (
     <TilesRenderer
       ref={mergeRefs([ref, setTiles])}
-      // Reconstruct tiles when credentials change.
-      key={`${useCesiumIon ? 'cesium-ion' : 'google'}:${apiToken}:${assetId}`}
-      url={url}
+      // Reconstruct tiles when API key changes.
+      key={apiKey}
     >
-      <TilesPlugin
-        plugin={useCesiumIon ? CesiumIonAuthPlugin : GoogleCloudAuthPlugin}
-        args={
-          useCesiumIon
-            ? { apiToken, assetId, autoRefreshToken: true }
-            : { apiToken, autoRefreshToken: true }
-        }
-      />
+      {(import.meta.env.STORYBOOK_ION_API_TOKEN ?? '') !== '' ? (
+        <TilesPlugin
+          plugin={CesiumIonAuthPlugin}
+          args={{
+            apiToken: import.meta.env.STORYBOOK_ION_API_TOKEN,
+            assetId: '2275207', // Google Photorealistic Tiles
+            autoRefreshToken: true
+          }}
+        />
+      ) : (
+        <TilesPlugin
+          plugin={GoogleCloudAuthPlugin}
+          args={{
+            apiToken: apiKey,
+            autoRefreshToken: true
+          }}
+        />
+      )}
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
       <TilesPlugin plugin={UpdateOnChangePlugin} />
