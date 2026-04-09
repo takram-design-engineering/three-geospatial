@@ -167,7 +167,7 @@ export class AtmosphereParameters {
   // must be precomputed (for maximum precision, use the smallest Sun zenith
   // angle yielding negligible sky light radiance values. For instance, for the
   // Earth case, 102 degrees is a good choice - yielding muSMin = -0.2).
-  muSMin = Math.cos(radians(102))
+  muSMin = Math.cos(radians(120))
 
   // Radiance to luminance conversion
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
