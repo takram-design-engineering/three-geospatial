@@ -180,18 +180,12 @@ const Content: FC<StoryProps> = ({
     )
   })
 
-  const cesiumIonToken = useControl(({ cesiumIonToken }: StoryArgs) =>
-    cesiumIonToken !== '' ? cesiumIonToken : undefined
-  )
   const googleMapsApiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
     googleMapsApiKey !== '' ? googleMapsApiKey : undefined
   )
 
   return (
-    <Globe
-      cesiumIonToken={cesiumIonToken}
-      googleMapsApiKey={googleMapsApiKey}
-    >
+    <Globe googleMapsApiKey={googleMapsApiKey}>
       <GlobeControls enableDamping overlayScene={overlayScene} />
     </Globe>
   )
@@ -200,7 +194,6 @@ const Content: FC<StoryProps> = ({
 interface StoryProps extends PointOfViewProps {}
 
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
-  cesiumIonToken: string
   googleMapsApiKey: string
 }
 
@@ -214,7 +207,6 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  cesiumIonToken: '',
   googleMapsApiKey: '',
   ...localDateArgs(),
   ...toneMappingArgs(),
@@ -223,7 +215,6 @@ Story.args = {
 }
 
 Story.argTypes = {
-  cesiumIonToken: { control: 'text' },
   googleMapsApiKey: { control: 'text' },
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),

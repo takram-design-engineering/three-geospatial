@@ -19,18 +19,9 @@ export const GoogleMapsAPIKeyPrompt: FC = () => {
           transform: translate(-50%, -50%);
         `}
       >
-        Tile loading failed with the configured credentials.
+        Our API key has seemingly exceeded its daily quota.
         <br />
-        Enter a{' '}
-        <a
-          href='https://ion.cesium.com/tokens'
-          target='_blank'
-          rel='noreferrer'
-          style={{ color: 'inherit' }}
-        >
-          Cesium ion token
-        </a>{' '}
-        or a{' '}
+        Enter your{' '}
         <a
           href='https://developers.google.com/maps/documentation/tile/get-api-key'
           target='_blank'
@@ -39,7 +30,7 @@ export const GoogleMapsAPIKeyPrompt: FC = () => {
         >
           Google Maps API key
         </a>{' '}
-        at the top right of this screen.
+        at the top right of this screen, or check back tomorrow.
       </div>
     )
   )
