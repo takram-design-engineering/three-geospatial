@@ -115,7 +115,7 @@ export class AtmosphereParameters {
   // The cosine of the maximum sun zenith angle for which atmospheric scattering
   // must be precomputed (for maximum precision, use the smallest sun zenith
   // angle yielding negligible sky light radiance values).
-  minCosLight = Math.cos(radians(120)) // TODO
+  minCosLight = Math.cos(radians(102))
 
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
   skyRadianceToLuminance = new Vector3(114974.91644, 71305.954816, 65310.548555)
