@@ -89,6 +89,8 @@ Create a `.env` file in the root directory with the following variables:
 | Name | Description |
 | -- | -- |
 | `STORYBOOK_GOOGLE_MAP_API_KEY` | [Google Maps API key](https://developers.google.com/maps/documentation/tile/get-api-key) |
+| `STORYBOOK_CESIUM_ION_TOKEN` | [Cesium ion access token](https://ion.cesium.com/tokens) for Google Photorealistic 3D Tiles |
+| `STORYBOOK_CESIUM_ION_ASSET_ID` | Optional Cesium ion asset ID. Defaults to `2275207` for Google Photorealistic 3D Tiles |
 
 ### Formatting and linting
 

@@ -1,4 +1,5 @@
 import { TilesRenderer } from '3d-tiles-renderer'
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
@@ -84,13 +85,22 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const scene = new Scene()
 
   // Setup 3D tiles renderer:
-  const tiles = new TilesRenderer()
+  const cesiumIonToken = import.meta.env.STORYBOOK_CESIUM_ION_TOKEN ?? ''
+  const googleMapsApiKey = import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY ?? ''
+  const assetId = import.meta.env.STORYBOOK_CESIUM_ION_ASSET_ID ?? '2275207'
+  const useCesiumIon = cesiumIonToken !== '' || googleMapsApiKey === ''
+  const apiToken = useCesiumIon ? cesiumIonToken : googleMapsApiKey
+  const tiles = new TilesRenderer(
+    useCesiumIon
+      ? undefined
+      : `https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiToken}`
+  )
   tiles.setCamera(camera)
   tiles.setResolutionFromRenderer(camera, renderer as any)
   tiles.registerPlugin(
-    new GoogleCloudAuthPlugin({
-      apiToken: import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
-    })
+    useCesiumIon
+      ? new CesiumIonAuthPlugin({ apiToken, assetId, autoRefreshToken: true })
+      : new GoogleCloudAuthPlugin({ apiToken })
   )
   tiles.registerPlugin(new GLTFExtensionsPlugin({ dracoLoader }))
   tiles.registerPlugin(new TileCompressionPlugin())

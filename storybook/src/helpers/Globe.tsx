@@ -1,4 +1,5 @@
 import type { TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
+import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
@@ -19,7 +20,11 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { radians } from '@takram/three-geospatial'
 
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
-import { googleMapsApiKeyAtom, needsApiKeyAtom } from './states'
+import {
+  cesiumIonTokenAtom,
+  googleMapsApiKeyAtom,
+  needsApiKeyAtom
+} from './states'
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -29,11 +34,14 @@ export interface GlobeProps {
   children?: ReactNode
 }
 export const Globe: FC<GlobeProps> = ({ ref, children }) => {
-  const inputApiKey = useAtomValue(googleMapsApiKeyAtom)
-  const apiKey =
-    inputApiKey !== ''
-      ? inputApiKey
-      : import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY
+  const cesiumIonToken = useAtomValue(cesiumIonTokenAtom) || import.meta.env.STORYBOOK_CESIUM_ION_TOKEN || ''
+  const googleMapsApiKey = useAtomValue(googleMapsApiKeyAtom) || import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY || ''
+  const assetId = import.meta.env.STORYBOOK_CESIUM_ION_ASSET_ID ?? '2275207'
+  const useCesiumIon = cesiumIonToken !== '' || googleMapsApiKey === ''
+  const apiToken = useCesiumIon ? cesiumIonToken : googleMapsApiKey
+  const url = useCesiumIon
+    ? undefined
+    : `https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiToken}`
 
   const [tiles, setTiles] = useState<TilesRendererImpl | null>(null)
   const setNeedsApiKey = useSetAtom(needsApiKeyAtom)
@@ -53,17 +61,17 @@ export const Globe: FC<GlobeProps> = ({ ref, children }) => {
   return (
     <TilesRenderer
       ref={mergeRefs([ref, setTiles])}
-      // Reconstruct tiles when API key changes.
-      key={apiKey}
-      // The root URL sometimes becomes null without specifying the URL.
-      url={`https://tile.googleapis.com/v1/3dtiles/root.json?key=${apiKey}`}
+      // Reconstruct tiles when credentials change.
+      key={`${useCesiumIon ? 'cesium-ion' : 'google'}:${apiToken}:${assetId}`}
+      url={url}
     >
       <TilesPlugin
-        plugin={GoogleCloudAuthPlugin}
-        args={{
-          apiToken: apiKey,
-          autoRefreshToken: true
-        }}
+        plugin={useCesiumIon ? CesiumIonAuthPlugin : GoogleCloudAuthPlugin}
+        args={
+          useCesiumIon
+            ? { apiToken, assetId, autoRefreshToken: true }
+            : { apiToken, autoRefreshToken: true }
+        }
       />
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
