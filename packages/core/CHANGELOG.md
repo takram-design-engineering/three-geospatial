@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `ScreenSpaceShadowNode`: Added support for reversed depth buffer.
+
 ### Fixed
 
 - `TemporalAntialiasNode`: Fixed incompatibility with `three >= 0.183.0`.

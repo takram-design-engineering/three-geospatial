@@ -5,6 +5,7 @@
 ### Added
 
 - Added support for moonlight and scattering in low light setup.
+- `AerialPerspectiveNode`: Added support for reversed depth buffer.
 
 ### Changed
 
