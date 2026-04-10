@@ -261,7 +261,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
     renderer={{
-      logarithmicDepthBuffer: true,
+      reversedDepthBuffer: true,
       onInit: renderer => {
         renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
       }
