@@ -107,8 +107,6 @@ export class ScreenSpaceShadowNode extends TempNode {
   shadowContrast = uniform(4)
   shadowIntensity = uniform(1)
   bilinearThreshold = uniform(0.02)
-  nearDepth = uniform(0)
-  farDepth = uniform(1)
 
   // xy: Screen coordinate
   // z: Normalized Z
@@ -353,11 +351,13 @@ export class ScreenSpaceShadowNode extends TempNode {
       shadowContrast,
       shadowIntensity,
       bilinearThreshold,
-      farDepth,
-      nearDepth,
       lightCoordinate,
       dispatchOffset
     } = this
+
+    const [nearDepth, farDepth] = builder.renderer.reversedDepthBuffer
+      ? [float(1), float(0)]
+      : [float(0), float(1)]
 
     // Number of bilinear sample reads performed per-thread.
     const readCount = Math.floor(sampleCount / GROUP_SIZE) + 2
@@ -443,16 +443,15 @@ export class ScreenSpaceShadowNode extends TempNode {
     }
 
     const loadDepth = (coord: Node<'ivec2'>): Node<'float'> => {
-      const depth = depthNode.load(coord).toVar()
+      let depth: Node = depthNode.load(coord)
       if (builder.renderer.logarithmicDepthBuffer) {
-        depth.assign(
-          logarithmicToPerspectiveDepth(
-            depth,
-            cameraNear(camera),
-            cameraFar(camera)
-          )
+        depth = logarithmicToPerspectiveDepth(
+          depth,
+          cameraNear(camera),
+          cameraFar(camera)
         )
       }
+      depth = depth.toConst()
 
       // Emulate a point sampler in bend_sss_gpu.h, with Wrap Mode set to
       // Clamp-To-Border-Color, and Border Color set to farDepth.

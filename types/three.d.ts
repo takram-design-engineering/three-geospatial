@@ -50,7 +50,7 @@ declare module 'three/tsl' {
 declare module 'three/webgpu' {
   interface Renderer {
     contextNode: ContextNode
-    reversedDepthBuffer?: boolean
+    reversedDepthBuffer: boolean
   }
 
   interface NodeBuilder {

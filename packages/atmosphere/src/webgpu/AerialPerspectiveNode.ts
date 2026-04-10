@@ -239,7 +239,7 @@ export class AerialPerspectiveNode extends TempNode {
     return Fn(() => {
       const luminance = colorNode.toVar()
       If(
-        builder.renderer.reversedDepthBuffer === true
+        builder.renderer.reversedDepthBuffer
           ? depth.lessThanEqual(0)
           : depth.greaterThanEqual(1),
         () => {

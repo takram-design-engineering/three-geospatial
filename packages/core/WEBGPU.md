@@ -414,22 +414,6 @@ bilinearThreshold = uniform(0.02)
 
 The depth difference threshold for edge detection. When exceeded, point filtering is used instead of bilinear interpolation.
 
-#### nearDepth
-
-```ts
-nearDepth = uniform(0)
-```
-
-The depth value for the near clip plane.
-
-#### farDepth
-
-```ts
-farDepth = uniform(1)
-```
-
-The depth value for the far clip plane.
-
 ### Static options
 
 #### camera
