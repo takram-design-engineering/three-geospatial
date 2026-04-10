@@ -15,7 +15,7 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "3d-tiles-renderer": "0.4.23",
+    "3d-tiles-renderer": "0.4.24",
     "@babel/core": "^7.29.0",
     "@babel/preset-react": "^7.28.5",
     "@emotion/babel-plugin": "11.13.5",

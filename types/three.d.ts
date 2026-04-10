@@ -33,11 +33,24 @@ declare module 'three/tsl' {
     value: T,
     type?: Node | string
   ) => U extends NodeType ? UniformNode<NodeValueTypeOf<U>> : UniformNode<U>
+
+  const viewZToReversedOrthographicDepth: (
+    viewZ: Node,
+    near: Node,
+    far: Node
+  ) => Node
+
+  const viewZToReversedPerspectiveDepth: (
+    viewZ: Node,
+    near: Node,
+    far: Node
+  ) => Node
 }
 
 declare module 'three/webgpu' {
   interface Renderer {
     contextNode: ContextNode
+    reversedDepthBuffer?: boolean
   }
 
   interface NodeBuilder {
@@ -66,6 +79,12 @@ declare module 'three/webgpu' {
   // Add "colorNode"
   interface AnalyticLightNode {
     colorNode: Node
+  }
+}
+
+declare module 'three/src/renderers/common/Renderer.js' {
+  interface RendererParameters {
+    reversedDepthBuffer?: boolean
   }
 }
 

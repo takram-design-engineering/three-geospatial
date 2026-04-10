@@ -238,13 +238,18 @@ export class AerialPerspectiveNode extends TempNode {
 
     return Fn(() => {
       const luminance = colorNode.toVar()
-      If(depth.greaterThanEqual(1), () => {
-        if (this.skyNode != null) {
-          // Render the sky (the scattering seen from the camera to an infinite
-          // distance) for very far depths.
-          luminance.rgb.assign(this.skyNode)
+      If(
+        builder.renderer.reversedDepthBuffer === true
+          ? depth.lessThanEqual(0)
+          : depth.greaterThanEqual(1),
+        () => {
+          if (this.skyNode != null) {
+            // Render the sky (the scattering seen from the camera to an infinite
+            // distance) for very far depths.
+            luminance.rgb.assign(this.skyNode)
+          }
         }
-      }).Else(() => {
+      ).Else(() => {
         luminance.rgb.assign(surfaceLuminance)
       })
       return luminance
