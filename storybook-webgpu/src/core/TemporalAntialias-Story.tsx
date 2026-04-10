@@ -86,13 +86,7 @@ const Content: FC<StoryProps> = () => {
   )
 
   const taaNode = useResource(
-    () =>
-      temporalAntialias(highpVelocity)(
-        toneMappingNode,
-        depthNode,
-        velocityNode,
-        camera
-      ),
+    () => temporalAntialias(toneMappingNode, depthNode, velocityNode, camera),
     [camera, depthNode, velocityNode, toneMappingNode]
   )
 
@@ -275,5 +269,3 @@ Story.argTypes = {
   ...outputPassArgTypes({ hasNormal: false }),
   ...rendererArgTypes()
 }
-
-export default Story

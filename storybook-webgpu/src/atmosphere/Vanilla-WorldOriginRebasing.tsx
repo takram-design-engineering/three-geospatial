@@ -1,14 +1,15 @@
 import {
   AgXToneMapping,
-  Clock,
   Mesh,
   PerspectiveCamera,
   Scene,
+  Timer,
   TorusKnotGeometry,
   Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { context, pass, toneMapping } from 'three/tsl'
+import { traa } from 'three/examples/jsm/tsl/display/TRAANode.js'
+import { context, mrt, output, pass, toneMapping, velocity } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
   PostProcessing,
@@ -27,7 +28,7 @@ import {
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
-import { dithering } from '@takram/three-geospatial/webgpu'
+import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 
@@ -108,6 +109,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   light.shadow.camera.far = 2
   light.shadow.mapSize.width = 2048
   light.shadow.mapSize.height = 2048
+  light.shadow.radius = 8
   light.shadow.normalBias = 0.01
   scene.add(light)
   scene.add(light.target)
@@ -116,16 +118,27 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   controls.enableDamping = true
   controls.minDistance = 1
 
-  // Post-processing for applying dithering after tone mapping:
-  const passNode = pass(scene, camera, { samples: 4 })
-  const toneMappingNode = toneMapping(AgXToneMapping, 3, passNode)
+  // Post-processing:
+  const passNode = pass(scene, camera, { samples: 0 }).setMRT(
+    mrt({
+      output,
+      velocity
+    })
+  )
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
+  const lensFlareNode = lensFlare(colorNode)
+  const toneMappingNode = toneMapping(AgXToneMapping, 3, lensFlareNode)
+  const taaNode = traa(toneMappingNode, depthNode, velocityNode, camera)
   const postProcessing = new PostProcessing(renderer)
-  postProcessing.outputNode = toneMappingNode.add(dithering)
+  postProcessing.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
-  const clock = new Clock()
+  const timer = new Timer()
   const observerECEF = new Vector3()
-  void renderer.setAnimationLoop(() => {
+  void renderer.setAnimationLoop(time => {
+    timer.update(time)
     controls.update()
     camera.updateMatrixWorld()
     observerECEF
@@ -134,7 +147,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
     // Configure the planetary conditions in the atmosphere context according to
     // the current date and optionally the point of observation:
-    const currentDate = +date + ((clock.getElapsedTime() * 5e6) % 864e5)
+    const currentDate = +date + ((timer.getElapsed() * 5e6) % 864e5)
     const matrixECIToECEF = getECIToECEFRotationMatrix(
       currentDate,
       atmosphereContext.matrixECIToECEF.value

@@ -1,6 +1,7 @@
 export * from './accessors'
 export * from './debug'
 export * from './DownsampleThresholdNode'
+export * from './events'
 export * from './FnLayout'
 export * from './FnVar'
 export * from './GaussianBlurNode'

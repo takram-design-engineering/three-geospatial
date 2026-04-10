@@ -508,10 +508,10 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         ).context({ getAtmosphere: () => context })
 
         const radiance = multipleScattering.get('radiance')
-        const cosViewSun = multipleScattering.get('cosViewSun')
+        const cosViewLight = multipleScattering.get('cosViewLight')
         const luminance = radiance
           .mul(luminanceFromRadiance)
-          .div(rayleighPhaseFunction(cosViewSun))
+          .div(rayleighPhaseFunction(cosViewLight))
 
         return mrt({
           scattering: vec4(luminance, 0),

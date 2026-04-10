@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### Added
+
+- Added support for moonlight and scattering in low light setup.
+
+### Changed
+
+- `AtmosphereParameters`: Deprecated and renamed `minCosSun` to `minCosLight`.
+- `SkyEnvironmentNode`: Optimized the PMREM texture generation.
+
+### Fixed
+
+- Fixed errors when `higherOrderScatteringTexture` is disabled.
+- Fixed changes in `AtmosphereParameters` not being applied when used by multiple renderers.
+- `MoonNode`: Fixed unstable derivatives.
+
+## [0.18.0] - 2026-04-05
+
 ### Changed
 
 - WebGPU entry point (`@takram/three-atmosphere/webgpu`) requires `three >= 0.182.0`.
@@ -51,6 +68,7 @@
 - Deprecated `AtmosphereContextNode` and renamed it to `AtmosphereContext`.
 - Changed default values for `depthTest` and `depthWrite` in `SkyMaterial` and `StarsMaterial`.
 - Deprecated `SKY_RENDER_ORDER`, which is no longer used.
+- BREAKING: Replaced `MoonNode.normalNode` with `MoonNode.displacementNode`.
 
 ### Fixed
 

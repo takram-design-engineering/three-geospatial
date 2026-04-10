@@ -1,16 +1,12 @@
-import { useThree } from '@react-three/fiber'
+import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, type FC } from 'react'
 import { AgXToneMapping, Scene } from 'three'
+import { context, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import {
-  context,
-  diffuseColor,
-  mrt,
-  normalView,
-  pass,
-  toneMapping,
-  uniform
-} from 'three/tsl'
-import { PostProcessing, type Renderer } from 'three/webgpu'
+  MeshLambertNodeMaterial,
+  PostProcessing,
+  type Renderer
+} from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -19,7 +15,9 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContext
+  AtmosphereContext,
+  AtmosphereLight,
+  AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -57,6 +55,14 @@ import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { usePointOfView, type PointOfViewProps } from '../hooks/usePointOfView'
 import { useResource } from '../hooks/useResource'
 
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    atmosphereLight: ThreeElement<typeof AtmosphereLight>
+  }
+}
+
+extend({ AtmosphereLight })
+
 const Content: FC<StoryProps> = ({
   longitude,
   latitude,
@@ -86,8 +92,7 @@ const Content: FC<StoryProps> = ({
     () =>
       pass(scene, camera, { samples: 0 }).setMRT(
         mrt({
-          output: diffuseColor,
-          normal: normalView,
+          output,
           velocity: highpVelocity
         })
       ),
@@ -96,12 +101,11 @@ const Content: FC<StoryProps> = ({
 
   const colorNode = passNode.getTextureNode('output')
   const depthNode = passNode.getTextureNode('depth')
-  const normalNode = passNode.getTextureNode('normal')
   const velocityNode = passNode.getTextureNode('velocity')
 
   const aerialNode = useResource(
-    () => aerialPerspective(colorNode.mul(2 / 3), depthNode, normalNode),
-    [colorNode, depthNode, normalNode]
+    () => aerialPerspective(colorNode.mul(2 / 3), depthNode),
+    [colorNode, depthNode]
   )
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
@@ -112,13 +116,7 @@ const Content: FC<StoryProps> = ({
   )
 
   const taaNode = useResource(
-    () =>
-      temporalAntialias(highpVelocity)(
-        toneMappingNode,
-        depthNode,
-        velocityNode,
-        camera
-      ),
+    () => temporalAntialias(toneMappingNode, depthNode, velocityNode, camera),
     [camera, depthNode, velocityNode, toneMappingNode]
   )
 
@@ -192,9 +190,15 @@ const Content: FC<StoryProps> = ({
   )
 
   return (
-    <Globe apiKey={apiKey}>
-      <GlobeControls enableDamping overlayScene={overlayScene} />
-    </Globe>
+    <>
+      <atmosphereLight />
+      <Globe
+        apiKey={apiKey}
+        materialHandler={() => new MeshLambertNodeMaterial()}
+      >
+        <GlobeControls enableDamping overlayScene={overlayScene} />
+      </Globe>
+    </>
   )
 }
 
@@ -205,7 +209,13 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
-  <WebGPUCanvas>
+  <WebGPUCanvas
+    renderer={{
+      onInit: renderer => {
+        renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+      }
+    }}
+  >
     <Content {...props} />
     <Description>
       <TilesAttribution />
@@ -228,5 +238,3 @@ Story.argTypes = {
   ...outputPassArgTypes(),
   ...rendererArgTypes()
 }
-
-export default Story

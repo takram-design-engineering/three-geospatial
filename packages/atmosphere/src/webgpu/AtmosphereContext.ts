@@ -1,4 +1,4 @@
-import { Matrix4, Vector3, type Camera } from 'three'
+import { Vector3, type Camera } from 'three'
 import { uniform } from 'three/tsl'
 import type { NodeBuilder } from 'three/webgpu'
 
@@ -15,22 +15,20 @@ const geodeticScratch = /*#__PURE__*/ new Geodetic()
 export class AtmosphereContext extends AtmosphereContextBase {
   lutNode: AtmosphereLUTNode
 
-  matrixWorldToECEF = uniform(new Matrix4()).setName('matrixWorldToECEF')
-  matrixECIToECEF = uniform(new Matrix4()).setName('matrixECIToECEF')
-  sunDirectionECEF = uniform(new Vector3()).setName('sunDirectionECEF')
-  moonDirectionECEF = uniform(new Vector3()).setName('moonDirectionECEF')
-  matrixMoonFixedToECEF = uniform(new Matrix4()).setName(
-    'matrixMoonFixedToECEF'
-  )
+  matrixWorldToECEF = uniform('mat4').setName('matrixWorldToECEF')
+  matrixECIToECEF = uniform('mat4').setName('matrixECIToECEF')
+  sunDirectionECEF = uniform('vec3').setName('sunDirectionECEF')
+  moonDirectionECEF = uniform('vec3').setName('moonDirectionECEF')
+  matrixMoonFixedToECEF = uniform('mat4').setName('matrixMoonFixedToECEF')
 
-  matrixECEFToWorld = uniform(new Matrix4())
+  matrixECEFToWorld = uniform('mat4')
     .setName('matrixECEFToWorld')
     .onRenderUpdate((_, { value }) => {
       // The matrixWorldToECEF must be orthogonal.
       value.copy(this.matrixWorldToECEF.value).transpose()
     })
 
-  cameraPositionECEF = uniform(new Vector3())
+  cameraPositionECEF = uniform('vec3')
     .setName('cameraPositionECEF')
     .onRenderUpdate((frame, { value }) => {
       const camera = this.camera ?? frame.camera
@@ -42,7 +40,7 @@ export class AtmosphereContext extends AtmosphereContextBase {
         .applyMatrix4(this.matrixWorldToECEF.value)
     })
 
-  altitudeCorrectionECEF = uniform(new Vector3())
+  altitudeCorrectionECEF = uniform('vec3')
     .setName('altitudeCorrectionECEF')
     .onRenderUpdate((frame, { value }) => {
       const camera = this.camera ?? frame.camera
@@ -73,14 +71,13 @@ export class AtmosphereContext extends AtmosphereContextBase {
     })
 
   cameraPositionUnit = this.cameraPositionECEF
-    .mul(this.worldToUnit)
-    .toVar('cameraPositionUnit')
+    .mul(this.parametersNode.worldToUnit)
+    .toConst('cameraPositionUnit')
 
   altitudeCorrectionUnit = this.altitudeCorrectionECEF
-    .mul(this.worldToUnit)
-    .toVar('altitudeCorrectionUnit')
+    .mul(this.parametersNode.worldToUnit)
+    .toConst('altitudeCorrectionUnit')
 
-  // Static options:
   camera?: Camera
   ellipsoid = Ellipsoid.WGS84
   correctAltitude = true

@@ -26,9 +26,11 @@ Please note the peer dependencies differ from the required versions to maintain 
 "three": ">=0.182.0"
 ```
 
-## API changes
+## Changes from the WebGL API
 
-- `LensFlareEffect` was moved from `effects` to here and replaced by `LensFlareNode`.
+- `LensFlareEffect`: moved from effects and replaced by `LensFlareNode`
+- `DitheringEffect`: moved from effects and replaced by `dithering`
+- Turbo coloring in `DepthEffect`: moved from effects and replaced by `depthToColor`
 
 # API
 
@@ -111,7 +113,7 @@ const fn = Fn(([a, b, c], builder) => {
 
 ## HighpVelocityNode
 
-A node that outputs geometry velocity in the current camera's UV and depth. Unlike `VelocityNode` in Three.js's examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
+A node that outputs geometry velocity in the current camera's UV and depth. Unlike `VelocityNode` in Three.js examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
 
 → [Source](/packages/core/src/webgpu/HighpVelocityNode.ts)
 
@@ -123,17 +125,25 @@ const passNode = pass(scene, camera).setMRT(
   })
 )
 const velocityNode = passNode.getTextureNode('velocity')
-const deltaUV = velocityNode.xy.mul(0.5)
-const deltaDepth = velocityNode.z.mul(0.5)
-```
-
-### Parameters
-
-```ts
-projectionMatrix?: Matrix4 | null
 ```
 
 ## LensFlareNode
+
+A post-processing node that simulates lens flare artifacts. The effect consists of the following visual components:
+
+- **Ghosts** : Colored reflections aligned along a line from the screen center through bright areas
+- **Halos** : Thin rings with chromatic aberration
+- **Bloom** : Soft glow around bright areas
+- **Glare** : Directional spike radiating from bright areas, WebGPU only.
+
+The implementation is based on Léna Piquet's [detailed walkthrough of UE4's lens flare effect](https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/).
+
+→ [Source](/packages/core/src/webgpu/LensFlareNode.ts)
+
+```ts
+const passNode = pass(scene, camera)
+const lensFlareNode = lensFlare(passNode)
+```
 
 ### Constructor
 
@@ -149,11 +159,15 @@ const lensFlare: (inputNode: Node | null) => LensFlareNode
 inputNode?: TextureNode | null
 ```
 
+The node to which the effect is applied.
+
 #### thresholdNode
 
 ```ts
 thresholdNode: DownsampleThresholdNode
 ```
+
+The node that extracts bright areas from `inputNode`.
 
 #### blurNode
 
@@ -161,11 +175,15 @@ thresholdNode: DownsampleThresholdNode
 blurNode: GaussianBlurNode
 ```
 
+The node to blur the bright areas extracted by `thresholdNode` before they are used by `ghostNode` and `haloNode`.
+
 #### ghostNode
 
 ```ts
 ghostNode: LensGhostNode
 ```
+
+The node that renders ghosts.
 
 #### haloNode
 
@@ -173,17 +191,23 @@ ghostNode: LensGhostNode
 haloNode: LensHaloNode
 ```
 
+The node that renders halos.
+
 #### bloomNode
 
 ```ts
 bloomNode: MipmapSurfaceBlurNode
 ```
 
+The node that applies bloom to the result of `thresholdNode`
+
 #### glareNode
 
 ```ts
 glareNode: LensGlareNode
 ```
+
+The node that applies glare to the result of `thresholdNode`
 
 ### Uniforms
 
@@ -193,18 +217,33 @@ glareNode: LensGlareNode
 bloomIntensity = uniform(0.05)
 ```
 
+A scaling factor that controls the intensity of the bloom.
+
 ## TemporalAntialiasNode
+
+A post-processing node that applies antialiasing by accumulating jittered samples across frames.
+
+The key difference from `TRAANode` in Three.js examples is that it synchronizes the unjittered projection matrix with `HighpVelocityNode` instead of `VelocityNode`. The technique used in this node has already been merged upstream.
+
+→ [Source](/packages/core/src/webgpu/TemporalAntialiasNode.ts)
+
+```ts
+const passNode = pass(scene, camera).setMRT(
+  mrt({
+    output,
+    velocity: highpVelocity
+  })
+)
+const colorNode = passNode.getTextureNode('output')
+const depthNode = passNode.getTextureNode('depth')
+const velocityNode = passNode.getTextureNode('velocity')
+const taaNode = temporalAntialias(colorNode, depthNode, velocityNode, camera)
+```
 
 ### Constructor
 
 ```ts
-interface VelocityNodeImmutable {
-  projectionMatrix?: Matrix4 | null
-}
-
-const temporalAntialias: (
-  velocityNodeImmutable: VelocityNodeImmutable
-) => (
+const temporalAntialias = (
   inputNode: Node,
   depthNode: TextureNode,
   velocityNode: TextureNode,
@@ -220,11 +259,15 @@ const temporalAntialias: (
 inputNode: TextureNode
 ```
 
+The node to which the effect is applied.
+
 #### depthNode
 
 ```ts
 depthNode: TextureNode
 ```
+
+The depth node for the current frame.
 
 #### velocityNode
 
@@ -232,13 +275,19 @@ depthNode: TextureNode
 velocityNode: TextureNode
 ```
 
+The node that stores motion vectors in NDC, provided by `HighpVelocityNode`.
+
 ### Uniforms
 
 #### temporalAlpha
 
 ```ts
-temporalAlpha = uniform(0.1)
+temporalAlpha = uniform(0.05)
 ```
+
+The blending factor between the current frame and the reprojected history.
+
+Lower values produce smoother results but increase ghosting.
 
 #### varianceGamma
 
@@ -246,17 +295,25 @@ temporalAlpha = uniform(0.1)
 varianceGamma = uniform(1)
 ```
 
+Controls the size of the variance clipping.
+
+Larger values allow more history to pass through, reducing flickering but increasing ghosting.
+
 #### velocityThreshold
 
 ```ts
 velocityThreshold = uniform(0.1)
 ```
 
+The velocity magnitude (in UV space) above which history samples are fully rejected.
+
 #### depthError
 
 ```ts
 depthError = uniform(0.001)
 ```
+
+The tolerance for the depth comparison between the reprojected depth and the previous frame's depth.
 
 ### Static options
 
@@ -266,15 +323,50 @@ depthError = uniform(0.001)
 camera: Camera
 ```
 
+The camera used for rendering the scene. This is required because the effect is rendered in a post-processing stage.
+
+#### debugShowRejection
+
+```ts
+debugShowRejection = false
+```
+
+When enabled, rejected pixels are displayed in red.
+
 ## ScreenSpaceShadowNode
+
+A post-processing node that applies screen-space shadows (SSS).
+
+Unlike `SSSNode` in Three.js examples, this node uses a compute shader with workgroup shared memory, allowing for longer and softer shadows at a lower cost per pixel.
+
+The implementation is based on [Bend Studio's technique](https://www.bendstudio.com/blog/inside-bend-screen-space-shadows/).
+
+→ [Source](/packages/core/src/webgpu/ScreenSpaceShadowNode.ts)
+
+```ts
+declare const light: DirectionalLight
+light.castShadow = true
+
+// To render shadows correctly, a separate depth pass is required before the
+// main pass. In this case, discard color output to keep the pre-pass cheap.
+const prePassNode = pass(scene, camera).setMRT(mrt({ output: vec4(0) }))
+const depthNode = prePassNode.getTextureNode('depth')
+const sssNode = screenSpaceShadow(depthNode, camera, light)
+
+// Setup the main pass with a custom shadow context using the SSS result:
+const passNode = pass(scene, camera)
+const sssSample = sssNode.getTextureNode().sample(screenUV).r
+const sssContext = builtinShadowContext(sssSample, light)
+passNode.contextNode = sssContext
+```
 
 ### Constructor
 
 ```ts
-const screenSpaceShadowNode: (
+const screenSpaceShadow: (
   depthNode: TextureNode,
-  camera?: Camera | null,
-  mainLight?: DirectionalLight | null
+  camera: Camera,
+  mainLight: DirectionalLight
 ) => ScreenSpaceShadowNode
 ```
 
@@ -286,6 +378,8 @@ const screenSpaceShadowNode: (
 depthNode: TextureNode
 ```
 
+The depth node for ray-marching.
+
 ### Uniforms
 
 #### thickness
@@ -294,11 +388,15 @@ depthNode: TextureNode
 thickness = uniform(0.005)
 ```
 
+The assumed pixel thickness for shadow-casting, as a fraction of the depth range to the far clip plane.
+
 #### shadowContrast
 
 ```ts
 shadowContrast = uniform(4)
 ```
+
+A contrast boost for the shadow transition. Must be >= 1.
 
 #### shadowIntensity
 
@@ -306,11 +404,15 @@ shadowContrast = uniform(4)
 shadowIntensity = uniform(1)
 ```
 
+The overall shadow intensity in the range [0, 1].
+
 #### bilinearThreshold
 
 ```ts
 bilinearThreshold = uniform(0.02)
 ```
+
+The depth difference threshold for edge detection. When exceeded, point filtering is used instead of bilinear interpolation.
 
 #### nearDepth
 
@@ -318,11 +420,15 @@ bilinearThreshold = uniform(0.02)
 nearDepth = uniform(0)
 ```
 
+The depth value for the near clip plane.
+
 #### farDepth
 
 ```ts
 farDepth = uniform(1)
 ```
+
+The depth value for the far clip plane.
 
 ### Static options
 
@@ -332,11 +438,15 @@ farDepth = uniform(1)
 camera: Camera
 ```
 
+The camera used for rendering the scene.
+
 #### mainLight
 
 ```ts
 mainLight: DirectionalLight
 ```
+
+The directional light from which shadows are cast.
 
 #### sampleCount
 
@@ -344,17 +454,23 @@ mainLight: DirectionalLight
 sampleCount = 60
 ```
 
+The number of shadow samples per pixel. Controls the maximum shadow length in pixels.
+
 #### hardShadowSamples
 
 ```ts
 hardShadowSamples = 4
 ```
 
+The number of initial samples that produce a hard shadow without averaging, grounding pixels close to the shadow caster.
+
 #### fadeOutSamples
 
 ```ts
 fadeOutSamples = 8
 ```
+
+The number of samples at the end of the ray that fade the shadow out.
 
 # Acknowledgement
 

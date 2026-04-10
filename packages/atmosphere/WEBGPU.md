@@ -180,7 +180,7 @@ Ellipsoid.WGS84.getNorthUpEastFrame(
 )
 ```
 
-## API changes
+## Changes from the WebGL API
 
 - `PrecomputedTexturesGenerator` was replaced by `AtmosphereLUTNode`.
 - `AerialPerspectiveEffect` was replaced by `AerialPerspectiveNode`.
@@ -237,7 +237,7 @@ lutNode: AtmosphereLUTNode
 #### matrixWorldToECEF
 
 ```ts
-matrixWorldToECEF = uniform(new Matrix4())
+matrixWorldToECEF = uniform('mat4')
 ```
 
 The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js's Y-up coordinate system.
@@ -247,7 +247,7 @@ It must be orthogonal and consist only of translation and rotation (no scaling).
 #### matrixECIToECEF
 
 ```ts
-matrixECIToECEF = uniform(new Matrix4())
+matrixECIToECEF = uniform('mat4')
 ```
 
 The rotation matrix for converting ECI to ECEF coordinates. This matrix is used to orient stars as seen from the earth in `StarsNode`.
@@ -255,8 +255,8 @@ The rotation matrix for converting ECI to ECEF coordinates. This matrix is used 
 #### sunDirectionECEF, moonDirectionECEF
 
 ```ts
-sunDirectionECEF = uniform(new Vector3())
-moonDirectionECEF = uniform(new Vector3())
+sunDirectionECEF = uniform('vec3')
+moonDirectionECEF = uniform('vec3')
 ```
 
 The normalized direction to the sun and moon in ECEF coordinates.
@@ -264,7 +264,7 @@ The normalized direction to the sun and moon in ECEF coordinates.
 #### matrixMoonFixedToECEF
 
 ```ts
-matrixMoonFixedToECEF = uniform(new Matrix4())
+matrixMoonFixedToECEF = uniform('mat4')
 ```
 
 The rotation matrix for converting moon fixed coordinates to ECEF coordinates. This matrix is used to orient the moon's surface as seen from the earth in `MoonNode`.
@@ -759,10 +759,10 @@ groundAlbedo = new Vector3().setScalar(0.3)
 
 The average albedo of the ground.
 
-#### minCosSun
+#### minCosLight
 
 ```ts
-minCosSun = Math.cos(radians(102))
+minCosLight = Math.cos(radians(102))
 ```
 
 The cosine of the maximum sun zenith angle for which atmospheric scattering must be precomputed (for maximum precision, use the smallest sun zenith angle yielding negligible sky light radiance values).

@@ -36,8 +36,8 @@ import { useTransientControl } from '../hooks/useTransientControl'
 
 export const textureUV = FnVar(
   (textureSize: Node<'vec2'>, zoom: Node<'float'>) => {
-    const scale = screenSize.div(textureSize).div(zoom).toVar()
-    const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toVar()
+    const scale = screenSize.div(textureSize).div(zoom).toConst()
+    const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toConst()
     If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
       Discard()
     })
@@ -54,7 +54,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
   const lutNode = useResource(() => {
     const parameters = new AtmosphereParameters()
     parameters.groundAlbedo.setScalar(0.1)
-    parameters.minCosSun = Math.cos(radians(120))
+    parameters.minCosLight = Math.cos(radians(120))
     return new AtmosphereLUTNode(parameters)
   }, [])
   Object.assign(lutNode.parameters, options)
@@ -111,5 +111,3 @@ Story.argTypes = {
   ...toneMappingArgTypes(),
   ...rendererArgTypes()
 }
-
-export default Story

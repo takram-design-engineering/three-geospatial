@@ -1,5 +1,4 @@
 import { useThree } from '@react-three/fiber'
-import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { useLayoutEffect, useMemo, type FC } from 'react'
 import { AgXToneMapping, Scene } from 'three'
 import {
@@ -11,11 +10,7 @@ import {
   toneMapping,
   uniform
 } from 'three/tsl'
-import {
-  MeshBasicNodeMaterial,
-  PostProcessing,
-  type Renderer
-} from 'three/webgpu'
+import { PostProcessing, type Renderer } from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -34,10 +29,10 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
-import { Description } from '../components/Description'
+import { Description, TilesAttribution } from '../components/Description'
+import { Globe } from '../components/Globe'
 import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
-import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
 import {
   localDateArgs,
   localDateArgTypes,
@@ -57,13 +52,10 @@ import {
   useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
+import { useControl } from '../hooks/useControl'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { usePointOfView, type PointOfViewProps } from '../hooks/usePointOfView'
 import { useResource } from '../hooks/useResource'
-import { useTransientControl } from '../hooks/useTransientControl'
-import { CesiumIonTerrainPlugin } from '../plugins/CesiumIonTerrainPlugin'
-import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
-import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 
 const Content: FC<StoryProps> = ({
   longitude,
@@ -108,7 +100,7 @@ const Content: FC<StoryProps> = ({
   const velocityNode = passNode.getTextureNode('velocity')
 
   const aerialNode = useResource(
-    () => aerialPerspective(colorNode, depthNode, normalNode),
+    () => aerialPerspective(colorNode.mul(2 / 3), depthNode, normalNode),
     [colorNode, depthNode, normalNode]
   )
 
@@ -149,15 +141,6 @@ const Content: FC<StoryProps> = ({
     postProcessing.render()
   }, 1)
 
-  useTransientControl(
-    ({ transmittance, inscatter }: StoryArgs) => ({ transmittance, inscatter }),
-    ({ transmittance, inscatter }) => {
-      aerialNode.transmittance = transmittance
-      aerialNode.inscatter = inscatter
-      postProcessing.needsUpdate = true
-    }
-  )
-
   // Output pass controls:
   useOutputPassControls(
     postProcessing,
@@ -197,67 +180,43 @@ const Content: FC<StoryProps> = ({
     )
   })
 
+  // Google Maps API key:
+  const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
+    googleMapsApiKey !== '' ? googleMapsApiKey : undefined
+  )
+
   return (
-    <>
+    <Globe apiKey={apiKey}>
       <GlobeControls enableDamping overlayScene={overlayScene} />
-      <TilesRenderer>
-        <TilesPlugin
-          plugin={CesiumIonTerrainPlugin}
-          args={{
-            apiToken: PLATEAU_TERRAIN_API_TOKEN,
-            assetId: 3258112, // PLATEAU terrain dataset
-            autoRefreshToken: true
-          }}
-        />
-        <TilesPlugin
-          plugin={TileMaterialReplacementPlugin}
-          args={() => new MeshBasicNodeMaterial()}
-        />
-        <TilesPlugin plugin={TilesFadePlugin} />
-      </TilesRenderer>
-    </>
+    </Globe>
   )
 }
 
 interface StoryProps extends PointOfViewProps {}
 
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
-  transmittance: boolean
-  inscatter: boolean
+  googleMapsApiKey: string
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
     <Content {...props} />
-    <Description />
+    <Description>
+      <TilesAttribution />
+    </Description>
   </WebGPUCanvas>
 )
 
 Story.args = {
-  transmittance: true,
-  inscatter: true,
-  ...localDateArgs({
-    dayOfYear: 0,
-    timeOfDay: 9
-  }),
-  ...toneMappingArgs({
-    toneMappingExposure: 5
-  }),
+  googleMapsApiKey: '',
+  ...localDateArgs(),
+  ...toneMappingArgs(),
   ...outputPassArgs(),
   ...rendererArgs()
 }
 
 Story.argTypes = {
-  transmittance: {
-    control: {
-      type: 'boolean'
-    }
-  },
-  inscatter: {
-    control: {
-      type: 'boolean'
-    }
-  },
+  googleMapsApiKey: { control: 'text' },
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes(),

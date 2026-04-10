@@ -487,14 +487,16 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       )
     )
     // TODO: Use NodeAccess.READ_ONLY, which appears to be not supported yet.
-    renderer.copyTextureToTexture(
-      this.higherOrderScattering,
-      higherOrderScatteringRead,
-      boxScratch.set(
-        boxScratch.min.setScalar(0),
-        parameters.scatteringTextureSize
+    if (parameters.higherOrderScatteringTexture) {
+      renderer.copyTextureToTexture(
+        this.higherOrderScattering,
+        higherOrderScatteringRead,
+        boxScratch.set(
+          boxScratch.min.setScalar(0),
+          parameters.scatteringTextureSize
+        )
       )
-    )
+    }
 
     this.multipleScatteringNode ??= Fn(() => {
       const size = uvec3(width, height, depth)
@@ -513,10 +515,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       )
 
       const radiance = multipleScattering.get('radiance')
-      const cosViewSun = multipleScattering.get('cosViewSun')
+      const cosViewLight = multipleScattering.get('cosViewLight')
       const luminance = radiance
         .mul(luminanceFromRadiance)
-        .div(rayleighPhaseFunction(cosViewSun))
+        .div(rayleighPhaseFunction(cosViewLight))
 
       textureStore(
         this.scattering,
@@ -587,6 +589,12 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     this.scattering.dispose()
     this.singleMieScattering.dispose()
     this.higherOrderScattering.dispose()
+    this.transmittanceNode?.dispose()
+    this.directIrradianceNode?.dispose()
+    this.singleScatteringNode?.dispose()
+    this.scatteringDensityNode?.dispose()
+    this.indirectIrradianceNode?.dispose()
+    this.multipleScatteringNode?.dispose()
     super.dispose()
   }
 }

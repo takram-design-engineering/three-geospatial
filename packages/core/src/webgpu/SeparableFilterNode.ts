@@ -1,4 +1,4 @@
-import { Vector2, type RenderTarget } from 'three'
+import type { RenderTarget } from 'three'
 import { uniform } from 'three/tsl'
 import {
   NodeMaterial,
@@ -24,8 +24,8 @@ export abstract class SeparableFilterNode extends FilterNode {
   private readonly mesh = new QuadMesh(this.material)
   private rendererState?: RendererUtils.RendererState
 
-  protected readonly inputTexelSize = uniform(new Vector2())
-  protected readonly direction = uniform(new Vector2())
+  protected readonly inputTexelSize = uniform('vec2')
+  protected readonly direction = uniform('vec2')
 
   constructor(inputNode?: TextureNode | null) {
     super(inputNode)

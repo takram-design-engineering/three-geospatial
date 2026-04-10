@@ -7,7 +7,6 @@ import {
   ToneMappingMode
 } from 'postprocessing'
 import {
-  Clock,
   Group,
   HalfFloatType,
   Matrix4,
@@ -19,6 +18,7 @@ import {
   PlaneGeometry,
   Points,
   Scene,
+  Timer,
   TorusKnotGeometry,
   Vector3,
   WebGLRenderer,
@@ -52,7 +52,7 @@ import {
 let renderer: WebGLRenderer
 let camera: PerspectiveCamera
 let controls: OrbitControls
-let clock: Clock
+let timer: Timer
 let scene: Scene
 let skyMaterial: SkyMaterial
 let starsMaterial: StarsMaterial
@@ -83,7 +83,7 @@ async function init(container: HTMLDivElement): Promise<void> {
   controls.minDistance = 1e3
   controls.target.copy(position)
 
-  clock = new Clock()
+  timer = new Timer()
   scene = new Scene()
 
   // SunDirectionalLight computes sunlight transmittance to its target position.
@@ -206,8 +206,9 @@ function onWindowResize(): void {
   renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
-function render(): void {
-  const date = +referenceDate + ((clock.getElapsedTime() * 5e6) % 864e5)
+function render(time: number): void {
+  timer.update(time)
+  const date = +referenceDate + ((timer.getElapsed() * 5e6) % 864e5)
 
   // Apply the sun and moon directions.
   getECIToECEFRotationMatrix(date, inertialToECEFMatrix)
