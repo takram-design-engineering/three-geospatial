@@ -170,12 +170,17 @@ const currentDepthStruct = /*#__PURE__*/ struct({
 })
 
 const getCurrentDepth = /*#__PURE__*/ FnVar(
-  (depthNode: TextureNode, inputCoord: Node<'ivec2'>) => {
+  (depthNode: TextureNode, inputCoord: Node<'ivec2'>) => builder => {
     const closestCoord = ivec2(0).toVar()
     const closestDepth = float(1).toVar()
     for (const [x, y] of neighborOffsets) {
       const neighbor = inputCoord.add(ivec2(x, y)).toConst()
-      const depth = depthNode.load(neighbor).r.toConst()
+      let depth = depthNode.load(neighbor).r
+      if (builder.renderer.reversedDepthBuffer) {
+        depth = depth.oneMinus()
+      }
+      depth = depth.toConst()
+
       If(depth.lessThan(closestDepth), () => {
         closestCoord.assign(neighbor)
         closestDepth.assign(depth)
@@ -422,7 +427,9 @@ export class TemporalAntialiasNode extends TempNode {
             cameraNear(this.camera),
             cameraFar(this.camera)
           )
-        : depth
+        : renderer.reversedDepthBuffer
+          ? depth.oneMinus()
+          : depth
     }
 
     return Fn(() => {

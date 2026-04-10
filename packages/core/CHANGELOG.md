@@ -4,7 +4,7 @@
 
 ### Added
 
-- `ScreenSpaceShadowNode`: Added support for reversed depth buffer.
+- `TemporalAntialiasNode`, `ScreenSpaceShadowNode`: Added support for reversed depth buffer.
 
 ### Fixed
 
