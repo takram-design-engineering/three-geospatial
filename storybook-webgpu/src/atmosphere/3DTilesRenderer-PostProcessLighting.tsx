@@ -139,14 +139,21 @@ const Content: FC<StoryProps> = ({
   )
 
   useTransientControl(
-    ({ transmittance, inscatter, raymarchSingleScattering }: StoryArgs) => ({
+    ({
       transmittance,
       inscatter,
+      showGround,
+      raymarchSingleScattering
+    }: StoryArgs) => ({
+      transmittance,
+      inscatter,
+      showGround,
       raymarchSingleScattering
     }),
-    ({ transmittance, inscatter, raymarchSingleScattering }) => {
+    ({ transmittance, inscatter, showGround, raymarchSingleScattering }) => {
       aerialNode.transmittance = transmittance
       aerialNode.inscatter = inscatter
+      atmosphereContext.showGround = showGround
       atmosphereContext.raymarchSingleScattering = raymarchSingleScattering
       postProcessing.needsUpdate = true
     }
@@ -213,6 +220,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
   googleMapsApiKey: string
   transmittance: boolean
   inscatter: boolean
+  showGround: boolean
   raymarchSingleScattering: boolean
 }
 
@@ -229,6 +237,7 @@ Story.args = {
   googleMapsApiKey: '',
   transmittance: true,
   inscatter: true,
+  showGround: false,
   raymarchSingleScattering: false,
   ...localDateArgs(),
   ...toneMappingArgs(),
@@ -245,6 +254,12 @@ Story.argTypes = {
     table: { category: 'aerial perspective' }
   },
   inscatter: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  showGround: {
     control: {
       type: 'boolean'
     },
