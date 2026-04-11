@@ -52,7 +52,7 @@
     "@types/react-dom": "19.0.0",
     "@types/shallowequal": "^1.1.5",
     "@types/string-template": "^1.0.7",
-    "@types/three": "0.182.0",
+    "@types/three": "0.183.1",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "4.1.2",
     "@vitest/ui": "4.1.2",
