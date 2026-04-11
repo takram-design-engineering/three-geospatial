@@ -684,64 +684,6 @@ const distanceToClosestPointOnRay = /*#__PURE__*/ FnLayout({
   return camera.add(t.mul(ray)).length()
 })
 
-const raySphereIntersections = /*#__PURE__*/ FnLayout({
-  name: 'raySphereIntersections',
-  type: 'vec2',
-  inputs: [
-    { name: 'camera', type: Position },
-    { name: 'direction', type: Direction },
-    { name: 'radius', type: Length }
-  ]
-})(([camera, direction, radius]) => {
-  const b = direction.dot(camera).mul(2).toConst()
-  const c = camera.dot(camera).sub(radius.pow2())
-  const discriminant = b.pow2().sub(c.mul(4))
-  const Q = sqrt(discriminant).toConst()
-  return vec2(b.negate().sub(Q), b.negate().add(Q)).mul(0.5)
-})
-
-const raySegmentStruct = /*#__PURE__*/ struct(
-  {
-    camera: Position,
-    point: Position,
-    degenerate: 'bool'
-  },
-  'RaySegment'
-)
-
-// Clip the view ray at the bottom atmosphere boundary.
-const clipRayAtBottomAtmosphere = /*#__PURE__*/ FnLayout({
-  name: 'clipRayAtBottomAtmosphere',
-  type: raySegmentStruct,
-  inputs: [
-    { name: 'parameters', type: atmosphereParametersStruct },
-    { name: 'camera', type: Position },
-    { name: 'point', type: Position }
-  ]
-})(([parameters, camera, point]) => {
-  const { bottomRadius } = makeDestructible(parameters)
-
-  const cameraBelow = camera.length().lessThan(bottomRadius).toConst()
-  const pointBelow = point.length().lessThan(bottomRadius).toConst()
-
-  const viewRay = point.sub(camera).normalize().toConst()
-  // Intersection can be NaN without max(0) on "t".
-  const t = raySphereIntersections(camera, viewRay, bottomRadius).max(0)
-  const intersection = camera.add(viewRay.mul(cameraBelow.select(t.y, t.x)))
-
-  // The ray segment degenerates when the both camera and point are below the
-  // bottom atmosphere boundary.
-  const clippedCamera = cameraBelow.select(intersection, camera)
-  const clippedPoint = pointBelow.select(intersection, point)
-  return raySegmentStruct(
-    clippedCamera,
-    clippedPoint,
-    cameraBelow
-      .and(pointBelow)
-      .or(clippedCamera.distance(clippedPoint).lessThan(1e-7))
-  )
-})
-
 const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
   // TODO: Fn layout doesn't support texture type
   typeOnly: true,
