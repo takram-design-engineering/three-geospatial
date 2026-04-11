@@ -84,6 +84,7 @@ import {
 } from './AtmosphereContextBase'
 import {
   clampRadius,
+  computeSingleScatteringToPoint,
   getIrradiance,
   getScattering,
   getScatteringTextureCoord,
@@ -459,7 +460,7 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
   ],
   builder
 ) => {
-  const context = getAtmosphereContextBase(builder)
+  const context = getAtmosphereContext(builder)
   const { topRadius, bottomRadius, miePhaseFunctionG } =
     makeDestructible(parameters)
 
@@ -580,6 +581,7 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
       )
     )
   })
+
   if (context.parameters.higherOrderScatteringTexture) {
     // Occlude only the single Rayleigh scattering by the shadow.
     const higherOrderScattering = getScattering(
@@ -590,7 +592,6 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
       cosViewLight,
       viewRayIntersectsGround
     ).toConst()
-    const singleScattering = scattering.sub(higherOrderScattering).toConst()
     const higherOrderScatteringP = getScattering(
       higherOrderScatteringTexture,
       radiusP,
@@ -599,34 +600,62 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
       cosViewLight,
       viewRayIntersectsGround
     ).toConst()
-    const singleScatteringP = scatteringP.sub(higherOrderScatteringP)
-    scattering.assign(
-      singleScattering
-        .sub(shadowTransmittance.mul(singleScatteringP))
-        .add(
+
+    if (context.raymarchSingleScattering) {
+      // TODO: Verify the result with shadow length.
+      // TODO: For macroscopic views, ray marching at runtime does not improve
+      // quality at all. Run this path selectively.
+      const computedSingleScattering = computeSingleScatteringToPoint(
+        parameters,
+        transmittanceTexture,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        viewRayIntersectsGround,
+        distanceToPoint.sub(shadowLength),
+        8
+      ).toConst()
+      const singleScattering = computedSingleScattering.get('rayleigh')
+      scattering.assign(
+        singleScattering.add(
           higherOrderScattering.sub(transmittance.mul(higherOrderScatteringP))
         )
-    )
+      )
+      singleMieScattering.assign(computedSingleScattering.get('mie'))
+    } else {
+      const singleScattering = scattering.sub(higherOrderScattering).toConst()
+      const singleScatteringP = scatteringP.sub(higherOrderScatteringP)
+      scattering.assign(
+        singleScattering
+          .sub(shadowTransmittance.mul(singleScatteringP))
+          .add(
+            higherOrderScattering.sub(transmittance.mul(higherOrderScatteringP))
+          )
+      )
+    }
   } else {
     scattering.assign(scattering.sub(shadowTransmittance.mul(scatteringP)))
   }
 
-  singleMieScattering.assign(
-    singleMieScattering.sub(shadowTransmittance.mul(singleMieScatteringP))
-  )
-  if (context.parameters.combinedScatteringTextures) {
+  if (!context.raymarchSingleScattering) {
     singleMieScattering.assign(
-      getExtrapolatedSingleMieScattering(
-        context.parametersNode,
-        vec4(scattering, singleMieScattering.r)
+      singleMieScattering.sub(shadowTransmittance.mul(singleMieScatteringP))
+    )
+    if (context.parameters.combinedScatteringTextures) {
+      singleMieScattering.assign(
+        getExtrapolatedSingleMieScattering(
+          context.parametersNode,
+          vec4(scattering, singleMieScattering.r)
+        )
       )
+    }
+
+    // Hack to avoid rendering artifacts when the light is below the horizon.
+    singleMieScattering.assign(
+      singleMieScattering.mul(smoothstep(0, 0.01, cosLight))
     )
   }
-
-  // Hack to avoid rendering artifacts when the light is below the horizon.
-  singleMieScattering.assign(
-    singleMieScattering.mul(smoothstep(0, 0.01, cosLight))
-  )
 
   // Finally combine the multiple Rayleigh scattering and the single Mie
   // scattering, applying their phase functions.
