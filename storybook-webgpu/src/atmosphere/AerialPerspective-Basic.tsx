@@ -150,14 +150,21 @@ const Content: FC<StoryProps> = ({
   }, 1)
 
   useTransientControl(
-    ({ transmittance, inscatter, raymarchSingleScattering }: StoryArgs) => ({
+    ({
       transmittance,
       inscatter,
+      showGround,
+      raymarchSingleScattering
+    }: StoryArgs) => ({
+      transmittance,
+      inscatter,
+      showGround,
       raymarchSingleScattering
     }),
-    ({ transmittance, inscatter, raymarchSingleScattering }) => {
+    ({ transmittance, inscatter, showGround, raymarchSingleScattering }) => {
       aerialNode.transmittance = transmittance
       aerialNode.inscatter = inscatter
+      atmosphereContext.showGround = showGround
       atmosphereContext.raymarchSingleScattering = raymarchSingleScattering
       postProcessing.needsUpdate = true
     }
@@ -229,6 +236,7 @@ interface StoryProps extends PointOfViewProps {}
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
   transmittance: boolean
   inscatter: boolean
+  showGround: boolean
   raymarchSingleScattering: boolean
 }
 
@@ -242,6 +250,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   transmittance: true,
   inscatter: true,
+  showGround: true,
   raymarchSingleScattering: false,
   ...localDateArgs({
     dayOfYear: 0,
@@ -262,6 +271,12 @@ Story.argTypes = {
     table: { category: 'aerial perspective' }
   },
   inscatter: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  showGround: {
     control: {
       type: 'boolean'
     },

@@ -85,6 +85,7 @@ const Content: FC<StoryProps> = () => {
 
   const atmosphereContext = useResource(() => new AtmosphereContext(), [])
   atmosphereContext.camera = camera
+  atmosphereContext.showGround = false
 
   useLayoutEffect(() => {
     renderer.contextNode = context({
