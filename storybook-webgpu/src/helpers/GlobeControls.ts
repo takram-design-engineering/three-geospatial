@@ -1,5 +1,5 @@
 import { GlobeControls as GlobeControlsBase } from '3d-tiles-renderer'
-import type { Material, Mesh, Object3D } from 'three'
+import type { Material, Mesh } from 'three'
 import {
   cameraProjectionMatrix,
   Fn,
@@ -61,29 +61,6 @@ function createPivotMaterial(uniforms: PivotUniforms): Material {
   return material
 }
 
-export function createOverlaySceneProxy(
-  scene: Object3D,
-  overlayScene: Object3D,
-  overlayObjects: readonly Object3D[]
-): Object3D {
-  return new Proxy(scene, {
-    get(target, property, receiver) {
-      if (property === 'add') {
-        return (...objects: Object3D[]) => {
-          for (const object of objects) {
-            if (overlayObjects.includes(object)) {
-              overlayScene.add(object)
-            } else {
-              Reflect.get(target, property, receiver)(object)
-            }
-          }
-        }
-      }
-      return Reflect.get(target, property, receiver)
-    }
-  })
-}
-
 export function modifyPivotMesh(originalPivotMesh: Mesh): Mesh {
   // HACK: Replace the pivot mesh:
   const pivotMesh = Object.assign(originalPivotMesh, {
@@ -100,32 +77,10 @@ export function modifyPivotMesh(originalPivotMesh: Mesh): Mesh {
 }
 
 export class GlobeControls extends GlobeControlsBase {
-  declare private readonly pivotMesh: Mesh
-
-  private overlayScene?: Object3D | null
+  declare readonly pivotMesh: Mesh
 
   constructor(...args: ConstructorParameters<typeof GlobeControlsBase>) {
     super(...args)
     modifyPivotMesh(this.pivotMesh)
-    this.setScene(this.scene)
-  }
-
-  private updateScene(): void {
-    const { scene, overlayScene } = this
-    super.setScene(
-      scene != null && overlayScene != null
-        ? createOverlaySceneProxy(scene, overlayScene, [this.pivotMesh])
-        : scene
-    )
-  }
-
-  override setScene(scene: Object3D | null): void {
-    super.setScene(scene)
-    this.updateScene()
-  }
-
-  setOverlayScene(scene: Object3D | null): void {
-    this.overlayScene = scene
-    this.updateScene()
   }
 }

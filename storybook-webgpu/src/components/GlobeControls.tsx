@@ -9,14 +9,11 @@ import type { Mesh, Scene } from 'three'
 
 import { reinterpretType } from '@takram/three-geospatial'
 
-import {
-  createOverlaySceneProxy,
-  modifyPivotMesh
-} from '../helpers/GlobeControls'
+import { modifyPivotMesh } from '../helpers/GlobeControls'
 
 const initControls =
   (overlayScene?: Scene) =>
-  (controls: GlobeControlsImpl): undefined | (() => void) => {
+  (controls: GlobeControlsImpl): void => {
     reinterpretType<
       GlobeControlsImpl & {
         pivotMesh: Mesh
@@ -25,22 +22,11 @@ const initControls =
 
     modifyPivotMesh(controls.pivotMesh)
 
-    // HACK: Add a hook to reroute the pivot mesh to another scene:
-    if (overlayScene != null) {
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      const setScene = controls.setScene
-      controls.setScene = scene => {
-        if (scene != null) {
-          scene = createOverlaySceneProxy(scene, overlayScene, [
-            controls.pivotMesh
-          ])
-        }
-        setScene.apply(controls, [scene])
+    controls.addEventListener('start', () => {
+      if (controls.pivotMesh.parent != null) {
+        overlayScene?.add(controls.pivotMesh)
       }
-      return () => {
-        controls.setScene = setScene
-      }
-    }
+    })
   }
 
 export const GlobeControls: FC<

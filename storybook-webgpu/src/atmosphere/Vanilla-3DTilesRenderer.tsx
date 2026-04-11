@@ -124,9 +124,13 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const controls = new GlobeControls(scene, camera, renderer.domElement)
   controls.enableDamping = true
 
-  // Hack to reroute the pivot mesh to another scene:
+  // Move the pivot mesh to another scene:
   const overlayScene = new Scene()
-  controls.setOverlayScene(overlayScene)
+  controls.addEventListener('start', () => {
+    if (controls.pivotMesh.parent != null) {
+      overlayScene?.add(controls.pivotMesh)
+    }
+  })
 
   // Disable "adjustHeight" until the user first drags because GlobeControls
   // adjusts the camera height based on very low LOD tiles during the initial
