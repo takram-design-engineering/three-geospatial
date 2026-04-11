@@ -1,7 +1,7 @@
 import type { ArgTypes } from '@storybook/react-vite'
 import { useMemo } from 'react'
 import { directionToColor, vec4 } from 'three/tsl'
-import type { Node, PassNode, PostProcessing } from 'three/webgpu'
+import type { Node, PassNode, PostProcessing, TextureNode } from 'three/webgpu'
 
 import {
   cameraFar,
@@ -88,7 +88,8 @@ export function useOutputPassControls(
         outputNode = directionToColor(normalNode)
         outputColorTransform = false
       } else if (outputDepth) {
-        const depthNode = passNode.getTextureNode('depth')
+        // @ts-expect-error Depth texture node is always float.
+        const depthNode: TextureNode<'float'> = passNode.getTextureNode('depth')
         outputNode = depthToColor(
           depthNode,
           cameraNear(passNode.camera),

@@ -9,7 +9,7 @@ export class SunNode extends TempNode {
     return 'SunNode'
   }
 
-  rayDirectionECEF?: Node
+  rayDirectionECEF?: Node<'vec3'>
 
   angularRadius = uniform(0.004675) // ≈ 16 arcminutes
   intensity = uniform(1)
@@ -18,7 +18,7 @@ export class SunNode extends TempNode {
     super('vec4')
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> {
+  override setup(builder: NodeBuilder): Node<'vec4'> | undefined {
     const atmosphereContext = getAtmosphereContext(builder)
 
     const { rayDirectionECEF } = this

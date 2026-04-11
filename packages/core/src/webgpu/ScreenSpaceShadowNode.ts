@@ -443,7 +443,8 @@ export class ScreenSpaceShadowNode extends TempNode {
     }
 
     const loadDepth = (coord: Node<'ivec2'>): Node<'float'> => {
-      let depth: Node = depthNode.load(coord)
+      // @ts-expect-error Depth texture node is always float.
+      let depth: Node<'float'> = depthNode.load(coord)
       if (builder.renderer.logarithmicDepthBuffer) {
         depth = logarithmicToPerspectiveDepth(
           depth,
@@ -528,7 +529,7 @@ export class ScreenSpaceShadowNode extends TempNode {
 
         // Perspective correct the shadowing depth, in this space, all light
         // rays are parallel.
-        let storedDepth: Node = shadowingDepth
+        let storedDepth: Node<'float'> = shadowingDepth
           .sub(lightCoordinate.z)
           .div(sampleDistance)
           .toConst()

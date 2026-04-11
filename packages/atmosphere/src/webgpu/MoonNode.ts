@@ -102,7 +102,7 @@ export class MoonNode extends TempNode {
     return 'MoonNode'
   }
 
-  rayDirectionECEF?: Node
+  rayDirectionECEF?: Node<'vec3'>
   colorNode?: TextureNode | null
   displacementNode?: TextureNode | null
 

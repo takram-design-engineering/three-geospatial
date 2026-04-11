@@ -54,7 +54,7 @@ export class MipmapSurfaceBlurNode extends DualMipmapFilterNode {
 
       const output = inputNode.sample(center).mul(outerWeight)
 
-      let weight: Node
+      let weight: Node<'vec4'>
       weight = vec4(
         clampToBorder(uv01),
         clampToBorder(uv02),

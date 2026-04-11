@@ -418,7 +418,8 @@ export class TemporalAntialiasNode extends TempNode {
   private setupResolveNode({ renderer }: NodeBuilder): Node {
     const getPreviousDepth = (uv: Node<'vec2'>): Node<'float'> => {
       const { previousDepthNode: depthNode } = this
-      const depth = depthNode
+      // @ts-expect-error Depth texture node is always float.
+      const depth: Node<'float'> = depthNode
         .load(ivec2(uv.mul(textureSize(depthNode)).sub(0.5)))
         .toConst()
       return renderer.logarithmicDepthBuffer
