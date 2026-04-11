@@ -62,6 +62,7 @@ import {
   floor,
   If,
   max,
+  mix,
   mul,
   not,
   PI,
@@ -725,12 +726,19 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
     const safeBottomRadius = bottomRadius
       .add(topRadius.sub(bottomRadius).mul(0.01)) // 600 meters for the default parameters
       .toConst()
-    const sampleCamera = camera
-      .mul(safeBottomRadius.div(camera.length()).max(1))
-      .toConst()
     const samplePoint = point
       .mul(safeBottomRadius.div(point.length()).max(1))
       .toConst()
+
+    // Avoid radial artifacts when the camera looks at the origin, while
+    // maintaining correct lighting at far distances.
+    const distanceToPoint = camera.distance(point)
+    const viewRay = point.sub(camera).div(distanceToPoint)
+    const sampleCamera = mix(
+      camera.mul(safeBottomRadius.div(camera.length()).max(1)),
+      camera.add(samplePoint.sub(point)),
+      camera.normalize().dot(viewRay).pow2()
+    )
 
     const result = getIndirectRadianceToPointImpl(
       parameters,
@@ -745,11 +753,10 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
     ).toConst()
 
     // Extrapolate the inscatter sampled above to the actual distance between
-    // the camera and point, assuming the average is the same (not really).
-    const distanceToPoint = camera.distance(point)
-    const sampledDistanceToPoint = sampleCamera.distance(samplePoint)
+    // the camera and point, assuming both averages are the same (not really).
+    const sampleDistanceToPoint = sampleCamera.distance(samplePoint)
     radiance.assign(
-      result.get('radiance').mul(distanceToPoint.div(sampledDistanceToPoint))
+      result.get('radiance').mul(distanceToPoint.div(sampleDistanceToPoint))
     )
     transmittance.assign(result.get('transmittance')) // TODO
   })
