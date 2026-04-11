@@ -69,7 +69,6 @@ import {
   smoothstep,
   sqrt,
   struct,
-  vec2,
   vec3,
   vec4
 } from 'three/tsl'
@@ -770,7 +769,7 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
   shadowLength,
   lightDirection
 ]) => {
-  const { topRadius } = makeDestructible(parameters)
+  const { topRadius, bottomRadius } = makeDestructible(parameters)
 
   const radiance = vec3(0).toVar()
   const transmittance = vec3(1).toVar()
@@ -779,33 +778,38 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
   // boundary.
   const distanceToRay = distanceToClosestPointOnRay(camera, point)
   If(distanceToRay.lessThan(topRadius), () => {
-    // Clip the ray at the bottom atmosphere boundary for rendering points
-    // below it.
-    const clippedRaySegment = clipRayAtBottomAtmosphere(
+    // Move the camera and point slightly above the atmosphere bottom, below
+    // which the scattering is undefined.
+    const safeBottomRadius = bottomRadius
+      .add(topRadius.sub(bottomRadius).mul(0.01)) // About 600 meters
+      .toConst()
+    const sampleCamera = camera
+      .mul(safeBottomRadius.div(camera.length()).max(1))
+      .toConst()
+    const samplePoint = point
+      .mul(safeBottomRadius.div(point.length()).max(1))
+      .toConst()
+
+    const result = getIndirectRadianceToPointImpl(
       parameters,
-      camera,
-      point
+      transmittanceTexture,
+      scatteringTexture,
+      singleMieScatteringTexture,
+      higherOrderScatteringTexture,
+      sampleCamera,
+      samplePoint,
+      shadowLength,
+      lightDirection
     ).toConst()
-    const clippedCamera = clippedRaySegment.get('camera')
-    const clippedPoint = clippedRaySegment.get('point')
-    const degenerate = clippedRaySegment.get('degenerate')
 
-    If(not(degenerate), () => {
-      const result = getIndirectRadianceToPointImpl(
-        parameters,
-        transmittanceTexture,
-        scatteringTexture,
-        singleMieScatteringTexture,
-        higherOrderScatteringTexture,
-        clippedCamera,
-        clippedPoint,
-        shadowLength,
-        lightDirection
-      ).toConst()
-
-      radiance.assign(result.get('radiance'))
-      transmittance.assign(result.get('transmittance'))
-    })
+    // Extrapolate the inscatter sampled above to the actual distance between
+    // the camera and point, assuming the average is the same (not really).
+    const distanceToPoint = camera.distance(point)
+    const sampledDistanceToPoint = sampleCamera.distance(samplePoint)
+    radiance.assign(
+      result.get('radiance').mul(distanceToPoint.div(sampledDistanceToPoint))
+    )
+    transmittance.assign(result.get('transmittance')) // TODO
   })
 
   return radianceTransferStruct(radiance, transmittance)
