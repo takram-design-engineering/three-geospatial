@@ -101,7 +101,7 @@ export class StarsNode extends TempNode {
     return this
   }
 
-  override updateBefore(frame: NodeFrame): void {
+  override updateBefore(frame: NodeFrame): boolean | undefined {
     const { renderer } = frame
     const camera = this.camera ?? frame.camera
     if (renderer == null || camera == null) {
@@ -199,7 +199,7 @@ export class StarsNode extends TempNode {
     material.needsUpdate = true
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): TextureNode {
     if (typeof this.data === 'string') {
       this.dataPromise ??= new ArrayBufferLoader()
         .loadAsync(this.data)

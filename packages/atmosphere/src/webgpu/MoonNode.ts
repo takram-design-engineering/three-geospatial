@@ -117,7 +117,7 @@ export class MoonNode extends TempNode {
     super('vec4')
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): Node<'vec4'> | undefined {
     const atmosphereContext = getAtmosphereContext(builder)
 
     const { rayDirectionECEF } = this

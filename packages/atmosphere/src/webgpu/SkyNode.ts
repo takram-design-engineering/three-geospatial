@@ -67,7 +67,7 @@ export class SkyNode extends TempNode {
     )
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): Node<'vec3'> | undefined {
     const atmosphereContext = getAtmosphereContext(builder)
 
     const {

@@ -200,7 +200,7 @@ export class AtmosphereLUTNode extends Node {
     }
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): boolean | undefined {
     if (renderer == null || this.version === this.currentVersion) {
       return
     }
@@ -212,7 +212,8 @@ export class AtmosphereLUTNode extends Node {
     })
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     if (this.textures == null) {
       // Lazily initialize the texture generator depending of the renderer:
       this.textures = isWebGPU(builder)

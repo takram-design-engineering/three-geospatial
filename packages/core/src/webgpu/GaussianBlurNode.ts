@@ -98,7 +98,7 @@ export class GaussianBlurNode extends SeparableFilterNode {
     this.kernelSize = kernelSize
   }
 
-  protected override setupOutputNode(builder: NodeBuilder): Node {
+  protected override setupOutputNode(builder: NodeBuilder): Node<'vec4'> {
     const { inputNode, inputTexelSize, direction } = this
     invariant(inputNode != null)
 

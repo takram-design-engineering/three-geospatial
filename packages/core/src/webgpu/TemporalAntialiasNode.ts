@@ -383,7 +383,7 @@ export class TemporalAntialiasNode extends TempNode {
     this.textureNode.value = resolveRT.texture
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): boolean | undefined {
     if (renderer == null) {
       return
     }
@@ -510,7 +510,7 @@ export class TemporalAntialiasNode extends TempNode {
     })()
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): TextureNode {
     // We have to take care of the renaming of PostProcessing to RenderPipeline
     // in r183, as well as changes to property fields in the context.
     const onBeforeRenderPipeline = (): void => {

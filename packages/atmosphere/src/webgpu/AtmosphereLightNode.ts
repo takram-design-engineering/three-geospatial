@@ -39,7 +39,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
-  override updateBefore(frame: NodeFrame): void {
+  override updateBefore(frame: NodeFrame): boolean | undefined {
     const { light, atmosphereContext } = this
     if (light == null || atmosphereContext == null) {
       return
@@ -52,7 +52,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
       .add(light.target.position)
   }
 
-  override update(frame: NodeFrame): void {
+  override update(frame: NodeFrame): boolean | undefined {
     super.update(frame)
 
     const { light, atmosphereContext } = this
@@ -71,7 +71,8 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
     }
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     this.atmosphereContext = getAtmosphereContext(builder)
     return super.setup(builder)
   }

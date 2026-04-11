@@ -1,5 +1,10 @@
 import { add, sub, uniform, uv, vec3 } from 'three/tsl'
-import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
+import {
+  TempNode,
+  type Node,
+  type NodeBuilder,
+  type TextureNode
+} from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { FnLayout } from './FnLayout'
@@ -18,7 +23,7 @@ export class LensGhostNode extends TempNode {
     this.inputNode = inputNode
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): Node<'vec3'> {
     const { inputNode, intensity } = this
     invariant(inputNode != null)
 

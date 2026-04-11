@@ -9,6 +9,7 @@ import {
 import {
   NodeUpdateType,
   TempNode,
+  type Node,
   type NodeBuilder,
   type NodeFrame
 } from 'three/webgpu'
@@ -48,7 +49,7 @@ export class HighpVelocityNode extends TempNode {
   }
 
   // Executed once per frame:
-  override update({ camera }: NodeFrame): void {
+  override update({ camera }: NodeFrame): boolean | undefined {
     if (camera == null) {
       return
     }
@@ -67,7 +68,7 @@ export class HighpVelocityNode extends TempNode {
   }
 
   // Executed once per object before rendering:
-  override updateBefore({ object, camera }: NodeFrame): void {
+  override updateBefore({ object, camera }: NodeFrame): boolean | undefined {
     if (object == null || camera == null) {
       return
     }
@@ -85,7 +86,7 @@ export class HighpVelocityNode extends TempNode {
   }
 
   // Executed once per object after rendering:
-  override updateAfter({ object }: NodeFrame): void {
+  override updateAfter({ object }: NodeFrame): boolean | undefined {
     if (object == null) {
       return
     }
@@ -102,7 +103,7 @@ export class HighpVelocityNode extends TempNode {
     matrix.copy(current.value)
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): Node<'vec3'> {
     const currentClip = this.currentProjectionMatrix
       .mul(this.currentModelViewMatrix)
       .mul(positionLocal)

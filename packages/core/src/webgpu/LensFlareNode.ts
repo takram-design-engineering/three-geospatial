@@ -55,7 +55,7 @@ export class LensFlareNode extends TempNode {
     this.glareNode.resolutionScale = 1
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): Node<'vec4'> {
     const {
       inputNode,
       thresholdNode,

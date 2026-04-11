@@ -14,6 +14,7 @@ import {
 import {
   NodeUpdateType,
   TempNode,
+  type Node,
   type NodeBuilder,
   type NodeFrame,
   type TextureNode
@@ -42,7 +43,7 @@ export class LensHaloNode extends TempNode {
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): boolean | undefined {
     if (renderer == null) {
       return
     }
@@ -50,7 +51,7 @@ export class LensHaloNode extends TempNode {
     this.aspectRatio.value = width / height
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): Node<'vec3'> {
     const { inputNode, intensity, chromaticAberration, aspectRatio } = this
     invariant(inputNode != null)
 

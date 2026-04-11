@@ -24,7 +24,8 @@ export class OutputTextureNode extends TextureNode {
     this.setUpdateMatrix(false)
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     this.owner.build(builder)
     return super.setup(builder)
   }

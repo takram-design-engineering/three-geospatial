@@ -12,7 +12,8 @@ import {
   NodeUpdateType,
   TempNode,
   type NodeBuilder,
-  type NodeFrame
+  type NodeFrame,
+  type PMREMNode
 } from 'three/webgpu'
 
 import { QuadGeometry, radians } from '@takram/three-geospatial'
@@ -58,7 +59,7 @@ export class SkyEnvironmentNode extends TempNode {
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): boolean | undefined {
     if (renderer == null || this.version === this.currentVersion) {
       return
     }
@@ -66,7 +67,7 @@ export class SkyEnvironmentNode extends TempNode {
     this.cubeCamera.update(renderer, this.mesh)
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): PMREMNode {
     const context = getAtmosphereContext(builder)
 
     const { camera } = context

@@ -170,7 +170,7 @@ export class ScreenSpaceShadowNode extends TempNode {
     return this
   }
 
-  override updateBefore(frame: NodeFrame): void {
+  override updateBefore(frame: NodeFrame): boolean | undefined {
     const { renderer } = frame
     if (renderer == null) {
       return
@@ -674,7 +674,7 @@ export class ScreenSpaceShadowNode extends TempNode {
     )
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): TextureNode {
     this.setupCompute(builder)
     return this.textureNode
   }

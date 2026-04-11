@@ -151,7 +151,7 @@ export class LongExposureNode extends TempNode {
     this.textureNode.value = currentRT.texture
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): boolean | undefined {
     if (renderer == null) {
       return
     }
@@ -193,7 +193,7 @@ export class LongExposureNode extends TempNode {
     this.swapBuffers()
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): TextureNode {
     const { material, copyMaterial } = this
 
     material.fragmentNode = time

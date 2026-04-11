@@ -18,7 +18,7 @@ export class SunNode extends TempNode {
     super('vec4')
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): Node<'vec4'> {
     const atmosphereContext = getAtmosphereContext(builder)
 
     const { rayDirectionECEF } = this

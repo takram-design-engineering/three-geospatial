@@ -38,7 +38,7 @@ export abstract class SingleFilterNode extends FilterNode {
     return this
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): boolean | undefined {
     if (renderer == null) {
       return
     }
@@ -60,7 +60,8 @@ export abstract class SingleFilterNode extends FilterNode {
 
   protected abstract setupOutputNode(builder: NodeBuilder): Node
 
-  override setup(builder: NodeBuilder): unknown {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const { inputNode } = this
     invariant(inputNode != null)
 

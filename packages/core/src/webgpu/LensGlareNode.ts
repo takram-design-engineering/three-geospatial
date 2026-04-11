@@ -141,7 +141,7 @@ export class LensGlareNode extends FilterNode {
     return this
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): boolean | undefined {
     if (renderer == null) {
       return
     }
@@ -287,7 +287,8 @@ export class LensGlareNode extends FilterNode {
     this.material.needsUpdate = true
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     if (this.spikeNode == null) {
       const spikeTexture = createSpikeTexture()
       spikeTexture.colorSpace = SRGBColorSpace

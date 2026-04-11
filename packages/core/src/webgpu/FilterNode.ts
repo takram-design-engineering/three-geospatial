@@ -71,7 +71,7 @@ export abstract class FilterNode extends TempNode {
 
   abstract setSize(width: number, height: number): this
 
-  override setup(builder: NodeBuilder): unknown {
+  override setup(builder: NodeBuilder): TextureNode {
     const { inputNode, textureNode: outputNode } = this
     invariant(
       inputNode != null,
