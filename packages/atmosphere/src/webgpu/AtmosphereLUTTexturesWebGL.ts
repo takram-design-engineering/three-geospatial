@@ -28,13 +28,13 @@ import {
 import {
   NodeMaterial,
   QuadMesh,
+  type Node,
   type Renderer,
   type UniformNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import type { AnyFloatType } from '@takram/three-geospatial'
-import type { Node } from '@takram/three-geospatial/webgpu'
 
 import type {
   AtmosphereLUTTexture3DName,

@@ -1,8 +1,8 @@
 import { float, ivec2, struct, uint, vec3 } from 'three/tsl'
-import type { NodeBuilder, StructNode } from 'three/webgpu'
+import type { Node, NodeBuilder, StructNode } from 'three/webgpu'
 
 import { reinterpretType } from '@takram/three-geospatial'
-import type { Node, NodeType } from '@takram/three-geospatial/webgpu'
+import type { NodeType } from '@takram/three-geospatial/webgpu'
 
 import type {
   AtmosphereParameters,

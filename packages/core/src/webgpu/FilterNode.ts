@@ -8,12 +8,12 @@ import {
 import {
   NodeUpdateType,
   TempNode,
+  type Node,
   type NodeBuilder,
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 
 // Represents a node that applies a shader on the input texture and outputs

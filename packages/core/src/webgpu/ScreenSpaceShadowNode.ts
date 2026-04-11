@@ -52,6 +52,7 @@ import {
   StorageTexture,
   TempNode,
   type ComputeNode,
+  type Node,
   type NodeBuilder,
   type NodeFrame,
   type TextureNode
@@ -59,7 +60,6 @@ import {
 import invariant from 'tiny-invariant'
 
 import { cameraFar, cameraNear } from './accessors'
-import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { logarithmicToPerspectiveDepth } from './transformations'
 

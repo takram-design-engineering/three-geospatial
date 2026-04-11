@@ -1,13 +1,12 @@
 import type { Camera } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { Fn, mix, nodeProxy, positionGeometry, uv, vec3, vec4 } from 'three/tsl'
-import { TempNode, type NodeBuilder } from 'three/webgpu'
+import { TempNode, type Node, type NodeBuilder } from 'three/webgpu'
 
 import {
   equirectToDirectionWorld,
   inverseProjectionMatrix,
-  inverseViewMatrix,
-  type Node
+  inverseViewMatrix
 } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from './AtmosphereContext'

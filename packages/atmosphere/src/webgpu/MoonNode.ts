@@ -16,9 +16,14 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
+import {
+  TempNode,
+  type Node,
+  type NodeBuilder,
+  type TextureNode
+} from 'three/webgpu'
 
-import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
+import { FnLayout } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from './AtmosphereContext'
 import {

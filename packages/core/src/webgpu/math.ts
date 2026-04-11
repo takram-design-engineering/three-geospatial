@@ -1,7 +1,7 @@
 import { dot, If, sqrt, struct, vec2, vec4 } from 'three/tsl'
+import type { Node } from 'three/webgpu'
 
 import { FnVar } from './FnVar'
-import type { Node } from './node'
 
 // Reference: https://iquilezles.org/articles/intersectors/
 
@@ -37,7 +37,7 @@ export const raySpheresIntersections = /*#__PURE__*/ FnVar(
     rayOrigin: Node<'vec3'>,
     rayDirection: Node<'vec3'>,
     center: Node<'vec3'>,
-    radii: Node // Scalar or vector
+    radii: Node<'vec4'> // Scalar or vector
   ) => {
     const a = rayOrigin.sub(center)
     const b = dot(rayDirection, a)

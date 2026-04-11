@@ -1,9 +1,8 @@
 import { add, Fn, mix, uniform, uv, vec2, vec4 } from 'three/tsl'
-import type { NodeBuilder, TextureNode } from 'three/webgpu'
+import type { Node, NodeBuilder, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { DualMipmapFilterNode } from './DualMipmapFilterNode'
-import type { Node } from './node'
 
 const clampToBorder = (uv: Node<'vec2'>): Node<'float'> => {
   return uv.greaterThanEqual(0).all().and(uv.lessThanEqual(1).all()).toFloat()

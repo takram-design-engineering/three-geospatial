@@ -20,6 +20,7 @@ import {
   MeshPhysicalNodeMaterial,
   PostProcessing,
   type MeshPhysicalNodeMaterialParameters,
+  type Node,
   type Renderer
 } from 'three/webgpu'
 
@@ -40,8 +41,7 @@ import {
   dithering,
   highpVelocity,
   lensFlare,
-  temporalAntialias,
-  type Node
+  temporalAntialias
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'

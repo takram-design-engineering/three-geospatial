@@ -1,13 +1,12 @@
 import type { ArgTypes } from '@storybook/react-vite'
 import { useMemo } from 'react'
 import { directionToColor, vec4 } from 'three/tsl'
-import type { PassNode, PostProcessing } from 'three/webgpu'
+import type { Node, PassNode, PostProcessing } from 'three/webgpu'
 
 import {
   cameraFar,
   cameraNear,
-  depthToColor,
-  type Node
+  depthToColor
 } from '@takram/three-geospatial/webgpu'
 
 import { useTransientControl } from '../hooks/useTransientControl'

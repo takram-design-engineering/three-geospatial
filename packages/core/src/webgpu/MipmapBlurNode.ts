@@ -1,5 +1,6 @@
 import { add, uv, vec2, vec4 } from 'three/tsl'
 import type {
+  Node,
   NodeBuilder,
   TextureNode,
   UniformNode,
@@ -8,7 +9,6 @@ import type {
 import invariant from 'tiny-invariant'
 
 import { DualMipmapFilterNode } from './DualMipmapFilterNode'
-import type { Node } from './node'
 
 export const mipmapBlurDownsample = (
   inputNode: TextureNode,

@@ -10,9 +10,7 @@ import {
   reference,
   uniform
 } from 'three/tsl'
-import type { UniformNode } from 'three/webgpu'
-
-import type { Node } from './node'
+import type { Node, UniformNode } from 'three/webgpu'
 
 let caches: WeakMap<{}, Record<string, {}>> | undefined
 

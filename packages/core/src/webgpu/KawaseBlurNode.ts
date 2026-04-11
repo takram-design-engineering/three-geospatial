@@ -1,9 +1,8 @@
 import { add, uv, vec2, vec4 } from 'three/tsl'
-import type { NodeBuilder, TextureNode } from 'three/webgpu'
+import type { Node, NodeBuilder, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { DualMipmapFilterNode } from './DualMipmapFilterNode'
-import type { Node } from './node'
 
 export class KawaseBlurNode extends DualMipmapFilterNode {
   static override get type(): string {

@@ -9,8 +9,7 @@ import {
   vec2,
   vec3
 } from 'three/tsl'
-
-import type { Node } from './node'
+import type { Node } from 'three/webgpu'
 
 // Reference: https://advances.realtimerendering.com/s2014/index.html
 export const interleavedGradientNoise = (seed: Node<'vec2'>): Node<'float'> => {

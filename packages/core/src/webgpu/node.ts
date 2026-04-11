@@ -29,7 +29,6 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import { Node as N } from 'three/webgpu'
 
 // prettier-ignore
 const nodes = {
@@ -84,13 +83,6 @@ export type NodeValueTypeOf<T extends NodeType> =
 // These types only provide for annotations, and not guarantee the type safety.
 // I'm working on storing the dimensions in the types, but most of TSL functions
 // are not generic and don't preserve the types anyways.
-
-export type Node<
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  T extends NodeType = NodeType
-> = N
-
-export const Node = N
 
 export function node<T extends NodeType>(type: T): (typeof nodes)[T] {
   return nodes[type]

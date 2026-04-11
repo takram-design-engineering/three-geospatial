@@ -11,7 +11,7 @@ import {
   vec2,
   vec4
 } from 'three/tsl'
-import { NodeMaterial } from 'three/webgpu'
+import { NodeMaterial, type Node } from 'three/webgpu'
 
 import {
   AtmosphereLUTNode,
@@ -19,7 +19,7 @@ import {
   type AtmosphereLUTTextureName
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
-import { FnVar, type Node } from '@takram/three-geospatial/webgpu'
+import { FnVar } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
 import { Description } from '../components/Description'

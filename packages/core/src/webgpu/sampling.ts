@@ -1,8 +1,7 @@
 import { add, sub, textureSize, vec2 } from 'three/tsl'
-import type { TextureNode } from 'three/webgpu'
+import type { Node, TextureNode } from 'three/webgpu'
 
 import { FnVar } from './FnVar'
-import type { Node } from './node'
 
 // 9-taps version of Catmull-Rom sampling.
 // Reference: https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1

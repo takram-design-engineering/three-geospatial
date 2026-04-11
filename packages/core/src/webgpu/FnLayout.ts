@@ -5,9 +5,14 @@ import type {
   Struct
 } from 'three/src/nodes/TSL.js'
 import { Fn } from 'three/tsl'
-import type { NodeBuilder, Texture3DNode, TextureNode } from 'three/webgpu'
+import type {
+  Node,
+  NodeBuilder,
+  Texture3DNode,
+  TextureNode
+} from 'three/webgpu'
 
-import type { Node, NodeType } from './node'
+import type { NodeType } from './node'
 
 // Note that "texture" and "texture3D" are just placeholders until TSL supports
 // texture types.

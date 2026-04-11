@@ -4,6 +4,7 @@ import {
   NodeMaterial,
   QuadMesh,
   RendererUtils,
+  type Node,
   type NodeBuilder,
   type NodeFrame,
   type TextureNode
@@ -11,7 +12,6 @@ import {
 import invariant from 'tiny-invariant'
 
 import { FilterNode } from './FilterNode'
-import type { Node } from './node'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 

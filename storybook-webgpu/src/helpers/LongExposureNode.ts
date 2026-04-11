@@ -28,6 +28,7 @@ import {
   Vector2,
   type ComputeNode,
   type DataTextureImageData,
+  type Node,
   type NodeBuilder,
   type NodeFrame,
   type Renderer,
@@ -35,7 +36,7 @@ import {
 } from 'three/webgpu'
 
 import { reinterpretType } from '@takram/three-geospatial'
-import { outputTexture, type Node } from '@takram/three-geospatial/webgpu'
+import { outputTexture } from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 

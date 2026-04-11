@@ -35,6 +35,7 @@ import {
   QuadMesh,
   RendererUtils,
   TempNode,
+  type Node,
   type NodeBuilder,
   type NodeFrame,
   type Renderer,
@@ -46,7 +47,6 @@ import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import { highpVelocity } from './HighpVelocityNode'
 import { haltonOffsets } from './internals'
-import type { Node } from './node'
 import { outputTexture } from './OutputTextureNode'
 import { logarithmicToPerspectiveDepth } from './transformations'
 import { isWebGPU } from './utils'

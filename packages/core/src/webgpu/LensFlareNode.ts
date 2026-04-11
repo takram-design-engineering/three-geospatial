@@ -1,6 +1,7 @@
 import { add, convertToTexture, Fn, rtt, uniform } from 'three/tsl'
 import {
   TempNode,
+  type Node,
   type NodeBuilder,
   type RTTNode,
   type TextureNode
@@ -13,7 +14,6 @@ import { LensGhostNode } from './LensGhostNode'
 import { LensGlareNode } from './LensGlareNode'
 import { LensHaloNode } from './LensHaloNode'
 import { MipmapSurfaceBlurNode } from './MipmapSurfaceBlurNode'
-import type { Node } from './node'
 import { isWebGPU } from './utils'
 
 export class LensFlareNode extends TempNode {

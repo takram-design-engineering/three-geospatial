@@ -1,8 +1,7 @@
 import { add, Fn, uv } from 'three/tsl'
-import type { NodeBuilder, TextureNode } from 'three/webgpu'
+import type { Node, NodeBuilder, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import type { Node } from './node'
 import { SeparableFilterNode } from './SeparableFilterNode'
 
 // Reference: https://github.com/pmndrs/postprocessing/blob/v6.37.8/src/core/GaussKernel.js

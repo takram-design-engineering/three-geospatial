@@ -13,8 +13,7 @@ import {
   viewZToLogarithmicDepth,
   viewZToPerspectiveDepth
 } from 'three/tsl'
-
-import type { Node } from './node'
+import type { Node } from 'three/webgpu'
 
 export interface DepthOptions {
   perspective?: boolean

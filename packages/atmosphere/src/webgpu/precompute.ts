@@ -78,9 +78,9 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import type { Texture3DNode, TextureNode } from 'three/webgpu'
+import type { Node, Texture3DNode, TextureNode } from 'three/webgpu'
 
-import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
+import { FnLayout, FnVar } from '@takram/three-geospatial/webgpu'
 
 import {
   atmosphereParametersStruct,

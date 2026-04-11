@@ -10,7 +10,7 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import { TempNode, type NodeBuilder } from 'three/webgpu'
+import { TempNode, type Node, type NodeBuilder } from 'three/webgpu'
 
 import {
   cameraFar,
@@ -20,8 +20,7 @@ import {
   inverseViewMatrix,
   projectionMatrix,
   rayEllipsoidIntersection,
-  screenToPositionView,
-  type Node
+  screenToPositionView
 } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from './AtmosphereContext'

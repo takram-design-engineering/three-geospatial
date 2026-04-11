@@ -1,9 +1,8 @@
 import { luminance, smoothstep, uniform, vec4 } from 'three/tsl'
-import type { TextureNode } from 'three/webgpu'
+import type { Node, TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import { mipmapBlurDownsample } from './MipmapBlurNode'
-import type { Node } from './node'
 import { SingleFilterNode } from './SingleFilterNode'
 
 export class DownsampleThresholdNode extends SingleFilterNode {

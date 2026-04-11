@@ -1,7 +1,5 @@
 import { cos, Fn, fwidth, If, smoothstep, uniform, vec4 } from 'three/tsl'
-import { TempNode, type NodeBuilder } from 'three/webgpu'
-
-import type { Node } from '@takram/three-geospatial/webgpu'
+import { TempNode, type Node, type NodeBuilder } from 'three/webgpu'
 
 import { getAtmosphereContext } from './AtmosphereContext'
 import { getSolarLuminance } from './runtime'
