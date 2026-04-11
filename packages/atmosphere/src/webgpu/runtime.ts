@@ -723,7 +723,7 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
     // Move the camera and point slightly above the atmosphere bottom, below
     // which the scattering is undefined.
     const safeBottomRadius = bottomRadius
-      .add(topRadius.sub(bottomRadius).mul(0.01)) // About 600 meters
+      .add(topRadius.sub(bottomRadius).mul(0.01)) // 600 meters for the default parameters
       .toConst()
     const sampleCamera = camera
       .mul(safeBottomRadius.div(camera.length()).max(1))
