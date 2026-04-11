@@ -54,6 +54,7 @@ import { useControl } from '../hooks/useControl'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { usePointOfView, type PointOfViewProps } from '../hooks/usePointOfView'
 import { useResource } from '../hooks/useResource'
+import { useTransientControl } from '../hooks/useTransientControl'
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
@@ -145,6 +146,20 @@ const Content: FC<StoryProps> = ({
     postProcessing.render()
   }, 1)
 
+  useTransientControl(
+    ({ transmittance, inscatter, raymarchSingleScattering }: StoryArgs) => ({
+      transmittance,
+      inscatter,
+      raymarchSingleScattering
+    }),
+    ({ transmittance, inscatter, raymarchSingleScattering }) => {
+      aerialNode.transmittance = transmittance
+      aerialNode.inscatter = inscatter
+      atmosphereContext.raymarchSingleScattering = raymarchSingleScattering
+      postProcessing.needsUpdate = true
+    }
+  )
+
   // Output pass controls:
   useOutputPassControls(
     postProcessing,
@@ -206,6 +221,9 @@ interface StoryProps extends PointOfViewProps {}
 
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
   googleMapsApiKey: string
+  transmittance: boolean
+  inscatter: boolean
+  raymarchSingleScattering: boolean
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
@@ -225,6 +243,9 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   googleMapsApiKey: '',
+  transmittance: true,
+  inscatter: true,
+  raymarchSingleScattering: false,
   ...localDateArgs(),
   ...toneMappingArgs(),
   ...outputPassArgs(),
@@ -233,6 +254,24 @@ Story.args = {
 
 Story.argTypes = {
   googleMapsApiKey: { control: 'text' },
+  transmittance: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  inscatter: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  raymarchSingleScattering: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes(),
