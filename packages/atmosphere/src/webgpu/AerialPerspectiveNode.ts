@@ -28,7 +28,7 @@ import { getIndirectLuminanceToPoint, getSplitIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
 export class AerialPerspectiveNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'AerialPerspectiveNode'
   }
 

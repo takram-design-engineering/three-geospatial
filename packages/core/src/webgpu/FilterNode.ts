@@ -19,7 +19,7 @@ import { outputTexture } from './OutputTextureNode'
 // Represents a node that applies a shader on the input texture and outputs
 // another texture of the same dimensions regardless of the drawing buffer size.
 export abstract class FilterNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'FilterNode'
   }
 

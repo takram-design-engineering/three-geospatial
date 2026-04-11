@@ -25,7 +25,7 @@ import { FnLayout } from './FnLayout'
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
 export class LensHaloNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'LensHaloNode'
   }
 

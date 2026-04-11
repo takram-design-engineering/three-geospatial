@@ -231,7 +231,7 @@ const emptyDepthTexture = /*#__PURE__*/ new DepthTexture(1, 1)
 // Note on TAA and tone mapping (p.19):
 // https://advances.realtimerendering.com/s2014/epic/TemporalAA.pptx
 export class TemporalAntialiasNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'TemporalAntialiasNode'
   }
 

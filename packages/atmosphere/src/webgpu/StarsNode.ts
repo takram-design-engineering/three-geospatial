@@ -59,7 +59,7 @@ function createRenderTarget(): RenderTarget {
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
 export class StarsNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'StarsNode'
   }
 

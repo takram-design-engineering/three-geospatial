@@ -75,7 +75,7 @@ const emptyTexture3D = /*#__PURE__*/ new Data3DTexture()
 const updateEvent = { type: 'update' as const }
 
 export class AtmosphereLUTNode extends Node {
-  static override get type(): string {
+  static get type(): string {
     return 'AtmosphereLUTNode'
   }
 

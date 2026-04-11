@@ -5,7 +5,7 @@ import { getAtmosphereContext } from './AtmosphereContext'
 import { getSolarLuminance } from './runtime'
 
 export class SunNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'SunNode'
   }
 

@@ -69,7 +69,7 @@ const sizeScratch = /*#__PURE__*/ new Vector2()
 
 // TODO: Refine and move to core.
 export class LongExposureNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'LongExposureNode'
   }
 

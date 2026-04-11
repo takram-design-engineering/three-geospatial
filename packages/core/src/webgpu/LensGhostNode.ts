@@ -5,7 +5,7 @@ import invariant from 'tiny-invariant'
 import { FnLayout } from './FnLayout'
 
 export class LensGhostNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'LensGhostNode'
   }
 

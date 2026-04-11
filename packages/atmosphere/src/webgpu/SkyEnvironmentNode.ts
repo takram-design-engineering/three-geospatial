@@ -22,7 +22,7 @@ import { getAtmosphereContext } from './AtmosphereContext'
 import { sky, type SkyNode } from './SkyNode'
 
 export class SkyEnvironmentNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'SkyEnvironmentNode'
   }
 

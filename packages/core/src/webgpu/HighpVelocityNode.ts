@@ -14,7 +14,7 @@ import {
 } from 'three/webgpu'
 
 export class HighpVelocityNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'HighpVelocityNode'
   }
 

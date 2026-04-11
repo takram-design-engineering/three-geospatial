@@ -17,7 +17,7 @@ import { MipmapSurfaceBlurNode } from './MipmapSurfaceBlurNode'
 import { isWebGPU } from './utils'
 
 export class LensFlareNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'LensFlareNode'
   }
 

@@ -4,7 +4,7 @@ import { TextureNode, type Node, type NodeBuilder } from 'three/webgpu'
 import { reinterpretType } from '../types'
 
 export class OutputTextureNode extends TextureNode {
-  static override get type(): string {
+  static get type(): string {
     return 'OutputTextureNode'
   }
 

@@ -25,7 +25,7 @@ import { getIndirectIlluminance } from './runtime'
 const rotationScratch = /*#__PURE__*/ new Matrix3()
 
 export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
-  static override get type(): string {
+  static get type(): string {
     return 'AtmosphereLightNode'
   }
 

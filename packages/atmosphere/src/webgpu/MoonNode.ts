@@ -98,7 +98,7 @@ const orenNayarDiffuse = /*#__PURE__*/ FnLayout({
 })
 
 export class MoonNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'MoonNode'
   }
 

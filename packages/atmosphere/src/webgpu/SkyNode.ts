@@ -31,7 +31,7 @@ const EQUIRECTANGULAR = 'EQUIRECTANGULAR'
 type SkyNodeScope = typeof CAMERA | typeof EQUIRECTANGULAR
 
 export class SkyNode extends TempNode {
-  static override get type(): string {
+  static get type(): string {
     return 'SkyNode'
   }
 
