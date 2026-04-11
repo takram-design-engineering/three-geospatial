@@ -495,7 +495,7 @@ export class TemporalAntialiasNode extends TempNode {
         // Reference: https://github.com/simco50/D3D12_Research/
         const temporalAlpha = mix(
           this.temporalAlpha,
-          0.8,
+          0.4,
           subpixelCorrection(velocityUVW.xy, textureSize(this.inputNode))
         ).saturate()
 
