@@ -46,7 +46,7 @@ export abstract class FilterNode extends TempNode {
     texture.magFilter = LinearFilter
     texture.generateMipmaps = false
 
-    const typeName = (this.constructor as typeof Node).type
+    const typeName = (this.constructor as typeof FilterNode).type
     texture.name = name != null ? `${typeName}.${name}` : typeName
 
     this.renderTargets.push(renderTarget)

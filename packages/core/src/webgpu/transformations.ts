@@ -79,7 +79,7 @@ const turboCoeffs = [
 export const turbo = (x: Node<'float'>): Node<'vec3'> => {
   return turboCoeffs
     .slice(1)
-    .reduce<Node>((y, offset) => offset.add(x.mul(y)), turboCoeffs[0])
+    .reduce<Node<'vec3'>>((y, offset) => offset.add(x.mul(y)), turboCoeffs[0])
 }
 
 export const depthToColor = (

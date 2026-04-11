@@ -1,5 +1,6 @@
 import { float, ivec2, struct, uint, vec3 } from 'three/tsl'
 import type { Node, NodeBuilder, StructNode } from 'three/webgpu'
+import type { Writable } from 'type-fest'
 
 import { reinterpretType } from '@takram/three-geospatial'
 import type { NodeType } from '@takram/three-geospatial/webgpu'
@@ -32,8 +33,8 @@ export const densityProfileLayerStruct = /*#__PURE__*/ struct(
 
 export const densityProfileStruct = /*#__PURE__*/ struct(
   {
-    layer0: densityProfileLayerStruct.layout.name!,
-    layer1: densityProfileLayerStruct.layout.name!
+    layer0: densityProfileLayerStruct.layout.name,
+    layer1: densityProfileLayerStruct.layout.name
   },
   'DensityProfile'
 )
@@ -44,13 +45,13 @@ const atmosphereParametersLayout = {
   sunAngularRadius: Angle,
   bottomRadius: Length,
   topRadius: Length,
-  rayleighDensity: densityProfileStruct.layout.name!,
+  rayleighDensity: densityProfileStruct.layout.name,
   rayleighScattering: ScatteringSpectrum,
-  mieDensity: densityProfileStruct.layout.name!,
+  mieDensity: densityProfileStruct.layout.name,
   mieScattering: ScatteringSpectrum,
   mieExtinction: ScatteringSpectrum,
   miePhaseFunctionG: Dimensionless,
-  absorptionDensity: densityProfileStruct.layout.name!,
+  absorptionDensity: densityProfileStruct.layout.name,
   absorptionExtinction: ScatteringSpectrum,
   groundAlbedo: DimensionlessSpectrum,
   minCosLight: Dimensionless,
@@ -63,7 +64,7 @@ const atmosphereParametersLayout = {
   scatteringTextureCosViewSize: 'uint',
   scatteringTextureCosLightSize: 'uint',
   scatteringTextureCosViewLightSize: 'uint'
-}
+} as const
 
 export const atmosphereParametersStruct = /*#__PURE__*/ struct(
   atmosphereParametersLayout,
@@ -96,17 +97,17 @@ function densityProfile(
   })
 }
 
-type AtmosphereParametersFields = {
+type AtmosphereParametersFields = Writable<{
   [K in keyof typeof atmosphereParametersLayout]: (typeof atmosphereParametersLayout)[K] extends NodeType
     ? Node<(typeof atmosphereParametersLayout)[K]>
-    : Node
-}
+    : StructNode
+}>
 
 const DESTRUCTIBLE = Symbol('DESTRUCTIBLE')
 
 export function makeDestructible(
-  node: Node
-): Node & AtmosphereParametersFields {
+  node: StructNode
+): StructNode & AtmosphereParametersFields {
   reinterpretType<
     StructNode &
       AtmosphereParametersFields & {
@@ -118,7 +119,7 @@ export function makeDestructible(
   }
   for (const key in atmosphereParametersLayout) {
     if (Object.hasOwn(atmosphereParametersLayout, key)) {
-      node[key as keyof typeof atmosphereParametersLayout] = node.get(key)
+      node[key as keyof AtmosphereParametersFields] = node.get(key) as any
     }
   }
   node[DESTRUCTIBLE] = true

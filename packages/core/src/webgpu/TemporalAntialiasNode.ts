@@ -299,7 +299,7 @@ export class TemporalAntialiasNode extends TempNode {
     texture.magFilter = LinearFilter
     texture.generateMipmaps = false
 
-    const typeName = (this.constructor as typeof Node).type
+    const typeName = (this.constructor as typeof TemporalAntialiasNode).type
     texture.name = name != null ? `${typeName}.${name}` : typeName
 
     return renderTarget
