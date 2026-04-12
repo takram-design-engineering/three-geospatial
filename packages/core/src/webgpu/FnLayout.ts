@@ -1,9 +1,4 @@
-import type {
-  ProxiedTuple,
-  ShaderCallNodeInternal,
-  ShaderNodeFn,
-  Struct
-} from 'three/src/nodes/TSL.js'
+import type { FnNode, ProxiedTuple, Struct } from 'three/src/nodes/TSL.js'
 import { Fn } from 'three/tsl'
 import type {
   Node,
@@ -33,7 +28,7 @@ export interface FnLayout<
   inputs?: Inputs
 }
 
-type InferNodeObject<T extends FnLayoutType> = T extends NodeType
+type InferNode<T extends FnLayoutType> = T extends NodeType
   ? Node<T>
   : T extends Struct
     ? ReturnType<T>
@@ -43,21 +38,21 @@ type InferNodeObject<T extends FnLayoutType> = T extends NodeType
         ? Texture3DNode
         : never
 
-type InferNodeObjects<Inputs extends readonly FnLayoutInput[]> = {
+type InferNodes<Inputs extends readonly FnLayoutInput[]> = {
   [K in keyof Inputs]: Inputs[K] extends FnLayoutInput<infer T>
-    ? InferNodeObject<T>
+    ? InferNode<T>
     : never
 }
 
 export type FnLayoutResult<
   T extends FnLayoutType,
   Inputs extends readonly FnLayoutInput[],
-  Nodes extends readonly unknown[] = InferNodeObjects<Inputs>
+  Nodes extends readonly unknown[] = InferNodes<Inputs>
 > = (
   callback: (
     ...args: [] extends Nodes ? [NodeBuilder] : [Nodes, NodeBuilder]
-  ) => InferNodeObject<T> | ShaderCallNodeInternal
-) => ShaderNodeFn<ProxiedTuple<Nodes>>
+  ) => InferNode<T>
+) => FnNode<ProxiedTuple<Nodes>, InferNode<T>>
 
 function transformType(type: FnLayoutType): string {
   if (typeof type === 'string') {
@@ -87,5 +82,5 @@ export function FnLayout<
               ...input,
               type: transformType(input.type)
             })) ?? []
-        })
+        }) as any
 }
