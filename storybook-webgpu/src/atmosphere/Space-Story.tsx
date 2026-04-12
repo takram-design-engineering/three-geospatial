@@ -78,7 +78,7 @@ declare module '@react-three/fiber' {
 extend({ AtmosphereLight })
 
 interface BlueMarbleParams {
-  sunDirection: Node<'float'>
+  sunDirection: Node<'vec3'>
   cloudAlbedo?: number
   cloudShadowOffset?: number // In UV
   oceanRoughness?: number
