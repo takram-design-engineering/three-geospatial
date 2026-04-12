@@ -31,8 +31,8 @@ declare module 'three/tsl' {
     U = T extends string ? T : T extends Primitive ? LiteralToPrimitive<T> : T
   >(
     value: T,
-    type?: Node | string
-  ) => U extends NodeType ? UniformNode<NodeValueTypeOf<U>> : UniformNode<U>
+    type?: Node | string | number
+  ) => U extends NodeType ? UniformNode<U, NodeValueTypeOf<U>> : UniformNode<U>
 
   const viewZToReversedOrthographicDepth: (
     viewZ: Node,
@@ -58,23 +58,23 @@ declare module 'three/webgpu' {
     context: NodeBuilderContext
   }
 
-  interface Node {
-    // Add "self"
-    // NOTE: This type is problematic because methods like these (parameter of
-    // "self: this") don't intersect with derived classes.
-    onFrameUpdate(
-      callback: (this: this, frame: NodeFrame, self: this) => void
-    ): this
-    onRenderUpdate(
-      callback: (this: this, frame: NodeFrame, self: this) => void
-    ): this
-    onObjectUpdate(
-      callback: (this: this, frame: NodeFrame, self: this) => void
-    ): this
-    onReference(
-      callback: (this: this, frame: NodeFrame, self: this) => void
-    ): this
-  }
+  // interface Node {
+  //   // Add "self"
+  //   // NOTE: This type is problematic because methods like these (parameter of
+  //   // "self: this") don't intersect with derived classes.
+  //   onFrameUpdate(
+  //     callback: (this: this, frame: NodeFrame, self: this) => void
+  //   ): this
+  //   onRenderUpdate(
+  //     callback: (this: this, frame: NodeFrame, self: this) => void
+  //   ): this
+  //   onObjectUpdate(
+  //     callback: (this: this, frame: NodeFrame, self: this) => void
+  //   ): this
+  //   onReference(
+  //     callback: (this: this, frame: NodeFrame, self: this) => void
+  //   ): this
+  // }
 
   // Add "colorNode"
   interface AnalyticLightNode {
