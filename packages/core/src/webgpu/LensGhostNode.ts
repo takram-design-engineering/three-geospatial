@@ -9,7 +9,7 @@ import invariant from 'tiny-invariant'
 
 import { FnLayout } from './FnLayout'
 
-export class LensGhostNode extends TempNode {
+export class LensGhostNode extends TempNode<'vec3'> {
   static get type(): string {
     return 'LensGhostNode'
   }
@@ -23,7 +23,8 @@ export class LensGhostNode extends TempNode {
     this.inputNode = inputNode
   }
 
-  override setup(builder: NodeBuilder): Node<'vec3'> {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const { inputNode, intensity } = this
     invariant(inputNode != null)
 

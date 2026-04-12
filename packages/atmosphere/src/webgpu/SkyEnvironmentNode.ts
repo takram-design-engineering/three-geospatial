@@ -22,7 +22,7 @@ import { OnBeforeFrameUpdate } from '@takram/three-geospatial/webgpu'
 import { getAtmosphereContext } from './AtmosphereContext'
 import { sky, type SkyNode } from './SkyNode'
 
-export class SkyEnvironmentNode extends TempNode {
+export class SkyEnvironmentNode extends TempNode<'vec3'> {
   static get type(): string {
     return 'SkyEnvironmentNode'
   }
@@ -67,7 +67,8 @@ export class SkyEnvironmentNode extends TempNode {
     this.cubeCamera.update(renderer, this.mesh)
   }
 
-  override setup(builder: NodeBuilder): PMREMNode {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const context = getAtmosphereContext(builder)
 
     const { camera } = context

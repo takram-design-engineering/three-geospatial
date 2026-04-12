@@ -16,7 +16,7 @@ import { LensHaloNode } from './LensHaloNode'
 import { MipmapSurfaceBlurNode } from './MipmapSurfaceBlurNode'
 import { isWebGPU } from './utils'
 
-export class LensFlareNode extends TempNode {
+export class LensFlareNode extends TempNode<'vec4'> {
   static get type(): string {
     return 'LensFlareNode'
   }
@@ -55,7 +55,8 @@ export class LensFlareNode extends TempNode {
     this.glareNode.resolutionScale = 1
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const {
       inputNode,
       thresholdNode,

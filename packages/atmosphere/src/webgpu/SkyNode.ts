@@ -30,7 +30,7 @@ const EQUIRECTANGULAR = 'EQUIRECTANGULAR'
 
 type SkyNodeScope = typeof CAMERA | typeof EQUIRECTANGULAR
 
-export class SkyNode extends TempNode {
+export class SkyNode extends TempNode<'vec3'> {
   static get type(): string {
     return 'SkyNode'
   }
@@ -67,7 +67,8 @@ export class SkyNode extends TempNode {
     )
   }
 
-  override setup(builder: NodeBuilder): Node<'vec3'> | undefined {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const atmosphereContext = getAtmosphereContext(builder)
 
     const {

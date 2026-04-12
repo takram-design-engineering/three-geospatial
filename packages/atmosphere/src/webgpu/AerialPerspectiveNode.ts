@@ -27,7 +27,7 @@ import { getAtmosphereContext } from './AtmosphereContext'
 import { getIndirectLuminanceToPoint, getSplitIlluminance } from './runtime'
 import { sky } from './SkyNode'
 
-export class AerialPerspectiveNode extends TempNode {
+export class AerialPerspectiveNode extends TempNode<'vec4'> {
   static get type(): string {
     return 'AerialPerspectiveNode'
   }
@@ -68,7 +68,8 @@ export class AerialPerspectiveNode extends TempNode {
     )
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> | undefined {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const atmosphereContext = getAtmosphereContext(builder)
 
     const camera = atmosphereContext.camera ?? builder.camera

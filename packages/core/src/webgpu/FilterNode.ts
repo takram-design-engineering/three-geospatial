@@ -8,7 +8,6 @@ import {
 import {
   NodeUpdateType,
   TempNode,
-  type Node,
   type NodeBuilder,
   type TextureNode
 } from 'three/webgpu'
@@ -18,7 +17,7 @@ import { outputTexture } from './OutputTextureNode'
 
 // Represents a node that applies a shader on the input texture and outputs
 // another texture of the same dimensions regardless of the drawing buffer size.
-export abstract class FilterNode extends TempNode {
+export abstract class FilterNode extends TempNode<'vec4'> {
   static get type(): string {
     return 'FilterNode'
   }
@@ -71,7 +70,8 @@ export abstract class FilterNode extends TempNode {
 
   abstract setSize(width: number, height: number): this
 
-  override setup(builder: NodeBuilder): TextureNode {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const { inputNode, textureNode: outputNode } = this
     invariant(
       inputNode != null,

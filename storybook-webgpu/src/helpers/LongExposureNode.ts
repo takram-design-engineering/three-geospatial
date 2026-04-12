@@ -68,7 +68,7 @@ function createStorageTexture(name: string): StorageTexture {
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
 // TODO: Refine and move to core.
-export class LongExposureNode extends TempNode {
+export class LongExposureNode extends TempNode<'vec4'> {
   static get type(): string {
     return 'LongExposureNode'
   }
@@ -193,7 +193,8 @@ export class LongExposureNode extends TempNode {
     this.swapBuffers()
   }
 
-  override setup(builder: NodeBuilder): TextureNode {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const { material, copyMaterial } = this
 
     material.fragmentNode = time

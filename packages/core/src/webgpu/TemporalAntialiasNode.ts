@@ -230,7 +230,7 @@ const emptyDepthTexture = /*#__PURE__*/ new DepthTexture(1, 1)
 
 // Note on TAA and tone mapping (p.19):
 // https://advances.realtimerendering.com/s2014/epic/TemporalAA.pptx
-export class TemporalAntialiasNode extends TempNode {
+export class TemporalAntialiasNode extends TempNode<'vec4'> {
   static get type(): string {
     return 'TemporalAntialiasNode'
   }
@@ -511,7 +511,8 @@ export class TemporalAntialiasNode extends TempNode {
     })()
   }
 
-  override setup(builder: NodeBuilder): TextureNode {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     // We have to take care of the renaming of PostProcessing to RenderPipeline
     // in r183, as well as changes to property fields in the context.
     const onBeforeRenderPipeline = (): void => {

@@ -4,7 +4,7 @@ import { TempNode, type Node, type NodeBuilder } from 'three/webgpu'
 import { getAtmosphereContext } from './AtmosphereContext'
 import { getSolarLuminance } from './runtime'
 
-export class SunNode extends TempNode {
+export class SunNode extends TempNode<'vec4'> {
   static get type(): string {
     return 'SunNode'
   }
@@ -18,7 +18,8 @@ export class SunNode extends TempNode {
     super('vec4')
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> | undefined {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const atmosphereContext = getAtmosphereContext(builder)
 
     const { rayDirectionECEF } = this

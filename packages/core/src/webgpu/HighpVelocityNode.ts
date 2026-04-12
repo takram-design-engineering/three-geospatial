@@ -14,7 +14,7 @@ import {
   type NodeFrame
 } from 'three/webgpu'
 
-export class HighpVelocityNode extends TempNode {
+export class HighpVelocityNode extends TempNode<'vec3'> {
   static get type(): string {
     return 'HighpVelocityNode'
   }
@@ -103,7 +103,8 @@ export class HighpVelocityNode extends TempNode {
     matrix.copy(current.value)
   }
 
-  override setup(builder: NodeBuilder): Node<'vec3'> {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const currentClip = this.currentProjectionMatrix
       .mul(this.currentModelViewMatrix)
       .mul(positionLocal)

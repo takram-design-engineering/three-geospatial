@@ -58,7 +58,7 @@ function createRenderTarget(): RenderTarget {
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
-export class StarsNode extends TempNode {
+export class StarsNode extends TempNode<'vec3'> {
   static get type(): string {
     return 'StarsNode'
   }
@@ -199,7 +199,8 @@ export class StarsNode extends TempNode {
     material.needsUpdate = true
   }
 
-  override setup(builder: NodeBuilder): TextureNode {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     if (typeof this.data === 'string') {
       this.dataPromise ??= new ArrayBufferLoader()
         .loadAsync(this.data)

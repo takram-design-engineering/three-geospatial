@@ -87,7 +87,7 @@ const vector4Scratch = /*#__PURE__*/ new Vector4()
 const sizeScratch = /*#__PURE__*/ new Vector2()
 const matrixScratch = /*#__PURE__*/ new Matrix4()
 
-export class ScreenSpaceShadowNode extends TempNode {
+export class ScreenSpaceShadowNode extends TempNode<'float'> {
   override get type(): string {
     return 'ScreenSpaceShadowNode'
   }
@@ -675,7 +675,8 @@ export class ScreenSpaceShadowNode extends TempNode {
     )
   }
 
-  override setup(builder: NodeBuilder): TextureNode {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     this.setupCompute(builder)
     return this.textureNode
   }

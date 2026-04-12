@@ -25,7 +25,7 @@ import { FnLayout } from './FnLayout'
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
-export class LensHaloNode extends TempNode {
+export class LensHaloNode extends TempNode<'vec3'> {
   static get type(): string {
     return 'LensHaloNode'
   }
@@ -51,7 +51,8 @@ export class LensHaloNode extends TempNode {
     this.aspectRatio.value = width / height
   }
 
-  override setup(builder: NodeBuilder): Node<'vec3'> {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const { inputNode, intensity, chromaticAberration, aspectRatio } = this
     invariant(inputNode != null)
 

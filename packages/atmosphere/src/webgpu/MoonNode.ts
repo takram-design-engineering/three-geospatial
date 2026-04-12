@@ -97,7 +97,7 @@ const orenNayarDiffuse = /*#__PURE__*/ FnLayout({
   return cosLight.max(0).mul(s.div(t).mul(B).add(A))
 })
 
-export class MoonNode extends TempNode {
+export class MoonNode extends TempNode<'vec4'> {
   static get type(): string {
     return 'MoonNode'
   }
@@ -117,7 +117,8 @@ export class MoonNode extends TempNode {
     super('vec4')
   }
 
-  override setup(builder: NodeBuilder): Node<'vec4'> | undefined {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  override setup(builder: NodeBuilder) {
     const atmosphereContext = getAtmosphereContext(builder)
 
     const { rayDirectionECEF } = this
