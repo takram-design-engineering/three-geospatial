@@ -27,6 +27,14 @@ const initControls =
         overlayScene?.add(controls.pivotMesh)
       }
     })
+
+    // Disable "adjustHeight" until the user first drags because GlobeControls
+    // adjusts the camera height based on very low LOD tiles during the initial
+    // load, causing the camera to jump to the sky when set to a low altitude.
+    controls.adjustHeight = false
+    controls.addEventListener('start', () => {
+      controls.adjustHeight = true
+    })
   }
 
 export const GlobeControls: FC<
