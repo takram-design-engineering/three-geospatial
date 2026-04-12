@@ -41,9 +41,8 @@ const latitude = 55 // In degrees
 const height = 500 // In meters
 
 async function init(container: HTMLDivElement): Promise<() => void> {
-  const renderer = new WebGPURenderer()
+  const renderer = new WebGPURenderer({ reversedDepthBuffer: true })
   renderer.highPrecision = true // Required when you work in ECEF coordinates
-  renderer.logarithmicDepthBuffer = true
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setSize(window.innerWidth, window.innerHeight)
