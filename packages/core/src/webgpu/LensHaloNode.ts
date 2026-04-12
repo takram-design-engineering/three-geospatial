@@ -14,7 +14,6 @@ import {
 import {
   NodeUpdateType,
   TempNode,
-  type Node,
   type NodeBuilder,
   type NodeFrame,
   type TextureNode

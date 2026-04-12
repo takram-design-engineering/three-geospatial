@@ -12,8 +12,7 @@ import {
   NodeUpdateType,
   TempNode,
   type NodeBuilder,
-  type NodeFrame,
-  type PMREMNode
+  type NodeFrame
 } from 'three/webgpu'
 
 import { QuadGeometry, radians } from '@takram/three-geospatial'
