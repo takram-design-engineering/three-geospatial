@@ -1,6 +1,9 @@
+export type { FrustumSplitMode } from './helpers/splitFrustum'
+
 export * from './ArrayBufferLoader'
 export * from './bufferGeometry'
 export * from './capabilities'
+export * from './CascadedShadowMaps'
 export * from './constants'
 export * from './DataTextureLoader'
 export * from './decorators'

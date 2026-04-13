@@ -24,6 +24,7 @@ import {
   type AtmosphereShadowLength
 } from '@takram/three-atmosphere'
 import {
+  CascadedShadowMaps,
   define,
   definePropertyShorthand,
   defineUniformShorthand,
@@ -34,7 +35,6 @@ import {
   type UniformShorthand
 } from '@takram/three-geospatial'
 
-import { CascadedShadowMaps } from './CascadedShadowMaps'
 import { CloudLayers } from './CloudLayers'
 import type { CloudsMaterial, CloudsMaterialUniforms } from './CloudsMaterial'
 import { CloudsPass } from './CloudsPass'
