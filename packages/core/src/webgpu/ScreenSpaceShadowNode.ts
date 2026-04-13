@@ -668,10 +668,7 @@ export class ScreenSpaceShadowNode extends TempNode {
       // Asking the GPU to write scattered single-byte pixels isn't great,
       // But thankfully the latency is hidden by all the work we're doing...
       textureStore(outputTexture, writeXY, mix(1, result, shadowIntensity))
-    })().compute(
-      0, // Determine this later
-      [GROUP_SIZE, 1, 1]
-    )
+    })().computeKernel([GROUP_SIZE, 1, 1])
   }
 
   override setup(builder: NodeBuilder): unknown {
