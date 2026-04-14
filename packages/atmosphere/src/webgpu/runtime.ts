@@ -602,7 +602,6 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
     ).toConst()
 
     if (context.raymarchSingleScattering) {
-      // TODO: Verify the result with shadow length.
       // TODO: For macroscopic views, ray marching at runtime does not improve
       // quality at all. Run this path selectively.
       const computedSingleScattering = computeSingleScatteringToPoint(
@@ -613,7 +612,7 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
         cosLight,
         cosViewLight,
         viewRayIntersectsGround,
-        distanceToPoint.sub(shadowLength),
+        distanceToPoint,
         8
       ).toConst()
       const singleScattering = computedSingleScattering.get('rayleigh')
