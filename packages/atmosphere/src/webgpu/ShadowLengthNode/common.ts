@@ -1,11 +1,23 @@
-import { float, vec4 } from 'three/tsl'
+import { float, vec2, vec4 } from 'three/tsl'
 
-import { FnVar, type Node } from '@takram/three-geospatial/webgpu'
+import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 export const FLOAT_MAX = 3.402823466e38
 
 export const NUM_EPIPOLAR_SLICES = 512
 export const MAX_SAMPLES_IN_SLICE = 256
+
+export const uvToScreen = FnLayout({
+  name: 'uvToScreen',
+  type: 'vec2',
+  inputs: [{ name: 'uv', type: 'vec2' }]
+})(([uv]) => uv.mul(vec2(2, -2)).add(vec2(-1, 1))) // TODO
+
+export const screenToUV = FnLayout({
+  name: 'screenToUV',
+  type: 'vec2',
+  inputs: [{ name: 'screen', type: 'vec2' }]
+})(([screen]) => screen.mul(vec2(0.5, -0.5)).add(0.5)) // TODO
 
 // The outermost visible screen pixels centers do not lie exactly on the
 // boundary (+1 or -1), but are biased by 0.5 screen pixel size inwards.

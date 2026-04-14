@@ -86,6 +86,9 @@ export class SliceEndpointsNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const { screenSize, lightScreenPosition, isLightOnScreen } = this
 
+    const maxSamplesInSlice = float(MAX_SAMPLES_IN_SLICE)
+    const numEpipolarSlices = float(NUM_EPIPOLAR_SLICES)
+
     const getEpipolarLineEntryPoint = FnVar(
       (exitPoint: Node<'vec2'>): Node<'vec2'> => {
         // If light source is on the screen, its location is entry point for
@@ -165,7 +168,7 @@ export class SliceEndpointsNode extends TempNode {
       // 0.5 texel size. We need to remove this offset. Also clamp to [0,1] to
       // fix FP32 precision issues.
       const epipolarSlice = uvNode.x
-        .sub(float(0.5).div(NUM_EPIPOLAR_SLICES))
+        .sub(float(0.5).div(numEpipolarSlices))
         .saturate()
         .toConst()
 
@@ -285,9 +288,7 @@ export class SliceEndpointsNode extends TempNode {
               exitPoint
                 .sub(entryPoint)
                 .mul(
-                  float(MAX_SAMPLES_IN_SLICE)
-                    .div(epipolarSliceScreenLength)
-                    .max(1)
+                  float(maxSamplesInSlice).div(epipolarSliceScreenLength).max(1)
                 )
             )
           )
