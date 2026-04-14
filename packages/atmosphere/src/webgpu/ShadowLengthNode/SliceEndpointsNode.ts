@@ -109,10 +109,11 @@ export class SliceEndpointsNode extends TempNode {
 
     return Fn(() => {
       // Note that due to the rasterization rules, UV coordinates are biased by
-      // 0.5 texel size.
-      // We need to remove this offset. Also clamp to [0,1] to fix FP32
-      // precision issues.
-      const epipolarSlice = uv().x.sub(0.5).div(NUM_EPIPOLAR_SLICES).saturate()
+      // 0.5 texel size. We need to remove this offset. Also clamp to [0,1] to
+      // fix FP32 precision issues.
+      const epipolarSlice = uv()
+        .x.sub(float(0.5).div(NUM_EPIPOLAR_SLICES))
+        .saturate()
 
       // epipolarSlice now lies in the range [0, 1 - 1/NUM_EPIPOLAR_SLICES]
       // 0 defines location in exactly left top corner, 1 - 1/NUM_EPIPOLAR_SLICES
@@ -243,6 +244,8 @@ export class SliceEndpointsNode extends TempNode {
 
         result.assign(vec4(entryPoint, exitPoint))
       })
+
+      return result
     })()
   }
 }
