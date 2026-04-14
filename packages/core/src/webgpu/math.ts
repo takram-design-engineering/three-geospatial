@@ -1,7 +1,104 @@
-import { dot, If, sqrt, struct, vec2, vec4 } from 'three/tsl'
+import {
+  bool,
+  bvec2,
+  bvec3,
+  bvec4,
+  dot,
+  If,
+  overloadingFn,
+  sqrt,
+  struct,
+  uvec2,
+  uvec3,
+  uvec4,
+  vec2,
+  vec4
+} from 'three/tsl'
 
+import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import type { Node } from './node'
+
+const bvec2Not = FnLayout({
+  name: 'bvecNot',
+  type: 'bvec2',
+  inputs: [{ name: 'x', type: 'bvec2' }]
+})(([x]) => x.notEqual(bool(true)))
+
+const bvec3Not = FnLayout({
+  name: 'bvecNot',
+  type: 'bvec3',
+  inputs: [{ name: 'x', type: 'bvec3' }]
+})(([x]) => x.notEqual(bool(true)))
+
+const bvec4Not = FnLayout({
+  name: 'bvecNot',
+  type: 'bvec4',
+  inputs: [{ name: 'x', type: 'bvec4' }]
+})(([x]) => x.notEqual(bool(true)))
+
+// @ts-expect-error Missing type
+export const bvecNot = overloadingFn([bvec2Not, bvec3Not, bvec4Not])
+
+const bvec2And = FnLayout({
+  name: 'bvecAnd',
+  type: 'bvec2',
+  inputs: [
+    { name: 'x', type: 'bvec2' },
+    { name: 'y', type: 'bvec2' }
+  ]
+})(([x, y]) => bvec2(uvec2(x).mul(uvec2(y))))
+
+const bvec3And = FnLayout({
+  name: 'bvecAnd',
+  type: 'bvec3',
+  inputs: [
+    { name: 'x', type: 'bvec3' },
+    { name: 'y', type: 'bvec3' }
+  ]
+})(([x, y]) => bvec3(uvec3(x).mul(uvec3(y))))
+
+const bvec4And = FnLayout({
+  name: 'bvecAnd',
+  type: 'bvec4',
+  inputs: [
+    { name: 'x', type: 'bvec4' },
+    { name: 'y', type: 'bvec4' }
+  ]
+})(([x, y]) => bvec4(uvec4(x).mul(uvec4(y))))
+
+// @ts-expect-error Missing type
+export const bvecAnd = overloadingFn([bvec2And, bvec3And, bvec4And])
+
+const bvec2Or = FnLayout({
+  name: 'bvecOr',
+  type: 'bvec2',
+  inputs: [
+    { name: 'x', type: 'bvec2' },
+    { name: 'y', type: 'bvec2' }
+  ]
+})(([x, y]) => uvec2(x).add(uvec2(y)).notEqual(0))
+
+const bvec3Or = FnLayout({
+  name: 'bvecOr',
+  type: 'bvec3',
+  inputs: [
+    { name: 'x', type: 'bvec3' },
+    { name: 'y', type: 'bvec3' }
+  ]
+})(([x, y]) => uvec3(x).add(uvec3(y)).notEqual(0))
+
+const bvec4Or = FnLayout({
+  name: 'bvecOr',
+  type: 'bvec4',
+  inputs: [
+    { name: 'x', type: 'bvec4' },
+    { name: 'y', type: 'bvec4' }
+  ]
+})(([x, y]) => uvec4(x).add(uvec4(y)).notEqual(0))
+
+// @ts-expect-error Missing type
+export const bvecOr = overloadingFn([bvec2Or, bvec3Or, bvec4Or])
 
 // Reference: https://iquilezles.org/articles/intersectors/
 

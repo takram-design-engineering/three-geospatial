@@ -1,19 +1,36 @@
 import {
+  Matrix4,
+  Vector3,
+  Vector4,
+  type Camera,
+  type DirectionalLight
+} from 'three'
+import {
   float,
   Fn,
   If,
   max,
   mix,
-  screenSize,
+  uint,
   uniform,
   uv,
   uvec4,
   vec2,
   vec4
 } from 'three/tsl'
-import { TempNode, type NodeBuilder } from 'three/webgpu'
+import {
+  NodeUpdateType,
+  TempNode,
+  type NodeBuilder,
+  type NodeFrame
+} from 'three/webgpu'
 
-import { FnVar, type Node } from '@takram/three-geospatial/webgpu'
+import {
+  bvecAnd,
+  bvecNot,
+  FnVar,
+  type Node
+} from '@takram/three-geospatial/webgpu'
 
 import {
   FLOAT_MAX,
@@ -23,27 +40,59 @@ import {
   NUM_EPIPOLAR_SLICES
 } from './common'
 
+const vector3Scratch = /*#__PURE__*/ new Vector3()
+const vector4Scratch = /*#__PURE__*/ new Vector4()
+const matrixScratch = /*#__PURE__*/ new Matrix4()
+
 export class SliceEndpointsNode extends TempNode {
-  lightScreenPosition!: Node<'vec4'>
-  isLightOnScreen!: Node<'bool'>
+  screenSize!: Node<'vec2'>
+  lightScreenPosition = uniform('vec4')
+  isLightOnScreen = uniform('bool')
+
+  camera!: Camera
+  light!: DirectionalLight
 
   constructor() {
     super('vec4')
+    this.updateBeforeType = NodeUpdateType.FRAME
+  }
+
+  override updateBefore(frame: NodeFrame): void {
+    const { camera, light } = this
+
+    const viewProjection = matrixScratch.multiplyMatrices(
+      camera.projectionMatrix,
+      camera.matrixWorldInverse
+    )
+    const lightDirection = vector3Scratch
+      .copy(light.position)
+      .sub(light.target.position)
+      .normalize()
+    const lightClip = vector4Scratch
+      .set(lightDirection.x, lightDirection.y, lightDirection.z, 0)
+      .applyMatrix4(viewProjection)
+
+    const lightW = lightClip.w
+    const [lightX, lightY, lightZ] =
+      lightW !== 0
+        ? [lightClip.x / lightW, lightClip.y / lightW, lightClip.z / lightW]
+        : [lightClip.x, lightClip.y, lightClip.z]
+
+    this.lightScreenPosition.value.set(lightX, lightY, lightZ, lightW)
+    this.isLightOnScreen.value =
+      lightX >= -1 && lightX <= 1 && lightY >= -1 && lightY <= 1
   }
 
   override setup(builder: NodeBuilder): unknown {
-    const lightScreenPosition = uniform('vec4')
-    const isLightOnScreen = uniform('bool')
+    const { screenSize, lightScreenPosition, isLightOnScreen } = this
 
     const getEpipolarLineEntryPoint = FnVar(
       (exitPoint: Node<'vec2'>): Node<'vec2'> => {
-        const entryPoint = vec2(0).toVar()
+        // If light source is on the screen, its location is entry point for
+        // each epipolar line.
+        const entryPoint = lightScreenPosition.xy.toVar()
 
-        If(isLightOnScreen, () => {
-          // If light source is on the screen, its location is entry point for
-          // each epipolar line.
-          entryPoint.assign(lightScreenPosition.xy)
-        }).Else(() => {
+        If(isLightOnScreen.not(), () => {
           // If light source is outside the screen, we need to compute
           // intersection of the ray with the screen boundaries.
 
@@ -56,7 +105,7 @@ export class SliceEndpointsNode extends TempNode {
           // Note that in fact the outermost visible screen pixels do not lie
           // exactly on the boundary (+1 or -1), but are biased by 0.5 screen
           // pixel size inwards.
-          const boundaries = getOutermostScreenPixelCoords().toConst()
+          const boundaries = getOutermostScreenPixelCoords(screenSize).toConst()
 
           // Compute signed distances along the ray from the light position to
           // all four boundaries.
@@ -69,7 +118,8 @@ export class SliceEndpointsNode extends TempNode {
           // Note that such incorrect lanes will be masked out anyway.
           const distanceToBoundaries = boundaries
             .sub(lightScreenPosition.xyxy)
-            .div(rayDirection.xyxy.add(isCorrectIntersection.not()))
+            .div(rayDirection.xyxy.add(vec4(bvecNot(isCorrectIntersection))))
+            .toVar()
 
           // We now need to find first intersection before the intersection with
           // the exit boundary.
@@ -78,14 +128,15 @@ export class SliceEndpointsNode extends TempNode {
           // We thus need to skip all boundaries, distance to which is greater
           // than the distance to exit boundary.
           isCorrectIntersection.assign(
-            isCorrectIntersection.and(
+            bvecAnd(
+              isCorrectIntersection,
               distanceToBoundaries.lessThan(distanceToExitBoundary.sub(1e-4))
             )
           )
           distanceToBoundaries.assign(
-            isCorrectIntersection
+            vec4(isCorrectIntersection)
               .mul(distanceToBoundaries)
-              .add(isCorrectIntersection.not().mul(-FLOAT_MAX))
+              .add(vec4(bvecNot(isCorrectIntersection)).mul(-FLOAT_MAX))
           )
 
           const firstIntersectionDistance = max(
@@ -93,7 +144,7 @@ export class SliceEndpointsNode extends TempNode {
             distanceToBoundaries.y,
             distanceToBoundaries.z,
             distanceToBoundaries.w
-          )
+          ).toConst()
 
           // Now we can compute entry point:
           entryPoint.assign(
@@ -108,25 +159,25 @@ export class SliceEndpointsNode extends TempNode {
     )
 
     return Fn(() => {
+      const uvNode = uv().toConst()
+
       // Note that due to the rasterization rules, UV coordinates are biased by
       // 0.5 texel size. We need to remove this offset. Also clamp to [0,1] to
       // fix FP32 precision issues.
-      const epipolarSlice = uv()
-        .x.sub(float(0.5).div(NUM_EPIPOLAR_SLICES))
+      const epipolarSlice = uvNode.x
+        .sub(float(0.5).div(NUM_EPIPOLAR_SLICES))
         .saturate()
+        .toConst()
 
       // epipolarSlice now lies in the range [0, 1 - 1/NUM_EPIPOLAR_SLICES]
       // 0 defines location in exactly left top corner, 1 - 1/NUM_EPIPOLAR_SLICES
       // defines position on the top boundary next to the top left corner.
-      const boundary = epipolarSlice
-        .mul(4)
-        .floor()
-        .clamp(0, 3)
-        .toUint()
-        .toConst()
+      const boundary = uint(epipolarSlice.mul(4).floor().clamp(0, 3)).toConst()
       const posOnBoundary = epipolarSlice.mul(4).fract().toConst()
 
-      const boundaryFlags = boundary.xxxx.equal(uvec4(0, 1, 2, 3)).toConst()
+      const boundaryFlags = uvec4(boundary)
+        .equal(uvec4(0, 1, 2, 3))
+        .toConst()
 
       // Note that in fact the outermost visible screen pixels do not lie
       // exactly on the boundary (+1 or -1), but are biased by 0.5 screen pixel
@@ -135,7 +186,7 @@ export class SliceEndpointsNode extends TempNode {
       // correction.
       // xyzw = (left, bottom, right, top)
       const outermostScreenPixelCoords =
-        getOutermostScreenPixelCoords().toConst()
+        getOutermostScreenPixelCoords(screenSize).toConst()
 
       // Check if there can definitely be no correct intersection with the
       // boundary:
@@ -160,13 +211,13 @@ export class SliceEndpointsNode extends TempNode {
       //
       const isInvalidBoundary = lightScreenPosition.xyxy
         .sub(outermostScreenPixelCoords)
-        .mul(1, 1, -1, -1)
+        .mul(vec4(1, 1, -1, -1))
         .lessThanEqual(0)
         .toConst()
 
       const result = vec4(-1000, -1000, -100, -100).toVar()
 
-      If(isInvalidBoundary.dot(boundaryFlags).not().equal(0), () => {
+      If(bvecAnd(isInvalidBoundary, boundaryFlags).any().not(), () => {
         // Additional check above is required to eliminate false epipolar lines
         // which can appear is shown below. The reason is that we have to use
         // some safety delta when performing check in IsValidScreenLocation()
@@ -206,8 +257,8 @@ export class SliceEndpointsNode extends TempNode {
 
         // Select the right coordinates for the boundary.
         const exitPointOnBoundary = vec2(
-          boundaryX.dot(boundaryFlags),
-          boundaryY.dot(boundaryFlags)
+          boundaryX.dot(vec4(boundaryFlags)),
+          boundaryY.dot(vec4(boundaryFlags))
         ).toConst()
         const exitPoint = mix(
           outermostScreenPixelCoords.xy,
@@ -220,7 +271,7 @@ export class SliceEndpointsNode extends TempNode {
 
         // If epipolar slice is not invisible, advance its exit point if
         // necessary.
-        If(isValidScreenLocation(entryPoint), () => {
+        If(isValidScreenLocation(entryPoint, screenSize), () => {
           // Compute length of the epipolar line in screen pixels:
           const epipolarSliceScreenLength = exitPoint
             .sub(entryPoint)
