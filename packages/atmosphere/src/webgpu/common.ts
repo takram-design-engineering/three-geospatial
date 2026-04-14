@@ -59,7 +59,6 @@
 import {
   clamp,
   div,
-  equal,
   exp,
   float,
   floor,
@@ -70,7 +69,6 @@ import {
   min,
   mix,
   mul,
-  or,
   PI,
   smoothstep,
   sqrt,
@@ -746,7 +744,7 @@ export const computeSingleScatteringToPoint = /*#__PURE__*/ FnLayout({
     const deltaMie = deltaRayleighMie.get('mie')
 
     // Sample weight from the trapezoidal rule.
-    const weight = or(equal(i, 0), equal(i, sampleCount)).select(0.5, 1)
+    const weight = vec2(i).equal(vec2(0, sampleCount)).any().select(0.5, 1)
     rayleighSum.addAssign(deltaRayleigh.mul(weight))
     mieSum.addAssign(deltaMie.mul(weight))
   })

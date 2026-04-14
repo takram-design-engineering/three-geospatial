@@ -61,7 +61,6 @@ import {
   bool,
   clamp,
   cos,
-  equal,
   exp,
   float,
   floor,
@@ -70,11 +69,11 @@ import {
   max,
   min,
   mul,
-  or,
   PI,
   sin,
   sqrt,
   struct,
+  vec2,
   vec3,
   vec4
 } from 'three/tsl'
@@ -150,7 +149,7 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     const y = getProfileDensity(profile, r.sub(bottomRadius))
 
     // Sample weight from the trapezoidal rule.
-    const weight = or(equal(i, 0), equal(i, sampleCount)).select(0.5, 1)
+    const weight = vec2(i).equal(vec2(0, sampleCount)).any().select(0.5, 1)
     opticalDepth.addAssign(y.mul(weight).mul(stepSize))
   })
 
@@ -917,7 +916,7 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
       .mul(stepSize)
 
     // Sample weight from the trapezoidal rule.
-    const weight = or(equal(i, 0), equal(i, sampleCount)).select(0.5, 1)
+    const weight = vec2(i).equal(vec2(0, sampleCount)).any().select(0.5, 1)
     radianceSum.addAssign(radiance.mul(weight))
   })
 
