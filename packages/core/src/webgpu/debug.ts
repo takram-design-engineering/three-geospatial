@@ -7,12 +7,10 @@ import { QuadGeometry } from '../QuadGeometry'
 async function debugShader(
   renderer: Renderer,
   mesh: Mesh
-): Promise<
-  Awaited<{
-    fragmentShader: string | null
-    vertexShader: string | null
-  }>
-> {
+): Promise<{
+  fragmentShader: string | null
+  vertexShader: string | null
+}> {
   return await renderer.debug
     .getShaderAsync(new Scene(), new Camera(), mesh)
     .then(result => {
@@ -24,42 +22,57 @@ async function debugShader(
     })
 }
 
-export function debugFragmentNode(
+export async function debugFragmentNode(
   renderer: Renderer,
   material: NodeMaterial
-): void {
+): Promise<string | null> {
   const mesh = new Mesh(new QuadGeometry(), material)
-  void debugShader(renderer, mesh)
+  return await debugShader(renderer, mesh)
     .then(result => {
-      console.log(result.fragmentShader)
+      return result.fragmentShader
+    })
+    .catch((error: unknown) => {
+      console.error(error)
+      return null
     })
     .finally(() => {
       mesh.geometry.dispose()
     })
 }
 
-export function debugVertexNode(
+export async function debugVertexNode(
   renderer: Renderer,
   material: NodeMaterial
-): void {
+): Promise<string | null> {
   const mesh = new Mesh(new QuadGeometry(), material)
-  void debugShader(renderer, mesh)
+  return await debugShader(renderer, mesh)
     .then(result => {
-      console.log(result.vertexShader)
+      return result.vertexShader
+    })
+    .catch((error: unknown) => {
+      console.error(error)
+      return null
     })
     .finally(() => {
       mesh.geometry.dispose()
     })
 }
 
-export function debugNode(renderer: Renderer, node: Node): void {
+export async function debugNode(
+  renderer: Renderer,
+  node: Node
+): Promise<string | null> {
   const material = new NodeMaterial()
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
-  material.fragmentNode = node
+  material.fragmentNode = node.toConst('debugNode')
   const mesh = new Mesh(new QuadGeometry(), material)
-  void debugShader(renderer, mesh)
+  return await debugShader(renderer, mesh)
     .then(result => {
-      console.log(result.fragmentShader)
+      return result.fragmentShader
+    })
+    .catch((error: unknown) => {
+      console.error(error)
+      return null
     })
     .finally(() => {
       material.dispose()
