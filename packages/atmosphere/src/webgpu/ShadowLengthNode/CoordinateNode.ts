@@ -10,7 +10,6 @@ import {
   mix,
   perspectiveDepthToViewZ,
   screenCoordinate,
-  textureSize,
   uv,
   uvec4,
   vec3
@@ -60,7 +59,7 @@ export class CoordinateNode extends TempNode {
       const far = cameraFar(camera)
 
       // Fallback to manual bilinear interpolation of view Z.
-      const size = textureSize(depthNode).xy.toConst()
+      const size = depthNode.size().xy.toConst()
       const coord = uv.mul(size).sub(0.5).clamp(0, size.sub(1)).toConst()
       const prev = floor(coord)
       const next = prev.add(1).min(size.oneMinus())

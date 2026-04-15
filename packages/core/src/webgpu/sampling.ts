@@ -1,4 +1,4 @@
-import { add, sub, textureSize, vec2 } from 'three/tsl'
+import { add, sub, vec2 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 
 import { FnVar } from './FnVar'
@@ -8,7 +8,7 @@ import type { Node } from './node'
 // Reference: https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
 export const textureCatmullRom = /*#__PURE__*/ FnVar(
   (textureNode: TextureNode, uv: Node<'vec2'>): Node<'vec4'> => {
-    const size = vec2(textureSize(textureNode))
+    const size = vec2(textureNode.size())
     const texelSize = size.reciprocal()
     const position = uv.mul(size)
     const centerPosition = position.sub(0.5).floor().add(0.5)

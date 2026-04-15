@@ -9,7 +9,6 @@ import {
   min,
   screenCoordinate,
   texture,
-  textureSize,
   uniform,
   uvec2,
   vec2
@@ -129,7 +128,7 @@ export class MinMaxLevelsNode extends TempNode {
       const maxDepth = float(0).toVar()
       // Gather 8 depths which will be used for PCF filtering for this sample
       // and its immediate neighbor along the epipolar slice.
-      const mapSize = textureSize(textureNodes[0]).toConst()
+      const mapSize = textureNodes[0].size().toConst()
       for (let cascade = 0; cascade < csmShadowNode.cascades; ++cascade) {
         If(cascadeIndex.equal(cascade), () => {
           for (let i = 0; i <= 1; ++i) {

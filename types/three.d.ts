@@ -111,3 +111,9 @@ declare module 'three/src/renderers/common/Backend.js' {
     isWebGPUBackend?: boolean
   }
 }
+
+declare module 'three/src/nodes/accessors/TextureNode.js' {
+  export default interface TextureNode {
+    size(levelNode?: Node): Node
+  }
+}

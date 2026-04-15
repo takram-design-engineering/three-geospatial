@@ -419,7 +419,7 @@ export class TemporalAntialiasNode extends TempNode {
     const getPreviousDepth = (uv: Node<'vec2'>): Node<'float'> => {
       const { previousDepthNode: depthNode } = this
       const depth = depthNode
-        .load(ivec2(uv.mul(textureSize(depthNode)).sub(0.5)))
+        .load(ivec2(uv.mul(depthNode.size()).sub(0.5)))
         .toConst()
       return renderer.logarithmicDepthBuffer
         ? logarithmicToPerspectiveDepth(

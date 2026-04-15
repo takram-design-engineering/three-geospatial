@@ -38,7 +38,6 @@ import {
   ivec2,
   min,
   mix,
-  textureSize,
   textureStore,
   uniform,
   vec2,
@@ -457,7 +456,7 @@ export class ScreenSpaceShadowNode extends TempNode {
       // Clamp-To-Border-Color, and Border Color set to farDepth.
       return and(
         coord.greaterThanEqual(0).all(),
-        coord.lessThan(textureSize(depthNode)).all()
+        coord.lessThan(depthNode.size()).all()
       ).select(depth, farDepth)
     }
 
