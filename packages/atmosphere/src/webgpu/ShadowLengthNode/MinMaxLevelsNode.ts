@@ -43,7 +43,7 @@ export class MinMaxLevelsNode extends TempNode {
   private readonly mesh = new QuadMesh(this.material)
   private rendererState?: RendererUtils.RendererState
 
-  private prevCascade = 0
+  private prevLightCount = 0
 
   constructor() {
     super('vec3')
@@ -83,8 +83,9 @@ export class MinMaxLevelsNode extends TempNode {
     const cascades = csmShadowNode.cascades - firstCascade.value
     this.renderTarget.setSize(size, cascades * NUM_EPIPOLAR_SLICES)
 
-    if (csmShadowNode.cascades !== this.prevCascade) {
-      this.prevCascade = csmShadowNode.cascades
+    const { lights } = csmShadowNode
+    if (lights.length !== this.prevLightCount) {
+      this.prevLightCount = lights.length
       const { material } = this
       material.fragmentNode = this.setupOutputNode()
       material.needsUpdate = true
@@ -101,7 +102,11 @@ export class MinMaxLevelsNode extends TempNode {
   private setupOutputNode(): Node<'vec2'> {
     const { csmShadowNode, sliceUVDirectionNode, firstCascade } = this
 
-    const textureNodes = csmShadowNode.lights.map(light => {
+    const { lights, cascades } = csmShadowNode
+    invariant(lights.length > 0)
+    invariant(lights.length === cascades)
+
+    const textureNodes = lights.map(light => {
       invariant(light.shadow?.map?.depthTexture != null)
       return texture(light.shadow.map.depthTexture)
     })
@@ -129,7 +134,7 @@ export class MinMaxLevelsNode extends TempNode {
       // Gather 8 depths which will be used for PCF filtering for this sample
       // and its immediate neighbor along the epipolar slice.
       const mapSize = textureNodes[0].size().toConst()
-      for (let cascade = 0; cascade < csmShadowNode.cascades; ++cascade) {
+      for (let cascade = 0; cascade < cascades; ++cascade) {
         If(cascadeIndex.equal(cascade), () => {
           for (let i = 0; i <= 1; ++i) {
             const sampleUV = currentUV.add(sliceUVDirection.xy.mul(i)).toConst()
