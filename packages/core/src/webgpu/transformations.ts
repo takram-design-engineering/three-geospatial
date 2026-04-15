@@ -14,6 +14,8 @@ import {
   viewZToPerspectiveDepth
 } from 'three/tsl'
 
+import { FnLayout } from './FnLayout'
+import { FnVar } from './FnVar'
 import type { Node } from './node'
 
 export interface DepthOptions {
@@ -68,20 +70,26 @@ export const screenToPositionView = (
 
 // A fifth-order polynomial approximation of Turbo color map.
 // See: https://observablehq.com/@mbostock/turbo
-const turboCoeffs = [
-  /*#__PURE__*/ vec3(58.1375, 2.7747, 26.8183),
-  /*#__PURE__*/ vec3(-150.5666, 4.2109, -88.5066),
-  /*#__PURE__*/ vec3(130.5887, -14.0195, 109.0745),
-  /*#__PURE__*/ vec3(-42.3277, 4.8052, -60.1097),
-  /*#__PURE__*/ vec3(4.5974, 2.1856, 12.5925),
-  /*#__PURE__*/ vec3(0.1357, 0.0914, 0.1067)
+const turboCoeffs: ReadonlyArray<[number, number, number]> = [
+  [58.1375, 2.7747, 26.8183],
+  [-150.5666, 4.2109, -88.5066],
+  [130.5887, -14.0195, 109.0745],
+  [-42.3277, 4.8052, -60.1097],
+  [4.5974, 2.1856, 12.5925],
+  [0.1357, 0.0914, 0.1067]
 ]
 
-export const turbo = (x: Node<'float'>): Node<'vec3'> => {
-  return turboCoeffs
-    .slice(1)
-    .reduce<Node>((y, offset) => offset.add(x.mul(y)), turboCoeffs[0])
-}
+export const turbo = FnLayout({
+  name: 'turbo',
+  type: 'vec3',
+  inputs: [{ name: 'x', type: 'float' }]
+})(([x]) => {
+  const y = vec3(...turboCoeffs[0]).toVar()
+  for (let i = 1; i < turboCoeffs.length; ++i) {
+    y.assign(vec3(...turboCoeffs[i]).add(x.mul(y)))
+  }
+  return y
+})
 
 export const depthToColor = (
   depth: Node<'float'>,
@@ -93,9 +101,13 @@ export const depthToColor = (
   return turbo(viewZToLogarithmicDepth(viewZ, near, far))
 }
 
-export const equirectToDirectionWorld = (uv: Node<'vec2'>): Node<'vec3'> => {
+export const equirectToDirectionWorld = FnLayout({
+  name: 'equirectToDirectionWorld',
+  type: 'vec3',
+  inputs: [{ name: 'uv', type: 'vec2' }]
+})(([uv]) => {
   const lambda = sub(0.5, uv.x).mul(PI2)
   const phi = sub(uv.y, 0.5).mul(PI)
   const cosPhi = cos(phi)
   return vec3(cosPhi.mul(cos(lambda)), sin(phi), cosPhi.mul(sin(lambda)))
-}
+})
