@@ -7,17 +7,19 @@ export const FLOAT_MAX = 3.402823466e38
 export const NUM_EPIPOLAR_SLICES = 512
 export const MAX_SAMPLES_IN_SLICE = 256
 
-export const uvToScreen = FnLayout({
+// Transform UV to NDC XY:
+export const transformUVToScreen = FnLayout({
   name: 'uvToScreen',
   type: 'vec2',
   inputs: [{ name: 'uv', type: 'vec2' }]
-})(([uv]) => uv.mul(vec2(2, -2)).add(vec2(-1, 1))) // TODO
+})(([uv]) => uv.mul(vec2(2, -2)).add(vec2(-1, 1)))
 
-export const screenToUV = FnLayout({
-  name: 'screenToUV',
+// Transform NDC XY to UV:
+export const transformScreenToUV = FnLayout({
+  name: 'transformScreenToUV',
   type: 'vec2',
   inputs: [{ name: 'screen', type: 'vec2' }]
-})(([screen]) => screen.mul(vec2(0.5, -0.5)).add(0.5)) // TODO
+})(([screen]) => screen.mul(vec2(0.5, -0.5)).add(0.5))
 
 // The outermost visible screen pixels centers do not lie exactly on the
 // boundary (+1 or -1), but are biased by 0.5 screen pixel size inwards.
@@ -34,6 +36,6 @@ export const isValidScreenLocation = FnVar(
   (xy: Node<'vec2'>, screenSize: Node<'vec2'>): Node<'bool'> => {
     const eps = float(0.2)
     const limit = eps.oneMinus().div(screenSize).oneMinus()
-    return xy.lessThan(limit).all()
+    return xy.abs().lessThanEqual(limit).all()
   }
 )
