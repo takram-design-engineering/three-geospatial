@@ -20,19 +20,19 @@ import { FnVar } from './FnVar'
 import type { Node } from './node'
 
 const bvec2Not = FnLayout({
-  name: 'bvecNot',
+  name: 'bvec2Not',
   type: 'bvec2',
   inputs: [{ name: 'x', type: 'bvec2' }]
 })(([x]) => x.notEqual(bool(true)))
 
 const bvec3Not = FnLayout({
-  name: 'bvecNot',
+  name: 'bvec3Not',
   type: 'bvec3',
   inputs: [{ name: 'x', type: 'bvec3' }]
 })(([x]) => x.notEqual(bool(true)))
 
 const bvec4Not = FnLayout({
-  name: 'bvecNot',
+  name: 'bvec4Not',
   type: 'bvec4',
   inputs: [{ name: 'x', type: 'bvec4' }]
 })(([x]) => x.notEqual(bool(true)))
@@ -41,7 +41,7 @@ const bvec4Not = FnLayout({
 export const bvecNot = overloadingFn([bvec2Not, bvec3Not, bvec4Not])
 
 const bvec2And = FnLayout({
-  name: 'bvecAnd',
+  name: 'bvec2And',
   type: 'bvec2',
   inputs: [
     { name: 'x', type: 'bvec2' },
@@ -50,7 +50,7 @@ const bvec2And = FnLayout({
 })(([x, y]) => bvec2(uvec2(x).mul(uvec2(y))))
 
 const bvec3And = FnLayout({
-  name: 'bvecAnd',
+  name: 'bvec3And',
   type: 'bvec3',
   inputs: [
     { name: 'x', type: 'bvec3' },
@@ -59,7 +59,7 @@ const bvec3And = FnLayout({
 })(([x, y]) => bvec3(uvec3(x).mul(uvec3(y))))
 
 const bvec4And = FnLayout({
-  name: 'bvecAnd',
+  name: 'bvec4And',
   type: 'bvec4',
   inputs: [
     { name: 'x', type: 'bvec4' },
@@ -71,7 +71,7 @@ const bvec4And = FnLayout({
 export const bvecAnd = overloadingFn([bvec2And, bvec3And, bvec4And])
 
 const bvec2Or = FnLayout({
-  name: 'bvecOr',
+  name: 'bvec2Or',
   type: 'bvec2',
   inputs: [
     { name: 'x', type: 'bvec2' },
@@ -80,7 +80,7 @@ const bvec2Or = FnLayout({
 })(([x, y]) => uvec2(x).add(uvec2(y)).notEqual(0))
 
 const bvec3Or = FnLayout({
-  name: 'bvecOr',
+  name: 'bvec3Or',
   type: 'bvec3',
   inputs: [
     { name: 'x', type: 'bvec3' },
@@ -89,7 +89,7 @@ const bvec3Or = FnLayout({
 })(([x, y]) => uvec3(x).add(uvec3(y)).notEqual(0))
 
 const bvec4Or = FnLayout({
-  name: 'bvecOr',
+  name: 'bvec4Or',
   type: 'bvec4',
   inputs: [
     { name: 'x', type: 'bvec4' },
