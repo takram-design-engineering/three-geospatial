@@ -1,4 +1,11 @@
-import { FloatType, LinearFilter, RenderTarget, RGFormat } from 'three'
+import {
+  Box2,
+  FloatType,
+  LinearFilter,
+  RenderTarget,
+  RGFormat,
+  Vector2
+} from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   float,
@@ -10,6 +17,7 @@ import {
   screenCoordinate,
   texture,
   uniform,
+  uniformTexture,
   uvec2,
   vec2
 } from 'three/tsl'
@@ -21,6 +29,7 @@ import {
   TempNode,
   type NodeBuilder,
   type NodeFrame,
+  type Renderer,
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
@@ -28,6 +37,9 @@ import invariant from 'tiny-invariant'
 import { outputTexture, type Node } from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
+
+const boxScratch = /*#__PURE__*/ new Box2()
+const vector2Scratch = /*#__PURE__*/ new Vector2()
 
 export class MinMaxLevelsNode extends TempNode {
   csmShadowNode!: CSMShadowNode
@@ -39,10 +51,15 @@ export class MinMaxLevelsNode extends TempNode {
   firstCascade = uniform(1, 'uint')
 
   private readonly textureNode: TextureNode
-  private readonly renderTarget: RenderTarget
-  private readonly material = new NodeMaterial()
-  private readonly mesh = new QuadMesh(this.material)
+  private readonly renderTargetA: RenderTarget
+  private readonly renderTargetB: RenderTarget
+  private readonly gatherMaterial = new NodeMaterial()
+  private readonly mipmapMaterial = new NodeMaterial()
+  private readonly mesh = new QuadMesh(this.gatherMaterial)
   private rendererState?: RendererUtils.RendererState
+
+  private readonly sourceNode = uniformTexture()
+  private readonly offsetNode = uniform('uvec2')
 
   private prevLightCount = 0
 
@@ -55,18 +72,78 @@ export class MinMaxLevelsNode extends TempNode {
       type: FloatType,
       format: RGFormat
     })
-    const texture = renderTarget.texture
-    texture.name = 'MinMaxLevels'
-    texture.minFilter = LinearFilter
-    texture.magFilter = LinearFilter
-    texture.generateMipmaps = false
-    this.renderTarget = renderTarget
+    const rtTexture = renderTarget.texture
+    rtTexture.minFilter = LinearFilter
+    rtTexture.magFilter = LinearFilter
+    rtTexture.generateMipmaps = false
 
-    this.textureNode = outputTexture(this, renderTarget.texture)
+    this.renderTargetA = renderTarget
+    this.renderTargetA.texture.name = 'MinMaxLevelsA'
+    this.renderTargetB = renderTarget.clone()
+    this.renderTargetB.texture.name = 'MinMaxLevelsB'
+
+    this.textureNode = outputTexture(this, this.renderTargetA.texture)
   }
 
   getTextureNode(): TextureNode {
     return this.textureNode
+  }
+
+  private render(renderer: Renderer, width: number, height: number): void {
+    const { renderTargetA, renderTargetB, mesh, sourceNode, offsetNode } = this
+
+    this.rendererState = resetRendererState(renderer, this.rendererState)
+    renderer.autoClear = false
+
+    let offsetX = 0
+    let prevOffsetX = 0
+    let parity = 0
+    const maxStep = width / 4
+
+    // Note that we start rendering min/max shadow map from step == 2.
+    for (let step = 2; step <= maxStep; step *= 2, parity = (parity + 1) % 2) {
+      const targetWidth = Math.floor(width / step)
+      const [sourceRT, targetRT] =
+        parity === 0
+          ? [renderTargetB, renderTargetA]
+          : [renderTargetA, renderTargetB]
+
+      if (step === 2) {
+        // At the initial pass, the shader gathers 8 depths which will be used
+        // for PCF filtering at the sample location and its next neighbor along
+        // the slice and outputs min/max depths.
+        mesh.material = this.gatherMaterial
+      } else {
+        // At the subsequent passes, the shader loads two min/max values from
+        // the next finer level to compute next level of the binary tree.
+        mesh.material = this.mipmapMaterial
+        sourceNode.value = sourceRT.texture
+        offsetNode.value.set(prevOffsetX, offsetX)
+      }
+
+      targetRT.viewport.set(offsetX, 0, targetWidth, height)
+      renderer.setRenderTarget(targetRT)
+      mesh.render(renderer)
+
+      // All the data must reside in 0-th texture, so copy current level, if
+      // necessary, from 1-st texture.
+      if (parity === 1) {
+        boxScratch.min.set(offsetX, 0)
+        boxScratch.max.set(offsetX + targetWidth, height)
+        vector2Scratch.set(offsetX, 0)
+        renderer.copyTextureToTexture(
+          renderTargetB.texture,
+          renderTargetA.texture,
+          boxScratch,
+          vector2Scratch
+        )
+      }
+
+      prevOffsetX = offsetX
+      offsetX += targetWidth
+    }
+
+    restoreRendererState(renderer, this.rendererState)
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
@@ -80,27 +157,25 @@ export class MinMaxLevelsNode extends TempNode {
     }
 
     const { csmShadowNode, firstCascade } = this
-    const size = Math.max(mapSize.x, mapSize.y)
-    const cascades = csmShadowNode.cascades - firstCascade.value
-    this.renderTarget.setSize(size, cascades * this.numEpipolarSlices)
 
     const { lights } = csmShadowNode
     if (lights.length !== this.prevLightCount) {
       this.prevLightCount = lights.length
-      const { material } = this
-      material.fragmentNode = this.setupOutputNode()
-      material.needsUpdate = true
+      const { gatherMaterial } = this
+      gatherMaterial.fragmentNode = this.setupGatherNode()
+      gatherMaterial.needsUpdate = true
     }
 
-    this.rendererState = resetRendererState(renderer, this.rendererState)
+    const cascades = csmShadowNode.cascades - firstCascade.value
+    const width = Math.max(mapSize.x, mapSize.y)
+    const height = cascades * this.numEpipolarSlices
+    this.renderTargetA.setSize(width, height)
+    this.renderTargetB.setSize(width, height)
 
-    renderer.setRenderTarget(this.renderTarget)
-    this.mesh.render(renderer)
-
-    restoreRendererState(renderer, this.rendererState)
+    this.render(renderer, width, height)
   }
 
-  private setupOutputNode(): Node<'vec2'> {
+  private setupGatherNode(): Node<'vec2'> {
     const {
       csmShadowNode,
       sliceUVDirectionNode,
@@ -163,13 +238,38 @@ export class MinMaxLevelsNode extends TempNode {
     })()
   }
 
+  private setupMipmapNode(): Node<'vec2'> {
+    const { sourceNode, offsetNode } = this
+
+    return Fn(() => {
+      const coordNode = uvec2(screenCoordinate).toConst()
+      const x1 = offsetNode.x
+        .add(coordNode.x.sub(offsetNode.y).mul(2))
+        .toConst()
+      const x2 = x1.add(1).toConst()
+
+      const minMaxDepth1 = sourceNode.load(uvec2(x1, coordNode.y)).toConst()
+      const minMaxDepth2 = sourceNode.load(uvec2(x2, coordNode.y)).toConst()
+      return vec2(
+        min(minMaxDepth1.x, minMaxDepth2.x),
+        max(minMaxDepth1.y, minMaxDepth2.y)
+      )
+    })()
+  }
+
   override setup(builder: NodeBuilder): unknown {
+    const { mipmapMaterial } = this
+    mipmapMaterial.fragmentNode = this.setupMipmapNode()
+    mipmapMaterial.needsUpdate = true
+
     return this.textureNode
   }
 
   override dispose(): void {
-    this.renderTarget.dispose()
-    this.material.dispose()
+    this.renderTargetA.dispose()
+    this.renderTargetB.dispose()
+    this.gatherMaterial.dispose()
+    this.mipmapMaterial.dispose()
     this.mesh.geometry.dispose()
     super.dispose()
   }

@@ -1,4 +1,4 @@
-import type { Camera, Texture } from 'three'
+import type { Camera, RenderTarget, Texture } from 'three'
 import type {
   ContextNode,
   Node,
@@ -50,11 +50,6 @@ declare module 'three/tsl' {
 }
 
 declare module 'three/webgpu' {
-  interface Renderer {
-    contextNode: ContextNode
-    reversedDepthBuffer: boolean
-  }
-
   interface NodeBuilder {
     camera?: Camera
     context: NodeBuilderContext
@@ -95,6 +90,12 @@ declare module 'three/tsl' {
 declare module 'three/src/renderers/common/Renderer.js' {
   interface RendererParameters {
     reversedDepthBuffer?: boolean
+  }
+
+  export default interface Renderer {
+    contextNode: ContextNode
+    reversedDepthBuffer: boolean
+    initRenderTarget(renderTarget: RenderTarget): void
   }
 }
 
