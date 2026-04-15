@@ -1,4 +1,4 @@
-import { HalfFloatType, LinearFilter, RenderTarget, RGBAFormat } from 'three'
+import { FloatType, LinearFilter, RenderTarget, RGFormat } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   float,
@@ -51,8 +51,8 @@ export class MinMaxLevelsNode extends TempNode {
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: HalfFloatType,
-      format: RGBAFormat
+      type: FloatType,
+      format: RGFormat
     })
     const texture = renderTarget.texture
     texture.name = 'MinMaxLevels'
