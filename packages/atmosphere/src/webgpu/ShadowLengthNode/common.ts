@@ -4,9 +4,6 @@ import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 export const FLOAT_MAX = 3.402823466e38
 
-export const NUM_EPIPOLAR_SLICES = 512
-export const MAX_SAMPLES_IN_SLICE = 256
-
 // Transform UV to NDC XY:
 export const transformUVToScreen = FnLayout({
   name: 'uvToScreen',

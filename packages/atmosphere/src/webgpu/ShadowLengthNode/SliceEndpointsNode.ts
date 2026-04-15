@@ -1,5 +1,9 @@
 import {
+  FloatType,
+  LinearFilter,
   Matrix4,
+  RenderTarget,
+  RGBAFormat,
   Vector2,
   Vector3,
   Vector4,
@@ -20,26 +24,31 @@ import {
   vec4
 } from 'three/tsl'
 import {
+  NodeMaterial,
   NodeUpdateType,
+  QuadMesh,
+  RendererUtils,
   TempNode,
   type NodeBuilder,
-  type NodeFrame
+  type NodeFrame,
+  type TextureNode
 } from 'three/webgpu'
 
 import {
   bvecAnd,
   bvecNot,
   FnVar,
+  outputTexture,
   type Node
 } from '@takram/three-geospatial/webgpu'
 
 import {
   FLOAT_MAX,
   getOutermostScreenPixelCoords,
-  isValidScreenLocation,
-  MAX_SAMPLES_IN_SLICE,
-  NUM_EPIPOLAR_SLICES
+  isValidScreenLocation
 } from './common'
+
+const { resetRendererState, restoreRendererState } = RendererUtils
 
 const vector3Scratch = /*#__PURE__*/ new Vector3()
 const vector4Scratch = /*#__PURE__*/ new Vector4()
@@ -54,15 +63,43 @@ export class SliceEndpointsNode extends TempNode {
   camera!: Camera
   light!: DirectionalLight
 
+  numEpipolarSlices = 512
+  maxSamplesInSlice = 256
+
+  private readonly textureNode: TextureNode
+  private readonly renderTarget: RenderTarget
+  private readonly material = new NodeMaterial()
+  private readonly mesh = new QuadMesh(this.material)
+  private rendererState?: RendererUtils.RendererState
+
   constructor() {
-    super('vec4')
+    super(null)
     this.updateBeforeType = NodeUpdateType.FRAME
+
+    const renderTarget = new RenderTarget(1, 1, {
+      depthBuffer: false,
+      type: FloatType,
+      format: RGBAFormat
+    })
+    const texture = renderTarget.texture
+    texture.name = 'SliceEndpoints'
+    texture.minFilter = LinearFilter
+    texture.magFilter = LinearFilter
+    texture.generateMipmaps = false
+    this.renderTarget = renderTarget
+
+    this.textureNode = outputTexture(this, renderTarget.texture)
+  }
+
+  getTextureNode(): TextureNode {
+    return this.textureNode
   }
 
   override updateBefore({ renderer }: NodeFrame): void {
     if (renderer == null) {
       return
     }
+
     const { camera, light } = this
 
     const viewProjection = matrixScratch.multiplyMatrices(
@@ -95,13 +132,22 @@ export class SliceEndpointsNode extends TempNode {
     this.isLightOnScreen.value =
       Math.abs(lightX) <= 1 - 1 / size.width &&
       Math.abs(lightY) <= 1 - 1 / size.height
+
+    this.renderTarget.setSize(this.numEpipolarSlices, 1)
+
+    this.rendererState = resetRendererState(renderer, this.rendererState)
+
+    renderer.setRenderTarget(this.renderTarget)
+    this.mesh.render(renderer)
+
+    restoreRendererState(renderer, this.rendererState)
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  private setupOutputNode(): Node<'vec4'> {
     const { screenSize, lightScreenPosition, isLightOnScreen } = this
 
-    const maxSamplesInSlice = float(MAX_SAMPLES_IN_SLICE)
-    const numEpipolarSlices = float(NUM_EPIPOLAR_SLICES)
+    const maxSamplesInSlice = float(this.maxSamplesInSlice)
+    const numEpipolarSlices = float(this.numEpipolarSlices)
 
     const getEpipolarLineEntryPoint = FnVar(
       (exitPoint: Node<'vec2'>): Node<'vec2'> => {
@@ -313,5 +359,20 @@ export class SliceEndpointsNode extends TempNode {
 
       return result
     })()
+  }
+
+  override setup(builder: NodeBuilder): unknown {
+    const { material } = this
+    material.fragmentNode = this.setupOutputNode()
+    material.needsUpdate = true
+
+    return this.textureNode
+  }
+
+  override dispose(): void {
+    this.renderTarget.dispose()
+    this.material.dispose()
+    this.mesh.geometry.dispose()
+    super.dispose()
   }
 }

@@ -27,13 +27,14 @@ import invariant from 'tiny-invariant'
 
 import { outputTexture, type Node } from '@takram/three-geospatial/webgpu'
 
-import { NUM_EPIPOLAR_SLICES } from './common'
-
 const { resetRendererState, restoreRendererState } = RendererUtils
 
 export class MinMaxLevelsNode extends TempNode {
   csmShadowNode!: CSMShadowNode
   sliceUVDirectionNode!: TextureNode
+
+  numEpipolarSlices = 512
+  maxSamplesInSlice = 256
 
   firstCascade = uniform(1, 'uint')
 
@@ -46,7 +47,7 @@ export class MinMaxLevelsNode extends TempNode {
   private prevLightCount = 0
 
   constructor() {
-    super('vec3')
+    super(null)
     this.updateBeforeType = NodeUpdateType.FRAME
 
     const renderTarget = new RenderTarget(1, 1, {
@@ -81,7 +82,7 @@ export class MinMaxLevelsNode extends TempNode {
     const { csmShadowNode, firstCascade } = this
     const size = Math.max(mapSize.x, mapSize.y)
     const cascades = csmShadowNode.cascades - firstCascade.value
-    this.renderTarget.setSize(size, cascades * NUM_EPIPOLAR_SLICES)
+    this.renderTarget.setSize(size, cascades * this.numEpipolarSlices)
 
     const { lights } = csmShadowNode
     if (lights.length !== this.prevLightCount) {
@@ -100,7 +101,12 @@ export class MinMaxLevelsNode extends TempNode {
   }
 
   private setupOutputNode(): Node<'vec2'> {
-    const { csmShadowNode, sliceUVDirectionNode, firstCascade } = this
+    const {
+      csmShadowNode,
+      sliceUVDirectionNode,
+      numEpipolarSlices,
+      firstCascade
+    } = this
 
     const { lights, cascades } = csmShadowNode
     invariant(lights.length > 0)
@@ -113,11 +119,11 @@ export class MinMaxLevelsNode extends TempNode {
 
     return Fn(() => {
       const coordNode = screenCoordinate.toConst()
-      const cascadeIndex = floor(coordNode.y.div(NUM_EPIPOLAR_SLICES))
+      const cascadeIndex = floor(coordNode.y.div(numEpipolarSlices))
         .add(firstCascade)
         .toConst()
       const sliceIndex = coordNode.y
-        .sub(cascadeIndex.sub(firstCascade).mul(NUM_EPIPOLAR_SLICES))
+        .sub(cascadeIndex.sub(firstCascade).mul(numEpipolarSlices))
         .toConst()
 
       // Load slice direction in shadow map.

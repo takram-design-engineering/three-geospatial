@@ -1,4 +1,4 @@
-import type { Camera } from 'three'
+import { RenderTarget, RGBAFormat, type Camera } from 'three'
 import {
   Discard,
   float,
@@ -14,21 +14,31 @@ import {
   uvec4,
   vec3
 } from 'three/tsl'
-import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
+import {
+  FloatType,
+  LinearFilter,
+  NodeMaterial,
+  NodeUpdateType,
+  QuadMesh,
+  RendererUtils,
+  TempNode,
+  type NodeBuilder,
+  type NodeFrame,
+  type TextureNode
+} from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import {
   cameraFar,
   cameraNear,
   FnVar,
+  outputTexture,
   type Node
 } from '@takram/three-geospatial/webgpu'
 
-import {
-  isValidScreenLocation,
-  MAX_SAMPLES_IN_SLICE,
-  transformScreenToUV
-} from './common'
+import { isValidScreenLocation, transformScreenToUV } from './common'
+
+const { resetRendererState, restoreRendererState } = RendererUtils
 
 export class CoordinateNode extends TempNode {
   depthNode?: TextureNode
@@ -38,15 +48,58 @@ export class CoordinateNode extends TempNode {
 
   camera?: Camera
 
+  numEpipolarSlices = 512
+  maxSamplesInSlice = 256
+
+  private readonly textureNode: TextureNode
+  private readonly renderTarget: RenderTarget
+  private readonly material = new NodeMaterial()
+  private readonly mesh = new QuadMesh(this.material)
+  private rendererState?: RendererUtils.RendererState
+
   constructor() {
-    super('vec3')
+    super(null)
+    this.updateBeforeType = NodeUpdateType.FRAME
+
+    const renderTarget = new RenderTarget(1, 1, {
+      depthBuffer: false,
+      type: FloatType,
+      format: RGBAFormat
+    })
+    const texture = renderTarget.texture
+    texture.name = 'Coordinate'
+    texture.minFilter = LinearFilter
+    texture.magFilter = LinearFilter
+    texture.generateMipmaps = false
+    this.renderTarget = renderTarget
+
+    this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
-  override setup(builder: NodeBuilder): unknown {
+  getTextureNode(): TextureNode {
+    return this.textureNode
+  }
+
+  override updateBefore({ renderer }: NodeFrame): void {
+    if (renderer == null) {
+      return
+    }
+
+    this.renderTarget.setSize(this.maxSamplesInSlice, this.numEpipolarSlices)
+
+    this.rendererState = resetRendererState(renderer, this.rendererState)
+
+    renderer.setRenderTarget(this.renderTarget)
+    this.mesh.render(renderer)
+
+    restoreRendererState(renderer, this.rendererState)
+  }
+
+  private setupOutputNode(): Node<'vec3'> {
     const { depthNode, viewZNode, sliceEndpointsNode, screenSize, camera } =
       this
 
-    const maxSamplesInSlice = float(MAX_SAMPLES_IN_SLICE)
+    const maxSamplesInSlice = float(this.maxSamplesInSlice)
 
     const getViewZ = FnVar((uv: Node<'vec2'>): Node<'float'> => {
       if (viewZNode != null) {
@@ -123,5 +176,20 @@ export class CoordinateNode extends TempNode {
 
       return vec3(xy, getViewZ(transformScreenToUV(xy)).negate())
     })()
+  }
+
+  override setup(builder: NodeBuilder): unknown {
+    const { material } = this
+    material.fragmentNode = this.setupOutputNode()
+    material.needsUpdate = true
+
+    return this.textureNode
+  }
+
+  override dispose(): void {
+    this.renderTarget.dispose()
+    this.material.dispose()
+    this.mesh.geometry.dispose()
+    super.dispose()
   }
 }
