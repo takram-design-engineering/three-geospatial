@@ -1,5 +1,6 @@
 import {
   Matrix4,
+  Vector2,
   Vector3,
   Vector4,
   type Camera,
@@ -43,6 +44,7 @@ import {
 const vector3Scratch = /*#__PURE__*/ new Vector3()
 const vector4Scratch = /*#__PURE__*/ new Vector4()
 const matrixScratch = /*#__PURE__*/ new Matrix4()
+const sizeScratch = /*#__PURE__*/ new Vector2()
 
 export class SliceEndpointsNode extends TempNode {
   screenSize!: Node<'vec2'>
@@ -57,7 +59,10 @@ export class SliceEndpointsNode extends TempNode {
     this.updateBeforeType = NodeUpdateType.FRAME
   }
 
-  override updateBefore(frame: NodeFrame): void {
+  override updateBefore({ renderer }: NodeFrame): void {
+    if (renderer == null) {
+      return
+    }
     const { camera, light } = this
 
     const viewProjection = matrixScratch.multiplyMatrices(
@@ -73,14 +78,23 @@ export class SliceEndpointsNode extends TempNode {
       .applyMatrix4(viewProjection)
 
     const lightW = lightClip.w
-    const [lightX, lightY, lightZ] =
-      lightW !== 0
-        ? [lightClip.x / lightW, lightClip.y / lightW, lightClip.z / lightW]
-        : [lightClip.x, lightClip.y, lightClip.z]
+    let lightX = lightClip.x / lightW
+    let lightY = lightClip.y / lightW
+    const lightZ = lightClip.z / lightW
 
+    const distanceToLightOnScreen = Math.hypot(lightX, lightY)
+    const maxDistance = 100
+    if (distanceToLightOnScreen > maxDistance) {
+      const scale = maxDistance / distanceToLightOnScreen
+      lightX *= scale
+      lightY *= scale
+    }
     this.lightScreenPosition.value.set(lightX, lightY, lightZ, lightW)
+
+    const size = renderer.getDrawingBufferSize(sizeScratch)
     this.isLightOnScreen.value =
-      lightX >= -1 && lightX <= 1 && lightY >= -1 && lightY <= 1
+      Math.abs(lightX) <= 1 - 1 / size.width &&
+      Math.abs(lightY) <= 1 - 1 / size.height
   }
 
   override setup(builder: NodeBuilder): unknown {
@@ -218,7 +232,7 @@ export class SliceEndpointsNode extends TempNode {
         .lessThanEqual(0)
         .toConst()
 
-      const result = vec4(-1000, -1000, -100, -100).toVar()
+      const result = vec4(-1000, -1000, -100, -100).toVar() // Invalid epipolar line
 
       If(bvecAnd(isInvalidBoundary, boundaryFlags).any().not(), () => {
         // Additional check above is required to eliminate false epipolar lines
