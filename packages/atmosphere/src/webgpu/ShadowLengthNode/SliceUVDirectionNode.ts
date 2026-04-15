@@ -1,17 +1,19 @@
-import { Matrix4, Vector2, type PerspectiveCamera } from 'three'
+import { Matrix4, PerspectiveCamera, Vector2, type Camera } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   Fn,
   If,
-  ivec2,
   max,
   min,
   screenCoordinate,
+  uint,
   uniform,
   uniformArray,
+  uvec2,
   vec4
 } from 'three/tsl'
 import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import {
   bvecAnd,
@@ -41,38 +43,50 @@ export class SliceUVDirectionNode extends TempNode {
   sliceEndpointsNode!: TextureNode
   screenSize!: Node<'vec2'>
 
-  camera!: PerspectiveCamera
+  camera!: Camera
 
-  shadowMapTexelSize = uniform('vec2')
-    .setName('shadowMapTexelSize')
-    .onFrameUpdate((_, { value }) => {
-      const shadow = this.csmShadowNode.lights[0]?.shadow
-      if (shadow != null) {
-        value.set(1 / shadow.mapSize.x, 1 / shadow.mapSize.y)
+  firstCascade = uniform(1, 'uint')
+
+  constructor() {
+    super('vec4')
+  }
+
+  override setup(builder: NodeBuilder): unknown {
+    const {
+      csmShadowNode,
+      sliceEndpointsNode,
+      screenSize,
+      camera,
+      firstCascade
+    } = this
+    invariant(camera instanceof PerspectiveCamera)
+
+    const shadowMapTexelSize = uniform('vec2').onRenderUpdate(
+      (_, { value }) => {
+        const shadow = csmShadowNode.lights[0]?.shadow
+        if (shadow != null) {
+          value.set(1 / shadow.mapSize.x, 1 / shadow.mapSize.y)
+        }
       }
-    })
+    )
 
-  cascadeNearFarArray = uniformArray(
-    Array.from({ length: 4 }, () => new Vector2())
-  )
-    .setName('cascadeNearFarArray')
-    .onFrameUpdate((_, self) => {
+    const shadowCascadeArray = uniformArray(
+      Array.from({ length: csmShadowNode.cascades }, () => new Vector2())
+    ).onRenderUpdate((_, self) => {
       const array = self.array as Vector2[]
-      const far = Math.min(this.camera.far, this.csmShadowNode.maxFar)
-      const cascades = this.csmShadowNode._cascades
+      const far = Math.min(camera.far, csmShadowNode.maxFar)
+      const cascades = csmShadowNode._cascades
       for (let i = 0; i < cascades.length; ++i) {
         const cascade = cascades[i]
         array[i].set(cascade.x * far, cascade.y * far)
       }
     })
 
-  worldToShadowMatrixArray = uniformArray(
-    Array.from({ length: 4 }, () => new Matrix4())
-  )
-    .setName('worldToShadowMatrixArray')
-    .onFrameUpdate((_, self) => {
+    const worldToShadowMatrixArray = uniformArray(
+      Array.from({ length: csmShadowNode.cascades }, () => new Matrix4())
+    ).onRenderUpdate((_, self) => {
       const array = self.array as Matrix4[]
-      const lights = this.csmShadowNode.lights
+      const lights = csmShadowNode.lights
       for (let i = 0; i < lights.length; ++i) {
         const matrix = lights[i].shadow?.matrix
         if (matrix != null) {
@@ -81,32 +95,17 @@ export class SliceUVDirectionNode extends TempNode {
       }
     })
 
-  constructor() {
-    super('vec4')
-  }
-
-  override setup(builder: NodeBuilder): unknown {
-    const {
-      sliceEndpointsNode,
-      screenSize,
-      camera,
-      shadowMapTexelSize,
-      cascadeNearFarArray,
-      worldToShadowMatrixArray
-    } = this
-
     // TODO:
     const transformSliceToWorld = FnVar(
       (
         positionNDC: Node<'vec2'>,
         cascadeDepth: Node<'float'>
       ): Node<'vec3'> => {
-        const farViewPosition = inverseProjectionMatrix(camera)
+        const farPositionView = inverseProjectionMatrix(camera)
           .mul(vec4(positionNDC, 1, 1))
-          .toConst()
-        const farViewPositionXYZ = farViewPosition.xyz.div(farViewPosition.w)
-        const positionView = farViewPositionXYZ
-          .mul(cascadeDepth.negate().div(farViewPositionXYZ.z))
+          .xyz.toConst()
+        const positionView = farPositionView
+          .mul(cascadeDepth.negate().div(farPositionView.z))
           .toConst()
         return inverseViewMatrix(camera).mul(vec4(positionView, 1)).xyz
       }
@@ -114,11 +113,11 @@ export class SliceUVDirectionNode extends TempNode {
 
     return Fn(() => {
       const coordNode = screenCoordinate.toConst()
-      const sliceIndex = coordNode.x
+      const sliceIndex = uint(coordNode.x)
 
       // Load epipolar slice endpoints.
       const sliceEndpoints = sliceEndpointsNode
-        .load(ivec2(sliceIndex, 0))
+        .load(uvec2(sliceIndex, 0))
         .toConst()
 
       const result = vec4(-10000, -10000, 0, 0).toVar() // Incorrect slice UV direction and start
@@ -126,26 +125,26 @@ export class SliceUVDirectionNode extends TempNode {
       // All correct entry points are completely inside the
       // [-1+1/W, 1-1/W] x [-1+1/H, 1-1/H] area.
       If(isValidScreenLocation(sliceEndpoints.xy, screenSize), () => {
-        const cascadeIndex = coordNode.y
+        const cascadeIndex = uint(coordNode.y).add(firstCascade)
         const worldToShadowMatrix =
           worldToShadowMatrixArray.element(cascadeIndex)
 
+        // Reconstruct slice exit point position in world space.
         const sliceExitWorld = transformSliceToWorld(
           sliceEndpoints.zw,
-          cascadeNearFarArray.element(cascadeIndex).y
-        ).toConst()
-
+          shadowCascadeArray.element(cascadeIndex).y
+        )
         // Transform it to the shadow map UV.
         const sliceExitUV = transformWorldToShadowUV(
           sliceExitWorld,
           worldToShadowMatrix
-        ).xy
+        ).xy.toConst()
 
         // Compute camera position in shadow map UV space.
         const sliceOriginUV = transformWorldToShadowUV(
           cameraPositionWorld(camera),
           worldToShadowMatrix
-        ).xy
+        ).xy.toVar()
 
         // Compute slice direction in shadow map UV space.
         const sliceDirection = sliceExitUV.sub(sliceOriginUV).toVar()
