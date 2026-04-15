@@ -21,6 +21,20 @@ export const transformScreenToUV = FnLayout({
   inputs: [{ name: 'screen', type: 'vec2' }]
 })(([screen]) => screen.mul(vec2(0.5, -0.5)).add(0.5))
 
+export const transformWorldToShadowUV = FnLayout({
+  name: 'transformWorldToShadowUV',
+  type: 'vec3',
+  inputs: [
+    { name: 'positionWorld', type: 'vec3' },
+    { name: 'worldToShadowUV', type: 'mat4' }
+  ]
+})(([positionWorld, worldToShadowUVDepth]) => {
+  // Shadow map projection matrix is orthographic, so we do not need to divide
+  // by w. Applying depth bias results in light leaking through the opaque
+  // objects when looking directly at the light source.
+  return vec4(positionWorld, 1).mul(worldToShadowUVDepth).xyz
+})
+
 // The outermost visible screen pixels centers do not lie exactly on the
 // boundary (+1 or -1), but are biased by 0.5 screen pixel size inwards.
 // xyzw = (left, bottom, right, top)
