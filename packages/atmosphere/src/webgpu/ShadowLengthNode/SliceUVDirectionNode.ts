@@ -5,6 +5,8 @@ import {
   If,
   max,
   min,
+  OnObjectUpdate,
+  renderGroup,
   screenCoordinate,
   uint,
   uniform,
@@ -59,6 +61,7 @@ export class SliceUVDirectionNode extends TempNode {
       camera,
       firstCascade
     } = this
+
     invariant(camera instanceof PerspectiveCamera)
 
     const shadowMapTexelSize = uniform('vec2').onRenderUpdate(
@@ -72,8 +75,15 @@ export class SliceUVDirectionNode extends TempNode {
 
     const shadowCascadeArray = uniformArray(
       Array.from({ length: csmShadowNode.cascades }, () => new Vector2())
-    ).onRenderUpdate((_, self) => {
-      const array = self.array as Vector2[]
+    ).setGroup(renderGroup)
+
+    const worldToShadowMatrixArray = uniformArray(
+      Array.from({ length: csmShadowNode.cascades }, () => new Matrix4())
+    ).setGroup(renderGroup)
+
+    // uniformArray doesn't appear to support onRenderUpdate.
+    OnObjectUpdate(() => {
+      const array = shadowCascadeArray.array as Vector2[]
       const far = Math.min(camera.far, csmShadowNode.maxFar)
       const cascades = csmShadowNode._cascades
       for (let i = 0; i < cascades.length; ++i) {
@@ -82,10 +92,8 @@ export class SliceUVDirectionNode extends TempNode {
       }
     })
 
-    const worldToShadowMatrixArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascades }, () => new Matrix4())
-    ).onRenderUpdate((_, self) => {
-      const array = self.array as Matrix4[]
+    OnObjectUpdate(() => {
+      const array = worldToShadowMatrixArray.array as Matrix4[]
       const lights = csmShadowNode.lights
       for (let i = 0; i < lights.length; ++i) {
         const matrix = lights[i].shadow?.matrix
@@ -95,7 +103,6 @@ export class SliceUVDirectionNode extends TempNode {
       }
     })
 
-    // TODO:
     const transformSliceToWorld = FnVar(
       (
         positionNDC: Node<'vec2'>,
