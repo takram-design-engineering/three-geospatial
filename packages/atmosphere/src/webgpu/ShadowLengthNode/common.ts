@@ -1,4 +1,4 @@
-import { float, vec2, vec4 } from 'three/tsl'
+import { float, vec2, vec3, vec4 } from 'three/tsl'
 
 import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -26,13 +26,14 @@ export const transformWorldToShadowUV = FnLayout({
   type: 'vec3',
   inputs: [
     { name: 'positionWorld', type: 'vec3' },
-    { name: 'worldToShadowUV', type: 'mat4' }
+    { name: 'shadowMatrix', type: 'mat4' }
   ]
-})(([positionWorld, worldToShadowUVDepth]) => {
+})(([positionWorld, shadowMatrix]) => {
   // Shadow map projection matrix is orthographic, so we do not need to divide
   // by w. Applying depth bias results in light leaking through the opaque
   // objects when looking directly at the light source.
-  return vec4(positionWorld, 1).mul(worldToShadowUVDepth).xyz
+  const uvDepth = shadowMatrix.mul(vec4(positionWorld, 1)).xyz
+  return vec3(uvDepth.x, uvDepth.oneMinus(), uvDepth.z) // Flip Y
 })
 
 // The outermost visible screen pixels centers do not lie exactly on the

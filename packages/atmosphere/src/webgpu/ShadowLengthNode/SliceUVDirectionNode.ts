@@ -77,7 +77,7 @@ export class SliceUVDirectionNode extends TempNode {
       Array.from({ length: csmShadowNode.cascades }, () => new Vector2())
     ).setGroup(renderGroup)
 
-    const worldToShadowMatrixArray = uniformArray(
+    const shadowMatrixArray = uniformArray(
       Array.from({ length: csmShadowNode.cascades }, () => new Matrix4())
     ).setGroup(renderGroup)
 
@@ -93,7 +93,7 @@ export class SliceUVDirectionNode extends TempNode {
     })
 
     OnObjectUpdate(() => {
-      const array = worldToShadowMatrixArray.array as Matrix4[]
+      const array = shadowMatrixArray.array as Matrix4[]
       const lights = csmShadowNode.lights
       for (let i = 0; i < lights.length; ++i) {
         const matrix = lights[i].shadow?.matrix
@@ -133,8 +133,7 @@ export class SliceUVDirectionNode extends TempNode {
       // [-1+1/W, 1-1/W] x [-1+1/H, 1-1/H] area.
       If(isValidScreenLocation(sliceEndpoints.xy, screenSize), () => {
         const cascadeIndex = uint(coordNode.y).add(firstCascade)
-        const worldToShadowMatrix =
-          worldToShadowMatrixArray.element(cascadeIndex)
+        const shadowMatrix = shadowMatrixArray.element(cascadeIndex)
 
         // Reconstruct slice exit point position in world space.
         const sliceExitWorld = transformSliceToWorld(
@@ -144,13 +143,13 @@ export class SliceUVDirectionNode extends TempNode {
         // Transform it to the shadow map UV.
         const sliceExitUV = transformWorldToShadowUV(
           sliceExitWorld,
-          worldToShadowMatrix
+          shadowMatrix
         ).xy.toConst()
 
         // Compute camera position in shadow map UV space.
         const sliceOriginUV = transformWorldToShadowUV(
           cameraPositionWorld(camera),
-          worldToShadowMatrix
+          shadowMatrix
         ).xy.toVar()
 
         // Compute slice direction in shadow map UV space.
