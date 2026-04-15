@@ -33,7 +33,7 @@ export const transformWorldToShadowUV = FnLayout({
   // by w. Applying depth bias results in light leaking through the opaque
   // objects when looking directly at the light source.
   const uvDepth = shadowMatrix.mul(vec4(positionWorld, 1)).xyz
-  return vec3(uvDepth.x, uvDepth.oneMinus(), uvDepth.z) // Flip Y
+  return vec3(uvDepth.x, uvDepth.y.oneMinus(), uvDepth.z) // Flip Y
 })
 
 // The outermost visible screen pixels centers do not lie exactly on the
