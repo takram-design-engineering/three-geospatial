@@ -1,6 +1,8 @@
 import type { Camera, RenderTarget, Texture } from 'three'
+import type { ShaderNodeFn } from 'three/src/nodes/TSL.js'
 import type {
   ContextNode,
+  FunctionOverloadingNode,
   Node,
   NodeBuilderContext,
   NodeFrame,
@@ -85,6 +87,10 @@ declare module 'three/tsl' {
     uvNode?: Node | null,
     storeNode?: Node
   ) => StorageTextureNode
+
+  const overloadingFn: (
+    functionNodes: ShaderNodeFn[]
+  ) => (...params: Node[]) => FunctionOverloadingNode
 }
 
 declare module 'three/src/renderers/common/Renderer.js' {

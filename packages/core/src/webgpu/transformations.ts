@@ -22,7 +22,7 @@ import { FnLayout } from './FnLayout'
 import { FnVar } from './FnVar'
 import type { Node } from './node'
 
-export const depthToViewZ = FnVar(
+export const depthToViewZ = /*#__PURE__*/ FnVar(
   (
     depth: Node<'float'>,
     camera?: Camera,
@@ -90,7 +90,7 @@ const turboCoeffs: ReadonlyArray<[number, number, number]> = [
   [0.1357, 0.0914, 0.1067]
 ]
 
-export const turbo = FnLayout({
+export const turbo = /*#__PURE__*/ FnLayout({
   name: 'turbo',
   type: 'vec3',
   inputs: [{ name: 'x', type: 'float' }]
@@ -114,7 +114,7 @@ export const depthToColor = (
   return turbo(viewZToLogarithmicDepth(viewZ, near, far))
 }
 
-export const equirectToDirectionWorld = FnLayout({
+export const equirectToDirectionWorld = /*#__PURE__*/ FnLayout({
   name: 'equirectToDirectionWorld',
   type: 'vec3',
   inputs: [{ name: 'uv', type: 'vec2' }]
