@@ -166,9 +166,9 @@ export class MinMaxLevelsNode extends TempNode {
       gatherMaterial.needsUpdate = true
     }
 
-    const cascades = csmShadowNode.cascades - firstCascade.value
+    const activeCascades = csmShadowNode.cascades - firstCascade.value
     const width = Math.max(mapSize.x, mapSize.y)
-    const height = cascades * this.numEpipolarSlices
+    const height = activeCascades * this.numEpipolarSlices
     this.renderTargetA.setSize(width, height)
     this.renderTargetB.setSize(width, height)
 
@@ -193,11 +193,10 @@ export class MinMaxLevelsNode extends TempNode {
     })
 
     return Fn(() => {
-      const coordNode = screenCoordinate.toConst()
-      const cascadeIndex = floor(coordNode.y.div(numEpipolarSlices))
+      const cascadeIndex = floor(screenCoordinate.y.div(numEpipolarSlices))
         .add(firstCascade)
         .toConst()
-      const sliceIndex = coordNode.y
+      const sliceIndex = screenCoordinate.y
         .sub(cascadeIndex.sub(firstCascade).mul(numEpipolarSlices))
         .toConst()
 
@@ -207,7 +206,7 @@ export class MinMaxLevelsNode extends TempNode {
         .toConst()
       // Calculate current sample position on the ray.
       const currentUV = sliceUVDirection.zw
-        .add(sliceUVDirection.xy.mul(floor(coordNode.x).mul(2)))
+        .add(sliceUVDirection.xy.mul(floor(screenCoordinate.x).mul(2)))
         .toConst()
 
       const minDepth = float(1).toVar()

@@ -169,8 +169,7 @@ export class SliceUVDirectionNode extends TempNode {
     })
 
     return Fn(() => {
-      const coordNode = screenCoordinate.toConst()
-      const sliceIndex = uint(coordNode.x)
+      const sliceIndex = uint(screenCoordinate.x)
 
       // Load epipolar slice endpoints.
       const sliceEndpoints = sliceEndpointsNode
@@ -182,7 +181,7 @@ export class SliceUVDirectionNode extends TempNode {
       // All correct entry points are completely inside the
       // [-1+1/W, 1-1/W] x [-1+1/H, 1-1/H] area.
       If(isValidScreenLocation(sliceEndpoints.xy, screenSize), () => {
-        const cascadeIndex = uint(coordNode.y).add(firstCascade)
+        const cascadeIndex = uint(screenCoordinate.y).add(firstCascade)
         const shadowMatrix = shadowMatrixArray.element(cascadeIndex)
 
         // Reconstruct slice exit point position in world space.

@@ -132,10 +132,9 @@ export class CoordinateNode extends TempNode {
 
     return Fn(() => {
       const uvNode = uv().toConst()
-      const coordNode = screenCoordinate.toConst()
 
       const sliceEndPoints = sliceEndpointsNode
-        .load(ivec2(coordNode.y, 0))
+        .load(ivec2(screenCoordinate.y, 0))
         .toConst()
 
       // If slice entry point is outside [-1,1]×[-1,1] area, the slice is
