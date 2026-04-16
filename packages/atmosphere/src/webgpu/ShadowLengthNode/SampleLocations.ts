@@ -27,15 +27,16 @@ export class SampleLocations extends Points {
     const coordinate = coordinateNode
       .getTextureNode()
       .load(uvec2(sampleIndex, sliceIndex))
-      .toVertexStage()
 
     const isValid = isValidScreenLocation(coordinate.xy, screenSize)
+      .toUint()
+      .toVertexStage()
 
-    material.colorNode = isValid.select(vec3(1, 0, 0), vec3())
     material.vertexNode = isValid.select(
       vec4(coordinate.xy, 0, 1),
       vec4(2, 2, 0, 1)
     )
+    material.colorNode = isValid.select(vec3(1, 0, 0), vec3())
 
     super(geometry, material)
 
