@@ -190,7 +190,7 @@ const getCurrentDepth = /*#__PURE__*/ FnVar(
   }
 )
 
-const subpixelCorrection = FnVar(
+const subpixelCorrection = /*#__PURE__#*/ FnVar(
   (velocityUV: Node<'vec2'>, textureSize: Node<'ivec2'>): Node<'float'> => {
     const velocityTexel = velocityUV.mul(textureSize)
     const phase = velocityTexel.fract().abs()

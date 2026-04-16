@@ -149,5 +149,5 @@ export class SkyNode extends TempNode {
   }
 }
 
-export const sky = nodeProxy(SkyNode, CAMERA)
-export const skyBackground = nodeProxy(SkyNode, EQUIRECTANGULAR)
+export const sky = /*#__PURE__*/ nodeProxy(SkyNode, CAMERA)
+export const skyBackground = /*#__PURE__*/ nodeProxy(SkyNode, EQUIRECTANGULAR)

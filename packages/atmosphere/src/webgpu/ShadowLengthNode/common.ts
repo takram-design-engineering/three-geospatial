@@ -12,20 +12,20 @@ import {
 export const FLOAT_MAX = 3.402823466e38
 
 // Transform UV to NDC XY:
-export const transformUVToScreen = FnLayout({
+export const transformUVToScreen = /*#__PURE__#*/ FnLayout({
   name: 'uvToScreen',
   type: 'vec2',
   inputs: [{ name: 'uv', type: 'vec2' }]
 })(([uv]) => uv.mul(vec2(2, -2)).add(vec2(-1, 1)))
 
 // Transform NDC XY to UV:
-export const transformScreenToUV = FnLayout({
+export const transformScreenToUV = /*#__PURE__#*/ FnLayout({
   name: 'transformScreenToUV',
   type: 'vec2',
   inputs: [{ name: 'screen', type: 'vec2' }]
 })(([screen]) => screen.mul(vec2(0.5, -0.5)).add(0.5))
 
-export const transformWorldToShadowUV = FnLayout({
+export const transformWorldToShadowUV = /*#__PURE__#*/ FnLayout({
   name: 'transformWorldToShadowUV',
   type: 'vec3',
   inputs: [
@@ -43,7 +43,7 @@ export const transformWorldToShadowUV = FnLayout({
 // The outermost visible screen pixels centers do not lie exactly on the
 // boundary (+1 or -1), but are biased by 0.5 screen pixel size inwards.
 // xyzw = (left, bottom, right, top)
-export const getOutermostScreenPixelCoords = FnVar(
+export const getOutermostScreenPixelCoords = /*#__PURE__#*/ FnVar(
   (screenSize: Node<'vec2'>): Node<'vec4'> => {
     return vec4(-1, -1, 1, 1).add(vec4(1, 1, -1, -1).div(screenSize.xyxy))
   }
@@ -51,7 +51,7 @@ export const getOutermostScreenPixelCoords = FnVar(
 
 // When checking if a point is inside the screen, we must test against the
 // biased screen boundaries.
-export const isValidScreenLocation = FnVar(
+export const isValidScreenLocation = /*#__PURE__#*/ FnVar(
   (xy: Node<'vec2'>, screenSize: Node<'vec2'>): Node<'bool'> => {
     const eps = float(0.2)
     const limit = eps.oneMinus().div(screenSize).oneMinus()
@@ -59,7 +59,7 @@ export const isValidScreenLocation = FnVar(
   }
 )
 
-export const transformSliceToWorld = FnVar(
+export const transformSliceToWorld = /*#__PURE__#*/ FnVar(
   (
     sampleLocation: Node<'vec2'>,
     linearDepth: Node<'float'>,
