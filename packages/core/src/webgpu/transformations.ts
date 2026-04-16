@@ -3,7 +3,6 @@ import {
   cameraFar as cameraFarTSL,
   cameraNear as cameraNearTSL,
   cos,
-  Fn,
   int,
   logarithmicDepthToViewZ,
   orthographicDepthToViewZ,
@@ -20,26 +19,28 @@ import {
 
 import { cameraFar, cameraNear } from './accessors'
 import { FnLayout } from './FnLayout'
+import { FnVar } from './FnVar'
 import type { Node } from './node'
 
-export const depthToViewZ = (
-  depth: Node<'float'>,
-  camera?: Camera,
-  near?: Node<'float'>,
-  far?: Node<'float'>
-): Node<'float'> => {
-  near ??= cameraNear(camera)
-  far ??= cameraFar(camera)
-  const perspective = camera?.isPerspectiveCamera === true
-  return Fn(builder => {
-    const logarithmic = builder.renderer.logarithmicDepthBuffer
-    return logarithmic
-      ? logarithmicDepthToViewZ(depth, near, far)
-      : perspective
-        ? perspectiveDepthToViewZ(depth, near, far)
-        : orthographicDepthToViewZ(depth, near, far)
-  })()
-}
+export const depthToViewZ = FnVar(
+  (
+    depth: Node<'float'>,
+    camera?: Camera,
+    near?: Node<'float'>,
+    far?: Node<'float'>
+  ) =>
+    (builder): Node<'float'> => {
+      near ??= cameraNear(camera)
+      far ??= cameraFar(camera)
+      const perspective = camera?.isPerspectiveCamera === true
+      const logarithmic = builder.renderer.logarithmicDepthBuffer
+      return logarithmic
+        ? logarithmicDepthToViewZ(depth, near, far)
+        : perspective
+          ? perspectiveDepthToViewZ(depth, near, far)
+          : orthographicDepthToViewZ(depth, near, far)
+    }
+)
 
 export const logarithmicToPerspectiveDepth = (
   depth: Node<'float'>,
