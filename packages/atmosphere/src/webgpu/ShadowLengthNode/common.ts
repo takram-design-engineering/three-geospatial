@@ -1,6 +1,13 @@
+import type { Camera } from 'three'
 import { float, vec2, vec3, vec4 } from 'three/tsl'
 
-import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
+import {
+  FnLayout,
+  FnVar,
+  inverseProjectionMatrix,
+  inverseViewMatrix,
+  type Node
+} from '@takram/three-geospatial/webgpu'
 
 export const FLOAT_MAX = 3.402823466e38
 
@@ -49,5 +56,21 @@ export const isValidScreenLocation = FnVar(
     const eps = float(0.2)
     const limit = eps.oneMinus().div(screenSize).oneMinus()
     return xy.abs().lessThanEqual(limit).all()
+  }
+)
+
+export const transformSliceToWorld = FnVar(
+  (
+    sampleLocation: Node<'vec2'>,
+    linearDepth: Node<'float'>,
+    camera: Camera
+  ): Node<'vec3'> => {
+    const farPositionView = inverseProjectionMatrix(camera)
+      .mul(vec4(sampleLocation, 1, 1))
+      .xyz.toConst()
+    const positionView = farPositionView
+      .mul(linearDepth.negate().div(farPositionView.z))
+      .toConst()
+    return inverseViewMatrix(camera).mul(vec4(positionView, 1)).xyz
   }
 )

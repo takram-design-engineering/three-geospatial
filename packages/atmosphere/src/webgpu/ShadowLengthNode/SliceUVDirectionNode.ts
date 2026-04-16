@@ -39,9 +39,6 @@ import {
   bvecAnd,
   bvecNot,
   cameraPositionWorld,
-  FnVar,
-  inverseProjectionMatrix,
-  inverseViewMatrix,
   outputTexture,
   type Node
 } from '@takram/three-geospatial/webgpu'
@@ -49,6 +46,7 @@ import {
 import {
   FLOAT_MAX,
   isValidScreenLocation,
+  transformSliceToWorld,
   transformWorldToShadowUV
 } from './common'
 
@@ -170,21 +168,6 @@ export class SliceUVDirectionNode extends TempNode {
       }
     })
 
-    const transformSliceToWorld = FnVar(
-      (
-        positionNDC: Node<'vec2'>,
-        cascadeDepth: Node<'float'>
-      ): Node<'vec3'> => {
-        const farPositionView = inverseProjectionMatrix(camera)
-          .mul(vec4(positionNDC, 1, 1))
-          .xyz.toConst()
-        const positionView = farPositionView
-          .mul(cascadeDepth.negate().div(farPositionView.z))
-          .toConst()
-        return inverseViewMatrix(camera).mul(vec4(positionView, 1)).xyz
-      }
-    )
-
     return Fn(() => {
       const coordNode = screenCoordinate.toConst()
       const sliceIndex = uint(coordNode.x)
@@ -205,7 +188,8 @@ export class SliceUVDirectionNode extends TempNode {
         // Reconstruct slice exit point position in world space.
         const sliceExitWorld = transformSliceToWorld(
           sliceEndpoints.zw,
-          shadowCascadeArray.element(cascadeIndex).y
+          shadowCascadeArray.element(cascadeIndex).y,
+          camera
         )
         // Transform it to the shadow map UV.
         const sliceExitUV = transformWorldToShadowUV(
