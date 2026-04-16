@@ -62,14 +62,14 @@ export const isValidScreenLocation = /*#__PURE__#*/ FnVar(
 export const transformSliceToWorld = /*#__PURE__#*/ FnVar(
   (
     sampleLocation: Node<'vec2'>,
-    linearDepth: Node<'float'>,
+    cameraZ: Node<'float'>, // -viewZ
     camera: Camera
   ): Node<'vec3'> => {
     const farPositionView = inverseProjectionMatrix(camera)
       .mul(vec4(sampleLocation, 1, 1))
       .xyz.toConst()
     const positionView = farPositionView
-      .mul(linearDepth.negate().div(farPositionView.z))
+      .mul(cameraZ.negate().div(farPositionView.z))
       .toConst()
     return inverseViewMatrix(camera).mul(vec4(positionView, 1)).xyz
   }

@@ -121,6 +121,12 @@ declare module 'three/src/renderers/common/Backend.js' {
 
 declare module 'three/src/nodes/accessors/TextureNode.js' {
   export default interface TextureNode {
-    size(levelNode?: Node): Node
+    sample(uvNode: Node): TextureNode
+    load(uvNode: Node): TextureNode
+    blur(amountNode: Node): TextureNode
+    level(levelNode: Node): TextureNode
+    size(levelNode: Node): TextureNode
+    size(levelNode?: Node): TextureNode
+    bias(biasNode: Node): TextureNode
   }
 }
