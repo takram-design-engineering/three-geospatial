@@ -13,8 +13,6 @@ import {
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
-  cameraFar,
-  cameraNear,
   depthToViewZ,
   inverseProjectionMatrix,
   inverseViewMatrix,
@@ -91,10 +89,7 @@ export class AerialPerspectiveNode extends TempNode {
     const depth = depthNode.r.toConst()
 
     const getSurfacePositionECEF = (): Node<'vec3'> => {
-      const viewZ = depthToViewZ(depth, cameraNear(camera), cameraFar(camera), {
-        perspective: camera.isPerspectiveCamera,
-        logarithmic: builder.renderer.logarithmicDepthBuffer
-      })
+      const viewZ = depthToViewZ(depth, camera)
       const positionView = screenToPositionView(
         uv(),
         depth,

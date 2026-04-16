@@ -1,5 +1,7 @@
+import type { Camera } from 'three'
 import {
   cos,
+  Fn,
   int,
   logarithmicDepthToViewZ,
   orthographicDepthToViewZ,
@@ -14,26 +16,27 @@ import {
   viewZToPerspectiveDepth
 } from 'three/tsl'
 
+import { cameraFar, cameraNear } from './accessors'
 import { FnLayout } from './FnLayout'
-import { FnVar } from './FnVar'
 import type { Node } from './node'
-
-export interface DepthOptions {
-  perspective?: boolean
-  logarithmic?: boolean
-}
 
 export const depthToViewZ = (
   depth: Node<'float'>,
-  near: Node<'float'>,
-  far: Node<'float'>,
-  { perspective = true, logarithmic = false }: DepthOptions = {}
+  camera?: Camera,
+  near?: Node<'float'>,
+  far?: Node<'float'>
 ): Node<'float'> => {
-  return logarithmic
-    ? logarithmicDepthToViewZ(depth, near, far)
-    : perspective
-      ? perspectiveDepthToViewZ(depth, near, far)
-      : orthographicDepthToViewZ(depth, near, far)
+  near ??= cameraNear(camera)
+  far ??= cameraFar(camera)
+  const perspective = camera?.isPerspectiveCamera === true
+  return Fn(builder => {
+    const logarithmic = builder.renderer.logarithmicDepthBuffer
+    return logarithmic
+      ? logarithmicDepthToViewZ(depth, near, far)
+      : perspective
+        ? perspectiveDepthToViewZ(depth, near, far)
+        : orthographicDepthToViewZ(depth, near, far)
+  })()
 }
 
 export const logarithmicToPerspectiveDepth = (
@@ -93,11 +96,13 @@ export const turbo = FnLayout({
 
 export const depthToColor = (
   depth: Node<'float'>,
-  near: Node<'float'>,
-  far: Node<'float'>,
-  options?: DepthOptions
+  camera?: Camera,
+  near?: Node<'float'>,
+  far?: Node<'float'>
 ): Node<'vec3'> => {
-  const viewZ = depthToViewZ(depth, near, far, options)
+  near ??= cameraNear(camera)
+  far ??= cameraFar(camera)
+  const viewZ = depthToViewZ(depth, camera, near, far)
   return turbo(viewZToLogarithmicDepth(viewZ, near, far))
 }
 
