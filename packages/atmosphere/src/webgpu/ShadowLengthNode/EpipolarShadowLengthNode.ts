@@ -24,7 +24,6 @@ import {
   min,
   OnObjectUpdate,
   renderGroup,
-  Return,
   screenCoordinate,
   texture,
   uint,
@@ -248,211 +247,214 @@ export class EpipolarShadowLengthNode extends TempNode {
           .toConst()
 
         const rayLength = distanceToRayEnd.sub(distanceToRayStart).toConst()
-        If(rayLength.lessThanEqual(10), () => {
-          Return() // Continue to the next cascade
-        })
 
-        // We trace the ray in the light projection space, not in the world
-        // space. Compute shadow map UV coordinates of the ray end point and its
-        // depth in the light space.
-        const shadowMatrix = shadowMatrixArray.element(cascadeIndex)
-        const startUVAndDepthInLightSpace = transformWorldToShadowUV(
-          rayStart,
-          shadowMatrix
-        )
-        const endUVAndDepthInLightSpace = transformWorldToShadowUV(
-          rayEnd,
-          shadowMatrix
-        )
+        // NOTE: We cannot use the early-return pattern.
+        If(rayLength.greaterThan(10), () => {
+          // We trace the ray in the light projection space, not in the world
+          // space. Compute shadow map UV coordinates of the ray end point and
+          // its depth in the light space.
+          const shadowMatrix = shadowMatrixArray.element(cascadeIndex)
+          const startUVAndDepthInLightSpace = transformWorldToShadowUV(
+            rayStart,
+            shadowMatrix
+          )
+          const endUVAndDepthInLightSpace = transformWorldToShadowUV(
+            rayEnd,
+            shadowMatrix
+          )
 
-        // Calculate normalized trace direction in the light projection space
-        // and its length.
-        const shadowTraceDirection = endUVAndDepthInLightSpace
-          .sub(startUVAndDepthInLightSpace)
-          .toVar()
-        // If the ray is directed exactly at the light source, trace length will
-        // be zero.
-        // Clamp to a very small positive value to avoid division by zero.
-        const traceLengthInShadowUVSpace = max(
-          shadowTraceDirection.xy.length(),
-          1e-7
-        ).toConst()
-        // Note that shadowTraceDirection.xy can be exactly zero.
-        shadowTraceDirection.divAssign(traceLengthInShadowUVSpace)
-
-        // Get UV direction for this slice.
-        const cascadeRelative = cascadeIndex.sub(firstCascade).toConst()
-        const sliceUVDirection = sliceUVDirectionNode
-          .load(ivec2(sliceIndex, cascadeRelative))
-          .toConst()
-        // Scale with the shadow map texel size.
-
-        // Get UV direction for this slice.
-        const sliceUVDirectionAndOrigin = sliceUVDirectionNode
-          .load(ivec2(sliceIndex, cascadeIndex))
-          .toConst()
-        const sliceDirectionUV = sliceUVDirection.xy.toConst()
-        const shadowUVStepLength = sliceDirectionUV.length().toConst()
-        const sliceOriginUV = sliceUVDirectionAndOrigin.zw.toConst()
-
-        // Calculate ray step length in world space.
-        const rayStepLengthWorld = rayLength
-          .mul(shadowUVStepLength.div(traceLengthInShadowUVSpace))
-          .toConst()
-
-        // March the ray.
-        const distanceMarchedInCascade = float(0).toVar()
-        const currentShadowUVAndDepthInLightSpace =
-          startUVAndDepthInLightSpace.toVar()
-
-        const minLevel = 0
-        // It is essential to round initial sample pos to the closest integer.
-        const currentSamplePosition = uint(
-          startUVAndDepthInLightSpace.xy
-            .sub(sliceOriginUV)
-            .length()
-            .div(shadowUVStepLength)
-            .add(0.5)
-        ).toVar()
-        const currentTreeLevel = uint(0).toVar()
-        // Note that min/max shadow map does not contain finest resolution level
-        // The first level it contains corresponds to step == 2.
-        const levelDataOffset = minMaxShadowMapSize.negate().toVar()
-        const stepScale = float(1).toVar()
-        const maxStepScale = maxShadowStep
-
-        // Scale trace direction in light projection space to calculate the step
-        // in shadow map.
-        const shadowUVAndDepthStep = shadowTraceDirection
-          .mul(shadowUVStepLength)
-          .toConst()
-
-        Loop(distanceMarchedInCascade.lessThan(rayLength), () => {
-          // Clamp depth to a very small positive value to avoid z-fighting at
-          // camera location.
-          const currentDepthInLightSpace = max(
-            currentShadowUVAndDepthInLightSpace.z,
+          // Calculate normalized trace direction in the light projection space
+          // and its length.
+          const shadowTraceDirection = endUVAndDepthInLightSpace
+            .sub(startUVAndDepthInLightSpace)
+            .toVar()
+          // If the ray is directed exactly at the light source, trace length
+          // will be zero.
+          // Clamp to a very small positive value to avoid division by zero.
+          const traceLengthInShadowUVSpace = max(
+            shadowTraceDirection.xy.length(),
             1e-7
           ).toConst()
-          const isInLight = float(0).toVar()
+          // Note that shadowTraceDirection.xy can be exactly zero.
+          shadowTraceDirection.divAssign(traceLengthInShadowUVSpace)
 
-          // If the step scale can be doubled without exceeding the maximum
-          // allowed scale and the sample is located at the appropriate
-          // position, advance to the next coarser level.
-          If(
-            and(
-              stepScale.mul(2).lessThan(maxStepScale),
-              currentSamplePosition
-                .bitAnd(uint(2).shiftLeft(currentTreeLevel).sub(1))
-                .equal(0)
-            ),
-            () => {
-              levelDataOffset.addAssign(
+          // Get UV direction for this slice.
+          const cascadeRelative = cascadeIndex.sub(firstCascade).toConst()
+          const sliceUVDirection = sliceUVDirectionNode
+            .load(ivec2(sliceIndex, cascadeRelative))
+            .toConst()
+          // Scale with the shadow map texel size.
+
+          // Get UV direction for this slice.
+          const sliceUVDirectionAndOrigin = sliceUVDirectionNode
+            .load(ivec2(sliceIndex, cascadeIndex))
+            .toConst()
+          const sliceDirectionUV = sliceUVDirection.xy.toConst()
+          const shadowUVStepLength = sliceDirectionUV.length().toConst()
+          const sliceOriginUV = sliceUVDirectionAndOrigin.zw.toConst()
+
+          // Calculate ray step length in world space.
+          const rayStepLengthWorld = rayLength
+            .mul(shadowUVStepLength.div(traceLengthInShadowUVSpace))
+            .toConst()
+
+          // March the ray.
+          const distanceMarchedInCascade = float(0).toVar()
+          const currentShadowUVAndDepthInLightSpace =
+            startUVAndDepthInLightSpace.toVar()
+
+          const minLevel = 0
+          // It is essential to round initial sample pos to the closest integer.
+          const currentSamplePosition = uint(
+            startUVAndDepthInLightSpace.xy
+              .sub(sliceOriginUV)
+              .length()
+              .div(shadowUVStepLength)
+              .add(0.5)
+          ).toVar()
+          const currentTreeLevel = uint(0).toVar()
+          // Note that min/max shadow map does not contain finest resolution
+          // level. The first level it contains corresponds to step == 2.
+          const levelDataOffset = minMaxShadowMapSize.negate().toVar()
+          const stepScale = float(1).toVar()
+          const maxStepScale = maxShadowStep
+
+          // Scale trace direction in light projection space to calculate the
+          // step in shadow map.
+          const shadowUVAndDepthStep = shadowTraceDirection
+            .mul(shadowUVStepLength)
+            .toConst()
+
+          Loop(distanceMarchedInCascade.lessThan(rayLength), () => {
+            // Clamp depth to a very small positive value to avoid z-fighting
+            // at camera location.
+            const currentDepthInLightSpace = max(
+              currentShadowUVAndDepthInLightSpace.z,
+              1e-7
+            ).toConst()
+            const isInLight = float(0).toVar()
+
+            // If the step scale can be doubled without exceeding the maximum
+            // allowed scale and the sample is located at the appropriate
+            // position, advance to the next coarser level.
+            If(
+              and(
+                stepScale.mul(2).lessThan(maxStepScale),
+                currentSamplePosition
+                  .bitAnd(uint(2).shiftLeft(currentTreeLevel).sub(1))
+                  .equal(0)
+              ),
+              () => {
+                levelDataOffset.addAssign(
+                  minMaxShadowMapSize.shiftRight(currentTreeLevel)
+                )
+                currentTreeLevel.addAssign(1)
+                stepScale.mulAssign(2)
+              }
+            )
+
+            Loop(currentTreeLevel.greaterThan(minLevel), () => {
+              // Compute light space depths at the ends of the current ray
+              // section.
+
+              // What we need here is actually depth which is divided by the
+              // camera view space z.
+              // Thus depth can be correctly interpolated in screen space:
+              // http://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf
+              // A subtle moment here is that we need to be sure that we can
+              // skip stepScale samples starting from 0 up to stepScale - 1.
+              // We do not need to do any checks against the sample stepScale
+              // away:
+              //
+              //     --------------->
+              //
+              //          *
+              //               *         *
+              //     *              *
+              //     0    1    2    3
+              //
+              //     |------------------>|
+              //         stepScale = 4
+              //
+              const nextLightSpaceDepth =
+                currentShadowUVAndDepthInLightSpace.z.add(
+                  shadowUVAndDepthStep.z.mul(stepScale.sub(1))
+                )
+              const startEndDepthOnRaySection = vec2(
+                currentShadowUVAndDepthInLightSpace.z,
+                nextLightSpaceDepth
+              ).toConst()
+
+              // Load 1D min/max depths.
+              const minMaxTextureYIndex = uint(sliceIndex).add(
+                uint(cascadeIndex.sub(firstCascade)).mul(numEpipolarSlices)
+              )
+              const minMaxTextureCoord = ivec2(
+                int(currentSamplePosition.shiftRight(currentTreeLevel)).add(
+                  levelDataOffset
+                ),
+                minMaxTextureYIndex
+              )
+              const currentMinMaxDepth = minMaxLevelsNode
+                .load(minMaxTextureCoord)
+                .xy.toConst()
+
+              // Since we use complimentary depth buffer, the relations are
+              // reversed.
+              isInLight.assign(
+                startEndDepthOnRaySection
+                  .greaterThanEqual(currentMinMaxDepth.yy)
+                  .all()
+              )
+              const isInShadow = startEndDepthOnRaySection
+                .lessThan(currentMinMaxDepth.xx)
+                .all()
+
+              If(isInLight.or(isInShadow), () => {
+                // If the ray section is fully lit or shadowed, we can break
+                // the loop.
+                Break()
+              })
+              // If the ray section is neither fully lit, nor shadowed, we have
+              // to go to the finer level.
+              currentTreeLevel.subAssign(1)
+              levelDataOffset.subAssign(
                 minMaxShadowMapSize.shiftRight(currentTreeLevel)
               )
-              currentTreeLevel.addAssign(1)
-              stepScale.mulAssign(2)
-            }
-          )
-
-          Loop(currentTreeLevel.greaterThan(minLevel), () => {
-            // Compute light space depths at the ends of the current ray
-            // section.
-
-            // What we need here is actually depth which is divided by the
-            // camera view space z.
-            // Thus depth can be correctly interpolated in screen space:
-            // http://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf
-            // A subtle moment here is that we need to be sure that we can
-            // skip stepScale samples starting from 0 up to stepScale - 1. We
-            // do not need to do any checks against the sample stepScale away:
-            //
-            //     --------------->
-            //
-            //          *
-            //               *         *
-            //     *              *
-            //     0    1    2    3
-            //
-            //     |------------------>|
-            //         stepScale = 4
-            //
-            const nextLightSpaceDepth =
-              currentShadowUVAndDepthInLightSpace.z.add(
-                shadowUVAndDepthStep.z.mul(stepScale.sub(1))
-              )
-            const startEndDepthOnRaySection = vec2(
-              currentShadowUVAndDepthInLightSpace.z,
-              nextLightSpaceDepth
-            ).toConst()
-
-            // Load 1D min/max depths.
-            const minMaxTextureYIndex = uint(sliceIndex).add(
-              uint(cascadeIndex.sub(firstCascade)).mul(numEpipolarSlices)
-            )
-            const minMaxTextureCoord = ivec2(
-              int(currentSamplePosition.shiftRight(currentTreeLevel)).add(
-                levelDataOffset
-              ),
-              minMaxTextureYIndex
-            )
-            const currentMinMaxDepth = minMaxLevelsNode
-              .load(minMaxTextureCoord)
-              .xy.toConst()
-
-            // Since we use complimentary depth buffer, the relations are
-            // reversed.
-            isInLight.assign(
-              startEndDepthOnRaySection
-                .greaterThanEqual(currentMinMaxDepth.yy)
-                .all()
-            )
-            const isInShadow = startEndDepthOnRaySection
-              .lessThan(currentMinMaxDepth.xx)
-              .all()
-
-            If(isInLight.or(isInShadow), () => {
-              // If the ray section is fully lit or shadowed, we can break the
-              // loop.
-              Break()
+              stepScale.divAssign(2)
             })
-            // If the ray section is neither fully lit, nor shadowed, we have
-            // to go to the finer level.
-            currentTreeLevel.subAssign(1)
-            levelDataOffset.subAssign(
-              minMaxShadowMapSize.shiftRight(currentTreeLevel)
-            )
-            stepScale.divAssign(2)
-          })
 
-          // If we are at the finest level, sample the shadow map with PCF.
-          If(currentTreeLevel.lessThanEqual(minLevel), () => {
-            isInLight.assign(
-              sampleShadow(
-                currentShadowUVAndDepthInLightSpace,
-                cascadeIndex,
-                currentDepthInLightSpace
+            // If we are at the finest level, sample the shadow map with PCF.
+            If(currentTreeLevel.lessThanEqual(minLevel), () => {
+              isInLight.assign(
+                sampleShadow(
+                  currentShadowUVAndDepthInLightSpace,
+                  cascadeIndex,
+                  currentDepthInLightSpace
+                )
               )
+            })
+
+            const remainingDistance = rayLength
+              .sub(distanceMarchedInCascade)
+              .max(0)
+              .toConst()
+            const integrationStep = rayStepLengthWorld
+              .mul(stepScale)
+              .min(remainingDistance)
+              .toConst()
+
+            currentShadowUVAndDepthInLightSpace.addAssign(
+              shadowUVAndDepthStep.mul(stepScale)
             )
+            currentSamplePosition.addAssign(uint(1).shiftLeft(currentTreeLevel))
+            distanceMarchedInCascade.addAssign(
+              rayStepLengthWorld.mul(stepScale)
+            )
+
+            totalLitLength.addAssign(integrationStep.mul(isInLight))
+            totalMarchedLength.addAssign(integrationStep)
           })
-
-          const remainingDistance = rayLength
-            .sub(distanceMarchedInCascade)
-            .max(0)
-            .toConst()
-          const integrationStep = rayStepLengthWorld
-            .mul(stepScale)
-            .min(remainingDistance)
-            .toConst()
-
-          currentShadowUVAndDepthInLightSpace.addAssign(
-            shadowUVAndDepthStep.mul(stepScale)
-          )
-          currentSamplePosition.addAssign(uint(1).shiftLeft(currentTreeLevel))
-          distanceMarchedInCascade.addAssign(rayStepLengthWorld.mul(stepScale))
-
-          totalLitLength.addAssign(integrationStep.mul(isInLight))
-          totalMarchedLength.addAssign(integrationStep)
         })
 
         return vec2(totalLitLength, totalMarchedLength)
