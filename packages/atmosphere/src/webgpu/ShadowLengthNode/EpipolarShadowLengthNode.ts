@@ -179,28 +179,6 @@ export class EpipolarShadowLengthNode extends TempNode {
       Array.from({ length: csmShadowNode.cascades }, () => new Matrix4())
     ).setGroup(renderGroup)
 
-    // uniformArray doesn't appear to support onRenderUpdate.
-    OnObjectUpdate(() => {
-      const array = shadowCascadeArray.array as Vector2[]
-      const far = Math.min(camera.far, csmShadowNode.maxFar)
-      const cascades = csmShadowNode._cascades
-      for (let i = 0; i < cascades.length; ++i) {
-        const cascade = cascades[i]
-        array[i].set(cascade.x * far, cascade.y * far)
-      }
-    })
-
-    OnObjectUpdate(() => {
-      const array = shadowMatrixArray.array as Matrix4[]
-      const lights = csmShadowNode.lights
-      for (let i = 0; i < lights.length; ++i) {
-        const matrix = lights[i].shadow?.matrix
-        if (matrix != null) {
-          array[i].copy(matrix)
-        }
-      }
-    })
-
     const { lights, cascades } = csmShadowNode
     invariant(lights.length > 0)
     invariant(lights.length === cascades)
@@ -487,6 +465,30 @@ export class EpipolarShadowLengthNode extends TempNode {
     let rayTopIntersection: Node<'vec2'>
 
     return Fn(builder => {
+      // uniformArray doesn't appear to support onRenderUpdate.
+      // OnObjectUpdate must be called inside a Fn() callback where
+      // currentStack is set, so that the EventNode is properly registered.
+      OnObjectUpdate(() => {
+        const array = shadowCascadeArray.array as Vector2[]
+        const far = Math.min(camera.far, csmShadowNode.maxFar)
+        const cascades = csmShadowNode._cascades
+        for (let i = 0; i < cascades.length; ++i) {
+          const cascade = cascades[i]
+          array[i].set(cascade.x * far, cascade.y * far)
+        }
+      })
+
+      OnObjectUpdate(() => {
+        const array = shadowMatrixArray.array as Matrix4[]
+        const lights = csmShadowNode.lights
+        for (let i = 0; i < lights.length; ++i) {
+          const matrix = lights[i].shadow?.matrix
+          if (matrix != null) {
+            array[i].copy(matrix)
+          }
+        }
+      })
+
       const { parameters } = getAtmosphereContext(builder)
       const { topRadius, bottomRadius } = parameters
 
