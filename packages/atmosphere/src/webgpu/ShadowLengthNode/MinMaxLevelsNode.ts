@@ -8,7 +8,6 @@ import {
 } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
-  float,
   floor,
   Fn,
   If,
@@ -19,7 +18,8 @@ import {
   uniform,
   uniformTexture,
   uvec2,
-  vec2
+  vec2,
+  vec4
 } from 'three/tsl'
 import {
   NodeMaterial,
@@ -34,7 +34,11 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { outputTexture, type Node } from '@takram/three-geospatial/webgpu'
+import {
+  outputTexture,
+  textureGather,
+  type Node
+} from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -209,31 +213,28 @@ export class MinMaxLevelsNode extends TempNode {
         .add(sliceUVDirection.xy.mul(floor(screenCoordinate.x).mul(2)))
         .toConst()
 
-      const minDepth = float(1).toVar()
-      const maxDepth = float(0).toVar()
+      const minDepths = vec4(1).toVar()
+      const maxDepths = vec4(0).toVar()
       // Gather 8 depths which will be used for PCF filtering for this sample
       // and its immediate neighbor along the epipolar slice.
-      const mapSize = textureNodes[0].size().toConst()
       for (let cascade = 0; cascade < cascades; ++cascade) {
         If(cascadeIndex.equal(cascade), () => {
           for (let i = 0; i <= 1; ++i) {
             const sampleUV = currentUV.add(sliceUVDirection.xy.mul(i)).toConst()
-            const sampleCoord = uvec2(sampleUV.mul(mapSize)).toConst()
-            // TODO: Add gather() in TextureNode and use it:
-            for (let y = 0; y <= 1; ++y) {
-              for (let x = 0; x <= 1; ++x) {
-                const depth = textureNodes[cascade]
-                  .load(sampleCoord.add(uvec2(x, y)))
-                  .toConst()
-                minDepth.assign(min(minDepth, depth))
-                maxDepth.assign(max(maxDepth, depth))
-              }
-            }
+            const depths = textureGather(
+              textureNodes[cascade],
+              sampleUV
+            ).toConst()
+            minDepths.assign(min(minDepths, depths))
+            maxDepths.assign(max(maxDepths, depths))
           }
         })
       }
 
-      return vec2(minDepth, maxDepth)
+      return vec2(
+        min(minDepths.x, minDepths.y, minDepths.z, minDepths.w),
+        max(maxDepths.x, maxDepths.y, maxDepths.z, maxDepths.w)
+      )
     })()
   }
 
