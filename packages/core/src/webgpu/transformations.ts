@@ -1,5 +1,7 @@
 import type { Camera } from 'three'
 import {
+  cameraFar as cameraFarTSL,
+  cameraNear as cameraNearTSL,
   cos,
   Fn,
   int,
@@ -41,22 +43,27 @@ export const depthToViewZ = (
 
 export const logarithmicToPerspectiveDepth = (
   depth: Node<'float'>,
-  near: Node<'float'>,
-  far: Node<'float'>
+  near?: Node<'float'>,
+  far?: Node<'float'>
 ): Node<'float'> => {
+  near ??= cameraNearTSL
+  far ??= cameraFarTSL
   const viewZ = logarithmicDepthToViewZ(depth, near, far)
   return viewZToPerspectiveDepth(viewZ, near, far)
 }
 
 export const perspectiveToLogarithmicDepth = (
   depth: Node<'float'>,
-  near: Node<'float'>,
-  far: Node<'float'>
+  near?: Node<'float'>,
+  far?: Node<'float'>
 ): Node<'float'> => {
+  near ??= cameraNearTSL
+  far ??= cameraFarTSL
   const viewZ = perspectiveDepthToViewZ(depth, near, far)
   return viewZToLogarithmicDepth(viewZ, near, far)
 }
 
+// TODO: Reconsider interface
 export const screenToPositionView = (
   uv: Node<'vec2'>,
   depth: Node<'float'>,
