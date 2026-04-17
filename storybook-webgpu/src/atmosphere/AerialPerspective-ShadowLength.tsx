@@ -1,0 +1,460 @@
+import { Box } from '@react-three/drei'
+import { useThree } from '@react-three/fiber'
+import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FC
+} from 'react'
+import { AgXToneMapping, FloatType, RedFormat, Scene } from 'three'
+import { CSMHelper } from 'three/examples/jsm/csm/CSMHelper.js'
+import { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
+import {
+  context,
+  mrt,
+  output,
+  pass,
+  toneMapping,
+  uniform,
+  vec4
+} from 'three/tsl'
+import {
+  MeshLambertNodeMaterial,
+  PostProcessing,
+  type Renderer
+} from 'three/webgpu'
+
+import {
+  getECIToECEFRotationMatrix,
+  getMoonDirectionECI,
+  getSunDirectionECI
+} from '@takram/three-atmosphere'
+import {
+  aerialPerspective,
+  AtmosphereContext,
+  AtmosphereLight,
+  AtmosphereLightNode,
+  AtmosphereParameters,
+  shadowLength
+} from '@takram/three-atmosphere/webgpu'
+import { radians } from '@takram/three-geospatial'
+import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
+import {
+  dithering,
+  highpVelocity,
+  lensFlare,
+  temporalAntialias,
+  textureQuadrant,
+  viewZ
+} from '@takram/three-geospatial/webgpu'
+
+import type { StoryFC } from '../components/createStory'
+import { Description } from '../components/Description'
+import { GlobeControls } from '../components/GlobeControls'
+import { WebGPUCanvas } from '../components/WebGPUCanvas'
+import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
+import {
+  localDateArgs,
+  localDateArgTypes,
+  useLocalDateControls,
+  type LocalDateArgs
+} from '../controls/localDateControls'
+import {
+  outputPassArgs,
+  outputPassArgTypes,
+  useOutputPassControls,
+  type OutputPassArgs
+} from '../controls/outputPassControls'
+import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
+import {
+  toneMappingArgs,
+  toneMappingArgTypes,
+  useToneMappingControls,
+  type ToneMappingArgs
+} from '../controls/toneMappingControls'
+import { useControl } from '../hooks/useControl'
+import { useGuardedFrame } from '../hooks/useGuardedFrame'
+import { usePointOfView, type PointOfViewProps } from '../hooks/usePointOfView'
+import { useResource } from '../hooks/useResource'
+import { useTransientControl } from '../hooks/useTransientControl'
+import { CesiumIonTerrainPlugin } from '../plugins/CesiumIonTerrainPlugin'
+import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
+import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
+import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
+
+const Content: FC<StoryProps> = ({
+  longitude,
+  latitude,
+  height,
+  heading,
+  pitch,
+  distance
+}) => {
+  const renderer = useThree<Renderer>(({ gl }) => gl as any)
+  const scene = useThree(({ scene }) => scene)
+  const camera = useThree(({ camera }) => camera)
+  const overlayScene = useMemo(() => new Scene(), [])
+
+  const atmosphereContext = useResource(() => {
+    const parameters = new AtmosphereParameters()
+    parameters.higherOrderScatteringTexture = false
+    return new AtmosphereContext(parameters)
+  }, [])
+  atmosphereContext.camera = camera
+
+  useLayoutEffect(() => {
+    renderer.contextNode = context({
+      ...renderer.contextNode.value,
+      getAtmosphere: () => atmosphereContext
+    })
+  }, [renderer, atmosphereContext])
+
+  const [light, csmShadowNode] = useMemo(() => {
+    const light = new AtmosphereLight()
+    light.castShadow = true
+    light.shadow.mapSize.width = 1024
+    light.shadow.mapSize.height = 1024
+    light.shadow.camera.near = 0
+    light.shadow.camera.far = 5e5
+
+    const csmNode = new CSMShadowNode(light)
+    csmNode.cascades = 3
+    csmNode.maxFar = 5e4
+    csmNode.fade = true
+    light.shadow.shadowNode = csmNode
+
+    return [light, csmNode]
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      light.dispose()
+    }
+  }, [light])
+
+  // Post-processing:
+
+  const passNode = useResource(
+    () =>
+      pass(scene, camera, { samples: 0 }).setMRT(
+        mrt({
+          output,
+          velocity: highpVelocity,
+          viewZ
+        })
+      ),
+    [scene, camera]
+  )
+
+  const colorNode = passNode.getTextureNode('output')
+  const depthNode = passNode.getTextureNode('depth')
+  const velocityNode = passNode.getTextureNode('velocity')
+  const viewZNode = passNode.getTextureNode('viewZ')
+  viewZNode.value.type = FloatType
+  viewZNode.value.format = RedFormat
+
+  const shadowLengthNode = useResource(
+    () => shadowLength(csmShadowNode, viewZNode),
+    [csmShadowNode, viewZNode]
+  )
+
+  const aerialNode = useResource(
+    () => aerialPerspective(colorNode, depthNode),
+    [colorNode, depthNode]
+  )
+
+  const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
+
+  const toneMappingNode = useResource(
+    () => toneMapping(AgXToneMapping, uniform(0), lensFlareNode),
+    [lensFlareNode]
+  )
+
+  const taaNode = useResource(
+    () => temporalAntialias(toneMappingNode, depthNode, velocityNode, camera),
+    [camera, depthNode, velocityNode, toneMappingNode]
+  )
+
+  const overlayPassNode = useResource(
+    () =>
+      pass(overlayScene, camera, {
+        samples: 0,
+        depthBuffer: false
+      }),
+    [camera, overlayScene]
+  )
+
+  const { showShadowLength, debugShadowLength } = useControl(
+    ({ showShadowLength, debugShadowLength }: StoryArgs) => ({
+      showShadowLength,
+      debugShadowLength
+    })
+  )
+
+  const postProcessing = useResource(() => {
+    let outputNode = taaNode
+      .add(dithering)
+      .mul(overlayPassNode.a.oneMinus())
+      .add(overlayPassNode)
+    if (debugShadowLength) {
+      outputNode = outputNode
+        .mul(vec4(0, 0, 0, 1))
+        .add(
+          textureQuadrant(
+            shadowLengthNode.sliceEndpointsNode.getTextureNode(),
+            shadowLengthNode.coordinateNode.getTextureNode(),
+            shadowLengthNode.sliceUVDirectionNode.getTextureNode(),
+            shadowLengthNode.minMaxLevelsNode.getTextureNode()
+          )
+        )
+    } else if (showShadowLength) {
+      outputNode = outputNode.mul(vec4(0, 0, 0, 1)).add(shadowLengthNode.rrr)
+    }
+    return new PostProcessing(renderer, outputNode)
+  }, [
+    taaNode,
+    overlayPassNode,
+    showShadowLength,
+    debugShadowLength,
+    renderer,
+    shadowLengthNode
+  ])
+
+  useTransientControl(
+    ({ shadowLength }: StoryArgs) => shadowLength,
+    value => {
+      aerialNode.shadowLengthNode = value ? shadowLengthNode : null
+      postProcessing.needsUpdate = true
+    }
+  )
+  const updateHelperRef = useRef(true)
+  useTransientControl(
+    ({ updateHelper }: StoryArgs) => updateHelper,
+    updateHelper => {
+      updateHelperRef.current = updateHelper
+    }
+  )
+
+  useGuardedFrame(() => {
+    if (updateHelperRef.current) {
+      csmHelper.update()
+    }
+    postProcessing.render()
+  }, 1)
+
+  useTransientControl(
+    ({
+      transmittance,
+      inscatter,
+      showGround,
+      raymarchSingleScattering
+    }: StoryArgs) => ({
+      transmittance,
+      inscatter,
+      showGround,
+      raymarchSingleScattering
+    }),
+    ({ transmittance, inscatter, showGround, raymarchSingleScattering }) => {
+      aerialNode.transmittance = transmittance
+      aerialNode.inscatter = inscatter
+      atmosphereContext.showGround = showGround
+      atmosphereContext.raymarchSingleScattering = raymarchSingleScattering
+      postProcessing.needsUpdate = true
+    }
+  )
+
+  // Output pass controls:
+  useOutputPassControls(
+    postProcessing,
+    passNode,
+    (outputNode, outputColorTransform) => {
+      postProcessing.outputNode = outputNode
+      postProcessing.outputColorTransform = outputColorTransform
+      postProcessing.needsUpdate = true
+    }
+  )
+
+  // Tone mapping controls:
+  useToneMappingControls(toneMappingNode, () => {
+    postProcessing.needsUpdate = true
+  })
+
+  // Apply the initial point of view.
+  usePointOfView({
+    longitude,
+    latitude,
+    height,
+    heading,
+    pitch,
+    distance
+  })
+
+  // Local date controls (depends on the longitude of the location):
+  useLocalDateControls(longitude, date => {
+    const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } =
+      atmosphereContext
+    getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
+    getSunDirectionECI(date, sunDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
+    getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(
+      matrixECIToECEF.value
+    )
+  })
+
+  const csmHelper = useResource(
+    () => new CSMHelper(csmShadowNode),
+    [csmShadowNode]
+  )
+
+  const [tilesScene, setTilesScene] = useState<Scene | null>(null)
+
+  return (
+    <>
+      <primitive object={light} />
+      {/* <primitive object={csmHelper} /> */}
+      {/* <primitive object={samplePoints} /> */}
+      <EastNorthUpFrame
+        longitude={radians(longitude)}
+        latitude={radians(latitude)}
+        height={1000}
+      >
+        <Box
+          args={[1000, 1000, 1000]}
+          material={new MeshLambertNodeMaterial()}
+          castShadow
+        />
+      </EastNorthUpFrame>
+      <scene ref={setTilesScene}>
+        <GlobeControls
+          enableDamping
+          scene={tilesScene}
+          overlayScene={overlayScene}
+        />
+        <TilesRenderer>
+          <TilesPlugin
+            plugin={CesiumIonTerrainPlugin}
+            args={{
+              apiToken: PLATEAU_TERRAIN_API_TOKEN,
+              assetId: 3258112, // PLATEAU terrain dataset
+              autoRefreshToken: true
+            }}
+          />
+          <TilesPlugin
+            plugin={TileMaterialReplacementPlugin}
+            args={() => new MeshLambertNodeMaterial()}
+          />
+          <TilesPlugin
+            plugin={TileMeshPropsPlugin}
+            args={{ castShadow: true, receiveShadow: true }}
+          />
+          <TilesPlugin plugin={TilesFadePlugin} />
+        </TilesRenderer>
+      </scene>
+    </>
+  )
+}
+
+interface StoryProps extends PointOfViewProps {}
+
+interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
+  updateHelper: boolean
+  transmittance: boolean
+  inscatter: boolean
+  showGround: boolean
+  raymarchSingleScattering: boolean
+  shadowLength: boolean
+  showShadowLength: boolean
+  debugShadowLength: boolean
+}
+
+export const Story: StoryFC<StoryProps, StoryArgs> = props => (
+  <WebGPUCanvas
+    shadows
+    renderer={{
+      onInit: renderer => {
+        renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+      }
+    }}
+  >
+    <Content {...props} />
+    <Description />
+  </WebGPUCanvas>
+)
+
+Story.args = {
+  updateHelper: true,
+  transmittance: true,
+  inscatter: true,
+  showGround: true,
+  raymarchSingleScattering: false,
+  shadowLength: true,
+  showShadowLength: false,
+  debugShadowLength: false,
+  ...localDateArgs({
+    dayOfYear: 0,
+    timeOfDay: 9
+  }),
+  ...toneMappingArgs({
+    toneMappingExposure: 5
+  }),
+  ...outputPassArgs(),
+  ...rendererArgs()
+}
+
+Story.argTypes = {
+  updateHelper: {
+    control: {
+      type: 'boolean'
+    }
+  },
+  transmittance: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  inscatter: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  showGround: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  raymarchSingleScattering: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  shadowLength: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  showShadowLength: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  debugShadowLength: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'aerial perspective' }
+  },
+  ...localDateArgTypes(),
+  ...toneMappingArgTypes(),
+  ...outputPassArgTypes(),
+  ...rendererArgTypes()
+}
