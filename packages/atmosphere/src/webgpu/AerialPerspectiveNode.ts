@@ -46,13 +46,15 @@ export class AerialPerspectiveNode extends TempNode {
   constructor(
     colorNode: Node<'vec4'>,
     depthNode: Node<'float'>,
-    normalNode?: Node<'vec3'> | null
+    normalNode?: Node<'vec3'> | null,
+    shadowLengthNode?: Node<'float'> | null
   ) {
     super('vec4')
     this.colorNode = colorNode
     this.depthNode = depthNode
     this.normalNode = normalNode
-    this.skyNode = sky()
+    this.shadowLengthNode = shadowLengthNode
+    this.skyNode = sky(shadowLengthNode)
 
     this.lighting = normalNode != null
   }

@@ -50,9 +50,10 @@ export class SkyNode extends TempNode {
   moonScattering = false
   useContextCamera = true
 
-  constructor(scope: SkyNodeScope) {
+  constructor(scope: SkyNodeScope, shadowLengthNode?: Node<'float'> | null) {
     super('vec3')
     this.scope = scope
+    this.shadowLengthNode = shadowLengthNode
     this.sunNode = new SunNode()
     this.moonNode = new MoonNode()
     this.starsNode = new StarsNode()
