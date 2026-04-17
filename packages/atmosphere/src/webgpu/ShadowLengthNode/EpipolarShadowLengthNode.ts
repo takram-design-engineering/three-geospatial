@@ -252,7 +252,7 @@ export class EpipolarShadowLengthNode extends TempNode {
 
         const rayLength = distanceToRayEnd.sub(distanceToRayStart).toConst()
 
-        // NOTE: We cannot use the early-return pattern.
+        // WORKAROUND: We cannot use the early-return pattern.
         If(rayLength.lessThanEqual(10).not(), () => {
           // We trace the ray in the light projection space, not in the world
           // space. Compute shadow map UV coordinates of the ray end point and
@@ -519,7 +519,7 @@ export class EpipolarShadowLengthNode extends TempNode {
       const totalShadowLength = float(0).toVar()
 
       // Skip samples with invalid screen coordinates.
-      // NOTE: We cannot use the early-return pattern.
+      // WORKAROUND: We cannot use the early-return pattern.
       If(
         sampleLocation
           .abs()

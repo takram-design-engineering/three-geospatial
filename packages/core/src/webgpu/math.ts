@@ -11,8 +11,7 @@ import {
   uvec2,
   uvec3,
   uvec4,
-  vec2,
-  vec4
+  vec2
 } from 'three/tsl'
 
 import { FnLayout } from './FnLayout'
@@ -146,13 +145,12 @@ export const raySpheresIntersections = /*#__PURE__*/ FnVar(
     const c = dot(a, a).sub(radii.pow2())
     const discriminant = b.pow2().sub(c).toConst()
 
-    const near = vec4(-1)
-    const far = vec4(-1)
-    If(discriminant.greaterThanEqual(0), () => {
-      const Q = sqrt(discriminant)
-      near.assign(b.negate().sub(Q))
-      far.assign(b.negate().add(Q))
-    })
+    // Reference: https://github.com/GameTechDev/OutdoorLightScattering/blob/master/fx/Common.fxh#L148
+    const mask = vec2(discriminant.greaterThanEqual(0)).toConst()
+    const inverseMask = mask.oneMinus().toConst()
+    const Q = sqrt(discriminant.max(0)).toConst()
+    const near = mask.mul(b.negate().sub(Q)).sub(inverseMask)
+    const far = mask.mul(b.negate().add(Q)).sub(inverseMask)
     return raySpheresIntersectionsStruct(near, far)
   }
 )
