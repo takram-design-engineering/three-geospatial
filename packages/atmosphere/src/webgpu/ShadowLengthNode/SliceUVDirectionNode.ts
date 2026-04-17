@@ -66,10 +66,10 @@ export class SliceUVDirectionNode extends TempNode {
 
   camera!: Camera
 
-  numEpipolarSlices = 512
-  maxSamplesInSlice = 256
+  numEpipolarSlices = 512 * 2
+  maxSamplesInSlice = 256 * 2
 
-  firstCascade = uniform(1, 'uint')
+  firstCascade = uniform(0, 'uint')
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget

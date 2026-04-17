@@ -93,11 +93,11 @@ export class EpipolarShadowLengthNode extends TempNode {
 
   camera!: Camera
 
-  firstCascade = uniform(1, 'uint')
+  firstCascade = uniform(0, 'uint')
   maxShadowStep = uniform(2048 / 4, 'float')
 
-  numEpipolarSlices = 512
-  maxSamplesInSlice = 256
+  numEpipolarSlices = 512 * 2
+  maxSamplesInSlice = 256 * 2
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget

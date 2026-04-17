@@ -63,8 +63,8 @@ export class SliceEndpointsNode extends TempNode {
   camera!: Camera
   light!: DirectionalLight
 
-  numEpipolarSlices = 512
-  maxSamplesInSlice = 256
+  numEpipolarSlices = 512 * 2
+  maxSamplesInSlice = 256 * 2
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget

@@ -37,8 +37,8 @@ export class CoordinateNode extends TempNode {
 
   camera?: Camera
 
-  numEpipolarSlices = 512
-  maxSamplesInSlice = 256
+  numEpipolarSlices = 512 * 2
+  maxSamplesInSlice = 256 * 2
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget

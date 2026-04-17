@@ -56,10 +56,10 @@ export class UnwarpEpipolarNode extends TempNode {
   camera!: Camera
   light!: DirectionalLight
 
-  refinementThreshold = uniform(0)
+  refinementThreshold = uniform(0.03)
 
-  numEpipolarSlices = 512
-  maxSamplesInSlice = 256
+  numEpipolarSlices = 512 * 2
+  maxSamplesInSlice = 256 * 2
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget
@@ -412,7 +412,8 @@ export class UnwarpEpipolarNode extends TempNode {
         totalWeight.addAssign(bilateralUWeight.dot(vec2(1)))
       }
 
-      return shadowLength.div(totalWeight)
+      // TODO: AerialPerspectiveNode expects 1/1000 scale value.
+      return shadowLength.div(totalWeight).div(1000)
     })()
   }
 
