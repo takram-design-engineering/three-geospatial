@@ -1,6 +1,7 @@
 import { add, ivec2, ivec4, sub, uv, vec2, vec4 } from 'three/tsl'
-import type { TextureNode } from 'three/webgpu'
+import type { ConstNode, TextureNode } from 'three/webgpu'
 
+import { reinterpretType } from '../types'
 import { FnVar } from './FnVar'
 import type { Node } from './node'
 
@@ -8,17 +9,27 @@ const components = ['x', 'y', 'z', 'w'] as const
 
 // WORKAROUND: TextureNode doesn't have gather() yet.
 // See: https://www.w3.org/TR/WGSL/#texturegather
+
 export const textureGather = /*#__PURE__*/ FnVar(
   (
     textureNode: TextureNode,
     uvNode: Node<'vec2'>,
-    // eslint-disable-next-line @typescript-eslint/no-inferrable-types
-    component: number = 0
+    component = 0
   ): Node<'vec4'> => {
+    let componentValue
+    if (typeof component === 'number') {
+      componentValue = component
+    } else if ((component as any)?.isConstNode === true) {
+      reinterpretType<ConstNode<number>>(component)
+      componentValue = component.value
+    } else {
+      throw new Error('Component must be a constant.')
+    }
+
     const size = textureNode.size()
     const coord = ivec2(uvNode.mul(size).sub(0.5)).toConst()
     const i = ivec4(coord, coord.add(1)).toConst()
-    const c = components[component] // element() fails for depth textures
+    const c = components[componentValue] // element() fails for depth textures
     return vec4(
       textureNode.load(i.xw)[c], // min, max
       textureNode.load(i.zw)[c], // max, max

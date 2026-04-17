@@ -62,7 +62,6 @@ import {
   exp,
   float,
   floor,
-  fract,
   If,
   Loop,
   max,
@@ -264,8 +263,8 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
         const size = vec2(transmittanceTextureSize)
         const texelSize = vec3(size.reciprocal(), 0).toConst()
         const coord = uv.mul(size).sub(0.5).toConst()
-        const i = floor(coord).add(0.5).mul(texelSize.xy).toConst()
-        const f = fract(coord).toConst()
+        const i = coord.floor().add(0.5).mul(texelSize.xy).toConst()
+        const f = coord.fract().toConst()
         const t1 = exp(transmittanceTexture.sample(i).negate())
         const t2 = exp(
           transmittanceTexture.sample(i.add(texelSize.xz)).negate()
