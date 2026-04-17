@@ -8,6 +8,7 @@ import {
 } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
+  and,
   floor,
   Fn,
   If,
@@ -221,12 +222,24 @@ export class MinMaxLevelsNode extends TempNode {
         If(cascadeIndex.equal(cascade), () => {
           for (let i = 0; i <= 1; ++i) {
             const sampleUV = currentUV.add(sliceUVDirection.xy.mul(i)).toConst()
-            const depths = textureGather(
-              textureNodes[cascade],
-              sampleUV
-            ).toConst()
-            minDepths.assign(min(minDepths, depths))
-            maxDepths.assign(max(maxDepths, depths))
+            // When sampleUV is outside [0,1], we skip the gather so that
+            // the initial values (min=1, max=0) are preserved. This tells the
+            // tree traversal to treat out-of-bounds as fully lit, matching the
+            // behavior of samLinearBorder0.
+            If(
+              and(
+                sampleUV.greaterThanEqual(0).all(),
+                sampleUV.lessThanEqual(1).all()
+              ),
+              () => {
+                const depths = textureGather(
+                  textureNodes[cascade],
+                  sampleUV
+                ).toConst()
+                minDepths.assign(min(minDepths, depths))
+                maxDepths.assign(max(maxDepths, depths))
+              }
+            )
           }
         })
       }
