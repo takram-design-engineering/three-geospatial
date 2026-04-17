@@ -249,7 +249,7 @@ export class EpipolarShadowLengthNode extends TempNode {
         const rayLength = distanceToRayEnd.sub(distanceToRayStart).toConst()
 
         // NOTE: We cannot use the early-return pattern.
-        If(rayLength.greaterThan(10), () => {
+        If(rayLength.lessThanEqual(10).not(), () => {
           // We trace the ray in the light projection space, not in the world
           // space. Compute shadow map UV coordinates of the ray end point and
           // its depth in the light space.
@@ -493,91 +493,92 @@ export class EpipolarShadowLengthNode extends TempNode {
       const sampleLocation = coordinate.xy
       const rayEndCameraZ = coordinate.z.toVar()
 
-      // TODO
-      // If(
-      //   sampleLocation
-      //     .abs()
-      //     .greaterThan(1 + 1e-3)
-      //     .any(),
-      //   () => {
-      //     Return()
-      //   }
-      // )
-
-      cameraPosition = cameraPositionWorld(camera).toConst()
-
-      // Compute the ray termination point, full ray length and view direction.
-      const rayTermination = transformSliceToWorld(
-        sampleLocation,
-        rayEndCameraZ,
-        camera
-      ).toConst()
-      const fullRay = rayTermination.sub(cameraPosition).toConst()
-      fullRayLength = fullRay.length().toVar()
-      viewDirection = fullRay.div(fullRayLength).toConst()
-
-      // Intersect the ray with the top of the atmosphere and the Earth:
-      const intersections = getRaySphereIntersections(
-        cameraPosition,
-        viewDirection,
-        vec3(0),
-        vec2(topRadius, bottomRadius)
-      ).toConst()
-      rayTopIntersection = intersections.xy
-      const rayBottomIntersection = intersections.zw
-
       const totalLitLength = float(0).toVar()
       const totalMarchedLength = float(0).toVar()
 
-      // the camera is outside the atmosphere and the ray either does not
-      // intersect the top of it or the intersection point is behind the
-      // camera. In either case there is no inscattering.
-      If(rayTopIntersection.y.greaterThan(0), () => {
-        // Limit the ray length by the distance to the top of the atmosphere if
-        // the ray does not hit terrain.
-        const originalRayLength = fullRayLength.toConst()
-        If(rayEndCameraZ.greaterThan(cameraFar(camera)), () => {
-          fullRayLength.assign(FLOAT_MAX)
-        })
-        // Limit the ray length by the distance to the point where the ray exits
-        // the atmosphere.
-        fullRayLength.assign(min(fullRayLength, rayTopIntersection.y))
-        // If there is an intersection with the Earth surface, limit the tracing
-        // distance to the intersection.
-        If(rayBottomIntersection.x.greaterThan(0), () => {
-          fullRayLength.assign(min(fullRayLength, rayBottomIntersection.x))
-        })
+      // Skip samples with invalid screen coordinates.
+      // NOTE: We cannot use the early-return pattern.
+      If(
+        sampleLocation
+          .abs()
+          .greaterThan(1 + 1e-3)
+          .any()
+          .not(),
+        () => {
+          cameraPosition = cameraPositionWorld(camera).toConst()
 
-        rayEndCameraZ.mulAssign(fullRayLength.div(originalRayLength))
+          // Compute the ray termination point, full ray length and view
+          // direction.
+          const rayTermination = transformSliceToWorld(
+            sampleLocation,
+            rayEndCameraZ,
+            camera
+          ).toConst()
+          const fullRay = rayTermination.sub(cameraPosition).toConst()
+          fullRayLength = fullRay.length().toVar()
+          viewDirection = fullRay.div(fullRayLength).toConst()
 
-        Loop(
-          {
-            start: firstCascade,
-            end: cascades,
-            condition: '<'
-          },
-          ({ i: cascadeIndex }) => {
-            const shadowCascade = shadowCascadeArray.element(cascadeIndex)
-            const cascadeStartCameraZ = shadowCascade.x
-            const cascadeEndCameraZ = shadowCascade.y
+          // Intersect the ray with the top of the atmosphere and the Earth:
+          const intersections = getRaySphereIntersections(
+            cameraPosition,
+            viewDirection,
+            vec3(0),
+            vec2(topRadius, bottomRadius)
+          ).toConst()
+          rayTopIntersection = intersections.xy
+          const rayBottomIntersection = intersections.zw
 
-            // Check if the ray terminates before it enters current cascade.
-            If(rayEndCameraZ.lessThan(cascadeStartCameraZ), () => {
-              Break()
+          // The camera is outside the atmosphere and the ray either does not
+          // intersect the top of it or the intersection point is behind the
+          // camera. In either case there is no inscattering.
+          If(rayTopIntersection.y.greaterThan(0), () => {
+            // Limit the ray length by the distance to the top of the
+            // atmosphere if the ray does not hit terrain.
+            const originalRayLength = fullRayLength.toConst()
+            If(rayEndCameraZ.greaterThan(cameraFar(camera)), () => {
+              fullRayLength.assign(FLOAT_MAX)
+            })
+            // Limit the ray length by the distance to the point where the ray
+            // exits the atmosphere.
+            fullRayLength.assign(min(fullRayLength, rayTopIntersection.y))
+            // If there is an intersection with the Earth surface, limit the
+            // tracing distance to the intersection.
+            If(rayBottomIntersection.x.greaterThan(0), () => {
+              fullRayLength.assign(min(fullRayLength, rayBottomIntersection.x))
             })
 
-            const result = processCascade(
-              cascadeIndex,
-              rayEndCameraZ,
-              cascadeStartCameraZ,
-              cascadeEndCameraZ
-            ).toConst()
+            rayEndCameraZ.mulAssign(fullRayLength.div(originalRayLength))
 
-            totalLitLength.addAssign(result.x)
-            totalMarchedLength.addAssign(result.y)
-          }
-        )
-      })
+            Loop(
+              {
+                start: firstCascade,
+                end: cascades,
+                condition: '<'
+              },
+              ({ i: cascadeIndex }) => {
+                const shadowCascade = shadowCascadeArray.element(cascadeIndex)
+                const cascadeStartCameraZ = shadowCascade.x
+                const cascadeEndCameraZ = shadowCascade.y
+
+                // Check if the ray terminates before it enters current cascade.
+                If(rayEndCameraZ.lessThan(cascadeStartCameraZ), () => {
+                  Break()
+                })
+
+                const result = processCascade(
+                  cascadeIndex,
+                  rayEndCameraZ,
+                  cascadeStartCameraZ,
+                  cascadeEndCameraZ
+                ).toConst()
+
+                totalLitLength.addAssign(result.x)
+                totalMarchedLength.addAssign(result.y)
+              }
+            )
+          })
+        }
+      )
 
       return totalMarchedLength.sub(totalLitLength)
     })()
