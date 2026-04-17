@@ -213,7 +213,7 @@ export class EpipolarShadowLengthNode extends TempNode {
         rayEndCameraZ: Node<'float'>,
         cascadeStartCameraZ: Node<'float'>,
         cascadeEndCameraZ: Node<'float'>
-      ): Node<'vec2'> => {
+      ): Node<'float'> => {
         const totalLitLength = float(0).toVar()
         const totalMarchedLength = float(0).toVar()
 
@@ -394,16 +394,32 @@ export class EpipolarShadowLengthNode extends TempNode {
                 .load(minMaxTextureCoord)
                 .xy.toConst()
 
-              // Since we use complimentary depth buffer, the relations are
-              // reversed.
-              isInLight.assign(
-                startEndDepthOnRaySection
-                  .greaterThanEqual(currentMinMaxDepth.yy)
-                  .all()
-              )
-              const isInShadow = startEndDepthOnRaySection
-                .lessThan(currentMinMaxDepth.xx)
-                .all()
+              // Determine if the ray section is fully lit or fully shadowed.
+              if (reversedDepthBuffer) {
+                // With reversed depth buffer, the relations are reversed.
+                // maxDepth = closest to light
+                isInLight.assign(
+                  startEndDepthOnRaySection
+                    .greaterThanEqual(currentMinMaxDepth.yy)
+                    .all()
+                )
+              } else {
+                // minDepth = closest to light
+                isInLight.assign(
+                  startEndDepthOnRaySection
+                    .lessThanEqual(currentMinMaxDepth.xx)
+                    .all()
+                )
+              }
+              const isInShadow = (
+                reversedDepthBuffer
+                  ? startEndDepthOnRaySection
+                      .lessThan(currentMinMaxDepth.xx)
+                      .all()
+                  : startEndDepthOnRaySection
+                      .greaterThan(currentMinMaxDepth.yy)
+                      .all()
+              ).toConst()
 
               If(isInLight.or(isInShadow), () => {
                 // If the ray section is fully lit or shadowed, we can break
@@ -452,16 +468,19 @@ export class EpipolarShadowLengthNode extends TempNode {
           })
         })
 
-        return vec2(totalLitLength, totalMarchedLength)
+        return totalMarchedLength.sub(totalLitLength)
       }
     )
 
+    let reversedDepthBuffer: boolean
     let cameraPosition: Node<'vec3'>
     let fullRayLength: Node<'float'>
     let viewDirection: Node<'vec3'>
     let rayTopIntersection: Node<'vec2'>
 
     return Fn(builder => {
+      reversedDepthBuffer = builder.renderer.reversedDepthBuffer
+
       // uniformArray doesn't appear to support onRenderUpdate.
       // OnObjectUpdate must be called inside a Fn() callback where
       // currentStack is set, so that the EventNode is properly registered.
@@ -564,14 +583,14 @@ export class EpipolarShadowLengthNode extends TempNode {
                   Break()
                 })
 
-                const result = processCascade(
+                const shadowLength = processCascade(
                   cascadeIndex,
                   rayEndCameraZ,
                   cascadeStartCameraZ,
                   cascadeEndCameraZ
                 ).toConst()
 
-                totalShadowLength.addAssign(result.x)
+                totalShadowLength.addAssign(shadowLength)
               }
             )
           })
