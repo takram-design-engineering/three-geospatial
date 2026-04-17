@@ -24,14 +24,14 @@ import {
 export const FLOAT_MAX = 3.402823466e38
 
 // Transform UV to NDC XY:
-export const transformUVToScreen = /*#__PURE__#*/ FnLayout({
+export const transformUVToNDC = /*#__PURE__#*/ FnLayout({
   name: 'uvToScreen',
   type: 'vec2',
   inputs: [{ name: 'uv', type: 'vec2' }]
 })(([uv]) => uv.mul(vec2(2, -2)).add(vec2(-1, 1)))
 
 // Transform NDC XY to UV:
-export const transformScreenToUV = /*#__PURE__#*/ FnLayout({
+export const transformNDCToUV = /*#__PURE__#*/ FnLayout({
   name: 'transformScreenToUV',
   type: 'vec2',
   inputs: [{ name: 'screen', type: 'vec2' }]

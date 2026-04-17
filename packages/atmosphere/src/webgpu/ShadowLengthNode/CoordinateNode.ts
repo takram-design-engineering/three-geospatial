@@ -25,7 +25,7 @@ import {
 
 import { outputTexture, type Node } from '@takram/three-geospatial/webgpu'
 
-import { getViewZ, isValidScreenLocation, transformScreenToUV } from './common'
+import { getViewZ, isValidScreenLocation, transformNDCToUV } from './common'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -134,7 +134,7 @@ export class CoordinateNode extends TempNode {
       })
 
       const cameraZ = getViewZ(
-        transformScreenToUV(xy),
+        transformNDCToUV(xy),
         viewZNode,
         depthNode,
         camera

@@ -10,16 +10,7 @@ import {
   type Camera,
   type DirectionalLight
 } from 'three'
-import {
-  float,
-  Fn,
-  max,
-  min,
-  screenCoordinate,
-  uniform,
-  vec2,
-  vec4
-} from 'three/tsl'
+import { float, Fn, max, min, uniform, uv, vec2, vec4 } from 'three/tsl'
 import {
   NodeMaterial,
   NodeUpdateType,
@@ -42,7 +33,7 @@ import {
 import {
   getOutermostScreenPixelCoords,
   getViewZ,
-  transformScreenToUV
+  transformUVToNDC
 } from './common'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -160,13 +151,14 @@ export class UnwarpEpipolarNode extends TempNode {
     const numEpipolarSlices = float(this.numEpipolarSlices)
 
     return Fn(() => {
-      const uv = transformScreenToUV(screenCoordinate).toConst()
-      const cameraZ = getViewZ(uv, viewZNode, depthNode, camera)
+      const uvNode = uv().toConst()
+      const positionNDC = transformUVToNDC(uvNode).toConst()
+      const cameraZ = getViewZ(uvNode, viewZNode, depthNode, camera)
         .negate()
         .toConst()
 
       // Compute direction of the ray going from the light through the pixel.
-      const rayDirection = screenCoordinate
+      const rayDirection = positionNDC
         .sub(lightScreenPosition.xy)
         .normalize()
         .toConst()
@@ -198,7 +190,7 @@ export class UnwarpEpipolarNode extends TempNode {
       // size inwards. Using these adjusted boundaries improves precision and
       // results in smaller number of pixels which require correction.
       const boundaries = getOutermostScreenPixelCoords(screenSize).toConst() // left, bottom, right, top
-      const halfSpaceEquationTerms = screenCoordinate.xxyy
+      const halfSpaceEquationTerms = positionNDC.xxyy
         .sub(boundaries.xzyw)
         .mul(rayDirection.yyxx)
         .toConst()
@@ -302,7 +294,7 @@ export class UnwarpEpipolarNode extends TempNode {
         const sliceLengthSquare = sliceDirection.dot(sliceDirection).toConst()
 
         // Project current pixel onto the epipolar line.
-        const samplePositionOnLine = screenCoordinate
+        const samplePositionOnLine = positionNDC
           .sub(sliceEndpoints.xy)
           .dot(sliceDirection)
           .div(sliceLengthSquare.max(1e-8))
