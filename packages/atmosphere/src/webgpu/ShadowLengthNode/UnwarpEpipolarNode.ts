@@ -413,7 +413,9 @@ export class UnwarpEpipolarNode extends TempNode {
       }
 
       // TODO: AerialPerspectiveNode expects 1/1000 scale value.
-      return shadowLength.div(totalWeight).div(1000)
+      return totalWeight
+        .greaterThan(1e-6)
+        .select(shadowLength.div(totalWeight).div(1000), 0)
     })()
   }
 
