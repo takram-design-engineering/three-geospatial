@@ -493,8 +493,7 @@ export class EpipolarShadowLengthNode extends TempNode {
       const sampleLocation = coordinate.xy
       const rayEndCameraZ = coordinate.z.toVar()
 
-      const totalLitLength = float(0).toVar()
-      const totalMarchedLength = float(0).toVar()
+      const totalShadowLength = float(0).toVar()
 
       // Skip samples with invalid screen coordinates.
       // NOTE: We cannot use the early-return pattern.
@@ -572,15 +571,14 @@ export class EpipolarShadowLengthNode extends TempNode {
                   cascadeEndCameraZ
                 ).toConst()
 
-                totalLitLength.addAssign(result.x)
-                totalMarchedLength.addAssign(result.y)
+                totalShadowLength.addAssign(result.x)
               }
             )
           })
         }
       )
 
-      return totalMarchedLength.sub(totalLitLength)
+      return totalShadowLength
     })()
   }
 
