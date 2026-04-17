@@ -203,7 +203,7 @@ export class AerialPerspectiveNode extends TempNode {
       const solarLuminanceTransfer = getIndirectLuminanceToPoint(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         positionUnit.add(altitudeCorrectionUnit),
-        this.shadowLengthNode ?? 0,
+        this.shadowLengthNode?.r ?? 0,
         sunDirectionECEF
       ).toConst()
       const transmittance = solarLuminanceTransfer.get('transmittance')
@@ -213,7 +213,7 @@ export class AerialPerspectiveNode extends TempNode {
         const lunarLuminanceTransfer = getIndirectLuminanceToPoint(
           cameraPositionUnit.add(altitudeCorrectionUnit),
           positionUnit.add(altitudeCorrectionUnit),
-          this.shadowLengthNode ?? 0,
+          this.shadowLengthNode?.r ?? 0,
           moonDirectionECEF
         ).toConst()
 

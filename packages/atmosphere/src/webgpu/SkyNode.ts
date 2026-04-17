@@ -107,7 +107,7 @@ export class SkyNode extends TempNode {
       const solarLuminanceTransfer = getIndirectLuminance(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         rayDirectionECEF,
-        this.shadowLengthNode ?? 0,
+        this.shadowLengthNode?.r ?? 0,
         sunDirectionECEF
       ).toConst()
       const transmittance = solarLuminanceTransfer.get('transmittance')
@@ -117,7 +117,7 @@ export class SkyNode extends TempNode {
         const lunarLuminanceTransfer = getIndirectLuminance(
           cameraPositionUnit.add(altitudeCorrectionUnit),
           rayDirectionECEF,
-          this.shadowLengthNode ?? 0,
+          this.shadowLengthNode?.r ?? 0,
           moonDirectionECEF
         )
 
