@@ -384,10 +384,9 @@ export class UnwarpEpipolarNode extends Node {
         totalWeight.addAssign(bilateralUWeight.dot(vec2(1)))
       }
 
-      // TODO: AerialPerspectiveNode expects 1/1000 scale value.
       return totalWeight
         .greaterThan(1e-6)
-        .select(shadowLength.div(totalWeight).div(1000), 0)
+        .select(shadowLength.div(totalWeight), 0)
     })()
   }
 

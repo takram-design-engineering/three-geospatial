@@ -384,7 +384,7 @@ export class EpipolarShadowLengthNode extends Node {
                 .xy.toConst()
 
               // Determine if the ray section is fully lit or fully shadowed.
-              if (reversedDepthBuffer) {
+              if (builder.renderer.reversedDepthBuffer) {
                 // With reversed depth buffer, the relations are reversed.
                 // maxDepth = closest to light
                 isInLight.assign(
@@ -401,7 +401,7 @@ export class EpipolarShadowLengthNode extends Node {
                 )
               }
               const isInShadow = (
-                reversedDepthBuffer
+                builder.renderer.reversedDepthBuffer
                   ? startEndDepthOnRaySection
                       .lessThan(currentMinMaxDepth.xx)
                       .all()
@@ -461,15 +461,12 @@ export class EpipolarShadowLengthNode extends Node {
       }
     )
 
-    let reversedDepthBuffer: boolean
     let cameraPosition: Node<'vec3'>
     let fullRayLength: Node<'float'>
     let viewDirection: Node<'vec3'>
     let rayTopIntersection: Node<'vec2'>
 
     return Fn(() => {
-      reversedDepthBuffer = builder.renderer.reversedDepthBuffer
-
       const { parameters } = getAtmosphereContext(builder)
       const { topRadius, bottomRadius } = parameters
 
@@ -562,7 +559,8 @@ export class EpipolarShadowLengthNode extends Node {
         }
       )
 
-      return totalShadowLength
+      // TODO: AerialPerspectiveNode expects 1/1000 scale value.
+      return totalShadowLength.div(1000)
     })()
   }
 
