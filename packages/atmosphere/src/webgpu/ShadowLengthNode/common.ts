@@ -3,6 +3,7 @@ import { float, mix, uvec4, vec2, vec3, vec4 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 
 import {
+  cameraFar,
   depthToViewZ,
   FnLayout,
   FnVar,
@@ -81,17 +82,20 @@ export const transformSliceToWorld = /*#__PURE__#*/ FnVar(
   }
 )
 
-// Equivalent to GetCamSpaceZ except this returns view Z.
-export const getViewZ = /*#__PURE__*/ FnVar(
+// Equivalent to GetCamSpaceZ:
+export const getCameraZ = /*#__PURE__*/ FnVar(
   (
+    camera: Camera,
     uv: Node<'vec2'>,
     viewZNode?: TextureNode | null,
-    depthNode?: TextureNode | null,
-    camera?: Camera | null
+    depthNode?: TextureNode | null
   ): Node<'float'> => {
     if (viewZNode != null) {
       // We can sample camera space z texture using bilinear filtering.
-      return viewZNode.sample(uv).x
+      const viewZ = viewZNode.sample(uv).x.toConst()
+      // The viewZ can be rendered using MRT, in which case the value of 0 is
+      // stored at the sky pixels. We replace it with the camera far.
+      return viewZ.lessThan(0).select(viewZ.negate(), cameraFar(camera))
     }
 
     if (depthNode == null || camera == null) {
@@ -112,6 +116,6 @@ export const getViewZ = /*#__PURE__*/ FnVar(
     const z2 = depthToViewZ(d2, camera)
     const z3 = depthToViewZ(d3, camera)
     const z4 = depthToViewZ(d4, camera)
-    return mix(mix(z1, z2, f.x), mix(z3, z4, f.x), f.y)
+    return mix(mix(z1, z2, f.x), mix(z3, z4, f.x), f.y).negate()
   }
 )

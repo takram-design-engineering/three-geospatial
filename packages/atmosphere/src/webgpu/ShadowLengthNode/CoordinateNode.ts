@@ -34,7 +34,7 @@ import { Node, outputTexture } from '@takram/three-geospatial/webgpu'
 import {
   DEFAULT_MAX_SAMPLES_IN_SLICE,
   DEFAULT_NUM_EPIPOLAR_SLICES,
-  getViewZ,
+  getCameraZ,
   isValidScreenLocation,
   transformNDCToUV
 } from './common'
@@ -50,7 +50,7 @@ export class CoordinateNode extends Node {
   depthNode?: TextureNode | null
   sliceEndpointsNode!: TextureNode
 
-  camera?: Camera
+  camera!: Camera
 
   numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
   maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
@@ -154,12 +154,12 @@ export class CoordinateNode extends Node {
         Discard()
       })
 
-      const cameraZ = getViewZ(
+      const cameraZ = getCameraZ(
+        camera,
         transformNDCToUV(xy),
         viewZNode,
-        depthNode,
-        camera
-      ).negate()
+        depthNode
+      )
       return vec3(xy, cameraZ)
     })()
   }

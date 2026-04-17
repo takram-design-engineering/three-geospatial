@@ -31,8 +31,8 @@ import {
 import {
   DEFAULT_MAX_SAMPLES_IN_SLICE,
   DEFAULT_NUM_EPIPOLAR_SLICES,
+  getCameraZ,
   getOutermostScreenPixelCoords,
-  getViewZ,
   transformUVToNDC
 } from './common'
 
@@ -127,9 +127,7 @@ export class UnwarpEpipolarNode extends Node {
     return Fn(() => {
       const uvNode = uv().toConst()
       const positionNDC = transformUVToNDC(uvNode).toConst()
-      const cameraZ = getViewZ(uvNode, viewZNode, depthNode, camera)
-        .negate()
-        .toConst()
+      const cameraZ = getCameraZ(camera, uvNode, viewZNode, depthNode).toConst()
 
       // Compute direction of the ray going from the light through the pixel.
       const rayDirection = positionNDC
