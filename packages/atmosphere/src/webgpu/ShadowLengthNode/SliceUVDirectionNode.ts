@@ -1,25 +1,20 @@
 import {
-  FloatType,
+  HalfFloatType,
   LinearFilter,
-  Matrix4,
-  PerspectiveCamera,
   RenderTarget,
   RGBAFormat,
-  Vector2,
-  type Camera
+  type Camera,
+  type Vector2
 } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   Fn,
   If,
   max,
   min,
-  OnObjectUpdate,
-  renderGroup,
   screenCoordinate,
   uint,
-  uniform,
-  uniformArray,
   uvec2,
   vec4
 } from 'three/tsl'
@@ -28,48 +23,51 @@ import {
   NodeUpdateType,
   QuadMesh,
   RendererUtils,
-  TempNode,
   type NodeBuilder,
   type NodeFrame,
-  type TextureNode
+  type TextureNode,
+  type UniformArrayNode,
+  type UniformNode
 } from 'three/webgpu'
-import invariant from 'tiny-invariant'
 
 import {
   bvecAnd,
   bvecNot,
   cameraPositionWorld,
-  outputTexture,
-  type Node
+  Node,
+  outputTexture
 } from '@takram/three-geospatial/webgpu'
 
 import {
+  DEFAULT_MAX_SAMPLES_IN_SLICE,
+  DEFAULT_NUM_EPIPOLAR_SLICES,
   FLOAT_MAX,
   isValidScreenLocation,
   transformSliceToWorld,
   transformWorldToShadowUV
 } from './common'
 
-declare module 'three/examples/jsm/csm/CSMShadowNode.js' {
-  interface CSMShadowNode {
-    _cascades: Vector2[] // TODO
-  }
-}
-
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-export class SliceUVDirectionNode extends TempNode {
+export class SliceUVDirectionNode extends Node {
+  static override get type(): string {
+    return 'SliceUVDirectionNode'
+  }
+
   depthNode!: TextureNode
   csmShadowNode!: CSMShadowNode
   sliceEndpointsNode!: TextureNode
-  screenSize!: Node<'vec2'>
 
   camera!: Camera
 
-  numEpipolarSlices = 512 * 2
-  maxSamplesInSlice = 256 * 2
+  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
+  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
 
-  firstCascade = uniform(0, 'uint')
+  firstCascade!: UniformNode<number> // uint
+  screenSize!: UniformNode<Vector2> // vec2
+  shadowMapTexelSize!: UniformNode<Vector2> // vec2
+  shadowCascadeArray!: UniformArrayNode // vec2[]
+  shadowMatrixArray!: UniformArrayNode // mat4[]
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget
@@ -78,12 +76,12 @@ export class SliceUVDirectionNode extends TempNode {
   private rendererState?: RendererUtils.RendererState
 
   constructor() {
-    super(null)
-    this.updateBeforeType = NodeUpdateType.FRAME
+    super()
+    this.updateBeforeType = NodeUpdateType.RENDER // TODO
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: FloatType,
+      type: HalfFloatType,
       format: RGBAFormat
     })
     const texture = renderTarget.texture
@@ -94,6 +92,10 @@ export class SliceUVDirectionNode extends TempNode {
     this.renderTarget = renderTarget
 
     this.textureNode = outputTexture(this, renderTarget.texture)
+  }
+
+  override customCacheKey(): number {
+    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
   }
 
   getTextureNode(): TextureNode {
@@ -118,55 +120,16 @@ export class SliceUVDirectionNode extends TempNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupOutputNode(): Node<'vec4'> {
+  private setupFragmentNode(builder: NodeBuilder): Node<'vec4'> {
     const {
-      csmShadowNode,
       sliceEndpointsNode,
       screenSize,
       camera,
-      firstCascade
+      firstCascade,
+      shadowMapTexelSize,
+      shadowCascadeArray,
+      shadowMatrixArray
     } = this
-
-    invariant(camera instanceof PerspectiveCamera)
-
-    const shadowMapTexelSize = uniform('vec2').onRenderUpdate(
-      (_, { value }) => {
-        const shadow = csmShadowNode.lights[0]?.shadow
-        if (shadow != null) {
-          value.set(1 / shadow.mapSize.x, 1 / shadow.mapSize.y)
-        }
-      }
-    )
-
-    const shadowCascadeArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascades }, () => new Vector2())
-    ).setGroup(renderGroup)
-
-    const shadowMatrixArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascades }, () => new Matrix4())
-    ).setGroup(renderGroup)
-
-    // uniformArray doesn't appear to support onRenderUpdate.
-    OnObjectUpdate(() => {
-      const array = shadowCascadeArray.array as Vector2[]
-      const far = Math.min(camera.far, csmShadowNode.maxFar)
-      const cascades = csmShadowNode._cascades
-      for (let i = 0; i < cascades.length; ++i) {
-        const cascade = cascades[i]
-        array[i].set(cascade.x * far, cascade.y * far)
-      }
-    })
-
-    OnObjectUpdate(() => {
-      const array = shadowMatrixArray.array as Matrix4[]
-      const lights = csmShadowNode.lights
-      for (let i = 0; i < lights.length; ++i) {
-        const matrix = lights[i].shadow?.matrix
-        if (matrix != null) {
-          array[i].copy(matrix)
-        }
-      }
-    })
 
     return Fn(() => {
       const sliceIndex = uint(screenCoordinate.x)
@@ -295,7 +258,7 @@ export class SliceUVDirectionNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { material } = this
-    material.fragmentNode = this.setupOutputNode()
+    material.fragmentNode = this.setupFragmentNode(builder)
     material.needsUpdate = true
 
     return this.textureNode

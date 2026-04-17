@@ -1,4 +1,11 @@
-import { RenderTarget, RGBAFormat, type Camera } from 'three'
+import {
+  HalfFloatType,
+  RenderTarget,
+  RGBAFormat,
+  type Camera,
+  type Vector2
+} from 'three'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   Discard,
   float,
@@ -11,34 +18,44 @@ import {
   vec3
 } from 'three/tsl'
 import {
-  FloatType,
   LinearFilter,
   NodeMaterial,
   NodeUpdateType,
   QuadMesh,
   RendererUtils,
-  TempNode,
   type NodeBuilder,
   type NodeFrame,
-  type TextureNode
+  type TextureNode,
+  type UniformNode
 } from 'three/webgpu'
 
-import { outputTexture, type Node } from '@takram/three-geospatial/webgpu'
+import { Node, outputTexture } from '@takram/three-geospatial/webgpu'
 
-import { getViewZ, isValidScreenLocation, transformNDCToUV } from './common'
+import {
+  DEFAULT_MAX_SAMPLES_IN_SLICE,
+  DEFAULT_NUM_EPIPOLAR_SLICES,
+  getViewZ,
+  isValidScreenLocation,
+  transformNDCToUV
+} from './common'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-export class CoordinateNode extends TempNode {
-  viewZNode?: TextureNode // Must be filterable
-  depthNode?: TextureNode
+export class CoordinateNode extends Node {
+  static override get type(): string {
+    return 'CoordinateNode'
+  }
+
+  viewZNode?: TextureNode | null // Must be filterable
+  depthNode?: TextureNode | null
   sliceEndpointsNode!: TextureNode
-  screenSize!: Node<'vec2'>
 
   camera?: Camera
 
-  numEpipolarSlices = 512 * 2
-  maxSamplesInSlice = 256 * 2
+  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
+  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
+
+  screenSize!: UniformNode<Vector2> // vec2
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget
@@ -47,12 +64,12 @@ export class CoordinateNode extends TempNode {
   private rendererState?: RendererUtils.RendererState
 
   constructor() {
-    super(null)
-    this.updateBeforeType = NodeUpdateType.FRAME
+    super()
+    this.updateBeforeType = NodeUpdateType.RENDER // TODO
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: FloatType,
+      type: HalfFloatType,
       format: RGBAFormat
     })
     const texture = renderTarget.texture
@@ -63,6 +80,10 @@ export class CoordinateNode extends TempNode {
     this.renderTarget = renderTarget
 
     this.textureNode = outputTexture(this, renderTarget.texture)
+  }
+
+  override customCacheKey(): number {
+    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
   }
 
   getTextureNode(): TextureNode {
@@ -84,7 +105,7 @@ export class CoordinateNode extends TempNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupOutputNode(): Node<'vec3'> {
+  private setupFragmentNode(builder: NodeBuilder): Node<'vec3'> {
     const { viewZNode, depthNode, sliceEndpointsNode, screenSize, camera } =
       this
 
@@ -145,7 +166,7 @@ export class CoordinateNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { material } = this
-    material.fragmentNode = this.setupOutputNode()
+    material.fragmentNode = this.setupFragmentNode(builder)
     material.needsUpdate = true
 
     return this.textureNode

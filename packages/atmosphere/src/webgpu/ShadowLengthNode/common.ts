@@ -13,6 +13,9 @@ import {
 
 export const FLOAT_MAX = 3.402823466e38
 
+export const DEFAULT_NUM_EPIPOLAR_SLICES = 512
+export const DEFAULT_MAX_SAMPLES_IN_SLICE = 256
+
 // Transform UV to NDC XY:
 export const transformUVToNDC = /*#__PURE__#*/ FnLayout({
   name: 'uvToScreen',
@@ -82,9 +85,9 @@ export const transformSliceToWorld = /*#__PURE__#*/ FnVar(
 export const getViewZ = /*#__PURE__*/ FnVar(
   (
     uv: Node<'vec2'>,
-    viewZNode?: TextureNode,
-    depthNode?: TextureNode,
-    camera?: Camera
+    viewZNode?: TextureNode | null,
+    depthNode?: TextureNode | null,
+    camera?: Camera | null
   ): Node<'float'> => {
     if (viewZNode != null) {
       // We can sample camera space z texture using bilinear filtering.

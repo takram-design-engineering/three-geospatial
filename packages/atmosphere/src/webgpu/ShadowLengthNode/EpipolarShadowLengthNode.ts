@@ -1,16 +1,15 @@
 /* eslint-disable max-nested-callbacks */
 
 import {
-  FloatType,
+  HalfFloatType,
   LinearFilter,
-  Matrix4,
   PerspectiveCamera,
   RedFormat,
   RenderTarget,
-  Vector2,
   type Camera
 } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   and,
   Break,
@@ -22,13 +21,9 @@ import {
   Loop,
   max,
   min,
-  OnObjectUpdate,
-  renderGroup,
   screenCoordinate,
-  texture,
   uint,
   uniform,
-  uniformArray,
   vec2,
   vec3,
   vec4
@@ -38,23 +33,26 @@ import {
   NodeUpdateType,
   QuadMesh,
   RendererUtils,
-  TempNode,
   type NodeBuilder,
   type NodeFrame,
-  type TextureNode
+  type TextureNode,
+  type UniformArrayNode,
+  type UniformNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
 import {
   cameraPositionWorld,
   FnVar,
+  Node,
   outputTexture,
-  raySpheresIntersections,
-  type Node
+  raySpheresIntersections
 } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from '../AtmosphereContext'
 import {
+  DEFAULT_MAX_SAMPLES_IN_SLICE,
+  DEFAULT_NUM_EPIPOLAR_SLICES,
   FLOAT_MAX,
   transformSliceToWorld,
   transformWorldToShadowUV
@@ -84,19 +82,26 @@ const getRaySphereIntersections = /*#__PURE__*/ FnVar(
   }
 )
 
-export class EpipolarShadowLengthNode extends TempNode {
+export class EpipolarShadowLengthNode extends Node {
+  static override get type(): string {
+    return 'EpipolarShadowLengthNode'
+  }
+
   csmShadowNode!: CSMShadowNode
   coordinateNode!: TextureNode
   sliceUVDirectionNode!: TextureNode
   minMaxLevelsNode!: TextureNode
+  shadowDepthNodes!: TextureNode[]
 
   camera!: Camera
 
-  firstCascade = uniform(0, 'uint')
-  maxShadowStep = uniform(2048 / 4, 'float')
+  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
+  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
 
-  numEpipolarSlices = 512 * 2
-  maxSamplesInSlice = 256 * 2
+  firstCascade!: UniformNode<number> // uint
+  maxShadowStep!: UniformNode<number> // float
+  shadowCascadeArray!: UniformArrayNode // vec2[]
+  shadowMatrixArray!: UniformArrayNode // mat4[]
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget
@@ -104,15 +109,13 @@ export class EpipolarShadowLengthNode extends TempNode {
   private readonly mesh = new QuadMesh(this.material)
   private rendererState?: RendererUtils.RendererState
 
-  private prevLightCount = 0
-
   constructor() {
-    super(null)
-    this.updateBeforeType = NodeUpdateType.FRAME
+    super()
+    this.updateBeforeType = NodeUpdateType.RENDER // TODO
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: FloatType,
+      type: HalfFloatType,
       format: RedFormat
     })
     const texture = renderTarget.texture
@@ -125,6 +128,10 @@ export class EpipolarShadowLengthNode extends TempNode {
     this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
+  override customCacheKey(): number {
+    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
+  }
+
   getTextureNode(): TextureNode {
     return this.textureNode
   }
@@ -132,16 +139,6 @@ export class EpipolarShadowLengthNode extends TempNode {
   override updateBefore({ renderer }: NodeFrame): void {
     if (renderer == null) {
       return
-    }
-
-    const { csmShadowNode } = this
-
-    const { lights } = csmShadowNode
-    if (lights.length !== this.prevLightCount) {
-      this.prevLightCount = lights.length
-      const { material } = this
-      material.fragmentNode = this.setupOutputNode()
-      material.needsUpdate = true
     }
 
     this.renderTarget.setSize(this.maxSamplesInSlice, this.numEpipolarSlices)
@@ -154,37 +151,25 @@ export class EpipolarShadowLengthNode extends TempNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupOutputNode(): Node<'float'> {
+  private setupFragmentNode(builder: NodeBuilder): Node<'float'> {
     const {
       csmShadowNode,
       coordinateNode,
       sliceUVDirectionNode,
       minMaxLevelsNode,
+      shadowDepthNodes,
       camera,
       firstCascade,
-      maxShadowStep
+      maxShadowStep,
+      shadowCascadeArray,
+      shadowMatrixArray
     } = this
 
     invariant(camera instanceof PerspectiveCamera)
 
     const numEpipolarSlices = float(this.numEpipolarSlices)
 
-    const shadowCascadeArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascades }, () => new Vector2())
-    ).setGroup(renderGroup)
-
-    const shadowMatrixArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascades }, () => new Matrix4())
-    ).setGroup(renderGroup)
-
-    const { lights, cascades } = csmShadowNode
-    invariant(lights.length > 0)
-    invariant(lights.length === cascades)
-
-    const textureNodes = lights.map(light => {
-      invariant(light.shadow?.map?.depthTexture != null)
-      return texture(light.shadow.map.depthTexture)
-    })
+    const { cascades } = csmShadowNode
 
     const biasedCameraFar = uniform('float').onRenderUpdate(
       // This bias might be required to test if the ray directs towards sky.
@@ -201,7 +186,7 @@ export class EpipolarShadowLengthNode extends TempNode {
         for (let cascade = 0; cascade < cascades; ++cascade) {
           If(cascadeIndex.equal(cascade), () => {
             isInLight.assign(
-              textureNodes[cascade]
+              shadowDepthNodes[cascade]
                 .sample(shadowUVAndDepthInLightSpace.xy)
                 .compare(depthInLightSpace)
             )
@@ -482,32 +467,8 @@ export class EpipolarShadowLengthNode extends TempNode {
     let viewDirection: Node<'vec3'>
     let rayTopIntersection: Node<'vec2'>
 
-    return Fn(builder => {
+    return Fn(() => {
       reversedDepthBuffer = builder.renderer.reversedDepthBuffer
-
-      // uniformArray doesn't appear to support onRenderUpdate.
-      // OnObjectUpdate must be called inside a Fn() callback where
-      // currentStack is set, so that the EventNode is properly registered.
-      OnObjectUpdate(() => {
-        const array = shadowCascadeArray.array as Vector2[]
-        const far = Math.min(camera.far, csmShadowNode.maxFar)
-        const cascades = csmShadowNode._cascades
-        for (let i = 0; i < cascades.length; ++i) {
-          const cascade = cascades[i]
-          array[i].set(cascade.x * far, cascade.y * far)
-        }
-      })
-
-      OnObjectUpdate(() => {
-        const array = shadowMatrixArray.array as Matrix4[]
-        const lights = csmShadowNode.lights
-        for (let i = 0; i < lights.length; ++i) {
-          const matrix = lights[i].shadow?.matrix
-          if (matrix != null) {
-            array[i].copy(matrix)
-          }
-        }
-      })
 
       const { parameters } = getAtmosphereContext(builder)
       const { topRadius, bottomRadius } = parameters
@@ -606,6 +567,10 @@ export class EpipolarShadowLengthNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
+    const { material } = this
+    material.fragmentNode = this.setupFragmentNode(builder)
+    material.needsUpdate = true
+
     return this.textureNode
   }
 

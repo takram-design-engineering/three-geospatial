@@ -1,36 +1,36 @@
 import {
-  FloatType,
+  HalfFloatType,
   LinearFilter,
-  Matrix4,
   RedFormat,
   RenderTarget,
-  Vector2,
-  Vector3,
-  Vector4,
   type Camera,
-  type DirectionalLight
+  type Vector2,
+  type Vector4
 } from 'three'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { float, Fn, max, min, uniform, uv, vec2, vec4 } from 'three/tsl'
 import {
   NodeMaterial,
   NodeUpdateType,
   QuadMesh,
   RendererUtils,
-  TempNode,
   type NodeBuilder,
   type NodeFrame,
-  type TextureNode
+  type TextureNode,
+  type UniformNode
 } from 'three/webgpu'
 
 import {
   bvecAnd,
   bvecNot,
+  Node,
   outputTexture,
-  textureGather,
-  type Node
+  textureGather
 } from '@takram/three-geospatial/webgpu'
 
 import {
+  DEFAULT_MAX_SAMPLES_IN_SLICE,
+  DEFAULT_NUM_EPIPOLAR_SLICES,
   getOutermostScreenPixelCoords,
   getViewZ,
   transformUVToNDC
@@ -38,28 +38,26 @@ import {
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-const vector3Scratch = /*#__PURE__*/ new Vector3()
-const vector4Scratch = /*#__PURE__*/ new Vector4()
-const matrixScratch = /*#__PURE__*/ new Matrix4()
-const sizeScratch = /*#__PURE__*/ new Vector2()
-
-export class UnwarpEpipolarNode extends TempNode {
-  screenSize!: Node<'vec2'>
-  lightScreenPosition = uniform('vec4')
+export class UnwarpEpipolarNode extends Node {
+  static override get type(): string {
+    return 'UnwarpEpipolarNode'
+  }
 
   sliceEndpointsNode!: TextureNode
   coordinateNode!: TextureNode
   epipolarShadowLengthNode!: TextureNode
-  viewZNode?: TextureNode // Must be filterable
-  depthNode?: TextureNode
+  viewZNode?: TextureNode | null // Must be filterable
+  depthNode?: TextureNode | null
 
   camera!: Camera
-  light!: DirectionalLight
+
+  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
+  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
+
+  screenSize!: UniformNode<Vector2> // vec2
+  lightScreenPosition!: UniformNode<Vector4> // vec4
 
   refinementThreshold = uniform(0.03)
-
-  numEpipolarSlices = 512 * 2
-  maxSamplesInSlice = 256 * 2
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget
@@ -68,12 +66,12 @@ export class UnwarpEpipolarNode extends TempNode {
   private rendererState?: RendererUtils.RendererState
 
   constructor() {
-    super(null)
-    this.updateBeforeType = NodeUpdateType.FRAME
+    super()
+    this.updateBeforeType = NodeUpdateType.RENDER // TODO
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: FloatType,
+      type: HalfFloatType,
       format: RedFormat
     })
     const texture = renderTarget.texture
@@ -86,6 +84,10 @@ export class UnwarpEpipolarNode extends TempNode {
     this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
+  override customCacheKey(): number {
+    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
+  }
+
   getTextureNode(): TextureNode {
     return this.textureNode
   }
@@ -95,35 +97,7 @@ export class UnwarpEpipolarNode extends TempNode {
       return
     }
 
-    const { camera, light } = this
-
-    const viewProjection = matrixScratch.multiplyMatrices(
-      camera.projectionMatrix,
-      camera.matrixWorldInverse
-    )
-    const lightDirection = vector3Scratch
-      .copy(light.position)
-      .sub(light.target.position)
-      .normalize()
-    const lightClip = vector4Scratch
-      .set(lightDirection.x, lightDirection.y, lightDirection.z, 0)
-      .applyMatrix4(viewProjection)
-
-    const lightW = lightClip.w
-    let lightX = lightClip.x / lightW
-    let lightY = lightClip.y / lightW
-    const lightZ = lightClip.z / lightW
-
-    const distanceToLightOnScreen = Math.hypot(lightX, lightY)
-    const maxDistance = 100
-    if (distanceToLightOnScreen > maxDistance) {
-      const scale = maxDistance / distanceToLightOnScreen
-      lightX *= scale
-      lightY *= scale
-    }
-    this.lightScreenPosition.value.set(lightX, lightY, lightZ, lightW)
-
-    const { width, height } = renderer.getDrawingBufferSize(sizeScratch)
+    const { width, height } = this.screenSize.value
     this.renderTarget.setSize(width, height)
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
@@ -134,7 +108,7 @@ export class UnwarpEpipolarNode extends TempNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupOutputNode(): Node<'vec4'> {
+  private setupFragmentNode(builder: NodeBuilder): Node<'vec4'> {
     const {
       screenSize,
       lightScreenPosition,
@@ -421,7 +395,7 @@ export class UnwarpEpipolarNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { material } = this
-    material.fragmentNode = this.setupOutputNode()
+    material.fragmentNode = this.setupFragmentNode(builder)
     material.needsUpdate = true
 
     return this.textureNode

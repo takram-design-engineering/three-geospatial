@@ -1,48 +1,35 @@
 import {
-  FloatType,
+  HalfFloatType,
   LinearFilter,
-  Matrix4,
   RenderTarget,
   RGBAFormat,
-  Vector2,
-  Vector3,
-  Vector4,
-  type Camera,
-  type DirectionalLight
+  type Vector2,
+  type Vector4
 } from 'three'
-import {
-  float,
-  Fn,
-  If,
-  max,
-  mix,
-  uint,
-  uniform,
-  uv,
-  uvec4,
-  vec2,
-  vec4
-} from 'three/tsl'
+import { hash } from 'three/src/nodes/core/NodeUtils.js'
+import { float, Fn, If, max, mix, uint, uv, uvec4, vec2, vec4 } from 'three/tsl'
 import {
   NodeMaterial,
   NodeUpdateType,
   QuadMesh,
   RendererUtils,
-  TempNode,
   type NodeBuilder,
   type NodeFrame,
-  type TextureNode
+  type TextureNode,
+  type UniformNode
 } from 'three/webgpu'
 
 import {
   bvecAnd,
   bvecNot,
   FnVar,
-  outputTexture,
-  type Node
+  Node,
+  outputTexture
 } from '@takram/three-geospatial/webgpu'
 
 import {
+  DEFAULT_MAX_SAMPLES_IN_SLICE,
+  DEFAULT_NUM_EPIPOLAR_SLICES,
   FLOAT_MAX,
   getOutermostScreenPixelCoords,
   isValidScreenLocation
@@ -50,21 +37,17 @@ import {
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
-const vector3Scratch = /*#__PURE__*/ new Vector3()
-const vector4Scratch = /*#__PURE__*/ new Vector4()
-const matrixScratch = /*#__PURE__*/ new Matrix4()
-const sizeScratch = /*#__PURE__*/ new Vector2()
+export class SliceEndpointsNode extends Node {
+  static override get type(): string {
+    return 'SliceEndpointsNode'
+  }
 
-export class SliceEndpointsNode extends TempNode {
-  screenSize!: Node<'vec2'>
-  lightScreenPosition = uniform('vec4')
-  isLightOnScreen = uniform('bool')
+  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
+  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
 
-  camera!: Camera
-  light!: DirectionalLight
-
-  numEpipolarSlices = 512 * 2
-  maxSamplesInSlice = 256 * 2
+  screenSize!: UniformNode<Vector2> // vec2
+  lightScreenPosition!: UniformNode<Vector4> // vec4
+  isLightOnScreen!: UniformNode<boolean> // bool
 
   private readonly textureNode: TextureNode
   private readonly renderTarget: RenderTarget
@@ -73,12 +56,12 @@ export class SliceEndpointsNode extends TempNode {
   private rendererState?: RendererUtils.RendererState
 
   constructor() {
-    super(null)
-    this.updateBeforeType = NodeUpdateType.FRAME
+    super()
+    this.updateBeforeType = NodeUpdateType.RENDER // TODO
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: FloatType,
+      type: HalfFloatType,
       format: RGBAFormat
     })
     const texture = renderTarget.texture
@@ -91,6 +74,10 @@ export class SliceEndpointsNode extends TempNode {
     this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
+  override customCacheKey(): number {
+    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
+  }
+
   getTextureNode(): TextureNode {
     return this.textureNode
   }
@@ -99,39 +86,6 @@ export class SliceEndpointsNode extends TempNode {
     if (renderer == null) {
       return
     }
-
-    const { camera, light } = this
-
-    const viewProjection = matrixScratch.multiplyMatrices(
-      camera.projectionMatrix,
-      camera.matrixWorldInverse
-    )
-    const lightDirection = vector3Scratch
-      .copy(light.position)
-      .sub(light.target.position)
-      .normalize()
-    const lightClip = vector4Scratch
-      .set(lightDirection.x, lightDirection.y, lightDirection.z, 0)
-      .applyMatrix4(viewProjection)
-
-    const lightW = lightClip.w
-    let lightX = lightClip.x / lightW
-    let lightY = lightClip.y / lightW
-    const lightZ = lightClip.z / lightW
-
-    const distanceToLightOnScreen = Math.hypot(lightX, lightY)
-    const maxDistance = 100
-    if (distanceToLightOnScreen > maxDistance) {
-      const scale = maxDistance / distanceToLightOnScreen
-      lightX *= scale
-      lightY *= scale
-    }
-    this.lightScreenPosition.value.set(lightX, lightY, lightZ, lightW)
-
-    const size = renderer.getDrawingBufferSize(sizeScratch)
-    this.isLightOnScreen.value =
-      Math.abs(lightX) <= 1 - 1 / size.width &&
-      Math.abs(lightY) <= 1 - 1 / size.height
 
     this.renderTarget.setSize(this.numEpipolarSlices, 1)
 
@@ -143,7 +97,7 @@ export class SliceEndpointsNode extends TempNode {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupOutputNode(): Node<'vec4'> {
+  private setupFragmentNode(builder: NodeBuilder): Node<'vec4'> {
     const { screenSize, lightScreenPosition, isLightOnScreen } = this
 
     const maxSamplesInSlice = float(this.maxSamplesInSlice)
@@ -363,7 +317,7 @@ export class SliceEndpointsNode extends TempNode {
 
   override setup(builder: NodeBuilder): unknown {
     const { material } = this
-    material.fragmentNode = this.setupOutputNode()
+    material.fragmentNode = this.setupFragmentNode(builder)
     material.needsUpdate = true
 
     return this.textureNode
