@@ -7,12 +7,15 @@ import {
   cameraProjectionMatrixInverse,
   cameraViewMatrix,
   cameraWorldMatrix,
+  depth,
+  Fn,
   reference,
   uniform
 } from 'three/tsl'
 import type { UniformNode } from 'three/webgpu'
 
 import type { Node } from './node'
+import { depthToViewZ } from './transformations'
 
 let caches: WeakMap<{}, Record<string, {}>> | undefined
 
@@ -93,3 +96,7 @@ export const cameraFar = (camera?: Camera | null): Node<'float'> =>
         reference('far', 'float', camera).setName('cameraFar')
       )
     : cameraFarTSL
+
+export const viewZ = Fn(({ camera }) => depthToViewZ(depth, camera))
+  .once()()
+  .toVar('viewZ')

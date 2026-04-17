@@ -25,9 +25,9 @@ import type { Node } from './node'
 export const depthToViewZ = /*#__PURE__*/ FnVar(
   (
     depth: Node<'float'>,
-    camera?: Camera,
-    near?: Node<'float'>,
-    far?: Node<'float'>
+    camera?: Camera | null,
+    near?: Node<'float'> | null,
+    far?: Node<'float'> | null
   ) =>
     (builder): Node<'float'> => {
       near ??= cameraNear(camera)
@@ -44,8 +44,8 @@ export const depthToViewZ = /*#__PURE__*/ FnVar(
 
 export const logarithmicToPerspectiveDepth = (
   depth: Node<'float'>,
-  near?: Node<'float'>,
-  far?: Node<'float'>
+  near?: Node<'float'> | null,
+  far?: Node<'float'> | null
 ): Node<'float'> => {
   near ??= cameraNearTSL
   far ??= cameraFarTSL
@@ -55,8 +55,8 @@ export const logarithmicToPerspectiveDepth = (
 
 export const perspectiveToLogarithmicDepth = (
   depth: Node<'float'>,
-  near?: Node<'float'>,
-  far?: Node<'float'>
+  near?: Node<'float'> | null,
+  far?: Node<'float'> | null
 ): Node<'float'> => {
   near ??= cameraNearTSL
   far ??= cameraFarTSL
