@@ -279,17 +279,12 @@ export class EpipolarShadowLengthNode extends TempNode {
           shadowTraceDirection.divAssign(traceLengthInShadowUVSpace)
 
           // Get UV direction for this slice.
-          const cascadeRelative = cascadeIndex.sub(firstCascade).toConst()
-          const sliceUVDirection = sliceUVDirectionNode
-            .load(ivec2(sliceIndex, cascadeRelative))
-            .toConst()
-          // Scale with the shadow map texel size.
-
-          // Get UV direction for this slice.
+          const relativeCascadeIndex = cascadeIndex.sub(firstCascade).toConst()
           const sliceUVDirectionAndOrigin = sliceUVDirectionNode
-            .load(ivec2(sliceIndex, cascadeIndex))
+            .load(ivec2(sliceIndex, relativeCascadeIndex))
             .toConst()
-          const sliceDirectionUV = sliceUVDirection.xy.toConst()
+          const sliceDirectionUV = sliceUVDirectionAndOrigin.xy.toConst()
+          // Scale with the shadow map texel size.
           const shadowUVStepLength = sliceDirectionUV.length().toConst()
           const sliceOriginUV = sliceUVDirectionAndOrigin.zw.toConst()
 
