@@ -46,7 +46,6 @@ import {
 import invariant from 'tiny-invariant'
 
 import {
-  cameraFar,
   cameraPositionWorld,
   FnVar,
   outputTexture,
@@ -186,6 +185,11 @@ export class EpipolarShadowLengthNode extends TempNode {
       invariant(light.shadow?.map?.depthTexture != null)
       return texture(light.shadow.map.depthTexture)
     })
+
+    const biasedCameraFar = uniform('float').onRenderUpdate(
+      // This bias might be required to test if the ray directs towards sky.
+      () => camera.far * 0.999999
+    )
 
     const sampleShadow = FnVar(
       (
@@ -553,7 +557,7 @@ export class EpipolarShadowLengthNode extends TempNode {
             // Limit the ray length by the distance to the top of the
             // atmosphere if the ray does not hit terrain.
             const originalRayLength = fullRayLength.toConst()
-            If(rayEndCameraZ.greaterThan(cameraFar(camera)), () => {
+            If(rayEndCameraZ.greaterThanEqual(biasedCameraFar), () => {
               fullRayLength.assign(FLOAT_MAX)
             })
             // Limit the ray length by the distance to the point where the ray
