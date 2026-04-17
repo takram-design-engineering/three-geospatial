@@ -600,7 +600,7 @@ Story.args = {
     height: 300
   }),
   ...toneMappingArgs({
-    toneMappingEnabled: true,
+    toneMapping: true,
     toneMappingExposure: 10
   }),
   ...rendererArgs()

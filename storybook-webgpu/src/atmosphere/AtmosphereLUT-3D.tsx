@@ -104,7 +104,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   zoom: 1,
   ...toneMappingArgs({
-    toneMapping: LinearToneMapping
+    toneMappingMode: LinearToneMapping
   }),
   ...rendererArgs()
 }

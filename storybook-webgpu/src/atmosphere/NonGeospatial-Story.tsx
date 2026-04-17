@@ -267,7 +267,7 @@ Story.args = {
   }),
   ...toneMappingArgs({
     toneMappingExposure: 10,
-    toneMapping: NeutralToneMapping
+    toneMappingMode: NeutralToneMapping
   }),
   ...outputPassArgs(),
   ...rendererArgs()

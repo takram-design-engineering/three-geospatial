@@ -237,7 +237,7 @@ Story.args = {
   rotateCamera: true,
   rotateObject: true,
   ...toneMappingArgs({
-    toneMapping: NeutralToneMapping,
+    toneMappingMode: NeutralToneMapping,
     toneMappingExposure: 3
   }),
   ...outputPassArgs(),
