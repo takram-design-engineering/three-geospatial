@@ -13,8 +13,8 @@ import {
 
 export const FLOAT_MAX = 3.402823466e38
 
-export const DEFAULT_NUM_EPIPOLAR_SLICES = 512
-export const DEFAULT_MAX_SAMPLES_IN_SLICE = 256
+export const DEFAULT_NUM_EPIPOLAR_SLICES = 512 * 2
+export const DEFAULT_MAX_SAMPLES_IN_SLICE = 256 * 2
 
 // Transform UV to NDC XY:
 export const transformUVToNDC = /*#__PURE__#*/ FnLayout({
