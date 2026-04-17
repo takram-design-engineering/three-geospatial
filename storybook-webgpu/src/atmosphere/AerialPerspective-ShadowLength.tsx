@@ -38,7 +38,8 @@ import {
   AtmosphereLight,
   AtmosphereLightNode,
   AtmosphereParameters,
-  shadowLength
+  shadowLength,
+  type SkyNode
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
@@ -227,6 +228,8 @@ const Content: FC<StoryProps> = ({
     ({ shadowLength }: StoryArgs) => shadowLength,
     value => {
       aerialNode.shadowLengthNode = value ? shadowLengthNode : null
+      const skyNode = aerialNode.skyNode as SkyNode
+      skyNode.shadowLengthNode = value ? shadowLengthNode : null
       postProcessing.needsUpdate = true
     }
   )
