@@ -51,8 +51,6 @@ import {
 
 import { getAtmosphereContext } from '../AtmosphereContext'
 import {
-  DEFAULT_MAX_SAMPLES_IN_SLICE,
-  DEFAULT_NUM_EPIPOLAR_SLICES,
   FLOAT_MAX,
   transformSliceToWorld,
   transformWorldToShadowUV
@@ -95,8 +93,8 @@ export class EpipolarShadowLengthNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
-  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
+  numEpipolarSlices!: number
+  maxSamplesInSlice!: number
 
   firstCascade!: UniformNode<number> // uint
   maxShadowStep!: UniformNode<number> // float

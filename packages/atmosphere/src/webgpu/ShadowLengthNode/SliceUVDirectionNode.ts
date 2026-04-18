@@ -39,8 +39,6 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import {
-  DEFAULT_MAX_SAMPLES_IN_SLICE,
-  DEFAULT_NUM_EPIPOLAR_SLICES,
   FLOAT_MAX,
   isValidScreenLocation,
   transformSliceToWorld,
@@ -60,8 +58,8 @@ export class SliceUVDirectionNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
-  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
+  numEpipolarSlices!: number
+  maxSamplesInSlice!: number
 
   firstCascade!: UniformNode<number> // uint
   screenSize!: UniformNode<Vector2> // vec2

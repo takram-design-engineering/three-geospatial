@@ -19,10 +19,6 @@ import invariant from 'tiny-invariant'
 
 import { OnBeforeFrameUpdate } from '@takram/three-geospatial/webgpu'
 
-import {
-  DEFAULT_MAX_SAMPLES_IN_SLICE,
-  DEFAULT_NUM_EPIPOLAR_SLICES
-} from './ShadowLengthNode/common'
 import { CoordinateNode } from './ShadowLengthNode/CoordinateNode'
 import { EpipolarShadowLengthNode } from './ShadowLengthNode/EpipolarShadowLengthNode'
 import { MinMaxLevelsNode } from './ShadowLengthNode/MinMaxLevelsNode'
@@ -57,8 +53,15 @@ export class ShadowLengthNode extends TempNode {
   epipolarShadowLengthNode: EpipolarShadowLengthNode
   unwarpEpipolarNode: UnwarpEpipolarNode
 
-  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
-  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
+  // Good visual results can be obtained when number of slices is at least half
+  // the maximum screen resolution (for 1280x720 resolution, good results are
+  // obtained for 512-1024 slices).
+  numEpipolarSlices = 512
+
+  // Convincing visual results are generated when number of samples is at least
+  // half the maximum screen resolution (for 1280x720 resolution, good results
+  // are obtained for 512-1024 samples).
+  maxSamplesInSlice = 256
 
   firstCascade = uniform(0, 'uint')
 

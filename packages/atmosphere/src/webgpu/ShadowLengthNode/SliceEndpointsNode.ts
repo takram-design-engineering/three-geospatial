@@ -28,8 +28,6 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import {
-  DEFAULT_MAX_SAMPLES_IN_SLICE,
-  DEFAULT_NUM_EPIPOLAR_SLICES,
   FLOAT_MAX,
   getOutermostScreenPixelCoords,
   isValidScreenLocation
@@ -42,8 +40,8 @@ export class SliceEndpointsNode extends Node {
     return 'SliceEndpointsNode'
   }
 
-  numEpipolarSlices = DEFAULT_NUM_EPIPOLAR_SLICES
-  maxSamplesInSlice = DEFAULT_MAX_SAMPLES_IN_SLICE
+  numEpipolarSlices!: number
+  maxSamplesInSlice!: number
 
   screenSize!: UniformNode<Vector2> // vec2
   lightScreenPosition!: UniformNode<Vector4> // vec4
@@ -301,9 +299,7 @@ export class SliceEndpointsNode extends Node {
             entryPoint.add(
               exitPoint
                 .sub(entryPoint)
-                .mul(
-                  float(maxSamplesInSlice).div(epipolarSliceScreenLength).max(1)
-                )
+                .mul(maxSamplesInSlice.div(epipolarSliceScreenLength).max(1))
             )
           )
         })
