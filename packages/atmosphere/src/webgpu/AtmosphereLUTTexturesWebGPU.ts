@@ -416,6 +416,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       const irradianceReadWrite = storageTexture(this.irradiance).toReadWrite()
       textureStore(
+        // @ts-expect-error This can be node.
         irradianceReadWrite,
         globalId.xy,
         texture(irradianceReadWrite)
@@ -475,6 +476,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         this.scattering
       ).toReadWrite()
       textureStore(
+        // @ts-expect-error This can be node.
         scatteringReadWrite,
         globalId,
         scatteringReadWrite.load(globalId).add(vec4(luminance, 0))
@@ -485,6 +487,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
           this.higherOrderScattering
         ).toReadWrite()
         textureStore(
+          // @ts-expect-error This can be node.
           higherOrderScatteringReadWrite,
           globalId,
           higherOrderScatteringReadWrite.load(globalId).add(vec4(luminance, 1))

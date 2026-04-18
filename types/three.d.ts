@@ -1,12 +1,10 @@
-import type { Camera, Texture } from 'three'
+import type { Camera } from 'three'
 import type {
   ContextNode,
   Node,
   NodeBuilderContext,
   NodeFrame,
   Renderer,
-  StorageTextureNode,
-  TextureNode,
   UniformNode
 } from 'three/webgpu'
 import type { LiteralToPrimitive, Primitive } from 'type-fest'
@@ -82,14 +80,6 @@ declare module 'three/webgpu' {
   interface AnalyticLightNode {
     colorNode: Node
   }
-}
-
-declare module 'three/tsl' {
-  const textureStore: (
-    value: Texture | TextureNode,
-    uvNode?: Node | null,
-    storeNode?: Node
-  ) => StorageTextureNode
 }
 
 declare module 'three/src/renderers/common/Renderer.js' {
