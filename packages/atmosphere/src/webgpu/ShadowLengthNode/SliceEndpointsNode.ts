@@ -186,8 +186,8 @@ export class SliceEndpointsNode extends Node {
         .saturate()
         .toConst()
 
-      // epipolarSlice now lies in the range [0, 1 - 1/NUM_EPIPOLAR_SLICES]
-      // 0 defines location in exactly left top corner, 1 - 1/NUM_EPIPOLAR_SLICES
+      // epipolarSlice now lies in the range [0, 1 - 1/numEpipolarSlices]
+      // 0 defines location in exactly left top corner, 1 - 1/numEpipolarSlices
       // defines position on the top boundary next to the top left corner.
       const boundary = uint(epipolarSlice.mul(4).floor().clamp(0, 3)).toConst()
       const posOnBoundary = epipolarSlice.mul(4).fract().toConst()
@@ -237,7 +237,7 @@ export class SliceEndpointsNode extends Node {
       If(bvecAnd(isInvalidBoundary, boundaryFlags).any().not(), () => {
         // Additional check above is required to eliminate false epipolar lines
         // which can appear is shown below. The reason is that we have to use
-        // some safety delta when performing check in IsValidScreenLocation()
+        // some safety delta when performing check in isValidScreenLocation()
         // function. If we do not do this, we will miss valid entry points due
         // to precision issues. As a result there could appear false entry
         // points which fall into the safety region, but in fact lie outside

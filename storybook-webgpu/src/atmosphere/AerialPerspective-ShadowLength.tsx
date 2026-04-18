@@ -276,6 +276,7 @@ const Content: FC<StoryProps> = ({
       postProcessing.needsUpdate = true
     }
   )
+
   const updateHelperRef = useRef(true)
   useTransientControl(
     ({ updateHelper }: StoryArgs) => updateHelper,

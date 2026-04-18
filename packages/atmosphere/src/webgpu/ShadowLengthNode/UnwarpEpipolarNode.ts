@@ -298,7 +298,7 @@ export class UnwarpEpipolarNode extends Node {
         // Note that we need to bias sourceColorUV by 0.5 texel size to refer
         // the location between all four texels and get the required values for
         // sure.
-        // The values in float4, which Gather() returns are arranged as follows:
+        // The values in vec4, which Gather() returns are arranged as follows:
         //   _______ _______
         //  |       |       |
         //  |   x   |   y   |
@@ -307,7 +307,7 @@ export class UnwarpEpipolarNode extends Node {
         //  |   *w  |   z   |  * sourceColorUV
         //  |_______|_______|
         //  |<----->|
-        //     1/f2ScatteredColorTexDim.x
+        //     1/shadowLengthTextureSize.x
 
         const shadowLengthTextureSize = vec2(
           maxSamplesInSlice,
@@ -351,7 +351,7 @@ export class UnwarpEpipolarNode extends Node {
         //
         //            -1       0       1                  N-2     N-1      N              Sample index
         // |   X   |   X   |   X   |   X   |  ......   |   X   |   X   |   X   |   X   |
-        //         1-1/(N-1)   0    1/(N-1)                        1   1+1/(N-1)          fSamplePosOnLine
+        //         1-1/(N-1)   0    1/(N-1)                        1   1+1/(N-1)          samplePositionOnLine
         //             |                                                   |
         //             |<-------------------Clamp range------------------->|
         bilateralUWeight.mulAssign(
