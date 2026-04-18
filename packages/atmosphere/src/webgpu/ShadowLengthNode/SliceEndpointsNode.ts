@@ -6,7 +6,6 @@ import {
   type Vector2,
   type Vector4
 } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { float, Fn, If, max, mix, uint, uv, uvec4, vec2, vec4 } from 'three/tsl'
 import {
   NodeMaterial,
@@ -40,9 +39,8 @@ export class SliceEndpointsNode extends Node {
     return 'SliceEndpointsNode'
   }
 
-  numEpipolarSlices!: number
-  maxSamplesInSlice!: number
-
+  numEpipolarSlices!: UniformNode<number> // float
+  maxSamplesInSlice!: UniformNode<number> // float
   screenSize!: UniformNode<Vector2> // vec2
   lightScreenPosition!: UniformNode<Vector4> // vec4
   isLightOnScreen!: UniformNode<boolean> // bool
@@ -72,10 +70,6 @@ export class SliceEndpointsNode extends Node {
     this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
-  override customCacheKey(): number {
-    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
-  }
-
   getTextureNode(): TextureNode {
     return this.textureNode
   }
@@ -85,7 +79,7 @@ export class SliceEndpointsNode extends Node {
       return
     }
 
-    this.renderTarget.setSize(this.numEpipolarSlices, 1)
+    this.renderTarget.setSize(this.numEpipolarSlices.value, 1)
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
@@ -96,10 +90,13 @@ export class SliceEndpointsNode extends Node {
   }
 
   private setupFragmentNode(builder: NodeBuilder): Node<'vec4'> {
-    const { screenSize, lightScreenPosition, isLightOnScreen } = this
-
-    const maxSamplesInSlice = float(this.maxSamplesInSlice)
-    const numEpipolarSlices = float(this.numEpipolarSlices)
+    const {
+      maxSamplesInSlice,
+      numEpipolarSlices,
+      screenSize,
+      lightScreenPosition,
+      isLightOnScreen
+    } = this
 
     const getEpipolarLineEntryPoint = FnVar(
       (exitPoint: Node<'vec2'>): Node<'vec2'> => {

@@ -7,7 +7,6 @@ import {
   type Vector2,
   type Vector4
 } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { float, Fn, max, min, uniform, uv, vec2, vec4 } from 'three/tsl'
 import {
   NodeMaterial,
@@ -49,9 +48,8 @@ export class UnwarpEpipolarNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices!: number
-  maxSamplesInSlice!: number
-
+  numEpipolarSlices!: UniformNode<number> // float
+  maxSamplesInSlice!: UniformNode<number> // float
   screenSize!: UniformNode<Vector2> // vec2
   lightScreenPosition!: UniformNode<Vector4> // vec4
 
@@ -82,10 +80,6 @@ export class UnwarpEpipolarNode extends Node {
     this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
-  override customCacheKey(): number {
-    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
-  }
-
   getTextureNode(): TextureNode {
     return this.textureNode
   }
@@ -108,19 +102,18 @@ export class UnwarpEpipolarNode extends Node {
 
   private setupFragmentNode(builder: NodeBuilder): Node<'vec4'> {
     const {
-      screenSize,
-      lightScreenPosition,
       sliceEndpointsNode,
       coordinateNode,
       epipolarShadowLengthNode,
       refinementThreshold,
       viewZNode,
       depthNode,
-      camera
+      camera,
+      maxSamplesInSlice,
+      numEpipolarSlices,
+      screenSize,
+      lightScreenPosition
     } = this
-
-    const maxSamplesInSlice = float(this.maxSamplesInSlice)
-    const numEpipolarSlices = float(this.numEpipolarSlices)
 
     return Fn(() => {
       const uvNode = uv().toConst()

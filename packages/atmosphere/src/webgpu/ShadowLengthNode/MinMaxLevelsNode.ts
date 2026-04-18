@@ -7,7 +7,6 @@ import {
   Vector2
 } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   and,
   floor,
@@ -54,9 +53,8 @@ export class MinMaxLevelsNode extends Node {
   sliceUVDirectionNode!: TextureNode
   shadowDepthNodes!: TextureNode[]
 
-  numEpipolarSlices!: number
-  maxSamplesInSlice!: number
-
+  numEpipolarSlices!: UniformNode<number> // float
+  maxSamplesInSlice!: UniformNode<number> // float
   firstCascade!: UniformNode<number> // uint
 
   private readonly textureNode: TextureNode
@@ -90,10 +88,6 @@ export class MinMaxLevelsNode extends Node {
     this.renderTargetB.texture.name = 'MinMaxLevelsB'
 
     this.textureNode = outputTexture(this, this.renderTargetA.texture)
-  }
-
-  override customCacheKey(): number {
-    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
   }
 
   getTextureNode(): TextureNode {
@@ -177,7 +171,7 @@ export class MinMaxLevelsNode extends Node {
 
     const activeCascades = csmShadowNode.cascades - this.firstCascade.value
     const width = Math.max(mapSize.x, mapSize.y)
-    const height = activeCascades * this.numEpipolarSlices
+    const height = activeCascades * this.numEpipolarSlices.value
     this.renderTargetA.setSize(width, height)
     this.renderTargetB.setSize(width, height)
 

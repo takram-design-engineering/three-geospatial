@@ -5,7 +5,6 @@ import {
   type Camera,
   type Vector2
 } from 'three'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   float,
   Fn,
@@ -30,11 +29,7 @@ import {
 
 import { Node, outputTexture } from '@takram/three-geospatial/webgpu'
 
-import {
-  getCameraZ,
-  isValidScreenLocation,
-  transformNDCToUV
-} from './common'
+import { getCameraZ, isValidScreenLocation, transformNDCToUV } from './common'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -49,9 +44,8 @@ export class CoordinateNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices!: number
-  maxSamplesInSlice!: number
-
+  numEpipolarSlices!: UniformNode<number> // float
+  maxSamplesInSlice!: UniformNode<number> // float
   screenSize!: UniformNode<Vector2> // vec2
 
   private readonly textureNode: TextureNode
@@ -79,10 +73,6 @@ export class CoordinateNode extends Node {
     this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
-  override customCacheKey(): number {
-    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
-  }
-
   getTextureNode(): TextureNode {
     return this.textureNode
   }
@@ -92,7 +82,10 @@ export class CoordinateNode extends Node {
       return
     }
 
-    this.renderTarget.setSize(this.maxSamplesInSlice, this.numEpipolarSlices)
+    this.renderTarget.setSize(
+      this.maxSamplesInSlice.value,
+      this.numEpipolarSlices.value
+    )
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 

@@ -7,7 +7,6 @@ import {
   type Vector2
 } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   Fn,
   If,
@@ -58,9 +57,8 @@ export class SliceUVDirectionNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices!: number
-  maxSamplesInSlice!: number
-
+  numEpipolarSlices!: UniformNode<number> // float
+  maxSamplesInSlice!: UniformNode<number> // float
   firstCascade!: UniformNode<number> // uint
   screenSize!: UniformNode<Vector2> // vec2
   shadowMapTexelSize!: UniformNode<Vector2> // vec2
@@ -92,10 +90,6 @@ export class SliceUVDirectionNode extends Node {
     this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
-  override customCacheKey(): number {
-    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
-  }
-
   getTextureNode(): TextureNode {
     return this.textureNode
   }
@@ -106,7 +100,7 @@ export class SliceUVDirectionNode extends Node {
     }
 
     this.renderTarget.setSize(
-      this.numEpipolarSlices,
+      this.numEpipolarSlices.value,
       this.csmShadowNode.cascades - this.firstCascade.value
     )
 

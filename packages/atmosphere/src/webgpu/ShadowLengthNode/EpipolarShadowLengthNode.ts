@@ -9,7 +9,6 @@ import {
   type Camera
 } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
-import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   and,
   Break,
@@ -93,9 +92,8 @@ export class EpipolarShadowLengthNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices!: number
-  maxSamplesInSlice!: number
-
+  numEpipolarSlices!: UniformNode<number> // float
+  maxSamplesInSlice!: UniformNode<number> // float
   firstCascade!: UniformNode<number> // uint
   maxShadowStep!: UniformNode<number> // float
   shadowCascadeArray!: UniformArrayNode // vec2[]
@@ -126,10 +124,6 @@ export class EpipolarShadowLengthNode extends Node {
     this.textureNode = outputTexture(this, renderTarget.texture)
   }
 
-  override customCacheKey(): number {
-    return hash(this.numEpipolarSlices, this.maxSamplesInSlice)
-  }
-
   getTextureNode(): TextureNode {
     return this.textureNode
   }
@@ -139,7 +133,10 @@ export class EpipolarShadowLengthNode extends Node {
       return
     }
 
-    this.renderTarget.setSize(this.maxSamplesInSlice, this.numEpipolarSlices)
+    this.renderTarget.setSize(
+      this.maxSamplesInSlice.value,
+      this.numEpipolarSlices.value
+    )
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
@@ -157,6 +154,7 @@ export class EpipolarShadowLengthNode extends Node {
       minMaxLevelsNode,
       shadowDepthNodes,
       camera,
+      numEpipolarSlices,
       firstCascade,
       maxShadowStep,
       shadowCascadeArray,
@@ -164,8 +162,6 @@ export class EpipolarShadowLengthNode extends Node {
     } = this
 
     invariant(camera instanceof PerspectiveCamera)
-
-    const numEpipolarSlices = float(this.numEpipolarSlices)
 
     const { cascades } = csmShadowNode
 

@@ -17,6 +17,7 @@ import {
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
+import { floorPowerOfTwo } from '@takram/three-geospatial'
 import { OnBeforeFrameUpdate } from '@takram/three-geospatial/webgpu'
 
 import { CoordinateNode } from './ShadowLengthNode/CoordinateNode'
@@ -53,16 +54,19 @@ export class ShadowLengthNode extends TempNode {
   epipolarShadowLengthNode: EpipolarShadowLengthNode
   unwarpEpipolarNode: UnwarpEpipolarNode
 
+  autoSampleResolution = true
+
   // Good visual results can be obtained when number of slices is at least half
   // the maximum screen resolution (for 1280x720 resolution, good results are
   // obtained for 512-1024 slices).
-  numEpipolarSlices = 512
+  numEpipolarSlices = uniform(512, 'float')
 
   // Convincing visual results are generated when number of samples is at least
   // half the maximum screen resolution (for 1280x720 resolution, good results
   // are obtained for 512-1024 samples).
-  maxSamplesInSlice = 256
+  maxSamplesInSlice = uniform(256, 'float')
 
+  // First cascade used for ray marching.
   firstCascade = uniform(0, 'uint')
 
   private readonly screenSize = uniform('vec2')
@@ -92,11 +96,7 @@ export class ShadowLengthNode extends TempNode {
   }
 
   override customCacheKey(): number {
-    return hash(
-      this.numEpipolarSlices,
-      this.maxSamplesInSlice,
-      this.currentCascades
-    )
+    return hash(this.currentCascades)
   }
 
   override updateBefore({ renderer, material }: NodeFrame): void {
@@ -148,12 +148,18 @@ export class ShadowLengthNode extends TempNode {
     }
     this.lightScreenPosition.value.set(lightX, lightY, lightZ, lightW)
 
-    const size = renderer.getDrawingBufferSize(sizeScratch)
+    const { width, height } = renderer.getDrawingBufferSize(sizeScratch)
     this.isLightOnScreen.value =
-      Math.abs(lightX) <= 1 - 1 / size.width &&
-      Math.abs(lightY) <= 1 - 1 / size.height
+      Math.abs(lightX) <= 1 - 1 / width && Math.abs(lightY) <= 1 - 1 / height
 
-    this.screenSize.value.copy(size)
+    this.screenSize.value.set(width, height)
+
+    if (this.autoSampleResolution) {
+      const pixelRatio = renderer.getPixelRatio()
+      const size = floorPowerOfTwo(Math.max(width, height) / pixelRatio)
+      this.numEpipolarSlices.value = size
+      this.maxSamplesInSlice.value = size >>> 1
+    }
   }
 
   override setup(builder: NodeBuilder): unknown {
