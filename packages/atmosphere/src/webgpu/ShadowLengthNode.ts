@@ -1,23 +1,22 @@
-import type { DirectionalLight } from 'three'
+import { DirectionalLight } from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { float, texture, uniform, uniformArray } from 'three/tsl'
 import {
   Matrix4,
+  NodeMaterial,
   NodeUpdateType,
+  PerspectiveCamera,
   TempNode,
   Vector2,
   Vector3,
   Vector4,
   type NodeBuilder,
   type NodeFrame,
-  type NodeMaterial,
-  type PerspectiveCamera,
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
-import { reinterpretType } from '@takram/three-geospatial'
 import { OnBeforeFrameUpdate } from '@takram/three-geospatial/webgpu'
 
 import {
@@ -107,15 +106,15 @@ export class ShadowLengthNode extends TempNode {
     if (camera == null || light == null) {
       return
     }
-    reinterpretType<PerspectiveCamera>(camera)
-    reinterpretType<DirectionalLight>(light)
+    invariant(camera instanceof PerspectiveCamera)
+    invariant(light instanceof DirectionalLight)
 
     const { lights } = csmShadowNode
     if (lights.length !== this.currentCascades) {
       this.currentCascades = lights.length
 
       // Trigger update in the upstream.
-      reinterpretType<NodeMaterial>(material)
+      invariant(material instanceof NodeMaterial)
       material.fragmentNode!.needsUpdate = true
       material.needsUpdate = true
     }
@@ -177,7 +176,7 @@ export class ShadowLengthNode extends TempNode {
     if (camera == null || lights.length === 0) {
       return float()
     }
-    reinterpretType<PerspectiveCamera>(camera)
+    invariant(camera instanceof PerspectiveCamera)
 
     const maxShadowStep = uniform(1024 / 4, 'float')
     const shadowMapTexelSize = uniform('vec2')
