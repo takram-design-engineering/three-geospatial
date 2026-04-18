@@ -2,13 +2,13 @@ import { BufferAttribute, BufferGeometry, Points } from 'three'
 import { instanceIndex, screenSize, uvec2, vec3, vec4 } from 'three/tsl'
 import { PointsNodeMaterial, type NodeMaterial } from 'three/webgpu'
 
-import { isValidScreenLocation } from './common'
-import type { CoordinateNode } from './CoordinateNode'
+import type { ShadowLengthNode } from './ShadowLengthNode'
+import { isValidScreenLocation } from './ShadowLengthNode/common'
 
-export class SampleLocations extends Points {
+export class ShadowLengthSampleLocations extends Points {
   declare material: NodeMaterial
 
-  constructor(coordinateNode: CoordinateNode) {
+  constructor(shadowLengthNode: ShadowLengthNode) {
     const geometry = new BufferGeometry()
     geometry.setAttribute(
       'position',
@@ -20,7 +20,8 @@ export class SampleLocations extends Points {
     material.depthTest = false
     material.depthWrite = false
 
-    const { maxSamplesInSlice, numEpipolarSlices } = coordinateNode
+    const { maxSamplesInSlice, numEpipolarSlices, coordinateNode } =
+      shadowLengthNode
     const sampleIndex = instanceIndex.mod(maxSamplesInSlice)
     const sliceIndex = instanceIndex.div(maxSamplesInSlice)
 
