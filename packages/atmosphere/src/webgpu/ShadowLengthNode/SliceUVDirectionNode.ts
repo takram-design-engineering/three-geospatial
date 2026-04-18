@@ -26,7 +26,6 @@ import {
   type Camera,
   type Vector2
 } from 'three'
-import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   Fn,
   If,
@@ -54,7 +53,8 @@ import {
   bvecNot,
   cameraPositionWorld,
   Node,
-  outputTexture
+  outputTexture,
+  type CascadedShadowMapsNode
 } from '@takram/three-geospatial/webgpu'
 
 import {
@@ -72,7 +72,7 @@ export class SliceUVDirectionNode extends Node {
   }
 
   depthNode!: TextureNode
-  csmShadowNode!: CSMShadowNode
+  csmShadowNode!: CascadedShadowMapsNode
   sliceEndpointsNode!: TextureNode
 
   camera!: Camera
@@ -121,7 +121,7 @@ export class SliceUVDirectionNode extends Node {
 
     this.renderTarget.setSize(
       this.numEpipolarSlices.value,
-      this.csmShadowNode.cascades - this.firstCascade.value
+      this.csmShadowNode.cascadeCount - this.firstCascade.value
     )
 
     this.rendererState = resetRendererState(renderer, this.rendererState)

@@ -26,7 +26,6 @@ import {
   RGFormat,
   Vector2
 } from 'three'
-import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   and,
   floor,
@@ -56,7 +55,8 @@ import {
 import {
   Node,
   outputTexture,
-  textureGather
+  textureGather,
+  type CascadedShadowMapsNode
 } from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -69,7 +69,7 @@ export class MinMaxLevelsNode extends Node {
     return 'MinMaxLevelsNode'
   }
 
-  csmShadowNode!: CSMShadowNode
+  csmShadowNode!: CascadedShadowMapsNode
   sliceUVDirectionNode!: TextureNode
   shadowDepthNodes!: TextureNode[]
 
@@ -189,7 +189,7 @@ export class MinMaxLevelsNode extends Node {
       return
     }
 
-    const activeCascades = csmShadowNode.cascades - this.firstCascade.value
+    const activeCascades = csmShadowNode.cascadeCount - this.firstCascade.value
     const width = Math.max(mapSize.x, mapSize.y)
     const height = activeCascades * this.numEpipolarSlices.value
     this.renderTargetA.setSize(width, height)
@@ -207,7 +207,7 @@ export class MinMaxLevelsNode extends Node {
       firstCascade
     } = this
 
-    const { cascades } = csmShadowNode
+    const { cascadeCount } = csmShadowNode
 
     return Fn(() => {
       const cascadeIndex = floor(screenCoordinate.y.div(numEpipolarSlices))
@@ -230,7 +230,7 @@ export class MinMaxLevelsNode extends Node {
       const maxDepths = vec4(0).toVar()
       // Gather 8 depths which will be used for PCF filtering for this sample
       // and its immediate neighbor along the epipolar slice.
-      for (let cascade = 0; cascade < cascades; ++cascade) {
+      for (let cascade = 0; cascade < cascadeCount; ++cascade) {
         If(cascadeIndex.equal(cascade), () => {
           for (let i = 0; i <= 1; ++i) {
             const sampleUV = currentUV.add(sliceUVDirection.xy.mul(i)).toConst()

@@ -1,4 +1,5 @@
 export * from './accessors'
+export * from './CascadedShadowMapsNode'
 export * from './debug'
 export * from './DownsampleThresholdNode'
 export * from './events'

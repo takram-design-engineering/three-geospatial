@@ -18,8 +18,6 @@
  * Modified from the original source code.
  */
 
-import { DirectionalLight } from 'three'
-import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import { float, texture, uniform, uniformArray } from 'three/tsl'
 import {
@@ -38,7 +36,10 @@ import {
 import invariant from 'tiny-invariant'
 
 import { floorPowerOfTwo } from '@takram/three-geospatial'
-import { OnBeforeFrameUpdate } from '@takram/three-geospatial/webgpu'
+import {
+  OnBeforeFrameUpdate,
+  type CascadedShadowMapsNode
+} from '@takram/three-geospatial/webgpu'
 
 import { CoordinateNode } from './ShadowLengthNode/CoordinateNode'
 import { EpipolarShadowLengthNode } from './ShadowLengthNode/EpipolarShadowLengthNode'
@@ -46,12 +47,6 @@ import { MinMaxLevelsNode } from './ShadowLengthNode/MinMaxLevelsNode'
 import { SliceEndpointsNode } from './ShadowLengthNode/SliceEndpointsNode'
 import { SliceUVDirectionNode } from './ShadowLengthNode/SliceUVDirectionNode'
 import { UnwarpEpipolarNode } from './ShadowLengthNode/UnwarpEpipolarNode'
-
-declare module 'three/examples/jsm/csm/CSMShadowNode.js' {
-  interface CSMShadowNode {
-    _cascades: Vector2[] // TODO
-  }
-}
 
 const vector3Scratch = /*#__PURE__*/ new Vector3()
 const vector4Scratch = /*#__PURE__*/ new Vector4()
@@ -63,7 +58,7 @@ export class ShadowLengthNode extends TempNode {
     return 'ShadowLengthNode'
   }
 
-  csmShadowNode: CSMShadowNode
+  csmShadowNode: CascadedShadowMapsNode
   viewZNode?: TextureNode | null // Must be filterable
   depthNode?: TextureNode | null
 
@@ -96,7 +91,7 @@ export class ShadowLengthNode extends TempNode {
   private currentCascades = 0
 
   constructor(
-    csmShadowNode: CSMShadowNode,
+    csmShadowNode: CascadedShadowMapsNode,
     viewZNode?: TextureNode | null,
     depthNode?: TextureNode | null
   ) {
@@ -129,8 +124,6 @@ export class ShadowLengthNode extends TempNode {
     if (camera == null || light == null) {
       return
     }
-    invariant(camera instanceof PerspectiveCamera)
-    invariant(light instanceof DirectionalLight)
 
     const { lights } = csmShadowNode
     if (lights.length !== this.currentCascades) {
@@ -219,21 +212,21 @@ export class ShadowLengthNode extends TempNode {
     })
 
     const shadowCascadeArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascades }, () => new Vector2()),
+      Array.from({ length: csmShadowNode.cascadeCount }, () => new Vector2()),
       'vec2'
     )
     OnBeforeFrameUpdate(() => {
       const array = shadowCascadeArray.array as Vector2[]
       const far = Math.min(camera.far, csmShadowNode.maxFar)
-      const cascades = csmShadowNode._cascades
+      const { cascadeIntervals } = csmShadowNode
       for (let i = 0; i < array.length; ++i) {
-        const cascade = cascades[i]
-        array[i].set(cascade.x * far, cascade.y * far)
+        const interval = cascadeIntervals[i]
+        array[i].set(interval.x * far, interval.y * far)
       }
     })
 
     const shadowMatrixArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascades }, () => new Matrix4()),
+      Array.from({ length: csmShadowNode.cascadeCount }, () => new Matrix4()),
       'mat4'
     )
     OnBeforeFrameUpdate(() => {

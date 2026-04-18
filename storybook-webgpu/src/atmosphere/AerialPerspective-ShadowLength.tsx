@@ -11,7 +11,6 @@ import {
 } from 'react'
 import { AgXToneMapping, Scene } from 'three'
 import { CSMHelper } from 'three/examples/jsm/csm/CSMHelper.js'
-import { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   bool,
   context,
@@ -49,6 +48,7 @@ import {
 import { radians } from '@takram/three-geospatial'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 import {
+  CascadedShadowMapsNode,
   dithering,
   FnVar,
   highpVelocity,
@@ -168,12 +168,13 @@ const Content: FC<StoryProps> = ({
     light.shadow.mapSize.height = 1024
     light.shadow.bias = 0.0001
     light.shadow.camera.near = 0
-    light.shadow.camera.far = 5e5
+    light.shadow.camera.far = 3e5
 
-    const csmNode = new CSMShadowNode(light)
-    csmNode.cascades = 3
+    const csmNode = new CascadedShadowMapsNode(light)
+    csmNode.cascadeCount = 3
     csmNode.maxFar = 5e4
     csmNode.fade = true
+    csmNode.lightMargin = 1e5
     light.shadow.shadowNode = csmNode
 
     return [light, csmNode]
@@ -357,12 +358,14 @@ const Content: FC<StoryProps> = ({
     [csmShadowNode]
   )
 
+  const showHelper = useControl(({ showHelper }: StoryArgs) => showHelper)
+
   const [tilesScene, setTilesScene] = useState<Scene | null>(null)
 
   return (
     <>
       <primitive object={light} />
-      {/* <primitive object={csmHelper} /> */}
+      {showHelper && <primitive object={csmHelper} />}
       <EastNorthUpFrame
         longitude={radians(longitude)}
         latitude={radians(latitude)}
@@ -407,6 +410,7 @@ const Content: FC<StoryProps> = ({
 interface StoryProps extends PointOfViewProps {}
 
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
+  showHelper: boolean
   updateHelper: boolean
   transmittance: boolean
   inscatter: boolean
@@ -432,6 +436,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
+  showHelper: false,
   updateHelper: true,
   transmittance: true,
   inscatter: true,
@@ -452,6 +457,11 @@ Story.args = {
 }
 
 Story.argTypes = {
+  showHelper: {
+    control: {
+      type: 'boolean'
+    }
+  },
   updateHelper: {
     control: {
       type: 'boolean'

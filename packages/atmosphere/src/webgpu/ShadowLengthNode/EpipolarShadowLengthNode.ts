@@ -23,12 +23,10 @@
 import {
   HalfFloatType,
   LinearFilter,
-  PerspectiveCamera,
   RedFormat,
   RenderTarget,
-  type Camera
+  type PerspectiveCamera
 } from 'three'
-import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   and,
   Break,
@@ -58,14 +56,14 @@ import {
   type UniformArrayNode,
   type UniformNode
 } from 'three/webgpu'
-import invariant from 'tiny-invariant'
 
 import {
   cameraPositionWorld,
   FnVar,
   Node,
   outputTexture,
-  raySpheresIntersections
+  raySpheresIntersections,
+  type CascadedShadowMapsNode
 } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from '../AtmosphereContext'
@@ -104,13 +102,13 @@ export class EpipolarShadowLengthNode extends Node {
     return 'EpipolarShadowLengthNode'
   }
 
-  csmShadowNode!: CSMShadowNode
+  csmShadowNode!: CascadedShadowMapsNode
   coordinateNode!: TextureNode
   sliceUVDirectionNode!: TextureNode
   minMaxLevelsNode!: TextureNode
   shadowDepthNodes!: TextureNode[]
 
-  camera!: Camera
+  camera!: PerspectiveCamera
 
   numEpipolarSlices!: UniformNode<number> // float
   maxSamplesInSlice!: UniformNode<number> // float
@@ -181,9 +179,7 @@ export class EpipolarShadowLengthNode extends Node {
       shadowMatrixArray
     } = this
 
-    invariant(camera instanceof PerspectiveCamera)
-
-    const { cascades } = csmShadowNode
+    const { cascadeCount } = csmShadowNode
 
     const biasedCameraFar = uniform('float').onRenderUpdate(
       // This bias might be required to test if the ray directs towards sky.
@@ -197,7 +193,7 @@ export class EpipolarShadowLengthNode extends Node {
         depthInLightSpace: Node<'float'>
       ): Node<'float'> => {
         const isInLight = float(0).toVar()
-        for (let cascade = 0; cascade < cascades; ++cascade) {
+        for (let cascade = 0; cascade < cascadeCount; ++cascade) {
           If(cascadeIndex.equal(cascade), () => {
             isInLight.assign(
               shadowDepthNodes[cascade]
@@ -546,7 +542,7 @@ export class EpipolarShadowLengthNode extends Node {
             Loop(
               {
                 start: firstCascade,
-                end: cascades,
+                end: cascadeCount,
                 condition: '<'
               },
               ({ i: cascadeIndex }) => {
