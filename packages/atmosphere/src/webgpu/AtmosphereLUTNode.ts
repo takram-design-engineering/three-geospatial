@@ -216,7 +216,7 @@ export class AtmosphereLUTNode extends Node {
     if (this.textures == null) {
       // Lazily initialize the texture generator depending of the renderer:
       this.textures = isWebGPU(builder)
-        ? new AtmosphereLUTTexturesWebGPU()
+        ? new AtmosphereLUTTexturesWebGPU(builder.renderer)
         : new AtmosphereLUTTexturesWebGL()
 
       // Swap the contents of the texture nodes. The WebGPU one has storage

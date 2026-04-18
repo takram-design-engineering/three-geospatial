@@ -102,6 +102,7 @@ declare module 'three/src/renderers/common/Renderer.js' {
     contextNode: ContextNode
     reversedDepthBuffer: boolean
     initRenderTarget(renderTarget: RenderTarget): void
+    hasFeature(name: string): boolean
   }
 }
 
