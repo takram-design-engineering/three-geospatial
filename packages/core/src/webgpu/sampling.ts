@@ -39,28 +39,6 @@ export const textureGather = /*#__PURE__*/ FnVar(
   }
 )
 
-export const textureQuadrant = /*#__PURE__*/ FnVar(
-  (
-    textureNode1: TextureNode,
-    textureNode2: TextureNode,
-    textureNode3: TextureNode,
-    textureNode4: TextureNode,
-    uvNode: Node<'vec2'> = uv()
-  ): Node<'vec4'> => {
-    const coord = vec4(uvNode, uvNode.sub(0.5)).mul(2).toConst()
-    return uvNode.y
-      .lessThan(0.5)
-      .select(
-        uvNode.x
-          .lessThan(0.5)
-          .select(textureNode1.sample(coord.xy), textureNode2.sample(coord.zy)),
-        uvNode.x
-          .lessThan(0.5)
-          .select(textureNode3.sample(coord.xw), textureNode4.sample(coord.zw))
-      )
-  }
-)
-
 // 9-taps version of Catmull-Rom sampling.
 // Reference: https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
 export const textureCatmullRom = /*#__PURE__*/ FnVar(

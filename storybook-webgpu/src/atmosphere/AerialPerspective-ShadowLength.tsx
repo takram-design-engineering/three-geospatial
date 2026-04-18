@@ -9,16 +9,20 @@ import {
   useState,
   type FC
 } from 'react'
-import { AgXToneMapping, FloatType, RedFormat, Scene } from 'three'
+import { AgXToneMapping, Scene } from 'three'
 import { CSMHelper } from 'three/examples/jsm/csm/CSMHelper.js'
 import { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
+  bool,
   context,
   mrt,
   output,
   pass,
   toneMapping,
   uniform,
+  uv,
+  vec2,
+  vec3,
   vec4
 } from 'three/tsl'
 import {
@@ -39,17 +43,19 @@ import {
   AtmosphereLightNode,
   AtmosphereParameters,
   shadowLength,
+  type ShadowLengthNode,
   type SkyNode
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 import {
   dithering,
+  FnVar,
   highpVelocity,
   lensFlare,
   temporalAntialias,
-  textureQuadrant,
-  viewZ
+  viewZ,
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
@@ -86,6 +92,48 @@ import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
 
+const internalTextures = FnVar(
+  (shadowLengthNode: ShadowLengthNode): Node<'vec3'> => {
+    const {
+      sliceEndpointsNode,
+      coordinateNode,
+      sliceUVDirectionNode,
+      minMaxLevelsNode,
+      epipolarShadowLengthNode
+    } = shadowLengthNode
+    const sliceEndpoints = sliceEndpointsNode.getTextureNode()
+    const coordinate = coordinateNode.getTextureNode()
+    const sliceUVDirection = sliceUVDirectionNode.getTextureNode()
+    const minMaxLevels = minMaxLevelsNode.getTextureNode()
+    const epipolarShadowLength = epipolarShadowLengthNode.getTextureNode()
+
+    const uvNode = uv()
+    const uv1 = vec4(uvNode, uvNode.sub(0.5)).mul(2).toConst()
+    const uv2 = vec3(uv1.x, uv1.yy.sub(vec2(0, 0.5)).mul(2)).toConst()
+    return uvNode.y
+      .lessThan(0.5)
+      .select(
+        uvNode.x
+          .lessThan(0.5)
+          .select(
+            uv1.y
+              .lessThan(0.5)
+              .select(
+                sliceEndpoints.sample(uv2.xy),
+                sliceUVDirection.sample(uv2.xz)
+              ),
+            coordinate.sample(uv1.zy)
+          ),
+        uvNode.x
+          .lessThan(0.5)
+          .select(
+            minMaxLevels.sample(uv1.xw),
+            epipolarShadowLength.sample(uv1.zw).rrr
+          )
+      ).rgb
+  }
+)
+
 const Content: FC<StoryProps> = ({
   longitude,
   latitude,
@@ -118,6 +166,7 @@ const Content: FC<StoryProps> = ({
     light.castShadow = true
     light.shadow.mapSize.width = 1024
     light.shadow.mapSize.height = 1024
+    light.shadow.bias = 0.0001
     light.shadow.camera.near = 0
     light.shadow.camera.far = 5e5
 
@@ -154,8 +203,6 @@ const Content: FC<StoryProps> = ({
   const depthNode = passNode.getTextureNode('depth')
   const velocityNode = passNode.getTextureNode('velocity')
   const viewZNode = passNode.getTextureNode('viewZ')
-  viewZNode.value.type = FloatType
-  viewZNode.value.format = RedFormat
 
   const shadowLengthNode = useResource(
     () => shadowLength(csmShadowNode, viewZNode),
@@ -188,40 +235,36 @@ const Content: FC<StoryProps> = ({
     [camera, overlayScene]
   )
 
-  const { showShadowLength, debugShadowLength } = useControl(
-    ({ showShadowLength, debugShadowLength }: StoryArgs) => ({
-      showShadowLength,
-      debugShadowLength
+  const { displayShadowLength, debugShadowLength } = useControl(
+    ({ shadowLength, displayShadowLength, debugShadowLength }: StoryArgs) => ({
+      displayShadowLength: shadowLength && displayShadowLength,
+      debugShadowLength: shadowLength && debugShadowLength
     })
   )
 
   const postProcessing = useResource(() => {
-    let outputNode = taaNode
+    let outputNode: Node = taaNode
       .add(dithering)
       .mul(overlayPassNode.a.oneMinus())
       .add(overlayPassNode)
+
+    // Useless conditionals to keep the main path in the graph:
     if (debugShadowLength) {
-      outputNode = outputNode
-        .mul(vec4(0, 0, 0, 1))
-        .add(
-          textureQuadrant(
-            shadowLengthNode.sliceEndpointsNode.getTextureNode(),
-            shadowLengthNode.coordinateNode.getTextureNode(),
-            shadowLengthNode.sliceUVDirectionNode.getTextureNode(),
-            shadowLengthNode.minMaxLevelsNode.getTextureNode()
-          )
-        )
-    } else if (showShadowLength) {
-      outputNode = outputNode.mul(vec4(0, 0, 0, 1)).add(shadowLengthNode.rrr)
+      outputNode = bool(true).select(
+        internalTextures(shadowLengthNode),
+        outputNode
+      )
+    } else if (displayShadowLength) {
+      outputNode = bool(true).select(vec4(shadowLengthNode.rrr, 1), outputNode)
     }
     return new PostProcessing(renderer, outputNode)
   }, [
+    renderer,
+    shadowLengthNode,
     taaNode,
     overlayPassNode,
-    showShadowLength,
-    debugShadowLength,
-    renderer,
-    shadowLengthNode
+    displayShadowLength,
+    debugShadowLength
   ])
 
   useTransientControl(
@@ -319,7 +362,6 @@ const Content: FC<StoryProps> = ({
     <>
       <primitive object={light} />
       {/* <primitive object={csmHelper} /> */}
-      {/* <primitive object={samplePoints} /> */}
       <EastNorthUpFrame
         longitude={radians(longitude)}
         latitude={radians(latitude)}
@@ -370,7 +412,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
   showGround: boolean
   raymarchSingleScattering: boolean
   shadowLength: boolean
-  showShadowLength: boolean
+  displayShadowLength: boolean
   debugShadowLength: boolean
 }
 
@@ -395,7 +437,7 @@ Story.args = {
   showGround: true,
   raymarchSingleScattering: false,
   shadowLength: true,
-  showShadowLength: false,
+  displayShadowLength: false,
   debugShadowLength: false,
   ...localDateArgs({
     dayOfYear: 0,
@@ -442,19 +484,22 @@ Story.argTypes = {
     control: {
       type: 'boolean'
     },
-    table: { category: 'aerial perspective' }
+    name: 'enable',
+    table: { category: 'shadow length' }
   },
-  showShadowLength: {
+  displayShadowLength: {
     control: {
       type: 'boolean'
     },
-    table: { category: 'aerial perspective' }
+    name: 'display',
+    table: { category: 'shadow length' }
   },
   debugShadowLength: {
     control: {
       type: 'boolean'
     },
-    table: { category: 'aerial perspective' }
+    name: 'debug',
+    table: { category: 'shadow length' }
   },
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
