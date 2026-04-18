@@ -1,4 +1,4 @@
-import { lerp } from '../math'
+import { lerp } from '@takram/three-geospatial'
 
 export type FrustumSplitFunction = (
   length: number,
