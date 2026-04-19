@@ -1,5 +1,5 @@
 import { BufferAttribute, BufferGeometry, Points } from 'three'
-import { instanceIndex, screenSize, uvec2, vec3, vec4 } from 'three/tsl'
+import { instanceIndex, screenSize, uint, uvec2, vec3, vec4 } from 'three/tsl'
 import { PointsNodeMaterial, type NodeMaterial } from 'three/webgpu'
 
 import type { ShadowLengthNode } from './ShadowLengthNode'
@@ -22,8 +22,8 @@ export class ShadowLengthSampleLocations extends Points {
 
     const { maxSamplesInSlice, numEpipolarSlices, coordinateNode } =
       shadowLengthNode
-    const sampleIndex = instanceIndex.mod(maxSamplesInSlice)
-    const sliceIndex = instanceIndex.div(maxSamplesInSlice)
+    const sampleIndex = instanceIndex.mod(uint(maxSamplesInSlice))
+    const sliceIndex = instanceIndex.div(uint(maxSamplesInSlice))
 
     const coordinate = coordinateNode
       .getTextureNode()
@@ -41,7 +41,7 @@ export class ShadowLengthSampleLocations extends Points {
 
     super(geometry, material)
 
-    this.count = maxSamplesInSlice * numEpipolarSlices
+    this.count = maxSamplesInSlice.value * numEpipolarSlices.value
     this.frustumCulled = false
   }
 
