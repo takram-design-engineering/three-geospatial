@@ -59,7 +59,7 @@ export const HighOrderScattering = createStory(Story2D, {
   },
   args: {
     zoom: 16,
-    toneMappingExposure: 1
+    toneMappingExposure: 50
   },
   parameters: {
     docs: {

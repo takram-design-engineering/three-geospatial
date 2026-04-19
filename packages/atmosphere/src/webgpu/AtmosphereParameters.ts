@@ -115,7 +115,7 @@ export class AtmosphereParameters {
   // The cosine of the maximum sun zenith angle for which atmospheric scattering
   // must be precomputed (for maximum precision, use the smallest sun zenith
   // angle yielding negligible sky light radiance values).
-  minCosLight = Math.cos(radians(102))
+  minCosLight = Math.cos(radians(120))
 
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
   skyRadianceToLuminance = new Vector3(114974.91644, 71305.954816, 65310.548555)
@@ -139,6 +139,7 @@ export class AtmosphereParameters {
   scatteringTextureCosLightSize = 32
   scatteringTextureCosViewLightSize = 8
   scatteringTextureSize = new Vector3()
+  highOrderScatteringTextureSize = new Vector2(64, 64)
 
   constructor() {
     this.update()
@@ -173,6 +174,9 @@ export class AtmosphereParameters {
     this.scatteringTextureCosViewLightSize =
       other.scatteringTextureCosViewLightSize
     this.scatteringTextureSize.copy(other.scatteringTextureSize)
+    this.highOrderScatteringTextureSize.copy(
+      other.highOrderScatteringTextureSize
+    )
     return this
   }
 

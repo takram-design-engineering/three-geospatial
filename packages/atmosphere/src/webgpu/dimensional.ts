@@ -45,6 +45,7 @@ export const ReducedScatteringTexture = 'texture3D'
 export const ScatteringTexture = 'texture3D'
 export const ScatteringDensityTexture = 'texture3D'
 export const IrradianceTexture = 'texture'
+export const HighOrderScatteringTexture = 'texture'
 
 export type Length = typeof Length
 export type Wavelength = typeof Wavelength
@@ -89,3 +90,4 @@ export type ReducedScatteringTexture = typeof ReducedScatteringTexture
 export type ScatteringTexture = typeof ScatteringTexture
 export type ScatteringDensityTexture = typeof ScatteringDensityTexture
 export type IrradianceTexture = typeof IrradianceTexture
+export type HighOrderScatteringTexture = typeof HighOrderScatteringTexture

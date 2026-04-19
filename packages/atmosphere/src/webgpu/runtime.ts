@@ -273,17 +273,17 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
   // Clamp the viewer at the bottom atmosphere boundary for rendering points
   // below it.
   const radius = camera.length().toVar()
-  const movedCamera = camera.toVar()
+  const sampleCamera = camera.toVar()
   if (context.constrainCamera) {
     If(radius.lessThan(bottomRadius), () => {
       radius.assign(bottomRadius)
-      movedCamera.assign(camera.normalize().mul(radius))
+      sampleCamera.assign(camera.normalize().mul(radius))
     })
   }
 
   // Compute the distance to the top atmosphere boundary along the view ray,
   // assuming the viewer is in space.
-  const radiusCosView = movedCamera.dot(viewRay).toVar()
+  const radiusCosView = sampleCamera.dot(viewRay).toVar()
   const distanceToTop = radiusCosView
     .negate()
     .sub(
@@ -294,7 +294,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
   // If the viewer is in space and the view ray intersects the atmosphere,
   // move the viewer to the top atmosphere boundary along the view ray.
   If(distanceToTop.greaterThan(0), () => {
-    movedCamera.assign(movedCamera.add(viewRay.mul(distanceToTop)))
+    sampleCamera.assign(sampleCamera.add(viewRay.mul(distanceToTop)))
     radius.assign(topRadius)
     radiusCosView.addAssign(distanceToTop)
   })
@@ -306,7 +306,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
   If(radius.lessThanEqual(topRadius), () => {
     // Compute the scattering parameters needed for the texture lookups.
     const cosView = radiusCosView.div(radius).toConst()
-    const cosLight = movedCamera.dot(lightDirection).div(radius).toConst()
+    const cosLight = sampleCamera.dot(lightDirection).div(radius).toConst()
     const cosViewLight = viewRay.dot(lightDirection).toConst()
 
     const viewRayIntersectsGround = rayIntersectsGround(

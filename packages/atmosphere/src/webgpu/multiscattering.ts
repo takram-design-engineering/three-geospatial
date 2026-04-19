@@ -76,10 +76,9 @@ export const sampleAtmosphereMedium = /*#__PURE__*/ FnLayout({
   const rayleighExtinction = rayleighScattering
   const mieScattering = mieDensity.mul(p.mieScattering)
   const mieExtinction = mieDensity.mul(p.mieExtinction)
-  const otherScattering = 0
   const otherExtinction = absorptionDensity.mul(p.absorptionExtinction)
 
-  const scattering = add(rayleighScattering, mieScattering, otherScattering)
+  const scattering = add(rayleighScattering, mieScattering)
   const extinction = add(rayleighExtinction, mieExtinction, otherExtinction)
   return atmosphereMediumStruct(scattering, extinction)
 })

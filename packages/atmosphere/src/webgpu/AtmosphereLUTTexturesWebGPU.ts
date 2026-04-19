@@ -590,14 +590,22 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
     const sampleCount = 64
 
-    // In the original implementation, theta and phi are uniformly distributed,
-    // but they shows artifacts at higher altitudes. A more stochastic sampling
-    // demonstrated in https://github.com/JolifantoBambla/webgpu-sky-atmosphere/blob/main/src/shaders/render_multi_scattering_lut.wgsl
-    // suppresses such artifacts.
     const getRayDirection = FnVar((index: Node<'uint'>): Node<'vec3'> => {
+      // In the original implementation, theta and phi are uniformly
+      // distributed, but they shows artifacts at higher altitudes. A more
+      // stochastic sampling demonstrated in:
+      // https://github.com/JolifantoBambla/webgpu-sky-atmosphere/blob/main/src/shaders/render_multi_scattering_lut.wgsl
+      // suppresses such artifacts.
+      // const sqrtCount = Math.sqrt(sampleCount)
+      // const i = float(index.div(sqrtCount)).add(0.5)
+      // const j = float(index.sub(float(index.div(sqrtCount).mul(sqrtCount)))).add(0.5)
+      // const a = i.div(sqrtCount)
+      // const b = j.div(sqrtCount)
+      // const theta = a.mul(2 * Math.PI)
+      // const phi = acos(b.mul(2).oneMinus())
       const sample = float(index)
       const theta = sample.mul(2 * Math.PI).div((1 + Math.sqrt(5)) / 2)
-      const phi = acos(sample.add(0.5).mul(2).div(64).oneMinus())
+      const phi = acos(sample.add(0.5).mul(2).div(sampleCount).oneMinus())
       const cosPhi = cos(phi)
       const sinPhi = sin(phi)
       const cosTheta = cos(theta)
@@ -606,8 +614,8 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     })
 
     this.highOrderScatteringNode ??= Fn(() => {
-      const radianceBuffer = workgroupArray('vec3', 64)
-      const transferFactorBuffer = workgroupArray('vec3', 64)
+      const radianceBuffer = workgroupArray('vec3', sampleCount)
+      const transferFactorBuffer = workgroupArray('vec3', sampleCount)
 
       const size = vec2(width, height).toConst()
       const coord = vec2(globalId.xy).add(0.5)
@@ -648,7 +656,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         rayOrigin,
         rayDirection,
         lightDirection,
-        20
+        100
       ).toConst()
 
       radianceBuffer
@@ -660,9 +668,9 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       workgroupBarrier()
 
-      // Sum all second-order scattering integrated along the ray  directions
+      // Sum all second-order scattering integrated along the ray directions
       // with respect to the LUT parameters.
-      for (let i = 32; i > 0; i >>>= 1) {
+      for (let i = sampleCount >> 1; i > 0; i >>>= 1) {
         const level = uint(i)
         If(index.lessThan(level), () => {
           radianceBuffer
@@ -694,7 +702,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       )
     })()
       .context({ getAtmosphere: () => context })
-      .computeKernel([1, 1, 64])
+      .computeKernel([1, 1, sampleCount])
       .setName('highOrderScattering')
 
     void renderer.compute(this.highOrderScatteringNode, [width, height, 1])
