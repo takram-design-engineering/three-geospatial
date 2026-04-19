@@ -202,9 +202,6 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
   private readonly singleMieScatteringRT = createRenderTarget3D(
     'singleMieScattering'
   )
-  private readonly higherOrderScatteringRT = createRenderTarget3D(
-    'higherOrderScattering'
-  )
 
   private readonly mesh = new QuadMesh()
 
@@ -516,10 +513,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         return mrt({
           scattering: vec4(luminance, 0),
           // deltaMultipleScattering is shared with deltaRayleighScattering.
-          deltaRayleighScattering: vec4(radiance, 1),
-          ...(parameters.higherOrderScatteringTexture && {
-            higherOrderScattering: vec4(luminance, 1)
-          })
+          deltaRayleighScattering: vec4(radiance, 1)
         })
       })()
     })
@@ -529,10 +523,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     clearRenderTarget(renderer, deltaMultipleScatteringRT)
 
     this.renderToRenderTarget3D(renderer, this.scatteringRT, this.layer, [
-      deltaMultipleScatteringRT.texture,
-      parameters.higherOrderScatteringTexture
-        ? this.higherOrderScatteringRT.texture
-        : undefined
+      deltaMultipleScatteringRT.texture
     ])
   }
 
@@ -562,13 +553,6 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         parameters.scatteringTextureSize
       )
     }
-    if (parameters.higherOrderScatteringTexture) {
-      setupRenderTarget3D(
-        this.higherOrderScatteringRT,
-        textureType,
-        parameters.scatteringTextureSize
-      )
-    }
     super.setup(parameters, textureType)
   }
 
@@ -577,7 +561,6 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     this.irradianceRT.dispose()
     this.scatteringRT.dispose()
     this.singleMieScatteringRT.dispose()
-    this.higherOrderScatteringRT.dispose()
     this.transmittanceMaterial?.dispose()
     this.directIrradianceMaterial?.dispose()
     this.singleScatteringMaterial?.dispose()

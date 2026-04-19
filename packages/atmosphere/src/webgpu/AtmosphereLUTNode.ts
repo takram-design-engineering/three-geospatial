@@ -63,10 +63,7 @@ function run(renderer: Renderer, task: () => void): boolean {
 }
 
 export type AtmosphereLUTTextureName = 'transmittance' | 'irradiance'
-export type AtmosphereLUTTexture3DName =
-  | 'scattering'
-  | 'singleMieScattering'
-  | 'higherOrderScattering'
+export type AtmosphereLUTTexture3DName = 'scattering' | 'singleMieScattering'
 
 const emptyTexture = /*#__PURE__*/ new Texture()
 const emptyTexture3D = /*#__PURE__*/ new Data3DTexture()
@@ -88,8 +85,7 @@ export class AtmosphereLUTNode extends Node {
     transmittance: outputTexture(this, emptyTexture),
     irradiance: outputTexture(this, emptyTexture),
     scattering: outputTexture3D(this, emptyTexture3D),
-    singleMieScattering: outputTexture3D(this, emptyTexture3D),
-    higherOrderScattering: outputTexture3D(this, emptyTexture3D)
+    singleMieScattering: outputTexture3D(this, emptyTexture3D)
   }
 
   private currentVersion?: number
@@ -222,18 +218,12 @@ export class AtmosphereLUTNode extends Node {
       // Swap the contents of the texture nodes. The WebGPU one has storage
       // textures and WebGL one has render target textures, which we cannot
       // populate until the generator is initialized.
-      const {
-        transmittance,
-        irradiance,
-        scattering,
-        singleMieScattering,
-        higherOrderScattering
-      } = this.textureNodes
+      const { transmittance, irradiance, scattering, singleMieScattering } =
+        this.textureNodes
       transmittance.value = this.textures.get('transmittance')
       irradiance.value = this.textures.get('irradiance')
       scattering.value = this.textures.get('scattering')
       singleMieScattering.value = this.textures.get('singleMieScattering')
-      higherOrderScattering.value = this.textures.get('higherOrderScattering')
     }
 
     const textureType = isFloatLinearSupported(builder.renderer)

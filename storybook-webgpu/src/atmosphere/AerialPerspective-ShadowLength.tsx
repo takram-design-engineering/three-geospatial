@@ -149,7 +149,6 @@ const Content: FC<StoryProps> = ({
 
   const atmosphereContext = useResource(() => {
     const parameters = new AtmosphereParameters()
-    parameters.higherOrderScatteringTexture = false
     return new AtmosphereContext(parameters)
   }, [])
   atmosphereContext.camera = camera

@@ -109,7 +109,6 @@ class AtmosphereLUTTexturesContextWebGPU extends AtmosphereLUTTexturesContext {
 
   irradianceCopy?: StorageTexture
   scatteringCopy?: Storage3DTexture
-  higherOrderScatteringCopy?: Storage3DTexture
 
   // deltaMultipleScattering is only needed to compute scattering order 3 or
   // more, while deltaRayleighScattering and deltaMieScattering are only needed
@@ -156,9 +155,6 @@ class AtmosphereLUTTexturesContextWebGPU extends AtmosphereLUTTexturesContext {
     if (!isTier2TextureFormatsSupported) {
       this.irradianceCopy = createStorageTexture('irradianceCopy')
       this.scatteringCopy = createStorage3DTexture('scatteringCopy')
-      this.higherOrderScatteringCopy = createStorage3DTexture(
-        'higherOrderScatteringCopy'
-      )
 
       setupStorageTexture(
         this.irradianceCopy,
@@ -167,11 +163,6 @@ class AtmosphereLUTTexturesContextWebGPU extends AtmosphereLUTTexturesContext {
       )
       setupStorage3DTexture(
         this.scatteringCopy,
-        textureType,
-        parameters.scatteringTextureSize
-      )
-      setupStorage3DTexture(
-        this.higherOrderScatteringCopy,
         textureType,
         parameters.scatteringTextureSize
       )
@@ -186,7 +177,6 @@ class AtmosphereLUTTexturesContextWebGPU extends AtmosphereLUTTexturesContext {
     this.deltaScatteringDensity.dispose()
     this.irradianceCopy?.dispose()
     this.scatteringCopy?.dispose()
-    this.higherOrderScatteringCopy?.dispose()
     super.dispose()
   }
 }
@@ -199,9 +189,6 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
   private readonly scattering = createStorage3DTexture('scattering')
   private readonly singleMieScattering = createStorage3DTexture(
     'singleMieScattering'
-  )
-  private readonly higherOrderScattering = createStorage3DTexture(
-    'higherOrderScattering'
   )
 
   private transmittanceNode?: ComputeNode
@@ -507,27 +494,19 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       deltaScatteringDensity,
       deltaMultipleScattering,
       opticalDepth,
-      scatteringCopy,
-      higherOrderScatteringCopy
+      scatteringCopy
     } = context
     const { x: width, y: height, z: depth } = parameters.scatteringTextureSize
 
     let scatteringRead: TextureNode
     let scatteringWrite: Texture | TextureNode
-    let higherOrderScatteringRead: TextureNode
-    let higherOrderScatteringWrite: Texture | TextureNode
 
     if (this.isTier2TextureFormatsSupported) {
       const scatteringReadWrite = storageTexture3D(
         this.scattering
       ).toReadWrite()
-      const higherOrderScatteringReadWrite = storageTexture3D(
-        this.higherOrderScattering
-      ).toReadWrite()
       scatteringRead = scatteringReadWrite
       scatteringWrite = scatteringReadWrite
-      higherOrderScatteringRead = higherOrderScatteringReadWrite
-      higherOrderScatteringWrite = higherOrderScatteringReadWrite
     } else {
       renderer.copyTextureToTexture(
         this.scattering,
@@ -539,19 +518,6 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       )
       scatteringRead = texture3D(scatteringCopy!)
       scatteringWrite = this.scattering
-
-      if (parameters.higherOrderScatteringTexture) {
-        renderer.copyTextureToTexture(
-          this.higherOrderScattering,
-          higherOrderScatteringCopy!,
-          boxScratch.set(
-            boxScratch.min.setScalar(0),
-            parameters.scatteringTextureSize
-          )
-        )
-        higherOrderScatteringRead = texture3D(higherOrderScatteringCopy!)
-        higherOrderScatteringWrite = this.higherOrderScattering
-      }
     }
 
     this.multipleScatteringNode ??= Fn(() => {
@@ -582,13 +548,6 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         scatteringRead.load(globalId).add(vec4(luminance, 0))
       )
       textureStore(deltaMultipleScattering, globalId, vec4(radiance, 1))
-      if (parameters.higherOrderScatteringTexture) {
-        textureStore(
-          higherOrderScatteringWrite,
-          globalId,
-          higherOrderScatteringRead.load(globalId).add(vec4(luminance, 1))
-        )
-      }
     })()
       .context({ getAtmosphere: () => context })
       .compute(
@@ -627,13 +586,6 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         parameters.scatteringTextureSize
       )
     }
-    if (parameters.higherOrderScatteringTexture) {
-      setupStorage3DTexture(
-        this.higherOrderScattering,
-        textureType,
-        parameters.scatteringTextureSize
-      )
-    }
     super.setup(parameters, textureType)
   }
 
@@ -642,7 +594,6 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     this.irradiance.dispose()
     this.scattering.dispose()
     this.singleMieScattering.dispose()
-    this.higherOrderScattering.dispose()
     this.transmittanceNode?.dispose()
     this.directIrradianceNode?.dispose()
     this.singleScatteringNode?.dispose()

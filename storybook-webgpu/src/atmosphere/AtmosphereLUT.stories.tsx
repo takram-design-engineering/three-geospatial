@@ -87,20 +87,3 @@ export const SingleMieScattering = createStory(Story3D, {
     }
   }
 })
-
-export const HigherOrderScattering = createStory(Story3D, {
-  props: {
-    name: 'higherOrderScattering'
-  },
-  args: {
-    zoom: 2,
-    toneMappingExposure: 0.5
-  },
-  parameters: {
-    docs: {
-      source: {
-        code: Code3D
-      }
-    }
-  }
-})

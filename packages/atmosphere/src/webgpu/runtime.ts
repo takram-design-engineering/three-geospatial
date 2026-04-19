@@ -86,7 +86,6 @@ import {
   clampRadius,
   computeSingleScatteringToPoint,
   getIrradiance,
-  getScattering,
   getScatteringTextureCoord,
   getTransmittance,
   getTransmittanceToSun,
@@ -249,7 +248,6 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'scatteringTexture', type: ReducedScatteringTexture },
     { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'higherOrderScatteringTexture', type: ReducedScatteringTexture },
     { name: 'camera', type: Position },
     { name: 'viewRay', type: Direction },
     { name: 'shadowLength', type: Length },
@@ -261,7 +259,6 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
     transmittanceTexture,
     scatteringTexture,
     singleMieScatteringTexture,
-    higherOrderScatteringTexture,
     camera,
     viewRay,
     shadowLength,
@@ -392,25 +389,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnLayout({
         scatteringRayIntersectsGround
       ).toConst()
 
-      // Occlude only single Rayleigh scattering by the shadow.
-      if (context.parameters.higherOrderScatteringTexture) {
-        const higherOrderScattering = getScattering(
-          higherOrderScatteringTexture,
-          radiusP,
-          cosViewP,
-          cosLightP,
-          cosViewLight,
-          scatteringRayIntersectsGround
-        ).toConst()
-        scattering.assign(
-          scattering
-            .sub(higherOrderScattering)
-            .mul(shadowTransmittance)
-            .add(higherOrderScattering)
-        )
-      } else {
-        scattering.assign(scattering.mul(shadowTransmittance))
-      }
+      scattering.assign(scattering.mul(shadowTransmittance))
       singleMieScattering.assign(singleMieScattering.mul(shadowTransmittance))
     })
 
@@ -440,7 +419,6 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'scatteringTexture', type: ReducedScatteringTexture },
     { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'higherOrderScatteringTexture', type: ReducedScatteringTexture },
     { name: 'camera', type: Position },
     { name: 'point', type: Position },
     { name: 'shadowLength', type: Length },
@@ -452,7 +430,6 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
     transmittanceTexture,
     scatteringTexture,
     singleMieScatteringTexture,
-    higherOrderScatteringTexture,
     camera,
     point,
     shadowLength,
@@ -582,57 +559,23 @@ const getIndirectRadianceToPointImpl = /*#__PURE__*/ FnLayout({
     )
   })
 
-  if (context.parameters.higherOrderScatteringTexture) {
-    // Occlude only the single Rayleigh scattering by the shadow.
-    const higherOrderScattering = getScattering(
-      higherOrderScatteringTexture,
+  if (context.raymarchSingleScattering) {
+    // TODO: For macroscopic views, ray marching at runtime does not improve
+    // quality at all. Run this path selectively.
+    const computedSingleScattering = computeSingleScatteringToPoint(
+      parameters,
+      transmittanceTexture,
       radius,
       cosView,
       cosLight,
       cosViewLight,
-      viewRayIntersectsGround
+      viewRayIntersectsGround,
+      distanceToPoint,
+      8
     ).toConst()
-    const higherOrderScatteringP = getScattering(
-      higherOrderScatteringTexture,
-      radiusP,
-      cosViewP,
-      cosLightP,
-      cosViewLight,
-      viewRayIntersectsGround
-    ).toConst()
-
-    if (context.raymarchSingleScattering) {
-      // TODO: For macroscopic views, ray marching at runtime does not improve
-      // quality at all. Run this path selectively.
-      const computedSingleScattering = computeSingleScatteringToPoint(
-        parameters,
-        transmittanceTexture,
-        radius,
-        cosView,
-        cosLight,
-        cosViewLight,
-        viewRayIntersectsGround,
-        distanceToPoint,
-        8
-      ).toConst()
-      const singleScattering = computedSingleScattering.get('rayleigh')
-      scattering.assign(
-        singleScattering.add(
-          higherOrderScattering.sub(transmittance.mul(higherOrderScatteringP))
-        )
-      )
-      singleMieScattering.assign(computedSingleScattering.get('mie'))
-    } else {
-      const singleScattering = scattering.sub(higherOrderScattering).toConst()
-      const singleScatteringP = scatteringP.sub(higherOrderScatteringP)
-      scattering.assign(
-        singleScattering
-          .sub(shadowTransmittance.mul(singleScatteringP))
-          .add(
-            higherOrderScattering.sub(transmittance.mul(higherOrderScatteringP))
-          )
-      )
-    }
+    const singleScattering = computedSingleScattering.get('rayleigh')
+    scattering.assign(singleScattering) // TODO
+    singleMieScattering.assign(computedSingleScattering.get('mie'))
   } else {
     scattering.assign(scattering.sub(shadowTransmittance.mul(scatteringP)))
   }
@@ -694,7 +637,6 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
     { name: 'transmittanceTexture', type: TransmittanceTexture },
     { name: 'scatteringTexture', type: ReducedScatteringTexture },
     { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'higherOrderScatteringTexture', type: ReducedScatteringTexture },
     { name: 'camera', type: Position },
     { name: 'point', type: Position },
     { name: 'shadowLength', type: Length },
@@ -705,7 +647,6 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
   transmittanceTexture,
   scatteringTexture,
   singleMieScatteringTexture,
-  higherOrderScatteringTexture,
   camera,
   point,
   shadowLength,
@@ -744,7 +685,6 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnLayout({
       transmittanceTexture,
       scatteringTexture,
       singleMieScatteringTexture,
-      higherOrderScatteringTexture,
       sampleCamera,
       samplePoint,
       shadowLength,
@@ -914,7 +854,6 @@ export const getIndirectLuminance = /*#__PURE__*/ FnVar(
         lutNode.getTextureNode('transmittance'),
         lutNode.getTextureNode('scattering'),
         lutNode.getTextureNode('singleMieScattering'),
-        lutNode.getTextureNode('higherOrderScattering'),
         camera,
         viewRay,
         shadowLength,
@@ -948,7 +887,6 @@ export const getIndirectLuminanceToPoint = /*#__PURE__*/ FnVar(
         lutNode.getTextureNode('transmittance'),
         lutNode.getTextureNode('scattering'),
         lutNode.getTextureNode('singleMieScattering'),
-        lutNode.getTextureNode('higherOrderScattering'),
         camera,
         point,
         shadowLength,
