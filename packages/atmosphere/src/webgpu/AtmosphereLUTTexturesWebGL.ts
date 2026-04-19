@@ -202,6 +202,9 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
   private readonly singleMieScatteringRT = createRenderTarget3D(
     'singleMieScattering'
   )
+  private readonly highOrderScatteringRT = createRenderTarget(
+    'highOrderScattering'
+  )
 
   private readonly mesh = new QuadMesh()
 
@@ -527,6 +530,15 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     ])
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  computeHighOrderScattering(
+    renderer: Renderer,
+    context: AtmosphereLUTTexturesContext
+  ): void {
+    // Not implemented
+    console.warn('computeHighOrderScattering is not implemented yet.')
+  }
+
   override setup(
     parameters: AtmosphereParameters,
     textureType: AnyFloatType
@@ -553,6 +565,11 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         parameters.scatteringTextureSize
       )
     }
+    setupRenderTarget(
+      this.highOrderScatteringRT,
+      textureType,
+      parameters.highOrderScatteringTextureSize
+    )
     super.setup(parameters, textureType)
   }
 
@@ -561,6 +578,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     this.irradianceRT.dispose()
     this.scatteringRT.dispose()
     this.singleMieScatteringRT.dispose()
+    this.highOrderScatteringRT.dispose()
     this.transmittanceMaterial?.dispose()
     this.directIrradianceMaterial?.dispose()
     this.singleScatteringMaterial?.dispose()

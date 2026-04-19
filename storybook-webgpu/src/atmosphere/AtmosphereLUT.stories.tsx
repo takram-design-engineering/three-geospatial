@@ -53,6 +53,23 @@ export const Irradiance = createStory(Story2D, {
   }
 })
 
+export const HighOrderScattering = createStory(Story2D, {
+  props: {
+    name: 'highOrderScattering'
+  },
+  args: {
+    zoom: 16,
+    toneMappingExposure: 1
+  },
+  parameters: {
+    docs: {
+      source: {
+        code: Code2D
+      }
+    }
+  }
+})
+
 export const Scattering = createStory(Story3D, {
   props: {
     name: 'scattering'

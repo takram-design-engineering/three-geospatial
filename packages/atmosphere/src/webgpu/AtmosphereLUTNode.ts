@@ -62,7 +62,10 @@ function run(renderer: Renderer, task: () => void): boolean {
   return true
 }
 
-export type AtmosphereLUTTextureName = 'transmittance' | 'irradiance'
+export type AtmosphereLUTTextureName =
+  | 'transmittance'
+  | 'irradiance'
+  | 'highOrderScattering'
 export type AtmosphereLUTTexture3DName = 'scattering' | 'singleMieScattering'
 
 const emptyTexture = /*#__PURE__*/ new Texture()
@@ -85,7 +88,8 @@ export class AtmosphereLUTNode extends Node {
     transmittance: outputTexture(this, emptyTexture),
     irradiance: outputTexture(this, emptyTexture),
     scattering: outputTexture3D(this, emptyTexture3D),
-    singleMieScattering: outputTexture3D(this, emptyTexture3D)
+    singleMieScattering: outputTexture3D(this, emptyTexture3D),
+    highOrderScattering: outputTexture(this, emptyTexture)
   }
 
   private currentVersion?: number
@@ -157,6 +161,18 @@ export class AtmosphereLUTNode extends Node {
       )
     })
 
+    // Compute the higher-order scattering texture based on "A Scalable and
+    // Production Ready Sky and Atmosphere Rendering Technique".
+    yield run(renderer, () => {
+      textures.computeHighOrderScattering(renderer, context)
+
+      // For scattering texture:
+      this.dispatchEvent(
+        // @ts-expect-error Cannot specify the events map
+        updateEvent
+      )
+    })
+
     // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
     for (let scatteringOrder = 2; scatteringOrder <= 4; ++scatteringOrder) {
       // Compute the scattering density, and store it in deltaScatteringDensity.
@@ -218,12 +234,18 @@ export class AtmosphereLUTNode extends Node {
       // Swap the contents of the texture nodes. The WebGPU one has storage
       // textures and WebGL one has render target textures, which we cannot
       // populate until the generator is initialized.
-      const { transmittance, irradiance, scattering, singleMieScattering } =
-        this.textureNodes
+      const {
+        transmittance,
+        irradiance,
+        scattering,
+        singleMieScattering,
+        highOrderScattering
+      } = this.textureNodes
       transmittance.value = this.textures.get('transmittance')
       irradiance.value = this.textures.get('irradiance')
       scattering.value = this.textures.get('scattering')
       singleMieScattering.value = this.textures.get('singleMieScattering')
+      highOrderScattering.value = this.textures.get('highOrderScattering')
     }
 
     const textureType = isFloatLinearSupported(builder.renderer)

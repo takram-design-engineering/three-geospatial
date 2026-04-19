@@ -94,10 +94,10 @@ export const singleScatteringIntegralStruct = /*#__PURE__*/ struct(
   'SingleScatteringIntegral'
 )
 
-export const integrateSingleScattering = /*#__PURE__*/ FnLayout({
+export const integrateSingleScatteringTexture = /*#__PURE__*/ FnLayout({
   // TODO: Fn layout doesn't support texture type
   typeOnly: true,
-  name: 'integrateSingleScattering',
+  name: 'integrateSingleScatteringTexture',
   type: singleScatteringIntegralStruct,
   inputs: [
     { name: 'parameters', type: atmosphereParametersStruct },

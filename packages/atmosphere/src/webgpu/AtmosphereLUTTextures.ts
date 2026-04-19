@@ -58,6 +58,10 @@ export abstract class AtmosphereLUTTextures {
     renderer: Renderer,
     context: AtmosphereLUTTexturesContext
   ): void
+  abstract computeHighOrderScattering(
+    renderer: Renderer,
+    context: AtmosphereLUTTexturesContext
+  ): void
 
   setup(parameters: AtmosphereParameters, textureType: AnyFloatType): void {
     this.parameters = parameters
