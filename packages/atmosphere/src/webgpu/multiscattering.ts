@@ -87,9 +87,7 @@ export const sampleAtmosphereMedium = /*#__PURE__*/ FnLayout({
 export const singleScatteringIntegralStruct = /*#__PURE__*/ struct(
   {
     radiance: RadianceSpectrum,
-    transferFactor: DimensionlessSpectrum,
-    opticalDepth: DimensionlessSpectrum,
-    transmittance: DimensionlessSpectrum
+    transferFactor: DimensionlessSpectrum
   },
   'SingleScatteringIntegral'
 )
@@ -135,13 +133,12 @@ export const integrateSingleScatteringTexture = /*#__PURE__*/ FnLayout({
 
   const totalRadiance = vec3(0).toVar()
   const transferFactor = vec3(0).toVar()
-  const totalOpticalDepth = vec3(0).toVar()
   const totalTransmittance = vec3(1).toVar()
   const prevRayLength = float(0).toVar()
 
   Loop({ start: 0, end: sampleCount, condition: '<' }, ({ i }) => {
     const rayLength = distanceToPoint
-      .mul(float(i).add(0.3)) // Add a bias the sample point
+      .mul(float(i).add(0.3)) // Add a bias to the sample point
       .div(sampleCount)
       .toConst()
 
@@ -158,7 +155,6 @@ export const integrateSingleScatteringTexture = /*#__PURE__*/ FnLayout({
 
     const opticalDepth = extinction.mul(stepLength).toConst()
     const transmittance = exp(opticalDepth.negate()).toConst()
-    totalOpticalDepth.addAssign(opticalDepth)
 
     const cosLight = position.dot(lightDirection).div(radius).toConst()
     const transmittanceToSun = getTransmittanceToSun(
@@ -203,10 +199,5 @@ export const integrateSingleScatteringTexture = /*#__PURE__*/ FnLayout({
     )
   })
 
-  return singleScatteringIntegralStruct(
-    totalRadiance,
-    transferFactor,
-    totalOpticalDepth,
-    totalTransmittance
-  )
+  return singleScatteringIntegralStruct(totalRadiance, transferFactor)
 })

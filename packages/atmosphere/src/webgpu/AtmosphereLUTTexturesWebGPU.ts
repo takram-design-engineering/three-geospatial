@@ -590,6 +590,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
     const sampleCount = 64
 
+    // In the original implementation, theta and phi are uniformly distributed,
+    // but they shows artifacts at higher altitudes. A more stochastic sampling
+    // demonstrated in https://github.com/JolifantoBambla/webgpu-sky-atmosphere/blob/main/src/shaders/render_multi_scattering_lut.wgsl
+    // suppresses such artifacts.
     const getRayDirection = FnVar((index: Node<'uint'>): Node<'vec3'> => {
       const sample = float(index)
       const theta = sample.mul(2 * Math.PI).div((1 + Math.sqrt(5)) / 2)
@@ -610,6 +614,9 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const uv = getTextureUnitFromSubUV(coord.div(size), size).toConst()
       const index = globalId.z
 
+      // Construct the parameters of the high-order scattering LUT. They are
+      // the cosine of light and zenith [-1, 1], and the view altitude
+      // [bottomRadius, topRadius].
       const { topRadius, bottomRadius } = makeDestructible(parametersNode)
       const cosLightZenith = uv.x.mul(2).sub(1).toConst()
       const lightDirection = vec3(
@@ -630,6 +637,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const rayOrigin = vec3(0, 0, radius)
       const rayDirection = getRayDirection(index)
 
+      // Integrate the second-order scattering. This outputs the integrated
+      // radiance here (as opposed to luminance) as well as the "transfer
+      // factor", which acts as a transfer function on the irradiance of a
+      // directional light at a given point.
       const result = integrateSingleScatteringTexture(
         parametersNode,
         texture(this.transmittance),
@@ -649,6 +660,8 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       workgroupBarrier()
 
+      // Sum all second-order scattering integrated along the ray  directions
+      // with respect to the LUT parameters.
       for (let i = 32; i > 0; i >>>= 1) {
         const level = uint(i)
         If(index.lessThan(level), () => {
@@ -673,6 +686,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       textureStore(
         this.highOrderScattering,
         globalId.xy,
+        // This represents the amount of radiance scattered as if the integral
+        // of scattered radiance over the sphere would be 1.
+        // For a power-series, such integral is analytically:
+        // sum_{n=0}^{n=+inf} = 1 + r + r^2 + r^3 + ... + r^n = 1 / (1 - r)
         vec4(radiance.mul(transferFactor.oneMinus().reciprocal()), 1)
       )
     })()
