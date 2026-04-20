@@ -28,27 +28,33 @@ import {
   add,
   exp,
   float,
+  frameId,
   If,
   Loop,
   mix,
   mul,
+  screenCoordinate,
   sqrt,
+  step,
   struct,
+  texture3D,
   vec2,
   vec3
 } from 'three/tsl'
+import type { TextureNode } from 'three/webgpu'
 
+import { DEFAULT_STBN_URL, STBNLoader } from '@takram/three-geospatial'
 import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 import {
   atmosphereParametersStruct,
+  getAtmosphereContextBase,
   makeDestructible
 } from './AtmosphereContextBase'
 import {
   clampCosine,
   clampRadius,
-  distanceToBottomAtmosphereBoundary,
-  distanceToTopAtmosphereBoundary,
+  distanceToNearestAtmosphereBoundary,
   getIrradiance,
   getProfileDensity,
   getTransmittanceToSun,
@@ -57,7 +63,9 @@ import {
   rayleighPhaseFunction
 } from './common'
 import {
+  AbstractSpectrum,
   DimensionlessSpectrum,
+  IrradianceSpectrum,
   Length,
   RadianceSpectrum,
   ScatteringSpectrum,
@@ -68,6 +76,7 @@ import {
   type Position,
   type TransmittanceTexture
 } from './dimensional'
+import { getParamsFromScatteringTextureFragCoord } from './precompute'
 
 export const getSubUVFromTextureUnit = /*#__PURE__*/ FnLayout({
   name: 'getSubUVFromTextureUnit',
@@ -134,52 +143,52 @@ export const sampleAtmosphereMedium = /*#__PURE__*/ FnLayout({
   )
 })
 
-export const highOrderScatteringStruct = /*#__PURE__*/ struct(
+export const multipleScatteringStruct = /*#__PURE__*/ struct(
   {
-    singleScattering: RadianceSpectrum,
+    multipleScattering: RadianceSpectrum,
     transferFactor: DimensionlessSpectrum
   },
-  'HighOrderScattering'
+  'MultipleScattering'
 )
 
-export const computeHighOrderScatteringTexture = /*#__PURE__*/ FnVar(
+export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
     transmittanceTexture: TransmittanceTexture,
     irradianceTexture: IrradianceTexture,
     rayOrigin: Node<Position>,
     rayDirection: Node<Direction>,
-    lightDirection: Node<Direction>,
-    sampleCount: Node<'int'>
-  ) => {
+    lightDirection: Node<Direction>
+  ): ReturnType<typeof multipleScatteringStruct> => {
     const { bottomRadius, groundAlbedo } = makeDestructible(parameters)
 
     const radius = rayOrigin.length().toConst()
     const cosView = rayOrigin.dot(rayDirection).div(radius).toConst()
-    const viewRayIntersectsGround = rayIntersectsGround(
+    const intersectsGround = rayIntersectsGround(
       parameters,
       radius,
       cosView
     ).toConst()
-    const distanceToPoint = viewRayIntersectsGround
-      .select(
-        distanceToBottomAtmosphereBoundary(parameters, radius, cosView),
-        distanceToTopAtmosphereBoundary(parameters, radius, cosView)
-      )
-      .toConst()
+    const distanceToPoint = distanceToNearestAtmosphereBoundary(
+      parameters,
+      radius,
+      cosView,
+      intersectsGround
+    ).toConst()
 
-    const totalRadiance = vec3(0).toVar()
+    const totalMultipleScattering = vec3(0).toVar()
     const totalTransferFactor = vec3(0).toVar()
     const totalTransmittance = vec3(1).toVar()
     const prevRayLength = float(0).toVar()
 
+    const sampleCount = 20
     Loop({ type: 'float', start: 0, end: sampleCount }, ({ i }) => {
       const rayLength = distanceToPoint
         .mul(i.add(0.3)) // Add a bias to the sample point
         .div(sampleCount)
         .toConst()
 
-      const stepLength = rayLength.sub(prevRayLength).toConst()
+      const stepSize = rayLength.sub(prevRayLength).toConst()
       prevRayLength.assign(rayLength)
 
       const position = rayLength.mul(rayDirection).add(rayOrigin).toConst()
@@ -190,7 +199,7 @@ export const computeHighOrderScatteringTexture = /*#__PURE__*/ FnVar(
       const scattering = medium.get('scattering')
       const extinction = medium.get('extinction')
 
-      const opticalDepth = extinction.mul(stepLength).toConst()
+      const opticalDepth = extinction.mul(stepSize).toConst()
       const transmittance = exp(opticalDepth.negate()).toConst()
 
       const cosLight = position.dot(lightDirection).div(radius).toConst()
@@ -206,19 +215,22 @@ export const computeHighOrderScatteringTexture = /*#__PURE__*/ FnVar(
         .toConst()
       totalTransferFactor.addAssign(totalTransmittance.mul(transferFactor))
 
-      const scatteredRadiance = transmittanceToSun
+      const multipleScattering = transmittanceToSun
         .mul(scattering.mul(1 / (4 * Math.PI))) // Isotropic phase
         .toConst()
-      const scatteringIntegrand = scatteredRadiance
-        .sub(scatteredRadiance.mul(transmittance))
+      const multipleScatteringIntegrand = multipleScattering
+        .sub(multipleScattering.mul(transmittance))
         .div(extinction)
         .toConst()
-      totalRadiance.addAssign(totalTransmittance.mul(scatteringIntegrand))
+      totalMultipleScattering.addAssign(
+        totalTransmittance.mul(multipleScatteringIntegrand)
+      )
       totalTransmittance.mulAssign(transmittance)
     })
 
+    // TODO:
     // Account for bounced light off the ground.
-    If(viewRayIntersectsGround, () => {
+    If(intersectsGround, () => {
       const groundNormal = rayOrigin
         .add(rayDirection.mul(distanceToPoint))
         .normalize()
@@ -228,7 +240,7 @@ export const computeHighOrderScatteringTexture = /*#__PURE__*/ FnVar(
         bottomRadius,
         groundNormal.dot(lightDirection).toConst()
       )
-      totalRadiance.addAssign(
+      totalMultipleScattering.addAssign(
         totalTransmittance
           .mul(groundAlbedo)
           .mul(groundIrradiance)
@@ -236,56 +248,70 @@ export const computeHighOrderScatteringTexture = /*#__PURE__*/ FnVar(
       )
     })
 
-    return highOrderScatteringStruct(totalRadiance, totalTransferFactor)
+    return multipleScatteringStruct(
+      totalMultipleScattering,
+      totalTransferFactor
+    )
   }
 )
 
-const getHighOrderScattering = /*#__PURE__*/ FnVar(
+export const getMultipleScattering = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    highOrderScatteringTexture: HighOrderScatteringTexture,
+    multipleScatteringTexture: HighOrderScatteringTexture,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
-  ) => {
-    const { topRadius, bottomRadius, highOrderScatteringTextureSize } =
+  ): Node<'vec3'> => {
+    const { topRadius, bottomRadius, multipleScatteringTextureSize } =
       makeDestructible(parameters)
     const uv = getSubUVFromTextureUnit(
       vec2(
         cosLight.mul(0.5).add(0.5),
         radius.sub(bottomRadius).div(topRadius.sub(bottomRadius))
       ).saturate(),
-      highOrderScatteringTextureSize
+      multipleScatteringTextureSize
     )
-    return highOrderScatteringTexture.sample(uv).rgb
+    return multipleScatteringTexture.sample(uv).rgb
   }
 )
 
-export const multipleScatteringStruct = /*#__PURE__*/ struct(
+export const scatteringToPointStruct = /*#__PURE__*/ struct(
   {
     radiance: RadianceSpectrum,
-    transferFactor: DimensionlessSpectrum,
     transmittance: DimensionlessSpectrum
   },
-  'MultipleScattering'
+  'ScatteringToPoint'
 )
 
 // TODO: Move to the context or parameters
 const minSampleCount = 4
 const maxSampleCount = 14
 
-export const computeMultipleScatteringToPoint = /*#__PURE__*/ FnVar(
+// TODO
+const stbnTexture = new STBNLoader().load(DEFAULT_STBN_URL)
+
+export const computeScatteringToPoint = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    transmittanceTexture: TransmittanceTexture,
-    highOrderScatteringTexture: HighOrderScatteringTexture,
+    transmittanceTexture: TextureNode,
+    multipleScatteringTexture: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
     cosViewLight: Node<Dimensionless>,
-    maxDistance: Node<Length>
-  ) => {
+    maxDistance: Node<Length>,
+    shadowLength: Node<Length>
+  ): ReturnType<typeof scatteringToPointStruct> => {
     const { solarIrradiance, bottomRadius, miePhaseFunctionG } =
       makeDestructible(parameters)
+
+    // TODO
+    const stbnNode = texture3D(stbnTexture)
+    const jitter = stbnNode
+      .sample(
+        vec3(screenCoordinate.xy, frameId.mod(64)).div(vec3(128, 128, 64))
+      )
+      .r.toConst()
 
     // Setup a variable sample count.
     const sampleCount = mix(
@@ -305,7 +331,134 @@ export const computeMultipleScatteringToPoint = /*#__PURE__*/ FnVar(
     const rayleighPhase = rayleighPhaseFunction(cosViewLight).toConst()
 
     const totalRadiance = vec3(0).toVar()
-    const totalTransferFactor = vec3(0).toVar()
+    const totalTransmittance = vec3(1).toVar()
+
+    Loop({ type: 'float', start: 0, end: sampleCount }, ({ i }) => {
+      const t0 = i.mul(sampleCountFloorInv).toVar()
+      const t1 = i.add(1).mul(sampleCountFloorInv).toVar()
+      // Non linear distribution of sample within the range.
+      t0.mulAssign(t0)
+      t1.mulAssign(t1)
+      // Make t0 and t1 world space distances.
+      t0.mulAssign(maxDistanceFloor)
+      t1.assign(t1.greaterThan(1).select(maxDistance, maxDistanceFloor.mul(t1)))
+
+      const stepSize = t1.sub(t0)
+      const rayLength = t0.add(stepSize.mul(jitter)) // Add a bias to the sample point
+
+      const radiusI = clampRadius(
+        parameters,
+        sqrt(
+          rayLength
+            .pow2()
+            .add(mul(2, radius, cosView, rayLength))
+            .add(radius.pow2())
+        )
+      ).toConst()
+
+      const cosLightI = clampCosine(
+        radius.mul(cosLight).add(rayLength.mul(cosViewLight)).div(radiusI)
+      ).toConst()
+
+      const altitude = radiusI.sub(bottomRadius)
+      const medium = sampleAtmosphereMedium(parameters, altitude).toConst()
+      const rayleighScattering = medium.get('rayleighScattering')
+      const mieScattering = medium.get('mieScattering')
+      const scattering = medium.get('scattering')
+      const extinction = medium.get('extinction')
+
+      const opticalDepth = extinction.mul(stepSize)
+      const transmittance = exp(opticalDepth.negate()).toConst()
+
+      const transmittanceToSun = getTransmittanceToSun(
+        transmittanceTexture,
+        radiusI,
+        cosLightI
+      ).toConst()
+
+      const multipleScattering = getMultipleScattering(
+        parameters,
+        multipleScatteringTexture,
+        radiusI,
+        cosLightI
+      )
+        .mul(scattering)
+        .toConst()
+
+      const shadow = step(shadowLength, rayLength)
+
+      const singleScattering = add(
+        rayleighScattering.mul(rayleighPhase),
+        mieScattering.mul(miePhase)
+      )
+      const radiance = solarIrradiance
+        .mul(
+          transmittanceToSun
+            .mul(singleScattering)
+            .mul(shadow)
+            .add(multipleScattering)
+        )
+        .toConst()
+      const radianceIntegrand = radiance
+        .sub(radiance.mul(transmittance))
+        .div(extinction)
+        .toConst()
+      totalRadiance.addAssign(totalTransmittance.mul(radianceIntegrand))
+      totalTransmittance.mulAssign(transmittance)
+    })
+
+    return scatteringToPointStruct(totalRadiance, totalTransmittance)
+  }
+)
+
+const splitScatteringStruct = /*#__PURE__*/ struct(
+  {
+    scattering: IrradianceSpectrum,
+    singleMieScattering: IrradianceSpectrum,
+    higherOrderScattering: AbstractSpectrum
+  },
+  'SplitScattering'
+)
+
+const computeSplitScattering = /*#__PURE__*/ FnVar(
+  (
+    parameters: ReturnType<typeof atmosphereParametersStruct>,
+    transmittanceTexture: TextureNode,
+    multipleScatteringTexture: TextureNode,
+    radius: Node<Length>,
+    cosView: Node<Dimensionless>,
+    cosLight: Node<Dimensionless>,
+    cosViewLight: Node<Dimensionless>,
+    intersectsGround: Node<'bool'>
+  ): ReturnType<typeof splitScatteringStruct> => {
+    const { solarIrradiance, bottomRadius } = makeDestructible(parameters)
+
+    const maxDistance = distanceToNearestAtmosphereBoundary(
+      parameters,
+      radius,
+      cosView,
+      intersectsGround
+    ).toConst()
+
+    // Setup a variable sample count.
+    const sampleCount = mix(
+      minSampleCount,
+      maxSampleCount,
+      maxDistance.mul(1 / 100)
+    ).toConst()
+    const sampleCountFloor = sampleCount.floor().toConst()
+    const sampleCountFloorInv = sampleCountFloor.reciprocal().toConst()
+    // Rescale distanceToPoint to map to the last entire step segment.
+    const maxDistanceFloor = maxDistance
+      .mul(sampleCountFloor)
+      .div(sampleCount)
+      .toConst()
+
+    const rayleighPhase = rayleighPhaseFunction(cosViewLight).toConst()
+
+    const totalRayleigh = vec3(0).toVar()
+    const totalMie = vec3(0).toVar()
+    const totalHigherOrder = vec3(0).toVar()
     const totalTransmittance = vec3(1).toVar()
 
     Loop({ type: 'float', start: 0, end: sampleCount }, ({ i }) => {
@@ -351,36 +504,83 @@ export const computeMultipleScatteringToPoint = /*#__PURE__*/ FnVar(
         cosLightI
       ).toConst()
 
-      const transferFactor = scattering
-        .sub(scattering.mul(transmittance))
-        .div(extinction)
-        .toConst()
-      totalTransferFactor.addAssign(totalTransmittance.mul(transferFactor))
-
-      const highOrderScattering = getHighOrderScattering(
+      const multipleScattering = getMultipleScattering(
         parameters,
-        highOrderScatteringTexture,
+        multipleScatteringTexture,
         radiusI,
         cosLightI
-      ).toConst()
-      const singleScattering = transmittanceToSun.mul(
-        add(rayleighScattering.mul(rayleighPhase), mieScattering.mul(miePhase))
       )
-      const scatteredRadiance = solarIrradiance
-        .mul(singleScattering.add(highOrderScattering.mul(scattering)))
+        .mul(scattering)
         .toConst()
-      const scatteringIntegrand = scatteredRadiance
-        .sub(scatteredRadiance.mul(transmittance))
+
+      // Integrate the Rayleigh scattering and multiple scattering over the
+      // Rayleigh phase (irradiance), in the way it matches to the Bruneton's
+      // 4D scattering LUT.
+      const rayleigh = solarIrradiance
+        .mul(
+          transmittanceToSun
+            .mul(rayleighScattering)
+            .add(multipleScattering.div(rayleighPhase))
+        )
+        .toConst()
+      const rayleighIntegrand = rayleigh
+        .sub(rayleigh.mul(transmittance))
         .div(extinction)
         .toConst()
-      totalRadiance.addAssign(totalTransmittance.mul(scatteringIntegrand))
+      totalRayleigh.addAssign(totalTransmittance.mul(rayleighIntegrand))
+
+      // Integrate the Mie scattering over the Mie phase (irradiance).
+      const mie = solarIrradiance
+        .mul(transmittanceToSun.mul(mieScattering))
+        .toConst()
+      const mieIntegrand = mie
+        .sub(mie.mul(transmittance))
+        .div(extinction)
+        .toConst()
+      totalMie.addAssign(totalTransmittance.mul(mieIntegrand))
+
+      // Integrate the multiple scattering radiance.
+      const higherOrder = solarIrradiance.mul(multipleScattering)
+      const higherOrderIntegrand = higherOrder
+        .sub(higherOrder.mul(transmittance))
+        .div(extinction)
+        .toConst()
+      totalHigherOrder.addAssign(totalTransmittance.mul(higherOrderIntegrand))
+
       totalTransmittance.mulAssign(transmittance)
     })
 
-    return multipleScatteringStruct(
-      totalRadiance,
-      totalTransferFactor,
-      totalTransmittance
-    )
+    return splitScatteringStruct(totalRayleigh, totalMie, totalHigherOrder)
   }
+)
+
+export const computeSplitScatteringTexture = /*#__PURE__*/ FnVar(
+  (
+    transmittanceTexture: TextureNode,
+    multipleTexture: TextureNode,
+    fragCoord: Node<'vec3'>
+  ) =>
+    (builder): ReturnType<typeof computeSplitScattering> => {
+      const context = getAtmosphereContextBase(builder)
+
+      const scatteringParams = getParamsFromScatteringTextureFragCoord(
+        context.parametersNode,
+        fragCoord
+      ).toConst()
+      const radius = scatteringParams.get('radius')
+      const cosView = scatteringParams.get('cosView')
+      const cosLight = scatteringParams.get('cosLight')
+      const cosViewLight = scatteringParams.get('cosViewLight')
+      const intersectsGround = scatteringParams.get('intersectsGround')
+      return computeSplitScattering(
+        context.parametersNode,
+        transmittanceTexture,
+        multipleTexture,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        intersectsGround
+      )
+    }
 )
