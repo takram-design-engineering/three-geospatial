@@ -131,15 +131,19 @@ export class AtmosphereParameters {
   // scattering texture, reducing the memory footprint on the GPU.
   combinedScatteringTextures = true
 
+  // Whether to generate and use a separate texture for higher-order scattering
+  // (n >= 2) for a better approximation of the multi-scattering occlusion.
+  higherOrderScatteringTexture = true
+
   // Texture sizes:
   transmittanceTextureSize = new Vector2(256, 64)
   irradianceTextureSize = new Vector2(64, 16)
+  multipleScatteringTextureSize = new Vector2(64, 64)
   scatteringTextureRadiusSize = 32
   scatteringTextureCosViewSize = 128
   scatteringTextureCosLightSize = 32
   scatteringTextureCosViewLightSize = 8
   scatteringTextureSize = new Vector3()
-  highOrderScatteringTextureSize = new Vector2(64, 64)
 
   constructor() {
     this.update()
@@ -168,15 +172,13 @@ export class AtmosphereParameters {
     this.combinedScatteringTextures = other.combinedScatteringTextures
     this.transmittanceTextureSize.copy(other.transmittanceTextureSize)
     this.irradianceTextureSize.copy(other.irradianceTextureSize)
+    this.multipleScatteringTextureSize.copy(other.multipleScatteringTextureSize)
     this.scatteringTextureRadiusSize = other.scatteringTextureRadiusSize
     this.scatteringTextureCosViewSize = other.scatteringTextureCosViewSize
     this.scatteringTextureCosLightSize = other.scatteringTextureCosLightSize
     this.scatteringTextureCosViewLightSize =
       other.scatteringTextureCosViewLightSize
     this.scatteringTextureSize.copy(other.scatteringTextureSize)
-    this.highOrderScatteringTextureSize.copy(
-      other.highOrderScatteringTextureSize
-    )
     return this
   }
 
