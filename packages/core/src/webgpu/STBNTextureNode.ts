@@ -1,4 +1,4 @@
-import { frameId, nodeImmutable, screenCoordinate, vec3 } from 'three/tsl'
+import { Fn, frameId, nodeImmutable, screenCoordinate, vec3 } from 'three/tsl'
 import {
   Data3DTexture,
   RedFormat,
@@ -8,8 +8,6 @@ import {
 
 import { DEFAULT_STBN_URL } from '../constants'
 import { STBNLoader } from '../STBNLoader'
-import { FnVar } from './FnVar'
-import type { Node } from './node'
 
 const emptyTexture = /*#__PURE__*/ (() => {
   const texture = new Data3DTexture(new Uint8Array(1))
@@ -40,7 +38,7 @@ export class STBNTextureNode extends Texture3DNode {
 
 export const stbnTexture = /*#__PURE__*/ nodeImmutable(STBNTextureNode)
 
-export const stbn = /*#__PURE__*/ FnVar((): Node<'float'> => {
+export const stbn = /*#__PURE__*/ Fn(() => {
   return stbnTexture
     .sample(vec3(screenCoordinate.xy, frameId.mod(64)).div(vec3(128, 128, 64)))
     .r.toConst('stbn')

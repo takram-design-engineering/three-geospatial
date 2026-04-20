@@ -28,23 +28,24 @@ import {
   add,
   exp,
   float,
-  frameId,
   If,
   Loop,
   mix,
   mul,
-  screenCoordinate,
   sqrt,
   step,
   struct,
-  texture3D,
   vec2,
   vec3
 } from 'three/tsl'
 import type { TextureNode } from 'three/webgpu'
 
-import { DEFAULT_STBN_URL, STBNLoader } from '@takram/three-geospatial'
-import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
+import {
+  FnLayout,
+  FnVar,
+  stbn,
+  type Node
+} from '@takram/three-geospatial/webgpu'
 
 import {
   atmosphereParametersStruct,
@@ -287,9 +288,6 @@ export const scatteringToPointStruct = /*#__PURE__*/ struct(
 const minSampleCount = 4
 const maxSampleCount = 14
 
-// TODO
-const stbnTexture = new STBNLoader().load(DEFAULT_STBN_URL)
-
 export const computeScatteringToPoint = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
@@ -304,14 +302,6 @@ export const computeScatteringToPoint = /*#__PURE__*/ FnVar(
   ): ReturnType<typeof scatteringToPointStruct> => {
     const { solarIrradiance, bottomRadius, miePhaseFunctionG } =
       makeDestructible(parameters)
-
-    // TODO
-    const stbnNode = texture3D(stbnTexture)
-    const jitter = stbnNode
-      .sample(
-        vec3(screenCoordinate.xy, frameId.mod(64)).div(vec3(128, 128, 64))
-      )
-      .r.toConst()
 
     // Setup a variable sample count.
     const sampleCount = mix(
@@ -344,7 +334,7 @@ export const computeScatteringToPoint = /*#__PURE__*/ FnVar(
       t1.assign(t1.greaterThan(1).select(maxDistance, maxDistanceFloor.mul(t1)))
 
       const stepSize = t1.sub(t0)
-      const rayLength = t0.add(stepSize.mul(jitter)) // Add a bias to the sample point
+      const rayLength = t0.add(stepSize.mul(stbn)) // Add a bias to the sample point
 
       const radiusI = clampRadius(
         parameters,
@@ -539,7 +529,7 @@ const computeSplitScattering = /*#__PURE__*/ FnVar(
         .toConst()
       totalMie.addAssign(totalTransmittance.mul(mieIntegrand))
 
-      // Integrate the multiple scattering radiance.
+      // Integrate the higher-order scattering radiance.
       const higherOrder = solarIrradiance.mul(multipleScattering)
       const higherOrderIntegrand = higherOrder
         .sub(higherOrder.mul(transmittance))
