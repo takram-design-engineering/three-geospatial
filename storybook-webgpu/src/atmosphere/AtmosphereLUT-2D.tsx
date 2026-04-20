@@ -34,16 +34,14 @@ import {
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
 
-export const textureUV = FnVar(
-  (textureSize: Node<'vec2'>, zoom: Node<'float'>) => {
-    const scale = screenSize.div(textureSize).div(zoom).toConst()
-    const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toConst()
-    If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
-      Discard()
-    })
-    return uv.flipY()
-  }
-)
+const textureUV = FnVar((textureSize: Node<'vec2'>, zoom: Node<'float'>) => {
+  const scale = screenSize.div(textureSize).div(zoom).toConst()
+  const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toConst()
+  If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
+    Discard()
+  })
+  return uv.flipY()
+})
 
 const Content: FC<StoryProps> = ({ name, ...options }) => {
   const zoom = uniform(0)
