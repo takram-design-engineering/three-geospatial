@@ -61,8 +61,8 @@ import {
 import type { AtmosphereParameters } from './AtmosphereParameters'
 import { rayleighPhaseFunction } from './common'
 import {
-  getTextureUnitFromSubUV,
-  integrateSingleScatteringTexture
+  computeHighOrderScatteringTexture,
+  getTextureUnitFromSubUV
 } from './multiscattering'
 import {
   computeDirectIrradianceTexture,
@@ -613,7 +613,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     })
 
     this.highOrderScatteringNode ??= Fn(() => {
-      const radianceBuffer = workgroupArray('vec3', sampleCount)
+      const singleScatteringBuffer = workgroupArray('vec3', sampleCount)
       const transferFactorBuffer = workgroupArray('vec3', sampleCount)
 
       const size = vec2(width, height).toConst()
@@ -648,7 +648,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       // radiance here (as opposed to luminance) as well as the "transfer
       // factor", which acts as a transfer function on the irradiance of a
       // directional light at a given point.
-      const result = integrateSingleScatteringTexture(
+      const result = computeHighOrderScatteringTexture(
         parametersNode,
         texture(this.transmittance),
         texture(this.irradiance),
@@ -658,9 +658,9 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         100
       ).toConst()
 
-      radianceBuffer
+      singleScatteringBuffer
         .element(index)
-        .assign(result.get('radiance').div(sampleCount))
+        .assign(result.get('singleScattering').div(sampleCount))
       transferFactorBuffer
         .element(index)
         .assign(result.get('transferFactor').div(sampleCount))
@@ -672,9 +672,9 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       for (let i = sampleCount >> 1; i > 0; i >>>= 1) {
         const level = uint(i)
         If(index.lessThan(level), () => {
-          radianceBuffer
+          singleScatteringBuffer
             .element(index)
-            .addAssign(radianceBuffer.element(index.add(level)))
+            .addAssign(singleScatteringBuffer.element(index.add(level)))
           transferFactorBuffer
             .element(index)
             .addAssign(transferFactorBuffer.element(index.add(level)))
@@ -687,7 +687,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         Return()
       })
 
-      const radiance = radianceBuffer.element(uint(0))
+      const singleScattering = singleScatteringBuffer.element(uint(0))
       const transferFactor = transferFactorBuffer.element(uint(0))
 
       textureStore(
@@ -697,7 +697,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         // of scattered radiance over the sphere would be 1.
         // For a power-series, such integral is analytically:
         // sum_{n=0}^{n=+inf} = 1 + r + r^2 + r^3 + ... + r^n = 1 / (1 - r)
-        vec4(radiance.mul(transferFactor.oneMinus().reciprocal()), 1)
+        vec4(singleScattering.mul(transferFactor.oneMinus().reciprocal()), 1)
       )
     })()
       .context({ getAtmosphere: () => context })
