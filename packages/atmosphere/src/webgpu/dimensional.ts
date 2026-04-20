@@ -2,6 +2,8 @@
 // I'm working on storing the dimensions in the types, but most of TSL functions
 // are not generic and don't preserve the types anyways.
 
+import { Texture3DNode, TextureNode } from 'three/webgpu'
+
 export const Length = 'float'
 export const Wavelength = 'float'
 export const Angle = 'float'
@@ -39,13 +41,13 @@ export const Direction = 'vec3'
 export const Luminance3 = 'vec3'
 export const Illuminance3 = 'vec3'
 
-export const TransmittanceTexture = 'texture'
-export const AbstractScatteringTexture = 'texture3D'
-export const ReducedScatteringTexture = 'texture3D'
-export const ScatteringTexture = 'texture3D'
-export const ScatteringDensityTexture = 'texture3D'
-export const IrradianceTexture = 'texture'
-export const HighOrderScatteringTexture = 'texture'
+export const TransmittanceTexture = TextureNode
+export const AbstractScatteringTexture = Texture3DNode
+export const ReducedScatteringTexture = Texture3DNode
+export const ScatteringTexture = Texture3DNode
+export const ScatteringDensityTexture = Texture3DNode
+export const IrradianceTexture = TextureNode
+export const HighOrderScatteringTexture = TextureNode
 
 export type Length = typeof Length
 export type Wavelength = typeof Wavelength

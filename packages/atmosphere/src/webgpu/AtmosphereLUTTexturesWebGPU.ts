@@ -50,7 +50,6 @@ import {
   type Node
 } from '@takram/three-geospatial/webgpu'
 
-import { makeDestructible } from './AtmosphereContextBase'
 import type {
   AtmosphereLUTTexture3DName,
   AtmosphereLUTTextureName
@@ -625,7 +624,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       // Construct the parameters of the high-order scattering LUT. They are
       // the cosine of light and zenith [-1, 1], and the view altitude
       // [bottomRadius, topRadius].
-      const { topRadius, bottomRadius } = makeDestructible(parametersNode)
+      const { topRadius, bottomRadius } = parametersNode
       const cosLightZenith = uv.x.mul(2).sub(1).toConst()
       const lightDirection = vec3(
         0,

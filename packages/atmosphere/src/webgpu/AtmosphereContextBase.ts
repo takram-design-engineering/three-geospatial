@@ -1,4 +1,4 @@
-import { float, ivec2, struct, uint, vec3 } from 'three/tsl'
+import { float, ivec2, struct, uint, uvec2, vec3 } from 'three/tsl'
 import type { NodeBuilder, StructNode } from 'three/webgpu'
 
 import { reinterpretType } from '@takram/three-geospatial'
@@ -62,8 +62,9 @@ const atmosphereParametersLayout = {
   scatteringTextureRadiusSize: 'uint',
   scatteringTextureCosViewSize: 'uint',
   scatteringTextureCosLightSize: 'uint',
-  scatteringTextureCosViewLightSize: 'uint'
-}
+  scatteringTextureCosViewLightSize: 'uint',
+  highOrderScatteringTextureSize: 'uvec2'
+} satisfies Partial<Record<keyof AtmosphereParameters, unknown>>
 
 export const atmosphereParametersStruct = /*#__PURE__*/ struct(
   atmosphereParametersLayout,
@@ -156,7 +157,8 @@ export class AtmosphereContextBase {
       scatteringTextureRadiusSize,
       scatteringTextureCosViewSize,
       scatteringTextureCosLightSize,
-      scatteringTextureCosViewLightSize
+      scatteringTextureCosViewLightSize,
+      highOrderScatteringTextureSize
     } = parameters
 
     this.parametersNode = makeDestructible(
@@ -203,7 +205,8 @@ export class AtmosphereContextBase {
         scatteringTextureCosLightSize: uint(scatteringTextureCosLightSize),
         scatteringTextureCosViewLightSize: uint(
           scatteringTextureCosViewLightSize
-        )
+        ),
+        highOrderScatteringTextureSize: uvec2(highOrderScatteringTextureSize)
       }).toConst('atmosphereParameters')
     )
   }
