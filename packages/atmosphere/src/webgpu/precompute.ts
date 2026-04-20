@@ -77,7 +77,6 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import type { Texture3DNode, TextureNode } from 'three/webgpu'
 
 import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -567,30 +566,31 @@ const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
 })
 
 export const computeSingleScatteringTexture = /*#__PURE__*/ FnVar(
-  (transmittanceTexture: TextureNode, fragCoord: Node<'vec3'>) => builder => {
-    const context = getAtmosphereContextBase(builder)
+  (transmittanceTexture: TransmittanceTexture, fragCoord: Node<'vec3'>) =>
+    builder => {
+      const context = getAtmosphereContextBase(builder)
 
-    const scatteringParams = getParamsFromScatteringTextureFragCoord(
-      context.parametersNode,
-      fragCoord
-    ).toConst()
-    const radius = scatteringParams.get('radius')
-    const cosView = scatteringParams.get('cosView')
-    const cosLight = scatteringParams.get('cosLight')
-    const cosViewLight = scatteringParams.get('cosViewLight')
-    const viewRayIntersectsGround = scatteringParams.get(
-      'viewRayIntersectsGround'
-    )
-    return computeSingleScattering(
-      context.parametersNode,
-      transmittanceTexture,
-      radius,
-      cosView,
-      cosLight,
-      cosViewLight,
-      viewRayIntersectsGround
-    )
-  }
+      const scatteringParams = getParamsFromScatteringTextureFragCoord(
+        context.parametersNode,
+        fragCoord
+      ).toConst()
+      const radius = scatteringParams.get('radius')
+      const cosView = scatteringParams.get('cosView')
+      const cosLight = scatteringParams.get('cosLight')
+      const cosViewLight = scatteringParams.get('cosViewLight')
+      const viewRayIntersectsGround = scatteringParams.get(
+        'viewRayIntersectsGround'
+      )
+      return computeSingleScattering(
+        context.parametersNode,
+        transmittanceTexture,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        viewRayIntersectsGround
+      )
+    }
 )
 
 const getScatteringForOrder = /*#__PURE__*/ FnLayout({
@@ -925,11 +925,11 @@ const computeMultipleScattering = /*#__PURE__*/ FnLayout({
 
 export const computeScatteringDensityTexture = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
-    singleRayleighScatteringTexture: Texture3DNode,
-    singleMieScatteringTexture: Texture3DNode,
-    multipleScatteringTexture: Texture3DNode,
-    irradianceTexture: TextureNode,
+    transmittanceTexture: TransmittanceTexture,
+    singleRayleighScatteringTexture: ReducedScatteringTexture,
+    singleMieScatteringTexture: ReducedScatteringTexture,
+    multipleScatteringTexture: ScatteringTexture,
+    irradianceTexture: IrradianceTexture,
     fragCoord: Node<'vec3'>,
     scatteringOrder: Node<'int'>
   ) =>
@@ -970,8 +970,8 @@ const multipleScatteringStruct = /*#__PURE__*/ struct(
 
 export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
-    scatteringDensityTexture: Texture3DNode,
+    transmittanceTexture: TransmittanceTexture,
+    scatteringDensityTexture: ScatteringDensityTexture,
     fragCoord: Node<'vec3'>
   ) =>
     builder => {
@@ -1137,7 +1137,7 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 })
 
 export const computeDirectIrradianceTexture = /*#__PURE__*/ FnVar(
-  (transmittanceTexture: TextureNode, fragCoord: Node<'vec2'>) =>
+  (transmittanceTexture: TransmittanceTexture, fragCoord: Node<'vec2'>) =>
     (builder): Node<IrradianceSpectrum> => {
       const context = getAtmosphereContextBase(builder)
       const { irradianceTextureSize } = context.parametersNode
@@ -1159,9 +1159,9 @@ export const computeDirectIrradianceTexture = /*#__PURE__*/ FnVar(
 
 export const computeIndirectIrradianceTexture = /*#__PURE__*/ FnVar(
   (
-    singleRayleighScatteringTexture: Texture3DNode,
-    singleMieScatteringTexture: Texture3DNode,
-    multipleScatteringTexture: Texture3DNode,
+    singleRayleighScatteringTexture: ReducedScatteringTexture,
+    singleMieScatteringTexture: ReducedScatteringTexture,
+    multipleScatteringTexture: ScatteringTexture,
     fragCoord: Node<'vec2'>,
     scatteringOrder: Node<'int'>
   ) =>

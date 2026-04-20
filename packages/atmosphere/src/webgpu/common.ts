@@ -76,7 +76,6 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import type { Texture3DNode, TextureNode } from 'three/webgpu'
 
 import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -95,7 +94,9 @@ import {
   Length,
   TransmittanceTexture,
   type AbstractSpectrum,
-  type IrradianceSpectrum
+  type IrradianceSpectrum,
+  type IrradianceTexture,
+  type ScatteringTexture
 } from './dimensional'
 
 export const clampCosine = /*#__PURE__*/ FnLayout({
@@ -243,7 +244,7 @@ const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
 
 export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
+    transmittanceTexture: TransmittanceTexture,
     radius: Node<Length>,
     cosView: Node<Dimensionless>
   ) =>
@@ -284,7 +285,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
 
 export const getTransmittance = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
+    transmittanceTexture: TransmittanceTexture,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     rayLength: Node<Length>,
@@ -348,7 +349,7 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
 
 export const getTransmittanceToSun = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
+    transmittanceTexture: TransmittanceTexture,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ) =>
@@ -512,7 +513,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 
 export const getScattering = /*#__PURE__*/ FnVar(
   (
-    scatteringTexture: Texture3DNode,
+    scatteringTexture: ScatteringTexture,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
@@ -575,7 +576,7 @@ const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 
 export const getIrradiance = /*#__PURE__*/ FnVar(
   (
-    irradianceTexture: TextureNode,
+    irradianceTexture: IrradianceTexture,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ) =>

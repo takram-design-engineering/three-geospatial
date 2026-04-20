@@ -86,10 +86,10 @@ export type Direction = typeof Direction
 export type Luminance3 = typeof Luminance3
 export type Illuminance3 = typeof Illuminance3
 
-export type TransmittanceTexture = typeof TransmittanceTexture
-export type AbstractScatteringTexture = typeof AbstractScatteringTexture
-export type ReducedScatteringTexture = typeof ReducedScatteringTexture
-export type ScatteringTexture = typeof ScatteringTexture
-export type ScatteringDensityTexture = typeof ScatteringDensityTexture
-export type IrradianceTexture = typeof IrradianceTexture
-export type HighOrderScatteringTexture = typeof HighOrderScatteringTexture
+export type TransmittanceTexture = InstanceType<typeof TextureNode>
+export type AbstractScatteringTexture = InstanceType<typeof Texture3DNode>
+export type ReducedScatteringTexture = InstanceType<typeof Texture3DNode>
+export type ScatteringTexture = InstanceType<typeof Texture3DNode>
+export type ScatteringDensityTexture = InstanceType<typeof Texture3DNode>
+export type IrradianceTexture = InstanceType<typeof TextureNode>
+export type HighOrderScatteringTexture = InstanceType<typeof TextureNode>
