@@ -55,7 +55,11 @@ const textureUVW = FnVar((textureSize: Node<'vec3'>, zoom: Node<'float'>) => {
   return vec3(uv.fract(), index.toFloat().add(0.5).div(textureSize.z))
 })
 
-const Content: FC<StoryProps> = ({ name, ...options }) => {
+const Content: FC<StoryProps> = ({
+  name,
+  outputNode = node => node.rgb,
+  ...options
+}) => {
   const zoom = uniform(0)
 
   const material = useResource(() => new NodeMaterial(), [])
@@ -70,7 +74,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
   Object.assign(lutNode.parameters, options)
   const textureSize = vec3(lutNode.parameters.scatteringTextureSize)
   const uvw = textureUVW(textureSize, zoom)
-  material.colorNode = lutNode.getTextureNode(name).sample(uvw).rgb
+  material.colorNode = outputNode(lutNode.getTextureNode(name).sample(uvw))
 
   // Tone mapping controls:
   useToneMappingControls()
@@ -88,6 +92,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
 
 interface StoryProps extends Partial<AtmosphereParameters> {
   name: AtmosphereLUTTexture3DName
+  outputNode?: (node: Node) => Node
 }
 
 interface StoryArgs extends ToneMappingArgs {
