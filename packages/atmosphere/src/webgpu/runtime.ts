@@ -247,8 +247,6 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         singleMieScattering.assign(singleMieScattering.mul(shadowTransmittance))
       })
 
-      // Finally combine the multiple Rayleigh scattering and the single Mie
-      // scattering, applying their phase functions.
       radiance.assign(
         scattering
           .mul(rayleighPhaseFunction(cosViewLight))
@@ -506,19 +504,36 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
       const cosViewLight = rayDirection.dot(lightDirection)
       const distanceToPoint = rayOrigin.distance(point)
 
-      let result
       if (context.raymarchScattering) {
-        result = getIndirectRadianceToPointRaymarch(
-          context,
-          radius,
-          cosView,
-          cosLight,
-          cosViewLight,
-          distanceToPoint,
-          shadowLength
-        ).toConst()
+        // WORKAROUND: As somewhat expected, select() doesn't work here.
+        // TODO: The threshold can be lower.
+        If(radius.lessThan(topRadius), () => {
+          const result = getIndirectRadianceToPointRaymarch(
+            context,
+            radius,
+            cosView,
+            cosLight,
+            cosViewLight,
+            distanceToPoint,
+            shadowLength
+          ).toConst()
+          radiance.assign(result.get('radiance'))
+          transmittance.assign(result.get('transmittance'))
+        }).Else(() => {
+          const result = getIndirectRadianceToPointLookup(
+            context,
+            radius,
+            cosView,
+            cosLight,
+            cosViewLight,
+            distanceToPoint,
+            shadowLength
+          ).toConst()
+          radiance.assign(result.get('radiance'))
+          transmittance.assign(result.get('transmittance'))
+        })
       } else {
-        result = getIndirectRadianceToPointLookup(
+        const result = getIndirectRadianceToPointLookup(
           context,
           radius,
           cosView,
@@ -527,10 +542,9 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
           distanceToPoint,
           shadowLength
         ).toConst()
+        radiance.assign(result.get('radiance'))
+        transmittance.assign(result.get('transmittance'))
       }
-
-      radiance.assign(result.get('radiance'))
-      transmittance.assign(result.get('transmittance'))
 
       // Extrapolate the inscatter sampled above to the actual distance between
       // the camera and point, assuming both averages are the same (not really).
