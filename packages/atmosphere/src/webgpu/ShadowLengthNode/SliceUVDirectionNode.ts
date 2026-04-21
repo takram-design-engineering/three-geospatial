@@ -95,6 +95,7 @@ export class SliceUVDirectionNode extends Node {
     super()
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
     this.material.name = 'SliceUVDirection'
+    this.mesh.name = 'SliceUVDirection'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

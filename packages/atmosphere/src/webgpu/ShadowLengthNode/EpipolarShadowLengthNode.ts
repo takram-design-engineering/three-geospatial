@@ -127,6 +127,7 @@ export class EpipolarShadowLengthNode extends Node {
     super()
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
     this.material.name = 'EpipolarShadowLength'
+    this.mesh.name = 'EpipolarShadowLength'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

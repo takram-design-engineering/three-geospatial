@@ -75,6 +75,7 @@ export class SliceEndpointsNode extends Node {
     super()
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
     this.material.name = 'SliceEndpointsNode'
+    this.mesh.name = 'SliceEndpointsNode'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

@@ -85,6 +85,7 @@ export class UnwarpEpipolarNode extends Node {
     super()
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
     this.material.name = 'UnwarpEpipolar'
+    this.mesh.name = 'UnwarpEpipolar'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

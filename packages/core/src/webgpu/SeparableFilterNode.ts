@@ -29,7 +29,9 @@ export abstract class SeparableFilterNode extends FilterNode {
 
   constructor(inputNode?: TextureNode | null) {
     super(inputNode)
-    this.material.name = (this.constructor as typeof Node).type
+    const typeName = (this.constructor as typeof Node).type.replace(/Node$/, '')
+    this.material.name = typeName
+    this.mesh.name = typeName
 
     this.horizontalRT = this.createRenderTarget('horizontal')
     this.verticalRT = this.createRenderTarget('vertical')

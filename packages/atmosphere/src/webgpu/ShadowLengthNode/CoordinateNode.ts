@@ -78,6 +78,7 @@ export class CoordinateNode extends Node {
     super()
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
     this.material.name = 'Coordinate'
+    this.mesh.name = 'Coordinate'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

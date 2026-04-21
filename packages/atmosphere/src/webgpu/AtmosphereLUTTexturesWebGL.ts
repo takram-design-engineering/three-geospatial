@@ -127,6 +127,8 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
   constructor() {
     super()
+    this.mesh.name = 'AtmosphereLUTTexturesWebGL'
+
     this.transmittanceRT = createRenderTarget('transmittance')
     this.multipleScatteringRT = createRenderTarget('multipleScattering')
     this.scatteringRT = createRenderTarget3D('scattering')

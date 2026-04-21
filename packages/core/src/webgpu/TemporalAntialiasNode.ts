@@ -273,6 +273,7 @@ export class TemporalAntialiasNode extends TempNode {
     super('vec4')
     this.updateBeforeType = NodeUpdateType.FRAME
     this.resolveMaterial.name = 'TemporalAntialias_resolve'
+    this.mesh.name = 'TemporalAntialias'
 
     this.inputNode = inputNode
     this.depthNode = depthNode

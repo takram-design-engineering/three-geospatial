@@ -93,6 +93,7 @@ export class MinMaxLevelsNode extends Node {
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
     this.gatherMaterial.name = 'MinMaxLevels_gather'
     this.mipmapMaterial.name = 'MinMaxLevels_mipmap'
+    this.mesh.name = 'MinMaxLevels'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
