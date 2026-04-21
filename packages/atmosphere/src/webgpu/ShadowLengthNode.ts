@@ -96,7 +96,7 @@ export class ShadowLengthNode extends TempNode {
     depthNode?: TextureNode | null
   ) {
     super('float')
-    this.updateBeforeType = NodeUpdateType.RENDER // TODO
+    this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
 
     this.csmShadowNode = csmShadowNode
     this.viewZNode = viewZNode
@@ -114,7 +114,7 @@ export class ShadowLengthNode extends TempNode {
     return hash(this.currentCascades)
   }
 
-  override updateBefore({ renderer, material }: NodeFrame): void {
+  override update({ renderer, material }: NodeFrame): void {
     if (renderer == null) {
       return
     }

@@ -90,7 +90,7 @@ export class MinMaxLevelsNode extends Node {
 
   constructor() {
     super()
-    this.updateBeforeType = NodeUpdateType.RENDER // TODO
+    this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
     this.gatherMaterial.name = 'MinMaxLevels_gather'
     this.mipmapMaterial.name = 'MinMaxLevels_mipmap'
 
@@ -179,7 +179,7 @@ export class MinMaxLevelsNode extends Node {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override update({ renderer }: NodeFrame): void {
     if (renderer == null) {
       return
     }

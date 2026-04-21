@@ -73,7 +73,7 @@ export class SliceEndpointsNode extends Node {
 
   constructor() {
     super()
-    this.updateBeforeType = NodeUpdateType.RENDER // TODO
+    this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
     this.material.name = 'SliceEndpointsNode'
 
     const renderTarget = new RenderTarget(1, 1, {
@@ -95,7 +95,7 @@ export class SliceEndpointsNode extends Node {
     return this.textureNode
   }
 
-  override updateBefore({ renderer }: NodeFrame): void {
+  override update({ renderer }: NodeFrame): void {
     if (renderer == null) {
       return
     }
