@@ -224,7 +224,9 @@ const Content: FC<StoryProps> = ({
   )
 }
 
-interface StoryProps extends PointOfViewProps {}
+interface StoryProps extends PointOfViewProps {
+  fov?: number
+}
 
 interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
   googleMapsApiKey: string
@@ -234,8 +236,9 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
   raymarchScattering: boolean
 }
 
-export const Story: StoryFC<StoryProps, StoryArgs> = props => (
+export const Story: StoryFC<StoryProps, StoryArgs> = ({ fov, ...props }) => (
   <WebGPUCanvas
+    camera={{ fov }}
     renderer={{
       onInit: renderer => {
         renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
