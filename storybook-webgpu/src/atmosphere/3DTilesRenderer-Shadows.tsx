@@ -111,8 +111,8 @@ const Content: FC<StoryProps> = ({
   const [light, csmShadowNode] = useMemo(() => {
     const light = new AtmosphereLight()
     light.castShadow = true
-    light.shadow.mapSize.width = 2048
-    light.shadow.mapSize.height = 2048
+    light.shadow.mapSize.width = 1024
+    light.shadow.mapSize.height = 1024
     light.shadow.camera.near = 0
     light.shadow.camera.far = 3e5
 
