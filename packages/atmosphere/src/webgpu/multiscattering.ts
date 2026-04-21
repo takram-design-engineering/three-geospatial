@@ -151,8 +151,8 @@ export const multipleScatteringStruct = /*#__PURE__*/ struct(
 export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    transmittanceTexture: TextureNode,
-    irradianceTexture: TextureNode,
+    transmittanceNode: TextureNode,
+    irradianceNode: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
@@ -210,7 +210,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
       const transmittance = exp(opticalDepth.negate()).toConst()
 
       const transmittanceToSun = getTransmittanceToSun(
-        transmittanceTexture,
+        transmittanceNode,
         radiusI,
         cosLightI
       ).toConst()
@@ -244,7 +244,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
           .div(bottomRadius)
       ).toConst()
       const groundIrradiance = getIrradiance(
-        irradianceTexture,
+        irradianceNode,
         bottomRadius,
         cosLightAtGround
       )
@@ -266,7 +266,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
 export const getMultipleScattering = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    multipleScatteringTexture: TextureNode,
+    multipleScatteringNode: TextureNode,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ): Node<'vec3'> => {
@@ -279,7 +279,7 @@ export const getMultipleScattering = /*#__PURE__*/ FnVar(
       ).saturate(),
       multipleScatteringTextureSize
     )
-    return multipleScatteringTexture.sample(uv).rgb
+    return multipleScatteringNode.sample(uv).rgb
   }
 )
 
@@ -290,8 +290,8 @@ const maxSampleCount = 14
 export const computeScatteringToPoint = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    transmittanceTexture: TextureNode,
-    multipleScatteringTexture: TextureNode,
+    transmittanceNode: TextureNode,
+    multipleScatteringNode: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
@@ -360,14 +360,14 @@ export const computeScatteringToPoint = /*#__PURE__*/ FnVar(
       const transmittance = exp(opticalDepth.negate()).toConst()
 
       const transmittanceToSun = getTransmittanceToSun(
-        transmittanceTexture,
+        transmittanceNode,
         radiusI,
         cosLightI
       ).toConst()
 
       const multipleScattering = getMultipleScattering(
         parameters,
-        multipleScatteringTexture,
+        multipleScatteringNode,
         radiusI,
         cosLightI
       )
@@ -412,8 +412,8 @@ const splitScatteringStruct = /*#__PURE__*/ struct(
 const computeSplitScattering = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    transmittanceTexture: TextureNode,
-    multipleScatteringTexture: TextureNode,
+    transmittanceNode: TextureNode,
+    multipleScatteringNode: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
@@ -488,14 +488,14 @@ const computeSplitScattering = /*#__PURE__*/ FnVar(
       const transmittance = exp(opticalDepth.negate()).toConst()
 
       const transmittanceToSun = getTransmittanceToSun(
-        transmittanceTexture,
+        transmittanceNode,
         radiusI,
         cosLightI
       ).toConst()
 
       const multipleScattering = getMultipleScattering(
         parameters,
-        multipleScatteringTexture,
+        multipleScatteringNode,
         radiusI,
         cosLightI
       )
@@ -545,8 +545,8 @@ const computeSplitScattering = /*#__PURE__*/ FnVar(
 
 export const computeSplitScatteringTexture = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
-    multipleTexture: TextureNode,
+    transmittanceNode: TextureNode,
+    multipleScatteringNode: TextureNode,
     fragCoord: Node<'vec3'>
   ) =>
     (builder): ReturnType<typeof computeSplitScattering> => {
@@ -563,8 +563,8 @@ export const computeSplitScatteringTexture = /*#__PURE__*/ FnVar(
       const intersectsGround = scatteringParams.get('intersectsGround')
       return computeSplitScattering(
         context.parametersNode,
-        transmittanceTexture,
-        multipleTexture,
+        transmittanceNode,
+        multipleScatteringNode,
         radius,
         cosView,
         cosLight,

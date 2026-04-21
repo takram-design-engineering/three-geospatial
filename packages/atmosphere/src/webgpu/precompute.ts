@@ -255,7 +255,7 @@ export const computeTransmittanceTexture = /*#__PURE__*/ FnVar(
 const computeIrradiance = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    scatteringTexture: Texture3DNode,
+    scatteringNode: Texture3DNode,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ): Node<IrradianceSpectrum> => {
@@ -289,8 +289,8 @@ const computeIrradiance = /*#__PURE__*/ FnVar(
 
         const scattering = getCombinedScattering(
           parameters,
-          scatteringTexture,
-          scatteringTexture,
+          scatteringNode,
+          scatteringNode,
           radius,
           omega.z,
           cosLight,
@@ -337,7 +337,7 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 })
 
 export const computeIrradianceTexture = /*#__PURE__*/ FnVar(
-  (scatteringTexture: Texture3DNode, fragCoord: Node<'vec2'>) =>
+  (scatteringNode: Texture3DNode, fragCoord: Node<'vec2'>) =>
     (builder): ReturnType<typeof computeIrradiance> => {
       const context = getAtmosphereContextBase(builder)
       const { irradianceTextureSize } = context.parametersNode
@@ -350,7 +350,7 @@ export const computeIrradianceTexture = /*#__PURE__*/ FnVar(
       const cosLight = irradianceParams.y
       return computeIrradiance(
         context.parametersNode,
-        scatteringTexture,
+        scatteringNode,
         radius,
         cosLight
       )

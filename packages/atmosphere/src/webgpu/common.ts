@@ -260,7 +260,7 @@ const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
 
 export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
+    transmittanceNode: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>
   ) =>
@@ -282,26 +282,20 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
         const coord = uv.mul(size).sub(0.5).toConst()
         const i = coord.floor().add(0.5).mul(texelSize.xy).toConst()
         const f = coord.fract().toConst()
-        const t1 = exp(transmittanceTexture.sample(i).negate())
-        const t2 = exp(
-          transmittanceTexture.sample(i.add(texelSize.xz)).negate()
-        )
-        const t3 = exp(
-          transmittanceTexture.sample(i.add(texelSize.zy)).negate()
-        )
-        const t4 = exp(
-          transmittanceTexture.sample(i.add(texelSize.xy)).negate()
-        )
+        const t1 = exp(transmittanceNode.sample(i).negate())
+        const t2 = exp(transmittanceNode.sample(i.add(texelSize.xz)).negate())
+        const t3 = exp(transmittanceNode.sample(i.add(texelSize.zy)).negate())
+        const t4 = exp(transmittanceNode.sample(i.add(texelSize.xy)).negate())
         return mix(mix(t1, t2, f.x), mix(t3, t4, f.x), f.y).rgb
       } else {
-        return transmittanceTexture.sample(uv).rgb
+        return transmittanceNode.sample(uv).rgb
       }
     }
 )
 
 export const getTransmittance = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
+    transmittanceNode: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     rayLength: Node<Length>,
@@ -328,12 +322,12 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
         transmittance.assign(
           min(
             getTransmittanceToTopAtmosphereBoundary(
-              transmittanceTexture,
+              transmittanceNode,
               radiusEnd,
               cosViewEnd.negate()
             ).div(
               getTransmittanceToTopAtmosphereBoundary(
-                transmittanceTexture,
+                transmittanceNode,
                 radius,
                 cosView.negate()
               )
@@ -345,12 +339,12 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
         transmittance.assign(
           min(
             getTransmittanceToTopAtmosphereBoundary(
-              transmittanceTexture,
+              transmittanceNode,
               radius,
               cosView
             ).div(
               getTransmittanceToTopAtmosphereBoundary(
-                transmittanceTexture,
+                transmittanceNode,
                 radiusEnd,
                 cosViewEnd
               )
@@ -365,7 +359,7 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
 
 export const getTransmittanceToSun = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TextureNode,
+    transmittanceNode: TextureNode,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ) =>
@@ -376,7 +370,7 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnVar(
       const sinHorizon = bottomRadius.div(radius).toConst()
       const cosHorizon = sqrt(max(sinHorizon.pow2().oneMinus(), 0)).negate()
       return getTransmittanceToTopAtmosphereBoundary(
-        transmittanceTexture,
+        transmittanceNode,
         radius,
         cosLight
       ).mul(
@@ -529,7 +523,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 
 export const getScattering = /*#__PURE__*/ FnVar(
   (
-    scatteringTexture: Texture3DNode,
+    scatteringNode: Texture3DNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
@@ -563,10 +557,10 @@ export const getScattering = /*#__PURE__*/ FnVar(
         coord.z,
         coord.w
       )
-      return scatteringTexture
+      return scatteringNode
         .sample(coord0)
         .mul(lerp.oneMinus())
-        .add(scatteringTexture.sample(coord1).mul(lerp)).rgb
+        .add(scatteringNode.sample(coord1).mul(lerp)).rgb
     }
 )
 
@@ -592,7 +586,7 @@ const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 
 export const getIrradiance = /*#__PURE__*/ FnVar(
   (
-    irradianceTexture: TextureNode,
+    irradianceNode: TextureNode,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ) =>
@@ -603,7 +597,7 @@ export const getIrradiance = /*#__PURE__*/ FnVar(
         radius,
         cosLight
       )
-      return irradianceTexture.sample(uv).rgb
+      return irradianceNode.sample(uv).rgb
     }
 )
 
@@ -895,8 +889,8 @@ export const combinedScatteringStruct = /*#__PURE__*/ struct(
 export const getCombinedScattering = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    scatteringTexture: Texture3DNode,
-    singleMieScatteringTexture: Texture3DNode,
+    scatteringNode: Texture3DNode,
+    singleMieScatteringNode: Texture3DNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
@@ -940,8 +934,8 @@ export const getCombinedScattering = /*#__PURE__*/ FnVar(
 
       if (context.parameters.combinedScatteringTextures) {
         const combinedScattering = add(
-          scatteringTexture.sample(coord0).mul(lerp.oneMinus()),
-          scatteringTexture.sample(coord1).mul(lerp)
+          scatteringNode.sample(coord0).mul(lerp.oneMinus()),
+          scatteringNode.sample(coord1).mul(lerp)
         ).toConst()
         scattering.assign(combinedScattering.rgb)
         singleMieScattering.assign(
@@ -954,14 +948,14 @@ export const getCombinedScattering = /*#__PURE__*/ FnVar(
       } else {
         scattering.assign(
           add(
-            scatteringTexture.sample(coord0).mul(lerp.oneMinus()),
-            scatteringTexture.sample(coord1).mul(lerp)
+            scatteringNode.sample(coord0).mul(lerp.oneMinus()),
+            scatteringNode.sample(coord1).mul(lerp)
           ).rgb
         )
         singleMieScattering.assign(
           add(
-            singleMieScatteringTexture.sample(coord0).mul(lerp.oneMinus()),
-            singleMieScatteringTexture.sample(coord1).mul(lerp)
+            singleMieScatteringNode.sample(coord0).mul(lerp.oneMinus()),
+            singleMieScatteringNode.sample(coord1).mul(lerp)
           ).rgb
         )
       }
