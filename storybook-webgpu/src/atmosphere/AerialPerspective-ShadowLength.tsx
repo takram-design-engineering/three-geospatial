@@ -297,18 +297,18 @@ const Content: FC<StoryProps> = ({
       transmittance,
       inscatter,
       showGround,
-      raymarchSingleScattering
+      raymarchScattering
     }: StoryArgs) => ({
       transmittance,
       inscatter,
       showGround,
-      raymarchSingleScattering
+      raymarchScattering
     }),
-    ({ transmittance, inscatter, showGround, raymarchSingleScattering }) => {
+    ({ transmittance, inscatter, showGround, raymarchScattering }) => {
       aerialNode.transmittance = transmittance
       aerialNode.inscatter = inscatter
       atmosphereContext.showGround = showGround
-      atmosphereContext.raymarchSingleScattering = raymarchSingleScattering
+      atmosphereContext.raymarchScattering = raymarchScattering
       postProcessing.needsUpdate = true
     }
   )
@@ -414,7 +414,7 @@ interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
   transmittance: boolean
   inscatter: boolean
   showGround: boolean
-  raymarchSingleScattering: boolean
+  raymarchScattering: boolean
   shadowLength: boolean
   displayShadowLength: boolean
   debugShadowLength: boolean
@@ -440,7 +440,7 @@ Story.args = {
   transmittance: true,
   inscatter: true,
   showGround: true,
-  raymarchSingleScattering: false,
+  raymarchScattering: false,
   shadowLength: true,
   displayShadowLength: false,
   debugShadowLength: false,
@@ -484,7 +484,7 @@ Story.argTypes = {
     },
     table: { category: 'aerial perspective' }
   },
-  raymarchSingleScattering: {
+  raymarchScattering: {
     control: {
       type: 'boolean'
     },
