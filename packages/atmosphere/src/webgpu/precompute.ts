@@ -86,7 +86,6 @@ import {
 } from './AtmosphereContextBase'
 import {
   clampCosine,
-  distanceToBottomAtmosphereBoundary,
   distanceToTopAtmosphereBoundary,
   getProfileDensity
 } from './common'
@@ -277,27 +276,6 @@ export const computeTransmittanceToTopAtmosphereBoundaryTexture =
         )
       }
   )
-
-const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ FnLayout({
-  name: 'distanceToNearestAtmosphereBoundary',
-  type: Length,
-  inputs: [
-    { name: 'parameters', type: atmosphereParametersStruct },
-    { name: 'radius', type: Length },
-    { name: 'cosView', type: Dimensionless },
-    { name: 'viewRayIntersectsGround', type: 'bool' }
-  ]
-})(([parameters, radius, cosView, viewRayIntersectsGround]) => {
-  const result = float(0).toVar()
-  If(viewRayIntersectsGround, () => {
-    result.assign(
-      distanceToBottomAtmosphereBoundary(parameters, radius, cosView)
-    )
-  }).Else(() => {
-    result.assign(distanceToTopAtmosphereBoundary(parameters, radius, cosView))
-  })
-  return result
-})
 
 const scatteringParamsStruct = /*#__PURE__*/ struct(
   {

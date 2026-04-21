@@ -190,6 +190,22 @@ export const rayIntersectsGround = /*#__PURE__*/ FnLayout({
     )
 })
 
+export const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ FnLayout({
+  name: 'distanceToNearestAtmosphereBoundary',
+  type: Length,
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'radius', type: Length },
+    { name: 'cosView', type: Dimensionless },
+    { name: 'intersectsGround', type: 'bool' }
+  ]
+})(([parameters, radius, cosView, intersectsGround]) => {
+  return intersectsGround.select(
+    distanceToBottomAtmosphereBoundary(parameters, radius, cosView),
+    distanceToTopAtmosphereBoundary(parameters, radius, cosView)
+  )
+})
+
 const getTextureCoordFromUnitRange = /*#__PURE__*/ FnLayout({
   name: 'getTextureCoordFromUnitRange',
   type: 'float',
@@ -289,7 +305,7 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     rayLength: Node<Length>,
-    viewRayIntersectsGround: Node<'bool'>
+    intersectsGround: Node<'bool'>
   ) =>
     (builder): Node<DimensionlessSpectrum> => {
       const context = getAtmosphereContextBase(builder)
@@ -308,7 +324,7 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
       ).toConst()
 
       const transmittance = vec3(0).toVar()
-      If(viewRayIntersectsGround, () => {
+      If(intersectsGround, () => {
         transmittance.assign(
           min(
             getTransmittanceToTopAtmosphereBoundary(
@@ -409,7 +425,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless },
     { name: 'cosLight', type: Dimensionless },
     { name: 'cosViewLight', type: Dimensionless },
-    { name: 'viewRayIntersectsGround', type: 'bool' }
+    { name: 'intersectsGround', type: 'bool' }
   ]
 })(([
   parameters,
@@ -417,7 +433,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   cosView,
   cosLight,
   cosViewLight,
-  viewRayIntersectsGround
+  intersectsGround
 ]) => {
   const {
     topRadius,
@@ -451,7 +467,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
     .toConst()
 
   const cosViewCoord = float(0).toVar()
-  If(viewRayIntersectsGround, () => {
+  If(intersectsGround, () => {
     // Distance to the ground for the ray (radius, cosView), and its minimum
     // and maximum values over all cosView - obtained for (radius, -1) and
     // (radius, cosHorizon).
@@ -518,7 +534,7 @@ export const getScattering = /*#__PURE__*/ FnVar(
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
     cosViewLight: Node<Dimensionless>,
-    viewRayIntersectsGround: Node<'bool'>
+    intersectsGround: Node<'bool'>
   ) =>
     (builder): Node<AbstractSpectrum> => {
       const context = getAtmosphereContextBase(builder)
@@ -530,7 +546,7 @@ export const getScattering = /*#__PURE__*/ FnVar(
         cosView,
         cosLight,
         cosViewLight,
-        viewRayIntersectsGround
+        intersectsGround
       ).toConst()
       const texCoordX = coord.x
         .mul(scatteringTextureCosViewLightSize.sub(1))
@@ -647,7 +663,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
     { name: 'cosLight', type: Dimensionless },
     { name: 'cosViewLight', type: Dimensionless },
     { name: 'rayLength', type: Length },
-    { name: 'viewRayIntersectsGround', type: 'bool' }
+    { name: 'intersectsGround', type: 'bool' }
   ]
 })(([
   parameters,
@@ -657,7 +673,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
   cosLight,
   cosViewLight,
   rayLength,
-  viewRayIntersectsGround
+  intersectsGround
 ]) => {
   const { bottomRadius, rayleighDensity, mieDensity } =
     makeDestructible(parameters)
@@ -679,7 +695,7 @@ const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
     radius,
     cosView,
     rayLength,
-    viewRayIntersectsGround
+    intersectsGround
   )
     .mul(getTransmittanceToSun(transmittanceTexture, radiusEnd, cosLightEnd))
     .toConst()
@@ -705,7 +721,7 @@ export const computeSingleScatteringToPoint = /*#__PURE__*/ FnLayout({
     { name: 'cosView', type: Dimensionless },
     { name: 'cosLight', type: Dimensionless },
     { name: 'cosViewLight', type: Dimensionless },
-    { name: 'viewRayIntersectsGround', type: 'bool' },
+    { name: 'intersectsGround', type: 'bool' },
     { name: 'distanceToPoint', type: Length },
     { name: 'sampleCount', type: 'int' }
   ]
@@ -716,7 +732,7 @@ export const computeSingleScatteringToPoint = /*#__PURE__*/ FnLayout({
   cosView,
   cosLight,
   cosViewLight,
-  viewRayIntersectsGround,
+  intersectsGround,
   distanceToPoint,
   sampleCount
 ]) => {
@@ -738,7 +754,7 @@ export const computeSingleScatteringToPoint = /*#__PURE__*/ FnLayout({
       cosLight,
       cosViewLight,
       rayLength,
-      viewRayIntersectsGround
+      intersectsGround
     ).toConst()
     const deltaRayleigh = deltaRayleighMie.get('rayleigh')
     const deltaMie = deltaRayleighMie.get('mie')
