@@ -59,11 +59,11 @@ const atmosphereParametersLayout = {
   luminanceScale: Dimensionless,
   transmittanceTextureSize: 'uvec2',
   irradianceTextureSize: 'uvec2',
+  multipleScatteringTextureSize: 'uvec2',
   scatteringTextureRadiusSize: 'uint',
   scatteringTextureCosViewSize: 'uint',
   scatteringTextureCosLightSize: 'uint',
-  scatteringTextureCosViewLightSize: 'uint',
-  highOrderScatteringTextureSize: 'uvec2'
+  scatteringTextureCosViewLightSize: 'uint'
 } satisfies Partial<Record<keyof AtmosphereParameters, unknown>>
 
 export const atmosphereParametersStruct = /*#__PURE__*/ struct(
@@ -154,11 +154,11 @@ export class AtmosphereContextBase {
       luminanceScale,
       transmittanceTextureSize,
       irradianceTextureSize,
+      multipleScatteringTextureSize,
       scatteringTextureRadiusSize,
       scatteringTextureCosViewSize,
       scatteringTextureCosLightSize,
-      scatteringTextureCosViewLightSize,
-      highOrderScatteringTextureSize
+      scatteringTextureCosViewLightSize
     } = parameters
 
     this.parametersNode = makeDestructible(
@@ -200,13 +200,13 @@ export class AtmosphereContextBase {
         luminanceScale: float(luminanceScale),
         transmittanceTextureSize: ivec2(transmittanceTextureSize),
         irradianceTextureSize: ivec2(irradianceTextureSize),
+        multipleScatteringTextureSize: uvec2(multipleScatteringTextureSize),
         scatteringTextureRadiusSize: uint(scatteringTextureRadiusSize),
         scatteringTextureCosViewSize: uint(scatteringTextureCosViewSize),
         scatteringTextureCosLightSize: uint(scatteringTextureCosLightSize),
         scatteringTextureCosViewLightSize: uint(
           scatteringTextureCosViewLightSize
-        ),
-        highOrderScatteringTextureSize: uvec2(highOrderScatteringTextureSize)
+        )
       }).toConst('atmosphereParameters')
     )
   }
