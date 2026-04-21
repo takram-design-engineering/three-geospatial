@@ -9,7 +9,7 @@ import {
 import { DEFAULT_STBN_URL } from '../constants'
 import { STBNLoader } from '../STBNLoader'
 
-const emptyTexture = /*#__PURE__*/ (() => {
+const emptyTexture3D = /*#__PURE__*/ (() => {
   const texture = new Data3DTexture(new Uint8Array(1))
   texture.format = RedFormat
   texture.needsUpdate = true
@@ -20,7 +20,7 @@ export class STBNTextureNode extends Texture3DNode {
   static DEFAULT_URL = DEFAULT_STBN_URL
 
   constructor() {
-    super(emptyTexture)
+    super(emptyTexture3D)
   }
 
   override setup(builder: NodeBuilder): unknown {

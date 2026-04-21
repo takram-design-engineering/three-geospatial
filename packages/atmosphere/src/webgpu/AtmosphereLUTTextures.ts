@@ -36,29 +36,15 @@ export abstract class AtmosphereLUTTextures {
     renderer: Renderer,
     context: AtmosphereLUTTexturesContext
   ): void
-  abstract computeDirectIrradiance(
-    renderer: Renderer,
-    context: AtmosphereLUTTexturesContext
-  ): void
-  abstract computeSingleScattering(
-    renderer: Renderer,
-    context: AtmosphereLUTTexturesContext
-  ): void
-  abstract computeScatteringDensity(
-    renderer: Renderer,
-    context: AtmosphereLUTTexturesContext,
-    scatteringOrder: number
-  ): void
-  abstract computeIndirectIrradiance(
-    renderer: Renderer,
-    context: AtmosphereLUTTexturesContext,
-    scatteringOrder: number
-  ): void
   abstract computeMultipleScattering(
     renderer: Renderer,
     context: AtmosphereLUTTexturesContext
   ): void
-  abstract computeHighOrderScattering(
+  abstract computeScattering(
+    renderer: Renderer,
+    context: AtmosphereLUTTexturesContext
+  ): void
+  abstract computeIrradiance(
     renderer: Renderer,
     context: AtmosphereLUTTexturesContext
   ): void
