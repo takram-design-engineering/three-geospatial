@@ -266,13 +266,10 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
   ) =>
     (builder): Node<DimensionlessSpectrum> => {
       const context = getAtmosphereContextBase(builder)
-      const { transmittanceTextureSize } = context.parametersNode
+      const { parametersNode } = context
+      const { transmittanceTextureSize } = parametersNode
 
-      const uv = getTransmittanceTextureUV(
-        context.parametersNode,
-        radius,
-        cosView
-      )
+      const uv = getTransmittanceTextureUV(parametersNode, radius, cosView)
 
       // Added for the precomputation stage in half-float precision. Manually
       // interpolate the transmittance instead of the optical depth.
@@ -303,9 +300,10 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
   ) =>
     (builder): Node<DimensionlessSpectrum> => {
       const context = getAtmosphereContextBase(builder)
+      const { parametersNode } = context
 
       const radiusEnd = clampRadius(
-        context.parametersNode,
+        parametersNode,
         sqrt(
           rayLength
             .pow2()
@@ -365,7 +363,8 @@ export const getTransmittanceToSun = /*#__PURE__*/ FnVar(
   ) =>
     (builder): Node<DimensionlessSpectrum> => {
       const context = getAtmosphereContextBase(builder)
-      const { sunAngularRadius, bottomRadius } = context.parametersNode
+      const { parametersNode } = context
+      const { sunAngularRadius, bottomRadius } = parametersNode
 
       const sinHorizon = bottomRadius.div(radius).toConst()
       const cosHorizon = sqrt(max(sinHorizon.pow2().oneMinus(), 0)).negate()
@@ -532,10 +531,11 @@ export const getScattering = /*#__PURE__*/ FnVar(
   ) =>
     (builder): Node<AbstractSpectrum> => {
       const context = getAtmosphereContextBase(builder)
-      const { scatteringTextureCosViewLightSize } = context.parametersNode
+      const { parametersNode } = context
+      const { scatteringTextureCosViewLightSize } = parametersNode
 
       const coord = getScatteringTextureCoord(
-        context.parametersNode,
+        parametersNode,
         radius,
         cosView,
         cosLight,
@@ -592,11 +592,8 @@ export const getIrradiance = /*#__PURE__*/ FnVar(
   ) =>
     (builder): Node<IrradianceSpectrum> => {
       const context = getAtmosphereContextBase(builder)
-      const uv = getIrradianceTextureUV(
-        context.parametersNode,
-        radius,
-        cosLight
-      )
+      const { parametersNode } = context
+      const uv = getIrradianceTextureUV(parametersNode, radius, cosLight)
       return irradianceNode.sample(uv).rgb
     }
 )

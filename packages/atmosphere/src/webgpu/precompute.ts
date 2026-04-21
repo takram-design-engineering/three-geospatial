@@ -235,16 +235,17 @@ export const computeTransmittanceTexture = /*#__PURE__*/ FnVar(
   (fragCoord: Node<'vec2'>) =>
     (builder): Node<DimensionlessSpectrum> => {
       const context = getAtmosphereContextBase(builder)
-      const { transmittanceTextureSize } = context.parametersNode
+      const { parametersNode } = context
+      const { transmittanceTextureSize } = parametersNode
 
       const transmittanceParams = getParamsFromTransmittanceTextureUV(
-        context.parametersNode,
+        parametersNode,
         fragCoord.div(transmittanceTextureSize)
       ).toConst()
       const radius = transmittanceParams.x
       const cosView = transmittanceParams.y
       return computeTransmittanceToTopAtmosphereBoundary(
-        context.parametersNode,
+        parametersNode,
         radius,
         cosView,
         bool(context.parameters.transmittancePrecisionLog)
@@ -340,19 +341,15 @@ export const computeIrradianceTexture = /*#__PURE__*/ FnVar(
   (scatteringNode: Texture3DNode, fragCoord: Node<'vec2'>) =>
     (builder): ReturnType<typeof computeIrradiance> => {
       const context = getAtmosphereContextBase(builder)
-      const { irradianceTextureSize } = context.parametersNode
+      const { parametersNode } = context
+      const { irradianceTextureSize } = parametersNode
 
       const irradianceParams = getParamsFromIrradianceTextureUV(
-        context.parametersNode,
+        parametersNode,
         fragCoord.div(irradianceTextureSize)
       ).toConst()
       const radius = irradianceParams.x
       const cosLight = irradianceParams.y
-      return computeIrradiance(
-        context.parametersNode,
-        scatteringNode,
-        radius,
-        cosLight
-      )
+      return computeIrradiance(parametersNode, scatteringNode, radius, cosLight)
     }
 )

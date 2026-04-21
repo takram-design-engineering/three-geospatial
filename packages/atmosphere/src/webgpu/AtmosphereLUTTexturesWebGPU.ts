@@ -51,7 +51,7 @@ import {
 import type { AtmosphereParameters } from './AtmosphereParameters'
 import {
   computeMultipleScatteringTexture,
-  computeSplitScatteringTexture,
+  computeScatteringTexture,
   getTextureUnitFromSubUV
 } from './multiscattering'
 import {
@@ -300,7 +300,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         Return()
       })
 
-      const result = computeSplitScatteringTexture(
+      const result = computeScatteringTexture(
         texture(this.transmittance),
         texture(this.multipleScattering),
         vec3(globalId).add(0.5)
