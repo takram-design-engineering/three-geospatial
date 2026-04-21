@@ -7,6 +7,7 @@ import {
   UpdateOnChangePlugin
 } from '3d-tiles-renderer/plugins'
 import { AgXToneMapping, PerspectiveCamera, Scene, Vector3 } from 'three'
+import { Inspector } from 'three/addons/inspector/Inspector.js'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { context, mrt, output, pass, toneMapping } from 'three/tsl'
 import {
@@ -44,16 +45,17 @@ const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 // Geospatial configurations:
-const date = new Date('2025-01-01T09:30:00Z')
-const longitude = -0.1293 // In degrees
-const latitude = 51.4836 // In degrees
+const date = new Date('2026-06-19T07:10:44+09:00')
+const longitude = 139.8146 // In degrees
+const latitude = 35.7455 // In degrees
 const height = 0 // In meters
-const heading = -94 // In degrees
-const pitch = -7 // In degrees
-const distance = 3231 // In meters
+const heading = -110 // In degrees
+const pitch = -9 // In degrees
+const distance = 1000 // In meters
 
 async function init(container: HTMLDivElement): Promise<() => void> {
   const renderer = new WebGPURenderer()
+  renderer.inspector = new Inspector()
   renderer.highPrecision = true // Required when you work in ECEF coordinates
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -157,9 +159,9 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const depthNode = passNode.getTextureNode('depth')
   const velocityNode = passNode.getTextureNode('velocity')
 
-  const aerialNode = aerialPerspective(colorNode, depthNode)
+  const aerialNode = aerialPerspective(colorNode.mul(2 / 3), depthNode)
   const lensFlareNode = lensFlare(aerialNode)
-  const toneMappingNode = toneMapping(AgXToneMapping, 5, lensFlareNode)
+  const toneMappingNode = toneMapping(AgXToneMapping, 10, lensFlareNode)
   const taaNode = temporalAntialias(
     toneMappingNode,
     depthNode,
