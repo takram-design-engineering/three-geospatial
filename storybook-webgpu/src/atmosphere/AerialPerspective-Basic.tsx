@@ -251,7 +251,7 @@ Story.args = {
   transmittance: true,
   inscatter: true,
   showGround: true,
-  raymarchScattering: false,
+  raymarchScattering: true,
   ...localDateArgs({
     dayOfYear: 0,
     timeOfDay: 9

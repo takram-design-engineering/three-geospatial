@@ -238,7 +238,7 @@ Story.args = {
   transmittance: true,
   inscatter: true,
   showGround: false,
-  raymarchScattering: false,
+  raymarchScattering: true,
   ...localDateArgs(),
   ...toneMappingArgs(),
   ...outputPassArgs(),

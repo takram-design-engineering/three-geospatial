@@ -440,7 +440,7 @@ Story.args = {
   transmittance: true,
   inscatter: true,
   showGround: true,
-  raymarchScattering: false,
+  raymarchScattering: true,
   shadowLength: true,
   displayShadowLength: false,
   debugShadowLength: false,
