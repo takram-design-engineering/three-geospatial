@@ -1,7 +1,9 @@
 import { Fn, frameId, nodeImmutable, screenCoordinate, vec3 } from 'three/tsl'
 import {
   Data3DTexture,
+  NearestFilter,
   RedFormat,
+  RepeatWrapping,
   Texture3DNode,
   type NodeBuilder
 } from 'three/webgpu'
@@ -12,6 +14,12 @@ import { STBNLoader } from '../STBNLoader'
 const emptyTexture3D = /*#__PURE__*/ (() => {
   const texture = new Data3DTexture(new Uint8Array(1))
   texture.format = RedFormat
+  // BUG: TextureNode doesn't update these when the texture is swapped.
+  texture.minFilter = NearestFilter
+  texture.magFilter = NearestFilter
+  texture.wrapS = RepeatWrapping
+  texture.wrapT = RepeatWrapping
+  texture.wrapR = RepeatWrapping
   texture.needsUpdate = true
   return texture
 })()
