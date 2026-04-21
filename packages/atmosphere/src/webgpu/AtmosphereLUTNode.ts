@@ -21,13 +21,18 @@ import {
   isFloatLinearSupported,
   type AnyFloatType
 } from '@takram/three-geospatial'
-import { outputTexture, outputTexture3D } from '@takram/three-geospatial/webgpu'
+import {
+  isWebGPU,
+  outputTexture,
+  outputTexture3D
+} from '@takram/three-geospatial/webgpu'
 
 import { requestIdleCallback } from '../helpers/requestIdleCallback'
 import type {
   AtmosphereLUTTextures,
   AtmosphereLUTTexturesContext
 } from './AtmosphereLUTTextures'
+import { AtmosphereLUTTexturesWebGL } from './AtmosphereLUTTexturesWebGL'
 import { AtmosphereLUTTexturesWebGPU } from './AtmosphereLUTTexturesWebGPU'
 import { AtmosphereParameters } from './AtmosphereParameters'
 
@@ -65,8 +70,8 @@ function run(renderer: Renderer, task: () => void): boolean {
 
 export type AtmosphereLUTTextureName =
   | 'transmittance'
-  | 'irradiance'
   | 'multipleScattering'
+  | 'irradiance'
 export type AtmosphereLUTTexture3DName =
   | 'scattering'
   | 'singleMieScattering'
@@ -95,11 +100,11 @@ export class AtmosphereLUTNode extends Node {
 
   private readonly textureNodes = {
     transmittance: outputTexture(this, emptyTexture),
-    irradiance: outputTexture(this, emptyTexture),
     multipleScattering: outputTexture(this, emptyTexture),
     scattering: outputTexture3D(this, emptyTexture3D),
     singleMieScattering: outputTexture3D(this, emptyTexture3D),
-    higherOrderScattering: outputTexture3D(this, emptyTexture3D)
+    higherOrderScattering: outputTexture3D(this, emptyTexture3D),
+    irradiance: outputTexture(this, emptyTexture)
   }
 
   private currentVersion?: number
@@ -186,8 +191,9 @@ export class AtmosphereLUTNode extends Node {
   override setup(builder: NodeBuilder): unknown {
     if (this.textures == null) {
       // Lazily initialize the texture generator depending of the renderer:
-      // TODO: Support WebGL
-      this.textures = new AtmosphereLUTTexturesWebGPU()
+      this.textures = isWebGPU(builder)
+        ? new AtmosphereLUTTexturesWebGPU()
+        : new AtmosphereLUTTexturesWebGL()
 
       // Swap the contents of the texture nodes. The WebGPU one has storage
       // textures and WebGL one has render target textures, which we cannot
