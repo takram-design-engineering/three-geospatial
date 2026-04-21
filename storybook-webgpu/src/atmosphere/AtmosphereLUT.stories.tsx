@@ -36,26 +36,9 @@ export const Transmittance = createStory(Story2D, {
   }
 })
 
-export const Irradiance = createStory(Story2D, {
+export const MultipleScattering = createStory(Story2D, {
   props: {
-    name: 'irradiance'
-  },
-  args: {
-    zoom: 16,
-    toneMappingExposure: 100
-  },
-  parameters: {
-    docs: {
-      source: {
-        code: Code2D
-      }
-    }
-  }
-})
-
-export const HighOrderScattering = createStory(Story2D, {
-  props: {
-    name: 'highOrderScattering'
+    name: 'multipleScattering'
   },
   args: {
     zoom: 16,
@@ -100,6 +83,41 @@ export const SingleMieScattering = createStory(Story3D, {
     docs: {
       source: {
         code: Code3D
+      }
+    }
+  }
+})
+
+export const HigherOrderScattering = createStory(Story3D, {
+  props: {
+    name: 'higherOrderScattering',
+    higherOrderScattering: false
+  },
+  args: {
+    zoom: 2,
+    toneMappingExposure: 0.5
+  },
+  parameters: {
+    docs: {
+      source: {
+        code: Code3D
+      }
+    }
+  }
+})
+
+export const Irradiance = createStory(Story2D, {
+  props: {
+    name: 'irradiance'
+  },
+  args: {
+    zoom: 16,
+    toneMappingExposure: 100
+  },
+  parameters: {
+    docs: {
+      source: {
+        code: Code2D
       }
     }
   }
