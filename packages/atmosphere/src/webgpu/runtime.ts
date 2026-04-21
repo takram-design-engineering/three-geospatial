@@ -57,7 +57,6 @@
  */
 
 import {
-  add,
   bool,
   If,
   mix,
@@ -247,14 +246,10 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         singleMieScattering.assign(singleMieScattering.mul(shadowTransmittance))
       })
 
+      const rayleighPhase = rayleighPhaseFunction(cosViewLight)
+      const miePhase = miePhaseFunction(miePhaseFunctionG, cosViewLight)
       radiance.assign(
-        scattering
-          .mul(rayleighPhaseFunction(cosViewLight))
-          .add(
-            singleMieScattering.mul(
-              miePhaseFunction(miePhaseFunctionG, cosViewLight)
-            )
-          )
+        scattering.mul(rayleighPhase).add(singleMieScattering.mul(miePhase))
       )
     })
 
@@ -386,13 +381,10 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       singleMieScattering.mul(smoothstep(0, 0.01, cosLight))
     )
 
+    const rayleighPhase = rayleighPhaseFunction(cosViewLight)
+    const miePhase = miePhaseFunction(miePhaseFunctionG, cosViewLight)
     scattering.assign(
-      add(
-        scattering.mul(rayleighPhaseFunction(cosViewLight)),
-        singleMieScattering.mul(
-          miePhaseFunction(miePhaseFunctionG, cosViewLight)
-        )
-      )
+      scattering.mul(rayleighPhase).add(singleMieScattering.mul(miePhase))
     )
     return radianceTransferStruct(scattering, transmittance)
   }
