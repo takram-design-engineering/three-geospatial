@@ -179,9 +179,9 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
   }
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this
-  private createMaterial(params: { fragmentNode: Node }): NodeMaterial {
+  private createMaterial(fragmentNode: Node): NodeMaterial {
     const material = new NodeMaterial()
-    material.fragmentNode = params.fragmentNode
+    material.fragmentNode = fragmentNode
     material.needsUpdate = true
     return material
   }
@@ -190,14 +190,14 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     renderer: Renderer,
     context: AtmosphereLUTTexturesContextWebGL
   ): void {
-    this.transmittanceMaterial ??= this.createMaterial({
+    this.transmittanceMaterial ??= this.createMaterial(
       // BUG: Context is not merged unless we wrap the node by OutputStructNode.
-      fragmentNode: mrt({
+      mrt({
         transmittance: computeTransmittanceTexture(screenCoordinate).context({
           getAtmosphere: () => context
         })
       })
-    })
+    )
     this.mesh.material = this.transmittanceMaterial
 
     this.renderToRenderTarget(renderer, this.transmittanceRT)
@@ -229,79 +229,83 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
       return vec3(cosTheta.mul(sinPhi), sinTheta.mul(sinPhi), cosPhi)
     })
 
-    this.multipleScatteringMaterial ??= this.createMaterial({
-      fragmentNode: (() => {
-        const multipleScattering = Fn(() => {
-          const size = vec2(parameters.multipleScatteringTextureSize)
-          const uv = getTextureUnitFromSubUV(
-            screenCoordinate.div(size),
-            size
-          ).toConst()
+    const getMultipleScattering = Fn(() => {
+      const size = vec2(parameters.multipleScatteringTextureSize)
+      const uv = getTextureUnitFromSubUV(
+        screenCoordinate.div(size),
+        size
+      ).toConst()
 
-          // Construct the parameters of the high-order scattering LUT. They are
-          // the cosine of light and zenith [-1, 1], and the view altitude
-          // [bottomRadius, topRadius].
-          const { topRadius, bottomRadius } = parametersNode
-          const cosLightZenith = uv.x.mul(2).sub(1).toConst()
-          const lightDirection = vec3(
-            0,
-            sqrt(cosLightZenith.pow2().oneMinus().saturate()),
-            cosLightZenith
-          ).toConst()
-          const radius = bottomRadius
-            .add(uv.y.saturate().mul(topRadius.sub(bottomRadius)))
-            .toConst()
+      // Construct the parameters of the high-order scattering LUT. They are
+      // the cosine of light and zenith [-1, 1], and the view altitude
+      // [bottomRadius, topRadius].
+      const { topRadius, bottomRadius } = parametersNode
+      const cosLightZenith = uv.x.mul(2).sub(1).toConst()
+      const lightDirection = vec3(
+        0,
+        sqrt(cosLightZenith.pow2().oneMinus().saturate()),
+        cosLightZenith
+      ).toConst()
+      const radiusOffset = 0
+      const radius = bottomRadius
+        .add(
+          uv.y
+            .add(radiusOffset)
+            .saturate()
+            .mul(topRadius.sub(bottomRadius).sub(radiusOffset))
+        )
+        .toConst()
 
-          const totalMultipleScattering = vec3(0).toVar()
-          const totalTransferFactor = vec3(0).toVar()
+      const totalMultipleScattering = vec3(0).toVar()
+      const totalTransferFactor = vec3(0).toVar()
 
-          Loop({ start: 0, end: sampleCount }, ({ i: index }) => {
-            const rayDirection = getRayDirection(index)
-            const cosView = rayDirection.z
-            const cosViewLight = rayDirection.dot(lightDirection).toConst()
+      Loop({ start: 0, end: sampleCount }, ({ i: index }) => {
+        const rayDirection = getRayDirection(index).toConst()
+        const cosView = rayDirection.z // rayOrigin is (0, 0, radius)
+        const cosViewLight = rayDirection.dot(lightDirection).toConst()
 
-            // Integrate the second-order scattering. This outputs the integrated
-            // radiance here (as opposed to luminance) as well as the "transfer
-            // factor", which acts as a transfer function on the irradiance of a
-            // directional light at a given point.
-            const result = computeMultipleScatteringTexture(
-              parametersNode,
-              texture(this.transmittanceRT.texture),
-              texture(this.irradianceRT.texture),
-              radius,
-              cosView,
-              cosLightZenith,
-              cosViewLight
-            )
-              .context({ getAtmosphere: () => context })
-              .toConst()
+        // Integrate the second-order scattering. This outputs the integrated
+        // radiance here (as opposed to luminance) as well as the "transfer
+        // factor", which acts as a transfer function on the irradiance of a
+        // directional light at a given point.
+        const result = computeMultipleScatteringTexture(
+          parametersNode,
+          texture(this.transmittanceRT.texture),
+          texture(this.irradianceRT.texture),
+          radius,
+          cosView,
+          cosLightZenith,
+          cosViewLight
+        )
+          .context({ getAtmosphere: () => context })
+          .toConst()
 
-            // Sum all second-order scattering integrated along the ray directions
-            // with respect to the LUT parameters.
-            totalMultipleScattering.addAssign(
-              result.get('multipleScattering').div(sampleCount)
-            )
-            totalTransferFactor.addAssign(
-              result.get('transferFactor').div(sampleCount)
-            )
-          })
+        // Sum all second-order scattering integrated along the ray directions
+        // with respect to the LUT parameters.
+        totalMultipleScattering.addAssign(
+          result.get('multipleScattering').div(sampleCount)
+        )
+        totalTransferFactor.addAssign(
+          result.get('transferFactor').div(sampleCount)
+        )
+      })
 
-          // This represents the amount of radiance scattered as if the integral
-          // of scattered radiance over the sphere would be 1.
-          // For a power-series, such integral is analytically:
-          // sum_{n=0}^{n=+inf} = 1 + r + r^2 + r^3 + ... + r^n = 1 / (1 - r)
-          return totalMultipleScattering.mul(
-            totalTransferFactor.oneMinus().reciprocal()
-          )
-        })()
-
-        // BUG: Context is not merged unless we wrap the node by
-        // OutputStructNode.
-        return mrt({
-          multipleScattering: vec4(multipleScattering, 1)
-        })
-      })()
+      // This represents the amount of radiance scattered as if the integral
+      // of scattered radiance over the sphere would be 1.
+      // For a power-series, such integral is analytically:
+      // sum_{n=0}^{n=+inf} = 1 + r + r^2 + r^3 + ... + r^n = 1 / (1 - r)
+      return totalMultipleScattering.mul(
+        totalTransferFactor.oneMinus().reciprocal()
+      )
     })
+
+    this.multipleScatteringMaterial ??= this.createMaterial(
+      // BUG: Context is not merged unless we wrap the node by
+      // OutputStructNode.
+      mrt({
+        multipleScattering: vec4(getMultipleScattering(), 1)
+      })
+    )
     this.mesh.material = this.multipleScatteringMaterial
 
     this.renderToRenderTarget(renderer, this.multipleScatteringRT)
@@ -313,8 +317,8 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
   ): void {
     const { parameters } = context
 
-    this.scatteringMaterial ??= this.createMaterial({
-      fragmentNode: (() => {
+    this.scatteringMaterial ??= this.createMaterial(
+      (() => {
         const result = computeScatteringTexture(
           texture(this.transmittanceRT.texture),
           texture(this.multipleScatteringRT.texture),
@@ -339,7 +343,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         }
         return mrt(outputNodes)
       })()
-    })
+    )
     this.mesh.material = this.scatteringMaterial
 
     const textures: Texture[] = []
@@ -361,15 +365,15 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     renderer: Renderer,
     context: AtmosphereLUTTexturesContextWebGL
   ): void {
-    this.irradianceMaterial ??= this.createMaterial({
+    this.irradianceMaterial ??= this.createMaterial(
       // BUG: Context is not merged unless we wrap the node by OutputStructNode.
-      fragmentNode: mrt({
+      mrt({
         irradiance: computeIrradianceTexture(
           texture3D(this.scatteringRT.texture),
           screenCoordinate
         ).context({ getAtmosphere: () => context })
       })
-    })
+    )
     this.mesh.material = this.irradianceMaterial
 
     this.renderToRenderTarget(renderer, this.irradianceRT)

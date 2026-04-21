@@ -226,7 +226,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         .toConst()
 
       const rayDirection = getRayDirection(index).toConst()
-      const cosView = rayDirection.z // // rayOrigin is (0, 0, radius)
+      const cosView = rayDirection.z // rayOrigin is (0, 0, radius)
       const cosViewLight = rayDirection.dot(lightDirection).toConst()
 
       // Integrate the second-order scattering. This outputs the integrated
