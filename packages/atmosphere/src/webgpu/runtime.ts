@@ -57,12 +57,11 @@
  */
 
 import {
+  add,
   bool,
   If,
-  max,
   mix,
   mul,
-  not,
   PI,
   PI2,
   smoothstep,
@@ -281,33 +280,15 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
     const singleMieScatteringNode = lutNode.getTextureNode(
       'singleMieScattering'
     )
-    const {
-      bottomRadius,
-      rayleighScattering,
-      mieScattering,
-      miePhaseFunctionG
-    } = parametersNode
+    const { rayleighScattering, mieScattering, miePhaseFunctionG } =
+      parametersNode
 
     // Compute the scattering parameters for the first texture lookup.
-    cosView = cosView.toVar()
-    distanceToPoint = distanceToPoint.toVar()
     const intersectsGround = rayIntersectsGround(
       parametersNode,
       radius,
       cosView
     ).toConst()
-
-    // Hack to avoid rendering artifacts near the horizon, due to finite
-    // atmosphere texture resolution and finite floating point precision.
-    If(not(intersectsGround), () => {
-      const cosHorizon = sqrtSafe(
-        bottomRadius.pow2().div(radius.pow2()).oneMinus()
-      )
-        .negate()
-        .toConst()
-      const eps = 0.004
-      cosView.assign(max(cosView, cosHorizon.add(eps)))
-    })
 
     const transmittance = getTransmittance(
       transmittanceNode,
@@ -315,7 +296,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       cosView,
       distanceToPoint,
       intersectsGround
-    ).toVar()
+    ).toConst()
 
     const combinedScattering = getCombinedScattering(
       parametersNode,
@@ -327,6 +308,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       cosViewLight,
       intersectsGround
     ).toConst()
+
     const scattering = combinedScattering.get('scattering').toVar()
     const singleMieScattering = combinedScattering
       .get('singleMieScattering')
@@ -336,24 +318,27 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
     // If shadowLength is not 0 (case of light shafts), we want to ignore the
     // scattering along the last shadowLength meters of the view ray, which we
     // do by subtracting shadowLength from distanceToPoint.
-    distanceToPoint.assign(distanceToPoint.sub(shadowLength).max(0))
+    const litDistanceToPoint = distanceToPoint
+      .sub(shadowLength)
+      .max(0)
+      .toConst()
     const radiusP = clampRadius(
       parametersNode,
       sqrt(
-        distanceToPoint
+        litDistanceToPoint
           .pow2()
-          .add(mul(2, radius, cosView, distanceToPoint))
+          .add(mul(2, radius, cosView, litDistanceToPoint))
           .add(radius.pow2())
       )
     ).toConst()
     const cosViewP = radius
       .mul(cosView)
-      .add(distanceToPoint)
+      .add(litDistanceToPoint)
       .div(radiusP)
       .toConst()
     const cosLightP = radius
       .mul(cosLight)
-      .add(distanceToPoint.mul(cosViewLight))
+      .add(litDistanceToPoint.mul(cosViewLight))
       .div(radiusP)
       .toConst()
     const combinedScatteringP = getCombinedScattering(
@@ -377,7 +362,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
           transmittanceNode,
           radius,
           cosView,
-          distanceToPoint,
+          litDistanceToPoint,
           intersectsGround
         )
       )
@@ -403,16 +388,13 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       singleMieScattering.mul(smoothstep(0, 0.01, cosLight))
     )
 
-    // Finally combine the multiple Rayleigh scattering and the single Mie
-    // scattering, applying their phase functions.
     scattering.assign(
-      scattering
-        .mul(rayleighPhaseFunction(cosViewLight))
-        .add(
-          singleMieScattering.mul(
-            miePhaseFunction(miePhaseFunctionG, cosViewLight)
-          )
+      add(
+        scattering.mul(rayleighPhaseFunction(cosViewLight)),
+        singleMieScattering.mul(
+          miePhaseFunction(miePhaseFunctionG, cosViewLight)
         )
+      )
     )
     return radianceTransferStruct(scattering, transmittance)
   }
