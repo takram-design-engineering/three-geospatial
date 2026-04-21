@@ -57,6 +57,7 @@ import {
   clampRadius,
   distanceToNearestAtmosphereBoundary,
   getIrradiance,
+  getParamsFromScatteringTextureFragCoord,
   getProfileDensity,
   getTransmittanceToSun,
   miePhaseFunction,
@@ -77,7 +78,6 @@ import {
   type Position,
   type TransmittanceTexture
 } from './dimensional'
-import { getParamsFromScatteringTextureFragCoord } from './precompute'
 
 export const getSubUVFromTextureUnit = /*#__PURE__*/ FnLayout({
   name: 'getSubUVFromTextureUnit',

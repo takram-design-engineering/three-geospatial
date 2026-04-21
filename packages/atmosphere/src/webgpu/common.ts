@@ -57,6 +57,7 @@
  */
 
 import {
+  add,
   bool,
   clamp,
   div,
@@ -90,10 +91,11 @@ import {
   Area,
   Dimensionless,
   InverseSolidAngle,
+  IrradianceSpectrum,
   Length,
+  ReducedScatteringTexture,
   type AbstractSpectrum,
   type DimensionlessSpectrum,
-  type IrradianceSpectrum,
   type IrradianceTexture,
   type ScatteringTexture,
   type TransmittanceTexture
@@ -695,7 +697,7 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   const radius = sqrt(distanceToHorizon.pow2().add(bottomRadius.pow2()))
 
   const cosView = float(0).toVar()
-  const intersectsGround = bool(false).toVar()
+  const intersectsGround = bool().toVar()
   If(coord.z.lessThan(0.5), () => {
     // Distance to the ground for the ray (radius, cosView), and its minimum
     // and maximum values over all cosView - obtained for (radius, -1) and
@@ -857,4 +859,128 @@ export const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
     cosViewLight,
     intersectsGround
   )
+})
+
+export const getExtrapolatedSingleMieScattering = /*#__PURE__*/ FnLayout({
+  name: 'getExtrapolatedSingleMieScattering',
+  type: IrradianceSpectrum,
+  inputs: [
+    { name: 'scattering', type: 'vec4' },
+    { name: 'rayleighScattering', type: 'vec3' },
+    { name: 'mieScattering', type: 'vec3' }
+  ]
+})(([scattering, rayleighScattering, mieScattering]) => {
+  // Algebraically this can never be negative, but rounding errors can produce
+  // that effect for sufficiently short view rays.
+  const singleMieScattering = vec3(0).toVar()
+  // Avoid division by infinitesimal values.
+  If(scattering.r.greaterThanEqual(1e-5), () => {
+    singleMieScattering.assign(
+      scattering.rgb
+        .mul(scattering.a)
+        .div(scattering.r)
+        .mul(rayleighScattering.r.div(mieScattering.r))
+        .mul(mieScattering.div(rayleighScattering))
+    )
+  })
+  return singleMieScattering
+})
+
+export const combinedScatteringStruct = /*#__PURE__*/ struct(
+  {
+    scattering: IrradianceSpectrum,
+    singleMieScattering: IrradianceSpectrum
+  },
+  'CombinedScattering'
+)
+
+export const getCombinedScattering = /*#__PURE__*/ FnLayout({
+  // TODO: Fn layout doesn't support texture type
+  typeOnly: true,
+  name: 'getCombinedScattering',
+  type: combinedScatteringStruct,
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'scatteringTexture', type: ReducedScatteringTexture },
+    { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
+    { name: 'radius', type: Length },
+    { name: 'cosView', type: Dimensionless },
+    { name: 'cosLight', type: Dimensionless },
+    { name: 'cosViewLight', type: Dimensionless },
+    { name: 'intersectsGround', type: 'bool' }
+  ]
+})((
+  [
+    parameters,
+    scatteringTexture,
+    singleMieScatteringTexture,
+    radius,
+    cosView,
+    cosLight,
+    cosViewLight,
+    intersectsGround
+  ],
+  builder
+) => {
+  const context = getAtmosphereContextBase(builder)
+  const {
+    rayleighScattering,
+    mieScattering,
+    scatteringTextureCosViewLightSize
+  } = makeDestructible(parameters)
+
+  const coord = getScatteringTextureCoord(
+    context.parametersNode,
+    radius,
+    cosView,
+    cosLight,
+    cosViewLight,
+    intersectsGround
+  ).toConst()
+  const texCoordX = coord.x
+    .mul(scatteringTextureCosViewLightSize.sub(1))
+    .toConst()
+  const texX = floor(texCoordX).toConst()
+  const lerp = texCoordX.sub(texX).toConst()
+  const coord0 = vec3(
+    texX.add(coord.y).div(scatteringTextureCosViewLightSize),
+    coord.z,
+    coord.w
+  ).toConst()
+  const coord1 = vec3(
+    texX.add(1).add(coord.y).div(scatteringTextureCosViewLightSize),
+    coord.z,
+    coord.w
+  ).toConst()
+
+  const scattering = vec3(0).toVar()
+  const singleMieScattering = vec3(0).toVar()
+  if (context.parameters.combinedScatteringTextures) {
+    const combinedScattering = add(
+      scatteringTexture.sample(coord0).mul(lerp.oneMinus()),
+      scatteringTexture.sample(coord1).mul(lerp)
+    ).toConst()
+    scattering.assign(combinedScattering.rgb)
+    singleMieScattering.assign(
+      getExtrapolatedSingleMieScattering(
+        combinedScattering,
+        rayleighScattering,
+        mieScattering
+      )
+    )
+  } else {
+    scattering.assign(
+      add(
+        scatteringTexture.sample(coord0).mul(lerp.oneMinus()),
+        scatteringTexture.sample(coord1).mul(lerp)
+      ).rgb
+    )
+    singleMieScattering.assign(
+      add(
+        singleMieScatteringTexture.sample(coord0).mul(lerp.oneMinus()),
+        singleMieScatteringTexture.sample(coord1).mul(lerp)
+      ).rgb
+    )
+  }
+  return combinedScatteringStruct(scattering, singleMieScattering)
 })

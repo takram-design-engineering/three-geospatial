@@ -66,7 +66,6 @@ import {
   mul,
   sin,
   sqrt,
-  struct,
   vec2,
   vec3
 } from 'three/tsl'
@@ -82,16 +81,18 @@ import {
 import {
   clampCosine,
   distanceToTopAtmosphereBoundary,
+  getCombinedScattering,
   getProfileDensity,
-  getUnitRangeFromTextureCoord
+  getUnitRangeFromTextureCoord,
+  miePhaseFunction,
+  rayleighPhaseFunction
 } from './common'
 import {
   Dimensionless,
   DimensionlessSpectrum,
-  IrradianceSpectrum,
   Length,
-  ReducedScatteringTexture,
-  ScatteringTexture
+  type IrradianceSpectrum,
+  type ScatteringTexture
 } from './dimensional'
 
 const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
@@ -152,31 +153,28 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     absorptionExtinction
   } = makeDestructible(parameters)
 
+  const rayleighOpticalDepth = computeOpticalDepthToTopAtmosphereBoundary(
+    parameters,
+    rayleighDensity,
+    radius,
+    cosView
+  )
+  const mieOpticalDepth = computeOpticalDepthToTopAtmosphereBoundary(
+    parameters,
+    mieDensity,
+    radius,
+    cosView
+  )
+  const absorptionOpticalDepth = computeOpticalDepthToTopAtmosphereBoundary(
+    parameters,
+    absorptionDensity,
+    radius,
+    cosView
+  )
   const opticalDepth = add(
-    rayleighScattering.mul(
-      computeOpticalDepthToTopAtmosphereBoundary(
-        parameters,
-        rayleighDensity,
-        radius,
-        cosView
-      )
-    ),
-    mieExtinction.mul(
-      computeOpticalDepthToTopAtmosphereBoundary(
-        parameters,
-        mieDensity,
-        radius,
-        cosView
-      )
-    ),
-    absorptionExtinction.mul(
-      computeOpticalDepthToTopAtmosphereBoundary(
-        parameters,
-        absorptionDensity,
-        radius,
-        cosView
-      )
-    )
+    rayleighScattering.mul(rayleighOpticalDepth),
+    mieExtinction.mul(mieOpticalDepth),
+    absorptionExtinction.mul(absorptionOpticalDepth)
   ).toConst()
 
   return transmittancePrecisionLog.select(
@@ -185,20 +183,12 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
   )
 })
 
-const transmittanceParamsStruct = /*#__PURE__*/ struct(
-  {
-    radius: Length,
-    cosView: Dimensionless
-  },
-  'TransmittanceParams'
-)
-
 const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   // BUG: Cannot access vector component inside struct in layout function
   // https://github.com/mrdoob/three.js/issues/33345
   typeOnly: true,
   name: 'getParamsFromTransmittanceTextureUV',
-  type: transmittanceParamsStruct,
+  type: 'vec2',
   inputs: [
     { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'uv', type: 'vec2' }
@@ -238,100 +228,88 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
       .sub(distance.pow2())
       .div(mul(2, radius, distance))
   )
-  return transmittanceParamsStruct(radius, cosView)
+  return vec2(radius, cosView)
 })
 
-export const computeTransmittanceToTopAtmosphereBoundaryTexture =
-  /*#__PURE__*/ FnVar(
-    (fragCoord: Node<'vec2'>) =>
-      (builder): Node<DimensionlessSpectrum> => {
-        const context = getAtmosphereContextBase(builder)
-        const { transmittanceTextureSize } = context.parametersNode
+export const computeTransmittanceTexture = /*#__PURE__*/ FnVar(
+  (fragCoord: Node<'vec2'>) =>
+    (builder): Node<DimensionlessSpectrum> => {
+      const context = getAtmosphereContextBase(builder)
+      const { transmittanceTextureSize } = context.parametersNode
 
-        const transmittanceParams = getParamsFromTransmittanceTextureUV(
-          context.parametersNode,
-          fragCoord.div(transmittanceTextureSize)
-        ).toConst()
-        return computeTransmittanceToTopAtmosphereBoundary(
-          context.parametersNode,
-          transmittanceParams.get('radius'),
-          transmittanceParams.get('cosView'),
-          bool(context.parameters.transmittancePrecisionLog)
-        )
-      }
-  )
-
-const computeIndirectIrradiance = /*#__PURE__*/ FnLayout({
-  // TODO: Fn layout doesn't support texture type
-  typeOnly: true,
-  name: 'computeIndirectIrradiance',
-  type: IrradianceSpectrum,
-  inputs: [
-    { name: 'parameters', type: atmosphereParametersStruct },
-    { name: 'singleRayleighScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
-    { name: 'multipleScatteringTexture', type: ScatteringTexture },
-    { name: 'radius', type: Length },
-    { name: 'cosLight', type: Dimensionless },
-    { name: 'scatteringOrder', type: 'int' }
-  ]
-})(([
-  parameters,
-  singleRayleighScatteringTexture,
-  singleMieScatteringTexture,
-  multipleScatteringTexture,
-  radius,
-  cosLight,
-  scatteringOrder
-]) => {
-  const sampleCount = 32
-  const deltaPhi = Math.PI / sampleCount
-  const deltaTheta = Math.PI / sampleCount
-
-  const result = vec3(0).toVar()
-  const omegaSun = vec3(sqrt(cosLight.pow2().oneMinus()), 0, cosLight).toConst()
-
-  // @ts-expect-error Missing type on custom name
-  Loop({ start: 0, end: sampleCount / 2, name: 'j' }, ({ j }) => {
-    const theta = float(j).add(0.5).mul(deltaTheta).toConst()
-
-    Loop({ start: 0, end: sampleCount * 2 }, ({ i }) => {
-      const phi = float(i).add(0.5).mul(deltaPhi).toConst()
-      const omega = vec3(
-        cos(phi).mul(sin(theta)),
-        sin(phi).mul(sin(theta)),
-        cos(theta)
+      const transmittanceParams = getParamsFromTransmittanceTextureUV(
+        context.parametersNode,
+        fragCoord.div(transmittanceTextureSize)
       ).toConst()
-      const deltaOmega = sin(theta).mul(deltaTheta * deltaPhi)
-      const cosViewLight = omega.dot(omegaSun)
-      result.addAssign(
-        getScatteringForOrder(
+      const radius = transmittanceParams.x
+      const cosView = transmittanceParams.y
+      return computeTransmittanceToTopAtmosphereBoundary(
+        context.parametersNode,
+        radius,
+        cosView,
+        bool(context.parameters.transmittancePrecisionLog)
+      )
+    }
+)
+
+const computeIrradiance = /*#__PURE__*/ FnVar(
+  (
+    parameters: ReturnType<typeof atmosphereParametersStruct>,
+    scatteringTexture: ScatteringTexture,
+    radius: Node<Length>,
+    cosLight: Node<Dimensionless>
+  ): Node<IrradianceSpectrum> => {
+    const { miePhaseFunctionG } = makeDestructible(parameters)
+
+    const sampleCount = 32
+    const deltaPhi = Math.PI / sampleCount
+    const deltaTheta = Math.PI / sampleCount
+
+    const result = vec3(0).toVar()
+    const omegaLight = vec3(
+      sqrt(cosLight.pow2().oneMinus()),
+      0,
+      cosLight
+    ).toConst()
+
+    // @ts-expect-error Missing type on custom name
+    Loop({ start: 0, end: sampleCount / 2, name: 'j' }, ({ j }) => {
+      const theta = float(j).add(0.5).mul(deltaTheta).toConst()
+
+      Loop({ start: 0, end: sampleCount * 2 }, ({ i }) => {
+        const phi = float(i).add(0.5).mul(deltaPhi).toConst()
+
+        const omega = vec3(
+          cos(phi).mul(sin(theta)),
+          sin(phi).mul(sin(theta)),
+          cos(theta)
+        ).toConst()
+        const deltaOmega = sin(theta).mul(deltaTheta * deltaPhi)
+        const cosViewLight = omega.dot(omegaLight)
+
+        const scattering = getCombinedScattering(
           parameters,
-          singleRayleighScatteringTexture,
-          singleMieScatteringTexture,
-          multipleScatteringTexture,
+          scatteringTexture,
+          scatteringTexture,
           radius,
           omega.z,
           cosLight,
           cosViewLight,
-          bool(false),
-          scatteringOrder
+          bool(false)
         )
-          .mul(omega.z)
-          .mul(deltaOmega)
-      )
+        const rayleigh = scattering.get('scattering')
+        const mie = scattering.get('singleMieScattering')
+        result.addAssign(
+          add(
+            rayleigh.mul(rayleighPhaseFunction(cosViewLight)),
+            mie.mul(miePhaseFunction(miePhaseFunctionG, cosViewLight))
+          ).mul(omega.z, deltaOmega)
+        )
+      })
     })
-  })
 
-  return result
-})
-
-const irradianceParamsStruct = /*#__PURE__*/ struct(
-  {
-    radius: Length,
-    cosLight: Dimensionless
-  },
-  'IrradianceParams'
+    return result
+  }
 )
 
 const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
@@ -339,7 +317,7 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
   // https://github.com/mrdoob/three.js/issues/33345
   typeOnly: true,
   name: 'getParamsFromIrradianceTextureUV',
-  type: irradianceParamsStruct,
+  type: 'vec2',
   inputs: [
     { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'uv', type: 'vec2' }
@@ -355,18 +333,12 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
   const radiusUnit = getUnitRangeFromTextureCoord(uv.y, irradianceTextureSize.y)
   const radius = bottomRadius.add(radiusUnit.mul(topRadius.sub(bottomRadius)))
   const cosLight = clampCosine(cosLightUnit.mul(2).sub(1))
-  return irradianceParamsStruct(radius, cosLight)
+  return vec2(radius, cosLight)
 })
 
-export const computeIndirectIrradianceTexture = /*#__PURE__*/ FnVar(
-  (
-    singleRayleighScatteringTexture: ReducedScatteringTexture,
-    singleMieScatteringTexture: ReducedScatteringTexture,
-    multipleScatteringTexture: ScatteringTexture,
-    fragCoord: Node<'vec2'>,
-    scatteringOrder: Node<'int'>
-  ) =>
-    builder => {
+export const computeIrradianceTexture = /*#__PURE__*/ FnVar(
+  (scatteringTexture: ScatteringTexture, fragCoord: Node<'vec2'>) =>
+    (builder): ReturnType<typeof computeIrradiance> => {
       const context = getAtmosphereContextBase(builder)
       const { irradianceTextureSize } = context.parametersNode
 
@@ -374,16 +346,13 @@ export const computeIndirectIrradianceTexture = /*#__PURE__*/ FnVar(
         context.parametersNode,
         fragCoord.div(irradianceTextureSize)
       ).toConst()
-      const radius = irradianceParams.get('radius')
-      const cosLight = irradianceParams.get('cosLight')
-      return computeIndirectIrradiance(
+      const radius = irradianceParams.x
+      const cosLight = irradianceParams.y
+      return computeIrradiance(
         context.parametersNode,
-        singleRayleighScatteringTexture,
-        singleMieScatteringTexture,
-        multipleScatteringTexture,
+        scatteringTexture,
         radius,
-        cosLight,
-        scatteringOrder
+        cosLight
       )
     }
 )
