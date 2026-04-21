@@ -14,13 +14,17 @@ import WorldOriginRebasingCode from './Vanilla-WorldOriginRebasing?raw'
 export default {
   title: 'atmosphere/Vanilla Three.js',
   parameters: {
+    controls: {
+      disable: true
+    },
     docs: {
       codePanel: true,
       source: {
         language: 'tsx'
       }
     }
-  }
+  },
+  tags: ['vanilla']
 } satisfies Meta
 
 export const AtmosphereLight = createStory(AtmosphereLightStory, {
