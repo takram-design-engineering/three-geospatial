@@ -493,6 +493,7 @@ export const computeIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
 
     const miePhase = miePhaseFunction(miePhaseFunctionG, cosViewLight).toConst()
     const rayleighPhase = rayleighPhaseFunction(cosViewLight).toConst()
+    const litDistance = maxDistance.sub(shadowLength).toConst()
 
     const totalRadiance = vec3(0).toVar()
     const totalTransmittance = vec3(1).toVar()
@@ -549,7 +550,7 @@ export const computeIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
         .mul(mediumScattering)
         .toConst()
 
-      const shadow = step(shadowLength, rayLength)
+      const shadow = step(rayLength, litDistance)
 
       const singleScattering = add(
         rayleighScattering.mul(rayleighPhase),
