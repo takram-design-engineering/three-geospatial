@@ -57,6 +57,7 @@
  */
 
 import {
+  bool,
   clamp,
   div,
   exp,
@@ -773,4 +774,221 @@ export const computeSingleScatteringToPoint = /*#__PURE__*/ FnLayout({
   )
   const mie = mul(mieSum, stepSize, solarIrradiance, mieScattering)
   return singleScatteringStruct(rayleigh, mie)
+})
+
+export const getUnitRangeFromTextureCoord = /*#__PURE__*/ FnLayout({
+  name: 'getUnitRangeFromTextureCoord',
+  type: 'float',
+  inputs: [
+    { name: 'coord', type: 'float' },
+    { name: 'textureSize', type: 'float' }
+  ]
+})(([coord, textureSize]) => {
+  const texelSize = textureSize.reciprocal()
+  return coord.sub(texelSize.mul(0.5)).div(texelSize.oneMinus())
+})
+
+export const scatteringParamsStruct = /*#__PURE__*/ struct(
+  {
+    radius: Length,
+    cosView: Dimensionless,
+    cosLight: Dimensionless,
+    cosViewLight: Dimensionless,
+    intersectsGround: 'bool'
+  },
+  'ScatteringParams'
+)
+
+const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
+  // BUG: Cannot access vector component inside struct in layout function
+  // https://github.com/mrdoob/three.js/issues/33345
+  typeOnly: true,
+  name: 'getParamsFromScatteringTextureCoord',
+  type: scatteringParamsStruct,
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'coord', type: 'vec4' }
+  ]
+})(([parameters, coord]) => {
+  const {
+    bottomRadius,
+    topRadius,
+    minCosLight,
+    scatteringTextureRadiusSize,
+    scatteringTextureCosViewSize,
+    scatteringTextureCosLightSize
+  } = makeDestructible(parameters)
+
+  // Distance to top atmosphere boundary for a horizontal ray at ground level.
+  const H = sqrt(topRadius.pow2().sub(bottomRadius.pow2())).toConst()
+
+  // Distance to the horizon.
+  const distanceToHorizon = H.mul(
+    getUnitRangeFromTextureCoord(coord.w, scatteringTextureRadiusSize)
+  ).toConst()
+  const radius = sqrt(distanceToHorizon.pow2().add(bottomRadius.pow2()))
+
+  const cosView = float(0).toVar()
+  const intersectsGround = bool(false).toVar()
+  If(coord.z.lessThan(0.5), () => {
+    // Distance to the ground for the ray (radius, cosView), and its minimum
+    // and maximum values over all cosView - obtained for (radius, -1) and
+    // (radius, cosHorizon) - from which we can recover cosView.
+    const minDistance = radius.sub(bottomRadius).toConst()
+    const maxDistance = distanceToHorizon
+    const distance = minDistance
+      .add(
+        maxDistance
+          .sub(minDistance)
+          .mul(
+            getUnitRangeFromTextureCoord(
+              coord.z.mul(2).oneMinus(),
+              scatteringTextureCosViewSize.div(2)
+            )
+          )
+      )
+      .toConst()
+    cosView.assign(
+      distance.equal(0).select(
+        -1,
+        clampCosine(
+          distanceToHorizon
+            .pow2()
+            .add(distance.pow2())
+            .negate()
+            .div(mul(2, radius, distance))
+        )
+      )
+    )
+    intersectsGround.assign(bool(true))
+  }).Else(() => {
+    // Distance to the top atmosphere boundary for the ray (radius, cosView),
+    // and its minimum and maximum values over all cosView - obtained for
+    // (radius, 1) and (radius, cosHorizon) - from which we can recover
+    // cosView.
+    const minDistance = topRadius.sub(radius).toConst()
+    const maxDistance = distanceToHorizon.add(H)
+    const distance = minDistance
+      .add(
+        maxDistance
+          .sub(minDistance)
+          .mul(
+            getUnitRangeFromTextureCoord(
+              coord.z.mul(2).sub(1),
+              scatteringTextureCosViewSize.div(2)
+            )
+          )
+      )
+      .toConst()
+    cosView.assign(
+      distance.equal(0).select(
+        1,
+        clampCosine(
+          H.pow2()
+            .sub(distanceToHorizon.pow2())
+            .sub(distance.pow2())
+            .div(mul(2, radius, distance))
+        )
+      )
+    )
+    intersectsGround.assign(bool(false))
+  })
+
+  const cosLightUnit = getUnitRangeFromTextureCoord(
+    coord.y,
+    scatteringTextureCosLightSize
+  ).toConst()
+  const minDistance = topRadius.sub(bottomRadius).toConst()
+  const maxDistance = H
+  const D = distanceToTopAtmosphereBoundary(
+    parameters,
+    bottomRadius,
+    minCosLight
+  )
+  const A = D.remap(minDistance, maxDistance).toConst()
+  const a = A.sub(cosLightUnit.mul(A)).div(cosLightUnit.mul(A).add(1))
+  const distance = minDistance
+    .add(min(a, A).mul(maxDistance.sub(minDistance)))
+    .toConst()
+  const cosLight = distance.equal(0).select(
+    1,
+    clampCosine(
+      H.pow2()
+        .sub(distance.pow2())
+        .div(mul(2, bottomRadius, distance))
+    )
+  )
+  const cosViewLight = clampCosine(coord.x.mul(2).sub(1))
+
+  return scatteringParamsStruct(
+    radius,
+    cosView,
+    cosLight,
+    cosViewLight,
+    intersectsGround
+  )
+})
+
+export const getParamsFromScatteringTextureFragCoord = /*#__PURE__*/ FnLayout({
+  // BUG: Cannot access vector component inside struct in layout function
+  // https://github.com/mrdoob/three.js/issues/33345
+  typeOnly: true,
+  name: 'getParamsFromScatteringTextureFragCoord',
+  type: scatteringParamsStruct,
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'fragCoord', type: 'vec3' }
+  ]
+})(([parameters, fragCoord]) => {
+  const {
+    scatteringTextureRadiusSize,
+    scatteringTextureCosViewSize,
+    scatteringTextureCosLightSize,
+    scatteringTextureCosViewLightSize
+  } = makeDestructible(parameters)
+
+  const fragCoordCosViewLight = floor(
+    fragCoord.x.div(scatteringTextureCosLightSize)
+  )
+  const fragCoordCosLight = fragCoord.x.mod(scatteringTextureCosLightSize)
+  const size = vec4(
+    scatteringTextureCosViewLightSize.sub(1),
+    scatteringTextureCosLightSize,
+    scatteringTextureCosViewSize,
+    scatteringTextureRadiusSize
+  )
+  const coord = vec4(
+    fragCoordCosViewLight,
+    fragCoordCosLight,
+    fragCoord.y,
+    fragCoord.z
+  ).div(size)
+  const scatteringParams = getParamsFromScatteringTextureCoord(
+    parameters,
+    coord
+  ).toConst()
+  const radius = scatteringParams.get('radius')
+  const cosView = scatteringParams.get('cosView')
+  const cosLight = scatteringParams.get('cosLight')
+  const cosViewLight = scatteringParams.get('cosViewLight').toVar()
+  const intersectsGround = scatteringParams.get('intersectsGround')
+
+  // Clamp cosViewLight to its valid range of values, given cosView and cosLight.
+  const sideRange = sqrt(
+    cosView.pow2().oneMinus().mul(cosLight.pow2().oneMinus())
+  ).toConst()
+  cosViewLight.assign(
+    clamp(
+      cosViewLight,
+      cosView.mul(cosLight).sub(sideRange),
+      cosView.mul(cosLight).add(sideRange)
+    )
+  )
+  return scatteringParamsStruct(
+    radius,
+    cosView,
+    cosLight,
+    cosViewLight,
+    intersectsGround
+  )
 })
