@@ -14,6 +14,9 @@ const config: StorybookConfig = {
     name: getAbsolutePath('@storybook/react-vite'),
     options: {}
   },
+  core: {
+    allowedHosts: ['.local']
+  },
   features: {
     actions: false,
     interactions: false
