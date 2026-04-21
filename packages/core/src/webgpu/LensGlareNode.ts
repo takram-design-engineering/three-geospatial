@@ -112,6 +112,8 @@ export class LensGlareNode extends FilterNode {
 
   constructor(inputNode?: TextureNode | null) {
     super(inputNode)
+    this.material.name = 'LensGlare'
+
     this.inputNode = inputNode
     this.resolutionScale = 0.5
 

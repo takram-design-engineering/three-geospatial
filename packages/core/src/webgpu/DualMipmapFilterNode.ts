@@ -28,11 +28,14 @@ export abstract class DualMipmapFilterNode extends FilterNode {
 
   constructor(inputNode: TextureNode | null | undefined, levels: number) {
     super(inputNode)
+    const type = (this.constructor as typeof Node).type
+    this.downsampleMaterial.name = `${type}_downsample`
+    this.upsampleMaterial.name = `${type}_upsample`
 
     for (let i = 0; i < levels; ++i) {
-      this.downsampleRTs[i] = this.createRenderTarget(`Downsample${i}`)
+      this.downsampleRTs[i] = this.createRenderTarget(`downsample${i}`)
       if (i < levels - 1) {
-        this.upsampleRTs[i] = this.createRenderTarget(`Upsample${i}`)
+        this.upsampleRTs[i] = this.createRenderTarget(`upsample${i}`)
       }
     }
     this.outputTexture = this.upsampleRTs[0].texture

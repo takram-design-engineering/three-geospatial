@@ -52,7 +52,7 @@ function createRenderTarget(): RenderTarget {
   texture.minFilter = LinearFilter
   texture.magFilter = LinearFilter
   texture.generateMipmaps = false
-  texture.name = 'StarsNode'
+  texture.name = 'Stars'
   return renderTarget
 }
 
@@ -84,12 +84,13 @@ export class StarsNode extends TempNode {
 
   constructor(data: string | ArrayBufferLike = DEFAULT_STARS_DATA_URL) {
     super('vec3')
-    this.data = data
-
-    this.renderTarget = createRenderTarget()
-    this.textureNode = outputTexture(this, this.renderTarget.texture)
-
     this.updateBeforeType = NodeUpdateType.FRAME
+    this.material.name = 'Stars'
+
+    this.data = data
+    this.renderTarget = createRenderTarget()
+
+    this.textureNode = outputTexture(this, this.renderTarget.texture)
   }
 
   getTextureNode(): TextureNode {

@@ -41,6 +41,8 @@ export class SkyEnvironmentNode extends TempNode {
 
   constructor(size = 64) {
     super('vec3')
+    this.updateBeforeType = NodeUpdateType.FRAME
+    this.material.name = 'SkyEnvironment'
 
     this.skyNode = sky()
     this.skyNode.showSun = false
@@ -54,8 +56,6 @@ export class SkyEnvironmentNode extends TempNode {
       format: RGBAFormat
     })
     this.cubeCamera = new CubeCamera(0.1, 1000, this.renderTarget)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   override updateBefore({ renderer }: NodeFrame): void {

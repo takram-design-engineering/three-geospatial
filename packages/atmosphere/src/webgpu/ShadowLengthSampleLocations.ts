@@ -17,6 +17,7 @@ export class ShadowLengthSampleLocations extends Points {
     geometry.drawRange.count = 1 // Force render points as instances
 
     const material = new PointsNodeMaterial()
+    material.name = 'ShadowLengthSampleLocations'
     material.depthTest = false
     material.depthWrite = false
 

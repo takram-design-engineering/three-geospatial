@@ -94,6 +94,7 @@ export class SliceUVDirectionNode extends Node {
   constructor() {
     super()
     this.updateBeforeType = NodeUpdateType.RENDER // TODO
+    this.material.name = 'SliceUVDirection'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

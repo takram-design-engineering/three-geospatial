@@ -29,9 +29,10 @@ export abstract class SeparableFilterNode extends FilterNode {
 
   constructor(inputNode?: TextureNode | null) {
     super(inputNode)
+    this.material.name = (this.constructor as typeof Node).type
 
-    this.horizontalRT = this.createRenderTarget('Horizontal')
-    this.verticalRT = this.createRenderTarget('Vertical')
+    this.horizontalRT = this.createRenderTarget('horizontal')
+    this.verticalRT = this.createRenderTarget('vertical')
     this.outputTexture = this.verticalRT.texture
   }
 

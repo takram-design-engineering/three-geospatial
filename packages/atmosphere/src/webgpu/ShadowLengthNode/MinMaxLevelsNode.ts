@@ -91,6 +91,8 @@ export class MinMaxLevelsNode extends Node {
   constructor() {
     super()
     this.updateBeforeType = NodeUpdateType.RENDER // TODO
+    this.gatherMaterial.name = 'MinMaxLevels_gather'
+    this.mipmapMaterial.name = 'MinMaxLevels_mipmap'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

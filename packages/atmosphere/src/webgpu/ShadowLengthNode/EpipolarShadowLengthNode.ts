@@ -126,6 +126,7 @@ export class EpipolarShadowLengthNode extends Node {
   constructor() {
     super()
     this.updateBeforeType = NodeUpdateType.RENDER // TODO
+    this.material.name = 'EpipolarShadowLength'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

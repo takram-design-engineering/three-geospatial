@@ -131,6 +131,8 @@ export class ScreenSpaceShadowNode extends TempNode {
     mainLight: DirectionalLight
   ) {
     super('float')
+    this.updateBeforeType = NodeUpdateType.FRAME
+
     this.depthNode = depthNode
     this.camera = camera
     this.mainLight = mainLight
@@ -140,12 +142,10 @@ export class ScreenSpaceShadowNode extends TempNode {
     texture.minFilter = LinearFilter
     texture.magFilter = LinearFilter
     texture.generateMipmaps = false
-    texture.name = 'ScreenSpaceShadowNode'
+    texture.name = 'ScreenSpaceShadow'
 
     this.outputTexture = texture
     this.textureNode = outputTexture(this, texture)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   override customCacheKey(): number {

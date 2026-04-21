@@ -74,6 +74,7 @@ export class SliceEndpointsNode extends Node {
   constructor() {
     super()
     this.updateBeforeType = NodeUpdateType.RENDER // TODO
+    this.material.name = 'SliceEndpointsNode'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

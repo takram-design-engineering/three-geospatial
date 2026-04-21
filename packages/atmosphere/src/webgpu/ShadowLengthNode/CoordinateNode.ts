@@ -77,6 +77,7 @@ export class CoordinateNode extends Node {
   constructor() {
     super()
     this.updateBeforeType = NodeUpdateType.RENDER // TODO
+    this.material.name = 'Coordinate'
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,

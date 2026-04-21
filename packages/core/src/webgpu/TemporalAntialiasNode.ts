@@ -249,8 +249,8 @@ export class TemporalAntialiasNode extends TempNode {
 
   private readonly textureNode: TextureNode
 
-  private resolveRT = this.createRenderTarget('Resolve')
-  private historyRT = this.createRenderTarget('History')
+  private resolveRT = this.createRenderTarget('resolve')
+  private historyRT = this.createRenderTarget('history')
   private previousDepthTexture?: DepthTexture
   private readonly resolveMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
@@ -271,6 +271,9 @@ export class TemporalAntialiasNode extends TempNode {
     camera: Camera
   ) {
     super('vec4')
+    this.updateBeforeType = NodeUpdateType.FRAME
+    this.resolveMaterial.name = 'TemporalAntialias_resolve'
+
     this.inputNode = inputNode
     this.depthNode = depthNode
     this.velocityNode = velocityNode
@@ -280,8 +283,6 @@ export class TemporalAntialiasNode extends TempNode {
     this.camera = camera
 
     this.textureNode = outputTexture(this, this.resolveRT.texture)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   override customCacheKey(): number {
@@ -300,7 +301,7 @@ export class TemporalAntialiasNode extends TempNode {
     texture.generateMipmaps = false
 
     const typeName = (this.constructor as typeof Node).type
-    texture.name = name != null ? `${typeName}.${name}` : typeName
+    texture.name = name != null ? `${typeName}_${name}` : typeName
 
     return renderTarget
   }

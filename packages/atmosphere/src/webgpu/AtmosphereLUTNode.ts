@@ -111,10 +111,10 @@ export class AtmosphereLUTNode extends Node {
     textureType?: AnyFloatType
   ) {
     super(null)
+    this.updateBeforeType = NodeUpdateType.FRAME
+
     this.parameters = parameters
     this.textureType = textureType
-
-    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(name: AtmosphereLUTTextureName): TextureNode

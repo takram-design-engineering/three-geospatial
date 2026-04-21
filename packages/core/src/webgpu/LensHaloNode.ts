@@ -38,8 +38,9 @@ export class LensHaloNode extends TempNode {
 
   constructor(inputNode?: TextureNode | null) {
     super('vec3')
-    this.inputNode = inputNode
     this.updateBeforeType = NodeUpdateType.FRAME
+
+    this.inputNode = inputNode
   }
 
   override updateBefore({ renderer }: NodeFrame): void {

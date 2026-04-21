@@ -25,6 +25,7 @@ export abstract class SingleFilterNode extends FilterNode {
 
   constructor(inputNode?: TextureNode | null) {
     super(inputNode)
+    this.material.name = (this.constructor as typeof Node).type
 
     this.renderTarget = this.createRenderTarget()
     this.outputTexture = this.renderTarget.texture

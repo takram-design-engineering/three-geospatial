@@ -45,7 +45,7 @@ export class LensFlareNode extends TempNode {
     this.glareNode = new LensGlareNode()
 
     this.featuresNode = rtt(add(this.ghostNode, this.haloNode))
-    this.featuresNode.value.name = 'LensFlareNode.Features'
+    this.featuresNode.value.name = 'LensFlare_features'
     this.featuresNode.pixelRatio = 0.5
 
     // Use the full resolution because the thresholdNode already downsamples the
