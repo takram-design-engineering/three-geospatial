@@ -42,7 +42,7 @@ export const MultipleScattering = createStory(Story2D, {
   },
   args: {
     zoom: 16,
-    toneMappingExposure: 50
+    toneMappingExposure: 30
   },
   parameters: {
     docs: {
@@ -91,7 +91,7 @@ export const SingleMieScattering = createStory(Story3D, {
 export const HigherOrderScattering = createStory(Story3D, {
   props: {
     name: 'higherOrderScattering',
-    higherOrderScattering: false
+    higherOrderScatteringTexture: true
   },
   args: {
     zoom: 2,

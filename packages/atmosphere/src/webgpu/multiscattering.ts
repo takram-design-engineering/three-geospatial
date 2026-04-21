@@ -57,7 +57,6 @@ import {
   clampCosine,
   clampRadius,
   distanceToNearestAtmosphereBoundary,
-  getIrradiance,
   getParamsFromScatteringTextureFragCoord,
   getProfileDensity,
   getTransmittanceToSun,
@@ -153,13 +152,13 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
     transmittanceNode: TextureNode,
-    irradianceNode: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
     cosViewLight: Node<Dimensionless>
   ): ReturnType<typeof multipleScatteringStruct> => {
-    const { bottomRadius, groundAlbedo } = makeDestructible(parameters)
+    const { solarIrradiance, bottomRadius, groundAlbedo } =
+      makeDestructible(parameters)
 
     const intersectsGround = rayIntersectsGround(
       parameters,
@@ -235,25 +234,28 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
       totalTransmittance.mulAssign(transmittance)
     })
 
-    // TODO:
     // Account for bounced light off the ground.
     If(intersectsGround, () => {
-      const cosLightAtGround = clampCosine(
+      const cosLightGround = clampCosine(
         radius
           .mul(cosLight)
           .add(distanceToPoint.mul(cosViewLight))
           .div(bottomRadius)
       ).toConst()
-      const groundIrradiance = getIrradiance(
-        irradianceNode,
+      const transmittanceToSun = getTransmittanceToSun(
+        transmittanceNode,
         bottomRadius,
-        cosLightAtGround
-      )
+        cosLightGround
+      ).toConst()
+
       totalMultipleScattering.addAssign(
-        totalTransmittance
-          .mul(groundAlbedo)
-          .mul(groundIrradiance)
-          .mul(1 / Math.PI)
+        solarIrradiance.mul(
+          transmittanceToSun,
+          totalTransmittance,
+          cosLightGround.saturate(),
+          groundAlbedo,
+          1 / Math.PI
+        )
       )
     })
 

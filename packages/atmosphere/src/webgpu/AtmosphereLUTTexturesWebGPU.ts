@@ -236,7 +236,6 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       const result = computeMultipleScatteringTexture(
         parametersNode,
         texture(this.transmittance),
-        texture(this.irradiance),
         radius,
         cosView,
         cosLightZenith,
