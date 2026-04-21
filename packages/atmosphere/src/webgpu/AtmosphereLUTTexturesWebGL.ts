@@ -12,6 +12,8 @@ import {
 import {
   acos,
   cos,
+  float,
+  Fn,
   Loop,
   mrt,
   screenCoordinate,
@@ -33,7 +35,7 @@ import {
 import invariant from 'tiny-invariant'
 
 import type { AnyFloatType } from '@takram/three-geospatial'
-import type { Node } from '@takram/three-geospatial/webgpu'
+import { FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 import type {
   AtmosphereLUTTexture3DName,
@@ -207,70 +209,94 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
   ): void {
     const { parameters, parametersNode } = context
 
+    const sampleCount = 64
+
+    const getRayDirection = FnVar((index: Node<'uint'>): Node<'vec3'> => {
+      // In the original implementation, theta and phi are uniformly
+      // distributed, but they shows artifacts at higher altitudes.
+      const sample = float(index)
+      const theta = sample.mul((2 * Math.PI) / ((1 + Math.sqrt(5)) / 2))
+      const phi = acos(
+        sample
+          .add(0.5)
+          .mul(2 / sampleCount)
+          .oneMinus()
+      )
+      const cosPhi = cos(phi)
+      const sinPhi = sin(phi)
+      const cosTheta = cos(theta)
+      const sinTheta = sin(theta)
+      return vec3(cosTheta.mul(sinPhi), sinTheta.mul(sinPhi), cosPhi)
+    })
+
     this.multipleScatteringMaterial ??= this.createMaterial({
       fragmentNode: (() => {
-        const sampleCount = 64
-        const { topRadius, bottomRadius } = parametersNode
-        const { x: width, y: height } = parameters.multipleScatteringTextureSize
-
-        const size = vec2(width, height)
-        const uv = getTextureUnitFromSubUV(
-          screenCoordinate.div(size),
-          size
-        ).toConst()
-
-        const cosLightZenith = uv.x.mul(2).sub(1).toConst()
-        const lightDirection = vec3(
-          0,
-          sqrt(cosLightZenith.pow2().oneMinus().saturate()),
-          cosLightZenith
-        ).toConst()
-        const radius = bottomRadius
-          .add(uv.y.saturate().mul(topRadius.sub(bottomRadius)))
-          .toConst()
-
-        const totalMultipleScattering = vec3(0).toVar()
-        const totalTransferFactor = vec3(0).toVar()
-
-        Loop({ type: 'float', start: 0, end: sampleCount }, ({ i }) => {
-          const theta = i.mul(2 * Math.PI / ((1 + Math.sqrt(5)) / 2))
-          const phi = acos(i.add(0.5).mul(2 / sampleCount).oneMinus())
-          const cosPhi = cos(phi)
-          const sinPhi = sin(phi)
-          const cosTheta = cos(theta)
-          const sinTheta = sin(theta)
-          const rayDirection = vec3(
-            cosTheta.mul(sinPhi),
-            sinTheta.mul(sinPhi),
-            cosPhi
+        const multipleScattering = Fn(() => {
+          const size = vec2(parameters.multipleScatteringTextureSize)
+          const uv = getTextureUnitFromSubUV(
+            screenCoordinate.div(size),
+            size
           ).toConst()
 
-          const cosView = rayDirection.z
-          const cosViewLight = rayDirection.dot(lightDirection).toConst()
-
-          const result = computeMultipleScatteringTexture(
-            parametersNode,
-            texture(this.transmittanceRT.texture),
-            texture(this.irradianceRT.texture),
-            radius,
-            cosView,
-            cosLightZenith,
-            cosViewLight
+          // Construct the parameters of the high-order scattering LUT. They are
+          // the cosine of light and zenith [-1, 1], and the view altitude
+          // [bottomRadius, topRadius].
+          const { topRadius, bottomRadius } = parametersNode
+          const cosLightZenith = uv.x.mul(2).sub(1).toConst()
+          const lightDirection = vec3(
+            0,
+            sqrt(cosLightZenith.pow2().oneMinus().saturate()),
+            cosLightZenith
           ).toConst()
+          const radius = bottomRadius
+            .add(uv.y.saturate().mul(topRadius.sub(bottomRadius)))
+            .toConst()
 
-          totalMultipleScattering.addAssign(
-            result.get('multipleScattering').div(sampleCount)
+          const totalMultipleScattering = vec3(0).toVar()
+          const totalTransferFactor = vec3(0).toVar()
+
+          Loop({ start: 0, end: sampleCount }, ({ i: index }) => {
+            const rayDirection = getRayDirection(index)
+            const cosView = rayDirection.z
+            const cosViewLight = rayDirection.dot(lightDirection).toConst()
+
+            // Integrate the second-order scattering. This outputs the integrated
+            // radiance here (as opposed to luminance) as well as the "transfer
+            // factor", which acts as a transfer function on the irradiance of a
+            // directional light at a given point.
+            const result = computeMultipleScatteringTexture(
+              parametersNode,
+              texture(this.transmittanceRT.texture),
+              texture(this.irradianceRT.texture),
+              radius,
+              cosView,
+              cosLightZenith,
+              cosViewLight
+            )
+              .context({ getAtmosphere: () => context })
+              .toConst()
+
+            // Sum all second-order scattering integrated along the ray directions
+            // with respect to the LUT parameters.
+            totalMultipleScattering.addAssign(
+              result.get('multipleScattering').div(sampleCount)
+            )
+            totalTransferFactor.addAssign(
+              result.get('transferFactor').div(sampleCount)
+            )
+          })
+
+          // This represents the amount of radiance scattered as if the integral
+          // of scattered radiance over the sphere would be 1.
+          // For a power-series, such integral is analytically:
+          // sum_{n=0}^{n=+inf} = 1 + r + r^2 + r^3 + ... + r^n = 1 / (1 - r)
+          return totalMultipleScattering.mul(
+            totalTransferFactor.oneMinus().reciprocal()
           )
-          totalTransferFactor.addAssign(
-            result.get('transferFactor').div(sampleCount)
-          )
-        })
+        })()
 
-        const multipleScattering = totalMultipleScattering.mul(
-          totalTransferFactor.oneMinus().reciprocal()
-        )
-
-        // BUG: Context is not merged unless we wrap the node by OutputStructNode.
+        // BUG: Context is not merged unless we wrap the node by
+        // OutputStructNode.
         return mrt({
           multipleScattering: vec4(multipleScattering, 1)
         })
@@ -320,7 +346,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     if (!parameters.combinedScatteringTextures) {
       textures.push(this.singleMieScatteringRT.texture)
     }
-    if (!parameters.higherOrderScatteringTexture) {
+    if (parameters.higherOrderScatteringTexture) {
       textures.push(this.higherOrderScatteringRT.texture)
     }
     this.renderToRenderTarget3D(

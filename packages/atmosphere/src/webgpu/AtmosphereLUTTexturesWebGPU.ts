@@ -182,8 +182,13 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       // In the original implementation, theta and phi are uniformly
       // distributed, but they shows artifacts at higher altitudes.
       const sample = float(index)
-      const theta = sample.mul(2 * Math.PI).div((1 + Math.sqrt(5)) / 2)
-      const phi = acos(sample.add(0.5).mul(2).div(sampleCount).oneMinus())
+      const theta = sample.mul((2 * Math.PI) / ((1 + Math.sqrt(5)) / 2))
+      const phi = acos(
+        sample
+          .add(0.5)
+          .mul(2 / sampleCount)
+          .oneMinus()
+      )
       const cosPhi = cos(phi)
       const sinPhi = sin(phi)
       const cosTheta = cos(theta)
