@@ -64,7 +64,6 @@ import {
   float,
   floor,
   If,
-  Loop,
   max,
   min,
   mix,
@@ -90,14 +89,14 @@ import {
 import {
   Area,
   Dimensionless,
-  DimensionlessSpectrum,
   InverseSolidAngle,
   Length,
-  TransmittanceTexture,
   type AbstractSpectrum,
+  type DimensionlessSpectrum,
   type IrradianceSpectrum,
   type IrradianceTexture,
-  type ScatteringTexture
+  type ScatteringTexture,
+  type TransmittanceTexture
 } from './dimensional'
 
 export const clampCosine = /*#__PURE__*/ FnLayout({
@@ -641,139 +640,6 @@ export const getProfileDensity = /*#__PURE__*/ FnLayout({
       getLayerDensity(profile.get('layer0'), altitude),
       getLayerDensity(profile.get('layer1'), altitude)
     )
-})
-
-export const singleScatteringStruct = /*#__PURE__*/ struct(
-  {
-    rayleigh: DimensionlessSpectrum,
-    mie: DimensionlessSpectrum
-  },
-  'SingleScattering'
-)
-
-const computeSingleScatteringIntegrand = /*#__PURE__*/ FnLayout({
-  // TODO: Fn layout doesn't support texture type
-  typeOnly: true,
-  name: 'computeSingleScatteringIntegrand',
-  type: singleScatteringStruct,
-  inputs: [
-    { name: 'parameters', type: atmosphereParametersStruct },
-    { name: 'transmittanceTexture', type: TransmittanceTexture },
-    { name: 'radius', type: Length },
-    { name: 'cosView', type: Dimensionless },
-    { name: 'cosLight', type: Dimensionless },
-    { name: 'cosViewLight', type: Dimensionless },
-    { name: 'rayLength', type: Length },
-    { name: 'intersectsGround', type: 'bool' }
-  ]
-})(([
-  parameters,
-  transmittanceTexture,
-  radius,
-  cosView,
-  cosLight,
-  cosViewLight,
-  rayLength,
-  intersectsGround
-]) => {
-  const { bottomRadius, rayleighDensity, mieDensity } =
-    makeDestructible(parameters)
-
-  const radiusEnd = clampRadius(
-    parameters,
-    sqrt(
-      rayLength
-        .pow2()
-        .add(mul(2, radius, cosView, rayLength))
-        .add(radius.pow2())
-    )
-  ).toConst()
-  const cosLightEnd = clampCosine(
-    radius.mul(cosLight).add(rayLength.mul(cosViewLight)).div(radiusEnd)
-  )
-  const transmittance = getTransmittance(
-    transmittanceTexture,
-    radius,
-    cosView,
-    rayLength,
-    intersectsGround
-  )
-    .mul(getTransmittanceToSun(transmittanceTexture, radiusEnd, cosLightEnd))
-    .toConst()
-
-  const rayleigh = transmittance.mul(
-    getProfileDensity(rayleighDensity, radiusEnd.sub(bottomRadius))
-  )
-  const mie = transmittance.mul(
-    getProfileDensity(mieDensity, radiusEnd.sub(bottomRadius))
-  )
-  return singleScatteringStruct(rayleigh, mie)
-})
-
-export const computeSingleScatteringToPoint = /*#__PURE__*/ FnLayout({
-  // TODO: Fn layout doesn't support texture type
-  typeOnly: true,
-  name: 'computeSingleScatteringToPoint',
-  type: singleScatteringStruct,
-  inputs: [
-    { name: 'parameters', type: atmosphereParametersStruct },
-    { name: 'transmittanceTexture', type: TransmittanceTexture },
-    { name: 'radius', type: Length },
-    { name: 'cosView', type: Dimensionless },
-    { name: 'cosLight', type: Dimensionless },
-    { name: 'cosViewLight', type: Dimensionless },
-    { name: 'intersectsGround', type: 'bool' },
-    { name: 'distanceToPoint', type: Length },
-    { name: 'sampleCount', type: 'int' }
-  ]
-})(([
-  parameters,
-  transmittanceTexture,
-  radius,
-  cosView,
-  cosLight,
-  cosViewLight,
-  intersectsGround,
-  distanceToPoint,
-  sampleCount
-]) => {
-  const { solarIrradiance, rayleighScattering, mieScattering } =
-    makeDestructible(parameters)
-
-  const stepSize = distanceToPoint.div(sampleCount).toConst()
-
-  const rayleighSum = vec3(0).toVar()
-  const mieSum = vec3(0).toVar()
-  Loop({ start: 0, end: sampleCount, condition: '<=' }, ({ i }) => {
-    const rayLength = float(i).mul(stepSize).toConst()
-
-    const deltaRayleighMie = computeSingleScatteringIntegrand(
-      parameters,
-      transmittanceTexture,
-      radius,
-      cosView,
-      cosLight,
-      cosViewLight,
-      rayLength,
-      intersectsGround
-    ).toConst()
-    const deltaRayleigh = deltaRayleighMie.get('rayleigh')
-    const deltaMie = deltaRayleighMie.get('mie')
-
-    // Sample weight from the trapezoidal rule.
-    const weight = vec2(i).equal(vec2(0, sampleCount)).any().select(0.5, 1)
-    rayleighSum.addAssign(deltaRayleigh.mul(weight))
-    mieSum.addAssign(deltaMie.mul(weight))
-  })
-
-  const rayleigh = mul(
-    rayleighSum,
-    stepSize,
-    solarIrradiance,
-    rayleighScattering
-  )
-  const mie = mul(mieSum, stepSize, solarIrradiance, mieScattering)
-  return singleScatteringStruct(rayleigh, mie)
 })
 
 export const getUnitRangeFromTextureCoord = /*#__PURE__*/ FnLayout({
