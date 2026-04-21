@@ -72,10 +72,8 @@ import {
   RadianceSpectrum,
   ScatteringSpectrum,
   type Dimensionless,
-  type Direction,
   type HighOrderScatteringTexture,
   type IrradianceTexture,
-  type Position,
   type TransmittanceTexture
 } from './dimensional'
 
@@ -157,14 +155,13 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
     parameters: ReturnType<typeof atmosphereParametersStruct>,
     transmittanceTexture: TransmittanceTexture,
     irradianceTexture: IrradianceTexture,
-    rayOrigin: Node<Position>,
-    rayDirection: Node<Direction>,
-    lightDirection: Node<Direction>
+    radius: Node<Length>,
+    cosView: Node<Dimensionless>,
+    cosLight: Node<Dimensionless>,
+    cosViewLight: Node<Dimensionless>
   ): ReturnType<typeof multipleScatteringStruct> => {
     const { bottomRadius, groundAlbedo } = makeDestructible(parameters)
 
-    const radius = rayOrigin.length().toConst()
-    const cosView = rayOrigin.dot(rayDirection).div(radius).toConst()
     const intersectsGround = rayIntersectsGround(
       parameters,
       radius,
@@ -192,10 +189,21 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
       const stepSize = rayLength.sub(prevRayLength).toConst()
       prevRayLength.assign(rayLength)
 
-      const position = rayLength.mul(rayDirection).add(rayOrigin).toConst()
-      const radius = position.length().toConst()
+      const radiusI = clampRadius(
+        parameters,
+        sqrt(
+          rayLength
+            .pow2()
+            .add(mul(2, radius, cosView, rayLength))
+            .add(radius.pow2())
+        )
+      ).toConst()
 
-      const altitude = radius.sub(bottomRadius)
+      const cosLightI = clampCosine(
+        radius.mul(cosLight).add(rayLength.mul(cosViewLight)).div(radiusI)
+      ).toConst()
+
+      const altitude = radiusI.sub(bottomRadius)
       const medium = sampleAtmosphereMedium(parameters, altitude).toConst()
       const scattering = medium.get('scattering')
       const extinction = medium.get('extinction')
@@ -203,11 +211,10 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
       const opticalDepth = extinction.mul(stepSize).toConst()
       const transmittance = exp(opticalDepth.negate()).toConst()
 
-      const cosLight = position.dot(lightDirection).div(radius).toConst()
       const transmittanceToSun = getTransmittanceToSun(
         transmittanceTexture,
-        radius,
-        cosLight
+        radiusI,
+        cosLightI
       ).toConst()
 
       const transferFactor = scattering
@@ -232,14 +239,16 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
     // TODO:
     // Account for bounced light off the ground.
     If(intersectsGround, () => {
-      const groundNormal = rayOrigin
-        .add(rayDirection.mul(distanceToPoint))
-        .normalize()
-        .toConst()
+      const cosLightAtGround = clampCosine(
+        radius
+          .mul(cosLight)
+          .add(distanceToPoint.mul(cosViewLight))
+          .div(bottomRadius)
+      ).toConst()
       const groundIrradiance = getIrradiance(
         irradianceTexture,
         bottomRadius,
-        groundNormal.dot(lightDirection).toConst()
+        cosLightAtGround
       )
       totalMultipleScattering.addAssign(
         totalTransmittance

@@ -220,8 +220,9 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         )
         .toConst()
 
-      const rayOrigin = vec3(0, 0, radius)
-      const rayDirection = getRayDirection(index)
+      const rayDirection = getRayDirection(index).toConst()
+      const cosView = rayDirection.z // // rayOrigin is (0, 0, radius)
+      const cosViewLight = rayDirection.dot(lightDirection).toConst()
 
       // Integrate the second-order scattering. This outputs the integrated
       // radiance here (as opposed to luminance) as well as the "transfer
@@ -231,9 +232,10 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
         parametersNode,
         texture(this.transmittance),
         texture(this.irradiance),
-        rayOrigin,
-        rayDirection,
-        lightDirection
+        radius,
+        cosView,
+        cosLightZenith,
+        cosViewLight
       ).toConst()
 
       multipleScatteringBuffer
