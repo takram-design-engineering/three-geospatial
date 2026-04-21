@@ -69,6 +69,7 @@ export class ShadowLengthNode extends TempNode {
   epipolarShadowLengthNode: EpipolarShadowLengthNode
   unwarpEpipolarNode: UnwarpEpipolarNode
 
+  resolutionScale = 0.5
   autoSampleResolution = true
 
   // Good visual results can be obtained when number of slices is at least half
@@ -161,7 +162,9 @@ export class ShadowLengthNode extends TempNode {
     }
     this.lightScreenPosition.value.set(lightX, lightY, lightZ, lightW)
 
-    const { width, height } = renderer.getDrawingBufferSize(sizeScratch)
+    const { width, height } = renderer
+      .getDrawingBufferSize(sizeScratch)
+      .multiplyScalar(this.resolutionScale)
     this.isLightOnScreen.value =
       Math.abs(lightX) <= 1 - 1 / width && Math.abs(lightY) <= 1 - 1 / height
 
