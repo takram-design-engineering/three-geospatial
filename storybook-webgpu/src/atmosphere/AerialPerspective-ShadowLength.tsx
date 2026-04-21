@@ -204,6 +204,8 @@ const Content: FC<StoryProps> = ({
   const velocityNode = passNode.getTextureNode('velocity')
   const viewZNode = passNode.getTextureNode('viewZ')
 
+  // Note that the shadow length is computed against the depths jittered by TAA,
+  // causing temporal instability. But in practice, this is not noticeable.
   const shadowLengthNode = useResource(
     () => shadowLength(csmShadowNode, viewZNode),
     [csmShadowNode, viewZNode]
