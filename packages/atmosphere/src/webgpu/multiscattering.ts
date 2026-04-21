@@ -72,10 +72,7 @@ import {
   Length,
   RadianceSpectrum,
   ScatteringSpectrum,
-  type Dimensionless,
-  type HighOrderScatteringTexture,
-  type IrradianceTexture,
-  type TransmittanceTexture
+  type Dimensionless
 } from './dimensional'
 
 export const getSubUVFromTextureUnit = /*#__PURE__*/ FnLayout({
@@ -154,8 +151,8 @@ export const multipleScatteringStruct = /*#__PURE__*/ struct(
 export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    transmittanceTexture: TransmittanceTexture,
-    irradianceTexture: IrradianceTexture,
+    transmittanceTexture: TextureNode,
+    irradianceTexture: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
@@ -269,7 +266,7 @@ export const computeMultipleScatteringTexture = /*#__PURE__*/ FnVar(
 export const getMultipleScattering = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    multipleScatteringTexture: HighOrderScatteringTexture,
+    multipleScatteringTexture: TextureNode,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ): Node<'vec3'> => {

@@ -77,6 +77,7 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
+import { Texture3DNode, type TextureNode } from 'three/webgpu'
 
 import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -95,11 +96,7 @@ import {
   IrradianceSpectrum,
   Length,
   RadianceSpectrum,
-  ReducedScatteringTexture,
-  type AbstractSpectrum,
-  type IrradianceTexture,
-  type ScatteringTexture,
-  type TransmittanceTexture
+  type AbstractSpectrum
 } from './dimensional'
 
 export const clampCosine = /*#__PURE__*/ FnLayout({
@@ -263,7 +260,7 @@ const getTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
 
 export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TransmittanceTexture,
+    transmittanceTexture: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>
   ) =>
@@ -304,7 +301,7 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
 
 export const getTransmittance = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TransmittanceTexture,
+    transmittanceTexture: TextureNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     rayLength: Node<Length>,
@@ -368,7 +365,7 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
 
 export const getTransmittanceToSun = /*#__PURE__*/ FnVar(
   (
-    transmittanceTexture: TransmittanceTexture,
+    transmittanceTexture: TextureNode,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ) =>
@@ -532,7 +529,7 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
 
 export const getScattering = /*#__PURE__*/ FnVar(
   (
-    scatteringTexture: ScatteringTexture,
+    scatteringTexture: Texture3DNode,
     radius: Node<Length>,
     cosView: Node<Dimensionless>,
     cosLight: Node<Dimensionless>,
@@ -595,7 +592,7 @@ const getIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 
 export const getIrradiance = /*#__PURE__*/ FnVar(
   (
-    irradianceTexture: IrradianceTexture,
+    irradianceTexture: TextureNode,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ) =>
@@ -902,8 +899,8 @@ export const getCombinedScattering = /*#__PURE__*/ FnLayout({
   type: combinedScatteringStruct,
   inputs: [
     { name: 'parameters', type: atmosphereParametersStruct },
-    { name: 'scatteringTexture', type: ReducedScatteringTexture },
-    { name: 'singleMieScatteringTexture', type: ReducedScatteringTexture },
+    { name: 'scatteringTexture', type: Texture3DNode },
+    { name: 'singleMieScatteringTexture', type: Texture3DNode },
     { name: 'radius', type: Length },
     { name: 'cosView', type: Dimensionless },
     { name: 'cosLight', type: Dimensionless },

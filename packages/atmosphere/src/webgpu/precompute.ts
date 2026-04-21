@@ -69,6 +69,7 @@ import {
   vec2,
   vec3
 } from 'three/tsl'
+import type { Texture3DNode } from 'three/webgpu'
 
 import { FnLayout, FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -91,8 +92,7 @@ import {
   Dimensionless,
   DimensionlessSpectrum,
   Length,
-  type IrradianceSpectrum,
-  type ScatteringTexture
+  type IrradianceSpectrum
 } from './dimensional'
 
 const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
@@ -255,7 +255,7 @@ export const computeTransmittanceTexture = /*#__PURE__*/ FnVar(
 const computeIrradiance = /*#__PURE__*/ FnVar(
   (
     parameters: ReturnType<typeof atmosphereParametersStruct>,
-    scatteringTexture: ScatteringTexture,
+    scatteringTexture: Texture3DNode,
     radius: Node<Length>,
     cosLight: Node<Dimensionless>
   ): Node<IrradianceSpectrum> => {
@@ -337,7 +337,7 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 })
 
 export const computeIrradianceTexture = /*#__PURE__*/ FnVar(
-  (scatteringTexture: ScatteringTexture, fragCoord: Node<'vec2'>) =>
+  (scatteringTexture: Texture3DNode, fragCoord: Node<'vec2'>) =>
     (builder): ReturnType<typeof computeIrradiance> => {
       const context = getAtmosphereContextBase(builder)
       const { irradianceTextureSize } = context.parametersNode
