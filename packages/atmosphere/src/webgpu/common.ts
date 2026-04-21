@@ -169,6 +169,22 @@ export const distanceToBottomAtmosphereBoundary = /*#__PURE__*/ FnLayout({
   return clampDistance(radius.negate().mul(cosView).sub(sqrtSafe(discriminant)))
 })
 
+export const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ FnLayout({
+  name: 'distanceToNearestAtmosphereBoundary',
+  type: Length,
+  inputs: [
+    { name: 'parameters', type: atmosphereParametersStruct },
+    { name: 'radius', type: Length },
+    { name: 'cosView', type: Dimensionless },
+    { name: 'intersectsGround', type: 'bool' }
+  ]
+})(([parameters, radius, cosView, intersectsGround]) => {
+  return intersectsGround.select(
+    distanceToBottomAtmosphereBoundary(parameters, radius, cosView),
+    distanceToTopAtmosphereBoundary(parameters, radius, cosView)
+  )
+})
+
 export const rayIntersectsGround = /*#__PURE__*/ FnLayout({
   name: 'rayIntersectsGround',
   type: 'bool',
@@ -190,20 +206,29 @@ export const rayIntersectsGround = /*#__PURE__*/ FnLayout({
     )
 })
 
-export const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ FnLayout({
-  name: 'distanceToNearestAtmosphereBoundary',
-  type: Length,
+export const rayIntersectsAtmosphere = /*#__PURE__*/ FnLayout({
+  name: 'rayIntersectsAtmosphere',
+  type: 'bool',
   inputs: [
     { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'radius', type: Length },
-    { name: 'cosView', type: Dimensionless },
-    { name: 'intersectsGround', type: 'bool' }
+    { name: 'cosView', type: Dimensionless }
   ]
-})(([parameters, radius, cosView, intersectsGround]) => {
-  return intersectsGround.select(
-    distanceToBottomAtmosphereBoundary(parameters, radius, cosView),
-    distanceToTopAtmosphereBoundary(parameters, radius, cosView)
-  )
+})(([parameters, radius, cosView]) => {
+  const { topRadius } = makeDestructible(parameters)
+  return radius
+    .lessThanEqual(topRadius)
+    .or(
+      cosView
+        .lessThan(0)
+        .and(
+          radius
+            .pow2()
+            .mul(cosView.pow2().sub(1))
+            .add(topRadius.pow2())
+            .greaterThanEqual(0)
+        )
+    )
 })
 
 const getTextureCoordFromUnitRange = /*#__PURE__*/ FnLayout({
