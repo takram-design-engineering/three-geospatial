@@ -10,11 +10,17 @@ import {
   type Vector3
 } from 'three'
 import {
+  acos,
+  cos,
+  Loop,
   mrt,
   screenCoordinate,
+  sin,
+  sqrt,
   texture,
   texture3D,
   uniform,
+  vec2,
   vec3,
   vec4
 } from 'three/tsl'
@@ -38,7 +44,11 @@ import {
   AtmosphereLUTTexturesContext
 } from './AtmosphereLUTTextures'
 import type { AtmosphereParameters } from './AtmosphereParameters'
-import { computeScatteringTexture } from './multiscattering'
+import {
+  computeMultipleScatteringTexture,
+  computeScatteringTexture,
+  getTextureUnitFromSubUV
+} from './multiscattering'
 import {
   computeIrradianceTexture,
   computeTransmittanceTexture
@@ -193,8 +203,83 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
 
   computeMultipleScattering(
     renderer: Renderer,
-    context: AtmosphereLUTTexturesContext
-  ): void {}
+    context: AtmosphereLUTTexturesContextWebGL
+  ): void {
+    const { parameters, parametersNode } = context
+
+    this.multipleScatteringMaterial ??= this.createMaterial({
+      fragmentNode: (() => {
+        const sampleCount = 64
+        const { topRadius, bottomRadius } = parametersNode
+        const { x: width, y: height } = parameters.multipleScatteringTextureSize
+
+        const size = vec2(width, height)
+        const uv = getTextureUnitFromSubUV(
+          screenCoordinate.div(size),
+          size
+        ).toConst()
+
+        const cosLightZenith = uv.x.mul(2).sub(1).toConst()
+        const lightDirection = vec3(
+          0,
+          sqrt(cosLightZenith.pow2().oneMinus().saturate()),
+          cosLightZenith
+        ).toConst()
+        const radius = bottomRadius
+          .add(uv.y.saturate().mul(topRadius.sub(bottomRadius)))
+          .toConst()
+
+        const totalMultipleScattering = vec3(0).toVar()
+        const totalTransferFactor = vec3(0).toVar()
+
+        Loop({ type: 'float', start: 0, end: sampleCount }, ({ i }) => {
+          const theta = i.mul(2 * Math.PI / ((1 + Math.sqrt(5)) / 2))
+          const phi = acos(i.add(0.5).mul(2 / sampleCount).oneMinus())
+          const cosPhi = cos(phi)
+          const sinPhi = sin(phi)
+          const cosTheta = cos(theta)
+          const sinTheta = sin(theta)
+          const rayDirection = vec3(
+            cosTheta.mul(sinPhi),
+            sinTheta.mul(sinPhi),
+            cosPhi
+          ).toConst()
+
+          const cosView = rayDirection.z
+          const cosViewLight = rayDirection.dot(lightDirection).toConst()
+
+          const result = computeMultipleScatteringTexture(
+            parametersNode,
+            texture(this.transmittanceRT.texture),
+            texture(this.irradianceRT.texture),
+            radius,
+            cosView,
+            cosLightZenith,
+            cosViewLight
+          ).toConst()
+
+          totalMultipleScattering.addAssign(
+            result.get('multipleScattering').div(sampleCount)
+          )
+          totalTransferFactor.addAssign(
+            result.get('transferFactor').div(sampleCount)
+          )
+        })
+
+        const multipleScattering = totalMultipleScattering.mul(
+          totalTransferFactor.oneMinus().reciprocal()
+        )
+
+        // BUG: Context is not merged unless we wrap the node by OutputStructNode.
+        return mrt({
+          multipleScattering: vec4(multipleScattering, 1)
+        })
+      })()
+    })
+    this.mesh.material = this.multipleScatteringMaterial
+
+    this.renderToRenderTarget(renderer, this.multipleScatteringRT)
+  }
 
   computeScattering(
     renderer: Renderer,
