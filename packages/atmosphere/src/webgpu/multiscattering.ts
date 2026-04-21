@@ -61,6 +61,7 @@ import {
   getProfileDensity,
   getTransmittanceToSun,
   miePhaseFunction,
+  radianceTransferStruct,
   rayIntersectsGround,
   rayleighPhaseFunction
 } from './common'
@@ -285,14 +286,6 @@ export const getMultipleScattering = /*#__PURE__*/ FnVar(
   }
 )
 
-export const scatteringToPointStruct = /*#__PURE__*/ struct(
-  {
-    radiance: RadianceSpectrum,
-    transmittance: DimensionlessSpectrum
-  },
-  'ScatteringToPoint'
-)
-
 // TODO: Move to the context or parameters
 const minSampleCount = 4
 const maxSampleCount = 14
@@ -308,7 +301,7 @@ export const computeScatteringToPoint = /*#__PURE__*/ FnVar(
     cosViewLight: Node<Dimensionless>,
     maxDistance: Node<Length>,
     shadowLength: Node<Length>
-  ): ReturnType<typeof scatteringToPointStruct> => {
+  ): ReturnType<typeof radianceTransferStruct> => {
     const { solarIrradiance, bottomRadius, miePhaseFunctionG } =
       makeDestructible(parameters)
 
@@ -406,7 +399,7 @@ export const computeScatteringToPoint = /*#__PURE__*/ FnVar(
       totalTransmittance.mulAssign(transmittance)
     })
 
-    return scatteringToPointStruct(totalRadiance, totalTransmittance)
+    return radianceTransferStruct(totalRadiance, totalTransmittance)
   }
 )
 

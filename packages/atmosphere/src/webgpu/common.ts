@@ -90,12 +90,13 @@ import {
 import {
   Area,
   Dimensionless,
+  DimensionlessSpectrum,
   InverseSolidAngle,
   IrradianceSpectrum,
   Length,
+  RadianceSpectrum,
   ReducedScatteringTexture,
   type AbstractSpectrum,
-  type DimensionlessSpectrum,
   type IrradianceTexture,
   type ScatteringTexture,
   type TransmittanceTexture
@@ -984,3 +985,11 @@ export const getCombinedScattering = /*#__PURE__*/ FnLayout({
   }
   return combinedScatteringStruct(scattering, singleMieScattering)
 })
+
+export const radianceTransferStruct = /*#__PURE__*/ struct(
+  {
+    radiance: RadianceSpectrum,
+    transmittance: DimensionlessSpectrum
+  },
+  'RadianceTransfer'
+)
