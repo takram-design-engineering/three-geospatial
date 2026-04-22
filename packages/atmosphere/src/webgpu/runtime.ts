@@ -99,6 +99,7 @@ import {
   type Dimensionless,
   type Direction,
   type Length,
+  type Length2,
   type Position
 } from './dimensional'
 import { computeIndirectRadianceToPoint } from './multiscattering'
@@ -108,7 +109,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
     context: AtmosphereContext,
     camera: Node<Position>,
     rayDirection: Node<Direction>,
-    shadowLength: Node<Length>,
+    shadowLength: Node<Length2>,
     lightDirection: Node<Direction>
   ): ReturnType<typeof radianceTransferStruct> => {
     const { lutNode, parametersNode } = context
@@ -181,7 +182,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
       const scattering = vec3(0).toVar()
       const singleMieScattering = vec3(0).toVar()
 
-      If(shadowLength.equal(0), () => {
+      If(shadowLength.x.equal(0), () => {
         const combinedScattering = getCombinedScattering(
           parametersNode,
           scatteringNode,
@@ -202,20 +203,20 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         const radiusP = clampRadius(
           parametersNode,
           sqrt(
-            shadowLength
+            shadowLength.x
               .pow2()
-              .add(mul(2, radius, cosView, shadowLength))
+              .add(mul(2, radius, cosView, shadowLength.x))
               .add(radius.pow2())
           )
         ).toConst()
         const cosViewP = radius
           .mul(cosView)
-          .add(shadowLength)
+          .add(shadowLength.x)
           .div(radiusP)
           .toConst()
         const cosLightP = radius
           .mul(cosLight)
-          .add(shadowLength.mul(cosViewLight))
+          .add(shadowLength.x.mul(cosViewLight))
           .div(radiusP)
           .toConst()
 
@@ -238,7 +239,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           transmittanceNode,
           radius,
           cosView,
-          shadowLength,
+          shadowLength.x,
           intersectsGroundScattering
         ).toConst()
 
@@ -265,7 +266,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
     cosLight: Node<Dimensionless>,
     cosViewLight: Node<Dimensionless>,
     distanceToPoint: Node<Length>,
-    shadowLength: Node<Length>
+    shadowLength: Node<Length2>
   ): ReturnType<typeof radianceTransferStruct> => {
     const { lutNode, parametersNode } = context
     const transmittanceNode = lutNode.getTextureNode('transmittance')
@@ -312,7 +313,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
     // scattering along the last shadowLength meters of the view ray, which we
     // do by subtracting shadowLength from distanceToPoint.
     const litDistanceToPoint = distanceToPoint
-      .sub(shadowLength)
+      .sub(shadowLength.x)
       .max(0)
       .toConst()
     const radiusP = clampRadius(
@@ -349,7 +350,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
 
     // Combine the lookup to get the scattering between camera and point.
     const shadowTransmittance = transmittance.toVar()
-    If(shadowLength.greaterThan(0), () => {
+    If(shadowLength.x.greaterThan(0), () => {
       shadowTransmittance.assign(
         getTransmittance(
           transmittanceNode,
@@ -398,7 +399,7 @@ const getIndirectRadianceToPointRaymarch = /*#__PURE__*/ FnVar(
     cosLight: Node<Dimensionless>,
     cosViewLight: Node<Dimensionless>,
     distanceToPoint: Node<Length>,
-    shadowLength: Node<Length>
+    shadowLength: Node<Length2>
   ): ReturnType<typeof radianceTransferStruct> => {
     const result = computeIndirectRadianceToPoint(
       context,
@@ -421,7 +422,7 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
     context: AtmosphereContext,
     camera: Node<Position>,
     point: Node<Position>,
-    shadowLength: Node<Length>,
+    shadowLength: Node<Length2>,
     lightDirection: Node<Direction>
   ): ReturnType<typeof radianceTransferStruct> => {
     const { parametersNode } = context
@@ -670,7 +671,7 @@ export const getIndirectLuminance = /*#__PURE__*/ FnVar(
   (
     camera: Node<Position>,
     rayDirection: Node<Direction>,
-    shadowLength: Node<Length>,
+    shadowLength: Node<Length2>,
     lightDirection: Node<Direction>
   ) =>
     (builder): ReturnType<typeof luminanceTransferStruct> => {
@@ -700,7 +701,7 @@ export const getIndirectLuminanceToPoint = /*#__PURE__*/ FnVar(
   (
     camera: Node<Position>,
     point: Node<Position>,
-    shadowLength: Node<Length>,
+    shadowLength: Node<Length2>,
     lightDirection: Node<Direction>
   ) =>
     (builder): ReturnType<typeof luminanceTransferStruct> => {

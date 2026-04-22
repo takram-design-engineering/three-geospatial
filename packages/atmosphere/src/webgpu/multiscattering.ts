@@ -72,7 +72,8 @@ import {
   Length,
   RadianceSpectrum,
   ScatteringSpectrum,
-  type Dimensionless
+  type Dimensionless,
+  type Length2
 } from './dimensional'
 
 export const getSubUVFromTextureUnit = /*#__PURE__*/ FnLayout({
@@ -471,7 +472,7 @@ export const computeIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
     cosLight: Node<Dimensionless>,
     cosViewLight: Node<Dimensionless>,
     maxDistance: Node<Length>,
-    shadowLength: Node<Length>
+    shadowLength: Node<Length2>
   ): ReturnType<typeof radianceTransferStruct> => {
     const { lutNode, parametersNode, scatteringSampleCount } = context
     const transmittanceNode = lutNode.getTextureNode('transmittance')
@@ -495,7 +496,11 @@ export const computeIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
 
     const miePhase = miePhaseFunction(miePhaseFunctionG, cosViewLight).toConst()
     const rayleighPhase = rayleighPhaseFunction(cosViewLight).toConst()
-    const litDistance = maxDistance.sub(shadowLength).toConst()
+
+    const shadowSegment = vec2(
+      shadowLength.y,
+      shadowLength.y.add(shadowLength.x)
+    ).toConst()
 
     const totalRadiance = vec3(0).toVar()
     const totalTransmittance = vec3(1).toVar()
@@ -552,7 +557,11 @@ export const computeIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
         .mul(mediumScattering)
         .toConst()
 
-      const shadow = step(rayLength, litDistance)
+      const shadows = step(
+        vec2(rayLength, shadowSegment.y),
+        vec2(shadowSegment.x, rayLength)
+      ).toConst()
+      const shadow = shadows.x.add(shadows.y).min(1).toConst()
 
       const singleScattering = add(
         rayleighScattering.mul(rayleighPhase),

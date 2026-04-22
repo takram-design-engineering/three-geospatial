@@ -38,6 +38,7 @@ export const Position = 'vec3'
 export const Direction = 'vec3'
 export const Luminance3 = 'vec3'
 export const Illuminance3 = 'vec3'
+export const Length2 = 'vec2'
 
 export type Length = typeof Length
 export type Wavelength = typeof Wavelength
@@ -75,3 +76,4 @@ export type Position = typeof Position
 export type Direction = typeof Direction
 export type Luminance3 = typeof Luminance3
 export type Illuminance3 = typeof Illuminance3
+export type Length2 = typeof Length2

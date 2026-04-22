@@ -7,6 +7,7 @@ import {
   positionGeometry,
   remapClamp,
   uv,
+  vec2,
   vec3,
   vec4
 } from 'three/tsl'
@@ -35,7 +36,7 @@ export class AerialPerspectiveNode extends TempNode {
   depthNode: Node<'float'>
   normalNode?: Node<'vec3'> | null
   skyNode?: Node<'vec3'> | null
-  shadowLengthNode?: Node<'float'> | null
+  shadowLengthNode?: Node<'vec2'> | null
 
   correctGeometricError = true
   lighting = false
@@ -47,7 +48,7 @@ export class AerialPerspectiveNode extends TempNode {
     colorNode: Node<'vec4'>,
     depthNode: Node<'float'>,
     normalNode?: Node<'vec3'> | null,
-    shadowLengthNode?: Node<'float'> | null
+    shadowLengthNode?: Node<'vec2'> | null
   ) {
     super('vec4')
     this.colorNode = colorNode
@@ -203,7 +204,7 @@ export class AerialPerspectiveNode extends TempNode {
       const solarLuminanceTransfer = getIndirectLuminanceToPoint(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         positionUnit.add(altitudeCorrectionUnit),
-        this.shadowLengthNode?.r ?? 0,
+        this.shadowLengthNode ?? vec2(0),
         sunDirectionECEF
       ).toConst()
       const transmittance = solarLuminanceTransfer.get('transmittance')
@@ -214,7 +215,7 @@ export class AerialPerspectiveNode extends TempNode {
         const lunarLuminanceTransfer = getIndirectLuminanceToPoint(
           cameraPositionUnit.add(altitudeCorrectionUnit),
           positionUnit.add(altitudeCorrectionUnit),
-          this.shadowLengthNode?.r ?? 0,
+          this.shadowLengthNode ?? vec2(0),
           moonDirectionECEF
         ).toConst()
 

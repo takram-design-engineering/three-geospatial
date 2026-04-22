@@ -1,6 +1,15 @@
 import type { Camera } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import { Fn, mix, nodeProxy, positionGeometry, uv, vec3, vec4 } from 'three/tsl'
+import {
+  Fn,
+  mix,
+  nodeProxy,
+  positionGeometry,
+  uv,
+  vec2,
+  vec3,
+  vec4
+} from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
@@ -38,7 +47,7 @@ export class SkyNode extends TempNode {
 
   private readonly scope: SkyNodeScope = CAMERA
 
-  shadowLengthNode?: Node<'float'> | null
+  shadowLengthNode?: Node<'vec2'> | null
 
   sunNode: SunNode
   moonNode: MoonNode
@@ -50,7 +59,7 @@ export class SkyNode extends TempNode {
   moonScattering = false
   useContextCamera = true
 
-  constructor(scope: SkyNodeScope, shadowLengthNode?: Node<'float'> | null) {
+  constructor(scope: SkyNodeScope, shadowLengthNode?: Node<'vec2'> | null) {
     super('vec3')
     this.scope = scope
     this.shadowLengthNode = shadowLengthNode
@@ -107,7 +116,7 @@ export class SkyNode extends TempNode {
       const solarLuminanceTransfer = getIndirectLuminance(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         rayDirectionECEF,
-        this.shadowLengthNode?.r ?? 0,
+        this.shadowLengthNode ?? vec2(0),
         sunDirectionECEF
       ).toConst()
       const transmittance = solarLuminanceTransfer.get('transmittance')
@@ -117,7 +126,7 @@ export class SkyNode extends TempNode {
         const lunarLuminanceTransfer = getIndirectLuminance(
           cameraPositionUnit.add(altitudeCorrectionUnit),
           rayDirectionECEF,
-          this.shadowLengthNode?.r ?? 0,
+          this.shadowLengthNode ?? vec2(0),
           moonDirectionECEF
         )
 
