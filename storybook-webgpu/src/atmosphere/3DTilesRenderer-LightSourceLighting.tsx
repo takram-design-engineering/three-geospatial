@@ -165,7 +165,7 @@ const Content: FC<StoryProps> = ({
     }),
     ({ transmittance, inscattering, showGround, raymarchScattering }) => {
       aerialNode.transmittance = transmittance
-      aerialNode.inscatter = inscattering
+      aerialNode.inscattering = inscattering
       atmosphereContext.showGround = showGround
       atmosphereContext.raymarchScattering = raymarchScattering
       postProcessing.needsUpdate = true

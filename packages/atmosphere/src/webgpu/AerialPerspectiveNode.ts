@@ -41,7 +41,7 @@ export class AerialPerspectiveNode extends TempNode {
   correctGeometricError = true
   lighting = false
   transmittance = true
-  inscatter = true
+  inscattering = true
   moonScattering = false
 
   constructor(
@@ -65,7 +65,7 @@ export class AerialPerspectiveNode extends TempNode {
       +this.correctGeometricError,
       +this.lighting,
       +this.transmittance,
-      +this.inscatter,
+      +this.inscattering,
       +this.moonScattering
     )
   }
@@ -208,7 +208,7 @@ export class AerialPerspectiveNode extends TempNode {
         sunDirectionECEF
       ).toConst()
       const transmittance = solarLuminanceTransfer.get('transmittance')
-      let inscatter = solarLuminanceTransfer.get('luminance')
+      let inscattering = solarLuminanceTransfer.get('luminance')
 
       if (this.moonScattering) {
         // TODO: Combine raymarch when raymarchScattering.
@@ -220,7 +220,7 @@ export class AerialPerspectiveNode extends TempNode {
         ).toConst()
 
         // TODO: Consider moon phase
-        inscatter = inscatter.add(
+        inscattering = inscattering.add(
           lunarLuminanceTransfer.get('luminance').mul(2.5e-6)
         )
       }
@@ -229,8 +229,8 @@ export class AerialPerspectiveNode extends TempNode {
       if (this.transmittance) {
         output = output.mul(transmittance)
       }
-      if (this.inscatter) {
-        output = output.add(inscatter)
+      if (this.inscattering) {
+        output = output.add(inscattering)
       }
       return output
     })()
@@ -258,6 +258,16 @@ export class AerialPerspectiveNode extends TempNode {
   override dispose(): void {
     this.skyNode?.dispose() // TODO: Conditionally depending on the owner.
     super.dispose()
+  }
+
+  /** @deprecated Use inscattering instead. */
+  get inscatter(): boolean {
+    return this.inscattering
+  }
+
+  /** @deprecated Use inscattering instead. */
+  set inscatter(value: boolean) {
+    this.inscattering = value
   }
 }
 

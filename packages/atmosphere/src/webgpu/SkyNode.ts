@@ -120,7 +120,7 @@ export class SkyNode extends TempNode {
         sunDirectionECEF
       ).toConst()
       const transmittance = solarLuminanceTransfer.get('transmittance')
-      let inscatter = solarLuminanceTransfer.get('luminance')
+      let inscattering = solarLuminanceTransfer.get('luminance')
 
       if (this.moonScattering) {
         const lunarLuminanceTransfer = getIndirectLuminance(
@@ -131,7 +131,7 @@ export class SkyNode extends TempNode {
         )
 
         // TODO: Consider moon phase
-        inscatter = inscatter.add(
+        inscattering = inscattering.add(
           lunarLuminanceTransfer.get('luminance').mul(2.5e-6)
         )
       }
@@ -154,7 +154,7 @@ export class SkyNode extends TempNode {
         luminance.assign(mix(luminance, moonNode.rgb, moonNode.a))
       }
 
-      return luminance.mul(transmittance).add(inscatter)
+      return luminance.mul(transmittance).add(inscattering)
     })()
   }
 }

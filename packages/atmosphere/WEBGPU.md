@@ -444,11 +444,11 @@ lighting = false
 
 Whether to apply direct and indirect irradiance as post-process lighting. This option requires `normalNode` to be set when enabled.
 
-#### transmittance, inscatter
+#### transmittance, inscattering
 
 ```ts
 transmittance = true
-inscatter = true
+inscattering = true
 ```
 
 Whether to account for the atmospheric transmittance and inscattered light.

@@ -620,8 +620,9 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
         transmittance.assign(result.get('transmittance'))
       }
 
-      // Extrapolate the inscatter sampled above to the actual distance between
-      // the camera and point, assuming both averages are the same (not really).
+      // Extrapolate the inscattered light sampled above to the actual distance
+      // between the camera and point, assuming both averages are the same (not
+      // really).
       if (!context.raymarchScattering) {
         const extrapolation = raySegmentLength.div(camera.distance(point))
         radiance.assign(radiance.mul(extrapolation))
