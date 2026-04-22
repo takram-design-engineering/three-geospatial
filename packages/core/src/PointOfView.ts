@@ -123,21 +123,28 @@ export class PointOfView {
     )
   }
 
-  setFromCamera(camera: Camera, ellipsoid = Ellipsoid.WGS84): this | undefined {
+  setFromCamera(
+    camera: Camera,
+    ellipsoid = Ellipsoid.WGS84,
+    target?: Vector3
+  ): this | undefined {
     const eye = vectorScratch1.setFromMatrixPosition(camera.matrixWorld)
     const direction = vectorScratch2
       .set(0, 0, 0.5)
       .unproject(camera)
       .sub(eye)
       .normalize()
-    const target = ellipsoid.getIntersection(rayScratch.set(eye, direction))
-    if (target == null) {
+    const intersection = ellipsoid.getIntersection(
+      rayScratch.set(eye, direction)
+    )
+    if (intersection == null) {
       return
     }
+    target?.copy(intersection)
 
-    this.distance = eye.distanceTo(target)
+    this.distance = eye.distanceTo(intersection)
     ellipsoid.getEastNorthUpVectors(
-      target,
+      intersection,
       eastScratch,
       northScratch,
       upScratch

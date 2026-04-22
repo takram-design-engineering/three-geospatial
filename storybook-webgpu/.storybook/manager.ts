@@ -14,3 +14,12 @@ addons.setConfig({
     }
   }
 })
+
+addons.register('focusIFrame', () => {
+  addons.getChannel().on('currentStoryWasSet', () => {
+    const iframe = document.querySelector('#storybook-preview-iframe')
+    if (iframe != null) {
+      ;(iframe as HTMLIFrameElement).focus()
+    }
+  })
+})
