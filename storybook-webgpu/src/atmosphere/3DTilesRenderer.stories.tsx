@@ -3,9 +3,11 @@ import type { Meta } from '@storybook/react-vite'
 import { createStory } from '../components/createStory'
 import { Story as LightSourceLightingStory } from './3DTilesRenderer-LightSourceLighting'
 import { Story as PostProcessLightingStory } from './3DTilesRenderer-PostProcessLighting'
+import { Story as ShadowsStory } from './3DTilesRenderer-Shadows'
 
 import LightSourceLightingCode from './3DTilesRenderer-LightSourceLighting?raw'
 import PostProcessLightingCode from './3DTilesRenderer-PostProcessLighting?raw'
+import ShadowsCode from './3DTilesRenderer-Shadows?raw'
 
 export default {
   title: 'atmosphere/3D Tiles Renderer Integration',
@@ -58,6 +60,28 @@ export const PostProcessLighting = createStory(PostProcessLightingStory, {
     docs: {
       source: {
         code: PostProcessLightingCode
+      }
+    }
+  }
+})
+
+export const Shadows = createStory(ShadowsStory, {
+  props: {
+    longitude: 138.296,
+    latitude: 35.8306,
+    heading: -74,
+    pitch: -24,
+    distance: 5864
+  },
+  args: {
+    toneMappingExposure: 45.1,
+    dayOfYear: 260,
+    timeOfDay: 17.7
+  },
+  parameters: {
+    docs: {
+      source: {
+        code: ShadowsCode
       }
     }
   }
