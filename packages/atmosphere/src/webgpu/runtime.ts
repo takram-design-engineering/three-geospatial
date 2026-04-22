@@ -231,6 +231,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           cosViewLight,
           intersectsGroundScattering
         ).toConst()
+
         scattering.assign(combinedScattering.get('scattering'))
         singleMieScattering.assign(
           combinedScattering.get('singleMieScattering')
