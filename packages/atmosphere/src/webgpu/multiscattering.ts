@@ -548,14 +548,29 @@ export const computeIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
         rayleighScattering.mul(rayleighPhase),
         mieScattering.mul(miePhase)
       )
-      const radiance = solarIrradiance
-        .mul(
-          transmittanceToSun
-            .mul(singleScattering)
-            .mul(shadow)
-            .add(multipleScattering)
-        )
-        .toConst()
+      let radiance: Node<'vec3'>
+      if (context.parameters.higherOrderScatteringTexture) {
+        radiance = solarIrradiance
+          .mul(
+            transmittanceToSun
+              .mul(singleScattering)
+              .mul(shadow)
+              .add(multipleScattering)
+          )
+          .toConst()
+      } else {
+        // In case where higherOrderScatteringTexture is disabled, we attenuate
+        // the multiple scattering by the shadows so that the inscattered light
+        // become consistent with the radiance at the sky.
+        radiance = solarIrradiance
+          .mul(
+            transmittanceToSun
+              .mul(singleScattering)
+              .add(multipleScattering)
+              .mul(shadow)
+          )
+          .toConst()
+      }
       const radianceIntegrand = radiance
         .sub(radiance.mul(transmittance))
         .div(mediumExtinction)
