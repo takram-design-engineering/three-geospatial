@@ -194,6 +194,9 @@ Story.argTypes = {
   ...localDateArgTypes(),
   ...locationArgTypes(),
   ...toneMappingArgTypes(),
-  ...outputPassArgTypes(),
+  ...outputPassArgTypes({
+    hasNormal: true,
+    hasVelocity: true
+  }),
   ...rendererArgTypes()
 }

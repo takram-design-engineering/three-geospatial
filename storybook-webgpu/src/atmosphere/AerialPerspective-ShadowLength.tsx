@@ -515,6 +515,8 @@ Story.argTypes = {
   },
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
-  ...outputPassArgTypes(),
+  ...outputPassArgTypes({
+    hasVelocity: true
+  }),
   ...rendererArgTypes()
 }

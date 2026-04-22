@@ -41,7 +41,7 @@ export const outputPassArgTypes = (
     name: 'normal',
     control: {
       type: 'boolean',
-      disable: options.hasNormal === false
+      disable: options.hasNormal !== true
     },
     table: { category: 'output pass' }
   },
@@ -49,7 +49,7 @@ export const outputPassArgTypes = (
     name: 'velocity',
     control: {
       type: 'boolean',
-      disable: options.hasVelocity === false
+      disable: options.hasVelocity !== true
     },
     table: { category: 'output pass' }
   }

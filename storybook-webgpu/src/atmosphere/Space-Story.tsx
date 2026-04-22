@@ -302,7 +302,7 @@ Story.argTypes = {
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes({
-    hasNormal: false
+    hasVelocity: true
   }),
   ...rendererArgTypes()
 }
