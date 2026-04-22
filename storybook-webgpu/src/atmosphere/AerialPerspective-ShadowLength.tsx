@@ -273,11 +273,17 @@ const Content: FC<StoryProps> = ({
         outputNode
       )
     } else if (displayShadowLength) {
-      outputNode = bool(true).select(vec4(shadowLengthNode.rrr, 1), outputNode)
+      outputNode = bool(true).select(
+        shadowLengthNode.xxx
+          .mul(1 / atmosphereContext.parameters.worldToUnit)
+          .mul(0.0001), // 1 = 10 km
+        outputNode
+      )
     }
     return new PostProcessing(renderer, outputNode)
   }, [
     renderer,
+    atmosphereContext,
     shadowLengthNode,
     taaNode,
     overlayPassNode,

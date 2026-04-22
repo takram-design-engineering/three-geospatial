@@ -15,8 +15,7 @@ import {
   output,
   pass,
   toneMapping,
-  uniform,
-  vec4
+  uniform
 } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
@@ -226,11 +225,17 @@ const Content: FC<StoryProps> = ({
 
     // Useless conditionals to keep the main path in the graph:
     if (displayShadowLength) {
-      outputNode = bool(true).select(vec4(shadowLengthNode.rrr, 1), outputNode)
+      outputNode = bool(true).select(
+        shadowLengthNode.xxx
+          .mul(1 / atmosphereContext.parameters.worldToUnit)
+          .mul(0.0001), // 1 = 10 km
+        outputNode
+      )
     }
     return new PostProcessing(renderer, outputNode)
   }, [
     renderer,
+    atmosphereContext,
     shadowLengthNode,
     taaNode,
     overlayPassNode,
