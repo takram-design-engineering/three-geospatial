@@ -296,151 +296,16 @@ const scatteringStruct = /*#__PURE__*/ struct(
   'Scattering'
 )
 
-const computeScattering = /*#__PURE__*/ FnVar(
-  (
-    parameters: ReturnType<typeof atmosphereParametersStruct>,
-    transmittanceNode: TextureNode,
-    multipleScatteringNode: TextureNode,
-    radius: Node<Length>,
-    cosView: Node<Dimensionless>,
-    cosLight: Node<Dimensionless>,
-    cosViewLight: Node<Dimensionless>,
-    intersectsGround: Node<'bool'>
-  ): ReturnType<typeof scatteringStruct> => {
-    const { solarIrradiance, bottomRadius } = makeDestructible(parameters)
-
-    const maxDistance = distanceToNearestAtmosphereBoundary(
-      parameters,
-      radius,
-      cosView,
-      intersectsGround
-    ).toConst()
-
-    // Setup a variable sample count.
-    const minSampleCount = 14
-    const maxSampleCount = 30
-    const sampleCount = mix(
-      minSampleCount,
-      maxSampleCount,
-      maxDistance.mul(1 / 100)
-    ).toConst()
-    const sampleCountFloor = sampleCount.floor().toConst()
-    const sampleCountFloorInv = sampleCountFloor.reciprocal().toConst()
-    // Rescale distanceToPoint to map to the last entire step segment.
-    const maxDistanceFloor = maxDistance
-      .mul(sampleCountFloor)
-      .div(sampleCount)
-      .toConst()
-
-    const rayleighPhase = rayleighPhaseFunction(cosViewLight).toConst()
-
-    const totalScattering = vec3(0).toVar()
-    const totalMie = vec3(0).toVar()
-    const totalHigherOrder = vec3(0).toVar()
-    const totalTransmittance = vec3(1).toVar()
-
-    Loop({ type: 'float', start: 0, end: sampleCount }, ({ i }) => {
-      const t0 = i.mul(sampleCountFloorInv).toVar()
-      const t1 = i.add(1).mul(sampleCountFloorInv).toVar()
-      // Non linear distribution of sample within the range.
-      t0.mulAssign(t0)
-      t1.mulAssign(t1)
-      // Make t0 and t1 world space distances.
-      t0.mulAssign(maxDistanceFloor)
-      t1.assign(t1.greaterThan(1).select(maxDistance, maxDistanceFloor.mul(t1)))
-
-      const stepSize = t1.sub(t0)
-      const rayLength = t0.add(stepSize.mul(0.3)) // Add a bias to the sample point
-
-      const radiusI = clampRadius(
-        parameters,
-        sqrt(
-          rayLength
-            .pow2()
-            .add(mul(2, radius, cosView, rayLength))
-            .add(radius.pow2())
-        )
-      ).toConst()
-
-      const cosLightI = clampCosine(
-        radius.mul(cosLight).add(rayLength.mul(cosViewLight)).div(radiusI)
-      ).toConst()
-
-      const altitude = radiusI.sub(bottomRadius)
-      const medium = sampleAtmosphereMedium(parameters, altitude).toConst()
-      const rayleighScattering = medium.get('rayleighScattering')
-      const mieScattering = medium.get('mieScattering')
-      const mediumScattering = medium.get('scattering')
-      const mediumExtinction = medium.get('extinction')
-
-      const opticalDepth = mediumExtinction.mul(stepSize)
-      const transmittance = exp(opticalDepth.negate()).toConst()
-
-      const transmittanceToSun = getTransmittanceToSun(
-        transmittanceNode,
-        radiusI,
-        cosLightI
-      ).toConst()
-
-      const multipleScattering = getMultipleScattering(
-        parameters,
-        multipleScatteringNode,
-        radiusI,
-        cosLightI
-      )
-        .mul(mediumScattering)
-        .toConst()
-
-      // Integrate the Rayleigh scattering and multiple scattering over the
-      // Rayleigh phase (irradiance), in the way it matches to the Bruneton's
-      // 4D scattering LUT.
-      const scattering = solarIrradiance
-        .mul(
-          transmittanceToSun
-            .mul(rayleighScattering)
-            .add(multipleScattering.div(rayleighPhase))
-        )
-        .toConst()
-      const scatteringIntegrand = scattering
-        .sub(scattering.mul(transmittance))
-        .div(mediumExtinction)
-        .toConst()
-      totalScattering.addAssign(totalTransmittance.mul(scatteringIntegrand))
-
-      // Integrate the Mie scattering over the Mie phase (irradiance).
-      const mie = solarIrradiance
-        .mul(transmittanceToSun.mul(mieScattering))
-        .toConst()
-      const mieIntegrand = mie
-        .sub(mie.mul(transmittance))
-        .div(mediumExtinction)
-        .toConst()
-      totalMie.addAssign(totalTransmittance.mul(mieIntegrand))
-
-      // Integrate the higher-order scattering radiance.
-      const higherOrder = solarIrradiance.mul(multipleScattering)
-      const higherOrderIntegrand = higherOrder
-        .sub(higherOrder.mul(transmittance))
-        .div(mediumExtinction)
-        .toConst()
-      totalHigherOrder.addAssign(totalTransmittance.mul(higherOrderIntegrand))
-
-      totalTransmittance.mulAssign(transmittance)
-    })
-
-    return scatteringStruct(totalScattering, totalMie, totalHigherOrder)
-  }
-)
-
 export const computeScatteringTexture = /*#__PURE__*/ FnVar(
   (
     transmittanceNode: TextureNode,
     multipleScatteringNode: TextureNode,
     fragCoord: Node<'vec3'>
   ) =>
-    (builder): ReturnType<typeof computeScattering> => {
+    (builder): ReturnType<typeof scatteringStruct> => {
       const context = getAtmosphereContextBase(builder)
       const { parametersNode } = context
+      const { solarIrradiance, bottomRadius } = parametersNode
 
       const scatteringParams = getParamsFromScatteringTextureFragCoord(
         parametersNode,
@@ -451,16 +316,132 @@ export const computeScatteringTexture = /*#__PURE__*/ FnVar(
       const cosLight = scatteringParams.get('cosLight')
       const cosViewLight = scatteringParams.get('cosViewLight')
       const intersectsGround = scatteringParams.get('intersectsGround')
-      return computeScattering(
+
+      const maxDistance = distanceToNearestAtmosphereBoundary(
         parametersNode,
-        transmittanceNode,
-        multipleScatteringNode,
         radius,
         cosView,
-        cosLight,
-        cosViewLight,
         intersectsGround
-      )
+      ).toConst()
+
+      // Setup a variable sample count.
+      const minSampleCount = 14
+      const maxSampleCount = 30
+      const sampleCount = mix(
+        minSampleCount,
+        maxSampleCount,
+        maxDistance.mul(1 / 100)
+      ).toConst()
+      const sampleCountFloor = sampleCount.floor().toConst()
+      const sampleCountFloorInv = sampleCountFloor.reciprocal().toConst()
+      // Rescale distanceToPoint to map to the last entire step segment.
+      const maxDistanceFloor = maxDistance
+        .mul(sampleCountFloor)
+        .div(sampleCount)
+        .toConst()
+
+      const rayleighPhase = rayleighPhaseFunction(cosViewLight).toConst()
+
+      const totalScattering = vec3(0).toVar()
+      const totalMie = vec3(0).toVar()
+      const totalHigherOrder = vec3(0).toVar()
+      const totalTransmittance = vec3(1).toVar()
+
+      Loop({ type: 'float', start: 0, end: sampleCount }, ({ i }) => {
+        const t0 = i.mul(sampleCountFloorInv).toVar()
+        const t1 = i.add(1).mul(sampleCountFloorInv).toVar()
+        // Non linear distribution of sample within the range.
+        t0.mulAssign(t0)
+        t1.mulAssign(t1)
+        // Make t0 and t1 world space distances.
+        t0.mulAssign(maxDistanceFloor)
+        t1.assign(
+          t1.greaterThan(1).select(maxDistance, maxDistanceFloor.mul(t1))
+        )
+
+        const stepSize = t1.sub(t0)
+        const rayLength = t0.add(stepSize.mul(0.3)) // Add a bias to the sample point
+
+        const radiusI = clampRadius(
+          parametersNode,
+          sqrt(
+            rayLength
+              .pow2()
+              .add(mul(2, radius, cosView, rayLength))
+              .add(radius.pow2())
+          )
+        ).toConst()
+
+        const cosLightI = clampCosine(
+          radius.mul(cosLight).add(rayLength.mul(cosViewLight)).div(radiusI)
+        ).toConst()
+
+        const altitude = radiusI.sub(bottomRadius)
+        const medium = sampleAtmosphereMedium(
+          parametersNode,
+          altitude
+        ).toConst()
+        const rayleighScattering = medium.get('rayleighScattering')
+        const mieScattering = medium.get('mieScattering')
+        const mediumScattering = medium.get('scattering')
+        const mediumExtinction = medium.get('extinction')
+
+        const opticalDepth = mediumExtinction.mul(stepSize)
+        const transmittance = exp(opticalDepth.negate()).toConst()
+
+        const transmittanceToSun = getTransmittanceToSun(
+          transmittanceNode,
+          radiusI,
+          cosLightI
+        ).toConst()
+
+        const multipleScattering = getMultipleScattering(
+          parametersNode,
+          multipleScatteringNode,
+          radiusI,
+          cosLightI
+        )
+          .mul(mediumScattering)
+          .toConst()
+
+        // In case where the higherOrderScatteringTexture is disabled, integrate
+        // the Rayleigh scattering and multiple scattering over the Rayleigh
+        // phase (irradiance), in the way it matches to the Bruneton's 4D
+        // scattering LUT.
+        let scattering: Node<'vec3'> =
+          transmittanceToSun.mul(rayleighScattering)
+        if (!context.parameters.higherOrderScatteringTexture) {
+          scattering = scattering.add(multipleScattering.div(rayleighPhase))
+        }
+        scattering = solarIrradiance.mul(scattering).toConst()
+        const scatteringIntegrand = scattering
+          .sub(scattering.mul(transmittance))
+          .div(mediumExtinction)
+          .toConst()
+        totalScattering.addAssign(totalTransmittance.mul(scatteringIntegrand))
+
+        // Integrate the Mie scattering over the Mie phase (irradiance).
+        const mie = solarIrradiance
+          .mul(transmittanceToSun.mul(mieScattering))
+          .toConst()
+        const mieIntegrand = mie
+          .sub(mie.mul(transmittance))
+          .div(mediumExtinction)
+          .toConst()
+        totalMie.addAssign(totalTransmittance.mul(mieIntegrand))
+
+        // Integrate the higher-order scattering radiance.
+        const higherOrder = solarIrradiance.mul(multipleScattering)
+        const higherOrderIntegrand = higherOrder
+          .sub(higherOrder.mul(transmittance))
+          .div(mediumExtinction)
+          .toConst()
+        totalHigherOrder.addAssign(totalTransmittance.mul(higherOrderIntegrand))
+
+        totalTransmittance.mulAssign(transmittance)
+      })
+
+      return scatteringStruct(totalScattering, totalMie, totalHigherOrder)
     }
 )
 

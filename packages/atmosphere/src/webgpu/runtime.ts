@@ -82,6 +82,7 @@ import {
   getCombinedScattering,
   getExtrapolatedSingleMieScattering,
   getIrradiance,
+  getScattering,
   getTransmittance,
   getTransmittanceToSun,
   getTransmittanceToTopAtmosphereBoundary,
@@ -247,10 +248,32 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         singleMieScattering.assign(singleMieScattering.mul(shadowTransmittance))
       })
 
+      // In case where the higherOrderScatteringTexture is enabled, the
+      // scattering texture only includes the scattered Rayleigh irradiance, so
+      // we just add the higher-order scattering radiance regardless of
+      // occlusion.
+      let higherOrderScattering: Node<'vec3'> = vec3(0)
+      if (context.parameters.higherOrderScatteringTexture) {
+        const higherOrderScatteringTexture = lutNode.getTextureNode(
+          'higherOrderScattering'
+        )
+        higherOrderScattering = getScattering(
+          higherOrderScatteringTexture,
+          radius,
+          cosView,
+          cosLight,
+          cosViewLight,
+          intersectsGroundScattering
+        )
+      }
+
       const rayleighPhase = rayleighPhaseFunction(cosViewLight)
       const miePhase = miePhaseFunction(miePhaseFunctionG, cosViewLight)
       radiance.assign(
-        scattering.mul(rayleighPhase).add(singleMieScattering.mul(miePhase))
+        scattering
+          .mul(rayleighPhase)
+          .add(singleMieScattering.mul(miePhase))
+          .add(higherOrderScattering)
       )
     })
 
@@ -303,6 +326,10 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       intersectsGround
     ).toConst()
 
+    // Note that the `scattering` contains only the Rayleigh scattering
+    // irradiance when higherOrderScatteringTexture is enabled, whereas it
+    // also includes multiple scattering over the Rayleigh phase when
+    // higherOrderScatteringTexture is disabled.
     const scattering = combinedScattering.get('scattering').toVar()
     const singleMieScattering = combinedScattering
       .get('singleMieScattering')
@@ -382,10 +409,62 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       singleMieScattering.mul(smoothstep(0, 0.01, cosLight))
     )
 
+    // In case where the higherOrderScatteringTexture is enabled, the
+    // scattering texture only includes the scattered Rayleigh irradiance, so
+    // we just add the higher-order scattering radiance regardless of
+    // occlusion.
+    let multipleScattering: Node<'vec3'> = vec3(0)
+    if (context.parameters.higherOrderScatteringTexture) {
+      const higherOrderScatteringTexture = lutNode.getTextureNode(
+        'higherOrderScattering'
+      )
+      const radiusP = clampRadius(
+        parametersNode,
+        sqrt(
+          distanceToPoint
+            .pow2()
+            .add(mul(2, radius, cosView, distanceToPoint))
+            .add(radius.pow2())
+        )
+      ).toConst()
+      const cosViewP = radius
+        .mul(cosView)
+        .add(distanceToPoint)
+        .div(radiusP)
+        .toConst()
+      const cosLightP = radius
+        .mul(cosLight)
+        .add(distanceToPoint.mul(cosViewLight))
+        .div(radiusP)
+        .toConst()
+      const higherOrderScattering = getScattering(
+        higherOrderScatteringTexture,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        intersectsGround
+      ).toConst()
+      const higherOrderScatteringP = getScattering(
+        higherOrderScatteringTexture,
+        radiusP,
+        cosViewP,
+        cosLightP,
+        cosViewLight,
+        intersectsGround
+      ).toConst()
+      multipleScattering = higherOrderScattering.sub(
+        transmittance.mul(higherOrderScatteringP)
+      )
+    }
+
     const rayleighPhase = rayleighPhaseFunction(cosViewLight)
     const miePhase = miePhaseFunction(miePhaseFunctionG, cosViewLight)
     scattering.assign(
-      scattering.mul(rayleighPhase).add(singleMieScattering.mul(miePhase))
+      scattering
+        .mul(rayleighPhase)
+        .add(singleMieScattering.mul(miePhase))
+        .add(multipleScattering)
     )
     return radianceTransferStruct(scattering, transmittance)
   }
