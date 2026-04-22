@@ -97,7 +97,8 @@ const Content: FC<StoryProps> = ({
   height,
   heading,
   pitch,
-  distance
+  distance,
+  csmFar: shadowFar
 }) => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
@@ -124,17 +125,17 @@ const Content: FC<StoryProps> = ({
     light.shadow.mapSize.width = 1024
     light.shadow.mapSize.height = 1024
     light.shadow.camera.near = 0
-    light.shadow.camera.far = 3e5
+    light.shadow.camera.far = shadowFar * 4
 
     const csmNode = new CascadedShadowMapsNode(light)
     csmNode.cascadeCount = 3
-    csmNode.maxFar = 5e4
+    csmNode.maxFar = shadowFar
     csmNode.fade = true
-    csmNode.lightMargin = 1e5
+    csmNode.lightMargin = shadowFar * 2
     light.shadow.shadowNode = csmNode
 
     return [light, csmNode]
-  }, [])
+  }, [shadowFar])
 
   useEffect(() => {
     return () => {
@@ -322,6 +323,7 @@ const Content: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {
   fov?: number
+  csmFar: number
 }
 
 interface StoryArgs

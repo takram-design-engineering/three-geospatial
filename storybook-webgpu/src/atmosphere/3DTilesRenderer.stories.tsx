@@ -71,7 +71,8 @@ export const Shadows = createStory(ShadowsStory, {
     latitude: 35.8306,
     heading: -74,
     pitch: -24,
-    distance: 5864
+    distance: 5864,
+    csmFar: 5e4
   },
   args: {
     toneMappingExposure: 45.1,

@@ -24,7 +24,8 @@ export const Cityscape = createStory(Story, {
     latitude: 40.7589,
     heading: -155,
     pitch: -35,
-    distance: 3000
+    distance: 3000,
+    csmFar: 1e4
   },
   args: {
     toneMappingExposure: 60,
