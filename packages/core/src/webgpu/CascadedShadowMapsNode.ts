@@ -49,7 +49,7 @@ export class CascadedShadowMapsNode extends CSMShadowNode {
     // Align near planes with that of the largest frustum's light.
     const lastLight = lights[lights.length - 1]
     const lightDirection = vectorScratch1
-      .subVectors(lastLight.position, lastLight.target.position)
+      .subVectors(lastLight.target.position, lastLight.position)
       .normalize()
     const nearPlane = planeScratch.setFromNormalAndCoplanarPoint(
       lightDirection,
@@ -58,6 +58,7 @@ export class CascadedShadowMapsNode extends CSMShadowNode {
     for (let i = 0; i < lights.length - 1; ++i) {
       const light = lights[i]
       nearPlane.projectPoint(light.position, light.position)
+      light.target.position.copy(light.position).add(lightDirection)
     }
   }
 }
