@@ -48,6 +48,11 @@ import { Globe } from '../components/Globe'
 import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import {
+  atmosphereArgs,
+  atmosphereArgTypes,
+  type AtmosphereArgs
+} from '../controls/atmosphereControls'
+import {
   localDateArgs,
   localDateArgTypes,
   useLocalDateControls,
@@ -60,6 +65,11 @@ import {
   type OutputPassArgs
 } from '../controls/outputPassControls'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
+import {
+  shadowLengthArgs,
+  shadowLengthArgTypes,
+  type ShadowLengthArgs
+} from '../controls/shadowLengthControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -231,18 +241,18 @@ const Content: FC<StoryProps> = ({
   useTransientControl(
     ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
       raymarchScattering
     }: StoryArgs) => ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
       raymarchScattering
     }),
-    ({ transmittance, inscatter, showGround, raymarchScattering }) => {
+    ({ transmittance, inscattering, showGround, raymarchScattering }) => {
       aerialNode.transmittance = transmittance
-      aerialNode.inscatter = inscatter
+      aerialNode.inscatter = inscattering
       atmosphereContext.showGround = showGround
       atmosphereContext.raymarchScattering = raymarchScattering
       postProcessing.needsUpdate = true
@@ -314,14 +324,14 @@ interface StoryProps extends PointOfViewProps {
   fov?: number
 }
 
-interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
+interface StoryArgs
+  extends
+    OutputPassArgs,
+    ToneMappingArgs,
+    LocalDateArgs,
+    ShadowLengthArgs,
+    AtmosphereArgs {
   googleMapsApiKey: string
-  transmittance: boolean
-  inscatter: boolean
-  showGround: boolean
-  raymarchScattering: boolean
-  shadowLength: boolean
-  displayShadowLength: boolean
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = ({ fov, ...props }) => (
@@ -343,12 +353,10 @@ export const Story: StoryFC<StoryProps, StoryArgs> = ({ fov, ...props }) => (
 
 Story.args = {
   googleMapsApiKey: '',
-  transmittance: true,
-  inscatter: true,
-  showGround: false,
-  raymarchScattering: true,
-  shadowLength: true,
-  displayShadowLength: false,
+  ...atmosphereArgs({
+    showGround: false
+  }),
+  ...shadowLengthArgs(),
   ...localDateArgs(),
   ...toneMappingArgs(),
   ...outputPassArgs(),
@@ -357,44 +365,8 @@ Story.args = {
 
 Story.argTypes = {
   googleMapsApiKey: { control: 'text' },
-  transmittance: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  inscatter: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  showGround: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  raymarchScattering: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  shadowLength: {
-    control: {
-      type: 'boolean'
-    },
-    name: 'enable',
-    table: { category: 'shadow length' }
-  },
-  displayShadowLength: {
-    control: {
-      type: 'boolean'
-    },
-    name: 'display',
-    table: { category: 'shadow length' }
-  },
+  ...atmosphereArgTypes(),
+  ...shadowLengthArgTypes(),
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes({

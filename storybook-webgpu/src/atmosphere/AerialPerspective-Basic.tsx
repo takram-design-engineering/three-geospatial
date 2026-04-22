@@ -39,6 +39,11 @@ import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
 import {
+  atmosphereArgs,
+  atmosphereArgTypes,
+  type AtmosphereArgs
+} from '../controls/atmosphereControls'
+import {
   localDateArgs,
   localDateArgTypes,
   useLocalDateControls,
@@ -152,18 +157,18 @@ const Content: FC<StoryProps> = ({
   useTransientControl(
     ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
       raymarchScattering
     }: StoryArgs) => ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
       raymarchScattering
     }),
-    ({ transmittance, inscatter, showGround, raymarchScattering }) => {
+    ({ transmittance, inscattering, showGround, raymarchScattering }) => {
       aerialNode.transmittance = transmittance
-      aerialNode.inscatter = inscatter
+      aerialNode.inscatter = inscattering
       atmosphereContext.showGround = showGround
       atmosphereContext.raymarchScattering = raymarchScattering
       postProcessing.needsUpdate = true
@@ -233,12 +238,8 @@ const Content: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
-  transmittance: boolean
-  inscatter: boolean
-  showGround: boolean
-  raymarchScattering: boolean
-}
+interface StoryArgs
+  extends OutputPassArgs, ToneMappingArgs, LocalDateArgs, AtmosphereArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
@@ -248,10 +249,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  transmittance: true,
-  inscatter: true,
-  showGround: true,
-  raymarchScattering: true,
+  ...atmosphereArgs(),
   ...localDateArgs({
     dayOfYear: 0,
     timeOfDay: 9
@@ -264,30 +262,7 @@ Story.args = {
 }
 
 Story.argTypes = {
-  transmittance: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  inscatter: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  showGround: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  raymarchScattering: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
+  ...atmosphereArgTypes(),
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes({

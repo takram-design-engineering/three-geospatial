@@ -64,6 +64,11 @@ import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
 import {
+  atmosphereArgs,
+  atmosphereArgTypes,
+  type AtmosphereArgs
+} from '../controls/atmosphereControls'
+import {
   localDateArgs,
   localDateArgTypes,
   useLocalDateControls,
@@ -76,6 +81,11 @@ import {
   type OutputPassArgs
 } from '../controls/outputPassControls'
 import { rendererArgs, rendererArgTypes } from '../controls/rendererControls'
+import {
+  shadowLengthArgs,
+  shadowLengthArgTypes,
+  type ShadowLengthArgs
+} from '../controls/shadowLengthControls'
 import {
   toneMappingArgs,
   toneMappingArgTypes,
@@ -297,18 +307,18 @@ const Content: FC<StoryProps> = ({
   useTransientControl(
     ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
       raymarchScattering
     }: StoryArgs) => ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
       raymarchScattering
     }),
-    ({ transmittance, inscatter, showGround, raymarchScattering }) => {
+    ({ transmittance, inscattering, showGround, raymarchScattering }) => {
       aerialNode.transmittance = transmittance
-      aerialNode.inscatter = inscatter
+      aerialNode.inscatter = inscattering
       atmosphereContext.showGround = showGround
       atmosphereContext.raymarchScattering = raymarchScattering
       postProcessing.needsUpdate = true
@@ -410,15 +420,15 @@ const Content: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
+interface StoryArgs
+  extends
+    OutputPassArgs,
+    ToneMappingArgs,
+    LocalDateArgs,
+    ShadowLengthArgs,
+    AtmosphereArgs {
   showHelper: boolean
   updateHelper: boolean
-  transmittance: boolean
-  inscatter: boolean
-  showGround: boolean
-  raymarchScattering: boolean
-  shadowLength: boolean
-  displayShadowLength: boolean
   debugShadowLength: boolean
 }
 
@@ -439,12 +449,8 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   showHelper: false,
   updateHelper: true,
-  transmittance: true,
-  inscatter: true,
-  showGround: true,
-  raymarchScattering: true,
-  shadowLength: true,
-  displayShadowLength: false,
+  ...atmosphereArgs(),
+  ...shadowLengthArgs(),
   debugShadowLength: false,
   ...localDateArgs({
     dayOfYear: 0,
@@ -461,51 +467,17 @@ Story.argTypes = {
   showHelper: {
     control: {
       type: 'boolean'
-    }
+    },
+    table: { category: 'CSM' }
   },
   updateHelper: {
     control: {
       type: 'boolean'
-    }
-  },
-  transmittance: {
-    control: {
-      type: 'boolean'
     },
-    table: { category: 'aerial perspective' }
+    table: { category: 'CSM' }
   },
-  inscatter: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  showGround: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  raymarchScattering: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  shadowLength: {
-    control: {
-      type: 'boolean'
-    },
-    name: 'enable',
-    table: { category: 'shadow length' }
-  },
-  displayShadowLength: {
-    control: {
-      type: 'boolean'
-    },
-    name: 'display',
-    table: { category: 'shadow length' }
-  },
+  ...atmosphereArgTypes(),
+  ...shadowLengthArgTypes(),
   debugShadowLength: {
     control: {
       type: 'boolean'

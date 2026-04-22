@@ -32,6 +32,11 @@ import { Globe } from '../components/Globe'
 import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import {
+  atmosphereArgs,
+  atmosphereArgTypes,
+  type AtmosphereArgs
+} from '../controls/atmosphereControls'
+import {
   localDateArgs,
   localDateArgTypes,
   useLocalDateControls,
@@ -149,18 +154,18 @@ const Content: FC<StoryProps> = ({
   useTransientControl(
     ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
       raymarchScattering
     }: StoryArgs) => ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
       raymarchScattering
     }),
-    ({ transmittance, inscatter, showGround, raymarchScattering }) => {
+    ({ transmittance, inscattering, showGround, raymarchScattering }) => {
       aerialNode.transmittance = transmittance
-      aerialNode.inscatter = inscatter
+      aerialNode.inscatter = inscattering
       atmosphereContext.showGround = showGround
       atmosphereContext.raymarchScattering = raymarchScattering
       postProcessing.needsUpdate = true
@@ -228,12 +233,9 @@ interface StoryProps extends PointOfViewProps {
   fov?: number
 }
 
-interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
+interface StoryArgs
+  extends OutputPassArgs, ToneMappingArgs, LocalDateArgs, AtmosphereArgs {
   googleMapsApiKey: string
-  transmittance: boolean
-  inscatter: boolean
-  showGround: boolean
-  raymarchScattering: boolean
 }
 
 export const Story: StoryFC<StoryProps, StoryArgs> = ({ fov, ...props }) => (
@@ -254,10 +256,9 @@ export const Story: StoryFC<StoryProps, StoryArgs> = ({ fov, ...props }) => (
 
 Story.args = {
   googleMapsApiKey: '',
-  transmittance: true,
-  inscatter: true,
-  showGround: false,
-  raymarchScattering: true,
+  ...atmosphereArgs({
+    showGround: false
+  }),
   ...localDateArgs(),
   ...toneMappingArgs(),
   ...outputPassArgs(),
@@ -266,30 +267,7 @@ Story.args = {
 
 Story.argTypes = {
   googleMapsApiKey: { control: 'text' },
-  transmittance: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  inscatter: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  showGround: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  raymarchScattering: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
+  ...atmosphereArgTypes(),
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes({
