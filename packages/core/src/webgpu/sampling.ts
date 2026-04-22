@@ -26,7 +26,7 @@ export const textureGather = /*#__PURE__*/ FnVar(
     }
 
     const size = textureNode.size()
-    const coord = ivec2(uvNode.mul(size).sub(0.5)).toConst()
+    const coord = ivec2(uvNode.mul(size).sub(0.5).floor()).toConst()
     const i = ivec4(coord, coord.add(1)).toConst()
     const c = components[componentValue] // element() fails for depth textures
     return vec4(
