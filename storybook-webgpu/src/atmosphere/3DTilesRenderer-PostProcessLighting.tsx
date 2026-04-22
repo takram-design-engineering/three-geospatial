@@ -87,6 +87,8 @@ const Content: FC<StoryProps> = ({
     return new AtmosphereContext(parameters)
   }, [higherOrderScatteringTexture])
 
+  atmosphereContext.camera = camera
+
   useLayoutEffect(() => {
     renderer.contextNode = context({
       ...renderer.contextNode.value,
