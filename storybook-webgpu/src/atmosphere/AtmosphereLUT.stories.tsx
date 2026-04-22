@@ -58,8 +58,16 @@ export const Scattering = createStory(Story3D, {
     name: 'scattering'
   },
   args: {
+    higherOrderScatteringTexture: true,
     zoom: 2,
     toneMappingExposure: 0.5
+  },
+  argTypes: {
+    higherOrderScatteringTexture: {
+      controls: {
+        type: 'boolean'
+      }
+    }
   },
   parameters: {
     docs: {

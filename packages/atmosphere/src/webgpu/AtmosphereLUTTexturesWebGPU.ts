@@ -147,7 +147,8 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     const { parameters } = context
     const { x: width, y: height } = parameters.transmittanceTextureSize
 
-    this.transmittanceNode ??= Fn(() => {
+    this.transmittanceNode?.dispose()
+    this.transmittanceNode = Fn(() => {
       const size = uvec2(width, height)
       If(globalId.xy.greaterThanEqual(size).any(), () => {
         Return()
@@ -196,7 +197,8 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
       return vec3(cosTheta.mul(sinPhi), sinTheta.mul(sinPhi), cosPhi)
     })
 
-    this.multipleScatteringNode ??= Fn(() => {
+    this.multipleScatteringNode?.dispose()
+    this.multipleScatteringNode = Fn(() => {
       const multipleScatteringBuffer = workgroupArray('vec3', sampleCount)
       const transferFactorBuffer = workgroupArray('vec3', sampleCount)
 
@@ -298,7 +300,8 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     const { parameters } = context
     const { x: width, y: height, z: depth } = parameters.scatteringTextureSize
 
-    this.scatteringNode ??= Fn(() => {
+    this.scatteringNode?.dispose()
+    this.scatteringNode = Fn(() => {
       const size = uvec3(width, height, depth)
       If(globalId.greaterThanEqual(size).any(), () => {
         Return()
@@ -354,7 +357,8 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     const { parameters } = context
     const { x: width, y: height } = parameters.irradianceTextureSize
 
-    this.irradianceNode ??= Fn(() => {
+    this.irradianceNode?.dispose()
+    this.irradianceNode = Fn(() => {
       const size = uvec2(width, height)
       If(globalId.xy.greaterThanEqual(size).any(), () => {
         Return()

@@ -192,7 +192,8 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     renderer: Renderer,
     context: AtmosphereLUTTexturesContextWebGL
   ): void {
-    this.transmittanceMaterial ??= this.createMaterial(
+    this.transmittanceMaterial?.dispose()
+    this.transmittanceMaterial = this.createMaterial(
       // BUG: Context is not merged unless we wrap the node by OutputStructNode.
       mrt({
         transmittance: computeTransmittanceTexture(screenCoordinate).context({
@@ -300,7 +301,8 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
       )
     })
 
-    this.multipleScatteringMaterial ??= this.createMaterial(
+    this.multipleScatteringMaterial?.dispose()
+    this.multipleScatteringMaterial = this.createMaterial(
       // BUG: Context is not merged unless we wrap the node by
       // OutputStructNode.
       mrt({
@@ -318,7 +320,8 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
   ): void {
     const { parameters } = context
 
-    this.scatteringMaterial ??= this.createMaterial(
+    this.scatteringMaterial?.dispose()
+    this.scatteringMaterial = this.createMaterial(
       (() => {
         const result = computeScatteringTexture(
           texture(this.transmittanceRT.texture),
@@ -366,7 +369,8 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     renderer: Renderer,
     context: AtmosphereLUTTexturesContextWebGL
   ): void {
-    this.irradianceMaterial ??= this.createMaterial(
+    this.irradianceMaterial?.dispose()
+    this.irradianceMaterial = this.createMaterial(
       // BUG: Context is not merged unless we wrap the node by OutputStructNode.
       mrt({
         irradiance: computeIrradianceTexture(

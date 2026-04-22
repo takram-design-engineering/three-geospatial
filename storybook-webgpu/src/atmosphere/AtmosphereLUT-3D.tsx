@@ -58,7 +58,7 @@ const textureUVW = FnVar((textureSize: Node<'vec3'>, zoom: Node<'float'>) => {
 const Content: FC<StoryProps> = ({
   name,
   outputNode = node => node.rgb,
-  ...options
+  combinedScatteringTextures = true
 }) => {
   const zoom = uniform(0)
 
@@ -71,7 +71,22 @@ const Content: FC<StoryProps> = ({
     parameters.minCosLight = Math.cos(radians(120))
     return new AtmosphereLUTNode(parameters)
   }, [])
-  Object.assign(lutNode.parameters, options)
+
+  lutNode.parameters.combinedScatteringTextures = combinedScatteringTextures
+
+  useTransientControl(
+    ({ higherOrderScatteringTexture }: StoryArgs) => ({
+      higherOrderScatteringTexture
+    }),
+    value => {
+      if (value.higherOrderScatteringTexture != null) {
+        lutNode.parameters.higherOrderScatteringTexture =
+          value.higherOrderScatteringTexture
+        lutNode.needsUpdate = true
+      }
+    }
+  )
+
   const textureSize = vec3(lutNode.parameters.scatteringTextureSize)
   const uvw = textureUVW(textureSize, zoom)
   material.colorNode = outputNode(lutNode.getTextureNode(name).sample(uvw))
@@ -95,7 +110,7 @@ interface StoryProps extends Partial<AtmosphereParameters> {
   outputNode?: (node: Node) => Node
 }
 
-interface StoryArgs extends ToneMappingArgs {
+interface StoryArgs extends ToneMappingArgs, Partial<AtmosphereParameters> {
   zoom: number
 }
 

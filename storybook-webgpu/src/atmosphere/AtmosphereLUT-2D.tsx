@@ -59,7 +59,9 @@ const Content: FC<StoryProps> = ({
     parameters.minCosLight = Math.cos(radians(120))
     return new AtmosphereLUTNode(parameters)
   }, [])
+
   Object.assign(lutNode.parameters, options)
+
   const textureSize = vec2(lutNode.parameters[`${name}TextureSize`])
   const uv = textureUV(textureSize, zoom)
 
