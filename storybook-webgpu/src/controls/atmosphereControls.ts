@@ -5,6 +5,7 @@ export interface AtmosphereArgs {
   inscattering: boolean
   showGround: boolean
   raymarchScattering: boolean
+  higherOrderScatteringTexture: boolean
 }
 
 export const atmosphereArgs = (
@@ -14,6 +15,7 @@ export const atmosphereArgs = (
   inscattering: true,
   showGround: true,
   raymarchScattering: false,
+  higherOrderScatteringTexture: true,
   ...defaults
 })
 
@@ -22,24 +24,30 @@ export const atmosphereArgTypes = (): ArgTypes<AtmosphereArgs> => ({
     control: {
       type: 'boolean'
     },
-    table: { category: 'aerial perspective' }
+    table: { category: 'atmosphere' }
   },
   inscattering: {
     control: {
       type: 'boolean'
     },
-    table: { category: 'aerial perspective' }
+    table: { category: 'atmosphere' }
   },
   showGround: {
     control: {
       type: 'boolean'
     },
-    table: { category: 'aerial perspective' }
+    table: { category: 'atmosphere' }
   },
   raymarchScattering: {
     control: {
       type: 'boolean'
     },
-    table: { category: 'aerial perspective' }
+    table: { category: 'atmosphere' }
+  },
+  higherOrderScatteringTexture: {
+    control: {
+      type: 'boolean'
+    },
+    table: { category: 'atmosphere' }
   }
 })

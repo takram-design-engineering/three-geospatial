@@ -19,7 +19,8 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContext
+  AtmosphereContext,
+  AtmosphereParameters
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -76,8 +77,15 @@ const Content: FC<StoryProps> = ({
   const camera = useThree(({ camera }) => camera)
   const overlayScene = useMemo(() => new Scene(), [])
 
-  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
-  atmosphereContext.camera = camera
+  const higherOrderScatteringTexture = useControl(
+    ({ higherOrderScatteringTexture }: StoryArgs) =>
+      higherOrderScatteringTexture
+  )
+  const atmosphereContext = useResource(() => {
+    const parameters = new AtmosphereParameters()
+    parameters.higherOrderScatteringTexture = higherOrderScatteringTexture
+    return new AtmosphereContext(parameters)
+  }, [higherOrderScatteringTexture])
 
   useLayoutEffect(() => {
     renderer.contextNode = context({

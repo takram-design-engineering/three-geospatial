@@ -105,11 +105,16 @@ const Content: FC<StoryProps> = ({
   const camera = useThree(({ camera }) => camera)
   const overlayScene = useMemo(() => new Scene(), [])
 
+  const higherOrderScatteringTexture = useControl(
+    ({ higherOrderScatteringTexture }: StoryArgs) =>
+      higherOrderScatteringTexture
+  )
   const atmosphereContext = useResource(() => {
     const parameters = new AtmosphereParameters()
-    parameters.higherOrderScatteringTexture = true
+    parameters.higherOrderScatteringTexture = higherOrderScatteringTexture
     return new AtmosphereContext(parameters)
-  }, [])
+  }, [higherOrderScatteringTexture])
+
   atmosphereContext.camera = camera
 
   useLayoutEffect(() => {
