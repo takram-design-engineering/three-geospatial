@@ -1,9 +1,9 @@
 import type { Meta } from '@storybook/react-vite'
 
 import { createStory } from '../components/createStory'
-import { Story } from './3DTilesRenderer-PostProcessLighting'
+import { Story } from './3DTilesRenderer-Shadows'
 
-import StoryCode from './3DTilesRenderer-PostProcessLighting?raw'
+import StoryCode from './3DTilesRenderer-Shadows?raw'
 
 export default {
   title: 'atmosphere/Cityscape',
@@ -24,9 +24,11 @@ export const Cityscape = createStory(Story, {
     latitude: 40.7589,
     heading: -155,
     pitch: -35,
-    distance: 3000
+    distance: 3000,
+    csmFar: 1e4
   },
   args: {
+    raymarchScattering: true,
     toneMappingExposure: 60,
     dayOfYear: 1,
     timeOfDay: 7.6

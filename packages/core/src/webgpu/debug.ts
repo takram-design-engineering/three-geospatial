@@ -6,56 +6,44 @@ import { QuadGeometry } from '../QuadGeometry'
 
 async function debugShader(
   renderer: Renderer,
-  mesh: Mesh
+  material: NodeMaterial
 ): Promise<{
-  fragmentShader: string | null
   vertexShader: string | null
+  fragmentShader: string | null
 }> {
-  return await renderer.debug
-    .getShaderAsync(new Scene(), new Camera(), mesh)
-    .then(result => {
-      return result
-    })
-    .catch((error: unknown) => {
-      console.error(error)
-      return { fragmentShader: null, vertexShader: null }
-    })
+  const mesh = new Mesh(new QuadGeometry(), material)
+  try {
+    return await renderer.debug.getShaderAsync(new Scene(), new Camera(), mesh)
+  } catch (error: unknown) {
+    console.error(error)
+    return { vertexShader: null, fragmentShader: null }
+  } finally {
+    mesh.geometry.dispose()
+  }
 }
 
-export async function debugFragmentNode(
+export async function debugMaterial(
   renderer: Renderer,
   material: NodeMaterial
 ): Promise<string | null> {
-  const mesh = new Mesh(new QuadGeometry(), material)
-  return await debugShader(renderer, mesh)
-    .then(result => {
-      return result.fragmentShader
-    })
-    .catch((error: unknown) => {
-      console.error(error)
-      return null
-    })
-    .finally(() => {
-      mesh.geometry.dispose()
-    })
+  const { vertexShader, fragmentShader } = await debugShader(renderer, material)
+  return vertexShader != null && fragmentShader != null
+    ? `// Vertex shader\n\n${vertexShader}\n// Fragment shader\n\n${fragmentShader}`
+    : null
 }
 
 export async function debugVertexNode(
   renderer: Renderer,
   material: NodeMaterial
 ): Promise<string | null> {
-  const mesh = new Mesh(new QuadGeometry(), material)
-  return await debugShader(renderer, mesh)
-    .then(result => {
-      return result.vertexShader
-    })
-    .catch((error: unknown) => {
-      console.error(error)
-      return null
-    })
-    .finally(() => {
-      mesh.geometry.dispose()
-    })
+  return (await debugShader(renderer, material)).vertexShader
+}
+
+export async function debugFragmentNode(
+  renderer: Renderer,
+  material: NodeMaterial
+): Promise<string | null> {
+  return (await debugShader(renderer, material)).fragmentShader
 }
 
 export async function debugNode(
@@ -65,19 +53,9 @@ export async function debugNode(
   const material = new NodeMaterial()
   material.vertexNode = vec4(positionGeometry.xy, 0, 1)
   material.fragmentNode = node.toConst('debugNode')
-  const mesh = new Mesh(new QuadGeometry(), material)
-  return await debugShader(renderer, mesh)
-    .then(result => {
-      return result.fragmentShader
-    })
-    .catch((error: unknown) => {
-      console.error(error)
-      return null
-    })
-    .finally(() => {
-      material.dispose()
-      mesh.geometry.dispose()
-    })
+  const shader = await debugShader(renderer, material)
+  material.dispose()
+  return shader.fragmentShader
 }
 
 export function hookFunction<

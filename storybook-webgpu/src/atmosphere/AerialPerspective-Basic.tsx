@@ -24,7 +24,8 @@ import {
 } from '@takram/three-atmosphere'
 import {
   aerialPerspective,
-  AtmosphereContext
+  AtmosphereContext,
+  AtmosphereParameters
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -38,6 +39,11 @@ import { Description } from '../components/Description'
 import { GlobeControls } from '../components/GlobeControls'
 import { WebGPUCanvas } from '../components/WebGPUCanvas'
 import { PLATEAU_TERRAIN_API_TOKEN } from '../constants'
+import {
+  atmosphereArgs,
+  atmosphereArgTypes,
+  type AtmosphereArgs
+} from '../controls/atmosphereControls'
 import {
   localDateArgs,
   localDateArgTypes,
@@ -57,6 +63,7 @@ import {
   useToneMappingControls,
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
+import { useControl } from '../hooks/useControl'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { usePointOfView, type PointOfViewProps } from '../hooks/usePointOfView'
 import { useResource } from '../hooks/useResource'
@@ -78,7 +85,16 @@ const Content: FC<StoryProps> = ({
   const camera = useThree(({ camera }) => camera)
   const overlayScene = useMemo(() => new Scene(), [])
 
-  const atmosphereContext = useResource(() => new AtmosphereContext(), [])
+  const higherOrderScatteringTexture = useControl(
+    ({ higherOrderScatteringTexture }: StoryArgs) =>
+      higherOrderScatteringTexture
+  )
+  const atmosphereContext = useResource(() => {
+    const parameters = new AtmosphereParameters()
+    parameters.higherOrderScatteringTexture = higherOrderScatteringTexture
+    return new AtmosphereContext(parameters)
+  }, [higherOrderScatteringTexture])
+
   atmosphereContext.camera = camera
 
   useLayoutEffect(() => {
@@ -152,20 +168,20 @@ const Content: FC<StoryProps> = ({
   useTransientControl(
     ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
-      raymarchSingleScattering
+      raymarchScattering
     }: StoryArgs) => ({
       transmittance,
-      inscatter,
+      inscattering,
       showGround,
-      raymarchSingleScattering
+      raymarchScattering
     }),
-    ({ transmittance, inscatter, showGround, raymarchSingleScattering }) => {
+    ({ transmittance, inscattering, showGround, raymarchScattering }) => {
       aerialNode.transmittance = transmittance
-      aerialNode.inscatter = inscatter
+      aerialNode.inscattering = inscattering
       atmosphereContext.showGround = showGround
-      atmosphereContext.raymarchSingleScattering = raymarchSingleScattering
+      atmosphereContext.raymarchScattering = raymarchScattering
       postProcessing.needsUpdate = true
     }
   )
@@ -233,12 +249,8 @@ const Content: FC<StoryProps> = ({
 
 interface StoryProps extends PointOfViewProps {}
 
-interface StoryArgs extends OutputPassArgs, ToneMappingArgs, LocalDateArgs {
-  transmittance: boolean
-  inscatter: boolean
-  showGround: boolean
-  raymarchSingleScattering: boolean
-}
+interface StoryArgs
+  extends OutputPassArgs, ToneMappingArgs, LocalDateArgs, AtmosphereArgs {}
 
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas>
@@ -248,10 +260,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
-  transmittance: true,
-  inscatter: true,
-  showGround: true,
-  raymarchSingleScattering: false,
+  ...atmosphereArgs(),
   ...localDateArgs({
     dayOfYear: 0,
     timeOfDay: 9
@@ -264,32 +273,12 @@ Story.args = {
 }
 
 Story.argTypes = {
-  transmittance: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  inscatter: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  showGround: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
-  raymarchSingleScattering: {
-    control: {
-      type: 'boolean'
-    },
-    table: { category: 'aerial perspective' }
-  },
+  ...atmosphereArgTypes(),
   ...localDateArgTypes(),
   ...toneMappingArgTypes(),
-  ...outputPassArgTypes(),
+  ...outputPassArgTypes({
+    hasNormal: true,
+    hasVelocity: true
+  }),
   ...rendererArgTypes()
 }

@@ -444,11 +444,11 @@ lighting = false
 
 Whether to apply direct and indirect irradiance as post-process lighting. This option requires `normalNode` to be set when enabled.
 
-#### transmittance, inscatter
+#### transmittance, inscattering
 
 ```ts
 transmittance = true
-inscatter = true
+inscattering = true
 ```
 
 Whether to account for the atmospheric transmittance and inscattered light.
@@ -783,14 +783,6 @@ luminanceScale = 1 / luminanceCoefficients.dot(sunRadianceToLuminance)
 ```
 
 A unit-less scaling factor to bring true luminance values into a numerically stable range. This helps prevent noticeable precision loss in half-float buffers.
-
-#### transmittancePrecisionLog
-
-```ts
-transmittancePrecisionLog = false
-```
-
-Whether to store the optical depth instead of the transmittance in the transmittance textures. Linear filtering on logarithmic numbers yields non-linear interpolations so that sampling will be performed manually, thus this should be enabled only in the precomputation stage.
 
 #### combinedScatteringTextures
 

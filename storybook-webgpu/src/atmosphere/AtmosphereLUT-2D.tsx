@@ -34,18 +34,20 @@ import {
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
 
-export const textureUV = FnVar(
-  (textureSize: Node<'vec2'>, zoom: Node<'float'>) => {
-    const scale = screenSize.div(textureSize).div(zoom).toConst()
-    const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toConst()
-    If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
-      Discard()
-    })
-    return uv.flipY()
-  }
-)
+const textureUV = FnVar((textureSize: Node<'vec2'>, zoom: Node<'float'>) => {
+  const scale = screenSize.div(textureSize).div(zoom).toConst()
+  const uv = screenUV.mul(scale).add(scale.oneMinus().mul(0.5)).toConst()
+  If(uv.lessThan(0).any().or(uv.greaterThan(1).any()), () => {
+    Discard()
+  })
+  return uv.flipY()
+})
 
-const Content: FC<StoryProps> = ({ name, ...options }) => {
+const Content: FC<StoryProps> = ({
+  name,
+  outputNode = node => node.rgb,
+  ...options
+}) => {
   const zoom = uniform(0)
 
   const material = useResource(() => new NodeMaterial(), [])
@@ -57,11 +59,13 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
     parameters.minCosLight = Math.cos(radians(120))
     return new AtmosphereLUTNode(parameters)
   }, [])
+
   Object.assign(lutNode.parameters, options)
+
   const textureSize = vec2(lutNode.parameters[`${name}TextureSize`])
   const uv = textureUV(textureSize, zoom)
 
-  material.colorNode = lutNode.getTextureNode(name).sample(uv).rgb
+  material.colorNode = outputNode(lutNode.getTextureNode(name).sample(uv))
 
   // Tone mapping controls:
   useToneMappingControls()
@@ -79,6 +83,7 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
 
 interface StoryProps extends Partial<AtmosphereParameters> {
   name: AtmosphereLUTTextureName
+  outputNode?: (node: Node) => Node
 }
 
 interface StoryArgs extends ToneMappingArgs {
@@ -94,7 +99,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 
 Story.args = {
   ...toneMappingArgs({
-    toneMapping: LinearToneMapping
+    toneMappingMode: LinearToneMapping
   }),
   ...rendererArgs()
 }

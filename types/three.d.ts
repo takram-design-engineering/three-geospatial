@@ -1,6 +1,8 @@
-import type { Camera, Texture } from 'three'
+import type { Camera, RenderTarget, Texture } from 'three'
+import type { ShaderNodeFn } from 'three/src/nodes/TSL.js'
 import type {
   ContextNode,
+  FunctionOverloadingNode,
   Node,
   NodeBuilderContext,
   NodeFrame,
@@ -50,12 +52,6 @@ declare module 'three/tsl' {
 }
 
 declare module 'three/webgpu' {
-  interface Renderer {
-    contextNode: ContextNode
-    reversedDepthBuffer: boolean
-    hasFeature(name: string): boolean
-  }
-
   interface NodeBuilder {
     camera?: Camera
     context: NodeBuilderContext
@@ -91,11 +87,22 @@ declare module 'three/tsl' {
     uvNode?: Node | null,
     storeNode?: Node
   ) => StorageTextureNode
+
+  const overloadingFn: (
+    functionNodes: ShaderNodeFn[]
+  ) => (...params: Node[]) => FunctionOverloadingNode
 }
 
 declare module 'three/src/renderers/common/Renderer.js' {
   interface RendererParameters {
     reversedDepthBuffer?: boolean
+  }
+
+  export default interface Renderer {
+    contextNode: ContextNode
+    reversedDepthBuffer: boolean
+    initRenderTarget(renderTarget: RenderTarget): void
+    hasFeature(name: string): boolean
   }
 }
 
@@ -110,5 +117,17 @@ declare module 'three/src/renderers/common/RendererUtils.js' {
 declare module 'three/src/renderers/common/Backend.js' {
   export default interface Backend {
     isWebGPUBackend?: boolean
+  }
+}
+
+declare module 'three/src/nodes/accessors/TextureNode.js' {
+  export default interface TextureNode {
+    sample(uvNode: Node): TextureNode
+    load(uvNode: Node): TextureNode
+    blur(amountNode: Node): TextureNode
+    level(levelNode: Node): TextureNode
+    size(levelNode: Node): TextureNode
+    size(levelNode?: Node): TextureNode
+    bias(biasNode: Node): TextureNode
   }
 }

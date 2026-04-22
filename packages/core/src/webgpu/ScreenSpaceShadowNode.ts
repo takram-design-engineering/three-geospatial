@@ -14,6 +14,8 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ *
+ * Modified from the original source code.
  */
 
 import {
@@ -38,7 +40,6 @@ import {
   ivec2,
   min,
   mix,
-  textureSize,
   textureStore,
   uniform,
   vec2,
@@ -130,6 +131,8 @@ export class ScreenSpaceShadowNode extends TempNode {
     mainLight: DirectionalLight
   ) {
     super('float')
+    this.updateBeforeType = NodeUpdateType.FRAME
+
     this.depthNode = depthNode
     this.camera = camera
     this.mainLight = mainLight
@@ -139,12 +142,10 @@ export class ScreenSpaceShadowNode extends TempNode {
     texture.minFilter = LinearFilter
     texture.magFilter = LinearFilter
     texture.generateMipmaps = false
-    texture.name = 'ScreenSpaceShadowNode'
+    texture.name = 'ScreenSpaceShadow'
 
     this.outputTexture = texture
     this.textureNode = outputTexture(this, texture)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   override customCacheKey(): number {
@@ -457,7 +458,7 @@ export class ScreenSpaceShadowNode extends TempNode {
       // Clamp-To-Border-Color, and Border Color set to farDepth.
       return and(
         coord.greaterThanEqual(0).all(),
-        coord.lessThan(textureSize(depthNode)).all()
+        coord.lessThan(depthNode.size()).all()
       ).select(depth, farDepth)
     }
 

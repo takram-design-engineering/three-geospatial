@@ -38,13 +38,7 @@ export const Position = 'vec3'
 export const Direction = 'vec3'
 export const Luminance3 = 'vec3'
 export const Illuminance3 = 'vec3'
-
-export const TransmittanceTexture = 'texture'
-export const AbstractScatteringTexture = 'texture3D'
-export const ReducedScatteringTexture = 'texture3D'
-export const ScatteringTexture = 'texture3D'
-export const ScatteringDensityTexture = 'texture3D'
-export const IrradianceTexture = 'texture'
+export const Length2 = 'vec2'
 
 export type Length = typeof Length
 export type Wavelength = typeof Wavelength
@@ -82,10 +76,4 @@ export type Position = typeof Position
 export type Direction = typeof Direction
 export type Luminance3 = typeof Luminance3
 export type Illuminance3 = typeof Illuminance3
-
-export type TransmittanceTexture = typeof TransmittanceTexture
-export type AbstractScatteringTexture = typeof AbstractScatteringTexture
-export type ReducedScatteringTexture = typeof ReducedScatteringTexture
-export type ScatteringTexture = typeof ScatteringTexture
-export type ScatteringDensityTexture = typeof ScatteringDensityTexture
-export type IrradianceTexture = typeof IrradianceTexture
+export type Length2 = typeof Length2

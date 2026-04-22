@@ -1,4 +1,4 @@
-import { Vector3, type Camera } from 'three'
+import { Vector2, Vector3, type Camera } from 'three'
 import { uniform } from 'three/tsl'
 import type { NodeBuilder } from 'three/webgpu'
 
@@ -20,6 +20,7 @@ export class AtmosphereContext extends AtmosphereContextBase {
   sunDirectionECEF = uniform('vec3').setName('sunDirectionECEF')
   moonDirectionECEF = uniform('vec3').setName('moonDirectionECEF')
   matrixMoonFixedToECEF = uniform('mat4').setName('matrixMoonFixedToECEF')
+  scatteringSampleCount = uniform(new Vector2(4, 14))
 
   matrixECEFToWorld = uniform('mat4')
     .setName('matrixECEFToWorld')
@@ -83,7 +84,7 @@ export class AtmosphereContext extends AtmosphereContextBase {
   correctAltitude = true
   constrainCamera = true
   showGround = true
-  raymarchSingleScattering = false
+  raymarchScattering = false
 
   constructor(
     parameters = new AtmosphereParameters(),

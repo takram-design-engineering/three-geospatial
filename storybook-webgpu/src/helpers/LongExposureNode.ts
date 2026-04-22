@@ -95,11 +95,11 @@ export class LongExposureNode extends TempNode {
 
   constructor(inputNode: TextureNode) {
     super('vec4')
+    this.updateBeforeType = NodeUpdateType.FRAME
+
     this.inputNode = inputNode
 
     this.textureNode = outputTexture(this, this.currentRT.texture)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(): TextureNode {

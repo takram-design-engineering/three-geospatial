@@ -55,7 +55,11 @@ const textureUVW = FnVar((textureSize: Node<'vec3'>, zoom: Node<'float'>) => {
   return vec3(uv.fract(), index.toFloat().add(0.5).div(textureSize.z))
 })
 
-const Content: FC<StoryProps> = ({ name, ...options }) => {
+const Content: FC<StoryProps> = ({
+  name,
+  outputNode = node => node.rgb,
+  combinedScatteringTextures = true
+}) => {
   const zoom = uniform(0)
 
   const material = useResource(() => new NodeMaterial(), [])
@@ -67,10 +71,25 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
     parameters.minCosLight = Math.cos(radians(120))
     return new AtmosphereLUTNode(parameters)
   }, [])
-  Object.assign(lutNode.parameters, options)
+
+  lutNode.parameters.combinedScatteringTextures = combinedScatteringTextures
+
+  useTransientControl(
+    ({ higherOrderScatteringTexture }: StoryArgs) => ({
+      higherOrderScatteringTexture
+    }),
+    value => {
+      if (value.higherOrderScatteringTexture != null) {
+        lutNode.parameters.higherOrderScatteringTexture =
+          value.higherOrderScatteringTexture
+        lutNode.needsUpdate = true
+      }
+    }
+  )
+
   const textureSize = vec3(lutNode.parameters.scatteringTextureSize)
   const uvw = textureUVW(textureSize, zoom)
-  material.colorNode = lutNode.getTextureNode(name).sample(uvw).rgb
+  material.colorNode = outputNode(lutNode.getTextureNode(name).sample(uvw))
 
   // Tone mapping controls:
   useToneMappingControls()
@@ -88,9 +107,10 @@ const Content: FC<StoryProps> = ({ name, ...options }) => {
 
 interface StoryProps extends Partial<AtmosphereParameters> {
   name: AtmosphereLUTTexture3DName
+  outputNode?: (node: Node) => Node
 }
 
-interface StoryArgs extends ToneMappingArgs {
+interface StoryArgs extends ToneMappingArgs, Partial<AtmosphereParameters> {
   zoom: number
 }
 
@@ -104,7 +124,7 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 Story.args = {
   zoom: 1,
   ...toneMappingArgs({
-    toneMapping: LinearToneMapping
+    toneMappingMode: LinearToneMapping
   }),
   ...rendererArgs()
 }

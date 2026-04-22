@@ -190,7 +190,7 @@ const getCurrentDepth = /*#__PURE__*/ FnVar(
   }
 )
 
-const subpixelCorrection = FnVar(
+const subpixelCorrection = /*#__PURE__#*/ FnVar(
   (velocityUV: Node<'vec2'>, textureSize: Node<'ivec2'>): Node<'float'> => {
     const velocityTexel = velocityUV.mul(textureSize)
     const phase = velocityTexel.fract().abs()
@@ -249,8 +249,8 @@ export class TemporalAntialiasNode extends TempNode {
 
   private readonly textureNode: TextureNode
 
-  private resolveRT = this.createRenderTarget('Resolve')
-  private historyRT = this.createRenderTarget('History')
+  private resolveRT = this.createRenderTarget('resolve')
+  private historyRT = this.createRenderTarget('history')
   private previousDepthTexture?: DepthTexture
   private readonly resolveMaterial = new NodeMaterial()
   private readonly mesh = new QuadMesh()
@@ -271,6 +271,10 @@ export class TemporalAntialiasNode extends TempNode {
     camera: Camera
   ) {
     super('vec4')
+    this.updateBeforeType = NodeUpdateType.FRAME
+    this.resolveMaterial.name = 'TemporalAntialias_resolve'
+    this.mesh.name = 'TemporalAntialias'
+
     this.inputNode = inputNode
     this.depthNode = depthNode
     this.velocityNode = velocityNode
@@ -280,8 +284,6 @@ export class TemporalAntialiasNode extends TempNode {
     this.camera = camera
 
     this.textureNode = outputTexture(this, this.resolveRT.texture)
-
-    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   override customCacheKey(): number {
@@ -300,7 +302,7 @@ export class TemporalAntialiasNode extends TempNode {
     texture.generateMipmaps = false
 
     const typeName = (this.constructor as typeof Node).type
-    texture.name = name != null ? `${typeName}.${name}` : typeName
+    texture.name = name != null ? `${typeName}_${name}` : typeName
 
     return renderTarget
   }
@@ -419,7 +421,7 @@ export class TemporalAntialiasNode extends TempNode {
     const getPreviousDepth = (uv: Node<'vec2'>): Node<'float'> => {
       const { previousDepthNode: depthNode } = this
       const depth = depthNode
-        .load(ivec2(uv.mul(textureSize(depthNode)).sub(0.5)))
+        .load(ivec2(uv.mul(depthNode.size()).sub(0.5)))
         .toConst()
       return renderer.logarithmicDepthBuffer
         ? logarithmicToPerspectiveDepth(

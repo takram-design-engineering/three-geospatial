@@ -1,11 +1,6 @@
 import {
-  AddEquation,
-  Box3,
-  CustomBlending,
   LinearFilter,
-  NoBlending,
   NoColorSpace,
-  OneFactor,
   RenderTarget,
   RenderTarget3D,
   RGBAFormat,
@@ -15,13 +10,19 @@ import {
   type Vector3
 } from 'three'
 import {
-  exp,
-  int,
+  acos,
+  cos,
+  float,
+  Fn,
+  Loop,
   mrt,
   screenCoordinate,
+  sin,
+  sqrt,
   texture,
   texture3D,
   uniform,
+  vec2,
   vec3,
   vec4
 } from 'three/tsl'
@@ -34,7 +35,7 @@ import {
 import invariant from 'tiny-invariant'
 
 import type { AnyFloatType } from '@takram/three-geospatial'
-import type { Node } from '@takram/three-geospatial/webgpu'
+import { FnVar, type Node } from '@takram/three-geospatial/webgpu'
 
 import type {
   AtmosphereLUTTexture3DName,
@@ -45,14 +46,14 @@ import {
   AtmosphereLUTTexturesContext
 } from './AtmosphereLUTTextures'
 import type { AtmosphereParameters } from './AtmosphereParameters'
-import { rayleighPhaseFunction } from './common'
 import {
-  computeDirectIrradianceTexture,
-  computeIndirectIrradianceTexture,
   computeMultipleScatteringTexture,
-  computeScatteringDensityTexture,
-  computeSingleScatteringTexture,
-  computeTransmittanceToTopAtmosphereBoundaryTexture
+  computeScatteringTexture,
+  getTextureUnitFromSubUV
+} from './multiscattering'
+import {
+  computeIrradianceTexture,
+  computeTransmittanceTexture
 } from './precompute'
 
 function createRenderTarget(name: string): RenderTarget {
@@ -105,118 +106,36 @@ function setupRenderTarget3D(
   renderTarget.texture.isArrayTexture = false
 }
 
-function clearRenderTarget(
-  renderer: Renderer,
-  renderTarget?: RenderTarget
-): void {
-  if (renderTarget != null) {
-    if (renderTarget instanceof RenderTarget3D) {
-      for (let i = 0; i < renderTarget.depth; ++i) {
-        renderer.setRenderTarget(renderTarget, i)
-        renderer.clearColor()
-      }
-    } else {
-      renderer.setRenderTarget(renderTarget)
-      renderer.clearColor()
-    }
-  }
-}
-
-class AtmosphereLUTTexturesContextWebGL extends AtmosphereLUTTexturesContext {
-  opticalDepthRT = createRenderTarget('opticalDepth')
-  deltaIrradianceRT = createRenderTarget('deltaIrradiance')
-  deltaRayleighScatteringRT = createRenderTarget3D('deltaRayleighScattering')
-  deltaMieScatteringRT = createRenderTarget3D('deltaMieScattering')
-  deltaScatteringDensityRT = createRenderTarget3D('deltaScatteringDensity')
-
-  // deltaMultipleScattering is only needed to compute scattering order 3 or
-  // more, while deltaRayleighScattering and deltaMieScattering are only needed
-  // to compute double scattering. Therefore, to save memory, we can store
-  // deltaRayleighScattering and deltaMultipleScattering in the same GPU
-  // texture.
-  deltaMultipleScatteringRT = this.deltaRayleighScatteringRT
-
-  constructor(parameters: AtmosphereParameters, textureType: AnyFloatType) {
-    super(parameters, textureType)
-
-    if (parameters.transmittancePrecisionLog) {
-      setupRenderTarget(
-        this.opticalDepthRT,
-        textureType,
-        parameters.transmittanceTextureSize
-      )
-    }
-    setupRenderTarget(
-      this.deltaIrradianceRT,
-      textureType,
-      parameters.irradianceTextureSize
-    )
-    setupRenderTarget3D(
-      this.deltaRayleighScatteringRT,
-      textureType,
-      parameters.scatteringTextureSize
-    )
-    setupRenderTarget3D(
-      this.deltaMieScatteringRT,
-      textureType,
-      parameters.scatteringTextureSize
-    )
-    setupRenderTarget3D(
-      this.deltaScatteringDensityRT,
-      textureType,
-      parameters.scatteringTextureSize
-    )
-  }
-
-  override dispose(): void {
-    this.opticalDepthRT.dispose()
-    this.deltaIrradianceRT.dispose()
-    this.deltaRayleighScatteringRT.dispose()
-    this.deltaMieScatteringRT.dispose()
-    this.deltaScatteringDensityRT.dispose()
-    super.dispose()
-  }
-}
-
-class AdditiveMaterial extends NodeMaterial {
-  override blendEquation = AddEquation
-  override blendEquationAlpha = AddEquation
-  override blendSrc = OneFactor
-  override blendDst = OneFactor
-  override blendSrcAlpha = OneFactor
-  override blendDstAlpha = OneFactor
-
-  // eslint-disable-next-line accessor-pairs
-  set additive(value: boolean) {
-    this.transparent = value
-    this.blending = value ? CustomBlending : NoBlending
-  }
-}
-
-const boxScratch = /*#__PURE__*/ new Box3()
+class AtmosphereLUTTexturesContextWebGL extends AtmosphereLUTTexturesContext {}
 
 export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
-  private readonly transmittanceRT = createRenderTarget('transmittance')
-  private readonly irradianceRT = createRenderTarget('irradiance')
-  private readonly scatteringRT = createRenderTarget3D('scattering')
-  private readonly singleMieScatteringRT = createRenderTarget3D(
-    'singleMieScattering'
-  )
-  private readonly higherOrderScatteringRT = createRenderTarget3D(
-    'higherOrderScattering'
-  )
+  private readonly transmittanceRT: RenderTarget
+  private readonly multipleScatteringRT: RenderTarget
+  private readonly scatteringRT: RenderTarget3D
+  private readonly singleMieScatteringRT: RenderTarget3D
+  private readonly higherOrderScatteringRT: RenderTarget3D
+  private readonly irradianceRT: RenderTarget
 
   private readonly mesh = new QuadMesh()
 
-  private transmittanceMaterial?: AdditiveMaterial
-  private directIrradianceMaterial?: AdditiveMaterial
-  private singleScatteringMaterial?: AdditiveMaterial
-  private scatteringDensityMaterial?: AdditiveMaterial
-  private indirectIrradianceMaterial?: AdditiveMaterial
-  private multipleScatteringMaterial?: AdditiveMaterial
+  private transmittanceMaterial?: NodeMaterial
+  private multipleScatteringMaterial?: NodeMaterial
+  private scatteringMaterial?: NodeMaterial
+  private irradianceMaterial?: NodeMaterial
 
   private readonly layer = uniform(0)
-  private readonly scatteringOrder = uniform(0)
+
+  constructor() {
+    super()
+    this.mesh.name = 'AtmosphereLUTTexturesWebGL'
+
+    this.transmittanceRT = createRenderTarget('transmittance')
+    this.multipleScatteringRT = createRenderTarget('multipleScattering')
+    this.scatteringRT = createRenderTarget3D('scattering')
+    this.singleMieScatteringRT = createRenderTarget3D('singleMieScattering')
+    this.higherOrderScatteringRT = createRenderTarget3D('higherOrderScattering')
+    this.irradianceRT = createRenderTarget('irradiance')
+  }
 
   get(name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName): Texture {
     return this[`${name}RT`].texture
@@ -262,13 +181,9 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
   }
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this
-  private createMaterial(params: {
-    additive: boolean
-    fragmentNode: Node
-  }): AdditiveMaterial {
-    const material = new AdditiveMaterial()
-    material.fragmentNode = params.fragmentNode
-    material.additive = params.additive
+  private createMaterial(fragmentNode: Node): NodeMaterial {
+    const material = new NodeMaterial()
+    material.fragmentNode = fragmentNode
     material.needsUpdate = true
     return material
   }
@@ -277,263 +192,196 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     renderer: Renderer,
     context: AtmosphereLUTTexturesContextWebGL
   ): void {
-    const { parameters, opticalDepthRT } = context
-
-    this.transmittanceMaterial ??= this.createMaterial({
-      additive: false,
-      fragmentNode: (() => {
-        const transmittance =
-          computeTransmittanceToTopAtmosphereBoundaryTexture(
-            screenCoordinate
-          ).context({ getAtmosphere: () => context })
-
-        return parameters.transmittancePrecisionLog
-          ? // Compute the optical depth, and store it in opticalDepth. Avoid
-            // having tiny transmittance values underflow to 0 due to half-float
-            // precision.
-            mrt({
-              transmittance: exp(transmittance.negate()),
-              opticalDepth: transmittance
-            })
-          : transmittance
-      })()
-    })
+    this.transmittanceMaterial?.dispose()
+    this.transmittanceMaterial = this.createMaterial(
+      // BUG: Context is not merged unless we wrap the node by OutputStructNode.
+      mrt({
+        transmittance: computeTransmittanceTexture(screenCoordinate).context({
+          getAtmosphere: () => context
+        })
+      })
+    )
     this.mesh.material = this.transmittanceMaterial
 
-    this.renderToRenderTarget(renderer, this.transmittanceRT, [
-      parameters.transmittancePrecisionLog ? opticalDepthRT.texture : undefined
-    ])
-  }
-
-  computeDirectIrradiance(
-    renderer: Renderer,
-    context: AtmosphereLUTTexturesContextWebGL
-  ): void {
-    const { parameters, deltaIrradianceRT, opticalDepthRT } = context
-
-    this.directIrradianceMaterial ??= this.createMaterial({
-      additive: true,
-      fragmentNode: (() => {
-        const irradiance = computeDirectIrradianceTexture(
-          texture(
-            parameters.transmittancePrecisionLog
-              ? opticalDepthRT.texture
-              : this.transmittanceRT.texture
-          ),
-          screenCoordinate
-        ).context({ getAtmosphere: () => context })
-
-        return mrt({
-          deltaIrradiance: vec4(irradiance, 1),
-          irradiance: vec4(vec3(0), 1)
-        })
-      })()
-    })
-    this.mesh.material = this.directIrradianceMaterial
-
-    // Turn off blending on the deltaIrradiance.
-    clearRenderTarget(renderer, deltaIrradianceRT)
-
-    this.renderToRenderTarget(renderer, this.irradianceRT, [
-      deltaIrradianceRT.texture
-    ])
-  }
-
-  computeSingleScattering(
-    renderer: Renderer,
-    context: AtmosphereLUTTexturesContextWebGL
-  ): void {
-    const {
-      parameters,
-      luminanceFromRadiance,
-      deltaRayleighScatteringRT,
-      deltaMieScatteringRT,
-      opticalDepthRT
-    } = context
-
-    this.singleScatteringMaterial ??= this.createMaterial({
-      additive: true,
-      fragmentNode: (() => {
-        const singleScattering = computeSingleScatteringTexture(
-          texture(
-            parameters.transmittancePrecisionLog
-              ? opticalDepthRT.texture
-              : this.transmittanceRT.texture
-          ),
-          vec3(screenCoordinate, this.layer.add(0.5))
-        ).context({ getAtmosphere: () => context })
-
-        const rayleigh = singleScattering.get('rayleigh')
-        const mie = singleScattering.get('mie')
-
-        return mrt({
-          scattering: vec4(
-            rayleigh.mul(luminanceFromRadiance),
-            mie.mul(luminanceFromRadiance).r
-          ),
-          deltaRayleighScattering: vec4(rayleigh, 1),
-          deltaMieScattering: vec4(mie.mul(luminanceFromRadiance), 1)
-        })
-      })()
-    })
-    this.mesh.material = this.singleScatteringMaterial
-
-    // Turn off blending on the deltaRayleighScattering and deltaMieScattering.
-    clearRenderTarget(renderer, deltaRayleighScatteringRT)
-    clearRenderTarget(renderer, deltaMieScatteringRT)
-
-    this.renderToRenderTarget3D(renderer, this.scatteringRT, this.layer, [
-      deltaRayleighScatteringRT.texture,
-      deltaMieScatteringRT.texture
-    ])
-
-    if (!parameters.combinedScatteringTextures) {
-      clearRenderTarget(renderer, this.singleMieScatteringRT)
-      renderer.copyTextureToTexture(
-        deltaMieScatteringRT.texture,
-        this.singleMieScatteringRT.texture,
-        boxScratch.set(
-          boxScratch.min.setScalar(0),
-          parameters.scatteringTextureSize
-        )
-      )
-    }
-  }
-
-  computeScatteringDensity(
-    renderer: Renderer,
-    context: AtmosphereLUTTexturesContextWebGL,
-    scatteringOrder: number
-  ): void {
-    const {
-      parameters,
-      deltaIrradianceRT,
-      deltaRayleighScatteringRT,
-      deltaMieScatteringRT,
-      deltaScatteringDensityRT,
-      deltaMultipleScatteringRT,
-      opticalDepthRT
-    } = context
-
-    this.scatteringDensityMaterial ??= this.createMaterial({
-      additive: false,
-      fragmentNode: (() => {
-        const radiance = computeScatteringDensityTexture(
-          texture(
-            parameters.transmittancePrecisionLog
-              ? opticalDepthRT.texture
-              : this.transmittanceRT.texture
-          ),
-          texture3D(deltaRayleighScatteringRT.texture),
-          texture3D(deltaMieScatteringRT.texture),
-          texture3D(deltaMultipleScatteringRT.texture),
-          texture(deltaIrradianceRT.texture),
-          vec3(screenCoordinate, this.layer.add(0.5)),
-          int(this.scatteringOrder)
-        ).context({ getAtmosphere: () => context })
-
-        return vec4(radiance, 1)
-      })()
-    })
-    this.mesh.material = this.scatteringDensityMaterial
-
-    this.scatteringOrder.value = scatteringOrder
-    this.renderToRenderTarget3D(renderer, deltaScatteringDensityRT, this.layer)
-  }
-
-  computeIndirectIrradiance(
-    renderer: Renderer,
-    context: AtmosphereLUTTexturesContextWebGL,
-    scatteringOrder: number
-  ): void {
-    const {
-      luminanceFromRadiance,
-      deltaIrradianceRT,
-      deltaRayleighScatteringRT,
-      deltaMieScatteringRT,
-      deltaMultipleScatteringRT
-    } = context
-
-    this.indirectIrradianceMaterial ??= this.createMaterial({
-      additive: true,
-      fragmentNode: (() => {
-        const irradiance = computeIndirectIrradianceTexture(
-          texture3D(deltaRayleighScatteringRT.texture),
-          texture3D(deltaMieScatteringRT.texture),
-          texture3D(deltaMultipleScatteringRT.texture),
-          screenCoordinate,
-          int(this.scatteringOrder.sub(1))
-        ).context({ getAtmosphere: () => context })
-
-        return mrt({
-          deltaIrradiance: irradiance,
-          irradiance: irradiance.mul(luminanceFromRadiance)
-        })
-      })()
-    })
-    this.mesh.material = this.indirectIrradianceMaterial
-
-    // Turn off blending on the deltaIrradiance.
-    clearRenderTarget(renderer, deltaIrradianceRT)
-
-    this.scatteringOrder.value = scatteringOrder
-    this.renderToRenderTarget(renderer, this.irradianceRT, [
-      deltaIrradianceRT.texture
-    ])
+    this.renderToRenderTarget(renderer, this.transmittanceRT)
   }
 
   computeMultipleScattering(
     renderer: Renderer,
     context: AtmosphereLUTTexturesContextWebGL
   ): void {
-    const {
-      parameters,
-      luminanceFromRadiance,
-      deltaScatteringDensityRT,
-      deltaMultipleScatteringRT,
-      opticalDepthRT
-    } = context
+    const { parameters, parametersNode } = context
 
-    this.multipleScatteringMaterial ??= this.createMaterial({
-      additive: true,
-      fragmentNode: (() => {
-        const multipleScattering = computeMultipleScatteringTexture(
-          texture(
-            parameters.transmittancePrecisionLog
-              ? opticalDepthRT.texture
-              : this.transmittanceRT.texture
-          ),
-          texture3D(deltaScatteringDensityRT.texture),
-          vec3(screenCoordinate, this.layer.add(0.5))
-        ).context({ getAtmosphere: () => context })
+    const sampleCount = 64
 
-        const radiance = multipleScattering.get('radiance')
-        const cosViewLight = multipleScattering.get('cosViewLight')
-        const luminance = radiance
-          .mul(luminanceFromRadiance)
-          .div(rayleighPhaseFunction(cosViewLight))
-
-        return mrt({
-          scattering: vec4(luminance, 0),
-          // deltaMultipleScattering is shared with deltaRayleighScattering.
-          deltaRayleighScattering: vec4(radiance, 1),
-          ...(parameters.higherOrderScatteringTexture && {
-            higherOrderScattering: vec4(luminance, 1)
-          })
-        })
-      })()
+    const getRayDirection = FnVar((index: Node<'uint'>): Node<'vec3'> => {
+      // In the original implementation, theta and phi are uniformly
+      // distributed, but they shows artifacts at higher altitudes.
+      const sample = float(index)
+      const theta = sample.mul((2 * Math.PI) / ((1 + Math.sqrt(5)) / 2))
+      const phi = acos(
+        sample
+          .add(0.5)
+          .mul(2 / sampleCount)
+          .oneMinus()
+      )
+      const cosPhi = cos(phi)
+      const sinPhi = sin(phi)
+      const cosTheta = cos(theta)
+      const sinTheta = sin(theta)
+      return vec3(cosTheta.mul(sinPhi), sinTheta.mul(sinPhi), cosPhi)
     })
+
+    const getMultipleScattering = Fn(() => {
+      const size = vec2(parameters.multipleScatteringTextureSize)
+      const uv = getTextureUnitFromSubUV(
+        screenCoordinate.div(size),
+        size
+      ).toConst()
+
+      // Construct the parameters of the high-order scattering LUT. They are
+      // the cosine of light and zenith [-1, 1], and the view altitude
+      // [bottomRadius, topRadius].
+      const { topRadius, bottomRadius } = parametersNode
+      const cosLightZenith = uv.x.mul(2).sub(1).toConst()
+      const lightDirection = vec3(
+        0,
+        sqrt(cosLightZenith.pow2().oneMinus().saturate()),
+        cosLightZenith
+      ).toConst()
+      const radiusOffset = 0
+      const radius = bottomRadius
+        .add(
+          uv.y
+            .add(radiusOffset)
+            .saturate()
+            .mul(topRadius.sub(bottomRadius).sub(radiusOffset))
+        )
+        .toConst()
+
+      const totalMultipleScattering = vec3(0).toVar()
+      const totalTransferFactor = vec3(0).toVar()
+
+      Loop({ start: 0, end: sampleCount }, ({ i: index }) => {
+        const rayDirection = getRayDirection(index).toConst()
+        const cosView = rayDirection.z // rayOrigin is (0, 0, radius)
+        const cosViewLight = rayDirection.dot(lightDirection).toConst()
+
+        // Integrate the second-order scattering. This outputs the integrated
+        // radiance here (as opposed to luminance) as well as the "transfer
+        // factor", which acts as a transfer function on the irradiance of a
+        // directional light at a given point.
+        const result = computeMultipleScatteringTexture(
+          parametersNode,
+          texture(this.transmittanceRT.texture),
+          radius,
+          cosView,
+          cosLightZenith,
+          cosViewLight
+        )
+          .context({ getAtmosphere: () => context })
+          .toConst()
+
+        // Sum all second-order scattering integrated along the ray directions
+        // with respect to the LUT parameters.
+        totalMultipleScattering.addAssign(
+          result.get('multipleScattering').div(sampleCount)
+        )
+        totalTransferFactor.addAssign(
+          result.get('transferFactor').div(sampleCount)
+        )
+      })
+
+      // This represents the amount of radiance scattered as if the integral
+      // of scattered radiance over the sphere would be 1.
+      // For a power-series, such integral is analytically:
+      // sum_{n=0}^{n=+inf} = 1 + r + r^2 + r^3 + ... + r^n = 1 / (1 - r)
+      return totalMultipleScattering.mul(
+        totalTransferFactor.oneMinus().reciprocal()
+      )
+    })
+
+    this.multipleScatteringMaterial?.dispose()
+    this.multipleScatteringMaterial = this.createMaterial(
+      // BUG: Context is not merged unless we wrap the node by
+      // OutputStructNode.
+      mrt({
+        multipleScattering: vec4(getMultipleScattering(), 1)
+      })
+    )
     this.mesh.material = this.multipleScatteringMaterial
 
-    // Turn off blending on the deltaMultipleScattering.
-    clearRenderTarget(renderer, deltaMultipleScatteringRT)
+    this.renderToRenderTarget(renderer, this.multipleScatteringRT)
+  }
 
-    this.renderToRenderTarget3D(renderer, this.scatteringRT, this.layer, [
-      deltaMultipleScatteringRT.texture,
-      parameters.higherOrderScatteringTexture
-        ? this.higherOrderScatteringRT.texture
-        : undefined
-    ])
+  computeScattering(
+    renderer: Renderer,
+    context: AtmosphereLUTTexturesContextWebGL
+  ): void {
+    const { parameters } = context
+
+    this.scatteringMaterial?.dispose()
+    this.scatteringMaterial = this.createMaterial(
+      (() => {
+        const result = computeScatteringTexture(
+          texture(this.transmittanceRT.texture),
+          texture(this.multipleScatteringRT.texture),
+          vec3(screenCoordinate, this.layer.add(0.5))
+        )
+          .context({ getAtmosphere: () => context })
+          .toConst()
+
+        const scattering = result.get('scattering')
+        const singleMieScattering = result.get('singleMieScattering')
+        const higherOrderScattering = result.get('higherOrderScattering')
+
+        const outputNodes: Record<string, Node> = {}
+        if (parameters.combinedScatteringTextures) {
+          outputNodes.scattering = vec4(scattering, singleMieScattering.r)
+        } else {
+          outputNodes.scattering = vec4(scattering, singleMieScattering.r)
+          outputNodes.singleMieScattering = vec4(singleMieScattering, 1)
+        }
+        if (parameters.higherOrderScatteringTexture) {
+          outputNodes.higherOrderScattering = vec4(higherOrderScattering, 1)
+        }
+        return mrt(outputNodes)
+      })()
+    )
+    this.mesh.material = this.scatteringMaterial
+
+    const textures: Texture[] = []
+    if (!parameters.combinedScatteringTextures) {
+      textures.push(this.singleMieScatteringRT.texture)
+    }
+    if (parameters.higherOrderScatteringTexture) {
+      textures.push(this.higherOrderScatteringRT.texture)
+    }
+    this.renderToRenderTarget3D(
+      renderer,
+      this.scatteringRT,
+      this.layer,
+      textures
+    )
+  }
+
+  computeIrradiance(
+    renderer: Renderer,
+    context: AtmosphereLUTTexturesContextWebGL
+  ): void {
+    this.irradianceMaterial?.dispose()
+    this.irradianceMaterial = this.createMaterial(
+      // BUG: Context is not merged unless we wrap the node by OutputStructNode.
+      mrt({
+        irradiance: computeIrradianceTexture(
+          texture3D(this.scatteringRT.texture),
+          screenCoordinate
+        ).context({ getAtmosphere: () => context })
+      })
+    )
+    this.mesh.material = this.irradianceMaterial
+
+    this.renderToRenderTarget(renderer, this.irradianceRT)
   }
 
   override setup(
@@ -546,9 +394,9 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
       parameters.transmittanceTextureSize
     )
     setupRenderTarget(
-      this.irradianceRT,
+      this.multipleScatteringRT,
       textureType,
-      parameters.irradianceTextureSize
+      parameters.multipleScatteringTextureSize
     )
     setupRenderTarget3D(
       this.scatteringRT,
@@ -569,21 +417,23 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
         parameters.scatteringTextureSize
       )
     }
+    setupRenderTarget(
+      this.irradianceRT,
+      textureType,
+      parameters.irradianceTextureSize
+    )
     super.setup(parameters, textureType)
   }
 
   override dispose(): void {
     this.transmittanceRT.dispose()
-    this.irradianceRT.dispose()
+    this.multipleScatteringRT.dispose()
     this.scatteringRT.dispose()
-    this.singleMieScatteringRT.dispose()
-    this.higherOrderScatteringRT.dispose()
+    this.irradianceRT.dispose()
     this.transmittanceMaterial?.dispose()
-    this.directIrradianceMaterial?.dispose()
-    this.singleScatteringMaterial?.dispose()
-    this.scatteringDensityMaterial?.dispose()
-    this.indirectIrradianceMaterial?.dispose()
     this.multipleScatteringMaterial?.dispose()
+    this.scatteringMaterial?.dispose()
+    this.irradianceMaterial?.dispose()
     this.mesh.geometry.dispose()
     super.dispose()
   }

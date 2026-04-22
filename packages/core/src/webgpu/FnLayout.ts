@@ -1,17 +1,17 @@
 import type {
   ProxiedTuple,
   ShaderCallNodeInternal,
-  ShaderNodeFn,
-  Struct
+  ShaderNodeFn
 } from 'three/src/nodes/TSL.js'
 import { Fn } from 'three/tsl'
-import type { NodeBuilder, Texture3DNode, TextureNode } from 'three/webgpu'
+import { StructTypeNode, type NodeBuilder } from 'three/webgpu'
 
 import type { Node, NodeType } from './node'
 
-// Note that "texture" and "texture3D" are just placeholders until TSL supports
-// texture types.
-type FnLayoutType = NodeType | Struct | 'texture' | 'texture3D'
+type FnLayoutType =
+  | NodeType
+  | (new (...args: any[]) => any)
+  | ((...args: any[]) => any)
 
 export interface FnLayoutInput<T extends FnLayoutType = FnLayoutType> {
   name: string
@@ -30,13 +30,11 @@ export interface FnLayout<
 
 type InferNodeObject<T extends FnLayoutType> = T extends NodeType
   ? Node<T>
-  : T extends Struct
-    ? ReturnType<T>
-    : T extends 'texture'
-      ? TextureNode
-      : T extends 'texture3D'
-        ? Texture3DNode
-        : never
+  : T extends new (...args: any[]) => any
+    ? InstanceType<T>
+    : T extends (...args: any[]) => any
+      ? ReturnType<T>
+      : never
 
 type InferNodeObjects<Inputs extends readonly FnLayoutInput[]> = {
   [K in keyof Inputs]: Inputs[K] extends FnLayoutInput<infer T>
@@ -58,10 +56,13 @@ function transformType(type: FnLayoutType): string {
   if (typeof type === 'string') {
     return type
   }
-  if (type.layout.name == null) {
-    throw new Error('Struct name is required.')
+  if ('layout' in type && type.layout instanceof StructTypeNode) {
+    if (type.layout.name == null) {
+      throw new Error('Struct name is required.')
+    }
+    return type.layout.name
   }
-  return type.layout.name
+  throw new Error(`Unsupported layout type: ${type}`)
 }
 
 export function FnLayout<

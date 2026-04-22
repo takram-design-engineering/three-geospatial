@@ -1,6 +1,15 @@
 import type { Camera } from 'three'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import { Fn, mix, nodeProxy, positionGeometry, uv, vec3, vec4 } from 'three/tsl'
+import {
+  Fn,
+  mix,
+  nodeProxy,
+  positionGeometry,
+  uv,
+  vec2,
+  vec3,
+  vec4
+} from 'three/tsl'
 import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
@@ -38,7 +47,7 @@ export class SkyNode extends TempNode {
 
   private readonly scope: SkyNodeScope = CAMERA
 
-  shadowLengthNode?: Node<'float'> | null
+  shadowLengthNode?: Node<'vec2'> | null
 
   sunNode: SunNode
   moonNode: MoonNode
@@ -50,9 +59,10 @@ export class SkyNode extends TempNode {
   moonScattering = false
   useContextCamera = true
 
-  constructor(scope: SkyNodeScope) {
+  constructor(scope: SkyNodeScope, shadowLengthNode?: Node<'vec2'> | null) {
     super('vec3')
     this.scope = scope
+    this.shadowLengthNode = shadowLengthNode
     this.sunNode = new SunNode()
     this.moonNode = new MoonNode()
     this.starsNode = new StarsNode()
@@ -106,22 +116,22 @@ export class SkyNode extends TempNode {
       const solarLuminanceTransfer = getIndirectLuminance(
         cameraPositionUnit.add(altitudeCorrectionUnit),
         rayDirectionECEF,
-        this.shadowLengthNode ?? 0,
+        this.shadowLengthNode ?? vec2(0),
         sunDirectionECEF
       ).toConst()
       const transmittance = solarLuminanceTransfer.get('transmittance')
-      let inscatter = solarLuminanceTransfer.get('luminance')
+      let inscattering = solarLuminanceTransfer.get('luminance')
 
       if (this.moonScattering) {
         const lunarLuminanceTransfer = getIndirectLuminance(
           cameraPositionUnit.add(altitudeCorrectionUnit),
           rayDirectionECEF,
-          this.shadowLengthNode ?? 0,
+          this.shadowLengthNode ?? vec2(0),
           moonDirectionECEF
         )
 
         // TODO: Consider moon phase
-        inscatter = inscatter.add(
+        inscattering = inscattering.add(
           lunarLuminanceTransfer.get('luminance').mul(2.5e-6)
         )
       }
@@ -144,10 +154,10 @@ export class SkyNode extends TempNode {
         luminance.assign(mix(luminance, moonNode.rgb, moonNode.a))
       }
 
-      return luminance.mul(transmittance).add(inscatter)
+      return luminance.mul(transmittance).add(inscattering)
     })()
   }
 }
 
-export const sky = nodeProxy(SkyNode, CAMERA)
-export const skyBackground = nodeProxy(SkyNode, EQUIRECTANGULAR)
+export const sky = /*#__PURE__*/ nodeProxy(SkyNode, CAMERA)
+export const skyBackground = /*#__PURE__*/ nodeProxy(SkyNode, EQUIRECTANGULAR)

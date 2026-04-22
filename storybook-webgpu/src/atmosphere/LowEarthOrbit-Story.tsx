@@ -286,7 +286,7 @@ Story.argTypes = {
   }),
   ...toneMappingArgTypes(),
   ...outputPassArgTypes({
-    hasNormal: false
+    hasVelocity: true
   }),
   ...rendererArgTypes()
 }

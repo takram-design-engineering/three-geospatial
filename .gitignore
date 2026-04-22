@@ -320,6 +320,7 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/node,linux,macos,windows,terraform,visualstudiocode
 
 .npmrc
+Caddyfile
 
 .nx/cache
 .nx/workspace-data

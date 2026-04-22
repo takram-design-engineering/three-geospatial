@@ -19,16 +19,16 @@ import { useSpringControl } from '../hooks/useSpringControl'
 import { useTransientControl } from '../hooks/useTransientControl'
 
 export interface ToneMappingArgs {
-  toneMappingEnabled: boolean
-  toneMapping: ToneMapping
+  toneMapping: boolean
+  toneMappingMode: ToneMapping
   toneMappingExposure: number
 }
 
 export const toneMappingArgs = (
   defaults?: Partial<ToneMappingArgs>
 ): ToneMappingArgs => ({
-  toneMappingEnabled: true,
-  toneMapping: AgXToneMapping,
+  toneMapping: true,
+  toneMappingMode: AgXToneMapping,
   toneMappingExposure: 1,
   ...defaults
 })
@@ -39,14 +39,14 @@ export const toneMappingArgTypes = (
     max?: number
   } = {}
 ): ArgTypes<ToneMappingArgs> => ({
-  toneMappingEnabled: {
-    name: 'enabled',
+  toneMapping: {
+    name: 'enable',
     control: {
       type: 'boolean'
     },
     table: { category: 'tone mapping' }
   },
-  toneMapping: {
+  toneMappingMode: {
     name: 'mode',
     options: [
       LinearToneMapping,
@@ -87,10 +87,10 @@ function useRendererToneMappingControls(
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
 
   useTransientControl(
-    ({ toneMappingEnabled, toneMapping }: ToneMappingArgs) => [
-      toneMappingEnabled,
-      toneMapping
-    ],
+    ({
+      toneMapping: toneMappingEnabled,
+      toneMappingMode: toneMapping
+    }: ToneMappingArgs) => [toneMappingEnabled, toneMapping],
     ([enabled, value]) => {
       renderer.toneMapping = enabled ? value : NoToneMapping
       onChange?.(value)
@@ -116,10 +116,10 @@ function usePostProcessingToneMappingControls(
   invariant(exposureNode instanceof UniformNode)
 
   useTransientControl(
-    ({ toneMappingEnabled, toneMapping }: ToneMappingArgs) => [
-      toneMappingEnabled,
-      toneMapping
-    ],
+    ({
+      toneMapping: toneMappingEnabled,
+      toneMappingMode: toneMapping
+    }: ToneMappingArgs) => [toneMappingEnabled, toneMapping],
     ([enabled, value]) => {
       // WORKAROUND: Missing method as of r182. Adding these in the module
       // augmentation breaks VSCode's auto completion.

@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
 import { Canvas, type CanvasProps } from '@react-three/fiber'
 import { atom, useAtomValue } from 'jotai'
-import { useEffect, useRef, type FC } from 'react'
+import { useCallback, useEffect, useRef, type FC, type MouseEvent } from 'react'
 import type { WebGPURendererParameters } from 'three/src/renderers/webgpu/WebGPURenderer.js'
 import { WebGPURenderer, type Renderer } from 'three/webgpu'
 
@@ -52,6 +52,7 @@ export interface WebGPUCanvasProps extends Omit<CanvasProps, 'gl'> {
 export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
   renderer: { onInit, ...otherProps } = {},
   children,
+  onClick,
   ...canvasProps
 }) => {
   const available = useAtomValue(availableAtom)
@@ -68,6 +69,15 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
       }, 500)
     }
   }, [])
+
+  // Focus the iframe in Storybook so that keyboard events can be captured.
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      window.focus()
+      onClick?.(event)
+    },
+    [onClick]
+  )
 
   return (
     <>
@@ -91,6 +101,7 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
           return renderer
         }}
         dpr={pixelRatio}
+        onClick={handleClick}
       >
         {children}
         <Stats />

@@ -31,8 +31,9 @@ export abstract class FilterNode extends TempNode {
 
   constructor(inputNode?: TextureNode | null) {
     super('vec4')
-    this.inputNode = inputNode
     this.updateBeforeType = NodeUpdateType.FRAME
+
+    this.inputNode = inputNode
   }
 
   protected createRenderTarget(name?: string): RenderTarget {
@@ -47,7 +48,7 @@ export abstract class FilterNode extends TempNode {
     texture.generateMipmaps = false
 
     const typeName = (this.constructor as typeof Node).type
-    texture.name = name != null ? `${typeName}.${name}` : typeName
+    texture.name = name != null ? `${typeName}_${name}` : typeName
 
     this.renderTargets.push(renderTarget)
     return renderTarget

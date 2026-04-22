@@ -1,16 +1,50 @@
-import { add, sub, textureSize, vec2 } from 'three/tsl'
-import type { TextureNode } from 'three/webgpu'
+import { add, ivec2, ivec4, sub, uv, vec2, vec4 } from 'three/tsl'
+import type { ConstNode, TextureNode } from 'three/webgpu'
 
+import { reinterpretType } from '../types'
 import { FnVar } from './FnVar'
 import type { Node } from './node'
+
+const components = ['x', 'y', 'z', 'w'] as const
+
+// WORKAROUND: TextureNode doesn't have gather() yet.
+// See: https://www.w3.org/TR/WGSL/#texturegather
+export const textureGather = /*#__PURE__*/ FnVar(
+  (
+    textureNode: TextureNode,
+    uvNode: Node<'vec2'>,
+    component = 0
+  ): Node<'vec4'> => {
+    let componentValue
+    if (typeof component === 'number') {
+      componentValue = component
+    } else if ((component as any)?.isConstNode === true) {
+      reinterpretType<ConstNode<number>>(component)
+      componentValue = component.value
+    } else {
+      throw new Error('Component must be a constant.')
+    }
+
+    const size = textureNode.size()
+    const coord = ivec2(uvNode.mul(size).sub(0.5).floor()).toConst()
+    const i = ivec4(coord, coord.add(1)).toConst()
+    const c = components[componentValue] // element() fails for depth textures
+    return vec4(
+      textureNode.load(i.xw)[c], // min, max
+      textureNode.load(i.zw)[c], // max, max
+      textureNode.load(i.zy)[c], // max, min
+      textureNode.load(i.xy)[c] // min, min
+    )
+  }
+)
 
 // 9-taps version of Catmull-Rom sampling.
 // Reference: https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
 export const textureCatmullRom = /*#__PURE__*/ FnVar(
-  (textureNode: TextureNode, uv: Node<'vec2'>): Node<'vec4'> => {
-    const size = vec2(textureSize(textureNode))
+  (textureNode: TextureNode, uvNode: Node<'vec2'> = uv()): Node<'vec4'> => {
+    const size = vec2(textureNode.size())
     const texelSize = size.reciprocal()
-    const position = uv.mul(size)
+    const position = uvNode.mul(size)
     const centerPosition = position.sub(0.5).floor().add(0.5)
 
     // Compute the fractional offset from our starting texel to our original

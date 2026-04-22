@@ -1,4 +1,4 @@
-import { float, ivec2, struct, uint, vec3 } from 'three/tsl'
+import { float, ivec2, struct, uint, uvec2, vec3 } from 'three/tsl'
 import type { NodeBuilder, StructNode } from 'three/webgpu'
 
 import { reinterpretType } from '@takram/three-geospatial'
@@ -59,11 +59,12 @@ const atmosphereParametersLayout = {
   luminanceScale: Dimensionless,
   transmittanceTextureSize: 'uvec2',
   irradianceTextureSize: 'uvec2',
+  multipleScatteringTextureSize: 'uvec2',
   scatteringTextureRadiusSize: 'uint',
   scatteringTextureCosViewSize: 'uint',
   scatteringTextureCosLightSize: 'uint',
   scatteringTextureCosViewLightSize: 'uint'
-}
+} satisfies Partial<Record<keyof AtmosphereParameters, unknown>>
 
 export const atmosphereParametersStruct = /*#__PURE__*/ struct(
   atmosphereParametersLayout,
@@ -153,6 +154,7 @@ export class AtmosphereContextBase {
       luminanceScale,
       transmittanceTextureSize,
       irradianceTextureSize,
+      multipleScatteringTextureSize,
       scatteringTextureRadiusSize,
       scatteringTextureCosViewSize,
       scatteringTextureCosLightSize,
@@ -198,6 +200,7 @@ export class AtmosphereContextBase {
         luminanceScale: float(luminanceScale),
         transmittanceTextureSize: ivec2(transmittanceTextureSize),
         irradianceTextureSize: ivec2(irradianceTextureSize),
+        multipleScatteringTextureSize: uvec2(multipleScatteringTextureSize),
         scatteringTextureRadiusSize: uint(scatteringTextureRadiusSize),
         scatteringTextureCosViewSize: uint(scatteringTextureCosViewSize),
         scatteringTextureCosLightSize: uint(scatteringTextureCosLightSize),

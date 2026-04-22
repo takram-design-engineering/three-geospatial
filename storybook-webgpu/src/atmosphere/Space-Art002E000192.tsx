@@ -317,7 +317,7 @@ Story.argTypes = {
     max: 1e5
   }),
   ...outputPassArgTypes({
-    hasNormal: false
+    hasVelocity: true
   }),
   ...rendererArgTypes()
 }

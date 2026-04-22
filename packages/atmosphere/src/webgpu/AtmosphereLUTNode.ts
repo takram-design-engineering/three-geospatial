@@ -1,4 +1,10 @@
-import { Data3DTexture, FloatType, HalfFloatType, Texture } from 'three'
+import {
+  Data3DTexture,
+  FloatType,
+  HalfFloatType,
+  RedFormat,
+  Texture
+} from 'three'
 import {
   Node,
   NodeUpdateType,
@@ -62,14 +68,22 @@ function run(renderer: Renderer, task: () => void): boolean {
   return true
 }
 
-export type AtmosphereLUTTextureName = 'transmittance' | 'irradiance'
+export type AtmosphereLUTTextureName =
+  | 'transmittance'
+  | 'multipleScattering'
+  | 'irradiance'
 export type AtmosphereLUTTexture3DName =
   | 'scattering'
   | 'singleMieScattering'
   | 'higherOrderScattering'
 
 const emptyTexture = /*#__PURE__*/ new Texture()
-const emptyTexture3D = /*#__PURE__*/ new Data3DTexture()
+const emptyTexture3D = /*#__PURE__*/ (() => {
+  const texture = new Data3DTexture(new Uint8Array(1))
+  texture.format = RedFormat
+  texture.needsUpdate = true
+  return texture
+})()
 
 // Dispatched when a texture node is updated.
 const updateEvent = { type: 'update' as const }
@@ -86,10 +100,11 @@ export class AtmosphereLUTNode extends Node {
 
   private readonly textureNodes = {
     transmittance: outputTexture(this, emptyTexture),
-    irradiance: outputTexture(this, emptyTexture),
+    multipleScattering: outputTexture(this, emptyTexture),
     scattering: outputTexture3D(this, emptyTexture3D),
     singleMieScattering: outputTexture3D(this, emptyTexture3D),
-    higherOrderScattering: outputTexture3D(this, emptyTexture3D)
+    higherOrderScattering: outputTexture3D(this, emptyTexture3D),
+    irradiance: outputTexture(this, emptyTexture)
   }
 
   private currentVersion?: number
@@ -101,10 +116,10 @@ export class AtmosphereLUTNode extends Node {
     textureType?: AnyFloatType
   ) {
     super(null)
+    this.updateBeforeType = NodeUpdateType.FRAME
+
     this.parameters = parameters
     this.textureType = textureType
-
-    this.updateBeforeType = NodeUpdateType.FRAME
   }
 
   getTextureNode(name: AtmosphereLUTTextureName): TextureNode
@@ -115,6 +130,13 @@ export class AtmosphereLUTNode extends Node {
     return this.textureNodes[name]
   }
 
+  private dispatchUpdate(): void {
+    this.dispatchEvent(
+      // @ts-expect-error Cannot specify the events map
+      updateEvent
+    )
+  }
+
   private *performCompute(
     renderer: Renderer,
     context: AtmosphereLUTTexturesContext
@@ -122,68 +144,22 @@ export class AtmosphereLUTNode extends Node {
     const { textures } = this
     invariant(textures != null)
 
-    // Compute the transmittance, and store it in transmittanceTexture.
     yield run(renderer, () => {
       textures.computeTransmittance(renderer, context)
-
-      // For transmittance texture:
-      this.dispatchEvent(
-        // @ts-expect-error Cannot specify the events map
-        updateEvent
-      )
+      this.dispatchUpdate()
     })
-
-    // Compute the direct irradiance, store it in deltaIrradiance and,
-    // depending on "additive", either initialize irradianceTexture with zeros
-    // or leave it unchanged (we don't want the direct irradiance in
-    // irradianceTexture, but only the irradiance from the sky).
     yield run(renderer, () => {
-      textures.computeDirectIrradiance(renderer, context)
-
-      // For irradiance texture:
-      this.dispatchEvent(
-        // @ts-expect-error Cannot specify the events map
-        updateEvent
-      )
+      textures.computeMultipleScattering(renderer, context)
+      this.dispatchUpdate()
     })
-
-    // Compute the rayleigh and mie single scattering, store them in
-    // deltaRayleighScattering and deltaMieScattering, and either store them or
-    // accumulate them in scatteringTexture and optional
-    // mieScatteringTexture.
     yield run(renderer, () => {
-      textures.computeSingleScattering(renderer, context)
-
-      // For scattering texture:
-      this.dispatchEvent(
-        // @ts-expect-error Cannot specify the events map
-        updateEvent
-      )
+      textures.computeScattering(renderer, context)
+      this.dispatchUpdate()
     })
-
-    // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
-    for (let scatteringOrder = 2; scatteringOrder <= 4; ++scatteringOrder) {
-      // Compute the scattering density, and store it in deltaScatteringDensity.
-      yield run(renderer, () => {
-        textures.computeScatteringDensity(renderer, context, scatteringOrder)
-      })
-      // Compute the indirect irradiance, store it in deltaIrradiance and
-      // accumulate it in irradianceTexture.
-      yield run(renderer, () => {
-        textures.computeIndirectIrradiance(renderer, context, scatteringOrder)
-      })
-      // Compute the multiple scattering, store it in deltaMultipleScattering,
-      // and accumulate it in scatteringTexture.
-      yield run(renderer, () => {
-        textures.computeMultipleScattering(renderer, context)
-      })
-
-      // For irradiance and scattering textures:
-      this.dispatchEvent(
-        // @ts-expect-error Cannot specify the events map
-        updateEvent
-      )
-    }
+    yield run(renderer, () => {
+      textures.computeIrradiance(renderer, context)
+      this.dispatchUpdate()
+    })
   }
 
   async updateTextures(renderer: Renderer): Promise<void> {
@@ -216,7 +192,7 @@ export class AtmosphereLUTNode extends Node {
     if (this.textures == null) {
       // Lazily initialize the texture generator depending of the renderer:
       this.textures = isWebGPU(builder)
-        ? new AtmosphereLUTTexturesWebGPU(builder.renderer)
+        ? new AtmosphereLUTTexturesWebGPU()
         : new AtmosphereLUTTexturesWebGL()
 
       // Swap the contents of the texture nodes. The WebGPU one has storage
@@ -225,24 +201,24 @@ export class AtmosphereLUTNode extends Node {
       const {
         transmittance,
         irradiance,
+        multipleScattering,
         scattering,
         singleMieScattering,
         higherOrderScattering
       } = this.textureNodes
       transmittance.value = this.textures.get('transmittance')
-      irradiance.value = this.textures.get('irradiance')
+      multipleScattering.value = this.textures.get('multipleScattering')
       scattering.value = this.textures.get('scattering')
       singleMieScattering.value = this.textures.get('singleMieScattering')
       higherOrderScattering.value = this.textures.get('higherOrderScattering')
+      irradiance.value = this.textures.get('irradiance')
     }
 
     const textureType = isFloatLinearSupported(builder.renderer)
       ? (this.textureType ?? FloatType)
       : HalfFloatType
-    const parameters = this.parameters.clone()
-    parameters.transmittancePrecisionLog = textureType === HalfFloatType
-    parameters.update()
-    this.textures.setup(parameters, textureType)
+    this.parameters.update()
+    this.textures.setup(this.parameters, textureType)
 
     return super.setup(builder)
   }

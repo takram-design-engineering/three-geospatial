@@ -115,17 +115,11 @@ export class AtmosphereParameters {
   // The cosine of the maximum sun zenith angle for which atmospheric scattering
   // must be precomputed (for maximum precision, use the smallest sun zenith
   // angle yielding negligible sky light radiance values).
-  minCosLight = Math.cos(radians(102))
+  minCosLight = Math.cos(radians(120))
 
   sunRadianceToLuminance = new Vector3(98242.786222, 69954.398112, 66475.012354)
   skyRadianceToLuminance = new Vector3(114974.91644, 71305.954816, 65310.548555)
   luminanceScale = 1 / luminanceCoefficients.dot(this.sunRadianceToLuminance)
-
-  // Whether to store the optical depth instead of the transmittance in the
-  // transmittance textures. Linear filtering on logarithmic numbers yields
-  // non-linear interpolations so that sampling will be performed manually, thus
-  // this should be enabled only in the precomputation stage.
-  transmittancePrecisionLog = false
 
   // Whether to store the single Mie scattering in the alpha channel of the
   // scattering texture, reducing the memory footprint on the GPU.
@@ -138,6 +132,7 @@ export class AtmosphereParameters {
   // Texture sizes:
   transmittanceTextureSize = new Vector2(256, 64)
   irradianceTextureSize = new Vector2(64, 16)
+  multipleScatteringTextureSize = new Vector2(64, 64)
   scatteringTextureRadiusSize = 32
   scatteringTextureCosViewSize = 128
   scatteringTextureCosLightSize = 32
@@ -167,11 +162,10 @@ export class AtmosphereParameters {
     this.sunRadianceToLuminance.copy(other.sunRadianceToLuminance)
     this.skyRadianceToLuminance.copy(other.skyRadianceToLuminance)
     this.luminanceScale = other.luminanceScale
-    this.transmittancePrecisionLog = other.transmittancePrecisionLog
     this.combinedScatteringTextures = other.combinedScatteringTextures
-    this.higherOrderScatteringTexture = other.higherOrderScatteringTexture
     this.transmittanceTextureSize.copy(other.transmittanceTextureSize)
     this.irradianceTextureSize.copy(other.irradianceTextureSize)
+    this.multipleScatteringTextureSize.copy(other.multipleScatteringTextureSize)
     this.scatteringTextureRadiusSize = other.scatteringTextureRadiusSize
     this.scatteringTextureCosViewSize = other.scatteringTextureCosViewSize
     this.scatteringTextureCosLightSize = other.scatteringTextureCosLightSize
@@ -224,4 +218,14 @@ export class AtmosphereParameters {
   set scatteringTextureCosViewSunSize(value: number) {
     this.scatteringTextureCosViewLightSize = value
   }
+
+  /** @deprecated This option was removed. */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  get transmittancePrecisionLog(): boolean {
+    return false
+  }
+
+  /** @deprecated This option was removed. */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  set transmittancePrecisionLog(value: boolean) {}
 }
