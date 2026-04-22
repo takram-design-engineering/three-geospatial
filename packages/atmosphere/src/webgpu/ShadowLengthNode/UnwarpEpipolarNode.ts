@@ -21,8 +21,8 @@
 import {
   HalfFloatType,
   LinearFilter,
-  RedFormat,
   RenderTarget,
+  RGFormat,
   type Camera,
   type Vector2,
   type Vector4
@@ -90,7 +90,7 @@ export class UnwarpEpipolarNode extends Node {
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
       type: HalfFloatType,
-      format: RedFormat
+      format: RGFormat
     })
     const texture = renderTarget.texture
     texture.name = 'UnwarpEpipolar'
@@ -122,7 +122,7 @@ export class UnwarpEpipolarNode extends Node {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupFragmentNode(builder: NodeBuilder): Node<'vec4'> {
+  private setupFragmentNode(builder: NodeBuilder): Node<'vec2'> {
     const {
       sliceEndpointsNode,
       coordinateNode,
@@ -262,7 +262,7 @@ export class UnwarpEpipolarNode extends Node {
       const sliceWeight0 = sliceWeight1.oneMinus().toConst()
       const sliceWeights = [sliceWeight0, sliceWeight1]
 
-      const shadowLength = float(0).toVar()
+      const shadowLength = vec2(0).toVar()
       const totalWeight = float(0).toVar()
 
       // Unrolled loop for 2 slices:
@@ -388,7 +388,7 @@ export class UnwarpEpipolarNode extends Node {
           .mul(
             epipolarShadowLengthNode.sample(
               shadowLengthUV.add(vec2(subpixelUOffset, 0))
-            )
+            ).xy
           )
           .toConst()
         shadowLength.addAssign(filteredShadowLength)

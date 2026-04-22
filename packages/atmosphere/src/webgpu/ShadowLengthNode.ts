@@ -96,7 +96,7 @@ export class ShadowLengthNode extends TempNode {
     viewZNode?: TextureNode | null,
     depthNode?: TextureNode | null
   ) {
-    super('float')
+    super('vec2')
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
 
     this.csmShadowNode = csmShadowNode

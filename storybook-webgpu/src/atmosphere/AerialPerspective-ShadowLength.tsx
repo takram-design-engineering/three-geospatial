@@ -128,7 +128,7 @@ const internalTextures = FnVar(
           .lessThan(0.5)
           .select(
             minMaxLevels.sample(uv1.xw),
-            epipolarShadowLength.sample(uv1.zw).rrr
+            vec3(epipolarShadowLength.sample(uv1.zw).xy, 0)
           )
       ).rgb
   }

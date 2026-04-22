@@ -23,8 +23,8 @@
 import {
   HalfFloatType,
   LinearFilter,
-  RedFormat,
   RenderTarget,
+  RGFormat,
   type PerspectiveCamera
 } from 'three'
 import {
@@ -132,7 +132,7 @@ export class EpipolarShadowLengthNode extends Node {
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
       type: HalfFloatType,
-      format: RedFormat
+      format: RGFormat
     })
     const texture = renderTarget.texture
     texture.name = 'EpipolarShadowLength'
@@ -166,7 +166,7 @@ export class EpipolarShadowLengthNode extends Node {
     restoreRendererState(renderer, this.rendererState)
   }
 
-  private setupFragmentNode(builder: NodeBuilder): Node<'float'> {
+  private setupFragmentNode(builder: NodeBuilder): Node<'vec2'> {
     const {
       csmShadowNode,
       coordinateNode,
@@ -214,10 +214,7 @@ export class EpipolarShadowLengthNode extends Node {
         rayEndCameraZ: Node<'float'>,
         cascadeStartCameraZ: Node<'float'>,
         cascadeEndCameraZ: Node<'float'>
-      ): Node<'float'> => {
-        const totalLitLength = float(0).toVar()
-        const totalMarchedLength = float(0).toVar()
-
+      ): Node<'vec2'> => {
         const sliceIndex = uint(screenCoordinate.y)
         const minMaxShadowMapSize = int(minMaxLevelsNode.size().x).toConst()
 
@@ -248,6 +245,10 @@ export class EpipolarShadowLengthNode extends Node {
           .toConst()
 
         const rayLength = distanceToRayEnd.sub(distanceToRayStart).toConst()
+
+        const totalLitLength = float(0).toVar()
+        const totalMarchedLength = float(0).toVar()
+        const distanceToFirstShadowedSection = float(-1).toVar()
 
         // WORKAROUND: We cannot use the early-return pattern.
         If(rayLength.lessThanEqual(10).not(), () => {
@@ -464,12 +465,29 @@ export class EpipolarShadowLengthNode extends Node {
               rayStepLengthWorld.mul(stepScale)
             )
 
+            // Store the distance where the ray first enters the shadow.
+            distanceToFirstShadowedSection.assign(
+              distanceToFirstShadowedSection
+                .lessThan(0)
+                .and(isInLight.not())
+                .select(totalMarchedLength, distanceToFirstShadowedSection)
+            )
+
             totalLitLength.addAssign(integrationStep.mul(isInLight))
             totalMarchedLength.addAssign(integrationStep)
           })
         })
 
-        return totalMarchedLength.sub(totalLitLength)
+        // If the whole ray is lit, set the distance to the first shadowed
+        // section to the total marched distance.
+        If(distanceToFirstShadowedSection.lessThan(0), () => {
+          distanceToFirstShadowedSection.assign(totalMarchedLength)
+        })
+
+        return vec2(
+          totalMarchedLength.sub(totalLitLength),
+          distanceToFirstShadowedSection
+        )
       }
     )
 
@@ -480,13 +498,13 @@ export class EpipolarShadowLengthNode extends Node {
 
     return Fn(() => {
       const { parameters } = getAtmosphereContext(builder)
-      const { topRadius, bottomRadius } = parameters
+      const { worldToUnit, topRadius, bottomRadius } = parameters
 
       const coordinate = coordinateNode.load(screenCoordinate).toConst()
       const sampleLocation = coordinate.xy
       const rayEndCameraZ = coordinate.z.toVar()
 
-      const totalShadowLength = float(0).toVar()
+      const totalShadowLength = vec2(0).toVar()
 
       // Skip samples with invalid screen coordinates.
       // WORKAROUND: We cannot use the early-return pattern.
@@ -571,8 +589,7 @@ export class EpipolarShadowLengthNode extends Node {
         }
       )
 
-      // TODO: AerialPerspectiveNode expects 1/1000 scale value.
-      return totalShadowLength.div(1000)
+      return totalShadowLength.mul(worldToUnit)
     })()
   }
 
