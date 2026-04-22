@@ -9,6 +9,13 @@ import { docs } from './theme'
 
 import './style.css'
 
+// Reload when loading invalid caches.
+// See: https://vite.dev/guide/build#load-error-handling
+window.addEventListener('vite:preloadError', event => {
+  event.preventDefault()
+  window.location.reload()
+})
+
 const DEBOUNCED = Symbol('DEBOUNCED')
 
 declare module 'storybook/preview-api' {
