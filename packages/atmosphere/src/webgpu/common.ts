@@ -67,7 +67,6 @@ import {
   If,
   max,
   min,
-  mix,
   mul,
   PI,
   smoothstep,
@@ -267,26 +266,9 @@ export const getTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnVar(
     (builder): Node<DimensionlessSpectrum> => {
       const context = getAtmosphereContextBase(builder)
       const { parametersNode } = context
-      const { transmittanceTextureSize } = parametersNode
 
       const uv = getTransmittanceTextureUV(parametersNode, radius, cosView)
-
-      // Added for the precomputation stage in half-float precision. Manually
-      // interpolate the transmittance instead of the optical depth.
-      if (context.parameters.transmittancePrecisionLog) {
-        const size = vec2(transmittanceTextureSize)
-        const texelSize = vec3(size.reciprocal(), 0).toConst()
-        const coord = uv.mul(size).sub(0.5).toConst()
-        const i = coord.floor().add(0.5).mul(texelSize.xy).toConst()
-        const f = coord.fract().toConst()
-        const t1 = exp(transmittanceNode.sample(i).negate())
-        const t2 = exp(transmittanceNode.sample(i.add(texelSize.xz)).negate())
-        const t3 = exp(transmittanceNode.sample(i.add(texelSize.zy)).negate())
-        const t4 = exp(transmittanceNode.sample(i.add(texelSize.xy)).negate())
-        return mix(mix(t1, t2, f.x), mix(t3, t4, f.x), f.y).rgb
-      } else {
-        return transmittanceNode.sample(uv).rgb
-      }
+      return transmittanceNode.sample(uv).rgb
     }
 )
 

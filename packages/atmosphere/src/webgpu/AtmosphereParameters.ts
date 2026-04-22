@@ -121,12 +121,6 @@ export class AtmosphereParameters {
   skyRadianceToLuminance = new Vector3(114974.91644, 71305.954816, 65310.548555)
   luminanceScale = 1 / luminanceCoefficients.dot(this.sunRadianceToLuminance)
 
-  // Whether to store the optical depth instead of the transmittance in the
-  // transmittance textures. Linear filtering on logarithmic numbers yields
-  // non-linear interpolations so that sampling will be performed manually, thus
-  // this should be enabled only in the precomputation stage.
-  transmittancePrecisionLog = false
-
   // Whether to store the single Mie scattering in the alpha channel of the
   // scattering texture, reducing the memory footprint on the GPU.
   combinedScatteringTextures = true
@@ -168,7 +162,6 @@ export class AtmosphereParameters {
     this.sunRadianceToLuminance.copy(other.sunRadianceToLuminance)
     this.skyRadianceToLuminance.copy(other.skyRadianceToLuminance)
     this.luminanceScale = other.luminanceScale
-    this.transmittancePrecisionLog = other.transmittancePrecisionLog
     this.combinedScatteringTextures = other.combinedScatteringTextures
     this.transmittanceTextureSize.copy(other.transmittanceTextureSize)
     this.irradianceTextureSize.copy(other.irradianceTextureSize)
@@ -225,4 +218,14 @@ export class AtmosphereParameters {
   set scatteringTextureCosViewSunSize(value: number) {
     this.scatteringTextureCosViewLightSize = value
   }
+
+  /** @deprecated This option was removed. */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  get transmittancePrecisionLog(): boolean {
+    return false
+  }
+
+  /** @deprecated This option was removed. */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  set transmittancePrecisionLog(value: boolean) {}
 }

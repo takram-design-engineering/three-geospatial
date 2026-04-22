@@ -140,10 +140,9 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
   inputs: [
     { name: 'parameters', type: atmosphereParametersStruct },
     { name: 'radius', type: Length },
-    { name: 'cosView', type: Dimensionless },
-    { name: 'transmittancePrecisionLog', type: 'bool' }
+    { name: 'cosView', type: Dimensionless }
   ]
-})(([parameters, radius, cosView, transmittancePrecisionLog]) => {
+})(([parameters, radius, cosView]) => {
   const {
     rayleighDensity,
     rayleighScattering,
@@ -177,10 +176,7 @@ const computeTransmittanceToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     absorptionExtinction.mul(absorptionOpticalDepth)
   ).toConst()
 
-  return transmittancePrecisionLog.select(
-    opticalDepth,
-    exp(opticalDepth.negate())
-  )
+  return exp(opticalDepth.negate())
 })
 
 const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
@@ -247,8 +243,7 @@ export const computeTransmittanceTexture = /*#__PURE__*/ FnVar(
       return computeTransmittanceToTopAtmosphereBoundary(
         parametersNode,
         radius,
-        cosView,
-        bool(context.parameters.transmittancePrecisionLog)
+        cosView
       )
     }
 )
