@@ -210,6 +210,7 @@ export class AerialPerspectiveNode extends TempNode {
       let inscatter = solarLuminanceTransfer.get('luminance')
 
       if (this.moonScattering) {
+        // TODO: Combine raymarch when raymarchScattering.
         const lunarLuminanceTransfer = getIndirectLuminanceToPoint(
           cameraPositionUnit.add(altitudeCorrectionUnit),
           positionUnit.add(altitudeCorrectionUnit),

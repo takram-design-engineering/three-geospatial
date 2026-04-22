@@ -36,6 +36,7 @@ const bvec4Not = /*#__PURE__*/ FnLayout({
   inputs: [{ name: 'x', type: 'bvec4' }]
 })(([x]) => x.notEqual(bool(true)))
 
+// WORKAROUND: PR on this https://github.com/mrdoob/three.js/pull/33442
 export const bvecNot = /*#__PURE__*/ overloadingFn([
   bvec2Not,
   bvec3Not,
