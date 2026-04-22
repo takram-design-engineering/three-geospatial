@@ -9,7 +9,6 @@ const components = ['x', 'y', 'z', 'w'] as const
 
 // WORKAROUND: TextureNode doesn't have gather() yet.
 // See: https://www.w3.org/TR/WGSL/#texturegather
-
 export const textureGather = /*#__PURE__*/ FnVar(
   (
     textureNode: TextureNode,

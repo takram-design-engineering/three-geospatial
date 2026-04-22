@@ -499,6 +499,7 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
       if (context.raymarchScattering) {
         // WORKAROUND: As somewhat expected, select() doesn't work here.
         // TODO: The threshold can be lower.
+        // TODO: Visible differences at points below the atmosphere bottom.
         If(radius.lessThan(topRadius), () => {
           const result = getIndirectRadianceToPointRaymarch(
             context,
