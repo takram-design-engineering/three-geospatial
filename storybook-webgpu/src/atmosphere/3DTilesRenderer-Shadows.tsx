@@ -1,6 +1,12 @@
-import { extend, useThree, type ThreeElement } from '@react-three/fiber'
+import {
+  extend,
+  useFrame,
+  useThree,
+  type ThreeElement
+} from '@react-three/fiber'
+import type { TilesRenderer } from '3d-tiles-renderer'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
-import { useEffect, useLayoutEffect, useMemo, type FC } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, type FC } from 'react'
 import { AgXToneMapping, Scene } from 'three'
 import {
   bool,
@@ -17,6 +23,7 @@ import {
   PostProcessing,
   type Renderer
 } from 'three/webgpu'
+import invariant from 'tiny-invariant'
 
 import {
   getECIToECEFRotationMatrix,
@@ -304,6 +311,21 @@ const Content: FC<StoryProps> = ({
     )
   })
 
+  // Make tiles outside the camera frustum but inside the shadow camera
+  // frustum active. Note that doing this every frame is inefficient, but it's
+  // hard to choose the right timing when the CSM allocates shadow cameras.
+  const tilesRef = useRef<TilesRenderer | null>(null)
+  useFrame(() => {
+    const tiles = tilesRef.current
+    if (tiles != null && csmShadowNode.lights.length > 0) {
+      const { lights } = csmShadowNode
+      const lastLight = lights[lights.length - 1]
+      invariant(lastLight.shadow != null)
+      tiles.setCamera(lastLight.shadow.camera)
+      tiles.setResolution(lastLight.shadow.camera, lastLight.shadow.mapSize)
+    }
+  })
+
   // Google Maps API key:
   const apiKey = useControl(({ googleMapsApiKey }: StoryArgs) =>
     googleMapsApiKey !== '' ? googleMapsApiKey : undefined
@@ -313,6 +335,7 @@ const Content: FC<StoryProps> = ({
     <>
       <primitive object={light} />
       <Globe
+        ref={tilesRef}
         apiKey={apiKey}
         materialHandler={() => new MeshLambertNodeMaterial()}
       >
