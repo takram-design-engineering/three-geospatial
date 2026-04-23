@@ -582,8 +582,14 @@ export class EpipolarShadowLengthNode extends Node {
                   cascadeEndCameraZ
                 ).toConst()
 
+                // Keep shadowLength.y from the first cascade that has shadow.
+                totalShadowLength.y.assign(
+                  totalShadowLength.x
+                    .equal(0)
+                    .and(shadowLength.x.greaterThan(0))
+                    .select(shadowLength.y, totalShadowLength.y)
+                )
                 totalShadowLength.x.addAssign(shadowLength.x)
-                totalShadowLength.y.assign(shadowLength.y)
               }
             )
           })
