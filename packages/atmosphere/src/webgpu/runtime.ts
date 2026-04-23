@@ -221,9 +221,53 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         intersectsGround.assign(bool(false))
       }
 
+      // Note that the `scattering` contains only the single Rayleigh scattering
+      // term when higherOrderScatteringTexture is enabled, whereas it also
+      // includes multiple scattering over the Rayleigh phase when
+      // higherOrderScatteringTexture is disabled.
       const scattering = vec3(0).toVar()
       const singleMieScattering = vec3(0).toVar()
 
+      const getScatteringAndTransmittance = (
+        rayLength: Node<Length>
+      ): {
+        S: Node<IrradianceSpectrum>
+        M: Node<IrradianceSpectrum>
+        T: Node<DimensionlessSpectrum>
+      } => {
+        const params = getScatteringParams(
+          parametersNode,
+          radius,
+          cosView,
+          cosLight,
+          cosViewLight,
+          rayLength
+        )
+        const combinedScattering = getCombinedScattering(
+          parametersNode,
+          scatteringNode,
+          singleMieScatteringNode,
+          params.radius,
+          params.cosView,
+          params.cosLight,
+          cosViewLight,
+          intersectsGround
+        ).toConst()
+        const transmittance = getTransmittance(
+          transmittanceNode,
+          radius,
+          cosView,
+          rayLength,
+          intersectsGround
+        )
+        return {
+          S: combinedScattering.get('scattering'),
+          M: combinedScattering.get('singleMieScattering'),
+          T: transmittance
+        }
+      }
+
+      const shadowLimit = shadowLength.y.add(shadowLength.x).toConst()
       If(shadowLength.x.equal(0), () => {
         const combinedScattering = getCombinedScattering(
           parametersNode,
@@ -249,43 +293,11 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           //        | shadowLength.x |
           //                         P
           //
-          // E = T(0,p)S(P)
+          // S = T(0,p)S(P)
 
-          const paramsP = getScatteringParams(
-            parametersNode,
-            radius,
-            cosView,
-            cosLight,
-            cosViewLight,
-            shadowLength.x
-          )
-          const combinedScattering = getCombinedScattering(
-            parametersNode,
-            scatteringNode,
-            singleMieScatteringNode,
-            paramsP.radius,
-            paramsP.cosView,
-            paramsP.cosLight,
-            cosViewLight,
-            intersectsGround
-          ).toConst()
-
-          const shadowTransmittance = getTransmittance(
-            transmittanceNode,
-            radius,
-            cosView,
-            shadowLength.x,
-            intersectsGround
-          ).toConst()
-
-          scattering.assign(
-            shadowTransmittance.mul(combinedScattering.get('scattering'))
-          )
-          singleMieScattering.assign(
-            shadowTransmittance.mul(
-              combinedScattering.get('singleMieScattering')
-            )
-          )
+          const p = getScatteringAndTransmittance(shadowLength.x)
+          scattering.assign(p.T.mul(p.S))
+          singleMieScattering.assign(p.T.mul(p.M))
         })
         .Else(() => {
           // In case where the camera is outside shadows, we have to lookup
@@ -297,7 +309,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           //                    | shadowLength.x |
           //                    A                B
           //
-          // E = S - T(0,a)S(A) + T(0,b)S(B)
+          // S = S(camera) - T(0,a)S(A) + T(0,b)S(B)
 
           const combinedScattering = getCombinedScattering(
             parametersNode,
@@ -310,71 +322,13 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
             intersectsGround
           ).toConst()
 
-          const distanceA = shadowLength.y
-          const paramsA = getScatteringParams(
-            parametersNode,
-            radius,
-            cosView,
-            cosLight,
-            cosViewLight,
-            distanceA
-          )
-          const combinedScatteringA = getCombinedScattering(
-            parametersNode,
-            scatteringNode,
-            singleMieScatteringNode,
-            paramsA.radius,
-            paramsA.cosView,
-            paramsA.cosLight,
-            cosViewLight,
-            intersectsGround
-          ).toConst()
-          const transmittanceA = getTransmittance(
-            transmittanceNode,
-            radius,
-            cosView,
-            distanceA,
-            intersectsGround
-          ).toConst()
-
-          const distanceB = shadowLength.y.add(shadowLength.x).toConst()
-          const paramsB = getScatteringParams(
-            parametersNode,
-            radius,
-            cosView,
-            cosLight,
-            cosViewLight,
-            distanceB
-          )
-          const combinedScatteringB = getCombinedScattering(
-            parametersNode,
-            scatteringNode,
-            singleMieScatteringNode,
-            paramsB.radius,
-            paramsB.cosView,
-            paramsB.cosLight,
-            cosViewLight,
-            intersectsGround
-          ).toConst()
-          const transmittanceB = getTransmittance(
-            transmittanceNode,
-            radius,
-            cosView,
-            distanceB,
-            intersectsGround
-          ).toConst()
-
           const S = combinedScattering.get('scattering')
-          const Sa = combinedScatteringA.get('scattering')
-          const Sb = combinedScatteringB.get('scattering')
-          scattering.assign(
-            S.sub(transmittanceA.mul(Sa).sub(transmittanceB.mul(Sb)).max(0))
-          )
           const M = combinedScattering.get('singleMieScattering')
-          const Ma = combinedScatteringA.get('singleMieScattering')
-          const Mb = combinedScatteringB.get('singleMieScattering')
+          const a = getScatteringAndTransmittance(shadowLength.y)
+          const b = getScatteringAndTransmittance(shadowLimit)
+          scattering.assign(S.sub(a.T.mul(a.S).sub(b.T.mul(b.S)).max(0)))
           singleMieScattering.assign(
-            M.sub(transmittanceA.mul(Ma).sub(transmittanceB.mul(Mb)).max(0))
+            M.sub(a.T.mul(a.M).sub(b.T.mul(b.M)).max(0))
           )
         })
 
@@ -444,77 +398,157 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       intersectsGround
     ).toConst()
 
-    const combinedScattering = getCombinedScattering(
-      parametersNode,
-      scatteringNode,
-      singleMieScatteringNode,
-      radius,
-      cosView,
-      cosLight,
-      cosViewLight,
-      intersectsGround
-    ).toConst()
-
     // Note that the `scattering` contains only the single Rayleigh scattering
     // term when higherOrderScatteringTexture is enabled, whereas it also
     // includes multiple scattering over the Rayleigh phase when
     // higherOrderScatteringTexture is disabled.
-    const scattering = combinedScattering.get('scattering').toVar()
-    const singleMieScattering = combinedScattering
-      .get('singleMieScattering')
-      .toVar()
+    const scattering = vec3(0).toVar()
+    const singleMieScattering = vec3(0).toVar()
 
-    // Compute the scattering parameters for the second texture lookup.
-    // If shadowLength is not 0 (case of light shafts), we want to ignore the
-    // scattering along the last shadowLength meters of the view ray, which we
-    // do by subtracting shadowLength from distanceToPoint.
-    const distanceToPointP = distanceToPoint
-      .sub(shadowLength.x)
-      .max(0)
+    const getScatteringAndTransmittance = (
+      rayLength: Node<Length>,
+      transmittance?: Node<DimensionlessSpectrum>
+    ): {
+      S: Node<IrradianceSpectrum>
+      M: Node<IrradianceSpectrum>
+      T: Node<DimensionlessSpectrum>
+    } => {
+      const params = getScatteringParams(
+        parametersNode,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        rayLength
+      )
+      const combinedScattering = getCombinedScattering(
+        parametersNode,
+        scatteringNode,
+        singleMieScatteringNode,
+        params.radius,
+        params.cosView,
+        params.cosLight,
+        cosViewLight,
+        intersectsGround
+      ).toConst()
+      return {
+        S: combinedScattering.get('scattering'),
+        M: combinedScattering.get('singleMieScattering'),
+        T:
+          transmittance ??
+          getTransmittance(
+            transmittanceNode,
+            radius,
+            cosView,
+            rayLength,
+            intersectsGround
+          )
+      }
+    }
+
+    const shadowLimit = shadowLength.y.add(shadowLength.x).toConst()
+    const shadowFlags = vec3(shadowLength, distanceToPoint)
+      .greaterThan(vec3(0, 0, shadowLimit))
       .toConst()
-    const paramsP = getScatteringParams(
-      parametersNode,
-      radius,
-      cosView,
-      cosLight,
-      cosViewLight,
-      distanceToPointP
-    )
-    const combinedScatteringP = getCombinedScattering(
-      parametersNode,
-      scatteringNode,
-      singleMieScatteringNode,
-      paramsP.radius,
-      paramsP.cosView,
-      paramsP.cosLight,
-      cosViewLight,
-      intersectsGround
-    ).toConst()
+    const hasShadow = shadowFlags.x
 
-    // Combine the lookup to get the scattering between camera and point.
-    const shadowTransmittance = transmittance.toVar()
-    If(shadowLength.x.greaterThan(0), () => {
-      shadowTransmittance.assign(
-        getTransmittance(
-          transmittanceNode,
+    // shadowLength.y === 0 && distanceToPoint > shadowLength.y + shadowLength.x
+    If(hasShadow.and(shadowFlags.y.not()).and(shadowFlags.z), () => {
+      //
+      //        |      distanceToPoint      |
+      // camera |////////////////|----------| surface //////> top atmosphere
+      //        | shadowLength.x |          P
+      //                         Q
+      //
+      // S = T(0,q)S(Q) - T(0,p)S(P)
+
+      const q = getScatteringAndTransmittance(shadowLimit)
+      const p = getScatteringAndTransmittance(distanceToPoint, transmittance)
+      scattering.assign(q.T.mul(q.S).sub(transmittance.mul(p.S)))
+      singleMieScattering.assign(q.T.mul(q.M).sub(transmittance.mul(p.M)))
+    })
+      // distanceToPoint > shadowLength.y + shadowLength.x
+      .ElseIf(hasShadow.and(shadowFlags.z), () => {
+        //
+        //        |         distanceToPoint        |
+        //        | shadowLength.y                 |
+        // camera |-------|////////////////|-------| surface //////> top atmosphere
+        //                | shadowLength.x |       P
+        //                A                B
+        //
+        // S = S(camera) - T(0,p)S(P) - T(0,a)S(A) + T(0,b)S(B)
+
+        const combinedScattering = getCombinedScattering(
+          parametersNode,
+          scatteringNode,
+          singleMieScatteringNode,
           radius,
           cosView,
-          distanceToPointP,
+          cosLight,
+          cosViewLight,
           intersectsGround
-        )
-      )
-    })
+        ).toConst()
 
-    scattering.assign(
-      scattering.sub(
-        shadowTransmittance.mul(combinedScatteringP.get('scattering'))
-      )
-    )
-    singleMieScattering.assign(
-      singleMieScattering.sub(
-        shadowTransmittance.mul(combinedScatteringP.get('singleMieScattering'))
-      )
-    )
+        const S = combinedScattering.get('scattering')
+        const M = combinedScattering.get('singleMieScattering')
+        const a = getScatteringAndTransmittance(shadowLength.y)
+        const b = getScatteringAndTransmittance(shadowLimit)
+        const p = getScatteringAndTransmittance(distanceToPoint)
+        scattering.assign(
+          S.sub(transmittance.mul(p.S), a.T.mul(a.S).sub(b.T.mul(b.S)).max(0))
+        )
+        singleMieScattering.assign(
+          M.sub(transmittance.mul(p.M), a.T.mul(a.M).sub(b.T.mul(b.M)).max(0))
+        )
+      })
+      .Else(() => {
+        // Compute the scattering parameters for the second texture lookup.
+        // If shadowLength.x is not 0 (case of light shafts), we want to ignore
+        // the scattering along the last shadowLength.x of the view ray, which we
+        // do by subtracting shadowLength.x from distanceToPoint.
+        //
+        //        |      distanceToPoint      |
+        // camera |---------------------------| surface //////> top atmosphere
+        //                                    |
+        //                                    P
+        //             shadowLength.y
+        // camera |----------|////////////////| surface //////> top atmosphere
+        //                   | shadowLength.x |
+        //                   P
+        //
+        // S = S(camera) - T(0,p)S(P)
+
+        const combinedScattering = getCombinedScattering(
+          parametersNode,
+          scatteringNode,
+          singleMieScatteringNode,
+          radius,
+          cosView,
+          cosLight,
+          cosViewLight,
+          intersectsGround
+        ).toConst()
+
+        const distance = distanceToPoint.sub(shadowLength.x).max(0).toConst()
+        const p = getScatteringAndTransmittance(
+          distance,
+          hasShadow.select(
+            getTransmittance(
+              transmittanceNode,
+              radius,
+              cosView,
+              distance,
+              intersectsGround
+            ),
+            transmittance
+          )
+        )
+
+        const S = combinedScattering.get('scattering')
+        const M = combinedScattering.get('singleMieScattering')
+        scattering.assign(S.sub(p.T.mul(p.S)))
+        singleMieScattering.assign(M.sub(p.T.mul(p.M)))
+      })
 
     if (context.parameters.combinedScatteringTextures) {
       singleMieScattering.assign(
@@ -539,7 +573,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       const higherOrderScatteringTexture = lutNode.getTextureNode(
         'higherOrderScattering'
       )
-      const scattering = getScattering(
+      const higherOrderScattering = getScattering(
         higherOrderScatteringTexture,
         radius,
         cosView,
@@ -556,7 +590,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
         cosViewLight,
         distanceToPoint
       )
-      const scatteringP = getScattering(
+      const higherOrderScatteringP = getScattering(
         higherOrderScatteringTexture,
         paramsP.radius,
         paramsP.cosView,
@@ -565,7 +599,9 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
         intersectsGround
       ).toConst()
 
-      multipleScattering = scattering.sub(transmittance.mul(scatteringP))
+      multipleScattering = higherOrderScattering.sub(
+        transmittance.mul(higherOrderScatteringP)
+      )
     }
 
     const rayleighPhase = rayleighPhaseFunction(cosViewLight)
