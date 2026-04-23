@@ -57,7 +57,6 @@ import {
   type NodeFrame,
   type TextureNode
 } from 'three/webgpu'
-import invariant from 'tiny-invariant'
 
 import { cameraFar, cameraNear } from './accessors'
 import type { Node } from './node'
@@ -123,7 +122,7 @@ export class ScreenSpaceShadowNode extends TempNode {
   )
   private dispatchCount = 0
 
-  private computeNode?: ComputeNode
+  private readonly computeNode: ComputeNode
 
   constructor(
     depthNode: TextureNode,
@@ -146,6 +145,7 @@ export class ScreenSpaceShadowNode extends TempNode {
 
     this.outputTexture = texture
     this.textureNode = outputTexture(this, texture)
+    this.computeNode = this.createComputeNode()
   }
 
   override customCacheKey(): number {
@@ -197,7 +197,6 @@ export class ScreenSpaceShadowNode extends TempNode {
 
     this.updateDispatchList(lightProjection, size)
 
-    invariant(this.computeNode != null)
     for (let index = 0; index < this.dispatchCount; ++index) {
       const dispatch = this.dispatches[index]
       this.dispatchOffset.value.set(dispatch.offset.x, dispatch.offset.y)
@@ -340,7 +339,7 @@ export class ScreenSpaceShadowNode extends TempNode {
   }
 
   // See bend_sss_gpu.h
-  private setupCompute(builder: NodeBuilder): void {
+  private createComputeNode(): ComputeNode {
     const {
       depthNode,
       camera,
@@ -355,10 +354,6 @@ export class ScreenSpaceShadowNode extends TempNode {
       lightCoordinate,
       dispatchOffset
     } = this
-
-    const [nearDepth, farDepth] = builder.renderer.reversedDepthBuffer
-      ? [float(1), float(0)]
-      : [float(0), float(1)]
 
     // Number of bilinear sample reads performed per-thread.
     const readCount = Math.floor(sampleCount / GROUP_SIZE) + 2
@@ -443,26 +438,30 @@ export class ScreenSpaceShadowNode extends TempNode {
       return { pixelXY, pixelDistance, xyDelta, xAxisMajor }
     }
 
-    const loadDepth = (coord: Node<'ivec2'>): Node<'float'> => {
-      let depth: Node = depthNode.load(coord)
-      if (builder.renderer.logarithmicDepthBuffer) {
-        depth = logarithmicToPerspectiveDepth(
-          depth,
-          cameraNear(camera),
-          cameraFar(camera)
-        )
+    return Fn(builder => {
+      const [nearDepth, farDepth] = builder.renderer.reversedDepthBuffer
+        ? [float(1), float(0)]
+        : [float(0), float(1)]
+
+      const loadDepth = (coord: Node<'ivec2'>): Node<'float'> => {
+        let depth: Node = depthNode.load(coord)
+        if (builder.renderer.logarithmicDepthBuffer) {
+          depth = logarithmicToPerspectiveDepth(
+            depth,
+            cameraNear(camera),
+            cameraFar(camera)
+          )
+        }
+        depth = depth.toConst()
+
+        // Emulate a point sampler in bend_sss_gpu.h, with Wrap Mode set to
+        // Clamp-To-Border-Color, and Border Color set to farDepth.
+        return and(
+          coord.greaterThanEqual(0).all(),
+          coord.lessThan(depthNode.size()).all()
+        ).select(depth, farDepth)
       }
-      depth = depth.toConst()
 
-      // Emulate a point sampler in bend_sss_gpu.h, with Wrap Mode set to
-      // Clamp-To-Border-Color, and Border Color set to farDepth.
-      return and(
-        coord.greaterThanEqual(0).all(),
-        coord.lessThan(depthNode.size()).all()
-      ).select(depth, farDepth)
-    }
-
-    this.computeNode = Fn(() => {
       const { pixelXY, xyDelta, pixelDistance, xAxisMajor } =
         getWorkgroupExtents()
 
@@ -673,7 +672,6 @@ export class ScreenSpaceShadowNode extends TempNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    this.setupCompute(builder)
     return this.textureNode
   }
 
