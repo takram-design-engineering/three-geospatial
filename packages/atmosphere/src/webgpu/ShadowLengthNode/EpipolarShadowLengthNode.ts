@@ -486,7 +486,7 @@ export class EpipolarShadowLengthNode extends Node {
 
         return vec2(
           totalMarchedLength.sub(totalLitLength),
-          distanceToFirstShadowedSection
+          distanceToFirstShadowedSection.add(distanceToRayStart)
         )
       }
     )
@@ -582,7 +582,8 @@ export class EpipolarShadowLengthNode extends Node {
                   cascadeEndCameraZ
                 ).toConst()
 
-                totalShadowLength.addAssign(shadowLength)
+                totalShadowLength.x.addAssign(shadowLength.x)
+                totalShadowLength.y.assign(shadowLength.y)
               }
             )
           })
