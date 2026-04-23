@@ -592,6 +592,12 @@ export class EpipolarShadowLengthNode extends Node {
                 totalShadowLength.x.addAssign(shadowLength.x)
               }
             )
+
+            // Set the full ray length to shadowLength.y to prevent
+            // interpolated values from being pulled towards 0.
+            If(totalShadowLength.x.equal(0), () => {
+              totalShadowLength.y.assign(fullRayLength)
+            })
           })
         }
       )
