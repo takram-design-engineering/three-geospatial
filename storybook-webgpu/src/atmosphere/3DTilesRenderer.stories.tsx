@@ -67,11 +67,11 @@ export const PostProcessLighting = createStory(PostProcessLightingStory, {
 
 export const Shadows = createStory(ShadowsStory, {
   props: {
-    longitude: 138.296,
-    latitude: 35.8306,
-    heading: -74,
-    pitch: -24,
-    distance: 5864,
+    longitude: 138.2761,
+    latitude: 35.7057,
+    heading: -55,
+    pitch: -26,
+    distance: 11128,
     csmFar: 5e4
   },
   args: {
