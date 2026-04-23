@@ -278,10 +278,9 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         )
       })
 
-      // In case where the higherOrderScatteringTexture is enabled, the
-      // scattering texture only includes the scattered Rayleigh irradiance, so
-      // we just add the higher-order scattering radiance regardless of
-      // occlusion.
+      // In case higherOrderScatteringTexture is enabled, the scattering texture
+      // includes the single Rayleigh scattering irradiance, so we just add the
+      // higher-order scattering radiance regardless of occlusion.
       let higherOrderScattering: Node<'vec3'> = vec3(0)
       if (context.parameters.higherOrderScatteringTexture) {
         const higherOrderScatteringTexture = lutNode.getTextureNode(
@@ -432,10 +431,9 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       singleMieScattering.mul(smoothstep(0, 0.01, cosLight))
     )
 
-    // In case where the higherOrderScatteringTexture is enabled, the
-    // scattering texture only includes the scattered Rayleigh irradiance, so
-    // we just add the higher-order scattering radiance regardless of
-    // occlusion.
+    // In case higherOrderScatteringTexture is enabled, the scattering texture
+    // includes the single Rayleigh scattering irradiance, so we just add the
+    // higher-order scattering radiance regardless of occlusion.
     let multipleScattering: Node<'vec3'> = vec3(0)
     if (context.parameters.higherOrderScatteringTexture) {
       const higherOrderScatteringTexture = lutNode.getTextureNode(

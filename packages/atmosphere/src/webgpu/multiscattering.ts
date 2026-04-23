@@ -404,8 +404,8 @@ export const computeScatteringTexture = /*#__PURE__*/ FnVar(
           .mul(mediumScattering)
           .toConst()
 
-        // In case where the higherOrderScatteringTexture is disabled, integrate
-        // the Rayleigh scattering and multiple scattering over the Rayleigh
+        // In case higherOrderScatteringTexture is disabled, integrate the
+        // single Rayleigh scattering and multiple scattering over the Rayleigh
         // phase (irradiance), in the way it matches to the Bruneton's 4D
         // scattering LUT.
         let scattering: Node<'vec3'> =
