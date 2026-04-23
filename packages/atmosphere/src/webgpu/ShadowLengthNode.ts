@@ -69,7 +69,7 @@ export class ShadowLengthNode extends TempNode {
   epipolarShadowLengthNode: EpipolarShadowLengthNode
   unwarpEpipolarNode: UnwarpEpipolarNode
 
-  resolutionScale = 0.5
+  resolutionScale = 1
   autoSampleResolution = true
 
   // Good visual results can be obtained when number of slices is at least half
