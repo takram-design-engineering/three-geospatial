@@ -205,21 +205,21 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         parametersNode,
         radius,
         cosView
-      ).toConst()
-      const intersectsGroundScattering = context.showGround
-        ? intersectsGround
-        : bool(false)
+      ).toVar()
 
-      transmittance.assign(
-        intersectsGround.select(
-          0,
+      If(intersectsGround.not(), () => {
+        transmittance.assign(
           getTransmittanceToTopAtmosphereBoundary(
             transmittanceNode,
             radius,
             cosView
           )
         )
-      )
+      })
+
+      if (!context.showGround) {
+        intersectsGround.assign(bool(false))
+      }
 
       const scattering = vec3(0).toVar()
       const singleMieScattering = vec3(0).toVar()
@@ -233,7 +233,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           cosView,
           cosLight,
           cosViewLight,
-          intersectsGroundScattering
+          intersectsGround
         ).toConst()
 
         scattering.assign(combinedScattering.get('scattering'))
@@ -259,7 +259,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           paramsP.cosView,
           paramsP.cosLight,
           cosViewLight,
-          intersectsGroundScattering
+          intersectsGround
         ).toConst()
 
         const shadowTransmittance = getTransmittance(
@@ -267,7 +267,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           radius,
           cosView,
           shadowLength.x,
-          intersectsGroundScattering
+          intersectsGround
         ).toConst()
 
         scattering.assign(
@@ -293,7 +293,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           cosView,
           cosLight,
           cosViewLight,
-          intersectsGroundScattering
+          intersectsGround
         )
       }
 
