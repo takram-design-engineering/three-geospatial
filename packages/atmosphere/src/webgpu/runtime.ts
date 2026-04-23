@@ -245,11 +245,11 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           // In case where the camera is inside shadows, we omit the scattering
           // between the camera and the point at shadowLength.x.
           //
-          // camera |////////////////|-----------> sky
+          // camera |////////////////|-----------> top atmosphere
           //        | shadowLength.x |
           //                         P
           //
-          // I = T(0,p)S(P)
+          // E = T(0,p)S(P)
 
           const paramsP = getScatteringParams(
             parametersNode,
@@ -293,11 +293,11 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           // the it becomes darker.
           //
           //              shadowLength.y
-          // camera |-----------|////////////////|-----------> sky
+          // camera |-----------|////////////////|-----------> top atmosphere
           //                    | shadowLength.x |
           //                    A                B
           //
-          // I = S - T(0,a)S(A) + T(0,b)S(B)
+          // E = S - T(0,a)S(A) + T(0,b)S(B)
 
           const combinedScattering = getCombinedScattering(
             parametersNode,
@@ -379,7 +379,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         })
 
       // In case higherOrderScatteringTexture is enabled, the scattering texture
-      // includes the single Rayleigh scattering irradiance, so we just add the
+      // includes the single Rayleigh scattering term, so we just add the
       // higher-order scattering radiance regardless of occlusion.
       let higherOrderScattering: Node<'vec3'> = vec3(0)
       if (context.parameters.higherOrderScatteringTexture) {
@@ -456,8 +456,8 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
     ).toConst()
 
     // Note that the `scattering` contains only the single Rayleigh scattering
-    // irradiance when higherOrderScatteringTexture is enabled, whereas it
-    // also includes multiple scattering over the Rayleigh phase when
+    // term when higherOrderScatteringTexture is enabled, whereas it also
+    // includes multiple scattering over the Rayleigh phase when
     // higherOrderScatteringTexture is disabled.
     const scattering = combinedScattering.get('scattering').toVar()
     const singleMieScattering = combinedScattering
@@ -532,7 +532,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
     )
 
     // In case higherOrderScatteringTexture is enabled, the scattering texture
-    // includes the single Rayleigh scattering irradiance, so we just add the
+    // includes the single Rayleigh scattering term, so we just add the
     // higher-order scattering radiance regardless of occlusion.
     let multipleScattering: Node<'vec3'> = vec3(0)
     if (context.parameters.higherOrderScatteringTexture) {
