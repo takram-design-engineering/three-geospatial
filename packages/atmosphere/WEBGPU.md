@@ -4,6 +4,8 @@
 
 A work-in-progress WebGPU support for `@takram/three-atmosphere`.
 
+The atmospheric model is based on Eric Bruneton's [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/) and uses the 4D scattering LUT with a couple of improvements. The key difference from the original implementation is that higher-order scattering is computed using the multiple scattering LUT proposed in Sébastien Hillaire's [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf). It also includes an option to raymarch inscattered light, which completely eliminates artifacts due to floating-point precision.
+
 Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation.
 
 ## Installation
@@ -311,7 +313,15 @@ Whether to constrain the camera above the atmosphere's inner sphere.
 showGround = true
 ```
 
-Disable this option to constrain the camera's ray above the horizon, effectively hiding the virtual ground.
+Disable this option to constrain the camera's ray above the horizon, hiding the virtual ground.
+
+#### raymarchScattering
+
+```ts
+raymarchScattering = false
+```
+
+Whether to raymarch inscattered light between the camera and scene objects instead of computing from LUT lookups. This may affect performance but eliminates artifacts due to floating-point precision of the 4D scattering LUT.
 
 ## AtmosphereLight
 
@@ -803,13 +813,14 @@ Whether to generate and use a separate texture for higher-order scattering (n >=
 # Acknowledgement
 
 - [Bruneton's paper](https://inria.hal.science/inria-00288758/en) and [his reference implementation](https://github.com/ebruneton/precomputed_atmospheric_scattering).
+- [Hillaire's paper](https://sebh.github.io/publications/egsr2020.pdf) and [his reference implementation](https://github.com/sebh/UnrealEngineSkyAtmosphere).
+- [Intel's implementation](https://github.com/GameTechDev/OutdoorLightScattering) of epipolar sampling and the [documentation](https://www.intel.com/content/dam/develop/external/us/en/documents/outdoor-light-scattering-update.pdf).
 - [Yale Bright Star Catalog version 5](http://tdc-www.harvard.edu/catalogs/bsc5.html) for the celestial dataset.
 
 Additional context and related work:
 
-- [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf)
-- [Outdoor Light Scattering Sample Update](https://www.intel.com/content/dam/develop/external/us/en/documents/outdoor-light-scattering-update.pdf)
 - [Physically Based Real-Time Rendering of Atmospheres using Mie Theory](https://diglib.eg.org/items/1fb6b85a-b3f8-4817-975f-f65634020f03)
+- [Epipolar Sampling for Shadows and Crepuscular Rays in Participating Media with Single Scattering](https://faculty.digipen.edu/~gherron/references/References/LightEffects/VolumetricLighting/espmss10.pdf)
 
 # License
 
