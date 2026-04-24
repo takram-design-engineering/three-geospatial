@@ -1,3 +1,4 @@
+import { hashString } from 'three/src/nodes/core/NodeUtils.js'
 import { Fn, frameId, nodeImmutable, screenCoordinate, vec3 } from 'three/tsl'
 import {
   Data3DTexture,
@@ -25,15 +26,19 @@ const emptyTexture3D = /*#__PURE__*/ (() => {
 })()
 
 export class STBNTextureNode extends Texture3DNode {
-  static DEFAULT_URL = DEFAULT_STBN_URL
+  url = DEFAULT_STBN_URL
 
   constructor() {
     super(emptyTexture3D)
   }
 
+  override customCacheKey(): number {
+    return hashString(this.url)
+  }
+
   override setup(builder: NodeBuilder): unknown {
     new STBNLoader()
-      .loadAsync(STBNTextureNode.DEFAULT_URL)
+      .loadAsync(this.url)
       .then(texture => {
         this.value = texture
       })
