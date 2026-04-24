@@ -14,7 +14,7 @@ export const atmosphereArgs = (
   transmittance: true,
   inscattering: true,
   showGround: true,
-  raymarchScattering: false,
+  raymarchScattering: true,
   higherOrderScatteringTexture: true,
   ...defaults
 })

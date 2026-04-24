@@ -84,7 +84,8 @@ export class AtmosphereContext extends AtmosphereContextBase {
   correctAltitude = true
   constrainCamera = true
   showGround = true
-  raymarchScattering = false
+  accurateShadowScattering = true
+  raymarchScattering = true
 
   constructor(
     parameters = new AtmosphereParameters(),

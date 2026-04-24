@@ -268,7 +268,52 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
       }
 
       const shadowLimit = shadowLength.y.add(shadowLength.x).toConst()
-      If(shadowLength.x.equal(0), () => {
+
+      // In case where the camera is inside shadows, we omit the scattering
+      // between the camera and the point at shadowLength.x.
+      //
+      // camera |////////////////|-----------> top atmosphere
+      //        | shadowLength.x |
+      //                         P
+      //
+      // S = T(0,p)S(P)
+      const scatteringBranch2 = (): void => {
+        const p = getScatteringAndTransmittance(shadowLength.x)
+        scattering.assign(p.T.mul(p.S))
+        singleMieScattering.assign(p.T.mul(p.M))
+      }
+
+      // In case where the camera is outside shadows, we have to lookup
+      // additional scattering to subtract the shadow segment, otherwise the it
+      // becomes darker.
+      //
+      //              shadowLength.y
+      // camera |-----------|////////////////|-----------> top atmosphere
+      //                    | shadowLength.x |
+      //                    A                B
+      //
+      // S = S(camera) - T(0,a)S(A) + T(0,b)S(B)
+      const scatteringBranch3 = (): void => {
+        const combinedScattering = getCombinedScattering(
+          parametersNode,
+          scatteringNode,
+          singleMieScatteringNode,
+          radius,
+          cosView,
+          cosLight,
+          cosViewLight,
+          intersectsGround
+        ).toConst()
+
+        const S = combinedScattering.get('scattering')
+        const M = combinedScattering.get('singleMieScattering')
+        const a = getScatteringAndTransmittance(shadowLength.y)
+        const b = getScatteringAndTransmittance(shadowLimit)
+        scattering.assign(S.sub(a.T.mul(a.S).sub(b.T.mul(b.S)).max(0)))
+        singleMieScattering.assign(M.sub(a.T.mul(a.M).sub(b.T.mul(b.M)).max(0)))
+      }
+
+      const scatteringConditional = If(shadowLength.x.equal(0), () => {
         const combinedScattering = getCombinedScattering(
           parametersNode,
           scatteringNode,
@@ -285,52 +330,14 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
           combinedScattering.get('singleMieScattering')
         )
       })
-        .ElseIf(shadowLength.y.equal(0), () => {
-          // In case where the camera is inside shadows, we omit the scattering
-          // between the camera and the point at shadowLength.x.
-          //
-          // camera |////////////////|-----------> top atmosphere
-          //        | shadowLength.x |
-          //                         P
-          //
-          // S = T(0,p)S(P)
 
-          const p = getScatteringAndTransmittance(shadowLength.x)
-          scattering.assign(p.T.mul(p.S))
-          singleMieScattering.assign(p.T.mul(p.M))
-        })
-        .Else(() => {
-          // In case where the camera is outside shadows, we have to lookup
-          // additional scattering to subtract the shadow segment, otherwise
-          // the it becomes darker.
-          //
-          //              shadowLength.y
-          // camera |-----------|////////////////|-----------> top atmosphere
-          //                    | shadowLength.x |
-          //                    A                B
-          //
-          // S = S(camera) - T(0,a)S(A) + T(0,b)S(B)
-
-          const combinedScattering = getCombinedScattering(
-            parametersNode,
-            scatteringNode,
-            singleMieScatteringNode,
-            radius,
-            cosView,
-            cosLight,
-            cosViewLight,
-            intersectsGround
-          ).toConst()
-
-          const S = combinedScattering.get('scattering')
-          const M = combinedScattering.get('singleMieScattering')
-          const a = getScatteringAndTransmittance(shadowLength.y)
-          const b = getScatteringAndTransmittance(shadowLimit)
-          scattering.assign(S.sub(a.T.mul(a.S).sub(b.T.mul(b.S)).max(0)))
-          singleMieScattering.assign(
-            M.sub(a.T.mul(a.M).sub(b.T.mul(b.M)).max(0))
-          )
-        })
+      if (context.accurateShadowScattering) {
+        scatteringConditional.Else(scatteringBranch2)
+      } else {
+        scatteringConditional
+          .ElseIf(shadowLength.y.equal(0), scatteringBranch2)
+          .Else(scatteringBranch3)
+      }
 
       // In case higherOrderScatteringTexture is enabled, the scattering texture
       // includes the single Rayleigh scattering term, so we just add the
@@ -452,103 +459,114 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       .toConst()
     const hasShadow = shadowFlags.x
 
-    // shadowLength.y === 0 && distanceToPoint > shadowLength.y + shadowLength.x
-    If(hasShadow.and(shadowFlags.y.not()).and(shadowFlags.z), () => {
-      //
-      //        |      distanceToPoint      |
-      // camera |////////////////|----------| surface //////> extremity
-      //        | shadowLength.x |          P
-      //                         Q
-      //
-      // S = T(0,q)S(Q) - T(0,p)S(P)
+    // Compute the scattering parameters for the second texture lookup.
+    // If shadowLength.x is not 0 (case of light shafts), we want to ignore
+    // the scattering along the last shadowLength.x of the view ray, which
+    // we do by subtracting shadowLength.x from distanceToPoint.
+    //
+    //        |      distanceToPoint      |
+    // camera |---------------------------| surface //////> extremity
+    //                                    |
+    //                                    P
+    //             shadowLength.y
+    // camera |----------|////////////////| surface //////> extremity
+    //                   | shadowLength.x |
+    //                   P
+    //
+    // S = S(camera) - T(0,p)S(P)
+    const scatteringBranch1 = (): void => {
+      const combinedScattering = getCombinedScattering(
+        parametersNode,
+        scatteringNode,
+        singleMieScatteringNode,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        intersectsGround
+      ).toConst()
 
+      const distance = distanceToPoint.sub(shadowLength.x).max(0).toConst()
+      const p = getScatteringAndTransmittance(
+        distance,
+        hasShadow.select(
+          getTransmittance(
+            transmittanceNode,
+            radius,
+            cosView,
+            distance,
+            intersectsGround
+          ),
+          transmittance
+        )
+      )
+
+      const S = combinedScattering.get('scattering')
+      const M = combinedScattering.get('singleMieScattering')
+      scattering.assign(S.sub(p.T.mul(p.S)))
+      singleMieScattering.assign(M.sub(p.T.mul(p.M)))
+    }
+
+    //        |      distanceToPoint      |
+    // camera |////////////////|----------| surface //////> extremity
+    //        | shadowLength.x |          P
+    //                         Q
+    //
+    // S = T(0,q)S(Q) - T(0,p)S(P)
+    const scatteringBranch2 = (): void => {
       const q = getScatteringAndTransmittance(shadowLimit)
       const p = getScatteringAndTransmittance(distanceToPoint, transmittance)
       scattering.assign(q.T.mul(q.S).sub(transmittance.mul(p.S)))
       singleMieScattering.assign(q.T.mul(q.M).sub(transmittance.mul(p.M)))
-    })
-      // distanceToPoint > shadowLength.y + shadowLength.x
-      .ElseIf(hasShadow.and(shadowFlags.z), () => {
-        //
-        //        |         distanceToPoint        |
-        //        | shadowLength.y                 |
-        // camera |-------|////////////////|-------| surface //////> extremity
-        //                | shadowLength.x |       P
-        //                A                B
-        //
-        // S = S(camera) - T(0,p)S(P) - T(0,a)S(A) + T(0,b)S(B)
+    }
 
-        const combinedScattering = getCombinedScattering(
-          parametersNode,
-          scatteringNode,
-          singleMieScatteringNode,
-          radius,
-          cosView,
-          cosLight,
-          cosViewLight,
-          intersectsGround
-        ).toConst()
+    //        |         distanceToPoint        |
+    //        | shadowLength.y                 |
+    // camera |-------|////////////////|-------| surface //////> extremity
+    //                | shadowLength.x |       P
+    //                A                B
+    //
+    // S = S(camera) - T(0,p)S(P) - T(0,a)S(A) + T(0,b)S(B)
+    const scatteringBranch3 = (): void => {
+      const combinedScattering = getCombinedScattering(
+        parametersNode,
+        scatteringNode,
+        singleMieScatteringNode,
+        radius,
+        cosView,
+        cosLight,
+        cosViewLight,
+        intersectsGround
+      ).toConst()
 
-        const S = combinedScattering.get('scattering')
-        const M = combinedScattering.get('singleMieScattering')
-        const a = getScatteringAndTransmittance(shadowLength.y)
-        const b = getScatteringAndTransmittance(shadowLimit)
-        const p = getScatteringAndTransmittance(distanceToPoint)
-        scattering.assign(
-          S.sub(transmittance.mul(p.S), a.T.mul(a.S).sub(b.T.mul(b.S)).max(0))
+      const S = combinedScattering.get('scattering')
+      const M = combinedScattering.get('singleMieScattering')
+      const a = getScatteringAndTransmittance(shadowLength.y)
+      const b = getScatteringAndTransmittance(shadowLimit)
+      const p = getScatteringAndTransmittance(distanceToPoint)
+      scattering.assign(
+        S.sub(transmittance.mul(p.S), a.T.mul(a.S).sub(b.T.mul(b.S)).max(0))
+      )
+      singleMieScattering.assign(
+        M.sub(transmittance.mul(p.M), a.T.mul(a.M).sub(b.T.mul(b.M)).max(0))
+      )
+    }
+
+    if (context.accurateShadowScattering) {
+      If(
+        // shadowLength.y === 0 && distanceToPoint > shadowLimit
+        hasShadow.and(shadowFlags.y.not()).and(shadowFlags.z),
+        scatteringBranch2
+      )
+        .ElseIf(
+          // distanceToPoint > shadowLength.y + shadowLength.x
+          hasShadow.and(shadowFlags.z),
+          scatteringBranch3
         )
-        singleMieScattering.assign(
-          M.sub(transmittance.mul(p.M), a.T.mul(a.M).sub(b.T.mul(b.M)).max(0))
-        )
-      })
-      .Else(() => {
-        // Compute the scattering parameters for the second texture lookup.
-        // If shadowLength.x is not 0 (case of light shafts), we want to ignore
-        // the scattering along the last shadowLength.x of the view ray, which
-        // we do by subtracting shadowLength.x from distanceToPoint.
-        //
-        //        |      distanceToPoint      |
-        // camera |---------------------------| surface //////> extremity
-        //                                    |
-        //                                    P
-        //             shadowLength.y
-        // camera |----------|////////////////| surface //////> extremity
-        //                   | shadowLength.x |
-        //                   P
-        //
-        // S = S(camera) - T(0,p)S(P)
-
-        const combinedScattering = getCombinedScattering(
-          parametersNode,
-          scatteringNode,
-          singleMieScatteringNode,
-          radius,
-          cosView,
-          cosLight,
-          cosViewLight,
-          intersectsGround
-        ).toConst()
-
-        const distance = distanceToPoint.sub(shadowLength.x).max(0).toConst()
-        const p = getScatteringAndTransmittance(
-          distance,
-          hasShadow.select(
-            getTransmittance(
-              transmittanceNode,
-              radius,
-              cosView,
-              distance,
-              intersectsGround
-            ),
-            transmittance
-          )
-        )
-
-        const S = combinedScattering.get('scattering')
-        const M = combinedScattering.get('singleMieScattering')
-        scattering.assign(S.sub(p.T.mul(p.S)))
-        singleMieScattering.assign(M.sub(p.T.mul(p.M)))
-      })
+        .Else(scatteringBranch1)
+    } else {
+      scatteringBranch1()
+    }
 
     if (context.parameters.combinedScatteringTextures) {
       singleMieScattering.assign(
