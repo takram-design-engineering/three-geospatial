@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+All changes were made to the WebGPU implementation, unless otherwise noted.
+
 ### Added
 
 - `TemporalAntialiasNode`, `ScreenSpaceShadowNode`: Added support for reversed depth buffer.

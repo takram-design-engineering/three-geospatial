@@ -6,6 +6,8 @@ This might be one of the biggest changes in the atmosphere package. This release
 
 Please consider this release as transitional, and further fundamental improvements such as Sky-View LUT and raymarched volumetric shadows, will be added.
 
+All changes were made to the WebGPU implementation, unless otherwise noted.
+
 ### Added
 
 - Added preliminary support for moonlight and scattering in a low light setup.
@@ -19,8 +21,8 @@ Please consider this release as transitional, and further fundamental improvemen
 
 - `SkyEnvironmentNode`: Optimized the PMREM texture generation.
 - `AtmosphereContext`: Deprecated and renamed `inscatter` to `inscattering`.
-- `AtmosphereParameters` in WebGPU: Deprecated and renamed `*Sun*` properties to `*Light*`.
-- `AtmosphereParameters` in WebGPU: Removed `transmittancePrecisionLog` option.
+- `AtmosphereParameters`: Deprecated and renamed `*Sun*` properties to `*Light*`.
+- `AtmosphereParameters`: Removed `transmittancePrecisionLog` option.
 - `AtmosphereLUTNode`: 4D scattering LUT now only contains the single Rayleigh scattering when `higherOrderScatteringTexture` option is enabled.
 - `AtmosphereLUTNode`: Higher-order scattering LUT now contains the scattering term rather than that over the Rayleigh phase.
 - `AerialPerspectiveNode`: Added approximated inscattered light below the bottom of the atmosphere.
