@@ -4,7 +4,7 @@
 
 A work-in-progress WebGPU support for `@takram/three-atmosphere`.
 
-The atmospheric model is based on Eric Bruneton's [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/) and uses the 4D scattering LUT with a couple of improvements. The key difference from the original implementation is that higher-order scattering is computed using the multiple scattering LUT proposed in Sébastien Hillaire's [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf). It also includes an option to raymarch inscattered light, which completely eliminates artifacts due to floating-point precision.
+The atmospheric model is based on Eric Bruneton's [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/) and uses the 4D scattering LUT with a couple of improvements. The key difference from the original implementation is that higher-order scattering is computed using the multiple scattering LUT proposed in Sébastien Hillaire's [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf). It also raymarch inscattered light between the camera and scene objects by default, which completely eliminates artifacts due to floating-point precision.
 
 Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation.
 
