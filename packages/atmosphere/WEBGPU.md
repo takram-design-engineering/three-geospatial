@@ -318,10 +318,10 @@ Disable this option to constrain the camera's ray above the horizon, hiding the 
 #### raymarchScattering
 
 ```ts
-raymarchScattering = false
+raymarchScattering = true
 ```
 
-Whether to raymarch inscattered light between the camera and scene objects instead of computing from LUT lookups. This may affect performance but eliminates artifacts due to floating-point precision of the 4D scattering LUT.
+Whether to raymarch inscattered light between the camera and scene objects instead of computing from LUT lookups.
 
 ## AtmosphereLight
 
@@ -800,7 +800,7 @@ A unit-less scaling factor to bring true luminance values into a numerically sta
 combinedScatteringTextures = true
 ```
 
-Whether to store the single Mie scattering in the alpha channel of the scattering texture, reducing the memory footprint on the GPU.
+Whether to store the single Mie scattering in the alpha channel of the scattering texture, which reduces the GPU memory footprint. Disabling this option improves the color of the Mie scattering, especially when the sun is near the horizon.
 
 #### higherOrderScatteringTexture
 
