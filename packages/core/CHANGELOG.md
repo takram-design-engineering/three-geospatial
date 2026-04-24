@@ -5,10 +5,20 @@
 ### Added
 
 - `TemporalAntialiasNode`, `ScreenSpaceShadowNode`: Added support for reversed depth buffer.
+- Added experimental `CascadedShadowMapsNode`.
+- Added `STBNTextureNode` and `stbn` accessor.
+
+### Changed
+
+- `ScreenSpaceShadowNode`: Removed `nearDepth` and `farDepth` uniforms. They are determined by the renderer's depth buffer configuration.
+- `FnLayout`: Removed `texture` and `texture3D` placeholder types.
+- `TemporalAntialiasNode`: Adjusted the amount of subpixel correction.
 
 ### Fixed
 
-- `TemporalAntialiasNode`: Fixed incompatibility with `three >= 0.183.0`.
+- `TemporalAntialiasNode`: Fixed incompatibility with Three.js r183.
+- `LensGlareNode`: Fixed occasional runtime errors on some devices, fixing the delayed update of the lens glare to texels.
+- `ScreenSpaceShadowNode`: Fixed incompatibility with Three.js r184.
 
 ## [0.8.0] - 2026-04-05
 

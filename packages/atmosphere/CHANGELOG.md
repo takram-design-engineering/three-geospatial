@@ -2,21 +2,35 @@
 
 ## Unreleased
 
+This might be one of the biggest changes in the atmosphere package. This release introduces the multiple scattering LUT proposed in Sébastien Hillaire's [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf). This removes the need for expensive stepwise computation of higher-order scattering in the 4D scattering LUT, and also allows inscattered light to be raymarched at runtime, eliminating artifacts due to floating-point precision in the 4D scattering LUT.
+
+Please consider this release as transitional, and further fundamental improvements such as Sky-View LUT and raymarched volumetric shadows, will be added.
+
 ### Added
 
-- Added support for moonlight and scattering in low light setup.
-- `AerialPerspectiveNode`: Added support for reversed depth buffer.
+- Added preliminary support for moonlight and scattering in a low light setup.
+- `AerialPerspectiveNode`: Added support for reversed depth buffers.
+- Added `ShadowLengthNode` for epipolar volumetric shadow sampling.
+- Added Hillaire's multiple scattering LUT, and removed stepwise computation of higher-order scattering in the 4D scattering LUT.
+- `AtmosphereContext`: Added `raymarchScattering` option to enable raymarching inscattered light between the camera and scene objects. This is enabled by default.
+- `AtmosphereContext`: Added `accurateShadowScattering` option to account for shadowed segments along the ray more accurately.
 
 ### Changed
 
-- `AtmosphereParameters`: Deprecated and renamed `minCosSun` to `minCosLight`.
 - `SkyEnvironmentNode`: Optimized the PMREM texture generation.
+- `AtmosphereContext`: Deprecated and renamed `inscatter` to `inscattering`.
+- `AtmosphereParameters` in WebGPU: Deprecated and renamed `*Sun*` properties to `*Light*`.
+- `AtmosphereParameters` in WebGPU: Removed `transmittancePrecisionLog` option.
+- `AtmosphereLUTNode`: 4D scattering LUT now only contains the single Rayleigh scattering when `higherOrderScatteringTexture` option is enabled.
+- `AtmosphereLUTNode`: Higher-order scattering LUT now contains the scattering term rather than that over the Rayleigh phase.
+- `AerialPerspectiveNode`: Added approximated inscattered light below the bottom of the atmosphere.
 
 ### Fixed
 
 - Fixed errors when `higherOrderScatteringTexture` is disabled.
 - Fixed changes in `AtmosphereParameters` not being applied when used by multiple renderers.
 - `MoonNode`: Fixed unstable derivatives.
+- `SkyEnvironmentNode`: Fixed incompatibility with Three.js r183, [#105](https://github.com/takram-design-engineering/three-geospatial/issues/105).
 
 ## [0.18.0] - 2026-04-05
 
