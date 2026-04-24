@@ -741,34 +741,17 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
       const distanceToPoint = rayOrigin.distance(point)
 
       if (context.raymarchScattering) {
-        // WORKAROUND: As somewhat expected, select() doesn't work here.
-        // TODO: The threshold can be lower.
-        // TODO: Visible differences at points below the atmosphere bottom.
-        If(radius.lessThan(topRadius), () => {
-          const result = getIndirectRadianceToPointRaymarch(
-            context,
-            radius,
-            cosView,
-            cosLight,
-            cosViewLight,
-            distanceToPoint,
-            shadowLength
-          ).toConst()
-          radiance.assign(result.get('radiance'))
-          transmittance.assign(result.get('transmittance'))
-        }).Else(() => {
-          const result = getIndirectRadianceToPointLookup(
-            context,
-            radius,
-            cosView,
-            cosLight,
-            cosViewLight,
-            distanceToPoint,
-            shadowLength
-          ).toConst()
-          radiance.assign(result.get('radiance'))
-          transmittance.assign(result.get('transmittance'))
-        })
+        const result = getIndirectRadianceToPointRaymarch(
+          context,
+          radius,
+          cosView,
+          cosLight,
+          cosViewLight,
+          distanceToPoint,
+          shadowLength
+        ).toConst()
+        radiance.assign(result.get('radiance'))
+        transmittance.assign(result.get('transmittance'))
       } else {
         const result = getIndirectRadianceToPointLookup(
           context,
