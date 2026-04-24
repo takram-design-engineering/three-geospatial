@@ -29,9 +29,9 @@ import {
   vec4
 } from 'three/tsl'
 import {
+  IndirectStorageBufferAttribute,
   MeshBasicNodeMaterial,
   RendererUtils,
-  StorageBufferAttribute,
   type ComputeNode,
   type NodeBuilder,
   type NodeFrame,
@@ -92,7 +92,12 @@ export class LensGlareNode extends FilterNode {
 
   private computeNode?: ComputeNode
 
-  private readonly counterBuffer = new StorageBufferAttribute(1, 1)
+  // drawIndexedIndirect format:
+  // [indexCount, instanceCount, firstIndex, baseVertex, firstInstance]
+  private readonly indirectBuffer = new IndirectStorageBufferAttribute(
+    new Uint32Array([6, 0, 0, 0, 0]),
+    1
+  )
   private instanceBuffer = instancedArray(1, instanceStruct)
 
   private readonly renderTarget = this.createRenderTarget()
@@ -118,6 +123,7 @@ export class LensGlareNode extends FilterNode {
     this.resolutionScale = 0.5
 
     this.outputTexture = this.renderTarget.texture
+    this.mesh.geometry.indirect = this.indirectBuffer
   }
 
   override customCacheKey(): number {
@@ -153,7 +159,7 @@ export class LensGlareNode extends FilterNode {
     const { width: inputWidth, height: inputHeight } = inputNode.value
     this.setSize(inputWidth, inputHeight) // Compute node is initialized here.
 
-    const { computeNode, counterBuffer, renderTarget } = this
+    const { computeNode, indirectBuffer, renderTarget } = this
     invariant(computeNode != null)
 
     this.inputTexelSize.value.set(1 / inputWidth, 1 / inputHeight)
@@ -167,23 +173,11 @@ export class LensGlareNode extends FilterNode {
     const { width: outputWidth, height: outputHeight } = renderTarget
     this.outputTexelSize.value.set(1 / outputWidth, 1 / outputHeight)
 
-    // Reset the counter:
-    counterBuffer.array[0] = 0
-    counterBuffer.needsUpdate = true
+    // Reset instanceCount in the indirect buffer:
+    indirectBuffer.array[1] = 0
+    indirectBuffer.needsUpdate = true
 
     void renderer.compute(computeNode)
-
-    renderer
-      .getArrayBufferAsync(counterBuffer)
-      .then(arrayBuffer => {
-        // TODO: This is indeed a couple of frames behind, thus the number of
-        // computed instances above and the number of instances to be drawn by
-        // the mesh differ.
-        this.mesh.count = new Uint32Array(arrayBuffer)[0]
-      })
-      .catch((error: unknown) => {
-        console.error(error)
-      })
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
@@ -197,16 +191,16 @@ export class LensGlareNode extends FilterNode {
     const {
       spikePairCount,
       inputNode,
-      counterBuffer,
+      indirectBuffer,
       instanceBuffer,
       outputTexelSize
     } = this
     invariant(inputNode != null)
 
-    const counterStorage = storage(
-      counterBuffer,
+    const indirectStorage = storage(
+      indirectBuffer,
       'uint',
-      counterBuffer.count
+      indirectBuffer.count
     ).toAtomic()
 
     this.computeNode = Fn(() => {
@@ -220,7 +214,11 @@ export class LensGlareNode extends FilterNode {
       const inputLuminance = inputColor.a // Alpha channel stores luminance
 
       If(inputLuminance.greaterThan(0.1), () => {
-        const countBefore = atomicAdd(counterStorage.element(0), spikePairCount)
+        // The first element is instanceCount in the drawIndexedIndirect buffer.
+        const countBefore = atomicAdd(
+          indirectStorage.element(1),
+          spikePairCount
+        )
         for (let i = 0; i < spikePairCount; ++i) {
           const instance = instanceBuffer.element(countBefore.add(i))
           instance.get('color').assign(inputColor.rgb)
