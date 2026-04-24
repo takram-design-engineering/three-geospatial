@@ -456,7 +456,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
     If(hasShadow.and(shadowFlags.y.not()).and(shadowFlags.z), () => {
       //
       //        |      distanceToPoint      |
-      // camera |////////////////|----------| surface //////> top atmosphere
+      // camera |////////////////|----------| surface //////> extremity
       //        | shadowLength.x |          P
       //                         Q
       //
@@ -472,7 +472,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
         //
         //        |         distanceToPoint        |
         //        | shadowLength.y                 |
-        // camera |-------|////////////////|-------| surface //////> top atmosphere
+        // camera |-------|////////////////|-------| surface //////> extremity
         //                | shadowLength.x |       P
         //                A                B
         //
@@ -504,15 +504,15 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
       .Else(() => {
         // Compute the scattering parameters for the second texture lookup.
         // If shadowLength.x is not 0 (case of light shafts), we want to ignore
-        // the scattering along the last shadowLength.x of the view ray, which we
-        // do by subtracting shadowLength.x from distanceToPoint.
+        // the scattering along the last shadowLength.x of the view ray, which
+        // we do by subtracting shadowLength.x from distanceToPoint.
         //
         //        |      distanceToPoint      |
-        // camera |---------------------------| surface //////> top atmosphere
+        // camera |---------------------------| surface //////> extremity
         //                                    |
         //                                    P
         //             shadowLength.y
-        // camera |----------|////////////////| surface //////> top atmosphere
+        // camera |----------|////////////////| surface //////> extremity
         //                   | shadowLength.x |
         //                   P
         //
