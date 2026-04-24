@@ -323,6 +323,9 @@ raymarchScattering = true
 
 Whether to raymarch inscattered light between the camera and scene objects instead of computing from LUT lookups.
 
+> [!TIP]
+> Enabling this option might slightly increase computational cost depending on the device. But in general, it is recommended to keep this enabled. Consider disabling it when the render output requires temporal stability, such as when temporal antialiasing cannot be used, because the raymarching makes use of STBN to greatly reduce aliasing along the rays.
+
 ## AtmosphereLight
 
 Represents direct and indirect sunlight. The lighting is correct at large scale regardless of the materials used on surfaces, unlike `SunDirectionalLight` and `SkyLightProbe` in the previous implementation.
