@@ -447,7 +447,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
     }
 
     const shadowLimit = shadowLength.y.add(shadowLength.x).toConst()
-    const shadowFlags = vec3(shadowLength, distanceToPoint)
+    const shadowFlags = vec3(shadowLength.xy, distanceToPoint)
       .greaterThan(vec3(0, 0, shadowLimit))
       .toConst()
     const hasShadow = shadowFlags.x
