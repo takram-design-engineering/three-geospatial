@@ -1,10 +1,15 @@
-import { addons } from 'storybook/manager-api'
+/* cSpell:words: customisations */
+
+import { addons, type State } from 'storybook/manager-api'
 
 import theme from './theme'
 
 addons.setConfig({
   theme,
   initialActive: 'canvas',
-  // https://github.com/storybookjs/storybook/issues/7149#issuecomment-2096502983
-  bottomPanelHeight: 0
+  layoutCustomisations: {
+    showPanel: (state: State, defaultValue: boolean) => {
+      return false
+    }
+  }
 })
