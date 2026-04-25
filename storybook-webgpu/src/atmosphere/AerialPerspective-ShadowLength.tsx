@@ -42,6 +42,7 @@ import {
   AtmosphereLightNode,
   AtmosphereParameters,
   shadowLength,
+  viewZUnit,
   type ShadowLengthNode,
   type SkyNode
 } from '@takram/three-atmosphere/webgpu'
@@ -54,7 +55,6 @@ import {
   highpVelocity,
   lensFlare,
   temporalAntialias,
-  viewZ,
   type Node
 } from '@takram/three-geospatial/webgpu'
 
@@ -213,22 +213,22 @@ const Content: FC<StoryProps> = ({
         mrt({
           output,
           velocity: highpVelocity,
-          viewZ: viewZ.mul(atmosphereParameters.worldToUnit)
+          viewZUnit
         })
       ),
-    [scene, camera, atmosphereParameters]
+    [scene, camera]
   )
 
   const colorNode = passNode.getTextureNode('output')
   const depthNode = passNode.getTextureNode('depth')
   const velocityNode = passNode.getTextureNode('velocity')
-  const viewZNode = passNode.getTextureNode('viewZ')
+  const viewZUnitNode = passNode.getTextureNode('viewZUnit')
 
   // Note that the shadow length is computed against the depths jittered by TAA,
   // causing temporal instability. But in practice, this is not noticeable.
   const shadowLengthNode = useResource(
-    () => shadowLength(csmShadowNode, viewZNode),
-    [csmShadowNode, viewZNode]
+    () => shadowLength(csmShadowNode, viewZUnitNode),
+    [csmShadowNode, viewZUnitNode]
   )
 
   const aerialNode = useResource(

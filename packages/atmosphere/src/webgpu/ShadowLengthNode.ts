@@ -60,7 +60,7 @@ export class ShadowLengthNode extends TempNode {
   }
 
   csmShadowNode: CascadedShadowMapsNode
-  viewZNode!: TextureNode // Must be filterable
+  viewZUnitNode!: TextureNode // Must be filterable
 
   sliceEndpointsNode: SliceEndpointsNode
   coordinateNode: CoordinateNode
@@ -91,12 +91,15 @@ export class ShadowLengthNode extends TempNode {
 
   private currentCascades = 0
 
-  constructor(csmShadowNode: CascadedShadowMapsNode, viewZNode: TextureNode) {
+  constructor(
+    csmShadowNode: CascadedShadowMapsNode,
+    viewZUnitNode: TextureNode
+  ) {
     super('vec2')
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
 
     this.csmShadowNode = csmShadowNode
-    this.viewZNode = viewZNode
+    this.viewZUnitNode = viewZUnitNode
 
     this.sliceEndpointsNode = new SliceEndpointsNode()
     this.coordinateNode = new CoordinateNode()
@@ -176,7 +179,7 @@ export class ShadowLengthNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const {
       csmShadowNode,
-      viewZNode,
+      viewZUnitNode,
       sliceEndpointsNode,
       coordinateNode,
       sliceUVDirectionNode,
@@ -255,7 +258,7 @@ export class ShadowLengthNode extends TempNode {
     sliceEndpointsNode.isLightOnScreen = isLightOnScreen
     const sliceEndpoints = sliceEndpointsNode.getTextureNode()
 
-    coordinateNode.viewZNode = viewZNode
+    coordinateNode.viewZUnitNode = viewZUnitNode
     coordinateNode.sliceEndpointsNode = sliceEndpoints
     coordinateNode.camera = camera
     coordinateNode.numEpipolarSlices = numEpipolarSlices
@@ -300,7 +303,7 @@ export class ShadowLengthNode extends TempNode {
     unwarpEpipolarNode.sliceEndpointsNode = sliceEndpoints
     unwarpEpipolarNode.coordinateNode = coordinate
     unwarpEpipolarNode.epipolarShadowLengthNode = epipolarShadowLength
-    unwarpEpipolarNode.viewZNode = viewZNode
+    unwarpEpipolarNode.viewZUnitNode = viewZUnitNode
     unwarpEpipolarNode.camera = camera
     unwarpEpipolarNode.numEpipolarSlices = numEpipolarSlices
     unwarpEpipolarNode.maxSamplesInSlice = maxSamplesInSlice
