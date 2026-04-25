@@ -19,7 +19,7 @@
  */
 
 import {
-  HalfFloatType,
+  FloatType,
   LinearFilter,
   RenderTarget,
   RGBAFormat,
@@ -51,17 +51,17 @@ import {
 import {
   bvecAnd,
   bvecNot,
-  cameraPositionWorld,
   Node,
   outputTexture,
   type CascadedShadowMapsNode
 } from '@takram/three-geospatial/webgpu'
 
+import { getAtmosphereContext } from '../AtmosphereContext'
 import {
   FLOAT_MAX,
   isValidScreenLocation,
-  transformSliceToWorld,
-  transformWorldToShadowUV
+  transformSliceToUnit,
+  transformUnitToShadowUV
 } from './common'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -99,7 +99,9 @@ export class SliceUVDirectionNode extends Node {
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: HalfFloatType,
+      // TODO: Still not sure why half-float texture computes correctly on
+      // mobile devices.
+      type: FloatType,
       format: RGBAFormat
     })
     const texture = renderTarget.texture
@@ -145,6 +147,8 @@ export class SliceUVDirectionNode extends Node {
       shadowMatrixArray
     } = this
 
+    const { cameraPositionUnit } = getAtmosphereContext(builder)
+
     return Fn(() => {
       const sliceIndex = uint(screenCoordinate.x)
 
@@ -161,21 +165,21 @@ export class SliceUVDirectionNode extends Node {
         const cascadeIndex = uint(screenCoordinate.y).add(firstCascade)
         const shadowMatrix = shadowMatrixArray.element(cascadeIndex)
 
-        // Reconstruct slice exit point position in world space.
-        const sliceExitWorld = transformSliceToWorld(
+        // Reconstruct slice exit point position in unit space.
+        const sliceExitUnit = transformSliceToUnit(
           sliceEndpoints.zw,
           shadowCascadeArray.element(cascadeIndex).y,
           camera
-        )
+        ).toConst()
         // Transform it to the shadow map UV.
-        const sliceExitUV = transformWorldToShadowUV(
-          sliceExitWorld,
+        const sliceExitUV = transformUnitToShadowUV(
+          sliceExitUnit,
           shadowMatrix
         ).xy.toConst()
 
         // Compute camera position in shadow map UV space.
-        const sliceOriginUV = transformWorldToShadowUV(
-          cameraPositionWorld(camera),
+        const sliceOriginUV = transformUnitToShadowUV(
+          cameraPositionUnit,
           shadowMatrix
         ).xy.toVar()
 

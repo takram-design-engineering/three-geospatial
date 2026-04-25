@@ -63,8 +63,7 @@ export class UnwarpEpipolarNode extends Node {
   sliceEndpointsNode!: TextureNode
   coordinateNode!: TextureNode
   epipolarShadowLengthNode!: TextureNode
-  viewZNode?: TextureNode | null // Must be filterable
-  depthNode?: TextureNode | null
+  viewZNode!: TextureNode // Must be filterable
 
   camera!: Camera
 
@@ -129,7 +128,6 @@ export class UnwarpEpipolarNode extends Node {
       epipolarShadowLengthNode,
       refinementThreshold,
       viewZNode,
-      depthNode,
       camera,
       maxSamplesInSlice,
       numEpipolarSlices,
@@ -140,7 +138,7 @@ export class UnwarpEpipolarNode extends Node {
     return Fn(() => {
       const uvNode = uv().toConst()
       const positionNDC = transformUVToNDC(uvNode).toConst()
-      const cameraZ = getCameraZ(camera, uvNode, viewZNode, depthNode).toConst()
+      const cameraZ = getCameraZ(camera, uvNode, viewZNode).toConst()
 
       // Compute direction of the ray going from the light through the pixel.
       const rayDirection = positionNDC

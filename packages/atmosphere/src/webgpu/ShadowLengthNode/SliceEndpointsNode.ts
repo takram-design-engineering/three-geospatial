@@ -19,7 +19,7 @@
  */
 
 import {
-  HalfFloatType,
+  FloatType,
   LinearFilter,
   RenderTarget,
   RGBAFormat,
@@ -79,7 +79,9 @@ export class SliceEndpointsNode extends Node {
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      type: HalfFloatType,
+      // TODO: Still not sure why half-float texture computes correctly on
+      // mobile devices.
+      type: FloatType,
       format: RGBAFormat
     })
     const texture = renderTarget.texture

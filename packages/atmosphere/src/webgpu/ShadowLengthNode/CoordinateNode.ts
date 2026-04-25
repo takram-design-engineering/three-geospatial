@@ -58,8 +58,7 @@ export class CoordinateNode extends Node {
     return 'CoordinateNode'
   }
 
-  viewZNode?: TextureNode | null // Must be filterable
-  depthNode?: TextureNode | null
+  viewZNode!: TextureNode // Must be filterable
   sliceEndpointsNode!: TextureNode
 
   camera!: Camera
@@ -118,8 +117,7 @@ export class CoordinateNode extends Node {
   }
 
   private setupFragmentNode(builder: NodeBuilder): Node<'vec3'> {
-    const { viewZNode, depthNode, sliceEndpointsNode, screenSize, camera } =
-      this
+    const { viewZNode, sliceEndpointsNode, screenSize, camera } = this
 
     const maxSamplesInSlice = float(this.maxSamplesInSlice)
 
@@ -161,12 +159,7 @@ export class CoordinateNode extends Node {
         // Discard pixels that fall behind the screen.
         // This can happen if slice exit point was optimized.
         If(isValidScreenLocation(xy, screenSize), () => {
-          const cameraZ = getCameraZ(
-            camera,
-            transformNDCToUV(xy),
-            viewZNode,
-            depthNode
-          )
+          const cameraZ = getCameraZ(camera, transformNDCToUV(xy), viewZNode)
           result.assign(vec3(xy, cameraZ))
         })
       })
