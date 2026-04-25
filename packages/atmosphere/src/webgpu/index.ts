@@ -1,3 +1,4 @@
+export * from './accessors'
 export * from './AerialPerspectiveNode'
 export * from './AtmosphereContext'
 export * from './AtmosphereLight'

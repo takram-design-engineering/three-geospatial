@@ -41,6 +41,7 @@ import {
   type CascadedShadowMapsNode
 } from '@takram/three-geospatial/webgpu'
 
+import { getAtmosphereContext } from './AtmosphereContext'
 import { CoordinateNode } from './ShadowLengthNode/CoordinateNode'
 import { EpipolarShadowLengthNode } from './ShadowLengthNode/EpipolarShadowLengthNode'
 import { MinMaxLevelsNode } from './ShadowLengthNode/MinMaxLevelsNode'
@@ -59,8 +60,7 @@ export class ShadowLengthNode extends TempNode {
   }
 
   csmShadowNode: CascadedShadowMapsNode
-  viewZNode?: TextureNode | null // Must be filterable
-  depthNode?: TextureNode | null
+  viewZUnitNode!: TextureNode // Must be filterable
 
   sliceEndpointsNode: SliceEndpointsNode
   coordinateNode: CoordinateNode
@@ -93,15 +93,13 @@ export class ShadowLengthNode extends TempNode {
 
   constructor(
     csmShadowNode: CascadedShadowMapsNode,
-    viewZNode?: TextureNode | null,
-    depthNode?: TextureNode | null
+    viewZUnitNode: TextureNode
   ) {
     super('vec2')
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
 
     this.csmShadowNode = csmShadowNode
-    this.viewZNode = viewZNode
-    this.depthNode = depthNode
+    this.viewZUnitNode = viewZUnitNode
 
     this.sliceEndpointsNode = new SliceEndpointsNode()
     this.coordinateNode = new CoordinateNode()
@@ -181,8 +179,7 @@ export class ShadowLengthNode extends TempNode {
   override setup(builder: NodeBuilder): unknown {
     const {
       csmShadowNode,
-      viewZNode,
-      depthNode,
+      viewZUnitNode,
       sliceEndpointsNode,
       coordinateNode,
       sliceUVDirectionNode,
@@ -202,6 +199,9 @@ export class ShadowLengthNode extends TempNode {
       return float()
     }
     invariant(camera instanceof PerspectiveCamera)
+
+    const { parameters } = getAtmosphereContext(builder)
+    const { worldToUnit } = parameters
 
     const maxShadowStep = uniform(1024 / 4, 'float')
     const shadowMapTexelSize = uniform('vec2')
@@ -224,7 +224,7 @@ export class ShadowLengthNode extends TempNode {
       const { cascadeIntervals } = csmShadowNode
       for (let i = 0; i < array.length; ++i) {
         const interval = cascadeIntervals[i]
-        array[i].set(interval.x * far, interval.y * far)
+        array[i].set(interval.x, interval.y).multiplyScalar(far * worldToUnit)
       }
     })
 
@@ -235,10 +235,13 @@ export class ShadowLengthNode extends TempNode {
     OnBeforeFrameUpdate(() => {
       const array = shadowMatrixArray.array as Matrix4[]
       const lights = csmShadowNode.lights
+      const unitToWorld = 1 / worldToUnit
+      matrixScratch.makeScale(unitToWorld, unitToWorld, unitToWorld)
       for (let i = 0; i < array.length; ++i) {
         const matrix = lights[i].shadow?.matrix
         if (matrix != null) {
           array[i].copy(matrix)
+          array[i].multiply(matrixScratch)
         }
       }
     })
@@ -255,8 +258,7 @@ export class ShadowLengthNode extends TempNode {
     sliceEndpointsNode.isLightOnScreen = isLightOnScreen
     const sliceEndpoints = sliceEndpointsNode.getTextureNode()
 
-    coordinateNode.viewZNode = viewZNode
-    coordinateNode.depthNode = depthNode
+    coordinateNode.viewZUnitNode = viewZUnitNode
     coordinateNode.sliceEndpointsNode = sliceEndpoints
     coordinateNode.camera = camera
     coordinateNode.numEpipolarSlices = numEpipolarSlices
@@ -301,8 +303,7 @@ export class ShadowLengthNode extends TempNode {
     unwarpEpipolarNode.sliceEndpointsNode = sliceEndpoints
     unwarpEpipolarNode.coordinateNode = coordinate
     unwarpEpipolarNode.epipolarShadowLengthNode = epipolarShadowLength
-    unwarpEpipolarNode.viewZNode = viewZNode
-    unwarpEpipolarNode.depthNode = depthNode
+    unwarpEpipolarNode.viewZUnitNode = viewZUnitNode
     unwarpEpipolarNode.camera = camera
     unwarpEpipolarNode.numEpipolarSlices = numEpipolarSlices
     unwarpEpipolarNode.maxSamplesInSlice = maxSamplesInSlice

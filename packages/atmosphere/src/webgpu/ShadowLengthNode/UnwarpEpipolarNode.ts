@@ -48,7 +48,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import {
-  getCameraZ,
+  getCameraZUnit,
   getOutermostScreenPixelCoords,
   transformUVToNDC
 } from './common'
@@ -63,8 +63,7 @@ export class UnwarpEpipolarNode extends Node {
   sliceEndpointsNode!: TextureNode
   coordinateNode!: TextureNode
   epipolarShadowLengthNode!: TextureNode
-  viewZNode?: TextureNode | null // Must be filterable
-  depthNode?: TextureNode | null
+  viewZUnitNode!: TextureNode // Must be filterable
 
   camera!: Camera
 
@@ -128,8 +127,7 @@ export class UnwarpEpipolarNode extends Node {
       coordinateNode,
       epipolarShadowLengthNode,
       refinementThreshold,
-      viewZNode,
-      depthNode,
+      viewZUnitNode,
       camera,
       maxSamplesInSlice,
       numEpipolarSlices,
@@ -140,7 +138,7 @@ export class UnwarpEpipolarNode extends Node {
     return Fn(() => {
       const uvNode = uv().toConst()
       const positionNDC = transformUVToNDC(uvNode).toConst()
-      const cameraZ = getCameraZ(camera, uvNode, viewZNode, depthNode).toConst()
+      const cameraZ = getCameraZUnit(camera, uvNode, viewZUnitNode).toConst()
 
       // Compute direction of the ray going from the light through the pixel.
       const rayDirection = positionNDC

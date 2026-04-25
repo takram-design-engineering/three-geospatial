@@ -58,7 +58,6 @@ import {
 } from 'three/webgpu'
 
 import {
-  cameraPositionWorld,
   FnVar,
   Node,
   outputTexture,
@@ -68,9 +67,9 @@ import {
 
 import { getAtmosphereContext } from '../AtmosphereContext'
 import {
-  FLOAT_MAX,
-  transformSliceToWorld,
-  transformWorldToShadowUV
+  HALF_FLOAT_MAX,
+  transformSliceToUnit,
+  transformUnitToShadowUV
 } from './common'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -182,10 +181,11 @@ export class EpipolarShadowLengthNode extends Node {
     } = this
 
     const { cascadeCount } = csmShadowNode
+    const { cameraPositionUnit, parameters } = getAtmosphereContext(builder)
+    const { worldToUnit } = parameters
 
     const biasedCameraFar = uniform('float').onRenderUpdate(
-      // This bias might be required to test if the ray directs towards sky.
-      () => camera.far * 0.999999
+      () => camera.far * worldToUnit * 0.999999
     )
 
     const sampleShadow = FnVar(
@@ -237,10 +237,10 @@ export class EpipolarShadowLengthNode extends Node {
 
         // To properly compute scattering from the space, we must set up ray end
         // position before exiting the loop.
-        const rayEnd = cameraPosition
+        const rayEnd = cameraPositionUnit
           .add(viewDirection.mul(distanceToRayEnd))
           .toConst()
-        const rayStart = cameraPosition
+        const rayStart = cameraPositionUnit
           .add(viewDirection.mul(distanceToRayStart))
           .toConst()
 
@@ -251,16 +251,16 @@ export class EpipolarShadowLengthNode extends Node {
         const distanceToFirstShadowedSection = float(-1).toVar()
 
         // WORKAROUND: We cannot use the early-return pattern.
-        If(rayLength.lessThanEqual(10).not(), () => {
-          // We trace the ray in the light projection space, not in the world
+        If(rayLength.lessThanEqual(10 * worldToUnit).not(), () => {
+          // We trace the ray in the light projection space, not in the unit
           // space. Compute shadow map UV coordinates of the ray end point and
           // its depth in the light space.
           const shadowMatrix = shadowMatrixArray.element(cascadeIndex)
-          const startUVAndDepthInLightSpace = transformWorldToShadowUV(
+          const startUVAndDepthInLightSpace = transformUnitToShadowUV(
             rayStart,
             shadowMatrix
           )
-          const endUVAndDepthInLightSpace = transformWorldToShadowUV(
+          const endUVAndDepthInLightSpace = transformUnitToShadowUV(
             rayEnd,
             shadowMatrix
           )
@@ -290,8 +290,8 @@ export class EpipolarShadowLengthNode extends Node {
           const shadowUVStepLength = sliceDirectionUV.length().toConst()
           const sliceOriginUV = sliceUVDirectionAndOrigin.zw.toConst()
 
-          // Calculate ray step length in world space.
-          const rayStepLengthWorld = rayLength
+          // Calculate ray step length in unit space.
+          const rayStepLengthUnit = rayLength
             .mul(shadowUVStepLength.div(traceLengthInShadowUVSpace))
             .toConst()
 
@@ -452,7 +452,7 @@ export class EpipolarShadowLengthNode extends Node {
               .sub(distanceMarchedInCascade)
               .max(0)
               .toConst()
-            const integrationStep = rayStepLengthWorld
+            const integrationStep = rayStepLengthUnit
               .mul(stepScale)
               .min(remainingDistance)
               .toConst()
@@ -461,9 +461,7 @@ export class EpipolarShadowLengthNode extends Node {
               shadowUVAndDepthStep.mul(stepScale)
             )
             currentSamplePosition.addAssign(uint(1).shiftLeft(currentTreeLevel))
-            distanceMarchedInCascade.addAssign(
-              rayStepLengthWorld.mul(stepScale)
-            )
+            distanceMarchedInCascade.addAssign(rayStepLengthUnit.mul(stepScale))
 
             // Store the distance where the ray first enters the shadow.
             distanceToFirstShadowedSection.assign(
@@ -491,14 +489,13 @@ export class EpipolarShadowLengthNode extends Node {
       }
     )
 
-    let cameraPosition: Node<'vec3'>
     let fullRayLength: Node<'float'>
     let viewDirection: Node<'vec3'>
     let rayTopIntersection: Node<'vec2'>
 
     return Fn(() => {
-      const { parameters } = getAtmosphereContext(builder)
-      const { worldToUnit, topRadius, bottomRadius } = parameters
+      const { parametersNode } = getAtmosphereContext(builder)
+      const { topRadius, bottomRadius } = parametersNode
 
       const coordinate = coordinateNode.load(screenCoordinate).toConst()
       const sampleLocation = coordinate.xy
@@ -515,22 +512,20 @@ export class EpipolarShadowLengthNode extends Node {
           .any()
           .not(),
         () => {
-          cameraPosition = cameraPositionWorld(camera).toConst()
-
           // Compute the ray termination point, full ray length and view
           // direction.
-          const rayTermination = transformSliceToWorld(
+          const rayTermination = transformSliceToUnit(
             sampleLocation,
             rayEndCameraZ,
             camera
           ).toConst()
-          const fullRay = rayTermination.sub(cameraPosition).toConst()
+          const fullRay = rayTermination.sub(cameraPositionUnit).toConst()
           fullRayLength = fullRay.length().toVar()
           viewDirection = fullRay.div(fullRayLength).toConst()
 
           // Intersect the ray with the top of the atmosphere and the Earth:
           const intersections = getRaySphereIntersections(
-            cameraPosition,
+            cameraPositionUnit,
             viewDirection,
             vec3(0),
             vec2(topRadius, bottomRadius)
@@ -546,7 +541,7 @@ export class EpipolarShadowLengthNode extends Node {
             // atmosphere if the ray does not hit terrain.
             const originalRayLength = fullRayLength.toConst()
             If(rayEndCameraZ.greaterThanEqual(biasedCameraFar), () => {
-              fullRayLength.assign(FLOAT_MAX)
+              fullRayLength.assign(HALF_FLOAT_MAX)
             })
             // Limit the ray length by the distance to the point where the ray
             // exits the atmosphere.
@@ -602,7 +597,7 @@ export class EpipolarShadowLengthNode extends Node {
         }
       )
 
-      return totalShadowLength.mul(worldToUnit)
+      return totalShadowLength
     })()
   }
 
