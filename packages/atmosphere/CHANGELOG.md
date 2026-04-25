@@ -35,7 +35,7 @@ All changes were made to the WebGPU implementation, unless otherwise noted.
 - `MoonNode`: Fixed unstable derivatives.
 - `SkyEnvironmentNode`: Fixed incompatibility with Three.js r183, [#105](https://github.com/takram-design-engineering/three-geospatial/issues/105).
 - `StarsNode`: Fixed incompatibility with Three.js r183, [#105](https://github.com/takram-design-engineering/three-geospatial/issues/105).
-- Fixed linear sRGB representation of stars. This shifts them more toward blue.
+- WebGPU and WebGL: Fixed linear sRGB representation of stars. This shifts them more toward blue.
 
 ## [0.18.0] - 2026-04-05
 
