@@ -115,11 +115,15 @@ const Content: FC<StoryProps> = ({
     ({ higherOrderScatteringTexture }: StoryArgs) =>
       higherOrderScatteringTexture
   )
-  const atmosphereContext = useResource(() => {
+  const atmosphereParameters = useMemo(() => {
     const parameters = new AtmosphereParameters()
     parameters.higherOrderScatteringTexture = higherOrderScatteringTexture
-    return new AtmosphereContext(parameters)
+    return parameters
   }, [higherOrderScatteringTexture])
+  const atmosphereContext = useResource(
+    () => new AtmosphereContext(atmosphereParameters),
+    [atmosphereParameters]
+  )
 
   atmosphereContext.camera = camera
 
@@ -162,10 +166,10 @@ const Content: FC<StoryProps> = ({
         mrt({
           output,
           velocity: highpVelocity,
-          viewZ
+          viewZ: viewZ.mul(atmosphereParameters.worldToUnit)
         })
       ),
-    [scene, camera]
+    [scene, camera, atmosphereParameters]
   )
 
   const colorNode = passNode.getTextureNode('output')
