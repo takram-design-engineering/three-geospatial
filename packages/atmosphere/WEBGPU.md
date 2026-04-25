@@ -198,6 +198,11 @@ Ellipsoid.WGS84.getNorthUpEastFrame(
 - [`AerialPerspectiveNode`](#aerialperspectivenode)
 - [`SkyNode`](#skynode)
 - [`SkyEnvironmentNode`](#skyenvironmentnode)
+- [`ShadowLengthNode`](#shadowlengthnode)
+
+**Generators**
+
+- [`cameraZUnit`](#camerazunit)
 
 **Advanced**
 
@@ -391,7 +396,8 @@ A post-processing node that renders atmospheric transparency and inscattered lig
 const aerialPerspective: (
   colorNode: Node,
   depthNode: Node,
-  normalNode?: Node | null
+  normalNode?: Node | null,
+  shadowLengthNode?: Node | null
 ) => AerialPerspectiveNode
 ```
 
@@ -435,7 +441,10 @@ A node representing the radiance of celestial sources and atmospheric scattering
 shadowLengthNode?: Node | null
 ```
 
-TODO
+A node representing the shadowed length along the camera rays. The x component stores the shadow length, and y component stores the distance to the first shadow segment from the camera.
+
+> [!NOTE]
+> This formulation assumes a single continuous shadowed segment along the camera rays.
 
 ### Static options
 
@@ -489,8 +498,8 @@ scene.backgroundNode = skyBackground()
 
 <!-- prettier-ignore -->
 ```ts
-const sky: () => SkyNode
-const skyBackground: () => SkyNode
+const sky: (shadowLengthNode?: Node | null) => SkyNode
+const skyBackground: (shadowLengthNode?: Node | null) => SkyNode
 ```
 
 ### Dependencies
@@ -501,7 +510,10 @@ const skyBackground: () => SkyNode
 shadowLengthNode?: Node | null
 ```
 
-TODO
+A node representing the shadowed length along the camera rays. The x component stores the shadow length, and y component stores the distance to the first shadow segment from the camera.
+
+> [!NOTE]
+> This formulation assumes a single continuous shadowed segment along the camera rays.
 
 #### sunNode
 
@@ -535,7 +547,7 @@ A node representing stars.
 sunNode.angularRadius = uniform(0.004675) // ≈ 16 arcminutes
 ```
 
-The angular radius of the sun, in radians.
+The angular radius of the sun in radians.
 
 #### sunNode.intensity
 
@@ -551,7 +563,7 @@ A scaling factor to adjust the brightness of the sun.
 moonNode.angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
 ```
 
-The angular radius of the moon, in radians.
+The angular radius of the moon in radians.
 
 #### moonNode.intensity
 
@@ -637,6 +649,26 @@ skyNode: SkyNode
 
 A node representing the radiance of celestial sources and atmospheric scattering seen from the camera.
 
+### Parameters
+
+#### distanceThreshold
+
+```ts
+distanceThreshold: 1000
+```
+
+The distance in meters the camera moves before the PMREM is updated.
+
+#### angularThreshold
+
+```ts
+angularThreshold: radians(0.1)
+```
+
+The angle in radians the sun direction changes before the PMREM is updated.
+
+## ShadowLengthNode
+
 ## AtmosphereParameters
 
 A class that encapsulates the parameters and static options for the atmospheric model based on [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/).
@@ -677,7 +709,7 @@ Note that this and other spectral parameters are simplified to only 3 wavelength
 sunAngularRadius = 0.004675
 ```
 
-The sun's angular radius, in radians.
+The sun's angular radius in radians.
 
 #### bottomRadius
 
@@ -685,7 +717,7 @@ The sun's angular radius, in radians.
 bottomRadius = 6360000
 ```
 
-The distance between the planet center and the bottom of the atmosphere, in meters.
+The distance in meters between the planet center and the bottom of the atmosphere.
 
 #### topRadius
 
@@ -693,7 +725,7 @@ The distance between the planet center and the bottom of the atmosphere, in mete
 topRadius = 6420000
 ```
 
-The distance between the planet center and the top of the atmosphere, in meters.
+The distance in meters between the planet center and the top of the atmosphere.
 
 #### rayleighDensity
 
@@ -779,7 +811,7 @@ The average albedo of the ground.
 #### minCosLight
 
 ```ts
-minCosLight = Math.cos(radians(102))
+minCosLight = Math.cos(radians(120))
 ```
 
 The cosine of the maximum sun zenith angle for which atmospheric scattering must be precomputed (for maximum precision, use the smallest sun zenith angle yielding negligible sky light radiance values).

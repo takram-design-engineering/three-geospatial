@@ -28,7 +28,7 @@ export class SkyEnvironmentNode extends TempNode {
 
   skyNode: SkyNode
 
-  distanceThreshold = 100
+  distanceThreshold = 1000
   angularThreshold = radians(0.1)
 
   private readonly renderTarget: CubeRenderTarget
