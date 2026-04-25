@@ -207,15 +207,16 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         cosView
       ).toVar()
 
-      If(intersectsGround.not(), () => {
-        transmittance.assign(
+      transmittance.assign(
+        intersectsGround.select(
+          0,
           getTransmittanceToTopAtmosphereBoundary(
             transmittanceNode,
             radius,
             cosView
           )
         )
-      })
+      )
 
       if (!context.showGround) {
         intersectsGround.assign(bool(false))
