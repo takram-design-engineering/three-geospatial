@@ -99,7 +99,7 @@ export class SliceUVDirectionNode extends Node {
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
-      // TODO: Still not sure why half-float texture computes correctly on
+      // TODO: Still not sure why half-float texture computes incorrectly on
       // mobile devices.
       type: FloatType,
       format: RGBAFormat
