@@ -246,7 +246,7 @@ export class EpipolarShadowLengthNode extends Node {
 
         const rayLength = distanceToRayEnd.sub(distanceToRayStart).toConst()
 
-        const totalLitLength = float(0).toVar()
+        const totalShadowLength = float(0).toVar()
         const totalMarchedLength = float(0).toVar()
         const distanceToFirstShadowedSection = float(-1).toVar()
 
@@ -328,6 +328,10 @@ export class EpipolarShadowLengthNode extends Node {
             const currentDepthInLightSpace = max(
               currentShadowUVAndDepthInLightSpace.z,
               1e-7
+            ).toConst()
+            const depthInRange = and(
+              currentShadowUVAndDepthInLightSpace.z.greaterThanEqual(0),
+              currentShadowUVAndDepthInLightSpace.z.lessThanEqual(1)
             ).toConst()
             const isInLight = float(0).toVar()
 
@@ -468,10 +472,13 @@ export class EpipolarShadowLengthNode extends Node {
               distanceToFirstShadowedSection
                 .lessThan(0)
                 .and(isInLight.not())
+                .and(depthInRange)
                 .select(totalMarchedLength, distanceToFirstShadowedSection)
             )
 
-            totalLitLength.addAssign(integrationStep.mul(isInLight))
+            totalShadowLength.addAssign(
+              depthInRange.select(integrationStep.mul(isInLight.oneMinus()), 0)
+            )
             totalMarchedLength.addAssign(integrationStep)
           })
         })
@@ -483,7 +490,7 @@ export class EpipolarShadowLengthNode extends Node {
         })
 
         return vec2(
-          totalMarchedLength.sub(totalLitLength),
+          totalShadowLength,
           distanceToFirstShadowedSection.add(distanceToRayStart)
         )
       }
