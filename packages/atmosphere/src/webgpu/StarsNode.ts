@@ -11,11 +11,12 @@ import {
 } from 'three'
 import {
   instancedBufferAttribute,
+  log,
   mix,
-  remapClamp,
+  pow,
+  screenSize,
   screenUV,
   uniform,
-  vec3,
   vec4
 } from 'three/tsl'
 import {
@@ -34,7 +35,11 @@ import { ArrayBufferLoader } from '@takram/three-geospatial'
 import {
   cameraFar,
   cameraNear,
-  outputTexture
+  FnLayout,
+  FnVar,
+  outputTexture,
+  projectionMatrix,
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 import { DEFAULT_STARS_DATA_URL } from '../constants'
@@ -55,6 +60,23 @@ function createRenderTarget(): RenderTarget {
   texture.name = 'Stars'
   return renderTarget
 }
+
+const log10 = FnLayout({
+  name: 'log10',
+  type: 'float',
+  inputs: [{ name: 'x', type: 'float' }]
+})(([x]) => log(x).mul(1 / Math.log(10)))
+
+// See: https://en.wikipedia.org/wiki/Surface_brightness
+const magnitudeToLuminance = /*#__PURE__*/ FnVar(
+  (magnitude: Node<'float'>, solidAngle: Node<'float'>): Node<'float'> => {
+    const steradiansToSquareArcSecs = 4.25e10
+    const surfaceBrightness = magnitude
+      .add(log10(solidAngle.mul(steradiansToSquareArcSecs)).mul(2.5))
+      .toConst()
+    return pow(10, surfaceBrightness.mul(-0.4)).mul(10.8e4)
+  }
+)
 
 const sizeScratch = /*#__PURE__*/ new Vector2()
 
@@ -173,7 +195,9 @@ export class StarsNode extends TempNode {
     const instanceMagnitude = instancedBufferAttribute(magnitudeBuffer, 'float')
     const instanceColor = instancedBufferAttribute(colorBuffer, 'vec3')
 
-    const { matrixECIToECEF, matrixECEFToWorld } = atmosphereContext
+    const { matrixECIToECEF, matrixECEFToWorld, parametersNode } =
+      atmosphereContext
+    const { luminanceScale } = parametersNode
 
     const directionECEF = matrixECIToECEF.mul(vec4(instancePosition, 0)).xyz
     const directionWorld = matrixECEFToWorld.mul(vec4(directionECEF, 0)).xyz
@@ -187,13 +211,17 @@ export class StarsNode extends TempNode {
       this.magnitudeRange.y,
       instanceMagnitude.x
     )
-    const brightness = vec3(10).pow(
-      vec3(this.magnitudeRange, magnitude)
-        .mul(1 / 100 ** (1 / 5))
-        .negate()
-    )
-    material.colorNode = instanceColor
-      .mul(remapClamp(brightness.z, brightness.y, brightness.x))
+
+    // This is only true at the screen center, but they are points anyway.
+    const solidAngle = this.pointSize
+      .mul(2)
+      .div(screenSize.y.mul(projectionMatrix(camera)[1][1]))
+      .pow2()
+    const luminance = magnitudeToLuminance(magnitude, solidAngle)
+
+    material.colorNode = luminance
+      .mul(luminanceScale)
+      .mul(instanceColor)
       .mul(this.intensity)
       .toVertexStage()
 
