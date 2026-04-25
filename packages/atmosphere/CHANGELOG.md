@@ -26,6 +26,7 @@ All changes were made to the WebGPU implementation, unless otherwise noted.
 - `AtmosphereLUTNode`: 4D scattering LUT now only contains the single Rayleigh scattering when `higherOrderScatteringTexture` option is enabled.
 - `AtmosphereLUTNode`: Higher-order scattering LUT now contains the scattering term rather than that over the Rayleigh phase.
 - `AerialPerspectiveNode`: Added approximated inscattered light below the bottom of the atmosphere.
+- `StarsNode`: Changed the luminance of stars more physically correct and the default intensity to 1000.
 
 ### Fixed
 
@@ -33,6 +34,8 @@ All changes were made to the WebGPU implementation, unless otherwise noted.
 - Fixed changes in `AtmosphereParameters` not being applied when used by multiple renderers.
 - `MoonNode`: Fixed unstable derivatives.
 - `SkyEnvironmentNode`: Fixed incompatibility with Three.js r183, [#105](https://github.com/takram-design-engineering/three-geospatial/issues/105).
+- `StarsNode`: Fixed incompatibility with Three.js r183, [#105](https://github.com/takram-design-engineering/three-geospatial/issues/105).
+- Fixed linear sRGB representation of stars. This shifts them more toward blue.
 
 ## [0.18.0] - 2026-04-05
 
