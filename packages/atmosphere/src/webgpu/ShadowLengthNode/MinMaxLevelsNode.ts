@@ -73,8 +73,8 @@ export class MinMaxLevelsNode extends Node {
   sliceUVDirectionNode!: TextureNode
   shadowDepthNodes!: TextureNode[]
 
-  numEpipolarSlices!: UniformNode<number> // float
-  maxSamplesInSlice!: UniformNode<number> // float
+  epipolarSliceCount!: UniformNode<number> // float
+  maxSliceSampleCount!: UniformNode<number> // float
   firstCascade!: UniformNode<number> // uint
 
   private readonly textureNode: TextureNode
@@ -194,7 +194,7 @@ export class MinMaxLevelsNode extends Node {
 
     const activeCascades = csmShadowNode.cascadeCount - this.firstCascade.value
     const width = Math.max(mapSize.x, mapSize.y)
-    const height = activeCascades * this.numEpipolarSlices.value
+    const height = activeCascades * this.epipolarSliceCount.value
     this.renderTargetA.setSize(width, height)
     this.renderTargetB.setSize(width, height)
 
@@ -206,18 +206,18 @@ export class MinMaxLevelsNode extends Node {
       csmShadowNode,
       sliceUVDirectionNode,
       shadowDepthNodes,
-      numEpipolarSlices,
+      epipolarSliceCount,
       firstCascade
     } = this
 
     const { cascadeCount } = csmShadowNode
 
     return Fn(() => {
-      const cascadeIndex = floor(screenCoordinate.y.div(numEpipolarSlices))
+      const cascadeIndex = floor(screenCoordinate.y.div(epipolarSliceCount))
         .add(firstCascade)
         .toConst()
       const sliceIndex = screenCoordinate.y
-        .sub(cascadeIndex.sub(firstCascade).mul(numEpipolarSlices))
+        .sub(cascadeIndex.sub(firstCascade).mul(epipolarSliceCount))
         .toConst()
 
       // Load slice direction in shadow map.

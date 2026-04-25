@@ -67,8 +67,8 @@ export class CoordinateNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices!: UniformNode<number> // float
-  maxSamplesInSlice!: UniformNode<number> // float
+  epipolarSliceCount!: UniformNode<number> // float
+  maxSliceSampleCount!: UniformNode<number> // float
   screenSize!: UniformNode<Vector2> // vec2
 
   private readonly textureNode: TextureNode
@@ -108,8 +108,8 @@ export class CoordinateNode extends Node {
     }
 
     this.renderTarget.setSize(
-      this.maxSamplesInSlice.value,
-      this.numEpipolarSlices.value
+      this.maxSliceSampleCount.value,
+      this.epipolarSliceCount.value
     )
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
@@ -123,7 +123,7 @@ export class CoordinateNode extends Node {
   private setupFragmentNode(builder: NodeBuilder): Node<'vec3'> {
     const { viewZUnitNode, sliceEndpointsNode, screenSize, camera } = this
 
-    const maxSamplesInSlice = float(this.maxSamplesInSlice)
+    const maxSliceSampleCount = float(this.maxSliceSampleCount)
 
     return Fn(() => {
       const uvNode = uv().toConst()
@@ -144,12 +144,12 @@ export class CoordinateNode extends Node {
         // Note that due to the rasterization rules, UV coordinates are biased
         // by 0.5 texel size. We need remove this offset:
         let samplePositionOnEpipolarLine: Node<'float'> = uvNode.x.sub(
-          float(0.5).div(maxSamplesInSlice)
+          float(0.5).div(maxSliceSampleCount)
         )
         // samplePositionOnEpipolarLine is now in the range
-        // [0, 1 - 1/maxSamplesInSlice]. We need to rescale it to be in [0, 1].
+        // [0, 1 - 1/maxSliceSampleCount]. We need to rescale it to be in [0, 1].
         samplePositionOnEpipolarLine = samplePositionOnEpipolarLine
-          .mul(maxSamplesInSlice.div(maxSamplesInSlice.sub(1)))
+          .mul(maxSliceSampleCount.div(maxSliceSampleCount.sub(1)))
           .saturate()
           .toConst()
 

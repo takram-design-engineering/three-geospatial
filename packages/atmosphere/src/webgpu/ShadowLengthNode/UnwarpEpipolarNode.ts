@@ -67,8 +67,8 @@ export class UnwarpEpipolarNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices!: UniformNode<number> // float
-  maxSamplesInSlice!: UniformNode<number> // float
+  epipolarSliceCount!: UniformNode<number> // float
+  maxSliceSampleCount!: UniformNode<number> // float
   screenSize!: UniformNode<Vector2> // vec2
   lightScreenPosition!: UniformNode<Vector4> // vec4
 
@@ -129,8 +129,8 @@ export class UnwarpEpipolarNode extends Node {
       refinementThreshold,
       viewZUnitNode,
       camera,
-      maxSamplesInSlice,
-      numEpipolarSlices,
+      maxSliceSampleCount,
+      epipolarSliceCount,
       screenSize,
       lightScreenPosition
     } = this
@@ -234,27 +234,27 @@ export class UnwarpEpipolarNode extends Node {
       // Note that 0 <= epipolarSlice <= 1, and both 0 and 1 refer to the first
       // slice.
       const precedingSliceIndex = min(
-        epipolarSliceValue.mul(numEpipolarSlices).floor(),
-        numEpipolarSlices.sub(1)
+        epipolarSliceValue.mul(epipolarSliceCount).floor(),
+        epipolarSliceCount.sub(1)
       ).toConst()
 
       // Compute EXACT texture coordinates of preceding and succeeding slices
       // and their weights.
       // Note that slice 0 is stored in the first texel which has exact texture
-      // coordinate 0.5 / numEpipolarSlices.
+      // coordinate 0.5 / epipolarSliceCount.
       const sourceSliceV0 = precedingSliceIndex
-        .div(numEpipolarSlices)
-        .add(float(0.5).div(numEpipolarSlices))
+        .div(epipolarSliceCount)
+        .add(float(0.5).div(epipolarSliceCount))
         .toConst()
       const sourceSliceV1 = sourceSliceV0
-        .add(float(1).div(numEpipolarSlices))
+        .add(float(1).div(epipolarSliceCount))
         .fract()
         .toConst()
       const sourceSliceV = [sourceSliceV0, sourceSliceV1]
 
       // Compute slice weights.
       const sliceWeight1 = epipolarSliceValue
-        .mul(numEpipolarSlices)
+        .mul(epipolarSliceCount)
         .sub(precedingSliceIndex)
         .toConst()
       const sliceWeight0 = sliceWeight1.oneMinus().toConst()
@@ -287,7 +287,7 @@ export class UnwarpEpipolarNode extends Node {
         // exactly the Entry Point, while the last sample
         // (samplePositionOnLine==1) is exactly the exit point.
         const sampleIndex = samplePositionOnLine
-          .mul(maxSamplesInSlice.sub(1))
+          .mul(maxSliceSampleCount.sub(1))
           .toConst()
 
         // We have to manually perform bilateral filtering of the texture to
@@ -300,7 +300,7 @@ export class UnwarpEpipolarNode extends Node {
         // is essential to align with the texel center.
         const precedingSampleU = precedingSampleIndex
           .add(0.5)
-          .div(maxSamplesInSlice)
+          .div(maxSliceSampleCount)
           .toConst()
 
         const shadowLengthUV = vec2(precedingSampleU, sourceSliceV[i]).toConst()
@@ -321,8 +321,8 @@ export class UnwarpEpipolarNode extends Node {
         //     1/shadowLengthTextureSize.x
 
         const shadowLengthTextureSize = vec2(
-          maxSamplesInSlice,
-          numEpipolarSlices
+          maxSliceSampleCount,
+          epipolarSliceCount
         ).toConst()
         const sourceLocationsCameraZ = textureGather(
           coordinateNode,
@@ -370,7 +370,7 @@ export class UnwarpEpipolarNode extends Node {
             samplePositionOnLine
               .sub(0.5)
               .abs()
-              .lessThan(maxSamplesInSlice.sub(1).reciprocal().add(0.5))
+              .lessThan(maxSliceSampleCount.sub(1).reciprocal().add(0.5))
           )
         )
         // We now need to compute the following weighted sum:

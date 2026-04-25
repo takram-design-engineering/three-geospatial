@@ -77,8 +77,8 @@ export class SliceUVDirectionNode extends Node {
 
   camera!: Camera
 
-  numEpipolarSlices!: UniformNode<number> // float
-  maxSamplesInSlice!: UniformNode<number> // float
+  epipolarSliceCount!: UniformNode<number> // float
+  maxSliceSampleCount!: UniformNode<number> // float
   firstCascade!: UniformNode<number> // uint
   screenSize!: UniformNode<Vector2> // vec2
   shadowMapTexelSize!: UniformNode<Vector2> // vec2
@@ -124,7 +124,7 @@ export class SliceUVDirectionNode extends Node {
     }
 
     this.renderTarget.setSize(
-      this.numEpipolarSlices.value,
+      this.epipolarSliceCount.value,
       this.csmShadowNode.cascadeCount - this.firstCascade.value
     )
 

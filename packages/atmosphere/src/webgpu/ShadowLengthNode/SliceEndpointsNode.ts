@@ -59,8 +59,8 @@ export class SliceEndpointsNode extends Node {
     return 'SliceEndpointsNode'
   }
 
-  numEpipolarSlices!: UniformNode<number> // float
-  maxSamplesInSlice!: UniformNode<number> // float
+  epipolarSliceCount!: UniformNode<number> // float
+  maxSliceSampleCount!: UniformNode<number> // float
   screenSize!: UniformNode<Vector2> // vec2
   lightScreenPosition!: UniformNode<Vector4> // vec4
   isLightOnScreen!: UniformNode<boolean> // bool
@@ -103,7 +103,7 @@ export class SliceEndpointsNode extends Node {
       return
     }
 
-    this.renderTarget.setSize(this.numEpipolarSlices.value, 1)
+    this.renderTarget.setSize(this.epipolarSliceCount.value, 1)
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
 
@@ -115,8 +115,8 @@ export class SliceEndpointsNode extends Node {
 
   private setupFragmentNode(builder: NodeBuilder): Node<'vec4'> {
     const {
-      maxSamplesInSlice,
-      numEpipolarSlices,
+      maxSliceSampleCount,
+      epipolarSliceCount,
       screenSize,
       lightScreenPosition,
       isLightOnScreen
@@ -201,12 +201,12 @@ export class SliceEndpointsNode extends Node {
       // 0.5 texel size. We need to remove this offset. Also clamp to [0,1] to
       // fix FP32 precision issues.
       const epipolarSlice = uvNode.x
-        .sub(float(0.5).div(numEpipolarSlices))
+        .sub(float(0.5).div(epipolarSliceCount))
         .saturate()
         .toConst()
 
-      // epipolarSlice now lies in the range [0, 1 - 1/numEpipolarSlices]
-      // 0 defines location in exactly left top corner, 1 - 1/numEpipolarSlices
+      // epipolarSlice now lies in the range [0, 1 - 1/epipolarSliceCount]
+      // 0 defines location in exactly left top corner, 1 - 1/epipolarSliceCount
       // defines position on the top boundary next to the top left corner.
       const boundary = uint(epipolarSlice.mul(4).floor().clamp(0, 3)).toConst()
       const posOnBoundary = epipolarSlice.mul(4).fract().toConst()
@@ -320,7 +320,7 @@ export class SliceEndpointsNode extends Node {
             entryPoint.add(
               exitPoint
                 .sub(entryPoint)
-                .mul(maxSamplesInSlice.div(epipolarSliceScreenLength).max(1))
+                .mul(maxSliceSampleCount.div(epipolarSliceScreenLength).max(1))
             )
           )
         })

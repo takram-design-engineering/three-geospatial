@@ -21,10 +21,10 @@ export class ShadowLengthSampleLocations extends Points {
     material.depthTest = false
     material.depthWrite = false
 
-    const { maxSamplesInSlice, numEpipolarSlices, coordinateNode } =
+    const { maxSliceSampleCount, epipolarSliceCount, coordinateNode } =
       shadowLengthNode
-    const sampleIndex = instanceIndex.mod(uint(maxSamplesInSlice))
-    const sliceIndex = instanceIndex.div(uint(maxSamplesInSlice))
+    const sampleIndex = instanceIndex.mod(uint(maxSliceSampleCount))
+    const sliceIndex = instanceIndex.div(uint(maxSliceSampleCount))
 
     const coordinate = coordinateNode
       .getTextureNode()
@@ -42,7 +42,7 @@ export class ShadowLengthSampleLocations extends Points {
 
     super(geometry, material)
 
-    this.count = maxSamplesInSlice.value * numEpipolarSlices.value
+    this.count = maxSliceSampleCount.value * epipolarSliceCount.value
     this.frustumCulled = false
   }
 

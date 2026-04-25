@@ -75,12 +75,12 @@ export class ShadowLengthNode extends TempNode {
   // Good visual results can be obtained when number of slices is at least half
   // the maximum screen resolution (for 1280x720 resolution, good results are
   // obtained for 512-1024 slices).
-  numEpipolarSlices = uniform(512, 'float')
+  epipolarSliceCount = uniform(512, 'float')
 
   // Convincing visual results are generated when number of samples is at least
   // half the maximum screen resolution (for 1280x720 resolution, good results
   // are obtained for 512-1024 samples).
-  maxSamplesInSlice = uniform(256, 'float')
+  maxSliceSampleCount = uniform(256, 'float')
 
   // First cascade used for ray marching.
   firstCascade = uniform(0, 'uint')
@@ -171,8 +171,8 @@ export class ShadowLengthNode extends TempNode {
     if (this.autoSampleResolution) {
       const pixelRatio = renderer.getPixelRatio()
       const size = floorPowerOfTwo(Math.max(width, height) / pixelRatio)
-      this.numEpipolarSlices.value = size
-      this.maxSamplesInSlice.value = size >>> 1
+      this.epipolarSliceCount.value = size
+      this.maxSliceSampleCount.value = size >>> 1
     }
   }
 
@@ -186,8 +186,8 @@ export class ShadowLengthNode extends TempNode {
       minMaxLevelsNode,
       epipolarShadowLengthNode,
       unwarpEpipolarNode,
-      numEpipolarSlices,
-      maxSamplesInSlice,
+      epipolarSliceCount,
+      maxSliceSampleCount,
       firstCascade,
       screenSize,
       lightScreenPosition,
@@ -251,8 +251,8 @@ export class ShadowLengthNode extends TempNode {
       return texture(light.shadow.map.depthTexture)
     })
 
-    sliceEndpointsNode.numEpipolarSlices = numEpipolarSlices
-    sliceEndpointsNode.maxSamplesInSlice = maxSamplesInSlice
+    sliceEndpointsNode.epipolarSliceCount = epipolarSliceCount
+    sliceEndpointsNode.maxSliceSampleCount = maxSliceSampleCount
     sliceEndpointsNode.screenSize = screenSize
     sliceEndpointsNode.lightScreenPosition = lightScreenPosition
     sliceEndpointsNode.isLightOnScreen = isLightOnScreen
@@ -261,16 +261,16 @@ export class ShadowLengthNode extends TempNode {
     coordinateNode.viewZUnitNode = viewZUnitNode
     coordinateNode.sliceEndpointsNode = sliceEndpoints
     coordinateNode.camera = camera
-    coordinateNode.numEpipolarSlices = numEpipolarSlices
-    coordinateNode.maxSamplesInSlice = maxSamplesInSlice
+    coordinateNode.epipolarSliceCount = epipolarSliceCount
+    coordinateNode.maxSliceSampleCount = maxSliceSampleCount
     coordinateNode.screenSize = screenSize
     const coordinate = coordinateNode.getTextureNode()
 
     sliceUVDirectionNode.csmShadowNode = csmShadowNode
     sliceUVDirectionNode.sliceEndpointsNode = sliceEndpoints
     sliceUVDirectionNode.camera = camera
-    sliceUVDirectionNode.numEpipolarSlices = numEpipolarSlices
-    sliceUVDirectionNode.maxSamplesInSlice = maxSamplesInSlice
+    sliceUVDirectionNode.epipolarSliceCount = epipolarSliceCount
+    sliceUVDirectionNode.maxSliceSampleCount = maxSliceSampleCount
     sliceUVDirectionNode.firstCascade = firstCascade
     sliceUVDirectionNode.screenSize = screenSize
     sliceUVDirectionNode.shadowMapTexelSize = shadowMapTexelSize
@@ -280,8 +280,8 @@ export class ShadowLengthNode extends TempNode {
 
     minMaxLevelsNode.csmShadowNode = csmShadowNode
     minMaxLevelsNode.sliceUVDirectionNode = sliceUVDirection
-    minMaxLevelsNode.numEpipolarSlices = numEpipolarSlices
-    minMaxLevelsNode.maxSamplesInSlice = maxSamplesInSlice
+    minMaxLevelsNode.epipolarSliceCount = epipolarSliceCount
+    minMaxLevelsNode.maxSliceSampleCount = maxSliceSampleCount
     minMaxLevelsNode.firstCascade = firstCascade
     minMaxLevelsNode.shadowDepthNodes = shadowDepthNodes
     const minMaxLevels = minMaxLevelsNode.getTextureNode()
@@ -291,8 +291,8 @@ export class ShadowLengthNode extends TempNode {
     epipolarShadowLengthNode.sliceUVDirectionNode = sliceUVDirection
     epipolarShadowLengthNode.minMaxLevelsNode = minMaxLevels
     epipolarShadowLengthNode.camera = camera
-    epipolarShadowLengthNode.numEpipolarSlices = numEpipolarSlices
-    epipolarShadowLengthNode.maxSamplesInSlice = maxSamplesInSlice
+    epipolarShadowLengthNode.epipolarSliceCount = epipolarSliceCount
+    epipolarShadowLengthNode.maxSliceSampleCount = maxSliceSampleCount
     epipolarShadowLengthNode.firstCascade = firstCascade
     epipolarShadowLengthNode.maxShadowStep = maxShadowStep
     epipolarShadowLengthNode.shadowCascadeArray = shadowCascadeArray
@@ -305,8 +305,8 @@ export class ShadowLengthNode extends TempNode {
     unwarpEpipolarNode.epipolarShadowLengthNode = epipolarShadowLength
     unwarpEpipolarNode.viewZUnitNode = viewZUnitNode
     unwarpEpipolarNode.camera = camera
-    unwarpEpipolarNode.numEpipolarSlices = numEpipolarSlices
-    unwarpEpipolarNode.maxSamplesInSlice = maxSamplesInSlice
+    unwarpEpipolarNode.epipolarSliceCount = epipolarSliceCount
+    unwarpEpipolarNode.maxSliceSampleCount = maxSliceSampleCount
     unwarpEpipolarNode.screenSize = screenSize
     unwarpEpipolarNode.lightScreenPosition = lightScreenPosition
     const unwarpEpipolar = unwarpEpipolarNode.getTextureNode()

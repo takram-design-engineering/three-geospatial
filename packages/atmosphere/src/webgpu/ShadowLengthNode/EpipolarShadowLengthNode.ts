@@ -109,8 +109,8 @@ export class EpipolarShadowLengthNode extends Node {
 
   camera!: PerspectiveCamera
 
-  numEpipolarSlices!: UniformNode<number> // float
-  maxSamplesInSlice!: UniformNode<number> // float
+  epipolarSliceCount!: UniformNode<number> // float
+  maxSliceSampleCount!: UniformNode<number> // float
   firstCascade!: UniformNode<number> // uint
   maxShadowStep!: UniformNode<number> // float
   shadowCascadeArray!: UniformArrayNode // vec2[]
@@ -153,8 +153,8 @@ export class EpipolarShadowLengthNode extends Node {
     }
 
     this.renderTarget.setSize(
-      this.maxSamplesInSlice.value,
-      this.numEpipolarSlices.value
+      this.maxSliceSampleCount.value,
+      this.epipolarSliceCount.value
     )
 
     this.rendererState = resetRendererState(renderer, this.rendererState)
@@ -173,7 +173,7 @@ export class EpipolarShadowLengthNode extends Node {
       minMaxLevelsNode,
       shadowDepthNodes,
       camera,
-      numEpipolarSlices,
+      epipolarSliceCount,
       firstCascade,
       maxShadowStep,
       shadowCascadeArray,
@@ -384,7 +384,7 @@ export class EpipolarShadowLengthNode extends Node {
 
               // Load 1D min/max depths.
               const minMaxTextureYIndex = uint(sliceIndex).add(
-                uint(cascadeIndex.sub(firstCascade)).mul(numEpipolarSlices)
+                uint(cascadeIndex.sub(firstCascade)).mul(epipolarSliceCount)
               )
               const minMaxTextureCoord = ivec2(
                 int(currentSamplePosition.shiftRight(currentTreeLevel)).add(
