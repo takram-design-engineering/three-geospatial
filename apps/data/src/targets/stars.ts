@@ -6,8 +6,64 @@ import { maxBy, meanBy, minBy } from 'lodash'
 import { Color } from 'three'
 import invariant from 'tiny-invariant'
 
-import { convertBVIndexToLinearSRGBChromaticity } from '@takram/three-atmosphere'
-import { closeTo, inverseLerp, lerp, radians } from '@takram/three-geospatial'
+import {
+  clamp,
+  closeTo,
+  inverseLerp,
+  lerp,
+  radians
+} from '@takram/three-geospatial'
+
+// Reference: http://www.vendian.org/mncharity/dir3/starcolor/details.html
+const bvIndexColors = [
+  new Color(0x9bb2ff), // -0.40
+  new Color(0x9eb5ff), // -0.35
+  new Color(0xa3b9ff), // -0.30
+  new Color(0xaabfff), // -0.25
+  new Color(0xb2c5ff), // -0.20
+  new Color(0xbbccff), // -0.15
+  new Color(0xc4d2ff), // -0.10
+  new Color(0xccd8ff), // -0.05
+  new Color(0xd3ddff), // -0.00
+  new Color(0xdae2ff), // 0.05
+  new Color(0xdfe5ff), // 0.10
+  new Color(0xe4e9ff), // 0.15
+  new Color(0xe9ecff), // 0.20
+  new Color(0xeeefff), // 0.25
+  new Color(0xf3f2ff), // 0.30
+  new Color(0xf8f6ff), // 0.35
+  new Color(0xfef9ff), // 0.40
+  new Color(0xfff9fb), // 0.45
+  new Color(0xfff7f5), // 0.50
+  new Color(0xfff5ef), // 0.55
+  new Color(0xfff3ea), // 0.60
+  new Color(0xfff1e5), // 0.65
+  new Color(0xffefe0), // 0.70
+  new Color(0xffeddb), // 0.75
+  new Color(0xffebd6), // 0.80
+  new Color(0xffe8ce), // 0.90
+  new Color(0xffe6ca), // 0.95
+  new Color(0xffe5c6), // 1.00
+  new Color(0xffe3c3), // 1.05
+  new Color(0xffe2bf), // 1.10
+  new Color(0xffe0bb), // 1.15
+  new Color(0xffdfb8), // 1.20
+  new Color(0xffddb4), // 1.25
+  new Color(0xffdbb0), // 1.30
+  new Color(0xffdaad), // 1.35
+  new Color(0xffd8a9), // 1.40
+  new Color(0xffd6a5), // 1.45
+  new Color(0xffd29c), // 1.55
+  new Color(0xffd096), // 1.60
+  new Color(0xffcc8f), // 1.65
+  new Color(0xffc885), // 1.70
+  new Color(0xffc178), // 1.75
+  new Color(0xffb765), // 1.80
+  new Color(0xffa94b), // 1.85
+  new Color(0xff9523), // 1.90
+  new Color(0xff7b00), // 1.95
+  new Color(0xff5200) // 2.00
+]
 
 function readRightAscension(input: string): number | undefined {
   const hours = parseInt(input.slice(75, 77), 10)
@@ -88,7 +144,17 @@ async function readRecords(path: string): Promise<Record[]> {
   const color = new Color()
   return records
     .map(({ bvIndex = bvIndexFallback, ...others }) => {
-      const { r, g, b } = convertBVIndexToLinearSRGBChromaticity(bvIndex, color)
+      const minIndex = -0.4
+      const maxIndex = 2
+      const step = 0.05
+      const index =
+        (clamp(bvIndex, minIndex, maxIndex) - minIndex) /
+        (maxIndex - minIndex) /
+        step
+      const c0 = bvIndexColors[Math.floor(index)]
+      const c1 = bvIndexColors[Math.ceil(index)]
+      color.lerpColors(c0, c1, index - Math.floor(index))
+      const { r, g, b } = color // Linear sRGB
       return { ...others, r, g, b }
     })
     .sort((a, b) => a.magnitude - b.magnitude)

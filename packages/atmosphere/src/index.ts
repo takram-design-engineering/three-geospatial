@@ -1,7 +1,6 @@
 export * from './AerialPerspectiveEffect'
 export * from './AtmosphereMaterialBase'
 export * from './AtmosphereParameters'
-export * from './blackBodyChromaticity'
 export * from './celestialDirections'
 export * from './constants'
 export * from './getAltitudeCorrectionOffset'
