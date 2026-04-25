@@ -75,7 +75,7 @@ export const Shadows = createStory(ShadowsStory, {
     csmFar: 5e4
   },
   args: {
-    toneMappingExposure: 45.1,
+    toneMappingExposure: 35,
     dayOfYear: 260,
     timeOfDay: 17.7
   },
