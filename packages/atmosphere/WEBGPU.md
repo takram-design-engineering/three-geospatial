@@ -572,10 +572,14 @@ The apparent size of the stars, in pixels.
 #### starsNode.intensity
 
 ```ts
-starsNode.intensity = uniform(1)
+starsNode.intensity = uniform(1000)
 ```
 
 A scaling factor to adjust the brightness of the stars.
+
+> [!NOTE]
+> The default value of 1000 is too bright from a physical standpoint. Otherwise, the stars become completely invisible, which is the correct result but makes them useless in most scenes.
+> Please set this value to 1 when the star luminance needs to be physically correct, as in the [Art002E000192 story](https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-space--art-002-e-000192).
 
 ### Static options
 

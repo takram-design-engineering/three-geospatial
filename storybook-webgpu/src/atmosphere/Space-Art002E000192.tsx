@@ -144,7 +144,7 @@ const Content: FC<StoryProps> = () => {
   )
   aerialNode.moonScattering = true
   const skyNode = aerialNode.skyNode! as SkyNode
-  skyNode.starsNode.intensity.value = 0.001 // TODO: Find physically-correct value
+  skyNode.starsNode.intensity.value = 1 // Physically correct value
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
   // Apply bloom on everything:

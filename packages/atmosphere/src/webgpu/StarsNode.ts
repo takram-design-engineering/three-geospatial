@@ -89,7 +89,7 @@ export class StarsNode extends TempNode {
   private dataPromise?: Promise<void>
 
   pointSize = uniform(1)
-  intensity = uniform(1)
+  intensity = uniform(1000)
   magnitudeRange = uniform(new Vector2(-2, 8))
 
   private readonly textureNode: TextureNode

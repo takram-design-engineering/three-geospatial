@@ -352,7 +352,6 @@ const Content: FC<StoryProps> = () => {
     ({ moonIntensity }: StoryArgs) => moonIntensity,
     value => {
       skyNode.moonNode.intensity.value = value
-      skyNode.starsNode.intensity.value = value
     }
   )
 
