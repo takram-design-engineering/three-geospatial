@@ -194,25 +194,16 @@ export class EpipolarShadowLengthNode extends Node {
         cascadeIndex: Node<'int'>,
         depthInLightSpace: Node<'float'>
       ): Node<'float'> => {
-        const isInLight = float(1).toVar()
-        If(
-          and(
-            shadowUVAndDepthInLightSpace.greaterThanEqual(0).all(),
-            shadowUVAndDepthInLightSpace.lessThanEqual(1).all()
-          ),
-          () => {
-            isInLight.assign(0)
-            for (let cascade = 0; cascade < cascadeCount; ++cascade) {
-              If(cascadeIndex.equal(cascade), () => {
-                isInLight.assign(
-                  shadowDepthNodes[cascade]
-                    .sample(shadowUVAndDepthInLightSpace.xy)
-                    .compare(depthInLightSpace)
-                )
-              })
-            }
-          }
-        )
+        const isInLight = float(0).toVar()
+        for (let cascade = 0; cascade < cascadeCount; ++cascade) {
+          If(cascadeIndex.equal(cascade), () => {
+            isInLight.assign(
+              shadowDepthNodes[cascade]
+                .sample(shadowUVAndDepthInLightSpace.xy)
+                .compare(depthInLightSpace)
+            )
+          })
+        }
         return isInLight
       }
     )
@@ -391,13 +382,6 @@ export class EpipolarShadowLengthNode extends Node {
                 nextLightSpaceDepth
               ).toConst()
 
-              const sectionDepthRange = vec4(
-                startEndDepthOnRaySection,
-                startEndDepthOnRaySection.oneMinus()
-              )
-                .greaterThanEqual(0)
-                .toConst()
-
               // Load 1D min/max depths.
               const minMaxTextureYIndex = uint(sliceIndex).add(
                 uint(cascadeIndex.sub(firstCascade)).mul(epipolarSliceCount)
@@ -420,7 +404,6 @@ export class EpipolarShadowLengthNode extends Node {
                   startEndDepthOnRaySection
                     .greaterThanEqual(currentMinMaxDepth.yy)
                     .all()
-                    .or(sectionDepthRange.xy.not().all())
                 )
               } else {
                 // minDepth = closest to light
@@ -428,7 +411,6 @@ export class EpipolarShadowLengthNode extends Node {
                   startEndDepthOnRaySection
                     .lessThanEqual(currentMinMaxDepth.xx)
                     .all()
-                    .or(sectionDepthRange.zw.not().all())
                 )
               }
               const isInShadow = (
@@ -439,9 +421,7 @@ export class EpipolarShadowLengthNode extends Node {
                   : startEndDepthOnRaySection
                       .greaterThan(currentMinMaxDepth.yy)
                       .all()
-              )
-                .and(sectionDepthRange.all())
-                .toConst()
+              ).toConst()
 
               If(isInLight.or(isInShadow), () => {
                 // If the ray section is fully lit or shadowed, we can break
