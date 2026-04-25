@@ -9,6 +9,7 @@ All changes were made to the WebGPU implementation, unless otherwise noted.
 - `TemporalAntialiasNode`, `ScreenSpaceShadowNode`: Added support for reversed depth buffer.
 - Added experimental `CascadedShadowMapsNode`.
 - Added `STBNTextureNode` and `stbn` accessor.
+- Added `viewZ` accessor.
 
 ### Changed
 

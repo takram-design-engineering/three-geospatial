@@ -16,6 +16,7 @@ All changes were made to the WebGPU implementation, unless otherwise noted.
 - Added Hillaire's multiple scattering LUT, and removed stepwise computation of higher-order scattering in the 4D scattering LUT.
 - `AtmosphereContext`: Added `raymarchScattering` option to enable raymarching inscattered light between the camera and scene objects. This is enabled by default.
 - `AtmosphereContext`: Added `accurateShadowScattering` option to account for shadowed segments along the ray more accurately.
+- - Added `viewZUnit` accessor.
 
 ### Changed
 
