@@ -140,7 +140,7 @@ const Content: FC<StoryProps> = ({
     light.shadow.mapSize.width = 1024
     light.shadow.mapSize.height = 1024
     light.shadow.camera.near = 0
-    light.shadow.camera.far = shadowFar * 4
+    light.shadow.camera.far = shadowFar * 5
 
     const csmNode = new CascadedShadowMapsNode(light)
     csmNode.cascadeCount = 3
