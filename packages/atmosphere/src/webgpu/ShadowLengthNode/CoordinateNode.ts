@@ -49,7 +49,11 @@ import {
 
 import { Node, outputTexture } from '@takram/three-geospatial/webgpu'
 
-import { getCameraZ, isValidScreenLocation, transformNDCToUV } from './common'
+import {
+  getCameraZUnit,
+  isValidScreenLocation,
+  transformNDCToUV
+} from './common'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
 
@@ -159,7 +163,7 @@ export class CoordinateNode extends Node {
         // Discard pixels that fall behind the screen.
         // This can happen if slice exit point was optimized.
         If(isValidScreenLocation(xy, screenSize), () => {
-          const cameraZ = getCameraZ(
+          const cameraZ = getCameraZUnit(
             camera,
             transformNDCToUV(xy),
             viewZUnitNode

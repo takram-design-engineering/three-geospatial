@@ -106,7 +106,7 @@ export const transformSliceToUnit = /*#__PURE__#*/ FnVar(
 )
 
 // Equivalent to GetCamSpaceZ:
-export const getCameraZ = /*#__PURE__*/ FnVar(
+export const getCameraZUnit = /*#__PURE__*/ FnVar(
   (
     camera: Camera,
     uv: Node<'vec2'>,
@@ -116,10 +116,10 @@ export const getCameraZ = /*#__PURE__*/ FnVar(
       const { parametersNode } = getAtmosphereContext(builder)
       const { worldToUnit } = parametersNode
       // We can sample camera space z texture using bilinear filtering.
-      const viewZ = viewZUnitNode.sample(uv).x.toConst()
+      const viewZUnit = viewZUnitNode.sample(uv).x.toConst()
       // The viewZ can be rendered using MRT, in which case the value of 0 is
       // stored at the sky pixels. We replace it with the camera far.
       const farValue = cameraFar(camera).mul(worldToUnit)
-      return viewZ.lessThan(0).select(viewZ.negate(), farValue)
+      return viewZUnit.lessThan(0).select(viewZUnit.negate(), farValue)
     }
 )
