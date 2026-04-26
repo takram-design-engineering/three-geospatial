@@ -3,8 +3,10 @@
 /coverage
 /.nx/cache
 /.nx/workspace-data
+.nx/self-healing
 /pnpm-lock.yaml
 /tsconfig.base.json
+
 *.bin
 *.jpg
 *.png
