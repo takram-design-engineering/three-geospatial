@@ -325,14 +325,10 @@ export class EpipolarShadowLengthNode extends Node {
           Loop(distanceMarchedInCascade.lessThan(rayLength), () => {
             // Clamp depth to a very small positive value to avoid z-fighting
             // at camera location.
-            const currentDepthInLightSpace = max(
-              currentShadowUVAndDepthInLightSpace.z,
-              1e-7
-            ).toConst()
-            const depthInRange = and(
-              currentShadowUVAndDepthInLightSpace.z.greaterThanEqual(0),
-              currentShadowUVAndDepthInLightSpace.z.lessThanEqual(1)
-            ).toConst()
+            const currentDepthInLightSpace =
+              currentShadowUVAndDepthInLightSpace.z
+                .clamp(1e-7, 1) // Extrapolate blockers
+                .toConst()
             const isInLight = float(0).toVar()
 
             // If the step scale can be doubled without exceeding the maximum
@@ -384,7 +380,9 @@ export class EpipolarShadowLengthNode extends Node {
               const startEndDepthOnRaySection = vec2(
                 currentShadowUVAndDepthInLightSpace.z,
                 nextLightSpaceDepth
-              ).toConst()
+              )
+                .saturate() // Extrapolate blockers
+                .toConst()
 
               // Load 1D min/max depths.
               const minMaxTextureYIndex = uint(sliceIndex).add(
@@ -472,12 +470,11 @@ export class EpipolarShadowLengthNode extends Node {
               distanceToFirstShadowedSection
                 .lessThan(0)
                 .and(isInLight.not())
-                .and(depthInRange)
                 .select(totalMarchedLength, distanceToFirstShadowedSection)
             )
 
             totalShadowLength.addAssign(
-              depthInRange.select(integrationStep.mul(isInLight.oneMinus()), 0)
+              integrationStep.mul(isInLight.oneMinus())
             )
             totalMarchedLength.addAssign(integrationStep)
           })
