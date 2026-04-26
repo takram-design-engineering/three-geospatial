@@ -375,6 +375,7 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
       mrt({
         irradiance: computeIrradianceTexture(
           texture3D(this.scatteringRT.texture),
+          texture3D(this.higherOrderScatteringRT.texture),
           screenCoordinate
         ).context({ getAtmosphere: () => context })
       })

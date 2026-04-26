@@ -366,6 +366,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
       const irradiance = computeIrradianceTexture(
         texture3D(this.scattering),
+        texture3D(this.higherOrderScattering),
         vec2(globalId.xy).add(0.5)
       )
       textureStore(this.irradiance, globalId.xy, irradiance)

@@ -343,12 +343,12 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
       // In case higherOrderScatteringTexture is enabled, the scattering texture
       // includes the single Rayleigh scattering term, so we just add the
       // higher-order scattering radiance regardless of occlusion.
-      let higherOrderScattering: Node<'vec3'> = vec3(0)
+      let multipleScattering: Node<'vec3'> = vec3(0)
       if (context.parameters.higherOrderScatteringTexture) {
         const higherOrderScatteringTexture = lutNode.getTextureNode(
           'higherOrderScattering'
         )
-        higherOrderScattering = getScattering(
+        multipleScattering = getScattering(
           higherOrderScatteringTexture,
           radius,
           cosView,
@@ -364,7 +364,7 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         scattering
           .mul(rayleighPhase)
           .add(singleMieScattering.mul(miePhase))
-          .add(higherOrderScattering)
+          .add(multipleScattering)
       )
     })
 

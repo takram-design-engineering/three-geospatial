@@ -84,6 +84,7 @@ import {
   distanceToTopAtmosphereBoundary,
   getCombinedScattering,
   getProfileDensity,
+  getScattering,
   getUnitRangeFromTextureCoord,
   miePhaseFunction,
   rayleighPhaseFunction
@@ -248,66 +249,6 @@ export const computeTransmittanceTexture = /*#__PURE__*/ FnVar(
     }
 )
 
-const computeIrradiance = /*#__PURE__*/ FnVar(
-  (
-    parameters: ReturnType<typeof atmosphereParametersStruct>,
-    scatteringNode: Texture3DNode,
-    radius: Node<Length>,
-    cosLight: Node<Dimensionless>
-  ): Node<IrradianceSpectrum> => {
-    const { miePhaseFunctionG } = makeDestructible(parameters)
-
-    const sampleCount = 32
-    const deltaPhi = Math.PI / sampleCount
-    const deltaTheta = Math.PI / sampleCount
-
-    const result = vec3(0).toVar()
-    const omegaLight = vec3(
-      sqrt(cosLight.pow2().oneMinus()),
-      0,
-      cosLight
-    ).toConst()
-
-    // @ts-expect-error Missing type on custom name
-    Loop({ start: 0, end: sampleCount / 2, name: 'j' }, ({ j }) => {
-      const theta = float(j).add(0.5).mul(deltaTheta).toConst()
-
-      Loop({ start: 0, end: sampleCount * 2 }, ({ i }) => {
-        const phi = float(i).add(0.5).mul(deltaPhi).toConst()
-
-        const omega = vec3(
-          cos(phi).mul(sin(theta)),
-          sin(phi).mul(sin(theta)),
-          cos(theta)
-        ).toConst()
-        const deltaOmega = sin(theta).mul(deltaTheta * deltaPhi)
-        const cosViewLight = omega.dot(omegaLight)
-
-        const scattering = getCombinedScattering(
-          parameters,
-          scatteringNode,
-          scatteringNode,
-          radius,
-          omega.z,
-          cosLight,
-          cosViewLight,
-          bool(false)
-        )
-        const rayleigh = scattering.get('scattering')
-        const mie = scattering.get('singleMieScattering')
-        result.addAssign(
-          add(
-            rayleigh.mul(rayleighPhaseFunction(cosViewLight)),
-            mie.mul(miePhaseFunction(miePhaseFunctionG, cosViewLight))
-          ).mul(omega.z, deltaOmega)
-        )
-      })
-    })
-
-    return result
-  }
-)
-
 const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
   // BUG: Cannot access vector component inside struct in layout function
   // https://github.com/mrdoob/three.js/issues/33345
@@ -333,11 +274,15 @@ const getParamsFromIrradianceTextureUV = /*#__PURE__*/ FnLayout({
 })
 
 export const computeIrradianceTexture = /*#__PURE__*/ FnVar(
-  (scatteringNode: Texture3DNode, fragCoord: Node<'vec2'>) =>
-    (builder): ReturnType<typeof computeIrradiance> => {
+  (
+    scatteringNode: Texture3DNode,
+    higherOrderScatteringTexture: Texture3DNode,
+    fragCoord: Node<'vec2'>
+  ) =>
+    (builder): Node<IrradianceSpectrum> => {
       const context = getAtmosphereContextBase(builder)
       const { parametersNode } = context
-      const { irradianceTextureSize } = parametersNode
+      const { miePhaseFunctionG, irradianceTextureSize } = parametersNode
 
       const irradianceParams = getParamsFromIrradianceTextureUV(
         parametersNode,
@@ -345,6 +290,72 @@ export const computeIrradianceTexture = /*#__PURE__*/ FnVar(
       ).toConst()
       const radius = irradianceParams.x
       const cosLight = irradianceParams.y
-      return computeIrradiance(parametersNode, scatteringNode, radius, cosLight)
+
+      const sampleCount = 32
+      const deltaPhi = Math.PI / sampleCount
+      const deltaTheta = Math.PI / sampleCount
+
+      const result = vec3(0).toVar()
+      const omegaLight = vec3(
+        sqrt(cosLight.pow2().oneMinus()),
+        0,
+        cosLight
+      ).toConst()
+
+      // @ts-expect-error Missing type on custom name
+      Loop({ start: 0, end: sampleCount / 2, name: 'j' }, ({ j }) => {
+        const theta = float(j).add(0.5).mul(deltaTheta).toConst()
+
+        Loop({ start: 0, end: sampleCount * 2 }, ({ i }) => {
+          const phi = float(i).add(0.5).mul(deltaPhi).toConst()
+
+          const omega = vec3(
+            cos(phi).mul(sin(theta)),
+            sin(phi).mul(sin(theta)),
+            cos(theta)
+          ).toConst()
+          const deltaOmega = sin(theta).mul(deltaTheta * deltaPhi)
+          const cosViewLight = omega.dot(omegaLight)
+
+          const combinedScattering = getCombinedScattering(
+            parametersNode,
+            scatteringNode,
+            scatteringNode,
+            radius,
+            omega.z,
+            cosLight,
+            cosViewLight,
+            bool(false)
+          )
+
+          let multipleScattering: Node<'vec3'> = vec3(0)
+          if (context.parameters.higherOrderScatteringTexture) {
+            multipleScattering = getScattering(
+              higherOrderScatteringTexture,
+              radius,
+              omega.z,
+              cosLight,
+              cosViewLight,
+              bool(false)
+            )
+          }
+
+          const scattering = combinedScattering.get('scattering')
+          const singleMieScattering = combinedScattering.get(
+            'singleMieScattering'
+          )
+          const rayleighPhase = rayleighPhaseFunction(cosViewLight)
+          const miePhase = miePhaseFunction(miePhaseFunctionG, cosViewLight)
+          result.addAssign(
+            scattering
+              .mul(rayleighPhase)
+              .add(singleMieScattering.mul(miePhase))
+              .add(multipleScattering)
+              .mul(omega.z, deltaOmega)
+          )
+        })
+      })
+
+      return result
     }
 )
