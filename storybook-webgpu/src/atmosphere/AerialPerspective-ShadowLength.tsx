@@ -18,11 +18,7 @@ import {
   output,
   pass,
   toneMapping,
-  uniform,
-  uv,
-  vec2,
-  vec3,
-  vec4
+  uniform
 } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
@@ -43,7 +39,6 @@ import {
   AtmosphereParameters,
   shadowLength,
   viewZUnit,
-  type ShadowLengthNode,
   type SkyNode
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
@@ -51,7 +46,6 @@ import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
 import {
   CascadedShadowMapsNode,
   dithering,
-  FnVar,
   highpVelocity,
   lensFlare,
   temporalAntialias,
@@ -102,48 +96,6 @@ import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
 
-const internalTextures = FnVar(
-  (shadowLengthNode: ShadowLengthNode): Node<'vec3'> => {
-    const {
-      sliceEndpointsNode,
-      coordinateNode,
-      sliceUVDirectionNode,
-      minMaxLevelsNode,
-      epipolarShadowLengthNode
-    } = shadowLengthNode
-    const sliceEndpoints = sliceEndpointsNode.getTextureNode()
-    const coordinate = coordinateNode.getTextureNode()
-    const sliceUVDirection = sliceUVDirectionNode.getTextureNode()
-    const minMaxLevels = minMaxLevelsNode.getTextureNode()
-    const epipolarShadowLength = epipolarShadowLengthNode.getTextureNode()
-
-    const uvNode = uv()
-    const uv1 = vec4(uvNode, uvNode.sub(0.5)).mul(2).toConst()
-    const uv2 = vec3(uv1.x, uv1.yy.sub(vec2(0, 0.5)).mul(2)).toConst()
-    return uvNode.y
-      .lessThan(0.5)
-      .select(
-        uvNode.x
-          .lessThan(0.5)
-          .select(
-            uv1.y
-              .lessThan(0.5)
-              .select(
-                sliceEndpoints.sample(uv2.xy),
-                sliceUVDirection.sample(uv2.xz)
-              ),
-            coordinate.sample(uv1.zy)
-          ),
-        uvNode.x
-          .lessThan(0.5)
-          .select(
-            minMaxLevels.sample(uv1.xw),
-            vec3(epipolarShadowLength.sample(uv1.zw).xy, 0)
-          )
-      ).rgb
-  }
-)
-
 const Content: FC<StoryProps> = ({
   longitude,
   latitude,
@@ -192,7 +144,7 @@ const Content: FC<StoryProps> = ({
     const csmShadowNode = new CascadedShadowMapsNode(light)
     csmShadowNode.cascades = 3
     csmShadowNode.maxFar = 5e4
-    csmShadowNode.fade = true
+    csmShadowNode.fade = false
     csmShadowNode.lightMargin = 1e5
     light.shadow.shadowNode = csmShadowNode // CSMShadowNode is disposed by DirectionalLight's dispose
 
@@ -273,7 +225,7 @@ const Content: FC<StoryProps> = ({
     // Useless conditionals to keep the main path in the graph:
     if (debugShadowLength) {
       outputNode = bool(true).select(
-        internalTextures(shadowLengthNode),
+        shadowLengthNode.getDebugInternalTexturesNode(),
         outputNode
       )
     } else if (displayShadowLength) {
@@ -451,6 +403,7 @@ interface StoryArgs
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
     shadows
+    camera={{ fov: 50 }}
     renderer={{
       onInit: renderer => {
         renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)

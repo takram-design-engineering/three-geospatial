@@ -19,7 +19,16 @@
  */
 
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
-import { float, texture, uniform, uniformArray } from 'three/tsl'
+import {
+  float,
+  texture,
+  uniform,
+  uniformArray,
+  uv,
+  vec2,
+  vec3,
+  vec4
+} from 'three/tsl'
 import {
   Matrix4,
   NodeMaterial,
@@ -38,7 +47,8 @@ import invariant from 'tiny-invariant'
 import { floorPowerOfTwo } from '@takram/three-geospatial'
 import {
   OnBeforeFrameUpdate,
-  type CascadedShadowMapsNode
+  type CascadedShadowMapsNode,
+  type Node
 } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from './AtmosphereContext'
@@ -314,6 +324,38 @@ export class ShadowLengthNode extends TempNode {
     const unwarpEpipolar = unwarpEpipolarNode.getTextureNode()
 
     return unwarpEpipolar
+  }
+
+  getDebugInternalTexturesNode(uvNode: Node<'vec2'> = uv()): Node<'vec3'> {
+    const sliceEndpoints = this.sliceEndpointsNode.getTextureNode()
+    const coordinate = this.coordinateNode.getTextureNode()
+    const sliceUVDirection = this.sliceUVDirectionNode.getTextureNode()
+    const minMaxLevels = this.minMaxLevelsNode.getTextureNode()
+    const epipolarShadowLength = this.epipolarShadowLengthNode.getTextureNode()
+
+    const uv1 = vec4(uvNode, uvNode.sub(0.5)).mul(2).toConst()
+    const uv2 = vec3(uv1.x, uv1.yy.sub(vec2(0, 0.5)).mul(2)).toConst()
+    return uvNode.y
+      .lessThan(0.5)
+      .select(
+        uvNode.x
+          .lessThan(0.5)
+          .select(
+            uv1.y
+              .lessThan(0.5)
+              .select(
+                sliceEndpoints.sample(uv2.xy),
+                sliceUVDirection.sample(uv2.xz)
+              ),
+            coordinate.sample(uv1.zy)
+          ),
+        uvNode.x
+          .lessThan(0.5)
+          .select(
+            minMaxLevels.sample(uv1.xw),
+            vec3(epipolarShadowLength.sample(uv1.zw).xy, 0)
+          )
+      ).rgb
   }
 
   override dispose(): void {
