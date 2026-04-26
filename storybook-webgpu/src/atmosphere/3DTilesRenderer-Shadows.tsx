@@ -143,7 +143,7 @@ const Content: FC<StoryProps> = ({
     light.shadow.camera.far = shadowFar * 4
 
     const csmNode = new CascadedShadowMapsNode(light)
-    csmNode.cascadeCount = 3
+    csmNode.cascades = 3
     csmNode.maxFar = shadowFar
     csmNode.fade = true
     csmNode.lightMargin = shadowFar * 2

@@ -192,7 +192,8 @@ export class MinMaxLevelsNode extends Node {
       return
     }
 
-    const activeCascades = csmShadowNode.cascadeCount - this.firstCascade.value
+    const { cascades: cascadeCount } = csmShadowNode
+    const activeCascades = cascadeCount - this.firstCascade.value
     const width = Math.max(mapSize.x, mapSize.y)
     const height = activeCascades * this.epipolarSliceCount.value
     this.renderTargetA.setSize(width, height)
@@ -210,7 +211,7 @@ export class MinMaxLevelsNode extends Node {
       firstCascade
     } = this
 
-    const { cascadeCount } = csmShadowNode
+    const { cascades: cascadeCount } = csmShadowNode
 
     return Fn(() => {
       const cascadeIndex = floor(screenCoordinate.y.div(epipolarSliceCount))

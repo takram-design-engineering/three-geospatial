@@ -180,7 +180,7 @@ export class EpipolarShadowLengthNode extends Node {
       shadowMatrixArray
     } = this
 
-    const { cascadeCount } = csmShadowNode
+    const { cascades: cascadeCount } = csmShadowNode
     const { cameraPositionUnit, parameters } = getAtmosphereContext(builder)
     const { worldToUnit } = parameters
 

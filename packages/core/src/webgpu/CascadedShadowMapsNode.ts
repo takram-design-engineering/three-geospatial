@@ -6,7 +6,13 @@ import {
   type Vector2
 } from 'three'
 import { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
-import type { NodeFrame, ShadowNode } from 'three/webgpu'
+import type { NodeFrame } from 'three/webgpu'
+
+declare module 'three/examples/jsm/csm/CSMShadowNode.js' {
+  interface CSMShadowNode {
+    _cascades: Vector2[]
+  }
+}
 
 const vectorScratch1 = /*#__PURE__*/ new Vector3()
 const planeScratch = /*#__PURE__*/ new Plane()
@@ -15,28 +21,6 @@ export class CascadedShadowMapsNode extends CSMShadowNode {
   // Fixes wrong types
   declare camera: PerspectiveCamera
   declare light: DirectionalLight
-
-  declare protected _cascades: Vector2[]
-  declare protected _shadowNodes: ShadowNode[]
-
-  // Change of privileges
-  readonly cascadeIntervals: Vector2[]
-  readonly shadowNodes: ShadowNode[]
-
-  constructor(...args: ConstructorParameters<typeof CSMShadowNode>) {
-    super(...args)
-    this.cascadeIntervals = this._cascades
-    this.shadowNodes = this._shadowNodes
-  }
-
-  // "cascades" feels ambiguous
-  get cascadeCount(): number {
-    return this.cascades
-  }
-
-  set cascadeCount(value: number) {
-    this.cascades = value
-  }
 
   override updateBefore(frame: NodeFrame): void {
     super.updateBefore(frame)

@@ -123,9 +123,10 @@ export class SliceUVDirectionNode extends Node {
       return
     }
 
+    const { cascades: cascadeCount } = this.csmShadowNode
     this.renderTarget.setSize(
       this.epipolarSliceCount.value,
-      this.csmShadowNode.cascadeCount - this.firstCascade.value
+      cascadeCount - this.firstCascade.value
     )
 
     this.rendererState = resetRendererState(renderer, this.rendererState)

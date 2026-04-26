@@ -214,22 +214,24 @@ export class ShadowLengthNode extends TempNode {
       }
     })
 
+    const { cascades: cascadeCount } = csmShadowNode
+
     const shadowCascadeArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascadeCount }, () => new Vector2()),
+      Array.from({ length: cascadeCount }, () => new Vector2()),
       'vec2'
     )
     OnBeforeFrameUpdate(() => {
       const array = shadowCascadeArray.array as Vector2[]
       const far = Math.min(camera.far, csmShadowNode.maxFar)
-      const { cascadeIntervals } = csmShadowNode
+      const { _cascades: cascades } = csmShadowNode
       for (let i = 0; i < array.length; ++i) {
-        const interval = cascadeIntervals[i]
-        array[i].set(interval.x, interval.y).multiplyScalar(far * worldToUnit)
+        const cascade = cascades[i]
+        array[i].set(cascade.x, cascade.y).multiplyScalar(far * worldToUnit)
       }
     })
 
     const shadowMatrixArray = uniformArray(
-      Array.from({ length: csmShadowNode.cascadeCount }, () => new Matrix4()),
+      Array.from({ length: cascadeCount }, () => new Matrix4()),
       'mat4'
     )
     OnBeforeFrameUpdate(() => {
