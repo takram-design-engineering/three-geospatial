@@ -333,11 +333,11 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
       })
 
       if (context.accurateShadowScattering) {
-        scatteringConditional.Else(scatteringBranch2)
-      } else {
         scatteringConditional
           .ElseIf(shadowLength.y.equal(0), scatteringBranch2)
           .Else(scatteringBranch3)
+      } else {
+        scatteringConditional.Else(scatteringBranch2)
       }
 
       // In case higherOrderScatteringTexture is enabled, the scattering texture
