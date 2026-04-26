@@ -84,11 +84,11 @@ const Content: FC<StoryProps> = () => {
     light.shadow.camera.right = 1000
     light.shadow.bias = -0.001
 
-    const csmNode = new CSMShadowNode(light)
-    csmNode.cascades = 3
-    csmNode.maxFar = 5000
-    csmNode.fade = true
-    light.shadow.shadowNode = csmNode // CSMShadowNode is disposed by DirectionalLight's dispose
+    const csmShadowNode = new CSMShadowNode(light)
+    csmShadowNode.cascades = 3
+    csmShadowNode.maxFar = 5000
+    csmShadowNode.fade = true
+    light.shadow.shadowNode = csmShadowNode // CSMShadowNode is disposed by DirectionalLight's dispose
 
     return light
   }, [])

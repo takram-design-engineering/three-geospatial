@@ -142,14 +142,14 @@ const Content: FC<StoryProps> = ({
     light.shadow.camera.near = 0
     light.shadow.camera.far = shadowFar * 4
 
-    const csmNode = new CascadedShadowMapsNode(light)
-    csmNode.cascades = 3
-    csmNode.maxFar = shadowFar
-    csmNode.fade = true
-    csmNode.lightMargin = shadowFar * 2
-    light.shadow.shadowNode = csmNode
+    const csmShadowNode = new CascadedShadowMapsNode(light)
+    csmShadowNode.cascades = 3
+    csmShadowNode.maxFar = shadowFar
+    csmShadowNode.fade = true
+    csmShadowNode.lightMargin = shadowFar * 2
+    light.shadow.shadowNode = csmShadowNode // CSMShadowNode is disposed by DirectionalLight's dispose
 
-    return [light, csmNode]
+    return [light, csmShadowNode]
   }, [shadowFar])
 
   useEffect(() => {
