@@ -2,7 +2,7 @@ import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { useLayoutEffect, type FC } from 'react'
 import { context, pass, toneMapping, uniform } from 'three/tsl'
-import { AgXToneMapping, PostProcessing, type Renderer } from 'three/webgpu'
+import { AgXToneMapping, RenderPipeline, type Renderer } from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -78,13 +78,13 @@ const Content: FC<StoryProps> = () => {
     [lensFlareNode]
   )
 
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer, toneMappingNode.add(dithering)),
+  const renderPipeline = useResource(
+    () => new RenderPipeline(renderer, toneMappingNode.add(dithering)),
     [renderer, toneMappingNode]
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   useTransientControl(
@@ -110,7 +110,7 @@ const Content: FC<StoryProps> = () => {
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   // Location controls:

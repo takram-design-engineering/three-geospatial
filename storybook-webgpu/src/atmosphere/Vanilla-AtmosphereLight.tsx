@@ -12,7 +12,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { context, mrt, output, pass, toneMapping } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
-  PostProcessing,
+  RenderPipeline,
   WebGPURenderer
 } from 'three/webgpu'
 
@@ -130,8 +130,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     velocityNode,
     camera
   )
-  const postProcessing = new PostProcessing(renderer)
-  postProcessing.outputNode = taaNode.add(dithering)
+  const renderPipeline = new RenderPipeline(renderer)
+  renderPipeline.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
   const timer = new Timer()
@@ -160,7 +160,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
       observerECEF
     ).applyMatrix4(matrixECIToECEF)
 
-    postProcessing.render()
+    renderPipeline.render()
   })
 
   // Resizing:
@@ -174,7 +174,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Cleanup:
   return () => {
     window.removeEventListener('resize', handleResize)
-    postProcessing.dispose()
+    renderPipeline.dispose()
     passNode.dispose()
     controls.dispose()
     geometry.dispose()

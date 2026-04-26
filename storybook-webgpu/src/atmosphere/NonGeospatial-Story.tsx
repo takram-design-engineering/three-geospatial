@@ -18,8 +18,8 @@ import {
 } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
-  PostProcessing,
   RectAreaLightNode,
+  RenderPipeline,
   type Renderer
 } from 'three/webgpu'
 
@@ -132,29 +132,29 @@ const Content: FC<StoryProps> = () => {
     [camera, depthNode, velocityNode, toneMappingNode]
   )
 
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer, taaNode.add(dithering)),
+  const renderPipeline = useResource(
+    () => new RenderPipeline(renderer, taaNode.add(dithering)),
     [renderer, taaNode]
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   // Output pass controls:
   useOutputPassControls(
-    postProcessing,
+    renderPipeline,
     passNode,
     (outputNode, outputColorTransform) => {
-      postProcessing.outputNode = outputNode
-      postProcessing.outputColorTransform = outputColorTransform
-      postProcessing.needsUpdate = true
+      renderPipeline.outputNode = outputNode
+      renderPipeline.outputColorTransform = outputColorTransform
+      renderPipeline.needsUpdate = true
     }
   )
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   // Location controls:

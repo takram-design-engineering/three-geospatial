@@ -3,7 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { useLayoutEffect, useRef, type FC } from 'react'
 import { AgXToneMapping } from 'three'
 import { context, toneMapping, uniform } from 'three/tsl'
-import { PostProcessing, type Renderer } from 'three/webgpu'
+import { RenderPipeline, type Renderer } from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -67,13 +67,13 @@ const Content: FC<StoryProps> = () => {
     [lensFlareNode]
   )
 
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer, toneMappingNode.add(dithering)),
+  const renderPipeline = useResource(
+    () => new RenderPipeline(renderer, toneMappingNode.add(dithering)),
     [renderer, toneMappingNode]
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   useTransientControl(
@@ -83,7 +83,7 @@ const Content: FC<StoryProps> = () => {
     }),
     options => {
       Object.assign(skyNode, options)
-      postProcessing.needsUpdate = true
+      renderPipeline.needsUpdate = true
     }
   )
 
@@ -93,13 +93,13 @@ const Content: FC<StoryProps> = () => {
     }),
     ({ showGround }) => {
       atmosphereContext.showGround = showGround
-      postProcessing.needsUpdate = true
+      renderPipeline.needsUpdate = true
     }
   )
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   // Location controls:

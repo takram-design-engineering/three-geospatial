@@ -19,7 +19,7 @@ import {
 } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
-  PostProcessing,
+  RenderPipeline,
   type Renderer
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
@@ -221,7 +221,7 @@ const Content: FC<StoryProps> = ({
       shadowLength && displayShadowLength
   )
 
-  const postProcessing = useResource(() => {
+  const renderPipeline = useResource(() => {
     let outputNode: Node = taaNode
       .add(dithering)
       .mul(overlayPassNode.a.oneMinus())
@@ -236,7 +236,7 @@ const Content: FC<StoryProps> = ({
         outputNode
       )
     }
-    return new PostProcessing(renderer, outputNode)
+    return new RenderPipeline(renderer, outputNode)
   }, [
     renderer,
     atmosphereContext,
@@ -252,12 +252,12 @@ const Content: FC<StoryProps> = ({
       aerialNode.shadowLengthNode = value ? shadowLengthNode : null
       const skyNode = aerialNode.skyNode as SkyNode
       skyNode.shadowLengthNode = value ? shadowLengthNode : null
-      postProcessing.needsUpdate = true
+      renderPipeline.needsUpdate = true
     }
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   useTransientControl(
@@ -277,24 +277,24 @@ const Content: FC<StoryProps> = ({
       aerialNode.inscattering = inscattering
       atmosphereContext.showGround = showGround
       atmosphereContext.raymarchScattering = raymarchScattering
-      postProcessing.needsUpdate = true
+      renderPipeline.needsUpdate = true
     }
   )
 
   // Output pass controls:
   useOutputPassControls(
-    postProcessing,
+    renderPipeline,
     passNode,
     (outputNode, outputColorTransform) => {
-      postProcessing.outputNode = outputNode
-      postProcessing.outputColorTransform = outputColorTransform
-      postProcessing.needsUpdate = true
+      renderPipeline.outputNode = outputNode
+      renderPipeline.outputColorTransform = outputColorTransform
+      renderPipeline.needsUpdate = true
     }
   )
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   // Apply the initial point of view.

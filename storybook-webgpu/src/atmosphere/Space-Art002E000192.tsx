@@ -20,7 +20,7 @@ import {
 } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
-  PostProcessing,
+  RenderPipeline,
   type Node,
   type Renderer
 } from 'three/webgpu'
@@ -174,9 +174,9 @@ const Content: FC<StoryProps> = () => {
     }
   )
 
-  const postProcessing = useResource(
+  const renderPipeline = useResource(
     () =>
-      new PostProcessing(
+      new RenderPipeline(
         renderer,
         blendFilmGrain(
           taaNode.add(dithering),
@@ -187,24 +187,24 @@ const Content: FC<StoryProps> = () => {
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   // Output pass controls:
 
   useOutputPassControls(
-    postProcessing,
+    renderPipeline,
     passNode,
     (outputNode, outputColorTransform) => {
-      postProcessing.outputNode = outputNode
-      postProcessing.outputColorTransform = outputColorTransform
-      postProcessing.needsUpdate = true
+      renderPipeline.outputNode = outputNode
+      renderPipeline.outputColorTransform = outputColorTransform
+      renderPipeline.needsUpdate = true
     }
   )
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   // Local date controls (depends on the longitude of the location):

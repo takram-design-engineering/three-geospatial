@@ -12,7 +12,7 @@ import { traa } from 'three/examples/jsm/tsl/display/TRAANode.js'
 import { context, mrt, output, pass, toneMapping, velocity } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
-  PostProcessing,
+  RenderPipeline,
   WebGPURenderer
 } from 'three/webgpu'
 
@@ -131,8 +131,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const lensFlareNode = lensFlare(colorNode)
   const toneMappingNode = toneMapping(AgXToneMapping, 3, lensFlareNode)
   const taaNode = traa(toneMappingNode, depthNode, velocityNode, camera)
-  const postProcessing = new PostProcessing(renderer)
-  postProcessing.outputNode = taaNode.add(dithering)
+  const renderPipeline = new RenderPipeline(renderer)
+  renderPipeline.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
   const timer = new Timer()
@@ -163,7 +163,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
       observerECEF
     ).applyMatrix4(matrixECIToECEF)
 
-    postProcessing.render()
+    renderPipeline.render()
   })
 
   // Resizing:
@@ -177,7 +177,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Cleanup:
   return () => {
     window.removeEventListener('resize', handleResize)
-    postProcessing.dispose()
+    renderPipeline.dispose()
     passNode.dispose()
     controls.dispose()
     geometry.dispose()

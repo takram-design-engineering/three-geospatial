@@ -46,7 +46,7 @@ import { context, div, pass, texture, toneMapping, uniform } from 'three/tsl'
 import {
   LineBasicNodeMaterial,
   LineDashedNodeMaterial,
-  PostProcessing,
+  RenderPipeline,
   type Renderer
 } from 'three/webgpu'
 
@@ -312,9 +312,9 @@ const Content: FC<StoryProps> = () => {
     [lensFlareNode]
   )
 
-  const postProcessing = useResource(
+  const renderPipeline = useResource(
     () =>
-      new PostProcessing(
+      new RenderPipeline(
         renderer,
         toneMappingNode.rgb
           .mul(passNode.a.oneMinus())
@@ -325,12 +325,12 @@ const Content: FC<StoryProps> = () => {
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   // Location controls:

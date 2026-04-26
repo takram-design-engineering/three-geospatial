@@ -1,7 +1,7 @@
 import type { ArgTypes } from '@storybook/react-vite'
 import { useMemo } from 'react'
 import { directionToColor, vec4 } from 'three/tsl'
-import type { PassNode, PostProcessing } from 'three/webgpu'
+import type { PassNode, RenderPipeline } from 'three/webgpu'
 
 import { depthToColor, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -56,16 +56,16 @@ export const outputPassArgTypes = (
 })
 
 export function useOutputPassControls(
-  postProcessing: PostProcessing,
+  renderPipeline: RenderPipeline,
   passNode: PassNode,
   onChange: (outputNode: Node, outputColorTransform: boolean) => void
 ): void {
   const initial = useMemo(
     () => ({
-      outputNode: postProcessing.outputNode,
-      outputColorTransform: postProcessing.outputColorTransform
+      outputNode: renderPipeline.outputNode,
+      outputColorTransform: renderPipeline.outputColorTransform
     }),
-    [postProcessing]
+    [renderPipeline]
   )
 
   useTransientControl(

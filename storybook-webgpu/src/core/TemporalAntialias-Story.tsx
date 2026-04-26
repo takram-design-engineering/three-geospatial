@@ -18,7 +18,7 @@ import {
   MeshBasicNodeMaterial,
   MeshStandardNodeMaterial,
   PMREMGenerator,
-  PostProcessing,
+  RenderPipeline,
   type Renderer
 } from 'three/webgpu'
 
@@ -90,16 +90,16 @@ const Content: FC<StoryProps> = () => {
     [camera, depthNode, velocityNode, toneMappingNode]
   )
 
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer),
+  const renderPipeline = useResource(
+    () => new RenderPipeline(renderer),
     [renderer]
   )
 
   useTransientControl(
     ({ enabled }: StoryArgs) => enabled,
     enabled => {
-      postProcessing.outputNode = enabled ? taaNode : toneMappingNode
-      postProcessing.needsUpdate = true
+      renderPipeline.outputNode = enabled ? taaNode : toneMappingNode
+      renderPipeline.needsUpdate = true
     }
   )
 
@@ -107,28 +107,28 @@ const Content: FC<StoryProps> = () => {
     ({ showRejection }: StoryArgs) => showRejection,
     showRejection => {
       taaNode.debugShowRejection = showRejection
-      postProcessing.needsUpdate = true
+      renderPipeline.needsUpdate = true
     }
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   // Output pass controls:
   useOutputPassControls(
-    postProcessing,
+    renderPipeline,
     passNode,
     (outputNode, outputColorTransform) => {
-      postProcessing.outputNode = outputNode
-      postProcessing.outputColorTransform = outputColorTransform
-      postProcessing.needsUpdate = true
+      renderPipeline.outputNode = outputNode
+      renderPipeline.outputColorTransform = outputColorTransform
+      renderPipeline.needsUpdate = true
     }
   )
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   // Rotate the checkered knot:

@@ -13,7 +13,7 @@ import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js'
 import { builtinShadowContext, mrt, pass, screenUV } from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
-  PostProcessing,
+  RenderPipeline,
   type Renderer
 } from 'three/webgpu'
 
@@ -163,9 +163,9 @@ const Content: FC<StoryProps> = () => {
     [camera, overlayScene]
   )
 
-  const postProcessing = useResource(
+  const renderPipeline = useResource(
     () =>
-      new PostProcessing(
+      new RenderPipeline(
         renderer,
         taaNode
           .add(dithering)
@@ -176,7 +176,7 @@ const Content: FC<StoryProps> = () => {
   )
 
   useFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   useTransientControl(

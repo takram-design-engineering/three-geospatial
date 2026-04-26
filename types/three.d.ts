@@ -79,6 +79,16 @@ declare module 'three/webgpu' {
   interface AnalyticLightNode {
     colorNode: Node
   }
+
+  class RenderPipeline {
+    renderer: Renderer
+    outputNode: Node
+    outputColorTransform: boolean
+    needsUpdate: boolean
+    constructor(renderer: Renderer, outputNode?: Node)
+    render(): void
+    dispose(): void
+  }
 }
 
 declare module 'three/tsl' {

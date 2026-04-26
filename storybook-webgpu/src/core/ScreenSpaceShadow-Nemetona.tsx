@@ -5,7 +5,7 @@ import { DirectionalLight, Mesh } from 'three'
 import { sss } from 'three/addons/tsl/display/SSSNode.js'
 import { traa } from 'three/addons/tsl/display/TRAANode.js'
 import { builtinShadowContext, mrt, pass, screenUV, velocity } from 'three/tsl'
-import { PostProcessing, type Renderer } from 'three/webgpu'
+import { RenderPipeline, type Renderer } from 'three/webgpu'
 
 import {
   dithering,
@@ -111,13 +111,13 @@ const Content: FC<StoryProps> = () => {
     [camera, prePassNode, passNode]
   )
 
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer, taaNode.add(dithering)),
+  const renderPipeline = useResource(
+    () => new RenderPipeline(renderer, taaNode.add(dithering)),
     [renderer, taaNode]
   )
 
   useFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   useTransientControl(

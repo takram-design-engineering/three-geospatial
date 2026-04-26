@@ -10,7 +10,7 @@ import {
   toneMapping,
   uniform
 } from 'three/tsl'
-import { PostProcessing, type Renderer } from 'three/webgpu'
+import { RenderPipeline, type Renderer } from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -141,9 +141,9 @@ const Content: FC<StoryProps> = ({
     [camera, overlayScene]
   )
 
-  const postProcessing = useResource(
+  const renderPipeline = useResource(
     () =>
-      new PostProcessing(
+      new RenderPipeline(
         renderer,
         taaNode
           .add(dithering)
@@ -170,28 +170,28 @@ const Content: FC<StoryProps> = ({
       aerialNode.inscattering = inscattering
       atmosphereContext.showGround = showGround
       atmosphereContext.raymarchScattering = raymarchScattering
-      postProcessing.needsUpdate = true
+      renderPipeline.needsUpdate = true
     }
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   // Output pass controls:
   useOutputPassControls(
-    postProcessing,
+    renderPipeline,
     passNode,
     (outputNode, outputColorTransform) => {
-      postProcessing.outputNode = outputNode
-      postProcessing.outputColorTransform = outputColorTransform
-      postProcessing.needsUpdate = true
+      renderPipeline.outputNode = outputNode
+      renderPipeline.outputColorTransform = outputColorTransform
+      renderPipeline.needsUpdate = true
     }
   )
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   // Apply the initial point of view.

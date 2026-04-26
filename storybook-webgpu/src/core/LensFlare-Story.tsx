@@ -3,7 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { Suspense, type FC } from 'react'
 import { AgXToneMapping } from 'three'
 import { pass, toneMapping, uniform } from 'three/tsl'
-import { PostProcessing, type Renderer } from 'three/webgpu'
+import { RenderPipeline, type Renderer } from 'three/webgpu'
 
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
@@ -37,8 +37,8 @@ const Content: FC<StoryProps> = () => {
     [lensFlareNode]
   )
 
-  const postProcessing = useResource(
-    () => new PostProcessing(renderer, toneMappingNode.add(dithering)),
+  const renderPipeline = useResource(
+    () => new RenderPipeline(renderer, toneMappingNode.add(dithering)),
     [renderer, toneMappingNode]
   )
 
@@ -66,17 +66,17 @@ const Content: FC<StoryProps> = () => {
     ({ wireframe }: StoryArgs) => wireframe,
     wireframe => {
       lensFlareNode.glareNode.wireframe = wireframe
-      postProcessing.needsUpdate = true
+      renderPipeline.needsUpdate = true
     }
   )
 
   useGuardedFrame(() => {
-    postProcessing.render()
+    renderPipeline.render()
   }, 1)
 
   // Tone mapping controls:
   useToneMappingControls(toneMappingNode, () => {
-    postProcessing.needsUpdate = true
+    renderPipeline.needsUpdate = true
   })
 
   return (

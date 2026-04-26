@@ -85,7 +85,7 @@ import {
   AtmosphereContext
 } from '@takram/three-atmosphere/webgpu'
 import { context, pass } from 'three/tsl'
-import { PostProcessing } from 'three/webgpu'
+import { RenderPipeline } from 'three/webgpu'
 
 declare const camera: Camera
 declare const date: Date
@@ -103,8 +103,8 @@ const passNode = pass(scene, camera, { samples: 0 })
 const colorNode = passNode.getTextureNode('output')
 const depthNode = passNode.getTextureNode('depth')
 
-const postProcessing = new PostProcessing(renderer)
-postProcessing.outputNode = aerialPerspective(colorNode, depthNode)
+const renderPipeline = new RenderPipeline(renderer)
+renderPipeline.outputNode = aerialPerspective(colorNode, depthNode)
 ```
 
 ### Sky

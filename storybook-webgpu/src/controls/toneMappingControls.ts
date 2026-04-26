@@ -105,7 +105,7 @@ function useRendererToneMappingControls(
   )
 }
 
-function usePostProcessingToneMappingControls(
+function useRenderPipelineToneMappingControls(
   toneMappingNode: ToneMappingNode,
   onChange?: (toneMapping: ToneMapping) => void
 ): void {
@@ -156,7 +156,7 @@ export function useToneMappingControls(
 ): void {
   if (arg1 != null && typeof arg1 !== 'function') {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    usePostProcessingToneMappingControls(arg1, arg2)
+    useRenderPipelineToneMappingControls(arg1, arg2)
   } else {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useRendererToneMappingControls(arg1)
