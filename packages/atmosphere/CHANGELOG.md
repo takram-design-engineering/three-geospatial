@@ -28,6 +28,7 @@ All changes were made to the WebGPU implementation, unless otherwise noted.
 - `AtmosphereLUTNode`: Higher-order scattering LUT now contains the scattering term rather than that over the Rayleigh phase.
 - `AerialPerspectiveNode`: Added approximated inscattered light below the bottom of the atmosphere.
 - `StarsNode`: Changed the luminance of stars more physically correct and the default intensity to 1000.
+- `AtmosphereParameters`: Changed the default value of `minCosLight` for 120 degrees.
 
 ### Fixed
 
