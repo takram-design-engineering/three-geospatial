@@ -102,17 +102,19 @@ export const turbo = /*#__PURE__*/ FnLayout({
   return y
 })
 
-export const depthToColor = (
-  depth: Node<'float'>,
-  camera?: Camera,
-  near?: Node<'float'>,
-  far?: Node<'float'>
-): Node<'vec3'> => {
-  near ??= cameraNear(camera)
-  far ??= cameraFar(camera)
-  const viewZ = depthToViewZ(depth, camera, near, far)
-  return turbo(viewZToLogarithmicDepth(viewZ, near, far))
-}
+export const depthToColor = FnVar(
+  (
+    depth: Node<'float'>,
+    camera?: Camera,
+    near?: Node<'float'>,
+    far?: Node<'float'>
+  ): Node<'vec3'> => {
+    near ??= cameraNear(camera)
+    far ??= cameraFar(camera)
+    const viewZ = depthToViewZ(depth, camera, near, far)
+    return turbo(viewZToLogarithmicDepth(viewZ, near, far))
+  }
+)
 
 export const equirectToDirectionWorld = /*#__PURE__*/ FnLayout({
   name: 'equirectToDirectionWorld',

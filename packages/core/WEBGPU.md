@@ -34,23 +34,30 @@ Please note the peer dependencies differ from the required versions to maintain 
 
 # API
 
-- [`FnVar`](#fnvar)
-- [`FnLayout`](#fnlayout)
+- [`FnVar`](#-fn-var)
+- [`FnLayout`](#-fn-layout)
 
 **Nodes**
 
-- [`HighpVelocityNode`](#highpvelocitynode)
-- [`LensFlareNode`](#lensflarenode)
-- [`TemporalAntialiasNode`](#temporalantialiasnode)
-- [`ScreenSpaceShadowNode`](#screenspaceshadownode)
+- [`HighpVelocityNode`](#-highp-velocity-node)
+- [`LensFlareNode`](#-lens-flare-node)
+- [`TemporalAntialiasNode`](#-temporal-antialias-node)
+- [`ScreenSpaceShadowNode`](#-screen-space-shadow-node)
+- [`CascadedShadowMapsNode`](#-cascaded-shadow-maps-node)
+- [`STBNTextureNode`](#-stbn-texture-node)
+
+**Accessors**
+
+- [`viewZ`](#-view-z)
 
 **Generators**
 
-- [`dithering`](#dithering)
+- [`dithering`](#-dithering)
 
 **Transformations**
 
-- [`depthToColor`](#depthtocolor)
+- [`depthToViewZ`](#-depth-to-view-z)
+- [`depthToColor`](#-depth-to-color)
 
 The following terms refer to class fields:
 
@@ -58,6 +65,8 @@ The following terms refer to class fields:
 - **Parameters** : Class fields whose changes take effect immediately.
 - **Uniforms** : Class field of type `UniformNode`. Changes in its value takes effect immediately.
 - **Static options** : Class fields whose changes take effect only after calling `setup()`.
+
+<a id='-fn-var'></a>
 
 ## FnVar
 
@@ -77,6 +86,8 @@ const fn = Fn<[TextureNode, Node, number | undefined]>(
   ([a, b, c], builder) => {}
 )
 ```
+
+<a id='-fn-layout'></a>
 
 ## FnLayout
 
@@ -111,6 +122,8 @@ const fn = Fn(([a, b, c], builder) => {
 })
 ```
 
+<a id='-highp-velocity-node'></a>
+
 ## HighpVelocityNode
 
 A node that outputs geometry velocity in the current camera's UV and depth. Unlike `VelocityNode` in Three.js examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
@@ -126,6 +139,8 @@ const passNode = pass(scene, camera).setMRT(
 )
 const velocityNode = passNode.getTextureNode('velocity')
 ```
+
+<a id='-lens-flare-node'></a>
 
 ## LensFlareNode
 
@@ -218,6 +233,8 @@ bloomIntensity = uniform(0.05)
 ```
 
 A scaling factor that controls the intensity of the bloom.
+
+<a id='-temporal-antialias-node'></a>
 
 ## TemporalAntialiasNode
 
@@ -332,6 +349,8 @@ debugShowRejection = false
 ```
 
 When enabled, rejected pixels are displayed in red.
+
+<a id='-screen-space-shadow-node'></a>
 
 ## ScreenSpaceShadowNode
 
@@ -455,6 +474,70 @@ fadeOutSamples = 8
 ```
 
 The number of samples at the end of the ray that fade the shadow out.
+
+<a id='-cascaded-shadow-maps-node'></a>
+
+## CascadedShadowMapsNode
+
+<a id='-stbn-texture-node'></a>
+
+## STBNTextureNode
+
+## Accessors
+
+<a id='-view-z'></a>
+
+### viewZ
+
+```ts
+const viewZ: Node<'float'>
+```
+
+View space Z for the current fragment depth using the builder's camera projection.
+
+## Generators
+
+<a id='-dithering'></a>
+
+### dithering
+
+```ts
+const dithering: Node<'vec3'>
+```
+
+Generates a temporal interleaved gradient noise dithering for the screen coordinate.
+
+## Transformations
+
+<a id='-depth-to-view-z'></a>
+
+### depthToViewZ
+
+```ts
+const depthToViewZ: (
+  depth: Node<'float'> | number,
+  camera?: Camera,
+  near?: Node<'float'> | number,
+  far?: Node<'float'> | number
+): Node<'float'>
+```
+
+Converts a depth value to view Z using the specified camera settings (defaults to the camera used for rendering the frame).
+
+<a id='-depth-to-color'></a>
+
+### depthToColor
+
+```ts
+const depthToColor: (
+  depth: Node<'float'> | number,
+  camera?: Camera,
+  near?: Node<'float'> | number,
+  far?: Node<'float'> | number
+): Node<'vec3'>
+```
+
+Converts a depth value to the [Turbo color map](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) using the specified camera settings (defaults to the camera used for rendering the frame).
 
 # Acknowledgement
 

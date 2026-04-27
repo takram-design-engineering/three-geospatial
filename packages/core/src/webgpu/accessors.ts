@@ -97,6 +97,8 @@ export const cameraFar = (camera?: Camera | null): Node<'float'> =>
       )
     : cameraFarTSL
 
-export const viewZ = Fn(({ camera }) => depthToViewZ(depth, camera))
+export const viewZ = Fn(
+  ({ camera }): Node<'float'> => depthToViewZ(depth, camera)
+)
   .once()()
   .toVar('viewZ')
