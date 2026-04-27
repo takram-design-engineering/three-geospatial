@@ -2,7 +2,7 @@ import {
   Data3DTexture,
   FloatType,
   HalfFloatType,
-  RedFormat,
+  RGBAFormat,
   Texture
 } from 'three'
 import {
@@ -79,8 +79,8 @@ export type AtmosphereLUTTexture3DName =
 
 const emptyTexture = /*#__PURE__*/ new Texture()
 const emptyTexture3D = /*#__PURE__*/ (() => {
-  const texture = new Data3DTexture(new Uint8Array(1))
-  texture.format = RedFormat
+  const texture = new Data3DTexture(new Uint8Array(4))
+  texture.format = RGBAFormat
   texture.needsUpdate = true
   return texture
 })()
