@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.9.0] - 2026-04-27
 
 All changes were made to the WebGPU implementation, unless otherwise noted.
 

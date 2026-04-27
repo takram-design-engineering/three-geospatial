@@ -1,10 +1,6 @@
 # Changelog
 
-## Unreleased
-
-This might be one of the biggest changes in the atmosphere package. This release introduces the multiple scattering LUT proposed in Sébastien Hillaire's [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf). This removes the need for expensive stepwise computation of higher-order scattering in the 4D scattering LUT, and also allows inscattered light to be raymarched at runtime, eliminating artifacts due to floating-point precision in the 4D scattering LUT.
-
-Please consider this release as transitional, and further fundamental improvements such as Sky-View LUT and raymarched volumetric shadows, will be added.
+## [0.19.0] - 2026-04-27
 
 All changes were made to the WebGPU implementation, unless otherwise noted.
 

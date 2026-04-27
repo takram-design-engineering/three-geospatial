@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.6.3] - 2026-04-27
+
+This release contains internal dependency updates only.
+
 ## [0.6.2] - 2026-04-05
 
 This release contains internal dependency updates only.
