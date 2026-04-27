@@ -34,7 +34,7 @@ export class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
   private readonly intensity = uniform(1)
   private readonly directionECEF = uniform('vec3')
 
-  constructor(light: AtmosphereLight | null) {
+  constructor(light?: AtmosphereLight | null) {
     super(light)
     this.updateBeforeType = NodeUpdateType.FRAME
   }

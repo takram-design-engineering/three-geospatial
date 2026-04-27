@@ -148,7 +148,7 @@ There are 4 quality presets that you may consider:
 - **High**: The baseline settings
 - **Ultra**: Increases the resolution of BSM
 
-If “Low” quality preset still does not meet your performance goal, then I recommend considering a skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
+If "Low" quality preset still does not meet your performance goal, then I recommend considering a skybox instead, which might offer better visual quality unless you specifically need volumetric clouds.
 
 Below are my measurements as of version 0.0.1 on the [Tokyo scene](https://takram-design-engineering.github.io/three-geospatial/?path=/story/clouds-3d-tiles-renderer-integration--tokyo). Note that they are relatively new devices as of this writing.
 
@@ -698,7 +698,7 @@ powderScale: number = 0.8
 powderExponent: number = 150
 ```
 
-Controls the [“Beer-Powder” term](https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn) on the clouds. This is a fudge factor and you might adjust this value to make it look convincing to you.
+Controls the ["Beer-Powder" term](https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn) on the clouds. This is a fudge factor and you might adjust this value to make it look convincing to you.
 
 ### Weather and shape
 

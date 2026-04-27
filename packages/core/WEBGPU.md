@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@takram/three-geospatial.svg?style=flat-square)](https://www.npmjs.com/package/@takram/three-geospatial) [![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
 
-A work-in-progress WebGPU support for `@takram/three-geospatial`.
+Work-in-progress WebGPU support for `@takram/three-geospatial`.
 
 Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation.
 
@@ -28,9 +28,9 @@ Please note the peer dependencies differ from the required versions to maintain 
 
 ## Changes from the WebGL API
 
-- `LensFlareEffect`: moved from effects and replaced by `LensFlareNode`
-- `DitheringEffect`: moved from effects and replaced by `dithering`
-- Turbo coloring in `DepthEffect`: moved from effects and replaced by `depthToColor`
+- `LensFlareEffect` has been replaced by `LensFlareNode`.
+- `DitheringEffect` has been replaced by `dithering`.
+- Turbo coloring in `DepthEffect` has been replaced by `depthToColor`.
 
 # API
 
@@ -43,7 +43,6 @@ Please note the peer dependencies differ from the required versions to maintain 
 - [`LensFlareNode`](#-lens-flare-node)
 - [`TemporalAntialiasNode`](#-temporal-antialias-node)
 - [`ScreenSpaceShadowNode`](#-screen-space-shadow-node)
-- [`CascadedShadowMapsNode`](#-cascaded-shadow-maps-node)
 - [`STBNTextureNode`](#-stbn-texture-node)
 
 **Accessors**
@@ -63,14 +62,14 @@ The following terms refer to class fields:
 
 - **Dependencies** : Class fields of type `Node` that the subject depends on.
 - **Parameters** : Class fields whose changes take effect immediately.
-- **Uniforms** : Class field of type `UniformNode`. Changes in its value takes effect immediately.
+- **Uniforms** : Class fields of type `UniformNode`. Changes to their values take effect immediately.
 - **Static options** : Class fields whose changes take effect only after calling `setup()`.
 
 <a id='-fn-var'></a>
 
 ## FnVar
 
-A utility function and works identically to `Fn`, except that the parameters of the callback function can be declared as variadic. This improves the colocation of parameters and their types.
+A utility function that works identically to `Fn`, except that the parameters of the callback function can be declared as variadic. This improves the colocation of parameters and their types.
 
 When you return a function, it receives the current `NodeBuilder`.
 
@@ -91,7 +90,7 @@ const fn = Fn<[TextureNode, Node, number | undefined]>(
 
 ## FnLayout
 
-A utility function and works identically to `Fn.setLayout`, except it's declared as a higher-order function on `Fn`. This improves the colocation of parameters and their types.
+A utility function that works identically to `Fn.setLayout`, except it is declared as a higher-order function on `Fn`. This improves the colocation of parameters and their types.
 
 → [Source](/packages/core/src/webgpu/FnLayout.ts)
 
@@ -126,7 +125,7 @@ const fn = Fn(([a, b, c], builder) => {
 
 ## HighpVelocityNode
 
-A node that outputs geometry velocity in the current camera's UV and depth. Unlike `VelocityNode` in Three.js examples, model view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
+A node that outputs geometry velocity in the current camera's UV and depth. Unlike `VelocityNode` in Three.js examples, model-view matrices of objects are computed on the CPU, so it does not suffer from precision issues when working with large coordinates such as meter-scale ECEF coordinates.
 
 → [Source](/packages/core/src/webgpu/HighpVelocityNode.ts)
 
@@ -260,7 +259,7 @@ const taaNode = temporalAntialias(colorNode, depthNode, velocityNode, camera)
 ### Constructor
 
 ```ts
-const temporalAntialias = (
+const temporalAntialias: (
   inputNode: Node,
   depthNode: TextureNode,
   velocityNode: TextureNode,
@@ -292,7 +291,7 @@ The depth node for the current frame.
 velocityNode: TextureNode
 ```
 
-The node that stores motion vectors in NDC, provided by `HighpVelocityNode`.
+A node that stores motion vectors in NDC, provided by `HighpVelocityNode`.
 
 ### Uniforms
 
@@ -415,7 +414,7 @@ The assumed pixel thickness for shadow-casting, as a fraction of the depth range
 shadowContrast = uniform(4)
 ```
 
-A contrast boost for the shadow transition. Must be >= 1.
+A contrast boost applied to the shadow transition. Must be >= 1.
 
 #### shadowIntensity
 
@@ -457,7 +456,7 @@ The directional light from which shadows are cast.
 sampleCount = 60
 ```
 
-The number of shadow samples per pixel. Controls the maximum shadow length in pixels.
+The number of shadow samples per pixel, which controls the maximum shadow length in pixels.
 
 #### hardShadowSamples
 
@@ -465,7 +464,7 @@ The number of shadow samples per pixel. Controls the maximum shadow length in pi
 hardShadowSamples = 4
 ```
 
-The number of initial samples that produce a hard shadow without averaging, grounding pixels close to the shadow caster.
+The number of initial samples that produce hard shadows without averaging, anchoring pixels close to the shadow caster.
 
 #### fadeOutSamples
 
@@ -475,15 +474,21 @@ fadeOutSamples = 8
 
 The number of samples at the end of the ray that fade the shadow out.
 
-<a id='-cascaded-shadow-maps-node'></a>
-
-## CascadedShadowMapsNode
-
 <a id='-stbn-texture-node'></a>
 
 ## STBNTextureNode
 
+```ts
+const stbn: Node<'float'>
+```
+
+Represents the scalar [Spatiotemporal Blue Noise (STBN)](https://research.nvidia.com/publication/2022-07_spatiotemporal-blue-noise-masks) for the screen coordinate and time.
+
+→ [Source](/packages/core/src/webgpu/STBNTextureNode.ts)
+
 ## Accessors
+
+→ [Source](/packages/core/src/webgpu/accessors.ts)
 
 <a id='-view-z'></a>
 
@@ -493,9 +498,18 @@ The number of samples at the end of the ray that fade the shadow out.
 const viewZ: Node<'float'>
 ```
 
-View space Z for the current fragment depth using the builder's camera projection.
+The view Z for the current fragment depth using the builder's camera.
+
+```ts
+import { viewZ } from '@takram/three-geospatial/webgpu'
+import { mrt, output, pass } from 'three/tsl'
+
+const scenePass = pass(scene, camera).setMRT(mrt({ output, viewZ }))
+```
 
 ## Generators
+
+→ [Source](/packages/core/src/webgpu/generators.ts)
 
 <a id='-dithering'></a>
 
@@ -505,9 +519,18 @@ View space Z for the current fragment depth using the builder's camera projectio
 const dithering: Node<'vec3'>
 ```
 
-Generates a temporal interleaved gradient noise dithering for the screen coordinate.
+Generates spatiotemporal interleaved gradient noise dithering for the current screen coordinate and time.
+
+```ts
+import { dithering } from '@takram/three-geospatial/webgpu'
+import { RenderPipeline } from 'three/webgpu'
+
+const renderPipeline = new RenderPipeline(renderer, outputNode.add(dithering))
+```
 
 ## Transformations
+
+→ [Source](/packages/core/src/webgpu/transformations.ts)
 
 <a id='-depth-to-view-z'></a>
 
@@ -522,7 +545,7 @@ const depthToViewZ: (
 ): Node<'float'>
 ```
 
-Converts a depth value to view Z using the specified camera settings (defaults to the camera used for rendering the frame).
+Converts a depth value to view Z using the given camera settings (defaults to the camera used for rendering the frame).
 
 <a id='-depth-to-color'></a>
 
@@ -537,7 +560,7 @@ const depthToColor: (
 ): Node<'vec3'>
 ```
 
-Converts a depth value to the [Turbo color map](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) using the specified camera settings (defaults to the camera used for rendering the frame).
+Converts a depth value to the [Turbo color map](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) using the given camera settings (defaults to the camera used for rendering the frame).
 
 # Acknowledgement
 

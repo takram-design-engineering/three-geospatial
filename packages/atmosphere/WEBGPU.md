@@ -2,9 +2,9 @@
 
 [![npm version](https://img.shields.io/npm/v/@takram/three-atmosphere.svg?style=flat-square)](https://www.npmjs.com/package/@takram/three-atmosphere) [![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)](https://takram-design-engineering.github.io/three-geospatial-webgpu/)
 
-A work-in-progress WebGPU support for `@takram/three-atmosphere`.
+Work-in-progress WebGPU support for `@takram/three-atmosphere`.
 
-The atmospheric model is based on Eric Bruneton's [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/) and uses the 4D scattering LUT with a couple of improvements. The key difference from the original implementation is that higher-order scattering is computed using the multiple scattering LUT proposed in Sébastien Hillaire's [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf). It also raymarch inscattered light between the camera and scene objects by default, which completely eliminates artifacts due to floating-point precision.
+The atmospheric model is based on Eric Bruneton's [Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/) and uses the 4D scattering LUT with several improvements. The key difference from the original implementation is that higher-order scattering is computed using the multiple scattering LUT proposed in Sébastien Hillaire's [A Scalable and Production Ready Sky and Atmosphere Rendering Technique](https://sebh.github.io/publications/egsr2020.pdf). It also performs raymarching of inscattered light between the camera and scene objects by default, which completely eliminates artifacts due to floating-point precision.
 
 Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation.
 
@@ -43,7 +43,7 @@ Please note the peer dependencies differ from the required versions to maintain 
 
 ### Atmospheric lighting
 
-[`AtmosphereLight`](#atmospherelight) replaces `SunLight` and `SkyLight`, providing physically correct lighting for large-scale scenes and maintaining compatibility with built-in Three.js materials and shadows.
+[`AtmosphereLight`](#-atmosphere-light) replaces `SunDirectionalLight` and `SkyLightProbe`, providing physically correct lighting for large-scale scenes while maintaining compatibility with built-in Three.js materials and shadows.
 
 ```ts
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -76,7 +76,7 @@ scene.add(light)
 
 ### Aerial perspective
 
-[`AerialPerspectiveNode`](#aerialperspectivenode) is a post-processing node that renders atmospheric transparency and inscattered light. It takes a color (beauty) buffer and a depth buffer, and also renders the sky for texels whose depth value is 1.
+[`AerialPerspectiveNode`](#-aerial-perspective-node) is a post-processing node that renders atmospheric transparency and inscattered light. It takes a color (beauty) buffer and a depth buffer, and also renders the sky for texels whose depth value is 1.
 
 ```ts
 import { getSunDirectionECEF } from '@takram/three-atmosphere'
@@ -109,7 +109,7 @@ renderPipeline.outputNode = aerialPerspective(colorNode, depthNode)
 
 ### Sky
 
-[`SkyNode`](#skynode) replaces `SkyMaterial` and is also aggregated in `AerialPerspectiveNode`. Despite its name, it renders the atmospheric transparency and inscattered light at infinite distance (or clamped to a virtual ground at the ellipsoidal surface), along with the sun, moon and stars.
+[`SkyNode`](#-sky-node) replaces `SkyMaterial` and is also aggregated in `AerialPerspectiveNode`. Despite its name, it renders atmospheric transparency and inscattered light at infinite distance (or clamped to a virtual ground at the ellipsoidal surface), along with the sun, moon, and stars.
 
 ```ts
 import {
@@ -148,9 +148,7 @@ getMoonDirectionECI(date, moonDirectionECEF.value).applyMatrix4(matrix)
 
 ### World origin rebasing
 
-World origin rebasing is a common technique for large coordinates like ECEF. Instead of moving the camera, it moves and rotate the world coordinates to reduces loss of floating-point precision.
-
-This appears to be required for the shadows to work correctly with `WebGPURenderer`.
+World origin rebasing is a common technique for large coordinates like ECEF. Instead of moving the camera, it moves and rotates the world coordinates to reduce loss of floating-point precision.
 
 ```ts
 import { AtmosphereContext } from '@takram/three-atmosphere/webgpu'
@@ -182,44 +180,94 @@ Ellipsoid.WGS84.getNorthUpEastFrame(
 )
 ```
 
+### Light shafts
+
+Light shafts are produced by subtracting the inscattered light within shadowed segments of camera rays. [`ShadowLengthNode`](#-shadow-length-node) computes the shadow length along the camera ray using epipolar sampling and cascaded shadow maps.
+
+```ts
+import { getSunDirectionECEF } from '@takram/three-atmosphere'
+import {
+  aerialPerspective,
+  AtmosphereContext,
+  shadowLength,
+  viewZUnit
+} from '@takram/three-atmosphere/webgpu'
+import { context, mrt, output, pass } from 'three/tsl'
+import { RenderPipeline } from 'three/webgpu'
+
+declare const camera: Camera
+declare const date: Date
+declare const csmShadowNode: CSMShadowNode
+
+const atmosphereContext = new AtmosphereContext()
+atmosphereContext.camera = camera
+renderer.contextNode = context({
+  ...renderer.contextNode.value,
+  getAtmosphere: () => atmosphereContext
+})
+
+getSunDirectionECEF(date, atmosphereContext.sunDirectionECEF.value)
+
+const passNode = pass(scene, camera, { samples: 0 }).setMRT(
+  mrt({
+    output,
+    viewZUnit
+  })
+)
+const colorNode = passNode.getTextureNode('output')
+const depthNode = passNode.getTextureNode('depth')
+const viewZUnitNode = passNode.getTextureNode('viewZUnit')
+
+const renderPipeline = new RenderPipeline(renderer)
+const shadowLengthNode = shadowLength(csmShadowNode, viewZUnitNode)
+renderPipeline.outputNode = aerialPerspective(
+  colorNode,
+  depthNode,
+  null,
+  shadowLengthNode
+)
+```
+
 ## Changes from the WebGL API
 
-- `PrecomputedTexturesGenerator` was replaced by `AtmosphereLUTNode`.
-- `AerialPerspectiveEffect` was replaced by `AerialPerspectiveNode`.
-- `SunDirectionalLight` and `SkyLightProbe` were replaced by `AtmosphereLight` and `AtmosphereLightNode`.
-- `SkyMaterial` was replaced by `SkyNode` (`skyBackground`) that can be used in `Scene.backgroundNode`.
-- `LightingMaskPass` was removed.
-- `StarsMaterial` and `StarsGeometry` were replaced by `StarsNode`.
+- `PrecomputedTexturesGenerator` has been replaced by `AtmosphereLUTNode`.
+- `AerialPerspectiveEffect` has been replaced by `AerialPerspectiveNode`.
+- `SunDirectionalLight` and `SkyLightProbe` have been replaced by `AtmosphereLight` and `AtmosphereLightNode`.
+- `SkyMaterial` has been replaced by `SkyNode` (`skyBackground`), which can be used as `Scene.backgroundNode`.
+- `LightingMaskPass` has been removed.
+- `StarsMaterial` and `StarsGeometry` have been replaced by `StarsNode`.
 
 # API
 
-- [`AtmosphereContext`](#atmospherecontext)
-- [`AtmosphereLight`](#atmospherelight)
-- [`AerialPerspectiveNode`](#aerialperspectivenode)
-- [`SkyNode`](#skynode)
-- [`SkyEnvironmentNode`](#skyenvironmentnode)
-- [`ShadowLengthNode`](#shadowlengthnode)
+- [`AtmosphereContext`](#-atmosphere-context)
+- [`AtmosphereLight`](#-atmosphere-light)
+- [`AerialPerspectiveNode`](#-aerial-perspective-node)
+- [`SkyNode`](#-sky-node)
+- [`SkyEnvironmentNode`](#-sky-environment-node)
+- [`ShadowLengthNode`](#-shadow-length-node)
 
 **Generators**
 
-- [`cameraZUnit`](#camerazunit)
+- [`viewZUnit`](#-view-z-unit)
 
 **Advanced**
 
-- [`AtmosphereParameters`](#atmosphereparameters)
-- [`AtmosphereLUTNode`](#atmospherelutnode)
-- [`AtmosphereLightNode`](#atmospherelightnode)
+- [`AtmosphereParameters`](#-atmosphere-parameters)
+- [`AtmosphereLUTNode`](#-atmosphere-lut-node)
+- [`AtmosphereLightNode`](#-atmosphere-light-node)
 
 The following terms refer to class fields:
 
 - **Dependencies** : Class fields of type `Node` that the subject depends on.
 - **Parameters** : Class fields whose changes take effect immediately.
-- **Uniforms** : Class field of type `UniformNode`. Changes in its value takes effect immediately.
+- **Uniforms** : Class fields of type `UniformNode`. Changes to their values take effect immediately.
 - **Static options** : Class fields whose changes take effect only after calling `setup()`.
+
+<a id='-atmosphere-context'></a>
 
 ## AtmosphereContext
 
-This instance aggregates the LUT, uniforms and static options that are shared across all atmospheric nodes. A single instance should be added to renderer's context to ensure consistent rendering.
+This instance aggregates the LUT, uniforms, and static options shared across all atmospheric nodes. A single instance should be added to the renderer's context to ensure consistent rendering.
 
 → [Source](/packages/atmosphere/src/webgpu/AtmosphereContext.ts)
 
@@ -247,7 +295,7 @@ lutNode: AtmosphereLUTNode
 matrixWorldToECEF = uniform('mat4')
 ```
 
-The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define a reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js's Y-up coordinate system.
+The matrix for converting world coordinates to ECEF coordinates. Use this matrix to define the reference frame of the scene or, more commonly, to orient the ellipsoid for working near the world space origin and adapting to Three.js's Y-up coordinate system.
 
 It must be orthogonal and consist only of translation and rotation (no scaling).
 
@@ -257,7 +305,7 @@ It must be orthogonal and consist only of translation and rotation (no scaling).
 matrixECIToECEF = uniform('mat4')
 ```
 
-The rotation matrix for converting ECI to ECEF coordinates. This matrix is used to orient stars as seen from the earth in `StarsNode`.
+The rotation matrix for converting ECI to ECEF coordinates. This matrix is used to orient stars as seen from Earth in `StarsNode`.
 
 #### sunDirectionECEF, moonDirectionECEF
 
@@ -274,7 +322,7 @@ The normalized direction to the sun and moon in ECEF coordinates.
 matrixMoonFixedToECEF = uniform('mat4')
 ```
 
-The rotation matrix for converting moon fixed coordinates to ECEF coordinates. This matrix is used to orient the moon's surface as seen from the earth in `MoonNode`.
+The rotation matrix for converting moon-fixed coordinates to ECEF coordinates. This matrix is used to orient the moon's surface as seen from Earth in `MoonNode`.
 
 ### Static options
 
@@ -300,9 +348,9 @@ The ellipsoid model representing the earth.
 correctAltitude = true
 ```
 
-Whether to adjust the atmosphere's inner sphere to osculate (touch and share a tangent with) the ellipsoid.
+Whether to adjust the atmosphere's inner sphere to osculate (touch and share a tangent with) the ellipsoid at the camera's position.
 
-The atmosphere is approximated as a sphere, with a radius between the ellipsoid's major and minor axes. The difference can exceed 10,000 meters in the worst cases, roughly equal to the cruising altitude of a passenger jet. This option compensates for this difference.
+The atmosphere is approximated as a sphere whose radius lies between the ellipsoid's semi-major and semi-minor axes. The difference can exceed 10,000 meters in the worst case, roughly equal to the cruising altitude of a passenger jet. This option compensates for that difference.
 
 #### constrainCamera
 
@@ -326,16 +374,18 @@ Disable this option to constrain the camera's ray above the horizon, hiding the 
 raymarchScattering = true
 ```
 
-Whether to raymarch inscattered light between the camera and scene objects instead of computing from LUT lookups.
+Whether to raymarch inscattered light between the camera and scene objects instead of computing it from LUT lookups.
 
 > [!TIP]
-> Enabling this option might slightly increase computational cost depending on the device. But in general, it is recommended to keep this enabled. Consider disabling it when the render output requires temporal stability, such as when temporal antialiasing cannot be used, because the raymarching makes use of STBN to greatly reduce aliasing along the rays.
+> Enabling this option might slightly increase computational cost depending on the device, but in general it is recommended to keep it enabled. Consider disabling it when the render output requires temporal stability, such as when temporal antialiasing cannot be used, because raymarching uses STBN which introduces temporal noise to reduce aliasing along the rays.
+
+<a id='-atmosphere-light'></a>
 
 ## AtmosphereLight
 
-Represents direct and indirect sunlight. The lighting is correct at large scale regardless of the materials used on surfaces, unlike `SunDirectionalLight` and `SkyLightProbe` in the previous implementation.
+Represents direct and indirect sunlight. Unlike `SunDirectionalLight` and `SkyLightProbe` in the previous implementation, lighting is correct at large scale regardless of the materials used on surfaces.
 
-Add it along with [`AtmosphereLightNode`](#atmospherelightnode) to the renderer's node library before use:
+Add it along with [`AtmosphereLightNode`](#-atmosphere-light-node) to the renderer's node library before use:
 
 ```ts
 import {
@@ -351,7 +401,7 @@ renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
 ### Constructor
 
 ```ts
-class AtmosphereLight {
+class AtmosphereLight extends DirectionalLight {
   constructor(distance?: number)
 }
 ```
@@ -364,7 +414,7 @@ class AtmosphereLight {
 distance = 1
 ```
 
-The distance from `DirectionalLight.target` to the light's position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects you want to cast shadows.
+The distance from `DirectionalLight.target` to the light's position. Adjust the target and this value when shadows are enabled so that the shadow camera covers the objects that should cast shadows.
 
 ### Uniforms
 
@@ -383,6 +433,8 @@ indirect = uniform(true)
 ```
 
 Whether to enable indirect sunlight. This must be turned off when you use an environment map.
+
+<a id='-aerial-perspective-node'></a>
 
 ## AerialPerspectiveNode
 
@@ -433,7 +485,7 @@ A node representing the scene's normal. It is only used for post-process lightin
 skyNode?: Node | null
 ```
 
-A node representing the radiance of celestial sources and atmospheric scattering seen from the camera at the far depth (where the depth value equals 1)
+A node representing the radiance of celestial sources and atmospheric scattering as seen from the camera at the far depth (where the depth value equals 1).
 
 #### shadowLengthNode
 
@@ -441,10 +493,10 @@ A node representing the radiance of celestial sources and atmospheric scattering
 shadowLengthNode?: Node | null
 ```
 
-A node representing the shadowed length along the camera rays. The x component stores the shadow length, and y component stores the distance to the first shadow segment from the camera.
+A node representing the shadow length along camera rays. The x component stores the total shadow length, and the y component stores the distance from the camera to the first shadow segment.
 
 > [!NOTE]
-> This formulation assumes a single continuous shadowed segment along the camera rays.
+> This formulation assumes a single continuous shadow segment along the camera ray.
 
 ### Static options
 
@@ -456,7 +508,7 @@ correctGeometricError = true
 
 This option corrects lighting artifacts caused by geometric errors in surface tiles.
 
-When `lighting` is enabled, the surface normals are gradually morphed to a true sphere. Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
+When `lighting` is enabled, surface normals are gradually morphed toward those of a true sphere. Disable this option if your scene contains objects that penetrate the atmosphere or are located in space.
 
 #### lighting
 
@@ -473,9 +525,11 @@ transmittance = true
 inscattering = true
 ```
 
-Whether to account for the atmospheric transmittance and inscattered light.
+Whether to account for atmospheric transmittance and inscattered light.
 
-Enabling one without the other is physically incorrect and should only be done for debugging.
+Enabling one without the other is physically incorrect and should only be used for debugging.
+
+<a id='-sky-node'></a>
 
 ## SkyNode
 
@@ -510,10 +564,10 @@ const skyBackground: (shadowLengthNode?: Node | null) => SkyNode
 shadowLengthNode?: Node | null
 ```
 
-A node representing the shadowed length along the camera rays. The x component stores the shadow length, and y component stores the distance to the first shadow segment from the camera.
+A node representing the shadow length along camera rays. The x component stores the total shadow length, and the y component stores the distance from the camera to the first shadow segment.
 
 > [!NOTE]
-> This formulation assumes a single continuous shadowed segment along the camera rays.
+> This formulation assumes a single continuous shadow segment along the camera ray.
 
 #### sunNode
 
@@ -555,7 +609,7 @@ The angular radius of the sun in radians.
 sunNode.intensity = uniform(1)
 ```
 
-A scaling factor to adjust the brightness of the sun.
+A scaling factor for the brightness of the sun.
 
 #### moonNode.angularRadius
 
@@ -571,7 +625,7 @@ The angular radius of the moon in radians.
 moonNode.intensity = uniform(1)
 ```
 
-A scaling factor to adjust the brightness of the sun.
+A scaling factor for the brightness of the moon.
 
 #### starsNode.pointSize
 
@@ -587,11 +641,11 @@ The apparent size of the stars, in pixels.
 starsNode.intensity = uniform(1000)
 ```
 
-A scaling factor to adjust the brightness of the stars.
+A scaling factor for the brightness of the stars.
 
 > [!NOTE]
-> The default value of 1000 is too bright from a physical standpoint. Otherwise, the stars become completely invisible, which is the correct result but makes them useless in most scenes.
-> Please set this value to 1 when the star luminance needs to be physically correct, as in the [Art002E000192 story](https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-space--art-002-e-000192).
+> The default value of 1000 is far too bright from a physical standpoint. Without it, stars would be completely invisible, which is physically correct but useless in most scenes.
+> Set this value to 1 when physically correct star luminance is needed, as in the [Art002E000192 story](https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-space--art-002-e-000192).
 
 ### Static options
 
@@ -618,6 +672,8 @@ showStars = true
 ```
 
 Whether to display the stars.
+
+<a id='-sky-environment-node'></a>
 
 ## SkyEnvironmentNode
 
@@ -647,7 +703,7 @@ const skyEnvironment: (size?: number) => SkyEnvironmentNode
 skyNode: SkyNode
 ```
 
-A node representing the radiance of celestial sources and atmospheric scattering seen from the camera.
+A node representing the radiance of celestial sources and atmospheric scattering as seen from the camera.
 
 ### Parameters
 
@@ -657,7 +713,7 @@ A node representing the radiance of celestial sources and atmospheric scattering
 distanceThreshold: 1000
 ```
 
-The distance in meters the camera moves before the PMREM is updated.
+The distance in meters the camera must move before the PMREM is updated.
 
 #### angularThreshold
 
@@ -665,9 +721,109 @@ The distance in meters the camera moves before the PMREM is updated.
 angularThreshold: radians(0.1)
 ```
 
-The angle in radians the sun direction changes before the PMREM is updated.
+The angle in radians the sun direction must change before the PMREM is updated.
+
+<a id='-view-z-unit'></a>
+
+## viewZUnit
+
+```ts
+const viewZUnit: Node<'float'>
+```
+
+The view Z for the current fragment depth, scaled by `worldToUnit`. This is used as an MRT output to produce the `viewZUnitNode` texture required by [`ShadowLengthNode`](#-shadow-length-node).
+
+→ [Source](/packages/atmosphere/src/webgpu/accessors.ts)
+
+```ts
+import { viewZUnit } from '@takram/three-atmosphere/webgpu'
+import { mrt, output, pass } from 'three/tsl'
+
+const passNode = pass(scene, camera).setMRT(mrt({ output, viewZUnit }))
+```
+
+<a id='-shadow-length-node'></a>
 
 ## ShadowLengthNode
+
+Computes the shadow length along camera rays using epipolar sampling combined with cascaded shadow maps. The output is a `vec2` where the x component is the total shadow length and the y component is the distance from the camera to the first shadow segment.
+
+The implementation is based on Intel's [Outdoor Light Scattering](https://github.com/GameTechDev/OutdoorLightScattering).
+
+→ [Source](/packages/atmosphere/src/webgpu/ShadowLengthNode.ts)
+
+### Constructor
+
+```ts
+const shadowLength: (
+  csmShadowNode: CascadedShadowMapsNode,
+  viewZUnitNode: TextureNode
+) => ShadowLengthNode
+```
+
+### Dependencies
+
+#### csmShadowNode
+
+```ts
+csmShadowNode: CascadedShadowMapsNode
+```
+
+The cascaded shadow maps node.
+
+#### viewZUnitNode
+
+```ts
+viewZUnitNode: TextureNode
+```
+
+A texture containing the view Z scaled by `worldToUnit`. This can be produced by writing [`viewZUnit`](#-view-z-unit) to MRT output.
+
+### Parameters
+
+#### resolutionScale
+
+```ts
+resolutionScale = 1
+```
+
+A scale factor applied to the internal render resolution.
+
+#### autoSampleResolution
+
+```ts
+autoSampleResolution = true
+```
+
+Whether to automatically adjust `epipolarSliceCount` and `maxSliceSampleCount` based on the screen size.
+
+### Uniforms
+
+#### epipolarSliceCount
+
+```ts
+epipolarSliceCount = uniform(512)
+```
+
+The number of epipolar slices. For best results, use at least half the maximum screen dimension. Ignored when `autoSampleResolution` is enabled.
+
+#### maxSliceSampleCount
+
+```ts
+maxSliceSampleCount = uniform(256)
+```
+
+The maximum number of samples per epipolar slice. For best results, use at least half the maximum screen dimension. Ignored when `autoSampleResolution` is enabled.
+
+#### firstCascade
+
+```ts
+firstCascade = uniform(0)
+```
+
+The index of the first cascade used for shadow raymarching.
+
+<a id='-atmosphere-parameters'></a>
 
 ## AtmosphereParameters
 
@@ -683,6 +839,8 @@ const parameters = new AtmosphereParameters()
 const atmosphereContext = new AtmosphereContext(parameters)
 ```
 
+→ [Source](/packages/atmosphere/src/webgpu/AtmosphereParameters.ts)
+
 ### Static options
 
 #### worldToUnit
@@ -691,7 +849,7 @@ const atmosphereContext = new AtmosphereContext(parameters)
 worldToUnit = 0.001
 ```
 
-A unit-less scaling factor for convert meters to the internal length unit (defaults to km) to reduce loss of floating-point precision during internal calculation.
+A dimensionless scaling factor for converting meters to the internal length unit (defaults to km) to reduce loss of floating-point precision during internal calculations.
 
 #### solarIrradiance
 
@@ -831,7 +989,7 @@ The precomputed coefficients (lm･W<sup>-1</sup>) to approximate the conversion
 luminanceScale = 1 / luminanceCoefficients.dot(sunRadianceToLuminance)
 ```
 
-A unit-less scaling factor to bring true luminance values into a numerically stable range. This helps prevent noticeable precision loss in half-float buffers.
+A dimensionless scaling factor that brings true luminance values into a numerically stable range. This helps prevent noticeable precision loss in half-float buffers.
 
 #### combinedScatteringTextures
 
@@ -847,7 +1005,68 @@ Whether to store the single Mie scattering in the alpha channel of the scatterin
 higherOrderScatteringTexture = true
 ```
 
-Whether to generate and use a separate texture for higher-order scattering (n >= 2) for a better approximation of the multi-scattering occlusion.
+Whether to generate and use a separate texture for higher-order scattering (n >= 2) for better approximation of multi-scattering occlusion.
+
+<a id='-atmosphere-lut-node'></a>
+
+## AtmosphereLUTNode
+
+A node that generates and stores the LUT textures required for rendering the atmosphere.
+
+→ [Source](/packages/atmosphere/src/webgpu/AtmosphereLUTNode.ts)
+
+### Constructor
+
+```ts
+class AtmosphereLUTNode extends Node {
+  constructor(parameters?: AtmosphereParameters, textureType?: AnyFloatType)
+}
+```
+
+### Methods
+
+#### getTextureNode
+
+```ts
+type AtmosphereLUTTextureName =
+  | 'transmittance'
+  | 'multipleScattering'
+  | 'irradiance'
+type AtmosphereLUTTexture3DName =
+  | 'scattering'
+  | 'singleMieScattering'
+  | 'higherOrderScattering'
+
+getTextureNode: (name: AtmosphereLUTTextureName) => TextureNode
+getTextureNode: (name: AtmosphereLUTTexture3DName) => Texture3DNode
+```
+
+<a id='-atmosphere-light-node'></a>
+
+## AtmosphereLightNode
+
+Represents direct and indirect sunlight as a node.
+
+Add it along with [`AtmosphereLight`](#-atmosphere-light) to the renderer's node library before use:
+
+```ts
+import {
+  AtmosphereLight,
+  AtmosphereLightNode
+} from '@takram/three-atmosphere/webgpu'
+
+renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)
+```
+
+→ [Source](/packages/atmosphere/src/webgpu/AtmosphereLightNode.ts)
+
+### Constructor
+
+```ts
+class AtmosphereLightNode extends AnalyticLightNode<AtmosphereLight> {
+  constructor(light?: AtmosphereLight | null)
+}
+```
 
 # Acknowledgement
 

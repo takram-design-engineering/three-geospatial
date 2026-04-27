@@ -2,7 +2,7 @@
 
 A monorepo of libraries for enhancing geospatial rendering in Three.js.
 
-This project takes a modular approach, allowing users to selectively use only the parts they need, rather than aiming to provide a comprehensive solution. It is designed to work in combination with existing, excellent libraries such as `3d-tiles-renderer`, `astronomy-engine`, and of course, Three.js and R3F (React Three Fiber).
+This project takes a modular approach, allowing users to selectively use only the parts they need rather than aiming to provide a comprehensive solution. It is designed to work alongside existing, excellent libraries such as `3d-tiles-renderer`, `astronomy-engine`, and of course Three.js and R3F (React Three Fiber).
 
 This project originally started as a prototype focused on the rendering aspect of a Web GIS engine developed by Eukarya. It was part of Takram's client work, commissioned by Eukarya under the SBIR (Small/Startup Business Innovation Research) program led by the Cabinet Office of Japan. Our contribution to the project concluded in March 2025.
 
@@ -16,11 +16,11 @@ This project originally started as a prototype focused on the rendering aspect o
 | [core](packages/core) | Provides fundamental functions for rendering GIS data | Alpha | [@takram/three-geospatial](https://www.npmjs.com/package/@takram/three-geospatial) |
 | [effects](packages/effects) | A collection of post-processing effects | Alpha | [@takram/three-geospatial-effects](https://www.npmjs.com/package/@takram/three-geospatial-effects) |
 
-Other packages not listed above are considered “examples” and are not intended for production use.
+Other packages not listed above are considered "examples" and are not intended for production use.
 
 ## Status of WebGPU support
 
-I'm actively working on adding support for WebGPU. This involves a complete rewrite of our API because of the transition from shader-chunk-based post-processing to a node-based approach. It already performs much better and offers greater flexibility.
+I'm actively working on WebGPU support. This involves a complete rewrite of the API due to the transition from shader-chunk-based post-processing to a node-based approach. It already performs much better and offers greater flexibility.
 
 → [Storybook](https://takram-design-engineering.github.io/three-geospatial-webgpu)
 
@@ -33,7 +33,7 @@ It will feature:
 - The moon's surface
 - More reliable rendering of stars
 
-Once all packages support WebGPU, the current implementation of the shader-chunk-based architecture will be archived and superseded by the node-based implementation. This will not mean dropping support for WebGL, because a WebGL fallback will still be possible, but the new API will be incompatible with the current one.
+Once all packages support WebGPU, the current shader-chunk-based architecture will be archived and superseded by the node-based implementation. This does not mean dropping WebGL support, because a WebGL fallback will still be possible, but the new API will be incompatible with the current one.
 
 <!-- prettier-ignore -->
 | Name | Status |
@@ -45,11 +45,11 @@ Once all packages support WebGPU, the current implementation of the shader-chunk
 
 ## Developing
 
-This repository uses a monorepo setup with [Nx](https://nx.dev). Please refer to its documentation for details of the concept.
+This repository uses a monorepo setup with [Nx](https://nx.dev). Please refer to its documentation for details.
 
 The `packages` directory contains the publishable NPM packages listed above.
 
-The `storybook` directory contains [Storybook](https://storybook.js.org) stories across the libraries. The stories are separated from the libraries to avoid circular dependencies. Story files and components are also separated to enable fast-refresh, which only supports files containing components only.
+The `storybook` directory contains [Storybook](https://storybook.js.org) stories across the libraries. Stories are separated from the libraries to avoid circular dependencies. Story files and components are also separated to enable fast-refresh, which only works with files that contain components only.
 
 The `apps` directory contains standalone applications.
 
@@ -71,7 +71,7 @@ git lfs pull
 
 ### Commands
 
-Project level commands are defined in [`project.json`](project.json). Although library and app-specific commands are defined in the respective `project.json`, most of them are inferred targets, and you may need to run `nx show project {name}` to see them.
+Project level commands are defined in [`project.json`](project.json). Library and app specific commands are defined in their respective `project.json` files, but most of them are inferred targets. You may need to run `nx show project {name}` to see them.
 
 - `nx storybook`: Run Storybook locally.
 - `nx build`: Build all libraries and apps.
@@ -93,17 +93,17 @@ Create a `.env` file in the root directory with either of the following variable
 
 ### Formatting and linting
 
-Run `nx format-all` to format your source code using Prettier. Ignore files you did not edit, as other files might also be formatted.
+Run `nx format-all` to format source code using Prettier. Ignore files you did not edit, as other files may also be formatted.
 
 Run `nx lint` to check for non-formatting-related code conventions.
 
-Alternatively, if you use VS Code, installing the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) can help.
+Alternatively, if you use VS Code, the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) can help.
 
 ### Running Storybook
 
 All examples are created as [Storybook](https://storybook.js.org) stories, hosted at: https://takram-design-engineering.github.io/three-geospatial/.
 
-The command below runs Storybook locally on port 4400 by default. You can override the port by adding the `--port` option:
+The command below runs Storybook locally on port 4400 by default. You can override the port with the `--port` option:
 
 ```sh
 nx storybook
@@ -122,9 +122,9 @@ Try adding it to `optimizeDeps.exclude`.
 
 or even `R3F: Hooks can only be used within the Canvas component!` error in the browser.
 
-If the Storybook build succeeded on the commit you're currently on in the Github Actions, the problem is likely not in the source or Storybook configuration. I haven't found a reliable way to prevent this problem or recover from it reliably.
+If the Storybook build succeeded on the commit you're currently on in Github Actions, the problem is likely not in the source or Storybook configuration. I haven't found a reliable way to prevent or recover from this.
 
-In most cases, removing the Storybook cache, resetting NX, restarting Storybook, and opening the Storybook in a _new browser window_ will recover from it:
+In most cases, removing the Storybook cache, resetting Nx, restarting Storybook, and opening it in a _new browser window_ resolves the issue:
 
 ```sh
 rm -r storybook/node_modules
