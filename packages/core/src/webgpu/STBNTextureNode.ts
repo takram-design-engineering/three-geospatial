@@ -47,6 +47,20 @@ export class STBNTextureNode extends Texture3DNode {
       })
     return super.setup(builder)
   }
+
+  override clone(): this {
+    // @ts-expect-error Ignore
+    const copy = new this.constructor()
+    copy.uvNode = this.uvNode
+    copy.levelNode = this.levelNode
+    copy.biasNode = this.biasNode
+    copy.sampler = this.sampler
+    copy.depthNode = this.depthNode
+    copy.compareNode = this.compareNode
+    copy.gradNode = this.gradNode
+    copy.offsetNode = this.offsetNode
+    return copy
+  }
 }
 
 export const stbnTexture = /*#__PURE__*/ nodeImmutable(STBNTextureNode)

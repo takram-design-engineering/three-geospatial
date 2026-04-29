@@ -31,7 +31,16 @@ export class OutputTextureNode extends TextureNode {
 
   override clone(): this {
     // @ts-expect-error Ignore
-    return new this.constructor(this.owner, this.value)
+    const copy = new this.constructor(this.owner, this.value)
+    copy.uvNode = this.uvNode
+    copy.levelNode = this.levelNode
+    copy.biasNode = this.biasNode
+    copy.sampler = this.sampler
+    copy.depthNode = this.depthNode
+    copy.compareNode = this.compareNode
+    copy.gradNode = this.gradNode
+    copy.offsetNode = this.offsetNode
+    return copy
   }
 }
 
