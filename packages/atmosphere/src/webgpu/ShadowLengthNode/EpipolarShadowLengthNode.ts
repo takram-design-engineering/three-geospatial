@@ -27,6 +27,7 @@ import {
   RGFormat,
   type PerspectiveCamera
 } from 'three'
+import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   and,
   Break,
@@ -61,8 +62,7 @@ import {
   FnVar,
   Node,
   outputTexture,
-  raySpheresIntersections,
-  type CascadedShadowMapsNode
+  raySpheresIntersections
 } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from '../AtmosphereContext'
@@ -101,7 +101,7 @@ export class EpipolarShadowLengthNode extends Node {
     return 'EpipolarShadowLengthNode'
   }
 
-  csmShadowNode!: CascadedShadowMapsNode
+  csmShadowNode!: CSMShadowNode
   coordinateNode!: TextureNode
   sliceUVDirectionNode!: TextureNode
   minMaxLevelsNode!: TextureNode

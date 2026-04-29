@@ -18,6 +18,7 @@
  * Modified from the original source code.
  */
 
+import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
   float,
@@ -45,11 +46,7 @@ import {
 import invariant from 'tiny-invariant'
 
 import { floorPowerOfTwo } from '@takram/three-geospatial'
-import {
-  OnBeforeFrameUpdate,
-  type CascadedShadowMapsNode,
-  type Node
-} from '@takram/three-geospatial/webgpu'
+import { OnBeforeFrameUpdate, type Node } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from './AtmosphereContext'
 import { CoordinateNode } from './ShadowLengthNode/CoordinateNode'
@@ -69,7 +66,7 @@ export class ShadowLengthNode extends TempNode {
     return 'ShadowLengthNode'
   }
 
-  csmShadowNode: CascadedShadowMapsNode
+  csmShadowNode: CSMShadowNode
   viewZUnitNode!: TextureNode // Must be filterable
 
   sliceEndpointsNode: SliceEndpointsNode
@@ -101,10 +98,7 @@ export class ShadowLengthNode extends TempNode {
 
   private currentCascades = 0
 
-  constructor(
-    csmShadowNode: CascadedShadowMapsNode,
-    viewZUnitNode: TextureNode
-  ) {
+  constructor(csmShadowNode: CSMShadowNode, viewZUnitNode: TextureNode) {
     super('vec2')
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
 

@@ -751,7 +751,7 @@ The implementation is based on Intel's [Outdoor Light Scattering](https://github
 
 ```ts
 const shadowLength: (
-  csmShadowNode: CascadedShadowMapsNode,
+  csmShadowNode: CSMShadowNode,
   viewZUnitNode: TextureNode
 ) => ShadowLengthNode
 ```
@@ -761,7 +761,7 @@ const shadowLength: (
 #### csmShadowNode
 
 ```ts
-csmShadowNode: CascadedShadowMapsNode
+csmShadowNode: CSMShadowNode
 ```
 
 The cascaded shadow maps node.

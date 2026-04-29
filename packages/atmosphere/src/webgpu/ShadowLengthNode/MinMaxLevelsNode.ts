@@ -26,6 +26,7 @@ import {
   RGFormat,
   Vector2
 } from 'three'
+import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   and,
   floor,
@@ -55,8 +56,7 @@ import {
 import {
   Node,
   outputTexture,
-  textureGather,
-  type CascadedShadowMapsNode
+  textureGather
 } from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -69,7 +69,7 @@ export class MinMaxLevelsNode extends Node {
     return 'MinMaxLevelsNode'
   }
 
-  csmShadowNode!: CascadedShadowMapsNode
+  csmShadowNode!: CSMShadowNode
   sliceUVDirectionNode!: TextureNode
   shadowDepthNodes!: TextureNode[]
 
