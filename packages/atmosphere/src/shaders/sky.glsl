@@ -30,7 +30,8 @@ vec3 getSkyRadiance(
   const vec3 sunDirection,
   const vec3 moonDirection,
   const float moonAngularRadius,
-  const float lunarRadianceScale
+  const float lunarRadianceScale,
+  const float fragmentAngle
 ) {
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
@@ -43,12 +44,6 @@ vec3 getSkyRadiance(
 
   // Rendering celestial objects without perspective doesn't make sense.
   #ifdef PERSPECTIVE_CAMERA
-
-  #if defined(SUN) || defined(MOON)
-  vec3 ddx = dFdx(rayDirection);
-  vec3 ddy = dFdy(rayDirection);
-  float fragmentAngle = length(ddx + ddy) / length(rayDirection);
-  #endif // defined(SUN) || defined(MOON)
 
   #ifdef SUN
   float viewDotSun = dot(rayDirection, sunDirection);

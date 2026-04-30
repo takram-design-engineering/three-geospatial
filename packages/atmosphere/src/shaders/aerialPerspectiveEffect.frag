@@ -287,10 +287,14 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   }
   #endif // HAS_OVERLAY
 
+  vec3 rayDirection = normalize(vRayDirection);
+  vec3 dRDdx = dFdx(rayDirection);
+  vec3 dRDdy = dFdy(rayDirection);
+  float fragmentAngle = length(dRDdx + dRDdy) / length(rayDirection);
+
   float depth = readDepthValue(depthBuffer, uv);
   if (depth >= 1.0 - 1e-8) {
     #ifdef SKY
-    vec3 rayDirection = normalize(vRayDirection);
     outputColor.rgb = getSkyRadiance(
       vCameraPosition,
       rayDirection,
@@ -298,7 +302,8 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
       sunDirection,
       moonDirection,
       moonAngularRadius,
-      lunarRadianceScale
+      lunarRadianceScale,
+      fragmentAngle
     );
     outputColor.a = 1.0;
     #else // SKY
@@ -327,9 +332,9 @@ void mainImage(const vec4 inputColor, const vec2 uv, out vec4 outputColor) {
   vec3 viewNormal;
   bool degenerateNormal = false;
   #ifdef RECONSTRUCT_NORMAL
-  vec3 dx = dFdx(viewPosition);
-  vec3 dy = dFdy(viewPosition);
-  viewNormal = normalize(cross(dx, dy));
+  vec3 dVPdx = dFdx(viewPosition);
+  vec3 dVPdy = dFdy(viewPosition);
+  viewNormal = normalize(cross(dVPdx, dVPdy));
   #elif defined(HAS_NORMALS)
   viewNormal = readNormal(uv, degenerateNormal);
   #endif // defined(HAS_NORMALS)
