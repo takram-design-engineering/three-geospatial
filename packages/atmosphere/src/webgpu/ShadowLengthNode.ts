@@ -18,6 +18,14 @@
  * Modified from the original source code.
  */
 
+import {
+  DirectionalLight,
+  Matrix4,
+  PerspectiveCamera,
+  Vector2,
+  Vector3,
+  Vector4
+} from 'three'
 import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import { hash } from 'three/src/nodes/core/NodeUtils.js'
 import {
@@ -31,14 +39,9 @@ import {
   vec4
 } from 'three/tsl'
 import {
-  Matrix4,
   NodeMaterial,
   NodeUpdateType,
-  PerspectiveCamera,
   TempNode,
-  Vector2,
-  Vector3,
-  Vector4,
   type NodeBuilder,
   type NodeFrame,
   type TextureNode
@@ -127,6 +130,7 @@ export class ShadowLengthNode extends TempNode {
     if (camera == null || light == null) {
       return
     }
+    invariant(light instanceof DirectionalLight)
 
     const { lights } = csmShadowNode
     if (lights.length !== this.currentCascades) {
