@@ -59,6 +59,7 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
   let forceWebGL = useControl(({ forceWebGL }: RendererArgs) => forceWebGL)
   forceWebGL ||= !available
   const pixelRatio = useControl(({ pixelRatio }: RendererArgs) => pixelRatio)
+  const frameloop = useControl(({ frameloop }: RendererArgs) => frameloop)
 
   const ref = useRef<Renderer>(null)
   useEffect(() => {
@@ -83,6 +84,7 @@ export const WebGPUCanvas: FC<WebGPUCanvasProps> = ({
     <>
       <Canvas
         key={forceWebGL ? 'webgl' : 'webgpu'}
+        frameloop={frameloop}
         {...canvasProps}
         gl={async props => {
           const renderer = new WebGPURenderer({

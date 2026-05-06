@@ -300,37 +300,35 @@ export const getTransmittance = /*#__PURE__*/ FnVar(
       const transmittance = vec3(0).toVar()
       If(intersectsGround, () => {
         transmittance.assign(
-          min(
-            getTransmittanceToTopAtmosphereBoundary(
-              transmittanceNode,
-              radiusEnd,
-              cosViewEnd.negate()
-            ).div(
+          getTransmittanceToTopAtmosphereBoundary(
+            transmittanceNode,
+            radiusEnd,
+            cosViewEnd.negate()
+          )
+            .div(
               getTransmittanceToTopAtmosphereBoundary(
                 transmittanceNode,
                 radius,
                 cosView.negate()
               )
-            ),
-            vec3(1)
-          )
+            )
+            .min(1)
         )
       }).Else(() => {
         transmittance.assign(
-          min(
-            getTransmittanceToTopAtmosphereBoundary(
-              transmittanceNode,
-              radius,
-              cosView
-            ).div(
+          getTransmittanceToTopAtmosphereBoundary(
+            transmittanceNode,
+            radius,
+            cosView
+          )
+            .div(
               getTransmittanceToTopAtmosphereBoundary(
                 transmittanceNode,
                 radiusEnd,
                 cosViewEnd
               )
-            ),
-            vec3(1)
-          )
+            )
+            .min(1)
         )
       })
       return transmittance

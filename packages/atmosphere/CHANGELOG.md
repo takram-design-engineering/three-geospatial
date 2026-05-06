@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.19.1] - 2026-05-26
+
+### Fixed
+
+- WebGPU: `ShadowLengthNode`: Fixed the type of `csmShadowNode`.
+- WebGPU: `ShadowLengthNode`: Fixed the distance to the first shadow segment not being properly accounted for.
+- WebGPU: `ShadowLengthNode`: Suppressed artifacts in the distance to the first shadow segment.
+- WebGL: Fixed unstable derivatives.
+- WebGL: Fixed the sun disk not being rendered on some devices, [#110](https://github.com/takram-design-engineering/three-geospatial/issues/110).
+
 ## [0.19.0] - 2026-04-27
 
 All changes were made to the WebGPU implementation, unless otherwise noted.

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.1] - 2026-05-06
+
+### Fixed
+
+- Fixed subclasses of TextureNode not being properly cloned.
+
 ## [0.9.0] - 2026-04-27
 
 All changes were made to the WebGPU implementation, unless otherwise noted.

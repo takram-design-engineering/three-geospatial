@@ -114,6 +114,7 @@ export interface AerialPerspectiveEffectUniforms {
   altitudeCorrection: Uniform<Vector3>
   geometricErrorCorrectionAmount: Uniform<number>
   sunDirection: Uniform<Vector3>
+  cosSunAngularRadius: Uniform<number>
   albedoScale: Uniform<number>
   moonDirection: Uniform<Vector3>
   moonAngularRadius: Uniform<number>
@@ -252,7 +253,8 @@ export class AerialPerspectiveEffect extends Effect {
             altitudeCorrection: new Uniform(new Vector3()),
             geometricErrorCorrectionAmount: new Uniform(0),
             sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
-            albedoScale: new Uniform( albedoScale),
+            cosSunAngularRadius: new Uniform(atmosphere.sunAngularRadius),
+            albedoScale: new Uniform(albedoScale),
             moonDirection: new Uniform(moonDirection?.clone() ?? new Vector3()),
             moonAngularRadius: new Uniform(moonAngularRadius),
             lunarRadianceScale: new Uniform(lunarRadianceScale),
@@ -587,6 +589,15 @@ export class AerialPerspectiveEffect extends Effect {
 
   get sunDirection(): Vector3 {
     return this.uniforms.get('sunDirection').value
+  }
+
+  get sunAngularRadius(): number {
+    return this.uniforms.get('ATMOSPHERE').value.sun_angular_radius
+  }
+
+  set sunAngularRadius(value: number) {
+    this.uniforms.get('ATMOSPHERE').value.sun_angular_radius = value
+    this.uniforms.get('cosSunAngularRadius').value = Math.cos(value)
   }
 
   @define('SUN_LIGHT')

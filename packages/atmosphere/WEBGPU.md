@@ -31,12 +31,7 @@ Please note the peer dependencies differ from the required versions to maintain 
 ## Examples
 
 <p align="center">
-  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-space--space"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/space.webp" /></a>
-  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-low-earth-orbit--low-earth-orbit"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/low-earth-orbit.webp" /></a>
-  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-cruising-altitude--cruising-altitude"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/cruising-altitude.webp" /></a>
-  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-cityscape--cityscape"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/cityscape.webp" /></a>
-  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-non-geospatial--non-geospatial"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/non-geospatial.webp" /></a>
-  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-sky--moon-surface"><img width="32%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/main/packages/atmosphere/docs/moon-surface.webp" /></a>
+  <a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-space--space"><img width="50%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/refs/heads/main/packages/atmosphere/docs/space.webp" /></a><a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-low-earth-orbit--low-earth-orbit"><img width="50%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/refs/heads/main/packages/atmosphere/docs/low-earth-orbit.webp" /></a><a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-3d-tiles-renderer-integration--shadows"><img width="50%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/refs/heads/main/packages/atmosphere/docs/shadows.webp" /></a><a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-cruising-altitude--cruising-altitude"><img width="50%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/refs/heads/main/packages/atmosphere/docs/cruising-altitude.webp" /></a><a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-3d-tiles-renderer-integration--light-source-lighting"><img width="50%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/refs/heads/main/packages/atmosphere/docs/light-source-lighting.webp" /></a><a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-cityscape--cityscape"><img width="50%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/refs/heads/main/packages/atmosphere/docs/cityscape.webp" /></a><a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-sky--moon-surface"><img width="50%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/refs/heads/main/packages/atmosphere/docs/moon-surface.webp" /></a><a href="https://takram-design-engineering.github.io/three-geospatial-webgpu/?path=/story/atmosphere-non-geospatial--non-geospatial"><img width="50%" src="https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/refs/heads/main/packages/atmosphere/docs/non-geospatial.webp" /></a>
 </p>
 
 ## Usage
@@ -756,7 +751,7 @@ The implementation is based on Intel's [Outdoor Light Scattering](https://github
 
 ```ts
 const shadowLength: (
-  csmShadowNode: CascadedShadowMapsNode,
+  csmShadowNode: CSMShadowNode,
   viewZUnitNode: TextureNode
 ) => ShadowLengthNode
 ```
@@ -766,7 +761,7 @@ const shadowLength: (
 #### csmShadowNode
 
 ```ts
-csmShadowNode: CascadedShadowMapsNode
+csmShadowNode: CSMShadowNode
 ```
 
 The cascaded shadow maps node.

@@ -185,10 +185,15 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
 
     // If the viewer is in space and the view ray intersects the atmosphere,
     // move the viewer to the top atmosphere boundary along the view ray.
+    shadowLength = shadowLength.toVar()
     If(distanceToTop.greaterThan(0), () => {
       camera.assign(camera.add(rayDirection.mul(distanceToTop)))
       radius.assign(topRadius)
       radiusCosView.addAssign(distanceToTop)
+
+      // The y component of shadow length is the distance from the camera,
+      // which must be moved as well.
+      shadowLength.y.assign(shadowLength.y.sub(distanceToTop).max(0))
     })
 
     const radiance = vec3(0).toVar()
@@ -333,9 +338,14 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
       })
 
       if (context.accurateShadowScattering) {
-        scatteringConditional
-          .ElseIf(shadowLength.y.equal(0), scatteringBranch2)
-          .Else(scatteringBranch3)
+        // TODO: Technically, we could use the scatteringBranch2 when the shadow
+        // starts from the camera to reduce the number of LUT lookups, but it
+        // produces discontinuity seemingly due to emphasized transmittance
+        // between a short distance.
+        // scatteringConditional
+        //   .ElseIf(shadowLength.y.equal(0), scatteringBranch2)
+        //   .Else(scatteringBranch3)
+        scatteringConditional.Else(scatteringBranch3)
       } else {
         scatteringConditional.Else(scatteringBranch2)
       }
@@ -730,10 +740,15 @@ const getIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
       // If the viewer is in space and the view ray intersects the atmosphere,
       // move the viewer to the top atmosphere boundary along the view ray.
       const rayOrigin = camera.toVar()
+      shadowLength = shadowLength.toVar()
       If(distanceToTop.greaterThan(0), () => {
         rayOrigin.addAssign(rayDirection.mul(distanceToTop))
         radius.assign(topRadius)
         radiusCosView.addAssign(distanceToTop)
+
+        // The y component of shadow length is the distance from the camera,
+        // which must be moved as well.
+        shadowLength.y.assign(shadowLength.y.sub(distanceToTop).max(0))
       })
 
       const cosView = radiusCosView.div(radius)

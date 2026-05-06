@@ -403,7 +403,6 @@ interface StoryArgs
 export const Story: StoryFC<StoryProps, StoryArgs> = props => (
   <WebGPUCanvas
     shadows
-    camera={{ fov: 50 }}
     renderer={{
       onInit: renderer => {
         renderer.library.addLight(AtmosphereLightNode, AtmosphereLight)

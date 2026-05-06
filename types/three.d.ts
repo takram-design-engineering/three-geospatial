@@ -132,6 +132,7 @@ declare module 'three/src/renderers/common/Backend.js' {
 
 declare module 'three/src/nodes/accessors/TextureNode.js' {
   export default interface TextureNode {
+    offsetNode: Node | null
     sample(uvNode: Node): TextureNode
     load(uvNode: Node): TextureNode
     blur(amountNode: Node): TextureNode

@@ -20,13 +20,14 @@ uniform sampler3D higher_order_scattering_texture;
 #include "bruneton/common"
 #include "bruneton/runtime"
 
-#include "sky"
-
 uniform vec3 sunDirection;
+uniform float cosSunAngularRadius;
 uniform vec3 moonDirection;
 uniform float moonAngularRadius;
 uniform float lunarRadianceScale;
 uniform vec3 groundAlbedo;
+
+#include "sky"
 
 #ifdef HAS_SHADOW_LENGTH
 uniform sampler2D shadowLengthBuffer;
@@ -48,6 +49,9 @@ void main() {
 
   vec3 cameraPosition = vCameraPosition;
   vec3 rayDirection = normalize(vRayDirection);
+  vec3 dRDdx = dFdx(rayDirection);
+  vec3 dRDdy = dFdy(rayDirection);
+  float fragmentAngle = length(dRDdx + dRDdy) / length(rayDirection);
 
   #ifdef GROUND_ALBEDO
 
@@ -87,7 +91,8 @@ void main() {
       sunDirection,
       moonDirection,
       moonAngularRadius,
-      lunarRadianceScale
+      lunarRadianceScale,
+      fragmentAngle
     );
   }
 
@@ -100,7 +105,8 @@ void main() {
     sunDirection,
     moonDirection,
     moonAngularRadius,
-    lunarRadianceScale
+    lunarRadianceScale,
+    fragmentAngle
   );
 
   #endif // GROUND_ALBEDO

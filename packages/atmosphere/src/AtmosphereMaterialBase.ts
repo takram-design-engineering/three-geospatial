@@ -82,6 +82,7 @@ export interface AtmosphereMaterialBaseUniforms {
   worldToECEFMatrix: Uniform<Matrix4>
   altitudeCorrection: Uniform<Vector3>
   sunDirection: Uniform<Vector3>
+  cosSunAngularRadius: Uniform<number>
 
   // Uniforms for atmosphere functions
   ATMOSPHERE: AtmosphereParametersUniform
@@ -130,6 +131,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
         worldToECEFMatrix: new Uniform(new Matrix4()),
         altitudeCorrection: new Uniform(new Vector3()),
         sunDirection: new Uniform(sunDirection?.clone() ?? new Vector3()),
+        cosSunAngularRadius: new Uniform(atmosphere.sunAngularRadius),
 
         // Uniforms for atmosphere functions
         ATMOSPHERE: atmosphere.toUniform(),
@@ -274,6 +276,7 @@ export abstract class AtmosphereMaterialBase extends RawShaderMaterial {
 
   set sunAngularRadius(value: number) {
     this.uniforms.ATMOSPHERE.value.sun_angular_radius = value
+    this.uniforms.cosSunAngularRadius.value = Math.cos(value)
   }
 
   /** @package */

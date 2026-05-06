@@ -1,9 +1,11 @@
+import type { Frameloop } from '@react-three/fiber'
 import type { ArgTypes } from '@storybook/react-vite'
 
 export interface RendererArgs {
   showStats: boolean
   forceWebGL: boolean
   pixelRatio: number
+  frameloop: Exclude<Frameloop, 'never'>
 }
 
 export const rendererArgs = (
@@ -12,6 +14,7 @@ export const rendererArgs = (
   showStats: false,
   forceWebGL: false,
   pixelRatio: Math.min(window.devicePixelRatio, 2),
+  frameloop: 'always',
   ...defaults
 })
 
@@ -37,6 +40,14 @@ export const rendererArgTypes = (): ArgTypes<RendererArgs> => ({
       max: 3.5,
       step: 0.1
     },
+    table: { category: 'renderer' }
+  },
+  frameloop: {
+    name: 'frameloop',
+    control: {
+      type: 'select'
+    },
+    options: ['always', 'demand'],
     table: { category: 'renderer' }
   }
 })

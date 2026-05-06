@@ -26,6 +26,7 @@ import {
   RGFormat,
   Vector2
 } from 'three'
+import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   and,
   floor,
@@ -55,8 +56,7 @@ import {
 import {
   Node,
   outputTexture,
-  textureGather,
-  type CascadedShadowMapsNode
+  textureGather
 } from '@takram/three-geospatial/webgpu'
 
 const { resetRendererState, restoreRendererState } = RendererUtils
@@ -69,7 +69,7 @@ export class MinMaxLevelsNode extends Node {
     return 'MinMaxLevelsNode'
   }
 
-  csmShadowNode!: CascadedShadowMapsNode
+  csmShadowNode!: CSMShadowNode
   sliceUVDirectionNode!: TextureNode
   shadowDepthNodes!: TextureNode[]
 
@@ -97,6 +97,12 @@ export class MinMaxLevelsNode extends Node {
 
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
+      // TODO: In reversed depth buffer, where FloatType is used for the depth
+      // texture, this lose precision and results in incorrect cascade selection
+      // in EpipolarShadowLengthNode. But as of r184, TSL doesn't allow
+      // outputting integer values. We will use RG16Unorm once it supports it,
+      // with flooring and ceiling the min/max depths.
+      // The current workaround is to use FloatType here.
       type: HalfFloatType,
       format: RGFormat
     })

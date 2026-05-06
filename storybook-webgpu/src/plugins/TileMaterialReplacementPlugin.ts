@@ -18,11 +18,10 @@ function replaceMaterials(mesh: Mesh, materialHandler: () => Material): void {
   ) {
     reinterpretType<Texture | null>(prevMaterial.map)
     reinterpretType<Texture | null>(nextMaterial.map)
-    nextMaterial.map = prevMaterial.map.clone()
+    nextMaterial.map = prevMaterial.map
   }
 
   mesh.material = nextMaterial
-  prevMaterial.dispose()
 }
 
 const defaultMaterial = (): Material => new MeshBasicNodeMaterial()
@@ -72,7 +71,6 @@ export class TileMaterialReplacementPlugin {
   // Plugin method
   dispose(): void {
     this.tiles?.removeEventListener('load-model', this.handleLoadModel)
-    // TODO: This leaks the materials already replaced.
     this.tiles?.removeEventListener('dispose-model', this.handleDisposeModel)
   }
 }

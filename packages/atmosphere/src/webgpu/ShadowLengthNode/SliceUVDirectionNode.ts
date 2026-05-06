@@ -26,6 +26,7 @@ import {
   type Camera,
   type Vector2
 } from 'three'
+import type { CSMShadowNode } from 'three/examples/jsm/csm/CSMShadowNode.js'
 import {
   Fn,
   If,
@@ -52,8 +53,7 @@ import {
   bvecAnd,
   bvecNot,
   Node,
-  outputTexture,
-  type CascadedShadowMapsNode
+  outputTexture
 } from '@takram/three-geospatial/webgpu'
 
 import { getAtmosphereContext } from '../AtmosphereContext'
@@ -72,7 +72,7 @@ export class SliceUVDirectionNode extends Node {
   }
 
   depthNode!: TextureNode
-  csmShadowNode!: CascadedShadowMapsNode
+  csmShadowNode!: CSMShadowNode
   sliceEndpointsNode!: TextureNode
 
   camera!: Camera
