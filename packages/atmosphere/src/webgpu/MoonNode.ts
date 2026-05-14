@@ -15,7 +15,12 @@ import {
   vec3,
   vec4
 } from 'three/tsl'
-import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
+import {
+  TempNode,
+  type NodeBuilder,
+  type SampleNode,
+  type TextureNode
+} from 'three/webgpu'
 
 import { FnLayout, type Node } from '@takram/three-geospatial/webgpu'
 
@@ -97,8 +102,8 @@ export class MoonNode extends TempNode {
   }
 
   rayDirectionECEF: Node | null = null
-  colorNode: TextureNode | null = null
-  displacementNode: TextureNode | null = null
+  colorNode: TextureNode | SampleNode | null = null
+  displacementNode: TextureNode | SampleNode | null = null
 
   angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
   intensity = uniform(1)

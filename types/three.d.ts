@@ -90,6 +90,14 @@ declare module 'three/webgpu' {
     render(): void
     dispose(): void
   }
+
+  class SampleNode extends Node {
+    callback: (uv: Node) => Node
+    uvNode: Node | null
+    readonly isSampleNode: true
+    constructor(callback: (uv: Node) => Node, uvNode?: Node | null)
+    sample(uv: Node): Node
+  }
 }
 
 declare module 'three/tsl' {
