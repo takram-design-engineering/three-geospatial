@@ -96,9 +96,9 @@ export class MoonNode extends TempNode {
     return 'MoonNode'
   }
 
-  rayDirectionECEF?: Node
-  colorNode?: TextureNode | null
-  displacementNode?: TextureNode | null
+  rayDirectionECEF: Node | null = null
+  colorNode: TextureNode | null = null
+  displacementNode: TextureNode | null = null
 
   angularRadius = uniform(0.0045) // ≈ 15.5 arcminutes
   intensity = uniform(1)

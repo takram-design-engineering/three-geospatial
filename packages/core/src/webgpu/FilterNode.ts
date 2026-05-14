@@ -28,11 +28,11 @@ export abstract class FilterNode extends TempNode {
   private outputNode?: TextureNode
   private readonly renderTargets: RenderTarget[] = []
 
-  constructor(inputNode?: TextureNode | null) {
+  constructor(inputNode: TextureNode | null = null) {
     super('vec4')
     this.updateBeforeType = NodeUpdateType.FRAME
 
-    this.inputNode = inputNode ?? null
+    this.inputNode = inputNode
   }
 
   protected createRenderTarget(

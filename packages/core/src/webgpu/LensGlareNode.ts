@@ -142,11 +142,11 @@ export class LensGlareNode extends FilterNode {
   private readonly outputTexelSize = uniform('vec2')
   private readonly geometryRatio = uniform('vec2')
 
-  constructor(inputNode?: TextureNode | null) {
+  constructor(inputNode: TextureNode | null = null) {
     super(inputNode)
     this.material.name = 'LensGlare'
 
-    this.inputNode = inputNode ?? null
+    this.inputNode = inputNode
 
     this.outputTexture = this.renderTarget.texture
     this.mesh.geometry.indirect = this.indirectBuffer

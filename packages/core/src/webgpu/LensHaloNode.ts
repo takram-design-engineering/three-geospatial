@@ -36,11 +36,11 @@ export class LensHaloNode extends TempNode {
 
   private readonly aspectRatio = uniform(0)
 
-  constructor(inputNode?: TextureNode | null) {
+  constructor(inputNode: TextureNode | null = null) {
     super('vec3')
     this.updateBeforeType = NodeUpdateType.FRAME
 
-    this.inputNode = inputNode ?? null
+    this.inputNode = inputNode
   }
 
   override updateBefore({ renderer }: NodeFrame): void {

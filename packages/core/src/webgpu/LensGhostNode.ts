@@ -13,9 +13,9 @@ export class LensGhostNode extends TempNode {
 
   intensity = uniform(1e-5)
 
-  constructor(inputNode?: TextureNode | null) {
+  constructor(inputNode: TextureNode | null = null) {
     super('vec3')
-    this.inputNode = inputNode ?? null
+    this.inputNode = inputNode
   }
 
   override setup(builder: NodeBuilder): unknown {

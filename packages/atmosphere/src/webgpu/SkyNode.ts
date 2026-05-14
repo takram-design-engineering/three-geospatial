@@ -13,8 +13,8 @@ import { TempNode, type NodeBuilder } from 'three/webgpu'
 
 import {
   equirectToDirectionWorld,
-  inverseProjectionMatrix,
   hashValues,
+  inverseProjectionMatrix,
   type Node
 } from '@takram/three-geospatial/webgpu'
 
@@ -37,20 +37,23 @@ export class SkyNode extends TempNode {
 
   private readonly scope: SkyNodeScope
 
-  shadowLengthNode?: Node<'vec2'> | null
+  shadowLengthNode: Node<'vec2'> | null
 
   sunNode: SunNode
   moonNode: MoonNode
   starsNode: StarsNode
-  cameraPositionUnit?: Node<'vec3'> | null
-  rayDirectionECEF?: Node<'vec3'> | null
+  cameraPositionUnit: Node<'vec3'> | null = null
+  rayDirectionECEF: Node<'vec3'> | null = null
 
   showSun = true
   showMoon = true
   showStars = true
   moonScattering = false
 
-  constructor(scope: SkyNodeScope, shadowLengthNode?: Node<'vec2'> | null) {
+  constructor(
+    scope: SkyNodeScope,
+    shadowLengthNode: Node<'vec2'> | null = null
+  ) {
     super('vec3')
     this.scope = scope
     this.shadowLengthNode = shadowLengthNode

@@ -58,7 +58,7 @@ export class RenderTargetNode extends Node {
   private rendererState?: RendererUtils.RendererState
 
   constructor(
-    inputNode?: Node | null,
+    inputNode: Node | null = null,
     {
       name = 'RenderTarget',
       resolutionScale = 1,
@@ -71,7 +71,7 @@ export class RenderTargetNode extends Node {
     this.material.name = name
     this.mesh.name = name
 
-    this.inputNode = inputNode ?? null
+    this.inputNode = inputNode
     this.resolutionScale = resolutionScale
     this.renderTarget = createRenderTarget(name, options)
     this.textureNode = outputTexture(this, this.renderTarget.texture)
