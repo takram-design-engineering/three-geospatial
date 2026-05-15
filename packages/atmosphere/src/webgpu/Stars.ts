@@ -18,6 +18,7 @@ import { PointsNodeMaterial, type NodeBuilder } from 'three/webgpu'
 
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 import {
+  cameraFar,
   FnLayout,
   FnVar,
   projectionMatrix,
@@ -46,7 +47,7 @@ const magnitudeToLuminance = /*#__PURE__*/ FnVar(
 
 class StarsNodeMaterial extends PointsNodeMaterial {
   pointSize = uniform(1)
-  intensity = uniform(10000000)
+  intensity = uniform(1000)
   magnitudeRange = uniform(new Vector2(-2, 8))
 
   positionBuffer!: BufferAttribute
@@ -78,7 +79,7 @@ class StarsNodeMaterial extends PointsNodeMaterial {
 
     const directionECEF = matrixECIToECEF.mul(vec4(instancePosition, 0)).xyz
     const directionWorld = matrixECEFToWorld.mul(vec4(directionECEF, 0)).xyz
-    this.positionNode = directionWorld
+    this.positionNode = directionWorld.mul(cameraFar(camera))
 
     // Magnitude is stored between 0 to 1 within the given range:
     const magnitude = mix(

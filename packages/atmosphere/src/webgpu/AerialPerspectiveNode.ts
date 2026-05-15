@@ -275,6 +275,7 @@ export class AerialPerspectiveNode extends TempNode {
           : depth.greaterThanEqual(1),
         () => {
           if (skyNode != null) {
+            skyNode.inputNode = colorNode
             luminance.rgb.assign(skyNode)
           }
         }

@@ -42,12 +42,14 @@ export class SkyNode extends TempNode {
   sunNode: SunNode
   moonNode: MoonNode
   starsNode: StarsNode
+
+  inputNode: Node | null = null
   cameraPositionUnit: Node<'vec3'> | null = null
   rayDirectionECEF: Node<'vec3'> | null = null
 
   showSun = true
   showMoon = true
-  showStars = true
+  showStars = false
   moonScattering = false
 
   constructor(
@@ -153,7 +155,7 @@ export class SkyNode extends TempNode {
         )
       }
 
-      const luminance = vec3(0).toVar()
+      const luminance = (this.inputNode?.rgb ?? vec3(0)).toVar()
 
       if (this.showStars) {
         luminance.addAssign(this.starsNode)
