@@ -9,7 +9,7 @@ import {
   useState,
   type FC
 } from 'react'
-import { Scene } from 'three'
+import { RedFormat, Scene } from 'three'
 import { CSMHelper } from 'three/examples/jsm/csm/CSMHelper.js'
 import {
   bool,
@@ -184,6 +184,8 @@ const Content: FC<StoryProps> = ({
   const depthNode = passNode.getTextureNode('depth')
   const velocityNode = passNode.getTextureNode('velocity')
   const viewZUnitNode = passNode.getTextureNode('viewZUnit')
+
+  viewZUnitNode.value.format = RedFormat
 
   // Note that the shadow length is computed against the depths jittered by TAA,
   // causing temporal instability. But in practice, this is not noticeable.
