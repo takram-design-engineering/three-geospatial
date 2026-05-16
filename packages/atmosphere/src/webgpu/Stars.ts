@@ -1,4 +1,10 @@
-import { InstancedBufferAttribute, Sprite, type Camera } from 'three'
+import {
+  InstancedBufferAttribute,
+  Sprite,
+  type Camera,
+  type Intersection,
+  type Raycaster
+} from 'three'
 
 import { ArrayBufferLoader } from '@takram/three-geospatial'
 
@@ -27,6 +33,9 @@ export class Stars extends Sprite {
       this.createBuffers(data)
     }
   }
+
+  // Disable raycasting, which confuses GlobeControls:
+  override raycast(raycaster: Raycaster, intersects: Intersection[]): void {}
 
   override updateMatrixWorld(force?: boolean): void {
     const { camera } = this
