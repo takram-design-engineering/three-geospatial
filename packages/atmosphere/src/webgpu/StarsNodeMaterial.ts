@@ -6,6 +6,7 @@ import {
   pow,
   screenSize,
   uniform,
+  vec3,
   vec4
 } from 'three/tsl'
 import { PointsNodeMaterial, type NodeBuilder } from 'three/webgpu'
@@ -54,6 +55,10 @@ export class StarsNodeMaterial extends PointsNodeMaterial {
     this.transparent = true
     this.blending = AdditiveBlending
     this.sizeAttenuation = false
+  }
+
+  override setupNormal(): Node {
+    return vec3(0)
   }
 
   override setup(builder: NodeBuilder): void {
