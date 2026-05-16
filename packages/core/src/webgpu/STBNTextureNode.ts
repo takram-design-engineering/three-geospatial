@@ -28,6 +28,8 @@ const emptyTexture3D = /*#__PURE__*/ (() => {
 export class STBNTextureNode extends Texture3DNode {
   url = DEFAULT_STBN_URL
 
+  private dataPromise?: Promise<void>
+
   constructor() {
     super(emptyTexture3D)
   }
@@ -37,28 +39,23 @@ export class STBNTextureNode extends Texture3DNode {
   }
 
   override setup(builder: NodeBuilder): unknown {
-    new STBNLoader()
+    this.dataPromise ??= new STBNLoader()
       .loadAsync(this.url)
       .then(texture => {
+        texture.name = 'STBN'
         this.value = texture
       })
       .catch((error: unknown) => {
         console.error(error)
       })
+
     return super.setup(builder)
   }
 
-  override clone(): this {
-    // @ts-expect-error Ignore
-    const copy = new this.constructor()
-    copy.uvNode = this.uvNode
-    copy.levelNode = this.levelNode
-    copy.biasNode = this.biasNode
-    copy.sampler = this.sampler
-    copy.depthNode = this.depthNode
-    copy.compareNode = this.compareNode
-    copy.gradNode = this.gradNode
-    copy.offsetNode = this.offsetNode
+  // @ts-expect-error Ignore
+  override clone(): Texture3DNode {
+    const copy = new Texture3DNode(this.value, this.uvNode, this.levelNode)
+    copy.referenceNode = this
     return copy
   }
 }
