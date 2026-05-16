@@ -185,6 +185,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     samples: 0,
     depthBuffer: false
   })
+  overlayPassNode.renderTarget.texture.name = 'overlay'
 
   const renderPipeline = new RenderPipeline(renderer)
   renderPipeline.outputNode = taaNode

@@ -219,6 +219,7 @@ const Content: FC<StoryProps> = ({
       }),
     [camera, overlayScene]
   )
+  overlayPassNode.renderTarget.texture.name = 'overlay'
 
   const { displayShadowLength, debugShadowLength } = useControl(
     ({ shadowLength, displayShadowLength, debugShadowLength }: StoryArgs) => ({

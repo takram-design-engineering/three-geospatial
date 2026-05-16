@@ -167,6 +167,7 @@ const Content: FC<StoryProps> = ({
       }),
     [camera, overlayScene]
   )
+  overlayPassNode.renderTarget.texture.name = 'overlay'
 
   const renderPipeline = useResource(
     () =>
