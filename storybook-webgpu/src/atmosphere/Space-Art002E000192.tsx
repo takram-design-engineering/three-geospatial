@@ -145,8 +145,6 @@ const Content: FC<StoryProps> = () => {
     [colorNode, depthNode]
   )
   aerialNode.moonScattering = true
-  const skyNode = aerialNode.skyNode!
-  skyNode.starsNode.intensity.value = 1 // Physically correct value
 
   const lensFlareNode = useResource(() => lensFlare(aerialNode), [aerialNode])
   // Apply bloom on everything:
@@ -237,7 +235,10 @@ const Content: FC<StoryProps> = () => {
     <>
       <atmosphereLight castShadow />
       <atmosphereLight body='moon' />
-      <stars camera={camera} />
+      <stars
+        camera={camera}
+        material-intensity-value={1} // Physically correct value
+      />
       <OrbitControls enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}
