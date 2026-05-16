@@ -5,7 +5,7 @@ import {
 } from '3d-tiles-renderer/plugins'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { Suspense, useLayoutEffect, useMemo, type FC } from 'react'
-import { DirectionalLight, Scene, Vector3 } from 'three'
+import { ColorManagement, DirectionalLight, Scene, Vector3 } from 'three'
 import { CSMShadowNode } from 'three/addons/csm/CSMShadowNode.js'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
@@ -154,30 +154,20 @@ const Content: FC<StoryProps> = () => {
     [camera, prePassNode, passNode]
   )
 
-  const overlayPassNode = useResource(
-    () =>
-      pass(overlayScene, camera, {
-        samples: 0,
-        depthBuffer: false
-      }),
-    [camera, overlayScene]
-  )
-  overlayPassNode.renderTarget.texture.name = 'overlay'
-
   const renderPipeline = useResource(
-    () =>
-      new RenderPipeline(
-        renderer,
-        taaNode
-          .add(dithering)
-          .mul(overlayPassNode.a.oneMinus())
-          .add(overlayPassNode)
-      ),
-    [renderer, taaNode, overlayPassNode]
+    () => new RenderPipeline(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useFrame(() => {
     renderPipeline.render()
+
+    const { autoClearColor, outputColorSpace } = renderer
+    renderer.autoClearColor = false
+    renderer.outputColorSpace = ColorManagement.workingColorSpace
+    renderer.render(overlayScene, camera)
+    renderer.autoClearColor = autoClearColor
+    renderer.outputColorSpace = outputColorSpace
   }, 1)
 
   useTransientControl(

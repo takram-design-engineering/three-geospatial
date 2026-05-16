@@ -1,6 +1,6 @@
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, type FC, type ReactNode } from 'react'
-import { Scene } from 'three'
+import { ColorManagement, Scene } from 'three'
 import { context, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import { RenderPipeline, type NodeMaterial, type Renderer } from 'three/webgpu'
 
@@ -137,30 +137,20 @@ const Content: FC<StoryProps> = ({
     [camera, depthNode, velocityNode, toneMappingNode]
   )
 
-  const overlayPassNode = useResource(
-    () =>
-      pass(overlayScene, camera, {
-        samples: 0,
-        depthBuffer: false
-      }),
-    [camera, overlayScene]
-  )
-  overlayPassNode.renderTarget.texture.name = 'overlay'
-
   const renderPipeline = useResource(
-    () =>
-      new RenderPipeline(
-        renderer,
-        taaNode
-          .add(dithering)
-          .mul(overlayPassNode.a.oneMinus())
-          .add(overlayPassNode)
-      ),
-    [renderer, taaNode, overlayPassNode]
+    () => new RenderPipeline(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useGuardedFrame(() => {
     renderPipeline.render()
+
+    const { autoClearColor, outputColorSpace } = renderer
+    renderer.autoClearColor = false
+    renderer.outputColorSpace = ColorManagement.workingColorSpace
+    renderer.render(overlayScene, camera)
+    renderer.autoClearColor = autoClearColor
+    renderer.outputColorSpace = outputColorSpace
   }, 1)
 
   useTransientControl(

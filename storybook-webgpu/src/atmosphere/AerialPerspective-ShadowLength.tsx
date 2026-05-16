@@ -9,7 +9,7 @@ import {
   useState,
   type FC
 } from 'react'
-import { RedFormat, Scene } from 'three'
+import { ColorManagement, RedFormat, Scene } from 'three'
 import { CSMHelper } from 'three/examples/jsm/csm/CSMHelper.js'
 import {
   bool,
@@ -211,16 +211,6 @@ const Content: FC<StoryProps> = ({
     [camera, depthNode, velocityNode, toneMappingNode]
   )
 
-  const overlayPassNode = useResource(
-    () =>
-      pass(overlayScene, camera, {
-        samples: 0,
-        depthBuffer: false
-      }),
-    [camera, overlayScene]
-  )
-  overlayPassNode.renderTarget.texture.name = 'overlay'
-
   const { displayShadowLength, debugShadowLength } = useControl(
     ({ shadowLength, displayShadowLength, debugShadowLength }: StoryArgs) => ({
       displayShadowLength: shadowLength && displayShadowLength,
@@ -229,10 +219,7 @@ const Content: FC<StoryProps> = ({
   )
 
   const renderPipeline = useResource(() => {
-    let outputNode: Node = taaNode
-      .add(dithering)
-      .mul(overlayPassNode.a.oneMinus())
-      .add(overlayPassNode)
+    let outputNode: Node = taaNode.add(dithering)
 
     // Useless conditionals to keep the main path in the graph:
     if (debugShadowLength) {
@@ -254,7 +241,6 @@ const Content: FC<StoryProps> = ({
     atmosphereContext,
     shadowLengthNode,
     taaNode,
-    overlayPassNode,
     displayShadowLength,
     debugShadowLength
   ])
@@ -282,6 +268,13 @@ const Content: FC<StoryProps> = ({
       csmHelper.update()
     }
     renderPipeline.render()
+
+    const { autoClearColor, outputColorSpace } = renderer
+    renderer.autoClearColor = false
+    renderer.outputColorSpace = ColorManagement.workingColorSpace
+    renderer.render(overlayScene, camera)
+    renderer.autoClearColor = autoClearColor
+    renderer.outputColorSpace = outputColorSpace
   }, 1)
 
   useTransientControl(

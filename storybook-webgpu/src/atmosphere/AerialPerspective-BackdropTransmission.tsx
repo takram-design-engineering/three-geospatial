@@ -1,7 +1,7 @@
 import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { useLayoutEffect, useMemo, useState, type FC } from 'react'
-import { BackSide, Scene } from 'three'
+import { BackSide, ColorManagement, Scene } from 'three'
 import { context, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import {
   MeshBasicNodeMaterial,
@@ -159,30 +159,20 @@ const Content: FC<StoryProps> = ({
     [camera, depthNode, velocityNode, toneMappingNode]
   )
 
-  const overlayPassNode = useResource(
-    () =>
-      pass(overlayScene, camera, {
-        samples: 0,
-        depthBuffer: false
-      }),
-    [camera, overlayScene]
-  )
-  overlayPassNode.renderTarget.texture.name = 'overlay'
-
   const renderPipeline = useResource(
-    () =>
-      new RenderPipeline(
-        renderer,
-        taaNode
-          .add(dithering)
-          .mul(overlayPassNode.a.oneMinus())
-          .add(overlayPassNode)
-      ),
-    [renderer, taaNode, overlayPassNode]
+    () => new RenderPipeline(renderer, taaNode.add(dithering)),
+    [renderer, taaNode]
   )
 
   useGuardedFrame(() => {
     renderPipeline.render()
+
+    const { autoClearColor, outputColorSpace } = renderer
+    renderer.autoClearColor = false
+    renderer.outputColorSpace = ColorManagement.workingColorSpace
+    renderer.render(overlayScene, camera)
+    renderer.autoClearColor = autoClearColor
+    renderer.outputColorSpace = outputColorSpace
   }, 1)
 
   useTransientControl(

@@ -6,7 +6,7 @@ import {
   TileCompressionPlugin,
   UpdateOnChangePlugin
 } from '3d-tiles-renderer/plugins'
-import { PerspectiveCamera, Scene, Vector3 } from 'three'
+import { ColorManagement, PerspectiveCamera, Scene, Vector3 } from 'three'
 import { Inspector } from 'three/addons/inspector/Inspector.js'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { context, mrt, output, pass, toneMapping } from 'three/tsl'
@@ -181,17 +181,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     camera
   )
 
-  const overlayPassNode = pass(overlayScene, camera, {
-    samples: 0,
-    depthBuffer: false
-  })
-  overlayPassNode.renderTarget.texture.name = 'overlay'
-
   const renderPipeline = new RenderPipeline(renderer)
-  renderPipeline.outputNode = taaNode
-    .add(dithering)
-    .mul(overlayPassNode.a.oneMinus())
-    .add(overlayPassNode)
+  renderPipeline.outputNode = taaNode.add(dithering)
 
   // Rendering loop:
   const observerECEF = new Vector3()
@@ -222,6 +213,13 @@ async function init(container: HTMLDivElement): Promise<() => void> {
     tiles.update()
 
     renderPipeline.render()
+
+    const { autoClearColor, outputColorSpace } = renderer
+    renderer.autoClearColor = false
+    renderer.outputColorSpace = ColorManagement.workingColorSpace
+    renderer.render(overlayScene, camera)
+    renderer.autoClearColor = autoClearColor
+    renderer.outputColorSpace = outputColorSpace
   })
 
   // Resizing:
@@ -236,7 +234,6 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   return () => {
     window.removeEventListener('resize', handleResize)
     renderPipeline.dispose()
-    overlayPassNode.dispose()
     taaNode.dispose()
     lensFlareNode.dispose()
     aerialNode.dispose()
