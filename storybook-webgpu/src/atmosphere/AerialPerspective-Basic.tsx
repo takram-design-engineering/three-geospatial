@@ -1,4 +1,4 @@
-import { useThree } from '@react-three/fiber'
+import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { useLayoutEffect, useMemo, type FC } from 'react'
 import { Scene } from 'three'
@@ -25,7 +25,8 @@ import {
 import {
   aerialPerspective,
   AtmosphereContext,
-  AtmosphereParameters
+  AtmosphereParameters,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -72,6 +73,14 @@ import { useTransientControl } from '../hooks/useTransientControl'
 import { CesiumIonTerrainPlugin } from '../plugins/CesiumIonTerrainPlugin'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
+
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    stars: ThreeElement<typeof Stars>
+  }
+}
+
+extend({ Stars })
 
 const Content: FC<StoryProps> = ({
   longitude,
@@ -230,6 +239,7 @@ const Content: FC<StoryProps> = ({
 
   return (
     <>
+      <stars args={[camera]} />
       <GlobeControls enableDamping overlayScene={overlayScene} />
       <TilesRenderer>
         <TilesPlugin

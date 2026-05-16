@@ -21,7 +21,8 @@ import {
   aerialPerspective,
   AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode
+  AtmosphereLightNode,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
@@ -108,6 +109,9 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Create the atmospheric light:
   const light = new AtmosphereLight()
   scene.add(light)
+
+  const stars = new Stars(camera)
+  scene.add(stars)
 
   const controls = new OrbitControls(camera, container)
   controls.enableDamping = true

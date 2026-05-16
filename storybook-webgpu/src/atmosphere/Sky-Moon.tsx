@@ -56,7 +56,7 @@ import {
   getSunDirectionECI,
   toAstroTime
 } from '@takram/three-atmosphere'
-import { AtmosphereContext, sky } from '@takram/three-atmosphere/webgpu'
+import { AtmosphereContext, sky, Stars } from '@takram/three-atmosphere/webgpu'
 import {
   degrees,
   Geodetic,
@@ -94,11 +94,12 @@ import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { useResource } from '../hooks/useResource'
 import { useSpringControl } from '../hooks/useSpringControl'
 
-extend({ LineObject: Line })
+extend({ LineObject: Line, Stars })
 
 declare module '@react-three/fiber' {
   interface ThreeElements {
     lineObject: ThreeElement<typeof Line>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
@@ -443,6 +444,7 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
+      <stars args={[camera]} />
       <OrbitControls
         ref={controlsRef}
         enableZoom={false} // Conflicts with the zoom arg

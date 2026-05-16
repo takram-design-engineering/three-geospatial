@@ -15,7 +15,8 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  skyEnvironment
+  skyEnvironment,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
 import {
@@ -67,10 +68,11 @@ import { ReorientationPlugin } from '../plugins/ReorientationPlugin'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
-extend({ AtmosphereLight })
+extend({ AtmosphereLight, Stars })
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
@@ -179,6 +181,7 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
+      <stars args={[camera]} />
       <atmosphereLight
         args={[80]}
         castShadow

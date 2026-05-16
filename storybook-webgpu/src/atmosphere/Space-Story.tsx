@@ -32,7 +32,8 @@ import {
   aerialPerspective,
   AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode
+  AtmosphereLightNode,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
@@ -73,10 +74,11 @@ import { useResource } from '../hooks/useResource'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
-extend({ AtmosphereLight })
+extend({ AtmosphereLight, Stars })
 
 interface BlueMarbleParams {
   sunDirection: Node<'vec3'>
@@ -237,6 +239,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight castShadow />
+      <stars args={[camera]} />
       <OrbitControls minDistance={2.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}

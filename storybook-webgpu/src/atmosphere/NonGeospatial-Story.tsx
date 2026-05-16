@@ -31,7 +31,8 @@ import {
 import {
   AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode
+  AtmosphereLightNode,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { remapClamped } from '@takram/three-geospatial'
 import {
@@ -78,11 +79,12 @@ import { useResource } from '../hooks/useResource'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
     meshLambertNodeMaterial: ThreeElement<typeof MeshLambertNodeMaterial>
   }
 }
 
-extend({ AtmosphereLight, MeshLambertNodeMaterial })
+extend({ AtmosphereLight, Stars, MeshLambertNodeMaterial })
 
 RectAreaLightNode.setLTC(RectAreaLightTexturesLib.init())
 
@@ -195,6 +197,7 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
+      <stars args={[camera]} />
       <atmosphereLight
         args={[5]}
         castShadow

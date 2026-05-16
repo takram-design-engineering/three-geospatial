@@ -14,7 +14,8 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  skyEnvironment
+  skyEnvironment,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -65,10 +66,11 @@ import { useTransientControl } from '../hooks/useTransientControl'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
-extend({ AtmosphereLight })
+extend({ AtmosphereLight, Stars })
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
@@ -183,6 +185,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight ref={lightRef} />
+      <stars args={[camera]} />
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere
         args={[0.5, 128, 128]}

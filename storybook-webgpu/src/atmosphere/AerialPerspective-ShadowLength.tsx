@@ -1,5 +1,5 @@
 import { Box } from '@react-three/drei'
-import { useThree } from '@react-three/fiber'
+import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   useEffect,
@@ -38,6 +38,7 @@ import {
   AtmosphereLightNode,
   AtmosphereParameters,
   shadowLength,
+  Stars,
   viewZUnit
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
@@ -95,6 +96,14 @@ import { CesiumIonTerrainPlugin } from '../plugins/CesiumIonTerrainPlugin'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
 import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
+
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    stars: ThreeElement<typeof Stars>
+  }
+}
+
+extend({ Stars })
 
 const Content: FC<StoryProps> = ({
   longitude,
@@ -344,6 +353,7 @@ const Content: FC<StoryProps> = ({
   return (
     <>
       <primitive object={light} />
+      <stars args={[camera]} />
       {showHelper && <primitive object={csmHelper} />}
       <EastNorthUpFrame
         longitude={radians(longitude)}

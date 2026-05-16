@@ -24,7 +24,8 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  skyBackground
+  skyBackground,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
@@ -98,6 +99,9 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // Create the atmospheric light. Note that this story omits the atmospheric
   // scattering, which is only plausible when the distance between the camera
   // and scene objects is small enough to ignore it.
+  const stars = new Stars(camera)
+  scene.add(stars)
+
   const light = new AtmosphereLight()
   light.castShadow = true
   light.distance = 1 // Distance from the light target to the light

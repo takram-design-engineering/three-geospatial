@@ -29,7 +29,8 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  AtmosphereParameters
+  AtmosphereParameters,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { radians } from '@takram/three-geospatial'
 import { EastNorthUpFrame } from '@takram/three-geospatial/r3f'
@@ -82,10 +83,11 @@ import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacemen
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
-extend({ AtmosphereLight })
+extend({ AtmosphereLight, Stars })
 
 const Content: FC<StoryProps> = ({
   longitude,
@@ -263,6 +265,7 @@ const Content: FC<StoryProps> = ({
   return (
     <>
       <atmosphereLight />
+      <stars args={[camera]} />
       <EastNorthUpFrame
         longitude={radians(longitude)}
         latitude={radians(latitude)}
