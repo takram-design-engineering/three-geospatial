@@ -57,6 +57,7 @@ const Content: FC<StoryProps> = () => {
   const skyNode = useResource(() => {
     const skyNode = sky()
     skyNode.starsNode = longExposure(skyNode.starsNode) as unknown as StarsNode
+    skyNode.showStars = true
     return skyNode
   }, [])
 

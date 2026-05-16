@@ -7,7 +7,6 @@ import {
   Vector3
 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { traa } from 'three/examples/jsm/tsl/display/TRAANode.js'
 import { context, mrt, output, pass, toneMapping, velocity } from 'three/tsl'
 import {
   MeshPhysicalNodeMaterial,
@@ -27,10 +26,17 @@ import {
   skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
-import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
+import {
+  dithering,
+  lensFlare,
+  temporalAntialias
+} from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
-import { AgXPunchyToneMapping } from '../helpers/AgxToneMapping'
+import {
+  agxPunchyToneMapping,
+  AgXPunchyToneMapping
+} from '../helpers/AgxToneMapping'
 
 // Geospatial configurations:
 const date = new Date('2000-06-01T10:00:00Z')
@@ -64,6 +70,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
   const atmosphereContext = new AtmosphereContext()
+  atmosphereContext.camera = camera
   renderer.contextNode = context({
     ...renderer.contextNode.value,
     getAtmosphere: () => atmosphereContext
@@ -71,7 +78,9 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // Create a scene with a sky background:
   const scene = new Scene()
-  scene.backgroundNode = skyBackground().add(dithering)
+  const skyNode = skyBackground()
+  skyNode.showStars = true
+  scene.backgroundNode = skyNode.add(dithering)
 
   // Move and rotate the ellipsoid so that the world origin locates at
   // the ECEF coordinates, and the scene's orientation aligns with
@@ -129,8 +138,16 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const depthNode = passNode.getTextureNode('depth')
   const velocityNode = passNode.getTextureNode('velocity')
   const lensFlareNode = lensFlare(colorNode)
+
+  renderer.library.addToneMapping(agxPunchyToneMapping, AgXPunchyToneMapping)
   const toneMappingNode = toneMapping(AgXPunchyToneMapping, 3, lensFlareNode)
-  const taaNode = traa(toneMappingNode, depthNode, velocityNode, camera)
+
+  const taaNode = temporalAntialias(
+    toneMappingNode,
+    depthNode,
+    velocityNode,
+    camera
+  )
   const renderPipeline = new RenderPipeline(renderer)
   renderPipeline.outputNode = taaNode.add(dithering)
 

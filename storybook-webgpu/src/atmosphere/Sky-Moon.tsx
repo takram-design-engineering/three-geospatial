@@ -94,13 +94,13 @@ import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { useResource } from '../hooks/useResource'
 import { useSpringControl } from '../hooks/useSpringControl'
 
-extend({ LineObject: Line })
-
 declare module '@react-three/fiber' {
   interface ThreeElements {
     lineObject: ThreeElement<typeof Line>
   }
 }
+
+extend({ LineObject: Line })
 
 const stateAtom = atom<{
   time: AstroTime
@@ -302,6 +302,7 @@ const Content: FC<StoryProps> = () => {
         }
       )
     )
+    skyNode.showStars = true
     return skyNode
   }, [])
 

@@ -34,6 +34,7 @@ import {
   RendererUtils,
   type NodeBuilder,
   type NodeFrame,
+  type SampleNode,
   type TextureNode,
   type UniformNode
 } from 'three/webgpu'
@@ -62,7 +63,7 @@ export class UnwarpEpipolarNode extends Node {
   sliceEndpointsNode!: TextureNode
   coordinateNode!: TextureNode
   epipolarShadowLengthNode!: TextureNode
-  viewZUnitNode!: TextureNode // Must be filterable
+  viewZUnitNode!: TextureNode | SampleNode // Must be filterable
 
   camera!: Camera
 

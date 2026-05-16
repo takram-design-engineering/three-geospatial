@@ -21,7 +21,8 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  skyEnvironment
+  skyEnvironment,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
@@ -68,10 +69,11 @@ import { ReorientationPlugin } from '../plugins/ReorientationPlugin'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
-extend({ AtmosphereLight })
+extend({ AtmosphereLight, Stars })
 
 const KNOT_TO_SI = 0.5144444444
 
@@ -234,6 +236,7 @@ const Content: FC<StoryProps> = () => {
           far={80}
         />
       </atmosphereLight>
+      <stars camera={camera} />
       <OrbitControls minDistance={45} maxDistance={1e5} />
       <Suspense>
         <B787 ref={modelRef} />

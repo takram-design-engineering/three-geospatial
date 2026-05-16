@@ -18,7 +18,8 @@ import {
   aerialPerspective,
   AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode
+  AtmosphereLightNode,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
@@ -64,11 +65,12 @@ import { useSpringControl } from '../hooks/useSpringControl'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
     meshLambertNodeMaterial: ThreeElement<typeof MeshLambertNodeMaterial>
   }
 }
 
-extend({ AtmosphereLight, MeshLambertNodeMaterial })
+extend({ AtmosphereLight, Stars, MeshLambertNodeMaterial })
 
 const geodetic = new Geodetic()
 const position = new Vector3()
@@ -181,6 +183,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight />
+      <stars camera={camera} />
       <OrbitControls target={[0, 0.5, 0]} minDistance={1} />
       <Sphere args={[0.5, 128, 128]} position={[0, 0.5, 0]}>
         <meshLambertNodeMaterial />

@@ -36,6 +36,7 @@ import {
   RendererUtils,
   type NodeBuilder,
   type NodeFrame,
+  type SampleNode,
   type TextureNode,
   type UniformNode
 } from 'three/webgpu'
@@ -55,7 +56,7 @@ export class CoordinateNode extends Node {
     return 'CoordinateNode'
   }
 
-  viewZUnitNode!: TextureNode // Must be filterable
+  viewZUnitNode!: TextureNode | SampleNode // Must be filterable
   sliceEndpointsNode!: TextureNode
 
   camera!: Camera

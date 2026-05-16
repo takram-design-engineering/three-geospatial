@@ -11,7 +11,7 @@ export class SunNode extends TempNode {
     return 'SunNode'
   }
 
-  rayDirectionECEF?: Node
+  rayDirectionECEF: Node | null = null
 
   angularRadius = uniform(0.004675) // ≈ 16 arcminutes
   intensity = uniform(1)

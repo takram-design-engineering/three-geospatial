@@ -44,12 +44,12 @@ export class AerialPerspectiveNode extends TempNode {
 
   colorNode: Node<'vec4'>
   depthNode: TextureNode
-  normalNode?: Node<'vec3'> | null
-  shadowLengthNode?: Node<'vec2'> | null
-  skyNode?: SkyNode | null
+  shadowLengthNode: Node<'vec2'> | null
+  skyNode: SkyNode | null = null
+  normalNode: Node<'vec3'> | null = null
 
-  cameraPositionUnit?: Node<'vec3'> | null
-  rayDirectionECEF?: Node<'vec3'> | null
+  cameraPositionUnit: Node<'vec3'> | null = null
+  rayDirectionECEF: Node<'vec3'> | null = null
 
   correctGeometricError = true
   lighting = false
@@ -61,7 +61,7 @@ export class AerialPerspectiveNode extends TempNode {
     scope: AerialPerspectiveNodeScope,
     colorNode: Node<'vec4'>,
     depthNode: TextureNode,
-    shadowLengthNode?: Node<'vec2'> | null
+    shadowLengthNode: Node<'vec2'> | null = null
   ) {
     super('vec4')
     this.scope = scope
@@ -275,6 +275,7 @@ export class AerialPerspectiveNode extends TempNode {
           : depth.greaterThanEqual(1),
         () => {
           if (skyNode != null) {
+            skyNode.inputNode = colorNode
             luminance.rgb.assign(skyNode)
           }
         }

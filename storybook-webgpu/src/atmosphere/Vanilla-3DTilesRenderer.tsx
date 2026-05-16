@@ -25,7 +25,8 @@ import {
   aerialPerspective,
   AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode
+  AtmosphereLightNode,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { Geodetic, PointOfView, radians } from '@takram/three-geospatial'
 import {
@@ -36,7 +37,10 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
-import { AgXPunchyToneMapping } from '../helpers/AgxToneMapping'
+import {
+  agxPunchyToneMapping,
+  AgXPunchyToneMapping
+} from '../helpers/AgxToneMapping'
 import { GlobeControls } from '../helpers/GlobeControls'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
@@ -124,6 +128,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const light = new AtmosphereLight()
   scene.add(light)
 
+  const stars = new Stars()
+  stars.camera = camera
+  scene.add(stars)
+
   const controls = new GlobeControls(scene, camera, renderer.domElement)
   controls.enableDamping = true
 
@@ -162,7 +170,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   const aerialNode = aerialPerspective(colorNode.mul(2 / 3), depthNode)
   const lensFlareNode = lensFlare(aerialNode)
+
+  renderer.library.addToneMapping(agxPunchyToneMapping, AgXPunchyToneMapping)
   const toneMappingNode = toneMapping(AgXPunchyToneMapping, 10, lensFlareNode)
+
   const taaNode = temporalAntialias(
     toneMappingNode,
     depthNode,

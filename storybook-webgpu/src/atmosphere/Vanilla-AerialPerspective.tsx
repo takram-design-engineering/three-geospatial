@@ -21,7 +21,8 @@ import {
   aerialPerspective,
   AtmosphereContext,
   AtmosphereLight,
-  AtmosphereLightNode
+  AtmosphereLightNode,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
@@ -32,7 +33,10 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
-import { AgXPunchyToneMapping } from '../helpers/AgxToneMapping'
+import {
+  agxPunchyToneMapping,
+  AgXPunchyToneMapping
+} from '../helpers/AgxToneMapping'
 
 // Geospatial configurations:
 const date = new Date('2000-06-01T10:00:00Z')
@@ -109,6 +113,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const light = new AtmosphereLight()
   scene.add(light)
 
+  const stars = new Stars()
+  stars.camera = camera
+  scene.add(stars)
+
   const controls = new OrbitControls(camera, container)
   controls.enableDamping = true
   controls.target.copy(positionECEF)
@@ -132,7 +140,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   const aerialNode = aerialPerspective(colorNode, depthNode)
   const lensFlareNode = lensFlare(aerialNode)
+
+  renderer.library.addToneMapping(agxPunchyToneMapping, AgXPunchyToneMapping)
   const toneMappingNode = toneMapping(AgXPunchyToneMapping, 3, lensFlareNode)
+
   const taaNode = temporalAntialias(
     toneMappingNode,
     depthNode,

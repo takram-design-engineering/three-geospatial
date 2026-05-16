@@ -20,7 +20,7 @@
 
 import type { Camera } from 'three'
 import { float, vec2, vec3, vec4 } from 'three/tsl'
-import type { TextureNode } from 'three/webgpu'
+import type { SampleNode, TextureNode } from 'three/webgpu'
 
 import {
   cameraFar,
@@ -110,7 +110,7 @@ export const getCameraZUnit = /*#__PURE__*/ FnVar(
   (
     camera: Camera,
     uv: Node<'vec2'>,
-    viewZUnitNode: TextureNode // viewZ in unit space
+    viewZUnitNode: TextureNode | SampleNode // viewZ in unit space
   ) =>
     (builder): Node<'float'> => {
       const { parametersNode } = getAtmosphereContext(builder)

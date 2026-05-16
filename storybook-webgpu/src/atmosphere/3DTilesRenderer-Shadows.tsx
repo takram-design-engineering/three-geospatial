@@ -39,6 +39,7 @@ import {
   AtmosphereLightNode,
   AtmosphereParameters,
   shadowLength,
+  Stars,
   viewZUnit
 } from '@takram/three-atmosphere/webgpu'
 import {
@@ -95,10 +96,11 @@ import { TileMeshPropsPlugin } from '../plugins/TileMeshPropsPlugin'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
-extend({ AtmosphereLight })
+extend({ AtmosphereLight, Stars })
 
 const Content: FC<StoryProps> = ({
   longitude,
@@ -342,6 +344,7 @@ const Content: FC<StoryProps> = ({
   return (
     <>
       <primitive object={light} />
+      <stars camera={camera} />
       <Globe ref={tilesRef} apiKey={apiKey} materialHandler={materialHandler}>
         <GlobeControls enableDamping overlayScene={overlayScene} />
         <TilesPlugin

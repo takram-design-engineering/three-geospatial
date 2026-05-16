@@ -21,7 +21,7 @@ export class LensFlareNode extends TempNode {
     return 'LensFlareNode'
   }
 
-  inputNode?: TextureNode | null
+  inputNode: TextureNode | null
   thresholdNode: DownsampleThresholdNode
   blurNode: GaussianBlurNode
   ghostNode: LensGhostNode
@@ -33,7 +33,7 @@ export class LensFlareNode extends TempNode {
 
   featuresNode: RenderTargetNode
 
-  constructor(inputNode?: TextureNode | null) {
+  constructor(inputNode: TextureNode | null = null) {
     super('vec4')
     this.inputNode = inputNode
 
@@ -110,5 +110,5 @@ export class LensFlareNode extends TempNode {
   }
 }
 
-export const lensFlare = (inputNode: Node | null): LensFlareNode =>
+export const lensFlare = (inputNode?: Node | null): LensFlareNode =>
   new LensFlareNode(convertToTexture(inputNode, { name: 'LensFlare_input' }))

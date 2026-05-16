@@ -35,7 +35,8 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  AtmosphereParameters
+  AtmosphereParameters,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, radians, remap } from '@takram/three-geospatial'
 import { EllipsoidMesh } from '@takram/three-geospatial/r3f'
@@ -77,10 +78,11 @@ import { blueMarble } from './Space-Story'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
-extend({ AtmosphereLight })
+extend({ AtmosphereLight, Stars })
 
 // Film grain based on: https://github.com/mattdesl/glsl-film-grain/
 const filmGrain = Fn(() => {
@@ -235,6 +237,7 @@ const Content: FC<StoryProps> = () => {
     <>
       <atmosphereLight castShadow />
       <atmosphereLight body='moon' />
+      <stars camera={camera} />
       <OrbitControls enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}

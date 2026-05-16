@@ -26,12 +26,12 @@ I'm actively working on WebGPU support. This involves a complete rewrite of the 
 
 It will feature:
 
-- Much faster generation of the atmosphere LUT
+- Much faster and physically plausible atmosphere LUTs
 - Accurate atmospheric lighting at large scale for all materials
+- Crepuscular rays / light shafts / volumetric shadow on scene objects
 - Geometry-based lens glare
-- Temporal antialiasing
-- The moon's surface
-- More reliable rendering of stars
+- Transparent and transmission materials
+- Temporal antialiasing and screen-space shadows
 
 Once all packages support WebGPU, the current shader-chunk-based architecture will be archived and superseded by the node-based implementation. This does not mean dropping WebGL support, because a WebGL fallback will still be possible, but the new API will be incompatible with the current one.
 

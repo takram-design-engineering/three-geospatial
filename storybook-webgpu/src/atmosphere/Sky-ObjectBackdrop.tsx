@@ -18,7 +18,8 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  skyBackdrop
+  skyBackdrop,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
@@ -52,10 +53,11 @@ import { useTransientControl } from '../hooks/useTransientControl'
 declare module '@react-three/fiber' {
   interface ThreeElements {
     atmosphereLight: ThreeElement<typeof AtmosphereLight>
+    stars: ThreeElement<typeof Stars>
   }
 }
 
-extend({ AtmosphereLight })
+extend({ AtmosphereLight, Stars })
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
@@ -75,6 +77,7 @@ const Content: FC<StoryProps> = () => {
   const backdropNode = useResource(() => {
     const skyNode = skyBackdrop()
     skyNode.moonNode.intensity.value = 10
+    skyNode.showStars = true
     return skyNode
   }, [])
 
@@ -158,6 +161,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight />
+      <stars camera={camera} />
       <OrbitControls minDistance={0} />
       <Box args={[2, 2, 2]} material={material} />
     </>

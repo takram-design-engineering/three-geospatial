@@ -60,6 +60,7 @@ const Content: FC<StoryProps> = () => {
   const skyNode = useResource(() => {
     const skyNode = skyBackground()
     skyNode.moonNode.intensity.value = 10
+    skyNode.showStars = true
     return skyNode
   }, [])
 
@@ -130,7 +131,11 @@ const Content: FC<StoryProps> = () => {
     )
   })
 
-  return <OrbitControls target={[0, 0, 0]} minDistance={1} />
+  return (
+    <>
+      <OrbitControls target={[0, 0, 0]} minDistance={1} />
+    </>
+  )
 }
 
 interface StoryProps {}

@@ -4,6 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "build": "pnpm nx build-libs",
     "clean": "pnpm exec rimraf --glob dist tmp **/node_modules/.cache"
   },
   "dependencies": {

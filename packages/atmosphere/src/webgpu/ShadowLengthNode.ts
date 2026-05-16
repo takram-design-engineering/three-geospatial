@@ -43,6 +43,7 @@ import {
   TempNode,
   type NodeBuilder,
   type NodeFrame,
+  type SampleNode,
   type TextureNode
 } from 'three/webgpu'
 import invariant from 'tiny-invariant'
@@ -73,7 +74,7 @@ export class ShadowLengthNode extends TempNode {
   }
 
   csmShadowNode: CSMShadowNode
-  viewZUnitNode!: TextureNode // Must be filterable
+  viewZUnitNode!: TextureNode | SampleNode // Must be filterable
 
   sliceEndpointsNode: SliceEndpointsNode
   coordinateNode: CoordinateNode
@@ -104,7 +105,10 @@ export class ShadowLengthNode extends TempNode {
 
   private currentCascades = 0
 
-  constructor(csmShadowNode: CSMShadowNode, viewZUnitNode: TextureNode) {
+  constructor(
+    csmShadowNode: CSMShadowNode,
+    viewZUnitNode: TextureNode | SampleNode
+  ) {
     super('vec2')
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
 

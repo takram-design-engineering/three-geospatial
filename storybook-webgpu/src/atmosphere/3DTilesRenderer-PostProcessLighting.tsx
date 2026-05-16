@@ -1,4 +1,4 @@
-import { useThree } from '@react-three/fiber'
+import { extend, useThree, type ThreeElement } from '@react-three/fiber'
 import { useCallback, useLayoutEffect, useMemo, type FC } from 'react'
 import { Scene } from 'three'
 import {
@@ -24,7 +24,8 @@ import {
 import {
   aerialPerspective,
   AtmosphereContext,
-  AtmosphereParameters
+  AtmosphereParameters,
+  Stars
 } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -68,6 +69,14 @@ import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { usePointOfView, type PointOfViewProps } from '../hooks/usePointOfView'
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
+
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    stars: ThreeElement<typeof Stars>
+  }
+}
+
+extend({ Stars })
 
 const Content: FC<StoryProps> = ({
   longitude,
@@ -230,12 +239,15 @@ const Content: FC<StoryProps> = ({
   )
 
   return (
-    <Globe
-      apiKey={apiKey}
-      materialHandler={useCallback(() => new MeshBasicNodeMaterial(), [])}
-    >
-      <GlobeControls enableDamping overlayScene={overlayScene} />
-    </Globe>
+    <>
+      <stars camera={camera} />
+      <Globe
+        apiKey={apiKey}
+        materialHandler={useCallback(() => new MeshBasicNodeMaterial(), [])}
+      >
+        <GlobeControls enableDamping overlayScene={overlayScene} />
+      </Globe>
+    </>
   )
 }
 
