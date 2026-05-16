@@ -15,7 +15,8 @@ const config: StorybookConfig = {
     options: {}
   },
   core: {
-    allowedHosts: ['.local']
+    allowedHosts: ['.local'],
+    disableWhatsNewNotifications: true
   },
   features: {
     actions: false,

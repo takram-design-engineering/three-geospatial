@@ -14,6 +14,9 @@ const config: StorybookConfig = {
     name: getAbsolutePath('@storybook/react-vite'),
     options: {}
   },
+  core: {
+    disableWhatsNewNotifications: true
+  },
   staticDirs: [
     { from: '../assets', to: '/public' },
     { from: '../../packages/core/assets', to: '/core' },
