@@ -77,6 +77,7 @@ const Content: FC<StoryProps> = () => {
   const backdropNode = useResource(() => {
     const skyNode = skyBackdrop()
     skyNode.moonNode.intensity.value = 10
+    skyNode.showStars = true
     return skyNode
   }, [])
 

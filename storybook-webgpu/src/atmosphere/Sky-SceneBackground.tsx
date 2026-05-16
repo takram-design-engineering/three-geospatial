@@ -1,5 +1,5 @@
 import { OrbitControls } from '@react-three/drei'
-import { extend, useThree, type ThreeElement } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import { useLayoutEffect, type FC } from 'react'
 import { context, pass, toneMapping, uniform } from 'three/tsl'
 import { RenderPipeline, type Renderer } from 'three/webgpu'
@@ -11,8 +11,7 @@ import {
 } from '@takram/three-atmosphere'
 import {
   AtmosphereContext,
-  skyBackground,
-  Stars
+  skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
@@ -43,14 +42,6 @@ import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
 
-declare module '@react-three/fiber' {
-  interface ThreeElements {
-    stars: ThreeElement<typeof Stars>
-  }
-}
-
-extend({ Stars })
-
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
   const scene = useThree(({ scene }) => scene)
@@ -69,6 +60,7 @@ const Content: FC<StoryProps> = () => {
   const skyNode = useResource(() => {
     const skyNode = skyBackground()
     skyNode.moonNode.intensity.value = 10
+    skyNode.showStars = true
     return skyNode
   }, [])
 
@@ -141,7 +133,6 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
-      <stars args={[camera]} />
       <OrbitControls target={[0, 0, 0]} minDistance={1} />
     </>
   )

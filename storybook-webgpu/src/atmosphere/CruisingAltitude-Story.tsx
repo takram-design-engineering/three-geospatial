@@ -220,7 +220,6 @@ const Content: FC<StoryProps> = () => {
 
   return (
     <>
-      <stars args={[camera]} />
       <atmosphereLight
         args={[40]}
         castShadow
@@ -237,6 +236,7 @@ const Content: FC<StoryProps> = () => {
           far={80}
         />
       </atmosphereLight>
+      <stars args={[camera]} />
       <OrbitControls minDistance={45} maxDistance={1e5} />
       <Suspense>
         <B787 ref={modelRef} />

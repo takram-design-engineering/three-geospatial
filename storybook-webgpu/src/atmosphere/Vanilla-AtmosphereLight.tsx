@@ -24,8 +24,7 @@ import {
   AtmosphereContext,
   AtmosphereLight,
   AtmosphereLightNode,
-  skyBackground,
-  Stars
+  skyBackground
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import {
@@ -36,7 +35,10 @@ import {
 } from '@takram/three-geospatial/webgpu'
 
 import type { StoryFC } from '../components/createStory'
-import { AgXPunchyToneMapping } from '../helpers/AgxToneMapping'
+import {
+  agxPunchyToneMapping,
+  AgXPunchyToneMapping
+} from '../helpers/AgxToneMapping'
 
 // Geospatial configurations:
 const date = new Date('2000-06-01T10:00:00Z')
@@ -80,7 +82,9 @@ async function init(container: HTMLDivElement): Promise<() => void> {
 
   // Create a scene with a sky background:
   const scene = new Scene()
-  scene.backgroundNode = skyBackground().add(dithering)
+  const skyNode = skyBackground()
+  skyNode.showStars = true
+  scene.backgroundNode = skyNode.add(dithering)
 
   const group = new Group()
   scene.add(group)
@@ -108,9 +112,6 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const light = new AtmosphereLight()
   scene.add(light)
 
-  const stars = new Stars(camera)
-  scene.add(stars)
-
   const controls = new OrbitControls(camera, container)
   controls.enableDamping = true
   controls.minDistance = 1
@@ -127,7 +128,10 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const depthNode = passNode.getTextureNode('depth')
   const velocityNode = passNode.getTextureNode('velocity')
   const lensFlareNode = lensFlare(colorNode)
+
+  renderer.library.addToneMapping(agxPunchyToneMapping, AgXPunchyToneMapping)
   const toneMappingNode = toneMapping(AgXPunchyToneMapping, 3, lensFlareNode)
+
   const taaNode = temporalAntialias(
     toneMappingNode,
     depthNode,
