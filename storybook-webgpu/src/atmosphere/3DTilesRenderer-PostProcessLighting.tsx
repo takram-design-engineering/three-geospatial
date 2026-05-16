@@ -240,7 +240,7 @@ const Content: FC<StoryProps> = ({
 
   return (
     <>
-      <stars args={[camera]} />
+      <stars camera={camera} />
       <Globe
         apiKey={apiKey}
         materialHandler={useCallback(() => new MeshBasicNodeMaterial(), [])}

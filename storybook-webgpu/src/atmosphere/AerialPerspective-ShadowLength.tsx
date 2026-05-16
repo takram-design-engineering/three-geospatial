@@ -353,7 +353,7 @@ const Content: FC<StoryProps> = ({
   return (
     <>
       <primitive object={light} />
-      <stars args={[camera]} />
+      <stars camera={camera} />
       {showHelper && <primitive object={csmHelper} />}
       <EastNorthUpFrame
         longitude={radians(longitude)}

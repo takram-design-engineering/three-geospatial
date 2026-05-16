@@ -161,7 +161,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight />
-      <stars args={[camera]} />
+      <stars camera={camera} />
       <OrbitControls minDistance={0} />
       <Box args={[2, 2, 2]} material={material} />
     </>

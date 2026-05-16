@@ -237,7 +237,7 @@ const Content: FC<StoryProps> = () => {
     <>
       <atmosphereLight castShadow />
       <atmosphereLight body='moon' />
-      <stars args={[camera]} />
+      <stars camera={camera} />
       <OrbitControls enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}

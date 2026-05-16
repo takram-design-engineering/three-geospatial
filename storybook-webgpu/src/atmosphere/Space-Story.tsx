@@ -239,7 +239,7 @@ const Content: FC<StoryProps> = () => {
   return (
     <>
       <atmosphereLight castShadow />
-      <stars args={[camera]} />
+      <stars camera={camera} />
       <OrbitControls minDistance={2.2e7} enablePan={false} />
       <EllipsoidMesh
         args={[Ellipsoid.WGS84.radii, 360, 180]}

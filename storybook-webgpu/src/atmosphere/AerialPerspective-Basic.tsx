@@ -239,7 +239,7 @@ const Content: FC<StoryProps> = ({
 
   return (
     <>
-      <stars args={[camera]} />
+      <stars camera={camera} />
       <GlobeControls enableDamping overlayScene={overlayScene} />
       <TilesRenderer>
         <TilesPlugin

@@ -230,7 +230,7 @@ const Content: FC<StoryProps> = ({
   return (
     <>
       <atmosphereLight />
-      <stars args={[camera]} />
+      <stars camera={camera} />
       <Globe apiKey={apiKey} materialHandler={materialHandler}>
         <GlobeControls enableDamping overlayScene={overlayScene} />
         {globeChildren}

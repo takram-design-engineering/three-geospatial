@@ -113,7 +113,8 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   const light = new AtmosphereLight()
   scene.add(light)
 
-  const stars = new Stars(camera)
+  const stars = new Stars()
+  stars.camera = camera
   scene.add(stars)
 
   const controls = new OrbitControls(camera, container)

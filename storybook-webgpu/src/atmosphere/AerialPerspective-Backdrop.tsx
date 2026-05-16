@@ -265,7 +265,7 @@ const Content: FC<StoryProps> = ({
   return (
     <>
       <atmosphereLight />
-      <stars args={[camera]} />
+      <stars camera={camera} />
       <EastNorthUpFrame
         longitude={radians(longitude)}
         latitude={radians(latitude)}

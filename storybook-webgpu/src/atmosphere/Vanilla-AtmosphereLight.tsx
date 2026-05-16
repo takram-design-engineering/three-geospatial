@@ -75,6 +75,7 @@ async function init(container: HTMLDivElement): Promise<() => void> {
   // The atmosphere context manages resources like LUTs and uniforms shared by
   // multiple nodes:
   const atmosphereContext = new AtmosphereContext()
+  atmosphereContext.camera = camera
   renderer.contextNode = context({
     ...renderer.contextNode.value,
     getAtmosphere: () => atmosphereContext

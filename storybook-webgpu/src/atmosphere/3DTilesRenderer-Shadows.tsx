@@ -344,7 +344,7 @@ const Content: FC<StoryProps> = ({
   return (
     <>
       <primitive object={light} />
-      <stars args={[camera]} />
+      <stars camera={camera} />
       <Globe ref={tilesRef} apiKey={apiKey} materialHandler={materialHandler}>
         <GlobeControls enableDamping overlayScene={overlayScene} />
         <TilesPlugin
