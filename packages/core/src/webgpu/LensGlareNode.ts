@@ -75,7 +75,6 @@ function createQuadTexture(): CanvasTexture {
     colorGradient.addColorStop(1 - t * 0.5, color)
   })
   context.fillStyle = colorGradient
-  context.fillRect(0, 0, width, height)
   const inset = 5
   context.fillRect(0, inset, width, height - inset * 2)
 
